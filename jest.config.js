@@ -8,4 +8,5 @@ module.exports = {
   },
   transformIgnorePatterns: [
   ],
+  setupFiles: ["dotenv/config"],
 };
