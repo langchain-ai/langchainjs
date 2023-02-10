@@ -8,13 +8,13 @@ import { backOff } from "exponential-backoff";
 import { BaseLLM, LLMResult, LLMCallbackManager } from ".";
 
 interface InvocationParams {
-  temperature: number;
-  maxTokens: number;
-  topP: number;
-  frequencyPenalty: number;
-  presencePenalty: number;
-  n: number;
-  bestOf: number;
+  temperature?: number;
+  maxTokens?: number;
+  topP?: number;
+  frequencyPenalty?: number;
+  presencePenalty?: number;
+  n?: number;
+  bestOf?: number;
   requestTimeout?: number | [number, number];
   logitBias?: Record<string, number>;
 }
@@ -84,13 +84,13 @@ export class OpenAI extends BaseLLM implements InvocationParams {
     this.batchSize = fields.batchSize ?? this.batchSize;
     this.maxRetries = fields.maxRetries ?? this.maxRetries;
 
-    this.temperature = fields.temperature;
-    this.maxTokens = fields.maxTokens;
-    this.topP = fields.topP;
-    this.frequencyPenalty = fields.frequencyPenalty;
-    this.presencePenalty = fields.presencePenalty;
-    this.n = fields.n;
-    this.bestOf = fields.bestOf;
+    this.temperature = fields.temperature ?? this.temperature;
+    this.maxTokens = fields.maxTokens ?? this.maxTokens;
+    this.topP = fields.topP ?? this.topP;
+    this.frequencyPenalty = fields.frequencyPenalty ?? this.frequencyPenalty;
+    this.presencePenalty = fields.presencePenalty ?? this.presencePenalty;
+    this.n = fields.n ?? this.n;
+    this.bestOf = fields.bestOf ?? this.bestOf;
     this.requestTimeout = fields.requestTimeout;
     this.logitBias = fields.logitBias;
 

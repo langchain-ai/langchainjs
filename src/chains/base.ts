@@ -2,5 +2,5 @@
 export type ChainValues = Record<string, any>;
 
 export abstract class BaseChain {
-  abstract format(values: ChainValues): ChainValues;
+  abstract call(values: ChainValues): ChainValues;
 }
