@@ -7,15 +7,14 @@ import {
 import { backOff } from "exponential-backoff";
 import { BaseLLM, LLMResult, LLMCallbackManager } from ".";
 
-interface InvocationParams {
-  temperature?: number;
-  maxTokens?: number;
-  topP?: number;
-  frequencyPenalty?: number;
-  presencePenalty?: number;
-  n?: number;
-  bestOf?: number;
-  requestTimeout?: number | [number, number];
+interface ModelParams {
+  temperature: number;
+  maxTokens: number;
+  topP: number;
+  frequencyPenalty: number;
+  presencePenalty: number;
+  n: number;
+  bestOf: number;
   logitBias?: Record<string, number>;
 }
 
@@ -37,22 +36,20 @@ const chunkArray = <T>(arr: T[], chunkSize: number) =>
     return chunks;
   }, [] as T[][]);
 
-export class OpenAI extends BaseLLM implements InvocationParams {
-  temperature: number;
+export class OpenAI extends BaseLLM implements ModelParams {
+  temperature = 0.7;
 
-  maxTokens: number;
+  maxTokens = 256;
 
-  topP: number;
+  topP = 1;
 
-  frequencyPenalty: number;
+  frequencyPenalty = 0;
 
-  presencePenalty: number;
+  presencePenalty = 0;
 
-  n: number;
+  n = 1;
 
-  bestOf: number;
-
-  requestTimeout?: number | [number, number];
+  bestOf = 1;
 
   logitBias?: Record<string, number>;
 
@@ -67,7 +64,7 @@ export class OpenAI extends BaseLLM implements InvocationParams {
   private client: OpenAIApi;
 
   constructor(
-    fields: InvocationParams & {
+    fields?: Partial<ModelParams> & {
       callbackManager?: LLMCallbackManager;
       verbose?: boolean;
       modelName?: string;
@@ -77,65 +74,59 @@ export class OpenAI extends BaseLLM implements InvocationParams {
       maxRetries?: number;
     }
   ) {
-    super(fields.callbackManager, fields.verbose);
+    super(fields?.callbackManager, fields?.verbose);
 
-    this.modelName = fields.modelName ?? this.modelName;
-    this.modelKwargs = fields.modelKwargs ?? {};
-    this.batchSize = fields.batchSize ?? this.batchSize;
-    this.maxRetries = fields.maxRetries ?? this.maxRetries;
+    this.modelName = fields?.modelName ?? this.modelName;
+    this.modelKwargs = fields?.modelKwargs ?? {};
+    this.batchSize = fields?.batchSize ?? this.batchSize;
+    this.maxRetries = fields?.maxRetries ?? this.maxRetries;
 
-    this.temperature = fields.temperature ?? this.temperature;
-    this.maxTokens = fields.maxTokens ?? this.maxTokens;
-    this.topP = fields.topP ?? this.topP;
-    this.frequencyPenalty = fields.frequencyPenalty ?? this.frequencyPenalty;
-    this.presencePenalty = fields.presencePenalty ?? this.presencePenalty;
-    this.n = fields.n ?? this.n;
-    this.bestOf = fields.bestOf ?? this.bestOf;
-    this.requestTimeout = fields.requestTimeout;
-    this.logitBias = fields.logitBias;
+    this.temperature = fields?.temperature ?? this.temperature;
+    this.maxTokens = fields?.maxTokens ?? this.maxTokens;
+    this.topP = fields?.topP ?? this.topP;
+    this.frequencyPenalty = fields?.frequencyPenalty ?? this.frequencyPenalty;
+    this.presencePenalty = fields?.presencePenalty ?? this.presencePenalty;
+    this.n = fields?.n ?? this.n;
+    this.bestOf = fields?.bestOf ?? this.bestOf;
+    this.logitBias = fields?.logitBias;
 
     const clientConfig = new Configuration({
-      apiKey: fields.openAIApiKey ?? process.env.OPENAI_API_KEY,
+      apiKey: fields?.openAIApiKey ?? process.env.OPENAI_API_KEY,
     });
     this.client = new OpenAIApi(clientConfig);
   }
 
-  invocationParams(): InvocationParams & Kwargs {
+  invocationParams(): CreateCompletionRequest & Kwargs {
     return {
+      model: this.modelName,
       temperature: this.temperature,
-      maxTokens: this.maxTokens,
-      topP: this.topP,
-      frequencyPenalty: this.frequencyPenalty,
-      presencePenalty: this.presencePenalty,
+      max_tokens: this.maxTokens,
+      top_p: this.topP,
+      frequency_penalty: this.frequencyPenalty,
+      presence_penalty: this.presencePenalty,
       n: this.n,
-      bestOf: this.bestOf,
-      requestTimeout: this.requestTimeout,
-      logitBias: this.logitBias,
+      best_of: this.bestOf,
+      logit_bias: this.logitBias,
       ...this.modelKwargs,
     };
   }
 
   identifyingParams() {
     return {
-      modelName: this.modelName,
+      model_name: this.modelName,
       ...this.invocationParams(),
     };
   }
 
   async _generate(prompts: string[], _?: string[]): Promise<LLMResult> {
-    const params = this.invocationParams();
-
-    params.maxTokens = this.maxTokens;
-
     const subPrompts = chunkArray(prompts, this.batchSize);
     const choices: CreateCompletionResponseChoicesInner[] = [];
     const tokenUsage: TokenUsage = {};
 
     for (let i = 0; i < subPrompts.length; i += 1) {
       const { data } = await this.completionWithRetry({
-        ...this.invocationParams,
+        ...this.invocationParams(),
         prompt: subPrompts[i],
-        model: this.modelName,
       });
       choices.push(...data.choices);
       const {
