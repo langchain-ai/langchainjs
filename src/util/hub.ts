@@ -1,25 +1,13 @@
 import path from "path";
-import fetch, { RequestInit } from "node-fetch";
 import os from "os";
 import fs from "fs";
+import { fetchWithTimeout } from "./index";
 
 const HUB_PATH_REGEX = /lc(@[^:]+)?:\/\/(.*)/;
 const DEFAULT_REF = process.env.LANGCHAIN_HUB_DEFAULT_REF ?? "master";
 const URL_BASE =
   process.env.LANGCHAIN_HUB_URL_BASE ??
   "https://raw.githubusercontent.com/hwchase17/langchain-hub/";
-
-const fetchWithTimeout = async (
-  url: string,
-  init: Omit<RequestInit, "signal"> & { timeout: number }
-) => {
-  const { timeout, ...rest } = init;
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeout);
-  const res = await fetch(url, { ...rest, signal: controller.signal });
-  clearTimeout(timeoutId);
-  return res;
-};
 
 export const loadFromHub = async <T>(
   uri: string,

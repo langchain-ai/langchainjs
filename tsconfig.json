@@ -10,6 +10,7 @@
     "allowSyntheticDefaultImports": true,
     "baseUrl": "./src",
     "declaration": true,
+    "experimentalDecorators": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "noUnusedLocals": true,
