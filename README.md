@@ -7,7 +7,7 @@ Please fill out [this form](https://forms.gle/57d8AmXBYp8PP8tZA) and we'll set u
 
 ## Quick Install
 
-`npm install -S langchain.js`
+`yarn add langchain.js --ignore-optional`
 
 **Note**: You should also make sure you have `moduleResolution` set to `nodenext` in your
 `tsconfig.json` if you're using ESM modules and would like to import from subpaths of langchain like

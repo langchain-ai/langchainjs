@@ -1,6 +1,6 @@
 {
   "name": "langchain.js",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Typescript bindings for langchain",
   "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.js",
@@ -18,6 +18,11 @@
       "types": "./dist/cjs/agents/index.d.ts",
       "require": "./dist/cjs/agents/index.js",
       "import": "./dist/esm/agents/index.js"
+    },
+    "./tools": {
+      "types": "./dist/cjs/agents/tools/index.d.ts",
+      "require": "./dist/cjs/agents/tools/index.js",
+      "import": "./dist/esm/agents/tools/index.js"
     },
     "./prompt": {
       "types": "./dist/cjs/prompt/index.d.ts",
