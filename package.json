@@ -1,6 +1,6 @@
 {
-  "name": "langchain",
-  "version": "0.0.1",
+  "name": "langchain.js",
+  "version": "0.0.3",
   "description": "Typescript bindings for langchain",
   "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.js",
@@ -9,8 +9,31 @@
     "dist/"
   ],
   "exports": {
-    "require": "./dist/cjs/index.js",
-    "import": "./dist/esm/index.js"
+    ".": {
+      "types": "./dist/cjs/index.d.ts",
+      "require": "./dist/cjs/index.js",
+      "import": "./dist/esm/index.js"
+    },
+    "./agents": {
+      "types": "./dist/cjs/agents/index.d.ts",
+      "require": "./dist/cjs/agents/index.js",
+      "import": "./dist/esm/agents/index.js"
+    },
+    "./prompt": {
+      "types": "./dist/cjs/prompt/index.d.ts",
+      "require": "./dist/cjs/prompt/index.js",
+      "import": "./dist/esm/prompt/index.js"
+    },
+    "./chains": {
+      "types": "./dist/cjs/chains/index.d.ts",
+      "require": "./dist/cjs/chains/index.js",
+      "import": "./dist/esm/chains/index.js"
+    },
+    "./llms": {
+      "types": "./dist/cjs/llms/index.d.ts",
+      "require": "./dist/cjs/llms/index.js",
+      "import": "./dist/esm/llms/index.js"
+    }
   },
   "scripts": {
     "build": "tsc --declaration --outDir dist/esm --module esnext && tsc --declaration --outDir dist/cjs",
@@ -62,5 +85,8 @@
       "prettier --write --ignore-unknown",
       "eslint --cache --fix"
     ]
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

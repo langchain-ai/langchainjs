@@ -2,14 +2,14 @@ import { LLMCallbackManager, LLMResult, OpenAI } from "./index";
 import { BaseCache, InMemoryCache } from "../cache";
 
 const getCallbackManager = (): LLMCallbackManager => ({
-  handleStart: (...args) => {
-    console.log(args);
+  handleStart: (..._args) => {
+    // console.log(args);
   },
-  handleEnd: (...args) => {
-    console.log(args);
+  handleEnd: (..._args) => {
+    // console.log(args);
   },
-  handleError: (...args) => {
-    console.log(args);
+  handleError: (..._args) => {
+    // console.log(args);
   },
 });
 

@@ -1,5 +1,6 @@
 export { BaseLLM, LLM, SerializedLLM } from "./base";
 export { OpenAI } from "./openai";
+export { loadLLM } from "./load";
 
 export type LLMCallbackManager = {
   handleStart: (
