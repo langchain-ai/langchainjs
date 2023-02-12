@@ -9,11 +9,11 @@ import {
   renderTemplate,
   parseFString,
 } from "./template";
-import { resolveTemplate } from "./load";
+import { resolveTemplateFromFile } from "../util";
 import { SerializedOutputParser, BaseOutputParser } from "./parser";
 
 export type SerializedPromptTemplate = {
-  _type: "prompt";
+  _type?: "prompt";
   input_variables: string[];
   output_parser?: SerializedOutputParser;
   template?: string;
@@ -99,12 +99,11 @@ export class PromptTemplate
   static async deserialize(
     data: SerializedPromptTemplate
   ): Promise<PromptTemplate> {
-    const { template, template_path } = data;
     const res = new PromptTemplate({
       inputVariables: data.input_variables,
       outputParser:
         data.output_parser && BaseOutputParser.deserialize(data.output_parser),
-      template: resolveTemplate("template", template, template_path),
+      template: resolveTemplateFromFile("template", data),
       templateFormat: data.template_format,
     });
     return res;

@@ -61,6 +61,8 @@ export class OpenAI extends BaseLLM implements ModelParams {
 
   maxRetries = 6;
 
+  stop?: string[];
+
   private client: OpenAIApi;
 
   constructor(
@@ -72,6 +74,7 @@ export class OpenAI extends BaseLLM implements ModelParams {
       openAIApiKey?: string;
       batchSize?: number;
       maxRetries?: number;
+      stop?: string[];
     }
   ) {
     super(fields?.callbackManager, fields?.verbose);
@@ -89,6 +92,7 @@ export class OpenAI extends BaseLLM implements ModelParams {
     this.n = fields?.n ?? this.n;
     this.bestOf = fields?.bestOf ?? this.bestOf;
     this.logitBias = fields?.logitBias;
+    this.stop = fields?.stop;
 
     const clientConfig = new Configuration({
       apiKey: fields?.openAIApiKey ?? process.env.OPENAI_API_KEY,
@@ -107,6 +111,7 @@ export class OpenAI extends BaseLLM implements ModelParams {
       n: this.n,
       best_of: this.bestOf,
       logit_bias: this.logitBias,
+      stop: this.stop,
       ...this.modelKwargs,
     };
   }
@@ -118,14 +123,21 @@ export class OpenAI extends BaseLLM implements ModelParams {
     };
   }
 
-  async _generate(prompts: string[], _?: string[]): Promise<LLMResult> {
+  async _generate(prompts: string[], stop?: string[]): Promise<LLMResult> {
     const subPrompts = chunkArray(prompts, this.batchSize);
     const choices: CreateCompletionResponseChoicesInner[] = [];
     const tokenUsage: TokenUsage = {};
 
+    if (this.stop && stop) {
+      throw new Error("Stop found in input and default params");
+    }
+
+    const params = this.invocationParams();
+    params.stop = stop ?? params.stop;
+
     for (let i = 0; i < subPrompts.length; i += 1) {
       const { data } = await this.completionWithRetry({
-        ...this.invocationParams(),
+        ...params,
         prompt: subPrompts[i],
       });
       choices.push(...data.choices);

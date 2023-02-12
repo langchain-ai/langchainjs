@@ -14,7 +14,7 @@ module.exports = {
   rules: {
     "@typescript-eslint/explicit-module-boundary-types": 0,
     "@typescript-eslint/no-empty-function": 0,
-    "@typescript-eslint/no-shadow": ["error"],
+    "@typescript-eslint/no-shadow": 0,
     "@typescript-eslint/no-use-before-define": ["error", "nofunc"],
     "@typescript-eslint/no-unused-vars": ["warn", { args: "none" }],
     "camelcase": 0,
@@ -33,6 +33,7 @@ module.exports = {
     "no-shadow": 0,
     "no-underscore-dangle": 0,
     "no-use-before-define": 0,
+    "no-useless-constructor": 0,
     "semi": ["error", "always"],
   },
 };

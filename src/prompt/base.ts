@@ -1,34 +1,26 @@
 import { BaseOutputParser } from "./parser";
-import {
-  PromptTemplateInput,
-  SerializedPromptTemplate,
-  PromptTemplate,
-  FewShotPromptTemplateInput,
-  SerializedFewShotTemplate,
-  FewShotPromptTemplate,
-} from "./index";
+import { PromptTemplate, FewShotPromptTemplate } from "./index";
+
+const templateClasses = [PromptTemplate, FewShotPromptTemplate];
+
+export type SerializedBasePromptTemplate = ReturnType<
+  InstanceType<(typeof templateClasses)[number]>["serialize"]
+>;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type InputValues = Record<string, any>;
-
-type SerializedBasePromptTemplate =
-  | SerializedPromptTemplate
-  | SerializedFewShotTemplate
-  | (Omit<SerializedPromptTemplate, "_type"> & { _type: undefined });
 
 export interface BasePromptTemplateInput {
   inputVariables: string[];
   outputParser?: BaseOutputParser;
 }
 
-type ConstructorInput = FewShotPromptTemplateInput | PromptTemplateInput;
-
 export abstract class BasePromptTemplate implements BasePromptTemplateInput {
   inputVariables: string[];
 
   outputParser?: BaseOutputParser;
 
-  constructor(input: ConstructorInput) {
+  constructor(input: BasePromptTemplateInput) {
     const { inputVariables } = input;
     if (inputVariables.includes("stop")) {
       throw new Error(

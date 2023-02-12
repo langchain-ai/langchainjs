@@ -1,14 +1,14 @@
-import fs from "fs";
-import path from "path";
-import * as yaml from "yaml";
-
 import {
   BasePromptTemplate,
   InputValues,
   BasePromptTemplateInput,
 } from "./index";
 import { TemplateFormat, checkValidTemplate, renderTemplate } from "./template";
-import { resolveTemplate, loadPrompt } from "./load";
+import {
+  resolveTemplateFromFile,
+  resolveConfigFromFile,
+  parseFileConfig,
+} from "../util";
 import { PromptTemplate, SerializedPromptTemplate } from "./prompt";
 import { SerializedOutputParser, BaseOutputParser } from "./parser";
 
@@ -140,50 +140,16 @@ export class FewShotPromptTemplate
   static async deserialize(
     data: SerializedFewShotTemplate
   ): Promise<FewShotPromptTemplate> {
-    const {
-      prefix,
-      prefix_path,
-      suffix,
-      suffix_path,
-      example_prompt,
-      example_prompt_path,
-    } = data;
-
-    if (example_prompt_path !== undefined && example_prompt !== undefined) {
-      throw new Error(
-        "Only one of example_prompt and example_prompt_path should be specified."
-      );
-    }
-
-    let examplePrompt: PromptTemplate;
-
-    if (example_prompt_path !== undefined) {
-      examplePrompt = (await loadPrompt(example_prompt_path)) as PromptTemplate;
-    } else if (example_prompt !== undefined) {
-      examplePrompt = await PromptTemplate.deserialize(example_prompt);
-    } else {
-      throw new Error(
-        "One of example_prompt and example_prompt_path should be specified."
-      );
-    }
+    const serializedPrompt = resolveConfigFromFile<
+      "example_prompt",
+      SerializedPromptTemplate
+    >("example_prompt", data);
+    const examplePrompt = await PromptTemplate.deserialize(serializedPrompt);
 
     let examples: Example[];
 
     if (typeof data.examples === "string") {
-      const content = fs.readFileSync(data.examples).toString();
-      switch (path.extname(data.examples)) {
-        case ".json":
-          examples = JSON.parse(content);
-          break;
-        case ".yml":
-        case ".yaml":
-          examples = yaml.parse(content);
-          break;
-        default:
-          throw new Error(
-            "Invalid file format. Only json or yaml formats are supported."
-          );
-      }
+      examples = parseFileConfig(data.examples, [".json", ".yml", ".yaml"]);
     } else if (Array.isArray(data.examples)) {
       examples = data.examples;
     } else {
@@ -199,8 +165,8 @@ export class FewShotPromptTemplate
       examplePrompt,
       examples,
       exampleSeparator: data.example_separator,
-      prefix: resolveTemplate("prefix", prefix, prefix_path),
-      suffix: resolveTemplate("suffix", suffix, suffix_path),
+      prefix: resolveTemplateFromFile("prefix", data),
+      suffix: resolveTemplateFromFile("suffix", data),
       templateFormat: data.template_format,
     });
   }
