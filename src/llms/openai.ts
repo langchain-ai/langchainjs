@@ -1,11 +1,22 @@
-import {
-  Configuration,
-  OpenAIApi,
+import type {
+  Configuration as ConfigurationT,
+  OpenAIApi as OpenAIApiT,
   CreateCompletionRequest,
   CreateCompletionResponseChoicesInner,
 } from "openai";
+
 import { backOff } from "exponential-backoff";
 import { BaseLLM, LLMResult, LLMCallbackManager } from ".";
+
+let Configuration: typeof ConfigurationT | null = null;
+let OpenAIApi: typeof OpenAIApiT | null = null;
+
+try {
+  // eslint-disable-next-line global-require
+  ({ Configuration, OpenAIApi } = require("openai"));
+} catch {
+  // ignore error
+}
 
 interface ModelParams {
   temperature: number;
@@ -63,7 +74,7 @@ export class OpenAI extends BaseLLM implements ModelParams {
 
   stop?: string[];
 
-  private client: OpenAIApi;
+  private client: OpenAIApiT;
 
   constructor(
     fields?: Partial<ModelParams> & {
@@ -78,6 +89,11 @@ export class OpenAI extends BaseLLM implements ModelParams {
     }
   ) {
     super(fields?.callbackManager, fields?.verbose);
+    if (Configuration === null || OpenAIApi === null) {
+      throw new Error(
+        "Please install openai as a dependency with, e.g. `npm install -S openai`"
+      );
+    }
 
     this.modelName = fields?.modelName ?? this.modelName;
     this.modelKwargs = fields?.modelKwargs ?? {};
