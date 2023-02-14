@@ -1,0 +1,97 @@
+{
+  "name": "langchain",
+  "version": "0.0.4",
+  "description": "Typescript bindings for langchain",
+  "main": "./dist/cjs/index.js",
+  "module": "./dist/esm/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist/"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/cjs/index.d.ts",
+      "require": "./dist/cjs/index.js",
+      "import": "./dist/esm/index.js"
+    },
+    "./agents": {
+      "types": "./dist/cjs/agents/index.d.ts",
+      "require": "./dist/cjs/agents/index.js",
+      "import": "./dist/esm/agents/index.js"
+    },
+    "./tools": {
+      "types": "./dist/cjs/agents/tools/index.d.ts",
+      "require": "./dist/cjs/agents/tools/index.js",
+      "import": "./dist/esm/agents/tools/index.js"
+    },
+    "./prompt": {
+      "types": "./dist/cjs/prompt/index.d.ts",
+      "require": "./dist/cjs/prompt/index.js",
+      "import": "./dist/esm/prompt/index.js"
+    },
+    "./chains": {
+      "types": "./dist/cjs/chains/index.d.ts",
+      "require": "./dist/cjs/chains/index.js",
+      "import": "./dist/esm/chains/index.js"
+    },
+    "./llms": {
+      "types": "./dist/cjs/llms/index.d.ts",
+      "require": "./dist/cjs/llms/index.js",
+      "import": "./dist/esm/llms/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc --declaration --outDir dist/esm --module esnext && tsc --declaration --outDir dist/cjs",
+    "lint": "eslint .",
+    "lint:fix": "yarn lint --fix",
+    "precommit": "tsc --noEmit && lint-staged",
+    "clean": "rm -rf dist/",
+    "prepack": "yarn build",
+    "test": "jest",
+    "prepare": "husky install"
+  },
+  "author": "Langchain",
+  "license": "MIT",
+  "devDependencies": {
+    "@babel/core": "^7.20.12",
+    "@babel/preset-env": "^7.20.2",
+    "@jest/globals": "^29.4.2",
+    "@tsconfig/recommended": "^1.0.2",
+    "@types/node-fetch": "2",
+    "@typescript-eslint/eslint-plugin": "^5.51.0",
+    "@typescript-eslint/parser": "^5.51.0",
+    "babel-jest": "^29.4.2",
+    "dotenv": "^16.0.3",
+    "eslint": "^8.33.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-config-prettier": "^8.6.0",
+    "eslint-plugin-import": "^2.27.5",
+    "eslint-plugin-prettier": "^4.2.1",
+    "husky": "^8.0.3",
+    "jest": "^29.4.2",
+    "lint-staged": "^13.1.1",
+    "openai": "^3.1.0",
+    "prettier": "^2.8.3",
+    "serpapi": "^1.1.0",
+    "ts-jest": "^29.0.5",
+    "typescript": "^4.9.5"
+  },
+  "dependencies": {
+    "exponential-backoff": "^3.1.0",
+    "node-fetch": "2",
+    "yaml": "^2.2.1"
+  },
+  "optionalDependencies": {
+    "openai": "^3.1.0",
+    "serpapi": "^1.1.0"
+  },
+  "lint-staged": {
+    "**/*.{ts,tsx}": [
+      "prettier --write --ignore-unknown",
+      "eslint --cache --fix"
+    ]
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

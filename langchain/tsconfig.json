@@ -6,7 +6,7 @@
     "moduleResolution": "node",
     "sourceMap": true,
     "allowSyntheticDefaultImports": true,
-    "baseUrl": "./src",
+    "baseUrl": "./",
     "declaration": true,
     "experimentalDecorators": true,
     "noImplicitReturns": true,
@@ -17,5 +17,5 @@
     "strictPropertyInitialization": false
   },
   "exclude": ["node_modules/", "dist/", "tests/"],
-  "include": ["./src"]
+  "include": ["./"]
 }
