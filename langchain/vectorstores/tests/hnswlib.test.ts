@@ -12,7 +12,7 @@ test("Test HNSWLib.fromTexts", async () => {
     [{ id: 2 }, { id: 1 }, { id: 3 }],
     new OpenAIEmbeddings()
   );
-  expect(vectorStore.index.getCurrentCount()).toBe(3);
+  expect(vectorStore.index?.getCurrentCount()).toBe(3);
 
   const resultOne = await vectorStore.similaritySearch("hello world", 1);
   expect(resultOne).toEqual([{ id: 2 }]);
@@ -27,7 +27,7 @@ test("Test HNSWLib.load and HNSWLib.save", async () => {
     [{ id: 2 }, { id: 1 }, { id: 3 }],
     new OpenAIEmbeddings()
   );
-  expect(vectorStore.index.getCurrentCount()).toBe(3);
+  expect(vectorStore.index?.getCurrentCount()).toBe(3);
 
   const resultOne = await vectorStore.similaritySearch("hello world", 1);
   expect(resultOne).toEqual([{ id: 2 }]);

@@ -24,8 +24,6 @@ interface ModelParams {
 export class OpenAIEmbeddings extends Embeddings implements ModelParams {
   modelName = "text-embedding-ada-002";
 
-  numDimensions = 1536;
-
   batchSize = 20;
 
   maxRetries = 6;
@@ -34,7 +32,6 @@ export class OpenAIEmbeddings extends Embeddings implements ModelParams {
 
   constructor(
     fields?: Partial<ModelParams> & {
-      numDimensions: number;
       batchSize?: number;
       maxRetries?: number;
       openAIApiKey?: string;
@@ -48,7 +45,6 @@ export class OpenAIEmbeddings extends Embeddings implements ModelParams {
     }
 
     this.modelName = fields?.modelName ?? this.modelName;
-    this.numDimensions = fields?.numDimensions ?? this.numDimensions;
     this.batchSize = fields?.batchSize ?? this.batchSize;
     const clientConfig = new Configuration({
       apiKey: fields?.openAIApiKey ?? process.env.OPENAI_API_KEY,

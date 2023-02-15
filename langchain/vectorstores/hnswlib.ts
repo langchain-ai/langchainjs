@@ -20,19 +20,19 @@ try {
 
 export interface HNSWLibArgs {
   space: SpaceName;
-  numDimensions: number;
+  numDimensions?: number;
 }
 
 export class HNSWLib extends SaveableVectorStore {
-  index: HierarchicalNSWT;
+  index?: HierarchicalNSWT;
 
   args: HNSWLibArgs;
 
   constructor(
-    index: HierarchicalNSWT,
     args: HNSWLibArgs,
     embeddings: Embeddings,
-    docstore: DocStore
+    docstore: DocStore,
+    index?: HierarchicalNSWT
   ) {
     super();
     this.index = index;
@@ -42,12 +42,32 @@ export class HNSWLib extends SaveableVectorStore {
   }
 
   async addVectors(vectors: number[][], metadatas: object[]) {
+    if (!this.index) {
+      if (this.args.numDimensions === undefined) {
+        this.args.numDimensions = vectors[0].length;
+      }
+      if (HierarchicalNSW === null) {
+        throw new Error(
+          "Please install hnswlib-node as a dependency with, e.g. `npm install -S hnswlib-node`"
+        );
+      }
+      this.index = new HierarchicalNSW(
+        this.args.space,
+        this.args.numDimensions
+      );
+      this.index.initIndex(vectors.length);
+    }
     // TODO here we could optionally normalise the vectors to unit length
     // so that dot product is equivalent to cosine similarity, like this
     // https://github.com/nmslib/hnswlib/issues/384#issuecomment-1155737730
     // While we only support OpenAI embeddings this isn't necessary
     if (vectors.length !== metadatas.length) {
       throw new Error(`Vectors and metadatas must have the same length`);
+    }
+    if (vectors[0].length !== this.args.numDimensions) {
+      throw new Error(
+        `Vectors must have the same length as the number of dimensions (${this.args.numDimensions})`
+      );
     }
     const capacity = this.index.getMaxElements();
     const needed = this.index.getCurrentCount() + vectors.length;
@@ -61,6 +81,11 @@ export class HNSWLib extends SaveableVectorStore {
   }
 
   async similaritySearchVectorWithScore(query: number[], k: number) {
+    if (!this.index) {
+      throw new Error(
+        "Vector store not initialised yet. Try calling `addTexts` first."
+      );
+    }
     const result = this.index.searchKnn(query, k);
     return result.neighbors.map(
       (docIndex, resultIndex) =>
@@ -72,6 +97,11 @@ export class HNSWLib extends SaveableVectorStore {
   }
 
   async save(directory: string) {
+    if (!this.index) {
+      throw new Error(
+        "Vector store not initialised yet. Try calling `addTexts` first."
+      );
+    }
     await fs.mkdir(directory, { recursive: true });
     await Promise.all([
       this.index.writeIndex(path.join(directory, "hnswlib.index")),
@@ -103,7 +133,7 @@ export class HNSWLib extends SaveableVectorStore {
       index.readIndex(path.join(directory, "hnswlib.index")),
     ]);
 
-    return new HNSWLib(index, args, embeddings, docstore);
+    return new HNSWLib(args, embeddings, docstore, index);
   }
 
   static async fromTexts(
@@ -118,11 +148,8 @@ export class HNSWLib extends SaveableVectorStore {
     }
     const args: HNSWLibArgs = {
       space: "ip", // dot product
-      numDimensions: embeddings.numDimensions,
     };
-    const index = new HierarchicalNSW(args.space, args.numDimensions);
-    index.initIndex(texts.length);
-    const instance = new this(index, args, embeddings, {});
+    const instance = new this(args, embeddings, {});
     await instance.addTexts(texts, metadatas);
     return instance;
   }
