@@ -16,7 +16,8 @@
     "test": "turbo run test",
     "publish": "turbo run build lint test && yarn workspace langchain npm publish",
     "example": "turbo run start --filter langchain-examples --",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "postinstall": "node ./scripts/postinstall.js"
   },
   "author": "Langchain",
   "license": "MIT",
