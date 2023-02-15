@@ -72,7 +72,7 @@
     "lint-staged": "^13.1.1",
     "openai": "^3.1.0",
     "prettier": "^2.8.3",
-    "serpapi": "^1.1.0",
+    "serpapi": "^1.1.1",
     "ts-jest": "^29.0.5",
     "typescript": "^4.9.5"
   },
@@ -83,7 +83,7 @@
   },
   "optionalDependencies": {
     "openai": "^3.1.0",
-    "serpapi": "^1.1.0"
+    "serpapi": "^1.1.1"
   },
   "lint-staged": {
     "**/*.{ts,tsx}": [

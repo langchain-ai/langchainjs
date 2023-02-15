@@ -4837,7 +4837,7 @@ __metadata:
     node-fetch: 2
     openai: ^3.1.0
     prettier: ^2.8.3
-    serpapi: ^1.1.0
+    serpapi: ^1.1.1
     ts-jest: ^29.0.5
     typescript: ^4.9.5
     yaml: ^2.2.1
@@ -5958,6 +5958,15 @@ __metadata:
     domexception: ^4.0.0
     undici: ^5.12.0
   checksum: 5dba2a39ccc5414f51422d64c203da6be446971ff7d9ce6fcd48f6c2b5c9ae5cb0447414fa815e73481bbb6a97ae793eb19adbe84f0ee49c89ed129953e3d458
+  languageName: node
+  linkType: hard
+
+"serpapi@npm:^1.1.1":
+  version: 1.1.1
+  resolution: "serpapi@npm:1.1.1"
+  dependencies:
+    undici: ^5.12.0
+  checksum: d96c90bd669329828fc50dbf39c37551c4761da81f0bdf44b7da709dc2f867e082c8c48020b38ad3a69b60aae710339be3cec89371a549778bda0e7ec9841eba
   languageName: node
   linkType: hard
 
