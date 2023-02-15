@@ -2,6 +2,7 @@
   "extends": "@tsconfig/recommended",
   "compilerOptions": {
     "outDir": "dist",
+    "target": "ES2018",
     "lib": ["ESNext", "DOM"],
     "moduleResolution": "node",
     "sourceMap": true,
