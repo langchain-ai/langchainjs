@@ -2450,6 +2450,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"bindings@npm:^1.5.0":
+  version: 1.5.0
+  resolution: "bindings@npm:1.5.0"
+  dependencies:
+    file-uri-to-path: 1.0.0
+  checksum: 65b6b48095717c2e6105a021a7da4ea435aa8d3d3cd085cb9e85bcb6e5773cf318c4745c3f7c504412855940b585bdf9b918236612a1c7a7942491de176f1ae7
+  languageName: node
+  linkType: hard
+
 "brace-expansion@npm:^1.1.7":
   version: 1.1.11
   resolution: "brace-expansion@npm:1.1.11"
@@ -3509,6 +3518,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"file-uri-to-path@npm:1.0.0":
+  version: 1.0.0
+  resolution: "file-uri-to-path@npm:1.0.0"
+  checksum: b648580bdd893a008c92c7ecc96c3ee57a5e7b6c4c18a9a09b44fb5d36d79146f8e442578bc0e173dc027adf3987e254ba1dfd6e3ec998b7c282873010502144
+  languageName: node
+  linkType: hard
+
 "fill-range@npm:^7.0.1":
   version: 7.0.1
   resolution: "fill-range@npm:7.0.1"
@@ -3895,6 +3911,17 @@ __metadata:
   dependencies:
     function-bind: ^1.1.1
   checksum: b9ad53d53be4af90ce5d1c38331e712522417d017d5ef1ebd0507e07c2fbad8686fffb8e12ddecd4c39ca9b9b47431afbb975b8abf7f3c3b82c98e9aad052792
+  languageName: node
+  linkType: hard
+
+"hnswlib-node@npm:^1.2.0":
+  version: 1.2.0
+  resolution: "hnswlib-node@npm:1.2.0"
+  dependencies:
+    bindings: ^1.5.0
+    node-addon-api: ^5.0.0
+    node-gyp: latest
+  checksum: 4eee3bd5e3b3ed46e6f21267aec157271b43f5105e59180f0b5212df703acbe19ba17b8e4a1f0eb1f9841b07277976abe0b86c528297489bc2f9039fbf954049
   languageName: node
   linkType: hard
 
@@ -4914,6 +4941,7 @@ __metadata:
     eslint-plugin-prettier: ^4.2.1
     exponential-backoff: ^3.1.0
     expr-eval: ^2.0.2
+    hnswlib-node: ^1.2.0
     husky: ^8.0.3
     jest: ^29.4.2
     lint-staged: ^13.1.1
@@ -4926,6 +4954,8 @@ __metadata:
     typescript: ^4.9.5
     yaml: ^2.2.1
   dependenciesMeta:
+    hnswlib-node:
+      optional: true
     openai:
       optional: true
     serpapi:
@@ -5330,6 +5360,15 @@ __metadata:
   version: 0.6.3
   resolution: "negotiator@npm:0.6.3"
   checksum: b8ffeb1e262eff7968fc90a2b6767b04cfd9842582a9d0ece0af7049537266e7b2506dfb1d107a32f06dd849ab2aea834d5830f7f4d0e5cb7d36e1ae55d021d9
+  languageName: node
+  linkType: hard
+
+"node-addon-api@npm:^5.0.0":
+  version: 5.1.0
+  resolution: "node-addon-api@npm:5.1.0"
+  dependencies:
+    node-gyp: latest
+  checksum: 2508bd2d2981945406243a7bd31362fc7af8b70b8b4d65f869c61731800058fb818cc2fd36c8eac714ddd0e568cc85becf5e165cebbdf7b5024d5151bbc75ea1
   languageName: node
   linkType: hard
 
