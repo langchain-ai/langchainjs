@@ -78,6 +78,7 @@
   },
   "dependencies": {
     "exponential-backoff": "^3.1.0",
+    "expr-eval": "^2.0.2",
     "node-fetch": "2",
     "yaml": "^2.2.1"
   },
