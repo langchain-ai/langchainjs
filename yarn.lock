@@ -4954,6 +4954,8 @@ __metadata:
     typescript: ^4.9.5
     yaml: ^2.2.1
   dependenciesMeta:
+    hnswlib-node:
+      optional: true
     openai:
       optional: true
     serpapi:

@@ -80,11 +80,11 @@
   "dependencies": {
     "exponential-backoff": "^3.1.0",
     "expr-eval": "^2.0.2",
-    "hnswlib-node": "^1.2.0",
     "node-fetch": "2",
     "yaml": "^2.2.1"
   },
   "optionalDependencies": {
+    "hnswlib-node": "^1.2.0",
     "openai": "^3.1.0",
     "serpapi": "^1.1.1"
   },
