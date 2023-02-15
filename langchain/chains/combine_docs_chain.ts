@@ -48,7 +48,7 @@ export class StuffDocumentsChain extends BaseChain implements StuffDocumentsChai
     const text = texts.join("\n\n");
     delete values[this.inputKey];
     values[this.documentVariableName] = text;
-    const result = this.llmChain.call(values);
+    const result = await this.llmChain.call(values);
     return result;
   }
 
