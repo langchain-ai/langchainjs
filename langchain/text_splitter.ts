@@ -8,9 +8,9 @@ interface TextSplitterParams {
 }
 
 abstract class TextSplitter implements TextSplitterParams {
-  chunkSize: number = 1000;
+  chunkSize = 1000;
 
-  chunkOverlap: number = 200;
+  chunkOverlap = 200;
 
   constructor(fields?: Partial<TextSplitterParams>) {
     this.chunkSize = fields?.chunkSize ?? this.chunkSize;
@@ -97,7 +97,7 @@ export interface CharacterTextSplitterParams extends TextSplitterParams {
 }
 
 export class CharacterTextSplitter extends TextSplitter implements CharacterTextSplitterParams{
-  separator: string = "\n\n";
+  separator = "\n\n";
 
   constructor(fields?: Partial<CharacterTextSplitterParams>) {
     super(fields);
