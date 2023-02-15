@@ -48,7 +48,9 @@ export class AgentExecutor extends BaseChain {
 
   async _call(inputs: ChainValues): Promise<ChainValues> {
     this.agent.prepareForNewCall();
-    const toolsByName = Object.fromEntries(this.tools.map((t) => [t.name, t]));
+    const toolsByName = Object.fromEntries(
+      this.tools.map((t) => [t.name.toLowerCase(), t])
+    );
     const steps: AgentStep[] = [];
     let iterations = 0;
 
@@ -66,7 +68,7 @@ export class AgentExecutor extends BaseChain {
         return getOutput(action);
       }
 
-      const tool = toolsByName[action.tool];
+      const tool = toolsByName[action.tool.toLowerCase()];
       const observation = tool
         ? await tool.call(action.toolInput)
         : `${action.tool} is not a valid tool, try another one.`;
