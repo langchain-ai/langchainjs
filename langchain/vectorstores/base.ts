@@ -8,7 +8,7 @@ export interface DocStore {
 export abstract class VectorStore {
   embeddings: Embeddings;
 
-  docstore: { [key: number]: object };
+  docstore: DocStore;
 
   abstract addVectors(vectors: number[][], metadatas: object[]): Promise<void>;
 

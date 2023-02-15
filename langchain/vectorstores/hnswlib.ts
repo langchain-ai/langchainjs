@@ -7,7 +7,7 @@ import type {
 
 import { Embeddings } from "../embeddings/base";
 
-import { SaveableVectorStore } from "./base";
+import { DocStore, SaveableVectorStore } from "./base";
 
 let HierarchicalNSW: typeof HierarchicalNSWT | null = null;
 
@@ -32,7 +32,7 @@ export class HNSWLib extends SaveableVectorStore {
     index: HierarchicalNSWT,
     args: HNSWLibArgs,
     embeddings: Embeddings,
-    docstore: { [key: number]: object }
+    docstore: DocStore
   ) {
     super();
     this.index = index;
