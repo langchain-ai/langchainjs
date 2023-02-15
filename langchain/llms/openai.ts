@@ -6,6 +6,7 @@ import type {
 } from "openai";
 
 import { backOff } from "exponential-backoff";
+import { chunkArray } from "../util";
 import { BaseLLM, LLMResult, LLMCallbackManager } from ".";
 
 let Configuration: typeof ConfigurationT | null = null;
@@ -37,15 +38,6 @@ type TokenUsage = {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Kwargs = Record<string, any>;
-
-const chunkArray = <T>(arr: T[], chunkSize: number) =>
-  arr.reduce((chunks, elem, index) => {
-    const chunkIndex = Math.floor(index / chunkSize);
-    const chunk = chunks[chunkIndex] || [];
-    // eslint-disable-next-line no-param-reassign
-    chunks[chunkIndex] = chunk.concat([elem]);
-    return chunks;
-  }, [] as T[][]);
 
 export class OpenAI extends BaseLLM implements ModelParams {
   temperature = 0.7;
