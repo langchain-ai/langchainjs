@@ -7,7 +7,7 @@ import { Calculator } from "../tools/calculator";
 
 test("Run agent from hub", async () => {
   const model = new OpenAI({});
-  const tools: Tool[] = [SerpAPI(), Calculator];
+  const tools: Tool[] = [new SerpAPI(), new Calculator()];
   const agent = await loadAgent(
     "lc://agents/zero-shot-react-description/agent.json",
     { llm: model, tools }
