@@ -4,7 +4,7 @@ import { CharacterTextSplitter, RecursiveCharacterTextSplitter } from './text_sp
 
 test('Test splitting by character count.', () => {
   const text = 'foo bar baz 123';
-  const splitter = new CharacterTextSplitter(separator: ' ', chunkSize: 7, chunkOverlap: 3 });
+  const splitter = new CharacterTextSplitter({separator: ' ', chunkSize: 7, chunkOverlap: 3 });
   const output = splitter.splitText(text);
   const expectedOutput = ['foo bar', 'bar baz', 'baz 123'];
   expect(output).toEqual(expectedOutput);
@@ -12,7 +12,7 @@ test('Test splitting by character count.', () => {
 
 test('Test splitting by character count doesn\'t create empty documents.', () => {
   const text = 'foo  bar';
-  const splitter = new CharacterTextSplitter(separator: ' ', chunkSize: 2, chunkOverlap: 0 });
+  const splitter = new CharacterTextSplitter({separator: ' ', chunkSize: 2, chunkOverlap: 0 });
   const output = splitter.splitText(text);
   const expectedOutput = ['foo', 'bar'];
   expect(output).toEqual(expectedOutput);
@@ -20,7 +20,7 @@ test('Test splitting by character count doesn\'t create empty documents.', () =>
 
 test('Test splitting by character count on long words.', () => {
   const text = 'foo bar baz a a';
-  const splitter = new CharacterTextSplitter(separator: ' ', chunkSize: 3, chunkOverlap: 1 });
+  const splitter = new CharacterTextSplitter({separator: ' ', chunkSize: 3, chunkOverlap: 1 });
   const output = splitter.splitText(text);
   const expectedOutput = ['foo', 'bar', 'baz', 'a a'];
   expect(output).toEqual(expectedOutput);
@@ -28,7 +28,7 @@ test('Test splitting by character count on long words.', () => {
 
 test('Test splitting by character count when shorter words are first.', () => {
   const text = 'a a foo bar baz';
-  const splitter = new CharacterTextSplitter(separator: ' ', chunkSize: 3, chunkOverlap: 1 });
+  const splitter = new CharacterTextSplitter({separator: ' ', chunkSize: 3, chunkOverlap: 1 });
   const output = splitter.splitText(text);
   const expectedOutput = ['a a', 'foo', 'bar', 'baz'];
   expect(output).toEqual(expectedOutput);
@@ -36,7 +36,7 @@ test('Test splitting by character count when shorter words are first.', () => {
 
 test('Test splitting by characters when splits not found easily.', () => {
   const text = 'foo bar baz 123';
-  const splitter = new CharacterTextSplitter(separator: ' ', chunkSize: 1, chunkOverlap: 1 });
+  const splitter = new CharacterTextSplitter({separator: ' ', chunkSize: 1, chunkOverlap: 0 });
   const output = splitter.splitText(text);
   const expectedOutput = ['foo', 'bar', 'baz', '123'];
   expect(output).toEqual(expectedOutput);
@@ -44,21 +44,21 @@ test('Test splitting by characters when splits not found easily.', () => {
 
 test('Test invalid arguments.', () => {
   expect(() => {
-    new CharacterTextSplitter(chunkSize: 2, chunkOverlap: 4 });
+    new CharacterTextSplitter({chunkSize: 2, chunkOverlap: 4 });
   }).toThrow();
 });
 
 test('Test create documents method.', () => {
   const texts = ['foo bar', 'baz'];
-  const splitter = new CharacterTextSplitter(separator: ' ', chunkSize: 3, chunkOverlap: 0 });
+  const splitter = new CharacterTextSplitter({separator: ' ', chunkSize: 3, chunkOverlap: 0 });
   const docs = splitter.createDocuments(texts);
-  const expectedDocs = [    new Document(pageContent: 'foo' }),    new Document(pageContent: 'bar' }),    new Document(pageContent: 'baz' }),  ];
+  const expectedDocs = [    new Document({pageContent: 'foo' }),    new Document({pageContent: 'bar' }),    new Document({pageContent: 'baz' }),  ];
   expect(docs).toEqual(expectedDocs);
 });
 
 test('Test create documents with metadata method.', () => {
   const texts = ['foo bar', 'baz'];
-  const splitter = new CharacterTextSplitter(separator: ' ', chunkSize: 3, chunkOverlap: 0 });
+  const splitter = new CharacterTextSplitter({separator: ' ', chunkSize: 3, chunkOverlap: 0 });
   const docs = splitter.createDocuments(texts, [ { source: '1' }, { source: '2' }]);
   const expectedDocs = [    new Document({ pageContent: 'foo', metadata: { source: '1' } }),    new Document({ pageContent: 'bar', metadata: { source: '1' } }),    new Document({ pageContent: 'baz', metadata: { source: '2' } }),  ];
   expect(docs).toEqual(expectedDocs);
@@ -66,7 +66,7 @@ test('Test create documents with metadata method.', () => {
 
 test('Test iterative text splitter.', () => {
     const text = `Hi.\n\nI'm Harrison.\n\nHow? Are? You?\nOkay then f f f f.
-This is a weird text to write, but gotta test the splittingggg some how.
+This is a weird text to write, but gotta test the splittingggg some how.\n\n
 Bye!\n\n-H.`;
     const splitter = new RecursiveCharacterTextSplitter({ chunkSize: 10, chunkOverlap: 1 });
     const output = splitter.splitText(text);

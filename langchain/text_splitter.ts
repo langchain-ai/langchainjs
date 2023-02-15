@@ -1,35 +1,25 @@
 import { Document } from "./document";
 
-interface TextSplitterInterface {
-  splitText(text: string): string[];
-  createDocuments(
-    texts: string[],
-    metadatas?: Record<string, any>[]
-  ): Document[];
-  splitDocuments(documents: Document[]): Document[];
+
+interface TextSplitterParams {
+  chunkSize: number;
+
+  chunkOverlap: number;
 }
 
-abstract class TextSplitter implements TextSplitterInterface {
-  protected readonly chunkSize: number;
+abstract class TextSplitter implements TextSplitterParams {
+  chunkSize: number = 1000;
 
-  protected readonly chunkOverlap: number;
+  chunkOverlap: number = 200;
 
-  protected readonly lengthFunction: (s: string) => number;
-
-  constructor(
-    chunkSize = 4000,
-    chunkOverlap = 200,
-    lengthFunction: (s: string) => number = (s) => s.length
-  ) {
-    if (chunkOverlap > chunkSize) {
+  constructor(fields?: Partial<TextSplitterParams>) {
+    this.chunkSize = fields?.chunkSize ?? this.chunkSize;
+    this.chunkOverlap = fields?.chunkOverlap ?? this.chunkOverlap;
+    if (this.chunkOverlap >= this.chunkSize) {
       throw new Error(
-        `Got a larger chunk overlap (${chunkOverlap}) than chunk size +
-(${chunkSize}), should be smaller.`
+        "Cannot have chunkOverlap >= chunkSize"
       );
     }
-    this.chunkSize = chunkSize;
-    this.chunkOverlap = chunkOverlap;
-    this.lengthFunction = lengthFunction;
   }
 
   abstract splitText(text: string): string[];
@@ -44,7 +34,7 @@ abstract class TextSplitter implements TextSplitterInterface {
     for (let i = 0; i < texts.length; i += 1) {
       const text = texts[i];
       for (const chunk of this.splitText(text)) {
-        documents.push(new Document(chunk, "", 0, _metadatas[i]));
+        documents.push(new Document({pageContent: chunk, metadata: _metadatas[i]}));
       }
     }
     return documents;
@@ -66,7 +56,7 @@ abstract class TextSplitter implements TextSplitterInterface {
     const currentDoc: string[] = [];
     let total = 0;
     for (const d of splits) {
-      const _len = this.lengthFunction(d);
+      const _len = d.length;
       if (total + _len >= this.chunkSize) {
         if (total > this.chunkSize) {
           console.warn(
@@ -86,7 +76,7 @@ which is longer than the specified ${this.chunkSize}`
             total > this.chunkOverlap ||
             (total + _len > this.chunkSize && total > 0)
           ) {
-            total -= this.lengthFunction(currentDoc[0]);
+            total -= currentDoc[0].length;
             currentDoc.shift();
           }
         }
@@ -102,12 +92,16 @@ which is longer than the specified ${this.chunkSize}`
   }
 }
 
-export class CharacterTextSplitter extends TextSplitter {
-  private readonly separator: string;
+export interface CharacterTextSplitterParams extends TextSplitterParams {
+  separator: string;
+}
 
-  constructor(separator = "\n\n", kwargs: any = {}) {
-    super(kwargs);
-    this.separator = separator;
+export class CharacterTextSplitter extends TextSplitter implements CharacterTextSplitterParams{
+  separator: string = "\n\n";
+
+  constructor(fields?: Partial<CharacterTextSplitterParams>) {
+    super(fields);
+    this.separator = fields?.separator ?? this.separator;
   }
 
   public splitText(text: string): string[] {
@@ -122,20 +116,24 @@ export class CharacterTextSplitter extends TextSplitter {
   }
 }
 
-export class RecursiveCharacterTextSplitter extends TextSplitter {
-  private _separators: string[];
+export interface RecursiveCharacterTextSplitterParams extends TextSplitterParams {
+  separators: string[];
+}
 
-  constructor(separators: string[] = ["\n\n", "\n", " ", ""], ...kwargs: any) {
-    super(kwargs);
-    this._separators = separators;
+export class RecursiveCharacterTextSplitter extends TextSplitter implements RecursiveCharacterTextSplitterParams {
+  separators: string[] = ["\n\n", "\n", " ", ""];
+
+  constructor(fields?: Partial<RecursiveCharacterTextSplitterParams>) {
+    super(fields);
+    this.separators = fields?.separators ?? this.separators;
   }
 
   splitText(text: string): string[] {
     const finalChunks: string[] = [];
 
     // Get appropriate separator to use
-    let separator: string = this._separators[this._separators.length - 1];
-    for (const s of this._separators) {
+    let separator: string = this.separators[this.separators.length - 1];
+    for (const s of this.separators) {
       if (s === "") {
         separator = s;
         break;
