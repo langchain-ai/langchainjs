@@ -42,6 +42,9 @@ export class HNSWLib extends SaveableVectorStore {
   }
 
   async addVectors(vectors: number[][], metadatas: object[]) {
+    if (vectors.length === 0) {
+      return;
+    }
     if (!this.index) {
       if (this.args.numDimensions === undefined) {
         this.args.numDimensions = vectors[0].length;
