@@ -42,6 +42,10 @@ export class HNSWLib extends SaveableVectorStore {
   }
 
   async addVectors(vectors: number[][], metadatas: object[]) {
+    // TODO here we could optionally normalise the vectors to unit length
+    // so that dot product is equivalent to cosine similarity, like this
+    // https://github.com/nmslib/hnswlib/issues/384#issuecomment-1155737730
+    // While we only support OpenAI embeddings this isn't necessary
     if (vectors.length !== metadatas.length) {
       throw new Error(`Vectors and metadatas must have the same length`);
     }
@@ -113,7 +117,7 @@ export class HNSWLib extends SaveableVectorStore {
       );
     }
     const args: HNSWLibArgs = {
-      space: "ip",
+      space: "ip", // dot product
       numDimensions: embeddings.numDimensions,
     };
     const index = new HierarchicalNSW(args.space, args.numDimensions);
