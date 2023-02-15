@@ -32,6 +32,7 @@ export class OpenAIEmbeddings extends Embeddings implements ModelParams {
 
   constructor(
     fields?: Partial<ModelParams> & {
+      verbose?: boolean;
       batchSize?: number;
       maxRetries?: number;
       openAIApiKey?: string;
