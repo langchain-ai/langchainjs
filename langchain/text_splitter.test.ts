@@ -90,4 +90,4 @@ Bye!\n\n-H.`;
         "Bye!\n\n-H.",
     ];
     expect(output).toEqual(expectedOutput);
-})
+});
