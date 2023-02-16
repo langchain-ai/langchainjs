@@ -66,10 +66,16 @@ const config = {
         },
         items: [
           {
+            type: 'doc', // 'api' is the 'out' directory
+            docId: 'getting-started',
+            position: 'left',
+            label: 'Docs',
+          },
+          {
             to: 'docs/api/',
             activeBasePath: 'docs',
             position: 'left',
-            label: 'Docs',
+            label: 'API',
           },
           // Please keep GitHub link to the right for consistency.
           {
@@ -87,7 +93,7 @@ const config = {
             items: [
               {
                 label: 'Get started',
-                to: 'docs/api'
+                to: 'docs/api',
               },
             ],
           },

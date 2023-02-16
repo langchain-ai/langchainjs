@@ -34,8 +34,11 @@
       "./vectorstores",
       "./text_splitter.ts"
     ],
+    "excludePrivate": true,
+    "excludeInternal": true,
     "excludeExternals": true,
     "internalModule": "internal",
+    "readme": "none",
     "out": "docs"
   }
 }
