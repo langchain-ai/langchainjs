@@ -22,13 +22,22 @@ export type SerializedLLM = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 } & Record<string, any>;
 
+/**
+ * LLM Wrapper. Provides an {@link call} (an {@link generate}) function that takes in a prompt (or prompts) and returns a string.
+ */
 export abstract class BaseLLM {
+  /**
+   * The name of the LLM class
+   */
   name: string;
 
   cache?: boolean;
 
   callbackManager: LLMCallbackManager;
 
+  /**
+   * Whether to print out response text.
+   */
   verbose?: boolean = false;
 
   constructor(callbackManager?: LLMCallbackManager, verbose?: boolean) {
@@ -36,8 +45,12 @@ export abstract class BaseLLM {
     this.verbose = verbose ?? getVerbosity();
   }
 
+  /**
+   * Run the LLM on the given prompts and input.
+   */
   abstract _generate(prompts: string[], stop?: string[]): Promise<LLMResult>;
 
+  /** @ignore */
   async _generateUncached(
     prompts: string[],
     stop?: string[]
@@ -59,6 +72,9 @@ export abstract class BaseLLM {
     return output;
   }
 
+  /**
+   * Run the LLM on the given propmts an input, handling caching.
+   */
   async generate(prompts: string[], stop?: string[]): Promise<LLMResult> {
     if (!Array.isArray(prompts)) {
       throw new Error("Argument 'prompts' is expected to be a string[]");
@@ -102,18 +118,30 @@ export abstract class BaseLLM {
     return { generations, llmOutput } as LLMResult;
   }
 
+  /**
+   * Convenience wrapper for {@link generate} that takes in a single string prompt and returns a single string output.
+   */
   async call(prompt: string, stop?: string[]) {
     const { generations } = await this.generate([prompt], stop);
     return generations[0][0].text;
   }
 
+  /**
+   * Get the identifying parameters of the LLM.
+   */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   _identifyingParams(): Record<string, any> {
     return {};
   }
 
+  /**
+   * Return the string type key uniquely identifying this class of LLM.
+   */
   abstract _llmType(): string;
 
+  /**
+   * Return a json-like object representing this LLM.
+   */
   serialize(): SerializedLLM {
     return {
       ...this._identifyingParams(),
@@ -121,6 +149,9 @@ export abstract class BaseLLM {
     };
   }
 
+  /**
+   * Load an LLM from a json-like object describing it.
+   */
   static async deserialize(data: SerializedLLM): Promise<BaseLLM> {
     const { _type, ...rest } = data;
     const Cls = {
@@ -135,7 +166,17 @@ export abstract class BaseLLM {
   // TODO(sean): save to disk, get_num_tokens
 }
 
+/**
+ * LLM class that provides a simpler interface to subclass than {@link BaseLLM}.
+ *
+ * Requires only implementing a simpler {@link _call} method instead of {@link _generate}.
+ *
+ * @augments BaseLLM
+ */
 export abstract class LLM extends BaseLLM {
+  /**
+   * Run the LLM on the given prompt and input.
+   */
   abstract _call(prompt: string, stop?: string[]): Promise<string>;
 
   async _generate(prompts: string[], stop?: string[]): Promise<LLMResult> {
