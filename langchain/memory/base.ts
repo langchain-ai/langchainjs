@@ -8,5 +8,8 @@ export type MemoryVariables = Record<string, any>;
 export abstract class BaseMemory {
   abstract loadMemoryVariables(values: InputValues): Promise<MemoryVariables>;
 
-  abstract saveContext(inputValues: InputValues, OutputValues: OutputValues): void;
+  abstract saveContext(
+    inputValues: InputValues,
+    OutputValues: Promise<OutputValues>
+  ): Promise<void>;
 }
