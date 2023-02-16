@@ -2,6 +2,11 @@ import { getJson, GoogleParameters } from "serpapi";
 
 import { Tool } from "./base";
 
+/**
+ * Wrapper around SerpAPI.
+ *
+ * To use, you should have the `serpapi` package installed and the SERPAPI_API_KEY environment variable set.
+ */
 export class SerpAPI extends Tool {
   protected key: string;
 
@@ -26,6 +31,9 @@ export class SerpAPI extends Tool {
 
   name = "search";
 
+  /**
+   * Run query through SerpAPI and parse result
+   */
   async call(input: string) {
     const res = await getJson("google", {
       ...this.params,

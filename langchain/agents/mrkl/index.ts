@@ -27,13 +27,21 @@ export type SerializedZeroShotAgent = SerializedAgentT<
 >;
 
 type CreatePromptArgs = {
+  /** String to put after the list of tools. */
   suffix?: string;
+  /** String to put before the list of tools. */
   prefix?: string;
+  /** List of input variables the final prompt will expect. */
   inputVariables?: string[];
 };
 
 type ZeroShotAgentInput = AgentInput;
 
+/**
+ * Agent for the MRKL chain.
+ * @augments Agent
+ * @augments StaticAgent
+ */
 @(staticImplements<StaticAgent>)
 export class ZeroShotAgent extends Agent {
   constructor(input: ZeroShotAgentInput) {
@@ -62,6 +70,15 @@ export class ZeroShotAgent extends Agent {
     }
   }
 
+  /**
+   * Create prompt in the style of the zero shot agent.
+   *
+   * @param tools - List of tools the agent will have access to, used to format the prompt.
+   * @param args - Arguments to create the prompt with.
+   * @param args.suffix - String to put after the list of tools.
+   * @param args.prefix - String to put before the list of tools.
+   * @param args.inputVariables - List of input variables the final prompt will expect.
+   */
   static createPrompt(tools: Tool[], args?: CreatePromptArgs) {
     const {
       prefix = PREFIX,

@@ -8,41 +8,10 @@
   "files": [
     "dist/"
   ],
-  "exports": {
-    ".": {
-      "types": "./dist/cjs/index.d.ts",
-      "require": "./dist/cjs/index.js",
-      "import": "./dist/esm/index.js"
-    },
-    "./agents": {
-      "types": "./dist/cjs/agents/index.d.ts",
-      "require": "./dist/cjs/agents/index.js",
-      "import": "./dist/esm/agents/index.js"
-    },
-    "./tools": {
-      "types": "./dist/cjs/agents/tools/index.d.ts",
-      "require": "./dist/cjs/agents/tools/index.js",
-      "import": "./dist/esm/agents/tools/index.js"
-    },
-    "./prompt": {
-      "types": "./dist/cjs/prompt/index.d.ts",
-      "require": "./dist/cjs/prompt/index.js",
-      "import": "./dist/esm/prompt/index.js"
-    },
-    "./chains": {
-      "types": "./dist/cjs/chains/index.d.ts",
-      "require": "./dist/cjs/chains/index.js",
-      "import": "./dist/esm/chains/index.js"
-    },
-    "./llms": {
-      "types": "./dist/cjs/llms/index.d.ts",
-      "require": "./dist/cjs/llms/index.js",
-      "import": "./dist/esm/llms/index.js"
-    }
-  },
   "scripts": {
     "build": "tsc --declaration --outDir dist/esm --module esnext && tsc --declaration --outDir dist/cjs",
     "lint": "eslint .",
+    "doc": "typedoc",
     "lint:fix": "yarn lint --fix",
     "precommit": "tsc --noEmit && lint-staged",
     "clean": "rm -rf dist/",
@@ -75,6 +44,8 @@
     "serpapi": "^1.1.1",
     "ts-jest": "^29.0.5",
     "ts-node": "^10.9.1",
+    "typedoc": "^0.23.25",
+    "typedoc-plugin-missing-exports": "^1.0.0",
     "typescript": "^4.9.5"
   },
   "dependencies": {
@@ -93,6 +64,53 @@
       "prettier --write --ignore-unknown",
       "eslint --cache --fix"
     ]
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/cjs/index.d.ts",
+      "require": "./dist/cjs/index.js",
+      "import": "./dist/esm/index.js"
+    },
+    "./agents": {
+      "types": "./dist/cjs/agents/index.d.ts",
+      "require": "./dist/cjs/agents/index.js",
+      "import": "./dist/esm/agents/index.js"
+    },
+    "./tools": {
+      "types": "./dist/cjs/agents/tools/index.d.ts",
+      "require": "./dist/cjs/agents/tools/index.js",
+      "import": "./dist/esm/agents/tools/index.js"
+    },
+    "./prompt": {
+      "types": "./dist/cjs/prompt/index.d.ts",
+      "require": "./dist/cjs/prompt/index.js",
+      "import": "./dist/esm/prompt/index.js"
+    },
+    "./chains": {
+      "types": "./dist/cjs/chains/index.d.ts",
+      "require": "./dist/cjs/chains/index.js",
+      "import": "./dist/esm/chains/index.js"
+    },
+    "./llms": {
+      "types": "./dist/cjs/llms/index.d.ts",
+      "require": "./dist/cjs/llms/index.js",
+      "import": "./dist/esm/llms/index.js"
+    },
+    "./embeddings": {
+      "types": "./dist/cjs/embeddings/index.d.ts",
+      "require": "./dist/cjs/embeddings/index.js",
+      "import": "./dist/esm/embeddings/index.js"
+    },
+    "./vectorstores": {
+      "types": "./dist/cjs/vectorstores/index.d.ts",
+      "require": "./dist/cjs/vectorstores/index.js",
+      "import": "./dist/esm/vectorstores/index.js"
+    },
+    "./text_splitter": {
+      "types": "./dist/cjs/text_splitter.d.ts",
+      "require": "./dist/cjs/text_splitter.js",
+      "import": "./dist/esm/text_splitter.js"
+    }
   },
   "publishConfig": {
     "access": "public"

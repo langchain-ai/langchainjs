@@ -6,8 +6,12 @@ import { BasePromptTemplate, SerializedBasePromptTemplate } from "../prompt";
 import { resolveConfigFromFile } from "../util";
 
 export interface LLMChainInput {
+  /** Prompt object to use */
   prompt: BasePromptTemplate;
+  /** LLM Wrapper to use */
   llm: BaseLLM;
+
+  /** @ignore */
   outputKey: string;
 }
 
@@ -19,6 +23,18 @@ export type SerializedLLMChain = {
   prompt_path?: string;
 };
 
+/**
+ * Chain to run queries against LLMs.
+ * @augments BaseChain
+ * @augments LLMChainInput
+ *
+ * @example
+ * ```ts
+ * import { LLMChain, OpenAI, PromptTemplate } from "langchain";
+ * const prompt = PromptTemplate.fromTemplate("Tell me a {adjective} joke");
+ * const llm = LLMChain({ llm: new OpenAI(), prompt });
+ * ```
+ */
 export class LLMChain extends BaseChain implements LLMChainInput {
   prompt: BasePromptTemplate;
 
@@ -48,6 +64,17 @@ export class LLMChain extends BaseChain implements LLMChainInput {
     return result;
   }
 
+  /**
+   * Format prompt with values and pass to LLM
+   *
+   * @param values - keys to pass to prompt template
+   * @returns Completion from LLM.
+   *
+   * @example
+   * ```ts
+   * llm.predict({ adjective: "funny" })
+   * ```
+   */
   async predict(values: ChainValues): Promise<string> {
     const output = await this.call(values);
     return output[this.outputKey];

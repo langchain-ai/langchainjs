@@ -18,5 +18,21 @@
     "strictPropertyInitialization": false
   },
   "exclude": ["node_modules/", "dist/", "tests/"],
-  "include": ["./"]
+  "include": ["./"],
+  "typedocOptions": {
+    "entryPoints": [
+      ".",
+      "./agents",
+      "./agents/tools",
+      "./chains",
+      "./embeddings",
+      "./llms",
+      "./prompt",
+      "./vectorstores",
+      "./text_splitter.ts"
+    ],
+    "excludeExternals": true,
+    "internalModule": "internal",
+    "out": "docs"
+  }
 }

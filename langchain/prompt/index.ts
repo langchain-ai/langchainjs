@@ -14,3 +14,4 @@ export {
   FewShotPromptTemplateInput,
   SerializedFewShotTemplate,
 } from "./few_shot";
+export { loadPrompt } from "./load";

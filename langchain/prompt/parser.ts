@@ -2,15 +2,33 @@ export type SerializedOutputParser =
   | SerializedRegexParser
   | SerializedCommaSeparatedListOutputParser;
 
+/**
+ * Class to parse the output of an LLM call.
+ */
 export abstract class BaseOutputParser {
+  /**
+   * Parse the output of an LLM call.
+   *
+   * @param text - LLM output to parse.
+   * @returns Parsed output.
+   */
   abstract parse(text: string): string | string[] | Record<string, string>;
 
+  /**
+   * Return the string type key uniquely identifying this class of parser
+   */
   _type(): string {
     throw new Error("_type not implemented");
   }
 
+  /**
+   * Return a json-like object representing this output parser.
+   */
   abstract serialize(): SerializedOutputParser;
 
+  /**
+   * Load an output parser from a json-like object describing the parser.
+   */
   static deserialize(data: SerializedOutputParser): BaseOutputParser {
     switch (data._type) {
       case "regex_parser":
@@ -22,6 +40,10 @@ export abstract class BaseOutputParser {
   }
 }
 
+/**
+ * Class to parse the output of an LLM call to a list.
+ * @augments BaseOutputParser
+ */
 export abstract class ListOutputParser extends BaseOutputParser {
   abstract parse(text: string): string[];
 }
@@ -30,6 +52,10 @@ type SerializedCommaSeparatedListOutputParser = {
   _type: "comma_separated_list";
 };
 
+/**
+ * Class to parse the output of an LLM call as a comma-separated list.
+ * @augments ListOutputParser
+ */
 export class CommaSeparatedListOutputParser extends ListOutputParser {
   parse(text: string): string[] {
     return text.trim().split(", ");
@@ -55,6 +81,10 @@ type SerializedRegexParser = {
   default_output_key?: string;
 };
 
+/**
+ * Class to parse the output of an LLM call into a dictionary.
+ * @augments BaseOutputParser
+ */
 export class RegexParser extends BaseOutputParser {
   regex: string | RegExp;
 

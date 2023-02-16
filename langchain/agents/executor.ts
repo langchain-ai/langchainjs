@@ -10,6 +10,10 @@ type AgentExecutorInput = {
   earlyStoppingMethod?: StoppingMethod;
 };
 
+/**
+ * A chain managing an agent using tools.
+ * @augments BaseChain
+ */
 export class AgentExecutor extends BaseChain {
   agent: Agent;
 
@@ -32,6 +36,7 @@ export class AgentExecutor extends BaseChain {
       input.earlyStoppingMethod ?? this.earlyStoppingMethod;
   }
 
+  /** Create from agent and a list of tools. */
   static fromAgentAndTools(
     fields: {
       agent: Agent;
