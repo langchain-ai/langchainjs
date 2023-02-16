@@ -36,6 +36,7 @@
     "eslint-config-prettier": "^8.6.0",
     "eslint-plugin-import": "^2.27.5",
     "eslint-plugin-prettier": "^4.2.1",
+    "hnswlib-node": "^1.2.0",
     "husky": "^8.0.3",
     "jest": "^29.4.2",
     "lint-staged": "^13.1.1",
@@ -53,11 +54,6 @@
     "expr-eval": "^2.0.2",
     "node-fetch": "2",
     "yaml": "^2.2.1"
-  },
-  "optionalDependencies": {
-    "hnswlib-node": "^1.2.0",
-    "openai": "^3.1.0",
-    "serpapi": "^1.1.1"
   },
   "lint-staged": {
     "**/*.{ts,tsx}": [
