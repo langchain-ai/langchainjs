@@ -16,15 +16,16 @@ const config = {
   favicon: 'img/favicon.ico',
 
   // Set the production url of your site here
-  url: 'https://your-docusaurus-test-site.com',
+  url: 'https://hwchase17.github.io',
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
-  baseUrl: '/',
+  baseUrl: '/langchainjs/',
 
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
   organizationName: 'hwchase17', // Usually your GitHub org/user name.
   projectName: 'langchainjs', // Usually your repo name.
+  deploymentBranch: 'gh-pages',
 
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
@@ -34,6 +35,9 @@ const config = {
       'docusaurus-plugin-typedoc',
       {
         tsconfig: '../langchain/tsconfig.json',
+        sidebar: {
+          fullNames: true,
+        },
       },
     ],
   ],
@@ -66,10 +70,16 @@ const config = {
         },
         items: [
           {
+            type: 'doc', // 'api' is the 'out' directory
+            docId: 'getting-started',
+            position: 'left',
+            label: 'Docs',
+          },
+          {
             to: 'docs/api/',
             activeBasePath: 'docs',
             position: 'left',
-            label: 'Docs',
+            label: 'API',
           },
           // Please keep GitHub link to the right for consistency.
           {
@@ -87,7 +97,7 @@ const config = {
             items: [
               {
                 label: 'Get started',
-                to: 'docs/api'
+                to: 'docs/api',
               },
             ],
           },

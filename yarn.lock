@@ -9492,13 +9492,6 @@ __metadata:
     typedoc-plugin-missing-exports: ^1.0.0
     typescript: ^4.9.5
     yaml: ^2.2.1
-  dependenciesMeta:
-    hnswlib-node:
-      optional: true
-    openai:
-      optional: true
-    serpapi:
-      optional: true
   languageName: unknown
   linkType: soft
 
