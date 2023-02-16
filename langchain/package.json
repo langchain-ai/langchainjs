@@ -106,6 +106,11 @@
       "types": "./dist/cjs/text_splitter.d.ts",
       "require": "./dist/cjs/text_splitter.js",
       "import": "./dist/esm/text_splitter.js"
+    },
+    "./memory": {
+      "types": "./dist/cjs/memory/index.d.ts",
+      "require": "./dist/cjs/memory/index.js",
+      "import": "./dist/esm/memory/index.js"
     }
   },
   "publishConfig": {
