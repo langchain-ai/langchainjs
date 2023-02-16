@@ -35,6 +35,9 @@ const config = {
       'docusaurus-plugin-typedoc',
       {
         tsconfig: '../langchain/tsconfig.json',
+        sidebar: {
+          fullNames: true,
+        },
       },
     ],
   ],
