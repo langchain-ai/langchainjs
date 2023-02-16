@@ -53,7 +53,6 @@ export const parseFString = (template: string): ParsedFStringNode[] => {
       i = next < 0 ? chars.length : next;
     }
   }
-
   return nodes;
 };
 

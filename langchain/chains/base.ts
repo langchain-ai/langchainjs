@@ -1,4 +1,6 @@
 import { LLMChain, StuffDocumentsChain, VectorDBQAChain } from "./index";
+import { BaseMemory } from "../memory";
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ChainValues = Record<string, any>;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -10,16 +12,33 @@ export type SerializedBaseChain = ReturnType<
   InstanceType<(typeof chainClasses)[number]>["serialize"]
 >;
 
-export abstract class BaseChain {
+export interface ChainInputs {
+  memory?: BaseMemory;
+}
+
+export abstract class BaseChain implements ChainInputs {
+  memory?: BaseMemory;
+
   abstract _call(values: ChainValues): Promise<ChainValues>;
 
   abstract _chainType(): string;
 
   abstract serialize(): SerializedBaseChain;
 
-  call(values: ChainValues): Promise<ChainValues> {
+  async call(values: ChainValues): Promise<ChainValues> {
+    const fullValues = structuredClone(values);
+    if (!(this.memory == null)) {
+      const newValues = await this.memory.loadMemoryVariables(values);
+      for (const [key, value] of Object.entries(newValues)) {
+        fullValues[key] = value;
+      }
+    }
     // TODO(sean) add callback support
-    return this._call(values);
+    const outputValues = this._call(fullValues);
+    if (!(this.memory == null)) {
+      this.memory.saveContext(values, outputValues);
+    }
+    return outputValues;
   }
 
   apply(inputs: ChainValues[]): ChainValues[] {
