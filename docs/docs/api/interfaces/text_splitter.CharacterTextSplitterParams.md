@@ -29,7 +29,7 @@ custom_edit_url: null
 
 #### Defined in
 
-[text_splitter.ts:7](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/text_splitter.ts#L7)
+[text_splitter.ts:7](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/text_splitter.ts#L7)
 
 ___
 
@@ -43,7 +43,7 @@ ___
 
 #### Defined in
 
-[text_splitter.ts:5](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/text_splitter.ts#L5)
+[text_splitter.ts:5](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/text_splitter.ts#L5)
 
 ___
 
@@ -53,4 +53,4 @@ ___
 
 #### Defined in
 
-[text_splitter.ts:96](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/text_splitter.ts#L96)
+[text_splitter.ts:96](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/text_splitter.ts#L96)

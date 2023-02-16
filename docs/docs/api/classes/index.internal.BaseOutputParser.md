@@ -29,7 +29,7 @@ Return the string type key uniquely identifying this class of parser
 
 #### Defined in
 
-[prompt/parser.ts:20](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/prompt/parser.ts#L20)
+[prompt/parser.ts:20](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/prompt/parser.ts#L20)
 
 ___
 
@@ -53,7 +53,7 @@ Parsed output.
 
 #### Defined in
 
-[prompt/parser.ts:15](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/prompt/parser.ts#L15)
+[prompt/parser.ts:15](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/prompt/parser.ts#L15)
 
 ___
 
@@ -69,7 +69,7 @@ Return a json-like object representing this output parser.
 
 #### Defined in
 
-[prompt/parser.ts:27](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/prompt/parser.ts#L27)
+[prompt/parser.ts:27](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/prompt/parser.ts#L27)
 
 ___
 
@@ -91,4 +91,4 @@ Load an output parser from a json-like object describing the parser.
 
 #### Defined in
 
-[prompt/parser.ts:32](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/prompt/parser.ts#L32)
+[prompt/parser.ts:32](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/prompt/parser.ts#L32)

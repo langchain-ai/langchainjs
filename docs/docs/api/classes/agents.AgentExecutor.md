@@ -33,7 +33,7 @@ A chain managing an agent using tools.
 
 #### Defined in
 
-[agents/executor.ts:28](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/agents/executor.ts#L28)
+[agents/executor.ts:28](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/agents/executor.ts#L28)
 
 ## Properties
 
@@ -43,7 +43,7 @@ A chain managing an agent using tools.
 
 #### Defined in
 
-[agents/executor.ts:18](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/agents/executor.ts#L18)
+[agents/executor.ts:18](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/agents/executor.ts#L18)
 
 ___
 
@@ -53,7 +53,7 @@ ___
 
 #### Defined in
 
-[agents/executor.ts:26](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/agents/executor.ts#L26)
+[agents/executor.ts:26](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/agents/executor.ts#L26)
 
 ___
 
@@ -63,7 +63,7 @@ ___
 
 #### Defined in
 
-[agents/executor.ts:24](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/agents/executor.ts#L24)
+[agents/executor.ts:24](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/agents/executor.ts#L24)
 
 ___
 
@@ -73,7 +73,7 @@ ___
 
 #### Defined in
 
-[agents/executor.ts:22](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/agents/executor.ts#L22)
+[agents/executor.ts:22](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/agents/executor.ts#L22)
 
 ___
 
@@ -83,7 +83,7 @@ ___
 
 #### Defined in
 
-[agents/executor.ts:20](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/agents/executor.ts#L20)
+[agents/executor.ts:20](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/agents/executor.ts#L20)
 
 ## Methods
 
@@ -109,7 +109,7 @@ Run the core logic of this chain and return the output
 
 #### Defined in
 
-[agents/executor.ts:54](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/agents/executor.ts#L54)
+[agents/executor.ts:54](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/agents/executor.ts#L54)
 
 ___
 
@@ -129,7 +129,7 @@ Return the string type key uniquely identifying this class of chain.
 
 #### Defined in
 
-[agents/executor.ts:99](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/agents/executor.ts#L99)
+[agents/executor.ts:99](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/agents/executor.ts#L99)
 
 ___
 
@@ -155,7 +155,7 @@ Call the chain on all inputs in the list
 
 #### Defined in
 
-[chains/base.ts:43](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/chains/base.ts#L43)
+[chains/base.ts:43](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/chains/base.ts#L43)
 
 ___
 
@@ -183,7 +183,7 @@ Eventually will handle memory, validation, etc. but for now just wraps [_call](a
 
 #### Defined in
 
-[chains/base.ts:35](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/chains/base.ts#L35)
+[chains/base.ts:35](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/chains/base.ts#L35)
 
 ___
 
@@ -203,7 +203,7 @@ Return a json-like object representing this chain.
 
 #### Defined in
 
-[agents/executor.ts:103](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/agents/executor.ts#L103)
+[agents/executor.ts:103](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/agents/executor.ts#L103)
 
 ___
 
@@ -223,7 +223,7 @@ ___
 
 #### Defined in
 
-[agents/executor.ts:50](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/agents/executor.ts#L50)
+[agents/executor.ts:50](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/agents/executor.ts#L50)
 
 ___
 
@@ -249,7 +249,7 @@ Load a chain from a json-like object describing it.
 
 #### Defined in
 
-[chains/base.ts:50](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/chains/base.ts#L50)
+[chains/base.ts:50](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/chains/base.ts#L50)
 
 ___
 
@@ -271,4 +271,4 @@ Create from agent and a list of tools.
 
 #### Defined in
 
-[agents/executor.ts:40](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/agents/executor.ts#L40)
+[agents/executor.ts:40](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/agents/executor.ts#L40)

@@ -48,7 +48,7 @@ const llm = LLMChain({ llm: new OpenAI(), prompt });
 
 #### Defined in
 
-[chains/llm_chain.ts:45](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/chains/llm_chain.ts#L45)
+[chains/llm_chain.ts:45](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/chains/llm_chain.ts#L45)
 
 ## Properties
 
@@ -64,7 +64,7 @@ LLM Wrapper to use
 
 #### Defined in
 
-[chains/llm_chain.ts:41](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/chains/llm_chain.ts#L41)
+[chains/llm_chain.ts:41](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/chains/llm_chain.ts#L41)
 
 ___
 
@@ -78,7 +78,7 @@ LLMChainInput.outputKey
 
 #### Defined in
 
-[chains/llm_chain.ts:43](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/chains/llm_chain.ts#L43)
+[chains/llm_chain.ts:43](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/chains/llm_chain.ts#L43)
 
 ___
 
@@ -94,7 +94,7 @@ Prompt object to use
 
 #### Defined in
 
-[chains/llm_chain.ts:39](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/chains/llm_chain.ts#L39)
+[chains/llm_chain.ts:39](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/chains/llm_chain.ts#L39)
 
 ## Methods
 
@@ -120,7 +120,7 @@ Run the core logic of this chain and return the output
 
 #### Defined in
 
-[chains/llm_chain.ts:56](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/chains/llm_chain.ts#L56)
+[chains/llm_chain.ts:56](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/chains/llm_chain.ts#L56)
 
 ___
 
@@ -140,7 +140,7 @@ Return the string type key uniquely identifying this class of chain.
 
 #### Defined in
 
-[chains/llm_chain.ts:83](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/chains/llm_chain.ts#L83)
+[chains/llm_chain.ts:83](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/chains/llm_chain.ts#L83)
 
 ___
 
@@ -166,7 +166,7 @@ Call the chain on all inputs in the list
 
 #### Defined in
 
-[chains/base.ts:43](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/chains/base.ts#L43)
+[chains/base.ts:43](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/chains/base.ts#L43)
 
 ___
 
@@ -194,7 +194,7 @@ Eventually will handle memory, validation, etc. but for now just wraps [_call](.
 
 #### Defined in
 
-[chains/base.ts:35](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/chains/base.ts#L35)
+[chains/base.ts:35](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/chains/base.ts#L35)
 
 ___
 
@@ -224,7 +224,7 @@ Completion from LLM.
 
 #### Defined in
 
-[chains/llm_chain.ts:78](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/chains/llm_chain.ts#L78)
+[chains/llm_chain.ts:78](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/chains/llm_chain.ts#L78)
 
 ___
 
@@ -244,7 +244,7 @@ Return a json-like object representing this chain.
 
 #### Defined in
 
-[chains/llm_chain.ts:103](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/chains/llm_chain.ts#L103)
+[chains/llm_chain.ts:103](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/chains/llm_chain.ts#L103)
 
 ___
 
@@ -270,4 +270,4 @@ Load a chain from a json-like object describing it.
 
 #### Defined in
 
-[chains/llm_chain.ts:87](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/chains/llm_chain.ts#L87)
+[chains/llm_chain.ts:87](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/chains/llm_chain.ts#L87)

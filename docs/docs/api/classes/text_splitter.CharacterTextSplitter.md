@@ -35,7 +35,7 @@ custom_edit_url: null
 
 #### Defined in
 
-[text_splitter.ts:102](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/text_splitter.ts#L102)
+[text_splitter.ts:102](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/text_splitter.ts#L102)
 
 ## Properties
 
@@ -53,7 +53,7 @@ custom_edit_url: null
 
 #### Defined in
 
-[text_splitter.ts:13](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/text_splitter.ts#L13)
+[text_splitter.ts:13](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/text_splitter.ts#L13)
 
 ___
 
@@ -71,7 +71,7 @@ ___
 
 #### Defined in
 
-[text_splitter.ts:11](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/text_splitter.ts#L11)
+[text_splitter.ts:11](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/text_splitter.ts#L11)
 
 ___
 
@@ -85,7 +85,7 @@ ___
 
 #### Defined in
 
-[text_splitter.ts:100](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/text_splitter.ts#L100)
+[text_splitter.ts:100](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/text_splitter.ts#L100)
 
 ## Methods
 
@@ -110,7 +110,7 @@ ___
 
 #### Defined in
 
-[text_splitter.ts:27](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/text_splitter.ts#L27)
+[text_splitter.ts:27](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/text_splitter.ts#L27)
 
 ___
 
@@ -135,7 +135,7 @@ ___
 
 #### Defined in
 
-[text_splitter.ts:54](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/text_splitter.ts#L54)
+[text_splitter.ts:54](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/text_splitter.ts#L54)
 
 ___
 
@@ -159,7 +159,7 @@ ___
 
 #### Defined in
 
-[text_splitter.ts:43](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/text_splitter.ts#L43)
+[text_splitter.ts:43](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/text_splitter.ts#L43)
 
 ___
 
@@ -183,4 +183,4 @@ ___
 
 #### Defined in
 
-[text_splitter.ts:107](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/text_splitter.ts#L107)
+[text_splitter.ts:107](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/text_splitter.ts#L107)

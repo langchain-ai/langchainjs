@@ -34,7 +34,7 @@ custom_edit_url: null
 
 #### Defined in
 
-[vectorstores/hnswlib.ts:31](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/vectorstores/hnswlib.ts#L31)
+[vectorstores/hnswlib.ts:31](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/vectorstores/hnswlib.ts#L31)
 
 ## Properties
 
@@ -44,7 +44,7 @@ custom_edit_url: null
 
 #### Defined in
 
-[vectorstores/hnswlib.ts:29](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/vectorstores/hnswlib.ts#L29)
+[vectorstores/hnswlib.ts:29](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/vectorstores/hnswlib.ts#L29)
 
 ___
 
@@ -58,7 +58,7 @@ ___
 
 #### Defined in
 
-[vectorstores/base.ts:11](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/vectorstores/base.ts#L11)
+[vectorstores/base.ts:11](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/vectorstores/base.ts#L11)
 
 ___
 
@@ -72,7 +72,7 @@ ___
 
 #### Defined in
 
-[vectorstores/base.ts:9](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/vectorstores/base.ts#L9)
+[vectorstores/base.ts:9](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/vectorstores/base.ts#L9)
 
 ___
 
@@ -82,7 +82,7 @@ ___
 
 #### Defined in
 
-[vectorstores/hnswlib.ts:27](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/vectorstores/hnswlib.ts#L27)
+[vectorstores/hnswlib.ts:27](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/vectorstores/hnswlib.ts#L27)
 
 ## Methods
 
@@ -107,7 +107,7 @@ ___
 
 #### Defined in
 
-[vectorstores/base.ts:20](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/vectorstores/base.ts#L20)
+[vectorstores/base.ts:20](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/vectorstores/base.ts#L20)
 
 ___
 
@@ -132,7 +132,7 @@ ___
 
 #### Defined in
 
-[vectorstores/hnswlib.ts:44](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/vectorstores/hnswlib.ts#L44)
+[vectorstores/hnswlib.ts:44](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/vectorstores/hnswlib.ts#L44)
 
 ___
 
@@ -156,7 +156,7 @@ ___
 
 #### Defined in
 
-[vectorstores/hnswlib.ts:102](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/vectorstores/hnswlib.ts#L102)
+[vectorstores/hnswlib.ts:102](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/vectorstores/hnswlib.ts#L102)
 
 ___
 
@@ -181,7 +181,7 @@ ___
 
 #### Defined in
 
-[vectorstores/base.ts:27](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/vectorstores/base.ts#L27)
+[vectorstores/base.ts:27](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/vectorstores/base.ts#L27)
 
 ___
 
@@ -206,7 +206,7 @@ ___
 
 #### Defined in
 
-[vectorstores/hnswlib.ts:86](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/vectorstores/hnswlib.ts#L86)
+[vectorstores/hnswlib.ts:86](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/vectorstores/hnswlib.ts#L86)
 
 ___
 
@@ -231,7 +231,7 @@ ___
 
 #### Defined in
 
-[vectorstores/base.ts:36](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/vectorstores/base.ts#L36)
+[vectorstores/base.ts:36](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/vectorstores/base.ts#L36)
 
 ___
 
@@ -253,7 +253,7 @@ ___
 
 #### Defined in
 
-[vectorstores/hnswlib.ts:142](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/vectorstores/hnswlib.ts#L142)
+[vectorstores/hnswlib.ts:142](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/vectorstores/hnswlib.ts#L142)
 
 ___
 
@@ -278,4 +278,4 @@ ___
 
 #### Defined in
 
-[vectorstores/hnswlib.ts:122](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/vectorstores/hnswlib.ts#L122)
+[vectorstores/hnswlib.ts:122](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/vectorstores/hnswlib.ts#L122)

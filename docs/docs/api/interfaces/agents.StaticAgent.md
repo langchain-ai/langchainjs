@@ -30,7 +30,7 @@ A PromptTemplate assembled from the given tools and fields.
 
 #### Defined in
 
-[agents/agent.ts:36](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/agents/agent.ts#L36)
+[agents/agent.ts:36](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/agents/agent.ts#L36)
 
 ___
 
@@ -54,7 +54,7 @@ Construct an agent from an LLM and a list of tools
 
 #### Defined in
 
-[agents/agent.ts:38](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/agents/agent.ts#L38)
+[agents/agent.ts:38](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/agents/agent.ts#L38)
 
 ___
 
@@ -74,4 +74,4 @@ ___
 
 #### Defined in
 
-[agents/agent.ts:44](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/agents/agent.ts#L44)
+[agents/agent.ts:44](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/agents/agent.ts#L44)

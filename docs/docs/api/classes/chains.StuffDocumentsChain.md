@@ -41,7 +41,7 @@ Chain that combines documents by stuffing into context.
 
 #### Defined in
 
-[chains/combine_docs_chain.ts:39](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/chains/combine_docs_chain.ts#L39)
+[chains/combine_docs_chain.ts:39](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/chains/combine_docs_chain.ts#L39)
 
 ## Properties
 
@@ -57,7 +57,7 @@ Variable name in the LLM chain to put the documents in
 
 #### Defined in
 
-[chains/combine_docs_chain.ts:37](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/chains/combine_docs_chain.ts#L37)
+[chains/combine_docs_chain.ts:37](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/chains/combine_docs_chain.ts#L37)
 
 ___
 
@@ -71,7 +71,7 @@ ___
 
 #### Defined in
 
-[chains/combine_docs_chain.ts:33](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/chains/combine_docs_chain.ts#L33)
+[chains/combine_docs_chain.ts:33](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/chains/combine_docs_chain.ts#L33)
 
 ___
 
@@ -87,7 +87,7 @@ LLM Wrapper to use after formatting documents
 
 #### Defined in
 
-[chains/combine_docs_chain.ts:31](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/chains/combine_docs_chain.ts#L31)
+[chains/combine_docs_chain.ts:31](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/chains/combine_docs_chain.ts#L31)
 
 ___
 
@@ -101,7 +101,7 @@ ___
 
 #### Defined in
 
-[chains/combine_docs_chain.ts:35](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/chains/combine_docs_chain.ts#L35)
+[chains/combine_docs_chain.ts:35](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/chains/combine_docs_chain.ts#L35)
 
 ## Methods
 
@@ -127,7 +127,7 @@ Run the core logic of this chain and return the output
 
 #### Defined in
 
-[chains/combine_docs_chain.ts:53](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/chains/combine_docs_chain.ts#L53)
+[chains/combine_docs_chain.ts:53](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/chains/combine_docs_chain.ts#L53)
 
 ___
 
@@ -147,7 +147,7 @@ Return the string type key uniquely identifying this class of chain.
 
 #### Defined in
 
-[chains/combine_docs_chain.ts:67](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/chains/combine_docs_chain.ts#L67)
+[chains/combine_docs_chain.ts:67](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/chains/combine_docs_chain.ts#L67)
 
 ___
 
@@ -173,7 +173,7 @@ Call the chain on all inputs in the list
 
 #### Defined in
 
-[chains/base.ts:43](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/chains/base.ts#L43)
+[chains/base.ts:43](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/chains/base.ts#L43)
 
 ___
 
@@ -201,7 +201,7 @@ Eventually will handle memory, validation, etc. but for now just wraps [_call](c
 
 #### Defined in
 
-[chains/base.ts:35](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/chains/base.ts#L35)
+[chains/base.ts:35](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/chains/base.ts#L35)
 
 ___
 
@@ -221,7 +221,7 @@ Return a json-like object representing this chain.
 
 #### Defined in
 
-[chains/combine_docs_chain.ts:82](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/chains/combine_docs_chain.ts#L82)
+[chains/combine_docs_chain.ts:82](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/chains/combine_docs_chain.ts#L82)
 
 ___
 
@@ -247,4 +247,4 @@ Load a chain from a json-like object describing it.
 
 #### Defined in
 
-[chains/combine_docs_chain.ts:71](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/chains/combine_docs_chain.ts#L71)
+[chains/combine_docs_chain.ts:71](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/chains/combine_docs_chain.ts#L71)

@@ -36,7 +36,7 @@ To use, you should have the `serpapi` package installed and the SERPAPI_API_KEY 
 
 #### Defined in
 
-[agents/tools/serpapi.ts:15](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/agents/tools/serpapi.ts#L15)
+[agents/tools/serpapi.ts:15](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/agents/tools/serpapi.ts#L15)
 
 ## Properties
 
@@ -50,7 +50,7 @@ To use, you should have the `serpapi` package installed and the SERPAPI_API_KEY 
 
 #### Defined in
 
-[agents/tools/serpapi.ts:75](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/agents/tools/serpapi.ts#L75)
+[agents/tools/serpapi.ts:75](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/agents/tools/serpapi.ts#L75)
 
 ___
 
@@ -60,7 +60,7 @@ ___
 
 #### Defined in
 
-[agents/tools/serpapi.ts:11](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/agents/tools/serpapi.ts#L11)
+[agents/tools/serpapi.ts:11](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/agents/tools/serpapi.ts#L11)
 
 ___
 
@@ -74,7 +74,7 @@ ___
 
 #### Defined in
 
-[agents/tools/serpapi.ts:32](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/agents/tools/serpapi.ts#L32)
+[agents/tools/serpapi.ts:32](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/agents/tools/serpapi.ts#L32)
 
 ___
 
@@ -84,7 +84,7 @@ ___
 
 #### Defined in
 
-[agents/tools/serpapi.ts:13](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/agents/tools/serpapi.ts#L13)
+[agents/tools/serpapi.ts:13](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/agents/tools/serpapi.ts#L13)
 
 ___
 
@@ -98,7 +98,7 @@ ___
 
 #### Defined in
 
-[agents/tools/base.ts:8](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/agents/tools/base.ts#L8)
+[agents/tools/base.ts:8](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/agents/tools/base.ts#L8)
 
 ## Methods
 
@@ -124,4 +124,4 @@ Run query through SerpAPI and parse result
 
 #### Defined in
 
-[agents/tools/serpapi.ts:37](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/agents/tools/serpapi.ts#L37)
+[agents/tools/serpapi.ts:37](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/agents/tools/serpapi.ts#L37)

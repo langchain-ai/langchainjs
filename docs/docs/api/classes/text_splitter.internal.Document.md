@@ -27,7 +27,7 @@ Interface for interacting with a document.
 
 #### Defined in
 
-[document.ts:17](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/document.ts#L17)
+[document.ts:17](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/document.ts#L17)
 
 ## Properties
 
@@ -41,7 +41,7 @@ Interface for interacting with a document.
 
 #### Defined in
 
-[document.ts:15](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/document.ts#L15)
+[document.ts:15](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/document.ts#L15)
 
 ___
 
@@ -55,4 +55,4 @@ ___
 
 #### Defined in
 
-[document.ts:12](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/document.ts#L12)
+[document.ts:12](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/document.ts#L12)

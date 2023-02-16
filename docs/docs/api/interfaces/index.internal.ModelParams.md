@@ -23,7 +23,7 @@ Generates `bestOf` completions server side and returns the "best"
 
 #### Defined in
 
-[llms/openai.ts:45](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/llms/openai.ts#L45)
+[llms/openai.ts:45](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/llms/openai.ts#L45)
 
 ___
 
@@ -35,7 +35,7 @@ Penalizes repeated tokens according to frequency
 
 #### Defined in
 
-[llms/openai.ts:36](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/llms/openai.ts#L36)
+[llms/openai.ts:36](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/llms/openai.ts#L36)
 
 ___
 
@@ -47,7 +47,7 @@ Dictionary used to adjust the probability of specific tokens being generated
 
 #### Defined in
 
-[llms/openai.ts:48](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/llms/openai.ts#L48)
+[llms/openai.ts:48](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/llms/openai.ts#L48)
 
 ___
 
@@ -60,7 +60,7 @@ tokens as possible given the prompt and the model's maximum context size.
 
 #### Defined in
 
-[llms/openai.ts:30](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/llms/openai.ts#L30)
+[llms/openai.ts:30](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/llms/openai.ts#L30)
 
 ___
 
@@ -72,7 +72,7 @@ Number of completions to generate for each prompt
 
 #### Defined in
 
-[llms/openai.ts:42](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/llms/openai.ts#L42)
+[llms/openai.ts:42](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/llms/openai.ts#L42)
 
 ___
 
@@ -84,7 +84,7 @@ Penalizes repeated tokens
 
 #### Defined in
 
-[llms/openai.ts:39](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/llms/openai.ts#L39)
+[llms/openai.ts:39](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/llms/openai.ts#L39)
 
 ___
 
@@ -96,7 +96,7 @@ Sampling temperature to use
 
 #### Defined in
 
-[llms/openai.ts:24](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/llms/openai.ts#L24)
+[llms/openai.ts:24](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/llms/openai.ts#L24)
 
 ___
 
@@ -108,4 +108,4 @@ Total probability mass of tokens to consider at each step
 
 #### Defined in
 
-[llms/openai.ts:33](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/llms/openai.ts#L33)
+[llms/openai.ts:33](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/llms/openai.ts#L33)

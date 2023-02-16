@@ -45,7 +45,7 @@ if not explicitly available on this class.
 
 #### Defined in
 
-[llms/openai.ts:128](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/llms/openai.ts#L128)
+[llms/openai.ts:128](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/llms/openai.ts#L128)
 
 ## Properties
 
@@ -61,7 +61,7 @@ Batch size to use when passing multiple documents to generate
 
 #### Defined in
 
-[llms/openai.ts:120](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/llms/openai.ts#L120)
+[llms/openai.ts:120](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/llms/openai.ts#L120)
 
 ___
 
@@ -77,7 +77,7 @@ Generates `bestOf` completions server side and returns the "best"
 
 #### Defined in
 
-[llms/openai.ts:112](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/llms/openai.ts#L112)
+[llms/openai.ts:112](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/llms/openai.ts#L112)
 
 ___
 
@@ -91,7 +91,7 @@ ___
 
 #### Defined in
 
-[llms/base.ts:34](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/llms/base.ts#L34)
+[llms/base.ts:34](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/llms/base.ts#L34)
 
 ___
 
@@ -105,7 +105,7 @@ ___
 
 #### Defined in
 
-[llms/base.ts:36](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/llms/base.ts#L36)
+[llms/base.ts:36](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/llms/base.ts#L36)
 
 ___
 
@@ -115,7 +115,7 @@ ___
 
 #### Defined in
 
-[llms/openai.ts:126](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/llms/openai.ts#L126)
+[llms/openai.ts:126](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/llms/openai.ts#L126)
 
 ___
 
@@ -131,7 +131,7 @@ Penalizes repeated tokens according to frequency
 
 #### Defined in
 
-[llms/openai.ts:106](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/llms/openai.ts#L106)
+[llms/openai.ts:106](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/llms/openai.ts#L106)
 
 ___
 
@@ -147,7 +147,7 @@ Dictionary used to adjust the probability of specific tokens being generated
 
 #### Defined in
 
-[llms/openai.ts:114](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/llms/openai.ts#L114)
+[llms/openai.ts:114](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/llms/openai.ts#L114)
 
 ___
 
@@ -163,7 +163,7 @@ Maximum number of retries to make when generating
 
 #### Defined in
 
-[llms/openai.ts:122](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/llms/openai.ts#L122)
+[llms/openai.ts:122](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/llms/openai.ts#L122)
 
 ___
 
@@ -180,7 +180,7 @@ tokens as possible given the prompt and the model's maximum context size.
 
 #### Defined in
 
-[llms/openai.ts:102](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/llms/openai.ts#L102)
+[llms/openai.ts:102](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/llms/openai.ts#L102)
 
 ___
 
@@ -196,7 +196,7 @@ Holds any additional parameters that are valid to pass to [`openai.createComplet
 
 #### Defined in
 
-[llms/openai.ts:118](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/llms/openai.ts#L118)
+[llms/openai.ts:118](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/llms/openai.ts#L118)
 
 ___
 
@@ -212,7 +212,7 @@ Model name to use
 
 #### Defined in
 
-[llms/openai.ts:116](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/llms/openai.ts#L116)
+[llms/openai.ts:116](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/llms/openai.ts#L116)
 
 ___
 
@@ -228,7 +228,7 @@ Number of completions to generate for each prompt
 
 #### Defined in
 
-[llms/openai.ts:110](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/llms/openai.ts#L110)
+[llms/openai.ts:110](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/llms/openai.ts#L110)
 
 ___
 
@@ -244,7 +244,7 @@ The name of the LLM class
 
 #### Defined in
 
-[llms/base.ts:32](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/llms/base.ts#L32)
+[llms/base.ts:32](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/llms/base.ts#L32)
 
 ___
 
@@ -260,7 +260,7 @@ Penalizes repeated tokens
 
 #### Defined in
 
-[llms/openai.ts:108](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/llms/openai.ts#L108)
+[llms/openai.ts:108](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/llms/openai.ts#L108)
 
 ___
 
@@ -276,7 +276,7 @@ List of stop words to use when generating
 
 #### Defined in
 
-[llms/openai.ts:124](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/llms/openai.ts#L124)
+[llms/openai.ts:124](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/llms/openai.ts#L124)
 
 ___
 
@@ -292,7 +292,7 @@ Sampling temperature to use
 
 #### Defined in
 
-[llms/openai.ts:100](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/llms/openai.ts#L100)
+[llms/openai.ts:100](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/llms/openai.ts#L100)
 
 ___
 
@@ -308,7 +308,7 @@ Total probability mass of tokens to consider at each step
 
 #### Defined in
 
-[llms/openai.ts:104](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/llms/openai.ts#L104)
+[llms/openai.ts:104](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/llms/openai.ts#L104)
 
 ___
 
@@ -324,7 +324,7 @@ Whether to print out response text.
 
 #### Defined in
 
-[llms/base.ts:41](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/llms/base.ts#L41)
+[llms/base.ts:41](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/llms/base.ts#L41)
 
 ## Methods
 
@@ -361,7 +361,7 @@ The full LLM output.
 
 #### Defined in
 
-[llms/openai.ts:207](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/llms/openai.ts#L207)
+[llms/openai.ts:207](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/llms/openai.ts#L207)
 
 ___
 
@@ -381,7 +381,7 @@ Get the identifying parameters of the LLM.
 
 #### Defined in
 
-[llms/base.ts:133](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/llms/base.ts#L133)
+[llms/base.ts:133](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/llms/base.ts#L133)
 
 ___
 
@@ -401,7 +401,7 @@ Return the string type key uniquely identifying this class of LLM.
 
 #### Defined in
 
-[llms/openai.ts:271](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/llms/openai.ts#L271)
+[llms/openai.ts:271](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/llms/openai.ts#L271)
 
 ___
 
@@ -428,7 +428,7 @@ Convenience wrapper for [generate](.OpenAI#generate) that takes in a single stri
 
 #### Defined in
 
-[llms/base.ts:124](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/llms/base.ts#L124)
+[llms/base.ts:124](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/llms/base.ts#L124)
 
 ___
 
@@ -455,7 +455,7 @@ Run the LLM on the given propmts an input, handling caching.
 
 #### Defined in
 
-[llms/base.ts:78](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/llms/base.ts#L78)
+[llms/base.ts:78](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/llms/base.ts#L78)
 
 ___
 
@@ -475,7 +475,7 @@ Get the identifyin parameters for the model
 
 #### Defined in
 
-[llms/openai.ts:185](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/llms/openai.ts#L185)
+[llms/openai.ts:185](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/llms/openai.ts#L185)
 
 ___
 
@@ -491,7 +491,7 @@ Get the parameters used to invoke the model
 
 #### Defined in
 
-[llms/openai.ts:166](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/llms/openai.ts#L166)
+[llms/openai.ts:166](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/llms/openai.ts#L166)
 
 ___
 
@@ -511,7 +511,7 @@ Return a json-like object representing this LLM.
 
 #### Defined in
 
-[llms/base.ts:145](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/llms/base.ts#L145)
+[llms/base.ts:145](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/llms/base.ts#L145)
 
 ___
 
@@ -537,4 +537,4 @@ Load an LLM from a json-like object describing it.
 
 #### Defined in
 
-[llms/base.ts:155](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/llms/base.ts#L155)
+[llms/base.ts:155](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/llms/base.ts#L155)

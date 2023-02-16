@@ -27,7 +27,7 @@ custom_edit_url: null
 
 #### Defined in
 
-[vectorstores/base.ts:11](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/vectorstores/base.ts#L11)
+[vectorstores/base.ts:11](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/vectorstores/base.ts#L11)
 
 ___
 
@@ -37,7 +37,7 @@ ___
 
 #### Defined in
 
-[vectorstores/base.ts:9](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/vectorstores/base.ts#L9)
+[vectorstores/base.ts:9](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/vectorstores/base.ts#L9)
 
 ## Methods
 
@@ -58,7 +58,7 @@ ___
 
 #### Defined in
 
-[vectorstores/base.ts:20](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/vectorstores/base.ts#L20)
+[vectorstores/base.ts:20](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/vectorstores/base.ts#L20)
 
 ___
 
@@ -79,7 +79,7 @@ ___
 
 #### Defined in
 
-[vectorstores/base.ts:13](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/vectorstores/base.ts#L13)
+[vectorstores/base.ts:13](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/vectorstores/base.ts#L13)
 
 ___
 
@@ -100,7 +100,7 @@ ___
 
 #### Defined in
 
-[vectorstores/base.ts:27](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/vectorstores/base.ts#L27)
+[vectorstores/base.ts:27](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/vectorstores/base.ts#L27)
 
 ___
 
@@ -121,7 +121,7 @@ ___
 
 #### Defined in
 
-[vectorstores/base.ts:15](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/vectorstores/base.ts#L15)
+[vectorstores/base.ts:15](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/vectorstores/base.ts#L15)
 
 ___
 
@@ -142,4 +142,4 @@ ___
 
 #### Defined in
 
-[vectorstores/base.ts:36](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/vectorstores/base.ts#L36)
+[vectorstores/base.ts:36](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/vectorstores/base.ts#L36)

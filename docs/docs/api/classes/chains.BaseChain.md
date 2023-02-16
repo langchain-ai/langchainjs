@@ -45,7 +45,7 @@ Run the core logic of this chain and return the output
 
 #### Defined in
 
-[chains/base.ts:18](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/chains/base.ts#L18)
+[chains/base.ts:18](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/chains/base.ts#L18)
 
 ___
 
@@ -61,7 +61,7 @@ Return the string type key uniquely identifying this class of chain.
 
 #### Defined in
 
-[chains/base.ts:23](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/chains/base.ts#L23)
+[chains/base.ts:23](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/chains/base.ts#L23)
 
 ___
 
@@ -83,7 +83,7 @@ Call the chain on all inputs in the list
 
 #### Defined in
 
-[chains/base.ts:43](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/chains/base.ts#L43)
+[chains/base.ts:43](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/chains/base.ts#L43)
 
 ___
 
@@ -107,7 +107,7 @@ Eventually will handle memory, validation, etc. but for now just wraps [_call](c
 
 #### Defined in
 
-[chains/base.ts:35](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/chains/base.ts#L35)
+[chains/base.ts:35](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/chains/base.ts#L35)
 
 ___
 
@@ -123,7 +123,7 @@ Return a json-like object representing this chain.
 
 #### Defined in
 
-[chains/base.ts:28](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/chains/base.ts#L28)
+[chains/base.ts:28](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/chains/base.ts#L28)
 
 ___
 
@@ -145,4 +145,4 @@ Load a chain from a json-like object describing it.
 
 #### Defined in
 
-[chains/base.ts:50](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/chains/base.ts#L50)
+[chains/base.ts:50](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/chains/base.ts#L50)

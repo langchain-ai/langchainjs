@@ -35,7 +35,7 @@ custom_edit_url: null
 
 #### Defined in
 
-[embeddings/openai.ts:33](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/embeddings/openai.ts#L33)
+[embeddings/openai.ts:33](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/embeddings/openai.ts#L33)
 
 ## Properties
 
@@ -45,7 +45,7 @@ custom_edit_url: null
 
 #### Defined in
 
-[embeddings/openai.ts:27](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/embeddings/openai.ts#L27)
+[embeddings/openai.ts:27](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/embeddings/openai.ts#L27)
 
 ___
 
@@ -55,7 +55,7 @@ ___
 
 #### Defined in
 
-[embeddings/openai.ts:31](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/embeddings/openai.ts#L31)
+[embeddings/openai.ts:31](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/embeddings/openai.ts#L31)
 
 ___
 
@@ -65,7 +65,7 @@ ___
 
 #### Defined in
 
-[embeddings/openai.ts:29](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/embeddings/openai.ts#L29)
+[embeddings/openai.ts:29](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/embeddings/openai.ts#L29)
 
 ___
 
@@ -79,7 +79,7 @@ ___
 
 #### Defined in
 
-[embeddings/openai.ts:25](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/embeddings/openai.ts#L25)
+[embeddings/openai.ts:25](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/embeddings/openai.ts#L25)
 
 ## Methods
 
@@ -103,7 +103,7 @@ ___
 
 #### Defined in
 
-[embeddings/openai.ts:56](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/embeddings/openai.ts#L56)
+[embeddings/openai.ts:56](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/embeddings/openai.ts#L56)
 
 ___
 
@@ -127,7 +127,7 @@ ___
 
 #### Defined in
 
-[embeddings/openai.ts:75](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/embeddings/openai.ts#L75)
+[embeddings/openai.ts:75](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/embeddings/openai.ts#L75)
 
 ___
 
@@ -147,4 +147,4 @@ ___
 
 #### Defined in
 
-[embeddings/openai.ts:83](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/embeddings/openai.ts#L83)
+[embeddings/openai.ts:83](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/embeddings/openai.ts#L83)

@@ -48,7 +48,7 @@ const prompt = new PromptTemplate({
 
 #### Defined in
 
-[prompt/prompt.ts:74](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/prompt/prompt.ts#L74)
+[prompt/prompt.ts:74](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/prompt/prompt.ts#L74)
 
 ## Properties
 
@@ -68,7 +68,7 @@ A list of variable names the prompt template expects
 
 #### Defined in
 
-[prompt/base.ts:34](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/prompt/base.ts#L34)
+[prompt/base.ts:34](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/prompt/base.ts#L34)
 
 ___
 
@@ -88,7 +88,7 @@ How to parse the output of calling an LLM on this formatted prompt
 
 #### Defined in
 
-[prompt/base.ts:36](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/prompt/base.ts#L36)
+[prompt/base.ts:36](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/prompt/base.ts#L36)
 
 ___
 
@@ -104,7 +104,7 @@ The propmt template
 
 #### Defined in
 
-[prompt/prompt.ts:68](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/prompt/prompt.ts#L68)
+[prompt/prompt.ts:68](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/prompt/prompt.ts#L68)
 
 ___
 
@@ -124,7 +124,7 @@ The format of the prompt template. Options are 'f-string', 'jinja-2'
 
 #### Defined in
 
-[prompt/prompt.ts:70](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/prompt/prompt.ts#L70)
+[prompt/prompt.ts:70](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/prompt/prompt.ts#L70)
 
 ___
 
@@ -144,7 +144,7 @@ Whether or not to try validating the template on initialization
 
 #### Defined in
 
-[prompt/prompt.ts:72](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/prompt/prompt.ts#L72)
+[prompt/prompt.ts:72](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/prompt/prompt.ts#L72)
 
 ## Methods
 
@@ -164,7 +164,7 @@ Return the string type key uniquely identifying this class of prompt template.
 
 #### Defined in
 
-[prompt/prompt.ts:87](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/prompt/prompt.ts#L87)
+[prompt/prompt.ts:87](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/prompt/prompt.ts#L87)
 
 ___
 
@@ -198,7 +198,7 @@ A formatted prompt string.
 
 #### Defined in
 
-[prompt/prompt.ts:91](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/prompt/prompt.ts#L91)
+[prompt/prompt.ts:91](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/prompt/prompt.ts#L91)
 
 ___
 
@@ -218,7 +218,7 @@ Return a json-like object representing this prompt template.
 
 #### Defined in
 
-[prompt/prompt.ts:139](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/prompt/prompt.ts#L139)
+[prompt/prompt.ts:139](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/prompt/prompt.ts#L139)
 
 ___
 
@@ -250,7 +250,7 @@ request.
 
 #### Defined in
 
-[prompt/prompt.ts:149](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/prompt/prompt.ts#L149)
+[prompt/prompt.ts:149](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/prompt/prompt.ts#L149)
 
 ___
 
@@ -280,7 +280,7 @@ The final prompt template generated.
 
 #### Defined in
 
-[prompt/prompt.ts:108](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/prompt/prompt.ts#L108)
+[prompt/prompt.ts:108](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/prompt/prompt.ts#L108)
 
 ___
 
@@ -302,4 +302,4 @@ Load prompt template from a template f-string
 
 #### Defined in
 
-[prompt/prompt.ts:125](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/prompt/prompt.ts#L125)
+[prompt/prompt.ts:125](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/prompt/prompt.ts#L125)

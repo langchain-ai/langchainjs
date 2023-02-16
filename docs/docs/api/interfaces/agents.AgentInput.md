@@ -15,7 +15,7 @@ custom_edit_url: null
 
 #### Defined in
 
-[agents/agent.ts:53](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/agents/agent.ts#L53)
+[agents/agent.ts:53](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/agents/agent.ts#L53)
 
 ___
 
@@ -25,4 +25,4 @@ ___
 
 #### Defined in
 
-[agents/agent.ts:52](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/agents/agent.ts#L52)
+[agents/agent.ts:52](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/agents/agent.ts#L52)

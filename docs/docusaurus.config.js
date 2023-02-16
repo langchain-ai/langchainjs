@@ -66,8 +66,8 @@ const config = {
         },
         items: [
           {
-            type: 'doc',
-            docId: 'intro',
+            to: 'docs/api/',
+            activeBasePath: 'docs',
             position: 'left',
             label: 'Docs',
           },

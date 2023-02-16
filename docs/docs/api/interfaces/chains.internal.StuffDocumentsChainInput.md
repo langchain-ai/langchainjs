@@ -21,7 +21,7 @@ Variable name in the LLM chain to put the documents in
 
 #### Defined in
 
-[chains/combine_docs_chain.ts:13](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/chains/combine_docs_chain.ts#L13)
+[chains/combine_docs_chain.ts:13](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/chains/combine_docs_chain.ts#L13)
 
 ___
 
@@ -31,7 +31,7 @@ ___
 
 #### Defined in
 
-[chains/combine_docs_chain.ts:10](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/chains/combine_docs_chain.ts#L10)
+[chains/combine_docs_chain.ts:10](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/chains/combine_docs_chain.ts#L10)
 
 ___
 
@@ -43,7 +43,7 @@ LLM Wrapper to use after formatting documents
 
 #### Defined in
 
-[chains/combine_docs_chain.ts:9](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/chains/combine_docs_chain.ts#L9)
+[chains/combine_docs_chain.ts:9](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/chains/combine_docs_chain.ts#L9)
 
 ___
 
@@ -53,4 +53,4 @@ ___
 
 #### Defined in
 
-[chains/combine_docs_chain.ts:11](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/chains/combine_docs_chain.ts#L11)
+[chains/combine_docs_chain.ts:11](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/chains/combine_docs_chain.ts#L11)

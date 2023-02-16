@@ -37,7 +37,7 @@ Prompt template that contains few-shot examples.
 
 #### Defined in
 
-[prompt/few_shot.ts:109](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/prompt/few_shot.ts#L109)
+[prompt/few_shot.ts:109](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/prompt/few_shot.ts#L109)
 
 ## Properties
 
@@ -53,7 +53,7 @@ An [PromptTemplate](.PromptTemplate) used to format a single example.
 
 #### Defined in
 
-[prompt/few_shot.ts:97](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/prompt/few_shot.ts#L97)
+[prompt/few_shot.ts:97](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/prompt/few_shot.ts#L97)
 
 ___
 
@@ -71,7 +71,7 @@ provided.
 
 #### Defined in
 
-[prompt/few_shot.ts:95](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/prompt/few_shot.ts#L95)
+[prompt/few_shot.ts:95](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/prompt/few_shot.ts#L95)
 
 ___
 
@@ -87,7 +87,7 @@ String separator used to join the prefix, the examples, and suffix.
 
 #### Defined in
 
-[prompt/few_shot.ts:101](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/prompt/few_shot.ts#L101)
+[prompt/few_shot.ts:101](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/prompt/few_shot.ts#L101)
 
 ___
 
@@ -105,7 +105,7 @@ provided.
 
 #### Defined in
 
-[prompt/few_shot.ts:93](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/prompt/few_shot.ts#L93)
+[prompt/few_shot.ts:93](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/prompt/few_shot.ts#L93)
 
 ___
 
@@ -125,7 +125,7 @@ A list of variable names the prompt template expects
 
 #### Defined in
 
-[prompt/base.ts:34](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/prompt/base.ts#L34)
+[prompt/base.ts:34](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/prompt/base.ts#L34)
 
 ___
 
@@ -145,7 +145,7 @@ How to parse the output of calling an LLM on this formatted prompt
 
 #### Defined in
 
-[prompt/base.ts:36](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/prompt/base.ts#L36)
+[prompt/base.ts:36](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/prompt/base.ts#L36)
 
 ___
 
@@ -165,7 +165,7 @@ A prompt template string to put before the examples.
 
 #### Defined in
 
-[prompt/few_shot.ts:103](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/prompt/few_shot.ts#L103)
+[prompt/few_shot.ts:103](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/prompt/few_shot.ts#L103)
 
 ___
 
@@ -181,7 +181,7 @@ A prompt template string to put after the examples.
 
 #### Defined in
 
-[prompt/few_shot.ts:99](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/prompt/few_shot.ts#L99)
+[prompt/few_shot.ts:99](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/prompt/few_shot.ts#L99)
 
 ___
 
@@ -197,7 +197,7 @@ The format of the prompt template. Options are: 'f-string', 'jinja-2'
 
 #### Defined in
 
-[prompt/few_shot.ts:105](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/prompt/few_shot.ts#L105)
+[prompt/few_shot.ts:105](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/prompt/few_shot.ts#L105)
 
 ___
 
@@ -213,7 +213,7 @@ Whether or not to try validating the template on initialization.
 
 #### Defined in
 
-[prompt/few_shot.ts:107](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/prompt/few_shot.ts#L107)
+[prompt/few_shot.ts:107](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/prompt/few_shot.ts#L107)
 
 ## Methods
 
@@ -233,7 +233,7 @@ Return the string type key uniquely identifying this class of prompt template.
 
 #### Defined in
 
-[prompt/few_shot.ts:134](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/prompt/few_shot.ts#L134)
+[prompt/few_shot.ts:134](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/prompt/few_shot.ts#L134)
 
 ___
 
@@ -267,7 +267,7 @@ A formatted prompt string.
 
 #### Defined in
 
-[prompt/few_shot.ts:151](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/prompt/few_shot.ts#L151)
+[prompt/few_shot.ts:151](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/prompt/few_shot.ts#L151)
 
 ___
 
@@ -287,7 +287,7 @@ ___
 
 #### Defined in
 
-[prompt/few_shot.ts:138](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/prompt/few_shot.ts#L138)
+[prompt/few_shot.ts:138](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/prompt/few_shot.ts#L138)
 
 ___
 
@@ -307,7 +307,7 @@ Return a json-like object representing this prompt template.
 
 #### Defined in
 
-[prompt/few_shot.ts:163](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/prompt/few_shot.ts#L163)
+[prompt/few_shot.ts:163](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/prompt/few_shot.ts#L163)
 
 ___
 
@@ -339,4 +339,4 @@ request.
 
 #### Defined in
 
-[prompt/few_shot.ts:182](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/prompt/few_shot.ts#L182)
+[prompt/few_shot.ts:182](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/prompt/few_shot.ts#L182)

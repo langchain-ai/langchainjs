@@ -36,7 +36,7 @@ string prompt given a set of input values.
 
 #### Defined in
 
-[prompt/base.ts:38](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/prompt/base.ts#L38)
+[prompt/base.ts:38](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/prompt/base.ts#L38)
 
 ## Properties
 
@@ -52,7 +52,7 @@ A list of variable names the prompt template expects
 
 #### Defined in
 
-[prompt/base.ts:34](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/prompt/base.ts#L34)
+[prompt/base.ts:34](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/prompt/base.ts#L34)
 
 ___
 
@@ -68,7 +68,7 @@ How to parse the output of calling an LLM on this formatted prompt
 
 #### Defined in
 
-[prompt/base.ts:36](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/prompt/base.ts#L36)
+[prompt/base.ts:36](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/prompt/base.ts#L36)
 
 ## Methods
 
@@ -84,7 +84,7 @@ Return the string type key uniquely identifying this class of prompt template.
 
 #### Defined in
 
-[prompt/base.ts:64](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/prompt/base.ts#L64)
+[prompt/base.ts:64](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/prompt/base.ts#L64)
 
 ___
 
@@ -114,7 +114,7 @@ A formatted prompt string.
 
 #### Defined in
 
-[prompt/base.ts:59](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/prompt/base.ts#L59)
+[prompt/base.ts:59](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/prompt/base.ts#L59)
 
 ___
 
@@ -130,7 +130,7 @@ Return a json-like object representing this prompt template.
 
 #### Defined in
 
-[prompt/base.ts:69](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/prompt/base.ts#L69)
+[prompt/base.ts:69](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/prompt/base.ts#L69)
 
 ___
 
@@ -158,4 +158,4 @@ request.
 
 #### Defined in
 
-[prompt/base.ts:79](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/prompt/base.ts#L79)
+[prompt/base.ts:79](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/prompt/base.ts#L79)

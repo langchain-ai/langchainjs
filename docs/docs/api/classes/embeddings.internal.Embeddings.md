@@ -37,7 +37,7 @@ custom_edit_url: null
 
 #### Defined in
 
-[embeddings/base.ts:2](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/embeddings/base.ts#L2)
+[embeddings/base.ts:2](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/embeddings/base.ts#L2)
 
 ___
 
@@ -57,4 +57,4 @@ ___
 
 #### Defined in
 
-[embeddings/base.ts:4](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/embeddings/base.ts#L4)
+[embeddings/base.ts:4](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/embeddings/base.ts#L4)

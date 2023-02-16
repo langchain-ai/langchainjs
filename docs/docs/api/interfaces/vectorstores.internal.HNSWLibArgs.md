@@ -15,7 +15,7 @@ custom_edit_url: null
 
 #### Defined in
 
-[vectorstores/hnswlib.ts:23](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/vectorstores/hnswlib.ts#L23)
+[vectorstores/hnswlib.ts:23](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/vectorstores/hnswlib.ts#L23)
 
 ___
 
@@ -25,4 +25,4 @@ ___
 
 #### Defined in
 
-[vectorstores/hnswlib.ts:22](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/vectorstores/hnswlib.ts#L22)
+[vectorstores/hnswlib.ts:22](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/vectorstores/hnswlib.ts#L22)

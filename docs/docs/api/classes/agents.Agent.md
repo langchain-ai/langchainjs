@@ -35,7 +35,7 @@ intermediary work.
 
 #### Defined in
 
-[agents/agent.ts:70](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/agents/agent.ts#L70)
+[agents/agent.ts:70](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/agents/agent.ts#L70)
 
 ## Properties
 
@@ -45,7 +45,7 @@ intermediary work.
 
 #### Defined in
 
-[agents/agent.ts:66](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/agents/agent.ts#L66)
+[agents/agent.ts:66](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/agents/agent.ts#L66)
 
 ___
 
@@ -55,7 +55,7 @@ ___
 
 #### Defined in
 
-[agents/agent.ts:64](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/agents/agent.ts#L64)
+[agents/agent.ts:64](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/agents/agent.ts#L64)
 
 ___
 
@@ -65,7 +65,7 @@ ___
 
 #### Defined in
 
-[agents/agent.ts:68](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/agents/agent.ts#L68)
+[agents/agent.ts:68](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/agents/agent.ts#L68)
 
 ## Methods
 
@@ -81,7 +81,7 @@ Return the string type key uniquely identifying this class of agent.
 
 #### Defined in
 
-[agents/agent.ts:95](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/agents/agent.ts#L95)
+[agents/agent.ts:95](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/agents/agent.ts#L95)
 
 ___
 
@@ -103,7 +103,7 @@ ___
 
 #### Defined in
 
-[agents/agent.ts:135](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/agents/agent.ts#L135)
+[agents/agent.ts:135](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/agents/agent.ts#L135)
 
 ___
 
@@ -117,7 +117,7 @@ ___
 
 #### Defined in
 
-[agents/agent.ts:108](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/agents/agent.ts#L108)
+[agents/agent.ts:108](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/agents/agent.ts#L108)
 
 ___
 
@@ -139,7 +139,7 @@ Construct a scratchpad to let the agent continue its thought process
 
 #### Defined in
 
-[agents/agent.ts:122](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/agents/agent.ts#L122)
+[agents/agent.ts:122](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/agents/agent.ts#L122)
 
 ___
 
@@ -161,7 +161,7 @@ Extract tool and tool input from LLM output.
 
 #### Defined in
 
-[agents/agent.ts:78](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/agents/agent.ts#L78)
+[agents/agent.ts:78](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/agents/agent.ts#L78)
 
 ___
 
@@ -177,7 +177,7 @@ Name of tool to use to terminate the chain.
 
 #### Defined in
 
-[agents/agent.ts:115](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/agents/agent.ts#L115)
+[agents/agent.ts:115](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/agents/agent.ts#L115)
 
 ___
 
@@ -193,7 +193,7 @@ Prefix to append the LLM call with.
 
 #### Defined in
 
-[agents/agent.ts:90](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/agents/agent.ts#L90)
+[agents/agent.ts:90](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/agents/agent.ts#L90)
 
 ___
 
@@ -209,7 +209,7 @@ Prefix to append the observation with.
 
 #### Defined in
 
-[agents/agent.ts:85](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/agents/agent.ts#L85)
+[agents/agent.ts:85](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/agents/agent.ts#L85)
 
 ___
 
@@ -234,7 +234,7 @@ Action specifying what tool to use.
 
 #### Defined in
 
-[agents/agent.ts:170](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/agents/agent.ts#L170)
+[agents/agent.ts:170](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/agents/agent.ts#L170)
 
 ___
 
@@ -250,7 +250,7 @@ Prepare the agent for a new call, if needed
 
 #### Defined in
 
-[agents/agent.ts:100](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/agents/agent.ts#L100)
+[agents/agent.ts:100](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/agents/agent.ts#L100)
 
 ___
 
@@ -274,7 +274,7 @@ Return response when agent has been stopped due to max iterations
 
 #### Defined in
 
-[agents/agent.ts:180](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/agents/agent.ts#L180)
+[agents/agent.ts:180](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/agents/agent.ts#L180)
 
 ___
 
@@ -296,7 +296,7 @@ Load an agent from a json-like object describing it.
 
 #### Defined in
 
-[agents/agent.ts:218](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/agents/agent.ts#L218)
+[agents/agent.ts:218](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/agents/agent.ts#L218)
 
 ___
 
@@ -318,4 +318,4 @@ Validate that appropriate tools are passed in
 
 #### Defined in
 
-[agents/agent.ts:106](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/agents/agent.ts#L106)
+[agents/agent.ts:106](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/agents/agent.ts#L106)

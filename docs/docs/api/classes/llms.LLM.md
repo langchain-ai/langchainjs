@@ -36,7 +36,7 @@ Requires only implementing a simpler [_call](llms.LLM.md#_call) method instead o
 
 #### Defined in
 
-[llms/base.ts:43](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/llms/base.ts#L43)
+[llms/base.ts:43](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/llms/base.ts#L43)
 
 ## Properties
 
@@ -50,7 +50,7 @@ Requires only implementing a simpler [_call](llms.LLM.md#_call) method instead o
 
 #### Defined in
 
-[llms/base.ts:34](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/llms/base.ts#L34)
+[llms/base.ts:34](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/llms/base.ts#L34)
 
 ___
 
@@ -64,7 +64,7 @@ ___
 
 #### Defined in
 
-[llms/base.ts:36](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/llms/base.ts#L36)
+[llms/base.ts:36](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/llms/base.ts#L36)
 
 ___
 
@@ -80,7 +80,7 @@ The name of the LLM class
 
 #### Defined in
 
-[llms/base.ts:32](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/llms/base.ts#L32)
+[llms/base.ts:32](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/llms/base.ts#L32)
 
 ___
 
@@ -96,7 +96,7 @@ Whether to print out response text.
 
 #### Defined in
 
-[llms/base.ts:41](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/llms/base.ts#L41)
+[llms/base.ts:41](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/llms/base.ts#L41)
 
 ## Methods
 
@@ -119,7 +119,7 @@ Run the LLM on the given prompt and input.
 
 #### Defined in
 
-[llms/base.ts:180](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/llms/base.ts#L180)
+[llms/base.ts:180](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/llms/base.ts#L180)
 
 ___
 
@@ -146,7 +146,7 @@ Run the LLM on the given prompts and input.
 
 #### Defined in
 
-[llms/base.ts:182](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/llms/base.ts#L182)
+[llms/base.ts:182](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/llms/base.ts#L182)
 
 ___
 
@@ -166,7 +166,7 @@ Get the identifying parameters of the LLM.
 
 #### Defined in
 
-[llms/base.ts:133](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/llms/base.ts#L133)
+[llms/base.ts:133](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/llms/base.ts#L133)
 
 ___
 
@@ -186,7 +186,7 @@ Return the string type key uniquely identifying this class of LLM.
 
 #### Defined in
 
-[llms/base.ts:140](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/llms/base.ts#L140)
+[llms/base.ts:140](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/llms/base.ts#L140)
 
 ___
 
@@ -213,7 +213,7 @@ Convenience wrapper for [generate](llms.LLM.md#generate) that takes in a single 
 
 #### Defined in
 
-[llms/base.ts:124](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/llms/base.ts#L124)
+[llms/base.ts:124](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/llms/base.ts#L124)
 
 ___
 
@@ -240,7 +240,7 @@ Run the LLM on the given propmts an input, handling caching.
 
 #### Defined in
 
-[llms/base.ts:78](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/llms/base.ts#L78)
+[llms/base.ts:78](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/llms/base.ts#L78)
 
 ___
 
@@ -260,7 +260,7 @@ Return a json-like object representing this LLM.
 
 #### Defined in
 
-[llms/base.ts:145](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/llms/base.ts#L145)
+[llms/base.ts:145](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/llms/base.ts#L145)
 
 ___
 
@@ -286,4 +286,4 @@ Load an LLM from a json-like object describing it.
 
 #### Defined in
 
-[llms/base.ts:155](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/llms/base.ts#L155)
+[llms/base.ts:155](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/llms/base.ts#L155)

@@ -34,7 +34,7 @@ Output of a single generation.
 
 #### Defined in
 
-[llms/index.ts:18](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/llms/index.ts#L18)
+[llms/index.ts:18](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/llms/index.ts#L18)
 
 ___
 
@@ -52,7 +52,7 @@ ___
 
 #### Defined in
 
-[llms/index.ts:5](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/llms/index.ts#L5)
+[llms/index.ts:5](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/llms/index.ts#L5)
 
 ___
 
@@ -71,7 +71,7 @@ Contains all relevant information returned by an LLM.
 
 #### Defined in
 
-[llms/index.ts:34](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/llms/index.ts#L34)
+[llms/index.ts:34](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/llms/index.ts#L34)
 
 ___
 
@@ -81,7 +81,7 @@ ___
 
 #### Defined in
 
-[llms/base.ts:20](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/llms/base.ts#L20)
+[llms/base.ts:20](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/llms/base.ts#L20)
 
 ## Functions
 
@@ -110,4 +110,4 @@ const model = await loadLLM("/path/to/llm.json");
 
 #### Defined in
 
-[llms/load.ts:13](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/llms/load.ts#L13)
+[llms/load.ts:13](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/llms/load.ts#L13)

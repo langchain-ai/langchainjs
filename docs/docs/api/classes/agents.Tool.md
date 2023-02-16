@@ -29,7 +29,7 @@ custom_edit_url: null
 
 #### Defined in
 
-[agents/tools/base.ts:6](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/agents/tools/base.ts#L6)
+[agents/tools/base.ts:6](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/agents/tools/base.ts#L6)
 
 ___
 
@@ -39,7 +39,7 @@ ___
 
 #### Defined in
 
-[agents/tools/base.ts:4](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/agents/tools/base.ts#L4)
+[agents/tools/base.ts:4](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/agents/tools/base.ts#L4)
 
 ___
 
@@ -49,7 +49,7 @@ ___
 
 #### Defined in
 
-[agents/tools/base.ts:8](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/agents/tools/base.ts#L8)
+[agents/tools/base.ts:8](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/agents/tools/base.ts#L8)
 
 ## Methods
 
@@ -69,4 +69,4 @@ ___
 
 #### Defined in
 
-[agents/tools/base.ts:2](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/agents/tools/base.ts#L2)
+[agents/tools/base.ts:2](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/agents/tools/base.ts#L2)

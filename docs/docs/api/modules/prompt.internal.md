@@ -13,7 +13,7 @@ custom_edit_url: null
 
 #### Defined in
 
-[prompt/few_shot.ts:19](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/prompt/few_shot.ts#L19)
+[prompt/few_shot.ts:19](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/prompt/few_shot.ts#L19)
 
 ## Variables
 
@@ -23,4 +23,4 @@ custom_edit_url: null
 
 #### Defined in
 
-[prompt/base.ts:4](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/prompt/base.ts#L4)
+[prompt/base.ts:4](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/prompt/base.ts#L4)

@@ -19,4 +19,4 @@ custom_edit_url: null
 
 #### Defined in
 
-[embeddings/openai.ts:21](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/embeddings/openai.ts#L21)
+[embeddings/openai.ts:21](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/embeddings/openai.ts#L21)

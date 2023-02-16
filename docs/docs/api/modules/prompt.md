@@ -42,7 +42,7 @@ Re-exports [PromptTemplate](../classes/.PromptTemplate)
 
 #### Defined in
 
-[prompt/base.ts:11](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/prompt/base.ts#L11)
+[prompt/base.ts:11](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/prompt/base.ts#L11)
 
 ___
 
@@ -52,7 +52,7 @@ ___
 
 #### Defined in
 
-[prompt/base.ts:6](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/prompt/base.ts#L6)
+[prompt/base.ts:6](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/prompt/base.ts#L6)
 
 ___
 
@@ -79,7 +79,7 @@ ___
 
 #### Defined in
 
-[prompt/few_shot.ts:21](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/prompt/few_shot.ts#L21)
+[prompt/few_shot.ts:21](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/prompt/few_shot.ts#L21)
 
 ___
 
@@ -100,7 +100,7 @@ ___
 
 #### Defined in
 
-[prompt/prompt.ts:15](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/prompt/prompt.ts#L15)
+[prompt/prompt.ts:15](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/prompt/prompt.ts#L15)
 
 ## Functions
 
@@ -138,4 +138,4 @@ const prompt = await loadPrompt("/path/to/prompt.json");
 
 #### Defined in
 
-[prompt/load.ts:25](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/prompt/load.ts#L25)
+[prompt/load.ts:25](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/prompt/load.ts#L25)

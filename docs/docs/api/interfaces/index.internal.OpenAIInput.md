@@ -29,7 +29,7 @@ Batch size to use when passing multiple documents to generate
 
 #### Defined in
 
-[llms/openai.ts:66](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/llms/openai.ts#L66)
+[llms/openai.ts:66](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/llms/openai.ts#L66)
 
 ___
 
@@ -45,7 +45,7 @@ Generates `bestOf` completions server side and returns the "best"
 
 #### Defined in
 
-[llms/openai.ts:45](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/llms/openai.ts#L45)
+[llms/openai.ts:45](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/llms/openai.ts#L45)
 
 ___
 
@@ -61,7 +61,7 @@ Penalizes repeated tokens according to frequency
 
 #### Defined in
 
-[llms/openai.ts:36](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/llms/openai.ts#L36)
+[llms/openai.ts:36](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/llms/openai.ts#L36)
 
 ___
 
@@ -77,7 +77,7 @@ Dictionary used to adjust the probability of specific tokens being generated
 
 #### Defined in
 
-[llms/openai.ts:48](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/llms/openai.ts#L48)
+[llms/openai.ts:48](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/llms/openai.ts#L48)
 
 ___
 
@@ -89,7 +89,7 @@ Maximum number of retries to make when generating
 
 #### Defined in
 
-[llms/openai.ts:69](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/llms/openai.ts#L69)
+[llms/openai.ts:69](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/llms/openai.ts#L69)
 
 ___
 
@@ -106,7 +106,7 @@ tokens as possible given the prompt and the model's maximum context size.
 
 #### Defined in
 
-[llms/openai.ts:30](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/llms/openai.ts#L30)
+[llms/openai.ts:30](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/llms/openai.ts#L30)
 
 ___
 
@@ -118,7 +118,7 @@ Holds any additional parameters that are valid to pass to [`openai.createComplet
 
 #### Defined in
 
-[llms/openai.ts:63](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/llms/openai.ts#L63)
+[llms/openai.ts:63](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/llms/openai.ts#L63)
 
 ___
 
@@ -130,7 +130,7 @@ Model name to use
 
 #### Defined in
 
-[llms/openai.ts:57](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/llms/openai.ts#L57)
+[llms/openai.ts:57](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/llms/openai.ts#L57)
 
 ___
 
@@ -146,7 +146,7 @@ Number of completions to generate for each prompt
 
 #### Defined in
 
-[llms/openai.ts:42](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/llms/openai.ts#L42)
+[llms/openai.ts:42](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/llms/openai.ts#L42)
 
 ___
 
@@ -162,7 +162,7 @@ Penalizes repeated tokens
 
 #### Defined in
 
-[llms/openai.ts:39](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/llms/openai.ts#L39)
+[llms/openai.ts:39](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/llms/openai.ts#L39)
 
 ___
 
@@ -174,7 +174,7 @@ List of stop words to use when generating
 
 #### Defined in
 
-[llms/openai.ts:72](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/llms/openai.ts#L72)
+[llms/openai.ts:72](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/llms/openai.ts#L72)
 
 ___
 
@@ -190,7 +190,7 @@ Sampling temperature to use
 
 #### Defined in
 
-[llms/openai.ts:24](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/llms/openai.ts#L24)
+[llms/openai.ts:24](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/llms/openai.ts#L24)
 
 ___
 
@@ -206,4 +206,4 @@ Total probability mass of tokens to consider at each step
 
 #### Defined in
 
-[llms/openai.ts:33](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/llms/openai.ts#L33)
+[llms/openai.ts:33](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/llms/openai.ts#L33)

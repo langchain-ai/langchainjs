@@ -21,7 +21,7 @@ LLM Wrapper to use
 
 #### Defined in
 
-[chains/llm_chain.ts:12](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/chains/llm_chain.ts#L12)
+[chains/llm_chain.ts:12](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/chains/llm_chain.ts#L12)
 
 ___
 
@@ -33,4 +33,4 @@ Prompt object to use
 
 #### Defined in
 
-[chains/llm_chain.ts:10](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/chains/llm_chain.ts#L10)
+[chains/llm_chain.ts:10](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/chains/llm_chain.ts#L10)

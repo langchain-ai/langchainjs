@@ -29,7 +29,7 @@ Re-exports [LLMChain](../classes/.LLMChain)
 
 #### Defined in
 
-[chains/base.ts:3](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/chains/base.ts#L3)
+[chains/base.ts:3](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/chains/base.ts#L3)
 
 ___
 
@@ -49,7 +49,7 @@ ___
 
 #### Defined in
 
-[chains/llm_chain.ts:18](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/chains/llm_chain.ts#L18)
+[chains/llm_chain.ts:18](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/chains/llm_chain.ts#L18)
 
 ___
 
@@ -67,7 +67,7 @@ ___
 
 #### Defined in
 
-[chains/combine_docs_chain.ts:16](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/chains/combine_docs_chain.ts#L16)
+[chains/combine_docs_chain.ts:16](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/chains/combine_docs_chain.ts#L16)
 
 ## Functions
 
@@ -106,7 +106,7 @@ const chain = await loadChain("/path/to/chain.json");
 
 #### Defined in
 
-[chains/load.ts:28](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/chains/load.ts#L28)
+[chains/load.ts:28](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/chains/load.ts#L28)
 
 ___
 
@@ -126,4 +126,4 @@ ___
 
 #### Defined in
 
-[chains/question_answering/load.ts:7](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/chains/question_answering/load.ts#L7)
+[chains/question_answering/load.ts:7](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/chains/question_answering/load.ts#L7)

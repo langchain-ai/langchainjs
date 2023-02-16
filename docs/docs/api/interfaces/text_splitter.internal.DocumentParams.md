@@ -19,7 +19,7 @@ custom_edit_url: null
 
 #### Defined in
 
-[document.ts:5](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/document.ts#L5)
+[document.ts:5](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/document.ts#L5)
 
 ___
 
@@ -29,4 +29,4 @@ ___
 
 #### Defined in
 
-[document.ts:2](https://github.com/hwchase17/langchainjs/blob/46f8b74/langchain/document.ts#L2)
+[document.ts:2](https://github.com/hwchase17/langchainjs/blob/f0c297a/langchain/document.ts#L2)
