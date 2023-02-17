@@ -1,12 +1,11 @@
 {
-  "version": "0.0.4",
+  "version": "0.0.5",
   "private": true,
   "engines": {
     "node": ">=18"
   },
   "workspaces": [
     "examples",
-    "docs",
     "langchain"
   ],
   "packageManager": "yarn@3.4.1",

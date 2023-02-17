@@ -1,6 +1,6 @@
 import { OpenAI } from "langchain/llms";
 import { VectorDBQAChain } from "langchain/chains";
-import { HNSWLib } from "langchain/vectorstores";
+import { Chroma } from "langchain/vectorstores";
 import { OpenAIEmbeddings } from "langchain/embeddings";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import * as fs from 'fs';
@@ -14,7 +14,7 @@ export const run = async () => {
   const textSplitter = new RecursiveCharacterTextSplitter({chunkSize: 1000});
   const docs = textSplitter.createDocuments([text]);
   /* Create the vectorstore */
-  const vectorStore = await HNSWLib.fromDocuments(
+  const vectorStore = await Chroma.fromDocuments(
     docs,
     new OpenAIEmbeddings()
     );
