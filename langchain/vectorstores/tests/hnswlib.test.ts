@@ -15,10 +15,12 @@ test("Test HNSWLib.fromTexts", async () => {
   expect(vectorStore.index?.getCurrentCount()).toBe(3);
 
   const resultOne = await vectorStore.similaritySearch("hello world", 1);
-  expect(resultOne).toEqual([{ id: 2 }]);
+  const resultOneMetadatas = resultOne.map(({metadata}) => (metadata))
+  expect(resultOneMetadatas).toEqual([{ id: 2 }]);
 
   const resultTwo = await vectorStore.similaritySearch("hello world", 3);
-  expect(resultTwo).toEqual([{ id: 2 }, { id: 3 }, { id: 1 }]);
+  const resultTwoMetadatas = resultTwo.map(({metadata}) => (metadata))
+  expect(resultTwoMetadatas).toEqual([{ id: 2 }, { id: 3 }, { id: 1 }]);
 });
 
 test("Test HNSWLib.load and HNSWLib.save", async () => {
@@ -30,10 +32,12 @@ test("Test HNSWLib.load and HNSWLib.save", async () => {
   expect(vectorStore.index?.getCurrentCount()).toBe(3);
 
   const resultOne = await vectorStore.similaritySearch("hello world", 1);
-  expect(resultOne).toEqual([{ id: 2 }]);
+  const resultOneMetadatas = resultOne.map(({metadata}) => (metadata))
+  expect(resultOneMetadatas).toEqual([{ id: 2 }]);
 
   const resultTwo = await vectorStore.similaritySearch("hello world", 3);
-  expect(resultTwo).toEqual([{ id: 2 }, { id: 3 }, { id: 1 }]);
+  const resultTwoMetadatas = resultTwo.map(({metadata}) => (metadata))
+  expect(resultTwoMetadatas).toEqual([{ id: 2 }, { id: 3 }, { id: 1 }]);
 
   const tempDirectory = await fs.mkdtemp(path.join(os.tmpdir(), "lcjs-"));
 
@@ -50,10 +54,12 @@ test("Test HNSWLib.load and HNSWLib.save", async () => {
     "hello world",
     1
   );
-
-  expect(resultThree).toEqual([{ id: 2 }]);
+  
+  const resultThreeMetadatas = resultThree.map(({metadata}) => (metadata))
+  expect(resultThreeMetadatas).toEqual([{ id: 2 }]);
 
   const resultFour = await loadedVectorStore.similaritySearch("hello world", 3);
-
-  expect(resultFour).toEqual([{ id: 2 }, { id: 3 }, { id: 1 }]);
+  
+  const resultFourMetadatas = resultFour.map(({metadata}) => (metadata))
+  expect(resultFourMetadatas).toEqual([{ id: 2 }, { id: 3 }, { id: 1 }]);
 });

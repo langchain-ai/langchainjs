@@ -1,4 +1,5 @@
 import { Embeddings } from "embeddings/base";
+import { Document } from "../document";
 
 // Temporary until we have a DocStore class
 export interface DocStore {
@@ -10,21 +11,22 @@ export abstract class VectorStore {
 
   docstore: DocStore;
 
-  abstract addVectors(vectors: number[][], metadatas: object[]): Promise<void>;
+  abstract addVectors(vectors: number[][], documents: Document[]): Promise<void>;
 
   abstract similaritySearchVectorWithScore(
     query: number[],
     k: number
-  ): Promise<[object, number][]>;
+  ): Promise<[Document, number][]>;
 
-  async addTexts(texts: string[], metadatas: object[]): Promise<void> {
-    return this.addVectors(
+  async addDocuments(documents: Document[]): Promise<void> {
+    const texts = documents.map( ({pageContent}) => (pageContent))
+    this.addVectors(
       await this.embeddings.embedDocuments(texts),
-      metadatas
+      documents
     );
   }
 
-  async similaritySearch(query: string, k = 4): Promise<object[]> {
+  async similaritySearch(query: string, k = 4): Promise<Document[]> {
     const results = await this.similaritySearchVectorWithScore(
       await this.embeddings.embedQuery(query),
       k

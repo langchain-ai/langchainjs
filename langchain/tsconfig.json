@@ -32,7 +32,9 @@
       "./prompt/index.ts",
       "./vectorstores/index.ts",
       "./text_splitter.ts",
-      "./index.ts"
+      "./memory/index.ts",
+      "./document.ts",
+      "./index.ts",
     ],
     "excludePrivate": true,
     "excludeInternal": true,

@@ -16,12 +16,18 @@ test("Test VectorDBQAChain", async () => {
   });
   const vectorStore = await HNSWLib.fromTexts(
     ["Hello world", "Bye bye", "hello nice world", "bye", "hi"],
-    [{ id: 2 }, { id: 1 }, { id: 3 }, {id: 4}, {id: 5}],
+    [{ id: 2 }, { id: 1 }, { id: 3 }, { id: 4 }, { id: 5 }],
     new OpenAIEmbeddings()
   );
   const llmChain = new LLMChain({ prompt, llm: model });
-  const combineDocsChain = new StuffDocumentsChain({ llmChain, documentVariableName: "foo"});
-  const chain = new VectorDBQAChain({combineDocumentsChain: combineDocsChain, vectorstore:vectorStore});
+  const combineDocsChain = new StuffDocumentsChain({
+    llmChain,
+    documentVariableName: "foo",
+  });
+  const chain = new VectorDBQAChain({
+    combineDocumentsChain: combineDocsChain,
+    vectorstore: vectorStore,
+  });
   const res = await chain.call({ query: "What up" });
   console.log({ res });
 });
@@ -30,7 +36,7 @@ test("Test VectorDBQAChain from LLM", async () => {
   const model = new OpenAI({});
   const vectorStore = await HNSWLib.fromTexts(
     ["Hello world", "Bye bye", "hello nice world", "bye", "hi"],
-    [{ id: 2 }, { id: 1 }, { id: 3 }, {id: 4}, {id: 5}],
+    [{ id: 2 }, { id: 1 }, { id: 3 }, { id: 4 }, { id: 5 }],
     new OpenAIEmbeddings()
   );
   const chain = VectorDBQAChain.fromLLM(model, vectorStore);
@@ -41,10 +47,12 @@ test("Test VectorDBQAChain from LLM", async () => {
 test("Load chain from hub", async () => {
   const vectorStore = await HNSWLib.fromTexts(
     ["Hello world", "Bye bye", "hello nice world", "bye", "hi"],
-    [{ id: 2 }, { id: 1 }, { id: 3 }, {id: 4}, {id: 5}],
+    [{ id: 2 }, { id: 1 }, { id: 3 }, { id: 4 }, { id: 5 }],
     new OpenAIEmbeddings()
   );
-  const chain = await loadChain("lc://chains/vector-db-qa/stuff/chain.json", {vectorstore: vectorStore});
+  const chain = await loadChain("lc://chains/vector-db-qa/stuff/chain.json", {
+    vectorstore: vectorStore,
+  });
   const res = await chain.call({ query: "what up" });
   console.log({ res });
 });

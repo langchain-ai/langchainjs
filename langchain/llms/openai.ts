@@ -13,7 +13,7 @@ let Configuration: typeof ConfigurationT | null = null;
 let OpenAIApi: typeof OpenAIApiT | null = null;
 
 try {
-  // eslint-disable-next-line global-require
+  // eslint-disable-next-line global-require,import/no-extraneous-dependencies
   ({ Configuration, OpenAIApi } = require("openai"));
 } catch {
   // ignore error
@@ -135,7 +135,7 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
     super(fields?.callbackManager, fields?.verbose);
     if (Configuration === null || OpenAIApi === null) {
       throw new Error(
-        "Please install openai as a dependency with, e.g. `npm install -S openai`"
+        "Please install openai as a dependency with, e.g. `npm i openai`"
       );
     }
 

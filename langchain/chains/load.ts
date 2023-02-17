@@ -28,7 +28,10 @@ const loadChainFromFile = async (file: string, values: LoadValues = {}) => {
  * const chain = await loadChain("/path/to/chain.json");
  * ```
  */
-export const loadChain = async (uri: string, values: LoadValues = {}): Promise<BaseChain> => {
+export const loadChain = async (
+  uri: string,
+  values: LoadValues = {}
+): Promise<BaseChain> => {
   const hubResult = await loadFromHub(
     uri,
     (uri) => loadChainFromFile(uri, values),
