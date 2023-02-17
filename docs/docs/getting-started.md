@@ -216,49 +216,31 @@ langchain-examples:start: Got output Olivia Wilde's boyfriend is Jason Sudeikis,
 
 So far, all the chains and agents we've gone through have been stateless. But often, you may want a chain or agent to have some concept of "memory" so that it may remember information about its previous interactions. The clearest and simple example of this is when designing a chatbot - you want it to remember previous messages so it can use context from that to have a better conversation. This would be a type of "short-term memory". On the more complex side, you could imagine a chain/agent remembering key pieces of information over time - this would be a form of "long-term memory".
 
-LangChain provides several specially created chains just for this purpose. This notebook walks through using one of those chains (the `ConversationChain`).
+LangChain provides several specially created chains just for this purpose. This section walks through using one of those chains (the `ConversationChain`).
 
 By default, the `ConversationChain` has a simple type of memory that remembers all previous inputs/outputs and adds them to the context that is passed. Let's take a look at using this chain.
 
-```python
-from langchain import OpenAI, ConversationChain
+```typescript
+import { OpenAI } from "langchain/llms";
+import { BufferMemory } from "langchain/memory";
+import { ConversationChain } from "langchain/chains";
 
-llm = OpenAI(temperature=0)
-conversation = ConversationChain(llm=llm, verbose=True)
-
-conversation.predict(input="Hi there!")
+const model = new OpenAI({});
+const memory = new BufferMemory();
+const chain = new ConversationChain({ llm: model, memory: memory});
+const res1 = await chain.call({ input: "Hi! I'm Jim." });
+console.log({ res1 });
 ```
 
-```pycon
-> Entering new chain...
-Prompt after formatting:
-The following is a friendly conversation between a human and an AI. The AI is talkative and provides lots of specific details from its context. If the AI does not know the answer to a question, it truthfully says it does not know.
-
-Current conversation:
-
-Human: Hi there!
-AI:
-
-> Finished chain.
-' Hello! How are you today?'
+```shell
+{response: " Hi Jim! It's nice to meet you. My name is AI. What would you like to talk about?"}
 ```
 
-```python
-conversation.predict(input="I'm doing well! Just having a conversation with an AI.")
+```typescript
+const res2 = await chain.call({ input: "What's my name?" });
+console.log({ res2 });
 ```
 
-```pycon
-> Entering new chain...
-Prompt after formatting:
-The following is a friendly conversation between a human and an AI. The AI is talkative and provides lots of specific details from its context. If the AI does not know the answer to a question, it truthfully says it does not know.
-
-Current conversation:
-
-Human: Hi there!
-AI:  Hello! How are you today?
-Human: I'm doing well! Just having a conversation with an AI.
-AI:
-
-> Finished chain.
-" That's great! What would you like to talk about?"
+```shell
+{response: ' You said your name is Jim. Is there anything else you would like to talk about?'}
 ```

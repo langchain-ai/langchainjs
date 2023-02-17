@@ -8,6 +8,7 @@ import type {
 import { Embeddings } from "../embeddings/base";
 
 import { DocStore, SaveableVectorStore } from "./base";
+import { Document } from "../document";
 
 let HierarchicalNSW: typeof HierarchicalNSWT | null = null;
 
@@ -144,6 +145,18 @@ export class HNSWLib extends SaveableVectorStore {
     metadatas: object[],
     embeddings: Embeddings
   ): Promise<HNSWLib> {
+    var docs = [];
+    for (let i = 1; i < texts.length; i++) {
+        let newDoc = new Document({pageContent: texts[i], metadata: metadatas[i]});
+        docs.push(newDoc);
+    }
+    return HNSWLib.fromDocuments(docs, embeddings)
+  }
+
+  static async fromDocuments(
+    docs: Document[],
+    embeddings: Embeddings
+  ): Promise<HNSWLib> {
     if (HierarchicalNSW === null) {
       throw new Error(
         "Please install hnswlib-node as a dependency with, e.g. `npm install -S hnswlib-node`"
@@ -153,7 +166,7 @@ export class HNSWLib extends SaveableVectorStore {
       space: "ip", // dot product
     };
     const instance = new this(args, embeddings, {});
-    await instance.addTexts(texts, metadatas);
+    await instance.addDocuments(docs);
     return instance;
   }
 }

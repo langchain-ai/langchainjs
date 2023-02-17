@@ -33,7 +33,8 @@
       "./vectorstores/index.ts",
       "./text_splitter.ts",
       "./index.ts",
-      "./memory/index.ts"
+      "./memory/index.ts",
+      "./document.ts"
     ],
     "excludePrivate": true,
     "excludeInternal": true,

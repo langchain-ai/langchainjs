@@ -111,6 +111,11 @@
       "types": "./dist/cjs/memory/index.d.ts",
       "require": "./dist/cjs/memory/index.js",
       "import": "./dist/esm/memory/index.js"
+    },
+    "./document": {
+      "types": "./dist/cjs/document.d.ts",
+      "require": "./dist/cjs/document.js",
+      "import": "./dist/esm/document.js"
     }
   },
   "publishConfig": {
