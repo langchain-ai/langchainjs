@@ -1,4 +1,4 @@
-import { LLMChain, StuffDocumentsChain, VectorDBQAChain } from "./index";
+import { LLMChain, StuffDocumentsChain, VectorDBQAChain, ChatVectorDBQAChain } from "./index";
 import { BaseMemory } from "../memory";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -6,7 +6,7 @@ export type ChainValues = Record<string, any>;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type LoadValues = Record<string, any>;
 
-const chainClasses = [LLMChain, StuffDocumentsChain, VectorDBQAChain];
+const chainClasses = [LLMChain, StuffDocumentsChain, VectorDBQAChain, ChatVectorDBQAChain];
 
 export type SerializedBaseChain = ReturnType<
   InstanceType<(typeof chainClasses)[number]>["serialize"]

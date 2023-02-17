@@ -2,6 +2,7 @@ import { Tool } from "./tools";
 import { BaseLLM } from "../llms";
 import { AgentExecutor } from "./executor";
 import { ZeroShotAgent } from "./mrkl";
+
 export const initializeAgentExecutor = async (
     tools: Tool[],
     llm: BaseLLM,
@@ -15,7 +16,7 @@ export const initializeAgentExecutor = async (
                 tools,
                 returnIntermediateSteps: true,
                 });
-                return executor
+                return executor;
         default:
             throw new Error("Unknown agent type");
     }
