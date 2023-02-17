@@ -1,4 +1,4 @@
-import { LLMChain } from "./index";
+import { LLMChain } from "./llm_chain";
 import { BaseLLM } from "../llms";
 import { BasePromptTemplate, PromptTemplate } from "../prompt";
 

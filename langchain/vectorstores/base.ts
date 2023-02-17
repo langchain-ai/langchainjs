@@ -16,7 +16,7 @@ export abstract class VectorStore {
   abstract similaritySearchVectorWithScore(
     query: number[],
     k: number
-  ): Promise<[object, number][]>;
+  ): Promise<[Document, number][]>;
 
   async addDocuments(documents: Document[]): Promise<void> {
     const texts = documents.map( ({pageContent}) => (pageContent))
@@ -26,7 +26,7 @@ export abstract class VectorStore {
     );
   }
 
-  async similaritySearch(query: string, k = 4): Promise<object[]> {
+  async similaritySearch(query: string, k = 4): Promise<Document[]> {
     const results = await this.similaritySearchVectorWithScore(
       await this.embeddings.embedQuery(query),
       k

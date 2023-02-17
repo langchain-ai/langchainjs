@@ -42,7 +42,7 @@ export class HNSWLib extends SaveableVectorStore {
     this.docstore = docstore;
   }
 
-  async addVectors(vectors: number[][], metadatas: object[]) {
+  async addVectors(vectors: number[][], documents: Document[]) {
     if (vectors.length === 0) {
       return;
     }
@@ -65,7 +65,7 @@ export class HNSWLib extends SaveableVectorStore {
     // so that dot product is equivalent to cosine similarity, like this
     // https://github.com/nmslib/hnswlib/issues/384#issuecomment-1155737730
     // While we only support OpenAI embeddings this isn't necessary
-    if (vectors.length !== metadatas.length) {
+    if (vectors.length !== documents.length) {
       throw new Error(`Vectors and metadatas must have the same length`);
     }
     if (vectors[0].length !== this.args.numDimensions) {
@@ -80,7 +80,7 @@ export class HNSWLib extends SaveableVectorStore {
     }
     for (let i = 0; i < vectors.length; i += 1) {
       this.index.addPoint(vectors[i], i);
-      this.docstore[i] = metadatas[i];
+      this.docstore[i] = documents[i];
     }
   }
 
@@ -94,7 +94,7 @@ export class HNSWLib extends SaveableVectorStore {
     return result.neighbors.map(
       (docIndex, resultIndex) =>
         [this.docstore[docIndex], result.distances[resultIndex]] as [
-          object,
+          Document,
           number
         ]
     );
@@ -146,7 +146,7 @@ export class HNSWLib extends SaveableVectorStore {
     embeddings: Embeddings
   ): Promise<HNSWLib> {
     var docs = [];
-    for (let i = 1; i < texts.length; i++) {
+    for (let i = 0; i < texts.length; i++) {
         let newDoc = new Document({pageContent: texts[i], metadata: metadatas[i]});
         docs.push(newDoc);
     }
