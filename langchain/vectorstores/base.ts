@@ -11,7 +11,10 @@ export abstract class VectorStore {
 
   docstore: DocStore;
 
-  abstract addVectors(vectors: number[][], documents: Document[]): Promise<void>;
+  abstract addVectors(
+    vectors: number[][],
+    documents: Document[]
+  ): Promise<void>;
 
   abstract similaritySearchVectorWithScore(
     query: number[],
@@ -19,11 +22,8 @@ export abstract class VectorStore {
   ): Promise<[Document, number][]>;
 
   async addDocuments(documents: Document[]): Promise<void> {
-    const texts = documents.map( ({pageContent}) => (pageContent));
-    this.addVectors(
-      await this.embeddings.embedDocuments(texts),
-      documents
-    );
+    const texts = documents.map(({ pageContent }) => pageContent);
+    this.addVectors(await this.embeddings.embedDocuments(texts), documents);
   }
 
   async similaritySearch(query: string, k = 4): Promise<Document[]> {

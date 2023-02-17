@@ -13,7 +13,7 @@ import { Document } from "../document";
 let HierarchicalNSW: typeof HierarchicalNSWT | null = null;
 
 try {
-  // eslint-disable-next-line global-require
+  // eslint-disable-next-line global-require,import/no-extraneous-dependencies
   ({ HierarchicalNSW } = require("hnswlib-node"));
 } catch {
   // ignore error
@@ -146,9 +146,12 @@ export class HNSWLib extends SaveableVectorStore {
     embeddings: Embeddings
   ): Promise<HNSWLib> {
     const docs = [];
-    for (let i = 0; i < texts.length; i++) {
-        const newDoc = new Document({pageContent: texts[i], metadata: metadatas[i]});
-        docs.push(newDoc);
+    for (let i = 0; i < texts.length; i += 1) {
+      const newDoc = new Document({
+        pageContent: texts[i],
+        metadata: metadatas[i],
+      });
+      docs.push(newDoc);
     }
     return HNSWLib.fromDocuments(docs, embeddings);
   }

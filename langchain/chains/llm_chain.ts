@@ -3,7 +3,11 @@ import { BaseChain, ChainValues } from "./index";
 import { BaseLLM, SerializedLLM } from "../llms";
 
 import { BaseMemory, BufferMemory } from "../memory";
-import { BasePromptTemplate, SerializedBasePromptTemplate, PromptTemplate } from "../prompt";
+import {
+  BasePromptTemplate,
+  SerializedBasePromptTemplate,
+  PromptTemplate,
+} from "../prompts";
 
 import { resolveConfigFromFile } from "../util";
 
@@ -110,7 +114,6 @@ export class LLMChain extends BaseChain implements LLMChainInput {
     };
   }
 }
-
 
 // eslint-disable-next-line max-len
 const defaultTemplate = `The following is a friendly conversation between a human and an AI. The AI is talkative and provides lots of specific details from its context. If the AI does not know the answer to a question, it truthfully says it does not know.

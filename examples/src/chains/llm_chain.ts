@@ -1,5 +1,5 @@
 import { OpenAI } from "langchain/llms";
-import { PromptTemplate } from "langchain/prompt";
+import { PromptTemplate } from "langchain/prompts";
 import {LLMChain} from "langchain/chains";
 
 export const run = async () => {

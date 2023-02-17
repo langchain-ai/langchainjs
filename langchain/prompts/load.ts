@@ -11,14 +11,14 @@ const loadPromptFromFile = async (file: string) =>
  * @example
  * Loading from LangchainHub:
  * ```ts
- * import { loadPrompt } from "langchain/prompt";
+ * import { loadPrompt } from "langchain/prompts";
  * const prompt = await loadPrompt("lc://prompts/hello-world/prompt.yaml");
  * ```
  *
  * @example
  * Loading from local filesystem:
  * ```ts
- * import { loadPrompt } from "langchain/prompt";
+ * import { loadPrompt } from "langchain/prompts";
  * const prompt = await loadPrompt("/path/to/prompt.json");
  * ```
  */
