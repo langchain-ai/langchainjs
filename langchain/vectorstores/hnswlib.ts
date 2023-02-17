@@ -145,12 +145,12 @@ export class HNSWLib extends SaveableVectorStore {
     metadatas: object[],
     embeddings: Embeddings
   ): Promise<HNSWLib> {
-    var docs = [];
+    const docs = [];
     for (let i = 0; i < texts.length; i++) {
-        let newDoc = new Document({pageContent: texts[i], metadata: metadatas[i]});
+        const newDoc = new Document({pageContent: texts[i], metadata: metadatas[i]});
         docs.push(newDoc);
     }
-    return HNSWLib.fromDocuments(docs, embeddings)
+    return HNSWLib.fromDocuments(docs, embeddings);
   }
 
   static async fromDocuments(

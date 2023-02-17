@@ -19,7 +19,7 @@ export abstract class VectorStore {
   ): Promise<[Document, number][]>;
 
   async addDocuments(documents: Document[]): Promise<void> {
-    const texts = documents.map( ({pageContent}) => (pageContent))
+    const texts = documents.map( ({pageContent}) => (pageContent));
     this.addVectors(
       await this.embeddings.embedDocuments(texts),
       documents
