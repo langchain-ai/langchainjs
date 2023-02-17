@@ -2,19 +2,38 @@
   "name": "langchain",
   "version": "0.0.5",
   "description": "Typescript bindings for langchain",
-  "main": "./dist/cjs/index.js",
-  "module": "./dist/esm/index.js",
+  "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
-    "dist/"
+    "dist/",
+    "agents.js",
+    "agents.d.ts",
+    "tools.js",
+    "tools.d.ts",
+    "chains.js",
+    "chains.d.ts",
+    "embeddings.js",
+    "embeddings.d.ts",
+    "llms.js",
+    "llms.d.ts",
+    "prompts.js",
+    "prompts.d.ts",
+    "vectorstores.js",
+    "vectorstores.d.ts",
+    "text_splitter.js",
+    "text_splitter.d.ts",
+    "memory.js",
+    "memory.d.ts",
+    "document.js",
+    "document.d.ts"
   ],
   "scripts": {
-    "build": "tsc --declaration --outDir dist/esm --module esnext && tsc --declaration --outDir dist/cjs",
+    "build": "tsc --declaration --outDir dist/ && node create-entrypoints.js",
     "lint": "eslint .",
     "doc": "typedoc",
     "lint:fix": "yarn lint --fix",
     "precommit": "tsc --noEmit && lint-staged",
-    "clean": "rm -rf dist/",
+    "clean": "rm -rf dist/ && node create-entrypoints.js clean",
     "prepack": "yarn build",
     "test": "jest",
     "prepare": "husky install"
@@ -60,63 +79,6 @@
       "prettier --write --ignore-unknown",
       "eslint --cache --fix"
     ]
-  },
-  "exports": {
-    ".": {
-      "types": "./dist/cjs/index.d.ts",
-      "require": "./dist/cjs/index.js",
-      "import": "./dist/esm/index.js"
-    },
-    "./agents": {
-      "types": "./dist/cjs/agents/index.d.ts",
-      "require": "./dist/cjs/agents/index.js",
-      "import": "./dist/esm/agents/index.js"
-    },
-    "./tools": {
-      "types": "./dist/cjs/agents/tools/index.d.ts",
-      "require": "./dist/cjs/agents/tools/index.js",
-      "import": "./dist/esm/agents/tools/index.js"
-    },
-    "./prompt": {
-      "types": "./dist/cjs/prompt/index.d.ts",
-      "require": "./dist/cjs/prompt/index.js",
-      "import": "./dist/esm/prompt/index.js"
-    },
-    "./chains": {
-      "types": "./dist/cjs/chains/index.d.ts",
-      "require": "./dist/cjs/chains/index.js",
-      "import": "./dist/esm/chains/index.js"
-    },
-    "./llms": {
-      "types": "./dist/cjs/llms/index.d.ts",
-      "require": "./dist/cjs/llms/index.js",
-      "import": "./dist/esm/llms/index.js"
-    },
-    "./embeddings": {
-      "types": "./dist/cjs/embeddings/index.d.ts",
-      "require": "./dist/cjs/embeddings/index.js",
-      "import": "./dist/esm/embeddings/index.js"
-    },
-    "./vectorstores": {
-      "types": "./dist/cjs/vectorstores/index.d.ts",
-      "require": "./dist/cjs/vectorstores/index.js",
-      "import": "./dist/esm/vectorstores/index.js"
-    },
-    "./text_splitter": {
-      "types": "./dist/cjs/text_splitter.d.ts",
-      "require": "./dist/cjs/text_splitter.js",
-      "import": "./dist/esm/text_splitter.js"
-    },
-    "./memory": {
-      "types": "./dist/cjs/memory/index.d.ts",
-      "require": "./dist/cjs/memory/index.js",
-      "import": "./dist/esm/memory/index.js"
-    },
-    "./document": {
-      "types": "./dist/cjs/document.d.ts",
-      "require": "./dist/cjs/document.js",
-      "import": "./dist/esm/document.js"
-    }
   },
   "publishConfig": {
     "access": "public"
