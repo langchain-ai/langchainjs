@@ -4993,6 +4993,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"cohere-ai@npm:^5.0.2":
+  version: 5.0.2
+  resolution: "cohere-ai@npm:5.0.2"
+  checksum: 3c374a8acab5fe28c34277354c600d16059398e56a84b8aaea1eafc43c4d887fd519a82b7488ba6b05333411d9e017f664f312ecd9759b666a2eba976b6784ba
+  languageName: node
+  linkType: hard
+
 "collapse-white-space@npm:^1.0.2":
   version: 1.0.6
   resolution: "collapse-white-space@npm:1.0.6"
@@ -9331,6 +9338,7 @@ __metadata:
     "@typescript-eslint/eslint-plugin": ^5.51.0
     "@typescript-eslint/parser": ^5.51.0
     babel-jest: ^29.4.2
+    cohere-ai: ^5.0.2
     dotenv: ^16.0.3
     eslint: ^8.33.0
     eslint-config-airbnb-base: ^15.0.0
