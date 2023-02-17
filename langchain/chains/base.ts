@@ -1,3 +1,4 @@
+import deepcopy = require("deepcopy");
 import {
   LLMChain,
   StuffDocumentsChain,
@@ -53,7 +54,7 @@ export abstract class BaseChain implements ChainInputs {
    * Wraps {@link _call} and handles memory.
    */
   async call(values: ChainValues): Promise<ChainValues> {
-    const fullValues = structuredClone(values);
+    const fullValues = deepcopy(values);
     if (!(this.memory == null)) {
       const newValues = await this.memory.loadMemoryVariables(values);
       for (const [key, value] of Object.entries(newValues)) {
