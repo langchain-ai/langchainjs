@@ -50,6 +50,39 @@ const config = {
         docs: {
           sidebarPath: require.resolve('./sidebars.js'),
           editUrl: 'https://github.com/hwchase17/langchainjs/',
+          async sidebarItemsGenerator({
+            defaultSidebarItemsGenerator,
+            ...args
+          }) {
+            const allInternal = [];
+            const filterInternal = (items) => {
+              return items.filter(item => {
+                const isInternal = item.label?.includes("internal");
+                if (isInternal) {
+                  allInternal.push(item);
+                }
+                return !isInternal;
+              }).map((item) => {
+                const { items, ...rest } = item;
+                if (items && Array.isArray(items)) {
+                  return { ...item, items: filterInternal(item.items) }
+                }
+                return item;
+              });
+            }
+            const sidebarItems = await defaultSidebarItemsGenerator(args);
+            const filtered = filterInternal(sidebarItems)
+            if (allInternal.length > 0) {
+              return [...filtered, {
+                type: "category",
+                label: "Internal",
+                collapsible: true,
+                collapsed: true,
+                items: allInternal
+              }]; 
+            }
+            return filtered;
+          },
         },
         theme: {
           customCss: require.resolve('./src/css/custom.css'),
