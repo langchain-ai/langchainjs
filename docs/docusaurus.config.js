@@ -55,21 +55,18 @@ const config = {
             ...args
           }) {
             const allInternal = [];
-            const filterInternal = (items) => {
-              return items.filter(item => {
-                const isInternal = item.label?.includes("internal");
-                if (isInternal) {
-                  allInternal.push(item);
-                }
-                return !isInternal;
-              }).map((item) => {
-                const { items, ...rest } = item;
-                if (items && Array.isArray(items)) {
-                  return { ...item, items: filterInternal(item.items) }
-                }
-                return item;
-              });
-            }
+            const filterInternal = (items) => items.filter(item => {
+              const isInternal = item.label?.includes("internal");
+              if (isInternal) {
+                allInternal.push(item);
+              }
+              return !isInternal;
+            }).map((item) => {
+              if (item.items && Array.isArray(item.items)) {
+                return { ...item, items: filterInternal(item.items) }
+              }
+              return item;
+            });
             const sidebarItems = await defaultSidebarItemsGenerator(args);
             const filtered = filterInternal(sidebarItems)
             if (allInternal.length > 0) {
