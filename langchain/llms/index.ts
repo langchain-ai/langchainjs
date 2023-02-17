@@ -1,5 +1,6 @@
 export { BaseLLM, LLM, SerializedLLM } from "./base";
 export { OpenAI } from "./openai";
+export { Cohere } from "./cohere";
 export { loadLLM } from "./load";
 
 export type LLMCallbackManager = {
