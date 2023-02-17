@@ -35,7 +35,7 @@
     "precommit": "tsc --noEmit && lint-staged",
     "clean": "rm -rf dist/ && node create-entrypoints.js clean",
     "prepack": "yarn build",
-    "test": "jest",
+    "test": "node create-entrypoints.js clean && jest",
     "prepare": "husky install"
   },
   "author": "Langchain",

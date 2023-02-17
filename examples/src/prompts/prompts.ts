@@ -1,4 +1,4 @@
-import { PromptTemplate } from "langchain/prompt";
+import { PromptTemplate } from "langchain/prompts";
 
 export const run = async () => {
     const template = "What is a good name for a company that makes {product}?";

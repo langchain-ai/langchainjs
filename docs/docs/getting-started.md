@@ -85,7 +85,7 @@ This is easy to do with LangChain!
 First lets define the prompt template:
 
 ```typescript
-import { PromptTemplate } from "langchain/prompt";
+import { PromptTemplate } from "langchain/prompts";
 const template = "What is a good name for a company that makes {product}?"
 const prompt = new PromptTemplate({template: template, inputVariables: ["product"]});
 ```
@@ -116,7 +116,7 @@ Extending the previous example, we can construct an LLMChain which takes user in
 
 ```typescript
 import { OpenAI } from "langchain/llms";
-import { PromptTemplate } from "langchain/prompt";
+import { PromptTemplate } from "langchain/prompts";
 const model = new OpenAI({temperature: 0.9});
 const template = "What is a good name for a company that makes {product}?"
 const prompt = new PromptTemplate({template: template, inputVariables: ["product"]});

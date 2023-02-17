@@ -7,7 +7,7 @@ To generate a prompt with few shot examples, you can use the FewShotPromptTempla
 In this example, we’ll create a prompt to generate word antonyms.
 
 ```typescript
-import { FewShotPromptTemplate, PromptTemplate } from "langchain/prompt";
+import { FewShotPromptTemplate, PromptTemplate } from "langchain/prompts";
 
 /* First, create the list of few shot examples. */
 const examples = [
