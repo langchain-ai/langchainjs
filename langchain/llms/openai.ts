@@ -6,27 +6,70 @@ import type {
 } from "openai";
 
 import { backOff } from "exponential-backoff";
+import { chunkArray } from "../util";
 import { BaseLLM, LLMResult, LLMCallbackManager } from ".";
 
 let Configuration: typeof ConfigurationT | null = null;
 let OpenAIApi: typeof OpenAIApiT | null = null;
 
 try {
-  // eslint-disable-next-line global-require
+  // eslint-disable-next-line global-require,import/no-extraneous-dependencies
   ({ Configuration, OpenAIApi } = require("openai"));
 } catch {
   // ignore error
 }
 
 interface ModelParams {
+  /** Sampling temperature to use */
   temperature: number;
+
+  /**
+   * Maximum number of tokens to generate in the completion. -1 returns as many
+   * tokens as possible given the prompt and the model's maximum context size.
+   */
   maxTokens: number;
+
+  /** Total probability mass of tokens to consider at each step */
   topP: number;
+
+  /** Penalizes repeated tokens according to frequency */
   frequencyPenalty: number;
+
+  /** Penalizes repeated tokens */
   presencePenalty: number;
+
+  /** Number of completions to generate for each prompt */
   n: number;
+
+  /** Generates `bestOf` completions server side and returns the "best" */
   bestOf: number;
+
+  /** Dictionary used to adjust the probability of specific tokens being generated */
   logitBias?: Record<string, number>;
+}
+
+/**
+ * Input to OpenAI class.
+ * @augments ModelParams
+ */
+interface OpenAIInput extends ModelParams {
+  /** Model name to use */
+  modelName: string;
+
+  /** Holds any additional parameters that are valid to pass to {@link
+   * https://platform.openai.com/docs/api-reference/completions/create |
+   * `openai.createCompletion`} that are not explicitly specified on this class.
+   */
+  modelKwargs?: Kwargs;
+
+  /** Batch size to use when passing multiple documents to generate */
+  batchSize: number;
+
+  /** Maximum number of retries to make when generating */
+  maxRetries: number;
+
+  /** List of stop words to use when generating */
+  stop?: string[];
 }
 
 type TokenUsage = {
@@ -38,16 +81,22 @@ type TokenUsage = {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Kwargs = Record<string, any>;
 
-const chunkArray = <T>(arr: T[], chunkSize: number) =>
-  arr.reduce((chunks, elem, index) => {
-    const chunkIndex = Math.floor(index / chunkSize);
-    const chunk = chunks[chunkIndex] || [];
-    // eslint-disable-next-line no-param-reassign
-    chunks[chunkIndex] = chunk.concat([elem]);
-    return chunks;
-  }, [] as T[][]);
-
-export class OpenAI extends BaseLLM implements ModelParams {
+/**
+ * Wrapper around OpenAI large language models.
+ *
+ * To use you should have the `openai` package installed, with the
+ * `OPENAI_API_KEY` environment variable set.
+ *
+ * @remarks
+ * Any parameters that are valid to be passed to {@link
+ * https://platform.openai.com/docs/api-reference/completions/create |
+ * `openai.createCompletion`} can be passed through {@link modelKwargs}, even
+ * if not explicitly available on this class.
+ *
+ * @augments BaseLLM
+ * @augments OpenAIInput
+ */
+export class OpenAI extends BaseLLM implements OpenAIInput {
   temperature = 0.7;
 
   maxTokens = 256;
@@ -77,21 +126,16 @@ export class OpenAI extends BaseLLM implements ModelParams {
   private client: OpenAIApiT;
 
   constructor(
-    fields?: Partial<ModelParams> & {
+    fields?: Partial<OpenAIInput> & {
       callbackManager?: LLMCallbackManager;
       verbose?: boolean;
-      modelName?: string;
-      modelKwargs?: Kwargs;
       openAIApiKey?: string;
-      batchSize?: number;
-      maxRetries?: number;
-      stop?: string[];
     }
   ) {
     super(fields?.callbackManager, fields?.verbose);
     if (Configuration === null || OpenAIApi === null) {
       throw new Error(
-        "Please install openai as a dependency with, e.g. `npm install -S openai`"
+        "Please install openai as a dependency with, e.g. `npm i openai`"
       );
     }
 
@@ -116,6 +160,9 @@ export class OpenAI extends BaseLLM implements ModelParams {
     this.client = new OpenAIApi(clientConfig);
   }
 
+  /**
+   * Get the parameters used to invoke the model
+   */
   invocationParams(): CreateCompletionRequest & Kwargs {
     return {
       model: this.modelName,
@@ -132,6 +179,9 @@ export class OpenAI extends BaseLLM implements ModelParams {
     };
   }
 
+  /**
+   * Get the identifyin parameters for the model
+   */
   identifyingParams() {
     return {
       model_name: this.modelName,
@@ -139,6 +189,21 @@ export class OpenAI extends BaseLLM implements ModelParams {
     };
   }
 
+  /**
+   * Call out to OpenAI's endpoint with k unique prompts
+   *
+   * @param prompts - The prompts to pass into the model.
+   * @param [stop] - Optional list of stop words to use when generating.
+   *
+   * @returns The full LLM output.
+   *
+   * @example
+   * ```ts
+   * import { OpenAI } from "langchain/llms";
+   * const openai = new OpenAI();
+   * const response = await openai.generate(["Tell me a joke."]);
+   * ```
+   */
   async _generate(prompts: string[], stop?: string[]): Promise<LLMResult> {
     const subPrompts = chunkArray(prompts, this.batchSize);
     const choices: CreateCompletionResponseChoicesInner[] = [];
@@ -192,6 +257,7 @@ export class OpenAI extends BaseLLM implements ModelParams {
     };
   }
 
+  /** @ignore */
   completionWithRetry(request: CreateCompletionRequest) {
     const makeCompletionRequest = () => this.client.createCompletion(request);
     return backOff(makeCompletionRequest, {

@@ -1,53 +1,97 @@
-import { getJson, GoogleParameters } from "serpapi";
-import { Tool } from "./index";
+import type { getJson as GetJsonT, GoogleParameters } from "serpapi";
 
-export const SerpAPI = (
-  params?: Partial<GoogleParameters>,
-  apiKey?: string
-): Tool => {
-  const key = apiKey ?? process.env.SERPAPI_API_KEY;
-  return {
-    name: "search",
-    call: async (input: string) => {
-      const res = await getJson("google", {
-        ...params,
-        api_key: key,
-        q: input,
-      });
+import { Tool } from "./base";
 
-      if (res.error) {
-        throw new Error(`Got error from serpAPI: ${res.error}`);
-      }
+let getJson: typeof GetJsonT | null = null;
 
-      if (res.answer_box?.answer) {
-        return res.answer_box.answer;
-      }
+try {
+  // eslint-disable-next-line global-require,import/no-extraneous-dependencies
+  ({ getJson } = require("serpapi"));
+} catch {
+  // ignore error
+}
 
-      if (res.answer_box?.snippet) {
-        return res.answer_box.snippet;
-      }
+/**
+ * Wrapper around SerpAPI.
+ *
+ * To use, you should have the `serpapi` package installed and the SERPAPI_API_KEY environment variable set.
+ */
+export class SerpAPI extends Tool {
+  protected key: string;
 
-      if (res.answer_box?.snippet_highlighted_words) {
-        return res.answer_box.snippet_highlighted_words[0];
-      }
+  protected params: Partial<GoogleParameters>;
 
-      if (res.sports_results?.game_spotlight) {
-        return res.sports_results.game_spotlight;
-      }
+  constructor(
+    apiKey: string | undefined = process.env.SERPAPI_API_KEY,
+    params: Partial<GoogleParameters> = {}
+  ) {
+    super();
 
-      if (res.knowledge_graph?.description) {
-        return res.knowledge_graph.description;
-      }
+    // Throw error at construction time.
+    if (getJson === null) {
+      throw new Error(
+        "Please install serpapi as a dependency with, e.g. `npm i serpapi`"
+      );
+    }
 
-      if (res.organic_results?.[0]?.snippet) {
-        return res.organic_results[0].snippet;
-      }
+    if (!apiKey) {
+      throw new Error(
+        "SerpAPI API key not set. You can set it as SERPAPI_API_KEY in your .env file, or pass it to SerpAPI."
+      );
+    }
 
-      return "No good search result found";
-    },
+    this.key = apiKey;
+    this.params = params;
+  }
 
-    description:
-      // eslint-disable-next-line max-len
-      "a search engine. useful for when you need to answer questions about current events. input should be a search query.",
-  };
-};
+  name = "search";
+
+  /**
+   * Run query through SerpAPI and parse result
+   */
+  async call(input: string) {
+    if (getJson === null) {
+      throw new Error(
+        "Please install serpapi as a dependency with, e.g. `npm i serpapi`"
+      );
+    }
+    const res = await getJson("google", {
+      ...this.params,
+      api_key: this.key,
+      q: input,
+    });
+
+    if (res.error) {
+      throw new Error(`Got error from serpAPI: ${res.error}`);
+    }
+
+    if (res.answer_box?.answer) {
+      return res.answer_box.answer;
+    }
+
+    if (res.answer_box?.snippet) {
+      return res.answer_box.snippet;
+    }
+
+    if (res.answer_box?.snippet_highlighted_words) {
+      return res.answer_box.snippet_highlighted_words[0];
+    }
+
+    if (res.sports_results?.game_spotlight) {
+      return res.sports_results.game_spotlight;
+    }
+
+    if (res.knowledge_graph?.description) {
+      return res.knowledge_graph.description;
+    }
+
+    if (res.organic_results?.[0]?.snippet) {
+      return res.organic_results[0].snippet;
+    }
+
+    return "No good search result found";
+  }
+
+  description =
+    "a search engine. useful for when you need to answer questions about current events. input should be a search query.";
+}

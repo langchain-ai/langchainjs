@@ -24,8 +24,17 @@ class ParseError extends Error {
 // Hacky workaround to add static abstract methods. See detailed description of
 // issue here: https://stackoverflow.com/a/65847601
 export interface StaticAgent {
+  /**
+   * Create a prompt for this class
+   *
+   * @param tools - List of tools the agent will have access to, used to format the prompt.
+   * @param fields - Additional fields used to format the prompt.
+   *
+   * @returns A PromptTemplate assembled from the given tools and fields.
+   * */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   createPrompt(tools: Tool[], fields?: Record<string, any>): BasePromptTemplate;
+  /** Construct an agent from an LLM and a list of tools */
   fromLLMAndTools(
     llm: BaseLLM,
     tools: Tool[],
@@ -44,6 +53,13 @@ export interface AgentInput {
   allowedTools?: string[];
 }
 
+/**
+ * Class responsible for calling a language model and deciding an action.
+ *
+ * @remarks This is driven by an LLMChain. The prompt in the LLMChain *must*
+ * include a variable called "agent_scratchpad" where the agent can put its
+ * intermediary work.
+ */
 export abstract class Agent {
   llmChain: LLMChain;
 
@@ -56,18 +72,36 @@ export abstract class Agent {
     this.allowedTools = input.allowedTools;
   }
 
+  /**
+   * Extract tool and tool input from LLM output.
+   */
   abstract extractToolAndInput(
     input: string
   ): { tool: string; input: string } | null;
 
+  /**
+   * Prefix to append the observation with.
+   */
   abstract observationPrefix(): string;
 
+  /**
+   * Prefix to append the LLM call with.
+   */
   abstract llmPrefix(): string;
 
+  /**
+   * Return the string type key uniquely identifying this class of agent.
+   */
   abstract _agentType(): string;
 
+  /**
+   * Prepare the agent for a new call, if needed
+   */
   prepareForNewCall(): void {}
 
+  /**
+   * Validate that appropriate tools are passed in
+   */
   // eslint-disable-next-line no-unused-vars
   static validateTools(_: Tool[]): void {}
 
@@ -75,10 +109,16 @@ export abstract class Agent {
     return [`\n${this.observationPrefix()}`];
   }
 
+  /**
+   * Name of tool to use to terminate the chain.
+   */
   finishToolName(): string {
     return "Final Answer";
   }
 
+  /**
+   * Construct a scratchpad to let the agent continue its thought process
+   */
   private constructScratchPad(steps: AgentStep[]): string {
     return steps.reduce(
       (thoughts, { action, observation }) =>
@@ -119,6 +159,14 @@ export abstract class Agent {
     return action;
   }
 
+  /**
+   * Decide what to do given some input.
+   *
+   * @param steps - Steps the LLM has taken so far, along with observations from each.
+   * @param inputs - User inputs.
+   *
+   * @returns Action specifying what tool to use.
+   */
   plan(
     steps: AgentStep[],
     inputs: ChainValues
@@ -126,6 +174,9 @@ export abstract class Agent {
     return this._plan(steps, inputs);
   }
 
+  /**
+   * Return response when agent has been stopped due to max iterations
+   */
   async returnStoppedResponse(
     earlyStoppingMethod: StoppingMethod,
     steps: AgentStep[],
@@ -161,6 +212,9 @@ export abstract class Agent {
     throw new Error(`Invalid stopping method: ${earlyStoppingMethod}`);
   }
 
+  /**
+   * Load an agent from a json-like object describing it.
+   */
   static async deserialize(
     data: SerializedAgent & { llm?: BaseLLM; tools?: Tool[] }
   ): Promise<Agent> {

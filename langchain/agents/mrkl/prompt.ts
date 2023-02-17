@@ -1,4 +1,3 @@
-/* eslint-disable max-len */
 export const PREFIX = `Answer the following questions as best you can. You have access to the following tools:`;
 export const formatInstructions = (
   toolNames: string

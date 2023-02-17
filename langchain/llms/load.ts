@@ -1,5 +1,14 @@
 import { BaseLLM } from "./base";
 import { parseFileConfig } from "../util";
 
-export const loadLLM = BaseLLM.deserialize;
-export const loadLLMFromFile = (file: string) => loadLLM(parseFileConfig(file));
+/**
+ * Load an LLM from a local file.
+ *
+ * @example
+ * ```ts
+ * import { loadLLM } from "langchain/llms";
+ * const model = await loadLLM("/path/to/llm.json");
+ * ```
+ */
+export const loadLLM = (file: string) =>
+  BaseLLM.deserialize(parseFileConfig(file));

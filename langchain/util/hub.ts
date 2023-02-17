@@ -8,12 +8,15 @@ const DEFAULT_REF = process.env.LANGCHAIN_HUB_DEFAULT_REF ?? "master";
 const URL_BASE =
   process.env.LANGCHAIN_HUB_URL_BASE ??
   "https://raw.githubusercontent.com/hwchase17/langchain-hub/";
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type LoadValues = Record<string, any>;
 
 export const loadFromHub = async <T>(
   uri: string,
-  loader: (a: string) => T,
+  loader: (a: string, values: LoadValues) => T,
   validPrefix: string,
-  validSuffixes: Set<string>
+  validSuffixes: Set<string>,
+  values: LoadValues = {}
 ): Promise<T | undefined> => {
   const match = uri.match(HUB_PATH_REGEX);
   if (!match) {
@@ -40,5 +43,5 @@ export const loadFromHub = async <T>(
   const tmpdir = fs.mkdtempSync(path.join(os.tmpdir(), "langchain"));
   const file = path.join(tmpdir, path.basename(remotePath));
   fs.writeFileSync(file, text);
-  return loader(file);
+  return loader(file, values);
 };
