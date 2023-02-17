@@ -30,7 +30,6 @@
     "typescript": "^4.9.5"
   },
   "dependencies": {
-    "deepcopy": "^2.1.0",
     "turbo": "^1.7.4"
   }
 }
