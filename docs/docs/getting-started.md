@@ -61,7 +61,7 @@ We can now call it on some input!
 
 ```typescript
 const res = await model.call("What would be a good company name a company that makes colorful socks?");
-console.log({ res });
+console.log(res);
 ```
 
 ```shell
@@ -94,7 +94,7 @@ Let's now see how this works! We can call the `.format` method to format it.
 
 ```typescript
 const res = prompt.format({product: "colorful socks"});
-console.log({ res });
+console.log(res);
 ```
 
 ```shell
@@ -135,7 +135,7 @@ Now we can run that chain only specifying the product!
 
 ```typescript
 const res = await chain.call({product: "colorful socks"});
-console.log({ res });
+console.log(res);
 ```
 
 ```shell
@@ -229,7 +229,7 @@ const model = new OpenAI({});
 const memory = new BufferMemory();
 const chain = new ConversationChain({ llm: model, memory: memory});
 const res1 = await chain.call({ input: "Hi! I'm Jim." });
-console.log({ res1 });
+console.log(res1);
 ```
 
 ```shell
@@ -238,7 +238,7 @@ console.log({ res1 });
 
 ```typescript
 const res2 = await chain.call({ input: "What's my name?" });
-console.log({ res2 });
+console.log(res2);
 ```
 
 ```shell
