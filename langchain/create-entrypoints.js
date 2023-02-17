@@ -26,7 +26,7 @@ const updateConfig = () => {
     ...json,
     typedocOptions: {
       ...json.typedocOptions,
-      entryPoints: [...Object.values(entrypoints), "index.ts"],
+      entryPoints: [...Object.values(entrypoints), "index.ts"].map(x => `./${x}`),
     },
   }));
 
@@ -66,7 +66,13 @@ const updateConfig = () => {
 const cleanGenerated = () => {
   Object.keys(entrypoints)
     .flatMap((key) => [`${key}.js`, `${key}.d.ts`])
-    .forEach(fs.unlinkSync);
+    .forEach((fname) => {
+      try {
+        fs.unlinkSync(fname)
+      } catch {
+        // ignore error
+      }
+    });
 };
 
 const command = process.argv[2];

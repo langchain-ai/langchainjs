@@ -28,7 +28,7 @@
     "document.d.ts"
   ],
   "scripts": {
-    "build": "tsc --declaration --outDir dist/ && node create-entrypoints.js",
+    "build": "yarn clean && tsc --declaration --outDir dist/ && node create-entrypoints.js",
     "lint": "eslint .",
     "doc": "typedoc",
     "lint:fix": "yarn lint --fix",
