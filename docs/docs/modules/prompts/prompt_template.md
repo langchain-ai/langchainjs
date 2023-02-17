@@ -1,4 +1,4 @@
-### Prompt Templates
+# Prompt Templates
 
 This example walks through how to use PromptTemplates.
 At their core, prompt templates are objects that are made up of a template with certain input variables.

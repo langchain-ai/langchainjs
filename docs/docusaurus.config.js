@@ -99,21 +99,9 @@ const config = {
         title: 'Langchain',
         logo: {
           alt: 'Langchain logo',
-          src: 'img/logo.svg',
+          src: 'img/docusaurus.png',
         },
         items: [
-          {
-            type: 'doc', // 'api' is the 'out' directory
-            docId: 'getting-started',
-            position: 'left',
-            label: 'Docs',
-          },
-          {
-            to: 'docs/api/',
-            activeBasePath: 'docs',
-            position: 'left',
-            label: 'API',
-          },
           // Please keep GitHub link to the right for consistency.
           {
             href: 'https://github.com/hwchase17/langchainjs',
@@ -124,26 +112,6 @@ const config = {
       },
       footer: {
         style: 'dark',
-        links: [
-          {
-            title: 'Learn',
-            items: [
-              {
-                label: 'Get started',
-                to: 'docs/getting-started',
-              },
-            ],
-          },
-          {
-            title: 'Community',
-            items: [
-              {
-                label: 'Discord',
-                href: 'https://discord.gg/6adMQxSpJS',
-              },
-            ],
-          },
-        ],
         // Please do not remove the credits, help to publicize Docusaurus :)
         copyright: `Copyright © ${new Date().getFullYear()} Langchain, Inc. Built with Docusaurus.`,
       },

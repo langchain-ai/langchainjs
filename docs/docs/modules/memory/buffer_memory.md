@@ -1,4 +1,4 @@
-### Buffer Memory
+# Buffer Memory
 
 BufferMemory is the simplest type of memory - it just remembers previous conversational back and forths directly.
 

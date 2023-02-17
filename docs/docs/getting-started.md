@@ -178,23 +178,16 @@ Now we can get started!
 
 ```typescript
 import { OpenAI } from "langchain";
-import { loadAgent, AgentExecutor } from "langchain/agents";
+import { initializeAgentExecutor } from "langchain/agents";
 import { SerpAPI, Calculator } from "langchain/tools";
 
-const model = new OpenAI();
+const model = new OpenAI({temperature: 0});
 const tools = [new SerpAPI(), new Calculator()];
 
-const agent = await loadAgent(
-"lc://agents/zero-shot-react-description/agent.json",
-{ llm: model, tools }
+const executor = await initializeAgentExecutor(
+    tools, model, "zero-shot-react-description"
 );
-console.log("Loaded agent from Langchain hub");
-
-const executor = AgentExecutor.fromAgentAndTools({
-agent,
-tools,
-returnIntermediateSteps: true,
-});
+console.log("Loaded agent.");
 
 const input = "Who is Olivia Wilde's boyfriend?" +
 " What is his current age raised to the 0.23 power?";
