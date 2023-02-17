@@ -29,10 +29,11 @@ This library is aimed at assisting in the development of those types of applicat
 
 This is built to integrate as seamlessly as possible with the [LangChain Python package](https://github.com/hwchase17/langchain). Specifically, this means all objects (prompts, LLMs, chains, etc) are designed in a way where they can be serialized and shared between languages.
 
+The [LangChainHub](https://github.com/hwchase17/langchain-hub) is a central place for the serialized versions of these prompts, chains, and agents.
+
 ## 📖 Documentation
 
-Documentation for Typescript is still WIP. In the meantime you can see the
-full Python documentation [here](https://langchain.readthedocs.io/en/latest/?)
+For full documentation of prompts, chains, agents and more, please see [here](https://hwchase17.github.io/langchainjs/docs/overview).
 
 
 ## 💁 Contributing
