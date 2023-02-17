@@ -33,3 +33,14 @@ console.log({ res });
 ```shell
 { res: { text: '\n\nColorfulCo Sockery.' } }
 ```
+
+LLMChain also supports output streaming by providing both the `streaming: true` parameter and the appropriate `callbackManager.handleNewToken` callback function.
+
+```typescript
+const model = new OpenAI({
+  streaming: true,
+  callbackManager: {
+    handleNewToken: (token) => console.log(token),
+  },
+});
+```

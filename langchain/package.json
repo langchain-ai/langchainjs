@@ -75,6 +75,7 @@
   },
   "dependencies": {
     "deepcopy": "^2.1.0",
+    "eventsource-parser": "^0.1.0",
     "exponential-backoff": "^3.1.0",
     "expr-eval": "^2.0.2",
     "node-fetch": "2",
