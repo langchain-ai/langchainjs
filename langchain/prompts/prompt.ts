@@ -53,7 +53,7 @@ export interface PromptTemplateInput extends BasePromptTemplateInput {
  *
  * @example
  * ```ts
- * import { PromptTemplate } from "@langchain/prompt";
+ * import { PromptTemplate } from "langchain/prompts";
  *
  * const prompt = new PromptTemplate({
  *   inputVariables: ["foo"],

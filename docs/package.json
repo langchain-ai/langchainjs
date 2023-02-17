@@ -13,7 +13,7 @@
     "write-translations": "docusaurus write-translations",
     "write-heading-ids": "docusaurus write-heading-ids",
     "ci": "yarn lint && yarn format:diff",
-    "lint": "eslint --cache \"**/*.js\" && stylelint \"**/*.css\"",
+    "lint": "eslint --cache \"**/*.js\"",
     "format": "prettier --config .prettierrc --write \"**/*.{js,jsx,ts,tsx,md,mdx}\"",
     "format:diff": "prettier --config .prettierrc --list-different \"**/*.{js,jsx,ts,tsx,md,mdx}\""
   },
@@ -39,7 +39,6 @@
     "openai": "^3.1.0",
     "prettier": "^2.7.1",
     "serpapi": "^1.1.1",
-    "stylelint": "^14.9.1",
     "typedoc": "^0.23.25",
     "typedoc-plugin-markdown": "^3.14.0",
     "typedoc-plugin-missing-exports": "^1.0.0"

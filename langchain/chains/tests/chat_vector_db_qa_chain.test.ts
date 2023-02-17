@@ -1,6 +1,6 @@
 import { test } from "@jest/globals";
 import { OpenAI } from "../../llms/openai";
-import { PromptTemplate } from "../../prompt";
+import { PromptTemplate } from "../../prompts";
 import { LLMChain } from "../llm_chain";
 import { StuffDocumentsChain } from "../combine_docs_chain";
 import { ChatVectorDBQAChain } from "../chat_vector_db_chain";
@@ -9,7 +9,9 @@ import { OpenAIEmbeddings } from "../../embeddings";
 
 test("Test ChatVectorDBQAChain", async () => {
   const model = new OpenAI({});
-  const prompt = PromptTemplate.fromTemplate("Print {question}, and ignore {chat_history}");
+  const prompt = PromptTemplate.fromTemplate(
+    "Print {question}, and ignore {chat_history}"
+  );
   const vectorStore = await HNSWLib.fromTexts(
     ["Hello world", "Bye bye", "hello nice world", "bye", "hi"],
     [{ id: 2 }, { id: 1 }, { id: 3 }, { id: 4 }, { id: 5 }],

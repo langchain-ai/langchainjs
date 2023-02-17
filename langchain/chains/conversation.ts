@@ -1,6 +1,6 @@
 import { LLMChain } from "./llm_chain";
 import { BaseLLM } from "../llms";
-import { BasePromptTemplate, PromptTemplate } from "../prompt";
+import { BasePromptTemplate, PromptTemplate } from "../prompts";
 
 import { BaseMemory, BufferMemory } from "../memory";
 

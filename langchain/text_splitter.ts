@@ -1,6 +1,5 @@
 import { Document } from "./document";
 
-
 interface TextSplitterParams {
   chunkSize: number;
 
@@ -16,9 +15,7 @@ abstract class TextSplitter implements TextSplitterParams {
     this.chunkSize = fields?.chunkSize ?? this.chunkSize;
     this.chunkOverlap = fields?.chunkOverlap ?? this.chunkOverlap;
     if (this.chunkOverlap >= this.chunkSize) {
-      throw new Error(
-        "Cannot have chunkOverlap >= chunkSize"
-      );
+      throw new Error("Cannot have chunkOverlap >= chunkSize");
     }
   }
 
@@ -26,6 +23,7 @@ abstract class TextSplitter implements TextSplitterParams {
 
   createDocuments(
     texts: string[],
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     metadatas: Record<string, any>[] = []
   ): Document[] {
     const _metadatas =
@@ -34,7 +32,9 @@ abstract class TextSplitter implements TextSplitterParams {
     for (let i = 0; i < texts.length; i += 1) {
       const text = texts[i];
       for (const chunk of this.splitText(text)) {
-        documents.push(new Document({pageContent: chunk, metadata: _metadatas[i]}));
+        documents.push(
+          new Document({ pageContent: chunk, metadata: _metadatas[i] })
+        );
       }
     }
     return documents;
@@ -96,7 +96,10 @@ export interface CharacterTextSplitterParams extends TextSplitterParams {
   separator: string;
 }
 
-export class CharacterTextSplitter extends TextSplitter implements CharacterTextSplitterParams{
+export class CharacterTextSplitter
+  extends TextSplitter
+  implements CharacterTextSplitterParams
+{
   separator = "\n\n";
 
   constructor(fields?: Partial<CharacterTextSplitterParams>) {
@@ -116,11 +119,15 @@ export class CharacterTextSplitter extends TextSplitter implements CharacterText
   }
 }
 
-export interface RecursiveCharacterTextSplitterParams extends TextSplitterParams {
+export interface RecursiveCharacterTextSplitterParams
+  extends TextSplitterParams {
   separators: string[];
 }
 
-export class RecursiveCharacterTextSplitter extends TextSplitter implements RecursiveCharacterTextSplitterParams {
+export class RecursiveCharacterTextSplitter
+  extends TextSplitter
+  implements RecursiveCharacterTextSplitterParams
+{
   separators: string[] = ["\n\n", "\n", " ", ""];
 
   constructor(fields?: Partial<RecursiveCharacterTextSplitterParams>) {
