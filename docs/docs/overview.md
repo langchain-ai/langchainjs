@@ -10,7 +10,7 @@ This library is aimed at assisting in the development of those types of applicat
 
 - ❓[Question Answering over specific documents](./modules/chains/question_answering.md)
 - 💬 [Chatbots](./modules/memory/buffer_memory.md)
-- 🤖 [Agents](./modules/agents/getting_started.md)
+- 🤖 [Agents](./modules/agents/overview.md)
 
 ## Getting Started
 
