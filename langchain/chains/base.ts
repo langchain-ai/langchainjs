@@ -1,4 +1,10 @@
-import { LLMChain, StuffDocumentsChain, VectorDBQAChain, ChatVectorDBQAChain } from "./index";
+import deepcopy = require("deepcopy");
+import {
+  LLMChain,
+  StuffDocumentsChain,
+  VectorDBQAChain,
+  ChatVectorDBQAChain,
+} from "./index";
 import { BaseMemory } from "../memory";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -6,7 +12,12 @@ export type ChainValues = Record<string, any>;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type LoadValues = Record<string, any>;
 
-const chainClasses = [LLMChain, StuffDocumentsChain, VectorDBQAChain, ChatVectorDBQAChain];
+const chainClasses = [
+  LLMChain,
+  StuffDocumentsChain,
+  VectorDBQAChain,
+  ChatVectorDBQAChain,
+];
 
 export type SerializedBaseChain = ReturnType<
   InstanceType<(typeof chainClasses)[number]>["serialize"]
@@ -43,7 +54,7 @@ export abstract class BaseChain implements ChainInputs {
    * Wraps {@link _call} and handles memory.
    */
   async call(values: ChainValues): Promise<ChainValues> {
-    const fullValues = structuredClone(values);
+    const fullValues = deepcopy(values);
     if (!(this.memory == null)) {
       const newValues = await this.memory.loadMemoryVariables(values);
       for (const [key, value] of Object.entries(newValues)) {
