@@ -11,7 +11,7 @@ let Configuration: typeof ConfigurationT | null = null;
 let OpenAIApi: typeof OpenAIApiT | null = null;
 
 try {
-  // eslint-disable-next-line global-require
+  // eslint-disable-next-line global-require,import/no-extraneous-dependencies
   ({ Configuration, OpenAIApi } = require("openai"));
 } catch {
   // ignore error

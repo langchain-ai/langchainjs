@@ -1,6 +1,6 @@
 import { test } from "@jest/globals";
 import { OpenAI } from "../../llms/openai";
-import { PromptTemplate } from "../../prompt";
+import { PromptTemplate } from "../../prompts";
 import { LLMChain } from "../llm_chain";
 import { loadChain } from "../load";
 import { StuffDocumentsChain } from "../combine_docs_chain";

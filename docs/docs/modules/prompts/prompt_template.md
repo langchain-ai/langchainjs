@@ -5,7 +5,7 @@ At their core, prompt templates are objects that are made up of a template with 
 This object can then be called with `.format(...)` to format the input variables accordingly.
 
 ```typescript
-import { PromptTemplate } from "langchain/prompt";
+import { PromptTemplate } from "langchain/prompts";
 const template = "What is a good name for a company that makes {product}?"
 const prompt = new PromptTemplate({template: template, inputVariables: ["product"]});
 ```

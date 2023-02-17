@@ -8,7 +8,7 @@ import {
   staticImplements,
   SerializedAgentT,
 } from "../index";
-import { PromptTemplate } from "../../prompt";
+import { PromptTemplate } from "../../prompts";
 import { PREFIX, SUFFIX, formatInstructions } from "./prompt";
 import { deserializeHelper } from "../helpers";
 

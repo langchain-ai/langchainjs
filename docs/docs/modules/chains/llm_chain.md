@@ -8,7 +8,7 @@ We can construct an LLMChain which takes user input, formats it with a PromptTem
 
 ```typescript
 import { OpenAI } from "langchain/llms";
-import { PromptTemplate } from "langchain/prompt";
+import { PromptTemplate } from "langchain/prompts";
 const model = new OpenAI({temperature: 0.9});
 const template = "What is a good name for a company that makes {product}?"
 const prompt = new PromptTemplate({template: template, inputVariables: ["product"]});
