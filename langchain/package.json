@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "Typescript bindings for langchain",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -27,6 +27,10 @@
     "document.js",
     "document.d.ts"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:hwchase17/langchainjs.git"
+  },
   "scripts": {
     "build": "yarn clean && tsc --declaration --outDir dist/ && node create-entrypoints.js",
     "lint": "eslint .",
@@ -84,5 +88,19 @@
   },
   "publishConfig": {
     "access": "public"
-  }
+  },
+  "keywords": [
+    "llm",
+    "ai",
+    "gpt3",
+    "chain",
+    "prompt",
+    "prompt engineering",
+    "chatgpt",
+    "machine learning",
+    "ml",
+    "openai",
+    "embeddings",
+    "vectorstores"
+  ]
 }
