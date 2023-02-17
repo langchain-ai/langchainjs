@@ -9,9 +9,6 @@ Please fill out [this form](https://forms.gle/57d8AmXBYp8PP8tZA) and we'll set u
 
 `yarn add langchain`
 
-**Note**: You should also make sure you have `moduleResolution` set to `nodenext` in your
-`tsconfig.json` if you're using ESM modules and would like to import from subpaths of langchain like
-
 ```typescript
 import { OpenAI } from 'langchain/llms';
 ```
