@@ -5664,6 +5664,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"deepcopy@npm:^2.1.0":
+  version: 2.1.0
+  resolution: "deepcopy@npm:2.1.0"
+  dependencies:
+    type-detect: ^4.0.8
+  checksum: 7890ccaa8ad672bdc33d02626d13666bfbb33a68f7c6e8921a348b962b77edc4daf7f1301a789ec74a97e7f0acd611099c5cdd1e8b32ce93287819722f57b92e
+  languageName: node
+  linkType: hard
+
 "deepmerge@npm:^4.2.2":
   version: 4.3.0
   resolution: "deepmerge@npm:4.3.0"
@@ -9339,6 +9348,7 @@ __metadata:
     "@typescript-eslint/parser": ^5.51.0
     babel-jest: ^29.4.2
     cohere-ai: ^5.0.2
+    deepcopy: ^2.1.0
     dotenv: ^16.0.3
     eslint: ^8.33.0
     eslint-config-airbnb-base: ^15.0.0
@@ -13405,7 +13415,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"type-detect@npm:4.0.8":
+"type-detect@npm:4.0.8, type-detect@npm:^4.0.8":
   version: 4.0.8
   resolution: "type-detect@npm:4.0.8"
   checksum: 62b5628bff67c0eb0b66afa371bd73e230399a8d2ad30d852716efcc4656a7516904570cd8631a49a3ce57c10225adf5d0cbdcb47f6b0255fe6557c453925a15
