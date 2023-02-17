@@ -55,7 +55,7 @@ export abstract class BaseLLM {
     prompts: string[],
     stop?: string[]
   ): Promise<LLMResult> {
-    this.callbackManager.handleStart(
+    this.callbackManager.handleStart?.(
       { name: this.name },
       prompts,
       this.verbose
@@ -64,11 +64,11 @@ export abstract class BaseLLM {
     try {
       output = await this._generate(prompts, stop);
     } catch (err) {
-      this.callbackManager.handleError(`${err}`, this.verbose);
+      this.callbackManager.handleError?.(`${err}`, this.verbose);
       throw err;
     }
 
-    this.callbackManager.handleEnd(output, this.verbose);
+    this.callbackManager.handleEnd?.(output, this.verbose);
     return output;
   }
 

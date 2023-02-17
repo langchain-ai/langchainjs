@@ -2,9 +2,12 @@ import type {
   Configuration as ConfigurationT,
   OpenAIApi as OpenAIApiT,
   CreateCompletionRequest,
+  CreateCompletionResponse,
   CreateCompletionResponseChoicesInner,
 } from "openai";
+import type { IncomingMessage } from "http";
 
+import { createParser } from "eventsource-parser";
 import { backOff } from "exponential-backoff";
 import { chunkArray } from "../util";
 import { BaseLLM, LLMResult, LLMCallbackManager } from ".";
@@ -46,6 +49,9 @@ interface ModelParams {
 
   /** Dictionary used to adjust the probability of specific tokens being generated */
   logitBias?: Record<string, number>;
+
+  /** Whether to stream the results or not */
+  streaming: boolean;
 }
 
 /**
@@ -123,6 +129,8 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
 
   stop?: string[];
 
+  streaming = false;
+
   private client: OpenAIApiT;
 
   constructor(
@@ -154,6 +162,16 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
     this.logitBias = fields?.logitBias;
     this.stop = fields?.stop;
 
+    this.streaming = fields?.streaming ?? false;
+
+    if (this.streaming && this.n > 1) {
+      throw new Error("Cannot stream results when n > 1");
+    }
+
+    if (this.streaming && this.bestOf > 1) {
+      throw new Error("Cannot stream results when bestOf > 1");
+    }
+
     const clientConfig = new Configuration({
       apiKey: fields?.openAIApiKey ?? process.env.OPENAI_API_KEY,
     });
@@ -175,6 +193,7 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
       best_of: this.bestOf,
       logit_bias: this.logitBias,
       stop: this.stop,
+      stream: this.streaming,
       ...this.modelKwargs,
     };
   }
@@ -221,7 +240,50 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
         ...params,
         prompt: subPrompts[i],
       });
-      choices.push(...data.choices);
+
+      if (params.stream) {
+        const choice = await new Promise<CreateCompletionResponseChoicesInner>(
+          (resolve, reject) => {
+            const choice: CreateCompletionResponseChoicesInner = {};
+            const parser = createParser((event) => {
+              if (event.type === "event") {
+                if (event.data === "[DONE]") {
+                  resolve(choice);
+                } else {
+                  const response = JSON.parse(event.data) as Omit<
+                    CreateCompletionResponse,
+                    "usage"
+                  >;
+
+                  const part = response.choices[0];
+                  if (part != null) {
+                    choice.text = (choice.text ?? "") + (part.text ?? "");
+                    choice.finish_reason = part.finish_reason;
+                    choice.logprobs = part.logprobs;
+
+                    this.callbackManager.handleNewToken?.(
+                      part.text ?? "",
+                      this.verbose
+                    );
+                  }
+                }
+              }
+            });
+
+            // workaround for incorrect axios types
+            const stream = data as unknown as IncomingMessage;
+            stream.on("data", (data: Buffer) =>
+              parser.feed(data.toString("utf-8"))
+            );
+            stream.on("error", (error) => reject(error));
+          }
+        );
+
+        choices.push(choice);
+      } else {
+        choices.push(...data.choices);
+      }
+
       const {
         completion_tokens: completionTokens,
         prompt_tokens: promptTokens,
@@ -259,7 +321,11 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
 
   /** @ignore */
   completionWithRetry(request: CreateCompletionRequest) {
-    const makeCompletionRequest = () => this.client.createCompletion(request);
+    const makeCompletionRequest = async () =>
+      this.client.createCompletion(
+        request,
+        request.stream ? { responseType: "stream" } : undefined
+      );
     return backOff(makeCompletionRequest, {
       startingDelay: 4,
       maxDelay: 10,
