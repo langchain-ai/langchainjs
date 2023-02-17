@@ -1,5 +1,5 @@
 export { BaseChain, ChainValues } from "./base";
-export { SerializedLLMChain, LLMChain } from "./llm_chain";
+export { SerializedLLMChain, LLMChain, ConversationChain } from "./llm_chain";
 export {
   SerializedStuffDocumentsChain,
   StuffDocumentsChain,

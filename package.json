@@ -6,6 +6,7 @@
   },
   "workspaces": [
     "examples",
+    "docs",
     "langchain"
   ],
   "packageManager": "yarn@3.4.1",

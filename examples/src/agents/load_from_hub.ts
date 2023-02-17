@@ -1,10 +1,10 @@
 import { OpenAI } from "langchain";
 import { loadAgent, AgentExecutor } from "langchain/agents";
-import { SerpAPI } from "langchain/tools";
+import { SerpAPI, Calculator } from "langchain/tools";
 
 export const run = async () => {
-  const model = new OpenAI();
-  const tools = [SerpAPI()];
+  const model = new OpenAI({temperature: 0});
+  const tools = [new SerpAPI(), new Calculator()];
 
   const agent = await loadAgent(
     "lc://agents/zero-shot-react-description/agent.json",

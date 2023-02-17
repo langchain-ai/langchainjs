@@ -16,15 +16,32 @@ export interface ChainInputs {
   memory?: BaseMemory;
 }
 
+/**
+ * Base interface that all chains must implement.
+ */
 export abstract class BaseChain implements ChainInputs {
   memory?: BaseMemory;
 
+  /**
+   * Run the core logic of this chain and return the output
+   */
   abstract _call(values: ChainValues): Promise<ChainValues>;
 
+  /**
+   * Return the string type key uniquely identifying this class of chain.
+   */
   abstract _chainType(): string;
 
+  /**
+   * Return a json-like object representing this chain.
+   */
   abstract serialize(): SerializedBaseChain;
 
+  /**
+   * Run the core logic of this chain and add to output if desired.
+   *
+   * Wraps {@link _call} and handles memory.
+   */
   async call(values: ChainValues): Promise<ChainValues> {
     const fullValues = structuredClone(values);
     if (!(this.memory == null)) {
@@ -41,10 +58,16 @@ export abstract class BaseChain implements ChainInputs {
     return outputValues;
   }
 
+  /**
+   * Call the chain on all inputs in the list
+   */
   apply(inputs: ChainValues[]): ChainValues[] {
     return inputs.map(this.call);
   }
 
+  /**
+   * Load a chain from a json-like object describing it.
+   */
   static deserialize(
     data: SerializedBaseChain,
     values: LoadValues = {}

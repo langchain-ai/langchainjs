@@ -1,4 +1,10 @@
-import { BaseChain, ChainValues, SerializedStuffDocumentsChain, StuffDocumentsChain, loadQAChain } from "./index";
+import {
+  BaseChain,
+  ChainValues,
+  SerializedStuffDocumentsChain,
+  StuffDocumentsChain,
+  loadQAChain,
+} from "./index";
 
 import { VectorStore } from "../vectorstores/base";
 import { BaseLLM } from "../llms";
@@ -6,7 +12,6 @@ import { BaseLLM } from "../llms";
 import { resolveConfigFromFile } from "../util";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type LoadValues = Record<string, any>;
-
 
 export interface VectorDBQAChainInput {
   vectorstore: VectorStore;
@@ -51,11 +56,11 @@ export class VectorDBQAChain extends BaseChain implements VectorDBQAChainInput {
 
   async _call(values: ChainValues): Promise<ChainValues> {
     if (!(this.inputKey in values)) {
-        throw new Error(`Question key ${  this.inputKey  } not found.`);
-      }
+      throw new Error(`Question key ${this.inputKey} not found.`);
+    }
     const question: string = values[this.inputKey];
     const docs = await this.vectorstore.similaritySearch(question, this.k);
-    const inputs = {question, input_documents: docs};
+    const inputs = { question, input_documents: docs };
     const result = await this.combineDocumentsChain.call(inputs);
     return result;
   }
@@ -64,20 +69,27 @@ export class VectorDBQAChain extends BaseChain implements VectorDBQAChainInput {
     return "vector_db_qa" as const;
   }
 
-  static async deserialize(data: SerializedVectorDBQAChain, values: LoadValues) {
+  static async deserialize(
+    data: SerializedVectorDBQAChain,
+    values: LoadValues
+  ) {
     if (!("vectorstore" in values)) {
-        throw new Error(`Need to pass in a vectorstore to deserialize VectorDBQAChain`);
-      }
-    const {vectorstore} = values;
-    const serializedCombineDocumentsChain = resolveConfigFromFile<"combine_documents_chain", SerializedStuffDocumentsChain>(
+      throw new Error(
+        `Need to pass in a vectorstore to deserialize VectorDBQAChain`
+      );
+    }
+    const { vectorstore } = values;
+    const serializedCombineDocumentsChain = resolveConfigFromFile<
       "combine_documents_chain",
-      data
-    );
+      SerializedStuffDocumentsChain
+    >("combine_documents_chain", data);
 
     return new VectorDBQAChain({
-      combineDocumentsChain: await StuffDocumentsChain.deserialize(serializedCombineDocumentsChain),
+      combineDocumentsChain: await StuffDocumentsChain.deserialize(
+        serializedCombineDocumentsChain
+      ),
       k: data.k,
-      vectorstore
+      vectorstore,
     });
   }
 
@@ -85,17 +97,13 @@ export class VectorDBQAChain extends BaseChain implements VectorDBQAChainInput {
     return {
       _type: this._chainType(),
       combine_documents_chain: this.combineDocumentsChain.serialize(),
-      k: this.k
+      k: this.k,
     };
   }
 
-  static fromLLM(
-    llm: BaseLLM,
-    vectorstore: VectorStore,
-  ): VectorDBQAChain {
-
+  static fromLLM(llm: BaseLLM, vectorstore: VectorStore): VectorDBQAChain {
     const qaChain = loadQAChain(llm);
-    const instance = new this({vectorstore, combineDocumentsChain: qaChain});
+    const instance = new this({ vectorstore, combineDocumentsChain: qaChain });
     return instance;
   }
 }

@@ -1,7 +1,21 @@
-import { getJson, GoogleParameters } from "serpapi";
+import type { getJson as GetJsonT, GoogleParameters } from "serpapi";
 
 import { Tool } from "./base";
 
+let getJson: typeof GetJsonT | null = null;
+
+try {
+  // eslint-disable-next-line global-require,import/no-extraneous-dependencies
+  ({ getJson } = require("serpapi"));
+} catch {
+  // ignore error
+}
+
+/**
+ * Wrapper around SerpAPI.
+ *
+ * To use, you should have the `serpapi` package installed and the SERPAPI_API_KEY environment variable set.
+ */
 export class SerpAPI extends Tool {
   protected key: string;
 
@@ -13,9 +27,15 @@ export class SerpAPI extends Tool {
   ) {
     super();
 
+    // Throw error at construction time.
+    if (getJson === null) {
+      throw new Error(
+        "Please install serpapi as a dependency with, e.g. `npm i serpapi`"
+      );
+    }
+
     if (!apiKey) {
       throw new Error(
-        // eslint-disable-next-line max-len
         "SerpAPI API key not set. You can set it as SERPAPI_API_KEY in your .env file, or pass it to SerpAPI."
       );
     }
@@ -26,7 +46,15 @@ export class SerpAPI extends Tool {
 
   name = "search";
 
+  /**
+   * Run query through SerpAPI and parse result
+   */
   async call(input: string) {
+    if (getJson === null) {
+      throw new Error(
+        "Please install serpapi as a dependency with, e.g. `npm i serpapi`"
+      );
+    }
     const res = await getJson("google", {
       ...this.params,
       api_key: this.key,
@@ -65,6 +93,5 @@ export class SerpAPI extends Tool {
   }
 
   description =
-    // eslint-disable-next-line max-len
     "a search engine. useful for when you need to answer questions about current events. input should be a search query.";
 }

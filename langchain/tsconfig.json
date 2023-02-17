@@ -18,5 +18,29 @@
     "strictPropertyInitialization": false
   },
   "exclude": ["node_modules/", "dist/", "tests/"],
-  "include": ["./"]
+  "include": ["./"],
+  "typedocOptions": {
+    "plugin": [
+      "typedoc-plugin-missing-exports"
+    ],
+    "entryPoints": [
+      "./agents/index.ts",
+      "./agents/tools/index.ts",
+      "./chains/index.ts",
+      "./embeddings/index.ts",
+      "./llms/index.ts",
+      "./prompt/index.ts",
+      "./vectorstores/index.ts",
+      "./text_splitter.ts",
+      "./memory/index.ts",
+      "./document.ts",
+      "./index.ts",
+    ],
+    "excludePrivate": true,
+    "excludeInternal": true,
+    "excludeExternals": true,
+    "internalModule": "internal",
+    "readme": "none",
+    "out": "docs"
+  }
 }
