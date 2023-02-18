@@ -39,6 +39,9 @@ export class Chroma extends SaveableVectorStore {
     this.args = args;
     this.embeddings = embeddings;
     this.docstore = docstore;
+
+    this.index?.reset()
+    // const collections = this.index.listCollections()
   }
 
   async addVectors(vectors: number[][], documents: Document[]) {
@@ -55,7 +58,12 @@ export class Chroma extends SaveableVectorStore {
         );
       }
       this.index = new ChromaClient("http://localhost:8000");
-      await this.index.createCollection("langchain-collection");
+      try {
+        await this.index.createCollection("langchain-collection");
+      } catch {
+        // ignore error
+      }
+      
     }
     if (vectors.length !== documents.length) {
       throw new Error(`Vectors and metadatas must have the same length`);
@@ -67,11 +75,13 @@ export class Chroma extends SaveableVectorStore {
     }
     const collection = await this.index!.getCollection("langchain-collection");
     for (let i = 0; i < vectors.length; i += 1) {
+      console.log("adding data", i.toString(), vectors[i])
       collection.add(i.toString(), vectors[i]);
-      await collection.add(
+      let results = await collection.add(
         i.toString(),
         vectors[i]
       )
+      console.log("added data", results)
       this.docstore[i] = documents[i];
     }
   }
