@@ -4,6 +4,7 @@ import type {
   CreateCompletionRequest,
   CreateCompletionResponse,
   CreateCompletionResponseChoicesInner,
+  ConfigurationParameters,
 } from "openai";
 import type { IncomingMessage } from "http";
 
@@ -138,7 +139,8 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
       callbackManager?: LLMCallbackManager;
       verbose?: boolean;
       openAIApiKey?: string;
-    }
+    },
+    configuration?: ConfigurationParameters
   ) {
     super(fields?.callbackManager, fields?.verbose);
     if (Configuration === null || OpenAIApi === null) {
@@ -174,6 +176,7 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
 
     const clientConfig = new Configuration({
       apiKey: fields?.openAIApiKey ?? process.env.OPENAI_API_KEY,
+      ...configuration,
     });
     this.client = new OpenAIApi(clientConfig);
   }
