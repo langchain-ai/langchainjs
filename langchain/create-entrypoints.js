@@ -68,7 +68,7 @@ const cleanGenerated = () => {
     .flatMap((key) => [`${key}.js`, `${key}.d.ts`])
     .forEach((fname) => {
       try {
-        fs.unlinkSync(fname)
+        fs.unlinkSync(fname);
       } catch {
         // ignore error
       }
