@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
 const path = require("path");
 const fs = require("fs");
 
@@ -26,7 +27,9 @@ const updateConfig = () => {
     ...json,
     typedocOptions: {
       ...json.typedocOptions,
-      entryPoints: [...Object.values(entrypoints), "index.ts"].map(x => `./${x}`),
+      entryPoints: [...Object.values(entrypoints), "index.ts"].map(
+        (x) => `./${x}`
+      ),
     },
   }));
 

@@ -41,8 +41,8 @@
     "prepack": "yarn build",
     "test": "node create-entrypoints.js clean && jest",
     "prepare": "husky install",
-    "format": "prettier --write \"**/*.{ts}\"",
-    "format:diff": "prettier --list-different \"**/*.{ts}\"",
+    "format": "prettier --write \"**/*.ts\"",
+    "format:diff": "prettier --list-different \"**/*.ts\"",
     "ci": "yarn lint && yarn format:diff && yarn build"
   },
   "author": "Langchain",
