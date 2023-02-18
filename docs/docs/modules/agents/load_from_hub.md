@@ -2,7 +2,7 @@
 
 [LangChainHub](https://github.com/hwchase17/langchain-hub) contains a collection of chains which can be loaded directly via LangChain.
 
-For this example, you will also need to install the SerpAPI Python package.
+For this example, you will also need to install the SerpAPI package for JavaScript/TypeScript.
 
 ```bash
 npm i serpapi
