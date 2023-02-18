@@ -11,7 +11,7 @@ In order to load agents, you should understand the following concepts:
 - LLM: The language model powering the agent.
 - Agent: The agent to use. This should be a string that references a support agent class. Because this notebook focuses on the simplest, highest level API, this only covers using the standard supported agents.
 
-For this example, you will also need to install the SerpAPI Python package.
+For this example, you will also need to install the SerpAPI package for JavaScript/TypeScript.
 
 ```bash
 npm i serpapi
