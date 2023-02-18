@@ -1,3 +1,4 @@
+import { AxiosRequestConfig } from "axios";
 import type {
   Configuration as ConfigurationT,
   OpenAIApi as OpenAIApiT,
@@ -87,6 +88,8 @@ type TokenUsage = {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Kwargs = Record<string, any>;
+
+export type OpenAIRequestConfig = AxiosRequestConfig;
 
 /**
  * Wrapper around OpenAI large language models.
@@ -226,7 +229,11 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
    * const response = await openai.generate(["Tell me a joke."]);
    * ```
    */
-  async _generate(prompts: string[], stop?: string[]): Promise<LLMResult> {
+  async _generate(
+    prompts: string[],
+    stop?: string[],
+    options?: OpenAIRequestConfig
+  ): Promise<LLMResult> {
     const subPrompts = chunkArray(prompts, this.batchSize);
     const choices: CreateCompletionResponseChoicesInner[] = [];
     const tokenUsage: TokenUsage = {};
@@ -239,10 +246,13 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
     params.stop = stop ?? params.stop;
 
     for (let i = 0; i < subPrompts.length; i += 1) {
-      const { data } = await this.completionWithRetry({
-        ...params,
-        prompt: subPrompts[i],
-      });
+      const { data } = await this.completionWithRetry(
+        {
+          ...params,
+          prompt: subPrompts[i],
+        },
+        options
+      );
 
       if (params.stream) {
         const choice = await new Promise<CreateCompletionResponseChoicesInner>(
@@ -323,11 +333,14 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
   }
 
   /** @ignore */
-  completionWithRetry(request: CreateCompletionRequest) {
+  completionWithRetry(
+    request: CreateCompletionRequest,
+    options?: AxiosRequestConfig
+  ) {
     const makeCompletionRequest = async () =>
       this.client.createCompletion(
         request,
-        request.stream ? { responseType: "stream" } : undefined
+        request.stream ? { ...options, responseType: "stream" } : options
       );
     return backOff(makeCompletionRequest, {
       startingDelay: 4,
