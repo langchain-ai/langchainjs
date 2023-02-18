@@ -33,6 +33,10 @@ export interface ChainInputs {
 export abstract class BaseChain implements ChainInputs {
   memory?: BaseMemory;
 
+  constructor(memory?: BaseMemory) {
+    this.memory = memory;
+  }
+
   /**
    * Run the core logic of this chain and return the output
    */

@@ -1,4 +1,4 @@
-import { BaseChain, ChainValues } from "./index";
+import { BaseChain, ChainValues, ChainInputs } from "./index";
 
 import { BaseLLM, SerializedLLM } from "../llms";
 
@@ -11,7 +11,7 @@ import {
 
 import { resolveConfigFromFile } from "../util";
 
-export interface LLMChainInput {
+export interface LLMChainInput extends ChainInputs {
   /** Prompt object to use */
   prompt: BasePromptTemplate;
   /** LLM Wrapper to use */
@@ -52,8 +52,9 @@ export class LLMChain extends BaseChain implements LLMChainInput {
     prompt: BasePromptTemplate;
     llm: BaseLLM;
     outputKey?: string;
+    memory?: BaseMemory;
   }) {
-    super();
+    super(fields.memory);
     this.prompt = fields.prompt;
     this.llm = fields.llm;
     this.outputKey = fields.outputKey ?? this.outputKey;
