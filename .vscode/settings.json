@@ -1,5 +1,5 @@
 {
   "yaml.schemas": {
-    "https://json.schemastore.org/github-workflow.json": "file:///Users/nuno/dev/langchainjs/.github/workflows/deploy.yml"
+    "https://json.schemastore.org/github-workflow.json": "./.github/workflows/deploy.yml"
   }
 }
