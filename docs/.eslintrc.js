@@ -19,47 +19,48 @@ module.exports = {
     jest: true,
     node: true,
   },
-  parser: '@babel/eslint-parser',
+  parser: "@babel/eslint-parser",
   parserOptions: {
     allowImportExportEverywhere: true,
   },
-  extends: ['airbnb', 'prettier'],
-  plugins: ['react-hooks', 'header'],
+  extends: ["airbnb", "prettier"],
+  plugins: ["react-hooks", "header"],
+  ignorePatterns: ["build", "docs/api", "node_modules"],
   rules: {
     // Ignore certain webpack alias because it can't be resolved
-    'import/no-unresolved': [
+    "import/no-unresolved": [
       ERROR,
-      {ignore: ['^@theme', '^@docusaurus', '^@generated']},
+      { ignore: ["^@theme", "^@docusaurus", "^@generated"] },
     ],
-    'import/extensions': OFF,
-    'header/header': [
+    "import/extensions": OFF,
+    "header/header": [
       ERROR,
-      'block',
+      "block",
 
       [
-        '*',
-        ' * Copyright (c) Meta Platforms, Inc. and affiliates.',
-        ' *',
-        ' * This source code is licensed under the MIT license found in the',
-        ' * LICENSE file in the root directory of this source tree.',
-        ' *',
+        "*",
+        " * Copyright (c) Meta Platforms, Inc. and affiliates.",
+        " *",
+        " * This source code is licensed under the MIT license found in the",
+        " * LICENSE file in the root directory of this source tree.",
+        " *",
         // Unfortunately eslint-plugin-header doesn't support optional lines.
         // If you want to enforce your website JS files to have @flow or @format,
         // modify these lines accordingly.
         {
-          pattern: '.* @format',
+          pattern: ".* @format",
         },
-        ' ',
+        " ",
       ],
     ],
-    'react/jsx-filename-extension': OFF,
-    'react-hooks/rules-of-hooks': ERROR,
-    'react/prop-types': OFF, // PropTypes aren't used much these days.
-    'react/function-component-definition': [
+    "react/jsx-filename-extension": OFF,
+    "react-hooks/rules-of-hooks": ERROR,
+    "react/prop-types": OFF, // PropTypes aren't used much these days.
+    "react/function-component-definition": [
       WARNING,
       {
-        namedComponents: 'function-declaration',
-        unnamedComponents: 'arrow-function',
+        namedComponents: "function-declaration",
+        unnamedComponents: "arrow-function",
       },
     ],
   },

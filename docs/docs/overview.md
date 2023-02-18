@@ -1,10 +1,6 @@
 # Welcome to LangChain
 
-Large language models (LLMs) are emerging as a transformative technology, enabling
-developers to build applications that they previously could not.
-But using these LLMs in isolation is often not enough to
-create a truly powerful app - the real power comes when you are able to
-combine them with other sources of computation or knowledge.
+Large language models (LLMs) are emerging as a transformative technology, enabling developers to build applications that they previously could not. But using these LLMs in isolation is often not enough to create a truly powerful app - the real power comes when you are able to combine them with other sources of computation or knowledge.
 
 This library is aimed at assisting in the development of those types of applications. Common examples of these types of applications include:
 
@@ -20,10 +16,7 @@ Checkout the below guide for a walkthrough of how to get started using LangChain
 
 ## Modules
 
-There are several main modules that LangChain provides support for.
-For each module we provide some examples to get started and get familiar with some of the concepts.
-These modules are, in increasing order of complexity:
-
+There are several main modules that LangChain provides support for. For each module we provide some examples to get started and get familiar with some of the concepts. These modules are, in increasing order of complexity:
 
 - Prompts: This includes prompt management, prompt optimization, and prompt serialization.
 
@@ -37,15 +30,15 @@ These modules are, in increasing order of complexity:
 
 - Memory: Memory is the concept of persisting state between calls of a chain/agent. LangChain provides a standard interface for memory, a collection of memory implementations, and examples of chains/agents that use memory.
 
-
 ## Reference Docs
----------------
 
-All of LangChain's reference documentation, in one place. Full documentation on all methods and classes. 
+---
 
+All of LangChain's reference documentation, in one place. Full documentation on all methods and classes.
 
 ## Additional Resources
----------------------
+
+---
 
 Additional collection of resources we think may be useful as you develop your application!
 
