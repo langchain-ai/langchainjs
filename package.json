@@ -5,9 +5,9 @@
     "node": ">=18"
   },
   "workspaces": [
+    "langchain",
     "examples",
-    "docs",
-    "langchain"
+    "docs"
   ],
   "packageManager": "yarn@3.4.1",
   "scripts": {
