@@ -5,4 +5,5 @@ export { AZLyricsLoader } from './azlyrics';
 export { CollegeConfidentialLoader } from './college_confidential';
 export { HNLoader } from './hn';
 export { IMSDBLoader } from './imsdb';
+export { SRTLoader } from './srt';
 export { TextLoader } from './text';
