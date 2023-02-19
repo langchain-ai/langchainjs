@@ -1,6 +1,6 @@
 # Text Splitter
 
-Language Models are often limited by the amount of text that you can pass to them. Therefor, it is neccessary to split them up into smaller chunks. LangChain provides several utilities for doing so.
+Language Models are often limited by the amount of text that you can pass to them. Therefore, it is neccessary to split them up into smaller chunks. LangChain provides several utilities for doing so.
 
 The recommended TextSplitter is the `RecursiveCharacterTextSplitter`. This will split documents recursively by different characters - starting with `"\n\n"`, then `"\n"`, then `" "`. This is nice because it will try to keep all the semantically relevant content in the same place for as long as possible.
 
