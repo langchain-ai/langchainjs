@@ -3,11 +3,14 @@ import path from "path";
 import type {
   ChromaClient as ChromaClientT,
 } from "chromadb";
+import { ChromaClient as ChromaClientO } from "chromadb";
 
 import { Embeddings } from "../embeddings/base";
 
 import { DocStore, SaveableVectorStore } from "./base";
 import { Document } from "../document";
+
+const COLLECTION_NAME = "langchain-collection-2";
 
 let ChromaClient: typeof ChromaClientT | null = null;
 
@@ -17,6 +20,7 @@ try {
 } catch {
   // ignore error
 }
+ChromaClient = ChromaClientO;
 
 export interface ChromaLibArgs {
   space: string;
@@ -59,7 +63,7 @@ export class Chroma extends SaveableVectorStore {
       }
       this.index = new ChromaClient("http://localhost:8000");
       try {
-        await this.index.createCollection("langchain-collection");
+        await this.index.createCollection(COLLECTION_NAME);
       } catch {
         // ignore error
       }
@@ -73,15 +77,13 @@ export class Chroma extends SaveableVectorStore {
         `Vectors must have the same length as the number of dimensions (${this.args.numDimensions})`
       );
     }
-    const collection = await this.index!.getCollection("langchain-collection");
+
+    const collection = await this.index.getCollection(COLLECTION_NAME);
     for (let i = 0; i < vectors.length; i += 1) {
-      console.log("adding data", i.toString(), vectors[i])
-      collection.add(i.toString(), vectors[i]);
-      let results = await collection.add(
+      await collection.add(
         i.toString(),
         vectors[i]
       )
-      console.log("added data", results)
       this.docstore[i] = documents[i];
     }
   }
@@ -92,7 +94,7 @@ export class Chroma extends SaveableVectorStore {
         "Vector store not initialised yet. Try calling `addTexts` first."
       );
     }
-    const collection = await this.index.getCollection("langchain-collection");
+    const collection = await this.index.getCollection(COLLECTION_NAME);
     const result = await collection.query(query, k);
     const {ids, distances} = result;
 
@@ -110,8 +112,17 @@ export class Chroma extends SaveableVectorStore {
         "Vector store not initialised yet. Try calling `addTexts` first."
       );
     }
-    // Save is not implemented because the backend is persistent
-    directory; // workaround for unused variable
+    await fs.mkdir(directory, { recursive: true });
+    await Promise.all([
+      await fs.writeFile(
+        path.join(directory, "args.json"),
+        JSON.stringify(this.args)
+      ),
+      await fs.writeFile(
+        path.join(directory, "docstore.json"),
+        JSON.stringify(this.docstore)
+      ),
+    ]);
   }
 
   static async load(directory: string, embeddings: Embeddings) {

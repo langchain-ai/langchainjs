@@ -23,7 +23,7 @@ export abstract class VectorStore {
 
   async addDocuments(documents: Document[]): Promise<void> {
     const texts = documents.map(({ pageContent }) => pageContent);
-    this.addVectors(await this.embeddings.embedDocuments(texts), documents);
+    await this.addVectors(await this.embeddings.embedDocuments(texts), documents);
   }
 
   async similaritySearch(query: string, k = 4): Promise<Document[]> {
