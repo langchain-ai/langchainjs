@@ -11,7 +11,10 @@
     "build": "tsc --declaration --outDir dist/",
     "start": "yarn build && node -r dotenv/config dist/index.js",
     "lint": "eslint src",
-    "lint:fix": "yarn lint --fix"
+    "lint:fix": "yarn lint --fix",
+    "format": "prettier --write \"**/*.ts\"",
+    "format:diff": "prettier --list-different \"**/*.ts\"",
+    "ci": "yarn lint && yarn format:diff && yarn build"
   },
   "author": "Langchain",
   "license": "MIT",

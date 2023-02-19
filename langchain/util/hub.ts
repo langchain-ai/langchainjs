@@ -11,6 +11,8 @@ const URL_BASE =
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type LoadValues = Record<string, any>;
 
+const URL_PATH_SEPARATOR = "/";
+
 export const loadFromHub = async <T>(
   uri: string,
   loader: (a: string, values: LoadValues) => T,
@@ -24,7 +26,7 @@ export const loadFromHub = async <T>(
   }
   const [rawRef, remotePath] = match.slice(1);
   const ref = rawRef ? rawRef.slice(1) : DEFAULT_REF;
-  const parts = remotePath.split(path.sep);
+  const parts = remotePath.split(URL_PATH_SEPARATOR);
   if (parts[0] !== validPrefix) {
     return undefined;
   }
@@ -41,7 +43,10 @@ export const loadFromHub = async <T>(
 
   const text = await res.text();
   const tmpdir = fs.mkdtempSync(path.join(os.tmpdir(), "langchain"));
-  const file = path.join(tmpdir, path.basename(remotePath));
+  const file = path.join(
+    tmpdir,
+    path.basename(remotePath.replace(URL_PATH_SEPARATOR, path.sep))
+  );
   fs.writeFileSync(file, text);
   return loader(file, values);
 };

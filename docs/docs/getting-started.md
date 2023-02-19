@@ -1,6 +1,5 @@
 # Quickstart Guide
 
-
 This tutorial gives you a quick walkthrough about building an end-to-end language model application with LangChain.
 
 ## Installation
@@ -10,7 +9,6 @@ To get started, install LangChain with the following command:
 ```bash
 npm i langchain
 ```
-
 
 ## Environment Setup
 
@@ -22,13 +20,11 @@ For this example, we will be using OpenAI's APIs, so we will first need to insta
 npm i openai
 ```
 
-We will then need to set the environment variable for the OpenAI key.
-We can do this by setting the value in a `.env` file.
+We will then need to set the environment variable for the OpenAI key. We can do this by setting the value in a `.env` file.
 
 ```
 OPENAI_API_KEY="..."
 ```
-
 
 ## Building a Language Model Application
 
@@ -36,13 +32,9 @@ Now that we have installed LangChain and set up our environment, we can start bu
 
 LangChain provides many modules that can be used to build language model applications. Modules can be combined to create more complex applications, or be used individually for simple applications.
 
-
-
 ### LLMs: Get predictions from a language model
 
-The most basic building block of LangChain is calling an LLM on some input.
-Let's walk through a simple example of how to do this. 
-For this purpose, let's pretend we are building a service that generates a company name based on what the company makes.
+The most basic building block of LangChain is calling an LLM on some input. Let's walk through a simple example of how to do this. For this purpose, let's pretend we are building a service that generates a company name based on what the company makes.
 
 In order to do this, we first need to import the LLM wrapper.
 
@@ -50,17 +42,18 @@ In order to do this, we first need to import the LLM wrapper.
 import { OpenAI } from "langchain";
 ```
 
-We can then initialize the wrapper with any arguments.
-In this example, we probably want the outputs to be MORE random, so we'll initialize it with a HIGH temperature.
+We can then initialize the wrapper with any arguments. In this example, we probably want the outputs to be MORE random, so we'll initialize it with a HIGH temperature.
 
 ```typescript
-const model = new OpenAI({temperature: 0.9});
+const model = new OpenAI({ temperature: 0.9 });
 ```
 
 We can now call it on some input!
 
 ```typescript
-const res = await model.call("What would be a good company name a company that makes colorful socks?");
+const res = await model.call(
+  "What would be a good company name a company that makes colorful socks?"
+);
 console.log(res);
 ```
 
@@ -68,17 +61,11 @@ console.log(res);
 { res: '\n\nFantasy Sockery' }
 ```
 
-
-
-
 ### Prompt Templates: Manage prompts for LLMs
 
-Calling an LLM is a great first step, but it's just the beginning.
-Normally when you use an LLM in an application, you are not sending user input directly to the LLM.
-Instead, you are probably taking user input and constructing a prompt, and then sending that to the LLM.
+Calling an LLM is a great first step, but it's just the beginning. Normally when you use an LLM in an application, you are not sending user input directly to the LLM. Instead, you are probably taking user input and constructing a prompt, and then sending that to the LLM.
 
-For example, in the previous example, the text we passed in was hardcoded to ask for a name for a company that made colorful socks.
-In this imaginary service, what we would want to do is take only the user input describing what the company does, and then format the prompt with that information.
+For example, in the previous example, the text we passed in was hardcoded to ask for a name for a company that made colorful socks. In this imaginary service, what we would want to do is take only the user input describing what the company does, and then format the prompt with that information.
 
 This is easy to do with LangChain!
 
@@ -86,23 +73,23 @@ First lets define the prompt template:
 
 ```typescript
 import { PromptTemplate } from "langchain/prompts";
-const template = "What is a good name for a company that makes {product}?"
-const prompt = new PromptTemplate({template: template, inputVariables: ["product"]});
+const template = "What is a good name for a company that makes {product}?";
+const prompt = new PromptTemplate({
+  template: template,
+  inputVariables: ["product"],
+});
 ```
 
 Let's now see how this works! We can call the `.format` method to format it.
 
 ```typescript
-const res = prompt.format({product: "colorful socks"});
+const res = prompt.format({ product: "colorful socks" });
 console.log(res);
 ```
 
 ```shell
 { res: 'What is a good name for a company that makes colorful socks?' }
 ```
-
-
-
 
 ### Chains: Combine LLMs and prompts in multi-step workflows
 
@@ -117,24 +104,26 @@ Extending the previous example, we can construct an LLMChain which takes user in
 ```typescript
 import { OpenAI } from "langchain/llms";
 import { PromptTemplate } from "langchain/prompts";
-const model = new OpenAI({temperature: 0.9});
-const template = "What is a good name for a company that makes {product}?"
-const prompt = new PromptTemplate({template: template, inputVariables: ["product"]});
+const model = new OpenAI({ temperature: 0.9 });
+const template = "What is a good name for a company that makes {product}?";
+const prompt = new PromptTemplate({
+  template: template,
+  inputVariables: ["product"],
+});
 ```
 
 We can now create a very simple chain that will take user input, format the prompt with it, and then send it to the LLM:
 
 ```typescript
-import {LLMChain} from "langchain/chains"
+import { LLMChain } from "langchain/chains";
 
-const chain = new LLMChain({llm: model, prompt: prompt})
-
+const chain = new LLMChain({ llm: model, prompt: prompt });
 ```
 
 Now we can run that chain only specifying the product!
 
 ```typescript
-const res = await chain.call({product: "colorful socks"});
+const res = await chain.call({ product: "colorful socks" });
 console.log(res);
 ```
 
@@ -142,10 +131,7 @@ console.log(res);
 { res: { text: '\n\nColorfulCo Sockery.' } }
 ```
 
-There we go! There's the first chain - an LLM Chain.
-This is one of the simpler types of chains, but understanding how it works will set you up well for working with more complex chains.
-
-
+There we go! There's the first chain - an LLM Chain. This is one of the simpler types of chains, but understanding how it works will set you up well for working with more complex chains.
 
 ### Agents: Dynamically call chains based on user input
 
@@ -154,7 +140,6 @@ So far the chains we've looked at run in a predetermined order.
 Agents no longer do: they use an LLM to determine which actions to take and in what order. An action can either be using a tool and observing its output, or returning to the user.
 
 When used correctly agents can be extremely powerful. In this tutorial, we show you how to easily use agents through the simplest, highest level API.
-
 
 In order to load agents, you should understand the following concepts:
 
@@ -181,16 +166,19 @@ import { OpenAI } from "langchain";
 import { initializeAgentExecutor } from "langchain/agents";
 import { SerpAPI, Calculator } from "langchain/tools";
 
-const model = new OpenAI({temperature: 0});
+const model = new OpenAI({ temperature: 0 });
 const tools = [new SerpAPI(), new Calculator()];
 
 const executor = await initializeAgentExecutor(
-    tools, model, "zero-shot-react-description"
+  tools,
+  model,
+  "zero-shot-react-description"
 );
 console.log("Loaded agent.");
 
-const input = "Who is Olivia Wilde's boyfriend?" +
-" What is his current age raised to the 0.23 power?";
+const input =
+  "Who is Olivia Wilde's boyfriend?" +
+  " What is his current age raised to the 0.23 power?";
 console.log(`Executing with input "${input}"...`);
 
 const result = await executor.call({ input });
@@ -202,8 +190,6 @@ console.log(`Got output ${result.output}`);
 langchain-examples:start: Executing with input "Who is Olivia Wilde's boyfriend? What is his current age raised to the 0.23 power?"...
 langchain-examples:start: Got output Olivia Wilde's boyfriend is Jason Sudeikis, and his current age raised to the 0.23 power is 2.4242784855673896.
 ```
-
-
 
 ### Memory: Add state to chains and agents
 
@@ -220,7 +206,7 @@ import { ConversationChain } from "langchain/chains";
 
 const model = new OpenAI({});
 const memory = new BufferMemory();
-const chain = new ConversationChain({ llm: model, memory: memory});
+const chain = new ConversationChain({ llm: model, memory: memory });
 const res1 = await chain.call({ input: "Hi! I'm Jim." });
 console.log(res1);
 ```

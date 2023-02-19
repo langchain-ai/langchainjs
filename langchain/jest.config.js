@@ -2,7 +2,7 @@
 module.exports = {
   preset: "ts-jest/presets/js-with-ts",
   testEnvironment: "node",
-  modulePathIgnorePatterns: ["dist/"],
+  modulePathIgnorePatterns: ["dist/", "docs/"],
   transform: {
     "^.+\\.(ts|tsx)$": "ts-jest",
     "^.+\\.(js)$": "babel-jest",

@@ -39,8 +39,12 @@
     "precommit": "tsc --noEmit && lint-staged",
     "clean": "rm -rf dist/ && node create-entrypoints.js clean",
     "prepack": "yarn build",
-    "test": "node create-entrypoints.js clean && jest",
-    "prepare": "husky install"
+    "test": "node create-entrypoints.js clean && jest --testPathIgnorePatterns=\\.int\\.test.ts",
+    "test:integration": "node create-entrypoints.js clean && jest --testPathPattern=\\.int\\.test.ts",
+    "prepare": "husky install",
+    "format": "prettier --write \"**/*.ts\"",
+    "format:diff": "prettier --list-different \"**/*.ts\"",
+    "ci": "yarn lint && yarn format:diff && yarn build"
   },
   "author": "Langchain",
   "license": "MIT",
