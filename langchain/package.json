@@ -35,7 +35,10 @@
     "memory.d.ts",
     "document.js",
     "document.mjs",
-    "document.d.ts"
+    "document.d.ts",
+    "index.js",
+    "index.mjs",
+    "index.d.ts"
   ],
   "repository": {
     "type": "git",
