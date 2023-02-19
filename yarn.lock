@@ -4687,6 +4687,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"callable-instance@npm:^2.0.0":
+  version: 2.0.0
+  resolution: "callable-instance@npm:2.0.0"
+  checksum: 2a36f30cb88b0c6b0989e4c23bdfa351bd6fc4d782996506b5d7bf276da7d30b24d714dc847ca9c7852f514baca1cbf2cbb431967c45021e54483da1f7c5cb73
+  languageName: node
+  linkType: hard
+
 "callsites@npm:^3.0.0":
   version: 3.1.0
   resolution: "callsites@npm:3.1.0"
@@ -9370,6 +9377,7 @@ __metadata:
     "@typescript-eslint/eslint-plugin": ^5.51.0
     "@typescript-eslint/parser": ^5.51.0
     babel-jest: ^29.4.2
+    callable-instance: ^2.0.0
     cohere-ai: ^5.0.2
     deepcopy: ^2.1.0
     dotenv: ^16.0.3

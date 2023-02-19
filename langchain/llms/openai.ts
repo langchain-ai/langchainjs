@@ -9,6 +9,7 @@ import type { IncomingMessage } from "http";
 
 import { createParser } from "eventsource-parser";
 import { backOff } from "exponential-backoff";
+import { BaseCallbackManager } from "../callbacks";
 import { chunkArray } from "../util";
 import { BaseLLM, LLMResult, LLMCallbackManager } from ".";
 
@@ -135,7 +136,7 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
 
   constructor(
     fields?: Partial<OpenAIInput> & {
-      callbackManager?: LLMCallbackManager;
+      callbackManager?: LLMCallbackManager | BaseCallbackManager;
       verbose?: boolean;
       openAIApiKey?: string;
     }
@@ -261,9 +262,12 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
                     choice.finish_reason = part.finish_reason;
                     choice.logprobs = part.logprobs;
 
-                    this.callbackManager.handleNewToken?.(
-                      part.text ?? "",
-                      this.verbose
+                    this.callbackManager(
+                      {
+                        event: "llm.new_token",
+                        token: part.text ?? "",
+                      },
+                      { verbose: this.verbose }
                     );
                   }
                 }

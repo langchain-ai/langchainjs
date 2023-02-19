@@ -6,6 +6,7 @@ import {
   loadQAChain,
 } from "./index";
 
+import { BaseCallbackManager } from "../callbacks";
 import { VectorStore } from "../vectorstores/base";
 import { BaseLLM } from "../llms";
 
@@ -43,10 +44,12 @@ export class VectorDBQAChain extends BaseChain implements VectorDBQAChainInput {
     vectorstore: VectorStore;
     combineDocumentsChain: StuffDocumentsChain;
     inputKey?: string;
+    callbackManager?: BaseCallbackManager;
+    verbose?: boolean;
     outputKey?: string;
     k?: number;
   }) {
-    super();
+    super(fields);
     this.vectorstore = fields.vectorstore;
     this.combineDocumentsChain = fields.combineDocumentsChain;
     this.inputKey = fields.inputKey ?? this.inputKey;

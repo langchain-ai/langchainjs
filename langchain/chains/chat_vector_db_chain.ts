@@ -8,6 +8,7 @@ import {
   LLMChain,
 } from "./index";
 
+import { BaseCallbackManager } from "../callbacks";
 import { PromptTemplate } from "../prompts";
 
 import { VectorStore } from "../vectorstores/base";
@@ -74,11 +75,16 @@ export class ChatVectorDBQAChain
     vectorstore: VectorStore;
     combineDocumentsChain: StuffDocumentsChain;
     questionGeneratorChain: LLMChain;
+    callbackManager?: BaseCallbackManager;
+    verbose?: boolean;
     inputKey?: string;
     outputKey?: string;
     k?: number;
   }) {
-    super();
+    super({
+      callbackManager: fields.callbackManager,
+      verbose: fields.verbose,
+    });
     this.vectorstore = fields.vectorstore;
     this.combineDocumentsChain = fields.combineDocumentsChain;
     this.questionGeneratorChain = fields.questionGeneratorChain;

@@ -1,3 +1,4 @@
+import { BaseCallbackManager } from "../callbacks";
 import { LLM, LLMCallbackManager } from ".";
 
 interface CohereInput {
@@ -23,7 +24,7 @@ export class Cohere extends LLM implements CohereInput {
 
   constructor(
     fields?: Partial<CohereInput> & {
-      callbackManager?: LLMCallbackManager;
+      callbackManager?: LLMCallbackManager | BaseCallbackManager;
       verbose?: boolean;
     }
   ) {

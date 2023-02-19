@@ -1,4 +1,5 @@
-import deepcopy = require("deepcopy");
+import deepcopy from "deepcopy";
+import { BaseCallbackManager, defaultCallbackManager } from "../callbacks";
 import {
   LLMChain,
   StuffDocumentsChain,
@@ -31,7 +32,19 @@ export interface ChainInputs {
  * Base interface that all chains must implement.
  */
 export abstract class BaseChain implements ChainInputs {
+  callbackManager: BaseCallbackManager;
+
+  verbose?: boolean = false;
+
   memory?: BaseMemory;
+
+  constructor(fields?: {
+    callbackManager?: BaseCallbackManager;
+    verbose?: boolean;
+  }) {
+    this.callbackManager = fields?.callbackManager ?? defaultCallbackManager;
+    this.verbose = fields?.verbose ?? false;
+  }
 
   /**
    * Run the core logic of this chain and return the output
@@ -61,12 +74,35 @@ export abstract class BaseChain implements ChainInputs {
         fullValues[key] = value;
       }
     }
-    // TODO(sean) add callback support
+
+    this.callbackManager(
+      {
+        event: "chain.start",
+        chain: { name: this._chainType() },
+        inputs: fullValues,
+      },
+      { verbose: this.verbose }
+    );
     const outputValues = this._call(fullValues);
     if (!(this.memory == null)) {
       this.memory.saveContext(values, outputValues);
     }
-    return outputValues;
+    try {
+      const output = await outputValues;
+
+      this.callbackManager(
+        { event: "chain.end", output },
+        { verbose: this.verbose }
+      );
+
+      return output;
+    } catch (err) {
+      this.callbackManager(
+        { event: "chain.error", err },
+        { verbose: this.verbose }
+      );
+      throw err;
+    }
   }
 
   /**

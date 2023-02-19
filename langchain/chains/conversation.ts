@@ -1,5 +1,6 @@
 import { LLMChain } from "./llm_chain";
 import { BaseLLM } from "../llms";
+import { BaseCallbackManager } from "../callbacks";
 import { BasePromptTemplate, PromptTemplate } from "../prompts";
 
 import { BaseMemory, BufferMemory } from "../memory";
@@ -21,12 +22,16 @@ export class ConversationChain extends LLMChain {
     llm: BaseLLM;
     prompt?: BasePromptTemplate;
     outputKey?: string;
+    callbackManager?: BaseCallbackManager;
+    verbose?: boolean;
     memory?: BaseMemory;
   }) {
     super({
       prompt: fields.prompt ?? defaultPrompt,
       llm: fields.llm,
       outputKey: fields.outputKey ?? "response",
+      callbackManager: fields.callbackManager,
+      verbose: fields.verbose,
     });
     this.memory = fields.memory ?? new BufferMemory();
   }

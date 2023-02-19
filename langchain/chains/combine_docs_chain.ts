@@ -1,4 +1,5 @@
 import { BaseChain, ChainValues, LLMChain, SerializedLLMChain } from "./index";
+import { BaseCallbackManager } from "../callbacks";
 
 import { Document } from "../document";
 
@@ -41,8 +42,13 @@ export class StuffDocumentsChain
     inputKey?: string;
     outputKey?: string;
     documentVariableName?: string;
+    callbackManager?: BaseCallbackManager;
+    verbose?: boolean;
   }) {
-    super();
+    super({
+      callbackManager: fields.callbackManager,
+      verbose: fields.verbose,
+    });
     this.llmChain = fields.llmChain;
     this.documentVariableName =
       fields.documentVariableName ?? this.documentVariableName;

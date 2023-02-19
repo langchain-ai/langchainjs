@@ -1,4 +1,5 @@
 import { ChainValues, BaseChain } from "../chains";
+import { BaseCallbackManager } from "../callbacks";
 import { Agent, Tool, StoppingMethod, AgentStep, AgentFinish } from "./index";
 import { SerializedLLMChain } from "../chains/llm_chain";
 
@@ -8,6 +9,8 @@ type AgentExecutorInput = {
   returnIntermediateSteps?: boolean;
   maxIterations?: number;
   earlyStoppingMethod?: StoppingMethod;
+  callbackManager?: BaseCallbackManager;
+  verbose?: boolean;
 };
 
 /**
@@ -26,7 +29,10 @@ export class AgentExecutor extends BaseChain {
   earlyStoppingMethod: StoppingMethod = "force";
 
   constructor(input: AgentExecutorInput) {
-    super();
+    super({
+      callbackManager: input.callbackManager,
+      verbose: input.verbose,
+    });
     this.agent = input.agent;
     this.tools = input.tools;
     this.returnIntermediateSteps =
@@ -61,6 +67,10 @@ export class AgentExecutor extends BaseChain {
 
     const getOutput = (finishStep: AgentFinish) => {
       const { returnValues } = finishStep;
+      this.callbackManager(
+        { event: "agent.end", action: finishStep },
+        { verbose: this.verbose }
+      );
       if (this.returnIntermediateSteps) {
         return { ...returnValues, intermediateSteps: steps };
       }
@@ -74,9 +84,33 @@ export class AgentExecutor extends BaseChain {
       }
 
       const tool = toolsByName[action.tool.toLowerCase()];
-      const observation = tool
-        ? await tool.call(action.toolInput)
-        : `${action.tool} is not a valid tool, try another one.`;
+      this.callbackManager(
+        {
+          event: "agent.tool_start",
+          tool: { name: tool?.name ?? "N/A" },
+          action,
+        },
+        { verbose: this.verbose }
+      );
+
+      let observation;
+      try {
+        observation = tool
+          ? await tool.call(action.toolInput)
+          : `${action.tool} is not a valid tool, try another one.`;
+      } catch (err) {
+        this.callbackManager(
+          { event: "agent.tool_error", err },
+          { verbose: this.verbose }
+        );
+        throw err;
+      }
+
+      this.callbackManager(
+        { event: "agent.tool_end", output: observation },
+        { verbose: this.verbose }
+      );
+
       steps.push({ action, observation });
       if (tool?.returnDirect) {
         return getOutput({

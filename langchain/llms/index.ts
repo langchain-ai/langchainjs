@@ -3,6 +3,9 @@ export { OpenAI } from "./openai";
 export { Cohere } from "./cohere";
 export { loadLLM } from "./load";
 
+/**
+ * @deprecated use {@link callbacks!BaseCallbackManager} instead
+ */
 export type LLMCallbackManager = {
   handleStart?: (
     llm: { name: string },

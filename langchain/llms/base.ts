@@ -1,17 +1,10 @@
+import {
+  CallbackManager,
+  BaseCallbackManager,
+  defaultCallbackManager,
+} from "../callbacks";
 import { LLMCallbackManager, LLMResult, OpenAI } from "./index";
 import { BaseCache, InMemoryCache } from "../cache";
-
-const getCallbackManager = (): LLMCallbackManager => ({
-  handleStart: (..._args) => {
-    // console.log(args);
-  },
-  handleEnd: (..._args) => {
-    // console.log(args);
-  },
-  handleError: (..._args) => {
-    // console.log(args);
-  },
-});
 
 const getVerbosity = () => true;
 
@@ -33,15 +26,26 @@ export abstract class BaseLLM {
 
   cache?: boolean;
 
-  callbackManager: LLMCallbackManager;
+  callbackManager: BaseCallbackManager;
 
   /**
    * Whether to print out response text.
    */
   verbose?: boolean = false;
 
-  constructor(callbackManager?: LLMCallbackManager, verbose?: boolean) {
-    this.callbackManager = callbackManager ?? getCallbackManager();
+  constructor(
+    callbackManager?: LLMCallbackManager | BaseCallbackManager,
+    verbose?: boolean
+  ) {
+    if (!callbackManager) {
+      this.callbackManager = defaultCallbackManager;
+    } else if (typeof callbackManager === "function") {
+      this.callbackManager = callbackManager;
+    } else {
+      this.callbackManager =
+        CallbackManager.fromLegacyLLMManager(callbackManager);
+    }
+
     this.verbose = verbose ?? getVerbosity();
   }
 
@@ -55,20 +59,20 @@ export abstract class BaseLLM {
     prompts: string[],
     stop?: string[]
   ): Promise<LLMResult> {
-    this.callbackManager.handleStart?.(
-      { name: this.name },
-      prompts,
-      this.verbose
+    const opts = { verbose: this.verbose };
+    this.callbackManager(
+      { event: "llm.start", llm: { name: this.name }, prompts },
+      opts
     );
     let output;
     try {
       output = await this._generate(prompts, stop);
     } catch (err) {
-      this.callbackManager.handleError?.(`${err}`, this.verbose);
+      this.callbackManager({ event: "llm.error", err }, opts);
       throw err;
     }
 
-    this.callbackManager.handleEnd?.(output, this.verbose);
+    this.callbackManager({ event: "llm.end", output }, opts);
     return output;
   }
 

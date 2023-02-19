@@ -1,6 +1,7 @@
 import { BaseChain, ChainValues } from "./index";
 
 import { BaseLLM, SerializedLLM } from "../llms";
+import { BaseCallbackManager } from "../callbacks";
 
 import { BaseMemory, BufferMemory } from "../memory";
 import {
@@ -52,8 +53,10 @@ export class LLMChain extends BaseChain implements LLMChainInput {
     prompt: BasePromptTemplate;
     llm: BaseLLM;
     outputKey?: string;
+    callbackManager?: BaseCallbackManager;
+    verbose?: boolean;
   }) {
-    super();
+    super(fields);
     this.prompt = fields.prompt;
     this.llm = fields.llm;
     this.outputKey = fields.outputKey ?? this.outputKey;
@@ -134,11 +137,15 @@ export class ConversationChain extends LLMChain {
     prompt?: BasePromptTemplate;
     outputKey?: string;
     memory?: BaseMemory;
+    callbackManager?: BaseCallbackManager;
+    verbose?: boolean;
   }) {
     super({
       prompt: fields.prompt ?? defaultPrompt,
       llm: fields.llm,
       outputKey: fields.outputKey ?? "response",
+      callbackManager: fields.callbackManager,
+      verbose: fields.verbose,
     });
     this.memory = fields.memory ?? new BufferMemory();
   }

@@ -87,6 +87,7 @@
     }
   },
   "dependencies": {
+    "callable-instance": "^2.0.0",
     "deepcopy": "^2.1.0",
     "eventsource-parser": "^0.1.0",
     "exponential-backoff": "^3.1.0",
