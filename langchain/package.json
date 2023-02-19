@@ -81,6 +81,11 @@
   "peerDependencies": {
     "pinecone-client": "^1.0.1"
   },
+  "peerDependenciesMeta": {
+    "pinecone-client": {
+      "optional": true
+    }
+  },
   "dependencies": {
     "deepcopy": "^2.1.0",
     "eventsource-parser": "^0.1.0",
