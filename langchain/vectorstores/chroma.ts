@@ -29,6 +29,8 @@ export interface ChromaLibArgs {
 
 export class Chroma extends SaveableVectorStore {
   index?: ChromaClientT;
+  
+  docstore: DocStore;
 
   args: ChromaLibArgs;
 
@@ -38,7 +40,7 @@ export class Chroma extends SaveableVectorStore {
     docstore: DocStore,
     index?: ChromaClientT
   ) {
-    super();
+    super(embeddings);
     this.index = index;
     this.args = args;
     this.embeddings = embeddings;
@@ -46,6 +48,11 @@ export class Chroma extends SaveableVectorStore {
 
     this.index?.reset()
     // const collections = this.index.listCollections()
+  }
+
+  async addDocuments(documents: Document[]): Promise<void> {
+    const texts = documents.map(({ pageContent }) => pageContent);
+    await this.addVectors(await this.embeddings.embedDocuments(texts), documents);
   }
 
   async addVectors(vectors: number[][], documents: Document[]) {
