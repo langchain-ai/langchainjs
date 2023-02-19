@@ -77,7 +77,9 @@
     "ts-node": "^10.9.1",
     "typedoc": "^0.23.25",
     "typedoc-plugin-missing-exports": "^1.0.0",
-    "typescript": "^4.9.5"
+    "typescript": "^4.9.5",
+    "youtube-transcript": "^1.0.4",
+    "ytdl-core": "^4.11.2"
   },
   "dependencies": {
     "deepcopy": "^2.1.0",
