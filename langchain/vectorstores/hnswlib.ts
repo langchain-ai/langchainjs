@@ -6,7 +6,7 @@ import type {
 } from "hnswlib-node";
 import { Embeddings } from "../embeddings/base";
 import { SaveableVectorStore } from "./base";
-import { Docstore, Document } from "../docstore";
+import { Docstore, Document, InMemoryDocstore } from "../docstore";
 
 let HierarchicalNSW: typeof HierarchicalNSWT | null = null;
 
@@ -30,14 +30,14 @@ export class HNSWLib extends SaveableVectorStore {
   constructor(
     args: HNSWLibArgs,
     embeddings: Embeddings,
-    docstore: Docstore,
+    docstore?: Docstore,
     index?: HierarchicalNSWT
   ) {
     super();
     this.index = index;
     this.args = args;
     this.embeddings = embeddings;
-    this.docstore = docstore;
+    this.docstore = docstore ?? new InMemoryDocstore();
   }
 
   async addVectors(vectors: number[][], documents: Document[]) {
@@ -142,7 +142,7 @@ export class HNSWLib extends SaveableVectorStore {
     texts: string[],
     metadatas: object[],
     embeddings: Embeddings,
-    docstore: Docstore,
+    docstore: Docstore = new InMemoryDocstore(),
   ): Promise<HNSWLib> {
     const docs = [];
     for (let i = 0; i < texts.length; i += 1) {
@@ -158,7 +158,7 @@ export class HNSWLib extends SaveableVectorStore {
   static async fromDocuments(
     docs: Document[],
     embeddings: Embeddings,
-    docstore: Docstore,
+    docstore: Docstore = new InMemoryDocstore(),
   ): Promise<HNSWLib> {
     if (HierarchicalNSW === null) {
       throw new Error(
