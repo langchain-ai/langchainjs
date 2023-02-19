@@ -3,13 +3,13 @@ import { Document } from "../docstore";
 import { CheerioWebBaseLoader } from "./cheerio_web_base";
 
 export class HNLoader extends CheerioWebBaseLoader {
-  constructor(web_path: string) {
-    super(web_path);
+  constructor(public webPath: string) {
+    super(webPath);
   }
 
   public async load(): Promise<Document[]> {
     const $ = await this.scrape();
-    if (this.web_path.includes("item")) {
+    if (this.webPath.includes("item")) {
       return this.loadComments($);
     } 
     return this.loadResults($);
@@ -21,7 +21,7 @@ export class HNLoader extends CheerioWebBaseLoader {
     const documents: Document[] = [];
     comments.each((_index, comment) => {
       const text = $(comment).text().trim();
-      const metadata = { source: this.web_path, title };
+      const metadata = { source: this.webPath, title };
       documents.push(new Document({ pageContent: text, metadata }));
     });
     return documents;
@@ -35,7 +35,7 @@ export class HNLoader extends CheerioWebBaseLoader {
       const link = $(item).find("span[class='titleline'] a").attr("href");
       const title = $(item).find("span[class='titleline']").text().trim();
       const metadata = {
-        source: this.web_path,
+        source: this.webPath,
         title,
         link,
         ranking,

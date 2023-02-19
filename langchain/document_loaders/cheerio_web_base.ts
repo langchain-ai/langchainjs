@@ -13,9 +13,8 @@ try {
 }
 
 export class CheerioWebBaseLoader extends BaseDocumentLoader implements DocumentLoader {
-  web_path: string;
 
-  constructor(web_path: string) {
+  constructor(public webPath: string) {
     super();
 
     /**
@@ -27,8 +26,6 @@ export class CheerioWebBaseLoader extends BaseDocumentLoader implements Document
         "Please install cheerio as a dependency with, e.g. `yarn add cheerio`"
       );
     }
-
-    this.web_path = web_path;
   }
 
   async scrape(): Promise<CheerioAPI> {
@@ -38,7 +35,7 @@ export class CheerioWebBaseLoader extends BaseDocumentLoader implements Document
       );
     }
 
-    const response = await fetch(this.web_path);
+    const response = await fetch(this.webPath);
     const html = await response.text();
     return load(html);
   }
@@ -46,7 +43,7 @@ export class CheerioWebBaseLoader extends BaseDocumentLoader implements Document
   async load(): Promise<Document[]> {
     const $ = await this.scrape();
     const text = $('body').text();
-    const metadata = { source: this.web_path };
+    const metadata = { source: this.webPath };
     return [new Document({ pageContent: text, metadata })];
   }
 }
