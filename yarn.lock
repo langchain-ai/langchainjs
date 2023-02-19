@@ -9354,6 +9354,7 @@ __metadata:
     "@typescript-eslint/eslint-plugin": ^5.51.0
     "@typescript-eslint/parser": ^5.51.0
     babel-jest: ^29.4.2
+    cheerio: ^1.0.0-rc.12
     cohere-ai: ^5.0.2
     deepcopy: ^2.1.0
     dotenv: ^16.0.3
