@@ -1,4 +1,3 @@
-
 import { OpenAI } from "langchain/llms";
 import { ChatVectorDBQAChain } from "langchain/chains";
 import { HNSWLib } from "langchain/vectorstores";
