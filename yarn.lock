@@ -3459,6 +3459,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/uuid@npm:^9":
+  version: 9.0.0
+  resolution: "@types/uuid@npm:9.0.0"
+  checksum: 59ae56d9547c8758588659da2a2b4c97cce79c2aae1798c892bb29452ef08e87859dea2ec3a66bfa88d0d2153147520be2b1893be920f9f0bc9c53a3207ea6aa
+  languageName: node
+  linkType: hard
+
 "@types/ws@npm:^8.5.1":
   version: 8.5.4
   resolution: "@types/ws@npm:8.5.4"
@@ -9321,6 +9328,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"ky@npm:^0.33.1":
+  version: 0.33.2
+  resolution: "ky@npm:0.33.2"
+  checksum: bb5b1685b7d639dad5fc0a41a218f76c2400d2a9189bcf747f541633af13b68a7ef12bb8aa971bc1667087789ec5965cc3728e24b693897a2d0cc539d7593655
+  languageName: node
+  linkType: hard
+
 "langchain-examples@workspace:examples":
   version: 0.0.0-use.local
   resolution: "langchain-examples@workspace:examples"
@@ -9336,6 +9350,7 @@ __metadata:
     eslint-plugin-prettier: ^4.2.1
     langchain: "workspace:*"
     openai: ^3.1.0
+    pinecone-client: ^1.0.1
     prettier: ^2.8.3
     serpapi: ^1.1.0
     typescript: ^4.9.5
@@ -9351,6 +9366,7 @@ __metadata:
     "@jest/globals": ^29.4.2
     "@tsconfig/recommended": ^1.0.2
     "@types/node-fetch": 2
+    "@types/uuid": ^9
     "@typescript-eslint/eslint-plugin": ^5.51.0
     "@typescript-eslint/parser": ^5.51.0
     babel-jest: ^29.4.2
@@ -9378,7 +9394,13 @@ __metadata:
     typedoc: ^0.23.25
     typedoc-plugin-missing-exports: ^1.0.0
     typescript: ^4.9.5
+    uuid: ^9.0.0
     yaml: ^2.2.1
+  peerDependencies:
+    pinecone-client: ^1.0.1
+  peerDependenciesMeta:
+    pinecone-client:
+      optional: true
   languageName: unknown
   linkType: soft
 
@@ -10759,6 +10781,15 @@ __metadata:
   bin:
     pidtree: bin/pidtree.js
   checksum: 8fbc073ede9209dd15e80d616e65eb674986c93be49f42d9ddde8dbbd141bb53d628a7ca4e58ab5c370bb00383f67d75df59a9a226dede8fa801267a7030c27a
+  languageName: node
+  linkType: hard
+
+"pinecone-client@npm:^1.0.1":
+  version: 1.0.1
+  resolution: "pinecone-client@npm:1.0.1"
+  dependencies:
+    ky: ^0.33.1
+  checksum: ec7cc0f3a2a9f580d1dcb5229b86ee9c120d322b48dd37311875f8a3872128a7999e0bc9af2969d457fd52098c9ec9ca231bd73a9bc08a4b40eefd1f94333fef
   languageName: node
   linkType: hard
 
@@ -13909,6 +13940,15 @@ __metadata:
   bin:
     uuid: dist/bin/uuid
   checksum: 5575a8a75c13120e2f10e6ddc801b2c7ed7d8f3c8ac22c7ed0c7b2ba6383ec0abda88c905085d630e251719e0777045ae3236f04c812184b7c765f63a70e58df
+  languageName: node
+  linkType: hard
+
+"uuid@npm:^9.0.0":
+  version: 9.0.0
+  resolution: "uuid@npm:9.0.0"
+  bin:
+    uuid: dist/bin/uuid
+  checksum: 8dd2c83c43ddc7e1c71e36b60aea40030a6505139af6bee0f382ebcd1a56f6cd3028f7f06ffb07f8cf6ced320b76aea275284b224b002b289f89fe89c389b028
   languageName: node
   linkType: hard
 

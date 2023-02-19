@@ -54,6 +54,7 @@
     "@jest/globals": "^29.4.2",
     "@tsconfig/recommended": "^1.0.2",
     "@types/node-fetch": "2",
+    "@types/uuid": "^9",
     "@typescript-eslint/eslint-plugin": "^5.51.0",
     "@typescript-eslint/parser": "^5.51.0",
     "babel-jest": "^29.4.2",
@@ -77,12 +78,21 @@
     "typedoc-plugin-missing-exports": "^1.0.0",
     "typescript": "^4.9.5"
   },
+  "peerDependencies": {
+    "pinecone-client": "^1.0.1"
+  },
+  "peerDependenciesMeta": {
+    "pinecone-client": {
+      "optional": true
+    }
+  },
   "dependencies": {
     "deepcopy": "^2.1.0",
     "eventsource-parser": "^0.1.0",
     "exponential-backoff": "^3.1.0",
     "expr-eval": "^2.0.2",
     "node-fetch": "2",
+    "uuid": "^9.0.0",
     "yaml": "^2.2.1"
   },
   "lint-staged": {

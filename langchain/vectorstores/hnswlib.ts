@@ -27,6 +27,8 @@ export interface HNSWLibArgs {
 export class HNSWLib extends SaveableVectorStore {
   index?: HierarchicalNSWT;
 
+  docstore: DocStore;
+
   args: HNSWLibArgs;
 
   constructor(
@@ -35,11 +37,16 @@ export class HNSWLib extends SaveableVectorStore {
     docstore: DocStore,
     index?: HierarchicalNSWT
   ) {
-    super();
+    super(embeddings);
     this.index = index;
     this.args = args;
     this.embeddings = embeddings;
     this.docstore = docstore;
+  }
+
+  async addDocuments(documents: Document[]): Promise<void> {
+    const texts = documents.map(({ pageContent }) => pageContent);
+    this.addVectors(await this.embeddings.embedDocuments(texts), documents);
   }
 
   async addVectors(vectors: number[][], documents: Document[]) {
