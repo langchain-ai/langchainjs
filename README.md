@@ -10,7 +10,7 @@ Please fill out [this form](https://forms.gle/57d8AmXBYp8PP8tZA) and we'll set u
 `yarn add langchain`
 
 ```typescript
-import { OpenAI } from 'langchain/llms';
+import { OpenAI } from "langchain/llms";
 ```
 
 ## 🤔 What is this?
@@ -31,7 +31,6 @@ The [LangChainHub](https://github.com/hwchase17/langchain-hub) is a central plac
 ## 📖 Documentation
 
 For full documentation of prompts, chains, agents and more, please see [here](https://hwchase17.github.io/langchainjs/docs/overview).
-
 
 ## 💁 Contributing
 

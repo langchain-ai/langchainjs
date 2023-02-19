@@ -1,4 +1,4 @@
-import { Embeddings } from "embeddings/base";
+import { Embeddings } from "../embeddings/base";
 import { Document } from "../document";
 
 // Temporary until we have a DocStore class

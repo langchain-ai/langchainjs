@@ -11,30 +11,30 @@
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
-  title: 'Langchain',
-  tagline: 'The tagline of my site',
-  favicon: 'img/favicon.ico',
+  title: "Langchain",
+  tagline: "The tagline of my site",
+  favicon: "img/favicon.ico",
 
   // Set the production url of your site here
-  url: 'https://hwchase17.github.io',
+  url: "https://hwchase17.github.io",
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
-  baseUrl: '/langchainjs/',
+  baseUrl: "/langchainjs/",
 
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
-  organizationName: 'hwchase17', // Usually your GitHub org/user name.
-  projectName: 'langchainjs', // Usually your repo name.
-  deploymentBranch: 'gh-pages',
+  organizationName: "hwchase17", // Usually your GitHub org/user name.
+  projectName: "langchainjs", // Usually your repo name.
+  deploymentBranch: "gh-pages",
 
-  onBrokenLinks: 'throw',
-  onBrokenMarkdownLinks: 'warn',
+  onBrokenLinks: "throw",
+  onBrokenMarkdownLinks: "warn",
 
   plugins: [
     [
-      'docusaurus-plugin-typedoc',
+      "docusaurus-plugin-typedoc",
       {
-        tsconfig: '../langchain/tsconfig.json',
+        tsconfig: "../langchain/tsconfig.json",
         sidebar: {
           fullNames: true,
         },
@@ -44,45 +44,51 @@ const config = {
 
   presets: [
     [
-      'classic',
+      "classic",
       /** @type {import('@docusaurus/preset-classic').Options} */
       ({
         docs: {
-          sidebarPath: require.resolve('./sidebars.js'),
-          editUrl: 'https://github.com/hwchase17/langchainjs/',
+          sidebarPath: require.resolve("./sidebars.js"),
+          editUrl: "https://github.com/hwchase17/langchainjs/",
           async sidebarItemsGenerator({
             defaultSidebarItemsGenerator,
             ...args
           }) {
             const allInternal = [];
-            const filterInternal = (items) => items.filter(item => {
-              const isInternal = item.label?.includes("internal");
-              if (isInternal) {
-                allInternal.push(item);
-              }
-              return !isInternal;
-            }).map((item) => {
-              if (item.items && Array.isArray(item.items)) {
-                return { ...item, items: filterInternal(item.items) }
-              }
-              return item;
-            });
+            const filterInternal = (items) =>
+              items
+                .filter((item) => {
+                  const isInternal = item.label?.includes("internal");
+                  if (isInternal) {
+                    allInternal.push(item);
+                  }
+                  return !isInternal;
+                })
+                .map((item) => {
+                  if (item.items && Array.isArray(item.items)) {
+                    return { ...item, items: filterInternal(item.items) };
+                  }
+                  return item;
+                });
             const sidebarItems = await defaultSidebarItemsGenerator(args);
-            const filtered = filterInternal(sidebarItems)
+            const filtered = filterInternal(sidebarItems);
             if (allInternal.length > 0) {
-              return [...filtered, {
-                type: "category",
-                label: "Internal",
-                collapsible: true,
-                collapsed: true,
-                items: allInternal
-              }]; 
+              return [
+                ...filtered,
+                {
+                  type: "category",
+                  label: "Internal",
+                  collapsible: true,
+                  collapsed: true,
+                  items: allInternal,
+                },
+              ];
             }
             return filtered;
           },
         },
         theme: {
-          customCss: require.resolve('./src/css/custom.css'),
+          customCss: require.resolve("./src/css/custom.css"),
         },
       }),
     ],
@@ -91,24 +97,24 @@ const config = {
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
-      image: 'img/docusaurus-social-card.jpg',
+      image: "img/docusaurus-social-card.jpg",
       navbar: {
-        title: 'Langchain',
+        title: "Langchain",
         logo: {
-          alt: 'Langchain logo',
-          src: 'img/docusaurus.png',
+          alt: "Langchain logo",
+          src: "img/docusaurus.png",
         },
         items: [
           // Please keep GitHub link to the right for consistency.
           {
-            href: 'https://github.com/hwchase17/langchainjs',
-            label: 'GitHub',
-            position: 'right',
+            href: "https://github.com/hwchase17/langchainjs",
+            label: "GitHub",
+            position: "right",
           },
         ],
       },
       footer: {
-        style: 'dark',
+        style: "dark",
         // Please do not remove the credits, help to publicize Docusaurus :)
         copyright: `Copyright © ${new Date().getFullYear()} Langchain, Inc. Built with Docusaurus.`,
       },
