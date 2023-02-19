@@ -2248,6 +2248,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@dqbd/tiktoken@npm:^0.2.1":
+  version: 0.2.1
+  resolution: "@dqbd/tiktoken@npm:0.2.1"
+  checksum: 1d3fd243112b154ced97985585a439837401614e0498c9798899d925f781de769da9a0918b3f4d4c4dded1e172a546b6ec4713ad988a7990c9e1872d341b7098
+  languageName: node
+  linkType: hard
+
 "@eslint/eslintrc@npm:^1.4.1":
   version: 1.4.1
   resolution: "@eslint/eslintrc@npm:1.4.1"
@@ -9339,6 +9346,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "langchain-examples@workspace:examples"
   dependencies:
+    "@dqbd/tiktoken": ^0.2.1
     "@tsconfig/recommended": ^1.0.2
     "@typescript-eslint/eslint-plugin": ^5.51.0
     "@typescript-eslint/parser": ^5.51.0
@@ -9397,8 +9405,11 @@ __metadata:
     uuid: ^9.0.0
     yaml: ^2.2.1
   peerDependencies:
+    "@dqbd/tiktoken": ^0.2.1
     pinecone-client: ^1.0.1
   peerDependenciesMeta:
+    "@dqbd/tiktoken":
+      optional: true
     pinecone-client:
       optional: true
   languageName: unknown
