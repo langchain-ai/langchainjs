@@ -37,7 +37,7 @@ const generateFiles = () => {
   });
 
   return Object.fromEntries(files);
-}
+};
 
 const updateConfig = () => {
   updateJsonFile("./tsconfig.json", (json) => ({
@@ -59,7 +59,7 @@ const updateConfig = () => {
       const entryPoint = {
         import: `./${key}.mjs`,
         default: `./${key}.js`,
-      }
+      };
       return [`./${key}`, entryPoint];
     })),
     files: ["dist/", ...filenames]
@@ -67,7 +67,7 @@ const updateConfig = () => {
 
   Object.entries(generatedFiles).forEach(([filename, content]) => {
     fs.writeFileSync(filename, content);
-  })
+  });
   fs.writeFileSync("./.gitignore", filenames.join("\n"));
 };
 
