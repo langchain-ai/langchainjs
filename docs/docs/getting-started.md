@@ -145,7 +145,7 @@ In order to load agents, you should understand the following concepts:
 
 - Tool: A function that performs a specific duty. This can be things like: Google Search, Database lookup, code REPL, other chains. The interface for a tool is currently a function that is expected to have a string as an input, with a string as an output.
 - LLM: The language model powering the agent.
-- Agent: The agent to use. This should be a string that references a support agent class. Because this notebook focuses on the simplest, highest level API, this only covers using the standard supported agents.
+- Agent: The agent to use. This should be a string that references a support agent class. Because this tutorial focuses on the simplest, highest level API, this only covers using the standard supported agents.
 
 For this example, you will also need to install the SerpAPI package for JavaScript/TypeScript.
 
