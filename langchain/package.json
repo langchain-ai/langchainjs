@@ -2,8 +2,8 @@
   "name": "langchain",
   "version": "0.0.7",
   "description": "Typescript bindings for langchain",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./index.js",
+  "types": "./index.d.ts",
   "files": [
     "dist/",
     "agents.js",
