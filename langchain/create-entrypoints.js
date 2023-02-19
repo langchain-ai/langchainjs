@@ -25,9 +25,7 @@ const updateJsonFile = (relativePath, updateFunction) => {
 const generateFiles = () => {
   const files = Object.entries(entrypoints).flatMap(([key, value]) => {
     const modulePath =
-      path.basename(value) === "index"
-        ? path.dirname(value)
-        : value;
+      path.basename(value) === "index" ? path.dirname(value) : value;
     const compiledPath = `./dist/${modulePath}`;
     return [
       [`${key}.js`, `module.exports = require('${compiledPath}')`],
@@ -55,14 +53,16 @@ const updateConfig = () => {
 
   updateJsonFile("./package.json", (json) => ({
     ...json,
-    exports: Object.fromEntries(Object.keys(entrypoints).map((key) => {
-      const entryPoint = {
-        import: `./${key}.mjs`,
-        default: `./${key}.js`,
-      };
-      return [`./${key}`, entryPoint];
-    })),
-    files: ["dist/", ...filenames]
+    exports: Object.fromEntries(
+      ["index", ...Object.keys(entrypoints)].map((key) => {
+        const entryPoint = {
+          import: `./${key}.mjs`,
+          default: `./${key}.js`,
+        };
+        return [key === "index" ? "." : `./${key}`, entryPoint];
+      })
+    ),
+    files: ["dist/", ...filenames],
   }));
 
   Object.entries(generatedFiles).forEach(([filename, content]) => {

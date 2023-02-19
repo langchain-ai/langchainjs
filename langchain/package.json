@@ -129,6 +129,10 @@
     "vectorstores"
   ],
   "exports": {
+    ".": {
+      "import": "./index.mjs",
+      "default": "./index.js"
+    },
     "./agents": {
       "import": "./agents.mjs",
       "default": "./agents.js"
