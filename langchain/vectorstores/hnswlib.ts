@@ -46,7 +46,10 @@ export class HNSWLib extends SaveableVectorStore {
 
   async addDocuments(documents: Document[]): Promise<void> {
     const texts = documents.map(({ pageContent }) => pageContent);
-    this.addVectors(await this.embeddings.embedDocuments(texts), documents);
+    return this.addVectors(
+      await this.embeddings.embedDocuments(texts),
+      documents
+    );
   }
 
   async addVectors(vectors: number[][], documents: Document[]) {
@@ -83,7 +86,7 @@ export class HNSWLib extends SaveableVectorStore {
     const capacity = this.index.getMaxElements();
     const needed = this.index.getCurrentCount() + vectors.length;
     if (needed > capacity) {
-      this.index.resizeIndex(needed - capacity);
+      this.index.resizeIndex(needed);
     }
     for (let i = 0; i < vectors.length; i += 1) {
       this.index.addPoint(vectors[i], i);
