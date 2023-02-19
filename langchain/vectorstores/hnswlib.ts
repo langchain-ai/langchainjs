@@ -4,9 +4,7 @@ import type {
   HierarchicalNSW as HierarchicalNSWT,
   SpaceName,
 } from "hnswlib-node";
-
 import { Embeddings } from "../embeddings/base";
-
 import { SaveableVectorStore } from "./base";
 import { Docstore, Document } from "../docstore";
 
@@ -93,7 +91,7 @@ export class HNSWLib extends SaveableVectorStore {
     const result = this.index.searchKnn(query, k);
     return result.neighbors.map(
       (docIndex, resultIndex) =>
-        [this.docstore.search(docIndex), result.distances[resultIndex]] as [
+        [this.docstore.search(String(docIndex)), result.distances[resultIndex]] as [
           Document,
           number
         ]
