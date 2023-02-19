@@ -9398,6 +9398,9 @@ __metadata:
     yaml: ^2.2.1
   peerDependencies:
     pinecone-client: ^1.0.1
+  peerDependenciesMeta:
+    pinecone-client:
+      optional: true
   languageName: unknown
   linkType: soft
 
