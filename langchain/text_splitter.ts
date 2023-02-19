@@ -1,4 +1,4 @@
-import { Document } from "./document";
+import { Document } from "langchain/docstore";
 
 interface TextSplitterParams {
   chunkSize: number;

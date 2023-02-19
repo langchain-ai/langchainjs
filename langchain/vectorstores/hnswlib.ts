@@ -7,8 +7,8 @@ import type {
 
 import { Embeddings } from "../embeddings/base";
 
-import { DocStore, SaveableVectorStore } from "./base";
-import { Document } from "../document";
+import { SaveableVectorStore } from "./base";
+import { Docstore, Document } from "../docstore";
 
 let HierarchicalNSW: typeof HierarchicalNSWT | null = null;
 
@@ -32,7 +32,7 @@ export class HNSWLib extends SaveableVectorStore {
   constructor(
     args: HNSWLibArgs,
     embeddings: Embeddings,
-    docstore: DocStore,
+    docstore: Docstore,
     index?: HierarchicalNSWT
   ) {
     super();
@@ -80,7 +80,7 @@ export class HNSWLib extends SaveableVectorStore {
     }
     for (let i = 0; i < vectors.length; i += 1) {
       this.index.addPoint(vectors[i], i);
-      this.docstore[i] = documents[i];
+      this.docstore.add({[i] : documents[i]});
     }
   }
 
@@ -93,7 +93,7 @@ export class HNSWLib extends SaveableVectorStore {
     const result = this.index.searchKnn(query, k);
     return result.neighbors.map(
       (docIndex, resultIndex) =>
-        [this.docstore[docIndex], result.distances[resultIndex]] as [
+        [this.docstore.search(docIndex), result.distances[resultIndex]] as [
           Document,
           number
         ]
@@ -143,7 +143,8 @@ export class HNSWLib extends SaveableVectorStore {
   static async fromTexts(
     texts: string[],
     metadatas: object[],
-    embeddings: Embeddings
+    embeddings: Embeddings,
+    docstore: Docstore,
   ): Promise<HNSWLib> {
     const docs = [];
     for (let i = 0; i < texts.length; i += 1) {
@@ -153,12 +154,13 @@ export class HNSWLib extends SaveableVectorStore {
       });
       docs.push(newDoc);
     }
-    return HNSWLib.fromDocuments(docs, embeddings);
+    return HNSWLib.fromDocuments(docs, embeddings, docstore);
   }
 
   static async fromDocuments(
     docs: Document[],
-    embeddings: Embeddings
+    embeddings: Embeddings,
+    docstore: Docstore,
   ): Promise<HNSWLib> {
     if (HierarchicalNSW === null) {
       throw new Error(
@@ -168,7 +170,7 @@ export class HNSWLib extends SaveableVectorStore {
     const args: HNSWLibArgs = {
       space: "ip", // dot product
     };
-    const instance = new this(args, embeddings, {});
+    const instance = new this(args, embeddings, docstore);
     await instance.addDocuments(docs);
     return instance;
   }

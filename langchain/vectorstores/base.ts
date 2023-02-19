@@ -1,15 +1,10 @@
 import { Embeddings } from "../embeddings/base";
-import { Document } from "../document";
-
-// Temporary until we have a DocStore class
-export interface DocStore {
-  [key: number]: object;
-}
+import { Docstore, Document } from "../docstore";
 
 export abstract class VectorStore {
   embeddings: Embeddings;
 
-  docstore: DocStore;
+  docstore: Docstore;
 
   abstract addVectors(
     vectors: number[][],
