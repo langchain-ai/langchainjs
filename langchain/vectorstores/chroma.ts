@@ -10,8 +10,6 @@ import { Embeddings } from "../embeddings/base";
 import { DocStore, SaveableVectorStore } from "./base";
 import { Document } from "../document";
 
-const COLLECTION_NAME = "langchain-collection-2";
-
 let ChromaClient: typeof ChromaClientT | null = null;
 
 try {
@@ -25,6 +23,7 @@ ChromaClient = ChromaClientO;
 export interface ChromaLibArgs {
   space: string;
   numDimensions?: number;
+  collection_name: string,
 }
 
 export class Chroma extends SaveableVectorStore {
@@ -34,17 +33,20 @@ export class Chroma extends SaveableVectorStore {
 
   args: ChromaLibArgs;
 
+  collection_name: string;
+
   constructor(
     args: ChromaLibArgs,
     embeddings: Embeddings,
     docstore: DocStore,
-    index?: ChromaClientT
+    index?: ChromaClientT,
   ) {
     super(embeddings);
     this.index = index;
     this.args = args;
     this.embeddings = embeddings;
     this.docstore = docstore;
+    this.collection_name = args.collection_name;
   }
 
   async addDocuments(documents: Document[]): Promise<void> {
@@ -67,7 +69,7 @@ export class Chroma extends SaveableVectorStore {
       }
       this.index = new ChromaClient("http://localhost:8000");
       try {
-        await this.index.createCollection(COLLECTION_NAME);
+        await this.index.createCollection(this.collection_name);
       } catch {
         // ignore error
       }
@@ -82,7 +84,7 @@ export class Chroma extends SaveableVectorStore {
       );
     }
 
-    const collection = await this.index.getCollection(COLLECTION_NAME);
+    const collection = await this.index.getCollection(this.collection_name);
     for (let i = 0; i < vectors.length; i += 1) {
       await collection.add(
         i.toString(),
@@ -98,7 +100,7 @@ export class Chroma extends SaveableVectorStore {
         "Vector store not initialised yet. Try calling `addTexts` first."
       );
     }
-    const collection = await this.index.getCollection(COLLECTION_NAME);
+    const collection = await this.index.getCollection(this.collection_name);
     const result = await collection.query(query, k);
     const {ids, distances} = result;
 
@@ -142,6 +144,8 @@ export class Chroma extends SaveableVectorStore {
       await fs.readFile(path.join(directory, "args.json"), "utf8")
     );
 
+    args.collection_name = "langchain..."
+
     const index = new ChromaClient("http://localhost:8000");
     const [docstore] = await Promise.all([
       fs
@@ -155,7 +159,8 @@ export class Chroma extends SaveableVectorStore {
   static async fromTexts(
     texts: string[],
     metadatas: object[],
-    embeddings: Embeddings
+    embeddings: Embeddings,
+    collection_name: string
   ): Promise<Chroma> {
     const docs = [];
     for (let i = 0; i < texts.length; i += 1) {
@@ -165,12 +170,13 @@ export class Chroma extends SaveableVectorStore {
       });
       docs.push(newDoc);
     }
-    return Chroma.fromDocuments(docs, embeddings);
+    return Chroma.fromDocuments(docs, embeddings, collection_name);
   }
 
   static async fromDocuments(
     docs: Document[],
-    embeddings: Embeddings
+    embeddings: Embeddings,
+    collection_name: string
   ): Promise<Chroma> {
     if (ChromaClient === null) {
       throw new Error(
@@ -179,6 +185,7 @@ export class Chroma extends SaveableVectorStore {
     }
     const args: ChromaLibArgs = {
       space: "ip", // dot product
+      collection_name: collection_name,
     };
     const instance = new this(args, embeddings, {});
     await instance.addDocuments(docs);

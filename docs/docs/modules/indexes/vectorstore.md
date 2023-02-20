@@ -40,7 +40,8 @@ const vectorStore = await Chroma.fromTexts(
         "Achilles: Oh, no!",
         "Tortoise: But it's only a myth. Courage, Achilles." ],
     [{ id: 2 }, { id: 1 }, { id: 3 }],
-    new OpenAIEmbeddings()
+    new OpenAIEmbeddings(),
+    "goldel-escher-bach"
 );
 const resultOne = await vectorStore.similaritySearch("scared", 2);
 console.log(resultOne); // -> 'Achilles: Yiikes! What is that?'

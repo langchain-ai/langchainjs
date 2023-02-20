@@ -18,7 +18,8 @@ export const run = async () => {
   /* Create the vectorstore */
   const vectorStore = await Chroma.fromDocuments(
     docs,
-    new OpenAIEmbeddings()
+    new OpenAIEmbeddings(),
+    "state_of_the_union"
     );
   /* Create the chain */
   const chain = ChatVectorDBQAChain.fromLLM(model, vectorStore); 
