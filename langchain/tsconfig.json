@@ -42,8 +42,9 @@
       "./vectorstores/index.ts",
       "./text_splitter.ts",
       "./memory/index.ts",
-      "./document_loaders/index.ts",
       "./document.ts",
+      "./docstore/index.ts",
+      "./document_loaders/index.ts",
       "./index.ts"
     ],
     "excludePrivate": true,

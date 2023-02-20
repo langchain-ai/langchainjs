@@ -4,6 +4,7 @@ import type {
   CreateCompletionRequest,
   CreateCompletionResponse,
   CreateCompletionResponseChoicesInner,
+  ConfigurationParameters,
 } from "openai";
 import type { IncomingMessage } from "http";
 
@@ -134,12 +135,15 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
 
   private client: OpenAIApiT;
 
+  private clientConfig: ConfigurationParameters;
+
   constructor(
     fields?: Partial<OpenAIInput> & {
       callbackManager?: LLMCallbackManager;
       verbose?: boolean;
       openAIApiKey?: string;
-    }
+    },
+    configuration?: ConfigurationParameters
   ) {
     super(fields?.callbackManager, fields?.verbose);
     if (Configuration === null || OpenAIApi === null) {
@@ -172,10 +176,11 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
     if (this.streaming && this.bestOf > 1) {
       throw new Error("Cannot stream results when bestOf > 1");
     }
-
-    const clientConfig = new Configuration({
+    this.clientConfig = {
       apiKey: fields?.openAIApiKey ?? process.env.OPENAI_API_KEY,
-    });
+      ...configuration,
+    };
+    const clientConfig = new Configuration(this.clientConfig);
     this.client = new OpenAIApi(clientConfig);
   }
 
@@ -199,14 +204,19 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
     };
   }
 
-  /**
-   * Get the identifyin parameters for the model
-   */
-  identifyingParams() {
+  _identifyingParams() {
     return {
       model_name: this.modelName,
       ...this.invocationParams(),
+      ...this.clientConfig,
     };
+  }
+
+  /**
+   * Get the identifying parameters for the model
+   */
+  identifyingParams() {
+    return this._identifyingParams();
   }
 
   /**
