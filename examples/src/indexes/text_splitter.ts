@@ -1,4 +1,4 @@
-import { Document } from "langchain/docstore";
+import { Document } from "langchain/document";
 import { CharacterTextSplitter } from "langchain/text_splitter";
 
 export const run = async () => {

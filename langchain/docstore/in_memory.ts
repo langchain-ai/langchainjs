@@ -9,6 +9,11 @@ export class InMemoryDocstore extends Docstore {
     this._docs = new Map();
   }
 
+  /** Method for getting count of documents in _docs */
+  get count() {
+    return this._docs.size;
+  }
+
   search(search: string): Document | string {
     return this._docs.get(search) ?? `ID ${search} not found.`;
   }

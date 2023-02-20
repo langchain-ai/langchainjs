@@ -6,7 +6,8 @@ import type {
 } from "hnswlib-node";
 import { Embeddings } from "../embeddings/base";
 import { SaveableVectorStore } from "./base";
-import { Docstore, Document, InMemoryDocstore } from "../docstore";
+import { Document } from "../document";
+import { InMemoryDocstore } from "../docstore";
 
 let HierarchicalNSW: typeof HierarchicalNSWT | null = null;
 
@@ -25,21 +26,21 @@ export interface HNSWLibArgs {
 export class HNSWLib extends SaveableVectorStore {
   index?: HierarchicalNSWT;
 
-  docstore: DocStore;
+  docstore: InMemoryDocstore;
 
   args: HNSWLibArgs;
 
   constructor(
     args: HNSWLibArgs,
     embeddings: Embeddings,
-    docstore?: Docstore,
+    docstore: InMemoryDocstore,
     index?: HierarchicalNSWT
   ) {
     super(embeddings);
     this.index = index;
     this.args = args;
     this.embeddings = embeddings;
-    this.docstore = docstore ?? new InMemoryDocstore();
+    this.docstore = docstore;
   }
 
   async addDocuments(documents: Document[]): Promise<void> {
@@ -86,9 +87,10 @@ export class HNSWLib extends SaveableVectorStore {
     if (needed > capacity) {
       this.index.resizeIndex(needed);
     }
+    const docstoreSize = this.docstore.count;
     for (let i = 0; i < vectors.length; i += 1) {
-      this.index.addPoint(vectors[i], i);
-      this.docstore.add({[i] : documents[i]});
+      this.index.addPoint(vectors[i], docstoreSize + i);
+      this.docstore.add({[docstoreSize + i] : documents[i]});
     }
   }
 
@@ -152,7 +154,7 @@ export class HNSWLib extends SaveableVectorStore {
     texts: string[],
     metadatas: object[],
     embeddings: Embeddings,
-    docstore: Docstore = new InMemoryDocstore(),
+    docstore: InMemoryDocstore = new InMemoryDocstore(),
   ): Promise<HNSWLib> {
     const docs = [];
     for (let i = 0; i < texts.length; i += 1) {
@@ -168,7 +170,7 @@ export class HNSWLib extends SaveableVectorStore {
   static async fromDocuments(
     docs: Document[],
     embeddings: Embeddings,
-    docstore: Docstore = new InMemoryDocstore(),
+    docstore: InMemoryDocstore = new InMemoryDocstore(),
   ): Promise<HNSWLib> {
     if (HierarchicalNSW === null) {
       throw new Error(

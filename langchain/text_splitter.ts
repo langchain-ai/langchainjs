@@ -1,5 +1,5 @@
-import { Document } from "langchain/docstore";
 import type * as tiktoken from "@dqbd/tiktoken";
+import { Document } from "./document";
 
 interface TextSplitterParams {
   chunkSize: number;

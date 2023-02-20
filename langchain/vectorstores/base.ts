@@ -1,5 +1,5 @@
 import { Embeddings } from "../embeddings/base";
-import { Docstore, Document } from "../docstore";
+import { Document } from "../document";
 
 // Temporary until we have a DocStore class
 export interface DocStore {
@@ -8,8 +8,6 @@ export interface DocStore {
 
 export abstract class VectorStore {
   embeddings: Embeddings;
-
-  docstore: Docstore;
 
   constructor(embeddings: Embeddings) {
     this.embeddings = embeddings;
