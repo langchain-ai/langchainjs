@@ -54,7 +54,6 @@
     "prepack": "yarn build",
     "test": "yarn clean && jest --testPathIgnorePatterns=\\.int\\.test.ts",
     "test:integration": "yarn clean && jest --testPathPattern=\\.int\\.test.ts",
-    "prepare": "husky install",
     "format": "prettier --write \"**/*.ts\"",
     "format:diff": "prettier --list-different \"**/*.ts\"",
     "ci": "yarn lint && yarn format:diff && yarn build"
@@ -104,11 +103,13 @@
     }
   },
   "dependencies": {
+    "@dqbd/tiktoken": "^0.2.1",
     "deepcopy": "^2.1.0",
     "eventsource-parser": "^0.1.0",
     "exponential-backoff": "^3.1.0",
     "expr-eval": "^2.0.2",
     "node-fetch": "2",
+    "pinecone-client": "^1.0.1",
     "uuid": "^9.0.0",
     "yaml": "^2.2.1"
   },
