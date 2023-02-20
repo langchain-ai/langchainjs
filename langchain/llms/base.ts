@@ -1,5 +1,5 @@
 import { LLMCallbackManager, LLMResult, OpenAI } from "./index";
-import { BaseCache, InMemoryCache } from "../cache";
+import { BaseCache, getKey, InMemoryCache } from "../cache";
 
 const getCallbackManager = (): LLMCallbackManager => ({
   handleStart: (..._args) => {
@@ -93,13 +93,15 @@ export abstract class BaseLLM {
 
     const llmStringKey = `${Object.entries(params).sort()}`;
     const missingPromptIndices: number[] = [];
-    const generations = prompts.map((prompt, index) => {
-      const result = cache.lookup(prompt, llmStringKey);
-      if (!result) {
-        missingPromptIndices.push(index);
-      }
-      return result;
-    });
+    const generations = await Promise.all(
+      prompts.map(async (prompt, index) => {
+        const result = cache.lookup(await getKey(prompt, llmStringKey));
+        if (!result) {
+          missingPromptIndices.push(index);
+        }
+        return result;
+      })
+    );
 
     let llmOutput = {};
     if (missingPromptIndices.length > 0) {
@@ -107,11 +109,14 @@ export abstract class BaseLLM {
         missingPromptIndices.map((i) => prompts[i]),
         stop
       );
-      results.generations.forEach((generation, index) => {
-        const promptIndex = missingPromptIndices[index];
-        generations[promptIndex] = generation;
-        cache.update(prompts[promptIndex], llmStringKey, generation);
-      });
+      await Promise.all(
+        results.generations.map(async (generation, index) => {
+          const promptIndex = missingPromptIndices[index];
+          generations[promptIndex] = generation;
+          const key = await getKey(prompts[promptIndex], llmStringKey);
+          cache.update(key, generation);
+        })
+      );
       llmOutput = results.llmOutput ?? {};
     }
 

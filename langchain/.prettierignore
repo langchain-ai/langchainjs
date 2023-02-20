@@ -1,2 +1,5 @@
 dist/
 docs/
+*.js
+*.mjs
+*.d.ts
