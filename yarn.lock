@@ -4758,6 +4758,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"centra@npm:^2.6.0":
+  version: 2.6.0
+  resolution: "centra@npm:2.6.0"
+  checksum: 3b4d44762bceb9e20f7e45d01ffb9e462523cf8a0186f6710c08863f0455bceabfbcb754d6b01ea095c3bdee09c4ebef912669dc2b391a9af400e9ba7e398bc5
+  languageName: node
+  linkType: hard
+
 "chalk@npm:^2.0.0":
   version: 2.4.2
   resolution: "chalk@npm:2.4.2"
@@ -9378,6 +9385,7 @@ __metadata:
     "@typescript-eslint/eslint-plugin": ^5.51.0
     "@typescript-eslint/parser": ^5.51.0
     babel-jest: ^29.4.2
+    cheerio: ^1.0.0-rc.12
     cohere-ai: ^5.0.2
     deepcopy: ^2.1.0
     dotenv: ^16.0.3
@@ -9397,6 +9405,7 @@ __metadata:
     openai: ^3.1.0
     prettier: ^2.8.3
     serpapi: ^1.1.1
+    srt-parser-2: ^1.2.2
     ts-jest: ^29.0.5
     ts-node: ^10.9.1
     typedoc: ^0.23.25
@@ -9404,6 +9413,8 @@ __metadata:
     typescript: ^4.9.5
     uuid: ^9.0.0
     yaml: ^2.2.1
+    youtube-transcript: ^1.0.4
+    ytdl-core: ^4.11.2
   peerDependencies:
     "@dqbd/tiktoken": ^0.2.1
     pinecone-client: ^1.0.1
@@ -9695,6 +9706,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"m3u8stream@npm:^0.8.6":
+  version: 0.8.6
+  resolution: "m3u8stream@npm:0.8.6"
+  dependencies:
+    miniget: ^4.2.2
+    sax: ^1.2.4
+  checksum: b8f61c1101dd3ad873ff2f3d0e9e6a5139ad17e20990b89ae67f2585043bc2b727151ed85f3e58aabc8a1a95af28e1ee26f69af6ac9e8841ff68129eae2f5ac5
+  languageName: node
+  linkType: hard
+
 "make-dir@npm:^3.0.0, make-dir@npm:^3.0.2, make-dir@npm:^3.1.0":
   version: 3.1.0
   resolution: "make-dir@npm:3.1.0"
@@ -9939,6 +9960,13 @@ __metadata:
   peerDependencies:
     webpack: ^5.0.0
   checksum: cd65611d6dc452f230c6ebba8a47bc5f5146b813b13b0b402c6f4a69f6451242eeea781152bebd31cad8ca7c7e95dac91e7e464087f18fb65b2d1097b58cf4ae
+  languageName: node
+  linkType: hard
+
+"miniget@npm:^4.2.2":
+  version: 4.2.2
+  resolution: "miniget@npm:4.2.2"
+  checksum: 577a7826cbf521b8ecb31906b3dce55c61b35398318a461f3484681572287208b7ec5a40de7b0bf0b7738f21630d015cc39ba3edcfb69146565f1528ff957612
   languageName: node
   linkType: hard
 
@@ -10769,6 +10797,15 @@ __metadata:
   version: 4.0.0
   resolution: "path-type@npm:4.0.0"
   checksum: 5b1e2daa247062061325b8fdbfd1fb56dde0a448fb1455453276ea18c60685bdad23a445dc148cf87bc216be1573357509b7d4060494a6fd768c7efad833ee45
+  languageName: node
+  linkType: hard
+
+"phin@npm:^3.5.0":
+  version: 3.7.0
+  resolution: "phin@npm:3.7.0"
+  dependencies:
+    centra: ^2.6.0
+  checksum: b0a35e943615c40a3ccd7d6a2dd062568258e6b36dceed3150d13d28cad906e9028e756ad6efe66963b43937879e8a3593f986d17aac968d42982b4e8702e539
   languageName: node
   linkType: hard
 
@@ -12250,7 +12287,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"sax@npm:^1.2.4":
+"sax@npm:^1.1.3, sax@npm:^1.2.4":
   version: 1.2.4
   resolution: "sax@npm:1.2.4"
   checksum: d3df7d32b897a2c2f28e941f732c71ba90e27c24f62ee918bd4d9a8cfb3553f2f81e5493c7f0be94a11c1911b643a9108f231dd6f60df3fa9586b5d2e3e9e1fe
@@ -12771,6 +12808,15 @@ __metadata:
   version: 1.0.3
   resolution: "sprintf-js@npm:1.0.3"
   checksum: 19d79aec211f09b99ec3099b5b2ae2f6e9cdefe50bc91ac4c69144b6d3928a640bb6ae5b3def70c2e85a2c3d9f5ec2719921e3a59d3ca3ef4b2fd1a4656a0df3
+  languageName: node
+  linkType: hard
+
+"srt-parser-2@npm:^1.2.2":
+  version: 1.2.2
+  resolution: "srt-parser-2@npm:1.2.2"
+  bin:
+    srt-parser-2: bin/index.js
+  checksum: b0c3e4dcd9e6e07d92002ac4f045f25534f14d3501a31043273463d6c6967fa125018ca5a1761fd23942815cc7958199f53117e939b600cf15e87bac4b60f558
   languageName: node
   linkType: hard
 
@@ -14564,6 +14610,26 @@ __metadata:
   version: 0.1.0
   resolution: "yocto-queue@npm:0.1.0"
   checksum: f77b3d8d00310def622123df93d4ee654fc6a0096182af8bd60679ddcdfb3474c56c6c7190817c84a2785648cdee9d721c0154eb45698c62176c322fb46fc700
+  languageName: node
+  linkType: hard
+
+"youtube-transcript@npm:^1.0.4":
+  version: 1.0.4
+  resolution: "youtube-transcript@npm:1.0.4"
+  dependencies:
+    phin: ^3.5.0
+  checksum: 498066c5730011605913cea9ba629a9b925724134b25fbcd2c7b111516fe9847f4150dfddea021964ad405821054c3a07f78d0ecb7e23b21663f5c819368fcd3
+  languageName: node
+  linkType: hard
+
+"ytdl-core@npm:^4.11.2":
+  version: 4.11.2
+  resolution: "ytdl-core@npm:4.11.2"
+  dependencies:
+    m3u8stream: ^0.8.6
+    miniget: ^4.2.2
+    sax: ^1.1.3
+  checksum: 57df38b5b1e4955db0e0c0be8d185f34de9eaee102ad1281d69de91628230cc84e8d46d278409eafa68c4aab4085a0f9fe8de30e9ea8644e011e20cae7f37c0e
   languageName: node
   linkType: hard
 
