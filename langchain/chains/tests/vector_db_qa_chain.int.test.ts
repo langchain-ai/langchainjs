@@ -1,5 +1,4 @@
 import { test } from "@jest/globals";
-import { InMemoryDocstore } from "docstore";
 import { OpenAI } from "../../llms/openai";
 import { PromptTemplate } from "../../prompts";
 import { LLMChain } from "../llm_chain";
