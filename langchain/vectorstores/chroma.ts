@@ -105,10 +105,13 @@ export class Chroma extends SaveableVectorStore {
     const result = await collection.query(query, k);
     const {ids, distances} = result;
 
+    // ids comes back as a list of lists, so we need to flatten it
+    let takeIds = ids[0]
+
     var results = [];
-    for (let i = 0; i < ids.length; i += 1) {
-      ids[i] = parseInt(ids[i]);
-      results.push([this.docstore[ids[i]], distances[i]] as [Document, number]);
+    for (let i = 0; i < takeIds.length; i += 1) {
+      takeIds[i] = parseInt(takeIds[i]);
+      results.push([this.docstore[takeIds[i]], distances[i]] as [Document, number]);
     }
     return results;
   }
