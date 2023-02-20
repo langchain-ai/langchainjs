@@ -7,6 +7,7 @@ import type {
 } from "openai";
 import type { IncomingMessage } from "http";
 
+import fetch from "node-fetch";
 import { createParser } from "eventsource-parser";
 import { backOff } from "exponential-backoff";
 import { chunkArray } from "../util";
