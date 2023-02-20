@@ -2,7 +2,6 @@ import { test, expect } from "@jest/globals";
 import fs from "fs/promises";
 import path from "path";
 import os from "os";
-
 import { HNSWLib } from "../hnswlib";
 import { Document } from "../../document";
 import { FakeEmbeddings } from "../../embeddings/fake";
@@ -11,7 +10,7 @@ test("Test HNSWLib.fromTexts", async () => {
   const vectorStore = await HNSWLib.fromTexts(
     ["Hello world", "Bye bye", "hello nice world"],
     [{ id: 2 }, { id: 1 }, { id: 3 }],
-    new FakeEmbeddings()
+    new FakeEmbeddings(),
   );
   expect(vectorStore.index?.getCurrentCount()).toBe(3);
 
@@ -90,7 +89,7 @@ test("Test HNSWLib.load and HNSWLib.save", async () => {
   const vectorStore = await HNSWLib.fromTexts(
     ["Hello world", "Bye bye", "hello nice world"],
     [{ id: 2 }, { id: 1 }, { id: 3 }],
-    new FakeEmbeddings()
+    new FakeEmbeddings(),
   );
   expect(vectorStore.index?.getCurrentCount()).toBe(3);
 
