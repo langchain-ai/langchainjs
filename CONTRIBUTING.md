@@ -47,6 +47,7 @@ good code into the codebase.
 ### 🏭Release process
 
 # TODO:
+
 As of now, LangChain has an ad hoc release process: releases are cut with high frequency via by
 a developer and published to [npm](https://www.npmjs.com/package/langchain).
 
@@ -68,9 +69,8 @@ with if you plan to contribute:
 - **[prettier](https://prettier.io/)** - enforcing standard code formatting
 - **[jest](https://jestjs.io/)** - testing code
 - **[TypeDoc](https://typedoc.org/)** - reference doc generation from
-    comments
+  comments
 - **[Docusaurus](https://docusaurus.io/)** - static site generation for documentation
-
 
 Now, you should be able to run the common tasks in the following section.
 
@@ -78,16 +78,18 @@ Now, you should be able to run the common tasks in the following section.
 
 ### Testing
 
+Tests should be added within a `tests/` folder alongside the modules they
+are testing.
+
 **Unit tests** cover modular logic that does not require calls to outside APIs.
 
 If you add new logic, please add a unit test.
+Unit tests should be called `*.test.ts`.
 
 **Integration tests** cover logic that requires making calls to outside APIs (often integration with other services).
 
 If you add support for a new external API, please add a new integration test.
-
-Tests should be added within a `tests/` folder alongside the modules they
-are testing.
+Integration tests should be called `*.int.test.ts`.
 
 To run tests, run:
 
@@ -111,7 +113,7 @@ level of the repo.
 Langchain let's user import from multiple subpaths, e.g.
 
 ```ts
-import { OpenAI } from "langchain/llms"
+import { OpenAI } from "langchain/llms";
 ```
 
 In order to declare a new entrypoint that users can import from, you
@@ -122,8 +124,8 @@ the following to the `entrypoints` variable:
 ```ts
 const entrypoints = {
   // ...
-  "tools": "agents/tools/index.ts",
-}
+  tools: "agents/tools/index.ts",
+};
 ```
 
 This will make sure the entrypoint is included in the published package,

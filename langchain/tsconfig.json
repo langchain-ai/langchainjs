@@ -23,7 +23,7 @@
   "exclude": [
     "node_modules/",
     "dist/",
-    "tests/"
+    "docs/"
   ],
   "include": [
     "./"
