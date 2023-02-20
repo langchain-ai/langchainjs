@@ -1,5 +1,5 @@
 import { test, expect } from "@jest/globals";
-import { Document } from "../document";
+import { Document } from "langchain/docstore";
 import {
   CharacterTextSplitter,
   RecursiveCharacterTextSplitter,

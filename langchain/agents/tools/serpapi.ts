@@ -30,7 +30,7 @@ export class SerpAPI extends Tool {
     // Throw error at construction time.
     if (getJson === null) {
       throw new Error(
-        "Please install serpapi as a dependency with, e.g. `npm i serpapi`"
+        "Please install serpapi as a dependency with, e.g. `yarn add serpapi`"
       );
     }
 
