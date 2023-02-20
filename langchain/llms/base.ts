@@ -93,13 +93,13 @@ export abstract class BaseLLM {
 
     const llmStringKey = `${Object.entries(params).sort()}`;
     const missingPromptIndices: number[] = [];
-    const generations = prompts.map((prompt, index) => {
-      const result = cache.lookup(prompt, llmStringKey);
+    const generations = await Promise.all(prompts.map(async (prompt, index) => {
+      const result = await cache.lookup(prompt, llmStringKey);
       if (!result) {
         missingPromptIndices.push(index);
       }
       return result;
-    });
+    }));
 
     let llmOutput = {};
     if (missingPromptIndices.length > 0) {
