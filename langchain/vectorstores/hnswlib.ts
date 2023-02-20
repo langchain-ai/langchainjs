@@ -4,10 +4,10 @@ import type {
   HierarchicalNSW as HierarchicalNSWT,
   SpaceName,
 } from "hnswlib-node";
-import { DocumentMetadata } from "docstore/document";
 import { Embeddings } from "../embeddings/base";
 import { SaveableVectorStore } from "./base";
-import { Docstore, Document } from "../docstore";
+import { Document } from "../document";
+import { InMemoryDocstore } from "../docstore";
 
 let HierarchicalNSW: typeof HierarchicalNSWT | null = null;
 
@@ -26,19 +26,29 @@ export interface HNSWLibArgs {
 export class HNSWLib extends SaveableVectorStore {
   index?: HierarchicalNSWT;
 
+  docstore: InMemoryDocstore;
+
   args: HNSWLibArgs;
 
   constructor(
     args: HNSWLibArgs,
     embeddings: Embeddings,
-    docstore: Docstore,
+    docstore: InMemoryDocstore,
     index?: HierarchicalNSWT
   ) {
-    super();
+    super(embeddings);
     this.index = index;
     this.args = args;
     this.embeddings = embeddings;
     this.docstore = docstore;
+  }
+
+  async addDocuments(documents: Document[]): Promise<void> {
+    const texts = documents.map(({ pageContent }) => pageContent);
+    return this.addVectors(
+      await this.embeddings.embedDocuments(texts),
+      documents
+    );
   }
 
   async addVectors(vectors: number[][], documents: Document[]) {
@@ -75,11 +85,12 @@ export class HNSWLib extends SaveableVectorStore {
     const capacity = this.index.getMaxElements();
     const needed = this.index.getCurrentCount() + vectors.length;
     if (needed > capacity) {
-      this.index.resizeIndex(needed - capacity);
+      this.index.resizeIndex(needed);
     }
+    const docstoreSize = this.docstore.count;
     for (let i = 0; i < vectors.length; i += 1) {
-      this.index.addPoint(vectors[i], i);
-      this.docstore.add({[i] : documents[i]});
+      this.index.addPoint(vectors[i], docstoreSize + i);
+      this.docstore.add({ [docstoreSize + i]: documents[i] });
     }
   }
 
@@ -92,10 +103,10 @@ export class HNSWLib extends SaveableVectorStore {
     const result = this.index.searchKnn(query, k);
     return result.neighbors.map(
       (docIndex, resultIndex) =>
-        [this.docstore.search(String(docIndex)), result.distances[resultIndex]] as [
-          Document,
-          number
-        ]
+        [
+          this.docstore.search(String(docIndex)),
+          result.distances[resultIndex],
+        ] as [Document, number]
     );
   }
 
@@ -143,7 +154,7 @@ export class HNSWLib extends SaveableVectorStore {
     texts: string[],
     metadatas: DocumentMetadata[],
     embeddings: Embeddings,
-    docstore: Docstore,
+    docstore: InMemoryDocstore = new InMemoryDocstore()
   ): Promise<HNSWLib> {
     const docs = [];
     for (let i = 0; i < texts.length; i += 1) {
@@ -159,7 +170,7 @@ export class HNSWLib extends SaveableVectorStore {
   static async fromDocuments(
     docs: Document[],
     embeddings: Embeddings,
-    docstore: Docstore,
+    docstore: InMemoryDocstore = new InMemoryDocstore()
   ): Promise<HNSWLib> {
     if (HierarchicalNSW === null) {
       throw new Error(
