@@ -58,7 +58,6 @@
     "@typescript-eslint/eslint-plugin": "^5.51.0",
     "@typescript-eslint/parser": "^5.51.0",
     "babel-jest": "^29.4.2",
-    "chromadb": "^1.2.1",
     "cohere-ai": "^5.0.2",
     "dotenv": "^16.0.3",
     "eslint": "^8.33.0",
@@ -80,9 +79,13 @@
     "typescript": "^4.9.5"
   },
   "peerDependencies": {
+    "chromadb": "^1.2.1",
     "pinecone-client": "^1.0.1"
   },
   "peerDependenciesMeta": {
+    "chromadb": {
+      "optional": true
+    },
     "pinecone-client": {
       "optional": true
     }

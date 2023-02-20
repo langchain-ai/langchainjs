@@ -1,13 +1,11 @@
-import fs from "fs/promises";
-import path from "path";
+import { v4 as uuidv4 } from 'uuid';
 import type {
   ChromaClient as ChromaClientT,
 } from "chromadb";
-import { ChromaClient as ChromaClientO } from "chromadb";
 
 import { Embeddings } from "../embeddings/base";
 
-import { DocStore, SaveableVectorStore } from "./base";
+import { DocStore, VectorStore } from "./base";
 import { Document } from "../document";
 
 let ChromaClient: typeof ChromaClientT | null = null;
@@ -18,22 +16,23 @@ try {
 } catch {
   // ignore error
 }
-ChromaClient = ChromaClientO;
 
 export interface ChromaLibArgs {
-  space: string;
+  url?: string;
   numDimensions?: number;
-  collection_name: string,
+  collectionName: string,
 }
 
-export class Chroma extends SaveableVectorStore {
+export class Chroma extends VectorStore {
   index?: ChromaClientT;
   
   docstore: DocStore;
 
   args: ChromaLibArgs;
 
-  collection_name: string;
+  collectionName: string;
+
+  url: string;
 
   constructor(
     args: ChromaLibArgs,
@@ -46,7 +45,8 @@ export class Chroma extends SaveableVectorStore {
     this.args = args;
     this.embeddings = embeddings;
     this.docstore = docstore;
-    this.collection_name = args.collection_name;
+    this.collectionName = args.collectionName;
+    this.url = args.url || "http://localhost:8000";
   }
 
   async addDocuments(documents: Document[]): Promise<void> {
@@ -67,9 +67,9 @@ export class Chroma extends SaveableVectorStore {
           "Please install chromadb as a dependency with, e.g. `npm install -S chromadb`"
         );
       }
-      this.index = new ChromaClient("http://localhost:8000");
+      this.index = new ChromaClient(this.url);
       try {
-        await this.index.createCollection(this.collection_name);
+        await this.index.createCollection(this.collectionName);
       } catch {
         // ignore error
       }
@@ -84,7 +84,7 @@ export class Chroma extends SaveableVectorStore {
       );
     }
 
-    const collection = await this.index.getCollection(this.collection_name);
+    const collection = await this.index.getCollection(this.collectionName);
     for (let i = 0; i < vectors.length; i += 1) {
       await collection.add(
         i.toString(),
@@ -100,7 +100,7 @@ export class Chroma extends SaveableVectorStore {
         "Vector store not initialised yet. Try calling `addTexts` first."
       );
     }
-    const collection = await this.index.getCollection(this.collection_name);
+    const collection = await this.index.getCollection(this.collectionName);
     const result = await collection.query(query, k);
     const {ids, distances} = result;
 
@@ -115,52 +115,12 @@ export class Chroma extends SaveableVectorStore {
     return results;
   }
 
-  async save(directory: string) {
-    if (!this.index) {
-      throw new Error(
-        "Vector store not initialised yet. Try calling `addTexts` first."
-      );
-    }
-    await fs.mkdir(directory, { recursive: true });
-    await Promise.all([
-      await fs.writeFile(
-        path.join(directory, "args.json"),
-        JSON.stringify(this.args)
-      ),
-      await fs.writeFile(
-        path.join(directory, "docstore.json"),
-        JSON.stringify(this.docstore)
-      ),
-    ]);
-  }
-
-  static async load(directory: string, embeddings: Embeddings, collection_name: string) {
-    if (ChromaClient === null) {
-      throw new Error(
-        "Please install chromadb as a dependency with, e.g. `npm install -S chromadb`"
-      );
-    }
-    const args = JSON.parse(
-      await fs.readFile(path.join(directory, "args.json"), "utf8")
-    );
-
-    args.collection_name = collection_name
-
-    const index = new ChromaClient("http://localhost:8000");
-    const [docstore] = await Promise.all([
-      fs
-        .readFile(path.join(directory, "docstore.json"), "utf8")
-        .then(JSON.parse),
-    ]);
-
-    return new Chroma(args, embeddings, docstore, index);
-  }
-
   static async fromTexts(
     texts: string[],
     metadatas: object[],
     embeddings: Embeddings,
-    collection_name: string
+    collectionName: string,
+    url?: string
   ): Promise<Chroma> {
     const docs = [];
     for (let i = 0; i < texts.length; i += 1) {
@@ -170,25 +130,35 @@ export class Chroma extends SaveableVectorStore {
       });
       docs.push(newDoc);
     }
-    return Chroma.fromDocuments(docs, embeddings, collection_name);
+    return Chroma.fromDocuments(docs, embeddings, collectionName, url);
   }
 
   static async fromDocuments(
     docs: Document[],
     embeddings: Embeddings,
-    collection_name: string
+    collectionName?: string,
+    url?: string
   ): Promise<Chroma> {
     if (ChromaClient === null) {
       throw new Error(
         "Please install chromadb as a dependency with, e.g. `npm install -S chromadb`"
       );
     }
+    collectionName = ensureCollectionName(collectionName);
+
     const args: ChromaLibArgs = {
-      space: "ip", // dot product
-      collection_name: collection_name,
+      collectionName: collectionName,
+      url: url
     };
     const instance = new this(args, embeddings, {});
     await instance.addDocuments(docs);
     return instance;
   }
+}
+
+function ensureCollectionName(collectionName?: string) {
+  if (!collectionName) {
+    collectionName = "langchain-" + uuidv4()
+  }
+  return collectionName
 }

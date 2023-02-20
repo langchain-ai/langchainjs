@@ -4969,7 +4969,6 @@ __metadata:
     "@typescript-eslint/eslint-plugin": ^5.51.0
     "@typescript-eslint/parser": ^5.51.0
     babel-jest: ^29.4.2
-    chromadb: ^1.2.1
     cohere-ai: ^5.0.2
     deepcopy: ^2.1.0
     dotenv: ^16.0.3
@@ -4997,8 +4996,11 @@ __metadata:
     uuid: ^9.0.0
     yaml: ^2.2.1
   peerDependencies:
+    chromadb: ^1.2.1
     pinecone-client: ^1.0.1
   peerDependenciesMeta:
+    chromadb:
+      optional: true
     pinecone-client:
       optional: true
   languageName: unknown
