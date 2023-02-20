@@ -1,4 +1,4 @@
-import { RecursiveCharacterTextSplitter, TextSplitter } from "text_splitter";
+import { RecursiveCharacterTextSplitter, TextSplitter } from "../text_splitter";
 import { Document } from "../document";
 
 export interface DocumentLoader {
