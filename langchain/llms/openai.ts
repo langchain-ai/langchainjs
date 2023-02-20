@@ -7,6 +7,7 @@ import type {
 } from "openai";
 import type { IncomingMessage } from "http";
 
+import fetch from "node-fetch";
 import { createParser } from "eventsource-parser";
 import { backOff } from "exponential-backoff";
 import { chunkArray } from "../util";
@@ -336,5 +337,63 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
 
   _llmType() {
     return "openai";
+  }
+}
+
+/**
+ * PromptLayer wrapper to OpenAI
+ * @augments OpenAI
+ */
+export class PromptLayerOpenAI extends OpenAI {
+  promptLayerApiKey?: string;
+
+  plTags?: string[];
+
+  constructor(
+    fields?: ConstructorParameters<typeof OpenAI>[0] & {
+      promptLayerApiKey?: string;
+      plTags?: string[];
+    }
+  ) {
+    super(fields);
+
+    this.plTags = fields?.plTags ?? [];
+    this.promptLayerApiKey =
+      fields?.promptLayerApiKey ?? process.env.PROMPTLAYER_API_KEY;
+
+    if (!this.promptLayerApiKey) {
+      throw new Error("Missing PromptLayer API key");
+    }
+  }
+
+  async completionWithRetry(request: CreateCompletionRequest) {
+    if (request.stream) {
+      return super.completionWithRetry(request);
+    }
+
+    const requestStartTime = Date.now();
+    const response = await super.completionWithRetry(request);
+    const requestEndTime = Date.now();
+
+    // https://github.com/MagnivOrg/promptlayer-js-helper
+    await fetch("https://api.promptlayer.com/track-request", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify({
+        function_name: "openai.Completion.create",
+        args: [],
+        kwargs: { engine: request.model, prompt: request.prompt },
+        tags: this.plTags ?? [],
+        request_response: response.data,
+        request_start_time: Math.floor(requestStartTime / 1000),
+        request_end_time: Math.floor(requestEndTime / 1000),
+        api_key: process.env.PROMPTLAYER_API_KEY,
+      }),
+    });
+
+    return response;
   }
 }
