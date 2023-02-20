@@ -90,7 +90,7 @@ export class HNSWLib extends SaveableVectorStore {
     const docstoreSize = this.docstore.count;
     for (let i = 0; i < vectors.length; i += 1) {
       this.index.addPoint(vectors[i], docstoreSize + i);
-      this.docstore.add({[docstoreSize + i] : documents[i]});
+      this.docstore.add({ [docstoreSize + i]: documents[i] });
     }
   }
 
@@ -103,10 +103,10 @@ export class HNSWLib extends SaveableVectorStore {
     const result = this.index.searchKnn(query, k);
     return result.neighbors.map(
       (docIndex, resultIndex) =>
-        [this.docstore.search(String(docIndex)), result.distances[resultIndex]] as [
-          Document,
-          number
-        ]
+        [
+          this.docstore.search(String(docIndex)),
+          result.distances[resultIndex],
+        ] as [Document, number]
     );
   }
 
@@ -154,7 +154,7 @@ export class HNSWLib extends SaveableVectorStore {
     texts: string[],
     metadatas: object[],
     embeddings: Embeddings,
-    docstore: InMemoryDocstore = new InMemoryDocstore(),
+    docstore: InMemoryDocstore = new InMemoryDocstore()
   ): Promise<HNSWLib> {
     const docs = [];
     for (let i = 0; i < texts.length; i += 1) {
@@ -170,7 +170,7 @@ export class HNSWLib extends SaveableVectorStore {
   static async fromDocuments(
     docs: Document[],
     embeddings: Embeddings,
-    docstore: InMemoryDocstore = new InMemoryDocstore(),
+    docstore: InMemoryDocstore = new InMemoryDocstore()
   ): Promise<HNSWLib> {
     if (HierarchicalNSW === null) {
       throw new Error(

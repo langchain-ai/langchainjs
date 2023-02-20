@@ -1,5 +1,5 @@
-import { Document } from '../document';
-import { Docstore } from './base';
+import { Document } from "../document";
+import { Docstore } from "./base";
 
 export class InMemoryDocstore extends Docstore {
   private _docs: Map<string, Document>;
@@ -20,7 +20,7 @@ export class InMemoryDocstore extends Docstore {
 
   add(texts: Record<string, Document>): void {
     const keys = [...this._docs.keys()];
-    const overlapping = Object.keys(texts).filter(x => keys.includes(x));
+    const overlapping = Object.keys(texts).filter((x) => keys.includes(x));
 
     if (overlapping.length > 0) {
       throw new Error(`Tried to add ids that already exist: ${overlapping}`);

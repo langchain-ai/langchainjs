@@ -19,7 +19,7 @@ test("Test VectorDBQAChain", async () => {
     ["Hello world", "Bye bye", "hello nice world", "bye", "hi"],
     [{ id: 2 }, { id: 1 }, { id: 3 }, { id: 4 }, { id: 5 }],
     new OpenAIEmbeddings(),
-    new InMemoryDocstore(),
+    new InMemoryDocstore()
   );
   const llmChain = new LLMChain({ prompt, llm: model });
   const combineDocsChain = new StuffDocumentsChain({
@@ -40,7 +40,7 @@ test("Test VectorDBQAChain from LLM", async () => {
     ["Hello world", "Bye bye", "hello nice world", "bye", "hi"],
     [{ id: 2 }, { id: 1 }, { id: 3 }, { id: 4 }, { id: 5 }],
     new OpenAIEmbeddings(),
-    new InMemoryDocstore(),
+    new InMemoryDocstore()
   );
   const chain = VectorDBQAChain.fromLLM(model, vectorStore);
   const res = await chain.call({ query: "What up" });
@@ -52,7 +52,7 @@ test("Load chain from hub", async () => {
     ["Hello world", "Bye bye", "hello nice world", "bye", "hi"],
     [{ id: 2 }, { id: 1 }, { id: 3 }, { id: 4 }, { id: 5 }],
     new OpenAIEmbeddings(),
-    new InMemoryDocstore(),
+    new InMemoryDocstore()
   );
   const chain = await loadChain("lc://chains/vector-db-qa/stuff/chain.json", {
     vectorstore: vectorStore,
