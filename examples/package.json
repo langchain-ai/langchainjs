@@ -19,8 +19,10 @@
   "author": "Langchain",
   "license": "MIT",
   "dependencies": {
+    "@dqbd/tiktoken": "^0.2.1",
     "langchain": "workspace:*",
     "openai": "^3.1.0",
+    "pinecone-client": "^1.0.1",
     "serpapi": "^1.1.0"
   },
   "devDependencies": {
