@@ -10,6 +10,10 @@
     "docs",
     "test-exports"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hwchase17/langchainjs.git"
+  },
   "packageManager": "yarn@3.4.1",
   "scripts": {
     "ci": "turbo run ci",
