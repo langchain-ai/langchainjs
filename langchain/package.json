@@ -79,9 +79,13 @@
     "typescript": "^4.9.5"
   },
   "peerDependencies": {
+    "@dqbd/tiktoken": "^0.2.1",
     "pinecone-client": "^1.0.1"
   },
   "peerDependenciesMeta": {
+    "@dqbd/tiktoken": {
+      "optional": true
+    },
     "pinecone-client": {
       "optional": true
     }
