@@ -1,11 +1,6 @@
 import { Embeddings } from "../embeddings/base";
 import { Document } from "../document";
 
-// Temporary until we have a DocStore class
-export interface DocStore {
-  [key: number]: Document;
-}
-
 export abstract class VectorStore {
   embeddings: Embeddings;
 
