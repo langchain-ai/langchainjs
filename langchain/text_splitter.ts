@@ -1,3 +1,4 @@
+import type * as tiktoken from "@dqbd/tiktoken";
 import { Document } from "./document";
 
 interface TextSplitterParams {
@@ -179,5 +180,77 @@ export class RecursiveCharacterTextSplitter
       finalChunks.push(...mergedText);
     }
     return finalChunks;
+  }
+}
+
+export interface TokenTextSplitterParams extends TextSplitterParams {
+  encodingName: tiktoken.TiktokenEmbedding;
+  allowedSpecial: "all" | Set<string>;
+  disallowedSpecial: "all" | Array<string>;
+}
+
+/**
+ * Implementation of splitter which looks at tokens.
+ */
+export class TokenTextSplitter
+  extends TextSplitter
+  implements TokenTextSplitterParams
+{
+  encodingName: tiktoken.TiktokenEmbedding;
+
+  allowedSpecial: "all" | Set<string>;
+
+  disallowedSpecial: "all" | Array<string>;
+
+  private tokenizer: tiktoken.Tiktoken;
+
+  constructor(fields?: Partial<TokenTextSplitterParams>) {
+    super(fields);
+
+    this.encodingName = fields?.encodingName ?? "gpt2";
+    this.allowedSpecial = fields?.allowedSpecial ?? new Set();
+    this.disallowedSpecial = fields?.disallowedSpecial ?? "all";
+
+    if (fields?.allowedSpecial != null) {
+      throw new Error("allowedSpecial is not implemented yet.");
+    }
+
+    if (fields?.disallowedSpecial != null) {
+      throw new Error("disallowedSpecial is not implemented yet.");
+    }
+
+    try {
+      const tiktoken =
+        // eslint-disable-next-line @typescript-eslint/no-var-requires, global-require
+        require("@dqbd/tiktoken") as typeof import("@dqbd/tiktoken");
+      this.tokenizer = tiktoken.get_encoding(this.encodingName);
+    } catch (err) {
+      console.error(err);
+      throw new Error(
+        "Please install @dqbd/tiktoken as a dependency with, e.g. `npm install -S @dqbd/tiktoken`"
+      );
+    }
+  }
+
+  splitText(text: string): string[] {
+    const splits: string[] = [];
+
+    const input_ids = this.tokenizer.encode(text);
+
+    let start_idx = 0;
+    let cur_idx = Math.min(start_idx + this.chunkSize, input_ids.length);
+    let chunk_ids = input_ids.slice(start_idx, cur_idx);
+
+    const decoder = new TextDecoder();
+
+    while (start_idx < input_ids.length) {
+      splits.push(decoder.decode(this.tokenizer.decode(chunk_ids)));
+
+      start_idx += this.chunkSize - this.chunkOverlap;
+      cur_idx = Math.min(start_idx + this.chunkSize, input_ids.length);
+      chunk_ids = input_ids.slice(start_idx, cur_idx);
+    }
+
+    return splits;
   }
 }
