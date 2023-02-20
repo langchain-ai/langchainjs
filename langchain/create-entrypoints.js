@@ -13,6 +13,7 @@ const entrypoints = {
   text_splitter: "text_splitter",
   memory: "memory/index",
   document: "document",
+  docstore: "docstore/index",
 };
 
 const updateJsonFile = (relativePath, updateFunction) => {

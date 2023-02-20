@@ -36,6 +36,9 @@
     "document.js",
     "document.mjs",
     "document.d.ts",
+    "docstore.js",
+    "docstore.mjs",
+    "docstore.d.ts",
     "index.js",
     "index.mjs",
     "index.d.ts"
@@ -197,6 +200,10 @@
     "./document": {
       "import": "./document.mjs",
       "default": "./document.js"
+    },
+    "./docstore": {
+      "import": "./docstore.mjs",
+      "default": "./docstore.js"
     }
   }
 }
