@@ -133,6 +133,7 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
   streaming = false;
 
   private client: OpenAIApiT;
+
   private clientConfig: ConfigurationParameters;
 
   constructor(
