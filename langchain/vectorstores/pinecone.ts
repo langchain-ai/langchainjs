@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from "uuid";
 
 import { VectorStore } from "./base";
 import { Embeddings } from "../embeddings/base";
-import { Document, DocumentMetadata } from "../document";
+import { Document } from "../document";
 
 // eslint-disable-next-line @typescript-eslint/ban-types, @typescript-eslint/no-explicit-any
 type PineconeMetadata = Record<string, any>;
@@ -73,7 +73,7 @@ export class PineconeStore extends VectorStore {
   static async fromTexts(
     pineconeClient: PineconeClient<PineconeMetadata>,
     texts: string[],
-    metadatas: DocumentMetadata[],
+    metadatas: object[],
     embeddings: Embeddings,
     textKey = "text"
   ): Promise<PineconeStore> {

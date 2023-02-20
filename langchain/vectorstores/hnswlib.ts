@@ -6,7 +6,7 @@ import type {
 } from "hnswlib-node";
 import { Embeddings } from "../embeddings/base";
 import { SaveableVectorStore } from "./base";
-import { Document, DocumentMetadata } from "../document";
+import { Document } from "../document";
 import { InMemoryDocstore } from "../docstore";
 
 let HierarchicalNSW: typeof HierarchicalNSWT | null = null;
@@ -152,7 +152,7 @@ export class HNSWLib extends SaveableVectorStore {
 
   static async fromTexts(
     texts: string[],
-    metadatas: DocumentMetadata[],
+    metadatas: object[],
     embeddings: Embeddings,
     docstore: InMemoryDocstore = new InMemoryDocstore()
   ): Promise<HNSWLib> {

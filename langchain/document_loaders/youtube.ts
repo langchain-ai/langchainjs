@@ -1,7 +1,6 @@
-import { DocumentMetadata } from "../document";
 import type YouTubeTranscriptT from "youtube-transcript";
 import type ytdlT from "ytdl-core";
-import { Document } from "../docstore";
+import { Document } from "../document";
 import { BaseDocumentLoader } from "./base";
 
 let ytdl: typeof ytdlT | null = null;
@@ -63,7 +62,7 @@ export class YouTubeLoader extends BaseDocumentLoader {
       );
     }
 
-    let metadata: DocumentMetadata = { source: this.videoId };
+    let metadata: object = { source: this.videoId };
 
     if (this.addVideoInfo) {
       const videoInfo = await this.getVideoInfo();
@@ -78,7 +77,7 @@ export class YouTubeLoader extends BaseDocumentLoader {
     return [new Document({ pageContent: transcript, metadata })];
   }
 
-  private async getVideoInfo(): Promise<DocumentMetadata> {
+  private async getVideoInfo(): Promise<object> {
     if (ytdl === null) {
       throw new Error(
         "Please install ytdl-core as a dependency with, e.g. `yarn add ytdl-core`"
