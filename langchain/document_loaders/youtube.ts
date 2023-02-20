@@ -1,4 +1,4 @@
-import { DocumentMetadata } from "docstore/document";
+import { DocumentMetadata } from "../document";
 import type YouTubeTranscriptT from "youtube-transcript";
 import type ytdlT from "ytdl-core";
 import { Document } from "../docstore";

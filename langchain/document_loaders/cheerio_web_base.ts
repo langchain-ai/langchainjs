@@ -1,5 +1,5 @@
 import type { CheerioAPI, load as LoadT } from "cheerio";
-import { Document } from "../docstore";
+import { Document } from "../document";
 import { BaseDocumentLoader } from "./base";
 import type { DocumentLoader } from "./base";
 

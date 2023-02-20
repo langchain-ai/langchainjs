@@ -4,7 +4,6 @@ import { HNSWLib } from "langchain/vectorstores";
 import { OpenAIEmbeddings } from "langchain/embeddings";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import * as fs from "fs";
-import { InMemoryDocstore } from "langchain/docstore/in_memory";
 
 export const run = async () => {
   /* Initialize the LLM to use to answer the question */
@@ -15,7 +14,7 @@ export const run = async () => {
   const textSplitter = new RecursiveCharacterTextSplitter({ chunkSize: 1000 });
   const docs = textSplitter.createDocuments([text]);
   /* Create the vectorstore */
-  const vectorStore = await HNSWLib.fromDocuments(docs, new OpenAIEmbeddings(), new InMemoryDocstore());
+  const vectorStore = await HNSWLib.fromDocuments(docs, new OpenAIEmbeddings());
   /* Create the chain */
   const chain = ChatVectorDBQAChain.fromLLM(model, vectorStore);
   /* Ask it a question */

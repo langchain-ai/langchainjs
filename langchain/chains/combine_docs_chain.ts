@@ -1,6 +1,6 @@
 import { BaseChain, ChainValues, LLMChain, SerializedLLMChain } from "./index";
 
-import { Document } from "../docstore/document";
+import { Document } from "../document";
 
 import { resolveConfigFromFile } from "../util";
 

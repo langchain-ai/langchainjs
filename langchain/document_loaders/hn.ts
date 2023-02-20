@@ -1,5 +1,5 @@
 import type { CheerioAPI } from "cheerio";
-import { Document } from "../docstore";
+import { Document } from "../document";
 import { CheerioWebBaseLoader } from "./cheerio_web_base";
 
 export class HNLoader extends CheerioWebBaseLoader {

@@ -3,7 +3,6 @@ import fs from "fs/promises";
 import path from "path";
 import os from "os";
 
-import { InMemoryDocstore } from "docstore";
 import { HNSWLib } from "../hnswlib";
 import { OpenAIEmbeddings } from "../../embeddings";
 import { Document } from "../../document";
@@ -12,8 +11,7 @@ test("Test HNSWLib.fromTexts", async () => {
   const vectorStore = await HNSWLib.fromTexts(
     ["Hello world", "Bye bye", "hello nice world"],
     [{ id: 2 }, { id: 1 }, { id: 3 }],
-    new OpenAIEmbeddings(),
-    new InMemoryDocstore()
+    new OpenAIEmbeddings()
   );
   expect(vectorStore.index?.getCurrentCount()).toBe(3);
 
@@ -74,8 +72,7 @@ test("Test HNSWLib.load and HNSWLib.save", async () => {
   const vectorStore = await HNSWLib.fromTexts(
     ["Hello world", "Bye bye", "hello nice world"],
     [{ id: 2 }, { id: 1 }, { id: 3 }],
-    new OpenAIEmbeddings(),
-    new InMemoryDocstore()
+    new OpenAIEmbeddings()
   );
   expect(vectorStore.index?.getCurrentCount()).toBe(3);
 

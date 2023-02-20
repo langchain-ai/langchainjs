@@ -4,7 +4,7 @@ import { PromptTemplate } from "../../prompts";
 import { LLMChain } from "../llm_chain";
 import { loadChain } from "../load";
 import { StuffDocumentsChain } from "../combine_docs_chain";
-import { Document } from "../../docstore/document";
+import { Document } from "../../document";
 
 test("Test StuffDocumentsChain", async () => {
   const model = new OpenAI({});

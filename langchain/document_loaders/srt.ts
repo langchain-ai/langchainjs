@@ -1,6 +1,6 @@
 import type { readFile as ReadFileT } from "fs/promises";
 import type SRTParserT from "srt-parser-2";
-import { Document } from "../docstore/document";
+import { Document } from "../document";
 import { BaseDocumentLoader } from "./base";
 
 let readFile: typeof ReadFileT | null = null;
