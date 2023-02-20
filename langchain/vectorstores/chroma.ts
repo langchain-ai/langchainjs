@@ -134,7 +134,7 @@ export class Chroma extends SaveableVectorStore {
     ]);
   }
 
-  static async load(directory: string, embeddings: Embeddings) {
+  static async load(directory: string, embeddings: Embeddings, collection_name: string) {
     if (ChromaClient === null) {
       throw new Error(
         "Please install chromadb as a dependency with, e.g. `npm install -S chromadb`"
@@ -144,7 +144,7 @@ export class Chroma extends SaveableVectorStore {
       await fs.readFile(path.join(directory, "args.json"), "utf8")
     );
 
-    args.collection_name = "langchain..."
+    args.collection_name = collection_name
 
     const index = new ChromaClient("http://localhost:8000");
     const [docstore] = await Promise.all([
