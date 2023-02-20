@@ -1,4 +1,4 @@
-import { Document } from './document';
+import { Document } from '../document';
 
 export abstract class Docstore {
   abstract search(search: string): Document | string;

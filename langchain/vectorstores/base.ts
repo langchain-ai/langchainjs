@@ -10,6 +10,7 @@ export abstract class VectorStore {
   embeddings: Embeddings;
 
   docstore: Docstore;
+
   constructor(embeddings: Embeddings) {
     this.embeddings = embeddings;
   }
