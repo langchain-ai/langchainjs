@@ -25,7 +25,9 @@
     "memory.js",
     "memory.d.ts",
     "document.js",
-    "document.d.ts"
+    "document.d.ts",
+    "docstore.js",
+    "docstore.d.ts"
   ],
   "repository": {
     "type": "git",

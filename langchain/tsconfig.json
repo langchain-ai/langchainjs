@@ -43,6 +43,7 @@
       "./text_splitter.ts",
       "./memory/index.ts",
       "./document.ts",
+      "./docstore/index.ts",
       "./index.ts"
     ],
     "excludePrivate": true,
