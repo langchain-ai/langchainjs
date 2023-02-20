@@ -11,7 +11,7 @@ module.exports = {
     sourceType: "module",
   },
   plugins: ["@typescript-eslint"],
-  ignorePatterns: ["dist", "docs", "node_modules"],
+  ignorePatterns: ["dist", "docs", "node_modules", '*.mjs', '*.js', '*.d.ts'],
   rules: {
     "@typescript-eslint/explicit-module-boundary-types": 0,
     "@typescript-eslint/no-empty-function": 0,

@@ -7,8 +7,7 @@
     ],
     "sourceMap": true,
     "allowSyntheticDefaultImports": true,
-    "baseUrl": "./src",
-    "declaration": true,
+    "baseUrl": "./",
     "experimentalDecorators": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
@@ -19,10 +18,8 @@
   },
   "exclude": [
     "node_modules/",
-    "dist/",
-    "tests/"
   ],
   "include": [
-    "./src"
+    "*.ts"
   ]
 }

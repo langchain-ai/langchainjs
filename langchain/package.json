@@ -2,8 +2,8 @@
   "name": "langchain",
   "version": "0.0.7",
   "description": "Typescript bindings for langchain",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./index.js",
+  "types": "./index.d.ts",
   "files": [
     "dist/",
     "agents.js",
@@ -35,7 +35,10 @@
     "memory.d.ts",
     "document.js",
     "document.mjs",
-    "document.d.ts"
+    "document.d.ts",
+    "index.js",
+    "index.mjs",
+    "index.d.ts"
   ],
   "repository": {
     "type": "git",
@@ -129,6 +132,10 @@
     "vectorstores"
   ],
   "exports": {
+    ".": {
+      "import": "./index.mjs",
+      "default": "./index.js"
+    },
     "./agents": {
       "import": "./agents.mjs",
       "default": "./agents.js"

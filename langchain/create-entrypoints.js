@@ -23,18 +23,18 @@ const updateJsonFile = (relativePath, updateFunction) => {
 };
 
 const generateFiles = () => {
-  const files = Object.entries(entrypoints).flatMap(([key, value]) => {
-    const modulePath =
-      path.basename(value) === "index"
-        ? path.dirname(value)
-        : value;
-    const compiledPath = `./dist/${modulePath}`;
-    return [
-      [`${key}.js`, `module.exports = require('${compiledPath}')`],
-      [`${key}.mjs`, `export * from './dist/${value}.js'`],
-      [`${key}.d.ts`, `export * from '${compiledPath}'`],
-    ];
-  });
+  const files = [...Object.entries(entrypoints), ["index", "index"]].flatMap(
+    ([key, value]) => {
+      const modulePath =
+        path.basename(value) === "index" ? path.dirname(value) : value;
+      const compiledPath = `./dist/${modulePath}`;
+      return [
+        [`${key}.js`, `module.exports = require('${compiledPath}')`],
+        [`${key}.mjs`, `export * from './dist/${value}.js'`],
+        [`${key}.d.ts`, `export * from '${compiledPath}'`],
+      ];
+    }
+  );
 
   return Object.fromEntries(files);
 };
@@ -55,14 +55,16 @@ const updateConfig = () => {
 
   updateJsonFile("./package.json", (json) => ({
     ...json,
-    exports: Object.fromEntries(Object.keys(entrypoints).map((key) => {
-      const entryPoint = {
-        import: `./${key}.mjs`,
-        default: `./${key}.js`,
-      };
-      return [`./${key}`, entryPoint];
-    })),
-    files: ["dist/", ...filenames]
+    exports: Object.fromEntries(
+      ["index", ...Object.keys(entrypoints)].map((key) => {
+        const entryPoint = {
+          import: `./${key}.mjs`,
+          default: `./${key}.js`,
+        };
+        return [key === "index" ? "." : `./${key}`, entryPoint];
+      })
+    ),
+    files: ["dist/", ...filenames],
   }));
 
   Object.entries(generatedFiles).forEach(([filename, content]) => {

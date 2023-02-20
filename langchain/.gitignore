@@ -28,3 +28,6 @@ memory.d.ts
 document.js
 document.mjs
 document.d.ts
+index.js
+index.mjs
+index.d.ts
