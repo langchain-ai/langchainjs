@@ -45,9 +45,6 @@ export class Chroma extends SaveableVectorStore {
     this.args = args;
     this.embeddings = embeddings;
     this.docstore = docstore;
-
-    this.index?.reset()
-    // const collections = this.index.listCollections()
   }
 
   async addDocuments(documents: Document[]): Promise<void> {
