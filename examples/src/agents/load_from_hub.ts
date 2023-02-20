@@ -18,9 +18,7 @@ export const run = async () => {
     returnIntermediateSteps: true,
   });
 
-  const input =
-    "Who is Olivia Wilde's boyfriend?" +
-    " What is his current age raised to the 0.23 power?";
+  const input = `Who is Olivia Wilde's boyfriend? What is his current age raised to the 0.23 power?`;
   console.log(`Executing with input "${input}"...`);
 
   const result = await executor.call({ input });
