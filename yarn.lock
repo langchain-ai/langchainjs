@@ -13170,6 +13170,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"test-exports@workspace:test-exports":
+  version: 0.0.0-use.local
+  resolution: "test-exports@workspace:test-exports"
+  dependencies:
+    "@tsconfig/recommended": ^1.0.2
+    langchain: "workspace:*"
+    prettier: ^2.8.3
+    typescript: ^4.9.5
+  languageName: unknown
+  linkType: soft
+
 "text-table@npm:^0.2.0":
   version: 0.2.0
   resolution: "text-table@npm:0.2.0"
