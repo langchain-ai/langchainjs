@@ -18,3 +18,5 @@ memory.js
 memory.d.ts
 document.js
 document.d.ts
+docstore.js
+docstore.d.ts
