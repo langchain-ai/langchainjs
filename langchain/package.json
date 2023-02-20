@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "Typescript bindings for langchain",
   "main": "./index.js",
   "types": "./index.d.ts",
