@@ -16,5 +16,7 @@ text_splitter.js
 text_splitter.d.ts
 memory.js
 memory.d.ts
+document_loaders.js
+document_loaders.d.ts
 document.js
 document.d.ts

@@ -12,6 +12,7 @@ const entrypoints = {
   vectorstores: "vectorstores/index.ts",
   text_splitter: "text_splitter.ts",
   memory: "memory/index.ts",
+  document_loaders: "document_loaders/index.ts",
   document: "document.ts",
 };
 
