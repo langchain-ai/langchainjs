@@ -86,3 +86,81 @@ export class StuffDocumentsChain
     };
   }
 }
+
+export type SerializedMapReduceDocumentsChain = {
+  _type: "map_reduce_documents_chain";
+  llm_chain?: SerializedLLMChain;
+  llm_chain_path?: string;
+};
+
+/**
+ * Chain that combines documents by stuffing into context.
+ * @augments BaseChain
+ * @augments StuffDocumentsChainInput
+ */
+export class MapReduceDocumentsChain
+  extends BaseChain
+  implements StuffDocumentsChainInput
+{
+  llmChain: LLMChain;
+
+  inputKey = "input_documents";
+
+  outputKey = "output_text";
+
+  documentVariableName = "context";
+
+  combineDocumentChain: BaseChain;
+
+  collapseDocumentChain?: BaseChain;
+
+  constructor(fields: {
+    llmChain: LLMChain;
+    inputKey?: string;
+    outputKey?: string;
+    documentVariableName?: string;
+  }) {
+    super();
+    this.llmChain = fields.llmChain;
+    this.documentVariableName =
+      fields.documentVariableName ?? this.documentVariableName;
+    this.inputKey = fields.inputKey ?? this.inputKey;
+    this.outputKey = fields.outputKey ?? this.outputKey;
+  }
+
+  async _call(values: ChainValues): Promise<ChainValues> {
+    if (!(this.inputKey in values)) {
+      throw new Error(`Document key ${this.inputKey} not found.`);
+    }
+    const { [this.inputKey]: docs, ...rest } = values;
+    const texts = (docs as Document[]).map(({ pageContent }) => pageContent);
+    const text = texts.join("\n\n");
+    const result = await this.llmChain.call({
+      ...rest,
+      [this.documentVariableName]: text,
+    });
+    return result;
+  }
+
+  _chainType() {
+    return "stuff_documents_chain" as const;
+  }
+
+  static async deserialize(data: SerializedStuffDocumentsChain) {
+    const SerializedLLMChain = resolveConfigFromFile<
+      "llm_chain",
+      SerializedLLMChain
+    >("llm_chain", data);
+
+    return new StuffDocumentsChain({
+      llmChain: await LLMChain.deserialize(SerializedLLMChain),
+    });
+  }
+
+  serialize(): SerializedStuffDocumentsChain {
+    return {
+      _type: this._chainType(),
+      llm_chain: this.llmChain.serialize(),
+    };
+  }
+}
