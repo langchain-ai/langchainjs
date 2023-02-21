@@ -2,12 +2,22 @@ import { ReadGoogleCalendar } from "agents/tools";
 
 
 import { BaseChain, ChainValues, LLMChain, SerializedLLMChain } from "./index";
-
+import { BaseLLM } from "../llms";
+import { PromptTemplate } from "../prompts";
 
 import { resolveConfigFromFile } from "../util";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type LoadValues = Record<string, any>;
+const template = `You are given the following calendar events.
 
+{calendar_context}
+
+Answer the following question about those events.
+Question: {question}
+Answer:`;
+const prompt = PromptTemplate.fromTemplate(
+  template
+);
 export type SerializedCalendarChain = {
   _type: "calendar_chain";
   llm_chain?: SerializedLLMChain;
@@ -78,5 +88,14 @@ export class CalendarChain
       _type: this._chainType(),
       llm_chain: this.llmChain.serialize(),
     };
+  }
+  
+  static fromLLM(llm: BaseLLM, calendarTool: ReadGoogleCalendar): CalendarChain {
+    const llmChain = new LLMChain({
+      prompt,
+      llm,
+    })
+    const instance = new this({ llmChain, calendarTool });
+    return instance;
   }
 }
