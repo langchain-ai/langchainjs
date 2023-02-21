@@ -2,8 +2,8 @@ import { v4 as uuidv4 } from "uuid";
 import type { ChromaClient as ChromaClientT } from "chromadb";
 
 import { Embeddings } from "../embeddings/base";
-
-import { DocStore, VectorStore } from "./base";
+import { InMemoryDocstore } from "../docstore";
+import { VectorStore } from "./base";
 import { Document } from "../document";
 
 let ChromaClient: typeof ChromaClientT | null = null;
@@ -18,13 +18,13 @@ try {
 export interface ChromaLibArgs {
   url?: string;
   numDimensions?: number;
-  collectionName: string;
+  collectionName?: string;
 }
 
 export class Chroma extends VectorStore {
   index?: ChromaClientT;
 
-  docstore: DocStore;
+  docstore: InMemoryDocstore;
 
   args: ChromaLibArgs;
 
@@ -35,7 +35,7 @@ export class Chroma extends VectorStore {
   constructor(
     args: ChromaLibArgs,
     embeddings: Embeddings,
-    docstore: DocStore,
+    docstore: InMemoryDocstore,
     index?: ChromaClientT
   ) {
     super(embeddings);
@@ -43,7 +43,7 @@ export class Chroma extends VectorStore {
     this.args = args;
     this.embeddings = embeddings;
     this.docstore = docstore;
-    this.collectionName = args.collectionName;
+    this.collectionName = ensureCollectionName(args.collectionName);
     this.url = args.url || "http://localhost:8000";
   }
 
@@ -85,9 +85,10 @@ export class Chroma extends VectorStore {
     }
 
     const collection = await this.index.getCollection(this.collectionName);
+    const docstoreSize = this.docstore.count;
     for (let i = 0; i < vectors.length; i += 1) {
-      await collection.add(i.toString(), vectors[i]);
-      this.docstore[i] = documents[i];
+      await collection.add((docstoreSize + i).toString(), vectors[i]);
+      this.docstore.add({ [docstoreSize + i]: documents[i] });
     }
   }
 
@@ -102,12 +103,11 @@ export class Chroma extends VectorStore {
     const { ids, distances } = result;
 
     // ids comes back as a list of lists, so we need to flatten it
-    let takeIds = ids[0];
+    const takeIds = ids[0];
 
-    var results = [];
+    const results = [];
     for (let i = 0; i < takeIds.length; i += 1) {
-      takeIds[i] = parseInt(takeIds[i]);
-      results.push([this.docstore[takeIds[i]], distances[i]] as [
+      results.push([this.docstore.search(takeIds[i]), distances[i]] as [
         Document,
         number
       ]);
@@ -119,7 +119,9 @@ export class Chroma extends VectorStore {
     texts: string[],
     metadatas: object[],
     embeddings: Embeddings,
-    collectionName: string,
+    // eslint-disable-next-line default-param-last
+    docstore: InMemoryDocstore = new InMemoryDocstore(),
+    collectionName?: string,
     url?: string
   ): Promise<Chroma> {
     const docs = [];
@@ -130,12 +132,20 @@ export class Chroma extends VectorStore {
       });
       docs.push(newDoc);
     }
-    return Chroma.fromDocuments(docs, embeddings, collectionName, url);
+    return Chroma.fromDocuments(
+      docs,
+      embeddings,
+      docstore,
+      collectionName,
+      url
+    );
   }
 
   static async fromDocuments(
     docs: Document[],
     embeddings: Embeddings,
+    // eslint-disable-next-line default-param-last
+    docstore: InMemoryDocstore = new InMemoryDocstore(),
     collectionName?: string,
     url?: string
   ): Promise<Chroma> {
@@ -144,13 +154,12 @@ export class Chroma extends VectorStore {
         "Please install chromadb as a dependency with, e.g. `npm install -S chromadb`"
       );
     }
-    collectionName = ensureCollectionName(collectionName);
 
     const args: ChromaLibArgs = {
-      collectionName: collectionName,
-      url: url,
+      collectionName,
+      url,
     };
-    const instance = new this(args, embeddings, {});
+    const instance = new this(args, embeddings, docstore);
     await instance.addDocuments(docs);
     return instance;
   }
@@ -158,7 +167,7 @@ export class Chroma extends VectorStore {
 
 function ensureCollectionName(collectionName?: string) {
   if (!collectionName) {
-    collectionName = "langchain-" + uuidv4();
+    return `langchain-${uuidv4()}`;
   }
   return collectionName;
 }
