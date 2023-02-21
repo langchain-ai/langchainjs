@@ -1,7 +1,5 @@
-import { v4 as uuidv4 } from 'uuid';
-import type {
-  ChromaClient as ChromaClientT,
-} from "chromadb";
+import { v4 as uuidv4 } from "uuid";
+import type { ChromaClient as ChromaClientT } from "chromadb";
 
 import { Embeddings } from "../embeddings/base";
 
@@ -20,12 +18,12 @@ try {
 export interface ChromaLibArgs {
   url?: string;
   numDimensions?: number;
-  collectionName: string,
+  collectionName: string;
 }
 
 export class Chroma extends VectorStore {
   index?: ChromaClientT;
-  
+
   docstore: DocStore;
 
   args: ChromaLibArgs;
@@ -38,7 +36,7 @@ export class Chroma extends VectorStore {
     args: ChromaLibArgs,
     embeddings: Embeddings,
     docstore: DocStore,
-    index?: ChromaClientT,
+    index?: ChromaClientT
   ) {
     super(embeddings);
     this.index = index;
@@ -51,7 +49,10 @@ export class Chroma extends VectorStore {
 
   async addDocuments(documents: Document[]): Promise<void> {
     const texts = documents.map(({ pageContent }) => pageContent);
-    await this.addVectors(await this.embeddings.embedDocuments(texts), documents);
+    await this.addVectors(
+      await this.embeddings.embedDocuments(texts),
+      documents
+    );
   }
 
   async addVectors(vectors: number[][], documents: Document[]) {
@@ -73,7 +74,6 @@ export class Chroma extends VectorStore {
       } catch {
         // ignore error
       }
-      
     }
     if (vectors.length !== documents.length) {
       throw new Error(`Vectors and metadatas must have the same length`);
@@ -86,10 +86,7 @@ export class Chroma extends VectorStore {
 
     const collection = await this.index.getCollection(this.collectionName);
     for (let i = 0; i < vectors.length; i += 1) {
-      await collection.add(
-        i.toString(),
-        vectors[i]
-      )
+      await collection.add(i.toString(), vectors[i]);
       this.docstore[i] = documents[i];
     }
   }
@@ -102,15 +99,18 @@ export class Chroma extends VectorStore {
     }
     const collection = await this.index.getCollection(this.collectionName);
     const result = await collection.query(query, k);
-    const {ids, distances} = result;
+    const { ids, distances } = result;
 
     // ids comes back as a list of lists, so we need to flatten it
-    let takeIds = ids[0]
+    let takeIds = ids[0];
 
     var results = [];
     for (let i = 0; i < takeIds.length; i += 1) {
       takeIds[i] = parseInt(takeIds[i]);
-      results.push([this.docstore[takeIds[i]], distances[i]] as [Document, number]);
+      results.push([this.docstore[takeIds[i]], distances[i]] as [
+        Document,
+        number
+      ]);
     }
     return results;
   }
@@ -148,7 +148,7 @@ export class Chroma extends VectorStore {
 
     const args: ChromaLibArgs = {
       collectionName: collectionName,
-      url: url
+      url: url,
     };
     const instance = new this(args, embeddings, {});
     await instance.addDocuments(docs);
@@ -158,7 +158,7 @@ export class Chroma extends VectorStore {
 
 function ensureCollectionName(collectionName?: string) {
   if (!collectionName) {
-    collectionName = "langchain-" + uuidv4()
+    collectionName = "langchain-" + uuidv4();
   }
-  return collectionName
+  return collectionName;
 }
