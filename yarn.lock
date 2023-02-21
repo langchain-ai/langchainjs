@@ -12227,6 +12227,7 @@ __metadata:
     prettier: ^2.8.3
     turbo: ^1.7.4
     typescript: ^4.9.5
+    youtube-transcript: ^1.0.4
   languageName: unknown
   linkType: soft
 

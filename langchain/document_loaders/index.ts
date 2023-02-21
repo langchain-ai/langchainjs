@@ -5,5 +5,4 @@ export { CollegeConfidentialLoader } from "./college_confidential";
 export { HNLoader } from "./hn";
 export { IMSDBLoader } from "./imsdb";
 export { SRTLoader } from "./srt";
-export { YouTubeLoader } from "./youtube";
 export { TextLoader } from "./text";

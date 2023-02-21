@@ -2,11 +2,11 @@ import { Document } from "../document";
 import { Docstore } from "./base";
 
 export class InMemoryDocstore extends Docstore {
-  private _docs: Map<string, Document>;
+  _docs: Map<string, Document>;
 
-  constructor() {
+  constructor(docs?: Map<string, Document>) {
     super();
-    this._docs = new Map();
+    this._docs = docs ?? new Map();
   }
 
   /** Method for getting count of documents in _docs */

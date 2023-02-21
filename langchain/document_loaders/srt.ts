@@ -4,13 +4,13 @@ import { Document } from "../document";
 import { BaseDocumentLoader } from "./base";
 
 let readFile: typeof ReadFileT | null = null;
-let SRTParser: typeof SRTParserT | null = null;
+let SRTParser2: typeof SRTParserT | null = null;
 
 try {
   // eslint-disable-next-line global-require,import/no-extraneous-dependencies
   ({ readFile } = require("fs/promises"));
   // eslint-disable-next-line global-require,import/no-extraneous-dependencies
-  SRTParser = require("srt-parser-2");
+  ({ SRTParser2 } = require("srt-parser-2"));
 } catch {
   // ignore error, will be throw in constructor
 }
@@ -31,7 +31,7 @@ export class SRTLoader extends BaseDocumentLoader {
      * Throw error at construction time
      * if srt-parser-2 is not installed.
      */
-    if (SRTParser === null) {
+    if (SRTParser2 === null) {
       throw new Error(
         "Please install srt-parser-2 as a dependency with, e.g. `yarn add srt-parser-2`"
       );
@@ -43,14 +43,14 @@ export class SRTLoader extends BaseDocumentLoader {
       throw new Error("Failed to load fs/promises.");
     }
 
-    if (SRTParser === null) {
+    if (SRTParser2 === null) {
       throw new Error(
         "Please install srt-parser-2 as a dependency with, e.g. `yarn add srt-parser-2`"
       );
     }
 
     const file = await readFile(this.filePath, "utf8");
-    const parser = new SRTParser();
+    const parser = new SRTParser2();
     const srts = parser.fromSrt(file);
     const text = srts.map((srt) => srt.text).join(" ");
     const metadata = { source: this.filePath };
