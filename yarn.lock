@@ -2685,6 +2685,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@mendable/search@npm:^0.0.12":
+  version: 0.0.12
+  resolution: "@mendable/search@npm:0.0.12"
+  peerDependencies:
+    react: ^17.x || ^18.x
+    react-dom: ^17.x || ^18.x
+  checksum: 2cfb800eeabbc6e8322e76159c2a40024959121eca21259f7fb1061417de44d6a110f7a2c27ca10af4015df7f631be1ae713dc7b300c1d92ee9d187e3fbcf9f0
+  languageName: node
+  linkType: hard
+
 "@nicolo-ribaudo/eslint-scope-5-internals@npm:5.1.1-v1":
   version: 5.1.1-v1
   resolution: "@nicolo-ribaudo/eslint-scope-5-internals@npm:5.1.1-v1"
@@ -5860,6 +5870,7 @@ __metadata:
     "@docusaurus/core": 2.3.1
     "@docusaurus/preset-classic": 2.3.1
     "@mdx-js/react": ^1.6.22
+    "@mendable/search": ^0.0.12
     clsx: ^1.2.1
     docusaurus-plugin-typedoc: ^0.18.0
     eslint: ^8.19.0
@@ -5872,12 +5883,14 @@ __metadata:
     eslint-plugin-react-hooks: ^4.6.0
     openai: ^3.1.0
     prettier: ^2.7.1
+    process: ^0.11.10
     react: ^17.0.2
     react-dom: ^17.0.2
     serpapi: ^1.1.1
     typedoc: ^0.23.25
     typedoc-plugin-markdown: ^3.14.0
     typedoc-plugin-missing-exports: ^1.0.0
+    webpack: ^5.75.0
   languageName: unknown
   linkType: soft
 
@@ -11307,6 +11320,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"process@npm:^0.11.10":
+  version: 0.11.10
+  resolution: "process@npm:0.11.10"
+  checksum: bfcce49814f7d172a6e6a14d5fa3ac92cc3d0c3b9feb1279774708a719e19acd673995226351a082a9ae99978254e320ccda4240ddc474ba31a76c79491ca7c3
+  languageName: node
+  linkType: hard
+
 "promise-inflight@npm:^1.0.1":
   version: 1.0.1
   resolution: "promise-inflight@npm:1.0.1"
@@ -14132,7 +14152,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"webpack@npm:^5.73.0":
+"webpack@npm:^5.73.0, webpack@npm:^5.75.0":
   version: 5.75.0
   resolution: "webpack@npm:5.75.0"
   dependencies:
