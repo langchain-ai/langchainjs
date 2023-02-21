@@ -29,7 +29,7 @@ export class BufferWindowMemory
 
   buffer: string[] = [];
 
-  k: number = 5;
+  k = 5;
 
   constructor(fields?: Partial<BufferWindowMemoryInput>) {
     super();
