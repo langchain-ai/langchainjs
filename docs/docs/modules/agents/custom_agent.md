@@ -23,45 +23,51 @@ import { LLMChain } from "langchain/chains";
 ```
 
 Next, let's initialize a model and the tools we want.
+
 ```typescript
 const model = new OpenAI({ temperature: 0 });
 const tools = [new SerpAPI(), new Calculator()];
 ```
 
 Now, let's create the custom prompt.
+
 ```typescript
-const prefix = `Answer the following questions as best you can, but speaking as a pirate might speak. You have access to the following tools:`
+const prefix = `Answer the following questions as best you can, but speaking as a pirate might speak. You have access to the following tools:`;
 const suffix = `Begin! Remember to speak as a pirate when giving your final answer. Use lots of "Args"
 
 Question: {input}
-{agent_scratchpad}`
+{agent_scratchpad}`;
 
 const createPromptArgs = {
-    suffix,
-    prefix,
-        inputVariables: ["input", "agent_scratchpad"],
-}
+  suffix,
+  prefix,
+  inputVariables: ["input", "agent_scratchpad"],
+};
 
-const prompt = ZeroShotAgent.createPrompt(
-tools, createPromptArgs
-)
+const prompt = ZeroShotAgent.createPrompt(tools, createPromptArgs);
 
-console.log(prompt.template)
+console.log(prompt.template);
 ```
 
 Now, lets create an LLMChain with that custom prompt.
+
 ```typescript
-const llmChain = new LLMChain({llm: model, prompt})
+const llmChain = new LLMChain({ llm: model, prompt });
 ```
 
 Now we create an agent and agent executor with that custom prompt.
+
 ```typescript
-const agent = new ZeroShotAgent({llmChain: llmChain, allowedTools:["search", "calculator"]})
-const agentExecutor = AgentExecutor.fromAgentAndTools({agent, tools})
+const agent = new ZeroShotAgent({
+  llmChain: llmChain,
+  allowedTools: ["search", "calculator"],
+});
+const agentExecutor = AgentExecutor.fromAgentAndTools({ agent, tools });
 console.log("Loaded agent.");
 ```
 
 Now we can run the agent!
+
 ```typescript
 const input = `Who is Olivia Wilde's boyfriend? What is his current age raised to the 0.23 power?`;
 
@@ -70,7 +76,6 @@ console.log(`Executing with input "${input}"...`);
 const result = await agentExecutor.call({ input });
 
 console.log(`Got output ${result.output}`);
-
 ```
 
 ```shell
