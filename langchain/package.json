@@ -78,7 +78,6 @@
     "@typescript-eslint/eslint-plugin": "^5.51.0",
     "@typescript-eslint/parser": "^5.51.0",
     "babel-jest": "^29.4.2",
-    "cheerio": "^1.0.0-rc.12",
     "cohere-ai": "^5.0.2",
     "dotenv": "^16.0.3",
     "eslint": "^8.33.0",
@@ -94,14 +93,11 @@
     "pinecone-client": "^1.0.1",
     "prettier": "^2.8.3",
     "serpapi": "^1.1.1",
-    "srt-parser-2": "^1.2.2",
     "ts-jest": "^29.0.5",
     "ts-node": "^10.9.1",
     "typedoc": "^0.23.25",
     "typedoc-plugin-missing-exports": "^1.0.0",
-    "typescript": "^4.9.5",
-    "youtube-transcript": "^1.0.4",
-    "ytdl-core": "^4.11.2"
+    "typescript": "^4.9.5"
   },
   "peerDependencies": {
     "@dqbd/tiktoken": "^0.2.1",
@@ -109,7 +105,11 @@
     "hnswlib-node": "^1.3.0",
     "openai": "^3.1.0",
     "pinecone-client": "^1.0.1",
-    "serpapi": "^1.1.1"
+    "serpapi": "^1.1.1",
+    "srt-parser-2": "^1.2.2",
+    "youtube-transcript": "^1.0.4",
+    "cheerio": "^1.0.0-rc.12",
+    "ytdl-core": "^4.11.2"
   },
   "peerDependenciesMeta": {
     "@dqbd/tiktoken": {
@@ -125,6 +125,15 @@
       "optional": true
     },
     "pinecone-client": {
+      "optional": true
+    },
+    "srt-parser-2": {
+      "optional": true
+    },
+    "youtube-transcript": {
+      "optional": true
+    },
+    "cheerio": {
       "optional": true
     },
     "serpapi": {

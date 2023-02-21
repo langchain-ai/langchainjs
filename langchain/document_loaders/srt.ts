@@ -24,7 +24,30 @@ export class SRTLoader extends BaseDocumentLoader {
      * if fs/promises is not installed.
      */
     if (readFile === null) {
-      throw new Error("Failed to load fs/promises.`");
+      const {
+        isBrowser,
+        isNode,
+        isWebWorker,
+        isJsDom,
+        isDeno,
+      } = require("browser-or-node");
+      let env: string;
+      if (isBrowser) {
+        env = "browser";
+      } else if (isNode) {
+        env = "node";
+      } else if (isWebWorker) {
+        env = "webworker";
+      } else if (isJsDom) {
+        env = "jsdom";
+      } else if (isDeno) {
+        env = "deno";
+      } else {
+        env = "other";
+      }
+      throw new Error(
+        `Failed to load fs/promises. SRTLoader available only on environment 'node'. It appears you are running environment '${env}'. See https://<link to docs> for alternatives.`
+      );
     }
 
     /**
