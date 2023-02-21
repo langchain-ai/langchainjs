@@ -5,12 +5,18 @@
     "node": ">=18"
   },
   "workspaces": [
+    "langchain",
     "examples",
     "docs",
-    "langchain"
+    "test-exports"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hwchase17/langchainjs.git"
+  },
   "packageManager": "yarn@3.4.1",
   "scripts": {
+    "ci": "turbo run ci",
     "build": "turbo run build",
     "lint": "turbo run lint",
     "lint:fix": "yarn lint -- --fix",

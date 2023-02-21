@@ -2,8 +2,9 @@
   "extends": "@tsconfig/recommended",
   "compilerOptions": {
     "outDir": "dist",
-    "lib": ["ESNext", "DOM"],
-    "moduleResolution": "nodenext",
+    "lib": [
+      "ESNext",
+    ],
     "sourceMap": true,
     "allowSyntheticDefaultImports": true,
     "baseUrl": "./src",
@@ -16,6 +17,12 @@
     "useDefineForClassFields": true,
     "strictPropertyInitialization": false
   },
-  "exclude": ["node_modules/", "dist/", "tests/"],
-  "include": ["./src"]
+  "exclude": [
+    "node_modules/",
+    "dist/",
+    "tests/"
+  ],
+  "include": [
+    "./src"
+  ]
 }

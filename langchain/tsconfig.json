@@ -23,7 +23,7 @@
   "exclude": [
     "node_modules/",
     "dist/",
-    "tests/"
+    "docs/"
   ],
   "include": [
     "./"
@@ -43,6 +43,7 @@
       "./text_splitter.ts",
       "./memory/index.ts",
       "./document.ts",
+      "./docstore/index.ts",
       "./index.ts"
     ],
     "excludePrivate": true,

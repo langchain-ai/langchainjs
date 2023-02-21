@@ -1,16 +1,17 @@
 export { BaseLLM, LLM, SerializedLLM } from "./base";
-export { OpenAI } from "./openai";
+export { OpenAI, PromptLayerOpenAI } from "./openai";
 export { Cohere } from "./cohere";
 export { loadLLM } from "./load";
 
 export type LLMCallbackManager = {
-  handleStart: (
+  handleStart?: (
     llm: { name: string },
     prompts: string[],
     verbose?: boolean
   ) => void;
-  handleError: (err: string, verbose?: boolean) => void;
-  handleEnd: (output: LLMResult, verbose?: boolean) => void;
+  handleNewToken?: (token: string, verbose?: boolean) => void;
+  handleError?: (err: string, verbose?: boolean) => void;
+  handleEnd?: (output: LLMResult, verbose?: boolean) => void;
 };
 
 /**

@@ -3,6 +3,7 @@ import { Document } from "../document";
 import {
   CharacterTextSplitter,
   RecursiveCharacterTextSplitter,
+  TokenTextSplitter,
 } from "../text_splitter";
 
 test("Test splitting by character count.", () => {
@@ -135,5 +136,18 @@ Bye!\n\n-H.`;
     "some how.",
     "Bye!\n\n-H.",
   ];
+  expect(output).toEqual(expectedOutput);
+});
+
+test("Token text splitter", () => {
+  const text = "foo bar baz a a";
+  const splitter = new TokenTextSplitter({
+    encodingName: "r50k_base",
+    chunkSize: 3,
+    chunkOverlap: 0,
+  });
+  const output = splitter.splitText(text);
+  const expectedOutput = ["foo bar b", "az a a"];
+
   expect(output).toEqual(expectedOutput);
 });

@@ -1,15 +1,12 @@
-import { Embeddings } from "embeddings/base";
+import { Embeddings } from "../embeddings/base";
 import { Document } from "../document";
-
-// Temporary until we have a DocStore class
-export interface DocStore {
-  [key: number]: object;
-}
 
 export abstract class VectorStore {
   embeddings: Embeddings;
 
-  docstore: DocStore;
+  constructor(embeddings: Embeddings) {
+    this.embeddings = embeddings;
+  }
 
   abstract addVectors(
     vectors: number[][],
@@ -20,11 +17,6 @@ export abstract class VectorStore {
     query: number[],
     k: number
   ): Promise<[Document, number][]>;
-
-  async addDocuments(documents: Document[]): Promise<void> {
-    const texts = documents.map(({ pageContent }) => pageContent);
-    this.addVectors(await this.embeddings.embedDocuments(texts), documents);
-  }
 
   async similaritySearch(query: string, k = 4): Promise<Document[]> {
     const results = await this.similaritySearchVectorWithScore(
