@@ -4,6 +4,7 @@ import {
   StuffDocumentsChain,
   VectorDBQAChain,
   ChatVectorDBQAChain,
+  CalendarChain,
 } from "./index";
 import { BaseMemory } from "../memory";
 
@@ -17,6 +18,7 @@ const chainClasses = [
   StuffDocumentsChain,
   VectorDBQAChain,
   ChatVectorDBQAChain,
+  CalendarChain,
 ];
 
 export type SerializedBaseChain = ReturnType<
