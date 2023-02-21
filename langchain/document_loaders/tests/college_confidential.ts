@@ -1,0 +1,10 @@
+import { test } from "@jest/globals";
+import { CollegeConfidentialLoader } from "../college_confidential";
+
+test("Test College confidential loader", async () => {
+  const loader = new CollegeConfidentialLoader(
+    "https://www.collegeconfidential.com/colleges/brown-university/"
+  );
+  const docs = await loader.load();
+  console.log({ docs });
+});
