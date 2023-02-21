@@ -1,8 +1,9 @@
 import type { CheerioAPI, load as LoadT } from "cheerio";
+
+import fetch from "node-fetch";
 import { Document } from "../document";
 import { BaseDocumentLoader } from "./base";
 import type { DocumentLoader } from "./base";
-import fetch from "node-fetch";
 
 let load: typeof LoadT | null = null;
 
