@@ -19,8 +19,8 @@
   "author": "Langchain",
   "license": "MIT",
   "dependencies": {
-    "chromadb": "^1.2.1",
     "@dqbd/tiktoken": "^0.2.1",
+    "chromadb": "^1.2.1",
     "langchain": "workspace:*",
     "openai": "^3.1.0",
     "pinecone-client": "^1.0.1",

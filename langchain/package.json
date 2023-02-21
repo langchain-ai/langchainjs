@@ -97,8 +97,8 @@
     "typescript": "^4.9.5"
   },
   "peerDependencies": {
-    "chromadb": "^1.2.1",
     "@dqbd/tiktoken": "^0.2.1",
+    "chromadb": "^1.2.1",
     "cohere-ai": "^5.0.2",
     "hnswlib-node": "^1.3.0",
     "openai": "^3.1.0",
@@ -107,6 +107,9 @@
   },
   "peerDependenciesMeta": {
     "@dqbd/tiktoken": {
+      "optional": true
+    },
+    "chromadb": {
       "optional": true
     },
     "cohere-ai": {
@@ -123,10 +126,7 @@
     },
     "serpapi": {
       "optional": true
-    },
-    "chromadb": {
-      "optional": true
-    },
+    }
   },
   "dependencies": {
     "deepcopy": "^2.1.0",
