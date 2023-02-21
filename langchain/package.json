@@ -108,7 +108,6 @@
     "pinecone-client": "^1.0.1",
     "serpapi": "^1.1.1",
     "srt-parser-2": "^1.2.2",
-    "youtube-transcript": "^1.0.4",
     "ytdl-core": "^4.11.2"
   },
   "peerDependenciesMeta": {
@@ -134,9 +133,6 @@
       "optional": true
     },
     "srt-parser-2": {
-      "optional": true
-    },
-    "youtube-transcript": {
       "optional": true
     }
   },

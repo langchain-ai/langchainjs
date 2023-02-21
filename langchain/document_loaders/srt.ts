@@ -30,6 +30,7 @@ export class SRTLoader extends BaseDocumentLoader {
         isWebWorker,
         isJsDom,
         isDeno,
+        // eslint-disable-next-line global-require,@typescript-eslint/no-var-requires
       } = require("browser-or-node");
       let env: string;
       if (isBrowser) {
