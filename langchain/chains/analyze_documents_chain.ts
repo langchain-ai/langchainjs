@@ -49,6 +49,10 @@ export class AnalyzeDocumentChain
       fields.textSplitter ?? new RecursiveCharacterTextSplitter();
   }
 
+  get inputKeys(): string[] {
+    return [this.inputKey];
+  }
+
   async _call(values: ChainValues): Promise<ChainValues> {
     if (!(this.inputKey in values)) {
       throw new Error(`Document key ${this.inputKey} not found.`);
