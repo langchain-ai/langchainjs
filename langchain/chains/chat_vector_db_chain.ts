@@ -165,7 +165,7 @@ export class ChatVectorDBQAChain
   }
 
   static fromLLM(llm: BaseLLM, vectorstore: VectorStore): ChatVectorDBQAChain {
-    const qaChain = loadQAChain({ llm, prompt: qa_prompt });
+    const qaChain = loadQAChain(llm, { prompt: qa_prompt });
     const questionGeneratorChain = new LLMChain({
       prompt: question_generator_prompt,
       llm,

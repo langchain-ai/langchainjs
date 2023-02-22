@@ -8,7 +8,7 @@ import { loadQAChain } from "langchain/chains";
 import { Document } from "langchain/document";
 
 const model = new OpenAI({});
-const chain = loadQAChain({ llm: model });
+const chain = loadQAChain(llm);
 const docs = [
   new Document({ pageContent: "harrison went to harvard" }),
   new Document({ pageContent: "ankush went to princeton" }),
@@ -29,7 +29,7 @@ import { loadQAChain } from "langchain/chains";
 import { Document } from "langchain/document";
 
 const model = new OpenAI({});
-const chain = loadQAChain({ llm: model, type: "map_reduce" });
+const chain = loadQAChain(llm, { type: "map_reduce" });
 const docs = [
   new Document({ pageContent: "harrison went to harvard" }),
   new Document({ pageContent: "ankush went to princeton" }),

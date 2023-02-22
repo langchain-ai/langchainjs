@@ -5,7 +5,7 @@ import { Document } from "../../../document";
 
 test("Test loadQAChain", async () => {
   const model = new OpenAI({});
-  const chain = loadQAChain({ llm: model });
+  const chain = loadQAChain(model);
   const docs = [
     new Document({ pageContent: "foo" }),
     new Document({ pageContent: "bar" }),
@@ -17,7 +17,7 @@ test("Test loadQAChain", async () => {
 
 test("Test loadQAChain map_reduce", async () => {
   const model = new OpenAI({});
-  const chain = loadQAChain({ llm: model, type: "map_reduce" });
+  const chain = loadQAChain(model, { type: "map_reduce" });
   const docs = [
     new Document({ pageContent: "foo" }),
     new Document({ pageContent: "bar" }),

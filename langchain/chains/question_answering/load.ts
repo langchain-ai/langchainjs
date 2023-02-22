@@ -12,15 +12,13 @@ import {
 } from "./map_reduce_prompts";
 
 interface qaChainParams {
-  llm: BaseLLM;
   prompt?: PromptTemplate;
   combineQAPrompt?: PromptTemplate;
   combinePrompt?: PromptTemplate;
   type?: string;
 }
-export const loadQAChain = (params: qaChainParams) => {
+export const loadQAChain = (llm: BaseLLM, params: qaChainParams = {}) => {
   const {
-    llm,
     prompt = DEFAULT_QA_PROMPT,
     combineQAPrompt = DEFAULT_COMBINE_QA_PROMPT,
     combinePrompt = COMBINE_PROMPT,
