@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "description": "Typescript bindings for langchain",
   "main": "./index.js",
   "types": "./index.d.ts",
@@ -142,7 +142,9 @@
     "eventsource-parser": "^0.1.0",
     "exponential-backoff": "^3.1.0",
     "expr-eval": "^2.0.2",
+    "gpt-3-encoder": "^1.1.4",
     "node-fetch": "2",
+    "p-queue": "6",
     "uuid": "^9.0.0",
     "yaml": "^2.2.1"
   },

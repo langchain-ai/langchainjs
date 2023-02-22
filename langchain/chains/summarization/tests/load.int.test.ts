@@ -1,11 +1,11 @@
 import { test } from "@jest/globals";
 import { OpenAI } from "../../../llms/openai";
-import { loadQAChain } from "../load";
+import { loadSummarizationChain } from "../load";
 import { Document } from "../../../document";
 
-test("Test loadQAChain", async () => {
+test("Test loadSummzationChain", async () => {
   const model = new OpenAI({});
-  const chain = loadQAChain(model);
+  const chain = loadSummarizationChain(model);
   const docs = [
     new Document({ pageContent: "foo" }),
     new Document({ pageContent: "bar" }),
@@ -17,7 +17,7 @@ test("Test loadQAChain", async () => {
 
 test("Test loadQAChain map_reduce", async () => {
   const model = new OpenAI({});
-  const chain = loadQAChain(model, { type: "map_reduce" });
+  const chain = loadSummarizationChain(model, { type: "map_reduce" });
   const docs = [
     new Document({ pageContent: "foo" }),
     new Document({ pageContent: "bar" }),
