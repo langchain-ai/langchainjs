@@ -20,6 +20,7 @@
   "license": "MIT",
   "dependencies": {
     "@dqbd/tiktoken": "^0.2.1",
+    "@google-cloud/local-auth": "^2.1.1",
     "langchain": "workspace:*",
     "openai": "^3.1.0",
     "pinecone-client": "^1.0.1",

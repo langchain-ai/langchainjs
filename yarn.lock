@@ -9517,6 +9517,7 @@ __metadata:
   resolution: "langchain-examples@workspace:examples"
   dependencies:
     "@dqbd/tiktoken": ^0.2.1
+    "@google-cloud/local-auth": ^2.1.1
     "@tsconfig/recommended": ^1.0.2
     "@typescript-eslint/eslint-plugin": ^5.51.0
     "@typescript-eslint/parser": ^5.51.0
