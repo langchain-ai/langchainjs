@@ -2,7 +2,6 @@ import { v4 as uuidv4 } from "uuid";
 import type { ChromaClient as ChromaClientT } from "chromadb";
 
 import { Embeddings } from "../embeddings/base";
-import { InMemoryDocstore } from "../docstore";
 import { VectorStore } from "./base";
 import { Document } from "../document";
 
@@ -24,8 +23,6 @@ export interface ChromaLibArgs {
 export class Chroma extends VectorStore {
   index?: ChromaClientT;
 
-  docstore: InMemoryDocstore;
-
   args: ChromaLibArgs;
 
   collectionName: string;
@@ -35,14 +32,12 @@ export class Chroma extends VectorStore {
   constructor(
     args: ChromaLibArgs,
     embeddings: Embeddings,
-    docstore: InMemoryDocstore,
     index?: ChromaClientT
   ) {
     super(embeddings);
     this.index = index;
     this.args = args;
     this.embeddings = embeddings;
-    this.docstore = docstore;
     this.collectionName = ensureCollectionName(args.collectionName);
     this.url = args.url || "http://localhost:8000";
   }
@@ -85,11 +80,15 @@ export class Chroma extends VectorStore {
     }
 
     const collection = await this.index.getCollection(this.collectionName);
-    const docstoreSize = this.docstore.count;
-    for (let i = 0; i < vectors.length; i += 1) {
-      await collection.add((docstoreSize + i).toString(), vectors[i]);
-      this.docstore.add({ [docstoreSize + i]: documents[i] });
-    }
+    const docstoreSize = await collection.count();
+    await collection.add(
+      Array.from({ length: vectors.length }, (_, i) =>
+        (docstoreSize + i).toString()
+      ),
+      vectors,
+      documents.map(({ metadata }) => metadata),
+      documents.map(({ pageContent }) => pageContent)
+    );
   }
 
   async similaritySearchVectorWithScore(query: number[], k: number) {
@@ -100,16 +99,19 @@ export class Chroma extends VectorStore {
     }
     const collection = await this.index.getCollection(this.collectionName);
     const result = await collection.query(query, k);
-    const { ids, distances } = result;
+    const { ids, distances, documents, metadatas } = result;
 
     // ids comes back as a list of lists, so we need to flatten it
     const takeIds = ids[0];
 
-    const results = [];
+    const results: [Document, number][] = [];
     for (let i = 0; i < takeIds.length; i += 1) {
-      results.push([this.docstore.search(takeIds[i]), distances[i]] as [
-        Document,
-        number
+      results.push([
+        new Document({
+          pageContent: documents[i],
+          metadata: metadatas[i],
+        }),
+        distances[i],
       ]);
     }
     return results;
@@ -119,12 +121,10 @@ export class Chroma extends VectorStore {
     texts: string[],
     metadatas: object[],
     embeddings: Embeddings,
-    // eslint-disable-next-line default-param-last
-    docstore: InMemoryDocstore = new InMemoryDocstore(),
     collectionName?: string,
     url?: string
   ): Promise<Chroma> {
-    const docs = [];
+    const docs: Document[] = [];
     for (let i = 0; i < texts.length; i += 1) {
       const newDoc = new Document({
         pageContent: texts[i],
@@ -132,20 +132,12 @@ export class Chroma extends VectorStore {
       });
       docs.push(newDoc);
     }
-    return Chroma.fromDocuments(
-      docs,
-      embeddings,
-      docstore,
-      collectionName,
-      url
-    );
+    return Chroma.fromDocuments(docs, embeddings, collectionName, url);
   }
 
   static async fromDocuments(
     docs: Document[],
     embeddings: Embeddings,
-    // eslint-disable-next-line default-param-last
-    docstore: InMemoryDocstore = new InMemoryDocstore(),
     collectionName?: string,
     url?: string
   ): Promise<Chroma> {
@@ -159,7 +151,7 @@ export class Chroma extends VectorStore {
       collectionName,
       url,
     };
-    const instance = new this(args, embeddings, docstore);
+    const instance = new this(args, embeddings);
     await instance.addDocuments(docs);
     return instance;
   }
