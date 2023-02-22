@@ -21,7 +21,7 @@ export const loadSummarizationChain = (
     prompt = DEFAULT_PROMPT,
     combineMapPrompt = DEFAULT_PROMPT,
     combinePrompt = DEFAULT_PROMPT,
-    type = "stuff",
+    type = "map_reduce",
   } = params;
   if (type === "stuff") {
     const llmChain = new LLMChain({ prompt, llm });

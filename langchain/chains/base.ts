@@ -5,6 +5,7 @@ import {
   VectorDBQAChain,
   ChatVectorDBQAChain,
   MapReduceDocumentsChain,
+  AnalyzeDocumentChain,
 } from "./index";
 import { BaseMemory } from "../memory";
 
@@ -19,6 +20,7 @@ const chainClasses = [
   VectorDBQAChain,
   ChatVectorDBQAChain,
   MapReduceDocumentsChain,
+  AnalyzeDocumentChain,
 ];
 
 export type SerializedBaseChain = ReturnType<

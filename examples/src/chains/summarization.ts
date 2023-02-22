@@ -4,7 +4,7 @@ import { Document } from "langchain/document";
 
 export const run = async () => {
   const model = new OpenAI({});
-  const chain = loadSummarizationChain(model);
+  const chain = loadSummarizationChain(model, { type: "stuff" });
   const docs = [
     new Document({ pageContent: "harrison went to harvard" }),
     new Document({ pageContent: "ankush went to princeton" }),
@@ -12,5 +12,5 @@ export const run = async () => {
   const res = await chain.call({
     input_documents: docs,
   });
-  console.log({ res });
+  console.log(res);
 };
