@@ -175,7 +175,6 @@ export class MapReduceDocumentsChain
       }));
     }
     const newInputs = { input_documents: currentDocs, ...rest };
-    console.log(newInputs);
     const result = await this.combineDocumentChain.call(newInputs);
     return result;
   }
