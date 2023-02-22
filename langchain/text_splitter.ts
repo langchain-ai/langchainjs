@@ -7,7 +7,7 @@ interface TextSplitterParams {
   chunkOverlap: number;
 }
 
-abstract class TextSplitter implements TextSplitterParams {
+export abstract class TextSplitter implements TextSplitterParams {
   chunkSize = 1000;
 
   chunkOverlap = 200;

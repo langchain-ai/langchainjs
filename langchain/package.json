@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.8",
+  "version": "0.0.10",
   "description": "Typescript bindings for langchain",
   "main": "./index.js",
   "types": "./index.d.ts",
@@ -39,6 +39,9 @@
     "docstore.js",
     "docstore.mjs",
     "docstore.d.ts",
+    "document_loaders.js",
+    "document_loaders.mjs",
+    "document_loaders.d.ts",
     "index.js",
     "index.mjs",
     "index.d.ts"
@@ -75,6 +78,7 @@
     "@typescript-eslint/eslint-plugin": "^5.51.0",
     "@typescript-eslint/parser": "^5.51.0",
     "babel-jest": "^29.4.2",
+    "cheerio": "^1.0.0-rc.12",
     "cohere-ai": "^5.0.2",
     "dotenv": "^16.0.3",
     "eslint": "^8.33.0",
@@ -90,6 +94,7 @@
     "pinecone-client": "^1.0.1",
     "prettier": "^2.8.3",
     "serpapi": "^1.1.1",
+    "srt-parser-2": "^1.2.2",
     "ts-jest": "^29.0.5",
     "ts-node": "^10.9.1",
     "typedoc": "^0.23.25",
@@ -99,17 +104,22 @@
   "peerDependencies": {
     "@dqbd/tiktoken": "^0.2.1",
     "chromadb": "^1.3.0",
+    "cheerio": "^1.0.0-rc.12",
     "cohere-ai": "^5.0.2",
     "hnswlib-node": "^1.3.0",
     "openai": "^3.1.0",
     "pinecone-client": "^1.0.1",
-    "serpapi": "^1.1.1"
+    "serpapi": "^1.1.1",
+    "srt-parser-2": "^1.2.2"
   },
   "peerDependenciesMeta": {
     "@dqbd/tiktoken": {
       "optional": true
     },
     "chromadb": {
+      "optional": true
+    },
+    "cheerio": {
       "optional": true
     },
     "cohere-ai": {
@@ -126,6 +136,9 @@
     },
     "serpapi": {
       "optional": true
+    },
+    "srt-parser-2": {
+      "optional": true
     }
   },
   "dependencies": {
@@ -133,7 +146,9 @@
     "eventsource-parser": "^0.1.0",
     "exponential-backoff": "^3.1.0",
     "expr-eval": "^2.0.2",
+    "gpt-3-encoder": "^1.1.4",
     "node-fetch": "2",
+    "p-queue": "6",
     "uuid": "^9.0.0",
     "yaml": "^2.2.1"
   },
@@ -208,6 +223,10 @@
     "./docstore": {
       "import": "./docstore.mjs",
       "default": "./docstore.js"
+    },
+    "./document_loaders": {
+      "import": "./document_loaders.mjs",
+      "default": "./document_loaders.js"
     }
   }
 }

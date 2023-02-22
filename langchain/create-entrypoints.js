@@ -14,6 +14,7 @@ const entrypoints = {
   memory: "memory/index",
   document: "document",
   docstore: "docstore/index",
+  document_loaders: "document_loaders/index",
 };
 
 const updateJsonFile = (relativePath, updateFunction) => {

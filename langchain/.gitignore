@@ -31,6 +31,9 @@ document.d.ts
 docstore.js
 docstore.mjs
 docstore.d.ts
+document_loaders.js
+document_loaders.mjs
+document_loaders.d.ts
 index.js
 index.mjs
 index.d.ts

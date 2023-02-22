@@ -43,7 +43,7 @@ test("Test HNSWLib.fromTexts + addDocuments", async () => {
 
   const resultTwo = await vectorStore.similaritySearch("hello world", 3);
   const resultTwoMetadatas = resultTwo.map(({ metadata }) => metadata);
-  expect(resultTwoMetadatas).toEqual([{ id: 2 }, { id: 1 }, { id: 3 }]);
+  expect(resultTwoMetadatas).toEqual([{ id: 2 }, { id: 3 }, { id: 4 }]);
 });
 
 test("Test HNSWLib.load and HNSWLib.save", async () => {

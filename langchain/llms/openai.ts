@@ -140,12 +140,19 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
   constructor(
     fields?: Partial<OpenAIInput> & {
       callbackManager?: LLMCallbackManager;
+      concurrency?: number;
+      cache?: boolean;
       verbose?: boolean;
       openAIApiKey?: string;
     },
     configuration?: ConfigurationParameters
   ) {
-    super(fields?.callbackManager, fields?.verbose);
+    super(
+      fields?.callbackManager,
+      fields?.verbose,
+      fields?.concurrency,
+      fields?.cache
+    );
     if (Configuration === null || OpenAIApi === null) {
       throw new Error(
         "Please install openai as a dependency with, e.g. `npm i openai`"

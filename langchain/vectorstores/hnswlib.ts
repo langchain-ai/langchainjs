@@ -100,6 +100,19 @@ export class HNSWLib extends SaveableVectorStore {
         "Vector store not initialised yet. Try calling `addTexts` first."
       );
     }
+    if (query.length !== this.args.numDimensions) {
+      throw new Error(
+        `Query vector must have the same length as the number of dimensions (${this.args.numDimensions})`
+      );
+    }
+    if (k > this.index.getCurrentCount()) {
+      const total = this.index.getCurrentCount();
+      console.warn(
+        `k (${k}) is greater than the number of elements in the index (${total}), setting k to ${total}`
+      );
+      // eslint-disable-next-line no-param-reassign
+      k = total;
+    }
     const result = this.index.searchKnn(query, k);
     return result.neighbors.map(
       (docIndex, resultIndex) =>
@@ -116,6 +129,8 @@ export class HNSWLib extends SaveableVectorStore {
         "Vector store not initialised yet. Try calling `addTexts` first."
       );
     }
+    console.log(this.docstore);
+    console.log(JSON.stringify(this.docstore._docs.get("0")));
     await fs.mkdir(directory, { recursive: true });
     await Promise.all([
       this.index.writeIndex(path.join(directory, "hnswlib.index")),
@@ -125,7 +140,7 @@ export class HNSWLib extends SaveableVectorStore {
       ),
       await fs.writeFile(
         path.join(directory, "docstore.json"),
-        JSON.stringify(this.docstore)
+        JSON.stringify(Array.from(this.docstore._docs.entries()))
       ),
     ]);
   }
@@ -140,12 +155,15 @@ export class HNSWLib extends SaveableVectorStore {
       await fs.readFile(path.join(directory, "args.json"), "utf8")
     );
     const index = new HierarchicalNSW(args.space, args.numDimensions);
-    const [docstore] = await Promise.all([
+    const [docstoreFiles] = await Promise.all([
       fs
         .readFile(path.join(directory, "docstore.json"), "utf8")
         .then(JSON.parse),
       index.readIndex(path.join(directory, "hnswlib.index")),
     ]);
+    console.log(docstoreFiles);
+    console.log(docstoreFiles._docs);
+    const docstore = new InMemoryDocstore(new Map(docstoreFiles));
 
     return new HNSWLib(args, embeddings, docstore, index);
   }
