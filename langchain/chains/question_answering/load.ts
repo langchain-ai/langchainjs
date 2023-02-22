@@ -30,7 +30,8 @@ export const loadQAChain = (params: qaChainParams) => {
     const llmChain = new LLMChain({ prompt, llm });
     const chain = new StuffDocumentsChain({ llmChain });
     return chain;
-  } if (type === "map_reduce") {
+  }
+  if (type === "map_reduce") {
     const llmChain = new LLMChain({ prompt: combineQAPrompt, llm });
     const combineLLMChain = new LLMChain({ prompt: combinePrompt, llm });
     const combineDocumentChain = new StuffDocumentsChain({
@@ -42,7 +43,6 @@ export const loadQAChain = (params: qaChainParams) => {
       combineDocumentChain,
     });
     return chain;
-  } 
-    throw new Error(`Invalid _type: ${type}`);
-  
+  }
+  throw new Error(`Invalid _type: ${type}`);
 };

@@ -141,12 +141,13 @@ export class MapReduceDocumentsChain
       throw new Error(`Document key ${this.inputKey} not found.`);
     }
     const { [this.inputKey]: docs, ...rest } = values;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const inputs = docs.map((d: { pageContent: any }) => ({
       [this.documentVariableName]: d.pageContent,
       ...rest,
     }));
     const results = await this.llmChain.apply(inputs);
-    const {outputKey} = this.llmChain;
+    const { outputKey } = this.llmChain;
     const newDocs = results.map((r: ChainValues) => ({
       pageContent: r[outputKey],
     }));
