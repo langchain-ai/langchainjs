@@ -1,4 +1,10 @@
-import { BaseChain, ChainValues, LLMChain, SerializedLLMChain } from "./index";
+import {
+  BaseChain,
+  ChainValues,
+  LLMChain,
+  SerializedLLMChain,
+  SerializedBaseChain,
+} from "./index";
 
 import { Document } from "../document";
 
@@ -91,6 +97,8 @@ export type SerializedMapReduceDocumentsChain = {
   _type: "map_reduce_documents_chain";
   llm_chain?: SerializedLLMChain;
   llm_chain_path?: string;
+  combine_document_chain?: SerializedBaseChain;
+  combine_document_chain_path?: string;
 };
 
 /**
@@ -112,16 +120,16 @@ export class MapReduceDocumentsChain
 
   combineDocumentChain: BaseChain;
 
-  collapseDocumentChain?: BaseChain;
-
   constructor(fields: {
     llmChain: LLMChain;
+    combineDocumentChain: BaseChain;
     inputKey?: string;
     outputKey?: string;
     documentVariableName?: string;
   }) {
     super();
     this.llmChain = fields.llmChain;
+    this.combineDocumentChain = fields.combineDocumentChain;
     this.documentVariableName =
       fields.documentVariableName ?? this.documentVariableName;
     this.inputKey = fields.inputKey ?? this.inputKey;
@@ -133,34 +141,49 @@ export class MapReduceDocumentsChain
       throw new Error(`Document key ${this.inputKey} not found.`);
     }
     const { [this.inputKey]: docs, ...rest } = values;
-    const texts = (docs as Document[]).map(({ pageContent }) => pageContent);
-    const text = texts.join("\n\n");
-    const result = await this.llmChain.call({
+    const inputs = docs.map((d: { pageContent: any }) => ({
+      [this.documentVariableName]: d.pageContent,
       ...rest,
-      [this.documentVariableName]: text,
-    });
+    }));
+    const results = await this.llmChain.apply(inputs);
+    const {outputKey} = this.llmChain;
+    const newDocs = results.map((r: ChainValues) => ({
+      pageContent: r[outputKey],
+    }));
+    const newInputs = { input_documents: newDocs, ...rest };
+    console.log(newInputs);
+    const result = await this.combineDocumentChain.call(newInputs);
     return result;
   }
 
   _chainType() {
-    return "stuff_documents_chain" as const;
+    return "map_reduce_documents_chain" as const;
   }
 
-  static async deserialize(data: SerializedStuffDocumentsChain) {
+  static async deserialize(data: SerializedMapReduceDocumentsChain) {
     const SerializedLLMChain = resolveConfigFromFile<
       "llm_chain",
       SerializedLLMChain
     >("llm_chain", data);
 
-    return new StuffDocumentsChain({
+    const SerializedCombineDocumentChain = resolveConfigFromFile<
+      "combine_document_chain",
+      SerializedBaseChain
+    >("combine_document_chain", data);
+
+    return new MapReduceDocumentsChain({
       llmChain: await LLMChain.deserialize(SerializedLLMChain),
+      combineDocumentChain: await BaseChain.deserialize(
+        SerializedCombineDocumentChain
+      ),
     });
   }
 
-  serialize(): SerializedStuffDocumentsChain {
+  serialize(): SerializedMapReduceDocumentsChain {
     return {
       _type: this._chainType(),
       llm_chain: this.llmChain.serialize(),
+      combine_document_chain: this.combineDocumentChain.serialize(),
     };
   }
 }
