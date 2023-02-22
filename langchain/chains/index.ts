@@ -18,3 +18,4 @@ export {
 export { VectorDBQAChain, SerializedVectorDBQAChain } from "./vector_db_qa";
 export { loadChain } from "./load";
 export { loadQAChain } from "./question_answering/load";
+export { loadSummarizationChain } from "./summarization/load";
