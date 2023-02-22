@@ -105,6 +105,12 @@ export type SerializedMapReduceDocumentsChain = {
   combine_document_chain_path?: string;
 };
 
+export interface MapReduceDocumentsChainInput extends StuffDocumentsChainInput {
+  maxTokens: number;
+  maxIterations: number;
+  combineDocumentsChain: BaseChain;
+}
+
 /**
  * Chain that combines documents by stuffing into context.
  * @augments BaseChain
