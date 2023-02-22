@@ -5,6 +5,5 @@ test("Test College confidential loader", async () => {
   const loader = new CollegeConfidentialLoader(
     "https://www.collegeconfidential.com/colleges/brown-university/"
   );
-  const docs = await loader.load();
-  console.log({ docs });
+  await loader.load();
 });
