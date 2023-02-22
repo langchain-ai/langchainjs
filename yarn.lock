@@ -4862,12 +4862,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"chromadb@npm:^1.2.1":
-  version: 1.2.1
-  resolution: "chromadb@npm:1.2.1"
+"chromadb@npm:^1.3.0":
+  version: 1.3.0
+  resolution: "chromadb@npm:1.3.0"
   dependencies:
     axios: ^0.26.0
-  checksum: b0715b207ccf81e26207b401a808666ba812292480e94cc2825c53b0b01c6655a5bc68a28d6c59795d5f53dd669eeab96f71df48eac3682aaa94547be6a10aa0
+  checksum: f3a4054479c4b4bbfb2de13a18ec1bc09212f7d0254d6c371d3c6c22f508e004e552ae5133f96360fa398357775f5de3d780f22ad39db383ebb2939bb28d0ace
   languageName: node
   linkType: hard
 
@@ -9359,7 +9359,7 @@ __metadata:
     "@tsconfig/recommended": ^1.0.2
     "@typescript-eslint/eslint-plugin": ^5.51.0
     "@typescript-eslint/parser": ^5.51.0
-    chromadb: ^1.2.1
+    chromadb: ^1.3.0
     dotenv: ^16.0.3
     eslint: ^8.33.0
     eslint-config-airbnb-base: ^15.0.0
@@ -9418,7 +9418,7 @@ __metadata:
     yaml: ^2.2.1
   peerDependencies:
     "@dqbd/tiktoken": ^0.2.1
-    chromadb: ^1.2.1
+    chromadb: ^1.3.0
     cohere-ai: ^5.0.2
     hnswlib-node: ^1.3.0
     openai: ^3.1.0
