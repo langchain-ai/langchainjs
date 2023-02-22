@@ -1,6 +1,6 @@
-# Text files
+# Webpages
 
-This example goes over how to load data from text files.
+This example goes over how to load data from webpages.
 
 ```typescript
 import { CheerioWebBaseLoader } from "langchain/document_loaders";

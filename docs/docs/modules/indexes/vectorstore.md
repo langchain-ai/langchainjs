@@ -2,6 +2,10 @@
 
 A vectorstore is a particular type of database optimized for storing documents, embeddings, and then allowing for fetching of the most relevant documents for a particular query.
 
+## HNSWLib
+
+HNSWLib is an in-memory vectorstore.
+
 ```typescript
 import { HNSWLib } from "langchain/vectorstores";
 import { OpenAIEmbeddings } from "langchain/embeddings";
