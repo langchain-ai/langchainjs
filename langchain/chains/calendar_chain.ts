@@ -1,6 +1,5 @@
 import { ReadGoogleCalendar } from "agents/tools";
 
-
 import { BaseChain, ChainValues, LLMChain, SerializedLLMChain } from "./index";
 import { BaseLLM } from "../llms";
 import { PromptTemplate } from "../prompts";
@@ -15,18 +14,14 @@ const template = `You are given the following calendar events.
 Answer the following question about those events.
 Question: {question}
 Answer:`;
-const prompt = PromptTemplate.fromTemplate(
-  template
-);
+const prompt = PromptTemplate.fromTemplate(template);
 export type SerializedCalendarChain = {
   _type: "calendar_chain";
   llm_chain?: SerializedLLMChain;
   llm_chain_path?: string;
 };
 
-export class CalendarChain
-  extends BaseChain
-{
+export class CalendarChain extends BaseChain {
   llmChain: LLMChain;
 
   calendarTool: ReadGoogleCalendar;
@@ -49,7 +44,6 @@ export class CalendarChain
   }
 
   async _call(values: ChainValues): Promise<ChainValues> {
-
     const calendarContext = await this.calendarTool.call("");
     const result = await this.llmChain.call({
       ...values,
@@ -62,10 +56,7 @@ export class CalendarChain
     return "calendar_chain" as const;
   }
 
-  static async deserialize(
-    data: SerializedCalendarChain,
-    values: LoadValues
-  ) {
+  static async deserialize(data: SerializedCalendarChain, values: LoadValues) {
     if (!("calendarTool" in values)) {
       throw new Error(
         `Need to pass in a calendarTool to deserialize CalendarChain`
@@ -89,12 +80,15 @@ export class CalendarChain
       llm_chain: this.llmChain.serialize(),
     };
   }
-  
-  static fromLLM(llm: BaseLLM, calendarTool: ReadGoogleCalendar): CalendarChain {
+
+  static fromLLM(
+    llm: BaseLLM,
+    calendarTool: ReadGoogleCalendar
+  ): CalendarChain {
     const llmChain = new LLMChain({
       prompt,
       llm,
-    })
+    });
     const instance = new this({ llmChain, calendarTool });
     return instance;
   }

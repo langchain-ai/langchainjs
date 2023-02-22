@@ -1,5 +1,5 @@
 import { OpenAI } from "langchain";
-import { ReadGoogleCalendar } from "langchain/agents/tools/read-google-calendar";
+import { ReadGoogleCalendar } from "langchain/tools";
 import { authenticate } from "@google-cloud/local-auth";
 import { CalendarChain } from "langchain/chains";
 
@@ -17,6 +17,8 @@ export const run = async () => {
 
   const chain = CalendarChain.fromLLM(model, calendarTool);
 
-  const res = await chain.call({ question: "Are there any events next week?" });
+  const res = await chain.call({
+    question: `Today's ${new Date().toString()}. What events do I have in the coming month?`,
+  });
   console.log({ res });
 };
