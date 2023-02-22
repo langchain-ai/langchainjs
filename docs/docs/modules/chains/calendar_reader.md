@@ -2,7 +2,7 @@
 
 A Google Calendar Reader chain takes as input a question, and then pulls recent primary calendar events and uses them as evidence for the question response.
 
-You'll need an authenticated Google API client with access to the `calendar.readonly` scope.
+You'll need an authenticated Google API client with access to the `calendar.readonly` scope, to pass into the `ReadGoogleCalendar` tool instance.
 
 ## Example
 
