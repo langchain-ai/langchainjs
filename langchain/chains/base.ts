@@ -1,4 +1,5 @@
 import deepcopy = require("deepcopy");
+import PQueue from "p-queue";
 import {
   LLMChain,
   StuffDocumentsChain,
@@ -35,11 +36,18 @@ export interface ChainInputs {
 export abstract class BaseChain implements ChainInputs {
   memory?: BaseMemory;
 
+  /**
+   * Maximum number of concurrent calls to this chain,
+   * additional calls are queued up. Defaults to 10. To disable set to Infinity.
+   */
   concurrency?: number = 10;
+
+  queue: PQueue;
 
   constructor(memory?: BaseMemory, concurrency?: number) {
     this.memory = memory;
     this.concurrency = concurrency ?? this.concurrency;
+    this.queue = new PQueue({ concurrency: this.concurrency });
   }
 
   /**
@@ -71,7 +79,9 @@ export abstract class BaseChain implements ChainInputs {
       }
     }
     // TODO(sean) add callback support
-    const outputValues = this._call(fullValues);
+    const outputValues = this.queue.add(() => this._call(fullValues), {
+      throwOnTimeout: true,
+    });
     if (!(this.memory == null)) {
       await this.memory.saveContext(values, outputValues);
     }
@@ -82,7 +92,10 @@ export abstract class BaseChain implements ChainInputs {
    * Call the chain on all inputs in the list
    */
   async apply(inputs: ChainValues[]): Promise<ChainValues> {
-    return Promise.all(inputs.map(async (i) => this.call(i)));
+    return this.queue.addAll(
+      inputs.map((i) => async () => this.call(i)),
+      { throwOnTimeout: true }
+    );
   }
 
   /**
