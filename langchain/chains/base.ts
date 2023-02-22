@@ -35,8 +35,11 @@ export interface ChainInputs {
 export abstract class BaseChain implements ChainInputs {
   memory?: BaseMemory;
 
-  constructor(memory?: BaseMemory) {
+  concurrency?: number = 10;
+
+  constructor(memory?: BaseMemory, concurrency?: number) {
     this.memory = memory;
+    this.concurrency = concurrency ?? this.concurrency;
   }
 
   /**
