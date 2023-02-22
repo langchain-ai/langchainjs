@@ -48,6 +48,10 @@ export class LLMChain extends BaseChain implements LLMChainInput {
 
   outputKey = "text";
 
+  get inputKeys() {
+    return this.prompt.inputVariables;
+  }
+
   constructor(fields: {
     prompt: BasePromptTemplate;
     llm: BaseLLM;

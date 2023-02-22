@@ -25,9 +25,16 @@ export class Cohere extends LLM implements CohereInput {
     fields?: Partial<CohereInput> & {
       callbackManager?: LLMCallbackManager;
       verbose?: boolean;
+      concurrency?: number;
+      cache?: boolean;
     }
   ) {
-    super(fields?.callbackManager, fields?.verbose);
+    super(
+      fields?.callbackManager,
+      fields?.verbose,
+      fields?.concurrency,
+      fields?.cache
+    );
 
     this.maxTokens = fields?.maxTokens ?? this.maxTokens;
     this.temperature = fields?.temperature ?? this.temperature;

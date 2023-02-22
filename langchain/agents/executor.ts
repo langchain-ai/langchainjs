@@ -25,6 +25,10 @@ export class AgentExecutor extends BaseChain {
 
   earlyStoppingMethod: StoppingMethod = "force";
 
+  get inputKeys() {
+    return this.agent.inputKeys;
+  }
+
   constructor(input: AgentExecutorInput) {
     super();
     this.agent = input.agent;

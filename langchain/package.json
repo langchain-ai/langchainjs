@@ -144,6 +144,7 @@
     "expr-eval": "^2.0.2",
     "gpt-3-encoder": "^1.1.4",
     "node-fetch": "2",
+    "p-queue": "6",
     "uuid": "^9.0.0",
     "yaml": "^2.2.1"
   },
