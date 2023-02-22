@@ -30,6 +30,7 @@ The next usage examples takes as inputs multiple examples, but it assumes that t
 import { OpenAI } from "langchain/llms";
 import { loadSummarizationChain } from "langchain/chains";
 import { Document } from "langchain/document";
+import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import * as fs from "fs";
 
 const text = fs.readFileSync("state_of_the_union.txt", "utf8");
