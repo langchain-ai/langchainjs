@@ -1,7 +1,30 @@
-import path from "path";
 import fetch, { RequestInit } from "node-fetch";
-import fs from "fs";
 import * as yaml from "yaml";
+
+export const extname = (path: string) => `.${path.split(".").pop()}`;
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type LoadValues = Record<string, any>;
+
+export type FileLoader<T> = (
+  text: string,
+  filePath: string,
+  values: LoadValues
+) => Promise<T>;
+
+export const loadFromFile = async <T>(
+  uri: string,
+  loader: FileLoader<T>,
+  values: LoadValues = {}
+): Promise<T> => {
+  try {
+    const fs = await import("fs/promises");
+    return loader(await fs.readFile(uri, { encoding: "utf-8" }), uri, values);
+  } catch (e) {
+    console.error(e);
+    throw new Error(`Could not load file at ${uri}`);
+  }
+};
 
 export const fetchWithTimeout = async (
   url: string,
@@ -43,12 +66,12 @@ export type FromPath<key extends string, T> = {
   [k in `${key}_path`]?: string;
 };
 
-const resolveFieldFromFile = <K extends string, R, T extends R>(
+const resolveFieldFromFile = async <K extends string, R, T extends R>(
   fieldName: K,
   config: FromPath<K, T>,
   load: (contents: string, suffix: string) => R,
   allowExtensions?: string[]
-): R => {
+): Promise<R> => {
   const fieldPath = config[`${fieldName}_path`] as string | undefined;
   const field = config[fieldName] as T | undefined;
   if (fieldPath !== undefined && field !== undefined) {
@@ -62,12 +85,19 @@ const resolveFieldFromFile = <K extends string, R, T extends R>(
   }
 
   if (fieldPath !== undefined) {
-    const suffix = path.extname(fieldPath);
+    const suffix = extname(fieldPath);
     if (allowExtensions && !allowExtensions.includes(suffix)) {
       throw new Error("Invalid file type");
     }
 
-    return load(fs.readFileSync(fieldPath).toString(), suffix);
+    try {
+      const fs = await import("fs/promises");
+
+      return load(await fs.readFile(fieldPath, { encoding: "utf-8" }), suffix);
+    } catch (e) {
+      console.error(e);
+      throw new Error(`Unable to read file ${fieldPath}: ${e}`);
+    }
   }
 
   throw new Error(
@@ -75,19 +105,23 @@ const resolveFieldFromFile = <K extends string, R, T extends R>(
   );
 };
 
-export const resolveTemplateFromFile = <K extends string>(
+export const resolveTemplateFromFile = async <K extends string>(
   fieldName: K,
   config: FromPath<K, string>
 ) => resolveFieldFromFile(fieldName, config, (contents) => contents, [".txt"]);
 
-export const resolveConfigFromFile = <K extends string, T>(
+export const resolveConfigFromFile = async <K extends string, T>(
   fieldName: K,
   config: FromPath<K, T>
-): T =>
+): Promise<T> =>
   resolveFieldFromFile(fieldName, config, loadFileContents, [".json", ".yaml"]);
 
-export const parseFileConfig = (file: string, supportedTypes?: string[]) => {
-  const suffix = path.extname(file);
+export const parseFileConfig = (
+  text: string,
+  path: string,
+  supportedTypes?: string[]
+) => {
+  const suffix = extname(path);
 
   if (
     ![".json", ".yaml"].includes(suffix) ||
@@ -96,8 +130,7 @@ export const parseFileConfig = (file: string, supportedTypes?: string[]) => {
     throw new Error(`Unsupported filetype ${suffix}`);
   }
 
-  const contents = fs.readFileSync(file).toString();
-  return loadFileContents(contents, suffix);
+  return loadFileContents(text, suffix);
 };
 
 export const chunkArray = <T>(arr: T[], chunkSize: number) =>

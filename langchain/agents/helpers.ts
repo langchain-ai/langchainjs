@@ -27,7 +27,7 @@ export const deserializeHelper = async <
     return fromLLMAndTools(llm, tools, data);
   }
 
-  const serializedLLMChain = resolveConfigFromFile<
+  const serializedLLMChain = await resolveConfigFromFile<
     "llm_chain",
     SerializedLLMChain
   >("llm_chain", data);

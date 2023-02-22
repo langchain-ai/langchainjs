@@ -1,13 +1,14 @@
 import { Agent, Tool } from ".";
 import { BaseLLM } from "../llms";
 import { loadFromHub } from "../util/hub";
-import { parseFileConfig } from "../util";
+import { FileLoader, loadFromFile, parseFileConfig } from "../util";
 
-const loadAgentFromFile = async (
+const loadAgentFromFile: FileLoader<Agent> = async (
   file: string,
+  path: string,
   llmAndTools?: { llm?: BaseLLM; tools?: Tool[] }
 ) => {
-  const serialized = parseFileConfig(file);
+  const serialized = parseFileConfig(file, path);
   return Agent.deserialize({ ...serialized, ...llmAndTools });
 };
 
@@ -17,13 +18,14 @@ export const loadAgent = async (
 ): Promise<Agent> => {
   const hubResult = await loadFromHub(
     uri,
-    (u) => loadAgentFromFile(u, llmAndTools),
+    loadAgentFromFile,
     "agents",
-    new Set(["json", "yaml"])
+    new Set(["json", "yaml"]),
+    llmAndTools
   );
   if (hubResult) {
     return hubResult;
   }
 
-  return loadAgentFromFile(uri, llmAndTools);
+  return loadFromFile(uri, loadAgentFromFile, llmAndTools);
 };

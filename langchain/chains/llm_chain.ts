@@ -96,11 +96,11 @@ export class LLMChain extends BaseChain implements LLMChainInput {
   }
 
   static async deserialize(data: SerializedLLMChain) {
-    const serializedLLM = resolveConfigFromFile<"llm", SerializedLLM>(
+    const serializedLLM = await resolveConfigFromFile<"llm", SerializedLLM>(
       "llm",
       data
     );
-    const serializedPrompt = resolveConfigFromFile<
+    const serializedPrompt = await resolveConfigFromFile<
       "prompt",
       SerializedBasePromptTemplate
     >("prompt", data);
