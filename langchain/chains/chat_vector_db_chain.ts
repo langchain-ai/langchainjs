@@ -1,8 +1,7 @@
 import {
   BaseChain,
   ChainValues,
-  SerializedStuffDocumentsChain,
-  StuffDocumentsChain,
+  SerializedBaseChain,
   SerializedLLMChain,
   loadQAChain,
   LLMChain,
@@ -38,7 +37,7 @@ const qa_prompt = PromptTemplate.fromTemplate(qa_template);
 export interface ChatVectorDBQAChainInput {
   vectorstore: VectorStore;
   k: number;
-  combineDocumentsChain: StuffDocumentsChain;
+  combineDocumentsChain: BaseChain;
   questionGeneratorChain: LLMChain;
   outputKey: string;
   inputKey: string;
@@ -47,7 +46,7 @@ export interface ChatVectorDBQAChainInput {
 export type SerializedChatVectorDBQAChain = {
   _type: "chat-vector-db";
   k: number;
-  combine_documents_chain: SerializedStuffDocumentsChain;
+  combine_documents_chain: SerializedBaseChain;
   combine_documents_chain_path?: string;
   question_generator: SerializedLLMChain;
 };
@@ -66,13 +65,13 @@ export class ChatVectorDBQAChain
 
   vectorstore: VectorStore;
 
-  combineDocumentsChain: StuffDocumentsChain;
+  combineDocumentsChain: BaseChain;
 
   questionGeneratorChain: LLMChain;
 
   constructor(fields: {
     vectorstore: VectorStore;
-    combineDocumentsChain: StuffDocumentsChain;
+    combineDocumentsChain: BaseChain;
     questionGeneratorChain: LLMChain;
     inputKey?: string;
     outputKey?: string;
@@ -137,7 +136,7 @@ export class ChatVectorDBQAChain
     const { vectorstore } = values;
     const serializedCombineDocumentsChain = resolveConfigFromFile<
       "combine_documents_chain",
-      SerializedStuffDocumentsChain
+      SerializedBaseChain
     >("combine_documents_chain", data);
     const serializedQuestionGeneratorChain = resolveConfigFromFile<
       "question_generator",
@@ -145,7 +144,7 @@ export class ChatVectorDBQAChain
     >("question_generator", data);
 
     return new ChatVectorDBQAChain({
-      combineDocumentsChain: await StuffDocumentsChain.deserialize(
+      combineDocumentsChain: await BaseChain.deserialize(
         serializedCombineDocumentsChain
       ),
       questionGeneratorChain: await LLMChain.deserialize(
@@ -166,7 +165,7 @@ export class ChatVectorDBQAChain
   }
 
   static fromLLM(llm: BaseLLM, vectorstore: VectorStore): ChatVectorDBQAChain {
-    const qaChain = loadQAChain(llm, qa_prompt);
+    const qaChain = loadQAChain(llm, { prompt: qa_prompt });
     const questionGeneratorChain = new LLMChain({
       prompt: question_generator_prompt,
       llm,

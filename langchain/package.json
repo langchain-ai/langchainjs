@@ -142,6 +142,7 @@
     "eventsource-parser": "^0.1.0",
     "exponential-backoff": "^3.1.0",
     "expr-eval": "^2.0.2",
+    "gpt-3-encoder": "^1.1.4",
     "node-fetch": "2",
     "uuid": "^9.0.0",
     "yaml": "^2.2.1"

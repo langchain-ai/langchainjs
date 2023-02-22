@@ -4,6 +4,7 @@ import {
   StuffDocumentsChain,
   VectorDBQAChain,
   ChatVectorDBQAChain,
+  MapReduceDocumentsChain,
 } from "./index";
 import { BaseMemory } from "../memory";
 
@@ -17,6 +18,7 @@ const chainClasses = [
   StuffDocumentsChain,
   VectorDBQAChain,
   ChatVectorDBQAChain,
+  MapReduceDocumentsChain,
 ];
 
 export type SerializedBaseChain = ReturnType<
@@ -76,8 +78,8 @@ export abstract class BaseChain implements ChainInputs {
   /**
    * Call the chain on all inputs in the list
    */
-  apply(inputs: ChainValues[]): ChainValues[] {
-    return inputs.map(this.call);
+  async apply(inputs: ChainValues[]): Promise<ChainValues> {
+    return Promise.all(inputs.map(async (i) => this.call(i)));
   }
 
   /**

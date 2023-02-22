@@ -1,8 +1,15 @@
-export { BaseChain, ChainValues, ChainInputs } from "./base";
+export {
+  BaseChain,
+  ChainValues,
+  ChainInputs,
+  SerializedBaseChain,
+} from "./base";
 export { SerializedLLMChain, LLMChain, ConversationChain } from "./llm_chain";
 export {
   SerializedStuffDocumentsChain,
   StuffDocumentsChain,
+  SerializedMapReduceDocumentsChain,
+  MapReduceDocumentsChain,
 } from "./combine_docs_chain";
 export {
   ChatVectorDBQAChain,

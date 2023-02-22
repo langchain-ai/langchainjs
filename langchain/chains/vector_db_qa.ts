@@ -1,8 +1,7 @@
 import {
   BaseChain,
   ChainValues,
-  SerializedStuffDocumentsChain,
-  StuffDocumentsChain,
+  SerializedBaseChain,
   loadQAChain,
 } from "./index";
 
@@ -16,7 +15,7 @@ export type LoadValues = Record<string, any>;
 export interface VectorDBQAChainInput {
   vectorstore: VectorStore;
   k: number;
-  combineDocumentsChain: StuffDocumentsChain;
+  combineDocumentsChain: BaseChain;
   outputKey: string;
   inputKey: string;
 }
@@ -24,7 +23,7 @@ export interface VectorDBQAChainInput {
 export type SerializedVectorDBQAChain = {
   _type: "vector_db_qa";
   k: number;
-  combine_documents_chain: SerializedStuffDocumentsChain;
+  combine_documents_chain: SerializedBaseChain;
   combine_documents_chain_path?: string;
 };
 
@@ -37,11 +36,11 @@ export class VectorDBQAChain extends BaseChain implements VectorDBQAChainInput {
 
   vectorstore: VectorStore;
 
-  combineDocumentsChain: StuffDocumentsChain;
+  combineDocumentsChain: BaseChain;
 
   constructor(fields: {
     vectorstore: VectorStore;
-    combineDocumentsChain: StuffDocumentsChain;
+    combineDocumentsChain: BaseChain;
     inputKey?: string;
     outputKey?: string;
     k?: number;
@@ -81,11 +80,11 @@ export class VectorDBQAChain extends BaseChain implements VectorDBQAChainInput {
     const { vectorstore } = values;
     const serializedCombineDocumentsChain = resolveConfigFromFile<
       "combine_documents_chain",
-      SerializedStuffDocumentsChain
+      SerializedBaseChain
     >("combine_documents_chain", data);
 
     return new VectorDBQAChain({
-      combineDocumentsChain: await StuffDocumentsChain.deserialize(
+      combineDocumentsChain: await BaseChain.deserialize(
         serializedCombineDocumentsChain
       ),
       k: data.k,
