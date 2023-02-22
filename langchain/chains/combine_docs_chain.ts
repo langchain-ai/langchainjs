@@ -118,6 +118,10 @@ export class MapReduceDocumentsChain
 
   documentVariableName = "context";
 
+  maxTokens = 3000;
+
+  maxIterations = 10;
+
   combineDocumentChain: BaseChain;
 
   constructor(fields: {
@@ -126,6 +130,8 @@ export class MapReduceDocumentsChain
     inputKey?: string;
     outputKey?: string;
     documentVariableName?: string;
+    maxTokens?: number;
+    maxIterations?: number;
   }) {
     super();
     this.llmChain = fields.llmChain;
@@ -134,6 +140,8 @@ export class MapReduceDocumentsChain
       fields.documentVariableName ?? this.documentVariableName;
     this.inputKey = fields.inputKey ?? this.inputKey;
     this.outputKey = fields.outputKey ?? this.outputKey;
+    this.maxTokens = fields.maxTokens ?? this.maxTokens;
+    this.maxIterations = fields.maxIterations ?? this.maxIterations;
   }
 
   async _call(values: ChainValues): Promise<ChainValues> {
@@ -141,17 +149,32 @@ export class MapReduceDocumentsChain
       throw new Error(`Document key ${this.inputKey} not found.`);
     }
     const { [this.inputKey]: docs, ...rest } = values;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const inputs = docs.map((d: { pageContent: any }) => ({
-      [this.documentVariableName]: d.pageContent,
-      ...rest,
-    }));
-    const results = await this.llmChain.apply(inputs);
-    const { outputKey } = this.llmChain;
-    const newDocs = results.map((r: ChainValues) => ({
-      pageContent: r[outputKey],
-    }));
-    const newInputs = { input_documents: newDocs, ...rest };
+
+    let currentDocs = docs as Document[];
+
+    for (let i = 0; i < this.maxIterations; i += 1) {
+      const inputs = currentDocs.map((d) => ({
+        [this.documentVariableName]: d.pageContent,
+        ...rest,
+      }));
+      const length = inputs
+        .map((i) =>
+          this.llmChain.llm.getNumTokens(this.llmChain.prompt.format(i))
+        )
+        .reduce((a, b) => a + b, 0);
+
+      if (length < this.maxTokens) {
+        break;
+      }
+
+      const results = await this.llmChain.apply(inputs);
+      const { outputKey } = this.llmChain;
+
+      currentDocs = results.map((r: ChainValues) => ({
+        pageContent: r[outputKey],
+      }));
+    }
+    const newInputs = { input_documents: currentDocs, ...rest };
     console.log(newInputs);
     const result = await this.combineDocumentChain.call(newInputs);
     return result;

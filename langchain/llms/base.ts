@@ -1,3 +1,5 @@
+import { encode } from "gpt-3-encoder";
+
 import { LLMCallbackManager, LLMResult, OpenAI } from "./index";
 import { BaseCache, getKey, InMemoryCache } from "../cache";
 
@@ -168,7 +170,14 @@ export abstract class BaseLLM {
     return new Cls(rest);
   }
 
-  // TODO(sean): save to disk, get_num_tokens
+  getNumTokens(text: string): number {
+    // TODOs copied from py implementation
+    // TODO: this method may not be exact.
+    // TODO: this method may differ based on model (eg codex).
+    return encode(text).length;
+  }
+
+  // TODO(sean): save to disk
 }
 
 /**
