@@ -100,6 +100,19 @@ export class HNSWLib extends SaveableVectorStore {
         "Vector store not initialised yet. Try calling `addTexts` first."
       );
     }
+    if (query.length !== this.args.numDimensions) {
+      throw new Error(
+        `Query vector must have the same length as the number of dimensions (${this.args.numDimensions})`
+      );
+    }
+    if (k > this.index.getCurrentCount()) {
+      const total = this.index.getCurrentCount();
+      console.warn(
+        `k (${k}) is greater than the number of elements in the index (${total}), setting k to ${total}`
+      );
+      // eslint-disable-next-line no-param-reassign
+      k = total;
+    }
     const result = this.index.searchKnn(query, k);
     return result.neighbors.map(
       (docIndex, resultIndex) =>
