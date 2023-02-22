@@ -19,7 +19,6 @@ export const run = async () => {
   const vectorStore = await Chroma.fromDocuments(
     docs,
     new OpenAIEmbeddings(),
-    undefined,
     "state_of_the_union"
   );
   /* Create the chain */
