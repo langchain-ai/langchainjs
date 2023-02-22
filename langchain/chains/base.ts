@@ -69,7 +69,7 @@ export abstract class BaseChain implements ChainInputs {
         Object.keys(values).includes(this.inputKeys[0])
       );
     const fullValues = isKeylessInput
-      ? { [this.inputKeys[0]]: values }
+      ? { [this.inputKeys[0]]: deepcopy(values) }
       : deepcopy(values);
     if (!(this.memory == null)) {
       const newValues = await this.memory.loadMemoryVariables(values);
