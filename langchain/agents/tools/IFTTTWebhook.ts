@@ -1,11 +1,12 @@
-import { Tool } from './base';
 import fetch from 'node-fetch';
+import { Tool } from './base';
 
 class IFTTTWebhook extends Tool {
 
   private url: string;
 
   name: string;
+  
   description: string;
 
   constructor(url: string, name = "ifttt", description = "Send data to an IFTTT webhook URL") {
