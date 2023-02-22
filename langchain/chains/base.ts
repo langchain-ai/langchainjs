@@ -38,9 +38,9 @@ export abstract class BaseChain implements ChainInputs {
 
   /**
    * Maximum number of concurrent calls to this chain,
-   * additional calls are queued up. Defaults to 10. To disable set to Infinity.
+   * additional calls are queued up. Defaults to Infinity.
    */
-  concurrency?: number = 10;
+  concurrency?: number = Infinity;
 
   queue: PQueue;
 
