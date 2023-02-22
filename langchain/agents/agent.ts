@@ -67,6 +67,10 @@ export abstract class Agent {
 
   returnValues = ["output"];
 
+  get inputKeys(): string[] {
+    return this.llmChain.inputKeys.filter((k) => k !== "agent_scratchpad");
+  }
+
   constructor(input: AgentInput) {
     this.llmChain = input.llmChain;
     this.allowedTools = input.allowedTools;
