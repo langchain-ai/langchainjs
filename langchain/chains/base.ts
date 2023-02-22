@@ -54,13 +54,23 @@ export abstract class BaseChain implements ChainInputs {
    */
   abstract serialize(): SerializedBaseChain;
 
+  abstract get inputKeys(): string[];
+
   /**
    * Run the core logic of this chain and add to output if desired.
    *
    * Wraps {@link _call} and handles memory.
    */
   async call(values: ChainValues): Promise<ChainValues> {
-    const fullValues = deepcopy(values);
+    const isKeylessInput =
+      this.inputKeys.length === 1 &&
+      !(
+        typeof values === "object" &&
+        Object.keys(values).includes(this.inputKeys[0])
+      );
+    const fullValues = isKeylessInput
+      ? { [this.inputKeys[0]]: values }
+      : deepcopy(values);
     if (!(this.memory == null)) {
       const newValues = await this.memory.loadMemoryVariables(values);
       for (const [key, value] of Object.entries(newValues)) {
