@@ -1,5 +1,5 @@
-import fetch from 'node-fetch';
-import { Tool } from './base';
+import fetch from "node-fetch";
+import { Tool } from "./base";
 
 class DadJokeAPI extends Tool {
   name: string;
@@ -9,11 +9,12 @@ class DadJokeAPI extends Tool {
   constructor() {
     super();
     this.name = "dadjoke";
-    this.description = "a dad joke generator. get a dad joke about a specific topic. input should be a search term.";
+    this.description =
+      "a dad joke generator. get a dad joke about a specific topic. input should be a search term.";
   }
 
   async call(input: string): Promise<string> {
-    const headers = { "Accept": "application/json" };
+    const headers = { Accept: "application/json" };
     const searchUrl = `https://icanhazdadjoke.com/search?term=${input}`;
 
     const response = await fetch(searchUrl, { headers });
