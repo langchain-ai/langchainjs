@@ -1,0 +1,24 @@
+import { Tool } from "./base";
+
+export class DynamicTool extends Tool {
+  name: string;
+
+  description: string;
+
+  func: (arg1: string) => string;
+
+  constructor(fields: {
+    name: string;
+    description: string;
+    func: (arg1: string) => string;
+  }) {
+    super();
+    this.name = fields.name;
+    this.description = fields.description;
+    this.func = fields.func;
+  }
+
+  async call(input: string): Promise<string> {
+    return this.func(input);
+  }
+}
