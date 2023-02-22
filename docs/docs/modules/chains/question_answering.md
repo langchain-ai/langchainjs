@@ -30,6 +30,11 @@ import { Document } from "langchain/document";
 
 const model = new OpenAI({});
 const chain = loadQAChain(llm, { type: "map_reduce" });
+/* Optionally you can limit the concurrency of the map-reduce chain to help
+ * with rate limiting, eg. the following would limit to 10 concurrent requests
+ *
+ * chain.llmChain.concurrency = 10;
+ */
 const docs = [
   new Document({ pageContent: "harrison went to harvard" }),
   new Document({ pageContent: "ankush went to princeton" }),
