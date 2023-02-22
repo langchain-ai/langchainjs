@@ -42,6 +42,10 @@ export class StuffDocumentsChain
 
   documentVariableName = "context";
 
+  get inputKeys() {
+    return [this.inputKey, ...this.llmChain.inputKeys];
+  }
+
   constructor(fields: {
     llmChain: LLMChain;
     inputKey?: string;
@@ -117,6 +121,10 @@ export class MapReduceDocumentsChain
   outputKey = "output_text";
 
   documentVariableName = "context";
+
+  get inputKeys() {
+    return [this.inputKey, ...this.combineDocumentChain.inputKeys];
+  }
 
   maxTokens = 3000;
 

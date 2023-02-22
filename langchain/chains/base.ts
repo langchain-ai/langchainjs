@@ -54,6 +54,20 @@ export abstract class BaseChain implements ChainInputs {
    */
   abstract serialize(): SerializedBaseChain;
 
+  abstract get inputKeys(): string[];
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async run(input: any): Promise<ChainValues> {
+    const isKeylessInput = this.inputKeys.length === 1;
+    if (!isKeylessInput) {
+      throw new Error(
+        `Chain ${this._chainType()} expects multiple inputs, cannot use 'run' `
+      );
+    }
+    const values = { [this.inputKeys[0]]: input };
+    return this.call(values);
+  }
+
   /**
    * Run the core logic of this chain and add to output if desired.
    *
@@ -61,6 +75,7 @@ export abstract class BaseChain implements ChainInputs {
    */
   async call(values: ChainValues): Promise<ChainValues> {
     const fullValues = deepcopy(values);
+
     if (!(this.memory == null)) {
       const newValues = await this.memory.loadMemoryVariables(values);
       for (const [key, value] of Object.entries(newValues)) {

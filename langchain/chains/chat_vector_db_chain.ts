@@ -61,6 +61,10 @@ export class ChatVectorDBQAChain
 
   chatHistoryKey = "chat_history";
 
+  get inputKeys() {
+    return [this.inputKey, this.chatHistoryKey];
+  }
+
   outputKey = "result";
 
   vectorstore: VectorStore;

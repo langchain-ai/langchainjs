@@ -32,6 +32,10 @@ export class VectorDBQAChain extends BaseChain implements VectorDBQAChainInput {
 
   inputKey = "query";
 
+  get inputKeys() {
+    return [this.inputKey];
+  }
+
   outputKey = "result";
 
   vectorstore: VectorStore;
