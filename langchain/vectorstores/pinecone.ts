@@ -1,7 +1,4 @@
-import type {
-  VectorOperationsApi,
-  UpsertResponse,
-} from "@pinecone-database/pinecone/dist/pinecone-generated-ts-fetch";
+import type { VectorOperationsApi } from "@pinecone-database/pinecone/dist/pinecone-generated-ts-fetch";
 import { v4 as uuidv4 } from "uuid";
 
 import { VectorStore } from "./base";
