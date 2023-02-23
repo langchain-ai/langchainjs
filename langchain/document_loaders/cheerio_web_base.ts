@@ -30,16 +30,19 @@ export class CheerioWebBaseLoader
     }
   }
 
-  async scrape(): Promise<CheerioAPI> {
+  static async _scrape(url: string): Promise<CheerioAPI> {
     if (load === null) {
       throw new Error(
         "Please install cheerio as a dependency with, e.g. `yarn add cheerio`"
       );
     }
-
-    const response = await fetch(this.webPath);
+    const response = await fetch(url);
     const html = await response.text();
     return load(html);
+  }
+
+  async scrape(): Promise<CheerioAPI> {
+    return CheerioWebBaseLoader._scrape(this.webPath);
   }
 
   async load(): Promise<Document[]> {

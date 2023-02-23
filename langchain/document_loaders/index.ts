@@ -6,3 +6,4 @@ export { HNLoader } from "./hn";
 export { IMSDBLoader } from "./imsdb";
 export { SRTLoader } from "./srt";
 export { TextLoader } from "./text";
+export { GitbookLoader } from "./gitbook";
