@@ -25,7 +25,7 @@ export class PineconeStore extends VectorStore {
     this.textKey = textKey;
   }
 
-  async addDocuments(documents: Document[], ids?: string[]): Promise<void> {
+  async addDocuments(documents: Document[], ids?: string[]): Promise<any> {
     const texts = documents.map(({ pageContent }) => pageContent);
     return this.addVectors(
       await this.embeddings.embedDocuments(texts),
@@ -34,7 +34,11 @@ export class PineconeStore extends VectorStore {
     );
   }
 
-  async addVectors(vectors: number[][], documents: Document[], ids?: string[]) {
+  async addVectors(
+    vectors: number[][],
+    documents: Document[],
+    ids?: string[]
+  ): Promise<any> {
     const documentIds = ids == null ? documents.map(() => uuidv4()) : ids;
 
     return this.pineconeClient.upsert({
