@@ -103,21 +103,21 @@ export class Chroma extends VectorStore {
     // chroma supports multiple query vectors at a time
     const result = await collection.query(query, k);
     
-    let { ids, distances, documents, metadatas } = result;
+    const { ids, distances, documents, metadatas } = result;
     // get the result data from the first and only query vector
-    ids = ids[0];
-    distances = distances[0];
-    documents = documents[0];
-    metadatas = metadatas[0];
+    const [firstIds] = ids;
+    const [firstDistances] = distances;
+    const [firstDocuments] = documents;
+    const [firstMetadatas] = metadatas;
 
     const results: [Document, number][] = [];
-    for (let i = 0; i < ids.length; i += 1) {
+    for (let i = 0; i < firstIds.length; i += 1) {
       results.push([
         new Document({
-          pageContent: documents[i],
-          metadata: metadatas[i],
+          pageContent: firstDocuments[i],
+          metadata: firstMetadatas[i],
         }),
-        distances[i],
+        firstDistances[i],
       ]);
     }
     return results;
