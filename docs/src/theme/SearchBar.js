@@ -6,17 +6,21 @@
  *
  * @format
  */
-import React from 'react';
+import React from "react";
 import { MendableSearchBar } from "@mendable/search";
-import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
+import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
 
 export default function SearchBarWrapper() {
   const {
-    siteConfig: {customFields},
+    siteConfig: { customFields },
   } = useDocusaurusContext();
   return (
-    <div >
-    <MendableSearchBar anon_key={customFields.mendableAnonKey} style={{accentColor:"#4F956C", darkMode: false}} placeholder="Search.." />
+    <div>
+      <MendableSearchBar
+        anon_key={customFields.mendableAnonKey}
+        style={{ accentColor: "#4F956C", darkMode: false }}
+        placeholder="Search.."
+      />
     </div>
   );
 }

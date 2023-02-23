@@ -9,7 +9,7 @@
 // @ts-check
 // Note: type annotations allow type checking and IDEs autocompletion
 // eslint-disable-next-line import/no-extraneous-dependencies
-const {ProvidePlugin} = require("webpack");
+const { ProvidePlugin } = require("webpack");
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
@@ -43,33 +43,32 @@ const config = {
           fullNames: true,
         },
       },
-      
     ],
     () => ({
       name: "custom-webpack-config",
       configureWebpack: () => ({
-          plugins: [
-            new ProvidePlugin({
-              process: require.resolve('process/browser'),
-            }),
-          ],
-          resolve: {
-            fallback: {
-              path: false,
-              url: false,
-            },
+        plugins: [
+          new ProvidePlugin({
+            process: require.resolve("process/browser"),
+          }),
+        ],
+        resolve: {
+          fallback: {
+            path: false,
+            url: false,
           },
-          module: {
-            rules: [
-              {
-                test: /\.m?js/,
-                resolve: {
-                    fullySpecified: false
-                },
+        },
+        module: {
+          rules: [
+            {
+              test: /\.m?js/,
+              resolve: {
+                fullySpecified: false,
               },
-            ],
-          },
-        }),
+            },
+          ],
+        },
+      }),
     }),
   ],
 
