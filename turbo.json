@@ -15,7 +15,11 @@
     "lint": {
       "outputs": []
     },
-    "test": {},
+    "test": {
+      "dependsOn": [
+        "^build"
+      ]
+    },
     "precommit": {},
     "ci": {
       "cache": false,
