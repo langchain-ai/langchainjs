@@ -88,7 +88,8 @@ export class ZeroShotAgent extends Agent {
     const toolStrings = tools
       .map((tool) => `${tool.name}: ${tool.description}`)
       .join("\n");
-    const instructions = formatInstructions(toolStrings);
+    const toolNames = tools.map((tool) => tool.name).join("\n");
+    const instructions = formatInstructions(toolNames);
     const template = [prefix, toolStrings, instructions, suffix].join("\n\n");
 
     return new PromptTemplate({
