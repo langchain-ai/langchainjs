@@ -10,7 +10,7 @@ To get started, install LangChain with the following command:
 npm i langchain
 ```
 
-## Environment Setup
+## Picking up a LLM
 
 Using LangChain will usually require integrations with one or more model providers, data stores, apis, etc.
 
@@ -20,15 +20,9 @@ For this example, we will be using OpenAI's APIs, so we will first need to insta
 npm i openai
 ```
 
-We will then need to set the environment variable for the OpenAI key. We can do this by setting the value in a `.env` file.
-
-```
-OPENAI_API_KEY="..."
-```
-
 ## Building a Language Model Application
 
-Now that we have installed LangChain and set up our environment, we can start building our language model application.
+Now that we have installed LangChain, we can start building our language model application.
 
 LangChain provides many modules that can be used to build language model applications. Modules can be combined to create more complex applications, or be used individually for simple applications.
 
@@ -42,13 +36,27 @@ In order to do this, we first need to import the LLM wrapper.
 import { OpenAI } from "langchain";
 ```
 
-We can then initialize the wrapper with any arguments. In this example, we probably want the outputs to be MORE random, so we'll initialize it with a HIGH temperature.
+We will then need to set the environment variable for the OpenAI key. Three options here:
 
-```typescript
-const model = new OpenAI({ temperature: 0.9 });
+1. We can do this by setting the value in a `.env` file and use the [dotenv](https://github.com/motdotla/dotenv) package to read it.
+
+```
+OPENAI_API_KEY="..."
 ```
 
-We can now call it on some input!
+2. Or we can export the environment variable with the following command in your shell:
+
+```bash
+export OPENAI_API_KEY=sk-....
+```
+
+3. Or we can do it when initializing the wrapper along with other arguments. In this example, we probably want the outputs to be MORE random, so we'll initialize it with a HIGH temperature.
+
+```typescript
+const model = new OpenAI({ openAIApiKey: "sk-...", temperature: 0.9 });
+```
+
+Once we have initialized the wrapper, we can now call it on some input!
 
 ```typescript
 const res = await model.call(

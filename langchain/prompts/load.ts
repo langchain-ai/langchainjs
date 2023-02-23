@@ -1,9 +1,9 @@
 import { BasePromptTemplate } from ".";
 import { loadFromHub } from "../util/hub";
-import { parseFileConfig } from "../util";
+import { parseFileConfig, FileLoader, loadFromFile } from "../util";
 
-const loadPromptFromFile = async (file: string) =>
-  BasePromptTemplate.deserialize(parseFileConfig(file));
+const loadPromptFromFile: FileLoader<BasePromptTemplate> = (text, path) =>
+  BasePromptTemplate.deserialize(parseFileConfig(text, path));
 
 /**
  * Load a prompt from {@link https://github.com/hwchase17/langchain-hub | LangchainHub} or local filesystem.
@@ -33,5 +33,5 @@ export const loadPrompt = async (uri: string): Promise<BasePromptTemplate> => {
     return hubResult;
   }
 
-  return loadPromptFromFile(uri);
+  return loadFromFile(uri, loadPromptFromFile);
 };
