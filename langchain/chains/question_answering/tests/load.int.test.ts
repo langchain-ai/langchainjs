@@ -1,7 +1,7 @@
 import { test } from "@jest/globals";
-import { OpenAI } from "../../../llms/openai";
-import { loadQAChain } from "../load";
-import { Document } from "../../../document";
+import { OpenAI } from "../../../llms/openai.js";
+import { loadQAChain } from "../load.js";
+import { Document } from "../../../document.js";
 
 test("Test loadQAChain", async () => {
   const model = new OpenAI({ modelName: "text-ada-001" });

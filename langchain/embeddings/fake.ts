@@ -1,4 +1,4 @@
-import { Embeddings } from "./base";
+import { Embeddings } from "./base.js";
 
 export class FakeEmbeddings extends Embeddings {
   embedDocuments(documents: string[]): Promise<number[][]> {

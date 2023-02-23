@@ -1,6 +1,6 @@
 import type { getJson as GetJsonT, GoogleParameters } from "serpapi";
 
-import { Tool } from "./base";
+import { Tool } from "./base.js";
 
 let getJson: typeof GetJsonT | null = null;
 

@@ -1,5 +1,5 @@
 /* eslint-disable */
-import { PromptTemplate } from "../../prompts";
+import { PromptTemplate } from "../../prompts/index.js";
 
 const qa_template = `Use the following portion of a long document to see if any of the text is relevant to answer the question. 
 Return any relevant text verbatim.

@@ -4,10 +4,10 @@ import type {
   HierarchicalNSW as HierarchicalNSWT,
   SpaceName,
 } from "hnswlib-node";
-import { Embeddings } from "../embeddings/base";
-import { SaveableVectorStore } from "./base";
-import { Document } from "../document";
-import { InMemoryDocstore } from "../docstore";
+import { Embeddings } from "../embeddings/base.js";
+import { SaveableVectorStore } from "./base.js";
+import { Document } from "../document.js";
+import { InMemoryDocstore } from "../docstore/index.js";
 
 let HierarchicalNSW: typeof HierarchicalNSWT | null = null;
 

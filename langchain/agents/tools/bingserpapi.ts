@@ -1,4 +1,4 @@
-import { Tool } from "./base";
+import { Tool } from "./base.js";
 
 class BingSerpAPI extends Tool {
   name = "bing-search";

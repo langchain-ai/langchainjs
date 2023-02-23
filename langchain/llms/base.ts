@@ -1,8 +1,8 @@
 import { encode } from "gpt-3-encoder";
 import PQueue from "p-queue";
 
-import { LLMCallbackManager, LLMResult, OpenAI } from "./index";
-import { BaseCache, getKey, InMemoryCache } from "../cache";
+import { LLMCallbackManager, LLMResult, OpenAI } from "./index.js";
+import { BaseCache, getKey, InMemoryCache } from "../cache.js";
 
 const getCallbackManager = (): LLMCallbackManager => ({
   handleStart: (..._args) => {

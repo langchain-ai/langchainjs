@@ -4,11 +4,11 @@ export {
   AgentStep,
   StoppingMethod,
   SerializedAgentT,
-} from "./types";
-export { Agent, StaticAgent, staticImplements, AgentInput } from "./agent";
-export { AgentExecutor } from "./executor";
-export { ZeroShotAgent, SerializedZeroShotAgent } from "./mrkl";
-export { Tool } from "./tools";
-export { initializeAgentExecutor } from "./initialize";
+} from "./types.js";
+export { Agent, StaticAgent, staticImplements, AgentInput } from "./agent.js";
+export { AgentExecutor } from "./executor.js";
+export { ZeroShotAgent, SerializedZeroShotAgent } from "./mrkl/index.js";
+export { Tool } from "./tools/index.js";
+export { initializeAgentExecutor } from "./initialize.js";
 
-export { loadAgent } from "./load";
+export { loadAgent } from "./load.js";

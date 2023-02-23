@@ -1,5 +1,5 @@
-import { SerializedLLMChain } from "../chains";
-import { AgentInput } from "./index";
+import { SerializedLLMChain } from "../chains/index.js";
+import { AgentInput } from "./index.js";
 
 export type AgentAction = {
   tool: string;

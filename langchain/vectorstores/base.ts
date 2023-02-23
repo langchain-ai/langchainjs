@@ -1,5 +1,5 @@
-import { Embeddings } from "../embeddings/base";
-import { Document } from "../document";
+import { Embeddings } from "../embeddings/base.js";
+import { Document } from "../document.js";
 
 export abstract class VectorStore {
   embeddings: Embeddings;

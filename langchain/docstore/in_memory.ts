@@ -1,5 +1,5 @@
-import { Document } from "../document";
-import { Docstore } from "./base";
+import { Document } from "../document.js";
+import { Docstore } from "./base.js";
 
 export class InMemoryDocstore extends Docstore {
   _docs: Map<string, Document>;

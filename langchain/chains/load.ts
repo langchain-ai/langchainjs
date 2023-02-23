@@ -1,6 +1,6 @@
-import { BaseChain } from ".";
-import { loadFromHub } from "../util/hub";
-import { parseFileConfig } from "../util";
+import { BaseChain } from "./index.js";
+import { loadFromHub } from "../util/hub.js";
+import { parseFileConfig } from "../util/index.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type LoadValues = Record<string, any>;

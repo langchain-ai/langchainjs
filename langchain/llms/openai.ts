@@ -10,8 +10,8 @@ import type { IncomingMessage } from "http";
 import fetchAdapter from "@vespaiach/axios-fetch-adapter";
 import { createParser } from "eventsource-parser";
 import { backOff } from "exponential-backoff";
-import { chunkArray } from "../util";
-import { BaseLLM, LLMResult, LLMCallbackManager } from ".";
+import { chunkArray } from "../util/index.js";
+import { BaseLLM, LLMResult, LLMCallbackManager } from "./index.js";
 
 let Configuration: typeof ConfigurationT | null = null;
 let OpenAIApi: typeof OpenAIApiT | null = null;

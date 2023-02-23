@@ -1,10 +1,10 @@
 import { test } from "@jest/globals";
-import { OpenAI } from "../../llms/openai";
-import { loadAgent } from "../load";
-import { AgentExecutor, Tool } from "../index";
-import { SerpAPI } from "../tools/serpapi";
-import { Calculator } from "../tools/calculator";
-import { initializeAgentExecutor } from "../initialize";
+import { OpenAI } from "../../llms/openai.js";
+import { loadAgent } from "../load.js";
+import { AgentExecutor, Tool } from "../index.js";
+import { SerpAPI } from "../tools/serpapi.js";
+import { Calculator } from "../tools/calculator.js";
+import { initializeAgentExecutor } from "../initialize.js";
 
 test("Run agent from hub", async () => {
   const model = new OpenAI({ temperature: 0, modelName: "text-babbage-001" });

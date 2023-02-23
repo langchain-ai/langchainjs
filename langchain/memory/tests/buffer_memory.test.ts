@@ -1,6 +1,6 @@
 import { test, expect } from "@jest/globals";
-import { BufferMemory } from "../buffer_memory";
-import { OutputValues } from "../base";
+import { BufferMemory } from "../buffer_memory.js";
+import { OutputValues } from "../base.js";
 
 test("Test buffer memory", async () => {
   const memory = new BufferMemory();

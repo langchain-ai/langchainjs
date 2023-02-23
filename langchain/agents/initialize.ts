@@ -1,7 +1,7 @@
-import { Tool } from "./tools";
-import { BaseLLM } from "../llms";
-import { AgentExecutor } from "./executor";
-import { ZeroShotAgent } from "./mrkl";
+import { Tool } from "./tools/index.js";
+import { BaseLLM } from "../llms/index.js";
+import { AgentExecutor } from "./executor.js";
+import { ZeroShotAgent } from "./mrkl/index.js";
 
 export const initializeAgentExecutor = async (
   tools: Tool[],

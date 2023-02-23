@@ -1,5 +1,5 @@
-import { BaseOutputParser } from "./parser";
-import { PromptTemplate, FewShotPromptTemplate } from "./index";
+import { BaseOutputParser } from "./parser.js";
+import { PromptTemplate, FewShotPromptTemplate } from "./index.js";
 
 const templateClasses = [PromptTemplate, FewShotPromptTemplate];
 

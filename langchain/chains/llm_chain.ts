@@ -1,15 +1,15 @@
-import { BaseChain, ChainValues, ChainInputs } from "./index";
+import { BaseChain, ChainValues, ChainInputs } from "./index.js";
 
-import { BaseLLM, SerializedLLM } from "../llms";
+import { BaseLLM, SerializedLLM } from "../llms/index.js";
 
-import { BaseMemory, BufferMemory } from "../memory";
+import { BaseMemory, BufferMemory } from "../memory/index.js";
 import {
   BasePromptTemplate,
   SerializedBasePromptTemplate,
   PromptTemplate,
-} from "../prompts";
+} from "../prompts/index.js";
 
-import { resolveConfigFromFile } from "../util";
+import { resolveConfigFromFile } from "../util/index.js";
 
 export interface LLMChainInput extends ChainInputs {
   /** Prompt object to use */

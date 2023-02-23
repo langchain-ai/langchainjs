@@ -1,15 +1,15 @@
-import { BaseLLM } from "../../llms";
-import { LLMChain } from "../llm_chain";
-import { PromptTemplate } from "../../prompts";
+import { BaseLLM } from "../../llms/index.js";
+import { LLMChain } from "../llm_chain.js";
+import { PromptTemplate } from "../../prompts/index.js";
 import {
   StuffDocumentsChain,
   MapReduceDocumentsChain,
-} from "../combine_docs_chain";
-import { DEFAULT_QA_PROMPT } from "./stuff_prompts";
+} from "../combine_docs_chain.js";
+import { DEFAULT_QA_PROMPT } from "./stuff_prompts.js";
 import {
   COMBINE_PROMPT,
   DEFAULT_COMBINE_QA_PROMPT,
-} from "./map_reduce_prompts";
+} from "./map_reduce_prompts.js";
 
 interface qaChainParams {
   prompt?: PromptTemplate;

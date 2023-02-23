@@ -5,14 +5,14 @@ import {
   SerializedLLMChain,
   loadQAChain,
   LLMChain,
-} from "./index";
+} from "./index.js";
 
-import { PromptTemplate } from "../prompts";
+import { PromptTemplate } from "../prompts/index.js";
 
-import { VectorStore } from "../vectorstores/base";
-import { BaseLLM } from "../llms";
+import { VectorStore } from "../vectorstores/base.js";
+import { BaseLLM } from "../llms/index.js";
 
-import { resolveConfigFromFile } from "../util";
+import { resolveConfigFromFile } from "../util/index.js";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type LoadValues = Record<string, any>;
 

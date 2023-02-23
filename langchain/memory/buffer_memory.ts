@@ -1,4 +1,9 @@
-import { BaseMemory, InputValues, MemoryVariables, OutputValues } from "./base";
+import {
+  BaseMemory,
+  InputValues,
+  MemoryVariables,
+  OutputValues,
+} from "./base.js";
 
 export interface BufferMemoryInput {
   humanPrefix: string;

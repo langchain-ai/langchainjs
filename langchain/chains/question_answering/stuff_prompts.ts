@@ -1,5 +1,5 @@
 /* eslint-disable */
-import { PromptTemplate } from "../../prompts";
+import { PromptTemplate } from "../../prompts/index.js";
 
 export const DEFAULT_QA_PROMPT = new PromptTemplate({
   template:

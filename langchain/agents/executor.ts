@@ -1,6 +1,12 @@
-import { ChainValues, BaseChain } from "../chains";
-import { Agent, Tool, StoppingMethod, AgentStep, AgentFinish } from "./index";
-import { SerializedLLMChain } from "../chains/llm_chain";
+import { ChainValues, BaseChain } from "../chains/index.js";
+import {
+  Agent,
+  Tool,
+  StoppingMethod,
+  AgentStep,
+  AgentFinish,
+} from "./index.js";
+import { SerializedLLMChain } from "../chains/llm_chain.js";
 
 type AgentExecutorInput = {
   agent: Agent;

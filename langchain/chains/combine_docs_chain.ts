@@ -4,11 +4,11 @@ import {
   LLMChain,
   SerializedLLMChain,
   SerializedBaseChain,
-} from "./index";
+} from "./index.js";
 
-import { Document } from "../document";
+import { Document } from "../document.js";
 
-import { resolveConfigFromFile } from "../util";
+import { resolveConfigFromFile } from "../util/index.js";
 
 export interface StuffDocumentsChainInput {
   /** LLM Wrapper to use after formatting documents */

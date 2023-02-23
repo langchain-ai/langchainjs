@@ -1,9 +1,9 @@
 import type { PineconeClient } from "pinecone-client";
 import { v4 as uuidv4 } from "uuid";
 
-import { VectorStore } from "./base";
-import { Embeddings } from "../embeddings/base";
-import { Document } from "../document";
+import { VectorStore } from "./base.js";
+import { Embeddings } from "../embeddings/base.js";
+import { Document } from "../document.js";
 
 // eslint-disable-next-line @typescript-eslint/ban-types, @typescript-eslint/no-explicit-any
 type PineconeMetadata = Record<string, any>;

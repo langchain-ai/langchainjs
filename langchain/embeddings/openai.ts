@@ -5,8 +5,8 @@ import type {
 } from "openai";
 import { backOff } from "exponential-backoff";
 import fetchAdapter from "@vespaiach/axios-fetch-adapter";
-import { chunkArray } from "../util";
-import { Embeddings } from "./base";
+import { chunkArray } from "../util/index.js";
+import { Embeddings } from "./base.js";
 
 let Configuration: typeof ConfigurationT | null = null;
 let OpenAIApi: typeof OpenAIApiT | null = null;

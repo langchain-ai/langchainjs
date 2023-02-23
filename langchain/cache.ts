@@ -1,5 +1,5 @@
 import crypto from "crypto";
-import { Generation } from "./llms";
+import { Generation } from "./llms/index.js";
 
 // Takes in an arbitrary number of strings and returns a hash of them
 // that can be used as a key in a cache.

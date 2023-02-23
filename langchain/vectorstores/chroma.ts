@@ -1,9 +1,9 @@
 import { v4 as uuidv4 } from "uuid";
 import type { ChromaClient as ChromaClientT } from "chromadb";
 
-import { Embeddings } from "../embeddings/base";
-import { VectorStore } from "./base";
-import { Document } from "../document";
+import { Embeddings } from "../embeddings/base.js";
+import { VectorStore } from "./base.js";
+import { Document } from "../document.js";
 
 let ChromaClient: typeof ChromaClientT | null = null;
 

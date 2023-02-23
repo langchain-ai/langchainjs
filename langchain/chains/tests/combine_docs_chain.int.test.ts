@@ -1,11 +1,11 @@
 import { test } from "@jest/globals";
-import { OpenAI } from "../../llms/openai";
-import { PromptTemplate } from "../../prompts";
-import { LLMChain } from "../llm_chain";
-import { loadChain } from "../load";
-import { StuffDocumentsChain } from "../combine_docs_chain";
-import { Document } from "../../document";
-import { loadQAChain } from "../question_answering/load";
+import { OpenAI } from "../../llms/openai.js";
+import { PromptTemplate } from "../../prompts/index.js";
+import { LLMChain } from "../llm_chain.js";
+import { loadChain } from "../load.js";
+import { StuffDocumentsChain } from "../combine_docs_chain.js";
+import { Document } from "../../document.js";
+import { loadQAChain } from "../question_answering/load.js";
 
 test("Test StuffDocumentsChain", async () => {
   const model = new OpenAI({ modelName: "text-ada-001" });

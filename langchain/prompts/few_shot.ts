@@ -2,15 +2,19 @@ import {
   BasePromptTemplate,
   InputValues,
   BasePromptTemplateInput,
-} from "./index";
-import { TemplateFormat, checkValidTemplate, renderTemplate } from "./template";
+} from "./index.js";
+import {
+  TemplateFormat,
+  checkValidTemplate,
+  renderTemplate,
+} from "./template.js";
 import {
   resolveTemplateFromFile,
   resolveConfigFromFile,
   parseFileConfig,
-} from "../util";
-import { PromptTemplate, SerializedPromptTemplate } from "./prompt";
-import { SerializedOutputParser, BaseOutputParser } from "./parser";
+} from "../util/index.js";
+import { PromptTemplate, SerializedPromptTemplate } from "./prompt.js";
+import { SerializedOutputParser, BaseOutputParser } from "./parser.js";
 
 // TODO: support ExampleSelectors.
 type ExampleSelector = null;

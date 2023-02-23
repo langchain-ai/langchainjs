@@ -1,12 +1,12 @@
 import { test } from "@jest/globals";
-import { OpenAI } from "../../llms/openai";
-import { PromptTemplate } from "../../prompts";
-import { LLMChain } from "../llm_chain";
-import { loadChain } from "../load";
-import { StuffDocumentsChain } from "../combine_docs_chain";
-import { VectorDBQAChain } from "../vector_db_qa";
-import { HNSWLib } from "../../vectorstores/hnswlib";
-import { OpenAIEmbeddings } from "../../embeddings";
+import { OpenAI } from "../../llms/openai.js";
+import { PromptTemplate } from "../../prompts/index.js";
+import { LLMChain } from "../llm_chain.js";
+import { loadChain } from "../load.js";
+import { StuffDocumentsChain } from "../combine_docs_chain.js";
+import { VectorDBQAChain } from "../vector_db_qa.js";
+import { HNSWLib } from "../../vectorstores/hnswlib.js";
+import { OpenAIEmbeddings } from "../../embeddings/index.js";
 
 test("Test VectorDBQAChain", async () => {
   const model = new OpenAI({ modelName: "text-ada-001" });

@@ -1,8 +1,11 @@
-import { BaseChain, ChainValues, SerializedBaseChain } from "./index";
+import { BaseChain, ChainValues, SerializedBaseChain } from "./index.js";
 
-import { TextSplitter, RecursiveCharacterTextSplitter } from "../text_splitter";
+import {
+  TextSplitter,
+  RecursiveCharacterTextSplitter,
+} from "../text_splitter.js";
 
-import { resolveConfigFromFile } from "../util";
+import { resolveConfigFromFile } from "../util/index.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type LoadValues = Record<string, any>;

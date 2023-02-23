@@ -1,5 +1,8 @@
-import { RecursiveCharacterTextSplitter, TextSplitter } from "../text_splitter";
-import { Document } from "../document";
+import {
+  RecursiveCharacterTextSplitter,
+  TextSplitter,
+} from "../text_splitter.js";
+import { Document } from "../document.js";
 
 export interface DocumentLoader {
   load(): Promise<Document[]>;

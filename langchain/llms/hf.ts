@@ -1,5 +1,5 @@
 import type { HuggingFace as HuggingFaceT } from "huggingface";
-import { LLM, LLMCallbackManager } from ".";
+import { LLM, LLMCallbackManager } from "./index.js";
 
 let HuggingFace: typeof HuggingFaceT | null = null;
 
@@ -59,6 +59,7 @@ export class HuggingFaceInference extends LLM implements HFInput {
         "Please set the HUGGINGFACEHUB_API_KEY environment variable"
       );
     }
+    const HuggingFace = await import("huggingface");
     const hf = new HuggingFace(process.env.HUGGINGFACEHUB_API_KEY ?? "");
     const res = await hf.textGeneration({
       model: this.model,

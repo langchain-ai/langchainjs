@@ -1,7 +1,7 @@
 import path from "path";
 import os from "os";
 import fs from "fs";
-import { fetchWithTimeout } from "./index";
+import { fetchWithTimeout } from "./index.js";
 
 const HUB_PATH_REGEX = /lc(@[^:]+)?:\/\/(.*)/;
 const DEFAULT_REF = process.env.LANGCHAIN_HUB_DEFAULT_REF ?? "master";
