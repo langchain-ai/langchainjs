@@ -32,7 +32,6 @@ service, and you're ready to start receiving data and triggering actions 🎉
 - Copy the IFTTT key value from there. The URL is of the form
 https://maker.ifttt.com/use/YOUR_IFTTT_KEY. Grab the YOUR_IFTTT_KEY value.
  */
-import fetch from "node-fetch";
 import { Tool } from "./base";
 
 export class IFTTTWebhook extends Tool {

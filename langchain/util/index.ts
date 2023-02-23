@@ -1,5 +1,4 @@
 import path from "path";
-import fetch, { RequestInit } from "node-fetch";
 import fs from "fs";
 import * as yaml from "yaml";
 
