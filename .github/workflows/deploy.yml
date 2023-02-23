@@ -27,6 +27,7 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
+    env:
       MENDABLE_ANON_KEY: ${{ secrets.MENDABLE_ANON_KEY }}
     runs-on: ubuntu-latest
     steps:
