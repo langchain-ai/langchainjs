@@ -1,4 +1,5 @@
 {
+  "extends": "@tsconfig/recommended/tsconfig.json",
   "compilerOptions": {
     "outDir": "dist",
     "target": "ES2018",

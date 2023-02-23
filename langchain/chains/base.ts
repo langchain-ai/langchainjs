@@ -1,5 +1,4 @@
-// @ts-ignore
-import * as deepcopy from "deepcopy";
+import deepcopy from "deepcopy";
 import {
   LLMChain,
   StuffDocumentsChain,

@@ -33,7 +33,5 @@ export const deserializeHelper = async <
   >("llm_chain", data);
   const llmChain = await LLMChain.deserialize(serializedLLMChain);
 
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
   return fromConstructor({ ...data, llmChain });
 };
