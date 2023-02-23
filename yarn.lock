@@ -4592,6 +4592,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"browser-or-node@npm:^2.1.1":
+  version: 2.1.1
+  resolution: "browser-or-node@npm:2.1.1"
+  checksum: b1650b579345574d2c1905c73d385915a032523066ef9589036cf129b23b27b85096b6713476dffb88feb83cda798ed0774363e699117aa2724a0409adea25aa
+  languageName: node
+  linkType: hard
+
 "browserslist@npm:^4.0.0, browserslist@npm:^4.14.5, browserslist@npm:^4.18.1, browserslist@npm:^4.21.3, browserslist@npm:^4.21.4, browserslist@npm:^4.21.5":
   version: 4.21.5
   resolution: "browserslist@npm:4.21.5"
@@ -9451,6 +9458,7 @@ __metadata:
     "@typescript-eslint/parser": ^5.51.0
     "@vespaiach/axios-fetch-adapter": ^0.3.1
     babel-jest: ^29.4.2
+    browser-or-node: ^2.1.1
     cheerio: ^1.0.0-rc.12
     cohere-ai: ^5.0.2
     deepcopy: ^2.1.0

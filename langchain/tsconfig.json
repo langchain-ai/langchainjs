@@ -19,7 +19,8 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "useDefineForClassFields": true,
-    "strictPropertyInitialization": false
+    "strictPropertyInitialization": false,
+    "allowJs": true
   },
   "typedocOptions": {
     "plugin": [
