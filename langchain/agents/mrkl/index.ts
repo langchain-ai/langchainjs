@@ -1,5 +1,5 @@
-import { BaseLLM } from "../../llms";
-import { LLMChain } from "../../chains";
+import { BaseLLM } from "../../llms/index.js";
+import { LLMChain } from "../../chains/index.js";
 import {
   Agent,
   Tool,
@@ -7,10 +7,10 @@ import {
   StaticAgent,
   staticImplements,
   SerializedAgentT,
-} from "../index";
-import { PromptTemplate } from "../../prompts";
-import { PREFIX, SUFFIX, formatInstructions } from "./prompt";
-import { deserializeHelper } from "../helpers";
+} from "../index.js";
+import { PromptTemplate } from "../../prompts/index.js";
+import { PREFIX, SUFFIX, formatInstructions } from "./prompt.js";
+import { deserializeHelper } from "../helpers.js";
 
 const FINAL_ANSWER_ACTION = "Final Answer:";
 

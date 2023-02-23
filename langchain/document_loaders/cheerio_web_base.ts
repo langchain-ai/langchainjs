@@ -1,7 +1,7 @@
 import type { CheerioAPI, load as LoadT } from "cheerio";
-import { Document } from "../document";
-import { BaseDocumentLoader } from "./base";
-import type { DocumentLoader } from "./base";
+import { Document } from "../document.js";
+import { BaseDocumentLoader } from "./base.js";
+import type { DocumentLoader } from "./base.js";
 
 let load: typeof LoadT | null = null;
 

@@ -1,6 +1,6 @@
-import { BasePromptTemplate } from ".";
-import { loadFromHub } from "../util/hub";
-import { parseFileConfig, FileLoader, loadFromFile } from "../util";
+import { BasePromptTemplate } from "./index.js";
+import { loadFromHub } from "../util/hub.js";
+import { parseFileConfig, FileLoader, loadFromFile } from "../util/index.js";
 
 const loadPromptFromFile: FileLoader<BasePromptTemplate> = (text, path) =>
   BasePromptTemplate.deserialize(parseFileConfig(text, path));

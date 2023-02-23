@@ -1,7 +1,7 @@
-import { Agent, Tool } from ".";
-import { BaseLLM } from "../llms";
-import { loadFromHub } from "../util/hub";
-import { FileLoader, loadFromFile, parseFileConfig } from "../util";
+import { Agent, Tool } from "./index.js";
+import { BaseLLM } from "../llms/index.js";
+import { loadFromHub } from "../util/hub.js";
+import { FileLoader, loadFromFile, parseFileConfig } from "../util/index.js";
 
 const loadAgentFromFile: FileLoader<Agent> = async (
   file: string,

@@ -1,8 +1,8 @@
 import { test } from "@jest/globals";
-import { OpenAI } from "../../llms/openai";
-import { PromptTemplate } from "../../prompts";
-import { LLMChain, ConversationChain } from "../llm_chain";
-import { loadChain } from "../load";
+import { OpenAI } from "../../llms/openai.js";
+import { PromptTemplate } from "../../prompts/index.js";
+import { LLMChain, ConversationChain } from "../llm_chain.js";
+import { loadChain } from "../load.js";
 
 test("Test OpenAI", async () => {
   const model = new OpenAI({ modelName: "text-ada-001" });

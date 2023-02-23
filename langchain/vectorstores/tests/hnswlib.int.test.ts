@@ -3,9 +3,9 @@ import fs from "fs/promises";
 import path from "path";
 import os from "os";
 
-import { HNSWLib } from "../hnswlib";
-import { OpenAIEmbeddings } from "../../embeddings";
-import { Document } from "../../document";
+import { HNSWLib } from "../hnswlib.js";
+import { OpenAIEmbeddings } from "../../embeddings/index.js";
+import { Document } from "../../document.js";
 
 test("Test HNSWLib.fromTexts", async () => {
   const vectorStore = await HNSWLib.fromTexts(

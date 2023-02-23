@@ -1,4 +1,4 @@
-import { Tool } from "./base";
+import { Tool } from "./base.js";
 
 export class DynamicTool extends Tool {
   name: string;

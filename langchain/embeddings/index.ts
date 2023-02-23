@@ -1,1 +1,1 @@
-export { OpenAIEmbeddings } from "./openai";
+export { OpenAIEmbeddings } from "./openai.js";

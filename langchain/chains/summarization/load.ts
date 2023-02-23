@@ -1,11 +1,11 @@
-import { BaseLLM } from "../../llms";
-import { LLMChain } from "../llm_chain";
-import { PromptTemplate } from "../../prompts";
+import { BaseLLM } from "../../llms/index.js";
+import { LLMChain } from "../llm_chain.js";
+import { PromptTemplate } from "../../prompts/index.js";
 import {
   StuffDocumentsChain,
   MapReduceDocumentsChain,
-} from "../combine_docs_chain";
-import { DEFAULT_PROMPT } from "./stuff_prompts";
+} from "../combine_docs_chain.js";
+import { DEFAULT_PROMPT } from "./stuff_prompts.js";
 
 interface summarizationChainParams {
   prompt?: PromptTemplate;

@@ -3,15 +3,15 @@ export {
   BasePromptTemplateInput,
   SerializedBasePromptTemplate,
   InputValues,
-} from "./base";
+} from "./base.js";
 export {
   PromptTemplate,
   PromptTemplateInput,
   SerializedPromptTemplate,
-} from "./prompt";
+} from "./prompt.js";
 export {
   FewShotPromptTemplate,
   FewShotPromptTemplateInput,
   SerializedFewShotTemplate,
-} from "./few_shot";
-export { loadPrompt } from "./load";
+} from "./few_shot.js";
+export { loadPrompt } from "./load.js";

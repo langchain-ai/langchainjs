@@ -1,7 +1,7 @@
-import { SerializedAgentT, Tool, AgentInput } from "./index";
-import { BaseLLM } from "../llms";
-import { SerializedLLMChain, LLMChain } from "../chains";
-import { resolveConfigFromFile } from "../util";
+import { SerializedAgentT, Tool, AgentInput } from "./index.js";
+import { BaseLLM } from "../llms/index.js";
+import { SerializedLLMChain, LLMChain } from "../chains/index.js";
+import { resolveConfigFromFile } from "../util/index.js";
 
 export const deserializeHelper = async <
   T extends string,

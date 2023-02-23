@@ -1,5 +1,5 @@
-import { BaseLLM } from "./base";
-import { FileLoader, loadFromFile, parseFileConfig } from "../util";
+import { BaseLLM } from "./base.js";
+import { FileLoader, loadFromFile, parseFileConfig } from "../util/index.js";
 
 /**
  * Load an LLM from a local file.

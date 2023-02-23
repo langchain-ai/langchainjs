@@ -1,10 +1,10 @@
 import { test, expect } from "@jest/globals";
-import { Document } from "../document";
+import { Document } from "../document.js";
 import {
   CharacterTextSplitter,
   RecursiveCharacterTextSplitter,
   TokenTextSplitter,
-} from "../text_splitter";
+} from "../text_splitter.js";
 
 test("Test splitting by character count.", () => {
   const text = "foo bar baz 123";

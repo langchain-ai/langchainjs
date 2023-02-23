@@ -2,7 +2,7 @@ export {
   PromptTemplate,
   BasePromptTemplate,
   FewShotPromptTemplate,
-} from "./prompts";
+} from "./prompts/index.js";
 
-export { LLMChain } from "./chains";
-export { OpenAI } from "./llms";
+export { LLMChain } from "./chains/index.js";
+export { OpenAI } from "./llms/index.js";

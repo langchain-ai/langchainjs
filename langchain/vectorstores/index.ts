@@ -1,3 +1,3 @@
-export { HNSWLib } from "./hnswlib";
-export { Chroma } from "./chroma";
-export { PineconeStore } from "./pinecone";
+export { HNSWLib } from "./hnswlib.js";
+export { Chroma } from "./chroma.js";
+export { PineconeStore } from "./pinecone.js";

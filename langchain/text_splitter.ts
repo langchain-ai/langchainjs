@@ -1,5 +1,5 @@
 import type * as tiktoken from "@dqbd/tiktoken";
-import { Document } from "./document";
+import { Document } from "./document.js";
 
 interface TextSplitterParams {
   chunkSize: number;

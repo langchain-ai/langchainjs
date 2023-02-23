@@ -1,6 +1,6 @@
 import { Parser } from "expr-eval";
 
-import { Tool } from "./base";
+import { Tool } from "./base.js";
 
 export class Calculator extends Tool {
   name = "calculator";

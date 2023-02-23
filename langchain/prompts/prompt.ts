@@ -2,15 +2,15 @@ import {
   BasePromptTemplate,
   BasePromptTemplateInput,
   InputValues,
-} from "./index";
+} from "./index.js";
 import {
   TemplateFormat,
   checkValidTemplate,
   renderTemplate,
   parseFString,
-} from "./template";
-import { resolveTemplateFromFile } from "../util";
-import { SerializedOutputParser, BaseOutputParser } from "./parser";
+} from "./template.js";
+import { resolveTemplateFromFile } from "../util/index.js";
+import { SerializedOutputParser, BaseOutputParser } from "./parser.js";
 
 export type SerializedPromptTemplate = {
   _type?: "prompt";

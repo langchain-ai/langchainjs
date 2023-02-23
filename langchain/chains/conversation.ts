@@ -1,8 +1,8 @@
-import { LLMChain } from "./llm_chain";
-import { BaseLLM } from "../llms";
-import { BasePromptTemplate, PromptTemplate } from "../prompts";
+import { LLMChain } from "./llm_chain.js";
+import { BaseLLM } from "../llms/index.js";
+import { BasePromptTemplate, PromptTemplate } from "../prompts/index.js";
 
-import { BaseMemory, BufferMemory } from "../memory";
+import { BaseMemory, BufferMemory } from "../memory/index.js";
 
 const defaultTemplate = `The following is a friendly conversation between a human and an AI. The AI is talkative and provides lots of specific details from its context. If the AI does not know the answer to a question, it truthfully says it does not know.
 

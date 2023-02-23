@@ -1,7 +1,7 @@
 import { test, expect } from "@jest/globals";
-import { HNSWLib } from "../hnswlib";
-import { Document } from "../../document";
-import { FakeEmbeddings } from "../../embeddings/fake";
+import { HNSWLib } from "../hnswlib.js";
+import { Document } from "../../document.js";
+import { FakeEmbeddings } from "../../embeddings/fake.js";
 
 test("Test HNSWLib.fromTexts + addVectors", async () => {
   const vectorStore = await HNSWLib.fromTexts(
