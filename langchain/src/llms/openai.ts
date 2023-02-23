@@ -11,7 +11,8 @@ import fetchAdapter from "@vespaiach/axios-fetch-adapter";
 import { createParser } from "eventsource-parser";
 import { backOff } from "exponential-backoff";
 import { chunkArray } from "../util/index.js";
-import { BaseLLM, LLMResult, LLMCallbackManager } from "./index.js";
+import { BaseLLM } from "./base.js";
+import { LLMResult, LLMCallbackManager } from "./index.js";
 
 let Configuration: typeof ConfigurationT | null = null;
 let OpenAIApi: typeof OpenAIApiT | null = null;

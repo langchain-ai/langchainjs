@@ -1,7 +1,7 @@
 import { encode } from "gpt-3-encoder";
 import PQueue from "p-queue";
 
-import { LLMCallbackManager, LLMResult, OpenAI } from "./index.js";
+import { LLMCallbackManager, LLMResult } from "./index.js";
 import { BaseCache, getKey, InMemoryCache } from "../cache.js";
 
 const getCallbackManager = (): LLMCallbackManager => ({
@@ -181,7 +181,7 @@ export abstract class BaseLLM {
   static async deserialize(data: SerializedLLM): Promise<BaseLLM> {
     const { _type, ...rest } = data;
     const Cls = {
-      openai: OpenAI,
+      openai: (await import("./openai.js")).OpenAI,
     }[_type];
     if (Cls === undefined) {
       throw new Error(`Cannot load  LLM with type ${_type}`);
