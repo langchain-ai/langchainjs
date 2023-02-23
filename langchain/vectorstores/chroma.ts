@@ -102,7 +102,7 @@ export class Chroma extends VectorStore {
     // similaritySearchVectorWithScore supports one query vector at a time
     // chroma supports multiple query vectors at a time
     const result = await collection.query(query, k);
-    
+
     const { ids, distances, documents, metadatas } = result;
     // get the result data from the first and only query vector
     const [firstIds] = ids;
