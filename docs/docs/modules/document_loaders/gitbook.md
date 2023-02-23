@@ -19,7 +19,9 @@ For this to work, the GitbookLoader needs to be initialized with the root path (
 ```typescript
 import { GitbookLoader } from "langchain/document_loaders";
 
-const loader = new GitbookLoader("https://docs.gitbook.com");
-const docs = await loader.load(true);
+const loader = new GitbookLoader("https://docs.gitbook.com", {
+  shouldLoadAllPaths: true,
+});
+const docs = await loader.load();
 console.log({ docs });
 ```

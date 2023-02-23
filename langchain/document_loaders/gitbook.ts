@@ -2,15 +2,23 @@ import type { CheerioAPI } from "cheerio";
 import { Document } from "../document";
 import { CheerioWebBaseLoader } from "./cheerio_web_base";
 
+interface GitbookLoaderParams {
+  shouldLoadAllPaths?: boolean;
+}
+
 export class GitbookLoader extends CheerioWebBaseLoader {
-  constructor(public webPath: string) {
+  shouldLoadAllPaths = false;
+
+  constructor(public webPath: string, params: GitbookLoaderParams = {}) {
     super(webPath);
+    this.shouldLoadAllPaths =
+      params.shouldLoadAllPaths ?? this.shouldLoadAllPaths;
   }
 
-  public async load(loadAllPaths = false): Promise<Document[]> {
+  public async load(): Promise<Document[]> {
     const $ = await this.scrape();
 
-    if (loadAllPaths === true) {
+    if (this.shouldLoadAllPaths === true) {
       return this.loadAllPaths($);
     }
     return this.loadPath($);
