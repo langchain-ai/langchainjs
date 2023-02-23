@@ -59,7 +59,7 @@
     "clean": "rm -rf dist/ && node create-entrypoints.js clean",
     "prepack": "yarn build",
     "test": "yarn clean && jest --testPathIgnorePatterns=\\.int\\.test.ts",
-    "test:integration": "yarn clean && jest --testPathPattern=\\.int\\.test.ts",
+    "test:integration": "yarn clean && jest --testPathPattern=\\.int\\.test.ts --testTimeout 20000",
     "prepare": "husky install",
     "format": "prettier --write \"**/*.ts\"",
     "format:diff": "prettier --list-different \"**/*.ts\"",

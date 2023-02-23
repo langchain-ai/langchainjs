@@ -1,5 +1,5 @@
 import { BaseLLM } from "./base";
-import { parseFileConfig } from "../util";
+import { FileLoader, loadFromFile, parseFileConfig } from "../util";
 
 /**
  * Load an LLM from a local file.
@@ -10,5 +10,8 @@ import { parseFileConfig } from "../util";
  * const model = await loadLLM("/path/to/llm.json");
  * ```
  */
-export const loadLLM = (file: string) =>
-  BaseLLM.deserialize(parseFileConfig(file));
+const loader: FileLoader<BaseLLM> = (file: string, path: string) =>
+  BaseLLM.deserialize(parseFileConfig(file, path));
+
+export const loadLLM = (uri: string): Promise<BaseLLM> =>
+  loadFromFile(uri, loader);

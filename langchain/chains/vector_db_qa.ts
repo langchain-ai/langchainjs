@@ -82,7 +82,7 @@ export class VectorDBQAChain extends BaseChain implements VectorDBQAChainInput {
       );
     }
     const { vectorstore } = values;
-    const serializedCombineDocumentsChain = resolveConfigFromFile<
+    const serializedCombineDocumentsChain = await resolveConfigFromFile<
       "combine_documents_chain",
       SerializedBaseChain
     >("combine_documents_chain", data);
