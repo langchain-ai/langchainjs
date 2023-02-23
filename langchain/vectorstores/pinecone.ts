@@ -1,4 +1,4 @@
-import type { PineconeClient } from "pinecone-client";
+import type { VectorOperationsApi } from "@pinecone-database/pinecone/dist/pinecone-generated-ts";
 import { v4 as uuidv4 } from "uuid";
 
 import { VectorStore } from "./base";
@@ -11,10 +11,10 @@ type PineconeMetadata = Record<string, any>;
 export class PineconeStore extends VectorStore {
   textKey: string;
 
-  pineconeClient: PineconeClient<PineconeMetadata>;
+  pineconeClient: VectorOperationsApi;
 
   constructor(
-    pineconeClient: PineconeClient<PineconeMetadata>,
+    pineconeClient: VectorOperationsApi,
     embeddings: Embeddings,
     textKey = "text"
   ) {
@@ -61,7 +61,7 @@ export class PineconeStore extends VectorStore {
 
     const result: [Document, number][] = [];
 
-    for (const res of results.matches) {
+    for (const res of results.data.matches) {
       const { [this.textKey]: pageContent, ...metadata } =
         res.metadata as PineconeMetadata;
       result.push([new Document({ metadata, pageContent }), res.score]);
@@ -71,7 +71,7 @@ export class PineconeStore extends VectorStore {
   }
 
   static async fromTexts(
-    pineconeClient: PineconeClient<PineconeMetadata>,
+    pineconeClient: VectorOperationsApi,
     texts: string[],
     metadatas: object[],
     embeddings: Embeddings,
@@ -95,7 +95,7 @@ export class PineconeStore extends VectorStore {
   }
 
   static async fromDocuments(
-    pineconeClient: PineconeClient<PineconeMetadata>,
+    pineconeClient: VectorOperationsApi,
     docs: Document[],
     embeddings: Embeddings,
     textKey = "text"
@@ -106,7 +106,7 @@ export class PineconeStore extends VectorStore {
   }
 
   static async fromExistingIndex(
-    pineconeClient: PineconeClient<PineconeMetadata>,
+    pineconeClient: VectorOperationsApi,
     embeddings: Embeddings,
     textKey = "text"
   ): Promise<PineconeStore> {
