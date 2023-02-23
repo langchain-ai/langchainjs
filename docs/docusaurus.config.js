@@ -19,7 +19,6 @@ const config = {
   customFields: {
     mendableAnonKey: "fc146644-1dab-43f0-902a-a26f9d653db2",
   },
-
   // Set the production url of your site here
   url: "https://hwchase17.github.io",
   // Set the /<baseUrl>/ pathname under which your site is served
