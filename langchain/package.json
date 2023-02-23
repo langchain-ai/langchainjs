@@ -49,8 +49,8 @@
     "test": "yarn clean && jest --testPathIgnorePatterns=\\.int\\.test.ts",
     "test:integration": "yarn clean && jest --testPathPattern=\\.int\\.test.ts",
     "prepare": "husky install",
-    "format": "prettier --write \"**/*.ts\"",
-    "format:diff": "prettier --list-different \"**/*.ts\"",
+    "format": "prettier --write \"src\"",
+    "format:diff": "prettier --list-different \"src\"",
     "ci": "yarn lint && yarn format:diff && yarn build"
   },
   "author": "Langchain",

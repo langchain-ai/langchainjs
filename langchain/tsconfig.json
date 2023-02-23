@@ -1,7 +1,7 @@
 {
   "extends": "@tsconfig/recommended",
   "compilerOptions": {
-    "outDir": "dist",
+    "outDir": "../dist",
     "target": "ES2018",
     "lib": [
       "ESNext",
@@ -11,7 +11,7 @@
     "moduleResolution": "nodenext",
     "sourceMap": true,
     "allowSyntheticDefaultImports": true,
-    "baseUrl": "./",
+    "baseUrl": "./src",
     "declaration": true,
     "experimentalDecorators": true,
     "noImplicitReturns": true,
@@ -21,14 +21,6 @@
     "useDefineForClassFields": true,
     "strictPropertyInitialization": false
   },
-  "exclude": [
-    "node_modules/",
-    "dist/",
-    "docs/"
-  ],
-  "include": [
-    "./"
-  ],
   "typedocOptions": {
     "plugin": [
       "typedoc-plugin-missing-exports"
