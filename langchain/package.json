@@ -2,48 +2,36 @@
   "name": "langchain",
   "version": "0.0.11",
   "description": "Typescript bindings for langchain",
+  "type": "module",
   "main": "./index.js",
   "types": "./index.d.ts",
   "files": [
     "dist/",
     "agents.js",
-    "agents.mjs",
     "agents.d.ts",
     "tools.js",
-    "tools.mjs",
     "tools.d.ts",
     "chains.js",
-    "chains.mjs",
     "chains.d.ts",
     "embeddings.js",
-    "embeddings.mjs",
     "embeddings.d.ts",
     "llms.js",
-    "llms.mjs",
     "llms.d.ts",
     "prompts.js",
-    "prompts.mjs",
     "prompts.d.ts",
     "vectorstores.js",
-    "vectorstores.mjs",
     "vectorstores.d.ts",
     "text_splitter.js",
-    "text_splitter.mjs",
     "text_splitter.d.ts",
     "memory.js",
-    "memory.mjs",
     "memory.d.ts",
     "document.js",
-    "document.mjs",
     "document.d.ts",
     "docstore.js",
-    "docstore.mjs",
     "docstore.d.ts",
     "document_loaders.js",
-    "document_loaders.mjs",
     "document_loaders.d.ts",
     "index.js",
-    "index.mjs",
     "index.d.ts"
   ],
   "repository": {
@@ -178,56 +166,43 @@
   ],
   "exports": {
     ".": {
-      "import": "./index.mjs",
-      "default": "./index.js"
+      "import": "./index.js"
     },
     "./agents": {
-      "import": "./agents.mjs",
-      "default": "./agents.js"
+      "import": "./agents.js"
     },
     "./tools": {
-      "import": "./tools.mjs",
-      "default": "./tools.js"
+      "import": "./tools.js"
     },
     "./chains": {
-      "import": "./chains.mjs",
-      "default": "./chains.js"
+      "import": "./chains.js"
     },
     "./embeddings": {
-      "import": "./embeddings.mjs",
-      "default": "./embeddings.js"
+      "import": "./embeddings.js"
     },
     "./llms": {
-      "import": "./llms.mjs",
-      "default": "./llms.js"
+      "import": "./llms.js"
     },
     "./prompts": {
-      "import": "./prompts.mjs",
-      "default": "./prompts.js"
+      "import": "./prompts.js"
     },
     "./vectorstores": {
-      "import": "./vectorstores.mjs",
-      "default": "./vectorstores.js"
+      "import": "./vectorstores.js"
     },
     "./text_splitter": {
-      "import": "./text_splitter.mjs",
-      "default": "./text_splitter.js"
+      "import": "./text_splitter.js"
     },
     "./memory": {
-      "import": "./memory.mjs",
-      "default": "./memory.js"
+      "import": "./memory.js"
     },
     "./document": {
-      "import": "./document.mjs",
-      "default": "./document.js"
+      "import": "./document.js"
     },
     "./docstore": {
-      "import": "./docstore.mjs",
-      "default": "./docstore.js"
+      "import": "./docstore.js"
     },
     "./document_loaders": {
-      "import": "./document_loaders.mjs",
-      "default": "./document_loaders.js"
+      "import": "./document_loaders.js"
     }
   }
 }
