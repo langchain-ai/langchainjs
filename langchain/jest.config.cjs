@@ -1,12 +1,13 @@
 /** @type {import('ts-jest').JestConfigWithTsJest} */
 module.exports = {
-  preset: "ts-jest/presets/js-with-ts",
+  preset: "ts-jest/presets/default-esm",
   testEnvironment: "node",
   modulePathIgnorePatterns: ["dist/", "docs/"],
-  transform: {
-    "^.+\\.(ts|tsx)$": "ts-jest",
-    "^.+\\.(js)$": "babel-jest",
+  moduleNameMapper: {
+    "^(\\.{1,2}/.*)\\.js$": "$1",
   },
-  transformIgnorePatterns: [],
+  transform: {
+    "^.+\\.m?[tj]sx?$": ["ts-jest", { useESM: true }],
+  },
   setupFiles: ["dotenv/config"],
 };

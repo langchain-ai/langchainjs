@@ -46,8 +46,8 @@
     "precommit": "tsc --noEmit && lint-staged",
     "clean": "rm -rf dist/ && node create-entrypoints.js clean",
     "prepack": "yarn build",
-    "test": "yarn clean && jest --testPathIgnorePatterns=\\.int\\.test.ts",
-    "test:integration": "yarn clean && jest --testPathPattern=\\.int\\.test.ts --testTimeout 20000",
+    "test": "yarn clean && NODE_OPTIONS=--experimental-vm-modules jest --testPathIgnorePatterns=\\.int\\.test.ts",
+    "test:integration": "yarn clean && NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern=\\.int\\.test.ts --testTimeout 20000",
     "prepare": "husky install",
     "format": "prettier --write \"src\"",
     "format:diff": "prettier --list-different \"src\"",
@@ -132,6 +132,7 @@
   },
   "dependencies": {
     "@vespaiach/axios-fetch-adapter": "^0.3.1",
+    "browser-or-node": "^2.1.1",
     "deepcopy": "^2.1.0",
     "eventsource-parser": "^0.1.0",
     "exponential-backoff": "^3.1.0",
