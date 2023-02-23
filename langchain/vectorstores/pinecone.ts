@@ -1,4 +1,7 @@
-import type { VectorOperationsApi } from "@pinecone-database/pinecone/dist/pinecone-generated-ts";
+import type {
+  VectorOperationsApi,
+  UpsertResponse,
+} from "@pinecone-database/pinecone/dist/pinecone-generated-ts-fetch";
 import { v4 as uuidv4 } from "uuid";
 
 import { VectorStore } from "./base";
@@ -25,7 +28,7 @@ export class PineconeStore extends VectorStore {
     this.textKey = textKey;
   }
 
-  async addDocuments(documents: Document[], ids?: string[]): Promise<any> {
+  async addDocuments(documents: Document[], ids?: string[]): Promise<void> {
     const texts = documents.map(({ pageContent }) => pageContent);
     return this.addVectors(
       await this.embeddings.embedDocuments(texts),
@@ -38,18 +41,20 @@ export class PineconeStore extends VectorStore {
     vectors: number[][],
     documents: Document[],
     ids?: string[]
-  ): Promise<any> {
+  ): Promise<void> {
     const documentIds = ids == null ? documents.map(() => uuidv4()) : ids;
 
-    return this.pineconeClient.upsert({
-      vectors: vectors.map((values, idx) => ({
-        id: documentIds[idx],
-        metadata: {
-          ...documents[idx].metadata,
-          [this.textKey]: documents[idx].pageContent,
-        },
-        values,
-      })),
+    await this.pineconeClient.upsert({
+      upsertRequest: {
+        vectors: vectors.map((values, idx) => ({
+          id: documentIds[idx],
+          metadata: {
+            ...documents[idx].metadata,
+            [this.textKey]: documents[idx].pageContent,
+          },
+          values,
+        })),
+      },
     });
   }
 
@@ -58,17 +63,23 @@ export class PineconeStore extends VectorStore {
     k: number
   ): Promise<[Document, number][]> {
     const results = await this.pineconeClient.query({
-      topK: k,
-      includeMetadata: true,
-      vector: query,
+      queryRequest: {
+        topK: k,
+        includeMetadata: true,
+        vector: query,
+      },
     });
 
     const result: [Document, number][] = [];
 
-    for (const res of results.data.matches) {
-      const { [this.textKey]: pageContent, ...metadata } =
-        res.metadata as PineconeMetadata;
-      result.push([new Document({ metadata, pageContent }), res.score]);
+    if (results.matches) {
+      for (const res of results.matches) {
+        const { [this.textKey]: pageContent, ...metadata } =
+          res.metadata as PineconeMetadata;
+        if (res.score) {
+          result.push([new Document({ metadata, pageContent }), res.score]);
+        }
+      }
     }
 
     return result;
