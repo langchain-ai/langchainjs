@@ -1,4 +1,3 @@
-import fetch, { RequestInit } from "node-fetch";
 import * as yaml from "yaml";
 
 export const extname = (path: string) => `.${path.split(".").pop()}`;

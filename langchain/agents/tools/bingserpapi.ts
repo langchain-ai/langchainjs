@@ -1,4 +1,3 @@
-import fetch from "node-fetch";
 import { Tool } from "./base";
 
 class BingSerpAPI extends Tool {
