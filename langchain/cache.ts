@@ -1,4 +1,4 @@
-import crypto from "crypto";
+import * as crypto from "crypto";
 import { Generation } from "./llms";
 
 // Takes in an arbitrary number of strings and returns a hash of them

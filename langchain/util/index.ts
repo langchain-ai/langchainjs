@@ -1,6 +1,6 @@
-import path from "path";
+import * as path from "path";
 import fetch, { RequestInit } from "node-fetch";
-import fs from "fs";
+import * as fs from "fs";
 import * as yaml from "yaml";
 
 export const fetchWithTimeout = async (

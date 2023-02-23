@@ -1,16 +1,10 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  "globalDependencies": [
-    "**/.env"
-  ],
+  "globalDependencies": ["**/.env"],
   "pipeline": {
     "build": {
-      "dependsOn": [
-        "^build"
-      ],
-      "outputs": [
-        "dist/**"
-      ]
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**"]
     },
     "lint": {
       "outputs": []
@@ -19,12 +13,13 @@
     "precommit": {},
     "ci": {
       "cache": false,
-      "dependsOn": [
-        "^ci"
-      ]
+      "dependsOn": ["^ci"]
     },
     "start": {
       "cache": false
+    },
+    "test-exports#test": {
+      "dependsOn": ["langchain#build"]
     }
   }
 }

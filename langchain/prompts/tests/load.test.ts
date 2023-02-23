@@ -1,5 +1,5 @@
 import { expect, test } from "@jest/globals";
-import path from "path";
+import * as path from "path";
 import { loadPrompt } from "../load";
 
 const PROMPTS_DIR = path.join(__dirname, "prompts");
