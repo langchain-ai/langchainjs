@@ -144,6 +144,7 @@
     }
   },
   "dependencies": {
+    "@vespaiach/axios-fetch-adapter": "^0.3.1",
     "deepcopy": "^2.1.0",
     "eventsource-parser": "^0.1.0",
     "exponential-backoff": "^3.1.0",

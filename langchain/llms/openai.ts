@@ -7,7 +7,7 @@ import type {
   ConfigurationParameters,
 } from "openai";
 import type { IncomingMessage } from "http";
-
+import fetchAdapter from "@vespaiach/axios-fetch-adapter";
 import fetch from "node-fetch";
 import { createParser } from "eventsource-parser";
 import { backOff } from "exponential-backoff";
@@ -185,6 +185,7 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
     }
     this.clientConfig = {
       apiKey: fields?.openAIApiKey ?? process.env.OPENAI_API_KEY,
+      baseOptions: { adapter: fetchAdapter },
       ...configuration,
     };
     const clientConfig = new Configuration(this.clientConfig);

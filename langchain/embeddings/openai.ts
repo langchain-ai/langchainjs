@@ -4,6 +4,7 @@ import type {
   CreateEmbeddingRequest,
 } from "openai";
 import { backOff } from "exponential-backoff";
+import fetchAdapter from "@vespaiach/axios-fetch-adapter";
 import { chunkArray } from "../util";
 import { Embeddings } from "./base";
 
@@ -49,6 +50,7 @@ export class OpenAIEmbeddings extends Embeddings implements ModelParams {
     this.batchSize = fields?.batchSize ?? this.batchSize;
     const clientConfig = new Configuration({
       apiKey: fields?.openAIApiKey ?? process.env.OPENAI_API_KEY,
+      baseOptions: { adapter: fetchAdapter },
     });
     this.client = new OpenAIApi(clientConfig);
   }
