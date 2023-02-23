@@ -1,6 +1,3 @@
-import * as path from "path";
-import * as os from "os";
-import * as fs from "fs";
 import { fetchWithTimeout, extname, FileLoader, LoadValues } from "./index";
 
 const HUB_PATH_REGEX = /lc(@[^:]+)?:\/\/(.*)/;
