@@ -17,7 +17,7 @@ const config = {
   tagline: "The tagline of my site",
   favicon: "img/favicon.ico",
   customFields: {
-    mendableAnonKey: "fc146644-1dab-43f0-902a-a26f9d653bd3",
+    mendableAnonKey: process.env.MENDABLE_ANON_KEY,
   },
   // Set the production url of your site here
   url: "https://hwchase17.github.io",
