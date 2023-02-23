@@ -9,7 +9,7 @@ import { HNSWLib } from "../../vectorstores/hnswlib";
 import { OpenAIEmbeddings } from "../../embeddings";
 
 test("Test VectorDBQAChain", async () => {
-  const model = new OpenAI({});
+  const model = new OpenAI({ modelName: "text-ada-001" });
   const prompt = new PromptTemplate({
     template: "Print {foo}",
     inputVariables: ["foo"],
@@ -33,7 +33,7 @@ test("Test VectorDBQAChain", async () => {
 });
 
 test("Test VectorDBQAChain from LLM", async () => {
-  const model = new OpenAI({});
+  const model = new OpenAI({ modelName: "text-ada-001" });
   const vectorStore = await HNSWLib.fromTexts(
     ["Hello world", "Bye bye", "hello nice world", "bye", "hi"],
     [{ id: 2 }, { id: 1 }, { id: 3 }, { id: 4 }, { id: 5 }],
