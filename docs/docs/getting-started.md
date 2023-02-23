@@ -37,19 +37,23 @@ import { OpenAI } from "langchain";
 ```
 
 We will then need to set the environment variable for the OpenAI key. Three options here:
+
 1. We can do this by setting the value in a `.env` file and use the [dotenv](https://github.com/motdotla/dotenv) package to read it.
 
 ```
 OPENAI_API_KEY="..."
 ```
+
 2. Or we can export the environment variable with the following command in your shell:
+
 ```bash
 export OPENAI_API_KEY=sk-....
 ```
+
 3. Or we can do it when initializing the wrapper along with other arguments. In this example, we probably want the outputs to be MORE random, so we'll initialize it with a HIGH temperature.
 
 ```typescript
-const model = new OpenAI({ openAIApiKey: 'sk-...', temperature: 0.9});
+const model = new OpenAI({ openAIApiKey: "sk-...", temperature: 0.9 });
 ```
 
 Once we have initialized the wrapper, we can now call it on some input!
