@@ -5,7 +5,7 @@
   "description": "Tests for the things exported by the langchain package",
   "main": "./index.js",
   "scripts": {
-    "test": "node ./index.js && node ./index.mjs && tsc --noEmit index.ts",
+    "test": "node ./index.mjs && tsc --noEmit index.ts",
     "format": "prettier --write \"**/*.ts\"",
     "format:diff": "prettier --list-different \"**/*.ts\"",
     "ci": "yarn format:diff && yarn test"

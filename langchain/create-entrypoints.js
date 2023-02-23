@@ -1,6 +1,5 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
-const path = require("path");
-const fs = require("fs");
+import path from "path";
+import fs from "fs";
 
 const entrypoints = {
   agents: "agents/index",
@@ -18,7 +17,10 @@ const entrypoints = {
 };
 
 const updateJsonFile = (relativePath, updateFunction) => {
-  const filePath = path.resolve(__dirname, relativePath);
+  const filePath = path.resolve(
+    path.dirname(import.meta.url.replace("file://", "")),
+    relativePath
+  );
   const contents = fs.readFileSync(filePath).toString();
   const res = updateFunction(JSON.parse(contents));
   fs.writeFileSync(filePath, JSON.stringify(res, null, 2));
@@ -31,8 +33,7 @@ const generateFiles = () => {
         path.basename(value) === "index" ? path.dirname(value) : value;
       const compiledPath = `./dist/${modulePath}`;
       return [
-        [`${key}.js`, `module.exports = require('${compiledPath}')`],
-        [`${key}.mjs`, `export * from './dist/${value}.js'`],
+        [`${key}.js`, `export * from './dist/${value}.js'`],
         [`${key}.d.ts`, `export * from '${compiledPath}'`],
       ];
     }
@@ -60,8 +61,7 @@ const updateConfig = () => {
     exports: Object.fromEntries(
       ["index", ...Object.keys(entrypoints)].map((key) => {
         const entryPoint = {
-          import: `./${key}.mjs`,
-          default: `./${key}.js`,
+          import: `./${key}.js`,
         };
         return [key === "index" ? "." : `./${key}`, entryPoint];
       })

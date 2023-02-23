@@ -1,4 +1,4 @@
-import deepcopy = require("deepcopy");
+import deepcopy from "deepcopy";
 import {
   LLMChain,
   StuffDocumentsChain,
