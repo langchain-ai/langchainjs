@@ -1,6 +1,6 @@
 import assert from "assert";
-import { OpenAI } from "../langchain/dist/index.mjs";
-import { loadPrompt } from "../langchain/dist/prompts/index.mjs";
+import { OpenAI } from "langchain";
+import { loadPrompt } from "langchain/prompts";
 
 assert(typeof OpenAI === "function");
 assert(typeof loadPrompt === "function");

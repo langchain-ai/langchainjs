@@ -2,7 +2,7 @@
   "name": "langchain",
   "version": "0.0.10",
   "description": "Typescript bindings for langchain",
-  "main": "./index",
+  "main": "./index.ts",
   "types": "./index.d.ts",
   "files": [
     "dist"
@@ -38,6 +38,7 @@
     "@typescript-eslint/eslint-plugin": "^5.51.0",
     "@typescript-eslint/parser": "^5.51.0",
     "babel-jest": "^29.4.2",
+    "browser-or-node": "^2.1.1",
     "cheerio": "^1.0.0-rc.12",
     "cohere-ai": "^5.0.2",
     "dotenv": "^16.0.3",
@@ -138,56 +139,56 @@
   ],
   "exports": {
     ".": {
-      "import": "./index.mjs",
-      "require": "./index.js"
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
     },
     "./agents": {
-      "import": "./agents.mjs",
-      "require": "./agents.js"
+      "import": "./dist/agents/index.mjs",
+      "require": "./dist/agents/index.js"
     },
     "./tools": {
-      "import": "./tools.mjs",
-      "require": "./tools.js"
+      "import": "./dist/tools/index.mjs",
+      "require": "./dist/tools/index.js"
     },
     "./chains": {
-      "import": "./chains.mjs",
-      "require": "./chains.js"
+      "import": "./dist/chains/index.mjs",
+      "require": "./dist/chains/index.js"
     },
     "./embeddings": {
-      "import": "./embeddings.mjs",
-      "require": "./embeddings.js"
+      "import": "./dist/embeddings/index.mjs",
+      "require": "./dist/embeddings/index.js"
     },
     "./llms": {
-      "import": "./llms.mjs",
-      "require": "./llms.js"
+      "import": "./dist/llms/index.mjs",
+      "require": "./dist/llms/index.js"
     },
     "./prompts": {
-      "import": "./prompts.mjs",
-      "require": "./prompts.js"
+      "import": "./dist/prompts/index.mjs",
+      "require": "./dist/prompts/index.js"
     },
     "./vectorstores": {
-      "import": "./vectorstores.mjs",
-      "require": "./vectorstores.js"
+      "import": "./dist/vectorstores/index.mjs",
+      "require": "./dist/vectorstores/index.js"
     },
     "./text_splitter": {
-      "import": "./text_splitter.mjs",
-      "require": "./text_splitter.js"
+      "import": "./dist/text_splitter/index.mjs",
+      "require": "./dist/text_splitter/index.js"
     },
     "./memory": {
-      "import": "./memory.mjs",
-      "require": "./memory.js"
+      "import": "./dist/memory/index.mjs",
+      "require": "./dist/memory/index.js"
     },
     "./document": {
-      "import": "./document.mjs",
-      "require": "./document.js"
+      "import": "./dist/document/index.mjs",
+      "require": "./dist/document/index.js"
     },
     "./docstore": {
-      "import": "./docstore.mjs",
-      "require": "./docstore.js"
+      "import": "./dist/docstore/index.mjs",
+      "require": "./dist/docstore/index.js"
     },
     "./document_loaders": {
-      "import": "./document_loaders.mjs",
-      "require": "./document_loaders.js"
+      "import": "./dist/document_loaders/index.mjs",
+      "require": "./dist/document_loaders/index.js"
     }
   }
 }
