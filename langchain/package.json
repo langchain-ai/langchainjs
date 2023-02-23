@@ -2,56 +2,17 @@
   "name": "langchain",
   "version": "0.0.10",
   "description": "Typescript bindings for langchain",
-  "main": "./index.js",
+  "main": "./index",
   "types": "./index.d.ts",
   "files": [
-    "dist/",
-    "agents.js",
-    "agents.mjs",
-    "agents.d.ts",
-    "tools.js",
-    "tools.mjs",
-    "tools.d.ts",
-    "chains.js",
-    "chains.mjs",
-    "chains.d.ts",
-    "embeddings.js",
-    "embeddings.mjs",
-    "embeddings.d.ts",
-    "llms.js",
-    "llms.mjs",
-    "llms.d.ts",
-    "prompts.js",
-    "prompts.mjs",
-    "prompts.d.ts",
-    "vectorstores.js",
-    "vectorstores.mjs",
-    "vectorstores.d.ts",
-    "text_splitter.js",
-    "text_splitter.mjs",
-    "text_splitter.d.ts",
-    "memory.js",
-    "memory.mjs",
-    "memory.d.ts",
-    "document.js",
-    "document.mjs",
-    "document.d.ts",
-    "docstore.js",
-    "docstore.mjs",
-    "docstore.d.ts",
-    "document_loaders.js",
-    "document_loaders.mjs",
-    "document_loaders.d.ts",
-    "index.js",
-    "index.mjs",
-    "index.d.ts"
+    "dist"
   ],
   "repository": {
     "type": "git",
     "url": "git@github.com:hwchase17/langchainjs.git"
   },
   "scripts": {
-    "build": "yarn clean && tsc --declaration --outDir dist/ && node create-entrypoints.js",
+    "build": "tsup",
     "lint": "eslint .",
     "doc": "typedoc",
     "lint:fix": "yarn lint --fix",
@@ -97,6 +58,7 @@
     "srt-parser-2": "^1.2.2",
     "ts-jest": "^29.0.5",
     "ts-node": "^10.9.1",
+    "tsup": "^6.6.3",
     "typedoc": "^0.23.25",
     "typedoc-plugin-missing-exports": "^1.0.0",
     "typescript": "^4.9.5"
@@ -178,55 +140,55 @@
   "exports": {
     ".": {
       "import": "./index.mjs",
-      "default": "./index.js"
+      "require": "./index.js"
     },
     "./agents": {
       "import": "./agents.mjs",
-      "default": "./agents.js"
+      "require": "./agents.js"
     },
     "./tools": {
       "import": "./tools.mjs",
-      "default": "./tools.js"
+      "require": "./tools.js"
     },
     "./chains": {
       "import": "./chains.mjs",
-      "default": "./chains.js"
+      "require": "./chains.js"
     },
     "./embeddings": {
       "import": "./embeddings.mjs",
-      "default": "./embeddings.js"
+      "require": "./embeddings.js"
     },
     "./llms": {
       "import": "./llms.mjs",
-      "default": "./llms.js"
+      "require": "./llms.js"
     },
     "./prompts": {
       "import": "./prompts.mjs",
-      "default": "./prompts.js"
+      "require": "./prompts.js"
     },
     "./vectorstores": {
       "import": "./vectorstores.mjs",
-      "default": "./vectorstores.js"
+      "require": "./vectorstores.js"
     },
     "./text_splitter": {
       "import": "./text_splitter.mjs",
-      "default": "./text_splitter.js"
+      "require": "./text_splitter.js"
     },
     "./memory": {
       "import": "./memory.mjs",
-      "default": "./memory.js"
+      "require": "./memory.js"
     },
     "./document": {
       "import": "./document.mjs",
-      "default": "./document.js"
+      "require": "./document.js"
     },
     "./docstore": {
       "import": "./docstore.mjs",
-      "default": "./docstore.js"
+      "require": "./docstore.js"
     },
     "./document_loaders": {
       "import": "./document_loaders.mjs",
-      "default": "./document_loaders.js"
+      "require": "./document_loaders.js"
     }
   }
 }

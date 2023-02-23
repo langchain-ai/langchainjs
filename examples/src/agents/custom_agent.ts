@@ -1,6 +1,6 @@
 import { OpenAI } from "langchain/llms";
 import { ZeroShotAgent, AgentExecutor } from "langchain/agents";
-import { SerpAPI, Calculator } from "langchain/tools";
+import { SerpAPI, Calculator } from "langchain/agents/tools";
 import { LLMChain } from "langchain/chains";
 
 export const run = async () => {
