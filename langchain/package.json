@@ -38,7 +38,6 @@
     "@typescript-eslint/eslint-plugin": "^5.51.0",
     "@typescript-eslint/parser": "^5.51.0",
     "babel-jest": "^29.4.2",
-    "browser-or-node": "^2.1.1",
     "cheerio": "^1.0.0-rc.12",
     "cohere-ai": "^5.0.2",
     "dotenv": "^16.0.3",
@@ -58,7 +57,6 @@
     "srt-parser-2": "^1.2.2",
     "ts-jest": "^29.0.5",
     "ts-node": "^10.9.1",
-    "tsup": "^6.6.3",
     "typedoc": "^0.23.25",
     "typedoc-plugin-missing-exports": "^1.0.0",
     "typescript": "^4.9.5"
@@ -104,6 +102,7 @@
     }
   },
   "dependencies": {
+    "browser-or-node": "^2.1.1",
     "deepcopy": "^2.1.0",
     "eventsource-parser": "^0.1.0",
     "exponential-backoff": "^3.1.0",
@@ -111,6 +110,7 @@
     "gpt-3-encoder": "^1.1.4",
     "node-fetch": "2",
     "p-queue": "6",
+    "tsup": "^6.6.3",
     "uuid": "^9.0.0",
     "yaml": "^2.2.1"
   },
