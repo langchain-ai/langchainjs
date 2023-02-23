@@ -8,13 +8,17 @@
  */
 // @ts-check
 // Note: type annotations allow type checking and IDEs autocompletion
+// eslint-disable-next-line import/no-extraneous-dependencies
+const { ProvidePlugin } = require("webpack");
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   title: "Langchain",
   tagline: "The tagline of my site",
   favicon: "img/favicon.ico",
-
+  customFields: {
+    mendableAnonKey: "fc146644-1dab-43f0-902a-a26f9d653bd3",
+  },
   // Set the production url of your site here
   url: "https://hwchase17.github.io",
   // Set the /<baseUrl>/ pathname under which your site is served
@@ -40,6 +44,32 @@ const config = {
         },
       },
     ],
+    () => ({
+      name: "custom-webpack-config",
+      configureWebpack: () => ({
+        plugins: [
+          new ProvidePlugin({
+            process: require.resolve("process/browser"),
+          }),
+        ],
+        resolve: {
+          fallback: {
+            path: false,
+            url: false,
+          },
+        },
+        module: {
+          rules: [
+            {
+              test: /\.m?js/,
+              resolve: {
+                fullySpecified: false,
+              },
+            },
+          ],
+        },
+      }),
+    }),
   ],
 
   presets: [
