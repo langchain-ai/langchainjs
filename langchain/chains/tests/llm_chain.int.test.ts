@@ -5,7 +5,7 @@ import { LLMChain, ConversationChain } from "../llm_chain";
 import { loadChain } from "../load";
 
 test("Test OpenAI", async () => {
-  const model = new OpenAI({});
+  const model = new OpenAI({ modelName: "text-ada-001" });
   const prompt = new PromptTemplate({
     template: "Print {foo}",
     inputVariables: ["foo"],
@@ -16,7 +16,7 @@ test("Test OpenAI", async () => {
 });
 
 test("Test run method", async () => {
-  const model = new OpenAI({});
+  const model = new OpenAI({ modelName: "text-ada-001" });
   const prompt = new PromptTemplate({
     template: "Print {foo}",
     inputVariables: ["foo"],
@@ -27,7 +27,7 @@ test("Test run method", async () => {
 });
 
 test("Test apply", async () => {
-  const model = new OpenAI({});
+  const model = new OpenAI({ modelName: "text-ada-001" });
   const prompt = new PromptTemplate({
     template: "Print {foo}",
     inputVariables: ["foo"],
@@ -44,7 +44,7 @@ test("Load chain from hub", async () => {
 });
 
 test("Test ConversationChain", async () => {
-  const model = new OpenAI({});
+  const model = new OpenAI({ modelName: "text-ada-001" });
   const chain = new ConversationChain({ llm: model });
   const res = await chain.call({ input: "my favorite color" });
   console.log({ res });

@@ -7,7 +7,7 @@ import { Calculator } from "../tools/calculator";
 import { initializeAgentExecutor } from "../initialize";
 
 test("Run agent from hub", async () => {
-  const model = new OpenAI({ temperature: 0 });
+  const model = new OpenAI({ temperature: 0, modelName: "text-babbage-001" });
   const tools: Tool[] = [new SerpAPI(), new Calculator()];
   const agent = await loadAgent(
     "lc://agents/zero-shot-react-description/agent.json",
@@ -26,7 +26,7 @@ test("Run agent from hub", async () => {
 }, 30000);
 
 test("Run agent locally", async () => {
-  const model = new OpenAI({ temperature: 0 });
+  const model = new OpenAI({ temperature: 0, modelName: "text-babbage-001" });
   const tools = [new SerpAPI(), new Calculator()];
 
   const executor = await initializeAgentExecutor(

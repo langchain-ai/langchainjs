@@ -8,7 +8,7 @@ import { Document } from "../../document";
 import { loadQAChain } from "../question_answering/load";
 
 test("Test StuffDocumentsChain", async () => {
-  const model = new OpenAI({});
+  const model = new OpenAI({ modelName: "text-ada-001" });
   const prompt = new PromptTemplate({
     template: "Print {foo}",
     inputVariables: ["foo"],
@@ -28,7 +28,7 @@ test("Test StuffDocumentsChain", async () => {
 });
 
 test("Test MapReduceDocumentsChain with QA chain", async () => {
-  const model = new OpenAI({ temperature: 0 });
+  const model = new OpenAI({ temperature: 0, modelName: "text-ada-001" });
   const chain = loadQAChain(model, { type: "map_reduce" });
   const docs = [
     new Document({ pageContent: "harrison went to harvard" }),

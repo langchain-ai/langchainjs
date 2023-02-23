@@ -4,7 +4,7 @@ import { loadQAChain } from "../load";
 import { Document } from "../../../document";
 
 test("Test loadQAChain", async () => {
-  const model = new OpenAI({});
+  const model = new OpenAI({ modelName: "text-ada-001" });
   const chain = loadQAChain(model);
   const docs = [
     new Document({ pageContent: "foo" }),
@@ -16,7 +16,7 @@ test("Test loadQAChain", async () => {
 });
 
 test("Test loadQAChain map_reduce", async () => {
-  const model = new OpenAI({});
+  const model = new OpenAI({ modelName: "text-ada-001" });
   const chain = loadQAChain(model, { type: "map_reduce" });
   const docs = [
     new Document({ pageContent: "foo" }),
