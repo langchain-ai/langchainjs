@@ -15,4 +15,6 @@ yarn-error.log
 
 langchain/docs/
 
+.idea/
+
 .DS_Store
