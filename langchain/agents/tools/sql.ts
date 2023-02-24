@@ -1,8 +1,8 @@
-import sqlite3 from 'sqlite3';
-import {Tool, Toolkit} from "./base";
-import {OpenAI} from "../../llms";
-import {LLMChain} from "../../chains";
-import {PromptTemplate} from "../../prompts";
+import sqlite3 from "sqlite3";
+import { Tool, Toolkit } from "./base";
+import { OpenAI } from "../../llms";
+import { LLMChain } from "../../chains";
+import { PromptTemplate } from "../../prompts";
 
 export class SqlDatabase {
   private db: sqlite3.Database;
@@ -13,27 +13,33 @@ export class SqlDatabase {
 
   public getTables(): Promise<string[]> {
     return new Promise((resolve, reject) => {
-      this.db.all("SELECT name FROM sqlite_master WHERE type='table'", (err, rows) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(rows.map((row) => row.name));
+      this.db.all(
+        "SELECT name FROM sqlite_master WHERE type='table'",
+        (err, rows) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve(rows.map((row) => row.name));
+          }
         }
-      });
+      );
     });
   }
 
   public getCreateTableStatement(tableName: string): Promise<string> {
     return new Promise((resolve, reject) => {
-      this.db.get(`SELECT sql FROM sqlite_master WHERE type='table' AND name='${tableName}'`, (err, row) => {
-        if (err) {
-          reject(err);
-        } else if (!row) {
+      this.db.get(
+        `SELECT sql FROM sqlite_master WHERE type='table' AND name='${tableName}'`,
+        (err, row) => {
+          if (err) {
+            reject(err);
+          } else if (!row) {
             reject(new Error(`table ${tableName} does not exist`));
           } else {
             resolve(row.sql);
           }
-      });
+        }
+      );
     });
   }
 
@@ -104,46 +110,55 @@ export class InfoSqlTool extends Tool implements SqlTool {
   async call(input: string) {
     try {
       const tables = input.split(",").map((table) => table.trim());
-      const createTableStatements = await Promise.all(tables.map((table) => this.db.getCreateTableStatement(table)));
-      const sampleData = await Promise.all(tables.map((table) => this.db.getSampleData(table)));
-      return tables.map((_, index) => `${createTableStatements[index]}\n${sampleData[index].join("\n")}`).join("\n\n");
+      const createTableStatements = await Promise.all(
+        tables.map((table) => this.db.getCreateTableStatement(table))
+      );
+      const sampleData = await Promise.all(
+        tables.map((table) => this.db.getSampleData(table))
+      );
+      return tables
+        .map(
+          (_, index) =>
+            `${createTableStatements[index]}\n${sampleData[index].join("\n")}`
+        )
+        .join("\n\n");
     } catch (error) {
       return `${error}`;
     }
   }
 
-    description = `Input to this tool is a comma-separated list of tables, output is the schema and sample rows for those tables.
+  description = `Input to this tool is a comma-separated list of tables, output is the schema and sample rows for those tables.
     Be sure that the tables actually exist by calling list_tables_sql_db first!
     
     Example Input: "table1, table2, table3.`;
 }
 
 export class ListTablesSqlTool extends Tool implements SqlTool {
-    name = "list-tables-sql-db";
+  name = "list-tables-sql-db";
 
-    db: SqlDatabase;
+  db: SqlDatabase;
 
-    constructor(db: SqlDatabase) {
-        super();
-        this.db = db;
+  constructor(db: SqlDatabase) {
+    super();
+    this.db = db;
+  }
+
+  async call(_: string) {
+    try {
+      const tables = await this.db.getTables();
+      return tables.sort().join("\n");
+    } catch (error) {
+      return `${error}`;
     }
+  }
 
-    async call(_: string) {
-      try {
-        const tables = await this.db.getTables();
-        return tables.sort().join("\n");
-      } catch (error) {
-        return `${error}`;
-      }
-    }
-
-    description = `Input is an empty string, output is a comma separated list of tables in the database.`;
+  description = `Input is an empty string, output is a comma separated list of tables in the database.`;
 }
 
 export class QueryCheckerTool extends Tool {
-    name = "query-checker";
+  name = "query-checker";
 
-    template = `
+  template = `
     {query}
 Double check the sqlite query above for common mistakes, including:
 - Using NOT IN with NULL values
@@ -157,33 +172,32 @@ Double check the sqlite query above for common mistakes, including:
 
 If there are any of the above mistakes, rewrite the query. If there are no mistakes, just reproduce the original query.`;
 
-    llmChain: LLMChain;
+  llmChain: LLMChain;
 
-    constructor(llmChain?: LLMChain) {
-        super();
-        if (llmChain) {
-          this.llmChain = llmChain;
-        } else {
-          const model = new OpenAI({ temperature: 0 });
-          const prompt = new PromptTemplate({
-            template: this.template,
-            inputVariables: ["query"],
-          });
-            this.llmChain = new LLMChain({ llm: model, prompt });
-        }
+  constructor(llmChain?: LLMChain) {
+    super();
+    if (llmChain) {
+      this.llmChain = llmChain;
+    } else {
+      const model = new OpenAI({ temperature: 0 });
+      const prompt = new PromptTemplate({
+        template: this.template,
+        inputVariables: ["query"],
+      });
+      this.llmChain = new LLMChain({ llm: model, prompt });
     }
+  }
 
-    async call(input: string) {
-      return this.llmChain.predict({ query: input});
-    }
+  async call(input: string) {
+    return this.llmChain.predict({ query: input });
+  }
 
-    description = `
+  description = `
     Use this tool to double check if your query is correct before executing it.
     Always use this tool before executing a query with query_sql_db!`;
 }
 
 export class SqlToolkit extends Toolkit {
-
   tools: Tool[];
 
   db: SqlDatabase;
