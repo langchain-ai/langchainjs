@@ -9,9 +9,9 @@ import {
   SerializedAgentT,
 } from "../index";
 import { PromptTemplate } from "../../prompts";
-import {PREFIX, SUFFIX, formatInstructions, SQL_PREFIX, SQL_SUFFIX} from "./prompt";
+import {PREFIX, SUFFIX, formatInstructions, SQL_PREFIX, SQL_SUFFIX, JSON_PREFIX, JSON_SUFFIX} from "./prompt";
 import { deserializeHelper } from "../helpers";
-import {SqlToolkit} from "../tools";
+import {JsonToolkit, SqlToolkit} from "../tools";
 import {interpolateFString} from "../../prompts/template";
 
 const FINAL_ANSWER_ACTION = "Final Answer:";
@@ -129,6 +129,21 @@ export class ZeroShotAgent extends Agent {
     return new ZeroShotAgent({
       llmChain: chain,
       allowedTools: tools.map((t) => t.name),
+    });
+  }
+
+  static asJsonAgent(llm: BaseLLM, toolkit: JsonToolkit, args?: CreatePromptArgs) {
+    const {
+      prefix = JSON_PREFIX,
+        suffix = JSON_SUFFIX,
+        inputVariables = ["input", "agent_scratchpad"],
+    } = args ?? {};
+    const {tools} = toolkit;
+    const prompt = ZeroShotAgent.createPrompt(tools, {prefix, suffix, inputVariables});
+    const chain = new LLMChain({ prompt, llm });
+    return new ZeroShotAgent({
+        llmChain: chain,
+        allowedTools: tools.map((t) => t.name),
     });
   }
 
