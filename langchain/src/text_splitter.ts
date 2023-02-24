@@ -20,19 +20,19 @@ export abstract class TextSplitter implements TextSplitterParams {
     }
   }
 
-  abstract splitText(text: string): string[];
+  abstract splitText(text: string): Promise<string[]>;
 
-  createDocuments(
+  async createDocuments(
     texts: string[],
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     metadatas: Record<string, any>[] = []
-  ): Document[] {
+  ): Promise<Document[]> {
     const _metadatas =
       metadatas.length > 0 ? metadatas : new Array(texts.length).fill({});
     const documents = new Array<Document>();
     for (let i = 0; i < texts.length; i += 1) {
       const text = texts[i];
-      for (const chunk of this.splitText(text)) {
+      for (const chunk of await this.splitText(text)) {
         documents.push(
           new Document({ pageContent: chunk, metadata: _metadatas[i] })
         );
@@ -41,7 +41,7 @@ export abstract class TextSplitter implements TextSplitterParams {
     return documents;
   }
 
-  splitDocuments(documents: Document[]): Document[] {
+  async splitDocuments(documents: Document[]): Promise<Document[]> {
     const texts = documents.map((doc) => doc.pageContent);
     const metadatas = documents.map((doc) => doc.metadata);
     return this.createDocuments(texts, metadatas);
@@ -108,7 +108,7 @@ export class CharacterTextSplitter
     this.separator = fields?.separator ?? this.separator;
   }
 
-  public splitText(text: string): string[] {
+  async splitText(text: string): Promise<string[]> {
     // First we naively split the large input into a bunch of smaller ones.
     let splits: string[];
     if (this.separator) {
@@ -136,7 +136,7 @@ export class RecursiveCharacterTextSplitter
     this.separators = fields?.separators ?? this.separators;
   }
 
-  splitText(text: string): string[] {
+  async splitText(text: string): Promise<string[]> {
     const finalChunks: string[] = [];
 
     // Get appropriate separator to use
@@ -171,7 +171,7 @@ export class RecursiveCharacterTextSplitter
           finalChunks.push(...mergedText);
           goodSplits = [];
         }
-        const otherInfo = this.splitText(s);
+        const otherInfo = await this.splitText(s);
         finalChunks.push(...otherInfo);
       }
     }
@@ -218,21 +218,14 @@ export class TokenTextSplitter
     if (fields?.disallowedSpecial != null) {
       throw new Error("disallowedSpecial is not implemented yet.");
     }
-
-    try {
-      const tiktoken =
-        // eslint-disable-next-line @typescript-eslint/no-var-requires, global-require
-        require("@dqbd/tiktoken") as typeof import("@dqbd/tiktoken");
-      this.tokenizer = tiktoken.get_encoding(this.encodingName);
-    } catch (err) {
-      console.error(err);
-      throw new Error(
-        "Please install @dqbd/tiktoken as a dependency with, e.g. `npm install -S @dqbd/tiktoken`"
-      );
-    }
   }
 
-  splitText(text: string): string[] {
+  async splitText(text: string): Promise<string[]> {
+    if (!this.tokenizer) {
+      const tiktoken = await TokenTextSplitter.imports();
+      this.tokenizer = tiktoken.get_encoding(this.encodingName);
+    }
+
     const splits: string[] = [];
 
     const input_ids = this.tokenizer.encode(text);
@@ -252,5 +245,16 @@ export class TokenTextSplitter
     }
 
     return splits;
+  }
+
+  static async imports(): Promise<typeof tiktoken> {
+    try {
+      return await import("@dqbd/tiktoken");
+    } catch (err) {
+      console.error(err);
+      throw new Error(
+        "Please install @dqbd/tiktoken as a dependency with, e.g. `npm install -S @dqbd/tiktoken`"
+      );
+    }
   }
 }

@@ -6,62 +6,62 @@ import {
   TokenTextSplitter,
 } from "../text_splitter.js";
 
-test("Test splitting by character count.", () => {
+test("Test splitting by character count.", async () => {
   const text = "foo bar baz 123";
   const splitter = new CharacterTextSplitter({
     separator: " ",
     chunkSize: 7,
     chunkOverlap: 3,
   });
-  const output = splitter.splitText(text);
+  const output = await splitter.splitText(text);
   const expectedOutput = ["foo bar", "bar baz", "baz 123"];
   expect(output).toEqual(expectedOutput);
 });
 
-test("Test splitting by character count doesn't create empty documents.", () => {
+test("Test splitting by character count doesn't create empty documents.", async () => {
   const text = "foo  bar";
   const splitter = new CharacterTextSplitter({
     separator: " ",
     chunkSize: 2,
     chunkOverlap: 0,
   });
-  const output = splitter.splitText(text);
+  const output = await splitter.splitText(text);
   const expectedOutput = ["foo", "bar"];
   expect(output).toEqual(expectedOutput);
 });
 
-test("Test splitting by character count on long words.", () => {
+test("Test splitting by character count on long words.", async () => {
   const text = "foo bar baz a a";
   const splitter = new CharacterTextSplitter({
     separator: " ",
     chunkSize: 3,
     chunkOverlap: 1,
   });
-  const output = splitter.splitText(text);
+  const output = await splitter.splitText(text);
   const expectedOutput = ["foo", "bar", "baz", "a a"];
   expect(output).toEqual(expectedOutput);
 });
 
-test("Test splitting by character count when shorter words are first.", () => {
+test("Test splitting by character count when shorter words are first.", async () => {
   const text = "a a foo bar baz";
   const splitter = new CharacterTextSplitter({
     separator: " ",
     chunkSize: 3,
     chunkOverlap: 1,
   });
-  const output = splitter.splitText(text);
+  const output = await splitter.splitText(text);
   const expectedOutput = ["a a", "foo", "bar", "baz"];
   expect(output).toEqual(expectedOutput);
 });
 
-test("Test splitting by characters when splits not found easily.", () => {
+test("Test splitting by characters when splits not found easily.", async () => {
   const text = "foo bar baz 123";
   const splitter = new CharacterTextSplitter({
     separator: " ",
     chunkSize: 1,
     chunkOverlap: 0,
   });
-  const output = splitter.splitText(text);
+  const output = await splitter.splitText(text);
   const expectedOutput = ["foo", "bar", "baz", "123"];
   expect(output).toEqual(expectedOutput);
 });
@@ -73,14 +73,14 @@ test("Test invalid arguments.", () => {
   }).toThrow();
 });
 
-test("Test create documents method.", () => {
+test("Test create documents method.", async () => {
   const texts = ["foo bar", "baz"];
   const splitter = new CharacterTextSplitter({
     separator: " ",
     chunkSize: 3,
     chunkOverlap: 0,
   });
-  const docs = splitter.createDocuments(texts);
+  const docs = await splitter.createDocuments(texts);
   const expectedDocs = [
     new Document({ pageContent: "foo" }),
     new Document({ pageContent: "bar" }),
@@ -89,14 +89,14 @@ test("Test create documents method.", () => {
   expect(docs).toEqual(expectedDocs);
 });
 
-test("Test create documents with metadata method.", () => {
+test("Test create documents with metadata method.", async () => {
   const texts = ["foo bar", "baz"];
   const splitter = new CharacterTextSplitter({
     separator: " ",
     chunkSize: 3,
     chunkOverlap: 0,
   });
-  const docs = splitter.createDocuments(texts, [
+  const docs = await splitter.createDocuments(texts, [
     { source: "1" },
     { source: "2" },
   ]);
@@ -108,7 +108,7 @@ test("Test create documents with metadata method.", () => {
   expect(docs).toEqual(expectedDocs);
 });
 
-test("Test iterative text splitter.", () => {
+test("Test iterative text splitter.", async () => {
   const text = `Hi.\n\nI'm Harrison.\n\nHow? Are? You?\nOkay then f f f f.
 This is a weird text to write, but gotta test the splittingggg some how.\n\n
 Bye!\n\n-H.`;
@@ -116,7 +116,7 @@ Bye!\n\n-H.`;
     chunkSize: 10,
     chunkOverlap: 1,
   });
-  const output = splitter.splitText(text);
+  const output = await splitter.splitText(text);
   const expectedOutput = [
     "Hi.",
     "I'm",
@@ -139,14 +139,14 @@ Bye!\n\n-H.`;
   expect(output).toEqual(expectedOutput);
 });
 
-test("Token text splitter", () => {
+test("Token text splitter", async () => {
   const text = "foo bar baz a a";
   const splitter = new TokenTextSplitter({
     encodingName: "r50k_base",
     chunkSize: 3,
     chunkOverlap: 0,
   });
-  const output = splitter.splitText(text);
+  const output = await splitter.splitText(text);
   const expectedOutput = ["foo bar b", "az a a"];
 
   expect(output).toEqual(expectedOutput);
