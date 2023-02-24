@@ -4,8 +4,9 @@
   "private": true,
   "description": "Tests for the things exported by the langchain package",
   "main": "./index.js",
+  "type": "module",
   "scripts": {
-    "test": "node ./index.mjs && tsc --noEmit index.ts",
+    "test": "node ./index.mjs && tsc",
     "format": "prettier --write \"**/*.ts\"",
     "format:diff": "prettier --list-different \"**/*.ts\"",
     "ci": "yarn format:diff && yarn test"
