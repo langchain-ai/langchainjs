@@ -15,11 +15,11 @@ export default function SearchBarWrapper() {
     siteConfig: { customFields },
   } = useDocusaurusContext();
   return (
-    <div>
+    <div className="mendable-search">
       <MendableSearchBar
         anon_key={customFields.mendableAnonKey}
         style={{ accentColor: "#4F956C", darkMode: false }}
-        placeholder="Search.."
+        placeholder="Search..."
       />
     </div>
   );
