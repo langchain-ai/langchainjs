@@ -59,6 +59,8 @@ export class HNSWLib extends SaveableVectorStore {
         this.args.numDimensions = vectors[0].length;
       }
       this.index = await HNSWLib.getHierarchicalNSW(this.args);
+    }
+    if (!this.index.getCurrentCount()) {
       this.index.initIndex(vectors.length);
     }
   }
