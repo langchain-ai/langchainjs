@@ -3,27 +3,31 @@ import type SRTParserT from "srt-parser-2";
 import { Document } from "../document.js";
 import { BaseDocumentLoader } from "./base.js";
 
-let readFile: typeof ReadFileT | null = null;
-let SRTParser2: typeof SRTParserT | null = null;
-
-try {
-  // eslint-disable-next-line global-require,import/no-extraneous-dependencies
-  ({ readFile } = require("fs/promises"));
-  // eslint-disable-next-line global-require,import/no-extraneous-dependencies
-  ({ SRTParser2 } = require("srt-parser-2"));
-} catch {
-  // ignore error, will be throw in constructor
-}
-
 export class SRTLoader extends BaseDocumentLoader {
   constructor(public filePath: string) {
     super();
 
-    /**
-     * Throw error at construction time
-     * if fs/promises is not installed.
-     */
-    if (readFile === null) {
+    this.filePath = filePath;
+  }
+
+  public async load(): Promise<Document[]> {
+    const { readFile, SRTParser2 } = await SRTLoader.imports();
+    const file = await readFile(this.filePath, "utf8");
+    const parser = new SRTParser2();
+    const srts = parser.fromSrt(file);
+    const text = srts.map((srt) => srt.text).join(" ");
+    const metadata = { source: this.filePath };
+    return [new Document({ pageContent: text, metadata })];
+  }
+
+  static async imports(): Promise<{
+    readFile: typeof ReadFileT;
+    SRTParser2: typeof SRTParserT.default;
+  }> {
+    let readFile: typeof ReadFileT | null = null;
+    try {
+      readFile = (await import("fs/promises")).readFile;
+    } catch (e) {
       const {
         isBrowser,
         isNode,
@@ -51,33 +55,14 @@ export class SRTLoader extends BaseDocumentLoader {
       );
     }
 
-    /**
-     * Throw error at construction time
-     * if srt-parser-2 is not installed.
-     */
-    if (SRTParser2 === null) {
+    let SRTParser2: typeof SRTParserT.default | null = null;
+    try {
+      SRTParser2 = (await import("srt-parser-2")).default.default;
+    } catch (e) {
       throw new Error(
         "Please install srt-parser-2 as a dependency with, e.g. `yarn add srt-parser-2`"
       );
     }
-  }
-
-  public async load(): Promise<Document[]> {
-    if (readFile === null) {
-      throw new Error("Failed to load fs/promises.");
-    }
-
-    if (SRTParser2 === null) {
-      throw new Error(
-        "Please install srt-parser-2 as a dependency with, e.g. `yarn add srt-parser-2`"
-      );
-    }
-
-    const file = await readFile(this.filePath, "utf8");
-    const parser = new SRTParser2();
-    const srts = parser.fromSrt(file);
-    const text = srts.map((srt) => srt.text).join(" ");
-    const metadata = { source: this.filePath };
-    return [new Document({ pageContent: text, metadata })];
+    return { readFile, SRTParser2 };
   }
 }
