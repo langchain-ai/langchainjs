@@ -84,4 +84,15 @@ export class JsonGetValueTool extends Tool {
     async call(input: string) {
         return this.jsonSpec.getValue(input);
     }
+
+    description: string;
+}
+
+export class JsonToolkit extends Toolkit {
+    tools: Tool[];
+
+    constructor(public jsonSpec: JsonSpec) {
+        super();
+        this.tools = [new JsonListKeysTool(jsonSpec), new JsonGetValueTool(jsonSpec)];
+    }
 }
