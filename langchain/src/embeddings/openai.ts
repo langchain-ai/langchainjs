@@ -4,19 +4,9 @@ import type {
   CreateEmbeddingRequest,
 } from "openai";
 import { backOff } from "exponential-backoff";
-import fetchAdapter from "@vespaiach/axios-fetch-adapter";
+import type fetchAdapterT from "@vespaiach/axios-fetch-adapter";
 import { chunkArray } from "../util/index.js";
 import { Embeddings } from "./base.js";
-
-let Configuration: typeof ConfigurationT | null = null;
-let OpenAIApi: typeof OpenAIApiT | null = null;
-
-try {
-  // eslint-disable-next-line global-require,import/no-extraneous-dependencies
-  ({ Configuration, OpenAIApi } = require("openai"));
-} catch {
-  // ignore error
-}
 
 interface ModelParams {
   modelName: string;
@@ -29,6 +19,8 @@ export class OpenAIEmbeddings extends Embeddings implements ModelParams {
 
   maxRetries = 6;
 
+  private apiKey: string;
+
   private client: OpenAIApiT;
 
   constructor(
@@ -40,19 +32,16 @@ export class OpenAIEmbeddings extends Embeddings implements ModelParams {
     }
   ) {
     super();
-    if (Configuration === null || OpenAIApi === null) {
-      throw new Error(
-        "Please install openai as a dependency with, e.g. `npm install -S openai`"
-      );
+
+    const apiKey = fields?.openAIApiKey ?? process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+      throw new Error("OpenAI API key not found");
     }
 
     this.modelName = fields?.modelName ?? this.modelName;
     this.batchSize = fields?.batchSize ?? this.batchSize;
-    const clientConfig = new Configuration({
-      apiKey: fields?.openAIApiKey ?? process.env.OPENAI_API_KEY,
-      baseOptions: { adapter: fetchAdapter },
-    });
-    this.client = new OpenAIApi(clientConfig);
+    this.apiKey = apiKey;
+    this.maxRetries = fields?.maxRetries ?? this.maxRetries;
   }
 
   async embedDocuments(texts: string[]): Promise<number[][]> {
@@ -82,12 +71,40 @@ export class OpenAIEmbeddings extends Embeddings implements ModelParams {
     return data.data[0].embedding;
   }
 
-  private embeddingWithRetry(request: CreateEmbeddingRequest) {
+  private async embeddingWithRetry(request: CreateEmbeddingRequest) {
+    if (!this.client) {
+      const { Configuration, OpenAIApi, fetchAdapter } =
+        await OpenAIEmbeddings.imports();
+      const clientConfig = new Configuration({
+        apiKey: this.apiKey,
+        baseOptions: { adapter: fetchAdapter },
+      });
+      this.client = new OpenAIApi(clientConfig);
+    }
     const makeCompletionRequest = () => this.client.createEmbedding(request);
     return backOff(makeCompletionRequest, {
       startingDelay: 4,
       maxDelay: 10,
       numOfAttempts: this.maxRetries,
     });
+  }
+
+  static async imports(): Promise<{
+    Configuration: typeof ConfigurationT;
+    OpenAIApi: typeof OpenAIApiT;
+    fetchAdapter: typeof fetchAdapterT.default;
+  }> {
+    try {
+      const { Configuration, OpenAIApi } = await import("openai");
+      const {
+        default: { default: fetchAdapter },
+      } = await import("@vespaiach/axios-fetch-adapter");
+      return { Configuration, OpenAIApi, fetchAdapter };
+    } catch (err) {
+      console.error(err);
+      throw new Error(
+        "Please install openai as a dependency with, e.g. `npm install -S openai`"
+      );
+    }
   }
 }

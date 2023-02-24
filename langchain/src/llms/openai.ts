@@ -7,22 +7,12 @@ import type {
   ConfigurationParameters,
 } from "openai";
 import type { IncomingMessage } from "http";
-import fetchAdapter from "@vespaiach/axios-fetch-adapter";
+import type fetchAdapterT from "@vespaiach/axios-fetch-adapter";
 import { createParser } from "eventsource-parser";
 import { backOff } from "exponential-backoff";
 import { chunkArray } from "../util/index.js";
 import { BaseLLM } from "./base.js";
 import { LLMResult, LLMCallbackManager } from "./index.js";
-
-let Configuration: typeof ConfigurationT | null = null;
-let OpenAIApi: typeof OpenAIApiT | null = null;
-
-try {
-  // eslint-disable-next-line global-require,import/no-extraneous-dependencies
-  ({ Configuration, OpenAIApi } = require("openai"));
-} catch {
-  // ignore error
-}
 
 interface ModelParams {
   /** Sampling temperature to use */
@@ -153,10 +143,10 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
       fields?.concurrency,
       fields?.cache
     );
-    if (Configuration === null || OpenAIApi === null) {
-      throw new Error(
-        "Please install openai as a dependency with, e.g. `npm i openai`"
-      );
+
+    const apiKey = fields?.openAIApiKey ?? process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+      throw new Error("OpenAI API key not found");
     }
 
     this.modelName = fields?.modelName ?? this.modelName;
@@ -183,13 +173,11 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
     if (this.streaming && this.bestOf > 1) {
       throw new Error("Cannot stream results when bestOf > 1");
     }
+
     this.clientConfig = {
       apiKey: fields?.openAIApiKey ?? process.env.OPENAI_API_KEY,
-      baseOptions: { adapter: fetchAdapter },
       ...configuration,
     };
-    const clientConfig = new Configuration(this.clientConfig);
-    this.client = new OpenAIApi(clientConfig);
   }
 
   /**
@@ -339,7 +327,12 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
   }
 
   /** @ignore */
-  completionWithRetry(request: CreateCompletionRequest) {
+  async completionWithRetry(request: CreateCompletionRequest) {
+    if (!this.client) {
+      const { Configuration, OpenAIApi } = await OpenAI.imports();
+      const clientConfig = new Configuration(this.clientConfig);
+      this.client = new OpenAIApi(clientConfig);
+    }
     const makeCompletionRequest = async () =>
       this.client.createCompletion(
         request,
@@ -355,6 +348,25 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
 
   _llmType() {
     return "openai";
+  }
+
+  static async imports(): Promise<{
+    Configuration: typeof ConfigurationT;
+    OpenAIApi: typeof OpenAIApiT;
+    fetchAdapter: typeof fetchAdapterT.default;
+  }> {
+    try {
+      const { Configuration, OpenAIApi } = await import("openai");
+      const {
+        default: { default: fetchAdapter },
+      } = await import("@vespaiach/axios-fetch-adapter");
+      return { Configuration, OpenAIApi, fetchAdapter };
+    } catch (err) {
+      console.error(err);
+      throw new Error(
+        "Please install openai as a dependency with, e.g. `npm install -S openai`"
+      );
+    }
   }
 }
 
