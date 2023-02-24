@@ -134,7 +134,7 @@ export class ZeroShotAgent extends Agent {
 
   static asJsonAgent(llm: BaseLLM, toolkit: JsonToolkit, args?: CreatePromptArgs) {
     const {
-      prefix = JSON_PREFIX,
+        prefix = JSON_PREFIX,
         suffix = JSON_SUFFIX,
         inputVariables = ["input", "agent_scratchpad"],
     } = args ?? {};
