@@ -1,10 +1,10 @@
 import { BaseOutputParser } from "./parser.js";
-import { PromptTemplate, FewShotPromptTemplate } from "./index.js";
-
-const templateClasses = [PromptTemplate, FewShotPromptTemplate];
+import type { PromptTemplate, FewShotPromptTemplate } from "./index.js";
 
 export type SerializedBasePromptTemplate = ReturnType<
-  InstanceType<(typeof templateClasses)[number]>["serialize"]
+  InstanceType<
+    typeof PromptTemplate | typeof FewShotPromptTemplate
+  >["serialize"]
 >;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -80,12 +80,18 @@ export abstract class BasePromptTemplate implements BasePromptTemplateInput {
     data: SerializedBasePromptTemplate
   ): Promise<BasePromptTemplate> {
     switch (data._type) {
-      case "prompt":
+      case "prompt": {
+        const { PromptTemplate } = await import("./prompt.js");
         return PromptTemplate.deserialize(data);
-      case undefined:
+      }
+      case undefined: {
+        const { PromptTemplate } = await import("./prompt.js");
         return PromptTemplate.deserialize({ ...data, _type: "prompt" });
-      case "few_shot":
+      }
+      case "few_shot": {
+        const { FewShotPromptTemplate } = await import("./few_shot.js");
         return FewShotPromptTemplate.deserialize(data);
+      }
       default:
         throw new Error(
           `Invalid prompt type in config: ${
