@@ -153,7 +153,7 @@ export class PromptTemplate
       inputVariables: data.input_variables,
       outputParser:
         data.output_parser && BaseOutputParser.deserialize(data.output_parser),
-      template: resolveTemplateFromFile("template", data),
+      template: await resolveTemplateFromFile("template", data),
       templateFormat: data.template_format,
     });
     return res;

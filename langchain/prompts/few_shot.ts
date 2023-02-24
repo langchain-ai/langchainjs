@@ -182,7 +182,7 @@ export class FewShotPromptTemplate
   static async deserialize(
     data: SerializedFewShotTemplate
   ): Promise<FewShotPromptTemplate> {
-    const serializedPrompt = resolveConfigFromFile<
+    const serializedPrompt = await resolveConfigFromFile<
       "example_prompt",
       SerializedPromptTemplate
     >("example_prompt", data);
@@ -191,7 +191,11 @@ export class FewShotPromptTemplate
     let examples: Example[];
 
     if (typeof data.examples === "string") {
-      examples = parseFileConfig(data.examples, [".json", ".yml", ".yaml"]);
+      examples = await parseFileConfig(data.examples, ".json", [
+        ".json",
+        ".yml",
+        ".yaml",
+      ]);
     } else if (Array.isArray(data.examples)) {
       examples = data.examples;
     } else {
@@ -207,8 +211,8 @@ export class FewShotPromptTemplate
       examplePrompt,
       examples,
       exampleSeparator: data.example_separator,
-      prefix: resolveTemplateFromFile("prefix", data),
-      suffix: resolveTemplateFromFile("suffix", data),
+      prefix: await resolveTemplateFromFile("prefix", data),
+      suffix: await resolveTemplateFromFile("suffix", data),
       templateFormat: data.template_format,
     });
   }

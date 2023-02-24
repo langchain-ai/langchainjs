@@ -1,12 +1,13 @@
 import { BaseChain } from ".";
 import { loadFromHub } from "../util/hub";
-import { parseFileConfig } from "../util";
+import { FileLoader, parseFileConfig, LoadValues, loadFromFile } from "../util";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type LoadValues = Record<string, any>;
-
-const loadChainFromFile = async (file: string, values: LoadValues = {}) => {
-  const serialized = parseFileConfig(file);
+const loadChainFromFile: FileLoader<BaseChain> = async (
+  file: string,
+  path: string,
+  values: LoadValues = {}
+) => {
+  const serialized = parseFileConfig(file, path);
   return BaseChain.deserialize(serialized, values);
 };
 
@@ -34,7 +35,7 @@ export const loadChain = async (
 ): Promise<BaseChain> => {
   const hubResult = await loadFromHub(
     uri,
-    (uri) => loadChainFromFile(uri, values),
+    loadChainFromFile,
     "chains",
     new Set(["json", "yaml"]),
     values
@@ -43,5 +44,5 @@ export const loadChain = async (
     return hubResult;
   }
 
-  return loadChainFromFile(uri, values);
+  return loadFromFile(uri, loadChainFromFile, values);
 };

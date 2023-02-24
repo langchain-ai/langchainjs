@@ -79,7 +79,7 @@ export class StuffDocumentsChain
   }
 
   static async deserialize(data: SerializedStuffDocumentsChain) {
-    const SerializedLLMChain = resolveConfigFromFile<
+    const SerializedLLMChain = await resolveConfigFromFile<
       "llm_chain",
       SerializedLLMChain
     >("llm_chain", data);
@@ -198,12 +198,12 @@ export class MapReduceDocumentsChain
   }
 
   static async deserialize(data: SerializedMapReduceDocumentsChain) {
-    const SerializedLLMChain = resolveConfigFromFile<
+    const SerializedLLMChain = await resolveConfigFromFile<
       "llm_chain",
       SerializedLLMChain
     >("llm_chain", data);
 
-    const SerializedCombineDocumentChain = resolveConfigFromFile<
+    const SerializedCombineDocumentChain = await resolveConfigFromFile<
       "combine_document_chain",
       SerializedBaseChain
     >("combine_document_chain", data);

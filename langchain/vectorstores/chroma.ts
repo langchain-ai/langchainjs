@@ -98,20 +98,26 @@ export class Chroma extends VectorStore {
       );
     }
     const collection = await this.index.getCollection(this.collectionName);
-    const result = await collection.query(query, k);
-    const { ids, distances, documents, metadatas } = result;
 
-    // ids comes back as a list of lists, so we need to flatten it
-    const takeIds = ids[0];
+    // similaritySearchVectorWithScore supports one query vector at a time
+    // chroma supports multiple query vectors at a time
+    const result = await collection.query(query, k);
+
+    const { ids, distances, documents, metadatas } = result;
+    // get the result data from the first and only query vector
+    const [firstIds] = ids;
+    const [firstDistances] = distances;
+    const [firstDocuments] = documents;
+    const [firstMetadatas] = metadatas;
 
     const results: [Document, number][] = [];
-    for (let i = 0; i < takeIds.length; i += 1) {
+    for (let i = 0; i < firstIds.length; i += 1) {
       results.push([
         new Document({
-          pageContent: documents[i],
-          metadata: metadatas[i],
+          pageContent: firstDocuments[i],
+          metadata: firstMetadatas[i],
         }),
-        distances[i],
+        firstDistances[i],
       ]);
     }
     return results;

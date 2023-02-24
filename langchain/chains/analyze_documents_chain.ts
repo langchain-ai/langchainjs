@@ -82,7 +82,7 @@ export class AnalyzeDocumentChain
     }
     const { text_splitter } = values;
 
-    const SerializedCombineDocumentChain = resolveConfigFromFile<
+    const SerializedCombineDocumentChain = await resolveConfigFromFile<
       "combine_document_chain",
       SerializedBaseChain
     >("combine_document_chain", data);

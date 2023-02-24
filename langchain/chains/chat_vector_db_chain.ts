@@ -138,11 +138,11 @@ export class ChatVectorDBQAChain
       );
     }
     const { vectorstore } = values;
-    const serializedCombineDocumentsChain = resolveConfigFromFile<
+    const serializedCombineDocumentsChain = await resolveConfigFromFile<
       "combine_documents_chain",
       SerializedBaseChain
     >("combine_documents_chain", data);
-    const serializedQuestionGeneratorChain = resolveConfigFromFile<
+    const serializedQuestionGeneratorChain = await resolveConfigFromFile<
       "question_generator",
       SerializedLLMChain
     >("question_generator", data);
