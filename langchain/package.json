@@ -47,6 +47,7 @@
     "clean": "rm -rf dist/ && node create-entrypoints.js clean",
     "prepack": "yarn build",
     "test": "yarn clean && NODE_OPTIONS=--experimental-vm-modules jest --testPathIgnorePatterns=\\.int\\.test.ts",
+    "test:node16": "yarn clean && NODE_OPTIONS='--experimental-vm-modules --experimental-fetch' jest --testPathIgnorePatterns=\\.int\\.test.ts",
     "test:integration": "yarn clean && NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern=\\.int\\.test.ts --testTimeout 20000",
     "prepare": "husky install",
     "format": "prettier --write \"src\"",
