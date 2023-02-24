@@ -166,43 +166,56 @@
   ],
   "exports": {
     ".": {
-      "import": "./index.js"
+      "import": "./index.js",
+      "types": "./index.d.ts"
     },
     "./agents": {
-      "import": "./agents.js"
+      "import": "./agents.js",
+      "types": "./agents.d.ts"
     },
     "./tools": {
-      "import": "./tools.js"
+      "import": "./tools.js",
+      "types": "./tools.d.ts"
     },
     "./chains": {
-      "import": "./chains.js"
+      "import": "./chains.js",
+      "types": "./chains.d.ts"
     },
     "./embeddings": {
-      "import": "./embeddings.js"
+      "import": "./embeddings.js",
+      "types": "./embeddings.d.ts"
     },
     "./llms": {
-      "import": "./llms.js"
+      "import": "./llms.js",
+      "types": "./llms.d.ts"
     },
     "./prompts": {
-      "import": "./prompts.js"
+      "import": "./prompts.js",
+      "types": "./prompts.d.ts"
     },
     "./vectorstores": {
-      "import": "./vectorstores.js"
+      "import": "./vectorstores.js",
+      "types": "./vectorstores.d.ts"
     },
     "./text_splitter": {
-      "import": "./text_splitter.js"
+      "import": "./text_splitter.js",
+      "types": "./text_splitter.d.ts"
     },
     "./memory": {
-      "import": "./memory.js"
+      "import": "./memory.js",
+      "types": "./memory.d.ts"
     },
     "./document": {
-      "import": "./document.js"
+      "import": "./document.js",
+      "types": "./document.d.ts"
     },
     "./docstore": {
-      "import": "./docstore.js"
+      "import": "./docstore.js",
+      "types": "./docstore.d.ts"
     },
     "./document_loaders": {
-      "import": "./document_loaders.js"
+      "import": "./document_loaders.js",
+      "types": "./document_loaders.d.ts"
     }
   }
 }
