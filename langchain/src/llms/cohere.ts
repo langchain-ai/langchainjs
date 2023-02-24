@@ -21,6 +21,8 @@ export class Cohere extends LLM implements CohereInput {
 
   model: string;
 
+  apiKey: string;
+
   constructor(
     fields?: Partial<CohereInput> & {
       callbackManager?: LLMCallbackManager;
@@ -36,6 +38,13 @@ export class Cohere extends LLM implements CohereInput {
       fields?.cache
     );
 
+    const apiKey = process.env.COHERE_API_KEY;
+
+    if (!apiKey) {
+      throw new Error("Please set the COHERE_API_KEY environment variable");
+    }
+
+    this.apiKey = apiKey;
     this.maxTokens = fields?.maxTokens ?? this.maxTokens;
     this.temperature = fields?.temperature ?? this.temperature;
     this.model = fields?.model ?? this.model;
@@ -46,10 +55,9 @@ export class Cohere extends LLM implements CohereInput {
   }
 
   async _call(prompt: string, _stop?: string[]): Promise<string> {
-    // eslint-disable-next-line global-require,import/no-extraneous-dependencies,@typescript-eslint/no-var-requires
-    const cohere = require("cohere-ai");
+    const { cohere } = await Cohere.imports();
 
-    cohere.init(process.env.COHERE_API_KEY);
+    cohere.init(this.apiKey);
 
     // Hit the `generate` endpoint on the `large` model
     const generateResponse = await cohere.generate({
@@ -63,6 +71,19 @@ export class Cohere extends LLM implements CohereInput {
     } catch {
       console.log(generateResponse);
       throw new Error("Could not parse response.");
+    }
+  }
+
+  static async imports(): Promise<{
+    cohere: typeof import("cohere-ai");
+  }> {
+    try {
+      const { default: cohere } = await import("cohere-ai");
+      return { cohere };
+    } catch (e) {
+      throw new Error(
+        "Please install cohere-ai as a dependency with, e.g. `yarn add cohere-ai`"
+      );
     }
   }
 }
