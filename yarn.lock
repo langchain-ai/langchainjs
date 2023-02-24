@@ -3621,15 +3621,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@vespaiach/axios-fetch-adapter@npm:^0.3.1":
-  version: 0.3.1
-  resolution: "@vespaiach/axios-fetch-adapter@npm:0.3.1"
-  peerDependencies:
-    axios: ">=0.26.0"
-  checksum: 976a7f920ec2eddeb08fcced2980139f046f72df767e693440a2b727afef65e5664e24a1e8d4c9cf053db717a6fe2395f7e53ac56c3fb1cc6d2d6a90203cb1cf
-  languageName: node
-  linkType: hard
-
 "@webassemblyjs/ast@npm:1.11.1":
   version: 1.11.1
   resolution: "@webassemblyjs/ast@npm:1.11.1"
@@ -9456,7 +9447,6 @@ __metadata:
     "@types/uuid": ^9
     "@typescript-eslint/eslint-plugin": ^5.51.0
     "@typescript-eslint/parser": ^5.51.0
-    "@vespaiach/axios-fetch-adapter": ^0.3.1
     babel-jest: ^29.4.2
     browser-or-node: ^2.1.1
     cheerio: ^1.0.0-rc.12

@@ -4,7 +4,7 @@ import type {
   CreateEmbeddingRequest,
 } from "openai";
 import { backOff } from "exponential-backoff";
-import type fetchAdapterT from "@vespaiach/axios-fetch-adapter";
+import type fetchAdapterT from "../util/axios-fetch-adapter.js";
 import { chunkArray } from "../util/index.js";
 import { Embeddings } from "./base.js";
 
@@ -92,13 +92,13 @@ export class OpenAIEmbeddings extends Embeddings implements ModelParams {
   static async imports(): Promise<{
     Configuration: typeof ConfigurationT;
     OpenAIApi: typeof OpenAIApiT;
-    fetchAdapter: typeof fetchAdapterT.default;
+    fetchAdapter: typeof fetchAdapterT;
   }> {
     try {
       const { Configuration, OpenAIApi } = await import("openai");
-      const {
-        default: { default: fetchAdapter },
-      } = await import("@vespaiach/axios-fetch-adapter");
+      const { default: fetchAdapter } = await import(
+        "../util/axios-fetch-adapter.js"
+      );
       return { Configuration, OpenAIApi, fetchAdapter };
     } catch (err) {
       console.error(err);

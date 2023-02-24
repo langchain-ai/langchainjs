@@ -7,9 +7,9 @@ import type {
   ConfigurationParameters,
 } from "openai";
 import type { IncomingMessage } from "http";
-import type fetchAdapterT from "@vespaiach/axios-fetch-adapter";
 import { createParser } from "eventsource-parser";
 import { backOff } from "exponential-backoff";
+import type fetchAdapterT from "../util/axios-fetch-adapter.js";
 import { chunkArray } from "../util/index.js";
 import { BaseLLM } from "./base.js";
 import { LLMResult, LLMCallbackManager } from "./index.js";
@@ -329,8 +329,11 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
   /** @ignore */
   async completionWithRetry(request: CreateCompletionRequest) {
     if (!this.client) {
-      const { Configuration, OpenAIApi } = await OpenAI.imports();
-      const clientConfig = new Configuration(this.clientConfig);
+      const { Configuration, OpenAIApi, fetchAdapter } = await OpenAI.imports();
+      const clientConfig = new Configuration({
+        ...this.clientConfig,
+        baseOptions: { adapter: fetchAdapter },
+      });
       this.client = new OpenAIApi(clientConfig);
     }
     const makeCompletionRequest = async () =>
@@ -353,13 +356,13 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
   static async imports(): Promise<{
     Configuration: typeof ConfigurationT;
     OpenAIApi: typeof OpenAIApiT;
-    fetchAdapter: typeof fetchAdapterT.default;
+    fetchAdapter: typeof fetchAdapterT;
   }> {
     try {
       const { Configuration, OpenAIApi } = await import("openai");
-      const {
-        default: { default: fetchAdapter },
-      } = await import("@vespaiach/axios-fetch-adapter");
+      const { default: fetchAdapter } = await import(
+        "../util/axios-fetch-adapter.js"
+      );
       return { Configuration, OpenAIApi, fetchAdapter };
     } catch (err) {
       console.error(err);
