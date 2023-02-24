@@ -2,15 +2,6 @@ import type { getJson as GetJsonT, GoogleParameters } from "serpapi";
 
 import { Tool } from "./base.js";
 
-let getJson: typeof GetJsonT | null = null;
-
-try {
-  // eslint-disable-next-line global-require,import/no-extraneous-dependencies
-  ({ getJson } = require("serpapi"));
-} catch {
-  // ignore error
-}
-
 /**
  * Wrapper around SerpAPI.
  *
@@ -26,13 +17,6 @@ export class SerpAPI extends Tool {
     params: Partial<GoogleParameters> = {}
   ) {
     super();
-
-    // Throw error at construction time.
-    if (getJson === null) {
-      throw new Error(
-        "Please install serpapi as a dependency with, e.g. `yarn add serpapi`"
-      );
-    }
 
     if (!apiKey) {
       throw new Error(
@@ -50,11 +34,7 @@ export class SerpAPI extends Tool {
    * Run query through SerpAPI and parse result
    */
   async call(input: string) {
-    if (getJson === null) {
-      throw new Error(
-        "Please install serpapi as a dependency with, e.g. `npm i serpapi`"
-      );
-    }
+    const { getJson } = await SerpAPI.imports();
     const res = await getJson("google", {
       ...this.params,
       api_key: this.key,
@@ -94,4 +74,17 @@ export class SerpAPI extends Tool {
 
   description =
     "a search engine. useful for when you need to answer questions about current events. input should be a search query.";
+
+  static async imports(): Promise<{
+    getJson: typeof GetJsonT;
+  }> {
+    try {
+      const { getJson } = await import("serpapi");
+      return { getJson };
+    } catch (e) {
+      throw new Error(
+        "Please install serpapi as a dependency with, e.g. `yarn add serpapi`"
+      );
+    }
+  }
 }
