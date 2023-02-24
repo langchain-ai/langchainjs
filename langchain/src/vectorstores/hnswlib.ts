@@ -9,15 +9,6 @@ import { SaveableVectorStore } from "./base.js";
 import { Document } from "../document.js";
 import { InMemoryDocstore } from "../docstore/index.js";
 
-let HierarchicalNSW: typeof HierarchicalNSWT | null = null;
-
-try {
-  // eslint-disable-next-line global-require,import/no-extraneous-dependencies
-  ({ HierarchicalNSW } = require("hnswlib-node"));
-} catch {
-  // ignore error
-}
-
 export interface HNSWLibArgs {
   space: SpaceName;
   numDimensions?: number;
@@ -51,12 +42,8 @@ export class HNSWLib extends SaveableVectorStore {
     );
   }
 
-  private static getHierarchicalNSW(args: HNSWLibArgs) {
-    if (HierarchicalNSW === null) {
-      throw new Error(
-        "Please install hnswlib-node as a dependency with, e.g. `npm install -S hnswlib-node`"
-      );
-    }
+  private static async getHierarchicalNSW(args: HNSWLibArgs) {
+    const { HierarchicalNSW } = await HNSWLib.imports();
     if (!args.space) {
       throw new Error("hnswlib-node requires a space argument");
     }
@@ -66,12 +53,12 @@ export class HNSWLib extends SaveableVectorStore {
     return new HierarchicalNSW(args.space, args.numDimensions);
   }
 
-  private initIndex(vectors: number[][]) {
-    if (!this.index) {
+  private async initIndex(vectors: number[][]) {
+    if (!this._index) {
       if (this.args.numDimensions === undefined) {
         this.args.numDimensions = vectors[0].length;
       }
-      this.index = HNSWLib.getHierarchicalNSW(this.args);
+      this.index = await HNSWLib.getHierarchicalNSW(this.args);
       this.index.initIndex(vectors.length);
     }
   }
@@ -93,7 +80,7 @@ export class HNSWLib extends SaveableVectorStore {
     if (vectors.length === 0) {
       return;
     }
-    this.initIndex(vectors);
+    await this.initIndex(vectors);
 
     // TODO here we could optionally normalise the vectors to unit length
     // so that dot product is equivalent to cosine similarity, like this
@@ -162,7 +149,7 @@ export class HNSWLib extends SaveableVectorStore {
     const args = JSON.parse(
       await fs.readFile(path.join(directory, "args.json"), "utf8")
     );
-    const index = HNSWLib.getHierarchicalNSW(args);
+    const index = await HNSWLib.getHierarchicalNSW(args);
     const [docstoreFiles] = await Promise.all([
       fs
         .readFile(path.join(directory, "docstore.json"), "utf8")
@@ -202,5 +189,21 @@ export class HNSWLib extends SaveableVectorStore {
     const instance = new this(args, embeddings, docstore);
     await instance.addDocuments(docs);
     return instance;
+  }
+
+  static async imports(): Promise<{
+    HierarchicalNSW: typeof HierarchicalNSWT;
+  }> {
+    try {
+      const {
+        default: { HierarchicalNSW },
+      } = await import("hnswlib-node");
+
+      return { HierarchicalNSW };
+    } catch (err) {
+      throw new Error(
+        "Please install hnswlib-node as a dependency with, e.g. `npm install -S hnswlib-node`"
+      );
+    }
   }
 }
