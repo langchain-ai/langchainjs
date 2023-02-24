@@ -24,7 +24,6 @@ export class JsonSpec {
         for (const key of keys) {
             res = res[key];
         }
-        // check if res is a dictionary
         if (res.constructor === Object) {
             return Object.keys(res).join(", ");
         }
@@ -43,7 +42,6 @@ export class JsonSpec {
         }
 
         if (str.length > this.max_value_length) {
-            // truncate the string
             return `${str.slice(0, this.max_value_length)}...`;
         }
         return str;
