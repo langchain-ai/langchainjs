@@ -1,5 +1,5 @@
 import deepcopy from "deepcopy";
-import {
+import type {
   LLMChain,
   StuffDocumentsChain,
   VectorDBQAChain,
@@ -14,17 +14,15 @@ export type ChainValues = Record<string, any>;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type LoadValues = Record<string, any>;
 
-const chainClasses = [
-  LLMChain,
-  StuffDocumentsChain,
-  VectorDBQAChain,
-  ChatVectorDBQAChain,
-  MapReduceDocumentsChain,
-  AnalyzeDocumentChain,
-];
-
 export type SerializedBaseChain = ReturnType<
-  InstanceType<(typeof chainClasses)[number]>["serialize"]
+  InstanceType<
+    | typeof LLMChain
+    | typeof StuffDocumentsChain
+    | typeof VectorDBQAChain
+    | typeof ChatVectorDBQAChain
+    | typeof MapReduceDocumentsChain
+    | typeof AnalyzeDocumentChain
+  >["serialize"]
 >;
 
 export interface ChainInputs {
@@ -102,17 +100,23 @@ export abstract class BaseChain implements ChainInputs {
   /**
    * Load a chain from a json-like object describing it.
    */
-  static deserialize(
+  static async deserialize(
     data: SerializedBaseChain,
     values: LoadValues = {}
   ): Promise<BaseChain> {
     switch (data._type) {
-      case "llm_chain":
+      case "llm_chain": {
+        const { LLMChain } = await import("./index.js");
         return LLMChain.deserialize(data);
-      case "stuff_documents_chain":
+      }
+      case "stuff_documents_chain": {
+        const { StuffDocumentsChain } = await import("./index.js");
         return StuffDocumentsChain.deserialize(data);
-      case "vector_db_qa":
+      }
+      case "vector_db_qa": {
+        const { VectorDBQAChain } = await import("./index.js");
         return VectorDBQAChain.deserialize(data, values);
+      }
       default:
         throw new Error(
           `Invalid prompt type in config: ${
