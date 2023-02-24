@@ -47,7 +47,7 @@ const updateConfig = () => {
     typedocOptions: {
       ...json.typedocOptions,
       entryPoints: [...Object.values(entrypoints), "index"].map(
-        (value) => `./${value}.ts`
+        (value) => `src/${value}.ts`
       ),
     },
   }));
