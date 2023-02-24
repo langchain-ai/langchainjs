@@ -188,6 +188,8 @@ export class SqlToolkit extends Toolkit {
 
   db: SqlDatabase;
 
+  dialect = "sqlite";
+
   constructor(db: SqlDatabase) {
     super();
     this.db = db;
