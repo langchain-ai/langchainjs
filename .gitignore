@@ -23,3 +23,4 @@ langchain/docs/
 *.sql
 *.sqlite3
 *.sqlite
+openai_openapi.yaml
