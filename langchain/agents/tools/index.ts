@@ -19,3 +19,4 @@ export {
   JsonGetValueTool,
   JsonToolkit,
 } from "./json";
+export { RequestsGetTool, RequestsPostTool, RequestsToolkit } from "./requests";
