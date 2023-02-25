@@ -38,11 +38,17 @@ export class RequestsPostTool extends Tool implements RequestTool {
   }
 
   async call(input: string) {
-    const res = await fetch(input, {
-      method: "POST",
-      headers: this.headers,
-    });
-    return res.text();
+    try {
+      const { url, data } = JSON.parse(input);
+      const res = await fetch(url, {
+        method: "POST",
+        headers: this.headers,
+        body: JSON.stringify(data),
+      });
+      return res.text();
+    } catch (error) {
+      return `${error}`;
+    }
   }
 
   description = `Use this when you want to POST to a website.
