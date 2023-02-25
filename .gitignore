@@ -19,7 +19,5 @@ langchain/docs/
 
 .DS_Store
 
-*.db
-*.sql
-*.sqlite3
-*.sqlite
+Chinook.db
+Chinook_Sqlite.sql

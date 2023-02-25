@@ -79,7 +79,6 @@ test("ListTablesSqlTool", async () => {
   expect(result).toBe(
     `
     products
-sqlite_sequence
 users`.trim()
   );
 });
