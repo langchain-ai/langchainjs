@@ -1,4 +1,4 @@
-import { BasePromptTemplate } from ".";
+import { BasePromptTemplate } from "./base";
 import { loadFromHub } from "../util/hub";
 import { parseFileConfig, FileLoader, loadFromFile } from "../util";
 

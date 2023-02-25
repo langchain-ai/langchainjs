@@ -3,11 +3,8 @@ import { BaseChain, ChainValues, ChainInputs } from "./index";
 import { BaseLLM, SerializedLLM } from "../llms";
 
 import { BaseMemory, BufferMemory } from "../memory";
-import {
-  BasePromptTemplate,
-  SerializedBasePromptTemplate,
-  PromptTemplate,
-} from "../prompts";
+import { SerializedBasePromptTemplate, PromptTemplate } from "../prompts";
+import { BasePromptTemplate } from "../prompts/base";
 
 import { resolveConfigFromFile } from "../util";
 

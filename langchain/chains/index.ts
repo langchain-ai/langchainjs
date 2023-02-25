@@ -4,7 +4,7 @@ export {
   ChainInputs,
   SerializedBaseChain,
 } from "./base";
-export { SerializedLLMChain, LLMChain, ConversationChain } from "./llm_chain";
+export { LLMChain, ConversationChain } from "./llm_chain";
 export {
   SerializedStuffDocumentsChain,
   StuffDocumentsChain,

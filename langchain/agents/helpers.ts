@@ -1,6 +1,6 @@
 import { SerializedAgentT, Tool, AgentInput } from "./index";
 import { BaseLLM } from "../llms";
-import { SerializedLLMChain, LLMChain } from "../chains";
+import { SerializedLLMChain, LLMChain } from "../chains/llm_chain";
 import { resolveConfigFromFile } from "../util";
 
 export const deserializeHelper = async <

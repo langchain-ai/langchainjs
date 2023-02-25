@@ -1,10 +1,5 @@
-import {
-  BaseChain,
-  ChainValues,
-  LLMChain,
-  SerializedLLMChain,
-  SerializedBaseChain,
-} from "./index";
+import { BaseChain, ChainValues, LLMChain, SerializedBaseChain } from "./index";
+import { SerializedLLMChain } from "./llm_chain";
 
 import { Document } from "../document";
 

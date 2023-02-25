@@ -2,10 +2,10 @@ import {
   BaseChain,
   ChainValues,
   SerializedBaseChain,
-  SerializedLLMChain,
   loadQAChain,
   LLMChain,
 } from "./index";
+import { SerializedLLMChain } from "./llm_chain";
 
 import { PromptTemplate } from "../prompts";
 

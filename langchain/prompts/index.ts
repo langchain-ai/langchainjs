@@ -1,5 +1,4 @@
 export {
-  BasePromptTemplate,
   BasePromptTemplateInput,
   SerializedBasePromptTemplate,
   InputValues,

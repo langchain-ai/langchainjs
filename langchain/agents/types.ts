@@ -1,4 +1,4 @@
-import { SerializedLLMChain } from "../chains";
+import { SerializedLLMChain } from "../chains/llm_chain";
 import { AgentInput } from "./index";
 
 export type AgentAction = {

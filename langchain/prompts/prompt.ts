@@ -1,8 +1,6 @@
-import {
-  BasePromptTemplate,
-  BasePromptTemplateInput,
-  InputValues,
-} from "./index";
+import { BasePromptTemplateInput, InputValues } from "./index";
+import { BasePromptTemplate } from "./base";
+
 import {
   TemplateFormat,
   checkValidTemplate,

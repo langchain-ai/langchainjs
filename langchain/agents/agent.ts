@@ -10,7 +10,7 @@ import {
 } from "./index";
 import { BaseLLM } from "../llms";
 import { LLMChain } from "../chains/llm_chain";
-import { BasePromptTemplate } from "../prompts";
+import { BasePromptTemplate } from "../prompts/base";
 
 class ParseError extends Error {
   output: string;
