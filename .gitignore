@@ -18,3 +18,8 @@ langchain/docs/
 .idea/
 
 .DS_Store
+
+*.db
+*.sql
+*.sqlite3
+*.sqlite
