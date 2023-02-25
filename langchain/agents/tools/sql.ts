@@ -9,6 +9,7 @@ export class SqlDatabase {
 
   constructor(db: sqlite3.Database) {
     this.db = db;
+    this.db.exec("PRAGMA read_only = ON");
   }
 
   public getTables(): Promise<string[]> {
@@ -19,7 +20,11 @@ export class SqlDatabase {
           if (err) {
             reject(err);
           } else {
-            resolve(rows.map((row) => row.name));
+            resolve(
+              rows
+                .map((row) => row.name)
+                .filter((name) => name !== "sqlite_sequence")
+            );
           }
         }
       );
@@ -128,13 +133,13 @@ export class InfoSqlTool extends Tool implements SqlTool {
   }
 
   description = `Input to this tool is a comma-separated list of tables, output is the schema and sample rows for those tables.
-    Be sure that the tables actually exist by calling list_tables_sql_db first!
+    Be sure that the tables actually exist by calling list-tables-sql first!
     
     Example Input: "table1, table2, table3.`;
 }
 
 export class ListTablesSqlTool extends Tool implements SqlTool {
-  name = "list-tables-sql-db";
+  name = "list-tables-sql";
 
   db: SqlDatabase;
 
@@ -194,7 +199,7 @@ If there are any of the above mistakes, rewrite the query. If there are no mista
 
   description = `
     Use this tool to double check if your query is correct before executing it.
-    Always use this tool before executing a query with query_sql_db!`;
+    Always use this tool before executing a query with query-sql!`;
 }
 
 export class SqlToolkit extends Toolkit {
