@@ -9562,6 +9562,7 @@ __metadata:
     pinecone-client: ^1.0.1
     prettier: ^2.8.3
     serpapi: ^1.1.0
+    sqlite3: ^5.1.4
     typescript: ^4.9.5
   languageName: unknown
   linkType: soft
