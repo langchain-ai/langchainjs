@@ -5,7 +5,7 @@ import * as yaml from "js-yaml";
 import {
   JsonSpec,
   JsonToolkit,
-    JsonObject,
+  JsonObject,
   RequestsToolkit,
   DynamicTool,
 } from "langchain/tools";
