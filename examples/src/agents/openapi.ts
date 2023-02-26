@@ -17,7 +17,7 @@ export const run = async () => {
     const yamlFile = fs.readFileSync("openai_openapi.yaml", "utf8");
     data = yaml.load(yamlFile) as JsonObject;
     if (!data) {
-      console.error("Could not load YAML file");
+      throw new Error("Failed to load OpenAPI spec");
     }
   } catch (e) {
     console.error(e);

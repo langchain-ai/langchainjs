@@ -1,19 +1,18 @@
 import { Tool, Toolkit } from "./base";
 
-type headers = { [key: string]: string };
+interface Headers {
+  [key: string]: string;
+}
 
 interface RequestTool {
-  headers: headers;
+  headers: Headers;
 }
 
 export class RequestsGetTool extends Tool implements RequestTool {
   name = "requests_get";
 
-  headers: headers;
-
-  constructor(headers?: headers) {
+  constructor(public headers: Headers = {}) {
     super();
-    this.headers = headers ?? {};
   }
 
   async call(input: string) {
@@ -30,11 +29,8 @@ export class RequestsGetTool extends Tool implements RequestTool {
 export class RequestsPostTool extends Tool implements RequestTool {
   name = "requests_post";
 
-  headers: headers;
-
-  constructor(headers?: headers) {
+  constructor(public headers: Headers = {}) {
     super();
-    this.headers = headers ?? {};
   }
 
   async call(input: string) {
@@ -62,7 +58,7 @@ export class RequestsPostTool extends Tool implements RequestTool {
 export class RequestsToolkit extends Toolkit {
   tools: Tool[];
 
-  constructor(headers?: headers) {
+  constructor(headers?: Headers) {
     super();
     this.tools = [new RequestsGetTool(headers), new RequestsPostTool(headers)];
   }

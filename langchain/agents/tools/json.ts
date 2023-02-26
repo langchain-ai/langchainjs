@@ -14,11 +14,11 @@ export type JsonObject = { [key: string]: Json };
 export class JsonSpec {
   obj: JsonObject;
 
-  max_value_length = 4000;
+  maxValueLength = 4000;
 
   constructor(obj: JsonObject, max_value_length = 4000) {
     this.obj = obj;
-    this.max_value_length = max_value_length;
+    this.maxValueLength = max_value_length;
   }
 
   public getKeys(input: string): string {
@@ -45,13 +45,13 @@ export class JsonSpec {
     if (
       typeof res === "object" &&
       !Array.isArray(res) &&
-      str.length > this.max_value_length
+      str.length > this.maxValueLength
     ) {
       return `Value is a large dictionary, should explore its keys directly.`;
     }
 
-    if (str.length > this.max_value_length) {
-      return `${str.slice(0, this.max_value_length)}...`;
+    if (str.length > this.maxValueLength) {
+      return `${str.slice(0, this.maxValueLength)}...`;
     }
     return str;
   }
@@ -74,7 +74,7 @@ export class JsonListKeysTool extends Tool {
 
   description = `Can be used to list all keys at a given path. 
     Before calling this you should be SURE that the path to this exists.
-    The input is a text representation of the path to the json in as json pointer syntax (e.g. /key1/0/key2).`;
+    The input is a text representation of the path to the json as json pointer syntax (e.g. /key1/0/key2).`;
 }
 
 export class JsonGetValueTool extends Tool {
@@ -94,7 +94,7 @@ export class JsonGetValueTool extends Tool {
 
   description: `Can be used to see value in string format at a given path.
     Before calling this you should be SURE that the path to this exists.
-    The input is a text representation of the path to the json in as json pointer syntax (e.g. /key1/0/key2).`;
+    The input is a text representation of the path to the json as json pointer syntax (e.g. /key1/0/key2).`;
 }
 
 export class JsonToolkit extends Toolkit {
