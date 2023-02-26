@@ -185,7 +185,7 @@ export class RecursiveCharacterTextSplitter
 
 export interface TokenTextSplitterParams extends TextSplitterParams {
   encodingName: tiktoken.TiktokenEmbedding;
-  allowedSpecial: "all" | Set<string>;
+  allowedSpecial: "all" | Array<string>;
   disallowedSpecial: "all" | Array<string>;
 }
 
@@ -198,7 +198,7 @@ export class TokenTextSplitter
 {
   encodingName: tiktoken.TiktokenEmbedding;
 
-  allowedSpecial: "all" | Set<string>;
+  allowedSpecial: "all" | Array<string>;
 
   disallowedSpecial: "all" | Array<string>;
 
@@ -208,16 +208,8 @@ export class TokenTextSplitter
     super(fields);
 
     this.encodingName = fields?.encodingName ?? "gpt2";
-    this.allowedSpecial = fields?.allowedSpecial ?? new Set();
+    this.allowedSpecial = fields?.allowedSpecial ?? [];
     this.disallowedSpecial = fields?.disallowedSpecial ?? "all";
-
-    if (fields?.allowedSpecial != null) {
-      throw new Error("allowedSpecial is not implemented yet.");
-    }
-
-    if (fields?.disallowedSpecial != null) {
-      throw new Error("disallowedSpecial is not implemented yet.");
-    }
 
     try {
       const tiktoken =
@@ -235,7 +227,11 @@ export class TokenTextSplitter
   splitText(text: string): string[] {
     const splits: string[] = [];
 
-    const input_ids = this.tokenizer.encode(text);
+    const input_ids = this.tokenizer.encode(
+      text,
+      this.allowedSpecial,
+      this.disallowedSpecial
+    );
 
     let start_idx = 0;
     let cur_idx = Math.min(start_idx + this.chunkSize, input_ids.length);
