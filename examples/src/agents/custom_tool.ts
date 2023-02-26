@@ -9,13 +9,19 @@ export const run = async () => {
       name: "FOO",
       description:
         "call this to get the value of foo. input should be an empty string.",
-      func: () => "baz",
+      func: () =>
+        new Promise((resolve) => {
+          resolve("foo");
+        }),
     }),
     new DynamicTool({
       name: "BAR",
       description:
         "call this to get the value of bar. input should be an empty string.",
-      func: () => "baz1",
+      func: () =>
+        new Promise((resolve) => {
+          resolve("baz1");
+        }),
     }),
   ];
 

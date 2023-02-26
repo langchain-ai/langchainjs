@@ -59,7 +59,7 @@ export abstract class BaseChain implements ChainInputs {
   abstract get inputKeys(): string[];
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async run(input: any): Promise<ChainValues> {
+  async run(input: any): Promise<string> {
     const isKeylessInput = this.inputKeys.length === 1;
     if (!isKeylessInput) {
       throw new Error(
@@ -67,7 +67,15 @@ export abstract class BaseChain implements ChainInputs {
       );
     }
     const values = { [this.inputKeys[0]]: input };
-    return this.call(values);
+    const returnValues = await this.call(values);
+    const keys = Object.keys(returnValues);
+    if (keys.length === 1) {
+      const finalReturn = returnValues[keys[0]];
+      return finalReturn;
+    }
+    throw new Error(
+      "return values have multiple keys, `run` only supported when one key currently"
+    );
   }
 
   /**
