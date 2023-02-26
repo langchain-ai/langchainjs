@@ -14,6 +14,8 @@ export const run = async () => {
     encodingName: "r50k_base",
     chunkSize: 10,
     chunkOverlap: 0,
+    allowedSpecial: ["<|endoftext|>"],
+    disallowedSpecial: [],
   });
 
   const output = splitter.createDocuments([text]);
