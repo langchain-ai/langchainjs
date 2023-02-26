@@ -149,6 +149,7 @@
     "exponential-backoff": "^3.1.0",
     "expr-eval": "^2.0.2",
     "gpt-3-encoder": "^1.1.4",
+    "jsonpointer": "^5.0.1",
     "node-fetch": "2",
     "p-queue": "6",
     "sqlite3": "^5.1.4",

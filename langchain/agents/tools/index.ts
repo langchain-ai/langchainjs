@@ -18,5 +18,7 @@ export {
   JsonListKeysTool,
   JsonGetValueTool,
   JsonToolkit,
+  JsonObject,
+  Json,
 } from "./json";
 export { RequestsGetTool, RequestsPostTool, RequestsToolkit } from "./requests";

@@ -2,13 +2,13 @@ import { OpenAI } from "langchain";
 import { ZeroShotAgent, AgentExecutor } from "langchain/agents";
 import * as fs from "fs";
 import * as yaml from "js-yaml";
-import { JsonSpec, JsonToolkit } from "langchain/tools";
+import { JsonSpec, JsonToolkit, JsonObject } from "langchain/tools";
 
 export const run = async () => {
-  let data: object;
+  let data: JsonObject;
   try {
     const yamlFile = fs.readFileSync("openai_openapi.yaml", "utf8");
-    data = yaml.load(yamlFile) as object;
+    data = yaml.load(yamlFile) as JsonObject;
     if (!data) {
       console.error("Could not load YAML file");
     }

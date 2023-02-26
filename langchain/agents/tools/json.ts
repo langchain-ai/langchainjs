@@ -1,45 +1,52 @@
+import jsonpointer from "jsonpointer";
 import { Tool, Toolkit } from "./base";
 
-function parseInput(input: string): (string | number)[] {
-  const regex = /\[.*?]/g;
-  const _res = input.match(regex) ?? [];
-  const res = _res.map((i) => i.slice(1, -1).replace(/['"]+/g, ""));
-  return res.map((i) => (Number.isNaN(+i) ? i : +i));
-}
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json }
+  | Json[];
+
+export type JsonObject = { [key: string]: Json };
 
 export class JsonSpec {
-  obj: { [key: string]: any };
+  obj: JsonObject;
 
   max_value_length = 4000;
 
-  constructor(obj: object, max_value_length = 4000) {
+  constructor(obj: JsonObject, max_value_length = 4000) {
     this.obj = obj;
     this.max_value_length = max_value_length;
   }
 
   public getKeys(input: string): string {
-    const keys = parseInput(input);
-    let res = this.obj;
-    for (const key of keys) {
-      res = res[key];
-    }
-    if (res.constructor === Object) {
+    const pointer = jsonpointer.compile(input);
+    const res = pointer.get(this.obj) as Json;
+    if (typeof res === "object" && !Array.isArray(res) && res !== null) {
       return Object.keys(res).join(", ");
     }
+
     throw new Error(
       `Value at ${input} is not a dictionary, get the value directly instead.`
     );
   }
 
   public getValue(input: string): string {
-    const keys = parseInput(input);
-    let res = this.obj;
-    for (const key of keys) {
-      res = res[key];
+    const pointer = jsonpointer.compile(input);
+    const res = pointer.get(this.obj) as Json;
+
+    if (res === null || res === undefined) {
+      throw new Error(`Value at ${input} is null or undefined.`);
     }
-    const str =
-      res.constructor === Object ? JSON.stringify(res) : res.toString();
-    if (res.constructor === Object && str.length > this.max_value_length) {
+
+    const str = typeof res === "object" ? JSON.stringify(res) : res.toString();
+    if (
+      typeof res === "object" &&
+      !Array.isArray(res) &&
+      str.length > this.max_value_length
+    ) {
       return `Value is a large dictionary, should explore its keys directly.`;
     }
 
@@ -67,7 +74,7 @@ export class JsonListKeysTool extends Tool {
 
   description = `Can be used to list all keys at a given path. 
     Before calling this you should be SURE that the path to this exists.
-    The input is a text representation of the path to the dict in Python syntax (e.g. data["key1"][0]["key2"]).`;
+    The input is a text representation of the path to the json in as json pointer syntax (e.g. /key1/0/key2).`;
 }
 
 export class JsonGetValueTool extends Tool {
@@ -87,7 +94,7 @@ export class JsonGetValueTool extends Tool {
 
   description: `Can be used to see value in string format at a given path.
     Before calling this you should be SURE that the path to this exists.
-    The input is a text representation of the path to the dict in Python syntax (e.g. data["key1"][0]["key2"]).`;
+    The input is a text representation of the path to the json in as json pointer syntax (e.g. /key1/0/key2).`;
 }
 
 export class JsonToolkit extends Toolkit {
