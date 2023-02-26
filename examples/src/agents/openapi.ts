@@ -11,7 +11,6 @@ import {
 } from "langchain/tools";
 
 export const run = async () => {
-  // create the json agent
   let data: JsonObject;
   try {
     const yamlFile = fs.readFileSync("openai_openapi.yaml", "utf8");

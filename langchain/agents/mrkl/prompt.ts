@@ -60,3 +60,28 @@ export const JSON_SUFFIX = `Begin!"
 Question: {input}
 Thought: I should look at the keys that exist to see what I can query. I should use the 'json_list_keys' tool with an empty string as the input.
 {agent_scratchpad}`;
+
+export const OPENAPI_PREFIX = `You are an agent designed to answer questions by making web requests to an API given the OpenAPI spec.
+
+If the question does not seem related to the API, return I don't know. Do not make up an answer.
+Only use information provided by the tools to construct your response.
+
+To find information in the OpenAPI spec, use the 'openapi_explorer' tool. The input to this tool is a question about the API.
+
+Take the following steps:
+First, find the base URL needed to make the request.
+
+Second, find the relevant paths needed to answer the question. Take note that, sometimes, you might need to make more than one request to more than one path to answer the question.
+
+Third, find the required parameters needed to make the request. For GET requests, these are usually URL parameters and for POST requests, these are request body parameters.
+
+Fourth, make the requests needed to answer the question. Ensure that you are sending the correct parameters to the request by checking which parameters are required. For parameters with a fixed set of values, please use the spec to look at which values are allowed.
+
+Use the exact parameter names as listed in the spec, do not make up any names or abbreviate the names of parameters.
+If you get a not found error, ensure that you are using a path that actually exists in the spec.`;
+
+export const OPENAPI_SUFFIX = `Begin!"
+
+Question: {input}
+Thought: I should explore the spec to find the base url for the API.
+{agent_scratchpad}`;
