@@ -2,7 +2,7 @@ import { OpenAI } from "langchain";
 import { ZeroShotAgent, AgentExecutor } from "langchain/agents";
 import * as fs from "fs";
 import * as yaml from "js-yaml";
-import { JsonSpec, JsonToolkit, JsonObject} from "langchain/tools";
+import { JsonSpec, JsonToolkit, JsonObject } from "langchain/tools";
 
 export const run = async () => {
   let data: JsonObject;
