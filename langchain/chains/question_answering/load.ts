@@ -11,13 +11,23 @@ import {
   DEFAULT_COMBINE_QA_PROMPT,
 } from "./map_reduce_prompts";
 
-interface qaChainParams {
-  prompt?: PromptTemplate;
-  combineMapPrompt?: PromptTemplate;
-  combinePrompt?: PromptTemplate;
-  type?: string;
-}
-export const loadQAChain = (llm: BaseLLM, params: qaChainParams = {}) => {
+type chainTypeName = "stuff" | "map_reduce";
+
+type chainType<T> = T extends "stuff"
+  ? StuffDocumentsChain
+  : T extends "map_reduce"
+  ? MapReduceDocumentsChain
+  : never;
+
+export function loadQAChain<T extends chainTypeName>(
+  llm: BaseLLM,
+  params: {
+    prompt?: PromptTemplate;
+    combineMapPrompt?: PromptTemplate;
+    combinePrompt?: PromptTemplate;
+    type?: T;
+  } = {}
+): chainType<T> {
   const {
     prompt = DEFAULT_QA_PROMPT,
     combineMapPrompt = DEFAULT_COMBINE_QA_PROMPT,
@@ -27,7 +37,7 @@ export const loadQAChain = (llm: BaseLLM, params: qaChainParams = {}) => {
   if (type === "stuff") {
     const llmChain = new LLMChain({ prompt, llm });
     const chain = new StuffDocumentsChain({ llmChain });
-    return chain;
+    return chain as chainType<T>;
   }
   if (type === "map_reduce") {
     const llmChain = new LLMChain({ prompt: combineMapPrompt, llm });
@@ -40,7 +50,7 @@ export const loadQAChain = (llm: BaseLLM, params: qaChainParams = {}) => {
       llmChain,
       combineDocumentChain,
     });
-    return chain;
+    return chain as chainType<T>;
   }
   throw new Error(`Invalid _type: ${type}`);
-};
+}
