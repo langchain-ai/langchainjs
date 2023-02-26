@@ -21,7 +21,7 @@
     "@docusaurus/core": "2.3.1",
     "@docusaurus/preset-classic": "2.3.1",
     "@mdx-js/react": "^1.6.22",
-    "@mendable/search": "^0.0.30",
+    "@mendable/search": "^0.0.37",
     "clsx": "^1.2.1",
     "process": "^0.11.10",
     "react": "^17.0.2",
