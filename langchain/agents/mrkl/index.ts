@@ -9,8 +9,16 @@ import {
   SerializedAgentT,
 } from "../index";
 import { PromptTemplate } from "../../prompts";
-import { PREFIX, SUFFIX, formatInstructions } from "./prompt";
+import {
+  PREFIX,
+  SUFFIX,
+  formatInstructions,
+  SQL_PREFIX,
+  SQL_SUFFIX,
+} from "./prompt";
 import { deserializeHelper } from "../helpers";
+import { SqlToolkit } from "../tools";
+import { interpolateFString } from "../../prompts/template";
 
 const FINAL_ANSWER_ACTION = "Final Answer:";
 
@@ -34,6 +42,11 @@ type CreatePromptArgs = {
   /** List of input variables the final prompt will expect. */
   inputVariables?: string[];
 };
+
+type SqlCreatePromptArgs = {
+  /** Number of results to return. */
+  topK?: number;
+} & CreatePromptArgs;
 
 type ZeroShotAgentInput = AgentInput;
 
@@ -101,6 +114,34 @@ export class ZeroShotAgent extends Agent {
   static fromLLMAndTools(llm: BaseLLM, tools: Tool[], args?: CreatePromptArgs) {
     ZeroShotAgent.validateTools(tools);
     const prompt = ZeroShotAgent.createPrompt(tools, args);
+    const chain = new LLMChain({ prompt, llm });
+    return new ZeroShotAgent({
+      llmChain: chain,
+      allowedTools: tools.map((t) => t.name),
+    });
+  }
+
+  static asSqlAgent(
+    llm: BaseLLM,
+    toolkit: SqlToolkit,
+    args?: SqlCreatePromptArgs
+  ) {
+    const {
+      prefix = SQL_PREFIX,
+      suffix = SQL_SUFFIX,
+      inputVariables = ["input", "agent_scratchpad"],
+      topK = 10,
+    } = args ?? {};
+    const { tools } = toolkit;
+    const formattedPrefix = interpolateFString(prefix, {
+      dialect: toolkit.dialect,
+      top_k: topK,
+    });
+    const prompt = ZeroShotAgent.createPrompt(tools, {
+      prefix: formattedPrefix,
+      suffix,
+      inputVariables,
+    });
     const chain = new LLMChain({ prompt, llm });
     return new ZeroShotAgent({
       llmChain: chain,

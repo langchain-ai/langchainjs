@@ -1,6 +1,6 @@
 import { OpenAI } from "langchain";
 import { initializeAgentExecutor } from "langchain/agents";
-import { SerpAPI, Calculator } from "langchain/agents/tools";
+import { SerpAPI, Calculator } from "langchain/tools";
 
 export const run = async () => {
   const model = new OpenAI({ temperature: 0 });
@@ -20,4 +20,12 @@ export const run = async () => {
   const result = await executor.call({ input });
 
   console.log(`Got output ${result.output}`);
+
+  console.log(
+    `Got intermediate steps ${JSON.stringify(
+      result.intermediateSteps,
+      null,
+      2
+    )}`
+  );
 };

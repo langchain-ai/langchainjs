@@ -24,7 +24,8 @@
     "langchain": "workspace:*",
     "openai": "^3.1.0",
     "pinecone-client": "^1.0.1",
-    "serpapi": "^1.1.0"
+    "serpapi": "^1.1.0",
+    "sqlite3": "^5.1.4"
   },
   "devDependencies": {
     "@tsconfig/recommended": "^1.0.2",
