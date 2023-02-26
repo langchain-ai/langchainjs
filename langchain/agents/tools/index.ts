@@ -18,4 +18,6 @@ export {
   JsonListKeysTool,
   JsonGetValueTool,
   JsonToolkit,
+  JsonObject,
+  Json,
 } from "./json";
