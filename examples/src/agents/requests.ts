@@ -5,16 +5,17 @@ import * as yaml from "js-yaml";
 import {
   JsonSpec,
   JsonToolkit,
+    JsonObject,
   RequestsToolkit,
   DynamicTool,
 } from "langchain/tools";
 
 export const run = async () => {
   // create the json agent
-  let data: object;
+  let data: JsonObject;
   try {
     const yamlFile = fs.readFileSync("openai_openapi.yaml", "utf8");
-    data = yaml.load(yamlFile) as object;
+    data = yaml.load(yamlFile) as JsonObject;
     if (!data) {
       console.error("Could not load YAML file");
     }

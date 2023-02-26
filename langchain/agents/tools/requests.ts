@@ -54,7 +54,7 @@ export class RequestsPostTool extends Tool implements RequestTool {
   description = `Use this when you want to POST to a website.
   Input should be a json string with two keys: "url" and "data".
   The value of "url" should be a string, and the value of "data" should be a dictionary of 
-  key-value pairs you want to POST to the url.
+  key-value pairs you want to POST to the url as a JSON body.
   Be careful to always use double quotes for strings in the json string
   The output will be the text response of the POST request.`;
 }
