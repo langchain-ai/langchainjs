@@ -12,7 +12,7 @@
     "serve": "docusaurus serve",
     "write-translations": "docusaurus write-translations",
     "write-heading-ids": "docusaurus write-heading-ids",
-    "ci": "yarn lint && yarn format:diff",
+    "ci": "yarn lint && yarn format:diff && yarn build",
     "lint": "eslint --cache \"**/*.js\"",
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,md,mdx}\"",
     "format:diff": "prettier --list-different \"**/*.{js,jsx,ts,tsx,md,mdx}\""
