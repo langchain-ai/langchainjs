@@ -1,5 +1,5 @@
 import { test } from "@jest/globals";
-import { TextLoader } from "../text";
+import { TextLoader } from "../text.js";
 
 test("Test Text loader", async () => {
   const loader = new TextLoader(

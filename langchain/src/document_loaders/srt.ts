@@ -35,7 +35,7 @@ export class SRTLoader extends BaseDocumentLoader {
         isJsDom,
         isDeno,
         // eslint-disable-next-line global-require,@typescript-eslint/no-var-requires
-      } = require("browser-or-node");
+      } = await import("browser-or-node");
       let env: string;
       if (isBrowser) {
         env = "browser";
