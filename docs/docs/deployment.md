@@ -22,6 +22,8 @@ Some other considerations include:
 - Do you deploy your backend and frontend together, or separately?
 - Do you deploy your backend co-located with your database, or separately?
 
+As you move your LangChains into production, we'd love to offer more comprehensive support. Please fill out [this form](https://forms.gle/57d8AmXBYp8PP8tZA) and we'll set up a dedicated support Slack channel.
+
 ## Deployment Options
 
 See below for a list of deployment options for your LangChain app. If you don't see your preferred option, please get in touch and we can add it to this list.
@@ -30,4 +32,4 @@ See below for a list of deployment options for your LangChain app. If you don't 
 
 [Fly.io](https://fly.io) is a platform for deploying apps to the cloud. It's a great option for deploying your app to a container environment.
 
-See [our Fly.io template](https://github.com/nfcampos/langchain-template-node-fly) for an example of how to deploy your app to Fly.io.
+See [our Fly.io template](https://github.com/hwchase17/langchain-template-node-fly) for an example of how to deploy your app to Fly.io.
