@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - harrison/env-key
     # Review gh actions docs if you want to further define triggers, paths, etc
     # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#on
   # Allows you to run this workflow manually from the Actions tab
@@ -26,6 +27,8 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
+    env:
+      MENDABLE_ANON_KEY: ${{ secrets.MENDABLE_ANON_KEY }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
