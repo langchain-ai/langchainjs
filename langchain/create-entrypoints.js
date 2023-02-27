@@ -1,6 +1,6 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
-const path = require("path");
-const fs = require("fs");
+import path from "path";
+import url from "url";
+import fs from "fs";
 
 const entrypoints = {
   agents: "agents/index",
@@ -18,7 +18,10 @@ const entrypoints = {
 };
 
 const updateJsonFile = (relativePath, updateFunction) => {
-  const filePath = path.resolve(__dirname, relativePath);
+  const filePath = path.resolve(
+    path.dirname(url.fileURLToPath(import.meta.url)),
+    relativePath
+  );
   const contents = fs.readFileSync(filePath).toString();
   const res = updateFunction(JSON.parse(contents));
   fs.writeFileSync(filePath, JSON.stringify(res, null, 2));
@@ -27,12 +30,9 @@ const updateJsonFile = (relativePath, updateFunction) => {
 const generateFiles = () => {
   const files = [...Object.entries(entrypoints), ["index", "index"]].flatMap(
     ([key, value]) => {
-      const modulePath =
-        path.basename(value) === "index" ? path.dirname(value) : value;
-      const compiledPath = `./dist/${modulePath}`;
+      const compiledPath = `./dist/${value}.js`;
       return [
-        [`${key}.js`, `module.exports = require('${compiledPath}')`],
-        [`${key}.mjs`, `export * from './dist/${value}.js'`],
+        [`${key}.js`, `export * from '${compiledPath}'`],
         [`${key}.d.ts`, `export * from '${compiledPath}'`],
       ];
     }
@@ -47,7 +47,7 @@ const updateConfig = () => {
     typedocOptions: {
       ...json.typedocOptions,
       entryPoints: [...Object.values(entrypoints), "index"].map(
-        (value) => `./${value}.ts`
+        (value) => `src/${value}.ts`
       ),
     },
   }));
@@ -60,8 +60,8 @@ const updateConfig = () => {
     exports: Object.fromEntries(
       ["index", ...Object.keys(entrypoints)].map((key) => {
         const entryPoint = {
-          import: `./${key}.mjs`,
-          default: `./${key}.js`,
+          types: `./${key}.d.ts`,
+          import: `./${key}.js`,
         };
         return [key === "index" ? "." : `./${key}`, entryPoint];
       })

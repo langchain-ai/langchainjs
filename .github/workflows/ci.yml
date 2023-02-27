@@ -29,3 +29,6 @@ jobs:
         run: yarn install --immutable
       - run: yarn run ci
       - run: yarn workspace langchain run test
+        if: matrix.node-version != '16.x'
+      - run: yarn workspace langchain run test:node16
+        if: matrix.node-version == '16.x'

@@ -14,7 +14,7 @@ export const run = async () => {
   const text = fs.readFileSync("state_of_the_union.txt", "utf8");
   /* Split the text into chunks */
   const textSplitter = new RecursiveCharacterTextSplitter({ chunkSize: 1000 });
-  const docs = textSplitter.createDocuments([text]);
+  const docs = await textSplitter.createDocuments([text]);
   /* Create the vectorstore */
   const vectorStore = await Chroma.fromDocuments(
     docs,

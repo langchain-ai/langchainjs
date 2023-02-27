@@ -10,6 +10,11 @@ To get started, install LangChain with the following command:
 npm i langchain
 ```
 
+If you are running this on Node.js 16, either:
+
+- run your application with `NODE_OPTIONS='--experimental-fetch' node ...`, or
+- install `node-fetch` and follow the instructions [here](https://github.com/node-fetch/node-fetch#providing-global-access)
+
 ## Picking up a LLM
 
 Using LangChain will usually require integrations with one or more model providers, data stores, apis, etc.
