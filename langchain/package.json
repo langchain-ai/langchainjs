@@ -40,7 +40,7 @@
   },
   "scripts": {
     "build": "yarn clean && tsc --declaration --outDir dist/ && node create-entrypoints.js",
-    "lint": "eslint .",
+    "lint": "eslint src",
     "doc": "typedoc",
     "lint:fix": "yarn lint --fix",
     "precommit": "tsc --noEmit && lint-staged",
