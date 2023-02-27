@@ -60,8 +60,8 @@ const updateConfig = () => {
     exports: Object.fromEntries(
       ["index", ...Object.keys(entrypoints)].map((key) => {
         const entryPoint = {
-          import: `./${key}.js`,
           types: `./${key}.d.ts`,
+          import: `./${key}.js`,
         };
         return [key === "index" ? "." : `./${key}`, entryPoint];
       })

@@ -12,3 +12,13 @@ export { Tool } from "./tools/index.js";
 export { initializeAgentExecutor } from "./initialize.js";
 
 export { loadAgent } from "./load.js";
+
+export {
+  SqlToolkit,
+  JsonToolkit,
+  RequestsToolkit,
+  OpenApiToolkit,
+  createSqlAgent,
+  createJsonAgent,
+  createOpenApiAgent,
+} from "./agent_toolkits/index.js";

@@ -7,7 +7,7 @@ import { OpenAI } from "langchain/llms";
 import { loadQAChain } from "langchain/chains";
 import { Document } from "langchain/document";
 
-const model = new OpenAI({});
+const llm = new OpenAI({});
 const chain = loadQAChain(llm);
 const docs = [
   new Document({ pageContent: "harrison went to harvard" }),
@@ -30,7 +30,7 @@ import { Document } from "langchain/document";
 
 // Optionally limit the nr of concurrent requests to the language model,
 // if you have a lot of documents, to avoid rate limiting.
-const model = new OpenAI({ concurrency: 10 });
+const llm = new OpenAI({ concurrency: 10 });
 const chain = loadQAChain(llm, { type: "map_reduce" });
 const docs = [
   new Document({ pageContent: "harrison went to harvard" }),

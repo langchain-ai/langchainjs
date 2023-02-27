@@ -1,4 +1,5 @@
-import { SerializedAgentT, Tool, AgentInput } from "./index.js";
+import type { SerializedAgentT, AgentInput } from "./index.js";
+import { Tool } from "./tools/index.js";
 import { BaseLLM } from "../llms/index.js";
 import { SerializedLLMChain, LLMChain } from "../chains/index.js";
 import { resolveConfigFromFile } from "../util/index.js";

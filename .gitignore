@@ -15,4 +15,10 @@ yarn-error.log
 
 langchain/docs/
 
+.idea/
+
 .DS_Store
+
+openai_openapi.yaml
+Chinook.db
+Chinook_Sqlite.sql

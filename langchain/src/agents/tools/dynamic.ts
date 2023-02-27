@@ -5,12 +5,12 @@ export class DynamicTool extends Tool {
 
   description: string;
 
-  func: (arg1: string) => string;
+  func: (arg1: string) => Promise<string>;
 
   constructor(fields: {
     name: string;
     description: string;
-    func: (arg1: string) => string;
+    func: (arg1: string) => Promise<string>;
   }) {
     super();
     this.name = fields.name;

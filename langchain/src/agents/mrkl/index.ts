@@ -26,7 +26,7 @@ export type SerializedZeroShotAgent = SerializedAgentT<
   AgentInput
 >;
 
-type CreatePromptArgs = {
+export type CreatePromptArgs = {
   /** String to put after the list of tools. */
   suffix?: string;
   /** String to put before the list of tools. */

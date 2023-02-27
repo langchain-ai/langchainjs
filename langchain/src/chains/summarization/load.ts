@@ -11,7 +11,7 @@ interface summarizationChainParams {
   prompt?: PromptTemplate;
   combineMapPrompt?: PromptTemplate;
   combinePrompt?: PromptTemplate;
-  type?: string;
+  type?: "map_reduce" | "stuff";
 }
 export const loadSummarizationChain = (
   llm: BaseLLM,
