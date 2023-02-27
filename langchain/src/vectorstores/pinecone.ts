@@ -10,6 +10,7 @@ type PineconeMetadata = Record<string, any>;
 
 export class PineconeStore extends VectorStore {
   textKey: string;
+
   namespace: string;
 
   pineconeClient: VectorOperationsApi;
