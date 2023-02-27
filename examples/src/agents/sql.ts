@@ -1,7 +1,6 @@
 import { OpenAI } from "langchain";
-import { ZeroShotAgent, AgentExecutor } from "langchain/agents";
-
-import { SqlDatabase, SqlToolkit } from "langchain/tools";
+import { SqlDatabase } from "langchain/tools";
+import { createSqlAgent, SqlToolkit } from "langchain/agents";
 import sqlite3 from "sqlite3";
 
 /** This example uses Chinook database, which is a sample database available for SQL Server, Oracle, MySQL, etc.
@@ -10,16 +9,9 @@ import sqlite3 from "sqlite3";
  */
 export const run = async () => {
   const db = await new sqlite3.Database("Chinook.db");
-
   const tookit = new SqlToolkit(new SqlDatabase(db));
   const model = new OpenAI({ temperature: 0 });
-
-  const agent = ZeroShotAgent.asSqlAgent(model, tookit);
-  const executor = AgentExecutor.fromAgentAndTools({
-    agent,
-    tools: tookit.tools,
-    returnIntermediateSteps: true,
-  });
+  const executor = createSqlAgent(model, tookit);
 
   const input = `List the total sales per country. Which country's customers spent the most?`;
 

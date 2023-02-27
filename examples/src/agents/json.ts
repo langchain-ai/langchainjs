@@ -1,8 +1,8 @@
 import { OpenAI } from "langchain";
-import { ZeroShotAgent, AgentExecutor } from "langchain/agents";
 import * as fs from "fs";
 import * as yaml from "js-yaml";
-import { JsonSpec, JsonToolkit, JsonObject } from "langchain/tools";
+import { JsonSpec, JsonObject } from "langchain/tools";
+import { JsonToolkit, createJsonAgent } from "langchain/agents";
 
 export const run = async () => {
   let data: JsonObject;
@@ -19,13 +19,7 @@ export const run = async () => {
 
   const toolkit = new JsonToolkit(new JsonSpec(data));
   const model = new OpenAI({ temperature: 0 });
-
-  const agent = ZeroShotAgent.asJsonAgent(model, toolkit);
-  const executor = AgentExecutor.fromAgentAndTools({
-    agent,
-    tools: toolkit.tools,
-    returnIntermediateSteps: true,
-  });
+  const executor = createJsonAgent(model, toolkit);
 
   const input = `What are the required parameters in the request body to the /completions endpoint?`;
 

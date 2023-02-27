@@ -1,5 +1,5 @@
 import jsonpointer from "jsonpointer";
-import { Tool, Toolkit } from "./base";
+import { Tool } from "./base";
 
 export type Json =
   | string
@@ -95,16 +95,4 @@ export class JsonGetValueTool extends Tool {
   description: `Can be used to see value in string format at a given path.
     Before calling this you should be SURE that the path to this exists.
     The input is a text representation of the path to the json as json pointer syntax (e.g. /key1/0/key2).`;
-}
-
-export class JsonToolkit extends Toolkit {
-  tools: Tool[];
-
-  constructor(public jsonSpec: JsonSpec) {
-    super();
-    this.tools = [
-      new JsonListKeysTool(jsonSpec),
-      new JsonGetValueTool(jsonSpec),
-    ];
-  }
 }

@@ -1,10 +1,10 @@
-import { Tool, Toolkit } from "./base";
+import { Tool } from "./base";
 
-interface Headers {
+export interface Headers {
   [key: string]: string;
 }
 
-interface RequestTool {
+export interface RequestTool {
   headers: Headers;
 }
 
@@ -53,13 +53,4 @@ export class RequestsPostTool extends Tool implements RequestTool {
   key-value pairs you want to POST to the url as a JSON body.
   Be careful to always use double quotes for strings in the json string
   The output will be the text response of the POST request.`;
-}
-
-export class RequestsToolkit extends Toolkit {
-  tools: Tool[];
-
-  constructor(headers?: Headers) {
-    super();
-    this.tools = [new RequestsGetTool(headers), new RequestsPostTool(headers)];
-  }
 }

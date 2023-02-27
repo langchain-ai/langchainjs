@@ -7,7 +7,3 @@ export abstract class Tool {
 
   returnDirect = false;
 }
-
-export abstract class Toolkit {
-  abstract tools: Tool[];
-}

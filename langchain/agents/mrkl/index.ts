@@ -1,5 +1,3 @@
-import fs from "fs";
-import * as yaml from "js-yaml";
 import { BaseLLM } from "../../llms";
 import { LLMChain } from "../../chains";
 import {
@@ -9,30 +7,10 @@ import {
   StaticAgent,
   staticImplements,
   SerializedAgentT,
-  AgentExecutor,
 } from "../index";
 import { PromptTemplate } from "../../prompts";
-import {
-  PREFIX,
-  SUFFIX,
-  formatInstructions,
-  SQL_PREFIX,
-  SQL_SUFFIX,
-  JSON_PREFIX,
-  JSON_SUFFIX,
-  OPENAPI_PREFIX,
-  OPENAPI_SUFFIX,
-} from "./prompt";
+import { PREFIX, SUFFIX, formatInstructions } from "./prompt";
 import { deserializeHelper } from "../helpers";
-import {
-  JsonToolkit,
-  RequestsToolkit,
-  SqlToolkit,
-  DynamicTool,
-  JsonObject,
-  JsonSpec,
-} from "../tools";
-import { interpolateFString } from "../../prompts/template";
 
 const FINAL_ANSWER_ACTION = "Final Answer:";
 
@@ -48,7 +26,7 @@ export type SerializedZeroShotAgent = SerializedAgentT<
   AgentInput
 >;
 
-type CreatePromptArgs = {
+export type CreatePromptArgs = {
   /** String to put after the list of tools. */
   suffix?: string;
   /** String to put before the list of tools. */
@@ -56,11 +34,6 @@ type CreatePromptArgs = {
   /** List of input variables the final prompt will expect. */
   inputVariables?: string[];
 };
-
-type SqlCreatePromptArgs = {
-  /** Number of results to return. */
-  topK?: number;
-} & CreatePromptArgs;
 
 type ZeroShotAgentInput = AgentInput;
 
@@ -133,112 +106,6 @@ export class ZeroShotAgent extends Agent {
       llmChain: chain,
       allowedTools: tools.map((t) => t.name),
     });
-  }
-
-  static asSqlAgent(
-    llm: BaseLLM,
-    toolkit: SqlToolkit,
-    args?: SqlCreatePromptArgs
-  ) {
-    const {
-      prefix = SQL_PREFIX,
-      suffix = SQL_SUFFIX,
-      inputVariables = ["input", "agent_scratchpad"],
-      topK = 10,
-    } = args ?? {};
-    const { tools } = toolkit;
-    const formattedPrefix = interpolateFString(prefix, {
-      dialect: toolkit.dialect,
-      top_k: topK,
-    });
-    const prompt = ZeroShotAgent.createPrompt(tools, {
-      prefix: formattedPrefix,
-      suffix,
-      inputVariables,
-    });
-    const chain = new LLMChain({ prompt, llm });
-    return new ZeroShotAgent({
-      llmChain: chain,
-      allowedTools: tools.map((t) => t.name),
-    });
-  }
-
-  static asJsonAgent(
-    llm: BaseLLM,
-    toolkit: JsonToolkit,
-    args?: CreatePromptArgs
-  ) {
-    const {
-      prefix = JSON_PREFIX,
-      suffix = JSON_SUFFIX,
-      inputVariables = ["input", "agent_scratchpad"],
-    } = args ?? {};
-    const { tools } = toolkit;
-    const prompt = ZeroShotAgent.createPrompt(tools, {
-      prefix,
-      suffix,
-      inputVariables,
-    });
-    const chain = new LLMChain({ prompt, llm });
-    return new ZeroShotAgent({
-      llmChain: chain,
-      allowedTools: tools.map((t) => t.name),
-    });
-  }
-
-  static asOpenApiAgent(
-    llm: BaseLLM,
-    requestsToolkit: RequestsToolkit,
-    openApiYaml: string,
-    args?: CreatePromptArgs
-  ) {
-    const yamlFile = fs.readFileSync(openApiYaml, "utf8");
-    const data = yaml.load(yamlFile) as JsonObject;
-    if (!data) {
-      throw new Error("Failed to load OpenAPI spec");
-    }
-    const jsonToolkit = new JsonToolkit(new JsonSpec(data));
-
-    const jsonAgent = ZeroShotAgent.asJsonAgent(llm, jsonToolkit);
-    const jsonExecutor = AgentExecutor.fromAgentAndTools({
-      agent: jsonAgent,
-      tools: jsonToolkit.tools,
-      returnIntermediateSteps: true,
-    });
-
-    const tools = [
-      ...requestsToolkit.tools,
-      new DynamicTool({
-        name: "json_explorer",
-        func: async (input: string) => {
-          const result = await jsonExecutor.call({ input });
-          return result.output as string;
-        },
-        description: `
-                Can be used to answer questions about the openapi spec for the API. Always use this tool before trying to make a request. 
-                Example inputs to this tool: 
-                    'What are the required query parameters for a GET request to the /bar endpoint?'
-                    'What are the required parameters in the request body for a POST request to the /foo endpoint?'
-                Always give this tool a specific question.`,
-      }),
-    ];
-    const {
-      prefix = OPENAPI_PREFIX,
-      suffix = OPENAPI_SUFFIX,
-      inputVariables = ["input", "agent_scratchpad"],
-    } = args ?? {};
-
-    const prompt = ZeroShotAgent.createPrompt(tools, {
-      prefix,
-      suffix,
-      inputVariables,
-    });
-    const chain = new LLMChain({
-      prompt,
-      llm,
-    });
-    const toolNames = tools.map((tool) => tool.name);
-    return new ZeroShotAgent({ llmChain: chain, allowedTools: toolNames });
   }
 
   extractToolAndInput(text: string): { tool: string; input: string } | null {
