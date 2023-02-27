@@ -169,56 +169,56 @@
   ],
   "exports": {
     ".": {
-      "import": "./index.js",
-      "types": "./index.d.ts"
+      "types": "./index.d.ts",
+      "import": "./index.js"
     },
     "./agents": {
-      "import": "./agents.js",
-      "types": "./agents.d.ts"
+      "types": "./agents.d.ts",
+      "import": "./agents.js"
     },
     "./tools": {
-      "import": "./tools.js",
-      "types": "./tools.d.ts"
+      "types": "./tools.d.ts",
+      "import": "./tools.js"
     },
     "./chains": {
-      "import": "./chains.js",
-      "types": "./chains.d.ts"
+      "types": "./chains.d.ts",
+      "import": "./chains.js"
     },
     "./embeddings": {
-      "import": "./embeddings.js",
-      "types": "./embeddings.d.ts"
+      "types": "./embeddings.d.ts",
+      "import": "./embeddings.js"
     },
     "./llms": {
-      "import": "./llms.js",
-      "types": "./llms.d.ts"
+      "types": "./llms.d.ts",
+      "import": "./llms.js"
     },
     "./prompts": {
-      "import": "./prompts.js",
-      "types": "./prompts.d.ts"
+      "types": "./prompts.d.ts",
+      "import": "./prompts.js"
     },
     "./vectorstores": {
-      "import": "./vectorstores.js",
-      "types": "./vectorstores.d.ts"
+      "types": "./vectorstores.d.ts",
+      "import": "./vectorstores.js"
     },
     "./text_splitter": {
-      "import": "./text_splitter.js",
-      "types": "./text_splitter.d.ts"
+      "types": "./text_splitter.d.ts",
+      "import": "./text_splitter.js"
     },
     "./memory": {
-      "import": "./memory.js",
-      "types": "./memory.d.ts"
+      "types": "./memory.d.ts",
+      "import": "./memory.js"
     },
     "./document": {
-      "import": "./document.js",
-      "types": "./document.d.ts"
+      "types": "./document.d.ts",
+      "import": "./document.js"
     },
     "./docstore": {
-      "import": "./docstore.js",
-      "types": "./docstore.d.ts"
+      "types": "./docstore.d.ts",
+      "import": "./docstore.js"
     },
     "./document_loaders": {
-      "import": "./document_loaders.js",
-      "types": "./document_loaders.d.ts"
+      "types": "./document_loaders.d.ts",
+      "import": "./document_loaders.js"
     }
   }
 }

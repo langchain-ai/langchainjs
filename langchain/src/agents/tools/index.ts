@@ -5,7 +5,7 @@ export { BingSerpAPI } from "./bingserpapi.js";
 export { Tool } from "./base.js";
 export { DynamicTool } from "./dynamic.js";
 export { IFTTTWebhook } from "./IFTTTWebhook.js";
-export { ChainTool } from "./chain";
+export { ChainTool } from "./chain.js";
 export {
   SqlDatabase,
   QuerySqlTool,
