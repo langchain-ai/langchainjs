@@ -127,10 +127,16 @@ export class FewShotPromptTemplate
     }
 
     if (this.validateTemplate) {
+      let totalInputVariables = this.inputVariables;
+      if (this.partialVariables) {
+        totalInputVariables = totalInputVariables.concat(
+          Object.keys(this.partialVariables)
+        );
+      }
       checkValidTemplate(
         this.prefix + this.suffix,
         this.templateFormat,
-        this.inputVariables
+        totalInputVariables
       );
     }
   }
@@ -152,8 +158,21 @@ export class FewShotPromptTemplate
     );
   }
 
+  async partial(values: InputValues): Promise<FewShotPromptTemplate> {
+    const promptDict: FewShotPromptTemplate = { ...this };
+    promptDict.inputVariables = this.inputVariables.filter(
+      (iv) => !(iv in values)
+    );
+    promptDict.partialVariables = {
+      ...(this.partialVariables ?? {}),
+      ...values,
+    };
+    return new FewShotPromptTemplate(promptDict);
+  }
+
   format(values: InputValues): string {
-    const examples = this.getExamples(values);
+    const allValues = this.mergePartialAndUserVariables(values);
+    const examples = this.getExamples(allValues);
 
     const exampleStrings = examples.map((example) =>
       this.examplePrompt.format(example)
@@ -161,7 +180,7 @@ export class FewShotPromptTemplate
     const template = [this.prefix, ...exampleStrings, this.suffix].join(
       this.exampleSeparator
     );
-    return renderTemplate(template, this.templateFormat, values);
+    return renderTemplate(template, this.templateFormat, allValues);
   }
 
   serialize(): SerializedFewShotTemplate {

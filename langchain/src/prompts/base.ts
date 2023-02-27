@@ -23,6 +23,9 @@ export interface BasePromptTemplateInput {
    * How to parse the output of calling an LLM on this formatted prompt
    */
   outputParser?: BaseOutputParser;
+
+  /** Partial variables */
+  partialVariables?: InputValues;
 }
 
 /**
@@ -35,14 +38,35 @@ export abstract class BasePromptTemplate implements BasePromptTemplateInput {
 
   outputParser?: BaseOutputParser;
 
+  partialVariables?: InputValues;
+
   constructor(input: BasePromptTemplateInput) {
-    const { inputVariables } = input;
+    const { inputVariables, partialVariables } = input;
     if (inputVariables.includes("stop")) {
       throw new Error(
         "Cannot have an input variable named 'stop', as it is used internally, please rename."
       );
     }
     Object.assign(this, input);
+    Object.assign(this, partialVariables);
+  }
+
+  abstract partial(values: InputValues): Promise<BasePromptTemplate>;
+
+  mergePartialAndUserVariables(userVariables: InputValues): InputValues {
+    const partialVariables = this.partialVariables ?? {};
+    const partialKwargs: InputValues = {};
+    for (let i = 0; i < Object.keys(partialVariables).length; i += 1) {
+      const key = Object.keys(partialVariables)[i];
+      const value = partialVariables[key];
+      if (typeof value === "string") {
+        partialKwargs[key] = value;
+      } else {
+        partialKwargs[key] = value();
+      }
+    }
+    const allKwargs = { ...partialKwargs, ...userVariables };
+    return allKwargs;
   }
 
   /**

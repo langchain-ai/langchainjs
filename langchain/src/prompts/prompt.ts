@@ -76,10 +76,16 @@ export class PromptTemplate
     Object.assign(this, input);
 
     if (this.validateTemplate) {
+      let totalInputVariables = this.inputVariables;
+      if (this.partialVariables) {
+        totalInputVariables = totalInputVariables.concat(
+          Object.keys(this.partialVariables)
+        );
+      }
       checkValidTemplate(
         this.template,
         this.templateFormat,
-        this.inputVariables
+        totalInputVariables
       );
     }
   }
@@ -89,7 +95,8 @@ export class PromptTemplate
   }
 
   format(values: InputValues): string {
-    return renderTemplate(this.template, this.templateFormat, values);
+    const allValues = this.mergePartialAndUserVariables(values);
+    return renderTemplate(this.template, this.templateFormat, allValues);
   }
 
   /**
@@ -134,6 +141,18 @@ export class PromptTemplate
       inputVariables: [...names],
       template,
     });
+  }
+
+  async partial(values: InputValues): Promise<PromptTemplate> {
+    const promptDict: PromptTemplateInput = { ...this };
+    promptDict.inputVariables = this.inputVariables.filter(
+      (iv) => !(iv in values)
+    );
+    promptDict.partialVariables = {
+      ...(this.partialVariables ?? {}),
+      ...values,
+    };
+    return new PromptTemplate(promptDict);
   }
 
   serialize(): SerializedPromptTemplate {
