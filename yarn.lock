@@ -9592,6 +9592,7 @@ __metadata:
     "@dqbd/tiktoken": ^0.4.0
     "@jest/globals": ^29.4.2
     "@tsconfig/recommended": ^1.0.2
+    "@types/js-yaml": ^4
     "@types/node-fetch": 2
     "@types/uuid": ^9
     "@typescript-eslint/eslint-plugin": ^5.51.0
@@ -9614,6 +9615,7 @@ __metadata:
     huggingface: ^1.4.0
     husky: ^8.0.3
     jest: ^29.4.2
+    js-yaml: ^4.1.0
     jsonpointer: ^5.0.1
     lint-staged: ^13.1.1
     node-fetch: 2

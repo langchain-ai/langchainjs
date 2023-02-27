@@ -1,4 +1,6 @@
-import {BaseLLM} from "../../llms";
+import fs from "fs";
+import * as yaml from "js-yaml";
+import { BaseLLM } from "../../llms";
 import { LLMChain } from "../../chains";
 import {
   Agent,
@@ -6,7 +8,8 @@ import {
   AgentInput,
   StaticAgent,
   staticImplements,
-  SerializedAgentT, AgentExecutor,
+  SerializedAgentT,
+  AgentExecutor,
 } from "../index";
 import { PromptTemplate } from "../../prompts";
 import {
@@ -16,14 +19,14 @@ import {
   SQL_PREFIX,
   SQL_SUFFIX,
   JSON_PREFIX,
-  JSON_SUFFIX, OPENAPI_PREFIX, OPENAPI_SUFFIX,
+  JSON_SUFFIX,
+  OPENAPI_PREFIX,
+  OPENAPI_SUFFIX,
 } from "./prompt";
 import { deserializeHelper } from "../helpers";
-import {JsonToolkit, RequestsToolkit, SqlToolkit} from "../tools";
+import { JsonToolkit, RequestsToolkit, SqlToolkit } from "../tools";
 import { interpolateFString } from "../../prompts/template";
-import {DynamicTool, JsonObject, JsonSpec} from "../../dist/agents/tools";
-import fs from "fs";
-import * as yaml from "js-yaml";
+import { DynamicTool, JsonObject, JsonSpec } from "../../dist/agents/tools";
 
 const FINAL_ANSWER_ACTION = "Final Answer:";
 
@@ -178,10 +181,10 @@ export class ZeroShotAgent extends Agent {
   }
 
   static asOpenApiAgent(
-      llm: BaseLLM,
-      requestsToolkit: RequestsToolkit,
-      openApiYaml: string,
-      args?: CreatePromptArgs
+    llm: BaseLLM,
+    requestsToolkit: RequestsToolkit,
+    openApiYaml: string,
+    args?: CreatePromptArgs
   ) {
     const yamlFile = fs.readFileSync(openApiYaml, "utf8");
     const data = yaml.load(yamlFile) as JsonObject;
@@ -219,10 +222,14 @@ export class ZeroShotAgent extends Agent {
       inputVariables = ["input", "agent_scratchpad"],
     } = args ?? {};
 
-    const prompt = ZeroShotAgent.createPrompt(tools, { prefix, suffix, inputVariables});
+    const prompt = ZeroShotAgent.createPrompt(tools, {
+      prefix,
+      suffix,
+      inputVariables,
+    });
     const chain = new LLMChain({
       prompt,
-      llm
+      llm,
     });
     const toolNames = tools.map((tool) => tool.name);
     return new ZeroShotAgent({ llmChain: chain, allowedTools: toolNames });
