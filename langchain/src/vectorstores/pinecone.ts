@@ -10,19 +10,22 @@ type PineconeMetadata = Record<string, any>;
 
 export class PineconeStore extends VectorStore {
   textKey: string;
+  namespace: string;
 
   pineconeClient: VectorOperationsApi;
 
   constructor(
     pineconeClient: VectorOperationsApi,
     embeddings: Embeddings,
-    textKey = "text"
+    textKey = "text",
+    namespace = "embeddings"
   ) {
     super(embeddings);
 
     this.pineconeClient = pineconeClient;
     this.embeddings = embeddings;
     this.textKey = textKey;
+    this.namespace = namespace;
   }
 
   async addDocuments(documents: Document[], ids?: string[]): Promise<void> {
@@ -51,6 +54,7 @@ export class PineconeStore extends VectorStore {
           },
           values,
         })),
+        namespace: this.namespace,
       },
     });
   }
@@ -87,7 +91,8 @@ export class PineconeStore extends VectorStore {
     texts: string[],
     metadatas: object[],
     embeddings: Embeddings,
-    textKey = "text"
+    textKey = "text",
+    namespace = "embeddings"
   ): Promise<PineconeStore> {
     const docs = [];
     for (let i = 0; i < texts.length; i += 1) {
@@ -102,7 +107,8 @@ export class PineconeStore extends VectorStore {
       pineconeClient,
       docs,
       embeddings,
-      textKey
+      textKey,
+      namespace
     );
   }
 
@@ -110,9 +116,10 @@ export class PineconeStore extends VectorStore {
     pineconeClient: VectorOperationsApi,
     docs: Document[],
     embeddings: Embeddings,
-    textKey = "text"
+    textKey = "text",
+    namespace = "embeddings"
   ): Promise<PineconeStore> {
-    const instance = new this(pineconeClient, embeddings, textKey);
+    const instance = new this(pineconeClient, embeddings, textKey, namespace);
     await instance.addDocuments(docs);
     return instance;
   }
@@ -120,9 +127,10 @@ export class PineconeStore extends VectorStore {
   static async fromExistingIndex(
     pineconeClient: VectorOperationsApi,
     embeddings: Embeddings,
-    textKey = "text"
+    textKey = "text",
+    namespace = "embeddings"
   ): Promise<PineconeStore> {
-    const instance = new this(pineconeClient, embeddings, textKey);
+    const instance = new this(pineconeClient, embeddings, textKey, namespace);
     return instance;
   }
 }
