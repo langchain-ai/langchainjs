@@ -1,4 +1,4 @@
-import type { PineconeClient } from "pinecone-client";
+import type { VectorOperationsApi } from "@pinecone-database/pinecone/dist/pinecone-generated-ts-fetch";
 import { v4 as uuidv4 } from "uuid";
 
 import { VectorStore } from "./base";
@@ -11,10 +11,10 @@ type PineconeMetadata = Record<string, any>;
 export class PineconeStore extends VectorStore {
   textKey: string;
 
-  pineconeClient: PineconeClient<PineconeMetadata>;
+  pineconeClient: VectorOperationsApi;
 
   constructor(
-    pineconeClient: PineconeClient<PineconeMetadata>,
+    pineconeClient: VectorOperationsApi,
     embeddings: Embeddings,
     textKey = "text"
   ) {
@@ -34,18 +34,24 @@ export class PineconeStore extends VectorStore {
     );
   }
 
-  async addVectors(vectors: number[][], documents: Document[], ids?: string[]) {
+  async addVectors(
+    vectors: number[][],
+    documents: Document[],
+    ids?: string[]
+  ): Promise<void> {
     const documentIds = ids == null ? documents.map(() => uuidv4()) : ids;
 
-    return this.pineconeClient.upsert({
-      vectors: vectors.map((values, idx) => ({
-        id: documentIds[idx],
-        metadata: {
-          ...documents[idx].metadata,
-          [this.textKey]: documents[idx].pageContent,
-        },
-        values,
-      })),
+    await this.pineconeClient.upsert({
+      upsertRequest: {
+        vectors: vectors.map((values, idx) => ({
+          id: documentIds[idx],
+          metadata: {
+            ...documents[idx].metadata,
+            [this.textKey]: documents[idx].pageContent,
+          },
+          values,
+        })),
+      },
     });
   }
 
@@ -54,24 +60,30 @@ export class PineconeStore extends VectorStore {
     k: number
   ): Promise<[Document, number][]> {
     const results = await this.pineconeClient.query({
-      topK: k,
-      includeMetadata: true,
-      vector: query,
+      queryRequest: {
+        topK: k,
+        includeMetadata: true,
+        vector: query,
+      },
     });
 
     const result: [Document, number][] = [];
 
-    for (const res of results.matches) {
-      const { [this.textKey]: pageContent, ...metadata } =
-        res.metadata as PineconeMetadata;
-      result.push([new Document({ metadata, pageContent }), res.score]);
+    if (results.matches) {
+      for (const res of results.matches) {
+        const { [this.textKey]: pageContent, ...metadata } =
+          res.metadata as PineconeMetadata;
+        if (res.score) {
+          result.push([new Document({ metadata, pageContent }), res.score]);
+        }
+      }
     }
 
     return result;
   }
 
   static async fromTexts(
-    pineconeClient: PineconeClient<PineconeMetadata>,
+    pineconeClient: VectorOperationsApi,
     texts: string[],
     metadatas: object[],
     embeddings: Embeddings,
@@ -95,7 +107,7 @@ export class PineconeStore extends VectorStore {
   }
 
   static async fromDocuments(
-    pineconeClient: PineconeClient<PineconeMetadata>,
+    pineconeClient: VectorOperationsApi,
     docs: Document[],
     embeddings: Embeddings,
     textKey = "text"
@@ -106,7 +118,7 @@ export class PineconeStore extends VectorStore {
   }
 
   static async fromExistingIndex(
-    pineconeClient: PineconeClient<PineconeMetadata>,
+    pineconeClient: VectorOperationsApi,
     embeddings: Embeddings,
     textKey = "text"
   ): Promise<PineconeStore> {

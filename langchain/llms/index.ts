@@ -1,6 +1,7 @@
 export { BaseLLM, LLM, SerializedLLM } from "./base";
 export { OpenAI, PromptLayerOpenAI } from "./openai";
 export { Cohere } from "./cohere";
+export { HuggingFaceInference } from "./hf";
 export { loadLLM } from "./load";
 
 export type LLMCallbackManager = {
