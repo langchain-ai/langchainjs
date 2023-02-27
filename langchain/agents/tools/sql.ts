@@ -1,5 +1,5 @@
 import sqlite3 from "sqlite3";
-import { Tool, Toolkit } from "./base";
+import { Tool } from "./base";
 import { OpenAI } from "../../llms";
 import { LLMChain } from "../../chains";
 import { PromptTemplate } from "../../prompts";
@@ -200,23 +200,4 @@ If there are any of the above mistakes, rewrite the query. If there are no mista
   description = `
     Use this tool to double check if your query is correct before executing it.
     Always use this tool before executing a query with query-sql!`;
-}
-
-export class SqlToolkit extends Toolkit {
-  tools: Tool[];
-
-  db: SqlDatabase;
-
-  dialect = "sqlite";
-
-  constructor(db: SqlDatabase) {
-    super();
-    this.db = db;
-    this.tools = [
-      new QuerySqlTool(db),
-      new InfoSqlTool(db),
-      new ListTablesSqlTool(db),
-      new QueryCheckerTool(),
-    ];
-  }
 }
