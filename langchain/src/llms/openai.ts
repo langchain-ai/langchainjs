@@ -330,10 +330,14 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
   async completionWithRetry(request: CreateCompletionRequest) {
     if (!this.client) {
       const { Configuration, OpenAIApi, fetchAdapter } = await OpenAI.imports();
-      const clientConfig = new Configuration({
-        ...this.clientConfig,
-        baseOptions: { adapter: fetchAdapter },
-      });
+      const clientConfig = new Configuration(
+        request.stream
+          ? this.clientConfig
+          : {
+              ...this.clientConfig,
+              baseOptions: { adapter: fetchAdapter },
+            }
+      );
       this.client = new OpenAIApi(clientConfig);
     }
     const makeCompletionRequest = async () =>

@@ -6,10 +6,14 @@
  */
 
 import axios from "axios";
-import settle from "axios/lib/core/settle";
-import buildURL from "axios/lib/helpers/buildURL";
-import buildFullPath from "axios/lib/core/buildFullPath";
-import { isUndefined, isStandardBrowserEnv, isFormData } from "axios/lib/utils";
+import settle from "axios/lib/core/settle.js";
+import buildURL from "axios/lib/helpers/buildURL.js";
+import buildFullPath from "axios/lib/core/buildFullPath.js";
+import {
+  isUndefined,
+  isStandardBrowserEnv,
+  isFormData,
+} from "axios/lib/utils.js";
 
 /**
  * - Create a request object
