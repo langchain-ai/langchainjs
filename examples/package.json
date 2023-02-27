@@ -4,6 +4,7 @@
   "private": true,
   "description": "Langchain examples",
   "main": "./dist/index.js",
+  "type": "module",
   "files": [
     "dist/"
   ],

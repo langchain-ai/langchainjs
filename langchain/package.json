@@ -2,48 +2,36 @@
   "name": "langchain",
   "version": "0.0.11",
   "description": "Typescript bindings for langchain",
+  "type": "module",
   "main": "./index.js",
   "types": "./index.d.ts",
   "files": [
     "dist/",
     "agents.js",
-    "agents.mjs",
     "agents.d.ts",
     "tools.js",
-    "tools.mjs",
     "tools.d.ts",
     "chains.js",
-    "chains.mjs",
     "chains.d.ts",
     "embeddings.js",
-    "embeddings.mjs",
     "embeddings.d.ts",
     "llms.js",
-    "llms.mjs",
     "llms.d.ts",
     "prompts.js",
-    "prompts.mjs",
     "prompts.d.ts",
     "vectorstores.js",
-    "vectorstores.mjs",
     "vectorstores.d.ts",
     "text_splitter.js",
-    "text_splitter.mjs",
     "text_splitter.d.ts",
     "memory.js",
-    "memory.mjs",
     "memory.d.ts",
     "document.js",
-    "document.mjs",
     "document.d.ts",
     "docstore.js",
-    "docstore.mjs",
     "docstore.d.ts",
     "document_loaders.js",
-    "document_loaders.mjs",
     "document_loaders.d.ts",
     "index.js",
-    "index.mjs",
     "index.d.ts"
   ],
   "repository": {
@@ -58,11 +46,12 @@
     "precommit": "tsc --noEmit && lint-staged",
     "clean": "rm -rf dist/ && node create-entrypoints.js clean",
     "prepack": "yarn build",
-    "test": "yarn clean && jest --testPathIgnorePatterns=\\.int\\.test.ts",
-    "test:integration": "yarn clean && jest --testPathPattern=\\.int\\.test.ts --testTimeout 20000",
+    "test": "yarn clean && NODE_OPTIONS=--experimental-vm-modules jest --testPathIgnorePatterns=\\.int\\.test.ts",
+    "test:node16": "yarn clean && NODE_OPTIONS='--experimental-vm-modules --experimental-fetch' jest --testPathIgnorePatterns=\\.int\\.test.ts",
+    "test:integration": "yarn clean && NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern=\\.int\\.test.ts --testTimeout 20000",
     "prepare": "husky install",
-    "format": "prettier --write \"**/*.ts\"",
-    "format:diff": "prettier --list-different \"**/*.ts\"",
+    "format": "prettier --write \"src\"",
+    "format:diff": "prettier --list-different \"src\"",
     "ci": "yarn lint && yarn format:diff && yarn build"
   },
   "author": "Langchain",
@@ -143,13 +132,13 @@
     }
   },
   "dependencies": {
-    "@vespaiach/axios-fetch-adapter": "^0.3.1",
+    "browser-or-node": "^2.1.1",
     "deepcopy": "^2.1.0",
     "eventsource-parser": "^0.1.0",
     "exponential-backoff": "^3.1.0",
     "expr-eval": "^2.0.2",
     "gpt-3-encoder": "^1.1.4",
-    "p-queue": "6",
+    "p-queue": "^7.3.4",
     "uuid": "^9.0.0",
     "yaml": "^2.2.1"
   },
@@ -178,56 +167,56 @@
   ],
   "exports": {
     ".": {
-      "import": "./index.mjs",
-      "default": "./index.js"
+      "import": "./index.js",
+      "types": "./index.d.ts"
     },
     "./agents": {
-      "import": "./agents.mjs",
-      "default": "./agents.js"
+      "import": "./agents.js",
+      "types": "./agents.d.ts"
     },
     "./tools": {
-      "import": "./tools.mjs",
-      "default": "./tools.js"
+      "import": "./tools.js",
+      "types": "./tools.d.ts"
     },
     "./chains": {
-      "import": "./chains.mjs",
-      "default": "./chains.js"
+      "import": "./chains.js",
+      "types": "./chains.d.ts"
     },
     "./embeddings": {
-      "import": "./embeddings.mjs",
-      "default": "./embeddings.js"
+      "import": "./embeddings.js",
+      "types": "./embeddings.d.ts"
     },
     "./llms": {
-      "import": "./llms.mjs",
-      "default": "./llms.js"
+      "import": "./llms.js",
+      "types": "./llms.d.ts"
     },
     "./prompts": {
-      "import": "./prompts.mjs",
-      "default": "./prompts.js"
+      "import": "./prompts.js",
+      "types": "./prompts.d.ts"
     },
     "./vectorstores": {
-      "import": "./vectorstores.mjs",
-      "default": "./vectorstores.js"
+      "import": "./vectorstores.js",
+      "types": "./vectorstores.d.ts"
     },
     "./text_splitter": {
-      "import": "./text_splitter.mjs",
-      "default": "./text_splitter.js"
+      "import": "./text_splitter.js",
+      "types": "./text_splitter.d.ts"
     },
     "./memory": {
-      "import": "./memory.mjs",
-      "default": "./memory.js"
+      "import": "./memory.js",
+      "types": "./memory.d.ts"
     },
     "./document": {
-      "import": "./document.mjs",
-      "default": "./document.js"
+      "import": "./document.js",
+      "types": "./document.d.ts"
     },
     "./docstore": {
-      "import": "./docstore.mjs",
-      "default": "./docstore.js"
+      "import": "./docstore.js",
+      "types": "./docstore.d.ts"
     },
     "./document_loaders": {
-      "import": "./document_loaders.mjs",
-      "default": "./document_loaders.js"
+      "import": "./document_loaders.js",
+      "types": "./document_loaders.d.ts"
     }
   }
 }

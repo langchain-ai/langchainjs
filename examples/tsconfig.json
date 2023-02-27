@@ -4,6 +4,7 @@
     "outDir": "dist",
     "lib": [
       "ESNext",
+      "DOM"
     ],
     "sourceMap": true,
     "allowSyntheticDefaultImports": true,
