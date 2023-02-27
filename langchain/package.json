@@ -129,6 +129,7 @@
     }
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.7.1",
     "browser-or-node": "^2.1.1",
     "d3-dsv": "^3.0.1",
     "deepcopy": "^2.1.0",
