@@ -67,6 +67,7 @@ module.exports = {
         },
       ],
     },
+    "deployment",
     {
       type: "category",
       label: "Ecosystem",
