@@ -1,15 +1,15 @@
-import { BaseLLM } from "../../llms/index.js";
+import { BaseLLM } from "../../../llms/index.js";
 import {
   JsonGetValueTool,
   JsonListKeysTool,
   JsonSpec,
   Tool,
-} from "../tools/index.js";
+} from "../../tools/index.js";
 import { JSON_PREFIX, JSON_SUFFIX } from "./prompt.js";
-import { LLMChain } from "../../chains/index.js";
-import { CreatePromptArgs, ZeroShotAgent } from "../mrkl/index.js";
-import { Toolkit } from "./base.js";
-import { AgentExecutor } from "../executor.js";
+import { LLMChain } from "../../../chains/index.js";
+import { CreatePromptArgs, ZeroShotAgent } from "../../mrkl/index.js";
+import { Toolkit } from "../base.js";
+import { AgentExecutor } from "../../executor.js";
 
 export class JsonToolkit extends Toolkit {
   tools: Tool[];
