@@ -1,3 +1,4 @@
+/* eslint-disable no-param-reassign */
 /* eslint-disable import/no-extraneous-dependencies */
 
 /**
@@ -30,7 +31,7 @@ export default async function fetchAdapter(config) {
         setTimeout(() => {
           const message = config.timeoutErrorMessage
             ? config.timeoutErrorMessage
-            : "timeout of " + config.timeout + "ms exceeded";
+            : `timeout of ${config.timeout}ms exceeded`;
           res(createError(message, config, "ECONNABORTED", request));
         }, config.timeout);
       })
@@ -42,6 +43,7 @@ export default async function fetchAdapter(config) {
     if (data instanceof Error) {
       reject(data);
     } else {
+      // eslint-disable-next-line no-unused-expressions
       Object.prototype.toString.call(config.settle) === "[object Function]"
         ? config.settle(resolve, reject, data)
         : settle(resolve, reject, data);
@@ -66,7 +68,7 @@ async function getResponse(request, config) {
     status: stageOne.status,
     statusText: stageOne.statusText,
     headers: new Headers(stageOne.headers), // Make a copy of headers
-    config: config,
+    config,
     request,
   };
 
@@ -105,12 +107,12 @@ function createRequest(config) {
     const password = config.auth.password
       ? decodeURI(encodeURIComponent(config.auth.password))
       : "";
-    headers.set("Authorization", `Basic ${btoa(username + ":" + password)}`);
+    headers.set("Authorization", `Basic ${btoa(`${username}:${password}`)}`);
   }
 
   const method = config.method.toUpperCase();
   const options = {
-    headers: headers,
+    headers,
     method,
   };
   if (method !== "GET" && method !== "HEAD") {
@@ -178,7 +180,7 @@ function createError(message, config, code, request, response) {
     );
   }
 
-  var error = new Error(message);
+  const error = new Error(message);
   return enhanceError(error, config, code, request, response);
 }
 

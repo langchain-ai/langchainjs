@@ -12,7 +12,7 @@ module.exports = {
     sourceType: "module",
   },
   plugins: ["@typescript-eslint"],
-  ignorePatterns: ["dist", "docs", "node_modules", "*.d.ts", "*.cjs", "*.js"],
+  ignorePatterns: [".eslintrc.cjs", "node_modules"],
   rules: {
     "@typescript-eslint/explicit-module-boundary-types": 0,
     "@typescript-eslint/no-empty-function": 0,
