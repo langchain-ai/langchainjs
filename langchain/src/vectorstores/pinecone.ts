@@ -11,7 +11,7 @@ type PineconeMetadata = Record<string, any>;
 export class PineconeStore extends VectorStore {
   textKey: string;
 
-  namespace: string;
+  namespace: string | undefined;
 
   pineconeClient: VectorOperationsApi;
 
@@ -19,7 +19,7 @@ export class PineconeStore extends VectorStore {
     pineconeClient: VectorOperationsApi,
     embeddings: Embeddings,
     textKey = "text",
-    namespace = "embeddings"
+    namespace: string | undefined = undefined
   ) {
     super(embeddings);
 
@@ -93,7 +93,7 @@ export class PineconeStore extends VectorStore {
     metadatas: object[],
     embeddings: Embeddings,
     textKey = "text",
-    namespace = "embeddings"
+    namespace: string | undefined = undefined
   ): Promise<PineconeStore> {
     const docs = [];
     for (let i = 0; i < texts.length; i += 1) {
@@ -118,7 +118,7 @@ export class PineconeStore extends VectorStore {
     docs: Document[],
     embeddings: Embeddings,
     textKey = "text",
-    namespace = "embeddings"
+    namespace: string | undefined = undefined
   ): Promise<PineconeStore> {
     const instance = new this(pineconeClient, embeddings, textKey, namespace);
     await instance.addDocuments(docs);
@@ -129,7 +129,7 @@ export class PineconeStore extends VectorStore {
     pineconeClient: VectorOperationsApi,
     embeddings: Embeddings,
     textKey = "text",
-    namespace = "embeddings"
+    namespace: string | undefined = undefined
   ): Promise<PineconeStore> {
     const instance = new this(pineconeClient, embeddings, textKey, namespace);
     return instance;
