@@ -10,6 +10,8 @@ import {
 
 let db: sqlite3.Database;
 
+const previousEnv = process.env;
+
 beforeEach(() => {
   db = new sqlite3.Database(":memory:");
   db.serialize(() => {
@@ -27,10 +29,14 @@ beforeEach(() => {
     db.run("INSERT INTO products (name, price) VALUES ('Banana', 200)");
     db.run("INSERT INTO products (name, price) VALUES ('Orange', 300)");
   });
+
+  process.env = { ...previousEnv, OPENAI_API_KEY: "test" };
 });
 
 afterEach(() => {
   db.close();
+
+  process.env = previousEnv;
 });
 
 test("QuerySqlTool", async () => {
