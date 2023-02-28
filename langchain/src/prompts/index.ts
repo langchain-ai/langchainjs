@@ -3,6 +3,7 @@ export {
   BasePromptTemplateInput,
   SerializedBasePromptTemplate,
   InputValues,
+  PartialValues,
 } from "./base.js";
 export {
   PromptTemplate,
