@@ -1,3 +1,7 @@
+---
+sidebar_position: 1
+---
+
 # Folders with multiple files
 
 This example goes over how to load data from folders with multiple files. The second argument is a map of file extensions to loader factories. Each file will be passed to the matching loader, and the resulting documents will be concatenated together.
