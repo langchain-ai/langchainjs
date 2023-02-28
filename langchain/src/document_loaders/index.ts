@@ -5,6 +5,7 @@ export { CollegeConfidentialLoader } from "./college_confidential.js";
 export { GitbookLoader } from "./gitbook.js";
 export { HNLoader } from "./hn.js";
 export { IMSDBLoader } from "./imsdb.js";
+export { DirectoryLoader } from "./directory.js";
 export { SRTLoader } from "./srt.js";
 export { PDFLoader } from "./pdf.js";
 export { TextLoader } from "./text.js";
