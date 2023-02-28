@@ -1,10 +1,12 @@
 import path from "path";
+import url from "url";
 
 const [exampleName, ...args] = process.argv.slice(2);
 let runExample;
 try {
-  // eslint-disable-next-line import/no-dynamic-require,global-require
-  ({ run: runExample } = require(path.join(__dirname, exampleName)));
+  ({ run: runExample } = await import(
+    path.join(path.dirname(url.fileURLToPath(import.meta.url)), exampleName)
+  ));
 } catch (e) {
   throw new Error(`Could not load example ${exampleName}: ${e}`);
 }

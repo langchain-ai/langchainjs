@@ -6,6 +6,7 @@
       "ESNext",
       "DOM"
     ],
+    "module": "nodenext",
     "sourceMap": true,
     "allowSyntheticDefaultImports": true,
     "baseUrl": "./",

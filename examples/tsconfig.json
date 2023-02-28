@@ -6,6 +6,8 @@
       "ESNext",
       "DOM"
     ],
+    "target": "ES2020",
+    "module": "nodenext",
     "sourceMap": true,
     "allowSyntheticDefaultImports": true,
     "baseUrl": "./src",
