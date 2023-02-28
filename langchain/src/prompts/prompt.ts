@@ -2,6 +2,7 @@ import {
   BasePromptTemplate,
   BasePromptTemplateInput,
   InputValues,
+  PartialValues,
 } from "./index.js";
 import {
   TemplateFormat,
@@ -143,7 +144,7 @@ export class PromptTemplate
     });
   }
 
-  async partial(values: InputValues): Promise<PromptTemplate> {
+  async partial(values: PartialValues): Promise<PromptTemplate> {
     const promptDict: PromptTemplateInput = { ...this };
     promptDict.inputVariables = this.inputVariables.filter(
       (iv) => !(iv in values)

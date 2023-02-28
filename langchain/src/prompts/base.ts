@@ -9,6 +9,7 @@ export type SerializedBasePromptTemplate = ReturnType<
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type InputValues = Record<string, any>;
+export type PartialValues = Record<string, string | (() => Promise<string>)>;
 
 /**
  * Input common to all prompt templates.
@@ -25,7 +26,7 @@ export interface BasePromptTemplateInput {
   outputParser?: BaseOutputParser;
 
   /** Partial variables */
-  partialVariables?: InputValues;
+  partialVariables?: PartialValues;
 }
 
 /**
@@ -51,23 +52,23 @@ export abstract class BasePromptTemplate implements BasePromptTemplateInput {
     Object.assign(this, partialVariables);
   }
 
-  abstract partial(values: InputValues): Promise<BasePromptTemplate>;
+  abstract partial(values: PartialValues): Promise<BasePromptTemplate>;
 
   async mergePartialAndUserVariables(
     userVariables: InputValues
   ): Promise<InputValues> {
     const partialVariables = this.partialVariables ?? {};
-    const partialKwargs: InputValues = {};
+    const partialValues: InputValues = {};
     for (let i = 0; i < Object.keys(partialVariables).length; i += 1) {
       const key = Object.keys(partialVariables)[i];
       const value = partialVariables[key];
       if (typeof value === "string") {
-        partialKwargs[key] = value;
+        partialValues[key] = value;
       } else {
-        partialKwargs[key] = await value();
+        partialValues[key] = await value();
       }
     }
-    const allKwargs = { ...partialKwargs, ...userVariables };
+    const allKwargs = { ...partialValues, ...userVariables };
     return allKwargs;
   }
 
