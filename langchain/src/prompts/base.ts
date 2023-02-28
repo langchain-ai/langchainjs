@@ -53,7 +53,9 @@ export abstract class BasePromptTemplate implements BasePromptTemplateInput {
 
   abstract partial(values: InputValues): Promise<BasePromptTemplate>;
 
-  mergePartialAndUserVariables(userVariables: InputValues): InputValues {
+  async mergePartialAndUserVariables(
+    userVariables: InputValues
+  ): Promise<InputValues> {
     const partialVariables = this.partialVariables ?? {};
     const partialKwargs: InputValues = {};
     for (let i = 0; i < Object.keys(partialVariables).length; i += 1) {
@@ -62,7 +64,7 @@ export abstract class BasePromptTemplate implements BasePromptTemplateInput {
       if (typeof value === "string") {
         partialKwargs[key] = value;
       } else {
-        partialKwargs[key] = value();
+        partialKwargs[key] = await value();
       }
     }
     const allKwargs = { ...partialKwargs, ...userVariables };
@@ -80,7 +82,7 @@ export abstract class BasePromptTemplate implements BasePromptTemplateInput {
    * prompt.format({ foo: "bar" });
    * ```
    */
-  abstract format(values: InputValues): string;
+  abstract format(values: InputValues): Promise<string>;
 
   /**
    * Return the string type key uniquely identifying this class of prompt template.

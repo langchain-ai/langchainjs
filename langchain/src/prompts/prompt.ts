@@ -94,8 +94,8 @@ export class PromptTemplate
     return "prompt";
   }
 
-  format(values: InputValues): string {
-    const allValues = this.mergePartialAndUserVariables(values);
+  async format(values: InputValues): Promise<string> {
+    const allValues = await this.mergePartialAndUserVariables(values);
     return renderTemplate(this.template, this.templateFormat, allValues);
   }
 

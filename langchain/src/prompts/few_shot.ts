@@ -170,8 +170,8 @@ export class FewShotPromptTemplate
     return new FewShotPromptTemplate(promptDict);
   }
 
-  format(values: InputValues): string {
-    const allValues = this.mergePartialAndUserVariables(values);
+  async format(values: InputValues): Promise<string> {
+    const allValues = await this.mergePartialAndUserVariables(values);
     const examples = this.getExamples(allValues);
 
     const exampleStrings = examples.map((example) =>

@@ -7,7 +7,7 @@ test("Test using partial", async () => {
     inputVariables: ["foo"],
     partialVariables: { bar: "baz" },
   });
-  expect(prompt.format({ foo: "foo" })).toBe("foobaz");
+  expect(await prompt.format({ foo: "foo" })).toBe("foobaz");
 });
 
 test("Test using full partial", async () => {
@@ -16,7 +16,7 @@ test("Test using full partial", async () => {
     inputVariables: [],
     partialVariables: { bar: "baz", foo: "boo" },
   });
-  expect(prompt.format({})).toBe("boobaz");
+  expect(await prompt.format({})).toBe("boobaz");
 });
 
 test("Test partial", async () => {
@@ -25,7 +25,7 @@ test("Test partial", async () => {
     inputVariables: ["foo", "bar"],
   });
   const partialPrompt = await prompt.partial({ foo: "foo" });
-  expect(partialPrompt.format({ bar: "baz" })).toBe("foobaz");
+  expect(await partialPrompt.format({ bar: "baz" })).toBe("foobaz");
 });
 
 test("Test partial with function", async () => {
@@ -34,5 +34,5 @@ test("Test partial with function", async () => {
     inputVariables: ["foo", "bar"],
   });
   const partialPrompt = await prompt.partial({ foo: () => "boo" });
-  expect(partialPrompt.format({ bar: "baz" })).toBe("boobaz");
+  expect(await partialPrompt.format({ bar: "baz" })).toBe("boobaz");
 });
