@@ -28,8 +28,7 @@ test("Test Directory loader", async () => {
   expect(docs.map((d) => d.metadata)).toEqual([
     // PDF
     {
-      source:
-        "/Users/nuno/dev/langchainjs/langchain/src/document_loaders/tests/example_data/1706.03762.pdf",
+      source: path.resolve(directoryPath, "1706.03762.pdf"),
     },
     // CSV
     ...Array.from({ length: 32 }, (_) => ({
@@ -47,8 +46,7 @@ test("Test Directory loader", async () => {
     })),
     // TXT
     {
-      source:
-        "/Users/nuno/dev/langchainjs/langchain/src/document_loaders/tests/example_data/example.txt",
+      source: path.resolve(directoryPath, "example.txt"),
     },
   ]);
 });
