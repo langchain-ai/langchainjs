@@ -152,7 +152,7 @@ export class FewShotPromptTemplate
     );
   }
 
-  format(values: InputValues): string {
+  async format(values: InputValues): Promise<string> {
     const examples = this.getExamples(values);
 
     const exampleStrings = examples.map((example) =>

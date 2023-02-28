@@ -56,7 +56,7 @@ export abstract class BasePromptTemplate implements BasePromptTemplateInput {
    * prompt.format({ foo: "bar" });
    * ```
    */
-  abstract format(values: InputValues): string;
+  abstract format(values: InputValues): Promise<string>;
 
   /**
    * Return the string type key uniquely identifying this class of prompt template.
