@@ -33,10 +33,6 @@ export class DirectoryLoader extends BaseDocumentLoader {
     }
   }
 
-  protected async parse(raw: string): Promise<string[]> {
-    return [raw];
-  }
-
   public async load(): Promise<Document[]> {
     const { readdir, extname, resolve } = await DirectoryLoader.imports();
     const files = await readdir(this.directoryPath, { withFileTypes: true });
