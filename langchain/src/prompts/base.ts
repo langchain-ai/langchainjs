@@ -9,6 +9,10 @@ export type SerializedBasePromptTemplate = ReturnType<
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type InputValues = Record<string, any>;
+export type PartialValues = Record<
+  string,
+  string | (() => Promise<string>) | (() => string)
+>;
 
 /**
  * Input common to all prompt templates.
@@ -23,6 +27,9 @@ export interface BasePromptTemplateInput {
    * How to parse the output of calling an LLM on this formatted prompt
    */
   outputParser?: BaseOutputParser;
+
+  /** Partial variables */
+  partialVariables?: PartialValues;
 }
 
 /**
@@ -35,6 +42,8 @@ export abstract class BasePromptTemplate implements BasePromptTemplateInput {
 
   outputParser?: BaseOutputParser;
 
+  partialVariables?: InputValues;
+
   constructor(input: BasePromptTemplateInput) {
     const { inputVariables } = input;
     if (inputVariables.includes("stop")) {
@@ -43,6 +52,26 @@ export abstract class BasePromptTemplate implements BasePromptTemplateInput {
       );
     }
     Object.assign(this, input);
+  }
+
+  abstract partial(values: PartialValues): Promise<BasePromptTemplate>;
+
+  async mergePartialAndUserVariables(
+    userVariables: InputValues
+  ): Promise<InputValues> {
+    const partialVariables = this.partialVariables ?? {};
+    const partialValues: InputValues = {};
+    for (let i = 0; i < Object.keys(partialVariables).length; i += 1) {
+      const key = Object.keys(partialVariables)[i];
+      const value = partialVariables[key];
+      if (typeof value === "string") {
+        partialValues[key] = value;
+      } else {
+        partialValues[key] = await value();
+      }
+    }
+    const allKwargs = { ...partialValues, ...userVariables };
+    return allKwargs;
   }
 
   /**

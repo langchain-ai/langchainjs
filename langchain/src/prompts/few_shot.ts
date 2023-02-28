@@ -2,6 +2,7 @@ import {
   BasePromptTemplate,
   InputValues,
   BasePromptTemplateInput,
+  PartialValues,
 } from "./index.js";
 import {
   TemplateFormat,
@@ -127,10 +128,16 @@ export class FewShotPromptTemplate
     }
 
     if (this.validateTemplate) {
+      let totalInputVariables = this.inputVariables;
+      if (this.partialVariables) {
+        totalInputVariables = totalInputVariables.concat(
+          Object.keys(this.partialVariables)
+        );
+      }
       checkValidTemplate(
         this.prefix + this.suffix,
         this.templateFormat,
-        this.inputVariables
+        totalInputVariables
       );
     }
   }
@@ -152,8 +159,21 @@ export class FewShotPromptTemplate
     );
   }
 
+  async partial(values: PartialValues): Promise<FewShotPromptTemplate> {
+    const promptDict: FewShotPromptTemplate = { ...this };
+    promptDict.inputVariables = this.inputVariables.filter(
+      (iv) => !(iv in values)
+    );
+    promptDict.partialVariables = {
+      ...(this.partialVariables ?? {}),
+      ...values,
+    };
+    return new FewShotPromptTemplate(promptDict);
+  }
+
   async format(values: InputValues): Promise<string> {
-    const examples = this.getExamples(values);
+    const allValues = await this.mergePartialAndUserVariables(values);
+    const examples = this.getExamples(allValues);
 
     const exampleStrings = examples.map((example) =>
       this.examplePrompt.format(example)
@@ -161,7 +181,7 @@ export class FewShotPromptTemplate
     const template = [this.prefix, ...exampleStrings, this.suffix].join(
       this.exampleSeparator
     );
-    return renderTemplate(template, this.templateFormat, values);
+    return renderTemplate(template, this.templateFormat, allValues);
   }
 
   serialize(): SerializedFewShotTemplate {
