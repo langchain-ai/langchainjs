@@ -63,6 +63,7 @@
     "@jest/globals": "^29.4.2",
     "@pinecone-database/pinecone": "^0.0.8",
     "@tsconfig/recommended": "^1.0.2",
+    "@types/d3-dsv": "^3",
     "@types/uuid": "^9",
     "@typescript-eslint/eslint-plugin": "^5.51.0",
     "@typescript-eslint/parser": "^5.51.0",
@@ -133,6 +134,7 @@
   },
   "dependencies": {
     "browser-or-node": "^2.1.1",
+    "d3-dsv": "^3.0.1",
     "deepcopy": "^2.1.0",
     "eventsource-parser": "^0.1.0",
     "exponential-backoff": "^3.1.0",
