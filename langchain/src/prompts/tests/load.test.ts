@@ -12,7 +12,7 @@ test("Load Hello World Prompt", async () => {
   const helloWorld = path.join(PROMPTS_DIR, "hello_world.yaml");
   const prompt = await loadPrompt(helloWorld);
   expect(prompt._getPromptType()).toBe("prompt");
-  expect(prompt.format({})).toBe("Say hello world.");
+  expect(await prompt.format({})).toBe("Say hello world.");
 });
 
 test("Load hub prompt", async () => {
@@ -20,5 +20,5 @@ test("Load hub prompt", async () => {
     "lc@abb92d8://prompts/hello-world/prompt.yaml"
   );
   expect(prompt._getPromptType()).toBe("prompt");
-  expect(prompt.format({})).toBe("Say hello world.");
+  expect(await prompt.format({})).toBe("Say hello world.");
 });

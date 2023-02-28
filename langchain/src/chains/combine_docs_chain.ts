@@ -171,11 +171,14 @@ export class MapReduceDocumentsChain
         [this.documentVariableName]: d.pageContent,
         ...rest,
       }));
-      const length = inputs
-        .map((i) =>
-          this.llmChain.llm.getNumTokens(this.llmChain.prompt.format(i))
-        )
-        .reduce((a, b) => a + b, 0);
+      const promises = inputs.map(async (i) => {
+        const prompt = await this.llmChain.prompt.format(i);
+        return this.llmChain.llm.getNumTokens(prompt);
+      });
+
+      const length = await Promise.all(promises).then((results) =>
+        results.reduce((a, b) => a + b, 0)
+      );
 
       if (length < this.maxTokens) {
         break;

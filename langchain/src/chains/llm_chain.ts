@@ -69,7 +69,7 @@ export class LLMChain extends BaseChain implements LLMChainInput {
     if ("stop" in values && Array.isArray(values.stop)) {
       stop = values.stop;
     }
-    const formattedString = this.prompt.format(values);
+    const formattedString = await this.prompt.format(values);
     const llmResult = await this.llm.call(formattedString, stop);
     const result = { [this.outputKey]: llmResult };
     return result;

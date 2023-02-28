@@ -88,7 +88,7 @@ export class PromptTemplate
     return "prompt";
   }
 
-  format(values: InputValues): string {
+  async format(values: InputValues): Promise<string> {
     return renderTemplate(this.template, this.templateFormat, values);
   }
 
