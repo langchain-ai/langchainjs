@@ -9,7 +9,10 @@ export class JSONLinesLoader extends TextLoader {
 
   protected async parse(raw: string): Promise<string[]> {
     const lines = raw.split("\n");
-    const jsons = lines.map((line) => JSON.parse(line));
+    const jsons = lines
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .map((line) => JSON.parse(line));
     const pointer = jsonpointer.compile(this.pointer);
     return jsons.map((json) => pointer.get(json));
   }
