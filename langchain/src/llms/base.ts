@@ -1,7 +1,7 @@
 import GPT3Tokenizer from "gpt3-tokenizer";
 import PQueue from "p-queue";
 
-import { BaseCache, getKey, InMemoryCache } from "../cache.js";
+import { BaseCache, InMemoryCache } from "../cache.js";
 import {
   BaseLanguageModel,
   BasePromptValue,
@@ -133,7 +133,7 @@ export abstract class BaseLLM extends BaseLanguageModel {
     const missingPromptIndices: number[] = [];
     const generations = await Promise.all(
       prompts.map(async (prompt, index) => {
-        const result = cache.lookup(await getKey(prompt, llmStringKey));
+        const result = await cache.lookup(prompt, llmStringKey);
         if (!result) {
           missingPromptIndices.push(index);
         }
@@ -151,8 +151,7 @@ export abstract class BaseLLM extends BaseLanguageModel {
         results.generations.map(async (generation, index) => {
           const promptIndex = missingPromptIndices[index];
           generations[promptIndex] = generation;
-          const key = await getKey(prompts[promptIndex], llmStringKey);
-          cache.update(key, generation);
+          cache.update(prompts[promptIndex], llmStringKey, generation);
         })
       );
       llmOutput = results.llmOutput ?? {};
