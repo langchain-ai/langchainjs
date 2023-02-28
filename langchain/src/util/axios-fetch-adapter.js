@@ -1,3 +1,8 @@
+/* eslint-disable no-plusplus */
+/* eslint-disable prefer-template */
+/* eslint-disable prefer-arrow-callback */
+/* eslint-disable no-var */
+/* eslint-disable vars-on-top */
 /* eslint-disable no-param-reassign */
 /* eslint-disable import/no-extraneous-dependencies */
 
@@ -7,14 +12,180 @@
  */
 
 import axios from "axios";
-import settle from "axios/lib/core/settle.js";
-import buildURL from "axios/lib/helpers/buildURL.js";
-import buildFullPath from "axios/lib/core/buildFullPath.js";
-import {
-  isUndefined,
-  isStandardBrowserEnv,
-  isFormData,
-} from "axios/lib/utils.js";
+
+/**
+ * In order to avoid import issues with axios 1.x, copying here the internal
+ * utility functions that we used to import directly from axios.
+ */
+
+// Copied from axios/lib/core/settle.js
+function settle(resolve, reject, response) {
+  const { validateStatus } = response.config;
+  if (!response.status || !validateStatus || validateStatus(response.status)) {
+    resolve(response);
+  } else {
+    reject(
+      createError(
+        `Request failed with status code ${response.status}`,
+        response.config,
+        null,
+        response.request,
+        response
+      )
+    );
+  }
+}
+
+// Copied from axios/lib/helpers/isAbsoluteURL.js
+function isAbsoluteURL(url) {
+  // A URL is considered absolute if it begins with "<scheme>://" or "//" (protocol-relative URL).
+  // RFC 3986 defines scheme name as a sequence of characters beginning with a letter and followed
+  // by any combination of letters, digits, plus, period, or hyphen.
+  return /^([a-z][a-z\d+\-.]*:)?\/\//i.test(url);
+}
+
+// Copied from axios/lib/helpers/combineURLs.js
+function combineURLs(baseURL, relativeURL) {
+  return relativeURL
+    ? baseURL.replace(/\/+$/, "") + "/" + relativeURL.replace(/^\/+/, "")
+    : baseURL;
+}
+
+// Copied from axios/lib/helpers/buildURL.js
+function encode(val) {
+  return encodeURIComponent(val)
+    .replace(/%3A/gi, ":")
+    .replace(/%24/g, "$")
+    .replace(/%2C/gi, ",")
+    .replace(/%20/g, "+")
+    .replace(/%5B/gi, "[")
+    .replace(/%5D/gi, "]");
+}
+
+function buildURL(url, params, paramsSerializer) {
+  if (!params) {
+    return url;
+  }
+
+  var serializedParams;
+  if (paramsSerializer) {
+    serializedParams = paramsSerializer(params);
+  } else if (isURLSearchParams(params)) {
+    serializedParams = params.toString();
+  } else {
+    var parts = [];
+
+    forEach(params, function serialize(val, key) {
+      if (val === null || typeof val === "undefined") {
+        return;
+      }
+
+      if (isArray(val)) {
+        key = `${key}[]`;
+      } else {
+        val = [val];
+      }
+
+      forEach(val, function parseValue(v) {
+        if (isDate(v)) {
+          v = v.toISOString();
+        } else if (isObject(v)) {
+          v = JSON.stringify(v);
+        }
+        parts.push(`${encode(key)}=${encode(v)}`);
+      });
+    });
+
+    serializedParams = parts.join("&");
+  }
+
+  if (serializedParams) {
+    var hashmarkIndex = url.indexOf("#");
+    if (hashmarkIndex !== -1) {
+      url = url.slice(0, hashmarkIndex);
+    }
+
+    url += (url.indexOf("?") === -1 ? "?" : "&") + serializedParams;
+  }
+
+  return url;
+}
+
+// Copied from axios/lib/core/buildFullPath.js
+function buildFullPath(baseURL, requestedURL) {
+  if (baseURL && !isAbsoluteURL(requestedURL)) {
+    return combineURLs(baseURL, requestedURL);
+  }
+  return requestedURL;
+}
+
+// Copied from axios/lib/utils.js
+function isUndefined(val) {
+  return typeof val === "undefined";
+}
+
+function isObject(val) {
+  return val !== null && typeof val === "object";
+}
+
+function isDate(val) {
+  return toString.call(val) === "[object Date]";
+}
+
+function isURLSearchParams(val) {
+  return toString.call(val) === "[object URLSearchParams]";
+}
+
+function isArray(val) {
+  return Array.isArray(val);
+}
+
+function forEach(obj, fn) {
+  // Don't bother if no value provided
+  if (obj === null || typeof obj === "undefined") {
+    return;
+  }
+
+  // Force an array if not already something iterable
+  if (typeof obj !== "object") {
+    obj = [obj];
+  }
+
+  if (isArray(obj)) {
+    // Iterate over array values
+    for (var i = 0, l = obj.length; i < l; i++) {
+      fn.call(null, obj[i], i, obj);
+    }
+  } else {
+    // Iterate over object keys
+    for (var key in obj) {
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
+        fn.call(null, obj[key], key, obj);
+      }
+    }
+  }
+}
+
+function isFormData(val) {
+  return toString.call(val) === "[object FormData]";
+}
+
+// TODO this needs to be fixed to run in newer browser-like environments
+// https://github.com/vespaiach/axios-fetch-adapter/issues/20#issue-1396365322
+function isStandardBrowserEnv() {
+  if (
+    typeof navigator !== "undefined" &&
+    // eslint-disable-next-line no-undef
+    (navigator.product === "ReactNative" ||
+      // eslint-disable-next-line no-undef
+      navigator.product === "NativeScript" ||
+      // eslint-disable-next-line no-undef
+      navigator.product === "NS")
+  ) {
+    return false;
+  }
+  return typeof window !== "undefined" && typeof document !== "undefined";
+}
 
 /**
  * - Create a request object
