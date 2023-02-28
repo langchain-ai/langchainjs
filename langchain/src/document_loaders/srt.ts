@@ -1,6 +1,7 @@
 import type { readFile as ReadFileT } from "fs/promises";
 import type SRTParserT from "srt-parser-2";
 import { Document } from "../document.js";
+import { getEnv } from "../util/env.js";
 import { BaseDocumentLoader } from "./base.js";
 
 export class SRTLoader extends BaseDocumentLoader {
@@ -28,30 +29,9 @@ export class SRTLoader extends BaseDocumentLoader {
     try {
       readFile = (await import("fs/promises")).readFile;
     } catch (e) {
-      const {
-        isBrowser,
-        isNode,
-        isWebWorker,
-        isJsDom,
-        isDeno,
-        // eslint-disable-next-line global-require,@typescript-eslint/no-var-requires
-      } = await import("browser-or-node");
-      let env: string;
-      if (isBrowser) {
-        env = "browser";
-      } else if (isNode) {
-        env = "node";
-      } else if (isWebWorker) {
-        env = "webworker";
-      } else if (isJsDom) {
-        env = "jsdom";
-      } else if (isDeno) {
-        env = "deno";
-      } else {
-        env = "other";
-      }
+      console.error(e);
       throw new Error(
-        `Failed to load fs/promises. SRTLoader available only on environment 'node'. It appears you are running environment '${env}'. See https://<link to docs> for alternatives.`
+        `Failed to load fs/promises. SRTLoader available only on environment 'node'. It appears you are running environment '${getEnv()}'. See https://<link to docs> for alternatives.`
       );
     }
 
