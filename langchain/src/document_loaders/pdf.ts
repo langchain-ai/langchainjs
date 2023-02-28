@@ -10,10 +10,6 @@ export class PDFLoader extends BaseDocumentLoader {
     super();
   }
 
-  protected async parse(raw: string): Promise<string[]> {
-    return [raw];
-  }
-
   public async load(): Promise<Document[]> {
     const { readFile } = await PDFLoader.imports();
     const buffer = await readFile(this.filePath);
