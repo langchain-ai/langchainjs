@@ -20,4 +20,12 @@ export const run = async () => {
   const result = await executor.call({ input });
 
   console.log(`Got output ${result.output}`);
+
+  console.log(
+    `Got intermediate steps ${JSON.stringify(
+      result.intermediateSteps,
+      null,
+      2
+    )}`
+  );
 };

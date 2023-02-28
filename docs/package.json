@@ -12,7 +12,7 @@
     "serve": "docusaurus serve",
     "write-translations": "docusaurus write-translations",
     "write-heading-ids": "docusaurus write-heading-ids",
-    "ci": "yarn lint && yarn format:diff",
+    "ci": "yarn lint && yarn format:diff && yarn build",
     "lint": "eslint --cache \"**/*.js\"",
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,md,mdx}\"",
     "format:diff": "prettier --list-different \"**/*.{js,jsx,ts,tsx,md,mdx}\""
@@ -21,9 +21,12 @@
     "@docusaurus/core": "2.3.1",
     "@docusaurus/preset-classic": "2.3.1",
     "@mdx-js/react": "^1.6.22",
+    "@mendable/search": "^0.0.37",
     "clsx": "^1.2.1",
+    "process": "^0.11.10",
     "react": "^17.0.2",
-    "react-dom": "^17.0.2"
+    "react-dom": "^17.0.2",
+    "webpack": "^5.75.0"
   },
   "devDependencies": {
     "@babel/eslint-parser": "^7.18.2",

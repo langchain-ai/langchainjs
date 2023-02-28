@@ -8,13 +8,17 @@
  */
 // @ts-check
 // Note: type annotations allow type checking and IDEs autocompletion
+// eslint-disable-next-line import/no-extraneous-dependencies
+const { ProvidePlugin } = require("webpack");
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   title: "Langchain",
   tagline: "The tagline of my site",
   favicon: "img/favicon.ico",
-
+  customFields: {
+    mendableAnonKey: process.env.MENDABLE_ANON_KEY,
+  },
   // Set the production url of your site here
   url: "https://hwchase17.github.io",
   // Set the /<baseUrl>/ pathname under which your site is served
@@ -40,6 +44,32 @@ const config = {
         },
       },
     ],
+    () => ({
+      name: "custom-webpack-config",
+      configureWebpack: () => ({
+        plugins: [
+          new ProvidePlugin({
+            process: require.resolve("process/browser"),
+          }),
+        ],
+        resolve: {
+          fallback: {
+            path: false,
+            url: false,
+          },
+        },
+        module: {
+          rules: [
+            {
+              test: /\.m?js/,
+              resolve: {
+                fullySpecified: false,
+              },
+            },
+          ],
+        },
+      }),
+    }),
   ],
 
   presets: [
@@ -97,7 +127,7 @@ const config = {
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
-      image: "img/docusaurus-social-card.jpg",
+      image: "img/docusaurus.png",
       navbar: {
         title: "Langchain",
         logo: {
