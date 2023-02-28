@@ -14,14 +14,14 @@ import { Generation } from "./schema/index.js";
  */
 
 const getCacheKey = (prompt: string, llmKey: string, idx?: string): string => {
-  const key = `${prompt}_${llmKey}${idx ? `_${idx}` : ""}}`;
+  const key = `${prompt}_${llmKey}${idx ? `_${idx}` : ""}`;
   return crypto.createHash("sha256").update(key).digest("hex");
 };
 
 export abstract class BaseCache<T = Generation[]> {
   abstract lookup(prompt: string, llmKey: string): Promise<T | null>;
 
-  abstract update(prompt: string, llmKey: string, value: T): void;
+  abstract update(prompt: string, llmKey: string, value: T): Promise<void>;
 }
 
 export class InMemoryCache<T = Generation[]> extends BaseCache<T> {
@@ -38,7 +38,7 @@ export class InMemoryCache<T = Generation[]> extends BaseCache<T> {
     );
   }
 
-  update(prompt: string, llmKey: string, value: T): void {
+  async update(prompt: string, llmKey: string, value: T): Promise<void> {
     this.#cache.set(getCacheKey(prompt, llmKey), value);
   }
 }
@@ -78,10 +78,14 @@ export class RedisCache extends BaseCache<Generation[]> {
     return generations.length > 0 ? generations : null;
   }
 
-  public update(prompt: string, llmKey: string, value: Generation[]): void {
+  public async update(
+    prompt: string,
+    llmKey: string,
+    value: Generation[]
+  ): Promise<void> {
     for (let i = 0; i < value.length; i += 1) {
       const key = getCacheKey(prompt, llmKey, String(i));
-      this.#redisClient.set(key, value[i].text);
+      await this.#redisClient.set(key, value[i].text);
     }
   }
 }
