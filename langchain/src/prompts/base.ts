@@ -9,7 +9,10 @@ export type SerializedBasePromptTemplate = ReturnType<
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type InputValues = Record<string, any>;
-export type PartialValues = Record<string, string | (() => Promise<string>)>;
+export type PartialValues = Record<
+  string,
+  string | (() => Promise<string>) | (() => string)
+>;
 
 /**
  * Input common to all prompt templates.
@@ -42,14 +45,13 @@ export abstract class BasePromptTemplate implements BasePromptTemplateInput {
   partialVariables?: InputValues;
 
   constructor(input: BasePromptTemplateInput) {
-    const { inputVariables, partialVariables } = input;
+    const { inputVariables } = input;
     if (inputVariables.includes("stop")) {
       throw new Error(
         "Cannot have an input variable named 'stop', as it is used internally, please rename."
       );
     }
     Object.assign(this, input);
-    Object.assign(this, partialVariables);
   }
 
   abstract partial(values: PartialValues): Promise<BasePromptTemplate>;

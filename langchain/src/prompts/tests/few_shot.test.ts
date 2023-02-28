@@ -46,6 +46,7 @@ test("Test partial with string", async () => {
 
   const partialPrompt = await prompt.partial({ foo: "foo" });
   expect(await partialPrompt.format({ bar: "baz" })).toBe("foobaz\n");
+  expect(prompt.inputVariables).toEqual(["foo", "bar"]);
 });
 
 test("Test partial with function", async () => {
