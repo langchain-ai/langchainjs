@@ -1,18 +1,20 @@
+import { TiktokenModel } from "@dqbd/tiktoken";
+import { createParser } from "eventsource-parser";
+import { backOff } from "exponential-backoff";
+import type { IncomingMessage } from "http";
 import {
   Configuration,
-  OpenAIApi,
+  ConfigurationParameters,
   CreateCompletionRequest,
   CreateCompletionResponse,
   CreateCompletionResponseChoicesInner,
-  ConfigurationParameters,
+  OpenAIApi,
 } from "openai";
-import type { IncomingMessage } from "http";
-import { createParser } from "eventsource-parser";
-import { backOff } from "exponential-backoff";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
 import { chunkArray } from "../util/index.js";
 import { BaseLLM } from "./base.js";
-import { LLMResult, LLMCallbackManager } from "./index.js";
+import { calculateMaxTokens } from "./calculateMaxTokens.js";
+import { LLMCallbackManager, LLMResult } from "./index.js";
 
 interface ModelParams {
   /** Sampling temperature to use */
@@ -52,7 +54,7 @@ interface ModelParams {
  */
 interface OpenAIInput extends ModelParams {
   /** Model name to use */
-  modelName: string;
+  modelName: TiktokenModel;
 
   /** Holds any additional parameters that are valid to pass to {@link
    * https://platform.openai.com/docs/api-reference/completions/create |
@@ -111,7 +113,7 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
 
   logitBias?: Record<string, number>;
 
-  modelName = "text-davinci-003";
+  modelName: TiktokenModel = "text-davinci-003";
 
   modelKwargs?: Kwargs;
 
@@ -245,6 +247,18 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
 
     const params = this.invocationParams();
     params.stop = stop ?? params.stop;
+
+    if (params.max_tokens === -1) {
+      if (subPrompts.length !== 1) {
+        throw new Error(
+          "max_tokens set to -1 not supported for multiple inputs"
+        );
+      }
+      params.max_tokens = calculateMaxTokens({
+        prompt: prompts[0],
+        modelName: this.modelName,
+      });
+    }
 
     for (let i = 0; i < subPrompts.length; i += 1) {
       const { data } = await this.completionWithRetry({
