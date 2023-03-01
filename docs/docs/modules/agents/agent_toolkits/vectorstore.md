@@ -1,4 +1,4 @@
-# JSON Agent Toolkit
+# VectorStore Agent Toolkit
 
 This example shows how to load and use an agent with a vectorstore toolkit.
 
