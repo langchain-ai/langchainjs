@@ -22,7 +22,7 @@
     "lint:fix": "yarn lint -- --fix",
     "test": "turbo run test",
     "test:unit": "turbo run test --filter langchain --",
-    "test:int": "turbo run test --filter langchain-examples --",
+    "test:int": "yarn workspace langchain run test:integration",
     "publish": "turbo run build lint test && yarn workspace langchain npm publish",
     "example": "turbo run start --filter langchain-examples --",
     "prepare": "husky install",

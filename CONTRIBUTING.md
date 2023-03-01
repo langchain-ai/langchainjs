@@ -76,6 +76,9 @@ Now, you should be able to run the common tasks in the following section.
 
 ## ✅Common Tasks
 
+Our primary goal is to make it as easy as possible for you to contribute to this project.
+To that end, we have configured the most common actions to be directly runnable from the root of the project (unless otherwise noted).
+
 ### Setup
 
 To get started, you will need to install the dependencies for the project. To do so, run:
