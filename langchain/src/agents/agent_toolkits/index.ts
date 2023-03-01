@@ -5,3 +5,10 @@ export {
   OpenApiToolkit,
   createOpenApiAgent,
 } from "./openapi/openapi.js";
+export {
+  VectorStoreInfo,
+  VectorStoreToolkit,
+  VectorStoreRouterToolkit,
+  createVectorStoreAgent,
+  createVectorStoreRouterAgent,
+} from "./vectorstore/vectorstore.js";
