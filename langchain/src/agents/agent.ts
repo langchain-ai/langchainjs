@@ -223,6 +223,7 @@ export abstract class Agent {
     data: SerializedAgent & { llm?: BaseLLM; tools?: Tool[] }
   ): Promise<Agent> {
     switch (data._type) {
+      // todo
       case "zero-shot-react-description":
         return ZeroShotAgent.deserialize(data);
       default:
