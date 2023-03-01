@@ -7,6 +7,15 @@ import { OpenAIApi } from "openai";
 
 import { Tool } from "./base.js";
 
+/**
+ * Create an image using the OpenAI API. Pass in a prompt, to be fed into the Dalle2 Image Generation API. Returns a URL to the image.
+ * 
+ * @param openaiApi A configured OpenAIApi object.
+ * @param name The name of the tool. Defaults to "OpenAI Create Image".
+ * @param description The description of the tool. Defaults to "Create an image using the OpenAI API. Pass in a prompt, to be fed into the Dalle2 Image Generation API. Returns a URL to the image."
+ *
+ *  From https://platform.openai.com/docs/api-reference/images/create
+ */
 export class OpenAICreateImage extends Tool {
     name: string = "OpenAI Create Image";
     description: string = "Create an image using the OpenAI API. Pass in a prompt, to be fed into the Dalle2 Image Generation API. Returns a URL to the image.";
