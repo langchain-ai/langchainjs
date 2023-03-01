@@ -1,6 +1,6 @@
 # Contributing to LangChain
 
-Hi there! Thank you for even being interested in contributing to LangChain.
+👋 Hi there! Thank you for even being interested in contributing to LangChain.
 As an open source project in a rapidly developing field, we are extremely open
 to contributions, whether it be in the form of a new feature, improved infra, or better documentation.
 
@@ -76,25 +76,68 @@ Now, you should be able to run the common tasks in the following section.
 
 ## ✅Common Tasks
 
+### Setup
+
+To get started, you will need to install the dependencies for the project. To do so, run:
+
+```bash
+yarn install
+```
+
+### Linting
+
+We use [eslint](https://eslint.org/) to enforce standard lint rules.
+To run the linter, run:
+
+```bash
+yarn lint
+```
+
+To automatically fix linting errors, run:
+
+```bash
+yarn lint:fix
+```
+
 ### Testing
 
 Tests should be added within a `tests/` folder alongside the modules they
 are testing.
+
+To run all tests, run:
+
+```bash
+yarn test
+```
 
 **Unit tests** cover modular logic that does not require calls to outside APIs.
 
 If you add new logic, please add a unit test.
 Unit tests should be called `*.test.ts`.
 
+To run only unit tests, run:
+
+```bash
+yarn test:unit
+```
+
 **Integration tests** cover logic that requires making calls to outside APIs (often integration with other services).
 
 If you add support for a new external API, please add a new integration test.
 Integration tests should be called `*.int.test.ts`.
 
-To run tests, run:
+To run only integration tests, run:
 
 ```bash
-yarn test
+yarn test:int
+```
+
+### Building
+
+To build the project, run:
+
+```bash
+yarn build
 ```
 
 ### Running examples
@@ -146,6 +189,8 @@ Similar to linting, we recognize documentation can be annoying. If you do not wa
 You can run a hot-reloading dev version of the docs static site by
 running:
 
+To generate and view the documentation locally, run:
+
 ```bash
-cd docs && yarn start
+yarn docs
 ```
