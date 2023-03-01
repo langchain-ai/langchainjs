@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { jest, test, expect } from "@jest/globals";
 import { FakeEmbeddings } from "../../embeddings/fake.js";
 

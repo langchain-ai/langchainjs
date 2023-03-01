@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { test, expect } from "@jest/globals";
 import { PineconeClient } from "@pinecone-database/pinecone";
 import { OpenAIEmbeddings } from "../../embeddings/index.js";
