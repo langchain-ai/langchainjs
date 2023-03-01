@@ -256,6 +256,7 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
       }
       params.max_tokens = calculateMaxTokens({
         prompt: prompts[0],
+        // Cast here to allow for other models that may not fit the union
         modelName: this.modelName as TiktokenModel,
       });
     }
