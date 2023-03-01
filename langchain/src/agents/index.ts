@@ -18,7 +18,11 @@ export {
   JsonToolkit,
   RequestsToolkit,
   OpenApiToolkit,
+  VectorStoreInfo,
+  VectorStoreToolkit,
+  VectorStoreRouterToolkit,
   createSqlAgent,
   createJsonAgent,
   createOpenApiAgent,
+  createVectorStoreAgent,
 } from "./agent_toolkits/index.js";

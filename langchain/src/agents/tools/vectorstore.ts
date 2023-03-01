@@ -32,7 +32,7 @@ export class VectorStoreQATool extends Tool implements VectorStoreTool {
             "Input should be a fully formed question.`;
   }
 
-  async call(input: string): Promise<string> {
+  async call(input: string) {
     const chain = VectorDBQAChain.fromLLM(this.llm, this.vectorStore);
     return chain.run(input);
   }

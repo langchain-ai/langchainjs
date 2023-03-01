@@ -19,12 +19,13 @@ export class VectorStoreToolkit extends Toolkit {
 
   llm: BaseLLM;
 
-  constructor(vectorStoreInfo: VectorStoreInfo) {
+  constructor(vectorStoreInfo: VectorStoreInfo, llm: BaseLLM) {
     super();
     const description = VectorStoreQATool.getDescription(
       vectorStoreInfo.name,
       vectorStoreInfo.description
     );
+    this.llm = llm;
     this.tools = [
       new VectorStoreQATool(vectorStoreInfo.name, description, {
         vectorStore: vectorStoreInfo.vectorStore,
@@ -41,8 +42,9 @@ export class VectorStoreRouterToolkit extends Toolkit {
 
   llm: BaseLLM;
 
-  constructor(vectorStoreInfos: VectorStoreInfo[]) {
+  constructor(vectorStoreInfos: VectorStoreInfo[], llm: BaseLLM) {
     super();
+    this.llm = llm;
     this.vectorStoreInfos = vectorStoreInfos;
     this.tools = vectorStoreInfos.map((vectorStoreInfo) => {
       const description = VectorStoreQATool.getDescription(
