@@ -17,14 +17,15 @@ import { Tool } from "./base.js";
  *  From https://platform.openai.com/docs/api-reference/images/create
  */
 export class OpenAICreateImage extends Tool {
-    name: string = "OpenAI Create Image";
-    description: string = "Create an image using the OpenAI API. Pass in a prompt, to be fed into the Dalle2 Image Generation API. Returns a URL to the image.";
+    name = "OpenAI Create Image";
+
+    description = "Create an image using the OpenAI API. Pass in a prompt, to be fed into the Dalle2 Image Generation API. Returns a URL to the image.";
 
     constructor(readonly openaiApi: OpenAIApi, name?: string, description?: string) {
         super();
         // name and description are both optional because they have sane defaults.
-        this.name = name ? name : this.name;
-        this.description = description ? description : this.description;
+        this.name = name || this.name;
+        this.description = description || this.description;
     }
 
     async call(input: string): Promise<string> {
@@ -33,7 +34,7 @@ export class OpenAICreateImage extends Tool {
             // TODO: Future idea -- could we ask an LLM to extract these arguments from an input that might contain them?
             n: 1,
             size: "1024x1024",
-        })
+        });
 
         const theImageUrl = resp.data.data[0].url;
 
