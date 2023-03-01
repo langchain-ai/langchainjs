@@ -20,6 +20,7 @@ export default function SearchBarWrapper() {
         anon_key={customFields.mendableAnonKey}
         style={{ accentColor: "#4F956C", darkMode: false }}
         placeholder="Search..."
+        dialogPlaceholder="How do I use a LLM Chain?"
       />
     </div>
   );
