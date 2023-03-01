@@ -5,8 +5,7 @@ interface CohereInput {
   temperature: number;
 
   /**
-   * Maximum number of tokens to generate in the completion. -1 returns as many
-   * tokens as possible given the prompt and the model's maximum context size.
+   * Maximum number of tokens to generate in the completion.
    */
   maxTokens: number;
 
