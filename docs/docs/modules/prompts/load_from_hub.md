@@ -1,3 +1,7 @@
+---
+sidebar_position: 3
+---
+
 # Load from Hub
 
 [LangChainHub](https://github.com/hwchase17/langchain-hub) contains a collection of prompts which can be loaded directly via LangChain.

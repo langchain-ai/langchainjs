@@ -1,3 +1,7 @@
+---
+sidebar_position: 1
+---
+
 # Prompt Templates
 
 This example walks through how to use PromptTemplates. At their core, prompt templates are objects that are made up of a template with certain input variables. This object can then be called with `.format(...)` to format the input variables accordingly.
