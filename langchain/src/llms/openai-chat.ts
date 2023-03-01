@@ -90,7 +90,7 @@ export class OpenAIChat extends LLM implements OpenAIInput {
 
   logitBias?: Record<string, number>;
 
-  modelName = "text-davinci-003";
+  modelName = "gpt-3.5-turbo";
 
   prefixMessages?: ChatCompletionRequestMessage[];
 

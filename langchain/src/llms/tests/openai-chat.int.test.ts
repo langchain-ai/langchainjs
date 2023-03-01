@@ -9,7 +9,6 @@ test("Test OpenAI", async () => {
 
 test("Test OpenAI with prefix messages", async () => {
   const model = new OpenAIChat({
-    modelName: "gpt-3.5-turbo",
     prefixMessages: [
       { role: "user", content: "My name is John" },
       { role: "assistant", content: "Hi there" },
