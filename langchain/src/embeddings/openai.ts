@@ -1,10 +1,6 @@
-import type {
-  Configuration as ConfigurationT,
-  OpenAIApi as OpenAIApiT,
-  CreateEmbeddingRequest,
-} from "openai";
+import { Configuration, OpenAIApi, CreateEmbeddingRequest } from "openai";
 import { backOff } from "exponential-backoff";
-import type fetchAdapterT from "../util/axios-fetch-adapter.js";
+import fetchAdapter from "../util/axios-fetch-adapter.js";
 import { chunkArray } from "../util/index.js";
 import { Embeddings } from "./base.js";
 
@@ -21,7 +17,7 @@ export class OpenAIEmbeddings extends Embeddings implements ModelParams {
 
   private apiKey: string;
 
-  private client: OpenAIApiT;
+  private client: OpenAIApi;
 
   constructor(
     fields?: Partial<ModelParams> & {
@@ -73,8 +69,6 @@ export class OpenAIEmbeddings extends Embeddings implements ModelParams {
 
   private async embeddingWithRetry(request: CreateEmbeddingRequest) {
     if (!this.client) {
-      const { Configuration, OpenAIApi, fetchAdapter } =
-        await OpenAIEmbeddings.imports();
       const clientConfig = new Configuration({
         apiKey: this.apiKey,
         baseOptions: { adapter: fetchAdapter },
@@ -87,24 +81,5 @@ export class OpenAIEmbeddings extends Embeddings implements ModelParams {
       maxDelay: 10,
       numOfAttempts: this.maxRetries,
     });
-  }
-
-  static async imports(): Promise<{
-    Configuration: typeof ConfigurationT;
-    OpenAIApi: typeof OpenAIApiT;
-    fetchAdapter: typeof fetchAdapterT;
-  }> {
-    try {
-      const { Configuration, OpenAIApi } = await import("openai");
-      const { default: fetchAdapter } = await import(
-        "../util/axios-fetch-adapter.js"
-      );
-      return { Configuration, OpenAIApi, fetchAdapter };
-    } catch (err) {
-      console.error(err);
-      throw new Error(
-        "Please install openai as a dependency with, e.g. `npm install -S openai`"
-      );
-    }
   }
 }
