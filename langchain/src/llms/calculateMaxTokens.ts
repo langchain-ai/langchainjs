@@ -1,6 +1,4 @@
-import {
-  encoding_for_model, TiktokenModel
-} from "@dqbd/tiktoken";
+import { encoding_for_model, TiktokenModel } from "@dqbd/tiktoken";
 
 // https://www.npmjs.com/package/@dqbd/tiktoken
 

@@ -54,7 +54,7 @@ interface ModelParams {
  */
 interface OpenAIInput extends ModelParams {
   /** Model name to use */
-  modelName: TiktokenModel;
+  modelName: string;
 
   /** Holds any additional parameters that are valid to pass to {@link
    * https://platform.openai.com/docs/api-reference/completions/create |
@@ -113,7 +113,7 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
 
   logitBias?: Record<string, number>;
 
-  modelName: TiktokenModel = "text-davinci-003";
+  modelName = "text-davinci-003";
 
   modelKwargs?: Kwargs;
 
@@ -256,7 +256,7 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
       }
       params.max_tokens = calculateMaxTokens({
         prompt: prompts[0],
-        modelName: this.modelName,
+        modelName: this.modelName as TiktokenModel,
       });
     }
 
