@@ -8,8 +8,14 @@ import { OpenAIApi } from "openai";
 import { Tool } from "./base.js";
 
 export class OpenAICreateImage extends Tool {
-    constructor(readonly openaiApi: OpenAIApi, readonly name: string, readonly description: string) {
+    name: string = "OpenAI Create Image";
+    description: string = "Create an image using the OpenAI API. Pass in a prompt, to be fed into the Dalle2 Image Generation API. Returns a URL to the image.";
+
+    constructor(readonly openaiApi: OpenAIApi, name?: string, description?: string) {
         super();
+        // name and description are both optional because they have sane defaults.
+        this.name = name ? name : this.name;
+        this.description = description ? description : this.description;
     }
 
     async call(input: string): Promise<string> {
