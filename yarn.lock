@@ -9872,7 +9872,7 @@ __metadata:
     jest: ^29.4.2
     jsonpointer: ^5.0.1
     lint-staged: ^13.1.1
-    openai: ^3.1.0
+    openai: ^3.2.0
     p-queue: ^7.3.4
     prettier: ^2.8.3
     serpapi: ^1.1.1
@@ -9894,7 +9894,6 @@ __metadata:
     cohere-ai: ^5.0.2
     hnswlib-node: ^1.3.0
     huggingface: ^1.4.0
-    openai: ^3.1.0
     serpapi: ^1.1.1
     srt-parser-2: ^1.2.2
   peerDependenciesMeta:
@@ -9909,8 +9908,6 @@ __metadata:
     cohere-ai:
       optional: true
     hnswlib-node:
-      optional: true
-    openai:
       optional: true
     serpapi:
       optional: true
@@ -11095,6 +11092,16 @@ __metadata:
     axios: ^0.26.0
     form-data: ^4.0.0
   checksum: 2277d9e2b419b0ba17fb5ee7187bcff285a2a90120990c8da9658b8a8c8d4a927c95cec6cdc5503aa33108b4933288ef1f3756cc09033c33700d4bb2025138c0
+  languageName: node
+  linkType: hard
+
+"openai@npm:^3.2.0":
+  version: 3.2.0
+  resolution: "openai@npm:3.2.0"
+  dependencies:
+    axios: ^0.26.0
+    form-data: ^4.0.0
+  checksum: 590bd37d87d44ebf61189e258499f53c0e3be8ade5b18442a0e7514b974316c8d4cb01f77f10069807d1d112d7b54b86c61c03d3f0f409acf894140308aa3ff1
   languageName: node
   linkType: hard
 

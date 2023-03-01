@@ -1,6 +1,6 @@
-import type {
-  Configuration as ConfigurationT,
-  OpenAIApi as OpenAIApiT,
+import {
+  Configuration,
+  OpenAIApi,
   CreateCompletionRequest,
   CreateCompletionResponse,
   CreateCompletionResponseChoicesInner,
@@ -9,7 +9,7 @@ import type {
 import type { IncomingMessage } from "http";
 import { createParser } from "eventsource-parser";
 import { backOff } from "exponential-backoff";
-import type fetchAdapterT from "../util/axios-fetch-adapter.js";
+import fetchAdapter from "../util/axios-fetch-adapter.js";
 import { chunkArray } from "../util/index.js";
 import { BaseLLM } from "./base.js";
 import { LLMResult, LLMCallbackManager } from "./index.js";
@@ -123,7 +123,11 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
 
   streaming = false;
 
-  private client: OpenAIApiT;
+  // Used for non-streaming requests
+  private batchClient: OpenAIApi;
+
+  // Used for streaming requests
+  private streamingClient: OpenAIApi;
 
   private clientConfig: ConfigurationParameters;
 
@@ -328,20 +332,20 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
 
   /** @ignore */
   async completionWithRetry(request: CreateCompletionRequest) {
-    if (!this.client) {
-      const { Configuration, OpenAIApi, fetchAdapter } = await OpenAI.imports();
-      const clientConfig = new Configuration(
-        request.stream
-          ? this.clientConfig
-          : {
-              ...this.clientConfig,
-              baseOptions: { adapter: fetchAdapter },
-            }
-      );
-      this.client = new OpenAIApi(clientConfig);
+    if (!request.stream && !this.batchClient) {
+      const clientConfig = new Configuration({
+        ...this.clientConfig,
+        baseOptions: { adapter: fetchAdapter },
+      });
+      this.batchClient = new OpenAIApi(clientConfig);
     }
+    if (request.stream && !this.streamingClient) {
+      const clientConfig = new Configuration(this.clientConfig);
+      this.streamingClient = new OpenAIApi(clientConfig);
+    }
+    const client = !request.stream ? this.batchClient : this.streamingClient;
     const makeCompletionRequest = async () =>
-      this.client.createCompletion(
+      client.createCompletion(
         request,
         request.stream ? { responseType: "stream" } : undefined
       );
@@ -355,25 +359,6 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
 
   _llmType() {
     return "openai";
-  }
-
-  static async imports(): Promise<{
-    Configuration: typeof ConfigurationT;
-    OpenAIApi: typeof OpenAIApiT;
-    fetchAdapter: typeof fetchAdapterT;
-  }> {
-    try {
-      const { Configuration, OpenAIApi } = await import("openai");
-      const { default: fetchAdapter } = await import(
-        "../util/axios-fetch-adapter.js"
-      );
-      return { Configuration, OpenAIApi, fetchAdapter };
-    } catch (err) {
-      console.error(err);
-      throw new Error(
-        "Please install openai as a dependency with, e.g. `npm install -S openai`"
-      );
-    }
   }
 }
 
