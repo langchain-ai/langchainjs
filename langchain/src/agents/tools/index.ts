@@ -21,3 +21,4 @@ export {
   Json,
 } from "./json.js";
 export { RequestsGetTool, RequestsPostTool } from "./requests.js";
+export { VectorStoreQATool } from "./vectorstore.js";
