@@ -9,13 +9,16 @@ test("Test OpenAI", async () => {
 
 test("Test OpenAI in streaming mode", async () => {
   let nrNewTokens = 0;
+  let streamedCompletion = "";
+
   const model = new OpenAI({
     maxTokens: 5,
     modelName: "text-ada-001",
     streaming: true,
     callbackManager: {
-      handleNewToken() {
+      handleNewToken(token) {
         nrNewTokens += 1;
+        streamedCompletion += token;
       },
     },
   });
@@ -23,4 +26,5 @@ test("Test OpenAI in streaming mode", async () => {
   console.log({ res });
 
   expect(nrNewTokens > 0).toBe(true);
+  expect(res).toBe(streamedCompletion);
 });
