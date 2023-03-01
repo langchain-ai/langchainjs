@@ -1,3 +1,7 @@
+---
+sidebar_position: 2
+---
+
 # Partial Prompt Templates
 
 A prompt template is a class with a `.format` method which takes in a key-value map and returns a string (a prompt) to pass to the language model. Like other methods, it can make sense to "partial" a prompt template - eg pass in a subset of the required values, as to create a new prompt template which expects only the remaining subset of values.
