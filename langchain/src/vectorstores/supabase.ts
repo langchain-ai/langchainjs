@@ -3,7 +3,6 @@ import { VectorStore } from "./base.js";
 import { Embeddings } from "../embeddings/base.js";
 import { Document } from "../document.js";
 
-// eslint-disable-next-line @typescript-eslint/ban-types, @typescript-eslint/no-explicit-any
 type SupabaseMetadata = Record<string, any>;
 
 export type SearchEmbeddingsResponse = {
@@ -61,17 +60,19 @@ export class PGVectorStore extends VectorStore {
     const matchDocumentsParams: SearchEmbeddingsParams = {
       query_embedding: query,
       match_threshold: k,
+      // todo pass through?
       match_count: 100,
     };
 
-    const { searches } = (await this.supabaseClient.rpc(
-      this.textKey,
-      matchDocumentsParams
-    )) as unknown as { searches: SearchEmbeddingsResponse[]; error: unknown };
+    const { data: searches, error } = (await this.supabaseClient.rpc(
+        this.textKey,
+        matchDocumentsParams
+      )) as { data: SearchEmbeddingsResponse[]; error: unknown };
 
-    const result: [Document, number][] = [];
+    // todo what to do with the error, throw?
+    console.log(error);
 
-    searches.forEach(resp => result.push([new Document({ metadata: "" as unknown as SupabaseMetadata, pageContent: `${resp.prompt  } ${  resp.completion}` }), resp.similarity]));
+    const result: [Document, number][] = searches.map(resp => [new Document({ metadata: "" as unknown as SupabaseMetadata, pageContent: `${resp.prompt  } ${  resp.completion}` }), resp.similarity]);
 
     return result;
   }
@@ -96,11 +97,11 @@ export class PGVectorStore extends VectorStore {
   }
 
   static async fromExistingIndex(
-    pineconeClient: SupabaseClient,
+    supabaseClient: SupabaseClient,
     embeddings: Embeddings,
     textKey = "text"
   ): Promise<PGVectorStore> {
-    const instance = new this(pineconeClient, embeddings, textKey);
+    const instance = new this(supabaseClient, embeddings, textKey);
     return instance;
   }
 }
