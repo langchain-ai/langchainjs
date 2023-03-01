@@ -25,28 +25,24 @@ test("Test Directory loader", async () => {
   );
   const docs = await loader.load();
   expect(docs.length).toBe(66);
-  expect(docs.map((d) => d.metadata)).toEqual([
+  expect(docs.map((d) => d.metadata.source).sort()).toEqual([
     // PDF
-    {
-      source: path.resolve(directoryPath, "1706.03762.pdf"),
-    },
+    path.resolve(directoryPath, "1706.03762.pdf"),
     // CSV
-    ...Array.from({ length: 32 }, (_) => ({
-      source: path.resolve(
+    ...Array.from({ length: 32 }, (_) =>
+      path.resolve(
         directoryPath,
         "Star_Wars_The_Clone_Wars_S06E07_Crisis_at_the_Heart.csv"
-      ),
-    })),
+      )
+    ),
     // JSON
-    ...Array.from({ length: 32 }, (_) => ({
-      source: path.resolve(
+    ...Array.from({ length: 32 }, (_) =>
+      path.resolve(
         directoryPath,
         "Star_Wars_The_Clone_Wars_S06E07_Crisis_at_the_Heart.json"
-      ),
-    })),
+      )
+    ),
     // TXT
-    {
-      source: path.resolve(directoryPath, "example.txt"),
-    },
+    path.resolve(directoryPath, "example.txt"),
   ]);
 });
