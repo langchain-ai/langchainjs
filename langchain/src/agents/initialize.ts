@@ -1,9 +1,6 @@
 import { BaseLLM } from "../llms/index.js";
 import { AgentExecutor } from "./executor.js";
-import {
-  CreatePromptArgs,
-  ZeroShotAgent,
-} from "./mrkl/index.js";
+import { CreatePromptArgs, ZeroShotAgent } from "./mrkl/index.js";
 import { Tool } from "./tools/index.js";
 
 export interface InitializeAgentExecutorOptions {
