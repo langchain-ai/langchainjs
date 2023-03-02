@@ -10804,7 +10804,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"node-fetch@npm:^3.2.0":
+"node-fetch@npm:^3.2.0, node-fetch@npm:^3.3.0":
   version: 3.3.0
   resolution: "node-fetch@npm:3.3.0"
   dependencies:
@@ -12872,8 +12872,10 @@ __metadata:
   dependencies:
     "@tsconfig/recommended": ^1.0.2
     dotenv: ^16.0.3
+    form-data: ^4.0.0
     husky: ^8.0.3
     lint-staged: ^13.1.1
+    node-fetch: ^3.3.0
     prettier: ^2.8.3
     turbo: ^1.7.4
     typescript: ^4.9.5
