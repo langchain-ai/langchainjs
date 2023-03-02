@@ -61,16 +61,16 @@ export class PGVectorStore extends VectorStore {
       query_embedding: query,
       match_threshold: k,
       // todo pass through?
-      match_count: 100,
+      match_count: 10,
     };
 
-    const { data: searches, error } = (await this.supabaseClient.rpc(
+    const { data: searches } = (await this.supabaseClient.rpc(
         this.textKey,
         matchDocumentsParams
       )) as { data: SearchEmbeddingsResponse[]; error: unknown };
 
     // todo what to do with the error, throw?
-    console.log(error);
+    // console.log(error);
 
     const result: [Document, number][] = searches.map(resp => [new Document({ metadata: "" as unknown as SupabaseMetadata, pageContent: `${resp.prompt  } ${  resp.completion}` }), resp.similarity]);
 

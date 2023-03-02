@@ -20,9 +20,11 @@ export const run = async () => {
   );
   
   const chain = ChatVectorDBQAChain.fromLLM(model, vectorStore);
+  chain.k = 0.8;
+
   /* Ask it a question */
   const question = "How do I get a record deal?";
-  const res = await chain.call({ k:.75, question, chat_history: [] });
+  const res = await chain.call({ question, chat_history: [] });
   console.log(res);
   /* Ask it a follow up question */
   const chatHistory = question + res.text;
