@@ -228,11 +228,11 @@ import { SerpAPI, Calculator } from "langchain/tools";
 const model = new OpenAI({ temperature: 0 });
 const tools = [new SerpAPI(), new Calculator()];
 
-const executor = await initializeAgentExecutor(
+const executor = await initializeAgentExecutor({
   tools,
-  model,
-  "zero-shot-react-description"
-);
+  model, 
+  agentType: "zero-shot-react-description"
+});
 console.log("Loaded agent.");
 
 const input =

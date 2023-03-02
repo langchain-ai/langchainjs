@@ -3,7 +3,7 @@ import { initializeAgentExecutor } from "langchain/agents";
 import { DynamicTool } from "langchain/tools";
 
 export const run = async () => {
-  const model = new OpenAI({ temperature: 0 });
+  const llm = new OpenAI({ temperature: 0 });
   const tools = [
     new DynamicTool({
       name: "FOO",
@@ -25,11 +25,11 @@ export const run = async () => {
     }),
   ];
 
-  const executor = await initializeAgentExecutor(
+  const executor = await initializeAgentExecutor({
     tools,
-    model,
-    "zero-shot-react-description"
-  );
+    llm,
+    agentType: "zero-shot-react-description",
+  });
 
   console.log("Loaded agent.");
 

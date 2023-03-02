@@ -28,11 +28,11 @@ export const run = async () => {
     }),
   ];
 
-  const executor = await initializeAgentExecutor(
+  const executor = await initializeAgentExecutor({
     tools,
-    model,
-    "zero-shot-react-description"
-  );
+    llm,
+    agentType: "zero-shot-react-description",
+  });
 
   console.log("Loaded agent.");
 

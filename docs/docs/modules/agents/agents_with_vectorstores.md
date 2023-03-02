@@ -20,7 +20,7 @@ import * as fs from "fs";
 Next, you want to create the vectorstore with your data, and then the QA chain to interact with that vectorstore.
 
 ```typescript
-const model = new OpenAI({ temperature: 0 });
+const llm = new OpenAI({ temperature: 0 });
 /* Load in the file we want to do question answering over */
 const text = fs.readFileSync("state_of_the_union.txt", "utf8");
 /* Split the text into chunks */
@@ -29,7 +29,7 @@ const docs = textSplitter.createDocuments([text]);
 /* Create the vectorstore */
 const vectorStore = await HNSWLib.fromDocuments(docs, new OpenAIEmbeddings());
 /* Create the chain */
-const chain = VectorDBQAChain.fromLLM(model, vectorStore);
+const chain = VectorDBQAChain.fromLLM(llm, vectorStore);
 ```
 
 Now that you have that chain, you can create a tool to use that chain. Note that you should update the name and description to be specific to your QA chain.
@@ -48,11 +48,11 @@ Now we can go about constructing and using the tool as we would any other tool!
 ```typescript
 const tools = [new SerpAPI(), new Calculator(), qaTool];
 
-const executor = await initializeAgentExecutor(
+const executor = await initializeAgentExecutor({
   tools,
-  model,
-  "zero-shot-react-description"
-);
+  llm,
+  agentType: "zero-shot-react-description",
+});
 console.log("Loaded agent.");
 
 const input = `What did biden say about ketanji brown jackson is the state of the union address?`;
