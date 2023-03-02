@@ -1,3 +1,7 @@
+---
+sidebar_position: 1
+---
+
 # Webpages
 
 This example goes over how to load data from webpages.
