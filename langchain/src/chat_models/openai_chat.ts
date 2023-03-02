@@ -4,13 +4,14 @@ import {
   ChatCompletionRequestMessage,
   CreateChatCompletionRequest,
   ConfigurationParameters,
+  ChatCompletionResponseMessageRoleEnum,
 } from "openai";
 import type { IncomingMessage } from "http";
 import { createParser } from "eventsource-parser";
 import { backOff } from "exponential-backoff";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
-import { LLM } from "./base.js";
-import { LLMCallbackManager } from "./index.js";
+import { ChatMessage, Role, SimpleChatModel } from "./base.js";
+import { LLMCallbackManager } from "../llms/index.js";
 
 interface ModelParams {
   /** Sampling temperature to use, between 0 and 2, defaults to 1 */
@@ -77,7 +78,7 @@ type Kwargs = Record<string, any>;
  * @augments BaseLLM
  * @augments OpenAIInput
  */
-export class OpenAIChat extends LLM implements OpenAIInput {
+export class OpenAIChat extends SimpleChatModel implements OpenAIInput {
   temperature = 1;
 
   topP = 1;
@@ -112,6 +113,7 @@ export class OpenAIChat extends LLM implements OpenAIInput {
 
   constructor(
     fields?: Partial<OpenAIInput> & {
+      role: Role;
       callbackManager?: LLMCallbackManager;
       concurrency?: number;
       cache?: boolean;
@@ -121,10 +123,11 @@ export class OpenAIChat extends LLM implements OpenAIInput {
     configuration?: ConfigurationParameters
   ) {
     super(
+      fields?.role,
       fields?.callbackManager,
-      fields?.verbose,
-      fields?.concurrency,
-      fields?.cache
+      fields?.verbose
+      // fields?.concurrency,
+      // fields?.cache
     );
 
     const apiKey = fields?.openAIApiKey ?? process.env.OPENAI_API_KEY;
@@ -194,16 +197,6 @@ export class OpenAIChat extends LLM implements OpenAIInput {
     };
   }
 
-  private formatMessages(prompt: string): ChatCompletionRequestMessage[] {
-    const message: ChatCompletionRequestMessage = {
-      role: "user",
-      content: prompt,
-    };
-    console.log(this.prefixMessages);
-    console.log(message);
-    return this.prefixMessages ? [...this.prefixMessages, message] : [message];
-  }
-
   /**
    * Call out to OpenAI's endpoint with k unique prompts
    *
@@ -219,7 +212,7 @@ export class OpenAIChat extends LLM implements OpenAIInput {
    * const response = await openai.generate(["Tell me a joke."]);
    * ```
    */
-  async _call(prompt: string, stop?: string[]): Promise<string> {
+  async _call(messages: ChatMessage[], stop?: string[]): Promise<string> {
     if (this.stop && stop) {
       throw new Error("Stop found in input and default params");
     }
@@ -229,7 +222,10 @@ export class OpenAIChat extends LLM implements OpenAIInput {
 
     const { data } = await this.completionWithRetry({
       ...params,
-      messages: this.formatMessages(prompt),
+      messages: messages.map((message) => ({
+        role: message.role as ChatCompletionResponseMessageRoleEnum,
+        content: message.text,
+      })),
     });
 
     let completion = "";
