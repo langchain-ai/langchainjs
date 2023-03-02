@@ -29,7 +29,9 @@ export class AgentExecutor extends BaseChain {
 
   maxIterations?: number = 15;
 
-  earlyStoppingMethod: StoppingMethod = "force";
+  earlyStoppingMethod: StoppingMethod = 'force';
+
+  private steps: AgentStep[] = [];
 
   get inputKeys() {
     return this.agent.inputKeys;
@@ -39,11 +41,9 @@ export class AgentExecutor extends BaseChain {
     super();
     this.agent = input.agent;
     this.tools = input.tools;
-    this.returnIntermediateSteps =
-      input.returnIntermediateSteps ?? this.returnIntermediateSteps;
+    this.returnIntermediateSteps = input.returnIntermediateSteps ?? this.returnIntermediateSteps;
     this.maxIterations = input.maxIterations ?? this.maxIterations;
-    this.earlyStoppingMethod =
-      input.earlyStoppingMethod ?? this.earlyStoppingMethod;
+    this.earlyStoppingMethod = input.earlyStoppingMethod ?? this.earlyStoppingMethod;
   }
 
   /** Create from agent and a list of tools. */
@@ -63,54 +63,62 @@ export class AgentExecutor extends BaseChain {
 
   async _call(inputs: ChainValues): Promise<ChainValues> {
     this.agent.prepareForNewCall();
-    const toolsByName = Object.fromEntries(
-      this.tools.map((t) => [t.name.toLowerCase(), t])
-    );
-    const steps: AgentStep[] = [];
-    let iterations = 0;
+    const toolsByName = Object.fromEntries(this.tools.map(t => [t.name.toLowerCase(), t]));
 
-    const getOutput = (finishStep: AgentFinish) => {
-      const { returnValues } = finishStep;
-      if (this.returnIntermediateSteps) {
-        return { ...returnValues, intermediateSteps: steps };
-      }
-      return returnValues;
-    };
-
-    while (this.shouldContinue(iterations)) {
-      const action = await this.agent.plan(steps, inputs);
-      if ("returnValues" in action) {
-        return getOutput(action);
+    while (this.shouldContinue(this.steps.length)) {
+      const action = await this.agent.plan(this.steps, inputs);
+      if ('returnValues' in action) {
+        return this.getOutput(action);
       }
 
       const tool = toolsByName[action.tool.toLowerCase()];
       const observation = tool
         ? await tool.call(action.toolInput)
         : `${action.tool} is not a valid tool, try another one.`;
-      steps.push({ action, observation });
+      this.steps.push({ action, observation });
       if (tool?.returnDirect) {
-        return getOutput({
+        return this.getOutput({
           returnValues: { [this.agent.returnValues[0]]: observation },
-          log: "",
+          log: '',
         });
       }
-      iterations += 1;
     }
 
-    const finish = await this.agent.returnStoppedResponse(
-      this.earlyStoppingMethod,
-      steps,
-      inputs
-    );
+    const finish = await this.agent.returnStoppedResponse(this.earlyStoppingMethod, this.steps, inputs);
 
-    return getOutput(finish);
+    return this.getOutput(finish);
   }
 
   _chainType() {
-    return "agent_executor" as const;
+    return 'agent_executor' as const;
   }
 
   serialize(): SerializedLLMChain {
-    throw new Error("Cannot serialize an AgentExecutor");
+    throw new Error('Cannot serialize an AgentExecutor');
+  }
+
+  serializeSteps(): string {
+    return JSON.stringify(this.steps);
+  }
+
+  /**
+   * Deserialize steps from a string.
+   * @param serializedSteps - The serialized steps.
+   * @param lastReturnValue - If set, replaces the return value from the last executed step.
+   */
+  deserializeSteps(serializedSteps: string, lastReturnValue?: string): void {
+    this.steps = JSON.parse(serializedSteps);
+
+    if (lastReturnValue) {
+      this.steps[this.steps.length - 1].observation = lastReturnValue;
+    }
+  }
+
+  private getOutput(finishStep: AgentFinish) {
+    const { returnValues } = finishStep;
+    if (this.returnIntermediateSteps) {
+      return { ...returnValues, intermediateSteps: this.steps };
+    }
+    return returnValues;
   }
 }
