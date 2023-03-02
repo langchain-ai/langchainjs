@@ -6,11 +6,11 @@ export class UnstructuredBaseDocumentLoader
   extends BaseDocumentLoader
   implements DocumentLoader
 {
-  constructor(public webPath: string, filepath: string) {
+  constructor(public webPath: string, filePath: string) {
     super();
   }
 
-  static async _partition(filename: string) {
+  static async _partition() {
     const buffer = await readFile(this.filePath);
 
     const data = new FormData();
@@ -25,20 +25,16 @@ export class UnstructuredBaseDocumentLoader
       body: data,
     });
 
-    elements = await response.json();
+    const elements = await response.json();
     return elements;
   }
 
-  async scrape(): Promise<CheerioAPI> {
-    return CheerioWebBaseLoader._scrape(this.webPath);
-  }
-
   async load(): Promise<Document[]> {
-    const elements = await _partition();
+    const elements = await this._partition();
 
-    documents = [];
+    const documents = [];
     for (const element of elements) {
-        metadata = element.metadata;
+        const {metadata} = element;
         metadata.category = element.type;
         documents.push(new Document({ pageContent: metadata.text, metadata }));
     }
