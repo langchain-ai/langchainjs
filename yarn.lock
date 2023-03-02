@@ -3567,6 +3567,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/pdf-parse@npm:^1.1.1":
+  version: 1.1.1
+  resolution: "@types/pdf-parse@npm:1.1.1"
+  checksum: c1292028a9048d8054990a76814600d5aa2462c063efa951d4f1c7a61763a5bad1755198e26a58b46a7f5602681c0090c726b7478eb6fa2734528552f1f44aac
+  languageName: node
+  linkType: hard
+
 "@types/prettier@npm:^2.1.5":
   version: 2.7.2
   resolution: "@types/prettier@npm:2.7.2"
@@ -5947,7 +5954,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"debug@npm:^3.2.7":
+"debug@npm:^3.1.0, debug@npm:^3.2.7":
   version: 3.2.7
   resolution: "debug@npm:3.2.7"
   dependencies:
@@ -9877,6 +9884,7 @@ __metadata:
     "@pinecone-database/pinecone": ^0.0.8
     "@tsconfig/recommended": ^1.0.2
     "@types/d3-dsv": ^3
+    "@types/pdf-parse": ^1.1.1
     "@types/uuid": ^9
     "@typescript-eslint/eslint-plugin": ^5.51.0
     "@typescript-eslint/parser": ^5.51.0
@@ -9904,6 +9912,7 @@ __metadata:
     lint-staged: ^13.1.1
     openai: ^3.1.0
     p-queue: ^7.3.4
+    pdf-parse: ^1.1.1
     prettier: ^2.8.3
     serpapi: ^1.1.1
     sqlite3: ^5.1.4
@@ -10763,6 +10772,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"node-ensure@npm:^0.0.0":
+  version: 0.0.0
+  resolution: "node-ensure@npm:0.0.0"
+  checksum: 1124623beb1dec66889794286ec1761ac3bfac42ce93b8652903efa5af14227edce5bafa06c4e0675cdc850360931d7c9413e3b5406150f05b2c9bf5bb3ccce4
+  languageName: node
+  linkType: hard
+
 "node-fetch@npm:2.6.7":
   version: 2.6.7
   resolution: "node-fetch@npm:2.6.7"
@@ -11429,6 +11445,16 @@ __metadata:
   version: 4.0.0
   resolution: "path-type@npm:4.0.0"
   checksum: 5b1e2daa247062061325b8fdbfd1fb56dde0a448fb1455453276ea18c60685bdad23a445dc148cf87bc216be1573357509b7d4060494a6fd768c7efad833ee45
+  languageName: node
+  linkType: hard
+
+"pdf-parse@npm:^1.1.1":
+  version: 1.1.1
+  resolution: "pdf-parse@npm:1.1.1"
+  dependencies:
+    debug: ^3.1.0
+    node-ensure: ^0.0.0
+  checksum: 5d63a8be1b3b8915618b1b76350409513fdd7fe03c77056b2dd7a1c2da28a11e297645e33bb4e953e2c1cd0ae66980f30fd0bed2979877f894347962d9647241
   languageName: node
   linkType: hard
 
