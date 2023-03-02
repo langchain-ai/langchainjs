@@ -1,20 +1,21 @@
+import { readFile } from "fs/promises";
 import { Document } from "../document.js";
 import { BaseDocumentLoader } from "./base.js";
-import type { DocumentLoader } from "./base.js";
 
-export class UnstructuredBaseDocumentLoader
-  extends BaseDocumentLoader
-  implements DocumentLoader
+export class UnstructuredBaseDocumentLoader extends BaseDocumentLoader
 {
   constructor(public webPath: string, filePath: string) {
     super();
+    this.filePath = filePath;
+    this.webPath = webPath;
   }
 
-  static async _partition() {
+  async _partition() {
     const buffer = await readFile(this.filePath);
+    const blob = new Blob([buffer]);
 
     const data = new FormData();
-    data.append("file", buffer);
+    data.append("file", blob);
 
     const response = await fetch(this.webPath, {
       method: "POST",
