@@ -33,6 +33,7 @@ export class UnstructuredBaseDocumentLoader extends BaseDocumentLoader {
     const elements = await this._partition();
 
     const documents = [];
+    // TODO(robinson) - actual typing so we don't need these comments :-P
     // eslint-disable-next-line
     // @ts-ignore
     for (const element of elements) {
