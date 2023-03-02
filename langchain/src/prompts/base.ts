@@ -1,5 +1,5 @@
 import { BaseOutputParser } from "./parser.js";
-import type { PromptTemplate, FewShotPromptTemplate } from "./index.js";
+import type { FewShotPromptTemplate, PromptTemplate } from "./index.js";
 
 export type SerializedBasePromptTemplate = ReturnType<
   InstanceType<

@@ -13,7 +13,7 @@ function getDefaultStartMessages() {
   return [
     {
       role: "system",
-      text: `You are chatbot optimized for question answering.
+      text: `You are a chatbot optimized for question answering.
         Your job is to answer the most recent user question based
         ONLY on the information they have told you before.
         Do NOT use other information than what is provided in previous

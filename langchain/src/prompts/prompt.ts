@@ -5,21 +5,21 @@ import {
   PartialValues,
 } from "./index.js";
 import {
-  TemplateFormat,
   checkValidTemplate,
-  renderTemplate,
   parseFString,
+  renderTemplate,
+  TemplateFormat,
 } from "./template.js";
 import { resolveTemplateFromFile } from "../util/index.js";
-import { SerializedOutputParser, BaseOutputParser } from "./parser.js";
+import { BaseOutputParser, SerializedOutputParser } from "./parser.js";
 
 export type SerializedPromptTemplate = {
   _type?: "prompt";
   input_variables: string[];
   output_parser?: SerializedOutputParser;
+  template_format?: TemplateFormat;
   template?: string;
   template_path?: string;
-  template_format?: TemplateFormat;
 };
 
 /**
