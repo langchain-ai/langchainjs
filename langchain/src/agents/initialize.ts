@@ -1,9 +1,6 @@
 import { BaseLLM } from "../llms/index.js";
 import { AgentExecutor } from "./executor.js";
-import {
-  CreatePromptArgs,
-  ZeroShotAgent,
-} from "./mrkl/index.js";
+import { CreatePromptArgs, ZeroShotAgent } from "./mrkl/index.js";
 import { Tool } from "./tools/index.js";
 
 export interface InitializeAgentExecutorOptions {
@@ -13,7 +10,12 @@ export interface InitializeAgentExecutorOptions {
   promptArgs?: CreatePromptArgs;
 }
 
-export const initializeAgentExecutor = async ({ tools, llm, agentType, promptArgs }: InitializeAgentExecutorOptions): Promise<AgentExecutor> => {
+export const initializeAgentExecutor = async ({
+  tools,
+  llm,
+  agentType,
+  promptArgs,
+}: InitializeAgentExecutorOptions): Promise<AgentExecutor> => {
   agentType = agentType || "zero-shot-react-description";
 
   switch (agentType) {

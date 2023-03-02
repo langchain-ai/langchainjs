@@ -1,10 +1,7 @@
 import { test } from "@jest/globals";
 
 import { OpenAI } from "../../llms/openai.js";
-import {
-  AgentExecutor,
-  Tool,
-} from "../index.js";
+import { AgentExecutor, Tool } from "../index.js";
 import { initializeAgentExecutor } from "../initialize.js";
 import { loadAgent } from "../load.js";
 import { Calculator } from "../tools/calculator.js";
@@ -36,7 +33,7 @@ test("Run agent locally", async () => {
   const executor = await initializeAgentExecutor({
     tools,
     llm: model,
-    agentType: "zero-shot-react-description"
+    agentType: "zero-shot-react-description",
   });
   console.log("Loaded agent.");
 
