@@ -38,7 +38,7 @@ export abstract class BaseChatModel {
     return this._generate(messages, stop);
   }
 
-  abstract async _generate(
+  abstract _generate(
     messages: ChatMessage[],
     stop?: string[]
   ): Promise<ChatResult>;
@@ -57,10 +57,7 @@ export abstract class SimpleChatModel extends BaseChatModel {
     this.role = role ?? this.role;
   }
 
-  abstract async _call(
-    messages: ChatMessage[],
-    stop?: string[]
-  ): Promise<string>;
+  abstract _call(messages: ChatMessage[], stop?: string[]): Promise<string>;
 
   async _generate(
     messages: ChatMessage[],
