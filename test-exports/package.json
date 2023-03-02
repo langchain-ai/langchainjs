@@ -6,7 +6,7 @@
   "main": "./index.js",
   "type": "module",
   "scripts": {
-    "test": "node ./index.mjs && tsc",
+    "test": "node ./index.mjs && node ./index.cjs && tsc",
     "format": "prettier --write \"**/*.ts\"",
     "format:diff": "prettier --list-different \"**/*.ts\"",
     "ci": "yarn format:diff && yarn test"
