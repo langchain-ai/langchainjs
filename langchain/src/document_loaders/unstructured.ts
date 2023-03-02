@@ -2,9 +2,9 @@ import { readFile } from "fs/promises";
 import { Document } from "../document.js";
 import { BaseDocumentLoader } from "./base.js";
 
-export class UnstructuredBaseDocumentLoader extends BaseDocumentLoader
-{
-  constructor(public webPath: string, filePath: string) {
+export class UnstructuredBaseDocumentLoader extends BaseDocumentLoader {
+
+  constructor(public webPath: string, public filePath: string) {
     super();
     this.filePath = filePath;
     this.webPath = webPath;
