@@ -14,7 +14,8 @@ import fetchAdapter from "../util/axios-fetch-adapter.js";
 import { chunkArray } from "../util/index.js";
 import { BaseLLM } from "./base.js";
 import { calculateMaxTokens } from "./calculateMaxTokens.js";
-import { LLMCallbackManager, LLMResult } from "./index.js";
+import type { LLMCallbackManager, LLMResult } from "./index.js";
+import { OpenAIChat } from "./openai-chat.js";
 
 interface ModelParams {
   /** Sampling temperature to use */
@@ -143,6 +144,10 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
     },
     configuration?: ConfigurationParameters
   ) {
+    if (fields?.modelName?.startsWith("gpt-3.5-turbo")) {
+      // eslint-disable-next-line no-constructor-return
+      return new OpenAIChat(fields, configuration) as any as OpenAI;
+    }
     super(
       fields?.callbackManager,
       fields?.verbose,
