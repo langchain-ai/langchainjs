@@ -21,7 +21,7 @@ export const initializeAgentExecutor = async ({
 }: InitializeAgentExecutorOptions): Promise<AgentExecutor> => {
   const agentType = _agentType || "zero-shot-react-description";
 
-  switch (_agentType) {
+  switch (agentType) {
     case "zero-shot-react-description":
       return AgentExecutor.fromAgentAndTools({
         agent: ZeroShotAgent.fromLLMAndTools(llm, tools, promptArgs),
