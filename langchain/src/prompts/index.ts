@@ -16,3 +16,4 @@ export {
   SerializedFewShotTemplate,
 } from "./few_shot.js";
 export { loadPrompt } from "./load.js";
+export { ChatPromptTemplate } from "./chat.js";
