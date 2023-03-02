@@ -33,6 +33,8 @@ export class UnstructuredBaseDocumentLoader extends BaseDocumentLoader {
     const elements = await this._partition();
 
     const documents = [];
+    // eslint-disable-next-line
+    // @ts-ignore
     for (const element of elements) {
         const {metadata} = element.metadata;
         metadata.category = element.type;
