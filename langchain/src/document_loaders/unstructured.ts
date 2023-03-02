@@ -2,7 +2,6 @@ import FormData from "form-data";
 import fetch from "node-fetch";
 import { createReadStream } from "fs";
 
-// import { readFile } from "fs/promises";
 import { Document } from "../document.js";
 import { BaseDocumentLoader } from "./base.js";
 
@@ -16,22 +15,13 @@ export class UnstructuredBaseDocumentLoader extends BaseDocumentLoader {
   }
 
   async _partition() {
-    // const buffer = await readFile(this.filePath);
-    // const blob = new Blob([buffer]);
-
-    // const stats = statSync(self.filePath);
-    // const fileSizeInBytes = stats.size;
     const fileStream = createReadStream(this.filePath);
 
     const form = new FormData();
-    form.append('files', fileStream); // , { knownLength: fileSizeInBytes });
+    form.append('files', fileStream);
 
     const response = await fetch(this.webPath, {
       method: "POST",
-      // headers: {
-      //   "Content-Type": "multipart/form-data",
-      //   "Accept": "application/json",
-      // },
       body: form,
     });
 
@@ -43,7 +33,6 @@ export class UnstructuredBaseDocumentLoader extends BaseDocumentLoader {
     const elements = await this._partition();
 
     const documents = [];
-    // @ts-ignore
     for (const element of elements) {
         const {metadata} = element.metadata;
         metadata.category = element.type;
