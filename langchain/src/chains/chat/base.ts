@@ -1,7 +1,7 @@
 import { BaseChain, ChainValues } from "../base.js";
 import { BaseChatModel, ChatMessage, Role } from "../../chat_models/base.js";
 import { ChatMemory } from "../../memory/chat_memory.js";
-import { BasePromptTemplate } from "../../prompts/index.js";
+// import { BasePromptTemplate } from "../../prompts/index.js";
 import { Document } from "../../document.js";
 
 export interface ChatChainInput {
@@ -27,11 +27,11 @@ export class ChatQAChain extends BaseChain implements ChatChainInput {
 
   aiPrefix: Role = "assistant";
 
-  memory: ChatMemory; // TODO: consolidate chatmemory with base memory
+  declare memory: ChatMemory;
 
   model: BaseChatModel;
 
-  prompt: BasePromptTemplate;
+  // prompt: BasePromptTemplate;
 
   questionKey = "question";
 
@@ -51,21 +51,31 @@ export class ChatQAChain extends BaseChain implements ChatChainInput {
 
   constructor(fields: {
     model: BaseChatModel;
-    prompt: BasePromptTemplate;
+    // prompt: BasePromptTemplate;
     humanPrefix?: Role;
     aiPrefix?: Role;
-    startMessages?: ChatMessage[];
+    starterMessages?: ChatMessage[];
+    memory?: ChatMemory;
   }) {
     super();
     this.model = fields.model;
-    this.prompt = fields.prompt;
+    // this.prompt = fields.prompt;
     this.humanPrefix = fields.humanPrefix ?? this.humanPrefix;
     this.aiPrefix = fields.aiPrefix ?? this.aiPrefix;
-    this.starterMessages = fields.startMessages ?? getDefaultStartMessages();
+    this.starterMessages = fields.starterMessages ?? getDefaultStartMessages();
+    this.memory =
+      fields.memory ??
+      new ChatMemory({
+        humanPrefix: this.humanPrefix,
+        aiPrefix: this.aiPrefix,
+        messages: this.starterMessages,
+        inputKey: this.questionKey,
+        outputKey: this.outputKey,
+      });
   }
 
-  static fromModel(model: BaseChatModel, prompt: BasePromptTemplate) {
-    return new ChatQAChain({ model, prompt });
+  static fromModel(model: BaseChatModel, starterMessages: ChatMessage[]) {
+    return new ChatQAChain({ model, starterMessages });
   }
 
   async _call(values: ChainValues): Promise<ChainValues> {
@@ -82,4 +92,23 @@ export class ChatQAChain extends BaseChain implements ChatChainInput {
     const output = await this.model.run(messages);
     return { [this.outputKey]: output };
   }
+
+  serialize(): SerializedChatQAChain {
+    return {
+      _type: "chat-qa",
+      // TODO: serialize the rest of the fields
+      // model: this.model.serialize(),
+      // prompt: this.prompt.serialize(),
+      // humanPrefix: this.humanPrefix,
+      // aiPrefix: this.aiPrefix,
+    };
+  }
+
+  _chainType() {
+    return "chat-qa" as const;
+  }
+}
+
+export interface SerializedChatQAChain {
+  _type: "chat-qa";
 }

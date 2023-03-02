@@ -4,6 +4,7 @@ export { OpenAIChat } from "./openai-chat.js";
 export { Cohere } from "./cohere.js";
 export { HuggingFaceInference } from "./hf.js";
 export { loadLLM } from "./load.js";
+export { OpenAIChat as OpenAIChatChat } from "../chat_models/openai_chat.js";
 
 export type LLMCallbackManager = {
   handleStart?: (

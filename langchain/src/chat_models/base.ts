@@ -1,3 +1,19 @@
+import { LLMCallbackManager } from "../llms/index.js";
+
+const getCallbackManager = (): LLMCallbackManager => ({
+  handleStart: (..._args) => {
+    // console.log(args);
+  },
+  handleEnd: (..._args) => {
+    // console.log(args);
+  },
+  handleError: (..._args) => {
+    // console.log(args);
+  },
+});
+
+const getVerbosity = () => true;
+
 export type Role = "user" | "assistant" | "system";
 
 export type ChatMessage = {
@@ -52,9 +68,19 @@ export abstract class BaseChatModel {
 export abstract class SimpleChatModel extends BaseChatModel {
   role: Role = "assistant";
 
-  constructor(role?: Role) {
+  callbackManager: LLMCallbackManager;
+
+  verbose: boolean;
+
+  constructor(
+    role?: Role,
+    callbackManager?: LLMCallbackManager,
+    verbose?: boolean
+  ) {
     super();
     this.role = role ?? this.role;
+    this.callbackManager = callbackManager ?? getCallbackManager();
+    this.verbose = verbose ?? getVerbosity();
   }
 
   abstract _call(messages: ChatMessage[], stop?: string[]): Promise<string>;
