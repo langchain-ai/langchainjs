@@ -5,7 +5,7 @@ import {
   InputValues,
   PartialValues,
 } from "./base.js";
-import { TemplateFormat } from "./template.js";
+import { DEFAULT_FORMATTER_MAPPING, TemplateFormat } from "./template.js";
 import { SerializedPromptTemplate } from "./prompt.js";
 
 export type PromptMessage = {
@@ -26,7 +26,12 @@ export interface ChatPromptTemplateInput extends BasePromptTemplateInput {
    */
   templateFormat?: TemplateFormat;
 
-  // TODO: add support for validation
+  /**
+   * Whether or not to try validating the template on initialization
+   *
+   * @defaultValue `true`
+   */
+  validateTemplate?: boolean;
 }
 
 export class ChatPromptTemplate
@@ -37,9 +42,47 @@ export class ChatPromptTemplate
 
   templateFormat: TemplateFormat = "f-string";
 
+  validateTemplate = true;
+
   constructor(input: ChatPromptTemplateInput) {
     super(input);
     Object.assign(this, input);
+
+    if (this.validateTemplate) {
+      if (!(this.templateFormat in DEFAULT_FORMATTER_MAPPING)) {
+        const validFormats = Object.keys(DEFAULT_FORMATTER_MAPPING);
+        throw new Error(`Invalid template format. Got \`${this.templateFormat}\`;
+                         should be one of ${validFormats}`);
+      }
+      // create a set of all input variables from all prompt messages
+      const inputVariables = new Set<string>();
+      for (const promptMessage of this.promptMessages) {
+        for (const inputVariable of promptMessage.message.inputVariables) {
+          inputVariables.add(inputVariable);
+        }
+      }
+      const difference = new Set(
+        [...this.inputVariables].filter((x) => !inputVariables.has(x))
+      );
+      if (difference.size > 0) {
+        throw new Error(
+          `Input variables \`${[
+            ...difference,
+          ]}\` are not used in any of the prompt messages.`
+        );
+      }
+      const thisInputVariables = new Set(this.inputVariables);
+      const otherDifference = new Set(
+        [...inputVariables].filter((x) => !thisInputVariables.has(x))
+      );
+      if (otherDifference.size > 0) {
+        throw new Error(
+          `Input variables \`${[
+            ...otherDifference,
+          ]}\` are used in prompt messages but not in the prompt template.`
+        );
+      }
+    }
   }
 
   _getPromptType(): "chat" {
@@ -56,6 +99,11 @@ export class ChatPromptTemplate
     for (const promptMessage of this.promptMessages) {
       const inputValues: InputValues = {};
       for (const inputVariable of promptMessage.message.inputVariables) {
+        if (!(inputVariable in values)) {
+          throw new Error(
+            `Missing value for input variable \`${inputVariable}\``
+          );
+        }
         inputValues[inputVariable] = values[inputVariable];
       }
       const message = await promptMessage.message.format(inputValues);
@@ -73,5 +121,20 @@ export class ChatPromptTemplate
 
   async partial(_: PartialValues): Promise<BasePromptTemplate> {
     throw new Error("ChatPromptTemplate.partial() not yet implemented");
+  }
+
+  static fromPromptMessages(
+    promptMessages: PromptMessage[]
+  ): ChatPromptTemplate {
+    const inputVariables = new Set<string>();
+    for (const promptMessage of promptMessages) {
+      for (const inputVariable of promptMessage.message.inputVariables) {
+        inputVariables.add(inputVariable);
+      }
+    }
+    return new ChatPromptTemplate({
+      inputVariables: [...inputVariables],
+      promptMessages,
+    });
   }
 }
