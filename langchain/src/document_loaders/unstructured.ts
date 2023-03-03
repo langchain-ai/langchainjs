@@ -45,7 +45,7 @@ export class UnstructuredBaseDocumentLoader extends BaseDocumentLoader {
     // eslint-disable-next-line
     // @ts-ignore
     for (const element of elements) {
-      const { metadata } = element.metadata;
+      const { metadata } = element;
       metadata.category = element.type;
       documents.push(new Document({ pageContent: metadata.text, metadata }));
     }
