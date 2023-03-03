@@ -1,6 +1,15 @@
 import { Document } from "../document.js";
 import { BaseDocumentLoader } from "./base.js";
 
+interface Element {
+  type: string;
+  text: string;
+  // this is purposefully loosely typed
+  metadata: {
+    [key: string]: unknown;
+  };
+}
+
 export class UnstructuredBaseDocumentLoader extends BaseDocumentLoader {
   constructor(public webPath: string, public filePath: string) {
     super();
@@ -34,20 +43,29 @@ export class UnstructuredBaseDocumentLoader extends BaseDocumentLoader {
     }
 
     const elements = await response.json();
-    return elements;
+    if (!Array.isArray(elements)) {
+      throw new Error(
+        `Expected partitioning request to return an array, but got ${elements}`
+      );
+    }
+    return elements as Element[];
   }
 
   async load(): Promise<Document[]> {
     const elements = await this._partition();
 
-    const documents = [];
-    // TODO(robinson) - actual typing so we don't need these comments :-P
-    // eslint-disable-next-line
-    // @ts-ignore
+    const documents: Document[] = [];
     for (const element of elements) {
-      const { metadata } = element;
-      metadata.category = element.type;
-      documents.push(new Document({ pageContent: metadata.text, metadata }));
+      const { metadata, text } = element;
+      documents.push(
+        new Document({
+          pageContent: text,
+          metadata: {
+            ...metadata,
+            category: element.type,
+          },
+        })
+      );
     }
 
     return documents;
