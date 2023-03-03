@@ -1,18 +1,20 @@
+import { TiktokenModel } from "@dqbd/tiktoken";
+import { createParser } from "eventsource-parser";
+import { backOff } from "exponential-backoff";
+import type { IncomingMessage } from "http";
 import {
   Configuration,
-  OpenAIApi,
+  ConfigurationParameters,
   CreateCompletionRequest,
   CreateCompletionResponse,
   CreateCompletionResponseChoicesInner,
-  ConfigurationParameters,
+  OpenAIApi,
 } from "openai";
-import type { IncomingMessage } from "http";
-import { createParser } from "eventsource-parser";
-import { backOff } from "exponential-backoff";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
 import { chunkArray } from "../util/index.js";
 import { BaseLLM } from "./base.js";
-import type { LLMResult, LLMCallbackManager } from "./index.js";
+import { calculateMaxTokens } from "./calculateMaxTokens.js";
+import type { LLMCallbackManager, LLMResult } from "./index.js";
 import { OpenAIChat } from "./openai-chat.js";
 
 interface ModelParams {
@@ -250,6 +252,19 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
 
     const params = this.invocationParams();
     params.stop = stop ?? params.stop;
+
+    if (params.max_tokens === -1) {
+      if (prompts.length !== 1) {
+        throw new Error(
+          "max_tokens set to -1 not supported for multiple inputs"
+        );
+      }
+      params.max_tokens = await calculateMaxTokens({
+        prompt: prompts[0],
+        // Cast here to allow for other models that may not fit the union
+        modelName: this.modelName as TiktokenModel,
+      });
+    }
 
     for (let i = 0; i < subPrompts.length; i += 1) {
       const { data } = await this.completionWithRetry({
