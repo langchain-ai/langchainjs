@@ -6,6 +6,7 @@ import type {
   ChatVectorDBQAChain,
   MapReduceDocumentsChain,
   AnalyzeDocumentChain,
+  ChatModelChain,
   ChatQAChain,
 } from "./index.js";
 import { BaseMemory } from "../memory/index.js";
@@ -18,6 +19,7 @@ export type LoadValues = Record<string, any>;
 export type SerializedBaseChain = ReturnType<
   InstanceType<
     | typeof LLMChain
+    | typeof ChatModelChain
     | typeof StuffDocumentsChain
     | typeof VectorDBQAChain
     | typeof ChatVectorDBQAChain

@@ -89,7 +89,7 @@ export class ChatQAChain extends BaseChain implements ChatChainInput {
       text: doc.pageContent,
     }));
     const messages = [...this.starterMessages, ...docMessages, newMessage];
-    const output = await this.model.run(messages);
+    const output = await this.model.call(messages);
     return { [this.outputKey]: output };
   }
 

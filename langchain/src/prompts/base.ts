@@ -1,9 +1,12 @@
 import { BaseOutputParser } from "./parser.js";
 import type { FewShotPromptTemplate, PromptTemplate } from "./index.js";
+import { ChatPromptTemplate } from "./index.js";
 
 export type SerializedBasePromptTemplate = ReturnType<
   InstanceType<
-    typeof PromptTemplate | typeof FewShotPromptTemplate
+    | typeof PromptTemplate
+    | typeof FewShotPromptTemplate
+    | typeof ChatPromptTemplate
   >["serialize"]
 >;
 
