@@ -1,27 +1,35 @@
-import {BaseChain, ChainInputs, ChainValues} from "./index.js";
+import { BaseChain, ChainInputs, ChainValues } from "./index.js";
 
-import {BaseLLM, SerializedLLM} from "../llms/index.js";
+import { BaseLLM, SerializedLLM } from "../llms/index.js";
 
-import {BaseMemory, BufferMemory} from "../memory/index.js";
-import {BasePromptTemplate, PromptTemplate, SerializedBasePromptTemplate,} from "../prompts/index.js";
+import { BaseMemory, BufferMemory } from "../memory/index.js";
+import {
+  BasePromptTemplate,
+  PromptTemplate,
+  SerializedBasePromptTemplate,
+  ChatPromptTemplate,
+} from "../prompts/index.js";
 
-import {resolveConfigFromFile} from "../util/index.js";
-import {BaseChatModel} from "../chat_models/base.js";
+import { resolveConfigFromFile } from "../util/index.js";
+import { BaseChatModel } from "../chat_models/base.js";
 
 export interface BaseLLMChainInput extends ChainInputs {
-  /** Prompt object to use */
-  prompt: BasePromptTemplate;
-
   /** @ignore */
   outputKey: string;
 }
 
 export interface LLMChainInput extends BaseLLMChainInput {
+  /** Prompt object to use */
+  prompt: BasePromptTemplate;
+
   /** LLM Wrapper to use */
   llm: BaseLLM;
 }
 
 export interface ChatModelChainInput extends BaseLLMChainInput {
+  /** Prompt object to use */
+  prompt: ChatPromptTemplate;
+
   /** ChatModel Wrapper to use */
   llm: BaseChatModel;
 }
@@ -46,22 +54,14 @@ export type SerializedLLMChain = {
  * const llm = LLMChain({ llm: new OpenAI(), prompt });
  * ```
  */
-export abstract class BaseLLMChain extends BaseChain implements BaseLLMChainInput {
-  prompt: BasePromptTemplate;
-
+export abstract class BaseLLMChain
+  extends BaseChain
+  implements BaseLLMChainInput
+{
   outputKey = "text";
 
-  get inputKeys() {
-    return this.prompt.inputVariables;
-  }
-
-  constructor(fields: {
-    prompt: BasePromptTemplate;
-    outputKey?: string;
-    memory?: BaseMemory;
-  }) {
+  constructor(fields: { outputKey?: string; memory?: BaseMemory }) {
     super(fields.memory);
-    this.prompt = fields.prompt;
     this.outputKey = fields.outputKey ?? this.outputKey;
   }
 
@@ -87,14 +87,21 @@ export abstract class BaseLLMChain extends BaseChain implements BaseLLMChainInpu
 export class LLMChain extends BaseLLMChain implements LLMChainInput {
   llm: BaseLLM;
 
+  prompt: BasePromptTemplate;
+
+  get inputKeys() {
+    return this.prompt.inputVariables;
+  }
+
   constructor(fields: {
     prompt: BasePromptTemplate;
     llm: BaseLLM;
     outputKey?: string;
     memory?: BaseMemory;
   }) {
-    super({prompt: fields.prompt, outputKey: fields.outputKey, memory: fields.memory});
+    super({ outputKey: fields.outputKey, memory: fields.memory });
     this.llm = fields.llm;
+    this.prompt = fields.prompt;
   }
 
   async _call(values: ChainValues): Promise<ChainValues> {
@@ -104,17 +111,17 @@ export class LLMChain extends BaseLLMChain implements LLMChainInput {
     }
     const formattedString = await this.prompt.format(values);
     const llmResult = await this.llm.call(formattedString, stop);
-    return {[this.outputKey]: llmResult};
+    return { [this.outputKey]: llmResult };
   }
 
   static async deserialize(data: SerializedLLMChain) {
     const serializedLLM = await resolveConfigFromFile<"llm", SerializedLLM>(
-        "llm",
-        data
+      "llm",
+      data
     );
     const serializedPrompt = await resolveConfigFromFile<
-        "prompt",
-        SerializedBasePromptTemplate
+      "prompt",
+      SerializedBasePromptTemplate
     >("prompt", data);
 
     return new LLMChain({
@@ -136,38 +143,48 @@ export class LLMChain extends BaseLLMChain implements LLMChainInput {
   }
 }
 
-export class ChatModelChain extends BaseLLMChain implements ChatModelChainInput {
+export class ChatModelChain
+  extends BaseLLMChain
+  implements ChatModelChainInput
+{
+  llm: BaseChatModel;
+
+  prompt: ChatPromptTemplate;
+
+  get inputKeys() {
+    return this.prompt.inputVariables;
+  }
+
+  constructor(fields: {
+    prompt: ChatPromptTemplate;
     llm: BaseChatModel;
+    outputKey?: string;
+    memory?: BaseMemory;
+  }) {
+    super({ outputKey: fields.outputKey, memory: fields.memory });
+    this.llm = fields.llm;
+    this.prompt = fields.prompt;
+  }
 
-    constructor(fields: {
-        prompt: BasePromptTemplate;
-        llm: BaseChatModel;
-        outputKey?: string;
-        memory?: BaseMemory;
-    }) {
-        super({prompt: fields.prompt, outputKey: fields.outputKey, memory: fields.memory});
-        this.llm = fields.llm;
+  async _call(values: ChainValues): Promise<ChainValues> {
+    let stop;
+    if ("stop" in values && Array.isArray(values.stop)) {
+      stop = values.stop;
     }
+    const messages = await this.prompt.formatChat(values);
+    const llmResult = await this.llm.call(messages, stop);
+    return { [this.outputKey]: llmResult };
+  }
 
-    async _call(values: ChainValues): Promise<ChainValues> {
-        const formattedString = await this.prompt.format(values);
-        const llmResult = await this.llm.call(formattedString);
-        return {[this.outputKey]: llmResult};
-    }
+  // TODO: create a new serialization type for ChatModelChain
+  // and implement these methods
+  serialize(): SerializedLLMChain {
+    throw new Error("Method not implemented.");
+  }
 
-    // TODO: create a new serialization type for ChatModelChain
-    // and implement these methods
-    static async deserialize(_: SerializedLLMChain) {
-      throw new Error("Method not implemented.");
-    }
-
-    serialize(): SerializedLLMChain {
-      throw new Error("Method not implemented.");
-    }
-
-    _chainType() {
-        return "chat_model_chain" as const;
-    }
+  _chainType() {
+    return "chat_model_chain" as const;
+  }
 }
 
 // eslint-disable-next-line max-len

@@ -8,6 +8,7 @@ export {
   SerializedLLMChain,
   LLMChain,
   ConversationChain,
+  ChatModelChain,
 } from "./llm_chain.js";
 export {
   SerializedStuffDocumentsChain,

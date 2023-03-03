@@ -59,7 +59,7 @@ export abstract class BaseChatModel {
     stop?: string[]
   ): Promise<ChatResult>;
 
-  async run(messages: ChatMessage[], stop?: string[]): Promise<ChatMessage> {
+  async call(messages: ChatMessage[], stop?: string[]): Promise<ChatMessage> {
     const { generations } = await this.generate(messages, stop);
     return generations[0].message;
   }
