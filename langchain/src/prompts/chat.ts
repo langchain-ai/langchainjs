@@ -6,7 +6,15 @@ import {
   PartialValues,
 } from "./base.js";
 import { DEFAULT_FORMATTER_MAPPING, TemplateFormat } from "./template.js";
-import { SerializedPromptTemplate } from "./prompt.js";
+import { SerializedOutputParser } from "./parser.js";
+
+export type SerializedChatPromptTemplate = {
+  _type?: "chat_prompt";
+  input_variables: string[];
+  output_parser?: SerializedOutputParser;
+  template_format?: TemplateFormat;
+  prompt_messages: PromptMessage[];
+};
 
 export type PromptMessage = {
   role: Role;
@@ -115,8 +123,13 @@ export class ChatPromptTemplate
     return messages;
   }
 
-  serialize(): SerializedPromptTemplate {
-    throw new Error("ChatPromptTemplate.serialize() not yet implemented");
+  serialize(): SerializedChatPromptTemplate {
+    return {
+      input_variables: this.inputVariables,
+      output_parser: this.outputParser?.serialize(),
+      template_format: this.templateFormat,
+      prompt_messages: this.promptMessages,
+    };
   }
 
   async partial(_: PartialValues): Promise<BasePromptTemplate> {

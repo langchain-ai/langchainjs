@@ -1,15 +1,16 @@
 import { BaseLLM } from "../../llms/index.js";
-import { LLMChain } from "../llm_chain.js";
+import { ChatModelChain, LLMChain } from "../llm_chain.js";
 import { PromptTemplate } from "../../prompts/index.js";
 import {
-  StuffDocumentsChain,
   MapReduceDocumentsChain,
+  StuffDocumentsChain,
 } from "../combine_docs_chain.js";
-import { DEFAULT_QA_PROMPT } from "./stuff_prompts.js";
+import { DEFAULT_CHAT_QA_PROMPT, DEFAULT_QA_PROMPT } from "./stuff_prompts.js";
 import {
   COMBINE_PROMPT,
   DEFAULT_COMBINE_QA_PROMPT,
 } from "./map_reduce_prompts.js";
+import { BaseChatModel } from "../../chat_models/base.js";
 
 interface qaChainParams {
   prompt?: PromptTemplate;
@@ -43,4 +44,12 @@ export const loadQAChain = (llm: BaseLLM, params: qaChainParams = {}) => {
     return chain;
   }
   throw new Error(`Invalid _type: ${type}`);
+};
+
+export const loadQAChainFromChatModel = (llm: BaseChatModel) => {
+  const chatModelChain = new ChatModelChain({
+    prompt: DEFAULT_CHAT_QA_PROMPT,
+    llm,
+  });
+  return new StuffDocumentsChain({ llmChain: chatModelChain });
 };

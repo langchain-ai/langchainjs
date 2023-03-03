@@ -9,6 +9,7 @@ import type {
   ChatQAChain,
 } from "./index.js";
 import { BaseMemory } from "../memory/index.js";
+import { ChatModelChain } from "./index.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ChainValues = Record<string, any>;
@@ -18,6 +19,7 @@ export type LoadValues = Record<string, any>;
 export type SerializedBaseChain = ReturnType<
   InstanceType<
     | typeof LLMChain
+    | typeof ChatModelChain
     | typeof StuffDocumentsChain
     | typeof VectorDBQAChain
     | typeof ChatVectorDBQAChain

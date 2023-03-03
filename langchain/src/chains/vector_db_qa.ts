@@ -3,12 +3,14 @@ import {
   ChainValues,
   SerializedBaseChain,
   loadQAChain,
+  loadQAChainFromChatModel,
 } from "./index.js";
 
 import { VectorStore } from "../vectorstores/base.js";
 import { BaseLLM } from "../llms/index.js";
 
 import { resolveConfigFromFile } from "../util/index.js";
+import { BaseChatModel } from "../chat_models/base.js";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type LoadValues = Record<string, any>;
 
@@ -106,6 +108,15 @@ export class VectorDBQAChain extends BaseChain implements VectorDBQAChainInput {
 
   static fromLLM(llm: BaseLLM, vectorstore: VectorStore): VectorDBQAChain {
     const qaChain = loadQAChain(llm);
+    const instance = new this({ vectorstore, combineDocumentsChain: qaChain });
+    return instance;
+  }
+
+  static fromChatModel(
+    llm: BaseChatModel,
+    vectorstore: VectorStore
+  ): VectorDBQAChain {
+    const qaChain = loadQAChainFromChatModel(llm);
     const instance = new this({ vectorstore, combineDocumentsChain: qaChain });
     return instance;
   }

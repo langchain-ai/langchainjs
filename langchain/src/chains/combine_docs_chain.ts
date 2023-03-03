@@ -1,6 +1,7 @@
 import {
   BaseChain,
   ChainValues,
+  BaseLLMChain,
   LLMChain,
   SerializedLLMChain,
   SerializedBaseChain,
@@ -9,10 +10,11 @@ import {
 import { Document } from "../document.js";
 
 import { resolveConfigFromFile } from "../util/index.js";
+import { SerializedChatModelChain } from "./llm_chain.js";
 
 export interface StuffDocumentsChainInput {
   /** LLM Wrapper to use after formatting documents */
-  llmChain: LLMChain;
+  llmChain: BaseLLMChain;
   inputKey: string;
   outputKey: string;
   /** Variable name in the LLM chain to put the documents in */
@@ -22,6 +24,7 @@ export interface StuffDocumentsChainInput {
 export type SerializedStuffDocumentsChain = {
   _type: "stuff_documents_chain";
   llm_chain?: SerializedLLMChain;
+  chat_model_chain?: SerializedChatModelChain;
   llm_chain_path?: string;
 };
 
@@ -34,7 +37,7 @@ export class StuffDocumentsChain
   extends BaseChain
   implements StuffDocumentsChainInput
 {
-  llmChain: LLMChain;
+  llmChain: BaseLLMChain;
 
   inputKey = "input_documents";
 
@@ -47,7 +50,7 @@ export class StuffDocumentsChain
   }
 
   constructor(fields: {
-    llmChain: LLMChain;
+    llmChain: BaseLLMChain;
     inputKey?: string;
     outputKey?: string;
     documentVariableName?: string;
@@ -83,17 +86,19 @@ export class StuffDocumentsChain
       "llm_chain",
       SerializedLLMChain
     >("llm_chain", data);
-
     return new StuffDocumentsChain({
       llmChain: await LLMChain.deserialize(SerializedLLMChain),
     });
   }
 
   serialize(): SerializedStuffDocumentsChain {
-    return {
-      _type: this._chainType(),
-      llm_chain: this.llmChain.serialize(),
-    };
+    if (this.llmChain instanceof LLMChain) {
+      return {
+        _type: this._chainType(),
+        llm_chain: this.llmChain.serialize(),
+      };
+    }
+    throw new Error("Cannot serialize Chain with ChatModelChain chain.");
   }
 }
 
