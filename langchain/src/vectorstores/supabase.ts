@@ -1,16 +1,19 @@
-/// Youre not allowed to run raw sql on supabase apis I dont beleive
-/// https://github.com/supabase/supabase/discussions/3419#discussioncomment-1428126
-/// you need to follow the blogpost https://supabase.com/blog/openai-embeddings-postgres-vector
-/// or simply execute this raw sql to setup the defaul query and table
-/// Note, I needed to add the #variable_conflict use_column the blog post didnt work out of the box for me
-/// create extension vector;
+/// This is a vector implementation for a serverless pgsql server, in the style of supabase
+/// blogpost https://supabase.com/blog/openai-embeddings-postgres-vector
+/// Ideally we could run raw sql in order to set up the table and query we need, but they
+/// dont seem to allow that https://github.com/supabase/supabase/discussions/3419#discussioncomment-1428126
+/// So you need to go to the supabase sql editor and run the following sql from their blog post
+/// Note, I needed to add the #variable_conflict use_column to the blog post as it didnt
+/// work out of the box for me
 
+/// create extension vector;
+///
 /// create table documents (
 ///   id bigserial primary key,
 ///   content text,
 ///   embedding vector (1536)
 /// );
-
+///
 /// create or replace function match_documents (
 ///   query_embedding vector(1536),
 ///   similarity_threshold float,
@@ -36,7 +39,7 @@
 ///   limit match_count;
 /// end;
 /// $$;
-
+///
 /// create index on documents
 /// using ivfflat (embedding vector_cosine_ops)
 /// with (lists = 100);
