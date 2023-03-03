@@ -12,6 +12,7 @@ import {
 
 import { resolveConfigFromFile } from "../util/index.js";
 import { BaseChatModel } from "../chat_models/base.js";
+import { SerializedChatPromptTemplate } from "../prompts/chat.js";
 
 export interface BaseLLMChainInput extends ChainInputs {
   /** @ignore */
@@ -39,6 +40,13 @@ export type SerializedLLMChain = {
   llm?: SerializedLLM;
   llm_path?: string;
   prompt?: SerializedBasePromptTemplate;
+  prompt_path?: string;
+};
+
+export type SerializedChatModelChain = {
+  _type: "chat_model_chain";
+  // TODO: add chat model serialization and path
+  prompt?: SerializedChatPromptTemplate;
   prompt_path?: string;
 };
 
@@ -178,8 +186,11 @@ export class ChatModelChain
 
   // TODO: create a new serialization type for ChatModelChain
   // and implement these methods
-  serialize(): SerializedLLMChain {
-    throw new Error("Method not implemented.");
+  serialize(): SerializedChatModelChain {
+    return {
+      _type: this._chainType(),
+      prompt: this.prompt.serialize(),
+    };
   }
 
   _chainType() {
