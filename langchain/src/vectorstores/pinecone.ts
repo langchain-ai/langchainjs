@@ -69,6 +69,7 @@ export class PineconeStore extends VectorStore {
         topK: k,
         includeMetadata: true,
         vector: query,
+        namespace: this.namespace,
       },
     });
 
