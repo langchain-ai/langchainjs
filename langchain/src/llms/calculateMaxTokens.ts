@@ -1,4 +1,4 @@
-import { encoding_for_model, TiktokenModel } from "@dqbd/tiktoken";
+import type { TiktokenModel } from "@dqbd/tiktoken";
 
 // https://www.npmjs.com/package/@dqbd/tiktoken
 
@@ -26,10 +26,24 @@ type CalculateMaxTokenProps = {
   modelName: TiktokenModel;
 };
 
-export const calculateMaxTokens = ({
+const imports = async () => {
+  try {
+    const { encoding_for_model } = await import("@dqbd/tiktoken");
+    return { encoding_for_model };
+  } catch (error) {
+    console.log(error);
+    throw new Error(
+      "Please install @dqbd/tiktoken as a dependency with, e.g. `yarn add @dqbd/tiktoken`"
+    );
+  }
+};
+
+export const calculateMaxTokens = async ({
   prompt,
   modelName,
 }: CalculateMaxTokenProps) => {
+  const { encoding_for_model } = await imports();
+
   const encoding = encoding_for_model(modelName);
 
   const tokenized = encoding.encode(prompt);

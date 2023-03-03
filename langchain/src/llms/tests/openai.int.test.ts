@@ -8,6 +8,12 @@ test("Test OpenAI", async () => {
   console.log({ res });
 });
 
+test("Test OpenAI with maxTokens -1", async () => {
+  const model = new OpenAI({ maxTokens: -1, modelName: "text-ada-001" });
+  const res = await model.call("Print hello world", ["world"]);
+  console.log({ res });
+});
+
 test("Test OpenAI with chat model returns OpenAIChat", async () => {
   const model = new OpenAI({ modelName: "gpt-3.5-turbo" });
   expect(model).toBeInstanceOf(OpenAIChat);

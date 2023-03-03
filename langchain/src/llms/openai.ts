@@ -254,12 +254,12 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
     params.stop = stop ?? params.stop;
 
     if (params.max_tokens === -1) {
-      if (subPrompts.length !== 1) {
+      if (prompts.length !== 1) {
         throw new Error(
           "max_tokens set to -1 not supported for multiple inputs"
         );
       }
-      params.max_tokens = calculateMaxTokens({
+      params.max_tokens = await calculateMaxTokens({
         prompt: prompts[0],
         // Cast here to allow for other models that may not fit the union
         modelName: this.modelName as TiktokenModel,
