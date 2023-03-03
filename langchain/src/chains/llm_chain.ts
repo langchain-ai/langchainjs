@@ -15,7 +15,7 @@ import { BaseChatModel } from "../chat_models/base.js";
 import { SerializedChatPromptTemplate } from "../prompts/chat.js";
 
 export interface BaseLLMChainInput extends ChainInputs {
-  /** @ignore */
+  /** Output key to use */
   outputKey: string;
 }
 
