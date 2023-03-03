@@ -69,6 +69,7 @@ export class PineconeStore extends VectorStore {
         topK: k,
         includeMetadata: true,
         vector: query,
+        namespace: this.namespace,
       },
     });
 
@@ -76,8 +77,8 @@ export class PineconeStore extends VectorStore {
 
     if (results.matches) {
       for (const res of results.matches) {
-        const { [this.textKey]: pageContent, ...metadata } =
-          res.metadata as PineconeMetadata;
+        const { [this.textKey]: pageContent, ...metadata } = (res.metadata ??
+          {}) as PineconeMetadata;
         if (res.score) {
           result.push([new Document({ metadata, pageContent }), res.score]);
         }
