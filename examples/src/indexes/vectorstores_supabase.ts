@@ -8,15 +8,18 @@ export const run = async () => {
     process.env.SUPABASE_PRIVATE_KEY || ""
   );
 
-  const vectorStore = await PGVectorStore.fromExistingIndex(
+  const vectorStore = await PGVectorStore.fromTexts(
     client,
+    ["Hello world", "Bye bye", "hello nice world"],
+    [{ id: 2 }, { id: 1 }, { id: 3 }],
     new OpenAIEmbeddings(),
-    "search_embeddings"
+    "documents",
+    "match_documents",
   );
 
   const resultOne = await vectorStore.similaritySearchWithScore(
-    "How do I get a record deal",
-    0.75
+    "Hello world",
+    .80
   );
-  console.log(resultOne);
+  console.dir(resultOne, { depth: null });
 };

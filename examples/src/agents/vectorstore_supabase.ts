@@ -6,7 +6,7 @@ import {
   VectorStoreInfo,
 } from "langchain/agents";
 import { PGVectorStore } from "langchain/vectorstores";
-import { createClient } from '@supabase/supabase-js'
+import { createClient } from '@supabase/supabase-js';
 
 
 export const run = async () => {
@@ -20,13 +20,13 @@ export const run = async () => {
   const vectorStore = await PGVectorStore.fromExistingIndex(
     client,
     new OpenAIEmbeddings(),
-    'search_embeddings'
+    'match_documents'
   );
 
   /* Create the agent */
   const vectorStoreInfo: VectorStoreInfo = {
-    name: "music_business",
-    description: "common questions and answers about the music industry",
+    name: "state_of_union_address",
+    description: "the most recent state of the Union address",
     vectorStore,
   };
 
@@ -34,7 +34,7 @@ export const run = async () => {
   const agent = createVectorStoreAgent(model, toolkit);
 
   const input =
-    "How do I get a record deal?";
+    "What did biden say about Ketanji Brown Jackson is the state of the union address?";
   console.log(`Executing: ${input}`);
   const result = await agent.call({ input });
   console.log(`Got output ${result.output}`);
