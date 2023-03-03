@@ -6,10 +6,10 @@ import type {
   ChatVectorDBQAChain,
   MapReduceDocumentsChain,
   AnalyzeDocumentChain,
+  ChatModelChain,
   ChatQAChain,
 } from "./index.js";
 import { BaseMemory } from "../memory/index.js";
-import { ChatModelChain } from "./index.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ChainValues = Record<string, any>;
