@@ -14,22 +14,53 @@ const getCallbackManager = (): LLMCallbackManager => ({
 
 const getVerbosity = () => true;
 
-export type Role = "user" | "assistant" | "system";
+export type MessageType = "human" | "ai" | "generic" | "system";
 
-export type ChatMessage = {
-  /**
-   * Generated text output.
-   */
+export abstract class BaseChatMessage {
+  /** The text of the message. */
   text: string;
 
-  /**
-   * Role of the agent that generated the text.
-   */
-  role: string;
-};
+  /** The type of the message. */
+  abstract _getType(): MessageType;
 
-export type ChatGeneration = {
-  message: ChatMessage;
+  constructor(text: string) {
+    this.text = text;
+  }
+}
+
+export class HumanChatMessage extends BaseChatMessage {
+  _getType(): MessageType {
+    return "human";
+  }
+}
+
+export class AIChatMessage extends BaseChatMessage {
+  _getType(): MessageType {
+    return "ai";
+  }
+}
+
+export class SystemChatMessage extends BaseChatMessage {
+  _getType(): MessageType {
+    return "system";
+  }
+}
+
+export class GenericChatMessage extends BaseChatMessage {
+  role: string;
+
+  constructor(text: string, role: string) {
+    super(text);
+    this.role = role;
+  }
+
+  _getType(): MessageType {
+    return "generic";
+  }
+}
+
+export interface ChatGeneration {
+  message: BaseChatMessage;
 
   /**
    * Raw generation info from the provider.
@@ -37,63 +68,65 @@ export type ChatGeneration = {
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   generationInfo?: Record<string, any>;
-};
+}
 
-export type ChatResult = {
+export interface ChatResult {
   generations: ChatGeneration[];
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   llmOutput?: Record<string, any>;
-};
+}
 
 export abstract class BaseChatModel {
+  callbackManager: LLMCallbackManager;
+
+  verbose: boolean;
+
+  protected constructor(
+    callbackManager?: LLMCallbackManager,
+    verbose?: boolean
+  ) {
+    this.callbackManager = callbackManager ?? getCallbackManager();
+    this.verbose = verbose ?? getVerbosity();
+  }
+
   async generate(
-    messages: ChatMessage[],
+    messages: BaseChatMessage[],
     stop?: string[]
   ): Promise<ChatResult> {
     return this._generate(messages, stop);
   }
 
   abstract _generate(
-    messages: ChatMessage[],
+    messages: BaseChatMessage[],
     stop?: string[]
   ): Promise<ChatResult>;
 
-  async run(messages: ChatMessage[], stop?: string[]): Promise<ChatMessage> {
+  async call(
+    messages: BaseChatMessage[],
+    stop?: string[]
+  ): Promise<BaseChatMessage> {
     const { generations } = await this.generate(messages, stop);
     return generations[0].message;
   }
 }
 
 export abstract class SimpleChatModel extends BaseChatModel {
-  role: Role = "assistant";
-
-  callbackManager: LLMCallbackManager;
-
-  verbose: boolean;
-
-  constructor(
-    role?: Role,
+  protected constructor(
     callbackManager?: LLMCallbackManager,
     verbose?: boolean
   ) {
-    super();
-    this.role = role ?? this.role;
-    this.callbackManager = callbackManager ?? getCallbackManager();
-    this.verbose = verbose ?? getVerbosity();
+    super(callbackManager, verbose);
   }
 
-  abstract _call(messages: ChatMessage[], stop?: string[]): Promise<string>;
+  abstract _call(messages: BaseChatMessage[], stop?: string[]): Promise<string>;
 
   async _generate(
-    messages: ChatMessage[],
+    messages: BaseChatMessage[],
     stop?: string[]
   ): Promise<ChatResult> {
     const text = await this._call(messages, stop);
-    const message: ChatMessage = {
-      text,
-      role: this.role,
-    };
+    const message = new AIChatMessage(text);
     return {
       generations: [
         {

@@ -5,6 +5,7 @@ import {
   loadQAChain,
   SerializedBaseChain,
   SerializedLLMChain,
+  loadQAChainFromChatModel,
 } from "./index.js";
 
 import { PromptTemplate } from "../prompts/index.js";
@@ -13,6 +14,7 @@ import { BaseLLM } from "../llms/index.js";
 import { VectorStore } from "../vectorstores/base.js";
 
 import { resolveConfigFromFile } from "../util/index.js";
+import { BaseChatModel } from "../chat_models/base.js";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type LoadValues = Record<string, any>;
 
@@ -181,6 +183,24 @@ export class ChatVectorDBQAChain
 
   static fromLLM(llm: BaseLLM, vectorstore: VectorStore): ChatVectorDBQAChain {
     const qaChain = loadQAChain(llm, { prompt: qa_prompt });
+    const questionGeneratorChain = new LLMChain({
+      prompt: question_generator_prompt,
+      llm,
+    });
+    const instance = new this({
+      vectorstore,
+      combineDocumentsChain: qaChain,
+      questionGeneratorChain,
+    });
+    return instance;
+  }
+
+  static fromChatModel(
+    llm: BaseLLM,
+    chatModel: BaseChatModel,
+    vectorstore: VectorStore
+  ): ChatVectorDBQAChain {
+    const qaChain = loadQAChainFromChatModel(chatModel);
     const questionGeneratorChain = new LLMChain({
       prompt: question_generator_prompt,
       llm,
