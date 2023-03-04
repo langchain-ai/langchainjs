@@ -42,12 +42,15 @@ export class VectorDBQAChain extends BaseChain implements VectorDBQAChainInput {
 
   combineDocumentsChain: BaseChain;
 
+  returnSourceDocuments = false;
+
   constructor(fields: {
     vectorstore: VectorStore;
     combineDocumentsChain: BaseChain;
     inputKey?: string;
     outputKey?: string;
     k?: number;
+    returnSourceDocuments?: boolean;
   }) {
     super();
     this.vectorstore = fields.vectorstore;
@@ -55,6 +58,8 @@ export class VectorDBQAChain extends BaseChain implements VectorDBQAChainInput {
     this.inputKey = fields.inputKey ?? this.inputKey;
     this.outputKey = fields.outputKey ?? this.outputKey;
     this.k = fields.k ?? this.k;
+    this.returnSourceDocuments =
+      fields.returnSourceDocuments ?? this.returnSourceDocuments;
   }
 
   async _call(values: ChainValues): Promise<ChainValues> {
@@ -65,6 +70,12 @@ export class VectorDBQAChain extends BaseChain implements VectorDBQAChainInput {
     const docs = await this.vectorstore.similaritySearch(question, this.k);
     const inputs = { question, input_documents: docs };
     const result = await this.combineDocumentsChain.call(inputs);
+    if (this.returnSourceDocuments) {
+      return {
+        ...result,
+        sourceDocuments: docs,
+      };
+    }
     return result;
   }
 
