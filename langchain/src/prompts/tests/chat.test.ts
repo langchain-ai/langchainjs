@@ -1,70 +1,63 @@
-import { expect, test } from "@jest/globals";
-import { ChatPromptTemplate } from "../chat.js";
-import { PromptTemplate } from "../prompt.js";
+import {expect, test} from "@jest/globals";
+import {
+  AIPromptMessage,
+  ChatPromptTemplate,
+  GenericPromptMessage,
+  HumanPromptMessage,
+  SystemPromptMessage,
+} from "../chat.js";
+import {PromptTemplate} from "../prompt.js";
+import {AIChatMessage, GenericChatMessage, HumanChatMessage, SystemChatMessage,} from "../../chat_models/base.js";
 
-test("Test format", async () => {
+function createChatPromptTemplate(): ChatPromptTemplate {
   const systemPrompt = new PromptTemplate({
     template: "Here's some context: {context}",
     inputVariables: ["context"],
   });
   const userPrompt = new PromptTemplate({
-    template: "Hello {foo}, I'm {bar}",
+    template: "Hello {foo}, I'm {bar}. Thanks for the {context}",
+    inputVariables: ["foo", "bar", "context"],
+  });
+  const aiPrompt = new PromptTemplate({
+    template: "I'm an AI. I'm {foo}. I'm {bar}.",
     inputVariables: ["foo", "bar"],
   });
-  const chatPrompt = new ChatPromptTemplate({
+  const genericPrompt = new PromptTemplate({
+    template: "I'm a generic message. I'm {foo}. I'm {bar}.",
+    inputVariables: ["foo", "bar"],
+  });
+  return new ChatPromptTemplate({
     promptMessages: [
-      {
-        role: "system",
-        message: systemPrompt,
-      },
-      {
-        role: "user",
-        message: userPrompt,
-      },
+      new SystemPromptMessage(systemPrompt),
+      new HumanPromptMessage(userPrompt),
+      new AIPromptMessage(aiPrompt),
+      new GenericPromptMessage(genericPrompt, "test"),
     ],
     inputVariables: ["context", "foo", "bar"],
   });
-  const messages = await chatPrompt.formatChat({
+}
+
+test("Test format", async () => {
+  const chatPrompt = createChatPromptTemplate();
+  const messages = await chatPrompt.formatPromptValue({
     context: "This is a context",
     foo: "Foo",
     bar: "Bar",
   });
-  expect(messages).toEqual([
-    {
-      role: "system",
-      text: "Here's some context: This is a context",
-    },
-    {
-      role: "user",
-      text: "Hello Foo, I'm Bar",
-    },
+  expect(messages.toChatMessages()).toEqual([
+    new SystemChatMessage("Here's some context: This is a context"),
+    new HumanChatMessage(
+      "Hello Foo, I'm Bar. Thanks for the This is a context"
+    ),
+    new AIChatMessage("I'm an AI. I'm Foo. I'm Bar."),
+    new GenericChatMessage("I'm a generic message. I'm Foo. I'm Bar.", "test"),
   ]);
 });
 
 test("Test format with invalid input values", async () => {
-  const systemPrompt = new PromptTemplate({
-    template: "Here's some context: {context}",
-    inputVariables: ["context"],
-  });
-  const userPrompt = new PromptTemplate({
-    template: "Hello {foo}, I'm {bar}",
-    inputVariables: ["foo", "bar"],
-  });
-  const chatPrompt = new ChatPromptTemplate({
-    promptMessages: [
-      {
-        role: "system",
-        message: systemPrompt,
-      },
-      {
-        role: "user",
-        message: userPrompt,
-      },
-    ],
-    inputVariables: ["context", "foo", "bar"],
-  });
+  const chatPrompt = createChatPromptTemplate();
   await expect(
-    chatPrompt.formatChat({
+    chatPrompt.formatPromptValue({
       context: "This is a context",
       foo: "Foo",
     })
@@ -84,14 +77,8 @@ test("Test format with invalid input variables", async () => {
     () =>
       new ChatPromptTemplate({
         promptMessages: [
-          {
-            role: "system",
-            message: systemPrompt,
-          },
-          {
-            role: "user",
-            message: userPrompt,
-          },
+            new SystemPromptMessage(systemPrompt),
+            new HumanPromptMessage(userPrompt),
         ],
         inputVariables: ["context", "foo", "bar", "baz"],
       })
@@ -103,14 +90,8 @@ test("Test format with invalid input variables", async () => {
     () =>
       new ChatPromptTemplate({
         promptMessages: [
-          {
-            role: "system",
-            message: systemPrompt,
-          },
-          {
-            role: "user",
-            message: userPrompt,
-          },
+            new SystemPromptMessage(systemPrompt),
+            new HumanPromptMessage(userPrompt),
         ],
         inputVariables: ["context", "foo"],
       })
@@ -129,29 +110,19 @@ test("Test fromPromptMessages", async () => {
     inputVariables: ["foo", "bar"],
   });
   const chatPrompt = ChatPromptTemplate.fromPromptMessages([
-    {
-      role: "system",
-      message: systemPrompt,
-    },
-    {
-      role: "user",
-      message: userPrompt,
-    },
+      new SystemPromptMessage(systemPrompt),
+      new HumanPromptMessage(userPrompt),
   ]);
   expect(chatPrompt.inputVariables).toEqual(["context", "foo", "bar"]);
-  const messages = await chatPrompt.formatChat({
+  const messages = await chatPrompt.formatPromptValue({
     context: "This is a context",
     foo: "Foo",
     bar: "Bar",
   });
-  expect(messages).toEqual([
-    {
-      role: "system",
-      text: "Here's some context: This is a context",
-    },
-    {
-      role: "user",
-      text: "Hello Foo, I'm Bar",
-    },
+  expect(messages.toChatMessages()).toEqual([
+    new SystemChatMessage("Here's some context: This is a context"),
+    new HumanChatMessage(
+        "Hello Foo, I'm Bar"
+    ),
   ]);
 });
