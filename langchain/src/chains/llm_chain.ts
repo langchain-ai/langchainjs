@@ -179,8 +179,8 @@ export class ChatModelChain
     if ("stop" in values && Array.isArray(values.stop)) {
       stop = values.stop;
     }
-    const messages = await this.prompt.formatChat(values);
-    const llmResult = await this.llm.call(messages, stop);
+    const messages = await this.prompt.formatPromptValue(values);
+    const llmResult = await this.llm.call(messages.toChatMessages(), stop);
     return { [this.outputKey]: llmResult };
   }
 
