@@ -1,4 +1,4 @@
-import { encode } from "gpt-3-encoder";
+import GPT3Tokenizer from 'gpt3-tokenizer';
 import PQueue from "p-queue";
 
 import { LLMCallbackManager, LLMResult } from "./index.js";
@@ -192,8 +192,14 @@ export abstract class BaseLLM {
   getNumTokens(text: string): number {
     // TODOs copied from py implementation
     // TODO: this method may not be exact.
-    // TODO: this method may differ based on model (eg codex).
-    return encode(text).length;
+    // TODO: this method may differ based on model (eg codex, gpt-3.5).
+    // TODO: this method has an issue with TS understanding it's typings
+    // TODO: this method should not recreate the tokenizer every call
+    // but we have to minimally lazy load it, because the max start time
+    // on edge workers is pretty short. This prevents a failed deploy.
+    // @ts-ignore
+    const tokenizer = new GPT3Tokenizer({type: "gpt3"});
+    return tokenizer.encode(text).bpe.length;
   }
 
   // TODO(sean): save to disk

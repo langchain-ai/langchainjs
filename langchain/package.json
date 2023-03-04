@@ -138,7 +138,7 @@
     "eventsource-parser": "^0.1.0",
     "exponential-backoff": "^3.1.0",
     "expr-eval": "^2.0.2",
-    "gpt-3-encoder": "^1.1.4",
+    "gpt3-tokenizer": "^1.1.5",
     "jsonpointer": "^5.0.1",
     "openai": "^3.2.0",
     "p-queue": "^7.3.4",
