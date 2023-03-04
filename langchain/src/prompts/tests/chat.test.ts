@@ -1,4 +1,4 @@
-import {expect, test} from "@jest/globals";
+import { expect, test } from "@jest/globals";
 import {
   AIPromptMessage,
   ChatPromptTemplate,
@@ -6,8 +6,13 @@ import {
   HumanPromptMessage,
   SystemPromptMessage,
 } from "../chat.js";
-import {PromptTemplate} from "../prompt.js";
-import {AIChatMessage, GenericChatMessage, HumanChatMessage, SystemChatMessage,} from "../../chat_models/base.js";
+import { PromptTemplate } from "../prompt.js";
+import {
+  AIChatMessage,
+  GenericChatMessage,
+  HumanChatMessage,
+  SystemChatMessage,
+} from "../../chat_models/base.js";
 
 function createChatPromptTemplate(): ChatPromptTemplate {
   const systemPrompt = new PromptTemplate({
@@ -77,8 +82,8 @@ test("Test format with invalid input variables", async () => {
     () =>
       new ChatPromptTemplate({
         promptMessages: [
-            new SystemPromptMessage(systemPrompt),
-            new HumanPromptMessage(userPrompt),
+          new SystemPromptMessage(systemPrompt),
+          new HumanPromptMessage(userPrompt),
         ],
         inputVariables: ["context", "foo", "bar", "baz"],
       })
@@ -90,8 +95,8 @@ test("Test format with invalid input variables", async () => {
     () =>
       new ChatPromptTemplate({
         promptMessages: [
-            new SystemPromptMessage(systemPrompt),
-            new HumanPromptMessage(userPrompt),
+          new SystemPromptMessage(systemPrompt),
+          new HumanPromptMessage(userPrompt),
         ],
         inputVariables: ["context", "foo"],
       })
@@ -110,8 +115,8 @@ test("Test fromPromptMessages", async () => {
     inputVariables: ["foo", "bar"],
   });
   const chatPrompt = ChatPromptTemplate.fromPromptMessages([
-      new SystemPromptMessage(systemPrompt),
-      new HumanPromptMessage(userPrompt),
+    new SystemPromptMessage(systemPrompt),
+    new HumanPromptMessage(userPrompt),
   ]);
   expect(chatPrompt.inputVariables).toEqual(["context", "foo", "bar"]);
   const messages = await chatPrompt.formatPromptValue({
@@ -121,8 +126,6 @@ test("Test fromPromptMessages", async () => {
   });
   expect(messages.toChatMessages()).toEqual([
     new SystemChatMessage("Here's some context: This is a context"),
-    new HumanChatMessage(
-        "Hello Foo, I'm Bar"
-    ),
+    new HumanChatMessage("Hello Foo, I'm Bar"),
   ]);
 });

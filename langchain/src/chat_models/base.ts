@@ -78,6 +78,18 @@ export interface ChatResult {
 }
 
 export abstract class BaseChatModel {
+  callbackManager: LLMCallbackManager;
+
+  verbose: boolean;
+
+  protected constructor(
+    callbackManager?: LLMCallbackManager,
+    verbose?: boolean
+  ) {
+    this.callbackManager = callbackManager ?? getCallbackManager();
+    this.verbose = verbose ?? getVerbosity();
+  }
+
   async generate(
     messages: BaseChatMessage[],
     stop?: string[]
@@ -100,17 +112,11 @@ export abstract class BaseChatModel {
 }
 
 export abstract class SimpleChatModel extends BaseChatModel {
-  callbackManager: LLMCallbackManager;
-
-  verbose: boolean;
-
   protected constructor(
     callbackManager?: LLMCallbackManager,
     verbose?: boolean
   ) {
-    super();
-    this.callbackManager = callbackManager ?? getCallbackManager();
-    this.verbose = verbose ?? getVerbosity();
+    super(callbackManager, verbose);
   }
 
   abstract _call(messages: BaseChatMessage[], stop?: string[]): Promise<string>;
