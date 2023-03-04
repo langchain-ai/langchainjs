@@ -1,5 +1,6 @@
 /* eslint-disable */
 import { ChatPromptTemplate, PromptTemplate } from "../../prompts/index.js";
+import {SystemPromptMessage, HumanPromptMessage} from "../../prompts/chat.js";
 
 export const DEFAULT_QA_PROMPT = new PromptTemplate({
   template:
@@ -11,12 +12,6 @@ const chatTemplateSystem = `Use the following pieces of context to answer any us
 {context}`;
 
 export const DEFAULT_CHAT_QA_PROMPT = ChatPromptTemplate.fromPromptMessages([
-  {
-    role: "system",
-    message: PromptTemplate.fromTemplate(chatTemplateSystem),
-  },
-  {
-    role: "user",
-    message: PromptTemplate.fromTemplate("{question}"),
-  },
+    new SystemPromptMessage(PromptTemplate.fromTemplate(chatTemplateSystem)),
+    new HumanPromptMessage(PromptTemplate.fromTemplate("{question}")),
 ]);
