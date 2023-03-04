@@ -1,13 +1,39 @@
-import type HuggingFaceT from "huggingface";
 import { LLM, LLMCallbackManager } from "./index.js";
 
 interface HFInput {
   /** Model to use */
   model: string;
+
+  /** Sampling temperature to use */
+  temperature?: number;
+
+  /**
+   * Maximum number of tokens to generate in the completion.
+   */
+  maxTokens?: number;
+
+  /** Total probability mass of tokens to consider at each step */
+  topP?: number;
+
+  /** Integer to define the top tokens considered within the sample operation to create new text. */
+  topK?: number;
+
+  /** Penalizes repeated tokens according to frequency */
+  frequencyPenalty?: number;
 }
 
 export class HuggingFaceInference extends LLM implements HFInput {
   model = "gpt2";
+
+  temperature: number | undefined = undefined;
+
+  maxTokens: number | undefined = undefined;
+
+  topP: number | undefined = undefined;
+
+  topK: number | undefined = undefined;
+
+  frequencyPenalty: number | undefined = undefined;
 
   constructor(
     fields?: Partial<HFInput> & {
@@ -24,6 +50,11 @@ export class HuggingFaceInference extends LLM implements HFInput {
       fields?.cache
     );
     this.model = fields?.model ?? this.model;
+    this.temperature = fields?.temperature ?? this.temperature;
+    this.maxTokens = fields?.maxTokens ?? this.maxTokens;
+    this.topP = fields?.topP ?? this.topP;
+    this.topK = fields?.topK ?? this.topK;
+    this.frequencyPenalty = fields?.frequencyPenalty ?? this.frequencyPenalty;
   }
 
   _llmType() {
@@ -36,21 +67,30 @@ export class HuggingFaceInference extends LLM implements HFInput {
         "Please set the HUGGINGFACEHUB_API_KEY environment variable"
       );
     }
-    const { HuggingFace } = await HuggingFaceInference.imports();
-    const hf = new HuggingFace(process.env.HUGGINGFACEHUB_API_KEY ?? "");
+    const { HfInference } = await HuggingFaceInference.imports();
+    const hf = new HfInference(process.env.HUGGINGFACEHUB_API_KEY ?? "");
     const res = await hf.textGeneration({
       model: this.model,
+      parameters: {
+        // make it behave similar to openai, returning only the generated text
+        return_full_text: false,
+        temperature: this.temperature,
+        max_new_tokens: this.maxTokens,
+        top_p: this.topP,
+        top_k: this.topK,
+        repetition_penalty: this.frequencyPenalty,
+      },
       inputs: prompt,
     });
     return res.generated_text;
   }
 
   static async imports(): Promise<{
-    HuggingFace: typeof HuggingFaceT;
+    HfInference: typeof import("@huggingface/inference").HfInference;
   }> {
     try {
-      const { default: HuggingFace } = await import("huggingface");
-      return { HuggingFace };
+      const { HfInference } = await import("@huggingface/inference");
+      return { HfInference };
     } catch (e) {
       throw new Error(
         "Please install huggingface as a dependency with, e.g. `yarn add huggingface`"
