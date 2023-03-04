@@ -1,13 +1,21 @@
-import { ChatMessage, Role } from "../chat_models/base.js";
+import {
+  AIChatMessage,
+  BaseChatMessage,
+  GenericChatMessage,
+  HumanChatMessage,
+  SystemChatMessage,
+} from "../chat_models/base.js";
 import {
   BasePromptTemplate,
   BasePromptTemplateInput,
   InputValues,
   PartialValues,
+  PromptValue,
 } from "./base.js";
 import { DEFAULT_FORMATTER_MAPPING, TemplateFormat } from "./template.js";
 import { SerializedOutputParser } from "./parser.js";
 
+/** Serialized Chat prompt template */
 export type SerializedChatPromptTemplate = {
   _type?: "chat_prompt";
   input_variables: string[];
@@ -16,10 +24,75 @@ export type SerializedChatPromptTemplate = {
   prompt_messages: PromptMessage[];
 };
 
-export type PromptMessage = {
-  role: Role;
-  message: BasePromptTemplate;
-};
+export abstract class PromptMessage {
+  prompt: BasePromptTemplate;
+
+  protected constructor(prompt: BasePromptTemplate) {
+    this.prompt = prompt;
+  }
+
+  abstract format(values: InputValues): Promise<BaseChatMessage>;
+}
+
+export class GenericPromptMessage extends PromptMessage {
+  role: string;
+
+  async format(values: InputValues): Promise<BaseChatMessage> {
+    return new GenericChatMessage(await this.prompt.format(values), this.role);
+  }
+
+  constructor(prompt: BasePromptTemplate, role: string) {
+    super(prompt);
+    this.role = role;
+  }
+}
+
+export class HumanPromptMessage extends PromptMessage {
+  async format(values: InputValues): Promise<BaseChatMessage> {
+    return new HumanChatMessage(await this.prompt.format(values));
+  }
+
+  constructor(prompt: BasePromptTemplate) {
+    super(prompt);
+  }
+}
+
+export class AIPromptMessage extends PromptMessage {
+  async format(values: InputValues): Promise<BaseChatMessage> {
+    return new AIChatMessage(await this.prompt.format(values));
+  }
+
+  constructor(prompt: BasePromptTemplate) {
+    super(prompt);
+  }
+}
+
+export class SystemPromptMessage extends PromptMessage {
+  async format(values: InputValues): Promise<BaseChatMessage> {
+    return new SystemChatMessage(await this.prompt.format(values));
+  }
+
+  constructor(prompt: BasePromptTemplate) {
+    super(prompt);
+  }
+}
+
+export class ChatPromptValue extends PromptValue {
+  messages: BaseChatMessage[];
+
+  constructor(messages: BaseChatMessage[]) {
+    super();
+    this.messages = messages;
+  }
+
+  toString() {
+    return JSON.stringify(this.messages);
+  }
+
+  toChatMessages() {
+    return this.messages;
+  }
+}
 
 export interface ChatPromptTemplateInput extends BasePromptTemplateInput {
   /**
@@ -35,7 +108,7 @@ export interface ChatPromptTemplateInput extends BasePromptTemplateInput {
   templateFormat?: TemplateFormat;
 
   /**
-   * Whether or not to try validating the template on initialization
+   * Whether to try validating the template on initialization
    *
    * @defaultValue `true`
    */
@@ -62,10 +135,9 @@ export class ChatPromptTemplate
         throw new Error(`Invalid template format. Got \`${this.templateFormat}\`;
                          should be one of ${validFormats}`);
       }
-      // create a set of all input variables from all prompt messages
       const inputVariables = new Set<string>();
       for (const promptMessage of this.promptMessages) {
-        for (const inputVariable of promptMessage.message.inputVariables) {
+        for (const inputVariable of promptMessage.prompt.inputVariables) {
           inputVariables.add(inputVariable);
         }
       }
@@ -98,15 +170,14 @@ export class ChatPromptTemplate
   }
 
   async format(values: InputValues): Promise<string> {
-    const messages = await this.formatChat(values);
-    return JSON.stringify(messages);
+    return (await this.formatPromptValue(values)).toString();
   }
 
-  async formatChat(values: InputValues): Promise<ChatMessage[]> {
-    const messages: ChatMessage[] = [];
+  async formatPromptValue(values: InputValues): Promise<PromptValue> {
+    const resultMessages: BaseChatMessage[] = [];
     for (const promptMessage of this.promptMessages) {
       const inputValues: InputValues = {};
-      for (const inputVariable of promptMessage.message.inputVariables) {
+      for (const inputVariable of promptMessage.prompt.inputVariables) {
         if (!(inputVariable in values)) {
           throw new Error(
             `Missing value for input variable \`${inputVariable}\``
@@ -114,13 +185,10 @@ export class ChatPromptTemplate
         }
         inputValues[inputVariable] = values[inputVariable];
       }
-      const message = await promptMessage.message.format(inputValues);
-      messages.push({
-        role: promptMessage.role,
-        text: message,
-      });
+      const message = await promptMessage.format(inputValues);
+      resultMessages.push(message);
     }
-    return messages;
+    return new ChatPromptValue(resultMessages);
   }
 
   serialize(): SerializedChatPromptTemplate {
@@ -141,7 +209,7 @@ export class ChatPromptTemplate
   ): ChatPromptTemplate {
     const inputVariables = new Set<string>();
     for (const promptMessage of promptMessages) {
-      for (const inputVariable of promptMessage.message.inputVariables) {
+      for (const inputVariable of promptMessage.prompt.inputVariables) {
         inputVariables.add(inputVariable);
       }
     }
