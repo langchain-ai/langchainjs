@@ -106,6 +106,9 @@
     "@dqbd/tiktoken": {
       "optional": true
     },
+    "@huggingface/inference": {
+      "optional": true
+    },
     "@pinecone-database/pinecone": {
       "optional": true
     },
@@ -141,7 +144,6 @@
     "p-queue": "^7.3.4",
     "pdf-parse": "^1.1.1",
     "sqlite3": "^5.1.4",
-    "unfetch": "^5.0.0",
     "uuid": "^9.0.0",
     "yaml": "^2.2.1"
   },

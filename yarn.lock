@@ -9884,7 +9884,6 @@ __metadata:
     typedoc: ^0.23.25
     typedoc-plugin-missing-exports: ^1.0.0
     typescript: ^4.9.5
-    unfetch: ^5.0.0
     uuid: ^9.0.0
     yaml: ^2.2.1
   peerDependencies:
@@ -9899,6 +9898,8 @@ __metadata:
     srt-parser-2: ^1.2.2
   peerDependenciesMeta:
     "@dqbd/tiktoken":
+      optional: true
+    "@huggingface/inference":
       optional: true
     "@pinecone-database/pinecone":
       optional: true
@@ -14349,13 +14350,6 @@ __metadata:
   dependencies:
     busboy: ^1.6.0
   checksum: 57ee94ee74d944faa41dbcb2faf4e0c90069708d3aaae860185884e51376b5d457728352a8396d69a3c9cb752b62ff99a19a664c5aacb7ee61cc488af499a01c
-  languageName: node
-  linkType: hard
-
-"unfetch@npm:^5.0.0":
-  version: 5.0.0
-  resolution: "unfetch@npm:5.0.0"
-  checksum: 005133bcdc85cefea60890af4ac265799356b69c6a7719c1330484165af7109c06b9eedd3e03d620c14dcc8b43bcf329148f4c1f06016390162f845e0d0a62c5
   languageName: node
   linkType: hard
 
