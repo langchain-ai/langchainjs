@@ -7,7 +7,7 @@ import type {
   MapReduceDocumentsChain,
   AnalyzeDocumentChain,
   ChatModelChain,
-  ChatQAChain,
+  // ChatQAChain,
 } from "./index.js";
 import { BaseMemory } from "../memory/index.js";
 
@@ -25,7 +25,7 @@ export type SerializedBaseChain = ReturnType<
     | typeof ChatVectorDBQAChain
     | typeof MapReduceDocumentsChain
     | typeof AnalyzeDocumentChain
-    | typeof ChatQAChain
+    // | typeof ChatQAChain
   >["serialize"]
 >;
 

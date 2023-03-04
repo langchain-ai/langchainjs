@@ -32,5 +32,5 @@ export {
   loadQAChainFromChatModel,
 } from "./question_answering/load.js";
 export { loadSummarizationChain } from "./summarization/load.js";
-export { ChatQAChain } from "./chat/base.js";
-export { ChatChatVectorDBQAChain } from "./chat/vector_db_qa.js";
+// export { ChatQAChain } from "./chat/base.js";
+// export { ChatChatVectorDBQAChain } from "./chat/vector_db_qa.js";
