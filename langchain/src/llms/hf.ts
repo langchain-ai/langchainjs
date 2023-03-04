@@ -1,4 +1,3 @@
-import type HuggingFaceT from "huggingface";
 import { LLM, LLMCallbackManager } from "./index.js";
 
 interface HFInput {
@@ -36,8 +35,8 @@ export class HuggingFaceInference extends LLM implements HFInput {
         "Please set the HUGGINGFACEHUB_API_KEY environment variable"
       );
     }
-    const { HuggingFace } = await HuggingFaceInference.imports();
-    const hf = new HuggingFace(process.env.HUGGINGFACEHUB_API_KEY ?? "");
+    const { HfInference } = await HuggingFaceInference.imports();
+    const hf = new HfInference(process.env.HUGGINGFACEHUB_API_KEY ?? "");
     const res = await hf.textGeneration({
       model: this.model,
       inputs: prompt,
@@ -46,11 +45,12 @@ export class HuggingFaceInference extends LLM implements HFInput {
   }
 
   static async imports(): Promise<{
-    HuggingFace: typeof HuggingFaceT;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    HfInference: any;
   }> {
     try {
-      const { default: HuggingFace } = await import("huggingface");
-      return { HuggingFace };
+      const { HfInference } = await import("@huggingface/inference");
+      return { HfInference };
     } catch (e) {
       throw new Error(
         "Please install huggingface as a dependency with, e.g. `yarn add huggingface`"
