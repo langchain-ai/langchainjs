@@ -1,7 +1,8 @@
-import { DataSource } from "typeorm";
+import { DataSource, DataSourceOptions } from "typeorm";
 import {
   generateTableInfoFromTables,
   getTableAndColumnsName,
+  SerializedSqlDatabase,
   SQLDatabaseParams,
   SqlTable,
   verifyIgnoreTablesExistInDatabase,
@@ -9,7 +10,9 @@ import {
   verifyListTablesExistInDatabase,
 } from "./util/sql_utils.js";
 
-export class SQLDatabase {
+export class SQLDatabase implements SQLDatabaseParams {
+  appDataSourceOptions: DataSourceOptions;
+
   appDataSource: DataSource;
 
   allTables: Array<SqlTable> = [];
@@ -21,7 +24,7 @@ export class SQLDatabase {
   sampleRowsInTableInfo = 3;
 
   constructor(fields: SQLDatabaseParams) {
-    this.appDataSource = fields.appDataSource;
+    this.appDataSource = new DataSource(fields.appDataSourceOptions);
     if (fields?.includesTables && fields?.ignoreTables) {
       throw new Error("Cannot specify both include_tables and ignoreTables");
     }
@@ -34,7 +37,9 @@ export class SQLDatabase {
   static async fromDataSource(fields: SQLDatabaseParams): Promise<SQLDatabase> {
     const sqlDatabase = new SQLDatabase(fields);
     await sqlDatabase.appDataSource.initialize();
-    sqlDatabase.allTables = await getTableAndColumnsName(fields.appDataSource);
+    sqlDatabase.allTables = await getTableAndColumnsName(
+      sqlDatabase.appDataSource
+    );
     verifyIncludeTablesExistInDatabase(
       sqlDatabase.allTables,
       sqlDatabase.includesTables
@@ -94,5 +99,15 @@ export class SQLDatabase {
     }
 
     return "";
+  }
+
+  serialize(): SerializedSqlDatabase {
+    return {
+      _type: "sql_database_chain",
+      appDataSourceOptions: this.appDataSourceOptions,
+      includesTables: this.includesTables,
+      ignoreTables: this.ignoreTables,
+      sampleRowsInTableInfo: this.sampleRowsInTableInfo,
+    };
   }
 }

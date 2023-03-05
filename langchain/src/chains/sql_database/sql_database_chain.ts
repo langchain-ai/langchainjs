@@ -4,10 +4,13 @@ import { BaseMemory } from "../../memory/index.js";
 import { BaseLLM, SerializedLLM } from "../../llms/index.js";
 import { LLMChain } from "../llm_chain.js";
 import { SQLDatabase } from "../../sql_database.js";
+import { resolveConfigFromFile } from "../../util/index.js";
+import { SerializedSqlDatabase } from "../../util/sql_utils.js";
 
 export type SerializedSqlDatabaseChain = {
+  sql_database: SerializedSqlDatabase;
   _type: "sql_database_chain";
-  llm_chain: SerializedLLM;
+  llm: SerializedLLM;
   sql_database_chain_path?: string;
 };
 
@@ -68,7 +71,7 @@ export class SqlDatabaseChain extends BaseChain {
     const llmInputs = {
       input: inputText,
       top_k: this.topK,
-      dialect: this.database.appDataSource.options.type,
+      dialect: this.database.appDataSourceOptions.type,
       table_info: tableInfo,
       stop: ["\nSQLResult:"],
     };
@@ -106,10 +109,30 @@ export class SqlDatabaseChain extends BaseChain {
     return [this.inputKey];
   }
 
+  static async deserialize(data: SerializedSqlDatabaseChain) {
+    const serializedLLM = await resolveConfigFromFile<"llm", SerializedLLM>(
+      "llm",
+      data
+    );
+    const llm = await BaseLLM.deserialize(serializedLLM);
+    const serializedDatabase = await resolveConfigFromFile<
+      "sql_database",
+      SerializedSqlDatabase
+    >("sql_database", data);
+
+    const sqlDataBase = await SQLDatabase.fromDataSource(serializedDatabase);
+
+    return new SqlDatabaseChain({
+      llm,
+      database: sqlDataBase,
+    });
+  }
+
   serialize(): SerializedSqlDatabaseChain {
     return {
       _type: this._chainType(),
-      llm_chain: this.llm.serialize(),
+      llm: this.llm.serialize(),
+      sql_database: this.database.serialize(),
     };
   }
 }

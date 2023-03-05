@@ -1,4 +1,4 @@
-import { DataSource } from "typeorm";
+import { DataSource, DataSourceOptions } from "typeorm";
 
 interface RawResultTableAndColumn {
   table_name: string;
@@ -8,11 +8,15 @@ interface RawResultTableAndColumn {
 }
 
 export interface SQLDatabaseParams {
-  appDataSource: DataSource;
+  appDataSourceOptions: DataSourceOptions;
   includesTables?: Array<string>;
   ignoreTables?: Array<string>;
   sampleRowsInTableInfo?: number;
 }
+
+export type SerializedSqlDatabase = SQLDatabaseParams & {
+  _type: string;
+};
 
 export interface SqlTable {
   tableName: string;
