@@ -53,7 +53,7 @@ interface ModelParams {
  * Input to OpenAI class.
  * @augments ModelParams
  */
-interface OpenAIInput extends ModelParams {
+export interface OpenAIInput extends ModelParams {
   /** Model name to use */
   modelName: string;
 
