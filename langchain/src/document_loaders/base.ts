@@ -1,3 +1,4 @@
+import { Audio } from "audio.js";
 import {
   RecursiveCharacterTextSplitter,
   TextSplitter,
@@ -18,4 +19,12 @@ export abstract class BaseDocumentLoader implements DocumentLoader {
     const docs = await this.load();
     return splitter.splitDocuments(docs);
   }
+}
+
+export interface AudioLoader {
+  load(): Promise<Audio[]>;
+}
+
+export abstract class BaseAudioLoader implements AudioLoader {
+  abstract load(): Promise<Audio[]>;
 }

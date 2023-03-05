@@ -9872,7 +9872,7 @@ __metadata:
     jest: ^29.4.2
     jsonpointer: ^5.0.1
     lint-staged: ^13.1.1
-    openai: ^3.2.0
+    openai: ^3.2.1
     p-queue: ^7.3.4
     pdf-parse: ^1.1.1
     prettier: ^2.8.3
@@ -11086,13 +11086,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"openai@npm:^3.2.0":
-  version: 3.2.0
-  resolution: "openai@npm:3.2.0"
+"openai@npm:^3.2.1":
+  version: 3.2.1
+  resolution: "openai@npm:3.2.1"
   dependencies:
     axios: ^0.26.0
     form-data: ^4.0.0
-  checksum: 590bd37d87d44ebf61189e258499f53c0e3be8ade5b18442a0e7514b974316c8d4cb01f77f10069807d1d112d7b54b86c61c03d3f0f409acf894140308aa3ff1
+  checksum: ef3942e9b527cf27273c4355bb8fb9ebd94ae3a88c12eec0ac51c4ef0ad8c18864683759471597390816bcd822bdc9f2f1cea7a3eb1e432c9101f568f7c6d19a
   languageName: node
   linkType: hard
 

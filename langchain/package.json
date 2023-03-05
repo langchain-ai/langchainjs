@@ -140,7 +140,7 @@
     "expr-eval": "^2.0.2",
     "gpt-3-encoder": "^1.1.4",
     "jsonpointer": "^5.0.1",
-    "openai": "^3.2.0",
+    "openai": "^3.2.1",
     "p-queue": "^7.3.4",
     "pdf-parse": "^1.1.1",
     "sqlite3": "^5.1.4",
