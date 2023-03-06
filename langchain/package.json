@@ -31,6 +31,10 @@
     "docstore.d.ts",
     "document_loaders.js",
     "document_loaders.d.ts",
+    "chat_models.js",
+    "chat_models.d.ts",
+    "schema.js",
+    "schema.d.ts",
     "index.js",
     "index.d.ts"
   ],
@@ -222,6 +226,14 @@
     "./document_loaders": {
       "types": "./document_loaders.d.ts",
       "import": "./document_loaders.js"
+    },
+    "./chat_models": {
+      "types": "./chat_models.d.ts",
+      "import": "./chat_models.js"
+    },
+    "./schema": {
+      "types": "./schema.d.ts",
+      "import": "./schema.js"
     }
   }
 }
