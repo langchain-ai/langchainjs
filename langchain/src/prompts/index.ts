@@ -24,4 +24,5 @@ export {
   AIMessagePromptTemplate,
   SystemMessagePromptTemplate,
   ChatMessagePromptTemplate,
+  SimpleMessagePromptTemplate,
 } from "./chat.js";

@@ -8,6 +8,7 @@ import {
   InputValues,
   OutputValues,
   getInputValue,
+  MemoryVariables,
 } from "./base.js";
 
 export class ChatMessageHistory {
@@ -41,5 +42,21 @@ export abstract class ChatMemoryMixin extends BaseMemory {
     const values = await OutputValues;
     this.chatHistory.addUserMessage(getInputValue(inputValues));
     this.chatHistory.addAIChatMessage(getInputValue(values));
+  }
+}
+
+export class ChatMessageMemory extends ChatMemoryMixin {
+  memoryKey = "history";
+
+  constructor(memoryKey?: string) {
+    super();
+    this.memoryKey = memoryKey ?? this.memoryKey;
+  }
+
+  async loadMemoryVariables(_values: InputValues): Promise<MemoryVariables> {
+    const result = {
+      [this.memoryKey]: this.chatHistory.messages,
+    };
+    return result;
   }
 }
