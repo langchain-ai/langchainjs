@@ -1,4 +1,5 @@
-import { LLM, LLMCallbackManager } from "./index.js";
+import { LLM } from "./index.js";
+import { LLMCallbackManager } from "../schema/index.js";
 
 interface CohereInput {
   /** Sampling temperature to use */

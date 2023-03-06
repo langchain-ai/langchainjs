@@ -1,6 +1,7 @@
 import { test, expect } from "@jest/globals";
 import { OpenAIChat } from "../openai-chat.js";
 import { OpenAI } from "../openai.js";
+import { StringPromptValue } from "../../prompts/index.js";
 
 test("Test OpenAI", async () => {
   const model = new OpenAI({ maxTokens: 5, modelName: "text-ada-001" });
@@ -42,4 +43,19 @@ test("Test OpenAI in streaming mode", async () => {
 
   expect(nrNewTokens > 0).toBe(true);
   expect(res).toBe(streamedCompletion);
+});
+
+test("Test OpenAI prompt value", async () => {
+  const model = new OpenAI({ maxTokens: 5, modelName: "text-ada-001" });
+  const res = await model.generatePrompt([
+    new StringPromptValue("Print hello world"),
+  ]);
+  expect(res.generations.length).toBe(1);
+  for (const generation of res.generations) {
+    expect(generation.length).toBe(1);
+    for (const g of generation) {
+      console.log(g.text);
+    }
+  }
+  console.log({ res });
 });

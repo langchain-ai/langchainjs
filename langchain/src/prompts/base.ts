@@ -1,9 +1,13 @@
 import { BaseOutputParser } from "./parser.js";
-import type { PromptTemplate, FewShotPromptTemplate } from "./index.js";
+import type { FewShotPromptTemplate, PromptTemplate } from "./index.js";
+import { ChatPromptTemplate } from "./index.js";
+import { BasePromptValue, HumanChatMessage } from "../schema/index.js";
 
 export type SerializedBasePromptTemplate = ReturnType<
   InstanceType<
-    typeof PromptTemplate | typeof FewShotPromptTemplate
+    | typeof PromptTemplate
+    | typeof FewShotPromptTemplate
+    | typeof ChatPromptTemplate
   >["serialize"]
 >;
 
@@ -13,6 +17,22 @@ export type PartialValues = Record<
   string,
   string | (() => Promise<string>) | (() => string)
 >;
+
+export class StringPromptValue {
+  value: string;
+
+  constructor(value: string) {
+    this.value = value;
+  }
+
+  toString() {
+    return this.value;
+  }
+
+  toChatMessages() {
+    return [new HumanChatMessage(this.value)];
+  }
+}
 
 /**
  * Input common to all prompt templates.
@@ -77,7 +97,7 @@ export abstract class BasePromptTemplate implements BasePromptTemplateInput {
   /**
    * Format the prompt given the input values.
    *
-   * @param inputValues - A dictionary of arguments to be passed to the prompt template.
+   * @param values - A dictionary of arguments to be passed to the prompt template.
    * @returns A formatted prompt string.
    *
    * @example
@@ -86,6 +106,13 @@ export abstract class BasePromptTemplate implements BasePromptTemplateInput {
    * ```
    */
   abstract format(values: InputValues): Promise<string>;
+
+  /**
+   * Format the prompt given the input values and return a formatted prompt value.
+   * @param values
+   * @returns A formatted PromptValue.
+   */
+  abstract formatPromptValue(values: InputValues): Promise<BasePromptValue>;
 
   /**
    * Return the string type key uniquely identifying this class of prompt template.
@@ -128,5 +155,12 @@ export abstract class BasePromptTemplate implements BasePromptTemplateInput {
           }`
         );
     }
+  }
+}
+
+export abstract class BaseStringPromptTemplate extends BasePromptTemplate {
+  async formatPromptValue(values: InputValues): Promise<BasePromptValue> {
+    const formattedPrompt = await this.format(values);
+    return new StringPromptValue(formattedPrompt);
   }
 }

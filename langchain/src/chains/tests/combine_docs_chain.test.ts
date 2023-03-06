@@ -1,7 +1,8 @@
 import { test, expect } from "@jest/globals";
 import { Document } from "../../document.js";
-import { BaseLLM, LLMResult } from "../../llms/index.js";
+import { BaseLLM } from "../../llms/index.js";
 import { loadQAChain } from "../question_answering/load.js";
+import { LLMResult } from "../../schema/index.js";
 
 test("Test MapReduceDocumentsChain", async () => {
   let nrMapCalls = 0;

@@ -31,6 +31,10 @@
     "docstore.d.ts",
     "document_loaders.js",
     "document_loaders.d.ts",
+    "chat_models.js",
+    "chat_models.d.ts",
+    "schema.js",
+    "schema.d.ts",
     "index.js",
     "index.d.ts"
   ],
@@ -46,9 +50,9 @@
     "precommit": "tsc --noEmit && lint-staged",
     "clean": "rm -rf dist/ && node create-entrypoints.js clean",
     "prepack": "yarn build",
-    "test": "yarn clean && NODE_OPTIONS=--experimental-vm-modules jest --testPathIgnorePatterns=\\.int\\.test.ts",
-    "test:node16": "yarn clean && NODE_OPTIONS='--experimental-vm-modules --experimental-fetch' jest --testPathIgnorePatterns=\\.int\\.test.ts",
-    "test:integration": "yarn clean && NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern=\\.int\\.test.ts --testTimeout 20000",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest --testPathIgnorePatterns=\\.int\\.test.ts",
+    "test:node16": "NODE_OPTIONS='--experimental-vm-modules --experimental-fetch' jest --testPathIgnorePatterns=\\.int\\.test.ts",
+    "test:integration": "NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern=\\.int\\.test.ts --testTimeout 20000",
     "prepare": "husky install",
     "format": "prettier --write \"src\"",
     "format:diff": "prettier --list-different \"src\"",
@@ -222,6 +226,14 @@
     "./document_loaders": {
       "types": "./document_loaders.d.ts",
       "import": "./document_loaders.js"
+    },
+    "./chat_models": {
+      "types": "./chat_models.d.ts",
+      "import": "./chat_models.js"
+    },
+    "./schema": {
+      "types": "./schema.d.ts",
+      "import": "./schema.js"
     }
   }
 }

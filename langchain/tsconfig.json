@@ -48,6 +48,8 @@
       "src/document.ts",
       "src/docstore/index.ts",
       "src/document_loaders/index.ts",
+      "src/chat_models/index.ts",
+      "src/schema/index.ts",
       "src/index.ts"
     ],
     "excludePrivate": true,
