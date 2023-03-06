@@ -46,7 +46,7 @@ export class SystemChatMessage extends BaseChatMessage {
   }
 }
 
-export class GenericChatMessage extends BaseChatMessage {
+export class ChatMessage extends BaseChatMessage {
   role: string;
 
   constructor(text: string, role: string) {

@@ -1,7 +1,7 @@
 import {
   AIChatMessage,
   BaseChatMessage,
-  GenericChatMessage,
+  ChatMessage,
   HumanChatMessage,
   SystemChatMessage,
 } from "../chat_models/base.js";
@@ -21,10 +21,10 @@ export type SerializedChatPromptTemplate = {
   input_variables: string[];
   output_parser?: SerializedOutputParser;
   template_format?: TemplateFormat;
-  prompt_messages: PromptMessage[];
+  prompt_messages: BaseMessagePromptTemplate[];
 };
 
-export abstract class PromptMessage {
+export abstract class BaseMessagePromptTemplate {
   prompt: BasePromptTemplate;
 
   protected constructor(prompt: BasePromptTemplate) {
@@ -34,11 +34,11 @@ export abstract class PromptMessage {
   abstract format(values: InputValues): Promise<BaseChatMessage>;
 }
 
-export class GenericPromptMessage extends PromptMessage {
+export class ChatMessagePromptTemplate extends BaseMessagePromptTemplate {
   role: string;
 
   async format(values: InputValues): Promise<BaseChatMessage> {
-    return new GenericChatMessage(await this.prompt.format(values), this.role);
+    return new ChatMessage(await this.prompt.format(values), this.role);
   }
 
   constructor(prompt: BasePromptTemplate, role: string) {
@@ -47,7 +47,7 @@ export class GenericPromptMessage extends PromptMessage {
   }
 }
 
-export class HumanPromptMessage extends PromptMessage {
+export class HumanMessagePromptTemplate extends BaseMessagePromptTemplate {
   async format(values: InputValues): Promise<BaseChatMessage> {
     return new HumanChatMessage(await this.prompt.format(values));
   }
@@ -57,7 +57,7 @@ export class HumanPromptMessage extends PromptMessage {
   }
 }
 
-export class AIPromptMessage extends PromptMessage {
+export class AIMessagePromptTemplate extends BaseMessagePromptTemplate {
   async format(values: InputValues): Promise<BaseChatMessage> {
     return new AIChatMessage(await this.prompt.format(values));
   }
@@ -67,7 +67,7 @@ export class AIPromptMessage extends PromptMessage {
   }
 }
 
-export class SystemPromptMessage extends PromptMessage {
+export class SystemMessagePromptTemplate extends BaseMessagePromptTemplate {
   async format(values: InputValues): Promise<BaseChatMessage> {
     return new SystemChatMessage(await this.prompt.format(values));
   }
@@ -98,7 +98,7 @@ export interface ChatPromptTemplateInput extends BasePromptTemplateInput {
   /**
    * The prompt messages
    */
-  promptMessages: PromptMessage[];
+  promptMessages: BaseMessagePromptTemplate[];
 
   /**
    * The format of the prompt template. Options are 'f-string', 'jinja-2'
@@ -119,7 +119,7 @@ export class ChatPromptTemplate
   extends BasePromptTemplate
   implements ChatPromptTemplateInput
 {
-  promptMessages: PromptMessage[];
+  promptMessages: BaseMessagePromptTemplate[];
 
   templateFormat: TemplateFormat = "f-string";
 
@@ -205,7 +205,7 @@ export class ChatPromptTemplate
   }
 
   static fromPromptMessages(
-    promptMessages: PromptMessage[]
+    promptMessages: BaseMessagePromptTemplate[]
   ): ChatPromptTemplate {
     const inputVariables = new Set<string>();
     for (const promptMessage of promptMessages) {

@@ -13,7 +13,7 @@ import fetchAdapter from "../util/axios-fetch-adapter.js";
 import {
   BaseChatModel,
   BaseChatMessage,
-  GenericChatMessage,
+  ChatMessage,
   HumanChatMessage,
   AIChatMessage,
   SystemChatMessage,
@@ -50,7 +50,7 @@ function openAIResponseToChatMessage(
     case "system":
       return new SystemChatMessage(text);
     default:
-      return new GenericChatMessage(text, role ?? "unknown");
+      return new ChatMessage(text, role ?? "unknown");
   }
 }
 
