@@ -12,6 +12,8 @@
 const { ProvidePlugin } = require("webpack");
 const path = require("path");
 
+const examplesPath = path.resolve(__dirname, "..", "examples", "src");
+
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   title: "Langchain",
@@ -59,13 +61,13 @@ const config = {
             url: false,
           },
           alias: {
-            "@examples": path.resolve(__dirname, "../examples/src"),
+            "@examples": examplesPath,
           },
         },
         module: {
           rules: [
             {
-              test: /\/examples\/src\//,
+              test: examplesPath,
               use: "raw-loader",
             },
             {
