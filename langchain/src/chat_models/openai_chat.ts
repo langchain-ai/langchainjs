@@ -119,7 +119,7 @@ type Kwargs = Record<string, any>;
  * @augments BaseLLM
  * @augments OpenAIInput
  */
-export class OpenAIChat extends BaseChatModel implements OpenAIInput {
+export class ChatOpenAI extends BaseChatModel implements OpenAIInput {
   temperature = 1;
 
   topP = 1;
