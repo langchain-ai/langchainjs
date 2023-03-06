@@ -4,7 +4,7 @@ import { PuppeteerWebBaseLoader } from "../puppeteer_web_base.js";
 test("Test puppeteer web scraper loader", async () => {
   const loader = new PuppeteerWebBaseLoader("https://www.tabnews.com.br/");
   await loader.load();
-});
+}, 20000);
 
 test("Test puppeteer web scraper loader with evaluate options", async () => {
   const loader = new PuppeteerWebBaseLoader("https://www.tabnews.com.br/", {
@@ -30,4 +30,4 @@ test("Test puppeteer web scraper loader with evaluate options", async () => {
   expect(result).toBeDefined();
   expect(result.length).toBe(1);
   expect(result[0].pageContent).toContain("TabNews");
-});
+}, 20000);
