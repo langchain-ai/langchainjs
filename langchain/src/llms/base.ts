@@ -1,8 +1,13 @@
-import { encode } from "gpt-3-encoder";
+import GPT3Tokenizer from "gpt3-tokenizer";
 import PQueue from "p-queue";
 
-import { LLMCallbackManager, LLMResult } from "./index.js";
 import { BaseCache, getKey, InMemoryCache } from "../cache.js";
+import {
+  BaseLanguageModel,
+  BasePromptValue,
+  LLMCallbackManager,
+  LLMResult,
+} from "../schema/index.js";
 
 const getCallbackManager = (): LLMCallbackManager => ({
   handleStart: (..._args) => {
@@ -21,6 +26,7 @@ const getVerbosity = () => true;
 const cache: BaseCache = new InMemoryCache();
 
 export type SerializedLLM = {
+  _model: string;
   _type: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 } & Record<string, any>;
@@ -28,7 +34,7 @@ export type SerializedLLM = {
 /**
  * LLM Wrapper. Provides an {@link call} (an {@link generate}) function that takes in a prompt (or prompts) and returns a string.
  */
-export abstract class BaseLLM {
+export abstract class BaseLLM extends BaseLanguageModel {
   /**
    * The name of the LLM class
    */
@@ -57,11 +63,22 @@ export abstract class BaseLLM {
     concurrency?: number,
     cache?: boolean
   ) {
+    super();
     this.callbackManager = callbackManager ?? getCallbackManager();
     this.verbose = verbose ?? getVerbosity();
     this.cache = cache;
     this.concurrency = concurrency ?? Infinity;
     this.queue = new PQueue({ concurrency: this.concurrency });
+  }
+
+  async generatePrompt(
+    promptValues: BasePromptValue[],
+    stop?: string[]
+  ): Promise<LLMResult> {
+    const prompts: string[] = promptValues.map((promptValue) =>
+      promptValue.toString()
+    );
+    return this.generate(prompts, stop);
   }
 
   /**
@@ -172,14 +189,22 @@ export abstract class BaseLLM {
     return {
       ...this._identifyingParams(),
       _type: this._llmType(),
+      _model: this._modelType(),
     };
+  }
+
+  _modelType(): string {
+    return "base_llm" as const;
   }
 
   /**
    * Load an LLM from a json-like object describing it.
    */
   static async deserialize(data: SerializedLLM): Promise<BaseLLM> {
-    const { _type, ...rest } = data;
+    const { _type, _model, ...rest } = data;
+    if (_model && _model !== "base_llm") {
+      throw new Error(`Cannot load LLM with model ${_model}`);
+    }
     const Cls = {
       openai: (await import("./openai.js")).OpenAI,
     }[_type];
@@ -189,11 +214,17 @@ export abstract class BaseLLM {
     return new Cls(rest);
   }
 
+  private _tokenizer?: GPT3Tokenizer.default;
+
   getNumTokens(text: string): number {
     // TODOs copied from py implementation
     // TODO: this method may not be exact.
-    // TODO: this method may differ based on model (eg codex).
-    return encode(text).length;
+    // TODO: this method may differ based on model (eg codex, gpt-3.5).
+    if (this._tokenizer === undefined) {
+      const Constructor = GPT3Tokenizer.default;
+      this._tokenizer = new Constructor({ type: "gpt3" });
+    }
+    return this._tokenizer.encode(text).bpe.length;
   }
 
   // TODO(sean): save to disk

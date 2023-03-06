@@ -1,16 +1,16 @@
 import {
   BaseChain,
   ChainValues,
+  LLMChain,
+  loadQAChain,
   SerializedBaseChain,
   SerializedLLMChain,
-  loadQAChain,
-  LLMChain,
 } from "./index.js";
 
 import { PromptTemplate } from "../prompts/index.js";
 
-import { VectorStore } from "../vectorstores/base.js";
 import { BaseLLM } from "../llms/index.js";
+import { VectorStore } from "../vectorstores/base.js";
 
 import { resolveConfigFromFile } from "../util/index.js";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -73,6 +73,8 @@ export class ChatVectorDBQAChain
 
   questionGeneratorChain: LLMChain;
 
+  returnSourceDocuments = false;
+
   constructor(fields: {
     vectorstore: VectorStore;
     combineDocumentsChain: BaseChain;
@@ -80,6 +82,7 @@ export class ChatVectorDBQAChain
     inputKey?: string;
     outputKey?: string;
     k?: number;
+    returnSourceDocuments?: boolean;
   }) {
     super();
     this.vectorstore = fields.vectorstore;
@@ -88,6 +91,8 @@ export class ChatVectorDBQAChain
     this.inputKey = fields.inputKey ?? this.inputKey;
     this.outputKey = fields.outputKey ?? this.outputKey;
     this.k = fields.k ?? this.k;
+    this.returnSourceDocuments =
+      fields.returnSourceDocuments ?? this.returnSourceDocuments;
   }
 
   async _call(values: ChainValues): Promise<ChainValues> {
@@ -121,6 +126,12 @@ export class ChatVectorDBQAChain
       chat_history: chatHistory,
     };
     const result = await this.combineDocumentsChain.call(inputs);
+    if (this.returnSourceDocuments) {
+      return {
+        ...result,
+        sourceDocuments: docs,
+      };
+    }
     return result;
   }
 

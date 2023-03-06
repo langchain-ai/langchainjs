@@ -5,15 +5,6 @@ import { Embeddings } from "../embeddings/base.js";
 import { VectorStore } from "./base.js";
 import { Document } from "../document.js";
 
-let ChromaClient: typeof ChromaClientT | null = null;
-
-try {
-  // eslint-disable-next-line global-require,import/no-extraneous-dependencies
-  ({ ChromaClient } = require("chromadb"));
-} catch {
-  // ignore error
-}
-
 export interface ChromaLibArgs {
   url?: string;
   numDimensions?: number;
@@ -58,11 +49,7 @@ export class Chroma extends VectorStore {
       if (this.args.numDimensions === undefined) {
         this.args.numDimensions = vectors[0].length;
       }
-      if (ChromaClient === null) {
-        throw new Error(
-          "Please install chromadb as a dependency with, e.g. `npm install -S chromadb`"
-        );
-      }
+      const { ChromaClient } = await Chroma.imports();
       this.index = new ChromaClient(this.url);
       try {
         await this.index.createCollection(this.collectionName);
@@ -147,12 +134,6 @@ export class Chroma extends VectorStore {
     collectionName?: string,
     url?: string
   ): Promise<Chroma> {
-    if (ChromaClient === null) {
-      throw new Error(
-        "Please install chromadb as a dependency with, e.g. `npm install -S chromadb`"
-      );
-    }
-
     const args: ChromaLibArgs = {
       collectionName,
       url,
@@ -160,6 +141,19 @@ export class Chroma extends VectorStore {
     const instance = new this(args, embeddings);
     await instance.addDocuments(docs);
     return instance;
+  }
+
+  static async imports(): Promise<{
+    ChromaClient: typeof ChromaClientT;
+  }> {
+    try {
+      const { ChromaClient } = await import("chromadb");
+      return { ChromaClient };
+    } catch (e) {
+      throw new Error(
+        "Please install chromadb as a dependency with, e.g. `npm install -S chromadb`"
+      );
+    }
   }
 }
 

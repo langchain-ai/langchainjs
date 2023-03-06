@@ -1,12 +1,13 @@
-import { BaseChain, ChainValues, ChainInputs } from "./index.js";
+import { BaseChain, ChainInputs, ChainValues } from "./index.js";
 
 import { BaseLLM, SerializedLLM } from "../llms/index.js";
+import { BaseLanguageModel } from "../schema/index.js";
 
 import { BaseMemory, BufferMemory } from "../memory/index.js";
 import {
   BasePromptTemplate,
-  SerializedBasePromptTemplate,
   PromptTemplate,
+  SerializedBasePromptTemplate,
 } from "../prompts/index.js";
 
 import { resolveConfigFromFile } from "../util/index.js";
@@ -15,7 +16,7 @@ export interface LLMChainInput extends ChainInputs {
   /** Prompt object to use */
   prompt: BasePromptTemplate;
   /** LLM Wrapper to use */
-  llm: BaseLLM;
+  llm: BaseLanguageModel;
 
   /** @ignore */
   outputKey: string;
@@ -44,7 +45,7 @@ export type SerializedLLMChain = {
 export class LLMChain extends BaseChain implements LLMChainInput {
   prompt: BasePromptTemplate;
 
-  llm: BaseLLM;
+  llm: BaseLanguageModel;
 
   outputKey = "text";
 
@@ -54,7 +55,7 @@ export class LLMChain extends BaseChain implements LLMChainInput {
 
   constructor(fields: {
     prompt: BasePromptTemplate;
-    llm: BaseLLM;
+    llm: BaseLanguageModel;
     outputKey?: string;
     memory?: BaseMemory;
   }) {
@@ -69,10 +70,9 @@ export class LLMChain extends BaseChain implements LLMChainInput {
     if ("stop" in values && Array.isArray(values.stop)) {
       stop = values.stop;
     }
-    const formattedString = await this.prompt.format(values);
-    const llmResult = await this.llm.call(formattedString, stop);
-    const result = { [this.outputKey]: llmResult };
-    return result;
+    const promptValue = await this.prompt.formatPromptValue(values);
+    const { generations } = await this.llm.generatePrompt([promptValue], stop);
+    return { [this.outputKey]: generations[0][0].text };
   }
 
   /**
@@ -114,7 +114,7 @@ export class LLMChain extends BaseChain implements LLMChainInput {
   serialize(): SerializedLLMChain {
     return {
       _type: this._chainType(),
-      llm: this.llm.serialize(),
+      // llm: this.llm.serialize(), TODO fix this now that llm is BaseLanguageModel
       prompt: this.prompt.serialize(),
     };
   }

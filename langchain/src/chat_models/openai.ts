@@ -1,16 +1,57 @@
 import {
   Configuration,
   OpenAIApi,
-  ChatCompletionRequestMessage,
   CreateChatCompletionRequest,
   ConfigurationParameters,
+  ChatCompletionResponseMessageRoleEnum,
 } from "openai";
 import type { IncomingMessage } from "http";
 import { createParser } from "eventsource-parser";
 import { backOff } from "exponential-backoff";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
-import { LLM } from "./base.js";
-import { LLMCallbackManager } from "../schema/index.js";
+import { BaseChatModel } from "./base.js";
+import {
+  AIChatMessage,
+  BaseChatMessage,
+  ChatGeneration,
+  ChatMessage,
+  ChatResult,
+  HumanChatMessage,
+  LLMCallbackManager,
+  MessageType,
+  SystemChatMessage,
+} from "../schema/index.js";
+
+function messageTypeToOpenAIRole(
+  type: MessageType
+): ChatCompletionResponseMessageRoleEnum {
+  switch (type) {
+    case "system":
+      return "system";
+    case "ai":
+      return "assistant";
+    case "human":
+      return "user";
+    default:
+      throw new Error(`Unknown message type: ${type}`);
+  }
+}
+
+function openAIResponseToChatMessage(
+  role: ChatCompletionResponseMessageRoleEnum | undefined,
+  text: string
+): BaseChatMessage {
+  switch (role) {
+    case "user":
+      return new HumanChatMessage(text);
+    case "assistant":
+      return new AIChatMessage(text);
+    case "system":
+      return new SystemChatMessage(text);
+    default:
+      return new ChatMessage(text, role ?? "unknown");
+  }
+}
 
 interface ModelParams {
   /** Sampling temperature to use, between 0 and 2, defaults to 1 */
@@ -33,6 +74,12 @@ interface ModelParams {
 
   /** Whether to stream the results or not */
   streaming: boolean;
+
+  /**
+   * Maximum number of tokens to generate in the completion. -1 returns as many
+   * tokens as possible given the prompt and the model's maximum context size.
+   */
+  maxTokens: number;
 }
 
 /**
@@ -42,9 +89,6 @@ interface ModelParams {
 interface OpenAIInput extends ModelParams {
   /** Model name to use */
   modelName: string;
-
-  /** ChatGPT messages to pass as a prefix to the prompt */
-  prefixMessages?: ChatCompletionRequestMessage[];
 
   /** Holds any additional parameters that are valid to pass to {@link
    * https://platform.openai.com/docs/api-reference/completions/create |
@@ -77,7 +121,7 @@ type Kwargs = Record<string, any>;
  * @augments BaseLLM
  * @augments OpenAIInput
  */
-export class OpenAIChat extends LLM implements OpenAIInput {
+export class ChatOpenAI extends BaseChatModel implements OpenAIInput {
   temperature = 1;
 
   topP = 1;
@@ -92,8 +136,6 @@ export class OpenAIChat extends LLM implements OpenAIInput {
 
   modelName = "gpt-3.5-turbo";
 
-  prefixMessages?: ChatCompletionRequestMessage[];
-
   modelKwargs?: Kwargs;
 
   maxRetries = 6;
@@ -101,6 +143,8 @@ export class OpenAIChat extends LLM implements OpenAIInput {
   stop?: string[];
 
   streaming = false;
+
+  maxTokens = 256;
 
   // Used for non-streaming requests
   private batchClient: OpenAIApi;
@@ -120,12 +164,7 @@ export class OpenAIChat extends LLM implements OpenAIInput {
     },
     configuration?: ConfigurationParameters
   ) {
-    super(
-      fields?.callbackManager,
-      fields?.verbose,
-      fields?.concurrency,
-      fields?.cache
-    );
+    super(fields?.callbackManager, fields?.verbose);
 
     const apiKey = fields?.openAIApiKey ?? process.env.OPENAI_API_KEY;
     if (!apiKey) {
@@ -133,7 +172,6 @@ export class OpenAIChat extends LLM implements OpenAIInput {
     }
 
     this.modelName = fields?.modelName ?? this.modelName;
-    this.prefixMessages = fields?.prefixMessages ?? this.prefixMessages;
     this.modelKwargs = fields?.modelKwargs ?? {};
     this.maxRetries = fields?.maxRetries ?? this.maxRetries;
 
@@ -187,25 +225,13 @@ export class OpenAIChat extends LLM implements OpenAIInput {
    * Get the identifying parameters for the model
    */
   identifyingParams() {
-    return {
-      model_name: this.modelName,
-      ...this.invocationParams(),
-      ...this.clientConfig,
-    };
-  }
-
-  private formatMessages(prompt: string): ChatCompletionRequestMessage[] {
-    const message: ChatCompletionRequestMessage = {
-      role: "user",
-      content: prompt,
-    };
-    return this.prefixMessages ? [...this.prefixMessages, message] : [message];
+    return this._identifyingParams();
   }
 
   /**
    * Call out to OpenAI's endpoint with k unique prompts
    *
-   * @param prompt - The prompt to pass into the model.
+   * @param messages - The messages to pass into the model.
    * @param [stop] - Optional list of stop words to use when generating.
    *
    * @returns The full LLM output.
@@ -217,7 +243,10 @@ export class OpenAIChat extends LLM implements OpenAIInput {
    * const response = await openai.generate(["Tell me a joke."]);
    * ```
    */
-  async _call(prompt: string, stop?: string[]): Promise<string> {
+  async _generate(
+    messages: BaseChatMessage[],
+    stop?: string[]
+  ): Promise<ChatResult> {
     if (this.stop && stop) {
       throw new Error("Stop found in input and default params");
     }
@@ -227,13 +256,15 @@ export class OpenAIChat extends LLM implements OpenAIInput {
 
     const { data } = await this.completionWithRetry({
       ...params,
-      messages: this.formatMessages(prompt),
+      messages: messages.map((message) => ({
+        role: messageTypeToOpenAIRole(message._getType()),
+        content: message.text,
+      })),
     });
 
-    let completion = "";
-
     if (params.stream) {
-      completion = await new Promise<string>((resolve, reject) => {
+      let role: ChatCompletionResponseMessageRoleEnum = "assistant";
+      const completion = await new Promise<string>((resolve, reject) => {
         let innerCompletion = "";
         const parser = createParser((event) => {
           if (event.type === "event") {
@@ -248,14 +279,17 @@ export class OpenAIChat extends LLM implements OpenAIInput {
                 choices: Array<{
                   index: number;
                   finish_reason: string | null;
-                  delta: { content?: string; role?: string };
+                  delta: {
+                    content?: string;
+                    role?: ChatCompletionResponseMessageRoleEnum;
+                  };
                 }>;
               };
 
               const part = response.choices[0];
               if (part != null) {
                 innerCompletion += part.delta?.content ?? "";
-
+                role = part.delta?.role ?? role;
                 this.callbackManager.handleNewToken?.(
                   part.delta?.content ?? "",
                   this.verbose
@@ -272,10 +306,27 @@ export class OpenAIChat extends LLM implements OpenAIInput {
         );
         stream.on("error", (error) => reject(error));
       });
-    } else {
-      completion = data.choices[0].message?.content ?? "";
+      return {
+        generations: [
+          {
+            text: completion,
+            message: openAIResponseToChatMessage(role, completion),
+          },
+        ],
+      };
     }
-    return completion;
+    const generations: ChatGeneration[] = [];
+    for (const part of data.choices) {
+      const role = part.message?.role ?? undefined;
+      const text = part.message?.content ?? "";
+      generations.push({
+        text,
+        message: openAIResponseToChatMessage(role, text),
+      });
+    }
+    return {
+      generations,
+    };
   }
 
   /** @ignore */

@@ -65,11 +65,7 @@ Please see [Deployment](./deployment.md) for more information on deploying LangC
 
 Using LangChain will usually require integrations with one or more model providers, data stores, apis, etc.
 
-For this example, we will be using OpenAI's APIs, so we will first need to install their SDK:
-
-```bash
-npm i openai
-```
+For this example, we will be using OpenAI's APIs, so no additional setup is required.
 
 ## Building a Language Model Application
 

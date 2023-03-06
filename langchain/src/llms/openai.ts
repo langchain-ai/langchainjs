@@ -14,8 +14,8 @@ import fetchAdapter from "../util/axios-fetch-adapter.js";
 import { chunkArray } from "../util/index.js";
 import { BaseLLM } from "./base.js";
 import { calculateMaxTokens } from "./calculateMaxTokens.js";
-import type { LLMCallbackManager, LLMResult } from "./index.js";
 import { OpenAIChat } from "./openai-chat.js";
+import { LLMCallbackManager, LLMResult } from "../schema/index.js";
 
 interface ModelParams {
   /** Sampling temperature to use */
