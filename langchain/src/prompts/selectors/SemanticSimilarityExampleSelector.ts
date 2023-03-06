@@ -48,7 +48,6 @@ export class SemanticSimilarityExampleSelector implements BaseExampleSelector {
       }),
     ]);
 
-    // return ids[0]; // python returns an id, but currently vectorstore.addDocuments returns void so we cannot do exact parity with python here
   }
 
   async selectExamples(

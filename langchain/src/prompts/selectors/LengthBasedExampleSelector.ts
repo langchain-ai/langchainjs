@@ -8,18 +8,28 @@ function getLengthBased(text: string): number {
 export class LengthBasedExampleSelector implements BaseExampleSelector {
   examples!: Example[];
 
-  example_prompt!: PromptTemplate;
+  examplePrompt!: PromptTemplate;
 
-  get_text_length: (text: string) => number = getLengthBased;
+  getTextLength: (text: string) => number = getLengthBased;
 
-  max_length = 2048;
+  maxLength = 2048;
 
-  example_text_lengths: number[] = [];
+  exampleTextLengths: number[] = [];
+
+  constructor(data: {
+    examplePrompt: PromptTemplate;
+    maxLength?: number;
+    getTextLength?: (text: string) => number;
+  }) {
+    this.examplePrompt = data.examplePrompt;
+    this.maxLength = data.maxLength ?? 2048;
+    this.getTextLength = data.getTextLength ?? getLengthBased;
+  }
 
   async addExample(example: Example): Promise<void> {
     this.examples.push(example);
-    const stringExample = await this.example_prompt.format(example);
-    this.example_text_lengths.push(this.get_text_length(stringExample));
+    const stringExample = await this.examplePrompt.format(example);
+    this.exampleTextLengths.push(this.getTextLength(stringExample));
   }
 
   async calculateExampleTextLengths(
@@ -30,21 +40,21 @@ export class LengthBasedExampleSelector implements BaseExampleSelector {
       return v;
     }
 
-    const { examples, example_prompt } = values;
+    const { examples, examplePrompt } = values;
     const stringExamples = await Promise.all(
-      examples.map((eg: Example) => example_prompt.format(eg))
+      examples.map((eg: Example) => examplePrompt.format(eg))
     );
-    return stringExamples.map((eg: string) => this.get_text_length(eg));
+    return stringExamples.map((eg: string) => this.getTextLength(eg));
   }
 
   async selectExamples(inputVariables: Example): Promise<Example[]> {
     const inputs = Object.values(inputVariables).join(" ");
-    let remainingLength = this.max_length - this.get_text_length(inputs);
+    let remainingLength = this.maxLength - this.getTextLength(inputs);
     let i = 0;
     const examples = [];
 
     while (remainingLength > 0 && i < this.examples.length) {
-      const newLength = remainingLength - this.example_text_lengths[i];
+      const newLength = remainingLength - this.exampleTextLengths[i];
       if (newLength < 0) {
         break;
       } else {
