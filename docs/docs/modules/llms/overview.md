@@ -38,3 +38,36 @@ import { OpenAI } from "langchain/llms";
 
 const model = new OpenAI({ concurrency: 5 });
 ```
+
+## Logging for Debugging
+
+Especially when using an agent, there can be a lot of back-and-forth going on behind the scenes as a LLM processes a chain. For agents, the response object contains an intermediateSteps object that you can print to see an overview of the steps it took to get there. If that's not enough and you want to see every exchange with the LLM, you can use the LLMCallbackManager to write yourself custom logging (or anything else you want to do) as the model goes through the steps:
+
+```typescript
+import { LLMCallbackManager } from "langchain/llms";
+
+//create our callback manager
+
+const callbackManager = {
+  handleStart: (..._args) => {
+    console.log(JSON.stringify(_args, null, 2));
+  },
+  handleEnd: (..._args) => {
+    console.log(JSON.stringify(_args, null, 2));
+  },
+  handleError: (..._args) => {
+    console.log(JSON.stringify(_args, null, 2));
+  },
+} as LLMCallbackManager;
+
+//create our model and pass it the callback manager
+
+const model = new OpenAIChat({
+  openAIApiKey: process.env.OPENAI_API_KEY,
+  modelName: "gpt-3.5-turbo",
+  prefixMessages: history,
+  temperature: 1,
+  verbose: true,
+  callbackManager: callbackManager,
+});
+```
