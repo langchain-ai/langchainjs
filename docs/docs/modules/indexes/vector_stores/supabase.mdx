@@ -1,0 +1,56 @@
+# Supabase
+
+Langchain supports using Supabase Postgres database as a vector store, using the `pgvector` postgres extension. Refer to the [Supabase blog post](https://supabase.com/blog/openai-embeddings-postgres-vector) for more information.
+
+## Setup
+
+1. Install the library with `npm install -S @supabase/supabase-js`.
+
+2. Create a table and search function in your database
+
+```sql
+create extension vector;
+
+create table documents (
+  id bigserial primary key,
+  content text, -- corresponds to Document.pageContent
+  metadata jsonb, -- corresponds to Document.metadata
+  embedding vector(1536) -- 1536 works for OpenAI embeddings, change if needed
+);
+
+create function match_documents (
+  query_embedding vector(1536),
+  match_count int
+) returns table (
+  id bigint,
+  content text,
+  metadata jsonb,
+  similarity float
+)
+language plpgsql
+as $$
+#variable_conflict use_column
+begin
+  return query
+  select
+    id,
+    content,
+    metadata,
+    1 - (documents.embedding <=> query_embedding) as similarity
+  from documents
+  order by documents.embedding <=> query_embedding
+  limit match_count;
+end;
+$$;
+
+create index on documents
+  using ivfflat (embedding vector_cosine_ops)
+  with (lists = 100);
+```
+
+## Usage
+
+import CodeBlock from "@theme/CodeBlock";
+import Example from "@examples/indexes/vectorstores_supabase.ts";
+
+<CodeBlock language="typescript">{Example}</CodeBlock>
