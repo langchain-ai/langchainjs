@@ -50,7 +50,6 @@ type SerializedAgent = SerializedZeroShotAgent;
 
 export interface AgentInput {
   llmChain: LLMChain;
-  allowedTools?: string[];
 }
 
 /**
@@ -63,8 +62,6 @@ export interface AgentInput {
 export abstract class Agent {
   llmChain: LLMChain;
 
-  allowedTools?: string[] = undefined;
-
   returnValues = ["output"];
 
   get inputKeys(): string[] {
@@ -73,7 +70,6 @@ export abstract class Agent {
 
   constructor(input: AgentInput) {
     this.llmChain = input.llmChain;
-    this.allowedTools = input.allowedTools;
   }
 
   /**

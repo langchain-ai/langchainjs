@@ -26,7 +26,6 @@ Question: {input}
   const llmChain = new LLMChain({ llm: model, prompt });
   const agent = new ZeroShotAgent({
     llmChain,
-    allowedTools: ["search", "calculator"],
   });
   const agentExecutor = AgentExecutor.fromAgentAndTools({ agent, tools });
   console.log("Loaded agent.");

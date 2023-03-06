@@ -66,8 +66,7 @@ export function createOpenApiAgent(
     prompt,
     llm,
   });
-  const toolNames = tools.map((tool) => tool.name);
-  const agent = new ZeroShotAgent({ llmChain: chain, allowedTools: toolNames });
+  const agent = new ZeroShotAgent({ llmChain: chain });
   return AgentExecutor.fromAgentAndTools({
     agent,
     tools,

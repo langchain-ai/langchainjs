@@ -60,7 +60,6 @@ Now we create an agent and agent executor with that custom prompt.
 ```typescript
 const agent = new ZeroShotAgent({
   llmChain: llmChain,
-  allowedTools: ["search", "calculator"],
 });
 const agentExecutor = AgentExecutor.fromAgentAndTools({ agent, tools });
 console.log("Loaded agent.");
