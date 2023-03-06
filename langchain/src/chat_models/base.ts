@@ -1,4 +1,4 @@
-import { LLMCallbackManager , Generation , LLMResult } from "../llms/index.js";
+import { LLMCallbackManager, Generation, LLMResult } from "../llms/index.js";
 
 const getCallbackManager = (): LLMCallbackManager => ({
   handleStart: (..._args) => {
@@ -84,12 +84,12 @@ export abstract class BaseChatModel {
   }
 
   async generate(
-    messages: BaseChatMessage[],
+    messages: BaseChatMessage[][],
     stop?: string[]
   ): Promise<LLMResult> {
     const generations: ChatGeneration[][] = [];
     for (const message of messages) {
-      const result = await this._generate([message], stop);
+      const result = await this._generate(message, stop);
       generations.push(result.generations);
     }
     return {

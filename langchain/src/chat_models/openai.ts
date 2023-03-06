@@ -1,7 +1,6 @@
 import {
   Configuration,
   OpenAIApi,
-  ChatCompletionRequestMessage,
   CreateChatCompletionRequest,
   ConfigurationParameters,
   ChatCompletionResponseMessageRoleEnum,
@@ -75,6 +74,12 @@ interface ModelParams {
 
   /** Whether to stream the results or not */
   streaming: boolean;
+
+  /**
+   * Maximum number of tokens to generate in the completion. -1 returns as many
+   * tokens as possible given the prompt and the model's maximum context size.
+   */
+  maxTokens: number;
 }
 
 /**
@@ -84,9 +89,6 @@ interface ModelParams {
 interface OpenAIInput extends ModelParams {
   /** Model name to use */
   modelName: string;
-
-  /** ChatGPT messages to pass as a prefix to the prompt */
-  prefixMessages?: ChatCompletionRequestMessage[];
 
   /** Holds any additional parameters that are valid to pass to {@link
    * https://platform.openai.com/docs/api-reference/completions/create |
@@ -134,8 +136,6 @@ export class ChatOpenAI extends BaseChatModel implements OpenAIInput {
 
   modelName = "gpt-3.5-turbo";
 
-  prefixMessages?: ChatCompletionRequestMessage[];
-
   modelKwargs?: Kwargs;
 
   maxRetries = 6;
@@ -143,6 +143,8 @@ export class ChatOpenAI extends BaseChatModel implements OpenAIInput {
   stop?: string[];
 
   streaming = false;
+
+  maxTokens = 256;
 
   // Used for non-streaming requests
   private batchClient: OpenAIApi;
@@ -170,7 +172,6 @@ export class ChatOpenAI extends BaseChatModel implements OpenAIInput {
     }
 
     this.modelName = fields?.modelName ?? this.modelName;
-    this.prefixMessages = fields?.prefixMessages ?? this.prefixMessages;
     this.modelKwargs = fields?.modelKwargs ?? {};
     this.maxRetries = fields?.maxRetries ?? this.maxRetries;
 

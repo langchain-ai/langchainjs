@@ -166,10 +166,8 @@ export abstract class BasePromptTemplate implements BasePromptTemplateInput {
 }
 
 export abstract class BaseStringPromptTemplate extends BasePromptTemplate {
-
   async formatPromptValue(values: InputValues): Promise<PromptValue> {
     const formattedPrompt = await this.format(values);
     return new StringPromptValue(formattedPrompt);
   }
-
 }
