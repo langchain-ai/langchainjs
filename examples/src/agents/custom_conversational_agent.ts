@@ -5,17 +5,31 @@ import { LLMChain } from "langchain/chains";
 
 export const run = async () => {
   const model = new OpenAI({ temperature: 0 });
-
   const tools = [new SerpAPI(), new Calculator()];
 
-  const prompt = ConversationalAgent.createPrompt(tools);
+  const prefix = `Answer the following questions as best you can. You have access to the following tools:`;
+
+  const suffix = `Begin!
+
+Previous conversation history:
+{chat_history}
+
+Question: {input}
+Thought:{agent_scratchpad}`;
+
+  const createPromptArgs = {
+    suffix,
+    prefix,
+    inputVariables: ["input", "agent_scratchpad", "chat_history"],
+  };
+
+  const prompt = ConversationalAgent.createPrompt(tools, createPromptArgs);
 
   const llmChain = new LLMChain({ llm: model, prompt });
 
   const agent = new ConversationalAgent({
     llmChain,
   });
-
   const executor = AgentExecutor.fromAgentAndTools({
     agent,
     tools,
