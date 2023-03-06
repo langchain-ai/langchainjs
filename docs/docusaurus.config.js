@@ -10,6 +10,7 @@
 // Note: type annotations allow type checking and IDEs autocompletion
 // eslint-disable-next-line import/no-extraneous-dependencies
 const { ProvidePlugin } = require("webpack");
+const path = require("path");
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
@@ -57,9 +58,16 @@ const config = {
             path: false,
             url: false,
           },
+          alias: {
+            "@examples": path.resolve(__dirname, "../examples/src"),
+          },
         },
         module: {
           rules: [
+            {
+              test: /\/examples\/src\//,
+              use: "raw-loader",
+            },
             {
               test: /\.m?js/,
               resolve: {

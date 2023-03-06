@@ -7,7 +7,6 @@ import {
   ChatPromptTemplate,
   HumanMessagePromptTemplate,
   SystemMessagePromptTemplate,
-  // AIMessagePromptTemplate,
 } from "../../prompts/index.js";
 import { LLMChain } from "../../chains/index.js";
 
@@ -128,7 +127,7 @@ test("OpenAI Chat, docs, getting started", async () => {
   console.log(responseC);
 });
 
-test.only("OpenAI Chat, docs, prompt templates", async () => {
+test("OpenAI Chat, docs, prompt templates", async () => {
   const chat = new ChatOpenAI({ temperature: 0 });
 
   const systemPrompt = new PromptTemplate({
