@@ -1,6 +1,7 @@
 import { test, expect } from "@jest/globals";
 import { ChatOpenAI } from "../openai.js";
 import { HumanChatMessage, SystemChatMessage } from "../../schema/index.js";
+import { ChatPromptValue } from "../../prompts/chat.js";
 
 test("Test ChatOpenAI", async () => {
   const chat = new ChatOpenAI({ modelName: "gpt-3.5-turbo", maxTokens: 10 });
@@ -55,4 +56,22 @@ test("Test ChatOpenAI in streaming mode", async () => {
 
   expect(nrNewTokens > 0).toBe(true);
   expect(res.text).toBe(streamedCompletion);
+});
+
+test("Test ChatOpenAI prompt value", async () => {
+  const chat = new ChatOpenAI({
+    modelName: "gpt-3.5-turbo",
+    maxTokens: 10,
+    n: 2,
+  });
+  const message = new HumanChatMessage("Hello!");
+  const res = await chat.generatePrompt([new ChatPromptValue([message])]);
+  expect(res.generations.length).toBe(1);
+  for (const generation of res.generations) {
+    expect(generation.length).toBe(2);
+    for (const g of generation) {
+      console.log(g.text);
+    }
+  }
+  console.log({ res });
 });
