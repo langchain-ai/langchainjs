@@ -2,6 +2,14 @@ import { test, expect } from "@jest/globals";
 import { ChatOpenAI } from "../openai.js";
 import { HumanChatMessage, SystemChatMessage } from "../../schema/index.js";
 import { ChatPromptValue } from "../../prompts/chat.js";
+import {
+  PromptTemplate,
+  ChatPromptTemplate,
+  HumanMessagePromptTemplate,
+  SystemMessagePromptTemplate,
+  // AIMessagePromptTemplate,
+} from "../../prompts/index.js";
+import { LLMChain } from "../../chains/index.js";
 
 test("Test ChatOpenAI", async () => {
   const chat = new ChatOpenAI({ modelName: "gpt-3.5-turbo", maxTokens: 10 });
@@ -74,4 +82,94 @@ test("Test ChatOpenAI prompt value", async () => {
     }
   }
   console.log({ res });
+});
+
+test("OpenAI Chat, docs, getting started", async () => {
+  const chat = new ChatOpenAI({ temperature: 0 });
+
+  const responseA = await chat.call([
+    new HumanChatMessage(
+      "Translate this sentence from English to French. I love programming."
+    ),
+  ]);
+
+  console.log(responseA);
+
+  const responseB = await chat.call([
+    new SystemChatMessage(
+      "You are a helpful assistant that translates English to French."
+    ),
+    new HumanChatMessage(
+      "Translate this sentence from English to French. I love programming."
+    ),
+  ]);
+
+  console.log(responseB);
+
+  const responseC = await chat.generate([
+    [
+      new SystemChatMessage(
+        "You are a helpful assistant that translates English to French."
+      ),
+      new HumanChatMessage(
+        "Translate this sentence from English to French. I love programming."
+      ),
+    ],
+    [
+      new SystemChatMessage(
+        "You are a helpful assistant that translates English to French."
+      ),
+      new HumanChatMessage(
+        "Translate this sentence from English to French. I love artificial intelligence."
+      ),
+    ],
+  ]);
+
+  console.log(responseC);
+});
+
+test.only("OpenAI Chat, docs, prompt templates", async () => {
+  const chat = new ChatOpenAI({ temperature: 0 });
+
+  const systemPrompt = new PromptTemplate({
+    template:
+      "You are a helpful assistant that translates {input_language} to {output_language}.",
+    inputVariables: ["input_language", "output_language"],
+  });
+
+  const userPrompt = new PromptTemplate({
+    template: "{text}",
+    inputVariables: ["text"],
+  });
+
+  const chatPrompt = new ChatPromptTemplate({
+    promptMessages: [
+      new SystemMessagePromptTemplate(systemPrompt),
+      new HumanMessagePromptTemplate(userPrompt),
+    ],
+    inputVariables: ["input_language", "output_language", "text"],
+  });
+
+  const responseA = await chat.generatePrompt([
+    await chatPrompt.formatPromptValue({
+      input_language: "English",
+      output_language: "French",
+      text: "I love programming.",
+    }),
+  ]);
+
+  console.log(responseA.generations);
+
+  const chain = new LLMChain({
+    prompt: chatPrompt,
+    llm: chat,
+  });
+
+  const responseB = await chain.call({
+    input_language: "English",
+    output_language: "French",
+    text: "I love programming.",
+  });
+
+  console.log(responseB);
 });
