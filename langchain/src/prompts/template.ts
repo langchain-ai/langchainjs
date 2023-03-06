@@ -70,9 +70,16 @@ export const interpolateFString = (template: string, values: InputValues) =>
 
 type Interpolator = (template: string, values: InputValues) => string;
 
+type Parser = (template: string) => ParsedFStringNode[];
+
 export const DEFAULT_FORMATTER_MAPPING: Record<TemplateFormat, Interpolator> = {
   "f-string": interpolateFString,
   jinja2: (_: string, __: InputValues) => "",
+};
+
+export const DEFAULT_PARSER_MAPPING: Record<TemplateFormat, Parser> = {
+  "f-string": parseFString,
+  jinja2: (_: string) => [],
 };
 
 export const renderTemplate = (
@@ -80,6 +87,11 @@ export const renderTemplate = (
   templateFormat: TemplateFormat,
   inputValues: InputValues
 ) => DEFAULT_FORMATTER_MAPPING[templateFormat](template, inputValues);
+
+export const parseTemplate = (
+  template: string,
+  templateFormat: TemplateFormat
+) => DEFAULT_PARSER_MAPPING[templateFormat](template);
 
 export const checkValidTemplate = (
   template: string,
