@@ -5,7 +5,7 @@ import type {
   Browser,
   PuppeteerLaunchOptions,
 } from "puppeteer";
-import type { CheerioAPI, load as LoadT } from "cheerio";
+
 import { Document } from "../document.js";
 import { BaseDocumentLoader } from "./base.js";
 import type { DocumentLoader } from "./base.js";
@@ -34,8 +34,8 @@ export class PuppeteerWebBaseLoader
   static async _scrape(
     url: string,
     options?: PuppeteerWebBaseLoaderOptions
-  ): Promise<CheerioAPI> {
-    const { load, launch } = await PuppeteerWebBaseLoader.imports();
+  ): Promise<string> {
+    const { launch } = await PuppeteerWebBaseLoader.imports();
 
     const browser = await launch({
       headless: true,
@@ -55,29 +55,27 @@ export class PuppeteerWebBaseLoader
 
     await browser.close();
 
-    return load(bodyHTML);
+    return bodyHTML;
   }
 
-  async scrape(): Promise<CheerioAPI> {
+  async scrape(): Promise<string> {
     return PuppeteerWebBaseLoader._scrape(this.webPath, this.options);
   }
 
   async load(): Promise<Document[]> {
-    const $ = await this.scrape();
+    const text = await this.scrape();
 
-    const text = $("body").text();
     const metadata = { source: this.webPath };
     return [new Document({ pageContent: text, metadata })];
   }
 
   static async imports(): Promise<{
-    load: typeof LoadT;
     launch: typeof launch;
   }> {
     try {
       const { launch } = await import("puppeteer");
-      const { load } = await import("cheerio");
-      return { load, launch };
+
+      return { launch };
     } catch (e) {
       console.error(e);
       throw new Error(
