@@ -114,4 +114,6 @@ export abstract class BaseLanguageModel {
   ): Promise<LLMResult>;
 
   abstract _modelType(): string;
+
+  abstract getNumTokens(text: string): number;
 }

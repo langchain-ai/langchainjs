@@ -55,6 +55,11 @@ export abstract class BaseChatModel extends BaseLanguageModel {
     return "base_chat_model" as const;
   }
 
+  getNumTokens(_: string): number {
+    // TODO: Implement this
+    throw new Error("Method not implemented.");
+  }
+
   async generatePrompt(
     promptValues: BasePromptValue[],
     stop?: string[]
