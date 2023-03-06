@@ -111,6 +111,14 @@ export abstract class BaseChatModel extends BaseLanguageModel {
     const { generations } = await this._generate(messages, stop);
     return generations[0].message;
   }
+
+  async callPrompt(
+    promptValue: BasePromptValue,
+    stop?: string[]
+  ): Promise<BaseChatMessage> {
+    const promptMessages: BaseChatMessage[] = promptValue.toChatMessages();
+    return this.call(promptMessages, stop);
+  }
 }
 
 export abstract class SimpleChatModel extends BaseChatModel {
