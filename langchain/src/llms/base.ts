@@ -1,4 +1,4 @@
-import { encode } from "gpt-3-encoder";
+import GPT3Tokenizer from "gpt3-tokenizer";
 import PQueue from "p-queue";
 
 import { LLMCallbackManager, LLMResult } from "./index.js";
@@ -189,11 +189,17 @@ export abstract class BaseLLM {
     return new Cls(rest);
   }
 
+  private _tokenizer?: GPT3Tokenizer.default;
+
   getNumTokens(text: string): number {
     // TODOs copied from py implementation
     // TODO: this method may not be exact.
-    // TODO: this method may differ based on model (eg codex).
-    return encode(text).length;
+    // TODO: this method may differ based on model (eg codex, gpt-3.5).
+    if (this._tokenizer === undefined) {
+      const Constructor = GPT3Tokenizer.default;
+      this._tokenizer = new Constructor({ type: "gpt3" });
+    }
+    return this._tokenizer.encode(text).bpe.length;
   }
 
   // TODO(sean): save to disk
