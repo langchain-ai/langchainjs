@@ -1,6 +1,6 @@
 import { test, expect } from "@jest/globals";
 import { ChatOpenAI } from "../openai.js";
-import { HumanChatMessage, SystemChatMessage } from "../base.js";
+import { HumanChatMessage, SystemChatMessage } from "../../schema/index.js";
 
 test("Test ChatOpenAI", async () => {
   const chat = new ChatOpenAI({ modelName: "gpt-3.5-turbo", maxTokens: 10 });

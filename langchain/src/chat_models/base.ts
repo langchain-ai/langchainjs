@@ -1,10 +1,13 @@
 import {
+  AIChatMessage,
+  BaseChatMessage,
+  BaseLanguageModel,
+  BasePromptValue,
+  ChatGeneration,
+  ChatResult,
   LLMCallbackManager,
-  Generation,
   LLMResult,
-  BaseLanguageModel, BasePromptValue,
-
-} from "../llms/index.js";
+} from "../schema/index.js";
 
 const getCallbackManager = (): LLMCallbackManager => ({
   handleStart: (..._args) => {
@@ -19,62 +22,6 @@ const getCallbackManager = (): LLMCallbackManager => ({
 });
 
 const getVerbosity = () => true;
-
-export type MessageType = "human" | "ai" | "generic" | "system";
-
-export abstract class BaseChatMessage {
-  /** The text of the message. */
-  text: string;
-
-  /** The type of the message. */
-  abstract _getType(): MessageType;
-
-  constructor(text: string) {
-    this.text = text;
-  }
-}
-
-export class HumanChatMessage extends BaseChatMessage {
-  _getType(): MessageType {
-    return "human";
-  }
-}
-
-export class AIChatMessage extends BaseChatMessage {
-  _getType(): MessageType {
-    return "ai";
-  }
-}
-
-export class SystemChatMessage extends BaseChatMessage {
-  _getType(): MessageType {
-    return "system";
-  }
-}
-
-export class ChatMessage extends BaseChatMessage {
-  role: string;
-
-  constructor(text: string, role: string) {
-    super(text);
-    this.role = role;
-  }
-
-  _getType(): MessageType {
-    return "generic";
-  }
-}
-
-export interface ChatGeneration extends Generation {
-  message: BaseChatMessage;
-}
-
-export interface ChatResult {
-  generations: ChatGeneration[];
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  llmOutput?: Record<string, any>;
-}
 
 export abstract class BaseChatModel extends BaseLanguageModel {
   callbackManager: LLMCallbackManager;

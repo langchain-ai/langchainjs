@@ -1,11 +1,4 @@
 import {
-  AIChatMessage,
-  BaseChatMessage,
-  ChatMessage,
-  HumanChatMessage,
-  SystemChatMessage,
-} from "../chat_models/base.js";
-import {
   BasePromptTemplate,
   BaseStringPromptTemplate,
   BasePromptTemplateInput,
@@ -14,7 +7,14 @@ import {
 } from "./base.js";
 import { DEFAULT_FORMATTER_MAPPING, TemplateFormat } from "./template.js";
 import { SerializedOutputParser } from "./parser.js";
-import {BasePromptValue} from "../llms/index.js";
+import {
+  AIChatMessage,
+  BaseChatMessage,
+  BasePromptValue,
+  ChatMessage,
+  HumanChatMessage,
+  SystemChatMessage,
+} from "../schema/index.js";
 
 /** Serialized Chat prompt template */
 export type SerializedChatPromptTemplate = {

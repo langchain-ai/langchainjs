@@ -1,12 +1,13 @@
 import GPT3Tokenizer from "gpt3-tokenizer";
 import PQueue from "p-queue";
 
+import { BaseCache, getKey, InMemoryCache } from "../cache.js";
 import {
+  BaseLanguageModel,
+  BasePromptValue,
   LLMCallbackManager,
   LLMResult,
-  BaseLanguageModel, BasePromptValue,
-} from "./index.js";
-import { BaseCache, getKey, InMemoryCache } from "../cache.js";
+} from "../schema/index.js";
 
 const getCallbackManager = (): LLMCallbackManager => ({
   handleStart: (..._args) => {

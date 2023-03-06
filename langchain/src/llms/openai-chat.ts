@@ -10,7 +10,7 @@ import { createParser } from "eventsource-parser";
 import { backOff } from "exponential-backoff";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
 import { LLM } from "./base.js";
-import { LLMCallbackManager } from "./index.js";
+import { LLMCallbackManager } from "../schema/index.js";
 
 interface ModelParams {
   /** Sampling temperature to use, between 0 and 2, defaults to 1 */

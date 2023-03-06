@@ -9,18 +9,18 @@ import type { IncomingMessage } from "http";
 import { createParser } from "eventsource-parser";
 import { backOff } from "exponential-backoff";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
+import { BaseChatModel } from "./base.js";
 import {
-  BaseChatModel,
-  BaseChatMessage,
-  ChatMessage,
-  HumanChatMessage,
   AIChatMessage,
-  SystemChatMessage,
-  ChatResult,
+  BaseChatMessage,
   ChatGeneration,
+  ChatMessage,
+  ChatResult,
+  HumanChatMessage,
+  LLMCallbackManager,
   MessageType,
-} from "./base.js";
-import { LLMCallbackManager } from "../llms/index.js";
+  SystemChatMessage,
+} from "../schema/index.js";
 
 function messageTypeToOpenAIRole(
   type: MessageType

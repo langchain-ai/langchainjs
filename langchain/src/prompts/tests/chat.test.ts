@@ -12,7 +12,7 @@ import {
   ChatMessage,
   HumanChatMessage,
   SystemChatMessage,
-} from "../../chat_models/base.js";
+} from "../../schema/index.js";
 
 function createChatPromptTemplate(): ChatPromptTemplate {
   const systemPrompt = new PromptTemplate({
