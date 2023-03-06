@@ -20,7 +20,7 @@ export type LLMCallbackManager = {
 /**
  * Output of a single generation.
  */
-export type Generation = {
+export interface Generation {
   /**
    * Generated text output
    */
@@ -31,7 +31,7 @@ export type Generation = {
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   generationInfo?: Record<string, any>;
-};
+}
 
 /**
  * Contains all relevant information returned by an LLM.

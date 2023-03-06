@@ -312,6 +312,7 @@ export class OpenAIChat extends BaseChatModel implements OpenAIInput {
       return {
         generations: [
           {
+            text: completion,
             message: openAIResponseToChatMessage(role, completion),
           },
         ],
@@ -322,6 +323,7 @@ export class OpenAIChat extends BaseChatModel implements OpenAIInput {
       const role = part.message?.role ?? undefined;
       const text = part.message?.content ?? "";
       generations.push({
+        text,
         message: openAIResponseToChatMessage(role, text),
       });
     }

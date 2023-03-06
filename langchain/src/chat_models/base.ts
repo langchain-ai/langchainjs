@@ -1,4 +1,4 @@
-import { LLMCallbackManager } from "../llms/index.js";
+import { LLMCallbackManager , Generation , LLMResult } from "../llms/index.js";
 
 const getCallbackManager = (): LLMCallbackManager => ({
   handleStart: (..._args) => {
@@ -59,15 +59,8 @@ export class GenericChatMessage extends BaseChatMessage {
   }
 }
 
-export interface ChatGeneration {
+export interface ChatGeneration extends Generation {
   message: BaseChatMessage;
-
-  /**
-   * Raw generation info from the provider.
-   * May include things like reason for finishing (e.g. in {@link OpenAI})
-   */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  generationInfo?: Record<string, any>;
 }
 
 export interface ChatResult {
@@ -93,8 +86,15 @@ export abstract class BaseChatModel {
   async generate(
     messages: BaseChatMessage[],
     stop?: string[]
-  ): Promise<ChatResult> {
-    return this._generate(messages, stop);
+  ): Promise<LLMResult> {
+    const generations: ChatGeneration[][] = [];
+    for (const message of messages) {
+      const result = await this._generate([message], stop);
+      generations.push(result.generations);
+    }
+    return {
+      generations,
+    };
   }
 
   abstract _generate(
@@ -106,7 +106,7 @@ export abstract class BaseChatModel {
     messages: BaseChatMessage[],
     stop?: string[]
   ): Promise<BaseChatMessage> {
-    const { generations } = await this.generate(messages, stop);
+    const { generations } = await this._generate(messages, stop);
     return generations[0].message;
   }
 }
@@ -130,6 +130,7 @@ export abstract class SimpleChatModel extends BaseChatModel {
     return {
       generations: [
         {
+          text: message.text,
           message,
         },
       ],
