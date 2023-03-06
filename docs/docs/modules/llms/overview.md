@@ -48,29 +48,26 @@ import { LLMCallbackManager } from "langchain/llms";
 
 //create our callback manager
 
-  let callbackManager = {
-    handleStart: (..._args) => {
-      console.log(JSON.stringify(_args, null, 2));
-    },
-    handleEnd: (..._args) => {
-      console.log(JSON.stringify(_args, null, 2));
-    },
-    handleError: (..._args) => {
-      console.log(JSON.stringify(_args, null, 2));
-    },
-  } as LLMCallbackManager;
+const callbackManager = {
+  handleStart: (..._args) => {
+    console.log(JSON.stringify(_args, null, 2));
+  },
+  handleEnd: (..._args) => {
+    console.log(JSON.stringify(_args, null, 2));
+  },
+  handleError: (..._args) => {
+    console.log(JSON.stringify(_args, null, 2));
+  },
+} as LLMCallbackManager;
 
 //create our model and pass it the callback manager
 
-  const model = new OpenAIChat({
-    openAIApiKey: process.env.OPENAI_API_KEY,
-    modelName: "gpt-3.5-turbo",
-    prefixMessages: history,
-    temperature: 1,
-    verbose: true,
-    callbackManager: callbackManager
-  });
-  
-  ```
-
-
+const model = new OpenAIChat({
+  openAIApiKey: process.env.OPENAI_API_KEY,
+  modelName: "gpt-3.5-turbo",
+  prefixMessages: history,
+  temperature: 1,
+  verbose: true,
+  callbackManager: callbackManager,
+});
+```
