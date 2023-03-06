@@ -1,8 +1,4 @@
-import {
-  PuppeteerWebBaseLoader,
-  Browser,
-  Page,
-} from "langchain/document_loaders";
+import { PuppeteerWebBaseLoader } from "langchain/document_loaders";
 
 export const run = async () => {
   const loader = new PuppeteerWebBaseLoader("https://www.tabnews.com.br/");
@@ -21,7 +17,7 @@ export const run = async () => {
         waitUntil: "domcontentloaded",
       },
       /**  Pass custom evaluate , in this case you get page and browser instances */
-      async evaluate(page: Page, browser: Browser) {
+      async evaluate(page, browser) {
         await page.waitForResponse("https://www.tabnews.com.br/va/view");
 
         const result = await page.evaluate(() => document.body.innerHTML);

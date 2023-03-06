@@ -17,10 +17,15 @@ export type PuppeteerGotoOptions = WaitForOptions & {
   referrerPolicy?: string;
 };
 
+export type PuppeteerEvaluate = (
+  page: Page,
+  browser: Browser
+) => Promise<string>;
+
 export type PuppeteerWebBaseLoaderOptions = {
   launchOptions?: PuppeteerLaunchOptions;
   gotoOptions?: PuppeteerGotoOptions;
-  evaluate?: (page: Page, browser: Browser) => Promise<string>;
+  evaluate?: PuppeteerEvaluate;
 };
 
 export class PuppeteerWebBaseLoader
