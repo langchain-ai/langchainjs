@@ -1,4 +1,10 @@
-import { LLMCallbackManager, Generation, LLMResult } from "../llms/index.js";
+import {
+  LLMCallbackManager,
+  Generation,
+  LLMResult,
+  BaseLanguageModel, BasePromptValue,
+
+} from "../llms/index.js";
 
 const getCallbackManager = (): LLMCallbackManager => ({
   handleStart: (..._args) => {
@@ -70,7 +76,7 @@ export interface ChatResult {
   llmOutput?: Record<string, any>;
 }
 
-export abstract class BaseChatModel {
+export abstract class BaseChatModel extends BaseLanguageModel {
   callbackManager: LLMCallbackManager;
 
   verbose: boolean;
@@ -79,6 +85,7 @@ export abstract class BaseChatModel {
     callbackManager?: LLMCallbackManager,
     verbose?: boolean
   ) {
+    super();
     this.callbackManager = callbackManager ?? getCallbackManager();
     this.verbose = verbose ?? getVerbosity();
   }
@@ -95,6 +102,16 @@ export abstract class BaseChatModel {
     return {
       generations,
     };
+  }
+
+  async generatePrompt(
+    promptValues: BasePromptValue[],
+    stop?: string[]
+  ): Promise<LLMResult> {
+    const promptMessages: BaseChatMessage[][] = promptValues.map(
+      (promptValue) => promptValue.toChatMessages()
+    );
+    return this.generate(promptMessages, stop);
   }
 
   abstract _generate(

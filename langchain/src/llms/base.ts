@@ -1,7 +1,11 @@
 import GPT3Tokenizer from "gpt3-tokenizer";
 import PQueue from "p-queue";
 
-import { LLMCallbackManager, LLMResult } from "./index.js";
+import {
+  LLMCallbackManager,
+  LLMResult,
+  BaseLanguageModel, BasePromptValue,
+} from "./index.js";
 import { BaseCache, getKey, InMemoryCache } from "../cache.js";
 
 const getCallbackManager = (): LLMCallbackManager => ({
@@ -28,7 +32,7 @@ export type SerializedLLM = {
 /**
  * LLM Wrapper. Provides an {@link call} (an {@link generate}) function that takes in a prompt (or prompts) and returns a string.
  */
-export abstract class BaseLLM {
+export abstract class BaseLLM extends BaseLanguageModel {
   /**
    * The name of the LLM class
    */
@@ -57,11 +61,22 @@ export abstract class BaseLLM {
     concurrency?: number,
     cache?: boolean
   ) {
+    super();
     this.callbackManager = callbackManager ?? getCallbackManager();
     this.verbose = verbose ?? getVerbosity();
     this.cache = cache;
     this.concurrency = concurrency ?? Infinity;
     this.queue = new PQueue({ concurrency: this.concurrency });
+  }
+
+  async generatePrompt(
+    promptValues: BasePromptValue[],
+    stop?: string[]
+  ): Promise<LLMResult> {
+    const prompts: string[] = promptValues.map((promptValue) =>
+      promptValue.toString()
+    );
+    return this.generate(prompts, stop);
   }
 
   /**

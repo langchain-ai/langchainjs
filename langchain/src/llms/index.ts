@@ -1,3 +1,5 @@
+import {BaseChatMessage} from "../chat_models/base.js";
+
 export { BaseLLM, LLM, SerializedLLM } from "./base.js";
 export { OpenAI, PromptLayerOpenAI } from "./openai.js";
 export { OpenAIChat } from "./openai-chat.js";
@@ -46,3 +48,22 @@ export type LLMResult = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   llmOutput?: Record<string, any>;
 };
+
+/**
+ * Base PromptValue class. All prompt values should extend this class.
+ */
+export abstract class BasePromptValue {
+  abstract toString(): string;
+
+  abstract toChatMessages(): BaseChatMessage[];
+}
+
+/**
+ * Base class for language models.
+ */
+export abstract class BaseLanguageModel {
+  abstract generatePrompt(
+    promptValues: BasePromptValue[],
+    stop?: string[]
+  ): Promise<LLMResult>;
+}

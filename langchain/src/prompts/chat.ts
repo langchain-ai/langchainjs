@@ -11,10 +11,10 @@ import {
   BasePromptTemplateInput,
   InputValues,
   PartialValues,
-  PromptValue,
 } from "./base.js";
 import { DEFAULT_FORMATTER_MAPPING, TemplateFormat } from "./template.js";
 import { SerializedOutputParser } from "./parser.js";
+import {BasePromptValue} from "../llms/index.js";
 
 /** Serialized Chat prompt template */
 export type SerializedChatPromptTemplate = {
@@ -78,7 +78,7 @@ export class SystemMessagePromptTemplate extends BaseMessagePromptTemplate {
   }
 }
 
-export class ChatPromptValue extends PromptValue {
+export class ChatPromptValue extends BasePromptValue {
   messages: BaseChatMessage[];
 
   constructor(messages: BaseChatMessage[]) {
@@ -174,7 +174,7 @@ export class ChatPromptTemplate
     return (await this.formatPromptValue(values)).toString();
   }
 
-  async formatPromptValue(values: InputValues): Promise<PromptValue> {
+  async formatPromptValue(values: InputValues): Promise<BasePromptValue> {
     const resultMessages: BaseChatMessage[] = [];
     for (const promptMessage of this.promptMessages) {
       const inputValues: InputValues = {};

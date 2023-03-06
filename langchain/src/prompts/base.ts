@@ -1,8 +1,8 @@
 import { BaseOutputParser } from "./parser.js";
 import type { FewShotPromptTemplate, PromptTemplate } from "./index.js";
-import type { BaseChatMessage } from "../chat_models/base.js";
 import { ChatPromptTemplate } from "./index.js";
 import { HumanChatMessage } from "../chat_models/base.js";
+import {BasePromptValue} from "../llms/index.js";
 
 export type SerializedBasePromptTemplate = ReturnType<
   InstanceType<
@@ -18,12 +18,6 @@ export type PartialValues = Record<
   string,
   string | (() => Promise<string>) | (() => string)
 >;
-
-export abstract class PromptValue {
-  abstract toString(): string;
-
-  abstract toChatMessages(): BaseChatMessage[];
-}
 
 export class StringPromptValue {
   value: string;
@@ -119,7 +113,7 @@ export abstract class BasePromptTemplate implements BasePromptTemplateInput {
    * @param values
    * @returns A formatted PromptValue.
    */
-  abstract formatPromptValue(values: InputValues): Promise<PromptValue>;
+  abstract formatPromptValue(values: InputValues): Promise<BasePromptValue>;
 
   /**
    * Return the string type key uniquely identifying this class of prompt template.
@@ -166,7 +160,7 @@ export abstract class BasePromptTemplate implements BasePromptTemplateInput {
 }
 
 export abstract class BaseStringPromptTemplate extends BasePromptTemplate {
-  async formatPromptValue(values: InputValues): Promise<PromptValue> {
+  async formatPromptValue(values: InputValues): Promise<BasePromptValue> {
     const formattedPrompt = await this.format(values);
     return new StringPromptValue(formattedPrompt);
   }
