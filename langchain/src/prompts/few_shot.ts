@@ -1,5 +1,5 @@
 import {
-  BasePromptTemplate,
+  BaseStringPromptTemplate,
   InputValues,
   BasePromptTemplateInput,
   PartialValues,
@@ -92,7 +92,7 @@ export interface FewShotPromptTemplateInput extends BasePromptTemplateInput {
  * @augments FewShotPromptTemplateInput
  */
 export class FewShotPromptTemplate
-  extends BasePromptTemplate
+  extends BaseStringPromptTemplate
   implements FewShotPromptTemplateInput
 {
   examples?: InputValues[];

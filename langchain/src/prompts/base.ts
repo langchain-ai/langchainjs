@@ -119,10 +119,7 @@ export abstract class BasePromptTemplate implements BasePromptTemplateInput {
    * @param values
    * @returns A formatted PromptValue.
    */
-  async formatPromptValue(values: InputValues): Promise<PromptValue> {
-    const prompt = await this.format(values);
-    return new StringPromptValue(prompt);
-  }
+  abstract formatPromptValue(values: InputValues): Promise<PromptValue>;
 
   /**
    * Return the string type key uniquely identifying this class of prompt template.
@@ -166,4 +163,13 @@ export abstract class BasePromptTemplate implements BasePromptTemplateInput {
         );
     }
   }
+}
+
+export abstract class BaseStringPromptTemplate extends BasePromptTemplate {
+
+  async formatPromptValue(values: InputValues): Promise<PromptValue> {
+    const formattedPrompt = await this.format(values);
+    return new StringPromptValue(formattedPrompt);
+  }
+
 }

@@ -7,6 +7,7 @@ import {
 } from "../chat_models/base.js";
 import {
   BasePromptTemplate,
+  BaseStringPromptTemplate,
   BasePromptTemplateInput,
   InputValues,
   PartialValues,
@@ -25,9 +26,9 @@ export type SerializedChatPromptTemplate = {
 };
 
 export abstract class BaseMessagePromptTemplate {
-  prompt: BasePromptTemplate;
+  prompt: BaseStringPromptTemplate;
 
-  protected constructor(prompt: BasePromptTemplate) {
+  protected constructor(prompt: BaseStringPromptTemplate) {
     this.prompt = prompt;
   }
 
@@ -41,7 +42,7 @@ export class ChatMessagePromptTemplate extends BaseMessagePromptTemplate {
     return new ChatMessage(await this.prompt.format(values), this.role);
   }
 
-  constructor(prompt: BasePromptTemplate, role: string) {
+  constructor(prompt: BaseStringPromptTemplate, role: string) {
     super(prompt);
     this.role = role;
   }
@@ -52,7 +53,7 @@ export class HumanMessagePromptTemplate extends BaseMessagePromptTemplate {
     return new HumanChatMessage(await this.prompt.format(values));
   }
 
-  constructor(prompt: BasePromptTemplate) {
+  constructor(prompt: BaseStringPromptTemplate) {
     super(prompt);
   }
 }
@@ -62,7 +63,7 @@ export class AIMessagePromptTemplate extends BaseMessagePromptTemplate {
     return new AIChatMessage(await this.prompt.format(values));
   }
 
-  constructor(prompt: BasePromptTemplate) {
+  constructor(prompt: BaseStringPromptTemplate) {
     super(prompt);
   }
 }
@@ -72,7 +73,7 @@ export class SystemMessagePromptTemplate extends BaseMessagePromptTemplate {
     return new SystemChatMessage(await this.prompt.format(values));
   }
 
-  constructor(prompt: BasePromptTemplate) {
+  constructor(prompt: BaseStringPromptTemplate) {
     super(prompt);
   }
 }

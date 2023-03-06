@@ -1,5 +1,5 @@
 import {
-  BasePromptTemplate,
+  BaseStringPromptTemplate,
   BasePromptTemplateInput,
   InputValues,
   PartialValues,
@@ -63,7 +63,7 @@ export interface PromptTemplateInput extends BasePromptTemplateInput {
  * ```
  */
 export class PromptTemplate
-  extends BasePromptTemplate
+  extends BaseStringPromptTemplate
   implements PromptTemplateInput
 {
   template: string;
