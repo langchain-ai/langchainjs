@@ -175,8 +175,8 @@ export class FewShotPromptTemplate
     const allValues = await this.mergePartialAndUserVariables(values);
     const examples = this.getExamples(allValues);
 
-    const exampleStrings = examples.map((example) =>
-      this.examplePrompt.format(example)
+    const exampleStrings = await Promise.all(
+      examples.map((example) => this.examplePrompt.format(example))
     );
     const template = [this.prefix, ...exampleStrings, this.suffix].join(
       this.exampleSeparator
