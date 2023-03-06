@@ -10,6 +10,8 @@ import { Document } from "../document.js";
 import { BaseDocumentLoader } from "./base.js";
 import type { DocumentLoader } from "./base.js";
 
+export { Page, Browser };
+
 export type PuppeteerGotoOptions = WaitForOptions & {
   referer?: string;
   referrerPolicy?: string;

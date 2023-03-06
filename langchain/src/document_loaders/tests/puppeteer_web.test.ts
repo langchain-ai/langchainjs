@@ -14,13 +14,14 @@ test("Test puppeteer web scraper loader with evaluate options", async () => {
     gotoOptions: {
       waitUntil: "domcontentloaded",
     },
-    async evaluate(page) {
+    async evaluate(page, browser) {
       const firstResponse = await page.waitForResponse(
         "https://www.tabnews.com.br/va/view"
       );
 
       expect(firstResponse.ok()).toBe(true);
       const result = await page.evaluate(() => document.body.innerHTML);
+      await browser.close();
       return result;
     },
   });
