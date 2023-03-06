@@ -199,8 +199,6 @@ export class OpenAIChat extends LLM implements OpenAIInput {
       role: "user",
       content: prompt,
     };
-    console.log(this.prefixMessages);
-    console.log(message);
     return this.prefixMessages ? [...this.prefixMessages, message] : [message];
   }
 
