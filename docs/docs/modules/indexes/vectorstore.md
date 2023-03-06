@@ -100,3 +100,56 @@ const response = await chain.call({
   query: "what does the doc say about pinecone",
 });
 ```
+
+## Supabase vectorstore
+
+Langchain.js accepts [@supabase/supabase-js](https://www.npmjs.com/package/@supabase/supabase-js) as the client for PGVector vectorstore. Install the library with `npm install -S @supabase/supabase-js`. And follow their [blog post](https://supabase.com/blog/openai-embeddings-postgres-vector) to create your table and query (note it may be needed to add below language plpgsql #variable_conflict use_column)
+
+Index docs
+
+```typescript
+import { PGVectorStore } from "langchain/vectorstores";
+import { OpenAIEmbeddings } from "langchain/embeddings";
+import { createClient } from "@supabase/supabase-js";
+
+// set in your .env
+const client = createClient(
+  process.env.SUPABASE_URL || "",
+  process.env.SUPABASE_PRIVATE_KEY || ""
+);
+await PGVectorStore.fromDocuments(
+  client,
+  docs,
+  new OpenAIEmbeddings(),
+  "documents", // name of your table
+  "match_documents" // name of your query
+);
+```
+
+Query docs
+
+```typescript
+import { PGVectorStore } from "langchain/vectorstores";
+import { OpenAIEmbeddings } from "langchain/embeddings";
+import { createClient } from "@supabase/supabase-js";
+import { VectorDBQAChain } from "langchain/chains";
+import { OpenAI } from "langchain/llms";
+
+// set in your .env
+const client = createClient(
+  process.env.SUPABASE_URL || "",
+  process.env.SUPABASE_PRIVATE_KEY || ""
+);
+const vectorStore = await PGVectorStore.fromExistingIndex(
+  client,
+  new OpenAIEmbeddings(),
+  "documents", // name of your table
+  "match_documents" // name of your query
+);
+
+const model = new OpenAI();
+const chain = VectorDBQAChain.fromLLM(model, vectorStore);
+const response = await chain.call({
+  query: "what does the doc say about pinecone",
+});
+```
