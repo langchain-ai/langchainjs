@@ -101,7 +101,7 @@ const response = await chain.call({
 });
 ```
 
-## PGVector vectorstore
+## Supabase vectorstore
 
 Langchain.js accepts [@supabase/supabase-js](https://www.npmjs.com/package/@supabase/supabase-js) as the client for PGVector vectorstore. Install the library with `npm install -S @supabase/supabase-js`. And follow their [blog post](https://supabase.com/blog/openai-embeddings-postgres-vector) to create your table and query (note it may be needed to add below language plpgsql #variable_conflict use_column)
 
