@@ -1,9 +1,6 @@
-import {
-  BaseMemory,
-  InputValues,
-  MemoryVariables,
-  OutputValues,
-} from "./base.js";
+import { InputValues, MemoryVariables, getBufferString } from "./base.js";
+
+import { ChatMemoryMixin } from "./chat_memory.js";
 
 export interface BufferWindowMemoryInput {
   humanPrefix: string;
@@ -12,18 +9,8 @@ export interface BufferWindowMemoryInput {
   k: number;
 }
 
-const getInputValue = (inputValues: InputValues) => {
-  const keys = Object.keys(inputValues);
-  if (keys.length === 1) {
-    return inputValues[keys[0]];
-  }
-  throw new Error(
-    "input values have multiple keys, memory only supported when one key currently"
-  );
-};
-
 export class BufferWindowMemory
-  extends BaseMemory
+  extends ChatMemoryMixin
   implements BufferWindowMemoryInput
 {
   humanPrefix = "Human";
@@ -31,8 +18,6 @@ export class BufferWindowMemory
   aiPrefix = "AI";
 
   memoryKey = "history";
-
-  buffer: string[] = [];
 
   k = 5;
 
@@ -46,19 +31,10 @@ export class BufferWindowMemory
 
   async loadMemoryVariables(_values: InputValues): Promise<MemoryVariables> {
     const result = {
-      [this.memoryKey]: this.buffer.slice(-this.k).join("\n\n"),
+      [this.memoryKey]: getBufferString(
+        this.chatHistory.messages.slice(-this.k * 2)
+      ),
     };
     return result;
-  }
-
-  async saveContext(
-    inputValues: InputValues,
-    outputValues: Promise<OutputValues>
-  ): Promise<void> {
-    const values = await outputValues;
-    const human = `${this.humanPrefix}: ${getInputValue(inputValues)}`;
-    const ai = `${this.aiPrefix}: ${getInputValue(values)}`;
-    const newlines = [human, ai];
-    this.buffer.push(`\n${newlines.join("\n")}`);
   }
 }

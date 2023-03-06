@@ -11,7 +11,7 @@ test("Test buffer memory", async () => {
     resolve({ bar: "foo" });
   });
   await memory.saveContext({ foo: "bar" }, llmResult);
-  const expectedString = "\nHuman: bar\nAI: foo";
+  const expectedString = "Human: bar\nAI: foo";
   const result2 = await memory.loadMemoryVariables({});
   expect(result2).toStrictEqual({ history: expectedString });
 
@@ -19,7 +19,7 @@ test("Test buffer memory", async () => {
     resolve({ bar: "foo" });
   });
   await memory.saveContext({ foo: "bar1" }, llmResult2);
-  const expectedString3 = "\nHuman: bar1\nAI: foo";
+  const expectedString3 = "Human: bar1\nAI: foo";
   const result3 = await memory.loadMemoryVariables({});
   expect(result3).toStrictEqual({ history: expectedString3 });
 });
