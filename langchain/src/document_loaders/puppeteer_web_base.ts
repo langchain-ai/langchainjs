@@ -81,6 +81,7 @@ export class PuppeteerWebBaseLoader
     launch: typeof launch;
   }> {
     try {
+      // eslint-disable-next-line import/no-extraneous-dependencies
       const { launch } = await import("puppeteer");
 
       return { launch };
