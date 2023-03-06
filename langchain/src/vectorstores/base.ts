@@ -13,6 +13,8 @@ export abstract class VectorStore {
     documents: Document[]
   ): Promise<void>;
 
+  abstract addDocuments(documents: Document[]): Promise<void>;
+
   abstract similaritySearchVectorWithScore(
     query: number[],
     k: number
@@ -34,6 +36,18 @@ export abstract class VectorStore {
     return this.similaritySearchVectorWithScore(
       await this.embeddings.embedQuery(query),
       k
+    );
+  }
+
+  static fromTexts(
+    texts: string[],
+    metadatas: object[],
+    embeddings: Embeddings,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    dbConfig: Record<string, any>
+  ): Promise<VectorStore> {
+    throw new Error(
+      "vectorstore impl forgot to override this, either you are using the base vectorstore class (dont), or report a bug"
     );
   }
 }

@@ -130,3 +130,13 @@ export abstract class BasePromptTemplate implements BasePromptTemplateInput {
     }
   }
 }
+
+/**
+ * Base class for example selectors. 
+ */
+export type Example = Record<string, string>;
+export abstract class BaseExampleSelector {
+  abstract addExample(example: Example): Promise<void | string>;
+
+  abstract selectExamples(input_variables: Example): Promise<Example[]>;
+}

@@ -3,6 +3,8 @@ import {
   InputValues,
   BasePromptTemplateInput,
   PartialValues,
+  Example,
+  BaseExampleSelector,
 } from "./index.js";
 import {
   TemplateFormat,
@@ -16,12 +18,6 @@ import {
 } from "../util/index.js";
 import { PromptTemplate, SerializedPromptTemplate } from "./prompt.js";
 import { SerializedOutputParser, BaseOutputParser } from "./parser.js";
-
-// TODO: support ExampleSelectors.
-type ExampleSelector = null;
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type Example = Record<string, any>;
 
 export type SerializedFewShotTemplate = {
   _type: "few_shot";
@@ -47,11 +43,11 @@ export interface FewShotPromptTemplateInput extends BasePromptTemplateInput {
   examples?: Example[];
 
   /**
-   * An {@link ExampleSelector} Examples to format into the prompt. Exactly one of this or
+   * An {@link BaseExampleSelector} Examples to format into the prompt. Exactly one of this or
    * {@link examples} must be
    * provided.
    */
-  exampleSelector?: ExampleSelector;
+  exampleSelector?: BaseExampleSelector;
 
   /**
    * An {@link PromptTemplate} used to format a single example.
@@ -97,7 +93,7 @@ export class FewShotPromptTemplate
 {
   examples?: InputValues[];
 
-  exampleSelector?: ExampleSelector;
+  exampleSelector?: BaseExampleSelector | undefined;
 
   examplePrompt: PromptTemplate;
 
