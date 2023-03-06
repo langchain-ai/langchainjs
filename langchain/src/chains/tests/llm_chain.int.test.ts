@@ -4,7 +4,8 @@ import { ChatOpenAI } from "../../chat_models/index.js";
 import {
   ChatPromptTemplate,
   HumanMessagePromptTemplate,
- PromptTemplate } from "../../prompts/index.js";
+  PromptTemplate,
+} from "../../prompts/index.js";
 import { LLMChain, ConversationChain } from "../llm_chain.js";
 import { loadChain } from "../load.js";
 
