@@ -59,7 +59,7 @@ export class VectorDBQAChain extends BaseChain implements VectorDBQAChainInput {
     this.outputKey = fields.outputKey ?? this.outputKey;
     this.k = fields.k ?? this.k;
     this.returnSourceDocuments =
-        fields.returnSourceDocuments ?? this.returnSourceDocuments;
+      fields.returnSourceDocuments ?? this.returnSourceDocuments;
   }
 
   async _call(values: ChainValues): Promise<ChainValues> {
@@ -84,23 +84,23 @@ export class VectorDBQAChain extends BaseChain implements VectorDBQAChainInput {
   }
 
   static async deserialize(
-      data: SerializedVectorDBQAChain,
-      values: LoadValues
+    data: SerializedVectorDBQAChain,
+    values: LoadValues
   ) {
     if (!("vectorstore" in values)) {
       throw new Error(
-          `Need to pass in a vectorstore to deserialize VectorDBQAChain`
+        `Need to pass in a vectorstore to deserialize VectorDBQAChain`
       );
     }
     const { vectorstore } = values;
     const serializedCombineDocumentsChain = await resolveConfigFromFile<
-        "combine_documents_chain",
-        SerializedBaseChain
+      "combine_documents_chain",
+      SerializedBaseChain
     >("combine_documents_chain", data);
 
     return new VectorDBQAChain({
       combineDocumentsChain: await BaseChain.deserialize(
-          serializedCombineDocumentsChain
+        serializedCombineDocumentsChain
       ),
       k: data.k,
       vectorstore,

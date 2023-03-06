@@ -31,8 +31,8 @@ export type SerializedStuffDocumentsChain = {
  * @augments StuffDocumentsChainInput
  */
 export class StuffDocumentsChain
-    extends BaseChain
-    implements StuffDocumentsChainInput
+  extends BaseChain
+  implements StuffDocumentsChainInput
 {
   llmChain: LLMChain;
 
@@ -55,7 +55,7 @@ export class StuffDocumentsChain
     super();
     this.llmChain = fields.llmChain;
     this.documentVariableName =
-        fields.documentVariableName ?? this.documentVariableName;
+      fields.documentVariableName ?? this.documentVariableName;
     this.inputKey = fields.inputKey ?? this.inputKey;
     this.outputKey = fields.outputKey ?? this.outputKey;
   }
@@ -80,8 +80,8 @@ export class StuffDocumentsChain
 
   static async deserialize(data: SerializedStuffDocumentsChain) {
     const SerializedLLMChain = await resolveConfigFromFile<
-        "llm_chain",
-        SerializedLLMChain
+      "llm_chain",
+      SerializedLLMChain
     >("llm_chain", data);
 
     return new StuffDocumentsChain({
@@ -117,8 +117,8 @@ export interface MapReduceDocumentsChainInput extends StuffDocumentsChainInput {
  * @augments StuffDocumentsChainInput
  */
 export class MapReduceDocumentsChain
-    extends BaseChain
-    implements StuffDocumentsChainInput
+  extends BaseChain
+  implements StuffDocumentsChainInput
 {
   llmChain: LLMChain;
 
@@ -151,7 +151,7 @@ export class MapReduceDocumentsChain
     this.llmChain = fields.llmChain;
     this.combineDocumentChain = fields.combineDocumentChain;
     this.documentVariableName =
-        fields.documentVariableName ?? this.documentVariableName;
+      fields.documentVariableName ?? this.documentVariableName;
     this.inputKey = fields.inputKey ?? this.inputKey;
     this.outputKey = fields.outputKey ?? this.outputKey;
     this.maxTokens = fields.maxTokens ?? this.maxTokens;
@@ -177,7 +177,7 @@ export class MapReduceDocumentsChain
       });
 
       const length = await Promise.all(promises).then((results) =>
-          results.reduce((a, b) => a + b, 0)
+        results.reduce((a, b) => a + b, 0)
       );
 
       if (length < this.maxTokens) {
@@ -202,19 +202,19 @@ export class MapReduceDocumentsChain
 
   static async deserialize(data: SerializedMapReduceDocumentsChain) {
     const SerializedLLMChain = await resolveConfigFromFile<
-        "llm_chain",
-        SerializedLLMChain
+      "llm_chain",
+      SerializedLLMChain
     >("llm_chain", data);
 
     const SerializedCombineDocumentChain = await resolveConfigFromFile<
-        "combine_document_chain",
-        SerializedBaseChain
+      "combine_document_chain",
+      SerializedBaseChain
     >("combine_document_chain", data);
 
     return new MapReduceDocumentsChain({
       llmChain: await LLMChain.deserialize(SerializedLLMChain),
       combineDocumentChain: await BaseChain.deserialize(
-          SerializedCombineDocumentChain
+        SerializedCombineDocumentChain
       ),
     });
   }

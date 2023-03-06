@@ -15,14 +15,14 @@ export type ChainValues = Record<string, any>;
 export type LoadValues = Record<string, any>;
 
 export type SerializedBaseChain = ReturnType<
-    InstanceType<
-        | typeof LLMChain
-        | typeof StuffDocumentsChain
-        | typeof VectorDBQAChain
-        | typeof ChatVectorDBQAChain
-        | typeof MapReduceDocumentsChain
-        | typeof AnalyzeDocumentChain
-    >["serialize"]
+  InstanceType<
+    | typeof LLMChain
+    | typeof StuffDocumentsChain
+    | typeof VectorDBQAChain
+    | typeof ChatVectorDBQAChain
+    | typeof MapReduceDocumentsChain
+    | typeof AnalyzeDocumentChain
+  >["serialize"]
 >;
 
 export interface ChainInputs {
@@ -61,7 +61,7 @@ export abstract class BaseChain implements ChainInputs {
     const isKeylessInput = this.inputKeys.length === 1;
     if (!isKeylessInput) {
       throw new Error(
-          `Chain ${this._chainType()} expects multiple inputs, cannot use 'run' `
+        `Chain ${this._chainType()} expects multiple inputs, cannot use 'run' `
       );
     }
     const values = { [this.inputKeys[0]]: input };
@@ -72,7 +72,7 @@ export abstract class BaseChain implements ChainInputs {
       return finalReturn;
     }
     throw new Error(
-        "return values have multiple keys, `run` only supported when one key currently"
+      "return values have multiple keys, `run` only supported when one key currently"
     );
   }
 
@@ -109,8 +109,8 @@ export abstract class BaseChain implements ChainInputs {
    * Load a chain from a json-like object describing it.
    */
   static async deserialize(
-      data: SerializedBaseChain,
-      values: LoadValues = {}
+    data: SerializedBaseChain,
+    values: LoadValues = {}
   ): Promise<BaseChain> {
     switch (data._type) {
       case "llm_chain": {
@@ -127,9 +127,9 @@ export abstract class BaseChain implements ChainInputs {
       }
       default:
         throw new Error(
-            `Invalid prompt type in config: ${
-                (data as SerializedBaseChain)._type
-            }`
+          `Invalid prompt type in config: ${
+            (data as SerializedBaseChain)._type
+          }`
         );
     }
   }
