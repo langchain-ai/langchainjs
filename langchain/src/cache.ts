@@ -12,7 +12,6 @@ import { Generation } from "./schema/index.js";
  *
  * TODO: Make cache key consistent across versions of langchain.
  */
-
 const getCacheKey = (...strings: string[]): string => hash(strings.join("_"));
 
 export abstract class BaseCache<T = Generation[]> {
