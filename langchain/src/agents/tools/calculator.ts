@@ -8,11 +8,11 @@ export class Calculator extends Tool {
   async call(input: string) {
     try {
       return Parser.evaluate(input).toString();
-    } catch (error) {
-      return "I don't know how to do that.";
+    } catch (error: any) {
+      return `javascript failed to parse. Try again: ${error.toString()}`;
     }
   }
 
   description = `Useful for getting the result of a math expression. 
-  The input to this tool should be a valid mathmatical expression that can be parsed and evaluated by javascript's expr-eval`;
+  The input to this tool should be a well formed string math expression to be parsed and evaluated by expr-eval npm package."`;
 }
