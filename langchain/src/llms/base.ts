@@ -191,6 +191,10 @@ export abstract class BaseLLM extends BaseLanguageModel {
     };
   }
 
+  _modelType(): string {
+    return "base_llm" as const;
+  }
+
   /**
    * Load an LLM from a json-like object describing it.
    */

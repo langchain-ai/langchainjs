@@ -112,4 +112,6 @@ export abstract class BaseLanguageModel {
     promptValues: BasePromptValue[],
     stop?: string[]
   ): Promise<LLMResult>;
+
+  abstract _modelType(): string;
 }

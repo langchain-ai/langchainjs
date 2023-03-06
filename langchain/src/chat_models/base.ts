@@ -51,6 +51,10 @@ export abstract class BaseChatModel extends BaseLanguageModel {
     };
   }
 
+  _modelType(): string {
+    return "base_chat_model" as const;
+  }
+
   async generatePrompt(
     promptValues: BasePromptValue[],
     stop?: string[]
