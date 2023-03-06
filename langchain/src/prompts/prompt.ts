@@ -6,7 +6,7 @@ import {
 } from "./index.js";
 import {
   checkValidTemplate,
-  parseFString,
+  parseTemplate,
   renderTemplate,
   TemplateFormat,
 } from "./template.js";
@@ -132,7 +132,7 @@ export class PromptTemplate
    */
   static fromTemplate(template: string) {
     const names = new Set<string>();
-    parseFString(template).forEach((node) => {
+    parseTemplate(template, "f-string").forEach((node) => {
       if (node.type === "variable") {
         names.add(node.name);
       }

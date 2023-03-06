@@ -130,24 +130,16 @@ test("OpenAI Chat, docs, getting started", async () => {
 test("OpenAI Chat, docs, prompt templates", async () => {
   const chat = new ChatOpenAI({ temperature: 0 });
 
-  const systemPrompt = new PromptTemplate({
-    template:
-      "You are a helpful assistant that translates {input_language} to {output_language}.",
-    inputVariables: ["input_language", "output_language"],
-  });
+  const systemPrompt = PromptTemplate.fromTemplate(
+    "You are a helpful assistant that translates {input_language} to {output_language}."
+  );
 
-  const userPrompt = new PromptTemplate({
-    template: "{text}",
-    inputVariables: ["text"],
-  });
+  const userPrompt = PromptTemplate.fromTemplate("{text}");
 
-  const chatPrompt = new ChatPromptTemplate({
-    promptMessages: [
-      new SystemMessagePromptTemplate(systemPrompt),
-      new HumanMessagePromptTemplate(userPrompt),
-    ],
-    inputVariables: ["input_language", "output_language", "text"],
-  });
+  const chatPrompt = ChatPromptTemplate.fromPromptMessages([
+    new SystemMessagePromptTemplate(systemPrompt),
+    new HumanMessagePromptTemplate(userPrompt),
+  ]);
 
   const responseA = await chat.generatePrompt([
     await chatPrompt.formatPromptValue({

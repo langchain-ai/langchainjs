@@ -17,21 +17,15 @@ export const run = async () => {
     suffix: `Begin! Remember to speak as a pirate when giving your final answer. Use lots of "Args"`,
   });
 
-  const chatPrompt = new ChatPromptTemplate({
-    promptMessages: [
-      new SystemMessagePromptTemplate(prompt),
-      new HumanMessagePromptTemplate(
-        new PromptTemplate({
-          template: `{input}
+  const chatPrompt = ChatPromptTemplate.fromPromptMessages([
+    new SystemMessagePromptTemplate(prompt),
+    new HumanMessagePromptTemplate(
+      PromptTemplate.fromTemplate(`{input}
 
 This was your previous work (but I haven't seen any of it! I only see what you return as final answer):
-{agent_scratchpad}`,
-          inputVariables: ["input", "agent_scratchpad"],
-        })
-      ),
-    ],
-    inputVariables: ["input", "agent_scratchpad"],
-  });
+{agent_scratchpad}`)
+    ),
+  ]);
 
   const chat = new ChatOpenAI({});
 
