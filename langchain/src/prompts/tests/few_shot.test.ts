@@ -66,3 +66,26 @@ test("Test partial with function", async () => {
   });
   expect(await partialPrompt.format({ bar: "baz" })).toBe("boobaz\n");
 });
+
+test("Test partial with function and examples", async () => {
+  const examplePrompt = PromptTemplate.fromTemplate("An example about {x}");
+  const prompt = new FewShotPromptTemplate({
+    prefix: "{foo}{bar}",
+    examples: [{ x: "foo" }, { x: "bar" }],
+    suffix: "",
+    templateFormat: "f-string",
+    exampleSeparator: "\n",
+    examplePrompt,
+    inputVariables: ["foo", "bar"],
+  });
+
+  const partialPrompt = await prompt.partial({
+    foo: () => Promise.resolve("boo"),
+  });
+  expect(await partialPrompt.format({ bar: "baz" })).toBe(
+    `boobaz
+An example about foo
+An example about bar
+`
+  );
+});
