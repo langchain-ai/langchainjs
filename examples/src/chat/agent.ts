@@ -6,7 +6,6 @@ import {
   ChatPromptTemplate,
   SystemMessagePromptTemplate,
   HumanMessagePromptTemplate,
-  PromptTemplate,
 } from "langchain/prompts";
 
 export const run = async () => {
@@ -19,12 +18,10 @@ export const run = async () => {
 
   const chatPrompt = ChatPromptTemplate.fromPromptMessages([
     new SystemMessagePromptTemplate(prompt),
-    new HumanMessagePromptTemplate(
-      PromptTemplate.fromTemplate(`{input}
+    HumanMessagePromptTemplate.fromTemplate(`{input}
 
 This was your previous work (but I haven't seen any of it! I only see what you return as final answer):
-{agent_scratchpad}`)
-    ),
+{agent_scratchpad}`),
   ]);
 
   const chat = new ChatOpenAI({});

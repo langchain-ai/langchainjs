@@ -150,7 +150,8 @@ export abstract class BasePromptTemplate implements BasePromptTemplateInput {
       }
       default:
         throw new Error(
-          `Invalid prompt type in config: ${(data as SerializedBasePromptTemplate)._type
+          `Invalid prompt type in config: ${
+            (data as SerializedBasePromptTemplate)._type
           }`
         );
     }

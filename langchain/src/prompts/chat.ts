@@ -15,6 +15,7 @@ import {
   HumanChatMessage,
   SystemChatMessage,
 } from "../schema/index.js";
+import { PromptTemplate } from "./prompt.js";
 
 /** Serialized Chat prompt template */
 export type SerializedChatPromptTemplate = {
@@ -46,6 +47,10 @@ export class ChatMessagePromptTemplate extends BaseMessagePromptTemplate {
     super(prompt);
     this.role = role;
   }
+
+  static fromTemplate(template: string, role: string) {
+    return new this(PromptTemplate.fromTemplate(template), role);
+  }
 }
 
 export class HumanMessagePromptTemplate extends BaseMessagePromptTemplate {
@@ -55,6 +60,10 @@ export class HumanMessagePromptTemplate extends BaseMessagePromptTemplate {
 
   constructor(prompt: BaseStringPromptTemplate) {
     super(prompt);
+  }
+
+  static fromTemplate(template: string) {
+    return new this(PromptTemplate.fromTemplate(template));
   }
 }
 
@@ -66,6 +75,10 @@ export class AIMessagePromptTemplate extends BaseMessagePromptTemplate {
   constructor(prompt: BaseStringPromptTemplate) {
     super(prompt);
   }
+
+  static fromTemplate(template: string) {
+    return new this(PromptTemplate.fromTemplate(template));
+  }
 }
 
 export class SystemMessagePromptTemplate extends BaseMessagePromptTemplate {
@@ -75,6 +88,10 @@ export class SystemMessagePromptTemplate extends BaseMessagePromptTemplate {
 
   constructor(prompt: BaseStringPromptTemplate) {
     super(prompt);
+  }
+
+  static fromTemplate(template: string) {
+    return new this(PromptTemplate.fromTemplate(template));
   }
 }
 

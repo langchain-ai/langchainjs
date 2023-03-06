@@ -113,7 +113,6 @@ Continuing with the previous example:
 
 ```typescript
 import {
-  PromptTemplate,
   SystemMessagePromptTemplate,
   HumanMessagePromptTemplate,
   ChatPromptTemplate,
@@ -123,15 +122,11 @@ import {
 First we create a reusable template:
 
 ```typescript
-const systemPrompt = PromptTemplate.fromTemplate(
-  "You are a helpful assistant that translates {input_language} to {output_language}."
-);
-
-const userPrompt = PromptTemplate.fromTemplate("{text}");
-
 const chatPrompt = ChatPromptTemplate.fromPromptMessages([
-  new SystemMessagePromptTemplate(systemPrompt),
-  new HumanMessagePromptTemplate(userPrompt),
+  SystemMessagePromptTemplate.fromTemplate(
+    "You are a helpful assistant that translates {input_language} to {output_language}."
+  ),
+  HumanMessagePromptTemplate.fromTemplate("{text}"),
 ]);
 ```
 
