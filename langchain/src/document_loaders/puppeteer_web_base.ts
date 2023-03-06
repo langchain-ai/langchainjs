@@ -28,6 +28,7 @@ export class PuppeteerWebBaseLoader
   implements DocumentLoader
 {
   options: PuppeteerWebBaseLoaderOptions | undefined;
+
   constructor(public webPath: string, options?: PuppeteerWebBaseLoaderOptions) {
     super();
     this.options = options ?? undefined;
@@ -81,7 +82,7 @@ export class PuppeteerWebBaseLoader
     } catch (e) {
       console.error(e);
       throw new Error(
-        "Please install cheerio and puppeteer as a dependency with, e.g. `yarn add cheerio puppeteer`"
+        "Please install puppeteer as a dependency with, e.g. `yarn add puppeteer`"
       );
     }
   }
