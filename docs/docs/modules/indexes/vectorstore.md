@@ -114,16 +114,16 @@ import { createClient } from "@supabase/supabase-js";
 
 // set in your .env
 const client = createClient(
-  process.env.SUPABASE_URL || '',
-  process.env.SUPABASE_PRIVATE_KEY || ''
+  process.env.SUPABASE_URL || "",
+  process.env.SUPABASE_PRIVATE_KEY || ""
 );
 await PGVectorStore.fromDocuments(
-    client,
-    docs,
-    new OpenAIEmbeddings(),
-    "documents", // name of your table
-    "match_documents" // name of your query
-  );
+  client,
+  docs,
+  new OpenAIEmbeddings(),
+  "documents", // name of your table
+  "match_documents" // name of your query
+);
 ```
 
 Query docs
@@ -137,8 +137,8 @@ import { OpenAI } from "langchain/llms";
 
 // set in your .env
 const client = createClient(
-  process.env.SUPABASE_URL || '',
-  process.env.SUPABASE_PRIVATE_KEY || ''
+  process.env.SUPABASE_URL || "",
+  process.env.SUPABASE_PRIVATE_KEY || ""
 );
 const vectorStore = await PGVectorStore.fromExistingIndex(
   client,
