@@ -26,6 +26,7 @@ const getVerbosity = () => true;
 const cache: BaseCache = new InMemoryCache();
 
 export type SerializedLLM = {
+  _model: string;
   _type: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 } & Record<string, any>;
@@ -188,6 +189,7 @@ export abstract class BaseLLM extends BaseLanguageModel {
     return {
       ...this._identifyingParams(),
       _type: this._llmType(),
+      _model: this._modelType(),
     };
   }
 
@@ -199,7 +201,10 @@ export abstract class BaseLLM extends BaseLanguageModel {
    * Load an LLM from a json-like object describing it.
    */
   static async deserialize(data: SerializedLLM): Promise<BaseLLM> {
-    const { _type, ...rest } = data;
+    const { _type, _model, ...rest } = data;
+    if (_model && _model !== "base_llm") {
+      throw new Error(`Cannot load LLM with model ${_model}`);
+    }
     const Cls = {
       openai: (await import("./openai.js")).OpenAI,
     }[_type];

@@ -225,11 +225,7 @@ export class ChatOpenAI extends BaseChatModel implements OpenAIInput {
    * Get the identifying parameters for the model
    */
   identifyingParams() {
-    return {
-      model_name: this.modelName,
-      ...this.invocationParams(),
-      ...this.clientConfig,
-    };
+    return this._identifyingParams();
   }
 
   /**

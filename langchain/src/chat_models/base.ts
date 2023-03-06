@@ -23,6 +23,12 @@ const getCallbackManager = (): LLMCallbackManager => ({
 
 const getVerbosity = () => true;
 
+export type SerializedChatModel = {
+  _model: string;
+  _type: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+} & Record<string, any>;
+
 export abstract class BaseChatModel extends BaseLanguageModel {
   callbackManager: LLMCallbackManager;
 
@@ -51,9 +57,32 @@ export abstract class BaseChatModel extends BaseLanguageModel {
     };
   }
 
+  /**
+   * Get the identifying parameters of the LLM.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  _identifyingParams(): Record<string, any> {
+    return {};
+  }
+
   _modelType(): string {
     return "base_chat_model" as const;
   }
+
+  abstract _llmType(): string;
+
+  /**
+   * Return a json-like object representing this Chat model.
+   */
+  serialize(): SerializedChatModel {
+    return {
+      ...this._identifyingParams(),
+      _type: this._llmType(),
+      _model: this._modelType(),
+    };
+  }
+
+  // TODO deserialize
 
   getNumTokens(_: string): number {
     // TODO: Implement this
