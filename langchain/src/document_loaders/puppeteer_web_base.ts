@@ -48,6 +48,7 @@ export class PuppeteerWebBaseLoader
     const browser = await launch({
       headless: true,
       defaultViewport: null,
+      ignoreDefaultArgs: ["--disable-extensions"],
       ...options?.launchOptions,
     });
     const page = await browser.newPage();
