@@ -40,11 +40,11 @@ export abstract class VectorStore {
   }
 
   static fromTexts(
-    texts: string[],
-    metadatas: object[],
-    embeddings: Embeddings,
+    _texts: string[],
+    _metadatas: object[],
+    _embeddings: Embeddings,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    dbConfig: Record<string, any>
+    _dbConfig: Record<string, any>
   ): Promise<VectorStore> {
     throw new Error(
       "vectorstore impl forgot to override this, either you are using the base vectorstore class (dont), or report a bug"

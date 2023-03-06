@@ -2,11 +2,11 @@ import type { BaseExampleSelector, Example } from "../base.js";
 import { PromptTemplate } from "../prompt.js";
 
 function getLengthBased(text: string): number {
-  return text.split(/\n|\s+/).length;
+  return text.split(/\n| /).length;
 }
 
 export class LengthBasedExampleSelector implements BaseExampleSelector {
-  examples!: Example[];
+  examples: Example[] = [];
 
   examplePrompt!: PromptTemplate;
 

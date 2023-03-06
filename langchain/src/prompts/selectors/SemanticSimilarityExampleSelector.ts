@@ -1,6 +1,6 @@
-import { Document } from "document.js";
 import { Embeddings } from "embeddings/base.js";
 import { VectorStore } from "vectorstores/base.js";
+import { Document } from "../../document.js";
 import type { BaseExampleSelector, Example } from "../base.js";
 
 function sortedValues(values: Record<string, string>): string[] {
@@ -12,7 +12,7 @@ function sortedValues(values: Record<string, string>): string[] {
 export class SemanticSimilarityExampleSelector implements BaseExampleSelector {
   static examples?: unknown[];
 
-  vectorstore: VectorStore;
+  vectorStore: VectorStore;
 
   k = 4;
 
@@ -21,12 +21,12 @@ export class SemanticSimilarityExampleSelector implements BaseExampleSelector {
   input_keys?: string[];
 
   constructor(data: {
-    vectorstore: VectorStore;
+    vectorStore: VectorStore;
     k?: number;
     example_keys?: string[];
     input_keys?: string[];
   }) {
-    this.vectorstore = data.vectorstore;
+    this.vectorStore = data.vectorStore;
     this.k = data.k ?? 4;
     this.example_keys = data.example_keys;
     this.input_keys = data.input_keys;
@@ -41,13 +41,12 @@ export class SemanticSimilarityExampleSelector implements BaseExampleSelector {
       )
     ).join(" ");
 
-    await this.vectorstore.addDocuments([
+    await this.vectorStore.addDocuments([
       new Document({
         pageContent: stringExample,
         metadata: { example },
       }),
     ]);
-
   }
 
   async selectExamples(
@@ -61,7 +60,7 @@ export class SemanticSimilarityExampleSelector implements BaseExampleSelector {
       )
     ).join(" ");
 
-    const exampleDocs = await this.vectorstore.similaritySearch(query, this.k);
+    const exampleDocs = await this.vectorStore.similaritySearch(query, this.k);
 
     const examples = exampleDocs.map((doc) => doc.metadata);
     if (this.example_keys) {
@@ -79,7 +78,7 @@ export class SemanticSimilarityExampleSelector implements BaseExampleSelector {
   static async fromExamples(
     examples: Record<string, string>[],
     embeddings: Embeddings,
-    vectorstoreCls: typeof VectorStore,
+    vectorStoreCls: typeof VectorStore,
     options: {
       k?: number;
       inputKeys?: string[];
@@ -99,7 +98,7 @@ export class SemanticSimilarityExampleSelector implements BaseExampleSelector {
       ).join(" ")
     );
 
-    const vectorstore = await vectorstoreCls.fromTexts(
+    const vectorStore = await vectorStoreCls.fromTexts(
       stringExamples,
       examples, // metadatas
       embeddings,
@@ -107,7 +106,7 @@ export class SemanticSimilarityExampleSelector implements BaseExampleSelector {
     );
 
     return new SemanticSimilarityExampleSelector({
-      vectorstore,
+      vectorStore,
       k: options.k ?? 4,
       example_keys: options.exampleKeys,
       input_keys: options.inputKeys,
