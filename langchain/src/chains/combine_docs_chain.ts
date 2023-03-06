@@ -1,7 +1,6 @@
 import {
   BaseChain,
   ChainValues,
-  BaseLLMChain,
   LLMChain,
   SerializedLLMChain,
   SerializedBaseChain,
@@ -10,11 +9,10 @@ import {
 import { Document } from "../document.js";
 
 import { resolveConfigFromFile } from "../util/index.js";
-import { SerializedChatModelChain } from "./llm_chain.js";
 
 export interface StuffDocumentsChainInput {
   /** LLM Wrapper to use after formatting documents */
-  llmChain: BaseLLMChain;
+  llmChain: LLMChain;
   inputKey: string;
   outputKey: string;
   /** Variable name in the LLM chain to put the documents in */
@@ -24,7 +22,6 @@ export interface StuffDocumentsChainInput {
 export type SerializedStuffDocumentsChain = {
   _type: "stuff_documents_chain";
   llm_chain?: SerializedLLMChain;
-  chat_model_chain?: SerializedChatModelChain;
   llm_chain_path?: string;
 };
 
@@ -34,10 +31,10 @@ export type SerializedStuffDocumentsChain = {
  * @augments StuffDocumentsChainInput
  */
 export class StuffDocumentsChain
-  extends BaseChain
-  implements StuffDocumentsChainInput
+    extends BaseChain
+    implements StuffDocumentsChainInput
 {
-  llmChain: BaseLLMChain;
+  llmChain: LLMChain;
 
   inputKey = "input_documents";
 
@@ -50,7 +47,7 @@ export class StuffDocumentsChain
   }
 
   constructor(fields: {
-    llmChain: BaseLLMChain;
+    llmChain: LLMChain;
     inputKey?: string;
     outputKey?: string;
     documentVariableName?: string;
@@ -58,7 +55,7 @@ export class StuffDocumentsChain
     super();
     this.llmChain = fields.llmChain;
     this.documentVariableName =
-      fields.documentVariableName ?? this.documentVariableName;
+        fields.documentVariableName ?? this.documentVariableName;
     this.inputKey = fields.inputKey ?? this.inputKey;
     this.outputKey = fields.outputKey ?? this.outputKey;
   }
@@ -83,22 +80,20 @@ export class StuffDocumentsChain
 
   static async deserialize(data: SerializedStuffDocumentsChain) {
     const SerializedLLMChain = await resolveConfigFromFile<
-      "llm_chain",
-      SerializedLLMChain
+        "llm_chain",
+        SerializedLLMChain
     >("llm_chain", data);
+
     return new StuffDocumentsChain({
       llmChain: await LLMChain.deserialize(SerializedLLMChain),
     });
   }
 
   serialize(): SerializedStuffDocumentsChain {
-    if (this.llmChain instanceof LLMChain) {
-      return {
-        _type: this._chainType(),
-        llm_chain: this.llmChain.serialize(),
-      };
-    }
-    throw new Error("Cannot serialize Chain with ChatModelChain chain.");
+    return {
+      _type: this._chainType(),
+      llm_chain: this.llmChain.serialize(),
+    };
   }
 }
 
@@ -122,8 +117,8 @@ export interface MapReduceDocumentsChainInput extends StuffDocumentsChainInput {
  * @augments StuffDocumentsChainInput
  */
 export class MapReduceDocumentsChain
-  extends BaseChain
-  implements StuffDocumentsChainInput
+    extends BaseChain
+    implements StuffDocumentsChainInput
 {
   llmChain: LLMChain;
 
@@ -156,7 +151,7 @@ export class MapReduceDocumentsChain
     this.llmChain = fields.llmChain;
     this.combineDocumentChain = fields.combineDocumentChain;
     this.documentVariableName =
-      fields.documentVariableName ?? this.documentVariableName;
+        fields.documentVariableName ?? this.documentVariableName;
     this.inputKey = fields.inputKey ?? this.inputKey;
     this.outputKey = fields.outputKey ?? this.outputKey;
     this.maxTokens = fields.maxTokens ?? this.maxTokens;
@@ -182,7 +177,7 @@ export class MapReduceDocumentsChain
       });
 
       const length = await Promise.all(promises).then((results) =>
-        results.reduce((a, b) => a + b, 0)
+          results.reduce((a, b) => a + b, 0)
       );
 
       if (length < this.maxTokens) {
@@ -207,19 +202,19 @@ export class MapReduceDocumentsChain
 
   static async deserialize(data: SerializedMapReduceDocumentsChain) {
     const SerializedLLMChain = await resolveConfigFromFile<
-      "llm_chain",
-      SerializedLLMChain
+        "llm_chain",
+        SerializedLLMChain
     >("llm_chain", data);
 
     const SerializedCombineDocumentChain = await resolveConfigFromFile<
-      "combine_document_chain",
-      SerializedBaseChain
+        "combine_document_chain",
+        SerializedBaseChain
     >("combine_document_chain", data);
 
     return new MapReduceDocumentsChain({
       llmChain: await LLMChain.deserialize(SerializedLLMChain),
       combineDocumentChain: await BaseChain.deserialize(
-        SerializedCombineDocumentChain
+          SerializedCombineDocumentChain
       ),
     });
   }
