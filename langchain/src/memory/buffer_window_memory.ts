@@ -1,6 +1,6 @@
 import { InputValues, MemoryVariables, getBufferString } from "./base.js";
 
-import { BaseChatMemory } from "./chat_memory.js";
+import { ChatMemoryMixin } from "./chat_memory.js";
 
 export interface BufferWindowMemoryInput {
   humanPrefix: string;
@@ -10,7 +10,7 @@ export interface BufferWindowMemoryInput {
 }
 
 export class BufferWindowMemory
-  extends BaseChatMemory
+  extends ChatMemoryMixin
   implements BufferWindowMemoryInput
 {
   humanPrefix = "Human";

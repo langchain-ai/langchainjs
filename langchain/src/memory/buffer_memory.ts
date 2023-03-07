@@ -1,5 +1,5 @@
 import { InputValues, MemoryVariables, getBufferString } from "./base.js";
-import { BaseChatMemory } from "./chat_memory.js";
+import { ChatMemoryMixin } from "./chat_memory.js";
 
 export interface BufferMemoryInput {
   humanPrefix: string;
@@ -7,7 +7,7 @@ export interface BufferMemoryInput {
   memoryKey: string;
 }
 
-export class BufferMemory extends BaseChatMemory implements BufferMemoryInput {
+export class BufferMemory extends ChatMemoryMixin implements BufferMemoryInput {
   humanPrefix = "Human";
 
   aiPrefix = "AI";
