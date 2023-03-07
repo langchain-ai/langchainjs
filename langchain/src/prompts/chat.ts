@@ -167,7 +167,8 @@ export interface ChatPromptTemplateInput extends BasePromptTemplateInput {
 
 export class ChatPromptTemplate
   extends BasePromptTemplate
-  implements ChatPromptTemplateInput {
+  implements ChatPromptTemplateInput
+{
   promptMessages: BaseMessagePromptTemplate[];
 
   templateFormat: TemplateFormat = "f-string";
