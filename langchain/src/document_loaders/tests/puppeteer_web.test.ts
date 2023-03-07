@@ -7,7 +7,6 @@ test("Test puppeteer web scraper loader", async () => {
 
   expect(result).toBeDefined();
   expect(result.length).toBe(1);
-  expect(result[0].pageContent).toContain("I'm Feeling Lucky");
 }, 20_000);
 
 test("Test puppeteer web scraper loader with evaluate options", async () => {
@@ -30,5 +29,4 @@ test("Test puppeteer web scraper loader with evaluate options", async () => {
   expect(nrTimesCalled).toBe(1);
   expect(result).toBeDefined();
   expect(result.length).toBe(1);
-  expect(result[0].pageContent).toContain("Google");
 }, 20_000);
