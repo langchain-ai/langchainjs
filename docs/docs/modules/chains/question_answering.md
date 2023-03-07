@@ -1,6 +1,6 @@
 # Question Answering Chain
 
-A question answering chain takes as input documents and a question and then uses the language model to answer that question given the relevant documents.
+The question answering chain receives both documents and a question as input. It then utilizes the language model to provide an answer to the question based on the relevant documents.
 
 ```typescript
 import { OpenAI } from "langchain/llms";
