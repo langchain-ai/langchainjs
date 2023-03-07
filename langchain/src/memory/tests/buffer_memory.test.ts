@@ -27,8 +27,8 @@ test("Test buffer memory return messages", async () => {
   });
   await memory.saveContext({ foo: "bar" }, result);
   const expectedResult = [
-    new HumanChatMessage("foo"),
-    new AIChatMessage("bar"),
+    new HumanChatMessage("bar"),
+    new AIChatMessage("foo"),
   ];
   const result2 = await memory.loadMemoryVariables({});
   expect(result2).toStrictEqual({ history: expectedResult });

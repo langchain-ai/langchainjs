@@ -26,7 +26,7 @@ test("Test buffer memory", async () => {
 });
 
 test("Test buffer memory return messages", async () => {
-  const memory = new BufferWindowMemory({ k: 1 });
+  const memory = new BufferWindowMemory({ k: 1, returnMessages: true });
   const result1 = await memory.loadMemoryVariables({});
   expect(result1).toStrictEqual({ history: [] });
 
@@ -35,8 +35,8 @@ test("Test buffer memory return messages", async () => {
   });
   await memory.saveContext({ foo: "bar" }, llmResult);
   const expectedResult = [
-    new HumanChatMessage("foo"),
-    new AIChatMessage("bar"),
+    new HumanChatMessage("bar"),
+    new AIChatMessage("foo"),
   ];
   const result2 = await memory.loadMemoryVariables({});
   expect(result2).toStrictEqual({ history: expectedResult });
@@ -46,8 +46,8 @@ test("Test buffer memory return messages", async () => {
   });
   await memory.saveContext({ foo: "bar1" }, llmResult2);
   const expectedResult2 = [
-    new HumanChatMessage("foo"),
-    new AIChatMessage("bar1"),
+    new HumanChatMessage("bar1"),
+    new AIChatMessage("foo"),
   ];
   const result3 = await memory.loadMemoryVariables({});
   expect(result3).toStrictEqual({ history: expectedResult2 });
