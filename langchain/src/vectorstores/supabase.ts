@@ -44,13 +44,25 @@ export class SupabaseVectorStore extends VectorStore {
   }
 
   async addVectors(vectors: number[][], documents: Document[]): Promise<void> {
-    await this.client.from(this.tableName).upsert(
-      vectors.map((embedding, idx) => ({
-        content: documents[idx].pageContent,
-        embedding,
-        metadata: documents[idx].metadata,
-      }))
-    );
+    const rows = vectors.map((embedding, idx) => ({
+      content: documents[idx].pageContent,
+      embedding,
+      metadata: documents[idx].metadata,
+    }));
+
+    // upsert returns 500/502/504 (yes really any of them) if given too many rows/characters
+    // ~2000 trips it, but my data is probably smaller than average pageContent and metadata
+    const chunkSize = 500;
+    for (let i = 0; i < rows.length; i += chunkSize) {
+      const chunk = rows.slice(i, i + chunkSize);
+
+      const res = await this.client.from(this.tableName).insert(chunk);
+      if (res.error) {
+        throw new Error(
+          `Error inserting: ${res.error.message} ${res.status} ${res.statusText}`
+        );
+      }
+    }
   }
 
   async similaritySearchVectorWithScore(
