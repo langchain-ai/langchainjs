@@ -2,12 +2,16 @@ import { expect, test } from "@jest/globals";
 import { PuppeteerWebBaseLoader } from "../puppeteer_web_base.js";
 
 test("Test puppeteer web scraper loader", async () => {
-  const loader = new PuppeteerWebBaseLoader("https://www.tabnews.com.br/");
-  await loader.load();
+  const loader = new PuppeteerWebBaseLoader("https://www.google.com/");
+  const result = await loader.load();
+
+  expect(result).toBeDefined();
+  expect(result.length).toBe(1);
 }, 20_000);
 
 test("Test puppeteer web scraper loader with evaluate options", async () => {
-  const loader = new PuppeteerWebBaseLoader("https://www.tabnews.com.br/", {
+  let nrTimesCalled = 0;
+  const loader = new PuppeteerWebBaseLoader("https://www.google.com/", {
     launchOptions: {
       headless: true,
       ignoreDefaultArgs: ["--disable-extensions"],
@@ -15,20 +19,14 @@ test("Test puppeteer web scraper loader with evaluate options", async () => {
     gotoOptions: {
       waitUntil: "domcontentloaded",
     },
-    async evaluate(page, browser) {
-      const firstResponse = await page.waitForResponse(
-        "https://www.tabnews.com.br/va/view"
-      );
-
-      expect(firstResponse.ok()).toBe(true);
-      const result = await page.evaluate(() => document.body.innerHTML);
-      await browser.close();
-      return result;
+    async evaluate(page) {
+      nrTimesCalled += 1;
+      return page.evaluate(() => document.body.innerHTML);
     },
   });
   const result = await loader.load();
 
+  expect(nrTimesCalled).toBe(1);
   expect(result).toBeDefined();
   expect(result.length).toBe(1);
-  expect(result[0].pageContent).toContain("TabNews");
 }, 20_000);
