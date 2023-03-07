@@ -32,7 +32,7 @@ export abstract class BaseMessagePromptTemplate {
   abstract formatMessages(values: InputValues): Promise<BaseChatMessage[]>;
 }
 
-export class SimpleMessagePromptTemplate extends BaseMessagePromptTemplate {
+export class MessagesPlaceholder extends BaseMessagePromptTemplate {
   variableName: string;
 
   constructor(variableName: string) {
@@ -167,8 +167,7 @@ export interface ChatPromptTemplateInput extends BasePromptTemplateInput {
 
 export class ChatPromptTemplate
   extends BasePromptTemplate
-  implements ChatPromptTemplateInput
-{
+  implements ChatPromptTemplateInput {
   promptMessages: BaseMessagePromptTemplate[];
 
   templateFormat: TemplateFormat = "f-string";
