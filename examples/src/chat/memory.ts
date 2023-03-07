@@ -4,7 +4,7 @@ import {
   ChatPromptTemplate,
   HumanMessagePromptTemplate,
   SystemMessagePromptTemplate,
-  SimpleMessagePromptTemplate,
+  MessagesPlaceholder,
 } from "langchain/prompts";
 import { ChatMessageMemory } from "langchain/memory";
 
@@ -15,7 +15,7 @@ export const run = async () => {
     SystemMessagePromptTemplate.fromTemplate(
       "The following is a friendly conversation between a human and an AI. The AI is talkative and provides lots of specific details from its context. If the AI does not know the answer to a question, it truthfully says it does not know."
     ),
-    new SimpleMessagePromptTemplate("history"),
+    new MessagesPlaceholder("history"),
     HumanMessagePromptTemplate.fromTemplate("{input}"),
   ]);
 
