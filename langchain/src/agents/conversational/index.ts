@@ -1,3 +1,4 @@
+import { deserializeHelper } from "agents/helpers.js";
 import { BaseLLM } from "../../llms/index.js";
 import { LLMChain } from "../../chains/index.js";
 import {
@@ -7,7 +8,6 @@ import {
   StaticAgent,
   staticImplements,
   SerializedAgentT,
-  SerializedZeroShotAgent,
 } from "../index.js";
 import { PromptTemplate } from "../../prompts/index.js";
 import { PREFIX, SUFFIX, formatInstructions } from "./prompt.js";
@@ -31,8 +31,6 @@ export type CreatePromptArgs = {
   prefix?: string;
   /** String to put after the list of tools. */
   suffix?: string;
-  /** Instructions. */
-  instructions?: string;
   /** Prefix to use for AI generated responses. */
   aiPrefix?: string;
   /** Prefix to use for human responses. */
@@ -148,8 +146,22 @@ export class ConversationalAgent extends Agent {
   }
 
   static async deserialize(
-    _data: SerializedZeroShotAgent & { llm?: BaseLLM; tools?: Tool[] }
+    data: SerializedConversationalAgent & { llm?: BaseLLM; tools?: Tool[] }
   ): Promise<ConversationalAgent> {
-    throw new Error("Method not implemented.");
+    const { llm, tools, ...rest } = data;
+    return deserializeHelper(
+      llm,
+      tools,
+      rest,
+      (llm: BaseLLM, tools: Tool[], args: SerializedFromLLMAndTools) =>
+        ConversationalAgent.fromLLMAndTools(llm, tools, {
+          prefix: args.prefix,
+          suffix: args.suffix,
+          aiPrefix: args.ai_prefix,
+          humanPrefix: args.human_prefix,
+          inputVariables: args.input_variables,
+        }),
+      (args) => new ConversationalAgent(args)
+    );
   }
 }

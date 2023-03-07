@@ -7,6 +7,7 @@ import {
   AgentStep,
   StoppingMethod,
   Tool,
+  ConversationalAgent,
 } from "./index.js";
 import { BaseLLM } from "../llms/index.js";
 import { LLMChain } from "../chains/llm_chain.js";
@@ -46,6 +47,7 @@ export interface StaticAgent {
 
 export const staticImplements = <T>(_: T) => {};
 
+// todo this needs to not be hardcoded
 type SerializedAgent = SerializedZeroShotAgent;
 
 export interface AgentInput {
@@ -223,9 +225,10 @@ export abstract class Agent {
     data: SerializedAgent & { llm?: BaseLLM; tools?: Tool[] }
   ): Promise<Agent> {
     switch (data._type) {
-      // todo
       case "zero-shot-react-description":
         return ZeroShotAgent.deserialize(data);
+      case "conversational-react-description":
+        return ConversationalAgent.deserialize(data);
       default:
         throw new Error("Unknown agent type");
     }
