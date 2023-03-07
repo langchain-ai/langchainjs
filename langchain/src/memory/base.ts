@@ -17,7 +17,7 @@ export abstract class BaseMemory {
 
   abstract saveContext(
     inputValues: InputValues,
-    OutputValues: Promise<OutputValues>
+    outputValues: OutputValues
   ): Promise<void>;
 }
 

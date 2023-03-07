@@ -44,10 +44,9 @@ export abstract class BaseChatMemory extends BaseMemory {
 
   async saveContext(
     inputValues: InputValues,
-    OutputValues: Promise<OutputValues>
+    outputValues: OutputValues
   ): Promise<void> {
-    const values = await OutputValues;
     this.chatHistory.addUserMessage(getInputValue(inputValues));
-    this.chatHistory.addAIChatMessage(getInputValue(values));
+    this.chatHistory.addAIChatMessage(getInputValue(outputValues));
   }
 }

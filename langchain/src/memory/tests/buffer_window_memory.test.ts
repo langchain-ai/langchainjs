@@ -30,10 +30,7 @@ test("Test buffer memory return messages", async () => {
   const result1 = await memory.loadMemoryVariables({});
   expect(result1).toStrictEqual({ history: [] });
 
-  const llmResult = new Promise<OutputValues>((resolve, _reject) => {
-    resolve({ bar: "foo" });
-  });
-  await memory.saveContext({ foo: "bar" }, llmResult);
+  await memory.saveContext({ foo: "bar" }, { bar: "foo" });
   const expectedResult = [
     new HumanChatMessage("bar"),
     new AIChatMessage("foo"),
@@ -41,10 +38,7 @@ test("Test buffer memory return messages", async () => {
   const result2 = await memory.loadMemoryVariables({});
   expect(result2).toStrictEqual({ history: expectedResult });
 
-  const llmResult2 = new Promise<OutputValues>((resolve, _reject) => {
-    resolve({ bar: "foo" });
-  });
-  await memory.saveContext({ foo: "bar1" }, llmResult2);
+  await memory.saveContext({ foo: "bar1" }, { bar: "foo" });
   const expectedResult2 = [
     new HumanChatMessage("bar1"),
     new AIChatMessage("foo"),
