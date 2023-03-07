@@ -1,6 +1,10 @@
 export type { DocumentLoader } from "./base.js";
 export { BaseDocumentLoader } from "./base.js";
 export { CheerioWebBaseLoader } from "./cheerio_web_base.js";
+export {
+  PuppeteerWebBaseLoader,
+  PuppeteerEvaluate,
+} from "./puppeteer_web_base.js";
 export { CollegeConfidentialLoader } from "./college_confidential.js";
 export { GitbookLoader } from "./gitbook.js";
 export { HNLoader } from "./hn.js";
