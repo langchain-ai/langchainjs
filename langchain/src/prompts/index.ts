@@ -24,4 +24,5 @@ export {
   AIMessagePromptTemplate,
   SystemMessagePromptTemplate,
   ChatMessagePromptTemplate,
+  MessagesPlaceholder,
 } from "./chat.js";

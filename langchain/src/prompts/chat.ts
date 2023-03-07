@@ -27,16 +27,48 @@ export type SerializedChatPromptTemplate = {
 };
 
 export abstract class BaseMessagePromptTemplate {
+  abstract inputVariables: string[];
+
+  abstract formatMessages(values: InputValues): Promise<BaseChatMessage[]>;
+}
+
+export class MessagesPlaceholder extends BaseMessagePromptTemplate {
+  variableName: string;
+
+  constructor(variableName: string) {
+    super();
+    this.variableName = variableName;
+  }
+
+  get inputVariables() {
+    return [this.variableName];
+  }
+
+  formatMessages(values: InputValues): Promise<BaseChatMessage[]> {
+    return Promise.resolve(values[this.variableName] as BaseChatMessage[]);
+  }
+}
+
+export abstract class BaseMessageStringPromptTemplate extends BaseMessagePromptTemplate {
   prompt: BaseStringPromptTemplate;
 
   protected constructor(prompt: BaseStringPromptTemplate) {
+    super();
     this.prompt = prompt;
   }
 
+  get inputVariables() {
+    return this.prompt.inputVariables;
+  }
+
   abstract format(values: InputValues): Promise<BaseChatMessage>;
+
+  async formatMessages(values: InputValues): Promise<BaseChatMessage[]> {
+    return [await this.format(values)];
+  }
 }
 
-export class ChatMessagePromptTemplate extends BaseMessagePromptTemplate {
+export class ChatMessagePromptTemplate extends BaseMessageStringPromptTemplate {
   role: string;
 
   async format(values: InputValues): Promise<BaseChatMessage> {
@@ -53,7 +85,7 @@ export class ChatMessagePromptTemplate extends BaseMessagePromptTemplate {
   }
 }
 
-export class HumanMessagePromptTemplate extends BaseMessagePromptTemplate {
+export class HumanMessagePromptTemplate extends BaseMessageStringPromptTemplate {
   async format(values: InputValues): Promise<BaseChatMessage> {
     return new HumanChatMessage(await this.prompt.format(values));
   }
@@ -67,7 +99,7 @@ export class HumanMessagePromptTemplate extends BaseMessagePromptTemplate {
   }
 }
 
-export class AIMessagePromptTemplate extends BaseMessagePromptTemplate {
+export class AIMessagePromptTemplate extends BaseMessageStringPromptTemplate {
   async format(values: InputValues): Promise<BaseChatMessage> {
     return new AIChatMessage(await this.prompt.format(values));
   }
@@ -81,7 +113,7 @@ export class AIMessagePromptTemplate extends BaseMessagePromptTemplate {
   }
 }
 
-export class SystemMessagePromptTemplate extends BaseMessagePromptTemplate {
+export class SystemMessagePromptTemplate extends BaseMessageStringPromptTemplate {
   async format(values: InputValues): Promise<BaseChatMessage> {
     return new SystemChatMessage(await this.prompt.format(values));
   }
@@ -155,7 +187,7 @@ export class ChatPromptTemplate
       }
       const inputVariables = new Set<string>();
       for (const promptMessage of this.promptMessages) {
-        for (const inputVariable of promptMessage.prompt.inputVariables) {
+        for (const inputVariable of promptMessage.inputVariables) {
           inputVariables.add(inputVariable);
         }
       }
@@ -192,10 +224,10 @@ export class ChatPromptTemplate
   }
 
   async formatPromptValue(values: InputValues): Promise<BasePromptValue> {
-    const resultMessages: BaseChatMessage[] = [];
+    let resultMessages: BaseChatMessage[] = [];
     for (const promptMessage of this.promptMessages) {
       const inputValues: InputValues = {};
-      for (const inputVariable of promptMessage.prompt.inputVariables) {
+      for (const inputVariable of promptMessage.inputVariables) {
         if (!(inputVariable in values)) {
           throw new Error(
             `Missing value for input variable \`${inputVariable}\``
@@ -203,8 +235,8 @@ export class ChatPromptTemplate
         }
         inputValues[inputVariable] = values[inputVariable];
       }
-      const message = await promptMessage.format(inputValues);
-      resultMessages.push(message);
+      const message = await promptMessage.formatMessages(inputValues);
+      resultMessages = resultMessages.concat(message);
     }
     return new ChatPromptValue(resultMessages);
   }
@@ -227,7 +259,7 @@ export class ChatPromptTemplate
   ): ChatPromptTemplate {
     const inputVariables = new Set<string>();
     for (const promptMessage of promptMessages) {
-      for (const inputVariable of promptMessage.prompt.inputVariables) {
+      for (const inputVariable of promptMessage.inputVariables) {
         inputVariables.add(inputVariable);
       }
     }

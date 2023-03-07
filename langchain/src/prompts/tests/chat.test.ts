@@ -5,6 +5,7 @@ import {
   ChatMessagePromptTemplate,
   HumanMessagePromptTemplate,
   SystemMessagePromptTemplate,
+  MessagesPlaceholder,
 } from "../chat.js";
 import { PromptTemplate } from "../prompt.js";
 import {
@@ -128,4 +129,11 @@ test("Test fromPromptMessages", async () => {
     new SystemChatMessage("Here's some context: This is a context"),
     new HumanChatMessage("Hello Foo, I'm Bar"),
   ]);
+});
+
+test("Test SimpleMessagePromptTemplate", async () => {
+  const prompt = new MessagesPlaceholder("foo");
+  const values = { foo: [new HumanChatMessage("Hello Foo, I'm Bar")] };
+  const messages = await prompt.formatMessages(values);
+  expect(messages).toEqual([new HumanChatMessage("Hello Foo, I'm Bar")]);
 });
