@@ -41,7 +41,9 @@ export type CreatePromptArgs = {
   inputVariables?: string[];
 };
 
-type ConversationalAgentInput = AgentInput;
+export interface ConversationalAgentInput extends AgentInput {
+  aiPrefix?: string;
+}
 
 /**
  * Agent for the MRKL chain.
@@ -52,9 +54,9 @@ type ConversationalAgentInput = AgentInput;
 export class ConversationalAgent extends Agent {
   aiPrefix: string;
 
-  constructor(input: ConversationalAgentInput, aiPrefix = "AI") {
+  constructor(input: ConversationalAgentInput) {
     super(input);
-    this.aiPrefix = aiPrefix;
+    this.aiPrefix = input.aiPrefix || "AI";
   }
 
   _agentType() {
@@ -98,7 +100,7 @@ export class ConversationalAgent extends Agent {
     const {
       prefix = PREFIX,
       suffix = SUFFIX,
-      aiPrefix = "AI",
+      aiPrefix = "AI", // if you override this, remember to override aiPrefix in constructor for finishToolName
       humanPrefix = "Human",
       inputVariables = ["input", "chat_history", "agent_scratchpad"],
     } = args ?? {};

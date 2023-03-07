@@ -18,7 +18,6 @@ export const initializeAgentExecutor = async (
       });
     case "conversational-react-description":
       return AgentExecutor.fromAgentAndTools({
-        // todo pass args?
         agent: ConversationalAgent.fromLLMAndTools(llm, tools),
         tools,
         returnIntermediateSteps: true,
