@@ -91,7 +91,7 @@ export abstract class BaseChain implements ChainInputs {
       }
     }
     // TODO(sean) add callback support
-    const outputValues = this._call(fullValues);
+    const outputValues = await this._call(fullValues);
     if (!(this.memory == null)) {
       await this.memory.saveContext(values, outputValues);
     }

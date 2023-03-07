@@ -1,5 +1,5 @@
 import { LLMChain } from "./llm_chain.js";
-import { BaseLLM } from "../llms/index.js";
+import { BaseLanguageModel } from "../schema/index.js";
 import { BasePromptTemplate, PromptTemplate } from "../prompts/index.js";
 
 import { BaseMemory, BufferMemory } from "../memory/index.js";
@@ -18,7 +18,7 @@ const defaultPrompt = new PromptTemplate({
 
 export class ConversationChain extends LLMChain {
   constructor(fields: {
-    llm: BaseLLM;
+    llm: BaseLanguageModel;
     prompt?: BasePromptTemplate;
     outputKey?: string;
     memory?: BaseMemory;

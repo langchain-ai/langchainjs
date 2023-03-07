@@ -26,20 +26,27 @@ export class ChatMessageHistory {
   }
 }
 
-export abstract class ChatMemoryMixin extends BaseMemory {
+export interface BaseMemoryInput {
+  chatHistory: ChatMessageHistory;
+  returnMessages: boolean;
+}
+
+export abstract class BaseChatMemory extends BaseMemory {
   chatHistory: ChatMessageHistory;
 
-  constructor(chatHistory?: ChatMessageHistory) {
+  returnMessages = false;
+
+  constructor(fields?: Partial<BaseMemoryInput>) {
     super();
-    this.chatHistory = chatHistory ?? new ChatMessageHistory();
+    this.chatHistory = fields?.chatHistory ?? new ChatMessageHistory();
+    this.returnMessages = fields?.returnMessages ?? this.returnMessages;
   }
 
   async saveContext(
     inputValues: InputValues,
-    OutputValues: Promise<OutputValues>
+    outputValues: OutputValues
   ): Promise<void> {
-    const values = await OutputValues;
     this.chatHistory.addUserMessage(getInputValue(inputValues));
-    this.chatHistory.addAIChatMessage(getInputValue(values));
+    this.chatHistory.addAIChatMessage(getInputValue(outputValues));
   }
 }
