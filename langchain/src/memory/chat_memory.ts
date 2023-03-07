@@ -26,7 +26,7 @@ export class ChatMessageHistory {
   }
 }
 
-export abstract class ChatMemoryMixin extends BaseMemory {
+export abstract class BaseChatMemory extends BaseMemory {
   chatHistory: ChatMessageHistory;
 
   constructor(chatHistory?: ChatMessageHistory) {
