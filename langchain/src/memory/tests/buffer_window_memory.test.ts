@@ -8,10 +8,7 @@ test("Test buffer memory", async () => {
   const result1 = await memory.loadMemoryVariables({});
   expect(result1).toStrictEqual({ history: "" });
 
-  const llmResult = new Promise<OutputValues>((resolve, _reject) => {
-    resolve({ bar: "foo" });
-  });
-  await memory.saveContext({ foo: "bar" }, llmResult);
+  await memory.saveContext({ foo: "bar" }, { bar: "foo" });
   const expectedString = "Human: bar\nAI: foo";
   const result2 = await memory.loadMemoryVariables({});
   expect(result2).toStrictEqual({ history: expectedString });
