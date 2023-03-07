@@ -1,6 +1,6 @@
 # Chat Vector DB QA Chain
 
-A Chat Vector DB QA chain takes as input a question and chat history. It first combines the chat history and the question into a standalone question, then looks up relevant documents from the vector database, and then passes those documents and the question to a question answering chain to return a response.
+The Chat Vector DB QA chain requires two inputs: a question and the chat history. It first combines the chat history and the question into a standalone question, then looks up relevant documents from the vector database, and then passes those documents and the question to a question answering chain to return a response.
 
 To create one, you will need a vectorstore, which can be created from embeddings.
 

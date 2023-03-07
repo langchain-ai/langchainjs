@@ -1,6 +1,6 @@
 # Summarization Chain
 
-A summarization chain can be used to summarize multiple documents. There are a few different ways to use such a chain. You can either take as input multiple smaller documents (after they have been split into chunks) and operate over those, or you can use the `AnalyzeDocumentChain` which takes a single piece of text as input and operates over that.
+A summarization chain can be used to summarize multiple documents. One way is to input multiple smaller documents, after they have been divided into chunks, and operate over them. Alternatively, you can use the `AnalyzeDocumentChain`, which accepts a single piece of text as input and operates over it.
 
 In the first usage example, we will utilize the `AnalyzeDocumentChain`, which takes a single piece of text as input.
 
@@ -24,7 +24,7 @@ const res = await chain.call({
 console.log({ res });
 ```
 
-The next usage examples takes as inputs multiple examples, but it assumes that the documents have already been split into smaller chunks.
+The usage examples for next.js require multiple inputs, but assumes that the documents have been previously divided into smaller chunks.
 
 ```typescript
 import { OpenAI } from "langchain/llms";
