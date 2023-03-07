@@ -54,7 +54,7 @@ export class PuppeteerWebBaseLoader
     const page = await browser.newPage();
 
     await page.goto(url, {
-      timeout: 180000,
+      timeout: 0,
       waitUntil: "domcontentloaded",
       ...options?.gotoOptions,
     });
