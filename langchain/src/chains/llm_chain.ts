@@ -135,7 +135,7 @@ const defaultPrompt = new PromptTemplate({
 
 export class ConversationChain extends LLMChain {
   constructor(fields: {
-    llm: BaseLLM;
+    llm: BaseLanguageModel;
     prompt?: BasePromptTemplate;
     outputKey?: string;
     memory?: BaseMemory;

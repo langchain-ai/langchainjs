@@ -6,7 +6,7 @@ import {
   SystemMessagePromptTemplate,
   MessagesPlaceholder,
 } from "langchain/prompts";
-import { ChatMessageMemory } from "langchain/memory";
+import { BufferMemory } from "langchain/memory";
 
 export const run = async () => {
   const chat = new ChatOpenAI({ temperature: 0 });
@@ -20,7 +20,7 @@ export const run = async () => {
   ]);
 
   const chain = new ConversationChain({
-    memory: new ChatMessageMemory(),
+    memory: new BufferMemory({ returnMessages: true }),
     prompt: chatPrompt,
     llm: chat,
   });

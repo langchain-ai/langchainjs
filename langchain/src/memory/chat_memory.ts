@@ -8,7 +8,6 @@ import {
   InputValues,
   OutputValues,
   getInputValue,
-  MemoryVariables,
 } from "./base.js";
 
 export class ChatMessageHistory {
@@ -27,12 +26,20 @@ export class ChatMessageHistory {
   }
 }
 
-export abstract class ChatMemoryMixin extends BaseMemory {
+export interface BaseMemoryInput {
+  chatHistory: ChatMessageHistory;
+  returnMessages: boolean;
+}
+
+export abstract class BaseChatMemory extends BaseMemory {
   chatHistory: ChatMessageHistory;
 
-  constructor(chatHistory?: ChatMessageHistory) {
+  returnMessages = false;
+
+  constructor(fields?: Partial<BaseMemoryInput>) {
     super();
-    this.chatHistory = chatHistory ?? new ChatMessageHistory();
+    this.chatHistory = fields?.chatHistory ?? new ChatMessageHistory();
+    this.returnMessages = fields?.returnMessages ?? this.returnMessages;
   }
 
   async saveContext(
@@ -42,36 +49,5 @@ export abstract class ChatMemoryMixin extends BaseMemory {
     const values = await OutputValues;
     this.chatHistory.addUserMessage(getInputValue(inputValues));
     this.chatHistory.addAIChatMessage(getInputValue(values));
-  }
-}
-
-export interface ChatMemoryInput {
-  memoryKey: string;
-  k?: number;
-}
-
-export class ChatMessageMemory
-  extends ChatMemoryMixin
-  implements ChatMemoryInput
-{
-  memoryKey = "history";
-
-  k?: number = undefined;
-
-  constructor(fields?: Partial<ChatMemoryInput>) {
-    super();
-    this.memoryKey = fields?.memoryKey ?? this.memoryKey;
-    this.k = fields?.k ?? this.k;
-  }
-
-  async loadMemoryVariables(_values: InputValues): Promise<MemoryVariables> {
-    let { messages } = this.chatHistory;
-    if (this.k) {
-      messages = messages.slice(-this.k);
-    }
-    const result = {
-      [this.memoryKey]: messages,
-    };
-    return result;
   }
 }
