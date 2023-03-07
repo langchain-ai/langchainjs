@@ -45,17 +45,32 @@ export abstract class ChatMemoryMixin extends BaseMemory {
   }
 }
 
-export class ChatMessageMemory extends ChatMemoryMixin {
+export interface ChatMemoryInput {
+  memoryKey: string;
+  k?: number;
+}
+
+export class ChatMessageMemory
+  extends ChatMemoryMixin
+  implements ChatMemoryInput
+{
   memoryKey = "history";
 
-  constructor(memoryKey?: string) {
+  k?: number = undefined;
+
+  constructor(fields?: Partial<ChatMemoryInput>) {
     super();
-    this.memoryKey = memoryKey ?? this.memoryKey;
+    this.memoryKey = fields?.memoryKey ?? this.memoryKey;
+    this.k = fields?.k ?? this.k;
   }
 
   async loadMemoryVariables(_values: InputValues): Promise<MemoryVariables> {
+    let { messages } = this.chatHistory;
+    if (this.k) {
+      messages = messages.slice(-this.k);
+    }
     const result = {
-      [this.memoryKey]: this.chatHistory.messages,
+      [this.memoryKey]: messages,
     };
     return result;
   }
