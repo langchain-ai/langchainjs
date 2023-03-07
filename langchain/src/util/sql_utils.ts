@@ -121,6 +121,29 @@ export const getTableAndColumnsName = async (
     return formatToSqlTable(rep);
   }
 
+  if (appDataSource.options.type === "sqlite") {
+    sql =
+      "SELECT \n" +
+      "   m.name AS table_name,\n" +
+      "   p.name AS column_name,\n" +
+      "   p.type AS data_type,\n" +
+      "   CASE \n" +
+      "      WHEN p.\"notnull\" = 0 THEN 'YES' \n" +
+      "      ELSE 'NO' \n" +
+      "   END AS is_nullable \n" +
+      "FROM \n" +
+      "   sqlite_master m \n" +
+      "JOIN \n" +
+      "   pragma_table_info(m.name) p \n" +
+      "WHERE \n" +
+      "   m.type = 'table' AND \n" +
+      "   m.name NOT LIKE 'sqlite_%';\n";
+
+    const rep = await appDataSource.query(sql);
+
+    return formatToSqlTable(rep);
+  }
+
   throw new Error("Database type not implemented yet");
 };
 

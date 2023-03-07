@@ -24,6 +24,7 @@ export class SQLDatabase implements SQLDatabaseParams {
   sampleRowsInTableInfo = 3;
 
   constructor(fields: SQLDatabaseParams) {
+    this.appDataSourceOptions = fields.appDataSourceOptions;
     this.appDataSource = new DataSource(fields.appDataSourceOptions);
     if (fields?.includesTables && fields?.ignoreTables) {
       throw new Error("Cannot specify both include_tables and ignoreTables");
