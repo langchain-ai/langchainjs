@@ -123,7 +123,7 @@ export abstract class Agent {
   /**
    * Construct a scratchpad to let the agent continue its thought process
    */
-  private constructScratchPad(steps: AgentStep[]): string {
+  constructScratchPad(steps: AgentStep[]): string {
     return steps.reduce(
       (thoughts, { action, observation }) =>
         thoughts +

@@ -2,6 +2,7 @@ import { Tool } from "./tools/index.js";
 import { BaseLLM } from "../llms/index.js";
 import { AgentExecutor } from "./executor.js";
 import { ZeroShotAgent } from "./mrkl/index.js";
+import { ChatAgent } from "./chat/index.js";
 
 export const initializeAgentExecutor = async (
   tools: Tool[],
@@ -12,6 +13,12 @@ export const initializeAgentExecutor = async (
     case "zero-shot-react-description":
       return AgentExecutor.fromAgentAndTools({
         agent: ZeroShotAgent.fromLLMAndTools(llm, tools),
+        tools,
+        returnIntermediateSteps: true,
+      });
+    case "chat-zero-shot-react-description":
+      return AgentExecutor.fromAgentAndTools({
+        agent: ChatAgent.fromLLMAndTools(llm, tools),
         tools,
         returnIntermediateSteps: true,
       });
