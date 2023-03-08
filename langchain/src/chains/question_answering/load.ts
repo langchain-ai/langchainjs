@@ -47,13 +47,13 @@ export const loadQAChain = (llm: BaseLLM, params: qaChainParams = {}) => {
   throw new Error(`Invalid _type: ${type}`);
 };
 
-interface stuffQAChainParams {
+interface StuffQAChainParams {
   prompt?: PromptTemplate;
 }
 
 export const loadQAStuffChain = (
   llm: BaseLLM,
-  params: stuffQAChainParams = {}
+  params: StuffQAChainParams = {}
 ) => {
   const { prompt = QA_PROMPT_SELECTOR.getPrompt(llm) } = params;
   const llmChain = new LLMChain({ prompt, llm });
@@ -61,14 +61,14 @@ export const loadQAStuffChain = (
   return chain;
 };
 
-interface mapReduceQAChainParams {
+interface MapReduceQAChainParams {
   combineMapPrompt?: PromptTemplate;
   combinePrompt?: PromptTemplate;
 }
 
 export const loadQAMapReduceChain = (
   llm: BaseLLM,
-  params: mapReduceQAChainParams = {}
+  params: MapReduceQAChainParams = {}
 ) => {
   const {
     combineMapPrompt = COMBINE_QA_PROMPT_SELECTOR.getPrompt(llm),
