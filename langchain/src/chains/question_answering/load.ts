@@ -5,7 +5,7 @@ import {
   StuffDocumentsChain,
   MapReduceDocumentsChain,
 } from "../combine_docs_chain.js";
-import { DEFAULT_QA_PROMPT } from "./stuff_prompts.js";
+import { QA_PROMPT_COLLECTION, DEFAULT_QA_PROMPT } from "./stuff_prompts.js";
 import {
   COMBINE_PROMPT,
   DEFAULT_COMBINE_QA_PROMPT,
@@ -43,4 +43,44 @@ export const loadQAChain = (llm: BaseLLM, params: qaChainParams = {}) => {
     return chain;
   }
   throw new Error(`Invalid _type: ${type}`);
+};
+
+interface stuffQAChainParams {
+  prompt?: PromptTemplate;
+}
+
+export const loadQAStuffChain = (
+  llm: BaseLLM,
+  params: stuffQAChainParams = {}
+) => {
+  const { prompt = QA_PROMPT_COLLECTION.getPrompt(llm) } = params;
+  const llmChain = new LLMChain({ prompt, llm });
+  const chain = new StuffDocumentsChain({ llmChain });
+  return chain;
+};
+
+interface mapReduceQAChainParams {
+  combineMapPrompt?: PromptTemplate;
+  combinePrompt?: PromptTemplate;
+}
+
+export const loadQAMapReduceChain = (
+  llm: BaseLLM,
+  params: mapReduceQAChainParams = {}
+) => {
+  const {
+    combineMapPrompt = DEFAULT_COMBINE_QA_PROMPT,
+    combinePrompt = COMBINE_PROMPT,
+  } = params;
+  const llmChain = new LLMChain({ prompt: combineMapPrompt, llm });
+  const combineLLMChain = new LLMChain({ prompt: combinePrompt, llm });
+  const combineDocumentChain = new StuffDocumentsChain({
+    llmChain: combineLLMChain,
+    documentVariableName: "summaries",
+  });
+  const chain = new MapReduceDocumentsChain({
+    llmChain,
+    combineDocumentChain,
+  });
+  return chain;
 };

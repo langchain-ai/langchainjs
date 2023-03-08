@@ -46,17 +46,17 @@ const res = await chain.call({
 console.log(res);
 ```
 
-By default, the QA chain will do a map-reduce technique, where it summarizes each chunk individually and then summarizes the summaries.
+By default, the summarization chain will do a map-reduce technique, where it summarizes each chunk individually and then summarizes the summaries.
 This is good because it avoids any context window lengths, but is bad because it takes more calls to the language model.
 If you have a smaller set of documents and want to just pass them into the same prompt, you can use the `stuff` method.
 
 ```typescript
 import { OpenAI } from "langchain/llms";
-import { loadQAChain } from "langchain/chains";
+import { loadSummarizationChain } from "langchain/chains";
 import { Document } from "langchain/document";
 
 const model = new OpenAI({});
-const chain = loadQAChain(llm, { type: "stuff" });
+const chain = loadSummarizationChain(llm, { type: "stuff" });
 const docs = [
   new Document({ pageContent: "harrison went to harvard" }),
   new Document({ pageContent: "ankush went to princeton" }),

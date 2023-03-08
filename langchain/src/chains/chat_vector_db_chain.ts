@@ -2,7 +2,7 @@ import {
   BaseChain,
   ChainValues,
   LLMChain,
-  loadQAChain,
+  loadQAStuffChain,
   SerializedBaseChain,
   SerializedLLMChain,
 } from "./index.js";
@@ -180,7 +180,7 @@ export class ChatVectorDBQAChain
   }
 
   static fromLLM(llm: BaseLLM, vectorstore: VectorStore): ChatVectorDBQAChain {
-    const qaChain = loadQAChain(llm, { prompt: qa_prompt });
+    const qaChain = loadQAStuffChain(llm, { prompt: qa_prompt });
     const questionGeneratorChain = new LLMChain({
       prompt: question_generator_prompt,
       llm,
