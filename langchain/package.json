@@ -75,7 +75,6 @@
     "@types/uuid": "^9",
     "@typescript-eslint/eslint-plugin": "^5.51.0",
     "@typescript-eslint/parser": "^5.51.0",
-    "add": "2.0.6",
     "babel-jest": "^29.4.2",
     "cheerio": "^1.0.0-rc.12",
     "cohere-ai": "^5.0.2",
