@@ -7,7 +7,11 @@ Use [chroma](https://github.com/chroma-core/chroma) with langchainjs.
 ## Setup
 
 1. Run chroma inside of docker on your computer [docs](https://docs.trychroma.com/api-reference)
-2. Install the chroma js client. `npm install -S chromadb`
+2. Install the chroma js client.
+
+```bash npm2yarn
+npm install -S chromadb
+```
 
 ## Usage
 

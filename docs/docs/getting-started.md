@@ -6,8 +6,8 @@ This tutorial gives you a quick walkthrough about building an end-to-end languag
 
 To get started, install LangChain with the following command:
 
-```bash
-npm i langchain
+```bash npm2yarn
+npm install -S langchain
 ```
 
 We currently support LangChain on Node.js 16, 18, and 19. Go [here](https://github.com/hwchase17/langchainjs/discussions/152) to vote on the next environment we should support.
@@ -98,7 +98,7 @@ We will then need to set the environment variable for the OpenAI key. Three opti
 
 1. We can do this by setting the value in a `.env` file and use the [dotenv](https://github.com/motdotla/dotenv) package to read it.
 
-```
+```bash
 OPENAI_API_KEY="..."
 ```
 
@@ -170,6 +170,7 @@ Extending the previous example, we can construct an LLMChain which takes user in
 ```typescript
 import { OpenAI } from "langchain/llms";
 import { PromptTemplate } from "langchain/prompts";
+
 const model = new OpenAI({ temperature: 0.9 });
 const template = "What is a good name for a company that makes {product}?";
 const prompt = new PromptTemplate({
@@ -215,13 +216,13 @@ In order to load agents, you should understand the following concepts:
 
 For this example, you will also need to install the SerpAPI package for JavaScript/TypeScript.
 
-```bash
-npm i serpapi
+```bash npm2yarn
+npm install -S serpapi
 ```
 
 And set the appropriate environment variables in the `.env` file.
 
-```
+```bash
 SERPAPI_API_KEY="..."
 ```
 
