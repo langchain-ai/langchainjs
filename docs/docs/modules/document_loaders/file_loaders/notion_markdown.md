@@ -1,4 +1,4 @@
-# Webpages
+# Notion Markdown Files
 
 This example goes over how to load data from your Notion pages exported from the notion dashboard.
 
