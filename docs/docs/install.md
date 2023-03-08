@@ -51,7 +51,7 @@ If your project is using CommonJS, you can use LangChain only with the dynamic `
 const { OpenAI } = await import("langchain");
 ```
 
-To use this in TypeScript in a CommonJS project, you'll need to add the following to your `tsconfig.json`:
+If you're using TypeScript in a CommonJS project, you'll need to add the following to your `tsconfig.json`:
 
 ```json
 {
