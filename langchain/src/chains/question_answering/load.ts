@@ -5,10 +5,12 @@ import {
   StuffDocumentsChain,
   MapReduceDocumentsChain,
 } from "../combine_docs_chain.js";
-import { QA_PROMPT_COLLECTION, DEFAULT_QA_PROMPT } from "./stuff_prompts.js";
+import { QA_PROMPT_SELECTOR, DEFAULT_QA_PROMPT } from "./stuff_prompts.js";
 import {
   COMBINE_PROMPT,
   DEFAULT_COMBINE_QA_PROMPT,
+  COMBINE_PROMPT_SELECTOR,
+  COMBINE_QA_PROMPT_SELECTOR,
 } from "./map_reduce_prompts.js";
 
 interface qaChainParams {
@@ -53,7 +55,7 @@ export const loadQAStuffChain = (
   llm: BaseLLM,
   params: stuffQAChainParams = {}
 ) => {
-  const { prompt = QA_PROMPT_COLLECTION.getPrompt(llm) } = params;
+  const { prompt = QA_PROMPT_SELECTOR.getPrompt(llm) } = params;
   const llmChain = new LLMChain({ prompt, llm });
   const chain = new StuffDocumentsChain({ llmChain });
   return chain;
@@ -69,8 +71,8 @@ export const loadQAMapReduceChain = (
   params: mapReduceQAChainParams = {}
 ) => {
   const {
-    combineMapPrompt = DEFAULT_COMBINE_QA_PROMPT,
-    combinePrompt = COMBINE_PROMPT,
+    combineMapPrompt = COMBINE_QA_PROMPT_SELECTOR.getPrompt(llm),
+    combinePrompt = COMBINE_PROMPT_SELECTOR.getPrompt(llm),
   } = params;
   const llmChain = new LLMChain({ prompt: combineMapPrompt, llm });
   const combineLLMChain = new LLMChain({ prompt: combinePrompt, llm });

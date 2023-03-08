@@ -5,10 +5,7 @@ import {
   SystemMessagePromptTemplate,
   HumanMessagePromptTemplate,
 } from "../../prompts/index.js";
-import {
-  ConditionalPromptCollection,
-  isChatModel,
-} from "../prompt_collections.js";
+import { ConditionalPromptSelector, isChatModel } from "../prompt_selector.js";
 
 export const DEFAULT_QA_PROMPT = new PromptTemplate({
   template:
@@ -26,7 +23,7 @@ const messages = [
 ];
 const CHAT_PROMPT = ChatPromptTemplate.fromPromptMessages(messages);
 
-export const QA_PROMPT_COLLECTION = new ConditionalPromptCollection(
+export const QA_PROMPT_SELECTOR = new ConditionalPromptSelector(
   DEFAULT_QA_PROMPT,
   [[isChatModel, CHAT_PROMPT]]
 );
