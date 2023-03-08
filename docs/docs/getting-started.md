@@ -23,7 +23,7 @@ If you are running this on Node.js 18 or 19, you do not need to do anything.
 
 ### TypeScript
 
-We suggest updating your `tsconfig.json` to include the following:
+If you are using TypeScript we suggest updating your `tsconfig.json` to include the following:
 
 ```json
 {
@@ -51,6 +51,17 @@ If your project is using CommonJS, you can use LangChain only with the dynamic `
 
 ```typescript
 const { OpenAI } = await import("langchain");
+```
+
+To use this in TypeScript in a CommonJS project, you'll need to add the following to your `tsconfig.json`:
+
+```json
+{
+  "compilerOptions": {
+    ...
+    "moduleResolution": "node16",
+  }
+}
 ```
 
 ### Other environments
