@@ -70,7 +70,7 @@ export class SqlDatabase
   }
 
   /**
-   * """Get information about specified tables.
+   * Get information about specified tables.
    *
    * Follows best practices as specified in: Rajkumar et al, 2022
    * (https://arxiv.org/abs/2204.00498)
@@ -99,9 +99,10 @@ export class SqlDatabase
     );
   }
 
-  /** Execute a SQL command and return a string representing the results.
-   *  If the statement returns rows, a string of the results is returned.
-   *  If the statement returns no rows, an empty string is returned.
+  /**
+   * Execute a SQL command and return a string representing the results.
+   * If the statement returns rows, a string of the results is returned.
+   * If the statement returns no rows, an empty string is returned.
    */
   async run(command: string, fetch: "all" | "one" = "all"): Promise<string> {
     // TODO: Potential security issue here

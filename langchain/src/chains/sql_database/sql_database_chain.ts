@@ -31,11 +31,11 @@ export class SqlDatabaseChain extends BaseChain {
 
   outputKey = "result";
 
+  // Whether or not to return the intermediate steps along with the final answer.
   returnIntermediateSteps = false;
 
-  // Whether or not to return the intermediate steps along with the final answer.
-  returnDirect = false;
   // Whether or not to return the result of querying the SQL table directly.
+  returnDirect = false;
 
   constructor(fields: {
     llm: BaseLLM;
