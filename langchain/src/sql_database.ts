@@ -3,14 +3,17 @@ import {
   generateTableInfoFromTables,
   getTableAndColumnsName,
   SerializedSqlDatabase,
-  SQLDatabaseParams,
+  SqlDatabaseDataSourceParams,
+  SqlDatabaseOptionsParams,
   SqlTable,
   verifyIgnoreTablesExistInDatabase,
   verifyIncludeTablesExistInDatabase,
   verifyListTablesExistInDatabase,
 } from "./util/sql_utils.js";
 
-export class SQLDatabase implements SQLDatabaseParams {
+export class SqlDatabase
+  implements SqlDatabaseOptionsParams, SqlDatabaseDataSourceParams
+{
   appDataSourceOptions: DataSourceOptions;
 
   appDataSource: DataSource;
@@ -23,9 +26,9 @@ export class SQLDatabase implements SQLDatabaseParams {
 
   sampleRowsInTableInfo = 3;
 
-  constructor(fields: SQLDatabaseParams) {
-    this.appDataSourceOptions = fields.appDataSourceOptions;
-    this.appDataSource = new DataSource(fields.appDataSourceOptions);
+  protected constructor(fields: SqlDatabaseDataSourceParams) {
+    this.appDataSource = fields.appDataSource;
+    this.appDataSourceOptions = fields.appDataSource.options;
     if (fields?.includesTables && fields?.ignoreTables) {
       throw new Error("Cannot specify both include_tables and ignoreTables");
     }
@@ -35,9 +38,10 @@ export class SQLDatabase implements SQLDatabaseParams {
       fields?.sampleRowsInTableInfo ?? this.sampleRowsInTableInfo;
   }
 
-  static async fromDataSource(fields: SQLDatabaseParams): Promise<SQLDatabase> {
-    const sqlDatabase = new SQLDatabase(fields);
-    await sqlDatabase.appDataSource.initialize();
+  static async fromDataSourceParams(
+    fields: SqlDatabaseDataSourceParams
+  ): Promise<SqlDatabase> {
+    const sqlDatabase = new SqlDatabase(fields);
     sqlDatabase.allTables = await getTableAndColumnsName(
       sqlDatabase.appDataSource
     );
@@ -49,8 +53,17 @@ export class SQLDatabase implements SQLDatabaseParams {
       sqlDatabase.allTables,
       sqlDatabase.ignoreTables
     );
-
     return sqlDatabase;
+  }
+
+  static async fromOptionsParams(
+    fields: SqlDatabaseOptionsParams
+  ): Promise<SqlDatabase> {
+    const dataSource = new DataSource(fields.appDataSourceOptions);
+    return SqlDatabase.fromDataSourceParams({
+      ...fields,
+      appDataSource: dataSource,
+    });
   }
 
   /**
@@ -104,7 +117,7 @@ export class SQLDatabase implements SQLDatabaseParams {
 
   serialize(): SerializedSqlDatabase {
     return {
-      _type: "sql_database_chain",
+      _type: "sql_database",
       appDataSourceOptions: this.appDataSourceOptions,
       includesTables: this.includesTables,
       ignoreTables: this.ignoreTables,

@@ -7,14 +7,21 @@ interface RawResultTableAndColumn {
   is_nullable: string;
 }
 
-export interface SQLDatabaseParams {
-  appDataSourceOptions: DataSourceOptions;
+export interface SqlDatabaseParams {
   includesTables?: Array<string>;
   ignoreTables?: Array<string>;
   sampleRowsInTableInfo?: number;
 }
 
-export type SerializedSqlDatabase = SQLDatabaseParams & {
+export interface SqlDatabaseOptionsParams extends SqlDatabaseParams {
+  appDataSourceOptions: DataSourceOptions;
+}
+
+export interface SqlDatabaseDataSourceParams extends SqlDatabaseParams {
+  appDataSource: DataSource;
+}
+
+export type SerializedSqlDatabase = SqlDatabaseOptionsParams & {
   _type: string;
 };
 
@@ -55,7 +62,7 @@ export const verifyIncludeTablesExistInDatabase = (
   verifyListTablesExistInDatabase(
     tablesFromDatabase,
     includeTables,
-    "Wrong include table name:"
+    "Include tables not found in database:"
   );
 };
 
@@ -66,7 +73,7 @@ export const verifyIgnoreTablesExistInDatabase = (
   verifyListTablesExistInDatabase(
     tablesFromDatabase,
     ignoreTables,
-    "Wrong ignore table name:"
+    "Ignore tables not found in database:"
   );
 };
 
@@ -163,7 +170,6 @@ const formatSqlResponseToSimpleTableString = (rawResult: unknown): string => {
   return globalString;
 };
 
-// TODO: add tests
 export const generateTableInfoFromTables = async (
   tables: Array<SqlTable> | undefined,
   appDataSource: DataSource,
