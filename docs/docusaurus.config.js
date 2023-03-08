@@ -137,6 +137,12 @@ const config = {
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
+      prism: {
+        // eslint-disable-next-line global-require,import/no-extraneous-dependencies
+        theme: require("prism-react-renderer/themes/vsLight"),
+        // eslint-disable-next-line global-require,import/no-extraneous-dependencies
+        darkTheme: require("prism-react-renderer/themes/vsDark"),
+      },
       image: "img/docusaurus.png",
       navbar: {
         title: "Langchain",
