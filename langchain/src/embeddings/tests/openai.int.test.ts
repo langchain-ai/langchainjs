@@ -14,3 +14,32 @@ test("Test OpenAIEmbeddings.embedDocuments", async () => {
   expect(typeof res[0][0]).toBe("number");
   expect(typeof res[1][0]).toBe("number");
 });
+
+test("Test OpenAIEmbeddings.embedDocuments, faster with concurrency", async () => {
+  const embeddingsNoConcurrency = new OpenAIEmbeddings({
+    batchSize: 1,
+    concurrency: 1,
+  });
+  const embeddingsWithConcurrency = new OpenAIEmbeddings({
+    batchSize: 1,
+    concurrency: 20,
+  });
+  const texts = Array.from({ length: 20 }, (_, i) => `Hello world ${i}`);
+
+  const startTimeNoConcurrency = Date.now();
+  await embeddingsNoConcurrency.embedDocuments(texts);
+  const endTimeNoConcurrency = Date.now();
+
+  const startTimeWithConcurrency = Date.now();
+  await embeddingsWithConcurrency.embedDocuments(texts);
+  const endTimeWithConcurrency = Date.now();
+
+  const timeToEmbedNoConcurrency =
+    endTimeNoConcurrency - startTimeNoConcurrency;
+  const timeToEmbedWithConcurrency =
+    endTimeWithConcurrency - startTimeWithConcurrency;
+
+  expect(
+    timeToEmbedNoConcurrency / timeToEmbedWithConcurrency
+  ).toBeGreaterThanOrEqual(3);
+});

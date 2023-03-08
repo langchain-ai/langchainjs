@@ -1,5 +1,6 @@
 import { Configuration, OpenAIApi, CreateEmbeddingRequest } from "openai";
 import { backOff } from "exponential-backoff";
+import pMap from "p-map";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
 import { chunkArray } from "../util/index.js";
 import { Embeddings } from "./base.js";
@@ -13,6 +14,8 @@ export class OpenAIEmbeddings extends Embeddings implements ModelParams {
 
   batchSize = 20;
 
+  concurrency = 10;
+
   maxRetries = 6;
 
   private apiKey: string;
@@ -23,6 +26,7 @@ export class OpenAIEmbeddings extends Embeddings implements ModelParams {
     fields?: Partial<ModelParams> & {
       verbose?: boolean;
       batchSize?: number;
+      concurrency?: number;
       maxRetries?: number;
       openAIApiKey?: string;
     }
@@ -36,6 +40,7 @@ export class OpenAIEmbeddings extends Embeddings implements ModelParams {
 
     this.modelName = fields?.modelName ?? this.modelName;
     this.batchSize = fields?.batchSize ?? this.batchSize;
+    this.concurrency = fields?.concurrency ?? this.concurrency;
     this.apiKey = apiKey;
     this.maxRetries = fields?.maxRetries ?? this.maxRetries;
   }
@@ -43,20 +48,20 @@ export class OpenAIEmbeddings extends Embeddings implements ModelParams {
   async embedDocuments(texts: string[]): Promise<number[][]> {
     const subPrompts = chunkArray(texts, this.batchSize);
 
-    const embeddings = [];
+    const embeddings = await pMap(
+      subPrompts,
+      async (input) => {
+        const { data } = await this.embeddingWithRetry({
+          model: this.modelName,
+          input,
+        });
 
-    for (let i = 0; i < subPrompts.length; i += 1) {
-      const input = subPrompts[i];
-      const { data } = await this.embeddingWithRetry({
-        model: this.modelName,
-        input,
-      });
-      for (let j = 0; j < input.length; j += 1) {
-        embeddings.push(data.data[j].embedding);
-      }
-    }
+        return data.data.map((i) => i.embedding);
+      },
+      { concurrency: this.concurrency }
+    );
 
-    return embeddings;
+    return embeddings.flat();
   }
 
   async embedQuery(text: string): Promise<number[]> {
