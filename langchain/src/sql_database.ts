@@ -42,6 +42,9 @@ export class SqlDatabase
     fields: SqlDatabaseDataSourceParams
   ): Promise<SqlDatabase> {
     const sqlDatabase = new SqlDatabase(fields);
+    if (!sqlDatabase.appDataSource.isInitialized) {
+      await sqlDatabase.appDataSource.initialize();
+    }
     sqlDatabase.allTables = await getTableAndColumnsName(
       sqlDatabase.appDataSource
     );

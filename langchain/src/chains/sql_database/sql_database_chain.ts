@@ -64,7 +64,6 @@ export class SqlDatabaseChain extends BaseChain {
     }
     const question: string = values[this.inputKey];
     let inputText = `${question}\nSQLQuery:`;
-    console.info(inputText);
     const tablesToUse = values.table_names_to_use;
     const tableInfo = await this.database.getTableInfo(tablesToUse);
 
