@@ -1,10 +1,10 @@
 import { OpenAI } from "langchain/llms";
-import { loadQAChain } from "langchain/chains";
+import { loadQAStuffChain } from "langchain/chains";
 import { Document } from "langchain/document";
 
 export const run = async () => {
   const model = new OpenAI({});
-  const chain = loadQAChain(model);
+  const chain = loadQAStuffChain(model);
   const docs = [
     new Document({ pageContent: "harrison went to harvard" }),
     new Document({ pageContent: "ankush went to princeton" }),
