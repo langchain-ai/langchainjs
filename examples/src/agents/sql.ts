@@ -34,4 +34,6 @@ export const run = async () => {
       2
     )}`
   );
+
+  await datasource.destroy();
 };

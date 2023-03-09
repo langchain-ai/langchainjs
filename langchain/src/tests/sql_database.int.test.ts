@@ -1,4 +1,4 @@
-import { test, expect, beforeEach } from "@jest/globals";
+import { test, expect, beforeEach, afterEach } from "@jest/globals";
 import { DataSource } from "typeorm";
 import { SqlDatabase } from "../sql_db.js";
 
@@ -41,6 +41,10 @@ beforeEach(async () => {
   db = await SqlDatabase.fromDataSourceParams({
     appDataSource: datasource,
   });
+});
+
+afterEach(async () => {
+  await db.appDataSource.destroy();
 });
 
 test("Test getTableInfo", async () => {

@@ -36,4 +36,6 @@ test("Test SqlDatabaseChain", async () => {
 
   const res = await chain.run("How many users are there?");
   console.log(res);
+
+  await datasource.destroy();
 });

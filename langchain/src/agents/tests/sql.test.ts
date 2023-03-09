@@ -53,8 +53,9 @@ beforeEach(async () => {
   process.env = { ...previousEnv, OPENAI_API_KEY: "test" };
 });
 
-afterEach(() => {
+afterEach(async () => {
   process.env = previousEnv;
+  await db.appDataSource.destroy();
 });
 
 test("QuerySqlTool", async () => {
