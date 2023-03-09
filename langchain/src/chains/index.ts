@@ -31,3 +31,7 @@ export {
   loadQAMapReduceChain,
 } from "./question_answering/load.js";
 export { loadSummarizationChain } from "./summarization/load.js";
+export {
+  SqlDatabaseChain,
+  SerializedSqlDatabaseChain,
+} from "./sql_db/sql_db_chain.js";

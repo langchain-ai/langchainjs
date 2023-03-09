@@ -26,5 +26,7 @@ chat_models.js
 chat_models.d.ts
 schema.js
 schema.d.ts
+sql_db.js
+sql_db.d.ts
 index.js
 index.d.ts

@@ -1,14 +1,6 @@
 import { test, expect, beforeEach, afterEach } from "@jest/globals";
 import { DataSource } from "typeorm";
-import {
-  InfoSqlTool,
-  QuerySqlTool,
-  ListTablesSqlTool,
-  QueryCheckerTool,
-} from "../tools/sql.js";
-import { SqlDatabase } from "../../sql_db.js";
-
-const previousEnv = process.env;
+import { SqlDatabase } from "../sql_db.js";
 
 let db: SqlDatabase;
 
@@ -49,32 +41,14 @@ beforeEach(async () => {
   db = await SqlDatabase.fromDataSourceParams({
     appDataSource: datasource,
   });
-
-  process.env = { ...previousEnv, OPENAI_API_KEY: "test" };
 });
 
 afterEach(async () => {
-  process.env = previousEnv;
   await db.appDataSource.destroy();
 });
 
-test("QuerySqlTool", async () => {
-  const querySqlTool = new QuerySqlTool(db);
-  const result = await querySqlTool.call("SELECT * FROM users");
-  expect(result).toBe(
-    `[{"id":1,"name":"Alice","age":20},{"id":2,"name":"Bob","age":21},{"id":3,"name":"Charlie","age":22}]`
-  );
-});
-
-test("QuerySqlTool with error", async () => {
-  const querySqlTool = new QuerySqlTool(db);
-  const result = await querySqlTool.call("SELECT * FROM userss");
-  expect(result).toBe(`QueryFailedError: SQLITE_ERROR: no such table: userss`);
-});
-
-test("InfoSqlTool", async () => {
-  const infoSqlTool = new InfoSqlTool(db);
-  const result = await infoSqlTool.call("users, products");
+test("Test getTableInfo", async () => {
+  const result = await db.getTableInfo(["users", "products"]);
   const expectStr = `
 CREATE TABLE products (
 id INTEGER , name TEXT , price INTEGER ) 
@@ -93,22 +67,22 @@ SELECT * FROM "users" LIMIT 3;
   expect(result.trim()).toBe(expectStr.trim());
 });
 
-test("InfoSqlTool with error", async () => {
-  const infoSqlTool = new InfoSqlTool(db);
-  const result = await infoSqlTool.call("userss, products");
-  expect(result).toBe(
-    `Error: Wrong target table name: the table userss was not found in the database`
+test("Test getTableInfo with error", async () => {
+  await expect(async () => {
+    await db.getTableInfo(["users", "productss"]);
+  }).rejects.toThrow(
+    "Wrong target table name: the table productss was not found in the database"
   );
 });
 
-test("ListTablesSqlTool", async () => {
-  const listSqlTool = new ListTablesSqlTool(db);
-  const result = await listSqlTool.call("");
-  expect(result).toBe(`products, users`);
+test("Test run", async () => {
+  const result = await db.run("SELECT * FROM users");
+  const expectStr = `[{"id":1,"name":"Alice","age":20},{"id":2,"name":"Bob","age":21},{"id":3,"name":"Charlie","age":22}]`;
+  expect(result.trim()).toBe(expectStr.trim());
 });
 
-test("QueryCheckerTool", async () => {
-  const queryCheckerTool = new QueryCheckerTool();
-  expect(queryCheckerTool.llmChain).not.toBeNull();
-  expect(queryCheckerTool.llmChain.inputKeys).toEqual(["query"]);
+test("Test run with error", async () => {
+  await expect(async () => {
+    await db.run("SELECT * FROM userss");
+  }).rejects.toThrow("SQLITE_ERROR: no such table: userss");
 });

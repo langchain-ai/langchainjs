@@ -50,6 +50,7 @@
       "src/document_loaders/index.ts",
       "src/chat_models/index.ts",
       "src/schema/index.ts",
+      "src/sql_db.ts",
       "src/index.ts"
     ],
     "excludePrivate": true,
