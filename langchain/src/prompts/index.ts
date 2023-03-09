@@ -1,4 +1,6 @@
 export {
+  Example,
+  BaseExampleSelector,
   BasePromptTemplate,
   BasePromptTemplateInput,
   SerializedBasePromptTemplate,
@@ -12,6 +14,8 @@ export {
   PromptTemplateInput,
   SerializedPromptTemplate,
 } from "./prompt.js";
+export { LengthBasedExampleSelector } from "./selectors/LengthBasedExampleSelector.js";
+export { SemanticSimilarityExampleSelector } from "./selectors/SemanticSimilarityExampleSelector.js";
 export {
   FewShotPromptTemplate,
   FewShotPromptTemplateInput,
