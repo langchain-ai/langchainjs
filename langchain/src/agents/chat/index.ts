@@ -119,7 +119,13 @@ export class ChatAgent extends Agent {
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [_, action, __] = text.split("```");
-    const response = JSON.parse(action.trim());
-    return { tool: response.action, input: response.action_input };
+    try {
+      const response = JSON.parse(action.trim());
+      return { tool: response.action, input: response.action_input };
+    } catch {
+      throw new Error(
+        `Unable to parse JSON response from chat agent.\n\n${text}`
+      );
+    }
   }
 }
