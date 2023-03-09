@@ -17,16 +17,16 @@ This section covers how to get started with chat models. The interface is based 
 
 ```typescript
 import { ChatOpenAI } from "langchain/chat_models";
-import {
-  AIChatMessage,
-  HumanChatMessage,
-  SystemChatMessage,
-} from "langchain/schema";
+import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
 
 const chat = new ChatOpenAI({ temperature: 0 });
 ```
 
-You can get chat completions by passing one or more messages to the chat model. The response will be a message. The types of messages currently supported in LangChain are `AIChatMessage`, `HumanChatMessage`, `SystemChatMessage`, and a generic `ChatMessage` -- ChatMessage takes in an arbitrary role parameter. Most of the time, you'll just be dealing with `HumanChatMessage`, `AIChatMessage`, and `SystemChatMessage`.
+Here we create a chat model using the API key stored in the environment variable `OPENAI_API_KEY`. We'll be calling this chat model throughout this section.
+
+### Message in, Message out
+
+You can get chat completions by passing one or more messages to the chat model. The response will also be a message. The types of messages currently supported in LangChain are `AIChatMessage`, `HumanChatMessage`, `SystemChatMessage`, and a generic `ChatMessage` -- ChatMessage takes in an arbitrary role parameter, which we won't be using here. Most of the time, you'll just be dealing with `HumanChatMessage`, `AIChatMessage`, and `SystemChatMessage`.
 
 ```typescript
 const response = await chat.call([
@@ -42,6 +42,8 @@ console.log(response);
 AIChatMessage { text: "J'aime programmer." }
 ```
 
+### Multiple Messages
+
 OpenAI's chat model supports multiple messages as input. See [here](https://platform.openai.com/docs/guides/chat/chat-vs-completions) for more information. Here is an example of sending a system and user message to the chat model:
 
 ```typescript
@@ -49,9 +51,7 @@ response = await chat.call([
   new SystemChatMessage(
     "You are a helpful assistant that translates English to French."
   ),
-  new HumanChatMessage(
-    "Translate this sentence from English to French. I love programming."
-  ),
+  new HumanChatMessage("Translate: I love programming."),
 ]);
 
 console.log(response);
@@ -60,6 +60,8 @@ console.log(response);
 ```
 AIChatMessage { text: "J'aime programmer." }
 ```
+
+### Multiple Completions
 
 You can go one step further and generate completions for multiple sets of messages using generate. This returns an LLMResult with an additional message parameter.
 
@@ -105,7 +107,7 @@ console.log(responseC);
 }
 ```
 
-## PromptTemplates
+### PromptTemplates to encapsulate reusable tokens
 
 You can make use of templating by using a `MessagePromptTemplate`. You can build a `ChatPromptTemplate` from one or more `MessagePromptTemplates`. You can use `ChatPromptTemplate`'s format_prompt -- this returns a `PromptValue`, which you can convert to a string or Message object, depending on whether you want to use the formatted value as input to an llm or chat model.
 
@@ -122,7 +124,7 @@ import {
 First we create a reusable template:
 
 ```typescript
-const chatPrompt = ChatPromptTemplate.fromPromptMessages([
+const translationPrompt = ChatPromptTemplate.fromPromptMessages([
   SystemMessagePromptTemplate.fromTemplate(
     "You are a helpful assistant that translates {input_language} to {output_language}."
   ),
@@ -134,7 +136,7 @@ Then we can use the template to generate a response:
 
 ```typescript
 const responseA = await chat.generatePrompt([
-  await chatPrompt.formatPromptValue({
+  await translationPrompt.formatPromptValue({
     input_language: "English",
     output_language: "French",
     text: "I love programming.",
@@ -157,9 +159,9 @@ console.log(responseA);
 }
 ```
 
-## LLMChain
+### Model + Prompt = LLMChain
 
-You can use the existing LLMChain in a very similar way to before - provide a prompt and a model.
+This pattern of asking for the completion of a formatted prompt is quite common, so we introduce the next piece of the puzzle: LLMChain
 
 ```typescript
 const chain = new LLMChain({
@@ -182,6 +184,129 @@ console.log(responseB);
 
 ```
 { text: "J'aime programmer." }
+```
+
+### Stateful chains
+
+You can also use the chain to store state. This is useful for eg. chatbots, where you want to keep track of the conversation history.
+
+```typescript
+const chatPrompt = ChatPromptTemplate.fromPromptMessages([
+  SystemMessagePromptTemplate.fromTemplate(
+    "The following is a friendly conversation between a human and an AI. The AI is talkative and provides lots of specific details from its context. If the AI does not know the answer to a question, it truthfully says it does not know."
+  ),
+  new MessagesPlaceholder("history"),
+  HumanMessagePromptTemplate.fromTemplate("{input}"),
+]);
+
+const chain = new ConversationChain({
+  memory: new BufferMemory({ returnMessages: true }),
+  prompt: chatPrompt,
+  llm: chat,
+});
+```
+
+Then you can call the chain a few times, and it remembers previous messages:
+
+```typescript
+const responseD = await chain.call({
+  input: "hi from London, how are you doing today",
+});
+```
+
+```
+{
+  response: "Hello! As an AI language model, I don't have feelings, but I'm functioning properly and ready to assist you with any questions or tasks you may have. How can I help you today?"
+}
+```
+
+```typescript
+const responseE = await chain.call({
+  input: "Do you know where I am?",
+});
+
+console.log(responseE);
+```
+
+```
+{
+  response: "Yes, you mentioned that you are from London. However, as an AI language model, I don't have access to your current location unless you provide me with that information."
+}
+```
+
+### Agents and Tools
+
+Finally, we introduce Tools and Agents, which extend the model with other abilities, such as search, or a calculator.
+
+A tool is a function that takes a string (such as a search query) and returns a string (such as a search result). They also have a name and description, which are used by the chat model to identify which tool it should call.
+
+```typescript
+class Tool {
+  name: string;
+  description: string;
+  call(arg: string): Promise<string>;
+}
+```
+
+An agent is a stateless wrapper around an agent prompt chain (such as MRKL) which takes care of formatting tools into the prompt, as well as parsing the responses obtained from the chat model.
+
+```typescript
+interface AgentStep {
+  action: AgentAction;
+  observation: string;
+}
+
+interface AgentAction {
+  tool: string; // Tool.name
+  toolInput: string; // Tool.call argument
+}
+
+interface AgentFinish {
+  returnValues: object;
+}
+
+class Agent {
+  plan(steps: AgentStep[], inputs: object): Promise<AgentAction | AgentFinish>;
+}
+```
+
+To make agents more powerful we need to make them iterative, ie. call the model multiple times until they arrive at the final answer. That's the job of the AgentExecutor.
+
+```typescript
+class AgentExecutor {
+  // a simplified implementation
+  run(inputs: object) {
+    const steps = [];
+    while (true) {
+      const step = await this.agent.plan(steps, inputs);
+      if (step instanceof AgentFinish) {
+        return step.returnValues;
+      }
+      steps.push(step);
+    }
+  }
+}
+```
+
+And finally, we can use the AgentExecutor to run an agent:
+
+```typescript
+// Define the list of tools the agent can use
+const tools = [new SerpAPI()];
+// Create the agent from the chat model and the tools
+const agent = ChatAgent.fromLLMAndTools(new ChatOpenAI(), tools);
+// Create an executor, which calls to the agent until an answer is found
+const executor = AgentExecutor.fromAgentAndTools({ agent, tools });
+
+const responseG = await executor.run(
+  "How many people live in canada as of 2023?"
+);
+
+console.log(responseG);
+```
+
+```
+38,626,704.
 ```
 
 ## Streaming
