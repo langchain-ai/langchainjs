@@ -6,25 +6,16 @@ import {
   AgentInput,
   StaticAgent,
   staticImplements,
-  SerializedAgentT,
+  AgentStep,
 } from "../index.js";
-import { PromptTemplate } from "../../prompts/index.js";
-import { PREFIX, SUFFIX, formatInstructions } from "./prompt.js";
-import { deserializeHelper } from "../helpers.js";
+import {
+  SystemMessagePromptTemplate,
+  HumanMessagePromptTemplate,
+  ChatPromptTemplate,
+} from "../../prompts/index.js";
+import { PREFIX, SUFFIX, FORMAT_INSTRUCTIONS } from "./prompt.js";
 
 const FINAL_ANSWER_ACTION = "Final Answer:";
-
-type SerializedFromLLMAndTools = {
-  suffix?: string;
-  prefix?: string;
-  input_variables?: string[];
-};
-
-export type SerializedZeroShotAgent = SerializedAgentT<
-  "zero-shot-react-description",
-  SerializedFromLLMAndTools,
-  AgentInput
->;
 
 export type CreatePromptArgs = {
   /** String to put after the list of tools. */
@@ -43,7 +34,7 @@ type ZeroShotAgentInput = AgentInput;
  * @augments StaticAgent
  */
 @(staticImplements<StaticAgent>)
-export class ZeroShotAgent extends Agent {
+export class ChatAgent extends Agent {
   constructor(input: ZeroShotAgentInput) {
     super(input);
   }
@@ -60,6 +51,10 @@ export class ZeroShotAgent extends Agent {
     return "Thought:";
   }
 
+  _stop(): string[] {
+    return ["Observation:"];
+  }
+
   static validateTools(tools: Tool[]) {
     const invalidTool = tools.find((tool) => !tool.description);
     if (invalidTool) {
@@ -70,6 +65,14 @@ export class ZeroShotAgent extends Agent {
     }
   }
 
+  constructScratchPad(steps: AgentStep[]): string {
+    const agentScratchpad = super.constructScratchPad(steps);
+    if (agentScratchpad) {
+      return `This was your previous work (but I haven't seen any of it! I only see what you return as final answer):\n${agentScratchpad}`;
+    }
+    return agentScratchpad;
+  }
+
   /**
    * Create prompt in the style of the zero shot agent.
    *
@@ -77,25 +80,20 @@ export class ZeroShotAgent extends Agent {
    * @param args - Arguments to create the prompt with.
    * @param args.suffix - String to put after the list of tools.
    * @param args.prefix - String to put before the list of tools.
-   * @param args.inputVariables - List of input variables the final prompt will expect.
    */
   static createPrompt(tools: Tool[], args?: CreatePromptArgs) {
-    const {
-      prefix = PREFIX,
-      suffix = SUFFIX,
-      inputVariables = ["input", "agent_scratchpad"],
-    } = args ?? {};
+    const { prefix = PREFIX, suffix = SUFFIX } = args ?? {};
     const toolStrings = tools
       .map((tool) => `${tool.name}: ${tool.description}`)
       .join("\n");
-    const toolNames = tools.map((tool) => tool.name).join("\n");
-    const instructions = formatInstructions(toolNames);
-    const template = [prefix, toolStrings, instructions, suffix].join("\n\n");
-
-    return new PromptTemplate({
-      template,
-      inputVariables,
-    });
+    const template = [prefix, toolStrings, FORMAT_INSTRUCTIONS, suffix].join(
+      "\n\n"
+    );
+    const messages = [
+      SystemMessagePromptTemplate.fromTemplate(template),
+      HumanMessagePromptTemplate.fromTemplate("{input}\n\n{agent_scratchpad}"),
+    ];
+    return ChatPromptTemplate.fromPromptMessages(messages);
   }
 
   static fromLLMAndTools(
@@ -103,10 +101,10 @@ export class ZeroShotAgent extends Agent {
     tools: Tool[],
     args?: CreatePromptArgs
   ) {
-    ZeroShotAgent.validateTools(tools);
-    const prompt = ZeroShotAgent.createPrompt(tools, args);
+    ChatAgent.validateTools(tools);
+    const prompt = ChatAgent.createPrompt(tools, args);
     const chain = new LLMChain({ prompt, llm });
-    return new ZeroShotAgent({
+    return new ChatAgent({
       llmChain: chain,
       allowedTools: tools.map((t) => t.name),
     });
@@ -119,36 +117,15 @@ export class ZeroShotAgent extends Agent {
       return { tool: "Final Answer", input };
     }
 
-    const match = /Action: (.*)\nAction Input: (.*)/s.exec(text);
-    if (!match) {
-      throw new Error(`Could not parse LLM output: ${text}`);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const [_, action, __] = text.split("```");
+    try {
+      const response = JSON.parse(action.trim());
+      return { tool: response.action, input: response.action_input };
+    } catch {
+      throw new Error(
+        `Unable to parse JSON response from chat agent.\n\n${text}`
+      );
     }
-
-    return {
-      tool: match[1].trim(),
-      input: match[2].trim().replace(/^"+|"+$/g, ""),
-    };
-  }
-
-  static async deserialize(
-    data: SerializedZeroShotAgent & { llm?: BaseLanguageModel; tools?: Tool[] }
-  ): Promise<ZeroShotAgent> {
-    const { llm, tools, ...rest } = data;
-    return deserializeHelper(
-      llm,
-      tools,
-      rest,
-      (
-        llm: BaseLanguageModel,
-        tools: Tool[],
-        args: SerializedFromLLMAndTools
-      ) =>
-        ZeroShotAgent.fromLLMAndTools(llm, tools, {
-          prefix: args.prefix,
-          suffix: args.suffix,
-          inputVariables: args.input_variables,
-        }),
-      (args) => new ZeroShotAgent(args)
-    );
   }
 }

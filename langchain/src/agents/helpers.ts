@@ -1,6 +1,6 @@
 import type { SerializedAgentT, AgentInput } from "./index.js";
 import { Tool } from "./tools/index.js";
-import { BaseLLM } from "../llms/index.js";
+import { BaseLanguageModel } from "../schema/index.js";
 import { SerializedLLMChain, LLMChain } from "../chains/index.js";
 import { resolveConfigFromFile } from "../util/index.js";
 
@@ -10,10 +10,10 @@ export const deserializeHelper = async <
   V extends AgentInput,
   Z
 >(
-  llm: BaseLLM | undefined,
+  llm: BaseLanguageModel | undefined,
   tools: Tool[] | undefined,
   data: SerializedAgentT<T, U, V>,
-  fromLLMAndTools: (llm: BaseLLM, tools: Tool[], args: U) => Z,
+  fromLLMAndTools: (llm: BaseLanguageModel, tools: Tool[], args: U) => Z,
   fromConstructor: (args: V) => Z
 ): Promise<Z> => {
   if (data.load_from_llm_and_tools) {
