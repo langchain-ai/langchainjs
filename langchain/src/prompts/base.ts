@@ -169,6 +169,7 @@ export abstract class BaseStringPromptTemplate extends BasePromptTemplate {
  * Base class for example selectors.
  */
 export type Example = Record<string, string>;
+
 export abstract class BaseExampleSelector {
   abstract addExample(example: Example): Promise<void | string>;
 

@@ -57,24 +57,24 @@ export interface FewShotPromptTemplateInput extends BasePromptTemplateInput {
   /**
    * String separator used to join the prefix, the examples, and suffix.
    */
-  exampleSeparator: string;
+  exampleSeparator?: string;
 
   /**
    * A prompt template string to put before the examples.
    *
    * @defaultValue `""`
    */
-  prefix: string;
+  prefix?: string;
 
   /**
    * A prompt template string to put after the examples.
    */
-  suffix: string;
+  suffix?: string;
 
   /**
    * The format of the prompt template. Options are: 'f-string', 'jinja-2'
    */
-  templateFormat: TemplateFormat;
+  templateFormat?: TemplateFormat;
 
   /**
    * Whether or not to try validating the template on initialization.
@@ -97,11 +97,11 @@ export class FewShotPromptTemplate
 
   examplePrompt: PromptTemplate;
 
-  suffix: string;
+  suffix = "";
 
-  exampleSeparator: string;
+  exampleSeparator = "\n\n";
 
-  prefix: string;
+  prefix = "";
 
   templateFormat: TemplateFormat = "f-string";
 
