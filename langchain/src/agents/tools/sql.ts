@@ -1,77 +1,9 @@
-import sqlite3 from "sqlite3";
 import { Tool } from "./base.js";
 import { OpenAI } from "../../llms/index.js";
 import { LLMChain } from "../../chains/index.js";
 import { PromptTemplate } from "../../prompts/index.js";
-
-export class SqlDatabase {
-  private db: sqlite3.Database;
-
-  constructor(db: sqlite3.Database) {
-    this.db = db;
-    this.db.exec("PRAGMA read_only = ON");
-  }
-
-  public getTables(): Promise<string[]> {
-    return new Promise((resolve, reject) => {
-      this.db.all(
-        "SELECT name FROM sqlite_master WHERE type='table'",
-        (err, rows) => {
-          if (err) {
-            reject(err);
-          } else {
-            resolve(
-              rows
-                .map((row) => row.name)
-                .filter((name) => name !== "sqlite_sequence")
-            );
-          }
-        }
-      );
-    });
-  }
-
-  public getCreateTableStatement(tableName: string): Promise<string> {
-    return new Promise((resolve, reject) => {
-      this.db.get(
-        `SELECT sql FROM sqlite_master WHERE type='table' AND name='${tableName}'`,
-        (err, row) => {
-          if (err) {
-            reject(err);
-          } else if (!row) {
-            reject(new Error(`table ${tableName} does not exist`));
-          } else {
-            resolve(row.sql);
-          }
-        }
-      );
-    });
-  }
-
-  public getSampleData(tableName: string, limit = 3): Promise<string[]> {
-    return new Promise((resolve, reject) => {
-      this.db.all(`SELECT * FROM ${tableName} LIMIT ${limit}`, (err, rows) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(rows.map((row) => JSON.stringify(row)));
-        }
-      });
-    });
-  }
-
-  public executeQuery(query: string): Promise<string[]> {
-    return new Promise((resolve, reject) => {
-      this.db.all(query, (err, rows) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(rows.map((row) => JSON.stringify(row)));
-        }
-      });
-    });
-  }
-}
+import { SqlDatabase } from "../../sql_db.js";
+import { SqlTable } from "../../util/sql_utils.js";
 
 interface SqlTool {
   db: SqlDatabase;
@@ -89,8 +21,7 @@ export class QuerySqlTool extends Tool implements SqlTool {
 
   async call(input: string) {
     try {
-      const rows = await this.db.executeQuery(input);
-      return rows.join("\n");
+      return await this.db.run(input);
     } catch (error) {
       return `${error}`;
     }
@@ -115,18 +46,7 @@ export class InfoSqlTool extends Tool implements SqlTool {
   async call(input: string) {
     try {
       const tables = input.split(",").map((table) => table.trim());
-      const createTableStatements = await Promise.all(
-        tables.map((table) => this.db.getCreateTableStatement(table))
-      );
-      const sampleData = await Promise.all(
-        tables.map((table) => this.db.getSampleData(table))
-      );
-      return tables
-        .map(
-          (_, index) =>
-            `${createTableStatements[index]}\n${sampleData[index].join("\n")}`
-        )
-        .join("\n\n");
+      return await this.db.getTableInfo(tables);
     } catch (error) {
       return `${error}`;
     }
@@ -150,8 +70,10 @@ export class ListTablesSqlTool extends Tool implements SqlTool {
 
   async call(_: string) {
     try {
-      const tables = await this.db.getTables();
-      return tables.sort().join("\n");
+      const tables = this.db.allTables.map(
+        (table: SqlTable) => table.tableName
+      );
+      return tables.join(", ");
     } catch (error) {
       return `${error}`;
     }

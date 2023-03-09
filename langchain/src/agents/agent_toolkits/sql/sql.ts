@@ -4,7 +4,6 @@ import {
   ListTablesSqlTool,
   QueryCheckerTool,
   QuerySqlTool,
-  SqlDatabase,
 } from "../../tools/index.js";
 import { Toolkit } from "../base.js";
 import { BaseLLM } from "../../../llms/index.js";
@@ -13,6 +12,7 @@ import { interpolateFString } from "../../../prompts/template.js";
 import { LLMChain } from "../../../chains/index.js";
 import { ZeroShotAgent, CreatePromptArgs } from "../../mrkl/index.js";
 import { AgentExecutor } from "../../executor.js";
+import { SqlDatabase } from "../../../sql_db.js";
 
 type SqlCreatePromptArgs = {
   /** Number of results to return. */
