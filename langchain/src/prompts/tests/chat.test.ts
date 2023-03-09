@@ -60,6 +60,11 @@ test("Test format", async () => {
   ]);
 });
 
+test("Test serialize", async () => {
+  const chatPrompt = createChatPromptTemplate();
+  expect(chatPrompt.serialize()).toMatchSnapshot();
+});
+
 test("Test format with invalid input values", async () => {
   const chatPrompt = createChatPromptTemplate();
   await expect(

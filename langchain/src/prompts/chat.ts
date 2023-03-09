@@ -17,19 +17,31 @@ import {
 } from "../schema/index.js";
 import { PromptTemplate } from "./prompt.js";
 
+export interface SerializedMessagePromptTemplate {
+  _type?: string;
+  [key: string]: unknown;
+}
+
 /** Serialized Chat prompt template */
 export type SerializedChatPromptTemplate = {
   _type?: "chat_prompt";
   input_variables: string[];
   output_parser?: SerializedOutputParser;
   template_format?: TemplateFormat;
-  prompt_messages: BaseMessagePromptTemplate[];
+  prompt_messages: SerializedMessagePromptTemplate[];
 };
 
 export abstract class BaseMessagePromptTemplate {
   abstract inputVariables: string[];
 
   abstract formatMessages(values: InputValues): Promise<BaseChatMessage[]>;
+
+  serialize(): SerializedMessagePromptTemplate {
+    return {
+      _type: this.constructor.name,
+      ...JSON.parse(JSON.stringify(this)),
+    };
+  }
 }
 
 export class MessagesPlaceholder extends BaseMessagePromptTemplate {
@@ -246,7 +258,7 @@ export class ChatPromptTemplate
       input_variables: this.inputVariables,
       output_parser: this.outputParser?.serialize(),
       template_format: this.templateFormat,
-      prompt_messages: this.promptMessages,
+      prompt_messages: this.promptMessages.map((m) => m.serialize()),
     };
   }
 
