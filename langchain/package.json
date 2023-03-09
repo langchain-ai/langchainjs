@@ -35,6 +35,8 @@
     "chat_models.d.ts",
     "schema.js",
     "schema.d.ts",
+    "sql_db.js",
+    "sql_db.d.ts",
     "index.js",
     "index.d.ts"
   ],
@@ -246,6 +248,10 @@
     "./schema": {
       "types": "./schema.d.ts",
       "import": "./schema.js"
+    },
+    "./sql_db": {
+      "types": "./sql_db.d.ts",
+      "import": "./sql_db.js"
     }
   }
 }

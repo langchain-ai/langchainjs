@@ -29,7 +29,8 @@
     "langchain": "workspace:*",
     "openai": "^3.1.0",
     "serpapi": "^1.1.0",
-    "sqlite3": "^5.1.4"
+    "sqlite3": "^5.1.4",
+    "typeorm": "^0.3.12"
   },
   "devDependencies": {
     "@tsconfig/recommended": "^1.0.2",
