@@ -142,12 +142,14 @@ export class FewShotPromptTemplate
     return "few_shot";
   }
 
-  private getExamples(_: InputValues): InputValues[] {
+  private async getExamples(
+    inputVariables: InputValues
+  ): Promise<InputValues[]> {
     if (this.examples !== undefined) {
       return this.examples;
     }
     if (this.exampleSelector !== undefined) {
-      throw new Error("Example selectors are not yet supported.");
+      return this.exampleSelector.selectExamples(inputVariables);
     }
 
     throw new Error(
@@ -169,7 +171,7 @@ export class FewShotPromptTemplate
 
   async format(values: InputValues): Promise<string> {
     const allValues = await this.mergePartialAndUserVariables(values);
-    const examples = this.getExamples(allValues);
+    const examples = await this.getExamples(allValues);
 
     const exampleStrings = await Promise.all(
       examples.map((example) => this.examplePrompt.format(example))

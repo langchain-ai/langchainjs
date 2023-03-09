@@ -11,18 +11,21 @@ test("Test using LengthBasedExampleSelector", async () => {
     inputVariables: ["foo"],
     partialVariables: { bar: "baz" },
   });
-  const selector = new LengthBasedExampleSelector({
-    examplePrompt: prompt,
-    maxLength: 10,
-  });
+  const selector = await LengthBasedExampleSelector.fromExamples(
+    [{ foo: "one one one" }],
+    {
+      examplePrompt: prompt,
+      maxLength: 10,
+    }
+  );
   await selector.addExample({ foo: "one two three" });
   await selector.addExample({ foo: "four five six" });
   await selector.addExample({ foo: "seven eight nine" });
   await selector.addExample({ foo: "ten eleven twelve" });
   const chosen = await selector.selectExamples({ foo: "hello", bar: "world" });
   expect(chosen).toStrictEqual([
+    { foo: "one one one" },
     { foo: "one two three" },
-    { foo: "four five six" },
   ]);
 });
 

@@ -10,30 +10,28 @@ function sortedValues<T>(values: Record<string, T>): T[] {
 }
 
 export class SemanticSimilarityExampleSelector implements BaseExampleSelector {
-  static examples?: unknown[];
-
   vectorStore: VectorStore;
 
   k = 4;
 
-  example_keys?: string[];
+  exampleKeys?: string[];
 
-  input_keys?: string[];
+  inputKeys?: string[];
 
   constructor(data: {
     vectorStore: VectorStore;
     k?: number;
-    example_keys?: string[];
-    input_keys?: string[];
+    exampleKeys?: string[];
+    inputKeys?: string[];
   }) {
     this.vectorStore = data.vectorStore;
     this.k = data.k ?? 4;
-    this.example_keys = data.example_keys;
-    this.input_keys = data.input_keys;
+    this.exampleKeys = data.exampleKeys;
+    this.inputKeys = data.inputKeys;
   }
 
   async addExample(example: Record<string, string>): Promise<void> {
-    const inputKeys = this.input_keys ?? Object.keys(example);
+    const inputKeys = this.inputKeys ?? Object.keys(example);
     const stringExample = sortedValues(
       inputKeys.reduce(
         (acc, key) => ({ ...acc, [key]: example[key] }),
@@ -52,7 +50,7 @@ export class SemanticSimilarityExampleSelector implements BaseExampleSelector {
   async selectExamples<T>(
     inputVariables: Record<string, T>
   ): Promise<Example[]> {
-    const inputKeys = this.input_keys ?? Object.keys(inputVariables);
+    const inputKeys = this.inputKeys ?? Object.keys(inputVariables);
     const query = sortedValues(
       inputKeys.reduce(
         (acc, key) => ({ ...acc, [key]: inputVariables[key] }),
@@ -63,10 +61,10 @@ export class SemanticSimilarityExampleSelector implements BaseExampleSelector {
     const exampleDocs = await this.vectorStore.similaritySearch(query, this.k);
 
     const examples = exampleDocs.map((doc) => doc.metadata);
-    if (this.example_keys) {
+    if (this.exampleKeys) {
       // If example keys are provided, filter examples to those keys.
       return examples.map((example) =>
-        (this.example_keys as string[]).reduce(
+        (this.exampleKeys as string[]).reduce(
           (acc, key) => ({ ...acc, [key]: example[key] }),
           {}
         )
@@ -108,8 +106,8 @@ export class SemanticSimilarityExampleSelector implements BaseExampleSelector {
     return new SemanticSimilarityExampleSelector({
       vectorStore,
       k: options.k ?? 4,
-      example_keys: options.exampleKeys,
-      input_keys: options.inputKeys,
+      exampleKeys: options.exampleKeys,
+      inputKeys: options.inputKeys,
     });
   }
 }
