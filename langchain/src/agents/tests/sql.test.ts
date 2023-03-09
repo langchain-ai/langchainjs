@@ -6,7 +6,7 @@ import {
   ListTablesSqlTool,
   QueryCheckerTool,
 } from "../tools/sql.js";
-import {SqlDatabase} from "../../sql_db.js";
+import { SqlDatabase } from "../../sql_db.js";
 
 const previousEnv = process.env;
 
@@ -60,7 +60,9 @@ afterEach(() => {
 test("QuerySqlTool", async () => {
   const querySqlTool = new QuerySqlTool(db);
   const result = await querySqlTool.call("SELECT * FROM users");
-  expect(result).toBe(`[{"id":1,"name":"Alice","age":20},{"id":2,"name":"Bob","age":21},{"id":3,"name":"Charlie","age":22}]`);
+  expect(result).toBe(
+    `[{"id":1,"name":"Alice","age":20},{"id":2,"name":"Bob","age":21},{"id":3,"name":"Charlie","age":22}]`
+  );
 });
 
 test("QuerySqlTool with error", async () => {
@@ -93,7 +95,9 @@ SELECT * FROM "users" LIMIT 3;
 test("InfoSqlTool with error", async () => {
   const infoSqlTool = new InfoSqlTool(db);
   const result = await infoSqlTool.call("userss, products");
-  expect(result).toBe(`Error: Wrong target table name: the table userss was not found in the database`);
+  expect(result).toBe(
+    `Error: Wrong target table name: the table userss was not found in the database`
+  );
 });
 
 test("ListTablesSqlTool", async () => {

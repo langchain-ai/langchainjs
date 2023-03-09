@@ -1,9 +1,9 @@
-import {Tool} from "./base.js";
-import {OpenAI} from "../../llms/index.js";
-import {LLMChain} from "../../chains/index.js";
-import {PromptTemplate} from "../../prompts/index.js";
-import {SqlDatabase} from "../../sql_db.js";
-import {SqlTable} from "../../util/sql_utils.js";
+import { Tool } from "./base.js";
+import { OpenAI } from "../../llms/index.js";
+import { LLMChain } from "../../chains/index.js";
+import { PromptTemplate } from "../../prompts/index.js";
+import { SqlDatabase } from "../../sql_db.js";
+import { SqlTable } from "../../util/sql_utils.js";
 
 interface SqlTool {
   db: SqlDatabase;
@@ -70,7 +70,9 @@ export class ListTablesSqlTool extends Tool implements SqlTool {
 
   async call(_: string) {
     try {
-      const tables = this.db.allTables.map((table: SqlTable) => table.tableName);
+      const tables = this.db.allTables.map(
+        (table: SqlTable) => table.tableName
+      );
       return tables.join(", ");
     } catch (error) {
       return `${error}`;
