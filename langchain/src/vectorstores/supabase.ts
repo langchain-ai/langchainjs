@@ -16,21 +16,23 @@ interface SearchEmbeddingsResponse {
 }
 
 export class SupabaseVectorStore extends VectorStore {
+  client: SupabaseClient;
+
   tableName: string;
 
   queryName: string;
 
   constructor(
-    public client: SupabaseClient,
     embeddings: Embeddings,
     options: {
+      client: SupabaseClient;
       tableName?: string;
       queryName?: string;
-      withMetadata?: boolean;
-    } = {}
+    }
   ) {
     super(embeddings);
 
+    this.client = options.client;
     this.tableName = options.tableName || "documents";
     this.queryName = options.queryName || "match_documents";
   }
@@ -100,10 +102,10 @@ export class SupabaseVectorStore extends VectorStore {
     texts: string[],
     metadatas: object[],
     embeddings: Embeddings,
-    {
-      client,
-    }: {
+    dbConfig: {
       client: SupabaseClient;
+      tableName?: string;
+      queryName?: string;
     }
   ): Promise<SupabaseVectorStore> {
     const docs = [];
@@ -114,24 +116,32 @@ export class SupabaseVectorStore extends VectorStore {
       });
       docs.push(newDoc);
     }
-    return SupabaseVectorStore.fromDocuments(client, docs, embeddings);
+    return SupabaseVectorStore.fromDocuments(docs, embeddings, dbConfig);
   }
 
   static async fromDocuments(
-    client: SupabaseClient,
     docs: Document[],
-    embeddings: Embeddings
+    embeddings: Embeddings,
+    dbConfig: {
+      client: SupabaseClient;
+      tableName?: string;
+      queryName?: string;
+    }
   ): Promise<SupabaseVectorStore> {
-    const instance = new this(client, embeddings);
+    const instance = new this(embeddings, dbConfig);
     await instance.addDocuments(docs);
     return instance;
   }
 
   static async fromExistingIndex(
-    client: SupabaseClient,
-    embeddings: Embeddings
+    embeddings: Embeddings,
+    dbConfig: {
+      client: SupabaseClient;
+      tableName?: string;
+      queryName?: string;
+    }
   ): Promise<SupabaseVectorStore> {
-    const instance = new this(client, embeddings);
+    const instance = new this(embeddings, dbConfig);
     return instance;
   }
 }

@@ -3,7 +3,7 @@ import { OpenAIEmbeddings } from "langchain/embeddings";
 import { createClient } from "@supabase/supabase-js";
 
 export const run = async () => {
-  const supabaseClient = createClient(
+  const client = createClient(
     process.env.SUPABASE_URL || "",
     process.env.SUPABASE_PRIVATE_KEY || ""
   );
@@ -13,7 +13,9 @@ export const run = async () => {
     [{ id: 2 }, { id: 1 }, { id: 3 }],
     new OpenAIEmbeddings(),
     {
-      client: supabaseClient,
+      client,
+      tableName: "documents",
+      queryName: "match_documents"
     }
   );
 
