@@ -188,7 +188,7 @@ console.log(responseB);
 
 ### Stateful chains
 
-You can also use the chain to store state. This is useful for eg. chatbots, where you want to keep track of the conversation history.
+You can also use the chain to store state. This is useful for eg. chatbots, where you want to keep track of the conversation history. MessagesPlaceholder is a special prompt template that will be replaced with the messages passed in each call.
 
 ```typescript
 const chatPrompt = ChatPromptTemplate.fromPromptMessages([
@@ -200,13 +200,13 @@ const chatPrompt = ChatPromptTemplate.fromPromptMessages([
 ]);
 
 const chain = new ConversationChain({
-  memory: new BufferMemory({ returnMessages: true }),
+  memory: new BufferMemory({ returnMessages: true, memoryKey: "history" }),
   prompt: chatPrompt,
   llm: chat,
 });
 ```
 
-Then you can call the chain a few times, and it remembers previous messages:
+The chain will internally accumulate the messages sent to the model, and the ones received as output. Then it will inject the messages into the prompt on the next call. So you can call the chain a few times, and it remembers previous messages:
 
 ```typescript
 const responseD = await chain.call({
