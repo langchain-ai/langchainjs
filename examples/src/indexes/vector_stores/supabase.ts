@@ -9,10 +9,12 @@ export const run = async () => {
   );
 
   const vectorStore = await SupabaseVectorStore.fromTexts(
-    supabaseClient,
     ["Hello world", "Bye bye", "What's this?"],
     [{ id: 2 }, { id: 1 }, { id: 3 }],
-    new OpenAIEmbeddings()
+    new OpenAIEmbeddings(),
+    {
+      client: supabaseClient,
+    }
   );
 
   const resultOne = await vectorStore.similaritySearch("Hello world", 1);

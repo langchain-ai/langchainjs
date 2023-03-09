@@ -167,8 +167,11 @@ export class HNSWLib extends SaveableVectorStore {
     texts: string[],
     metadatas: object[],
     embeddings: Embeddings,
-    docstore: InMemoryDocstore = new InMemoryDocstore()
+    dbConfig?: {
+      docstore?: InMemoryDocstore;
+    }
   ): Promise<HNSWLib> {
+    const docstore = dbConfig?.docstore || new InMemoryDocstore();
     const docs: Document[] = [];
     for (let i = 0; i < texts.length; i += 1) {
       const newDoc = new Document({

@@ -1,5 +1,6 @@
 import { expect, test } from "@jest/globals";
 import { FewShotPromptTemplate } from "../few_shot.js";
+import { LengthBasedExampleSelector } from "../index.js";
 import { PromptTemplate } from "../prompt.js";
 
 test("Test using partial", async () => {
@@ -72,6 +73,33 @@ test("Test partial with function and examples", async () => {
   const prompt = new FewShotPromptTemplate({
     prefix: "{foo}{bar}",
     examples: [{ x: "foo" }, { x: "bar" }],
+    suffix: "",
+    templateFormat: "f-string",
+    exampleSeparator: "\n",
+    examplePrompt,
+    inputVariables: ["foo", "bar"],
+  });
+
+  const partialPrompt = await prompt.partial({
+    foo: () => Promise.resolve("boo"),
+  });
+  expect(await partialPrompt.format({ bar: "baz" })).toBe(
+    `boobaz
+An example about foo
+An example about bar
+`
+  );
+});
+
+test.only("Test partial with function and example selector", async () => {
+  const examplePrompt = PromptTemplate.fromTemplate("An example about {x}");
+  const exampleSelector = await LengthBasedExampleSelector.fromExamples(
+    [{ x: "foo" }, { x: "bar" }],
+    { examplePrompt, maxLength: 200 }
+  );
+  const prompt = new FewShotPromptTemplate({
+    prefix: "{foo}{bar}",
+    exampleSelector,
     suffix: "",
     templateFormat: "f-string",
     exampleSeparator: "\n",

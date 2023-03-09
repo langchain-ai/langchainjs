@@ -114,8 +114,10 @@ export class Chroma extends VectorStore {
     texts: string[],
     metadatas: object[],
     embeddings: Embeddings,
-    collectionName?: string,
-    url?: string
+    dbConfig: {
+      collectionName?: string;
+      url?: string;
+    }
   ): Promise<Chroma> {
     const docs: Document[] = [];
     for (let i = 0; i < texts.length; i += 1) {
@@ -125,7 +127,12 @@ export class Chroma extends VectorStore {
       });
       docs.push(newDoc);
     }
-    return Chroma.fromDocuments(docs, embeddings, collectionName, url);
+    return Chroma.fromDocuments(
+      docs,
+      embeddings,
+      dbConfig.collectionName,
+      dbConfig.url
+    );
   }
 
   static async fromDocuments(

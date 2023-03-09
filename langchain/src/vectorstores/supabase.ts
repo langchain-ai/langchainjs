@@ -97,10 +97,14 @@ export class SupabaseVectorStore extends VectorStore {
   }
 
   static async fromTexts(
-    client: SupabaseClient,
     texts: string[],
     metadatas: object[],
-    embeddings: Embeddings
+    embeddings: Embeddings,
+    {
+      client,
+    }: {
+      client: SupabaseClient;
+    }
   ): Promise<SupabaseVectorStore> {
     const docs = [];
     for (let i = 0; i < texts.length; i += 1) {

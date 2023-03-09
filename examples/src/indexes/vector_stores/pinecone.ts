@@ -11,10 +11,12 @@ export const run = async () => {
 
   const index = client.Index("my-index");
   const vectorStore = await PineconeStore.fromTexts(
-    index,
     ["Hello world", "Bye bye", "hello nice world"],
     [{ id: 2 }, { id: 1 }, { id: 3 }],
-    new OpenAIEmbeddings()
+    new OpenAIEmbeddings(),
+    {
+      pineconeClient: index,
+    }
   );
 
   const resultOne = await vectorStore.similaritySearchWithScore(
