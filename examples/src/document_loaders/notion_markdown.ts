@@ -1,9 +1,9 @@
-import {NotionLoader} from "langchain/document_loaders";
+import { NotionLoader } from "langchain/document_loaders";
 
 export const run = async () => {
-  const loader = new NotionLoader(
-    "src/document_loaders/example_data/notion.md"
-  );
+  /** Provide the directory path of your notion folder */
+  const directoryPath = "Notion_DB";
+  const loader = new NotionLoader(directoryPath);
   const docs = await loader.load();
   console.log({ docs });
 };
