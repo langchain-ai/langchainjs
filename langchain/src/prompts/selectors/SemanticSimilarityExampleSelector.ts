@@ -3,7 +3,7 @@ import { VectorStore } from "vectorstores/base.js";
 import { Document } from "../../document.js";
 import type { BaseExampleSelector, Example } from "../base.js";
 
-function sortedValues(values: Record<string, string>): string[] {
+function sortedValues<T>(values: Record<string, T>): T[] {
   return Object.keys(values)
     .sort()
     .map((key) => values[key]);
@@ -49,14 +49,14 @@ export class SemanticSimilarityExampleSelector implements BaseExampleSelector {
     ]);
   }
 
-  async selectExamples(
-    inputVariables: Record<string, string>
+  async selectExamples<T>(
+    inputVariables: Record<string, T>
   ): Promise<Example[]> {
     const inputKeys = this.input_keys ?? Object.keys(inputVariables);
     const query = sortedValues(
       inputKeys.reduce(
         (acc, key) => ({ ...acc, [key]: inputVariables[key] }),
-        {} as Record<string, string>
+        {} as Record<string, T>
       )
     ).join(" ");
 

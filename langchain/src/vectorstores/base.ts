@@ -47,7 +47,7 @@ export abstract class VectorStore {
     _dbConfig: Record<string, any>
   ): Promise<VectorStore> {
     throw new Error(
-      "vectorstore impl forgot to override this, either you are using the base vectorstore class (dont), or report a bug"
+      "the Langchain vectorstore implementation you are using forgot to override this, please report a bug"
     );
   }
 }
