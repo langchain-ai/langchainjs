@@ -16,3 +16,4 @@ export { TextLoader } from "./text.js";
 export { JSONLoader } from "./json.js";
 export { JSONLinesLoader } from "./jsonl.js";
 export { CSVLoader } from "./csv.js";
+export { NotionLoader } from "./notion_markdown.js";
