@@ -94,12 +94,12 @@ export class PineconeStore extends VectorStore {
     embeddings: Embeddings,
     dbConfig: {
       pineconeClient: VectorOperationsApi;
-      textKey: string;
-      namespace: string | undefined;
+      textKey?: string;
+      namespace?: string | undefined;
     }
   ): Promise<PineconeStore> {
     const textKey = dbConfig.textKey || "text";
-    const docs = [];
+    const docs: Document[] = [];
     for (let i = 0; i < texts.length; i += 1) {
       const newDoc = new Document({
         pageContent: texts[i],
