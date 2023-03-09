@@ -1,4 +1,9 @@
-import { Configuration, OpenAIApi, CreateEmbeddingRequest } from "openai";
+import {
+  Configuration,
+  OpenAIApi,
+  CreateEmbeddingRequest,
+  ConfigurationParameters,
+} from "openai";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
 import { chunkArray } from "../util/index.js";
 import { Embeddings, EmbeddingsParams } from "./base.js";
@@ -22,9 +27,9 @@ export class OpenAIEmbeddings extends Embeddings implements ModelParams {
    */
   stripNewLines = true;
 
-  private apiKey: string;
-
   private client: OpenAIApi;
+
+  private clientConfig: ConfigurationParameters;
 
   constructor(
     fields?: Partial<ModelParams> &
@@ -33,7 +38,8 @@ export class OpenAIEmbeddings extends Embeddings implements ModelParams {
         batchSize?: number;
         openAIApiKey?: string;
         stripNewLines?: boolean;
-      }
+      },
+    configuration?: ConfigurationParameters
   ) {
     super(fields ?? {});
 
@@ -44,8 +50,12 @@ export class OpenAIEmbeddings extends Embeddings implements ModelParams {
 
     this.modelName = fields?.modelName ?? this.modelName;
     this.batchSize = fields?.batchSize ?? this.batchSize;
-    this.apiKey = apiKey;
     this.stripNewLines = fields?.stripNewLines ?? this.stripNewLines;
+
+    this.clientConfig = {
+      apiKey,
+      ...configuration,
+    };
   }
 
   async embedDocuments(texts: string[]): Promise<number[][]> {
@@ -81,8 +91,11 @@ export class OpenAIEmbeddings extends Embeddings implements ModelParams {
   private async embeddingWithRetry(request: CreateEmbeddingRequest) {
     if (!this.client) {
       const clientConfig = new Configuration({
-        apiKey: this.apiKey,
-        baseOptions: { adapter: fetchAdapter },
+        ...this.clientConfig,
+        baseOptions: {
+          ...this.clientConfig.baseOptions,
+          adapter: fetchAdapter,
+        },
       });
       this.client = new OpenAIApi(clientConfig);
     }
