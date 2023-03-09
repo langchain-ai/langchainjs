@@ -1,6 +1,12 @@
 # HNSWLib
 
-HNSWLib is an in-memory vectorstore. You can install it with `npm install hnswlib-node`.
+HNSWLib is an in-memory vectorstore. You can install it with
+
+```bash npm2yarn
+npm install hnswlib-node
+```
+
+And this is how to use it:
 
 ```typescript
 import { HNSWLib } from "langchain/vectorstores";

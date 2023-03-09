@@ -1,6 +1,10 @@
 # Pinecone
 
-Langchain.js accepts [@pinecone-database/pinecone](https://docs.pinecone.io/docs/node-client) as the client for Pinecone vectorstore. Install the library with `npm install -S @pinecone-database/pinecone`.
+Langchain.js accepts [@pinecone-database/pinecone](https://docs.pinecone.io/docs/node-client) as the client for Pinecone vectorstore. Install the library with
+
+```bash npm2yarn
+npm install -S @pinecone-database/pinecone
+```
 
 ## Index docs
 
