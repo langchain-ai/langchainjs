@@ -3,7 +3,7 @@
 This example shows how to load and use an agent with a SQL toolkit.
 
 ```typescript
-import { OpenAI } from "langchain";
+import { OpenAI } from "langchain/llms";
 import { SqlDatabase } from "langchain/tools";
 import { createSqlAgent, SqlToolkit } from "langchain/agents";
 import sqlite3 from "sqlite3";
@@ -13,7 +13,7 @@ import sqlite3 from "sqlite3";
  * in the examples folder.
  */
 export const run = async () => {
-  const db = await new sqlite3.Database("Chinook.db");
+  const db = new sqlite3.Database("Chinook.db");
   const tookit = new SqlToolkit(new SqlDatabase(db));
   const model = new OpenAI({ temperature: 0 });
   const executor = createSqlAgent(model, tookit);

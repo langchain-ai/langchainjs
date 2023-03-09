@@ -17,3 +17,5 @@ You can create one with metadata with:
 import { Document } from "langchain/document";
 const doc = new Document({ pageContent: "foo", metadata: { source: "1" } });
 ```
+
+Also check out [Document Loaders](../document_loaders/) for a way to load documents from a variety of sources.

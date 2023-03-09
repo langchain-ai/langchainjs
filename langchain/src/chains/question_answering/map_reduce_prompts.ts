@@ -1,5 +1,11 @@
 /* eslint-disable */
-import { PromptTemplate } from "../../prompts/index.js";
+import {
+  PromptTemplate,
+  ChatPromptTemplate,
+  SystemMessagePromptTemplate,
+  HumanMessagePromptTemplate,
+} from "../../prompts/index.js";
+import { ConditionalPromptSelector, isChatModel } from "../prompt_selector.js";
 
 const qa_template = `Use the following portion of a long document to see if any of the text is relevant to answer the question. 
 Return any relevant text verbatim.
@@ -8,6 +14,21 @@ Question: {question}
 Relevant text, if any:`;
 export const DEFAULT_COMBINE_QA_PROMPT =
   PromptTemplate.fromTemplate(qa_template);
+
+const system_template = `Use the following portion of a long document to see if any of the text is relevant to answer the question. 
+Return any relevant text verbatim.
+----------------
+{context}`;
+const messages = [
+  SystemMessagePromptTemplate.fromTemplate(system_template),
+  HumanMessagePromptTemplate.fromTemplate("{question}"),
+];
+const CHAT_QA_PROMPT = ChatPromptTemplate.fromPromptMessages(messages);
+
+export const COMBINE_QA_PROMPT_SELECTOR = new ConditionalPromptSelector(
+  DEFAULT_COMBINE_QA_PROMPT,
+  [[isChatModel, CHAT_QA_PROMPT]]
+);
 
 const combine_prompt = `Given the following extracted parts of a long document and a question, create a final answer. 
 If you don't know the answer, just say that you don't know. Don't try to make up an answer.
@@ -40,3 +61,19 @@ QUESTION: {question}
 =========
 FINAL ANSWER:`;
 export const COMBINE_PROMPT = PromptTemplate.fromTemplate(combine_prompt);
+
+const system_combine_template = `Given the following extracted parts of a long document and a question, create a final answer. 
+If you don't know the answer, just say that you don't know. Don't try to make up an answer.
+----------------
+{summaries}`;
+const combine_messages = [
+  SystemMessagePromptTemplate.fromTemplate(system_combine_template),
+  HumanMessagePromptTemplate.fromTemplate("{question}"),
+];
+const CHAT_COMBINE_PROMPT =
+  ChatPromptTemplate.fromPromptMessages(combine_messages);
+
+export const COMBINE_PROMPT_SELECTOR = new ConditionalPromptSelector(
+  COMBINE_PROMPT,
+  [[isChatModel, CHAT_COMBINE_PROMPT]]
+);

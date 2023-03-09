@@ -1,10 +1,10 @@
 import { OpenAI } from "langchain/llms";
-import { loadQAChain } from "langchain/chains";
+import { loadQAMapReduceChain } from "langchain/chains";
 import { Document } from "langchain/document";
 
 export const run = async () => {
   const model = new OpenAI({ temperature: 0 });
-  const chain = loadQAChain(model, { type: "map_reduce" });
+  const chain = loadQAMapReduceChain(model);
   const docs = [
     new Document({ pageContent: "harrison went to harvard" }),
     new Document({ pageContent: "ankush went to princeton" }),
