@@ -26,9 +26,10 @@ export type SerializedFewShotTemplate = {
   template_format: TemplateFormat;
 };
 
-export type SerializedBaseMessagePromptTemplate = {
+export type SerializedMessagePromptTemplate = {
   _type: "message";
   input_variables: string[];
+  [key: string]: unknown;
 };
 
 /** Serialized Chat prompt template */
@@ -37,7 +38,7 @@ export type SerializedChatPromptTemplate = {
   input_variables: string[];
   output_parser?: SerializedOutputParser;
   template_format?: TemplateFormat;
-  prompt_messages: SerializedBaseMessagePromptTemplate[];
+  prompt_messages: SerializedMessagePromptTemplate[];
 };
 
 export type SerializedBasePromptTemplate =

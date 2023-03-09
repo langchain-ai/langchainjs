@@ -15,12 +15,22 @@ import {
   SystemChatMessage,
 } from "../schema/index.js";
 import { PromptTemplate } from "./prompt.js";
-import { SerializedChatPromptTemplate } from "./serde.js";
+import {
+  SerializedChatPromptTemplate,
+  SerializedMessagePromptTemplate,
+} from "./serde.js";
 
 export abstract class BaseMessagePromptTemplate {
   abstract inputVariables: string[];
 
   abstract formatMessages(values: InputValues): Promise<BaseChatMessage[]>;
+
+  serialize(): SerializedMessagePromptTemplate {
+    return {
+      _type: this.constructor.name,
+      ...JSON.parse(JSON.stringify(this)),
+    };
+  }
 }
 
 export class MessagesPlaceholder extends BaseMessagePromptTemplate {
@@ -237,7 +247,7 @@ export class ChatPromptTemplate
       input_variables: this.inputVariables,
       output_parser: this.outputParser?.serialize(),
       template_format: this.templateFormat,
-      prompt_messages: this.promptMessages,
+      prompt_messages: this.promptMessages.map((m) => m.serialize()),
     };
   }
 
