@@ -9,6 +9,7 @@ import {
   AgentStep,
 } from "../index.js";
 import {
+  SystemMessagePromptTemplate,
   HumanMessagePromptTemplate,
   ChatPromptTemplate,
 } from "../../prompts/index.js";
@@ -89,7 +90,7 @@ export class ChatAgent extends Agent {
       "\n\n"
     );
     const messages = [
-      HumanMessagePromptTemplate.fromTemplate(template),
+      SystemMessagePromptTemplate.fromTemplate(template),
       HumanMessagePromptTemplate.fromTemplate("{input}\n\n{agent_scratchpad}"),
     ];
     return ChatPromptTemplate.fromPromptMessages(messages);
