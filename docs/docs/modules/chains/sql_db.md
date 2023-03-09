@@ -1,7 +1,7 @@
 # SQLDatabaseChain
 
 The `SqlDatabaseChain` allows you to answer questions over a SQL database.
-This example uses Chinook database, which is a sample database available for SQL Server, Oracle, MySQL, etc. 
+This example uses Chinook database, which is a sample database available for SQL Server, Oracle, MySQL, etc.
 To set it up follow the instructions on https://database.guide/2-sample-databases-sqlite/.
 
 ```typescript
