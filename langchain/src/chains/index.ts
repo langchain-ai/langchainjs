@@ -30,4 +30,4 @@ export { loadSummarizationChain } from "./summarization/load.js";
 export {
   SqlDatabaseChain,
   SerializedSqlDatabaseChain,
-} from "./sql_database/sql_database_chain.js";
+} from "./sql_db/sql_db_chain.js";

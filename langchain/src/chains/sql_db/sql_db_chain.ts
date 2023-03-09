@@ -1,9 +1,9 @@
-import { DEFAULT_SQL_DATABASE_PROMPT } from "./sql_database_prompt.js";
+import { DEFAULT_SQL_DATABASE_PROMPT } from "./sql_db_prompt.js";
 import { BaseChain, ChainValues } from "../base.js";
 import { BaseMemory } from "../../memory/index.js";
 import { BaseLLM, SerializedLLM } from "../../llms/index.js";
 import { LLMChain } from "../llm_chain.js";
-import { SqlDatabase } from "../../sql_database.js";
+import { SqlDatabase } from "../../sql_db.js";
 import { resolveConfigFromFile } from "../../util/index.js";
 import { SerializedSqlDatabase } from "../../util/sql_utils.js";
 

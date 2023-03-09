@@ -1,8 +1,8 @@
 import { test } from "@jest/globals";
 import { DataSource } from "typeorm";
 import { OpenAI } from "../../llms/openai.js";
-import { SqlDatabaseChain } from "../sql_database/sql_database_chain.js";
-import { SqlDatabase } from "../../sql_database.js";
+import { SqlDatabaseChain } from "../sql_db/sql_db_chain.js";
+import { SqlDatabase } from "../../sql_db.js";
 
 test("Test SqlDatabaseChain", async () => {
   const datasource = new DataSource({
