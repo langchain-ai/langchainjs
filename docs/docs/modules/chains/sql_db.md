@@ -27,7 +27,7 @@ export const run = async () => {
 
   const res = await chain.run("How many tracks are there?");
   console.log(res);
-  
+
   await datasource.destroy();
 };
 ```
