@@ -255,17 +255,27 @@ export class ChatPromptTemplate
   }
 
   static fromPromptMessages(
-    promptMessages: BaseMessagePromptTemplate[]
+    promptMessages: (BaseMessagePromptTemplate | ChatPromptTemplate)[]
   ): ChatPromptTemplate {
+    const flattenedMessages = promptMessages.reduce(
+      (acc, promptMessage) =>
+        acc.concat(
+          promptMessage instanceof ChatPromptTemplate
+            ? promptMessage.promptMessages
+            : [promptMessage]
+        ),
+      [] as BaseMessagePromptTemplate[]
+    );
+
     const inputVariables = new Set<string>();
-    for (const promptMessage of promptMessages) {
+    for (const promptMessage of flattenedMessages) {
       for (const inputVariable of promptMessage.inputVariables) {
         inputVariables.add(inputVariable);
       }
     }
     return new ChatPromptTemplate({
       inputVariables: [...inputVariables],
-      promptMessages,
+      promptMessages: flattenedMessages,
     });
   }
 }
