@@ -1,5 +1,5 @@
-import {AgentAction, AgentFinish} from "../agents/index.js";
-import {ChainValues} from "../chains/index.js";
+import { AgentAction, AgentFinish } from "../agents/index.js";
+import { ChainValues } from "../chains/index.js";
 import { LLMResult, LLMCallbackManager } from "../schema/index.js";
 
 
@@ -40,31 +40,155 @@ type CallbackKwargs = {
 } & Record<string, any>;
 
 export abstract class BaseCallbackHandler {
-    abstract handleLLMStart (
+    abstract handleLLMStart(
         llm: { name: string },
         prompts: string[],
         verbose?: boolean
     ): Promise<void>;
     abstract handleLLMNewToken(token: string, verbose?: boolean): Promise<void>;
-    handleLLMError?: (err: string, verbose?: boolean) => void;
-    handleLLMEnd?: (output: LLMResult, verbose?: boolean) => void;
+    abstract handleLLMError(err: string, verbose?: boolean): Promise<void>;
+    abstract handleLLMEnd(output: LLMResult, verbose?: boolean): Promise<void>;
 
-    handleChainStart?: (
+    abstract handleChainStart(
         chain: { name: string },
         inputs: ChainValues,
         verbose?: boolean
-    ) => void;
-    handleChainError?: (err: Error, verbose?: boolean) => void;
-    handleChainEnd?: (output: ChainValues, verbose?: boolean) => void;
+    ): Promise<void>;
+    abstract handleChainError(err: Error, verbose?: boolean): Promise<void>;
+    abstract handleChainEnd(output: ChainValues, verbose?: boolean): Promise<void>;
 
-    handleToolStart?: (
+    abstract handleToolStart(
         tool: { name: string },
         action: AgentAction,
         verbose?: boolean
-    ) => void;
-    handleToolError?: (err: Error, verbose?: boolean) => void;
-    handleToolEnd?: (output: string, verbose?: boolean) => void;
-    handleAgentEnd?: (action: AgentFinish, verbose?: boolean) => void;
+    ): Promise<void>;
+    abstract handleToolError(err: Error, verbose?: boolean): Promise<void>;
+    abstract handleToolEnd(output: string, verbose?: boolean): Promise<void>;
+    abstract handleAgentEnd(action: AgentFinish, verbose?: boolean): Promise<void>;
+}
+
+export abstract class BaseCallbackManager extends BaseCallbackHandler {
+
+    abstract addHandler(handler: BaseCallbackHandler): Promise<void>;
+    abstract removeHandler(handler: BaseCallbackHandler): Promise<void>;
+    abstract setHandlers(handlers: BaseCallbackHandler[]): Promise<void>;
+    setHandler(handler: BaseCallbackHandler): Promise<void> {
+        return this.setHandlers([handler]);
+    }
+}
+
+class CallbackManager extends BaseCallbackManager {
+    handlers: BaseCallbackHandler[] = [];
+
+    async handleLLMStart(
+        llm: { name: string },
+        prompts: string[],
+        verbose?: boolean
+    ): Promise<void> {
+        for (const handler of this.handlers) {
+            await handler.handleLLMStart(llm, prompts, verbose);
+        }
+    }
+    async handleLLMNewToken(token: string, verbose?: boolean): Promise<void> {
+        for (const handler of this.handlers) {
+            await handler.handleLLMNewToken(token, verbose);
+        }
+    }
+    async handleLLMError(err: string, verbose?: boolean): Promise<void> {
+        for (const handler of this.handlers) {
+            await handler.handleLLMError(err, verbose);
+        }
+    }
+    async handleLLMEnd(output: LLMResult, verbose?: boolean): Promise<void> {
+        for (const handler of this.handlers) {
+            await handler.handleLLMEnd(output, verbose);
+        }
+    }
+
+    async handleChainStart(
+        chain: { name: string },
+        inputs: ChainValues,
+        verbose?: boolean
+    ): Promise<void> {
+        for (const handler of this.handlers) {
+            await handler.handleChainStart(chain, inputs, verbose);
+        }
+    }
+    async handleChainError(err: Error, verbose?: boolean): Promise<void> {
+        for (const handler of this.handlers) {
+            await handler.handleChainError(err, verbose);
+        }
+    }
+    async handleChainEnd(output: ChainValues, verbose?: boolean): Promise<void> {
+        for (const handler of this.handlers) {
+            await handler.handleChainEnd(output, verbose);
+        }
+    }
+
+    async handleToolStart(
+        tool: { name: string },
+        action: AgentAction,
+        verbose?: boolean
+    ): Promise<void> {
+        for (const handler of this.handlers) {
+            await handler.handleToolStart(tool, action, verbose);
+        }
+    }
+    async handleToolError(err: Error, verbose?: boolean): Promise<void> {
+        for (const handler of this.handlers) {
+            await handler.handleToolError(err, verbose);
+        }
+    }
+    async handleToolEnd(output: string, verbose?: boolean): Promise<void> {
+        for (const handler of this.handlers) {
+            await handler.handleToolEnd(output, verbose);
+        }
+    }
+    async handleAgentEnd(action: AgentFinish, verbose?: boolean): Promise<void> {
+        for (const handler of this.handlers) {
+            await handler.handleAgentEnd(action, verbose);
+        }
+    }
+
+    async addHandler(handler: BaseCallbackHandler): Promise<void> {
+        this.handlers.push(handler);
+    }
+    async removeHandler(handler: BaseCallbackHandler): Promise<void> {
+        this.handlers = this.handlers.filter((_handler) => _handler !== handler);
+    }
+    async setHandlers(handlers: BaseCallbackHandler[]): Promise<void> {
+        this.handlers = handlers;
+    }
+}
+
+export class StdOutCallbackHandler extends BaseCallbackHandler {
+    async handleLLMStart(
+        llm: { name: string },
+        prompts: string[],
+        verbose?: boolean
+    ): Promise<void> {
+        pass
+    }
+    async handleLLMNewToken(token: string, verbose?: boolean): Promise<void>;
+    async handleLLMError(err: string, verbose?: boolean): Promise<void>;
+    async handleLLMEnd(output: LLMResult, verbose?: boolean): Promise<void>;
+
+    async handleChainStart(
+        chain: { name: string },
+        inputs: ChainValues,
+        verbose?: boolean
+    ): Promise<void>;
+    async handleChainError(err: Error, verbose?: boolean): Promise<void>;
+    async handleChainEnd(output: ChainValues, verbose?: boolean): Promise<void>;
+
+    async handleToolStart(
+        tool: { name: string },
+        action: AgentAction,
+        verbose?: boolean
+    ): Promise<void>;
+    async handleToolError(err: Error, verbose?: boolean): Promise<void>;
+    async handleToolEnd(output: string, verbose?: boolean): Promise<void>;
+    async handleAgentEnd(action: AgentFinish, verbose?: boolean): Promise<void>;
 }
 
 export const createFromHandlers =
@@ -109,20 +233,6 @@ export const createFromHandlers =
                     return undefined;
             }
         };
-
-export abstract class BaseCallbackHandler extends CallableInstance<
-    Parameters<CallbackHandler>,
-    ReturnType<CallbackHandler>
-> {
-    constructor() {
-        super("handle");
-    }
-
-    abstract handle(
-        event: CallbackEvent,
-        args?: CallbackKwargs
-    ): Promise<void> | void;
-}
 
 export interface BaseCallbackManager extends BaseCallbackHandler {
     addHandler: (handler: CallbackHandler) => void;
