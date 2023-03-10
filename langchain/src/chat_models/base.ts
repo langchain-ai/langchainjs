@@ -3,6 +3,7 @@ import {
   AIChatMessage,
   BaseChatMessage,
   BaseLanguageModel,
+  BaseLanguageModelParams,
   BasePromptValue,
   ChatGeneration,
   ChatResult,
@@ -22,26 +23,22 @@ const getCallbackManager = (): LLMCallbackManager => ({
   },
 });
 
-const getVerbosity = () => true;
-
 export type SerializedChatModel = {
   _model: string;
   _type: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 } & Record<string, any>;
 
+export interface BaseChatModelParams extends BaseLanguageModelParams {
+  callbackManager?: LLMCallbackManager;
+}
+
 export abstract class BaseChatModel extends BaseLanguageModel {
   callbackManager: LLMCallbackManager;
 
-  verbose: boolean;
-
-  protected constructor(
-    callbackManager?: LLMCallbackManager,
-    verbose?: boolean
-  ) {
-    super();
+  protected constructor({ callbackManager, ...rest }: BaseChatModelParams) {
+    super(rest);
     this.callbackManager = callbackManager ?? getCallbackManager();
-    this.verbose = verbose ?? getVerbosity();
   }
 
   async generate(
@@ -131,13 +128,6 @@ export abstract class BaseChatModel extends BaseLanguageModel {
 }
 
 export abstract class SimpleChatModel extends BaseChatModel {
-  protected constructor(
-    callbackManager?: LLMCallbackManager,
-    verbose?: boolean
-  ) {
-    super(callbackManager, verbose);
-  }
-
   abstract _call(messages: BaseChatMessage[], stop?: string[]): Promise<string>;
 
   async _generate(

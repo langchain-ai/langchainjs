@@ -9,7 +9,7 @@ import type { IncomingMessage } from "http";
 import { createParser } from "eventsource-parser";
 import { backOff } from "exponential-backoff";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
-import { BaseChatModel } from "./base.js";
+import { BaseChatModel, BaseChatModelParams } from "./base.js";
 import {
   AIChatMessage,
   BaseChatMessage,
@@ -17,7 +17,6 @@ import {
   ChatMessage,
   ChatResult,
   HumanChatMessage,
-  LLMCallbackManager,
   MessageType,
   SystemChatMessage,
 } from "../schema/index.js";
@@ -155,16 +154,15 @@ export class ChatOpenAI extends BaseChatModel implements OpenAIInput {
   private clientConfig: ConfigurationParameters;
 
   constructor(
-    fields?: Partial<OpenAIInput> & {
-      callbackManager?: LLMCallbackManager;
-      concurrency?: number;
-      cache?: boolean;
-      verbose?: boolean;
-      openAIApiKey?: string;
-    },
+    fields?: Partial<OpenAIInput> &
+      BaseChatModelParams & {
+        concurrency?: number;
+        cache?: boolean;
+        openAIApiKey?: string;
+      },
     configuration?: ConfigurationParameters
   ) {
-    super(fields?.callbackManager, fields?.verbose);
+    super(fields ?? {});
 
     const apiKey = fields?.openAIApiKey ?? process.env.OPENAI_API_KEY;
     if (!apiKey) {

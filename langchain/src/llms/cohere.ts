@@ -1,6 +1,4 @@
-import { LLM } from "./base.js";
-import { LLMCallbackManager } from "../schema/index.js";
-import { BaseCache } from "../cache.js";
+import { LLM, BaseLLMParams } from "./base.js";
 
 interface CohereInput {
   /** Sampling temperature to use */
@@ -24,20 +22,8 @@ export class Cohere extends LLM implements CohereInput {
 
   apiKey: string;
 
-  constructor(
-    fields?: Partial<CohereInput> & {
-      callbackManager?: LLMCallbackManager;
-      verbose?: boolean;
-      concurrency?: number;
-      cache?: BaseCache | boolean;
-    }
-  ) {
-    super(
-      fields?.callbackManager,
-      fields?.verbose,
-      fields?.concurrency,
-      fields?.cache
-    );
+  constructor(fields?: Partial<CohereInput> & BaseLLMParams) {
+    super(fields ?? {});
 
     const apiKey = process.env.COHERE_API_KEY;
 

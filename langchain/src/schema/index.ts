@@ -104,10 +104,30 @@ export abstract class BasePromptValue {
   abstract toChatMessages(): BaseChatMessage[];
 }
 
+const getVerbosity = () => true;
+
+/**
+ * Base interface for language model parameters.
+ * A subclass of {@link BaseLanguageModel} should have a constructor that
+ * takes in a parameter that extends this interface.
+ */
+export interface BaseLanguageModelParams {
+  verbose?: boolean;
+}
+
 /**
  * Base class for language models.
  */
-export abstract class BaseLanguageModel {
+export abstract class BaseLanguageModel implements BaseLanguageModelParams {
+  /**
+   * Whether to print out response text.
+   */
+  verbose: boolean;
+
+  constructor(params: BaseLanguageModelParams) {
+    this.verbose = params.verbose ?? getVerbosity();
+  }
+
   abstract generatePrompt(
     promptValues: BasePromptValue[],
     stop?: string[]

@@ -12,11 +12,10 @@ import {
 } from "openai";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
 import { chunkArray } from "../util/index.js";
-import { BaseLLM } from "./base.js";
+import { BaseLLM, BaseLLMParams } from "./base.js";
 import { calculateMaxTokens } from "./calculateMaxTokens.js";
 import { OpenAIChat } from "./openai-chat.js";
-import { LLMCallbackManager, LLMResult } from "../schema/index.js";
-import { BaseCache } from "../cache.js";
+import { LLMResult } from "../schema/index.js";
 
 interface ModelParams {
   /** Sampling temperature to use */
@@ -136,25 +135,17 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
   private clientConfig: ConfigurationParameters;
 
   constructor(
-    fields?: Partial<OpenAIInput> & {
-      callbackManager?: LLMCallbackManager;
-      concurrency?: number;
-      cache?: BaseCache | boolean;
-      verbose?: boolean;
-      openAIApiKey?: string;
-    },
+    fields?: Partial<OpenAIInput> &
+      BaseLLMParams & {
+        openAIApiKey?: string;
+      },
     configuration?: ConfigurationParameters
   ) {
     if (fields?.modelName?.startsWith("gpt-3.5-turbo")) {
       // eslint-disable-next-line no-constructor-return, @typescript-eslint/no-explicit-any
       return new OpenAIChat(fields, configuration) as any as OpenAI;
     }
-    super(
-      fields?.callbackManager,
-      fields?.verbose,
-      fields?.concurrency,
-      fields?.cache
-    );
+    super(fields ?? {});
 
     const apiKey = fields?.openAIApiKey ?? process.env.OPENAI_API_KEY;
     if (!apiKey) {

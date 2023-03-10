@@ -4,6 +4,7 @@ import PQueue from "p-queue";
 import { BaseCache, InMemoryCache } from "../cache.js";
 import {
   BaseLanguageModel,
+  BaseLanguageModelParams,
   BasePromptValue,
   LLMCallbackManager,
   LLMResult,
@@ -21,8 +22,6 @@ const getCallbackManager = (): LLMCallbackManager => ({
   },
 });
 
-const getVerbosity = () => true;
-
 const GLOBAL_CACHE: BaseCache = new InMemoryCache();
 
 export type SerializedLLM = {
@@ -30,6 +29,12 @@ export type SerializedLLM = {
   _type: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 } & Record<string, any>;
+
+export interface BaseLLMParams extends BaseLanguageModelParams {
+  callbackManager?: LLMCallbackManager;
+  concurrency?: number;
+  cache?: BaseCache | boolean;
+}
 
 /**
  * LLM Wrapper. Provides an {@link call} (an {@link generate}) function that takes in a prompt (or prompts) and returns a string.
@@ -52,20 +57,10 @@ export abstract class BaseLLM extends BaseLanguageModel {
 
   protected queue: PQueue;
 
-  /**
-   * Whether to print out response text.
-   */
-  verbose?: boolean = false;
+  constructor({ callbackManager, concurrency, cache, ...rest }: BaseLLMParams) {
+    super(rest);
 
-  constructor(
-    callbackManager?: LLMCallbackManager,
-    verbose?: boolean,
-    concurrency?: number,
-    cache?: BaseCache | boolean
-  ) {
-    super();
     this.callbackManager = callbackManager ?? getCallbackManager();
-    this.verbose = verbose ?? getVerbosity();
     if (cache instanceof BaseCache) {
       this.cache = cache;
     } else if (cache) {
