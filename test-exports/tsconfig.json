@@ -6,6 +6,7 @@
       "ESNext",
       "DOM"
     ],
+    "target": "ES2021",
     "module": "nodenext",
     "sourceMap": true,
     "allowSyntheticDefaultImports": true,
