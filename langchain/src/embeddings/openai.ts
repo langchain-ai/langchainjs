@@ -11,9 +11,22 @@ interface ModelParams {
 export class OpenAIEmbeddings extends Embeddings implements ModelParams {
   modelName = "text-embedding-ada-002";
 
-  batchSize = 20;
+  /**
+   * The maximum number of documents to embed in a single request. This is
+   * limited by the OpenAI API to a maximum of 2048.
+   */
+  batchSize = 512;
 
+  /**
+   * The maximum number of retries to make when the OpenAI API returns an error.
+   */
   maxRetries = 6;
+
+  /**
+   * Whether to strip new lines from the input text. This is recommended by
+   * OpenAI, but may not be suitable for all use cases.
+   */
+  stripNewLines = true;
 
   private apiKey: string;
 
@@ -25,6 +38,7 @@ export class OpenAIEmbeddings extends Embeddings implements ModelParams {
       batchSize?: number;
       maxRetries?: number;
       openAIApiKey?: string;
+      stripNewLines?: boolean;
     }
   ) {
     super();
@@ -38,10 +52,14 @@ export class OpenAIEmbeddings extends Embeddings implements ModelParams {
     this.batchSize = fields?.batchSize ?? this.batchSize;
     this.apiKey = apiKey;
     this.maxRetries = fields?.maxRetries ?? this.maxRetries;
+    this.stripNewLines = fields?.stripNewLines ?? this.stripNewLines;
   }
 
   async embedDocuments(texts: string[]): Promise<number[][]> {
-    const subPrompts = chunkArray(texts, this.batchSize);
+    const subPrompts = chunkArray(
+      this.stripNewLines ? texts.map((t) => t.replaceAll("\n", " ")) : texts,
+      this.batchSize
+    );
 
     const embeddings = [];
 
@@ -62,7 +80,7 @@ export class OpenAIEmbeddings extends Embeddings implements ModelParams {
   async embedQuery(text: string): Promise<number[]> {
     const { data } = await this.embeddingWithRetry({
       model: this.modelName,
-      input: text,
+      input: this.stripNewLines ? text.replaceAll("\n", " ") : text,
     });
     return data.data[0].embedding;
   }
