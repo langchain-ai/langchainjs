@@ -16,6 +16,7 @@ import { BaseLLM } from "./base.js";
 import { calculateMaxTokens } from "./calculateMaxTokens.js";
 import { OpenAIChat } from "./openai-chat.js";
 import { LLMCallbackManager, LLMResult } from "../schema/index.js";
+import { BaseCache } from "../cache.js";
 
 interface ModelParams {
   /** Sampling temperature to use */
@@ -138,7 +139,7 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
     fields?: Partial<OpenAIInput> & {
       callbackManager?: LLMCallbackManager;
       concurrency?: number;
-      cache?: boolean;
+      cache?: BaseCache | boolean;
       verbose?: boolean;
       openAIApiKey?: string;
     },

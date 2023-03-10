@@ -11,6 +11,7 @@ import { backOff } from "exponential-backoff";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
 import { LLM } from "./base.js";
 import { LLMCallbackManager } from "../schema/index.js";
+import { BaseCache } from "../cache.js";
 
 interface ModelParams {
   /** Sampling temperature to use, between 0 and 2, defaults to 1 */
@@ -114,7 +115,7 @@ export class OpenAIChat extends LLM implements OpenAIInput {
     fields?: Partial<OpenAIInput> & {
       callbackManager?: LLMCallbackManager;
       concurrency?: number;
-      cache?: boolean;
+      cache?: BaseCache | boolean;
       verbose?: boolean;
       openAIApiKey?: string;
     },

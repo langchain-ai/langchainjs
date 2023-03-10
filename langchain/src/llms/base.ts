@@ -1,7 +1,7 @@
 import GPT3Tokenizer from "gpt3-tokenizer";
 import PQueue from "p-queue";
 
-import { BaseCache, getKey, InMemoryCache } from "../cache.js";
+import { BaseCache, InMemoryCache } from "../cache.js";
 import {
   BaseLanguageModel,
   BasePromptValue,
@@ -23,7 +23,7 @@ const getCallbackManager = (): LLMCallbackManager => ({
 
 const getVerbosity = () => true;
 
-const cache: BaseCache = new InMemoryCache();
+const GLOBAL_CACHE: BaseCache = new InMemoryCache();
 
 export type SerializedLLM = {
   _model: string;
@@ -40,7 +40,7 @@ export abstract class BaseLLM extends BaseLanguageModel {
    */
   name: string;
 
-  cache?: boolean;
+  cache?: BaseCache;
 
   callbackManager: LLMCallbackManager;
 
@@ -61,12 +61,18 @@ export abstract class BaseLLM extends BaseLanguageModel {
     callbackManager?: LLMCallbackManager,
     verbose?: boolean,
     concurrency?: number,
-    cache?: boolean
+    cache?: BaseCache | boolean
   ) {
     super();
     this.callbackManager = callbackManager ?? getCallbackManager();
     this.verbose = verbose ?? getVerbosity();
-    this.cache = cache;
+    if (cache instanceof BaseCache) {
+      this.cache = cache;
+    } else if (cache) {
+      this.cache = GLOBAL_CACHE;
+    } else {
+      this.cache = undefined;
+    }
     this.concurrency = concurrency ?? Infinity;
     this.queue = new PQueue({ concurrency: this.concurrency });
   }
@@ -118,14 +124,11 @@ export abstract class BaseLLM extends BaseLanguageModel {
       throw new Error("Argument 'prompts' is expected to be a string[]");
     }
 
-    if (this.cache === true && cache === null) {
-      throw new Error("Requested cache, but no cache found");
-    }
-
-    if (cache === null || this.cache === false) {
+    if (!this.cache) {
       return this._generateUncached(prompts, stop);
     }
 
+    const { cache } = this;
     const params = this.serialize();
     params.stop = stop;
 
@@ -133,7 +136,7 @@ export abstract class BaseLLM extends BaseLanguageModel {
     const missingPromptIndices: number[] = [];
     const generations = await Promise.all(
       prompts.map(async (prompt, index) => {
-        const result = cache.lookup(await getKey(prompt, llmStringKey));
+        const result = await cache.lookup(prompt, llmStringKey);
         if (!result) {
           missingPromptIndices.push(index);
         }
@@ -151,8 +154,7 @@ export abstract class BaseLLM extends BaseLanguageModel {
         results.generations.map(async (generation, index) => {
           const promptIndex = missingPromptIndices[index];
           generations[promptIndex] = generation;
-          const key = await getKey(prompts[promptIndex], llmStringKey);
-          cache.update(key, generation);
+          return cache.update(prompts[promptIndex], llmStringKey, generation);
         })
       );
       llmOutput = results.llmOutput ?? {};
