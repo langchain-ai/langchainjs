@@ -189,7 +189,7 @@ export class HNSWLib extends SaveableVectorStore {
     docstore: InMemoryDocstore = new InMemoryDocstore()
   ): Promise<HNSWLib> {
     const args: HNSWLibArgs = {
-      space: "ip", // dot product
+      space: "cosine",
     };
     const instance = new this(args, embeddings, docstore);
     await instance.addDocuments(docs);
