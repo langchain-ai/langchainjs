@@ -1,6 +1,8 @@
 import { AgentAction, AgentFinish } from "../agents/index.js";
 import { ChainValues } from "../chains/index.js";
 import { LLMResult } from "../schema/index.js";
+import * as process from "process";
+import {LangChainTracer} from "./tracers/index.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Error = any;
@@ -256,4 +258,19 @@ export class ConsoleCallbackHandler extends BaseCallbackHandler {
   async onAgentEnd(action: AgentFinish, _verbose?: boolean): Promise<void> {
     console.log(action.log);
   }
+}
+
+export function getCallbackManager(): CallbackManager {
+  const manager = new CallbackManager();
+  manager.setHandler(new ConsoleCallbackHandler());
+  if (process.env.LANGCHAIN_HANDLER === "console") {
+    return manager;
+  }
+  if (process.env.LANGCHAIN_HANDLER === "langchain") {
+    manager.addHandler(new LangChainTracer());
+    return manager;
+  }
+  throw new Error(
+    `Invalid LANGCHAIN_HANDLER environment variable: ${process.env.LANGCHAIN_HANDLER}`
+    );
 }
