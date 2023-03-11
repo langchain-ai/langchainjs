@@ -1,4 +1,4 @@
-import type { readFile as ReadFileT } from "fs/promises";
+import type { readFile as ReadFileT } from "node:fs/promises";
 import { Document } from "../document.js";
 import { getEnv } from "../util/env.js";
 import { BaseDocumentLoader } from "./base.js";
@@ -31,7 +31,7 @@ export class TextLoader extends BaseDocumentLoader {
     readFile: typeof ReadFileT;
   }> {
     try {
-      const { readFile } = await import("fs/promises");
+      const { readFile } = await import("node:fs/promises");
       return { readFile };
     } catch (e) {
       console.error(e);

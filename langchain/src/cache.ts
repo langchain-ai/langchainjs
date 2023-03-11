@@ -1,4 +1,4 @@
-import crypto from "crypto";
+import crypto from "node:crypto";
 import type { RedisClientType } from "redis";
 import { Generation } from "./schema/index.js";
 

@@ -17,7 +17,7 @@ export const loadFromFile = async <T>(
   values: LoadValues = {}
 ): Promise<T> => {
   try {
-    const fs = await import("fs/promises");
+    const fs = await import("node:fs/promises");
     return loader(await fs.readFile(uri, { encoding: "utf-8" }), uri, values);
   } catch (e) {
     console.error(e);
@@ -90,7 +90,7 @@ const resolveFieldFromFile = async <K extends string, R, T extends R>(
     }
 
     try {
-      const fs = await import("fs/promises");
+      const fs = await import("node:fs/promises");
 
       return load(await fs.readFile(fieldPath, { encoding: "utf-8" }), suffix);
     } catch (e) {

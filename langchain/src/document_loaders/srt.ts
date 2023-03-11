@@ -1,4 +1,4 @@
-import type { readFile as ReadFileT } from "fs/promises";
+import type { readFile as ReadFileT } from "node:fs/promises";
 import type SRTParserT from "srt-parser-2";
 import { Document } from "../document.js";
 import { getEnv } from "../util/env.js";
@@ -27,7 +27,7 @@ export class SRTLoader extends BaseDocumentLoader {
   }> {
     let readFile: typeof ReadFileT | null = null;
     try {
-      readFile = (await import("fs/promises")).readFile;
+      readFile = (await import("node:fs/promises")).readFile;
     } catch (e) {
       console.error(e);
       throw new Error(

@@ -1,4 +1,4 @@
-import crypto from "crypto";
+import crypto from "node:crypto";
 import { test, expect, jest } from "@jest/globals";
 
 import { InMemoryCache, RedisCache } from "../cache.js";
