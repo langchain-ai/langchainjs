@@ -35,10 +35,13 @@ export class TextLoader extends BaseDocumentLoader {
       (pageContent, i) =>
         new Document({
           pageContent,
-          metadata: {
-            ...metadata,
-            line: i + 1,
-          },
+          metadata:
+            parsed.length === 1
+              ? metadata
+              : {
+                  ...metadata,
+                  line: i + 1,
+                },
         })
     );
   }

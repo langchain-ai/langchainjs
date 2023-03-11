@@ -17,7 +17,6 @@ test("Test Text loader from file", async () => {
   `);
   expect(docs[0].metadata).toMatchInlineSnapshot(`
     {
-      "line": 1,
       "source": "../examples/src/document_loaders/example_data/example.txt",
     }
   `);
@@ -34,7 +33,6 @@ test("Test Text loader from blob", async () => {
   expect(docs[0].metadata).toMatchInlineSnapshot(`
     {
       "blobType": "text/plain",
-      "line": 1,
       "source": "blob",
     }
   `);
