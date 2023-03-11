@@ -3009,10 +3009,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@pinecone-database/pinecone@npm:^0.0.8":
-  version: 0.0.8
-  resolution: "@pinecone-database/pinecone@npm:0.0.8"
-  checksum: 8a7ea30b2bd9a6d0ee06e719e94b122753adc8dc468d4ab70da67a30964dfeb3539f4fac996b8ebadf6a0d739546e76ef463d00b30d68a9d567c779a6cbf8b4a
+"@pinecone-database/pinecone@npm:^0.0.10":
+  version: 0.0.10
+  resolution: "@pinecone-database/pinecone@npm:0.0.10"
+  dependencies:
+    cross-fetch: ^3.1.5
+  checksum: bc4de93134f03574bbf09d40ed16936cd981594748d71d741fe392963075b8b9d0e8effbfea19c90b7019f7defd4b79b440fa33f18d0734d81c39caf4e68783e
   languageName: node
   linkType: hard
 
@@ -10241,7 +10243,7 @@ __metadata:
   resolution: "langchain-examples@workspace:examples"
   dependencies:
     "@dqbd/tiktoken": ^0.4.0
-    "@pinecone-database/pinecone": ^0.0.8
+    "@pinecone-database/pinecone": ^0.0.10
     "@supabase/supabase-js": ^2.10.0
     "@tsconfig/recommended": ^1.0.2
     "@types/js-yaml": ^4
@@ -10275,7 +10277,7 @@ __metadata:
     "@dqbd/tiktoken": ^0.4.0
     "@huggingface/inference": ^1.5.1
     "@jest/globals": ^29.4.2
-    "@pinecone-database/pinecone": ^0.0.8
+    "@pinecone-database/pinecone": ^0.0.10
     "@supabase/supabase-js": ^2.10.0
     "@tsconfig/recommended": ^1.0.2
     "@types/d3-dsv": ^3
@@ -10324,7 +10326,7 @@ __metadata:
   peerDependencies:
     "@dqbd/tiktoken": ^0.4.0
     "@huggingface/inference": ^1.5.1
-    "@pinecone-database/pinecone": ^0.0.8
+    "@pinecone-database/pinecone": ^0.0.10
     "@supabase/supabase-js": ^2.10.0
     cheerio: ^1.0.0-rc.12
     chromadb: ^1.3.0
