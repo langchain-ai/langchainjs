@@ -73,7 +73,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     session: TracerSessionCreate
   ): Promise<TracerSession>;
 
-  async newSession(sessionName: string): Promise<TracerSession> {
+  async newSession(sessionName?: string): Promise<TracerSession> {
     const sessionCreate: TracerSessionCreate = {
       startTime: Date.now(),
       name: sessionName,
@@ -102,7 +102,12 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     this.executionOrder += 1;
 
     if (this.stack.length > 0) {
-      if (!(run.type === "tool" || run.type === "chain")) {
+      if (
+        !(
+          this.stack.at(-1)?.type === "tool" ||
+          this.stack.at(-1)?.type === "chain"
+        )
+      ) {
         throw new Error("Nested run can only be logged for tool or chain");
       }
       const parentRun = this.stack.at(-1) as ChainRun | ToolRun;
@@ -142,7 +147,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
 
   async handleLLMEnd(output: LLMResult, _verbose?: boolean): Promise<void> {
     if (this.stack.length === 0 || this.stack.at(-1)?.type !== "llm") {
-      throw new Error("No LLM run to end");
+      throw new Error("No LLM run to end.");
     }
     const run = this.stack.at(-1) as LLMRun;
     run.endTime = Date.now();
@@ -152,7 +157,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
 
   async handleLLMError(error: Error, _verbose?: boolean): Promise<void> {
     if (this.stack.length === 0 || this.stack.at(-1)?.type !== "llm") {
-      throw new Error("No LLM run to end");
+      throw new Error("No LLM run to end.");
     }
     const run = this.stack.at(-1) as LLMRun;
     run.endTime = Date.now();
@@ -189,7 +194,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     _verbose?: boolean
   ): Promise<void> {
     if (this.stack.length === 0 || this.stack.at(-1)?.type !== "chain") {
-      throw new Error("No chain run to end");
+      throw new Error("No chain run to end.");
     }
     const run = this.stack.at(-1) as ChainRun;
     run.endTime = Date.now();
@@ -199,7 +204,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
 
   async handleChainError(error: Error, _verbose?: boolean): Promise<void> {
     if (this.stack.length === 0 || this.stack.at(-1)?.type !== "chain") {
-      throw new Error("No chain run to end");
+      throw new Error("No chain run to end.");
     }
     const run = this.stack.at(-1) as ChainRun;
     run.endTime = Date.now();
@@ -244,7 +249,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
 
   async handleToolError(error: Error, _verbose?: boolean): Promise<void> {
     if (this.stack.length === 0 || this.stack.at(-1)?.type !== "tool") {
-      throw new Error("No tool run to end");
+      throw new Error("No tool run to end.");
     }
     const run = this.stack.at(-1) as ToolRun;
     run.endTime = Date.now();
