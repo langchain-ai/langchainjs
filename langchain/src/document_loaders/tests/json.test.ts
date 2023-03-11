@@ -15,7 +15,7 @@ test("Test JSON loader from file", async () => {
   expect(docs.length).toBe(32);
   expect(docs[0]).toEqual(
     new Document({
-      metadata: { source: filePath },
+      metadata: { source: filePath, line: 1 },
       pageContent:
         "<i>Corruption discovered at the core of the Banking Clan!</i>",
     })
@@ -34,7 +34,7 @@ test("Test JSON loader from blob", async () => {
   expect(docs.length).toBe(32);
   expect(docs[0]).toEqual(
     new Document({
-      metadata: { source: "blob", blobType: "application/json" },
+      metadata: { source: "blob", blobType: "application/json", line: 1 },
       pageContent:
         "<i>Corruption discovered at the core of the Banking Clan!</i>",
     })

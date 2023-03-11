@@ -31,7 +31,16 @@ export class TextLoader extends BaseDocumentLoader {
         );
       }
     });
-    return parsed.map((pageContent) => new Document({ pageContent, metadata }));
+    return parsed.map(
+      (pageContent, i) =>
+        new Document({
+          pageContent,
+          metadata: {
+            ...metadata,
+            line: i + 1,
+          },
+        })
+    );
   }
 
   static async imports(): Promise<{

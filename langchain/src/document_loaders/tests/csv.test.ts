@@ -15,9 +15,15 @@ test("Test CSV loader from file with column arg", async () => {
   expect(docs.length).toBe(32);
   expect(docs[0]).toEqual(
     new Document({
-      metadata: { source: filePath },
+      metadata: { source: filePath, line: 1 },
       pageContent:
         "<i>Corruption discovered at the core of the Banking Clan!</i>",
+    })
+  );
+  expect(docs[1]).toEqual(
+    new Document({
+      metadata: { source: filePath, line: 2 },
+      pageContent: "<i>Reunited, Rush Clovis and Senator Amidala</i>",
     })
   );
 });
@@ -35,9 +41,15 @@ test("Test CSV loader from blob with column arg", async () => {
   expect(docs.length).toBe(32);
   expect(docs[0]).toEqual(
     new Document({
-      metadata: { source: filePath },
+      metadata: { source: "blob", blobType: "text/csv", line: 1 },
       pageContent:
         "<i>Corruption discovered at the core of the Banking Clan!</i>",
+    })
+  );
+  expect(docs[1]).toEqual(
+    new Document({
+      metadata: { source: "blob", blobType: "text/csv", line: 2 },
+      pageContent: "<i>Reunited, Rush Clovis and Senator Amidala</i>",
     })
   );
 });
