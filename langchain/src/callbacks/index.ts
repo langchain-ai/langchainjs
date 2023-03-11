@@ -260,17 +260,24 @@ export class ConsoleCallbackHandler extends BaseCallbackHandler {
   }
 }
 
-export function getCallbackManager(): CallbackManager {
+export async function getCallbackManager(): Promise<CallbackManager> {
   const manager = new CallbackManager();
   manager.setHandler(new ConsoleCallbackHandler());
-  if (process.env.LANGCHAIN_HANDLER === "console") {
+  if (process.env.LANGCHAIN_HANDLER === "console" || !process.env.LANGCHAIN_HANDLER) {
     return manager;
   }
   if (process.env.LANGCHAIN_HANDLER === "langchain") {
-    manager.addHandler(new LangChainTracer());
+    const tracingHandler = new LangChainTracer();
+    const sessionName = process.env.LANGCHAIN_SESSION;
+    if (sessionName) {
+      await tracingHandler.loadSession(sessionName);
+    } else {
+      await tracingHandler.loadDefaultSession();
+    }
+    manager.addHandler(tracingHandler);
     return manager;
   }
   throw new Error(
-    `Invalid LANGCHAIN_HANDLER environment variable: ${process.env.LANGCHAIN_HANDLER}`
-    );
+    `Invalid LANGCHAIN_HANDLER environment variable: ${process.env.LANGCHAIN_HANDLER}, must be one of: console, langchain.`
+  );
 }
