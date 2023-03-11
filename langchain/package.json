@@ -52,6 +52,7 @@
   },
   "scripts": {
     "build": "yarn clean && tsc --declaration --outDir dist/ && node create-entrypoints.js",
+    "build:watch": "node create-entrypoints.js && tsc --declaration --outDir dist/ --watch",
     "lint": "eslint src",
     "lint:fix": "yarn lint --fix",
     "precommit": "tsc --noEmit && lint-staged",
