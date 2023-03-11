@@ -14,7 +14,7 @@ test("Test SRT loader from file", async () => {
   expect(docs.length).toBe(1);
   expect(docs[0].metadata).toMatchInlineSnapshot(`
     {
-      "source": "/Users/nuno/dev/langchainjs/langchain/src/document_loaders/tests/example_data/Star_Wars_The_Clone_Wars_S06E07_Crisis_at_the_Heart.srt",
+      "source": "${filePath}",
     }
   `);
   expect(docs[0].pageContent).toContain("Corruption discovered");
