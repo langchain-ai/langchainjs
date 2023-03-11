@@ -43,7 +43,9 @@ const vectorStore = await PineconeStore.fromExistingIndex(
 );
 
 const model = new OpenAI();
-const chain = VectorDBQAChain.fromLLM(model, vectorStore);
+const chain = VectorDBQAChain.fromLLM(model, vectorStore, {
+  returnSourceDocuments: true,
+});
 const response = await chain.call({
   query: "what does the doc say about pinecone",
 });
