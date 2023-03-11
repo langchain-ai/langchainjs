@@ -65,9 +65,13 @@ export abstract class BaseTracer extends BaseCallbackHandler {
 
   abstract loadDefaultSession(): Promise<TracerSession>;
 
-  abstract persistRun(run: LLMRun | ChainRun | ToolRun): Promise<void>;
+  protected abstract persistRun(
+    run: LLMRun | ChainRun | ToolRun
+  ): Promise<void>;
 
-  abstract persistSession(session: TracerSessionCreate): Promise<TracerSession>;
+  protected abstract persistSession(
+    session: TracerSessionCreate
+  ): Promise<TracerSession>;
 
   async newSession(sessionName: string): Promise<TracerSession> {
     const sessionCreate: TracerSessionCreate = {
@@ -310,12 +314,12 @@ export class LangChainTracer extends BaseTracer {
     };
   }
 
-  protected async loadSession(sessionName: string): Promise<TracerSession> {
+  async loadSession(sessionName: string): Promise<TracerSession> {
     const endpoint = `${this.endpoint}/sessions?name=${sessionName}`;
     return this._handleSessionResponse(endpoint);
   }
 
-  protected async loadDefaultSession(): Promise<TracerSession> {
+  async loadDefaultSession(): Promise<TracerSession> {
     const endpoint = `${this.endpoint}/sessions?name=default`;
     return this._handleSessionResponse(endpoint);
   }
@@ -328,7 +332,7 @@ export class LangChainTracer extends BaseTracer {
     let tracerSession: TracerSession;
     if (!response.ok) {
       console.error(
-          `Failed to load session: ${response.status} ${response.statusText}`
+        `Failed to load session: ${response.status} ${response.statusText}`
       );
       tracerSession = {
         id: 1,
