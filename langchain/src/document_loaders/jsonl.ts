@@ -3,8 +3,8 @@ import jsonpointer from "jsonpointer";
 import { TextLoader } from "./text.js";
 
 export class JSONLinesLoader extends TextLoader {
-  constructor(filePath: string, public pointer: string) {
-    super(filePath);
+  constructor(filePathOrBlob: string | Blob, public pointer: string) {
+    super(filePathOrBlob);
   }
 
   protected async parse(raw: string): Promise<string[]> {

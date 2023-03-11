@@ -4,7 +4,7 @@ import { getEnv } from "../util/env.js";
 import { BaseDocumentLoader } from "./base.js";
 
 export class TextLoader extends BaseDocumentLoader {
-  constructor(public filePath: string) {
+  constructor(public filePathOrBlob: string | Blob) {
     super();
   }
 
@@ -13,9 +13,16 @@ export class TextLoader extends BaseDocumentLoader {
   }
 
   public async load(): Promise<Document[]> {
-    const { readFile } = await TextLoader.imports();
-    const text = await readFile(this.filePath, "utf8");
-    const metadata = { source: this.filePath };
+    let text: string;
+    let metadata: Record<string, string>;
+    if (typeof this.filePathOrBlob === "string") {
+      const { readFile } = await TextLoader.imports();
+      text = await readFile(this.filePathOrBlob, "utf8");
+      metadata = { source: this.filePathOrBlob };
+    } else {
+      text = await this.filePathOrBlob.text();
+      metadata = { source: "blob", blobType: this.filePathOrBlob.type };
+    }
     const parsed = await this.parse(text);
     parsed.forEach((pageContent, i) => {
       if (typeof pageContent !== "string") {
