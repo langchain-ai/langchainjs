@@ -121,7 +121,7 @@ export class ChatVectorDBQAChain
     }
     const docs = await this.vectorstore.similaritySearch(newQuestion, this.k);
     const inputs = {
-      question,
+      question: newQuestion,
       input_documents: docs,
       chat_history: chatHistory,
     };
