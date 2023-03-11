@@ -1,6 +1,6 @@
 import { test, expect } from "@jest/globals";
-import url from "url";
-import path from "path";
+import url from "node:url";
+import path from "node:path";
 import { NotionLoader } from "../notion_markdown.js";
 
 test("Test Notion Loader", async () => {

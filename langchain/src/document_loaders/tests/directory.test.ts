@@ -1,5 +1,5 @@
-import url from "url";
-import path from "path";
+import url from "node:url";
+import path from "node:path";
 import { test, expect } from "@jest/globals";
 import { DirectoryLoader, UnknownHandling } from "../directory.js";
 import { CSVLoader } from "../csv.js";
