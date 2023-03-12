@@ -288,10 +288,10 @@ export class ChatOpenAI extends BaseChatModel implements OpenAIInput {
               if (part != null) {
                 innerCompletion += part.delta?.content ?? "";
                 role = part.delta?.role ?? role;
-                this.callbackManager.handleNewToken?.(
-                  part.delta?.content ?? "",
-                  this.verbose
-                );
+                // this.callbackManager.handleNewToken?.(
+                //   part.delta?.content ?? "",
+                //   this.verbose
+                // );
               }
             }
           }
