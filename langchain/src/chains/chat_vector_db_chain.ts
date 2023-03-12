@@ -2,7 +2,7 @@ import {
   BaseChain,
   ChainValues,
   LLMChain,
-  loadQAChain,
+  loadQAStuffChain,
   SerializedBaseChain,
   SerializedLLMChain,
 } from "./index.js";
@@ -121,7 +121,7 @@ export class ChatVectorDBQAChain
     }
     const docs = await this.vectorstore.similaritySearch(newQuestion, this.k);
     const inputs = {
-      question,
+      question: newQuestion,
       input_documents: docs,
       chat_history: chatHistory,
     };
@@ -180,7 +180,7 @@ export class ChatVectorDBQAChain
   }
 
   static fromLLM(llm: BaseLLM, vectorstore: VectorStore): ChatVectorDBQAChain {
-    const qaChain = loadQAChain(llm, { prompt: qa_prompt });
+    const qaChain = loadQAStuffChain(llm, { prompt: qa_prompt });
     const questionGeneratorChain = new LLMChain({
       prompt: question_generator_prompt,
       llm,

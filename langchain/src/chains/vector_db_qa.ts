@@ -2,7 +2,7 @@ import {
   BaseChain,
   ChainValues,
   SerializedBaseChain,
-  loadQAChain,
+  loadQAStuffChain,
 } from "./index.js";
 
 import { VectorStore } from "../vectorstores/base.js";
@@ -116,8 +116,7 @@ export class VectorDBQAChain extends BaseChain implements VectorDBQAChainInput {
   }
 
   static fromLLM(llm: BaseLLM, vectorstore: VectorStore): VectorDBQAChain {
-    const qaChain = loadQAChain(llm);
-    const instance = new this({ vectorstore, combineDocumentsChain: qaChain });
-    return instance;
+    const qaChain = loadQAStuffChain(llm);
+    return new this({ vectorstore, combineDocumentsChain: qaChain });
   }
 }

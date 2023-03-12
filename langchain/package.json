@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.22",
+  "version": "0.0.28",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "main": "./index.js",
@@ -31,6 +31,12 @@
     "docstore.d.ts",
     "document_loaders.js",
     "document_loaders.d.ts",
+    "chat_models.js",
+    "chat_models.d.ts",
+    "schema.js",
+    "schema.d.ts",
+    "sql_db.js",
+    "sql_db.d.ts",
     "index.js",
     "index.d.ts"
   ],
@@ -46,9 +52,10 @@
     "precommit": "tsc --noEmit && lint-staged",
     "clean": "rm -rf dist/ && node create-entrypoints.js clean",
     "prepack": "yarn build",
-    "test": "yarn clean && NODE_OPTIONS=--experimental-vm-modules jest --testPathIgnorePatterns=\\.int\\.test.ts",
-    "test:node16": "yarn clean && NODE_OPTIONS='--experimental-vm-modules --experimental-fetch' jest --testPathIgnorePatterns=\\.int\\.test.ts",
-    "test:integration": "yarn clean && NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern=\\.int\\.test.ts --testTimeout 20000",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest --testPathIgnorePatterns=\\.int\\.test.ts",
+    "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch --testPathIgnorePatterns=\\.int\\.test.ts",
+    "test:node16": "NODE_OPTIONS='--experimental-vm-modules --experimental-fetch' jest --testPathIgnorePatterns=\\.int\\.test.ts",
+    "test:integration": "NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern=\\.int\\.test.ts --testTimeout 20000",
     "prepare": "husky install",
     "format": "prettier --write \"src\"",
     "format:diff": "prettier --list-different \"src\"",
@@ -62,7 +69,8 @@
     "@dqbd/tiktoken": "^0.4.0",
     "@huggingface/inference": "^1.5.1",
     "@jest/globals": "^29.4.2",
-    "@pinecone-database/pinecone": "^0.0.8",
+    "@pinecone-database/pinecone": "^0.0.10",
+    "@supabase/supabase-js": "^2.10.0",
     "@tsconfig/recommended": "^1.0.2",
     "@types/d3-dsv": "^3",
     "@types/pdf-parse": "^1.1.1",
@@ -78,11 +86,13 @@
     "eslint-config-prettier": "^8.6.0",
     "eslint-plugin-import": "^2.27.5",
     "eslint-plugin-prettier": "^4.2.1",
-    "hnswlib-node": "^1.3.0",
+    "hnswlib-node": "^1.4.2",
     "husky": "^8.0.3",
     "jest": "^29.4.2",
     "lint-staged": "^13.1.1",
     "prettier": "^2.8.3",
+    "puppeteer": "^19.7.2",
+    "redis": "^4.6.4",
     "serpapi": "^1.1.1",
     "srt-parser-2": "^1.2.2",
     "ts-jest": "^29.0.5",
@@ -94,11 +104,14 @@
   "peerDependencies": {
     "@dqbd/tiktoken": "^0.4.0",
     "@huggingface/inference": "^1.5.1",
-    "@pinecone-database/pinecone": "^0.0.8",
+    "@pinecone-database/pinecone": "^0.0.10",
+    "@supabase/supabase-js": "^2.10.0",
     "cheerio": "^1.0.0-rc.12",
     "chromadb": "^1.3.0",
     "cohere-ai": "^5.0.2",
-    "hnswlib-node": "^1.3.0",
+    "hnswlib-node": "^1.4.2",
+    "puppeteer": "^19.7.2",
+    "redis": "^4.6.4",
     "serpapi": "^1.1.1",
     "srt-parser-2": "^1.2.2"
   },
@@ -112,6 +125,9 @@
     "@pinecone-database/pinecone": {
       "optional": true
     },
+    "@supabase/supabase-js": {
+      "optional": true
+    },
     "cheerio": {
       "optional": true
     },
@@ -122,6 +138,12 @@
       "optional": true
     },
     "hnswlib-node": {
+      "optional": true
+    },
+    "puppeteer": {
+      "optional": true
+    },
+    "redis": {
       "optional": true
     },
     "serpapi": {
@@ -138,12 +160,13 @@
     "eventsource-parser": "^0.1.0",
     "exponential-backoff": "^3.1.0",
     "expr-eval": "^2.0.2",
-    "gpt-3-encoder": "^1.1.4",
+    "gpt3-tokenizer": "^1.1.5",
     "jsonpointer": "^5.0.1",
     "openai": "^3.2.0",
     "p-queue": "^7.3.4",
     "pdf-parse": "^1.1.1",
     "sqlite3": "^5.1.4",
+    "typeorm": "^0.3.12",
     "uuid": "^9.0.0",
     "yaml": "^2.2.1"
   },
@@ -222,6 +245,18 @@
     "./document_loaders": {
       "types": "./document_loaders.d.ts",
       "import": "./document_loaders.js"
+    },
+    "./chat_models": {
+      "types": "./chat_models.d.ts",
+      "import": "./chat_models.js"
+    },
+    "./schema": {
+      "types": "./schema.d.ts",
+      "import": "./schema.js"
+    },
+    "./sql_db": {
+      "types": "./sql_db.d.ts",
+      "import": "./sql_db.js"
     }
   }
 }

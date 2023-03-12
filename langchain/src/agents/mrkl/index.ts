@@ -1,4 +1,4 @@
-import { BaseLLM } from "../../llms/index.js";
+import { BaseLanguageModel } from "../../schema/index.js";
 import { LLMChain } from "../../chains/index.js";
 import {
   Agent,
@@ -98,7 +98,11 @@ export class ZeroShotAgent extends Agent {
     });
   }
 
-  static fromLLMAndTools(llm: BaseLLM, tools: Tool[], args?: CreatePromptArgs) {
+  static fromLLMAndTools(
+    llm: BaseLanguageModel,
+    tools: Tool[],
+    args?: CreatePromptArgs
+  ) {
     ZeroShotAgent.validateTools(tools);
     const prompt = ZeroShotAgent.createPrompt(tools, args);
     const chain = new LLMChain({ prompt, llm });
@@ -127,14 +131,18 @@ export class ZeroShotAgent extends Agent {
   }
 
   static async deserialize(
-    data: SerializedZeroShotAgent & { llm?: BaseLLM; tools?: Tool[] }
+    data: SerializedZeroShotAgent & { llm?: BaseLanguageModel; tools?: Tool[] }
   ): Promise<ZeroShotAgent> {
     const { llm, tools, ...rest } = data;
     return deserializeHelper(
       llm,
       tools,
       rest,
-      (llm: BaseLLM, tools: Tool[], args: SerializedFromLLMAndTools) =>
+      (
+        llm: BaseLanguageModel,
+        tools: Tool[],
+        args: SerializedFromLLMAndTools
+      ) =>
         ZeroShotAgent.fromLLMAndTools(llm, tools, {
           prefix: args.prefix,
           suffix: args.suffix,

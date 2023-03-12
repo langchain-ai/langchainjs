@@ -1,4 +1,6 @@
-import { LLM, LLMCallbackManager } from "./index.js";
+import { LLM } from "./base.js";
+import { LLMCallbackManager } from "../schema/index.js";
+import { BaseCache } from "../cache.js";
 
 interface CohereInput {
   /** Sampling temperature to use */
@@ -27,7 +29,7 @@ export class Cohere extends LLM implements CohereInput {
       callbackManager?: LLMCallbackManager;
       verbose?: boolean;
       concurrency?: number;
-      cache?: boolean;
+      cache?: BaseCache | boolean;
     }
   ) {
     super(

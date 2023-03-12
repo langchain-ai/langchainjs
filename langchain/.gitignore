@@ -22,5 +22,11 @@ docstore.js
 docstore.d.ts
 document_loaders.js
 document_loaders.d.ts
+chat_models.js
+chat_models.d.ts
+schema.js
+schema.d.ts
+sql_db.js
+sql_db.d.ts
 index.js
 index.d.ts

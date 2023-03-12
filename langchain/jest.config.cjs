@@ -10,4 +10,5 @@ module.exports = {
     "^.+\\.m?[tj]sx?$": ["ts-jest", { useESM: true }],
   },
   setupFiles: ["dotenv/config"],
+  testTimeout: 20_000,
 };

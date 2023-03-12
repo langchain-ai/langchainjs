@@ -1,6 +1,6 @@
 # Chat Vector DB QA Chain
 
-A Chat Vector DB QA chain takes as input a question and chat history. It first combines the chat history and the question into a standalone question, then looks up relevant documents from the vector database, and then passes those documents and the question to a question answering chain to return a response.
+The Chat Vector DB QA chain requires two inputs: a question and the chat history. It first combines the chat history and the question into a standalone question, then looks up relevant documents from the vector database, and then passes those documents and the question to a question answering chain to return a response.
 
 To create one, you will need a vectorstore, which can be created from embeddings.
 
@@ -20,7 +20,7 @@ const model = new OpenAI({});
 const text = fs.readFileSync("state_of_the_union.txt", "utf8");
 /* Split the text into chunks */
 const textSplitter = new RecursiveCharacterTextSplitter({ chunkSize: 1000 });
-const docs = textSplitter.createDocuments([text]);
+const docs = await textSplitter.createDocuments([text]);
 /* Create the vectorstore */
 const vectorStore = await HNSWLib.fromDocuments(docs, new OpenAIEmbeddings());
 /* Create the chain */

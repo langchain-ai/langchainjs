@@ -1,5 +1,5 @@
-import type { extname as ExtnameT, resolve as ResolveT } from "path";
-import type { readdir as ReaddirT } from "fs/promises";
+import type { extname as ExtnameT, resolve as ResolveT } from "node:path";
+import type { readdir as ReaddirT } from "node:fs/promises";
 import { Document } from "../document.js";
 import { getEnv } from "../util/env.js";
 import { BaseDocumentLoader } from "./base.js";
@@ -83,8 +83,8 @@ export class DirectoryLoader extends BaseDocumentLoader {
     resolve: typeof ResolveT;
   }> {
     try {
-      const { extname, resolve } = await import("path");
-      const { readdir } = await import("fs/promises");
+      const { extname, resolve } = await import("node:path");
+      const { readdir } = await import("node:fs/promises");
       return { readdir, extname, resolve };
     } catch (e) {
       console.error(e);

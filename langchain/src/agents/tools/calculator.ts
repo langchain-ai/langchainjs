@@ -13,6 +13,5 @@ export class Calculator extends Tool {
     }
   }
 
-  description = `Useful for getting the result of a math expression. 
-  The input to this tool should be a well formed string math expression to be parsed and evaluated by expr-eval npm package."`;
+  description = `Useful for getting the result of a math expression. The input to this tool should be a valid mathmatical expression that could be executed by a simple calculator.`;
 }

@@ -4,13 +4,13 @@
 
 For this example, you will also need to install the SerpAPI package for JavaScript/TypeScript.
 
-```bash
-npm i serpapi
+```bash npm2yarn
+npm install -S serpapi
 ```
 
 And set the appropriate environment variables in the `.env` file.
 
-```
+```bash
 SERPAPI_API_KEY="..."
 ```
 

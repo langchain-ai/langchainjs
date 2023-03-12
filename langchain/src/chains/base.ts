@@ -8,6 +8,7 @@ import type {
   AnalyzeDocumentChain,
 } from "./index.js";
 import { BaseMemory } from "../memory/index.js";
+import { SqlDatabaseChain } from "./sql_db/sql_db_chain.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ChainValues = Record<string, any>;
@@ -22,6 +23,7 @@ export type SerializedBaseChain = ReturnType<
     | typeof ChatVectorDBQAChain
     | typeof MapReduceDocumentsChain
     | typeof AnalyzeDocumentChain
+    | typeof SqlDatabaseChain
   >["serialize"]
 >;
 
@@ -91,7 +93,7 @@ export abstract class BaseChain implements ChainInputs {
       }
     }
     // TODO(sean) add callback support
-    const outputValues = this._call(fullValues);
+    const outputValues = await this._call(fullValues);
     if (!(this.memory == null)) {
       await this.memory.saveContext(values, outputValues);
     }

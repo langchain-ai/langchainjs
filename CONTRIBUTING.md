@@ -4,8 +4,20 @@ Hi there! Thank you for even being interested in contributing to LangChain.
 As an open source project in a rapidly developing field, we are extremely open
 to contributions, whether it be in the form of a new feature, improved infra, or better documentation.
 
-To contribute to this project, please follow a ["fork and pull request"](https://docs.github.com/en/get-started/quickstart/contributing-to-projects) workflow.
-Please do not try to push directly to this repo unless you are maintainer.
+To contribute to this project, please follow a ["fork and pull request"](https://docs.github.com/en/get-started/quickstart/contributing-to-projects) workflow. Please do not try to push directly to this repo unless you are a maintainer.
+
+## Quick Links
+
+### Not sure what to work on?
+
+If you are not sure what to work on, we have a few suggestions:
+
+- Look at the issues with the [help wanted](https://github.com/hwchase17/langchainjs/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22) label. These are issues that we think are good targets for new contributors. If you are interested in working on one of these, please comment on the issue so that we can assign it to you. And any questions let us know, we're happy to guide you!
+- At the moment our main focus is reaching parity with the Python version across both [integrations](https://langchain.com/integrations.html) and [features](https://langchain.com/features.html). If you are interested in working on a specific integration or feature, just pick anything from those lists not done yet, please let us know and we can help you get started.
+
+### New abstractions
+
+We are currently trying to keep API parity between the Python and JS versions of LangChain, where possible. As such we ask that if you have an idea for a new abstraction, please open an issue first to discuss it. This will help us make sure that the API is consistent across both versions. If you're not sure what to work on, we recommend looking at the links above first.
 
 ## 🗺️Contributing Guidelines
 
@@ -46,7 +58,7 @@ good code into the codebase.
 
 ### 🏭Release process
 
-# TODO:
+> TODO:
 
 As of now, LangChain has an ad hoc release process: releases are cut with high frequency via by
 a developer and published to [npm](https://www.npmjs.com/package/langchain).

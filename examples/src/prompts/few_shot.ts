@@ -31,6 +31,6 @@ export const run = async () => {
     templateFormat: "f-string",
   });
   /* We can now generate a prompt using the `format` method. */
-  const res = fewShotPrompt.format({ input: "big" });
+  const res = await fewShotPrompt.format({ input: "big" });
   console.log({ res });
 };

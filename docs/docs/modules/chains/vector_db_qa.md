@@ -1,6 +1,6 @@
 # Vector DB QA Chain
 
-A Vector DB QA chain takes as input a question, looks up relevant documents from the vector database, and then passes those documents and the question to a question answering chain to return a response.
+The Vector DB QA chain operates by taking a question as input, searching for relevant documents in the vector database, and passing both the documents and the question to a question answering chain, which returns a response.
 
 To create one, you will need a vectorstore, which can be created from embeddings.
 

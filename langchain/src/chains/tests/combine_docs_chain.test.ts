@@ -1,7 +1,8 @@
 import { test, expect } from "@jest/globals";
 import { Document } from "../../document.js";
-import { BaseLLM, LLMResult } from "../../llms/index.js";
-import { loadQAChain } from "../question_answering/load.js";
+import { BaseLLM } from "../../llms/index.js";
+import { loadQAMapReduceChain } from "../question_answering/load.js";
+import { LLMResult } from "../../schema/index.js";
 
 test("Test MapReduceDocumentsChain", async () => {
   let nrMapCalls = 0;
@@ -35,7 +36,7 @@ test("Test MapReduceDocumentsChain", async () => {
   }
 
   const model = new FakeLLM({});
-  const chain = loadQAChain(model, { type: "map_reduce" });
+  const chain = loadQAMapReduceChain(model);
   const docs = [
     new Document({ pageContent: "harrison went to harvard" }),
     new Document({ pageContent: "ankush went to princeton" }),

@@ -89,14 +89,17 @@ export class PineconeStore extends VectorStore {
   }
 
   static async fromTexts(
-    pineconeClient: VectorOperationsApi,
     texts: string[],
     metadatas: object[],
     embeddings: Embeddings,
-    textKey = "text",
-    namespace: string | undefined = undefined
+    dbConfig: {
+      pineconeClient: VectorOperationsApi;
+      textKey?: string;
+      namespace?: string | undefined;
+    }
   ): Promise<PineconeStore> {
-    const docs = [];
+    const textKey = dbConfig.textKey || "text";
+    const docs: Document[] = [];
     for (let i = 0; i < texts.length; i += 1) {
       const newDoc = new Document({
         pageContent: texts[i],
@@ -106,11 +109,11 @@ export class PineconeStore extends VectorStore {
     }
 
     return PineconeStore.fromDocuments(
-      pineconeClient,
+      dbConfig.pineconeClient,
       docs,
       embeddings,
       textKey,
-      namespace
+      dbConfig.namespace
     );
   }
 

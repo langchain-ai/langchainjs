@@ -1,92 +1,110 @@
 import { test, expect, beforeEach, afterEach } from "@jest/globals";
-import sqlite3 from "sqlite3";
+import { DataSource } from "typeorm";
 import {
   InfoSqlTool,
   QuerySqlTool,
-  SqlDatabase,
   ListTablesSqlTool,
   QueryCheckerTool,
 } from "../tools/sql.js";
-
-let db: sqlite3.Database;
+import { SqlDatabase } from "../../sql_db.js";
 
 const previousEnv = process.env;
 
-beforeEach(() => {
-  db = new sqlite3.Database(":memory:");
-  db.serialize(() => {
-    db.run(
-      "CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, age INTEGER)"
-    );
-    db.run("INSERT INTO users (name, age) VALUES ('Alice', 20)");
-    db.run("INSERT INTO users (name, age) VALUES ('Bob', 21)");
-    db.run("INSERT INTO users (name, age) VALUES ('Charlie', 22)");
+let db: SqlDatabase;
 
-    db.run(
-      "CREATE TABLE products (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, price INTEGER)"
-    );
-    db.run("INSERT INTO products (name, price) VALUES ('Apple', 100)");
-    db.run("INSERT INTO products (name, price) VALUES ('Banana', 200)");
-    db.run("INSERT INTO products (name, price) VALUES ('Orange', 300)");
+beforeEach(async () => {
+  const datasource = new DataSource({
+    type: "sqlite",
+    database: ":memory:",
+    synchronize: true,
+  });
+
+  await datasource.initialize();
+
+  await datasource.query(`
+        CREATE TABLE products (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, price INTEGER);
+    `);
+  await datasource.query(`
+        INSERT INTO products (name, price) VALUES ('Apple', 100);
+    `);
+  await datasource.query(`
+        INSERT INTO products (name, price) VALUES ('Banana', 200);
+    `);
+  await datasource.query(`
+        INSERT INTO products (name, price) VALUES ('Orange', 300);
+    `);
+  await datasource.query(`
+        CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, age INTEGER);
+    `);
+  await datasource.query(`
+        INSERT INTO users (name, age) VALUES ('Alice', 20);
+    `);
+  await datasource.query(`
+        INSERT INTO users (name, age) VALUES ('Bob', 21);
+    `);
+  await datasource.query(`
+        INSERT INTO users (name, age) VALUES ('Charlie', 22);
+    `);
+
+  db = await SqlDatabase.fromDataSourceParams({
+    appDataSource: datasource,
   });
 
   process.env = { ...previousEnv, OPENAI_API_KEY: "test" };
 });
 
-afterEach(() => {
-  db.close();
-
+afterEach(async () => {
   process.env = previousEnv;
+  await db.appDataSource.destroy();
 });
 
 test("QuerySqlTool", async () => {
-  const querySqlTool = new QuerySqlTool(new SqlDatabase(db));
+  const querySqlTool = new QuerySqlTool(db);
   const result = await querySqlTool.call("SELECT * FROM users");
   expect(result).toBe(
-    `
-    {"id":1,"name":"Alice","age":20}
-{"id":2,"name":"Bob","age":21}
-{"id":3,"name":"Charlie","age":22}`.trim()
+    `[{"id":1,"name":"Alice","age":20},{"id":2,"name":"Bob","age":21},{"id":3,"name":"Charlie","age":22}]`
   );
 });
 
 test("QuerySqlTool with error", async () => {
-  const querySqlTool = new QuerySqlTool(new SqlDatabase(db));
+  const querySqlTool = new QuerySqlTool(db);
   const result = await querySqlTool.call("SELECT * FROM userss");
-  expect(result).toBe(`Error: SQLITE_ERROR: no such table: userss`);
+  expect(result).toBe(`QueryFailedError: SQLITE_ERROR: no such table: userss`);
 });
 
 test("InfoSqlTool", async () => {
-  const infoSqlTool = new InfoSqlTool(new SqlDatabase(db));
+  const infoSqlTool = new InfoSqlTool(db);
   const result = await infoSqlTool.call("users, products");
-  expect(result).toBe(
-    `
-    CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, age INTEGER)
-{"id":1,"name":"Alice","age":20}
-{"id":2,"name":"Bob","age":21}
-{"id":3,"name":"Charlie","age":22}
-
-CREATE TABLE products (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, price INTEGER)
-{"id":1,"name":"Apple","price":100}
-{"id":2,"name":"Banana","price":200}
-{"id":3,"name":"Orange","price":300}`.trim()
-  );
+  const expectStr = `
+CREATE TABLE products (
+id INTEGER , name TEXT , price INTEGER ) 
+SELECT * FROM "products" LIMIT 3;
+ id name price
+ 1 Apple 100
+ 2 Banana 200
+ 3 Orange 300
+CREATE TABLE users (
+id INTEGER , name TEXT , age INTEGER ) 
+SELECT * FROM "users" LIMIT 3;
+ id name age
+ 1 Alice 20
+ 2 Bob 21
+ 3 Charlie 22`;
+  expect(result.trim()).toBe(expectStr.trim());
 });
 
 test("InfoSqlTool with error", async () => {
-  const infoSqlTool = new InfoSqlTool(new SqlDatabase(db));
+  const infoSqlTool = new InfoSqlTool(db);
   const result = await infoSqlTool.call("userss, products");
-  expect(result).toBe(`Error: table userss does not exist`);
+  expect(result).toBe(
+    `Error: Wrong target table name: the table userss was not found in the database`
+  );
 });
 
 test("ListTablesSqlTool", async () => {
-  const listSqlTool = new ListTablesSqlTool(new SqlDatabase(db));
+  const listSqlTool = new ListTablesSqlTool(db);
   const result = await listSqlTool.call("");
-  expect(result).toBe(
-    `
-    products
-users`.trim()
-  );
+  expect(result).toBe(`products, users`);
 });
 
 test("QueryCheckerTool", async () => {

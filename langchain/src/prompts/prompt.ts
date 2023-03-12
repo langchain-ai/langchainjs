@@ -1,25 +1,25 @@
 import {
-  BasePromptTemplate,
+  BaseStringPromptTemplate,
   BasePromptTemplateInput,
   InputValues,
   PartialValues,
 } from "./index.js";
 import {
-  TemplateFormat,
   checkValidTemplate,
+  parseTemplate,
   renderTemplate,
-  parseFString,
+  TemplateFormat,
 } from "./template.js";
 import { resolveTemplateFromFile } from "../util/index.js";
-import { SerializedOutputParser, BaseOutputParser } from "./parser.js";
+import { BaseOutputParser, SerializedOutputParser } from "./parser.js";
 
 export type SerializedPromptTemplate = {
   _type?: "prompt";
   input_variables: string[];
   output_parser?: SerializedOutputParser;
+  template_format?: TemplateFormat;
   template?: string;
   template_path?: string;
-  template_format?: TemplateFormat;
 };
 
 /**
@@ -63,7 +63,7 @@ export interface PromptTemplateInput extends BasePromptTemplateInput {
  * ```
  */
 export class PromptTemplate
-  extends BasePromptTemplate
+  extends BaseStringPromptTemplate
   implements PromptTemplateInput
 {
   template: string;
@@ -132,7 +132,7 @@ export class PromptTemplate
    */
   static fromTemplate(template: string) {
     const names = new Set<string>();
-    parseFString(template).forEach((node) => {
+    parseTemplate(template, "f-string").forEach((node) => {
       if (node.type === "variable") {
         names.add(node.name);
       }
