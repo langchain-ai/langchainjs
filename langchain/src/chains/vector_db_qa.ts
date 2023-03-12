@@ -119,7 +119,7 @@ export class VectorDBQAChain extends BaseChain implements VectorDBQAChainInput {
   static fromLLM(
     llm: BaseLLM,
     vectorstore: VectorStore,
-    options?: Partial<VectorDBQAChainInput>
+    options?: Partial<Omit<VectorDBQAChainInput, 'combineDocumentsChain' | 'vectorstore'>>
   ): VectorDBQAChain {
     const qaChain = loadQAStuffChain(llm);
     return new this({
