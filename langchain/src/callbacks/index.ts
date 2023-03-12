@@ -264,7 +264,7 @@ export interface TracerOptions {
     sessionName?: string;
 }
 
-export async function getCallbackManager(options?: TracerOptions): Promise<CallbackManager> {
+export function getCallbackManager(): CallbackManager {
   const manager = new CallbackManager();
   manager.setHandler(new ConsoleCallbackHandler());
   if (process.env.LANGCHAIN_HANDLER === "console" || !process.env.LANGCHAIN_HANDLER) {
@@ -272,16 +272,23 @@ export async function getCallbackManager(options?: TracerOptions): Promise<Callb
   }
   if (process.env.LANGCHAIN_HANDLER === "langchain") {
     const tracingHandler = new LangChainTracer();
-    const sessionName = options?.sessionName;
-    if (sessionName) {
-      await tracingHandler.loadSession(sessionName);
-    } else {
-      await tracingHandler.loadDefaultSession();
-    }
     manager.addHandler(tracingHandler);
     return manager;
   }
   throw new Error(
     `Invalid LANGCHAIN_HANDLER environment variable: ${process.env.LANGCHAIN_HANDLER}, must be one of: console, langchain.`
   );
+}
+
+export async function setTracerSession(callbackManager: CallbackManager, options?: TracerOptions) {
+    for (const handler of callbackManager.handlers) {
+      if (handler instanceof LangChainTracer) {
+        const sessionName = options?.sessionName;
+        if (sessionName) {
+          await handler.loadSession(sessionName);
+        } else {
+          await handler.loadDefaultSession();
+        }
+      }
+    }
 }

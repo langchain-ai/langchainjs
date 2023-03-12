@@ -1,4 +1,3 @@
-import { BaseLanguageModel } from "../../schema/index.js";
 import { LLMChain } from "../../chains/index.js";
 import {
   Agent,
@@ -14,6 +13,7 @@ import {
   ChatPromptTemplate,
 } from "../../prompts/index.js";
 import { PREFIX, SUFFIX, FORMAT_INSTRUCTIONS } from "./prompt.js";
+import {BaseLanguageModel} from "../../base_language/index.js";
 
 const FINAL_ANSWER_ACTION = "Final Answer:";
 

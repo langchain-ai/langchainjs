@@ -71,13 +71,6 @@ test("Test LLMRun", async () => {
   expect(run).toEqual(compareRun);
 });
 
-test("Test LLM Run no session", async () => {
-  const tracer = new FakeTracer();
-  await expect(
-    tracer.handleLLMStart({ name: "test" }, ["test"])
-  ).rejects.toThrow("Initialize a session before starting a trace.");
-});
-
 test("Test LLM Run no start", async () => {
   const tracer = new FakeTracer();
   await tracer.newSession();

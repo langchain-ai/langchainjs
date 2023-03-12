@@ -1,7 +1,6 @@
 import { BaseChain, ChainInputs, ChainValues } from "./index.js";
 
 import { BaseLLM, SerializedLLM } from "../llms/index.js";
-import { BaseLanguageModel } from "../schema/index.js";
 
 import { BaseMemory, BufferMemory } from "../memory/index.js";
 import {
@@ -11,6 +10,7 @@ import {
 } from "../prompts/index.js";
 
 import { resolveConfigFromFile } from "../util/index.js";
+import {BaseLanguageModel} from "../base_language/index.js";
 
 export interface LLMChainInput extends ChainInputs {
   /** Prompt object to use */

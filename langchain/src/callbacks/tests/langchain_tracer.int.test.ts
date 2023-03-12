@@ -4,7 +4,6 @@ import {LangChainTracer} from "../tracers/index.js";
 
 test("Test LangChain tracer", async () => {
     const tracer = new LangChainTracer();
-    await tracer.loadDefaultSession();
     expect(tracer.alwaysVerbose).toBe(true);
 
     await tracer.handleChainStart({ name: "test" }, { foo: "bar" });

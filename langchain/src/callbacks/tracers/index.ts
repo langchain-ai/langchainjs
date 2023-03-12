@@ -130,7 +130,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     _verbose?: boolean
   ): Promise<void> {
     if (this.session === undefined) {
-      throw new Error("Initialize a session before starting a trace.");
+      this.session = await this.loadDefaultSession();
     }
     const run: LLMRun = {
       start_time: Date.now(),
@@ -171,7 +171,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     _verbose?: boolean
   ): Promise<void> {
     if (this.session === undefined) {
-      throw new Error("Initialize a session before starting a trace.");
+      this.session = await this.loadDefaultSession();
     }
     const run: ChainRun = {
       start_time: Date.now(),
@@ -218,7 +218,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     _verbose?: boolean
   ): Promise<void> {
     if (this.session === undefined) {
-      throw new Error("Initialize a session before starting a trace.");
+      this.session = await this.loadDefaultSession();
     }
     const run: ToolRun = {
       start_time: Date.now(),
