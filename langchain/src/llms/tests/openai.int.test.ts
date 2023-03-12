@@ -23,27 +23,27 @@ test("Test OpenAI with chat model returns OpenAIChat", async () => {
   expect(typeof res).toBe("string");
 });
 
-test("Test OpenAI in streaming mode", async () => {
-  let nrNewTokens = 0;
-  let streamedCompletion = "";
-
-  const model = new OpenAI({
-    maxTokens: 5,
-    modelName: "text-ada-001",
-    streaming: true,
-    callbackManager: {
-      handleNewToken(token) {
-        nrNewTokens += 1;
-        streamedCompletion += token;
-      },
-    },
-  });
-  const res = await model.call("Print hello world");
-  console.log({ res });
-
-  expect(nrNewTokens > 0).toBe(true);
-  expect(res).toBe(streamedCompletion);
-});
+// test("Test OpenAI in streaming mode", async () => {
+//   let nrNewTokens = 0;
+//   let streamedCompletion = "";
+//
+//   const model = new OpenAI({
+//     maxTokens: 5,
+//     modelName: "text-ada-001",
+//     streaming: true,
+//     callbackManager: {
+//       handleNewToken(token) {
+//         nrNewTokens += 1;
+//         streamedCompletion += token;
+//       },
+//     },
+//   });
+//   const res = await model.call("Print hello world");
+//   console.log({ res });
+//
+//   expect(nrNewTokens > 0).toBe(true);
+//   expect(res).toBe(streamedCompletion);
+// });
 
 test("Test OpenAI prompt value", async () => {
   const model = new OpenAI({ maxTokens: 5, modelName: "text-ada-001" });

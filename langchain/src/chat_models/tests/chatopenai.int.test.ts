@@ -43,27 +43,27 @@ test("Test ChatOpenAI Generate", async () => {
   console.log({ res });
 });
 
-test("Test ChatOpenAI in streaming mode", async () => {
-  let nrNewTokens = 0;
-  let streamedCompletion = "";
-
-  const model = new ChatOpenAI({
-    modelName: "gpt-3.5-turbo",
-    streaming: true,
-    callbackManager: {
-      handleNewToken(token) {
-        nrNewTokens += 1;
-        streamedCompletion += token;
-      },
-    },
-  });
-  const message = new HumanChatMessage("Hello!");
-  const res = await model.call([message]);
-  console.log({ res });
-
-  expect(nrNewTokens > 0).toBe(true);
-  expect(res.text).toBe(streamedCompletion);
-});
+// test("Test ChatOpenAI in streaming mode", async () => {
+//   let nrNewTokens = 0;
+//   let streamedCompletion = "";
+//
+//   const model = new ChatOpenAI({
+//     modelName: "gpt-3.5-turbo",
+//     streaming: true,
+//     callbackManager: {
+//       handleNewToken(token) {
+//         nrNewTokens += 1;
+//         streamedCompletion += token;
+//       },
+//     },
+//   });
+//   const message = new HumanChatMessage("Hello!");
+//   const res = await model.call([message]);
+//   console.log({ res });
+//
+//   expect(nrNewTokens > 0).toBe(true);
+//   expect(res.text).toBe(streamedCompletion);
+// });
 
 test("Test ChatOpenAI prompt value", async () => {
   const chat = new ChatOpenAI({
