@@ -6,7 +6,7 @@ import { BaseCallbackHandler } from "../index.js";
 export type RunType = "llm" | "chain" | "tool";
 
 export interface BaseTracerSession {
-  startTime: number;
+  start_time: number;
   name?: string;
 }
 
@@ -18,11 +18,11 @@ export interface TracerSession extends BaseTracerSession {
 
 export interface BaseRun {
   id?: number;
-  startTime: number;
-  endTime: number;
-  executionOrder: number;
+  start_time: number;
+  end_time: number;
+  execution_order: number;
   serialized: { name: string };
-  sessionId: number;
+  session_id: number;
   error?: string;
   type: RunType;
 }
@@ -35,18 +35,18 @@ export interface LLMRun extends BaseRun {
 export interface ChainRun extends BaseRun {
   inputs: ChainValues;
   outputs?: ChainValues;
-  childLLMRuns: LLMRun[];
-  childChainRuns: ChainRun[];
-  childToolRuns: ToolRun[];
+  child_llm_runs: LLMRun[];
+  child_chain_runs: ChainRun[];
+  child_tool_runs: ToolRun[];
 }
 
 export interface ToolRun extends BaseRun {
-  toolInput: string;
+  tool_input: string;
   output?: string;
   action: string;
-  childLLMRuns: LLMRun[];
-  childChainRuns: ChainRun[];
-  childToolRuns: ToolRun[];
+  child_llm_runs: LLMRun[];
+  child_chain_runs: ChainRun[];
+  child_tool_runs: ToolRun[];
 }
 
 export abstract class BaseTracer extends BaseCallbackHandler {
@@ -75,7 +75,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
 
   async newSession(sessionName?: string): Promise<TracerSession> {
     const sessionCreate: TracerSessionCreate = {
-      startTime: Date.now(),
+      start_time: Date.now(),
       name: sessionName,
     };
     const session = await this.persistSession(sessionCreate);
@@ -88,11 +88,11 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     childRun: LLMRun | ChainRun | ToolRun
   ) {
     if (childRun.type === "llm") {
-      parentRun.childLLMRuns.push(childRun as LLMRun);
+      parentRun.child_llm_runs.push(childRun as LLMRun);
     } else if (childRun.type === "chain") {
-      parentRun.childChainRuns.push(childRun as ChainRun);
+      parentRun.child_chain_runs.push(childRun as ChainRun);
     } else if (childRun.type === "tool") {
-      parentRun.childToolRuns.push(childRun as ToolRun);
+      parentRun.child_tool_runs.push(childRun as ToolRun);
     } else {
       throw new Error("Invalid run type");
     }
@@ -133,12 +133,12 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       throw new Error("Initialize a session before starting a trace.");
     }
     const run: LLMRun = {
-      startTime: Date.now(),
-      endTime: 0,
+      start_time: Date.now(),
+      end_time: 0,
       serialized: llm,
       prompts,
-      sessionId: this.session.id,
-      executionOrder: this.executionOrder,
+      session_id: this.session.id,
+      execution_order: this.executionOrder,
       type: "llm",
     };
 
@@ -150,7 +150,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       throw new Error("No LLM run to end.");
     }
     const run = this.stack.at(-1) as LLMRun;
-    run.endTime = Date.now();
+    run.end_time = Date.now();
     run.response = output;
     await this._endTrace();
   }
@@ -160,7 +160,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       throw new Error("No LLM run to end.");
     }
     const run = this.stack.at(-1) as LLMRun;
-    run.endTime = Date.now();
+    run.end_time = Date.now();
     run.error = error.message;
     await this._endTrace();
   }
@@ -174,16 +174,16 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       throw new Error("Initialize a session before starting a trace.");
     }
     const run: ChainRun = {
-      startTime: Date.now(),
-      endTime: 0,
+      start_time: Date.now(),
+      end_time: 0,
       serialized: chain,
       inputs,
-      sessionId: this.session.id,
-      executionOrder: this.executionOrder,
+      session_id: this.session.id,
+      execution_order: this.executionOrder,
       type: "chain",
-      childLLMRuns: [],
-      childChainRuns: [],
-      childToolRuns: [],
+      child_llm_runs: [],
+      child_chain_runs: [],
+      child_tool_runs: [],
     };
 
     this._startTrace(run);
@@ -197,7 +197,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       throw new Error("No chain run to end.");
     }
     const run = this.stack.at(-1) as ChainRun;
-    run.endTime = Date.now();
+    run.end_time = Date.now();
     run.outputs = outputs;
     await this._endTrace();
   }
@@ -207,7 +207,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       throw new Error("No chain run to end.");
     }
     const run = this.stack.at(-1) as ChainRun;
-    run.endTime = Date.now();
+    run.end_time = Date.now();
     run.error = error.message;
     await this._endTrace();
   }
@@ -221,17 +221,17 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       throw new Error("Initialize a session before starting a trace.");
     }
     const run: ToolRun = {
-      startTime: Date.now(),
-      endTime: 0,
+      start_time: Date.now(),
+      end_time: 0,
       serialized: tool,
-      toolInput: input,
-      sessionId: this.session.id,
-      executionOrder: this.executionOrder,
+      tool_input: input,
+      session_id: this.session.id,
+      execution_order: this.executionOrder,
       type: "tool",
       action: JSON.stringify(tool), // TODO: this is duplicate info, not needed
-      childLLMRuns: [],
-      childChainRuns: [],
-      childToolRuns: [],
+      child_llm_runs: [],
+      child_chain_runs: [],
+      child_tool_runs: [],
     };
 
     this._startTrace(run);
@@ -242,7 +242,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       throw new Error("No tool run to end");
     }
     const run = this.stack.at(-1) as ToolRun;
-    run.endTime = Date.now();
+    run.end_time = Date.now();
     run.output = output;
     await this._endTrace();
   }
@@ -252,7 +252,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       throw new Error("No tool run to end.");
     }
     const run = this.stack.at(-1) as ToolRun;
-    run.endTime = Date.now();
+    run.end_time = Date.now();
     run.error = error.message;
     await this._endTrace();
   }
@@ -292,6 +292,7 @@ export class LangChainTracer extends BaseTracer {
       console.error(
         `Failed to persist run: ${response.status} ${response.statusText}`
       );
+      console.error(await response.text());
     }
   }
 
@@ -341,7 +342,7 @@ export class LangChainTracer extends BaseTracer {
       );
       tracerSession = {
         id: 1,
-        startTime: Date.now(),
+        start_time: Date.now(),
       };
       this.session = tracerSession;
       return tracerSession;
@@ -350,7 +351,7 @@ export class LangChainTracer extends BaseTracer {
     if (resp.length === 0) {
       tracerSession = {
         id: 1,
-        startTime: Date.now(),
+        start_time: Date.now(),
       };
       this.session = tracerSession;
       return tracerSession;
