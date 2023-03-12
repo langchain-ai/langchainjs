@@ -33,7 +33,7 @@ export interface ChainInputs {
   callbackManager?: CallbackManager;
 }
 
-const getVerbosity = () => true;
+const getVerbosity = () => false;
 
 /**
  * Base interface that all chains must implement.

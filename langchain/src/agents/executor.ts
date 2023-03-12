@@ -64,11 +64,12 @@ export class AgentExecutor extends BaseChain {
     const steps: AgentStep[] = [];
     let iterations = 0;
 
-    const getOutput = (finishStep: AgentFinish) => {
+    const getOutput = async (finishStep: AgentFinish) => {
       const { returnValues } = finishStep;
       if (this.returnIntermediateSteps) {
         return { ...returnValues, intermediateSteps: steps };
       }
+      await this.callbackManager.handleAgentEnd(finishStep, this.verbose);
       return returnValues;
     };
 
@@ -77,10 +78,11 @@ export class AgentExecutor extends BaseChain {
       if ("returnValues" in action) {
         return getOutput(action);
       }
+      await this.callbackManager.handleAgentAction(action, this.verbose);
 
       const tool = toolsByName[action.tool.toLowerCase()];
       const observation = tool
-        ? await tool.call(action.toolInput)
+        ? await tool.call(action.toolInput, this.verbose)
         : `${action.tool} is not a valid tool, try another one.`;
       steps.push({ action, observation });
       if (tool?.returnDirect) {

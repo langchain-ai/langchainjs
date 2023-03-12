@@ -1,6 +1,6 @@
 import {CallbackManager, getCallbackManager} from "../../callbacks/index.js";
 
-const getVerbosity = () => true;
+const getVerbosity = () => false;
 
 export interface ToolParams {
   verbose?: boolean;
@@ -23,16 +23,17 @@ export abstract class Tool {
 
   protected abstract _call(arg: string): Promise<string>;
 
-  async call(arg: string): Promise<string> {
-    await this.callbackManager.handleToolStart({name: this.name}, arg, this.verbose);
+  async call(arg: string, verbose?: boolean): Promise<string> {
+    const _verbose = verbose ?? this.verbose;
+    await this.callbackManager.handleToolStart({name: this.name}, arg, _verbose);
     let result;
     try {
         result = await this._call(arg);
     } catch (e) {
-        await this.callbackManager.handleToolError(e, this.verbose);
+        await this.callbackManager.handleToolError(e, _verbose);
         throw e;
     }
-    await this.callbackManager.handleToolEnd(result, this.verbose);
+    await this.callbackManager.handleToolEnd(result, _verbose);
     return result;
   }
 

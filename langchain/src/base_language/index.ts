@@ -1,7 +1,7 @@
 import { BasePromptValue, LLMResult } from "../schema/index.js";
 import { CallbackManager, getCallbackManager } from "../callbacks/index.js";
 
-const getVerbosity = () => true;
+const getVerbosity = () => false;
 
 /**
  * Base interface for language model parameters.
