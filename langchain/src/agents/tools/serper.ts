@@ -3,11 +3,11 @@ import { Tool } from "./base.js";
 type GoogleParameters = {
   gl?: string;
   hl?: string;
-}
+};
 
 /**
  * Wrapper around serper.
- * 
+ *
  * You can create a free API key at https://serper.dev.
  *
  * To use, you should have the SERPER_API_KEY environment variable set.
@@ -40,47 +40,47 @@ export class Serper extends Tool {
    */
   async call(input: string) {
     const options = {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'X-API-KEY': this.key,
-        'Content-Type': 'application/json'
+        "X-API-KEY": this.key,
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
         q: input,
-        ...this.params
+        ...this.params,
       }),
     };
 
-    const res = await fetch("https://google.serper.dev/search", options)
+    const res = await fetch("https://google.serper.dev/search", options);
 
     if (!res.ok) {
       throw new Error(`Got ${res.status} error from serper: ${res.statusText}`);
     }
 
-    const json = await res.json()
-    
+    const json = await res.json();
+
     if (json.answerBox?.answer) {
-      return res.answerBox.answer;
+      return json.answerBox.answer;
     }
 
-    if (res.answerBox?.snippet) {
-      return res.answerBox.snippet;
+    if (json.answerBox?.snippet) {
+      return json.answerBox.snippet;
     }
 
-    if (res.answerBox?.snippet_highlighted_words) {
-      return res.answerBox.snippet_highlighted_words[0];
+    if (json.answerBox?.snippet_highlighted_words) {
+      return json.answerBox.snippet_highlighted_words[0];
     }
 
-    if (res.sportsResults?.game_spotlight) {
-      return res.sportsResults.game_spotlight;
+    if (json.sportsResults?.game_spotlight) {
+      return json.sportsResults.game_spotlight;
     }
 
-    if (res.knowledgeGraph?.description) {
-      return res.knowledgeGraph.description;
+    if (json.knowledgeGraph?.description) {
+      return json.knowledgeGraph.description;
     }
 
-    if (res.organic?.[0]?.snippet) {
-      return res.organic[0].snippet;
+    if (json.organic?.[0]?.snippet) {
+      return json.organic[0].snippet;
     }
 
     return "No good search result found";
