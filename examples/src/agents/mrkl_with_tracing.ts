@@ -1,8 +1,10 @@
 import { OpenAI } from "langchain";
 import { initializeAgentExecutor } from "langchain/agents";
 import { SerpAPI, Calculator } from "langchain/tools";
+import process from "process";
 
 export const run = async () => {
+  process.env.LANGCHAIN_HANDLER = "langchain";
   const model = new OpenAI({ temperature: 0 });
   const tools = [new SerpAPI(), new Calculator()];
 
