@@ -2,6 +2,7 @@ import { BaseChain } from "../chains/index.js";
 import { Agent, Tool, StoppingMethod } from "./index.js";
 import { SerializedLLMChain } from "../chains/llm_chain.js";
 import { AgentFinish, AgentStep, ChainValues } from "../schema/index.js";
+import { CallbackManager } from "../callbacks/index.js";
 
 type AgentExecutorInput = {
   agent: Agent;
@@ -9,6 +10,9 @@ type AgentExecutorInput = {
   returnIntermediateSteps?: boolean;
   maxIterations?: number;
   earlyStoppingMethod?: StoppingMethod;
+
+  verbose?: boolean;
+  callbackManager?: CallbackManager;
 };
 
 /**
@@ -39,6 +43,8 @@ export class AgentExecutor extends BaseChain {
     this.maxIterations = input.maxIterations ?? this.maxIterations;
     this.earlyStoppingMethod =
       input.earlyStoppingMethod ?? this.earlyStoppingMethod;
+    this.verbose = input.verbose ?? this.verbose;
+    this.callbackManager = input.callbackManager ?? this.callbackManager;
   }
 
   /** Create from agent and a list of tools. */

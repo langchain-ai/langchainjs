@@ -11,6 +11,7 @@
   "scripts": {
     "build": "tsc --declaration --outDir dist/",
     "start": "tsx -r dotenv/config src/index.ts",
+    "start:mrkl": "yarn start agents/mrkl",
     "start:dist": "yarn build && node -r dotenv/config dist/index.js",
     "lint": "eslint src",
     "lint:fix": "yarn lint --fix",
