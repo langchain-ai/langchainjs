@@ -38,7 +38,7 @@ class FakeTracer extends BaseTracer {
     return Promise.resolve({
       id: TEST_SESSION_ID,
       name: sessionName,
-      startTime: _DATE,
+      start_time: _DATE,
     });
   }
 
@@ -46,18 +46,18 @@ class FakeTracer extends BaseTracer {
     return Promise.resolve({
       id: TEST_SESSION_ID,
       name: "default",
-      startTime: _DATE,
+      start_time: _DATE,
     });
   }
 }
 
 test("Test LLMRun", async () => {
   const compareRun: LLMRun = {
-    startTime: _DATE,
-    endTime: _DATE,
-    executionOrder: 1,
+    start_time: _DATE,
+    end_time: _DATE,
+    execution_order: 1,
     serialized: { name: "test" },
-    sessionId: TEST_SESSION_ID,
+    session_id: TEST_SESSION_ID,
     prompts: ["test"],
     type: "llm",
     response: { generations: [] },
@@ -88,17 +88,17 @@ test("Test LLM Run no start", async () => {
 
 test("Test Chain Run", async () => {
   const compareRun: ChainRun = {
-    startTime: _DATE,
-    endTime: _DATE,
-    executionOrder: 1,
+    start_time: _DATE,
+    end_time: _DATE,
+    execution_order: 1,
     serialized: { name: "test" },
-    sessionId: TEST_SESSION_ID,
+    session_id: TEST_SESSION_ID,
     inputs: { foo: "bar" },
     outputs: { foo: "bar" },
     type: "chain",
-    childLLMRuns: [],
-    childChainRuns: [],
-    childToolRuns: [],
+    child_llm_runs: [],
+    child_chain_runs: [],
+    child_tool_runs: [],
   };
   const tracer = new FakeTracer();
   await tracer.newSession();
@@ -111,18 +111,18 @@ test("Test Chain Run", async () => {
 
 test("Test Tool Run", async () => {
   const compareRun: ToolRun = {
-    startTime: _DATE,
-    endTime: _DATE,
-    executionOrder: 1,
+    start_time: _DATE,
+    end_time: _DATE,
+    execution_order: 1,
     serialized: { name: "test" },
-    sessionId: TEST_SESSION_ID,
-    toolInput: "test",
+    session_id: TEST_SESSION_ID,
+    tool_input: "test",
     output: "output",
     type: "tool",
     action: JSON.stringify({ name: "test" }),
-    childLLMRuns: [],
-    childChainRuns: [],
-    childToolRuns: [],
+    child_llm_runs: [],
+    child_chain_runs: [],
+    child_tool_runs: [],
   };
   const tracer = new FakeTracer();
   await tracer.newSession();
@@ -135,58 +135,58 @@ test("Test Tool Run", async () => {
 
 test("Test nested runs", async () => {
   const compareRun: ChainRun = {
-    childChainRuns: [],
-    childLLMRuns: [
+    child_chain_runs: [],
+    child_llm_runs: [
       {
-        endTime: 1620000000000,
-        executionOrder: 4,
+        end_time: 1620000000000,
+        execution_order: 4,
         prompts: ["test"],
         response: {
-          generations: [],
+          generations: [[]],
         },
         serialized: {
           name: "test2",
         },
-        sessionId: 2023,
-        startTime: 1620000000000,
+        session_id: 2023,
+        start_time: 1620000000000,
         type: "llm",
       },
     ],
-    childToolRuns: [
+    child_tool_runs: [
       {
         action: '{"name":"test"}',
-        childChainRuns: [],
-        childLLMRuns: [
+        child_chain_runs: [],
+        child_llm_runs: [
           {
-            endTime: 1620000000000,
-            executionOrder: 3,
+            end_time: 1620000000000,
+            execution_order: 3,
             prompts: ["test"],
             response: {
-              generations: [],
+              generations: [[]],
             },
             serialized: {
               name: "test",
             },
-            sessionId: 2023,
-            startTime: 1620000000000,
+            session_id: 2023,
+            start_time: 1620000000000,
             type: "llm",
           },
         ],
-        childToolRuns: [],
-        endTime: 1620000000000,
-        executionOrder: 2,
+        child_tool_runs: [],
+        end_time: 1620000000000,
+        execution_order: 2,
         output: "output",
         serialized: {
           name: "test",
         },
-        sessionId: 2023,
-        startTime: 1620000000000,
-        toolInput: "test",
+        session_id: 2023,
+        start_time: 1620000000000,
+        tool_input: "test",
         type: "tool",
       },
     ],
-    endTime: 1620000000000,
-    executionOrder: 1,
+    end_time: 1620000000000,
+    execution_order: 1,
     inputs: {
       foo: "bar",
     },
@@ -196,8 +196,8 @@ test("Test nested runs", async () => {
     serialized: {
       name: "test",
     },
-    sessionId: 2023,
-    startTime: 1620000000000,
+    session_id: 2023,
+    start_time: 1620000000000,
     type: "chain",
   };
 
@@ -206,15 +206,15 @@ test("Test nested runs", async () => {
   await tracer.handleChainStart({ name: "test" }, { foo: "bar" });
   await tracer.handleToolStart({ name: "test" }, "test");
   await tracer.handleLLMStart({ name: "test" }, ["test"]);
-  await tracer.handleLLMEnd({ generations: [] });
+  await tracer.handleLLMEnd({ generations: [[]] });
   await tracer.handleToolEnd("output");
   await tracer.handleLLMStart({ name: "test2" }, ["test"]);
-  await tracer.handleLLMEnd({ generations: [] });
+  await tracer.handleLLMEnd({ generations: [[]] });
   await tracer.handleChainEnd({ foo: "bar" });
   expect(tracer.runs.length).toBe(1);
   expect(tracer.runs[0]).toEqual(compareRun);
 
   await tracer.handleLLMStart({ name: "test" }, ["test"]);
-  await tracer.handleLLMEnd({ generations: [] });
+  await tracer.handleLLMEnd({ generations: [[]] });
   expect(tracer.runs.length).toBe(2);
 });
