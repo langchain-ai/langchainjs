@@ -60,7 +60,7 @@ afterEach(async () => {
 
 test("QuerySqlTool", async () => {
   const querySqlTool = new QuerySqlTool(db);
-  const result = await querySqlTool.call("SELECT * FROM users");
+  const result = await querySqlTool._call("SELECT * FROM users");
   expect(result).toBe(
     `[{"id":1,"name":"Alice","age":20},{"id":2,"name":"Bob","age":21},{"id":3,"name":"Charlie","age":22}]`
   );
@@ -68,13 +68,13 @@ test("QuerySqlTool", async () => {
 
 test("QuerySqlTool with error", async () => {
   const querySqlTool = new QuerySqlTool(db);
-  const result = await querySqlTool.call("SELECT * FROM userss");
+  const result = await querySqlTool._call("SELECT * FROM userss");
   expect(result).toBe(`QueryFailedError: SQLITE_ERROR: no such table: userss`);
 });
 
 test("InfoSqlTool", async () => {
   const infoSqlTool = new InfoSqlTool(db);
-  const result = await infoSqlTool.call("users, products");
+  const result = await infoSqlTool._call("users, products");
   const expectStr = `
 CREATE TABLE products (
 id INTEGER , name TEXT , price INTEGER ) 
@@ -95,7 +95,7 @@ SELECT * FROM "users" LIMIT 3;
 
 test("InfoSqlTool with error", async () => {
   const infoSqlTool = new InfoSqlTool(db);
-  const result = await infoSqlTool.call("userss, products");
+  const result = await infoSqlTool._call("userss, products");
   expect(result).toBe(
     `Error: Wrong target table name: the table userss was not found in the database`
   );
@@ -103,7 +103,7 @@ test("InfoSqlTool with error", async () => {
 
 test("ListTablesSqlTool", async () => {
   const listSqlTool = new ListTablesSqlTool(db);
-  const result = await listSqlTool.call("");
+  const result = await listSqlTool._call("");
   expect(result).toBe(`products, users`);
 });
 

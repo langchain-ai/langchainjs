@@ -5,7 +5,7 @@ import { Tool } from "./base.js";
 export class Calculator extends Tool {
   name = "calculator";
 
-  async call(input: string) {
+  async _call(input: string) {
     try {
       return Parser.evaluate(input).toString();
     } catch (error) {

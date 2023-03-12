@@ -15,7 +15,7 @@ export class RequestsGetTool extends Tool implements RequestTool {
     super();
   }
 
-  async call(input: string) {
+  async _call(input: string) {
     const res = await fetch(input, {
       headers: this.headers,
     });
@@ -33,7 +33,7 @@ export class RequestsPostTool extends Tool implements RequestTool {
     super();
   }
 
-  async call(input: string) {
+  async _call(input: string) {
     try {
       const { url, data } = JSON.parse(input);
       const res = await fetch(url, {

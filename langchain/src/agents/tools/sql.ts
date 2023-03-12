@@ -19,7 +19,7 @@ export class QuerySqlTool extends Tool implements SqlTool {
     this.db = db;
   }
 
-  async call(input: string) {
+  async _call(input: string) {
     try {
       return await this.db.run(input);
     } catch (error) {
@@ -43,7 +43,7 @@ export class InfoSqlTool extends Tool implements SqlTool {
   }
 
   // get the table names for a comma separated list of tables, return error message in strong format
-  async call(input: string) {
+  async _call(input: string) {
     try {
       const tables = input.split(",").map((table) => table.trim());
       return await this.db.getTableInfo(tables);
@@ -68,7 +68,7 @@ export class ListTablesSqlTool extends Tool implements SqlTool {
     this.db = db;
   }
 
-  async call(_: string) {
+  async _call(_: string) {
     try {
       const tables = this.db.allTables.map(
         (table: SqlTable) => table.tableName
@@ -115,7 +115,7 @@ If there are any of the above mistakes, rewrite the query. If there are no mista
     }
   }
 
-  async call(input: string) {
+  async _call(input: string) {
     return this.llmChain.predict({ query: input });
   }
 
