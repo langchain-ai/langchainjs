@@ -1,17 +1,16 @@
 import deepcopy from "deepcopy";
 import type {
+  AnalyzeDocumentChain,
+  ChatVectorDBQAChain,
   LLMChain,
+  MapReduceDocumentsChain,
   StuffDocumentsChain,
   VectorDBQAChain,
-  ChatVectorDBQAChain,
-  MapReduceDocumentsChain,
-  AnalyzeDocumentChain,
 } from "./index.js";
-import { BaseMemory } from "../memory/index.js";
-import { SqlDatabaseChain } from "./sql_db/sql_db_chain.js";
+import {BaseMemory} from "../memory/index.js";
+import {SqlDatabaseChain} from "./sql_db/sql_db_chain.js";
+import {ChainValues} from "../schema/index.js";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type ChainValues = Record<string, any>;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type LoadValues = Record<string, any>;
 

@@ -1,6 +1,5 @@
 export {
   BaseChain,
-  ChainValues,
   ChainInputs,
   SerializedBaseChain,
 } from "./base.js";

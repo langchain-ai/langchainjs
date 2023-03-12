@@ -1,4 +1,4 @@
-import { BaseChain, ChainInputs, ChainValues } from "./index.js";
+import { BaseChain, ChainInputs } from "./index.js";
 
 import { BaseLLM, SerializedLLM } from "../llms/index.js";
 
@@ -11,6 +11,7 @@ import {
 
 import { resolveConfigFromFile } from "../util/index.js";
 import {BaseLanguageModel} from "../base_language/index.js";
+import {ChainValues} from "../schema/index.js";
 
 export interface LLMChainInput extends ChainInputs {
   /** Prompt object to use */

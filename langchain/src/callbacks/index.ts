@@ -1,8 +1,6 @@
-import { AgentAction, AgentFinish } from "../agents/index.js";
-import { ChainValues } from "../chains/index.js";
-import { LLMResult } from "../schema/index.js";
+import type {LangChainTracer} from "./tracers/index.js";
+import {AgentAction, AgentFinish, ChainValues, LLMResult} from "../schema/index.js";
 import * as process from "process";
-import {LangChainTracer} from "./tracers/index.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Error = any;

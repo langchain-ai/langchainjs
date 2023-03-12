@@ -1,6 +1,5 @@
 import * as process from "process";
-import { LLMResult } from "../../schema/index.js";
-import { ChainValues } from "../../chains/index.js";
+import {ChainValues, LLMResult} from "../../schema/index.js";
 import { BaseCallbackHandler } from "../index.js";
 
 export type RunType = "llm" | "chain" | "tool";
