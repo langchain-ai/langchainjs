@@ -10,7 +10,7 @@ import {
 import { PromptTemplate } from "../../prompts/index.js";
 import { PREFIX, SUFFIX, formatInstructions } from "./prompt.js";
 import { deserializeHelper } from "../helpers.js";
-import {BaseLanguageModel} from "../../base_language/index.js";
+import { BaseLanguageModel } from "../../base_language/index.js";
 
 const FINAL_ANSWER_ACTION = "Final Answer:";
 

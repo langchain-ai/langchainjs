@@ -10,8 +10,8 @@ import {
 } from "../prompts/index.js";
 
 import { resolveConfigFromFile } from "../util/index.js";
-import {BaseLanguageModel} from "../base_language/index.js";
-import {ChainValues} from "../schema/index.js";
+import { BaseLanguageModel } from "../base_language/index.js";
+import { ChainValues } from "../schema/index.js";
 
 export interface LLMChainInput extends ChainInputs {
   /** Prompt object to use */

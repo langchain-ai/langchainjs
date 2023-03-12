@@ -94,9 +94,9 @@ export abstract class BasePromptValue {
 }
 
 export type AgentAction = {
-    tool: string;
-    toolInput: string;
-    log: string;
+  tool: string;
+  toolInput: string;
+  log: string;
 };
 export type AgentFinish = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

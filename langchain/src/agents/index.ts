@@ -1,7 +1,4 @@
-export {
-  StoppingMethod,
-  SerializedAgentT,
-} from "./types.js";
+export { StoppingMethod, SerializedAgentT } from "./types.js";
 export { Agent, StaticAgent, staticImplements, AgentInput } from "./agent.js";
 export { AgentExecutor } from "./executor.js";
 export { ZeroShotAgent, SerializedZeroShotAgent } from "./mrkl/index.js";

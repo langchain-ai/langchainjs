@@ -1,5 +1,5 @@
-import {BasePromptValue, LLMResult} from "../schema/index.js";
-import {CallbackManager, getCallbackManager} from "../callbacks/index.js";
+import { BasePromptValue, LLMResult } from "../schema/index.js";
+import { CallbackManager, getCallbackManager } from "../callbacks/index.js";
 
 const getVerbosity = () => true;
 
@@ -9,32 +9,32 @@ const getVerbosity = () => true;
  * takes in a parameter that extends this interface.
  */
 export interface BaseLanguageModelParams {
-    verbose?: boolean;
-    callbackManager?: CallbackManager
+  verbose?: boolean;
+  callbackManager?: CallbackManager;
 }
 
 /**
  * Base class for language models.
  */
 export abstract class BaseLanguageModel implements BaseLanguageModelParams {
-    /**
-     * Whether to print out response text.
-     */
-    verbose: boolean;
+  /**
+   * Whether to print out response text.
+   */
+  verbose: boolean;
 
-    callbackManager: CallbackManager;
+  callbackManager: CallbackManager;
 
-    protected constructor(params: BaseLanguageModelParams) {
-        this.verbose = params.verbose ?? getVerbosity();
-        this.callbackManager = params.callbackManager ?? getCallbackManager();
-    }
+  protected constructor(params: BaseLanguageModelParams) {
+    this.verbose = params.verbose ?? getVerbosity();
+    this.callbackManager = params.callbackManager ?? getCallbackManager();
+  }
 
-    abstract generatePrompt(
-        promptValues: BasePromptValue[],
-        stop?: string[]
-    ): Promise<LLMResult>;
+  abstract generatePrompt(
+    promptValues: BasePromptValue[],
+    stop?: string[]
+  ): Promise<LLMResult>;
 
-    abstract _modelType(): string;
+  abstract _modelType(): string;
 
-    abstract getNumTokens(text: string): number;
+  abstract getNumTokens(text: string): number;
 }

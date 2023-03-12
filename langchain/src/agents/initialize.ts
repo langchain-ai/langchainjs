@@ -2,7 +2,7 @@ import { Tool } from "./tools/index.js";
 import { AgentExecutor } from "./executor.js";
 import { ZeroShotAgent } from "./mrkl/index.js";
 import { ChatAgent } from "./chat/index.js";
-import {BaseLanguageModel} from "../base_language/index.js";
+import { BaseLanguageModel } from "../base_language/index.js";
 
 export const initializeAgentExecutor = async (
   tools: Tool[],

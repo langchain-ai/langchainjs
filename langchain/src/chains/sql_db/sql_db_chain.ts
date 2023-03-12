@@ -6,7 +6,7 @@ import { LLMChain } from "../llm_chain.js";
 import { SqlDatabase } from "../../sql_db.js";
 import { resolveConfigFromFile } from "../../util/index.js";
 import { SerializedSqlDatabase } from "../../util/sql_utils.js";
-import {ChainValues} from "../../schema/index.js";
+import { ChainValues } from "../../schema/index.js";
 
 export type SerializedSqlDatabaseChain = {
   sql_database: SerializedSqlDatabase;

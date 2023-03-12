@@ -3,8 +3,13 @@ import {
   CallbackManager,
   BaseCallbackHandler,
   BaseCallbackHandlerInput,
-} from "../index.js";
-import {AgentAction, AgentFinish, ChainValues, LLMResult} from "../../schema/index.js";
+} from "../base.js";
+import {
+  AgentAction,
+  AgentFinish,
+  ChainValues,
+  LLMResult,
+} from "../../schema/index.js";
 
 class FakeCallbackHandler extends BaseCallbackHandler {
   starts = 0;

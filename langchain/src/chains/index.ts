@@ -1,8 +1,4 @@
-export {
-  BaseChain,
-  ChainInputs,
-  SerializedBaseChain,
-} from "./base.js";
+export { BaseChain, ChainInputs, SerializedBaseChain } from "./base.js";
 export {
   SerializedLLMChain,
   LLMChain,

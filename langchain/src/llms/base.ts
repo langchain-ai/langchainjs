@@ -2,11 +2,11 @@ import GPT3Tokenizer from "gpt3-tokenizer";
 import PQueue from "p-queue";
 
 import { BaseCache, InMemoryCache } from "../cache.js";
+import { BasePromptValue, LLMResult } from "../schema/index.js";
 import {
-  BasePromptValue,
-  LLMResult,
-} from "../schema/index.js";
-import {BaseLanguageModel, BaseLanguageModelParams} from "../base_language/index.js";
+  BaseLanguageModel,
+  BaseLanguageModelParams,
+} from "../base_language/index.js";
 
 const GLOBAL_CACHE: BaseCache = new InMemoryCache();
 
