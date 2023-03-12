@@ -26,6 +26,8 @@ export const initializeAgentExecutor = async (
         agent: ChatAgent.fromLLMAndTools(llm, tools),
         tools,
         returnIntermediateSteps: true,
+        verbose,
+        callbackManager,
       });
     default:
       throw new Error("Unknown agent type");
