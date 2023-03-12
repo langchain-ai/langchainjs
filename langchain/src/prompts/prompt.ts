@@ -11,7 +11,10 @@ import {
   TemplateFormat,
 } from "./template.js";
 import { resolveTemplateFromFile } from "../util/index.js";
-import { BaseOutputParser, SerializedOutputParser } from "./parser.js";
+import {
+  BaseOutputParser,
+  SerializedOutputParser,
+} from "../output_parsers/index.js";
 
 export type SerializedPromptTemplate = {
   _type?: "prompt";

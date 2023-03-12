@@ -17,7 +17,10 @@ import {
   parseFileConfig,
 } from "../util/index.js";
 import { PromptTemplate, SerializedPromptTemplate } from "./prompt.js";
-import { SerializedOutputParser, BaseOutputParser } from "./parser.js";
+import {
+  SerializedOutputParser,
+  BaseOutputParser,
+} from "../output_parsers/index.js";
 
 export type SerializedFewShotTemplate = {
   _type: "few_shot";

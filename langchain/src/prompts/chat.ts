@@ -6,7 +6,7 @@ import {
   PartialValues,
 } from "./base.js";
 import { DEFAULT_FORMATTER_MAPPING, TemplateFormat } from "./template.js";
-import { SerializedOutputParser } from "./parser.js";
+import { SerializedOutputParser } from "../output_parsers/index.js";
 import {
   AIChatMessage,
   BaseChatMessage,
