@@ -292,7 +292,6 @@ export class LangChainTracer extends BaseTracer {
       console.error(
         `Failed to persist run: ${response.status} ${response.statusText}`
       );
-      console.error(await response.text());
     }
   }
 

@@ -260,7 +260,11 @@ export class ConsoleCallbackHandler extends BaseCallbackHandler {
   }
 }
 
-export async function getCallbackManager(): Promise<CallbackManager> {
+export interface TracerOptions {
+    sessionName?: string;
+}
+
+export async function getCallbackManager(options?: TracerOptions): Promise<CallbackManager> {
   const manager = new CallbackManager();
   manager.setHandler(new ConsoleCallbackHandler());
   if (process.env.LANGCHAIN_HANDLER === "console" || !process.env.LANGCHAIN_HANDLER) {
@@ -268,7 +272,7 @@ export async function getCallbackManager(): Promise<CallbackManager> {
   }
   if (process.env.LANGCHAIN_HANDLER === "langchain") {
     const tracingHandler = new LangChainTracer();
-    const sessionName = process.env.LANGCHAIN_SESSION;
+    const sessionName = options?.sessionName;
     if (sessionName) {
       await tracingHandler.loadSession(sessionName);
     } else {
