@@ -244,7 +244,10 @@ export class ConsoleCallbackHandler extends BaseCallbackHandler {
     console.log("Finished chain.");
   }
 
-  async handleAgentAction(action: AgentAction, _verbose?: boolean): Promise<void> {
+  async handleAgentAction(
+    action: AgentAction,
+    _verbose?: boolean
+  ): Promise<void> {
     console.log(action.log);
   }
 
