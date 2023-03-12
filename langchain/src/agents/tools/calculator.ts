@@ -8,8 +8,8 @@ export class Calculator extends Tool {
   async call(input: string) {
     try {
       return Parser.evaluate(input).toString();
-    } catch (error) {
-      return "I don't know how to do that.";
+    } catch (error: any) {
+      return `javascript failed to parse. Try again: ${error.toString()}`;
     }
   }
 
