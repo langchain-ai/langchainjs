@@ -9,6 +9,7 @@ import {
   SystemMessagePromptTemplate,
 } from "../../prompts/index.js";
 import { LLMChain } from "../../chains/index.js";
+import {BaseCallbackHandler, CallbackManager} from "../../callbacks/index.js";
 
 test("Test ChatOpenAI", async () => {
   const chat = new ChatOpenAI({ modelName: "gpt-3.5-turbo", maxTokens: 10 });
@@ -43,27 +44,36 @@ test("Test ChatOpenAI Generate", async () => {
   console.log({ res });
 });
 
-// test("Test ChatOpenAI in streaming mode", async () => {
-//   let nrNewTokens = 0;
-//   let streamedCompletion = "";
-//
-//   const model = new ChatOpenAI({
-//     modelName: "gpt-3.5-turbo",
-//     streaming: true,
-//     callbackManager: {
-//       handleNewToken(token) {
-//         nrNewTokens += 1;
-//         streamedCompletion += token;
-//       },
-//     },
-//   });
-//   const message = new HumanChatMessage("Hello!");
-//   const res = await model.call([message]);
-//   console.log({ res });
-//
-//   expect(nrNewTokens > 0).toBe(true);
-//   expect(res.text).toBe(streamedCompletion);
-// });
+test("Test ChatOpenAI in streaming mode", async () => {
+  class StreamCallbackHandler extends BaseCallbackHandler {
+    nrNewTokens = 0;
+
+    alwaysVerbose = true;
+
+    streamedCompletion = "";
+
+    async handleLLMNewToken(token: string) {
+      this.nrNewTokens += 1;
+      this.streamedCompletion += token;
+    }
+  }
+
+  const streamCallbackHandler = new StreamCallbackHandler();
+  const callbackManager = new CallbackManager();
+  callbackManager.addHandler(streamCallbackHandler);
+
+  const model = new ChatOpenAI({
+    modelName: "gpt-3.5-turbo",
+    streaming: true,
+    callbackManager,
+  });
+  const message = new HumanChatMessage("Hello!");
+  const res = await model.call([message]);
+  console.log({ res });
+
+  expect(streamCallbackHandler.nrNewTokens > 0).toBe(true);
+  expect(res.text).toBe(streamCallbackHandler.streamedCompletion);
+});
 
 test("Test ChatOpenAI prompt value", async () => {
   const chat = new ChatOpenAI({
