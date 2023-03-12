@@ -179,7 +179,16 @@ export class ChatVectorDBQAChain
     };
   }
 
-  static fromLLM(llm: BaseLLM, vectorstore: VectorStore): ChatVectorDBQAChain {
+  static fromLLM(
+    llm: BaseLLM,
+    vectorstore: VectorStore,
+    options?: {
+      inputKey?: string;
+      outputKey?: string;
+      k?: number;
+      returnSourceDocuments?: boolean;
+    }
+  ): ChatVectorDBQAChain {
     const qaChain = loadQAStuffChain(llm, { prompt: qa_prompt });
     const questionGeneratorChain = new LLMChain({
       prompt: question_generator_prompt,
@@ -189,6 +198,7 @@ export class ChatVectorDBQAChain
       vectorstore,
       combineDocumentsChain: qaChain,
       questionGeneratorChain,
+      ...options,
     });
     return instance;
   }
