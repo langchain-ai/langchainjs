@@ -1,6 +1,7 @@
 import { ChainValues } from "../chains/index.js";
 import {
   ZeroShotAgent,
+  SerializedConversationalAgent,
   SerializedZeroShotAgent,
   AgentAction,
   AgentFinish,
@@ -9,7 +10,7 @@ import {
   Tool,
   ConversationalAgent,
 } from "./index.js";
-import { BaseLLM } from "../llms/index.js";
+import { BaseLanguageModel } from "../schema/index.js";
 import { LLMChain } from "../chains/llm_chain.js";
 import { BasePromptTemplate } from "../prompts/index.js";
 
@@ -37,7 +38,7 @@ export interface StaticAgent {
   createPrompt(tools: Tool[], fields?: Record<string, any>): BasePromptTemplate;
   /** Construct an agent from an LLM and a list of tools */
   fromLLMAndTools(
-    llm: BaseLLM,
+    llm: BaseLanguageModel,
     tools: Tool[],
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     args?: Record<string, any>
@@ -47,8 +48,9 @@ export interface StaticAgent {
 
 export const staticImplements = <T>(_: T) => {};
 
-// todo this needs to not be hardcoded
-type SerializedAgent = SerializedZeroShotAgent;
+export type SerializedAgent =
+  | SerializedConversationalAgent
+  | SerializedZeroShotAgent;
 
 export interface AgentInput {
   llmChain: LLMChain;
@@ -222,7 +224,7 @@ export abstract class Agent {
    * Load an agent from a json-like object describing it.
    */
   static async deserialize(
-    data: SerializedAgent & { llm?: BaseLLM; tools?: Tool[] }
+    data: SerializedAgent & { llm?: BaseLanguageModel; tools?: Tool[] }
   ): Promise<Agent> {
     switch (data._type) {
       case "zero-shot-react-description":

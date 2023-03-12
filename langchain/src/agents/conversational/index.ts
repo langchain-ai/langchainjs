@@ -1,5 +1,5 @@
-import { deserializeHelper } from "agents/helpers.js";
-import { BaseLLM } from "../../llms/index.js";
+import { deserializeHelper } from "../helpers.js";
+import { BaseLanguageModel } from "../../schema/index.js";
 import { LLMChain } from "../../chains/index.js";
 import {
   Agent,
@@ -117,7 +117,11 @@ export class ConversationalAgent extends Agent {
     });
   }
 
-  static fromLLMAndTools(llm: BaseLLM, tools: Tool[], args?: CreatePromptArgs) {
+  static fromLLMAndTools(
+    llm: BaseLanguageModel,
+    tools: Tool[],
+    args?: CreatePromptArgs
+  ) {
     ConversationalAgent.validateTools(tools);
     const prompt = ConversationalAgent.createPrompt(tools, args);
     const chain = new LLMChain({ prompt, llm });
@@ -146,14 +150,21 @@ export class ConversationalAgent extends Agent {
   }
 
   static async deserialize(
-    data: SerializedConversationalAgent & { llm?: BaseLLM; tools?: Tool[] }
+    data: SerializedConversationalAgent & {
+      llm?: BaseLanguageModel;
+      tools?: Tool[];
+    }
   ): Promise<ConversationalAgent> {
     const { llm, tools, ...rest } = data;
     return deserializeHelper(
       llm,
       tools,
       rest,
-      (llm: BaseLLM, tools: Tool[], args: SerializedFromLLMAndTools) =>
+      (
+        llm: BaseLanguageModel,
+        tools: Tool[],
+        args: SerializedFromLLMAndTools
+      ) =>
         ConversationalAgent.fromLLMAndTools(llm, tools, {
           prefix: args.prefix,
           suffix: args.suffix,
