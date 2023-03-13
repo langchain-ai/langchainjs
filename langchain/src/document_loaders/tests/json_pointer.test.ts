@@ -32,7 +32,7 @@ test("Test JSON Pointer loader for complex json with one pointer that points not
   expect(docs.length).toBe(0);
 });
 
-test("Test JSON Pointer loader for complex json with one pointer that points nothing", async () => {
+test("Test JSON Pointer loader for complex json with one pointer that points a specific object", async () => {
   const filePath = path.resolve(
     path.dirname(url.fileURLToPath(import.meta.url)),
     "./example_data/complex.json"
@@ -57,7 +57,7 @@ test("Test JSON Pointer loader for complex json without pointer", async () => {
   const loader = new JSONPointerLoader(filePath);
   const docs = await loader.load();
 
-  expect(docs.length).toBe(8);
+  expect(docs.length).toBe(10);
   expect(docs[0]).toEqual(
     new Document({
       metadata: { source: filePath },

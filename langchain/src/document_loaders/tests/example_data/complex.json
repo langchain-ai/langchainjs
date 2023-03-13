@@ -7,6 +7,10 @@
   "2": {
     "body": "Intern, Treasury and other roles are available",
     "from": "LinkedIn Job2",
-    "labels": ["IMPORTANT"]
+    "labels": ["IMPORTANT"],
+    "other": {
+      "name": "plop",
+      "surname": "bob"
+    }
   }
 }
