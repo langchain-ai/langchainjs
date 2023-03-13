@@ -113,8 +113,10 @@ export abstract class Agent {
     _returnValues: Record<string, any>,
     _steps: AgentStep[]
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ): Record<string, any> {
-    return {};
+  ): Promise<Record<string, any>> {
+    return new Promise((resolve) => {
+      resolve({});
+    });
   }
 
   /**

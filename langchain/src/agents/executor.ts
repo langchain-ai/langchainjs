@@ -72,7 +72,7 @@ export class AgentExecutor extends BaseChain {
 
     const getOutput = async (finishStep: AgentFinish) => {
       const { returnValues } = finishStep;
-      const additional = this.agent.prepareForOutput(returnValues, steps);
+      const additional = await this.agent.prepareForOutput(returnValues, steps);
 
       if (this.returnIntermediateSteps) {
         return { ...returnValues, intermediateSteps: steps, ...additional };
