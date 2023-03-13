@@ -9,7 +9,7 @@ import {
   SystemMessagePromptTemplate,
 } from "../../prompts/index.js";
 import { LLMChain } from "../../chains/index.js";
-import {BaseCallbackHandler, CallbackManager} from "../../callbacks/index.js";
+import { BaseCallbackHandler, CallbackManager } from "../../callbacks/index.js";
 
 test("Test ChatOpenAI", async () => {
   const chat = new ChatOpenAI({ modelName: "gpt-3.5-turbo", maxTokens: 10 });

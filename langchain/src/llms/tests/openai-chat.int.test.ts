@@ -1,6 +1,6 @@
-import {expect, test} from "@jest/globals";
+import { expect, test } from "@jest/globals";
 import { OpenAIChat } from "../openai-chat.js";
-import {BaseCallbackHandler, CallbackManager} from "../../callbacks/index.js";
+import { BaseCallbackHandler, CallbackManager } from "../../callbacks/index.js";
 
 test("Test OpenAI", async () => {
   const model = new OpenAIChat({ modelName: "gpt-3.5-turbo" });
@@ -40,7 +40,7 @@ test("Test OpenAI in streaming mode", async () => {
   const model = new OpenAIChat({
     modelName: "gpt-3.5-turbo",
     streaming: true,
-    callbackManager
+    callbackManager,
   });
   const res = await model.call("Print hello world");
   console.log({ res });
