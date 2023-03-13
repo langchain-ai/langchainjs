@@ -1,15 +1,15 @@
 import url from "node:url";
 import path from "node:path";
 import { test, expect } from "@jest/globals";
-import { JSONLoader } from "../json.js";
 import { Document } from "../../document.js";
+import { JSONPointerLoader } from "../json_pointer.js";
 
 test("Test JSON loader from file", async () => {
   const filePath = path.resolve(
     path.dirname(url.fileURLToPath(import.meta.url)),
     "./example_data/Star_Wars_The_Clone_Wars_S06E07_Crisis_at_the_Heart.json"
   );
-  const loader = new JSONLoader(filePath);
+  const loader = new JSONPointerLoader(filePath);
   const docs = await loader.load();
   expect(docs.length).toBe(32);
   expect(docs[0]).toEqual(
@@ -21,23 +21,23 @@ test("Test JSON loader from file", async () => {
   );
 });
 
-test("Test JSON loader for complex json with one pointer that points nothing", async () => {
+test("Test JSON Pointer loader for complex json with one pointer that points nothing", async () => {
   const filePath = path.resolve(
     path.dirname(url.fileURLToPath(import.meta.url)),
     "./example_data/complex.json"
   );
-  const loader = new JSONLoader(filePath, "/body");
+  const loader = new JSONPointerLoader(filePath, "/body");
   const docs = await loader.load();
 
   expect(docs.length).toBe(0);
 });
 
-test("Test JSON loader for complex json with one pointer that points nothing", async () => {
+test("Test JSON Pointer loader for complex json with one pointer that points nothing", async () => {
   const filePath = path.resolve(
     path.dirname(url.fileURLToPath(import.meta.url)),
     "./example_data/complex.json"
   );
-  const loader = new JSONLoader(filePath, "/2/from");
+  const loader = new JSONPointerLoader(filePath, "/2/from");
   const docs = await loader.load();
 
   expect(docs.length).toBe(1);
@@ -49,12 +49,12 @@ test("Test JSON loader for complex json with one pointer that points nothing", a
   );
 });
 
-test("Test JSON loader for complex json without pointer", async () => {
+test("Test JSON Pointer loader for complex json without pointer", async () => {
   const filePath = path.resolve(
     path.dirname(url.fileURLToPath(import.meta.url)),
     "./example_data/complex.json"
   );
-  const loader = new JSONLoader(filePath);
+  const loader = new JSONPointerLoader(filePath);
   const docs = await loader.load();
 
   expect(docs.length).toBe(8);
