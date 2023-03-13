@@ -4,6 +4,7 @@ Similar to the python `langchain` package, `langchain.js` support tracing.
 
 You can view an overview of tracing [here.](https://langchain.readthedocs.io/en/latest/tracing.html)
 To spin up the tracing backend, run `docker compose up` (or `docker-compose up` if on using an older version of `docker`) in the `langchain` directory.
+You can also use the `langchain-server` command if you have the python `langchain` package installed.
 
 Here's an example of how to use tracing in `langchain.js`. All that needs to be done is setting the `LANGCHAIN_HANDLER` environment variable to `langchain`.
 
