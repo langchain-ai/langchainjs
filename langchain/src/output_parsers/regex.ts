@@ -1,4 +1,4 @@
-import { BaseOutputParser } from "./index.js";
+import { BaseOutputParser } from "./base.js";
 
 export type SerializedRegexParser = {
   _type: "regex_parser";
@@ -52,6 +52,10 @@ export class RegexParser extends BaseOutputParser {
     }, {} as Record<string, string>);
   }
 
+  getFormatInstructions(): string {
+    return `Your response should match the following regex: /${this.regex}/`;
+  }
+
   serialize() {
     return {
       _type: "regex_parser" as const,
@@ -61,7 +65,7 @@ export class RegexParser extends BaseOutputParser {
     };
   }
 
-  static deserialize(data: SerializedRegexParser): RegexParser {
+  static async deserialize(data: SerializedRegexParser): Promise<RegexParser> {
     return new RegexParser(
       data.regex,
       data.output_keys,

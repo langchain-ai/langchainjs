@@ -174,8 +174,9 @@ export class PromptTemplate
   ): Promise<PromptTemplate> {
     const res = new PromptTemplate({
       inputVariables: data.input_variables,
-      outputParser:
-        data.output_parser && BaseOutputParser.deserialize(data.output_parser),
+      outputParser: data.output_parser
+        ? await BaseOutputParser.deserialize(data.output_parser)
+        : undefined,
       template: await resolveTemplateFromFile("template", data),
       templateFormat: data.template_format,
     });

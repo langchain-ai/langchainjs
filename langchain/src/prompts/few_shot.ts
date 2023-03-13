@@ -231,8 +231,9 @@ export class FewShotPromptTemplate
 
     return new FewShotPromptTemplate({
       inputVariables: data.input_variables,
-      outputParser:
-        data.output_parser && BaseOutputParser.deserialize(data.output_parser),
+      outputParser: data.output_parser
+        ? await BaseOutputParser.deserialize(data.output_parser)
+        : undefined,
       examplePrompt,
       examples,
       exampleSeparator: data.example_separator,

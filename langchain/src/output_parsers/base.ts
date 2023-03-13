@@ -1,7 +1,6 @@
-import {
+import type {
   SerializedRegexParser,
   SerializedCommaSeparatedListOutputParser,
-  RegexParser,
 } from "./index.js";
 
 export type SerializedOutputParser =
@@ -18,7 +17,19 @@ export abstract class BaseOutputParser {
    * @param text - LLM output to parse.
    * @returns Parsed output.
    */
-  abstract parse(text: string): string | string[] | Record<string, string>;
+  abstract parse(text: string): unknown;
+
+  /**
+   * Return a string describing the format of the output.
+   * @returns Format instructions.
+   * @example
+   * ```json
+   * {
+   *  "foo": "bar"
+   * }
+   * ```
+   */
+  abstract getFormatInstructions(): string;
 
   /**
    * Return the string type key uniquely identifying this class of parser
@@ -35,11 +46,14 @@ export abstract class BaseOutputParser {
   /**
    * Load an output parser from a json-like object describing the parser.
    */
-  static deserialize(data: SerializedOutputParser): BaseOutputParser {
+  static async deserialize(
+    data: SerializedOutputParser
+  ): Promise<BaseOutputParser> {
     switch (data._type) {
-      case "regex_parser":
-        // eslint-disable-next-line @typescript-eslint/no-use-before-define
+      case "regex_parser": {
+        const { RegexParser } = await import("./regex.js");
         return RegexParser.deserialize(data);
+      }
       default:
         throw new Error(`Unknown parser type: ${data._type}`);
     }

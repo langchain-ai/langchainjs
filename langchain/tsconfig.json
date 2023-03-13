@@ -21,7 +21,8 @@
     "noUnusedParameters": true,
     "useDefineForClassFields": true,
     "strictPropertyInitialization": false,
-    "allowJs": true
+    "allowJs": true,
+    "strict": true
   },
   "include": [
     "src/**/*"
@@ -52,6 +53,7 @@
       "src/schema/index.ts",
       "src/sql_db.ts",
       "src/callbacks/index.ts",
+      "src/output_parsers/index.ts",
       "src/index.ts"
     ],
     "excludePrivate": true,

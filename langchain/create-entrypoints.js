@@ -19,6 +19,7 @@ const entrypoints = {
   schema: "schema/index",
   sql_db: "sql_db",
   callbacks: "callbacks/index",
+  output_parsers: "output_parsers/index",
 };
 
 const updateJsonFile = (relativePath, updateFunction) => {

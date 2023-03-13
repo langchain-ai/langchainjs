@@ -1,4 +1,4 @@
-import { BaseOutputParser } from "./index.js";
+import { BaseOutputParser } from "./base.js";
 
 export type SerializedCommaSeparatedListOutputParser = {
   _type: "comma_separated_list";
@@ -17,7 +17,14 @@ export abstract class ListOutputParser extends BaseOutputParser {
  */
 export class CommaSeparatedListOutputParser extends ListOutputParser {
   parse(text: string): string[] {
-    return text.trim().split(", ");
+    return text
+      .trim()
+      .split(",")
+      .map((s) => s.trim());
+  }
+
+  getFormatInstructions(): string {
+    return `Your response should be a list of comma separated values, eg: \`foo, bar, baz\``;
   }
 
   serialize(): SerializedCommaSeparatedListOutputParser {
@@ -26,9 +33,9 @@ export class CommaSeparatedListOutputParser extends ListOutputParser {
     };
   }
 
-  static deserialize(
+  static async deserialize(
     _: SerializedCommaSeparatedListOutputParser
-  ): CommaSeparatedListOutputParser {
+  ): Promise<CommaSeparatedListOutputParser> {
     return new CommaSeparatedListOutputParser();
   }
 }
