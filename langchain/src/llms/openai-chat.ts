@@ -208,7 +208,11 @@ export class OpenAIChat extends LLM implements OpenAIInput {
    * const response = await openai.generate(["Tell me a joke."]);
    * ```
    */
-  async _call(prompt: string, stop?: string[]): Promise<string> {
+  async _call(
+    prompt: string,
+    stop: string[] | undefined,
+    runId: symbol
+  ): Promise<string> {
     if (this.stop && stop) {
       throw new Error("Stop found in input and default params");
     }
@@ -249,6 +253,7 @@ export class OpenAIChat extends LLM implements OpenAIInput {
                 // eslint-disable-next-line no-void
                 void this.callbackManager.handleLLMNewToken(
                   part.delta?.content ?? "",
+                  runId,
                   true
                 );
               }

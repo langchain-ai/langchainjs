@@ -91,7 +91,7 @@ class FakeCallbackHandler extends BaseCallbackHandler {
     this.toolEnds += 1;
   }
 
-  async handleToolError(_err: Error, _verbose?: boolean): Promise<void> {
+  async handleToolError(_err: Error): Promise<void> {
     this.errors += 1;
   }
 
@@ -123,16 +123,19 @@ test("CallbackManager", async () => {
   manager.addHandler(handler1);
   manager.addHandler(handler2);
 
-  await manager.handleLLMStart({ name: "test" }, ["test"]);
-  await manager.handleLLMEnd({ generations: [] });
-  await manager.handleLLMNewToken("test");
-  await manager.handleLLMError(new Error("test"));
-  await manager.handleChainStart({ name: "test" }, { test: "test" });
-  await manager.handleChainEnd({ test: "test" });
-  await manager.handleChainError(new Error("test"));
-  await manager.handleToolStart({ name: "test" }, "test");
-  await manager.handleToolEnd("test");
-  await manager.handleToolError(new Error("test"));
+  const llmRunId = await manager.handleLLMStart({ name: "test" }, ["test"]);
+  await manager.handleLLMEnd({ generations: [] }, llmRunId);
+  await manager.handleLLMNewToken("test", llmRunId);
+  await manager.handleLLMError(new Error("test"), llmRunId);
+  const chainRunId = await manager.handleChainStart(
+    { name: "test" },
+    { test: "test" }
+  );
+  await manager.handleChainEnd({ test: "test" }, chainRunId);
+  await manager.handleChainError(new Error("test"), chainRunId);
+  const toolRunId = await manager.handleToolStart({ name: "test" }, "test");
+  await manager.handleToolEnd("test", toolRunId);
+  await manager.handleToolError(new Error("test"), toolRunId);
   await manager.handleText("test");
   await manager.handleAgentAction({
     tool: "test",
@@ -173,16 +176,31 @@ test("CallbackManager with verbose passed in", async () => {
   const handler = new FakeCallbackHandler({ alwaysVerbose: false });
   manager.addHandler(handler);
 
-  await manager.handleLLMStart({ name: "test" }, ["test"], true);
-  await manager.handleLLMEnd({ generations: [] }, true);
-  await manager.handleLLMNewToken("test", true);
-  await manager.handleLLMError(new Error("test"), true);
-  await manager.handleChainStart({ name: "test" }, { test: "test" }, true);
-  await manager.handleChainEnd({ test: "test" }, true);
-  await manager.handleChainError(new Error("test"), true);
-  await manager.handleToolStart({ name: "test" }, "test", true);
-  await manager.handleToolEnd("test", true);
-  await manager.handleToolError(new Error("test"), true);
+  const llmRunId = await manager.handleLLMStart(
+    { name: "test" },
+    ["test"],
+    undefined,
+    true
+  );
+  await manager.handleLLMEnd({ generations: [] }, llmRunId, true);
+  await manager.handleLLMNewToken("test", llmRunId, true);
+  await manager.handleLLMError(new Error("test"), llmRunId, true);
+  const chainRunId = await manager.handleChainStart(
+    { name: "test" },
+    { test: "test" },
+    undefined,
+    true
+  );
+  await manager.handleChainEnd({ test: "test" }, chainRunId, true);
+  await manager.handleChainError(new Error("test"), chainRunId, true);
+  const toolRunId = await manager.handleToolStart(
+    { name: "test" },
+    "test",
+    undefined,
+    true
+  );
+  await manager.handleToolEnd("test", toolRunId, true);
+  await manager.handleToolError(new Error("test"), toolRunId, true);
   await manager.handleText("test", true);
   await manager.handleAgentAction(
     { tool: "test", toolInput: "test", log: "test" },
@@ -214,10 +232,10 @@ test("CallbackHandler with ignoreLLM", async () => {
   });
   const manager = new CallbackManager();
   manager.addHandler(handler);
-  await manager.handleLLMStart({ name: "test" }, ["test"]);
-  await manager.handleLLMEnd({ generations: [] });
-  await manager.handleLLMNewToken("test");
-  await manager.handleLLMError(new Error("test"));
+  const runId = await manager.handleLLMStart({ name: "test" }, ["test"]);
+  await manager.handleLLMEnd({ generations: [] }, runId);
+  await manager.handleLLMNewToken("test", runId);
+  await manager.handleLLMError(new Error("test"), runId);
 
   expect(handler.starts).toBe(0);
   expect(handler.ends).toBe(0);
@@ -234,9 +252,12 @@ test("CallbackHandler with ignoreChain", async () => {
   });
   const manager = new CallbackManager();
   manager.addHandler(handler);
-  await manager.handleChainStart({ name: "test" }, { test: "test" });
-  await manager.handleChainEnd({ test: "test" });
-  await manager.handleChainError(new Error("test"));
+  const runId = await manager.handleChainStart(
+    { name: "test" },
+    { test: "test" }
+  );
+  await manager.handleChainEnd({ test: "test" }, runId);
+  await manager.handleChainError(new Error("test"), runId);
 
   expect(handler.starts).toBe(0);
   expect(handler.ends).toBe(0);
@@ -252,9 +273,9 @@ test("CallbackHandler with ignoreAgent", async () => {
   });
   const manager = new CallbackManager();
   manager.addHandler(handler);
-  await manager.handleToolStart({ name: "test" }, "test");
-  await manager.handleToolEnd("test");
-  await manager.handleToolError(new Error("test"));
+  const runId = await manager.handleToolStart({ name: "test" }, "test");
+  await manager.handleToolEnd("test", runId);
+  await manager.handleToolError(new Error("test"), runId);
   await manager.handleAgentAction({
     tool: "test",
     toolInput: "test",

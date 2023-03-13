@@ -66,29 +66,37 @@ export abstract class BaseLLM extends BaseLanguageModel {
   /**
    * Run the LLM on the given prompts and input.
    */
-  abstract _generate(prompts: string[], stop?: string[]): Promise<LLMResult>;
+  abstract _generate(
+    prompts: string[],
+    stop: string[] | undefined,
+    runId: symbol
+  ): Promise<LLMResult>;
 
   /** @ignore */
   async _generateUncached(
     prompts: string[],
     stop?: string[]
   ): Promise<LLMResult> {
-    await this.callbackManager.handleLLMStart(
+    const runId = await this.callbackManager.handleLLMStart(
       { name: this._llmType() },
       prompts,
+      undefined,
       this.verbose
     );
     let output;
     try {
-      output = await this.queue.add(() => this._generate(prompts, stop), {
-        throwOnTimeout: true,
-      });
+      output = await this.queue.add(
+        () => this._generate(prompts, stop, runId),
+        {
+          throwOnTimeout: true,
+        }
+      );
     } catch (err) {
-      await this.callbackManager.handleLLMError(err, this.verbose);
+      await this.callbackManager.handleLLMError(err, runId, this.verbose);
       throw err;
     }
 
-    await this.callbackManager.handleLLMEnd(output, this.verbose);
+    await this.callbackManager.handleLLMEnd(output, runId, this.verbose);
     return output;
   }
 
@@ -219,14 +227,25 @@ export abstract class LLM extends BaseLLM {
   /**
    * Run the LLM on the given prompt and input.
    */
-  abstract _call(prompt: string, stop?: string[]): Promise<string>;
+  abstract _call(
+    prompt: string,
+    stop: string[] | undefined,
+    runId: symbol
+  ): Promise<string>;
 
-  async _generate(prompts: string[], stop?: string[]): Promise<LLMResult> {
+  async _generate(
+    prompts: string[],
+    stop: string[] | undefined,
+    runId: symbol
+  ): Promise<LLMResult> {
     const generations = [];
     for (let i = 0; i < prompts.length; i += 1) {
-      const text = await this.queue.add(() => this._call(prompts[i], stop), {
-        throwOnTimeout: true,
-      });
+      const text = await this.queue.add(
+        () => this._call(prompts[i], stop, runId),
+        {
+          throwOnTimeout: true,
+        }
+      );
       generations.push([{ text }]);
     }
     return { generations };

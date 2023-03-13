@@ -34,24 +34,25 @@ export abstract class BaseChatModel extends BaseLanguageModel {
     const messageStrings: string[] = messages.map((messageList) =>
       getBufferString(messageList)
     );
-    await this.callbackManager.handleLLMStart(
+    const runId = await this.callbackManager.handleLLMStart(
       { name: this._llmType() },
       messageStrings,
+      undefined,
       this.verbose
     );
     try {
       for (const message of messages) {
-        const result = await this._generate(message, stop);
+        const result = await this._generate(message, stop, runId);
         generations.push(result.generations);
       }
     } catch (err) {
-      await this.callbackManager.handleLLMError(err, this.verbose);
+      await this.callbackManager.handleLLMError(err, runId, this.verbose);
       throw err;
     }
     const output: LLMResult = {
       generations,
     };
-    await this.callbackManager.handleLLMEnd(output, this.verbose);
+    await this.callbackManager.handleLLMEnd(output, runId, this.verbose);
     return output;
   }
 
@@ -107,7 +108,8 @@ export abstract class BaseChatModel extends BaseLanguageModel {
 
   abstract _generate(
     messages: BaseChatMessage[],
-    stop?: string[]
+    stop: string[] | undefined,
+    runId: symbol
   ): Promise<ChatResult>;
 
   async call(

@@ -233,7 +233,11 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
    * const response = await openai.generate(["Tell me a joke."]);
    * ```
    */
-  async _generate(prompts: string[], stop?: string[]): Promise<LLMResult> {
+  async _generate(
+    prompts: string[],
+    stop: string[] | undefined,
+    runId: symbol
+  ): Promise<LLMResult> {
     const subPrompts = chunkArray(prompts, this.batchSize);
     const choices: CreateCompletionResponseChoicesInner[] = [];
     const tokenUsage: TokenUsage = {};
@@ -286,6 +290,7 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
                     // eslint-disable-next-line no-void
                     void this.callbackManager.handleLLMNewToken(
                       part.text ?? "",
+                      runId,
                       true
                     );
                   }

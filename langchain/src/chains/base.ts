@@ -84,19 +84,24 @@ export abstract class BaseChain implements ChainInputs {
         fullValues[key] = value;
       }
     }
-    await this.callbackManager.handleChainStart(
+    const runId = await this.callbackManager.handleChainStart(
       { name: this._chainType() },
       fullValues,
+      undefined,
       this.verbose
     );
     let outputValues;
     try {
       outputValues = await this._call(fullValues);
     } catch (e) {
-      await this.callbackManager.handleChainError(e, this.verbose);
+      await this.callbackManager.handleChainError(e, runId, this.verbose);
       throw e;
     }
-    await this.callbackManager.handleChainEnd(outputValues, this.verbose);
+    await this.callbackManager.handleChainEnd(
+      outputValues,
+      runId,
+      this.verbose
+    );
     if (!(this.memory == null)) {
       await this.memory.saveContext(values, outputValues);
     }

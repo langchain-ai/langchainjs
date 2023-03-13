@@ -243,7 +243,8 @@ export class ChatOpenAI extends BaseChatModel implements OpenAIInput {
    */
   async _generate(
     messages: BaseChatMessage[],
-    stop?: string[]
+    stop: string[],
+    runId: symbol
   ): Promise<ChatResult> {
     if (this.stop && stop) {
       throw new Error("Stop found in input and default params");
@@ -291,6 +292,7 @@ export class ChatOpenAI extends BaseChatModel implements OpenAIInput {
                 // eslint-disable-next-line no-void
                 void this.callbackManager.handleLLMNewToken(
                   part.delta?.content ?? "",
+                  runId,
                   true
                 );
               }

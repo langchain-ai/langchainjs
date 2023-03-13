@@ -9,17 +9,21 @@ test("Test LangChain tracer", async () => {
   const tracer = new LangChainTracer();
   expect(tracer.alwaysVerbose).toBe(true);
 
-  await tracer.handleChainStart({ name: "test" }, { foo: "bar" });
-  await tracer.handleToolStart({ name: "test" }, "test");
-  await tracer.handleLLMStart({ name: "test" }, ["test"]);
-  await tracer.handleLLMEnd({ generations: [[]] });
-  await tracer.handleToolEnd("output");
-  await tracer.handleLLMStart({ name: "test2" }, ["test"]);
-  await tracer.handleLLMEnd({ generations: [[]] });
-  await tracer.handleChainEnd({ foo: "bar" });
+  const chainRunId = Symbol("");
+  const toolRunId = Symbol("");
+  const llmRunId = Symbol("");
+  await tracer.handleChainStart({ name: "test" }, { foo: "bar" }, chainRunId);
+  await tracer.handleToolStart({ name: "test" }, "test", toolRunId);
+  await tracer.handleLLMStart({ name: "test" }, ["test"], llmRunId);
+  await tracer.handleLLMEnd({ generations: [[]] }, llmRunId);
+  await tracer.handleToolEnd("output", toolRunId);
+  await tracer.handleLLMStart({ name: "test2" }, ["test"], llmRunId);
+  await tracer.handleLLMEnd({ generations: [[]] }, llmRunId);
+  await tracer.handleChainEnd({ foo: "bar" }, chainRunId);
 
-  await tracer.handleLLMStart({ name: "test" }, ["test"]);
-  await tracer.handleLLMEnd({ generations: [[]] });
+  const llmRunId2 = Symbol("");
+  await tracer.handleLLMStart({ name: "test" }, ["test"], llmRunId2);
+  await tracer.handleLLMEnd({ generations: [[]] }, llmRunId2);
 });
 
 test.skip("Test Traced Agent with concurrency (skipped until we fix concurrency)", async () => {

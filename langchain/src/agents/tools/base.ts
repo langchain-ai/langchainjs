@@ -21,19 +21,20 @@ export abstract class Tool {
 
   async call(arg: string, verbose?: boolean): Promise<string> {
     const _verbose = verbose ?? this.verbose;
-    await this.callbackManager.handleToolStart(
+    const runId = await this.callbackManager.handleToolStart(
       { name: this.name },
       arg,
+      undefined,
       _verbose
     );
     let result;
     try {
       result = await this._call(arg);
     } catch (e) {
-      await this.callbackManager.handleToolError(e, _verbose);
+      await this.callbackManager.handleToolError(e, runId, _verbose);
       throw e;
     }
-    await this.callbackManager.handleToolEnd(result, _verbose);
+    await this.callbackManager.handleToolEnd(result, runId, _verbose);
     return result;
   }
 

@@ -64,8 +64,9 @@ test("Test LLMRun", async () => {
   };
   const tracer = new FakeTracer();
   await tracer.newSession();
-  await tracer.handleLLMStart({ name: "test" }, ["test"]);
-  await tracer.handleLLMEnd({ generations: [] });
+  const runId = Symbol("");
+  await tracer.handleLLMStart({ name: "test" }, ["test"], runId);
+  await tracer.handleLLMEnd({ generations: [] }, runId);
   expect(tracer.runs.length).toBe(1);
   const run = tracer.runs[0];
   expect(run).toEqual(compareRun);
@@ -74,9 +75,9 @@ test("Test LLMRun", async () => {
 test("Test LLM Run no start", async () => {
   const tracer = new FakeTracer();
   await tracer.newSession();
-  await expect(tracer.handleLLMEnd({ generations: [] })).rejects.toThrow(
-    "No LLM run to end"
-  );
+  await expect(
+    tracer.handleLLMEnd({ generations: [] }, Symbol(""))
+  ).rejects.toThrow("No LLM run to end");
 });
 
 test("Test Chain Run", async () => {
@@ -95,8 +96,9 @@ test("Test Chain Run", async () => {
   };
   const tracer = new FakeTracer();
   await tracer.newSession();
-  await tracer.handleChainStart({ name: "test" }, { foo: "bar" });
-  await tracer.handleChainEnd({ foo: "bar" });
+  const runId = Symbol("");
+  await tracer.handleChainStart({ name: "test" }, { foo: "bar" }, runId);
+  await tracer.handleChainEnd({ foo: "bar" }, runId);
   expect(tracer.runs.length).toBe(1);
   const run = tracer.runs[0];
   expect(run).toEqual(compareRun);
@@ -119,8 +121,9 @@ test("Test Tool Run", async () => {
   };
   const tracer = new FakeTracer();
   await tracer.newSession();
-  await tracer.handleToolStart({ name: "test" }, "test");
-  await tracer.handleToolEnd("output");
+  const runId = Symbol("");
+  await tracer.handleToolStart({ name: "test" }, "test", runId);
+  await tracer.handleToolEnd("output", runId);
   expect(tracer.runs.length).toBe(1);
   const run = tracer.runs[0];
   expect(run).toEqual(compareRun);
@@ -196,18 +199,22 @@ test("Test nested runs", async () => {
 
   const tracer = new FakeTracer();
   await tracer.newSession();
-  await tracer.handleChainStart({ name: "test" }, { foo: "bar" });
-  await tracer.handleToolStart({ name: "test" }, "test");
-  await tracer.handleLLMStart({ name: "test" }, ["test"]);
-  await tracer.handleLLMEnd({ generations: [[]] });
-  await tracer.handleToolEnd("output");
-  await tracer.handleLLMStart({ name: "test2" }, ["test"]);
-  await tracer.handleLLMEnd({ generations: [[]] });
-  await tracer.handleChainEnd({ foo: "bar" });
+  const chainRunId = Symbol("");
+  const toolRunId = Symbol("");
+  const llmRunId = Symbol("");
+  await tracer.handleChainStart({ name: "test" }, { foo: "bar" }, chainRunId);
+  await tracer.handleToolStart({ name: "test" }, "test", toolRunId);
+  await tracer.handleLLMStart({ name: "test" }, ["test"], llmRunId);
+  await tracer.handleLLMEnd({ generations: [[]] }, llmRunId);
+  await tracer.handleToolEnd("output", toolRunId);
+  await tracer.handleLLMStart({ name: "test2" }, ["test"], llmRunId);
+  await tracer.handleLLMEnd({ generations: [[]] }, llmRunId);
+  await tracer.handleChainEnd({ foo: "bar" }, chainRunId);
   expect(tracer.runs.length).toBe(1);
   expect(tracer.runs[0]).toEqual(compareRun);
 
-  await tracer.handleLLMStart({ name: "test" }, ["test"]);
-  await tracer.handleLLMEnd({ generations: [[]] });
+  const llmRunId2 = Symbol("");
+  await tracer.handleLLMStart({ name: "test" }, ["test"], llmRunId2);
+  await tracer.handleLLMEnd({ generations: [[]] }, llmRunId2);
   expect(tracer.runs.length).toBe(2);
 });

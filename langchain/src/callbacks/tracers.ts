@@ -53,6 +53,8 @@ export abstract class BaseTracer extends BaseCallbackHandler {
 
   protected stack: (LLMRun | ChainRun | ToolRun)[] = [];
 
+  protected map: Map<symbol, LLMRun | ChainRun | ToolRun> = new Map();
+
   protected executionOrder = 1;
 
   protected constructor() {
@@ -97,7 +99,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     }
   }
 
-  protected _startTrace(run: LLMRun | ChainRun | ToolRun) {
+  protected _startTrace(runId: symbol, run: LLMRun | ChainRun | ToolRun) {
     this.executionOrder += 1;
 
     if (this.stack.length > 0) {
@@ -112,11 +114,13 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       const parentRun = this.stack.at(-1) as ChainRun | ToolRun;
       this._addChildRun(parentRun, run);
     }
+    this.map.set(runId, run);
     this.stack.push(run);
   }
 
-  protected async _endTrace() {
-    const run = this.stack.pop();
+  protected async _endTrace(runId: symbol) {
+    const run = this.map.get(runId);
+    this.stack.pop();
     if (this.stack.length === 0 && run) {
       this.executionOrder = 1;
       await this.persistRun(run);
@@ -126,6 +130,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
   async handleLLMStart(
     llm: { name: string },
     prompts: string[],
+    runId: symbol,
     _verbose?: boolean
   ): Promise<void> {
     if (this.session === undefined) {
@@ -141,32 +146,43 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       type: "llm",
     };
 
-    this._startTrace(run);
+    this._startTrace(runId, run);
   }
 
-  async handleLLMEnd(output: LLMResult, _verbose?: boolean): Promise<void> {
-    if (this.stack.length === 0 || this.stack.at(-1)?.type !== "llm") {
+  async handleLLMEnd(
+    output: LLMResult,
+    runId: symbol,
+    _verbose?: boolean
+  ): Promise<void> {
+    const run = this.map.get(runId);
+    if (!run || run?.type !== "llm") {
       throw new Error("No LLM run to end.");
     }
-    const run = this.stack.at(-1) as LLMRun;
-    run.end_time = Date.now();
-    run.response = output;
-    await this._endTrace();
+    const llmRun = run as LLMRun;
+    llmRun.end_time = Date.now();
+    llmRun.response = output;
+    await this._endTrace(runId);
   }
 
-  async handleLLMError(error: Error, _verbose?: boolean): Promise<void> {
-    if (this.stack.length === 0 || this.stack.at(-1)?.type !== "llm") {
+  async handleLLMError(
+    error: Error,
+    runId: symbol,
+    _verbose?: boolean
+  ): Promise<void> {
+    const run = this.map.get(runId);
+    if (!run || run?.type !== "llm") {
       throw new Error("No LLM run to end.");
     }
-    const run = this.stack.at(-1) as LLMRun;
-    run.end_time = Date.now();
-    run.error = error.message;
-    await this._endTrace();
+    const llmRun = run as LLMRun;
+    llmRun.end_time = Date.now();
+    llmRun.error = error.message;
+    await this._endTrace(runId);
   }
 
   async handleChainStart(
     chain: { name: string },
     inputs: ChainValues,
+    runId: symbol,
     _verbose?: boolean
   ): Promise<void> {
     if (this.session === undefined) {
@@ -185,35 +201,43 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       child_tool_runs: [],
     };
 
-    this._startTrace(run);
+    this._startTrace(runId, run);
   }
 
   async handleChainEnd(
     outputs: ChainValues,
+    runId: symbol,
     _verbose?: boolean
   ): Promise<void> {
-    if (this.stack.length === 0 || this.stack.at(-1)?.type !== "chain") {
+    const run = this.map.get(runId);
+    if (!run || run?.type !== "chain") {
       throw new Error("No chain run to end.");
     }
-    const run = this.stack.at(-1) as ChainRun;
-    run.end_time = Date.now();
-    run.outputs = outputs;
-    await this._endTrace();
+    const chainRun = run as ChainRun;
+    chainRun.end_time = Date.now();
+    chainRun.outputs = outputs;
+    await this._endTrace(runId);
   }
 
-  async handleChainError(error: Error, _verbose?: boolean): Promise<void> {
-    if (this.stack.length === 0 || this.stack.at(-1)?.type !== "chain") {
+  async handleChainError(
+    error: Error,
+    runId: symbol,
+    _verbose?: boolean
+  ): Promise<void> {
+    const run = this.map.get(runId);
+    if (!run || run?.type !== "chain") {
       throw new Error("No chain run to end.");
     }
-    const run = this.stack.at(-1) as ChainRun;
-    run.end_time = Date.now();
-    run.error = error.message;
-    await this._endTrace();
+    const chainRun = run as ChainRun;
+    chainRun.end_time = Date.now();
+    chainRun.error = error.message;
+    await this._endTrace(runId);
   }
 
   async handleToolStart(
     tool: { name: string },
     input: string,
+    runId: symbol,
     _verbose?: boolean
   ): Promise<void> {
     if (this.session === undefined) {
@@ -233,27 +257,37 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       child_tool_runs: [],
     };
 
-    this._startTrace(run);
+    this._startTrace(runId, run);
   }
 
-  async handleToolEnd(output: string, _verbose?: boolean): Promise<void> {
-    if (this.stack.length === 0 || this.stack.at(-1)?.type !== "tool") {
+  async handleToolEnd(
+    output: string,
+    runId: symbol,
+    _verbose?: boolean
+  ): Promise<void> {
+    const run = this.map.get(runId);
+    if (!run || run?.type !== "tool") {
       throw new Error("No tool run to end");
     }
-    const run = this.stack.at(-1) as ToolRun;
-    run.end_time = Date.now();
-    run.output = output;
-    await this._endTrace();
+    const toolRun = run as ToolRun;
+    toolRun.end_time = Date.now();
+    toolRun.output = output;
+    await this._endTrace(runId);
   }
 
-  async handleToolError(error: Error, _verbose?: boolean): Promise<void> {
-    if (this.stack.length === 0 || this.stack.at(-1)?.type !== "tool") {
-      throw new Error("No tool run to end.");
+  async handleToolError(
+    error: Error,
+    runId: symbol,
+    _verbose?: boolean
+  ): Promise<void> {
+    const run = this.map.get(runId);
+    if (!run || run?.type !== "tool") {
+      throw new Error("No tool run to end");
     }
-    const run = this.stack.at(-1) as ToolRun;
-    run.end_time = Date.now();
-    run.error = error.message;
-    await this._endTrace();
+    const toolRun = run as ToolRun;
+    toolRun.end_time = Date.now();
+    toolRun.error = error.message;
+    await this._endTrace(runId);
   }
 }
 
