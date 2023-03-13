@@ -1,14 +1,10 @@
-import {
-  BaseChain,
-  ChainValues,
-  SerializedBaseChain,
-  loadQAStuffChain,
-} from "./index.js";
+import { BaseChain, SerializedBaseChain, loadQAStuffChain } from "./index.js";
 
 import { VectorStore } from "../vectorstores/base.js";
 import { BaseLLM } from "../llms/index.js";
 
 import { resolveConfigFromFile } from "../util/index.js";
+import { ChainValues } from "../schema/index.js";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type LoadValues = Record<string, any>;
 

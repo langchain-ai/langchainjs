@@ -1,14 +1,3 @@
-export type LLMCallbackManager = {
-  handleStart?: (
-    llm: { name: string },
-    prompts: string[],
-    verbose?: boolean
-  ) => void;
-  handleNewToken?: (token: string, verbose?: boolean) => void;
-  handleError?: (err: string, verbose?: boolean) => void;
-  handleEnd?: (output: LLMResult, verbose?: boolean) => void;
-};
-
 /**
  * Output of a single generation.
  */
@@ -104,36 +93,20 @@ export abstract class BasePromptValue {
   abstract toChatMessages(): BaseChatMessage[];
 }
 
-const getVerbosity = () => true;
+export type AgentAction = {
+  tool: string;
+  toolInput: string;
+  log: string;
+};
+export type AgentFinish = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  returnValues: Record<string, any>;
+  log: string;
+};
+export type AgentStep = {
+  action: AgentAction;
+  observation: string;
+};
 
-/**
- * Base interface for language model parameters.
- * A subclass of {@link BaseLanguageModel} should have a constructor that
- * takes in a parameter that extends this interface.
- */
-export interface BaseLanguageModelParams {
-  verbose?: boolean;
-}
-
-/**
- * Base class for language models.
- */
-export abstract class BaseLanguageModel implements BaseLanguageModelParams {
-  /**
-   * Whether to print out response text.
-   */
-  verbose: boolean;
-
-  constructor(params: BaseLanguageModelParams) {
-    this.verbose = params.verbose ?? getVerbosity();
-  }
-
-  abstract generatePrompt(
-    promptValues: BasePromptValue[],
-    stop?: string[]
-  ): Promise<LLMResult>;
-
-  abstract _modelType(): string;
-
-  abstract getNumTokens(text: string): number;
-}
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type ChainValues = Record<string, any>;

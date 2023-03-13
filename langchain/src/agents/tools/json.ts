@@ -64,7 +64,7 @@ export class JsonListKeysTool extends Tool {
     super();
   }
 
-  async call(input: string) {
+  async _call(input: string) {
     try {
       return this.jsonSpec.getKeys(input);
     } catch (error) {
@@ -84,7 +84,7 @@ export class JsonGetValueTool extends Tool {
     super();
   }
 
-  async call(input: string) {
+  async _call(input: string) {
     try {
       return this.jsonSpec.getValue(input);
     } catch (error) {

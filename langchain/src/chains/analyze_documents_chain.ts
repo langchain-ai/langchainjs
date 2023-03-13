@@ -1,4 +1,4 @@
-import { BaseChain, ChainValues, SerializedBaseChain } from "./index.js";
+import { BaseChain, SerializedBaseChain } from "./index.js";
 
 import {
   TextSplitter,
@@ -6,6 +6,7 @@ import {
 } from "../text_splitter.js";
 
 import { resolveConfigFromFile } from "../util/index.js";
+import { ChainValues } from "../schema/index.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type LoadValues = Record<string, any>;

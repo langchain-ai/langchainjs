@@ -18,6 +18,7 @@ const entrypoints = {
   chat_models: "chat_models/index",
   schema: "schema/index",
   sql_db: "sql_db",
+  callbacks: "callbacks/index",
 };
 
 const updateJsonFile = (relativePath, updateFunction) => {

@@ -1,15 +1,16 @@
-import { OpenAI } from "langchain";
+import { ChatOpenAI } from "langchain/chat_models";
 import { initializeAgentExecutor } from "langchain/agents";
 import { SerpAPI, Calculator } from "langchain/tools";
 
 export const run = async () => {
-  const model = new OpenAI({ temperature: 0 });
+  process.env.LANGCHAIN_HANDLER = "langchain";
+  const model = new ChatOpenAI({ temperature: 0 });
   const tools = [new SerpAPI(), new Calculator()];
 
   const executor = await initializeAgentExecutor(
     tools,
     model,
-    "zero-shot-react-description",
+    "chat-zero-shot-react-description",
     true
   );
   console.log("Loaded agent.");
@@ -21,4 +22,12 @@ export const run = async () => {
   const result = await executor.call({ input });
 
   console.log(`Got output ${result.output}`);
+
+  console.log(
+    `Got intermediate steps ${JSON.stringify(
+      result.intermediateSteps,
+      null,
+      2
+    )}`
+  );
 };

@@ -18,7 +18,7 @@ export class DynamicTool extends Tool {
     this.func = fields.func;
   }
 
-  async call(input: string): Promise<string> {
+  async _call(input: string): Promise<string> {
     return this.func(input);
   }
 }

@@ -2,25 +2,11 @@ import GPT3Tokenizer from "gpt3-tokenizer";
 import PQueue from "p-queue";
 
 import { BaseCache, InMemoryCache } from "../cache.js";
+import { BasePromptValue, LLMResult } from "../schema/index.js";
 import {
   BaseLanguageModel,
   BaseLanguageModelParams,
-  BasePromptValue,
-  LLMCallbackManager,
-  LLMResult,
-} from "../schema/index.js";
-
-const getCallbackManager = (): LLMCallbackManager => ({
-  handleStart: (..._args) => {
-    // console.log(args);
-  },
-  handleEnd: (..._args) => {
-    // console.log(args);
-  },
-  handleError: (..._args) => {
-    // console.log(args);
-  },
-});
+} from "../base_language/index.js";
 
 const GLOBAL_CACHE: BaseCache = new InMemoryCache();
 
@@ -31,7 +17,6 @@ export type SerializedLLM = {
 } & Record<string, any>;
 
 export interface BaseLLMParams extends BaseLanguageModelParams {
-  callbackManager?: LLMCallbackManager;
   concurrency?: number;
   cache?: BaseCache | boolean;
 }
@@ -47,8 +32,6 @@ export abstract class BaseLLM extends BaseLanguageModel {
 
   cache?: BaseCache;
 
-  callbackManager: LLMCallbackManager;
-
   /**
    * Maximum number of concurrent calls to this chain,
    * additional calls are queued up. Defaults to Infinity.
@@ -57,10 +40,8 @@ export abstract class BaseLLM extends BaseLanguageModel {
 
   protected queue: PQueue;
 
-  constructor({ callbackManager, concurrency, cache, ...rest }: BaseLLMParams) {
+  constructor({ concurrency, cache, ...rest }: BaseLLMParams) {
     super(rest);
-
-    this.callbackManager = callbackManager ?? getCallbackManager();
     if (cache instanceof BaseCache) {
       this.cache = cache;
     } else if (cache) {
@@ -92,8 +73,8 @@ export abstract class BaseLLM extends BaseLanguageModel {
     prompts: string[],
     stop?: string[]
   ): Promise<LLMResult> {
-    this.callbackManager.handleStart?.(
-      { name: this.name },
+    await this.callbackManager.handleLLMStart(
+      { name: this._llmType() },
       prompts,
       this.verbose
     );
@@ -103,11 +84,11 @@ export abstract class BaseLLM extends BaseLanguageModel {
         throwOnTimeout: true,
       });
     } catch (err) {
-      this.callbackManager.handleError?.(`${err}`, this.verbose);
+      await this.callbackManager.handleLLMError(err, this.verbose);
       throw err;
     }
 
-    this.callbackManager.handleEnd?.(output, this.verbose);
+    await this.callbackManager.handleLLMEnd(output, this.verbose);
     return output;
   }
 
