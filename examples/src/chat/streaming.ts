@@ -6,7 +6,7 @@ export const run = async () => {
   const chat = new ChatOpenAI({
     streaming: true,
     callbackManager: CallbackManager.fromHandlers({
-      async handleLLMNewToken(token: string): Promise<void> {
+      async handleLLMNewToken(token) {
         console.log({ token });
       },
     }),

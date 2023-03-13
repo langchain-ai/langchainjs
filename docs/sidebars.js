@@ -77,6 +77,7 @@ module.exports = {
         },
       ],
     },
+    "tracing",
     "deployment",
     {
       type: "category",
