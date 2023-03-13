@@ -1,5 +1,6 @@
-import { test } from "@jest/globals";
+import {expect, test} from "@jest/globals";
 import { OpenAIChat } from "../openai-chat.js";
+import {BaseCallbackHandler, CallbackManager} from "../../callbacks/index.js";
 
 test("Test OpenAI", async () => {
   const model = new OpenAIChat({ modelName: "gpt-3.5-turbo" });
@@ -18,23 +19,32 @@ test("Test OpenAI with prefix messages", async () => {
   console.log({ res });
 });
 
-// test("Test OpenAI in streaming mode", async () => {
-//   let nrNewTokens = 0;
-//   let streamedCompletion = "";
-//
-//   const model = new OpenAIChat({
-//     modelName: "gpt-3.5-turbo",
-//     streaming: true,
-//     callbackManager: {
-//       handleNewToken(token) {
-//         nrNewTokens += 1;
-//         streamedCompletion += token;
-//       },
-//     },
-//   });
-//   const res = await model.call("Print hello world");
-//   console.log({ res });
-//
-//   expect(nrNewTokens > 0).toBe(true);
-//   expect(res).toBe(streamedCompletion);
-// });
+test("Test OpenAI in streaming mode", async () => {
+  class StreamCallbackHandler extends BaseCallbackHandler {
+    nrNewTokens = 0;
+
+    alwaysVerbose = true;
+
+    streamedCompletion = "";
+
+    async handleLLMNewToken(token: string) {
+      this.nrNewTokens += 1;
+      this.streamedCompletion += token;
+    }
+  }
+
+  const streamCallbackHandler = new StreamCallbackHandler();
+  const callbackManager = new CallbackManager();
+  callbackManager.addHandler(streamCallbackHandler);
+
+  const model = new OpenAIChat({
+    modelName: "gpt-3.5-turbo",
+    streaming: true,
+    callbackManager
+  });
+  const res = await model.call("Print hello world");
+  console.log({ res });
+
+  expect(streamCallbackHandler.nrNewTokens > 0).toBe(true);
+  expect(res).toBe(streamCallbackHandler.streamedCompletion);
+});
