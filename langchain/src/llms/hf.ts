@@ -1,6 +1,4 @@
-import { LLM } from "./base.js";
-import { LLMCallbackManager } from "../schema/index.js";
-import { BaseCache } from "../cache.js";
+import { LLM, BaseLLMParams } from "./base.js";
 
 interface HFInput {
   /** Model to use */
@@ -37,20 +35,9 @@ export class HuggingFaceInference extends LLM implements HFInput {
 
   frequencyPenalty: number | undefined = undefined;
 
-  constructor(
-    fields?: Partial<HFInput> & {
-      callbackManager?: LLMCallbackManager;
-      verbose?: boolean;
-      concurrency?: number;
-      cache?: BaseCache | boolean;
-    }
-  ) {
-    super(
-      fields?.callbackManager,
-      fields?.verbose,
-      fields?.concurrency,
-      fields?.cache
-    );
+  constructor(fields?: Partial<HFInput> & BaseLLMParams) {
+    super(fields ?? {});
+
     this.model = fields?.model ?? this.model;
     this.temperature = fields?.temperature ?? this.temperature;
     this.maxTokens = fields?.maxTokens ?? this.maxTokens;

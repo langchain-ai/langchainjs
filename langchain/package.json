@@ -37,6 +37,8 @@
     "schema.d.ts",
     "sql_db.js",
     "sql_db.d.ts",
+    "callbacks.js",
+    "callbacks.d.ts",
     "index.js",
     "index.d.ts"
   ],
@@ -257,6 +259,10 @@
     "./sql_db": {
       "types": "./sql_db.d.ts",
       "import": "./sql_db.js"
+    },
+    "./callbacks": {
+      "types": "./callbacks.d.ts",
+      "import": "./callbacks.js"
     }
   }
 }

@@ -2,27 +2,16 @@ import GPT3Tokenizer from "gpt3-tokenizer";
 import {
   AIChatMessage,
   BaseChatMessage,
-  BaseLanguageModel,
   BasePromptValue,
   ChatGeneration,
   ChatResult,
-  LLMCallbackManager,
   LLMResult,
 } from "../schema/index.js";
-
-const getCallbackManager = (): LLMCallbackManager => ({
-  handleStart: (..._args) => {
-    // console.log(args);
-  },
-  handleEnd: (..._args) => {
-    // console.log(args);
-  },
-  handleError: (..._args) => {
-    // console.log(args);
-  },
-});
-
-const getVerbosity = () => true;
+import {
+  BaseLanguageModel,
+  BaseLanguageModelParams,
+} from "../base_language/index.js";
+import { getBufferString } from "../memory/base.js";
 
 export type SerializedChatModel = {
   _model: string;
@@ -30,18 +19,11 @@ export type SerializedChatModel = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 } & Record<string, any>;
 
+export type BaseChatModelParams = BaseLanguageModelParams;
+
 export abstract class BaseChatModel extends BaseLanguageModel {
-  callbackManager: LLMCallbackManager;
-
-  verbose: boolean;
-
-  protected constructor(
-    callbackManager?: LLMCallbackManager,
-    verbose?: boolean
-  ) {
-    super();
-    this.callbackManager = callbackManager ?? getCallbackManager();
-    this.verbose = verbose ?? getVerbosity();
+  protected constructor({ ...rest }: BaseChatModelParams) {
+    super(rest);
   }
 
   async generate(
@@ -49,13 +31,28 @@ export abstract class BaseChatModel extends BaseLanguageModel {
     stop?: string[]
   ): Promise<LLMResult> {
     const generations: ChatGeneration[][] = [];
-    for (const message of messages) {
-      const result = await this._generate(message, stop);
-      generations.push(result.generations);
+    const messageStrings: string[] = messages.map((messageList) =>
+      getBufferString(messageList)
+    );
+    await this.callbackManager.handleLLMStart(
+      { name: this._llmType() },
+      messageStrings,
+      this.verbose
+    );
+    try {
+      for (const message of messages) {
+        const result = await this._generate(message, stop);
+        generations.push(result.generations);
+      }
+    } catch (err) {
+      await this.callbackManager.handleLLMError(err, this.verbose);
+      throw err;
     }
-    return {
+    const output: LLMResult = {
       generations,
     };
+    await this.callbackManager.handleLLMEnd(output, this.verbose);
+    return output;
   }
 
   /**
@@ -117,8 +114,9 @@ export abstract class BaseChatModel extends BaseLanguageModel {
     messages: BaseChatMessage[],
     stop?: string[]
   ): Promise<BaseChatMessage> {
-    const { generations } = await this._generate(messages, stop);
-    return generations[0].message;
+    const result = await this.generate([messages], stop);
+    const generations = result.generations as ChatGeneration[][];
+    return generations[0][0].message;
   }
 
   async callPrompt(
@@ -131,13 +129,6 @@ export abstract class BaseChatModel extends BaseLanguageModel {
 }
 
 export abstract class SimpleChatModel extends BaseChatModel {
-  protected constructor(
-    callbackManager?: LLMCallbackManager,
-    verbose?: boolean
-  ) {
-    super(callbackManager, verbose);
-  }
-
   abstract _call(messages: BaseChatMessage[], stop?: string[]): Promise<string>;
 
   async _generate(

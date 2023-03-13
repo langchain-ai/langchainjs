@@ -2,26 +2,11 @@ import GPT3Tokenizer from "gpt3-tokenizer";
 import PQueue from "p-queue";
 
 import { BaseCache, InMemoryCache } from "../cache.js";
+import { BasePromptValue, LLMResult } from "../schema/index.js";
 import {
   BaseLanguageModel,
-  BasePromptValue,
-  LLMCallbackManager,
-  LLMResult,
-} from "../schema/index.js";
-
-const getCallbackManager = (): LLMCallbackManager => ({
-  handleStart: (..._args) => {
-    // console.log(args);
-  },
-  handleEnd: (..._args) => {
-    // console.log(args);
-  },
-  handleError: (..._args) => {
-    // console.log(args);
-  },
-});
-
-const getVerbosity = () => true;
+  BaseLanguageModelParams,
+} from "../base_language/index.js";
 
 const GLOBAL_CACHE: BaseCache = new InMemoryCache();
 
@@ -30,6 +15,11 @@ export type SerializedLLM = {
   _type: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 } & Record<string, any>;
+
+export interface BaseLLMParams extends BaseLanguageModelParams {
+  concurrency?: number;
+  cache?: BaseCache | boolean;
+}
 
 /**
  * LLM Wrapper. Provides an {@link call} (an {@link generate}) function that takes in a prompt (or prompts) and returns a string.
@@ -42,8 +32,6 @@ export abstract class BaseLLM extends BaseLanguageModel {
 
   cache?: BaseCache;
 
-  callbackManager: LLMCallbackManager;
-
   /**
    * Maximum number of concurrent calls to this chain,
    * additional calls are queued up. Defaults to Infinity.
@@ -52,20 +40,8 @@ export abstract class BaseLLM extends BaseLanguageModel {
 
   protected queue: PQueue;
 
-  /**
-   * Whether to print out response text.
-   */
-  verbose?: boolean = false;
-
-  constructor(
-    callbackManager?: LLMCallbackManager,
-    verbose?: boolean,
-    concurrency?: number,
-    cache?: BaseCache | boolean
-  ) {
-    super();
-    this.callbackManager = callbackManager ?? getCallbackManager();
-    this.verbose = verbose ?? getVerbosity();
+  constructor({ concurrency, cache, ...rest }: BaseLLMParams) {
+    super(rest);
     if (cache instanceof BaseCache) {
       this.cache = cache;
     } else if (cache) {
@@ -97,8 +73,8 @@ export abstract class BaseLLM extends BaseLanguageModel {
     prompts: string[],
     stop?: string[]
   ): Promise<LLMResult> {
-    this.callbackManager.handleStart?.(
-      { name: this.name },
+    await this.callbackManager.handleLLMStart(
+      { name: this._llmType() },
       prompts,
       this.verbose
     );
@@ -108,11 +84,11 @@ export abstract class BaseLLM extends BaseLanguageModel {
         throwOnTimeout: true,
       });
     } catch (err) {
-      this.callbackManager.handleError?.(`${err}`, this.verbose);
+      await this.callbackManager.handleLLMError(err, this.verbose);
       throw err;
     }
 
-    this.callbackManager.handleEnd?.(output, this.verbose);
+    await this.callbackManager.handleLLMEnd(output, this.verbose);
     return output;
   }
 

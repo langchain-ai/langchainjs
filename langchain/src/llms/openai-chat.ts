@@ -9,9 +9,7 @@ import type { IncomingMessage } from "http";
 import { createParser } from "eventsource-parser";
 import { backOff } from "exponential-backoff";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
-import { LLM } from "./base.js";
-import { LLMCallbackManager } from "../schema/index.js";
-import { BaseCache } from "../cache.js";
+import { BaseLLMParams, LLM } from "./base.js";
 
 interface ModelParams {
   /** Sampling temperature to use, between 0 and 2, defaults to 1 */
@@ -112,21 +110,13 @@ export class OpenAIChat extends LLM implements OpenAIInput {
   private clientConfig: ConfigurationParameters;
 
   constructor(
-    fields?: Partial<OpenAIInput> & {
-      callbackManager?: LLMCallbackManager;
-      concurrency?: number;
-      cache?: BaseCache | boolean;
-      verbose?: boolean;
-      openAIApiKey?: string;
-    },
+    fields?: Partial<OpenAIInput> &
+      BaseLLMParams & {
+        openAIApiKey?: string;
+      },
     configuration?: ConfigurationParameters
   ) {
-    super(
-      fields?.callbackManager,
-      fields?.verbose,
-      fields?.concurrency,
-      fields?.cache
-    );
+    super(fields ?? {});
 
     const apiKey = fields?.openAIApiKey ?? process.env.OPENAI_API_KEY;
     if (!apiKey) {
@@ -256,8 +246,8 @@ export class OpenAIChat extends LLM implements OpenAIInput {
               const part = response.choices[0];
               if (part != null) {
                 innerCompletion += part.delta?.content ?? "";
-
-                this.callbackManager.handleNewToken?.(
+                // eslint-disable-next-line no-void
+                void this.callbackManager.handleLLMNewToken(
                   part.delta?.content ?? "",
                   this.verbose
                 );

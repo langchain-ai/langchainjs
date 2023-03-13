@@ -1,17 +1,17 @@
 import deepcopy from "deepcopy";
 import type {
+  AnalyzeDocumentChain,
+  ChatVectorDBQAChain,
   LLMChain,
+  MapReduceDocumentsChain,
   StuffDocumentsChain,
   VectorDBQAChain,
-  ChatVectorDBQAChain,
-  MapReduceDocumentsChain,
-  AnalyzeDocumentChain,
 } from "./index.js";
 import { BaseMemory } from "../memory/index.js";
 import { SqlDatabaseChain } from "./sql_db/sql_db_chain.js";
+import { ChainValues } from "../schema/index.js";
+import { CallbackManager, getCallbackManager } from "../callbacks/index.js";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type ChainValues = Record<string, any>;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type LoadValues = Record<string, any>;
 
@@ -29,7 +29,11 @@ export type SerializedBaseChain = ReturnType<
 
 export interface ChainInputs {
   memory?: BaseMemory;
+  verbose?: boolean;
+  callbackManager?: CallbackManager;
 }
+
+const getVerbosity = () => false;
 
 /**
  * Base interface that all chains must implement.
@@ -37,8 +41,18 @@ export interface ChainInputs {
 export abstract class BaseChain implements ChainInputs {
   memory?: BaseMemory;
 
-  constructor(memory?: BaseMemory) {
+  verbose: boolean;
+
+  callbackManager: CallbackManager;
+
+  constructor(
+    memory?: BaseMemory,
+    verbose?: boolean,
+    callbackManager?: CallbackManager
+  ) {
     this.memory = memory;
+    this.verbose = verbose ?? getVerbosity();
+    this.callbackManager = callbackManager ?? getCallbackManager();
   }
 
   /**
@@ -92,8 +106,19 @@ export abstract class BaseChain implements ChainInputs {
         fullValues[key] = value;
       }
     }
-    // TODO(sean) add callback support
-    const outputValues = await this._call(fullValues);
+    await this.callbackManager.handleChainStart(
+      { name: this._chainType() },
+      fullValues,
+      this.verbose
+    );
+    let outputValues;
+    try {
+      outputValues = await this._call(fullValues);
+    } catch (e) {
+      await this.callbackManager.handleChainError(e, this.verbose);
+      throw e;
+    }
+    await this.callbackManager.handleChainEnd(outputValues, this.verbose);
     if (!(this.memory == null)) {
       await this.memory.saveContext(values, outputValues);
     }
