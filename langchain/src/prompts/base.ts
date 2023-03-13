@@ -1,6 +1,7 @@
 import { BaseOutputParser } from "../output_parsers/index.js";
-import type { FewShotPromptTemplate, PromptTemplate } from "./index.js";
-import { ChatPromptTemplate } from "./index.js";
+import type { PromptTemplate } from "./prompt.js";
+import type { ChatPromptTemplate } from "./chat.js";
+import type { FewShotPromptTemplate } from "./few_shot.js";
 import { BasePromptValue, HumanChatMessage } from "../schema/index.js";
 
 export type SerializedBasePromptTemplate = ReturnType<

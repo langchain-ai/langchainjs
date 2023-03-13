@@ -1,9 +1,9 @@
-import {
-  BaseStringPromptTemplate,
+import type {
   BasePromptTemplateInput,
   InputValues,
   PartialValues,
 } from "./index.js";
+import { BaseStringPromptTemplate } from "./base.js";
 import {
   checkValidTemplate,
   parseTemplate,

@@ -1,9 +1,6 @@
-import {
-  BaseChain,
-  LLMChain,
-  SerializedLLMChain,
-  SerializedBaseChain,
-} from "./index.js";
+import type { SerializedLLMChain, SerializedBaseChain } from "./index.js";
+import { BaseChain } from "./base.js";
+import { LLMChain } from "./llm_chain.js";
 
 import { Document } from "../document.js";
 
