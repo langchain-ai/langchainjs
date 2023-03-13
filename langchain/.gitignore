@@ -30,5 +30,7 @@ sql_db.js
 sql_db.d.ts
 callbacks.js
 callbacks.d.ts
+output_parsers.js
+output_parsers.d.ts
 index.js
 index.d.ts

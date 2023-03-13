@@ -17,7 +17,10 @@ import {
   parseFileConfig,
 } from "../util/index.js";
 import { PromptTemplate, SerializedPromptTemplate } from "./prompt.js";
-import { SerializedOutputParser, BaseOutputParser } from "./parser.js";
+import {
+  SerializedOutputParser,
+  BaseOutputParser,
+} from "../output_parsers/index.js";
 
 export type SerializedFewShotTemplate = {
   _type: "few_shot";
@@ -228,8 +231,9 @@ export class FewShotPromptTemplate
 
     return new FewShotPromptTemplate({
       inputVariables: data.input_variables,
-      outputParser:
-        data.output_parser && BaseOutputParser.deserialize(data.output_parser),
+      outputParser: data.output_parser
+        ? await BaseOutputParser.deserialize(data.output_parser)
+        : undefined,
       examplePrompt,
       examples,
       exampleSeparator: data.example_separator,

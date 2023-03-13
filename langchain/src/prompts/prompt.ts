@@ -11,7 +11,10 @@ import {
   TemplateFormat,
 } from "./template.js";
 import { resolveTemplateFromFile } from "../util/index.js";
-import { BaseOutputParser, SerializedOutputParser } from "./parser.js";
+import {
+  BaseOutputParser,
+  SerializedOutputParser,
+} from "../output_parsers/index.js";
 
 export type SerializedPromptTemplate = {
   _type?: "prompt";
@@ -171,8 +174,9 @@ export class PromptTemplate
   ): Promise<PromptTemplate> {
     const res = new PromptTemplate({
       inputVariables: data.input_variables,
-      outputParser:
-        data.output_parser && BaseOutputParser.deserialize(data.output_parser),
+      outputParser: data.output_parser
+        ? await BaseOutputParser.deserialize(data.output_parser)
+        : undefined,
       template: await resolveTemplateFromFile("template", data),
       templateFormat: data.template_format,
     });

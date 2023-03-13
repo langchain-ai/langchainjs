@@ -39,6 +39,8 @@
     "sql_db.d.ts",
     "callbacks.js",
     "callbacks.d.ts",
+    "output_parsers.js",
+    "output_parsers.d.ts",
     "index.js",
     "index.d.ts"
   ],
@@ -170,7 +172,8 @@
     "sqlite3": "^5.1.4",
     "typeorm": "^0.3.12",
     "uuid": "^9.0.0",
-    "yaml": "^2.2.1"
+    "yaml": "^2.2.1",
+    "zod": "^3.21.4"
   },
   "lint-staged": {
     "**/*.{ts,tsx}": [
@@ -263,6 +266,10 @@
     "./callbacks": {
       "types": "./callbacks.d.ts",
       "import": "./callbacks.js"
+    },
+    "./output_parsers": {
+      "types": "./output_parsers.d.ts",
+      "import": "./output_parsers.js"
     }
   }
 }

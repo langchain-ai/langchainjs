@@ -1,4 +1,4 @@
-import { BaseOutputParser } from "./parser.js";
+import { BaseOutputParser } from "../output_parsers/index.js";
 import type { FewShotPromptTemplate, PromptTemplate } from "./index.js";
 import { ChatPromptTemplate } from "./index.js";
 import { BasePromptValue, HumanChatMessage } from "../schema/index.js";
