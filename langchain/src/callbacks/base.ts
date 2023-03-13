@@ -322,37 +322,27 @@ export class CallbackManager extends BaseCallbackManager {
 }
 
 export class ConsoleCallbackHandler extends BaseCallbackHandler {
-  async handleChainStart(
-    chain: { name: string },
-    _inputs: ChainValues,
-    _verbose?: boolean
-  ): Promise<void> {
+  async handleChainStart(chain: { name: string }) {
     console.log(`Entering new ${chain.name} chain...`);
   }
 
-  async handleChainEnd(
-    _output: ChainValues,
-    _verbose?: boolean
-  ): Promise<void> {
+  async handleChainEnd(_output: ChainValues) {
     console.log("Finished chain.");
   }
 
-  async handleAgentAction(
-    action: AgentAction,
-    _verbose?: boolean
-  ): Promise<void> {
+  async handleAgentAction(action: AgentAction) {
     console.log(action.log);
   }
 
-  async handleToolEnd(output: string, _verbose?: boolean): Promise<void> {
+  async handleToolEnd(output: string) {
     console.log(output);
   }
 
-  async handleText(text: string, _verbose?: boolean): Promise<void> {
+  async handleText(text: string) {
     console.log(text);
   }
 
-  async handleAgentEnd(action: AgentFinish, _verbose?: boolean): Promise<void> {
+  async handleAgentEnd(action: AgentFinish) {
     console.log(action.log);
   }
 }
