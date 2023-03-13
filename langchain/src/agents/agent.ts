@@ -106,6 +106,18 @@ export abstract class Agent {
   prepareForNewCall(): void {}
 
   /**
+   * Prepare the agent for output, if needed
+   */
+  prepareForOutput(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    _returnValues: Record<string, any>,
+    _steps: AgentStep[]
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ): Record<string, any> {
+    return {};
+  }
+
+  /**
    * Validate that appropriate tools are passed in
    */
   // eslint-disable-next-line no-unused-vars
