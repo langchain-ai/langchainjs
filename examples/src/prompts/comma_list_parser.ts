@@ -1,26 +1,20 @@
 import { OpenAI, PromptTemplate } from "langchain";
-import { StructuredOutputParser } from "langchain/output_parsers";
+import { CommaSeparatedListOutputParser } from "langchain/output_parsers";
 
 export const run = async () => {
-  const parser = StructuredOutputParser.fromNamesAndDescriptions({
-    answer: "answer to the user's question",
-    source: "source used to answer the user's question, should be a website.",
-  });
+  const parser = new CommaSeparatedListOutputParser();
 
   const formatInstructions = parser.getFormatInstructions();
 
   const prompt = new PromptTemplate({
-    template:
-      "answer the users question as best as possible.\n{format_instructions}\n{question}",
-    inputVariables: ["question"],
+    template: "List five {subject}.\n{format_instructions}",
+    inputVariables: ["subject"],
     partialVariables: { format_instructions: formatInstructions },
   });
 
   const model = new OpenAI({ temperature: 0 });
 
-  const input = await prompt.format({
-    question: "What is the capital of France?",
-  });
+  const input = await prompt.format({ subject: "ice cream flavors" });
   const response = await model.call(input);
 
   console.log("Prompt:");

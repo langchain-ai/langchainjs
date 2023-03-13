@@ -17,8 +17,7 @@ test("StructuredOutputParser.fromNamesAndDescriptions", () => {
 
     \`\`\`json
     {
-        /** A link to the resource */
-        url: string;
+    	"url": string // A link to the resource
     }
     \`\`\` 
     "
@@ -39,8 +38,7 @@ test("StructuredOutputParser.fromZodSchema", () => {
 
     \`\`\`json
     {
-        /** A link to the resource */
-        url: string;
+    	"url": string // A link to the resource
     }
     \`\`\` 
     "
@@ -76,16 +74,12 @@ test("StructuredOutputParser.fromZodSchema", () => {
 
     \`\`\`json
     {
-        /** A link to the resource */
-        url: string;
-        /** A title for the resource */
-        title: string;
-        authors: {
-            /** The name of the author */
-            name: string;
-            /** The email of the author */
-            email: string;
-        }[];
+    	"url": string // A link to the resource
+    	"title": string // A title for the resource
+    	"authors": {
+    		"name": string // The name of the author
+    		"email": string // The email of the author
+    	}[]
     }
     \`\`\` 
     "

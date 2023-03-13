@@ -3,24 +3,29 @@ import { z } from "zod";
 
 import { BaseOutputParser, SerializedOutputParser } from "./base.js";
 
-function printSchema(schema: z.ZodObject<any>): string {
-  return `{
+function printSchema(schema: z.ZodTypeAny, depth = 0): string {
+  if (schema instanceof z.ZodString) {
+    return "string";
+  } else if (schema instanceof z.ZodArray) {
+    return `${printSchema(schema._def.type, depth)}[]`;
+  } else if (schema instanceof z.ZodObject) {
+    const indent = "\t".repeat(depth);
+    const indentIn = "\t".repeat(depth + 1);
+    return `{
 ${Object.entries(schema.shape)
-  .map(([key, value]) => {
-    if (value instanceof z.ZodString) {
-      return `\t"${key}": string // ${value._def.description}`;
-    } else if (value instanceof z.ZodArray) {
-      return `\t"${key}": ${printSchema(value._def.type)}[] // ${
-        value._def.description
-      }`;
-    } else if (value instanceof z.ZodObject) {
-      return `\t"${key}": ${printSchema(value)} // ${value._def.description}`;
-    } else {
-      throw new Error(`Unsupported type: ${value}`);
-    }
-  })
+  .map(
+    ([key, value]) =>
+      // eslint-disable-next-line prefer-template
+      `${indentIn}"${key}": ${printSchema(value as z.ZodTypeAny, depth + 1)}` +
+      ((value as z.ZodTypeAny)._def.description
+        ? ` // ${(value as z.ZodTypeAny)._def.description}`
+        : "")
+  )
   .join("\n")}
-}`;
+${indent}}`;
+  } else {
+    throw new Error(`Unsupported type: ${schema}`);
+  }
 }
 
 export class StructuredOutputParser<
