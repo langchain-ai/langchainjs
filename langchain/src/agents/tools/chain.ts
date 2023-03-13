@@ -23,7 +23,7 @@ export class ChainTool extends Tool {
     this.returnDirect = fields.returnDirect ?? this.returnDirect;
   }
 
-  async call(input: string): Promise<string> {
+  async _call(input: string): Promise<string> {
     return this.chain.run(input);
   }
 }

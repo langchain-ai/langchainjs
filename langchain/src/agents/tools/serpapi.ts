@@ -33,7 +33,7 @@ export class SerpAPI extends Tool {
   /**
    * Run query through SerpAPI and parse result
    */
-  async call(input: string) {
+  async _call(input: string) {
     const { getJson } = await SerpAPI.imports();
     const res = await getJson("google", {
       ...this.params,

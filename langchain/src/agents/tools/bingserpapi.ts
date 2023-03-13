@@ -26,7 +26,7 @@ class BingSerpAPI extends Tool {
     this.params = params;
   }
 
-  async call(input: string): Promise<string> {
+  async _call(input: string): Promise<string> {
     const headers = { "Ocp-Apim-Subscription-Key": this.key };
     const params = { q: input, textDecorations: "true", textFormat: "HTML" };
     const searchUrl = new URL("https://api.bing.microsoft.com/v7.0/search");

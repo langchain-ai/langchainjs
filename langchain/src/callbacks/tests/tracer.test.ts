@@ -6,7 +6,7 @@ import {
   ToolRun,
   TracerSession,
   TracerSessionCreate,
-} from "../tracers/index.js";
+} from "../tracers.js";
 
 const TEST_SESSION_ID = 2023;
 const _DATE = 1620000000000;
@@ -69,13 +69,6 @@ test("Test LLMRun", async () => {
   expect(tracer.runs.length).toBe(1);
   const run = tracer.runs[0];
   expect(run).toEqual(compareRun);
-});
-
-test("Test LLM Run no session", async () => {
-  const tracer = new FakeTracer();
-  await expect(
-    tracer.handleLLMStart({ name: "test" }, ["test"])
-  ).rejects.toThrow("Initialize a session before starting a trace.");
 });
 
 test("Test LLM Run no start", async () => {

@@ -1,6 +1,5 @@
 import {
   BaseChain,
-  ChainValues,
   LLMChain,
   SerializedLLMChain,
   SerializedBaseChain,
@@ -9,6 +8,7 @@ import {
 import { Document } from "../document.js";
 
 import { resolveConfigFromFile } from "../util/index.js";
+import { ChainValues } from "../schema/index.js";
 
 export interface StuffDocumentsChainInput {
   /** LLM Wrapper to use after formatting documents */

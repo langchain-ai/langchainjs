@@ -1,8 +1,8 @@
 import type { SerializedAgentT, AgentInput } from "./index.js";
 import { Tool } from "./tools/index.js";
-import { BaseLanguageModel } from "../schema/index.js";
 import { SerializedLLMChain, LLMChain } from "../chains/index.js";
 import { resolveConfigFromFile } from "../util/index.js";
+import { BaseLanguageModel } from "../base_language/index.js";
 
 export const deserializeHelper = async <
   T extends string,

@@ -246,8 +246,8 @@ export class OpenAIChat extends LLM implements OpenAIInput {
               const part = response.choices[0];
               if (part != null) {
                 innerCompletion += part.delta?.content ?? "";
-
-                this.callbackManager.handleNewToken?.(
+                // eslint-disable-next-line no-void
+                void this.callbackManager.handleLLMNewToken(
                   part.delta?.content ?? "",
                   this.verbose
                 );

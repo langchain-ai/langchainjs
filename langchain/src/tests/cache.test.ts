@@ -22,6 +22,7 @@ test("RedisCache", async () => {
       return null;
     }),
   };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const cache = new RedisCache(redis as any);
   expect(await cache.lookup("foo", "bar")).toEqual([{ text: "baz" }]);
 });

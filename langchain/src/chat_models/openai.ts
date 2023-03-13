@@ -288,7 +288,8 @@ export class ChatOpenAI extends BaseChatModel implements OpenAIInput {
               if (part != null) {
                 innerCompletion += part.delta?.content ?? "";
                 role = part.delta?.role ?? role;
-                this.callbackManager.handleNewToken?.(
+                // eslint-disable-next-line no-void
+                void this.callbackManager.handleLLMNewToken(
                   part.delta?.content ?? "",
                   this.verbose
                 );

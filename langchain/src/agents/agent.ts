@@ -1,16 +1,18 @@
-import { ChainValues } from "../chains/index.js";
 import {
   ZeroShotAgent,
   SerializedZeroShotAgent,
-  AgentAction,
-  AgentFinish,
-  AgentStep,
   StoppingMethod,
   Tool,
 } from "./index.js";
 import { BaseLLM } from "../llms/index.js";
 import { LLMChain } from "../chains/llm_chain.js";
 import { BasePromptTemplate } from "../prompts/index.js";
+import {
+  AgentAction,
+  AgentFinish,
+  AgentStep,
+  ChainValues,
+} from "../schema/index.js";
 
 class ParseError extends Error {
   output: string;

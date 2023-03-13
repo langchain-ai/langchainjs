@@ -1,7 +1,7 @@
 import { BaseChatModel } from "../chat_models/base.js";
 import { BaseLLM } from "../llms/base.js";
 import { BasePromptTemplate } from "../prompts/base.js";
-import { BaseLanguageModel } from "../schema/index.js";
+import { BaseLanguageModel } from "../base_language/index.js";
 
 export abstract class BasePromptSelector {
   abstract getPrompt(llm: BaseLanguageModel): BasePromptTemplate;

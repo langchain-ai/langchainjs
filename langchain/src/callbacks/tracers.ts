@@ -1,7 +1,6 @@
 import * as process from "process";
-import { LLMResult } from "../../schema/index.js";
-import { ChainValues } from "../../chains/index.js";
-import { BaseCallbackHandler } from "../index.js";
+import { ChainValues, LLMResult } from "../schema/index.js";
+import { BaseCallbackHandler } from "./base.js";
 
 export type RunType = "llm" | "chain" | "tool";
 
@@ -130,7 +129,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     _verbose?: boolean
   ): Promise<void> {
     if (this.session === undefined) {
-      throw new Error("Initialize a session before starting a trace.");
+      this.session = await this.loadDefaultSession();
     }
     const run: LLMRun = {
       start_time: Date.now(),
@@ -171,7 +170,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     _verbose?: boolean
   ): Promise<void> {
     if (this.session === undefined) {
-      throw new Error("Initialize a session before starting a trace.");
+      this.session = await this.loadDefaultSession();
     }
     const run: ChainRun = {
       start_time: Date.now(),
@@ -218,7 +217,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     _verbose?: boolean
   ): Promise<void> {
     if (this.session === undefined) {
-      throw new Error("Initialize a session before starting a trace.");
+      this.session = await this.loadDefaultSession();
     }
     const run: ToolRun = {
       start_time: Date.now(),
@@ -292,7 +291,6 @@ export class LangChainTracer extends BaseTracer {
       console.error(
         `Failed to persist run: ${response.status} ${response.statusText}`
       );
-      console.error(await response.text());
     }
   }
 
