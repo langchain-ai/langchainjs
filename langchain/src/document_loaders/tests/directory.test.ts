@@ -5,7 +5,7 @@ import { DirectoryLoader, UnknownHandling } from "../directory.js";
 import { CSVLoader } from "../csv.js";
 import { PDFLoader } from "../pdf.js";
 import { TextLoader } from "../text.js";
-import { JSONLoader } from "../json.js";
+import { JSONPointerLoader } from "../json_pointer.js";
 
 test("Test Directory loader", async () => {
   const directoryPath = path.resolve(
@@ -18,13 +18,13 @@ test("Test Directory loader", async () => {
       ".csv": (p) => new CSVLoader(p, "html"),
       ".pdf": (p) => new PDFLoader(p),
       ".txt": (p) => new TextLoader(p),
-      ".json": (p) => new JSONLoader(p),
+      ".json": (p) => new JSONPointerLoader(p),
     },
     true,
     UnknownHandling.Ignore
   );
   const docs = await loader.load();
-  expect(docs.length).toBe(66);
+  expect(docs.length).toBe(76);
   expect(docs.map((d) => d.metadata.source).sort()).toEqual([
     // PDF
     path.resolve(directoryPath, "1706.03762.pdf"),
@@ -41,6 +41,9 @@ test("Test Directory loader", async () => {
         directoryPath,
         "Star_Wars_The_Clone_Wars_S06E07_Crisis_at_the_Heart.json"
       )
+    ),
+    ...Array.from({ length: 10 }, (_) =>
+      path.resolve(directoryPath, "complex.json")
     ),
     // TXT
     path.resolve(directoryPath, "example.txt"),
