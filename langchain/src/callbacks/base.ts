@@ -15,24 +15,7 @@ export interface BaseCallbackHandlerInput {
   ignoreAgent?: boolean;
 }
 
-export abstract class BaseCallbackHandler implements BaseCallbackHandlerInput {
-  alwaysVerbose = false;
-
-  ignoreLLM = false;
-
-  ignoreChain = false;
-
-  ignoreAgent = false;
-
-  constructor(input?: BaseCallbackHandlerInput) {
-    if (input) {
-      this.alwaysVerbose = input.alwaysVerbose ?? this.alwaysVerbose;
-      this.ignoreLLM = input.ignoreLLM ?? this.ignoreLLM;
-      this.ignoreChain = input.ignoreChain ?? this.ignoreChain;
-      this.ignoreAgent = input.ignoreAgent ?? this.ignoreAgent;
-    }
-  }
-
+abstract class BaseCallbackHandlerMethods {
   handleLLMStart?(
     llm: { name: string },
     prompts: string[],
@@ -70,6 +53,29 @@ export abstract class BaseCallbackHandler implements BaseCallbackHandlerInput {
   handleAgentAction?(action: AgentAction, verbose?: boolean): Promise<void>;
 
   handleAgentEnd?(action: AgentFinish, verbose?: boolean): Promise<void>;
+}
+
+export abstract class BaseCallbackHandler
+  extends BaseCallbackHandlerMethods
+  implements BaseCallbackHandlerInput
+{
+  alwaysVerbose = false;
+
+  ignoreLLM = false;
+
+  ignoreChain = false;
+
+  ignoreAgent = false;
+
+  constructor(input?: BaseCallbackHandlerInput) {
+    super();
+    if (input) {
+      this.alwaysVerbose = input.alwaysVerbose ?? this.alwaysVerbose;
+      this.ignoreLLM = input.ignoreLLM ?? this.ignoreLLM;
+      this.ignoreChain = input.ignoreChain ?? this.ignoreChain;
+      this.ignoreAgent = input.ignoreAgent ?? this.ignoreAgent;
+    }
+  }
 }
 
 export abstract class BaseCallbackManager extends BaseCallbackHandler {
@@ -299,6 +305,19 @@ export class CallbackManager extends BaseCallbackManager {
 
   setHandlers(handlers: BaseCallbackHandler[]): void {
     this.handlers = handlers;
+  }
+
+  static fromHandlers(handlers: BaseCallbackHandlerMethods) {
+    class Handler extends BaseCallbackHandler {
+      constructor() {
+        super();
+        Object.assign(this, handlers);
+      }
+    }
+
+    const manager = new this();
+    manager.addHandler(new Handler());
+    return manager;
   }
 }
 
