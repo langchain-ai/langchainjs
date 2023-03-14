@@ -27,7 +27,6 @@ const vectorStore = await HNSWLib.fromDocuments(docs, new OpenAIEmbeddings());
 const chain = VectorDBQAChain.fromLLM(model, vectorStore);
 /* Ask it a question */
 const res = await chain.call({
-  input_documents: docs,
   query: "What did the president say about Justice Breyer?",
 });
 ```
