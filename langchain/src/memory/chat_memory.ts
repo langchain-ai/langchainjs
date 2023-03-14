@@ -54,7 +54,6 @@ export abstract class BaseChatMemory extends BaseMemory {
     inputValues: InputValues,
     outputValues: OutputValues
   ): Promise<void> {
-    console.log(this.inputKey);
     this.chatHistory.addUserMessage(getInputValue(inputValues, this.inputKey));
     this.chatHistory.addAIChatMessage(
       getInputValue(outputValues, this.outputKey)
