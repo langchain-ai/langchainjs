@@ -14,6 +14,7 @@ export interface VectorDBQAChainInput {
   combineDocumentsChain: BaseChain;
   outputKey: string;
   inputKey: string;
+  returnSourceDocuments?: boolean;
 }
 
 export type SerializedVectorDBQAChain = {
@@ -111,8 +112,18 @@ export class VectorDBQAChain extends BaseChain implements VectorDBQAChainInput {
     };
   }
 
-  static fromLLM(llm: BaseLLM, vectorstore: VectorStore): VectorDBQAChain {
+  static fromLLM(
+    llm: BaseLLM,
+    vectorstore: VectorStore,
+    options?: Partial<
+      Omit<VectorDBQAChainInput, "combineDocumentsChain" | "vectorstore">
+    >
+  ): VectorDBQAChain {
     const qaChain = loadQAStuffChain(llm);
-    return new this({ vectorstore, combineDocumentsChain: qaChain });
+    return new this({
+      vectorstore,
+      combineDocumentsChain: qaChain,
+      ...options,
+    });
   }
 }
