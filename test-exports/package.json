@@ -8,8 +8,7 @@
   "scripts": {
     "test": "node ./index.mjs && node ./index.cjs && tsc",
     "format": "prettier --write \"**/*.ts\"",
-    "format:diff": "prettier --list-different \"**/*.ts\"",
-    "ci": "yarn format:diff && yarn test"
+    "format:check": "prettier --list-different \"**/*.ts\""
   },
   "author": "Langchain",
   "license": "MIT",

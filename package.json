@@ -18,6 +18,8 @@
   "scripts": {
     "ci": "turbo run ci",
     "build": "turbo run build",
+    "format": "turbo run format",
+    "format:check": "turbo run format:check",
     "lint": "turbo run lint",
     "lint:fix": "yarn lint -- --fix",
     "test": "turbo run test",

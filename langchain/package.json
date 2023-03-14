@@ -51,7 +51,6 @@
   "scripts": {
     "build": "yarn clean && tsc --declaration --outDir dist/ && node create-entrypoints.js",
     "lint": "eslint src",
-    "doc": "typedoc",
     "lint:fix": "yarn lint --fix",
     "precommit": "tsc --noEmit && lint-staged",
     "clean": "rm -rf dist/ && node create-entrypoints.js clean",
@@ -62,8 +61,7 @@
     "test:integration": "NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern=\\.int\\.test.ts --testTimeout 50000",
     "prepare": "husky install",
     "format": "prettier --write \"src\"",
-    "format:diff": "prettier --list-different \"src\"",
-    "ci": "yarn lint && yarn format:diff && yarn build"
+    "format:check": "prettier --list-different \"src\""
   },
   "author": "Langchain",
   "license": "MIT",
@@ -101,8 +99,6 @@
     "srt-parser-2": "^1.2.2",
     "ts-jest": "^29.0.5",
     "ts-node": "^10.9.1",
-    "typedoc": "^0.23.25",
-    "typedoc-plugin-missing-exports": "^1.0.0",
     "typescript": "^4.9.5"
   },
   "peerDependencies": {
