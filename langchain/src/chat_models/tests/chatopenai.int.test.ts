@@ -48,8 +48,6 @@ test("Test ChatOpenAI in streaming mode", async () => {
   class StreamCallbackHandler extends BaseCallbackHandler {
     nrNewTokens = 0;
 
-    alwaysVerbose = true;
-
     streamedCompletion = "";
 
     async handleLLMNewToken(token: string) {

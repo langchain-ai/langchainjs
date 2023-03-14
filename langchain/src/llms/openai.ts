@@ -286,7 +286,7 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
                     // eslint-disable-next-line no-void
                     void this.callbackManager.handleLLMNewToken(
                       part.text ?? "",
-                      this.verbose
+                      true
                     );
                   }
                 }
