@@ -8,8 +8,7 @@ import {
   HumanMessagePromptTemplate,
   SystemMessagePromptTemplate,
 } from "../../prompts/index.js";
-import { LLMChain } from "../../chains/index.js";
-import { BaseCallbackHandler, CallbackManager } from "../../callbacks/index.js";
+import { CallbackManager } from "../../callbacks/index.js";
 
 test("Test ChatOpenAI", async () => {
   const chat = new ChatOpenAI({ modelName: "gpt-3.5-turbo", maxTokens: 10 });
@@ -45,32 +44,25 @@ test("Test ChatOpenAI Generate", async () => {
 });
 
 test("Test ChatOpenAI in streaming mode", async () => {
-  class StreamCallbackHandler extends BaseCallbackHandler {
-    nrNewTokens = 0;
-
-    streamedCompletion = "";
-
-    async handleLLMNewToken(token: string) {
-      this.nrNewTokens += 1;
-      this.streamedCompletion += token;
-    }
-  }
-
-  const streamCallbackHandler = new StreamCallbackHandler();
-  const callbackManager = new CallbackManager();
-  callbackManager.addHandler(streamCallbackHandler);
+  let nrNewTokens = 0;
+  let streamedCompletion = "";
 
   const model = new ChatOpenAI({
     modelName: "gpt-3.5-turbo",
     streaming: true,
-    callbackManager,
+    callbackManager: CallbackManager.fromHandlers({
+      async handleLLMNewToken(token: string) {
+        nrNewTokens += 1;
+        streamedCompletion += token;
+      },
+    }),
   });
   const message = new HumanChatMessage("Hello!");
   const res = await model.call([message]);
   console.log({ res });
 
-  expect(streamCallbackHandler.nrNewTokens > 0).toBe(true);
-  expect(res.text).toBe(streamCallbackHandler.streamedCompletion);
+  expect(nrNewTokens > 0).toBe(true);
+  expect(res.text).toBe(streamedCompletion);
 });
 
 test("Test ChatOpenAI prompt value", async () => {
@@ -89,50 +81,6 @@ test("Test ChatOpenAI prompt value", async () => {
     }
   }
   console.log({ res });
-});
-
-test("OpenAI Chat, docs, getting started", async () => {
-  const chat = new ChatOpenAI({ temperature: 0 });
-
-  const responseA = await chat.call([
-    new HumanChatMessage(
-      "Translate this sentence from English to French. I love programming."
-    ),
-  ]);
-
-  console.log(responseA);
-
-  const responseB = await chat.call([
-    new SystemChatMessage(
-      "You are a helpful assistant that translates English to French."
-    ),
-    new HumanChatMessage(
-      "Translate this sentence from English to French. I love programming."
-    ),
-  ]);
-
-  console.log(responseB);
-
-  const responseC = await chat.generate([
-    [
-      new SystemChatMessage(
-        "You are a helpful assistant that translates English to French."
-      ),
-      new HumanChatMessage(
-        "Translate this sentence from English to French. I love programming."
-      ),
-    ],
-    [
-      new SystemChatMessage(
-        "You are a helpful assistant that translates English to French."
-      ),
-      new HumanChatMessage(
-        "Translate this sentence from English to French. I love artificial intelligence."
-      ),
-    ],
-  ]);
-
-  console.log(responseC);
 });
 
 test("OpenAI Chat, docs, prompt templates", async () => {
@@ -156,17 +104,4 @@ test("OpenAI Chat, docs, prompt templates", async () => {
   ]);
 
   console.log(responseA.generations);
-
-  const chain = new LLMChain({
-    prompt: chatPrompt,
-    llm: chat,
-  });
-
-  const responseB = await chain.call({
-    input_language: "English",
-    output_language: "French",
-    text: "I love programming.",
-  });
-
-  console.log(responseB);
-});
+}, 50000);

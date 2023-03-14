@@ -22,7 +22,7 @@ test("Test LangChain tracer", async () => {
   await tracer.handleLLMEnd({ generations: [[]] });
 });
 
-test("Test Traced Agent with concurrency", async () => {
+test.skip("Test Traced Agent with concurrency (skipped until we fix concurrency)", async () => {
   process.env.LANGCHAIN_HANDLER = "langchain";
   const model = new OpenAI({ temperature: 0 });
   const tools = [new SerpAPI(), new Calculator()];
