@@ -10,6 +10,7 @@ on:
 
 jobs:
   format:
+    name: Check formatting
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -24,6 +25,7 @@ jobs:
         run: yarn run format:check
 
   lint:
+    name: Check linting
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -38,6 +40,7 @@ jobs:
         run: yarn run lint
 
   build:
+    name: Build and check types
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -52,14 +55,13 @@ jobs:
         run: yarn run build
 
   test:
+    name: Test
     strategy:
       matrix:
         os: [macos-latest, windows-latest, ubuntu-latest]
         node-version: [16.x, 18.x, 19.x]
         # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
-
     runs-on: ${{ matrix.os }}
-
     steps:
       - uses: actions/checkout@v3
       - name: Use Node.js ${{ matrix.node-version }}
@@ -70,7 +72,7 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
       - name: Build
-        run: yarn run build --filter=\!docs
+        run: yarn run build --filter="!docs"
       - name: Test exports
         run: yarn workspace test-exports run test
       - name: Test langchain
