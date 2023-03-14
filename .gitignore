@@ -1,5 +1,6 @@
 node_modules/
 dist/
+build/
 lib/
 .turbo
 .eslintcache
