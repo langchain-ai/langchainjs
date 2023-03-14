@@ -13,17 +13,17 @@ export class PineconeStore extends VectorStore {
 
   namespace: string | undefined;
 
-  pineconeClient: VectorOperationsApi;
+  pineconeIndex: VectorOperationsApi;
 
   constructor(
-    pineconeClient: VectorOperationsApi,
+    pineconeIndex: VectorOperationsApi,
     embeddings: Embeddings,
     textKey = "text",
     namespace: string | undefined = undefined
   ) {
     super(embeddings);
 
-    this.pineconeClient = pineconeClient;
+    this.pineconeIndex = pineconeIndex;
     this.embeddings = embeddings;
     this.textKey = textKey;
     this.namespace = namespace;
@@ -45,7 +45,7 @@ export class PineconeStore extends VectorStore {
   ): Promise<void> {
     const documentIds = ids == null ? documents.map(() => uuidv4()) : ids;
 
-    await this.pineconeClient.upsert({
+    await this.pineconeIndex.upsert({
       upsertRequest: {
         vectors: vectors.map((values, idx) => ({
           id: documentIds[idx],
@@ -64,7 +64,7 @@ export class PineconeStore extends VectorStore {
     query: number[],
     k: number
   ): Promise<[Document, number][]> {
-    const results = await this.pineconeClient.query({
+    const results = await this.pineconeIndex.query({
       queryRequest: {
         topK: k,
         includeMetadata: true,
@@ -92,11 +92,20 @@ export class PineconeStore extends VectorStore {
     texts: string[],
     metadatas: object[],
     embeddings: Embeddings,
-    dbConfig: {
-      pineconeClient: VectorOperationsApi;
-      textKey?: string;
-      namespace?: string | undefined;
-    }
+    dbConfig:
+      | {
+          /**
+           * @deprecated Use pineconeIndex instead
+           */
+          pineconeClient: VectorOperationsApi;
+          textKey?: string;
+          namespace?: string | undefined;
+        }
+      | {
+          pineconeIndex: VectorOperationsApi;
+          textKey?: string;
+          namespace?: string | undefined;
+        }
   ): Promise<PineconeStore> {
     const textKey = dbConfig.textKey || "text";
     const docs: Document[] = [];
@@ -109,7 +118,9 @@ export class PineconeStore extends VectorStore {
     }
 
     return PineconeStore.fromDocuments(
-      dbConfig.pineconeClient,
+      "pineconeIndex" in dbConfig
+        ? dbConfig.pineconeIndex
+        : dbConfig.pineconeClient,
       docs,
       embeddings,
       textKey,
@@ -118,24 +129,24 @@ export class PineconeStore extends VectorStore {
   }
 
   static async fromDocuments(
-    pineconeClient: VectorOperationsApi,
+    pineconeIndex: VectorOperationsApi,
     docs: Document[],
     embeddings: Embeddings,
     textKey = "text",
     namespace: string | undefined = undefined
   ): Promise<PineconeStore> {
-    const instance = new this(pineconeClient, embeddings, textKey, namespace);
+    const instance = new this(pineconeIndex, embeddings, textKey, namespace);
     await instance.addDocuments(docs);
     return instance;
   }
 
   static async fromExistingIndex(
-    pineconeClient: VectorOperationsApi,
+    pineconeIndex: VectorOperationsApi,
     embeddings: Embeddings,
     textKey = "text",
     namespace: string | undefined = undefined
   ): Promise<PineconeStore> {
-    const instance = new this(pineconeClient, embeddings, textKey, namespace);
+    const instance = new this(pineconeIndex, embeddings, textKey, namespace);
     return instance;
   }
 }

@@ -4,18 +4,28 @@ import { PineconeClient } from "@pinecone-database/pinecone";
 
 export const run = async () => {
   const client = new PineconeClient();
+
+  if (
+    !process.env.PINECONE_ENVIRONMENT ||
+    !process.env.PINECONE_API_KEY ||
+    !process.env.PINECONE_INDEX
+  ) {
+    throw new Error(
+      "PINECONE_ENVIRONMENT and PINECONE_API_KEY and PINECONE_INDEX must be set"
+    );
+  }
+
   await client.init({
-    environment: "us-west1-gcp",
-    apiKey: "apiKey",
+    environment: process.env.PINECONE_ENVIRONMENT,
+    apiKey: process.env.PINECONE_API_KEY,
   });
 
-  const index = client.Index("my-index");
   const vectorStore = await PineconeStore.fromTexts(
     ["Hello world", "Bye bye", "hello nice world"],
     [{ id: 2 }, { id: 1 }, { id: 3 }],
     new OpenAIEmbeddings(),
     {
-      pineconeClient: index,
+      pineconeIndex: client.Index(process.env.PINECONE_INDEX),
     }
   );
 
