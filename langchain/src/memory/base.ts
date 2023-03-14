@@ -21,13 +21,16 @@ export abstract class BaseMemory {
   ): Promise<void>;
 }
 
-export const getInputValue = (inputValues: InputValues) => {
+export const getInputValue = (inputValues: InputValues, inputKey?: string) => {
+  if (inputKey !== undefined) {
+    return inputValues[inputKey];
+  }
   const keys = Object.keys(inputValues);
   if (keys.length === 1) {
     return inputValues[keys[0]];
   }
   throw new Error(
-    "input values have multiple keys, memory only supported when one key currently"
+    `input values have multiple keys, memory only supported when one key currently: ${keys}`
   );
 };
 

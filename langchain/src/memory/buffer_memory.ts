@@ -15,7 +15,11 @@ export class BufferMemory extends BaseChatMemory implements BufferMemoryInput {
   memoryKey = "history";
 
   constructor(fields?: Partial<BufferMemoryInput>) {
-    super({ returnMessages: fields?.returnMessages ?? false });
+    super({
+      returnMessages: fields?.returnMessages ?? false,
+      inputKey: fields?.inputKey,
+      outputKey: fields?.outputKey,
+    });
     this.humanPrefix = fields?.humanPrefix ?? this.humanPrefix;
     this.aiPrefix = fields?.aiPrefix ?? this.aiPrefix;
     this.memoryKey = fields?.memoryKey ?? this.memoryKey;

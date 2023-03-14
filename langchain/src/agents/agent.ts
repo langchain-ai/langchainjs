@@ -12,6 +12,7 @@ import {
   AgentFinish,
   AgentStep,
   ChainValues,
+  BaseChatMessage,
 } from "../schema/index.js";
 
 class ParseError extends Error {
@@ -125,7 +126,7 @@ export abstract class Agent {
   /**
    * Construct a scratchpad to let the agent continue its thought process
    */
-  constructScratchPad(steps: AgentStep[]): string {
+  constructScratchPad(steps: AgentStep[]): string | BaseChatMessage[] {
     return steps.reduce(
       (thoughts, { action, observation }) =>
         thoughts +
