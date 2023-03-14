@@ -4,6 +4,7 @@
     "outDir": "./dist",
     "lib": [
       "ES2021",
+      "ES2022.Object",
       "DOM"
     ],
     "target": "ES2021",
