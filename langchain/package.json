@@ -156,7 +156,6 @@
   "dependencies": {
     "browser-or-node": "^2.1.1",
     "d3-dsv": "^3.0.1",
-    "deepcopy": "^2.1.0",
     "eventsource-parser": "^0.1.0",
     "exponential-backoff": "^3.1.0",
     "expr-eval": "^2.0.2",
