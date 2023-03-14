@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.31",
+  "version": "0.0.32",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "main": "./index.js",
@@ -59,7 +59,7 @@
     "test": "NODE_OPTIONS=--experimental-vm-modules jest --testPathIgnorePatterns=\\.int\\.test.ts",
     "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch --testPathIgnorePatterns=\\.int\\.test.ts",
     "test:node16": "NODE_OPTIONS='--experimental-vm-modules --experimental-fetch' jest --testPathIgnorePatterns=\\.int\\.test.ts",
-    "test:integration": "NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern=\\.int\\.test.ts --testTimeout 20000",
+    "test:integration": "NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern=\\.int\\.test.ts --testTimeout 50000",
     "prepare": "husky install",
     "format": "prettier --write \"src\"",
     "format:diff": "prettier --list-different \"src\"",
