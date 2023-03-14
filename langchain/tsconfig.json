@@ -39,6 +39,7 @@
     ],
     "entryPoints": [
       "src/agents/index.ts",
+      "src/base_language/index.ts",
       "src/agents/tools/index.ts",
       "src/chains/index.ts",
       "src/embeddings/index.ts",

@@ -3,6 +3,12 @@ import { CallbackManager, getCallbackManager } from "../callbacks/index.js";
 
 const getVerbosity = () => false;
 
+export type SerializedLLM = {
+  _model: string;
+  _type: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+} & Record<string, any>;
+
 /**
  * Base interface for language model parameters.
  * A subclass of {@link BaseLanguageModel} should have a constructor that
@@ -37,4 +43,18 @@ export abstract class BaseLanguageModel implements BaseLanguageModelParams {
   abstract _modelType(): string;
 
   abstract getNumTokens(text: string): number;
+
+  /**
+   * Return a json-like object representing this LLM.
+   */
+  serialize(): SerializedLLM {
+    throw new Error("Not implemented");
+  }
+
+  /**
+   * Load an LLM from a json-like object describing it.
+   */
+  static async deserialize(_data: SerializedLLM): Promise<BaseLanguageModel> {
+    throw new Error("Not implemented");
+  }
 }

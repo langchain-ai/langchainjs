@@ -19,6 +19,13 @@ export type SerializedChatModel = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 } & Record<string, any>;
 
+// todo?
+export type SerializedLLM = {
+  _model: string;
+  _type: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+} & Record<string, any>;
+
 export type BaseChatModelParams = BaseLanguageModelParams;
 
 export abstract class BaseChatModel extends BaseLanguageModel {
@@ -84,7 +91,12 @@ export abstract class BaseChatModel extends BaseLanguageModel {
     };
   }
 
-  // TODO deserialize
+  /**
+   * Load an LLM from a json-like object describing it.
+   */
+  static async deserialize(_data: SerializedLLM): Promise<BaseLanguageModel> {
+    throw new Error("Not implemented");
+  }
 
   private _tokenizer?: GPT3Tokenizer.default;
 
