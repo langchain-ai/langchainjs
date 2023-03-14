@@ -69,6 +69,8 @@ jobs:
           cache: "yarn"
       - name: Install dependencies
         run: yarn install --immutable
+      - name: Build
+        run: yarn run build
       - name: Test exports
         run: yarn workspace test-exports run test
       - name: Test langchain
