@@ -1,0 +1,5 @@
+{
+  "rules": {
+    "tree-shaking/no-side-effects-in-initialization": 0
+  }
+}
