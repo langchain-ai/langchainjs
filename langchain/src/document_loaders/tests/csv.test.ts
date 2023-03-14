@@ -16,7 +16,7 @@ test("Test CSV loader", async () => {
     new Document({
       metadata: { source: filePath },
       pageContent:
-        "<i>Corruption discovered at the core of the Banking Clan!</i>",
+        "\nid: 1\nhtml: <i>Corruption discovered at the core of the Banking Clan!</i>\n",
     })
   );
 });

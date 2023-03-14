@@ -12,8 +12,15 @@ export class CSVLoader extends TextLoader {
     if (!parsed.columns.includes(this.column)) {
       throw new Error(`Column ${this.column} not found in CSV file.`);
     }
-    // Note TextLoader will raise an exception if the value is null.
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    return parsed.map((row) => row[this.column]!);
+
+    // each key/value in the csv should be separated by a newline
+    return parsed.map((row) =>
+      Object.keys(row).reduce(
+        (acc, key) =>
+          // eslint-disable-next-line prefer-template, no-useless-concat
+          acc + `${key.trim()}: ${row[key]?.trim()}` + "\n",
+        "\n"
+      )
+    );
   }
 }
