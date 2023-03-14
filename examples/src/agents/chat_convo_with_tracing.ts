@@ -39,5 +39,3 @@ export const run = async () => {
 
   console.log(`Got output ${result2.output}`);
 };
-
-run();
