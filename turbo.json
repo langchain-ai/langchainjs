@@ -23,6 +23,7 @@
     },
     "test": {
       "dependsOn": [
+        "^build",
         "build"
       ]
     },
