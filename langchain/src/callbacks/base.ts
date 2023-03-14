@@ -309,6 +309,8 @@ export class CallbackManager extends BaseCallbackManager {
 
   static fromHandlers(handlers: BaseCallbackHandlerMethods) {
     class Handler extends BaseCallbackHandler {
+      alwaysVerbose = true;
+
       constructor() {
         super();
         Object.assign(this, handlers);
