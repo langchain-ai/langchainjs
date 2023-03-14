@@ -1,6 +1,6 @@
 import { OpenAI } from "langchain";
 import { initializeAgentExecutor, ZapierToolKit } from "langchain/agents";
-import { ZapierNLAWrapper } from "langchain/zapier";
+import { ZapierNLAWrapper } from "langchain/tools";
 
 export const run = async () => {
   const model = new OpenAI({ temperature: 0 });
