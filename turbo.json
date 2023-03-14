@@ -23,7 +23,7 @@
     },
     "test": {
       "dependsOn": [
-        "^build"
+        "build"
       ]
     },
     "precommit": {},

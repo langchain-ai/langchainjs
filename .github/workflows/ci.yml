@@ -9,7 +9,49 @@ on:
   pull_request:
 
 jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js 18.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+          cache: "yarn"
+      - name: Install dependencies
+        run: yarn install --immutable
+      - name: Check formatting
+        run: yarn run format:check
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js 18.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+          cache: "yarn"
+      - name: Install dependencies
+        run: yarn install --immutable
+      - name: Check linting
+        run: yarn run lint
+
   build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js 18.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+          cache: "yarn"
+      - name: Install dependencies
+        run: yarn install --immutable
+      - name: Build and check types
+        run: yarn run build
+
+  test:
     strategy:
       matrix:
         os: [macos-latest, windows-latest, ubuntu-latest]
@@ -27,12 +69,6 @@ jobs:
           cache: "yarn"
       - name: Install dependencies
         run: yarn install --immutable
-      - name: Check formatting
-        run: yarn run format:check
-      - name: Check linting
-        run: yarn run lint
-      - name: Build and check types
-        run: yarn run build
       - name: Test exports
         run: yarn workspace test-exports run test
       - name: Test langchain
