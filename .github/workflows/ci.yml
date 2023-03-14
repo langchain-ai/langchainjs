@@ -27,8 +27,17 @@ jobs:
           cache: "yarn"
       - name: Install dependencies
         run: yarn install --immutable
-      - run: yarn run ci
-      - run: yarn workspace langchain run test
+      - name: Check formatting
+        run: yarn run format:check
+      - name: Check linting
+        run: yarn run lint
+      - name: Build and check types
+        run: yarn run build
+      - name: Test exports
+        run: yarn workspace test-exports run test
+      - name: Test langchain
+        run: yarn workspace langchain run test
         if: matrix.node-version != '16.x'
-      - run: yarn workspace langchain run test:node16
+      - name: Test langchain (Node 16)
+        run: yarn workspace langchain run test:node16
         if: matrix.node-version == '16.x'

@@ -15,8 +15,7 @@
     "lint": "eslint src",
     "lint:fix": "yarn lint --fix",
     "format": "prettier --write \"**/*.ts\"",
-    "format:diff": "prettier --list-different \"**/*.ts\"",
-    "ci": "yarn lint && yarn format:diff && yarn build"
+    "format:check": "prettier --list-different \"**/*.ts\""
   },
   "author": "Langchain",
   "license": "MIT",
