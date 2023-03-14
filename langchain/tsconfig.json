@@ -5,7 +5,7 @@
     "rootDir": "./src",
     "target": "ES2021",
     "lib": [
-      "ESNext",
+      "ES2021",
       "DOM"
     ],
     "module": "ES2020",
