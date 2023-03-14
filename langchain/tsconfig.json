@@ -54,6 +54,7 @@
       "src/sql_db.ts",
       "src/callbacks/index.ts",
       "src/output_parsers/index.ts",
+      "src/zapier.ts",
       "src/index.ts"
     ],
     "excludePrivate": true,

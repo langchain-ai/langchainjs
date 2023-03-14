@@ -32,5 +32,7 @@ callbacks.js
 callbacks.d.ts
 output_parsers.js
 output_parsers.d.ts
+zapier.js
+zapier.d.ts
 index.js
 index.d.ts
