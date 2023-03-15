@@ -21,9 +21,6 @@ Chat History:
 {chat_history}
 Follow Up Input: {question}
 Standalone question:`;
-const question_generator_prompt = PromptTemplate.fromTemplate(
-  question_generator_template
-);
 
 const qa_template = `Use the following pieces of context to answer the question at the end. If you don't know the answer, just say that you don't know, don't try to make up an answer.
 
@@ -31,7 +28,6 @@ const qa_template = `Use the following pieces of context to answer the question 
 
 Question: {question}
 Helpful Answer:`;
-const qa_prompt = PromptTemplate.fromTemplate(qa_template);
 
 export interface ChatVectorDBQAChainInput {
   vectorstore: VectorStore;
@@ -173,13 +169,22 @@ export class ChatVectorDBQAChain
   static fromLLM(
     llm: BaseLLM,
     vectorstore: VectorStore,
-    options?: {
+    options: {
       inputKey?: string;
       outputKey?: string;
       k?: number;
       returnSourceDocuments?: boolean;
-    }
+      questionGeneratorTemplate?: string;
+      qaTemplate?: string;
+    } = {}
   ): ChatVectorDBQAChain {
+    const { questionGeneratorTemplate, qaTemplate, ...rest } = options;
+    const question_generator_prompt = PromptTemplate.fromTemplate(
+      questionGeneratorTemplate || question_generator_template
+    );
+
+    const qa_prompt = PromptTemplate.fromTemplate(qaTemplate || qa_template);
+
     const qaChain = loadQAStuffChain(llm, { prompt: qa_prompt });
     const questionGeneratorChain = new LLMChain({
       prompt: question_generator_prompt,
@@ -189,7 +194,7 @@ export class ChatVectorDBQAChain
       vectorstore,
       combineDocumentsChain: qaChain,
       questionGeneratorChain,
-      ...options,
+      ...rest,
     });
     return instance;
   }
