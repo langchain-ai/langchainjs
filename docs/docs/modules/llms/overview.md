@@ -46,6 +46,7 @@ Especially when using an agent, there can be a lot of back-and-forth going on be
 
 ```typescript
 import { LLMResult } from "langchain/schema";
+import { CallbackManager } from "langchain/callbacks";
 
 //create our callback manager
 
