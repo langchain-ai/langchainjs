@@ -1,8 +1,7 @@
 import { Configuration, OpenAIApi, CreateEmbeddingRequest } from "openai";
-import { backOff } from "exponential-backoff";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
 import { chunkArray } from "../util/index.js";
-import { Embeddings } from "./base.js";
+import { Embeddings, EmbeddingsParams } from "./base.js";
 
 interface ModelParams {
   modelName: string;
@@ -18,11 +17,6 @@ export class OpenAIEmbeddings extends Embeddings implements ModelParams {
   batchSize = 512;
 
   /**
-   * The maximum number of retries to make when the OpenAI API returns an error.
-   */
-  maxRetries = 6;
-
-  /**
    * Whether to strip new lines from the input text. This is recommended by
    * OpenAI, but may not be suitable for all use cases.
    */
@@ -33,15 +27,15 @@ export class OpenAIEmbeddings extends Embeddings implements ModelParams {
   private client: OpenAIApi;
 
   constructor(
-    fields?: Partial<ModelParams> & {
-      verbose?: boolean;
-      batchSize?: number;
-      maxRetries?: number;
-      openAIApiKey?: string;
-      stripNewLines?: boolean;
-    }
+    fields?: Partial<ModelParams> &
+      EmbeddingsParams & {
+        verbose?: boolean;
+        batchSize?: number;
+        openAIApiKey?: string;
+        stripNewLines?: boolean;
+      }
   ) {
-    super();
+    super(fields ?? {});
 
     const apiKey = fields?.openAIApiKey ?? process.env.OPENAI_API_KEY;
     if (!apiKey) {
@@ -51,7 +45,6 @@ export class OpenAIEmbeddings extends Embeddings implements ModelParams {
     this.modelName = fields?.modelName ?? this.modelName;
     this.batchSize = fields?.batchSize ?? this.batchSize;
     this.apiKey = apiKey;
-    this.maxRetries = fields?.maxRetries ?? this.maxRetries;
     this.stripNewLines = fields?.stripNewLines ?? this.stripNewLines;
   }
 
@@ -61,7 +54,7 @@ export class OpenAIEmbeddings extends Embeddings implements ModelParams {
       this.batchSize
     );
 
-    const embeddings = [];
+    const embeddings: number[][] = [];
 
     for (let i = 0; i < subPrompts.length; i += 1) {
       const input = subPrompts[i];
@@ -93,11 +86,9 @@ export class OpenAIEmbeddings extends Embeddings implements ModelParams {
       });
       this.client = new OpenAIApi(clientConfig);
     }
-    const makeCompletionRequest = () => this.client.createEmbedding(request);
-    return backOff(makeCompletionRequest, {
-      startingDelay: 4,
-      maxDelay: 10,
-      numOfAttempts: this.maxRetries,
-    });
+    return this.caller.call(
+      this.client.createEmbedding.bind(this.client),
+      request
+    );
   }
 }
