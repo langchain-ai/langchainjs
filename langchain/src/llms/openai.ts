@@ -45,7 +45,7 @@ interface ModelParams {
   /** Dictionary used to adjust the probability of specific tokens being generated */
   logitBias?: Record<string, number>;
 
-  /** Whether to stream the results or not */
+  /** Whether to stream the results or not. Enabling disables tokenUsage reporting */
   streaming: boolean;
 }
 

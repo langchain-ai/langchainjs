@@ -61,7 +61,7 @@ export class AnalyzeDocumentChain
     const { [this.inputKey]: doc, ...rest } = values;
 
     const currentDoc = doc as string;
-    const currentDocs = this.textSplitter.createDocuments([currentDoc]);
+    const currentDocs = await this.textSplitter.createDocuments([currentDoc]);
 
     const newInputs = { input_documents: currentDocs, ...rest };
     const result = await this.combineDocumentsChain.call(newInputs);
