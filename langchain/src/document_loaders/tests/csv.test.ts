@@ -37,7 +37,7 @@ test("Test CSV loader without column arg", async () => {
   expect(docs.length).toBe(32);
   expect(docs[0]).toEqual(
     new Document({
-      metadata: { source: filePath },
+      metadata: { source: filePath, line: 1 },
       pageContent: `id: 1
 html: <i>Corruption discovered at the core of the Banking Clan!</i>`,
     })
