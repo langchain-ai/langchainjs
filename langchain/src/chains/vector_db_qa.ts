@@ -1,10 +1,11 @@
-import { BaseChain, SerializedBaseChain, loadQAStuffChain } from "./index.js";
-
+import { BaseChain } from "./base.js";
 import { VectorStore } from "../vectorstores/base.js";
 import { BaseLLM } from "../llms/index.js";
-
+import { SerializedBaseChain, SerializedVectorDBQAChain } from "./serde.js";
 import { resolveConfigFromFile } from "../util/index.js";
 import { ChainValues } from "../schema/index.js";
+import { loadQAStuffChain } from "./question_answering/load.js";
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type LoadValues = Record<string, any>;
 
@@ -16,13 +17,6 @@ export interface VectorDBQAChainInput {
   inputKey: string;
   returnSourceDocuments?: boolean;
 }
-
-export type SerializedVectorDBQAChain = {
-  _type: "vector_db_qa";
-  k: number;
-  combine_documents_chain: SerializedBaseChain;
-  combine_documents_chain_path?: string;
-};
 
 export class VectorDBQAChain extends BaseChain implements VectorDBQAChainInput {
   k = 4;

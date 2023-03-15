@@ -1,30 +1,10 @@
-import type {
-  AnalyzeDocumentChain,
-  ChatVectorDBQAChain,
-  LLMChain,
-  MapReduceDocumentsChain,
-  StuffDocumentsChain,
-  VectorDBQAChain,
-} from "./index.js";
 import { BaseMemory } from "../memory/index.js";
-import { SqlDatabaseChain } from "./sql_db/sql_db_chain.js";
 import { ChainValues } from "../schema/index.js";
 import { CallbackManager, getCallbackManager } from "../callbacks/index.js";
+import { SerializedBaseChain } from "./serde.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type LoadValues = Record<string, any>;
-
-export type SerializedBaseChain = ReturnType<
-  InstanceType<
-    | typeof LLMChain
-    | typeof StuffDocumentsChain
-    | typeof VectorDBQAChain
-    | typeof ChatVectorDBQAChain
-    | typeof MapReduceDocumentsChain
-    | typeof AnalyzeDocumentChain
-    | typeof SqlDatabaseChain
-  >["serialize"]
->;
 
 export interface ChainInputs {
   memory?: BaseMemory;

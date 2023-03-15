@@ -4,7 +4,8 @@ import { Document } from "../document.js";
 export abstract class VectorStore {
   embeddings: Embeddings;
 
-  constructor(embeddings: Embeddings) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  constructor(embeddings: Embeddings, _dbConfig: Record<string, any>) {
     this.embeddings = embeddings;
   }
 

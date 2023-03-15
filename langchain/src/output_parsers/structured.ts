@@ -1,7 +1,8 @@
 /* eslint-disable no-else-return */
 import { z } from "zod";
 
-import { BaseOutputParser, SerializedOutputParser } from "./base.js";
+import { BaseOutputParser } from "./base.js";
+import { SerializedOutputParser } from "./serde.js";
 
 function printSchema(schema: z.ZodTypeAny, depth = 0): string {
   if (schema instanceof z.ZodString) {

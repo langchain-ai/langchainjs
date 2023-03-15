@@ -1,4 +1,5 @@
-import type { BaseExampleSelector, Example } from "../base.js";
+import { Example } from "../../schema/index.js";
+import type { BaseExampleSelector } from "../base.js";
 import { PromptTemplate } from "../prompt.js";
 
 function getLengthBased(text: string): number {
@@ -53,7 +54,7 @@ export class LengthBasedExampleSelector implements BaseExampleSelector {
     const inputs = Object.values(inputVariables).join(" ");
     let remainingLength = this.maxLength - this.getTextLength(inputs);
     let i = 0;
-    const examples = [];
+    const examples: Example[] = [];
 
     while (remainingLength > 0 && i < this.examples.length) {
       const newLength = remainingLength - this.exampleTextLengths[i];

@@ -27,7 +27,7 @@ export class HNSWLib extends SaveableVectorStore {
   args: HNSWLibBase;
 
   constructor(embeddings: Embeddings, args: HNSWLibArgs) {
-    super(embeddings);
+    super(embeddings, args);
     this._index = args.index;
     this.args = args;
     this.embeddings = embeddings;

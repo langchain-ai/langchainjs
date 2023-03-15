@@ -2,11 +2,8 @@ import {
   BasePromptTemplate,
   BaseStringPromptTemplate,
   BasePromptTemplateInput,
-  InputValues,
-  PartialValues,
 } from "./base.js";
 import { DEFAULT_FORMATTER_MAPPING, TemplateFormat } from "./template.js";
-import { SerializedOutputParser } from "../output_parsers/index.js";
 import {
   AIChatMessage,
   BaseChatMessage,
@@ -14,22 +11,26 @@ import {
   ChatMessage,
   HumanChatMessage,
   SystemChatMessage,
+  InputValues,
+  PartialValues,
 } from "../schema/index.js";
 import { PromptTemplate } from "./prompt.js";
-
-/** Serialized Chat prompt template */
-export type SerializedChatPromptTemplate = {
-  _type?: "chat_prompt";
-  input_variables: string[];
-  output_parser?: SerializedOutputParser;
-  template_format?: TemplateFormat;
-  prompt_messages: BaseMessagePromptTemplate[];
-};
+import {
+  SerializedChatPromptTemplate,
+  SerializedMessagePromptTemplate,
+} from "./serde.js";
 
 export abstract class BaseMessagePromptTemplate {
   abstract inputVariables: string[];
 
   abstract formatMessages(values: InputValues): Promise<BaseChatMessage[]>;
+
+  serialize(): SerializedMessagePromptTemplate {
+    return {
+      _type: this.constructor.name,
+      ...JSON.parse(JSON.stringify(this)),
+    };
+  }
 }
 
 export class MessagesPlaceholder extends BaseMessagePromptTemplate {
@@ -246,7 +247,7 @@ export class ChatPromptTemplate
       input_variables: this.inputVariables,
       output_parser: this.outputParser?.serialize(),
       template_format: this.templateFormat,
-      prompt_messages: this.promptMessages,
+      prompt_messages: this.promptMessages.map((m) => m.serialize()),
     };
   }
 

@@ -1,11 +1,5 @@
 import { BaseOutputParser } from "./base.js";
-
-export type SerializedRegexParser = {
-  _type: "regex_parser";
-  regex: string;
-  output_keys: string[];
-  default_output_key?: string;
-};
+import { SerializedRegexParser } from "./serde.js";
 
 /**
  * Class to parse the output of an LLM call into a dictionary.

@@ -1,11 +1,8 @@
 import {
   BaseStringPromptTemplate,
-  InputValues,
   BasePromptTemplateInput,
-  PartialValues,
-  Example,
   BaseExampleSelector,
-} from "./index.js";
+} from "./base.js";
 import {
   TemplateFormat,
   checkValidTemplate,
@@ -16,26 +13,13 @@ import {
   resolveConfigFromFile,
   parseFileConfig,
 } from "../util/index.js";
-import { PromptTemplate, SerializedPromptTemplate } from "./prompt.js";
+import { PromptTemplate } from "./prompt.js";
+import { BaseOutputParser } from "../output_parsers/index.js";
 import {
-  SerializedOutputParser,
-  BaseOutputParser,
-} from "../output_parsers/index.js";
-
-export type SerializedFewShotTemplate = {
-  _type: "few_shot";
-  input_variables: string[];
-  output_parser?: SerializedOutputParser;
-  examples: string | Example[];
-  example_prompt?: SerializedPromptTemplate;
-  example_prompt_path?: string;
-  example_separator: string;
-  prefix?: string;
-  prefix_path?: string;
-  suffix?: string;
-  suffix_path?: string;
-  template_format: TemplateFormat;
-};
+  SerializedFewShotTemplate,
+  SerializedPromptTemplate,
+} from "./serde.js";
+import { Example, InputValues, PartialValues } from "../schema/index.js";
 
 export interface FewShotPromptTemplateInput extends BasePromptTemplateInput {
   /**

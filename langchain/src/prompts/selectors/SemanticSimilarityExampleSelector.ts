@@ -1,7 +1,8 @@
-import { Embeddings } from "embeddings/base.js";
-import { VectorStore } from "vectorstores/base.js";
+import { Embeddings } from "../../embeddings/base.js";
+import { VectorStore } from "../../vectorstores/base.js";
 import { Document } from "../../document.js";
-import type { BaseExampleSelector, Example } from "../base.js";
+import { Example } from "../../schema/index.js";
+import type { BaseExampleSelector } from "../base.js";
 
 function sortedValues<T>(values: Record<string, T>): T[] {
   return Object.keys(values)
@@ -30,12 +31,12 @@ export class SemanticSimilarityExampleSelector implements BaseExampleSelector {
     this.inputKeys = data.inputKeys;
   }
 
-  async addExample(example: Record<string, string>): Promise<void> {
+  async addExample(example: Example): Promise<void> {
     const inputKeys = this.inputKeys ?? Object.keys(example);
     const stringExample = sortedValues(
       inputKeys.reduce(
         (acc, key) => ({ ...acc, [key]: example[key] }),
-        {} as Record<string, string>
+        {} as Example
       )
     ).join(" ");
 
@@ -73,16 +74,14 @@ export class SemanticSimilarityExampleSelector implements BaseExampleSelector {
     return examples;
   }
 
-  static async fromExamples(
+  static async fromExamples<C extends typeof VectorStore>(
     examples: Record<string, string>[],
     embeddings: Embeddings,
-    vectorStoreCls: typeof VectorStore,
+    vectorStoreCls: C,
     options: {
       k?: number;
       inputKeys?: string[];
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      [key: string]: any;
-    } = {}
+    } & Parameters<C["fromTexts"]>[3] = {}
   ): Promise<SemanticSimilarityExampleSelector> {
     const inputKeys = options.inputKeys ?? null;
     const stringExamples = examples.map((example) =>

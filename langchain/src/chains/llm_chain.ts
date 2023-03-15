@@ -1,17 +1,15 @@
-import { BaseChain, ChainInputs } from "./index.js";
-
+import { BaseChain, ChainInputs } from "./base.js";
 import { BaseLLM, SerializedLLM } from "../llms/index.js";
-
 import { BaseMemory, BufferMemory } from "../memory/index.js";
 import {
   BasePromptTemplate,
   PromptTemplate,
   SerializedBasePromptTemplate,
 } from "../prompts/index.js";
-
 import { resolveConfigFromFile } from "../util/index.js";
 import { BaseLanguageModel } from "../base_language/index.js";
 import { ChainValues } from "../schema/index.js";
+import { SerializedLLMChain } from "./serde.js";
 
 export interface LLMChainInput extends ChainInputs {
   /** Prompt object to use */
@@ -22,14 +20,6 @@ export interface LLMChainInput extends ChainInputs {
   /** @ignore */
   outputKey: string;
 }
-
-export type SerializedLLMChain = {
-  _type: "llm_chain";
-  llm?: SerializedLLM;
-  llm_path?: string;
-  prompt?: SerializedBasePromptTemplate;
-  prompt_path?: string;
-};
 
 /**
  * Chain to run queries against LLMs.
