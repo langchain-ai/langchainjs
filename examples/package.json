@@ -28,7 +28,8 @@
     "langchain": "workspace:*",
     "serpapi": "^1.1.0",
     "sqlite3": "^5.1.4",
-    "typeorm": "^0.3.12"
+    "typeorm": "^0.3.12",
+    "zod": "^3.21.4"
   },
   "devDependencies": {
     "@tsconfig/recommended": "^1.0.2",
