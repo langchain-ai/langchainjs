@@ -29,7 +29,7 @@ export class SupabaseVectorStore extends VectorStore {
   queryName: string;
 
   constructor(embeddings: Embeddings, args: SupabaseLibArgs) {
-    super(embeddings);
+    super(embeddings, args);
 
     this.client = args.client;
     this.tableName = args.tableName || "documents";

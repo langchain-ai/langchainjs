@@ -22,7 +22,7 @@ export class Chroma extends VectorStore {
   url: string;
 
   constructor(embeddings: Embeddings, args: ChromaLibArgs) {
-    super(embeddings);
+    super(embeddings, args);
     this.index = args.index;
     this.numDimensions = args.numDimensions;
     this.embeddings = embeddings;

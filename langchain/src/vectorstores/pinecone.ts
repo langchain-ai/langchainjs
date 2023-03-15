@@ -22,7 +22,7 @@ export class PineconeStore extends VectorStore {
   pineconeIndex: VectorOperationsApi;
 
   constructor(embeddings: Embeddings, args: PineconeLibArgs) {
-    super(embeddings);
+    super(embeddings, args);
 
     this.pineconeIndex = args.pineconeIndex;
     this.embeddings = embeddings;

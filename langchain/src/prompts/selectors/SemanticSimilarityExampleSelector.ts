@@ -74,16 +74,14 @@ export class SemanticSimilarityExampleSelector implements BaseExampleSelector {
     return examples;
   }
 
-  static async fromExamples(
+  static async fromExamples<C extends typeof VectorStore>(
     examples: Record<string, string>[],
     embeddings: Embeddings,
-    vectorStoreCls: typeof VectorStore,
+    vectorStoreCls: C,
     options: {
       k?: number;
       inputKeys?: string[];
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      [key: string]: any;
-    } = {}
+    } & Parameters<C["fromTexts"]>[3] = {}
   ): Promise<SemanticSimilarityExampleSelector> {
     const inputKeys = options.inputKeys ?? null;
     const stringExamples = examples.map((example) =>
