@@ -16,11 +16,9 @@ export const run = async () => {
   const textSplitter = new RecursiveCharacterTextSplitter({ chunkSize: 1000 });
   const docs = await textSplitter.createDocuments([text]);
   /* Create the vectorstore */
-  const vectorStore = await Chroma.fromDocuments(
-    docs,
-    new OpenAIEmbeddings(),
-    "state_of_the_union"
-  );
+  const vectorStore = await Chroma.fromDocuments(docs, new OpenAIEmbeddings(), {
+    collectionName: "state_of_the_union",
+  });
   /* Create the chain */
   const chain = ChatVectorDBQAChain.fromLLM(model, vectorStore);
   /* Ask it a question */

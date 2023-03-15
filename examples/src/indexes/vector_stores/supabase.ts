@@ -15,7 +15,7 @@ export const run = async () => {
     {
       client,
       tableName: "documents",
-      queryName: "match_documents"
+      queryName: "match_documents",
     }
   );
 

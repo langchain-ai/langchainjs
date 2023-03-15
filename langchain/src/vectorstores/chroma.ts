@@ -9,25 +9,22 @@ export interface ChromaLibArgs {
   url?: string;
   numDimensions?: number;
   collectionName?: string;
+  index?: ChromaClientT;
 }
 
 export class Chroma extends VectorStore {
   index?: ChromaClientT;
 
-  args: ChromaLibArgs;
-
   collectionName: string;
+
+  numDimensions?: number;
 
   url: string;
 
-  constructor(
-    args: ChromaLibArgs,
-    embeddings: Embeddings,
-    index?: ChromaClientT
-  ) {
+  constructor(embeddings: Embeddings, args: ChromaLibArgs) {
     super(embeddings);
-    this.index = index;
-    this.args = args;
+    this.index = args.index;
+    this.numDimensions = args.numDimensions;
     this.embeddings = embeddings;
     this.collectionName = ensureCollectionName(args.collectionName);
     this.url = args.url || "http://localhost:8000";
@@ -46,8 +43,8 @@ export class Chroma extends VectorStore {
       return;
     }
     if (!this.index) {
-      if (this.args.numDimensions === undefined) {
-        this.args.numDimensions = vectors[0].length;
+      if (this.numDimensions === undefined) {
+        this.numDimensions = vectors[0].length;
       }
       const { ChromaClient } = await Chroma.imports();
       this.index = new ChromaClient(this.url);
@@ -60,9 +57,9 @@ export class Chroma extends VectorStore {
     if (vectors.length !== documents.length) {
       throw new Error(`Vectors and metadatas must have the same length`);
     }
-    if (vectors[0].length !== this.args.numDimensions) {
+    if (vectors[0].length !== this.numDimensions) {
       throw new Error(
-        `Vectors must have the same length as the number of dimensions (${this.args.numDimensions})`
+        `Vectors must have the same length as the number of dimensions (${this.numDimensions})`
       );
     }
 
@@ -127,25 +124,18 @@ export class Chroma extends VectorStore {
       });
       docs.push(newDoc);
     }
-    return Chroma.fromDocuments(
-      docs,
-      embeddings,
-      dbConfig.collectionName,
-      dbConfig.url
-    );
+    return Chroma.fromDocuments(docs, embeddings, dbConfig);
   }
 
   static async fromDocuments(
     docs: Document[],
     embeddings: Embeddings,
-    collectionName?: string,
-    url?: string
+    dbConfig: {
+      collectionName?: string;
+      url?: string;
+    }
   ): Promise<Chroma> {
-    const args: ChromaLibArgs = {
-      collectionName,
-      url,
-    };
-    const instance = new this(args, embeddings);
+    const instance = new this(embeddings, dbConfig);
     await instance.addDocuments(docs);
     return instance;
   }

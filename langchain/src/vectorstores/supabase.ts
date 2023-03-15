@@ -15,6 +15,12 @@ interface SearchEmbeddingsResponse {
   similarity: number;
 }
 
+export interface SupabaseLibArgs {
+  client: SupabaseClient;
+  tableName?: string;
+  queryName?: string;
+}
+
 export class SupabaseVectorStore extends VectorStore {
   client: SupabaseClient;
 
@@ -22,19 +28,12 @@ export class SupabaseVectorStore extends VectorStore {
 
   queryName: string;
 
-  constructor(
-    embeddings: Embeddings,
-    options: {
-      client: SupabaseClient;
-      tableName?: string;
-      queryName?: string;
-    }
-  ) {
+  constructor(embeddings: Embeddings, args: SupabaseLibArgs) {
     super(embeddings);
 
-    this.client = options.client;
-    this.tableName = options.tableName || "documents";
-    this.queryName = options.queryName || "match_documents";
+    this.client = args.client;
+    this.tableName = args.tableName || "documents";
+    this.queryName = args.queryName || "match_documents";
   }
 
   async addDocuments(documents: Document[]): Promise<void> {
@@ -102,11 +101,7 @@ export class SupabaseVectorStore extends VectorStore {
     texts: string[],
     metadatas: object[],
     embeddings: Embeddings,
-    dbConfig: {
-      client: SupabaseClient;
-      tableName?: string;
-      queryName?: string;
-    }
+    dbConfig: SupabaseLibArgs
   ): Promise<SupabaseVectorStore> {
     const docs = [];
     for (let i = 0; i < texts.length; i += 1) {
@@ -122,11 +117,7 @@ export class SupabaseVectorStore extends VectorStore {
   static async fromDocuments(
     docs: Document[],
     embeddings: Embeddings,
-    dbConfig: {
-      client: SupabaseClient;
-      tableName?: string;
-      queryName?: string;
-    }
+    dbConfig: SupabaseLibArgs
   ): Promise<SupabaseVectorStore> {
     const instance = new this(embeddings, dbConfig);
     await instance.addDocuments(docs);
@@ -135,11 +126,7 @@ export class SupabaseVectorStore extends VectorStore {
 
   static async fromExistingIndex(
     embeddings: Embeddings,
-    dbConfig: {
-      client: SupabaseClient;
-      tableName?: string;
-      queryName?: string;
-    }
+    dbConfig: SupabaseLibArgs
   ): Promise<SupabaseVectorStore> {
     const instance = new this(embeddings, dbConfig);
     return instance;
