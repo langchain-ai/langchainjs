@@ -151,6 +151,21 @@ export const getTableAndColumnsName = async (
     return formatToSqlTable(rep);
   }
 
+  if (appDataSource.options.type === "mysql") {
+    sql =
+      "SELECT " +
+      "TABLE_NAME AS table_name, " +
+      "COLUMN_NAME AS column_name, " +
+      "DATA_TYPE AS data_type, " +
+      "IS_NULLABLE AS is_nullable " +
+      "FROM INFORMATION_SCHEMA.COLUMNS " +
+      `WHERE TABLE_SCHEMA = '${appDataSource.options.database}';`;
+
+    const rep = await appDataSource.query(sql);
+
+    return formatToSqlTable(rep);
+  }
+
   throw new Error("Database type not implemented yet");
 };
 
@@ -193,7 +208,13 @@ export const generateTableInfoFromTables = async (
     }
     sqlCreateTableQuery += ") \n";
 
-    const sqlSelectInfoQuery = `SELECT * FROM "${currentTable.tableName}" LIMIT ${nbSampleRow};\n`;
+    let sqlSelectInfoQuery;
+    if (appDataSource.options.type === "mysql") {
+      // We use backticks to quote the table names and thus allow for example spaces in table names
+      sqlSelectInfoQuery = `SELECT * FROM \`${currentTable.tableName}\` LIMIT ${nbSampleRow};\n`;
+    } else {
+      sqlSelectInfoQuery = `SELECT * FROM "${currentTable.tableName}" LIMIT ${nbSampleRow};\n`;
+    }
 
     const columnNamesConcatString = `${currentTable.columns.reduce(
       (completeString, column) => `${completeString} ${column.columnName}`,
