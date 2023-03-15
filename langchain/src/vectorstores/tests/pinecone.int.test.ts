@@ -14,11 +14,11 @@ test("PineconeStore with external ids", async () => {
     apiKey: process.env.PINECONE_API_KEY!,
   });
 
-  const index = client.Index(process.env.PINECONE_INDEX!);
+  const pineconeIndex = client.Index(process.env.PINECONE_INDEX!);
 
   const embeddings = new OpenAIEmbeddings();
 
-  const store = new PineconeStore(index, embeddings);
+  const store = new PineconeStore(embeddings, { pineconeIndex });
 
   expect(store).toBeDefined();
 
@@ -44,11 +44,11 @@ test("PineconeStore with generated ids", async () => {
     apiKey: process.env.PINECONE_API_KEY!,
   });
 
-  const index = client.Index(process.env.PINECONE_INDEX!);
+  const pineconeIndex = client.Index(process.env.PINECONE_INDEX!);
 
   const embeddings = new OpenAIEmbeddings();
 
-  const store = new PineconeStore(index, embeddings);
+  const store = new PineconeStore(embeddings, { pineconeIndex });
 
   expect(store).toBeDefined();
 

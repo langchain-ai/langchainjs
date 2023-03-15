@@ -14,7 +14,7 @@ test("SupabaseVectorStore with external ids", async () => {
 
   const embeddings = new OpenAIEmbeddings();
 
-  const store = new SupabaseVectorStore(client, embeddings);
+  const store = new SupabaseVectorStore(embeddings, { client });
 
   expect(store).toBeDefined();
 

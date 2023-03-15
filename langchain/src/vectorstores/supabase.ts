@@ -15,24 +15,25 @@ interface SearchEmbeddingsResponse {
   similarity: number;
 }
 
+export interface SupabaseLibArgs {
+  client: SupabaseClient;
+  tableName?: string;
+  queryName?: string;
+}
+
 export class SupabaseVectorStore extends VectorStore {
+  client: SupabaseClient;
+
   tableName: string;
 
   queryName: string;
 
-  constructor(
-    public client: SupabaseClient,
-    embeddings: Embeddings,
-    options: {
-      tableName?: string;
-      queryName?: string;
-      withMetadata?: boolean;
-    } = {}
-  ) {
+  constructor(embeddings: Embeddings, args: SupabaseLibArgs) {
     super(embeddings);
 
-    this.tableName = options.tableName || "documents";
-    this.queryName = options.queryName || "match_documents";
+    this.client = args.client;
+    this.tableName = args.tableName || "documents";
+    this.queryName = args.queryName || "match_documents";
   }
 
   async addDocuments(documents: Document[]): Promise<void> {
@@ -100,11 +101,7 @@ export class SupabaseVectorStore extends VectorStore {
     texts: string[],
     metadatas: object[],
     embeddings: Embeddings,
-    {
-      client,
-    }: {
-      client: SupabaseClient;
-    }
+    dbConfig: SupabaseLibArgs
   ): Promise<SupabaseVectorStore> {
     const docs = [];
     for (let i = 0; i < texts.length; i += 1) {
@@ -114,24 +111,24 @@ export class SupabaseVectorStore extends VectorStore {
       });
       docs.push(newDoc);
     }
-    return SupabaseVectorStore.fromDocuments(client, docs, embeddings);
+    return SupabaseVectorStore.fromDocuments(docs, embeddings, dbConfig);
   }
 
   static async fromDocuments(
-    client: SupabaseClient,
     docs: Document[],
-    embeddings: Embeddings
+    embeddings: Embeddings,
+    dbConfig: SupabaseLibArgs
   ): Promise<SupabaseVectorStore> {
-    const instance = new this(client, embeddings);
+    const instance = new this(embeddings, dbConfig);
     await instance.addDocuments(docs);
     return instance;
   }
 
   static async fromExistingIndex(
-    client: SupabaseClient,
-    embeddings: Embeddings
+    embeddings: Embeddings,
+    dbConfig: SupabaseLibArgs
   ): Promise<SupabaseVectorStore> {
-    const instance = new this(client, embeddings);
+    const instance = new this(embeddings, dbConfig);
     return instance;
   }
 }
