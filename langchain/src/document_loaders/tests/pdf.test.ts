@@ -3,7 +3,7 @@ import url from "node:url";
 import path from "node:path";
 import { PDFLoader } from "../pdf.js";
 
-test("Test PDF loader", async () => {
+test("Test PDF loader from file", async () => {
   const filePath = path.resolve(
     path.dirname(url.fileURLToPath(import.meta.url)),
     "./example_data/1706.03762.pdf"

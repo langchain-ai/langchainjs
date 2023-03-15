@@ -1,20 +1,24 @@
 import url from "node:url";
 import path from "node:path";
+import fs from "node:fs/promises";
 import { test, expect } from "@jest/globals";
-import { JSONLoader } from "../json.js";
+import { JSONLinesLoader } from "../jsonl.js";
 import { Document } from "../../document.js";
 
-test("Test JSON loader from file", async () => {
+test("Test JSON loader from blob", async () => {
   const filePath = path.resolve(
     path.dirname(url.fileURLToPath(import.meta.url)),
-    "./example_data/Star_Wars_The_Clone_Wars_S06E07_Crisis_at_the_Heart.json"
+    "./example_data/Star_Wars_The_Clone_Wars_S06E07_Crisis_at_the_Heart.jsonl"
   );
-  const loader = new JSONLoader(filePath);
+  const loader = new JSONLinesLoader(
+    new Blob([await fs.readFile(filePath)], { type: "application/jsonl+json" }),
+    "/html"
+  );
   const docs = await loader.load();
   expect(docs.length).toBe(32);
   expect(docs[0]).toEqual(
     new Document({
-      metadata: { source: filePath, line: 1 },
+      metadata: { source: "blob", blobType: "application/jsonl+json", line: 1 },
       pageContent:
         "<i>Corruption discovered at the core of the Banking Clan!</i>",
     })

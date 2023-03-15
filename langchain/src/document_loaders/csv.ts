@@ -38,8 +38,8 @@ import { TextLoader } from "./text.js";
  * // <i>Corruption discovered at the core of the Banking Clan!</i>
  */
 export class CSVLoader extends TextLoader {
-  constructor(filePath: string, public column?: string) {
-    super(filePath);
+  constructor(filePathOrBlob: string | Blob, public column?: string) {
+    super(filePathOrBlob);
   }
 
   protected async parse(raw: string): Promise<string[]> {

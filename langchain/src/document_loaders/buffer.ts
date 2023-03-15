@@ -3,47 +3,30 @@ import { Document } from "../document.js";
 import { getEnv } from "../util/env.js";
 import { BaseDocumentLoader } from "./base.js";
 
-export class TextLoader extends BaseDocumentLoader {
+export abstract class BufferLoader extends BaseDocumentLoader {
   constructor(public filePathOrBlob: string | Blob) {
     super();
   }
 
-  protected async parse(raw: string): Promise<string[]> {
-    return [raw];
-  }
+  protected abstract parse(
+    raw: Buffer,
+    metadata: Document["metadata"]
+  ): Promise<Document[]>;
 
   public async load(): Promise<Document[]> {
-    let text: string;
+    let buffer: Buffer;
     let metadata: Record<string, string>;
     if (typeof this.filePathOrBlob === "string") {
-      const { readFile } = await TextLoader.imports();
-      text = await readFile(this.filePathOrBlob, "utf8");
+      const { readFile } = await BufferLoader.imports();
+      buffer = await readFile(this.filePathOrBlob);
       metadata = { source: this.filePathOrBlob };
     } else {
-      text = await this.filePathOrBlob.text();
+      buffer = await this.filePathOrBlob
+        .arrayBuffer()
+        .then((ab) => Buffer.from(ab));
       metadata = { source: "blob", blobType: this.filePathOrBlob.type };
     }
-    const parsed = await this.parse(text);
-    parsed.forEach((pageContent, i) => {
-      if (typeof pageContent !== "string") {
-        throw new Error(
-          `Expected string, at position ${i} got ${typeof pageContent}`
-        );
-      }
-    });
-    return parsed.map(
-      (pageContent, i) =>
-        new Document({
-          pageContent,
-          metadata:
-            parsed.length === 1
-              ? metadata
-              : {
-                  ...metadata,
-                  line: i + 1,
-                },
-        })
-    );
+    return this.parse(buffer, metadata);
   }
 
   static async imports(): Promise<{

@@ -52,6 +52,7 @@
   },
   "scripts": {
     "build": "yarn clean && tsc --declaration --outDir dist/ && node create-entrypoints.js",
+    "build:watch": "node create-entrypoints.js && tsc --declaration --outDir dist/ --watch",
     "lint": "eslint src",
     "lint:fix": "yarn lint --fix",
     "precommit": "tsc --noEmit && lint-staged",
@@ -59,7 +60,7 @@
     "prepack": "yarn build",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest --testPathIgnorePatterns=\\.int\\.test.ts",
     "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch --testPathIgnorePatterns=\\.int\\.test.ts",
-    "test:node16": "NODE_OPTIONS='--experimental-vm-modules --experimental-fetch' jest --testPathIgnorePatterns=\\.int\\.test.ts",
+    "test:node16": "NODE_OPTIONS='--experimental-vm-modules --experimental-fetch' jest --testPathIgnorePatterns=\\.int\\.test.ts --testPathIgnorePatterns=\\.blob\\.test.ts",
     "test:integration": "NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern=\\.int\\.test.ts --testTimeout 50000",
     "prepare": "husky install",
     "format": "prettier --write \"src\"",
