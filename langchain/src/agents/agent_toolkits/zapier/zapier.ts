@@ -18,7 +18,8 @@ export class ZapierToolKit extends Toolkit {
       const tool = new ZapierNLARunAction(
         zapierNLAWrapper,
         action.id,
-        action.description
+        action.description,
+        action.params
       );
       toolkit.tools.push(tool);
     }
