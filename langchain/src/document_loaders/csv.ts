@@ -1,5 +1,3 @@
-import { csvParse } from "d3-dsv";
-
 import { TextLoader } from "./text.js";
 
 /**
@@ -43,6 +41,7 @@ export class CSVLoader extends TextLoader {
   }
 
   protected async parse(raw: string): Promise<string[]> {
+    const { csvParse } = await CSVLoaderImports();
     const parsed = csvParse(raw.trim());
     const { column } = this;
 
@@ -60,6 +59,18 @@ export class CSVLoader extends TextLoader {
       Object.keys(row)
         .map((key) => `${key.trim()}: ${row[key]?.trim()}`)
         .join("\n")
+    );
+  }
+}
+
+async function CSVLoaderImports() {
+  try {
+    const { csvParse } = await import("d3-dsv");
+    return { csvParse };
+  } catch (e) {
+    console.error(e);
+    throw new Error(
+      "Please install d3-dsv as a dependency with, e.g. `yarn add d3-dsv`"
     );
   }
 }

@@ -1,4 +1,4 @@
-import { DataSource, DataSourceOptions } from "typeorm";
+import type { DataSource, DataSourceOptions } from "typeorm";
 
 interface RawResultTableAndColumn {
   table_name: string;

@@ -2,7 +2,24 @@
 
 The `SqlDatabaseChain` allows you to answer questions over a SQL database.
 This example uses Chinook database, which is a sample database available for SQL Server, Oracle, MySQL, etc.
-To set it up follow the instructions on https://database.guide/2-sample-databases-sqlite/.
+
+## Set up
+
+First install `typeorm`:
+
+```bash npm2yarn
+npm install typeorm
+```
+
+Then install the dependencies needed for your database. For example, for SQLite:
+
+```bash npm2yarn
+npm install sqlite3
+```
+
+For other databases see https://typeorm.io/#installation
+
+Finally follow the instructions on https://database.guide/2-sample-databases-sqlite/ to get the sample database for this example.
 
 ```typescript
 import { DataSource } from "typeorm";
