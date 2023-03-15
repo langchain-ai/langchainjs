@@ -1,3 +1,5 @@
+export type Example = Record<string, string>;
+
 /**
  * Output of a single generation.
  */

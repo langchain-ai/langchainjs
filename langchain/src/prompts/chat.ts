@@ -6,7 +6,6 @@ import {
   PartialValues,
 } from "./base.js";
 import { DEFAULT_FORMATTER_MAPPING, TemplateFormat } from "./template.js";
-import { SerializedOutputParser } from "../output_parsers/index.js";
 import {
   AIChatMessage,
   BaseChatMessage,
@@ -16,15 +15,7 @@ import {
   SystemChatMessage,
 } from "../schema/index.js";
 import { PromptTemplate } from "./prompt.js";
-
-/** Serialized Chat prompt template */
-export type SerializedChatPromptTemplate = {
-  _type?: "chat_prompt";
-  input_variables: string[];
-  output_parser?: SerializedOutputParser;
-  template_format?: TemplateFormat;
-  prompt_messages: BaseMessagePromptTemplate[];
-};
+import { SerializedChatPromptTemplate } from "./serde.js";
 
 export abstract class BaseMessagePromptTemplate {
   abstract inputVariables: string[];

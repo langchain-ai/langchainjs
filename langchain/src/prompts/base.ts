@@ -1,16 +1,6 @@
 import { BaseOutputParser } from "../output_parsers/index.js";
-import type { PromptTemplate } from "./prompt.js";
-import type { ChatPromptTemplate } from "./chat.js";
-import type { FewShotPromptTemplate } from "./few_shot.js";
-import { BasePromptValue, HumanChatMessage } from "../schema/index.js";
-
-export type SerializedBasePromptTemplate = ReturnType<
-  InstanceType<
-    | typeof PromptTemplate
-    | typeof FewShotPromptTemplate
-    | typeof ChatPromptTemplate
-  >["serialize"]
->;
+import { BasePromptValue, Example, HumanChatMessage } from "../schema/index.js";
+import { SerializedBasePromptTemplate } from "./serde.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type InputValues = Record<string, any>;
@@ -169,8 +159,6 @@ export abstract class BaseStringPromptTemplate extends BasePromptTemplate {
 /**
  * Base class for example selectors.
  */
-export type Example = Record<string, string>;
-
 export abstract class BaseExampleSelector {
   abstract addExample(example: Example): Promise<void | string>;
 
