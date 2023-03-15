@@ -20,14 +20,13 @@ const model = new OpenAI({});
 const text = fs.readFileSync("state_of_the_union.txt", "utf8");
 /* Split the text into chunks */
 const textSplitter = new RecursiveCharacterTextSplitter({ chunkSize: 1000 });
-const docs = textSplitter.createDocuments([text]);
+const docs = await textSplitter.createDocuments([text]);
 /* Create the vectorstore */
 const vectorStore = await HNSWLib.fromDocuments(docs, new OpenAIEmbeddings());
 /* Create the chain */
 const chain = VectorDBQAChain.fromLLM(model, vectorStore);
 /* Ask it a question */
 const res = await chain.call({
-  input_documents: docs,
   query: "What did the president say about Justice Breyer?",
 });
 ```
