@@ -10380,7 +10380,6 @@ __metadata:
     eslint-plugin-prettier: ^4.2.1
     js-yaml: ^4.1.0
     langchain: "workspace:*"
-    openai: ^3.1.0
     prettier: ^2.8.3
     serpapi: ^1.1.0
     sqlite3: ^5.1.4
@@ -10455,11 +10454,14 @@ __metadata:
     cheerio: ^1.0.0-rc.12
     chromadb: ^1.3.0
     cohere-ai: ^5.0.2
+    d3-dsv: ^3.0.1
     hnswlib-node: ^1.4.2
+    pdf-parse: ^1.1.1
     puppeteer: ^19.7.2
     redis: ^4.6.4
     serpapi: ^1.1.1
     srt-parser-2: ^1.2.2
+    typeorm: ^0.3.12
   peerDependenciesMeta:
     "@dqbd/tiktoken":
       optional: true
@@ -10475,7 +10477,11 @@ __metadata:
       optional: true
     cohere-ai:
       optional: true
+    d3-dsv:
+      optional: true
     hnswlib-node:
+      optional: true
+    pdf-parse:
       optional: true
     puppeteer:
       optional: true
@@ -10484,6 +10490,8 @@ __metadata:
     serpapi:
       optional: true
     srt-parser-2:
+      optional: true
+    typeorm:
       optional: true
   languageName: unknown
   linkType: soft
