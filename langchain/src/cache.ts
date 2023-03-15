@@ -1,4 +1,4 @@
-import crypto from "node:crypto";
+import hash from "object-hash";
 import type { RedisClientType } from "redis";
 import { Generation } from "./schema/index.js";
 
@@ -12,11 +12,7 @@ import { Generation } from "./schema/index.js";
  *
  * TODO: Make cache key consistent across versions of langchain.
  */
-
-const getCacheKey = (prompt: string, llmKey: string, idx?: string): string => {
-  const key = `${prompt}_${llmKey}${idx ? `_${idx}` : ""}`;
-  return crypto.createHash("sha256").update(key).digest("hex");
-};
+const getCacheKey = (...strings: string[]): string => hash(strings.join("_"));
 
 export abstract class BaseCache<T = Generation[]> {
   abstract lookup(prompt: string, llmKey: string): Promise<T | null>;
