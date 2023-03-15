@@ -12,3 +12,4 @@ export {
   createVectorStoreAgent,
   createVectorStoreRouterAgent,
 } from "./vectorstore/vectorstore.js";
+export { ZapierToolKit } from "./zapier/zapier.js";

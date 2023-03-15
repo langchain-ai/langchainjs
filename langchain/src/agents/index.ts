@@ -16,6 +16,7 @@ export {
   VectorStoreInfo,
   VectorStoreToolkit,
   VectorStoreRouterToolkit,
+  ZapierToolKit,
   createSqlAgent,
   createJsonAgent,
   createOpenApiAgent,
