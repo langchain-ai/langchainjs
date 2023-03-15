@@ -42,15 +42,15 @@ In this code snippet, the fromLLM method of the ChatVectorDBQAChain class has th
 
 ```typescript
 static fromLLM(
-    llm: BaseLLM,
-    vectorstore: VectorStore,
-    options?: {
-      questionGeneratorTemplate?: string;
-      qaTemplate?: string;
-      returnSourceDocuments?: boolean;
-      k?: number;
-    }
-  ): ChatVectorDBQAChain
+  llm: BaseLLM,
+  vectorstore: VectorStore,
+  options?: {
+    questionGeneratorTemplate?: string;
+    qaTemplate?: string;
+    returnSourceDocuments?: boolean;
+    k?: number;
+  }
+): ChatVectorDBQAChain
 ```
 
 Here's an explanation of each of the attributes of the options object:
