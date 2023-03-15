@@ -1,6 +1,10 @@
 import { test, expect } from "@jest/globals";
 import { ChatOpenAI } from "../openai.js";
-import { HumanChatMessage, SystemChatMessage } from "../../schema/index.js";
+import {
+  HumanChatMessage,
+  LLMResult,
+  SystemChatMessage,
+} from "../../schema/index.js";
 import { ChatPromptValue } from "../../prompts/chat.js";
 import {
   PromptTemplate,
@@ -41,6 +45,28 @@ test("Test ChatOpenAI Generate", async () => {
     }
   }
   console.log({ res });
+});
+
+test("Test ChatOpenAI tokenUsage", async () => {
+  let tokenUsage = {
+    completionTokens: 0,
+    promptTokens: 0,
+    totalTokens: 0,
+  };
+
+  const model = new ChatOpenAI({
+    modelName: "gpt-3.5-turbo",
+    callbackManager: CallbackManager.fromHandlers({
+      async handleLLMEnd(output: LLMResult) {
+        tokenUsage = output.llmOutput?.tokenUsage;
+      },
+    }),
+  });
+  const message = new HumanChatMessage("Hello");
+  const res = await model.call([message]);
+  console.log({ res });
+
+  expect(tokenUsage.promptTokens).toBe(1);
 });
 
 test("Test ChatOpenAI in streaming mode", async () => {
