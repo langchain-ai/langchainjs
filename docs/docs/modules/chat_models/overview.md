@@ -311,13 +311,13 @@ console.log(responseG);
 
 ## Streaming
 
-You can also use the streaming API to get words streamed back to you as they are generated. This is useful for eg. chatbots, where you want to show the user what is being generated as it is being generated.
+You can also use the streaming API to get words streamed back to you as they are generated. This is useful for eg. chatbots, where you want to show the user what is being generated as it is being generated. Note: OpenAI as of this writing does not support tokenUsage reporting while streaming is enabled.
 
 ```typescript
 const chatStreaming = new ChatOpenAI({
   streaming: true,
-  callbackManager: {
-    handleNewToken(token) {
+  callbackManager: CallbackManager.fromHandlers({
+    handleLLMNewToken(token: string) {
       console.log(token);
     },
   },

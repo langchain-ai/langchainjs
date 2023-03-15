@@ -5,7 +5,7 @@ import { CallbackManager } from "langchain/callbacks";
 
 export const run = async () => {
   const manager = CallbackManager.fromHandlers({
-    async handleLLMNewToken(token) {
+    async handleLLMNewToken(token: string) {
       console.log({ token });
     },
   });
