@@ -6767,7 +6767,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"dpdm@npm:^3.12.0":
+"dpdm@npm:3.12.0":
   version: 3.12.0
   resolution: "dpdm@npm:3.12.0"
   dependencies:
@@ -6784,6 +6784,26 @@ __metadata:
   bin:
     dpdm: lib/bin/dpdm.js
   checksum: af612fe53f7d1a68f9735e66fa593f76b58963625205c5491bbb6e3127449d9e28f23854cef33c36ac279dc114ada4c0f6e5e930cb85353b7c513e117623ea1e
+  languageName: node
+  linkType: hard
+
+"dpdm@patch:dpdm@npm%3A3.12.0#./.yarn/patches/dpdm-npm-3.12.0-0dfdd8e3b8.patch::locator=root-workspace-0b6124%40workspace%3A.":
+  version: 3.12.0
+  resolution: "dpdm@patch:dpdm@npm%3A3.12.0#./.yarn/patches/dpdm-npm-3.12.0-0dfdd8e3b8.patch::version=3.12.0&hash=2406a8&locator=root-workspace-0b6124%40workspace%3A."
+  dependencies:
+    "@types/fs-extra": ^11.0.1
+    "@types/glob": ^8.0.0
+    "@types/yargs": ^17.0.19
+    chalk: ^4.1.2
+    fs-extra: ^11.1.0
+    glob: ^8.1.0
+    ora: ^5.4.1
+    tslib: ^2.4.1
+    typescript: ^4.9.4
+    yargs: ^17.6.2
+  bin:
+    dpdm: lib/bin/dpdm.js
+  checksum: 458d48c62cc48437f89814adfcfae0a22d920080d32549b4d68d32a33f4ad10b404f29a14a10d7a808814651b652631216a999853381fa9671ea6ede1cee3b5d
   languageName: node
   linkType: hard
 

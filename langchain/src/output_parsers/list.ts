@@ -1,8 +1,6 @@
 import { BaseOutputParser } from "./base.js";
+import { SerializedCommaSeparatedListOutputParser } from "./serde.js";
 
-export type SerializedCommaSeparatedListOutputParser = {
-  _type: "comma_separated_list";
-};
 /**
  * Class to parse the output of an LLM call to a list.
  * @augments BaseOutputParser

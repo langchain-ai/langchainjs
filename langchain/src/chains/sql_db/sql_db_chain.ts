@@ -7,13 +7,7 @@ import { SqlDatabase } from "../../sql_db.js";
 import { resolveConfigFromFile } from "../../util/index.js";
 import { SerializedSqlDatabase } from "../../util/sql_utils.js";
 import { ChainValues } from "../../schema/index.js";
-
-export type SerializedSqlDatabaseChain = {
-  sql_database: SerializedSqlDatabase;
-  _type: "sql_database_chain";
-  llm: SerializedLLM;
-  sql_database_chain_path?: string;
-};
+import { SerializedSqlDatabaseChain } from "../serde.js";
 
 export class SqlDatabaseChain extends BaseChain {
   // LLM wrapper to use

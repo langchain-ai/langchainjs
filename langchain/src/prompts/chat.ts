@@ -2,8 +2,6 @@ import {
   BasePromptTemplate,
   BaseStringPromptTemplate,
   BasePromptTemplateInput,
-  InputValues,
-  PartialValues,
 } from "./base.js";
 import { DEFAULT_FORMATTER_MAPPING, TemplateFormat } from "./template.js";
 import {
@@ -13,6 +11,8 @@ import {
   ChatMessage,
   HumanChatMessage,
   SystemChatMessage,
+  InputValues,
+  PartialValues,
 } from "../schema/index.js";
 import { PromptTemplate } from "./prompt.js";
 import {

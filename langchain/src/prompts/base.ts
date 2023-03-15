@@ -1,13 +1,12 @@
 import { BaseOutputParser } from "../output_parsers/index.js";
-import { BasePromptValue, Example, HumanChatMessage } from "../schema/index.js";
+import {
+  BasePromptValue,
+  Example,
+  HumanChatMessage,
+  InputValues,
+  PartialValues,
+} from "../schema/index.js";
 import { SerializedBasePromptTemplate } from "./serde.js";
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type InputValues = Record<string, any>;
-export type PartialValues = Record<
-  string,
-  string | (() => Promise<string>) | (() => string)
->;
 
 export class StringPromptValue {
   value: string;

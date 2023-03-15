@@ -1,4 +1,4 @@
-import { BaseChain } from "./index.js";
+import { BaseChain } from "./base.js";
 import { loadFromHub } from "../util/hub.js";
 import {
   FileLoader,

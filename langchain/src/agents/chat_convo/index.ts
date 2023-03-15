@@ -26,10 +26,8 @@ import {
   AIChatMessage,
   HumanChatMessage,
 } from "../../schema/index.js";
-import {
-  BaseOutputParser,
-  SerializedOutputParser,
-} from "../../output_parsers/base.js";
+import { BaseOutputParser } from "../../output_parsers/base.js";
+import { SerializedOutputParser } from "../../output_parsers/serde.js";
 
 export class AgentOutputParser extends BaseOutputParser {
   parse(text: string): unknown {

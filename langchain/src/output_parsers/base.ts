@@ -1,11 +1,4 @@
-import type {
-  SerializedRegexParser,
-  SerializedCommaSeparatedListOutputParser,
-} from "./index.js";
-
-export type SerializedOutputParser =
-  | SerializedRegexParser
-  | SerializedCommaSeparatedListOutputParser;
+import { SerializedOutputParser } from "./serde.js";
 
 /**
  * Class to parse the output of an LLM call.

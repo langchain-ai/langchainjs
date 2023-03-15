@@ -1,18 +1,17 @@
-import {
-  BaseChain,
-  LLMChain,
-  loadQAStuffChain,
-  SerializedBaseChain,
-  SerializedLLMChain,
-} from "./index.js";
-
 import { PromptTemplate } from "../prompts/index.js";
-
 import { BaseLLM } from "../llms/index.js";
 import { VectorStore } from "../vectorstores/base.js";
-
+import {
+  SerializedBaseChain,
+  SerializedChatVectorDBQAChain,
+  SerializedLLMChain,
+} from "./serde.js";
 import { resolveConfigFromFile } from "../util/index.js";
 import { ChainValues } from "../schema/index.js";
+import { BaseChain } from "./base.js";
+import { LLMChain } from "./llm_chain.js";
+import { loadQAStuffChain } from "./question_answering/load.js";
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type LoadValues = Record<string, any>;
 
@@ -42,14 +41,6 @@ export interface ChatVectorDBQAChainInput {
   outputKey: string;
   inputKey: string;
 }
-
-export type SerializedChatVectorDBQAChain = {
-  _type: "chat-vector-db";
-  k: number;
-  combine_documents_chain: SerializedBaseChain;
-  combine_documents_chain_path?: string;
-  question_generator: SerializedLLMChain;
-};
 
 export class ChatVectorDBQAChain
   extends BaseChain

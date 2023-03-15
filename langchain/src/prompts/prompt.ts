@@ -1,9 +1,4 @@
-import type {
-  BasePromptTemplateInput,
-  InputValues,
-  PartialValues,
-} from "./index.js";
-import { BaseStringPromptTemplate } from "./base.js";
+import { BaseStringPromptTemplate, BasePromptTemplateInput } from "./base.js";
 import {
   checkValidTemplate,
   parseTemplate,
@@ -13,6 +8,7 @@ import {
 import { resolveTemplateFromFile } from "../util/index.js";
 import { BaseOutputParser } from "../output_parsers/index.js";
 import { SerializedPromptTemplate } from "./serde.js";
+import { InputValues, PartialValues } from "../schema/index.js";
 
 /**
  * Inputs to create a {@link PromptTemplate}

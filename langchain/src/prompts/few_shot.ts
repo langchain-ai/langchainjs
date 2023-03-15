@@ -1,11 +1,8 @@
-import { BaseStringPromptTemplate } from "./base.js";
-import type {
-  InputValues,
+import {
+  BaseStringPromptTemplate,
   BasePromptTemplateInput,
-  PartialValues,
-  Example,
   BaseExampleSelector,
-} from "./index.js";
+} from "./base.js";
 import {
   TemplateFormat,
   checkValidTemplate,
@@ -22,6 +19,7 @@ import {
   SerializedFewShotTemplate,
   SerializedPromptTemplate,
 } from "./serde.js";
+import { Example, InputValues, PartialValues } from "../schema/index.js";
 
 export interface FewShotPromptTemplateInput extends BasePromptTemplateInput {
   /**

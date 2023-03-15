@@ -1,6 +1,6 @@
-import type { SerializedOutputParser } from "../output_parsers";
-import { Example } from "../schema";
-import type { TemplateFormat } from "./template";
+import type { SerializedOutputParser } from "../output_parsers/index.js";
+import type { Example } from "../schema/index.js";
+import type { TemplateFormat } from "./template.js";
 
 export type SerializedPromptTemplate = {
   _type?: "prompt";
