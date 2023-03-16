@@ -12,7 +12,12 @@ module.exports = {
     sourceType: "module",
   },
   plugins: ["@typescript-eslint", "tree-shaking"],
-  ignorePatterns: [".eslintrc.cjs", "create-entrypoints.js", "node_modules"],
+  ignorePatterns: [
+    ".eslintrc.cjs",
+    "create-entrypoints.js",
+    "check-tree-shaking.js",
+    "node_modules",
+  ],
   rules: {
     "tree-shaking/no-side-effects-in-initialization": 2,
     "@typescript-eslint/explicit-module-boundary-types": 0,

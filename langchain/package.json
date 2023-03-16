@@ -102,6 +102,7 @@
     "prettier": "^2.8.3",
     "puppeteer": "^19.7.2",
     "redis": "^4.6.4",
+    "rollup": "^3.19.1",
     "serpapi": "^1.1.1",
     "sqlite3": "^5.1.4",
     "srt-parser-2": "^1.2.2",

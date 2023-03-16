@@ -23,22 +23,19 @@ export abstract class BaseCache<T = Generation[]> {
 const GLOBAL_MAP = new Map();
 
 export class InMemoryCache<T = Generation[]> extends BaseCache<T> {
-  // eslint-disable-next-line tree-shaking/no-side-effects-in-initialization
-  #cache: Map<string, T>;
+  private cache: Map<string, T>;
 
   constructor(map?: Map<string, T>) {
     super();
-    this.#cache = map ?? new Map();
+    this.cache = map ?? new Map();
   }
 
   lookup(prompt: string, llmKey: string): Promise<T | null> {
-    return Promise.resolve(
-      this.#cache.get(getCacheKey(prompt, llmKey)) ?? null
-    );
+    return Promise.resolve(this.cache.get(getCacheKey(prompt, llmKey)) ?? null);
   }
 
   async update(prompt: string, llmKey: string, value: T): Promise<void> {
-    this.#cache.set(getCacheKey(prompt, llmKey), value);
+    this.cache.set(getCacheKey(prompt, llmKey), value);
   }
 
   static global(): InMemoryCache {
@@ -51,12 +48,11 @@ export class InMemoryCache<T = Generation[]> extends BaseCache<T> {
  * TODO: Generalize to support other types.
  */
 export class RedisCache extends BaseCache<Generation[]> {
-  // eslint-disable-next-line tree-shaking/no-side-effects-in-initialization
-  #redisClient: RedisClientType;
+  private redisClient: RedisClientType;
 
   constructor(redisClient: RedisClientType) {
     super();
-    this.#redisClient = redisClient;
+    this.redisClient = redisClient;
   }
 
   public async lookup(
@@ -65,7 +61,7 @@ export class RedisCache extends BaseCache<Generation[]> {
   ): Promise<Generation[] | null> {
     let idx = 0;
     let key = getCacheKey(prompt, llmKey, String(idx));
-    let value = await this.#redisClient.get(key);
+    let value = await this.redisClient.get(key);
     const generations: Generation[] = [];
 
     while (value) {
@@ -76,7 +72,7 @@ export class RedisCache extends BaseCache<Generation[]> {
       generations.push({ text: value });
       idx += 1;
       key = getCacheKey(prompt, llmKey, String(idx));
-      value = await this.#redisClient.get(key);
+      value = await this.redisClient.get(key);
     }
 
     return generations.length > 0 ? generations : null;
@@ -89,7 +85,7 @@ export class RedisCache extends BaseCache<Generation[]> {
   ): Promise<void> {
     for (let i = 0; i < value.length; i += 1) {
       const key = getCacheKey(prompt, llmKey, String(i));
-      await this.#redisClient.set(key, value[i].text);
+      await this.redisClient.set(key, value[i].text);
     }
   }
 }
