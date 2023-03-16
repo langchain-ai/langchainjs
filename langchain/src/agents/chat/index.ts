@@ -1,5 +1,5 @@
 import { LLMChain } from "../../chains/index.js";
-import { Agent, StaticAgent, staticImplements } from "../agent.js";
+import { Agent } from "../agent.js";
 import {
   SystemMessagePromptTemplate,
   HumanMessagePromptTemplate,
@@ -27,9 +27,7 @@ type ZeroShotAgentInput = AgentInput;
 /**
  * Agent for the MRKL chain.
  * @augments Agent
- * @augments StaticAgent
  */
-@(staticImplements<StaticAgent>)
 export class ChatAgent extends Agent {
   constructor(input: ZeroShotAgentInput) {
     super(input);

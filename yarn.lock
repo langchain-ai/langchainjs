@@ -3081,18 +3081,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@rollup/plugin-virtual@npm:^3.0.1":
-  version: 3.0.1
-  resolution: "@rollup/plugin-virtual@npm:3.0.1"
-  peerDependencies:
-    rollup: ^1.20.0||^2.0.0||^3.0.0
-  peerDependenciesMeta:
-    rollup:
-      optional: true
-  checksum: 93800884956299b071383e1a051323ed38acfffdb64bbd6f3b909a052e506e236eb9022e43b3a039425aa45a33367c9fd50f85a3a867a1259a9862086143bd42
-  languageName: node
-  linkType: hard
-
 "@sideway/address@npm:^4.1.3":
   version: 4.1.4
   resolution: "@sideway/address@npm:4.1.4"
@@ -4308,7 +4296,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"acorn@npm:^8.0.4, acorn@npm:^8.4.1, acorn@npm:^8.5.0, acorn@npm:^8.7.1, acorn@npm:^8.8.0, acorn@npm:^8.8.1":
+"acorn@npm:^8.0.4, acorn@npm:^8.4.1, acorn@npm:^8.5.0, acorn@npm:^8.7.1, acorn@npm:^8.8.0":
   version: 8.8.2
   resolution: "acorn@npm:8.8.2"
   bin:
@@ -4321,19 +4309,6 @@ __metadata:
   version: 1.2.2
   resolution: "address@npm:1.2.2"
   checksum: ace439960c1e3564d8f523aff23a841904bf33a2a7c2e064f7f60a064194075758b9690e65bd9785692a4ef698a998c57eb74d145881a1cecab8ba658ddb1607
-  languageName: node
-  linkType: hard
-
-"agadoo@npm:^3.0.0":
-  version: 3.0.0
-  resolution: "agadoo@npm:3.0.0"
-  dependencies:
-    "@rollup/plugin-virtual": ^3.0.1
-    acorn: ^8.8.1
-    rollup: ^3.5.0
-  bin:
-    agadoo: cli.js
-  checksum: 9b36cec3c4e7b77ecde186c883f097f045a3fb419f59f00784053bc6c2dab2356825a7dbcba2fd95590f9d24bbfb02d84f00444fea60a8f6e10241d025ff51ba
   languageName: node
   linkType: hard
 
@@ -10440,7 +10415,6 @@ __metadata:
     "@types/uuid": ^9
     "@typescript-eslint/eslint-plugin": ^5.51.0
     "@typescript-eslint/parser": ^5.51.0
-    agadoo: ^3.0.0
     babel-jest: ^29.5.0
     browser-or-node: ^2.1.1
     cheerio: ^1.0.0-rc.12
@@ -13622,7 +13596,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"rollup@npm:^3.19.1, rollup@npm:^3.5.0":
+"rollup@npm:^3.19.1":
   version: 3.19.1
   resolution: "rollup@npm:3.19.1"
   dependencies:

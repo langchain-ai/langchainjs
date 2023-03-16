@@ -8,7 +8,7 @@ import {
   SerializedFromLLMAndTools,
   SerializedZeroShotAgent,
 } from "../types.js";
-import { Agent, StaticAgent, staticImplements } from "../agent.js";
+import { Agent } from "../agent.js";
 import { Tool } from "../tools/base.js";
 
 const FINAL_ANSWER_ACTION = "Final Answer:";
@@ -27,9 +27,7 @@ type ZeroShotAgentInput = AgentInput;
 /**
  * Agent for the MRKL chain.
  * @augments Agent
- * @augments StaticAgent
  */
-@(staticImplements<StaticAgent>)
 export class ZeroShotAgent extends Agent {
   constructor(input: ZeroShotAgentInput) {
     super(input);

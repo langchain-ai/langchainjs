@@ -51,7 +51,7 @@
   "scripts": {
     "build": "yarn clean && tsc --declaration --outDir dist/ && node create-entrypoints.js",
     "build:watch": "node create-entrypoints.js && tsc --declaration --outDir dist/ --watch",
-    "lint": "eslint src && dpdm --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
+    "lint": "eslint src && dpdm --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts && node check-tree-shaking.js",
     "lint:fix": "yarn lint --fix",
     "precommit": "tsc --noEmit && lint-staged",
     "clean": "rm -rf dist/ && node create-entrypoints.js clean",
@@ -81,7 +81,6 @@
     "@types/uuid": "^9",
     "@typescript-eslint/eslint-plugin": "^5.51.0",
     "@typescript-eslint/parser": "^5.51.0",
-    "agadoo": "^3.0.0",
     "babel-jest": "^29.5.0",
     "cheerio": "^1.0.0-rc.12",
     "cohere-ai": "^5.0.2",

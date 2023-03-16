@@ -1,8 +1,9 @@
 import fs from "fs/promises";
 import { rollup } from "rollup";
 
-export async function listEntrypoints() {
-  const packageJson = JSON.parse(await fs.readFile("package.json", "utf-8"));
+const packageJson = JSON.parse(await fs.readFile("package.json", "utf-8"));
+
+export function listEntrypoints() {
   const exports = packageJson.exports;
   const entrypoints = [];
 
@@ -17,8 +18,19 @@ export async function listEntrypoints() {
   return entrypoints;
 }
 
+export function listExternals() {
+  return [
+    ...Object.keys(packageJson.dependencies),
+    ...Object.keys(packageJson.peerDependencies),
+    /node\:/,
+    "axios", // axios is a dependency of openai
+    "pdf-parse/lib/pdf-parse.js",
+  ];
+}
+
 export async function checkTreeShaking() {
-  const entrypoints = await listEntrypoints();
+  const externals = listExternals();
+  const entrypoints = listEntrypoints();
   const consoleLog = console.log;
   const reportMap = new Map();
 
@@ -33,6 +45,7 @@ export async function checkTreeShaking() {
     };
 
     await rollup({
+      external: externals,
       input: entrypoint,
       experimentalLogSideEffects: true,
     });
@@ -57,6 +70,8 @@ export async function checkTreeShaking() {
 
   if (failed) {
     process.exit(1);
+  } else {
+    console.log("Tree shaking checks passed!");
   }
 }
 

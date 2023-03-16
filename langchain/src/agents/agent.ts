@@ -20,31 +20,6 @@ class ParseError extends Error {
   }
 }
 
-// Hacky workaround to add static abstract methods. See detailed description of
-// issue here: https://stackoverflow.com/a/65847601
-export interface StaticAgent {
-  /**
-   * Create a prompt for this class
-   *
-   * @param tools - List of tools the agent will have access to, used to format the prompt.
-   * @param fields - Additional fields used to format the prompt.
-   *
-   * @returns A PromptTemplate assembled from the given tools and fields.
-   * */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  createPrompt(tools: Tool[], fields?: Record<string, any>): BasePromptTemplate;
-  /** Construct an agent from an LLM and a list of tools */
-  fromLLMAndTools(
-    llm: BaseLLM,
-    tools: Tool[],
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    args?: Record<string, any>
-  ): Agent;
-  validateTools(_: Tool[]): void;
-}
-
-export const staticImplements = <T>(_: T) => {};
-
 /**
  * Class responsible for calling a language model and deciding an action.
  *
@@ -96,10 +71,35 @@ export abstract class Agent {
   prepareForNewCall(): void {}
 
   /**
+   * Create a prompt for this class
+   *
+   * @param tools - List of tools the agent will have access to, used to format the prompt.
+   * @param fields - Additional fields used to format the prompt.
+   *
+   * @returns A PromptTemplate assembled from the given tools and fields.
+   * */
+  static createPrompt(
+    _tools: Tool[],
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    _fields?: Record<string, any>
+  ): BasePromptTemplate {
+    throw new Error("Not implemented");
+  }
+
+  /** Construct an agent from an LLM and a list of tools */
+  static fromLLMAndTools(
+    _llm: BaseLLM,
+    _tools: Tool[],
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    _args?: Record<string, any>
+  ): Agent {
+    throw new Error("Not implemented");
+  }
+
+  /**
    * Validate that appropriate tools are passed in
    */
-  // eslint-disable-next-line no-unused-vars
-  static validateTools(_: Tool[]): void {}
+  static validateTools(_tools: Tool[]): void {}
 
   _stop(): string[] {
     return [`\n${this.observationPrefix()}`];

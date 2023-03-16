@@ -4,11 +4,16 @@ import { Document } from "../document.js";
 import { getEnv } from "../util/env.js";
 import { BaseDocumentLoader } from "./base.js";
 
-export enum UnknownHandling {
-  Ignore = "ignore",
-  Warn = "warn",
-  Error = "error",
-}
+// TypeScript enums are not tree-shakeable, so doing this instead
+// See https://bargsten.org/jsts/enums/
+export const UnknownHandling = {
+  Ignore: "ignore",
+  Warn: "warn",
+  Error: "error",
+} as const;
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export type UnknownHandling =
+  (typeof UnknownHandling)[keyof typeof UnknownHandling];
 
 export class DirectoryLoader extends BaseDocumentLoader {
   constructor(
@@ -37,7 +42,7 @@ export class DirectoryLoader extends BaseDocumentLoader {
     const { readdir, extname, resolve } = await DirectoryLoader.imports();
     const files = await readdir(this.directoryPath, { withFileTypes: true });
 
-    const documents = [];
+    const documents: Document[] = [];
 
     for (const file of files) {
       const fullPath = resolve(this.directoryPath, file.name);

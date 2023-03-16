@@ -5,7 +5,7 @@ export {
   SerializedZeroShotAgent,
   SerializedAgent,
 } from "./types.js";
-export { Agent, StaticAgent, staticImplements } from "./agent.js";
+export { Agent } from "./agent.js";
 export { AgentExecutor } from "./executor.js";
 export { ZeroShotAgent } from "./mrkl/index.js";
 export { ChatAgent } from "./chat/index.js";
