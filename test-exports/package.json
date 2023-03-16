@@ -8,6 +8,7 @@
   "scripts": {
     "test": "node ./index.mjs && node ./index.cjs && tsc && yarn run test:esbuild:node",
     "test:esbuild:node": "esbuild --bundle --minify --platform=node --target=node18 --outdir=build/ index.ts --define:process.env.NODE_ENV=\\\"production\\\" --analyze --format=esm --tree-shaking=true",
+    "test:rollup:node": "rollup -c",
     "format": "prettier --write \"**/*.ts\"",
     "format:check": "prettier --list-different \"**/*.ts\""
   },
@@ -17,9 +18,13 @@
     "langchain": "workspace:*"
   },
   "devDependencies": {
+    "@rollup/plugin-commonjs": "^24.0.1",
+    "@rollup/plugin-json": "^6.0.0",
+    "@rollup/plugin-node-resolve": "^15.0.1",
     "@tsconfig/recommended": "^1.0.2",
     "esbuild": "^0.17.11",
     "prettier": "^2.8.3",
+    "rollup": "^3.19.1",
     "typescript": "^4.9.5"
   }
 }
