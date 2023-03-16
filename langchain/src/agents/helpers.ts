@@ -6,7 +6,7 @@ import { BaseLanguageModel } from "../base_language/index.js";
 
 export const deserializeHelper = async <
   T extends string,
-  U,
+  U extends Record<string, unknown>,
   V extends AgentInput,
   Z
 >(
