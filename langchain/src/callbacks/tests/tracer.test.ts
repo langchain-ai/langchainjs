@@ -11,6 +11,7 @@ import {
 const TEST_SESSION_ID = 2023;
 const _DATE = 1620000000000;
 
+// eslint-disable-next-line tree-shaking/no-side-effects-in-initialization
 Date.now = jest.fn(() => _DATE);
 
 class FakeTracer extends BaseTracer {
