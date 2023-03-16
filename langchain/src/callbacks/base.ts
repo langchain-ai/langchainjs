@@ -15,12 +15,18 @@ export interface BaseCallbackHandlerInput {
   ignoreAgent?: boolean;
 }
 
+export type CallbackHandlerStartValues = Promise<Record<
+  string,
+  string | number
+> | void>;
+export type CallerId = string | number;
+
 abstract class BaseCallbackHandlerMethods {
   handleLLMStart?(
     llm: { name: string },
     prompts: string[],
     verbose?: boolean
-  ): Promise<void>;
+  ): CallbackHandlerStartValues;
 
   handleLLMNewToken?(token: string, verbose?: boolean): Promise<void>;
 
@@ -32,7 +38,7 @@ abstract class BaseCallbackHandlerMethods {
     chain: { name: string },
     inputs: ChainValues,
     verbose?: boolean
-  ): Promise<void>;
+  ): CallbackHandlerStartValues;
 
   handleChainError?(err: Error, verbose?: boolean): Promise<void>;
 
@@ -42,7 +48,7 @@ abstract class BaseCallbackHandlerMethods {
     tool: { name: string },
     input: string,
     verbose?: boolean
-  ): Promise<void>;
+  ): CallbackHandlerStartValues;
 
   handleToolError?(err: Error, verbose?: boolean): Promise<void>;
 
@@ -102,20 +108,22 @@ export class CallbackManager extends BaseCallbackManager {
     llm: { name: string },
     prompts: string[],
     verbose?: boolean
-  ): Promise<void> {
-    await Promise.all(
+  ): CallbackHandlerStartValues {
+    const results = await Promise.all(
       this.handlers.map(async (handler) => {
         if (!handler.ignoreLLM && (verbose || handler.alwaysVerbose)) {
           try {
-            await handler.handleLLMStart?.(llm, prompts);
+            return handler.handleLLMStart?.(llm, prompts);
           } catch (err) {
             console.error(
               `Error in handler ${handler.constructor.name}, handleLLMStart: ${err}`
             );
           }
         }
+        return undefined;
       })
     );
+    return results.reduce((acc, cur) => ({ ...acc, ...cur }), {});
   }
 
   async handleLLMNewToken(token: string, verbose?: boolean): Promise<void> {
@@ -170,20 +178,22 @@ export class CallbackManager extends BaseCallbackManager {
     chain: { name: string },
     inputs: ChainValues,
     verbose?: boolean
-  ): Promise<void> {
-    await Promise.all(
+  ): CallbackHandlerStartValues {
+    const results = await Promise.all(
       this.handlers.map(async (handler) => {
         if (!handler.ignoreChain && (verbose || handler.alwaysVerbose)) {
           try {
-            await handler.handleChainStart?.(chain, inputs);
+            return handler.handleChainStart?.(chain, inputs);
           } catch (err) {
             console.error(
               `Error in handler ${handler.constructor.name}, handleChainStart: ${err}`
             );
           }
         }
+        return undefined;
       })
     );
+    return results.reduce((acc, cur) => ({ ...acc, ...cur }), {});
   }
 
   async handleChainError(err: Error, verbose?: boolean): Promise<void> {
@@ -222,20 +232,22 @@ export class CallbackManager extends BaseCallbackManager {
     tool: { name: string },
     input: string,
     verbose?: boolean
-  ): Promise<void> {
-    await Promise.all(
+  ): CallbackHandlerStartValues {
+    const results = await Promise.all(
       this.handlers.map(async (handler) => {
         if (!handler.ignoreAgent && (verbose || handler.alwaysVerbose)) {
           try {
-            await handler.handleToolStart?.(tool, input);
+            return handler.handleToolStart?.(tool, input);
           } catch (err) {
             console.error(
               `Error in handler ${handler.constructor.name}, handleToolStart: ${err}`
             );
           }
         }
+        return undefined;
       })
     );
+    return results.reduce((acc, cur) => ({ ...acc, ...cur }), {});
   }
 
   async handleToolError(err: Error, verbose?: boolean): Promise<void> {

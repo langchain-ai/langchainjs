@@ -3,6 +3,7 @@ import {
   CallbackManager,
   BaseCallbackHandler,
   BaseCallbackHandlerInput,
+  CallbackHandlerStartValues,
 } from "../base.js";
 import {
   AgentAction,
@@ -268,4 +269,75 @@ test("CallbackHandler with ignoreAgent", async () => {
   expect(handler.toolStarts).toBe(0);
   expect(handler.toolEnds).toBe(0);
   expect(handler.agentEnds).toBe(0);
+});
+
+test("CallbackManager with return values", async () => {
+  class Handler extends BaseCallbackHandler {
+    values?: Record<string, string | number>;
+
+    alwaysVerbose = true;
+
+    constructor(values?: Record<string, string | number>) {
+      super();
+      this.values = values;
+    }
+
+    handleLLMStart(
+      _llm: { name: string },
+      _prompts: string[]
+    ): CallbackHandlerStartValues {
+      return Promise.resolve(this.values);
+    }
+
+    handleChainStart(
+      _chain: { name: string },
+      _inputs: ChainValues
+    ): CallbackHandlerStartValues {
+      return Promise.resolve(this.values);
+    }
+
+    handleToolStart(
+      _tool: { name: string },
+      _input: string
+    ): CallbackHandlerStartValues {
+      return Promise.resolve(this.values);
+    }
+  }
+
+  const manager = new CallbackManager();
+  manager.addHandler(new Handler({ test1: "test", test2: "test" }));
+  manager.addHandler(new Handler());
+  manager.addHandler(new Handler({ test3: 1, test4: 2 }));
+
+  const llmStartValues = await manager.handleLLMStart({ name: "test" }, [
+    "test",
+  ]);
+  expect(llmStartValues).toEqual({
+    test1: "test",
+    test2: "test",
+    test3: 1,
+    test4: 2,
+  });
+
+  const chainStartValues = await manager.handleChainStart(
+    { name: "test" },
+    { test: "test" }
+  );
+  expect(chainStartValues).toEqual({
+    test1: "test",
+    test2: "test",
+    test3: 1,
+    test4: 2,
+  });
+
+  const toolStartValues = await manager.handleToolStart(
+    { name: "test" },
+    "test"
+  );
+  expect(toolStartValues).toEqual({
+    test1: "test",
+    test2: "test",
+    test3: 1,
+    test4: 2,
+  });
 });
