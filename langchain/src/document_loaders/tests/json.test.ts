@@ -14,7 +14,7 @@ test("Test JSON loader", async () => {
   expect(docs.length).toBe(32);
   expect(docs[0]).toEqual(
     new Document({
-      metadata: { source: filePath },
+      metadata: { source: filePath, line: 1 },
       pageContent:
         "<i>Corruption discovered at the core of the Banking Clan!</i>",
     })
@@ -32,25 +32,25 @@ test("Test JSON  loader for complex json without keys", async () => {
   expect(docs.length).toBe(10);
   expect(docs[0]).toEqual(
     new Document({
-      metadata: { source: filePath },
+      metadata: { source: filePath, line: 1 },
       pageContent: "BD 2023 SUMMER",
     })
   );
   expect(docs[1]).toEqual(
     new Document({
-      metadata: { source: filePath },
+      metadata: { source: filePath, line: 2 },
       pageContent: "LinkedIn Job",
     })
   );
   expect(docs[2]).toEqual(
     new Document({
-      metadata: { source: filePath },
+      metadata: { source: filePath, line: 3 },
       pageContent: "IMPORTANT",
     })
   );
 });
 
-test("Test JSON  loader for complex json with one key that points nothing", async () => {
+test("Test JSON loader for complex json with one key that points nothing", async () => {
   const filePath = path.resolve(
     path.dirname(url.fileURLToPath(import.meta.url)),
     "./example_data/complex.json"
@@ -72,7 +72,7 @@ test("Test JSON loader for complex json with one key that exists", async () => {
   expect(docs.length).toBe(2);
   expect(docs[1]).toEqual(
     new Document({
-      metadata: { source: filePath },
+      metadata: { source: filePath, line: 2 },
       pageContent: "LinkedIn Job2",
     })
   );
@@ -89,7 +89,7 @@ test("Test JSON loader for complex json with two keys that exists", async () => 
   expect(docs.length).toBe(6);
   expect(docs[3]).toEqual(
     new Document({
-      metadata: { source: filePath },
+      metadata: { source: filePath, line: 4 },
       pageContent: "INBOX",
     })
   );
@@ -106,7 +106,7 @@ test("Test JSON loader for complex json with two existing keys on different leve
   expect(docs.length).toBe(3);
   expect(docs[2]).toEqual(
     new Document({
-      metadata: { source: filePath },
+      metadata: { source: filePath, line: 3 },
       pageContent: "bob",
     })
   );

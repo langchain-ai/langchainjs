@@ -2,8 +2,8 @@ import jsonpointer from "jsonpointer";
 import { TextLoader } from "./text.js";
 
 export class JSONLoader extends TextLoader {
-  constructor(filePath: string, public pointers: string[] = []) {
-    super(filePath);
+  constructor(filePathOrBlob: string | Blob, public pointers: string[] = []) {
+    super(filePathOrBlob);
   }
 
   protected async parse(raw: string): Promise<string[]> {
@@ -22,12 +22,10 @@ export class JSONLoader extends TextLoader {
   }
 
   /**
-   * If keys are specified, return all strings below any node represented by a key
-   * and exclude all other nodes expect if they contain a key
+   * If JSON pointers are specified, return all strings below any of them
+   * and exclude all other nodes expect if they match a JSON pointer (to allow to extract strings from different levels)
    *
-   * If no key is specified then return all string in the object
-   * @param json
-   * @private
+   * If no JSON pointer is specified then return all string in the object
    */
   private extractArrayStringsFromObject(
     json: any,
@@ -70,7 +68,7 @@ export class JSONLoader extends TextLoader {
       );
 
       let extractedStrings: string[] = [];
-      // If we
+      // If we found a targeted entry, we extract all strings from it
       if (targetedEntries.length > 0) {
         for (const oneEntry of targetedEntries) {
           extractedStrings = extractedStrings.concat(
