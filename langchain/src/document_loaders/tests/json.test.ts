@@ -55,7 +55,7 @@ test("Test JSON  loader for complex json with one key that points nothing", asyn
     path.dirname(url.fileURLToPath(import.meta.url)),
     "./example_data/complex.json"
   );
-  const loader = new JSONLoader(filePath, ["plop"]);
+  const loader = new JSONLoader(filePath, ["/plop"]);
   const docs = await loader.load();
 
   expect(docs.length).toBe(0);
@@ -66,7 +66,7 @@ test("Test JSON loader for complex json with one key that exists", async () => {
     path.dirname(url.fileURLToPath(import.meta.url)),
     "./example_data/complex.json"
   );
-  const loader = new JSONLoader(filePath, ["from"]);
+  const loader = new JSONLoader(filePath, ["/from"]);
   const docs = await loader.load();
 
   expect(docs.length).toBe(2);
@@ -83,7 +83,7 @@ test("Test JSON loader for complex json with two keys that exists", async () => 
     path.dirname(url.fileURLToPath(import.meta.url)),
     "./example_data/complex.json"
   );
-  const loader = new JSONLoader(filePath, ["from", "labels"]);
+  const loader = new JSONLoader(filePath, ["/from", "/labels"]);
   const docs = await loader.load();
 
   expect(docs.length).toBe(6);
@@ -100,7 +100,7 @@ test("Test JSON loader for complex json with two existing keys on different leve
     path.dirname(url.fileURLToPath(import.meta.url)),
     "./example_data/complex.json"
   );
-  const loader = new JSONLoader(filePath, ["from", "surname"]);
+  const loader = new JSONLoader(filePath, ["/from", "/surname"]);
   const docs = await loader.load();
 
   expect(docs.length).toBe(3);

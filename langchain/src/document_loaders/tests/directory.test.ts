@@ -5,7 +5,7 @@ import { DirectoryLoader, UnknownHandling } from "../directory.js";
 import { CSVLoader } from "../csv.js";
 import { PDFLoader } from "../pdf.js";
 import { TextLoader } from "../text.js";
-import { JSONPointerLoader } from "../json_pointer.js";
+import { JSONLoader } from "../json.js";
 
 test("Test Directory loader", async () => {
   const directoryPath = path.resolve(
@@ -18,7 +18,7 @@ test("Test Directory loader", async () => {
       ".csv": (p) => new CSVLoader(p, "html"),
       ".pdf": (p) => new PDFLoader(p),
       ".txt": (p) => new TextLoader(p),
-      ".json": (p) => new JSONPointerLoader(p),
+      ".json": (p) => new JSONLoader(p),
     },
     true,
     UnknownHandling.Ignore

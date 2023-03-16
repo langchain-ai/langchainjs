@@ -14,7 +14,6 @@ export { SRTLoader } from "./srt.js";
 export { PDFLoader } from "./pdf.js";
 export { TextLoader } from "./text.js";
 export { JSONLoader } from "./json.js";
-export { JSONPointerLoader } from "./json_pointer.js";
 export { JSONLinesLoader } from "./jsonl.js";
 export { CSVLoader } from "./csv.js";
 export { NotionLoader } from "./notion_markdown.js";
