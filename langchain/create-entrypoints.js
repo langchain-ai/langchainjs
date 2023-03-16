@@ -20,7 +20,6 @@ const entrypoints = {
   sql_db: "sql_db",
   callbacks: "callbacks/index",
   output_parsers: "output_parsers/index",
-  zapier: "zapier",
 };
 
 const updateJsonFile = (relativePath, updateFunction) => {
