@@ -1,4 +1,5 @@
-import { Agent, Tool } from "./index.js";
+import { Agent } from "./agent.js";
+import { Tool } from "./tools/base.js";
 import { BaseLLM } from "../llms/index.js";
 import { loadFromHub } from "../util/hub.js";
 import { FileLoader, loadFromFile, parseFileConfig } from "../util/index.js";

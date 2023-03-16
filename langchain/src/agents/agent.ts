@@ -1,9 +1,3 @@
-import {
-  ZeroShotAgent,
-  SerializedZeroShotAgent,
-  StoppingMethod,
-  Tool,
-} from "./index.js";
 import { BaseLLM } from "../llms/index.js";
 import { LLMChain } from "../chains/llm_chain.js";
 import { BasePromptTemplate } from "../prompts/index.js";
@@ -14,6 +8,8 @@ import {
   ChainValues,
   BaseChatMessage,
 } from "../schema/index.js";
+import { AgentInput, SerializedAgent, StoppingMethod } from "./types.js";
+import { Tool } from "./tools/base.js";
 
 class ParseError extends Error {
   output: string;
@@ -48,13 +44,6 @@ export interface StaticAgent {
 }
 
 export const staticImplements = <T>(_: T) => {};
-
-type SerializedAgent = SerializedZeroShotAgent;
-
-export interface AgentInput {
-  llmChain: LLMChain;
-  allowedTools?: string[];
-}
 
 /**
  * Class responsible for calling a language model and deciding an action.
@@ -226,8 +215,10 @@ export abstract class Agent {
     data: SerializedAgent & { llm?: BaseLLM; tools?: Tool[] }
   ): Promise<Agent> {
     switch (data._type) {
-      case "zero-shot-react-description":
+      case "zero-shot-react-description": {
+        const { ZeroShotAgent } = await import("./mrkl/index.js");
         return ZeroShotAgent.deserialize(data);
+      }
       default:
         throw new Error("Unknown agent type");
     }

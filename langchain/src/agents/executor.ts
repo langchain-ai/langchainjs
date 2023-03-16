@@ -1,5 +1,7 @@
 import { BaseChain } from "../chains/index.js";
-import { Agent, Tool, StoppingMethod } from "./index.js";
+import { Agent } from "./agent.js";
+import { Tool } from "./tools/base.js";
+import { StoppingMethod } from "./types.js";
 import { SerializedLLMChain } from "../chains/serde.js";
 import { AgentFinish, AgentStep, ChainValues } from "../schema/index.js";
 import { CallbackManager } from "../callbacks/index.js";
