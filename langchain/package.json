@@ -49,9 +49,9 @@
     "url": "git@github.com:hwchase17/langchainjs.git"
   },
   "scripts": {
-    "build": "yarn clean && tsc --declaration --outDir dist/ && node create-entrypoints.js",
+    "build": "yarn clean && tsc --declaration --outDir dist/ && node create-entrypoints.js && node check-tree-shaking.js",
     "build:watch": "node create-entrypoints.js && tsc --declaration --outDir dist/ --watch",
-    "lint": "eslint src && dpdm --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts && node check-tree-shaking.js",
+    "lint": "eslint src && dpdm --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint:fix": "yarn lint --fix",
     "precommit": "tsc --noEmit && lint-staged",
     "clean": "rm -rf dist/ && node create-entrypoints.js clean",
