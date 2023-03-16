@@ -2,6 +2,7 @@ import { test, expect } from "@jest/globals";
 import { Document } from "../document.js";
 import {
   CharacterTextSplitter,
+  MarkdownTextSplitter,
   RecursiveCharacterTextSplitter,
   TokenTextSplitter,
 } from "../text_splitter.js";
@@ -149,5 +150,32 @@ test("Token text splitter", async () => {
   const output = await splitter.splitText(text);
   const expectedOutput = ["foo bar b", "az a a"];
 
+  expect(output).toEqual(expectedOutput);
+});
+
+test("Test markdown text splitter.", async () => {
+  const text =
+    "# 🦜️🔗 LangChain\n" +
+    "\n" +
+    "⚡ Building applications with LLMs through composability ⚡\n" +
+    "\n" +
+    "## Quick Install\n" +
+    "\n" +
+    "```bash\n" +
+    "# Hopefully this code block isn't split\n" +
+    "pip install langchain\n" +
+    "```\n" +
+    "\n" +
+    "As an open source project in a rapidly developing field, we are extremely open to contributions.";
+  const splitter = new MarkdownTextSplitter({
+    chunkSize: 100,
+    chunkOverlap: 0,
+  });
+  const output = await splitter.splitText(text);
+  const expectedOutput = [
+    "# 🦜️🔗 LangChain\n\n⚡ Building applications with LLMs through composability ⚡",
+    "Quick Install\n\n```bash\n# Hopefully this code block isn't split\npip install langchain",
+    "As an open source project in a rapidly developing field, we are extremely open to contributions.",
+  ];
   expect(output).toEqual(expectedOutput);
 });

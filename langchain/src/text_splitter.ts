@@ -254,3 +254,38 @@ export class TokenTextSplitter
     }
   }
 }
+
+export type MarkdownTextSplitterParams = TextSplitterParams;
+
+export class MarkdownTextSplitter
+  extends RecursiveCharacterTextSplitter
+  implements MarkdownTextSplitterParams
+{
+  separators: string[] = [
+    // First, try to split along Markdown headings (starting with level 2)
+    "\n## ",
+    "\n### ",
+    "\n#### ",
+    "\n##### ",
+    "\n###### ",
+    // Note the alternative syntax for headings (below) is not handled here
+    // Heading level 2
+    // ---------------
+    // End of code block
+    "```\n\n",
+    // Horizontal lines
+    "\n\n***\n\n",
+    "\n\n---\n\n",
+    "\n\n___\n\n",
+    // Note that this splitter doesn't handle horizontal lines defined
+    // by *three or more* of ***, ---, or ___, but this is not handled
+    "\n\n",
+    "\n",
+    " ",
+    "",
+  ];
+
+  constructor(fields?: Partial<MarkdownTextSplitterParams>) {
+    super(fields);
+  }
+}
