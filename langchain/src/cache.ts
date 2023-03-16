@@ -23,6 +23,7 @@ export abstract class BaseCache<T = Generation[]> {
 const GLOBAL_MAP = new Map();
 
 export class InMemoryCache<T = Generation[]> extends BaseCache<T> {
+  // eslint-disable-next-line tree-shaking/no-side-effects-in-initialization
   #cache: Map<string, T>;
 
   constructor(map?: Map<string, T>) {
@@ -50,6 +51,7 @@ export class InMemoryCache<T = Generation[]> extends BaseCache<T> {
  * TODO: Generalize to support other types.
  */
 export class RedisCache extends BaseCache<Generation[]> {
+  // eslint-disable-next-line tree-shaking/no-side-effects-in-initialization
   #redisClient: RedisClientType;
 
   constructor(redisClient: RedisClientType) {
