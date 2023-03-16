@@ -20,6 +20,7 @@ export async function listEntrypoints() {
 export async function checkTreeShaking() {
   const entrypoints = await listEntrypoints();
   const consoleLog = console.log;
+  const reportMap = new Map();
 
   for (const entrypoint of entrypoints) {
     let sideEffects = "";
@@ -31,15 +32,32 @@ export async function checkTreeShaking() {
       }
     };
 
-    const build = await rollup({
+    await rollup({
       input: entrypoint,
       experimentalLogSideEffects: true,
     });
 
-    consoleLog(`Checking tree shaking for ${entrypoint}...`, sideEffects);
+    reportMap.set(entrypoint, {
+      log: sideEffects,
+      hasSideEffects: sideEffects.length > 0,
+    });
   }
 
   console.log = consoleLog;
+
+  let failed = false;
+  for (const [entrypoint, report] of reportMap) {
+    if (report.hasSideEffects) {
+      failed = true;
+      console.log("---------------------------------");
+      console.log(`Tree shaking failed for ${entrypoint}`);
+      console.log(report.log);
+    }
+  }
+
+  if (failed) {
+    process.exit(1);
+  }
 }
 
 checkTreeShaking();
