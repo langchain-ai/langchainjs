@@ -1,11 +1,5 @@
 import { LLMChain } from "../../chains/index.js";
-import {
-  Agent,
-  Tool,
-  AgentInput,
-  StaticAgent,
-  staticImplements,
-} from "../index.js";
+import { Agent, StaticAgent, staticImplements } from "../agent.js";
 import {
   SystemMessagePromptTemplate,
   HumanMessagePromptTemplate,
@@ -14,6 +8,8 @@ import {
 import { PREFIX, SUFFIX, FORMAT_INSTRUCTIONS } from "./prompt.js";
 import { BaseLanguageModel } from "../../base_language/index.js";
 import { AgentStep } from "../../schema/index.js";
+import { AgentInput } from "../types.js";
+import { Tool } from "../tools/base.js";
 
 const FINAL_ANSWER_ACTION = "Final Answer:";
 
