@@ -8,8 +8,6 @@ import {
   BaseLanguageModelParams,
 } from "../base_language/index.js";
 
-const GLOBAL_CACHE: BaseCache = new InMemoryCache();
-
 export type SerializedLLM = {
   _model: string;
   _type: string;
@@ -45,7 +43,7 @@ export abstract class BaseLLM extends BaseLanguageModel {
     if (cache instanceof BaseCache) {
       this.cache = cache;
     } else if (cache) {
-      this.cache = GLOBAL_CACHE;
+      this.cache = InMemoryCache.global();
     } else {
       this.cache = undefined;
     }

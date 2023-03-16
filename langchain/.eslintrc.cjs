@@ -11,9 +11,34 @@ module.exports = {
     project: "./tsconfig.json",
     sourceType: "module",
   },
-  plugins: ["@typescript-eslint"],
-  ignorePatterns: [".eslintrc.cjs", "create-entrypoints.js", "node_modules"],
+  plugins: ["@typescript-eslint", "tree-shaking"],
+  ignorePatterns: [
+    ".eslintrc.cjs",
+    "create-entrypoints.js",
+    "check-tree-shaking.js",
+    "node_modules",
+  ],
   rules: {
+    "tree-shaking/no-side-effects-in-initialization": [
+      2,
+      {
+        noSideEffectsWhenCalled: [
+          {
+            module: "@jest/globals",
+            functions: [
+              "test",
+              "describe",
+              "it",
+              "beforeEach",
+              "afterEach",
+              "skip",
+              "each",
+              "only",
+            ],
+          },
+        ],
+      },
+    ],
     "@typescript-eslint/explicit-module-boundary-types": 0,
     "@typescript-eslint/no-empty-function": 0,
     "@typescript-eslint/no-shadow": 0,

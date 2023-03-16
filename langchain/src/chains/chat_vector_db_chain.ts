@@ -182,7 +182,6 @@ export class ChatVectorDBQAChain
     const question_generator_prompt = PromptTemplate.fromTemplate(
       questionGeneratorTemplate || question_generator_template
     );
-
     const qa_prompt = PromptTemplate.fromTemplate(qaTemplate || qa_template);
 
     const qaChain = loadQAStuffChain(llm, { prompt: qa_prompt });

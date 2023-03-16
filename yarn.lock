@@ -7371,6 +7371,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"eslint-plugin-tree-shaking@npm:^1.10.0":
+  version: 1.10.0
+  resolution: "eslint-plugin-tree-shaking@npm:1.10.0"
+  checksum: 839047134c3009f5fcc5b2cb7d908fffd9def46663a1642e6abe8f4be4bc77416e7214259430dbb1d26445b4cf54673227092a0e2a23d2d2a88189212aed7974
+  languageName: node
+  linkType: hard
+
 "eslint-scope@npm:5.1.1, eslint-scope@npm:^5.1.1":
   version: 5.1.1
   resolution: "eslint-scope@npm:5.1.1"
@@ -10420,6 +10427,7 @@ __metadata:
     eslint-config-prettier: ^8.6.0
     eslint-plugin-import: ^2.27.5
     eslint-plugin-prettier: ^4.2.1
+    eslint-plugin-tree-shaking: ^1.10.0
     eventsource-parser: ^0.1.0
     exponential-backoff: ^3.1.0
     expr-eval: ^2.0.2
@@ -10436,6 +10444,7 @@ __metadata:
     prettier: ^2.8.3
     puppeteer: ^19.7.2
     redis: ^4.6.4
+    rollup: ^3.19.1
     serpapi: ^1.1.1
     sqlite3: ^5.1.4
     srt-parser-2: ^1.2.2
@@ -13584,6 +13593,20 @@ __metadata:
   bin:
     rimraf: bin.js
   checksum: 87f4164e396f0171b0a3386cc1877a817f572148ee13a7e113b238e48e8a9f2f31d009a92ec38a591ff1567d9662c6b67fd8818a2dbbaed74bc26a87a2a4a9a0
+  languageName: node
+  linkType: hard
+
+"rollup@npm:^3.19.1":
+  version: 3.19.1
+  resolution: "rollup@npm:3.19.1"
+  dependencies:
+    fsevents: ~2.3.2
+  dependenciesMeta:
+    fsevents:
+      optional: true
+  bin:
+    rollup: dist/bin/rollup
+  checksum: f78198c6de224b26650c70b16db156762d1fcceeb375d34fb2c76fc5b23a78f712c3c881d3248e6f277a511589e20d50c247bcf5c7920f1ddc0a43cadf9f0140
   languageName: node
   linkType: hard
 
