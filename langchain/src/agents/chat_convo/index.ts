@@ -6,7 +6,7 @@ import {
   ChatPromptTemplate,
   MessagesPlaceholder,
 } from "../../prompts/index.js";
-import { interpolateFString, renderTemplate } from "../../prompts/template.js";
+import { renderTemplate } from "../../prompts/template.js";
 import {
   PREFIX,
   SUFFIX,
@@ -135,12 +135,11 @@ export class ChatConversationalAgent extends Agent {
     const toolStrings = tools
       .map((tool) => `${tool.name}: ${tool.description}`)
       .join("\n");
-    const formatInstructions = interpolateFString(humanMessage, {
+    const formatInstructions = renderTemplate(humanMessage, "f-string", {
       format_instructions: outputParser.getFormatInstructions(),
     });
-
     const toolNames = tools.map((tool) => tool.name).join("\n");
-    const finalPrompt = interpolateFString(formatInstructions, {
+    const finalPrompt = renderTemplate(formatInstructions, "f-string", {
       tools: toolStrings,
       tool_names: toolNames,
     });

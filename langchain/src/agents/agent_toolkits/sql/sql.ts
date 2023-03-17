@@ -8,7 +8,7 @@ import {
 import { Toolkit } from "../base.js";
 import { BaseLLM } from "../../../llms/index.js";
 import { SQL_PREFIX, SQL_SUFFIX } from "./prompt.js";
-import { interpolateFString } from "../../../prompts/template.js";
+import { renderTemplate } from "../../../prompts/template.js";
 import { LLMChain } from "../../../chains/index.js";
 import { ZeroShotAgent, CreatePromptArgs } from "../../mrkl/index.js";
 import { AgentExecutor } from "../../executor.js";
@@ -50,10 +50,11 @@ export function createSqlAgent(
     topK = 10,
   } = args ?? {};
   const { tools } = toolkit;
-  const formattedPrefix = interpolateFString(prefix, {
+  const formattedPrefix = renderTemplate(prefix, "f-string", {
     dialect: toolkit.dialect,
     top_k: topK,
   });
+
   const prompt = ZeroShotAgent.createPrompt(tools, {
     prefix: formattedPrefix,
     suffix,
