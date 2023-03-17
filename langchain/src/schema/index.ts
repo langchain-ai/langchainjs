@@ -1,3 +1,13 @@
+export type Example = Record<string, string>;
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type InputValues = Record<string, any>;
+
+export type PartialValues = Record<
+  string,
+  string | (() => Promise<string>) | (() => string)
+>;
+
 /**
  * Output of a single generation.
  */

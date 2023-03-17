@@ -36,13 +36,13 @@ console.log({ res });
 { res: { text: '\n\nColorfulCo Sockery.' } }
 ```
 
-LLMChain also supports output streaming by providing both the `streaming: true` parameter and the appropriate `callbackManager.handleNewToken` callback function.
+LLMChain also supports output streaming by providing both the `streaming: true` parameter and the appropriate `callbackManager.handleNewToken` callback function. Note: OpenAI as of this writing does not support tokenUsage reporting while streaming is enabled.
 
 ```typescript
 const model = new OpenAI({
   streaming: true,
-  callbackManager: {
-    handleNewToken: (token) => console.log(token),
+  callbackManager: CallbackManager.fromHandlers({
+    handleLLMNewToken: (token: string) => console.log(token),
   },
 });
 ```

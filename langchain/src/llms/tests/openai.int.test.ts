@@ -1,4 +1,5 @@
 import { test, expect } from "@jest/globals";
+import { LLMResult } from "schema/index.js";
 import { OpenAIChat } from "../openai-chat.js";
 import { OpenAI } from "../openai.js";
 import { StringPromptValue } from "../../prompts/index.js";
@@ -24,11 +25,31 @@ test("Test OpenAI with chat model returns OpenAIChat", async () => {
   expect(typeof res).toBe("string");
 });
 
+test("Test ChatOpenAI tokenUsage", async () => {
+  let tokenUsage = {
+    completionTokens: 0,
+    promptTokens: 0,
+    totalTokens: 0,
+  };
+
+  const model = new OpenAI({
+    maxTokens: 5,
+    modelName: "text-ada-001",
+    callbackManager: CallbackManager.fromHandlers({
+      async handleLLMEnd(output: LLMResult) {
+        tokenUsage = output.llmOutput?.tokenUsage;
+      },
+    }),
+  });
+  const res = await model.call("Hello");
+  console.log({ res });
+
+  expect(tokenUsage.promptTokens).toBe(1);
+});
+
 test("Test OpenAI in streaming mode", async () => {
   class StreamCallbackHandler extends BaseCallbackHandler {
     nrNewTokens = 0;
-
-    alwaysVerbose = true;
 
     streamedCompletion = "";
 

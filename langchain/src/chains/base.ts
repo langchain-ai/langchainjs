@@ -1,31 +1,10 @@
-import deepcopy from "deepcopy";
-import type {
-  AnalyzeDocumentChain,
-  ChatVectorDBQAChain,
-  LLMChain,
-  MapReduceDocumentsChain,
-  StuffDocumentsChain,
-  VectorDBQAChain,
-} from "./index.js";
 import { BaseMemory } from "../memory/index.js";
-import { SqlDatabaseChain } from "./sql_db/sql_db_chain.js";
 import { ChainValues } from "../schema/index.js";
 import { CallbackManager, getCallbackManager } from "../callbacks/index.js";
+import { SerializedBaseChain } from "./serde.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type LoadValues = Record<string, any>;
-
-export type SerializedBaseChain = ReturnType<
-  InstanceType<
-    | typeof LLMChain
-    | typeof StuffDocumentsChain
-    | typeof VectorDBQAChain
-    | typeof ChatVectorDBQAChain
-    | typeof MapReduceDocumentsChain
-    | typeof AnalyzeDocumentChain
-    | typeof SqlDatabaseChain
-  >["serialize"]
->;
 
 export interface ChainInputs {
   memory?: BaseMemory;
@@ -98,8 +77,7 @@ export abstract class BaseChain implements ChainInputs {
    * Wraps {@link _call} and handles memory.
    */
   async call(values: ChainValues): Promise<ChainValues> {
-    const fullValues = deepcopy(values);
-
+    const fullValues = { ...values } as typeof values;
     if (!(this.memory == null)) {
       const newValues = await this.memory.loadMemoryVariables(values);
       for (const [key, value] of Object.entries(newValues)) {

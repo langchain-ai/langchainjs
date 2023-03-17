@@ -14,15 +14,12 @@ async function test() {
   // Test dynamic imports of peer dependencies
   const { HierarchicalNSW } = await HNSWLib.imports();
 
-  const vs = new HNSWLib(
-    {
-      space: "ip",
-      numDimensions: 3,
-    },
-    new OpenAIEmbeddings({ openAIApiKey: "sk-XXXX" }),
-    new InMemoryDocstore(),
-    new HierarchicalNSW("ip", 3)
-  );
+  const vs = new HNSWLib(new OpenAIEmbeddings({ openAIApiKey: "sk-XXXX" }), {
+    space: "ip",
+    numDimensions: 3,
+    docstore: new InMemoryDocstore(),
+    index: new HierarchicalNSW("ip", 3),
+  });
 
   await vs.addVectors(
     [

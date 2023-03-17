@@ -1,10 +1,9 @@
-import crypto from "node:crypto";
+import hash from "object-hash";
 import { test, expect, jest } from "@jest/globals";
 
 import { InMemoryCache, RedisCache } from "../cache.js";
 
-const sha256 = (str: string) =>
-  crypto.createHash("sha256").update(str).digest("hex");
+const sha256 = (str: string) => hash(str);
 
 test("InMemoryCache", async () => {
   const cache = new InMemoryCache();
@@ -15,7 +14,6 @@ test("InMemoryCache", async () => {
 test("RedisCache", async () => {
   const redis = {
     get: jest.fn(async (key: string) => {
-      console.log(key, sha256("foo_bar_0"));
       if (key === sha256("foo_bar_0")) {
         return "baz";
       }

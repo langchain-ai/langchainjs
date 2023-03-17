@@ -3,9 +3,10 @@
   "compilerOptions": {
     "outDir": "../dist",
     "rootDir": "./src",
-    "target": "ES2020",
+    "target": "ES2021",
     "lib": [
-      "ESNext",
+      "ES2021",
+      "ES2022.Object",
       "DOM"
     ],
     "module": "ES2020",
@@ -21,7 +22,8 @@
     "noUnusedParameters": true,
     "useDefineForClassFields": true,
     "strictPropertyInitialization": false,
-    "allowJs": true
+    "allowJs": true,
+    "strict": true
   },
   "include": [
     "src/**/*"
@@ -52,6 +54,7 @@
       "src/schema/index.ts",
       "src/sql_db.ts",
       "src/callbacks/index.ts",
+      "src/output_parsers/index.ts",
       "src/index.ts"
     ],
     "excludePrivate": true,

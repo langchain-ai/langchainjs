@@ -21,6 +21,12 @@ import {
   SystemChatMessage,
 } from "../schema/index.js";
 
+type TokenUsage = {
+  completionTokens?: number;
+  promptTokens?: number;
+  totalTokens?: number;
+};
+
 function messageTypeToOpenAIRole(
   type: MessageType
 ): ChatCompletionResponseMessageRoleEnum {
@@ -71,7 +77,7 @@ interface ModelParams {
   /** Dictionary used to adjust the probability of specific tokens being generated */
   logitBias?: Record<string, number>;
 
-  /** Whether to stream the results or not */
+  /** Whether to stream the results or not. Enabling disables tokenUsage reporting */
   streaming: boolean;
 
   /**
@@ -245,6 +251,7 @@ export class ChatOpenAI extends BaseChatModel implements OpenAIInput {
     messages: BaseChatMessage[],
     stop?: string[]
   ): Promise<ChatResult> {
+    const tokenUsage: TokenUsage = {};
     if (this.stop && stop) {
       throw new Error("Stop found in input and default params");
     }
@@ -291,7 +298,7 @@ export class ChatOpenAI extends BaseChatModel implements OpenAIInput {
                 // eslint-disable-next-line no-void
                 void this.callbackManager.handleLLMNewToken(
                   part.delta?.content ?? "",
-                  this.verbose
+                  true
                 );
               }
             }
@@ -314,6 +321,26 @@ export class ChatOpenAI extends BaseChatModel implements OpenAIInput {
         ],
       };
     }
+
+    const {
+      completion_tokens: completionTokens,
+      prompt_tokens: promptTokens,
+      total_tokens: totalTokens,
+    } = data.usage ?? {};
+
+    if (completionTokens) {
+      tokenUsage.completionTokens =
+        (tokenUsage.completionTokens ?? 0) + completionTokens;
+    }
+
+    if (promptTokens) {
+      tokenUsage.promptTokens = (tokenUsage.promptTokens ?? 0) + promptTokens;
+    }
+
+    if (totalTokens) {
+      tokenUsage.totalTokens = (tokenUsage.totalTokens ?? 0) + totalTokens;
+    }
+
     const generations: ChatGeneration[] = [];
     for (const part of data.choices) {
       const role = part.message?.role ?? undefined;
@@ -325,6 +352,7 @@ export class ChatOpenAI extends BaseChatModel implements OpenAIInput {
     }
     return {
       generations,
+      llmOutput: { tokenUsage },
     };
   }
 

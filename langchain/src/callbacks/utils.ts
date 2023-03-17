@@ -1,4 +1,3 @@
-import * as process from "process";
 import { LangChainTracer } from "./tracers.js";
 import { CallbackManager, ConsoleCallbackHandler } from "./base.js";
 

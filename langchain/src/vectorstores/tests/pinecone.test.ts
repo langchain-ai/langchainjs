@@ -13,7 +13,7 @@ test("PineconeStore with external ids", async () => {
   };
   const embeddings = new FakeEmbeddings();
 
-  const store = new PineconeStore(client as any, embeddings);
+  const store = new PineconeStore(embeddings, { pineconeIndex: client as any });
 
   expect(store).toBeDefined();
 
@@ -38,7 +38,7 @@ test("PineconeStore with generated ids", async () => {
   };
   const embeddings = new FakeEmbeddings();
 
-  const store = new PineconeStore(client as any, embeddings);
+  const store = new PineconeStore(embeddings, { pineconeIndex: client as any });
 
   expect(store).toBeDefined();
 

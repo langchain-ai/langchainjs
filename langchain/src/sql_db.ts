@@ -1,4 +1,4 @@
-import { DataSource, DataSourceOptions } from "typeorm";
+import type { DataSource as DataSourceT, DataSourceOptions } from "typeorm";
 import {
   generateTableInfoFromTables,
   getTableAndColumnsName,
@@ -16,7 +16,7 @@ export class SqlDatabase
 {
   appDataSourceOptions: DataSourceOptions;
 
-  appDataSource: DataSource;
+  appDataSource: DataSourceT;
 
   allTables: Array<SqlTable> = [];
 
@@ -62,6 +62,7 @@ export class SqlDatabase
   static async fromOptionsParams(
     fields: SqlDatabaseOptionsParams
   ): Promise<SqlDatabase> {
+    const { DataSource } = await import("typeorm");
     const dataSource = new DataSource(fields.appDataSourceOptions);
     return SqlDatabase.fromDataSourceParams({
       ...fields,
@@ -127,5 +128,17 @@ export class SqlDatabase
       ignoreTables: this.ignoreTables,
       sampleRowsInTableInfo: this.sampleRowsInTableInfo,
     };
+  }
+
+  static async imports() {
+    try {
+      const { DataSource } = await import("typeorm");
+      return { DataSource };
+    } catch (e) {
+      console.error(e);
+      throw new Error(
+        "Failed to load typeorm. Please install it with eg. `yarn add typeorm`."
+      );
+    }
   }
 }

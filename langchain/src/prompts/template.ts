@@ -1,4 +1,4 @@
-import { InputValues } from "./index.js";
+import { InputValues } from "../schema/index.js";
 
 export type TemplateFormat = "f-string" | "jinja2";
 

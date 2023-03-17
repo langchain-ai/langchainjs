@@ -1,5 +1,4 @@
-import { BaseChain, SerializedBaseChain } from "./index.js";
-
+import { BaseChain } from "./base.js";
 import {
   TextSplitter,
   RecursiveCharacterTextSplitter,
@@ -7,15 +6,13 @@ import {
 
 import { resolveConfigFromFile } from "../util/index.js";
 import { ChainValues } from "../schema/index.js";
+import {
+  SerializedAnalyzeDocumentChain,
+  SerializedBaseChain,
+} from "./serde.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type LoadValues = Record<string, any>;
-
-export type SerializedAnalyzeDocumentChain = {
-  _type: "analyze_document_chain";
-  combine_document_chain?: SerializedBaseChain;
-  combine_document_chain_path?: string;
-};
 
 export interface AnalyzeDocumentChainInput {
   textSplitter: TextSplitter;
@@ -64,7 +61,7 @@ export class AnalyzeDocumentChain
     const { [this.inputKey]: doc, ...rest } = values;
 
     const currentDoc = doc as string;
-    const currentDocs = this.textSplitter.createDocuments([currentDoc]);
+    const currentDocs = await this.textSplitter.createDocuments([currentDoc]);
 
     const newInputs = { input_documents: currentDocs, ...rest };
     const result = await this.combineDocumentsChain.call(newInputs);

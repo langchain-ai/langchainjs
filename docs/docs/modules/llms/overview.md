@@ -45,21 +45,23 @@ const model = new OpenAI({ concurrency: 5 });
 Especially when using an agent, there can be a lot of back-and-forth going on behind the scenes as a LLM processes a chain. For agents, the response object contains an intermediateSteps object that you can print to see an overview of the steps it took to get there. If that's not enough and you want to see every exchange with the LLM, you can use the LLMCallbackManager to write yourself custom logging (or anything else you want to do) as the model goes through the steps:
 
 ```typescript
-import { LLMCallbackManager } from "langchain/llms";
+import { LLMResult } from "langchain/schema";
+import { CallbackManager } from "langchain/callbacks";
 
 //create our callback manager
 
-const callbackManager = {
-  handleStart: (..._args) => {
-    console.log(JSON.stringify(_args, null, 2));
+const callbackManager = CallbackManager.fromHandlers({
+  handleLLMStart: async (llm: { name: string }, prompts: string[]) => {
+    console.log(JSON.stringify(llm, null, 2));
+    console.log(JSON.stringify(prompts, null, 2));
   },
-  handleEnd: (..._args) => {
-    console.log(JSON.stringify(_args, null, 2));
+  handleLLMEnd: async (output: LLMResult) => {
+    console.log(JSON.stringify(output, null, 2));
   },
-  handleError: (..._args) => {
-    console.log(JSON.stringify(_args, null, 2));
+  handleLLMError: async (err: Error) => {
+    console.error(err);
   },
-} as LLMCallbackManager;
+});
 
 //create our model and pass it the callback manager
 
@@ -69,6 +71,6 @@ const model = new OpenAIChat({
   prefixMessages: history,
   temperature: 1,
   verbose: true,
-  callbackManager: callbackManager,
+  callbackManager,
 });
 ```

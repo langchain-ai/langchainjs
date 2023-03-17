@@ -1,4 +1,4 @@
-import crypto from "node:crypto";
+import hash from "object-hash";
 import type { RedisClientType } from "redis";
 import { Generation } from "./schema/index.js";
 
@@ -12,11 +12,7 @@ import { Generation } from "./schema/index.js";
  *
  * TODO: Make cache key consistent across versions of langchain.
  */
-
-const getCacheKey = (prompt: string, llmKey: string, idx?: string): string => {
-  const key = `${prompt}_${llmKey}${idx ? `_${idx}` : ""}`;
-  return crypto.createHash("sha256").update(key).digest("hex");
-};
+const getCacheKey = (...strings: string[]): string => hash(strings.join("_"));
 
 export abstract class BaseCache<T = Generation[]> {
   abstract lookup(prompt: string, llmKey: string): Promise<T | null>;
@@ -24,22 +20,26 @@ export abstract class BaseCache<T = Generation[]> {
   abstract update(prompt: string, llmKey: string, value: T): Promise<void>;
 }
 
-export class InMemoryCache<T = Generation[]> extends BaseCache<T> {
-  #cache: Map<string, T>;
+const GLOBAL_MAP = new Map();
 
-  constructor() {
+export class InMemoryCache<T = Generation[]> extends BaseCache<T> {
+  private cache: Map<string, T>;
+
+  constructor(map?: Map<string, T>) {
     super();
-    this.#cache = new Map();
+    this.cache = map ?? new Map();
   }
 
   lookup(prompt: string, llmKey: string): Promise<T | null> {
-    return Promise.resolve(
-      this.#cache.get(getCacheKey(prompt, llmKey)) ?? null
-    );
+    return Promise.resolve(this.cache.get(getCacheKey(prompt, llmKey)) ?? null);
   }
 
   async update(prompt: string, llmKey: string, value: T): Promise<void> {
-    this.#cache.set(getCacheKey(prompt, llmKey), value);
+    this.cache.set(getCacheKey(prompt, llmKey), value);
+  }
+
+  static global(): InMemoryCache {
+    return new InMemoryCache(GLOBAL_MAP);
   }
 }
 
@@ -48,11 +48,11 @@ export class InMemoryCache<T = Generation[]> extends BaseCache<T> {
  * TODO: Generalize to support other types.
  */
 export class RedisCache extends BaseCache<Generation[]> {
-  #redisClient: RedisClientType;
+  private redisClient: RedisClientType;
 
   constructor(redisClient: RedisClientType) {
     super();
-    this.#redisClient = redisClient;
+    this.redisClient = redisClient;
   }
 
   public async lookup(
@@ -61,7 +61,7 @@ export class RedisCache extends BaseCache<Generation[]> {
   ): Promise<Generation[] | null> {
     let idx = 0;
     let key = getCacheKey(prompt, llmKey, String(idx));
-    let value = await this.#redisClient.get(key);
+    let value = await this.redisClient.get(key);
     const generations: Generation[] = [];
 
     while (value) {
@@ -72,7 +72,7 @@ export class RedisCache extends BaseCache<Generation[]> {
       generations.push({ text: value });
       idx += 1;
       key = getCacheKey(prompt, llmKey, String(idx));
-      value = await this.#redisClient.get(key);
+      value = await this.redisClient.get(key);
     }
 
     return generations.length > 0 ? generations : null;
@@ -85,7 +85,7 @@ export class RedisCache extends BaseCache<Generation[]> {
   ): Promise<void> {
     for (let i = 0; i < value.length; i += 1) {
       const key = getCacheKey(prompt, llmKey, String(i));
-      await this.#redisClient.set(key, value[i].text);
+      await this.redisClient.set(key, value[i].text);
     }
   }
 }
