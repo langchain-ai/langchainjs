@@ -2,7 +2,7 @@ import { v4 as uuidv4 } from "uuid";
 import { ChainValues, LLMResult } from "../schema/index.js";
 import { BaseCallbackHandler, RunId } from "./base.js";
 
-export const TRACER_RUN_ID = "run_id";
+export const TRACER_RUN_ID = "runId";
 
 export type RunType = "llm" | "chain" | "tool";
 
@@ -22,6 +22,7 @@ export interface BaseRun {
   start_time: number;
   end_time: number;
   execution_order: number;
+  child_execution_order: number;
   serialized: { name: string };
   session_id: number;
   error?: string;
@@ -56,8 +57,6 @@ export abstract class BaseTracer extends BaseCallbackHandler {
 
   protected runMap: Map<RunId, LLMRun | ChainRun | ToolRun> = new Map();
 
-  protected executionOrder = 1;
-
   protected constructor() {
     super();
     this.alwaysVerbose = true;
@@ -89,6 +88,10 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     parentRun: ChainRun | ToolRun,
     childRun: LLMRun | ChainRun | ToolRun
   ) {
+    // eslint-disable-next-line no-param-reassign
+    childRun.execution_order = parentRun.child_execution_order + 1;
+    // eslint-disable-next-line no-param-reassign
+    childRun.child_execution_order = childRun.execution_order;
     if (childRun.type === "llm") {
       parentRun.child_llm_runs.push(childRun as LLMRun);
     } else if (childRun.type === "chain") {
@@ -101,8 +104,6 @@ export abstract class BaseTracer extends BaseCallbackHandler {
   }
 
   protected _startTrace(run: LLMRun | ChainRun | ToolRun) {
-    this.executionOrder += 1;
-
     if (run.caller_id) {
       const callerRun = this.runMap.get(run.caller_id);
       if (callerRun) {
@@ -114,12 +115,25 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       } else {
         throw new Error(`Caller run ${run.caller_id} not found`);
       }
+    } else {
+      // eslint-disable-next-line no-param-reassign
+      run.execution_order = 1;
+      // eslint-disable-next-line no-param-reassign
+      run.child_execution_order = 1;
     }
+    this.runMap.set(run.id, run);
   }
 
   protected async _endTrace(run: LLMRun | ChainRun | ToolRun): Promise<void> {
     if (run.caller_id === undefined) {
       await this.persistRun(run);
+    } else {
+      const parentRun = this.runMap.get(run.caller_id);
+      if (parentRun) {
+        parentRun.child_execution_order = run.child_execution_order;
+      } else {
+        throw new Error(`Parent run ${run.caller_id} not found`);
+      }
     }
     this.runMap.delete(run.id);
   }
@@ -139,13 +153,14 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       serialized: llm,
       prompts,
       session_id: this.session.id,
-      execution_order: this.executionOrder,
+      execution_order: 0,
+      child_execution_order: 0,
       caller_id: callerId,
       type: "llm",
     };
 
     this._startTrace(run);
-    return { TRACER_RUN_ID: run.id };
+    return { [TRACER_RUN_ID]: run.id };
   }
 
   async handleLLMEnd(output: LLMResult, runId: RunId): Promise<void> {
@@ -190,7 +205,8 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       serialized: chain,
       inputs,
       session_id: this.session.id,
-      execution_order: this.executionOrder,
+      execution_order: 0,
+      child_execution_order: 0,
       type: "chain",
       child_llm_runs: [],
       child_chain_runs: [],
@@ -198,7 +214,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     };
 
     this._startTrace(run);
-    return { TRACER_RUN_ID: run.id };
+    return { [TRACER_RUN_ID]: run.id };
   }
 
   async handleChainEnd(outputs: ChainValues, runId: RunId): Promise<void> {
@@ -243,7 +259,8 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       serialized: tool,
       tool_input: input,
       session_id: this.session.id,
-      execution_order: this.executionOrder,
+      execution_order: 0,
+      child_execution_order: 0,
       type: "tool",
       action: JSON.stringify(tool), // TODO: this is duplicate info, not needed
       child_llm_runs: [],
@@ -252,7 +269,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     };
 
     this._startTrace(run);
-    return { TRACER_RUN_ID: run.id };
+    return { [TRACER_RUN_ID]: run.id };
   }
 
   async handleToolEnd(output: string, runId: RunId): Promise<void> {
