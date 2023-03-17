@@ -190,7 +190,7 @@ test("CallbackManager with verbose passed in", async () => {
   );
   await manager.handleAgentEnd(
     { returnValues: { test: "test" }, log: "test" },
-      1, 
+      1,
     true
   );
 

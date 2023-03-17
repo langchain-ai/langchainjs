@@ -12,6 +12,8 @@ import {
   BaseLanguageModelParams,
 } from "../base_language/index.js";
 import { getBufferString } from "../memory/base.js";
+import {RunId} from "../callbacks/base.js";
+import {TRACER_RUN_ID} from "../callbacks/index.js";
 
 export type SerializedChatModel = {
   _model: string;
@@ -28,30 +30,36 @@ export abstract class BaseChatModel extends BaseLanguageModel {
 
   async generate(
     messages: BaseChatMessage[][],
-    stop?: string[]
+    stop?: string[],
+    callerId?: RunId,
   ): Promise<LLMResult> {
     const generations: ChatGeneration[][] = [];
     const messageStrings: string[] = messages.map((messageList) =>
       getBufferString(messageList)
     );
-    await this.callbackManager.handleLLMStart(
+    const values = await this.callbackManager.handleLLMStart(
       { name: this._llmType() },
       messageStrings,
+        callerId,
       this.verbose
     );
+    const runId = values[TRACER_RUN_ID];
     try {
       for (const message of messages) {
         const result = await this._generate(message, stop);
         generations.push(result.generations);
       }
     } catch (err) {
-      await this.callbackManager.handleLLMError(err, this.verbose);
+      await this.callbackManager.handleLLMError(err, runId, this.verbose);
       throw err;
     }
     const output: LLMResult = {
       generations,
+      llmOutput: {
+        ...values,
+      }
     };
-    await this.callbackManager.handleLLMEnd(output, this.verbose);
+    await this.callbackManager.handleLLMEnd(output, runId, this.verbose);
     return output;
   }
 
@@ -97,34 +105,38 @@ export abstract class BaseChatModel extends BaseLanguageModel {
 
   async generatePrompt(
     promptValues: BasePromptValue[],
-    stop?: string[]
+    stop?: string[],
+    callerId?: RunId,
   ): Promise<LLMResult> {
     const promptMessages: BaseChatMessage[][] = promptValues.map(
       (promptValue) => promptValue.toChatMessages()
     );
-    return this.generate(promptMessages, stop);
+    return this.generate(promptMessages, stop, callerId);
   }
 
   abstract _generate(
     messages: BaseChatMessage[],
-    stop?: string[]
+    stop?: string[],
+    runId?: RunId,
   ): Promise<ChatResult>;
 
   async call(
     messages: BaseChatMessage[],
-    stop?: string[]
+    stop?: string[],
+    callerId?: RunId,
   ): Promise<BaseChatMessage> {
-    const result = await this.generate([messages], stop);
+    const result = await this.generate([messages], stop, callerId);
     const generations = result.generations as ChatGeneration[][];
     return generations[0][0].message;
   }
 
   async callPrompt(
     promptValue: BasePromptValue,
-    stop?: string[]
+    stop?: string[],
+    callerId?: RunId,
   ): Promise<BaseChatMessage> {
     const promptMessages: BaseChatMessage[] = promptValue.toChatMessages();
-    return this.call(promptMessages, stop);
+    return this.call(promptMessages, stop, callerId);
   }
 }
 

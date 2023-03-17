@@ -4,6 +4,6 @@ export {
   BaseCallbackHandler,
 } from "./base.js";
 
-export { LangChainTracer } from "./tracers.js";
+export { LangChainTracer, TRACER_RUN_ID } from "./tracers.js";
 
 export { getCallbackManager, setTracerSession } from "./utils.js";

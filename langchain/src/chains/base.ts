@@ -1,7 +1,8 @@
 import { BaseMemory } from "../memory/index.js";
 import { ChainValues } from "../schema/index.js";
-import { CallbackManager, getCallbackManager } from "../callbacks/index.js";
+import {CallbackManager, getCallbackManager, TRACER_RUN_ID} from "../callbacks/index.js";
 import { SerializedBaseChain } from "./serde.js";
+import {RunId} from "../callbacks/base.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type LoadValues = Record<string, any>;
@@ -37,7 +38,7 @@ export abstract class BaseChain implements ChainInputs {
   /**
    * Run the core logic of this chain and return the output
    */
-  abstract _call(values: ChainValues): Promise<ChainValues>;
+  abstract _call(values: ChainValues, runId?: RunId): Promise<ChainValues>;
 
   /**
    * Return the string type key uniquely identifying this class of chain.
@@ -52,7 +53,7 @@ export abstract class BaseChain implements ChainInputs {
   abstract get inputKeys(): string[];
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async run(input: any): Promise<string> {
+  async run(input: any, callerId?: RunId): Promise<string> {
     const isKeylessInput = this.inputKeys.length === 1;
     if (!isKeylessInput) {
       throw new Error(
@@ -60,7 +61,7 @@ export abstract class BaseChain implements ChainInputs {
       );
     }
     const values = { [this.inputKeys[0]]: input };
-    const returnValues = await this.call(values);
+    const returnValues = await this.call(values, callerId);
     const keys = Object.keys(returnValues);
     if (keys.length === 1) {
       const finalReturn = returnValues[keys[0]];
@@ -76,7 +77,7 @@ export abstract class BaseChain implements ChainInputs {
    *
    * Wraps {@link _call} and handles memory.
    */
-  async call(values: ChainValues): Promise<ChainValues> {
+  async call(values: ChainValues, callerId?: RunId): Promise<ChainValues> {
     const fullValues = { ...values } as typeof values;
     if (!(this.memory == null)) {
       const newValues = await this.memory.loadMemoryVariables(values);
@@ -84,30 +85,32 @@ export abstract class BaseChain implements ChainInputs {
         fullValues[key] = value;
       }
     }
-    await this.callbackManager.handleChainStart(
+    const callbackValues = await this.callbackManager.handleChainStart(
       { name: this._chainType() },
       fullValues,
+        callerId,
       this.verbose
     );
     let outputValues;
+    const runId = callbackValues[TRACER_RUN_ID];
     try {
-      outputValues = await this._call(fullValues);
+      outputValues = await this._call(fullValues, runId);
     } catch (e) {
-      await this.callbackManager.handleChainError(e, this.verbose);
+      await this.callbackManager.handleChainError(e, runId, this.verbose);
       throw e;
     }
-    await this.callbackManager.handleChainEnd(outputValues, this.verbose);
+    await this.callbackManager.handleChainEnd(outputValues, runId, this.verbose);
     if (!(this.memory == null)) {
       await this.memory.saveContext(values, outputValues);
     }
-    return outputValues;
+    return { ...values, ...outputValues };
   }
 
   /**
    * Call the chain on all inputs in the list
    */
-  async apply(inputs: ChainValues[]): Promise<ChainValues> {
-    return Promise.all(inputs.map(async (i) => this.call(i)));
+  async apply(inputs: ChainValues[], callerIds?: RunId[]): Promise<ChainValues> {
+    return Promise.all(inputs.map(async (i, idx) => this.call(i, callerIds?.[idx])));
   }
 
   /**

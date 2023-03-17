@@ -1,6 +1,8 @@
 import { ChainValues, LLMResult } from "../schema/index.js";
 import { BaseCallbackHandler } from "./base.js";
 
+export const TRACER_RUN_ID = "run_id";
+
 export type RunType = "llm" | "chain" | "tool";
 
 export interface BaseTracerSession {

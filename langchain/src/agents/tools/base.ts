@@ -1,4 +1,5 @@
-import { CallbackManager, getCallbackManager } from "../../callbacks/index.js";
+import {CallbackManager, getCallbackManager, TRACER_RUN_ID} from "../../callbacks/index.js";
+import {RunId} from "../../callbacks/base.js";
 
 const getVerbosity = () => false;
 
@@ -19,21 +20,23 @@ export abstract class Tool {
 
   protected abstract _call(arg: string): Promise<string>;
 
-  async call(arg: string, verbose?: boolean): Promise<string> {
+  async call(arg: string, callerId?: RunId, verbose?: boolean): Promise<string> {
     const _verbose = verbose ?? this.verbose;
-    await this.callbackManager.handleToolStart(
+    const values = await this.callbackManager.handleToolStart(
       { name: this.name },
       arg,
+        callerId,
       _verbose
     );
     let result;
+    const runId = values[TRACER_RUN_ID];
     try {
       result = await this._call(arg);
     } catch (e) {
-      await this.callbackManager.handleToolError(e, _verbose);
+      await this.callbackManager.handleToolError(e, runId, _verbose);
       throw e;
     }
-    await this.callbackManager.handleToolEnd(result, _verbose);
+    await this.callbackManager.handleToolEnd(result, runId, _verbose);
     return result;
   }
 

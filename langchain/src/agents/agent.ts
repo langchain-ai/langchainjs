@@ -10,6 +10,7 @@ import {
 } from "../schema/index.js";
 import { AgentInput, SerializedAgent, StoppingMethod } from "./types.js";
 import { Tool } from "./tools/base.js";
+import {RunId} from "../callbacks/base.js";
 
 class ParseError extends Error {
   output: string;
@@ -131,6 +132,7 @@ export abstract class Agent {
   private async _plan(
     steps: AgentStep[],
     inputs: ChainValues,
+    runId?: RunId,
     suffix?: string
   ): Promise<AgentAction | AgentFinish> {
     const thoughts = this.constructScratchPad(steps);
@@ -139,7 +141,7 @@ export abstract class Agent {
       agent_scratchpad: suffix ? `${thoughts}${suffix}` : thoughts,
       stop: this._stop(),
     };
-    const output = await this.llmChain.predict(newInputs);
+    const output = await this.llmChain.predict(newInputs, runId);
     const parsed = this.extractToolAndInput(output);
     if (!parsed) {
       throw new ParseError(`Invalid output: ${output}`, output);
@@ -160,14 +162,16 @@ export abstract class Agent {
    *
    * @param steps - Steps the LLM has taken so far, along with observations from each.
    * @param inputs - User inputs.
+   * @param runId - Optional run id to pass to the LLM.
    *
    * @returns Action specifying what tool to use.
    */
   plan(
     steps: AgentStep[],
-    inputs: ChainValues
+    inputs: ChainValues,
+    runId?: RunId,
   ): Promise<AgentAction | AgentFinish> {
-    return this._plan(steps, inputs);
+    return this._plan(steps, inputs, runId);
   }
 
   /**
