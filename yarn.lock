@@ -2260,10 +2260,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@dqbd/tiktoken@npm:^0.4.0":
-  version: 0.4.0
-  resolution: "@dqbd/tiktoken@npm:0.4.0"
-  checksum: 2d708e70b86bd09fc9f5a5cb5e9d3bee34574e18b4c28911f311011f6673008b91510eea658e2769e29421c8e8cd7bf2c0938ffdcad58fa082871f696717383f
+"@dqbd/tiktoken@npm:^1.0.2":
+  version: 1.0.2
+  resolution: "@dqbd/tiktoken@npm:1.0.2"
+  checksum: 626c499723604616c36f55c3413f998d2b3456a4e477842769a4c6689db2e0911b10b4e5d4c3f294bb8407b52ff1213c7e3220476ea89c7e80f5bdf88f04fc9d
   languageName: node
   linkType: hard
 
@@ -10371,7 +10371,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "langchain-examples@workspace:examples"
   dependencies:
-    "@dqbd/tiktoken": ^0.4.0
+    "@dqbd/tiktoken": ^1.0.2
     "@pinecone-database/pinecone": ^0.0.10
     "@supabase/supabase-js": ^2.10.0
     "@tsconfig/recommended": ^1.0.2
@@ -10403,7 +10403,7 @@ __metadata:
   dependencies:
     "@babel/core": ^7.20.12
     "@babel/preset-env": ^7.20.2
-    "@dqbd/tiktoken": ^0.4.0
+    "@dqbd/tiktoken": ^1.0.2
     "@huggingface/inference": ^1.5.1
     "@jest/globals": ^29.5.0
     "@pinecone-database/pinecone": ^0.0.10
@@ -10456,7 +10456,7 @@ __metadata:
     yaml: ^2.2.1
     zod: ^3.21.4
   peerDependencies:
-    "@dqbd/tiktoken": ^0.4.0
+    "@dqbd/tiktoken": ^1.0.2
     "@huggingface/inference": ^1.5.1
     "@pinecone-database/pinecone": ^0.0.10
     "@supabase/supabase-js": ^2.10.0
