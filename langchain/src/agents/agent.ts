@@ -71,6 +71,16 @@ export abstract class Agent {
   prepareForNewCall(): void {}
 
   /**
+   * Prepare the agent for output, if needed
+   */
+  async prepareForOutput(
+    _returnValues: AgentFinish["returnValues"],
+    _steps: AgentStep[]
+  ): Promise<AgentFinish["returnValues"]> {
+    return {};
+  }
+
+  /**
    * Create a prompt for this class
    *
    * @param tools - List of tools the agent will have access to, used to format the prompt.
