@@ -6,7 +6,7 @@ import {
   ChatPromptTemplate,
   MessagesPlaceholder,
 } from "../../prompts/index.js";
-import { interpolateFString } from "../../prompts/template.js";
+import { interpolateFString, renderTemplate } from "../../prompts/template.js";
 import {
   PREFIX,
   SUFFIX,
@@ -109,7 +109,7 @@ export class ChatConversationalAgent extends Agent {
       thoughts.push(new AIChatMessage(step.action.log));
       thoughts.push(
         new HumanChatMessage(
-          interpolateFString(TEMPLATE_TOOL_RESPONSE, {
+          renderTemplate(TEMPLATE_TOOL_RESPONSE, "f-string", {
             observation: step.observation,
           })
         )
