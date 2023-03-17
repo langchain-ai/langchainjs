@@ -178,7 +178,7 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
     }
 
     this.clientConfig = {
-      apiKey: fields?.openAIApiKey ?? process.env.OPENAI_API_KEY,
+      apiKey,
       ...configuration,
     };
   }
@@ -347,7 +347,10 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
     if (!request.stream && !this.batchClient) {
       const clientConfig = new Configuration({
         ...this.clientConfig,
-        baseOptions: { adapter: fetchAdapter },
+        baseOptions: {
+          ...this.clientConfig.baseOptions,
+          adapter: fetchAdapter,
+        },
       });
       this.batchClient = new OpenAIApi(clientConfig);
     }
