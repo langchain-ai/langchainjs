@@ -63,7 +63,7 @@ export class StuffDocumentsChain
     this.inputKey = fields.inputKey ?? this.inputKey;
     this.outputKey = fields.outputKey ?? this.outputKey;
     this.documentPrompt =
-      fields.documentPrompt ?? PromptTemplate.fromTemplate("{pageContent}");
+      fields.documentPrompt ?? PromptTemplate.fromTemplate("{page_content}");
     if (fields.outputParser) {
       this.outputParser = fields.outputParser;
     }
@@ -78,7 +78,7 @@ export class StuffDocumentsChain
       (docs as Document[]).map((doc) =>
         this.documentPrompt.format({
           ...doc.metadata,
-          pageContent: doc.pageContent,
+          page_content: doc.pageContent,
         })
       )
     );
