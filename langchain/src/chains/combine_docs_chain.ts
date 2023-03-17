@@ -11,6 +11,8 @@ import { Document } from "../document.js";
 
 import { resolveConfigFromFile } from "../util/index.js";
 import { ChainValues } from "../schema/index.js";
+import { PromptTemplate } from "../index.js";
+import { RecordOutputParser } from "../output_parsers/base.js";
 
 export interface StuffDocumentsChainInput {
   /** LLM Wrapper to use after formatting documents */
@@ -38,6 +40,10 @@ export class StuffDocumentsChain
 
   documentVariableName = "context";
 
+  documentPrompt: PromptTemplate;
+
+  outputParser?: RecordOutputParser;
+
   get inputKeys() {
     return [this.inputKey, ...this.llmChain.inputKeys];
   }
@@ -47,6 +53,8 @@ export class StuffDocumentsChain
     inputKey?: string;
     outputKey?: string;
     documentVariableName?: string;
+    documentPrompt?: PromptTemplate;
+    outputParser?: RecordOutputParser;
   }) {
     super();
     this.llmChain = fields.llmChain;
@@ -54,6 +62,11 @@ export class StuffDocumentsChain
       fields.documentVariableName ?? this.documentVariableName;
     this.inputKey = fields.inputKey ?? this.inputKey;
     this.outputKey = fields.outputKey ?? this.outputKey;
+    this.documentPrompt =
+      fields.documentPrompt ?? PromptTemplate.fromTemplate("{pageContent}");
+    if (fields.outputParser) {
+      this.outputParser = fields.outputParser;
+    }
   }
 
   async _call(values: ChainValues): Promise<ChainValues> {
@@ -61,13 +74,23 @@ export class StuffDocumentsChain
       throw new Error(`Document key ${this.inputKey} not found.`);
     }
     const { [this.inputKey]: docs, ...rest } = values;
-    const texts = (docs as Document[]).map(({ pageContent }) => pageContent);
+    const texts = await Promise.all(
+      (docs as Document[]).map((doc) =>
+        this.documentPrompt.format({
+          ...doc.metadata,
+          pageContent: doc.pageContent,
+        })
+      )
+    );
     const text = texts.join("\n\n");
     const result = await this.llmChain.call({
       ...rest,
       [this.documentVariableName]: text,
     });
-    return result;
+
+    return this.outputParser
+      ? this.outputParser.parse(result[this.outputKey])
+      : result;
   }
 
   _chainType() {

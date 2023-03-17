@@ -1,13 +1,5 @@
-import { BaseOutputParser } from "./base.js";
+import { ListOutputParser } from "./base.js";
 import { SerializedCommaSeparatedListOutputParser } from "./serde.js";
-
-/**
- * Class to parse the output of an LLM call to a list.
- * @augments BaseOutputParser
- */
-export abstract class ListOutputParser extends BaseOutputParser {
-  abstract parse(text: string): string[];
-}
 
 /**
  * Class to parse the output of an LLM call as a comma-separated list.

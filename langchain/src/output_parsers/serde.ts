@@ -9,6 +9,12 @@ export type SerializedCommaSeparatedListOutputParser = {
   _type: "comma_separated_list";
 };
 
+export type SerializedKeyValueOutputParser = {
+  _type: "key_value";
+  keys: string[];
+};
+
 export type SerializedOutputParser =
   | SerializedRegexParser
-  | SerializedCommaSeparatedListOutputParser;
+  | SerializedCommaSeparatedListOutputParser
+  | SerializedKeyValueOutputParser;

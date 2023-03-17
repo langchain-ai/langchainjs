@@ -52,3 +52,20 @@ export abstract class BaseOutputParser {
     }
   }
 }
+
+/**
+ * Class to parse the output of an LLM call to a list.
+ * @augments BaseOutputParser
+ */
+export abstract class ListOutputParser extends BaseOutputParser {
+  abstract parse(text: string): string[];
+}
+
+/**
+ * Class to parse the output of an LLM call to a record.
+ * @augments BaseOutputParser
+ */
+export abstract class RecordOutputParser extends BaseOutputParser {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  abstract parse(text: string): Record<string, any>;
+}
