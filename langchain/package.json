@@ -69,7 +69,7 @@
   "devDependencies": {
     "@babel/core": "^7.20.12",
     "@babel/preset-env": "^7.20.2",
-    "@dqbd/tiktoken": "^0.4.0",
+    "@dqbd/tiktoken": "^1.0.2",
     "@huggingface/inference": "^1.5.1",
     "@jest/globals": "^29.5.0",
     "@pinecone-database/pinecone": "^0.0.10",
@@ -111,7 +111,7 @@
     "typescript": "^4.9.5"
   },
   "peerDependencies": {
-    "@dqbd/tiktoken": "^0.4.0",
+    "@dqbd/tiktoken": "^1.0.2",
     "@huggingface/inference": "^1.5.1",
     "@pinecone-database/pinecone": "^0.0.10",
     "@supabase/supabase-js": "^2.10.0",

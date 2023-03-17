@@ -184,7 +184,7 @@ export class RecursiveCharacterTextSplitter
 }
 
 export interface TokenTextSplitterParams extends TextSplitterParams {
-  encodingName: tiktoken.TiktokenEmbedding;
+  encodingName: tiktoken.TiktokenEncoding;
   allowedSpecial: "all" | Array<string>;
   disallowedSpecial: "all" | Array<string>;
 }
@@ -196,13 +196,15 @@ export class TokenTextSplitter
   extends TextSplitter
   implements TokenTextSplitterParams
 {
-  encodingName: tiktoken.TiktokenEmbedding;
+  encodingName: tiktoken.TiktokenEncoding;
 
   allowedSpecial: "all" | Array<string>;
 
   disallowedSpecial: "all" | Array<string>;
 
   private tokenizer: tiktoken.Tiktoken;
+
+  private registry: FinalizationRegistry<tiktoken.Tiktoken>;
 
   constructor(fields?: Partial<TokenTextSplitterParams>) {
     super(fields);
@@ -216,6 +218,10 @@ export class TokenTextSplitter
     if (!this.tokenizer) {
       const tiktoken = await TokenTextSplitter.imports();
       this.tokenizer = tiktoken.get_encoding(this.encodingName);
+      // We need to register a finalizer to free the tokenizer when the
+      // splitter is garbage collected.
+      this.registry = new FinalizationRegistry((t) => t.free());
+      this.registry.register(this, this.tokenizer);
     }
 
     const splits: string[] = [];
