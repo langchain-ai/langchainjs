@@ -1,3 +1,7 @@
+---
+sidebar_position: 1
+---
+
 # Agent Overview
 
 Agents use an LLM to determine which actions to take and in what order. An action can either be using a tool and observing its output, or returning to the user.
@@ -12,13 +16,13 @@ In order to load agents, you should understand the following concepts:
 
 For this example, you will also need to install the SerpAPI package for JavaScript/TypeScript.
 
-```bash
-npm i serpapi
+```bash npm2yarn
+npm install -S serpapi
 ```
 
 And set the appropriate environment variables in the `.env` file.
 
-```
+```bash
 SERPAPI_API_KEY="..."
 ```
 

@@ -1,18 +1,21 @@
-import type {
-  Configuration as ConfigurationT,
-  OpenAIApi as OpenAIApiT,
+import { TiktokenModel } from "@dqbd/tiktoken";
+import { createParser } from "eventsource-parser";
+import { backOff } from "exponential-backoff";
+import type { IncomingMessage } from "http";
+import {
+  Configuration,
+  ConfigurationParameters,
   CreateCompletionRequest,
   CreateCompletionResponse,
   CreateCompletionResponseChoicesInner,
-  ConfigurationParameters,
+  OpenAIApi,
 } from "openai";
-import type { IncomingMessage } from "http";
-import { createParser } from "eventsource-parser";
-import { backOff } from "exponential-backoff";
-import type fetchAdapterT from "../util/axios-fetch-adapter.js";
+import fetchAdapter from "../util/axios-fetch-adapter.js";
 import { chunkArray } from "../util/index.js";
-import { BaseLLM } from "./base.js";
-import { LLMResult, LLMCallbackManager } from "./index.js";
+import { BaseLLM, BaseLLMParams } from "./base.js";
+import { calculateMaxTokens } from "./calculateMaxTokens.js";
+import { OpenAIChat } from "./openai-chat.js";
+import { LLMResult } from "../schema/index.js";
 
 interface ModelParams {
   /** Sampling temperature to use */
@@ -42,7 +45,7 @@ interface ModelParams {
   /** Dictionary used to adjust the probability of specific tokens being generated */
   logitBias?: Record<string, number>;
 
-  /** Whether to stream the results or not */
+  /** Whether to stream the results or not. Enabling disables tokenUsage reporting */
   streaming: boolean;
 }
 
@@ -123,26 +126,26 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
 
   streaming = false;
 
-  private client: OpenAIApiT;
+  // Used for non-streaming requests
+  private batchClient: OpenAIApi;
+
+  // Used for streaming requests
+  private streamingClient: OpenAIApi;
 
   private clientConfig: ConfigurationParameters;
 
   constructor(
-    fields?: Partial<OpenAIInput> & {
-      callbackManager?: LLMCallbackManager;
-      concurrency?: number;
-      cache?: boolean;
-      verbose?: boolean;
-      openAIApiKey?: string;
-    },
+    fields?: Partial<OpenAIInput> &
+      BaseLLMParams & {
+        openAIApiKey?: string;
+      },
     configuration?: ConfigurationParameters
   ) {
-    super(
-      fields?.callbackManager,
-      fields?.verbose,
-      fields?.concurrency,
-      fields?.cache
-    );
+    if (fields?.modelName?.startsWith("gpt-3.5-turbo")) {
+      // eslint-disable-next-line no-constructor-return, @typescript-eslint/no-explicit-any
+      return new OpenAIChat(fields, configuration) as any as OpenAI;
+    }
+    super(fields ?? {});
 
     const apiKey = fields?.openAIApiKey ?? process.env.OPENAI_API_KEY;
     if (!apiKey) {
@@ -242,6 +245,19 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
     const params = this.invocationParams();
     params.stop = stop ?? params.stop;
 
+    if (params.max_tokens === -1) {
+      if (prompts.length !== 1) {
+        throw new Error(
+          "max_tokens set to -1 not supported for multiple inputs"
+        );
+      }
+      params.max_tokens = await calculateMaxTokens({
+        prompt: prompts[0],
+        // Cast here to allow for other models that may not fit the union
+        modelName: this.modelName as TiktokenModel,
+      });
+    }
+
     for (let i = 0; i < subPrompts.length; i += 1) {
       const { data } = await this.completionWithRetry({
         ...params,
@@ -267,10 +283,10 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
                     choice.text = (choice.text ?? "") + (part.text ?? "");
                     choice.finish_reason = part.finish_reason;
                     choice.logprobs = part.logprobs;
-
-                    this.callbackManager.handleNewToken?.(
+                    // eslint-disable-next-line no-void
+                    void this.callbackManager.handleLLMNewToken(
                       part.text ?? "",
-                      this.verbose
+                      true
                     );
                   }
                 }
@@ -328,20 +344,20 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
 
   /** @ignore */
   async completionWithRetry(request: CreateCompletionRequest) {
-    if (!this.client) {
-      const { Configuration, OpenAIApi, fetchAdapter } = await OpenAI.imports();
-      const clientConfig = new Configuration(
-        request.stream
-          ? this.clientConfig
-          : {
-              ...this.clientConfig,
-              baseOptions: { adapter: fetchAdapter },
-            }
-      );
-      this.client = new OpenAIApi(clientConfig);
+    if (!request.stream && !this.batchClient) {
+      const clientConfig = new Configuration({
+        ...this.clientConfig,
+        baseOptions: { adapter: fetchAdapter },
+      });
+      this.batchClient = new OpenAIApi(clientConfig);
     }
+    if (request.stream && !this.streamingClient) {
+      const clientConfig = new Configuration(this.clientConfig);
+      this.streamingClient = new OpenAIApi(clientConfig);
+    }
+    const client = !request.stream ? this.batchClient : this.streamingClient;
     const makeCompletionRequest = async () =>
-      this.client.createCompletion(
+      client.createCompletion(
         request,
         request.stream ? { responseType: "stream" } : undefined
       );
@@ -355,25 +371,6 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
 
   _llmType() {
     return "openai";
-  }
-
-  static async imports(): Promise<{
-    Configuration: typeof ConfigurationT;
-    OpenAIApi: typeof OpenAIApiT;
-    fetchAdapter: typeof fetchAdapterT;
-  }> {
-    try {
-      const { Configuration, OpenAIApi } = await import("openai");
-      const { default: fetchAdapter } = await import(
-        "../util/axios-fetch-adapter.js"
-      );
-      return { Configuration, OpenAIApi, fetchAdapter };
-    } catch (err) {
-      console.error(err);
-      throw new Error(
-        "Please install openai as a dependency with, e.g. `npm install -S openai`"
-      );
-    }
   }
 }
 

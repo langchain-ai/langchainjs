@@ -1,18 +1,17 @@
-import {
-  BaseChain,
-  ChainValues,
-  SerializedBaseChain,
-  SerializedLLMChain,
-  loadQAChain,
-  LLMChain,
-} from "./index.js";
-
 import { PromptTemplate } from "../prompts/index.js";
-
-import { VectorStore } from "../vectorstores/base.js";
 import { BaseLLM } from "../llms/index.js";
-
+import { VectorStore } from "../vectorstores/base.js";
+import {
+  SerializedBaseChain,
+  SerializedChatVectorDBQAChain,
+  SerializedLLMChain,
+} from "./serde.js";
 import { resolveConfigFromFile } from "../util/index.js";
+import { ChainValues } from "../schema/index.js";
+import { BaseChain } from "./base.js";
+import { LLMChain } from "./llm_chain.js";
+import { loadQAStuffChain } from "./question_answering/load.js";
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type LoadValues = Record<string, any>;
 
@@ -22,9 +21,6 @@ Chat History:
 {chat_history}
 Follow Up Input: {question}
 Standalone question:`;
-const question_generator_prompt = PromptTemplate.fromTemplate(
-  question_generator_template
-);
 
 const qa_template = `Use the following pieces of context to answer the question at the end. If you don't know the answer, just say that you don't know, don't try to make up an answer.
 
@@ -32,7 +28,6 @@ const qa_template = `Use the following pieces of context to answer the question 
 
 Question: {question}
 Helpful Answer:`;
-const qa_prompt = PromptTemplate.fromTemplate(qa_template);
 
 export interface ChatVectorDBQAChainInput {
   vectorstore: VectorStore;
@@ -42,14 +37,6 @@ export interface ChatVectorDBQAChainInput {
   outputKey: string;
   inputKey: string;
 }
-
-export type SerializedChatVectorDBQAChain = {
-  _type: "chat-vector-db";
-  k: number;
-  combine_documents_chain: SerializedBaseChain;
-  combine_documents_chain_path?: string;
-  question_generator: SerializedLLMChain;
-};
 
 export class ChatVectorDBQAChain
   extends BaseChain
@@ -73,6 +60,8 @@ export class ChatVectorDBQAChain
 
   questionGeneratorChain: LLMChain;
 
+  returnSourceDocuments = false;
+
   constructor(fields: {
     vectorstore: VectorStore;
     combineDocumentsChain: BaseChain;
@@ -80,6 +69,7 @@ export class ChatVectorDBQAChain
     inputKey?: string;
     outputKey?: string;
     k?: number;
+    returnSourceDocuments?: boolean;
   }) {
     super();
     this.vectorstore = fields.vectorstore;
@@ -88,6 +78,8 @@ export class ChatVectorDBQAChain
     this.inputKey = fields.inputKey ?? this.inputKey;
     this.outputKey = fields.outputKey ?? this.outputKey;
     this.k = fields.k ?? this.k;
+    this.returnSourceDocuments =
+      fields.returnSourceDocuments ?? this.returnSourceDocuments;
   }
 
   async _call(values: ChainValues): Promise<ChainValues> {
@@ -116,11 +108,17 @@ export class ChatVectorDBQAChain
     }
     const docs = await this.vectorstore.similaritySearch(newQuestion, this.k);
     const inputs = {
-      question,
+      question: newQuestion,
       input_documents: docs,
       chat_history: chatHistory,
     };
     const result = await this.combineDocumentsChain.call(inputs);
+    if (this.returnSourceDocuments) {
+      return {
+        ...result,
+        sourceDocuments: docs,
+      };
+    }
     return result;
   }
 
@@ -168,8 +166,25 @@ export class ChatVectorDBQAChain
     };
   }
 
-  static fromLLM(llm: BaseLLM, vectorstore: VectorStore): ChatVectorDBQAChain {
-    const qaChain = loadQAChain(llm, { prompt: qa_prompt });
+  static fromLLM(
+    llm: BaseLLM,
+    vectorstore: VectorStore,
+    options: {
+      inputKey?: string;
+      outputKey?: string;
+      k?: number;
+      returnSourceDocuments?: boolean;
+      questionGeneratorTemplate?: string;
+      qaTemplate?: string;
+    } = {}
+  ): ChatVectorDBQAChain {
+    const { questionGeneratorTemplate, qaTemplate, ...rest } = options;
+    const question_generator_prompt = PromptTemplate.fromTemplate(
+      questionGeneratorTemplate || question_generator_template
+    );
+    const qa_prompt = PromptTemplate.fromTemplate(qaTemplate || qa_template);
+
+    const qaChain = loadQAStuffChain(llm, { prompt: qa_prompt });
     const questionGeneratorChain = new LLMChain({
       prompt: question_generator_prompt,
       llm,
@@ -178,6 +193,7 @@ export class ChatVectorDBQAChain
       vectorstore,
       combineDocumentsChain: qaChain,
       questionGeneratorChain,
+      ...rest,
     });
     return instance;
   }

@@ -1,9 +1,8 @@
 import {
-  BasePromptTemplate,
-  InputValues,
+  BaseStringPromptTemplate,
   BasePromptTemplateInput,
-  PartialValues,
-} from "./index.js";
+  BaseExampleSelector,
+} from "./base.js";
 import {
   TemplateFormat,
   checkValidTemplate,
@@ -14,29 +13,13 @@ import {
   resolveConfigFromFile,
   parseFileConfig,
 } from "../util/index.js";
-import { PromptTemplate, SerializedPromptTemplate } from "./prompt.js";
-import { SerializedOutputParser, BaseOutputParser } from "./parser.js";
-
-// TODO: support ExampleSelectors.
-type ExampleSelector = null;
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type Example = Record<string, any>;
-
-export type SerializedFewShotTemplate = {
-  _type: "few_shot";
-  input_variables: string[];
-  output_parser?: SerializedOutputParser;
-  examples: string | Example[];
-  example_prompt?: SerializedPromptTemplate;
-  example_prompt_path?: string;
-  example_separator: string;
-  prefix?: string;
-  prefix_path?: string;
-  suffix?: string;
-  suffix_path?: string;
-  template_format: TemplateFormat;
-};
+import { PromptTemplate } from "./prompt.js";
+import { BaseOutputParser } from "../output_parsers/index.js";
+import {
+  SerializedFewShotTemplate,
+  SerializedPromptTemplate,
+} from "./serde.js";
+import { Example, InputValues, PartialValues } from "../schema/index.js";
 
 export interface FewShotPromptTemplateInput extends BasePromptTemplateInput {
   /**
@@ -47,11 +30,11 @@ export interface FewShotPromptTemplateInput extends BasePromptTemplateInput {
   examples?: Example[];
 
   /**
-   * An {@link ExampleSelector} Examples to format into the prompt. Exactly one of this or
+   * An {@link BaseExampleSelector} Examples to format into the prompt. Exactly one of this or
    * {@link examples} must be
    * provided.
    */
-  exampleSelector?: ExampleSelector;
+  exampleSelector?: BaseExampleSelector;
 
   /**
    * An {@link PromptTemplate} used to format a single example.
@@ -61,24 +44,24 @@ export interface FewShotPromptTemplateInput extends BasePromptTemplateInput {
   /**
    * String separator used to join the prefix, the examples, and suffix.
    */
-  exampleSeparator: string;
+  exampleSeparator?: string;
 
   /**
    * A prompt template string to put before the examples.
    *
    * @defaultValue `""`
    */
-  prefix: string;
+  prefix?: string;
 
   /**
    * A prompt template string to put after the examples.
    */
-  suffix: string;
+  suffix?: string;
 
   /**
    * The format of the prompt template. Options are: 'f-string', 'jinja-2'
    */
-  templateFormat: TemplateFormat;
+  templateFormat?: TemplateFormat;
 
   /**
    * Whether or not to try validating the template on initialization.
@@ -92,20 +75,20 @@ export interface FewShotPromptTemplateInput extends BasePromptTemplateInput {
  * @augments FewShotPromptTemplateInput
  */
 export class FewShotPromptTemplate
-  extends BasePromptTemplate
+  extends BaseStringPromptTemplate
   implements FewShotPromptTemplateInput
 {
   examples?: InputValues[];
 
-  exampleSelector?: ExampleSelector;
+  exampleSelector?: BaseExampleSelector | undefined;
 
   examplePrompt: PromptTemplate;
 
-  suffix: string;
+  suffix = "";
 
-  exampleSeparator: string;
+  exampleSeparator = "\n\n";
 
-  prefix: string;
+  prefix = "";
 
   templateFormat: TemplateFormat = "f-string";
 
@@ -146,12 +129,14 @@ export class FewShotPromptTemplate
     return "few_shot";
   }
 
-  private getExamples(_: InputValues): InputValues[] {
+  private async getExamples(
+    inputVariables: InputValues
+  ): Promise<InputValues[]> {
     if (this.examples !== undefined) {
       return this.examples;
     }
     if (this.exampleSelector !== undefined) {
-      throw new Error("Example selectors are not yet supported.");
+      return this.exampleSelector.selectExamples(inputVariables);
     }
 
     throw new Error(
@@ -173,10 +158,10 @@ export class FewShotPromptTemplate
 
   async format(values: InputValues): Promise<string> {
     const allValues = await this.mergePartialAndUserVariables(values);
-    const examples = this.getExamples(allValues);
+    const examples = await this.getExamples(allValues);
 
-    const exampleStrings = examples.map((example) =>
-      this.examplePrompt.format(example)
+    const exampleStrings = await Promise.all(
+      examples.map((example) => this.examplePrompt.format(example))
     );
     const template = [this.prefix, ...exampleStrings, this.suffix].join(
       this.exampleSeparator
@@ -230,8 +215,9 @@ export class FewShotPromptTemplate
 
     return new FewShotPromptTemplate({
       inputVariables: data.input_variables,
-      outputParser:
-        data.output_parser && BaseOutputParser.deserialize(data.output_parser),
+      outputParser: data.output_parser
+        ? await BaseOutputParser.deserialize(data.output_parser)
+        : undefined,
       examplePrompt,
       examples,
       exampleSeparator: data.example_separator,

@@ -7,7 +7,6 @@ export { DynamicTool } from "./dynamic.js";
 export { IFTTTWebhook } from "./IFTTTWebhook.js";
 export { ChainTool } from "./chain.js";
 export {
-  SqlDatabase,
   QuerySqlTool,
   InfoSqlTool,
   ListTablesSqlTool,
@@ -21,3 +20,5 @@ export {
   Json,
 } from "./json.js";
 export { RequestsGetTool, RequestsPostTool } from "./requests.js";
+export { VectorStoreQATool } from "./vectorstore.js";
+export { ZapierNLARunAction, ZapierNLAWrapper } from "./zapier.js";

@@ -15,6 +15,11 @@ const entrypoints = {
   document: "document",
   docstore: "docstore/index",
   document_loaders: "document_loaders/index",
+  chat_models: "chat_models/index",
+  schema: "schema/index",
+  sql_db: "sql_db",
+  callbacks: "callbacks/index",
+  output_parsers: "output_parsers/index",
 };
 
 const updateJsonFile = (relativePath, updateFunction) => {

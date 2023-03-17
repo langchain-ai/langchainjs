@@ -1,4 +1,4 @@
-import { BasePromptTemplate } from "./index.js";
+import { BasePromptTemplate } from "./base.js";
 import { loadFromHub } from "../util/hub.js";
 import { parseFileConfig, FileLoader, loadFromFile } from "../util/index.js";
 

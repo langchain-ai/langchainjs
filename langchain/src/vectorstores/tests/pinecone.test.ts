@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { jest, test, expect } from "@jest/globals";
 import { FakeEmbeddings } from "../../embeddings/fake.js";
 
@@ -12,7 +13,7 @@ test("PineconeStore with external ids", async () => {
   };
   const embeddings = new FakeEmbeddings();
 
-  const store = new PineconeStore(client as any, embeddings);
+  const store = new PineconeStore(embeddings, { pineconeIndex: client as any });
 
   expect(store).toBeDefined();
 
@@ -37,7 +38,7 @@ test("PineconeStore with generated ids", async () => {
   };
   const embeddings = new FakeEmbeddings();
 
-  const store = new PineconeStore(client as any, embeddings);
+  const store = new PineconeStore(embeddings, { pineconeIndex: client as any });
 
   expect(store).toBeDefined();
 

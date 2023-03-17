@@ -34,7 +34,8 @@ const maybePromise = runExample(args);
 
 if (maybePromise instanceof Promise) {
   maybePromise.catch((e) => {
-    console.error(`Example failed with ${e}`);
+    console.error(`Example failed with:`);
+    console.error(e);
     process.exit(1);
   });
 }

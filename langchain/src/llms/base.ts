@@ -1,42 +1,34 @@
-import { encode } from "gpt-3-encoder";
+import GPT3Tokenizer from "gpt3-tokenizer";
 import PQueue from "p-queue";
 
-import { LLMCallbackManager, LLMResult } from "./index.js";
-import { BaseCache, getKey, InMemoryCache } from "../cache.js";
-
-const getCallbackManager = (): LLMCallbackManager => ({
-  handleStart: (..._args) => {
-    // console.log(args);
-  },
-  handleEnd: (..._args) => {
-    // console.log(args);
-  },
-  handleError: (..._args) => {
-    // console.log(args);
-  },
-});
-
-const getVerbosity = () => true;
-
-const cache: BaseCache = new InMemoryCache();
+import { BaseCache, InMemoryCache } from "../cache.js";
+import { BasePromptValue, LLMResult } from "../schema/index.js";
+import {
+  BaseLanguageModel,
+  BaseLanguageModelParams,
+} from "../base_language/index.js";
 
 export type SerializedLLM = {
+  _model: string;
   _type: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 } & Record<string, any>;
 
+export interface BaseLLMParams extends BaseLanguageModelParams {
+  concurrency?: number;
+  cache?: BaseCache | boolean;
+}
+
 /**
  * LLM Wrapper. Provides an {@link call} (an {@link generate}) function that takes in a prompt (or prompts) and returns a string.
  */
-export abstract class BaseLLM {
+export abstract class BaseLLM extends BaseLanguageModel {
   /**
    * The name of the LLM class
    */
   name: string;
 
-  cache?: boolean;
-
-  callbackManager: LLMCallbackManager;
+  cache?: BaseCache;
 
   /**
    * Maximum number of concurrent calls to this chain,
@@ -46,22 +38,27 @@ export abstract class BaseLLM {
 
   protected queue: PQueue;
 
-  /**
-   * Whether to print out response text.
-   */
-  verbose?: boolean = false;
-
-  constructor(
-    callbackManager?: LLMCallbackManager,
-    verbose?: boolean,
-    concurrency?: number,
-    cache?: boolean
-  ) {
-    this.callbackManager = callbackManager ?? getCallbackManager();
-    this.verbose = verbose ?? getVerbosity();
-    this.cache = cache;
+  constructor({ concurrency, cache, ...rest }: BaseLLMParams) {
+    super(rest);
+    if (cache instanceof BaseCache) {
+      this.cache = cache;
+    } else if (cache) {
+      this.cache = InMemoryCache.global();
+    } else {
+      this.cache = undefined;
+    }
     this.concurrency = concurrency ?? Infinity;
     this.queue = new PQueue({ concurrency: this.concurrency });
+  }
+
+  async generatePrompt(
+    promptValues: BasePromptValue[],
+    stop?: string[]
+  ): Promise<LLMResult> {
+    const prompts: string[] = promptValues.map((promptValue) =>
+      promptValue.toString()
+    );
+    return this.generate(prompts, stop);
   }
 
   /**
@@ -74,8 +71,8 @@ export abstract class BaseLLM {
     prompts: string[],
     stop?: string[]
   ): Promise<LLMResult> {
-    this.callbackManager.handleStart?.(
-      { name: this.name },
+    await this.callbackManager.handleLLMStart(
+      { name: this._llmType() },
       prompts,
       this.verbose
     );
@@ -85,11 +82,11 @@ export abstract class BaseLLM {
         throwOnTimeout: true,
       });
     } catch (err) {
-      this.callbackManager.handleError?.(`${err}`, this.verbose);
+      await this.callbackManager.handleLLMError(err, this.verbose);
       throw err;
     }
 
-    this.callbackManager.handleEnd?.(output, this.verbose);
+    await this.callbackManager.handleLLMEnd(output, this.verbose);
     return output;
   }
 
@@ -101,14 +98,11 @@ export abstract class BaseLLM {
       throw new Error("Argument 'prompts' is expected to be a string[]");
     }
 
-    if (this.cache === true && cache === null) {
-      throw new Error("Requested cache, but no cache found");
-    }
-
-    if (cache === null || this.cache === false) {
+    if (!this.cache) {
       return this._generateUncached(prompts, stop);
     }
 
+    const { cache } = this;
     const params = this.serialize();
     params.stop = stop;
 
@@ -116,7 +110,7 @@ export abstract class BaseLLM {
     const missingPromptIndices: number[] = [];
     const generations = await Promise.all(
       prompts.map(async (prompt, index) => {
-        const result = cache.lookup(await getKey(prompt, llmStringKey));
+        const result = await cache.lookup(prompt, llmStringKey);
         if (!result) {
           missingPromptIndices.push(index);
         }
@@ -134,8 +128,7 @@ export abstract class BaseLLM {
         results.generations.map(async (generation, index) => {
           const promptIndex = missingPromptIndices[index];
           generations[promptIndex] = generation;
-          const key = await getKey(prompts[promptIndex], llmStringKey);
-          cache.update(key, generation);
+          return cache.update(prompts[promptIndex], llmStringKey, generation);
         })
       );
       llmOutput = results.llmOutput ?? {};
@@ -172,14 +165,22 @@ export abstract class BaseLLM {
     return {
       ...this._identifyingParams(),
       _type: this._llmType(),
+      _model: this._modelType(),
     };
+  }
+
+  _modelType(): string {
+    return "base_llm" as const;
   }
 
   /**
    * Load an LLM from a json-like object describing it.
    */
   static async deserialize(data: SerializedLLM): Promise<BaseLLM> {
-    const { _type, ...rest } = data;
+    const { _type, _model, ...rest } = data;
+    if (_model && _model !== "base_llm") {
+      throw new Error(`Cannot load LLM with model ${_model}`);
+    }
     const Cls = {
       openai: (await import("./openai.js")).OpenAI,
     }[_type];
@@ -189,11 +190,17 @@ export abstract class BaseLLM {
     return new Cls(rest);
   }
 
+  private _tokenizer?: GPT3Tokenizer.default;
+
   getNumTokens(text: string): number {
     // TODOs copied from py implementation
     // TODO: this method may not be exact.
-    // TODO: this method may differ based on model (eg codex).
-    return encode(text).length;
+    // TODO: this method may differ based on model (eg codex, gpt-3.5).
+    if (this._tokenizer === undefined) {
+      const Constructor = GPT3Tokenizer.default;
+      this._tokenizer = new Constructor({ type: "gpt3" });
+    }
+    return this._tokenizer.encode(text).bpe.length;
   }
 
   // TODO(sean): save to disk

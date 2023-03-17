@@ -5,38 +5,26 @@ import { Embeddings } from "../embeddings/base.js";
 import { VectorStore } from "./base.js";
 import { Document } from "../document.js";
 
-let ChromaClient: typeof ChromaClientT | null = null;
-
-try {
-  // eslint-disable-next-line global-require,import/no-extraneous-dependencies
-  ({ ChromaClient } = require("chromadb"));
-} catch {
-  // ignore error
-}
-
 export interface ChromaLibArgs {
   url?: string;
   numDimensions?: number;
   collectionName?: string;
+  index?: ChromaClientT;
 }
 
 export class Chroma extends VectorStore {
   index?: ChromaClientT;
 
-  args: ChromaLibArgs;
-
   collectionName: string;
+
+  numDimensions?: number;
 
   url: string;
 
-  constructor(
-    args: ChromaLibArgs,
-    embeddings: Embeddings,
-    index?: ChromaClientT
-  ) {
-    super(embeddings);
-    this.index = index;
-    this.args = args;
+  constructor(embeddings: Embeddings, args: ChromaLibArgs) {
+    super(embeddings, args);
+    this.index = args.index;
+    this.numDimensions = args.numDimensions;
     this.embeddings = embeddings;
     this.collectionName = ensureCollectionName(args.collectionName);
     this.url = args.url || "http://localhost:8000";
@@ -55,14 +43,10 @@ export class Chroma extends VectorStore {
       return;
     }
     if (!this.index) {
-      if (this.args.numDimensions === undefined) {
-        this.args.numDimensions = vectors[0].length;
+      if (this.numDimensions === undefined) {
+        this.numDimensions = vectors[0].length;
       }
-      if (ChromaClient === null) {
-        throw new Error(
-          "Please install chromadb as a dependency with, e.g. `npm install -S chromadb`"
-        );
-      }
+      const { ChromaClient } = await Chroma.imports();
       this.index = new ChromaClient(this.url);
       try {
         await this.index.createCollection(this.collectionName);
@@ -73,9 +57,9 @@ export class Chroma extends VectorStore {
     if (vectors.length !== documents.length) {
       throw new Error(`Vectors and metadatas must have the same length`);
     }
-    if (vectors[0].length !== this.args.numDimensions) {
+    if (vectors[0].length !== this.numDimensions) {
       throw new Error(
-        `Vectors must have the same length as the number of dimensions (${this.args.numDimensions})`
+        `Vectors must have the same length as the number of dimensions (${this.numDimensions})`
       );
     }
 
@@ -127,8 +111,10 @@ export class Chroma extends VectorStore {
     texts: string[],
     metadatas: object[],
     embeddings: Embeddings,
-    collectionName?: string,
-    url?: string
+    dbConfig: {
+      collectionName?: string;
+      url?: string;
+    }
   ): Promise<Chroma> {
     const docs: Document[] = [];
     for (let i = 0; i < texts.length; i += 1) {
@@ -138,28 +124,33 @@ export class Chroma extends VectorStore {
       });
       docs.push(newDoc);
     }
-    return Chroma.fromDocuments(docs, embeddings, collectionName, url);
+    return Chroma.fromDocuments(docs, embeddings, dbConfig);
   }
 
   static async fromDocuments(
     docs: Document[],
     embeddings: Embeddings,
-    collectionName?: string,
-    url?: string
+    dbConfig: {
+      collectionName?: string;
+      url?: string;
+    }
   ): Promise<Chroma> {
-    if (ChromaClient === null) {
+    const instance = new this(embeddings, dbConfig);
+    await instance.addDocuments(docs);
+    return instance;
+  }
+
+  static async imports(): Promise<{
+    ChromaClient: typeof ChromaClientT;
+  }> {
+    try {
+      const { ChromaClient } = await import("chromadb");
+      return { ChromaClient };
+    } catch (e) {
       throw new Error(
         "Please install chromadb as a dependency with, e.g. `npm install -S chromadb`"
       );
     }
-
-    const args: ChromaLibArgs = {
-      collectionName,
-      url,
-    };
-    const instance = new this(args, embeddings);
-    await instance.addDocuments(docs);
-    return instance;
   }
 }
 

@@ -1,0 +1,36 @@
+import CodeBlock from "@theme/CodeBlock";
+
+# Output Parsers
+
+Language models output text. But many times you may want to get more structured information than just text back. This is where output parsers come in.
+
+Output parsers are classes that help structure language model responses. There are two main methods an output parser must implement:
+
+- `getFormatInstructions(): str` A method which returns a string containing instructions for how the output of a language model should be formatted.
+- `parse(raw: string): any` A method which takes in a string (assumed to be the response from a language model) and parses it into some structure.
+
+Below we go over some examples of output parsers.
+
+## Structured Output Parser
+
+This output parser can be used when you want to return multiple fields.
+
+import Structured from "@examples/prompts/structured_parser.ts";
+
+<CodeBlock language="typescript">{Structured}</CodeBlock>
+
+## Structured Output Parser with Zod Schema
+
+This output parser can be also be used when you want to define the output schema using Zod, a TypeScript validation library.
+
+import StructuredZod from "@examples/prompts/structured_parser_zod.ts";
+
+<CodeBlock language="typescript">{StructuredZod}</CodeBlock>
+
+## Comma-separated List Parser
+
+This output parser can be used when you want to return a list of items.
+
+import Comma from "@examples/prompts/comma_list_parser.ts";
+
+<CodeBlock language="typescript">{Comma}</CodeBlock>

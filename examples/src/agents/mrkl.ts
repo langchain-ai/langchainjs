@@ -9,7 +9,8 @@ export const run = async () => {
   const executor = await initializeAgentExecutor(
     tools,
     model,
-    "zero-shot-react-description"
+    "zero-shot-react-description",
+    true
   );
   console.log("Loaded agent.");
 
@@ -20,12 +21,4 @@ export const run = async () => {
   const result = await executor.call({ input });
 
   console.log(`Got output ${result.output}`);
-
-  console.log(
-    `Got intermediate steps ${JSON.stringify(
-      result.intermediateSteps,
-      null,
-      2
-    )}`
-  );
 };

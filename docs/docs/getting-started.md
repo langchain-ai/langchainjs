@@ -2,56 +2,15 @@
 
 This tutorial gives you a quick walkthrough about building an end-to-end language model application with LangChain.
 
-## Installation
+## Installation and setup
 
-To get started, install LangChain with the following command:
-
-```bash
-npm i langchain
-```
-
-If you are running this on Node.js 16, either:
-
-- run your application with `NODE_OPTIONS='--experimental-fetch' node ...`, or
-- install `node-fetch` and follow the instructions [here](https://github.com/node-fetch/node-fetch#providing-global-access)
-
-## Loading the library
-
-We support LangChain on Node.js 16, 18, and 19.
-
-### ESM in Node.js
-
-LangChain is an ESM library currently targeting Node.js environments. To use it, you will need to use the `import` syntax, inside a project with `type: module` in its `package.json`.
-
-```typescript
-import { OpenAI } from "langchain";
-```
-
-### CommonJS in Node.js
-
-If your project is using CommonJS, you can use LangChain only with the dynamic `import()` syntax.
-
-```typescript
-const { OpenAI } = await import("langchain");
-```
-
-### Other environments
-
-LangChain currently supports only Node.js-based environments. This includes Vercel Serverless functions (but not Edge functions), as well as other serverless environments, like AWS Lambda and Google Cloud Functions.
-
-We currently do not support running LangChain in the browser. We are listening to the community on additional environments that we should support. Please open an issue if you would like to see support for a specific environment.
-
-Please see [Deployment](./deployment.md) for more information on deploying LangChain applications.
+To get started, follow the [installation instructions](./install) to install LangChain.
 
 ## Picking up a LLM
 
 Using LangChain will usually require integrations with one or more model providers, data stores, apis, etc.
 
-For this example, we will be using OpenAI's APIs, so we will first need to install their SDK:
-
-```bash
-npm i openai
-```
+For this example, we will be using OpenAI's APIs, so no additional setup is required.
 
 ## Building a Language Model Application
 
@@ -73,7 +32,7 @@ We will then need to set the environment variable for the OpenAI key. Three opti
 
 1. We can do this by setting the value in a `.env` file and use the [dotenv](https://github.com/motdotla/dotenv) package to read it.
 
-```
+```bash
 OPENAI_API_KEY="..."
 ```
 
@@ -114,6 +73,7 @@ First lets define the prompt template:
 
 ```typescript
 import { PromptTemplate } from "langchain/prompts";
+
 const template = "What is a good name for a company that makes {product}?";
 const prompt = new PromptTemplate({
   template: template,
@@ -145,6 +105,7 @@ Extending the previous example, we can construct an LLMChain which takes user in
 ```typescript
 import { OpenAI } from "langchain/llms";
 import { PromptTemplate } from "langchain/prompts";
+
 const model = new OpenAI({ temperature: 0.9 });
 const template = "What is a good name for a company that makes {product}?";
 const prompt = new PromptTemplate({
@@ -190,13 +151,13 @@ In order to load agents, you should understand the following concepts:
 
 For this example, you will also need to install the SerpAPI package for JavaScript/TypeScript.
 
-```bash
-npm i serpapi
+```bash npm2yarn
+npm install -S serpapi
 ```
 
 And set the appropriate environment variables in the `.env` file.
 
-```
+```bash
 SERPAPI_API_KEY="..."
 ```
 

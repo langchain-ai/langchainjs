@@ -1,30 +1,17 @@
-import { BaseLLM } from "../../llms/index.js";
 import { LLMChain } from "../../chains/index.js";
-import {
-  Agent,
-  Tool,
-  AgentInput,
-  StaticAgent,
-  staticImplements,
-  SerializedAgentT,
-} from "../index.js";
 import { PromptTemplate } from "../../prompts/index.js";
 import { PREFIX, SUFFIX, formatInstructions } from "./prompt.js";
 import { deserializeHelper } from "../helpers.js";
+import { BaseLanguageModel } from "../../base_language/index.js";
+import {
+  AgentInput,
+  SerializedFromLLMAndTools,
+  SerializedZeroShotAgent,
+} from "../types.js";
+import { Agent } from "../agent.js";
+import { Tool } from "../tools/base.js";
 
 const FINAL_ANSWER_ACTION = "Final Answer:";
-
-type SerializedFromLLMAndTools = {
-  suffix?: string;
-  prefix?: string;
-  input_variables?: string[];
-};
-
-export type SerializedZeroShotAgent = SerializedAgentT<
-  "zero-shot-react-description",
-  SerializedFromLLMAndTools,
-  AgentInput
->;
 
 export type CreatePromptArgs = {
   /** String to put after the list of tools. */
@@ -40,9 +27,7 @@ type ZeroShotAgentInput = AgentInput;
 /**
  * Agent for the MRKL chain.
  * @augments Agent
- * @augments StaticAgent
  */
-@(staticImplements<StaticAgent>)
 export class ZeroShotAgent extends Agent {
   constructor(input: ZeroShotAgentInput) {
     super(input);
@@ -98,7 +83,11 @@ export class ZeroShotAgent extends Agent {
     });
   }
 
-  static fromLLMAndTools(llm: BaseLLM, tools: Tool[], args?: CreatePromptArgs) {
+  static fromLLMAndTools(
+    llm: BaseLanguageModel,
+    tools: Tool[],
+    args?: CreatePromptArgs
+  ) {
     ZeroShotAgent.validateTools(tools);
     const prompt = ZeroShotAgent.createPrompt(tools, args);
     const chain = new LLMChain({ prompt, llm });
@@ -127,14 +116,18 @@ export class ZeroShotAgent extends Agent {
   }
 
   static async deserialize(
-    data: SerializedZeroShotAgent & { llm?: BaseLLM; tools?: Tool[] }
+    data: SerializedZeroShotAgent & { llm?: BaseLanguageModel; tools?: Tool[] }
   ): Promise<ZeroShotAgent> {
     const { llm, tools, ...rest } = data;
     return deserializeHelper(
       llm,
       tools,
       rest,
-      (llm: BaseLLM, tools: Tool[], args: SerializedFromLLMAndTools) =>
+      (
+        llm: BaseLanguageModel,
+        tools: Tool[],
+        args: SerializedFromLLMAndTools
+      ) =>
         ZeroShotAgent.fromLLMAndTools(llm, tools, {
           prefix: args.prefix,
           suffix: args.suffix,

@@ -1,14 +1,14 @@
 # Question Answering Chain
 
-A question answering chain takes as input documents and a question and then uses the language model to answer that question given the relevant documents.
+The question answering chain receives both documents and a question as input. It then utilizes the language model to provide an answer to the question based on the relevant documents.
 
 ```typescript
 import { OpenAI } from "langchain/llms";
-import { loadQAChain } from "langchain/chains";
+import { loadQAStuffChain } from "langchain/chains";
 import { Document } from "langchain/document";
 
 const llm = new OpenAI({});
-const chain = loadQAChain(llm);
+const chain = loadQAStuffChain(llm);
 const docs = [
   new Document({ pageContent: "harrison went to harvard" }),
   new Document({ pageContent: "ankush went to princeton" }),
@@ -25,13 +25,13 @@ If you have a lot of documents, you may want to try using the map-reduce method.
 
 ```typescript
 import { OpenAI } from "langchain/llms";
-import { loadQAChain } from "langchain/chains";
+import { loadQAMapReduceChain } from "langchain/chains";
 import { Document } from "langchain/document";
 
 // Optionally limit the nr of concurrent requests to the language model,
 // if you have a lot of documents, to avoid rate limiting.
 const llm = new OpenAI({ concurrency: 10 });
-const chain = loadQAChain(llm, { type: "map_reduce" });
+const chain = loadQAMapReduceChain(llm);
 const docs = [
   new Document({ pageContent: "harrison went to harvard" }),
   new Document({ pageContent: "ankush went to princeton" }),

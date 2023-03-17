@@ -5,7 +5,7 @@ import { LLMChain } from "../llm_chain.js";
 import { loadChain } from "../load.js";
 import { StuffDocumentsChain } from "../combine_docs_chain.js";
 import { Document } from "../../document.js";
-import { loadQAChain } from "../question_answering/load.js";
+import { loadQAMapReduceChain } from "../question_answering/load.js";
 
 test("Test StuffDocumentsChain", async () => {
   const model = new OpenAI({ modelName: "text-ada-001" });
@@ -29,7 +29,7 @@ test("Test StuffDocumentsChain", async () => {
 
 test("Test MapReduceDocumentsChain with QA chain", async () => {
   const model = new OpenAI({ temperature: 0, modelName: "text-ada-001" });
-  const chain = loadQAChain(model, { type: "map_reduce" });
+  const chain = loadQAMapReduceChain(model);
   const docs = [
     new Document({ pageContent: "harrison went to harvard" }),
     new Document({ pageContent: "ankush went to princeton" }),

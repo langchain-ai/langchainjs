@@ -5,7 +5,7 @@ import { Tool } from "./base.js";
 export class Calculator extends Tool {
   name = "calculator";
 
-  async call(input: string) {
+  async _call(input: string) {
     try {
       return Parser.evaluate(input).toString();
     } catch (error) {
@@ -13,6 +13,5 @@ export class Calculator extends Tool {
     }
   }
 
-  description = `Useful for getting the result of a math expression. 
-  The input to this tool should be a valid mathmatical expression that can be parsed and evaluated by javascript's expr-eval`;
+  description = `Useful for getting the result of a math expression. The input to this tool should be a valid mathmatical expression that could be executed by a simple calculator.`;
 }
