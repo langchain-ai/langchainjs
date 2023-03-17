@@ -71,9 +71,9 @@ type ZeroShotAgentInput = AgentInput;
 export class ChatConversationalAgent extends Agent {
   outputParser: BaseOutputParser;
 
-  constructor(input: ZeroShotAgentInput, outputParser: BaseOutputParser) {
+  constructor(input: ZeroShotAgentInput, outputParser?: BaseOutputParser) {
     super(input);
-    this.outputParser = outputParser;
+    this.outputParser = outputParser ?? new AgentOutputParser();
   }
 
   _agentType(): string {
