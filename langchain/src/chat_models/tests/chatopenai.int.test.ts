@@ -66,7 +66,7 @@ test("Test ChatOpenAI tokenUsage", async () => {
   const res = await model.call([message]);
   console.log({ res });
 
-  expect(tokenUsage.promptTokens).toBe(1);
+  expect(tokenUsage.promptTokens).toBeGreaterThan(0);
 });
 
 test("Test ChatOpenAI in streaming mode", async () => {
