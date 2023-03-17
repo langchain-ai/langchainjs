@@ -52,5 +52,7 @@ export const calculateMaxTokens = async ({
 
   const maxTokens = getModelContextSize(modelName);
 
+  encoding.free();
+
   return maxTokens - numTokens;
 };
