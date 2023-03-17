@@ -249,6 +249,7 @@ export class OpenAIChat extends LLM implements OpenAIInput {
                 // eslint-disable-next-line no-void
                 void this.callbackManager.handleLLMNewToken(
                   part.delta?.content ?? "",
+                  "",
                   true
                 );
               }

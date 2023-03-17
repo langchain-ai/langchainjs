@@ -1,6 +1,6 @@
 import { test, expect } from "@jest/globals";
 
-import { LangChainTracer } from "../tracers.js";
+import {LangChainTracer, TRACER_RUN_ID} from "../tracers.js";
 import { OpenAI } from "../../llms/index.js";
 import { Calculator, SerpAPI } from "../../agents/tools/index.js";
 import { initializeAgentExecutor } from "../../agents/index.js";
@@ -9,17 +9,24 @@ test("Test LangChain tracer", async () => {
   const tracer = new LangChainTracer();
   expect(tracer.alwaysVerbose).toBe(true);
 
-  await tracer.handleChainStart({ name: "test" }, { foo: "bar" });
-  await tracer.handleToolStart({ name: "test" }, "test");
-  await tracer.handleLLMStart({ name: "test" }, ["test"]);
-  await tracer.handleLLMEnd({ generations: [[]] });
-  await tracer.handleToolEnd("output");
-  await tracer.handleLLMStart({ name: "test2" }, ["test"]);
-  await tracer.handleLLMEnd({ generations: [[]] });
-  await tracer.handleChainEnd({ foo: "bar" });
+  let values;
+  values = await tracer.handleChainStart({ name: "test" }, { foo: "bar" });
+  const runIdA = values[TRACER_RUN_ID];
 
-  await tracer.handleLLMStart({ name: "test" }, ["test"]);
-  await tracer.handleLLMEnd({ generations: [[]] });
+  values = await tracer.handleToolStart({ name: "test" }, "test", runIdA);
+  const runIdB = values[TRACER_RUN_ID];
+
+  values = await tracer.handleLLMStart({ name: "test" }, ["test"], runIdB);
+  const runIdC = values[TRACER_RUN_ID];
+
+  await tracer.handleLLMEnd({ generations: [[]] }, runIdC);
+  await tracer.handleToolEnd("output", runIdB);
+
+  values = await tracer.handleLLMStart({ name: "test2" }, ["test"], runIdA);
+  const runIdD = values[TRACER_RUN_ID];
+
+  await tracer.handleLLMEnd({ generations: [[]] }, runIdD);
+  await tracer.handleChainEnd({ foo: "bar" }, runIdA);
 });
 
 test.skip("Test Traced Agent with concurrency (skipped until we fix concurrency)", async () => {

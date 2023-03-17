@@ -20,6 +20,7 @@ import {
   MessageType,
   SystemChatMessage,
 } from "../schema/index.js";
+import {RunId} from "../callbacks/base.js";
 
 function messageTypeToOpenAIRole(
   type: MessageType
@@ -231,6 +232,7 @@ export class ChatOpenAI extends BaseChatModel implements OpenAIInput {
    *
    * @param messages - The messages to pass into the model.
    * @param [stop] - Optional list of stop words to use when generating.
+   * @param [runId] - Optional run ID to use for the request.
    *
    * @returns The full LLM output.
    *
@@ -243,7 +245,8 @@ export class ChatOpenAI extends BaseChatModel implements OpenAIInput {
    */
   async _generate(
     messages: BaseChatMessage[],
-    stop?: string[]
+    stop?: string[],
+    runId?: RunId,
   ): Promise<ChatResult> {
     if (this.stop && stop) {
       throw new Error("Stop found in input and default params");
@@ -291,6 +294,7 @@ export class ChatOpenAI extends BaseChatModel implements OpenAIInput {
                 // eslint-disable-next-line no-void
                 void this.callbackManager.handleLLMNewToken(
                   part.delta?.content ?? "",
+                  runId,
                   true
                 );
               }
