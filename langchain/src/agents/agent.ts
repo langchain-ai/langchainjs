@@ -73,17 +73,14 @@ export abstract class Agent {
   /**
    * Prepare the agent for output, if needed
    */
-  prepareForOutput(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    _returnValues: Record<string, any>,
+  async prepareForOutput(
+    _returnValues: AgentFinish["returnValues"],
     _steps: AgentStep[]
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ): Promise<Record<string, any>> {
-    return new Promise((resolve) => {
-      resolve({});
-    });
+  ): Promise<AgentFinish["returnValues"]> {
+    return {};
   }
 
+  /**
    * Create a prompt for this class
    *
    * @param tools - List of tools the agent will have access to, used to format the prompt.
