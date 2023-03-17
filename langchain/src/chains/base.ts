@@ -111,7 +111,7 @@ export abstract class BaseChain implements ChainInputs {
     if (!(this.memory == null)) {
       await this.memory.saveContext(values, outputValues);
     }
-    return { ...values, ...outputValues };
+    return { ...callbackValues, ...outputValues };
   }
 
   /**

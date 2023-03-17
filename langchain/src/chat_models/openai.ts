@@ -20,7 +20,7 @@ import {
   MessageType,
   SystemChatMessage,
 } from "../schema/index.js";
-import {RunId} from "../callbacks/base.js";
+import { RunId } from "../callbacks/base.js";
 
 function messageTypeToOpenAIRole(
   type: MessageType
@@ -246,7 +246,7 @@ export class ChatOpenAI extends BaseChatModel implements OpenAIInput {
   async _generate(
     messages: BaseChatMessage[],
     stop?: string[],
-    runId?: RunId,
+    runId?: RunId
   ): Promise<ChatResult> {
     if (this.stop && stop) {
       throw new Error("Stop found in input and default params");

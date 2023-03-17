@@ -16,7 +16,7 @@ import { BaseLLM, BaseLLMParams } from "./base.js";
 import { calculateMaxTokens } from "./calculateMaxTokens.js";
 import { OpenAIChat } from "./openai-chat.js";
 import { LLMResult } from "../schema/index.js";
-import {RunId} from "../callbacks/base.js";
+import { RunId } from "../callbacks/base.js";
 
 interface ModelParams {
   /** Sampling temperature to use */
@@ -235,7 +235,11 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
    * const response = await openai.generate(["Tell me a joke."]);
    * ```
    */
-  async _generate(prompts: string[], stop?: string[], runId?: RunId): Promise<LLMResult> {
+  async _generate(
+    prompts: string[],
+    stop?: string[],
+    runId?: RunId
+  ): Promise<LLMResult> {
     const subPrompts = chunkArray(prompts, this.batchSize);
     const choices: CreateCompletionResponseChoicesInner[] = [];
     const tokenUsage: TokenUsage = {};
