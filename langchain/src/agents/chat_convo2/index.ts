@@ -1,5 +1,5 @@
 import { LLMChain } from "../../chains/index.js";
-import { Agent, Tool, AgentInput } from "../index.js";
+import { Agent } from "../agent.js";
 import {
   SystemMessagePromptTemplate,
   HumanMessagePromptTemplate,
@@ -16,6 +16,8 @@ import {
 } from "../../schema/index.js";
 import { BaseOutputParser } from "../../output_parsers/base.js";
 import { SerializedOutputParser } from "../../output_parsers/serde.js";
+import { AgentInput } from "../types.js";
+import { Tool } from "../tools/base.js";
 
 // presumably pointless to be a seperate parser class
 export class AgentOputputParser extends BaseOutputParser {
