@@ -7,8 +7,8 @@ import {
   BaseLanguageModel,
   BaseLanguageModelParams,
 } from "../base_language/index.js";
-import {RunId} from "../callbacks/base.js";
-import {TRACER_RUN_ID} from "../callbacks/index.js";
+import { RunId } from "../callbacks/base.js";
+import { TRACER_RUN_ID } from "../callbacks/index.js";
 
 export type SerializedLLM = {
   _model: string;
@@ -56,7 +56,7 @@ export abstract class BaseLLM extends BaseLanguageModel {
   async generatePrompt(
     promptValues: BasePromptValue[],
     stop?: string[],
-    callerId?: RunId,
+    callerId?: RunId
   ): Promise<LLMResult> {
     const prompts: string[] = promptValues.map((promptValue) =>
       promptValue.toString()
@@ -67,13 +67,17 @@ export abstract class BaseLLM extends BaseLanguageModel {
   /**
    * Run the LLM on the given prompts and input.
    */
-  abstract _generate(prompts: string[], stop?: string[], runId?: RunId): Promise<LLMResult>;
+  abstract _generate(
+    prompts: string[],
+    stop?: string[],
+    runId?: RunId
+  ): Promise<LLMResult>;
 
   /** @ignore */
   async _generateUncached(
     prompts: string[],
     stop?: string[],
-    callerId?: RunId,
+    callerId?: RunId
   ): Promise<LLMResult> {
     const values = await this.callbackManager.handleLLMStart(
       { name: this._llmType() },
@@ -84,9 +88,12 @@ export abstract class BaseLLM extends BaseLanguageModel {
     const runId = values[TRACER_RUN_ID];
     let output;
     try {
-      output = await this.queue.add(() => this._generate(prompts, stop, runId), {
-        throwOnTimeout: true,
-      });
+      output = await this.queue.add(
+        () => this._generate(prompts, stop, runId),
+        {
+          throwOnTimeout: true,
+        }
+      );
     } catch (err) {
       await this.callbackManager.handleLLMError(err, runId, this.verbose);
       throw err;
@@ -94,12 +101,12 @@ export abstract class BaseLLM extends BaseLanguageModel {
 
     await this.callbackManager.handleLLMEnd(output, runId, this.verbose);
     if (output.llmOutput) {
-        output.llmOutput = {
-            ...output.llmOutput,
-            ...values,
-        };
+      output.llmOutput = {
+        ...output.llmOutput,
+        ...values,
+      };
     } else {
-        output.llmOutput = values;
+      output.llmOutput = values;
     }
     return output;
   }
@@ -107,7 +114,11 @@ export abstract class BaseLLM extends BaseLanguageModel {
   /**
    * Run the LLM on the given propmts an input, handling caching.
    */
-  async generate(prompts: string[], stop?: string[], callerId?: RunId): Promise<LLMResult> {
+  async generate(
+    prompts: string[],
+    stop?: string[],
+    callerId?: RunId
+  ): Promise<LLMResult> {
     if (!Array.isArray(prompts)) {
       throw new Error("Argument 'prompts' is expected to be a string[]");
     }
@@ -155,7 +166,11 @@ export abstract class BaseLLM extends BaseLanguageModel {
   /**
    * Convenience wrapper for {@link generate} that takes in a single string prompt and returns a single string output.
    */
-  async call(prompt: string, stop?: string[], callerId?: RunId): Promise<string> {
+  async call(
+    prompt: string,
+    stop?: string[],
+    callerId?: RunId
+  ): Promise<string> {
     const { generations } = await this.generate([prompt], stop, callerId);
     return generations[0][0].text;
   }

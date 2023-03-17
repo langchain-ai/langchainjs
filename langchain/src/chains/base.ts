@@ -1,8 +1,12 @@
 import { BaseMemory } from "../memory/index.js";
 import { ChainValues } from "../schema/index.js";
-import {CallbackManager, getCallbackManager, TRACER_RUN_ID} from "../callbacks/index.js";
+import {
+  CallbackManager,
+  getCallbackManager,
+  TRACER_RUN_ID,
+} from "../callbacks/index.js";
 import { SerializedBaseChain } from "./serde.js";
-import {RunId} from "../callbacks/base.js";
+import { RunId } from "../callbacks/base.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type LoadValues = Record<string, any>;
@@ -88,7 +92,7 @@ export abstract class BaseChain implements ChainInputs {
     const callbackValues = await this.callbackManager.handleChainStart(
       { name: this._chainType() },
       fullValues,
-        callerId,
+      callerId,
       this.verbose
     );
     let outputValues;
@@ -99,7 +103,11 @@ export abstract class BaseChain implements ChainInputs {
       await this.callbackManager.handleChainError(e, runId, this.verbose);
       throw e;
     }
-    await this.callbackManager.handleChainEnd(outputValues, runId, this.verbose);
+    await this.callbackManager.handleChainEnd(
+      outputValues,
+      runId,
+      this.verbose
+    );
     if (!(this.memory == null)) {
       await this.memory.saveContext(values, outputValues);
     }
@@ -109,8 +117,13 @@ export abstract class BaseChain implements ChainInputs {
   /**
    * Call the chain on all inputs in the list
    */
-  async apply(inputs: ChainValues[], callerIds?: RunId[]): Promise<ChainValues> {
-    return Promise.all(inputs.map(async (i, idx) => this.call(i, callerIds?.[idx])));
+  async apply(
+    inputs: ChainValues[],
+    callerIds?: RunId[]
+  ): Promise<ChainValues> {
+    return Promise.all(
+      inputs.map(async (i, idx) => this.call(i, callerIds?.[idx]))
+    );
   }
 
   /**

@@ -5,7 +5,7 @@ import { StoppingMethod } from "./types.js";
 import { SerializedLLMChain } from "../chains/serde.js";
 import { AgentFinish, AgentStep, ChainValues } from "../schema/index.js";
 import { CallbackManager } from "../callbacks/index.js";
-import {RunId} from "../callbacks/base.js";
+import { RunId } from "../callbacks/base.js";
 
 type AgentExecutorInput = {
   agent: Agent;
@@ -78,7 +78,11 @@ export class AgentExecutor extends BaseChain {
       if (this.returnIntermediateSteps) {
         return { ...returnValues, intermediateSteps: steps };
       }
-      await this.callbackManager.handleAgentEnd(finishStep, runId, this.verbose);
+      await this.callbackManager.handleAgentEnd(
+        finishStep,
+        runId,
+        this.verbose
+      );
       return returnValues;
     };
 

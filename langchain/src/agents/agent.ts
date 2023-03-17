@@ -10,7 +10,7 @@ import {
 } from "../schema/index.js";
 import { AgentInput, SerializedAgent, StoppingMethod } from "./types.js";
 import { Tool } from "./tools/base.js";
-import {RunId} from "../callbacks/base.js";
+import { RunId } from "../callbacks/base.js";
 
 class ParseError extends Error {
   output: string;
@@ -169,7 +169,7 @@ export abstract class Agent {
   plan(
     steps: AgentStep[],
     inputs: ChainValues,
-    runId?: RunId,
+    runId?: RunId
   ): Promise<AgentAction | AgentFinish> {
     return this._plan(steps, inputs, runId);
   }

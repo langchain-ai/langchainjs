@@ -10,7 +10,7 @@ import { resolveConfigFromFile } from "../util/index.js";
 import { BaseLanguageModel } from "../base_language/index.js";
 import { ChainValues } from "../schema/index.js";
 import { SerializedLLMChain } from "./serde.js";
-import {RunId} from "../callbacks/base.js";
+import { RunId } from "../callbacks/base.js";
 
 export interface LLMChainInput extends ChainInputs {
   /** Prompt object to use */
@@ -63,7 +63,11 @@ export class LLMChain extends BaseChain implements LLMChainInput {
       stop = values.stop;
     }
     const promptValue = await this.prompt.formatPromptValue(values);
-    const { generations } = await this.llm.generatePrompt([promptValue], stop, runId);
+    const { generations } = await this.llm.generatePrompt(
+      [promptValue],
+      stop,
+      runId
+    );
     return { [this.outputKey]: generations[0][0].text };
   }
 

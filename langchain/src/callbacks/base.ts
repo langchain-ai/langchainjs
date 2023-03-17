@@ -35,11 +35,7 @@ abstract class BaseCallbackHandlerMethods {
     verbose?: boolean
   ): Promise<void>;
 
-  handleLLMError?(
-    err: Error,
-    runId?: RunId,
-    verbose?: boolean
-  ): Promise<void>;
+  handleLLMError?(err: Error, runId?: RunId, verbose?: boolean): Promise<void>;
 
   handleLLMEnd?(
     output: LLMResult,
@@ -73,11 +69,7 @@ abstract class BaseCallbackHandlerMethods {
     verbose?: boolean
   ): CallbackHandlerStartValues;
 
-  handleToolError?(
-    err: Error,
-    runId?: RunId,
-    verbose?: boolean
-  ): Promise<void>;
+  handleToolError?(err: Error, runId?: RunId, verbose?: boolean): Promise<void>;
 
   handleToolEnd?(
     output: string,
@@ -85,11 +77,7 @@ abstract class BaseCallbackHandlerMethods {
     verbose?: boolean
   ): Promise<void>;
 
-  handleText?(
-    text: string,
-    runId?: RunId,
-    verbose?: boolean
-  ): Promise<void>;
+  handleText?(text: string, runId?: RunId, verbose?: boolean): Promise<void>;
 
   handleAgentAction?(
     action: AgentAction,
@@ -153,7 +141,7 @@ export class CallbackManager extends BaseCallbackManager {
     callerId?: RunId,
     verbose?: boolean
   ): Promise<Record<string, string | number>> {
-    const results = await Promise.all(
+    const results = (await Promise.all(
       this.handlers.map(async (handler) => {
         if (!handler.ignoreLLM && (verbose || handler.alwaysVerbose)) {
           try {
@@ -166,8 +154,11 @@ export class CallbackManager extends BaseCallbackManager {
         }
         return undefined;
       })
-    ) as (undefined | Record<string, string | number>)[];
-    return results.reduce((acc, cur) => ({ ...acc, ...cur }), {}) as Record<string, string | number>;
+    )) as (undefined | Record<string, string | number>)[];
+    return results.reduce((acc, cur) => ({ ...acc, ...cur }), {}) as Record<
+      string,
+      string | number
+    >;
   }
 
   async handleLLMNewToken(
@@ -236,7 +227,7 @@ export class CallbackManager extends BaseCallbackManager {
     callerId?: RunId,
     verbose?: boolean
   ): Promise<Record<string, string | number>> {
-    const results = await Promise.all(
+    const results = (await Promise.all(
       this.handlers.map(async (handler) => {
         if (!handler.ignoreChain && (verbose || handler.alwaysVerbose)) {
           try {
@@ -249,8 +240,11 @@ export class CallbackManager extends BaseCallbackManager {
         }
         return undefined;
       })
-    ) as (undefined | Record<string, string | number>)[];
-    return results.reduce((acc, cur) => ({ ...acc, ...cur }), {}) as Record<string, string | number>;
+    )) as (undefined | Record<string, string | number>)[];
+    return results.reduce((acc, cur) => ({ ...acc, ...cur }), {}) as Record<
+      string,
+      string | number
+    >;
   }
 
   async handleChainError(
@@ -299,7 +293,7 @@ export class CallbackManager extends BaseCallbackManager {
     callerId?: RunId,
     verbose?: boolean
   ): Promise<Record<string, string | number>> {
-    const results = await Promise.all(
+    const results = (await Promise.all(
       this.handlers.map(async (handler) => {
         if (!handler.ignoreAgent && (verbose || handler.alwaysVerbose)) {
           try {
@@ -312,8 +306,11 @@ export class CallbackManager extends BaseCallbackManager {
         }
         return undefined;
       })
-    ) as (undefined | Record<string, string | number>)[];
-    return results.reduce((acc, cur) => ({ ...acc, ...cur }), {}) as Record<string, string | number>;
+    )) as (undefined | Record<string, string | number>)[];
+    return results.reduce((acc, cur) => ({ ...acc, ...cur }), {}) as Record<
+      string,
+      string | number
+    >;
   }
 
   async handleToolError(

@@ -100,16 +100,12 @@ class FakeCallbackHandler extends BaseCallbackHandler {
     this.texts += 1;
   }
 
-  async handleAgentAction(
-    _action: AgentAction,
-  ): Promise<void> {
+  async handleAgentAction(_action: AgentAction): Promise<void> {
     this.starts += 1;
     this.toolStarts += 1;
   }
 
-  async handleAgentEnd(
-    _action: AgentFinish,
-  ): Promise<void> {
+  async handleAgentEnd(_action: AgentFinish): Promise<void> {
     this.ends += 1;
     this.agentEnds += 1;
   }
@@ -185,12 +181,12 @@ test("CallbackManager with verbose passed in", async () => {
   await manager.handleText("test", 1, true);
   await manager.handleAgentAction(
     { tool: "test", toolInput: "test", log: "test" },
-      1,
+    1,
     true
   );
   await manager.handleAgentEnd(
     { returnValues: { test: "test" }, log: "test" },
-      1,
+    1,
     true
   );
 

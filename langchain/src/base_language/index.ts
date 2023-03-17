@@ -1,6 +1,6 @@
 import { BasePromptValue, LLMResult } from "../schema/index.js";
 import { CallbackManager, getCallbackManager } from "../callbacks/index.js";
-import {RunId} from "../callbacks/base.js";
+import { RunId } from "../callbacks/base.js";
 
 const getVerbosity = () => false;
 
@@ -33,7 +33,7 @@ export abstract class BaseLanguageModel implements BaseLanguageModelParams {
   abstract generatePrompt(
     promptValues: BasePromptValue[],
     stop?: string[],
-    callerId?: RunId,
+    callerId?: RunId
   ): Promise<LLMResult>;
 
   abstract _modelType(): string;
