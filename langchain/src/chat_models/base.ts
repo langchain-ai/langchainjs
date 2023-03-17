@@ -31,6 +31,7 @@ export abstract class BaseChatModel extends BaseLanguageModel {
     stop?: string[]
   ): Promise<LLMResult> {
     const generations: ChatGeneration[][] = [];
+    let llmOutput = {};
     const messageStrings: string[] = messages.map((messageList) =>
       getBufferString(messageList)
     );
@@ -42,14 +43,17 @@ export abstract class BaseChatModel extends BaseLanguageModel {
     try {
       for (const message of messages) {
         const result = await this._generate(message, stop);
+        llmOutput = result.llmOutput ?? {};
         generations.push(result.generations);
       }
     } catch (err) {
       await this.callbackManager.handleLLMError(err, this.verbose);
       throw err;
     }
+
     const output: LLMResult = {
       generations,
+      llmOutput,
     };
     await this.callbackManager.handleLLMEnd(output, this.verbose);
     return output;
