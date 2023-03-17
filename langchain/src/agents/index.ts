@@ -8,6 +8,7 @@ export {
 export { Agent } from "./agent.js";
 export { AgentExecutor } from "./executor.js";
 export { ZeroShotAgent } from "./mrkl/index.js";
+export { ChatConversationalAgent2 } from "./chat_convo2/index.js";
 export { ChatAgent } from "./chat/index.js";
 export { ChatConversationalAgent } from "./chat_convo/index.js";
 export { Tool } from "./tools/index.js";
