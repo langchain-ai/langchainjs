@@ -92,17 +92,16 @@ class FakeCallbackHandler extends BaseCallbackHandler {
     this.toolEnds += 1;
   }
 
-  async handleToolError(_err: Error, _verbose?: boolean): Promise<void> {
+  async handleToolError(_err: Error): Promise<void> {
     this.errors += 1;
   }
 
-  async handleText(_text: string, _verbose?: boolean): Promise<void> {
+  async handleText(_text: string): Promise<void> {
     this.texts += 1;
   }
 
   async handleAgentAction(
     _action: AgentAction,
-    _verbose?: boolean
   ): Promise<void> {
     this.starts += 1;
     this.toolStarts += 1;
@@ -110,7 +109,6 @@ class FakeCallbackHandler extends BaseCallbackHandler {
 
   async handleAgentEnd(
     _action: AgentFinish,
-    _verbose?: boolean
   ): Promise<void> {
     this.ends += 1;
     this.agentEnds += 1;
@@ -174,23 +172,25 @@ test("CallbackManager with verbose passed in", async () => {
   const handler = new FakeCallbackHandler({ alwaysVerbose: false });
   manager.addHandler(handler);
 
-  await manager.handleLLMStart({ name: "test" }, ["test"], true);
-  await manager.handleLLMEnd({ generations: [] }, true);
-  await manager.handleLLMNewToken("test", true);
-  await manager.handleLLMError(new Error("test"), true);
-  await manager.handleChainStart({ name: "test" }, { test: "test" }, true);
-  await manager.handleChainEnd({ test: "test" }, true);
-  await manager.handleChainError(new Error("test"), true);
-  await manager.handleToolStart({ name: "test" }, "test", true);
-  await manager.handleToolEnd("test", true);
-  await manager.handleToolError(new Error("test"), true);
-  await manager.handleText("test", true);
+  await manager.handleLLMStart({ name: "test" }, ["test"], 1, true);
+  await manager.handleLLMEnd({ generations: [] }, 1, true);
+  await manager.handleLLMNewToken("test", 1, true);
+  await manager.handleLLMError(new Error("test"), 1, true);
+  await manager.handleChainStart({ name: "test" }, { test: "test" }, 1, true);
+  await manager.handleChainEnd({ test: "test" }, 1, true);
+  await manager.handleChainError(new Error("test"), 1, true);
+  await manager.handleToolStart({ name: "test" }, "test", 1, true);
+  await manager.handleToolEnd("test", 1, true);
+  await manager.handleToolError(new Error("test"), 1, true);
+  await manager.handleText("test", 1, true);
   await manager.handleAgentAction(
     { tool: "test", toolInput: "test", log: "test" },
+      1,
     true
   );
   await manager.handleAgentEnd(
     { returnValues: { test: "test" }, log: "test" },
+      1, 
     true
   );
 
