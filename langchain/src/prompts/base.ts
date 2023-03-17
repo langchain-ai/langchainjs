@@ -38,6 +38,11 @@ export interface BasePromptTemplateInput {
    */
   outputParser?: BaseOutputParser;
 
+  /**
+   * The key to use for the format instructions in the prompt template.
+   */
+  formatInstructionsKey?: string;
+
   /** Partial variables */
   partialVariables?: PartialValues;
 }
@@ -52,6 +57,8 @@ export abstract class BasePromptTemplate implements BasePromptTemplateInput {
 
   outputParser?: BaseOutputParser;
 
+  formatInstructionsKey?: string;
+
   partialVariables?: InputValues;
 
   constructor(input: BasePromptTemplateInput) {
@@ -59,6 +66,22 @@ export abstract class BasePromptTemplate implements BasePromptTemplateInput {
     if (inputVariables.includes("stop")) {
       throw new Error(
         "Cannot have an input variable named 'stop', as it is used internally, please rename."
+      );
+    }
+    if (input.outputParser && inputVariables.includes("format_instructions")) {
+      this.formatInstructionsKey = "format_instructions";
+    }
+    if (
+      input.formatInstructionsKey &&
+      !inputVariables.includes(input.formatInstructionsKey)
+    ) {
+      throw new Error(
+        `formatInstructionsKey ${input.formatInstructionsKey} is not in inputVariables`
+      );
+    }
+    if (input.formatInstructionsKey && !input.outputParser) {
+      throw new Error(
+        `formatInstructionsKey ${input.formatInstructionsKey} is set but outputParser is not`
       );
     }
     Object.assign(this, input);

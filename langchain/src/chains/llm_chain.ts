@@ -41,6 +41,12 @@ export class LLMChain extends BaseChain implements LLMChainInput {
   outputKey = "text";
 
   get inputKeys() {
+    if (this.prompt.formatInstructionsKey) {
+      return this.prompt.inputVariables.filter(
+        (key) => key !== this.prompt.formatInstructionsKey
+      );
+    }
+
     return this.prompt.inputVariables;
   }
 
@@ -61,7 +67,19 @@ export class LLMChain extends BaseChain implements LLMChainInput {
     if ("stop" in values && Array.isArray(values.stop)) {
       stop = values.stop;
     }
-    const promptValue = await this.prompt.formatPromptValue(values);
+    const promptWantsFormatInstructions = this.prompt.formatInstructionsKey
+      ? this.prompt.inputVariables.includes(this.prompt.formatInstructionsKey)
+      : false;
+    const promptValue = await this.prompt.formatPromptValue(
+      promptWantsFormatInstructions
+        ? {
+            ...values,
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            [this.prompt.formatInstructionsKey!]:
+              this.prompt.outputParser?.getFormatInstructions(),
+          }
+        : values
+    );
     const { generations } = await this.llm.generatePrompt([promptValue], stop);
     return { [this.outputKey]: generations[0][0].text };
   }
