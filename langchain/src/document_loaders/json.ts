@@ -2,8 +2,11 @@ import jsonpointer from "jsonpointer";
 import { TextLoader } from "./text.js";
 
 export class JSONLoader extends TextLoader {
-  constructor(filePathOrBlob: string | Blob, public pointers: string[] = []) {
+  public pointers: string[];
+
+  constructor(filePathOrBlob: string | Blob, pointers: string | string[] = []) {
     super(filePathOrBlob);
+    this.pointers = Array.isArray(pointers) ? pointers : [pointers];
   }
 
   protected async parse(raw: string): Promise<string[]> {
@@ -28,6 +31,7 @@ export class JSONLoader extends TextLoader {
    * If no JSON pointer is specified then return all string in the object
    */
   private extractArrayStringsFromObject(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     json: any,
     pointers: jsonpointer[],
     extractAllStrings = false,
