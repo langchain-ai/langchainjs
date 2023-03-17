@@ -4,6 +4,14 @@ import type { TiktokenModel } from "@dqbd/tiktoken";
 
 export const getModelContextSize = (modelName: TiktokenModel): number => {
   switch (modelName) {
+    case "gpt-4":
+      return 8192;
+    case "gpt-4-0314":
+      return 8192;
+    case "gpt-4-32k":
+      return 32768;
+    case "gpt-4-32k-0314":
+      return 32768;
     case "text-davinci-003":
       return 4097;
     case "text-curie-001":
