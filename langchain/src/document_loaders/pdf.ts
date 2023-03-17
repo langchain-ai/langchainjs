@@ -1,22 +1,67 @@
+import type { TextItem } from "pdfjs-dist/types/src/display/api.js";
 import { Document } from "../document.js";
 import { BufferLoader } from "./buffer.js";
 
 export class PDFLoader extends BufferLoader {
+  constructor(filePathOrBlob: string | Blob, public splitPages = true) {
+    super(filePathOrBlob);
+  }
+
   public async parse(
     raw: Buffer,
     metadata: Document["metadata"]
   ): Promise<Document[]> {
-    const { pdf } = await PDFLoaderImports();
-    const parsed = await pdf(raw);
+    const { getDocument, version } = await PDFLoaderImports();
+    const pdf = await getDocument({
+      data: new Uint8Array(raw.buffer),
+      useWorkerFetch: false,
+      isEvalSupported: false,
+      useSystemFonts: true,
+    }).promise;
+    const meta = await pdf.getMetadata().catch(() => null);
+
+    const documents: Document[] = [];
+
+    for (let i = 1; i <= pdf.numPages; i += 1) {
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      const text = content.items
+        .map((item) => (item as TextItem).str)
+        .join("\n");
+
+      documents.push(
+        new Document({
+          pageContent: text,
+          metadata: {
+            ...metadata,
+            pdf: {
+              version,
+              info: meta?.info,
+              metadata: meta?.metadata,
+              totalPages: pdf.numPages,
+            },
+            loc: {
+              pageNumber: i,
+            },
+          },
+        })
+      );
+    }
+
+    if (this.splitPages) {
+      return documents;
+    }
+
     return [
       new Document({
-        pageContent: parsed.text,
+        pageContent: documents.map((doc) => doc.pageContent).join("\n\n"),
         metadata: {
           ...metadata,
           pdf: {
-            info: parsed.info,
-            metadata: parsed.metadata,
-            numpages: parsed.numpages,
+            version,
+            info: meta?.info,
+            metadata: meta?.metadata,
+            totalPages: pdf.numPages,
           },
         },
       }),
@@ -26,13 +71,13 @@ export class PDFLoader extends BufferLoader {
 
 async function PDFLoaderImports() {
   try {
-    // the main entrypoint has some debug code that we don't want to import
-    const { default: pdf } = await import("pdf-parse/lib/pdf-parse.js");
-    return { pdf };
+    const { default: mod } = await import("pdfjs-dist");
+    const { getDocument, version } = mod;
+    return { getDocument, version };
   } catch (e) {
     console.error(e);
     throw new Error(
-      "Failed to load pdf-parse. Please install it with eg. `npm install pdf-parse`."
+      "Failed to load pdfjs-dist. Please install it with eg. `npm install pdfjs-dist`."
     );
   }
 }
