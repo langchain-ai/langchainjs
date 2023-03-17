@@ -84,7 +84,7 @@ To that end, we have configured the most common actions to be directly runnable 
 To get started, you will need to install the dependencies for the project. To do so, run:
 
 ```bash
-yarn install
+yarn
 ```
 
 ### Linting
@@ -100,6 +100,21 @@ To automatically fix linting errors, run:
 
 ```bash
 yarn lint:fix
+```
+
+### Formatting
+
+We use [prettier](https://prettier.io) to enforce code formatting style.
+To run the formatter, run:
+
+```bash
+yarn format
+```
+
+To just check for formatting differences, without fixing them, run:
+
+```bash
+yarn format:check
 ```
 
 ### Testing
@@ -156,7 +171,7 @@ level of the repo.
 
 ### Adding an Entrypoint
 
-Langchain let's user import from multiple subpaths, e.g.
+Langchain exposes multiple multiple subpaths the user can import from, e.g.
 
 ```ts
 import { OpenAI } from "langchain/llms";

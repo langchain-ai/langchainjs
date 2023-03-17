@@ -20,13 +20,13 @@
     "build": "turbo run build",
     "lint": "turbo run lint",
     "lint:fix": "yarn lint -- --fix",
-    "test": "turbo run test",
-    "test:unit": "turbo run test --filter langchain --",
+    "test": "yarn run test:unit && yarn run test:int",
+    "test:unit": "turbo run test",
     "test:int": "yarn workspace langchain run test:integration",
     "publish": "turbo run build lint test && yarn workspace langchain npm publish",
     "example": "turbo run start --filter langchain-examples --",
     "prepare": "husky install",
-    "docs": "cd docs && yarn start"
+    "docs": "yarn workspace docs start"
   },
   "author": "Langchain",
   "license": "MIT",
