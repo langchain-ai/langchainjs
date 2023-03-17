@@ -137,8 +137,12 @@ export abstract class Agent {
     const newInputs: ChainValues = {
       ...inputs,
       agent_scratchpad: suffix ? `${thoughts}${suffix}` : thoughts,
-      stop: this._stop(),
     };
+
+    if (this._stop().length !== 0) {
+      newInputs.stop = this._stop();
+    }
+
     const output = await this.llmChain.predict(newInputs);
     const parsed = this.extractToolAndInput(output);
     if (!parsed) {
