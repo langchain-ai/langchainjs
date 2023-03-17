@@ -38,7 +38,7 @@ export class Serper extends Tool {
   /**
    * Run query through SerpAPI and parse result
    */
-  async call(input: string) {
+  async _call(input: string) {
     const options = {
       method: "POST",
       headers: {
