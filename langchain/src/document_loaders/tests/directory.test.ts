@@ -24,7 +24,7 @@ test("Test Directory loader", async () => {
     UnknownHandling.Ignore
   );
   const docs = await loader.load();
-  expect(docs.length).toBe(66);
+  expect(docs.length).toBe(76);
   expect(docs.map((d) => d.metadata.source).sort()).toEqual([
     // PDF
     path.resolve(directoryPath, "1706.03762.pdf"),
@@ -41,6 +41,9 @@ test("Test Directory loader", async () => {
         directoryPath,
         "Star_Wars_The_Clone_Wars_S06E07_Crisis_at_the_Heart.json"
       )
+    ),
+    ...Array.from({ length: 10 }, (_) =>
+      path.resolve(directoryPath, "complex.json")
     ),
     // TXT
     path.resolve(directoryPath, "example.txt"),
