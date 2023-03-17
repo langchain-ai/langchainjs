@@ -11,7 +11,7 @@ import { Document } from "../document.js";
 
 import { resolveConfigFromFile } from "../util/index.js";
 import { ChainValues } from "../schema/index.js";
-import { PromptTemplate } from "../index.js";
+import { PromptTemplate } from "../prompts/index.js";
 import { RecordOutputParser } from "../output_parsers/base.js";
 
 export interface StuffDocumentsChainInput {
