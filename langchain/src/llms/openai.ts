@@ -141,7 +141,10 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
       },
     configuration?: ConfigurationParameters
   ) {
-    if (fields?.modelName?.startsWith("gpt-3.5-turbo")) {
+    if (
+      fields?.modelName?.startsWith("gpt-3.5-turbo") ||
+      fields?.modelName?.startsWith("gpt-4")
+    ) {
       // eslint-disable-next-line no-constructor-return, @typescript-eslint/no-explicit-any
       return new OpenAIChat(fields, configuration) as any as OpenAI;
     }
