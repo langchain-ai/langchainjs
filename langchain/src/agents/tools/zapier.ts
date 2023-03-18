@@ -52,7 +52,7 @@ export class ZapierNLAWrapper {
 
     // add api key to params
     const resp = await fetch(
-      `${this.zapierNlaApiBase}exposed/${actionId}/execute/`,
+      `${this.zapierNlaApiDynamicBase}exposed/${actionId}/execute/`,
       {
         method: "POST",
         headers,
