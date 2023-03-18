@@ -11,7 +11,7 @@ export { ZeroShotAgent } from "./mrkl/index.js";
 export { ChatAgent } from "./chat/index.js";
 export { ChatConversationalAgent } from "./chat_convo/index.js";
 export { Tool } from "./tools/index.js";
-export { initializeAgentExecutor } from "./initialize.js";
+export { initializeAgentExecutor, initializeAgentExecutorWithOptions } from "./initialize.js";
 
 export { loadAgent } from "./load.js";
 

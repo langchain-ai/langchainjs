@@ -5,6 +5,7 @@ import { StoppingMethod } from "./types.js";
 import { SerializedLLMChain } from "../chains/serde.js";
 import { AgentFinish, AgentStep, ChainValues } from "../schema/index.js";
 import { CallbackManager } from "../callbacks/index.js";
+import { BaseMemory } from "../memory/base.js";
 
 type AgentExecutorInput = {
   agent: Agent;
@@ -12,6 +13,7 @@ type AgentExecutorInput = {
   returnIntermediateSteps?: boolean;
   maxIterations?: number;
   earlyStoppingMethod?: StoppingMethod;
+  memory?: BaseMemory;
 
   verbose?: boolean;
   callbackManager?: CallbackManager;

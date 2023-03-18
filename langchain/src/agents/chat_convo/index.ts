@@ -8,8 +8,9 @@ import {
 } from "../../prompts/index.js";
 import { interpolateFString } from "../../prompts/template.js";
 import {
-  PREFIX,
-  SUFFIX,
+  DEFAULT_PREFIX,
+  DEFAULT_SUFFIX,
+  PREFIX_END,
   FORMAT_INSTRUCTIONS,
   TEMPLATE_TOOL_RESPONSE,
 } from "./prompt.js";
@@ -60,6 +61,10 @@ export type CreatePromptArgs = {
   inputVariables?: string[];
   /** Output parser to use for formatting. */
   outputParser?: BaseOutputParser;
+  /** Custom prompt prefix */
+  prefix?: string;
+  /** Custom prompt suffix */
+  suffix?: string;
 };
 
 type ZeroShotAgentInput = AgentInput;
@@ -127,11 +132,9 @@ export class ChatConversationalAgent extends Agent {
    * @param args.prefix - String to put before the list of tools.
    */
   static createPrompt(tools: Tool[], args?: CreatePromptArgs) {
-    const {
-      systemMessage = PREFIX,
-      humanMessage = SUFFIX,
-      outputParser = new AgentOutputParser(),
-    } = args ?? {};
+    const systemMessage = (args?.prefix ?? args?.systemMessage ?? DEFAULT_PREFIX) + PREFIX_END;
+    const humanMessage = args?.suffix ?? args?.humanMessage ?? DEFAULT_SUFFIX;
+    const outputParser = args?.outputParser ?? new AgentOutputParser();
     const toolStrings = tools
       .map((tool) => `${tool.name}: ${tool.description}`)
       .join("\n");
