@@ -132,7 +132,8 @@ export class ChatConversationalAgent extends Agent {
    * @param args.prefix - String to put before the list of tools.
    */
   static createPrompt(tools: Tool[], args?: CreatePromptArgs) {
-    const systemMessage = (args?.prefix ?? args?.systemMessage ?? DEFAULT_PREFIX) + PREFIX_END;
+    const systemMessage =
+      (args?.prefix ?? args?.systemMessage ?? DEFAULT_PREFIX) + PREFIX_END;
     const humanMessage = args?.suffix ?? args?.humanMessage ?? DEFAULT_SUFFIX;
     const outputParser = args?.outputParser ?? new AgentOutputParser();
     const toolStrings = tools

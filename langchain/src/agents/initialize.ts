@@ -36,7 +36,7 @@ export const initializeAgentExecutor = async (
         agent: ChatConversationalAgent.fromLLMAndTools(llm, tools),
         tools,
         verbose,
-        callbackManager
+        callbackManager,
       });
     default:
       throw new Error("Unknown agent type");
@@ -47,10 +47,10 @@ export const initializeAgentExecutorWithOptions = async (
   tools: Tool[],
   llm: BaseLanguageModel,
   options: {
-    agentType?: string,
-    prompt?: string,
-    verbose?: boolean,
-    callbackManager?: CallbackManager
+    agentType?: string;
+    prompt?: string;
+    verbose?: boolean;
+    callbackManager?: CallbackManager;
   }
 ): Promise<AgentExecutor> => {
   const agentType = options.agentType ?? "zero-shot-react-description";
@@ -78,11 +78,11 @@ export const initializeAgentExecutorWithOptions = async (
     case "chat-conversational-react-description": {
       const executor = AgentExecutor.fromAgentAndTools({
         agent: ChatConversationalAgent.fromLLMAndTools(llm, tools, {
-          prefix: options.prompt
+          prefix: options.prompt,
         }),
         tools,
         verbose,
-        callbackManager
+        callbackManager,
       });
       executor.memory = new BufferMemory({
         returnMessages: true,
