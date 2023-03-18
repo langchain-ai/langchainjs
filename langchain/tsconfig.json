@@ -15,6 +15,7 @@
     "esModuleInterop": true,
     "baseUrl": "./src",
     "declaration": true,
+    "declarationMap": true,
     "experimentalDecorators": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
