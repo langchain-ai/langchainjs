@@ -12,6 +12,7 @@ import {
   BaseLanguageModelParams,
 } from "../base_language/index.js";
 import { getBufferString } from "../memory/base.js";
+import { CallbackManager } from "../callbacks/index.js";
 
 export type SerializedChatModel = {
   _model: string;
@@ -28,34 +29,42 @@ export abstract class BaseChatModel extends BaseLanguageModel {
 
   async generate(
     messages: BaseChatMessage[][],
-    stop?: string[]
+    stop?: string[],
+    callbackManager?: CallbackManager
   ): Promise<LLMResult> {
     const generations: ChatGeneration[][] = [];
     let llmOutput = {};
     const messageStrings: string[] = messages.map((messageList) =>
       getBufferString(messageList)
     );
-    await this.callbackManager.handleLLMStart(
+    const callbackManager_ = callbackManager ?? new CallbackManager();
+    const runId = await callbackManager_.handleLLMStart(
       { name: this._llmType() },
       messageStrings,
+      undefined,
       this.verbose
     );
     try {
       for (const message of messages) {
-        const result = await this._generate(message, stop);
+        const result = await this._generate(
+          message,
+          stop,
+          callbackManager,
+          runId
+        );
         llmOutput = result.llmOutput ?? {};
         generations.push(result.generations);
       }
     } catch (err) {
-      await this.callbackManager.handleLLMError(err, this.verbose);
+      await callbackManager_.handleLLMError(err, runId, this.verbose);
       throw err;
     }
 
     const output: LLMResult = {
       generations,
-      llmOutput,
+      llmOutput: { ...llmOutput, runId },
     };
-    await this.callbackManager.handleLLMEnd(output, this.verbose);
+    await callbackManager_.handleLLMEnd(output, runId, this.verbose);
     return output;
   }
 
@@ -101,34 +110,39 @@ export abstract class BaseChatModel extends BaseLanguageModel {
 
   async generatePrompt(
     promptValues: BasePromptValue[],
-    stop?: string[]
+    stop?: string[],
+    callbackManager?: CallbackManager
   ): Promise<LLMResult> {
     const promptMessages: BaseChatMessage[][] = promptValues.map(
       (promptValue) => promptValue.toChatMessages()
     );
-    return this.generate(promptMessages, stop);
+    return this.generate(promptMessages, stop, callbackManager);
   }
 
   abstract _generate(
     messages: BaseChatMessage[],
-    stop?: string[]
+    stop?: string[],
+    callbackManager?: CallbackManager,
+    runId?: string
   ): Promise<ChatResult>;
 
   async call(
     messages: BaseChatMessage[],
-    stop?: string[]
+    stop?: string[],
+    callbackManager?: CallbackManager
   ): Promise<BaseChatMessage> {
-    const result = await this.generate([messages], stop);
+    const result = await this.generate([messages], stop, callbackManager);
     const generations = result.generations as ChatGeneration[][];
     return generations[0][0].message;
   }
 
   async callPrompt(
     promptValue: BasePromptValue,
-    stop?: string[]
+    stop?: string[],
+    callbackManager?: CallbackManager
   ): Promise<BaseChatMessage> {
     const promptMessages: BaseChatMessage[] = promptValue.toChatMessages();
-    return this.call(promptMessages, stop);
+    return this.call(promptMessages, stop, callbackManager);
   }
 }
 

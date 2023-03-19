@@ -10,6 +10,7 @@ import { resolveConfigFromFile } from "../util/index.js";
 import { BaseLanguageModel } from "../base_language/index.js";
 import { ChainValues } from "../schema/index.js";
 import { SerializedLLMChain } from "./serde.js";
+import { CallbackManager } from "../callbacks/index.js";
 
 export interface LLMChainInput extends ChainInputs {
   /** Prompt object to use */
@@ -56,13 +57,20 @@ export class LLMChain extends BaseChain implements LLMChainInput {
     this.outputKey = fields.outputKey ?? this.outputKey;
   }
 
-  async _call(values: ChainValues): Promise<ChainValues> {
+  async _call(
+    values: ChainValues,
+    callbackManager?: CallbackManager
+  ): Promise<ChainValues> {
     let stop;
     if ("stop" in values && Array.isArray(values.stop)) {
       stop = values.stop;
     }
     const promptValue = await this.prompt.formatPromptValue(values);
-    const { generations } = await this.llm.generatePrompt([promptValue], stop);
+    const { generations } = await this.llm.generatePrompt(
+      [promptValue],
+      stop,
+      callbackManager
+    );
     return { [this.outputKey]: generations[0][0].text };
   }
 
@@ -70,6 +78,7 @@ export class LLMChain extends BaseChain implements LLMChainInput {
    * Format prompt with values and pass to LLM
    *
    * @param values - keys to pass to prompt template
+   * @param callbackManager - CallbackManager to use
    * @returns Completion from LLM.
    *
    * @example
@@ -77,8 +86,11 @@ export class LLMChain extends BaseChain implements LLMChainInput {
    * llm.predict({ adjective: "funny" })
    * ```
    */
-  async predict(values: ChainValues): Promise<string> {
-    const output = await this.call(values);
+  async predict(
+    values: ChainValues,
+    callbackManager?: CallbackManager
+  ): Promise<string> {
+    const output = await this.call(values, callbackManager);
     return output[this.outputKey];
   }
 

@@ -10,6 +10,7 @@ import { createParser } from "eventsource-parser";
 import { backOff } from "exponential-backoff";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
 import { BaseLLMParams, LLM } from "./base.js";
+import { CallbackManager } from "../callbacks/index.js";
 
 interface ModelParams {
   /** Sampling temperature to use, between 0 and 2, defaults to 1 */
@@ -198,6 +199,9 @@ export class OpenAIChat extends LLM implements OpenAIInput {
    *
    * @param prompt - The prompt to pass into the model.
    * @param [stop] - Optional list of stop words to use when generating.
+   * @param [callbackManager] - Optional callback manager to use for streaming
+   * requests.
+   * @param [runId] - Optional run ID to use for streaming requests.
    *
    * @returns The full LLM output.
    *
@@ -208,10 +212,16 @@ export class OpenAIChat extends LLM implements OpenAIInput {
    * const response = await openai.generate(["Tell me a joke."]);
    * ```
    */
-  async _call(prompt: string, stop?: string[]): Promise<string> {
+  async _call(
+    prompt: string,
+    stop?: string[],
+    callbackManager?: CallbackManager,
+    runId?: string
+  ): Promise<string> {
     if (this.stop && stop) {
       throw new Error("Stop found in input and default params");
     }
+    const callbackManager_ = callbackManager ?? new CallbackManager();
 
     const params = this.invocationParams();
     params.stop = stop ?? params.stop;
@@ -247,8 +257,9 @@ export class OpenAIChat extends LLM implements OpenAIInput {
               if (part != null) {
                 innerCompletion += part.delta?.content ?? "";
                 // eslint-disable-next-line no-void
-                void this.callbackManager.handleLLMNewToken(
+                void callbackManager_.handleLLMNewToken(
                   part.delta?.content ?? "",
+                  runId ?? "",
                   true
                 );
               }

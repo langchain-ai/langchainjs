@@ -20,6 +20,7 @@ import {
   MessageType,
   SystemChatMessage,
 } from "../schema/index.js";
+import { CallbackManager } from "../callbacks/index.js";
 
 type TokenUsage = {
   completionTokens?: number;
@@ -237,6 +238,8 @@ export class ChatOpenAI extends BaseChatModel implements OpenAIInput {
    *
    * @param messages - The messages to pass into the model.
    * @param [stop] - Optional list of stop words to use when generating.
+   * @param [callbackManager] - Optional callback manager to use for streaming.
+   * @param [runId] - Optional run ID to use for streaming.
    *
    * @returns The full LLM output.
    *
@@ -249,13 +252,15 @@ export class ChatOpenAI extends BaseChatModel implements OpenAIInput {
    */
   async _generate(
     messages: BaseChatMessage[],
-    stop?: string[]
+    stop?: string[],
+    callbackManager?: CallbackManager,
+    runId?: string
   ): Promise<ChatResult> {
     const tokenUsage: TokenUsage = {};
     if (this.stop && stop) {
       throw new Error("Stop found in input and default params");
     }
-
+    const callbackManager_ = callbackManager ?? new CallbackManager();
     const params = this.invocationParams();
     params.stop = stop ?? params.stop;
 
@@ -296,8 +301,9 @@ export class ChatOpenAI extends BaseChatModel implements OpenAIInput {
                 innerCompletion += part.delta?.content ?? "";
                 role = part.delta?.role ?? role;
                 // eslint-disable-next-line no-void
-                void this.callbackManager.handleLLMNewToken(
+                void callbackManager_.handleLLMNewToken(
                   part.delta?.content ?? "",
+                  runId ?? "",
                   true
                 );
               }

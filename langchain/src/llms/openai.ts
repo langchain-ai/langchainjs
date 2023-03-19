@@ -16,6 +16,7 @@ import { BaseLLM, BaseLLMParams } from "./base.js";
 import { calculateMaxTokens } from "./calculateMaxTokens.js";
 import { OpenAIChat } from "./openai-chat.js";
 import { LLMResult } from "../schema/index.js";
+import { CallbackManager } from "../callbacks/index.js";
 
 interface ModelParams {
   /** Sampling temperature to use */
@@ -226,6 +227,9 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
    *
    * @param prompts - The prompts to pass into the model.
    * @param [stop] - Optional list of stop words to use when generating.
+   * @param [callbackManager] - Optional callback manager to use for streaming
+   * requests.
+   * @param [runId] - Optional run ID to use for callbacks.
    *
    * @returns The full LLM output.
    *
@@ -236,10 +240,16 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
    * const response = await openai.generate(["Tell me a joke."]);
    * ```
    */
-  async _generate(prompts: string[], stop?: string[]): Promise<LLMResult> {
+  async _generate(
+    prompts: string[],
+    stop?: string[],
+    callbackManager?: CallbackManager,
+    runId?: string
+  ): Promise<LLMResult> {
     const subPrompts = chunkArray(prompts, this.batchSize);
     const choices: CreateCompletionResponseChoicesInner[] = [];
     const tokenUsage: TokenUsage = {};
+    const callbackManager_ = callbackManager ?? this.callbackManager;
 
     if (this.stop && stop) {
       throw new Error("Stop found in input and default params");
@@ -287,8 +297,9 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
                     choice.finish_reason = part.finish_reason;
                     choice.logprobs = part.logprobs;
                     // eslint-disable-next-line no-void
-                    void this.callbackManager.handleLLMNewToken(
+                    void callbackManager_.handleLLMNewToken(
                       part.text ?? "",
+                      runId ?? "",
                       true
                     );
                   }

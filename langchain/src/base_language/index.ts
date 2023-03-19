@@ -31,7 +31,8 @@ export abstract class BaseLanguageModel implements BaseLanguageModelParams {
 
   abstract generatePrompt(
     promptValues: BasePromptValue[],
-    stop?: string[]
+    stop?: string[],
+    callbackManager?: CallbackManager
   ): Promise<LLMResult>;
 
   abstract _modelType(): string;

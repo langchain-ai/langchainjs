@@ -37,7 +37,11 @@ export abstract class BaseChain implements ChainInputs {
   /**
    * Run the core logic of this chain and return the output
    */
-  abstract _call(values: ChainValues): Promise<ChainValues>;
+  abstract _call(
+    values: ChainValues,
+    callbackManager?: CallbackManager,
+    runId?: string
+  ): Promise<ChainValues>;
 
   /**
    * Return the string type key uniquely identifying this class of chain.
@@ -52,7 +56,7 @@ export abstract class BaseChain implements ChainInputs {
   abstract get inputKeys(): string[];
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async run(input: any): Promise<string> {
+  async run(input: any, callbackManager?: CallbackManager): Promise<string> {
     const isKeylessInput = this.inputKeys.length === 1;
     if (!isKeylessInput) {
       throw new Error(
@@ -60,11 +64,10 @@ export abstract class BaseChain implements ChainInputs {
       );
     }
     const values = { [this.inputKeys[0]]: input };
-    const returnValues = await this.call(values);
+    const returnValues = await this.call(values, callbackManager);
     const keys = Object.keys(returnValues);
     if (keys.length === 1) {
-      const finalReturn = returnValues[keys[0]];
-      return finalReturn;
+      return returnValues[keys[0]];
     }
     throw new Error(
       "return values have multiple keys, `run` only supported when one key currently"
@@ -76,27 +79,32 @@ export abstract class BaseChain implements ChainInputs {
    *
    * Wraps {@link _call} and handles memory.
    */
-  async call(values: ChainValues): Promise<ChainValues> {
+  async call(
+    values: ChainValues,
+    callbackManager?: CallbackManager
+  ): Promise<ChainValues> {
     const fullValues = { ...values } as typeof values;
+    const callbackManager_ = callbackManager ?? this.callbackManager;
     if (!(this.memory == null)) {
       const newValues = await this.memory.loadMemoryVariables(values);
       for (const [key, value] of Object.entries(newValues)) {
         fullValues[key] = value;
       }
     }
-    await this.callbackManager.handleChainStart(
+    const runId = await callbackManager_.handleChainStart(
       { name: this._chainType() },
       fullValues,
+      undefined,
       this.verbose
     );
     let outputValues;
     try {
-      outputValues = await this._call(fullValues);
+      outputValues = await this._call(fullValues, callbackManager, runId);
     } catch (e) {
-      await this.callbackManager.handleChainError(e, this.verbose);
+      await callbackManager_.handleChainError(e, runId, this.verbose);
       throw e;
     }
-    await this.callbackManager.handleChainEnd(outputValues, this.verbose);
+    await callbackManager_.handleChainEnd(outputValues, runId, this.verbose);
     if (!(this.memory == null)) {
       await this.memory.saveContext(values, outputValues);
     }
@@ -106,8 +114,13 @@ export abstract class BaseChain implements ChainInputs {
   /**
    * Call the chain on all inputs in the list
    */
-  async apply(inputs: ChainValues[]): Promise<ChainValues> {
-    return Promise.all(inputs.map(async (i) => this.call(i)));
+  async apply(
+    inputs: ChainValues[],
+    callbackManagers?: CallbackManager[]
+  ): Promise<ChainValues> {
+    return Promise.all(
+      inputs.map(async (i, idx) => this.call(i, callbackManagers?.[idx]))
+    );
   }
 
   /**
