@@ -70,7 +70,7 @@ export abstract class BaseLanguageModel implements BaseLanguageModelParams {
    */
   static async deserialize(data: SerializedLLM): Promise<BaseLanguageModel> {
     const { _type, _model, ...rest } = data;
-    if (_model && _model !== "base_llm") {
+    if (_model && _model !== "base_chat_model") {
       throw new Error(`Cannot load LLM with model ${_model}`);
     }
     const Cls = {
