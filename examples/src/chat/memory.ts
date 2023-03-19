@@ -20,7 +20,7 @@ export const run = async () => {
   ]);
 
   const chain = new ConversationChain({
-    memory: new BufferMemory({ returnMessages: true }),
+    memory: new BufferMemory({ returnMessages: true, memoryKey: "history" }),
     prompt: chatPrompt,
     llm: chat,
   });
