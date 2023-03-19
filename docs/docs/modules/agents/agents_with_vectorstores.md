@@ -8,7 +8,7 @@ First, you want to import the relevant modules
 
 ```typescript
 import { OpenAI } from "langchain";
-import { initializeAgentExecutor } from "langchain/agents";
+import { initializeAgentExecutorWithOptions } from "langchain/agents";
 import { SerpAPI, Calculator, ChainTool } from "langchain/tools";
 import { VectorDBQAChain } from "langchain/chains";
 import { HNSWLib } from "langchain/vectorstores";
@@ -48,11 +48,9 @@ Now we can go about constructing and using the tool as we would any other tool!
 ```typescript
 const tools = [new SerpAPI(), new Calculator(), qaTool];
 
-const executor = await initializeAgentExecutor(
-  tools,
-  model,
-  "zero-shot-react-description"
-);
+const executor = await initializeAgentExecutorWithOptions(tools, model, {
+  agentType: "zero-shot-react-description",
+});
 console.log("Loaded agent.");
 
 const input = `What did biden say about ketanji brown jackson is the state of the union address?`;

@@ -4,7 +4,7 @@ import { loadAgent } from "../load.js";
 import { AgentExecutor, Tool } from "../index.js";
 import { SerpAPI } from "../tools/serpapi.js";
 import { Calculator } from "../tools/calculator.js";
-import { initializeAgentExecutor } from "../initialize.js";
+import { initializeAgentExecutorWithOptions } from "../initialize.js";
 
 test("Run agent from hub", async () => {
   const model = new OpenAI({ temperature: 0, modelName: "text-babbage-001" });
@@ -29,11 +29,9 @@ test("Run agent locally", async () => {
   const model = new OpenAI({ temperature: 0, modelName: "text-babbage-001" });
   const tools = [new SerpAPI(), new Calculator()];
 
-  const executor = await initializeAgentExecutor(
-    tools,
-    model,
-    "zero-shot-react-description"
-  );
+  const executor = await initializeAgentExecutorWithOptions(tools, model, {
+    agentType: "zero-shot-react-description",
+  });
   console.log("Loaded agent.");
 
   const input = `Who is Olivia Wilde's boyfriend? What is his current age raised to the 0.23 power?`;

@@ -10,7 +10,7 @@ Here's an example of how to use tracing in `langchain.js`. All that needs to be 
 
 ```typescript
 import { OpenAI } from "langchain";
-import { initializeAgentExecutor } from "langchain/agents";
+import { initializeAgentExecutorWithOptions } from "langchain/agents";
 import { SerpAPI, Calculator } from "langchain/tools";
 import process from "process";
 
@@ -19,12 +19,10 @@ export const run = async () => {
   const model = new OpenAI({ temperature: 0 });
   const tools = [new SerpAPI(), new Calculator()];
 
-  const executor = await initializeAgentExecutor(
-    tools,
-    model,
-    "zero-shot-react-description",
-    true
-  );
+  const executor = await initializeAgentExecutorWithOptions(tools, model, {
+    agentType: "zero-shot-react-description",
+    verbose: true,
+  });
   console.log("Loaded agent.");
 
   const input = `Who is Olivia Wilde's boyfriend? What is his current age raised to the 0.23 power?`;
@@ -41,7 +39,7 @@ We are actively working on improving tracing to work better with concurrency. Fo
 
 ```typescript
 import { OpenAI } from "langchain";
-import { initializeAgentExecutor } from "langchain/agents";
+import { initializeAgentExecutorWithOptions } from "langchain/agents";
 import { SerpAPI, Calculator } from "langchain/tools";
 import process from "process";
 import {
@@ -55,12 +53,10 @@ export const run = async () => {
   const model = new OpenAI({ temperature: 0 });
   const tools = [new SerpAPI(), new Calculator()];
 
-  const executor = await initializeAgentExecutor(
-    tools,
-    model,
-    "zero-shot-react-description",
-    true
-  );
+  const executor = await initializeAgentExecutorWithOptions(tools, model, {
+    agentType: "zero-shot-react-description",
+    verbose: true,
+  });
   console.log("Loaded agent.");
 
   const input = `Who is Olivia Wilde's boyfriend? What is his current age raised to the 0.23 power?`;
@@ -92,13 +88,11 @@ export const run = async () => {
     for (const tool of tools) {
       tool.callbackManager = callbackManager;
     }
-    const executor = await initializeAgentExecutor(
-      tools,
-      model,
-      "zero-shot-react-description",
-      true,
-      callbackManager
-    );
+    const executor = await initializeAgentExecutorWithOptions(tools, model, {
+      agentType: "zero-shot-react-description",
+      verbose: true,
+      callbackManager,
+    });
     executor.agent.llmChain.callbackManager = callbackManager;
     executors.push(executor);
   }

@@ -1,5 +1,5 @@
 import { ChatOpenAI } from "langchain/chat_models";
-import { initializeAgentExecutor } from "langchain/agents";
+import { initializeAgentExecutorWithOptions } from "langchain/agents";
 import { SerpAPI, Calculator } from "langchain/tools";
 import { BufferMemory } from "langchain/memory";
 
@@ -8,12 +8,10 @@ export const run = async () => {
   const model = new ChatOpenAI({ temperature: 0 });
   const tools = [new SerpAPI(), new Calculator()];
 
-  const executor = await initializeAgentExecutor(
-    tools,
-    model,
-    "chat-conversational-react-description",
-    true
-  );
+  const executor = await initializeAgentExecutorWithOptions(tools, model, {
+    agentType: "chat-conversational-react-description",
+    verbose: true,
+  });
   executor.memory = new BufferMemory({
     returnMessages: true,
     memoryKey: "chat_history",
