@@ -61,10 +61,6 @@ export type CreatePromptArgs = {
   inputVariables?: string[];
   /** Output parser to use for formatting. */
   outputParser?: BaseOutputParser;
-  /** Custom prompt prefix */
-  prefix?: string;
-  /** Custom prompt suffix */
-  suffix?: string;
 };
 
 type ZeroShotAgentInput = AgentInput;
@@ -124,17 +120,16 @@ export class ChatConversationalAgent extends Agent {
   }
 
   /**
-   * Create prompt in the style of the zero shot agent.
+   * Create prompt in the style of the ChatConversationAgent.
    *
    * @param tools - List of tools the agent will have access to, used to format the prompt.
    * @param args - Arguments to create the prompt with.
-   * @param args.suffix - String to put after the list of tools.
-   * @param args.prefix - String to put before the list of tools.
+   * @param args.systemMessage - String to put after the list of tools.
+   * @param args.humanMessage - String to put before the list of tools.
    */
   static createPrompt(tools: Tool[], args?: CreatePromptArgs) {
-    const systemMessage =
-      (args?.prefix ?? args?.systemMessage ?? DEFAULT_PREFIX) + PREFIX_END;
-    const humanMessage = args?.suffix ?? args?.humanMessage ?? DEFAULT_SUFFIX;
+    const systemMessage = (args?.systemMessage ?? DEFAULT_PREFIX) + PREFIX_END;
+    const humanMessage = args?.humanMessage ?? DEFAULT_SUFFIX;
     const outputParser = args?.outputParser ?? new AgentOutputParser();
     const toolStrings = tools
       .map((tool) => `${tool.name}: ${tool.description}`)

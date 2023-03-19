@@ -5,7 +5,7 @@ import { ChatConversationalAgent } from "./chat_convo/index.js";
 import { ChatAgent } from "./chat/index.js";
 import { BaseLanguageModel } from "../base_language/index.js";
 import { CallbackManager, getCallbackManager } from "../callbacks/index.js";
-import { BufferMemory } from "../memory/buffer_memory.js";
+import { BaseMemory, BufferMemory } from "../memory/index.js";
 
 export const initializeAgentExecutor = async (
   tools: Tool[],
@@ -49,6 +49,7 @@ export const initializeAgentExecutorWithOptions = async (
   options: {
     agentType?: string;
     prompt?: string;
+    memory?: BaseMemory;
     verbose?: boolean;
     callbackManager?: CallbackManager;
   }
@@ -56,37 +57,44 @@ export const initializeAgentExecutorWithOptions = async (
   const agentType = options.agentType ?? "zero-shot-react-description";
   const verbose = options.verbose ?? false;
   const callbackManager = options.callbackManager ?? getCallbackManager();
+
   switch (agentType) {
     case "zero-shot-react-description": {
       return AgentExecutor.fromAgentAndTools({
-        agent: ZeroShotAgent.fromLLMAndTools(llm, tools),
+        agent: ZeroShotAgent.fromLLMAndTools(llm, tools, {
+          prefix: options.prompt
+        }),
         tools,
         returnIntermediateSteps: true,
         verbose,
         callbackManager,
+        memory: options.memory,
       });
     }
     case "chat-zero-shot-react-description": {
       return AgentExecutor.fromAgentAndTools({
-        agent: ChatAgent.fromLLMAndTools(llm, tools),
+        agent: ChatAgent.fromLLMAndTools(llm, tools, {
+          prefix: options.prompt
+        }),
         tools,
         returnIntermediateSteps: true,
         verbose,
         callbackManager,
+        memory: options.memory,
       });
     }
     case "chat-conversational-react-description": {
       const executor = AgentExecutor.fromAgentAndTools({
         agent: ChatConversationalAgent.fromLLMAndTools(llm, tools, {
-          prefix: options.prompt,
+          systemMessage: options.prompt,
         }),
         tools,
         verbose,
         callbackManager,
-      });
-      executor.memory = new BufferMemory({
-        returnMessages: true,
-        memoryKey: "chat_history",
+        memory: options.memory ?? new BufferMemory({
+          returnMessages: true,
+          memoryKey: "chat_history",
+        }),
       });
       return executor;
     }

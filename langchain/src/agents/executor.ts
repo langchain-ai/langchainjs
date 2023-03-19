@@ -39,7 +39,7 @@ export class AgentExecutor extends BaseChain {
   }
 
   constructor(input: AgentExecutorInput) {
-    super();
+    super(input.memory, input.verbose, input.callbackManager);
     this.agent = input.agent;
     this.tools = input.tools;
     this.returnIntermediateSteps =
@@ -47,8 +47,6 @@ export class AgentExecutor extends BaseChain {
     this.maxIterations = input.maxIterations ?? this.maxIterations;
     this.earlyStoppingMethod =
       input.earlyStoppingMethod ?? this.earlyStoppingMethod;
-    this.verbose = input.verbose ?? this.verbose;
-    this.callbackManager = input.callbackManager ?? this.callbackManager;
   }
 
   /** Create from agent and a list of tools. */
