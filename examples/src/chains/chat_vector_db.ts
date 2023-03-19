@@ -72,7 +72,7 @@ export const run = async () => {
       }),
     }),
     documentPrompt: PromptTemplate.fromTemplate(
-      `Content: {pageContent}\nSource: {source}`
+      `Content: {page_content}\nSource: {source}`
     ),
     outputParser: new KeyValueOutputParser(["FINAL ANSWER", "SOURCES"]),
     outputKey: "text",
