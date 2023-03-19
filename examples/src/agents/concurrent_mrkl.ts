@@ -2,11 +2,12 @@ import { OpenAI } from "langchain";
 import { initializeAgentExecutor } from "langchain/agents";
 import { SerpAPI, Calculator } from "langchain/tools";
 import process from "process";
-import {
-  CallbackManager,
-  LangChainTracer,
-  ConsoleCallbackHandler,
-} from "langchain/callbacks";
+import {getTracingCallbackManager} from "langchain/callbacks";
+// import {
+//   CallbackManager,
+//   LangChainTracer,
+//   ConsoleCallbackHandler,
+// } from "langchain/callbacks";
 
 export const run = async () => {
   process.env.LANGCHAIN_HANDLER = "langchain";
@@ -27,9 +28,9 @@ export const run = async () => {
 
   // This will result in a lot of errors, because the shared Tracer is not concurrency-safe.
   const [resultA, resultB, resultC] = await Promise.all([
-    executor.call({ input }),
-    executor.call({ input }),
-    executor.call({ input }),
+    executor.call({ input }, getTracingCallbackManager()),
+    executor.call({ input }, getTracingCallbackManager()),
+    executor.call({ input }, getTracingCallbackManager()),
   ]);
 
   console.log(`Got output ${resultA.output}`);
@@ -37,34 +38,34 @@ export const run = async () => {
   console.log(`Got output ${resultC.output}`);
 
   // This will work, because each executor has its own Tracer, avoiding concurrency issues.
-  console.log("---Now with concurrency-safe tracing---");
-
-  const executors = [];
-  for (let i = 0; i < 3; i += 1) {
-    const callbackManager = new CallbackManager();
-    callbackManager.addHandler(new ConsoleCallbackHandler());
-    callbackManager.addHandler(new LangChainTracer());
-
-    const model = new OpenAI({ temperature: 0, callbackManager });
-    const tools = [new SerpAPI(), new Calculator()];
-    for (const tool of tools) {
-      tool.callbackManager = callbackManager;
-    }
-    const executor = await initializeAgentExecutor(
-      tools,
-      model,
-      "zero-shot-react-description",
-      true,
-      callbackManager
-    );
-    executor.agent.llmChain.callbackManager = callbackManager;
-    executors.push(executor);
-  }
-
-  const results = await Promise.all(
-    executors.map((executor) => executor.call({ input }))
-  );
-  for (const result of results) {
-    console.log(`Got output ${result.output}`);
-  }
+  // console.log("---Now with concurrency-safe tracing---");
+  //
+  // const executors = [];
+  // for (let i = 0; i < 3; i += 1) {
+  //   const callbackManager = new CallbackManager();
+  //   callbackManager.addHandler(new ConsoleCallbackHandler());
+  //   callbackManager.addHandler(new LangChainTracer());
+  //
+  //   const model = new OpenAI({ temperature: 0, callbackManager });
+  //   const tools = [new SerpAPI(), new Calculator()];
+  //   for (const tool of tools) {
+  //     tool.callbackManager = callbackManager;
+  //   }
+  //   const executor = await initializeAgentExecutor(
+  //     tools,
+  //     model,
+  //     "zero-shot-react-description",
+  //     true,
+  //     callbackManager
+  //   );
+  //   executor.agent.llmChain.callbackManager = callbackManager;
+  //   executors.push(executor);
+  // }
+  //
+  // const results = await Promise.all(
+  //   executors.map((executor) => executor.call({ input }))
+  // );
+  // for (const result of results) {
+  //   console.log(`Got output ${result.output}`);
+  // }
 };

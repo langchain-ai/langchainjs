@@ -54,12 +54,13 @@ export abstract class BaseLLM extends BaseLanguageModel {
 
   async generatePrompt(
     promptValues: BasePromptValue[],
-    stop?: string[]
+    stop?: string[],
+    callbackManager?: CallbackManager
   ): Promise<LLMResult> {
     const prompts: string[] = promptValues.map((promptValue) =>
       promptValue.toString()
     );
-    return this.generate(prompts, stop);
+    return this.generate(prompts, stop, callbackManager);
   }
 
   /**
@@ -111,7 +112,7 @@ export abstract class BaseLLM extends BaseLanguageModel {
   }
 
   /**
-   * Run the LLM on the given propmts an input, handling caching.
+   * Run the LLM on the given prompts an input, handling caching.
    */
   async generate(
     prompts: string[],

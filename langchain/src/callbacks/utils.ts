@@ -27,6 +27,15 @@ export function getCallbackManager(): CallbackManager {
   return SingletonCallbackManager.getInstance();
 }
 
+export function getTracingCallbackManager(): CallbackManager {
+  const manager = new CallbackManager();
+  const tracer = new LangChainTracer();
+  const consoleHandler = new ConsoleCallbackHandler();
+  manager.addHandler(tracer);
+  manager.addHandler(consoleHandler);
+  return manager;
+}
+
 export interface TracerOptions {
   sessionName?: string;
 }
