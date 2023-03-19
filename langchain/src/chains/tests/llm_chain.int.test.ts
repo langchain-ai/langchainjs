@@ -77,49 +77,11 @@ test("Test deserialize", async () => {
   const chain = new LLMChain({ prompt, llm: model });
 
   const serialized = chain.serialize();
-  console.log(serialized);
+  // console.log(serialized)
   const chain2 = await LLMChain.deserialize({ ...serialized });
 
   const res = await chain2.run("my favorite color");
   console.log({ res });
+
+  // chain === chain2?
 });
-
-// {
-//   _type: 'llm_chain',
-//   prompt: {
-//     _type: 'prompt',
-//     input_variables: [ 'foo' ],
-//     output_parser: undefined,
-//     template: 'Print {foo}',
-//     template_format: 'f-string'
-//   }
-// }
-
-// {
-//   "memory": null,
-//   "verbose": false,
-//   "prompt": {
-//       "input_variables": [
-//           "topic"
-//       ],
-//       "output_parser": null,
-//       "template": "Tell me a joke about {topic}:",
-//       "template_format": "f-string",
-//       "_type": "prompt"
-//   },
-//   "llm": {
-//       "model_name": "text-davinci-003",
-//       "temperature": 0.9,
-//       "max_tokens": 256,
-//       "top_p": 1,
-//       "frequency_penalty": 0,
-//       "presence_penalty": 0,
-//       "n": 1,
-//       "best_of": 1,
-//       "request_timeout": null,
-//       "logit_bias": {},
-//       "_type": "openai"
-//   },
-//   "output_key": "text",
-//   "_type": "llm_chain"
-// }
