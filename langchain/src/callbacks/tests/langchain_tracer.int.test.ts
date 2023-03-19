@@ -1,3 +1,4 @@
+import { v4 as uuidv4 } from "uuid";
 import { test, expect } from "@jest/globals";
 
 import { LangChainTracer } from "../tracers.js";
@@ -8,18 +9,23 @@ import { initializeAgentExecutor } from "../../agents/index.js";
 test("Test LangChain tracer", async () => {
   const tracer = new LangChainTracer();
   expect(tracer.alwaysVerbose).toBe(true);
+  const chainRunId = uuidv4();
+  const toolRunId = uuidv4();
+  const llmRunId = uuidv4();
 
-  await tracer.handleChainStart({ name: "test" }, { foo: "bar" });
-  await tracer.handleToolStart({ name: "test" }, "test");
-  await tracer.handleLLMStart({ name: "test" }, ["test"]);
-  await tracer.handleLLMEnd({ generations: [[]] });
-  await tracer.handleToolEnd("output");
-  await tracer.handleLLMStart({ name: "test2" }, ["test"]);
-  await tracer.handleLLMEnd({ generations: [[]] });
-  await tracer.handleChainEnd({ foo: "bar" });
+  await tracer.handleChainStart({ name: "test" }, { foo: "bar" }, chainRunId);
+  await tracer.handleToolStart({ name: "test" }, "test", toolRunId);
+  await tracer.handleLLMStart({ name: "test" }, ["test"], llmRunId);
+  await tracer.handleLLMEnd({ generations: [[]] }, llmRunId);
+  await tracer.handleToolEnd("output", toolRunId);
+  const llmRunId2 = uuidv4();
+  await tracer.handleLLMStart({ name: "test2" }, ["test"], llmRunId2);
+  await tracer.handleLLMEnd({ generations: [[]] }, llmRunId2);
+  await tracer.handleChainEnd({ foo: "bar" }, chainRunId);
 
-  await tracer.handleLLMStart({ name: "test" }, ["test"]);
-  await tracer.handleLLMEnd({ generations: [[]] });
+  const llmRunId3 = uuidv4();
+  await tracer.handleLLMStart({ name: "test" }, ["test"], llmRunId3);
+  await tracer.handleLLMEnd({ generations: [[]] }, llmRunId3);
 });
 
 test.skip("Test Traced Agent with concurrency (skipped until we fix concurrency)", async () => {
