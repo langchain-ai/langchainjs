@@ -66,37 +66,11 @@ export abstract class BaseChatModel extends BaseLanguageModel {
     return output;
   }
 
-  /**
-   * Get the identifying parameters of the LLM.
-   */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  _identifyingParams(): Record<string, any> {
-    return {};
-  }
-
   _modelType(): string {
     return "base_chat_model" as const;
   }
 
   abstract _llmType(): string;
-
-  /**
-   * Return a json-like object representing this Chat model.
-   */
-  serialize(): SerializedChatModel {
-    return {
-      ...this._identifyingParams(),
-      _type: this._llmType(),
-      _model: this._modelType(),
-    };
-  }
-
-  /**
-   * Load an LLM from a json-like object describing it.
-   */
-  static async deserialize(_data: SerializedLLM): Promise<BaseLanguageModel> {
-    throw new Error("Not implemented");
-  }
 
   private _tokenizer?: GPT3Tokenizer.default;
 

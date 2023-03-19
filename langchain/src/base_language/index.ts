@@ -42,19 +42,43 @@ export abstract class BaseLanguageModel implements BaseLanguageModelParams {
 
   abstract _modelType(): string;
 
+  abstract _llmType(): string;
+
   abstract getNumTokens(text: string): number;
+
+  /**
+   * Get the identifying parameters of the LLM.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  _identifyingParams(): Record<string, any> {
+    return {};
+  }
 
   /**
    * Return a json-like object representing this LLM.
    */
   serialize(): SerializedLLM {
-    throw new Error("Not implemented");
+    return {
+      ...this._identifyingParams(),
+      _type: this._llmType(),
+      _model: this._modelType(),
+    };
   }
 
   /**
    * Load an LLM from a json-like object describing it.
    */
-  static async deserialize(_data: SerializedLLM): Promise<BaseLanguageModel> {
-    throw new Error("Not implemented");
+  static async deserialize(data: SerializedLLM): Promise<BaseLanguageModel> {
+    const { _type, _model, ...rest } = data;
+    if (_model && _model !== "base_llm") {
+      throw new Error(`Cannot load LLM with model ${_model}`);
+    }
+    const Cls = {
+      openai: (await import("../chat_models/openai.js")).ChatOpenAI,
+    }[_type];
+    if (Cls === undefined) {
+      throw new Error(`Cannot load  LLM with type ${_type}`);
+    }
+    return new Cls(rest);
   }
 }
