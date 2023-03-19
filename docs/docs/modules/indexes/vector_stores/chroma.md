@@ -35,7 +35,9 @@ const vectorStore = await Chroma.fromTexts(
   ],
   [{ id: 2 }, { id: 1 }, { id: 3 }],
   new OpenAIEmbeddings(),
-  "goldel-escher-bach"
+  {
+    collectionName: "goldel-escher-bach",
+  }
 );
 const resultOne = await vectorStore.similaritySearch("scared", 2);
 console.log(resultOne); // -> 'Achilles: Yiikes! What is that?'
