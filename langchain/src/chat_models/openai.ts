@@ -21,11 +21,15 @@ import {
   SystemChatMessage,
 } from "../schema/index.js";
 
-type TokenUsage = {
+interface TokenUsage {
   completionTokens?: number;
   promptTokens?: number;
   totalTokens?: number;
-};
+}
+
+interface OpenAILLMOutput {
+  tokenUsage: TokenUsage;
+}
 
 function messageTypeToOpenAIRole(
   type: MessageType
@@ -385,5 +389,28 @@ export class ChatOpenAI extends BaseChatModel implements OpenAIInput {
 
   _llmType() {
     return "openai";
+  }
+
+  _combineLLMOutput(...llmOutputs: OpenAILLMOutput[]): OpenAILLMOutput {
+    return llmOutputs.reduce<{
+      [key in keyof OpenAILLMOutput]: Required<OpenAILLMOutput[key]>;
+    }>(
+      (acc, llmOutput) => {
+        if (llmOutput && llmOutput.tokenUsage) {
+          acc.tokenUsage.completionTokens +=
+            llmOutput.tokenUsage.completionTokens ?? 0;
+          acc.tokenUsage.promptTokens += llmOutput.tokenUsage.promptTokens ?? 0;
+          acc.tokenUsage.totalTokens += llmOutput.tokenUsage.totalTokens ?? 0;
+        }
+        return acc;
+      },
+      {
+        tokenUsage: {
+          completionTokens: 0,
+          promptTokens: 0,
+          totalTokens: 0,
+        },
+      }
+    );
   }
 }
