@@ -62,7 +62,7 @@ export const initializeAgentExecutorWithOptions = async (
     case "zero-shot-react-description": {
       return AgentExecutor.fromAgentAndTools({
         agent: ZeroShotAgent.fromLLMAndTools(llm, tools, {
-          prefix: options.prompt
+          prefix: options.prompt,
         }),
         tools,
         returnIntermediateSteps: true,
@@ -74,7 +74,7 @@ export const initializeAgentExecutorWithOptions = async (
     case "chat-zero-shot-react-description": {
       return AgentExecutor.fromAgentAndTools({
         agent: ChatAgent.fromLLMAndTools(llm, tools, {
-          prefix: options.prompt
+          prefix: options.prompt,
         }),
         tools,
         returnIntermediateSteps: true,
@@ -91,10 +91,12 @@ export const initializeAgentExecutorWithOptions = async (
         tools,
         verbose,
         callbackManager,
-        memory: options.memory ?? new BufferMemory({
-          returnMessages: true,
-          memoryKey: "chat_history",
-        }),
+        memory:
+          options.memory ??
+          new BufferMemory({
+            returnMessages: true,
+            memoryKey: "chat_history",
+          }),
       });
       return executor;
     }
