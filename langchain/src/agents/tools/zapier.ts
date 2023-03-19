@@ -1,5 +1,5 @@
 import { Tool } from "./base.js";
-import { interpolateFString } from "../../prompts/template.js";
+import { renderTemplate } from "../../prompts/template.js";
 
 const zapierNLABaseDescription: string =
   "A wrapper around Zapier NLA actions. " +
@@ -188,7 +188,7 @@ export class ZapierNLARunAction extends Tool {
     const paramsSchemaKeysString = JSON.stringify(
       Object.keys(paramsSchemaWithoutInstructions)
     );
-    this.description = interpolateFString(zapierNLABaseDescription, {
+    this.description = renderTemplate(zapierNLABaseDescription, "f-string", {
       zapier_description: zapierDescription,
       params: paramsSchemaKeysString,
     });
