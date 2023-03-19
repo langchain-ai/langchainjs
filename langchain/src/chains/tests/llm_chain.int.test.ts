@@ -69,7 +69,7 @@ test("Test LLMChain with ChatOpenAI", async () => {
 });
 
 test("Test deserialize", async () => {
-  const model = new OpenAI({ modelName: "text-ada-001" });
+  const model = new ChatOpenAI();
   const prompt = new PromptTemplate({
     template: "Print {foo}",
     inputVariables: ["foo"],
