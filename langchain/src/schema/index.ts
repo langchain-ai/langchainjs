@@ -1,3 +1,4 @@
+import { Document } from "../document.js";
 export type Example = Record<string, string>;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -121,3 +122,10 @@ export type AgentStep = {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ChainValues = Record<string, any>;
+
+/**
+ * Base Index class. All indexes should extend this class.
+ */
+export abstract class BaseIndex {
+  abstract getRelevantTexts(query: string): Promise<Document[]>;
+}

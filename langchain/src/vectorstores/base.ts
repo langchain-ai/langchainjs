@@ -1,5 +1,6 @@
 import { Embeddings } from "../embeddings/base.js";
 import { Document } from "../document.js";
+import { BaseIndex } from "../schema/index.js";
 
 export abstract class VectorStore {
   embeddings: Embeddings;
@@ -62,6 +63,10 @@ export abstract class VectorStore {
       "the Langchain vectorstore implementation you are using forgot to override this, please report a bug"
     );
   }
+
+  toIndex(k?: number): BaseIndex {
+    return new VectorStoreIndex({ vectorStore: this, k });
+  }
 }
 
 export abstract class SaveableVectorStore extends VectorStore {
@@ -72,5 +77,20 @@ export abstract class SaveableVectorStore extends VectorStore {
     _embeddings: Embeddings
   ): Promise<SaveableVectorStore> {
     throw new Error("Not implemented");
+  }
+}
+
+export class VectorStoreIndex extends BaseIndex {
+  vectorStore: VectorStore;
+  k = 4;
+  constructor(fields: { vectorStore: VectorStore; k?: number }) {
+    super();
+    this.vectorStore = fields.vectorStore;
+    this.k = fields.k ?? this.k;
+  }
+
+  async getRelevantTexts(query: string): Promise<Document[]> {
+    const results = await this.vectorStore.similaritySearch(query, 4);
+    return results;
   }
 }
