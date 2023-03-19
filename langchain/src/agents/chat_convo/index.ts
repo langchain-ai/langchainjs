@@ -134,7 +134,8 @@ export class ChatConversationalAgent extends Agent {
   static createPrompt(tools: Tool[], args?: CreatePromptArgs) {
     const systemMessage = (args?.systemMessage ?? DEFAULT_PREFIX) + PREFIX_END;
     const humanMessage = args?.humanMessage ?? DEFAULT_SUFFIX;
-    const outputParser = args?.outputParser ?? new ChatConversationalAgentOutputParser();
+    const outputParser =
+      args?.outputParser ?? new ChatConversationalAgentOutputParser();
     const toolStrings = tools
       .map((tool) => `${tool.name}: ${tool.description}`)
       .join("\n");
