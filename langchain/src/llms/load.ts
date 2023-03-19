@@ -11,7 +11,7 @@ import { BaseLanguageModel } from "../base_language/index.js";
  * ```
  */
 const loader: FileLoader<BaseLanguageModel> = (file: string, path: string) =>
-BaseLanguageModel.deserialize(parseFileConfig(file, path));
+  BaseLanguageModel.deserialize(parseFileConfig(file, path));
 
 export const loadLLM = (uri: string): Promise<BaseLanguageModel> =>
   loadFromFile(uri, loader);
