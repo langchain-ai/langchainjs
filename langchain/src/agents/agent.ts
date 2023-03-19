@@ -10,6 +10,7 @@ import {
 } from "../schema/index.js";
 import { AgentInput, SerializedAgent, StoppingMethod } from "./types.js";
 import { Tool } from "./tools/base.js";
+import { CallbackManager } from "../callbacks/index.js";
 
 class ParseError extends Error {
   output: string;
@@ -141,7 +142,8 @@ export abstract class Agent {
   private async _plan(
     steps: AgentStep[],
     inputs: ChainValues,
-    suffix?: string
+    suffix?: string,
+    callbackManager?: CallbackManager
   ): Promise<AgentAction | AgentFinish> {
     const thoughts = this.constructScratchPad(steps);
     const newInputs: ChainValues = {
@@ -153,7 +155,7 @@ export abstract class Agent {
       newInputs.stop = this._stop();
     }
 
-    const output = await this.llmChain.predict(newInputs);
+    const output = await this.llmChain.predict(newInputs, callbackManager);
     const parsed = this.extractToolAndInput(output);
     if (!parsed) {
       throw new ParseError(`Invalid output: ${output}`, output);
@@ -174,14 +176,16 @@ export abstract class Agent {
    *
    * @param steps - Steps the LLM has taken so far, along with observations from each.
    * @param inputs - User inputs.
+   * @param callbackManager - Callback manager to use for this call.
    *
    * @returns Action specifying what tool to use.
    */
   plan(
     steps: AgentStep[],
-    inputs: ChainValues
+    inputs: ChainValues,
+    callbackManager?: CallbackManager
   ): Promise<AgentAction | AgentFinish> {
-    return this._plan(steps, inputs);
+    return this._plan(steps, inputs, undefined, callbackManager);
   }
 
   /**
@@ -190,7 +194,8 @@ export abstract class Agent {
   async returnStoppedResponse(
     earlyStoppingMethod: StoppingMethod,
     steps: AgentStep[],
-    inputs: ChainValues
+    inputs: ChainValues,
+    callbackManager?: CallbackManager
   ): Promise<AgentFinish> {
     if (earlyStoppingMethod === "force") {
       return {
@@ -204,7 +209,8 @@ export abstract class Agent {
         const action = await this._plan(
           steps,
           inputs,
-          "\n\nI now need to return a final answer based on the previous steps:"
+          "\n\nI now need to return a final answer based on the previous steps:",
+          callbackManager
         );
         if ("returnValues" in action) {
           return action;

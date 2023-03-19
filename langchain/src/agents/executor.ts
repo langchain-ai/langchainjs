@@ -64,7 +64,11 @@ export class AgentExecutor extends BaseChain {
     return this.maxIterations === undefined || iterations < this.maxIterations;
   }
 
-  async _call(inputs: ChainValues): Promise<ChainValues> {
+  async _call(
+    inputs: ChainValues,
+    callbackManager?: CallbackManager,
+    runId?: string
+  ): Promise<ChainValues> {
     this.agent.prepareForNewCall();
     const toolsByName = Object.fromEntries(
       this.tools.map((t) => [t.name.toLowerCase(), t])
@@ -79,20 +83,28 @@ export class AgentExecutor extends BaseChain {
       if (this.returnIntermediateSteps) {
         return { ...returnValues, intermediateSteps: steps, ...additional };
       }
-      await this.callbackManager.handleAgentEnd(finishStep, this.verbose);
+      await this.callbackManager.handleAgentEnd(
+        finishStep,
+        runId ?? "",
+        this.verbose
+      );
       return { ...returnValues, ...additional };
     };
 
     while (this.shouldContinue(iterations)) {
-      const action = await this.agent.plan(steps, inputs);
+      const action = await this.agent.plan(steps, inputs, callbackManager);
       if ("returnValues" in action) {
         return getOutput(action);
       }
-      await this.callbackManager.handleAgentAction(action, this.verbose);
+      await this.callbackManager.handleAgentAction(
+        action,
+        runId ?? "",
+        this.verbose
+      );
 
       const tool = toolsByName[action.tool.toLowerCase()];
       const observation = tool
-        ? await tool.call(action.toolInput, this.verbose)
+        ? await tool.call(action.toolInput, this.verbose, callbackManager)
         : `${action.tool} is not a valid tool, try another one.`;
       steps.push({ action, observation });
       if (tool?.returnDirect) {
@@ -107,7 +119,8 @@ export class AgentExecutor extends BaseChain {
     const finish = await this.agent.returnStoppedResponse(
       this.earlyStoppingMethod,
       steps,
-      inputs
+      inputs,
+      callbackManager
     );
 
     return getOutput(finish);

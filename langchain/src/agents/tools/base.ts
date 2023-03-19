@@ -17,23 +17,32 @@ export abstract class Tool {
     this.callbackManager = callbackManager ?? getCallbackManager();
   }
 
-  protected abstract _call(arg: string): Promise<string>;
+  protected abstract _call(
+    arg: string,
+    callbackManager?: CallbackManager
+  ): Promise<string>;
 
-  async call(arg: string, verbose?: boolean): Promise<string> {
-    const _verbose = verbose ?? this.verbose;
-    await this.callbackManager.handleToolStart(
+  async call(
+    arg: string,
+    verbose?: boolean,
+    callbackManager?: CallbackManager
+  ): Promise<string> {
+    const verbose_ = verbose ?? this.verbose;
+    const callbackManager_ = callbackManager ?? this.callbackManager;
+    const runId = await callbackManager_.handleToolStart(
       { name: this.name },
       arg,
-      _verbose
+      undefined,
+      verbose_
     );
     let result;
     try {
-      result = await this._call(arg);
+      result = await this._call(arg, callbackManager);
     } catch (e) {
-      await this.callbackManager.handleToolError(e, _verbose);
+      await callbackManager_.handleToolError(e, runId, verbose_);
       throw e;
     }
-    await this.callbackManager.handleToolEnd(result, _verbose);
+    await callbackManager_.handleToolEnd(result, runId, verbose_);
     return result;
   }
 
