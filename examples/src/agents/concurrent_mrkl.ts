@@ -37,7 +37,7 @@ export const run = async () => {
   console.log(`Got output ${resultB.output}`);
   console.log(`Got output ${resultC.output}`);
 
-  // This will work, because each executor has its own Tracer, avoiding concurrency issues.
+  // // This will work, because each executor has its own Tracer, avoiding concurrency issues.
   // console.log("---Now with concurrency-safe tracing---");
   //
   // const executors = [];
