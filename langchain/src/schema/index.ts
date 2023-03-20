@@ -1,3 +1,5 @@
+import { BaseOutputParser } from "output_parsers/base.js";
+
 export type Example = Record<string, string>;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -121,3 +123,14 @@ export type AgentStep = {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ChainValues = Record<string, any>;
+
+/**
+ * Base GuardedOutputParser class. All guarded output parsers should extend this.
+ */
+export abstract class GuardedOutputParser {
+  abstract parse(
+    prompt: BasePromptValue,
+    output: string,
+    outputParser: BaseOutputParser
+  ): unknown;
+}
