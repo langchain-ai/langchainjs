@@ -56,6 +56,12 @@ interface OpenAIInput extends ModelParams {
 
   /** List of stop words to use when generating */
   stop?: string[];
+
+  /**
+   * Maximum number of tokens to generate in the completion.  If not specified,
+   * defaults to the maximum number of tokens allowed by the model.
+   */
+  maxTokens?: number;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -88,6 +94,8 @@ export class OpenAIChat extends LLM implements OpenAIInput {
   n = 1;
 
   logitBias?: Record<string, number>;
+
+  maxTokens?: number;
 
   modelName = "gpt-3.5-turbo";
 
@@ -134,6 +142,7 @@ export class OpenAIChat extends LLM implements OpenAIInput {
     this.presencePenalty = fields?.presencePenalty ?? this.presencePenalty;
     this.n = fields?.n ?? this.n;
     this.logitBias = fields?.logitBias;
+    this.maxTokens = fields?.maxTokens;
     this.stop = fields?.stop;
 
     this.streaming = fields?.streaming ?? false;
@@ -160,6 +169,7 @@ export class OpenAIChat extends LLM implements OpenAIInput {
       presence_penalty: this.presencePenalty,
       n: this.n,
       logit_bias: this.logitBias,
+      max_tokens: this.maxTokens,
       stop: this.stop,
       stream: this.streaming,
       ...this.modelKwargs,
