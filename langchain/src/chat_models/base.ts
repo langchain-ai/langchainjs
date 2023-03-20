@@ -26,12 +26,16 @@ export abstract class BaseChatModel extends BaseLanguageModel {
     super(rest);
   }
 
+  abstract _combineLLMOutput?(
+    ...llmOutputs: LLMResult["llmOutput"][]
+  ): LLMResult["llmOutput"];
+
   async generate(
     messages: BaseChatMessage[][],
     stop?: string[]
   ): Promise<LLMResult> {
     const generations: ChatGeneration[][] = [];
-    let llmOutput = {};
+    const llmOutputs: LLMResult["llmOutput"][] = [];
     const messageStrings: string[] = messages.map((messageList) =>
       getBufferString(messageList)
     );
@@ -43,7 +47,9 @@ export abstract class BaseChatModel extends BaseLanguageModel {
     try {
       for (const message of messages) {
         const result = await this._generate(message, stop);
-        llmOutput = result.llmOutput ?? {};
+        if (result.llmOutput) {
+          llmOutputs.push(result.llmOutput);
+        }
         generations.push(result.generations);
       }
     } catch (err) {
@@ -53,7 +59,9 @@ export abstract class BaseChatModel extends BaseLanguageModel {
 
     const output: LLMResult = {
       generations,
-      llmOutput,
+      llmOutput: llmOutputs.length
+        ? this._combineLLMOutput?.(...llmOutputs)
+        : undefined,
     };
     await this.callbackManager.handleLLMEnd(output, this.verbose);
     return output;
