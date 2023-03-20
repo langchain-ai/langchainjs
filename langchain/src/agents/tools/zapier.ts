@@ -23,8 +23,6 @@ export class ZapierNLAWrapper {
 
   zapierNlaApiBase = "https://nla.zapier.com/api/v1/";
 
-  zapierNlaApiDynamicBase = "https://nla.zapier.com/api/v1/dynamic/";
-
   constructor(zapierNlaApiKey?: string) {
     const apiKey = zapierNlaApiKey ?? process.env.ZAPIER_NLA_API_KEY;
     if (!apiKey) {
@@ -101,7 +99,7 @@ export class ZapierNLAWrapper {
     const data = params ?? {};
     data.preview_only = true;
     const resp = await this._getActionRequest(actionId, instructions, data);
-    return resp.params;
+    return resp.input_params;
   }
 
   /**
@@ -111,7 +109,7 @@ export class ZapierNLAWrapper {
    */
   async listActions(): Promise<ZapierValues[]> {
     const headers = this._getHeaders();
-    const resp = await fetch(`${this.zapierNlaApiDynamicBase}exposed/`, {
+    const resp = await fetch(`${this.zapierNlaApiBase}exposed/`, {
       method: "GET",
       headers,
     });
