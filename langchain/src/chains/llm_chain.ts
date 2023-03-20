@@ -69,7 +69,7 @@ export class LLMChain extends BaseChain implements LLMChainInput {
     const { generations } = await this.llm.generatePrompt(
       [promptValue],
       stop,
-      callbackManager
+      callbackManager?.getChild()
     );
     return { [this.outputKey]: generations[0][0].text };
   }
