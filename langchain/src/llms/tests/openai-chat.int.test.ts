@@ -3,7 +3,7 @@ import { OpenAIChat } from "../openai-chat.js";
 import { CallbackManager } from "../../callbacks/index.js";
 
 test("Test OpenAI", async () => {
-  const model = new OpenAIChat({ modelName: "gpt-3.5-turbo" });
+  const model = new OpenAIChat({ modelName: "gpt-3.5-turbo", maxTokens: 10 });
   const res = await model.call("Print hello world");
   console.log({ res });
 });
@@ -14,6 +14,7 @@ test("Test OpenAI with prefix messages", async () => {
       { role: "user", content: "My name is John" },
       { role: "assistant", content: "Hi there" },
     ],
+    maxTokens: 10,
   });
   const res = await model.call("What is my name");
   console.log({ res });
@@ -24,6 +25,7 @@ test("Test OpenAI in streaming mode", async () => {
   let streamedCompletion = "";
 
   const model = new OpenAIChat({
+    maxTokens: 10,
     modelName: "gpt-3.5-turbo",
     streaming: true,
     callbackManager: CallbackManager.fromHandlers({
