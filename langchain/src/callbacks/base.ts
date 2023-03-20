@@ -21,69 +21,94 @@ abstract class BaseCallbackHandlerMethods {
     llm: { name: string },
     prompts: string[],
     runId: string,
-    verbose?: boolean
+    verbose?: boolean,
+    parentRunId?: string
   ): Promise<void | string>;
 
   handleLLMNewToken?(
     token: string,
     runId: string,
-    verbose?: boolean
+    verbose?: boolean,
+    parentRunId?: string
   ): Promise<void>;
 
-  handleLLMError?(err: Error, runId: string, verbose?: boolean): Promise<void>;
+  handleLLMError?(
+    err: Error,
+    runId: string,
+    verbose?: boolean,
+    parentRunId?: string
+  ): Promise<void>;
 
   handleLLMEnd?(
     output: LLMResult,
     runId: string,
-    verbose?: boolean
+    verbose?: boolean,
+    parentRunId?: string
   ): Promise<void>;
 
   handleChainStart?(
     chain: { name: string },
     inputs: ChainValues,
     runId: string,
-    verbose?: boolean
+    verbose?: boolean,
+    parentRunId?: string
   ): Promise<void | string>;
 
   handleChainError?(
     err: Error,
     runId: string,
-    verbose?: boolean
+    verbose?: boolean,
+    parentRunId?: string
   ): Promise<void>;
 
   handleChainEnd?(
     outputs: ChainValues,
     runId: string,
-    verbose?: boolean
+    verbose?: boolean,
+    parentRunId?: string
   ): Promise<void>;
 
   handleToolStart?(
     tool: { name: string },
     input: string,
     runId: string,
-    verbose?: boolean
+    verbose?: boolean,
+    parentRunId?: string
   ): Promise<void | string>;
 
-  handleToolError?(err: Error, runId: string, verbose?: boolean): Promise<void>;
+  handleToolError?(
+    err: Error,
+    runId: string,
+    verbose?: boolean,
+    parentRunId?: string
+  ): Promise<void>;
 
   handleToolEnd?(
     output: string,
     runId: string,
-    verbose?: boolean
+    verbose?: boolean,
+    parentRunId?: string
   ): Promise<void>;
 
-  handleText?(text: string, runId: string, verbose?: boolean): Promise<void>;
+  handleText?(
+    text: string,
+    runId: string,
+    verbose?: boolean,
+    parentRunId?: string
+  ): Promise<void>;
 
   handleAgentAction?(
     action: AgentAction,
     runId: string,
-    verbose?: boolean
+    verbose?: boolean,
+    parentRunId?: string
   ): Promise<void>;
 
   handleAgentEnd?(
     action: AgentFinish,
     runId: string,
-    verbose?: boolean
+    verbose?: boolean,
+    parentRunId?: string
   ): Promise<void>;
 }
 
@@ -125,9 +150,14 @@ export abstract class BaseCallbackManager extends BaseCallbackHandler {
 export class CallbackManager extends BaseCallbackManager {
   handlers: BaseCallbackHandler[];
 
-  constructor() {
+  private _currentRunId?: string;
+
+  private readonly _parentRunId?: string;
+
+  constructor(parentRunId?: string) {
     super();
     this.handlers = [];
+    this._parentRunId = parentRunId;
   }
 
   async handleLLMStart(
@@ -140,7 +170,7 @@ export class CallbackManager extends BaseCallbackManager {
       this.handlers.map(async (handler) => {
         if (!handler.ignoreLLM && (verbose || handler.alwaysVerbose)) {
           try {
-            await handler.handleLLMStart?.(llm, prompts, runId);
+            await handler.handleLLMStart?.(llm, prompts, runId, undefined, this._parentRunId);
           } catch (err) {
             console.error(
               `Error in handler ${handler.constructor.name}, handleLLMStart: ${err}`
@@ -149,6 +179,7 @@ export class CallbackManager extends BaseCallbackManager {
         }
       })
     );
+    this._currentRunId = runId;
     return runId;
   }
 
@@ -161,7 +192,7 @@ export class CallbackManager extends BaseCallbackManager {
       this.handlers.map(async (handler) => {
         if (!handler.ignoreLLM && (verbose || handler.alwaysVerbose)) {
           try {
-            await handler.handleLLMNewToken?.(token, runId);
+            await handler.handleLLMNewToken?.(token, runId, undefined, this._parentRunId);
           } catch (err) {
             console.error(
               `Error in handler ${handler.constructor.name}, handleLLMNewToken: ${err}`
@@ -181,7 +212,7 @@ export class CallbackManager extends BaseCallbackManager {
       this.handlers.map(async (handler) => {
         if (!handler.ignoreLLM && (verbose || handler.alwaysVerbose)) {
           try {
-            await handler.handleLLMError?.(err, runId);
+            await handler.handleLLMError?.(err, runId, undefined, this._parentRunId);
           } catch (err) {
             console.error(
               `Error in handler ${handler.constructor.name}, handleLLMError: ${err}`
@@ -201,7 +232,7 @@ export class CallbackManager extends BaseCallbackManager {
       this.handlers.map(async (handler) => {
         if (!handler.ignoreLLM && (verbose || handler.alwaysVerbose)) {
           try {
-            await handler.handleLLMEnd?.(output, runId);
+            await handler.handleLLMEnd?.(output, runId, undefined, this._parentRunId);
           } catch (err) {
             console.error(
               `Error in handler ${handler.constructor.name}, handleLLMEnd: ${err}`
@@ -222,7 +253,7 @@ export class CallbackManager extends BaseCallbackManager {
       this.handlers.map(async (handler) => {
         if (!handler.ignoreChain && (verbose || handler.alwaysVerbose)) {
           try {
-            await handler.handleChainStart?.(chain, inputs, runId);
+            await handler.handleChainStart?.(chain, inputs, runId, undefined, this._parentRunId);
           } catch (err) {
             console.error(
               `Error in handler ${handler.constructor.name}, handleChainStart: ${err}`
@@ -231,6 +262,7 @@ export class CallbackManager extends BaseCallbackManager {
         }
       })
     );
+    this._currentRunId = runId;
     return runId;
   }
 
@@ -243,7 +275,7 @@ export class CallbackManager extends BaseCallbackManager {
       this.handlers.map(async (handler) => {
         if (!handler.ignoreChain && (verbose || handler.alwaysVerbose)) {
           try {
-            await handler.handleChainError?.(err, runId);
+            await handler.handleChainError?.(err, runId, undefined, this._parentRunId);
           } catch (err) {
             console.error(
               `Error in handler ${handler.constructor.name}, handleChainError: ${err}`
@@ -263,7 +295,7 @@ export class CallbackManager extends BaseCallbackManager {
       this.handlers.map(async (handler) => {
         if (!handler.ignoreChain && (verbose || handler.alwaysVerbose)) {
           try {
-            await handler.handleChainEnd?.(output, runId);
+            await handler.handleChainEnd?.(output, runId, undefined, this._parentRunId);
           } catch (err) {
             console.error(
               `Error in handler ${handler.constructor.name}, handleChainEnd: ${err}`
@@ -284,7 +316,7 @@ export class CallbackManager extends BaseCallbackManager {
       this.handlers.map(async (handler) => {
         if (!handler.ignoreAgent && (verbose || handler.alwaysVerbose)) {
           try {
-            await handler.handleToolStart?.(tool, input, runId);
+            await handler.handleToolStart?.(tool, input, runId, undefined, this._parentRunId);
           } catch (err) {
             console.error(
               `Error in handler ${handler.constructor.name}, handleToolStart: ${err}`
@@ -293,6 +325,7 @@ export class CallbackManager extends BaseCallbackManager {
         }
       })
     );
+    this._currentRunId = runId;
     return runId;
   }
 
@@ -305,7 +338,7 @@ export class CallbackManager extends BaseCallbackManager {
       this.handlers.map(async (handler) => {
         if (!handler.ignoreAgent && (verbose || handler.alwaysVerbose)) {
           try {
-            await handler.handleToolError?.(err, runId);
+            await handler.handleToolError?.(err, runId, undefined, this._parentRunId);
           } catch (err) {
             console.error(
               `Error in handler ${handler.constructor.name}, handleToolError: ${err}`
@@ -345,7 +378,7 @@ export class CallbackManager extends BaseCallbackManager {
       this.handlers.map(async (handler) => {
         if (verbose || handler.alwaysVerbose) {
           try {
-            await handler.handleText?.(text, runId);
+            await handler.handleText?.(text, runId, undefined, this._parentRunId);
           } catch (err) {
             console.error(
               `Error in handler ${handler.constructor.name}, handleText: ${err}`
@@ -365,7 +398,7 @@ export class CallbackManager extends BaseCallbackManager {
       this.handlers.map(async (handler) => {
         if (!handler.ignoreAgent && (verbose || handler.alwaysVerbose)) {
           try {
-            await handler.handleAgentAction?.(action, runId);
+            await handler.handleAgentAction?.(action, runId, undefined, this._parentRunId);
           } catch (err) {
             console.error(
               `Error in handler ${handler.constructor.name}, handleAgentAction: ${err}`
@@ -385,7 +418,7 @@ export class CallbackManager extends BaseCallbackManager {
       this.handlers.map(async (handler) => {
         if (!handler.ignoreAgent && (verbose || handler.alwaysVerbose)) {
           try {
-            await handler.handleAgentEnd?.(action, runId);
+            await handler.handleAgentEnd?.(action, runId, undefined, this._parentRunId);
           } catch (err) {
             console.error(
               `Error in handler ${handler.constructor.name}, handleAgentEnd: ${err}`
@@ -406,6 +439,12 @@ export class CallbackManager extends BaseCallbackManager {
 
   setHandlers(handlers: BaseCallbackHandler[]): void {
     this.handlers = handlers;
+  }
+
+  getChild(): CallbackManager {
+    const manager = new CallbackManager(this._currentRunId);
+    manager.setHandlers(this.handlers);
+    return manager;
   }
 
   static fromHandlers(handlers: BaseCallbackHandlerMethods) {
