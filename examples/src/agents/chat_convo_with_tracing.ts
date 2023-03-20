@@ -11,11 +11,11 @@ export const run = async () => {
   const executor = await initializeAgentExecutorWithOptions(tools, model, {
     agentType: "chat-conversational-react-description",
     verbose: true,
-  });
-  executor.memory = new BufferMemory({
-    returnMessages: true,
-    memoryKey: "chat_history",
-    inputKey: "input",
+    memory: new BufferMemory({
+      returnMessages: true,
+      memoryKey: "chat_history",
+      inputKey: "input",
+    }),
   });
   console.log("Loaded agent.");
 

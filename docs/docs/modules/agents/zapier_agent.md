@@ -2,7 +2,7 @@
 
 Full docs here: https://nla.zapier.com/api/v1/dynamic/docs
 
-**Zapier Natural Language Actions** gives you access to the 5k+ apps, 20k+ actions on Zapier's platform through a natural language API interface.
+**Zapier Natural Language Actions** gives you access to the 5k+ apps and 20k+ actions on Zapier's platform through a natural language API interface.
 
 NLA supports apps like Gmail, Salesforce, Trello, Slack, Asana, HubSpot, Google Sheets, Microsoft Teams, and thousands more apps: https://zapier.com/apps
 
@@ -16,7 +16,7 @@ User-facing (Oauth): for production scenarios where you are deploying an end-use
 
 This quick start will focus on the server-side use case for brevity. Review full docs or reach out to nla@zapier.com for user-facing oauth developer support.
 
-This example goes over how to use the Zapier integration an Agent. In code, below:
+The example below demonstrates how to use the Zapier integration as an Agent:
 
 ```typescript
 import { OpenAI } from "langchain";
