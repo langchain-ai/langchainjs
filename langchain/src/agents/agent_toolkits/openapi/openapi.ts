@@ -1,4 +1,4 @@
-import { BaseLLM } from "../../../llms/index.js";
+import { BaseLanguageModel } from "../../../base_language/index.js";
 import {
   DynamicTool,
   JsonSpec,
@@ -28,7 +28,7 @@ export class RequestsToolkit extends Toolkit {
 }
 
 export class OpenApiToolkit extends RequestsToolkit {
-  constructor(jsonSpec: JsonSpec, llm: BaseLLM, headers?: Headers) {
+  constructor(jsonSpec: JsonSpec, llm: BaseLanguageModel, headers?: Headers) {
     super(headers);
     const jsonAgent = createJsonAgent(llm, new JsonToolkit(jsonSpec));
     this.tools = [
@@ -46,7 +46,7 @@ export class OpenApiToolkit extends RequestsToolkit {
 }
 
 export function createOpenApiAgent(
-  llm: BaseLLM,
+  llm: BaseLanguageModel,
   openApiToolkit: OpenApiToolkit,
   args?: CreatePromptArgs
 ) {

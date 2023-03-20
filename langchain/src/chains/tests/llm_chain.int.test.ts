@@ -67,3 +67,21 @@ test("Test LLMChain with ChatOpenAI", async () => {
   const res = await chatChain.call({ product: "colorful socks" });
   console.log({ res });
 });
+
+test("Test deserialize", async () => {
+  const model = new ChatOpenAI();
+  const prompt = new PromptTemplate({
+    template: "Print {foo}",
+    inputVariables: ["foo"],
+  });
+  const chain = new LLMChain({ prompt, llm: model });
+
+  const serialized = chain.serialize();
+  // console.log(serialized)
+  const chain2 = await LLMChain.deserialize({ ...serialized });
+
+  const res = await chain2.run("my favorite color");
+  console.log({ res });
+
+  // chain === chain2?
+});
