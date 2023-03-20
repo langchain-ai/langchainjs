@@ -298,3 +298,42 @@ test("CallbackHandler with ignoreAgent", async () => {
   expect(handler.toolEnds).toBe(0);
   expect(handler.agentEnds).toBe(0);
 });
+
+test("CallbackManager with child manager", async () => {
+  const llmRunId = "llmRunId";
+  const chainRunId = "chainRunId";
+  let llmWasCalled = false;
+  let chainWasCalled = false;
+  const manager = CallbackManager.fromHandlers({
+    async handleLLMStart(
+      _llm: { name: string },
+      _prompts: string[],
+      runId: string,
+      _verbose?: boolean,
+      parentRunId?: string
+    ) {
+      expect(runId).toBe(llmRunId);
+      expect(parentRunId).toBe(chainRunId);
+      llmWasCalled = true;
+    },
+    async handleChainStart(
+      _chain: { name: string },
+      _inputs: ChainValues,
+      runId: string,
+      _verbose?: boolean,
+      parentRunId?: string
+    ) {
+      expect(runId).toBe(chainRunId);
+      expect(parentRunId).toBe(undefined);
+      chainWasCalled = true;
+    },
+  });
+  await manager.handleChainStart(
+    { name: "test" },
+    { test: "test" },
+    chainRunId
+  );
+  await manager.getChild().handleLLMStart({ name: "test" }, ["test"], llmRunId);
+  expect(llmWasCalled).toBe(true);
+  expect(chainWasCalled).toBe(true);
+});
