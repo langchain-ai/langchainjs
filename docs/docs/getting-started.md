@@ -84,7 +84,7 @@ const prompt = new PromptTemplate({
 Let's now see how this works! We can call the `.format` method to format it.
 
 ```typescript
-const res = prompt.format({ product: "colorful socks" });
+const res = await prompt.format({ product: "colorful socks" });
 console.log(res);
 ```
 
