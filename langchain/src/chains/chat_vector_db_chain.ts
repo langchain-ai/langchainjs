@@ -170,6 +170,11 @@ export class ChatVectorDBQAChain
     llm: BaseLanguageModel,
     vectorstore: VectorStore,
     options: {
+      /**
+       * If true, ask the model to return a list of which documents it used
+       * to answer the question.
+       */
+      withSources?: boolean;
       inputKey?: string;
       outputKey?: string;
       k?: number;
@@ -184,7 +189,10 @@ export class ChatVectorDBQAChain
     );
     const qa_prompt = PromptTemplate.fromTemplate(qaTemplate || qa_template);
 
-    const qaChain = loadQAStuffChain(llm, { prompt: qa_prompt });
+    const qaChain = loadQAStuffChain(llm, {
+      prompt: qa_prompt,
+      withSources: options.withSources,
+    });
     const questionGeneratorChain = new LLMChain({
       prompt: question_generator_prompt,
       llm,

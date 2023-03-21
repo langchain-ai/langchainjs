@@ -1,5 +1,5 @@
 import { LLMChain } from "../llm_chain.js";
-import { BasePromptTemplate } from "../../prompts/index.js";
+import { PromptTemplate, BasePromptTemplate } from "../../prompts/index.js";
 import {
   StuffDocumentsChain,
   MapReduceDocumentsChain,
@@ -12,6 +12,8 @@ import {
   COMBINE_QA_PROMPT_SELECTOR,
 } from "./map_reduce_prompts.js";
 import { BaseLanguageModel } from "../../base_language/index.js";
+import { KeyValueOutputParser } from "../../output_parsers/index.js";
+import { QA_PROMPT_SELECTOR_WITH_SOURCES } from "./stuff_prompts_with_sources.js";
 
 interface qaChainParams {
   prompt?: BasePromptTemplate;
@@ -52,15 +54,31 @@ export const loadQAChain = (
 
 interface StuffQAChainParams {
   prompt?: BasePromptTemplate;
+  withSources?: boolean;
 }
 
 export const loadQAStuffChain = (
   llm: BaseLanguageModel,
   params: StuffQAChainParams = {}
 ) => {
-  const { prompt = QA_PROMPT_SELECTOR.getPrompt(llm) } = params;
+  const outputParser = new KeyValueOutputParser(["FINAL ANSWER", "SOURCES"]);
+  const {
+    prompt = params.withSources
+      ? QA_PROMPT_SELECTOR_WITH_SOURCES.getPrompt(llm)
+      : QA_PROMPT_SELECTOR.getPrompt(llm),
+  } = params;
   const llmChain = new LLMChain({ prompt, llm });
-  const chain = new StuffDocumentsChain({ llmChain });
+  const chain = new StuffDocumentsChain(
+    params.withSources
+      ? {
+          llmChain,
+          outputParser: new KeyValueOutputParser(["FINAL ANSWER", "SOURCES"]),
+          documentPrompt: PromptTemplate.fromTemplate(
+            `Content: {page_content}\nSource: {source}`
+          ),
+        }
+      : { llmChain }
+  );
   return chain;
 };
 
