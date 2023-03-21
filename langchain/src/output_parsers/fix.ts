@@ -4,7 +4,7 @@ import { LLMChain } from "../chains/llm_chain.js";
 import { BaseLanguageModel } from "../base_language/index.js";
 import { NAIVE_FIX_PROMPT } from "./prompts.js";
 
-export class FixOutputParser extends BaseOutputParser {
+export class OutputFixingParser extends BaseOutputParser {
   parser: BaseOutputParser;
 
   retryChain: LLMChain;
@@ -18,19 +18,19 @@ export class FixOutputParser extends BaseOutputParser {
   ) {
     const prompt = fields?.prompt ?? NAIVE_FIX_PROMPT;
     const chain = new LLMChain({ llm, prompt });
-    return new FixOutputParser({ parser, retry_chain: chain });
+    return new OutputFixingParser({ parser, retryChain: chain });
   }
 
   constructor({
     parser,
-    retry_chain,
+    retryChain,
   }: {
     parser: BaseOutputParser;
-    retry_chain: LLMChain;
+    retryChain: LLMChain;
   }) {
     super();
     this.parser = parser;
-    this.retryChain = retry_chain;
+    this.retryChain = retryChain;
   }
 
   async parse(completion: string) {

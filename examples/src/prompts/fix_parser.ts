@@ -2,7 +2,7 @@ import { z } from "zod";
 import { ChatOpenAI } from "langchain/chat_models";
 import {
   StructuredOutputParser,
-  FixOutputParser,
+  OutputFixingParser,
 } from "langchain/output_parsers";
 
 export const run = async () => {
@@ -26,7 +26,7 @@ export const run = async () => {
   } catch (e) {
     console.log("Failed to parse bad output: ", e);
   }
-  const fixParser = FixOutputParser.fromLLM(
+  const fixParser = OutputFixingParser.fromLLM(
     new ChatOpenAI({ temperature: 0 }),
     parser
   );
