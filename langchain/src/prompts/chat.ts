@@ -3,7 +3,6 @@ import {
   BaseStringPromptTemplate,
   BasePromptTemplateInput,
 } from "./base.js";
-import { DEFAULT_FORMATTER_MAPPING, TemplateFormat } from "./template.js";
 import {
   AIChatMessage,
   BaseChatMessage,
@@ -152,13 +151,6 @@ export interface ChatPromptTemplateInput extends BasePromptTemplateInput {
   promptMessages: BaseMessagePromptTemplate[];
 
   /**
-   * The format of the prompt template. Options are 'f-string', 'jinja-2'
-   *
-   * @defaultValue 'f-string'
-   */
-  templateFormat?: TemplateFormat;
-
-  /**
    * Whether to try validating the template on initialization
    *
    * @defaultValue `true`
@@ -172,8 +164,6 @@ export class ChatPromptTemplate
 {
   promptMessages: BaseMessagePromptTemplate[];
 
-  templateFormat: TemplateFormat = "f-string";
-
   validateTemplate = true;
 
   constructor(input: ChatPromptTemplateInput) {
@@ -181,11 +171,6 @@ export class ChatPromptTemplate
     Object.assign(this, input);
 
     if (this.validateTemplate) {
-      if (!(this.templateFormat in DEFAULT_FORMATTER_MAPPING)) {
-        const validFormats = Object.keys(DEFAULT_FORMATTER_MAPPING);
-        throw new Error(`Invalid template format. Got \`${this.templateFormat}\`;
-                         should be one of ${validFormats}`);
-      }
       const inputVariables = new Set<string>();
       for (const promptMessage of this.promptMessages) {
         for (const inputVariable of promptMessage.inputVariables) {
@@ -246,7 +231,6 @@ export class ChatPromptTemplate
     return {
       input_variables: this.inputVariables,
       output_parser: this.outputParser?.serialize(),
-      template_format: this.templateFormat,
       prompt_messages: this.promptMessages.map((m) => m.serialize()),
     };
   }

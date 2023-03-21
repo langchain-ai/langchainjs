@@ -118,9 +118,15 @@ export class PromptTemplate
   /**
    * Load prompt template from a template f-string
    */
-  static fromTemplate(template: string) {
+  static fromTemplate(
+    template: string,
+    {
+      templateFormat = "f-string",
+      ...rest
+    }: Omit<PromptTemplateInput, "template" | "inputVariables"> = {}
+  ) {
     const names = new Set<string>();
-    parseTemplate(template, "f-string").forEach((node) => {
+    parseTemplate(template, templateFormat).forEach((node) => {
       if (node.type === "variable") {
         names.add(node.name);
       }
@@ -128,7 +134,9 @@ export class PromptTemplate
 
     return new PromptTemplate({
       inputVariables: [...names],
+      templateFormat,
       template,
+      ...rest,
     });
   }
 
