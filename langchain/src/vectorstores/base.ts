@@ -1,6 +1,6 @@
 import { Embeddings } from "../embeddings/base.js";
 import { Document } from "../document.js";
-import { BaseIndex } from "../schema/index.js";
+import { BaseRetriever } from "../schema/index.js";
 
 export abstract class VectorStore {
   embeddings: Embeddings;
@@ -64,8 +64,8 @@ export abstract class VectorStore {
     );
   }
 
-  toIndex(k?: number): BaseIndex {
-    return new VectorStoreIndex({ vectorStore: this, k });
+  asRetriever(k?: number): BaseRetriever {
+    return new VectorStoreRetriever({ vectorStore: this, k });
   }
 }
 
@@ -80,9 +80,11 @@ export abstract class SaveableVectorStore extends VectorStore {
   }
 }
 
-export class VectorStoreIndex extends BaseIndex {
+export class VectorStoreRetriever extends BaseRetriever {
   vectorStore: VectorStore;
+
   k = 4;
+
   constructor(fields: { vectorStore: VectorStore; k?: number }) {
     super();
     this.vectorStore = fields.vectorStore;

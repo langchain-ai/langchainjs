@@ -1,5 +1,5 @@
 import { OpenAI } from "langchain/llms";
-import { ChatIndexQAChain } from "langchain/chains";
+import { ChatRetrievalQAChain } from "langchain/chains";
 import { Chroma } from "langchain/vectorstores";
 import { OpenAIEmbeddings } from "langchain/embeddings";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
@@ -20,7 +20,7 @@ export const run = async () => {
     collectionName: "state_of_the_union",
   });
   /* Create the chain */
-  const chain = ChatIndexQAChain.fromLLM(model, vectorStore.toIndex());
+  const chain = ChatRetrievalQAChain.fromLLM(model, vectorStore.asRetriever());
   /* Ask it a question */
   const question = "What did the president say about Justice Breyer?";
   const res = await chain.call({ question, chat_history: [] });
