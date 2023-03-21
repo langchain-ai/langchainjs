@@ -23,7 +23,7 @@ const qa_template = `Use the following pieces of context to answer the question 
 Question: {question}
 Helpful Answer:`;
 
-export interface ConversationalRetrieverQAChainInput {
+export interface ConversationalRetrievalQAChainInput {
   retriever: BaseRetriever;
   combineDocumentsChain: BaseChain;
   questionGeneratorChain: LLMChain;
@@ -31,9 +31,10 @@ export interface ConversationalRetrieverQAChainInput {
   inputKey: string;
 }
 
-export class ConversationalRetrieverQAChain
+export class ConversationalRetrievalQAChain
   extends BaseChain
-  implements ConversationalRetrieverQAChainInput {
+  implements ConversationalRetrievalQAChainInput
+{
   inputKey = "question";
 
   chatHistoryKey = "chat_history";
@@ -117,7 +118,7 @@ export class ConversationalRetrieverQAChain
   static async deserialize(
     _data: SerializedChatVectorDBQAChain,
     _values: LoadValues
-  ): Promise<ConversationalRetrieverQAChain> {
+  ): Promise<ConversationalRetrievalQAChain> {
     throw new Error("Not implemented.");
   }
 
@@ -136,7 +137,7 @@ export class ConversationalRetrieverQAChain
       questionGeneratorTemplate?: string;
       qaTemplate?: string;
     } = {}
-  ): ConversationalRetrieverQAChain {
+  ): ConversationalRetrievalQAChain {
     const { questionGeneratorTemplate, qaTemplate, ...rest } = options;
     const question_generator_prompt = PromptTemplate.fromTemplate(
       questionGeneratorTemplate || question_generator_template

@@ -17,7 +17,8 @@ export interface RetrievalQAChainInput {
 
 export class RetrievalQAChain
   extends BaseChain
-  implements RetrievalQAChainInput {
+  implements RetrievalQAChainInput
+{
   inputKey = "query";
 
   get inputKeys() {
