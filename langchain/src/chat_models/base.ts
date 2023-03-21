@@ -95,7 +95,7 @@ export abstract class BaseChatModel extends BaseLanguageModel {
   }
 
   getNumTokensFromMessages(messages: BaseChatMessage[]): { totalCount: number, countPerMessage: number[] } {
-    var totalCount = 0;
+    let totalCount = 0;
 
     const countPerMessage = messages.map((message) => {
       const count = this.getNumTokens(message.text);
