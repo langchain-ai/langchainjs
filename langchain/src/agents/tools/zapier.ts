@@ -66,7 +66,7 @@ export class ZapierNLAWrapper {
 
     const jsonResp = await resp.json();
 
-    if (jsonResp.error) {
+    if (jsonResp.status === "error") {
       throw new Error(`Error from Zapier: ${jsonResp.error}`);
     }
 

@@ -33,8 +33,8 @@ test("Test ZapierNLAWrapper", async () => {
   console.log("result: ", result);
 
   result = await zapier.previewAction(
-      action?.id ?? "",
-      "Find an email with foobarbaz"
+    action?.id ?? "",
+    "Find an email with foobarbaz"
   );
   console.log("result: ", result);
 });
