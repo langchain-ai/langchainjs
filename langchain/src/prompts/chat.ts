@@ -94,8 +94,11 @@ export class HumanMessagePromptTemplate extends BaseMessageStringPromptTemplate 
     super(prompt);
   }
 
-  static fromTemplate(template: string) {
-    return new this(PromptTemplate.fromTemplate(template));
+  static fromTemplate(
+    template: string,
+    input?: Parameters<typeof PromptTemplate.fromTemplate>[1]
+  ) {
+    return new this(PromptTemplate.fromTemplate(template, input));
   }
 }
 
@@ -108,8 +111,11 @@ export class AIMessagePromptTemplate extends BaseMessageStringPromptTemplate {
     super(prompt);
   }
 
-  static fromTemplate(template: string) {
-    return new this(PromptTemplate.fromTemplate(template));
+  static fromTemplate(
+    template: string,
+    input?: Parameters<typeof PromptTemplate.fromTemplate>[1]
+  ) {
+    return new this(PromptTemplate.fromTemplate(template, input));
   }
 }
 
@@ -122,8 +128,11 @@ export class SystemMessagePromptTemplate extends BaseMessageStringPromptTemplate
     super(prompt);
   }
 
-  static fromTemplate(template: string) {
-    return new this(PromptTemplate.fromTemplate(template));
+  static fromTemplate(
+    template: string,
+    input?: Parameters<typeof PromptTemplate.fromTemplate>[1]
+  ) {
+    return new this(PromptTemplate.fromTemplate(template, input));
   }
 }
 
