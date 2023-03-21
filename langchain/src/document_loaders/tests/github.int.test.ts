@@ -8,4 +8,4 @@ test("Test GithubRepoLoader", async () => {
   );
   const documents = await loader.load();
   console.log(documents[0].pageContent);
-}, 10000);
+});

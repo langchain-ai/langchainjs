@@ -1,3 +1,4 @@
+import isBinaryPath from "is-binary-path";
 import { Document } from "../document.js";
 import { BaseDocumentLoader } from "./base.js";
 import { UnknownHandling } from "./directory.js";
@@ -23,6 +24,7 @@ export interface GithubRepoLoaderParams {
   branch?: string;
   recursive?: boolean;
   unknown?: UnknownHandling;
+  accessToken?: string;
 }
 
 export class GithubRepoLoader
@@ -35,15 +37,20 @@ export class GithubRepoLoader
 
   private readonly initialPath: string;
 
+  private headers: Record<string, string> = {};
+
   public branch: string;
 
   public recursive: boolean;
 
   public unknown: UnknownHandling;
 
+  public accessToken?: string;
+
   constructor(
     githubUrl: string,
     {
+      accessToken = process.env.GITHUB_ACCESS_TOKEN,
       branch = "main",
       recursive = true,
       unknown = UnknownHandling.Warn,
@@ -57,6 +64,12 @@ export class GithubRepoLoader
     this.branch = branch;
     this.recursive = recursive;
     this.unknown = unknown;
+    this.accessToken = accessToken;
+    if (this.accessToken) {
+      this.headers = {
+        Authorization: `Bearer ${this.accessToken}`,
+      };
+    }
   }
 
   private extractOwnerAndRepoAndPath(url: string): {
@@ -95,11 +108,13 @@ export class GithubRepoLoader
           }
         } else {
           try {
-            const fileContent = await this.fetchFileContent(file);
-            const metadata = { source: file.path };
-            documents.push(
-              new Document({ pageContent: fileContent, metadata })
-            );
+            if (!isBinaryPath(file.name)) {
+              const fileContent = await this.fetchFileContent(file);
+              const metadata = { source: file.path };
+              documents.push(
+                new Document({ pageContent: fileContent, metadata })
+              );
+            }
           } catch (e) {
             this.handleError(
               `Failed to fetch file content: ${file.path}, ${e}`
@@ -114,7 +129,7 @@ export class GithubRepoLoader
 
   private async fetchRepoFiles(path: string): Promise<GithubFile[]> {
     const url = `https://api.github.com/repos/${this.owner}/${this.repo}/contents/${path}?ref=${this.branch}`;
-    const response = await fetch(url);
+    const response = await fetch(url, { headers: this.headers });
     const data = await response.json();
     if (!response.ok) {
       throw new Error(
@@ -132,20 +147,7 @@ export class GithubRepoLoader
   }
 
   private async fetchFileContent(file: GithubFile): Promise<string> {
-    const fileExtension = file.name.split(".").pop()?.toLowerCase();
-    if (
-      fileExtension === "jpg" ||
-      fileExtension === "jpeg" ||
-      fileExtension === "png" ||
-      fileExtension === "gif" ||
-      fileExtension === "svg" ||
-      fileExtension === "srt" ||
-      fileExtension === "pdf"
-    ) {
-      return "";
-    }
-
-    const response = await fetch(file.download_url);
+    const response = await fetch(file.download_url, { headers: this.headers });
     return response.text();
   }
 
