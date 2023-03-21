@@ -94,14 +94,16 @@ export abstract class BaseChatModel extends BaseLanguageModel {
     return this._tokenizer.encode(text).bpe.length;
   }
 
-  getNumTokensFromMessages(messages: BaseChatMessage[]): number {
-    return messages.reduce((acc, message) => {
-      if (message instanceof AIChatMessage) {
-        return acc + this.getNumTokens(message.text);
-      } else {
-        return acc;
-      }
-    }, 0);
+  getNumTokensFromMessages(messages: BaseChatMessage[]): { totalCount: number, countPerMessage: number[] } {
+    var totalCount = 0;
+
+    const countPerMessage = messages.map((message) => {
+      const count = this.getNumTokens(message.text);
+      totalCount += count;
+      return count;
+    });
+
+    return { totalCount, countPerMessage };
   }
 
   async generatePrompt(
