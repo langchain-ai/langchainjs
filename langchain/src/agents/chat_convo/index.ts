@@ -19,14 +19,13 @@ import {
   BaseChatMessage,
   AIChatMessage,
   HumanChatMessage,
+  BaseOutputParser,
 } from "../../schema/index.js";
-import { BaseOutputParser } from "../../output_parsers/base.js";
-import { SerializedOutputParser } from "../../output_parsers/serde.js";
 import { AgentInput } from "../types.js";
 import { Tool } from "../tools/base.js";
 
 export class ChatConversationalAgentOutputParser extends BaseOutputParser {
-  parse(text: string): unknown {
+  async parse(text: string): Promise<unknown> {
     let jsonOutput = text.trim();
     if (jsonOutput.includes("```json")) {
       jsonOutput = jsonOutput.split("```json")[1].trimStart();
@@ -46,10 +45,6 @@ export class ChatConversationalAgentOutputParser extends BaseOutputParser {
 
   getFormatInstructions(): string {
     return FORMAT_INSTRUCTIONS;
-  }
-
-  serialize(): SerializedOutputParser {
-    throw new Error("Method not implemented.");
   }
 }
 
@@ -177,9 +172,11 @@ export class ChatConversationalAgent extends Agent {
     );
   }
 
-  extractToolAndInput(text: string): { tool: string; input: string } | null {
+  async extractToolAndInput(
+    text: string
+  ): Promise<{ tool: string; input: string } | null> {
     try {
-      const response = this.outputParser.parse(text) as {
+      const response = (await this.outputParser.parse(text)) as {
         action: string;
         action_input: string;
       };

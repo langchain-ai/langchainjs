@@ -11,9 +11,9 @@ import { resolveConfigFromFile } from "../util/index.js";
 import { BaseLanguageModel } from "../base_language/index.js";
 import {
   ChainValues,
-  GuardedOutputParser,
   Generation,
   BasePromptValue,
+  BaseOutputParser,
 } from "../schema/index.js";
 import { SerializedLLMChain } from "./serde.js";
 
@@ -22,8 +22,8 @@ export interface LLMChainInput extends ChainInputs {
   prompt: BasePromptTemplate;
   /** LLM Wrapper to use */
   llm: BaseLanguageModel;
-  /** Guarded OutputParser to use */
-  guardedOutputParser?: GuardedOutputParser;
+  /** OutputParser to use */
+  outputParser?: BaseOutputParser;
 
   /** @ignore */
   outputKey: string;
@@ -48,7 +48,7 @@ export class LLMChain extends BaseChain implements LLMChainInput {
 
   outputKey = "text";
 
-  guardedOutputParser?: GuardedOutputParser;
+  outputParser?: BaseOutputParser;
 
   get inputKeys() {
     return this.prompt.inputVariables;
@@ -59,14 +59,19 @@ export class LLMChain extends BaseChain implements LLMChainInput {
     llm: BaseLanguageModel;
     outputKey?: string;
     memory?: BaseMemory;
-    guardedOutputParser?: GuardedOutputParser;
+    outputParser?: BaseOutputParser;
   }) {
     super(fields.memory);
     this.prompt = fields.prompt;
     this.llm = fields.llm;
     this.outputKey = fields.outputKey ?? this.outputKey;
-    this.guardedOutputParser =
-      fields.guardedOutputParser ?? this.guardedOutputParser;
+    this.outputParser = fields.outputParser ?? this.outputParser;
+    if (this.prompt.outputParser) {
+      if (this.outputParser) {
+        throw new Error("Cannot set both outputParser and prompt.outputParser");
+      }
+      this.outputParser = this.prompt.outputParser;
+    }
   }
 
   async _getFinalOutput(
@@ -75,16 +80,11 @@ export class LLMChain extends BaseChain implements LLMChainInput {
   ): Promise<unknown> {
     const completion = generations[0].text;
     let finalCompletion: unknown;
-    if (this.prompt.outputParser) {
-      if (this.guardedOutputParser) {
-        finalCompletion = this.guardedOutputParser.parse(
-          promptValue,
-          completion,
-          this.prompt.outputParser
-        );
-      } else {
-        finalCompletion = this.prompt.outputParser.parse(completion);
-      }
+    if (this.outputParser) {
+      finalCompletion = await this.outputParser.parseWithPrompt(
+        completion,
+        promptValue
+      );
     } else {
       finalCompletion = completion;
     }
@@ -98,7 +98,9 @@ export class LLMChain extends BaseChain implements LLMChainInput {
     }
     const promptValue = await this.prompt.formatPromptValue(values);
     const { generations } = await this.llm.generatePrompt([promptValue], stop);
-    return { [this.outputKey]: generations[0] };
+    return {
+      [this.outputKey]: await this._getFinalOutput(generations[0], promptValue),
+    };
   }
 
   /**

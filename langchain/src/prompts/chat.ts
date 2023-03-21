@@ -243,9 +243,13 @@ export class ChatPromptTemplate
   }
 
   serialize(): SerializedChatPromptTemplate {
+    if (this.outputParser !== undefined) {
+      throw new Error(
+        "ChatPromptTemplate cannot be serialized if outputParser is set"
+      );
+    }
     return {
       input_variables: this.inputVariables,
-      output_parser: this.outputParser?.serialize(),
       template_format: this.templateFormat,
       prompt_messages: this.promptMessages.map((m) => m.serialize()),
     };
