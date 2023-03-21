@@ -182,6 +182,7 @@
     "exponential-backoff": "^3.1.0",
     "expr-eval": "^2.0.2",
     "gpt3-tokenizer": "^1.1.5",
+    "is-binary-path": "^2.1.0",
     "jsonpointer": "^5.0.1",
     "object-hash": "^3.0.0",
     "openai": "^3.2.0",
