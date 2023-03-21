@@ -94,7 +94,10 @@ export abstract class BaseChatModel extends BaseLanguageModel {
     return this._tokenizer.encode(text).bpe.length;
   }
 
-  getNumTokensFromMessages(messages: BaseChatMessage[]): { totalCount: number, countPerMessage: number[] } {
+  getNumTokensFromMessages(messages: BaseChatMessage[]): {
+    totalCount: number;
+    countPerMessage: number[];
+  } {
     let totalCount = 0;
 
     const countPerMessage = messages.map((message) => {
