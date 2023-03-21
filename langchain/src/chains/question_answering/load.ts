@@ -1,5 +1,5 @@
 import { LLMChain } from "../llm_chain.js";
-import { PromptTemplate } from "../../prompts/index.js";
+import { BasePromptTemplate } from "../../prompts/index.js";
 import {
   StuffDocumentsChain,
   MapReduceDocumentsChain,
@@ -14,9 +14,9 @@ import {
 import { BaseLanguageModel } from "../../base_language/index.js";
 
 interface qaChainParams {
-  prompt?: PromptTemplate;
-  combineMapPrompt?: PromptTemplate;
-  combinePrompt?: PromptTemplate;
+  prompt?: BasePromptTemplate;
+  combineMapPrompt?: BasePromptTemplate;
+  combinePrompt?: BasePromptTemplate;
   type?: string;
 }
 export const loadQAChain = (
@@ -51,7 +51,7 @@ export const loadQAChain = (
 };
 
 interface StuffQAChainParams {
-  prompt?: PromptTemplate;
+  prompt?: BasePromptTemplate;
 }
 
 export const loadQAStuffChain = (
@@ -65,8 +65,8 @@ export const loadQAStuffChain = (
 };
 
 interface MapReduceQAChainParams {
-  combineMapPrompt?: PromptTemplate;
-  combinePrompt?: PromptTemplate;
+  combineMapPrompt?: BasePromptTemplate;
+  combinePrompt?: BasePromptTemplate;
 }
 
 export const loadQAMapReduceChain = (
