@@ -17,19 +17,19 @@ export const run = async () => {
   /** This is a bad output because sources is a string, not a list */
   const badOutput = `\`\`\`json
   {
-    'answer': 'foo',
-    'sources': ['foo', 'bar']
+    "answer": "foo",
+    "sources": "foo.com"
   }
   \`\`\``;
   try {
-    parser.parse(badOutput);
-  } catch (e: any) {
-    console.log(e.message);
+    await parser.parse(badOutput);
+  } catch (e) {
+    console.log("Failed to parse bad output: ", e);
   }
   const fixParser = FixOutputParser.fromLLM(
     new ChatOpenAI({ temperature: 0 }),
     parser
   );
   const output = await fixParser.parse(badOutput);
-  console.log(output);
+  console.log("Fixed output: ", output);
 };

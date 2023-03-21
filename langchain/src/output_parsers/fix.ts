@@ -35,8 +35,7 @@ export class FixOutputParser extends BaseOutputParser {
 
   async parse(completion: string) {
     try {
-      const parsedCompletion = await this.parser.parse(completion);
-      return parsedCompletion;
+      return await this.parser.parse(completion);
     } catch (e) {
       if (e instanceof OutputParserException) {
         const result = await this.retryChain.call({
@@ -45,8 +44,7 @@ export class FixOutputParser extends BaseOutputParser {
           error: e,
         });
         const newCompletion: string = result[this.retryChain.outputKey];
-        const parsedCompletion = await this.parser.parse(newCompletion);
-        return parsedCompletion;
+        return this.parser.parse(newCompletion);
       }
       throw e;
     }
