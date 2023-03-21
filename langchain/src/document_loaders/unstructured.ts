@@ -10,7 +10,7 @@ interface Element {
   };
 }
 
-export class UnstructuredBaseDocumentLoader extends BaseDocumentLoader {
+export class UnstructuredLoader extends BaseDocumentLoader {
   constructor(public webPath: string, public filePath: string) {
     super();
     this.filePath = filePath;
