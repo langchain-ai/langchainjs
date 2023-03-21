@@ -63,7 +63,16 @@ export class ZapierNLAWrapper {
         `Failed to execute action ${actionId} with instructions ${instructions}`
       );
     }
-    return resp.json();
+
+    // Get the JSON response as usual
+    const jsonResponse = await resp.json();
+
+    // Check if there's an error property in the JSON response
+    if (jsonResponse.error) {
+      throw new Error(`Error from Zapier: ${jsonResponse.error}`);
+    }
+
+    return jsonResponse;
   }
 
   /**
