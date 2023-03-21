@@ -12,7 +12,6 @@
     "build": "tsc --declaration --outDir dist/",
     "start": "tsx -r dotenv/config src/index.ts",
     "start:dist": "yarn build && node -r dotenv/config dist/index.js",
-    "start:prompt": "yarn start prompts/fix_parser",
     "lint": "eslint src",
     "lint:fix": "yarn lint --fix",
     "format": "prettier --write \"**/*.ts\"",
