@@ -64,15 +64,13 @@ export class ZapierNLAWrapper {
       );
     }
 
-    // Get the JSON response as usual
-    const jsonResponse = await resp.json();
+    const jsonResp = await resp.json();
 
-    // Check if there's an error property in the JSON response
-    if (jsonResponse.error) {
-      throw new Error(`Error from Zapier: ${jsonResponse.error}`);
+    if (jsonResp.error) {
+      throw new Error(`Error from Zapier: ${jsonResp.error}`);
     }
 
-    return jsonResponse;
+    return jsonResp;
   }
 
   /**
