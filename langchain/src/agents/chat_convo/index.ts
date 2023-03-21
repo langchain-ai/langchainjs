@@ -6,7 +6,7 @@ import {
   ChatPromptTemplate,
   MessagesPlaceholder,
 } from "../../prompts/index.js";
-import { interpolateFString } from "../../prompts/template.js";
+import { renderTemplate } from "../../prompts/template.js";
 import {
   PREFIX,
   SUFFIX,
@@ -25,18 +25,20 @@ import { SerializedOutputParser } from "../../output_parsers/serde.js";
 import { AgentInput } from "../types.js";
 import { Tool } from "../tools/base.js";
 
-export class AgentOutputParser extends BaseOutputParser {
+export class ChatConversationalAgentOutputParser extends BaseOutputParser {
   parse(text: string): unknown {
-    const cleanedOutput = text.trim();
-    let jsonOutput = cleanedOutput;
+    let jsonOutput = text.trim();
     if (jsonOutput.includes("```json")) {
-      jsonOutput = jsonOutput.split("```json")[1].trimLeft();
+      jsonOutput = jsonOutput.split("```json")[1].trimStart();
+    }
+    if (jsonOutput.includes("```")) {
+      jsonOutput = jsonOutput.split("```")[0].trimEnd();
     }
     if (jsonOutput.startsWith("```")) {
-      jsonOutput = jsonOutput.slice(3).trimLeft();
+      jsonOutput = jsonOutput.slice(3).trimStart();
     }
     if (jsonOutput.endsWith("```")) {
-      jsonOutput = jsonOutput.slice(0, -3).trimRight();
+      jsonOutput = jsonOutput.slice(0, -3).trimEnd();
     }
     const response = JSON.parse(jsonOutput);
     return { action: response.action, action_input: response.action_input };
@@ -62,7 +64,7 @@ export type CreatePromptArgs = {
   outputParser?: BaseOutputParser;
 };
 
-type ZeroShotAgentInput = AgentInput;
+export type ChatConversationalAgentInput = AgentInput;
 
 /**
  * Agent for the MRKL chain.
@@ -71,9 +73,13 @@ type ZeroShotAgentInput = AgentInput;
 export class ChatConversationalAgent extends Agent {
   outputParser: BaseOutputParser;
 
-  constructor(input: ZeroShotAgentInput, outputParser: BaseOutputParser) {
+  constructor(
+    input: ChatConversationalAgentInput,
+    outputParser?: BaseOutputParser
+  ) {
     super(input);
-    this.outputParser = outputParser;
+    this.outputParser =
+      outputParser ?? new ChatConversationalAgentOutputParser();
   }
 
   _agentType(): string {
@@ -109,7 +115,7 @@ export class ChatConversationalAgent extends Agent {
       thoughts.push(new AIChatMessage(step.action.log));
       thoughts.push(
         new HumanChatMessage(
-          interpolateFString(TEMPLATE_TOOL_RESPONSE, {
+          renderTemplate(TEMPLATE_TOOL_RESPONSE, "f-string", {
             observation: step.observation,
           })
         )
@@ -130,17 +136,16 @@ export class ChatConversationalAgent extends Agent {
     const {
       systemMessage = PREFIX,
       humanMessage = SUFFIX,
-      outputParser = new AgentOutputParser(),
+      outputParser = new ChatConversationalAgentOutputParser(),
     } = args ?? {};
     const toolStrings = tools
       .map((tool) => `${tool.name}: ${tool.description}`)
       .join("\n");
-    const formatInstructions = interpolateFString(humanMessage, {
+    const formatInstructions = renderTemplate(humanMessage, "f-string", {
       format_instructions: outputParser.getFormatInstructions(),
     });
-
     const toolNames = tools.map((tool) => tool.name).join("\n");
-    const finalPrompt = interpolateFString(formatInstructions, {
+    const finalPrompt = renderTemplate(formatInstructions, "f-string", {
       tools: toolStrings,
       tool_names: toolNames,
     });
@@ -161,7 +166,8 @@ export class ChatConversationalAgent extends Agent {
     ChatConversationalAgent.validateTools(tools);
     const prompt = ChatConversationalAgent.createPrompt(tools, args);
     const chain = new LLMChain({ prompt, llm });
-    const { outputParser = new AgentOutputParser() } = args ?? {};
+    const { outputParser = new ChatConversationalAgentOutputParser() } =
+      args ?? {};
     return new ChatConversationalAgent(
       {
         llmChain: chain,

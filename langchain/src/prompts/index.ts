@@ -28,3 +28,4 @@ export {
   SerializedMessagePromptTemplate,
   SerializedChatPromptTemplate,
 } from "./serde.js";
+export { parseTemplate, renderTemplate } from "./template.js";

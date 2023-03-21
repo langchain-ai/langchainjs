@@ -1,4 +1,4 @@
-import { BaseLLM } from "../../../llms/index.js";
+import { BaseLanguageModel } from "../../../base_language/index.js";
 import {
   JsonGetValueTool,
   JsonListKeysTool,
@@ -24,7 +24,7 @@ export class JsonToolkit extends Toolkit {
 }
 
 export function createJsonAgent(
-  llm: BaseLLM,
+  llm: BaseLanguageModel,
   toolkit: JsonToolkit,
   args?: CreatePromptArgs
 ) {

@@ -21,11 +21,15 @@ import {
   SystemChatMessage,
 } from "../schema/index.js";
 
-type TokenUsage = {
+interface TokenUsage {
   completionTokens?: number;
   promptTokens?: number;
   totalTokens?: number;
-};
+}
+
+interface OpenAILLMOutput {
+  tokenUsage: TokenUsage;
+}
 
 function messageTypeToOpenAIRole(
   type: MessageType
@@ -81,10 +85,10 @@ interface ModelParams {
   streaming: boolean;
 
   /**
-   * Maximum number of tokens to generate in the completion. -1 returns as many
-   * tokens as possible given the prompt and the model's maximum context size.
+   * Maximum number of tokens to generate in the completion. If not specified,
+   * defaults to the maximum number of tokens allowed by the model.
    */
-  maxTokens: number;
+  maxTokens?: number;
 }
 
 /**
@@ -149,7 +153,7 @@ export class ChatOpenAI extends BaseChatModel implements OpenAIInput {
 
   streaming = false;
 
-  maxTokens = 256;
+  maxTokens?: number;
 
   // Used for non-streaming requests
   private batchClient: OpenAIApi;
@@ -183,6 +187,7 @@ export class ChatOpenAI extends BaseChatModel implements OpenAIInput {
     this.topP = fields?.topP ?? this.topP;
     this.frequencyPenalty = fields?.frequencyPenalty ?? this.frequencyPenalty;
     this.presencePenalty = fields?.presencePenalty ?? this.presencePenalty;
+    this.maxTokens = fields?.maxTokens;
     this.n = fields?.n ?? this.n;
     this.logitBias = fields?.logitBias;
     this.stop = fields?.stop;
@@ -209,6 +214,7 @@ export class ChatOpenAI extends BaseChatModel implements OpenAIInput {
       top_p: this.topP,
       frequency_penalty: this.frequencyPenalty,
       presence_penalty: this.presencePenalty,
+      max_tokens: this.maxTokens,
       n: this.n,
       logit_bias: this.logitBias,
       stop: this.stop,
@@ -385,5 +391,28 @@ export class ChatOpenAI extends BaseChatModel implements OpenAIInput {
 
   _llmType() {
     return "openai";
+  }
+
+  _combineLLMOutput(...llmOutputs: OpenAILLMOutput[]): OpenAILLMOutput {
+    return llmOutputs.reduce<{
+      [key in keyof OpenAILLMOutput]: Required<OpenAILLMOutput[key]>;
+    }>(
+      (acc, llmOutput) => {
+        if (llmOutput && llmOutput.tokenUsage) {
+          acc.tokenUsage.completionTokens +=
+            llmOutput.tokenUsage.completionTokens ?? 0;
+          acc.tokenUsage.promptTokens += llmOutput.tokenUsage.promptTokens ?? 0;
+          acc.tokenUsage.totalTokens += llmOutput.tokenUsage.totalTokens ?? 0;
+        }
+        return acc;
+      },
+      {
+        tokenUsage: {
+          completionTokens: 0,
+          promptTokens: 0,
+          totalTokens: 0,
+        },
+      }
+    );
   }
 }

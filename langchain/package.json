@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.36",
+  "version": "0.0.37",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "main": "./index.js",
@@ -9,6 +9,8 @@
     "dist/",
     "agents.js",
     "agents.d.ts",
+    "base_language.js",
+    "base_language.d.ts",
     "tools.js",
     "tools.d.ts",
     "chains.js",
@@ -180,6 +182,7 @@
     "exponential-backoff": "^3.1.0",
     "expr-eval": "^2.0.2",
     "gpt3-tokenizer": "^1.1.5",
+    "is-binary-path": "^2.1.0",
     "jsonpointer": "^5.0.1",
     "object-hash": "^3.0.0",
     "openai": "^3.2.0",
@@ -219,6 +222,10 @@
     "./agents": {
       "types": "./agents.d.ts",
       "import": "./agents.js"
+    },
+    "./base_language": {
+      "types": "./base_language.d.ts",
+      "import": "./base_language.js"
     },
     "./tools": {
       "types": "./tools.d.ts",

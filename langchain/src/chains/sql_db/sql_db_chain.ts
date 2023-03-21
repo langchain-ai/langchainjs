@@ -1,17 +1,18 @@
 import { DEFAULT_SQL_DATABASE_PROMPT } from "./sql_db_prompt.js";
 import { BaseChain } from "../base.js";
 import { BaseMemory } from "../../memory/index.js";
-import { BaseLLM, SerializedLLM } from "../../llms/index.js";
+import { SerializedLLM } from "../../llms/index.js";
 import { LLMChain } from "../llm_chain.js";
 import { SqlDatabase } from "../../sql_db.js";
 import { resolveConfigFromFile } from "../../util/index.js";
 import { SerializedSqlDatabase } from "../../util/sql_utils.js";
 import { ChainValues } from "../../schema/index.js";
 import { SerializedSqlDatabaseChain } from "../serde.js";
+import { BaseLanguageModel } from "../../base_language/index.js";
 
 export class SqlDatabaseChain extends BaseChain {
   // LLM wrapper to use
-  llm: BaseLLM;
+  llm: BaseLanguageModel;
 
   // SQL Database to connect to.
   database: SqlDatabase;
@@ -30,7 +31,7 @@ export class SqlDatabaseChain extends BaseChain {
   returnDirect = false;
 
   constructor(fields: {
-    llm: BaseLLM;
+    llm: BaseLanguageModel;
     database: SqlDatabase;
     inputKey?: string;
     outputKey?: string;
@@ -105,7 +106,7 @@ export class SqlDatabaseChain extends BaseChain {
       "llm",
       data
     );
-    const llm = await BaseLLM.deserialize(serializedLLM);
+    const llm = await BaseLanguageModel.deserialize(serializedLLM);
     const serializedDatabase = await resolveConfigFromFile<
       "sql_database",
       SerializedSqlDatabase

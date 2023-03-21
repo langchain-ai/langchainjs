@@ -1,5 +1,5 @@
 import { test, expect } from "@jest/globals";
-import { LLMResult } from "schema/index.js";
+import { LLMResult } from "../../schema/index.js";
 import { OpenAIChat } from "../openai-chat.js";
 import { OpenAI } from "../openai.js";
 import { StringPromptValue } from "../../prompts/index.js";
