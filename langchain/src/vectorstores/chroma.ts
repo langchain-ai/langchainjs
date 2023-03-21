@@ -42,7 +42,11 @@ export class Chroma extends VectorStore {
     if (!this.index) {
       const { ChromaClient } = await Chroma.imports();
       this.index = new ChromaClient(this.url);
-      await this.index.getCollection(this.collectionName);
+      try {
+        await this.index.createCollection(this.collectionName);
+      } catch {
+        // ignore error
+      }
     }
   }
 
