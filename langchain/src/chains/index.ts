@@ -25,4 +25,3 @@ export {
   SerializedStuffDocumentsChain,
   SerializedVectorDBQAChain,
 } from "./serde.js";
-export { FixOutputParser } from "../output_parsers/fix.js";

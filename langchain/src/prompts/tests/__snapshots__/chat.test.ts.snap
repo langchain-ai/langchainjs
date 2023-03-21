@@ -58,6 +58,5 @@ exports[`Test serialize 1`] = `
       "role": "test",
     },
   ],
-  "template_format": "f-string",
 }
 `;

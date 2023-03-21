@@ -26,9 +26,15 @@ test("Test ZapierNLAWrapper", async () => {
   );
   console.log("previewData: ", data);
 
-  const result = await zapier.runAction(
+  let result = await zapier.runAction(
     action?.id ?? "",
     "Find an email with Silicon Valley Bank"
+  );
+  console.log("result: ", result);
+
+  result = await zapier.previewAction(
+    action?.id ?? "",
+    "Find an email with foobarbaz"
   );
   console.log("result: ", result);
 });

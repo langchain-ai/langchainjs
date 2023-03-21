@@ -38,8 +38,8 @@ await pinecone.init({
 });
 const index = pinecone.Index("my-index");
 const vectorStore = await PineconeStore.fromExistingIndex(
-  index,
-  new OpenAIEmbeddings()
+  new OpenAIEmbeddings(),
+  { pineconeIndex: index }
 );
 
 const model = new OpenAI();

@@ -38,6 +38,18 @@ export class Chroma extends VectorStore {
     );
   }
 
+  async ensureCollection() {
+    if (!this.index) {
+      const { ChromaClient } = await Chroma.imports();
+      this.index = new ChromaClient(this.url);
+      try {
+        await this.index.createCollection(this.collectionName);
+      } catch {
+        // ignore error
+      }
+    }
+  }
+
   async addVectors(vectors: number[][], documents: Document[]) {
     if (vectors.length === 0) {
       return;
@@ -137,6 +149,18 @@ export class Chroma extends VectorStore {
   ): Promise<Chroma> {
     const instance = new this(embeddings, dbConfig);
     await instance.addDocuments(docs);
+    return instance;
+  }
+
+  static async fromExistingCollection(
+    embeddings: Embeddings,
+    dbConfig: {
+      collectionName?: string;
+      url?: string;
+    }
+  ): Promise<Chroma> {
+    const instance = new this(embeddings, dbConfig);
+    await instance.ensureCollection();
     return instance;
   }
 
