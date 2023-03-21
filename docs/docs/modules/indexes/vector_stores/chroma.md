@@ -21,16 +21,14 @@ import { OpenAIEmbeddings } from "langchain/embeddings";
 import { VectorDBQAChain } from "langchain/chains";
 import { OpenAI } from "langchain";
 
-const vectorStore = await Chroma.fromDocuments(
-  docs,
-  new OpenAIEmbeddings(),
-  {
-    collectionName: "goldel-escher-bach",
-  }
-);
+const vectorStore = await Chroma.fromDocuments(docs, new OpenAIEmbeddings(), {
+  collectionName: "goldel-escher-bach",
+});
 
 const model = new OpenAI();
-const chain = VectorDBQAChain.fromLLM(model, vectorStore, { returnSourceDocuments: true });
+const chain = VectorDBQAChain.fromLLM(model, vectorStore, {
+  returnSourceDocuments: true,
+});
 const response = await chain.call({
   query: "What does the doc say about Chroma?",
 });
@@ -52,7 +50,9 @@ const vectorStore = await Chroma.fromExistingCollection(
 );
 
 const model = new OpenAI();
-const chain = VectorDBQAChain.fromLLM(model, vectorStore, { returnSourceDocuments: true });
+const chain = VectorDBQAChain.fromLLM(model, vectorStore, {
+  returnSourceDocuments: true,
+});
 const response = await chain.call({
   query: "What does the doc say about Chroma?",
 });
