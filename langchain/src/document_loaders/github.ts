@@ -1,26 +1,47 @@
 import { Document } from "../document.js";
 import { BaseDocumentLoader } from "./base.js";
 
-
 export enum UnknownHandling {
   Ignore = "ignore",
   Warn = "warn",
   Error = "error",
 }
 
+interface GithubFile {
+  name: string;
+  path: string;
+  sha: string;
+  size: number;
+  url: string;
+  html_url: string;
+  git_url: string;
+  download_url: string;
+  mime?: string;
+  type: string;
+  _links: {
+    self: string;
+    git: string;
+    html: string;
+  };
+}
 
 export class GithubRepoLoader extends BaseDocumentLoader {
-  private owner: string;
-  private repo: string;
-  private initialPath: string;
+  private readonly owner: string;
+
+  private readonly repo: string;
+
+  private readonly initialPath: string;
+
   public branch: string;
+
   public recursive: boolean;
+
   public unknown: UnknownHandling;
 
   constructor(
     githubUrl: string,
-    branch: string = "main",
-    recursive: boolean = true,
+    branch = "main",
+    recursive = true,
     unknown: UnknownHandling = UnknownHandling.Warn
   ) {
     super();
@@ -39,7 +60,7 @@ export class GithubRepoLoader extends BaseDocumentLoader {
     path: string;
   } {
     const match = url.match(
-      /https:\/\/github.com\/([^\/]+)\/([^\/]+)(\/tree\/[^\/]+\/(.+))?/i
+      /https:\/\/github.com\/([^/]+)\/([^/]+)(\/tree\/[^/]+\/(.+))?/i
     );
 
     if (!match) {
@@ -84,7 +105,7 @@ export class GithubRepoLoader extends BaseDocumentLoader {
     }
   }
 
-  private async fetchRepoFiles(path: string): Promise<any[]> {
+  private async fetchRepoFiles(path: string): Promise<GithubFile[]> {
     const url = `https://api.github.com/repos/${this.owner}/${this.repo}/contents/${path}?ref=${this.branch}`;
     const response = await fetch(url);
     const data = await response.json();
@@ -93,10 +114,10 @@ export class GithubRepoLoader extends BaseDocumentLoader {
       throw new Error("Unable to fetch repository files.");
     }
 
-    return data;
+    return data as GithubFile[];
   }
 
-  private async fetchFileContent(file: any): Promise<string> {
+  private async fetchFileContent(file: GithubFile): Promise<string> {
     // Check if the file has a MIME type that starts with "image/" or "application/pdf"
     if (
       file.mime &&
@@ -114,9 +135,7 @@ export class GithubRepoLoader extends BaseDocumentLoader {
     }
 
     const response = await fetch(file.download_url);
-    const content = await response.text();
-
-    return content;
+    return response.text();
   }
 
   private handleError(message: string): void {
