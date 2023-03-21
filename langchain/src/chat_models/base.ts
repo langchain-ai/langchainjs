@@ -1,4 +1,10 @@
 import GPT3Tokenizer from "gpt3-tokenizer";
+
+import {
+  BaseLanguageModel,
+  BaseLanguageModelParams,
+} from "../base_language/index.js";
+import { getBufferString } from "../memory/base.js";
 import {
   AIChatMessage,
   BaseChatMessage,
@@ -7,11 +13,6 @@ import {
   ChatResult,
   LLMResult,
 } from "../schema/index.js";
-import {
-  BaseLanguageModel,
-  BaseLanguageModelParams,
-} from "../base_language/index.js";
-import { getBufferString } from "../memory/base.js";
 
 export type SerializedChatModel = {
   _model: string;
@@ -91,6 +92,16 @@ export abstract class BaseChatModel extends BaseLanguageModel {
       this._tokenizer = new Constructor({ type: "gpt3" });
     }
     return this._tokenizer.encode(text).bpe.length;
+  }
+
+  getNumTokensFromMessages(messages: BaseChatMessage[]): number {
+    return messages.reduce((acc, message) => {
+      if (message instanceof AIChatMessage) {
+        return acc + this.getNumTokens(message.text);
+      } else {
+        return acc;
+      }
+    }, 0);
   }
 
   async generatePrompt(
