@@ -1,11 +1,6 @@
 import { Document } from "../document.js";
 import { BaseDocumentLoader } from "./base.js";
-
-export enum UnknownHandling {
-  Ignore = "ignore",
-  Warn = "warn",
-  Error = "error",
-}
+import { UnknownHandling } from "./directory.js";
 
 interface GithubFile {
   name: string;
@@ -16,7 +11,6 @@ interface GithubFile {
   html_url: string;
   git_url: string;
   download_url: string;
-  mime?: string;
   type: string;
   _links: {
     self: string;
@@ -25,7 +19,16 @@ interface GithubFile {
   };
 }
 
-export class GithubRepoLoader extends BaseDocumentLoader {
+export interface GithubRepoLoaderParams {
+  branch?: string;
+  recursive?: boolean;
+  unknown?: UnknownHandling;
+}
+
+export class GithubRepoLoader
+  extends BaseDocumentLoader
+  implements GithubRepoLoaderParams
+{
   private readonly owner: string;
 
   private readonly repo: string;
@@ -40,18 +43,20 @@ export class GithubRepoLoader extends BaseDocumentLoader {
 
   constructor(
     githubUrl: string,
-    branch = "main",
-    recursive = true,
-    unknown: UnknownHandling = UnknownHandling.Warn
+    {
+      branch = "main",
+      recursive = true,
+      unknown = UnknownHandling.Warn,
+    }: GithubRepoLoaderParams = {}
   ) {
     super();
     const { owner, repo, path } = this.extractOwnerAndRepoAndPath(githubUrl);
     this.owner = owner;
     this.repo = repo;
+    this.initialPath = path;
     this.branch = branch;
     this.recursive = recursive;
     this.unknown = unknown;
-    this.initialPath = path;
   }
 
   private extractOwnerAndRepoAndPath(url: string): {
@@ -96,12 +101,14 @@ export class GithubRepoLoader extends BaseDocumentLoader {
               new Document({ pageContent: fileContent, metadata })
             );
           } catch (e) {
-            this.handleError(`Failed to fetch file content: ${file.path}`);
+            this.handleError(
+              `Failed to fetch file content: ${file.path}, ${e}`
+            );
           }
         }
       }
     } catch (error) {
-      this.handleError(`Failed to process directory: ${path}`);
+      this.handleError(`Failed to process directory: ${path}, ${error}`);
     }
   }
 
@@ -109,6 +116,13 @@ export class GithubRepoLoader extends BaseDocumentLoader {
     const url = `https://api.github.com/repos/${this.owner}/${this.repo}/contents/${path}?ref=${this.branch}`;
     const response = await fetch(url);
     const data = await response.json();
+    if (!response.ok) {
+      throw new Error(
+        `Unable to fetch repository files: ${response.status} ${JSON.stringify(
+          data
+        )}`
+      );
+    }
 
     if (!Array.isArray(data)) {
       throw new Error("Unable to fetch repository files.");
@@ -118,19 +132,16 @@ export class GithubRepoLoader extends BaseDocumentLoader {
   }
 
   private async fetchFileContent(file: GithubFile): Promise<string> {
-    // Check if the file has a MIME type that starts with "image/" or "application/pdf"
-    if (
-      file.mime &&
-      (file.mime.startsWith("image/") || file.mime === "application/pdf")
-    ) {
-      return "";
-    }
-
-    // Get the file extension
     const fileExtension = file.name.split(".").pop()?.toLowerCase();
-
-    // Ignore .srt and .pdf files
-    if (fileExtension === "srt" || fileExtension === "pdf") {
+    if (
+      fileExtension === "jpg" ||
+      fileExtension === "jpeg" ||
+      fileExtension === "png" ||
+      fileExtension === "gif" ||
+      fileExtension === "svg" ||
+      fileExtension === "srt" ||
+      fileExtension === "pdf"
+    ) {
       return "";
     }
 
