@@ -1,4 +1,3 @@
-import { BaseLLM } from "../../llms/index.js";
 import { LLMChain } from "../llm_chain.js";
 import { PromptTemplate } from "../../prompts/index.js";
 import {
@@ -12,6 +11,7 @@ import {
   COMBINE_PROMPT_SELECTOR,
   COMBINE_QA_PROMPT_SELECTOR,
 } from "./map_reduce_prompts.js";
+import { BaseLanguageModel } from "../../base_language/index.js";
 
 interface qaChainParams {
   prompt?: PromptTemplate;
@@ -19,7 +19,10 @@ interface qaChainParams {
   combinePrompt?: PromptTemplate;
   type?: string;
 }
-export const loadQAChain = (llm: BaseLLM, params: qaChainParams = {}) => {
+export const loadQAChain = (
+  llm: BaseLanguageModel,
+  params: qaChainParams = {}
+) => {
   const {
     prompt = DEFAULT_QA_PROMPT,
     combineMapPrompt = DEFAULT_COMBINE_QA_PROMPT,
@@ -52,7 +55,7 @@ interface StuffQAChainParams {
 }
 
 export const loadQAStuffChain = (
-  llm: BaseLLM,
+  llm: BaseLanguageModel,
   params: StuffQAChainParams = {}
 ) => {
   const { prompt = QA_PROMPT_SELECTOR.getPrompt(llm) } = params;
@@ -67,7 +70,7 @@ interface MapReduceQAChainParams {
 }
 
 export const loadQAMapReduceChain = (
-  llm: BaseLLM,
+  llm: BaseLanguageModel,
   params: MapReduceQAChainParams = {}
 ) => {
   const {

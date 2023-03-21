@@ -19,6 +19,13 @@ export type SerializedChatModel = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 } & Record<string, any>;
 
+// todo?
+export type SerializedLLM = {
+  _model: string;
+  _type: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+} & Record<string, any>;
+
 export type BaseChatModelParams = BaseLanguageModelParams;
 
 export abstract class BaseChatModel extends BaseLanguageModel {
@@ -26,12 +33,16 @@ export abstract class BaseChatModel extends BaseLanguageModel {
     super(rest);
   }
 
+  abstract _combineLLMOutput?(
+    ...llmOutputs: LLMResult["llmOutput"][]
+  ): LLMResult["llmOutput"];
+
   async generate(
     messages: BaseChatMessage[][],
     stop?: string[]
   ): Promise<LLMResult> {
     const generations: ChatGeneration[][] = [];
-    let llmOutput = {};
+    const llmOutputs: LLMResult["llmOutput"][] = [];
     const messageStrings: string[] = messages.map((messageList) =>
       getBufferString(messageList)
     );
@@ -43,7 +54,9 @@ export abstract class BaseChatModel extends BaseLanguageModel {
     try {
       for (const message of messages) {
         const result = await this._generate(message, stop);
-        llmOutput = result.llmOutput ?? {};
+        if (result.llmOutput) {
+          llmOutputs.push(result.llmOutput);
+        }
         generations.push(result.generations);
       }
     } catch (err) {
@@ -53,18 +66,12 @@ export abstract class BaseChatModel extends BaseLanguageModel {
 
     const output: LLMResult = {
       generations,
-      llmOutput,
+      llmOutput: llmOutputs.length
+        ? this._combineLLMOutput?.(...llmOutputs)
+        : undefined,
     };
     await this.callbackManager.handleLLMEnd(output, this.verbose);
     return output;
-  }
-
-  /**
-   * Get the identifying parameters of the LLM.
-   */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  _identifyingParams(): Record<string, any> {
-    return {};
   }
 
   _modelType(): string {
@@ -72,19 +79,6 @@ export abstract class BaseChatModel extends BaseLanguageModel {
   }
 
   abstract _llmType(): string;
-
-  /**
-   * Return a json-like object representing this Chat model.
-   */
-  serialize(): SerializedChatModel {
-    return {
-      ...this._identifyingParams(),
-      _type: this._llmType(),
-      _model: this._modelType(),
-    };
-  }
-
-  // TODO deserialize
 
   private _tokenizer?: GPT3Tokenizer.default;
 

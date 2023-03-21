@@ -56,6 +56,7 @@ test("Test ChatOpenAI tokenUsage", async () => {
 
   const model = new ChatOpenAI({
     modelName: "gpt-3.5-turbo",
+    maxTokens: 10,
     callbackManager: CallbackManager.fromHandlers({
       async handleLLMEnd(output: LLMResult) {
         tokenUsage = output.llmOutput?.tokenUsage;
@@ -69,6 +70,31 @@ test("Test ChatOpenAI tokenUsage", async () => {
   expect(tokenUsage.promptTokens).toBeGreaterThan(0);
 });
 
+test("Test ChatOpenAI tokenUsage with a batch", async () => {
+  let tokenUsage = {
+    completionTokens: 0,
+    promptTokens: 0,
+    totalTokens: 0,
+  };
+
+  const model = new ChatOpenAI({
+    temperature: 0,
+    modelName: "gpt-3.5-turbo",
+    callbackManager: CallbackManager.fromHandlers({
+      async handleLLMEnd(output: LLMResult) {
+        tokenUsage = output.llmOutput?.tokenUsage;
+      },
+    }),
+  });
+  const res = await model.generate([
+    [new HumanChatMessage("Hello")],
+    [new HumanChatMessage("Hi")],
+  ]);
+  console.log(res);
+
+  expect(tokenUsage.promptTokens).toBeGreaterThan(0);
+});
+
 test("Test ChatOpenAI in streaming mode", async () => {
   let nrNewTokens = 0;
   let streamedCompletion = "";
@@ -76,6 +102,7 @@ test("Test ChatOpenAI in streaming mode", async () => {
   const model = new ChatOpenAI({
     modelName: "gpt-3.5-turbo",
     streaming: true,
+    maxTokens: 10,
     callbackManager: CallbackManager.fromHandlers({
       async handleLLMNewToken(token: string) {
         nrNewTokens += 1;
@@ -110,7 +137,7 @@ test("Test ChatOpenAI prompt value", async () => {
 });
 
 test("OpenAI Chat, docs, prompt templates", async () => {
-  const chat = new ChatOpenAI({ temperature: 0 });
+  const chat = new ChatOpenAI({ temperature: 0, maxTokens: 10 });
 
   const systemPrompt = PromptTemplate.fromTemplate(
     "You are a helpful assistant that translates {input_language} to {output_language}."

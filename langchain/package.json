@@ -9,6 +9,8 @@
     "dist/",
     "agents.js",
     "agents.d.ts",
+    "base_language.js",
+    "base_language.d.ts",
     "tools.js",
     "tools.d.ts",
     "chains.js",
@@ -219,6 +221,10 @@
     "./agents": {
       "types": "./agents.d.ts",
       "import": "./agents.js"
+    },
+    "./base_language": {
+      "types": "./base_language.d.ts",
+      "import": "./base_language.js"
     },
     "./tools": {
       "types": "./tools.d.ts",

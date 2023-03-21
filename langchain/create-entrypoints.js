@@ -4,6 +4,7 @@ import fs from "fs";
 
 const entrypoints = {
   agents: "agents/index",
+  base_language: "base_language/index",
   tools: "agents/tools/index",
   chains: "chains/index",
   embeddings: "embeddings/index",
