@@ -18,3 +18,4 @@ export { JSONLinesLoader } from "./jsonl.js";
 export { CSVLoader } from "./csv.js";
 export { NotionLoader } from "./notion_markdown.js";
 export { GithubRepoLoader, GithubRepoLoaderParams } from "./github.js";
+export { UnstructuredLoader } from "./unstructured.js";
