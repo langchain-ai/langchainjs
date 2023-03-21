@@ -2,6 +2,23 @@ import { Embeddings } from "../embeddings/base.js";
 import { Document } from "../document.js";
 import { BaseRetriever } from "../schema/index.js";
 
+export class VectorStoreRetriever extends BaseRetriever {
+  vectorStore: VectorStore;
+
+  k = 4;
+
+  constructor(fields: { vectorStore: VectorStore; k?: number }) {
+    super();
+    this.vectorStore = fields.vectorStore;
+    this.k = fields.k ?? this.k;
+  }
+
+  async getRelevantTexts(query: string): Promise<Document[]> {
+    const results = await this.vectorStore.similaritySearch(query, 4);
+    return results;
+  }
+}
+
 export abstract class VectorStore {
   embeddings: Embeddings;
 
@@ -77,22 +94,5 @@ export abstract class SaveableVectorStore extends VectorStore {
     _embeddings: Embeddings
   ): Promise<SaveableVectorStore> {
     throw new Error("Not implemented");
-  }
-}
-
-export class VectorStoreRetriever extends BaseRetriever {
-  vectorStore: VectorStore;
-
-  k = 4;
-
-  constructor(fields: { vectorStore: VectorStore; k?: number }) {
-    super();
-    this.vectorStore = fields.vectorStore;
-    this.k = fields.k ?? this.k;
-  }
-
-  async getRelevantTexts(query: string): Promise<Document[]> {
-    const results = await this.vectorStore.similaritySearch(query, 4);
-    return results;
   }
 }
