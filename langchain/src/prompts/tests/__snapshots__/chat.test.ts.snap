@@ -7,7 +7,6 @@ exports[`Test serialize 1`] = `
     "foo",
     "bar",
   ],
-  "output_parser": undefined,
   "prompt_messages": [
     {
       "_type": "SystemMessagePromptTemplate",
