@@ -1,26 +1,14 @@
+import { BaseStringPromptTemplate, BasePromptTemplateInput } from "./base.js";
 import {
-  BasePromptTemplate,
-  BasePromptTemplateInput,
-  InputValues,
-  PartialValues,
-} from "./index.js";
-import {
-  TemplateFormat,
   checkValidTemplate,
+  parseTemplate,
   renderTemplate,
-  parseFString,
+  TemplateFormat,
 } from "./template.js";
 import { resolveTemplateFromFile } from "../util/index.js";
-import { SerializedOutputParser, BaseOutputParser } from "./parser.js";
-
-export type SerializedPromptTemplate = {
-  _type?: "prompt";
-  input_variables: string[];
-  output_parser?: SerializedOutputParser;
-  template?: string;
-  template_path?: string;
-  template_format?: TemplateFormat;
-};
+import { BaseOutputParser } from "../output_parsers/index.js";
+import { SerializedPromptTemplate } from "./serde.js";
+import { InputValues, PartialValues } from "../schema/index.js";
 
 /**
  * Inputs to create a {@link PromptTemplate}
@@ -63,7 +51,7 @@ export interface PromptTemplateInput extends BasePromptTemplateInput {
  * ```
  */
 export class PromptTemplate
-  extends BasePromptTemplate
+  extends BaseStringPromptTemplate
   implements PromptTemplateInput
 {
   template: string;
@@ -130,9 +118,15 @@ export class PromptTemplate
   /**
    * Load prompt template from a template f-string
    */
-  static fromTemplate(template: string) {
+  static fromTemplate(
+    template: string,
+    {
+      templateFormat = "f-string",
+      ...rest
+    }: Omit<PromptTemplateInput, "template" | "inputVariables"> = {}
+  ) {
     const names = new Set<string>();
-    parseFString(template).forEach((node) => {
+    parseTemplate(template, templateFormat).forEach((node) => {
       if (node.type === "variable") {
         names.add(node.name);
       }
@@ -140,7 +134,9 @@ export class PromptTemplate
 
     return new PromptTemplate({
       inputVariables: [...names],
+      templateFormat,
       template,
+      ...rest,
     });
   }
 
@@ -171,8 +167,9 @@ export class PromptTemplate
   ): Promise<PromptTemplate> {
     const res = new PromptTemplate({
       inputVariables: data.input_variables,
-      outputParser:
-        data.output_parser && BaseOutputParser.deserialize(data.output_parser),
+      outputParser: data.output_parser
+        ? await BaseOutputParser.deserialize(data.output_parser)
+        : undefined,
       template: await resolveTemplateFromFile("template", data),
       templateFormat: data.template_format,
     });

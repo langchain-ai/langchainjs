@@ -1,12 +1,11 @@
-import { LLM, LLMCallbackManager } from "./index.js";
+import { LLM, BaseLLMParams } from "./base.js";
 
 interface CohereInput {
   /** Sampling temperature to use */
   temperature: number;
 
   /**
-   * Maximum number of tokens to generate in the completion. -1 returns as many
-   * tokens as possible given the prompt and the model's maximum context size.
+   * Maximum number of tokens to generate in the completion.
    */
   maxTokens: number;
 
@@ -23,20 +22,8 @@ export class Cohere extends LLM implements CohereInput {
 
   apiKey: string;
 
-  constructor(
-    fields?: Partial<CohereInput> & {
-      callbackManager?: LLMCallbackManager;
-      verbose?: boolean;
-      concurrency?: number;
-      cache?: boolean;
-    }
-  ) {
-    super(
-      fields?.callbackManager,
-      fields?.verbose,
-      fields?.concurrency,
-      fields?.cache
-    );
+  constructor(fields?: Partial<CohereInput> & BaseLLMParams) {
+    super(fields ?? {});
 
     const apiKey = process.env.COHERE_API_KEY;
 

@@ -1,8 +1,12 @@
-import { Configuration, OpenAIApi, CreateEmbeddingRequest } from "openai";
-import { backOff } from "exponential-backoff";
+import {
+  Configuration,
+  OpenAIApi,
+  CreateEmbeddingRequest,
+  ConfigurationParameters,
+} from "openai";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
 import { chunkArray } from "../util/index.js";
-import { Embeddings } from "./base.js";
+import { Embeddings, EmbeddingsParams } from "./base.js";
 
 interface ModelParams {
   modelName: string;
@@ -11,23 +15,33 @@ interface ModelParams {
 export class OpenAIEmbeddings extends Embeddings implements ModelParams {
   modelName = "text-embedding-ada-002";
 
-  batchSize = 20;
+  /**
+   * The maximum number of documents to embed in a single request. This is
+   * limited by the OpenAI API to a maximum of 2048.
+   */
+  batchSize = 512;
 
-  maxRetries = 6;
-
-  private apiKey: string;
+  /**
+   * Whether to strip new lines from the input text. This is recommended by
+   * OpenAI, but may not be suitable for all use cases.
+   */
+  stripNewLines = true;
 
   private client: OpenAIApi;
 
+  private clientConfig: ConfigurationParameters;
+
   constructor(
-    fields?: Partial<ModelParams> & {
-      verbose?: boolean;
-      batchSize?: number;
-      maxRetries?: number;
-      openAIApiKey?: string;
-    }
+    fields?: Partial<ModelParams> &
+      EmbeddingsParams & {
+        verbose?: boolean;
+        batchSize?: number;
+        openAIApiKey?: string;
+        stripNewLines?: boolean;
+      },
+    configuration?: ConfigurationParameters
   ) {
-    super();
+    super(fields ?? {});
 
     const apiKey = fields?.openAIApiKey ?? process.env.OPENAI_API_KEY;
     if (!apiKey) {
@@ -36,14 +50,21 @@ export class OpenAIEmbeddings extends Embeddings implements ModelParams {
 
     this.modelName = fields?.modelName ?? this.modelName;
     this.batchSize = fields?.batchSize ?? this.batchSize;
-    this.apiKey = apiKey;
-    this.maxRetries = fields?.maxRetries ?? this.maxRetries;
+    this.stripNewLines = fields?.stripNewLines ?? this.stripNewLines;
+
+    this.clientConfig = {
+      apiKey,
+      ...configuration,
+    };
   }
 
   async embedDocuments(texts: string[]): Promise<number[][]> {
-    const subPrompts = chunkArray(texts, this.batchSize);
+    const subPrompts = chunkArray(
+      this.stripNewLines ? texts.map((t) => t.replaceAll("\n", " ")) : texts,
+      this.batchSize
+    );
 
-    const embeddings = [];
+    const embeddings: number[][] = [];
 
     for (let i = 0; i < subPrompts.length; i += 1) {
       const input = subPrompts[i];
@@ -62,7 +83,7 @@ export class OpenAIEmbeddings extends Embeddings implements ModelParams {
   async embedQuery(text: string): Promise<number[]> {
     const { data } = await this.embeddingWithRetry({
       model: this.modelName,
-      input: text,
+      input: this.stripNewLines ? text.replaceAll("\n", " ") : text,
     });
     return data.data[0].embedding;
   }
@@ -70,16 +91,17 @@ export class OpenAIEmbeddings extends Embeddings implements ModelParams {
   private async embeddingWithRetry(request: CreateEmbeddingRequest) {
     if (!this.client) {
       const clientConfig = new Configuration({
-        apiKey: this.apiKey,
-        baseOptions: { adapter: fetchAdapter },
+        ...this.clientConfig,
+        baseOptions: {
+          ...this.clientConfig.baseOptions,
+          adapter: fetchAdapter,
+        },
       });
       this.client = new OpenAIApi(clientConfig);
     }
-    const makeCompletionRequest = () => this.client.createEmbedding(request);
-    return backOff(makeCompletionRequest, {
-      startingDelay: 4,
-      maxDelay: 10,
-      numOfAttempts: this.maxRetries,
-    });
+    return this.caller.call(
+      this.client.createEmbedding.bind(this.client),
+      request
+    );
   }
 }

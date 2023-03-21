@@ -15,7 +15,7 @@ test("Test loadSummzationChain", async () => {
   console.log({ res });
 });
 
-test("Test loadQAChain map_reduce", async () => {
+test("Test loadSummarizationChain map_reduce", async () => {
   const model = new OpenAI({ modelName: "text-ada-001" });
   const chain = loadSummarizationChain(model, { type: "map_reduce" });
   const docs = [

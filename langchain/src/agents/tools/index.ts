@@ -7,6 +7,8 @@ export { DynamicTool } from "./dynamic.js";
 export { IFTTTWebhook } from "./IFTTTWebhook.js";
 export { ChainTool } from "./chain.js";
 export {
+  QuerySqlTool,
+
   InfoSqlTool,
   ListTablesSqlTool,
   QueryCheckerTool,
@@ -23,3 +25,5 @@ export {
 export { RequestsGetTool, RequestsPostTool } from "./requests.js";
 export { VectorStoreQATool } from "./vectorstore.js";
 export { OpenAICreateImage } from "./openaiCreateImage.js";
+export { ZapierNLARunAction, ZapierNLAWrapper } from "./zapier.js";
+

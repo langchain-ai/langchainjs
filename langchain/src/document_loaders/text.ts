@@ -1,51 +1,61 @@
-import type { readFile as ReadFileT } from "fs/promises";
+import type { readFile as ReadFileT } from "node:fs/promises";
 import { Document } from "../document.js";
+import { getEnv } from "../util/env.js";
 import { BaseDocumentLoader } from "./base.js";
 
 export class TextLoader extends BaseDocumentLoader {
-  constructor(public filePath: string) {
+  constructor(public filePathOrBlob: string | Blob) {
     super();
   }
 
+  protected async parse(raw: string): Promise<string[]> {
+    return [raw];
+  }
+
   public async load(): Promise<Document[]> {
-    const { readFile } = await TextLoader.imports();
-    const text = await readFile(this.filePath, "utf8");
-    const metadata = { source: this.filePath };
-    return [new Document({ pageContent: text, metadata })];
+    let text: string;
+    let metadata: Record<string, string>;
+    if (typeof this.filePathOrBlob === "string") {
+      const { readFile } = await TextLoader.imports();
+      text = await readFile(this.filePathOrBlob, "utf8");
+      metadata = { source: this.filePathOrBlob };
+    } else {
+      text = await this.filePathOrBlob.text();
+      metadata = { source: "blob", blobType: this.filePathOrBlob.type };
+    }
+    const parsed = await this.parse(text);
+    parsed.forEach((pageContent, i) => {
+      if (typeof pageContent !== "string") {
+        throw new Error(
+          `Expected string, at position ${i} got ${typeof pageContent}`
+        );
+      }
+    });
+    return parsed.map(
+      (pageContent, i) =>
+        new Document({
+          pageContent,
+          metadata:
+            parsed.length === 1
+              ? metadata
+              : {
+                  ...metadata,
+                  line: i + 1,
+                },
+        })
+    );
   }
 
   static async imports(): Promise<{
     readFile: typeof ReadFileT;
   }> {
     try {
-      const { readFile } = await import("fs/promises");
+      const { readFile } = await import("node:fs/promises");
       return { readFile };
     } catch (e) {
       console.error(e);
-      const {
-        isBrowser,
-        isNode,
-        isWebWorker,
-        isJsDom,
-        isDeno,
-        // eslint-disable-next-line global-require,@typescript-eslint/no-var-requires
-      } = await import("browser-or-node");
-      let env: string;
-      if (isBrowser) {
-        env = "browser";
-      } else if (isNode) {
-        env = "node";
-      } else if (isWebWorker) {
-        env = "webworker";
-      } else if (isJsDom) {
-        env = "jsdom";
-      } else if (isDeno) {
-        env = "deno";
-      } else {
-        env = "other";
-      }
       throw new Error(
-        `Failed to load fs/promises. TextLoader available only on environment 'node'. It appears you are running environment '${env}'. See https://<link to docs> for alternatives.`
+        `Failed to load fs/promises. TextLoader available only on environment 'node'. It appears you are running environment '${getEnv()}'. See https://<link to docs> for alternatives.`
       );
     }
   }

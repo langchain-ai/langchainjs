@@ -8,25 +8,28 @@ import { Document } from "../document.js";
 // eslint-disable-next-line @typescript-eslint/ban-types, @typescript-eslint/no-explicit-any
 type PineconeMetadata = Record<string, any>;
 
+export interface PineconeLibArgs {
+  pineconeIndex: VectorOperationsApi;
+  textKey?: string;
+  namespace?: string;
+}
+
 export class PineconeStore extends VectorStore {
   textKey: string;
 
-  namespace: string | undefined;
+  namespace?: string;
 
-  pineconeClient: VectorOperationsApi;
+  pineconeIndex: VectorOperationsApi;
 
-  constructor(
-    pineconeClient: VectorOperationsApi,
-    embeddings: Embeddings,
-    textKey = "text",
-    namespace: string | undefined = undefined
-  ) {
-    super(embeddings);
+  constructor(embeddings: Embeddings, args: PineconeLibArgs) {
+    super(embeddings, args);
 
-    this.pineconeClient = pineconeClient;
+    this.pineconeIndex = args.pineconeIndex;
     this.embeddings = embeddings;
-    this.textKey = textKey;
-    this.namespace = namespace;
+    this.textKey = args.textKey ?? "text";
+    this.namespace = args.namespace;
+
+    console.log(this.textKey);
   }
 
   async addDocuments(documents: Document[], ids?: string[]): Promise<void> {
@@ -45,7 +48,7 @@ export class PineconeStore extends VectorStore {
   ): Promise<void> {
     const documentIds = ids == null ? documents.map(() => uuidv4()) : ids;
 
-    await this.pineconeClient.upsert({
+    await this.pineconeIndex.upsert({
       upsertRequest: {
         vectors: vectors.map((values, idx) => ({
           id: documentIds[idx],
@@ -64,11 +67,12 @@ export class PineconeStore extends VectorStore {
     query: number[],
     k: number
   ): Promise<[Document, number][]> {
-    const results = await this.pineconeClient.query({
+    const results = await this.pineconeIndex.query({
       queryRequest: {
         topK: k,
         includeMetadata: true,
         vector: query,
+        namespace: this.namespace,
       },
     });
 
@@ -76,8 +80,8 @@ export class PineconeStore extends VectorStore {
 
     if (results.matches) {
       for (const res of results.matches) {
-        const { [this.textKey]: pageContent, ...metadata } =
-          res.metadata as PineconeMetadata;
+        const { [this.textKey]: pageContent, ...metadata } = (res.metadata ??
+          {}) as PineconeMetadata;
         if (res.score) {
           result.push([new Document({ metadata, pageContent }), res.score]);
         }
@@ -88,14 +92,21 @@ export class PineconeStore extends VectorStore {
   }
 
   static async fromTexts(
-    pineconeClient: VectorOperationsApi,
     texts: string[],
     metadatas: object[],
     embeddings: Embeddings,
-    textKey = "text",
-    namespace: string | undefined = undefined
+    dbConfig:
+      | {
+          /**
+           * @deprecated Use pineconeIndex instead
+           */
+          pineconeClient: VectorOperationsApi;
+          textKey?: string;
+          namespace?: string | undefined;
+        }
+      | PineconeLibArgs
   ): Promise<PineconeStore> {
-    const docs = [];
+    const docs: Document[] = [];
     for (let i = 0; i < texts.length; i += 1) {
       const newDoc = new Document({
         pageContent: texts[i],
@@ -104,34 +115,35 @@ export class PineconeStore extends VectorStore {
       docs.push(newDoc);
     }
 
-    return PineconeStore.fromDocuments(
-      pineconeClient,
-      docs,
-      embeddings,
-      textKey,
-      namespace
-    );
+    const args: PineconeLibArgs = {
+      pineconeIndex:
+        "pineconeIndex" in dbConfig
+          ? dbConfig.pineconeIndex
+          : dbConfig.pineconeClient,
+      textKey: dbConfig.textKey,
+      namespace: dbConfig.namespace,
+    };
+    return PineconeStore.fromDocuments(docs, embeddings, args);
   }
 
   static async fromDocuments(
-    pineconeClient: VectorOperationsApi,
     docs: Document[],
     embeddings: Embeddings,
-    textKey = "text",
-    namespace: string | undefined = undefined
+    dbConfig: PineconeLibArgs
   ): Promise<PineconeStore> {
-    const instance = new this(pineconeClient, embeddings, textKey, namespace);
+    const args = dbConfig;
+    args.textKey = dbConfig.textKey ?? "text";
+
+    const instance = new this(embeddings, args);
     await instance.addDocuments(docs);
     return instance;
   }
 
   static async fromExistingIndex(
-    pineconeClient: VectorOperationsApi,
     embeddings: Embeddings,
-    textKey = "text",
-    namespace: string | undefined = undefined
+    dbConfig: PineconeLibArgs
   ): Promise<PineconeStore> {
-    const instance = new this(pineconeClient, embeddings, textKey, namespace);
+    const instance = new this(embeddings, dbConfig);
     return instance;
   }
 }

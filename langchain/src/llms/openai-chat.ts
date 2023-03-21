@@ -9,8 +9,7 @@ import type { IncomingMessage } from "http";
 import { createParser } from "eventsource-parser";
 import { backOff } from "exponential-backoff";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
-import { LLM } from "./base.js";
-import { LLMCallbackManager } from "./index.js";
+import { BaseLLMParams, LLM } from "./base.js";
 
 interface ModelParams {
   /** Sampling temperature to use, between 0 and 2, defaults to 1 */
@@ -57,6 +56,12 @@ interface OpenAIInput extends ModelParams {
 
   /** List of stop words to use when generating */
   stop?: string[];
+
+  /**
+   * Maximum number of tokens to generate in the completion.  If not specified,
+   * defaults to the maximum number of tokens allowed by the model.
+   */
+  maxTokens?: number;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -90,6 +95,8 @@ export class OpenAIChat extends LLM implements OpenAIInput {
 
   logitBias?: Record<string, number>;
 
+  maxTokens?: number;
+
   modelName = "gpt-3.5-turbo";
 
   prefixMessages?: ChatCompletionRequestMessage[];
@@ -111,21 +118,13 @@ export class OpenAIChat extends LLM implements OpenAIInput {
   private clientConfig: ConfigurationParameters;
 
   constructor(
-    fields?: Partial<OpenAIInput> & {
-      callbackManager?: LLMCallbackManager;
-      concurrency?: number;
-      cache?: boolean;
-      verbose?: boolean;
-      openAIApiKey?: string;
-    },
+    fields?: Partial<OpenAIInput> &
+      BaseLLMParams & {
+        openAIApiKey?: string;
+      },
     configuration?: ConfigurationParameters
   ) {
-    super(
-      fields?.callbackManager,
-      fields?.verbose,
-      fields?.concurrency,
-      fields?.cache
-    );
+    super(fields ?? {});
 
     const apiKey = fields?.openAIApiKey ?? process.env.OPENAI_API_KEY;
     if (!apiKey) {
@@ -143,6 +142,7 @@ export class OpenAIChat extends LLM implements OpenAIInput {
     this.presencePenalty = fields?.presencePenalty ?? this.presencePenalty;
     this.n = fields?.n ?? this.n;
     this.logitBias = fields?.logitBias;
+    this.maxTokens = fields?.maxTokens;
     this.stop = fields?.stop;
 
     this.streaming = fields?.streaming ?? false;
@@ -152,7 +152,7 @@ export class OpenAIChat extends LLM implements OpenAIInput {
     }
 
     this.clientConfig = {
-      apiKey: fields?.openAIApiKey ?? process.env.OPENAI_API_KEY,
+      apiKey,
       ...configuration,
     };
   }
@@ -169,6 +169,7 @@ export class OpenAIChat extends LLM implements OpenAIInput {
       presence_penalty: this.presencePenalty,
       n: this.n,
       logit_bias: this.logitBias,
+      max_tokens: this.maxTokens,
       stop: this.stop,
       stream: this.streaming,
       ...this.modelKwargs,
@@ -255,10 +256,10 @@ export class OpenAIChat extends LLM implements OpenAIInput {
               const part = response.choices[0];
               if (part != null) {
                 innerCompletion += part.delta?.content ?? "";
-
-                this.callbackManager.handleNewToken?.(
+                // eslint-disable-next-line no-void
+                void this.callbackManager.handleLLMNewToken(
                   part.delta?.content ?? "",
-                  this.verbose
+                  true
                 );
               }
             }
@@ -283,7 +284,10 @@ export class OpenAIChat extends LLM implements OpenAIInput {
     if (!request.stream && !this.batchClient) {
       const clientConfig = new Configuration({
         ...this.clientConfig,
-        baseOptions: { adapter: fetchAdapter },
+        baseOptions: {
+          ...this.clientConfig.baseOptions,
+          adapter: fetchAdapter,
+        },
       });
       this.batchClient = new OpenAIApi(clientConfig);
     }

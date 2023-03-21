@@ -1,5 +1,12 @@
-/* eslint-disable */
-import { PromptTemplate } from "../../prompts/index.js";
+/* eslint-disable tree-shaking/no-side-effects-in-initialization */
+/* eslint-disable spaced-comment */
+import {
+  PromptTemplate,
+  ChatPromptTemplate,
+  SystemMessagePromptTemplate,
+  HumanMessagePromptTemplate,
+} from "../../prompts/index.js";
+import { ConditionalPromptSelector, isChatModel } from "../prompt_selector.js";
 
 const qa_template = `Use the following portion of a long document to see if any of the text is relevant to answer the question. 
 Return any relevant text verbatim.
@@ -7,7 +14,24 @@ Return any relevant text verbatim.
 Question: {question}
 Relevant text, if any:`;
 export const DEFAULT_COMBINE_QA_PROMPT =
+  /*#__PURE__*/
   PromptTemplate.fromTemplate(qa_template);
+
+const system_template = `Use the following portion of a long document to see if any of the text is relevant to answer the question. 
+Return any relevant text verbatim.
+----------------
+{context}`;
+const messages = [
+  /*#__PURE__*/ SystemMessagePromptTemplate.fromTemplate(system_template),
+  /*#__PURE__*/ HumanMessagePromptTemplate.fromTemplate("{question}"),
+];
+const CHAT_QA_PROMPT =
+  /*#__PURE__*/ ChatPromptTemplate.fromPromptMessages(messages);
+
+export const COMBINE_QA_PROMPT_SELECTOR =
+  /*#__PURE__*/ new ConditionalPromptSelector(DEFAULT_COMBINE_QA_PROMPT, [
+    [isChatModel, CHAT_QA_PROMPT],
+  ]);
 
 const combine_prompt = `Given the following extracted parts of a long document and a question, create a final answer. 
 If you don't know the answer, just say that you don't know. Don't try to make up an answer.
@@ -39,4 +63,23 @@ QUESTION: {question}
 {summaries}
 =========
 FINAL ANSWER:`;
-export const COMBINE_PROMPT = PromptTemplate.fromTemplate(combine_prompt);
+export const COMBINE_PROMPT =
+  /*#__PURE__*/ PromptTemplate.fromTemplate(combine_prompt);
+
+const system_combine_template = `Given the following extracted parts of a long document and a question, create a final answer. 
+If you don't know the answer, just say that you don't know. Don't try to make up an answer.
+----------------
+{summaries}`;
+const combine_messages = [
+  /*#__PURE__*/ SystemMessagePromptTemplate.fromTemplate(
+    system_combine_template
+  ),
+  /*#__PURE__*/ HumanMessagePromptTemplate.fromTemplate("{question}"),
+];
+const CHAT_COMBINE_PROMPT =
+  /*#__PURE__*/ ChatPromptTemplate.fromPromptMessages(combine_messages);
+
+export const COMBINE_PROMPT_SELECTOR =
+  /*#__PURE__*/ new ConditionalPromptSelector(COMBINE_PROMPT, [
+    [isChatModel, CHAT_COMBINE_PROMPT],
+  ]);

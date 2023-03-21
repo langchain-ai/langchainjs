@@ -15,18 +15,18 @@
     "lint": {
       "outputs": []
     },
+    "format": {
+      "outputs": []
+    },
+    "format:check": {
+      "outputs": []
+    },
     "test": {
       "dependsOn": [
         "^build"
       ]
     },
     "precommit": {},
-    "ci": {
-      "cache": false,
-      "dependsOn": [
-        "^ci"
-      ]
-    },
     "start": {
       "cache": false
     }

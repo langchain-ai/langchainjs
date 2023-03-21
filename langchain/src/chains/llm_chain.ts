@@ -1,33 +1,26 @@
-import { BaseChain, ChainValues, ChainInputs } from "./index.js";
-
-import { BaseLLM, SerializedLLM } from "../llms/index.js";
+import { BaseChain, ChainInputs } from "./base.js";
+import { SerializedLLM } from "../llms/index.js";
 
 import { BaseMemory, BufferMemory } from "../memory/index.js";
 import {
   BasePromptTemplate,
-  SerializedBasePromptTemplate,
   PromptTemplate,
+  SerializedBasePromptTemplate,
 } from "../prompts/index.js";
-
 import { resolveConfigFromFile } from "../util/index.js";
+import { BaseLanguageModel } from "../base_language/index.js";
+import { ChainValues } from "../schema/index.js";
+import { SerializedLLMChain } from "./serde.js";
 
 export interface LLMChainInput extends ChainInputs {
   /** Prompt object to use */
   prompt: BasePromptTemplate;
   /** LLM Wrapper to use */
-  llm: BaseLLM;
+  llm: BaseLanguageModel;
 
   /** @ignore */
   outputKey: string;
 }
-
-export type SerializedLLMChain = {
-  _type: "llm_chain";
-  llm?: SerializedLLM;
-  llm_path?: string;
-  prompt?: SerializedBasePromptTemplate;
-  prompt_path?: string;
-};
 
 /**
  * Chain to run queries against LLMs.
@@ -44,7 +37,7 @@ export type SerializedLLMChain = {
 export class LLMChain extends BaseChain implements LLMChainInput {
   prompt: BasePromptTemplate;
 
-  llm: BaseLLM;
+  llm: BaseLanguageModel;
 
   outputKey = "text";
 
@@ -54,7 +47,7 @@ export class LLMChain extends BaseChain implements LLMChainInput {
 
   constructor(fields: {
     prompt: BasePromptTemplate;
-    llm: BaseLLM;
+    llm: BaseLanguageModel;
     outputKey?: string;
     memory?: BaseMemory;
   }) {
@@ -69,10 +62,9 @@ export class LLMChain extends BaseChain implements LLMChainInput {
     if ("stop" in values && Array.isArray(values.stop)) {
       stop = values.stop;
     }
-    const formattedString = await this.prompt.format(values);
-    const llmResult = await this.llm.call(formattedString, stop);
-    const result = { [this.outputKey]: llmResult };
-    return result;
+    const promptValue = await this.prompt.formatPromptValue(values);
+    const { generations } = await this.llm.generatePrompt([promptValue], stop);
+    return { [this.outputKey]: generations[0][0].text };
   }
 
   /**
@@ -106,7 +98,7 @@ export class LLMChain extends BaseChain implements LLMChainInput {
     >("prompt", data);
 
     return new LLMChain({
-      llm: await BaseLLM.deserialize(serializedLLM),
+      llm: await BaseLanguageModel.deserialize(serializedLLM),
       prompt: await BasePromptTemplate.deserialize(serializedPrompt),
     });
   }
@@ -128,20 +120,20 @@ Current conversation:
 Human: {input}
 AI:`;
 
-const defaultPrompt = new PromptTemplate({
-  template: defaultTemplate,
-  inputVariables: ["history", "input"],
-});
-
 export class ConversationChain extends LLMChain {
   constructor(fields: {
-    llm: BaseLLM;
+    llm: BaseLanguageModel;
     prompt?: BasePromptTemplate;
     outputKey?: string;
     memory?: BaseMemory;
   }) {
     super({
-      prompt: fields.prompt ?? defaultPrompt,
+      prompt:
+        fields.prompt ??
+        new PromptTemplate({
+          template: defaultTemplate,
+          inputVariables: ["history", "input"],
+        }),
       llm: fields.llm,
       outputKey: fields.outputKey ?? "response",
     });

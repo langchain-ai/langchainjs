@@ -1,5 +1,6 @@
 ---
 sidebar_position: 1
+sidebar_label: Overview
 ---
 
 # LLM Overview
@@ -37,4 +38,39 @@ To use this feature, simply pass `concurrency: <number>` when you instantiate th
 import { OpenAI } from "langchain/llms";
 
 const model = new OpenAI({ concurrency: 5 });
+```
+
+## Logging for Debugging
+
+Especially when using an agent, there can be a lot of back-and-forth going on behind the scenes as a LLM processes a chain. For agents, the response object contains an intermediateSteps object that you can print to see an overview of the steps it took to get there. If that's not enough and you want to see every exchange with the LLM, you can use the LLMCallbackManager to write yourself custom logging (or anything else you want to do) as the model goes through the steps:
+
+```typescript
+import { LLMResult } from "langchain/schema";
+import { CallbackManager } from "langchain/callbacks";
+
+//create our callback manager
+
+const callbackManager = CallbackManager.fromHandlers({
+  handleLLMStart: async (llm: { name: string }, prompts: string[]) => {
+    console.log(JSON.stringify(llm, null, 2));
+    console.log(JSON.stringify(prompts, null, 2));
+  },
+  handleLLMEnd: async (output: LLMResult) => {
+    console.log(JSON.stringify(output, null, 2));
+  },
+  handleLLMError: async (err: Error) => {
+    console.error(err);
+  },
+});
+
+//create our model and pass it the callback manager
+
+const model = new OpenAIChat({
+  openAIApiKey: process.env.OPENAI_API_KEY,
+  modelName: "gpt-3.5-turbo",
+  prefixMessages: history,
+  temperature: 1,
+  verbose: true,
+  callbackManager,
+});
 ```

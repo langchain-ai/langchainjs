@@ -1,12 +1,10 @@
-import { ChainValues, BaseChain } from "../chains/index.js";
-import {
-  Agent,
-  Tool,
-  StoppingMethod,
-  AgentStep,
-  AgentFinish,
-} from "./index.js";
-import { SerializedLLMChain } from "../chains/llm_chain.js";
+import { BaseChain } from "../chains/index.js";
+import { Agent } from "./agent.js";
+import { Tool } from "./tools/base.js";
+import { StoppingMethod } from "./types.js";
+import { SerializedLLMChain } from "../chains/serde.js";
+import { AgentFinish, AgentStep, ChainValues } from "../schema/index.js";
+import { CallbackManager } from "../callbacks/index.js";
 
 type AgentExecutorInput = {
   agent: Agent;
@@ -14,6 +12,9 @@ type AgentExecutorInput = {
   returnIntermediateSteps?: boolean;
   maxIterations?: number;
   earlyStoppingMethod?: StoppingMethod;
+
+  verbose?: boolean;
+  callbackManager?: CallbackManager;
 };
 
 /**
@@ -44,6 +45,8 @@ export class AgentExecutor extends BaseChain {
     this.maxIterations = input.maxIterations ?? this.maxIterations;
     this.earlyStoppingMethod =
       input.earlyStoppingMethod ?? this.earlyStoppingMethod;
+    this.verbose = input.verbose ?? this.verbose;
+    this.callbackManager = input.callbackManager ?? this.callbackManager;
   }
 
   /** Create from agent and a list of tools. */
@@ -69,12 +72,15 @@ export class AgentExecutor extends BaseChain {
     const steps: AgentStep[] = [];
     let iterations = 0;
 
-    const getOutput = (finishStep: AgentFinish) => {
+    const getOutput = async (finishStep: AgentFinish) => {
       const { returnValues } = finishStep;
+      const additional = await this.agent.prepareForOutput(returnValues, steps);
+
       if (this.returnIntermediateSteps) {
-        return { ...returnValues, intermediateSteps: steps };
+        return { ...returnValues, intermediateSteps: steps, ...additional };
       }
-      return returnValues;
+      await this.callbackManager.handleAgentEnd(finishStep, this.verbose);
+      return { ...returnValues, ...additional };
     };
 
     while (this.shouldContinue(iterations)) {
@@ -82,10 +88,11 @@ export class AgentExecutor extends BaseChain {
       if ("returnValues" in action) {
         return getOutput(action);
       }
+      await this.callbackManager.handleAgentAction(action, this.verbose);
 
       const tool = toolsByName[action.tool.toLowerCase()];
       const observation = tool
-        ? await tool.call(action.toolInput)
+        ? await tool.call(action.toolInput, this.verbose)
         : `${action.tool} is not a valid tool, try another one.`;
       steps.push({ action, observation });
       if (tool?.returnDirect) {

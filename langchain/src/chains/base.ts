@@ -1,33 +1,18 @@
-import deepcopy from "deepcopy";
-import type {
-  LLMChain,
-  StuffDocumentsChain,
-  VectorDBQAChain,
-  ChatVectorDBQAChain,
-  MapReduceDocumentsChain,
-  AnalyzeDocumentChain,
-} from "./index.js";
 import { BaseMemory } from "../memory/index.js";
+import { ChainValues } from "../schema/index.js";
+import { CallbackManager, getCallbackManager } from "../callbacks/index.js";
+import { SerializedBaseChain } from "./serde.js";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type ChainValues = Record<string, any>;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type LoadValues = Record<string, any>;
 
-export type SerializedBaseChain = ReturnType<
-  InstanceType<
-    | typeof LLMChain
-    | typeof StuffDocumentsChain
-    | typeof VectorDBQAChain
-    | typeof ChatVectorDBQAChain
-    | typeof MapReduceDocumentsChain
-    | typeof AnalyzeDocumentChain
-  >["serialize"]
->;
-
 export interface ChainInputs {
   memory?: BaseMemory;
+  verbose?: boolean;
+  callbackManager?: CallbackManager;
 }
+
+const getVerbosity = () => false;
 
 /**
  * Base interface that all chains must implement.
@@ -35,8 +20,18 @@ export interface ChainInputs {
 export abstract class BaseChain implements ChainInputs {
   memory?: BaseMemory;
 
-  constructor(memory?: BaseMemory) {
+  verbose: boolean;
+
+  callbackManager: CallbackManager;
+
+  constructor(
+    memory?: BaseMemory,
+    verbose?: boolean,
+    callbackManager?: CallbackManager
+  ) {
     this.memory = memory;
+    this.verbose = verbose ?? getVerbosity();
+    this.callbackManager = callbackManager ?? getCallbackManager();
   }
 
   /**
@@ -82,16 +77,26 @@ export abstract class BaseChain implements ChainInputs {
    * Wraps {@link _call} and handles memory.
    */
   async call(values: ChainValues): Promise<ChainValues> {
-    const fullValues = deepcopy(values);
-
+    const fullValues = { ...values } as typeof values;
     if (!(this.memory == null)) {
       const newValues = await this.memory.loadMemoryVariables(values);
       for (const [key, value] of Object.entries(newValues)) {
         fullValues[key] = value;
       }
     }
-    // TODO(sean) add callback support
-    const outputValues = this._call(fullValues);
+    await this.callbackManager.handleChainStart(
+      { name: this._chainType() },
+      fullValues,
+      this.verbose
+    );
+    let outputValues;
+    try {
+      outputValues = await this._call(fullValues);
+    } catch (e) {
+      await this.callbackManager.handleChainError(e, this.verbose);
+      throw e;
+    }
+    await this.callbackManager.handleChainEnd(outputValues, this.verbose);
     if (!(this.memory == null)) {
       await this.memory.saveContext(values, outputValues);
     }

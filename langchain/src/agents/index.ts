@@ -1,13 +1,19 @@
 export {
-  AgentAction,
-  AgentFinish,
-  AgentStep,
   StoppingMethod,
   SerializedAgentT,
+  AgentInput,
+  SerializedZeroShotAgent,
+  SerializedAgent,
 } from "./types.js";
-export { Agent, StaticAgent, staticImplements, AgentInput } from "./agent.js";
+export { Agent } from "./agent.js";
 export { AgentExecutor } from "./executor.js";
-export { ZeroShotAgent, SerializedZeroShotAgent } from "./mrkl/index.js";
+export { ZeroShotAgent } from "./mrkl/index.js";
+export { ChatAgent } from "./chat/index.js";
+export {
+  ChatConversationalAgent,
+  ChatConversationalAgentOutputParser,
+  ChatConversationalAgentInput,
+} from "./chat_convo/index.js";
 export { Tool } from "./tools/index.js";
 export { initializeAgentExecutor } from "./initialize.js";
 
@@ -21,6 +27,7 @@ export {
   VectorStoreInfo,
   VectorStoreToolkit,
   VectorStoreRouterToolkit,
+  ZapierToolKit,
   createSqlAgent,
   createJsonAgent,
   createOpenApiAgent,

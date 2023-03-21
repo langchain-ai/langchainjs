@@ -64,7 +64,7 @@ export class JsonListKeysTool extends Tool {
     super();
   }
 
-  async call(input: string) {
+  async _call(input: string) {
     try {
       return this.jsonSpec.getKeys(input);
     } catch (error) {
@@ -84,7 +84,7 @@ export class JsonGetValueTool extends Tool {
     super();
   }
 
-  async call(input: string) {
+  async _call(input: string) {
     try {
       return this.jsonSpec.getValue(input);
     } catch (error) {
@@ -92,7 +92,7 @@ export class JsonGetValueTool extends Tool {
     }
   }
 
-  description: `Can be used to see value in string format at a given path.
+  description = `Can be used to see value in string format at a given path.
     Before calling this you should be SURE that the path to this exists.
     The input is a text representation of the path to the json as json pointer syntax (e.g. /key1/0/key2).`;
 }

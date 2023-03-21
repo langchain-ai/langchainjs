@@ -60,7 +60,13 @@ const output = splitter.createDocuments([text]);
 
 Finally, `TokenTextSplitter` splits a raw text string by first converting the text into BPE tokens, then split these tokens into chunks and convert the tokens within a single chunk back into text.
 
-To utilize the `TokenTextSplitter`, first install the accompanying required library: `npm install -S @dqbd/tiktoken`.
+To utilize the `TokenTextSplitter`, first install the accompanying required library
+
+```bash npm2yarn
+npm install -S @dqbd/tiktoken
+```
+
+Then, you can use it like so:
 
 ```typescript
 import { Document } from "langchain/document";

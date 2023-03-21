@@ -1,14 +1,12 @@
-import {
-  BaseChain,
-  ChainValues,
-  SerializedBaseChain,
-  loadQAChain,
-} from "./index.js";
-
+import { BaseChain } from "./base.js";
 import { VectorStore } from "../vectorstores/base.js";
-import { BaseLLM } from "../llms/index.js";
+import { SerializedBaseChain, SerializedVectorDBQAChain } from "./serde.js";
+import { BaseLanguageModel } from "../base_language/index.js";
 
 import { resolveConfigFromFile } from "../util/index.js";
+import { ChainValues } from "../schema/index.js";
+import { loadQAStuffChain } from "./question_answering/load.js";
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type LoadValues = Record<string, any>;
 
@@ -18,14 +16,8 @@ export interface VectorDBQAChainInput {
   combineDocumentsChain: BaseChain;
   outputKey: string;
   inputKey: string;
+  returnSourceDocuments?: boolean;
 }
-
-export type SerializedVectorDBQAChain = {
-  _type: "vector_db_qa";
-  k: number;
-  combine_documents_chain: SerializedBaseChain;
-  combine_documents_chain_path?: string;
-};
 
 export class VectorDBQAChain extends BaseChain implements VectorDBQAChainInput {
   k = 4;
@@ -42,12 +34,15 @@ export class VectorDBQAChain extends BaseChain implements VectorDBQAChainInput {
 
   combineDocumentsChain: BaseChain;
 
+  returnSourceDocuments = false;
+
   constructor(fields: {
     vectorstore: VectorStore;
     combineDocumentsChain: BaseChain;
     inputKey?: string;
     outputKey?: string;
     k?: number;
+    returnSourceDocuments?: boolean;
   }) {
     super();
     this.vectorstore = fields.vectorstore;
@@ -55,6 +50,8 @@ export class VectorDBQAChain extends BaseChain implements VectorDBQAChainInput {
     this.inputKey = fields.inputKey ?? this.inputKey;
     this.outputKey = fields.outputKey ?? this.outputKey;
     this.k = fields.k ?? this.k;
+    this.returnSourceDocuments =
+      fields.returnSourceDocuments ?? this.returnSourceDocuments;
   }
 
   async _call(values: ChainValues): Promise<ChainValues> {
@@ -65,6 +62,12 @@ export class VectorDBQAChain extends BaseChain implements VectorDBQAChainInput {
     const docs = await this.vectorstore.similaritySearch(question, this.k);
     const inputs = { question, input_documents: docs };
     const result = await this.combineDocumentsChain.call(inputs);
+    if (this.returnSourceDocuments) {
+      return {
+        ...result,
+        sourceDocuments: docs,
+      };
+    }
     return result;
   }
 
@@ -104,9 +107,18 @@ export class VectorDBQAChain extends BaseChain implements VectorDBQAChainInput {
     };
   }
 
-  static fromLLM(llm: BaseLLM, vectorstore: VectorStore): VectorDBQAChain {
-    const qaChain = loadQAChain(llm);
-    const instance = new this({ vectorstore, combineDocumentsChain: qaChain });
-    return instance;
+  static fromLLM(
+    llm: BaseLanguageModel,
+    vectorstore: VectorStore,
+    options?: Partial<
+      Omit<VectorDBQAChainInput, "combineDocumentsChain" | "vectorstore">
+    >
+  ): VectorDBQAChain {
+    const qaChain = loadQAStuffChain(llm);
+    return new this({
+      vectorstore,
+      combineDocumentsChain: qaChain,
+      ...options,
+    });
   }
 }

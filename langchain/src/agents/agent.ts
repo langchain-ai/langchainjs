@@ -1,16 +1,15 @@
-import { ChainValues } from "../chains/index.js";
+import { BaseLanguageModel } from "../base_language/index.js";
+import { LLMChain } from "../chains/llm_chain.js";
+import { BasePromptTemplate } from "../prompts/index.js";
 import {
-  ZeroShotAgent,
-  SerializedZeroShotAgent,
   AgentAction,
   AgentFinish,
   AgentStep,
-  StoppingMethod,
-  Tool,
-} from "./index.js";
-import { BaseLLM } from "../llms/index.js";
-import { LLMChain } from "../chains/llm_chain.js";
-import { BasePromptTemplate } from "../prompts/index.js";
+  ChainValues,
+  BaseChatMessage,
+} from "../schema/index.js";
+import { AgentInput, SerializedAgent, StoppingMethod } from "./types.js";
+import { Tool } from "./tools/base.js";
 
 class ParseError extends Error {
   output: string;
@@ -19,38 +18,6 @@ class ParseError extends Error {
     super(msg);
     this.output = output;
   }
-}
-
-// Hacky workaround to add static abstract methods. See detailed description of
-// issue here: https://stackoverflow.com/a/65847601
-export interface StaticAgent {
-  /**
-   * Create a prompt for this class
-   *
-   * @param tools - List of tools the agent will have access to, used to format the prompt.
-   * @param fields - Additional fields used to format the prompt.
-   *
-   * @returns A PromptTemplate assembled from the given tools and fields.
-   * */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  createPrompt(tools: Tool[], fields?: Record<string, any>): BasePromptTemplate;
-  /** Construct an agent from an LLM and a list of tools */
-  fromLLMAndTools(
-    llm: BaseLLM,
-    tools: Tool[],
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    args?: Record<string, any>
-  ): Agent;
-  validateTools(_: Tool[]): void;
-}
-
-export const staticImplements = <T>(_: T) => {};
-
-type SerializedAgent = SerializedZeroShotAgent;
-
-export interface AgentInput {
-  llmChain: LLMChain;
-  allowedTools?: string[];
 }
 
 /**
@@ -104,10 +71,45 @@ export abstract class Agent {
   prepareForNewCall(): void {}
 
   /**
+   * Prepare the agent for output, if needed
+   */
+  async prepareForOutput(
+    _returnValues: AgentFinish["returnValues"],
+    _steps: AgentStep[]
+  ): Promise<AgentFinish["returnValues"]> {
+    return {};
+  }
+
+  /**
+   * Create a prompt for this class
+   *
+   * @param tools - List of tools the agent will have access to, used to format the prompt.
+   * @param fields - Additional fields used to format the prompt.
+   *
+   * @returns A PromptTemplate assembled from the given tools and fields.
+   * */
+  static createPrompt(
+    _tools: Tool[],
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    _fields?: Record<string, any>
+  ): BasePromptTemplate {
+    throw new Error("Not implemented");
+  }
+
+  /** Construct an agent from an LLM and a list of tools */
+  static fromLLMAndTools(
+    _llm: BaseLanguageModel,
+    _tools: Tool[],
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    _args?: Record<string, any>
+  ): Agent {
+    throw new Error("Not implemented");
+  }
+
+  /**
    * Validate that appropriate tools are passed in
    */
-  // eslint-disable-next-line no-unused-vars
-  static validateTools(_: Tool[]): void {}
+  static validateTools(_tools: Tool[]): void {}
 
   _stop(): string[] {
     return [`\n${this.observationPrefix()}`];
@@ -123,7 +125,7 @@ export abstract class Agent {
   /**
    * Construct a scratchpad to let the agent continue its thought process
    */
-  private constructScratchPad(steps: AgentStep[]): string {
+  constructScratchPad(steps: AgentStep[]): string | BaseChatMessage[] {
     return steps.reduce(
       (thoughts, { action, observation }) =>
         thoughts +
@@ -145,8 +147,12 @@ export abstract class Agent {
     const newInputs: ChainValues = {
       ...inputs,
       agent_scratchpad: suffix ? `${thoughts}${suffix}` : thoughts,
-      stop: this._stop(),
     };
+
+    if (this._stop().length !== 0) {
+      newInputs.stop = this._stop();
+    }
+
     const output = await this.llmChain.predict(newInputs);
     const parsed = this.extractToolAndInput(output);
     if (!parsed) {
@@ -220,11 +226,13 @@ export abstract class Agent {
    * Load an agent from a json-like object describing it.
    */
   static async deserialize(
-    data: SerializedAgent & { llm?: BaseLLM; tools?: Tool[] }
+    data: SerializedAgent & { llm?: BaseLanguageModel; tools?: Tool[] }
   ): Promise<Agent> {
     switch (data._type) {
-      case "zero-shot-react-description":
+      case "zero-shot-react-description": {
+        const { ZeroShotAgent } = await import("./mrkl/index.js");
         return ZeroShotAgent.deserialize(data);
+      }
       default:
         throw new Error("Unknown agent type");
     }

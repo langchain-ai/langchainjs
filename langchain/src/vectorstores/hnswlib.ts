@@ -1,5 +1,5 @@
-import fs from "fs/promises";
-import path from "path";
+import fs from "node:fs/promises";
+import path from "node:path";
 import type {
   HierarchicalNSW as HierarchicalNSWT,
   SpaceName,
@@ -9,9 +9,14 @@ import { SaveableVectorStore } from "./base.js";
 import { Document } from "../document.js";
 import { InMemoryDocstore } from "../docstore/index.js";
 
-export interface HNSWLibArgs {
+export interface HNSWLibBase {
   space: SpaceName;
   numDimensions?: number;
+}
+
+export interface HNSWLibArgs extends HNSWLibBase {
+  docstore?: InMemoryDocstore;
+  index?: HierarchicalNSWT;
 }
 
 export class HNSWLib extends SaveableVectorStore {
@@ -19,19 +24,14 @@ export class HNSWLib extends SaveableVectorStore {
 
   docstore: InMemoryDocstore;
 
-  args: HNSWLibArgs;
+  args: HNSWLibBase;
 
-  constructor(
-    args: HNSWLibArgs,
-    embeddings: Embeddings,
-    docstore: InMemoryDocstore,
-    index?: HierarchicalNSWT
-  ) {
-    super(embeddings);
-    this._index = index;
+  constructor(embeddings: Embeddings, args: HNSWLibArgs) {
+    super(embeddings, args);
+    this._index = args.index;
     this.args = args;
     this.embeddings = embeddings;
-    this.docstore = docstore;
+    this.docstore = args?.docstore ?? new InMemoryDocstore();
   }
 
   async addDocuments(documents: Document[]): Promise<void> {
@@ -42,7 +42,7 @@ export class HNSWLib extends SaveableVectorStore {
     );
   }
 
-  private static async getHierarchicalNSW(args: HNSWLibArgs) {
+  private static async getHierarchicalNSW(args: HNSWLibBase) {
     const { HierarchicalNSW } = await HNSWLib.imports();
     if (!args.space) {
       throw new Error("hnswlib-node requires a space argument");
@@ -158,16 +158,20 @@ export class HNSWLib extends SaveableVectorStore {
         .then(JSON.parse),
       index.readIndex(path.join(directory, "hnswlib.index")),
     ]);
-    const docstore = new InMemoryDocstore(new Map(docstoreFiles));
+    args.docstore = new InMemoryDocstore(new Map(docstoreFiles));
 
-    return new HNSWLib(args, embeddings, docstore, index);
+    args.index = index;
+
+    return new HNSWLib(embeddings, args);
   }
 
   static async fromTexts(
     texts: string[],
     metadatas: object[],
     embeddings: Embeddings,
-    docstore: InMemoryDocstore = new InMemoryDocstore()
+    dbConfig?: {
+      docstore?: InMemoryDocstore;
+    }
   ): Promise<HNSWLib> {
     const docs: Document[] = [];
     for (let i = 0; i < texts.length; i += 1) {
@@ -177,18 +181,21 @@ export class HNSWLib extends SaveableVectorStore {
       });
       docs.push(newDoc);
     }
-    return HNSWLib.fromDocuments(docs, embeddings, docstore);
+    return HNSWLib.fromDocuments(docs, embeddings, dbConfig);
   }
 
   static async fromDocuments(
     docs: Document[],
     embeddings: Embeddings,
-    docstore: InMemoryDocstore = new InMemoryDocstore()
+    dbConfig?: {
+      docstore?: InMemoryDocstore;
+    }
   ): Promise<HNSWLib> {
     const args: HNSWLibArgs = {
-      space: "ip", // dot product
+      docstore: dbConfig?.docstore,
+      space: "cosine",
     };
-    const instance = new this(args, embeddings, docstore);
+    const instance = new this(embeddings, args);
     await instance.addDocuments(docs);
     return instance;
   }

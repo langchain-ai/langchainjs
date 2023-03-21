@@ -1,6 +1,6 @@
 # Summarization Chain
 
-A summarization chain can be used to summarize multiple documents. There are a few different ways to use such a chain. You can either take as input multiple smaller documents (after they have been split into chunks) and operate over those, or you can use the `AnalyzeDocumentChain` which takes a single piece of text as input and operates over that.
+A summarization chain can be used to summarize multiple documents. One way is to input multiple smaller documents, after they have been divided into chunks, and operate over them. Alternatively, you can use the `AnalyzeDocumentChain`, which accepts a single piece of text as input and operates over it.
 
 In the first usage example, we will utilize the `AnalyzeDocumentChain`, which takes a single piece of text as input.
 
@@ -24,7 +24,7 @@ const res = await chain.call({
 console.log({ res });
 ```
 
-The next usage examples takes as inputs multiple examples, but it assumes that the documents have already been split into smaller chunks.
+The usage examples for next.js require multiple inputs, but assumes that the documents have been previously divided into smaller chunks.
 
 ```typescript
 import { OpenAI } from "langchain/llms";
@@ -37,7 +37,7 @@ const text = fs.readFileSync("state_of_the_union.txt", "utf8");
 const model = new OpenAI({ temperature: 0 });
 /* Split the text into chunks. */
 const textSplitter = new RecursiveCharacterTextSplitter({ chunkSize: 1000 });
-const docs = textSplitter.createDocuments([text]);
+const docs = await textSplitter.createDocuments([text]);
 /** Call the summarization chain. */
 const chain = loadSummarizationChain(model);
 const res = await chain.call({
@@ -46,17 +46,17 @@ const res = await chain.call({
 console.log(res);
 ```
 
-By default, the QA chain will do a map-reduce technique, where it summarizes each chunk individually and then summarizes the summaries.
+By default, the summarization chain will do a map-reduce technique, where it summarizes each chunk individually and then summarizes the summaries.
 This is good because it avoids any context window lengths, but is bad because it takes more calls to the language model.
 If you have a smaller set of documents and want to just pass them into the same prompt, you can use the `stuff` method.
 
 ```typescript
 import { OpenAI } from "langchain/llms";
-import { loadQAChain } from "langchain/chains";
+import { loadSummarizationChain } from "langchain/chains";
 import { Document } from "langchain/document";
 
 const model = new OpenAI({});
-const chain = loadQAChain(llm, { type: "stuff" });
+const chain = loadSummarizationChain(llm, { type: "stuff" });
 const docs = [
   new Document({ pageContent: "harrison went to harvard" }),
   new Document({ pageContent: "ankush went to princeton" }),

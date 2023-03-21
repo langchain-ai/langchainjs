@@ -1,29 +1,16 @@
-import { SerializedLLMChain } from "../chains/index.js";
-import type { AgentInput } from "./index.js";
+import { LLMChain, SerializedLLMChain } from "../chains/index.js";
 
-export type AgentAction = {
-  tool: string;
-  toolInput: string;
-  log: string;
-};
-
-export type AgentFinish = {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  returnValues: Record<string, any>;
-  log: string;
-};
-
-export type AgentStep = {
-  action: AgentAction;
-  observation: string;
-};
+export interface AgentInput {
+  llmChain: LLMChain;
+  allowedTools?: string[];
+}
 
 export type StoppingMethod = "force" | "generate";
 
 export type SerializedAgentT<
-  TType extends string,
-  FromLLMInput,
-  ConstructorInput extends AgentInput
+  TType extends string = string,
+  FromLLMInput extends Record<string, unknown> = Record<string, unknown>,
+  ConstructorInput extends AgentInput = AgentInput
 > = {
   _type: TType;
   llm_chain?: SerializedLLMChain;
@@ -32,3 +19,17 @@ export type SerializedAgentT<
   | ({ load_from_llm_and_tools: true } & FromLLMInput)
   | ({ load_from_llm_and_tools?: false } & ConstructorInput)
 );
+
+export type SerializedFromLLMAndTools = {
+  suffix?: string;
+  prefix?: string;
+  input_variables?: string[];
+};
+
+export type SerializedZeroShotAgent = SerializedAgentT<
+  "zero-shot-react-description",
+  SerializedFromLLMAndTools,
+  AgentInput
+>;
+
+export type SerializedAgent = SerializedZeroShotAgent;

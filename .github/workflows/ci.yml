@@ -9,15 +9,59 @@ on:
   pull_request:
 
 jobs:
+  format:
+    name: Check formatting
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js 18.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+          cache: "yarn"
+      - name: Install dependencies
+        run: yarn install --immutable
+      - name: Check formatting
+        run: yarn run format:check
+
+  lint:
+    name: Check linting
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js 18.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+          cache: "yarn"
+      - name: Install dependencies
+        run: yarn install --immutable
+      - name: Check linting
+        run: yarn run lint
+
   build:
+    name: Build and check types
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js 18.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+          cache: "yarn"
+      - name: Install dependencies
+        run: yarn install --immutable
+      - name: Build and check types
+        run: yarn run build
+
+  test:
+    name: Test
     strategy:
       matrix:
         os: [macos-latest, windows-latest, ubuntu-latest]
         node-version: [16.x, 18.x, 19.x]
         # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
-
     runs-on: ${{ matrix.os }}
-
     steps:
       - uses: actions/checkout@v3
       - name: Use Node.js ${{ matrix.node-version }}
@@ -27,8 +71,13 @@ jobs:
           cache: "yarn"
       - name: Install dependencies
         run: yarn install --immutable
-      - run: yarn run ci
-      - run: yarn workspace langchain run test
+      - name: Build
+        run: yarn run build --filter="!docs"
+      - name: Test exports
+        run: yarn workspace test-exports run test
+      - name: Test langchain
+        run: yarn workspace langchain run test
         if: matrix.node-version != '16.x'
-      - run: yarn workspace langchain run test:node16
+      - name: Test langchain (Node 16)
+        run: yarn workspace langchain run test:node16
         if: matrix.node-version == '16.x'
