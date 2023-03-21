@@ -1,5 +1,3 @@
-import { BaseOutputParser } from "output_parsers/base.js";
-
 export type Example = Record<string, string>;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -125,12 +123,46 @@ export type AgentStep = {
 export type ChainValues = Record<string, any>;
 
 /**
- * Base GuardedOutputParser class. All guarded output parsers should extend this.
+ * Class to parse the output of an LLM call.
  */
-export abstract class GuardedOutputParser {
-  abstract parse(
-    prompt: BasePromptValue,
-    output: string,
-    outputParser: BaseOutputParser
-  ): unknown;
+export abstract class BaseOutputParser {
+  /**
+   * Parse the output of an LLM call.
+   *
+   * @param text - LLM output to parse.
+   * @returns Parsed output.
+   */
+  abstract parse(text: string): Promise<unknown>;
+
+  async parseWithPrompt(
+    text: string,
+    _prompt: BasePromptValue
+  ): Promise<unknown> {
+    return this.parse(text);
+  }
+
+  /**
+   * Return a string describing the format of the output.
+   * @returns Format instructions.
+   * @example
+   * ```json
+   * {
+   *  "foo": "bar"
+   * }
+   * ```
+   */
+  abstract getFormatInstructions(): string;
+
+  /**
+   * Return the string type key uniquely identifying this class of parser
+   */
+  _type(): string {
+    throw new Error("_type not implemented");
+  }
+}
+
+export class OutputParserException extends Error {
+  constructor(message: string) {
+    super(message);
+  }
 }
