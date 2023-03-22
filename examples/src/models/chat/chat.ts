@@ -44,20 +44,22 @@ export const run = async () => {
     ],
   ]);
   console.log(responseC);
-  // {
-  //   generations: [
-  //     [
-  //       {
-  //         text: "J'aime programmer.",
-  //         message: AIChatMessage { text: "J'aime programmer." },
-  //       }
-  //     ],
-  //     [
-  //       {
-  //         text: "J'aime l'intelligence artificielle.",
-  //         message: AIChatMessage { text: "J'aime l'intelligence artificielle." }
-  //       }
-  //     ]
-  //   ]
-  // }
+  /*
+  {
+    generations: [
+      [
+        {
+          text: "J'aime programmer.",
+          message: AIChatMessage { text: "J'aime programmer." },
+        }
+      ],
+      [
+        {
+          text: "J'aime l'intelligence artificielle.",
+          message: AIChatMessage { text: "J'aime l'intelligence artificielle." }
+        }
+      ]
+    ]
+  }
+  */
 };
