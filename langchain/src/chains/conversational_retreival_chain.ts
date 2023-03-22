@@ -33,8 +33,7 @@ export interface ConversationalRetrievalQAChainInput {
 
 export class ConversationalRetrievalQAChain
   extends BaseChain
-  implements ConversationalRetrievalQAChainInput
-{
+  implements ConversationalRetrievalQAChainInput {
   inputKey = "question";
 
   chatHistoryKey = "chat_history";
@@ -112,7 +111,7 @@ export class ConversationalRetrievalQAChain
   }
 
   _chainType(): string {
-    return "chat_index_qa_chain";
+    return "conversational_retrieval_chain";
   }
 
   static async deserialize(

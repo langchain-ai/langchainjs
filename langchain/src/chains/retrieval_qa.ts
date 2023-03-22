@@ -17,8 +17,7 @@ export interface RetrievalQAChainInput {
 
 export class RetrievalQAChain
   extends BaseChain
-  implements RetrievalQAChainInput
-{
+  implements RetrievalQAChainInput {
   inputKey = "query";
 
   get inputKeys() {
@@ -67,7 +66,7 @@ export class RetrievalQAChain
   }
 
   _chainType() {
-    return "index_qa" as const;
+    return "retrieval_qa" as const;
   }
 
   static async deserialize(
