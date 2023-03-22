@@ -29,4 +29,4 @@ import { Document } from "langchain/document";
 const doc = new Document({ pageContent: "foo", metadata: { source: "1" } });
 ```
 
-Also check out [Document Loaders](../indexes/document_loaders/) for a way to load documents from a variety of sources.
+Also check out [Document Loaders](../indexing/document_loaders/) for a way to load documents from a variety of sources.
