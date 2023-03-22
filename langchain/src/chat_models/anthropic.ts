@@ -215,8 +215,8 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
    * @example
    * ```ts
    * import { ChatAnthropic } from "langchain/llms";
-   * const anthropic = new Anthropic();
-   * const response = await anthropic.generate(["Tell me a joke."]);
+   * const anthropic = new ChatAnthropic();
+   * const response = await anthropic.generate(new HumanChatMessage(["Tell me a joke."]));
    * ```
    */
   async _generate(
