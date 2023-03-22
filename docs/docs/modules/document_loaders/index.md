@@ -1,5 +1,5 @@
 ---
-sidebar_label: Overview
+sidebar_label: Document Loaders
 sidebar_position: 1
 ---
 
