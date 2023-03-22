@@ -6,11 +6,26 @@ import {
   SamplingParameters,
 } from "@anthropic-ai/sdk";
 import { backOff } from "exponential-backoff";
-import { BaseLLMParams, LLM } from "./base.js";
+import { BaseChatModel, BaseChatModelParams } from "./base.js";
+import {
+  AIChatMessage,
+  BaseChatMessage,
+  ChatGeneration,
+  ChatResult,
+  MessageType,
+} from "../schema/index.js";
 
-interface FormattedRequestMessage {
-  role: "user" | "assistant";
-  content: string;
+function getAnthropicPromptFromMessage(type: MessageType): string {
+  switch (type) {
+    case "ai":
+      return AI_PROMPT;
+    case "human":
+      return HUMAN_PROMPT;
+    case "system":
+      return "";
+    default:
+      throw new Error(`Unknown message type: ${type}`);
+  }
 }
 
 interface ModelParams {
@@ -61,18 +76,6 @@ interface AnthropicInput extends ModelParams {
   /** Model name to use */
   modelName: string;
 
-  /** Raw Anthropic prompt prefix. Must end with "\n\nHuman:"
-   * and will be ignored if prefixMessages is provided.
-   */
-  rawPrefix?: string;
-
-  /** Prefix messages in a format similar to OpenAI's
-   * ChatCompletionRequestMessage format (an object with role and
-   * prompt properties). Only "user" and "assistant" roles are
-   * currently supported.
-   */
-  prefixMessages?: FormattedRequestMessage[];
-
   /** Holds any additional parameters that are valid to pass to {@link
    * https://console.anthropic.com/docs/api/reference |
    * `anthropic.complete`} that are not explicitly specified on this class.
@@ -101,7 +104,7 @@ type Kwargs = Record<string, any>;
  * @augments BaseLLM
  * @augments AnthropicInput
  */
-export class AnthropicChat extends LLM implements AnthropicInput {
+export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
   apiKey?: string;
 
   temperature = 1;
@@ -113,10 +116,6 @@ export class AnthropicChat extends LLM implements AnthropicInput {
   maxTokensToSample = 256;
 
   modelName = "claude-v1";
-
-  rawPrefix?: string;
-
-  prefixMessages?: FormattedRequestMessage[];
 
   invocationKwargs?: Kwargs;
 
@@ -134,7 +133,7 @@ export class AnthropicChat extends LLM implements AnthropicInput {
 
   constructor(
     fields?: Partial<AnthropicInput> &
-      BaseLLMParams & {
+      BaseChatModelParams & {
         anthropicApiKey?: string;
       }
   ) {
@@ -146,8 +145,6 @@ export class AnthropicChat extends LLM implements AnthropicInput {
     }
 
     this.modelName = fields?.modelName ?? this.modelName;
-    this.rawPrefix = fields?.rawPrefix ?? this.rawPrefix;
-    this.prefixMessages = fields?.prefixMessages ?? this.prefixMessages;
     this.invocationKwargs = fields?.invocationKwargs ?? {};
     this.maxRetries = fields?.maxRetries ?? this.maxRetries;
 
@@ -194,35 +191,41 @@ export class AnthropicChat extends LLM implements AnthropicInput {
     };
   }
 
-  private formatPrompt(prompt: string): string {
-    if (!this.prefixMessages || !this.prefixMessages.length) {
-      return [this.rawPrefix ?? HUMAN_PROMPT, prompt].join(" ");
-    }
-    return this.prefixMessages
-      .concat({
-        role: "user",
-        content: prompt,
-      })
-      .map((prefixMessage) => {
-        const messagePrompt =
-          prefixMessage.role === "user" ? HUMAN_PROMPT : AI_PROMPT;
-        return `${messagePrompt} ${prefixMessage.content}`;
-      })
-      .join("");
+  private formatMessagesAsPrompt(messages: BaseChatMessage[]): string {
+    return (
+      messages
+        .map((message) => {
+          const messagePrompt = getAnthropicPromptFromMessage(
+            message._getType()
+          );
+          return `${messagePrompt} ${message.text}`;
+        })
+        .join("") + AI_PROMPT
+    );
   }
 
   /**
    * Call out to Anthropic's endpoint with k unique prompts
    *
-   * @param prompt - The prompt to pass into the model.
-   * @param [stopSequences] - Optional list of stop sequences to use.
+   * @param messages - The messages to pass into the model.
+   * @param [stopSequences] - Optional list of stop sequences to use when generating.
    *
    * @returns The full LLM output.
+   *
+   * @example
+   * ```ts
+   * import { ChatAnthropic } from "langchain/llms";
+   * const anthropic = new Anthropic();
+   * const response = await anthropic.generate(["Tell me a joke."]);
+   * ```
    */
-  async _call(prompt: string, stopSequences?: string[]): Promise<string> {
+  async _generate(
+    messages: BaseChatMessage[],
+    stopSequences?: string[]
+  ): Promise<ChatResult> {
     if (this.stopSequences && stopSequences) {
       throw new Error(
-        'Parameter "stopSequences" found in input and default params'
+        `"stopSequence" parameter found in input and default params`
       );
     }
 
@@ -231,16 +234,26 @@ export class AnthropicChat extends LLM implements AnthropicInput {
 
     const response = await this.completionWithRetry({
       ...params,
-      prompt: this.formatPrompt(prompt),
+      prompt: this.formatMessagesAsPrompt(messages),
     });
 
-    return response.completion ?? "";
+    const generations: ChatGeneration[] = response.completion
+      .split(new RegExp(`(${HUMAN_PROMPT}|${AI_PROMPT})`, "g"))
+      .map((message) => ({
+        text: message,
+        message: new AIChatMessage(message),
+      }));
+
+    return {
+      generations,
+    };
   }
 
   /** @ignore */
   async completionWithRetry(
     request: SamplingParameters & Kwargs
   ): Promise<CompletionResponse> {
+    console.log(request.prompt);
     if (!this.apiKey) {
       throw new Error("Missing Anthropic API key.");
     }
@@ -282,6 +295,8 @@ export class AnthropicChat extends LLM implements AnthropicInput {
   _llmType() {
     return "anthropic";
   }
-}
 
-export { AI_PROMPT, HUMAN_PROMPT } from "@anthropic-ai/sdk";
+  _combineLLMOutput() {
+    return [];
+  }
+}
