@@ -22,16 +22,30 @@ await client.init({
   apiKey: process.env.PINECONE_API_KEY,
   environment: process.env.PINECONE_ENVIRONMENT,
 });
-const pineconeIndex = client.Index(process.env.PINECONE_INDEX)
+const pineconeIndex = client.Index(process.env.PINECONE_INDEX);
 
 const docs = [
-  new Document({ metadata: { foo: "bar" }, pageContent: "pinecone is a vector db" }),
-  new Document({ metadata: { foo: "bar" }, pageContent: "the quick brown fox jumped over the lazy dog" }),
-  new Document({ metadata: { baz: "qux" }, pageContent: "lorem ipsum dolor sit amet" }),
-  new Document({ metadata: { baz: "qux" }, pageContent: "pinecones are the woody fruiting body and of a pine tree" }),
-]
+  new Document({
+    metadata: { foo: "bar" },
+    pageContent: "pinecone is a vector db",
+  }),
+  new Document({
+    metadata: { foo: "bar" },
+    pageContent: "the quick brown fox jumped over the lazy dog",
+  }),
+  new Document({
+    metadata: { baz: "qux" },
+    pageContent: "lorem ipsum dolor sit amet",
+  }),
+  new Document({
+    metadata: { baz: "qux" },
+    pageContent: "pinecones are the woody fruiting body and of a pine tree",
+  }),
+];
 
-await PineconeStore.fromDocuments(docs, new OpenAIEmbeddings(), { pineconeIndex });
+await PineconeStore.fromDocuments(docs, new OpenAIEmbeddings(), {
+  pineconeIndex,
+});
 ```
 
 ## Query docs
@@ -51,7 +65,7 @@ await client.init({
   apiKey: process.env.PINECONE_API_KEY,
   environment: process.env.PINECONE_ENVIRONMENT,
 });
-const pineconeIndex = client.Index(process.env.PINECONE_INDEX)
+const pineconeIndex = client.Index(process.env.PINECONE_INDEX);
 
 const vectorStore = await PineconeStore.fromExistingIndex(
   new OpenAIEmbeddings(),
@@ -59,7 +73,9 @@ const vectorStore = await PineconeStore.fromExistingIndex(
 );
 
 /* Search the vector DB independently with meta filters */
-const results = await vectorStore.similaritySearch("pinecone", 1, { foo: "bar" });
+const results = await vectorStore.similaritySearch("pinecone", 1, {
+  foo: "bar",
+});
 console.log(results);
 /*
 [
@@ -72,7 +88,10 @@ console.log(results);
 
 /* Use as part of a chain (currently no metadata filters) */
 const model = new OpenAI();
-const chain = VectorDBQAChain.fromLLM(model, vectorStore, { k: 1, returnSourceDocuments: true });
+const chain = VectorDBQAChain.fromLLM(model, vectorStore, {
+  k: 1,
+  returnSourceDocuments: true,
+});
 const response = await chain.call({ query: "What is pinecone?" });
 console.log(response);
 /*

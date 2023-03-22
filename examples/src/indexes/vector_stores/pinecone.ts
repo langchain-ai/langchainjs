@@ -51,7 +51,9 @@ export const run = async () => {
   */
 
   /* With metadata filtering */
-  result = await vectorStore.similaritySearchWithScore("Hello world", 3, { foo: "bar" });
+  result = await vectorStore.similaritySearchWithScore("Hello world", 3, {
+    foo: "bar",
+  });
   console.dir(result, { depth: null });
   /*
   [
