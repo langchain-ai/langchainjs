@@ -49,20 +49,26 @@ export class PineconeStore extends VectorStore {
     ids?: string[]
   ): Promise<void> {
     const documentIds = ids == null ? documents.map(() => uuidv4()) : ids;
-
-    await this.pineconeIndex.upsert({
-      upsertRequest: {
-        vectors: vectors.map((values, idx) => ({
-          id: documentIds[idx],
-          metadata: {
-            ...documents[idx].metadata,
-            [this.textKey]: documents[idx].pageContent,
-          },
-          values,
-        })),
-        namespace: this.namespace,
+    const pineconeVectors = vectors.map((values, idx) => ({
+      id: documentIds[idx],
+      metadata: {
+        ...documents[idx].metadata,
+        [this.textKey]: documents[idx].pageContent,
       },
-    });
+      values,
+    }));
+
+    // Pinecone recommends a limit of 100 vectors per upsert request
+    const chunkSize = 50;
+    for (let i = 0; i < pineconeVectors.length; i += chunkSize) {
+      const chunk = pineconeVectors.slice(i, i + chunkSize);
+      await this.pineconeIndex.upsert({
+        upsertRequest: {
+          vectors: chunk,
+          namespace: this.namespace,
+        },
+      });
+    }
   }
 
   async similaritySearchVectorWithScore(
