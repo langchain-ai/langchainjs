@@ -12,6 +12,7 @@ export interface PineconeLibArgs {
   pineconeIndex: VectorOperationsApi;
   textKey?: string;
   namespace?: string;
+  filter?: PineconeMetadata;
 }
 
 export class PineconeStore extends VectorStore {
@@ -21,6 +22,8 @@ export class PineconeStore extends VectorStore {
 
   pineconeIndex: VectorOperationsApi;
 
+  filter?: PineconeMetadata;
+
   constructor(embeddings: Embeddings, args: PineconeLibArgs) {
     super(embeddings, args);
 
@@ -28,6 +31,7 @@ export class PineconeStore extends VectorStore {
     this.embeddings = embeddings;
     this.textKey = args.textKey ?? "text";
     this.namespace = args.namespace;
+    this.filter = args.filter;
 
     console.log(this.textKey);
   }
@@ -73,6 +77,7 @@ export class PineconeStore extends VectorStore {
         includeMetadata: true,
         vector: query,
         namespace: this.namespace,
+        filter: this.filter,
       },
     });
 
