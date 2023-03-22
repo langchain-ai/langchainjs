@@ -9,6 +9,6 @@ sidebar_position: 3
 ```typescript
 import { loadPrompt } from "langchain/prompts";
 const prompt = await loadPrompt("lc://prompts/hello-world/prompt.yaml");
-const res = prompt.format({});
+const res = await prompt.format({});
 console.log({ res });
 ```
