@@ -18,13 +18,19 @@ export abstract class VectorStore {
 
   abstract similaritySearchVectorWithScore(
     query: number[],
-    k: number
+    k: number,
+    filter?: object
   ): Promise<[Document, number][]>;
 
-  async similaritySearch(query: string, k = 4): Promise<Document[]> {
+  async similaritySearch(
+    query: string,
+    k = 4,
+    filter: object = {}
+  ): Promise<Document[]> {
     const results = await this.similaritySearchVectorWithScore(
       await this.embeddings.embedQuery(query),
-      k
+      k,
+      filter
     );
 
     return results.map((result) => result[0]);
@@ -32,11 +38,13 @@ export abstract class VectorStore {
 
   async similaritySearchWithScore(
     query: string,
-    k = 4
+    k = 4,
+    filter: object = {}
   ): Promise<[object, number][]> {
     return this.similaritySearchVectorWithScore(
       await this.embeddings.embedQuery(query),
-      k
+      k,
+      filter
     );
   }
 
