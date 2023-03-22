@@ -17,7 +17,9 @@ export interface DynamoLibArgs {
 
 export class DynamoStore extends VectorStore {
   textKey: string;
+
   tableName: string;
+
   dynamoDb: DynamoDB.DocumentClient;
 
   constructor(embeddings: Embeddings, args: DynamoLibArgs) {
@@ -51,7 +53,7 @@ export class DynamoStore extends VectorStore {
           id: documentIds[idx],
           metadata: documents[idx].metadata,
           [this.textKey]: documents[idx].pageContent,
-          values: values,
+          values,
         },
       },
     }));
