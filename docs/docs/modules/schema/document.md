@@ -11,6 +11,8 @@ interface Document {
 }
 ```
 
+## Creating a Document
+
 You can create a document object rather easily in LangChain with:
 
 ```typescript
