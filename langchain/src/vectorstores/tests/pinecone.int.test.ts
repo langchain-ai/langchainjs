@@ -1,65 +1,73 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import { test, expect } from "@jest/globals";
+import { beforeEach, describe, expect, test } from "@jest/globals";
+import { faker } from "@faker-js/faker";
 import { PineconeClient } from "@pinecone-database/pinecone";
-import { OpenAIEmbeddings } from "../../embeddings/index.js";
+import { v4 as uuidv4 } from "uuid";
 import { Document } from "../../document.js";
-
+import { OpenAIEmbeddings } from "../../embeddings/index.js";
 import { PineconeStore } from "../pinecone.js";
 
-test("PineconeStore with external ids", async () => {
-  const client = new PineconeClient();
+describe("PineconeStore", () => {
+  let pineconeStore: PineconeStore;
 
-  await client.init({
-    environment: process.env.PINECONE_ENVIRONMENT!,
-    apiKey: process.env.PINECONE_API_KEY!,
+  beforeEach(async () => {
+    const client = new PineconeClient();
+
+    await client.init({
+      environment: process.env.PINECONE_ENVIRONMENT!,
+      apiKey: process.env.PINECONE_API_KEY!,
+    });
+
+    const embeddings = new OpenAIEmbeddings();
+    const pineconeIndex = client.Index(process.env.PINECONE_INDEX!);
+    pineconeStore = new PineconeStore(embeddings, { pineconeIndex });
   });
 
-  const pineconeIndex = client.Index(process.env.PINECONE_INDEX!);
+  test("user-provided ids", async () => {
+    const documentId = uuidv4();
+    const pageContent = faker.lorem.sentence(5);
 
-  const embeddings = new OpenAIEmbeddings();
+    await pineconeStore.addDocuments(
+      [{ pageContent, metadata: {} }],
+      [documentId]
+    );
 
-  const store = new PineconeStore(embeddings, { pineconeIndex });
+    const results = await pineconeStore.similaritySearch(pageContent, 1);
 
-  expect(store).toBeDefined();
-
-  await store.addDocuments(
-    [{ pageContent: "hello", metadata: { a: 1 } }],
-    ["id1"]
-  );
-
-  const results = await store.similaritySearch("hello", 1);
-
-  expect(results).toHaveLength(1);
-
-  expect(results).toEqual([
-    new Document({ metadata: { a: 1 }, pageContent: "hello" }),
-  ]);
-});
-
-test("PineconeStore with generated ids", async () => {
-  const client = new PineconeClient();
-
-  await client.init({
-    environment: process.env.PINECONE_ENVIRONMENT!,
-    apiKey: process.env.PINECONE_API_KEY!,
+    expect(results).toEqual([new Document({ metadata: {}, pageContent })]);
   });
 
-  const pineconeIndex = client.Index(process.env.PINECONE_INDEX!);
+  test("auto-generated ids", async () => {
+    const pageContent = faker.lorem.sentence(5);
 
-  const embeddings = new OpenAIEmbeddings();
+    await pineconeStore.addDocuments([
+      { pageContent, metadata: { foo: "bar" } },
+    ]);
 
-  const store = new PineconeStore(embeddings, { pineconeIndex });
+    const results = await pineconeStore.similaritySearch(pageContent, 1);
 
-  expect(store).toBeDefined();
+    expect(results).toEqual([
+      new Document({ metadata: { foo: "bar" }, pageContent }),
+    ]);
+  });
 
-  await store.addDocuments([{ pageContent: "hello", metadata: { a: 1 } }]);
+  test("metadata filtering", async () => {
+    const pageContent = faker.lorem.sentence(5);
+    const uuid = uuidv4();
 
-  const results = await store.similaritySearch("hello", 1);
+    await pineconeStore.addDocuments([
+      { pageContent, metadata: { foo: "bar" } },
+      { pageContent, metadata: { foo: uuid } },
+      { pageContent, metadata: { foo: "qux" } },
+    ]);
 
-  expect(results).toHaveLength(1);
+    // If the filter wasn't working, we'd get all 3 documents back
+    const results = await pineconeStore.similaritySearch(pageContent, 3, {
+      foo: uuid,
+    });
 
-  // This assert can fail if the test index is used for other things.
-  expect(results).toEqual([
-    new Document({ metadata: { a: 1 }, pageContent: "hello" }),
-  ]);
+    expect(results).toEqual([
+      new Document({ metadata: { foo: uuid }, pageContent }),
+    ]);
+  });
 });

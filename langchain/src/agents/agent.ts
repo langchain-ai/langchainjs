@@ -46,9 +46,11 @@ export abstract class Agent {
   /**
    * Extract tool and tool input from LLM output.
    */
-  abstract extractToolAndInput(
-    input: string
-  ): { tool: string; input: string } | null;
+  async extractToolAndInput(
+    _input: string
+  ): Promise<{ tool: string; input: string } | null> {
+    throw new Error("Not implemented");
+  }
 
   /**
    * Prefix to append the observation with.
@@ -154,7 +156,7 @@ export abstract class Agent {
     }
 
     const output = await this.llmChain.predict(newInputs);
-    const parsed = this.extractToolAndInput(output);
+    const parsed = await this.extractToolAndInput(output);
     if (!parsed) {
       throw new ParseError(`Invalid output: ${output}`, output);
     }

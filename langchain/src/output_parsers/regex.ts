@@ -1,5 +1,4 @@
-import { BaseOutputParser } from "./base.js";
-import { SerializedRegexParser } from "./serde.js";
+import { BaseOutputParser, OutputParserException } from "../schema/index.js";
 
 /**
  * Class to parse the output of an LLM call into a dictionary.
@@ -27,7 +26,7 @@ export class RegexParser extends BaseOutputParser {
     return "regex_parser";
   }
 
-  parse(text: string): Record<string, string> {
+  async parse(text: string): Promise<Record<string, string>> {
     const match = text.match(this.regex);
     if (match) {
       return this.outputKeys.reduce((acc, key, index) => {
@@ -37,7 +36,7 @@ export class RegexParser extends BaseOutputParser {
     }
 
     if (this.defaultOutputKey === undefined) {
-      throw new Error(`Could not parse output: ${text}`);
+      throw new OutputParserException(`Could not parse output: ${text}`);
     }
 
     return this.outputKeys.reduce((acc, key) => {
@@ -48,22 +47,5 @@ export class RegexParser extends BaseOutputParser {
 
   getFormatInstructions(): string {
     return `Your response should match the following regex: /${this.regex}/`;
-  }
-
-  serialize() {
-    return {
-      _type: "regex_parser" as const,
-      regex: typeof this.regex === "string" ? this.regex : this.regex.source,
-      output_keys: this.outputKeys,
-      default_output_key: this.defaultOutputKey,
-    };
-  }
-
-  static async deserialize(data: SerializedRegexParser): Promise<RegexParser> {
-    return new RegexParser(
-      data.regex,
-      data.output_keys,
-      data.default_output_key
-    );
   }
 }

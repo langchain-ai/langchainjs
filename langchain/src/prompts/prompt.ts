@@ -6,7 +6,6 @@ import {
   TemplateFormat,
 } from "./template.js";
 import { resolveTemplateFromFile } from "../util/index.js";
-import { BaseOutputParser } from "../output_parsers/index.js";
 import { SerializedPromptTemplate } from "./serde.js";
 import { InputValues, PartialValues } from "../schema/index.js";
 
@@ -153,10 +152,14 @@ export class PromptTemplate
   }
 
   serialize(): SerializedPromptTemplate {
+    if (this.outputParser !== undefined) {
+      throw new Error(
+        "Cannot serialize a prompt template with an output parser"
+      );
+    }
     return {
       _type: this._getPromptType(),
       input_variables: this.inputVariables,
-      output_parser: this.outputParser?.serialize(),
       template: this.template,
       template_format: this.templateFormat,
     };
@@ -167,9 +170,6 @@ export class PromptTemplate
   ): Promise<PromptTemplate> {
     const res = new PromptTemplate({
       inputVariables: data.input_variables,
-      outputParser: data.output_parser
-        ? await BaseOutputParser.deserialize(data.output_parser)
-        : undefined,
       template: await resolveTemplateFromFile("template", data),
       templateFormat: data.template_format,
     });
