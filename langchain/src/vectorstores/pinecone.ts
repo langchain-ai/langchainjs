@@ -27,13 +27,11 @@ export class PineconeStore extends VectorStore {
   constructor(embeddings: Embeddings, args: PineconeLibArgs) {
     super(embeddings, args);
 
-    this.pineconeIndex = args.pineconeIndex;
     this.embeddings = embeddings;
-    this.textKey = args.textKey ?? "text";
     this.namespace = args.namespace;
+    this.pineconeIndex = args.pineconeIndex;
+    this.textKey = args.textKey ?? "text";
     this.filter = args.filter;
-
-    console.log(this.textKey);
   }
 
   async addDocuments(documents: Document[], ids?: string[]): Promise<void> {
@@ -69,15 +67,20 @@ export class PineconeStore extends VectorStore {
 
   async similaritySearchVectorWithScore(
     query: number[],
-    k: number
+    k: number,
+    filter?: object
   ): Promise<[Document, number][]> {
+    if (filter && this.filter) {
+      throw new Error("cannot provide both `filter` and `this.filter`");
+    }
+    const _filter = filter ?? this.filter;
     const results = await this.pineconeIndex.query({
       queryRequest: {
-        topK: k,
         includeMetadata: true,
-        vector: query,
         namespace: this.namespace,
-        filter: this.filter,
+        topK: k,
+        vector: query,
+        filter: _filter,
       },
     });
 
