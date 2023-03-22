@@ -18,20 +18,12 @@ npm install -S chromadb
 ```typescript
 import { Chroma } from "langchain/vectorstores";
 import { OpenAIEmbeddings } from "langchain/embeddings";
-import { VectorDBQAChain } from "langchain/chains";
-import { OpenAI } from "langchain";
 
 const vectorStore = await Chroma.fromDocuments(docs, new OpenAIEmbeddings(), {
   collectionName: "goldel-escher-bach",
 });
 
-const model = new OpenAI();
-const chain = VectorDBQAChain.fromLLM(model, vectorStore, {
-  returnSourceDocuments: true,
-});
-const response = await chain.call({
-  query: "What does the doc say about Chroma?",
-});
+const response = await vectorStore.similaritySearch("scared", 2);
 ```
 
 ## Query docs from existing collection
@@ -39,8 +31,6 @@ const response = await chain.call({
 ```typescript
 import { Chroma } from "langchain/vectorstores";
 import { OpenAIEmbeddings } from "langchain/embeddings";
-import { OpenAI } from "langchain";
-import { VectorDBQAChain } from "langchain/chains";
 
 const vectorStore = await Chroma.fromExistingCollection(
   new OpenAIEmbeddings(),
@@ -49,11 +39,5 @@ const vectorStore = await Chroma.fromExistingCollection(
   }
 );
 
-const model = new OpenAI();
-const chain = VectorDBQAChain.fromLLM(model, vectorStore, {
-  returnSourceDocuments: true,
-});
-const response = await chain.call({
-  query: "What does the doc say about Chroma?",
-});
+const response = await vectorStore.similaritySearch("scared", 2);
 ```
