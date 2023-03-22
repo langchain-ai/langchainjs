@@ -72,6 +72,7 @@
     "@babel/core": "^7.20.12",
     "@babel/preset-env": "^7.20.2",
     "@dqbd/tiktoken": "^1.0.2",
+    "@faker-js/faker": "^7.6.0",
     "@huggingface/inference": "^1.5.1",
     "@jest/globals": "^29.5.0",
     "@pinecone-database/pinecone": "^0.0.10",
