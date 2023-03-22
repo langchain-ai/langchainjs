@@ -44,7 +44,7 @@ export abstract class BaseChatMessage {
   /** The text of the message. */
   text: string;
 
-  /** The name of the message sender in a multi-user chat.*/
+  /** The name of the message sender in a multi-user chat. */
   name?: string;
 
   /** The type of the message. */

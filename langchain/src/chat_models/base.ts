@@ -97,7 +97,7 @@ export abstract class BaseChatModel extends BaseLanguageModel {
   abstract getNumTokensFromMessages(messages: BaseChatMessage[]): {
     totalCount: number;
     countPerMessage: number[];
-  }
+  };
 
   async generatePrompt(
     promptValues: BasePromptValue[],
