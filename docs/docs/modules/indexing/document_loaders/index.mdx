@@ -1,6 +1,5 @@
 ---
 sidebar_label: Document Loaders
-sidebar_position: 1
 ---
 
 import DocCardList from "@theme/DocCardList";
@@ -12,6 +11,7 @@ Document loaders make it easy to create [Documents](../../schema/document.md) fr
 ```typescript
 interface DocumentLoader {
   load(): Promise<Document[]>;
+
   loadAndSplit(textSplitter?: TextSplitter): Promise<Document[]>;
 }
 ```
