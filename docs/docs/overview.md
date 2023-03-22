@@ -5,7 +5,7 @@ Large language models (LLMs) are emerging as a transformative technology, enabli
 This library is aimed at assisting in the development of those types of applications. Common examples of these types of applications include:
 
 - ❓[Question Answering over specific documents](./modules/chains/question_answering.md)
-- 💬 [Chatbots](./modules/memory/buffer_memory.md)
+- 💬 [Chatbots](./modules/memory/examples/buffer_memory.md)
 - 🤖 [Agents](./modules/agents/overview.md)
 
 ## Getting Started
