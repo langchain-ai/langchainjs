@@ -11,6 +11,19 @@ test("Test OpenAI", async () => {
   console.log({ res });
 });
 
+test("Test OpenAI with concurrency == 1", async () => {
+  const model = new OpenAI({
+    maxTokens: 5,
+    modelName: "text-ada-001",
+    maxConcurrency: 1,
+  });
+  const res = await Promise.all([
+    model.call("Print hello world"),
+    model.call("Print hello world"),
+  ]);
+  console.log({ res });
+});
+
 test("Test OpenAI with maxTokens -1", async () => {
   const model = new OpenAI({ maxTokens: -1, modelName: "text-ada-001" });
   const res = await model.call("Print hello world", ["world"]);
