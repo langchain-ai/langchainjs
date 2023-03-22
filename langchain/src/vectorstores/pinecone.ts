@@ -12,7 +12,7 @@ export interface PineconeLibArgs {
   pineconeIndex: VectorOperationsApi;
   textKey?: string;
   namespace?: string;
-  filter?: any;
+  filter?: PineconeMetadata;
 }
 
 export class PineconeStore extends VectorStore {
@@ -22,7 +22,7 @@ export class PineconeStore extends VectorStore {
 
   pineconeIndex: VectorOperationsApi;
 
-  filter?: any;
+  filter?: PineconeMetadata;
 
   constructor(embeddings: Embeddings, args: PineconeLibArgs) {
     super(embeddings, args);
