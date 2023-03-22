@@ -1,5 +1,4 @@
 import { createParser } from "eventsource-parser";
-import { backOff } from "exponential-backoff";
 import type { IncomingMessage } from "http";
 import {
   ChatCompletionResponseMessageRoleEnum,
@@ -8,10 +7,7 @@ import {
   CreateChatCompletionRequest,
   OpenAIApi,
 } from "openai";
-import type { IncomingMessage } from "http";
-import { createParser } from "eventsource-parser";
-import fetchAdapter from "../util/axios-fetch-adapter.js";
-import { BaseChatModel, BaseChatModelParams } from "./base.js";
+
 import {
   AIChatMessage,
   BaseChatMessage,
@@ -23,7 +19,10 @@ import {
   SystemChatMessage,
 } from "../schema/index.js";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
-import { BaseChatModel, BaseChatModelParams } from "./base.js";
+import {
+  BaseChatModel,
+  BaseChatModelParams,
+} from "./base.js";
 
 interface TokenUsage {
   completionTokens?: number;
