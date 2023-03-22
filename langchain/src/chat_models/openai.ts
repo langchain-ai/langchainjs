@@ -270,6 +270,7 @@ export class ChatOpenAI extends BaseChatModel implements OpenAIInput {
       messages: messages.map((message) => ({
         role: messageTypeToOpenAIRole(message._getType()),
         content: message.text,
+        name: message.name,
       })),
     });
 
