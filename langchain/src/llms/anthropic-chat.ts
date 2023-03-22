@@ -253,11 +253,11 @@ export class AnthropicChat extends LLM implements AnthropicInput {
         let currentCompletion = "";
         return this.streamingClient.completeStream(request, {
           onUpdate: (data: CompletionResponse) => {
-            if (!!data.stop_reason) {
+            if (data.stop_reason) {
               return;
             }
             const part = data.completion;
-            if (!!part) {
+            if (part) {
               const delta = part.slice(currentCompletion.length);
               currentCompletion += delta ?? "";
               // eslint-disable-next-line no-void
@@ -270,9 +270,7 @@ export class AnthropicChat extends LLM implements AnthropicInput {
       if (!this.batchClient) {
         this.batchClient = new AnthropicApi(this.apiKey);
       }
-      makeCompletionRequest = async () => {
-        return this.batchClient.complete(request);
-      };
+      makeCompletionRequest = async () => this.batchClient.complete(request);
     }
     return backOff(makeCompletionRequest, {
       startingDelay: 4,
