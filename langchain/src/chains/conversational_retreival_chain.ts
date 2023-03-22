@@ -33,7 +33,8 @@ export interface ConversationalRetrievalQAChainInput {
 
 export class ConversationalRetrievalQAChain
   extends BaseChain
-  implements ConversationalRetrievalQAChainInput {
+  implements ConversationalRetrievalQAChainInput
+{
   inputKey = "question";
 
   chatHistoryKey = "chat_history";
