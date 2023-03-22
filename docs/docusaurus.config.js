@@ -29,7 +29,7 @@ const config = {
   deploymentBranch: "gh-pages",
 
   onBrokenLinks: "throw",
-  onBrokenMarkdownLinks: "warn",
+  onBrokenMarkdownLinks: "throw",
 
   plugins: [
     [
