@@ -24,12 +24,10 @@ export class PineconeStore extends VectorStore {
   constructor(embeddings: Embeddings, args: PineconeLibArgs) {
     super(embeddings, args);
 
-    this.pineconeIndex = args.pineconeIndex;
     this.embeddings = embeddings;
-    this.textKey = args.textKey ?? "text";
     this.namespace = args.namespace;
-
-    console.log(this.textKey);
+    this.pineconeIndex = args.pineconeIndex;
+    this.textKey = args.textKey ?? "text";
   }
 
   async addDocuments(documents: Document[], ids?: string[]): Promise<void> {
@@ -65,14 +63,16 @@ export class PineconeStore extends VectorStore {
 
   async similaritySearchVectorWithScore(
     query: number[],
-    k: number
+    k: number,
+    filter?: object
   ): Promise<[Document, number][]> {
     const results = await this.pineconeIndex.query({
       queryRequest: {
-        topK: k,
+        filter,
         includeMetadata: true,
-        vector: query,
         namespace: this.namespace,
+        topK: k,
+        vector: query,
       },
     });
 
