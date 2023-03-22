@@ -19,10 +19,7 @@ import {
   SystemChatMessage,
 } from "../schema/index.js";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
-import {
-  BaseChatModel,
-  BaseChatModelParams,
-} from "./base.js";
+import { BaseChatModel, BaseChatModelParams } from "./base.js";
 
 interface TokenUsage {
   completionTokens?: number;
