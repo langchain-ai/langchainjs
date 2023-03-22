@@ -1,6 +1,5 @@
 import { TiktokenModel } from "@dqbd/tiktoken";
 import { createParser } from "eventsource-parser";
-import { backOff } from "exponential-backoff";
 import type { IncomingMessage } from "http";
 import {
   Configuration,
@@ -66,9 +65,6 @@ interface OpenAIInput extends ModelParams {
   /** Batch size to use when passing multiple documents to generate */
   batchSize: number;
 
-  /** Maximum number of retries to make when generating */
-  maxRetries: number;
-
   /** List of stop words to use when generating */
   stop?: string[];
 }
@@ -120,8 +116,6 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
 
   batchSize = 20;
 
-  maxRetries = 6;
-
   stop?: string[];
 
   streaming = false;
@@ -158,7 +152,6 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
     this.modelName = fields?.modelName ?? this.modelName;
     this.modelKwargs = fields?.modelKwargs ?? {};
     this.batchSize = fields?.batchSize ?? this.batchSize;
-    this.maxRetries = fields?.maxRetries ?? this.maxRetries;
 
     this.temperature = fields?.temperature ?? this.temperature;
     this.maxTokens = fields?.maxTokens ?? this.maxTokens;
@@ -362,17 +355,11 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
       this.streamingClient = new OpenAIApi(clientConfig);
     }
     const client = !request.stream ? this.batchClient : this.streamingClient;
-    const makeCompletionRequest = async () =>
-      client.createCompletion(
-        request,
-        request.stream ? { responseType: "stream" } : undefined
-      );
-    return backOff(makeCompletionRequest, {
-      startingDelay: 4,
-      maxDelay: 10,
-      numOfAttempts: this.maxRetries,
-      // TODO(sean) pass custom retry function to check error types.
-    });
+    return this.caller.call(
+      client.createCompletion.bind(client),
+      request,
+      request.stream ? { responseType: "stream" } : undefined
+    );
   }
 
   _llmType() {
@@ -416,7 +403,7 @@ export class PromptLayerOpenAI extends OpenAI {
     const requestEndTime = Date.now();
 
     // https://github.com/MagnivOrg/promptlayer-js-helper
-    await fetch("https://api.promptlayer.com/track-request", {
+    await this.caller.call(fetch, "https://api.promptlayer.com/track-request", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

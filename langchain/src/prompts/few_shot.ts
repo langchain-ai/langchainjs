@@ -14,7 +14,6 @@ import {
   parseFileConfig,
 } from "../util/index.js";
 import { PromptTemplate } from "./prompt.js";
-import { BaseOutputParser } from "../output_parsers/index.js";
 import {
   SerializedFewShotTemplate,
   SerializedPromptTemplate,
@@ -175,10 +174,14 @@ export class FewShotPromptTemplate
         "Serializing an example selector is not currently supported"
       );
     }
+    if (this.outputParser !== undefined) {
+      throw new Error(
+        "Serializing an output parser is not currently supported"
+      );
+    }
     return {
       _type: this._getPromptType(),
       input_variables: this.inputVariables,
-      output_parser: this.outputParser?.serialize(),
       example_prompt: this.examplePrompt.serialize(),
       example_separator: this.exampleSeparator,
       suffix: this.suffix,
@@ -215,9 +218,6 @@ export class FewShotPromptTemplate
 
     return new FewShotPromptTemplate({
       inputVariables: data.input_variables,
-      outputParser: data.output_parser
-        ? await BaseOutputParser.deserialize(data.output_parser)
-        : undefined,
       examplePrompt,
       examples,
       exampleSeparator: data.example_separator,
