@@ -13,9 +13,7 @@ export const run = async () => {
     }),
   });
 
-  const response = await chat.call([
-    new HumanChatMessage("Tell me a joke."),
-  ]);
+  const response = await chat.call([new HumanChatMessage("Tell me a joke.")]);
 
   console.log(response);
   // { token: '' }
