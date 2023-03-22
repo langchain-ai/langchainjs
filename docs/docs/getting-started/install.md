@@ -1,3 +1,7 @@
+---
+sidebar_position: 1
+---
+
 # Setup and Installation
 
 ## Installation
@@ -68,4 +72,4 @@ LangChain currently supports only Node.js-based environments. This includes Verc
 
 We currently do not support running LangChain in the browser. We are listening to the community on additional environments that we should support. Go [here](https://github.com/hwchase17/langchainjs/discussions/152) to vote and discuss the next environments we should support.
 
-Please see [Deployment](./deployment.md) for more information on deploying LangChain applications.
+Please see [Deployment](../production/deployment.md) for more information on deploying LangChain applications.

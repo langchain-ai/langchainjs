@@ -12,7 +12,7 @@ This library is aimed at assisting in the development of those types of applicat
 
 Checkout the below guide for a walkthrough of how to get started using LangChain to create an Language Model application.
 
-- [Getting Started Documentation](./getting-started.md)
+- [Getting Started Documentation](./getting-started/guide-llm.mdx)
 
 ## Modules
 
