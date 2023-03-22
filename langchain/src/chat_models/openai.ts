@@ -1,15 +1,14 @@
-import {
-  Configuration,
-  OpenAIApi,
-  CreateChatCompletionRequest,
-  ConfigurationParameters,
-  ChatCompletionResponseMessageRoleEnum,
-} from "openai";
-import type { IncomingMessage } from "http";
 import { createParser } from "eventsource-parser";
 import { backOff } from "exponential-backoff";
-import fetchAdapter from "../util/axios-fetch-adapter.js";
-import { BaseChatModel, BaseChatModelParams } from "./base.js";
+import type { IncomingMessage } from "http";
+import {
+  ChatCompletionResponseMessageRoleEnum,
+  Configuration,
+  ConfigurationParameters,
+  CreateChatCompletionRequest,
+  OpenAIApi,
+} from "openai";
+
 import {
   AIChatMessage,
   BaseChatMessage,
@@ -20,6 +19,11 @@ import {
   MessageType,
   SystemChatMessage,
 } from "../schema/index.js";
+import fetchAdapter from "../util/axios-fetch-adapter.js";
+import {
+  BaseChatModel,
+  BaseChatModelParams,
+} from "./base.js";
 
 interface TokenUsage {
   completionTokens?: number;
@@ -361,6 +365,32 @@ export class ChatOpenAI extends BaseChatModel implements OpenAIInput {
       generations,
       llmOutput: { tokenUsage },
     };
+  }
+
+  getNumTokensFromMessages(messages: BaseChatMessage[]): { totalCount: number; countPerMessage: number[]; } {
+    let totalCount = 0;
+    let tokensPerMessage = 0
+    let tokensPerName = 0
+
+    // From: https://github.com/openai/openai-cookbook/blob/main/examples/How_to_format_inputs_to_ChatGPT_models.ipynb
+    if (['gpt-3.5-turbo', 'gpt-3.5-turbo-0301'].includes(this.modelName)) {
+      tokensPerMessage = 4
+      tokensPerName = -1
+    }
+    else if (['gpt-4', 'gpt-4-0314'].includes(this.modelName)) {
+      tokensPerMessage = 3
+      tokensPerName = 1
+    }
+
+    const countPerMessage = messages.map((message) => {
+      const textCount = this.getNumTokens(message.text);
+      const count = textCount + tokensPerMessage + (message.name ? tokensPerName : 0);
+
+      totalCount += count;
+      return count;
+    });
+
+    return { totalCount, countPerMessage };
   }
 
   /** @ignore */
