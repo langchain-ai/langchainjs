@@ -12,6 +12,7 @@ export interface PineconeLibArgs {
   pineconeIndex: VectorOperationsApi;
   textKey?: string;
   namespace?: string;
+  filter?: PineconeMetadata;
 }
 
 export class PineconeStore extends VectorStore {
@@ -21,6 +22,8 @@ export class PineconeStore extends VectorStore {
 
   pineconeIndex: VectorOperationsApi;
 
+  filter?: PineconeMetadata;
+
   constructor(embeddings: Embeddings, args: PineconeLibArgs) {
     super(embeddings, args);
 
@@ -28,6 +31,7 @@ export class PineconeStore extends VectorStore {
     this.namespace = args.namespace;
     this.pineconeIndex = args.pineconeIndex;
     this.textKey = args.textKey ?? "text";
+    this.filter = args.filter;
   }
 
   async addDocuments(documents: Document[], ids?: string[]): Promise<void> {
@@ -66,13 +70,17 @@ export class PineconeStore extends VectorStore {
     k: number,
     filter?: object
   ): Promise<[Document, number][]> {
+    if (filter !== undefined && this.filter !== undefined){
+      throw new Error('cannot provide both `filter` and `this.filter`')
+    }
+    const _filter = filter ?? this.filter
     const results = await this.pineconeIndex.query({
       queryRequest: {
-        filter,
         includeMetadata: true,
         namespace: this.namespace,
         topK: k,
         vector: query,
+        filter: _filter,
       },
     });
 

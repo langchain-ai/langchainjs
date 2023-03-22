@@ -1,8 +1,7 @@
 /* eslint-disable no-else-return */
 import { z } from "zod";
 
-import { BaseOutputParser } from "./base.js";
-import { SerializedOutputParser } from "./serde.js";
+import { BaseOutputParser, OutputParserException } from "../schema/index.js";
 
 function printSchema(schema: z.ZodTypeAny, depth = 0): string {
   if (schema instanceof z.ZodString) {
@@ -64,12 +63,14 @@ ${printSchema(this.schema)}
 `;
   }
 
-  parse(text: string): z.infer<T> {
-    const json = text.trim().split("```json")[1].split("```")[0].trim();
-    return this.schema.parse(JSON.parse(json));
-  }
-
-  serialize(): SerializedOutputParser {
-    throw new Error("Not implemented");
+  async parse(text: string): Promise<z.infer<T>> {
+    try {
+      const json = text.trim().split("```json")[1].split("```")[0].trim();
+      return this.schema.parse(JSON.parse(json));
+    } catch (e) {
+      throw new OutputParserException(
+        `Failed to parse. Text: ${text}. Error: ${e}`
+      );
+    }
   }
 }
