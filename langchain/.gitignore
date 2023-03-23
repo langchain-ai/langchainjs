@@ -34,5 +34,7 @@ callbacks.js
 callbacks.d.ts
 output_parsers.js
 output_parsers.d.ts
+retrievers.js
+retrievers.d.ts
 index.js
 index.d.ts
