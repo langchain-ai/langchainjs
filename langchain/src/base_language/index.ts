@@ -1,5 +1,6 @@
 import { BasePromptValue, LLMResult } from "../schema/index.js";
 import { CallbackManager, getCallbackManager } from "../callbacks/index.js";
+import { AsyncCaller, AsyncCallerParams } from "../util/async_caller.js";
 
 const getVerbosity = () => false;
 
@@ -14,7 +15,7 @@ export type SerializedLLM = {
  * A subclass of {@link BaseLanguageModel} should have a constructor that
  * takes in a parameter that extends this interface.
  */
-export interface BaseLanguageModelParams {
+export interface BaseLanguageModelParams extends AsyncCallerParams {
   verbose?: boolean;
   callbackManager?: CallbackManager;
 }
@@ -30,9 +31,16 @@ export abstract class BaseLanguageModel implements BaseLanguageModelParams {
 
   callbackManager: CallbackManager;
 
+  /**
+   * The async caller should be used by subclasses to make any async calls,
+   * which will thus benefit from the concurrency and retry logic.
+   */
+  protected caller: AsyncCaller;
+
   protected constructor(params: BaseLanguageModelParams) {
     this.verbose = params.verbose ?? getVerbosity();
     this.callbackManager = params.callbackManager ?? getCallbackManager();
+    this.caller = new AsyncCaller(params ?? {});
   }
 
   abstract generatePrompt(

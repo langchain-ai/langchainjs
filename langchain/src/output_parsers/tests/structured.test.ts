@@ -3,12 +3,12 @@ import { z } from "zod";
 
 import { StructuredOutputParser } from "../structured.js";
 
-test("StructuredOutputParser.fromNamesAndDescriptions", () => {
+test("StructuredOutputParser.fromNamesAndDescriptions", async () => {
   const parser = StructuredOutputParser.fromNamesAndDescriptions({
     url: "A link to the resource",
   });
 
-  expect(parser.parse('```json\n{"url": "value"}```')).toEqual({
+  expect(await parser.parse('```json\n{"url": "value"}```')).toEqual({
     url: "value",
   });
 
@@ -24,12 +24,12 @@ test("StructuredOutputParser.fromNamesAndDescriptions", () => {
   `);
 });
 
-test("StructuredOutputParser.fromZodSchema", () => {
+test("StructuredOutputParser.fromZodSchema", async () => {
   const parser = StructuredOutputParser.fromZodSchema(
     z.object({ url: z.string().describe("A link to the resource") })
   );
 
-  expect(parser.parse('```json\n{"url": "value"}```')).toEqual({
+  expect(await parser.parse('```json\n{"url": "value"}```')).toEqual({
     url: "value",
   });
 
@@ -45,7 +45,7 @@ test("StructuredOutputParser.fromZodSchema", () => {
   `);
 });
 
-test("StructuredOutputParser.fromZodSchema", () => {
+test("StructuredOutputParser.fromZodSchema", async () => {
   const parser = StructuredOutputParser.fromZodSchema(
     z.object({
       url: z.string().describe("A link to the resource"),
@@ -60,7 +60,7 @@ test("StructuredOutputParser.fromZodSchema", () => {
   );
 
   expect(
-    parser.parse(
+    await parser.parse(
       '```json\n{"url": "value", "title": "value", "authors": [{"name": "value", "email": "value"}]}```'
     )
   ).toEqual({
