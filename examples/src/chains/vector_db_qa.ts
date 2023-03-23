@@ -1,5 +1,5 @@
 import { OpenAI } from "langchain/llms";
-import { VectorDBQAChain } from "langchain/chains";
+import { RetrievalQAChain } from "langchain/chains";
 import { HNSWLib } from "langchain/vectorstores";
 import { OpenAIEmbeddings } from "langchain/embeddings";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
@@ -16,7 +16,7 @@ export const run = async () => {
   /* Create the vectorstore */
   const vectorStore = await HNSWLib.fromDocuments(docs, new OpenAIEmbeddings());
   /* Create the chain */
-  const chain = VectorDBQAChain.fromLLM(model, vectorStore);
+  const chain = RetrievalQAChain.fromLLM(model, vectorStore.asRetriever());
   /* Ask it a question */
   const res = await chain.call({
     input_documents: docs,

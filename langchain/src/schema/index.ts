@@ -1,3 +1,5 @@
+import { Document } from "../document.js";
+
 export type Example = Record<string, string>;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -123,7 +125,12 @@ export type AgentStep = {
 export type ChainValues = Record<string, any>;
 
 /**
- * Class to parse the output of an LLM call.
+ * Base Index class. All indexes should extend this class.
+ */
+export abstract class BaseRetriever {
+  abstract getRelevantTexts(query: string): Promise<Document[]>;
+}
+/** Class to parse the output of an LLM call.
  */
 export abstract class BaseOutputParser {
   /**
