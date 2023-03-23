@@ -10,8 +10,8 @@ const examplesPath = path.resolve(__dirname, "..", "examples", "src");
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
-  title: "Langchain",
-  tagline: "The tagline of my site",
+  title: "🦜️🔗 Langchain",
+  tagline: "LangChain JS Docs",
   favicon: "img/favicon.ico",
   customFields: {
     mendableAnonKey: process.env.MENDABLE_ANON_KEY,
@@ -141,14 +141,25 @@ const config = {
         theme: require("prism-react-renderer/themes/vsLight"),
         darkTheme: require("prism-react-renderer/themes/vsDark"),
       },
-      image: "img/docusaurus.png",
+      image: "img/parrot-chainlink-icon.png",
       navbar: {
-        title: "Langchain",
-        logo: {
-          alt: "Langchain logo",
-          src: "img/docusaurus.png",
-        },
+        title: "🦜️🔗 LangChain",
         items: [
+          {
+            href: "https://docs-conceptual.vercel.app/docs/",
+            label: "Concepts",
+            position: "left",
+          },
+          {
+            href: "https://langchain.readthedocs.io/",
+            label: "Python",
+            position: "left",
+          },
+          {
+            to: "/docs/",
+            label: "JS/TS",
+            position: "left",
+          },
           // Please keep GitHub link to the right for consistency.
           {
             href: "https://github.com/hwchase17/langchainjs",
@@ -158,9 +169,49 @@ const config = {
         ],
       },
       footer: {
-        style: "dark",
-        // Please do not remove the credits, help to publicize Docusaurus :)
-        copyright: `Copyright © ${new Date().getFullYear()} Langchain, Inc. Built with Docusaurus.`,
+        style: "light",
+        links: [
+          {
+            title: "Community",
+            items: [
+              {
+                label: "Discord",
+                href: "https://discord.gg/cU2adEyC7w",
+              },
+              {
+                label: "Twitter",
+                href: "https://twitter.com/LangChainAI",
+              },
+            ],
+          },
+          {
+            title: "GitHub",
+            items: [
+              {
+                label: "Python",
+                href: "https://github.com/hwchase17/langchain",
+              },
+              {
+                label: "JS/TS",
+                href: "https://github.com/hwchase17/langchainjs",
+              },
+            ],
+          },
+          {
+            title: "More",
+            items: [
+              {
+                label: "Homepage",
+                href: "https://langchain.com",
+              },
+              {
+                label: "Blog",
+                href: "https://blog.langchain.dev",
+              },
+            ],
+          },
+        ],
+        copyright: `Copyright © ${new Date().getFullYear()} LangChain, Inc.`,
       },
     }),
 };
