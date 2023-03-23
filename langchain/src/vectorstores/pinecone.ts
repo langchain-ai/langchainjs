@@ -76,10 +76,13 @@ export class PineconeStore extends VectorStore {
     k: number,
     filter?: object
   ): Promise<[Document, number][]> {
-    if (filter && this.filter) {
+    if (
+      (filter !== undefined && Object.keys(filter).length > 0) &&
+      (this.filter !== undefined && Object.keys(this.filter).length > 0)
+    ) {
       throw new Error("cannot provide both `filter` and `this.filter`");
     }
-    const _filter = filter ?? this.filter;
+    const _filter = (filter === undefined || Object.keys(filter).length === 0) ? this.filter : filter;
     const results = await this.pineconeIndex.query({
       queryRequest: {
         includeMetadata: true,
