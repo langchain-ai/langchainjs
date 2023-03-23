@@ -1,5 +1,6 @@
 ---
-sidebar_label: Agent Executors
+sidebar_label: Getting Started
+hide_table_of_contents: true
 ---
 
 # Getting Started: Agent Executors
