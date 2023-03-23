@@ -13,6 +13,7 @@ export interface PineconeLibArgs {
   textKey?: string;
   namespace?: string;
   batchSize?: number;
+  filter?: PineconeMetadata;
 }
 
 export class PineconeStore extends VectorStore {
@@ -24,16 +25,17 @@ export class PineconeStore extends VectorStore {
 
   pineconeIndex: VectorOperationsApi;
 
+  filter?: PineconeMetadata;
+
   constructor(embeddings: Embeddings, args: PineconeLibArgs) {
     super(embeddings, args);
 
-    this.pineconeIndex = args.pineconeIndex;
     this.embeddings = embeddings;
-    this.textKey = args.textKey ?? "text";
     this.namespace = args.namespace;
     this.batchSize = args.batchSize ?? 1000;
-
-    console.log(this.textKey);
+    this.pineconeIndex = args.pineconeIndex;
+    this.textKey = args.textKey ?? "text";
+    this.filter = args.filter;
   }
 
   async addDocuments(documents: Document[], ids?: string[]): Promise<void> {
@@ -77,14 +79,20 @@ export class PineconeStore extends VectorStore {
 
   async similaritySearchVectorWithScore(
     query: number[],
-    k: number
+    k: number,
+    filter?: object
   ): Promise<[Document, number][]> {
+    if (filter && this.filter) {
+      throw new Error("cannot provide both `filter` and `this.filter`");
+    }
+    const _filter = filter ?? this.filter;
     const results = await this.pineconeIndex.query({
       queryRequest: {
-        topK: k,
         includeMetadata: true,
-        vector: query,
         namespace: this.namespace,
+        topK: k,
+        vector: query,
+        filter: _filter,
       },
     });
 

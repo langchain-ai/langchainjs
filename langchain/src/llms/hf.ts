@@ -58,7 +58,7 @@ export class HuggingFaceInference extends LLM implements HFInput {
     }
     const { HfInference } = await HuggingFaceInference.imports();
     const hf = new HfInference(process.env.HUGGINGFACEHUB_API_KEY ?? "");
-    const res = await hf.textGeneration({
+    const res = await this.caller.call(hf.textGeneration.bind(hf), {
       model: this.model,
       parameters: {
         // make it behave similar to openai, returning only the generated text

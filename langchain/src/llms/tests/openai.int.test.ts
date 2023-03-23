@@ -1,5 +1,5 @@
 import { test, expect } from "@jest/globals";
-import { LLMResult } from "schema/index.js";
+import { LLMResult } from "../../schema/index.js";
 import { OpenAIChat } from "../openai-chat.js";
 import { OpenAI } from "../openai.js";
 import { StringPromptValue } from "../../prompts/index.js";
@@ -8,6 +8,19 @@ import { BaseCallbackHandler, CallbackManager } from "../../callbacks/index.js";
 test("Test OpenAI", async () => {
   const model = new OpenAI({ maxTokens: 5, modelName: "text-ada-001" });
   const res = await model.call("Print hello world");
+  console.log({ res });
+});
+
+test("Test OpenAI with concurrency == 1", async () => {
+  const model = new OpenAI({
+    maxTokens: 5,
+    modelName: "text-ada-001",
+    maxConcurrency: 1,
+  });
+  const res = await Promise.all([
+    model.call("Print hello world"),
+    model.call("Print hello world"),
+  ]);
   console.log({ res });
 });
 

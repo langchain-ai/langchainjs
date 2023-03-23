@@ -1,5 +1,5 @@
 import { PromptTemplate } from "../prompts/index.js";
-import { BaseLLM } from "../llms/index.js";
+import { BaseLanguageModel } from "../base_language/index.js";
 import { VectorStore } from "../vectorstores/base.js";
 import {
   SerializedBaseChain,
@@ -167,7 +167,7 @@ export class ChatVectorDBQAChain
   }
 
   static fromLLM(
-    llm: BaseLLM,
+    llm: BaseLanguageModel,
     vectorstore: VectorStore,
     options: {
       inputKey?: string;

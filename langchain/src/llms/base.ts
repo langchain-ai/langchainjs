@@ -1,5 +1,4 @@
 import GPT3Tokenizer from "gpt3-tokenizer";
-import PQueue from "p-queue";
 
 import { BaseCache, InMemoryCache } from "../cache.js";
 import { BasePromptValue, LLMResult } from "../schema/index.js";
@@ -15,6 +14,9 @@ export type SerializedLLM = {
 } & Record<string, any>;
 
 export interface BaseLLMParams extends BaseLanguageModelParams {
+  /**
+   * @deprecated Use `maxConcurrency` instead
+   */
   concurrency?: number;
   cache?: BaseCache | boolean;
 }
@@ -30,16 +32,8 @@ export abstract class BaseLLM extends BaseLanguageModel {
 
   cache?: BaseCache;
 
-  /**
-   * Maximum number of concurrent calls to this chain,
-   * additional calls are queued up. Defaults to Infinity.
-   */
-  concurrency?: number;
-
-  protected queue: PQueue;
-
-  constructor({ concurrency, cache, ...rest }: BaseLLMParams) {
-    super(rest);
+  constructor({ cache, concurrency, ...rest }: BaseLLMParams) {
+    super(concurrency ? { maxConcurrency: concurrency, ...rest } : rest);
     if (cache instanceof BaseCache) {
       this.cache = cache;
     } else if (cache) {
@@ -47,8 +41,6 @@ export abstract class BaseLLM extends BaseLanguageModel {
     } else {
       this.cache = undefined;
     }
-    this.concurrency = concurrency ?? Infinity;
-    this.queue = new PQueue({ concurrency: this.concurrency });
   }
 
   async generatePrompt(
@@ -78,9 +70,7 @@ export abstract class BaseLLM extends BaseLanguageModel {
     );
     let output;
     try {
-      output = await this.queue.add(() => this._generate(prompts, stop), {
-        throwOnTimeout: true,
-      });
+      output = await this._generate(prompts, stop);
     } catch (err) {
       await this.callbackManager.handleLLMError(err, this.verbose);
       throw err;
@@ -222,9 +212,7 @@ export abstract class LLM extends BaseLLM {
   async _generate(prompts: string[], stop?: string[]): Promise<LLMResult> {
     const generations = [];
     for (let i = 0; i < prompts.length; i += 1) {
-      const text = await this.queue.add(() => this._call(prompts[i], stop), {
-        throwOnTimeout: true,
-      });
+      const text = await this._call(prompts[i], stop);
       generations.push([{ text }]);
     }
     return { generations };

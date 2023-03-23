@@ -91,7 +91,7 @@ An example about bar
   );
 });
 
-test.only("Test partial with function and example selector", async () => {
+test("Test partial with function and example selector", async () => {
   const examplePrompt = PromptTemplate.fromTemplate("An example about {x}");
   const exampleSelector = await LengthBasedExampleSelector.fromExamples(
     [{ x: "foo" }, { x: "bar" }],

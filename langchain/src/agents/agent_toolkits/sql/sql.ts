@@ -6,7 +6,7 @@ import {
   QuerySqlTool,
 } from "../../tools/index.js";
 import { Toolkit } from "../base.js";
-import { BaseLLM } from "../../../llms/index.js";
+import { BaseLanguageModel } from "../../../base_language/index.js";
 import { SQL_PREFIX, SQL_SUFFIX } from "./prompt.js";
 import { renderTemplate } from "../../../prompts/template.js";
 import { LLMChain } from "../../../chains/index.js";
@@ -39,7 +39,7 @@ export class SqlToolkit extends Toolkit {
 }
 
 export function createSqlAgent(
-  llm: BaseLLM,
+  llm: BaseLanguageModel,
   toolkit: SqlToolkit,
   args?: SqlCreatePromptArgs
 ) {

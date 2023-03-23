@@ -42,7 +42,7 @@ In this code snippet, the fromLLM method of the ChatVectorDBQAChain class has th
 
 ```typescript
 static fromLLM(
-  llm: BaseLLM,
+  llm: BaseLanguageModel,
   vectorstore: VectorStore,
   options?: {
     questionGeneratorTemplate?: string;
