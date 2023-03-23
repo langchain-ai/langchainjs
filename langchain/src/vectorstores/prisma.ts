@@ -106,10 +106,10 @@ export class PrismaVectorStore<
 
     await this.db.$transaction(
       vectors.map(
-        (vector) => this.db.$executeRaw`
+        (vector, idx) => this.db.$executeRaw`
           UPDATE ${this.tableSql}
           SET ${this.vectorColumnSql} = ${`[${vector.join(",")}]`}::vector
-          WHERE ${idSql} = ${documents[0].metadata.id}
+          WHERE ${idSql} = ${documents[idx].metadata.id}
         `
       )
     );
