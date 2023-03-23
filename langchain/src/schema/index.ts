@@ -129,8 +129,8 @@ export type ChainValues = Record<string, any>;
  */
 export abstract class BaseRetriever {
   abstract getRelevantTexts(query: string): Promise<Document[]>;
-
- * Class to parse the output of an LLM call.
+}
+/** Class to parse the output of an LLM call.
  */
 export abstract class BaseOutputParser {
   /**
