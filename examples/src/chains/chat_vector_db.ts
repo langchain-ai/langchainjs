@@ -1,5 +1,5 @@
 import { OpenAI } from "langchain/llms";
-import { ChatVectorDBQAChain } from "langchain/chains";
+import { ConversationalRetrievalQAChain } from "langchain/chains";
 import { HNSWLib } from "langchain/vectorstores";
 import { OpenAIEmbeddings } from "langchain/embeddings";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
@@ -16,7 +16,10 @@ export const run = async () => {
   /* Create the vectorstore */
   const vectorStore = await HNSWLib.fromDocuments(docs, new OpenAIEmbeddings());
   /* Create the chain */
-  const chain = ChatVectorDBQAChain.fromLLM(model, vectorStore);
+  const chain = ConversationalRetrievalQAChain.fromLLM(
+    model,
+    vectorStore.asRetriever()
+  );
   /* Ask it a question */
   const question = "What did the president say about Justice Breyer?";
   const res = await chain.call({ question, chat_history: [] });
