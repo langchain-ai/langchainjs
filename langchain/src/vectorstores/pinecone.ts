@@ -1,4 +1,4 @@
-import type { VectorOperationsApi } from "@pinecone-database/pinecone/dist/pinecone-generated-ts-fetch";
+import type { Vector, VectorOperationsApi } from "@pinecone-database/pinecone/dist/pinecone-generated-ts-fetch";
 import { v4 as uuidv4 } from "uuid";
 
 import { VectorStore } from "./base.js";
@@ -12,12 +12,15 @@ export interface PineconeLibArgs {
   pineconeIndex: VectorOperationsApi;
   textKey?: string;
   namespace?: string;
+  batchSize?: number;
 }
 
 export class PineconeStore extends VectorStore {
   textKey: string;
 
   namespace?: string;
+
+  batchSize: number;
 
   pineconeIndex: VectorOperationsApi;
 
@@ -28,6 +31,7 @@ export class PineconeStore extends VectorStore {
     this.embeddings = embeddings;
     this.textKey = args.textKey ?? "text";
     this.namespace = args.namespace;
+    this.batchSize = args.batchSize ?? 1000;
 
     console.log(this.textKey);
   }
@@ -48,19 +52,27 @@ export class PineconeStore extends VectorStore {
   ): Promise<void> {
     const documentIds = ids == null ? documents.map(() => uuidv4()) : ids;
 
-    await this.pineconeIndex.upsert({
-      upsertRequest: {
-        vectors: vectors.map((values, idx) => ({
-          id: documentIds[idx],
-          metadata: {
-            ...documents[idx].metadata,
-            [this.textKey]: documents[idx].pageContent,
-          },
-          values,
-        })),
-        namespace: this.namespace,
-      },
-    });
+    // Split the data into smaller batches
+    const vectorChunks = PineconeStore.splitVectorIntoChunks(vectors, this.batchSize);
+
+    for (let i = 0; i < vectorChunks.length; i+= 1) {
+      const batch = vectorChunks[i].map((values, idx) => ({
+        id: documentIds[idx + this.batchSize*i],
+        metadata: {
+          ...documents[idx].metadata,
+          [this.textKey]: documents[idx].pageContent,
+        },
+        values,
+      })) as Vector[];
+
+      console.log(`Upserting batch ${i + 1} of ${vectorChunks.length}`);
+      await this.pineconeIndex.upsert({
+        upsertRequest: {
+          vectors: batch,
+          namespace: this.namespace,
+        },
+      });
+    }
   }
 
   async similaritySearchVectorWithScore(
@@ -145,5 +157,19 @@ export class PineconeStore extends VectorStore {
   ): Promise<PineconeStore> {
     const instance = new this(embeddings, dbConfig);
     return instance;
+  }
+
+  static splitVectorIntoChunks(array: number[][], chunkSize: number): number[][][] {
+    if (!Array.isArray(array) || chunkSize <= 0) {
+      throw new Error('Invalid input parameters.');
+    }
+
+    const result: number[][][] = [];
+    for (let i = 0; i < array.length; i += chunkSize) {
+      const chunk = array.slice(i, i + chunkSize);
+      result.push(chunk);
+    }
+
+    return result;
   }
 }
