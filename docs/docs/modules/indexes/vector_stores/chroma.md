@@ -13,7 +13,7 @@ Use [chroma](https://github.com/chroma-core/chroma) with langchainjs.
 npm install -S chromadb
 ```
 
-## Usage
+## Index and query docs
 
 ```typescript
 import { Chroma } from "langchain/vectorstores";
@@ -39,6 +39,27 @@ const vectorStore = await Chroma.fromTexts(
     collectionName: "goldel-escher-bach",
   }
 );
-const resultOne = await vectorStore.similaritySearch("scared", 2);
-console.log(resultOne); // -> 'Achilles: Yiikes! What is that?'
+
+// or alternatively from docs
+const vectorStore = await Chroma.fromDocuments(docs, new OpenAIEmbeddings(), {
+  collectionName: "goldel-escher-bach",
+});
+
+const response = await vectorStore.similaritySearch("scared", 2);
+```
+
+## Query docs from existing collection
+
+```typescript
+import { Chroma } from "langchain/vectorstores";
+import { OpenAIEmbeddings } from "langchain/embeddings";
+
+const vectorStore = await Chroma.fromExistingCollection(
+  new OpenAIEmbeddings(),
+  {
+    collectionName: "goldel-escher-bach",
+  }
+);
+
+const response = await vectorStore.similaritySearch("scared", 2);
 ```
