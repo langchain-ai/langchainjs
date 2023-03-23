@@ -1,40 +1,43 @@
-import { VectorStore } from "../vectorstores";
-import { Document } from "../document";
-import { type Embeddings } from "../embeddings";
+import { VectorStore } from "./base.js";
+import { Document } from "../document.js";
+import { type Embeddings } from "../embeddings/base.js";
 
 export const TypeId = Symbol("id");
 export const TypeColumn = Symbol("content");
 
 type BasicColumnType = typeof TypeId | typeof TypeColumn;
 
-namespace Prisma {
-  declare type Value = unknown;
-  declare type RawValue = Value | Sql;
+declare type Value = unknown;
+declare type RawValue = Value | Sql;
 
-  export declare class Sql {
-    strings: string[];
-    constructor(
-      rawStrings: ReadonlyArray<string>,
-      rawValues: ReadonlyArray<RawValue>
-    );
-  }
+declare class Sql {
+  strings: string[];
+
+  constructor(
+    rawStrings: ReadonlyArray<string>,
+    rawValues: ReadonlyArray<RawValue>
+  );
 }
 
 type PrismaNamespace = {
   ModelName: Record<string, string>;
-  Sql: typeof Prisma.Sql;
-  raw: (sql: string) => Prisma.Sql;
+  Sql: typeof Sql;
+  raw: (sql: string) => Sql;
 };
 
 type PrismaClient = {
   $queryRaw<T = unknown>(
-    query: TemplateStringsArray | Prisma.Sql,
+    query: TemplateStringsArray | Sql,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ...values: any[]
   ): Promise<T>;
   $executeRaw(
-    query: TemplateStringsArray | Prisma.Sql,
+    query: TemplateStringsArray | Sql,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ...values: any[]
-  ): Promise<any>;
+  ): // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  Promise<any>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   $transaction<P extends Promise<any>[]>(arg: [...P]): Promise<any>;
 };
 
@@ -42,11 +45,14 @@ export class PrismaVectorStore<
   TModel extends Record<string, unknown> = Record<string, unknown>,
   TModelName extends string = string
 > extends VectorStore {
-  tableSql: Prisma.Sql;
-  vectorColumnSql: Prisma.Sql;
-  selectSql: Prisma.Sql;
+  tableSql: Sql;
+
+  vectorColumnSql: Sql;
+
+  selectSql: Sql;
 
   idColumn: keyof TModel;
+
   contentColumn: keyof TModel;
 
   constructor(
@@ -64,8 +70,14 @@ export class PrismaVectorStore<
     super(embeddings, {});
 
     const entries = Object.entries(config.columns);
-    this.idColumn = entries.find((i) => i[1] === TypeId)?.[0]!;
-    this.contentColumn = entries.find((i) => i[1] === TypeColumn)?.[0]!;
+    const idColumn = entries.find((i) => i[1] === TypeId)?.[0];
+    const contentColumn = entries.find((i) => i[1] === TypeColumn)?.[0];
+
+    if (idColumn == null) throw new Error("Missing ID column");
+    if (contentColumn == null) throw new Error("Missing content column");
+
+    this.idColumn = idColumn;
+    this.contentColumn = contentColumn;
 
     this.tableSql = Prisma.raw(`"${config.tableName}"`);
     this.vectorColumnSql = Prisma.raw(`"${config.vectorColumnName}"`);
@@ -81,6 +93,8 @@ export class PrismaVectorStore<
 
   async addDocuments(documents: Document[]) {
     const texts = documents.map(({ pageContent }) => pageContent);
+
+    // TODO: add documents to database
     return this.addVectors(
       await this.embeddings.embedDocuments(texts),
       documents
@@ -90,7 +104,7 @@ export class PrismaVectorStore<
   async addVectors(vectors: number[][], documents: Document[]) {
     const idSql = this.Prisma.raw(`"${this.idColumn as string}"`);
 
-    this.db.$transaction(
+    await this.db.$transaction(
       vectors.map(
         (vector) => this.db.$executeRaw`
           UPDATE ${this.tableSql}
