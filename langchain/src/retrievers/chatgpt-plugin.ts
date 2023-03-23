@@ -14,13 +14,33 @@ interface ChatGPTPluginRetrieverFilter {
 type ChatGPTPluginRetrieverAuth = false | { bearer: string };
 
 interface ChatGPTPluginRetrieverParams extends AsyncCallerParams {
+  /**
+   * The URL of the ChatGPTRetrievalPlugin server
+   */
   url: string;
+
+  /**
+   * The authentication method to use, currently implemented is
+   * - false: no authentication
+   * - { bearer: string }: Bearer token authentication
+   */
   auth: ChatGPTPluginRetrieverAuth;
+
+  /**
+   * The number of results to request from the ChatGPTRetrievalPlugin server
+   */
   topK?: number;
+
+  /**
+   * The filter to use when querying the ChatGPTRetrievalPlugin server
+   */
   filter?: ChatGPTPluginRetrieverFilter;
 }
 
-export class ChatGPTPluginRetriever extends BaseRetriever {
+export class ChatGPTPluginRetriever
+  extends BaseRetriever
+  implements ChatGPTPluginRetrieverParams
+{
   url: string;
 
   auth: ChatGPTPluginRetrieverAuth;
