@@ -1,0 +1,37 @@
+---
+sidebar_position: 1
+---
+
+import DocCardList from "@theme/DocCardList";
+
+# Tools
+
+A tool is an abstraction around a function that makes it easy for a language model to interact with it. Specifically, the interface of a tool has a single text input and a single text output. And it includes a name and description that communicate to the [Model](../../models/) what the tool does and whne to use it.
+
+```typescript
+interface Tool {
+  call(arg: string): Promise<string>;
+
+  name: string;
+
+  description: string;
+}
+```
+
+## All Tools
+
+<DocCardList />
+
+## Advanced
+
+To implement a custom tool you can subclass the `Tool` class and implement the `_call` method. The `_call` method is called with the input text and should return the output text. The Tool superclass implements the `call` method, which takes care of calling the right CallbackManager methods before and after calling your `_call` method.
+
+```typescript
+abstract class Tool {
+  abstract _call(arg: string): Promise<string>;
+
+  abstract name: string;
+
+  abstract description: string;
+}
+```
