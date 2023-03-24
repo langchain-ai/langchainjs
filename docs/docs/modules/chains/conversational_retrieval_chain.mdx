@@ -18,7 +18,7 @@ In this code snippet, the fromLLM method of the `ConversationalRetrievalQAChain`
 ```typescript
 static fromLLM(
   llm: BaseLanguageModel,
-  vectorstore: VectorStore,
+  retriever: BaseRetriever,
   options?: {
     questionGeneratorTemplate?: string;
     qaTemplate?: string;
