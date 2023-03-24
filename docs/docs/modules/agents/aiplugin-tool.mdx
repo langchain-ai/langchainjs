@@ -2,7 +2,8 @@
 hide_table_of_contents: true
 ---
 
-import Example from "@examples/indexes/vector_stores/supabase.ts";
+import CodeBlock from "@theme/CodeBlock";
+import Example from "@examples/agents/aiplugin-tool.ts";
 
 # ChatGPT Plugins
 
@@ -14,7 +15,7 @@ Note 2: There are almost certainly other ways to do this, this is just a first p
 
 <CodeBlock language="typescript">{Example}</CodeBlock>
 
-```
+````
 Entering new agent_executor chain...
 Thought: Klarna is a payment provider, not a store. I need to check if there is a Klarna Shopping API that I can use to search for t-shirts.
 Action:
@@ -50,4 +51,4 @@ Finished chain.
     intermediateSteps: [ [Object], [Object] ]
   }
 }
-```
+````

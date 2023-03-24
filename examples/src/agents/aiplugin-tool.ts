@@ -7,14 +7,15 @@ import {
 } from "langchain/tools";
 
 export const run = async () => {
+  const tools = [
+    new RequestsGetTool(),
+    new RequestsPostTool(),
+    await AIPluginTool.fromPluginUrl(
+      "https://www.klarna.com/.well-known/ai-plugin.json"
+    ),
+  ];
   const agent = await initializeAgentExecutor(
-    [
-      new RequestsGetTool(),
-      new RequestsPostTool(),
-      await AIPluginTool.fromPluginUrl(
-        "https://www.klarna.com/.well-known/ai-plugin.json"
-      ),
-    ],
+    tools,
     new ChatOpenAI({ temperature: 0 }),
     "chat-zero-shot-react-description",
     true
