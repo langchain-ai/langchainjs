@@ -18,6 +18,26 @@ const loader = new JSONLinesLoader(
   "src/document_loaders/example_data/example.jsonl",
   "/html"
 );
+
 const docs = await loader.load();
-console.log({ docs });
+/*
+[
+  Document {
+    "metadata": {
+      "blobType": "application/jsonl+json",
+      "line": 1,
+      "source": "blob",
+    },
+    "pageContent": "This is a sentence.",
+  },
+  Document {
+    "metadata": {
+      "blobType": "application/jsonl+json",
+      "line": 2,
+      "source": "blob",
+    },
+    "pageContent": "This is another sentence.",
+  },
+]
+*/
 ```
