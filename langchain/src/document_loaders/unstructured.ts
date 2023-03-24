@@ -72,9 +72,9 @@ export class UnstructuredLoader extends BaseDocumentLoader {
   }
 
   async imports(): Promise<{
-    readFile: typeof import("fs/promises")["readFile"];
+    readFile: typeof import("node:fs/promises")["readFile"];
   }> {
-    const { readFile } = await import("fs/promises");
+    const { readFile } = await import("node:fs/promises");
     return { readFile };
   }
 }

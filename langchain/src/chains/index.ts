@@ -15,6 +15,8 @@ export {
 } from "./question_answering/load.js";
 export { loadSummarizationChain } from "./summarization/load.js";
 export { SqlDatabaseChain } from "./sql_db/sql_db_chain.js";
+export { ConversationalRetrievalQAChain } from "./conversational_retrieval_chain.js";
+export { RetrievalQAChain } from "./retrieval_qa.js";
 export {
   SerializedLLMChain,
   SerializedSqlDatabaseChain,

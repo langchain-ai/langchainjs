@@ -7,7 +7,6 @@ import {
 } from "openai";
 import type { IncomingMessage } from "http";
 import { createParser } from "eventsource-parser";
-import { backOff } from "exponential-backoff";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
 import { BaseLLMParams, LLM } from "./base.js";
 
@@ -50,9 +49,6 @@ interface OpenAIInput extends ModelParams {
    * `openai.create`} that are not explicitly specified on this class.
    */
   modelKwargs?: Kwargs;
-
-  /** Maximum number of retries to make when generating */
-  maxRetries: number;
 
   /** List of stop words to use when generating */
   stop?: string[];
@@ -103,8 +99,6 @@ export class OpenAIChat extends LLM implements OpenAIInput {
 
   modelKwargs?: Kwargs;
 
-  maxRetries = 6;
-
   stop?: string[];
 
   streaming = false;
@@ -134,7 +128,6 @@ export class OpenAIChat extends LLM implements OpenAIInput {
     this.modelName = fields?.modelName ?? this.modelName;
     this.prefixMessages = fields?.prefixMessages ?? this.prefixMessages;
     this.modelKwargs = fields?.modelKwargs ?? {};
-    this.maxRetries = fields?.maxRetries ?? this.maxRetries;
 
     this.temperature = fields?.temperature ?? this.temperature;
     this.topP = fields?.topP ?? this.topP;
@@ -296,17 +289,11 @@ export class OpenAIChat extends LLM implements OpenAIInput {
       this.streamingClient = new OpenAIApi(clientConfig);
     }
     const client = !request.stream ? this.batchClient : this.streamingClient;
-    const makeCompletionRequest = async () =>
-      client.createChatCompletion(
-        request,
-        request.stream ? { responseType: "stream" } : undefined
-      );
-    return backOff(makeCompletionRequest, {
-      startingDelay: 4,
-      maxDelay: 10,
-      numOfAttempts: this.maxRetries,
-      // TODO(sean) pass custom retry function to check error types.
-    });
+    return this.caller.call(
+      client.createChatCompletion.bind(client),
+      request,
+      request.stream ? { responseType: "stream" } : undefined
+    );
   }
 
   _llmType() {
