@@ -128,7 +128,7 @@ export type ChainValues = Record<string, any>;
  * Base Index class. All indexes should extend this class.
  */
 export abstract class BaseRetriever {
-  abstract getRelevantTexts(query: string): Promise<Document[]>;
+  abstract getRelevantDocuments(query: string): Promise<Document[]>;
 }
 /** Class to parse the output of an LLM call.
  */
