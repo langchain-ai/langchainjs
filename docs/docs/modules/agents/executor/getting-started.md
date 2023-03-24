@@ -1,8 +1,9 @@
 ---
-sidebar_position: 1
+sidebar_label: Getting Started
+hide_table_of_contents: true
 ---
 
-# Agent Overview
+# Getting Started: Agent Executors
 
 Agents use an LLM to determine which actions to take and in what order. An action can either be using a tool and observing its output, or returning to the user.
 

@@ -1,0 +1,33 @@
+---
+hide_table_of_contents: true
+---
+
+import DocCardList from "@theme/DocCardList";
+
+# Agents
+
+An agent is a stateless wrapper around an agent prompt chain (such as MRKL) which takes care of formatting tools into the prompt, as well as parsing the responses obtained from the chat model. It takes in user input and returns a response corresponding to an “action” to take and a corresponding “action input”.
+
+```typescript
+interface AgentStep {
+  action: AgentAction;
+  observation: string;
+}
+
+interface AgentAction {
+  tool: string; // Tool.name
+  toolInput: string; // Tool.call argument
+}
+
+interface AgentFinish {
+  returnValues: object;
+}
+
+class Agent {
+  plan(steps: AgentStep[], inputs: object): Promise<AgentAction | AgentFinish>;
+}
+```
+
+## All Agents
+
+<DocCardList />

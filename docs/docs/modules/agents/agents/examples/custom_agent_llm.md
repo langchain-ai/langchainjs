@@ -1,4 +1,8 @@
-# Custom Agent
+---
+hide_table_of_contents: true
+---
+
+# Custom Agent, using LLMs
 
 The first way to create a custom agent is to use an existing Agent class, but use a custom LLMChain. This is the simplest way to create a custom Agent. It is highly reccomended that you work with the ZeroShotAgent, as at the moment that is by far the most generalizable one.
 
