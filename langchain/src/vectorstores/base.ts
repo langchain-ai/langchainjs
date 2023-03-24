@@ -42,8 +42,8 @@ export abstract class VectorStore {
 
   async similaritySearch(
     query: string,
-    k: number,
-    filter?: object
+    k = 4,
+    filter: object | undefined = undefined
   ): Promise<Document[]> {
     const results = await this.similaritySearchVectorWithScore(
       await this.embeddings.embedQuery(query),
@@ -56,9 +56,8 @@ export abstract class VectorStore {
 
   async similaritySearchWithScore(
     query: string,
-    // eslint-disable-next-line default-param-last
-    k: number,
-    filter?: object
+    k = 4,
+    filter: object | undefined = undefined
   ): Promise<[object, number][]> {
     return this.similaritySearchVectorWithScore(
       await this.embeddings.embedQuery(query),
