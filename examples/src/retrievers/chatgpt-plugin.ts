@@ -8,7 +8,7 @@ export const run = async () => {
     },
   });
 
-  const docs = await retriever.getRelevantTexts("hello world");
+  const docs = await retriever.getRelevantDocuments("hello world");
 
   console.log(docs);
 };

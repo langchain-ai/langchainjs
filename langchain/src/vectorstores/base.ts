@@ -13,7 +13,7 @@ export class VectorStoreRetriever extends BaseRetriever {
     this.k = fields.k ?? this.k;
   }
 
-  async getRelevantTexts(query: string): Promise<Document[]> {
+  async getRelevantDocuments(query: string): Promise<Document[]> {
     const results = await this.vectorStore.similaritySearch(query, 4);
     return results;
   }

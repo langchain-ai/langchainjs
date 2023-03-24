@@ -66,7 +66,7 @@ export class ChatGPTPluginRetriever
     this.asyncCaller = new AsyncCaller(rest);
   }
 
-  async getRelevantTexts(query: string): Promise<Document[]> {
+  async getRelevantDocuments(query: string): Promise<Document[]> {
     const res = await this.asyncCaller.call(fetch, `${this.url}/query`, {
       method: "POST",
       body: JSON.stringify({

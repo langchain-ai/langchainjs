@@ -54,7 +54,7 @@ export class RetrievalQAChain
       throw new Error(`Question key ${this.inputKey} not found.`);
     }
     const question: string = values[this.inputKey];
-    const docs = await this.retriever.getRelevantTexts(question);
+    const docs = await this.retriever.getRelevantDocuments(question);
     const inputs = { question, input_documents: docs };
     const result = await this.combineDocumentsChain.call(inputs);
     if (this.returnSourceDocuments) {
