@@ -30,3 +30,40 @@ test("Test CSV loader from blob", async () => {
     })
   );
 });
+
+test("Test CSV loader from blob", async () => {
+  const loader = new CSVLoader(
+    new Blob(
+      [
+        `id,text
+1,This is a sentence.
+2,This is another sentence.`,
+      ],
+      { type: "text/csv" }
+    )
+  );
+  const docs = await loader.load();
+  expect(docs.length).toBe(2);
+  expect(docs[0]).toMatchInlineSnapshot(`
+    Document {
+      "metadata": {
+        "blobType": "text/csv",
+        "line": 1,
+        "source": "blob",
+      },
+      "pageContent": "id: 1
+    text: This is a sentence.",
+    }
+  `);
+  expect(docs[1]).toMatchInlineSnapshot(`
+    Document {
+      "metadata": {
+        "blobType": "text/csv",
+        "line": 2,
+        "source": "blob",
+      },
+      "pageContent": "id: 2
+    text: This is another sentence.",
+    }
+  `);
+});
