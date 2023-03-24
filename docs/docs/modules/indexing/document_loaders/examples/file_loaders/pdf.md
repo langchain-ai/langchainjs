@@ -1,3 +1,7 @@
+---
+hide_table_of_contents: true
+---
+
 # PDF files
 
 This example goes over how to load data from PDF files. One document will be created for each PDF file.

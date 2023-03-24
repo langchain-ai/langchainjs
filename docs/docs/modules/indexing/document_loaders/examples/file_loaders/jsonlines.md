@@ -1,3 +1,7 @@
+---
+hide_table_of_contents: true
+---
+
 # JSONLines files
 
 This example goes over how to load data from JSONLines or JSONL files. The second argument is a JSONPointer to the property to extract from each JSON object in the file. One document will be created for each JSON object in the file.
