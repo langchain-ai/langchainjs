@@ -1,0 +1,14 @@
+# Retrieval QA
+
+The RetrievalQA chain operates by taking a question as input, searching for relevant documents in the retriever, and passing both the documents and the question to a question answering chain, which returns a response.
+
+To create one, you will need a retriever. In this example we will create one from a vectorstore, which can be created from embeddings.
+
+## Usage
+
+Below is an end-to-end example of doing question answering over a recent state of the union address.
+
+import CodeBlock from "@theme/CodeBlock";
+import Example from "@examples/chains/retrieval_qa.ts";
+
+<CodeBlock language="typescript">{Example}</CodeBlock>

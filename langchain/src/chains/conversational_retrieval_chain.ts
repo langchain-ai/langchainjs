@@ -132,7 +132,6 @@ export class ConversationalRetrievalQAChain
     options: {
       inputKey?: string;
       outputKey?: string;
-      k?: number;
       returnSourceDocuments?: boolean;
       questionGeneratorTemplate?: string;
       qaTemplate?: string;
