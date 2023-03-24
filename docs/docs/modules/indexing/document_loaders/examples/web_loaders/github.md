@@ -15,5 +15,4 @@ const loader = new GithubRepoLoader(
   { branch: "main", recursive: false, unknown: "warn" }
 );
 const docs = await loader.load();
-console.log({ docs });
 ```
