@@ -54,3 +54,16 @@
     width: 140px;
   }
 }
+
+.footer__links {
+  margin-top: 1rem;
+  margin-bottom: 3rem;
+}
+
+.footer__col {
+  text-align: center;
+}
+
+.footer__copyright {
+  opacity: 0.6;
+}
