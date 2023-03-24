@@ -21,8 +21,28 @@ Example code:
 import { JSONLoader } from "langchain/document_loaders";
 
 const loader = new JSONLoader("src/document_loaders/example_data/example.json");
+
 const docs = await loader.load();
-console.log({ docs });
+/*
+[
+  Document {
+    "metadata": {
+      "blobType": "application/json",
+      "line": 1,
+      "source": "blob",
+    },
+    "pageContent": "This is a sentence.",
+  },
+  Document {
+    "metadata": {
+      "blobType": "application/json",
+      "line": 2,
+      "source": "blob",
+    },
+    "pageContent": "This is another sentence.",
+  },
+]
+*/
 ```
 
 ### Using JSON pointer example
@@ -59,6 +79,26 @@ const loader = new JSONLoader(
   "src/document_loaders/example_data/example.json",
   ["/from", "/surname"]
 );
+
 const docs = await loader.load();
-console.log({ docs });
+/*
+[
+  Document {
+    "metadata": {
+      "blobType": "application/json",
+      "line": 1,
+      "source": "blob",
+    },
+    "pageContent": "BD 2023 SUMMER",
+  },
+  Document {
+    "metadata": {
+      "blobType": "application/json",
+      "line": 2,
+      "source": "blob",
+    },
+    "pageContent": "LinkedIn Job",
+  },
+  ...
+]
 ```
