@@ -6,10 +6,15 @@ import { ChatAgent } from "./chat/index.js";
 import { BaseLanguageModel } from "../base_language/index.js";
 import { CallbackManager, getCallbackManager } from "../callbacks/index.js";
 
+type AgentType =
+  | "zero-shot-react-description"
+  | "chat-zero-shot-react-description"
+  | "chat-conversational-react-description";
+
 export const initializeAgentExecutor = async (
   tools: Tool[],
   llm: BaseLanguageModel,
-  agentType = "zero-shot-react-description",
+  agentType: AgentType = "zero-shot-react-description",
   verbose = false,
   callbackManager: CallbackManager = getCallbackManager()
 ): Promise<AgentExecutor> => {
