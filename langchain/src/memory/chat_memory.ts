@@ -18,11 +18,15 @@ export class ChatMessageHistory {
   }
 
   addUserMessage(message: string): void {
-    this.messages.push(new HumanChatMessage(message));
+    if (message) {
+      this.messages.push(new HumanChatMessage(message));
+    }
   }
 
   addAIChatMessage(message: string): void {
-    this.messages.push(new AIChatMessage(message));
+    if (message) {
+      this.messages.push(new AIChatMessage(message));
+    }
   }
 }
 

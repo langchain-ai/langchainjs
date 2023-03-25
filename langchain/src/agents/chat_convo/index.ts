@@ -22,6 +22,7 @@ import {
   BaseOutputParser,
 } from "../../schema/index.js";
 import { AgentInput } from "../types.js";
+import { AgentFinish } from "../../schema/index.js";
 import { Tool } from "../tools/base.js";
 
 export class ChatConversationalAgentOutputParser extends BaseOutputParser {
@@ -117,6 +118,20 @@ export class ChatConversationalAgent extends Agent {
       );
     }
     return thoughts;
+  }
+
+  /**
+   * Add the return value to the llmChain memory if it exists
+   */
+  async prepareForOutput(
+    returnValues: AgentFinish["returnValues"],
+    _steps: AgentStep[]
+  ): Promise<AgentFinish["returnValues"]> {
+    const { memory } = this.llmChain;
+    if (memory) {
+      memory.saveContext({}, returnValues);
+    }
+    return returnValues;
   }
 
   /**
