@@ -2,10 +2,10 @@ import { VectorStore } from "./base.js";
 import { Document } from "../document.js";
 import { type Embeddings } from "../embeddings/base.js";
 
-export const TypeId = Symbol("id");
-export const TypeColumn = Symbol("content");
+export const PrismaTypeId = Symbol("id");
+export const PrismaTypeContent = Symbol("content");
 
-type BasicColumnType = typeof TypeId | typeof TypeColumn;
+type BasicColumnType = typeof PrismaTypeId | typeof PrismaTypeContent;
 
 declare type Value = unknown;
 declare type RawValue = Value | Sql;
@@ -56,8 +56,6 @@ export class PrismaVectorStore<
   contentColumn: keyof TModel;
 
   constructor(
-    protected db: PrismaClient,
-    protected Prisma: PrismaNamespace,
     config: {
       tableName: TModelName;
       vectorColumnName: string;
@@ -65,13 +63,15 @@ export class PrismaVectorStore<
         [K in keyof TModel]?: boolean | BasicColumnType;
       };
     },
+    protected db: PrismaClient,
+    protected Prisma: PrismaNamespace,
     embeddings: Embeddings
   ) {
     super(embeddings, {});
 
     const entries = Object.entries(config.columns);
-    const idColumn = entries.find((i) => i[1] === TypeId)?.[0];
-    const contentColumn = entries.find((i) => i[1] === TypeColumn)?.[0];
+    const idColumn = entries.find((i) => i[1] === PrismaTypeId)?.[0];
+    const contentColumn = entries.find((i) => i[1] === PrismaTypeContent)?.[0];
 
     if (idColumn == null) throw new Error("Missing ID column");
     if (contentColumn == null) throw new Error("Missing content column");
@@ -91,7 +91,7 @@ export class PrismaVectorStore<
     );
   }
 
-  async addDocuments(documents: Document[]) {
+  async addDocuments(documents: Document<TModel>[]) {
     const texts = documents.map(({ pageContent }) => pageContent);
 
     // TODO: add documents to database
@@ -101,7 +101,7 @@ export class PrismaVectorStore<
     );
   }
 
-  async addVectors(vectors: number[][], documents: Document[]) {
+  async addVectors(vectors: number[][], documents: Document<TModel>[]) {
     const idSql = this.Prisma.raw(`"${this.idColumn as string}"`);
 
     await this.db.$transaction(
@@ -115,10 +115,19 @@ export class PrismaVectorStore<
     );
   }
 
+  async similaritySearch(query: string, k = 4): Promise<Document<TModel>[]> {
+    const results = await this.similaritySearchVectorWithScore(
+      await this.embeddings.embedQuery(query),
+      k
+    );
+
+    return results.map((result) => result[0]);
+  }
+
   async similaritySearchVectorWithScore(
     query: number[],
     k: number
-  ): Promise<[Document, number][]> {
+  ): Promise<[Document<TModel>, number][]> {
     const vectorQuery = `[${query.join(",")}]`;
     const articles = await this.db.$queryRaw<
       Array<TModel & { _distance: number | null }>
@@ -129,7 +138,7 @@ export class PrismaVectorStore<
       LIMIT ${k};
     `;
 
-    const results: [Document, number][] = [];
+    const results: [Document<TModel>, number][] = [];
     for (const article of articles) {
       if (article._distance != null) {
         results.push([
