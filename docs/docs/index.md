@@ -1,12 +1,12 @@
 # Welcome to LangChain
 
-Large language models (LLMs) are emerging as a transformative technology, enabling developers to build applications that they previously could not. But using these LLMs in isolation is often not enough to create a truly powerful app - the real power comes when you are able to combine them with other sources of computation or knowledge.
+LangChain is a framework for developing applications powered by language models. We believe that the most powerful and differentiated applications will not only call out to a language model via an api, but will also:
 
-This library is aimed at assisting in the development of those types of applications. Common examples of these types of applications include:
+- Be data-aware: connect a language model to other sources of data
+- Be agentic: Allow a language model to interact with its environment
 
-- ❓[Question Answering over specific documents](./modules/chains/question_answering.md)
-- 💬 [Chatbots](./modules/memory/examples/buffer_memory.md)
-- 🤖 [Agents](./modules/agents/)
+As such, the LangChain framework is designed with the objective in mind to enable those types of applications.
+
 
 ## Getting Started
 
@@ -14,7 +14,7 @@ Checkout the below guide for a walkthrough of how to get started using LangChain
 
 - [Getting Started Documentation](./getting-started/guide-llm.mdx)
 
-## Modules
+## Components
 
 There are several main modules that LangChain provides support for. For each module we provide some examples to get started and get familiar with some of the concepts. These modules are, in increasing order of complexity:
 
@@ -22,19 +22,31 @@ There are several main modules that LangChain provides support for. For each mod
 
 - LLMs: This includes a generic interface for all LLMs, and common utilities for working with LLMs.
 
-- Indexes: This includes patterns and functionality for structuring your own text data so it can interact with language models (including embeddings, vectorstores, text splitters, etc).
+- Indexes: This includes patterns and functionality for structuring your own text data so it can interact with language models (including embeddings, vectorstores, text splitters, retrievers, etc).
+
+- Memory: Memory is the concept of persisting state between calls of a chain/agent. LangChain provides a standard interface for memory, a collection of memory implementations, and examples of chains/agents that use memory.
 
 - Chains: Chains go beyond just a single LLM call, and are sequences of calls (whether to an LLM or a different utility). LangChain provides a standard interface for chains, lots of integrations with other tools, and end-to-end chains for common applications.
 
 - Agents: Agents involve an LLM making decisions about which Actions to take, taking that Action, seeing an Observation, and repeating that until done. LangChain provides a standard interface for agents, a selection of agents to choose from, and examples of end to end agents.
 
-- Memory: Memory is the concept of persisting state between calls of a chain/agent. LangChain provides a standard interface for memory, a collection of memory implementations, and examples of chains/agents that use memory.
 
 ## Reference Docs
 
 ---
 
 All of LangChain's reference documentation, in one place. Full documentation on all methods and classes.
+
+## Production
+
+---
+
+As you move from prototyping into production, we're developing resources to help you do so.
+These including:
+
+- Deployment: resources on how to deploy your end application.
+- Tracing: resouces on how to use tracing to log and debug your applications.
+
 
 ## Additional Resources
 
