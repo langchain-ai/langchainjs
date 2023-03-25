@@ -1,5 +1,13 @@
 # Setup and Installation
 
+## Quickstart
+
+To get started with Langchain, you'll need to initialize a new Node.js project and configure some scripts to build, format, and compile your code.
+
+If you just want to get started quickly, [clone this repository](https://github.com/domeccleston/langchain-ts-starter) and follow the README instructions for a boilerplate project with those dependencies set up.
+
+If you'd prefer to set things up yourself, read on for instructions.
+
 ## Installation
 
 To get started, install LangChain with the following command:
