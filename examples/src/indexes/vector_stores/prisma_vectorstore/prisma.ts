@@ -1,43 +1,30 @@
-import {
-  PrismaTypeContent,
-  PrismaTypeId,
-  PrismaVectorStore,
-} from "langchain/vectorstores";
+import { PrismaVectorStore } from "langchain/vectorstores";
 import { OpenAIEmbeddings } from "langchain/embeddings";
-import {
-  PrismaClient,
-  Prisma,
-  Document as PrismaDocument,
-} from "@prisma/client";
-import { Document } from "langchain/document";
+import { PrismaClient, Prisma, Document } from "@prisma/client";
 
 export const run = async () => {
-  const client = new PrismaClient();
+  const db = new PrismaClient();
 
-  const vectorStore = new PrismaVectorStore<PrismaDocument, Prisma.ModelName>(
+  const vectorStore = PrismaVectorStore.withModel<Document>(db).create(
     {
+      prisma: Prisma,
       tableName: "Document",
-      columns: { id: PrismaTypeId, content: PrismaTypeContent },
       vectorColumnName: "vector",
+      columns: {
+        id: PrismaVectorStore.IdColumn,
+        content: PrismaVectorStore.ContentColumn,
+      },
     },
-    client,
-    Prisma,
     new OpenAIEmbeddings()
   );
 
   const texts = ["Hello world", "Bye bye", "What's this?"];
-
-  const data = await client.$transaction(async (tx) =>
-    Promise.all(
-      texts.map(async (content) => {
-        const metadata = await tx.document.create({ data: { content } });
-        return new Document({ pageContent: metadata.content, metadata });
-      })
+  await vectorStore.addModels(
+    await db.$transaction(
+      texts.map((content) => db.document.create({ data: { content } }))
     )
   );
 
-  await vectorStore.addDocuments(data);
   const resultOne = await vectorStore.similaritySearch("Hello world", 1);
-
-  console.log(resultOne);
+  console.log(resultOne.at(0)?.metadata.content);
 };

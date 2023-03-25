@@ -11,6 +11,7 @@
   "scripts": {
     "build": "tsc --declaration --outDir dist/",
     "start": "tsx -r dotenv/config src/index.ts",
+    "postinstall": "prisma generate --schema ./src/indexes/vector_stores/prisma_vectorstore/prisma/schema.prisma",
     "start:dist": "yarn build && node -r dotenv/config dist/index.js",
     "lint": "eslint src",
     "lint:fix": "yarn lint --fix",
