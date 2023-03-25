@@ -17,7 +17,7 @@ console.log({ res });
 This library supports PromptLayer for logging and debugging prompts and responses. To add support for PromptLayer:
 
 1. Create a PromptLayer account here: [https://promptlayer.com](https://promptlayer.com).
-2. Create an API token and pass it either as `promptLayerApiKey` argument in the `PromptLayerOpenAI` constructor or in the `PROMPT_LAYER_API_KEY` environment variable.
+2. Create an API token and pass it either as `promptLayerApiKey` argument in the `PromptLayerOpenAI` constructor or in the `PROMPTLAYER_API_KEY` environment variable.
 
 ```typescript
 const model = new PromptLayerOpenAI({ temperature: 0.9 });
