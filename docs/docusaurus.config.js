@@ -140,18 +140,18 @@ const config = {
         title: "🦜️🔗 LangChain",
         items: [
           {
-            href: "https://docs-conceptual.vercel.app/docs/",
+            href: "https://docs.langchain.com/docs/",
             label: "Concepts",
             position: "left",
           },
           {
             href: "https://langchain.readthedocs.io/",
-            label: "Python",
+            label: "Python Docs",
             position: "left",
           },
           {
             to: "/docs/",
-            label: "JS/TS",
+            label: "JS/TS Docs",
             position: "left",
           },
           // Please keep GitHub link to the right for consistency.
