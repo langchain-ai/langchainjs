@@ -24,6 +24,14 @@ interface BaseMemory {
 }
 ```
 
+:::info
+Do not share the same memory instance between two different chains, a memory instance represents the history of a single conversation
+:::
+
+:::note
+If you deploy your LangChain app on a serverless environment do not store memory instances in a variable, as your hosting provider may have reset it by the next time the function is called.
+:::
+
 ## All Memory classes
 
 <DocCardList />
