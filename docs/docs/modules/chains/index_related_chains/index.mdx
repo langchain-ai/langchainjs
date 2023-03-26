@@ -10,7 +10,9 @@ import ConvoRetrievalQAExample from "@examples/chains/conversational_qa.ts";
 
 # Index Related Chains
 
-[CONCEPTUAL GUIDE](https://docs.langchain.com/docs/components/chains/index_related_chains)
+:::info
+[Conceptual Guide](https://docs.langchain.com/docs/components/chains/index_related_chains)
+:::
 
 Chains related to working with unstructured data stored in indexes.
 
@@ -18,7 +20,7 @@ Some examples:
 
 ## Document QA Chains
 
-LangChain provides chains used for processing unstructured text data: `StuffDocumentsChain` and `MapReduceDocumentsChain`. 
+LangChain provides chains used for processing unstructured text data: `StuffDocumentsChain` and `MapReduceDocumentsChain`.
 These chains are the building blocks more complex chains for processing unstructured text data and receive both documents and a question as input. They then utilize the language model to provide an answer to the question based on the given documents.
 
 <CodeBlock language="typescript">{QAExample}</CodeBlock>
