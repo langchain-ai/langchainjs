@@ -5,6 +5,7 @@ Embeddings can be used to create a numerical representation of textual data. Thi
 Below is an example of how to use the OpenAI embeddings. Embeddings occasionally have different embedding methods for queries versus documents, so the embedding class exposes a `embedQuery` and `embedDocuments` method.
 
 ## OpenAI Embeddings
+
 ```typescript
 import { OpenAIEmbeddings } from "langchain/embeddings";
 
@@ -17,6 +18,7 @@ const documentRes = await embeddings.embedDocuments(["Hello world", "Bye bye"]);
 ```
 
 ## Cohere Embeddings
+
 ```typescript
 import { CohereEmbeddings } from "langchain/embeddings";
 

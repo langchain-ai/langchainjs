@@ -1,4 +1,3 @@
-
 import { backOff } from "exponential-backoff";
 import { chunkArray } from "../util/index.js";
 import { Embeddings, EmbeddingsParams } from "./base.js";
@@ -21,16 +20,17 @@ export class CohereEmbeddings extends Embeddings implements ModelParams {
 
   private client: typeof import("cohere-ai");
 
-	/**
+  /**
    * Constructor for the CohereEmbeddings class.
    * @param fields - An optional object with properties to configure the instance.
    */
   constructor(
-    fields?: EmbeddingsParams & Partial<ModelParams> & {
-      verbose?: boolean;
-      batchSize?: number;
-      apiKey?: string;
-    }
+    fields?: EmbeddingsParams &
+      Partial<ModelParams> & {
+        verbose?: boolean;
+        batchSize?: number;
+        apiKey?: string;
+      }
   ) {
     super(fields ?? {});
 
@@ -46,13 +46,13 @@ export class CohereEmbeddings extends Embeddings implements ModelParams {
     this.maxRetries = fields?.maxRetries ?? this.maxRetries;
   }
 
-	/**
+  /**
    * Generates embeddings for an array of texts.
    * @param texts - An array of strings to generate embeddings for.
    * @returns A Promise that resolves to an array of embeddings.
    */
   async embedDocuments(texts: string[]): Promise<number[][]> {
-		await this.maybeInitClient();
+    await this.maybeInitClient();
 
     const subPrompts = chunkArray(texts, this.batchSize);
 
@@ -72,13 +72,13 @@ export class CohereEmbeddings extends Embeddings implements ModelParams {
     return embeddings;
   }
 
-	 /**
+  /**
    * Generates an embedding for a single text.
    * @param text - A string to generate an embedding for.
    * @returns A Promise that resolves to an array of numbers representing the embedding.
    */
   async embedQuery(text: string): Promise<number[]> {
-		await this.maybeInitClient();
+    await this.maybeInitClient();
 
     const { body } = await this.embeddingWithRetry({
       model: this.modelName,
@@ -87,17 +87,18 @@ export class CohereEmbeddings extends Embeddings implements ModelParams {
     return body.embeddings[0];
   }
 
-	
-	/**
+  /**
    * Generates embeddings with retry capabilities.
    * @param request - An object containing the request parameters for generating embeddings.
    * @returns A Promise that resolves to the API response.
    */
-  private async embeddingWithRetry(request: Parameters<typeof this.client.embed>[0]) {
-		await this.maybeInitClient();
-	
+  private async embeddingWithRetry(
+    request: Parameters<typeof this.client.embed>[0]
+  ) {
+    await this.maybeInitClient();
+
     const makeCompletionRequest = () => this.client.embed(request);
-		
+
     return backOff(makeCompletionRequest, {
       startingDelay: 4,
       maxDelay: 10,
@@ -105,24 +106,24 @@ export class CohereEmbeddings extends Embeddings implements ModelParams {
     });
   }
 
-	/**
+  /**
    * Initializes the Cohere client if it hasn't been initialized already.
    */
-	private async maybeInitClient() {
-		if (!this.client) {
-			const { cohere } = await CohereEmbeddings.imports();
+  private async maybeInitClient() {
+    if (!this.client) {
+      const { cohere } = await CohereEmbeddings.imports();
 
-			this.client = cohere;
-			this.client.init(this.apiKey);
-		}
-	}
+      this.client = cohere;
+      this.client.init(this.apiKey);
+    }
+  }
 
-	/**
-	 * Dynamically imports the required dependencies for the CohereEmbeddings class.
-	 * @returns An object containing the imported cohere-ai module.
-	 * @throws An error if the cohere-ai dependency is not installed.
-	*/
-	static async imports(): Promise<{
+  /**
+   * Dynamically imports the required dependencies for the CohereEmbeddings class.
+   * @returns An object containing the imported cohere-ai module.
+   * @throws An error if the cohere-ai dependency is not installed.
+   */
+  static async imports(): Promise<{
     cohere: typeof import("cohere-ai");
   }> {
     try {
