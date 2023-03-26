@@ -7,7 +7,6 @@ LangChain is a framework for developing applications powered by language models.
 
 As such, the LangChain framework is designed with the objective in mind to enable those types of applications.
 
-
 ## Getting Started
 
 Checkout the below guide for a walkthrough of how to get started using LangChain to create an Language Model application.
@@ -30,7 +29,6 @@ There are several main modules that LangChain provides support for. For each mod
 
 - Agents: Agents involve an LLM making decisions about which Actions to take, taking that Action, seeing an Observation, and repeating that until done. LangChain provides a standard interface for agents, a selection of agents to choose from, and examples of end to end agents.
 
-
 ## Reference Docs
 
 ---
@@ -46,7 +44,6 @@ These including:
 
 - Deployment: resources on how to deploy your end application.
 - Tracing: resouces on how to use tracing to log and debug your applications.
-
 
 ## Additional Resources
 

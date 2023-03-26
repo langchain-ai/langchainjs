@@ -20,10 +20,9 @@ The `getPrompt` method takes in a language model and returns an appropriate prom
 We currently offer a `ConditionalPromptSelector` that allows you to specify a set of conditions and prompt templates. The first condition that evaluates to true will be used to select the prompt template.
 
 ```typescript
-const QA_PROMPT_SELECTOR = new ConditionalPromptSelector(
-  DEFAULT_QA_PROMPT,
-  [[isChatModel, CHAT_PROMPT]]
-);
+const QA_PROMPT_SELECTOR = new ConditionalPromptSelector(DEFAULT_QA_PROMPT, [
+  [isChatModel, CHAT_PROMPT],
+]);
 ```
 
 This will return `DEFAULT_QA_PROMPT` if the model is not a chat model, and `CHAT_PROMPT` if it is.
