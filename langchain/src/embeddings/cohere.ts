@@ -97,7 +97,7 @@ export class CohereEmbeddings extends Embeddings implements ModelParams {
   ) {
     await this.maybeInitClient();
 
-    return this.caller.call(this.client.embed, request);
+    return this.caller.call(this.client.embed.bind(this.client), request);
   }
 
   /**
