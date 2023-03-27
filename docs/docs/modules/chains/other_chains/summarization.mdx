@@ -1,0 +1,8 @@
+import CodeBlock from "@theme/CodeBlock";
+import SummarizeExample from "@examples/chains/summarization_map_reduce.ts";
+
+# Summarization
+
+A summarization chain can be used to summarize multiple documents. One way is to input multiple smaller documents, after they have been divided into chunks, and operate over them with a `MapReduceDocumentsChain`.
+
+<CodeBlock language="typescript">{SummarizeExample}</CodeBlock>
