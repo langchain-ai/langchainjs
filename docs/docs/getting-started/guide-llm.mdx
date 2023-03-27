@@ -6,7 +6,7 @@ sidebar_position: 2
 
 This tutorial gives you a quick walkthrough about building an end-to-end language model application with LangChain.
 
-## Installation and setup
+## Installation and Setup
 
 To get started, follow the [installation instructions](./install) to install LangChain.
 
@@ -22,7 +22,7 @@ Now that we have installed LangChain, we can start building our language model a
 
 LangChain provides many modules that can be used to build language model applications. Modules can be combined to create more complex applications, or be used individually for simple applications.
 
-### LLMs: Get predictions from a language model
+### LLMs: Get Predictions from a Language Model
 
 The most basic building block of LangChain is calling an LLM on some input. Let's walk through a simple example of how to do this. For this purpose, let's pretend we are building a service that generates a company name based on what the company makes.
 
@@ -65,7 +65,7 @@ console.log(res);
 { res: '\n\nFantasy Sockery' }
 ```
 
-### Prompt Templates: Manage prompts for LLMs
+### Prompt Templates: Manage Prompts for LLMs
 
 Calling an LLM is a great first step, but it's just the beginning. Normally when you use an LLM in an application, you are not sending user input directly to the LLM. Instead, you are probably taking user input and constructing a prompt, and then sending that to the LLM.
 
@@ -96,7 +96,7 @@ console.log(res);
 { res: 'What is a good name for a company that makes colorful socks?' }
 ```
 
-### Chains: Combine LLMs and prompts in multi-step workflows
+### Chains: Combine LLMs and Prompts in Multi-Step Workflows
 
 Up until now, we've worked with the PromptTemplate and LLM primitives by themselves. But of course, a real application is not just one primitive, but rather a combination of them.
 
@@ -139,7 +139,7 @@ console.log(res);
 
 There we go! There's the first chain - an LLM Chain. This is one of the simpler types of chains, but understanding how it works will set you up well for working with more complex chains.
 
-### Agents: Dynamically call chains based on user input
+### Agents: Dynamically Run Chains Based on User Input
 
 So far the chains we've looked at run in a predetermined order.
 
@@ -197,7 +197,7 @@ langchain-examples:start: Executing with input "Who is Olivia Wilde's boyfriend?
 langchain-examples:start: Got output Olivia Wilde's boyfriend is Jason Sudeikis, and his current age raised to the 0.23 power is 2.4242784855673896.
 ```
 
-### Memory: Add state to chains and agents
+### Memory: Add State to Chains and Agents
 
 So far, all the chains and agents we've gone through have been stateless. But often, you may want a chain or agent to have some concept of "memory" so that it may remember information about its previous interactions. The clearest and simple example of this is when designing a chatbot - you want it to remember previous messages so it can use context from that to have a better conversation. This would be a type of "short-term memory". On the more complex side, you could imagine a chain/agent remembering key pieces of information over time - this would be a form of "long-term memory".
 
@@ -228,4 +228,58 @@ console.log(res2);
 
 ```shell
 {response: ' You said your name is Jim. Is there anything else you would like to talk about?'}
+```
+
+## Streaming
+You can also use the streaming API to get words streamed back to you as they are generated. This is useful for eg. chatbots, where you want to show the user what is being generated as it is being generated. Note: OpenAI as of this writing does not support tokenUsage reporting while streaming is enabled.
+
+```typescript
+  const chat = new OpenAI({
+    streaming: true,
+    callbackManager: CallbackManager.fromHandlers({
+      async handleLLMNewToken(token: string) {
+        console.log(token);
+      },
+    }),
+  });
+
+  const response = await chat.call("Write me a song about sparkling water.");
+  console.log(response);
+```
+
+```
+Verse 1
+
+On a hot summer day, I'm looking for a treat
+I'm thirsty for something cool and sweet
+When I open up the fridge, what do I see?
+A bottle of sparkling water, it's calling out to me
+
+Chorus
+
+Sparkling water, it's so refreshing
+It quenches my thirst, it's the perfect thing
+It's so light and bubbly, it's like a dream
+And I'm loving every sip of sparkling water
+
+Verse 2
+
+I take it out of the fridge and pour some in a glass
+It's so light and bubbly, I can feel the fizz
+I take a sip and suddenly I'm revived
+This sparkling water's just what I need to survive
+
+Chorus
+
+Sparkling water, it's so refreshing
+It quenches my thirst, it's the perfect thing
+It's so light and bubbly, it's like a dream
+And I'm loving every sip of sparkling water
+
+Bridge
+
+It's like drinking sunshine between my hands
+It's so light and bubbly, I'm in a trance
+The summer heat's no match for sparkling water
+It's my favorite
 ```

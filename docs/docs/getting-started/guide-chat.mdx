@@ -10,7 +10,7 @@ Rather than expose a "text in, text out" API, they expose an interface where "ch
 
 Chat model APIs are fairly new, so we are still figuring out the correct abstractions.
 
-## Installation and setup
+## Installation and Setup
 
 To get started, follow the [installation instructions](./install) to install LangChain.
 
@@ -27,7 +27,7 @@ const chat = new ChatOpenAI({ temperature: 0 });
 
 Here we create a chat model using the API key stored in the environment variable `OPENAI_API_KEY`. We'll be calling this chat model throughout this section.
 
-### Message in, Message out
+### Chat Models: Message in, Message out
 
 You can get chat completions by passing one or more messages to the chat model. The response will also be a message. The types of messages currently supported in LangChain are `AIChatMessage`, `HumanChatMessage`, `SystemChatMessage`, and a generic `ChatMessage` -- ChatMessage takes in an arbitrary role parameter, which we won't be using here. Most of the time, you'll just be dealing with `HumanChatMessage`, `AIChatMessage`, and `SystemChatMessage`.
 
@@ -45,9 +45,9 @@ console.log(response);
 AIChatMessage { text: "J'aime programmer." }
 ```
 
-### Multiple Messages
+#### Multiple Messages
 
-OpenAI's chat model supports multiple messages as input. See [here](https://platform.openai.com/docs/guides/chat/chat-vs-completions) for more information. Here is an example of sending a system and user message to the chat model:
+OpenAI's chat-based models (currently `gpt-3.5-turbo` and `gpt-4`) support multiple messages as input. See [here](https://platform.openai.com/docs/guides/chat/chat-vs-completions) for more information. Here is an example of sending a system and user message to the chat model:
 
 ```typescript
 response = await chat.call([
@@ -64,7 +64,7 @@ console.log(response);
 AIChatMessage { text: "J'aime programmer." }
 ```
 
-### Multiple Completions
+#### Multiple Completions
 
 You can go one step further and generate completions for multiple sets of messages using generate. This returns an LLMResult with an additional message parameter.
 
@@ -110,9 +110,9 @@ console.log(responseC);
 }
 ```
 
-### PromptTemplates to encapsulate reusable tokens
+### Chat Prompt Templates: Manage Prompts for Chat Models
 
-You can make use of templating by using a `MessagePromptTemplate`. You can build a `ChatPromptTemplate` from one or more `MessagePromptTemplates`. You can use `ChatPromptTemplate`'s format_prompt -- this returns a `PromptValue`, which you can convert to a string or Message object, depending on whether you want to use the formatted value as input to an llm or chat model.
+You can make use of templating by using a `MessagePromptTemplate`. You can build a `ChatPromptTemplate` from one or more `MessagePromptTemplates`. You can use `ChatPromptTemplate`'s `formatPromptValue` -- this returns a `PromptValue`, which you can convert to a string or Message object, depending on whether you want to use the formatted value as input to an llm or chat model.
 
 Continuing with the previous example:
 
@@ -189,26 +189,6 @@ console.log(responseB);
 { text: "J'aime programmer." }
 ```
 
-### Stateful chains
-
-You can also use the chain to store state. This is useful for eg. chatbots, where you want to keep track of the conversation history. MessagesPlaceholder is a special prompt template that will be replaced with the messages passed in each call.
-
-```typescript
-const chatPrompt = ChatPromptTemplate.fromPromptMessages([
-  SystemMessagePromptTemplate.fromTemplate(
-    "The following is a friendly conversation between a human and an AI. The AI is talkative and provides lots of specific details from its context. If the AI does not know the answer to a question, it truthfully says it does not know."
-  ),
-  new MessagesPlaceholder("history"),
-  HumanMessagePromptTemplate.fromTemplate("{input}"),
-]);
-
-const chain = new ConversationChain({
-  memory: new BufferMemory({ returnMessages: true, memoryKey: "history" }),
-  prompt: chatPrompt,
-  llm: chat,
-});
-```
-
 The chain will internally accumulate the messages sent to the model, and the ones received as output. Then it will inject the messages into the prompt on the next call. So you can call the chain a few times, and it remembers previous messages:
 
 ```typescript
@@ -237,7 +217,7 @@ console.log(responseE);
 }
 ```
 
-### Agents and Tools
+### Agents: Dynamically Run Chains Based on User Input
 
 Finally, we introduce Tools and Agents, which extend the model with other abilities, such as search, or a calculator.
 
@@ -310,6 +290,26 @@ console.log(responseG);
 
 ```
 38,626,704.
+```
+
+### Memory: Add State to Chains and Agents
+
+You can also use the chain to store state. This is useful for eg. chatbots, where you want to keep track of the conversation history. MessagesPlaceholder is a special prompt template that will be replaced with the messages passed in each call.
+
+```typescript
+const chatPrompt = ChatPromptTemplate.fromPromptMessages([
+  SystemMessagePromptTemplate.fromTemplate(
+    "The following is a friendly conversation between a human and an AI. The AI is talkative and provides lots of specific details from its context. If the AI does not know the answer to a question, it truthfully says it does not know."
+  ),
+  new MessagesPlaceholder("history"),
+  HumanMessagePromptTemplate.fromTemplate("{input}"),
+]);
+
+const chain = new ConversationChain({
+  memory: new BufferMemory({ returnMessages: true, memoryKey: "history" }),
+  prompt: chatPrompt,
+  llm: chat,
+});
 ```
 
 ## Streaming

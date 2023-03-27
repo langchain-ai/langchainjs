@@ -2,10 +2,10 @@
 
 LangChain is a framework for developing applications powered by language models. We believe that the most powerful and differentiated applications will not only call out to a language model via an api, but will also:
 
-- Be data-aware: connect a language model to other sources of data
-- Be agentic: Allow a language model to interact with its environment
+- *Be data-aware*: connect a language model to other sources of data
+- *Be agentic*: allow a language model to interact with its environment
 
-As such, the LangChain framework is designed with the objective in mind to enable those types of applications.
+The LangChain framework is designed with the above principles in mind.
 
 ## Getting Started
 
