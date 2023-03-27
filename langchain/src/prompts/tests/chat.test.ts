@@ -143,7 +143,7 @@ test("Test SimpleMessagePromptTemplate", async () => {
   expect(messages).toEqual([new HumanChatMessage("Hello Foo, I'm Bar")]);
 });
 
-test.only("Test using partial", async () => {
+test("Test using partial", async () => {
   const userPrompt = new PromptTemplate({
     template: "{foo}{bar}",
     inputVariables: ["foo", "bar"],
@@ -156,9 +156,13 @@ test.only("Test using partial", async () => {
 
   const partialPrompt = await prompt.partial({ foo: "foo" });
 
+  // original prompt is not modified
+  expect(prompt.inputVariables).toEqual(["foo", "bar"]);
+  // partial prompt has only remaining variables
+  expect(partialPrompt.inputVariables).toEqual(["bar"]);
+
   // todo, writing to the test here no idea if thats correct
   expect(await partialPrompt.format({ bar: "baz" })).toBe(
     '[{"text":"foobaz"}]'
   );
-  expect(prompt.inputVariables).toEqual(["foo", "bar"]);
 });
