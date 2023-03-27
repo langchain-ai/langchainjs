@@ -19,35 +19,33 @@ export const run = async () => {
   // `generations` is a `Generation[][]`, each `Generation` having a `text` field.
   // Each input to the LLM could have multiple generations (depending on the `n` parameter), hence the list of lists.
   console.log(JSON.stringify(resB, null, 2));
-  //   {
-  //     "generations": [
-  //       [
-  //           {
-  //               "text": "\n\nVibrant Socks Co.",
-  //               "generationInfo": {
-  //                   "finishReason": "stop",
-  //                   "logprobs": null
-  //               }
-  //           }
-  //       ],
-  //       [
-  //           {
-  //               "text": "\n\nRainbow Knitworks.",
-  //               "generationInfo": {
-  //                   "finishReason": "stop",
-  //                   "logprobs": null
-  //               }
-  //           }
-  //       ]
-  //   ],
-  //   "llmOutput": {
-  //       "tokenUsage": {
-  //           "completionTokens": 17,
-  //            "promptTokens": 29,
-  //            "totalTokens": 46
-  //       }
-  //   }
-  // }
+  /*
+  {
+      "generations": [
+          [{
+              "text": "\n\nVibrant Socks Co.",
+              "generationInfo": {
+                  "finishReason": "stop",
+                  "logprobs": null
+              }
+          }],
+          [{
+              "text": "\n\nRainbow Knitworks.",
+              "generationInfo": {
+                  "finishReason": "stop",
+                  "logprobs": null
+              }
+          }]
+      ],
+      "llmOutput": {
+          "tokenUsage": {
+              "completionTokens": 17,
+              "promptTokens": 29,
+              "totalTokens": 46
+          }
+      }
+  }
+  */
 
   // We can specify additional parameters the specific model provider supports, like `temperature`:
   const modelB = new OpenAI({ temperature: 0.9 });
