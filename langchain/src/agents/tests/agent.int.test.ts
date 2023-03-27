@@ -5,6 +5,7 @@ import { AgentExecutor, Tool } from "../index.js";
 import { SerpAPI } from "../tools/serpapi.js";
 import { Calculator } from "../tools/calculator.js";
 import { initializeAgentExecutor } from "../initialize.js";
+import { ChatOpenAI } from "../../chat_models/index.js";
 
 test("Run agent from hub", async () => {
   const model = new OpenAI({ temperature: 0, modelName: "text-babbage-001" });
@@ -25,7 +26,7 @@ test("Run agent from hub", async () => {
   console.log(res);
 }, 30000);
 
-test("Run agent locally", async () => {
+test("Run agent locally with OpenAI", async () => {
   const model = new OpenAI({ temperature: 0, modelName: "text-babbage-001" });
   const tools = [new SerpAPI(), new Calculator()];
 
@@ -40,6 +41,25 @@ test("Run agent locally", async () => {
   console.log(`Executing with input "${input}"...`);
 
   const result = await executor.call({ input });
+
+  console.log(`Got output ${result.output}`);
+}, 30000);
+
+test.only("Run agent locally with ChatOpenAI", async () => {
+  const model = new ChatOpenAI({ temperature: 0 });
+  const tools = [new SerpAPI(), new Calculator()];
+
+  const executor = await initializeAgentExecutor(
+    tools,
+    model,
+    "zero-shot-react-description"
+  );
+  console.log("Loaded agent.");
+
+  const input = `Who is Olivia Wilde's boyfriend? What is his current age raised to the 0.23 power?`;
+  console.log(`Executing with input "${input}"...`);
+
+  const result = await executor.call({ input, chat_history: [] });
 
   console.log(`Got output ${result.output}`);
 }, 30000);
