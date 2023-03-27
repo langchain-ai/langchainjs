@@ -6,21 +6,28 @@ import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import * as fs from "fs";
 
 export const run = async () => {
-  /* Initialize the LLM to use to answer the question */
+  // Initialize the LLM to use to answer the question.
   const model = new OpenAI({});
-  /* Load in the file we want to do question answering over */
   const text = fs.readFileSync("state_of_the_union.txt", "utf8");
-  /* Split the text into chunks */
   const textSplitter = new RecursiveCharacterTextSplitter({ chunkSize: 1000 });
   const docs = await textSplitter.createDocuments([text]);
-  /* Create the vectorstore */
+
+  // Create a vector store from the documents.
   const vectorStore = await HNSWLib.fromDocuments(docs, new OpenAIEmbeddings());
-  /* Create the chain */
+
+  // Create a chain that uses the OpenAI LLM and HNSWLib vector store.
   const chain = RetrievalQAChain.fromLLM(model, vectorStore.asRetriever());
-  /* Ask it a question */
   const res = await chain.call({
     input_documents: docs,
     query: "What did the president say about Justice Breyer?",
   });
   console.log({ res });
+  /*
+  {
+    res: {
+      text: 'The president said that Justice Breyer was an Army veteran, Constitutional scholar,
+      and retiring Justice of the United States Supreme Court and thanked him for his service.'
+    }
+  }
+  */
 };

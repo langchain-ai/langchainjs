@@ -1,0 +1,20 @@
+---
+sidebar_label: Integrations
+hide_table_of_contents: true
+---
+
+import DocCardList from "@theme/DocCardList";
+
+# Integrations: Tools
+
+LangChain provides the following tools you can use out of the box:
+
+- `BingSerpAPI` - A wrapper around the Bing Search API. Useful for when you need to answer questions about current events. Input should be a search query.
+- `Calculator` - Useful for getting the result of a math expression. The input to this tool should be a valid mathematical expression that could be executed by a simple calculator.
+- `IFTTTWebHook` - A wrapper around the IFTTT Webhook API. Useful for triggering IFTTT actions.
+- `JsonListKeys` and `JsonGetValue` - Useful for extracting data from JSON objects. These tools can be used collectively in a `JsonToolkit`.
+- `RequestsGet` and `RequestsPost` - Useful for making HTTP requests.
+- `SerpAPI` - A wrapper around the SerpAPI API. Useful for when you need to answer questions about current events. Input should be a search query.
+- `QuerySqlTool`, `InfoSqlTool`, `ListTablesSqlTool`, and `SqlCheckerTool` - Useful for interacting with SQL databases. Can be used together in a `SqlToolkit`.
+- `VectorStoreQATool` - Useful for retrieving relevant text data from a vector store.
+- `ZapierNLARunAction` - A wrapper around the Zapier NLP API. Useful for triggering Zapier actions with a natural language input. Best when used in a `ZapierToolkit`.
