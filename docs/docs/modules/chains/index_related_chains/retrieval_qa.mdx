@@ -1,0 +1,10 @@
+import RetrievalQAExample from "@examples/chains/retrieval_qa.ts";
+import CodeBlock from "@theme/CodeBlock";
+
+# `RetrievalQAChain`
+
+The `RetrievalQAChain` is a chain that combines a `Retriever` and a QA chain (described above). It is used to retrieve documents from a `Retriever` and then use a `QA` chain to answer a question based on the retrieved documents.
+
+In the below example, we are using a `VectorStore` as the `Retriever`. By default, the `StuffDocumentsChain` is used as the `QA` chain.
+
+<CodeBlock language="typescript">{RetrievalQAExample}</CodeBlock>
