@@ -1,4 +1,3 @@
-import { backOff } from "exponential-backoff";
 import { chunkArray } from "../util/index.js";
 import { Embeddings, EmbeddingsParams } from "./base.js";
 
@@ -12,9 +11,11 @@ interface ModelParams {
 export class CohereEmbeddings extends Embeddings implements ModelParams {
   modelName = "small";
 
-  batchSize = 20;
-
-  maxRetries = 6;
+  /**
+   * The maximum number of documents to embed in a single request. This is
+   * limited by the Cohere API to a maximum of 96.
+   */
+  batchSize = 48;
 
   private apiKey: string;
 
@@ -43,7 +44,6 @@ export class CohereEmbeddings extends Embeddings implements ModelParams {
     this.modelName = fields?.modelName ?? this.modelName;
     this.batchSize = fields?.batchSize ?? this.batchSize;
     this.apiKey = apiKey;
-    this.maxRetries = fields?.maxRetries ?? this.maxRetries;
   }
 
   /**
@@ -97,13 +97,7 @@ export class CohereEmbeddings extends Embeddings implements ModelParams {
   ) {
     await this.maybeInitClient();
 
-    const makeCompletionRequest = () => this.client.embed(request);
-
-    return backOff(makeCompletionRequest, {
-      startingDelay: 4,
-      maxDelay: 10,
-      numOfAttempts: this.maxRetries,
-    });
+    return this.caller.call(this.client.embed, request);
   }
 
   /**
