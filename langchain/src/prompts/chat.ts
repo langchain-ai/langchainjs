@@ -187,17 +187,17 @@ export class ChatPromptTemplate
           ]}\` are not used in any of the prompt messages.`
         );
       }
-      const thisInputVariables = new Set(this.inputVariables);
-      const otherDifference = new Set(
-        [...inputVariables].filter((x) => !thisInputVariables.has(x))
-      );
-      if (otherDifference.size > 0) {
-        throw new Error(
-          `Input variables \`${[
-            ...otherDifference,
-          ]}\` are used in prompt messages but not in the prompt template.`
-        );
-      }
+      // const thisInputVariables = new Set(this.inputVariables);
+      // const otherDifference = new Set(
+      //   [...inputVariables].filter((x) => !thisInputVariables.has(x))
+      // );
+      // if (otherDifference.size > 0) {
+      //   throw new Error(
+      //     `Input variables \`${[
+      //       ...otherDifference,
+      //     ]}\` are used in prompt messages but not in the prompt template.`
+      //   );
+      // }
     }
   }
 
@@ -210,16 +210,18 @@ export class ChatPromptTemplate
   }
 
   async formatPromptValue(values: InputValues): Promise<BasePromptValue> {
+    const allValues = await this.mergePartialAndUserVariables(values);
+
     let resultMessages: BaseChatMessage[] = [];
     for (const promptMessage of this.promptMessages) {
       const inputValues: InputValues = {};
       for (const inputVariable of promptMessage.inputVariables) {
-        if (!(inputVariable in values)) {
+        if (!(inputVariable in allValues)) {
           throw new Error(
             `Missing value for input variable \`${inputVariable}\``
           );
         }
-        inputValues[inputVariable] = values[inputVariable];
+        inputValues[inputVariable] = allValues[inputVariable];
       }
       const message = await promptMessage.formatMessages(inputValues);
       resultMessages = resultMessages.concat(message);
@@ -239,8 +241,16 @@ export class ChatPromptTemplate
     };
   }
 
-  async partial(_: PartialValues): Promise<BasePromptTemplate> {
-    throw new Error("ChatPromptTemplate.partial() not yet implemented");
+  async partial(values: PartialValues): Promise<BasePromptTemplate> {
+    const promptDict: ChatPromptTemplateInput = { ...this };
+    promptDict.inputVariables = this.inputVariables.filter(
+      (iv) => !(iv in values)
+    );
+    promptDict.partialVariables = {
+      ...(this.partialVariables ?? {}),
+      ...values,
+    };
+    return new ChatPromptTemplate(promptDict);
   }
 
   static fromPromptMessages(
