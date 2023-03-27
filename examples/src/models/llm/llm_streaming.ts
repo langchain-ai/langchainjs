@@ -16,30 +16,32 @@ export const run = async () => {
 
   const response = await chat.call("Tell me a joke.");
   console.log(response);
-  // { token: '\n' }
-  // { token: '\n' }
-  // { token: 'Q' }
-  // { token: ':' }
-  // { token: ' Why' }
-  // { token: ' did' }
-  // { token: ' the' }
-  // { token: ' chicken' }
-  // { token: ' cross' }
-  // { token: ' the' }
-  // { token: ' playground' }
-  // { token: '?' }
-  // { token: '\n' }
-  // { token: 'A' }
-  // { token: ':' }
-  // { token: ' To' }
-  // { token: ' get' }
-  // { token: ' to' }
-  // { token: ' the' }
-  // { token: ' other' }
-  // { token: ' slide' }
-  // { token: '.' }
-  //
-  //
-  // Q: Why did the chicken cross the playground?
-  // A: To get to the other slide.
+  /*
+  { token: '\n' }
+  { token: '\n' }
+  { token: 'Q' }
+  { token: ':' }
+  { token: ' Why' }
+  { token: ' did' }
+  { token: ' the' }
+  { token: ' chicken' }
+  { token: ' cross' }
+  { token: ' the' }
+  { token: ' playground' }
+  { token: '?' }
+  { token: '\n' }
+  { token: 'A' }
+  { token: ':' }
+  { token: ' To' }
+  { token: ' get' }
+  { token: ' to' }
+  { token: ' the' }
+  { token: ' other' }
+  { token: ' slide' }
+  { token: '.' }
+
+
+  Q: Why did the chicken cross the playground?
+  A: To get to the other slide.
+  */
 };
