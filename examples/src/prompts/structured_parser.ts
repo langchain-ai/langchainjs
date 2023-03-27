@@ -28,7 +28,7 @@ export const run = async () => {
   console.log(input);
   /*
   Answer the users question as best as possible.
-  The output should be a markdown code snippet formatted in the following schema:
+  Your ONLY response should be a fenced code block formatted in the following schema:
   ```json
   {
       "answer": string // answer to the user's question

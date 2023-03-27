@@ -88,7 +88,7 @@ export class StructuredOutputParser<
   }
 
   getFormatInstructions(): string {
-    return `The output should be a markdown code snippet formatted in the following schema:
+    return `Your ONLY response should be a fenced code block formatted in the following schema:
 
 \`\`\`json
 ${printSchema(this.schema)}
@@ -100,7 +100,13 @@ Including the leading and trailing "\`\`\`json" and "\`\`\`"
 
   async parse(text: string): Promise<z.infer<T>> {
     try {
-      const json = text.trim().split("```json")[1].split("```")[0].trim();
+      let json = text.trim();
+      // not very consistent using syntax highlighting
+      json = json.includes("```json")
+        ? json.split("```json")[1]
+        : json.split("```")[1];
+      json = json.split("```")[0].trim();
+
       return this.schema.parse(JSON.parse(json));
     } catch (e) {
       throw new OutputParserException(
