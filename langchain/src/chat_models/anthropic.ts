@@ -5,7 +5,6 @@ import {
   CompletionResponse,
   SamplingParameters,
 } from "@anthropic-ai/sdk";
-import { backOff } from "exponential-backoff";
 import { BaseChatModel, BaseChatModelParams } from "./base.js";
 import {
   AIChatMessage,
@@ -253,7 +252,6 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
   async completionWithRetry(
     request: SamplingParameters & Kwargs
   ): Promise<CompletionResponse> {
-    console.log(request.prompt);
     if (!this.apiKey) {
       throw new Error("Missing Anthropic API key.");
     }
@@ -285,11 +283,7 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
       }
       makeCompletionRequest = async () => this.batchClient.complete(request);
     }
-    return backOff(makeCompletionRequest, {
-      startingDelay: 4,
-      maxDelay: 10,
-      numOfAttempts: this.maxRetries,
-    });
+    return this.caller.call(makeCompletionRequest);
   }
 
   _llmType() {
