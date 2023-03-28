@@ -6,7 +6,7 @@ Assistant is constantly learning and improving, and its capabilities are constan
 
 Overall, Assistant is a powerful system that can help with a wide range of tasks and provide valuable insights and information on a wide range of topics. Whether you need help with a specific question or just want to have a conversation about a particular topic, Assistant is here to assist.`;
 
-export const PREFIX_END = ` However, all responses must adhere to the style of RESPONSE FORMAT INSTRUCTIONS.`;
+export const PREFIX_END = ` However, above all else, all responses must adhere to the format of RESPONSE FORMAT INSTRUCTIONS.`;
 
 export const FORMAT_INSTRUCTIONS = `RESPONSE FORMAT INSTRUCTIONS
 ----------------------------

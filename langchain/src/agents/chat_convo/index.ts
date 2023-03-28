@@ -50,10 +50,14 @@ export class ChatConversationalAgentOutputParser extends BaseOutputParser {
 }
 
 export type CreatePromptArgs = {
-  /** String to put after the list of tools. */
+  /** DEPRECATED: String to put after the list of tools. */
   systemMessage?: string;
-  /** String to put before the list of tools. */
+  /** DEPRECATED: String to put before the list of tools. */
   humanMessage?: string;
+  /** String to put after the list of tools. */
+  prefix?: string;
+  /** String to put before the list of tools. */
+  suffix?: string;
   /** List of input variables the final prompt will expect. */
   inputVariables?: string[];
   /** Output parser to use for formatting. */
@@ -125,12 +129,13 @@ export class ChatConversationalAgent extends Agent {
    *
    * @param tools - List of tools the agent will have access to, used to format the prompt.
    * @param args - Arguments to create the prompt with.
-   * @param args.systemMessage - String to put after the list of tools.
-   * @param args.humanMessage - String to put before the list of tools.
+   * @param args.prefix - String to put before the list of tools.
+   * @param args.suffix - String to put after the list of tools.
    */
   static createPrompt(tools: Tool[], args?: CreatePromptArgs) {
-    const systemMessage = (args?.systemMessage ?? DEFAULT_PREFIX) + PREFIX_END;
-    const humanMessage = args?.humanMessage ?? DEFAULT_SUFFIX;
+    const systemMessage =
+      (args?.prefix ?? args?.systemMessage ?? DEFAULT_PREFIX) + PREFIX_END;
+    const humanMessage = args?.suffix ?? args?.humanMessage ?? DEFAULT_SUFFIX;
     const outputParser =
       args?.outputParser ?? new ChatConversationalAgentOutputParser();
     const toolStrings = tools
