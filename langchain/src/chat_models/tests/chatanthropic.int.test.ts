@@ -104,7 +104,7 @@ test("ChatAnthropic, docs, prompt templates", async () => {
   ]);
 
   console.log(responseA.generations);
-}, 50000);
+});
 
 test("ChatAnthropic, longer chain of messages", async () => {
   const chat = new ChatAnthropic({ temperature: 0 });
@@ -122,4 +122,4 @@ test("ChatAnthropic, longer chain of messages", async () => {
   ]);
 
   console.log(responseA.generations);
-}, 50000);
+});
