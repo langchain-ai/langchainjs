@@ -161,9 +161,6 @@
     "d3-dsv": {
       "optional": true
     },
-    "flat": {
-      "optional": true
-    },
     "hnswlib-node": {
       "optional": true
     },
