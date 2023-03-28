@@ -68,7 +68,7 @@ export abstract class VectorStore {
 
   static fromTexts(
     _texts: string[],
-    _metadatas: object[],
+    _metadatas: object[] | object,
     _embeddings: Embeddings,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     _dbConfig: Record<string, any>

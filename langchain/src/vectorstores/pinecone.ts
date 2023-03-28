@@ -1,5 +1,6 @@
 import type { VectorOperationsApi } from "@pinecone-database/pinecone/dist/pinecone-generated-ts-fetch";
 import { v4 as uuidv4 } from "uuid";
+import flatten from "flat";
 
 import { VectorStore } from "./base.js";
 import { Embeddings } from "../embeddings/base.js";
@@ -51,10 +52,10 @@ export class PineconeStore extends VectorStore {
     const documentIds = ids == null ? documents.map(() => uuidv4()) : ids;
     const pineconeVectors = vectors.map((values, idx) => ({
       id: documentIds[idx],
-      metadata: {
+      metadata: flatten({
         ...documents[idx].metadata,
         [this.textKey]: documents[idx].pageContent,
-      },
+      }) as object,
       values,
     }));
 
@@ -107,7 +108,7 @@ export class PineconeStore extends VectorStore {
 
   static async fromTexts(
     texts: string[],
-    metadatas: object[],
+    metadatas: object[] | object,
     embeddings: Embeddings,
     dbConfig:
       | {
@@ -122,9 +123,10 @@ export class PineconeStore extends VectorStore {
   ): Promise<PineconeStore> {
     const docs: Document[] = [];
     for (let i = 0; i < texts.length; i += 1) {
+      const metadata = Array.isArray(metadatas) ? metadatas[i] : metadatas;
       const newDoc = new Document({
         pageContent: texts[i],
-        metadata: metadatas[i],
+        metadata,
       });
       docs.push(newDoc);
     }

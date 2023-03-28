@@ -17,19 +17,19 @@ export const run = async () => {
   });
   console.log("Loaded agent.");
 
-  const input0 = `"hi, i am bob"`;
+  const input0 = "hi, i am bob";
 
   const result0 = await executor.call({ input: input0 });
 
   console.log(`Got output ${result0.output}`);
 
-  const input1 = `"whats my name?"`;
+  const input1 = "whats my name?";
 
   const result1 = await executor.call({ input: input1 });
 
   console.log(`Got output ${result1.output}`);
 
-  const input2 = `"whats the weather in pomfret?"`;
+  const input2 = "whats the weather in pomfret?";
 
   const result2 = await executor.call({ input: input2 });
 
