@@ -156,7 +156,7 @@ export class Chroma extends VectorStore {
   static async fromExistingCollection(
     embeddings: Embeddings,
     dbConfig: {
-      collectionName?: string;
+      collectionName: string;
       url?: string;
     }
   ): Promise<Chroma> {
