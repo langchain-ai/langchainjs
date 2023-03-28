@@ -1,21 +1,19 @@
 import { ChatOpenAI } from "langchain/chat_models";
 import { initializeAgentExecutorWithOptions } from "langchain/agents";
 import { SerpAPI, Calculator } from "langchain/tools";
-import { BufferMemory } from "langchain/memory";
 
 export const run = async () => {
   process.env.LANGCHAIN_HANDLER = "langchain";
   const model = new ChatOpenAI({ temperature: 0 });
   const tools = [new SerpAPI(), new Calculator()];
 
+  // Passing "chat-conversational-react-description" as the agent type
+  // automatically creates and uses BufferMemory with the executor.
+  // If you would like to override this, you can pass in a custom
+  // memory option, but the memoryKey set on it must be "chat_history".
   const executor = await initializeAgentExecutorWithOptions(tools, model, {
     agentType: "chat-conversational-react-description",
     verbose: true,
-    memory: new BufferMemory({
-      returnMessages: true,
-      memoryKey: "chat_history",
-      inputKey: "input",
-    }),
   });
   console.log("Loaded agent.");
 

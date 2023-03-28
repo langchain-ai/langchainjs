@@ -5,7 +5,7 @@ import { ChatConversationalAgent } from "./chat_convo/index.js";
 import { ChatAgent } from "./chat/index.js";
 import { BaseLanguageModel } from "../base_language/index.js";
 import { CallbackManager, getCallbackManager } from "../callbacks/index.js";
-import { BaseMemory } from "../memory/index.js";
+import { BaseMemory, BufferMemory } from "../memory/index.js";
 
 type AgentType =
   | "zero-shot-react-description"
@@ -53,8 +53,7 @@ export const initializeAgentExecutorWithOptions = async (
   llm: BaseLanguageModel,
   options: {
     agentType?: AgentType;
-    prefix?: string;
-    suffix?: string;
+    promptArgs?: object;
     memory?: BaseMemory;
     returnIntermediateSteps?: boolean;
     verbose?: boolean;
@@ -68,42 +67,55 @@ export const initializeAgentExecutorWithOptions = async (
 
   switch (agentType) {
     case "zero-shot-react-description": {
+      if (options.memory) {
+        throw new Error(
+          `The "memory" option is only supported for executors with agentType "chat-conversational-react-description".`
+        );
+      }
       return AgentExecutor.fromAgentAndTools({
-        agent: ZeroShotAgent.fromLLMAndTools(llm, tools, {
-          prefix: options.prefix,
-          suffix: options.suffix,
-        }),
+        agent: ZeroShotAgent.fromLLMAndTools(
+          llm,
+          tools,
+          options.promptArgs ?? {}
+        ),
         tools,
         returnIntermediateSteps,
         verbose,
         callbackManager,
-        memory: options.memory,
       });
     }
     case "chat-zero-shot-react-description": {
+      if (options.memory) {
+        throw new Error(
+          `The "memory" option is only supported for executors with agentType "chat-conversational-react-description".`
+        );
+      }
       return AgentExecutor.fromAgentAndTools({
-        agent: ChatAgent.fromLLMAndTools(llm, tools, {
-          prefix: options.prefix,
-          suffix: options.suffix,
-        }),
+        agent: ChatAgent.fromLLMAndTools(llm, tools, options.promptArgs ?? {}),
         tools,
         returnIntermediateSteps,
         verbose,
         callbackManager,
-        memory: options.memory,
       });
     }
     case "chat-conversational-react-description": {
       const executor = AgentExecutor.fromAgentAndTools({
-        agent: ChatConversationalAgent.fromLLMAndTools(llm, tools, {
-          prefix: options.prefix,
-          suffix: options.suffix,
-        }),
+        agent: ChatConversationalAgent.fromLLMAndTools(
+          llm,
+          tools,
+          options.promptArgs ?? {}
+        ),
         tools,
         returnIntermediateSteps,
         verbose,
         callbackManager,
-        memory: options.memory,
+        memory:
+          options.memory ??
+          new BufferMemory({
+            returnMessages: true,
+            memoryKey: "chat_history",
+            inputKey: "input",
+          }),
       });
       return executor;
     }
