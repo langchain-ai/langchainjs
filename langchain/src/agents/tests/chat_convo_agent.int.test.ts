@@ -36,4 +36,4 @@ test("Run conversational agent with memory", async () => {
   const result2 = await executor.call({ input: input2 });
 
   console.log(`Got output ${result2.output}`);
-}, 30000);
+});
