@@ -10433,7 +10433,6 @@ __metadata:
     js-yaml: ^4.1.0
     langchain: "workspace:*"
     prettier: ^2.8.3
-    serpapi: ^1.1.0
     sqlite3: ^5.1.4
     tsx: ^3.12.3
     typeorm: ^0.3.12
@@ -10493,7 +10492,6 @@ __metadata:
     puppeteer: ^19.7.2
     redis: ^4.6.4
     rollup: ^3.19.1
-    serpapi: ^1.1.1
     sqlite3: ^5.1.4
     srt-parser-2: ^1.2.2
     ts-jest: ^29.0.5
@@ -10516,7 +10514,6 @@ __metadata:
     pdfjs-dist: ^3.4.120
     puppeteer: ^19.7.2
     redis: ^4.6.4
-    serpapi: ^1.1.1
     srt-parser-2: ^1.2.2
     typeorm: ^0.3.12
   peerDependenciesMeta:
@@ -10543,8 +10540,6 @@ __metadata:
     puppeteer:
       optional: true
     redis:
-      optional: true
-    serpapi:
       optional: true
     srt-parser-2:
       optional: true
@@ -13933,7 +13928,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"serpapi@npm:^1.1.0, serpapi@npm:^1.1.1":
+"serpapi@npm:^1.1.1":
   version: 1.1.1
   resolution: "serpapi@npm:1.1.1"
   dependencies:
