@@ -1,5 +1,6 @@
 import type { VectorOperationsApi } from "@pinecone-database/pinecone/dist/pinecone-generated-ts-fetch";
 import { v4 as uuidv4 } from "uuid";
+import flatten from "flat";
 
 import { VectorStore } from "./base.js";
 import { Embeddings } from "../embeddings/base.js";
@@ -51,10 +52,10 @@ export class PineconeStore extends VectorStore {
     const documentIds = ids == null ? documents.map(() => uuidv4()) : ids;
     const pineconeVectors = vectors.map((values, idx) => ({
       id: documentIds[idx],
-      metadata: {
+      metadata: flatten({
         ...documents[idx].metadata,
         [this.textKey]: documents[idx].pageContent,
-      },
+      }) as object,
       values,
     }));
 
