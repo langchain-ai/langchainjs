@@ -3,6 +3,9 @@
   "version": "0.0.42",
   "description": "Typescript bindings for langchain",
   "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
   "main": "./index.js",
   "types": "./index.d.ts",
   "files": [
@@ -62,7 +65,6 @@
     "prepack": "yarn build",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest --testPathIgnorePatterns=\\.int\\.test.ts",
     "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch --testPathIgnorePatterns=\\.int\\.test.ts",
-    "test:node16": "NODE_OPTIONS='--experimental-vm-modules --experimental-fetch' jest --testPathIgnorePatterns=\\.int\\.test.ts --testPathIgnorePatterns=\\.blob\\.test.ts",
     "test:integration": "NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern=\\.int\\.test.ts --testTimeout 50000",
     "test:single": "NODE_OPTIONS=--experimental-vm-modules yarn run jest --config jest.config.cjs --testTimeout 50000 -- ",
     "prepare": "husky install",
