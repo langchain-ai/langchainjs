@@ -237,7 +237,7 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
     });
 
     const generations: ChatGeneration[] = response.completion
-      .split(new RegExp(`(${HUMAN_PROMPT}|${AI_PROMPT})`, "g"))
+      .split(AI_PROMPT)
       .map((message) => ({
         text: message,
         message: new AIChatMessage(message),

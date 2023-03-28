@@ -4,6 +4,7 @@ import { ChatPromptValue } from "../../prompts/chat.js";
 import {
   PromptTemplate,
   ChatPromptTemplate,
+  AIMessagePromptTemplate,
   HumanMessagePromptTemplate,
   SystemMessagePromptTemplate,
 } from "../../prompts/index.js";
@@ -99,6 +100,24 @@ test("ChatAnthropic, docs, prompt templates", async () => {
       input_language: "English",
       output_language: "French",
       text: "I love programming.",
+    }),
+  ]);
+
+  console.log(responseA.generations);
+}, 50000);
+
+test("ChatAnthropic, longer chain of messages", async () => {
+  const chat = new ChatAnthropic({ temperature: 0 });
+
+  const chatPrompt = ChatPromptTemplate.fromPromptMessages([
+    HumanMessagePromptTemplate.fromTemplate(`Hi, my name is Joe!`),
+    AIMessagePromptTemplate.fromTemplate(`Nice to meet you, Joe!`),
+    HumanMessagePromptTemplate.fromTemplate("{text}"),
+  ]);
+
+  const responseA = await chat.generatePrompt([
+    await chatPrompt.formatPromptValue({
+      text: "What did I say my name was?",
     }),
   ]);
 
