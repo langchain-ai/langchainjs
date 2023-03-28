@@ -80,9 +80,6 @@ interface AnthropicInput extends ModelParams {
    * `anthropic.complete`} that are not explicitly specified on this class.
    */
   invocationKwargs?: Kwargs;
-
-  /** Maximum number of retries to make when generating */
-  maxRetries: number;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -91,7 +88,7 @@ type Kwargs = Record<string, any>;
 /**
  * Wrapper around Anthropic large language models.
  *
- * To use you should have the `anthropic` package installed, with the
+ * To use you should have the `@anthropic-ai/sdk` package installed, with the
  * `ANTHROPIC_API_KEY` environment variable set.
  *
  * @remarks
@@ -118,8 +115,6 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
 
   invocationKwargs?: Kwargs;
 
-  maxRetries = 6;
-
   stopSequences = [HUMAN_PROMPT];
 
   streaming = false;
@@ -145,7 +140,6 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
 
     this.modelName = fields?.modelName ?? this.modelName;
     this.invocationKwargs = fields?.invocationKwargs ?? {};
-    this.maxRetries = fields?.maxRetries ?? this.maxRetries;
 
     this.temperature = fields?.temperature ?? this.temperature;
     this.topK = fields?.topK ?? this.topK;
