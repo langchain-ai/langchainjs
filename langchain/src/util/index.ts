@@ -30,11 +30,10 @@ export const fetchWithTimeout = async (
   init: Omit<RequestInit, "signal"> & { timeout: number }
 ) => {
   const { timeout, ...rest } = init;
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeout);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const res = await fetch(url, { ...rest, signal: controller.signal as any });
-  clearTimeout(timeoutId);
+  const res = await fetch(url, {
+    ...rest,
+    signal: AbortSignal.timeout(timeout),
+  });
   return res;
 };
 
