@@ -167,7 +167,7 @@ export class HNSWLib extends SaveableVectorStore {
 
   static async fromTexts(
     texts: string[],
-    metadatas: object[],
+    metadatas: object[] | object,
     embeddings: Embeddings,
     dbConfig?: {
       docstore?: InMemoryDocstore;
@@ -175,9 +175,10 @@ export class HNSWLib extends SaveableVectorStore {
   ): Promise<HNSWLib> {
     const docs: Document[] = [];
     for (let i = 0; i < texts.length; i += 1) {
+      const metadata = Array.isArray(metadatas) ? metadatas[i] : metadatas;
       const newDoc = new Document({
         pageContent: texts[i],
-        metadata: metadatas[i],
+        metadata,
       });
       docs.push(newDoc);
     }

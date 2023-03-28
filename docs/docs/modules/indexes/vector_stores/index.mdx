@@ -9,7 +9,75 @@ sidebar_position: 3
 [Conceptual Guide](https://docs.langchain.com/docs/components/indexing/vectorstore)
 :::
 
-A vectorstore is a particular type of database optimized for storing documents, embeddings, and then allowing for fetching of the most relevant documents for a particular query.
+A vector store is a particular type of database optimized for storing documents and their [embeddings](../../models/embeddings/), and then fetching of the most relevant documents for a particular query, ie. those whose embeddings are most similar to the embedding of the query.
+
+```typescript
+interface VectorStore {
+  /**
+   * Add more documents to an existing VectorStore
+   */
+  addDocuments(documents: Document[]): Promise<void>;
+
+  /**
+   * Search for the most similar documents to a query
+   */
+  similaritySearch(
+    query: string,
+    k?: number,
+    filter?: object | undefined
+  ): Promise<Document[]>;
+
+  /**
+   * Search for the most similar documents to a query,
+   * and return their similarity score
+   */
+  similaritySearchWithScore(
+    query: string,
+    k = 4,
+    filter: object | undefined = undefined
+  ): Promise<[object, number][]>;
+
+  /**
+   * Turn a VectorStore into a Retriever
+   */
+  asRetriever(k?: number): BaseRetriever;
+
+  /**
+   * Advanced: Add more documents to an existing VectorStore,
+   * when you already have their embeddings
+   */
+  addVectors(vectors: number[][], documents: Document[]): Promise<void>;
+
+  /**
+   * Advanced: Search for the most similar documents to a query,
+   * when you already have the embedding of the query
+   */
+  similaritySearchVectorWithScore(
+    query: number[],
+    k: number,
+    filter?: object
+  ): Promise<[Document, number][]>;
+}
+```
+
+You can create a vector store from a list of [Documents](../../schema/document), or from a list of texts and their corresponding metadata. You can also create a vector store from an existing index, the signature of this method depends on the vector store you're using, check the documentation of the vector store you're interested in.
+
+```typescript
+abstract class BaseVectorStore implements VectorStore {
+  static fromTexts(
+    texts: string[],
+    metadatas: object[] | object,
+    embeddings: Embeddings,
+    dbConfig: Record<string, any>
+  ): Promise<VectorStore>;
+
+  static fromDocuments(
+    docs: Document[],
+    embeddings: Embeddings,
+    dbConfig: Record<string, any>
+  ): Promise<VectorStore>;
+}
+```
 
 ## Which one to pick?
 
