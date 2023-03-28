@@ -5214,15 +5214,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"busboy@npm:^1.6.0":
-  version: 1.6.0
-  resolution: "busboy@npm:1.6.0"
-  dependencies:
-    streamsearch: ^1.1.0
-  checksum: 32801e2c0164e12106bf236291a00795c3c4e4b709ae02132883fe8478ba2ae23743b11c5735a0aae8afe65ac4b6ca4568b91f0d9fed1fdbc32ede824a73746e
-  languageName: node
-  linkType: hard
-
 "bytes@npm:3.0.0":
   version: 3.0.0
   resolution: "bytes@npm:3.0.0"
@@ -6673,13 +6664,11 @@ __metadata:
     eslint-plugin-jsx-a11y: ^6.6.0
     eslint-plugin-react: ^7.30.1
     eslint-plugin-react-hooks: ^4.6.0
-    openai: ^3.1.0
     prettier: ^2.7.1
     process: ^0.11.10
     raw-loader: ^4.0.2
     react: ^17.0.2
     react-dom: ^17.0.2
-    serpapi: ^1.1.1
     typedoc: ^0.23.25
     typedoc-plugin-markdown: ^3.14.0
     typedoc-plugin-missing-exports: ^1.0.0
@@ -10449,7 +10438,6 @@ __metadata:
     js-yaml: ^4.1.0
     langchain: "workspace:*"
     prettier: ^2.8.3
-    serpapi: ^1.1.0
     sqlite3: ^5.1.4
     tsx: ^3.12.3
     typeorm: ^0.3.12
@@ -10511,7 +10499,6 @@ __metadata:
     puppeteer: ^19.7.2
     redis: ^4.6.4
     rollup: ^3.19.1
-    serpapi: ^1.1.1
     sqlite3: ^5.1.4
     srt-parser-2: ^1.2.2
     ts-jest: ^29.0.5
@@ -10534,7 +10521,6 @@ __metadata:
     pdfjs-dist: ^3.4.120
     puppeteer: ^19.7.2
     redis: ^4.6.4
-    serpapi: ^1.1.1
     srt-parser-2: ^1.2.2
     typeorm: ^0.3.12
   peerDependenciesMeta:
@@ -10561,8 +10547,6 @@ __metadata:
     puppeteer:
       optional: true
     redis:
-      optional: true
-    serpapi:
       optional: true
     srt-parser-2:
       optional: true
@@ -11815,7 +11799,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"openai@npm:^3.1.0, openai@npm:^3.2.0":
+"openai@npm:^3.2.0":
   version: 3.2.1
   resolution: "openai@npm:3.2.1"
   dependencies:
@@ -13951,15 +13935,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"serpapi@npm:^1.1.0, serpapi@npm:^1.1.1":
-  version: 1.1.1
-  resolution: "serpapi@npm:1.1.1"
-  dependencies:
-    undici: ^5.12.0
-  checksum: d96c90bd669329828fc50dbf39c37551c4761da81f0bdf44b7da709dc2f867e082c8c48020b38ad3a69b60aae710339be3cec89371a549778bda0e7ec9841eba
-  languageName: node
-  linkType: hard
-
 "serve-handler@npm:^6.1.3":
   version: 6.1.5
   resolution: "serve-handler@npm:6.1.5"
@@ -14457,13 +14432,6 @@ __metadata:
   dependencies:
     internal-slot: ^1.0.4
   checksum: d04173690b2efa40e24ab70e5e51a3ff31d56d699550cfad084104ab3381390daccb36652b25755e420245f3b0737de66c1879eaa2a8d4fc0a78f9bf892fcb42
-  languageName: node
-  linkType: hard
-
-"streamsearch@npm:^1.1.0":
-  version: 1.1.0
-  resolution: "streamsearch@npm:1.1.0"
-  checksum: 1cce16cea8405d7a233d32ca5e00a00169cc0e19fbc02aa839959985f267335d435c07f96e5e0edd0eadc6d39c98d5435fb5bbbdefc62c41834eadc5622ad942
   languageName: node
   linkType: hard
 
@@ -15412,15 +15380,6 @@ __metadata:
     buffer: ^5.2.1
     through: ^2.3.8
   checksum: 0e67c4a91f4fa0fc7b4045f8b914d3498c2fc2e8c39c359977708ec85ac6d6029840e97f508675fdbdf21fcb8d276ca502043406f3682b70f075e69aae626d1d
-  languageName: node
-  linkType: hard
-
-"undici@npm:^5.12.0":
-  version: 5.20.0
-  resolution: "undici@npm:5.20.0"
-  dependencies:
-    busboy: ^1.6.0
-  checksum: 25412a785b2bd0b12f0bb0ec47ef00aa7a611ca0e570cb7af97cffe6a42e0d78e4b15190363a43771e9002defc3c6647c1b2d52201b3f64e2196819db4d150d3
   languageName: node
   linkType: hard
 

@@ -111,7 +111,6 @@
     "puppeteer": "^19.7.2",
     "redis": "^4.6.4",
     "rollup": "^3.19.1",
-    "serpapi": "^1.1.1",
     "sqlite3": "^5.1.4",
     "srt-parser-2": "^1.2.2",
     "ts-jest": "^29.0.5",
@@ -132,7 +131,6 @@
     "pdfjs-dist": "^3.4.120",
     "puppeteer": "^19.7.2",
     "redis": "^4.6.4",
-    "serpapi": "^1.1.1",
     "srt-parser-2": "^1.2.2",
     "typeorm": "^0.3.12"
   },
@@ -171,9 +169,6 @@
       "optional": true
     },
     "redis": {
-      "optional": true
-    },
-    "serpapi": {
       "optional": true
     },
     "srt-parser-2": {
