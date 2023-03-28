@@ -16,19 +16,30 @@ test("Test PDF loader from blob", async () => {
   );
   const docs = await loader.load();
 
-  expect(docs.length).toBe(1);
+  expect(docs.length).toBe(15);
   expect(docs[0].pageContent).toContain("Attention Is All You Need");
   expect(docs[0].metadata).toMatchInlineSnapshot(`
     {
       "blobType": "application/pdf",
+      "loc": {
+        "pageNumber": 1,
+      },
       "pdf": {
         "info": {
           "Author": "",
           "CreationDate": "D:20171207010315Z",
           "Creator": "LaTeX with hyperref package",
+          "Custom": {
+            "PTEX.Fullbanner": "This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) kpathsea version 6.2.2",
+          },
+          "EncryptFilterName": null,
           "IsAcroFormPresent": false,
+          "IsCollectionPresent": false,
+          "IsLinearized": false,
+          "IsSignaturesPresent": false,
           "IsXFAPresent": false,
           "Keywords": "",
+          "Language": null,
           "ModDate": "D:20171207010315Z",
           "PDFFormatVersion": "1.5",
           "Producer": "pdfTeX-1.40.17",
@@ -39,7 +50,8 @@ test("Test PDF loader from blob", async () => {
           },
         },
         "metadata": null,
-        "numpages": 15,
+        "totalPages": 15,
+        "version": "3.4.120",
       },
       "source": "blob",
     }
