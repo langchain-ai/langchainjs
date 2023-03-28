@@ -21,6 +21,7 @@ const entrypoints = {
   sql_db: "sql_db",
   callbacks: "callbacks/index",
   output_parsers: "output_parsers/index",
+  retrievers: "retrievers/index",
 };
 
 const updateJsonFile = (relativePath, updateFunction) => {

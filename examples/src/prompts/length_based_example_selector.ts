@@ -38,39 +38,39 @@ export async function run() {
 
   // An example with small input, so it selects all examples.
   console.log(await dynamicPrompt.format({ adjective: "big" }));
-  /**
-   * Give the antonym of every input
-   *
-   * Input: happy
-   * Output: sad
-   *
-   * Input: tall
-   * Output: short
-   *
-   * Input: energetic
-   * Output: lethargic
-   *
-   * Input: sunny
-   * Output: gloomy
-   *
-   * Input: windy
-   * Output: calm
-   *
-   * Input: big
-   * Output:
+  /*
+   Give the antonym of every input
+
+   Input: happy
+   Output: sad
+
+   Input: tall
+   Output: short
+
+   Input: energetic
+   Output: lethargic
+
+   Input: sunny
+   Output: gloomy
+
+   Input: windy
+   Output: calm
+
+   Input: big
+   Output:
    */
 
   // An example with long input, so it selects only one example.
   const longString =
     "big and huge and massive and large and gigantic and tall and much much much much much bigger than everything else";
   console.log(await dynamicPrompt.format({ adjective: longString }));
-  /**
-   * Give the antonym of every input
-   *
-   * Input: happy
-   * Output: sad
-   *
-   * Input: big and huge and massive and large and gigantic and tall and much much much much much bigger than everything else
-   * Output:
+  /*
+   Give the antonym of every input
+
+   Input: happy
+   Output: sad
+
+   Input: big and huge and massive and large and gigantic and tall and much much much much much bigger than everything else
+   Output:
    */
 }

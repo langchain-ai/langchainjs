@@ -1,19 +1,19 @@
 import { FewShotPromptTemplate, PromptTemplate } from "langchain/prompts";
 
 export const run = async () => {
-  /* First, create the list of few shot examples. */
+  // First, create a list of few-shot examples.
   const examples = [
     { word: "happy", antonym: "sad" },
     { word: "tall", antonym: "short" },
   ];
-  /** Next, we specify the template to format the examples we have provided.
-    We use the `PromptTemplate` class for this. */
+
+  // Next, we specify the template to format the examples we have provided.
   const exampleFormatterTemplate = "Word: {word}\nAntonym: {antonym}\n";
   const examplePrompt = new PromptTemplate({
     inputVariables: ["word", "antonym"],
     template: exampleFormatterTemplate,
   });
-  /* # Finally, we create the `FewShotPromptTemplate` object. */
+  // Finally, we create the `FewShotPromptTemplate`
   const fewShotPrompt = new FewShotPromptTemplate({
     /* These are the examples we want to insert into the prompt. */
     examples,
@@ -30,7 +30,21 @@ export const run = async () => {
     /* The template format is the formatting method to use for the template. Should usually be f-string. */
     templateFormat: "f-string",
   });
-  /* We can now generate a prompt using the `format` method. */
-  const res = await fewShotPrompt.format({ input: "big" });
-  console.log({ res });
+
+  // We can now generate a prompt using the `format` method.
+  console.log(await fewShotPrompt.format({ input: "big" }));
+  /*
+  Give the antonym of every input
+
+  Word: happy
+  Antonym: sad
+
+
+  Word: tall
+  Antonym: short
+
+
+  Word: big
+  Antonym:
+  */
 };

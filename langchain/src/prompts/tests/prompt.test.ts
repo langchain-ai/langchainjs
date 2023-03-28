@@ -24,9 +24,13 @@ test("Test partial", async () => {
     template: "{foo}{bar}",
     inputVariables: ["foo", "bar"],
   });
-  const partialPrompt = await prompt.partial({ foo: "foo" });
-  expect(await partialPrompt.format({ bar: "baz" })).toBe("foobaz");
   expect(prompt.inputVariables).toEqual(["foo", "bar"]);
+  const partialPrompt = await prompt.partial({ foo: "foo" });
+  // original prompt is not modified
+  expect(prompt.inputVariables).toEqual(["foo", "bar"]);
+  // partial prompt has only remaining variables
+  expect(partialPrompt.inputVariables).toEqual(["bar"]);
+  expect(await partialPrompt.format({ bar: "baz" })).toBe("foobaz");
 });
 
 test("Test partial with function", async () => {
