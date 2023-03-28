@@ -59,7 +59,7 @@ jobs:
     strategy:
       matrix:
         os: [macos-latest, windows-latest, ubuntu-latest]
-        node-version: [16.x, 18.x, 19.x]
+        node-version: [18.x, 19.x]
         # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
     runs-on: ${{ matrix.os }}
     steps:
@@ -77,7 +77,3 @@ jobs:
         run: yarn workspace test-exports run test
       - name: Test langchain
         run: yarn workspace langchain run test
-        if: matrix.node-version != '16.x'
-      - name: Test langchain (Node 16)
-        run: yarn workspace langchain run test:node16
-        if: matrix.node-version == '16.x'
