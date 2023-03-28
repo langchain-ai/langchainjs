@@ -24,7 +24,7 @@ test("Test Directory loader", async () => {
     UnknownHandling.Ignore
   );
   const docs = await loader.load();
-  expect(docs.length).toBe(80);
+  expect(docs.length).toBe(90);
   expect(docs.map((d) => d.metadata.source).sort()).toEqual([
     // PDF
     ...Array.from({ length: 15 }, (_) =>
