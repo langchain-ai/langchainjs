@@ -183,6 +183,7 @@
     }
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.4.2",
     "browser-or-node": "^2.1.1",
     "eventsource-parser": "^0.1.0",
     "exponential-backoff": "^3.1.0",

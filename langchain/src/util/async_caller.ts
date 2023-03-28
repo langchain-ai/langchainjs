@@ -2,7 +2,15 @@ import { backOff } from "exponential-backoff";
 import PQueue from "p-queue";
 
 export interface AsyncCallerParams {
+  /**
+   * The maximum number of concurrent calls that can be made.
+   * Defaults to `Infinity`, which means no limit.
+   */
   maxConcurrency?: number;
+  /**
+   * The maximum number of retries that can be made for a single call,
+   * with an exponential backoff between each attempt. Defaults to 6.
+   */
   maxRetries?: number;
 }
 
