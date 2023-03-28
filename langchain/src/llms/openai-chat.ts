@@ -7,7 +7,6 @@ import {
 } from "openai";
 import type { IncomingMessage } from "http";
 import { createParser } from "eventsource-parser";
-import { backOff } from "exponential-backoff";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
 import { BaseLLMParams, LLM } from "./base.js";
 
@@ -51,11 +50,14 @@ interface OpenAIInput extends ModelParams {
    */
   modelKwargs?: Kwargs;
 
-  /** Maximum number of retries to make when generating */
-  maxRetries: number;
-
   /** List of stop words to use when generating */
   stop?: string[];
+
+  /**
+   * Maximum number of tokens to generate in the completion.  If not specified,
+   * defaults to the maximum number of tokens allowed by the model.
+   */
+  maxTokens?: number;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -89,13 +91,13 @@ export class OpenAIChat extends LLM implements OpenAIInput {
 
   logitBias?: Record<string, number>;
 
+  maxTokens?: number;
+
   modelName = "gpt-3.5-turbo";
 
   prefixMessages?: ChatCompletionRequestMessage[];
 
   modelKwargs?: Kwargs;
-
-  maxRetries = 6;
 
   stop?: string[];
 
@@ -126,7 +128,6 @@ export class OpenAIChat extends LLM implements OpenAIInput {
     this.modelName = fields?.modelName ?? this.modelName;
     this.prefixMessages = fields?.prefixMessages ?? this.prefixMessages;
     this.modelKwargs = fields?.modelKwargs ?? {};
-    this.maxRetries = fields?.maxRetries ?? this.maxRetries;
 
     this.temperature = fields?.temperature ?? this.temperature;
     this.topP = fields?.topP ?? this.topP;
@@ -134,6 +135,7 @@ export class OpenAIChat extends LLM implements OpenAIInput {
     this.presencePenalty = fields?.presencePenalty ?? this.presencePenalty;
     this.n = fields?.n ?? this.n;
     this.logitBias = fields?.logitBias;
+    this.maxTokens = fields?.maxTokens;
     this.stop = fields?.stop;
 
     this.streaming = fields?.streaming ?? false;
@@ -160,6 +162,7 @@ export class OpenAIChat extends LLM implements OpenAIInput {
       presence_penalty: this.presencePenalty,
       n: this.n,
       logit_bias: this.logitBias,
+      max_tokens: this.maxTokens,
       stop: this.stop,
       stream: this.streaming,
       ...this.modelKwargs,
@@ -286,17 +289,11 @@ export class OpenAIChat extends LLM implements OpenAIInput {
       this.streamingClient = new OpenAIApi(clientConfig);
     }
     const client = !request.stream ? this.batchClient : this.streamingClient;
-    const makeCompletionRequest = async () =>
-      client.createChatCompletion(
-        request,
-        request.stream ? { responseType: "stream" } : undefined
-      );
-    return backOff(makeCompletionRequest, {
-      startingDelay: 4,
-      maxDelay: 10,
-      numOfAttempts: this.maxRetries,
-      // TODO(sean) pass custom retry function to check error types.
-    });
+    return this.caller.call(
+      client.createChatCompletion.bind(client),
+      request,
+      request.stream ? { responseType: "stream" } : undefined
+    );
   }
 
   _llmType() {

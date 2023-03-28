@@ -1,0 +1,45 @@
+---
+hide_table_of_contents: true
+---
+
+import DocCardList from "@theme/DocCardList";
+
+# Agents
+
+:::info
+[Conceptual Guide](https://docs.langchain.com/docs/components/agents/agent)
+:::
+
+An agent is a stateless wrapper around an agent prompt chain (such as MRKL) which takes care of formatting tools into the prompt, as well as parsing the responses obtained from the chat model. It takes in user input and returns a response corresponding to an “action” to take and a corresponding “action input”.
+
+```typescript
+interface AgentStep {
+  action: AgentAction;
+  observation: string;
+}
+
+interface AgentAction {
+  tool: string; // Tool.name
+  toolInput: string; // Tool.call argument
+}
+
+interface AgentFinish {
+  returnValues: object;
+}
+
+class Agent {
+  plan(steps: AgentStep[], inputs: object): Promise<AgentAction | AgentFinish>;
+}
+```
+
+## Which agent to choose?
+
+The agent you choose depends on the type of task you want to perform. Here's a quick guide to help you pick the right agent for your use case:
+
+- If you're using a text LLM, first try `zero-shot-react-description`, aka. the [MRKL agent for LLMs](./examples/llm_mrkl).
+- If you're using a Chat Model, try `chat-zero-shot-react-description`, aka. the [MRKL agent for Chat Models](./examples/chat_mrkl).
+- If you're using a Chat Model and want to use memory, try `chat-conversational-react-description`, the [Conversational agent](./examples/conversational_agent).
+
+## All Agents
+
+<DocCardList />

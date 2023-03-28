@@ -2,12 +2,12 @@ import { test, expect } from "@jest/globals";
 
 import { CommaSeparatedListOutputParser } from "../list.js";
 
-test("CommaSeparatedListOutputParser", () => {
+test("CommaSeparatedListOutputParser", async () => {
   const parser = new CommaSeparatedListOutputParser();
 
-  expect(parser.parse("hello, bye")).toEqual(["hello", "bye"]);
+  expect(await parser.parse("hello, bye")).toEqual(["hello", "bye"]);
 
-  expect(parser.parse("hello,bye")).toEqual(["hello", "bye"]);
+  expect(await parser.parse("hello,bye")).toEqual(["hello", "bye"]);
 
-  expect(parser.parse("hello")).toEqual(["hello"]);
+  expect(await parser.parse("hello")).toEqual(["hello"]);
 });

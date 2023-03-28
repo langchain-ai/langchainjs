@@ -1,4 +1,4 @@
-import { BaseLLM } from "../llms/index.js";
+import { BaseLanguageModel } from "../base_language/index.js";
 import { LLMChain } from "../chains/llm_chain.js";
 import { BasePromptTemplate } from "../prompts/index.js";
 import {
@@ -46,9 +46,11 @@ export abstract class Agent {
   /**
    * Extract tool and tool input from LLM output.
    */
-  abstract extractToolAndInput(
-    input: string
-  ): { tool: string; input: string } | null;
+  async extractToolAndInput(
+    _input: string
+  ): Promise<{ tool: string; input: string } | null> {
+    throw new Error("Not implemented");
+  }
 
   /**
    * Prefix to append the observation with.
@@ -98,7 +100,7 @@ export abstract class Agent {
 
   /** Construct an agent from an LLM and a list of tools */
   static fromLLMAndTools(
-    _llm: BaseLLM,
+    _llm: BaseLanguageModel,
     _tools: Tool[],
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     _args?: Record<string, any>
@@ -154,7 +156,7 @@ export abstract class Agent {
     }
 
     const output = await this.llmChain.predict(newInputs);
-    const parsed = this.extractToolAndInput(output);
+    const parsed = await this.extractToolAndInput(output);
     if (!parsed) {
       throw new ParseError(`Invalid output: ${output}`, output);
     }
@@ -226,7 +228,7 @@ export abstract class Agent {
    * Load an agent from a json-like object describing it.
    */
   static async deserialize(
-    data: SerializedAgent & { llm?: BaseLLM; tools?: Tool[] }
+    data: SerializedAgent & { llm?: BaseLanguageModel; tools?: Tool[] }
   ): Promise<Agent> {
     switch (data._type) {
       case "zero-shot-react-description": {

@@ -7,7 +7,6 @@ import {
 } from "openai";
 import type { IncomingMessage } from "http";
 import { createParser } from "eventsource-parser";
-import { backOff } from "exponential-backoff";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
 import { BaseChatModel, BaseChatModelParams } from "./base.js";
 import {
@@ -85,10 +84,10 @@ interface ModelParams {
   streaming: boolean;
 
   /**
-   * Maximum number of tokens to generate in the completion. -1 returns as many
-   * tokens as possible given the prompt and the model's maximum context size.
+   * Maximum number of tokens to generate in the completion. If not specified,
+   * defaults to the maximum number of tokens allowed by the model.
    */
-  maxTokens: number;
+  maxTokens?: number;
 }
 
 /**
@@ -104,9 +103,6 @@ interface OpenAIInput extends ModelParams {
    * `openai.create`} that are not explicitly specified on this class.
    */
   modelKwargs?: Kwargs;
-
-  /** Maximum number of retries to make when generating */
-  maxRetries: number;
 
   /** List of stop words to use when generating */
   stop?: string[];
@@ -147,13 +143,11 @@ export class ChatOpenAI extends BaseChatModel implements OpenAIInput {
 
   modelKwargs?: Kwargs;
 
-  maxRetries = 6;
-
   stop?: string[];
 
   streaming = false;
 
-  maxTokens = 256;
+  maxTokens?: number;
 
   // Used for non-streaming requests
   private batchClient: OpenAIApi;
@@ -181,12 +175,12 @@ export class ChatOpenAI extends BaseChatModel implements OpenAIInput {
 
     this.modelName = fields?.modelName ?? this.modelName;
     this.modelKwargs = fields?.modelKwargs ?? {};
-    this.maxRetries = fields?.maxRetries ?? this.maxRetries;
 
     this.temperature = fields?.temperature ?? this.temperature;
     this.topP = fields?.topP ?? this.topP;
     this.frequencyPenalty = fields?.frequencyPenalty ?? this.frequencyPenalty;
     this.presencePenalty = fields?.presencePenalty ?? this.presencePenalty;
+    this.maxTokens = fields?.maxTokens;
     this.n = fields?.n ?? this.n;
     this.logitBias = fields?.logitBias;
     this.stop = fields?.stop;
@@ -213,6 +207,7 @@ export class ChatOpenAI extends BaseChatModel implements OpenAIInput {
       top_p: this.topP,
       frequency_penalty: this.frequencyPenalty,
       presence_penalty: this.presencePenalty,
+      max_tokens: this.maxTokens,
       n: this.n,
       logit_bias: this.logitBias,
       stop: this.stop,
@@ -374,17 +369,11 @@ export class ChatOpenAI extends BaseChatModel implements OpenAIInput {
       this.streamingClient = new OpenAIApi(clientConfig);
     }
     const client = !request.stream ? this.batchClient : this.streamingClient;
-    const makeCompletionRequest = async () =>
-      client.createChatCompletion(
-        request,
-        request.stream ? { responseType: "stream" } : undefined
-      );
-    return backOff(makeCompletionRequest, {
-      startingDelay: 4,
-      maxDelay: 10,
-      numOfAttempts: this.maxRetries,
-      // TODO(sean) pass custom retry function to check error types.
-    });
+    return this.caller.call(
+      client.createChatCompletion.bind(client),
+      request,
+      request.stream ? { responseType: "stream" } : undefined
+    );
   }
 
   _llmType() {

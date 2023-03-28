@@ -24,7 +24,7 @@ test("PineconeStore with external ids", async () => {
 
   expect(client.upsert).toHaveBeenCalledTimes(1);
 
-  const results = await store.similaritySearch("hello");
+  const results = await store.similaritySearch("hello", 1);
 
   expect(results).toHaveLength(0);
 });
@@ -46,7 +46,7 @@ test("PineconeStore with generated ids", async () => {
 
   expect(client.upsert).toHaveBeenCalledTimes(1);
 
-  const results = await store.similaritySearch("hello");
+  const results = await store.similaritySearch("hello", 1);
 
   expect(results).toHaveLength(0);
 });

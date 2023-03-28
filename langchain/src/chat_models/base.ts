@@ -19,6 +19,13 @@ export type SerializedChatModel = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 } & Record<string, any>;
 
+// todo?
+export type SerializedLLM = {
+  _model: string;
+  _type: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+} & Record<string, any>;
+
 export type BaseChatModelParams = BaseLanguageModelParams;
 
 export abstract class BaseChatModel extends BaseLanguageModel {
@@ -67,32 +74,11 @@ export abstract class BaseChatModel extends BaseLanguageModel {
     return output;
   }
 
-  /**
-   * Get the identifying parameters of the LLM.
-   */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  _identifyingParams(): Record<string, any> {
-    return {};
-  }
-
   _modelType(): string {
     return "base_chat_model" as const;
   }
 
   abstract _llmType(): string;
-
-  /**
-   * Return a json-like object representing this Chat model.
-   */
-  serialize(): SerializedChatModel {
-    return {
-      ...this._identifyingParams(),
-      _type: this._llmType(),
-      _model: this._modelType(),
-    };
-  }
-
-  // TODO deserialize
 
   private _tokenizer?: GPT3Tokenizer.default;
 

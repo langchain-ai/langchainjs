@@ -20,24 +20,25 @@ import {
   BaseChatMessage,
   AIChatMessage,
   HumanChatMessage,
+  BaseOutputParser,
 } from "../../schema/index.js";
-import { BaseOutputParser } from "../../output_parsers/base.js";
-import { SerializedOutputParser } from "../../output_parsers/serde.js";
 import { AgentInput } from "../types.js";
 import { Tool } from "../tools/base.js";
 
 export class ChatConversationalAgentOutputParser extends BaseOutputParser {
-  parse(text: string): unknown {
-    const cleanedOutput = text.trim();
-    let jsonOutput = cleanedOutput;
+  async parse(text: string): Promise<unknown> {
+    let jsonOutput = text.trim();
     if (jsonOutput.includes("```json")) {
-      jsonOutput = jsonOutput.split("```json")[1].trimLeft();
+      jsonOutput = jsonOutput.split("```json")[1].trimStart();
+    }
+    if (jsonOutput.includes("```")) {
+      jsonOutput = jsonOutput.split("```")[0].trimEnd();
     }
     if (jsonOutput.startsWith("```")) {
-      jsonOutput = jsonOutput.slice(3).trimLeft();
+      jsonOutput = jsonOutput.slice(3).trimStart();
     }
     if (jsonOutput.endsWith("```")) {
-      jsonOutput = jsonOutput.slice(0, -3).trimRight();
+      jsonOutput = jsonOutput.slice(0, -3).trimEnd();
     }
     const response = JSON.parse(jsonOutput);
     return { action: response.action, action_input: response.action_input };
@@ -45,10 +46,6 @@ export class ChatConversationalAgentOutputParser extends BaseOutputParser {
 
   getFormatInstructions(): string {
     return FORMAT_INSTRUCTIONS;
-  }
-
-  serialize(): SerializedOutputParser {
-    throw new Error("Method not implemented.");
   }
 }
 
@@ -175,9 +172,11 @@ export class ChatConversationalAgent extends Agent {
     );
   }
 
-  extractToolAndInput(text: string): { tool: string; input: string } | null {
+  async extractToolAndInput(
+    text: string
+  ): Promise<{ tool: string; input: string } | null> {
     try {
-      const response = this.outputParser.parse(text) as {
+      const response = (await this.outputParser.parse(text)) as {
         action: string;
         action_input: string;
       };

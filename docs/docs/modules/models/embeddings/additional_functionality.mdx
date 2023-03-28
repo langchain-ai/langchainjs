@@ -1,0 +1,31 @@
+---
+sidebar_label: Additional Functionality
+---
+
+# Additional Functionality: Embeddings
+
+We offer a number of additional features for chat models. In the examples below, we'll be using the `ChatOpenAI` model.
+
+## Dealing with Rate Limits
+
+Some providers have rate limits. If you exceed the rate limit, you'll get an error. To help you deal with this, LangChain provides a `maxConcurrency` option when instantiating an Embeddings model. This option allows you to specify the maximum number of concurrent requests you want to make to the provider. If you exceed this number, LangChain will automatically queue up your requests to be sent as previous requests complete.
+
+For example, if you set `maxConcurrency: 5`, then LangChain will only send 5 requests to the provider at a time. If you send 10 requests, the first 5 will be sent immediately, and the next 5 will be queued up. Once one of the first 5 requests completes, the next request in the queue will be sent.
+
+To use this feature, simply pass `maxConcurrency: <number>` when you instantiate the LLM. For example:
+
+```typescript
+import { OpenAIEmbeddings } from "langchain/embeddings";
+
+const model = new OpenAIEmbeddings({ maxConcurrency: 5 });
+```
+
+## Dealing with API Errors
+
+If the model provider returns an error from their API, by default LangChain will retry up to 6 times on an exponential backoff. This enables error recovery without any additional effort from you. If you want to change this behavior, you can pass a `maxRetries` option when you instantiate the model. For example:
+
+```typescript
+import { OpenAIEmbeddings } from "langchain/embeddings";
+
+const model = new OpenAIEmbeddings({ maxRetries: 10 });
+```

@@ -4,6 +4,7 @@ import fs from "fs";
 
 const entrypoints = {
   agents: "agents/index",
+  base_language: "base_language/index",
   tools: "agents/tools/index",
   chains: "chains/index",
   embeddings: "embeddings/index",
@@ -20,6 +21,7 @@ const entrypoints = {
   sql_db: "sql_db",
   callbacks: "callbacks/index",
   output_parsers: "output_parsers/index",
+  retrievers: "retrievers/index",
 };
 
 const updateJsonFile = (relativePath, updateFunction) => {

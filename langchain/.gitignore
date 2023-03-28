@@ -1,5 +1,7 @@
 agents.js
 agents.d.ts
+base_language.js
+base_language.d.ts
 tools.js
 tools.d.ts
 chains.js
@@ -32,5 +34,7 @@ callbacks.js
 callbacks.d.ts
 output_parsers.js
 output_parsers.d.ts
+retrievers.js
+retrievers.d.ts
 index.js
 index.d.ts
