@@ -11,7 +11,7 @@ function printSchema(schema: z.ZodTypeAny, depth = 0): string {
   } else if (schema instanceof z.ZodObject) {
     const indent = "\t".repeat(depth);
     const indentIn = "\t".repeat(depth + 1);
-    return `{
+    return `{${schema._def.description ? ` // ${schema._def.description}` : ""}
 ${Object.entries(schema.shape)
   .map(
     ([key, value]) =>

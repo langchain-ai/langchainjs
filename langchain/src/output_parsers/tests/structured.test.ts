@@ -47,16 +47,18 @@ test("StructuredOutputParser.fromZodSchema", async () => {
 
 test("StructuredOutputParser.fromZodSchema", async () => {
   const parser = StructuredOutputParser.fromZodSchema(
-    z.object({
-      url: z.string().describe("A link to the resource"),
-      title: z.string().describe("A title for the resource"),
-      authors: z.array(
-        z.object({
-          name: z.string().describe("The name of the author"),
-          email: z.string().describe("The email of the author"),
-        })
-      ),
-    })
+    z
+      .object({
+        url: z.string().describe("A link to the resource"),
+        title: z.string().describe("A title for the resource"),
+        authors: z.array(
+          z.object({
+            name: z.string().describe("The name of the author"),
+            email: z.string().describe("The email of the author"),
+          })
+        ),
+      })
+      .describe("Only One object")
   );
 
   expect(
@@ -73,7 +75,7 @@ test("StructuredOutputParser.fromZodSchema", async () => {
     "The output should be a markdown code snippet formatted in the following schema:
 
     \`\`\`json
-    {
+    { // Only One object
     	"url": string // A link to the resource
     	"title": string // A title for the resource
     	"authors": {
