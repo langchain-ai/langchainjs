@@ -20,7 +20,7 @@ test("Test PDF loader from file to single document", async () => {
     path.dirname(url.fileURLToPath(import.meta.url)),
     "./example_data/1706.03762.pdf"
   );
-  const loader = new PDFLoader(filePath, false);
+  const loader = new PDFLoader(filePath, { splitPages: false });
   const docs = await loader.load();
 
   expect(docs.length).toBe(1);

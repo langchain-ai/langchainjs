@@ -3,8 +3,11 @@ import { Document } from "../document.js";
 import { BufferLoader } from "./buffer.js";
 
 export class PDFLoader extends BufferLoader {
-  constructor(filePathOrBlob: string | Blob, public splitPages = true) {
+  private splitPages: boolean;
+
+  constructor(filePathOrBlob: string | Blob, { splitPages = true } = {}) {
     super(filePathOrBlob);
+    this.splitPages = splitPages;
   }
 
   public async parse(
