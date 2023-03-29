@@ -1,3 +1,5 @@
+import { backOff } from "exponential-backoff";
+
 import { fetchWithTimeout, extname, FileLoader, LoadValues } from "./index.js";
 
 const HUB_PATH_REGEX = /lc(@[^:]+)?:\/\/(.*)/;
@@ -34,7 +36,9 @@ export const loadFromHub = async <T>(
     ref,
     remotePath,
   ].join("/");
-  const res = await fetchWithTimeout(url, { timeout: 5000 });
+  const res = await backOff(() => fetchWithTimeout(url, { timeout: 5000 }), {
+    numOfAttempts: 6,
+  });
   if (res.status !== 200) {
     throw new Error(`Could not find file at ${url}`);
   }
