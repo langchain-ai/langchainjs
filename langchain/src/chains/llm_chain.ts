@@ -26,7 +26,7 @@ export interface LLMChainInput extends ChainInputs {
   outputParser?: BaseOutputParser;
 
   /** @ignore */
-  outputKey: string;
+  outputKey?: string;
 }
 
 /**
@@ -54,14 +54,8 @@ export class LLMChain extends BaseChain implements LLMChainInput {
     return this.prompt.inputVariables;
   }
 
-  constructor(fields: {
-    prompt: BasePromptTemplate;
-    llm: BaseLanguageModel;
-    outputKey?: string;
-    memory?: BaseMemory;
-    outputParser?: BaseOutputParser;
-  }) {
-    super(fields.memory);
+  constructor(fields: LLMChainInput) {
+    super(fields.memory, fields.verbose, fields.callbackManager);
     this.prompt = fields.prompt;
     this.llm = fields.llm;
     this.outputKey = fields.outputKey ?? this.outputKey;
