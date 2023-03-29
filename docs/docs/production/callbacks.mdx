@@ -1,3 +1,5 @@
+import CodeBlock from "@theme/CodeBlock";
+
 # Events / Callbacks
 
 LangChain provides a callback system that allows you to hook into the various stages of your LLM application. This is useful for logging, [monitoring](./tracing), [streaming](../modules/models/llms/additional_functionality#streaming-responses), and other tasks.
@@ -64,15 +66,9 @@ abstract class BaseCallbackHandler {
 
 LangChain provides a few built-in handlers that you can use to get started. These are available in the `langchain/callbacks` module. The most basic handler is the `ConsoleCallbackHandler`, which simply logs all events to the console. In the future we will add more default handlers to the library.
 
-```typescript
-import { CallbackManager, ConsoleCallbackHandler } from "langchain/callbacks";
-import { OpenAI } from "langchain";
+import Example from "@examples/callbacks/console_handler.ts";
 
-const callbackManager = new CallbackManager();
-callbackManager.addHandler(new ConsoleCallbackHandler());
-
-const model = new OpenAI({ temperature: 0, callbackManager });
-```
+<CodeBlock language="typescript">{Example}</CodeBlock>
 
 ## Creating a one-off handler
 

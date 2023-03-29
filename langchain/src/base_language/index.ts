@@ -40,7 +40,8 @@ export abstract class BaseLanguageModel implements BaseLanguageModelParams {
   protected caller: AsyncCaller;
 
   protected constructor(params: BaseLanguageModelParams) {
-    this.verbose = params.verbose ?? getVerbosity();
+    this.verbose =
+      params.verbose ?? (params.callbackManager ? true : getVerbosity());
     this.callbackManager = params.callbackManager ?? getCallbackManager();
     this.caller = new AsyncCaller(params ?? {});
   }
