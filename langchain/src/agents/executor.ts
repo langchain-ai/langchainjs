@@ -92,7 +92,7 @@ export class AgentExecutor extends BaseChain {
     };
 
     while (this.shouldContinue(iterations)) {
-      const action = await this.agent.plan(steps, inputs, callbackManager);
+      const action = await this.agent.plan(steps, inputs, callbackManager?.getChild());
       if ("returnValues" in action) {
         return getOutput(action);
       }
@@ -104,7 +104,7 @@ export class AgentExecutor extends BaseChain {
 
       const tool = toolsByName[action.tool.toLowerCase()];
       const observation = tool
-        ? await tool.call(action.toolInput, this.verbose, callbackManager)
+        ? await tool.call(action.toolInput, this.verbose, callbackManager?.getChild())
         : `${action.tool} is not a valid tool, try another one.`;
       steps.push({ action, observation });
       if (tool?.returnDirect) {
