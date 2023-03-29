@@ -9,7 +9,9 @@ import {
   SystemMessagePromptTemplate,
 } from "../../prompts/index.js";
 import { ChatAnthropic } from "../anthropic.js";
+import { Calculator } from "../../agents/tools/calculator.js";
 import { CallbackManager } from "../../callbacks/index.js";
+import { initializeAgentExecutor } from "../../agents/initialize.js";
 
 test("Test ChatAnthropic", async () => {
   const chat = new ChatAnthropic({ modelName: "claude-v1" });
@@ -122,4 +124,24 @@ test("ChatAnthropic, longer chain of messages", async () => {
   ]);
 
   console.log(responseA.generations);
+});
+
+test("ChatAnthropic, with agent and a tool", async () => {
+  const model = new ChatAnthropic({ temperature: 0, modelName: "claude-v1" });
+  const tools = [new Calculator()];
+
+  const executor = await initializeAgentExecutor(
+    tools,
+    model,
+    "zero-shot-react-description",
+    true
+  );
+  console.log("Loaded agent.");
+
+  const input = `What is 9 to the second power?`;
+  console.log(`Executing with input "${input}"...`);
+
+  const result = await executor.call({ input });
+
+  console.log(`Got output ${result.output}`);
 });
