@@ -1,6 +1,8 @@
+import type { Tiktoken } from "@dqbd/tiktoken";
 import { BasePromptValue, LLMResult } from "../schema/index.js";
 import { CallbackManager, getCallbackManager } from "../callbacks/index.js";
 import { AsyncCaller, AsyncCallerParams } from "../util/async_caller.js";
+import { getModelNameForTiktoken, importTiktoken } from "./count_tokens.js";
 
 const getVerbosity = () => false;
 
@@ -52,7 +54,28 @@ export abstract class BaseLanguageModel implements BaseLanguageModelParams {
 
   abstract _llmType(): string;
 
-  abstract getNumTokens(text: string): number;
+  private _encoding?: Tiktoken;
+
+  private _registry?: FinalizationRegistry<Tiktoken>;
+
+  async getNumTokens(text: string) {
+    if (!this._encoding) {
+      const { encoding_for_model } = await importTiktoken();
+      // modelName only exists in openai subclasses, but tiktoken only supports
+      // openai tokenisers anyway, so for other subclasses we default to gpt2
+      this._encoding = encoding_for_model(
+        "modelName" in this
+          ? getModelNameForTiktoken(this.modelName as string)
+          : "gpt2"
+      );
+      // We need to register a finalizer to free the tokenizer when the
+      // model is garbage collected.
+      this._registry = new FinalizationRegistry((t) => t.free());
+      this._registry.register(this, this._encoding);
+    }
+
+    return this._encoding.encode(text).length;
+  }
 
   /**
    * Get the identifying parameters of the LLM.
