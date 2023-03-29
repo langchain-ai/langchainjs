@@ -161,7 +161,6 @@ test("Test using partial", async () => {
   // partial prompt has only remaining variables
   expect(partialPrompt.inputVariables).toEqual(["bar"]);
 
-  // todo, writing to the test here no idea if thats correct
   expect(await partialPrompt.format({ bar: "baz" })).toBe(
     '[{"text":"foobaz"}]'
   );
