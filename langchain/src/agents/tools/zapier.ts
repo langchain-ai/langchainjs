@@ -1,5 +1,6 @@
 import { Tool } from "./base.js";
 import { renderTemplate } from "../../prompts/template.js";
+import { AsyncCaller, AsyncCallerParams } from "../../util/async_caller.js";
 
 const zapierNLABaseDescription: string =
   "A wrapper around Zapier NLA actions. " +
@@ -18,17 +19,28 @@ const zapierNLABaseDescription: string =
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ZapierValues = Record<string, any>;
 
+interface ZapiterNLAWrapperParams extends AsyncCallerParams {
+  apiKey?: string;
+}
+
 export class ZapierNLAWrapper {
   zapierNlaApiKey: string;
 
   zapierNlaApiBase = "https://nla.zapier.com/api/v1/";
 
-  constructor(zapierNlaApiKey?: string) {
+  caller: AsyncCaller;
+
+  constructor(params?: string | ZapiterNLAWrapperParams) {
+    const zapierNlaApiKey =
+      typeof params === "string" ? params : params?.apiKey;
     const apiKey = zapierNlaApiKey ?? process.env.ZAPIER_NLA_API_KEY;
     if (!apiKey) {
       throw new Error("ZAPIER_NLA_API_KEY not set");
     }
     this.zapierNlaApiKey = apiKey;
+    this.caller = new AsyncCaller(
+      typeof params === "string" ? {} : params ?? {}
+    );
   }
 
   protected _getHeaders(): Record<string, string> {
@@ -49,7 +61,8 @@ export class ZapierNLAWrapper {
     const headers = this._getHeaders();
 
     // add api key to params
-    const resp = await fetch(
+    const resp = await this.caller.call(
+      fetch,
       `${this.zapierNlaApiBase}exposed/${actionId}/execute/`,
       {
         method: "POST",
@@ -116,10 +129,14 @@ export class ZapierNLAWrapper {
    */
   async listActions(): Promise<ZapierValues[]> {
     const headers = this._getHeaders();
-    const resp = await fetch(`${this.zapierNlaApiBase}exposed/`, {
-      method: "GET",
-      headers,
-    });
+    const resp = await this.caller.call(
+      fetch,
+      `${this.zapierNlaApiBase}exposed/`,
+      {
+        method: "GET",
+        headers,
+      }
+    );
     if (!resp.ok) {
       throw new Error("Failed to list actions");
     }
