@@ -254,6 +254,10 @@ export class ChatOpenAI extends BaseChatModel implements OpenAIInput {
 
     const params = this.invocationParams();
     params.stop = stop ?? params.stop;
+    const messagesMapped = messages.map((message) => ({
+      role: messageTypeToOpenAIRole(message._getType()),
+      content: message.text,
+    }));
 
     const data = params.stream
       ? await new Promise<CreateChatCompletionResponse>((resolve, reject) => {
@@ -262,10 +266,7 @@ export class ChatOpenAI extends BaseChatModel implements OpenAIInput {
           this.completionWithRetry(
             {
               ...params,
-              messages: messages.map((message) => ({
-                role: messageTypeToOpenAIRole(message._getType()),
-                content: message.text,
-              })),
+              messages: messagesMapped,
             },
             {
               responseType: "stream",
@@ -338,10 +339,7 @@ export class ChatOpenAI extends BaseChatModel implements OpenAIInput {
         })
       : await this.completionWithRetry({
           ...params,
-          messages: messages.map((message) => ({
-            role: messageTypeToOpenAIRole(message._getType()),
-            content: message.text,
-          })),
+          messages: messagesMapped,
         }).then((res) => res.data);
 
     const {
