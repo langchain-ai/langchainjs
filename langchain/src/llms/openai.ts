@@ -264,7 +264,7 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
               {
                 responseType: "stream",
                 onmessage: (event) => {
-                  if (event.data === "[DONE]") {
+                  if (event.data?.trim?.() === "[DONE]") {
                     resolve({
                       ...response,
                       choices: [choice],

@@ -271,7 +271,7 @@ export class ChatOpenAI extends BaseChatModel implements OpenAIInput {
             {
               responseType: "stream",
               onmessage: (event) => {
-                if (event.data === "[DONE]") {
+                if (event.data?.trim?.() === "[DONE]") {
                   resolve(response);
                 } else {
                   const message = JSON.parse(event.data) as {
