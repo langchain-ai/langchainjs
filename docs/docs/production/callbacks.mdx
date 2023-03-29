@@ -66,31 +66,19 @@ abstract class BaseCallbackHandler {
 
 LangChain provides a few built-in handlers that you can use to get started. These are available in the `langchain/callbacks` module. The most basic handler is the `ConsoleCallbackHandler`, which simply logs all events to the console. In the future we will add more default handlers to the library.
 
-import Example from "@examples/callbacks/console_handler.ts";
+import ConsoleExample from "@examples/callbacks/console_handler.ts";
 
-<CodeBlock language="typescript">{Example}</CodeBlock>
+<CodeBlock language="typescript">{ConsoleExample}</CodeBlock>
 
 ## Creating a one-off handler
 
-We offer a method on the `CallbackManager` class that allows you to create a one-off handler. This is useful if eg. you need to create a handler that you will use only for a single request, eg to stream the output of an LLM to a websocket.
+We offer a method on the `CallbackManager` class that allows you to create a one-off handler. This is useful if eg. you need to create a handler that you will use only for a single request, eg to stream the output of an LLM/Agent/etc to a websocket.
 
-```typescript
-import { CallbackManager } from "langchain/callbacks";
-import { OpenAI } from "langchain";
+This is a more complete example that passes a `CallbackManager` to a ChatModel, and LLMChain, a Tool, and an Agent.
 
-const callbackManager = CallbackManager.fromHandlers({
-  async handleLLMNewToken(token) {
-    // do something with the token
-  },
+import AgentExample from "@examples/agents/streaming.ts";
 
-  // you could add some of the other methods above if you wanted to
-});
-
-const model = new OpenAI({
-  temperature: 0,
-  callbackManager,
-});
-```
+<CodeBlock language="typescript">{AgentExample}</CodeBlock>
 
 ## Creating a custom handler
 
