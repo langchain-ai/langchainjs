@@ -156,6 +156,9 @@
     "cohere-ai": {
       "optional": true
     },
+    "replicate": {
+      "optional": true
+    },
     "d3-dsv": {
       "optional": true
     },

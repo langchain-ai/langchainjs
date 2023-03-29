@@ -6839,9 +6839,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"dpdm@patch:dpdm@npm%3A3.12.0#./.yarn/patches/dpdm-npm-3.12.0-0dfdd8e3b8.patch::locator=root-workspace-0b6124%40workspace%3A.":
+"dpdm@patch:dpdm@npm%3A3.12.0#./.yarn/patches/dpdm-npm-3.12.0-0dfdd8e3b8.patch::locator=langchainjs%40workspace%3A.":
   version: 3.12.0
-  resolution: "dpdm@patch:dpdm@npm%3A3.12.0#./.yarn/patches/dpdm-npm-3.12.0-0dfdd8e3b8.patch::version=3.12.0&hash=2406a8&locator=root-workspace-0b6124%40workspace%3A."
+  resolution: "dpdm@patch:dpdm@npm%3A3.12.0#./.yarn/patches/dpdm-npm-3.12.0-0dfdd8e3b8.patch::version=3.12.0&hash=2406a8&locator=langchainjs%40workspace%3A."
   dependencies:
     "@types/fs-extra": ^11.0.1
     "@types/glob": ^8.0.0
@@ -10567,6 +10567,20 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"langchainjs@workspace:.":
+  version: 0.0.0-use.local
+  resolution: "langchainjs@workspace:."
+  dependencies:
+    "@tsconfig/recommended": ^1.0.2
+    dotenv: ^16.0.3
+    husky: ^8.0.3
+    lint-staged: ^13.1.1
+    prettier: ^2.8.3
+    turbo: ^1.7.4
+    typescript: ^4.9.5
+  languageName: unknown
+  linkType: soft
+
 "language-subtag-registry@npm:~0.3.2":
   version: 0.3.22
   resolution: "language-subtag-registry@npm:0.3.22"
@@ -13700,20 +13714,6 @@ __metadata:
   checksum: f78198c6de224b26650c70b16db156762d1fcceeb375d34fb2c76fc5b23a78f712c3c881d3248e6f277a511589e20d50c247bcf5c7920f1ddc0a43cadf9f0140
   languageName: node
   linkType: hard
-
-"root-workspace-0b6124@workspace:.":
-  version: 0.0.0-use.local
-  resolution: "root-workspace-0b6124@workspace:."
-  dependencies:
-    "@tsconfig/recommended": ^1.0.2
-    dotenv: ^16.0.3
-    husky: ^8.0.3
-    lint-staged: ^13.1.1
-    prettier: ^2.8.3
-    turbo: ^1.7.4
-    typescript: ^4.9.5
-  languageName: unknown
-  linkType: soft
 
 "rrweb-snapshot@npm:^1.1.14":
   version: 1.1.14
