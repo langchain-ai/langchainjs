@@ -12,13 +12,6 @@ export const run = async () => {
   await chain.call({ number: 2 });
   /*
   Entering new llm_chain chain...
-  Starting LLM openai with prompts: 1 + 2 =
-  Finished LLM with output: {
-    generations: [ [ [Object] ] ],
-    llmOutput: {
-      tokenUsage: { completionTokens: 8, promptTokens: 4, totalTokens: 12 }
-    }
-  }
-  Finished chain with output: { text: ' 3\n\n3 - 1 = 2' }
+  Finished chain.
   */
 };

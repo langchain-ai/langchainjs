@@ -350,35 +350,27 @@ export class CallbackManager extends BaseCallbackManager {
 }
 
 export class ConsoleCallbackHandler extends BaseCallbackHandler {
-  async handleLLMStart(llm: { name: string }, prompts: string[]) {
-    console.log(`Starting LLM ${llm.name} with prompts: ${prompts.join(", ")}`);
-  }
-
-  async handleLLMEnd(output: LLMResult) {
-    console.log("Finished LLM with output:", output);
-  }
-
   async handleChainStart(chain: { name: string }) {
     console.log(`Entering new ${chain.name} chain...`);
   }
 
-  async handleChainEnd(output: ChainValues) {
-    console.log("Finished chain with output:", output);
+  async handleChainEnd(_output: ChainValues) {
+    console.log("Finished chain.");
   }
 
   async handleAgentAction(action: AgentAction) {
-    console.log("handleAgentAction", action.log);
+    console.log(action.log);
   }
 
   async handleToolEnd(output: string) {
-    console.log("handleToolEnd", output);
+    console.log(output);
   }
 
   async handleText(text: string) {
-    console.log("handleText", text);
+    console.log(text);
   }
 
   async handleAgentEnd(action: AgentFinish) {
-    console.log("handleAgentEnd", action.log);
+    console.log(action.log);
   }
 }
