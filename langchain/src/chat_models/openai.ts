@@ -384,7 +384,10 @@ export class ChatOpenAI extends BaseChatModel implements OpenAIInput {
     if (!this.client) {
       const clientConfig = new Configuration({
         ...this.clientConfig,
-        baseOptions: { adapter: fetchAdapter },
+        baseOptions: {
+          ...this.clientConfig.baseOptions,
+          adapter: fetchAdapter,
+        },
       });
       this.client = new OpenAIApi(clientConfig);
     }
