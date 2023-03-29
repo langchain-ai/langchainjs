@@ -173,3 +173,11 @@ export class OutputParserException extends Error {
     super(message);
   }
 }
+
+export abstract class BaseChatMessageHistory {
+  public abstract get messages(): BaseChatMessage[];
+
+  public abstract addUserMessage(message: string): void;
+
+  public abstract addAIChatMessage(message: string): void;
+}
