@@ -44,13 +44,7 @@ export class AgentExecutor extends BaseChain {
   }
 
   /** Create from agent and a list of tools. */
-  static fromAgentAndTools(
-    fields: {
-      agent: Agent;
-      tools: Tool[];
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } & Record<string, any>
-  ): AgentExecutor {
+  static fromAgentAndTools(fields: AgentExecutorInput): AgentExecutor {
     return new AgentExecutor(fields);
   }
 
