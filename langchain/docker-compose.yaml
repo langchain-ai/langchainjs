@@ -1,6 +1,7 @@
 version: '3'
 services:
   langchain-frontend:
+    platform: linux/amd64
     image: notlangchain/langchainplus-frontend:latest
     ports:
       - 4173:4173
@@ -11,6 +12,7 @@ services:
     depends_on:
       - langchain-backend
   langchain-backend:
+    platform: linux/amd64
     image: notlangchain/langchainplus:latest
     environment:
       - PORT=8000
