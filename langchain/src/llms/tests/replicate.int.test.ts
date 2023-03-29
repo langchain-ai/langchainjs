@@ -1,8 +1,16 @@
-import { test } from "@jest/globals";
-import { Cohere } from "../cohere.js";
+import { test, expect } from "@jest/globals";
+import { Replicate } from "../replicate.js";
 
 test("Test Cohere", async () => {
-  const model = new Cohere({ maxTokens: 20 });
-  const res = await model.call("1 + 1 =");
-  console.log(res);
+  const model = new Replicate({
+    model:
+      "daanelson/flan-t5:04e422a9b85baed86a4f24981d7f9953e20c5fd82f6103b74ebc431588e1cec8",
+    input: {
+      max_length: 10,
+    },
+  });
+
+  const res = await model.call("Hello, my name is ");
+
+  expect(typeof res).toBe("string");
 }, 50000);

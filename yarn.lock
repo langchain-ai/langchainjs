@@ -10533,6 +10533,7 @@ __metadata:
     pdfjs-dist: ^3.4.120
     puppeteer: ^19.7.2
     redis: ^4.6.4
+    replicate: ^0.6.0
     srt-parser-2: ^1.2.2
     typeorm: ^0.3.12
   peerDependenciesMeta:
@@ -10559,6 +10560,8 @@ __metadata:
     puppeteer:
       optional: true
     redis:
+      optional: true
+    replicate:
       optional: true
     srt-parser-2:
       optional: true

@@ -3,30 +3,34 @@ import { LLM, BaseLLMParams } from "./base.js";
 interface ReplicateInput {
   // owner/model_name:version
   model: `${string}/${string}:${string}`;
-  // input is optional, must be an object of string: string
-  input: object;
+
+  input?: {
+    // different models accept different inputs
+    [key: string]: string | number | boolean;
+  };
+
+  apiKey?: string;
 }
 
-export class ReplicateLLM extends LLM implements ReplicateInput {
-  model: `${string}/${string}:${string}`;
+export class Replicate extends LLM implements ReplicateInput {
+  model: ReplicateInput["model"];
+
+  input: ReplicateInput["input"];
 
   apiKey: string;
 
-  input: { prompt: any };
+  constructor(fields: ReplicateInput & BaseLLMParams) {
+    super(fields);
 
-  constructor(fields?: Partial<ReplicateInput> & BaseLLMParams) {
-    super(fields ?? {});
-
-    const apiKey = process.env.REPLICATE_API_TOKEN;
+    const apiKey = fields?.apiKey ?? process.env.REPLICATE_API_KEY;
 
     if (!apiKey) {
-      throw new Error(
-        "Please set the REPLICATE_API_TOKEN environment variable"
-      );
+      throw new Error("Please set the REPLICATE_API_KEY environment variable");
     }
 
     this.apiKey = apiKey;
-    this.model = fields?.model ?? this.model;
+    this.model = fields.model;
+    this.input = fields.input ?? {};
   }
 
   _llmType() {
@@ -34,19 +38,25 @@ export class ReplicateLLM extends LLM implements ReplicateInput {
   }
 
   async _call(prompt: string, _stop?: string[]): Promise<string> {
-    const { Replicate } = await ReplicateLLM.imports();
+    const imports = await Replicate.imports();
 
-    const replicate = new Replicate({
+    const replicate = new imports.Replicate({
       userAgent: "langchain",
       auth: this.apiKey,
     });
 
-    const model = this.model;
-    const input = this.input || {};
-    input.prompt = prompt;
+    const output = await this.caller.call(() =>
+      replicate.run(this.model, {
+        wait: true,
+        input: {
+          ...this.input,
+          prompt,
+        },
+      })
+    );
 
-    const output = await replicate.run(model, { input });
-
+    // Note this is a little odd, but the output format is not consistent
+    // across models, so it makes some amount of sense.
     return String(output);
   }
 
