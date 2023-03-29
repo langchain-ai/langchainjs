@@ -2,8 +2,24 @@ import type { TiktokenModel } from "@dqbd/tiktoken";
 
 // https://www.npmjs.com/package/@dqbd/tiktoken
 
-export const getModelContextSize = (modelName: TiktokenModel): number => {
-  switch (modelName) {
+export const getModelNameForTiktoken = (modelName: string): TiktokenModel => {
+  if (modelName.startsWith("gpt-3.5-turbo-")) {
+    return "gpt-3.5-turbo";
+  }
+
+  if (modelName.startsWith("gpt-4-32k-")) {
+    return "gpt-4-32k";
+  }
+
+  if (modelName.startsWith("gpt-4-")) {
+    return "gpt-4";
+  }
+
+  return modelName as TiktokenModel;
+};
+
+export const getModelContextSize = (modelName: string): number => {
+  switch (getModelNameForTiktoken(modelName)) {
     case "text-davinci-003":
       return 4097;
     case "text-curie-001":
@@ -26,7 +42,7 @@ type CalculateMaxTokenProps = {
   modelName: TiktokenModel;
 };
 
-const imports = async () => {
+export const importTiktoken = async () => {
   try {
     const { encoding_for_model } = await import("@dqbd/tiktoken");
     return { encoding_for_model };
@@ -42,9 +58,9 @@ export const calculateMaxTokens = async ({
   prompt,
   modelName,
 }: CalculateMaxTokenProps) => {
-  const { encoding_for_model } = await imports();
+  const { encoding_for_model } = await importTiktoken();
 
-  const encoding = encoding_for_model(modelName);
+  const encoding = encoding_for_model(getModelNameForTiktoken(modelName));
 
   const tokenized = encoding.encode(prompt);
 
