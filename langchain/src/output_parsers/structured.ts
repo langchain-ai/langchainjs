@@ -3,6 +3,12 @@ import { z } from "zod";
 import { BaseOutputParser, OutputParserException } from "../schema/index.js";
 
 function printSchema(schema: z.ZodTypeAny, depth = 0): string {
+  if (
+    schema instanceof z.ZodString &&
+    schema._def.checks.some((check) => check.kind === "datetime")
+  ) {
+    return "datetime";
+  }
   if (schema instanceof z.ZodString) {
     return "string";
   }
