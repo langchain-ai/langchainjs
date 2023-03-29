@@ -180,8 +180,8 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.4.2",
+    "@fortaine/fetch-event-source": "^3.0.6",
     "browser-or-node": "^2.1.1",
-    "eventsource-parser": "^0.1.0",
     "exponential-backoff": "^3.1.0",
     "expr-eval": "^2.0.2",
     "flat": "^5.0.2",

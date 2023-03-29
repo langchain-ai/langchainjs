@@ -1,6 +1,4 @@
 import { TiktokenModel } from "@dqbd/tiktoken";
-import { createParser } from "eventsource-parser";
-import type { IncomingMessage } from "http";
 import {
   Configuration,
   ConfigurationParameters,
@@ -10,6 +8,7 @@ import {
   OpenAIApi,
 } from "openai";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
+import type { StreamingAxiosConfiguration } from "../util/axios-fetch-adapter.js";
 import { chunkArray } from "../util/index.js";
 import { BaseLLM, BaseLLMParams } from "./base.js";
 import { calculateMaxTokens } from "../base_language/count_tokens.js";
@@ -121,10 +120,7 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
   streaming = false;
 
   // Used for non-streaming requests
-  private batchClient: OpenAIApi;
-
-  // Used for streaming requests
-  private streamingClient: OpenAIApi;
+  private client: OpenAIApi;
 
   private clientConfig: ConfigurationParameters;
 
@@ -255,53 +251,68 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
     }
 
     for (let i = 0; i < subPrompts.length; i += 1) {
-      const { data } = await this.completionWithRetry({
-        ...params,
-        prompt: subPrompts[i],
-      });
-
-      if (params.stream) {
-        const choice = await new Promise<CreateCompletionResponseChoicesInner>(
-          (resolve, reject) => {
+      const data = params.stream
+        ? await new Promise<CreateCompletionResponse>((resolve, reject) => {
             const choice: CreateCompletionResponseChoicesInner = {};
-            const parser = createParser((event) => {
-              if (event.type === "event") {
-                if (event.data === "[DONE]") {
-                  resolve(choice);
-                } else {
-                  const response = JSON.parse(event.data) as Omit<
-                    CreateCompletionResponse,
-                    "usage"
-                  >;
+            let response: Omit<CreateCompletionResponse, "choices">;
+            let rejected = false;
+            this.completionWithRetry(
+              {
+                ...params,
+                prompt: subPrompts[i],
+              },
+              {
+                responseType: "stream",
+                onmessage: (event) => {
+                  if (event.data?.trim?.() === "[DONE]") {
+                    resolve({
+                      ...response,
+                      choices: [choice],
+                    });
+                  } else {
+                    const message = JSON.parse(event.data) as Omit<
+                      CreateCompletionResponse,
+                      "usage"
+                    >;
 
-                  const part = response.choices[0];
-                  if (part != null) {
-                    choice.text = (choice.text ?? "") + (part.text ?? "");
-                    choice.finish_reason = part.finish_reason;
-                    choice.logprobs = part.logprobs;
-                    // eslint-disable-next-line no-void
-                    void this.callbackManager.handleLLMNewToken(
-                      part.text ?? "",
-                      true
-                    );
+                    // on the first message set the response properties
+                    if (!response) {
+                      response = {
+                        id: message.id,
+                        object: message.object,
+                        created: message.created,
+                        model: message.model,
+                      };
+                    }
+
+                    // on all messages, update choice
+                    const part = message.choices[0];
+                    if (part != null) {
+                      choice.text = (choice.text ?? "") + (part.text ?? "");
+                      choice.finish_reason = part.finish_reason;
+                      choice.logprobs = part.logprobs;
+                      // eslint-disable-next-line no-void
+                      void this.callbackManager.handleLLMNewToken(
+                        part.text ?? "",
+                        true
+                      );
+                    }
                   }
-                }
+                },
+              }
+            ).catch((error) => {
+              if (!rejected) {
+                rejected = true;
+                reject(error);
               }
             });
+          })
+        : await this.completionWithRetry({
+            ...params,
+            prompt: subPrompts[i],
+          }).then((res) => res.data);
 
-            // workaround for incorrect axios types
-            const stream = data as unknown as IncomingMessage;
-            stream.on("data", (data: Buffer) =>
-              parser.feed(data.toString("utf-8"))
-            );
-            stream.on("error", (error) => reject(error));
-          }
-        );
-
-        choices.push(choice);
-      } else {
-        choices.push(...data.choices);
-      }
+      choices.push(...data.choices);
 
       const {
         completion_tokens: completionTokens,
@@ -339,8 +350,11 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
   }
 
   /** @ignore */
-  async completionWithRetry(request: CreateCompletionRequest) {
-    if (!request.stream && !this.batchClient) {
+  async completionWithRetry(
+    request: CreateCompletionRequest,
+    options?: StreamingAxiosConfiguration
+  ) {
+    if (!this.client) {
       const clientConfig = new Configuration({
         ...this.clientConfig,
         baseOptions: {
@@ -348,17 +362,12 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
           adapter: fetchAdapter,
         },
       });
-      this.batchClient = new OpenAIApi(clientConfig);
+      this.client = new OpenAIApi(clientConfig);
     }
-    if (request.stream && !this.streamingClient) {
-      const clientConfig = new Configuration(this.clientConfig);
-      this.streamingClient = new OpenAIApi(clientConfig);
-    }
-    const client = !request.stream ? this.batchClient : this.streamingClient;
     return this.caller.call(
-      client.createCompletion.bind(client),
+      this.client.createCompletion.bind(this.client),
       request,
-      request.stream ? { responseType: "stream" } : undefined
+      options
     );
   }
 
@@ -393,9 +402,12 @@ export class PromptLayerOpenAI extends OpenAI {
     }
   }
 
-  async completionWithRetry(request: CreateCompletionRequest) {
+  async completionWithRetry(
+    request: CreateCompletionRequest,
+    options?: StreamingAxiosConfiguration
+  ) {
     if (request.stream) {
-      return super.completionWithRetry(request);
+      return super.completionWithRetry(request, options);
     }
 
     const requestStartTime = Date.now();
