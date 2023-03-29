@@ -77,8 +77,6 @@ test("StructuredOutputParser.fromZodSchema", async () => {
     authors: [{ name: "value", email: "value" }],
   });
 
-  console.log("parser.getFormatInstructions()", parser.getFormatInstructions());
-
   expect(parser.getFormatInstructions()).toMatchInlineSnapshot(
     `
 "The output should be a markdown code snippet formatted in the following schema:
