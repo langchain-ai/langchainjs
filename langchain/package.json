@@ -110,6 +110,7 @@
     "prettier": "^2.8.3",
     "puppeteer": "^19.7.2",
     "redis": "^4.6.4",
+    "replicate": "^0.6.0",
     "rollup": "^3.19.1",
     "sqlite3": "^5.1.4",
     "srt-parser-2": "^1.2.2",
@@ -131,6 +132,7 @@
     "pdfjs-dist": "^3.4.120",
     "puppeteer": "^19.7.2",
     "redis": "^4.6.4",
+    "replicate": "^0.6.0",
     "srt-parser-2": "^1.2.2",
     "typeorm": "^0.3.12"
   },
@@ -169,6 +171,9 @@
       "optional": true
     },
     "redis": {
+      "optional": true
+    },
+    "replicate": {
       "optional": true
     },
     "srt-parser-2": {
