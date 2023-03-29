@@ -4797,6 +4797,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"axios@npm:^1.3.4":
+  version: 1.3.4
+  resolution: "axios@npm:1.3.4"
+  dependencies:
+    follow-redirects: ^1.15.0
+    form-data: ^4.0.0
+    proxy-from-env: ^1.1.0
+  checksum: 7440edefcf8498bc3cdf39de00443e8101f249972c83b739c6e880d9d669fea9486372dbe8739e88b3bf8bb1ad15f6106693f206f078f4516fe8fd47b1c3093c
+  languageName: node
+  linkType: hard
+
 "axobject-query@npm:^3.1.1":
   version: 3.1.1
   resolution: "axobject-query@npm:3.1.1"
@@ -6828,9 +6839,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"dpdm@patch:dpdm@npm%3A3.12.0#./.yarn/patches/dpdm-npm-3.12.0-0dfdd8e3b8.patch::locator=root-workspace-0b6124%40workspace%3A.":
+"dpdm@patch:dpdm@npm%3A3.12.0#./.yarn/patches/dpdm-npm-3.12.0-0dfdd8e3b8.patch::locator=langchainjs%40workspace%3A.":
   version: 3.12.0
-  resolution: "dpdm@patch:dpdm@npm%3A3.12.0#./.yarn/patches/dpdm-npm-3.12.0-0dfdd8e3b8.patch::version=3.12.0&hash=2406a8&locator=root-workspace-0b6124%40workspace%3A."
+  resolution: "dpdm@patch:dpdm@npm%3A3.12.0#./.yarn/patches/dpdm-npm-3.12.0-0dfdd8e3b8.patch::version=3.12.0&hash=2406a8&locator=langchainjs%40workspace%3A."
   dependencies:
     "@types/fs-extra": ^11.0.1
     "@types/glob": ^8.0.0
@@ -8038,7 +8049,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"follow-redirects@npm:^1.0.0, follow-redirects@npm:^1.14.7, follow-redirects@npm:^1.14.8":
+"follow-redirects@npm:^1.0.0, follow-redirects@npm:^1.14.7, follow-redirects@npm:^1.14.8, follow-redirects@npm:^1.15.0":
   version: 1.15.2
   resolution: "follow-redirects@npm:1.15.2"
   peerDependenciesMeta:
@@ -10498,6 +10509,7 @@ __metadata:
     prettier: ^2.8.3
     puppeteer: ^19.7.2
     redis: ^4.6.4
+    replicate: ^0.6.0
     rollup: ^3.19.1
     sqlite3: ^5.1.4
     srt-parser-2: ^1.2.2
@@ -10552,6 +10564,20 @@ __metadata:
       optional: true
     typeorm:
       optional: true
+  languageName: unknown
+  linkType: soft
+
+"langchainjs@workspace:.":
+  version: 0.0.0-use.local
+  resolution: "langchainjs@workspace:."
+  dependencies:
+    "@tsconfig/recommended": ^1.0.2
+    dotenv: ^16.0.3
+    husky: ^8.0.3
+    lint-staged: ^13.1.1
+    prettier: ^2.8.3
+    turbo: ^1.7.4
+    typescript: ^4.9.5
   languageName: unknown
   linkType: soft
 
@@ -12840,7 +12866,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"proxy-from-env@npm:1.1.0":
+"proxy-from-env@npm:1.1.0, proxy-from-env@npm:^1.1.0":
   version: 1.1.0
   resolution: "proxy-from-env@npm:1.1.0"
   checksum: ed7fcc2ba0a33404958e34d95d18638249a68c430e30fcb6c478497d72739ba64ce9810a24f53a7d921d0c065e5b78e3822759800698167256b04659366ca4d4
@@ -13491,6 +13517,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"replicate@npm:^0.6.0":
+  version: 0.6.0
+  resolution: "replicate@npm:0.6.0"
+  dependencies:
+    axios: ^1.3.4
+  checksum: 66a9120131eb2d12f490cfb2239a198e0c0ee46ea065f5850fa7b05ea0b4927552142fb5bfb3ab27f336984fd1f0d7e4696ab06605bf31355fdfc18b53e3f072
+  languageName: node
+  linkType: hard
+
 "require-directory@npm:^2.1.1":
   version: 2.1.1
   resolution: "require-directory@npm:2.1.1"
@@ -13679,20 +13714,6 @@ __metadata:
   checksum: f78198c6de224b26650c70b16db156762d1fcceeb375d34fb2c76fc5b23a78f712c3c881d3248e6f277a511589e20d50c247bcf5c7920f1ddc0a43cadf9f0140
   languageName: node
   linkType: hard
-
-"root-workspace-0b6124@workspace:.":
-  version: 0.0.0-use.local
-  resolution: "root-workspace-0b6124@workspace:."
-  dependencies:
-    "@tsconfig/recommended": ^1.0.2
-    dotenv: ^16.0.3
-    husky: ^8.0.3
-    lint-staged: ^13.1.1
-    prettier: ^2.8.3
-    turbo: ^1.7.4
-    typescript: ^4.9.5
-  languageName: unknown
-  linkType: soft
 
 "rrweb-snapshot@npm:^1.1.14":
   version: 1.1.14
