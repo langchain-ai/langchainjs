@@ -1,7 +1,7 @@
 import { test, expect } from "@jest/globals";
 import { Replicate } from "../replicate.js";
 
-test("Test Cohere", async () => {
+test("Test Replicate", async () => {
   const model = new Replicate({
     model:
       "daanelson/flan-t5:04e422a9b85baed86a4f24981d7f9953e20c5fd82f6103b74ebc431588e1cec8",
