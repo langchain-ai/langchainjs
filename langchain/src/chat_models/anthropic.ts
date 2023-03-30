@@ -111,7 +111,7 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
 
   topP = -1;
 
-  maxTokensToSample = 4096;
+  maxTokensToSample = 2048;
 
   modelName = "claude-v1";
 

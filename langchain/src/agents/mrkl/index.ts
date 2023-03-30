@@ -112,7 +112,7 @@ export class ZeroShotAgent extends Agent {
     }
 
     return {
-      tool: match[1].trim().replace(/\[|\]/g, ""),
+      tool: match[1].trim(),
       input: match[2].trim().replace(/^"+|"+$/g, ""),
     };
   }

@@ -9,12 +9,10 @@ import {
   SystemMessagePromptTemplate,
 } from "../../prompts/index.js";
 import { ChatAnthropic } from "../anthropic.js";
-import { Calculator } from "../../agents/tools/calculator.js";
 import { CallbackManager } from "../../callbacks/index.js";
-import { initializeAgentExecutor } from "../../agents/initialize.js";
 
 test("Test ChatAnthropic", async () => {
-  const chat = new ChatAnthropic({ modelName: "claude-v1" });
+  const chat = new ChatAnthropic({ modelName: "claude-instant-v1" });
   const message = new HumanChatMessage("Hello!");
   const res = await chat.call([message]);
   console.log({ res });
@@ -22,7 +20,7 @@ test("Test ChatAnthropic", async () => {
 
 test("Test ChatAnthropic Generate", async () => {
   const chat = new ChatAnthropic({
-    modelName: "claude-v1",
+    modelName: "claude-instant-v1",
   });
   const message = new HumanChatMessage("Hello!");
   const res = await chat.generate([[message], [message]]);
@@ -39,7 +37,7 @@ test("Test ChatAnthropic Generate", async () => {
 test("Test ChatAnthropic tokenUsage with a batch", async () => {
   const model = new ChatAnthropic({
     temperature: 0,
-    modelName: "claude-v1",
+    modelName: "claude-instant-v1",
   });
   const res = await model.generate([
     [new HumanChatMessage(`Hello!`)],
@@ -53,7 +51,7 @@ test("Test ChatAnthropic in streaming mode", async () => {
   let streamedCompletion = "";
 
   const model = new ChatAnthropic({
-    modelName: "claude-v1",
+    modelName: "claude-instant-v1",
     streaming: true,
     callbackManager: CallbackManager.fromHandlers({
       async handleLLMNewToken(token: string) {
@@ -72,7 +70,7 @@ test("Test ChatAnthropic in streaming mode", async () => {
 
 test("Test ChatAnthropic prompt value", async () => {
   const chat = new ChatAnthropic({
-    modelName: "claude-v1",
+    modelName: "claude-instant-v1",
   });
   const message = new HumanChatMessage("Hello!");
   const res = await chat.generatePrompt([new ChatPromptValue([message])]);
@@ -86,7 +84,10 @@ test("Test ChatAnthropic prompt value", async () => {
 });
 
 test("ChatAnthropic, docs, prompt templates", async () => {
-  const chat = new ChatAnthropic({ temperature: 0 });
+  const chat = new ChatAnthropic({
+    modelName: "claude-instant-v1",
+    temperature: 0,
+  });
 
   const systemPrompt = PromptTemplate.fromTemplate(
     "You are a helpful assistant that translates {input_language} to {output_language}."
@@ -109,7 +110,10 @@ test("ChatAnthropic, docs, prompt templates", async () => {
 });
 
 test("ChatAnthropic, longer chain of messages", async () => {
-  const chat = new ChatAnthropic({ temperature: 0 });
+  const chat = new ChatAnthropic({
+    modelName: "claude-instant-v1",
+    temperature: 0,
+  });
 
   const chatPrompt = ChatPromptTemplate.fromPromptMessages([
     HumanMessagePromptTemplate.fromTemplate(`Hi, my name is Joe!`),
@@ -124,24 +128,4 @@ test("ChatAnthropic, longer chain of messages", async () => {
   ]);
 
   console.log(responseA.generations);
-});
-
-test("ChatAnthropic, with agent and a tool", async () => {
-  const model = new ChatAnthropic({ temperature: 0, modelName: "claude-v1" });
-  const tools = [new Calculator()];
-
-  const executor = await initializeAgentExecutor(
-    tools,
-    model,
-    "zero-shot-react-description",
-    true
-  );
-  console.log("Loaded agent.");
-
-  const input = `What is 9 to the second power?`;
-  console.log(`Executing with input "${input}"...`);
-
-  const result = await executor.call({ input });
-
-  console.log(`Got output ${result.output}`);
 });
