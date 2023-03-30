@@ -6,7 +6,7 @@ import { LLMResult } from "../../schema/index.js";
 
 class FakeLLM extends BaseLLM {
   nrMapCalls = 0;
-  
+
   nrReduceCalls = 0;
 
   _llmType(): string {
