@@ -18,11 +18,32 @@ test("PineconeStore with external ids", async () => {
   expect(store).toBeDefined();
 
   await store.addDocuments(
-    [{ pageContent: "hello", metadata: { a: 1 } }],
+    [
+      {
+        pageContent: "hello",
+        metadata: {
+          a: 1,
+          b: { nested: [1, { a: 4 }] },
+        },
+      },
+    ],
     ["id1"]
   );
 
   expect(client.upsert).toHaveBeenCalledTimes(1);
+
+  expect(client.upsert).toHaveBeenCalledWith({
+    upsertRequest: {
+      namespace: undefined,
+      vectors: [
+        {
+          id: "id1",
+          metadata: { a: 1, "b.nested.0": 1, "b.nested.1.a": 4, text: "hello" },
+          values: [0.1, 0.2, 0.3, 0.4],
+        },
+      ],
+    },
+  });
 
   const results = await store.similaritySearch("hello", 1);
 
