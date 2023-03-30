@@ -23,7 +23,13 @@
     "useDefineForClassFields": true,
     "strictPropertyInitialization": false,
     "allowJs": true,
-    "strict": true
+    "strict": true,
+    "paths": {
+      "@xata.io/client": ["../../node_modules/@xata.io/client/dist/index.d.ts"]
+    },
+    "typeRoots": [
+      "../node_modules"
+    ]
   },
   "include": [
     "src/**/*"

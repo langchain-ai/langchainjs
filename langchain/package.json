@@ -90,6 +90,7 @@
     "@types/uuid": "^9",
     "@typescript-eslint/eslint-plugin": "^5.51.0",
     "@typescript-eslint/parser": "^5.51.0",
+    "@xata.io/client": "^0.23.4",
     "babel-jest": "^29.5.0",
     "cheerio": "^1.0.0-rc.12",
     "cohere-ai": "^5.0.2",
@@ -124,6 +125,7 @@
     "@huggingface/inference": "^1.5.1",
     "@pinecone-database/pinecone": "^0.0.10",
     "@supabase/supabase-js": "^2.10.0",
+    "@xata.io/client": "^0.23.4",
     "cheerio": "^1.0.0-rc.12",
     "chromadb": "^1.3.0",
     "cohere-ai": "^5.0.2",
@@ -147,6 +149,9 @@
       "optional": true
     },
     "@supabase/supabase-js": {
+      "optional": true
+    },
+    "@xata.io/client": {
       "optional": true
     },
     "cheerio": {

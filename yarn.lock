@@ -4271,6 +4271,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@xata.io/client@npm:^0.23.4":
+  version: 0.23.4
+  resolution: "@xata.io/client@npm:0.23.4"
+  peerDependencies:
+    typescript: ">=4.5"
+  checksum: c495c45fa0e7e7c434b06437d028c49b999566617bbfef2847373de3c9ae4339ff5b5682b8440726e6f7a2f80244c32e9da376b9e5a2f172ff71ecef06675763
+  languageName: node
+  linkType: hard
+
 "@xtuc/ieee754@npm:^1.2.0":
   version: 1.2.0
   resolution: "@xtuc/ieee754@npm:1.2.0"
@@ -10416,6 +10425,7 @@ __metadata:
     "@types/js-yaml": ^4
     "@typescript-eslint/eslint-plugin": ^5.51.0
     "@typescript-eslint/parser": ^5.51.0
+    "@xata.io/client": ^0.23.4
     chromadb: ^1.3.0
     dotenv: ^16.0.3
     eslint: ^8.33.0
@@ -10456,6 +10466,7 @@ __metadata:
     "@types/uuid": ^9
     "@typescript-eslint/eslint-plugin": ^5.51.0
     "@typescript-eslint/parser": ^5.51.0
+    "@xata.io/client": ^0.23.4
     babel-jest: ^29.5.0
     browser-or-node: ^2.1.1
     cheerio: ^1.0.0-rc.12
@@ -10501,6 +10512,7 @@ __metadata:
     "@huggingface/inference": ^1.5.1
     "@pinecone-database/pinecone": ^0.0.10
     "@supabase/supabase-js": ^2.10.0
+    "@xata.io/client": ^0.23.4
     cheerio: ^1.0.0-rc.12
     chromadb: ^1.3.0
     cohere-ai: ^5.0.2
@@ -10520,6 +10532,8 @@ __metadata:
     "@pinecone-database/pinecone":
       optional: true
     "@supabase/supabase-js":
+      optional: true
+    "@xata.io/client":
       optional: true
     cheerio:
       optional: true
