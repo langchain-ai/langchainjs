@@ -106,6 +106,11 @@ interface OpenAIInput extends ModelParams {
 
   /** List of stop words to use when generating */
   stop?: string[];
+
+  /**
+   * Timeout to use when making requests to OpenAI.
+   */
+  timeout?: number;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -145,11 +150,12 @@ export class ChatOpenAI extends BaseChatModel implements OpenAIInput {
 
   stop?: string[];
 
+  timeout?: number;
+
   streaming = false;
 
   maxTokens?: number;
 
-  // Used for non-streaming requests
   private client: OpenAIApi;
 
   private clientConfig: ConfigurationParameters;
@@ -172,6 +178,7 @@ export class ChatOpenAI extends BaseChatModel implements OpenAIInput {
 
     this.modelName = fields?.modelName ?? this.modelName;
     this.modelKwargs = fields?.modelKwargs ?? {};
+    this.timeout = fields?.timeout;
 
     this.temperature = fields?.temperature ?? this.temperature;
     this.topP = fields?.topP ?? this.topP;
@@ -384,7 +391,11 @@ export class ChatOpenAI extends BaseChatModel implements OpenAIInput {
     if (!this.client) {
       const clientConfig = new Configuration({
         ...this.clientConfig,
-        baseOptions: { adapter: fetchAdapter },
+        baseOptions: {
+          timeout: this.timeout,
+          ...this.clientConfig.baseOptions,
+          adapter: fetchAdapter,
+        },
       });
       this.client = new OpenAIApi(clientConfig);
     }

@@ -14,7 +14,7 @@ export class VectorStoreRetriever extends BaseRetriever {
   }
 
   async getRelevantDocuments(query: string): Promise<Document[]> {
-    const results = await this.vectorStore.similaritySearch(query, 4);
+    const results = await this.vectorStore.similaritySearch(query, this.k);
     return results;
   }
 }

@@ -66,6 +66,11 @@ interface OpenAIInput extends ModelParams {
 
   /** List of stop words to use when generating */
   stop?: string[];
+
+  /**
+   * Timeout to use when making requests to OpenAI.
+   */
+  timeout?: number;
 }
 
 type TokenUsage = {
@@ -115,11 +120,12 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
 
   batchSize = 20;
 
+  timeout?: number;
+
   stop?: string[];
 
   streaming = false;
 
-  // Used for non-streaming requests
   private client: OpenAIApi;
 
   private clientConfig: ConfigurationParameters;
@@ -148,6 +154,7 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
     this.modelName = fields?.modelName ?? this.modelName;
     this.modelKwargs = fields?.modelKwargs ?? {};
     this.batchSize = fields?.batchSize ?? this.batchSize;
+    this.timeout = fields?.timeout;
 
     this.temperature = fields?.temperature ?? this.temperature;
     this.maxTokens = fields?.maxTokens ?? this.maxTokens;
@@ -358,6 +365,7 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
       const clientConfig = new Configuration({
         ...this.clientConfig,
         baseOptions: {
+          timeout: this.timeout,
           ...this.clientConfig.baseOptions,
           adapter: fetchAdapter,
         },

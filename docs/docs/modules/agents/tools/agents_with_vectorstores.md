@@ -1,10 +1,10 @@
-# Agents with Vectorstores
+# Agents with Vector Stores
 
-This notebook covers how to combine agents and vectorstores. The use case for this is that you’ve ingested your data into a vectorstore and want to interact with it in an agentic manner.
+This notebook covers how to combine agents and vector stores. The use case for this is that you’ve ingested your data into a vector store and want to interact with it in an agentic manner.
 
-The reccomended method for doing so is to create a VectorDBQAChain and then use that as a tool in the overall agent. Let’s take a look at doing this below. You can do this with multiple different vectordbs, and use the agent as a way to route between them. There are two different ways of doing this - you can either let the agent use the vectorstores as normal tools, or you can set return_direct=True to really just use the agent as a router.
+The recommended method for doing so is to create a VectorDBQAChain and then use that as a tool in the overall agent. Let’s take a look at doing this below. You can do this with multiple different vector databases, and use the agent as a way to choose between them. There are two different ways of doing this - you can either let the agent use the vector stores as normal tools, or you can set `returnDirect: true` to just use the agent as a router.
 
-First, you want to import the relevant modules
+First, you'll want to import the relevant modules:
 
 ```typescript
 import { OpenAI } from "langchain";
@@ -17,7 +17,7 @@ import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import * as fs from "fs";
 ```
 
-Next, you want to create the vectorstore with your data, and then the QA chain to interact with that vectorstore.
+Next, you'll want to create the vector store with your data, and then the QA chain to interact with that vector store.
 
 ```typescript
 const model = new OpenAI({ temperature: 0 });
@@ -43,7 +43,7 @@ const qaTool = new ChainTool({
 });
 ```
 
-Now we can go about constructing and using the tool as we would any other tool!
+Now you can construct and using the tool just as you would any other!
 
 ```typescript
 const tools = [new SerpAPI(), new Calculator(), qaTool];
@@ -64,7 +64,7 @@ const result = await executor.call({ input });
 console.log(`Got output ${result.output}`);
 ```
 
-You can also set return_direct=True if you intend to use the agent as a router and just want to directly return the result of the VectorDBQaChain.
+You can also set `returnDirect: true` if you intend to use the agent as a router and just want to directly return the result of the VectorDBQAChain.
 
 ```typescript
 const qaTool = new ChainTool({
