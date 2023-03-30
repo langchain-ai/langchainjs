@@ -1,5 +1,23 @@
 import { Embeddings } from "../embeddings/base.js";
 import { Document } from "../document.js";
+import { BaseRetriever } from "../schema/index.js";
+
+export class VectorStoreRetriever extends BaseRetriever {
+  vectorStore: VectorStore;
+
+  k = 4;
+
+  constructor(fields: { vectorStore: VectorStore; k?: number }) {
+    super();
+    this.vectorStore = fields.vectorStore;
+    this.k = fields.k ?? this.k;
+  }
+
+  async getRelevantDocuments(query: string): Promise<Document[]> {
+    const results = await this.vectorStore.similaritySearch(query, this.k);
+    return results;
+  }
+}
 
 export abstract class VectorStore {
   embeddings: Embeddings;
@@ -18,13 +36,19 @@ export abstract class VectorStore {
 
   abstract similaritySearchVectorWithScore(
     query: number[],
-    k: number
+    k: number,
+    filter?: object
   ): Promise<[Document, number][]>;
 
-  async similaritySearch(query: string, k = 4): Promise<Document[]> {
+  async similaritySearch(
+    query: string,
+    k = 4,
+    filter: object | undefined = undefined
+  ): Promise<Document[]> {
     const results = await this.similaritySearchVectorWithScore(
       await this.embeddings.embedQuery(query),
-      k
+      k,
+      filter
     );
 
     return results.map((result) => result[0]);
@@ -32,17 +56,19 @@ export abstract class VectorStore {
 
   async similaritySearchWithScore(
     query: string,
-    k = 4
+    k = 4,
+    filter: object | undefined = undefined
   ): Promise<[object, number][]> {
     return this.similaritySearchVectorWithScore(
       await this.embeddings.embedQuery(query),
-      k
+      k,
+      filter
     );
   }
 
   static fromTexts(
     _texts: string[],
-    _metadatas: object[],
+    _metadatas: object[] | object,
     _embeddings: Embeddings,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     _dbConfig: Record<string, any>
@@ -61,6 +87,10 @@ export abstract class VectorStore {
     throw new Error(
       "the Langchain vectorstore implementation you are using forgot to override this, please report a bug"
     );
+  }
+
+  asRetriever(k?: number): BaseRetriever {
+    return new VectorStoreRetriever({ vectorStore: this, k });
   }
 }
 

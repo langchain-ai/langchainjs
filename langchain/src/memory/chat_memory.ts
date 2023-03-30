@@ -2,6 +2,7 @@ import {
   HumanChatMessage,
   AIChatMessage,
   BaseChatMessage,
+  BaseChatMessageHistory,
 } from "../schema/index.js";
 import {
   BaseMemory,
@@ -10,10 +11,11 @@ import {
   getInputValue,
 } from "./base.js";
 
-export class ChatMessageHistory {
+export class ChatMessageHistory extends BaseChatMessageHistory {
   messages: BaseChatMessage[] = [];
 
   constructor(messages?: BaseChatMessage[]) {
+    super();
     this.messages = messages ?? [];
   }
 

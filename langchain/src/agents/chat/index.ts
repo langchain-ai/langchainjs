@@ -104,7 +104,9 @@ export class ChatAgent extends Agent {
     });
   }
 
-  extractToolAndInput(text: string): { tool: string; input: string } | null {
+  async extractToolAndInput(
+    text: string
+  ): Promise<{ tool: string; input: string } | null> {
     if (text.includes(FINAL_ANSWER_ACTION)) {
       const parts = text.split(FINAL_ANSWER_ACTION);
       const input = parts[parts.length - 1].trim();

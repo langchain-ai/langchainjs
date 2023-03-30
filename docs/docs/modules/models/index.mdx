@@ -1,0 +1,34 @@
+---
+sidebar_position: 2
+hide_table_of_contents: true
+sidebar_label: Models
+---
+
+import DocCardList from "@theme/DocCardList";
+
+# Models
+
+:::info
+[Conceptual Guide](https://docs.langchain.com/docs/components/models/)
+:::
+
+Models are a core component of LangChain. LangChain is not a provider of models, but rather provides a standard interface through which you can interact with a variety of language models.
+LangChain provides support for both text-based Large Language Models (LLMs), Chat Models, and Text Embedding models.
+
+LLMs use a text-based input and output, while Chat Models use a message-based input and output.
+
+> **_Note:_** Chat model APIs are fairly new, so we are still figuring out the correct abstractions. If you have any feedback, please let us know!
+
+## All Models
+
+<DocCardList />
+
+## Advanced
+
+_This section is for users who want a deeper technical understanding of how LangChain works. If you are just getting started, you can skip this section._
+
+Both LLMs and Chat Models are built on top of the `BaseLanguageModel` class. This class provides a common interface for all models, and allows us to easily swap out models in chains without changing the rest of the code.
+
+The `BaseLanguageModel` class has two abstract methods: `generatePrompt` and `getNumTokens`, which are implemented by `BaseChatModel` and `BaseLLM` respectively.
+
+`BaseLLM` is a subclass of `BaseLanguageModel` that provides a common interface for LLMs while `BaseChatModel` is a subclass of `BaseLanguageModel` that provides a common interface for chat models.

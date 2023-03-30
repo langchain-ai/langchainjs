@@ -1,0 +1,40 @@
+---
+hide_table_of_contents: true
+sidebar_position: 2
+---
+
+# Question Answering
+
+:::info
+[Conceptual Guide](https://docs.langchain.com/docs/use-cases/qa-docs)
+:::
+
+Question answering in this context refers to question answering over your document data.
+There are a few different types of question answering:
+
+- [Retrieval Question Answering](../modules/chains/index_related_chains/retrieval_qa): Use this to ingest documents, index them into a vectorstore, and then be able to ask questions about it.
+- [Chat Retrieval](../modules/chains/index_related_chains/conversational_retrieval): Similar to above in that you ingest and index documents, but this lets you have more a conversation (ask follow up questions, etc) rather than just asking one-off questions.
+
+## Indexing
+
+For question answering over many documents, you almost always want to create an index over the data.
+This can be used to smartly access the most relevant documents for a given question, allowing you to avoid having to pass all the documents to the LLM (saving you time and money).
+
+Therefor, it is really important to understand how to create indexes, and so you should familiarize yourself with all the documentation related to that.
+
+- [Indexes](../modules/indexes/index.mdx)
+
+## Chains
+
+After you create an index, you can then use it in a chain.
+You can just do normal question answering over it, or you can use it a conversational way.
+For an overview of these chains (and more) see the below documentation.
+
+- [Index related chains](../modules/chains/index_related_chains/index.mdx)
+
+## Agents
+
+If you want to be able to answer more complex, multi-hop questions you should look into combining your indexes with an agent.
+For an example of how to do that, please see the below.
+
+- [Vectorstore Agent](../modules/agents/toolkits/examples/vectorstore.md)
