@@ -83,10 +83,19 @@ test("StructuredOutputParser.fromZodSchema", async () => {
       .object({
         url: z.string().describe("A link to the resource"),
         title: z.string().describe("A title for the resource"),
+        year: z.number().describe("The year the resource was created"),
+        createdAt: z
+          .string()
+          .datetime()
+          .describe("The date the resource was created"),
         authors: z.array(
           z.object({
             name: z.string().describe("The name of the author"),
             email: z.string().describe("The email of the author"),
+            address: z
+              .string()
+              .optional()
+              .describe("The address of the author"),
           })
         ),
       })
@@ -95,27 +104,34 @@ test("StructuredOutputParser.fromZodSchema", async () => {
 
   expect(
     await parser.parse(
-      '```json\n{"url": "value", "title": "value", "authors": [{"name": "value", "email": "value"}]}```'
+      '```json\n{"url": "value", "title": "value", "year": 2011, "createdAt": "2023-03-29T16:07:09.600Z", "authors": [{"name": "value", "email": "value"}]}```'
     )
   ).toEqual({
     url: "value",
     title: "value",
+    year: 2011,
+    createdAt: "2023-03-29T16:07:09.600Z",
     authors: [{ name: "value", email: "value" }],
   });
 
-  expect(parser.getFormatInstructions()).toMatchInlineSnapshot(`
-    "The output should be a markdown code snippet formatted in the following schema:
+  expect(parser.getFormatInstructions()).toMatchInlineSnapshot(
+    `
+"The output should be a markdown code snippet formatted in the following schema:
 
-    \`\`\`json
-    { // Only One object
-    	"url": string // A link to the resource
-    	"title": string // A title for the resource
-    	"authors": {
-    		"name": string // The name of the author
-    		"email": string // The email of the author
-    	}[]
-    }
-    \`\`\` 
-    "
-  `);
+\`\`\`json
+{ // Only One object
+	"url": string // A link to the resource
+	"title": string // A title for the resource
+	"year": number // The year the resource was created
+	"createdAt": datetime // The date the resource was created
+	"authors": {
+		"name": string // The name of the author
+		"email": string // The email of the author
+		"address": string // Optional // The address of the author
+	}[]
+}
+\`\`\` 
+"
+`
+  );
 });
