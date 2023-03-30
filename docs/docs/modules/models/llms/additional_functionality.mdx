@@ -6,6 +6,7 @@ import CodeBlock from "@theme/CodeBlock";
 import Example from "@examples/models/llm/llm.ts";
 import DebuggingExample from "@examples/models/llm/llm_debugging.ts";
 import StreamingExample from "@examples/models/llm/llm_streaming.ts";
+import TimeoutExample from "@examples/models/llm/llm_timeout.ts";
 
 # Additional Functionality: LLMs
 
@@ -64,6 +65,14 @@ const cache = new RedisCache(client);
 
 const model = new OpenAI({ cache });
 ```
+
+## Adding a timeout
+
+By default, LangChain will wait indefinitely for a response from the model provider. If you want to add a timeout, you can pass a `timeout` option, in milliseconds, when you instantiate the model. For example, for OpenAI:
+
+<CodeBlock language="typescript">{TimeoutExample}</CodeBlock>
+
+Cureently, the timeout option is only supported for OpenAI models.
 
 ## Dealing with Rate Limits
 
