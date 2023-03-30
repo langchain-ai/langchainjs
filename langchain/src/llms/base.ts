@@ -1,5 +1,3 @@
-import GPT3Tokenizer from "gpt3-tokenizer";
-
 import { BaseCache, InMemoryCache } from "../cache.js";
 import { BasePromptValue, LLMResult } from "../schema/index.js";
 import {
@@ -178,19 +176,6 @@ export abstract class BaseLLM extends BaseLanguageModel {
       throw new Error(`Cannot load  LLM with type ${_type}`);
     }
     return new Cls(rest);
-  }
-
-  private _tokenizer?: GPT3Tokenizer.default;
-
-  getNumTokens(text: string): number {
-    // TODOs copied from py implementation
-    // TODO: this method may not be exact.
-    // TODO: this method may differ based on model (eg codex, gpt-3.5).
-    if (this._tokenizer === undefined) {
-      const Constructor = GPT3Tokenizer.default;
-      this._tokenizer = new Constructor({ type: "gpt3" });
-    }
-    return this._tokenizer.encode(text).bpe.length;
   }
 
   // TODO(sean): save to disk

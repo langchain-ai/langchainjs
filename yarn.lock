@@ -4661,13 +4661,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"array-keyed-map@npm:^2.1.3":
-  version: 2.1.3
-  resolution: "array-keyed-map@npm:2.1.3"
-  checksum: 53b45671922bbe7a7eb34950887fd4b1ba4154b0e0002523efa8fb352b320aaa6f798e4d7af151fc8dd4f3365996974f40f141e201d9aae90ea8b3383daf98f8
-  languageName: node
-  linkType: hard
-
 "array-union@npm:^2.1.0":
   version: 2.1.0
   resolution: "array-union@npm:2.1.0"
@@ -4794,6 +4787,17 @@ __metadata:
   dependencies:
     follow-redirects: ^1.14.8
   checksum: d9eb58ff4bc0b36a04783fc9ff760e9245c829a5a1052ee7ca6013410d427036b1d10d04e7380c02f3508c5eaf3485b1ae67bd2adbfec3683704745c8d7a6e1a
+  languageName: node
+  linkType: hard
+
+"axios@npm:^1.3.4":
+  version: 1.3.4
+  resolution: "axios@npm:1.3.4"
+  dependencies:
+    follow-redirects: ^1.15.0
+    form-data: ^4.0.0
+    proxy-from-env: ^1.1.0
+  checksum: 7440edefcf8498bc3cdf39de00443e8101f249972c83b739c6e880d9d669fea9486372dbe8739e88b3bf8bb1ad15f6106693f206f078f4516fe8fd47b1c3093c
   languageName: node
   linkType: hard
 
@@ -6828,9 +6832,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"dpdm@patch:dpdm@npm%3A3.12.0#./.yarn/patches/dpdm-npm-3.12.0-0dfdd8e3b8.patch::locator=root-workspace-0b6124%40workspace%3A.":
+"dpdm@patch:dpdm@npm%3A3.12.0#./.yarn/patches/dpdm-npm-3.12.0-0dfdd8e3b8.patch::locator=langchainjs%40workspace%3A.":
   version: 3.12.0
-  resolution: "dpdm@patch:dpdm@npm%3A3.12.0#./.yarn/patches/dpdm-npm-3.12.0-0dfdd8e3b8.patch::version=3.12.0&hash=2406a8&locator=root-workspace-0b6124%40workspace%3A."
+  resolution: "dpdm@patch:dpdm@npm%3A3.12.0#./.yarn/patches/dpdm-npm-3.12.0-0dfdd8e3b8.patch::version=3.12.0&hash=2406a8&locator=langchainjs%40workspace%3A."
   dependencies:
     "@types/fs-extra": ^11.0.1
     "@types/glob": ^8.0.0
@@ -7612,13 +7616,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eventsource-parser@npm:^0.1.0":
-  version: 0.1.0
-  resolution: "eventsource-parser@npm:0.1.0"
-  checksum: 873c24a4777887f9963945e3b54ec7d12a2031b9eacaa1a2d2cc025c0778fdf4429db9a7cf72aae72211ffbf0da8ef6bfe199846dffee2d7acd4f49394037332
-  languageName: node
-  linkType: hard
-
 "execa@npm:^5.0.0":
   version: 5.1.1
   resolution: "execa@npm:5.1.1"
@@ -8038,7 +8035,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"follow-redirects@npm:^1.0.0, follow-redirects@npm:^1.14.7, follow-redirects@npm:^1.14.8":
+"follow-redirects@npm:^1.0.0, follow-redirects@npm:^1.14.7, follow-redirects@npm:^1.14.8, follow-redirects@npm:^1.15.0":
   version: 1.15.2
   resolution: "follow-redirects@npm:1.15.2"
   peerDependenciesMeta:
@@ -8515,15 +8512,6 @@ __metadata:
     to-readable-stream: ^1.0.0
     url-parse-lax: ^3.0.0
   checksum: 941807bd9704bacf5eb401f0cc1212ffa1f67c6642f2d028fd75900471c221b1da2b8527f4553d2558f3faeda62ea1cf31665f8b002c6137f5de8732f07370b0
-  languageName: node
-  linkType: hard
-
-"gpt3-tokenizer@npm:^1.1.5":
-  version: 1.1.5
-  resolution: "gpt3-tokenizer@npm:1.1.5"
-  dependencies:
-    array-keyed-map: ^2.1.3
-  checksum: 9d458f1d57fc381f7e348780c90aa25758a224b2b06424ea255c6f0693b16d06eaaa4f4a26635d916cd6131ed47eba7f66bde81190a5f5bc606aa9a97bacb51a
   languageName: node
   linkType: hard
 
@@ -10455,6 +10443,7 @@ __metadata:
     "@babel/preset-env": ^7.20.2
     "@dqbd/tiktoken": ^1.0.2
     "@faker-js/faker": ^7.6.0
+    "@fortaine/fetch-event-source": ^3.0.6
     "@huggingface/inference": ^1.5.1
     "@jest/globals": ^29.5.0
     "@pinecone-database/pinecone": ^0.0.10
@@ -10480,11 +10469,9 @@ __metadata:
     eslint-plugin-import: ^2.27.5
     eslint-plugin-prettier: ^4.2.1
     eslint-plugin-tree-shaking: ^1.10.0
-    eventsource-parser: ^0.1.0
     exponential-backoff: ^3.1.0
     expr-eval: ^2.0.2
     flat: ^5.0.2
-    gpt3-tokenizer: ^1.1.5
     hnswlib-node: ^1.4.2
     husky: ^8.0.3
     is-binary-path: ^2.1.0
@@ -10498,6 +10485,7 @@ __metadata:
     prettier: ^2.8.3
     puppeteer: ^19.7.2
     redis: ^4.6.4
+    replicate: ^0.6.0
     rollup: ^3.19.1
     sqlite3: ^5.1.4
     srt-parser-2: ^1.2.2
@@ -10521,6 +10509,7 @@ __metadata:
     pdfjs-dist: ^3.4.120
     puppeteer: ^19.7.2
     redis: ^4.6.4
+    replicate: ^0.6.0
     srt-parser-2: ^1.2.2
     typeorm: ^0.3.12
   peerDependenciesMeta:
@@ -10548,10 +10537,26 @@ __metadata:
       optional: true
     redis:
       optional: true
+    replicate:
+      optional: true
     srt-parser-2:
       optional: true
     typeorm:
       optional: true
+  languageName: unknown
+  linkType: soft
+
+"langchainjs@workspace:.":
+  version: 0.0.0-use.local
+  resolution: "langchainjs@workspace:."
+  dependencies:
+    "@tsconfig/recommended": ^1.0.2
+    dotenv: ^16.0.3
+    husky: ^8.0.3
+    lint-staged: ^13.1.1
+    prettier: ^2.8.3
+    turbo: ^1.7.4
+    typescript: ^4.9.5
   languageName: unknown
   linkType: soft
 
@@ -12840,7 +12845,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"proxy-from-env@npm:1.1.0":
+"proxy-from-env@npm:1.1.0, proxy-from-env@npm:^1.1.0":
   version: 1.1.0
   resolution: "proxy-from-env@npm:1.1.0"
   checksum: ed7fcc2ba0a33404958e34d95d18638249a68c430e30fcb6c478497d72739ba64ce9810a24f53a7d921d0c065e5b78e3822759800698167256b04659366ca4d4
@@ -13491,6 +13496,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"replicate@npm:^0.6.0":
+  version: 0.6.0
+  resolution: "replicate@npm:0.6.0"
+  dependencies:
+    axios: ^1.3.4
+  checksum: 66a9120131eb2d12f490cfb2239a198e0c0ee46ea065f5850fa7b05ea0b4927552142fb5bfb3ab27f336984fd1f0d7e4696ab06605bf31355fdfc18b53e3f072
+  languageName: node
+  linkType: hard
+
 "require-directory@npm:^2.1.1":
   version: 2.1.1
   resolution: "require-directory@npm:2.1.1"
@@ -13679,20 +13693,6 @@ __metadata:
   checksum: f78198c6de224b26650c70b16db156762d1fcceeb375d34fb2c76fc5b23a78f712c3c881d3248e6f277a511589e20d50c247bcf5c7920f1ddc0a43cadf9f0140
   languageName: node
   linkType: hard
-
-"root-workspace-0b6124@workspace:.":
-  version: 0.0.0-use.local
-  resolution: "root-workspace-0b6124@workspace:."
-  dependencies:
-    "@tsconfig/recommended": ^1.0.2
-    dotenv: ^16.0.3
-    husky: ^8.0.3
-    lint-staged: ^13.1.1
-    prettier: ^2.8.3
-    turbo: ^1.7.4
-    typescript: ^4.9.5
-  languageName: unknown
-  linkType: soft
 
 "rrweb-snapshot@npm:^1.1.14":
   version: 1.1.14

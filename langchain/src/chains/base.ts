@@ -30,7 +30,7 @@ export abstract class BaseChain implements ChainInputs {
     callbackManager?: CallbackManager
   ) {
     this.memory = memory;
-    this.verbose = verbose ?? getVerbosity();
+    this.verbose = verbose ?? (callbackManager ? true : getVerbosity());
     this.callbackManager = callbackManager ?? getCallbackManager();
   }
 

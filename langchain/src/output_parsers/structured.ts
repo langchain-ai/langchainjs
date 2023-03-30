@@ -47,13 +47,13 @@ ${indent}}`;
 }
 
 export class StructuredOutputParser<
-  T extends z.AnyZodObject
+  T extends z.ZodTypeAny
 > extends BaseOutputParser {
   constructor(public schema: T) {
     super();
   }
 
-  static fromZodSchema<T extends z.AnyZodObject>(schema: T) {
+  static fromZodSchema<T extends z.ZodTypeAny>(schema: T) {
     return new this(schema);
   }
 
