@@ -6,6 +6,8 @@ import { BaseOutputParser, OutputParserException } from "../schema/index.js";
 function printSchema(schema: z.ZodTypeAny, depth = 0): string {
   if (schema instanceof z.ZodString) {
     return "string";
+  } else if (schema instanceof z.ZodNumber) {
+    return "number";
   } else if (schema instanceof z.ZodArray) {
     return `${printSchema(schema._def.type, depth)}[]`;
   } else if (schema instanceof z.ZodObject) {
@@ -29,13 +31,13 @@ ${indent}}`;
 }
 
 export class StructuredOutputParser<
-  T extends z.AnyZodObject
+  T extends z.ZodTypeAny
 > extends BaseOutputParser {
   constructor(public schema: T) {
     super();
   }
 
-  static fromZodSchema<T extends z.AnyZodObject>(schema: T) {
+  static fromZodSchema<T extends z.ZodTypeAny>(schema: T) {
     return new this(schema);
   }
 
