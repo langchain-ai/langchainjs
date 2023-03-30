@@ -10482,6 +10482,7 @@ __metadata:
     openai: ^3.2.0
     p-queue: ^7.3.4
     pdfjs-dist: ^3.4.120
+    playwright: ^1.32.1
     prettier: ^2.8.3
     puppeteer: ^19.7.2
     redis: ^4.6.4
@@ -10507,6 +10508,7 @@ __metadata:
     d3-dsv: ^3.0.1
     hnswlib-node: ^1.4.2
     pdfjs-dist: ^3.4.120
+    playwright: ^1.32.1
     puppeteer: ^19.7.2
     redis: ^4.6.4
     replicate: ^0.6.0
@@ -10532,6 +10534,8 @@ __metadata:
     hnswlib-node:
       optional: true
     pdfjs-dist:
+      optional: true
+    playwright:
       optional: true
     puppeteer:
       optional: true
@@ -12224,6 +12228,26 @@ __metadata:
   dependencies:
     find-up: ^3.0.0
   checksum: 5bac346b7c7c903613c057ae3ab722f320716199d753f4a7d053d38f2b5955460f3e6ab73b4762c62fd3e947f58e04f1343e92089e7bb6091c90877406fcd8c8
+  languageName: node
+  linkType: hard
+
+"playwright-core@npm:1.32.1":
+  version: 1.32.1
+  resolution: "playwright-core@npm:1.32.1"
+  bin:
+    playwright: cli.js
+  checksum: 796185e605df3c970885845c1fbf2de53db5d089d37946850483797c91b81ab9dc87c3440695e96a8c92613324ef3deaea698afaf2c379548a23f8ce074931de
+  languageName: node
+  linkType: hard
+
+"playwright@npm:^1.32.1":
+  version: 1.32.1
+  resolution: "playwright@npm:1.32.1"
+  dependencies:
+    playwright-core: 1.32.1
+  bin:
+    playwright: cli.js
+  checksum: bb2cef8812abf60cf07bbf6edb4ac480ccbf0b129e001fd4f2d499c8888918bc87dcc0f346b5954e6b67cd67528c8263593b091f3c83609a91c8a276196c8951
   languageName: node
   linkType: hard
 

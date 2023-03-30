@@ -5,6 +5,10 @@ export {
   PuppeteerWebBaseLoader,
   PuppeteerEvaluate,
 } from "./puppeteer_web_base.js";
+export {
+  PlaywrightWebBaseLoader,
+  PlaywrightEvaluate,
+} from "./playwright_web_base.js";
 export { CollegeConfidentialLoader } from "./college_confidential.js";
 export { GitbookLoader } from "./gitbook.js";
 export { HNLoader } from "./hn.js";
