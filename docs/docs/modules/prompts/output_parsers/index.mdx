@@ -35,7 +35,7 @@ import Structured from "@examples/prompts/structured_parser.ts";
 
 ## Structured Output Parser with Zod Schema
 
-This output parser can be also be used when you want to define the output schema using Zod, a TypeScript validation library.
+This output parser can be also be used when you want to define the output schema using Zod, a TypeScript validation library. The Zod schema passed in needs be parseable from a JSON string, so eg. `z.date()` is not allowed, but `z.coerce.date()` is.
 
 import StructuredZod from "@examples/prompts/structured_parser_zod.ts";
 

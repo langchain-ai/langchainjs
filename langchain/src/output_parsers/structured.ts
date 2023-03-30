@@ -1,41 +1,59 @@
-/* eslint-disable no-else-return */
 import { z } from "zod";
 
 import { BaseOutputParser, OutputParserException } from "../schema/index.js";
 
 function printSchema(schema: z.ZodTypeAny, depth = 0): string {
+  if (
+    schema instanceof z.ZodString &&
+    schema._def.checks.some((check) => check.kind === "datetime")
+  ) {
+    return "datetime";
+  }
   if (schema instanceof z.ZodString) {
     return "string";
-  } else if (schema instanceof z.ZodArray) {
+  }
+  if (schema instanceof z.ZodNumber) {
+    return "number";
+  }
+  if (schema instanceof z.ZodBoolean) {
+    return "boolean";
+  }
+  if (schema instanceof z.ZodDate) {
+    return "date";
+  }
+  if (schema instanceof z.ZodOptional) {
+    return `${printSchema(schema._def.innerType, depth)} // Optional`;
+  }
+  if (schema instanceof z.ZodArray) {
     return `${printSchema(schema._def.type, depth)}[]`;
-  } else if (schema instanceof z.ZodObject) {
+  }
+  if (schema instanceof z.ZodObject) {
     const indent = "\t".repeat(depth);
     const indentIn = "\t".repeat(depth + 1);
     return `{${schema._def.description ? ` // ${schema._def.description}` : ""}
 ${Object.entries(schema.shape)
   .map(
     ([key, value]) =>
-      // eslint-disable-next-line prefer-template
-      `${indentIn}"${key}": ${printSchema(value as z.ZodTypeAny, depth + 1)}` +
-      ((value as z.ZodTypeAny)._def.description
-        ? ` // ${(value as z.ZodTypeAny)._def.description}`
-        : "")
+      `${indentIn}"${key}": ${printSchema(value as z.ZodTypeAny, depth + 1)}${
+        (value as z.ZodTypeAny)._def.description
+          ? ` // ${(value as z.ZodTypeAny)._def.description}`
+          : ""
+      }`
   )
   .join("\n")}
 ${indent}}`;
-  } else {
-    throw new Error(`Unsupported type: ${schema}`);
   }
+  throw new Error(`Unsupported type: ${schema._def.innerType}`);
 }
 
 export class StructuredOutputParser<
-  T extends z.AnyZodObject
+  T extends z.ZodTypeAny
 > extends BaseOutputParser {
   constructor(public schema: T) {
     super();
   }
 
-  static fromZodSchema<T extends z.AnyZodObject>(schema: T) {
+  static fromZodSchema<T extends z.ZodTypeAny>(schema: T) {
     return new this(schema);
   }
 
@@ -59,7 +77,7 @@ export class StructuredOutputParser<
 
 \`\`\`json
 ${printSchema(this.schema)}
-\`\`\` 
+\`\`\`
 `;
   }
 
