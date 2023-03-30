@@ -16,5 +16,5 @@ const splitter = new CharacterTextSplitter({
   chunkSize: 7,
   chunkOverlap: 3,
 });
-const output = splitter.createDocuments([text]);
+const output = await splitter.createDocuments([text]);
 ```
