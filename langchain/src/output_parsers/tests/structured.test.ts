@@ -47,6 +47,38 @@ test("StructuredOutputParser.fromZodSchema", async () => {
 
 test("StructuredOutputParser.fromZodSchema", async () => {
   const parser = StructuredOutputParser.fromZodSchema(
+    z.object({
+      answer: z.string().describe("answer to the user's question"),
+      sources: z
+        .array(z.string())
+        .describe("sources used to answer the question, should be websites."),
+    })
+  );
+
+  expect(
+    await parser.parse(
+      '```json\n{"answer": "value", "sources": ["this-source"]}```'
+    )
+  ).toEqual({
+    answer: "value",
+    sources: ["this-source"],
+  });
+
+  expect(parser.getFormatInstructions()).toMatchInlineSnapshot(`
+    "The output should be a markdown code snippet formatted in the following schema:
+
+    \`\`\`json
+    {
+    	"answer": string // answer to the user's question
+    	"sources": string[] // sources used to answer the question, should be websites.
+    }
+    \`\`\` 
+    "
+  `);
+});
+
+test("StructuredOutputParser.fromZodSchema", async () => {
+  const parser = StructuredOutputParser.fromZodSchema(
     z
       .object({
         url: z.string().describe("A link to the resource"),
