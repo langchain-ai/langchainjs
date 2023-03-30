@@ -55,6 +55,11 @@ interface OpenAIInput extends ModelParams {
   stop?: string[];
 
   /**
+   * Timeout to use when making requests to OpenAI.
+   */
+  timeout?: number;
+
+  /**
    * Maximum number of tokens to generate in the completion.  If not specified,
    * defaults to the maximum number of tokens allowed by the model.
    */
@@ -100,6 +105,8 @@ export class OpenAIChat extends LLM implements OpenAIInput {
 
   modelKwargs?: Kwargs;
 
+  timeout?: number;
+
   stop?: string[];
 
   streaming = false;
@@ -125,6 +132,7 @@ export class OpenAIChat extends LLM implements OpenAIInput {
     this.modelName = fields?.modelName ?? this.modelName;
     this.prefixMessages = fields?.prefixMessages ?? this.prefixMessages;
     this.modelKwargs = fields?.modelKwargs ?? {};
+    this.timeout = fields?.timeout;
 
     this.temperature = fields?.temperature ?? this.temperature;
     this.topP = fields?.topP ?? this.topP;
@@ -311,6 +319,7 @@ export class OpenAIChat extends LLM implements OpenAIInput {
       const clientConfig = new Configuration({
         ...this.clientConfig,
         baseOptions: {
+          timeout: this.timeout,
           ...this.clientConfig.baseOptions,
           adapter: fetchAdapter,
         },

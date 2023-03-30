@@ -3,8 +3,7 @@ import { HumanChatMessage } from "langchain/schema";
 
 export const run = async () => {
   const chat = new ChatOpenAI(
-    { temperature: 1 },
-    { baseOptions: { timeout: 1000 } } // 1s timeout
+    { temperature: 1, timeout: 1000 } // 1s timeout
   );
 
   const response = await chat.call([

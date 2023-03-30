@@ -2,8 +2,7 @@ import { OpenAI } from "langchain/llms";
 
 export const run = async () => {
   const model = new OpenAI(
-    { temperature: 1 },
-    { baseOptions: { timeout: 1000 } } // 1s timeout
+    { temperature: 1, timeout: 1000 } // 1s timeout
   );
 
   const resA = await model.call(
