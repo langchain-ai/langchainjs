@@ -77,7 +77,7 @@ export class StructuredOutputParser<
 
 \`\`\`json
 ${printSchema(this.schema)}
-\`\`\` 
+\`\`\`
 `;
   }
 
