@@ -2,7 +2,7 @@
 hide_table_of_contents: true
 ---
 
-# PDF files
+# Docx files
 
 This example goes over how to load data from docx files.
 
