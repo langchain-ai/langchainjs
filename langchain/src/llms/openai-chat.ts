@@ -320,8 +320,8 @@ export class OpenAIChat extends LLM implements OpenAIInput {
         ...this.clientConfig,
         baseOptions: {
           timeout: this.timeout,
-          ...this.clientConfig.baseOptions,
           adapter: fetchAdapter,
+          ...this.clientConfig.baseOptions,
         },
       });
       this.client = new OpenAIApi(clientConfig);

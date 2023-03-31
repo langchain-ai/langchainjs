@@ -366,8 +366,8 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
         ...this.clientConfig,
         baseOptions: {
           timeout: this.timeout,
-          ...this.clientConfig.baseOptions,
           adapter: fetchAdapter,
+          ...this.clientConfig.baseOptions,
         },
       });
       this.client = new OpenAIApi(clientConfig);
