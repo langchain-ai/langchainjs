@@ -1,6 +1,6 @@
-# Supabase Hybrid Keyword Search 
+# Supabase Hybrid Search 
 
-Langchain supports hybrid search with a Supabase Postgres database. The hybrid search combines the postgres `pgvector`extension and Full-Text Search to retrieve documents. You can add documents via SupabaseVectorStore add documents function. SupabaseHybridKeyWordSearch accepts embedding, supabase client, number of results for similarity search, and number of results for keyword search as parameters. The getRelevantDocuments function produces a list of documents that has duplicates removed and is sorted by relevance score.
+Langchain supports hybrid search with a Supabase Postgres database. The hybrid search combines the postgres `pgvector` extension (similarity search) and Full-Text Search (keyword search) to retrieve documents. You can add documents via SupabaseVectorStore `addDocuments` function. SupabaseHybridKeyWordSearch accepts embedding, supabase client, number of results for similarity search, and number of results for keyword search as parameters. The `getRelevantDocuments` function produces a list of documents that has duplicates removed and is sorted by relevance score.
 
 ## Setup
 
@@ -10,7 +10,7 @@ Langchain supports hybrid search with a Supabase Postgres database. The hybrid s
 npm install -S @supabase/supabase-js
 ```
 
-### Create a table and search function in your database
+### Create a table and search functions in your database
 
 Run this in your database:
 
@@ -77,6 +77,6 @@ $$ language plpgsql;
 ## Usage
 
 import CodeBlock from "@theme/CodeBlock";
-import Example from "@examples/src/retrievers/supabase_hybrid.ts";
+import Example from "@examples/retrievers/supabase_hybrid.ts";
 
 <CodeBlock language="typescript">{Example}</CodeBlock>
