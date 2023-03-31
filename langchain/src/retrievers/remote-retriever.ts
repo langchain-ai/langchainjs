@@ -48,7 +48,6 @@ export class RemoteLangChainRetriever extends BaseRetriever {
   }
 
   async getRelevantDocuments(query: string): Promise<Document[]> {
-    console.log(query);
     const res = await this.asyncCaller.call(fetch, this.url, {
       method: "POST",
       body: JSON.stringify({
@@ -69,6 +68,7 @@ export class RemoteLangChainRetriever extends BaseRetriever {
 
     const body = await res.json();
     return body[this.responseKey].map(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (r: any) =>
         new Document({
           pageContent: r[this.pageContentKey],
