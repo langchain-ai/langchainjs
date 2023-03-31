@@ -33,27 +33,3 @@ test("SupabaseVectorStore with external ids", async () => {
     new Document({ metadata: { a: 1 }, pageContent: "hello" }),
   ]);
 });
-
-test("SupabaseVectorStore with hybrid search", async () => {
-  const client = createClient(
-    process.env.SUPABASE_URL!,
-    process.env.SUPABASE_PRIVATE_KEY!
-  );
-
-  const embeddings = new OpenAIEmbeddings();
-
-  const store = new SupabaseVectorStore(embeddings, { client });
-
-  expect(store).toBeDefined();
-
-  await store.addDocuments([
-    { pageContent: "hello world bye", metadata: { a: 1 } },
-    { pageContent: "hi", metadata: { a: 1 } },
-    { pageContent: "hello bye", metadata: { a: 1 } },
-    { pageContent: "what's this", metadata: { a: 1 } },
-  ]);
-
-  const results = await store.hybridSearch("hello bye", 2, 2);
-
-  expect(results).toHaveLength(2);
-});
