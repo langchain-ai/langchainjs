@@ -18,7 +18,6 @@ export const run = async () => {
   // Create a chain that uses the OpenAI LLM and HNSWLib vector store.
   const chain = RetrievalQAChain.fromLLM(model, vectorStore.asRetriever());
   const res = await chain.call({
-    input_documents: docs,
     query: "What did the president say about Justice Breyer?",
   });
   console.log({ res });
