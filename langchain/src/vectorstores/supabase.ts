@@ -8,7 +8,19 @@ interface SearchEmbeddingsParams {
   match_count: number; // int
 }
 
+interface kwSearchParams {
+  query_text: string;
+  match_count: number; // int
+}
+
 interface SearchEmbeddingsResponse {
+  id: number;
+  content: string;
+  metadata: object;
+  similarity: number;
+}
+
+interface kwSearchResponse {
   id: number;
   content: string;
   metadata: object;
@@ -19,6 +31,7 @@ export interface SupabaseLibArgs {
   client: SupabaseClient;
   tableName?: string;
   queryName?: string;
+  kwQueryName?: string;
 }
 
 export class SupabaseVectorStore extends VectorStore {
@@ -28,12 +41,15 @@ export class SupabaseVectorStore extends VectorStore {
 
   queryName: string;
 
+  kwQueryName: string;
+
   constructor(embeddings: Embeddings, args: SupabaseLibArgs) {
     super(embeddings, args);
 
     this.client = args.client;
     this.tableName = args.tableName || "documents";
     this.queryName = args.queryName || "match_documents";
+    this.kwQueryName = args.kwQueryName || "kw_match_documents";
   }
 
   async addDocuments(documents: Document[]): Promise<void> {
@@ -93,8 +109,65 @@ export class SupabaseVectorStore extends VectorStore {
       }),
       resp.similarity,
     ]);
+    return result;
+  }
+
+  async keywordSearch(query: string, k: number): Promise<[Document, number][]> {
+    const kwMatchDocumentsParams: kwSearchParams = {
+      query_text: query,
+      match_count: k,
+    };
+
+    const { data: searches, error } = await this.client.rpc(
+      this.kwQueryName,
+      kwMatchDocumentsParams
+    );
+
+    if (error) {
+      throw new Error(`Error searching for documents: ${error}`);
+    }
+
+    const result: [Document, number][] = (searches as kwSearchResponse[]).map(
+      (resp) => [
+        new Document({
+          metadata: resp.metadata,
+          pageContent: resp.content,
+        }),
+        resp.similarity * 10,
+      ]
+    );
 
     return result;
+  }
+
+  async hybridSearch(
+    query: string,
+    sim_k: number,
+    kw_k: number
+  ): Promise<[Document, number][]> {
+    const simularity_search = this.similaritySearchVectorWithScore(
+      await this.embeddings.embedQuery(query),
+      sim_k
+    );
+    const keyword_search = this.keywordSearch(query, kw_k);
+
+    return Promise.all<[Document, number][]>([
+      simularity_search,
+      keyword_search,
+    ])
+      .then((results) => results.flat())
+      .then((results) => {
+        const seenContent = new Set();
+        return results.filter(([doc]) => {
+          const content = doc.pageContent;
+          if (seenContent.has(content)) {
+            return false;
+          }
+          seenContent.add(content);
+          return true;
+        });
+      })
+      .then((results) => results.sort((a, b) => b[1] - a[1]));
   }
 
   static async fromTexts(
