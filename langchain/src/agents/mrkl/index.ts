@@ -1,6 +1,6 @@
 import { LLMChain } from "../../chains/index.js";
 import { PromptTemplate } from "../../prompts/index.js";
-import { PREFIX, SUFFIX, formatInstructions } from "./prompt.js";
+import { PREFIX, getSuffixForLLMType, formatInstructions } from "./prompt.js";
 import { deserializeHelper } from "../helpers.js";
 import { BaseLanguageModel } from "../../base_language/index.js";
 import {
@@ -20,6 +20,8 @@ export type CreatePromptArgs = {
   prefix?: string;
   /** List of input variables the final prompt will expect. */
   inputVariables?: string[];
+  /** The type of LLM you are creating the prompt for. */
+  llmType?: string;
 };
 
 type ZeroShotAgentInput = AgentInput;
@@ -63,11 +65,12 @@ export class ZeroShotAgent extends Agent {
    * @param args.suffix - String to put after the list of tools.
    * @param args.prefix - String to put before the list of tools.
    * @param args.inputVariables - List of input variables the final prompt will expect.
+   * @param args.llmType - The type of LLM you are creating the prompt for.
    */
   static createPrompt(tools: Tool[], args?: CreatePromptArgs) {
     const {
       prefix = PREFIX,
-      suffix = SUFFIX,
+      suffix = getSuffixForLLMType(args?.llmType),
       inputVariables = ["input", "agent_scratchpad"],
     } = args ?? {};
     const toolStrings = tools
@@ -89,7 +92,10 @@ export class ZeroShotAgent extends Agent {
     args?: CreatePromptArgs
   ) {
     ZeroShotAgent.validateTools(tools);
-    const prompt = ZeroShotAgent.createPrompt(tools, args);
+    const createPromptArgs = args ?? {
+      llmType: llm._llmType(),
+    };
+    const prompt = ZeroShotAgent.createPrompt(tools, createPromptArgs);
     const chain = new LLMChain({ prompt, llm });
     return new ZeroShotAgent({
       llmChain: chain,

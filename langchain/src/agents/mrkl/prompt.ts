@@ -1,3 +1,5 @@
+import { AI_PROMPT } from "@anthropic-ai/sdk";
+
 export const PREFIX = `Answer the following questions as best you can. You have access to the following tools:`;
 export const formatInstructions = (
   toolNames: string
@@ -11,7 +13,17 @@ Observation: the result of the action
 ... (this Thought/Action/Action Input/Observation can repeat N times)
 Thought: I now know the final answer
 Final Answer: the final answer to the original input question`;
-export const SUFFIX = `Begin!
+export const getSuffixForLLMType = (llmType?: string) => {
+  switch (llmType) {
+    case "anthropic":
+      return `Begin!
+
+Question: {input}
+${AI_PROMPT} Thought: {agent_scratchpad}`;
+    default:
+      return `Begin!
 
 Question: {input}
 Thought:{agent_scratchpad}`;
+  }
+};

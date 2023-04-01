@@ -4,7 +4,7 @@ import { Toolkit } from "../base.js";
 import { BaseLanguageModel } from "../../../base_language/index.js";
 import { CreatePromptArgs, ZeroShotAgent } from "../../mrkl/index.js";
 import { VECTOR_PREFIX, VECTOR_ROUTER_PREFIX } from "./prompt.js";
-import { SUFFIX } from "../../mrkl/prompt.js";
+import { getSuffixForLLMType } from "../../mrkl/prompt.js";
 import { LLMChain } from "../../../chains/index.js";
 import { AgentExecutor } from "../../executor.js";
 
@@ -66,7 +66,7 @@ export function createVectorStoreAgent(
 ) {
   const {
     prefix = VECTOR_PREFIX,
-    suffix = SUFFIX,
+    suffix = getSuffixForLLMType(llm._llmType()),
     inputVariables = ["input", "agent_scratchpad"],
   } = args ?? {};
   const { tools } = toolkit;
@@ -94,7 +94,7 @@ export function createVectorStoreRouterAgent(
 ) {
   const {
     prefix = VECTOR_ROUTER_PREFIX,
-    suffix = SUFFIX,
+    suffix = getSuffixForLLMType(llm._llmType()),
     inputVariables = ["input", "agent_scratchpad"],
   } = args ?? {};
   const { tools } = toolkit;
