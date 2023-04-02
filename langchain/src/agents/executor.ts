@@ -78,7 +78,7 @@ export class AgentExecutor extends BaseChain {
       }
       await this.callbackManager.handleAgentAction(action, this.verbose);
 
-      const tool = toolsByName[action.tool.toLowerCase()];
+      const tool = toolsByName[action.tool?.toLowerCase()];
       const observation = tool
         ? await tool.call(action.toolInput, this.verbose)
         : `${action.tool} is not a valid tool, try another one.`;
