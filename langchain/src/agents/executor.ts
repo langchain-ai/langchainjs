@@ -1,12 +1,12 @@
 import { BaseChain, ChainInputs } from "../chains/index.js";
-import { Agent } from "./agent.js";
+import { BaseSingleActionAgent } from "./agent.js";
 import { Tool } from "./tools/base.js";
 import { StoppingMethod } from "./types.js";
 import { SerializedLLMChain } from "../chains/serde.js";
 import { AgentFinish, AgentStep, ChainValues } from "../schema/index.js";
 
 interface AgentExecutorInput extends ChainInputs {
-  agent: Agent;
+  agent: BaseSingleActionAgent;
   tools: Tool[];
   returnIntermediateSteps?: boolean;
   maxIterations?: number;
@@ -18,7 +18,7 @@ interface AgentExecutorInput extends ChainInputs {
  * @augments BaseChain
  */
 export class AgentExecutor extends BaseChain {
-  agent: Agent;
+  agent: BaseSingleActionAgent;
 
   tools: Tool[];
 
@@ -53,7 +53,6 @@ export class AgentExecutor extends BaseChain {
   }
 
   async _call(inputs: ChainValues): Promise<ChainValues> {
-    this.agent.prepareForNewCall();
     const toolsByName = Object.fromEntries(
       this.tools.map((t) => [t.name.toLowerCase(), t])
     );
