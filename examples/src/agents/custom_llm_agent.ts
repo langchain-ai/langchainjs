@@ -64,9 +64,9 @@ class CustomPromptTemplate extends BaseStringPromptTemplate {
         [action.log, `\nObservation: ${observation}`, "Thought:"].join("\n"),
       ""
     );
-    input["agent_scratchpad"] = agentScratchpad;
+    const newInput = { agent_scratchpad: agentScratchpad, ...input };
     /** Format the template. */
-    return Promise.resolve(renderTemplate(template, "f-string", input));
+    return Promise.resolve(renderTemplate(template, "f-string", newInput));
   }
 
   partial(_values: PartialValues): Promise<BasePromptTemplate> {
