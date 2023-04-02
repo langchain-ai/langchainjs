@@ -17,7 +17,7 @@ npm install mammoth
 ```typescript
 import { DocxLoader } from "langchain/document_loaders";
 
-const loader = new PDFLoader(
+const loader = new DocxLoader(
   "src/document_loaders/tests/example_data/attention.docx"
 );
 
