@@ -93,8 +93,8 @@ export class OpenAIEmbeddings extends Embeddings implements ModelParams {
       const clientConfig = new Configuration({
         ...this.clientConfig,
         baseOptions: {
-          ...this.clientConfig.baseOptions,
           adapter: fetchAdapter,
+          ...this.clientConfig.baseOptions,
         },
       });
       this.client = new OpenAIApi(clientConfig);
