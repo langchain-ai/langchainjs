@@ -135,4 +135,3 @@ export const run = async () => {
 
   console.log(`Got output ${result.output}`);
 };
-run();
