@@ -32,10 +32,45 @@ export abstract class TextSplitter implements TextSplitterParams {
     const documents = new Array<Document>();
     for (let i = 0; i < texts.length; i += 1) {
       const text = texts[i];
+      let lineCounterIndex = 1;
+      let prevChunk = null;
       for (const chunk of await this.splitText(text)) {
+        // we need to count the \n that are in the text before getting removed by the splitting
+        let numberOfIntermediateNewLines = 0;
+        if (prevChunk) {
+          const indexChunk = text.indexOf(chunk);
+          const indexEndPrevChunk = text.indexOf(prevChunk) + prevChunk.length;
+          const removedNewlinesFromSplittingText = text.slice(
+            indexEndPrevChunk,
+            indexChunk
+          );
+          numberOfIntermediateNewLines = (
+            removedNewlinesFromSplittingText.match(/\n/g) || []
+          ).length;
+        }
+        lineCounterIndex += numberOfIntermediateNewLines;
+        const newLinesCount = (chunk.match(/\n/g) || []).length;
+
+        const loc =
+          _metadatas[i].loc && typeof _metadatas[i].loc === "object"
+            ? { ..._metadatas[i].loc }
+            : {};
+        loc.lines = {
+          from: lineCounterIndex,
+          to: lineCounterIndex + newLinesCount,
+        };
+        const metadataWithLinesNumber = {
+          ..._metadatas[i],
+          loc,
+        };
         documents.push(
-          new Document({ pageContent: chunk, metadata: _metadatas[i] })
+          new Document({
+            pageContent: chunk,
+            metadata: metadataWithLinesNumber,
+          })
         );
+        lineCounterIndex += newLinesCount;
+        prevChunk = chunk;
       }
     }
     return documents;
