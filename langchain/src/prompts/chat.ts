@@ -92,6 +92,10 @@ export abstract class BaseChatPromptTemplate extends BasePromptTemplate {
 
   abstract formatMessages(values: InputValues): Promise<BaseChatMessage[]>;
 
+  async format(values: InputValues): Promise<string> {
+    return (await this.formatPromptValue(values)).toString();
+  }
+
   async formatPromptValue(values: InputValues): Promise<BasePromptValue> {
     const resultMessages = await this.formatMessages(values);
     return new ChatPromptValue(resultMessages);
@@ -224,10 +228,6 @@ export class ChatPromptTemplate
 
   _getPromptType(): "chat" {
     return "chat";
-  }
-
-  async format(values: InputValues): Promise<string> {
-    return (await this.formatPromptValue(values)).toString();
   }
 
   async formatMessages(values: InputValues): Promise<BaseChatMessage[]> {
