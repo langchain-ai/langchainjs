@@ -68,7 +68,6 @@
     "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch --testPathIgnorePatterns=\\.int\\.test.ts",
     "test:integration": "NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern=\\.int\\.test.ts --testTimeout 50000",
     "test:single": "NODE_OPTIONS=--experimental-vm-modules yarn run jest --config jest.config.cjs --testTimeout 50000 -- ",
-    "prepare": "husky install",
     "format": "prettier --write \"src\"",
     "format:check": "prettier --list-different \"src\""
   },
@@ -104,7 +103,6 @@
     "eslint-plugin-prettier": "^4.2.1",
     "eslint-plugin-tree-shaking": "^1.10.0",
     "hnswlib-node": "^1.4.2",
-    "husky": "^8.0.3",
     "jest": "^29.5.0",
     "lint-staged": "^13.1.1",
     "pdfjs-dist": "^3.4.120",

@@ -29,6 +29,7 @@
     "publish": "turbo run build lint test && yarn run test:int && yarn workspace langchain npm release",
     "example": "turbo run start --filter langchain-examples --",
     "prepare": "husky install",
+    "precommit": "turbo run precommit",
     "docs": "yarn workspace docs start"
   },
   "author": "Langchain",

@@ -11314,7 +11314,6 @@ __metadata:
     expr-eval: ^2.0.2
     flat: ^5.0.2
     hnswlib-node: ^1.4.2
-    husky: ^8.0.3
     is-binary-path: ^2.1.0
     jest: ^29.5.0
     jsonpointer: ^5.0.1
