@@ -1,10 +1,10 @@
 import { OpenAIEmbeddings } from "langchain/embeddings";
 
 export const run = async () => {
-  /* Embed queries */
   const embeddings = new OpenAIEmbeddings({
     timeout: 1000 // 1s timeout
   });
+  /* Embed queries */
   const res = await embeddings.embedQuery("Hello world");
   console.log(res);
   /* Embed documents */
