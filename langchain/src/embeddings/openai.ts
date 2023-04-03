@@ -9,7 +9,13 @@ import { chunkArray } from "../util/index.js";
 import { Embeddings, EmbeddingsParams } from "./base.js";
 
 interface ModelParams {
+  /** Model name to use */
   modelName: string;
+
+  /**
+   * Timeout to use when making requests to OpenAI.
+   */
+  timeout?: number;
 }
 
 export class OpenAIEmbeddings extends Embeddings implements ModelParams {
@@ -26,6 +32,8 @@ export class OpenAIEmbeddings extends Embeddings implements ModelParams {
    * OpenAI, but may not be suitable for all use cases.
    */
   stripNewLines = true;
+
+  timeout?: number;
 
   private client: OpenAIApi;
 
@@ -51,6 +59,7 @@ export class OpenAIEmbeddings extends Embeddings implements ModelParams {
     this.modelName = fields?.modelName ?? this.modelName;
     this.batchSize = fields?.batchSize ?? this.batchSize;
     this.stripNewLines = fields?.stripNewLines ?? this.stripNewLines;
+    this.timeout = fields?.timeout;
 
     this.clientConfig = {
       apiKey,
@@ -93,6 +102,7 @@ export class OpenAIEmbeddings extends Embeddings implements ModelParams {
       const clientConfig = new Configuration({
         ...this.clientConfig,
         baseOptions: {
+          timeout: this.timeout,
           ...this.clientConfig.baseOptions,
           adapter: fetchAdapter,
         },
