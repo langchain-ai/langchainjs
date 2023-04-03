@@ -27,9 +27,12 @@ const docs = await loader.load();
 ```typescript
 import { EPubLoader } from "langchain/document_loaders";
 
-const loader = new EPubLoader("src/document_loaders/example_data/example.epub", {
-  splitChapters: false,
-});
+const loader = new EPubLoader(
+  "src/document_loaders/example_data/example.epub",
+  {
+    splitChapters: false,
+  }
+);
 
 const docs = await loader.load();
 ```
