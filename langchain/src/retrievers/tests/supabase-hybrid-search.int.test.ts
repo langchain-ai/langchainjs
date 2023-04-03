@@ -2,7 +2,7 @@
 import { test, expect } from "@jest/globals";
 import { createClient } from "@supabase/supabase-js";
 import { OpenAIEmbeddings } from "../../embeddings/index.js";
-import { SupabaseHybridKeyWordSearch } from "../SupabaseHybridKeyWordSearch.js";
+import { SupabaseHybridSearch } from "../supabase-hybrid-search.js";
 
 test("Supabase hybrid keyword search", async () => {
   const client = createClient(
@@ -12,10 +12,10 @@ test("Supabase hybrid keyword search", async () => {
 
   const embeddings = new OpenAIEmbeddings();
 
-  const retriever = new SupabaseHybridKeyWordSearch(embeddings, {
+  const retriever = new SupabaseHybridSearch(embeddings, {
     client,
-    sim_k: 2,
-    kw_k: 2,
+    similarityK: 2,
+    keywordK: 2,
   });
 
   expect(retriever).toBeDefined();

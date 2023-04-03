@@ -30,32 +30,38 @@ interface kwSearchResponse {
 export interface SupabaseLibArgs {
   client: SupabaseClient;
   tableName?: string;
-  queryName?: string;
-  kwQueryName?: string;
-  sim_k?: number;
-  kw_k?: number;
+  similarityQueryName?: string;
+  keywordQueryName?: string;
+  /**
+   * The number of documents to return from the similarity search
+   */
+  similarityK?: number;
+  /**
+   * The number of documents to return from the keyword search
+   */
+  keywordK?: number;
 }
 
-export interface SupabaseHybridKeyWordSearchParams {
+export interface SupabaseHybridSearchParams {
   query: string;
-  sim_k: number;
-  kw_k: number;
+  similarityK: number;
+  keywordK: number;
 }
 
-export class SupabaseHybridKeyWordSearch extends BaseRetriever {
-  sim_k: number;
+export class SupabaseHybridSearch extends BaseRetriever {
+  similarityK: number;
 
   query: string;
 
-  kw_k: number;
+  keywordK: number;
 
-  queryName: string;
+  similarityQueryName: string;
 
   client: SupabaseClient;
 
   tableName: string;
 
-  kwQueryName: string;
+  keywordQueryName: string;
 
   embeddings: Embeddings;
 
@@ -64,13 +70,13 @@ export class SupabaseHybridKeyWordSearch extends BaseRetriever {
     this.embeddings = embeddings;
     this.client = args.client;
     this.tableName = args.tableName || "documents";
-    this.queryName = args.queryName || "match_documents";
-    this.kwQueryName = args.kwQueryName || "kw_match_documents";
-    this.sim_k = args.sim_k || 2;
-    this.kw_k = args.kw_k || 2;
+    this.similarityQueryName = args.similarityQueryName || "match_documents";
+    this.keywordQueryName = args.keywordQueryName || "kw_match_documents";
+    this.similarityK = args.similarityK || 2;
+    this.keywordK = args.keywordK || 2;
   }
 
-  async similaritySearch(
+  protected async similaritySearch(
     query: string,
     k: number
   ): Promise<[Document, number][]> {
@@ -82,7 +88,7 @@ export class SupabaseHybridKeyWordSearch extends BaseRetriever {
     };
 
     const { data: searches, error } = await this.client.rpc(
-      this.queryName,
+      this.similarityQueryName,
       matchDocumentsParams
     );
 
@@ -102,14 +108,17 @@ export class SupabaseHybridKeyWordSearch extends BaseRetriever {
     return result;
   }
 
-  async keywordSearch(query: string, k: number): Promise<[Document, number][]> {
+  protected async keywordSearch(
+    query: string,
+    k: number
+  ): Promise<[Document, number][]> {
     const kwMatchDocumentsParams: kwSearchParams = {
       query_text: query,
       match_count: k,
     };
 
     const { data: searches, error } = await this.client.rpc(
-      this.kwQueryName,
+      this.keywordQueryName,
       kwMatchDocumentsParams
     );
 
@@ -129,14 +138,14 @@ export class SupabaseHybridKeyWordSearch extends BaseRetriever {
     return result;
   }
 
-  async hybridSearch(
+  protected async hybridSearch(
     query: string,
-    sim_k: number,
-    kw_k: number
+    similarityK: number,
+    keywordK: number
   ): Promise<[Document, number][]> {
-    const similarity_search = this.similaritySearch(query, sim_k);
+    const similarity_search = this.similaritySearch(query, similarityK);
 
-    const keyword_search = this.keywordSearch(query, kw_k);
+    const keyword_search = this.keywordSearch(query, keywordK);
 
     return Promise.all<[Document, number][]>([
       similarity_search,
@@ -158,7 +167,11 @@ export class SupabaseHybridKeyWordSearch extends BaseRetriever {
   }
 
   async getRelevantDocuments(query: string): Promise<Document[]> {
-    const searchResults = await this.hybridSearch(query, this.sim_k, this.kw_k);
+    const searchResults = await this.hybridSearch(
+      query,
+      this.similarityK,
+      this.keywordK
+    );
     return searchResults.map(([doc]) => doc);
   }
 }
