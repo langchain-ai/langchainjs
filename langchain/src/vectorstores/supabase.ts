@@ -99,15 +99,16 @@ export class SupabaseVectorStore extends VectorStore {
 
   static async fromTexts(
     texts: string[],
-    metadatas: object[],
+    metadatas: object[] | object,
     embeddings: Embeddings,
     dbConfig: SupabaseLibArgs
   ): Promise<SupabaseVectorStore> {
     const docs = [];
     for (let i = 0; i < texts.length; i += 1) {
+      const metadata = Array.isArray(metadatas) ? metadatas[i] : metadatas;
       const newDoc = new Document({
         pageContent: texts[i],
-        metadata: metadatas[i],
+        metadata,
       });
       docs.push(newDoc);
     }

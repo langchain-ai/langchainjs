@@ -1,0 +1,96 @@
+---
+sidebar_label: "Vector Stores"
+sidebar_position: 3
+---
+
+# Getting Started: Vector Stores
+
+:::info
+[Conceptual Guide](https://docs.langchain.com/docs/components/indexing/vectorstore)
+:::
+
+A vector store is a particular type of database optimized for storing documents and their [embeddings](../../models/embeddings/), and then fetching of the most relevant documents for a particular query, ie. those whose embeddings are most similar to the embedding of the query.
+
+```typescript
+interface VectorStore {
+  /**
+   * Add more documents to an existing VectorStore
+   */
+  addDocuments(documents: Document[]): Promise<void>;
+
+  /**
+   * Search for the most similar documents to a query
+   */
+  similaritySearch(
+    query: string,
+    k?: number,
+    filter?: object | undefined
+  ): Promise<Document[]>;
+
+  /**
+   * Search for the most similar documents to a query,
+   * and return their similarity score
+   */
+  similaritySearchWithScore(
+    query: string,
+    k = 4,
+    filter: object | undefined = undefined
+  ): Promise<[object, number][]>;
+
+  /**
+   * Turn a VectorStore into a Retriever
+   */
+  asRetriever(k?: number): BaseRetriever;
+
+  /**
+   * Advanced: Add more documents to an existing VectorStore,
+   * when you already have their embeddings
+   */
+  addVectors(vectors: number[][], documents: Document[]): Promise<void>;
+
+  /**
+   * Advanced: Search for the most similar documents to a query,
+   * when you already have the embedding of the query
+   */
+  similaritySearchVectorWithScore(
+    query: number[],
+    k: number,
+    filter?: object
+  ): Promise<[Document, number][]>;
+}
+```
+
+You can create a vector store from a list of [Documents](../../schema/document), or from a list of texts and their corresponding metadata. You can also create a vector store from an existing index, the signature of this method depends on the vector store you're using, check the documentation of the vector store you're interested in.
+
+```typescript
+abstract class BaseVectorStore implements VectorStore {
+  static fromTexts(
+    texts: string[],
+    metadatas: object[] | object,
+    embeddings: Embeddings,
+    dbConfig: Record<string, any>
+  ): Promise<VectorStore>;
+
+  static fromDocuments(
+    docs: Document[],
+    embeddings: Embeddings,
+    dbConfig: Record<string, any>
+  ): Promise<VectorStore>;
+}
+```
+
+## Which one to pick?
+
+Here's a quick guide to help you pick the right vector store for your use case:
+
+- If you're after something that can just run inside your application, in-memory, without any other servers to stand up, then go for [HNSWLib](./integrations/hnswlib)
+- If you come from Python and you were looking for something similar to FAISS, pick [HNSWLib](./integrations/hnswlib)
+- If you're looking for an open-source full-featured vector database that you can run locally in a docker container, then go for [Chroma](./integrations/chroma)
+- If you're using Supabase already then look at the [Supabase](./integrations/supabase) vector store to use the same Postgres database for your embeddings too
+- If you're looking for a production-ready vector store you don't have to worry about hosting yourself, then go for [Pinecone](./integrations/pinecone)
+
+## All Vector Stores
+
+import DocCardList from "@theme/DocCardList";
+
+<DocCardList />

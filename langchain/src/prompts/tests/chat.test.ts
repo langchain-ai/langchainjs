@@ -142,3 +142,26 @@ test("Test SimpleMessagePromptTemplate", async () => {
   const messages = await prompt.formatMessages(values);
   expect(messages).toEqual([new HumanChatMessage("Hello Foo, I'm Bar")]);
 });
+
+test("Test using partial", async () => {
+  const userPrompt = new PromptTemplate({
+    template: "{foo}{bar}",
+    inputVariables: ["foo", "bar"],
+  });
+
+  const prompt = new ChatPromptTemplate({
+    promptMessages: [new HumanMessagePromptTemplate(userPrompt)],
+    inputVariables: ["foo", "bar"],
+  });
+
+  const partialPrompt = await prompt.partial({ foo: "foo" });
+
+  // original prompt is not modified
+  expect(prompt.inputVariables).toEqual(["foo", "bar"]);
+  // partial prompt has only remaining variables
+  expect(partialPrompt.inputVariables).toEqual(["bar"]);
+
+  expect(await partialPrompt.format({ bar: "baz" })).toBe(
+    '[{"text":"foobaz"}]'
+  );
+});

@@ -1,8 +1,11 @@
 {
   "name": "langchain",
-  "version": "0.0.39",
+  "version": "0.0.45",
   "description": "Typescript bindings for langchain",
   "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
   "main": "./index.js",
   "types": "./index.d.ts",
   "files": [
@@ -43,6 +46,8 @@
     "callbacks.d.ts",
     "output_parsers.js",
     "output_parsers.d.ts",
+    "retrievers.js",
+    "retrievers.d.ts",
     "index.js",
     "index.d.ts"
   ],
@@ -60,7 +65,6 @@
     "prepack": "yarn build",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest --testPathIgnorePatterns=\\.int\\.test.ts",
     "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch --testPathIgnorePatterns=\\.int\\.test.ts",
-    "test:node16": "NODE_OPTIONS='--experimental-vm-modules --experimental-fetch' jest --testPathIgnorePatterns=\\.int\\.test.ts --testPathIgnorePatterns=\\.blob\\.test.ts",
     "test:integration": "NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern=\\.int\\.test.ts --testTimeout 50000",
     "test:single": "NODE_OPTIONS=--experimental-vm-modules yarn run jest --config jest.config.cjs --testTimeout 50000 -- ",
     "prepare": "husky install",
@@ -80,6 +84,7 @@
     "@supabase/supabase-js": "^2.10.0",
     "@tsconfig/recommended": "^1.0.2",
     "@types/d3-dsv": "^3",
+    "@types/flat": "^5.0.2",
     "@types/object-hash": "^3.0.2",
     "@types/pdf-parse": "^1.1.1",
     "@types/uuid": "^9",
@@ -101,12 +106,12 @@
     "husky": "^8.0.3",
     "jest": "^29.5.0",
     "lint-staged": "^13.1.1",
-    "pdf-parse": "^1.1.1",
+    "pdfjs-dist": "^3.4.120",
     "prettier": "^2.8.3",
     "puppeteer": "^19.7.2",
     "redis": "^4.6.4",
+    "replicate": "^0.6.0",
     "rollup": "^3.19.1",
-    "serpapi": "^1.1.1",
     "sqlite3": "^5.1.4",
     "srt-parser-2": "^1.2.2",
     "ts-jest": "^29.0.5",
@@ -124,10 +129,10 @@
     "cohere-ai": "^5.0.2",
     "d3-dsv": "^3.0.1",
     "hnswlib-node": "^1.4.2",
-    "pdf-parse": "^1.1.1",
+    "pdfjs-dist": "^3.4.120",
     "puppeteer": "^19.7.2",
     "redis": "^4.6.4",
-    "serpapi": "^1.1.1",
+    "replicate": "^0.6.0",
     "srt-parser-2": "^1.2.2",
     "typeorm": "^0.3.12"
   },
@@ -159,7 +164,7 @@
     "hnswlib-node": {
       "optional": true
     },
-    "pdf-parse": {
+    "pdfjs-dist": {
       "optional": true
     },
     "puppeteer": {
@@ -168,7 +173,7 @@
     "redis": {
       "optional": true
     },
-    "serpapi": {
+    "replicate": {
       "optional": true
     },
     "srt-parser-2": {
@@ -179,11 +184,12 @@
     }
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.4.2",
+    "@fortaine/fetch-event-source": "^3.0.6",
     "browser-or-node": "^2.1.1",
-    "eventsource-parser": "^0.1.0",
     "exponential-backoff": "^3.1.0",
     "expr-eval": "^2.0.2",
-    "gpt3-tokenizer": "^1.1.5",
+    "flat": "^5.0.2",
     "is-binary-path": "^2.1.0",
     "jsonpointer": "^5.0.1",
     "object-hash": "^3.0.0",
@@ -292,6 +298,10 @@
     "./output_parsers": {
       "types": "./output_parsers.d.ts",
       "import": "./output_parsers.js"
+    },
+    "./retrievers": {
+      "types": "./retrievers.d.ts",
+      "import": "./retrievers.js"
     }
   }
 }

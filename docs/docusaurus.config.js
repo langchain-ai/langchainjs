@@ -10,26 +10,20 @@ const examplesPath = path.resolve(__dirname, "..", "examples", "src");
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
-  title: "Langchain",
-  tagline: "The tagline of my site",
+  title: "🦜️🔗 Langchain",
+  tagline: "LangChain JS Docs",
   favicon: "img/favicon.ico",
   customFields: {
     mendableAnonKey: process.env.MENDABLE_ANON_KEY,
   },
   // Set the production url of your site here
-  url: "https://hwchase17.github.io",
+  url: "https://js.langchain.com",
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
-  baseUrl: "/langchainjs/",
-
-  // GitHub pages deployment config.
-  // If you aren't using GitHub pages, you don't need these.
-  organizationName: "hwchase17", // Usually your GitHub org/user name.
-  projectName: "langchainjs", // Usually your repo name.
-  deploymentBranch: "gh-pages",
+  baseUrl: "/",
 
   onBrokenLinks: "throw",
-  onBrokenMarkdownLinks: "warn",
+  onBrokenMarkdownLinks: "throw",
 
   plugins: [
     [
@@ -83,7 +77,7 @@ const config = {
       ({
         docs: {
           sidebarPath: require.resolve("./sidebars.js"),
-          editUrl: "https://github.com/hwchase17/langchainjs/",
+          editUrl: "https://github.com/hwchase17/langchainjs/edit/main/docs/",
           async sidebarItemsGenerator({
             defaultSidebarItemsGenerator,
             ...args
@@ -141,14 +135,25 @@ const config = {
         theme: require("prism-react-renderer/themes/vsLight"),
         darkTheme: require("prism-react-renderer/themes/vsDark"),
       },
-      image: "img/docusaurus.png",
+      image: "img/parrot-chainlink-icon.png",
       navbar: {
-        title: "Langchain",
-        logo: {
-          alt: "Langchain logo",
-          src: "img/docusaurus.png",
-        },
+        title: "🦜️🔗 LangChain",
         items: [
+          {
+            href: "https://docs.langchain.com/docs/",
+            label: "Concepts",
+            position: "left",
+          },
+          {
+            href: "https://python.langchain.com/en/latest/",
+            label: "Python Docs",
+            position: "left",
+          },
+          {
+            to: "/docs/",
+            label: "JS/TS Docs",
+            position: "left",
+          },
           // Please keep GitHub link to the right for consistency.
           {
             href: "https://github.com/hwchase17/langchainjs",
@@ -158,9 +163,49 @@ const config = {
         ],
       },
       footer: {
-        style: "dark",
-        // Please do not remove the credits, help to publicize Docusaurus :)
-        copyright: `Copyright © ${new Date().getFullYear()} Langchain, Inc. Built with Docusaurus.`,
+        style: "light",
+        links: [
+          {
+            title: "Community",
+            items: [
+              {
+                label: "Discord",
+                href: "https://discord.gg/cU2adEyC7w",
+              },
+              {
+                label: "Twitter",
+                href: "https://twitter.com/LangChainAI",
+              },
+            ],
+          },
+          {
+            title: "GitHub",
+            items: [
+              {
+                label: "Python",
+                href: "https://github.com/hwchase17/langchain",
+              },
+              {
+                label: "JS/TS",
+                href: "https://github.com/hwchase17/langchainjs",
+              },
+            ],
+          },
+          {
+            title: "More",
+            items: [
+              {
+                label: "Homepage",
+                href: "https://langchain.com",
+              },
+              {
+                label: "Blog",
+                href: "https://blog.langchain.dev",
+              },
+            ],
+          },
+        ],
+        copyright: `Copyright © ${new Date().getFullYear()} LangChain, Inc.`,
       },
     }),
 };

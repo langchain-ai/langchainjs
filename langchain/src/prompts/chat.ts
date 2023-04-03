@@ -171,14 +171,21 @@ export class ChatPromptTemplate
     Object.assign(this, input);
 
     if (this.validateTemplate) {
-      const inputVariables = new Set<string>();
+      const inputVariablesMessages = new Set<string>();
       for (const promptMessage of this.promptMessages) {
         for (const inputVariable of promptMessage.inputVariables) {
-          inputVariables.add(inputVariable);
+          inputVariablesMessages.add(inputVariable);
         }
       }
+      const inputVariablesInstance = new Set(
+        this.partialVariables
+          ? this.inputVariables.concat(Object.keys(this.partialVariables))
+          : this.inputVariables
+      );
       const difference = new Set(
-        [...this.inputVariables].filter((x) => !inputVariables.has(x))
+        [...inputVariablesInstance].filter(
+          (x) => !inputVariablesMessages.has(x)
+        )
       );
       if (difference.size > 0) {
         throw new Error(
@@ -187,9 +194,10 @@ export class ChatPromptTemplate
           ]}\` are not used in any of the prompt messages.`
         );
       }
-      const thisInputVariables = new Set(this.inputVariables);
       const otherDifference = new Set(
-        [...inputVariables].filter((x) => !thisInputVariables.has(x))
+        [...inputVariablesMessages].filter(
+          (x) => !inputVariablesInstance.has(x)
+        )
       );
       if (otherDifference.size > 0) {
         throw new Error(
@@ -210,16 +218,18 @@ export class ChatPromptTemplate
   }
 
   async formatPromptValue(values: InputValues): Promise<BasePromptValue> {
+    const allValues = await this.mergePartialAndUserVariables(values);
+
     let resultMessages: BaseChatMessage[] = [];
     for (const promptMessage of this.promptMessages) {
       const inputValues: InputValues = {};
       for (const inputVariable of promptMessage.inputVariables) {
-        if (!(inputVariable in values)) {
+        if (!(inputVariable in allValues)) {
           throw new Error(
             `Missing value for input variable \`${inputVariable}\``
           );
         }
-        inputValues[inputVariable] = values[inputVariable];
+        inputValues[inputVariable] = allValues[inputVariable];
       }
       const message = await promptMessage.formatMessages(inputValues);
       resultMessages = resultMessages.concat(message);
@@ -239,8 +249,18 @@ export class ChatPromptTemplate
     };
   }
 
-  async partial(_: PartialValues): Promise<BasePromptTemplate> {
-    throw new Error("ChatPromptTemplate.partial() not yet implemented");
+  async partial(values: PartialValues): Promise<BasePromptTemplate> {
+    // This is implemented in a way it doesn't require making
+    // BaseMessagePromptTemplate aware of .partial()
+    const promptDict: ChatPromptTemplateInput = { ...this };
+    promptDict.inputVariables = this.inputVariables.filter(
+      (iv) => !(iv in values)
+    );
+    promptDict.partialVariables = {
+      ...(this.partialVariables ?? {}),
+      ...values,
+    };
+    return new ChatPromptTemplate(promptDict);
   }
 
   static fromPromptMessages(

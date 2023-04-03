@@ -1,0 +1,65 @@
+---
+sidebar_label: Document Loaders
+sidebar_position: 1
+---
+
+import DocCardList from "@theme/DocCardList";
+
+# Getting Started: Document Loaders
+
+:::info
+[Conceptual Guide](https://docs.langchain.com/docs/components/indexing/document-loaders)
+:::
+
+Document loaders make it easy to create [Documents](../../schema/document.md) from a variety of sources. These documents can then be loaded onto [Vector Stores](../vector_stores/) to load documents from a source.
+
+```typescript
+interface DocumentLoader {
+  load(): Promise<Document[]>;
+
+  loadAndSplit(textSplitter?: TextSplitter): Promise<Document[]>;
+}
+```
+
+Document Loaders expose two methods, `load` and `loadAndSplit`. `load` will load the documents from the source and return them as an array of [Documents](../../schema/document.md). `loadAndSplit` will load the documents from the source, split them using the provided [TextSplitter](../text_splitters/index.mdx), and return them as an array of [Documents](../../schema/document.md).
+
+## All Document Loaders
+
+<DocCardList />
+
+## Advanced
+
+If you want to implement your own Document Loader, you have a few options.
+
+### Subclassing `BaseDocumentLoader`
+
+You can extend the `BaseDocumentLoader` class directly. The `BaseDocumentLoader` class provides a few convenience methods for loading documents from a variety of sources.
+
+```typescript
+abstract class BaseDocumentLoader implements DocumentLoader {
+  abstract load(): Promise<Document[]>;
+}
+```
+
+### Subclassing `TextLoader`
+
+If you want to load documents from a text file, you can extend the `TextLoader` class. The `TextLoader` class takes care of reading the file, so all you have to do is implement a parse method.
+
+```typescript
+abstract class TextLoader extends BaseDocumentLoader {
+  abstract parse(raw: string): Promise<string[]>;
+}
+```
+
+### Subclassing `BufferLoader`
+
+If you want to load documents from a binary file, you can extend the `BufferLoader` class. The `BufferLoader` class takes care of reading the file, so all you have to do is implement a parse method.
+
+```typescript
+abstract class BufferLoader extends BaseDocumentLoader {
+  abstract parse(
+    raw: Buffer,
+    metadata: Document["metadata"]
+  ): Promise<Document[]>;
+}
+```

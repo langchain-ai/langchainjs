@@ -13,7 +13,7 @@ export abstract class Tool {
   callbackManager: CallbackManager;
 
   constructor(verbose?: boolean, callbackManager?: CallbackManager) {
-    this.verbose = verbose ?? getVerbosity();
+    this.verbose = verbose ?? (callbackManager ? true : getVerbosity());
     this.callbackManager = callbackManager ?? getCallbackManager();
   }
 

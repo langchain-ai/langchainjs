@@ -1,21 +1,17 @@
-import { BaseChain } from "../chains/index.js";
+import { BaseChain, ChainInputs } from "../chains/index.js";
 import { Agent } from "./agent.js";
 import { Tool } from "./tools/base.js";
 import { StoppingMethod } from "./types.js";
 import { SerializedLLMChain } from "../chains/serde.js";
 import { AgentFinish, AgentStep, ChainValues } from "../schema/index.js";
-import { CallbackManager } from "../callbacks/index.js";
 
-type AgentExecutorInput = {
+interface AgentExecutorInput extends ChainInputs {
   agent: Agent;
   tools: Tool[];
   returnIntermediateSteps?: boolean;
   maxIterations?: number;
   earlyStoppingMethod?: StoppingMethod;
-
-  verbose?: boolean;
-  callbackManager?: CallbackManager;
-};
+}
 
 /**
  * A chain managing an agent using tools.
@@ -37,7 +33,7 @@ export class AgentExecutor extends BaseChain {
   }
 
   constructor(input: AgentExecutorInput) {
-    super();
+    super(input.memory, input.verbose, input.callbackManager);
     this.agent = input.agent;
     this.tools = input.tools;
     this.returnIntermediateSteps =
@@ -45,18 +41,10 @@ export class AgentExecutor extends BaseChain {
     this.maxIterations = input.maxIterations ?? this.maxIterations;
     this.earlyStoppingMethod =
       input.earlyStoppingMethod ?? this.earlyStoppingMethod;
-    this.verbose = input.verbose ?? this.verbose;
-    this.callbackManager = input.callbackManager ?? this.callbackManager;
   }
 
   /** Create from agent and a list of tools. */
-  static fromAgentAndTools(
-    fields: {
-      agent: Agent;
-      tools: Tool[];
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } & Record<string, any>
-  ): AgentExecutor {
+  static fromAgentAndTools(fields: AgentExecutorInput): AgentExecutor {
     return new AgentExecutor(fields);
   }
 
@@ -90,7 +78,7 @@ export class AgentExecutor extends BaseChain {
       }
       await this.callbackManager.handleAgentAction(action, this.verbose);
 
-      const tool = toolsByName[action.tool.toLowerCase()];
+      const tool = toolsByName[action.tool?.toLowerCase()];
       const observation = tool
         ? await tool.call(action.toolInput, this.verbose)
         : `${action.tool} is not a valid tool, try another one.`;

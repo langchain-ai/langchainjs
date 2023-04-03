@@ -1,0 +1,89 @@
+---
+sidebar_position: 3
+sidebar_label: Integrations
+---
+
+# Integrations: LLMs
+
+LangChain offers a number of LLM implementations that integrate with various model providers. These are:
+
+## `OpenAI`
+
+```typescript
+import { OpenAI } from "langchain/llms";
+
+const model = new OpenAI({ temperature: 0.9 });
+const res = await model.call(
+  "What would be a good company name a company that makes colorful socks?"
+);
+console.log({ res });
+```
+
+## `HuggingFaceInference`
+
+```bash npm2yarn
+npm install @huggingface/inference
+```
+
+```typescript
+import { HuggingFaceInference } from "langchain/llms";
+
+const model = new HuggingFaceInference({ model: "gpt2" });
+const res = await model.call("1 + 1 =");
+console.log({ res });
+```
+
+## `Cohere`
+
+```bash npm2yarn
+npm install cohere-ai
+```
+
+```typescript
+import { Cohere } from "langchain/llms";
+
+const model = new Cohere({ maxTokens: 20 });
+const res = await model.call(
+  "What would be a good company name a company that makes colorful socks?"
+);
+console.log({ res });
+```
+
+## `Replicate`
+
+```bash npm2yarn
+npm install replicate
+```
+
+```typescript
+import { Replicate } from "langchain/llms";
+
+const model = new Replicate({
+  model:
+    "daanelson/flan-t5:04e422a9b85baed86a4f24981d7f9953e20c5fd82f6103b74ebc431588e1cec8",
+});
+const res = await modelA.call(
+  "What would be a good company name a company that makes colorful socks?"
+);
+console.log({ res });
+```
+
+## Additional LLM Implementations
+
+### `PromptLayerOpenAI`
+
+LangChain integrates with PromptLayer for logging and debugging prompts and responses. To add support for PromptLayer:
+
+1. Create a PromptLayer account here: [https://promptlayer.com](https://promptlayer.com).
+2. Create an API token and pass it either as `promptLayerApiKey` argument in the `PromptLayerOpenAI` constructor or in the `PROMPTLAYER_API_KEY` environment variable.
+
+```typescript
+const model = new PromptLayerOpenAI({ temperature: 0.9 });
+const res = await model.call(
+  "What would be a good company name a company that makes colorful socks?"
+);
+```
+
+The request and the response will be logged in the [PromptLayer dashboard](https://promptlayer.com/home).
+
+> **_Note:_** In streaming mode PromptLayer will not log the response.

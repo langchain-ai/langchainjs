@@ -1,0 +1,26 @@
+---
+sidebar_position: 3
+sidebar_label: Integrations
+---
+
+# Integrations: Chat Models
+
+LangChain offers a number of Chat Models implementations that integrate with various model providers. These are:
+
+## `OpenAI`
+
+```typescript
+import { ChatOpenAI } from "langchain/chat_models";
+
+// Expects an OpenAI API key to be set in the env variable OPENAI_API_KEY
+const model = new ChatOpenAI({ temperature: 0.9 });
+```
+
+## `Anthropic`
+
+```typescript
+import { ChatAnthropic } from "langchain/chat_models";
+
+// Expects an Anthropic API key to be set in the env variable ANTHROPIC_API_KEY
+const model = new ChatAnthropic({ temperature: 0.9 });
+```
