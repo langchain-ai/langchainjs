@@ -139,10 +139,10 @@ export class LLMSingleActionAgent extends BaseSingleActionAgent {
 export abstract class Agent extends BaseSingleActionAgent {
   llmChain: LLMChain;
 
-  _allowedTools?: string[] = undefined;
+  private _allowedTools?: string[] = undefined;
 
   get allowedTools(): string[] | undefined {
-    return this.allowedTools;
+    return this._allowedTools;
   }
 
   get inputKeys(): string[] {
