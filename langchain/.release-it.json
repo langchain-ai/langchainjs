@@ -2,5 +2,10 @@
   "github": {
     "release": true,
     "autoGenerate": true
+  },
+  "npm": {
+    "versionArgs": [
+      "--workspaces-update=false"
+    ]
   }
 }
