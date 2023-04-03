@@ -16,6 +16,7 @@ export class BufferMemory extends BaseChatMemory implements BufferMemoryInput {
 
   constructor(fields?: Partial<BufferMemoryInput>) {
     super({
+      chatHistory: fields?.chatHistory,
       returnMessages: fields?.returnMessages ?? false,
       inputKey: fields?.inputKey,
       outputKey: fields?.outputKey,
