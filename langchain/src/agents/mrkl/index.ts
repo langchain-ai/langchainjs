@@ -92,9 +92,10 @@ export class ZeroShotAgent extends Agent {
     args?: CreatePromptArgs
   ) {
     ZeroShotAgent.validateTools(tools);
-    const createPromptArgs = args ?? {
-      llmType: llm._llmType(),
-    };
+    const createPromptArgs = args ?? {};
+    if (!createPromptArgs.llmType) {
+      createPromptArgs.llmType = llm._llmType();
+    }
     const prompt = ZeroShotAgent.createPrompt(tools, createPromptArgs);
     const chain = new LLMChain({ prompt, llm });
     return new ZeroShotAgent({
