@@ -1,15 +1,12 @@
-import { createParser } from "eventsource-parser";
-import type { IncomingMessage } from "http";
 import {
-  ChatCompletionResponseMessageRoleEnum,
   Configuration,
+  OpenAIApi,
+  CreateChatCompletionRequest,
   ConfigurationParameters,
   CreateChatCompletionResponse,
   ChatCompletionResponseMessageRoleEnum,
 } from "openai";
 import type { StreamingAxiosConfiguration } from "../util/axios-fetch-adapter.js";
-import fetchAdapter from "../util/axios-fetch-adapter.js";
-import { BaseChatModel, BaseChatModelParams } from "./base.js";
 import {
   AIChatMessage,
   BaseChatMessage,
@@ -22,6 +19,7 @@ import {
 } from "../schema/index.js";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
 import { BaseChatModel, BaseChatModelParams } from "./base.js";
+import { getModelNameForTiktoken } from "../base_language/count_tokens.js";
 
 interface TokenUsage {
   completionTokens?: number;
@@ -386,31 +384,33 @@ export class ChatOpenAI extends BaseChatModel implements OpenAIInput {
     };
   }
 
-  getNumTokensFromMessages(messages: BaseChatMessage[]): {
+  async getNumTokensFromMessages(messages: BaseChatMessage[]): Promise<{
     totalCount: number;
     countPerMessage: number[];
-  } {
+  }> {
     let totalCount = 0;
     let tokensPerMessage = 0;
     let tokensPerName = 0;
 
     // From: https://github.com/openai/openai-cookbook/blob/main/examples/How_to_format_inputs_to_ChatGPT_models.ipynb
-    if (["gpt-3.5-turbo", "gpt-3.5-turbo-0301"].includes(this.modelName)) {
+    if (getModelNameForTiktoken(this.modelName) === "gpt-3.5-turbo") {
       tokensPerMessage = 4;
       tokensPerName = -1;
-    } else if (["gpt-4", "gpt-4-0314"].includes(this.modelName)) {
+    } else if (getModelNameForTiktoken(this.modelName).startsWith("gpt-4")) {
       tokensPerMessage = 3;
       tokensPerName = 1;
     }
 
-    const countPerMessage = messages.map((message) => {
-      const textCount = this.getNumTokens(message.text);
-      const count =
-        textCount + tokensPerMessage + (message.name ? tokensPerName : 0);
+    const countPerMessage = await Promise.all(
+      messages.map(async (message) => {
+        const textCount = await this.getNumTokens(message.text);
+        const count =
+          textCount + tokensPerMessage + (message.name ? tokensPerName : 0);
 
-      totalCount += count;
-      return count;
-    });
+        totalCount += count;
+        return count;
+      })
+    );
 
     return { totalCount, countPerMessage };
   }
