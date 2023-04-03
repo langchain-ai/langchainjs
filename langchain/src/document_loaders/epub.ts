@@ -5,10 +5,7 @@ import { BaseDocumentLoader } from "./base.js";
 export class EPubLoader extends BaseDocumentLoader {
   private splitChapters: boolean;
 
-  constructor(
-    public filePathOrBlob: string | Blob,
-    { splitChapters = true } = {}
-  ) {
+  constructor(public filePath: string, { splitChapters = true } = {}) {
     super();
     this.splitChapters = splitChapters;
   }
@@ -35,14 +32,11 @@ export class EPubLoader extends BaseDocumentLoader {
   }
 
   public async load(): Promise<Document[]> {
-    if (typeof this.filePathOrBlob !== "string") {
-      throw new Error("Only file path is supported for epub loader");
-    }
     const { EPub } = await EpubImport();
-    const epub = await EPub.createAsync(this.filePathOrBlob);
+    const epub = await EPub.createAsync(this.filePath);
 
     const parsed = await this.parse(epub);
-    const metadata = { source: this.filePathOrBlob };
+    const metadata = { source: this.filePath };
     return this.splitChapters
       ? parsed.map(
           (chapter) =>
