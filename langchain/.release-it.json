@@ -1,0 +1,6 @@
+{
+  "github": {
+    "release": true,
+    "autoGenerate": true
+  }
+}

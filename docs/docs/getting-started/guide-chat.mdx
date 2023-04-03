@@ -317,13 +317,16 @@ const chain = new ConversationChain({
 You can also use the streaming API to get words streamed back to you as they are generated. This is useful for eg. chatbots, where you want to show the user what is being generated as it is being generated. Note: OpenAI as of this writing does not support `tokenUsage` reporting while streaming is enabled.
 
 ```typescript
+let s = "";
 const chatStreaming = new ChatOpenAI({
   streaming: true,
   callbackManager: CallbackManager.fromHandlers({
-    handleLLMNewToken(token: string) {
-      console.log(token);
+    async handleLLMNewToken(token: string) {
+      console.clear();
+      s += token;
+      console.log(s);
     },
-  },
+  }),
 });
 
 const responseD = await chatStreaming.call([
