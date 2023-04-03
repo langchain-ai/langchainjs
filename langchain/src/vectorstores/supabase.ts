@@ -93,6 +93,7 @@ export class SupabaseVectorStore extends VectorStore {
       }),
       resp.similarity,
     ]);
+
     return result;
   }
 
