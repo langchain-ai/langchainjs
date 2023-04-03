@@ -153,15 +153,27 @@ export class SupabaseHybridSearch extends BaseRetriever {
     ])
       .then((results) => results.flat())
       .then((results) => {
-        const seenContent = new Set();
-        return results.filter(([doc]) => {
+        const seenContent = new Map<string, number>();
+        const uniqueResults: [Document, number][] = [];
+
+        results.forEach(([doc, num]) => {
           const content = doc.pageContent;
           if (seenContent.has(content)) {
-            return false;
+            const existingNum = seenContent.get(content);
+            if (existingNum && num > existingNum) {
+              seenContent.set(content, num);
+              const index = uniqueResults.findIndex(
+                ([uniqueDoc]) => uniqueDoc.pageContent === content
+              );
+              uniqueResults[index] = [doc, num];
+            }
+          } else {
+            seenContent.set(content, num);
+            uniqueResults.push([doc, num]);
           }
-          seenContent.add(content);
-          return true;
         });
+
+        return uniqueResults;
       })
       .then((results) => results.sort((a, b) => b[1] - a[1]));
   }
@@ -172,6 +184,7 @@ export class SupabaseHybridSearch extends BaseRetriever {
       this.similarityK,
       this.keywordK
     );
+
     return searchResults.map(([doc]) => doc);
   }
 }
