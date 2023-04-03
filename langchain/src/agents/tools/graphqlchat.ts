@@ -16,14 +16,19 @@ class GraphqlChat extends Tool {
 
   graphqlEndpointAccessToken?: string;
 
-  constructor(
-    description: string,
-    accessToken: string = process.env.GRAPHQLCHAT_ACCESS_TOKEN,
-    graphqlEndpoint: string = process.env.GRAPHQLCHAT_ENDPOINT,
-    graphqlSchema: string = process.env.GRAPHQLCHAT_SCHEMA,
-    graphqlEndpointAccessToken: string = process.env
-      .GRAPHQLCHAT_ENDPOINT_ACCESS_TOKEN
-  ) {
+  constructor({
+    description,
+    accessToken,
+    graphqlEndpoint = process.env.GRAPHQLCHAT_ACCESS_TOKEN,
+    graphqlSchema = process.env.GRAPHQLCHAT_SCHEMA,
+    graphqlEndpointAccessToken = process.env.GRAPHQLCHAT_ENDPOINT_ACCESS_TOKEN,
+  }: {
+    description: string;
+    accessToken?: string | undefined;
+    graphqlEndpoint: string | undefined;
+    graphqlSchema: string | undefined;
+    graphqlEndpointAccessToken: string | undefined;
+  }) {
     super();
     this.name = "GraphqlChat";
     this.description =
@@ -32,13 +37,13 @@ class GraphqlChat extends Tool {
     this.graphqlEndpoint = graphqlEndpoint;
     this.graphqlSchema = graphqlSchema;
     this.graphqlEndpointAccessToken = graphqlEndpointAccessToken;
-    if (!accessToken) {
-      if (!graphqlEndpoint) {
+    if (!this.accessToken) {
+      if (!this.graphqlEndpoint) {
         throw new Error(
           "graphqlEndpoint key not set. You can set it as GRAPHQLCHAT_ENDPOINT in your .env file."
         );
       }
-      if (!graphqlSchema) {
+      if (!this.graphqlSchema) {
         throw new Error(
           "graphqlSchema key not set. You can set it as GRAPHQLCHAT_SCHEMA in your .env file."
         );
