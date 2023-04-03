@@ -27,6 +27,8 @@ function getAnthropicPromptFromMessage(type: MessageType): string {
   }
 }
 
+const DEFAULT_STOP_SEQUENCES = [HUMAN_PROMPT];
+
 interface ModelParams {
   /** Amount of randomness injected into the response. Ranges
    * from 0 to 1. Use temp closer to 0 for analytical /
@@ -109,13 +111,13 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
 
   topP = -1;
 
-  maxTokensToSample = 256;
+  maxTokensToSample = 2048;
 
   modelName = "claude-v1";
 
   invocationKwargs?: Kwargs;
 
-  stopSequences = [HUMAN_PROMPT];
+  stopSequences?: string[];
 
   streaming = false;
 
@@ -160,7 +162,7 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
       temperature: this.temperature,
       top_k: this.topK,
       top_p: this.topP,
-      stop_sequences: this.stopSequences,
+      stop_sequences: this.stopSequences ?? DEFAULT_STOP_SEQUENCES,
       max_tokens_to_sample: this.maxTokensToSample,
       stream: this.streaming,
       ...this.invocationKwargs,
@@ -223,7 +225,9 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
     }
 
     const params = this.invocationParams();
-    params.stop_sequences = stopSequences ?? params.stop_sequences;
+    params.stop_sequences = stopSequences
+      ? stopSequences.concat(DEFAULT_STOP_SEQUENCES)
+      : params.stop_sequences;
 
     const response = await this.completionWithRetry({
       ...params,
