@@ -7,6 +7,8 @@ import {
   ChatCompletionResponseMessageRoleEnum,
 } from "openai";
 import type { StreamingAxiosConfiguration } from "../util/axios-fetch-adapter.js";
+import fetchAdapter from "../util/axios-fetch-adapter.js";
+import { BaseChatModel, BaseChatModelParams } from "./base.js";
 import {
   AIChatMessage,
   BaseChatMessage,
@@ -17,8 +19,6 @@ import {
   MessageType,
   SystemChatMessage,
 } from "../schema/index.js";
-import fetchAdapter from "../util/axios-fetch-adapter.js";
-import { BaseChatModel, BaseChatModelParams } from "./base.js";
 import { getModelNameForTiktoken } from "../base_language/count_tokens.js";
 
 interface TokenUsage {
