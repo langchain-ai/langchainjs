@@ -1,4 +1,4 @@
-# Supabase Hybrid Search 
+# Supabase Hybrid Search
 
 Langchain supports hybrid search with a Supabase Postgres database. The hybrid search combines the postgres `pgvector` extension (similarity search) and Full-Text Search (keyword search) to retrieve documents. You can add documents via SupabaseVectorStore `addDocuments` function. SupabaseHybridKeyWordSearch accepts embedding, supabase client, number of results for similarity search, and number of results for keyword search as parameters. The `getRelevantDocuments` function produces a list of documents that has duplicates removed and is sorted by relevance score.
 
@@ -57,7 +57,7 @@ create index on documents
   using ivfflat (embedding vector_cosine_ops)
   with (lists = 100);
 
--- Create a function to keyword search for documents 
+-- Create a function to keyword search for documents
 create function kw_match_documents(query_text text, match_count int)
 returns table (id bigint, content text, metadata jsonb, similarity real)
 as $$

@@ -10,7 +10,12 @@ export const run = async () => {
 
   const embeddings = new OpenAIEmbeddings();
 
-  const retriever = new SupabaseHybridKeyWordSearch(embeddings, { client },2,2);
+  const retriever = new SupabaseHybridKeyWordSearch(
+    embeddings,
+    { client },
+    2,
+    2
+  );
 
   const results = await retriever.getRelevantDocuments("hello bye");
 

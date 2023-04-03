@@ -100,7 +100,6 @@ export class SupabaseHybridKeyWordSearch extends BaseRetriever {
       }),
       resp.similarity,
     ]);
-    console.log(result);
     return result;
   }
 
@@ -128,7 +127,6 @@ export class SupabaseHybridKeyWordSearch extends BaseRetriever {
         resp.similarity * 10,
       ]
     );
-    console.log(result);
     return result;
   }
 
@@ -137,14 +135,14 @@ export class SupabaseHybridKeyWordSearch extends BaseRetriever {
     sim_k: number,
     kw_k: number
   ): Promise<[Document, number][]> {
-    const simularity_search = this.similaritySearchVectorWithScore(
+    const similarity_search = this.similaritySearchVectorWithScore(
       await this.embeddings.embedQuery(query),
       sim_k
     );
     const keyword_search = this.keywordSearch(query, kw_k);
 
     return Promise.all<[Document, number][]>([
-      simularity_search,
+      similarity_search,
       keyword_search,
     ])
       .then((results) => results.flat())
