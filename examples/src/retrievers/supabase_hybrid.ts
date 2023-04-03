@@ -1,6 +1,6 @@
 import { OpenAIEmbeddings } from "langchain/embeddings";
 import { createClient } from "@supabase/supabase-js";
-import { SupabaseHybridKeyWordSearch } from "langchain/retrievers";
+import { SupabaseHybridSearch } from "langchain/retrievers";
 
 export const run = async () => {
   const client = createClient(
@@ -10,10 +10,10 @@ export const run = async () => {
 
   const embeddings = new OpenAIEmbeddings();
 
-  const retriever = new SupabaseHybridKeyWordSearch(embeddings, {
+  const retriever = new SupabaseHybridSearch(embeddings, {
     client,
-    sim_k: 2,
-    kw_k: 2,
+    similarityK: 2,
+    keywordK: 2,
   });
 
   const results = await retriever.getRelevantDocuments("hello bye");
