@@ -103,8 +103,8 @@ export class OpenAIEmbeddings extends Embeddings implements ModelParams {
         ...this.clientConfig,
         baseOptions: {
           timeout: this.timeout,
-          ...this.clientConfig.baseOptions,
           adapter: fetchAdapter,
+          ...this.clientConfig.baseOptions,
         },
       });
       this.client = new OpenAIApi(clientConfig);
