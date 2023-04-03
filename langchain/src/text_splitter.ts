@@ -51,7 +51,7 @@ export abstract class TextSplitter implements TextSplitterParams {
         lineCounterIndex += numberOfIntermediateNewLines;
         const newLinesCount = (chunk.match(/\n/g) || []).length;
 
-        const loc = _metadatas[i].loc ?? {};
+        const loc = (_metadatas[i].loc && typeof _metadatas[i].loc === 'object') ? { ..._metadatas[i].loc } ?? {};
         loc.lines = {
           from: lineCounterIndex,
           to: lineCounterIndex + newLinesCount,
