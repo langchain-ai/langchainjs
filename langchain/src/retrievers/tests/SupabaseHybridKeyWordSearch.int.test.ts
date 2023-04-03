@@ -12,12 +12,11 @@ test("Supabase hybrid keyword search", async () => {
 
   const embeddings = new OpenAIEmbeddings();
 
-  const retriever = new SupabaseHybridKeyWordSearch(
-    embeddings,
-    { client },
-    2,
-    2
-  );
+  const retriever = new SupabaseHybridKeyWordSearch(embeddings, {
+    client,
+    sim_k: 2,
+    kw_k: 2,
+  });
 
   expect(retriever).toBeDefined();
 

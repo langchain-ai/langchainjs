@@ -32,6 +32,8 @@ export interface SupabaseLibArgs {
   tableName?: string;
   queryName?: string;
   kwQueryName?: string;
+  sim_k?: number;
+  kw_k?: number;
 }
 
 export interface SupabaseHybridKeyWordSearchParams {
@@ -57,28 +59,25 @@ export class SupabaseHybridKeyWordSearch extends BaseRetriever {
 
   embeddings: Embeddings;
 
-  constructor(
-    embeddings: Embeddings,
-    args: SupabaseLibArgs,
-    sim_k: number,
-    kw_k: number
-  ) {
+  constructor(embeddings: Embeddings, args: SupabaseLibArgs) {
     super();
     this.embeddings = embeddings;
     this.client = args.client;
     this.tableName = args.tableName || "documents";
     this.queryName = args.queryName || "match_documents";
     this.kwQueryName = args.kwQueryName || "kw_match_documents";
-    this.sim_k = sim_k;
-    this.kw_k = kw_k;
+    this.sim_k = args.sim_k || 2;
+    this.kw_k = args.kw_k || 2;
   }
 
-  async similaritySearchVectorWithScore(
-    query: number[],
+  async similaritySearch(
+    query: string,
     k: number
   ): Promise<[Document, number][]> {
+    const embeddedQuery = await this.embeddings.embedQuery(query);
+
     const matchDocumentsParams: SearchEmbeddingsParams = {
-      query_embedding: query,
+      query_embedding: embeddedQuery,
       match_count: k,
     };
 
@@ -130,15 +129,13 @@ export class SupabaseHybridKeyWordSearch extends BaseRetriever {
     return result;
   }
 
-  async SupabaseHybridKeyWordSearch(
+  async hybridSearch(
     query: string,
     sim_k: number,
     kw_k: number
   ): Promise<[Document, number][]> {
-    const similarity_search = this.similaritySearchVectorWithScore(
-      await this.embeddings.embedQuery(query),
-      sim_k
-    );
+    const similarity_search = this.similaritySearch(query, sim_k);
+
     const keyword_search = this.keywordSearch(query, kw_k);
 
     return Promise.all<[Document, number][]>([
@@ -161,11 +158,7 @@ export class SupabaseHybridKeyWordSearch extends BaseRetriever {
   }
 
   async getRelevantDocuments(query: string): Promise<Document[]> {
-    const searchResults = await this.SupabaseHybridKeyWordSearch(
-      query,
-      this.sim_k,
-      this.kw_k
-    );
+    const searchResults = await this.hybridSearch(query, this.sim_k, this.kw_k);
     return searchResults.map(([doc]) => doc);
   }
 }
