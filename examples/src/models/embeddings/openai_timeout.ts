@@ -2,7 +2,7 @@ import { OpenAIEmbeddings } from "langchain/embeddings";
 
 export const run = async () => {
   const embeddings = new OpenAIEmbeddings({
-    timeout: 1000 // 1s timeout
+    timeout: 1000, // 1s timeout
   });
   /* Embed queries */
   const res = await embeddings.embedQuery("Hello world");
