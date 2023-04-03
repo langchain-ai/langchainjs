@@ -77,7 +77,7 @@ const config = {
       ({
         docs: {
           sidebarPath: require.resolve("./sidebars.js"),
-          editUrl: "https://github.com/hwchase17/langchainjs/",
+          editUrl: "https://github.com/hwchase17/langchainjs/edit/main/docs/",
           async sidebarItemsGenerator({
             defaultSidebarItemsGenerator,
             ...args
