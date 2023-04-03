@@ -5,6 +5,7 @@ import {
   ConfigurationParameters,
   CreateChatCompletionResponse,
   ChatCompletionResponseMessageRoleEnum,
+  ChatCompletionRequestMessage,
 } from "openai";
 import type { StreamingAxiosConfiguration } from "../util/axios-fetch-adapter.js";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
@@ -262,10 +263,13 @@ export class ChatOpenAI extends BaseChatModel implements OpenAIInput {
 
     const params = this.invocationParams();
     params.stop = stop ?? params.stop;
-    const messagesMapped = messages.map((message) => ({
-      role: messageTypeToOpenAIRole(message._getType()),
-      content: message.text,
-    }));
+    const messagesMapped: ChatCompletionRequestMessage[] = messages.map(
+      (message) => ({
+        role: messageTypeToOpenAIRole(message._getType()),
+        content: message.text,
+        name: message.name,
+      })
+    );
 
     const data = params.stream
       ? await new Promise<CreateChatCompletionResponse>((resolve, reject) => {
