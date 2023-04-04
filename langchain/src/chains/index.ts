@@ -13,6 +13,7 @@ export {
   loadQAChain,
   loadQAStuffChain,
   loadQAMapReduceChain,
+  loadQARefineChain,
 } from "./question_answering/load.js";
 export { loadSummarizationChain } from "./summarization/load.js";
 export { SqlDatabaseChain } from "./sql_db/sql_db_chain.js";
@@ -27,4 +28,5 @@ export {
   SerializedMapReduceDocumentsChain,
   SerializedStuffDocumentsChain,
   SerializedVectorDBQAChain,
+  SerializedRefineDocumentsChain,
 } from "./serde.js";
