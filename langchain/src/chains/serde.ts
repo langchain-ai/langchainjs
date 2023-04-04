@@ -46,6 +46,14 @@ export type SerializedMapReduceDocumentsChain = {
   combine_document_chain_path?: string;
 };
 
+export type SerializedRefineDocumentsChain = {
+  _type: "refine_documents_chain";
+  llm_chain?: SerializedLLMChain;
+  llm_chain_path?: string;
+  refine_llm_chain?: SerializedLLMChain;
+  refine_llm_chain_path?: string;
+};
+
 export type SerializedAnalyzeDocumentChain = {
   _type: "analyze_document_chain";
   combine_document_chain?: SerializedBaseChain;
@@ -59,4 +67,5 @@ export type SerializedBaseChain =
   | SerializedSqlDatabaseChain
   | SerializedChatVectorDBQAChain
   | SerializedMapReduceDocumentsChain
-  | SerializedAnalyzeDocumentChain;
+  | SerializedAnalyzeDocumentChain
+  | SerializedRefineDocumentsChain;
