@@ -12,8 +12,8 @@ import { Document } from "../document.js";
 
 import { resolveConfigFromFile } from "../util/index.js";
 import { ChainValues } from "../schema/index.js";
-import { BasePromptTemplate } from '../prompts/base.js';
-import { PromptTemplate } from '../prompts/prompt.js';
+import { BasePromptTemplate } from "../prompts/base.js";
+import { PromptTemplate } from "../prompts/prompt.js";
 
 export interface StuffDocumentsChainInput {
   /** LLM Wrapper to use after formatting documents */
@@ -245,8 +245,11 @@ export class RefineDocumentsChain
 
   refineLLMChain: LLMChain;
 
-  get defaultDocumentPrompt(): BasePromptTemplate{ 
-    return new PromptTemplate({inputVariables:["page_content"], template:"{page_content}"});
+  get defaultDocumentPrompt(): BasePromptTemplate {
+    return new PromptTemplate({
+      inputVariables: ["page_content"],
+      template: "{page_content}",
+    });
   }
 
   documentPrompt = this.defaultDocumentPrompt;
@@ -271,39 +274,45 @@ export class RefineDocumentsChain
       fields.documentVariableName ?? this.documentVariableName;
     this.inputKey = fields.inputKey ?? this.inputKey;
     this.documentPrompt = fields.documentPrompt ?? this.documentPrompt;
-    this.initialResponseName = fields.initialResponseName ?? this.initialResponseName;
-
+    this.initialResponseName =
+      fields.initialResponseName ?? this.initialResponseName;
   }
 
-  _constructInitialInputs(docs: Document[], rest: Record<string, unknown>){
-      const baseInfo: Record<string, unknown> = {"page_content": docs[0].pageContent, 
-        ...docs[0].metadata,
-      };
-      const documentInfo: Record<string, unknown> = {};
-      this.documentPrompt.inputVariables.forEach((value) => {
-        documentInfo[value] = baseInfo[value];
-      });
+  _constructInitialInputs(docs: Document[], rest: Record<string, unknown>) {
+    const baseInfo: Record<string, unknown> = {
+      page_content: docs[0].pageContent,
+      ...docs[0].metadata,
+    };
+    const documentInfo: Record<string, unknown> = {};
+    this.documentPrompt.inputVariables.forEach((value) => {
+      documentInfo[value] = baseInfo[value];
+    });
 
-      const baseInputs: Record<string, unknown> = {
-        [this.documentVariableName]: this.documentPrompt.format({...documentInfo})
-      };
-      const inputs = {...baseInputs, ...rest};
-      return inputs;
+    const baseInputs: Record<string, unknown> = {
+      [this.documentVariableName]: this.documentPrompt.format({
+        ...documentInfo,
+      }),
+    };
+    const inputs = { ...baseInputs, ...rest };
+    return inputs;
   }
 
   _constructRefineInputs(doc: Document, res: ChainValues) {
-      const baseInfo: Record<string, unknown> = {"page_content": doc.pageContent, 
-        ...doc.metadata,
-      };
-      const documentInfo: Record<string, unknown> = {};
-      this.documentPrompt.inputVariables.forEach((value) => {
-        documentInfo[value] = baseInfo[value];
-      });
-      const baseInputs: Record<string, unknown> = {
-        [this.documentVariableName]: this.documentPrompt.format({...documentInfo})
-      };
-      const inputs = {[this.initialResponseName]: res, ...baseInputs};
-      return inputs;
+    const baseInfo: Record<string, unknown> = {
+      page_content: doc.pageContent,
+      ...doc.metadata,
+    };
+    const documentInfo: Record<string, unknown> = {};
+    this.documentPrompt.inputVariables.forEach((value) => {
+      documentInfo[value] = baseInfo[value];
+    });
+    const baseInputs: Record<string, unknown> = {
+      [this.documentVariableName]: this.documentPrompt.format({
+        ...documentInfo,
+      }),
+    };
+    const inputs = { [this.initialResponseName]: res, ...baseInputs };
+    return inputs;
   }
 
   async _call(values: ChainValues): Promise<ChainValues> {
@@ -315,14 +324,14 @@ export class RefineDocumentsChain
     const currentDocs = docs as Document[];
 
     const initialInputs = this._constructInitialInputs(currentDocs, rest);
-    let res = await this.llmChain.call({...initialInputs});
+    let res = await this.llmChain.call({ ...initialInputs });
 
     const refineSteps = [res];
-    
-    for (let i = 1; i < currentDocs.length; i += 1){ 
+
+    for (let i = 1; i < currentDocs.length; i += 1) {
       const refineInputs = this._constructRefineInputs(currentDocs[i], res);
-      const inputs = {...refineInputs, ...rest};
-      res = await this.refineLLMChain.call({...inputs});
+      const inputs = { ...refineInputs, ...rest };
+      res = await this.refineLLMChain.call({ ...inputs });
       refineSteps.push(res);
     }
 
@@ -346,9 +355,7 @@ export class RefineDocumentsChain
 
     return new RefineDocumentsChain({
       llmChain: await LLMChain.deserialize(SerializedLLMChain),
-      refineLLMChain: await LLMChain.deserialize(
-        SerializedRefineDocumentChain
-      ),
+      refineLLMChain: await LLMChain.deserialize(SerializedRefineDocumentChain),
     });
   }
 
