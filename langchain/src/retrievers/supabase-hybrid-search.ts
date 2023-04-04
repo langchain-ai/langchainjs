@@ -8,24 +8,19 @@ interface SearchEmbeddingsParams {
   match_count: number; // int
 }
 
-interface kwSearchParams {
+interface SearchKeywordParams {
   query_text: string;
   match_count: number; // int
 }
 
-interface SearchEmbeddingsResponse {
+interface SearchResponseRow {
   id: number;
   content: string;
   metadata: object;
   similarity: number;
 }
 
-interface kwSearchResponse {
-  id: number;
-  content: string;
-  metadata: object;
-  similarity: number;
-}
+type SearchResult = [Document, number, number];
 
 export interface SupabaseLibArgs {
   client: SupabaseClient;
@@ -79,7 +74,7 @@ export class SupabaseHybridSearch extends BaseRetriever {
   protected async similaritySearch(
     query: string,
     k: number
-  ): Promise<[Document, number][]> {
+  ): Promise<SearchResult[]> {
     const embeddedQuery = await this.embeddings.embedQuery(query);
 
     const matchDocumentsParams: SearchEmbeddingsParams = {
@@ -96,23 +91,21 @@ export class SupabaseHybridSearch extends BaseRetriever {
       throw new Error(`Error searching for documents: ${error}`);
     }
 
-    const result: [Document, number][] = (
-      searches as SearchEmbeddingsResponse[]
-    ).map((resp) => [
+    return (searches as SearchResponseRow[]).map((resp) => [
       new Document({
         metadata: resp.metadata,
         pageContent: resp.content,
       }),
       resp.similarity,
+      resp.id,
     ]);
-    return result;
   }
 
   protected async keywordSearch(
     query: string,
     k: number
-  ): Promise<[Document, number][]> {
-    const kwMatchDocumentsParams: kwSearchParams = {
+  ): Promise<SearchResult[]> {
+    const kwMatchDocumentsParams: SearchKeywordParams = {
       query_text: query,
       match_count: k,
     };
@@ -126,54 +119,41 @@ export class SupabaseHybridSearch extends BaseRetriever {
       throw new Error(`Error searching for documents: ${error}`);
     }
 
-    const result: [Document, number][] = (searches as kwSearchResponse[]).map(
-      (resp) => [
-        new Document({
-          metadata: resp.metadata,
-          pageContent: resp.content,
-        }),
-        resp.similarity * 10,
-      ]
-    );
-    return result;
+    return (searches as SearchResponseRow[]).map((resp) => [
+      new Document({
+        metadata: resp.metadata,
+        pageContent: resp.content,
+      }),
+      resp.similarity * 10,
+      resp.id,
+    ]);
   }
 
   protected async hybridSearch(
     query: string,
     similarityK: number,
     keywordK: number
-  ): Promise<[Document, number][]> {
+  ): Promise<SearchResult[]> {
     const similarity_search = this.similaritySearch(query, similarityK);
 
     const keyword_search = this.keywordSearch(query, keywordK);
 
-    return Promise.all<[Document, number][]>([
-      similarity_search,
-      keyword_search,
-    ])
+    return Promise.all([similarity_search, keyword_search])
       .then((results) => results.flat())
       .then((results) => {
-        const seenContent = new Map<string, number>();
-        const uniqueResults: [Document, number][] = [];
+        const picks = new Map<number, SearchResult>();
 
-        results.forEach(([doc, num]) => {
-          const content = doc.pageContent;
-          if (seenContent.has(content)) {
-            const existingNum = seenContent.get(content);
-            if (existingNum && num > existingNum) {
-              seenContent.set(content, num);
-              const index = uniqueResults.findIndex(
-                ([uniqueDoc]) => uniqueDoc.pageContent === content
-              );
-              uniqueResults[index] = [doc, num];
-            }
-          } else {
-            seenContent.set(content, num);
-            uniqueResults.push([doc, num]);
+        results.forEach((result) => {
+          const id = result[2];
+          const nextScore = result[1];
+          const prevScore = picks.get(id)?.[1];
+
+          if (prevScore === undefined || nextScore > prevScore) {
+            picks.set(id, result);
           }
         });
 
-        return uniqueResults;
+        return Array.from(picks.values());
       })
       .then((results) => results.sort((a, b) => b[1] - a[1]));
   }
