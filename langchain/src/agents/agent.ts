@@ -8,7 +8,12 @@ import {
   ChainValues,
   BaseChatMessage,
 } from "../schema/index.js";
-import { AgentInput, SerializedAgent, StoppingMethod } from "./types.js";
+import {
+  AgentInput,
+  SerializedAgent,
+  StoppingMethod,
+  AgentActionOutputParser,
+} from "./types.js";
 import { Tool } from "./tools/base.js";
 
 class ParseError extends Error {
@@ -20,6 +25,110 @@ class ParseError extends Error {
   }
 }
 
+export abstract class BaseSingleActionAgent {
+  abstract get inputKeys(): string[];
+
+  get returnValues(): string[] {
+    return ["output"];
+  }
+
+  get allowedTools(): string[] | undefined {
+    return undefined;
+  }
+
+  /**
+   * Return the string type key uniquely identifying this class of agent.
+   */
+  _agentType(): string {
+    throw new Error("Not implemented");
+  }
+
+  /**
+   * Decide what to do given some input.
+   *
+   * @param steps - Steps the LLM has taken so far, along with observations from each.
+   * @param inputs - User inputs.
+   *
+   * @returns Action specifying what tool to use.
+   */
+  abstract plan(
+    steps: AgentStep[],
+    inputs: ChainValues
+  ): Promise<AgentAction | AgentFinish>;
+
+  /**
+   * Return response when agent has been stopped due to max iterations
+   */
+  returnStoppedResponse(
+    earlyStoppingMethod: StoppingMethod,
+    _steps: AgentStep[],
+    _inputs: ChainValues
+  ): Promise<AgentFinish> {
+    if (earlyStoppingMethod === "force") {
+      return Promise.resolve({
+        returnValues: { output: "Agent stopped due to max iterations." },
+        log: "",
+      });
+    }
+
+    throw new Error(`Invalid stopping method: ${earlyStoppingMethod}`);
+  }
+
+  /**
+   * Prepare the agent for output, if needed
+   */
+  async prepareForOutput(
+    _returnValues: AgentFinish["returnValues"],
+    _steps: AgentStep[]
+  ): Promise<AgentFinish["returnValues"]> {
+    return {};
+  }
+}
+
+export interface LLMSingleActionAgentInput {
+  llmChain: LLMChain;
+  outputParser: AgentActionOutputParser;
+  stop?: string[];
+}
+
+export class LLMSingleActionAgent extends BaseSingleActionAgent {
+  llmChain: LLMChain;
+
+  outputParser: AgentActionOutputParser;
+
+  stop?: string[];
+
+  constructor(input: LLMSingleActionAgentInput) {
+    super();
+    this.llmChain = input.llmChain;
+    this.outputParser = input.outputParser;
+  }
+
+  get inputKeys(): string[] {
+    return this.llmChain.inputKeys;
+  }
+
+  /**
+   * Decide what to do given some input.
+   *
+   * @param steps - Steps the LLM has taken so far, along with observations from each.
+   * @param inputs - User inputs.
+   *
+   * @returns Action specifying what tool to use.
+   */
+  async plan(
+    steps: AgentStep[],
+    inputs: ChainValues
+  ): Promise<AgentAction | AgentFinish> {
+    const output = await this.llmChain.call({
+      intermediate_steps: steps,
+      stop: this.stop,
+      ...inputs,
+    });
+    return this.outputParser.parse(output[this.llmChain.outputKey]);
+  }
+}
+
 /**
  * Class responsible for calling a language model and deciding an action.
  *
@@ -27,20 +136,23 @@ class ParseError extends Error {
  * include a variable called "agent_scratchpad" where the agent can put its
  * intermediary work.
  */
-export abstract class Agent {
+export abstract class Agent extends BaseSingleActionAgent {
   llmChain: LLMChain;
 
-  allowedTools?: string[] = undefined;
+  private _allowedTools?: string[] = undefined;
 
-  returnValues = ["output"];
+  get allowedTools(): string[] | undefined {
+    return this._allowedTools;
+  }
 
   get inputKeys(): string[] {
     return this.llmChain.inputKeys.filter((k) => k !== "agent_scratchpad");
   }
 
   constructor(input: AgentInput) {
+    super();
     this.llmChain = input.llmChain;
-    this.allowedTools = input.allowedTools;
+    this._allowedTools = input.allowedTools;
   }
 
   /**
@@ -66,21 +178,6 @@ export abstract class Agent {
    * Return the string type key uniquely identifying this class of agent.
    */
   abstract _agentType(): string;
-
-  /**
-   * Prepare the agent for a new call, if needed
-   */
-  prepareForNewCall(): void {}
-
-  /**
-   * Prepare the agent for output, if needed
-   */
-  async prepareForOutput(
-    _returnValues: AgentFinish["returnValues"],
-    _steps: AgentStep[]
-  ): Promise<AgentFinish["returnValues"]> {
-    return {};
-  }
 
   /**
    * Create a prompt for this class

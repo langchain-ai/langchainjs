@@ -32,6 +32,23 @@ export abstract class BaseMessagePromptTemplate {
   }
 }
 
+export class ChatPromptValue extends BasePromptValue {
+  messages: BaseChatMessage[];
+
+  constructor(messages: BaseChatMessage[]) {
+    super();
+    this.messages = messages;
+  }
+
+  toString() {
+    return JSON.stringify(this.messages);
+  }
+
+  toChatMessages() {
+    return this.messages;
+  }
+}
+
 export class MessagesPlaceholder extends BaseMessagePromptTemplate {
   variableName: string;
 
@@ -65,6 +82,23 @@ export abstract class BaseMessageStringPromptTemplate extends BaseMessagePromptT
 
   async formatMessages(values: InputValues): Promise<BaseChatMessage[]> {
     return [await this.format(values)];
+  }
+}
+
+export abstract class BaseChatPromptTemplate extends BasePromptTemplate {
+  constructor(input: BasePromptTemplateInput) {
+    super(input);
+  }
+
+  abstract formatMessages(values: InputValues): Promise<BaseChatMessage[]>;
+
+  async format(values: InputValues): Promise<string> {
+    return (await this.formatPromptValue(values)).toString();
+  }
+
+  async formatPromptValue(values: InputValues): Promise<BasePromptValue> {
+    const resultMessages = await this.formatMessages(values);
+    return new ChatPromptValue(resultMessages);
   }
 }
 
@@ -127,23 +161,6 @@ export class SystemMessagePromptTemplate extends BaseMessageStringPromptTemplate
   }
 }
 
-export class ChatPromptValue extends BasePromptValue {
-  messages: BaseChatMessage[];
-
-  constructor(messages: BaseChatMessage[]) {
-    super();
-    this.messages = messages;
-  }
-
-  toString() {
-    return JSON.stringify(this.messages);
-  }
-
-  toChatMessages() {
-    return this.messages;
-  }
-}
-
 export interface ChatPromptTemplateInput extends BasePromptTemplateInput {
   /**
    * The prompt messages
@@ -159,7 +176,7 @@ export interface ChatPromptTemplateInput extends BasePromptTemplateInput {
 }
 
 export class ChatPromptTemplate
-  extends BasePromptTemplate
+  extends BaseChatPromptTemplate
   implements ChatPromptTemplateInput
 {
   promptMessages: BaseMessagePromptTemplate[];
@@ -213,11 +230,7 @@ export class ChatPromptTemplate
     return "chat";
   }
 
-  async format(values: InputValues): Promise<string> {
-    return (await this.formatPromptValue(values)).toString();
-  }
-
-  async formatPromptValue(values: InputValues): Promise<BasePromptValue> {
+  async formatMessages(values: InputValues): Promise<BaseChatMessage[]> {
     const allValues = await this.mergePartialAndUserVariables(values);
 
     let resultMessages: BaseChatMessage[] = [];
@@ -234,7 +247,7 @@ export class ChatPromptTemplate
       const message = await promptMessage.formatMessages(inputValues);
       resultMessages = resultMessages.concat(message);
     }
-    return new ChatPromptValue(resultMessages);
+    return resultMessages;
   }
 
   serialize(): SerializedChatPromptTemplate {

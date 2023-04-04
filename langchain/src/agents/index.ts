@@ -4,8 +4,9 @@ export {
   AgentInput,
   SerializedZeroShotAgent,
   SerializedAgent,
+  AgentActionOutputParser,
 } from "./types.js";
-export { Agent } from "./agent.js";
+export { Agent, BaseSingleActionAgent, LLMSingleActionAgent } from "./agent.js";
 export { AgentExecutor } from "./executor.js";
 export { ZeroShotAgent } from "./mrkl/index.js";
 export { ChatAgent } from "./chat/index.js";

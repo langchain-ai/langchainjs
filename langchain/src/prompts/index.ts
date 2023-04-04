@@ -20,6 +20,7 @@ export {
   SystemMessagePromptTemplate,
   ChatMessagePromptTemplate,
   MessagesPlaceholder,
+  BaseChatPromptTemplate,
 } from "./chat.js";
 export {
   SerializedPromptTemplate,
