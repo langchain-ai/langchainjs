@@ -7,8 +7,6 @@ import {
 } from "./base.js";
 import { fetchWithTimeout } from "../util/index.js";
 
-const MOTORHEAD_URL = process.env.MOTORHEAD_URL || "http://localhost:8080";
-
 export interface MotorheadMemoryMessage {
   role: string;
   content: string;
@@ -20,14 +18,15 @@ export interface MotorheadMemoryInput {
   sessionId: string;
   inputKey?: string;
   outputKey?: string;
+  motorheadURL: string;
 }
 
 export class MotorheadMemory extends BaseChatMemory {
-  motorheadURL: string = MOTORHEAD_URL;
+  motorheadURL = "localhost:8080";
 
-  timeout: number = 3000;
+  timeout = 3000;
 
-  memoryKey: string = "history";
+  memoryKey = "history";
 
   sessionId: string;
 
@@ -42,11 +41,12 @@ export class MotorheadMemory extends BaseChatMemory {
     });
 
     this.sessionId = fields?.sessionId ?? this.sessionId;
+    this.motorheadURL = fields?.motorheadURL ?? this.motorheadURL;
   }
 
   async init(): Promise<void> {
     const res = await fetchWithTimeout(
-      `${MOTORHEAD_URL}/sessions/${this.sessionId}/memory`,
+      `${this.motorheadURL}/sessions/${this.sessionId}/memory`,
       {
         timeout: this.timeout,
         headers: {
@@ -88,7 +88,7 @@ export class MotorheadMemory extends BaseChatMemory {
     outputValues: OutputValues
   ): Promise<void> {
     await fetchWithTimeout(
-      `${MOTORHEAD_URL}/sessions/${this.sessionId}/memory`,
+      `${this.motorheadURL}/sessions/${this.sessionId}/memory`,
       {
         timeout: this.timeout,
         method: "POST",
@@ -104,6 +104,6 @@ export class MotorheadMemory extends BaseChatMemory {
       }
     );
 
-    super.saveContext(inputValues, outputValues);
+    await super.saveContext(inputValues, outputValues);
   }
 }
