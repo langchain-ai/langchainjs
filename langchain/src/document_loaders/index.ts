@@ -12,6 +12,7 @@ export { IMSDBLoader } from "./imsdb.js";
 export { DirectoryLoader, UnknownHandling } from "./directory.js";
 export { SRTLoader } from "./srt.js";
 export { PDFLoader } from "./pdf.js";
+export { DocxLoader } from "./docx.js";
 export { EPubLoader } from "./epub.js";
 export { TextLoader } from "./text.js";
 export { JSONLoader } from "./json.js";
