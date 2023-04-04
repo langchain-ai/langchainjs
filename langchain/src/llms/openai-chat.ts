@@ -7,7 +7,7 @@ import {
   ChatCompletionResponseMessageRoleEnum,
   CreateChatCompletionResponse,
 } from "openai";
-import type { StreamingAxiosConfiguration } from "../util/axios-fetch-adapter.js";
+import type { StreamingAxiosConfiguration } from "../util/axios-types.js";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
 import { BaseLLMParams, LLM } from "./base.js";
 
