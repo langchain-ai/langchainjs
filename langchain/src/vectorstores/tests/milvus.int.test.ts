@@ -1,11 +1,17 @@
-import { test, expect, afterAll } from "@jest/globals";
+import { test, expect, afterAll , beforeAll } from "@jest/globals";
 
 import { Milvus } from '../milvus.js';
 import { OpenAIEmbeddings } from "../../embeddings/index.js";
 import { ErrorCode } from '@zilliz/milvus2-sdk-node/dist/milvus/types.js';
 import { MilvusClient } from '@zilliz/milvus2-sdk-node/dist/milvus/index.js';
 
-let test_collection_name: string
+let collectionName: string;
+let embeddings: OpenAIEmbeddings;
+
+beforeAll(async () => {
+    embeddings = new OpenAIEmbeddings();
+    collectionName = "test_collection_" + Math.random().toString(36).substring(7);
+})
 
 test("Test Milvus.fromtext", async () => {
     const texts = [
@@ -21,10 +27,20 @@ test("Test Milvus.fromtext", async () => {
         "Tortoise: But it's only a myth. Courage, Achilles.",
     ]
     const metadatas: object[] = [{ id: 2 }, { id: 1 }, { id: 3 }, { id: 4 }, { id: 5 }]
-    const embeddings = new OpenAIEmbeddings();
-    const milvus = await Milvus.fromTexts(texts, metadatas, embeddings)
+    const milvus = await Milvus.fromTexts(texts, metadatas, embeddings, {collectionName: collectionName})
+    
+    const query = "who is achilles?"
+    const result = await milvus.similaritySearch(query, 1)
+    const resultMetadatas = result.map(({ metadata }) =>  metadata )
+    expect(resultMetadatas).toEqual([{ id: 1 }])
 
-    test_collection_name = milvus.collectionName; //record collection, drop after test complete
+    const resultTwo = await milvus.similaritySearch(query, 3)
+    const resultTwoMetadatas = resultTwo.map(({ metadata }) => metadata )
+    expect(resultTwoMetadatas).toEqual([{ id: 1 }, { id: 4 }, { id: 5 }])
+})
+
+test("Test Milvus.fromExistingCollection", async () => {
+    const milvus = await Milvus.fromExistingCollection(embeddings, {collectionName: collectionName})
 
     const query = "who is achilles?"
     const result = await milvus.similaritySearch(query, 1)
@@ -37,9 +53,10 @@ test("Test Milvus.fromtext", async () => {
 })
 
 
+
 afterAll(async () => {
     const client = new MilvusClient(process.env.MILVUS_URL as string)
-    const dropRes = await client.collectionManager.dropCollection({ collection_name: test_collection_name })
+    const dropRes = await client.collectionManager.dropCollection({ collection_name: collectionName })
     // console.log("Drop collection response: ", dropRes)
     expect(dropRes.error_code).toBe(ErrorCode.SUCCESS)
 })

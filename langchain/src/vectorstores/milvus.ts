@@ -213,13 +213,16 @@ export class Milvus extends VectorStore {
         return results;
     }
 
-    async ensureCollection(vectors: number[][], documents: Document[]) {
+    async ensureCollection(vectors?: number[][], documents?: Document[]) {
         const hasColResp = await this.colMgr.hasCollection({ collection_name: this.collectionName })
         if (hasColResp.status.error_code != ErrorCode.SUCCESS) {
             throw new Error("Error checking collection: " + JSON.stringify(hasColResp, null, 2) );
         }
 
         if (hasColResp.value === false) {
+            if (vectors === undefined || documents === undefined) {
+                throw new Error("Collection not found: " + this.collectionName + ", please provide vectors and documents to create collection.");
+            }
             await this.createCollection(vectors, documents);
         } else {
             await this.grabCollectionFields();
@@ -355,6 +358,18 @@ export class Milvus extends VectorStore {
         await instance.addDocuments(docs)
         return instance
     }
+
+    static async fromExistingCollection(
+        embeddings: Embeddings,
+        dbConfig: {
+          collectionName: string;
+          url?: string;
+        }
+      ): Promise<Milvus> {
+        const instance = new this(embeddings, dbConfig);
+        await instance.ensureCollection();
+        return instance;
+      }
 }
 
 
