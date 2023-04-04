@@ -9,21 +9,19 @@ import { MotorheadMemory } from "langchain/memory";
 
 const model = new OpenAI({});
 const memory = new MotorheadMemory({
-  sessionId: 'user-id',
-  motorheadUrl: 'localhost:8080',
+  sessionId: "user-id",
+  motorheadUrl: "localhost:8080",
 });
 
 await memory.init(); // loads previous state from Motörhead 🤘
-let context = "";
-
-if (memory.context) {
-  context = `
-    Here's previous context: ${memory.context}`;
-}
+const context = memory.context
+  ? `
+Here's previous context: ${memory.context}`
+  : "";
 
 const chatPrompt = ChatPromptTemplate.fromPromptMessages([
   SystemMessagePromptTemplate.fromTemplate(
-    `The following is a friendly conversation between a human and an AI. The AI is talkative and provides lots of specific details from its context. If the AI does not know the answer to a question, it truthfully says it does not know.$${context}`
+    `The following is a friendly conversation between a human and an AI. The AI is talkative and provides lots of specific details from its context. If the AI does not know the answer to a question, it truthfully says it does not know.${context}`
   ),
   new MessagesPlaceholder("history"),
   HumanMessagePromptTemplate.fromTemplate("{input}"),
