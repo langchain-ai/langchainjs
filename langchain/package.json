@@ -134,8 +134,8 @@
     "d3-dsv": "^3.0.1",
     "epub2": "^3.0.1",
     "hnswlib-node": "^1.4.2",
-    "mammoth": "*",
     "html-to-text": "^9.0.5",
+    "mammoth": "*",
     "pdfjs-dist": "^3.4.120",
     "puppeteer": "^19.7.2",
     "redis": "^4.6.4",
@@ -174,10 +174,10 @@
     "hnswlib-node": {
       "optional": true
     },
-    "mammoth": {
+    "html-to-text": {
       "optional": true
     },
-    "html-to-text": {
+    "mammoth": {
       "optional": true
     },
     "pdfjs-dist": {
