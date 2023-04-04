@@ -3,18 +3,16 @@ import { test, jest, expect } from "@jest/globals";
 // eslint-disable-next-line import/no-extraneous-dependencies
 import S3Client from "@aws-sdk/client-s3";
 import fs from "fs";
+import * as path from "path";
+import { Readable } from "stream";
 import { S3Loader } from "../s3.js";
 import { UnstructuredLoader } from "../unstructured.js";
 
 const fsMock = {
   ...fs,
-  mkdtempSync: jest.fn().mockReturnValue("/tmp/s3fileloader-12345"),
-  mkdirSync: jest.fn().mockImplementation(() => {
-    console.log("Mock mkdirSync invoked");
-  }),
-  writeFileSync: jest.fn().mockImplementation(() => {
-    console.log("Mock writeFileSync invoked");
-  }),
+  mkdtempSync: jest.fn().mockReturnValue("tmp/s3fileloader-12345"),
+  mkdirSync: jest.fn().mockImplementation(() => {}),
+  writeFileSync: jest.fn().mockImplementation(() => {}),
 };
 
 const UnstructuredLoaderMock = jest.fn().mockImplementation(() => ({
@@ -23,20 +21,16 @@ const UnstructuredLoaderMock = jest.fn().mockImplementation(() => ({
 
 jest.mock("@aws-sdk/client-s3", () => ({
   S3Client: jest.fn().mockImplementation(() => ({
-    send: jest.fn().mockImplementation(() => ({
-      Body: {
-        on: jest.fn().mockImplementation((event, callback) => {
-          if (event === "data") {
-            (callback as (buffer: Buffer) => void)(
-              Buffer.from("Mock file content")
-            );
-          } else if (event === "end") {
-            (callback as (buffer?: Buffer) => void)(undefined);
-          }
+    send: jest.fn().mockImplementation(() =>
+      Promise.resolve({
+        Body: new Readable({
+          read() {
+            this.push(Buffer.from("Mock file content"));
+            this.push(null);
+          },
         }),
-        pipe: jest.fn(),
-      },
-    })),
+      })
+    ),
   })),
   GetObjectCommand: jest.fn(),
 }));
@@ -61,7 +55,7 @@ test("Test S3 loader", async () => {
   expect(fsMock.writeFileSync).toHaveBeenCalled();
   expect(UnstructuredLoaderMock).toHaveBeenCalledWith(
     "http://localhost:8000/general/v0/general",
-    "/tmp/s3fileloader-12345/AccountingOverview.pdf"
+    path.join("tmp", "s3fileloader-12345", "AccountingOverview.pdf")
   );
   expect(result).toEqual(["fake document"]);
 });
