@@ -22,7 +22,7 @@ export interface MotorheadMemoryInput {
   outputKey?: string;
 }
 
-export default class MotorheadMemory extends BaseChatMemory {
+export class MotorheadMemory extends BaseChatMemory {
   motorheadURL: string = MOTORHEAD_URL;
 
   timeout: number = 3000;
