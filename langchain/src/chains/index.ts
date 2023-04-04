@@ -3,6 +3,7 @@ export { LLMChain, ConversationChain } from "./llm_chain.js";
 export {
   StuffDocumentsChain,
   MapReduceDocumentsChain,
+  RefineDocumentsChain
 } from "./combine_docs_chain.js";
 export { ChatVectorDBQAChain } from "./chat_vector_db_chain.js";
 export { AnalyzeDocumentChain } from "./analyze_documents_chain.js";
