@@ -1,4 +1,4 @@
-import { BaseChatMemory, ChatMessageHistory } from "./chat_memory.js";
+import { BaseChatMemory, BaseMemoryInput } from "./chat_memory.js";
 import {
   InputValues,
   OutputValues,
@@ -6,20 +6,20 @@ import {
   getBufferString,
 } from "./base.js";
 import { fetchWithTimeout } from "../util/index.js";
+import { AsyncCaller, AsyncCallerParams } from "../util/async_caller.js";
 
 export interface MotorheadMemoryMessage {
   role: string;
   content: string;
 }
 
-export interface MotorheadMemoryInput {
-  chatHistory: ChatMessageHistory;
-  returnMessages: boolean;
-  sessionId: string;
-  inputKey?: string;
-  outputKey?: string;
-  motorheadURL: string;
-}
+export type MotorheadMemoryInput = BaseMemoryInput &
+  AsyncCallerParams & {
+    sessionId: string;
+    motorheadURL?: string;
+    memoryKey?: string;
+    timeout?: number;
+  };
 
 export class MotorheadMemory extends BaseChatMemory {
   motorheadURL = "localhost:8080";
@@ -32,20 +32,32 @@ export class MotorheadMemory extends BaseChatMemory {
 
   context?: string;
 
-  constructor(fields?: Partial<MotorheadMemoryInput>) {
-    super({
-      returnMessages: fields?.returnMessages ?? false,
-      inputKey: fields?.inputKey,
-      outputKey: fields?.outputKey,
-      chatHistory: fields?.chatHistory,
-    });
+  caller: AsyncCaller;
 
-    this.sessionId = fields?.sessionId ?? this.sessionId;
-    this.motorheadURL = fields?.motorheadURL ?? this.motorheadURL;
+  constructor(fields: MotorheadMemoryInput) {
+    const {
+      sessionId,
+      motorheadURL,
+      memoryKey,
+      timeout,
+      returnMessages,
+      inputKey,
+      outputKey,
+      chatHistory,
+      ...rest
+    } = fields;
+    super({ returnMessages, inputKey, outputKey, chatHistory });
+
+    this.caller = new AsyncCaller(rest);
+    this.sessionId = sessionId;
+    this.motorheadURL = motorheadURL ?? this.motorheadURL;
+    this.memoryKey = memoryKey ?? this.memoryKey;
+    this.timeout = timeout ?? this.timeout;
   }
 
   async init(): Promise<void> {
-    const res = await fetchWithTimeout(
+    const res = await this.caller.call(
+      fetchWithTimeout,
       `${this.motorheadURL}/sessions/${this.sessionId}/memory`,
       {
         timeout: this.timeout,
@@ -87,23 +99,25 @@ export class MotorheadMemory extends BaseChatMemory {
     inputValues: InputValues,
     outputValues: OutputValues
   ): Promise<void> {
-    await fetchWithTimeout(
-      `${this.motorheadURL}/sessions/${this.sessionId}/memory`,
-      {
-        timeout: this.timeout,
-        method: "POST",
-        body: JSON.stringify({
-          messages: [
-            { role: "Human", content: `${inputValues.input}` },
-            { role: "AI", content: `${outputValues.response}` },
-          ],
-        }),
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
-
-    await super.saveContext(inputValues, outputValues);
+    await Promise.all([
+      this.caller.call(
+        fetchWithTimeout,
+        `${this.motorheadURL}/sessions/${this.sessionId}/memory`,
+        {
+          timeout: this.timeout,
+          method: "POST",
+          body: JSON.stringify({
+            messages: [
+              { role: "Human", content: `${inputValues.input}` },
+              { role: "AI", content: `${outputValues.response}` },
+            ],
+          }),
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      ),
+      super.saveContext(inputValues, outputValues),
+    ]);
   }
 }
