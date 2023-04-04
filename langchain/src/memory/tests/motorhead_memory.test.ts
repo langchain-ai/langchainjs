@@ -12,19 +12,20 @@ test("Test motörhead memory", async () => {
             { role: "Human", content: "Who is the best vocalist?" },
           ],
         }),
-    })
+    } as Response)
   );
 
-  const memory = new MotorheadMemory();
+  const memory = new MotorheadMemory({ sessionId: "1" });
   const result1 = await memory.loadMemoryVariables({});
   expect(result1).toStrictEqual({ history: "" });
 
-  await memory.saveContext({ input: "Who is the best vocalist?" }, { response: "Ozzy Osbourne" });
+  await memory.saveContext(
+    { input: "Who is the best vocalist?" },
+    { response: "Ozzy Osbourne" }
+  );
   const expectedString = "Human: Who is the best vocalist?\nAI: Ozzy Osbourne";
   const result2 = await memory.loadMemoryVariables({});
   expect(result2).toStrictEqual({ history: expectedString });
-
-  fetch.mockClear();
 });
 
 test("Test motörhead memory with pre-loaded history", async () => {
@@ -42,13 +43,13 @@ test("Test motörhead memory with pre-loaded history", async () => {
             { role: "Human", content: "My name is Ozzy" },
           ],
         }),
-    })
+    } as Response)
   );
   const memory = new MotorheadMemory({
     returnMessages: true,
+    sessionId: "2",
   });
   await memory.init();
   const result = await memory.loadMemoryVariables({});
   expect(result).toStrictEqual({ history: pastMessages });
-  fetch.mockClear();
 });
