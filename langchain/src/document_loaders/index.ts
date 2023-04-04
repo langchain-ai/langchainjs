@@ -19,3 +19,4 @@ export { CSVLoader } from "./csv.js";
 export { NotionLoader } from "./notion_markdown.js";
 export { GithubRepoLoader, GithubRepoLoaderParams } from "./github.js";
 export { UnstructuredLoader } from "./unstructured.js";
+export { S3Loader } from "./s3.js";
