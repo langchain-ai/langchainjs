@@ -11407,6 +11407,7 @@ __metadata:
   resolution: "langchain-examples@workspace:examples"
   dependencies:
     "@dqbd/tiktoken": ^1.0.2
+    "@getmetal/metal-sdk": ^1.0.12
     "@pinecone-database/pinecone": ^0.0.10
     "@supabase/supabase-js": ^2.10.0
     "@tsconfig/recommended": ^1.0.2
