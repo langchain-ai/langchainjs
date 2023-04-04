@@ -100,6 +100,7 @@
     "@babel/preset-env": "^7.20.2",
     "@dqbd/tiktoken": "^1.0.2",
     "@faker-js/faker": "^7.6.0",
+    "@getmetal/metal-sdk": "^1.0.12",
     "@huggingface/inference": "^1.5.1",
     "@jest/globals": "^29.5.0",
     "@pinecone-database/pinecone": "^0.0.10",
@@ -147,6 +148,7 @@
   },
   "peerDependencies": {
     "@dqbd/tiktoken": "^1.0.2",
+    "@getmetal/metal-sdk": "*",
     "@huggingface/inference": "^1.5.1",
     "@pinecone-database/pinecone": "^0.0.10",
     "@supabase/supabase-js": "^2.10.0",
@@ -167,6 +169,9 @@
   },
   "peerDependenciesMeta": {
     "@dqbd/tiktoken": {
+      "optional": true
+    },
+    "@getmetal/metal-sdk": {
       "optional": true
     },
     "@huggingface/inference": {
