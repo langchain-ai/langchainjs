@@ -360,6 +360,7 @@
       "types": "./retrievers.d.ts",
       "import": "./retrievers.js",
       "require": "./retrievers.cjs"
-    }
+    },
+    "./package.json": "./package.json"
   }
 }

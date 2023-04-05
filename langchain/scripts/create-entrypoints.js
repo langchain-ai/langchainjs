@@ -59,15 +59,18 @@ const updateConfig = () => {
 
   updateJsonFile("./package.json", (json) => ({
     ...json,
-    exports: Object.fromEntries(
-      ["index", ...Object.keys(entrypoints)].map((key) => {
-        const entryPoint = {
-          types: `./${key}.d.ts`,
-          import: `./${key}.js`,
-          require: `./${key}.cjs`,
-        };
-        return [key === "index" ? "." : `./${key}`, entryPoint];
-      })
+    exports: Object.assign(
+      Object.fromEntries(
+        ["index", ...Object.keys(entrypoints)].map((key) => {
+          const entryPoint = {
+            types: `./${key}.d.ts`,
+            import: `./${key}.js`,
+            require: `./${key}.cjs`,
+          };
+          return [key === "index" ? "." : `./${key}`, entryPoint];
+        })
+      ),
+      { "./package.json": "./package.json" }
     ),
     files: ["dist/", ...filenames],
   }));
