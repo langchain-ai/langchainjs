@@ -21,6 +21,7 @@ module.exports = {
     "dist-cjs",
     "*.js",
     "*.cjs",
+    "*.d.ts",
   ],
   rules: {
     "tree-shaking/no-side-effects-in-initialization": [
