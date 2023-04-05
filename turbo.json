@@ -17,6 +17,7 @@
       ],
       "inputs": [
         "src/**",
+        "scripts/**",
         "package.json",
         "tsconfig.json"
       ]
