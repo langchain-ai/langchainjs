@@ -33,7 +33,7 @@ LangChain is written in TypeScript and provides type definitions for all of its 
 LangChain provides an ESM build targeting Node.js environments. You can import it using the following syntax:
 
 ```typescript
-import { OpenAI } from "langchain";
+import { OpenAI } from "langchain/llms";
 ```
 
 If you are using TypeScript in an ESM project we suggest updating your `tsconfig.json` to include the following:
@@ -53,7 +53,7 @@ If you are using TypeScript in an ESM project we suggest updating your `tsconfig
 LangChain provides a CommonJS build targeting Node.js environments. You can import it using the following syntax:
 
 ```typescript
-const { OpenAI } = require("langchain");
+const { OpenAI } = require("langchain/llms");
 ```
 
 ### Other environments
