@@ -305,7 +305,7 @@ export class OpenAIChat extends LLM implements OpenAIInput {
       : await this.completionWithRetry({
           ...params,
           messages: this.formatMessages(prompt),
-        }).then((res) => res.data);
+        });
 
     return data.choices[0].message?.content ?? "";
   }
@@ -326,11 +326,13 @@ export class OpenAIChat extends LLM implements OpenAIInput {
       });
       this.client = new OpenAIApi(clientConfig);
     }
-    return this.caller.call(
-      this.client.createChatCompletion.bind(this.client),
-      request,
-      options
-    );
+    return this.caller
+      .call(
+        this.client.createChatCompletion.bind(this.client),
+        request,
+        options
+      )
+      .then((res) => res.data);
   }
 
   _llmType() {

@@ -45,7 +45,7 @@ export class AsyncCaller {
   call<A extends any[], T extends (...args: A) => Promise<any>>(
     callable: T,
     ...args: Parameters<T>
-  ): Promise<ReturnType<T>> {
+  ): Promise<Awaited<ReturnType<T>>> {
     return this.queue.add(
       () =>
         backOff(() => callable(...args), {
