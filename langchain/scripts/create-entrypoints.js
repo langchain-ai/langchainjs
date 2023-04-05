@@ -1,5 +1,3 @@
-import path from "path";
-import url from "url";
 import fs from "fs";
 
 const entrypoints = {
@@ -25,13 +23,9 @@ const entrypoints = {
 };
 
 const updateJsonFile = (relativePath, updateFunction) => {
-  const filePath = path.resolve(
-    path.dirname(url.fileURLToPath(import.meta.url)),
-    relativePath
-  );
-  const contents = fs.readFileSync(filePath).toString();
+  const contents = fs.readFileSync(relativePath).toString();
   const res = updateFunction(JSON.parse(contents));
-  fs.writeFileSync(filePath, JSON.stringify(res, null, 2) + "\n");
+  fs.writeFileSync(relativePath, JSON.stringify(res, null, 2) + "\n");
 };
 
 const generateFiles = () => {
@@ -81,7 +75,7 @@ const updateConfig = () => {
   Object.entries(generatedFiles).forEach(([filename, content]) => {
     fs.writeFileSync(filename, content);
   });
-  fs.writeFileSync("./.gitignore", filenames.join("\n"));
+  fs.writeFileSync("./.gitignore", filenames.join("\n") + "\n");
 };
 
 const cleanGenerated = () => {

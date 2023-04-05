@@ -14,7 +14,6 @@ module.exports = {
   plugins: ["@typescript-eslint", "tree-shaking"],
   ignorePatterns: [
     ".eslintrc.cjs",
-    "create-entrypoints.js",
     "scripts",
     "node_modules",
     "dist",

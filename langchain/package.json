@@ -76,14 +76,14 @@
     "url": "git@github.com:hwchase17/langchainjs.git"
   },
   "scripts": {
-    "build": "yarn clean && yarn build:esm && yarn build:cjs && node create-entrypoints.js && node scripts/check-tree-shaking.js",
+    "build": "yarn clean && yarn build:esm && yarn build:cjs && node scripts/create-entrypoints.js && node scripts/check-tree-shaking.js",
     "build:esm": "tsc --outDir dist/",
     "build:cjs": "tsc --outDir dist-cjs/ -p tsconfig.cjs.json && node scripts/move-cjs-to-dist.js && rm -r dist-cjs",
-    "build:watch": "node create-entrypoints.js && tsc --declaration --outDir dist/ --watch",
+    "build:watch": "node scripts/create-entrypoints.js && tsc --declaration --outDir dist/ --watch",
     "lint": "eslint src && dpdm --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint:fix": "yarn lint --fix",
     "precommit": "tsc --noEmit && lint-staged",
-    "clean": "rm -rf dist/ && node create-entrypoints.js clean",
+    "clean": "rm -rf dist/ && node scripts/create-entrypoints.js clean",
     "prepack": "yarn build",
     "release": "release-it --only-version --config .release-it.json",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest --testPathIgnorePatterns=\\.int\\.test.ts",

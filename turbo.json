@@ -9,7 +9,16 @@
         "^build"
       ],
       "outputs": [
-        "dist/**"
+        "dist/**",
+        "dist-cjs/**",
+        "*.js",
+        "*.cjs",
+        "*.d.ts"
+      ],
+      "inputs": [
+        "src/**",
+        "package.json",
+        "tsconfig.json"
       ]
     },
     "lint": {
