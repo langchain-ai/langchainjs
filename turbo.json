@@ -32,6 +32,13 @@
       "outputs": []
     },
     "test": {
+      "outputs": [],
+      "dependsOn": [
+        "^build"
+      ]
+    },
+    "test:integration": {
+      "outputs": [],
       "dependsOn": [
         "^build"
       ]
