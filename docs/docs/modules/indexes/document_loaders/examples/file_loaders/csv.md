@@ -5,7 +5,7 @@ This example goes over how to load data from CSV files. The second argument is t
 ## Setup
 
 ```bash npm2yarn
-npm install d3-dsv
+npm install d3-dsv@2
 ```
 
 ## Usage, extracting all columns
