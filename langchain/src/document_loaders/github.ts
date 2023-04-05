@@ -1,7 +1,14 @@
-import isBinaryPath from "is-binary-path";
+import binaryExtensions from "binary-extensions";
 import { Document } from "../document.js";
 import { BaseDocumentLoader } from "./base.js";
 import { UnknownHandling } from "./directory.js";
+import { extname } from "../util/extname.js";
+
+const extensions = new Set(binaryExtensions);
+
+function isBinaryPath(name: string) {
+  return extensions.has(extname(name).slice(1).toLowerCase());
+}
 
 interface GithubFile {
   name: string;
