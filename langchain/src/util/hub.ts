@@ -1,6 +1,7 @@
 import { backOff } from "exponential-backoff";
 
-import { fetchWithTimeout, extname, FileLoader, LoadValues } from "./index.js";
+import { fetchWithTimeout, FileLoader, LoadValues } from "./index.js";
+import { extname } from "./extname.js";
 
 const HUB_PATH_REGEX = /lc(@[^:]+)?:\/\/(.*)/;
 
