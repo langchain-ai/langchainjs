@@ -24,7 +24,19 @@ We currently support LangChain on Node.js 18 and 19. Go [here](https://github.co
 
 ### TypeScript
 
-If you are using TypeScript we suggest updating your `tsconfig.json` to include the following:
+LangChain is written in TypeScript and provides type definitions for all of its public APIs.
+
+## Loading the library
+
+### ESM in Node.js
+
+LangChain provides an ESM build targeting Node.js environments. You can import it using the following syntax:
+
+```typescript
+import { OpenAI } from "langchain";
+```
+
+If you are using TypeScript in an ESM project we suggest updating your `tsconfig.json` to include the following:
 
 ```json
 {
@@ -36,33 +48,12 @@ If you are using TypeScript we suggest updating your `tsconfig.json` to include 
 }
 ```
 
-## Loading the library
-
-### ESM in Node.js
-
-LangChain is an ESM library currently targeting Node.js environments. To use it, you will need to use the `import` syntax, inside a project with `type: module` in its `package.json`.
-
-```typescript
-import { OpenAI } from "langchain";
-```
-
 ### CommonJS in Node.js
 
-If your project is using CommonJS, you can use LangChain only with the dynamic `import()` syntax.
+LangChain provides a CommonJS build targeting Node.js environments. You can import it using the following syntax:
 
 ```typescript
-const { OpenAI } = await import("langchain");
-```
-
-If you're using TypeScript in a CommonJS project, you'll need to add the following to your `tsconfig.json`:
-
-```json
-{
-  "compilerOptions": {
-    ...
-    "moduleResolution": "node16",
-  }
-}
+const { OpenAI } = require("langchain");
 ```
 
 ### Other environments
