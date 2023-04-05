@@ -289,16 +289,22 @@
       "require": "./chains.cjs"
     },
     "./embeddings": {
-      "types": "./embeddings.d.ts",
-      "import": "./embeddings.js",
-      "require": "./embeddings.cjs",
-      "default": "./dist/embeddings/index.lite.js"
+      "types": "./dist/embeddings/index.d.ts",
+      "node": {
+        "types": "./embeddings.d.ts",
+        "import": "./embeddings.js",
+        "require": "./embeddings.cjs"
+      },
+      "import": "./dist/embeddings/index.lite.js"
     },
     "./llms": {
-      "types": "./llms.d.ts",
-      "import": "./llms.js",
-      "require": "./llms.cjs",
-      "default": "./dist/llms/index.lite.js"
+      "types": "./dist/llms/index.d.ts",
+      "node": {
+        "types": "./llms.d.ts",
+        "import": "./llms.js",
+        "require": "./llms.cjs"
+      },
+      "import": "./dist/llms/index.lite.js"
     },
     "./prompts": {
       "types": "./prompts.d.ts",
@@ -306,9 +312,13 @@
       "require": "./prompts.cjs"
     },
     "./vectorstores": {
-      "types": "./vectorstores.d.ts",
-      "import": "./vectorstores.js",
-      "require": "./vectorstores.cjs"
+      "types": "./dist/vectorstores/index.d.ts",
+      "node": {
+        "types": "./vectorstores.d.ts",
+        "import": "./vectorstores.js",
+        "require": "./vectorstores.cjs"
+      },
+      "import": "./dist/vectorstores/index.lite.js"
     },
     "./text_splitter": {
       "types": "./text_splitter.d.ts",
@@ -331,9 +341,13 @@
       "require": "./docstore.cjs"
     },
     "./document_loaders": {
-      "types": "./document_loaders.d.ts",
-      "import": "./document_loaders.js",
-      "require": "./document_loaders.cjs"
+      "types": "./dist/document_loaders/index.d.ts",
+      "node": {
+        "types": "./document_loaders.d.ts",
+        "import": "./document_loaders.js",
+        "require": "./document_loaders.cjs"
+      },
+      "import": "./dist/document_loaders/index.lite.js"
     },
     "./chat_models": {
       "types": "./chat_models.d.ts",
