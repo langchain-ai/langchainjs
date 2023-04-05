@@ -291,12 +291,14 @@
     "./embeddings": {
       "types": "./embeddings.d.ts",
       "import": "./embeddings.js",
-      "require": "./embeddings.cjs"
+      "require": "./embeddings.cjs",
+      "default": "./dist/embeddings/index.lite.js"
     },
     "./llms": {
       "types": "./llms.d.ts",
       "import": "./llms.js",
-      "require": "./llms.cjs"
+      "require": "./llms.cjs",
+      "default": "./dist/llms/index.lite.js"
     },
     "./prompts": {
       "types": "./prompts.d.ts",
