@@ -14,6 +14,10 @@ import {
   ChatPromptTemplate,
   HumanMessagePromptTemplate,
 } from "langchain/prompts";
+import { OpenAI } from "langchain/llms";
+import { OpenAIEmbeddings } from "langchain/embeddings";
+import { PineconeStore } from "langchain/vectorstores";
+import { TextLoader } from "langchain/document_loaders";
 
 export interface Env {
   OPENAI_API_KEY: string;
@@ -37,9 +41,15 @@ export default {
     env: Env,
     ctx: ExecutionContext
   ): Promise<Response> {
-    const openai = new ChatOpenAI({ openAIApiKey: env.OPENAI_API_KEY });
+    // Intantiate a few things to test the exports
+    new OpenAI({ openAIApiKey: env.OPENAI_API_KEY });
+    const emb = new OpenAIEmbeddings({ openAIApiKey: env.OPENAI_API_KEY });
+
+    // Test a document loader from a blob
+    const docs = new TextLoader(new Blob(["hello"]));
+
     const chain = new LLMChain({
-      llm: openai,
+      llm: new ChatOpenAI({ openAIApiKey: env.OPENAI_API_KEY }),
       prompt: ChatPromptTemplate.fromPromptMessages([
         HumanMessagePromptTemplate.fromTemplate("{input}"),
       ]),
