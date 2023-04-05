@@ -33,7 +33,12 @@ export class ZapierNLAWrapper {
   constructor(params?: string | ZapiterNLAWrapperParams) {
     const zapierNlaApiKey =
       typeof params === "string" ? params : params?.apiKey;
-    const apiKey = zapierNlaApiKey ?? process.env.ZAPIER_NLA_API_KEY;
+    const apiKey =
+      zapierNlaApiKey ??
+      (typeof process !== "undefined"
+        ? // eslint-disable-next-line no-process-env
+          process.env.ZAPIER_NLA_API_KEY
+        : undefined);
     if (!apiKey) {
       throw new Error("ZAPIER_NLA_API_KEY not set");
     }
