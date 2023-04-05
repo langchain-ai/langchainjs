@@ -74,4 +74,4 @@ jobs:
       - name: Build
         run: yarn run build --filter="!docs"
       - name: Test
-        run: yarn run test
+        run: yarn run test:unit
