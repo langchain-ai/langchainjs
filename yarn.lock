@@ -16386,6 +16386,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"test-exports-cjs@workspace:test-exports-cjs":
+  version: 0.0.0-use.local
+  resolution: "test-exports-cjs@workspace:test-exports-cjs"
+  dependencies:
+    "@tsconfig/recommended": ^1.0.2
+    langchain: "workspace:*"
+    prettier: ^2.8.3
+    typescript: ^4.9.5
+  languageName: unknown
+  linkType: soft
+
 "test-exports@workspace:test-exports":
   version: 0.0.0-use.local
   resolution: "test-exports@workspace:test-exports"

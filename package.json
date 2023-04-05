@@ -9,7 +9,8 @@
     "langchain",
     "examples",
     "docs",
-    "test-exports"
+    "test-exports",
+    "test-exports-cjs"
   ],
   "repository": {
     "type": "git",
