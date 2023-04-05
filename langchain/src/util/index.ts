@@ -1,6 +1,5 @@
 import * as yaml from "yaml";
-
-export const extname = (path: string) => `.${path.split(".").pop()}`;
+import { extname } from "./extname.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type LoadValues = Record<string, any>;
