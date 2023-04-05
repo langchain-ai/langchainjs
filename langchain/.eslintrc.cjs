@@ -15,8 +15,12 @@ module.exports = {
   ignorePatterns: [
     ".eslintrc.cjs",
     "create-entrypoints.js",
-    "check-tree-shaking.js",
+    "scripts",
     "node_modules",
+    "dist",
+    "dist-cjs",
+    "*.js",
+    "*.cjs",
   ],
   rules: {
     "tree-shaking/no-side-effects-in-initialization": [

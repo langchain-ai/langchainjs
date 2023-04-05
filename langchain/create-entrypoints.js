@@ -39,6 +39,7 @@ const generateFiles = () => {
     ([key, value]) => {
       const compiledPath = `./dist/${value}.js`;
       return [
+        [`${key}.cjs`, `module.exports = require('./dist/${value}.cjs');`],
         [`${key}.js`, `export * from '${compiledPath}'`],
         [`${key}.d.ts`, `export * from '${compiledPath}'`],
       ];
@@ -69,6 +70,7 @@ const updateConfig = () => {
         const entryPoint = {
           types: `./${key}.d.ts`,
           import: `./${key}.js`,
+          require: `./${key}.cjs`,
         };
         return [key === "index" ? "." : `./${key}`, entryPoint];
       })

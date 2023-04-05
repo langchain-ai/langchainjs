@@ -10,44 +10,64 @@
   "types": "./index.d.ts",
   "files": [
     "dist/",
+    "agents.cjs",
     "agents.js",
     "agents.d.ts",
+    "base_language.cjs",
     "base_language.js",
     "base_language.d.ts",
+    "tools.cjs",
     "tools.js",
     "tools.d.ts",
+    "chains.cjs",
     "chains.js",
     "chains.d.ts",
+    "embeddings.cjs",
     "embeddings.js",
     "embeddings.d.ts",
+    "llms.cjs",
     "llms.js",
     "llms.d.ts",
+    "prompts.cjs",
     "prompts.js",
     "prompts.d.ts",
+    "vectorstores.cjs",
     "vectorstores.js",
     "vectorstores.d.ts",
+    "text_splitter.cjs",
     "text_splitter.js",
     "text_splitter.d.ts",
+    "memory.cjs",
     "memory.js",
     "memory.d.ts",
+    "document.cjs",
     "document.js",
     "document.d.ts",
+    "docstore.cjs",
     "docstore.js",
     "docstore.d.ts",
+    "document_loaders.cjs",
     "document_loaders.js",
     "document_loaders.d.ts",
+    "chat_models.cjs",
     "chat_models.js",
     "chat_models.d.ts",
+    "schema.cjs",
     "schema.js",
     "schema.d.ts",
+    "sql_db.cjs",
     "sql_db.js",
     "sql_db.d.ts",
+    "callbacks.cjs",
     "callbacks.js",
     "callbacks.d.ts",
+    "output_parsers.cjs",
     "output_parsers.js",
     "output_parsers.d.ts",
+    "retrievers.cjs",
     "retrievers.js",
     "retrievers.d.ts",
+    "index.cjs",
     "index.js",
     "index.d.ts"
   ],
@@ -56,7 +76,9 @@
     "url": "git@github.com:hwchase17/langchainjs.git"
   },
   "scripts": {
-    "build": "yarn clean && tsc --declaration --outDir dist/ && node create-entrypoints.js && node check-tree-shaking.js",
+    "build": "yarn clean && yarn build:esm && yarn build:cjs && node create-entrypoints.js && node scripts/check-tree-shaking.js",
+    "build:esm": "tsc --outDir dist/",
+    "build:cjs": "tsc --outDir dist-cjs/ -p tsconfig.cjs.json && node scripts/move-cjs-to-dist.js",
     "build:watch": "node create-entrypoints.js && tsc --declaration --outDir dist/ --watch",
     "lint": "eslint src && dpdm --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint:fix": "yarn lint --fix",
@@ -241,83 +263,103 @@
   "exports": {
     ".": {
       "types": "./index.d.ts",
-      "import": "./index.js"
+      "import": "./index.js",
+      "require": "./index.cjs"
     },
     "./agents": {
       "types": "./agents.d.ts",
-      "import": "./agents.js"
+      "import": "./agents.js",
+      "require": "./agents.cjs"
     },
     "./base_language": {
       "types": "./base_language.d.ts",
-      "import": "./base_language.js"
+      "import": "./base_language.js",
+      "require": "./base_language.cjs"
     },
     "./tools": {
       "types": "./tools.d.ts",
-      "import": "./tools.js"
+      "import": "./tools.js",
+      "require": "./tools.cjs"
     },
     "./chains": {
       "types": "./chains.d.ts",
-      "import": "./chains.js"
+      "import": "./chains.js",
+      "require": "./chains.cjs"
     },
     "./embeddings": {
       "types": "./embeddings.d.ts",
-      "import": "./embeddings.js"
+      "import": "./embeddings.js",
+      "require": "./embeddings.cjs"
     },
     "./llms": {
       "types": "./llms.d.ts",
-      "import": "./llms.js"
+      "import": "./llms.js",
+      "require": "./llms.cjs"
     },
     "./prompts": {
       "types": "./prompts.d.ts",
-      "import": "./prompts.js"
+      "import": "./prompts.js",
+      "require": "./prompts.cjs"
     },
     "./vectorstores": {
       "types": "./vectorstores.d.ts",
-      "import": "./vectorstores.js"
+      "import": "./vectorstores.js",
+      "require": "./vectorstores.cjs"
     },
     "./text_splitter": {
       "types": "./text_splitter.d.ts",
-      "import": "./text_splitter.js"
+      "import": "./text_splitter.js",
+      "require": "./text_splitter.cjs"
     },
     "./memory": {
       "types": "./memory.d.ts",
-      "import": "./memory.js"
+      "import": "./memory.js",
+      "require": "./memory.cjs"
     },
     "./document": {
       "types": "./document.d.ts",
-      "import": "./document.js"
+      "import": "./document.js",
+      "require": "./document.cjs"
     },
     "./docstore": {
       "types": "./docstore.d.ts",
-      "import": "./docstore.js"
+      "import": "./docstore.js",
+      "require": "./docstore.cjs"
     },
     "./document_loaders": {
       "types": "./document_loaders.d.ts",
-      "import": "./document_loaders.js"
+      "import": "./document_loaders.js",
+      "require": "./document_loaders.cjs"
     },
     "./chat_models": {
       "types": "./chat_models.d.ts",
-      "import": "./chat_models.js"
+      "import": "./chat_models.js",
+      "require": "./chat_models.cjs"
     },
     "./schema": {
       "types": "./schema.d.ts",
-      "import": "./schema.js"
+      "import": "./schema.js",
+      "require": "./schema.cjs"
     },
     "./sql_db": {
       "types": "./sql_db.d.ts",
-      "import": "./sql_db.js"
+      "import": "./sql_db.js",
+      "require": "./sql_db.cjs"
     },
     "./callbacks": {
       "types": "./callbacks.d.ts",
-      "import": "./callbacks.js"
+      "import": "./callbacks.js",
+      "require": "./callbacks.cjs"
     },
     "./output_parsers": {
       "types": "./output_parsers.d.ts",
-      "import": "./output_parsers.js"
+      "import": "./output_parsers.js",
+      "require": "./output_parsers.cjs"
     },
     "./retrievers": {
       "types": "./retrievers.d.ts",
-      "import": "./retrievers.js"
+      "import": "./retrievers.js",
+      "require": "./retrievers.cjs"
     }
   }
 }
