@@ -14,7 +14,11 @@ export class SingletonCallbackManager extends CallbackManager {
       SingletonCallbackManager.instance.addHandler(
         new ConsoleCallbackHandler()
       );
-      if (process.env.LANGCHAIN_HANDLER === "langchain") {
+      if (
+        typeof process !== "undefined" &&
+        // eslint-disable-next-line no-process-env
+        process.env.LANGCHAIN_HANDLER === "langchain"
+      ) {
         SingletonCallbackManager.instance.addHandler(new LangChainTracer());
       }
     }

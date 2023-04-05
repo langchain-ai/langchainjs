@@ -2,6 +2,18 @@ import { backOff } from "exponential-backoff";
 
 import { fetchWithTimeout, extname, FileLoader, LoadValues } from "./index.js";
 
+const LANGCHAIN_HUB_DEFAULT_REF =
+  (typeof process !== "undefined"
+    ? // eslint-disable-next-line no-process-env
+      process.env.LANGCHAIN_HUB_DEFAULT_REF
+    : undefined) ?? "master";
+const LANGCHAIN_HUB_URL_BASE =
+  (typeof process !== "undefined"
+    ? // eslint-disable-next-line no-process-env
+      process.env.LANGCHAIN_HUB_URL_BASE
+    : undefined) ??
+  "https://raw.githubusercontent.com/hwchase17/langchain-hub/";
+
 const HUB_PATH_REGEX = /lc(@[^:]+)?:\/\/(.*)/;
 
 const URL_PATH_SEPARATOR = "/";
@@ -18,9 +30,7 @@ export const loadFromHub = async <T>(
     return undefined;
   }
   const [rawRef, remotePath] = match.slice(1);
-  const ref = rawRef
-    ? rawRef.slice(1)
-    : process.env.LANGCHAIN_HUB_DEFAULT_REF ?? "master";
+  const ref = rawRef ? rawRef.slice(1) : LANGCHAIN_HUB_DEFAULT_REF;
   const parts = remotePath.split(URL_PATH_SEPARATOR);
   if (parts[0] !== validPrefix) {
     return undefined;
@@ -30,12 +40,7 @@ export const loadFromHub = async <T>(
     throw new Error("Unsupported file type.");
   }
 
-  const url = [
-    process.env.LANGCHAIN_HUB_URL_BASE ??
-      "https://raw.githubusercontent.com/hwchase17/langchain-hub/",
-    ref,
-    remotePath,
-  ].join("/");
+  const url = [LANGCHAIN_HUB_URL_BASE, ref, remotePath].join("/");
   const res = await backOff(() => fetchWithTimeout(url, { timeout: 5000 }), {
     numOfAttempts: 6,
   });

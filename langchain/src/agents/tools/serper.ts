@@ -18,7 +18,10 @@ export class Serper extends Tool {
   protected params: Partial<GoogleParameters>;
 
   constructor(
-    apiKey: string | undefined = process.env.SERPER_API_KEY,
+    apiKey: string | undefined = typeof process !== "undefined"
+      ? // eslint-disable-next-line no-process-env
+        process.env.SERPER_API_KEY
+      : undefined,
     params: Partial<GoogleParameters> = {}
   ) {
     super();
