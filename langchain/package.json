@@ -77,9 +77,9 @@
   },
   "scripts": {
     "build": "yarn clean && yarn build:esm && yarn build:cjs && node scripts/create-entrypoints.js && node scripts/check-tree-shaking.js",
-    "build:esm": "tsc --outDir dist/",
+    "build:esm": "tsc --outDir dist/ && rm -rf dist/tests dist/**/tests",
     "build:cjs": "tsc --outDir dist-cjs/ -p tsconfig.cjs.json && node scripts/move-cjs-to-dist.js && rm -r dist-cjs",
-    "build:watch": "node scripts/create-entrypoints.js && tsc --declaration --outDir dist/ --watch",
+    "build:watch": "node scripts/create-entrypoints.js && tsc --outDir dist/ --watch",
     "lint": "eslint src && dpdm --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint:fix": "yarn lint --fix",
     "precommit": "tsc --noEmit && lint-staged",
