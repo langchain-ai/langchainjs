@@ -5,16 +5,22 @@ import { BufferLoader } from "./buffer.js";
 export class PDFLoader extends BufferLoader {
   private splitPages: boolean;
 
-  constructor(filePathOrBlob: string | Blob, { splitPages = true } = {}) {
+  private pdfjs: typeof PDFLoaderImports;
+
+  constructor(
+    filePathOrBlob: string | Blob,
+    { splitPages = true, pdfjs = PDFLoaderImports } = {}
+  ) {
     super(filePathOrBlob);
     this.splitPages = splitPages;
+    this.pdfjs = pdfjs;
   }
 
   public async parse(
     raw: Buffer,
     metadata: Document["metadata"]
   ): Promise<Document[]> {
-    const { getDocument, version } = await PDFLoaderImports();
+    const { getDocument, version } = await this.pdfjs();
     const pdf = await getDocument({
       data: new Uint8Array(raw.buffer),
       useWorkerFetch: false,
