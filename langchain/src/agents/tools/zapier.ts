@@ -105,7 +105,7 @@ export class ZapierNLAWrapper {
     params?: ZapierValues
   ): Promise<ZapierValues> {
     const resp = await this._getActionRequest(actionId, instructions, params);
-    return resp.result;
+    return resp.status === "error" ? resp.error : resp.result;
   }
 
   /**
