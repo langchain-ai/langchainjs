@@ -31,7 +31,7 @@ const updateJsonFile = (relativePath, updateFunction) => {
   );
   const contents = fs.readFileSync(filePath).toString();
   const res = updateFunction(JSON.parse(contents));
-  fs.writeFileSync(filePath, JSON.stringify(res, null, 2));
+  fs.writeFileSync(filePath, JSON.stringify(res, null, 2) + "\n");
 };
 
 const generateFiles = () => {
