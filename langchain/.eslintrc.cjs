@@ -39,6 +39,7 @@ module.exports = {
         ],
       },
     ],
+    "no-process-env": 2,
     "@typescript-eslint/explicit-module-boundary-types": 0,
     "@typescript-eslint/no-empty-function": 0,
     "@typescript-eslint/no-shadow": 0,
