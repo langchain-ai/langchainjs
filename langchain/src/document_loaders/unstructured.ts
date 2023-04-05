@@ -1,3 +1,4 @@
+import { getEnv } from "../util/env.js";
 import { Document } from "../document.js";
 import { BaseDocumentLoader } from "./base.js";
 
@@ -74,7 +75,14 @@ export class UnstructuredLoader extends BaseDocumentLoader {
   async imports(): Promise<{
     readFile: typeof import("node:fs/promises")["readFile"];
   }> {
-    const { readFile } = await import("node:fs/promises");
-    return { readFile };
+    try {
+      const { readFile } = await import("node:fs/promises");
+      return { readFile };
+    } catch (e) {
+      console.error(e);
+      throw new Error(
+        `Failed to load fs/promises. TextLoader available only on environment 'node'. It appears you are running environment '${getEnv()}'. See https://<link to docs> for alternatives.`
+      );
+    }
   }
 }
