@@ -10,7 +10,7 @@
     "test:esm": "node ./index.mjs",
     "test:cjs": "node ./require.cjs",
     "test:cjs:import": "node ./import.cjs",
-    "test:ts": "tsc",
+    "test:ts": "tsc && node dist/index.js",
     "format": "prettier --write \"**/*.ts\"",
     "format:check": "prettier --list-different \"**/*.ts\""
   },
