@@ -1,0 +1,16 @@
+---
+hide_table_of_contents: true
+---
+
+import CodeBlock from "@theme/CodeBlock";
+import Example from "@examples/chat/agent.ts";
+
+# Composition: Teams of agents working together
+
+By implementing your Agents as a set of custom tools, you can easily compose specialized Agents designed to work together in pursuit of a singular objective.
+
+Using a "manager-delegate" model, the agent driven by the agent executor will delegate work and tasks to the agents at their disposal.
+
+In the example below, the manager agent provides the ZIP code to its delegages which use that information to retrieve sports and current events news given a specific location. The manager aggregates this information to deliver a concise aggregated news summary to the user.
+
+<CodeBlock language="typescript">{Example}</CodeBlock>
