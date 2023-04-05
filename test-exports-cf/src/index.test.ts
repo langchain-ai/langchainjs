@@ -17,6 +17,7 @@ describe("Worker", () => {
 
   it("should return Hello World", async () => {
     const resp = await worker.fetch();
+    expect(resp.ok).toBe(true);
     if (resp) {
       const text = await resp.text();
       expect(text.startsWith("Hello")).toBe(true);
