@@ -6,6 +6,7 @@
   "engines": {
     "node": ">=18"
   },
+  "sideEffects": false,
   "main": "./index.js",
   "types": "./index.d.ts",
   "files": [
