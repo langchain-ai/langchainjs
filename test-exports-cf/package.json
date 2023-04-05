@@ -1,0 +1,16 @@
+{
+  "name": "test-exports-cf",
+  "version": "0.0.0",
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20230321.0",
+    "typescript": "^5.0.3",
+    "vitest": "^0.29.8",
+    "wrangler": "2.14.0"
+  },
+  "private": true,
+  "scripts": {
+    "start": "wrangler dev",
+    "deploy": "wrangler publish",
+    "test": "vitest"
+  }
+}
