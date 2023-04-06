@@ -12,7 +12,7 @@
     "test:cjs:import": "node ./import.cjs",
     "test:ts": "tsc && node dist/index.js",
     "format": "prettier --write \"**/*.ts\"",
-    "format:check": "prettier --list-different \"**/*.ts\""
+    "format:check": "prettier --check \"**/*.ts\""
   },
   "author": "Langchain",
   "license": "MIT",
