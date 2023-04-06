@@ -13,7 +13,7 @@ import { ConversationChain } from "langchain/chains";
 import { ChatOpenAI } from "langchain/chat_models";
 import { MotorheadMemory } from "langchain/memory";
 
-const model = new OpenAI({});
+const model = new ChatOpenAI({});
 const memory = new MotorheadMemory({
   sessionId: "user-id",
   motorheadUrl: "localhost:8080",
