@@ -6,7 +6,6 @@
   "engines": {
     "node": ">=18"
   },
-  "sideEffects": false,
   "main": "./index.js",
   "types": "./index.d.ts",
   "files": [
@@ -267,52 +266,43 @@
     ".": {
       "types": "./index.d.ts",
       "import": "./index.js",
-      "require": "./index.cjs",
-      "default": "./index.js"
+      "require": "./index.cjs"
     },
     "./agents": {
       "types": "./agents.d.ts",
       "import": "./agents.js",
-      "require": "./agents.cjs",
-      "default": "./agents.js"
+      "require": "./agents.cjs"
     },
     "./base_language": {
       "types": "./base_language.d.ts",
       "import": "./base_language.js",
-      "require": "./base_language.cjs",
-      "default": "./base_language.js"
+      "require": "./base_language.cjs"
     },
     "./tools": {
       "types": "./tools.d.ts",
       "import": "./tools.js",
-      "require": "./tools.cjs",
-      "default": "./tools.js"
+      "require": "./tools.cjs"
     },
     "./chains": {
       "types": "./chains.d.ts",
       "import": "./chains.js",
-      "require": "./chains.cjs",
-      "default": "./chains.js"
+      "require": "./chains.cjs"
     },
     "./embeddings": {
-      "types": "./dist/embeddings/index.lite.d.ts",
+      "types": "./embeddings.d.ts",
       "node": {
-        "types": "./embeddings.d.ts",
         "import": "./embeddings.js",
-        "require": "./embeddings.cjs",
-        "default": "./embeddings.js"
+        "require": "./embeddings.cjs"
       },
       "import": "./dist/embeddings/index.lite.js",
       "require": "./dist/embeddings/index.lite.cjs",
       "default": "./dist/embeddings/index.lite.js"
     },
     "./llms": {
-      "types": "./dist/llms/index.lite.d.ts",
+      "types": "./llms.d.ts",
       "node": {
-        "types": "./llms.d.ts",
         "import": "./llms.js",
-        "require": "./llms.cjs",
-        "default": "./llms.js"
+        "require": "./llms.cjs"
       },
       "import": "./dist/llms/index.lite.js",
       "require": "./dist/llms/index.lite.cjs",
@@ -321,16 +311,13 @@
     "./prompts": {
       "types": "./prompts.d.ts",
       "import": "./prompts.js",
-      "require": "./prompts.cjs",
-      "default": "./prompts.js"
+      "require": "./prompts.cjs"
     },
     "./vectorstores": {
-      "types": "./dist/vectorstores/index.lite.d.ts",
+      "types": "./vectorstores.d.ts",
       "node": {
-        "types": "./vectorstores.d.ts",
         "import": "./vectorstores.js",
-        "require": "./vectorstores.cjs",
-        "default": "./vectorstores.js"
+        "require": "./vectorstores.cjs"
       },
       "import": "./dist/vectorstores/index.lite.js",
       "require": "./dist/vectorstores/index.lite.cjs",
@@ -339,34 +326,28 @@
     "./text_splitter": {
       "types": "./text_splitter.d.ts",
       "import": "./text_splitter.js",
-      "require": "./text_splitter.cjs",
-      "default": "./text_splitter.js"
+      "require": "./text_splitter.cjs"
     },
     "./memory": {
       "types": "./memory.d.ts",
       "import": "./memory.js",
-      "require": "./memory.cjs",
-      "default": "./memory.js"
+      "require": "./memory.cjs"
     },
     "./document": {
       "types": "./document.d.ts",
       "import": "./document.js",
-      "require": "./document.cjs",
-      "default": "./document.js"
+      "require": "./document.cjs"
     },
     "./docstore": {
       "types": "./docstore.d.ts",
       "import": "./docstore.js",
-      "require": "./docstore.cjs",
-      "default": "./docstore.js"
+      "require": "./docstore.cjs"
     },
     "./document_loaders": {
-      "types": "./dist/document_loaders/index.lite.d.ts",
+      "types": "./document_loaders.d.ts",
       "node": {
-        "types": "./document_loaders.d.ts",
         "import": "./document_loaders.js",
-        "require": "./document_loaders.cjs",
-        "default": "./document_loaders.js"
+        "require": "./document_loaders.cjs"
       },
       "import": "./dist/document_loaders/index.lite.js",
       "require": "./dist/document_loaders/index.lite.cjs",
@@ -375,38 +356,32 @@
     "./chat_models": {
       "types": "./chat_models.d.ts",
       "import": "./chat_models.js",
-      "require": "./chat_models.cjs",
-      "default": "./chat_models.js"
+      "require": "./chat_models.cjs"
     },
     "./schema": {
       "types": "./schema.d.ts",
       "import": "./schema.js",
-      "require": "./schema.cjs",
-      "default": "./schema.js"
+      "require": "./schema.cjs"
     },
     "./sql_db": {
       "types": "./sql_db.d.ts",
       "import": "./sql_db.js",
-      "require": "./sql_db.cjs",
-      "default": "./sql_db.js"
+      "require": "./sql_db.cjs"
     },
     "./callbacks": {
       "types": "./callbacks.d.ts",
       "import": "./callbacks.js",
-      "require": "./callbacks.cjs",
-      "default": "./callbacks.js"
+      "require": "./callbacks.cjs"
     },
     "./output_parsers": {
       "types": "./output_parsers.d.ts",
       "import": "./output_parsers.js",
-      "require": "./output_parsers.cjs",
-      "default": "./output_parsers.js"
+      "require": "./output_parsers.cjs"
     },
     "./retrievers": {
       "types": "./retrievers.d.ts",
       "import": "./retrievers.js",
-      "require": "./retrievers.cjs",
-      "default": "./retrievers.js"
+      "require": "./retrievers.cjs"
     },
     "./cache": {
       "types": "./cache.d.ts",

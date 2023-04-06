@@ -67,16 +67,16 @@ const updateConfig = () => {
             types: `./${key}.d.ts`,
             import: `./${key}.js`,
             require: `./${key}.cjs`,
-            default: `./${key}.js`,
           };
 
           // If there is a *.lite.js file add it as the root `import` export,
           // which should/will then be used by non-Node environments.
           const litePath = `./dist/${entrypoints[key]}.lite.js`;
           if (fs.existsSync(litePath)) {
+            const { types, ...rest } = entryPoint;
             entryPoint = {
-              types: `./dist/${entrypoints[key]}.lite.d.ts`,
-              node: entryPoint,
+              types,
+              node: rest,
               import: litePath,
               require: `./dist/${entrypoints[key]}.lite.cjs`,
               default: litePath,
