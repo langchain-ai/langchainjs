@@ -1,6 +1,6 @@
 # Unstructured
 
-This page covers how to use  [Unstructured](https://unstructured.io) within LangChain.
+This page covers how to use [Unstructured](https://unstructured.io) within LangChain.
 
 ## What is Unstructured?
 
@@ -24,9 +24,7 @@ If you are running the container locally, switch the url to
 `https://api.unstructured.io/general/v0/general`.
 
 ```typescript
-import { test, expect } from "@jest/globals";
-import { UnstructuredLoader } from "../unstructured.js";
-
+import { UnstructuredLoader } from "langchain/document_loaders/unstructured.js";
 
 const loader = new UnstructuredLoader(
   "https://api.unstructured.io/general/v0/general",
