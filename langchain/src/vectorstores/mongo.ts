@@ -10,7 +10,6 @@ export type MongoLibArgs = {
 };
 
 export type MongoVectorStoreQueryExtension = {
-  preQueryPipelineSteps?: MongoDocument[];
   postQueryPipelineSteps?: MongoDocument[];
 };
 
@@ -50,14 +49,9 @@ export class MongoVectorStore extends VectorStore {
     k: number,
     filter?: MongoVectorStoreQueryExtension
   ): Promise<[Document, number][]> {
-    const pipeline: MongoDocument[] = [];
-
-    // apply any pre-query pipeline steps
-    if (filter?.preQueryPipelineSteps) {
-      pipeline.push(...filter.preQueryPipelineSteps);
-    }
-
-    pipeline.push({
+    // Search has to be the first pipeline step (https://www.mongodb.com/docs/atlas/atlas-search/query-syntax/#behavior)
+    // We hopefully this changes in the future
+    const pipeline: MongoDocument[] = [{
       $search: {
         index: this.indexName,
         knnBeta: {
@@ -66,7 +60,7 @@ export class MongoVectorStore extends VectorStore {
           k,
         },
       },
-    });
+    }];
 
     // apply any post-query pipeline steps (idk how useful the option to do this is in practice)
     if (filter?.postQueryPipelineSteps) {
@@ -100,8 +94,31 @@ export class MongoVectorStore extends VectorStore {
 
     return ret;
   }
+  static async fromTexts(
+    texts: string[],
+    metadatas: object[] | object,
+    embeddings: Embeddings,
+    dbConfig: MongoLibArgs
+  ): Promise<MongoVectorStore> {
+    const docs = [];
+    for (let i = 0; i < texts.length; i += 1) {
+      const metadata = Array.isArray(metadatas) ? metadatas[i] : metadatas;
+      const newDoc = new Document({
+        pageContent: texts[i],
+        metadata,
+      });
+      docs.push(newDoc);
+    }
+    return MongoVectorStore.fromDocuments(docs, embeddings, dbConfig);
+  }
 
-  // TODO fromDocuments
-
-  // TODO fromText
+  static async fromDocuments(
+    docs: Document[],
+    embeddings: Embeddings,
+    dbConfig: MongoLibArgs
+  ): Promise<MongoVectorStore> {
+    const instance = new this(embeddings, dbConfig);
+    await instance.addDocuments(docs);
+    return instance;
+  }
 }

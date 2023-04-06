@@ -1,47 +1,105 @@
 import { test, expect } from "@jest/globals";
 import { MongoClient } from "mongodb";
 
+/**
+ * The following json can be used to create an index in atlas for cohere embeddings:
+
+{
+  "mappings": {
+    "fields": {
+      "embedding": [
+        {
+          "dimensions": 1024,
+          "similarity": "euclidean",
+          "type": "knnVector"
+        }
+      ]
+    }
+  }
+}
+
+ */
+
 // import { OpenAIEmbeddings } from "../../embeddings/index.js";
 import { CohereEmbeddings } from "../../embeddings/index.js";
-import { MongoVectorStore } from "../mongo.js";
+import { MongoVectorStore, MongoVectorStoreQueryExtension } from "../mongo.js";
 
 test("MongoVectorStore with external ids", async () => {
   expect(process.env.MONGO_URI).toBeDefined();
 
   const client = new MongoClient(process.env.MONGO_URI!);
 
-  const collection = client.db("langchain").collection("test");
+  try {
+    const collection = client.db("langchain").collection("test");
 
-  const vectorStore = new MongoVectorStore(
-    // new OpenAIEmbeddings(), // OpenAI embeddings are too high in dimensionality for atlas
-    new CohereEmbeddings(),
-    {
-      client,
-      collection,
-      // indexName: "default" // make sure that this matches the index name in atlas if not using "default"
+    const vectorStore = new MongoVectorStore(
+      // new OpenAIEmbeddings(), // OpenAI embeddings are too high in dimensionality for atlas
+      new CohereEmbeddings(),
+      {
+        client,
+        collection,
+        // indexName: "default", // make sure that this matches the index name in atlas if not using "default"
+      }
+    );
+
+    expect(vectorStore).toBeDefined();
+
+    // check if the database is empty
+    const count = await collection.countDocuments();
+
+    const justInserted = count === 0;
+    if (justInserted) {
+      await vectorStore.addDocuments([
+        { pageContent: "Dogs are tough.", metadata: { a: 1 } },
+        { pageContent: "Cats have fluff.", metadata: { b: 1 } },
+        { pageContent: "What is a sandwich?", metadata: { c: 1 } },
+        { pageContent: "That fence is purple.", metadata: { d: 1, e: 2 } },
+      ]);
     }
-  );
 
-  expect(vectorStore).toBeDefined();
+    // This test is awkward because the index in atlas takes time to index new documents
+    // This means from a fresh insert the query will return nothing
+    let triesLeft = 4;
 
-  await vectorStore.addDocuments([
-    { pageContent: "Dogs are tough.", metadata: { a: 1 } },
-    { pageContent: "Cats have fluff.", metadata: { a: 1 } },
-    { pageContent: "What is a sandwich?", metadata: { a: 1 } },
-    { pageContent: "That fence is purple.", metadata: { a: 1 } },
-  ]);
+    while (triesLeft > 0) {
+      const results = await vectorStore.similaritySearch("Sandwich", 1);
 
-  // This test is awkward because the index in atlas takes time to index new documents
-  // This means from a fresh insert the query will return nothing or something that was already there
+      if (justInserted && results.length === 0 && triesLeft > 0) {
+        // wait and try again in hopes that the indexing has finished
+        await new Promise((resolve) => setTimeout(resolve, 3000));
 
-  const results = await vectorStore.similaritySearch("Sandwich", 1);
+        triesLeft -= 1;
+        continue;
+      }
 
-  expect(results).toEqual([
-    { pageContent: "What is a sandwich?", metadata: { a: 1 } },
-  ]);
+      expect(results).toEqual([
+        { pageContent: "What is a sandwich?", metadata: { c: 1 } },
+      ]);
 
-  console.log(results);
+      // we can filter the search with custom pipeline stages
+      const filter: MongoVectorStoreQueryExtension = {
+        postQueryPipelineSteps: [
+          {
+            $match: {
+              "metadata.e": { $exists: true },
+            },
+          },
+        ],
+      };
 
-  // disconnect
-  await client.close();
+      const filteredResults = await vectorStore.similaritySearch(
+        "Sandwich",
+        4,
+        filter
+      );
+
+      expect(filteredResults).toEqual([
+        { pageContent: "That fence is purple.", metadata: { d: 1, e: 2 } },
+      ]);
+
+      break;
+    }
+  } finally {
+    await client.close();
+  }
 });
