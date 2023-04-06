@@ -5,7 +5,7 @@ import {
   ChatPromptTemplate,
   HumanMessagePromptTemplate,
 } from "langchain/prompts";
-import { OpenAI } from "langchain/llms";
+// import { OpenAI } from "langchain/llms";
 // import { TextLoader } from "langchain/document_loaders";
 
 import logo from "./logo.svg";
