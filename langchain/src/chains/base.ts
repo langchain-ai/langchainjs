@@ -119,15 +119,15 @@ export abstract class BaseChain implements ChainInputs {
   ): Promise<BaseChain> {
     switch (data._type) {
       case "llm_chain": {
-        const { LLMChain } = await import("./index.js");
+        const { LLMChain } = await import("./llm_chain.js");
         return LLMChain.deserialize(data);
       }
       case "stuff_documents_chain": {
-        const { StuffDocumentsChain } = await import("./index.js");
+        const { StuffDocumentsChain } = await import("./combine_docs_chain.js");
         return StuffDocumentsChain.deserialize(data);
       }
       case "vector_db_qa": {
-        const { VectorDBQAChain } = await import("./index.js");
+        const { VectorDBQAChain } = await import("./vector_db_qa.js");
         return VectorDBQAChain.deserialize(data, values);
       }
       default:

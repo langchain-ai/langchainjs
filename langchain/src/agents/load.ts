@@ -2,7 +2,8 @@ import { Agent } from "./agent.js";
 import { Tool } from "./tools/base.js";
 import { BaseLanguageModel } from "../base_language/index.js";
 import { loadFromHub } from "../util/hub.js";
-import { FileLoader, loadFromFile, parseFileConfig } from "../util/index.js";
+import { FileLoader, loadFromFile } from "../util/load.js";
+import { parseFileConfig } from "../util/parse.js";
 
 const loadAgentFromFile: FileLoader<Agent> = async (
   file: string,

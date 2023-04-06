@@ -1,5 +1,5 @@
-import { LLMChain } from "../../chains/index.js";
-import { PromptTemplate } from "../../prompts/index.js";
+import { LLMChain } from "../../chains/llm_chain.js";
+import { PromptTemplate } from "../../prompts/prompt.js";
 import { PREFIX, SUFFIX, formatInstructions } from "./prompt.js";
 import { deserializeHelper } from "../helpers.js";
 import { BaseLanguageModel } from "../../base_language/index.js";

@@ -1,7 +1,6 @@
 import type { SerializedAgentT, AgentInput } from "./types.js";
 import { Tool } from "./tools/index.js";
-import { SerializedLLMChain, LLMChain } from "../chains/index.js";
-import { resolveConfigFromFile } from "../util/index.js";
+import { LLMChain } from "../chains/index.js";
 import { BaseLanguageModel } from "../base_language/index.js";
 
 export const deserializeHelper = async <
@@ -27,11 +26,10 @@ export const deserializeHelper = async <
 
     return fromLLMAndTools(llm, tools, data);
   }
+  if (!data.llm_chain) {
+    throw new Error("Loading from constructor, llm_chain must be provided.");
+  }
 
-  const serializedLLMChain = await resolveConfigFromFile<
-    "llm_chain",
-    SerializedLLMChain
-  >("llm_chain", data);
-  const llmChain = await LLMChain.deserialize(serializedLLMChain);
+  const llmChain = await LLMChain.deserialize(data.llm_chain);
   return fromConstructor({ ...data, llmChain });
 };

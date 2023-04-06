@@ -1,6 +1,6 @@
 import { LLMChain } from "./llm_chain.js";
-import { BasePromptTemplate, PromptTemplate } from "../prompts/index.js";
-
+import { PromptTemplate } from "../prompts/prompt.js";
+import { BasePromptTemplate } from "../prompts/base.js";
 import { BaseMemory, BufferMemory } from "../memory/index.js";
 import { BaseLanguageModel } from "../base_language/index.js";
 

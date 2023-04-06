@@ -5,7 +5,7 @@ import {
   ConfigurationParameters,
 } from "openai";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
-import { chunkArray } from "../util/index.js";
+import { chunkArray } from "../util/chunk.js";
 import { Embeddings, EmbeddingsParams } from "./base.js";
 
 interface ModelParams {

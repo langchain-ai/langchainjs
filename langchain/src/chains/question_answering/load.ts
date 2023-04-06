@@ -1,5 +1,5 @@
 import { LLMChain } from "../llm_chain.js";
-import { BasePromptTemplate } from "../../prompts/index.js";
+import { BasePromptTemplate } from "../../prompts/base.js";
 import {
   StuffDocumentsChain,
   MapReduceDocumentsChain,

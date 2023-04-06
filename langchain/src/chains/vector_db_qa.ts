@@ -1,9 +1,8 @@
 import { BaseChain } from "./base.js";
 import { VectorStore } from "../vectorstores/base.js";
-import { SerializedBaseChain, SerializedVectorDBQAChain } from "./serde.js";
+import { SerializedVectorDBQAChain } from "./serde.js";
 import { BaseLanguageModel } from "../base_language/index.js";
 
-import { resolveConfigFromFile } from "../util/index.js";
 import { ChainValues } from "../schema/index.js";
 import { loadQAStuffChain } from "./question_answering/load.js";
 
@@ -85,14 +84,15 @@ export class VectorDBQAChain extends BaseChain implements VectorDBQAChainInput {
       );
     }
     const { vectorstore } = values;
-    const serializedCombineDocumentsChain = await resolveConfigFromFile<
-      "combine_documents_chain",
-      SerializedBaseChain
-    >("combine_documents_chain", data);
+    if (!data.combine_documents_chain) {
+      throw new Error(
+        `VectorDBQAChain must have combine_documents_chain in serialized data`
+      );
+    }
 
     return new VectorDBQAChain({
       combineDocumentsChain: await BaseChain.deserialize(
-        serializedCombineDocumentsChain
+        data.combine_documents_chain
       ),
       k: data.k,
       vectorstore,

@@ -1,6 +1,6 @@
 import { BaseLanguageModel } from "../base_language/index.js";
 import { LLMChain } from "../chains/llm_chain.js";
-import { BasePromptTemplate } from "../prompts/index.js";
+import { BasePromptTemplate } from "../prompts/base.js";
 import {
   AgentAction,
   AgentFinish,
