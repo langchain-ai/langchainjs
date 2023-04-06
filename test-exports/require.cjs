@@ -1,10 +1,10 @@
-import assert from "assert";
-import { OpenAI } from "langchain";
-import { loadPrompt } from "langchain/prompts";
-import { HNSWLib } from "langchain/vectorstores";
-import { OpenAIEmbeddings } from "langchain/embeddings";
-import { InMemoryDocstore, Document } from "langchain/docstore";
-import { CSVLoader } from "langchain/document_loaders";
+const assert = require("assert");
+const { OpenAI } = require("langchain");
+const { loadPrompt } = require("langchain/prompts");
+const { HNSWLib } = require("langchain/vectorstores");
+const { OpenAIEmbeddings } = require("langchain/embeddings");
+const { InMemoryDocstore, Document } = require("langchain/docstore");
+const { CSVLoader } = require("langchain/document_loaders");
 
 async function test() {
   // Test exports

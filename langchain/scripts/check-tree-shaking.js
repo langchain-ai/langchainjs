@@ -8,6 +8,9 @@ export function listEntrypoints() {
   const entrypoints = [];
 
   for (const [key, value] of Object.entries(exports)) {
+    if (key === "./package.json") {
+      continue;
+    }
     if (typeof value === "string") {
       entrypoints.push(value);
     } else if (typeof value === "object") {

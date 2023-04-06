@@ -8,8 +8,7 @@
       "DOM"
     ],
     "target": "ES2021",
-    "module": "nodenext",
-    "baseUrl": "./",
+    "baseUrl": "./"
   },
   "include": [
     "*.ts"

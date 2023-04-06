@@ -5,6 +5,7 @@ async function test() {
   const { HNSWLib } = await import("langchain/vectorstores");
   const { OpenAIEmbeddings } = await import("langchain/embeddings");
   const { InMemoryDocstore, Document } = await import("langchain/docstore");
+  const { CSVLoader } = await import("langchain/document_loaders");
 
   // Test exports
   assert(typeof OpenAI === "function");
@@ -37,6 +38,13 @@ async function test() {
   );
 
   assert((await vs.similaritySearchVectorWithScore([0, 0, 1], 1)).length === 1);
+
+  // Test CSVLoader
+  const loader = new CSVLoader(new Blob(["a,b,c\n1,2,3\n4,5,6"]));
+
+  const docs = await loader.load();
+
+  assert(docs.length === 2);
 }
 
 test()

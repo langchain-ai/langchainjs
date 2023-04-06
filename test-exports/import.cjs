@@ -1,12 +1,12 @@
-import assert from "assert";
-import { OpenAI } from "langchain";
-import { loadPrompt } from "langchain/prompts";
-import { HNSWLib } from "langchain/vectorstores";
-import { OpenAIEmbeddings } from "langchain/embeddings";
-import { InMemoryDocstore, Document } from "langchain/docstore";
-import { CSVLoader } from "langchain/document_loaders";
-
 async function test() {
+  const { default: assert } = await import("assert");
+  const { OpenAI } = await import("langchain");
+  const { loadPrompt } = await import("langchain/prompts");
+  const { HNSWLib } = await import("langchain/vectorstores");
+  const { OpenAIEmbeddings } = await import("langchain/embeddings");
+  const { InMemoryDocstore, Document } = await import("langchain/docstore");
+  const { CSVLoader } = await import("langchain/document_loaders");
+
   // Test exports
   assert(typeof OpenAI === "function");
   assert(typeof loadPrompt === "function");

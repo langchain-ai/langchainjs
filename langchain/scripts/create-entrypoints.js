@@ -1,5 +1,3 @@
-import path from "path";
-import url from "url";
 import fs from "fs";
 
 const entrypoints = {
@@ -25,13 +23,9 @@ const entrypoints = {
 };
 
 const updateJsonFile = (relativePath, updateFunction) => {
-  const filePath = path.resolve(
-    path.dirname(url.fileURLToPath(import.meta.url)),
-    relativePath
-  );
-  const contents = fs.readFileSync(filePath).toString();
+  const contents = fs.readFileSync(relativePath).toString();
   const res = updateFunction(JSON.parse(contents));
-  fs.writeFileSync(filePath, JSON.stringify(res, null, 2));
+  fs.writeFileSync(relativePath, JSON.stringify(res, null, 2) + "\n");
 };
 
 const generateFiles = () => {
@@ -39,6 +33,7 @@ const generateFiles = () => {
     ([key, value]) => {
       const compiledPath = `./dist/${value}.js`;
       return [
+        [`${key}.cjs`, `module.exports = require('./dist/${value}.cjs');`],
         [`${key}.js`, `export * from '${compiledPath}'`],
         [`${key}.d.ts`, `export * from '${compiledPath}'`],
       ];
@@ -64,14 +59,18 @@ const updateConfig = () => {
 
   updateJsonFile("./package.json", (json) => ({
     ...json,
-    exports: Object.fromEntries(
-      ["index", ...Object.keys(entrypoints)].map((key) => {
-        const entryPoint = {
-          types: `./${key}.d.ts`,
-          import: `./${key}.js`,
-        };
-        return [key === "index" ? "." : `./${key}`, entryPoint];
-      })
+    exports: Object.assign(
+      Object.fromEntries(
+        ["index", ...Object.keys(entrypoints)].map((key) => {
+          const entryPoint = {
+            types: `./${key}.d.ts`,
+            import: `./${key}.js`,
+            require: `./${key}.cjs`,
+          };
+          return [key === "index" ? "." : `./${key}`, entryPoint];
+        })
+      ),
+      { "./package.json": "./package.json" }
     ),
     files: ["dist/", ...filenames],
   }));
@@ -79,7 +78,7 @@ const updateConfig = () => {
   Object.entries(generatedFiles).forEach(([filename, content]) => {
     fs.writeFileSync(filename, content);
   });
-  fs.writeFileSync("./.gitignore", filenames.join("\n"));
+  fs.writeFileSync("./.gitignore", filenames.join("\n") + "\n");
 };
 
 const cleanGenerated = () => {

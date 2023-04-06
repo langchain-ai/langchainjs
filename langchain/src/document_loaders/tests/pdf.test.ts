@@ -1,6 +1,6 @@
 import { test, expect } from "@jest/globals";
-import url from "node:url";
-import path from "node:path";
+import * as url from "node:url";
+import * as path from "node:path";
 import { PDFLoader } from "../pdf.js";
 
 test("Test PDF loader from file", async () => {

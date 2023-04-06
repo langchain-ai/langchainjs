@@ -320,7 +320,7 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
         : await this.completionWithRetry({
             ...params,
             prompt: subPrompts[i],
-          }).then((res) => res.data);
+          });
 
       choices.push(...data.choices);
 
@@ -375,11 +375,9 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
       });
       this.client = new OpenAIApi(clientConfig);
     }
-    return this.caller.call(
-      this.client.createCompletion.bind(this.client),
-      request,
-      options
-    );
+    return this.caller
+      .call(this.client.createCompletion.bind(this.client), request, options)
+      .then((res) => res.data);
   }
 
   _llmType() {
@@ -441,7 +439,7 @@ export class PromptLayerOpenAI extends OpenAI {
         args: [],
         kwargs: { engine: request.model, prompt: request.prompt },
         tags: this.plTags ?? [],
-        request_response: response.data,
+        request_response: response,
         request_start_time: Math.floor(requestStartTime / 1000),
         request_end_time: Math.floor(requestEndTime / 1000),
         api_key: this.promptLayerApiKey,
