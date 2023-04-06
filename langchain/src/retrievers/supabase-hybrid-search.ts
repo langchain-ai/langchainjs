@@ -24,15 +24,24 @@ type SearchResult = [Document, number, number];
 
 export interface SupabaseLibArgs {
   client: SupabaseClient;
+  /**
+   * The table name on Supabase. Defaults to "documents".
+   */
   tableName?: string;
+  /**
+   * The name of the Similarity search function on Supabase. Defaults to "match_documents".
+   */
   similarityQueryName?: string;
+  /**
+   * The name of the Keyword search function on Supabase. Defaults to "kw_match_documents".
+   */
   keywordQueryName?: string;
   /**
-   * The number of documents to return from the similarity search
+   * The number of documents to return from the similarity search. Defaults to 2.
    */
   similarityK?: number;
   /**
-   * The number of documents to return from the keyword search
+   * The number of documents to return from the keyword search. Defaults to 2.
    */
   keywordK?: number;
 }
