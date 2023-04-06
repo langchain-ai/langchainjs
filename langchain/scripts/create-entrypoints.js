@@ -63,10 +63,11 @@ const updateConfig = () => {
     exports: Object.assign(
       Object.fromEntries(
         ["index", ...Object.keys(entrypoints)].map((key) => {
-          const entryPoint = {
+          let entryPoint = {
             types: `./${key}.d.ts`,
             import: `./${key}.js`,
             require: `./${key}.cjs`,
+            default: `./${key}.js`,
           };
 
           // If there is a *.lite.js file add it as the root `import` export,
@@ -74,9 +75,11 @@ const updateConfig = () => {
           const litePath = `./dist/${entrypoints[key]}.lite.js`;
           if (fs.existsSync(litePath)) {
             entryPoint = {
-              types: `./dist/${entrypoints[key]}.d.ts`,
+              types: `./dist/${entrypoints[key]}.lite.d.ts`,
               node: entryPoint,
               import: litePath,
+              require: `./dist/${entrypoints[key]}.lite.cjs`,
+              default: litePath,
             };
           }
 

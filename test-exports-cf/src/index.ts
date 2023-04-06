@@ -21,18 +21,6 @@ import { TextLoader } from "langchain/document_loaders";
 
 export interface Env {
   OPENAI_API_KEY: string;
-
-  // Example binding to KV. Learn more at https://developers.cloudflare.com/workers/runtime-apis/kv/
-  // MY_KV_NAMESPACE: KVNamespace;
-  //
-  // Example binding to Durable Object. Learn more at https://developers.cloudflare.com/workers/runtime-apis/durable-objects/
-  // MY_DURABLE_OBJECT: DurableObjectNamespace;
-  //
-  // Example binding to R2. Learn more at https://developers.cloudflare.com/workers/runtime-apis/r2/
-  // MY_BUCKET: R2Bucket;
-  //
-  // Example binding to a Service. Learn more at https://developers.cloudflare.com/workers/runtime-apis/service-bindings/
-  // MY_SERVICE: Fetcher;
 }
 
 export default {
@@ -41,6 +29,16 @@ export default {
     env: Env,
     ctx: ExecutionContext
   ): Promise<Response> {
+    console.log("Hello, world!");
+    console.log(PineconeStore);
+    console.log(OpenAI);
+    console.log(OpenAIEmbeddings);
+    console.log(TextLoader);
+    console.log(LLMChain);
+    console.log(ChatOpenAI);
+    console.log(ChatPromptTemplate);
+    console.log(HumanMessagePromptTemplate);
+
     // Intantiate a few things to test the exports
     new OpenAI({ openAIApiKey: env.OPENAI_API_KEY });
     const emb = new OpenAIEmbeddings({ openAIApiKey: env.OPENAI_API_KEY });
