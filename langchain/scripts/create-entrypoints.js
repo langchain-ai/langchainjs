@@ -31,6 +31,12 @@ const updateJsonFile = (relativePath, updateFunction) => {
 const generateFiles = () => {
   const files = [...Object.entries(entrypoints), ["index", "index"]].flatMap(
     ([key, value]) => {
+      // TODO this would make it work for vercel edge,
+      // at the expense of possibly breaking other envs
+      // const litePath = `./dist/${entrypoints[key]}.lite.js`;
+      // const compiledPath = fs.existsSync(litePath)
+      //   ? litePath
+      //   : `./dist/${value}.js`;
       const compiledPath = `./dist/${value}.js`;
       return [
         [`${key}.cjs`, `module.exports = require('./dist/${value}.cjs');`],
@@ -78,6 +84,7 @@ const updateConfig = () => {
               node: rest,
               import: litePath,
               require: `./dist/${entrypoints[key]}.lite.cjs`,
+              "edge-light": litePath,
               default: litePath,
             };
           }

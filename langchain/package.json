@@ -279,6 +279,7 @@
       },
       "import": "./dist/agents/index.lite.js",
       "require": "./dist/agents/index.lite.cjs",
+      "edge-light": "./dist/agents/index.lite.js",
       "default": "./dist/agents/index.lite.js"
     },
     "./base_language": {
@@ -299,6 +300,7 @@
       },
       "import": "./dist/chains/index.lite.js",
       "require": "./dist/chains/index.lite.cjs",
+      "edge-light": "./dist/chains/index.lite.js",
       "default": "./dist/chains/index.lite.js"
     },
     "./embeddings": {
@@ -309,6 +311,7 @@
       },
       "import": "./dist/embeddings/index.lite.js",
       "require": "./dist/embeddings/index.lite.cjs",
+      "edge-light": "./dist/embeddings/index.lite.js",
       "default": "./dist/embeddings/index.lite.js"
     },
     "./llms": {
@@ -319,6 +322,7 @@
       },
       "import": "./dist/llms/index.lite.js",
       "require": "./dist/llms/index.lite.cjs",
+      "edge-light": "./dist/llms/index.lite.js",
       "default": "./dist/llms/index.lite.js"
     },
     "./prompts": {
@@ -329,6 +333,7 @@
       },
       "import": "./dist/prompts/index.lite.js",
       "require": "./dist/prompts/index.lite.cjs",
+      "edge-light": "./dist/prompts/index.lite.js",
       "default": "./dist/prompts/index.lite.js"
     },
     "./vectorstores": {
@@ -339,6 +344,7 @@
       },
       "import": "./dist/vectorstores/index.lite.js",
       "require": "./dist/vectorstores/index.lite.cjs",
+      "edge-light": "./dist/vectorstores/index.lite.js",
       "default": "./dist/vectorstores/index.lite.js"
     },
     "./text_splitter": {
@@ -369,6 +375,7 @@
       },
       "import": "./dist/document_loaders/index.lite.js",
       "require": "./dist/document_loaders/index.lite.cjs",
+      "edge-light": "./dist/document_loaders/index.lite.js",
       "default": "./dist/document_loaders/index.lite.js"
     },
     "./chat_models": {
