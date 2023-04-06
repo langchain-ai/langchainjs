@@ -1,7 +1,8 @@
 async function test() {
   const { default: assert } = await import("assert");
   const { OpenAI } = await import("langchain");
-  const { loadPrompt } = await import("langchain/prompts");
+  const { LLMChain } = await import("langchain/chains");
+  const { loadPrompt, ChatPromptTemplate } = await import("langchain/prompts");
   const { HNSWLib } = await import("langchain/vectorstores");
   const { OpenAIEmbeddings } = await import("langchain/embeddings");
   const { InMemoryDocstore, Document } = await import("langchain/docstore");
@@ -9,7 +10,9 @@ async function test() {
 
   // Test exports
   assert(typeof OpenAI === "function");
+  assert(typeof LLMChain === "function");
   assert(typeof loadPrompt === "function");
+  assert(typeof ChatPromptTemplate === "function");
   assert(typeof HNSWLib === "function");
 
   // Test dynamic imports of peer dependencies

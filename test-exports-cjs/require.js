@@ -1,6 +1,7 @@
 const assert = require("assert");
 const { OpenAI } = require("langchain");
-const { loadPrompt } = require("langchain/prompts");
+const { LLMChain } = require("langchain/chains");
+const { loadPrompt, ChatPromptTemplate } = require("langchain/prompts");
 const { HNSWLib } = require("langchain/vectorstores");
 const { OpenAIEmbeddings } = require("langchain/embeddings");
 const { InMemoryDocstore, Document } = require("langchain/docstore");
@@ -9,7 +10,9 @@ const { CSVLoader } = require("langchain/document_loaders");
 async function test() {
   // Test exports
   assert(typeof OpenAI === "function");
+  assert(typeof LLMChain === "function");
   assert(typeof loadPrompt === "function");
+  assert(typeof ChatPromptTemplate === "function");
   assert(typeof HNSWLib === "function");
 
   // Test dynamic imports of peer dependencies
