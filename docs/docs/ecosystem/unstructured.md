@@ -24,7 +24,7 @@ If you are running the container locally, switch the url to
 `https://api.unstructured.io/general/v0/general`.
 
 ```typescript
-import { UnstructuredLoader } from "langchain/document_loaders/unstructured.js";
+import { UnstructuredLoader } from "langchain/document_loader";
 
 const loader = new UnstructuredLoader(
   "https://api.unstructured.io/general/v0/general",
