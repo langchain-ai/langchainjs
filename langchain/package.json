@@ -270,8 +270,13 @@
     },
     "./agents": {
       "types": "./agents.d.ts",
-      "import": "./agents.js",
-      "require": "./agents.cjs"
+      "node": {
+        "import": "./agents.js",
+        "require": "./agents.cjs"
+      },
+      "import": "./dist/agents/index.lite.js",
+      "require": "./dist/agents/index.lite.cjs",
+      "default": "./dist/agents/index.lite.js"
     },
     "./base_language": {
       "types": "./base_language.d.ts",
@@ -285,8 +290,13 @@
     },
     "./chains": {
       "types": "./chains.d.ts",
-      "import": "./chains.js",
-      "require": "./chains.cjs"
+      "node": {
+        "import": "./chains.js",
+        "require": "./chains.cjs"
+      },
+      "import": "./dist/chains/index.lite.js",
+      "require": "./dist/chains/index.lite.cjs",
+      "default": "./dist/chains/index.lite.js"
     },
     "./embeddings": {
       "types": "./embeddings.d.ts",
@@ -310,8 +320,13 @@
     },
     "./prompts": {
       "types": "./prompts.d.ts",
-      "import": "./prompts.js",
-      "require": "./prompts.cjs"
+      "node": {
+        "import": "./prompts.js",
+        "require": "./prompts.cjs"
+      },
+      "import": "./dist/prompts/index.lite.js",
+      "require": "./dist/prompts/index.lite.cjs",
+      "default": "./dist/prompts/index.lite.js"
     },
     "./vectorstores": {
       "types": "./vectorstores.d.ts",
