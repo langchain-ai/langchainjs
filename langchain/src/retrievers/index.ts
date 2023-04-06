@@ -5,3 +5,4 @@ export {
   SupabaseHybridSearchParams,
 } from "./supabase-hybrid-search.js";
 export { RemoteLangChainRetriever } from "./remote/remote-retriever.js";
+export { MetalRetriever } from "./metal.js";

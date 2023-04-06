@@ -2506,6 +2506,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@getmetal/metal-sdk@npm:^1.0.12":
+  version: 1.0.12
+  resolution: "@getmetal/metal-sdk@npm:1.0.12"
+  dependencies:
+    axios: ^1.3.2
+  checksum: 46e3f7876b2aaad759c32a348df078c093fae89205e7050040f80300d04a0c7f1973562d1b9df74b453e2aad316fbfa5d88565e38b33c285d474cdb0356f18f3
+  languageName: node
+  linkType: hard
+
 "@hapi/hoek@npm:^9.0.0":
   version: 9.3.0
   resolution: "@hapi/hoek@npm:9.3.0"
@@ -5049,6 +5058,17 @@ __metadata:
   dependencies:
     follow-redirects: ^1.14.8
   checksum: d9eb58ff4bc0b36a04783fc9ff760e9245c829a5a1052ee7ca6013410d427036b1d10d04e7380c02f3508c5eaf3485b1ae67bd2adbfec3683704745c8d7a6e1a
+  languageName: node
+  linkType: hard
+
+"axios@npm:^1.3.2":
+  version: 1.3.4
+  resolution: "axios@npm:1.3.4"
+  dependencies:
+    follow-redirects: ^1.15.0
+    form-data: ^4.0.0
+    proxy-from-env: ^1.1.0
+  checksum: 7440edefcf8498bc3cdf39de00443e8101f249972c83b739c6e880d9d669fea9486372dbe8739e88b3bf8bb1ad15f6106693f206f078f4516fe8fd47b1c3093c
   languageName: node
   linkType: hard
 
@@ -8692,7 +8712,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"follow-redirects@npm:^1.0.0, follow-redirects@npm:^1.14.7, follow-redirects@npm:^1.14.8":
+"follow-redirects@npm:^1.0.0, follow-redirects@npm:^1.14.7, follow-redirects@npm:^1.14.8, follow-redirects@npm:^1.15.0":
   version: 1.15.2
   resolution: "follow-redirects@npm:1.15.2"
   peerDependenciesMeta:
@@ -11387,6 +11407,7 @@ __metadata:
   resolution: "langchain-examples@workspace:examples"
   dependencies:
     "@dqbd/tiktoken": ^1.0.2
+    "@getmetal/metal-sdk": ^1.0.12
     "@pinecone-database/pinecone": ^0.0.10
     "@supabase/supabase-js": ^2.10.0
     "@tsconfig/recommended": ^1.0.2
@@ -11421,6 +11442,7 @@ __metadata:
     "@dqbd/tiktoken": ^1.0.2
     "@faker-js/faker": ^7.6.0
     "@fortaine/fetch-event-source": ^3.0.6
+    "@getmetal/metal-sdk": ^1.0.12
     "@huggingface/inference": ^1.5.1
     "@jest/globals": ^29.5.0
     "@pinecone-database/pinecone": ^0.0.10
@@ -11479,6 +11501,7 @@ __metadata:
     zod: ^3.21.4
   peerDependencies:
     "@dqbd/tiktoken": ^1.0.2
+    "@getmetal/metal-sdk": "*"
     "@huggingface/inference": ^1.5.1
     "@pinecone-database/pinecone": ^0.0.10
     "@supabase/supabase-js": ^2.10.0
@@ -11498,6 +11521,8 @@ __metadata:
     typeorm: ^0.3.12
   peerDependenciesMeta:
     "@dqbd/tiktoken":
+      optional: true
+    "@getmetal/metal-sdk":
       optional: true
     "@huggingface/inference":
       optional: true
@@ -14237,7 +14262,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"proxy-from-env@npm:1.1.0, proxy-from-env@npm:^1.0.0":
+"proxy-from-env@npm:1.1.0, proxy-from-env@npm:^1.0.0, proxy-from-env@npm:^1.1.0":
   version: 1.1.0
   resolution: "proxy-from-env@npm:1.1.0"
   checksum: ed7fcc2ba0a33404958e34d95d18638249a68c430e30fcb6c478497d72739ba64ce9810a24f53a7d921d0c065e5b78e3822759800698167256b04659366ca4d4
