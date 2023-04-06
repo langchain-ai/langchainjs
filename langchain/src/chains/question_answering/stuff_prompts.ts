@@ -1,12 +1,11 @@
 /* eslint-disable tree-shaking/no-side-effects-in-initialization */
 /* eslint-disable spaced-comment */
+import { PromptTemplate } from "../../prompts/prompt.js";
 import {
-  PromptTemplate,
   ChatPromptTemplate,
   SystemMessagePromptTemplate,
   HumanMessagePromptTemplate,
-} from "../../prompts/index.js";
-
+} from "../../prompts/chat.js";
 import { ConditionalPromptSelector, isChatModel } from "../prompt_selector.js";
 
 export const DEFAULT_QA_PROMPT = /*#__PURE__*/ new PromptTemplate({

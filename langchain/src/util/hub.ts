@@ -1,7 +1,19 @@
 import { backOff } from "exponential-backoff";
 
-import { fetchWithTimeout, FileLoader, LoadValues } from "./index.js";
+import { FileLoader, LoadValues } from "./load.js";
 import { extname } from "./extname.js";
+
+const fetchWithTimeout = async (
+  url: string,
+  init: Omit<RequestInit, "signal"> & { timeout: number }
+) => {
+  const { timeout, ...rest } = init;
+  const res = await fetch(url, {
+    ...rest,
+    signal: AbortSignal.timeout(timeout),
+  });
+  return res;
+};
 
 const HUB_PATH_REGEX = /lc(@[^:]+)?:\/\/(.*)/;
 

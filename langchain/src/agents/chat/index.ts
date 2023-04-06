@@ -1,10 +1,10 @@
-import { LLMChain } from "../../chains/index.js";
+import { LLMChain } from "../../chains/llm_chain.js";
 import { Agent } from "../agent.js";
 import {
   SystemMessagePromptTemplate,
   HumanMessagePromptTemplate,
   ChatPromptTemplate,
-} from "../../prompts/index.js";
+} from "../../prompts/chat.js";
 import { PREFIX, SUFFIX, FORMAT_INSTRUCTIONS } from "./prompt.js";
 import { BaseLanguageModel } from "../../base_language/index.js";
 import { AgentStep } from "../../schema/index.js";

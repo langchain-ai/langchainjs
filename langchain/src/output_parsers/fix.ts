@@ -1,5 +1,5 @@
 import { BaseOutputParser, OutputParserException } from "../schema/index.js";
-import { BasePromptTemplate } from "../prompts/index.js";
+import { BasePromptTemplate } from "../prompts/base.js";
 import { LLMChain } from "../chains/llm_chain.js";
 import { BaseLanguageModel } from "../base_language/index.js";
 import { NAIVE_FIX_PROMPT } from "./prompts.js";
