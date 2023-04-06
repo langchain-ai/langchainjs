@@ -59,7 +59,7 @@ export class MongoVectorStore extends VectorStore {
 
     pipeline.push({
       $search: {
-        index: "default",
+        index: this.indexName,
         knnBeta: {
           path: "embedding",
           vector: query,
