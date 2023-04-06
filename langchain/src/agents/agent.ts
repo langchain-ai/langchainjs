@@ -103,6 +103,7 @@ export class LLMSingleActionAgent extends BaseSingleActionAgent {
     this.stop = input.stop;
     this.llmChain = input.llmChain;
     this.outputParser = input.outputParser;
+    this.stop = input.stop;
   }
 
   get inputKeys(): string[] {
