@@ -71,15 +71,15 @@ export abstract class BasePromptTemplate implements BasePromptTemplateInput {
   ): Promise<InputValues> {
     const partialVariables = this.partialVariables ?? {};
     const partialValues: InputValues = {};
-    for (let i = 0; i < Object.keys(partialVariables).length; i += 1) {
-      const key = Object.keys(partialVariables)[i];
-      const value = partialVariables[key];
+
+    for (const [key, value] of Object.entries(partialVariables)) {
       if (typeof value === "string") {
         partialValues[key] = value;
       } else {
         partialValues[key] = await value();
       }
     }
+
     const allKwargs = { ...partialValues, ...userVariables };
     return allKwargs;
   }
