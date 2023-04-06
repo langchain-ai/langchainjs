@@ -297,7 +297,7 @@ export class RefineDocumentsChain
     return inputs;
   }
 
-  _constructRefineInputs(doc: Document, res: ChainValues) {
+  _constructRefineInputs(doc: Document, res: string) {
     const baseInfo: Record<string, unknown> = {
       page_content: doc.pageContent,
       ...doc.metadata,
@@ -324,18 +324,18 @@ export class RefineDocumentsChain
     const currentDocs = docs as Document[];
 
     const initialInputs = this._constructInitialInputs(currentDocs, rest);
-    let res = await this.llmChain.call({ ...initialInputs });
+    let res = await this.llmChain.predict({ ...initialInputs });
 
     const refineSteps = [res];
 
     for (let i = 1; i < currentDocs.length; i += 1) {
       const refineInputs = this._constructRefineInputs(currentDocs[i], res);
       const inputs = { ...refineInputs, ...rest };
-      res = await this.refineLLMChain.call({ ...inputs });
+      res = await this.refineLLMChain.predict({ ...inputs });
       refineSteps.push(res);
     }
 
-    return res;
+    return { [this.outputKey]: res };
   }
 
   _chainType() {
