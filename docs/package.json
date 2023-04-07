@@ -14,6 +14,7 @@
     "write-heading-ids": "docusaurus write-heading-ids",
     "lint": "eslint --cache \"**/*.js\"",
     "lint:fix": "yarn lint --fix",
+    "precommit": "lint-staged",
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,md,mdx}\"",
     "format:check": "prettier --check \"**/*.{js,jsx,ts,tsx,md,mdx}\""
   },

@@ -11478,7 +11478,6 @@ __metadata:
     is-binary-path: ^2.1.0
     jest: ^29.5.0
     jsonpointer: ^5.0.1
-    lint-staged: ^13.1.1
     mammoth: ^1.5.1
     object-hash: ^3.0.0
     openai: ^3.2.0
