@@ -28,32 +28,31 @@ export const run = async () => {
   const response = await model.call(input);
 
   console.log(input);
+  /*
+  Answer the users question as best as possible.
+  For your first output: The output should be a markdown code snippet formatted in the following schema:
 
-    /*
-    Answer the users question as best as possible.
-    For your first output: The output should be a markdown code snippet formatted in the following schema:
+  ```json
+  {
+      "answer": string // answer to the user's question
+      "source": string // source used to answer the user's question, should be a website.
+  }
+  ```
+  Complete that output fully. Then produce another output: Your response should match the following regex: //Confidence: (A|B|C), Explanation: (.*)//
 
-    ```json
-    {
-        "answer": string // answer to the user's question
-        "source": string // source used to answer the user's question, should be a website.
-    }
-    ```
-    Complete that output fully. Then produce another output: Your response should match the following regex: //Confidence: (A|B|C), Explanation: (.*)//
+  What is the capital of France?
+  */
 
-    What is the capital of France?
-    */
-
-    console.log(response);
-    /*
-    * ```json
-    {
-        "answer": "Paris",
-        "source": "https://en.wikipedia.org/wiki/France"
-    }
-    ```
-    //Confidence: A, Explanation: Paris is the capital of France according to Wikipedia.//
-    */
+  console.log(response);
+  /*
+  ```json
+  {
+      "answer": "Paris",
+      "source": "https://en.wikipedia.org/wiki/France"
+  }
+  ```
+  //Confidence: A, Explanation: Paris is the capital of France according to Wikipedia.//
+  */
 
   console.log(await parser.parse(response));
   /*
