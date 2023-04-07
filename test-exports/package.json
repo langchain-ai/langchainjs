@@ -3,12 +3,16 @@
   "version": "0.0.0",
   "private": true,
   "description": "Tests for the things exported by the langchain package",
-  "main": "./index.js",
+  "main": "./index.mjs",
   "type": "module",
   "scripts": {
-    "test": "node ./index.mjs && node ./index.cjs && tsc",
+    "test": "npm run test:esm && npm run test:cjs && npm run test:cjs:import && npm run test:ts",
+    "test:esm": "node ./index.js",
+    "test:cjs": "node ./require.cjs",
+    "test:cjs:import": "node ./import.cjs",
+    "test:ts": "tsc && node dist/index.js",
     "format": "prettier --write \"**/*.ts\"",
-    "format:check": "prettier --list-different \"**/*.ts\""
+    "format:check": "prettier --check \"**/*.ts\""
   },
   "author": "Langchain",
   "license": "MIT",

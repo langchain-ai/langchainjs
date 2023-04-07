@@ -1,5 +1,5 @@
 import { expect, test } from "@jest/globals";
-import path from "node:path";
+import * as path from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadPrompt } from "../load.js";
 

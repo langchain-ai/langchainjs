@@ -1,16 +1,18 @@
 import { LLM, BaseLLMParams } from "./base.js";
 
-interface CohereInput {
+interface CohereInput extends BaseLLMParams {
   /** Sampling temperature to use */
-  temperature: number;
+  temperature?: number;
 
   /**
    * Maximum number of tokens to generate in the completion.
    */
-  maxTokens: number;
+  maxTokens?: number;
 
   /** Model to use */
-  model: string;
+  model?: string;
+
+  apiKey?: string;
 }
 
 export class Cohere extends LLM implements CohereInput {
@@ -22,13 +24,19 @@ export class Cohere extends LLM implements CohereInput {
 
   apiKey: string;
 
-  constructor(fields?: Partial<CohereInput> & BaseLLMParams) {
+  constructor(fields?: CohereInput) {
     super(fields ?? {});
 
-    const apiKey = process.env.COHERE_API_KEY;
+    const apiKey =
+      fields?.apiKey ?? typeof process !== "undefined"
+        ? // eslint-disable-next-line no-process-env
+          process.env.COHERE_API_KEY
+        : undefined;
 
     if (!apiKey) {
-      throw new Error("Please set the COHERE_API_KEY environment variable");
+      throw new Error(
+        "Please set the COHERE_API_KEY environment variable or pass it to the constructor as the apiKey field."
+      );
     }
 
     this.apiKey = apiKey;

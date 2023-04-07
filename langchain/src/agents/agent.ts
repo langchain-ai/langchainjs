@@ -100,6 +100,7 @@ export class LLMSingleActionAgent extends BaseSingleActionAgent {
 
   constructor(input: LLMSingleActionAgentInput) {
     super();
+    this.stop = input.stop;
     this.llmChain = input.llmChain;
     this.outputParser = input.outputParser;
   }

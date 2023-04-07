@@ -2506,6 +2506,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@getmetal/metal-sdk@npm:^1.0.12":
+  version: 1.0.12
+  resolution: "@getmetal/metal-sdk@npm:1.0.12"
+  dependencies:
+    axios: ^1.3.2
+  checksum: 46e3f7876b2aaad759c32a348df078c093fae89205e7050040f80300d04a0c7f1973562d1b9df74b453e2aad316fbfa5d88565e38b33c285d474cdb0356f18f3
+  languageName: node
+  linkType: hard
+
 "@hapi/hoek@npm:^9.0.0":
   version: 9.3.0
   resolution: "@hapi/hoek@npm:9.3.0"
@@ -3729,10 +3738,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/d3-dsv@npm:^3":
-  version: 3.0.1
-  resolution: "@types/d3-dsv@npm:3.0.1"
-  checksum: f3dbb3c994b1564b5cbeb2991fa9a0e0cee82e93e2d304f2e643b1808818493c6bb11da5503562e21ba6f6cced0faccc8d9cd5005e9065af8e4b6b4477cc8982
+"@types/d3-dsv@npm:^2":
+  version: 2.0.3
+  resolution: "@types/d3-dsv@npm:2.0.3"
+  checksum: 82b8aa6409643dbc624e0798a18e16f94aa4676f8e3949e0dc7992d898855e1d6230416c3fbf6d3d3314252e4027176525487dc030abb15031ef8db5b2c30f7a
   languageName: node
   linkType: hard
 
@@ -5052,7 +5061,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"axios@npm:^1.3.4":
+"axios@npm:^1.3.2":
   version: 1.3.4
   resolution: "axios@npm:1.3.4"
   dependencies:
@@ -6202,10 +6211,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"commander@npm:7, commander@npm:^7.2.0":
-  version: 7.2.0
-  resolution: "commander@npm:7.2.0"
-  checksum: 53501cbeee61d5157546c0bef0fedb6cdfc763a882136284bed9a07225f09a14b82d2a84e7637edfd1a679fb35ed9502fd58ef1d091e6287f60d790147f68ddc
+"commander@npm:2, commander@npm:^2.20.0":
+  version: 2.20.3
+  resolution: "commander@npm:2.20.3"
+  checksum: ab8c07884e42c3a8dbc5dd9592c606176c7eb5c1ca5ff274bcf907039b2c41de3626f684ea75ccf4d361ba004bbaff1f577d5384c155f3871e456bdf27becf9e
   languageName: node
   linkType: hard
 
@@ -6216,17 +6225,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"commander@npm:^2.20.0":
-  version: 2.20.3
-  resolution: "commander@npm:2.20.3"
-  checksum: ab8c07884e42c3a8dbc5dd9592c606176c7eb5c1ca5ff274bcf907039b2c41de3626f684ea75ccf4d361ba004bbaff1f577d5384c155f3871e456bdf27becf9e
-  languageName: node
-  linkType: hard
-
 "commander@npm:^5.1.0":
   version: 5.1.0
   resolution: "commander@npm:5.1.0"
   checksum: 0b7fec1712fbcc6230fcb161d8d73b4730fa91a21dc089515489402ad78810547683f058e2a9835929c212fead1d6a6ade70db28bbb03edbc2829a9ab7d69447
+  languageName: node
+  linkType: hard
+
+"commander@npm:^7.2.0":
+  version: 7.2.0
+  resolution: "commander@npm:7.2.0"
+  checksum: 53501cbeee61d5157546c0bef0fedb6cdfc763a882136284bed9a07225f09a14b82d2a84e7637edfd1a679fb35ed9502fd58ef1d091e6287f60d790147f68ddc
   languageName: node
   linkType: hard
 
@@ -6747,24 +6756,24 @@ __metadata:
   languageName: node
   linkType: hard
 
-"d3-dsv@npm:^3.0.1":
-  version: 3.0.1
-  resolution: "d3-dsv@npm:3.0.1"
+"d3-dsv@npm:^2.0.0":
+  version: 2.0.0
+  resolution: "d3-dsv@npm:2.0.0"
   dependencies:
-    commander: 7
-    iconv-lite: 0.6
+    commander: 2
+    iconv-lite: 0.4
     rw: 1
   bin:
-    csv2json: bin/dsv2json.js
-    csv2tsv: bin/dsv2dsv.js
-    dsv2dsv: bin/dsv2dsv.js
-    dsv2json: bin/dsv2json.js
-    json2csv: bin/json2dsv.js
-    json2dsv: bin/json2dsv.js
-    json2tsv: bin/json2dsv.js
-    tsv2csv: bin/dsv2dsv.js
-    tsv2json: bin/dsv2json.js
-  checksum: 5fc0723647269d5dccd181d74f2265920ab368a2868b0b4f55ffa2fecdfb7814390ea28622cd61ee5d9594ab262879509059544e9f815c54fe76fbfb4ffa4c8a
+    csv2json: bin/dsv2json
+    csv2tsv: bin/dsv2dsv
+    dsv2dsv: bin/dsv2dsv
+    dsv2json: bin/dsv2json
+    json2csv: bin/json2dsv
+    json2dsv: bin/json2dsv
+    json2tsv: bin/json2dsv
+    tsv2csv: bin/dsv2dsv
+    tsv2json: bin/dsv2json
+  checksum: 01b12d81e4ca3996f2e921388b1929c358a39711bf250f2c53dd0e452b80465ebe31ddb58a4064f160322dec7aaf2ceae1a249874af989404705fcfdf1e9b64d
   languageName: node
   linkType: hard
 
@@ -8215,7 +8224,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eventemitter3@npm:^4.0.0, eventemitter3@npm:^4.0.7":
+"eventemitter3@npm:^4.0.0, eventemitter3@npm:^4.0.4":
   version: 4.0.7
   resolution: "eventemitter3@npm:4.0.7"
   checksum: 1875311c42fcfe9c707b2712c32664a245629b42bb0a5a84439762dd0fd637fc54d078155ea83c2af9e0323c9ac13687e03cfba79b03af9f40c89b4960099374
@@ -9815,7 +9824,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"iconv-lite@npm:0.4.24, iconv-lite@npm:^0.4.24":
+"iconv-lite@npm:0.4, iconv-lite@npm:0.4.24, iconv-lite@npm:^0.4.24":
   version: 0.4.24
   resolution: "iconv-lite@npm:0.4.24"
   dependencies:
@@ -9824,7 +9833,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"iconv-lite@npm:0.6, iconv-lite@npm:^0.6.2":
+"iconv-lite@npm:^0.6.2":
   version: 0.6.3
   resolution: "iconv-lite@npm:0.6.3"
   dependencies:
@@ -11398,6 +11407,7 @@ __metadata:
   resolution: "langchain-examples@workspace:examples"
   dependencies:
     "@dqbd/tiktoken": ^1.0.2
+    "@getmetal/metal-sdk": ^1.0.12
     "@pinecone-database/pinecone": ^0.0.10
     "@supabase/supabase-js": ^2.10.0
     "@tsconfig/recommended": ^1.0.2
@@ -11432,12 +11442,13 @@ __metadata:
     "@dqbd/tiktoken": ^1.0.2
     "@faker-js/faker": ^7.6.0
     "@fortaine/fetch-event-source": ^3.0.6
+    "@getmetal/metal-sdk": ^1.0.12
     "@huggingface/inference": ^1.5.1
     "@jest/globals": ^29.5.0
     "@pinecone-database/pinecone": ^0.0.10
     "@supabase/supabase-js": ^2.10.0
     "@tsconfig/recommended": ^1.0.2
-    "@types/d3-dsv": ^3
+    "@types/d3-dsv": ^2
     "@types/flat": ^5.0.2
     "@types/html-to-text": ^9
     "@types/object-hash": ^3.0.2
@@ -11449,7 +11460,7 @@ __metadata:
     browser-or-node: ^2.1.1
     cheerio: ^1.0.0-rc.12
     cohere-ai: ^5.0.2
-    d3-dsv: ^3.0.1
+    d3-dsv: ^2.0.0
     dotenv: ^16.0.3
     dpdm: ^3.12.0
     epub2: ^3.0.1
@@ -11471,13 +11482,13 @@ __metadata:
     mammoth: ^1.5.1
     object-hash: ^3.0.0
     openai: ^3.2.0
-    p-queue: ^7.3.4
+    p-queue: ^6.6.2
     pdfjs-dist: ^3.4.120
     prettier: ^2.8.3
     puppeteer: ^19.7.2
     redis: ^4.6.4
     release-it: ^15.10.1
-    replicate: ^0.6.0
+    replicate: ^0.9.0
     rollup: ^3.19.1
     sqlite3: ^5.1.4
     srt-parser-2: ^1.2.2
@@ -11490,13 +11501,14 @@ __metadata:
     zod: ^3.21.4
   peerDependencies:
     "@dqbd/tiktoken": ^1.0.2
+    "@getmetal/metal-sdk": "*"
     "@huggingface/inference": ^1.5.1
     "@pinecone-database/pinecone": ^0.0.10
     "@supabase/supabase-js": ^2.10.0
     cheerio: ^1.0.0-rc.12
     chromadb: ^1.3.0
     cohere-ai: ^5.0.2
-    d3-dsv: ^3.0.1
+    d3-dsv: ^2.0.0
     epub2: ^3.0.1
     hnswlib-node: ^1.4.2
     html-to-text: ^9.0.5
@@ -11504,11 +11516,13 @@ __metadata:
     pdfjs-dist: ^3.4.120
     puppeteer: ^19.7.2
     redis: ^4.6.4
-    replicate: ^0.6.0
+    replicate: ^0.9.0
     srt-parser-2: ^1.2.2
     typeorm: ^0.3.12
   peerDependenciesMeta:
     "@dqbd/tiktoken":
+      optional: true
+    "@getmetal/metal-sdk":
       optional: true
     "@huggingface/inference":
       optional: true
@@ -13122,6 +13136,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"p-finally@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "p-finally@npm:1.0.0"
+  checksum: 93a654c53dc805dd5b5891bab16eb0ea46db8f66c4bfd99336ae929323b1af2b70a8b0654f8f1eae924b2b73d037031366d645f1fd18b3d30cbd15950cc4b1d4
+  languageName: node
+  linkType: hard
+
 "p-limit@npm:^2.0.0, p-limit@npm:^2.2.0":
   version: 2.3.0
   resolution: "p-limit@npm:2.3.0"
@@ -13176,13 +13197,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"p-queue@npm:^7.3.4":
-  version: 7.3.4
-  resolution: "p-queue@npm:7.3.4"
+"p-queue@npm:^6.6.2":
+  version: 6.6.2
+  resolution: "p-queue@npm:6.6.2"
   dependencies:
-    eventemitter3: ^4.0.7
-    p-timeout: ^5.0.2
-  checksum: a21b8a4dd75f64a4988e4468cc344d1b45132506ddd2c771932d3de446d108ee68713b629e0d3f0809c227bc10eafc613edde6ae741d9f60db89b6031e40921c
+    eventemitter3: ^4.0.4
+    p-timeout: ^3.2.0
+  checksum: 832642fcc4ab6477b43e6d7c30209ab10952969ed211c6d6f2931be8a4f9935e3578c72e8cce053dc34f2eb6941a408a2c516a54904e989851a1a209cf19761c
   languageName: node
   linkType: hard
 
@@ -13196,10 +13217,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"p-timeout@npm:^5.0.2":
-  version: 5.1.0
-  resolution: "p-timeout@npm:5.1.0"
-  checksum: f5cd4e17301ff1ff1d8dbf2817df0ad88c6bba99349fc24d8d181827176ad4f8aca649190b8a5b1a428dfd6ddc091af4606835d3e0cb0656e04045da5c9e270c
+"p-timeout@npm:^3.2.0":
+  version: 3.2.0
+  resolution: "p-timeout@npm:3.2.0"
+  dependencies:
+    p-finally: ^1.0.0
+  checksum: 3dd0eaa048780a6f23e5855df3dd45c7beacff1f820476c1d0d1bcd6648e3298752ba2c877aa1c92f6453c7dd23faaf13d9f5149fc14c0598a142e2c5e8d649c
   languageName: node
   linkType: hard
 
@@ -14985,12 +15008,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"replicate@npm:^0.6.0":
-  version: 0.6.0
-  resolution: "replicate@npm:0.6.0"
-  dependencies:
-    axios: ^1.3.4
-  checksum: 66a9120131eb2d12f490cfb2239a198e0c0ee46ea065f5850fa7b05ea0b4927552142fb5bfb3ab27f336984fd1f0d7e4696ab06605bf31355fdfc18b53e3f072
+"replicate@npm:^0.9.0":
+  version: 0.9.0
+  resolution: "replicate@npm:0.9.0"
+  checksum: 6fabacd71d5af1ccbf97e8bd5364003d693efbaa760c796dbddaae225109f9db3696e288115667010746c39578aa5021567d55e29b88300a67355eb6ebef8437
   languageName: node
   linkType: hard
 
@@ -16376,6 +16397,17 @@ __metadata:
   checksum: 3b34a3d77165a2cb82b34014b3aba93b1c4637a5011807557dc2f3da826c59975a5ccad765721c4648b39817e3472789f9b0fa98fc854c5c1c7a1e632aacdc28
   languageName: node
   linkType: hard
+
+"test-exports-cjs@workspace:test-exports-cjs":
+  version: 0.0.0-use.local
+  resolution: "test-exports-cjs@workspace:test-exports-cjs"
+  dependencies:
+    "@tsconfig/recommended": ^1.0.2
+    langchain: "workspace:*"
+    prettier: ^2.8.3
+    typescript: ^4.9.5
+  languageName: unknown
+  linkType: soft
 
 "test-exports@workspace:test-exports":
   version: 0.0.0-use.local

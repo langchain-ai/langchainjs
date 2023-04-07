@@ -11,7 +11,10 @@ class BingSerpAPI extends Tool {
   params: Record<string, string>;
 
   constructor(
-    apiKey: string | undefined = process.env.BingApiKey,
+    apiKey: string | undefined = typeof process !== "undefined"
+      ? // eslint-disable-next-line no-process-env
+        process.env.BingApiKey
+      : undefined,
     params: Record<string, string> = {}
   ) {
     super();

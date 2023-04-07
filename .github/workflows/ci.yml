@@ -73,7 +73,5 @@ jobs:
         run: yarn install --immutable
       - name: Build
         run: yarn run build --filter="!docs"
-      - name: Test exports
-        run: yarn workspace test-exports run test
-      - name: Test langchain
-        run: yarn workspace langchain run test
+      - name: Test
+        run: yarn run test:unit

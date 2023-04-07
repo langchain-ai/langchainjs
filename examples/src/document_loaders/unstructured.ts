@@ -2,7 +2,7 @@ import { UnstructuredLoader } from "langchain/document_loaders";
 
 export const run = async () => {
   const loader = new UnstructuredLoader(
-    "http://localhost:8000/general/v0.0.4/general",
+    "http://localhost:8000/general/v0/general",
     "langchain/src/document_loaders/tests/example_data/example.txt"
   );
   const docs = await loader.load();
