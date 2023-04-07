@@ -7,7 +7,7 @@ import { Embeddings } from "../embeddings/base.js";
 import { Document } from "../document.js";
 
 // eslint-disable-next-line @typescript-eslint/ban-types, @typescript-eslint/no-explicit-any
-type PineconeMetadata = Record<string, any>;
+export type PineconeMetadata = Record<string, any>;
 
 export interface PineconeLibArgs {
   pineconeIndex: VectorOperationsApi;
