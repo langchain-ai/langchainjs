@@ -5826,6 +5826,19 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@opensearch-project/opensearch@npm:^2.2.0":
+  version: 2.2.0
+  resolution: "@opensearch-project/opensearch@npm:2.2.0"
+  dependencies:
+    aws4: ^1.11.0
+    debug: ^4.3.1
+    hpagent: ^1.2.0
+    ms: ^2.1.3
+    secure-json-parse: ^2.4.0
+  checksum: cceb5bb2c194a7d4bfab3c1b4a3230ea1457ae8976f39bb9e0c5e0067dc450a418a4649536988f0d48a746d7d3ed2002c32d9fde48dfc3112158e964bafa6e76
+  languageName: node
+  linkType: hard
+
 "@pinecone-database/pinecone@npm:^0.0.12":
   version: 0.0.12
   resolution: "@pinecone-database/pinecone@npm:0.0.12"
@@ -8703,6 +8716,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"aws4@npm:^1.11.0":
+  version: 1.12.0
+  resolution: "aws4@npm:1.12.0"
+  checksum: 68f79708ac7c335992730bf638286a3ee0a645cf12575d557860100767c500c08b30e24726b9f03265d74116417f628af78509e1333575e9f8d52a80edfe8cbc
+  languageName: node
+  linkType: hard
+
 "axe-core@npm:^4.6.2":
   version: 4.6.3
   resolution: "axe-core@npm:4.6.3"
@@ -10947,7 +10967,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"debug@npm:4, debug@npm:4.3.4, debug@npm:^4.1.0, debug@npm:^4.1.1, debug@npm:^4.3.2, debug@npm:^4.3.3, debug@npm:^4.3.4":
+"debug@npm:4, debug@npm:4.3.4, debug@npm:^4.1.0, debug@npm:^4.1.1, debug@npm:^4.3.1, debug@npm:^4.3.2, debug@npm:^4.3.3, debug@npm:^4.3.4":
   version: 4.3.4
   resolution: "debug@npm:4.3.4"
   dependencies:
@@ -14410,25 +14430,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"html-encoding-sniffer@npm:^2.0.1":
-  version: 2.0.1
-  resolution: "html-encoding-sniffer@npm:2.0.1"
-  dependencies:
-    whatwg-encoding: ^1.0.5
-  checksum: bf30cce461015ed7e365736fcd6a3063c7bc016a91f74398ef6158886970a96333938f7c02417ab3c12aa82e3e53b40822145facccb9ddfbcdc15a879ae4d7ba
+"hpagent@npm:^1.2.0":
+  version: 1.2.0
+  resolution: "hpagent@npm:1.2.0"
+  checksum: b029da695edae438cee4da2a437386f9db4ac27b3ceb7306d02e1b586c9c194741ed2e943c8a222e0cfefaf27ee3f863aca7ba1721b0950a2a19bf25bc0d85e2
   languageName: node
   linkType: hard
 
-"html-encoding-sniffer@npm:^3.0.0":
-  version: 3.0.0
-  resolution: "html-encoding-sniffer@npm:3.0.0"
-  dependencies:
-    whatwg-encoding: ^2.0.0
-  checksum: 8d806aa00487e279e5ccb573366a951a9f68f65c90298eac9c3a2b440a7ffe46615aff2995a2f61c6746c639234e6179a97e18ca5ccbbf93d3725ef2099a4502
-  languageName: node
-  linkType: hard
-
-"html-entities@npm:^2.1.0, html-entities@npm:^2.3.2":
+"html-entities@npm:^2.3.2":
   version: 2.3.3
   resolution: "html-entities@npm:2.3.3"
   checksum: 92521501da8aa5f66fee27f0f022d6e9ceae62667dae93aa6a2f636afa71ad530b7fb24a18d4d6c124c9885970cac5f8a52dbf1731741161002816ae43f98196
@@ -17017,6 +17026,39 @@ __metadata:
   languageName: node
   linkType: hard
 
+"langchain-examples@workspace:examples":
+  version: 0.0.0-use.local
+  resolution: "langchain-examples@workspace:examples"
+  dependencies:
+    "@dqbd/tiktoken": ^1.0.2
+    "@getmetal/metal-sdk": ^1.0.12
+    "@opensearch-project/opensearch": ^2.2.0
+    "@pinecone-database/pinecone": ^0.0.10
+    "@prisma/client": ^4.11.0
+    "@supabase/supabase-js": ^2.10.0
+    "@tsconfig/recommended": ^1.0.2
+    "@types/js-yaml": ^4
+    "@typescript-eslint/eslint-plugin": ^5.51.0
+    "@typescript-eslint/parser": ^5.51.0
+    chromadb: ^1.3.0
+    dotenv: ^16.0.3
+    eslint: ^8.33.0
+    eslint-config-airbnb-base: ^15.0.0
+    eslint-config-prettier: ^8.6.0
+    eslint-plugin-import: ^2.27.5
+    eslint-plugin-prettier: ^4.2.1
+    js-yaml: ^4.1.0
+    langchain: "workspace:*"
+    prettier: ^2.8.3
+    prisma: ^4.11.0
+    sqlite3: ^5.1.4
+    tsx: ^3.12.3
+    typeorm: ^0.3.12
+    typescript: ^4.9.5
+    zod: ^3.21.4
+  languageName: unknown
+  linkType: soft
+
 "langchain@workspace:*, langchain@workspace:langchain":
   version: 0.0.0-use.local
   resolution: "langchain@workspace:langchain"
@@ -17028,7 +17070,8 @@ __metadata:
     "@getmetal/metal-sdk": ^1.0.12
     "@huggingface/inference": ^1.5.1
     "@jest/globals": ^29.5.0
-    "@pinecone-database/pinecone": ^0.0.12
+    "@opensearch-project/opensearch": ^2.2.0
+    "@pinecone-database/pinecone": ^0.0.10
     "@supabase/supabase-js": ^2.10.0
     "@tsconfig/recommended": ^1.0.2
     "@types/d3-dsv": ^2
@@ -17087,7 +17130,8 @@ __metadata:
     "@aws-sdk/client-s3": ^3.310.0
     "@getmetal/metal-sdk": "*"
     "@huggingface/inference": ^1.5.1
-    "@pinecone-database/pinecone": "*"
+    "@opensearch-project/opensearch": "*"
+    "@pinecone-database/pinecone": ^0.0.10
     "@supabase/supabase-js": ^2.10.0
     "@zilliz/milvus2-sdk-node": ^2.2.0
     cheerio: ^1.0.0-rc.12
@@ -18321,7 +18365,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ms@npm:2.1.3, ms@npm:^2.0.0, ms@npm:^2.1.1":
+"ms@npm:2.1.3, ms@npm:^2.0.0, ms@npm:^2.1.1, ms@npm:^2.1.3":
   version: 2.1.3
   resolution: "ms@npm:2.1.3"
   checksum: aa92de608021b242401676e35cfa5aa42dd70cbdc082b916da7fb925c542173e36bce97ea3e804923fe92c0ad991434e4a38327e15a1b5b5f945d66df615ae6d
@@ -22387,6 +22431,13 @@ __metadata:
     extend-shallow: ^2.0.1
     kind-of: ^6.0.0
   checksum: 3cc4131705493b2955729b075dcf562359bba66183debb0332752dc9cad35616f6da7a23e42b6cab45cd2e4bb5cda113e9e84c8f05aee77adb6b0289a0229101
+  languageName: node
+  linkType: hard
+
+"secure-json-parse@npm:^2.4.0":
+  version: 2.7.0
+  resolution: "secure-json-parse@npm:2.7.0"
+  checksum: d9d7d5a01fc6db6115744ba23cf9e67ecfe8c524d771537c062ee05ad5c11b64c730bc58c7f33f60bd6877f96b86f0ceb9ea29644e4040cb757f6912d4dd6737
   languageName: node
   linkType: hard
 
