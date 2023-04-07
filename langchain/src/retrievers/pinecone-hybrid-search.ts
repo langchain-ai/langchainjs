@@ -80,7 +80,9 @@ export class PineconeHybridSearchRetriever extends BaseRetriever {
         metadata: meta[idx],
       }));
 
-      await this.pineconeIndex.upsert({ upsertRequest: { vectors } });
+      await this.pineconeIndex.upsert({
+        upsertRequest: { vectors, namespace: this.namespace },
+      });
     }
   }
 

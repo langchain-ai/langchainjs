@@ -1,0 +1,96 @@
+# Pinecone Hybrid Search
+
+Langchain supports hybrid search with a Pinecone database. This example shows how to use the Pinecone Hybrid Search Retriever in a RetrievalQAChain to retrieve documents from Pinecone.
+
+The logic of this retriever is largely taken from [this blog post](https://www.pinecone.io/learn/hybrid-search-intro/).
+
+## Setup
+
+### Install the library with
+
+```bash npm2yarn
+npm install -S langchain @pinecone-database/pinecone tokenizers
+```
+
+### Setup Pinecone and Index
+
+```typescript
+import {
+  PineconeClient,
+  type CreateRequest,
+} from "@pinecone-database/pinecone";
+
+const client = new PineconeClient();
+await client.init({
+  apiKey: process.env.PINECONE_API_KEY, // your Pinecone API key
+  environment: process.env.PINECONE_ENVIRONMENT, // find next to api key in console
+});
+const indexName = "..."; // choose a name for your index
+
+// create the index
+const createRequest: CreateRequest = {
+  name: indexName,
+  dimension: 1536, // dimensionality of dense model
+  metric: "dotproduct", // must set metric to dotproduct
+  podType: "s1", // must use s1 or p1 pods
+};
+
+await client.createIndex({ createRequest });
+```
+
+Now that its created, we can use it
+
+```typescript
+const index = client.Index(indexName);
+```
+
+## Get embeddings and tokenizers
+
+Embeddings are used for the dense vectors, tokenizer is used for the sparse vector
+
+```typescript
+import { OpenAIEmbeddings } from "langchain/embeddings";
+import { BertWordPieceTokenizer } from "tokenizers";
+
+const embeddings = new OpenAIEmbeddings();
+
+const tokenizer = await BertWordPieceTokenizer.fromOptions({
+  lowercase: true,
+});
+```
+
+## Load Retriever
+
+```typescript
+const retriever = new PineconeHybridSearchRetriever(embeddings, {
+  pineconeIndex,
+  topK: 3,
+  alpha: 0.5,
+  tokenizer,
+});
+```
+
+## Add texts (if necessary)
+
+We can optionally add texts to the retriever (if they aren't already in there)
+
+```typescript
+retriever.addTexts(["foo", "bar", "world", "hello"]);
+```
+
+## Use Retriever
+
+We can now use the retriever!
+
+```typescript
+const results = await retriever.getRelevantDocuments("hello bye");
+
+console.log(results);
+```
+
+## Usage
+
+import CodeBlock from "@theme/CodeBlock";
+import Example from "@examples/retrievers/supabase_hybrid.ts";
+
+<CodeBlock language="typescript">{Example}</CodeBlock>;
