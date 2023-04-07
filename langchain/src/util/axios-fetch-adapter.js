@@ -12,12 +12,12 @@
  */
 
 import axios from "axios";
-import { EventStreamContentType } from "@fortaine/fetch-event-source";
 import {
+  EventStreamContentType,
   getLines,
   getBytes,
   getMessages,
-} from "@fortaine/fetch-event-source/parse";
+} from "./event-source-parse.js";
 
 /**
  * In order to avoid import issues with axios 1.x, copying here the internal

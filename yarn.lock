@@ -15245,7 +15245,6 @@ __metadata:
     "@babel/preset-env": ^7.20.2
     "@dqbd/tiktoken": ^1.0.2
     "@faker-js/faker": ^7.6.0
-    "@fortaine/fetch-event-source": ^3.0.6
     "@getmetal/metal-sdk": ^1.0.12
     "@huggingface/inference": ^1.5.1
     "@jest/globals": ^29.5.0

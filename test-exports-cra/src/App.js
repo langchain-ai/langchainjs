@@ -5,20 +5,26 @@ import {
   ChatPromptTemplate,
   HumanMessagePromptTemplate,
 } from "langchain/prompts";
-// import { OpenAI } from "langchain/llms";
-// import { TextLoader } from "langchain/document_loaders";
 
 import logo from "./logo.svg";
 import "./App.css";
-import { useEffect } from "react";
+import { useCallback } from "react";
+import { CallbackManager } from "langchain/callbacks";
 
-const OPENAI_API_KEY = "";
+const OPENAI_API_KEY = process.env.REACT_APP_OPENAI_API_KEY;
 
 function App() {
-  const runChain = async () => {
+  const runChain = useCallback(async () => {
     // Test a chain + prompt + model
     const chain = new LLMChain({
-      llm: new ChatOpenAI({ openAIApiKey: OPENAI_API_KEY }),
+      llm: new ChatOpenAI({
+        openAIApiKey: OPENAI_API_KEY,
+        streaming: true,
+        callbackManager: CallbackManager.fromHandlers({
+          handleLLMNewToken: async (token) =>
+            console.log("handleLLMNewToken", token),
+        }),
+      }),
       prompt: ChatPromptTemplate.fromPromptMessages([
         HumanMessagePromptTemplate.fromTemplate("{input}"),
       ]),
@@ -26,10 +32,6 @@ function App() {
     const res = await chain.run("hello");
 
     console.log("runChain", res);
-  };
-
-  useEffect(() => {
-    runChain();
   }, []);
 
   return (
@@ -47,6 +49,7 @@ function App() {
         >
           Learn React
         </a>
+        <button onClick={runChain}>Click to run a chain</button>
       </header>
     </div>
   );

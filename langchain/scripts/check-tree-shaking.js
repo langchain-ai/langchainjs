@@ -27,7 +27,6 @@ export function listExternals() {
     ...Object.keys(packageJson.peerDependencies),
     /node\:/,
     "axios", // axios is a dependency of openai
-    "@fortaine/fetch-event-source/parse",
     "pdf-parse/lib/pdf-parse.js",
   ];
 }

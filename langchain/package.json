@@ -228,7 +228,6 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.4.2",
-    "@fortaine/fetch-event-source": "^3.0.6",
     "binary-extensions": "^2.2.0",
     "browser-or-node": "^2.1.1",
     "exponential-backoff": "^3.1.0",
