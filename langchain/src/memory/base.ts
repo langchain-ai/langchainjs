@@ -42,14 +42,14 @@ export function getBufferString(
   const string_messages: string[] = [];
   for (const m of messages) {
     let role: string;
-    if (m instanceof HumanChatMessage) {
+    if (m._getType() === "human") {
       role = human_prefix;
-    } else if (m instanceof AIChatMessage) {
+    } else if (m._getType() === "ai") {
       role = ai_prefix;
-    } else if (m instanceof SystemChatMessage) {
+    } else if (m._getType() === "system") {
       role = "System";
-    } else if (m instanceof ChatMessage) {
-      role = m.role;
+    } else if (m._getType() === "generic") {
+      role = (m as ChatMessage).role;
     } else {
       throw new Error(`Got unsupported message type: ${m}`);
     }

@@ -37,6 +37,7 @@ export class OutputFixingParser extends BaseOutputParser {
     try {
       return await this.parser.parse(completion);
     } catch (e) {
+      // eslint-disable-next-line no-instanceof/no-instanceof
       if (e instanceof OutputParserException) {
         const result = await this.retryChain.call({
           instructions: this.parser.getFormatInstructions(),

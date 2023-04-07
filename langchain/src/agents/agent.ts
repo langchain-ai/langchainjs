@@ -312,6 +312,8 @@ export abstract class Agent extends BaseSingleActionAgent {
 
         return { returnValues: { output: action.log }, log: action.log };
       } catch (err) {
+        // fine to use instanceof because we're in the same module
+        // eslint-disable-next-line no-instanceof/no-instanceof
         if (!(err instanceof ParseError)) {
           throw err;
         }
