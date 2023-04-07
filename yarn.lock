@@ -7989,6 +7989,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"eslint-plugin-no-instanceof@npm:^1.0.1":
+  version: 1.0.1
+  resolution: "eslint-plugin-no-instanceof@npm:1.0.1"
+  checksum: 80b152b13869fd88debb9d387ca225dd18e5a75fe33f9510e71a65070a4862bfca5a57dc42b508259d8150f318312bf26c09e570874c2871bf0f59c4b745cfe5
+  languageName: node
+  linkType: hard
+
 "eslint-plugin-prettier@npm:^4.2.1":
   version: 4.2.1
   resolution: "eslint-plugin-prettier@npm:4.2.1"
@@ -11468,6 +11475,7 @@ __metadata:
     eslint-config-airbnb-base: ^15.0.0
     eslint-config-prettier: ^8.6.0
     eslint-plugin-import: ^2.27.5
+    eslint-plugin-no-instanceof: ^1.0.1
     eslint-plugin-prettier: ^4.2.1
     eslint-plugin-tree-shaking: ^1.10.0
     exponential-backoff: ^3.1.0
