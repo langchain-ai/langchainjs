@@ -67,6 +67,9 @@
     "retrievers.cjs",
     "retrievers.js",
     "retrievers.d.ts",
+    "cache.cjs",
+    "cache.js",
+    "cache.d.ts",
     "index.cjs",
     "index.js",
     "index.d.ts"
@@ -365,6 +368,11 @@
       "types": "./retrievers.d.ts",
       "import": "./retrievers.js",
       "require": "./retrievers.cjs"
+    },
+    "./cache": {
+      "types": "./cache.d.ts",
+      "import": "./cache.js",
+      "require": "./cache.cjs"
     },
     "./package.json": "./package.json"
   }
