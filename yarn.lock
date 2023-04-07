@@ -11369,13 +11369,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"exponential-backoff@npm:^3.1.0":
-  version: 3.1.1
-  resolution: "exponential-backoff@npm:3.1.1"
-  checksum: 3d21519a4f8207c99f7457287291316306255a328770d320b401114ec8481986e4e467e854cb9914dd965e0a1ca810a23ccb559c642c88f4c7f55c55778a9b48
-  languageName: node
-  linkType: hard
-
 "expr-eval@npm:^2.0.2":
   version: 2.0.2
   resolution: "expr-eval@npm:2.0.2"
@@ -15274,7 +15267,6 @@ __metadata:
     eslint-plugin-import: ^2.27.5
     eslint-plugin-prettier: ^4.2.1
     eslint-plugin-tree-shaking: ^1.10.0
-    exponential-backoff: ^3.1.0
     expr-eval: ^2.0.2
     flat: ^5.0.2
     hnswlib-node: ^1.4.2
@@ -15286,6 +15278,7 @@ __metadata:
     object-hash: ^3.0.0
     openai: ^3.2.0
     p-queue: ^6.6.2
+    p-retry: 4
     pdfjs-dist: ^3.4.120
     prettier: ^2.8.3
     puppeteer: ^19.7.2
@@ -17227,7 +17220,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"p-retry@npm:^4.5.0":
+"p-retry@npm:4, p-retry@npm:^4.5.0":
   version: 4.6.2
   resolution: "p-retry@npm:4.6.2"
   dependencies:
