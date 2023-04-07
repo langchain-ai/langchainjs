@@ -1,4 +1,4 @@
-import { Document } from "../document.js";
+import { Document } from "../../document.js";
 import { BufferLoader } from "./buffer.js";
 
 export class DocxLoader extends BufferLoader {

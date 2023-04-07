@@ -1,8 +1,8 @@
 import type { CheerioAPI, load as LoadT } from "cheerio";
-import { Document } from "../document.js";
-import { BaseDocumentLoader } from "./base.js";
-import type { DocumentLoader } from "./base.js";
-import { AsyncCaller, AsyncCallerParams } from "../util/async_caller.js";
+import { Document } from "../../document.js";
+import { BaseDocumentLoader } from "../base.js";
+import type { DocumentLoader } from "../base.js";
+import { AsyncCaller, AsyncCallerParams } from "../../util/async_caller.js";
 
 export interface WebBaseLoaderParams extends AsyncCallerParams {
   /**

@@ -1,6 +1,6 @@
-import { getEnv } from "../util/env.js";
-import { Document } from "../document.js";
-import { BaseDocumentLoader } from "./base.js";
+import { getEnv } from "../../util/env.js";
+import { Document } from "../../document.js";
+import { BaseDocumentLoader } from "../base.js";
 
 interface Element {
   type: string;

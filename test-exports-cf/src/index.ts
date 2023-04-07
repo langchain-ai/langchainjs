@@ -38,7 +38,7 @@ import {
 } from "langchain/prompts";
 import { OpenAI } from "langchain/llms";
 import { OpenAIEmbeddings } from "langchain/embeddings";
-import { TextLoader } from "langchain/document_loaders";
+import { HNLoader } from "langchain/document_loaders";
 
 export interface Env {
   OPENAI_API_KEY: string;
@@ -54,8 +54,8 @@ export default {
     new OpenAI({ openAIApiKey: env.OPENAI_API_KEY });
     const emb = new OpenAIEmbeddings({ openAIApiKey: env.OPENAI_API_KEY });
 
-    // Test a document loader from a blob
-    const docs = new TextLoader(new Blob(["hello"]));
+    // Test a document loader
+    new HNLoader("https://news.ycombinator.com/item?id=28275939");
 
     // Test a chain + prompt + model
     const chain = new LLMChain({

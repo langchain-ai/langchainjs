@@ -1,7 +1,7 @@
 import { test, expect } from "@jest/globals";
 import * as url from "node:url";
 import * as path from "node:path";
-import { PDFLoader } from "../pdf.js";
+import { PDFLoader } from "../path/pdf.js";
 
 test("Test PDF loader from file", async () => {
   const filePath = path.resolve(

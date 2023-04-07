@@ -6,9 +6,9 @@ import type {
   PuppeteerLaunchOptions,
 } from "puppeteer";
 
-import { Document } from "../document.js";
-import { BaseDocumentLoader } from "./base.js";
-import type { DocumentLoader } from "./base.js";
+import { Document } from "../../document.js";
+import { BaseDocumentLoader } from "../base.js";
+import type { DocumentLoader } from "../base.js";
 
 export { Page, Browser };
 

@@ -1,5 +1,5 @@
 import { expect, test } from "@jest/globals";
-import { PuppeteerWebBaseLoader } from "../puppeteer_web_base.js";
+import { PuppeteerWebBaseLoader } from "../web/puppeteer_web_base.js";
 
 test("Test puppeteer web scraper loader", async () => {
   const loader = new PuppeteerWebBaseLoader("https://www.google.com/");
