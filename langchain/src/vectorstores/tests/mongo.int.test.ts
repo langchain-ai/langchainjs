@@ -1,3 +1,6 @@
+/* eslint-disable no-process-env */
+/* eslint-disable no-promise-executor-return */
+
 import { test, expect } from "@jest/globals";
 import { MongoClient } from "mongodb";
 
@@ -24,9 +27,12 @@ import { MongoClient } from "mongodb";
 import { CohereEmbeddings } from "../../embeddings/index.js";
 import { MongoVectorStore, MongoVectorStoreQueryExtension } from "../mongo.js";
 
+import { Document } from "../../document.js";
+
 test("MongoVectorStore with external ids", async () => {
   expect(process.env.MONGO_URI).toBeDefined();
 
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const client = new MongoClient(process.env.MONGO_URI!);
 
   try {
@@ -61,44 +67,42 @@ test("MongoVectorStore with external ids", async () => {
     // This means from a fresh insert the query will return nothing
     let triesLeft = 4;
 
+    let results: Document[] = [];
     while (triesLeft > 0) {
-      const results = await vectorStore.similaritySearch("Sandwich", 1);
+      results = await vectorStore.similaritySearch("Sandwich", 1);
 
       if (justInserted && results.length === 0 && triesLeft > 0) {
         // wait and try again in hopes that the indexing has finished
         await new Promise((resolve) => setTimeout(resolve, 3000));
-
-        triesLeft -= 1;
-        continue;
       }
 
-      expect(results).toEqual([
-        { pageContent: "What is a sandwich?", metadata: { c: 1 } },
-      ]);
-
-      // we can filter the search with custom pipeline stages
-      const filter: MongoVectorStoreQueryExtension = {
-        postQueryPipelineSteps: [
-          {
-            $match: {
-              "metadata.e": { $exists: true },
-            },
-          },
-        ],
-      };
-
-      const filteredResults = await vectorStore.similaritySearch(
-        "Sandwich",
-        4,
-        filter
-      );
-
-      expect(filteredResults).toEqual([
-        { pageContent: "That fence is purple.", metadata: { d: 1, e: 2 } },
-      ]);
-
-      break;
+      triesLeft -= 1;
     }
+
+    expect(results).toEqual([
+      { pageContent: "What is a sandwich?", metadata: { c: 1 } },
+    ]);
+
+    // we can filter the search with custom pipeline stages
+    const filter: MongoVectorStoreQueryExtension = {
+      postQueryPipelineSteps: [
+        {
+          $match: {
+            "metadata.e": { $exists: true },
+          },
+        },
+      ],
+    };
+
+    const filteredResults = await vectorStore.similaritySearch(
+      "Sandwich",
+      4,
+      filter
+    );
+
+    expect(filteredResults).toEqual([
+      { pageContent: "That fence is purple.", metadata: { d: 1, e: 2 } },
+    ]);
   } finally {
     await client.close();
   }

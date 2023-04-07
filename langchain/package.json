@@ -208,6 +208,7 @@
     "flat": "^5.0.2",
     "is-binary-path": "^2.1.0",
     "jsonpointer": "^5.0.1",
+    "mongodb": "^5.2.0",
     "object-hash": "^3.0.0",
     "openai": "^3.2.0",
     "p-queue": "^7.3.4",

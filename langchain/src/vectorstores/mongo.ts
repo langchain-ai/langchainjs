@@ -15,7 +15,9 @@ export type MongoVectorStoreQueryExtension = {
 
 export class MongoVectorStore extends VectorStore {
   collection: Collection<MongoDocument>;
+
   client: MongoClient;
+
   indexName: string;
 
   constructor(embeddings: Embeddings, args: MongoLibArgs) {
@@ -51,16 +53,18 @@ export class MongoVectorStore extends VectorStore {
   ): Promise<[Document, number][]> {
     // Search has to be the first pipeline step (https://www.mongodb.com/docs/atlas/atlas-search/query-syntax/#behavior)
     // We hopefully this changes in the future
-    const pipeline: MongoDocument[] = [{
-      $search: {
-        index: this.indexName,
-        knnBeta: {
-          path: "embedding",
-          vector: query,
-          k,
+    const pipeline: MongoDocument[] = [
+      {
+        $search: {
+          index: this.indexName,
+          knnBeta: {
+            path: "embedding",
+            vector: query,
+            k,
+          },
         },
       },
-    }];
+    ];
 
     // apply any post-query pipeline steps (idk how useful the option to do this is in practice)
     if (filter?.postQueryPipelineSteps) {
@@ -94,6 +98,7 @@ export class MongoVectorStore extends VectorStore {
 
     return ret;
   }
+
   static async fromTexts(
     texts: string[],
     metadatas: object[] | object,

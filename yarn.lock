@@ -11493,6 +11493,7 @@ __metadata:
     jsonpointer: ^5.0.1
     lint-staged: ^13.1.1
     mammoth: ^1.5.1
+    mongodb: ^5.2.0
     object-hash: ^3.0.0
     openai: ^3.2.0
     p-queue: ^7.3.4
@@ -11579,7 +11580,6 @@ __metadata:
     dotenv: ^16.0.3
     husky: ^8.0.3
     lint-staged: ^13.1.1
-    mongodb: ^5.2.0
     prettier: ^2.8.3
     turbo: ^1.7.4
     typescript: ^4.9.5
