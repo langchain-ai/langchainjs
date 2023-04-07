@@ -54,7 +54,7 @@ export class GitbookLoader extends CheerioWebBaseLoader {
     for (const path of relative_paths) {
       const url = this.webPath + path;
       console.log(`Fetching text from ${url}`);
-      const html = await GitbookLoader._scrape(url);
+      const html = await GitbookLoader._scrape(url, this.caller, this.timeout);
       documents.push(...this.loadPath(html, url));
     }
     console.log(`Fetched ${documents.length} documents.`);

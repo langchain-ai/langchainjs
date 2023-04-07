@@ -15,7 +15,7 @@
     "lint": "eslint --cache \"**/*.js\"",
     "lint:fix": "yarn lint --fix",
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,md,mdx}\"",
-    "format:check": "prettier --list-different \"**/*.{js,jsx,ts,tsx,md,mdx}\""
+    "format:check": "prettier --check \"**/*.{js,jsx,ts,tsx,md,mdx}\""
   },
   "dependencies": {
     "@docusaurus/core": "2.3.1",

@@ -33,7 +33,12 @@ export class ZapierNLAWrapper {
   constructor(params?: string | ZapiterNLAWrapperParams) {
     const zapierNlaApiKey =
       typeof params === "string" ? params : params?.apiKey;
-    const apiKey = zapierNlaApiKey ?? process.env.ZAPIER_NLA_API_KEY;
+    const apiKey =
+      zapierNlaApiKey ??
+      (typeof process !== "undefined"
+        ? // eslint-disable-next-line no-process-env
+          process.env.ZAPIER_NLA_API_KEY
+        : undefined);
     if (!apiKey) {
       throw new Error("ZAPIER_NLA_API_KEY not set");
     }
@@ -100,7 +105,7 @@ export class ZapierNLAWrapper {
     params?: ZapierValues
   ): Promise<ZapierValues> {
     const resp = await this._getActionRequest(actionId, instructions, params);
-    return resp.result;
+    return resp.status === "error" ? resp.error : resp.result;
   }
 
   /**

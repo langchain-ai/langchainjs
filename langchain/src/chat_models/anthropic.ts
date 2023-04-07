@@ -135,7 +135,12 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
   ) {
     super(fields ?? {});
 
-    this.apiKey = fields?.anthropicApiKey ?? process.env.ANTHROPIC_API_KEY;
+    this.apiKey =
+      fields?.anthropicApiKey ??
+      (typeof process !== "undefined"
+        ? // eslint-disable-next-line no-process-env
+          process.env.ANTHROPIC_API_KEY
+        : undefined);
     if (!this.apiKey) {
       throw new Error("Anthropic API key not found");
     }
