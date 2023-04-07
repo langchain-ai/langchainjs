@@ -45,7 +45,6 @@ export class MongoVectorStore extends VectorStore {
     await this.collection.insertMany(items);
   }
 
-  // FIXME: This will silently fail if the index not correctly set up on atlas
   async similaritySearchVectorWithScore(
     query: number[],
     k: number,
@@ -94,6 +93,23 @@ export class MongoVectorStore extends VectorStore {
         }),
         result.similarity,
       ]);
+    }
+
+    // Attempt to warn if it appears that the indexing failed
+    if (
+      ret.length === 0 &&
+      k > 0 &&
+      filter?.postQueryPipelineSteps === undefined
+    ) {
+      // check for existence of documents (if nothing is there we should expect no results)
+      const count = await this.collection.countDocuments();
+
+      if (count !== 0) {
+        console.log(
+          "MongoDB search query returned no results where results were expected:\n" +
+            "This may be because the index is improperly configured or because the indexing over recently added documents has not yet completed."
+        );
+      }
     }
 
     return ret;

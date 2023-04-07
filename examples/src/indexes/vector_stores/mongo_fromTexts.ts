@@ -1,0 +1,25 @@
+
+import { MongoVectorStore } from "langchain/vectorstores";
+import { CohereEmbeddings } from "langchain/embeddings";
+import { MongoClient } from "mongodb";
+
+export const run = async () => {
+  const client = new MongoClient(process.env.MONGO_URI || "");
+  
+  const collection = client.db("langchain").collection("test");
+  
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const vectorStore = await MongoVectorStore.fromTexts(
+    ["Hello world", "Bye bye", "What's this?"],
+    [{ id: 2 }, { id: 1 }, { id: 3 }],
+    new CohereEmbeddings(),
+    {
+      client,
+      collection,
+      // indexName: "default", // make sure that this matches the index name in atlas if not using "default"
+    }
+  );
+
+  // remember to close the client
+  await client.close();
+};

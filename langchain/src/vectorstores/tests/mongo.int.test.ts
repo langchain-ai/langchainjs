@@ -3,6 +3,11 @@
 
 import { test, expect } from "@jest/globals";
 import { MongoClient } from "mongodb";
+// import { OpenAIEmbeddings } from "../../embeddings/index.js";
+import { CohereEmbeddings } from "../../embeddings/index.js";
+import { MongoVectorStore, MongoVectorStoreQueryExtension } from "../mongo.js";
+
+import { Document } from "../../document.js";
 
 /**
  * The following json can be used to create an index in atlas for cohere embeddings:
@@ -22,12 +27,6 @@ import { MongoClient } from "mongodb";
 }
 
  */
-
-// import { OpenAIEmbeddings } from "../../embeddings/index.js";
-import { CohereEmbeddings } from "../../embeddings/index.js";
-import { MongoVectorStore, MongoVectorStoreQueryExtension } from "../mongo.js";
-
-import { Document } from "../../document.js";
 
 test("MongoVectorStore with external ids", async () => {
   expect(process.env.MONGO_URI).toBeDefined();

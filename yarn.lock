@@ -11437,6 +11437,7 @@ __metadata:
     eslint-plugin-prettier: ^4.2.1
     js-yaml: ^4.1.0
     langchain: "workspace:*"
+    mongodb: ^5.2.0
     prettier: ^2.8.3
     sqlite3: ^5.1.4
     tsx: ^3.12.3
