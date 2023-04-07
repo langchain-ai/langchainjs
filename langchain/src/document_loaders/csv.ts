@@ -1,4 +1,6 @@
 import { TextLoader } from "./text.js";
+import { BaseDocumentLoader } from "./base.js;
+import { Document } from "./document.js";
 
 /**
  * Loads a CSV file into a list of documents.
