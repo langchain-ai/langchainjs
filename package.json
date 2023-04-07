@@ -11,7 +11,8 @@
     "docs",
     "test-exports",
     "test-exports-cjs",
-    "test-exports-cf"
+    "test-exports-cf",
+    "test-exports-cra"
   ],
   "repository": {
     "type": "git",
