@@ -1,5 +1,5 @@
 import { TextLoader } from "./text.js";
-import { BaseDocumentLoader } from "./base.js;
+import { BaseDocumentLoader } from "./base.js";
 import { Document } from "./document.js";
 
 /**
