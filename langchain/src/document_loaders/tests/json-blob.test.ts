@@ -2,7 +2,7 @@ import * as url from "node:url";
 import * as path from "node:path";
 import * as fs from "node:fs/promises";
 import { test, expect } from "@jest/globals";
-import { JSONLoader } from "../json.js";
+import { JSONLoader } from "../path/json.js";
 import { Document } from "../../document.js";
 
 test("Test JSON loader from blob", async () => {

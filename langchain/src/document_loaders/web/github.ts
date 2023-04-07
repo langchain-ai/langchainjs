@@ -1,8 +1,8 @@
 import binaryExtensions from "binary-extensions";
-import { Document } from "../document.js";
-import { BaseDocumentLoader } from "./base.js";
-import { UnknownHandling } from "./directory.js";
-import { extname } from "../util/extname.js";
+import { Document } from "../../document.js";
+import { BaseDocumentLoader } from "../base.js";
+import { UnknownHandling } from "../path/directory.js";
+import { extname } from "../../util/extname.js";
 
 const extensions = new Set(binaryExtensions);
 

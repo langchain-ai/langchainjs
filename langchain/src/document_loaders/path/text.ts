@@ -1,7 +1,7 @@
 import type { readFile as ReadFileT } from "node:fs/promises";
-import { Document } from "../document.js";
-import { getEnv } from "../util/env.js";
-import { BaseDocumentLoader } from "./base.js";
+import { Document } from "../../document.js";
+import { getEnv } from "../../util/env.js";
+import { BaseDocumentLoader } from "../base.js";
 
 export class TextLoader extends BaseDocumentLoader {
   constructor(public filePathOrBlob: string | Blob) {

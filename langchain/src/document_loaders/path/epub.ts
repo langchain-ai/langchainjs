@@ -1,6 +1,6 @@
 import type { EPub } from "epub2";
-import { Document } from "../document.js";
-import { BaseDocumentLoader } from "./base.js";
+import { Document } from "../../document.js";
+import { BaseDocumentLoader } from "../base.js";
 
 export class EPubLoader extends BaseDocumentLoader {
   private splitChapters: boolean;

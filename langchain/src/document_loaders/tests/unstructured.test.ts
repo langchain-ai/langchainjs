@@ -1,5 +1,5 @@
 import { test, expect } from "@jest/globals";
-import { UnstructuredLoader } from "../unstructured.js";
+import { UnstructuredLoader } from "../path/unstructured.js";
 
 test.skip("Test Unstructured base loader", async () => {
   const loader = new UnstructuredLoader(

@@ -1,5 +1,5 @@
 import type { TextItem } from "pdfjs-dist/types/src/display/api.js";
-import { Document } from "../document.js";
+import { Document } from "../../document.js";
 import { BufferLoader } from "./buffer.js";
 
 export class PDFLoader extends BufferLoader {
