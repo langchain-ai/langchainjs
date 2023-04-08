@@ -353,7 +353,7 @@ export class CallbackManager extends BaseCallbackManager {
 
 export class ConsoleCallbackHandler extends BaseCallbackHandler {
   async handleChainStart(chain: { name: string }) {
-    colorLog(LogColor.Blue, `\nEntering new ${chain.name} chain...`);
+    colorLog(LogColor.Cyan, `\n⚙️  Entering new ${chain.name} chain...`);
   }
 
   async handleChainEnd(_output: ChainValues) {
