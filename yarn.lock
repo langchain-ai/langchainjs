@@ -2961,15 +2961,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@mendable/search@npm:^0.0.57":
-  version: 0.0.57
-  resolution: "@mendable/search@npm:0.0.57"
+"@mendable/search@npm:^0.0.79":
+  version: 0.0.79
+  resolution: "@mendable/search@npm:0.0.79"
   dependencies:
     posthog-js: ^1.45.1
   peerDependencies:
     react: ^17.x || ^18.x
     react-dom: ^17.x || ^18.x
-  checksum: eacd3e5c7211e59474c2f3f52e416f214b9b5d82beec6eb95d0e4729c0a7a591a8ae48f43b5449d4c88246176bd6b793e4dd18cd0c8d0858723282d994c49115
+  checksum: 22b110a0afcdb0475c30f8e78b8fa5df0b227315a811ca37168e6759463caeb4922623ffd4e0843fbe69ebadec58e94b512aeb144ee7e731bd2fb4dea55eafba
   languageName: node
   linkType: hard
 
@@ -7207,7 +7207,7 @@ __metadata:
     "@docusaurus/preset-classic": 2.3.1
     "@docusaurus/remark-plugin-npm2yarn": ^2.3.1
     "@mdx-js/react": ^1.6.22
-    "@mendable/search": ^0.0.57
+    "@mendable/search": ^0.0.79
     clsx: ^1.2.1
     docusaurus-plugin-typedoc: ^0.18.0
     eslint: ^8.19.0
@@ -7986,6 +7986,13 @@ __metadata:
   peerDependencies:
     eslint: ^3 || ^4 || ^5 || ^6 || ^7 || ^8
   checksum: f166dd5fe7257c7b891c6692e6a3ede6f237a14043ae3d97581daf318fc5833ddc6b4871aa34ab7656187430170500f6d806895747ea17ecdf8231a666c3c2fd
+  languageName: node
+  linkType: hard
+
+"eslint-plugin-no-instanceof@npm:^1.0.1":
+  version: 1.0.1
+  resolution: "eslint-plugin-no-instanceof@npm:1.0.1"
+  checksum: 80b152b13869fd88debb9d387ca225dd18e5a75fe33f9510e71a65070a4862bfca5a57dc42b508259d8150f318312bf26c09e570874c2871bf0f59c4b745cfe5
   languageName: node
   linkType: hard
 
@@ -11468,6 +11475,7 @@ __metadata:
     eslint-config-airbnb-base: ^15.0.0
     eslint-config-prettier: ^8.6.0
     eslint-plugin-import: ^2.27.5
+    eslint-plugin-no-instanceof: ^1.0.1
     eslint-plugin-prettier: ^4.2.1
     eslint-plugin-tree-shaking: ^1.10.0
     exponential-backoff: ^3.1.0

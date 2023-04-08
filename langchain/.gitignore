@@ -55,6 +55,9 @@ output_parsers.d.ts
 retrievers.cjs
 retrievers.js
 retrievers.d.ts
+cache.cjs
+cache.js
+cache.d.ts
 index.cjs
 index.js
 index.d.ts

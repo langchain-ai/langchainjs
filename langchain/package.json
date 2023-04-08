@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.49",
+  "version": "0.0.50",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -67,6 +67,9 @@
     "retrievers.cjs",
     "retrievers.js",
     "retrievers.d.ts",
+    "cache.cjs",
+    "cache.js",
+    "cache.d.ts",
     "index.cjs",
     "index.js",
     "index.d.ts"
@@ -125,6 +128,7 @@
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-config-prettier": "^8.6.0",
     "eslint-plugin-import": "^2.27.5",
+    "eslint-plugin-no-instanceof": "^1.0.1",
     "eslint-plugin-prettier": "^4.2.1",
     "eslint-plugin-tree-shaking": "^1.10.0",
     "hnswlib-node": "^1.4.2",
@@ -365,6 +369,11 @@
       "types": "./retrievers.d.ts",
       "import": "./retrievers.js",
       "require": "./retrievers.cjs"
+    },
+    "./cache": {
+      "types": "./cache.d.ts",
+      "import": "./cache.js",
+      "require": "./cache.cjs"
     },
     "./package.json": "./package.json"
   }
