@@ -12950,6 +12950,7 @@ __metadata:
   resolution: "examples@workspace:examples"
   dependencies:
     "@getmetal/metal-sdk": ^1.0.12
+    "@opensearch-project/opensearch": ^2.2.0
     "@pinecone-database/pinecone": ^0.0.12
     "@prisma/client": ^4.11.0
     "@supabase/supabase-js": ^2.10.0
@@ -14437,7 +14438,25 @@ __metadata:
   languageName: node
   linkType: hard
 
-"html-entities@npm:^2.3.2":
+"html-encoding-sniffer@npm:^2.0.1":
+  version: 2.0.1
+  resolution: "html-encoding-sniffer@npm:2.0.1"
+  dependencies:
+    whatwg-encoding: ^1.0.5
+  checksum: bf30cce461015ed7e365736fcd6a3063c7bc016a91f74398ef6158886970a96333938f7c02417ab3c12aa82e3e53b40822145facccb9ddfbcdc15a879ae4d7ba
+  languageName: node
+  linkType: hard
+
+"html-encoding-sniffer@npm:^3.0.0":
+  version: 3.0.0
+  resolution: "html-encoding-sniffer@npm:3.0.0"
+  dependencies:
+    whatwg-encoding: ^2.0.0
+  checksum: 8d806aa00487e279e5ccb573366a951a9f68f65c90298eac9c3a2b440a7ffe46615aff2995a2f61c6746c639234e6179a97e18ca5ccbbf93d3725ef2099a4502
+  languageName: node
+  linkType: hard
+
+"html-entities@npm:^2.1.0, html-entities@npm:^2.3.2":
   version: 2.3.3
   resolution: "html-entities@npm:2.3.3"
   checksum: 92521501da8aa5f66fee27f0f022d6e9ceae62667dae93aa6a2f636afa71ad530b7fb24a18d4d6c124c9885970cac5f8a52dbf1731741161002816ae43f98196
@@ -17026,39 +17045,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"langchain-examples@workspace:examples":
-  version: 0.0.0-use.local
-  resolution: "langchain-examples@workspace:examples"
-  dependencies:
-    "@dqbd/tiktoken": ^1.0.2
-    "@getmetal/metal-sdk": ^1.0.12
-    "@opensearch-project/opensearch": ^2.2.0
-    "@pinecone-database/pinecone": ^0.0.10
-    "@prisma/client": ^4.11.0
-    "@supabase/supabase-js": ^2.10.0
-    "@tsconfig/recommended": ^1.0.2
-    "@types/js-yaml": ^4
-    "@typescript-eslint/eslint-plugin": ^5.51.0
-    "@typescript-eslint/parser": ^5.51.0
-    chromadb: ^1.3.0
-    dotenv: ^16.0.3
-    eslint: ^8.33.0
-    eslint-config-airbnb-base: ^15.0.0
-    eslint-config-prettier: ^8.6.0
-    eslint-plugin-import: ^2.27.5
-    eslint-plugin-prettier: ^4.2.1
-    js-yaml: ^4.1.0
-    langchain: "workspace:*"
-    prettier: ^2.8.3
-    prisma: ^4.11.0
-    sqlite3: ^5.1.4
-    tsx: ^3.12.3
-    typeorm: ^0.3.12
-    typescript: ^4.9.5
-    zod: ^3.21.4
-  languageName: unknown
-  linkType: soft
-
 "langchain@workspace:*, langchain@workspace:langchain":
   version: 0.0.0-use.local
   resolution: "langchain@workspace:langchain"
@@ -17071,7 +17057,7 @@ __metadata:
     "@huggingface/inference": ^1.5.1
     "@jest/globals": ^29.5.0
     "@opensearch-project/opensearch": ^2.2.0
-    "@pinecone-database/pinecone": ^0.0.10
+    "@pinecone-database/pinecone": ^0.0.12
     "@supabase/supabase-js": ^2.10.0
     "@tsconfig/recommended": ^1.0.2
     "@types/d3-dsv": ^2
@@ -17131,7 +17117,7 @@ __metadata:
     "@getmetal/metal-sdk": "*"
     "@huggingface/inference": ^1.5.1
     "@opensearch-project/opensearch": "*"
-    "@pinecone-database/pinecone": ^0.0.10
+    "@pinecone-database/pinecone": "*"
     "@supabase/supabase-js": ^2.10.0
     "@zilliz/milvus2-sdk-node": ^2.2.0
     cheerio: ^1.0.0-rc.12

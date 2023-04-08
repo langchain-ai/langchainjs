@@ -1,3 +1,4 @@
+/* eslint-disable no-instanceof/no-instanceof */
 import { Embeddings } from "embeddings/base.js";
 import { Client, RequestParams, errors } from "@opensearch-project/opensearch";
 import { v4 as uuid } from "uuid";
@@ -87,14 +88,21 @@ export class OpenSearchVectorStore extends VectorStore {
   async similaritySearchVectorWithScore(
     query: number[],
     k: number,
-    _filter?: object | undefined
+    filter?: object | undefined
   ): Promise<[Document, number][]> {
     const search: RequestParams.Search = {
       index: this.indexName,
       body: {
         query: {
-          knn: {
-            embedding: { vector: query, k },
+          bool: {
+            filter: { bool: { must: this.buildMetadataTerms(filter) } },
+            must: [
+              {
+                knn: {
+                  embedding: { vector: query, k },
+                },
+              },
+            ],
           },
         },
         size: k,
@@ -154,6 +162,15 @@ export class OpenSearchVectorStore extends VectorStore {
         },
       },
       mappings: {
+        dynamic_templates: [
+          {
+            // map all metadata properties to be keyword
+            "metadata.*": {
+              match_mapping_type: "*",
+              mapping: { type: "keyword" },
+            },
+          },
+        ],
         properties: {
           text: { type: "text" },
           metadata: { type: "object" },
@@ -177,6 +194,17 @@ export class OpenSearchVectorStore extends VectorStore {
     await this.client.indices.create({ index: this.indexName, body });
   }
 
+  private buildMetadataTerms(
+    filter?: object
+  ): { term: Record<string, unknown> }[] {
+    if (filter == null) return [];
+    const result = [];
+    for (const [key, value] of Object.entries(filter)) {
+      result.push({ term: { [`metadata.${key}`]: value } });
+    }
+    return result;
+  }
+
   async doesIndexExist(): Promise<boolean> {
     try {
       await this.client.cat.indices({ index: this.indexName });
@@ -187,5 +215,12 @@ export class OpenSearchVectorStore extends VectorStore {
       }
       throw err;
     }
+  }
+
+  async deleteIfExists(): Promise<void> {
+    const indexExists = await this.doesIndexExist();
+    if (!indexExists) return;
+
+    await this.client.indices.delete({ index: this.indexName });
   }
 }
