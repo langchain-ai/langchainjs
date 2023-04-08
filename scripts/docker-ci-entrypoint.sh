@@ -2,6 +2,8 @@
 
 set -euxo pipefail
 
+export CI=true
+
 cp -r ../package/* .
 
 # Replace the workspace dependency with the local copy, and install all others
