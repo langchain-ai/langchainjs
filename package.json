@@ -27,7 +27,7 @@
     "test": "yarn run test:unit && yarn run test:int",
     "test:unit": "turbo run test",
     "test:int": "yarn workspace langchain run test:integration",
-    "publish": "bash scripts/release-branch.sh && turbo run build lint test && yarn run test:int && yarn workspace langchain run release",
+    "publish": "bash scripts/release-branch.sh && turbo run build lint test && yarn run test:int && yarn workspace langchain run release && echo '🔗 Open https://github.com/hwchase17/langchainjs/compare/release?expand=1 and merge the release PR'",
     "example": "turbo run start --filter langchain-examples --",
     "prepare": "husky install",
     "precommit": "turbo run precommit",
