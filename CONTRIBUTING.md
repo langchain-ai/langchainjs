@@ -162,6 +162,14 @@ To run only integration tests, run:
 yarn test:int
 ```
 
+**Environment tests** test whether LangChain works across different JS environments, including Node.js (both ESM and CJS), Edge environments (eg. Cloudflare Workers), and browsers (using Webpack).
+
+To run the environment tests with Docker run:
+
+```bash
+yarn test:exports:docker
+```
+
 ### Building
 
 To build the project, run:

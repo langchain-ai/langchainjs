@@ -5783,6 +5783,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/node@npm:^18.15.11":
+  version: 18.15.11
+  resolution: "@types/node@npm:18.15.11"
+  checksum: 977b4ad04708897ff0eb049ecf82246d210939c82461922d20f7d2dcfd81bbc661582ba3af28869210f7e8b1934529dcd46bff7d448551400f9d48b9d3bddec3
+  languageName: node
+  linkType: hard
+
 "@types/object-hash@npm:^3.0.2":
   version: 3.0.2
   resolution: "@types/object-hash@npm:3.0.2"
@@ -9290,7 +9297,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"d3-dsv@npm:^2.0.0":
+"d3-dsv@npm:2, d3-dsv@npm:^2.0.0":
   version: 2.0.0
   resolution: "d3-dsv@npm:2.0.0"
   dependencies:
@@ -21709,6 +21716,9 @@ __metadata:
   resolution: "test-exports-cjs@workspace:test-exports-cjs"
   dependencies:
     "@tsconfig/recommended": ^1.0.2
+    "@types/node": ^18.15.11
+    d3-dsv: 2
+    hnswlib-node: ^1.4.2
     langchain: "workspace:*"
     prettier: ^2.8.3
     typescript: ^4.9.5
@@ -21727,17 +21737,6 @@ __metadata:
     react-dom: ^18.2.0
     react-scripts: 5.0.1
     web-vitals: ^2.1.4
-  languageName: unknown
-  linkType: soft
-
-"test-exports@workspace:test-exports":
-  version: 0.0.0-use.local
-  resolution: "test-exports@workspace:test-exports"
-  dependencies:
-    "@tsconfig/recommended": ^1.0.2
-    langchain: "workspace:*"
-    prettier: ^2.8.3
-    typescript: ^4.9.5
   languageName: unknown
   linkType: soft
 
