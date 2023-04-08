@@ -52,6 +52,7 @@ export class AsyncCaller {
         pRetry(
           () =>
             callable(...args).catch((error) => {
+              // eslint-disable-next-line no-instanceof/no-instanceof
               if (error instanceof Error) {
                 throw error;
               } else {
