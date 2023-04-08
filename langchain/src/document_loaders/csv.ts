@@ -1,6 +1,6 @@
 import { TextLoader } from "./text.js";
 import { BaseDocumentLoader } from "./base.js";
-import { Document } from "./document.js";
+import { Document } from "../document.js";
 
 /**
  * Loads a CSV file into a list of documents.
@@ -59,7 +59,9 @@ export class CSVLoader extends BaseDocumentLoader {
     if (metadataColumns) {
       for (const metadataColumn of metadataColumns) {
         if (!parsed.columns.includes(metadataColumn)) {
-          throw new Error(`Metadata column ${metadataColumn} not found in CSV file.`);
+          throw new Error(
+            `Metadata column ${metadataColumn} not found in CSV file.`
+          );
         }
       }
     }
@@ -81,20 +83,41 @@ export class CSVLoader extends BaseDocumentLoader {
     });
 
     return contents.map((content, i) => {
-      const metadata = {};
+      interface Metadata {
+        [key: string]: string | number;
+      }
+
+      const metadata: Metadata = {};
 
       if (metadataColumns) {
         for (const metadataColumn of metadataColumns) {
-          metadata[metadataColumn] = parsed[i][metadataColumn];
+          metadata[metadataColumn] = parsed[i][metadataColumn] as
+            | string
+            | number;
         }
       }
+
+      const isSourceInMetadata = metadataColumns?.includes("source");
+      const isFilePathString = typeof this.filePathOrBlob === "string";
+      let source: string | number;
+
+      if (isSourceInMetadata) {
+        source = metadata.source;
+      } else if (isFilePathString) {
+        source = this.filePathOrBlob as string;
+      } else {
+        source = "blob";
+      }
+
+      const isLineInMetadata = metadataColumns?.includes("line");
+      const line = isLineInMetadata ? metadata.line : i + 1;
 
       return new Document({
         pageContent: content,
         metadata: {
           ...metadata,
-          source: metadataColumns?.includes("source") ? metadata["source"] : (typeof this.filePathOrBlob === "string" ? this.filePathOrBlob : "blob"),
-          line: metadataColumns?.includes("line") ? metadata["line"] : i + 1,
+          source,
+          line,
         },
       });
     });
@@ -104,9 +127,9 @@ export class CSVLoader extends BaseDocumentLoader {
     if (typeof this.filePathOrBlob === "string") {
       const { readFile } = await TextLoader.imports();
       return readFile(this.filePathOrBlob, "utf8");
-    } else {
-      return this.filePathOrBlob.text();
     }
+
+    return this.filePathOrBlob.text();
   }
 }
 
