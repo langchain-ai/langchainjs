@@ -32,7 +32,7 @@ export class AsyncCaller {
 
   protected maxRetries: AsyncCallerParams["maxRetries"];
 
-  protected queue: PQueueMod.default;
+  protected queue: PQueueMod;
 
   constructor(params: AsyncCallerParams) {
     this.maxConcurrency = params.maxConcurrency ?? Infinity;
