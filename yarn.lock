@@ -11465,6 +11465,7 @@ __metadata:
     "@typescript-eslint/parser": ^5.51.0
     babel-jest: ^29.5.0
     browser-or-node: ^2.1.1
+    chalk: ^5.2.0
     cheerio: ^1.0.0-rc.12
     cohere-ai: ^5.0.2
     d3-dsv: ^2.0.0

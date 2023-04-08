@@ -5,6 +5,8 @@ import {
   LLMResult,
 } from "../schema/index.js";
 
+import { colorLog, LogColor } from "../util/chalk.js";
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Error = any;
 
@@ -351,26 +353,26 @@ export class CallbackManager extends BaseCallbackManager {
 
 export class ConsoleCallbackHandler extends BaseCallbackHandler {
   async handleChainStart(chain: { name: string }) {
-    console.log(`Entering new ${chain.name} chain...`);
+    colorLog(LogColor.Blue, `\nEntering new ${chain.name} chain...`);
   }
 
   async handleChainEnd(_output: ChainValues) {
-    console.log("Finished chain.");
+    colorLog(LogColor.Green, '\nFinished chain');
   }
 
   async handleAgentAction(action: AgentAction) {
-    console.log(action.log);
+    colorLog(LogColor.Yellow, '\n', action.log);
   }
 
   async handleToolEnd(output: string) {
-    console.log(output);
+    colorLog(LogColor.White, '\nTool output:\n', output);
   }
 
   async handleText(text: string) {
-    console.log(text);
+    colorLog(LogColor.White, text);
   }
 
   async handleAgentEnd(action: AgentFinish) {
-    console.log(action.log);
+    colorLog(LogColor.Green, action.log);
   }
 }
