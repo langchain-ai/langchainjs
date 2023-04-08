@@ -15,7 +15,7 @@ import {
   SystemChatMessage,
 } from "../../schema/index.js";
 
-function createChatPromptTemplate(): ChatPromptTemplate {
+function createChatPromptTemplate() {
   const systemPrompt = new PromptTemplate({
     template: "Here's some context: {context}",
     inputVariables: ["context"],
@@ -68,6 +68,7 @@ test("Test serialize", async () => {
 test("Test format with invalid input values", async () => {
   const chatPrompt = createChatPromptTemplate();
   await expect(
+    // @ts-expect-error Intentionally-missing parameter
     chatPrompt.formatPromptValue({
       context: "This is a context",
       foo: "Foo",

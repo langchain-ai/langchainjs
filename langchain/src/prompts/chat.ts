@@ -10,8 +10,6 @@ import {
   ChatMessage,
   HumanChatMessage,
   SystemChatMessage,
-  InputValues,
-  PartialValues,
 } from "../schema/index.js";
 import { PromptTemplate } from "./prompt.js";
 import {
@@ -19,10 +17,15 @@ import {
   SerializedMessagePromptTemplate,
 } from "./serde.js";
 
-export abstract class BaseMessagePromptTemplate {
-  abstract inputVariables: string[];
+export abstract class BaseMessagePromptTemplate<
+  K extends string,
+  P extends string
+> {
+  abstract inputVariables: K[];
 
-  abstract formatMessages(values: InputValues): Promise<BaseChatMessage[]>;
+  abstract formatMessages(
+    values: Record<K, any> & Partial<Record<P, any>>
+  ): Promise<BaseChatMessage[]>;
 
   serialize(): SerializedMessagePromptTemplate {
     return {
@@ -32,10 +35,13 @@ export abstract class BaseMessagePromptTemplate {
   }
 }
 
-export class MessagesPlaceholder extends BaseMessagePromptTemplate {
-  variableName: string;
+export class MessagesPlaceholder<
+  K extends string,
+  P extends string
+> extends BaseMessagePromptTemplate<K, P> {
+  variableName: K;
 
-  constructor(variableName: string) {
+  constructor(variableName: K) {
     super();
     this.variableName = variableName;
   }
@@ -44,15 +50,20 @@ export class MessagesPlaceholder extends BaseMessagePromptTemplate {
     return [this.variableName];
   }
 
-  formatMessages(values: InputValues): Promise<BaseChatMessage[]> {
+  formatMessages(
+    values: Record<K, any> & Partial<Record<P, any>>
+  ): Promise<BaseChatMessage[]> {
     return Promise.resolve(values[this.variableName] as BaseChatMessage[]);
   }
 }
 
-export abstract class BaseMessageStringPromptTemplate extends BaseMessagePromptTemplate {
-  prompt: BaseStringPromptTemplate;
+export abstract class BaseMessageStringPromptTemplate<
+  K extends string,
+  P extends string
+> extends BaseMessagePromptTemplate<K, P> {
+  prompt: BaseStringPromptTemplate<K, P>;
 
-  protected constructor(prompt: BaseStringPromptTemplate) {
+  protected constructor(prompt: BaseStringPromptTemplate<K, P>) {
     super();
     this.prompt = prompt;
   }
@@ -61,21 +72,30 @@ export abstract class BaseMessageStringPromptTemplate extends BaseMessagePromptT
     return this.prompt.inputVariables;
   }
 
-  abstract format(values: InputValues): Promise<BaseChatMessage>;
+  abstract format(
+    values: Record<K, any> & Partial<Record<P, any>>
+  ): Promise<BaseChatMessage>;
 
-  async formatMessages(values: InputValues): Promise<BaseChatMessage[]> {
+  async formatMessages(
+    values: Record<K, any> & Partial<Record<P, any>>
+  ): Promise<BaseChatMessage[]> {
     return [await this.format(values)];
   }
 }
 
-export class ChatMessagePromptTemplate extends BaseMessageStringPromptTemplate {
+export class ChatMessagePromptTemplate<
+  K extends string,
+  P extends string
+> extends BaseMessageStringPromptTemplate<K, P> {
   role: string;
 
-  async format(values: InputValues): Promise<BaseChatMessage> {
+  async format(
+    values: Record<K, any> & Partial<Record<P, any>>
+  ): Promise<BaseChatMessage> {
     return new ChatMessage(await this.prompt.format(values), this.role);
   }
 
-  constructor(prompt: BaseStringPromptTemplate, role: string) {
+  constructor(prompt: BaseStringPromptTemplate<K, P>, role: string) {
     super(prompt);
     this.role = role;
   }
@@ -85,12 +105,17 @@ export class ChatMessagePromptTemplate extends BaseMessageStringPromptTemplate {
   }
 }
 
-export class HumanMessagePromptTemplate extends BaseMessageStringPromptTemplate {
-  async format(values: InputValues): Promise<BaseChatMessage> {
+export class HumanMessagePromptTemplate<
+  K extends string,
+  P extends string
+> extends BaseMessageStringPromptTemplate<K, P> {
+  async format(
+    values: Record<K, any> & Partial<Record<P, any>>
+  ): Promise<BaseChatMessage> {
     return new HumanChatMessage(await this.prompt.format(values));
   }
 
-  constructor(prompt: BaseStringPromptTemplate) {
+  constructor(prompt: BaseStringPromptTemplate<K, P>) {
     super(prompt);
   }
 
@@ -99,12 +124,17 @@ export class HumanMessagePromptTemplate extends BaseMessageStringPromptTemplate 
   }
 }
 
-export class AIMessagePromptTemplate extends BaseMessageStringPromptTemplate {
-  async format(values: InputValues): Promise<BaseChatMessage> {
+export class AIMessagePromptTemplate<
+  K extends string,
+  P extends string
+> extends BaseMessageStringPromptTemplate<K, P> {
+  async format(
+    values: Record<K, any> & Partial<Record<P, any>>
+  ): Promise<BaseChatMessage> {
     return new AIChatMessage(await this.prompt.format(values));
   }
 
-  constructor(prompt: BaseStringPromptTemplate) {
+  constructor(prompt: BaseStringPromptTemplate<K, P>) {
     super(prompt);
   }
 
@@ -113,12 +143,17 @@ export class AIMessagePromptTemplate extends BaseMessageStringPromptTemplate {
   }
 }
 
-export class SystemMessagePromptTemplate extends BaseMessageStringPromptTemplate {
-  async format(values: InputValues): Promise<BaseChatMessage> {
+export class SystemMessagePromptTemplate<
+  K extends string,
+  P extends string
+> extends BaseMessageStringPromptTemplate<K, P> {
+  async format(
+    values: Record<K, any> & Partial<Record<P, any>>
+  ): Promise<BaseChatMessage> {
     return new SystemChatMessage(await this.prompt.format(values));
   }
 
-  constructor(prompt: BaseStringPromptTemplate) {
+  constructor(prompt: BaseStringPromptTemplate<K, P>) {
     super(prompt);
   }
 
@@ -144,11 +179,14 @@ export class ChatPromptValue extends BasePromptValue {
   }
 }
 
-export interface ChatPromptTemplateInput extends BasePromptTemplateInput {
+export interface ChatPromptTemplateInput<
+  K extends string,
+  P extends string
+> extends BasePromptTemplateInput<K, P> {
   /**
    * The prompt messages
    */
-  promptMessages: BaseMessagePromptTemplate[];
+  promptMessages: BaseMessagePromptTemplate<K, P>[];
 
   /**
    * Whether to try validating the template on initialization
@@ -158,15 +196,15 @@ export interface ChatPromptTemplateInput extends BasePromptTemplateInput {
   validateTemplate?: boolean;
 }
 
-export class ChatPromptTemplate
-  extends BasePromptTemplate
-  implements ChatPromptTemplateInput
+export class ChatPromptTemplate<K extends string, P extends string>
+  extends BasePromptTemplate<K, P>
+  implements ChatPromptTemplateInput<K, P>
 {
-  promptMessages: BaseMessagePromptTemplate[];
+  promptMessages: BaseMessagePromptTemplate<K, P>[];
 
   validateTemplate = true;
 
-  constructor(input: ChatPromptTemplateInput) {
+  constructor(input: ChatPromptTemplateInput<K, P>) {
     super(input);
     Object.assign(this, input);
 
@@ -177,9 +215,9 @@ export class ChatPromptTemplate
           inputVariablesMessages.add(inputVariable);
         }
       }
-      const inputVariablesInstance = new Set(
+      const inputVariablesInstance = new Set<string>(
         this.partialVariables
-          ? this.inputVariables.concat(Object.keys(this.partialVariables))
+          ? (this.inputVariables as string[]).concat(Object.keys(this.partialVariables))
           : this.inputVariables
       );
       const difference = new Set(
@@ -213,16 +251,20 @@ export class ChatPromptTemplate
     return "chat";
   }
 
-  async format(values: InputValues): Promise<string> {
+  async format(
+    values: Record<K, any> & Partial<Record<P, any>>
+  ): Promise<string> {
     return (await this.formatPromptValue(values)).toString();
   }
 
-  async formatPromptValue(values: InputValues): Promise<BasePromptValue> {
+  async formatPromptValue(
+    values: Record<K, any> & Partial<Record<P, any>>
+  ): Promise<BasePromptValue> {
     const allValues = await this.mergePartialAndUserVariables(values);
 
     let resultMessages: BaseChatMessage[] = [];
     for (const promptMessage of this.promptMessages) {
-      const inputValues: InputValues = {};
+      const inputValues = {} as Record<K | P, any>;
       for (const inputVariable of promptMessage.inputVariables) {
         if (!(inputVariable in allValues)) {
           throw new Error(
@@ -249,30 +291,32 @@ export class ChatPromptTemplate
     };
   }
 
-  async partial(values: PartialValues): Promise<BasePromptTemplate> {
+  async partial<P2 extends K>(
+    values: Record<P2, any>
+  ): Promise<BasePromptTemplate<Exclude<K, P2>, P | P2>> {
     // This is implemented in a way it doesn't require making
     // BaseMessagePromptTemplate aware of .partial()
-    const promptDict: ChatPromptTemplateInput = { ...this };
+    const promptDict: ChatPromptTemplateInput<Exclude<K, P2>, P | P2> = { ...this } as never;
     promptDict.inputVariables = this.inputVariables.filter(
       (iv) => !(iv in values)
-    );
+    ) as Exclude<K, P2>[];
     promptDict.partialVariables = {
       ...(this.partialVariables ?? {}),
       ...values,
-    };
+    } as Record<P | P2, any>;
     return new ChatPromptTemplate(promptDict);
   }
 
-  static fromPromptMessages(
-    promptMessages: BaseMessagePromptTemplate[]
-  ): ChatPromptTemplate {
-    const inputVariables = new Set<string>();
+  static fromPromptMessages<K extends string, P extends string>(
+    promptMessages: BaseMessagePromptTemplate<K, P>[]
+  ): ChatPromptTemplate<K, P> {
+    const inputVariables = new Set<K>();
     for (const promptMessage of promptMessages) {
       for (const inputVariable of promptMessage.inputVariables) {
         inputVariables.add(inputVariable);
       }
     }
-    return new ChatPromptTemplate({
+    return new ChatPromptTemplate<K, P>({
       inputVariables: [...inputVariables],
       promptMessages,
     });

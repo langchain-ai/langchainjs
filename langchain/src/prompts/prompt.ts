@@ -7,13 +7,13 @@ import {
 } from "./template.js";
 import { resolveTemplateFromFile } from "../util/index.js";
 import { SerializedPromptTemplate } from "./serde.js";
-import { InputValues, PartialValues } from "../schema/index.js";
 
 /**
  * Inputs to create a {@link PromptTemplate}
  * @augments BasePromptTemplateInput
  */
-export interface PromptTemplateInput extends BasePromptTemplateInput {
+export interface PromptTemplateInput<K extends string, P extends string>
+  extends BasePromptTemplateInput<K, P> {
   /**
    * The propmt template
    */
@@ -49,9 +49,9 @@ export interface PromptTemplateInput extends BasePromptTemplateInput {
  * });
  * ```
  */
-export class PromptTemplate
-  extends BaseStringPromptTemplate
-  implements PromptTemplateInput
+export class PromptTemplate<K extends string, P extends string>
+  extends BaseStringPromptTemplate<K, P>
+  implements PromptTemplateInput<K, P>
 {
   template: string;
 
@@ -59,7 +59,7 @@ export class PromptTemplate
 
   validateTemplate = true;
 
-  constructor(input: PromptTemplateInput) {
+  constructor(input: PromptTemplateInput<K, P>) {
     super(input);
     Object.assign(this, input);
 
@@ -67,7 +67,7 @@ export class PromptTemplate
       let totalInputVariables = this.inputVariables;
       if (this.partialVariables) {
         totalInputVariables = totalInputVariables.concat(
-          Object.keys(this.partialVariables)
+          Object.keys(this.partialVariables) as any
         );
       }
       checkValidTemplate(
@@ -82,7 +82,9 @@ export class PromptTemplate
     return "prompt";
   }
 
-  async format(values: InputValues): Promise<string> {
+  async format(
+    values: Record<K, any> & Partial<Record<P, any>>
+  ): Promise<string> {
     const allValues = await this.mergePartialAndUserVariables(values);
     return renderTemplate(this.template, this.templateFormat, allValues);
   }
@@ -122,7 +124,10 @@ export class PromptTemplate
     {
       templateFormat = "f-string",
       ...rest
-    }: Omit<PromptTemplateInput, "template" | "inputVariables"> = {}
+    }: Omit<
+      PromptTemplateInput<string, string>,
+      "template" | "inputVariables"
+    > = {}
   ) {
     const names = new Set<string>();
     parseTemplate(template, templateFormat).forEach((node) => {
@@ -139,16 +144,19 @@ export class PromptTemplate
     });
   }
 
-  async partial(values: PartialValues): Promise<PromptTemplate> {
-    const promptDict: PromptTemplateInput = { ...this };
+  async partial<P2 extends K>(
+    values: Record<P2, any>
+  ): Promise<PromptTemplate<Exclude<K, P2>, P | P2>> {
+    const promptDict: PromptTemplate<Exclude<K, P2>, P | P2> = { ...this } as never;
     promptDict.inputVariables = this.inputVariables.filter(
       (iv) => !(iv in values)
-    );
+    ) as Exclude<K, P2>[];
     promptDict.partialVariables = {
       ...(this.partialVariables ?? {}),
       ...values,
-    };
-    return new PromptTemplate(promptDict);
+    } as Record<P | P2, any>;
+
+    return new PromptTemplate<Exclude<K, P2>, P | P2>(promptDict);
   }
 
   serialize(): SerializedPromptTemplate {
@@ -167,7 +175,7 @@ export class PromptTemplate
 
   static async deserialize(
     data: SerializedPromptTemplate
-  ): Promise<PromptTemplate> {
+  ): Promise<PromptTemplate<string, string>> {
     const res = new PromptTemplate({
       inputVariables: data.input_variables,
       template: await resolveTemplateFromFile("template", data),
