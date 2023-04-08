@@ -7,6 +7,7 @@ import { InMemoryDocstore } from "../docstore/index.js";
 export interface FaissLibArgs {
   docstore?: InMemoryDocstore;
   index?: IndexFlatL2;
+  mapping?: Record<number, string>;
 }
 
 export class FaissStore extends SaveableVectorStore {
@@ -87,10 +88,13 @@ export class FaissStore extends SaveableVectorStore {
       k = total;
     }
     const result = this.index.search(query, k);
+    const getId = (index: number) => this.args.mapping ?
+      (this.args.mapping as Record<number, string>)[index] :
+      String(index);
     return result.labels.map(
       (docIndex, resultIndex) =>
         [
-          this.docstore.search(String(docIndex)),
+          this.docstore.search(getId(docIndex)),
           result.distances[resultIndex],
         ] as [Document, number]
     );
@@ -125,6 +129,63 @@ export class FaissStore extends SaveableVectorStore {
     ]);
     const docstore = new InMemoryDocstore(new Map(docstoreFiles));
     return new this(embeddings, { docstore, index });
+  }
+
+
+  static async loadFormPython(directory: string, embeddings: Embeddings) {
+    const fs = await import("node:fs/promises");
+    const path = await import("node:path");
+
+    class PyDocument {
+      __dict__: {
+        page_content: string;
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        metadata: Record<string, any>;
+      };
+
+      toDocument(): Document {
+        const d = new Document();
+        d.pageContent = this.__dict__.page_content;
+        d.metadata = this.__dict__.metadata;
+        return d;
+      }
+    }
+
+    class PyInMemoryDocstore {
+      _dict: Map<string, PyDocument>;
+
+      toInMemoryDocstore(): InMemoryDocstore {
+        const s = new InMemoryDocstore();
+        for (const [key, value] of Object.entries(this._dict)) {
+          s._docs.set(key, value.toDocument());
+        }
+        return s;
+      }
+    }
+
+    const readStore = async (directory: string) => {
+      const pkl = await fs.readFile(path.join(directory, "index.pkl"), "binary");
+      const pickle = await import('./pickle.js');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (pickle.emulated as Record<string, any>)['langchain.docstore.in_memory.InMemoryDocstore'] = PyInMemoryDocstore;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (pickle.emulated as Record<string, any>)['langchain.schema.Document'] = PyDocument;
+      const [pydoc, mapping]: [pydoc: PyInMemoryDocstore, mapping: Record<number, string>] = pickle.loads(pkl);
+      const store = pydoc.toInMemoryDocstore();
+
+      return { store, mapping };
+
+    };
+    const readIndex = async (directory: string) => {
+      const { IndexFlatL2 } = await this.imports();
+      return IndexFlatL2.read(path.join(directory, "index.faiss"));
+    };
+    const [store, index] = await Promise.all([
+      readStore(directory),
+      readIndex(directory)
+    ]);
+    return new this(embeddings, { docstore: store.store, index, mapping: store.mapping });
   }
 
   static async fromTexts(
