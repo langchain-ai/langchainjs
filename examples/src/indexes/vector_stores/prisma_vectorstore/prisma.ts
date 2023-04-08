@@ -6,6 +6,7 @@ export const run = async () => {
   const db = new PrismaClient();
 
   const vectorStore = PrismaVectorStore.withModel<Document>(db).create(
+    new OpenAIEmbeddings(),
     {
       prisma: Prisma,
       tableName: "Document",
@@ -14,8 +15,7 @@ export const run = async () => {
         id: PrismaVectorStore.IdColumn,
         content: PrismaVectorStore.ContentColumn,
       },
-    },
-    new OpenAIEmbeddings()
+    }
   );
 
   const texts = ["Hello world", "Bye bye", "What's this?"];
