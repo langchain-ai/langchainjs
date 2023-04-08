@@ -57,6 +57,12 @@ type SimilarityModel<
   _distance: number | null;
 };
 
+type DefaultPrismaVectorStore = PrismaVectorStore<
+  Record<string, unknown>,
+  string,
+  ModelColumns<Record<string, unknown>>
+>;
+
 export class PrismaVectorStore<
   TModel extends Record<string, unknown>,
   TModelName extends string,
@@ -81,14 +87,14 @@ export class PrismaVectorStore<
   protected Prisma: PrismaNamespace;
 
   constructor(
+    embeddings: Embeddings,
     config: {
       db: PrismaClient;
       prisma: PrismaNamespace;
       tableName: TModelName;
       vectorColumnName: string;
       columns: TSelectModel;
-    },
-    embeddings: Embeddings
+    }
   ) {
     super(embeddings, {});
 
@@ -124,22 +130,74 @@ export class PrismaVectorStore<
       TPrisma extends PrismaNamespace,
       TColumns extends ModelColumns<TModel>
     >(
+      embeddings: Embeddings,
       config: {
         prisma: TPrisma;
         tableName: keyof TPrisma["ModelName"] & string;
         vectorColumnName: string;
         columns: TColumns;
-      },
-      embeddings: Embeddings
+      }
     ) {
       type ModelName = keyof TPrisma["ModelName"] & string;
-      return new PrismaVectorStore<TModel, ModelName, TColumns>(
-        { db, ...config },
-        embeddings
-      );
+      return new PrismaVectorStore<TModel, ModelName, TColumns>(embeddings, {
+        ...config,
+        db,
+      });
     }
 
-    return { create };
+    async function fromTexts<
+      TPrisma extends PrismaNamespace,
+      TColumns extends ModelColumns<TModel>
+    >(
+      texts: string[],
+      metadatas: TModel[],
+      embeddings: Embeddings,
+      dbConfig: {
+        prisma: TPrisma;
+        tableName: keyof TPrisma["ModelName"] & string;
+        vectorColumnName: string;
+        columns: TColumns;
+      }
+    ) {
+      const docs: Document[] = [];
+      for (let i = 0; i < texts.length; i += 1) {
+        const metadata = Array.isArray(metadatas) ? metadatas[i] : metadatas;
+        const newDoc = new Document({
+          pageContent: texts[i],
+          metadata,
+        });
+        docs.push(newDoc);
+      }
+
+      return PrismaVectorStore.fromDocuments(docs, embeddings, {
+        ...dbConfig,
+        db,
+      });
+    }
+
+    async function fromDocuments<
+      TPrisma extends PrismaNamespace,
+      TColumns extends ModelColumns<TModel>
+    >(
+      docs: Document<TModel>[],
+      embeddings: Embeddings,
+      dbConfig: {
+        prisma: TPrisma;
+        tableName: keyof TPrisma["ModelName"] & string;
+        vectorColumnName: string;
+        columns: TColumns;
+      }
+    ) {
+      type ModelName = keyof TPrisma["ModelName"] & string;
+      const instance = new PrismaVectorStore<TModel, ModelName, TColumns>(
+        embeddings,
+        { ...dbConfig, db }
+      );
+      await instance.addDocuments(docs);
+      return instance;
+    }
+
+    return { create, fromTexts, fromDocuments };
   }
 
   async addModels(models: TModel[]) {
@@ -218,32 +276,44 @@ export class PrismaVectorStore<
     return results;
   }
 
-  /**
-   * @deprecated Not implemented in Prisma vectorstore, please use PrismaVectorStore.withModel instead
-   */
-  static fromTexts(
-    _texts: string[],
-    _metadatas: object[],
-    _embeddings: Embeddings,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    _dbConfig: Record<string, any>
-  ): Promise<VectorStore> {
-    throw new Error(
-      "Not implemented in Prisma vectorstore, please use PrismaVectorStore.withModel instead"
-    );
+  static async fromTexts(
+    texts: string[],
+    metadatas: object[],
+    embeddings: Embeddings,
+    dbConfig: {
+      db: PrismaClient;
+      prisma: PrismaNamespace;
+      tableName: string;
+      vectorColumnName: string;
+      columns: ModelColumns<Record<string, unknown>>;
+    }
+  ): Promise<DefaultPrismaVectorStore> {
+    const docs: Document[] = [];
+    for (let i = 0; i < texts.length; i += 1) {
+      const metadata = Array.isArray(metadatas) ? metadatas[i] : metadatas;
+      const newDoc = new Document({
+        pageContent: texts[i],
+        metadata,
+      });
+      docs.push(newDoc);
+    }
+
+    return PrismaVectorStore.fromDocuments(docs, embeddings, dbConfig);
   }
 
-  /**
-   * @deprecated Not implemented in Prisma vectorstore, please use PrismaVectorStore.withModel instead
-   */
-  static fromDocuments(
-    _docs: Document[],
-    _embeddings: Embeddings,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    _dbConfig: Record<string, any>
-  ): Promise<VectorStore> {
-    throw new Error(
-      "Not implemented in Prisma vectorstore, please use PrismaVectorStore.withModel instead"
-    );
+  static async fromDocuments(
+    docs: Document[],
+    embeddings: Embeddings,
+    dbConfig: {
+      db: PrismaClient;
+      prisma: PrismaNamespace;
+      tableName: string;
+      vectorColumnName: string;
+      columns: ModelColumns<Record<string, unknown>>;
+    }
+  ): Promise<DefaultPrismaVectorStore> {
+    const instance = new PrismaVectorStore(embeddings, dbConfig);
+    await instance.addDocuments(docs);
+    return instance;
   }
 }
