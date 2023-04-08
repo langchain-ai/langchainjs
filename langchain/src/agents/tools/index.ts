@@ -24,3 +24,4 @@ export { VectorStoreQATool } from "./vectorstore.js";
 export { ZapierNLARunAction, ZapierNLAWrapper } from "./zapier.js";
 export { Serper } from "./serper.js";
 export { AIPluginTool } from "./aiplugin.js";
+export { AWSLambda } from "./AWSLambda.js";

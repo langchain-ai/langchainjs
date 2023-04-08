@@ -99,6 +99,7 @@
   "author": "Langchain",
   "license": "MIT",
   "devDependencies": {
+    "@aws-sdk/client-lambda": "^3.309.0",
     "@babel/core": "^7.20.12",
     "@babel/preset-env": "^7.20.2",
     "@dqbd/tiktoken": "^1.0.2",
@@ -150,6 +151,7 @@
     "typescript": "^4.9.5"
   },
   "peerDependencies": {
+    "@aws-sdk/client-lambda": "^3.309.0",
     "@dqbd/tiktoken": "^1.0.2",
     "@getmetal/metal-sdk": "*",
     "@huggingface/inference": "^1.5.1",
