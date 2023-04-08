@@ -361,11 +361,15 @@ export class ConsoleCallbackHandler extends BaseCallbackHandler {
   }
 
   async handleAgentAction(action: AgentAction) {
-    colorLog(LogColor.Yellow, '\n', action.log);
+    if (action.log) {
+      colorLog(LogColor.Yellow, `\n${action.log.trim()}`);
+    }
   }
 
   async handleToolEnd(output: string) {
-    colorLog(LogColor.White, '\nTool output:\n', output);
+    if (output) {
+      colorLog(LogColor.White, `\nTool output:\n${output.trim()}`);
+    }
   }
 
   async handleText(text: string) {
