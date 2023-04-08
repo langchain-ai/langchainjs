@@ -150,7 +150,6 @@
     "typescript": "^4.9.5"
   },
   "peerDependencies": {
-    "@dqbd/tiktoken": "^1.0.2",
     "@getmetal/metal-sdk": "*",
     "@huggingface/inference": "^1.5.1",
     "@pinecone-database/pinecone": "^0.0.10",
@@ -171,9 +170,6 @@
     "typeorm": "^0.3.12"
   },
   "peerDependenciesMeta": {
-    "@dqbd/tiktoken": {
-      "optional": true
-    },
     "@getmetal/metal-sdk": {
       "optional": true
     },
@@ -231,6 +227,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.4.2",
+    "@dqbd/tiktoken": "^1.0.2",
     "binary-extensions": "^2.2.0",
     "browser-or-node": "^2.1.1",
     "expr-eval": "^2.0.2",
