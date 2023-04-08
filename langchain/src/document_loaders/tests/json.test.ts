@@ -1,5 +1,5 @@
-import url from "node:url";
-import path from "node:path";
+import * as url from "node:url";
+import * as path from "node:path";
 import { test, expect } from "@jest/globals";
 import { Document } from "../../document.js";
 import { JSONLoader } from "../json.js";
