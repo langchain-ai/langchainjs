@@ -278,10 +278,10 @@ export class RefineDocumentsChain
       fields.initialResponseName ?? this.initialResponseName;
   }
 
-  _constructInitialInputs(docs: Document[], rest: Record<string, unknown>) {
+  _constructInitialInputs(doc: Document, rest: Record<string, unknown>) {
     const baseInfo: Record<string, unknown> = {
-      page_content: docs[0].pageContent,
-      ...docs[0].metadata,
+      page_content: doc.pageContent,
+      ...doc.metadata,
     };
     const documentInfo: Record<string, unknown> = {};
     this.documentPrompt.inputVariables.forEach((value) => {
@@ -323,7 +323,7 @@ export class RefineDocumentsChain
 
     const currentDocs = docs as Document[];
 
-    const initialInputs = this._constructInitialInputs(currentDocs, rest);
+    const initialInputs = this._constructInitialInputs(currentDocs[0], rest);
     let res = await this.llmChain.predict({ ...initialInputs });
 
     const refineSteps = [res];
