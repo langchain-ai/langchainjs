@@ -1,5 +1,6 @@
 import { BaseChain, ChainInputs } from "./base.js";
-import { BaseMemory, BufferMemory } from "../memory/index.js";
+import { BaseMemory } from "../memory/base.js";
+import { BufferMemory } from "../memory/buffer_memory.js";
 import { PromptTemplate } from "../prompts/prompt.js";
 import { BasePromptTemplate } from "../prompts/base.js";
 import { BaseLanguageModel } from "../base_language/index.js";

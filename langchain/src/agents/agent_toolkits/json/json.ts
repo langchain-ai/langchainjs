@@ -6,7 +6,7 @@ import {
   JsonSpec,
 } from "../../tools/json.js";
 import { JSON_PREFIX, JSON_SUFFIX } from "./prompt.js";
-import { LLMChain } from "../../../chains/index.js";
+import { LLMChain } from "../../../chains/llm_chain.js";
 import { CreatePromptArgs, ZeroShotAgent } from "../../mrkl/index.js";
 import { Toolkit } from "../base.js";
 import { AgentExecutor } from "../../executor.js";

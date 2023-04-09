@@ -1,6 +1,6 @@
-import { VectorStore } from "../../vectorstores/index.js";
+import { VectorStore } from "../../vectorstores/base.js";
 import { BaseLanguageModel } from "../../base_language/index.js";
-import { VectorDBQAChain } from "../../chains/index.js";
+import { VectorDBQAChain } from "../../chains/vector_db_qa.js";
 import { Tool } from "./base.js";
 
 interface VectorStoreTool {

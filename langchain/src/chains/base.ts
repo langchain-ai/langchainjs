@@ -1,4 +1,4 @@
-import { BaseMemory } from "../memory/index.js";
+import { BaseMemory } from "../memory/base.js";
 import { ChainValues } from "../schema/index.js";
 import { CallbackManager, getCallbackManager } from "../callbacks/index.js";
 import { SerializedBaseChain } from "./serde.js";
