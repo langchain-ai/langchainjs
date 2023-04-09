@@ -44,8 +44,7 @@
     "eslint-plugin-react-hooks": "^4.6.0",
     "prettier": "^2.7.1",
     "typedoc": "^0.23.25",
-    "typedoc-plugin-markdown": "^3.14.0",
-    "typedoc-plugin-missing-exports": "^1.0.0"
+    "typedoc-plugin-markdown": "^3.14.0"
   },
   "browserslist": {
     "production": [

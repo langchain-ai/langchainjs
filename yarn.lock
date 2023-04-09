@@ -9899,7 +9899,6 @@ __metadata:
     react-dom: ^17.0.2
     typedoc: ^0.23.25
     typedoc-plugin-markdown: ^3.14.0
-    typedoc-plugin-missing-exports: ^1.0.0
     webpack: ^5.75.0
   languageName: unknown
   linkType: soft
@@ -22457,15 +22456,6 @@ __metadata:
   peerDependencies:
     typedoc: ">=0.23.0"
   checksum: 6205600052185b4b193ab8a253d9df5ccbc95002c948a07f9024bcd26f0f23fbcc089fda4d6b4c8f4172f4eaca2bf9c32129989f6baaace7261cf4a0e41c976b
-  languageName: node
-  linkType: hard
-
-"typedoc-plugin-missing-exports@npm:^1.0.0":
-  version: 1.0.0
-  resolution: "typedoc-plugin-missing-exports@npm:1.0.0"
-  peerDependencies:
-    typedoc: 0.22.x || 0.23.x
-  checksum: 11ef3ba347a88924397f2f2f84216e5d41f9714baba671e4f9a86dd4de22d5e5e47477a295776c4f489be91065a152fedcbfa9aa6cba90499894e6670441ce31
   languageName: node
   linkType: hard
 

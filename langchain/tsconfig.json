@@ -33,9 +33,6 @@
     "docs"
   ],
   "typedocOptions": {
-    "plugin": [
-      "typedoc-plugin-missing-exports"
-    ],
     "entryPoints": [
       "src/agents/index.ts",
       "src/agents/load.ts",
@@ -74,7 +71,6 @@
     "excludePrivate": true,
     "excludeInternal": true,
     "excludeExternals": true,
-    "internalModule": "internal",
     "readme": "none",
     "out": "docs"
   }
