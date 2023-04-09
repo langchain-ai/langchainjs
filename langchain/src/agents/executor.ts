@@ -1,4 +1,4 @@
-import { BaseChain, ChainInputs } from "../chains/index.js";
+import { BaseChain, ChainInputs } from "../chains/base.js";
 import { BaseSingleActionAgent } from "./agent.js";
 import { Tool } from "./tools/base.js";
 import { StoppingMethod } from "./types.js";

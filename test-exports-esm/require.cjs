@@ -1,7 +1,8 @@
 const assert = require("assert");
 const { OpenAI } = require("langchain");
 const { LLMChain } = require("langchain/chains");
-const { loadPrompt, ChatPromptTemplate } = require("langchain/prompts");
+const { ChatPromptTemplate } = require("langchain/prompts");
+const { loadPrompt } = require("langchain/prompts/load");
 const { HNSWLib } = require("langchain/vectorstores");
 const { OpenAIEmbeddings } = require("langchain/embeddings");
 const { InMemoryDocstore, Document } = require("langchain/docstore");

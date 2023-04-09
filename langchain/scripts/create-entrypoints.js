@@ -1,13 +1,17 @@
-import fs from "fs";
+import * as fs from "fs";
+import * as path from "path";
 
 const entrypoints = {
   agents: "agents/index",
+  "agents/load": "agents/load",
   base_language: "base_language/index",
   tools: "agents/tools/index",
   chains: "chains/index",
+  "chains/load": "chains/load",
   embeddings: "embeddings/index",
   llms: "llms/index",
   prompts: "prompts/index",
+  "prompts/load": "prompts/load",
   vectorstores: "vectorstores/index",
   text_splitter: "text_splitter",
   memory: "memory/index",
@@ -32,9 +36,14 @@ const updateJsonFile = (relativePath, updateFunction) => {
 const generateFiles = () => {
   const files = [...Object.entries(entrypoints), ["index", "index"]].flatMap(
     ([key, value]) => {
-      const compiledPath = `./dist/${value}.js`;
+      const nrOfDots = key.split("/").length - 1;
+      const relativePath = "../".repeat(nrOfDots) || "./";
+      const compiledPath = `${relativePath}dist/${value}.js`;
       return [
-        [`${key}.cjs`, `module.exports = require('./dist/${value}.cjs');`],
+        [
+          `${key}.cjs`,
+          `module.exports = require('${relativePath}dist/${value}.cjs');`,
+        ],
         [`${key}.js`, `export * from '${compiledPath}'`],
         [`${key}.d.ts`, `export * from '${compiledPath}'`],
       ];
@@ -92,6 +101,7 @@ const updateConfig = () => {
   }));
 
   Object.entries(generatedFiles).forEach(([filename, content]) => {
+    fs.mkdirSync(path.dirname(filename), { recursive: true });
     fs.writeFileSync(filename, content);
   });
   fs.writeFileSync("./.gitignore", filenames.join("\n") + "\n");

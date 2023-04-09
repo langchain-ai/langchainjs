@@ -1,7 +1,8 @@
 import assert from "assert";
 import { OpenAI } from "langchain";
 import { LLMChain } from "langchain/chains";
-import { loadPrompt, ChatPromptTemplate } from "langchain/prompts";
+import { ChatPromptTemplate } from "langchain/prompts";
+import { loadPrompt } from "langchain/prompts/load";
 import { HNSWLib } from "langchain/vectorstores";
 import { OpenAIEmbeddings, CohereEmbeddings } from "langchain/embeddings";
 import { InMemoryDocstore, Document } from "langchain/docstore";

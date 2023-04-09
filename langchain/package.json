@@ -13,6 +13,9 @@
     "agents.cjs",
     "agents.js",
     "agents.d.ts",
+    "agents/load.cjs",
+    "agents/load.js",
+    "agents/load.d.ts",
     "base_language.cjs",
     "base_language.js",
     "base_language.d.ts",
@@ -22,6 +25,9 @@
     "chains.cjs",
     "chains.js",
     "chains.d.ts",
+    "chains/load.cjs",
+    "chains/load.js",
+    "chains/load.d.ts",
     "embeddings.cjs",
     "embeddings.js",
     "embeddings.d.ts",
@@ -31,6 +37,9 @@
     "prompts.cjs",
     "prompts.js",
     "prompts.d.ts",
+    "prompts/load.cjs",
+    "prompts/load.js",
+    "prompts/load.d.ts",
     "vectorstores.cjs",
     "vectorstores.js",
     "vectorstores.d.ts",
@@ -266,13 +275,13 @@
     },
     "./agents": {
       "types": "./agents.d.ts",
-      "node": {
-        "import": "./agents.js",
-        "require": "./agents.cjs"
-      },
-      "import": "./dist/agents/index.lite.js",
-      "require": "./dist/agents/index.lite.cjs",
-      "default": "./dist/agents/index.lite.js"
+      "import": "./agents.js",
+      "require": "./agents.cjs"
+    },
+    "./agents/load": {
+      "types": "./agents/load.d.ts",
+      "import": "./agents/load.js",
+      "require": "./agents/load.cjs"
     },
     "./base_language": {
       "types": "./base_language.d.ts",
@@ -286,13 +295,13 @@
     },
     "./chains": {
       "types": "./chains.d.ts",
-      "node": {
-        "import": "./chains.js",
-        "require": "./chains.cjs"
-      },
-      "import": "./dist/chains/index.lite.js",
-      "require": "./dist/chains/index.lite.cjs",
-      "default": "./dist/chains/index.lite.js"
+      "import": "./chains.js",
+      "require": "./chains.cjs"
+    },
+    "./chains/load": {
+      "types": "./chains/load.d.ts",
+      "import": "./chains/load.js",
+      "require": "./chains/load.cjs"
     },
     "./embeddings": {
       "types": "./embeddings.d.ts",
@@ -316,13 +325,13 @@
     },
     "./prompts": {
       "types": "./prompts.d.ts",
-      "node": {
-        "import": "./prompts.js",
-        "require": "./prompts.cjs"
-      },
-      "import": "./dist/prompts/index.lite.js",
-      "require": "./dist/prompts/index.lite.cjs",
-      "default": "./dist/prompts/index.lite.js"
+      "import": "./prompts.js",
+      "require": "./prompts.cjs"
+    },
+    "./prompts/load": {
+      "types": "./prompts/load.d.ts",
+      "import": "./prompts/load.js",
+      "require": "./prompts/load.cjs"
     },
     "./vectorstores": {
       "types": "./vectorstores.d.ts",
