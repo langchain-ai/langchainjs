@@ -27,6 +27,7 @@ export class BufferMemory<I extends string, O extends string, MI extends string>
 
   constructor(fields?: Partial<BufferMemoryInput<I, O, MI>>) {
     super({
+      chatHistory: fields?.chatHistory,
       returnMessages: fields?.returnMessages ?? false,
       inputKey: fields?.inputKey,
       outputKey: fields?.outputKey,

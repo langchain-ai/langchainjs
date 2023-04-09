@@ -29,8 +29,8 @@ export class ChatMessageHistory extends BaseChatMessageHistory {
 }
 
 export interface BaseMemoryInput<I extends string, O extends string> {
-  chatHistory: ChatMessageHistory;
-  returnMessages: boolean;
+  chatHistory?: ChatMessageHistory;
+  returnMessages?: boolean;
   inputKey?: I;
   outputKey?: O;
 }
@@ -48,7 +48,7 @@ export abstract class BaseChatMemory<
 
   outputKey?: O;
 
-  constructor(fields?: Partial<BaseMemoryInput<I, O>>) {
+  constructor(fields?: BaseMemoryInput<I, O>) {
     super();
     this.chatHistory = fields?.chatHistory ?? new ChatMessageHistory();
     this.returnMessages = fields?.returnMessages ?? this.returnMessages;

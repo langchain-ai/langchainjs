@@ -34,7 +34,10 @@ export class BufferWindowMemory<
   k = 5;
 
   constructor(fields?: Partial<BufferWindowMemoryInput<I, O, MI>>) {
-    super({ returnMessages: fields?.returnMessages ?? false });
+    super({
+      returnMessages: fields?.returnMessages ?? false,
+      chatHistory: fields?.chatHistory,
+    });
     this.humanPrefix = fields?.humanPrefix ?? this.humanPrefix;
     this.aiPrefix = fields?.aiPrefix ?? this.aiPrefix;
     this.memoryKey = fields?.memoryKey ?? this.memoryKey;

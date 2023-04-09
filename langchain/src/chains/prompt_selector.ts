@@ -1,6 +1,7 @@
 import { BaseChatModel } from "../chat_models/base.js";
 import { BasePromptTemplate } from "../prompts/base.js";
 import { BaseLanguageModel } from "../base_language/index.js";
+import { BaseLLM } from "../llms/base.js";
 
 export abstract class BasePromptSelector {
   abstract getPrompt(llm: BaseLanguageModel): BasePromptTemplate;
@@ -37,10 +38,10 @@ export class ConditionalPromptSelector extends BasePromptSelector {
   }
 }
 
-export function isLLM(llm: BaseLanguageModel): llm is BaseLanguageModel {
-  return llm instanceof BaseLanguageModel;
+export function isLLM(llm: BaseLanguageModel): llm is BaseLLM {
+  return llm._modelType() === "base_llm";
 }
 
 export function isChatModel(llm: BaseLanguageModel): llm is BaseChatModel {
-  return llm instanceof BaseChatModel;
+  return llm._modelType() === "base_chat_model";
 }

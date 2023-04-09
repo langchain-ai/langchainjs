@@ -6,4 +6,4 @@ test("Test College confidential loader", async () => {
     "https://www.collegeconfidential.com/colleges/brown-university/"
   );
   await loader.load();
-}, 10000);
+});

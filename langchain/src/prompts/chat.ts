@@ -35,6 +35,23 @@ export abstract class BaseMessagePromptTemplate<
   }
 }
 
+export class ChatPromptValue extends BasePromptValue {
+  messages: BaseChatMessage[];
+
+  constructor(messages: BaseChatMessage[]) {
+    super();
+    this.messages = messages;
+  }
+
+  toString() {
+    return JSON.stringify(this.messages);
+  }
+
+  toChatMessages() {
+    return this.messages;
+  }
+}
+
 export class MessagesPlaceholder<
   K extends string = string,
   P extends string = string
@@ -80,6 +97,32 @@ export abstract class BaseMessageStringPromptTemplate<
     values: Record<K, any> & Partial<Record<P, any>>
   ): Promise<BaseChatMessage[]> {
     return [await this.format(values)];
+  }
+}
+
+export abstract class BaseChatPromptTemplate<
+  K extends string,
+  P extends string
+> extends BasePromptTemplate<K, P> {
+  constructor(input: BasePromptTemplateInput<K, P>) {
+    super(input);
+  }
+
+  abstract formatMessages(
+    values: Record<K, any> & Partial<Record<P, any>>
+  ): Promise<BaseChatMessage[]>;
+
+  async format(
+    values: Record<K, any> & Partial<Record<P, any>>
+  ): Promise<string> {
+    return (await this.formatPromptValue(values)).toString();
+  }
+
+  async formatPromptValue(
+    values: Record<K, any> & Partial<Record<P, any>>
+  ): Promise<BasePromptValue> {
+    const resultMessages = await this.formatMessages(values);
+    return new ChatPromptValue(resultMessages);
   }
 }
 
@@ -171,23 +214,6 @@ export class SystemMessagePromptTemplate<
   }
 }
 
-export class ChatPromptValue extends BasePromptValue {
-  messages: BaseChatMessage[];
-
-  constructor(messages: BaseChatMessage[]) {
-    super();
-    this.messages = messages;
-  }
-
-  toString() {
-    return JSON.stringify(this.messages);
-  }
-
-  toChatMessages() {
-    return this.messages;
-  }
-}
-
 export interface ChatPromptTemplateInput<K extends string, P extends string>
   extends BasePromptTemplateInput<K, P> {
   /**
@@ -204,7 +230,7 @@ export interface ChatPromptTemplateInput<K extends string, P extends string>
 }
 
 export class ChatPromptTemplate<K extends string, P extends string>
-  extends BasePromptTemplate<K, P>
+  extends BaseChatPromptTemplate<K, P>
   implements ChatPromptTemplateInput<K, P>
 {
   promptMessages: BaseMessagePromptTemplate<K, P>[];
@@ -260,15 +286,9 @@ export class ChatPromptTemplate<K extends string, P extends string>
     return "chat";
   }
 
-  async format(
+  async formatMessages(
     values: Record<K, any> & Partial<Record<P, any>>
-  ): Promise<string> {
-    return (await this.formatPromptValue(values)).toString();
-  }
-
-  async formatPromptValue(
-    values: Record<K, any> & Partial<Record<P, any>>
-  ): Promise<BasePromptValue> {
+  ): Promise<BaseChatMessage[]> {
     const allValues = await this.mergePartialAndUserVariables(values);
 
     let resultMessages: BaseChatMessage[] = [];
@@ -285,7 +305,7 @@ export class ChatPromptTemplate<K extends string, P extends string>
       const message = await promptMessage.formatMessages(inputValues);
       resultMessages = resultMessages.concat(message);
     }
-    return new ChatPromptValue(resultMessages);
+    return resultMessages;
   }
 
   serialize(): SerializedChatPromptTemplate {

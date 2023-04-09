@@ -75,15 +75,15 @@ export abstract class BasePromptTemplate<
   ): Promise<Record<K | P, any>> {
     const partialVariables = this.partialVariables ?? ({} as Record<P, any>);
     const partialValues = {} as Record<P, any>;
-    for (let i = 0; i < Object.keys(partialVariables).length; i += 1) {
-      const key = Object.keys(partialVariables)[i] as P;
-      const value = partialVariables[key];
+
+    for (const [key, value] of Object.entries(partialVariables)) {
       if (typeof value === "string") {
         partialValues[key] = value;
       } else {
         partialValues[key] = await value();
       }
     }
+
     const allKwargs = { ...partialValues, ...userVariables };
     return allKwargs;
   }

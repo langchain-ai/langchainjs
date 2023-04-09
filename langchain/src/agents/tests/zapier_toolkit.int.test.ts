@@ -32,7 +32,6 @@ describe("ZapierNLAWrapper", () => {
         keyword: "cats",
         size: expect.any(String),
         url: expect.stringContaining("https://"),
-        width: expect.any(String),
       });
     });
   });

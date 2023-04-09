@@ -1,5 +1,5 @@
 import { OpenAI } from "langchain";
-import { initializeAgentExecutor } from "langchain/agents";
+import { initializeAgentExecutor, Agent } from "langchain/agents";
 import { SerpAPI, Calculator } from "langchain/tools";
 import process from "process";
 import {
@@ -57,7 +57,8 @@ export const run = async () => {
       true,
       callbackManager
     );
-    executor.agent.llmChain.callbackManager = callbackManager;
+    const agent = executor.agent as Agent;
+    agent.llmChain.callbackManager = callbackManager;
     executors.push(executor);
   }
 

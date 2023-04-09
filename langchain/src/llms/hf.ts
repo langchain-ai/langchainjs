@@ -20,6 +20,9 @@ interface HFInput {
 
   /** Penalizes repeated tokens according to frequency */
   frequencyPenalty?: number;
+
+  /** API key to use. */
+  apiKey?: string;
 }
 
 export class HuggingFaceInference extends LLM implements HFInput {
@@ -35,6 +38,8 @@ export class HuggingFaceInference extends LLM implements HFInput {
 
   frequencyPenalty: number | undefined = undefined;
 
+  apiKey: string | undefined = undefined;
+
   constructor(fields?: Partial<HFInput> & BaseLLMParams) {
     super(fields ?? {});
 
@@ -44,6 +49,17 @@ export class HuggingFaceInference extends LLM implements HFInput {
     this.topP = fields?.topP ?? this.topP;
     this.topK = fields?.topK ?? this.topK;
     this.frequencyPenalty = fields?.frequencyPenalty ?? this.frequencyPenalty;
+    this.apiKey =
+      fields?.apiKey ??
+      (typeof process !== "undefined"
+        ? // eslint-disable-next-line no-process-env
+          process.env.HUGGINGFACEHUB_API_KEY
+        : undefined);
+    if (!this.apiKey) {
+      throw new Error(
+        "Please set an API key for HuggingFace Hub in the environment variable HUGGINGFACEHUB_API_KEY or in the apiKey field of the HuggingFaceInference constructor."
+      );
+    }
   }
 
   _llmType() {
@@ -51,13 +67,8 @@ export class HuggingFaceInference extends LLM implements HFInput {
   }
 
   async _call(prompt: string, _stop?: string[]): Promise<string> {
-    if (process.env.HUGGINGFACEHUB_API_KEY === "") {
-      throw new Error(
-        "Please set the HUGGINGFACEHUB_API_KEY environment variable"
-      );
-    }
     const { HfInference } = await HuggingFaceInference.imports();
-    const hf = new HfInference(process.env.HUGGINGFACEHUB_API_KEY ?? "");
+    const hf = new HfInference(this.apiKey);
     const res = await this.caller.call(hf.textGeneration.bind(hf), {
       model: this.model,
       parameters: {
