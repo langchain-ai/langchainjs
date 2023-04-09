@@ -36,4 +36,3 @@ export class ConversationChain<
     this.memory = fields.memory ?? new BufferMemory<I, O, MI>();
   }
 }
-

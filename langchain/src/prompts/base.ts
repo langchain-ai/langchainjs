@@ -25,10 +25,7 @@ export class StringPromptValue {
 /**
  * Input common to all prompt templates.
  */
-export interface BasePromptTemplateInput<
-  K extends string,
-  P extends string
-> {
+export interface BasePromptTemplateInput<K extends string, P extends string> {
   /**
    * A list of variable names the prompt template expects
    */
@@ -175,5 +172,7 @@ export abstract class BaseStringPromptTemplate<
 export abstract class BaseExampleSelector<K extends string, P extends string> {
   abstract addExample(example: Example<K, P>): Promise<void | string>;
 
-  abstract selectExamples(input_variables: Example<K, P>): Promise<Example<K, P>[]>;
+  abstract selectExamples(
+    input_variables: Example<K, P>
+  ): Promise<Example<K, P>[]>;
 }
