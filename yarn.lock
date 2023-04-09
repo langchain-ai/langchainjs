@@ -2961,15 +2961,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@mendable/search@npm:^0.0.57":
-  version: 0.0.57
-  resolution: "@mendable/search@npm:0.0.57"
+"@mendable/search@npm:^0.0.79":
+  version: 0.0.79
+  resolution: "@mendable/search@npm:0.0.79"
   dependencies:
     posthog-js: ^1.45.1
   peerDependencies:
     react: ^17.x || ^18.x
     react-dom: ^17.x || ^18.x
-  checksum: eacd3e5c7211e59474c2f3f52e416f214b9b5d82beec6eb95d0e4729c0a7a591a8ae48f43b5449d4c88246176bd6b793e4dd18cd0c8d0858723282d994c49115
+  checksum: 22b110a0afcdb0475c30f8e78b8fa5df0b227315a811ca37168e6759463caeb4922623ffd4e0843fbe69ebadec58e94b512aeb144ee7e731bd2fb4dea55eafba
   languageName: node
   linkType: hard
 
@@ -3229,6 +3229,34 @@ __metadata:
   version: 1.0.0-next.21
   resolution: "@polka/url@npm:1.0.0-next.21"
   checksum: c7654046d38984257dd639eab3dc770d1b0340916097b2fac03ce5d23506ada684e05574a69b255c32ea6a144a957c8cd84264159b545fca031c772289d88788
+  languageName: node
+  linkType: hard
+
+"@prisma/client@npm:^4.11.0":
+  version: 4.11.0
+  resolution: "@prisma/client@npm:4.11.0"
+  dependencies:
+    "@prisma/engines-version": 4.11.0-57.8fde8fef4033376662cad983758335009d522acb
+  peerDependencies:
+    prisma: "*"
+  peerDependenciesMeta:
+    prisma:
+      optional: true
+  checksum: ca8d8f820caaf4a76b94674f88207d5bb14f57a9682d37d2f79c56378f259cd3b14b30a110ab59a97647fcf3c46f896e7a2d20ded2777e09b835d7accd70cf1d
+  languageName: node
+  linkType: hard
+
+"@prisma/engines-version@npm:4.11.0-57.8fde8fef4033376662cad983758335009d522acb":
+  version: 4.11.0-57.8fde8fef4033376662cad983758335009d522acb
+  resolution: "@prisma/engines-version@npm:4.11.0-57.8fde8fef4033376662cad983758335009d522acb"
+  checksum: f040b93d09b21feaef193080eed22142fa26b3cf86d089ebb4286f5f45ed17a98e030a8bb55c0bec2892e15880a697f6754c6966b7795cf7ba4553f59fb387e7
+  languageName: node
+  linkType: hard
+
+"@prisma/engines@npm:4.11.0":
+  version: 4.11.0
+  resolution: "@prisma/engines@npm:4.11.0"
+  checksum: 98030cead39e5009b7a91fd2463433ccdb16cbeb6c7345ed7950c25dbe0731a425fc888458a1423b594d659972e081ca3d63d301ef647f05a634209c75769db2
   languageName: node
   linkType: hard
 
@@ -7263,7 +7291,7 @@ __metadata:
     "@docusaurus/preset-classic": 2.3.1
     "@docusaurus/remark-plugin-npm2yarn": ^2.3.1
     "@mdx-js/react": ^1.6.22
-    "@mendable/search": ^0.0.57
+    "@mendable/search": ^0.0.79
     clsx: ^1.2.1
     docusaurus-plugin-typedoc: ^0.18.0
     eslint: ^8.19.0
@@ -8042,6 +8070,13 @@ __metadata:
   peerDependencies:
     eslint: ^3 || ^4 || ^5 || ^6 || ^7 || ^8
   checksum: f166dd5fe7257c7b891c6692e6a3ede6f237a14043ae3d97581daf318fc5833ddc6b4871aa34ab7656187430170500f6d806895747ea17ecdf8231a666c3c2fd
+  languageName: node
+  linkType: hard
+
+"eslint-plugin-no-instanceof@npm:^1.0.1":
+  version: 1.0.1
+  resolution: "eslint-plugin-no-instanceof@npm:1.0.1"
+  checksum: 80b152b13869fd88debb9d387ca225dd18e5a75fe33f9510e71a65070a4862bfca5a57dc42b508259d8150f318312bf26c09e570874c2871bf0f59c4b745cfe5
   languageName: node
   linkType: hard
 
@@ -11508,6 +11543,7 @@ __metadata:
     "@dqbd/tiktoken": ^1.0.2
     "@getmetal/metal-sdk": ^1.0.12
     "@pinecone-database/pinecone": ^0.0.10
+    "@prisma/client": ^4.11.0
     "@supabase/supabase-js": ^2.10.0
     "@tsconfig/recommended": ^1.0.2
     "@types/js-yaml": ^4
@@ -11523,6 +11559,7 @@ __metadata:
     js-yaml: ^4.1.0
     langchain: "workspace:*"
     prettier: ^2.8.3
+    prisma: ^4.11.0
     sqlite3: ^5.1.4
     tsx: ^3.12.3
     typeorm: ^0.3.12
@@ -11567,6 +11604,7 @@ __metadata:
     eslint-config-airbnb-base: ^15.0.0
     eslint-config-prettier: ^8.6.0
     eslint-plugin-import: ^2.27.5
+    eslint-plugin-no-instanceof: ^1.0.1
     eslint-plugin-prettier: ^4.2.1
     eslint-plugin-tree-shaking: ^1.10.0
     exponential-backoff: ^3.1.0
@@ -11577,7 +11615,6 @@ __metadata:
     is-binary-path: ^2.1.0
     jest: ^29.5.0
     jsonpointer: ^5.0.1
-    lint-staged: ^13.1.1
     mammoth: ^1.5.1
     object-hash: ^3.0.0
     openai: ^3.2.0
@@ -14362,6 +14399,18 @@ __metadata:
   peerDependencies:
     react: ">=0.14.9"
   checksum: c18806dcbc4c0b4fd6fd15bd06b4f7c0a6da98d93af235c3e970854994eb9b59e23315abb6cfc29e69da26d36709a47e25da85ab27fed81b6812f0a52caf6dfa
+  languageName: node
+  linkType: hard
+
+"prisma@npm:^4.11.0":
+  version: 4.11.0
+  resolution: "prisma@npm:4.11.0"
+  dependencies:
+    "@prisma/engines": 4.11.0
+  bin:
+    prisma: build/index.js
+    prisma2: build/index.js
+  checksum: 760d80766ae16ad2d25cfc20d75433b020dff0937eab864b94b95beadd89e481508e4d3c6370a5df90749d5ac5c7af77c9c2f293b74bfdee0e548b04a905c2e7
   languageName: node
   linkType: hard
 
