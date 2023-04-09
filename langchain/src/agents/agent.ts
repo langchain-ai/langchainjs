@@ -47,9 +47,9 @@ export abstract class BaseAgent {
    * Return response when agent has been stopped due to max iterations
    */
   returnStoppedResponse(
-      earlyStoppingMethod: StoppingMethod,
-      _steps: AgentStep[],
-      _inputs: ChainValues
+    earlyStoppingMethod: StoppingMethod,
+    _steps: AgentStep[],
+    _inputs: ChainValues
   ): Promise<AgentFinish> {
     if (earlyStoppingMethod === "force") {
       return Promise.resolve({
@@ -65,8 +65,8 @@ export abstract class BaseAgent {
    * Prepare the agent for output, if needed
    */
   async prepareForOutput(
-      _returnValues: AgentFinish["returnValues"],
-      _steps: AgentStep[]
+    _returnValues: AgentFinish["returnValues"],
+    _steps: AgentStep[]
   ): Promise<AgentFinish["returnValues"]> {
     return {};
   }
@@ -82,8 +82,8 @@ export abstract class BaseSingleActionAgent extends BaseAgent {
    * @returns Action specifying what tool to use.
    */
   abstract plan(
-      steps: AgentStep[],
-      inputs: ChainValues
+    steps: AgentStep[],
+    inputs: ChainValues
   ): Promise<AgentAction | AgentFinish>;
 }
 
@@ -97,11 +97,10 @@ export abstract class BaseMultiActionAgent extends BaseAgent {
    * @returns Actions specifying what tools to use.
    */
   abstract plan(
-      steps: AgentStep[],
-      inputs: ChainValues
+    steps: AgentStep[],
+    inputs: ChainValues
   ): Promise<AgentAction[] | AgentFinish>;
 }
-
 
 export interface LLMSingleActionAgentInput {
   llmChain: LLMChain;

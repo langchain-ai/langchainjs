@@ -1,9 +1,14 @@
 import { BaseChain, ChainInputs } from "../chains/index.js";
-import {BaseMultiActionAgent, BaseSingleActionAgent} from "./agent.js";
+import { BaseMultiActionAgent, BaseSingleActionAgent } from "./agent.js";
 import { Tool } from "./tools/base.js";
 import { StoppingMethod } from "./types.js";
 import { SerializedLLMChain } from "../chains/serde.js";
-import {AgentAction, AgentFinish, AgentStep, ChainValues} from "../schema/index.js";
+import {
+  AgentAction,
+  AgentFinish,
+  AgentStep,
+  ChainValues,
+} from "../schema/index.js";
 
 interface AgentExecutorInput extends ChainInputs {
   agent: BaseSingleActionAgent | BaseMultiActionAgent;
@@ -64,7 +69,7 @@ export class AgentExecutor extends BaseChain {
 
   async _call(inputs: ChainValues): Promise<ChainValues> {
     const toolsByName = Object.fromEntries(
-        this.tools.map((t) => [t.name.toLowerCase(), t])
+      this.tools.map((t) => [t.name.toLowerCase(), t])
     );
     const steps: AgentStep[] = [];
     let iterations = 0;
@@ -95,16 +100,16 @@ export class AgentExecutor extends BaseChain {
       }
 
       const newSteps = await Promise.all(
-          actions.map(async (action) => {
-            await this.callbackManager.handleAgentAction(action, this.verbose);
+        actions.map(async (action) => {
+          await this.callbackManager.handleAgentAction(action, this.verbose);
 
-            const tool = toolsByName[action.tool?.toLowerCase()];
-            const observation = tool
-                ? await tool.call(action.toolInput, this.verbose)
-                : `${action.tool} is not a valid tool, try another one.`;
+          const tool = toolsByName[action.tool?.toLowerCase()];
+          const observation = tool
+            ? await tool.call(action.toolInput, this.verbose)
+            : `${action.tool} is not a valid tool, try another one.`;
 
-            return { action, observation };
-          })
+          return { action, observation };
+        })
       );
 
       steps.push(...newSteps);
@@ -123,9 +128,9 @@ export class AgentExecutor extends BaseChain {
     }
 
     const finish = await this.agent.returnStoppedResponse(
-        this.earlyStoppingMethod,
-        steps,
-        inputs
+      this.earlyStoppingMethod,
+      steps,
+      inputs
     );
 
     return getOutput(finish);
