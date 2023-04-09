@@ -100,8 +100,11 @@ export class ChatMessagePromptTemplate<
     this.role = role;
   }
 
-  static fromTemplate(template: string, role: string) {
-    return new this(PromptTemplate.fromTemplate(template), role);
+  static fromTemplate<K extends string, P extends string = never>(
+    template: string,
+    role: string
+  ) {
+    return new this(PromptTemplate.fromTemplate<K, P>(template), role);
   }
 }
 
@@ -119,8 +122,8 @@ export class HumanMessagePromptTemplate<
     super(prompt);
   }
 
-  static fromTemplate(template: string) {
-    return new this(PromptTemplate.fromTemplate(template));
+  static fromTemplate<K extends string, P extends string = never>(template: string) {
+    return new this(PromptTemplate.fromTemplate<K, P>(template));
   }
 }
 
@@ -138,8 +141,8 @@ export class AIMessagePromptTemplate<
     super(prompt);
   }
 
-  static fromTemplate(template: string) {
-    return new this(PromptTemplate.fromTemplate(template));
+  static fromTemplate<K extends string, P extends string = never>(template: string) {
+    return new this(PromptTemplate.fromTemplate<K, P>(template));
   }
 }
 
@@ -157,8 +160,8 @@ export class SystemMessagePromptTemplate<
     super(prompt);
   }
 
-  static fromTemplate(template: string) {
-    return new this(PromptTemplate.fromTemplate(template));
+  static fromTemplate<K extends string, P extends string = never>(template: string) {
+    return new this(PromptTemplate.fromTemplate<K, P>(template));
   }
 }
 
@@ -179,10 +182,8 @@ export class ChatPromptValue extends BasePromptValue {
   }
 }
 
-export interface ChatPromptTemplateInput<
-  K extends string,
-  P extends string
-> extends BasePromptTemplateInput<K, P> {
+export interface ChatPromptTemplateInput<K extends string, P extends string>
+  extends BasePromptTemplateInput<K, P> {
   /**
    * The prompt messages
    */
@@ -217,7 +218,9 @@ export class ChatPromptTemplate<K extends string, P extends string>
       }
       const inputVariablesInstance = new Set<string>(
         this.partialVariables
-          ? (this.inputVariables as string[]).concat(Object.keys(this.partialVariables))
+          ? (this.inputVariables as string[]).concat(
+              Object.keys(this.partialVariables)
+            )
           : this.inputVariables
       );
       const difference = new Set(
@@ -296,7 +299,9 @@ export class ChatPromptTemplate<K extends string, P extends string>
   ): Promise<BasePromptTemplate<Exclude<K, P2>, P | P2>> {
     // This is implemented in a way it doesn't require making
     // BaseMessagePromptTemplate aware of .partial()
-    const promptDict: ChatPromptTemplateInput<Exclude<K, P2>, P | P2> = { ...this } as never;
+    const promptDict: ChatPromptTemplateInput<Exclude<K, P2>, P | P2> = {
+      ...this,
+    } as never;
     promptDict.inputVariables = this.inputVariables.filter(
       (iv) => !(iv in values)
     ) as Exclude<K, P2>[];

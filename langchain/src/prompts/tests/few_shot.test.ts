@@ -69,7 +69,9 @@ test("Test partial with function", async () => {
 });
 
 test("Test partial with function and examples", async () => {
-  const examplePrompt = PromptTemplate.fromTemplate("An example about {x}");
+  const examplePrompt = PromptTemplate.fromTemplate<"x">(
+    "An example about {x}"
+  );
   const prompt = new FewShotPromptTemplate({
     prefix: "{foo}{bar}",
     examples: [{ x: "foo" }, { x: "bar" }],

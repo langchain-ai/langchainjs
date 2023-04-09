@@ -64,10 +64,10 @@ export class PromptTemplate<K extends string, P extends string>
     Object.assign(this, input);
 
     if (this.validateTemplate) {
-      let totalInputVariables = this.inputVariables;
+      let totalInputVariables: string[] = this.inputVariables;
       if (this.partialVariables) {
         totalInputVariables = totalInputVariables.concat(
-          Object.keys(this.partialVariables) as any
+          Object.keys(this.partialVariables)
         );
       }
       checkValidTemplate(
@@ -119,24 +119,24 @@ export class PromptTemplate<K extends string, P extends string>
   /**
    * Load prompt template from a template f-string
    */
-  static fromTemplate(
+  static fromTemplate<K extends string, P extends string = never>(
     template: string,
     {
       templateFormat = "f-string",
       ...rest
     }: Omit<
-      PromptTemplateInput<string, string>,
+      PromptTemplateInput<K, P>,
       "template" | "inputVariables"
     > = {}
   ) {
-    const names = new Set<string>();
+    const names = new Set<K>();
     parseTemplate(template, templateFormat).forEach((node) => {
       if (node.type === "variable") {
-        names.add(node.name);
+        names.add(node.name as K);
       }
     });
 
-    return new PromptTemplate({
+    return new PromptTemplate<K, P>({
       inputVariables: [...names],
       templateFormat,
       template,
@@ -147,7 +147,9 @@ export class PromptTemplate<K extends string, P extends string>
   async partial<P2 extends K>(
     values: Record<P2, any>
   ): Promise<PromptTemplate<Exclude<K, P2>, P | P2>> {
-    const promptDict: PromptTemplate<Exclude<K, P2>, P | P2> = { ...this } as never;
+    const promptDict: PromptTemplate<Exclude<K, P2>, P | P2> = {
+      ...this,
+    } as never;
     promptDict.inputVariables = this.inputVariables.filter(
       (iv) => !(iv in values)
     ) as Exclude<K, P2>[];

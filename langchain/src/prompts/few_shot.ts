@@ -18,15 +18,22 @@ import {
   SerializedFewShotTemplate,
   SerializedPromptTemplate,
 } from "./serde.js";
-import { Example, InputValues, PartialValues } from "../schema/index.js";
+// import { Example } from "../schema/index.js";
+type Example<ExK extends string, ExP extends string> = Record<ExK, any> &
+  Partial<Record<ExP, any>>;
 
-export interface FewShotPromptTemplateInput extends BasePromptTemplateInput {
+export interface FewShotPromptTemplateInput<
+  K extends string,
+  P extends string,
+  ExK extends string,
+  ExP extends string
+> extends BasePromptTemplateInput<K, P> {
   /**
    * Examples to format into the prompt. Exactly one of this or
    * {@link exampleSelector} must be
    * provided.
    */
-  examples?: Example[];
+  examples?: Example<ExK, ExP>[];
 
   /**
    * An {@link BaseExampleSelector} Examples to format into the prompt. Exactly one of this or
@@ -38,7 +45,7 @@ export interface FewShotPromptTemplateInput extends BasePromptTemplateInput {
   /**
    * An {@link PromptTemplate} used to format a single example.
    */
-  examplePrompt: PromptTemplate;
+  examplePrompt: PromptTemplate<ExK, ExP>;
 
   /**
    * String separator used to join the prefix, the examples, and suffix.
@@ -73,15 +80,20 @@ export interface FewShotPromptTemplateInput extends BasePromptTemplateInput {
  * @augments BasePromptTemplate
  * @augments FewShotPromptTemplateInput
  */
-export class FewShotPromptTemplate
-  extends BaseStringPromptTemplate
-  implements FewShotPromptTemplateInput
+export class FewShotPromptTemplate<
+    K extends string,
+    P extends string,
+    ExK extends string,
+    ExP extends string
+  >
+  extends BaseStringPromptTemplate<K, P>
+  implements FewShotPromptTemplateInput<K, P, ExK, ExP>
 {
-  examples?: InputValues[];
+  examples?: any[];
 
   exampleSelector?: BaseExampleSelector | undefined;
 
-  examplePrompt: PromptTemplate;
+  examplePrompt: PromptTemplate<ExK, ExP>;
 
   suffix = "";
 
@@ -93,7 +105,7 @@ export class FewShotPromptTemplate
 
   validateTemplate = true;
 
-  constructor(input: FewShotPromptTemplateInput) {
+  constructor(input: FewShotPromptTemplateInput<K, P, ExK, ExP>) {
     super(input);
     Object.assign(this, input);
 
@@ -110,7 +122,7 @@ export class FewShotPromptTemplate
     }
 
     if (this.validateTemplate) {
-      let totalInputVariables = this.inputVariables;
+      let totalInputVariables: string[] = this.inputVariables;
       if (this.partialVariables) {
         totalInputVariables = totalInputVariables.concat(
           Object.keys(this.partialVariables)
@@ -128,9 +140,7 @@ export class FewShotPromptTemplate
     return "few_shot";
   }
 
-  private async getExamples(
-    inputVariables: InputValues
-  ): Promise<InputValues[]> {
+  private async getExamples(inputVariables: any): Promise<any[]> {
     if (this.examples !== undefined) {
       return this.examples;
     }
@@ -143,19 +153,30 @@ export class FewShotPromptTemplate
     );
   }
 
-  async partial(values: PartialValues): Promise<FewShotPromptTemplate> {
-    const promptDict: FewShotPromptTemplate = { ...this };
+  async partial<P2 extends K>(
+    values: Record<P2, any>
+  ): Promise<FewShotPromptTemplate<Exclude<K, P2>, P | P2, ExK, ExP>> {
+    const promptDict: FewShotPromptTemplate<
+      Exclude<K, P2>,
+      P | P2,
+      ExK,
+      ExP
+    > = {
+      ...this,
+    } as never;
     promptDict.inputVariables = this.inputVariables.filter(
       (iv) => !(iv in values)
-    );
+    ) as Exclude<K, P2>[];
     promptDict.partialVariables = {
       ...(this.partialVariables ?? {}),
       ...values,
-    };
+    } as Record<P | P2, any>;
     return new FewShotPromptTemplate(promptDict);
   }
 
-  async format(values: InputValues): Promise<string> {
+  async format(
+    values: Record<K, any> & Partial<Record<P, any>>
+  ): Promise<string> {
     const allValues = await this.mergePartialAndUserVariables(values);
     const examples = await this.getExamples(allValues);
 
@@ -193,14 +214,14 @@ export class FewShotPromptTemplate
 
   static async deserialize(
     data: SerializedFewShotTemplate
-  ): Promise<FewShotPromptTemplate> {
+  ): Promise<FewShotPromptTemplate<string, string, string, string>> {
     const serializedPrompt = await resolveConfigFromFile<
       "example_prompt",
       SerializedPromptTemplate
     >("example_prompt", data);
     const examplePrompt = await PromptTemplate.deserialize(serializedPrompt);
 
-    let examples: Example[];
+    let examples: Example<string, string>[];
 
     if (typeof data.examples === "string") {
       examples = await parseFileConfig(data.examples, ".json", [
