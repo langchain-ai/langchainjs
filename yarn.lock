@@ -4694,15 +4694,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@pinecone-database/pinecone@npm:^0.0.10":
-  version: 0.0.10
-  resolution: "@pinecone-database/pinecone@npm:0.0.10"
-  dependencies:
-    cross-fetch: ^3.1.5
-  checksum: bc4de93134f03574bbf09d40ed16936cd981594748d71d741fe392963075b8b9d0e8effbfea19c90b7019f7defd4b79b440fa33f18d0734d81c39caf4e68783e
-  languageName: node
-  linkType: hard
-
 "@pinecone-database/pinecone@npm:^0.0.12":
   version: 0.0.12
   resolution: "@pinecone-database/pinecone@npm:0.0.12"
@@ -15642,7 +15633,7 @@ __metadata:
   dependencies:
     "@dqbd/tiktoken": ^1.0.2
     "@getmetal/metal-sdk": ^1.0.12
-    "@pinecone-database/pinecone": ^0.0.10
+    "@pinecone-database/pinecone": ^0.0.12
     "@prisma/client": ^4.11.0
     "@supabase/supabase-js": ^2.10.0
     "@tsconfig/recommended": ^1.0.2

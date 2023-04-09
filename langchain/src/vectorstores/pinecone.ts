@@ -1,4 +1,3 @@
-import type { VectorOperationsApi } from "@pinecone-database/pinecone/dist/pinecone-generated-ts-fetch";
 import { v4 as uuidv4 } from "uuid";
 import flatten from "flat";
 
@@ -8,6 +7,10 @@ import { Document } from "../document.js";
 
 // eslint-disable-next-line @typescript-eslint/ban-types, @typescript-eslint/no-explicit-any
 type PineconeMetadata = Record<string, any>;
+
+type VectorOperationsApi = ReturnType<
+  import("@pinecone-database/pinecone").PineconeClient["Index"]
+>;
 
 export interface PineconeLibArgs {
   pineconeIndex: VectorOperationsApi;
