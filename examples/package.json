@@ -19,7 +19,7 @@
     "format": "prettier --write \"**/*.ts\"",
     "format:check": "prettier --check \"**/*.ts\""
   },
-  "author": "Langchain",
+  "author": "LangChain",
   "license": "MIT",
   "dependencies": {
     "@dqbd/tiktoken": "^1.0.2",

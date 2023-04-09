@@ -24,9 +24,10 @@ SERPAPI_API_KEY="..."
 Now we can get started!
 
 ```typescript
-import { OpenAI } from "langchain";
+import { OpenAI } from "langchain/llms/openai";
 import { initializeAgentExecutor } from "langchain/agents";
-import { SerpAPI, Calculator } from "langchain/tools";
+import { SerpAPI } from "langchain/tools";
+import { Calculator } from "langchain/tools/calculator";
 
 const model = new OpenAI({ temperature: 0 });
 const tools = [new SerpAPI(), new Calculator()];

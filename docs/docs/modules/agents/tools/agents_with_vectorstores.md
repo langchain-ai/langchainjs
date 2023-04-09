@@ -7,7 +7,7 @@ The recommended method for doing so is to create a VectorDBQAChain and then use 
 First, you'll want to import the relevant modules:
 
 ```typescript
-import { OpenAI } from "langchain";
+import { OpenAI } from "langchain/llms/openai";
 import { initializeAgentExecutor } from "langchain/agents";
 import { SerpAPI, Calculator, ChainTool } from "langchain/tools";
 import { VectorDBQAChain } from "langchain/chains";

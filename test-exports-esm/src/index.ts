@@ -1,5 +1,5 @@
 import assert from "assert";
-import { OpenAI } from "langchain";
+import { OpenAI } from "langchain/llms/openai";
 import { LLMChain } from "langchain/chains";
 import { ChatPromptTemplate } from "langchain/prompts";
 import { loadPrompt } from "langchain/prompts/load";

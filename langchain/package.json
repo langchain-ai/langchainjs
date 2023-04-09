@@ -231,7 +231,7 @@
     "format": "prettier --write \"src\"",
     "format:check": "prettier --check \"src\""
   },
-  "author": "Langchain",
+  "author": "LangChain",
   "license": "MIT",
   "devDependencies": {
     "@babel/core": "^7.20.12",

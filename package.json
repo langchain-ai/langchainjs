@@ -37,7 +37,7 @@
     "precommit": "turbo run precommit",
     "docs": "yarn workspace docs start"
   },
-  "author": "Langchain",
+  "author": "LangChain",
   "license": "MIT",
   "devDependencies": {
     "@tsconfig/recommended": "^1.0.2",

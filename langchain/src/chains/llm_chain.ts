@@ -31,7 +31,9 @@ export interface LLMChainInput extends ChainInputs {
  *
  * @example
  * ```ts
- * import { LLMChain, OpenAI, PromptTemplate } from "langchain";
+ * import { LLMChain } from "langchain/chains";
+ * import { OpenAI } from "langchain/llms/openai";
+ * import { PromptTemplate } from "langchain/prompts";
  * const prompt = PromptTemplate.fromTemplate("Tell me a {adjective} joke");
  * const llm = LLMChain({ llm: new OpenAI(), prompt });
  * ```

@@ -1,5 +1,5 @@
 const assert = require("assert");
-const { OpenAI } = require("langchain");
+const { OpenAI } = require("langchain/llms/openai");
 const { LLMChain } = require("langchain/chains");
 const { ChatPromptTemplate } = require("langchain/prompts");
 const { loadPrompt } = require("langchain/prompts/load");

@@ -5,9 +5,9 @@ This example shows how to load and use an agent with a OpenAPI toolkit.
 ```typescript
 import * as fs from "fs";
 import * as yaml from "js-yaml";
+import { OpenAI } from "langchain/llms/openai";
 import { JsonSpec, JsonObject } from "langchain/tools";
 import { createOpenApiAgent, OpenApiToolkit } from "langchain/agents";
-import { OpenAI } from "langchain";
 
 export const run = async () => {
   let data: JsonObject;
