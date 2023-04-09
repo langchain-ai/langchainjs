@@ -279,7 +279,6 @@
     "sqlite3": "^5.1.4",
     "srt-parser-2": "^1.2.2",
     "ts-jest": "^29.0.5",
-    "ts-node": "^10.9.1",
     "typeorm": "^0.3.12",
     "typescript": "^4.9.5"
   },
@@ -360,7 +359,7 @@
     }
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.4.2",
+    "@anthropic-ai/sdk": "^0.4.3",
     "@dqbd/tiktoken": "^1.0.4",
     "binary-extensions": "^2.2.0",
     "browser-or-node": "^2.1.1",

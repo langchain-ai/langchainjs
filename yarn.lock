@@ -189,13 +189,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@anthropic-ai/sdk@npm:^0.4.2":
-  version: 0.4.2
-  resolution: "@anthropic-ai/sdk@npm:0.4.2"
+"@anthropic-ai/sdk@npm:^0.4.3":
+  version: 0.4.3
+  resolution: "@anthropic-ai/sdk@npm:0.4.3"
   dependencies:
     "@fortaine/fetch-event-source": ^3.0.6
     cross-fetch: ^3.1.5
-  checksum: 5d9a1cf230659a4352d4d659dde9bf77a97d3c90e25ac729e67e8fe9c6e963becd09c3db3656b8359f5e232247399ce7c52962ffcac05761fab43511af733659
+  checksum: 57fa5c6262f8796cebd64f25b128bfdbfb1691bea6855928873d56c8463186a783a81c242320e222a20b90ae205020bdfb29bddea5ff2ba6d7d50533b3e1b15c
   languageName: node
   linkType: hard
 
@@ -15661,7 +15661,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "langchain@workspace:langchain"
   dependencies:
-    "@anthropic-ai/sdk": ^0.4.2
+    "@anthropic-ai/sdk": ^0.4.3
     "@babel/core": ^7.20.12
     "@babel/preset-env": ^7.20.2
     "@dqbd/tiktoken": ^1.0.4
