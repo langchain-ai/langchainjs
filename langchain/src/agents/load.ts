@@ -1,5 +1,5 @@
 import { Agent } from "./agent.js";
-import { Tool } from "./tools/base.js";
+import { Tool } from "../tools/base.js";
 import { BaseLanguageModel } from "../base_language/index.js";
 import { loadFromHub } from "../util/hub.js";
 import { FileLoader, loadFromFile } from "../util/load.js";

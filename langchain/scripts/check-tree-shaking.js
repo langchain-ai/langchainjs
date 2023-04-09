@@ -13,7 +13,7 @@ export function listEntrypoints() {
     }
     if (typeof value === "string") {
       entrypoints.push(value);
-    } else if (typeof value === "object") {
+    } else if (typeof value === "object" && value.import) {
       entrypoints.push(value.import);
     }
   }

@@ -20,7 +20,7 @@ npm install cheerio
 ## Usage
 
 ```typescript
-import { CheerioWebBaseLoader } from "langchain/document_loaders";
+import { CheerioWebBaseLoader } from "langchain/document_loaders/web/cheerio";
 
 const loader = new CheerioWebBaseLoader(
   "https://news.ycombinator.com/item?id=34817881"

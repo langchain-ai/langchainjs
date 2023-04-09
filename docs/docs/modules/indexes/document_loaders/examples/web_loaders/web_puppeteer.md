@@ -20,7 +20,7 @@ npm install puppeteer
 ## Usage
 
 ```typescript
-import { PuppeteerWebBaseLoader } from "langchain/document_loaders";
+import { PuppeteerWebBaseLoader } from "langchain/document_loaders/web/puppeteer";
 
 /**
  * Loader uses `page.evaluate(() => document.body.innerHTML)`
@@ -54,7 +54,7 @@ By passing these options to the `PuppeteerWebBaseLoader` constructor, you can cu
 Here is a basic example to do it:
 
 ```typescript
-import { PuppeteerWebBaseLoader } from "langchain/document_loaders";
+import { PuppeteerWebBaseLoader } from "langchain/document_loaders/web/puppeteer";
 
 const loader = new PuppeteerWebBaseLoader("https://www.tabnews.com.br/", {
   launchOptions: {

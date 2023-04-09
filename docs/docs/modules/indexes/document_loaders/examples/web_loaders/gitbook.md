@@ -15,7 +15,7 @@ npm install cheerio
 ## Load from single GitBook page
 
 ```typescript
-import { GitbookLoader } from "langchain/document_loaders";
+import { GitbookLoader } from "langchain/document_loaders/web/gitbook";
 
 const loader = new GitbookLoader(
   "https://docs.gitbook.com/product-tour/navigation"
@@ -29,7 +29,7 @@ const docs = await loader.load();
 For this to work, the GitbookLoader needs to be initialized with the root path (https://docs.gitbook.com in this example) and have `shouldLoadAllPaths` set to `true`.
 
 ```typescript
-import { GitbookLoader } from "langchain/document_loaders";
+import { GitbookLoader } from "langchain/document_loaders/web/gitbook";
 
 const loader = new GitbookLoader("https://docs.gitbook.com", {
   shouldLoadAllPaths: true,

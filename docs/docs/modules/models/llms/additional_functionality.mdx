@@ -39,7 +39,7 @@ The default cache is stored in-memory. This means that if you restart your appli
 To enable it you can pass `cache: true` when you instantiate the LLM. For example:
 
 ```typescript
-import { OpenAI } from "langchain/llms";
+import { OpenAI } from "langchain/llms/openai";
 
 const model = new OpenAI({ cache: true });
 ```
@@ -55,7 +55,7 @@ npm install redis
 Then, you can pass a `cache` option when you instantiate the LLM. For example:
 
 ```typescript
-import { OpenAI } from "langchain/llms";
+import { OpenAI } from "langchain/llms/openai";
 import { RedisCache } from "langchain/cache";
 import { createClient } from "redis";
 
@@ -83,7 +83,7 @@ For example, if you set `maxConcurrency: 5`, then LangChain will only send 5 req
 To use this feature, simply pass `maxConcurrency: <number>` when you instantiate the LLM. For example:
 
 ```typescript
-import { OpenAI } from "langchain/llms";
+import { OpenAI } from "langchain/llms/openai";
 
 const model = new OpenAI({ maxConcurrency: 5 });
 ```
@@ -93,7 +93,7 @@ const model = new OpenAI({ maxConcurrency: 5 });
 If the model provider returns an error from their API, by default LangChain will retry up to 6 times on an exponential backoff. This enables error recovery without any additional effort from you. If you want to change this behavior, you can pass a `maxRetries` option when you instantiate the model. For example:
 
 ```typescript
-import { OpenAI } from "langchain/llms";
+import { OpenAI } from "langchain/llms/openai";
 
 const model = new OpenAI({ maxRetries: 10 });
 ```

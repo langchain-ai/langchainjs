@@ -1,6 +1,6 @@
 import { DEFAULT_SQL_DATABASE_PROMPT } from "./sql_db_prompt.js";
 import { BaseChain } from "../base.js";
-import { BaseMemory } from "../../memory/index.js";
+import { BaseMemory } from "../../memory/base.js";
 import { LLMChain } from "../llm_chain.js";
 import type { SqlDatabase } from "../../sql_db.js";
 import { ChainValues } from "../../schema/index.js";

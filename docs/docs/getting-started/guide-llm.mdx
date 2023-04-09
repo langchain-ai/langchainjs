@@ -107,7 +107,7 @@ The most core type of chain is an LLMChain, which consists of a PromptTemplate a
 Extending the previous example, we can construct an LLMChain which takes user input, formats it with a PromptTemplate, and then passes the formatted response to an LLM.
 
 ```typescript
-import { OpenAI } from "langchain/llms";
+import { OpenAI } from "langchain/llms/openai";
 import { PromptTemplate } from "langchain/prompts";
 
 const model = new OpenAI({ temperature: 0.9 });
@@ -200,7 +200,7 @@ LangChain provides several specially created chains just for this purpose. This 
 By default, the `ConversationChain` has a simple type of memory that remembers all previous inputs/outputs and adds them to the context that is passed. Let's take a look at using this chain.
 
 ```typescript
-import { OpenAI } from "langchain/llms";
+import { OpenAI } from "langchain/llms/openai";
 import { BufferMemory } from "langchain/memory";
 import { ConversationChain } from "langchain/chains";
 

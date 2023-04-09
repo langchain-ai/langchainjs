@@ -1,11 +1,11 @@
 import * as url from "node:url";
 import * as path from "node:path";
 import { test, expect } from "@jest/globals";
-import { DirectoryLoader, UnknownHandling } from "../path/directory.js";
-import { CSVLoader } from "../path/csv.js";
-import { PDFLoader } from "../path/pdf.js";
-import { TextLoader } from "../path/text.js";
-import { JSONLoader } from "../path/json.js";
+import { DirectoryLoader, UnknownHandling } from "../fs/directory.js";
+import { CSVLoader } from "../fs/csv.js";
+import { PDFLoader } from "../fs/pdf.js";
+import { TextLoader } from "../fs/text.js";
+import { JSONLoader } from "../fs/json.js";
 
 test("Test Directory loader", async () => {
   const directoryPath = path.resolve(

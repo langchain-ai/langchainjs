@@ -14,7 +14,7 @@ import {
   StoppingMethod,
   AgentActionOutputParser,
 } from "./types.js";
-import { Tool } from "./tools/base.js";
+import { Tool } from "../tools/base.js";
 
 class ParseError extends Error {
   output: string;

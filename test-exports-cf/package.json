@@ -15,6 +15,7 @@
     "start": "wrangler dev",
     "deploy": "wrangler publish",
     "build": "wrangler publish --dry-run --outdir=dist",
-    "test:integration": "vitest run"
+    "test": "vitest run **/*.unit.test.ts",
+    "test:integration": "vitest run **/*.int.test.ts"
   }
 }

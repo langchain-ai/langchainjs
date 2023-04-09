@@ -1,4 +1,4 @@
-import { PrismaVectorStore } from "langchain/vectorstores";
+import { PrismaVectorStore } from "langchain/vectorstores/prisma";
 import { OpenAIEmbeddings } from "langchain/embeddings";
 import { PrismaClient, Prisma, Document } from "@prisma/client";
 

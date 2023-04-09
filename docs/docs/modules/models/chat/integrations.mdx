@@ -10,7 +10,7 @@ LangChain offers a number of Chat Models implementations that integrate with var
 ## `OpenAI`
 
 ```typescript
-import { ChatOpenAI } from "langchain/chat_models";
+import { ChatOpenAI } from "langchain/chat_models/openai";
 
 // Expects an OpenAI API key to be set in the env variable OPENAI_API_KEY
 const model = new ChatOpenAI({ temperature: 0.9 });
@@ -19,7 +19,7 @@ const model = new ChatOpenAI({ temperature: 0.9 });
 ## `Anthropic`
 
 ```typescript
-import { ChatAnthropic } from "langchain/chat_models";
+import { ChatAnthropic } from "langchain/chat_models/anthropic";
 
 // Expects an Anthropic API key to be set in the env variable ANTHROPIC_API_KEY
 const model = new ChatAnthropic({ temperature: 0.9 });

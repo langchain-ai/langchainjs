@@ -7,7 +7,7 @@ import { parseFileConfig } from "../util/parse.js";
  *
  * @example
  * ```ts
- * import { loadLLM } from "langchain/llms";
+ * import { loadLLM } from "langchain/llms/openai";
  * const model = await loadLLM("/path/to/llm.json");
  * ```
  */
