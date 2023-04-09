@@ -9,7 +9,7 @@ The logic of this retriever is largely taken from [this blog post](https://www.p
 ### Install the library with
 
 ```bash npm2yarn
-npm install -S langchain @pinecone-database/pinecone tokenizers
+npm install -S langchain @pinecone-database/pinecone bert-tokenizer
 ```
 
 ### Setup Pinecone and Index
@@ -44,19 +44,17 @@ Now that its created, we can use it
 const index = client.Index(indexName);
 ```
 
-## Get embeddings and tokenizers
+## Get embeddings and tokenizer
 
 Embeddings are used for the dense vectors, tokenizer is used for the sparse vector
 
 ```typescript
 import { OpenAIEmbeddings } from "langchain/embeddings";
-import { BertWordPieceTokenizer } from "tokenizers";
+import { BertTokenizer } from "bert-tokenizer";
 
 const embeddings = new OpenAIEmbeddings();
 
-const tokenizer = await BertWordPieceTokenizer.fromOptions({
-  lowercase: true,
-});
+const tokenizer = new BertTokenizer(undefined, true, 512);
 ```
 
 ## Load Retriever

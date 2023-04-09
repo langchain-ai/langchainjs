@@ -1,5 +1,5 @@
 import { PineconeClient } from "@pinecone-database/pinecone";
-import { BertWordPieceTokenizer } from "tokenizers";
+import { BertTokenizer } from "bert-tokenizer";
 
 import { OpenAIEmbeddings } from "langchain/embeddings";
 import { PineconeHybridSearchRetriever } from "langchain/retrievers";
@@ -15,9 +15,7 @@ export const run = async () => {
   const embeddings = new OpenAIEmbeddings();
   const pineconeIndex = client.Index(process.env.PINECONE_INDEX!);
 
-  const tokenizer = await BertWordPieceTokenizer.fromOptions({
-    lowercase: true,
-  });
+  const tokenizer = new BertTokenizer(undefined, true, 512);
 
   const retriever = new PineconeHybridSearchRetriever(embeddings, {
     pineconeIndex,
