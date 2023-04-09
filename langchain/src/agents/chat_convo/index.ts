@@ -22,7 +22,7 @@ import {
   BaseOutputParser,
 } from "../../schema/index.js";
 import { AgentInput } from "../types.js";
-import { Tool } from "../tools/base.js";
+import { Tool } from "../../tools/base.js";
 
 export class ChatConversationalAgentOutputParser extends BaseOutputParser {
   async parse(text: string): Promise<unknown> {

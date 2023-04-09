@@ -1,5 +1,5 @@
 import { Tool } from "./base.js";
-import { BaseChain } from "../../chains/base.js";
+import { BaseChain } from "../chains/base.js";
 
 export class ChainTool extends Tool {
   name: string;

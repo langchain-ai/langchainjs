@@ -9,7 +9,7 @@ import {
   SerializedZeroShotAgent,
 } from "../types.js";
 import { Agent } from "../agent.js";
-import { Tool } from "../tools/base.js";
+import { Tool } from "../../tools/base.js";
 
 const FINAL_ANSWER_ACTION = "Final Answer:";
 

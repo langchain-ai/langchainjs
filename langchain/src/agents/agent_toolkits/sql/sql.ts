@@ -1,10 +1,10 @@
-import { Tool } from "../../tools/base.js";
+import { Tool } from "../../../tools/base.js";
 import {
   InfoSqlTool,
   ListTablesSqlTool,
   QueryCheckerTool,
   QuerySqlTool,
-} from "../../tools/sql.js";
+} from "../../../tools/sql.js";
 import { Toolkit } from "../base.js";
 import { BaseLanguageModel } from "../../../base_language/index.js";
 import { SQL_PREFIX, SQL_SUFFIX } from "./prompt.js";

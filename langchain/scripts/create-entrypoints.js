@@ -13,7 +13,7 @@ const entrypoints = {
   // base language
   base_language: "base_language/index",
   // tools
-  tools: "agents/tools/index",
+  tools: "tools/index",
   // chains
   chains: "chains/index",
   "chains/load": "chains/load",

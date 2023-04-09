@@ -1,5 +1,5 @@
 import type { SerializedAgentT, AgentInput } from "./types.js";
-import { Tool } from "./tools/base.js";
+import { Tool } from "../tools/base.js";
 import { LLMChain } from "../chains/llm_chain.js";
 import { BaseLanguageModel } from "../base_language/index.js";
 

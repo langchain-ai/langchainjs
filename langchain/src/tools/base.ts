@@ -1,4 +1,4 @@
-import { CallbackManager, getCallbackManager } from "../../callbacks/index.js";
+import { CallbackManager, getCallbackManager } from "../callbacks/index.js";
 
 const getVerbosity = () => false;
 

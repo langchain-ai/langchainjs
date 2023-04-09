@@ -37,7 +37,7 @@
       "src/agents/index.ts",
       "src/agents/load.ts",
       "src/base_language/index.ts",
-      "src/agents/tools/index.ts",
+      "src/tools/index.ts",
       "src/chains/index.ts",
       "src/chains/load.ts",
       "src/embeddings/base.ts",

@@ -1,10 +1,10 @@
 import { BaseLanguageModel } from "../../../base_language/index.js";
-import { Tool } from "../../tools/base.js";
+import { Tool } from "../../../tools/base.js";
 import {
   JsonGetValueTool,
   JsonListKeysTool,
   JsonSpec,
-} from "../../tools/json.js";
+} from "../../../tools/json.js";
 import { JSON_PREFIX, JSON_SUFFIX } from "./prompt.js";
 import { LLMChain } from "../../../chains/llm_chain.js";
 import { CreatePromptArgs, ZeroShotAgent } from "../../mrkl/index.js";

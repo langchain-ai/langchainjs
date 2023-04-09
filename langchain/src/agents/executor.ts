@@ -1,6 +1,6 @@
 import { BaseChain, ChainInputs } from "../chains/base.js";
 import { BaseSingleActionAgent } from "./agent.js";
-import { Tool } from "./tools/base.js";
+import { Tool } from "../tools/base.js";
 import { StoppingMethod } from "./types.js";
 import { SerializedLLMChain } from "../chains/serde.js";
 import { AgentFinish, AgentStep, ChainValues } from "../schema/index.js";

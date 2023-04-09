@@ -1,6 +1,6 @@
 import { Tool } from "./base.js";
-import { renderTemplate } from "../../prompts/template.js";
-import { AsyncCaller, AsyncCallerParams } from "../../util/async_caller.js";
+import { renderTemplate } from "../prompts/template.js";
+import { AsyncCaller, AsyncCallerParams } from "../util/async_caller.js";
 
 const zapierNLABaseDescription: string =
   "A wrapper around Zapier NLA actions. " +

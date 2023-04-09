@@ -1,5 +1,5 @@
-import { Tool } from "../../tools/base.js";
-import { VectorStoreQATool } from "../../tools/vectorstore.js";
+import { Tool } from "../../../tools/base.js";
+import { VectorStoreQATool } from "../../../tools/vectorstore.js";
 import { VectorStore } from "../../../vectorstores/base.js";
 import { Toolkit } from "../base.js";
 import { BaseLanguageModel } from "../../../base_language/index.js";
