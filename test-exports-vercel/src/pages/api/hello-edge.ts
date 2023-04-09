@@ -12,6 +12,7 @@ import {
 } from "langchain/prompts";
 import { OpenAI } from "langchain/llms/openai";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { CallbackManager } from "langchain/callbacks";
 
 import { NextRequest, NextResponse } from "next/server";
 
@@ -26,16 +27,43 @@ export default async function handler(req: NextRequest) {
     openAIApiKey: process.env.OPENAI_API_KEY,
   });
 
+  // Set up a streaming LLM
+  const encoder = new TextEncoder();
+  const stream = new TransformStream();
+  const writer = stream.writable.getWriter();
+  const llm = new ChatOpenAI({
+    streaming: true,
+    callbackManager: CallbackManager.fromHandlers({
+      handleLLMNewToken: async (token) => {
+        await writer.ready;
+        await writer.write(encoder.encode(`data: ${token}\n\n`));
+      },
+      handleLLMEnd: async () => {
+        await writer.ready;
+        await writer.close();
+      },
+      handleLLMError: async (e) => {
+        await writer.ready;
+        await writer.abort(e);
+      },
+    }),
+  });
+
   // Test a chain + prompt + model
   const chain = new LLMChain({
-    llm: new ChatOpenAI({ openAIApiKey: process.env.OPENAI_API_KEY }),
+    llm,
     prompt: ChatPromptTemplate.fromPromptMessages([
       HumanMessagePromptTemplate.fromTemplate("{input}"),
     ]),
   });
-  const res = await chain.run("hello");
 
-  return NextResponse.json({
-    name: `Hello, from ${req.url} I'm an Edge Function! Assistant says: ${res}`,
+  // Run the chain but don't await it
+  chain.run("hello").catch(console.error);
+
+  return new NextResponse(stream.readable, {
+    headers: {
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache",
+    },
   });
 }
