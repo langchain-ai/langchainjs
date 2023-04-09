@@ -241,7 +241,7 @@
     "@getmetal/metal-sdk": "^1.0.12",
     "@huggingface/inference": "^1.5.1",
     "@jest/globals": "^29.5.0",
-    "@pinecone-database/pinecone": "^0.0.10",
+    "@pinecone-database/pinecone": "^0.0.12",
     "@supabase/supabase-js": "^2.10.0",
     "@tsconfig/recommended": "^1.0.2",
     "@types/d3-dsv": "^2",
@@ -287,7 +287,7 @@
   "peerDependencies": {
     "@getmetal/metal-sdk": "*",
     "@huggingface/inference": "^1.5.1",
-    "@pinecone-database/pinecone": "^0.0.10",
+    "@pinecone-database/pinecone": "*",
     "@supabase/supabase-js": "^2.10.0",
     "cheerio": "^1.0.0-rc.12",
     "chromadb": "^1.3.0",

@@ -4703,6 +4703,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@pinecone-database/pinecone@npm:^0.0.12":
+  version: 0.0.12
+  resolution: "@pinecone-database/pinecone@npm:0.0.12"
+  dependencies:
+    cross-fetch: ^3.1.5
+  checksum: 010eb85b5c300f04c41d7939ec306f9c0f5b99bba9f31904ef19b57d1c4625c5ea2256fa2d1721075da267fe42db36c9f870c2a06cc45fcca4f610a7c660a134
+  languageName: node
+  linkType: hard
+
 "@pkgr/utils@npm:^2.3.1":
   version: 2.3.1
   resolution: "@pkgr/utils@npm:2.3.1"
@@ -15671,7 +15680,7 @@ __metadata:
     "@getmetal/metal-sdk": ^1.0.12
     "@huggingface/inference": ^1.5.1
     "@jest/globals": ^29.5.0
-    "@pinecone-database/pinecone": ^0.0.10
+    "@pinecone-database/pinecone": ^0.0.12
     "@supabase/supabase-js": ^2.10.0
     "@tsconfig/recommended": ^1.0.2
     "@types/d3-dsv": ^2
@@ -15728,7 +15737,7 @@ __metadata:
   peerDependencies:
     "@getmetal/metal-sdk": "*"
     "@huggingface/inference": ^1.5.1
-    "@pinecone-database/pinecone": ^0.0.10
+    "@pinecone-database/pinecone": "*"
     "@supabase/supabase-js": ^2.10.0
     cheerio: ^1.0.0-rc.12
     chromadb: ^1.3.0
