@@ -14,6 +14,7 @@ import {
 import { useCallback } from "react";
 import { CallbackManager } from "langchain/callbacks";
 
+// Don't do this in your app, it would leak your API key
 const OPENAI_API_KEY = process.env.REACT_APP_OPENAI_API_KEY;
 
 function App() {
