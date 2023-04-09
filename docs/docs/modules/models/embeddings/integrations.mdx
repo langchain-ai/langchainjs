@@ -14,7 +14,9 @@ The `OpenAIEmbeddings` class uses the OpenAI API to generate embeddings for a gi
 ```typescript
 import { OpenAIEmbeddings } from "langchain/embeddings";
 
-const embeddings = new OpenAIEmbeddings();
+const embeddings = new OpenAIEmbeddings({
+  openAIApiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.OPENAI_API_KEY
+});
 ```
 
 ## `CohereEmbeddings`
@@ -26,5 +28,7 @@ npm install cohere-ai
 ```typescript
 import { CohereEmbeddings } from "langchain/embeddings";
 
-const embeddings = new CohereEmbeddings();
+const embeddings = new CohereEmbeddings({
+  apiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.COHERE_API_KEY
+});
 ```
