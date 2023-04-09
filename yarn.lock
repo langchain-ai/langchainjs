@@ -21899,6 +21899,20 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"test-exports-esm@workspace:test-exports-esm":
+  version: 0.0.0-use.local
+  resolution: "test-exports-esm@workspace:test-exports-esm"
+  dependencies:
+    "@tsconfig/recommended": ^1.0.2
+    "@types/node": ^18.15.11
+    d3-dsv: 2
+    hnswlib-node: ^1.4.2
+    langchain: "workspace:*"
+    prettier: ^2.8.3
+    typescript: ^4.9.5
+  languageName: unknown
+  linkType: soft
+
 "text-table@npm:^0.2.0":
   version: 0.2.0
   resolution: "text-table@npm:0.2.0"

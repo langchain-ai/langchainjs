@@ -6,14 +6,14 @@
   "main": "./index.mjs",
   "scripts": {
     "build": "tsc",
-    "test": "npm run test:esm && npm run test:cjs && npm run test:cjs:import && npm run test:cjs:entrypoints && npm run test:ts",
-    "test:esm": "node ./index.mjs",
-    "test:cjs": "node ./require.js",
-    "test:cjs:import": "node ./import.js",
-    "test:cjs:entrypoints": "node ./entrypoints.js",
+    "test": "npm run test:esm && npm run test:cjs && npm run test:cjs:import && npm run test:entrypoints && npm run test:ts",
+    "test:esm": "node src/index.mjs",
+    "test:cjs": "node src/require.js",
+    "test:cjs:import": "node src/import.js",
+    "test:entrypoints": "node src/entrypoints.js",
     "test:ts": "node dist/index.js",
-    "format": "prettier --write \"**/*.ts\"",
-    "format:check": "prettier --list-different \"**/*.ts\""
+    "format": "prettier --write src",
+    "format:check": "prettier --check src"
   },
   "author": "Langchain",
   "license": "MIT",

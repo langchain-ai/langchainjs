@@ -1,5 +1,5 @@
 {
-  "name": "test-exports",
+  "name": "test-exports-esm",
   "version": "0.0.0",
   "private": true,
   "description": "Tests for the things exported by the langchain package",
@@ -7,13 +7,14 @@
   "type": "module",
   "scripts": {
     "build": "tsc",
-    "test": "npm run test:esm && npm run test:cjs && npm run test:cjs:import && npm run test:ts",
-    "test:esm": "node ./index.js",
-    "test:cjs": "node ./require.cjs",
-    "test:cjs:import": "node ./import.cjs",
+    "test": "npm run test:esm && npm run test:cjs && npm run test:cjs:import && npm run test:entrypoints && npm run test:ts",
+    "test:esm": "node src/index.js",
+    "test:cjs": "node src/require.cjs",
+    "test:cjs:import": "node src/import.cjs",
+    "test:entrypoints": "node src/entrypoints.js",
     "test:ts": "node dist/index.js",
-    "format": "prettier --write \"**/*.ts\"",
-    "format:check": "prettier --check \"**/*.ts\""
+    "format": "prettier --write src",
+    "format:check": "prettier --check src"
   },
   "author": "Langchain",
   "license": "MIT",

@@ -1,16 +1,7 @@
 /* eslint-disable no-unused-vars */
 
 // import all entrypoints
-import * as agents from "langchain/agents";
-import * as base_language from "langchain/base_language";
-import * as chains from "langchain/chains";
-import * as prompts from "langchain/prompts";
-import * as text_splitter from "langchain/text_splitter";
-import * as memory from "langchain/memory";
-import * as document from "langchain/document";
-import * as docstore from "langchain/docstore";
-import * as schema from "langchain/schema";
-import * as callbacks from "langchain/callbacks";
+import "./entrypoints.js";
 
 // Import a few things we'll use to test the exports
 import { LLMChain } from "langchain/chains";

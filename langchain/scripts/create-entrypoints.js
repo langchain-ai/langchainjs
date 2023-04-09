@@ -70,6 +70,36 @@ const entrypoints = {
 // 2. Be only available in Node.js environments (for backwards compatibility)
 const deprecatedNodeOnly = ["embeddings", "llms", "chat_models"];
 
+// Entrypoints in this list require an optional dependency to be installed.
+// Therefore they are no tested in the generated test-exports-* packages.
+const requiresOptionalDependency = [
+  "agents/load",
+  "chains/load",
+  "embeddings/cohere",
+  "llms/load",
+  "llms/cohere",
+  "llms/hf",
+  "llms/replicate",
+  "prompts/load",
+  "sql_db",
+];
+
+// List of test-exports-* packages which we use to test that the exports field
+// works correctly across different JS environments.
+// Each entry is a tuple of [package name, import statement].
+const testExports = [
+  [
+    "test-exports-esm",
+    (p) => `import * as ${p.replace(/\//g, "_")} from "langchain/${p}";`,
+  ],
+  [
+    "test-exports-cjs",
+    (p) => `const ${p.replace(/\//g, "_")} = require("langchain/${p}");`,
+  ],
+  ["test-exports-cf", (p) => `export * from "langchain/${p}";`],
+  ["test-exports-cra", (p) => `export * from "langchain/${p}";`],
+];
+
 const updateJsonFile = (relativePath, updateFunction) => {
   const contents = fs.readFileSync(relativePath).toString();
   const res = updateFunction(JSON.parse(contents));
@@ -97,6 +127,7 @@ const generateFiles = () => {
 };
 
 const updateConfig = () => {
+  // Update tsconfig.json `typedocOptions.entryPoints` field
   updateJsonFile("./tsconfig.json", (json) => ({
     ...json,
     typedocOptions: {
@@ -110,6 +141,7 @@ const updateConfig = () => {
   const generatedFiles = generateFiles();
   const filenames = Object.keys(generatedFiles);
 
+  // Update package.json `exports` and `files` fields
   updateJsonFile("./package.json", (json) => ({
     ...json,
     exports: Object.assign(
@@ -148,11 +180,24 @@ const updateConfig = () => {
     files: ["dist/", ...filenames],
   }));
 
+  // Write generated files
   Object.entries(generatedFiles).forEach(([filename, content]) => {
     fs.mkdirSync(path.dirname(filename), { recursive: true });
     fs.writeFileSync(filename, content);
   });
+
+  // Update .gitignore
   fs.writeFileSync("./.gitignore", filenames.join("\n") + "\n");
+
+  // Update test-exports-*/entrypoints.js
+  const entrypointsToTest = Object.keys(entrypoints)
+    .filter((key) => !deprecatedNodeOnly.includes(key))
+    .filter((key) => !requiresOptionalDependency.includes(key));
+  testExports.forEach(([pkg, importStatement]) => {
+    const contents =
+      entrypointsToTest.map((key) => importStatement(key)).join("\n") + "\n";
+    fs.writeFileSync(`../${pkg}/src/entrypoints.js`, contents);
+  });
 };
 
 const cleanGenerated = () => {

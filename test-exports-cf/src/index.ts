@@ -9,23 +9,7 @@
  */
 
 // import all entrypoints
-import * as agents from "langchain/agents";
-import * as base_language from "langchain/base_language";
-import * as tools from "langchain/tools";
-import * as chains from "langchain/chains";
-import * as prompts from "langchain/prompts";
-import * as vectorstores from "langchain/vectorstores";
-import * as text_splitter from "langchain/text_splitter";
-import * as memory from "langchain/memory";
-import * as document from "langchain/document";
-import * as docstore from "langchain/docstore";
-import * as document_loaders from "langchain/document_loaders";
-import * as chat_models from "langchain/chat_models/openai";
-import * as schema from "langchain/schema";
-import * as sql_db from "langchain/sql_db";
-import * as callbacks from "langchain/callbacks";
-import * as output_parsers from "langchain/output_parsers";
-import * as retrievers from "langchain/retrievers";
+import "./entrypoints.js";
 
 // Import a few things we'll use to test the exports
 import { LLMChain } from "langchain/chains";
