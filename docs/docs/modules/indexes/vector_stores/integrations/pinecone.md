@@ -12,7 +12,7 @@ npm install -S dotenv langchain @pinecone-database/pinecone
 import { PineconeClient } from "@pinecone-database/pinecone";
 import * as dotenv from "dotenv";
 import { Document } from "langchain/document";
-import { OpenAIEmbeddings } from "langchain/embeddings";
+import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { PineconeStore } from "langchain/vectorstores";
 
 dotenv.config();
@@ -54,7 +54,7 @@ await PineconeStore.fromDocuments(docs, new OpenAIEmbeddings(), {
 import { PineconeClient } from "@pinecone-database/pinecone";
 import * as dotenv from "dotenv";
 import { VectorDBQAChain } from "langchain/chains";
-import { OpenAIEmbeddings } from "langchain/embeddings";
+import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { OpenAI } from "langchain/llms";
 import { PineconeStore } from "langchain/vectorstores";
 

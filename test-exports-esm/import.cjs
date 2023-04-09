@@ -5,7 +5,7 @@ async function test() {
   const { ChatPromptTemplate } = await import("langchain/prompts");
   const { loadPrompt } = await import("langchain/prompts/load");
   const { HNSWLib } = await import("langchain/vectorstores");
-  const { OpenAIEmbeddings } = await import("langchain/embeddings");
+  const { OpenAIEmbeddings } = await import("langchain/embeddings/openai");
   const { InMemoryDocstore, Document } = await import("langchain/docstore");
   const { CSVLoader } = await import("langchain/document_loaders");
 

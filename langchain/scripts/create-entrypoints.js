@@ -9,6 +9,10 @@ const entrypoints = {
   chains: "chains/index",
   "chains/load": "chains/load",
   embeddings: "embeddings/index",
+  "embeddings/base": "embeddings/base",
+  "embeddings/fake": "embeddings/fake",
+  "embeddings/openai": "embeddings/openai",
+  "embeddings/cohere": "embeddings/cohere",
   llms: "llms/index",
   prompts: "prompts/index",
   "prompts/load": "prompts/load",
@@ -26,6 +30,8 @@ const entrypoints = {
   retrievers: "retrievers/index",
   cache: "cache",
 };
+
+const deprecatedNodeOnly = ["embeddings"];
 
 const updateJsonFile = (relativePath, updateFunction) => {
   const contents = fs.readFileSync(relativePath).toString();
@@ -58,9 +64,9 @@ const updateConfig = () => {
     ...json,
     typedocOptions: {
       ...json.typedocOptions,
-      entryPoints: [...Object.values(entrypoints), "index"].map(
-        (value) => `src/${value}.ts`
-      ),
+      entryPoints: [...Object.keys(entrypoints)]
+        .filter((key) => !deprecatedNodeOnly.includes(key))
+        .map((key) => `src/${entrypoints[key]}.ts`),
     },
   }));
 
@@ -77,6 +83,12 @@ const updateConfig = () => {
             import: `./${key}.js`,
             require: `./${key}.cjs`,
           };
+
+          if (deprecatedNodeOnly.includes(key)) {
+            entryPoint = {
+              node: entryPoint,
+            };
+          }
 
           // If there is a *.lite.js file add it as the root `import` export,
           // which should/will then be used by non-Node environments.

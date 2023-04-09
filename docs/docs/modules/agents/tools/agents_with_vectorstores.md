@@ -12,7 +12,7 @@ import { initializeAgentExecutor } from "langchain/agents";
 import { SerpAPI, Calculator, ChainTool } from "langchain/tools";
 import { VectorDBQAChain } from "langchain/chains";
 import { HNSWLib } from "langchain/vectorstores";
-import { OpenAIEmbeddings } from "langchain/embeddings";
+import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import * as fs from "fs";
 ```

@@ -43,7 +43,10 @@
       "src/agents/tools/index.ts",
       "src/chains/index.ts",
       "src/chains/load.ts",
-      "src/embeddings/index.ts",
+      "src/embeddings/base.ts",
+      "src/embeddings/fake.ts",
+      "src/embeddings/openai.ts",
+      "src/embeddings/cohere.ts",
       "src/llms/index.ts",
       "src/prompts/index.ts",
       "src/prompts/load.ts",
@@ -59,8 +62,7 @@
       "src/callbacks/index.ts",
       "src/output_parsers/index.ts",
       "src/retrievers/index.ts",
-      "src/cache.ts",
-      "src/index.ts"
+      "src/cache.ts"
     ],
     "excludePrivate": true,
     "excludeInternal": true,

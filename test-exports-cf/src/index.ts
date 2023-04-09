@@ -13,7 +13,6 @@ import * as agents from "langchain/agents";
 import * as base_language from "langchain/base_language";
 import * as tools from "langchain/tools";
 import * as chains from "langchain/chains";
-import * as embeddings from "langchain/embeddings";
 import * as llms from "langchain/llms";
 import * as prompts from "langchain/prompts";
 import * as vectorstores from "langchain/vectorstores";
@@ -37,7 +36,7 @@ import {
   HumanMessagePromptTemplate,
 } from "langchain/prompts";
 import { OpenAI } from "langchain/llms";
-import { OpenAIEmbeddings } from "langchain/embeddings";
+import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { HNLoader } from "langchain/document_loaders";
 
 export interface Env {

@@ -4,7 +4,7 @@ const { LLMChain } = require("langchain/chains");
 const { ChatPromptTemplate } = require("langchain/prompts");
 const { loadPrompt } = require("langchain/prompts/load");
 const { HNSWLib } = require("langchain/vectorstores");
-const { OpenAIEmbeddings } = require("langchain/embeddings");
+const { OpenAIEmbeddings } = require("langchain/embeddings/openai");
 const { InMemoryDocstore, Document } = require("langchain/docstore");
 const { CSVLoader } = require("langchain/document_loaders");
 

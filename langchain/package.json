@@ -31,6 +31,18 @@
     "embeddings.cjs",
     "embeddings.js",
     "embeddings.d.ts",
+    "embeddings/base.cjs",
+    "embeddings/base.js",
+    "embeddings/base.d.ts",
+    "embeddings/fake.cjs",
+    "embeddings/fake.js",
+    "embeddings/fake.d.ts",
+    "embeddings/openai.cjs",
+    "embeddings/openai.js",
+    "embeddings/openai.d.ts",
+    "embeddings/cohere.cjs",
+    "embeddings/cohere.js",
+    "embeddings/cohere.d.ts",
     "llms.cjs",
     "llms.js",
     "llms.d.ts",
@@ -304,14 +316,31 @@
       "require": "./chains/load.cjs"
     },
     "./embeddings": {
-      "types": "./embeddings.d.ts",
       "node": {
+        "types": "./embeddings.d.ts",
         "import": "./embeddings.js",
         "require": "./embeddings.cjs"
-      },
-      "import": "./dist/embeddings/index.lite.js",
-      "require": "./dist/embeddings/index.lite.cjs",
-      "default": "./dist/embeddings/index.lite.js"
+      }
+    },
+    "./embeddings/base": {
+      "types": "./embeddings/base.d.ts",
+      "import": "./embeddings/base.js",
+      "require": "./embeddings/base.cjs"
+    },
+    "./embeddings/fake": {
+      "types": "./embeddings/fake.d.ts",
+      "import": "./embeddings/fake.js",
+      "require": "./embeddings/fake.cjs"
+    },
+    "./embeddings/openai": {
+      "types": "./embeddings/openai.d.ts",
+      "import": "./embeddings/openai.js",
+      "require": "./embeddings/openai.cjs"
+    },
+    "./embeddings/cohere": {
+      "types": "./embeddings/cohere.d.ts",
+      "import": "./embeddings/cohere.js",
+      "require": "./embeddings/cohere.cjs"
     },
     "./llms": {
       "types": "./llms.d.ts",
