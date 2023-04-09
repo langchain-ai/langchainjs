@@ -1,6 +1,7 @@
 import { OpenAI } from "langchain";
 import { initializeAgentExecutor, Agent } from "langchain/agents";
-import { SerpAPI, Calculator } from "langchain/tools";
+import { SerpAPI } from "langchain/tools";
+import { Calculator } from "langchain/tools/calculator";
 import process from "process";
 import {
   CallbackManager,

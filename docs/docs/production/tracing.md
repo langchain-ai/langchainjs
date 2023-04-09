@@ -11,7 +11,8 @@ Here's an example of how to use tracing in `langchain.js`. All that needs to be 
 ```typescript
 import { OpenAI } from "langchain";
 import { initializeAgentExecutor } from "langchain/agents";
-import { SerpAPI, Calculator } from "langchain/tools";
+import { SerpAPI } from "langchain/tools";
+import { Calculator } from "langchain/tools/calculator";
 import process from "process";
 
 export const run = async () => {
@@ -42,7 +43,8 @@ We are actively working on improving tracing to work better with concurrency. Fo
 ```typescript
 import { OpenAI } from "langchain";
 import { initializeAgentExecutor } from "langchain/agents";
-import { SerpAPI, Calculator } from "langchain/tools";
+import { SerpAPI } from "langchain/tools";
+import { Calculator } from "langchain/tools/calculator";
 import process from "process";
 import {
   CallbackManager,

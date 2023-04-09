@@ -3,7 +3,8 @@ import { test, expect } from "@jest/globals";
 
 import { LangChainTracer } from "../tracers.js";
 import { OpenAI } from "../../llms/index.js";
-import { Calculator, SerpAPI } from "../../tools/index.js";
+import { SerpAPI } from "../../tools/index.js";
+import { Calculator } from "../../tools/calculator.js";
 import { initializeAgentExecutor } from "../../agents/index.js";
 
 test("Test LangChain tracer", async () => {

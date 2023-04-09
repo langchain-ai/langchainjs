@@ -38,6 +38,7 @@
       "src/agents/load.ts",
       "src/base_language/index.ts",
       "src/tools/index.ts",
+      "src/tools/calculator.ts",
       "src/chains/index.ts",
       "src/chains/load.ts",
       "src/embeddings/base.ts",

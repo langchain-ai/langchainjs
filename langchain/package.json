@@ -22,6 +22,9 @@
     "tools.cjs",
     "tools.js",
     "tools.d.ts",
+    "tools/calculator.cjs",
+    "tools/calculator.js",
+    "tools/calculator.d.ts",
     "chains.cjs",
     "chains.js",
     "chains.d.ts",
@@ -415,6 +418,11 @@
       "types": "./tools.d.ts",
       "import": "./tools.js",
       "require": "./tools.cjs"
+    },
+    "./tools/calculator": {
+      "types": "./tools/calculator.d.ts",
+      "import": "./tools/calculator.js",
+      "require": "./tools/calculator.cjs"
     },
     "./chains": {
       "types": "./chains.d.ts",

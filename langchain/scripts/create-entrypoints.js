@@ -14,6 +14,7 @@ const entrypoints = {
   base_language: "base_language/index",
   // tools
   tools: "tools/index",
+  "tools/calculator": "tools/calculator",
   // chains
   chains: "chains/index",
   "chains/load": "chains/load",
@@ -110,6 +111,7 @@ const deprecatedNodeOnly = [
 // Therefore they are no tested in the generated test-exports-* packages.
 const requiresOptionalDependency = [
   "agents/load",
+  "tools/calculator",
   "chains/load",
   "embeddings/cohere",
   "llms/load",
@@ -158,6 +160,7 @@ const testExports = [
   ],
   ["test-exports-cf", (p) => `export * from "langchain/${p}";`],
   ["test-exports-cra", (p) => `export * from "langchain/${p}";`],
+  ["test-exports-vercel", (p) => `export * from "langchain/${p}";`],
 ];
 
 const updateJsonFile = (relativePath, updateFunction) => {

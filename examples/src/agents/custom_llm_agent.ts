@@ -18,7 +18,8 @@ import {
   AgentAction,
   AgentFinish,
 } from "langchain/schema";
-import { SerpAPI, Calculator, Tool } from "langchain/tools";
+import { SerpAPI, Tool } from "langchain/tools";
+import { Calculator } from "langchain/tools/calculator";
 
 const PREFIX = `Answer the following questions as best you can. You have access to the following tools:`;
 const formatInstructions = (toolNames: string) => `Use the following format:

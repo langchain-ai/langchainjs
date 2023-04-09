@@ -2,7 +2,7 @@ import { Tool } from "./base.js";
 import { OpenAI } from "../llms/openai.js";
 import { LLMChain } from "../chains/llm_chain.js";
 import { PromptTemplate } from "../prompts/prompt.js";
-import { SqlDatabase } from "../sql_db.js";
+import type { SqlDatabase } from "../sql_db.js";
 import { SqlTable } from "../util/sql_utils.js";
 
 interface SqlTool {
