@@ -37,10 +37,9 @@ export abstract class BaseChatModel extends BaseLanguageModel {
     const messageStrings: string[] = messages.map((messageList) =>
       getBufferString(messageList)
     );
-    const callbackManager_ = callbackManager?.copy() ?? new CallbackManager();
-    for (const handler of this.callbackManager.handlers) {
-      callbackManager_.addHandler(handler);
-    }
+    const callbackManager_ =
+      callbackManager?.copy(this.callbackManager.handlers) ??
+      this.callbackManager;
     const runId = await callbackManager_.handleLLMStart(
       { name: this._llmType() },
       messageStrings,

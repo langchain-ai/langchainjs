@@ -510,9 +510,9 @@ export class CallbackManager extends BaseCallbackManager {
     return manager;
   }
 
-  copy(): CallbackManager {
+  copy(additionalHandlers: BaseCallbackHandler[] = []): CallbackManager {
     const manager = new CallbackManager(this._parentRunId);
-    manager.setHandlers(this.handlers);
+    manager.setHandlers([...this.handlers, ...additionalHandlers]);
     return manager;
   }
 
