@@ -30,7 +30,7 @@ test("Test partial", async () => {
   expect(prompt.inputVariables).toEqual(["foo", "bar"]);
   // partial prompt has only remaining variables
   expect(partialPrompt.inputVariables).toEqual(["bar"]);
-  expect(await partialPrompt.format({ foo: "42", bar: "baz" })).toBe("foobaz");
+  expect(await partialPrompt.format({ bar: "baz" })).toBe("foobaz");
 });
 
 test("Test partial with function", async () => {

@@ -49,8 +49,8 @@ export interface BasePromptTemplateInput<
  * @augments BasePromptTemplateInput
  */
 export abstract class BasePromptTemplate<
-  K extends string,
-  P extends string
+  K extends string = string,
+  P extends string = string
 > implements BasePromptTemplateInput<K, P>
 {
   inputVariables: K[];
@@ -69,7 +69,7 @@ export abstract class BasePromptTemplate<
     Object.assign(this, input);
   }
 
-  abstract partial<P2 extends K>(
+  abstract partial<P2 extends string>(
     values: Record<P2, any>
   ): Promise<BasePromptTemplate<Exclude<K, P2>, P | P2>>;
 

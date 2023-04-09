@@ -23,7 +23,7 @@ export interface LLMChainInput<
   MI extends string
 > extends ChainInputs<I, O, MI> {
   /** Prompt object to use */
-  prompt: BasePromptTemplate<I, never>;
+  prompt: BasePromptTemplate<I, string>;
   /** LLM Wrapper to use */
   llm: BaseLanguageModel;
   /** OutputParser to use */
@@ -45,11 +45,15 @@ export interface LLMChainInput<
  * const llm = LLMChain({ llm: new OpenAI(), prompt });
  * ```
  */
-export class LLMChain<I extends string, O extends string, MI extends string>
+export class LLMChain<
+    I extends string = string,
+    O extends string = string,
+    MI extends string = string
+  >
   extends BaseChain<I, O, MI>
   implements LLMChainInput<I, O, MI>
 {
-  prompt: BasePromptTemplate<I, never>;
+  prompt: BasePromptTemplate<I, string>;
 
   llm: BaseLanguageModel;
 

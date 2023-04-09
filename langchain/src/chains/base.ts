@@ -7,9 +7,9 @@ import { SerializedBaseChain } from "./serde.js";
 export type LoadValues = Record<string, any>;
 
 export interface ChainInputs<
-  I extends string,
-  O extends string,
-  MI extends string
+  I extends string = string,
+  O extends string = string,
+  MI extends string = string
 > {
   memory?: BaseMemory<I, O, MI>;
   verbose?: boolean;
@@ -22,9 +22,9 @@ const getVerbosity = () => false;
  * Base interface that all chains must implement.
  */
 export abstract class BaseChain<
-  I extends string,
-  O extends string,
-  MI extends string
+  I extends string = string,
+  O extends string = string,
+  MI extends string = string
 > implements ChainInputs<I, O, MI>
 {
   memory?: BaseMemory<I, O, MI>;

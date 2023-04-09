@@ -122,7 +122,9 @@ export class HumanMessagePromptTemplate<
     super(prompt);
   }
 
-  static fromTemplate<K extends string, P extends string = never>(template: string) {
+  static fromTemplate<K extends string = string, P extends string = string>(
+    template: string
+  ) {
     return new this(PromptTemplate.fromTemplate<K, P>(template));
   }
 }
@@ -141,7 +143,9 @@ export class AIMessagePromptTemplate<
     super(prompt);
   }
 
-  static fromTemplate<K extends string, P extends string = never>(template: string) {
+  static fromTemplate<K extends string, P extends string = never>(
+    template: string
+  ) {
     return new this(PromptTemplate.fromTemplate<K, P>(template));
   }
 }
@@ -160,7 +164,9 @@ export class SystemMessagePromptTemplate<
     super(prompt);
   }
 
-  static fromTemplate<K extends string, P extends string = never>(template: string) {
+  static fromTemplate<K extends string = string, P extends string = string>(
+    template: string
+  ) {
     return new this(PromptTemplate.fromTemplate<K, P>(template));
   }
 }
@@ -294,7 +300,7 @@ export class ChatPromptTemplate<K extends string, P extends string>
     };
   }
 
-  async partial<P2 extends K>(
+  async partial<P2 extends string>(
     values: Record<P2, any>
   ): Promise<BasePromptTemplate<Exclude<K, P2>, P | P2>> {
     // This is implemented in a way it doesn't require making
@@ -312,7 +318,10 @@ export class ChatPromptTemplate<K extends string, P extends string>
     return new ChatPromptTemplate(promptDict);
   }
 
-  static fromPromptMessages<K extends string, P extends string>(
+  static fromPromptMessages<
+    K extends string = string,
+    P extends string = string
+  >(
     promptMessages: BaseMessagePromptTemplate<K, P>[]
   ): ChatPromptTemplate<K, P> {
     const inputVariables = new Set<K>();

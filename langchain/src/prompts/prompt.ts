@@ -119,15 +119,12 @@ export class PromptTemplate<K extends string, P extends string>
   /**
    * Load prompt template from a template f-string
    */
-  static fromTemplate<K extends string, P extends string = never>(
+  static fromTemplate<K extends string = string, P extends string = string>(
     template: string,
     {
       templateFormat = "f-string",
       ...rest
-    }: Omit<
-      PromptTemplateInput<K, P>,
-      "template" | "inputVariables"
-    > = {}
+    }: Omit<PromptTemplateInput<K, P>, "template" | "inputVariables"> = {}
   ) {
     const names = new Set<K>();
     parseTemplate(template, templateFormat).forEach((node) => {
@@ -144,7 +141,7 @@ export class PromptTemplate<K extends string, P extends string>
     });
   }
 
-  async partial<P2 extends K>(
+  async partial<P2 extends string>(
     values: Record<P2, any>
   ): Promise<PromptTemplate<Exclude<K, P2>, P | P2>> {
     const promptDict: PromptTemplate<Exclude<K, P2>, P | P2> = {

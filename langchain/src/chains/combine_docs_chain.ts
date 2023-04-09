@@ -175,9 +175,10 @@ export class MapReduceDocumentsChain
       const results = await this.llmChain.apply(inputs);
       const { outputKey } = this.llmChain;
 
+      // FIXME: Missing `metadata` here; should this be optional on `Document`?
       currentDocs = results.map((r: ChainValues) => ({
         pageContent: r[outputKey],
-      }));
+      })) as Document[];
     }
     const newInputs = { input_documents: currentDocs, ...rest };
     const result = await this.combineDocumentChain.call(newInputs);

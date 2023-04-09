@@ -6,16 +6,16 @@ import {
   ChatMessage,
 } from "../schema/index.js";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type InputValues<K extends string> = Record<K, any>;
+export type InputValues<K extends string = string> = Record<K, any>;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type OutputValues<K extends string> = Record<K, any>;
+export type OutputValues<K extends string = string> = Record<K, any>;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type MemoryVariables<K extends string> = Record<K, any>;
+export type MemoryVariables<K extends string = string> = Record<K, any>;
 
 export abstract class BaseMemory<
-  I extends string,
-  O extends string,
-  MI extends string
+  I extends string = string,
+  O extends string = string,
+  MI extends string = string
 > {
   abstract loadMemoryVariables(
     values: InputValues<I>

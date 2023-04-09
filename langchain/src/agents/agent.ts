@@ -94,7 +94,7 @@ export abstract class Agent {
     _tools: Tool[],
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     _fields?: Record<string, any>
-  ): BasePromptTemplate {
+  ): BasePromptTemplate<string, string> {
     throw new Error("Not implemented");
   }
 

@@ -15,7 +15,7 @@ export interface BufferWindowMemoryInput<I extends string, O extends string>
 }
 
 export class BufferWindowMemory<I extends string, O extends string>
-  extends BaseChatMemory<"history", I, O>
+  extends BaseChatMemory<I, O, "history">
   implements BufferWindowMemoryInput<I, O>
 {
   humanPrefix = "Human";

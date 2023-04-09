@@ -13,11 +13,12 @@ import {
 } from "./map_reduce_prompts.js";
 import { BaseLanguageModel } from "../../base_language/index.js";
 
+type QAPromptTemplate = BasePromptTemplate<"context" | "question", string>;
 interface qaChainParams {
-  prompt?: BasePromptTemplate;
-  combineMapPrompt?: BasePromptTemplate;
-  combinePrompt?: BasePromptTemplate;
-  type?: string;
+  prompt?: QAPromptTemplate;
+  combineMapPrompt?: QAPromptTemplate;
+  combinePrompt?: QAPromptTemplate;
+  type?: "stuff" | "map_reduce";
 }
 export const loadQAChain = (
   llm: BaseLanguageModel,

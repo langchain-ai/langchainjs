@@ -151,7 +151,7 @@ export class FewShotPromptTemplate<
     );
   }
 
-  async partial<P2 extends K>(
+  async partial<P2 extends string>(
     values: Record<P2, any>
   ): Promise<FewShotPromptTemplate<Exclude<K, P2>, P | P2, ExK, ExP>> {
     const promptDict: FewShotPromptTemplate<
