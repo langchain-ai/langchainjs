@@ -70,7 +70,9 @@
       "src/sql_db.ts",
       "src/callbacks/index.ts",
       "src/output_parsers/index.ts",
-      "src/retrievers/index.ts",
+      "src/retrievers/remote/index.ts",
+      "src/retrievers/supabase.ts",
+      "src/retrievers/metal.ts",
       "src/cache.ts"
     ],
     "excludePrivate": true,

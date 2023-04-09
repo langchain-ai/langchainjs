@@ -21,5 +21,5 @@ const chat_models_anthropic = require("langchain/chat_models/anthropic");
 const schema = require("langchain/schema");
 const callbacks = require("langchain/callbacks");
 const output_parsers = require("langchain/output_parsers");
-const retrievers = require("langchain/retrievers");
+const retrievers_remote = require("langchain/retrievers/remote");
 const cache = require("langchain/cache");

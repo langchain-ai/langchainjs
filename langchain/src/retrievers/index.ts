@@ -3,6 +3,6 @@ export { ChatGPTPluginRetriever } from "./remote/chatgpt-plugin.js";
 export {
   SupabaseHybridSearch,
   SupabaseHybridSearchParams,
-} from "./supabase-hybrid-search.js";
+} from "./supabase.js";
 export { RemoteLangChainRetriever } from "./remote/remote-retriever.js";
 export { MetalRetriever } from "./metal.js";

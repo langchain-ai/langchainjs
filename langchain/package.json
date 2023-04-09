@@ -133,6 +133,15 @@
     "retrievers.cjs",
     "retrievers.js",
     "retrievers.d.ts",
+    "retrievers/remote.cjs",
+    "retrievers/remote.js",
+    "retrievers/remote.d.ts",
+    "retrievers/supabase.cjs",
+    "retrievers/supabase.js",
+    "retrievers/supabase.d.ts",
+    "retrievers/metal.cjs",
+    "retrievers/metal.js",
+    "retrievers/metal.d.ts",
     "cache.cjs",
     "cache.js",
     "cache.d.ts",
@@ -544,9 +553,26 @@
       "require": "./output_parsers.cjs"
     },
     "./retrievers": {
-      "types": "./retrievers.d.ts",
-      "import": "./retrievers.js",
-      "require": "./retrievers.cjs"
+      "node": {
+        "types": "./retrievers.d.ts",
+        "import": "./retrievers.js",
+        "require": "./retrievers.cjs"
+      }
+    },
+    "./retrievers/remote": {
+      "types": "./retrievers/remote.d.ts",
+      "import": "./retrievers/remote.js",
+      "require": "./retrievers/remote.cjs"
+    },
+    "./retrievers/supabase": {
+      "types": "./retrievers/supabase.d.ts",
+      "import": "./retrievers/supabase.js",
+      "require": "./retrievers/supabase.cjs"
+    },
+    "./retrievers/metal": {
+      "types": "./retrievers/metal.d.ts",
+      "import": "./retrievers/metal.js",
+      "require": "./retrievers/metal.cjs"
     },
     "./cache": {
       "types": "./cache.d.ts",

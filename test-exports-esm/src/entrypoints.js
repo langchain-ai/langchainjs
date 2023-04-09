@@ -21,5 +21,5 @@ import * as chat_models_anthropic from "langchain/chat_models/anthropic";
 import * as schema from "langchain/schema";
 import * as callbacks from "langchain/callbacks";
 import * as output_parsers from "langchain/output_parsers";
-import * as retrievers from "langchain/retrievers";
+import * as retrievers_remote from "langchain/retrievers/remote";
 import * as cache from "langchain/cache";

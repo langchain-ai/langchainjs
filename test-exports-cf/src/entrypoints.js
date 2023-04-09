@@ -21,5 +21,5 @@ export * from "langchain/chat_models/anthropic";
 export * from "langchain/schema";
 export * from "langchain/callbacks";
 export * from "langchain/output_parsers";
-export * from "langchain/retrievers";
+export * from "langchain/retrievers/remote";
 export * from "langchain/cache";

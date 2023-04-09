@@ -67,6 +67,9 @@ const entrypoints = {
   output_parsers: "output_parsers/index",
   // retrievers
   retrievers: "retrievers/index",
+  "retrievers/remote": "retrievers/remote/index",
+  "retrievers/supabase": "retrievers/supabase",
+  "retrievers/metal": "retrievers/metal",
   // cache
   cache: "cache",
 };
@@ -79,6 +82,7 @@ const deprecatedNodeOnly = [
   "llms",
   "chat_models",
   "vectorstores",
+  "retrievers",
 ];
 
 // Entrypoints in this list require an optional dependency to be installed.
@@ -97,6 +101,8 @@ const requiresOptionalDependency = [
   "vectorstores/pinecone",
   "vectorstores/supabase",
   "sql_db",
+  "retrievers/supabase",
+  "retrievers/metal",
 ];
 
 // List of test-exports-* packages which we use to test that the exports field

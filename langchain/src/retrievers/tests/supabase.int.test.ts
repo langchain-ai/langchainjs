@@ -3,7 +3,7 @@
 import { test, expect } from "@jest/globals";
 import { createClient } from "@supabase/supabase-js";
 import { OpenAIEmbeddings } from "../../embeddings/index.js";
-import { SupabaseHybridSearch } from "../supabase-hybrid-search.js";
+import { SupabaseHybridSearch } from "../supabase.js";
 
 test("Supabase hybrid keyword search", async () => {
   const client = createClient(

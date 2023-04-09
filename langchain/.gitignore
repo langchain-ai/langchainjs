@@ -121,6 +121,15 @@ output_parsers.d.ts
 retrievers.cjs
 retrievers.js
 retrievers.d.ts
+retrievers/remote.cjs
+retrievers/remote.js
+retrievers/remote.d.ts
+retrievers/supabase.cjs
+retrievers/supabase.js
+retrievers/supabase.d.ts
+retrievers/metal.cjs
+retrievers/metal.js
+retrievers/metal.d.ts
 cache.cjs
 cache.js
 cache.d.ts
