@@ -10,20 +10,24 @@ function sortedValues<T>(values: Record<string, T>): T[] {
     .map((key) => values[key]);
 }
 
-export class SemanticSimilarityExampleSelector implements BaseExampleSelector {
+export class SemanticSimilarityExampleSelector<
+  K extends string,
+  P extends string
+> implements BaseExampleSelector<K, P>
+{
   vectorStore: VectorStore;
 
   k = 4;
 
-  exampleKeys?: string[];
+  exampleKeys?: (K | P)[];
 
-  inputKeys?: string[];
+  inputKeys?: (K | P)[];
 
   constructor(data: {
     vectorStore: VectorStore;
     k?: number;
-    exampleKeys?: string[];
-    inputKeys?: string[];
+    exampleKeys?: (K | P)[];
+    inputKeys?: (K | P)[];
   }) {
     this.vectorStore = data.vectorStore;
     this.k = data.k ?? 4;
@@ -31,12 +35,12 @@ export class SemanticSimilarityExampleSelector implements BaseExampleSelector {
     this.inputKeys = data.inputKeys;
   }
 
-  async addExample(example: Example): Promise<void> {
-    const inputKeys = this.inputKeys ?? Object.keys(example);
+  async addExample(example: Example<K, P>): Promise<void> {
+    const inputKeys = this.inputKeys ?? (Object.keys(example) as (K | P)[]);
     const stringExample = sortedValues(
       inputKeys.reduce(
         (acc, key) => ({ ...acc, [key]: example[key] }),
-        {} as Example
+        {} as Example<K, P>
       )
     ).join(" ");
 
@@ -50,7 +54,7 @@ export class SemanticSimilarityExampleSelector implements BaseExampleSelector {
 
   async selectExamples<T>(
     inputVariables: Record<string, T>
-  ): Promise<Example[]> {
+  ): Promise<Example<K, P>[]> {
     const inputKeys = this.inputKeys ?? Object.keys(inputVariables);
     const query = sortedValues(
       inputKeys.reduce(
@@ -69,20 +73,24 @@ export class SemanticSimilarityExampleSelector implements BaseExampleSelector {
           (acc, key) => ({ ...acc, [key]: example[key] }),
           {}
         )
-      );
+      ) as Example<K, P>[];
     }
     return examples;
   }
 
-  static async fromExamples<C extends typeof VectorStore>(
+  static async fromExamples<
+    C extends typeof VectorStore,
+    K extends string,
+    P extends string
+  >(
     examples: Record<string, string>[],
     embeddings: Embeddings,
     vectorStoreCls: C,
     options: {
       k?: number;
-      inputKeys?: string[];
+      inputKeys?: (K | P)[];
     } & Parameters<C["fromTexts"]>[3] = {}
-  ): Promise<SemanticSimilarityExampleSelector> {
+  ): Promise<SemanticSimilarityExampleSelector<K, P>> {
     const inputKeys = options.inputKeys ?? null;
     const stringExamples = examples.map((example) =>
       sortedValues(

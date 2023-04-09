@@ -6,16 +6,18 @@ function getLengthBased(text: string): number {
   return text.split(/\n| /).length;
 }
 
-interface LengthBasedExampleSelectorArgs {
-  examplePrompt: PromptTemplate;
+interface LengthBasedExampleSelectorArgs<K extends string, P extends string> {
+  examplePrompt: PromptTemplate<K, P>;
   maxLength?: number;
   getTextLength?: (text: string) => number;
 }
 
-export class LengthBasedExampleSelector implements BaseExampleSelector {
-  protected examples: Example[] = [];
+export class LengthBasedExampleSelector<K extends string, P extends string>
+  implements BaseExampleSelector<K, P>
+{
+  protected examples: Example<K, P>[] = [];
 
-  examplePrompt!: PromptTemplate;
+  examplePrompt!: PromptTemplate<K, P>;
 
   getTextLength: (text: string) => number = getLengthBased;
 
@@ -23,13 +25,13 @@ export class LengthBasedExampleSelector implements BaseExampleSelector {
 
   exampleTextLengths: number[] = [];
 
-  constructor(data: LengthBasedExampleSelectorArgs) {
+  constructor(data: LengthBasedExampleSelectorArgs<K, P>) {
     this.examplePrompt = data.examplePrompt;
     this.maxLength = data.maxLength ?? 2048;
     this.getTextLength = data.getTextLength ?? getLengthBased;
   }
 
-  async addExample(example: Example): Promise<void> {
+  async addExample(example: Example<K, P>): Promise<void> {
     this.examples.push(example);
     const stringExample = await this.examplePrompt.format(example);
     this.exampleTextLengths.push(this.getTextLength(stringExample));
@@ -37,7 +39,7 @@ export class LengthBasedExampleSelector implements BaseExampleSelector {
 
   async calculateExampleTextLengths(
     v: number[],
-    values: LengthBasedExampleSelector
+    values: LengthBasedExampleSelector<K, P>
   ): Promise<number[]> {
     if (v.length > 0) {
       return v;
@@ -45,16 +47,18 @@ export class LengthBasedExampleSelector implements BaseExampleSelector {
 
     const { examples, examplePrompt } = values;
     const stringExamples = await Promise.all(
-      examples.map((eg: Example) => examplePrompt.format(eg))
+      examples.map((eg: Example<K, P>) => examplePrompt.format(eg))
     );
     return stringExamples.map((eg: string) => this.getTextLength(eg));
   }
 
-  async selectExamples(inputVariables: Example): Promise<Example[]> {
+  async selectExamples(
+    inputVariables: Example<K, P>
+  ): Promise<Example<K, P>[]> {
     const inputs = Object.values(inputVariables).join(" ");
     let remainingLength = this.maxLength - this.getTextLength(inputs);
     let i = 0;
-    const examples: Example[] = [];
+    const examples: Example<K, P>[] = [];
 
     while (remainingLength > 0 && i < this.examples.length) {
       const newLength = remainingLength - this.exampleTextLengths[i];
@@ -70,9 +74,9 @@ export class LengthBasedExampleSelector implements BaseExampleSelector {
     return examples;
   }
 
-  static async fromExamples(
-    examples: Example[],
-    args: LengthBasedExampleSelectorArgs
+  static async fromExamples<K extends string, P extends string>(
+    examples: Example<K, P>[],
+    args: LengthBasedExampleSelectorArgs<K, P>
   ) {
     const selector = new LengthBasedExampleSelector(args);
     await Promise.all(examples.map((eg) => selector.addExample(eg)));

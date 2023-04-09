@@ -172,8 +172,8 @@ export abstract class BaseStringPromptTemplate<
 /**
  * Base class for example selectors.
  */
-export abstract class BaseExampleSelector {
-  abstract addExample(example: Example): Promise<void | string>;
+export abstract class BaseExampleSelector<K extends string, P extends string> {
+  abstract addExample(example: Example<K, P>): Promise<void | string>;
 
-  abstract selectExamples(input_variables: Example): Promise<Example[]>;
+  abstract selectExamples(input_variables: Example<K, P>): Promise<Example<K, P>[]>;
 }

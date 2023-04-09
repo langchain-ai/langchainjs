@@ -1,6 +1,7 @@
 import { Document } from "../document.js";
 
-export type Example = Record<string, string>;
+export type Example<K extends string, P extends string> = Record<K, any> &
+  Partial<Record<P, any>>;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type InputValues = Record<string, any>;

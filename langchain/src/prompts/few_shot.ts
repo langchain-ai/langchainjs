@@ -18,9 +18,7 @@ import {
   SerializedFewShotTemplate,
   SerializedPromptTemplate,
 } from "./serde.js";
-// import { Example } from "../schema/index.js";
-type Example<ExK extends string, ExP extends string> = Record<ExK, any> &
-  Partial<Record<ExP, any>>;
+import { Example } from "../schema/index.js";
 
 export interface FewShotPromptTemplateInput<
   K extends string,
@@ -40,7 +38,7 @@ export interface FewShotPromptTemplateInput<
    * {@link examples} must be
    * provided.
    */
-  exampleSelector?: BaseExampleSelector;
+  exampleSelector?: BaseExampleSelector<ExK, ExP>;
 
   /**
    * An {@link PromptTemplate} used to format a single example.
@@ -91,7 +89,7 @@ export class FewShotPromptTemplate<
 {
   examples?: any[];
 
-  exampleSelector?: BaseExampleSelector | undefined;
+  exampleSelector?: BaseExampleSelector<ExK, ExP> | undefined;
 
   examplePrompt: PromptTemplate<ExK, ExP>;
 
