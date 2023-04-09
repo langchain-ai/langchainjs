@@ -6,8 +6,6 @@ import {
   HumanMessagePromptTemplate,
 } from "langchain/prompts";
 
-import logo from "./logo.svg";
-import "./App.css";
 import { useCallback } from "react";
 import { CallbackManager } from "langchain/callbacks";
 
@@ -15,16 +13,22 @@ const OPENAI_API_KEY = process.env.REACT_APP_OPENAI_API_KEY;
 
 function App() {
   const runChain = useCallback(async () => {
+    const llm = new ChatOpenAI({
+      openAIApiKey: OPENAI_API_KEY,
+      streaming: true,
+      callbackManager: CallbackManager.fromHandlers({
+        handleLLMNewToken: async (token) =>
+          console.log("handleLLMNewToken", token),
+      }),
+    });
+
+    // Test count tokens
+    const n = await llm.getNumTokens("Hello");
+    console.log("getNumTokens", n);
+
     // Test a chain + prompt + model
     const chain = new LLMChain({
-      llm: new ChatOpenAI({
-        openAIApiKey: OPENAI_API_KEY,
-        streaming: true,
-        callbackManager: CallbackManager.fromHandlers({
-          handleLLMNewToken: async (token) =>
-            console.log("handleLLMNewToken", token),
-        }),
-      }),
+      llm,
       prompt: ChatPromptTemplate.fromPromptMessages([
         HumanMessagePromptTemplate.fromTemplate("{input}"),
       ]),
@@ -37,7 +41,6 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
         <p>
           Edit <code>src/App.js</code> and save to reload.
         </p>
