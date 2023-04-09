@@ -32,7 +32,7 @@ export abstract class BaseLLM extends BaseLanguageModel {
 
   constructor({ cache, concurrency, ...rest }: BaseLLMParams) {
     super(concurrency ? { maxConcurrency: concurrency, ...rest } : rest);
-    if (cache instanceof BaseCache) {
+    if (typeof cache === "object") {
       this.cache = cache;
     } else if (cache) {
       this.cache = InMemoryCache.global();
