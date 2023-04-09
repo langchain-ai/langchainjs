@@ -4,7 +4,7 @@ import {
   PromptTemplate,
   FewShotPromptTemplate,
 } from "langchain/prompts";
-import { HNSWLib } from "langchain/vectorstores";
+import { HNSWLib } from "langchain/vectorstores/hnswlib";
 
 export async function run() {
   // Create a prompt template that will be used to format the examples.

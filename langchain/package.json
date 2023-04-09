@@ -73,6 +73,21 @@
     "vectorstores.cjs",
     "vectorstores.js",
     "vectorstores.d.ts",
+    "vectorstores/base.cjs",
+    "vectorstores/base.js",
+    "vectorstores/base.d.ts",
+    "vectorstores/chroma.cjs",
+    "vectorstores/chroma.js",
+    "vectorstores/chroma.d.ts",
+    "vectorstores/hnswlib.cjs",
+    "vectorstores/hnswlib.js",
+    "vectorstores/hnswlib.d.ts",
+    "vectorstores/pinecone.cjs",
+    "vectorstores/pinecone.js",
+    "vectorstores/pinecone.d.ts",
+    "vectorstores/supabase.cjs",
+    "vectorstores/supabase.js",
+    "vectorstores/supabase.d.ts",
     "text_splitter.cjs",
     "text_splitter.js",
     "text_splitter.d.ts",
@@ -417,14 +432,36 @@
       "require": "./prompts/load.cjs"
     },
     "./vectorstores": {
-      "types": "./vectorstores.d.ts",
       "node": {
+        "types": "./vectorstores.d.ts",
         "import": "./vectorstores.js",
         "require": "./vectorstores.cjs"
-      },
-      "import": "./dist/vectorstores/index.lite.js",
-      "require": "./dist/vectorstores/index.lite.cjs",
-      "default": "./dist/vectorstores/index.lite.js"
+      }
+    },
+    "./vectorstores/base": {
+      "types": "./vectorstores/base.d.ts",
+      "import": "./vectorstores/base.js",
+      "require": "./vectorstores/base.cjs"
+    },
+    "./vectorstores/chroma": {
+      "types": "./vectorstores/chroma.d.ts",
+      "import": "./vectorstores/chroma.js",
+      "require": "./vectorstores/chroma.cjs"
+    },
+    "./vectorstores/hnswlib": {
+      "types": "./vectorstores/hnswlib.d.ts",
+      "import": "./vectorstores/hnswlib.js",
+      "require": "./vectorstores/hnswlib.cjs"
+    },
+    "./vectorstores/pinecone": {
+      "types": "./vectorstores/pinecone.d.ts",
+      "import": "./vectorstores/pinecone.js",
+      "require": "./vectorstores/pinecone.cjs"
+    },
+    "./vectorstores/supabase": {
+      "types": "./vectorstores/supabase.d.ts",
+      "import": "./vectorstores/supabase.js",
+      "require": "./vectorstores/supabase.cjs"
     },
     "./text_splitter": {
       "types": "./text_splitter.d.ts",

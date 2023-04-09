@@ -4,7 +4,7 @@ async function test() {
   const { LLMChain } = await import("langchain/chains");
   const { ChatPromptTemplate } = await import("langchain/prompts");
   const { loadPrompt } = await import("langchain/prompts/load");
-  const { HNSWLib } = await import("langchain/vectorstores");
+  const { HNSWLib } = await import("langchain/vectorstores/hnswlib");
   const { OpenAIEmbeddings } = await import("langchain/embeddings/openai");
   const { InMemoryDocstore, Document } = await import("langchain/docstore");
   const { CSVLoader } = await import("langchain/document_loaders");

@@ -1,6 +1,6 @@
 import { OpenAI } from "langchain/llms/openai";
 import { ConversationalRetrievalQAChain } from "langchain/chains";
-import { Chroma } from "langchain/vectorstores";
+import { Chroma } from "langchain/vectorstores/chroma";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import * as fs from "fs";

@@ -3,7 +3,7 @@ import { OpenAI } from "langchain";
 import { LLMChain } from "langchain/chains";
 import { ChatPromptTemplate } from "langchain/prompts";
 import { loadPrompt } from "langchain/prompts/load";
-import { HNSWLib } from "langchain/vectorstores";
+import { HNSWLib } from "langchain/vectorstores/hnswlib";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { InMemoryDocstore, Document } from "langchain/docstore";
 import { CSVLoader } from "langchain/document_loaders";

@@ -36,6 +36,11 @@ const entrypoints = {
   "prompts/load": "prompts/load",
   // vectorstores
   vectorstores: "vectorstores/index",
+  "vectorstores/base": "vectorstores/base",
+  "vectorstores/chroma": "vectorstores/chroma",
+  "vectorstores/hnswlib": "vectorstores/hnswlib",
+  "vectorstores/pinecone": "vectorstores/pinecone",
+  "vectorstores/supabase": "vectorstores/supabase",
   // text_splitter
   text_splitter: "text_splitter",
   // memory
@@ -68,7 +73,12 @@ const entrypoints = {
 // Entrypoints in this list will
 // 1. Be excluded from the documentation
 // 2. Be only available in Node.js environments (for backwards compatibility)
-const deprecatedNodeOnly = ["embeddings", "llms", "chat_models"];
+const deprecatedNodeOnly = [
+  "embeddings",
+  "llms",
+  "chat_models",
+  "vectorstores",
+];
 
 // Entrypoints in this list require an optional dependency to be installed.
 // Therefore they are no tested in the generated test-exports-* packages.
@@ -81,6 +91,10 @@ const requiresOptionalDependency = [
   "llms/hf",
   "llms/replicate",
   "prompts/load",
+  "vectorstores/chroma",
+  "vectorstores/hnswlib",
+  "vectorstores/pinecone",
+  "vectorstores/supabase",
   "sql_db",
 ];
 

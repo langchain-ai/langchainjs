@@ -1,4 +1,4 @@
-import { HNSWLib } from "langchain/vectorstores";
+import { HNSWLib } from "langchain/vectorstores/hnswlib";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 
 export const run = async () => {

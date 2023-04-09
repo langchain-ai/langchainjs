@@ -16,7 +16,7 @@ npm install -S chromadb
 ## Index and query docs
 
 ```typescript
-import { Chroma } from "langchain/vectorstores";
+import { Chroma } from "langchain/vectorstores/chroma";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 
 // text sample from Godel, Escher, Bach
@@ -51,7 +51,7 @@ const response = await vectorStore.similaritySearch("scared", 2);
 ## Query docs from existing collection
 
 ```typescript
-import { Chroma } from "langchain/vectorstores";
+import { Chroma } from "langchain/vectorstores/chroma";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 
 const vectorStore = await Chroma.fromExistingCollection(

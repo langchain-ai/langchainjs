@@ -8,7 +8,7 @@ export * from "langchain/embeddings/openai";
 export * from "langchain/llms/base";
 export * from "langchain/llms/openai";
 export * from "langchain/prompts";
-export * from "langchain/vectorstores";
+export * from "langchain/vectorstores/base";
 export * from "langchain/text_splitter";
 export * from "langchain/memory";
 export * from "langchain/document";
