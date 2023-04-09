@@ -31,6 +31,9 @@ const entrypoints = {
   cache: "cache",
 };
 
+// Entrypoints in this list will
+// 1. Be excluded from the documentation
+// 2. Be only available in Node.js environments (for backwards compatibility)
 const deprecatedNodeOnly = ["embeddings"];
 
 const updateJsonFile = (relativePath, updateFunction) => {
