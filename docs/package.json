@@ -43,7 +43,7 @@
     "eslint-plugin-react": "^7.30.1",
     "eslint-plugin-react-hooks": "^4.6.0",
     "prettier": "^2.7.1",
-    "typedoc": "^0.23.25",
+    "typedoc": "^0.23.28",
     "typedoc-plugin-markdown": "^3.14.0"
   },
   "browserslist": {
