@@ -88,6 +88,9 @@
     "vectorstores/supabase.cjs",
     "vectorstores/supabase.js",
     "vectorstores/supabase.d.ts",
+    "vectorstores/prisma.cjs",
+    "vectorstores/prisma.js",
+    "vectorstores/prisma.d.ts",
     "text_splitter.cjs",
     "text_splitter.js",
     "text_splitter.d.ts",
@@ -462,6 +465,11 @@
       "types": "./vectorstores/supabase.d.ts",
       "import": "./vectorstores/supabase.js",
       "require": "./vectorstores/supabase.cjs"
+    },
+    "./vectorstores/prisma": {
+      "types": "./vectorstores/prisma.d.ts",
+      "import": "./vectorstores/prisma.js",
+      "require": "./vectorstores/prisma.cjs"
     },
     "./text_splitter": {
       "types": "./text_splitter.d.ts",

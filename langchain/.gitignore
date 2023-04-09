@@ -76,6 +76,9 @@ vectorstores/pinecone.d.ts
 vectorstores/supabase.cjs
 vectorstores/supabase.js
 vectorstores/supabase.d.ts
+vectorstores/prisma.cjs
+vectorstores/prisma.js
+vectorstores/prisma.d.ts
 text_splitter.cjs
 text_splitter.js
 text_splitter.d.ts

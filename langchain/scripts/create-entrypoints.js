@@ -41,6 +41,7 @@ const entrypoints = {
   "vectorstores/hnswlib": "vectorstores/hnswlib",
   "vectorstores/pinecone": "vectorstores/pinecone",
   "vectorstores/supabase": "vectorstores/supabase",
+  "vectorstores/prisma": "vectorstores/prisma",
   // text_splitter
   text_splitter: "text_splitter",
   // memory
