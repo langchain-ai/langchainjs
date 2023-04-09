@@ -130,11 +130,15 @@ export class Milvus extends VectorStore {
                     case this.vectorField:
                         data[field] = vec
                         break;
-                    default:
+                    default: //metadata fields
                         if (doc.metadata[field] === undefined) {
                             throw new Error(`The field "${field}" is not provided in documents[${index}].metadata.`)
                         } else {
-                            data[field] = doc.metadata[field]
+                            if (typeof doc.metadata[field] === 'object') {
+                                data[field] = JSON.stringify(doc.metadata[field])
+                            }else{
+                                data[field] = doc.metadata[field]
+                            }
                         }
                         break;
                 }
@@ -203,7 +207,12 @@ export class Milvus extends VectorStore {
                     doc.pageContent = result[key]
                 }else{
                     if (this.fields.includes(key)) {
-                        doc.metadata[key] = result[key]
+                        if (typeof result[key] === 'string') {
+                            const {isJson, obj} = checkJsonString(result[key])
+                            doc.metadata[key] = isJson ? obj : result[key]
+                        }else{
+                            doc.metadata[key] = result[key]
+                        }
                     }
                 }
             })
@@ -232,17 +241,7 @@ export class Milvus extends VectorStore {
     async createCollection(vectors: number[][], documents: Document[]): Promise<void> {
         let fieldList: FieldType[] = []
 
-        let sampleMetadata = documents[0].metadata
-        documents.forEach(({ metadata }) => {
-            // check all keys name and count in metadata is same as sampleMetadata
-            Object.keys(metadata).forEach((key) => {
-                if (!(key in sampleMetadata)) {
-                    throw new Error("All documents must have same metadata keys and datatype")
-                }
-            })
-        })
-
-        fieldList.push(...createFieldTypeForMetadata(documents[0].metadata))
+        fieldList.push(...createFieldTypeForMetadata(documents))
 
         fieldList.push({
             name: this.primaryField,
@@ -373,38 +372,71 @@ export class Milvus extends VectorStore {
 }
 
 
-function createFieldTypeForMetadata(metadata: Record<string, any>): FieldType[] {
+function createFieldTypeForMetadata(documents:Document[]): FieldType[] {
+
+    let sampleMetadata = documents[0].metadata
+    let textFieldMaxLength = 0
+    let jsonFieldMaxLength = 0
+    documents.forEach(({ metadata }) => {
+        // check all keys name and count in metadata is same as sampleMetadata
+        Object.keys(metadata).forEach((key) => {
+            if (!(key in metadata) || typeof metadata[key] !== typeof sampleMetadata[key]) {
+                throw new Error("All documents must have same metadata keys and datatype")
+            }
+
+            // find max length of string field and json field, cache json string value
+            if (typeof metadata[key] == "string") {
+                if (metadata[key].length > textFieldMaxLength) {
+                    textFieldMaxLength = metadata[key].length
+                }
+            }else if (typeof metadata[key] === "object") {
+                const json = JSON.stringify(metadata[key])
+                if (json.length > jsonFieldMaxLength) {
+                    jsonFieldMaxLength = json.length
+                }
+            }
+        })
+    })
+
     const fields: FieldType[] = [];
-    for (const [key, value] of Object.entries(metadata)) {
-        if (Array.isArray(value)) {
-            throw new Error(`Unsupported type array for metadata field`);
+    for (const [key, value] of Object.entries(sampleMetadata)) {
+        const type = typeof value;
+        if (type === "string") {
+            fields.push({
+                name: key,
+                description: `Metadata String field`,
+                data_type: DataType.VarChar,
+                type_params: {
+                    max_length: textFieldMaxLength.toString(),
+                }
+            });
+        } else if (type === "number") {
+            fields.push({
+                name: key,
+                description: `Metadata Number field`,
+                data_type: DataType.Float,
+            });
+        } else if (type === "boolean") {
+            fields.push({
+                name: key,
+                description: `Metadata Boolean field`,
+                data_type: DataType.Bool,
+            });
+        } else if (value === null) {
+            // skip
         } else {
-            const type = typeof value;
-            if (type === "string") {
+            // use json for other types
+            try {
                 fields.push({
                     name: key,
-                    description: `Metadata String field`,
+                    description: `Metadata JSON field`,
                     data_type: DataType.VarChar,
                     type_params: {
-                        max_length: value.length.toString(),
+                        max_length: jsonFieldMaxLength.toString(),
                     }
                 });
-            } else if (type === "number") {
-                fields.push({
-                    name: key,
-                    description: `Metadata Number field`,
-                    data_type: DataType.Float,
-                });
-            } else if (type === "boolean") {
-                fields.push({
-                    name: key,
-                    description: `Metadata Boolean field`,
-                    data_type: DataType.Bool,
-                });
-            } else if (value === null) {
-                // skip
-            } else {
-                throw new Error(`Unsupported type ${type} for metadata field`);
+            } catch (e) {
+                throw new Error("Failed to parse metadata field as JSON");
             }
         }
     }
@@ -432,3 +464,12 @@ function getVectorFieldDim(vectors: number[][]) {
     }
     return vectors[0].length;
 } 
+
+function checkJsonString(value: any): {isJson: boolean, obj: any} {
+    try {
+        let result = JSON.parse(value);
+        return {isJson: true, obj: result};
+    } catch (e) {
+        return {isJson: false, obj: null};
+    }
+  }

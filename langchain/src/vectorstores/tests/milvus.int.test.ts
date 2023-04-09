@@ -26,17 +26,27 @@ test("Test Milvus.fromtext", async () => {
         "Achilles: Oh, no!",
         "Tortoise: But it's only a myth. Courage, Achilles.",
     ]
-    const metadatas: object[] = [{ id: 2 }, { id: 1 }, { id: 3 }, { id: 4 }, { id: 5 }]
+    const objA = { "A": {"B": "some string"}} 
+    const objB = { "A": {"B": "some other string"}}
+    const metadatas: object[] = [
+        { id: 2 , other: objA }, 
+        { id: 1 , other: objB }, 
+        { id: 3 , other: objA }, 
+        { id: 4 , other: objB }, 
+        { id: 5 , other: objA }]
     const milvus = await Milvus.fromTexts(texts, metadatas, embeddings, {collectionName: collectionName})
     
     const query = "who is achilles?"
     const result = await milvus.similaritySearch(query, 1)
     const resultMetadatas = result.map(({ metadata }) =>  metadata )
-    expect(resultMetadatas).toEqual([{ id: 1 }])
+    expect(resultMetadatas).toEqual([{ id: 1 , other: objB}])
 
     const resultTwo = await milvus.similaritySearch(query, 3)
     const resultTwoMetadatas = resultTwo.map(({ metadata }) => metadata )
-    expect(resultTwoMetadatas).toEqual([{ id: 1 }, { id: 4 }, { id: 5 }])
+    expect(resultTwoMetadatas).toEqual([
+        { id: 1 , other: objB }, 
+        { id: 4 , other: objB }, 
+        { id: 5 , other: objA }])
 })
 
 test("Test Milvus.fromExistingCollection", async () => {
@@ -45,11 +55,15 @@ test("Test Milvus.fromExistingCollection", async () => {
     const query = "who is achilles?"
     const result = await milvus.similaritySearch(query, 1)
     const resultMetadatas = result.map(({ metadata }) =>  metadata )
-    expect(resultMetadatas).toEqual([{ id: 1 }])
+    expect(resultMetadatas.length).toBe(1)
+    expect(resultMetadatas[0].id).toEqual(1)
 
     const resultTwo = await milvus.similaritySearch(query, 3)
     const resultTwoMetadatas = resultTwo.map(({ metadata }) => metadata )
-    expect(resultTwoMetadatas).toEqual([{ id: 1 }, { id: 4 }, { id: 5 }])
+    expect(resultTwoMetadatas.length).toBe(3)
+    expect(resultTwoMetadatas[0].id).toEqual(1)
+    expect(resultTwoMetadatas[1].id).toEqual(4)
+    expect(resultTwoMetadatas[2].id).toEqual(5)
 })
 
 
