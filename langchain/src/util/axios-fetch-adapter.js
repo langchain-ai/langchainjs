@@ -315,6 +315,10 @@ function createRequest(config) {
   if (config.timeout && config.timeout > 0) {
     options.signal = AbortSignal.timeout(config.timeout);
   }
+  if (config.signal) {
+    // this overrides the timeout signal if both are set
+    options.signal = config.signal;
+  }
   // This config is similar to XHR’s withCredentials flag, but with three available values instead of two.
   // So if withCredentials is not set, default value 'same-origin' will be used
   if (!isUndefined(config.withCredentials)) {
