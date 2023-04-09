@@ -11,7 +11,7 @@ module.exports = {
     project: "./tsconfig.json",
     sourceType: "module",
   },
-  plugins: ["@typescript-eslint", "tree-shaking"],
+  plugins: ["@typescript-eslint", "tree-shaking", "no-instanceof"],
   ignorePatterns: [
     ".eslintrc.cjs",
     "scripts",
@@ -44,6 +44,7 @@ module.exports = {
       },
     ],
     "no-process-env": 2,
+    "no-instanceof/no-instanceof": 2,
     "@typescript-eslint/explicit-module-boundary-types": 0,
     "@typescript-eslint/no-empty-function": 0,
     "@typescript-eslint/no-shadow": 0,
