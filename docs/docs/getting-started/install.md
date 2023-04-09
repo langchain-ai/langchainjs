@@ -68,6 +68,21 @@ LangChain can be used in Vercel / Next.js. We support using LangChain in fronten
 import { OpenAI } from "langchain/llms/openai";
 ```
 
+If you want to use LangChain in frontend pages, in order to support the tokenizer library `@dqbd/tiktoken`, you need to add the following to your `next.config.js` to enable support for WebAssembly modules:
+
+```js
+const nextConfig = {
+  webpack(config) {
+    config.experiments = {
+      asyncWebAssembly: true,
+      layers: true,
+    };
+
+    return config;
+  },
+};
+```
+
 ## Unsupported: Node.js 16
 
 We do not support Node.js 16, but if you still want to run LangChain on Node.js 16, you will need to follow the instructions in this section. We do not guarantee that these instructions will continue to work in the future.
