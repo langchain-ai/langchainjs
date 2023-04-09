@@ -115,6 +115,7 @@
     "@typescript-eslint/eslint-plugin": "^5.51.0",
     "@typescript-eslint/parser": "^5.51.0",
     "babel-jest": "^29.5.0",
+    "bert-tokenizer": "^1.1.8",
     "cheerio": "^1.0.0-rc.12",
     "cohere-ai": "^5.0.2",
     "d3-dsv": "^2.0.0",
@@ -141,13 +142,13 @@
     "rollup": "^3.19.1",
     "sqlite3": "^5.1.4",
     "srt-parser-2": "^1.2.2",
-    "tokenizers": "^0.13.1",
     "ts-jest": "^29.0.5",
     "ts-node": "^10.9.1",
     "typeorm": "^0.3.12",
     "typescript": "^4.9.5"
   },
   "peerDependencies": {
+    "bert-tokenizer": "^1.1.8",
     "@dqbd/tiktoken": "^1.0.2",
     "@getmetal/metal-sdk": "*",
     "@huggingface/inference": "^1.5.1",
@@ -166,10 +167,12 @@
     "redis": "^4.6.4",
     "replicate": "^0.9.0",
     "srt-parser-2": "^1.2.2",
-    "tokenizers": "^0.13.1",
     "typeorm": "^0.3.12"
   },
   "peerDependenciesMeta": {
+    "bert-tokenizer": {
+      "optional": true
+    },
     "@dqbd/tiktoken": {
       "optional": true
     },
@@ -222,9 +225,6 @@
       "optional": true
     },
     "srt-parser-2": {
-      "optional": true
-    },
-    "tokenizers": {
       "optional": true
     },
     "typeorm": {

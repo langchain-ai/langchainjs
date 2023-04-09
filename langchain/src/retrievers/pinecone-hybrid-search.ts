@@ -2,7 +2,7 @@ import type {
   SparseValues,
   VectorOperationsApi,
 } from "@pinecone-database/pinecone/dist/pinecone-generated-ts-fetch";
-import { BertWordPieceTokenizer } from "tokenizers";
+import { BertTokenizer } from "bert-tokenizer";
 
 import { PineconeLibArgs, PineconeMetadata } from "vectorstores/pinecone.js";
 import { Embeddings } from "../embeddings/base.js";
@@ -10,7 +10,7 @@ import { Document } from "../document.js";
 import { BaseRetriever } from "../schema/index.js";
 
 export interface PineconeHybridSearchParams extends PineconeLibArgs {
-  tokenizer: BertWordPieceTokenizer;
+  tokenizer: BertTokenizer;
   topK: number;
   alpha: number;
 }
@@ -20,7 +20,7 @@ export class PineconeHybridSearchRetriever extends BaseRetriever {
 
   pineconeIndex: VectorOperationsApi;
 
-  tokenizer: BertWordPieceTokenizer;
+  tokenizer: BertTokenizer;
 
   topK = 4;
 
@@ -70,8 +70,10 @@ export class PineconeHybridSearchRetriever extends BaseRetriever {
       const meta = contextBatch.map((context) => ({ context }));
 
       const denseEmbeds = await this.embeddings.embedDocuments(contextBatch);
-      const encodedBatch = await this.tokenizer.encodeBatch(contextBatch);
-      const sparseEmbeds = this.buildDict(encodedBatch.map(({ ids }) => ids));
+      const tokenIdsBatch = contextBatch.map((text) =>
+        this.tokenizer.tokenize(text)
+      );
+      const sparseEmbeds = this.buildDict(tokenIdsBatch);
 
       const vectors = ids.map((id, idx) => ({
         id,
@@ -106,8 +108,8 @@ export class PineconeHybridSearchRetriever extends BaseRetriever {
   }
 
   async getRelevantDocuments(query: string): Promise<Document[]> {
-    const encodedQuery = await this.tokenizer.encode(query);
-    const sparseVec = this.buildDict([encodedQuery.ids])[0];
+    const tokenIds = await this.tokenizer.tokenize(query);
+    const sparseVec = this.buildDict([tokenIds])[0];
     const denseVec = await this.embeddings.embedQuery(query);
     const [scaledDenseVec, scaledSparseVec] = this.hybridScale(
       denseVec,

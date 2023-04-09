@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { test, expect } from "@jest/globals";
 import { PineconeClient } from "@pinecone-database/pinecone";
-import { BertWordPieceTokenizer } from "tokenizers";
+import { BertTokenizer } from "bert-tokenizer";
 
 import { OpenAIEmbeddings } from "../../embeddings/index.js";
 import { PineconeHybridSearchRetriever } from "../pinecone-hybrid-search.js";
@@ -18,9 +18,7 @@ test("Pinecone hybrid search", async () => {
   const embeddings = new OpenAIEmbeddings();
   const pineconeIndex = client.Index(process.env.PINECONE_INDEX!);
 
-  const tokenizer = await BertWordPieceTokenizer.fromOptions({
-    lowercase: true,
-  });
+  const tokenizer = new BertTokenizer(undefined, true, 512);
 
   const retriever = new PineconeHybridSearchRetriever(embeddings, {
     pineconeIndex,
