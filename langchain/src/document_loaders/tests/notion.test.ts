@@ -1,7 +1,7 @@
 import { test, expect } from "@jest/globals";
 import * as url from "node:url";
 import * as path from "node:path";
-import { NotionLoader } from "../path/notion_markdown.js";
+import { NotionLoader } from "../fs/notion.js";
 
 test("Test Notion Loader", async () => {
   const directoryPath = path.resolve(

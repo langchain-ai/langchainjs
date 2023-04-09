@@ -6,7 +6,7 @@ import { loadPrompt } from "langchain/prompts/load";
 import { HNSWLib } from "langchain/vectorstores/hnswlib";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { InMemoryDocstore, Document } from "langchain/docstore";
-import { CSVLoader } from "langchain/document_loaders";
+import { CSVLoader } from "langchain/document_loaders/fs/csv";
 
 // Test exports
 assert(typeof OpenAI === "function");

@@ -1,5 +1,5 @@
 import { Document } from "../../document.js";
-import { CheerioWebBaseLoader } from "./cheerio_web_base.js";
+import { CheerioWebBaseLoader } from "./cheerio.js";
 
 export class CollegeConfidentialLoader extends CheerioWebBaseLoader {
   constructor(webPath: string) {

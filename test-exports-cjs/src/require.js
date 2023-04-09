@@ -6,7 +6,7 @@ const { loadPrompt } = require("langchain/prompts/load");
 const { HNSWLib } = require("langchain/vectorstores/hnswlib");
 const { OpenAIEmbeddings } = require("langchain/embeddings/openai");
 const { InMemoryDocstore, Document } = require("langchain/docstore");
-const { CSVLoader } = require("langchain/document_loaders");
+const { CSVLoader } = require("langchain/document_loaders/fs/csv");
 
 async function test() {
   // Test exports

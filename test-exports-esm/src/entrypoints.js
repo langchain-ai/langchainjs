@@ -14,7 +14,7 @@ import * as text_splitter from "langchain/text_splitter";
 import * as memory from "langchain/memory";
 import * as document from "langchain/document";
 import * as docstore from "langchain/docstore";
-import * as document_loaders from "langchain/document_loaders";
+import * as document_loaders_base from "langchain/document_loaders/base";
 import * as chat_models_base from "langchain/chat_models/base";
 import * as chat_models_openai from "langchain/chat_models/openai";
 import * as chat_models_anthropic from "langchain/chat_models/anthropic";

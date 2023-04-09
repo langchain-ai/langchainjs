@@ -106,6 +106,63 @@
     "document_loaders.cjs",
     "document_loaders.js",
     "document_loaders.d.ts",
+    "document_loaders/base.cjs",
+    "document_loaders/base.js",
+    "document_loaders/base.d.ts",
+    "document_loaders/web/cheerio.cjs",
+    "document_loaders/web/cheerio.js",
+    "document_loaders/web/cheerio.d.ts",
+    "document_loaders/web/puppeteer.cjs",
+    "document_loaders/web/puppeteer.js",
+    "document_loaders/web/puppeteer.d.ts",
+    "document_loaders/web/college_confidential.cjs",
+    "document_loaders/web/college_confidential.js",
+    "document_loaders/web/college_confidential.d.ts",
+    "document_loaders/web/gitbook.cjs",
+    "document_loaders/web/gitbook.js",
+    "document_loaders/web/gitbook.d.ts",
+    "document_loaders/web/hn.cjs",
+    "document_loaders/web/hn.js",
+    "document_loaders/web/hn.d.ts",
+    "document_loaders/web/imsdb.cjs",
+    "document_loaders/web/imsdb.js",
+    "document_loaders/web/imsdb.d.ts",
+    "document_loaders/web/github.cjs",
+    "document_loaders/web/github.js",
+    "document_loaders/web/github.d.ts",
+    "document_loaders/fs/directory.cjs",
+    "document_loaders/fs/directory.js",
+    "document_loaders/fs/directory.d.ts",
+    "document_loaders/fs/buffer.cjs",
+    "document_loaders/fs/buffer.js",
+    "document_loaders/fs/buffer.d.ts",
+    "document_loaders/fs/text.cjs",
+    "document_loaders/fs/text.js",
+    "document_loaders/fs/text.d.ts",
+    "document_loaders/fs/json.cjs",
+    "document_loaders/fs/json.js",
+    "document_loaders/fs/json.d.ts",
+    "document_loaders/fs/srt.cjs",
+    "document_loaders/fs/srt.js",
+    "document_loaders/fs/srt.d.ts",
+    "document_loaders/fs/pdf.cjs",
+    "document_loaders/fs/pdf.js",
+    "document_loaders/fs/pdf.d.ts",
+    "document_loaders/fs/docx.cjs",
+    "document_loaders/fs/docx.js",
+    "document_loaders/fs/docx.d.ts",
+    "document_loaders/fs/epub.cjs",
+    "document_loaders/fs/epub.js",
+    "document_loaders/fs/epub.d.ts",
+    "document_loaders/fs/csv.cjs",
+    "document_loaders/fs/csv.js",
+    "document_loaders/fs/csv.d.ts",
+    "document_loaders/fs/notion.cjs",
+    "document_loaders/fs/notion.js",
+    "document_loaders/fs/notion.d.ts",
+    "document_loaders/fs/unstructured.cjs",
+    "document_loaders/fs/unstructured.js",
+    "document_loaders/fs/unstructured.d.ts",
     "chat_models.cjs",
     "chat_models.js",
     "chat_models.d.ts",
@@ -501,14 +558,106 @@
       "require": "./docstore.cjs"
     },
     "./document_loaders": {
-      "types": "./document_loaders.d.ts",
       "node": {
+        "types": "./document_loaders.d.ts",
         "import": "./document_loaders.js",
         "require": "./document_loaders.cjs"
-      },
-      "import": "./dist/document_loaders/index.lite.js",
-      "require": "./dist/document_loaders/index.lite.cjs",
-      "default": "./dist/document_loaders/index.lite.js"
+      }
+    },
+    "./document_loaders/base": {
+      "types": "./document_loaders/base.d.ts",
+      "import": "./document_loaders/base.js",
+      "require": "./document_loaders/base.cjs"
+    },
+    "./document_loaders/web/cheerio": {
+      "types": "./document_loaders/web/cheerio.d.ts",
+      "import": "./document_loaders/web/cheerio.js",
+      "require": "./document_loaders/web/cheerio.cjs"
+    },
+    "./document_loaders/web/puppeteer": {
+      "types": "./document_loaders/web/puppeteer.d.ts",
+      "import": "./document_loaders/web/puppeteer.js",
+      "require": "./document_loaders/web/puppeteer.cjs"
+    },
+    "./document_loaders/web/college_confidential": {
+      "types": "./document_loaders/web/college_confidential.d.ts",
+      "import": "./document_loaders/web/college_confidential.js",
+      "require": "./document_loaders/web/college_confidential.cjs"
+    },
+    "./document_loaders/web/gitbook": {
+      "types": "./document_loaders/web/gitbook.d.ts",
+      "import": "./document_loaders/web/gitbook.js",
+      "require": "./document_loaders/web/gitbook.cjs"
+    },
+    "./document_loaders/web/hn": {
+      "types": "./document_loaders/web/hn.d.ts",
+      "import": "./document_loaders/web/hn.js",
+      "require": "./document_loaders/web/hn.cjs"
+    },
+    "./document_loaders/web/imsdb": {
+      "types": "./document_loaders/web/imsdb.d.ts",
+      "import": "./document_loaders/web/imsdb.js",
+      "require": "./document_loaders/web/imsdb.cjs"
+    },
+    "./document_loaders/web/github": {
+      "types": "./document_loaders/web/github.d.ts",
+      "import": "./document_loaders/web/github.js",
+      "require": "./document_loaders/web/github.cjs"
+    },
+    "./document_loaders/fs/directory": {
+      "types": "./document_loaders/fs/directory.d.ts",
+      "import": "./document_loaders/fs/directory.js",
+      "require": "./document_loaders/fs/directory.cjs"
+    },
+    "./document_loaders/fs/buffer": {
+      "types": "./document_loaders/fs/buffer.d.ts",
+      "import": "./document_loaders/fs/buffer.js",
+      "require": "./document_loaders/fs/buffer.cjs"
+    },
+    "./document_loaders/fs/text": {
+      "types": "./document_loaders/fs/text.d.ts",
+      "import": "./document_loaders/fs/text.js",
+      "require": "./document_loaders/fs/text.cjs"
+    },
+    "./document_loaders/fs/json": {
+      "types": "./document_loaders/fs/json.d.ts",
+      "import": "./document_loaders/fs/json.js",
+      "require": "./document_loaders/fs/json.cjs"
+    },
+    "./document_loaders/fs/srt": {
+      "types": "./document_loaders/fs/srt.d.ts",
+      "import": "./document_loaders/fs/srt.js",
+      "require": "./document_loaders/fs/srt.cjs"
+    },
+    "./document_loaders/fs/pdf": {
+      "types": "./document_loaders/fs/pdf.d.ts",
+      "import": "./document_loaders/fs/pdf.js",
+      "require": "./document_loaders/fs/pdf.cjs"
+    },
+    "./document_loaders/fs/docx": {
+      "types": "./document_loaders/fs/docx.d.ts",
+      "import": "./document_loaders/fs/docx.js",
+      "require": "./document_loaders/fs/docx.cjs"
+    },
+    "./document_loaders/fs/epub": {
+      "types": "./document_loaders/fs/epub.d.ts",
+      "import": "./document_loaders/fs/epub.js",
+      "require": "./document_loaders/fs/epub.cjs"
+    },
+    "./document_loaders/fs/csv": {
+      "types": "./document_loaders/fs/csv.d.ts",
+      "import": "./document_loaders/fs/csv.js",
+      "require": "./document_loaders/fs/csv.cjs"
+    },
+    "./document_loaders/fs/notion": {
+      "types": "./document_loaders/fs/notion.d.ts",
+      "import": "./document_loaders/fs/notion.js",
+      "require": "./document_loaders/fs/notion.cjs"
+    },
+    "./document_loaders/fs/unstructured": {
+      "types": "./document_loaders/fs/unstructured.d.ts",
+      "import": "./document_loaders/fs/unstructured.js",
+      "require": "./document_loaders/fs/unstructured.cjs"
     },
     "./chat_models": {
       "node": {

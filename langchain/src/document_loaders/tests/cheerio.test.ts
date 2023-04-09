@@ -1,5 +1,5 @@
 import { test } from "@jest/globals";
-import { CheerioWebBaseLoader } from "../web/cheerio_web_base.js";
+import { CheerioWebBaseLoader } from "../web/cheerio.js";
 
 test("Test cheerio web scraper loader", async () => {
   const loader = new CheerioWebBaseLoader(
