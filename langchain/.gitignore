@@ -79,6 +79,15 @@ document_loaders.d.ts
 chat_models.cjs
 chat_models.js
 chat_models.d.ts
+chat_models/base.cjs
+chat_models/base.js
+chat_models/base.d.ts
+chat_models/openai.cjs
+chat_models/openai.js
+chat_models/openai.d.ts
+chat_models/anthropic.cjs
+chat_models/anthropic.js
+chat_models/anthropic.d.ts
 schema.cjs
 schema.js
 schema.d.ts

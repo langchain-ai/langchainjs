@@ -48,6 +48,9 @@ const entrypoints = {
   document_loaders: "document_loaders/index",
   // chat_models
   chat_models: "chat_models/index",
+  "chat_models/base": "chat_models/base",
+  "chat_models/openai": "chat_models/openai",
+  "chat_models/anthropic": "chat_models/anthropic",
   // schema
   schema: "schema/index",
   // sql_db
@@ -65,7 +68,7 @@ const entrypoints = {
 // Entrypoints in this list will
 // 1. Be excluded from the documentation
 // 2. Be only available in Node.js environments (for backwards compatibility)
-const deprecatedNodeOnly = ["embeddings", "llms"];
+const deprecatedNodeOnly = ["embeddings", "llms", "chat_models"];
 
 const updateJsonFile = (relativePath, updateFunction) => {
   const contents = fs.readFileSync(relativePath).toString();

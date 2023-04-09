@@ -6,7 +6,7 @@ import {
   SystemMessagePromptTemplate,
 } from "langchain/prompts";
 import { LLMChain } from "langchain/chains";
-import { ChatOpenAI } from "langchain/chat_models";
+import { ChatOpenAI } from "langchain/chat_models/openai";
 
 export const run = async () => {
   // We can construct an LLMChain from a PromptTemplate and an LLM.

@@ -20,7 +20,7 @@ import * as memory from "langchain/memory";
 import * as document from "langchain/document";
 import * as docstore from "langchain/docstore";
 import * as document_loaders from "langchain/document_loaders";
-import * as chat_models from "langchain/chat_models";
+import * as chat_models from "langchain/chat_models/openai";
 import * as schema from "langchain/schema";
 import * as sql_db from "langchain/sql_db";
 import * as callbacks from "langchain/callbacks";
@@ -29,7 +29,7 @@ import * as retrievers from "langchain/retrievers";
 
 // Import a few things we'll use to test the exports
 import { LLMChain } from "langchain/chains";
-import { ChatOpenAI } from "langchain/chat_models";
+import { ChatOpenAI } from "langchain/chat_models/openai";
 import {
   ChatPromptTemplate,
   HumanMessagePromptTemplate,
