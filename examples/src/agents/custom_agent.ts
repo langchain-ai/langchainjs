@@ -1,4 +1,4 @@
-import { OpenAI } from "langchain/llms";
+import { OpenAI } from "langchain/llms/openai";
 import { ZeroShotAgent, AgentExecutor } from "langchain/agents";
 import { SerpAPI, Calculator } from "langchain/tools";
 import { LLMChain } from "langchain/chains";

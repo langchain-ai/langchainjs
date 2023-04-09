@@ -46,6 +46,24 @@
     "llms.cjs",
     "llms.js",
     "llms.d.ts",
+    "llms/load.cjs",
+    "llms/load.js",
+    "llms/load.d.ts",
+    "llms/base.cjs",
+    "llms/base.js",
+    "llms/base.d.ts",
+    "llms/openai.cjs",
+    "llms/openai.js",
+    "llms/openai.d.ts",
+    "llms/cohere.cjs",
+    "llms/cohere.js",
+    "llms/cohere.d.ts",
+    "llms/hf.cjs",
+    "llms/hf.js",
+    "llms/hf.d.ts",
+    "llms/replicate.cjs",
+    "llms/replicate.js",
+    "llms/replicate.d.ts",
     "prompts.cjs",
     "prompts.js",
     "prompts.d.ts",
@@ -343,14 +361,41 @@
       "require": "./embeddings/cohere.cjs"
     },
     "./llms": {
-      "types": "./llms.d.ts",
       "node": {
+        "types": "./llms.d.ts",
         "import": "./llms.js",
         "require": "./llms.cjs"
-      },
-      "import": "./dist/llms/index.lite.js",
-      "require": "./dist/llms/index.lite.cjs",
-      "default": "./dist/llms/index.lite.js"
+      }
+    },
+    "./llms/load": {
+      "types": "./llms/load.d.ts",
+      "import": "./llms/load.js",
+      "require": "./llms/load.cjs"
+    },
+    "./llms/base": {
+      "types": "./llms/base.d.ts",
+      "import": "./llms/base.js",
+      "require": "./llms/base.cjs"
+    },
+    "./llms/openai": {
+      "types": "./llms/openai.d.ts",
+      "import": "./llms/openai.js",
+      "require": "./llms/openai.cjs"
+    },
+    "./llms/cohere": {
+      "types": "./llms/cohere.d.ts",
+      "import": "./llms/cohere.js",
+      "require": "./llms/cohere.cjs"
+    },
+    "./llms/hf": {
+      "types": "./llms/hf.d.ts",
+      "import": "./llms/hf.js",
+      "require": "./llms/hf.cjs"
+    },
+    "./llms/replicate": {
+      "types": "./llms/replicate.d.ts",
+      "import": "./llms/replicate.js",
+      "require": "./llms/replicate.cjs"
     },
     "./prompts": {
       "types": "./prompts.d.ts",

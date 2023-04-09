@@ -194,7 +194,7 @@ level of the repo.
 Langchain exposes multiple multiple subpaths the user can import from, e.g.
 
 ```ts
-import { OpenAI } from "langchain/llms";
+import { OpenAI } from "langchain/llms/openai";
 ```
 
 In order to declare a new entrypoint that users can import from, you
@@ -205,7 +205,7 @@ the following to the `entrypoints` variable:
 ```ts
 const entrypoints = {
   // ...
-  tools: "agents/tools/index.ts",
+  tools: "agents/tools/index",
 };
 ```
 

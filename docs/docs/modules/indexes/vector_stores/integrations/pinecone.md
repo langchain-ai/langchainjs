@@ -55,7 +55,7 @@ import { PineconeClient } from "@pinecone-database/pinecone";
 import * as dotenv from "dotenv";
 import { VectorDBQAChain } from "langchain/chains";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
-import { OpenAI } from "langchain/llms";
+import { OpenAI } from "langchain/llms/openai";
 import { PineconeStore } from "langchain/vectorstores";
 
 dotenv.config();

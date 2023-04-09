@@ -25,6 +25,12 @@ const entrypoints = {
   "embeddings/cohere": "embeddings/cohere",
   // llms
   llms: "llms/index",
+  "llms/load": "llms/load",
+  "llms/base": "llms/base",
+  "llms/openai": "llms/openai",
+  "llms/cohere": "llms/cohere",
+  "llms/hf": "llms/hf",
+  "llms/replicate": "llms/replicate",
   // prompts
   prompts: "prompts/index",
   "prompts/load": "prompts/load",
@@ -59,7 +65,7 @@ const entrypoints = {
 // Entrypoints in this list will
 // 1. Be excluded from the documentation
 // 2. Be only available in Node.js environments (for backwards compatibility)
-const deprecatedNodeOnly = ["embeddings"];
+const deprecatedNodeOnly = ["embeddings", "llms"];
 
 const updateJsonFile = (relativePath, updateFunction) => {
   const contents = fs.readFileSync(relativePath).toString();
@@ -112,16 +118,15 @@ const updateConfig = () => {
             require: `./${key}.cjs`,
           };
 
+          // If there is a *.lite.js file add it as the root `import` export,
+          // which should/will then be used by non-Node environments.
+          const litePath = `./dist/${entrypoints[key]}.lite.js`;
+
           if (deprecatedNodeOnly.includes(key)) {
             entryPoint = {
               node: entryPoint,
             };
-          }
-
-          // If there is a *.lite.js file add it as the root `import` export,
-          // which should/will then be used by non-Node environments.
-          const litePath = `./dist/${entrypoints[key]}.lite.js`;
-          if (fs.existsSync(litePath)) {
+          } else if (fs.existsSync(litePath)) {
             const { types, ...rest } = entryPoint;
             entryPoint = {
               types,
