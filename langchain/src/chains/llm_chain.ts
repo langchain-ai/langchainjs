@@ -17,16 +17,17 @@ import {
 } from "../schema/index.js";
 import { SerializedLLMChain } from "./serde.js";
 
-export interface LLMChainInput extends ChainInputs {
+export interface LLMChainInput<I extends string, O extends string>
+  extends ChainInputs<I, O> {
   /** Prompt object to use */
-  prompt: BasePromptTemplate;
+  prompt: BasePromptTemplate<I, never>;
   /** LLM Wrapper to use */
   llm: BaseLanguageModel;
   /** OutputParser to use */
   outputParser?: BaseOutputParser;
 
   /** @ignore */
-  outputKey?: string;
+  outputKey?: O;
 }
 
 /**
@@ -41,12 +42,15 @@ export interface LLMChainInput extends ChainInputs {
  * const llm = LLMChain({ llm: new OpenAI(), prompt });
  * ```
  */
-export class LLMChain extends BaseChain implements LLMChainInput {
-  prompt: BasePromptTemplate;
+export class LLMChain<I extends string, O extends string>
+  extends BaseChain<I, O>
+  implements LLMChainInput<I, O>
+{
+  prompt: BasePromptTemplate<I, never>;
 
   llm: BaseLanguageModel;
 
-  outputKey = "text";
+  outputKey = "text" as O;
 
   outputParser?: BaseOutputParser;
 
@@ -54,7 +58,7 @@ export class LLMChain extends BaseChain implements LLMChainInput {
     return this.prompt.inputVariables;
   }
 
-  constructor(fields: LLMChainInput) {
+  constructor(fields: LLMChainInput<I, O>) {
     super(fields.memory, fields.verbose, fields.callbackManager);
     this.prompt = fields.prompt;
     this.llm = fields.llm;
@@ -85,7 +89,7 @@ export class LLMChain extends BaseChain implements LLMChainInput {
     return finalCompletion;
   }
 
-  async _call(values: ChainValues): Promise<ChainValues> {
+  async _call(values: ChainValues<I>): Promise<ChainValues<O>> {
     let stop;
     if ("stop" in values && Array.isArray(values.stop)) {
       stop = values.stop;
@@ -93,8 +97,11 @@ export class LLMChain extends BaseChain implements LLMChainInput {
     const promptValue = await this.prompt.formatPromptValue(values);
     const { generations } = await this.llm.generatePrompt([promptValue], stop);
     return {
-      [this.outputKey]: await this._getFinalOutput(generations[0], promptValue),
-    };
+      [this.outputKey as O]: await this._getFinalOutput(
+        generations[0],
+        promptValue
+      ),
+    } as ChainValues<O>;
   }
 
   /**
@@ -108,9 +115,9 @@ export class LLMChain extends BaseChain implements LLMChainInput {
    * llm.predict({ adjective: "funny" })
    * ```
    */
-  async predict(values: ChainValues): Promise<string> {
+  async predict(values: ChainValues<I>): Promise<string> {
     const output = await this.call(values);
-    return output[this.outputKey];
+    return output[this.outputKey as O];
   }
 
   _chainType() {
@@ -150,12 +157,13 @@ Current conversation:
 Human: {input}
 AI:`;
 
-export class ConversationChain extends LLMChain {
+// TODO: Better type coverage here
+export class ConversationChain extends LLMChain<string, string> {
   constructor(fields: {
     llm: BaseLanguageModel;
-    prompt?: BasePromptTemplate;
+    prompt?: BasePromptTemplate<string, never>;
     outputKey?: string;
-    memory?: BaseMemory;
+    memory?: BaseMemory<string, string>;
   }) {
     super({
       prompt:

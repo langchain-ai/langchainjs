@@ -6,26 +6,31 @@ import {
   ChatMessage,
 } from "../schema/index.js";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type InputValues = Record<string, any>;
+export type InputValues<K extends string> = Record<K, any>;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type OutputValues = Record<string, any>;
+export type OutputValues<K extends string> = Record<K, any>;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type MemoryVariables = Record<string, any>;
+export type MemoryVariables<K extends string> = Record<K, any>;
 
-export abstract class BaseMemory {
-  abstract loadMemoryVariables(values: InputValues): Promise<MemoryVariables>;
+export abstract class BaseMemory<I extends string, O extends string> {
+  abstract loadMemoryVariables(
+    values: InputValues<I>
+  ): Promise<MemoryVariables<I>>;
 
   abstract saveContext(
-    inputValues: InputValues,
-    outputValues: OutputValues
+    inputValues: InputValues<I>,
+    outputValues: OutputValues<O>
   ): Promise<void>;
 }
 
-export const getInputValue = (inputValues: InputValues, inputKey?: string) => {
+export const getInputValue = <I extends string>(
+  inputValues: InputValues<I>,
+  inputKey?: I
+) => {
   if (inputKey !== undefined) {
     return inputValues[inputKey];
   }
-  const keys = Object.keys(inputValues);
+  const keys = Object.keys(inputValues) as I[];
   if (keys.length === 1) {
     return inputValues[keys[0]];
   }

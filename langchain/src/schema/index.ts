@@ -123,7 +123,7 @@ export type AgentStep = {
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type ChainValues = Record<string, any>;
+export type ChainValues<K extends string> = Record<K, any>;
 
 /**
  * Base Index class. All indexes should extend this class.
