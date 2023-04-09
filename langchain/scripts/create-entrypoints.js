@@ -1,33 +1,58 @@
 import * as fs from "fs";
 import * as path from "path";
 
+// This lists all the entrypoints for the library. Each key corresponds to an
+// importable path, eg. `import { AgentExecutor } from "langchain/agents"`.
+// The value is the path to the file in `src/` that exports the entrypoint.
+// This is used to generate the `exports` field in package.json.
+// Order is not important.
 const entrypoints = {
+  // agents
   agents: "agents/index",
   "agents/load": "agents/load",
+  // base language
   base_language: "base_language/index",
+  // tools
   tools: "agents/tools/index",
+  // chains
   chains: "chains/index",
   "chains/load": "chains/load",
+  // embeddings
   embeddings: "embeddings/index",
   "embeddings/base": "embeddings/base",
   "embeddings/fake": "embeddings/fake",
   "embeddings/openai": "embeddings/openai",
   "embeddings/cohere": "embeddings/cohere",
+  // llms
   llms: "llms/index",
+  // prompts
   prompts: "prompts/index",
   "prompts/load": "prompts/load",
+  // vectorstores
   vectorstores: "vectorstores/index",
+  // text_splitter
   text_splitter: "text_splitter",
+  // memory
   memory: "memory/index",
+  // document
   document: "document",
+  // docstore
   docstore: "docstore/index",
+  // document_loaders
   document_loaders: "document_loaders/index",
+  // chat_models
   chat_models: "chat_models/index",
+  // schema
   schema: "schema/index",
+  // sql_db
   sql_db: "sql_db",
+  // callbacks
   callbacks: "callbacks/index",
+  // output_parsers
   output_parsers: "output_parsers/index",
+  // retrievers
   retrievers: "retrievers/index",
+  // cache
   cache: "cache",
 };
 
