@@ -11,23 +11,28 @@ Current conversation:
 Human: {input}
 AI:`;
 
-export class ConversationChain extends LLMChain {
+// TODO: Dedupe this from implementation in ./llm_chain.ts
+export class ConversationChain<O extends string> extends LLMChain<
+  "input",
+  O | "response",
+  "history"
+> {
   constructor(fields: {
     llm: BaseLanguageModel;
-    prompt?: BasePromptTemplate;
-    outputKey?: string;
-    memory?: BaseMemory;
+    prompt?: BasePromptTemplate<"input", "history">;
+    outputKey?: O;
+    memory?: BaseMemory<"input", O, "history">;
   }) {
     super({
       prompt:
         fields.prompt ??
-        new PromptTemplate({
+        new PromptTemplate<"input", "history">({
           template: defaultTemplate,
-          inputVariables: ["history", "input"],
+          inputVariables: ["input"],
         }),
       llm: fields.llm,
       outputKey: fields.outputKey ?? "response",
     });
-    this.memory = fields.memory ?? new BufferMemory();
+    this.memory = fields.memory ?? new BufferMemory<"input", O>();
   }
 }

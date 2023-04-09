@@ -12,10 +12,14 @@ export type OutputValues<K extends string> = Record<K, any>;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type MemoryVariables<K extends string> = Record<K, any>;
 
-export abstract class BaseMemory<I extends string, O extends string> {
+export abstract class BaseMemory<
+  I extends string,
+  O extends string,
+  MI extends string
+> {
   abstract loadMemoryVariables(
     values: InputValues<I>
-  ): Promise<MemoryVariables<I>>;
+  ): Promise<MemoryVariables<MI>>;
 
   abstract saveContext(
     inputValues: InputValues<I>,

@@ -6,8 +6,12 @@ import { SerializedBaseChain } from "./serde.js";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type LoadValues = Record<string, any>;
 
-export interface ChainInputs<I extends string, O extends string> {
-  memory?: BaseMemory<I, O>;
+export interface ChainInputs<
+  I extends string,
+  O extends string,
+  MI extends string
+> {
+  memory?: BaseMemory<I, O, MI>;
   verbose?: boolean;
   callbackManager?: CallbackManager;
 }
@@ -17,17 +21,20 @@ const getVerbosity = () => false;
 /**
  * Base interface that all chains must implement.
  */
-export abstract class BaseChain<I extends string, O extends string>
-  implements ChainInputs<I, O>
+export abstract class BaseChain<
+  I extends string,
+  O extends string,
+  MI extends string
+> implements ChainInputs<I, O, MI>
 {
-  memory?: BaseMemory<I, O>;
+  memory?: BaseMemory<I, O, MI>;
 
   verbose: boolean;
 
   callbackManager: CallbackManager;
 
   constructor(
-    memory?: BaseMemory<I, O>,
+    memory?: BaseMemory<I, O, MI>,
     verbose?: boolean,
     callbackManager?: CallbackManager
   ) {
@@ -39,7 +46,7 @@ export abstract class BaseChain<I extends string, O extends string>
   /**
    * Run the core logic of this chain and return the output
    */
-  abstract _call(values: ChainValues<I>): Promise<ChainValues<O>>;
+  abstract _call(values: ChainValues<I | MI>): Promise<ChainValues<O>>;
 
   /**
    * Return the string type key uniquely identifying this class of chain.
@@ -79,7 +86,7 @@ export abstract class BaseChain<I extends string, O extends string>
    * Wraps {@link _call} and handles memory.
    */
   async call(values: ChainValues<I>): Promise<ChainValues<O>> {
-    const fullValues = { ...values } as typeof values;
+    const fullValues = { ...values } as ChainValues<I | MI>;
     if (!(this.memory == null)) {
       const newValues = await this.memory.loadMemoryVariables(values);
       for (const [key, value] of Object.entries(newValues)) {
@@ -118,7 +125,7 @@ export abstract class BaseChain<I extends string, O extends string>
   static async deserialize(
     data: SerializedBaseChain,
     values: LoadValues = {}
-  ): Promise<BaseChain<string, string>> {
+  ): Promise<BaseChain<string, string, string>> {
     switch (data._type) {
       case "llm_chain": {
         const { LLMChain } = await import("./index.js");
@@ -126,11 +133,11 @@ export abstract class BaseChain<I extends string, O extends string>
       }
       case "stuff_documents_chain": {
         const { StuffDocumentsChain } = await import("./index.js");
-        return StuffDocumentsChain.deserialize(data);
+        return StuffDocumentsChain.deserialize(data) as any;
       }
       case "vector_db_qa": {
         const { VectorDBQAChain } = await import("./index.js");
-        return VectorDBQAChain.deserialize(data, values);
+        return VectorDBQAChain.deserialize(data, values) as any;
       }
       default:
         throw new Error(

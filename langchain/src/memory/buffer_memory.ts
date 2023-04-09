@@ -1,20 +1,28 @@
 import { InputValues, MemoryVariables, getBufferString } from "./base.js";
 import { BaseChatMemory, BaseMemoryInput } from "./chat_memory.js";
 
-export interface BufferMemoryInput extends BaseMemoryInput {
+export interface BufferMemoryInput<I extends string, O extends string>
+  extends BaseMemoryInput<I, O> {
+  memoryKey: "history";
+
+  // FIXME: Are these used anywhere?
+  //
+  // Should these be passed to `getBufferString`?
   humanPrefix: string;
   aiPrefix: string;
-  memoryKey: string;
 }
 
-export class BufferMemory extends BaseChatMemory implements BufferMemoryInput {
+export class BufferMemory<I extends string, O extends string>
+  extends BaseChatMemory<I, O, "history">
+  implements BufferMemoryInput<I, O>
+{
   humanPrefix = "Human";
 
   aiPrefix = "AI";
 
-  memoryKey = "history";
+  memoryKey = "history" as const;
 
-  constructor(fields?: Partial<BufferMemoryInput>) {
+  constructor(fields?: Partial<BufferMemoryInput<I, O>>) {
     super({
       returnMessages: fields?.returnMessages ?? false,
       inputKey: fields?.inputKey,
@@ -25,7 +33,10 @@ export class BufferMemory extends BaseChatMemory implements BufferMemoryInput {
     this.memoryKey = fields?.memoryKey ?? this.memoryKey;
   }
 
-  async loadMemoryVariables(_values: InputValues): Promise<MemoryVariables> {
+  async loadMemoryVariables(
+    _values: InputValues<I>
+  ): Promise<MemoryVariables<"history">> {
+    // FIXME: This should return Record<"history", BaseChatMessage[] | string[]>
     if (this.returnMessages) {
       const result = {
         [this.memoryKey]: this.chatHistory.messages,

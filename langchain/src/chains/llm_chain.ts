@@ -17,8 +17,11 @@ import {
 } from "../schema/index.js";
 import { SerializedLLMChain } from "./serde.js";
 
-export interface LLMChainInput<I extends string, O extends string>
-  extends ChainInputs<I, O> {
+export interface LLMChainInput<
+  I extends string,
+  O extends string,
+  MI extends string
+> extends ChainInputs<I, O, MI> {
   /** Prompt object to use */
   prompt: BasePromptTemplate<I, never>;
   /** LLM Wrapper to use */
@@ -42,9 +45,9 @@ export interface LLMChainInput<I extends string, O extends string>
  * const llm = LLMChain({ llm: new OpenAI(), prompt });
  * ```
  */
-export class LLMChain<I extends string, O extends string>
-  extends BaseChain<I, O>
-  implements LLMChainInput<I, O>
+export class LLMChain<I extends string, O extends string, MI extends string>
+  extends BaseChain<I, O, MI>
+  implements LLMChainInput<I, O, MI>
 {
   prompt: BasePromptTemplate<I, never>;
 
@@ -58,7 +61,7 @@ export class LLMChain<I extends string, O extends string>
     return this.prompt.inputVariables;
   }
 
-  constructor(fields: LLMChainInput<I, O>) {
+  constructor(fields: LLMChainInput<I, O, MI>) {
     super(fields.memory, fields.verbose, fields.callbackManager);
     this.prompt = fields.prompt;
     this.llm = fields.llm;
@@ -157,24 +160,28 @@ Current conversation:
 Human: {input}
 AI:`;
 
-// TODO: Better type coverage here
-export class ConversationChain extends LLMChain<string, string> {
+// TODO: Dedupe this from implementation in ./conversation.ts
+export class ConversationChain<O extends string> extends LLMChain<
+  "input",
+  O | "response",
+  "history"
+> {
   constructor(fields: {
     llm: BaseLanguageModel;
-    prompt?: BasePromptTemplate<string, never>;
-    outputKey?: string;
-    memory?: BaseMemory<string, string>;
+    prompt?: BasePromptTemplate<"input", "history">;
+    outputKey?: O;
+    memory?: BaseMemory<"input", O, "history">;
   }) {
     super({
       prompt:
         fields.prompt ??
-        new PromptTemplate({
+        new PromptTemplate<"input", "history">({
           template: defaultTemplate,
-          inputVariables: ["history", "input"],
+          inputVariables: ["input"],
         }),
       llm: fields.llm,
       outputKey: fields.outputKey ?? "response",
     });
-    this.memory = fields.memory ?? new BufferMemory();
+    this.memory = fields.memory ?? new BufferMemory<"input", O>();
   }
 }
