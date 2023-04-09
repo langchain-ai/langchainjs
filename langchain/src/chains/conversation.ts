@@ -12,27 +12,28 @@ Human: {input}
 AI:`;
 
 // TODO: Dedupe this from implementation in ./llm_chain.ts
-export class ConversationChain<O extends string> extends LLMChain<
-  "input",
-  O | "response",
-  "history"
-> {
+export class ConversationChain<
+  I extends string = string,
+  O extends string = string,
+  MI extends string = string
+> extends LLMChain<I, O, MI> {
   constructor(fields: {
     llm: BaseLanguageModel;
-    prompt?: BasePromptTemplate<"input", "history">;
+    prompt?: BasePromptTemplate<I, MI>;
     outputKey?: O;
-    memory?: BaseMemory<"input", O, "history">;
+    memory?: BaseMemory<I, O, MI>;
   }) {
     super({
       prompt:
         fields.prompt ??
-        new PromptTemplate<"input", "history">({
+        new PromptTemplate<I, MI>({
           template: defaultTemplate,
-          inputVariables: ["input"],
+          inputVariables: ["input" as I],
         }),
       llm: fields.llm,
-      outputKey: fields.outputKey ?? "response",
+      outputKey: fields.outputKey ?? ("response" as O),
     });
-    this.memory = fields.memory ?? new BufferMemory<"input", O>();
+    this.memory = fields.memory ?? new BufferMemory<I, O, MI>();
   }
 }
+

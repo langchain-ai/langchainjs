@@ -18,8 +18,8 @@ import {
 } from "./serde.js";
 
 export abstract class BaseMessagePromptTemplate<
-  K extends string,
-  P extends string
+  K extends string = string,
+  P extends string = string
 > {
   abstract inputVariables: K[];
 
@@ -36,8 +36,8 @@ export abstract class BaseMessagePromptTemplate<
 }
 
 export class MessagesPlaceholder<
-  K extends string,
-  P extends string
+  K extends string = string,
+  P extends string = string
 > extends BaseMessagePromptTemplate<K, P> {
   variableName: K;
 

@@ -23,7 +23,7 @@ export interface LLMChainInput<
   MI extends string
 > extends ChainInputs<I, O, MI> {
   /** Prompt object to use */
-  prompt: BasePromptTemplate<I, string>;
+  prompt: BasePromptTemplate<I, MI>;
   /** LLM Wrapper to use */
   llm: BaseLanguageModel;
   /** OutputParser to use */
@@ -53,7 +53,7 @@ export class LLMChain<
   extends BaseChain<I, O, MI>
   implements LLMChainInput<I, O, MI>
 {
-  prompt: BasePromptTemplate<I, string>;
+  prompt: BasePromptTemplate<I, MI>;
 
   llm: BaseLanguageModel;
 
@@ -165,27 +165,27 @@ Human: {input}
 AI:`;
 
 // TODO: Dedupe this from implementation in ./conversation.ts
-export class ConversationChain<O extends string> extends LLMChain<
-  "input",
-  O | "response",
-  "history"
-> {
+export class ConversationChain<
+  I extends string = string,
+  O extends string = string,
+  MI extends string = string
+> extends LLMChain<I, O, MI> {
   constructor(fields: {
     llm: BaseLanguageModel;
-    prompt?: BasePromptTemplate<"input", "history">;
+    prompt?: BasePromptTemplate<I, MI>;
     outputKey?: O;
-    memory?: BaseMemory<"input", O, "history">;
+    memory?: BaseMemory<I, O, MI>;
   }) {
     super({
       prompt:
         fields.prompt ??
-        new PromptTemplate<"input", "history">({
+        new PromptTemplate<I, MI>({
           template: defaultTemplate,
-          inputVariables: ["input"],
+          inputVariables: ["input" as I],
         }),
       llm: fields.llm,
-      outputKey: fields.outputKey ?? "response",
+      outputKey: fields.outputKey ?? ("response" as O),
     });
-    this.memory = fields.memory ?? new BufferMemory<"input", O>();
+    this.memory = fields.memory ?? new BufferMemory<I, O, MI>();
   }
 }

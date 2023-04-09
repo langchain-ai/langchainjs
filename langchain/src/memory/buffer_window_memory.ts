@@ -2,9 +2,12 @@ import { InputValues, MemoryVariables, getBufferString } from "./base.js";
 
 import { BaseChatMemory, BaseMemoryInput } from "./chat_memory.js";
 
-export interface BufferWindowMemoryInput<I extends string, O extends string>
-  extends BaseMemoryInput<I, O> {
-  memoryKey: "history";
+export interface BufferWindowMemoryInput<
+  I extends string,
+  O extends string,
+  MI extends string
+> extends BaseMemoryInput<I, O> {
+  memoryKey: MI;
   k: number;
 
   // FIXME: Are these used anywhere?
@@ -14,19 +17,23 @@ export interface BufferWindowMemoryInput<I extends string, O extends string>
   aiPrefix: string;
 }
 
-export class BufferWindowMemory<I extends string, O extends string>
-  extends BaseChatMemory<I, O, "history">
-  implements BufferWindowMemoryInput<I, O>
+export class BufferWindowMemory<
+    I extends string,
+    O extends string,
+    MI extends string
+  >
+  extends BaseChatMemory<I, O, MI>
+  implements BufferWindowMemoryInput<I, O, MI>
 {
   humanPrefix = "Human";
 
   aiPrefix = "AI";
 
-  memoryKey = "history" as const;
+  memoryKey: MI = "history" as MI;
 
   k = 5;
 
-  constructor(fields?: Partial<BufferWindowMemoryInput<I, O>>) {
+  constructor(fields?: Partial<BufferWindowMemoryInput<I, O, MI>>) {
     super({ returnMessages: fields?.returnMessages ?? false });
     this.humanPrefix = fields?.humanPrefix ?? this.humanPrefix;
     this.aiPrefix = fields?.aiPrefix ?? this.aiPrefix;
@@ -36,19 +43,19 @@ export class BufferWindowMemory<I extends string, O extends string>
 
   async loadMemoryVariables(
     _values: InputValues<I>
-  ): Promise<MemoryVariables<"history">> {
+  ): Promise<MemoryVariables<MI>> {
     // FIXME: This should return Record<"history", BaseChatMessage[] | string[]>
     if (this.returnMessages) {
       const result = {
         [this.memoryKey]: this.chatHistory.messages.slice(-this.k * 2),
-      };
+      } as MemoryVariables<MI>;
       return result;
     }
     const result = {
       [this.memoryKey]: getBufferString(
         this.chatHistory.messages.slice(-this.k * 2)
       ),
-    };
+    } as MemoryVariables<MI>;
     return result;
   }
 }
