@@ -22,7 +22,6 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@dqbd/tiktoken": "^1.0.2",
     "@getmetal/metal-sdk": "^1.0.12",
     "@pinecone-database/pinecone": "^0.0.12",
     "@prisma/client": "^4.11.0",
@@ -32,8 +31,7 @@
     "langchain": "workspace:*",
     "prisma": "^4.11.0",
     "sqlite3": "^5.1.4",
-    "typeorm": "^0.3.12",
-    "zod": "^3.21.4"
+    "typeorm": "^0.3.12"
   },
   "devDependencies": {
     "@tsconfig/recommended": "^1.0.2",

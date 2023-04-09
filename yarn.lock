@@ -2829,10 +2829,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@dqbd/tiktoken@npm:^1.0.2":
-  version: 1.0.2
-  resolution: "@dqbd/tiktoken@npm:1.0.2"
-  checksum: 626c499723604616c36f55c3413f998d2b3456a4e477842769a4c6689db2e0911b10b4e5d4c3f294bb8407b52ff1213c7e3220476ea89c7e80f5bdf88f04fc9d
+"@dqbd/tiktoken@npm:^1.0.4":
+  version: 1.0.4
+  resolution: "@dqbd/tiktoken@npm:1.0.4"
+  checksum: d07c98b14c971f30a36f4655f35ee40e212f641460736a336552b95297a15f067a71652aaf3c9573e85fd4c9ff6206bfd8a75c1716de9812ee8df4650ca3e315
   languageName: node
   linkType: hard
 
@@ -15631,7 +15631,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "langchain-examples@workspace:examples"
   dependencies:
-    "@dqbd/tiktoken": ^1.0.2
     "@getmetal/metal-sdk": ^1.0.12
     "@pinecone-database/pinecone": ^0.0.12
     "@prisma/client": ^4.11.0
@@ -15655,7 +15654,6 @@ __metadata:
     tsx: ^3.12.3
     typeorm: ^0.3.12
     typescript: ^4.9.5
-    zod: ^3.21.4
   languageName: unknown
   linkType: soft
 
@@ -15666,7 +15664,7 @@ __metadata:
     "@anthropic-ai/sdk": ^0.4.2
     "@babel/core": ^7.20.12
     "@babel/preset-env": ^7.20.2
-    "@dqbd/tiktoken": ^1.0.2
+    "@dqbd/tiktoken": ^1.0.4
     "@faker-js/faker": ^7.6.0
     "@getmetal/metal-sdk": ^1.0.12
     "@huggingface/inference": ^1.5.1

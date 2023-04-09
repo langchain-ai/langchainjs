@@ -236,7 +236,6 @@
   "devDependencies": {
     "@babel/core": "^7.20.12",
     "@babel/preset-env": "^7.20.2",
-    "@dqbd/tiktoken": "^1.0.2",
     "@faker-js/faker": "^7.6.0",
     "@getmetal/metal-sdk": "^1.0.12",
     "@huggingface/inference": "^1.5.1",
@@ -362,7 +361,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.4.2",
-    "@dqbd/tiktoken": "^1.0.2",
+    "@dqbd/tiktoken": "^1.0.4",
     "binary-extensions": "^2.2.0",
     "browser-or-node": "^2.1.1",
     "expr-eval": "^2.0.2",
