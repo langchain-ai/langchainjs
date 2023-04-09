@@ -4,6 +4,10 @@ sidebar_position: 1
 
 # Setup and Installation
 
+:::info
+Updating from <0.0.52? See [this section](#updating-from-0052) for instructions.
+:::
+
 ## Quickstart
 
 If you want to get started quickly on using LangChain in Node.js, [clone this repository](https://github.com/domeccleston/langchain-ts-starter) and follow the README instructions for a boilerplate project with those dependencies set up.
@@ -82,6 +86,17 @@ const nextConfig = {
   },
 };
 ```
+
+## Updating from <0.0.52
+
+If you are updating from a version of LangChain prior to 0.0.52, you will need to update your imports to use the new path structure. For example, if you were previously importing `OpenAI` from `langchain/llms`, you will now need to import it from `langchain/llms/openai`. This applies to all imports from
+
+- `langchain/llms`, see [LLMs](../modules/models/llms/integrations)
+- `langchain/chat_models`, see [Chat Models](../modules/models/chat/integrations)
+- `langchain/embeddings`, see [Embeddings](../modules/models/embeddings/integrations)
+- `langchain/vectorstores`, see [Vector Stores](../modules/indexes/vector_stores/integrations/)
+- `langchain/document_loaders`, see [Document Loaders](../modules/indexes/document_loaders/examples/)
+- `langchain/retrievers`, see [Retrievers](../modules/indexes/retrievers/)
 
 ## Unsupported: Node.js 16
 
