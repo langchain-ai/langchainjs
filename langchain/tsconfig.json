@@ -57,6 +57,7 @@
       "src/callbacks/index.ts",
       "src/output_parsers/index.ts",
       "src/retrievers/index.ts",
+      "src/cache.ts",
       "src/index.ts"
     ],
     "excludePrivate": true,

@@ -20,6 +20,7 @@ const entrypoints = {
   callbacks: "callbacks/index",
   output_parsers: "output_parsers/index",
   retrievers: "retrievers/index",
+  cache: "cache",
 };
 
 const updateJsonFile = (relativePath, updateFunction) => {
