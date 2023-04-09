@@ -151,12 +151,12 @@
     "typescript": "^4.9.5"
   },
   "peerDependencies": {
-    "bert-tokenizer": "^1.1.8",
     "@dqbd/tiktoken": "^1.0.2",
     "@getmetal/metal-sdk": "*",
     "@huggingface/inference": "^1.5.1",
     "@pinecone-database/pinecone": "^0.0.12",
     "@supabase/supabase-js": "^2.10.0",
+    "bert-tokenizer": "^1.1.8",
     "cheerio": "^1.0.0-rc.12",
     "chromadb": "^1.3.0",
     "cohere-ai": "^5.0.2",
@@ -173,9 +173,6 @@
     "typeorm": "^0.3.12"
   },
   "peerDependenciesMeta": {
-    "bert-tokenizer": {
-      "optional": true
-    },
     "@dqbd/tiktoken": {
       "optional": true
     },
@@ -189,6 +186,9 @@
       "optional": true
     },
     "@supabase/supabase-js": {
+      "optional": true
+    },
+    "bert-tokenizer": {
       "optional": true
     },
     "cheerio": {
