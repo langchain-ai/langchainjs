@@ -8,7 +8,6 @@ import {
   checkValidTemplate,
   renderTemplate,
 } from "./template.js";
-import { parseFileConfig } from "../util/parse.js";
 import { PromptTemplate } from "./prompt.js";
 import { SerializedFewShotTemplate } from "./serde.js";
 import { Example, InputValues, PartialValues } from "../schema/index.js";
@@ -195,13 +194,7 @@ export class FewShotPromptTemplate
 
     let examples: Example[];
 
-    if (typeof data.examples === "string") {
-      examples = await parseFileConfig(data.examples, ".json", [
-        ".json",
-        ".yml",
-        ".yaml",
-      ]);
-    } else if (Array.isArray(data.examples)) {
+    if (Array.isArray(data.examples)) {
       examples = data.examples;
     } else {
       throw new Error(
