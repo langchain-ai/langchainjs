@@ -12,7 +12,10 @@ LangChain offers a number of LLM implementations that integrate with various mod
 ```typescript
 import { OpenAI } from "langchain/llms";
 
-const model = new OpenAI({ temperature: 0.9 });
+const model = new OpenAI({
+  temperature: 0.9,
+  openAIApiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.OPENAI_API_KEY
+});
 const res = await model.call(
   "What would be a good company name a company that makes colorful socks?"
 );
@@ -28,7 +31,10 @@ npm install @huggingface/inference
 ```typescript
 import { HuggingFaceInference } from "langchain/llms";
 
-const model = new HuggingFaceInference({ model: "gpt2", apiKey: "YOUR-API-KEY" });
+const model = new HuggingFaceInference({
+  model: "gpt2",
+  apiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.HUGGINGFACEHUB_API_KEY
+});
 const res = await model.call("1 + 1 =");
 console.log({ res });
 ```
@@ -42,7 +48,10 @@ npm install cohere-ai
 ```typescript
 import { Cohere } from "langchain/llms";
 
-const model = new Cohere({ maxTokens: 20, apiKey: "YOUR-API-KEY" });
+const model = new Cohere({
+  maxTokens: 20,
+  apiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.COHERE_API_KEY
+});
 const res = await model.call(
   "What would be a good company name a company that makes colorful socks?"
 );
@@ -61,7 +70,7 @@ import { Replicate } from "langchain/llms";
 const model = new Replicate({
   model:
     "daanelson/flan-t5:04e422a9b85baed86a4f24981d7f9953e20c5fd82f6103b74ebc431588e1cec8",
-  apiKey: "YOUR-API-KEY"
+  apiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.REPLICATE_API_KEY
 });
 const res = await modelA.call(
   "What would be a good company name a company that makes colorful socks?"
@@ -79,7 +88,11 @@ LangChain integrates with PromptLayer for logging and debugging prompts and resp
 2. Create an API token and pass it either as `promptLayerApiKey` argument in the `PromptLayerOpenAI` constructor or in the `PROMPTLAYER_API_KEY` environment variable.
 
 ```typescript
-const model = new PromptLayerOpenAI({ temperature: 0.9 });
+const model = new PromptLayerOpenAI({
+  temperature: 0.9,
+  openAIApiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.OPENAI_API_KEY
+  promptLayerApiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.PROMPTLAYER_API_KEY
+});
 const res = await model.call(
   "What would be a good company name a company that makes colorful socks?"
 );
