@@ -59,7 +59,7 @@ export const calculateMaxTokens = async ({
   const { encoding_for_model } = await importTiktoken();
 
   // fallback to approximate calculation if tiktoken is not available
-  let numTokens = prompt.length / 4;
+  let numTokens = Math.ceil(prompt.length / 4);
 
   try {
     if (encoding_for_model) {
