@@ -6,11 +6,9 @@ sidebar_position: 1
 
 ## Quickstart
 
-To get started with Langchain, you'll need to initialize a new Node.js project and configure some scripts to build, format, and compile your code.
+If you want to get started quickly on using LangChain in Node.js, [clone this repository](https://github.com/domeccleston/langchain-ts-starter) and follow the README instructions for a boilerplate project with those dependencies set up.
 
-If you just want to get started quickly, [clone this repository](https://github.com/domeccleston/langchain-ts-starter) and follow the README instructions for a boilerplate project with those dependencies set up.
-
-If you'd prefer to set things up yourself, read on for instructions.
+If you prefer to set things up yourself, or you want to run LangChain in other environments, read on for instructions.
 
 ## Installation
 
@@ -20,15 +18,13 @@ To get started, install LangChain with the following command:
 npm install -S langchain
 ```
 
-We currently support LangChain on Node.js 18 and 19. Go [here](https://github.com/hwchase17/langchainjs/discussions/152) to vote on the next environment we should support.
-
 ### TypeScript
 
 LangChain is written in TypeScript and provides type definitions for all of its public APIs.
 
 ## Loading the library
 
-### ESM in Node.js
+### ESM
 
 LangChain provides an ESM build targeting Node.js environments. You can import it using the following syntax:
 
@@ -48,7 +44,7 @@ If you are using TypeScript in an ESM project we suggest updating your `tsconfig
 }
 ```
 
-### CommonJS in Node.js
+### CommonJS
 
 LangChain provides a CommonJS build targeting Node.js environments. You can import it using the following syntax:
 
@@ -56,17 +52,25 @@ LangChain provides a CommonJS build targeting Node.js environments. You can impo
 const { OpenAI } = require("langchain/llms/openai");
 ```
 
-### Other environments
+### Cloudflare Workers
 
-LangChain currently supports only Node.js-based environments. This includes Vercel Serverless functions (but not Edge functions), as well as other serverless environments, like AWS Lambda and Google Cloud Functions.
+LangChain can be used in Cloudflare Workers. You can import it using the following syntax:
 
-We currently do not support running LangChain in the browser. We are listening to the community on additional environments that we should support. Go [here](https://github.com/hwchase17/langchainjs/discussions/152) to vote and discuss the next environments we should support.
+```typescript
+import { OpenAI } from "langchain/llms/openai";
+```
 
-Please see [Deployment](../production/deployment.md) for more information on deploying LangChain applications.
+### Vercel / Next.js
+
+LangChain can be used in Vercel / Next.js. We support using LangChain in frontend components, in Serverless functions and in Edge functions. You can import it using the following syntax:
+
+```typescript
+import { OpenAI } from "langchain/llms/openai";
+```
 
 ## Unsupported: Node.js 16
 
-We do not support Node.js 16, but if you want to run LangChain on Node.js 16, you will need to follow the instructions in this section. We do not guarantee that these instructions will continue to work in the future.
+We do not support Node.js 16, but if you still want to run LangChain on Node.js 16, you will need to follow the instructions in this section. We do not guarantee that these instructions will continue to work in the future.
 
 You will have to make `fetch` available globally, either:
 
