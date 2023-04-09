@@ -28,7 +28,12 @@ export abstract class Tool {
     callbackManager?: CallbackManager
   ): Promise<string> {
     const verbose_ = verbose ?? this.verbose;
-    const callbackManager_ = callbackManager ?? this.callbackManager;
+    const callbackManager_ =
+      callbackManager?.copy(this.callbackManager.handlers) ??
+      this.callbackManager;
+    for (const handler of this.callbackManager.handlers) {
+      callbackManager_.addHandler(handler);
+    }
     const runId = await callbackManager_.handleToolStart(
       { name: this.name },
       arg,

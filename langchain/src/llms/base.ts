@@ -79,7 +79,9 @@ export abstract class BaseLLM extends BaseLanguageModel {
     stop?: string[],
     callbackManager?: CallbackManager
   ): Promise<LLMResult> {
-    const callbackManager_ = callbackManager ?? this.callbackManager;
+    const callbackManager_ =
+      callbackManager?.copy(this.callbackManager.handlers) ??
+      this.callbackManager;
     const runId = await callbackManager_.handleLLMStart(
       { name: this._llmType() },
       prompts,

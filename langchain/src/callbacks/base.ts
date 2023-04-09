@@ -510,6 +510,12 @@ export class CallbackManager extends BaseCallbackManager {
     return manager;
   }
 
+  copy(additionalHandlers: BaseCallbackHandler[] = []): CallbackManager {
+    const manager = new CallbackManager(this._parentRunId);
+    manager.setHandlers([...this.handlers, ...additionalHandlers]);
+    return manager;
+  }
+
   static fromHandlers(handlers: BaseCallbackHandlerMethods) {
     class Handler extends BaseCallbackHandler {
       alwaysVerbose = true;

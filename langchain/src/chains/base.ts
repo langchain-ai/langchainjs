@@ -84,7 +84,9 @@ export abstract class BaseChain implements ChainInputs {
     callbackManager?: CallbackManager
   ): Promise<ChainValues> {
     const fullValues = { ...values } as typeof values;
-    const callbackManager_ = callbackManager ?? this.callbackManager;
+    const callbackManager_ =
+      callbackManager?.copy(this.callbackManager.handlers) ??
+      this.callbackManager;
     if (!(this.memory == null)) {
       const newValues = await this.memory.loadMemoryVariables(values);
       for (const [key, value] of Object.entries(newValues)) {
