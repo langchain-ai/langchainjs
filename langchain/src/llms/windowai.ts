@@ -1,28 +1,45 @@
 import { LLM, BaseLLMParams } from "./base.js";
 
-interface WindowAiInput extends BaseLLMParams {
+export enum ModelID {
+  GPT3 = "openai/gpt3.5",
+  GPT4 = "openai/gpt4",
+  GPTNeo = "together/gpt-neoxt-20B",
+  Cohere = "cohere/xlarge",
+  Local = "local",
+}
+
+export interface CompletionOptions {
+  onStreamResult?: (result: Output | null, error: string | null) => unknown;
   temperature?: number;
+  numOutputs?: number;
   maxTokens?: number;
-  model?: string;
-  completionOptions?: object;
+  stopSequences?: string[];
+  model?: ModelID;
+}
+
+export type ChatMessage = {
+  role: "system" | "user" | "assistant";
+  content: string;
+};
+
+export type Output = { text: string } | { message: ChatMessage };
+export type Input = { prompt: string } | { messages: ChatMessage[] };
+
+interface WindowAiInput extends BaseLLMParams {
+  completionOptions?: CompletionOptions;
 }
 
 export class WindowAi extends LLM implements WindowAiInput {
-  temperature = 0;
-  maxTokens = 250;
-  model: string;
-  completionOptions: object;
+  completionOptions: CompletionOptions;
   globalContext: any;
 
   constructor(fields?: WindowAiInput) {
     super(fields ?? {});
 
-    this.temperature = fields?.temperature ?? this.temperature;
-    this.maxTokens = fields?.maxTokens ?? this.maxTokens;
-    this.model = fields?.model ?? this.model;
     this.completionOptions = fields?.completionOptions ?? {};
 
-    this.globalContext = (typeof window !== "undefined") ? window : globalThis;
+    this.globalContext =
+      typeof window !== "undefined" ? window : globalThis;
 
     this._ensureAiAvailable();
   }
@@ -31,18 +48,11 @@ export class WindowAi extends LLM implements WindowAiInput {
     return "windowai";
   }
 
-  async _call(prompt: string, stopSequences?: string[]): Promise<string> {
-    const input = typeof prompt === "string" ? { prompt } : { messages: prompt };
-    const options = {
-      ...this.completionOptions,
-      temperature: this.temperature,
-      maxTokens: this.maxTokens,
-      model: this.model,
-      stopSequences,
-    };
+  async _call(prompt: string): Promise<string> {
+    const input: Input = typeof prompt === "string" ? { prompt } : { messages: prompt };
 
     try {
-      const output = await this.globalContext.ai.getCompletion(input, options);
+      const output = await this.globalContext.ai.getCompletion(input, this.completionOptions);
       return output.text;
     } catch (error) {
       console.log(error);
@@ -77,3 +87,14 @@ export class WindowAi extends LLM implements WindowAiInput {
   }
 }
 
+// Usage:
+//1)
+// const llm = new WindowAi({  completionOptions : { temperature: 0.7, maxTokens: 800, model: ModelID.GPT3 } });
+// const template = `Question: {question}.  Answer: Let's think step by step.`
+// const prompt = new PromptTemplate({ template:template, inputVariables:["question"]})
+// const llm_chain = new LLMChain({ prompt:prompt, llm:llm})
+// const question = "What NFL team won the Super Bowl in the year Justin Beiber was born?"
+// const response = await llm_chain.run(question)
+
+//2)
+// const model = await llm.getCurrentModel() //returns 'openai/gpt3.5' for example
