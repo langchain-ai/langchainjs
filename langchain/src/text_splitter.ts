@@ -449,7 +449,7 @@ export abstract class BaseCodeSplitter extends TextSplitter {
   }
 }
 
-export class GenericCodeSplitter extends BaseCodeSplitter {
+export class GenericCodeTextSplitter extends BaseCodeSplitter {
   constructor(keywords: string[], fields?: Partial<TextSplitterParams>) {
     super(fields);
 

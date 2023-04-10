@@ -2,7 +2,7 @@ import { test, expect } from "@jest/globals";
 import { Document } from "../document.js";
 import {
   CharacterTextSplitter,
-  GenericCodeSplitter,
+  GenericCodeTextSplitter,
   JavascriptClassTextSplitter,
   JavascriptFunctionTextSplitter,
   JavascriptTextSplitter,
@@ -504,7 +504,7 @@ test("Test generic splitter.", async () => {
     }
 }`;
 
-  const splitter = new GenericCodeSplitter(
+  const splitter = new GenericCodeTextSplitter(
     ["contract", "mapping", "modifier", "function"],
     { chunkSize: 10, chunkOverlap: 0 }
   );
