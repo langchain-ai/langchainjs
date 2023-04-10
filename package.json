@@ -9,8 +9,12 @@
     "langchain",
     "examples",
     "docs",
-    "test-exports",
-    "test-exports-cjs"
+    "test-exports-esm",
+    "test-exports-cjs",
+    "test-exports-cf",
+    "test-exports-cra",
+    "test-exports-vercel",
+    "test-exports-vite"
   ],
   "repository": {
     "type": "git",
@@ -24,16 +28,17 @@
     "format:check": "turbo run format:check",
     "lint": "turbo run lint",
     "lint:fix": "yarn lint -- --fix",
-    "test": "yarn run test:unit && yarn run test:int",
+    "test": "turbo run test test:integration && yarn test:exports:docker",
     "test:unit": "turbo run test",
-    "test:int": "yarn workspace langchain run test:integration",
-    "publish": "bash scripts/release-branch.sh && turbo run build lint test && yarn run test:int && yarn workspace langchain run release && echo '🔗 Open https://github.com/hwchase17/langchainjs/compare/release?expand=1 and merge the release PR'",
-    "example": "turbo run start --filter langchain-examples --",
+    "test:int": "turbo run test:integration",
+    "test:exports:docker": "docker compose up",
+    "publish": "bash scripts/release-branch.sh && turbo run build lint test test:integration && yarn run test:exports:docker && yarn workspace langchain run release && echo '🔗 Open https://github.com/hwchase17/langchainjs/compare/release?expand=1 and merge the release PR'",
+    "example": "turbo run start --filter examples --",
     "prepare": "husky install",
     "precommit": "turbo run precommit",
     "docs": "yarn workspace docs start"
   },
-  "author": "Langchain",
+  "author": "LangChain",
   "license": "MIT",
   "devDependencies": {
     "@tsconfig/recommended": "^1.0.2",

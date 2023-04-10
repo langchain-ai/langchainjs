@@ -1,6 +1,4 @@
 import type {
-  SerializedLLMChain,
-  SerializedBaseChain,
   SerializedStuffDocumentsChain,
   SerializedMapReduceDocumentsChain,
 } from "./serde.js";
@@ -9,7 +7,6 @@ import { LLMChain } from "./llm_chain.js";
 
 import { Document } from "../document.js";
 
-import { resolveConfigFromFile } from "../util/index.js";
 import { ChainValues } from "../schema/index.js";
 
 export interface StuffDocumentsChainInput {
@@ -75,13 +72,12 @@ export class StuffDocumentsChain
   }
 
   static async deserialize(data: SerializedStuffDocumentsChain) {
-    const SerializedLLMChain = await resolveConfigFromFile<
-      "llm_chain",
-      SerializedLLMChain
-    >("llm_chain", data);
+    if (!data.llm_chain) {
+      throw new Error("Missing llm_chain");
+    }
 
     return new StuffDocumentsChain({
-      llmChain: await LLMChain.deserialize(SerializedLLMChain),
+      llmChain: await LLMChain.deserialize(data.llm_chain),
     });
   }
 
@@ -195,20 +191,18 @@ export class MapReduceDocumentsChain
   }
 
   static async deserialize(data: SerializedMapReduceDocumentsChain) {
-    const SerializedLLMChain = await resolveConfigFromFile<
-      "llm_chain",
-      SerializedLLMChain
-    >("llm_chain", data);
+    if (!data.llm_chain) {
+      throw new Error("Missing llm_chain");
+    }
 
-    const SerializedCombineDocumentChain = await resolveConfigFromFile<
-      "combine_document_chain",
-      SerializedBaseChain
-    >("combine_document_chain", data);
+    if (!data.combine_document_chain) {
+      throw new Error("Missing combine_document_chain");
+    }
 
     return new MapReduceDocumentsChain({
-      llmChain: await LLMChain.deserialize(SerializedLLMChain),
+      llmChain: await LLMChain.deserialize(data.llm_chain),
       combineDocumentChain: await BaseChain.deserialize(
-        SerializedCombineDocumentChain
+        data.combine_document_chain
       ),
     });
   }

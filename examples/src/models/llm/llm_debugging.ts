@@ -1,6 +1,6 @@
 import { LLMResult } from "langchain/schema";
 import { CallbackManager } from "langchain/callbacks";
-import { OpenAI } from "langchain/llms";
+import { OpenAI } from "langchain/llms/openai";
 
 export const run = async () => {
   // We can pass in a `CallbackManager` to the LLM constructor to get callbacks for various events.

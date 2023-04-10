@@ -4,7 +4,7 @@ import {
   AgentExecutor,
 } from "langchain/agents";
 import { LLMChain } from "langchain/chains";
-import { ChatOpenAI } from "langchain/chat_models";
+import { ChatOpenAI } from "langchain/chat_models/openai";
 import {
   BasePromptTemplate,
   SerializedBasePromptTemplate,
@@ -20,7 +20,8 @@ import {
   BaseChatMessage,
   HumanChatMessage,
 } from "langchain/schema";
-import { SerpAPI, Calculator, Tool } from "langchain/tools";
+import { SerpAPI, Tool } from "langchain/tools";
+import { Calculator } from "langchain/tools/calculator";
 
 const PREFIX = `Answer the following questions as best you can. You have access to the following tools:`;
 const formatInstructions = (toolNames: string) => `Use the following format:
