@@ -1,4 +1,4 @@
-import puppeteer from "puppeteer";
+import axios from "axios";
 import * as cheerio from "cheerio";
 import { URL } from "url";
 import { BaseLanguageModel } from "base_language/index.js";
@@ -57,23 +57,30 @@ export class WebBrowser extends Tool {
     const inputArray = inputs.split(",");
     // remove errant spaces and quotes
     const baseUrl = inputArray[0].trim().replace(/^"|"$/g, "").trim();
-    const browser = await puppeteer.launch();
-    const page = await browser.newPage();
-    await page.setUserAgent(
-      "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Mobile Safari/537.36"
-    );
-    const htmlResponse = await page.goto(baseUrl, {
-      waitUntil: "networkidle2",
+    const domain = new URL(baseUrl).hostname;
+
+    // todo dont know which headers needed, but this worked on one page anyway, take in from user?
+    const htmlResponse = await axios.get(baseUrl, {
+      withCredentials: true,
+      headers: {
+        Accept:
+          "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+        "Accept-Encoding": "gzip, deflate, br",
+        "Accept-Language": "en-US,en;q=0.5",
+        "Alt-Used": domain,
+        Connection: "keep-alive",
+        Host: domain,
+        Referer: "https://www.google.com/",
+        "Sec-Fetch-Dest": "document",
+        "Sec-Fetch-Mode": "navigate",
+        "Sec-Fetch-Site": "cross-site",
+        "Upgrade-Insecure-Requests": "1",
+        "User-Agent":
+          "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/111.0",
+      },
     });
 
-    if (htmlResponse?.status() !== 200) {
-      return Promise.resolve(`http response ${htmlResponse?.status()}`);
-    }
-
-    const html = await page.content();
-    await browser.close();
-
-    const text = getText(html, baseUrl);
+    const text = getText(htmlResponse.data, baseUrl);
 
     // todo need to pass in tokenizer i guess
     const tokenizer = get_encoding("gpt2");

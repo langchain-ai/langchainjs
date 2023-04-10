@@ -20,14 +20,28 @@ test("parse html to text and links", async () => {
   expect(text).toContain("Word of the Day: Foible");
 }, 3000000);
 
-// cant figure a user agent and cookies etc to get this to not 404 so we dont use puppeteer
+// random site I saw my agent try to use and received a sneaky 403
 test.skip("get url and parse html to text and links", async () => {
-  const baseUrl = "https://www.merriam-webster.com/word-of-the-day";
+  const baseUrl = "https://www.musicgateway.com/spotify-pre-save";
+  const domain = new URL(baseUrl).hostname;
 
   const htmlResponse = await axios.get(baseUrl, {
+    withCredentials: true,
     headers: {
+      Accept:
+        "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+      "Accept-Encoding": "gzip, deflate, br",
+      "Accept-Language": "en-US,en;q=0.5",
+      "Alt-Used": domain,
+      Connection: "keep-alive",
+      Host: domain,
+      Referer: "https://www.google.com/",
+      "Sec-Fetch-Dest": "document",
+      "Sec-Fetch-Mode": "navigate",
+      "Sec-Fetch-Site": "cross-site",
+      "Upgrade-Insecure-Requests": "1",
       "User-Agent":
-        "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Mobile Safari/537.36",
+        "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/111.0",
     },
   });
 
@@ -35,7 +49,7 @@ test.skip("get url and parse html to text and links", async () => {
   console.log(text);
 }, 3000000);
 
-// use puppeteer instead for now
+// puppeteer tends to work but heavyweight dependency
 test.skip("get url and parse html to text and links", async () => {
   const baseUrl = "https://www.merriam-webster.com/word-of-the-day";
 
