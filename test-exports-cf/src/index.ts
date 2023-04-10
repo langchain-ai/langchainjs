@@ -8,7 +8,7 @@
  * Learn more at https://developers.cloudflare.com/workers/
  */
 
-// import all entrypoints
+// import all entrypoints to test, do not do this in your own app
 import "./entrypoints.js";
 
 // Import a few things we'll use to test the exports

@@ -38,7 +38,7 @@ import { OpenAI } from "langchain/llms/openai";
 
 If you are using TypeScript in an ESM project we suggest updating your `tsconfig.json` to include the following:
 
-```json
+```json title="tsconfig.json"
 {
   "compilerOptions": {
     ...
@@ -74,7 +74,7 @@ import { OpenAI } from "langchain/llms/openai";
 
 If you want to use LangChain in frontend `pages`, you need to add the following to your `next.config.js` to enable support for WebAssembly modules (which is required by the tokenizer library `@dqbd/tiktoken`):
 
-```js
+```js title="next.config.js"
 const nextConfig = {
   webpack(config) {
     config.experiments = {
@@ -85,6 +85,36 @@ const nextConfig = {
     return config;
   },
 };
+```
+
+### Browser
+
+LangChain can be used in the browser. In our CI we test bundling LangChain with Webpack and Vite, but other bundlers should work too. You can import it using the following syntax:
+
+```typescript
+import { OpenAI } from "langchain/llms/openai";
+```
+
+#### Create React App
+
+If you're using `create-react-app` by default it doesn't support WebAssembly modules, so the tokenizer library `@dqbd/tiktoken` will not work in the browser. You can follow the instructions [here](https://github.com/dqbd/tiktoken/tree/main/js#create-react-app) to enable support for WebAssembly modules.
+
+#### Vite
+
+If you're using Vite, you need to add the following to your `vite.config.js` to enable support for WebAssembly modules (which is required by the tokenizer library `@dqbd/tiktoken`):
+
+```bash npm2yarn
+npm install -D vite-plugin-wasm vite-plugin-top-level-await
+```
+
+```js title="vite.config.js"
+import wasm from "vite-plugin-wasm";
+import topLevelAwait from "vite-plugin-top-level-await";
+import { defineConfig } from "vite";
+
+export default defineConfig({
+  plugins: [wasm(), topLevelAwait()],
+});
 ```
 
 ## Updating from <0.0.52
@@ -105,12 +135,12 @@ import { OpenAI } from "langchain/llms/openai";
 
 This applies to all imports from the following 6 modules, which have been split into submodules for each integration. The combined modules are deprecated, do not work outside of Node.js, and will be removed in a future version.
 
-- If you were importing from `langchain/llms`, see [LLMs](../modules/models/llms/integrations) for updated import paths.
-- If you were importing from `langchain/chat_models`, see [Chat Models](../modules/models/chat/integrations) for updated import paths.
-- If you were importing from `langchain/embeddings`, see [Embeddings](../modules/models/embeddings/integrations) for updated import paths.
-- If you were importing from `langchain/vectorstores`, see [Vector Stores](../modules/indexes/vector_stores/integrations/) for updated import paths.
-- If you were importing from `langchain/document_loaders`, see [Document Loaders](../modules/indexes/document_loaders/examples/) for updated import paths.
-- If you were importing from `langchain/retrievers`, see [Retrievers](../modules/indexes/retrievers/) for updated import paths.
+- If you were using `langchain/llms`, see [LLMs](../modules/models/llms/integrations) for updated import paths.
+- If you were using `langchain/chat_models`, see [Chat Models](../modules/models/chat/integrations) for updated import paths.
+- If you were using `langchain/embeddings`, see [Embeddings](../modules/models/embeddings/integrations) for updated import paths.
+- If you were using `langchain/vectorstores`, see [Vector Stores](../modules/indexes/vector_stores/integrations/) for updated import paths.
+- If you were using `langchain/document_loaders`, see [Document Loaders](../modules/indexes/document_loaders/examples/) for updated import paths.
+- If you were using `langchain/retrievers`, see [Retrievers](../modules/indexes/retrievers/) for updated import paths.
 
 Other modules are not affected by this change, and you can continue to import them from the same path.
 
