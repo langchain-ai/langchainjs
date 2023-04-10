@@ -154,6 +154,19 @@ This applies to all imports from the following 6 modules, which have been split 
 
 Other modules are not affected by this change, and you can continue to import them from the same path.
 
+Additionally, there are some breaking changes that were needed to support new environments:
+
+- `import { Calculator } from "langchain/tools";` now moved to
+  - `import { Calculator } from "langchain/tools/calculator";`
+- `import { loadLLM } from "langchain/llms";` now moved to
+  - `import { loadLLM } from "langchain/llms/load";`
+- `import { loadAgent } from "langchain/agents";` now moved to
+  - `import { loadAgent } from "langchain/agents/load";`
+- `import { loadPrompt } from "langchain/prompts";` now moved to
+  - `import { loadPrompt } from "langchain/prompts/load";`
+- `import { loadChain } from "langchain/chains";` now moved to
+  - `import { loadChain } from "langchain/chains/load";`
+
 ## Unsupported: Node.js 16
 
 We do not support Node.js 16, but if you still want to run LangChain on Node.js 16, you will need to follow the instructions in this section. We do not guarantee that these instructions will continue to work in the future.
