@@ -25,7 +25,7 @@ class ParseError extends Error {
   }
 }
 
-export abstract class BaseSingleActionAgent {
+export abstract class BaseAgent {
   abstract get inputKeys(): string[];
 
   get returnValues(): string[] {
@@ -42,19 +42,6 @@ export abstract class BaseSingleActionAgent {
   _agentType(): string {
     throw new Error("Not implemented");
   }
-
-  /**
-   * Decide what to do given some input.
-   *
-   * @param steps - Steps the LLM has taken so far, along with observations from each.
-   * @param inputs - User inputs.
-   *
-   * @returns Action specifying what tool to use.
-   */
-  abstract plan(
-    steps: AgentStep[],
-    inputs: ChainValues
-  ): Promise<AgentAction | AgentFinish>;
 
   /**
    * Return response when agent has been stopped due to max iterations
@@ -83,6 +70,36 @@ export abstract class BaseSingleActionAgent {
   ): Promise<AgentFinish["returnValues"]> {
     return {};
   }
+}
+
+export abstract class BaseSingleActionAgent extends BaseAgent {
+  /**
+   * Decide what to do, given some input.
+   *
+   * @param steps - Steps the LLM has taken so far, along with observations from each.
+   * @param inputs - User inputs.
+   *
+   * @returns Action specifying what tool to use.
+   */
+  abstract plan(
+    steps: AgentStep[],
+    inputs: ChainValues
+  ): Promise<AgentAction | AgentFinish>;
+}
+
+export abstract class BaseMultiActionAgent extends BaseAgent {
+  /**
+   * Decide what to do, given some input.
+   *
+   * @param steps - Steps the LLM has taken so far, along with observations from each.
+   * @param inputs - User inputs.
+   *
+   * @returns Actions specifying what tools to use.
+   */
+  abstract plan(
+    steps: AgentStep[],
+    inputs: ChainValues
+  ): Promise<AgentAction[] | AgentFinish>;
 }
 
 export interface LLMSingleActionAgentInput {
@@ -183,8 +200,8 @@ export abstract class Agent extends BaseSingleActionAgent {
   /**
    * Create a prompt for this class
    *
-   * @param tools - List of tools the agent will have access to, used to format the prompt.
-   * @param fields - Additional fields used to format the prompt.
+   * @param _tools - List of tools the agent will have access to, used to format the prompt.
+   * @param _fields - Additional fields used to format the prompt.
    *
    * @returns A PromptTemplate assembled from the given tools and fields.
    * */
