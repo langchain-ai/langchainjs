@@ -1,4 +1,4 @@
-import type { CheerioAPI, load as LoadT } from "cheerio";
+import type { CheerioAPI, load as LoadT, SelectorType } from "cheerio";
 import { Document } from "../document.js";
 import { BaseDocumentLoader } from "./base.js";
 import type { DocumentLoader } from "./base.js";
@@ -47,9 +47,9 @@ export class CheerioWebBaseLoader
     );
   }
 
-  async load(): Promise<Document[]> {
+  async load(selector?: SelectorType): Promise<Document[]> {
     const $ = await this.scrape();
-    const text = $("body").text();
+    const text = $(selector).text() ?? $("body").text();
     const metadata = { source: this.webPath };
     return [new Document({ pageContent: text, metadata })];
   }
