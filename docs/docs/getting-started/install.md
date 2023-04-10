@@ -87,6 +87,16 @@ const nextConfig = {
 };
 ```
 
+### Deno / Supabase Edge Functions
+
+LangChain can be used in Deno / Supabase Edge Functions. You can import it using the following syntax:
+
+```typescript
+import { OpenAI } from "https://esm.sh/langchain/llms/openai";
+```
+
+We recommend looking at our [Supabase Template](https://github.com/langchain-ai/langchain-template-supabase) for an example of how to use LangChain in Supabase Edge Functions.
+
 ### Browser
 
 LangChain can be used in the browser. In our CI we test bundling LangChain with Webpack and Vite, but other bundlers should work too. You can import it using the following syntax:
