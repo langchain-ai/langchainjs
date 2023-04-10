@@ -2,6 +2,7 @@ import puppeteer from "puppeteer";
 import * as cheerio from "cheerio";
 import { URL } from "url";
 import { BaseLanguageModel } from "base_language/index.js";
+import { get_encoding } from "@dqbd/tiktoken";
 import { Tool } from "./base.js";
 import { StringPromptValue } from "../../prompts/index.js";
 
@@ -72,14 +73,21 @@ export class WebBrowser extends Tool {
     const html = await page.content();
     await browser.close();
 
-    let text = getText(html, baseUrl);
+    const text = getText(html, baseUrl);
 
-    // ~3500 token max estimate
-    text = text.slice(0, 1000);
+    // todo need to pass in tokenizer i guess
+    const tokenizer = get_encoding("gpt2");
+    // doesnt support max tokens yet?
+    const inputTokens = tokenizer.encode(text);
+    const truncatedTokens = inputTokens.slice(0, 3000);
+    const truncatedTextUint8 = tokenizer.decode(truncatedTokens);
+
+    const truncatedTextDecoder = new TextDecoder("utf-8");
+    const truncatedText = truncatedTextDecoder.decode(truncatedTextUint8);
 
     const input = `I need ${
       inputArray[1] ? inputArray[1] : "a summary"
-    } from the following webpage text, also provide up to 5 html links from within that would be of interest. Text:\n${text}`;
+    } from the following webpage text, also provide up to 5 html links from within that would be of interest. Text:\n${truncatedText}`;
 
     const { generations } = await this.model.generatePrompt([
       new StringPromptValue(input),
