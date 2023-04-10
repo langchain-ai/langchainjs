@@ -23,4 +23,5 @@ export { RequestsGetTool, RequestsPostTool } from "./requests.js";
 export { VectorStoreQATool } from "./vectorstore.js";
 export { ZapierNLARunAction, ZapierNLAWrapper } from "./zapier.js";
 export { Serper } from "./serper.js";
+export { GraphqlChat } from "./graphqlchat.js";
 export { AIPluginTool } from "./aiplugin.js";
