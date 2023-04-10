@@ -4,12 +4,11 @@ export const run = async () => {
   const model = new Cohere({
     temperature: 0.7,
     verbose: true,
-    maxConcurrency: 1,
     maxTokens: 20,
     maxRetries: 5,
   });
   const res = await model.call(
-    "What would be a good company name a company that makes colorful socks?"
+    "Question: What would be a good company name a company that makes colorful socks?\nAnswer:"
   );
-  console.log("hello", { res });
+  console.log({ res });
 };
