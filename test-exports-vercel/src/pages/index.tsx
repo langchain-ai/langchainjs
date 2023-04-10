@@ -1,4 +1,4 @@
-// import all entrypoints
+// import all entrypoints to test, do not do this in your own app
 import "../entrypoints.js";
 
 import Head from "next/head";
