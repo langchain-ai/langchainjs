@@ -407,8 +407,6 @@ export abstract class BaseCodeSplitter extends TextSplitter {
 
     // find our first match
     while (match && match[0]) {
-      console.log("match", match);
-
       // find and remove our first match - this is the start of our string
       // it should be index 0
       // only do this if this isn't our first run through or if we have an immediate match
@@ -442,8 +440,6 @@ export abstract class BaseCodeSplitter extends TextSplitter {
         results.push((matchingText + remainingText).trim());
       }
     }
-
-    console.log(results);
 
     return results;
   }
