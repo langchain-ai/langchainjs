@@ -1,5 +1,5 @@
-import { LLMChain } from "langchain";
-import { ChatOpenAI } from "langchain/chat_models";
+import { LLMChain } from "langchain/chains";
+import { ChatOpenAI } from "langchain/chat_models/openai";
 import {
   ChatPromptTemplate,
   HumanMessagePromptTemplate,

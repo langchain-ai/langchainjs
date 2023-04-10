@@ -1,4 +1,4 @@
-import { PromptLayerOpenAI } from "langchain/llms";
+import { PromptLayerOpenAI } from "langchain/llms/openai";
 
 export const run = async () => {
   const model = new PromptLayerOpenAI({ temperature: 0.9 });

@@ -1,6 +1,6 @@
 import { BaseLanguageModel } from "../base_language/index.js";
 import { LLMChain } from "../chains/llm_chain.js";
-import { BasePromptTemplate } from "../prompts/index.js";
+import { BasePromptTemplate } from "../prompts/base.js";
 import {
   AgentAction,
   AgentFinish,
@@ -14,7 +14,7 @@ import {
   StoppingMethod,
   AgentActionOutputParser,
 } from "./types.js";
-import { Tool } from "./tools/base.js";
+import { Tool } from "../tools/base.js";
 
 class ParseError extends Error {
   output: string;

@@ -214,7 +214,7 @@ export class OpenAIChat extends LLM implements OpenAIInput {
    *
    * @example
    * ```ts
-   * import { OpenAI } from "langchain/llms";
+   * import { OpenAI } from "langchain/llms/openai";
    * const openai = new OpenAI();
    * const response = await openai.generate(["Tell me a joke."]);
    * ```

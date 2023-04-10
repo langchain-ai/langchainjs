@@ -1,5 +1,5 @@
 import { CallbackManager } from "langchain/callbacks";
-import { OpenAI } from "langchain/llms";
+import { OpenAI } from "langchain/llms/openai";
 
 export const run = async () => {
   // To enable streaming, we pass in `streaming: true` to the LLM constructor.

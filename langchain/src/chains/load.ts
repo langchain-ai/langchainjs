@@ -1,11 +1,7 @@
 import { BaseChain } from "./base.js";
 import { loadFromHub } from "../util/hub.js";
-import {
-  FileLoader,
-  parseFileConfig,
-  LoadValues,
-  loadFromFile,
-} from "../util/index.js";
+import { FileLoader, LoadValues, loadFromFile } from "../util/load.js";
+import { parseFileConfig } from "../util/parse.js";
 
 const loadChainFromFile: FileLoader<BaseChain> = async (
   file: string,

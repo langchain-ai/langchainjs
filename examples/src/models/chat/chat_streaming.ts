@@ -1,5 +1,5 @@
 import { CallbackManager } from "langchain/callbacks";
-import { ChatOpenAI } from "langchain/chat_models";
+import { ChatOpenAI } from "langchain/chat_models/openai";
 import { HumanChatMessage } from "langchain/schema";
 
 export const run = async () => {

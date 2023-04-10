@@ -19,7 +19,7 @@ This quick start will focus on the server-side use case for brevity. Review full
 This example goes over how to use the Zapier integration an Agent. In code, below:
 
 ```typescript
-import { OpenAI } from "langchain";
+import { OpenAI } from "langchain/llms/openai";
 import { initializeAgentExecutor, ZapierToolKit } from "langchain/agents";
 import { ZapierNLAWrapper } from "langchain/tools";
 
