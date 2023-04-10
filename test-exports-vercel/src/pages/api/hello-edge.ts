@@ -57,7 +57,8 @@ export default async function handler(req: NextRequest) {
     ]),
   });
 
-  // Run the chain but don't await it
+  // Run the chain but don't await it, otherwise the response will start
+  // only after the chain is done
   chain.run("hello").catch(console.error);
 
   return new NextResponse(stream.readable, {
