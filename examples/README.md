@@ -6,22 +6,32 @@ This folder contains examples of how to use LangChain.
 
 What you'll usually want to do.
 
-First, build langchain. From the repository root, run:
+First, build LangChain. From the repository root, run:
 
 ```sh
 yarn
 yarn build
 ```
 
-Most examples require API keys. Run `cp .env.example .env`, then edit `.env` with your API keys.
+Then switch to this `examples/` directory, and run:
 
-Then from the `examples/` directory, run:
+```sh
+yarn  # Install dependencies for examples
+cp .env.example .env
+$EDITOR .env # Add your API keys
+```
 
-`yarn run start <path to example>`
+You can then run examples with
+
+```sh
+yarn run start "${path_to_example}"
+```
 
 eg.
 
-`yarn run start ./src/prompts/few_shot.ts`
+```sh
+yarn run start ./src/prompts/few_shot.ts
+```
 
 ## Run an example with the transpiled JS
 
