@@ -44,6 +44,11 @@ export abstract class BaseAgent {
   }
 
   /**
+   * Return the string type key uniquely identifying multi or single action agents.
+   */
+  abstract _agentActionType(): string;
+
+  /**
    * Return response when agent has been stopped due to max iterations
    */
   returnStoppedResponse(
@@ -73,6 +78,10 @@ export abstract class BaseAgent {
 }
 
 export abstract class BaseSingleActionAgent extends BaseAgent {
+  _agentActionType(): string {
+    return "single" as const;
+  }
+
   /**
    * Decide what to do, given some input.
    *
@@ -88,6 +97,10 @@ export abstract class BaseSingleActionAgent extends BaseAgent {
 }
 
 export abstract class BaseMultiActionAgent extends BaseAgent {
+  _agentActionType(): string {
+    return "multi" as const;
+  }
+
   /**
    * Decide what to do, given some input.
    *
