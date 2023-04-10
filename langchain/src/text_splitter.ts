@@ -461,8 +461,7 @@ export class GenericCodeSplitter extends BaseCodeSplitter {
     partialRegex = partialRegex.slice(0, partialRegex.length - 1);
 
     this.regex = new RegExp(
-      `(((.*//.*\n)*)|(.*/*.*\n))(.*(${partialRegex}).*)`
+      `(((.*\\/\\/.*\n)*)|(.*\\/\\*.*\n))(.*(${partialRegex}).*)`
     );
-    console.log(this.regex);
   }
 }
