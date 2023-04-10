@@ -49,8 +49,42 @@ test.skip("get url and parse html to text and links", async () => {
   console.log(text);
 }, 3000000);
 
+// fetch gives InvalidArgumentError: invalid connection header
+// if you remove the Connection: "keep-alive" it 'works' but is back to giving 403
+test.skip("get url and parse html to text and links with fetch", async () => {
+  const baseUrl = "https://www.musicgateway.com/spotify-pre-save";
+  const domain = new URL(baseUrl).hostname;
+
+  const headers = {
+    Accept:
+      "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+    "Accept-Encoding": "gzip, deflate, br",
+    "Accept-Language": "en-US,en;q=0.5",
+    "Alt-Used": domain,
+    Connection: "keep-alive",
+    Host: domain,
+    Referer: "https://www.google.com/",
+    "Sec-Fetch-Dest": "document",
+    "Sec-Fetch-Mode": "navigate",
+    "Sec-Fetch-Site": "cross-site",
+    "Upgrade-Insecure-Requests": "1",
+    "User-Agent":
+      "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/111.0",
+  };
+
+  const response = await fetch(baseUrl, {
+    headers,
+    credentials: "include",
+  });
+
+  const htmlResponse = await response.text();
+
+  const text = getText(htmlResponse, baseUrl);
+  console.log(text);
+}, 3000000);
+
 // puppeteer tends to work but heavyweight dependency
-test.skip("get url and parse html to text and links", async () => {
+test.skip("get url and parse html to text and links wih puppeteer", async () => {
   const baseUrl = "https://www.merriam-webster.com/word-of-the-day";
 
   const browser = await puppeteer.launch();
