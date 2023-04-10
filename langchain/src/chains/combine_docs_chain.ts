@@ -124,11 +124,14 @@ export class MapReduceDocumentsChain
 
   maxIterations = 10;
 
+  ensureMapStep = false;
+
   combineDocumentChain: BaseChain;
 
   constructor(fields: {
     llmChain: LLMChain;
     combineDocumentChain: BaseChain;
+    ensureMapStep?: boolean;
     inputKey?: string;
     outputKey?: string;
     documentVariableName?: string;
@@ -140,6 +143,7 @@ export class MapReduceDocumentsChain
     this.combineDocumentChain = fields.combineDocumentChain;
     this.documentVariableName =
       fields.documentVariableName ?? this.documentVariableName;
+    this.ensureMapStep = fields.ensureMapStep ?? this.ensureMapStep;
     this.inputKey = fields.inputKey ?? this.inputKey;
     this.outputKey = fields.outputKey ?? this.outputKey;
     this.maxTokens = fields.maxTokens ?? this.maxTokens;
@@ -168,7 +172,9 @@ export class MapReduceDocumentsChain
         results.reduce((a, b) => a + b, 0)
       );
 
-      if (length < this.maxTokens) {
+      const canSkipMapStep = i !== 0 || !this.ensureMapStep;
+      const withinTokenLimit = length < this.maxTokens;
+      if (canSkipMapStep && withinTokenLimit) {
         break;
       }
 

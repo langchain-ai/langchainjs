@@ -50,7 +50,10 @@ export class GithubRepoLoader
   constructor(
     githubUrl: string,
     {
-      accessToken = process.env.GITHUB_ACCESS_TOKEN,
+      accessToken = typeof process !== "undefined"
+        ? // eslint-disable-next-line no-process-env
+          process.env.GITHUB_ACCESS_TOKEN
+        : undefined,
       branch = "main",
       recursive = true,
       unknown = UnknownHandling.Warn,
