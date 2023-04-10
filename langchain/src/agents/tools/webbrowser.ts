@@ -45,10 +45,13 @@ export const getText = (html: string, baseUrl: string): string => {
 export class WebBrowser extends Tool {
   protected model: BaseLanguageModel;
 
-  constructor(model: BaseLanguageModel) {
+  headers: Record<string, any>;
+
+  constructor(model: BaseLanguageModel, headers: Record<string, any>) {
     super();
 
     this.model = model;
+    this.headers = headers;
   }
 
   name = "web-browser";
@@ -59,25 +62,14 @@ export class WebBrowser extends Tool {
     const baseUrl = inputArray[0].trim().replace(/^"|"$/g, "").trim();
     const domain = new URL(baseUrl).hostname;
 
-    // todo dont know which headers needed, but this worked on one page anyway, take in from user?
+    const headers = { ...this.headers };
+    // these appear to be positional, which means they have to exist in the headers passed in
+    headers.Host = domain;
+    headers["Alt-Used"] = domain;
+
     const htmlResponse = await axios.get(baseUrl, {
       withCredentials: true,
-      headers: {
-        Accept:
-          "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
-        "Accept-Encoding": "gzip, deflate, br",
-        "Accept-Language": "en-US,en;q=0.5",
-        "Alt-Used": domain,
-        Connection: "keep-alive",
-        Host: domain,
-        Referer: "https://www.google.com/",
-        "Sec-Fetch-Dest": "document",
-        "Sec-Fetch-Mode": "navigate",
-        "Sec-Fetch-Site": "cross-site",
-        "Upgrade-Insecure-Requests": "1",
-        "User-Agent":
-          "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/111.0",
-      },
+      headers,
     });
 
     const text = getText(htmlResponse.data, baseUrl);
