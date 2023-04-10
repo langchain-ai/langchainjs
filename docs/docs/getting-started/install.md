@@ -89,14 +89,30 @@ const nextConfig = {
 
 ## Updating from <0.0.52
 
-If you are updating from a version of LangChain prior to 0.0.52, you will need to update your imports to use the new path structure. For example, if you were previously importing `OpenAI` from `langchain/llms`, you will now need to import it from `langchain/llms/openai`. This applies to all imports from
+If you are updating from a version of LangChain prior to 0.0.52, you will need to update your imports to use the new path structure.
 
-- `langchain/llms`, see [LLMs](../modules/models/llms/integrations)
-- `langchain/chat_models`, see [Chat Models](../modules/models/chat/integrations)
-- `langchain/embeddings`, see [Embeddings](../modules/models/embeddings/integrations)
-- `langchain/vectorstores`, see [Vector Stores](../modules/indexes/vector_stores/integrations/)
-- `langchain/document_loaders`, see [Document Loaders](../modules/indexes/document_loaders/examples/)
-- `langchain/retrievers`, see [Retrievers](../modules/indexes/retrievers/)
+For example, if you were previously doing
+
+```typescript
+import { OpenAI } from "langchain/llms";
+```
+
+you will now need to do
+
+```typescript
+import { OpenAI } from "langchain/llms/openai";
+```
+
+This applies to all imports from the following 6 modules, which have been split into submodules for each integration. The combined modules are deprecated, do not work outside of Node.js, and will be removed in a future version.
+
+- If you were importing from `langchain/llms`, see [LLMs](../modules/models/llms/integrations) for updated import paths.
+- If you were importing from `langchain/chat_models`, see [Chat Models](../modules/models/chat/integrations) for updated import paths.
+- If you were importing from `langchain/embeddings`, see [Embeddings](../modules/models/embeddings/integrations) for updated import paths.
+- If you were importing from `langchain/vectorstores`, see [Vector Stores](../modules/indexes/vector_stores/integrations/) for updated import paths.
+- If you were importing from `langchain/document_loaders`, see [Document Loaders](../modules/indexes/document_loaders/examples/) for updated import paths.
+- If you were importing from `langchain/retrievers`, see [Retrievers](../modules/indexes/retrievers/) for updated import paths.
+
+Other modules are not affected by this change, and you can continue to import them from the same path.
 
 ## Unsupported: Node.js 16
 
