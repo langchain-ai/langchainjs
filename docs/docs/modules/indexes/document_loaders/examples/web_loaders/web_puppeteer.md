@@ -1,9 +1,15 @@
 ---
 sidebar_position: 2
+sidebar_label: Puppeteer
 hide_table_of_contents: true
+sidebar_class_name: node-only
 ---
 
 # Webpages, with Puppeteer
+
+:::tip Compatibility
+Only available on Node.js.
+:::
 
 This example goes over how to load data from webpages using Puppeteer. One document will be created for each webpage.
 

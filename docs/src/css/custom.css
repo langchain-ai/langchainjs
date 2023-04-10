@@ -67,3 +67,35 @@
 .footer__copyright {
   opacity: 0.6;
 }
+
+.node-only {
+  position: relative;
+}
+
+.node-only::after {
+  position: absolute;
+  right: 0.2rem;
+  top: 3px;
+  content: "Node.js";
+  background: #026e00;
+  color: #fff;
+  border-radius: 0.25rem;
+  padding: 0 0.5rem;
+  pointer-events: none;
+}
+
+.node-only-category {
+  position: relative;
+}
+
+.node-only-category::after {
+  position: absolute;
+  right: 2.9rem;
+  top: 3px;
+  content: "Node.js";
+  background: #026e00;
+  color: #fff;
+  border-radius: 0.25rem;
+  padding: 0 0.5rem;
+  pointer-events: none;
+}
