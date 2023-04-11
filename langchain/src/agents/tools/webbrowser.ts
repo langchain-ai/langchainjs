@@ -2,9 +2,12 @@ import axios, { isAxiosError } from "axios";
 import * as cheerio from "cheerio";
 import { URL } from "url";
 import { BaseLanguageModel } from "base_language/index.js";
-import { get_encoding } from "@dqbd/tiktoken";
 import { Tool } from "./base.js";
 import { StringPromptValue } from "../../prompts/index.js";
+import { Document } from "../../document.js";
+import { OpenAIEmbeddings } from "../../embeddings/openai.js";
+import { RecursiveCharacterTextSplitter } from "../../text_splitter.js";
+import { MemoryVectorStore } from "../../vectorstores/memory.js";
 
 export const getText = (html: string, baseUrl: string): string => {
   const $ = cheerio.load(html);
@@ -79,6 +82,8 @@ export class WebBrowser extends Tool {
     const inputArray = inputs.split(",");
     // remove errant spaces and quotes
     const baseUrl = inputArray[0].trim().replace(/^"|"$/g, "").trim();
+    const summary = !inputArray[1].trim();
+
     let domain;
     try {
       domain = new URL(baseUrl).hostname;
@@ -127,21 +132,37 @@ export class WebBrowser extends Tool {
       return "returned page was not utf8";
     }
 
-    const text = getText(htmlResponse.data, baseUrl);
+    let text = getText(htmlResponse.data, baseUrl);
 
-    // todo need to pass in tokenizer i guess
-    const tokenizer = get_encoding("gpt2");
-    // doesnt support max tokens yet?
-    const inputTokens = tokenizer.encode(text);
-    const truncatedTokens = inputTokens.slice(0, 3000);
-    const truncatedTextUint8 = tokenizer.decode(truncatedTokens);
+    const textSplitter = new RecursiveCharacterTextSplitter({
+      chunkSize: 2000,
+      chunkOverlap: 200,
+    });
+    const texts = await textSplitter.splitText(text);
 
-    const truncatedTextDecoder = new TextDecoder("utf-8");
-    const truncatedText = truncatedTextDecoder.decode(truncatedTextUint8);
+    // if we have a summary grab first 4
+    if (summary) {
+      text = texts.slice(0, 4).join("\n");
+    }
+    // search term well embed and grab top k
+    else {
+      const docs = texts.map(
+        (pageContent) =>
+          new Document({
+            pageContent,
+            metadata: [],
+          })
+      );
+
+      const vectorStore = new MemoryVectorStore(new OpenAIEmbeddings());
+      await vectorStore.addDocuments(docs);
+      const results = await vectorStore.similaritySearch(inputArray[1], 4);
+      text = results.map((res) => res.pageContent).join("\n");
+    }
 
     const input = `I need ${
-      inputArray[1] ? inputArray[1] : "a summary"
-    } from the following webpage text, also provide up to 5 html links from within that would be of interest. Text:\n${truncatedText}`;
+      summary ? "a summary" : inputArray[1]
+    } from the following html, also provide up to 5 html links from within that would be of interest. Text:\n${text}`;
 
     const { generations } = await this.model.generatePrompt([
       new StringPromptValue(input),
