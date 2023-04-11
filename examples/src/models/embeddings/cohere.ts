@@ -1,4 +1,4 @@
-import { CohereEmbeddings } from "langchain/embeddings";
+import { CohereEmbeddings } from "langchain/embeddings/cohere";
 
 export const run = async () => {
   /* Embed queries */

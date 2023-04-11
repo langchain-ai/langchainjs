@@ -81,7 +81,19 @@ export class SqlDatabase
    * demonstrated in the paper.
    */
   async getTableInfo(targetTables?: Array<string>): Promise<string> {
-    let selectedTables = this.allTables;
+    let selectedTables =
+      this.includesTables.length > 0
+        ? this.allTables.filter((currentTable) =>
+            this.includesTables.includes(currentTable.tableName)
+          )
+        : this.allTables;
+
+    if (this.ignoreTables.length > 0) {
+      selectedTables = selectedTables.filter(
+        (currentTable) => !this.ignoreTables.includes(currentTable.tableName)
+      );
+    }
+
     if (targetTables && targetTables.length > 0) {
       verifyListTablesExistInDatabase(
         this.allTables,

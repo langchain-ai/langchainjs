@@ -1,7 +1,7 @@
-import url from "node:url";
-import path from "node:path";
+import * as url from "node:url";
+import * as path from "node:path";
 import { test, expect } from "@jest/globals";
-import { SRTLoader } from "../srt.js";
+import { SRTLoader } from "../fs/srt.js";
 
 test("Test SRT loader from file", async () => {
   const filePath = path.resolve(

@@ -1,3 +1,4 @@
+/* eslint-disable no-instanceof/no-instanceof */
 import { z } from "zod";
 
 import { BaseOutputParser, OutputParserException } from "../schema/index.js";

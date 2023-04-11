@@ -1,7 +1,10 @@
-# VectorStore
+---
+hide_table_of_contents: true
+---
 
-The main supported type of Retriever is one backed by a Vector Store.
-Once you've created a Vector Store, the way to use it as a Retriever is very simple:
+# Vector Store
+
+Once you've created a [Vector Store](../vector_stores/), the way to use it as a Retriever is very simple:
 
 ```typescript
 vectorStore = ...

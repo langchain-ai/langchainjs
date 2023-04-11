@@ -5,11 +5,17 @@ import {
   ConfigurationParameters,
 } from "openai";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
-import { chunkArray } from "../util/index.js";
+import { chunkArray } from "../util/chunk.js";
 import { Embeddings, EmbeddingsParams } from "./base.js";
 
 interface ModelParams {
+  /** Model name to use */
   modelName: string;
+
+  /**
+   * Timeout to use when making requests to OpenAI.
+   */
+  timeout?: number;
 }
 
 export class OpenAIEmbeddings extends Embeddings implements ModelParams {
@@ -27,6 +33,8 @@ export class OpenAIEmbeddings extends Embeddings implements ModelParams {
    */
   stripNewLines = true;
 
+  timeout?: number;
+
   private client: OpenAIApi;
 
   private clientConfig: ConfigurationParameters;
@@ -43,7 +51,10 @@ export class OpenAIEmbeddings extends Embeddings implements ModelParams {
   ) {
     super(fields ?? {});
 
-    const apiKey = fields?.openAIApiKey ?? process.env.OPENAI_API_KEY;
+    const apiKey =
+      fields?.openAIApiKey ??
+      // eslint-disable-next-line no-process-env
+      (typeof process !== "undefined" ? process.env.OPENAI_API_KEY : undefined);
     if (!apiKey) {
       throw new Error("OpenAI API key not found");
     }
@@ -51,6 +62,7 @@ export class OpenAIEmbeddings extends Embeddings implements ModelParams {
     this.modelName = fields?.modelName ?? this.modelName;
     this.batchSize = fields?.batchSize ?? this.batchSize;
     this.stripNewLines = fields?.stripNewLines ?? this.stripNewLines;
+    this.timeout = fields?.timeout;
 
     this.clientConfig = {
       apiKey,
@@ -93,8 +105,9 @@ export class OpenAIEmbeddings extends Embeddings implements ModelParams {
       const clientConfig = new Configuration({
         ...this.clientConfig,
         baseOptions: {
-          ...this.clientConfig.baseOptions,
+          timeout: this.timeout,
           adapter: fetchAdapter,
+          ...this.clientConfig.baseOptions,
         },
       });
       this.client = new OpenAIApi(clientConfig);

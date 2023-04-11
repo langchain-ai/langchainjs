@@ -26,5 +26,5 @@ const splitter = new TokenTextSplitter({
   chunkOverlap: 0,
 });
 
-const output = splitter.createDocuments([text]);
+const output = await splitter.createDocuments([text]);
 ```

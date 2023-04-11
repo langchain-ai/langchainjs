@@ -1,4 +1,4 @@
-import { TextLoader } from "langchain/document_loaders";
+import { TextLoader } from "langchain/document_loaders/fs/text";
 
 export const run = async () => {
   const loader = new TextLoader(

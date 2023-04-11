@@ -1,7 +1,7 @@
-import { OpenAI } from "langchain/llms";
+import { OpenAI } from "langchain/llms/openai";
 import { RetrievalQAChain } from "langchain/chains";
-import { HNSWLib } from "langchain/vectorstores";
-import { OpenAIEmbeddings } from "langchain/embeddings";
+import { HNSWLib } from "langchain/vectorstores/hnswlib";
+import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import * as fs from "fs";
 
@@ -18,7 +18,6 @@ export const run = async () => {
   // Create a chain that uses the OpenAI LLM and HNSWLib vector store.
   const chain = RetrievalQAChain.fromLLM(model, vectorStore.asRetriever());
   const res = await chain.call({
-    input_documents: docs,
     query: "What did the president say about Justice Breyer?",
   });
   console.log({ res });

@@ -1,8 +1,8 @@
-import url from "node:url";
-import path from "node:path";
-import fs from "node:fs/promises";
+import * as url from "node:url";
+import * as path from "node:path";
+import * as fs from "node:fs/promises";
 import { test, expect } from "@jest/globals";
-import { JSONLinesLoader } from "../jsonl.js";
+import { JSONLinesLoader } from "../fs/json.js";
 import { Document } from "../../document.js";
 
 test("Test JSONL loader from blob", async () => {

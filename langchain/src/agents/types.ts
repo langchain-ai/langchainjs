@@ -1,8 +1,14 @@
-import { LLMChain, SerializedLLMChain } from "../chains/index.js";
+import { LLMChain } from "../chains/llm_chain.js";
+import { SerializedLLMChain } from "../chains/serde.js";
+import { BaseOutputParser, AgentAction, AgentFinish } from "../schema/index.js";
 
 export interface AgentInput {
   llmChain: LLMChain;
   allowedTools?: string[];
+}
+
+export abstract class AgentActionOutputParser extends BaseOutputParser {
+  abstract parse(text: string): Promise<AgentAction | AgentFinish>;
 }
 
 export type StoppingMethod = "force" | "generate";
