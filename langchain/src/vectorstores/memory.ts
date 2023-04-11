@@ -40,9 +40,9 @@ export class MemoryVectorStore extends VectorStore {
     k: number
   ): Promise<[Document, number][]> {
     let searches = this.memoryVectors.map((vector, index) => ({
-        similarity: math.dot(query, vector.embedding),
-        index,
-      }));
+      similarity: math.dot(query, vector.embedding),
+      index,
+    }));
 
     searches.sort((a, b) => (a.similarity > b.similarity ? -1 : 0));
     searches = searches.slice(0, k);
