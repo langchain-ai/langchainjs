@@ -9,7 +9,7 @@ import {
 } from "openai";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
 import type { StreamingAxiosConfiguration } from "../util/axios-types.js";
-import { chunkArray } from "../util/index.js";
+import { chunkArray } from "../util/chunk.js";
 import { BaseLLM, BaseLLMParams } from "./base.js";
 import { calculateMaxTokens } from "../base_language/count_tokens.js";
 import { OpenAIChat } from "./openai-chat.js";
@@ -230,7 +230,7 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
    *
    * @example
    * ```ts
-   * import { OpenAI } from "langchain/llms";
+   * import { OpenAI } from "langchain/llms/openai";
    * const openai = new OpenAI();
    * const response = await openai.generate(["Tell me a joke."]);
    * ```
@@ -449,3 +449,5 @@ export class PromptLayerOpenAI extends OpenAI {
     return response;
   }
 }
+
+export { OpenAIChat } from "./openai-chat.js";

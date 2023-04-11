@@ -40,6 +40,8 @@ export async function setTracerSession(
   callbackManager: CallbackManager = getCallbackManager()
 ) {
   for (const handler of callbackManager.handlers) {
+    // fine to use instanceof here because we're in the same package
+    // eslint-disable-next-line no-instanceof/no-instanceof
     if (handler instanceof LangChainTracer) {
       const sessionName = options?.sessionName;
       if (sessionName) {

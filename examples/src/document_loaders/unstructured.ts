@@ -1,4 +1,4 @@
-import { UnstructuredLoader } from "langchain/document_loaders";
+import { UnstructuredLoader } from "langchain/document_loaders/fs/unstructured";
 
 export const run = async () => {
   const loader = new UnstructuredLoader(
