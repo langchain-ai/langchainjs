@@ -7,7 +7,6 @@ export {
 export { ChatVectorDBQAChain } from "./chat_vector_db_chain.js";
 export { AnalyzeDocumentChain } from "./analyze_documents_chain.js";
 export { VectorDBQAChain } from "./vector_db_qa.js";
-export { loadChain } from "./load.js";
 export {
   loadQAChain,
   loadQAStuffChain,

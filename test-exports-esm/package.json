@@ -1,0 +1,32 @@
+{
+  "name": "test-exports-esm",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Tests for the things exported by the langchain package",
+  "main": "./index.mjs",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "test": "npm run test:esm && npm run test:cjs && npm run test:cjs:import && npm run test:entrypoints && npm run test:ts",
+    "test:esm": "node src/index.js",
+    "test:cjs": "node src/require.cjs",
+    "test:cjs:import": "node src/import.cjs",
+    "test:entrypoints": "node src/entrypoints.js",
+    "test:ts": "node dist/index.js",
+    "format": "prettier --write src",
+    "format:check": "prettier --check src"
+  },
+  "author": "LangChain",
+  "license": "MIT",
+  "dependencies": {
+    "d3-dsv": "2",
+    "hnswlib-node": "^1.4.2",
+    "langchain": "workspace:*"
+  },
+  "devDependencies": {
+    "@tsconfig/recommended": "^1.0.2",
+    "@types/node": "^18.15.11",
+    "prettier": "^2.8.3",
+    "typescript": "^4.9.5"
+  }
+}

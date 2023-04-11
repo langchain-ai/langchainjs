@@ -1,6 +1,6 @@
-import { OpenAI } from "langchain/llms";
+import { OpenAI } from "langchain/llms/openai";
 import { RetrievalQAChain } from "langchain/chains";
-import { RemoteLangChainRetriever } from "langchain/retrievers";
+import { RemoteLangChainRetriever } from "langchain/retrievers/remote";
 
 export const run = async () => {
   // Initialize the LLM to use to answer the question.
@@ -9,7 +9,7 @@ export const run = async () => {
   // Initialize the remote retriever.
   const retriever = new RemoteLangChainRetriever({
     url: "http://0.0.0.0:8080/retrieve", // Replace with your own URL.
-    auth: { Authorization: "Bearer foo" }, // Replace with your own auth.
+    auth: { bearer: "foo" }, // Replace with your own auth.
     inputKey: "message",
     responseKey: "response",
   });

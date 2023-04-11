@@ -8,16 +8,8 @@ import {
   checkValidTemplate,
   renderTemplate,
 } from "./template.js";
-import {
-  resolveTemplateFromFile,
-  resolveConfigFromFile,
-  parseFileConfig,
-} from "../util/index.js";
 import { PromptTemplate } from "./prompt.js";
-import {
-  SerializedFewShotTemplate,
-  SerializedPromptTemplate,
-} from "./serde.js";
+import { SerializedFewShotTemplate } from "./serde.js";
 import { Example, InputValues, PartialValues } from "../schema/index.js";
 
 export interface FewShotPromptTemplateInput extends BasePromptTemplateInput {
@@ -194,21 +186,15 @@ export class FewShotPromptTemplate
   static async deserialize(
     data: SerializedFewShotTemplate
   ): Promise<FewShotPromptTemplate> {
-    const serializedPrompt = await resolveConfigFromFile<
-      "example_prompt",
-      SerializedPromptTemplate
-    >("example_prompt", data);
-    const examplePrompt = await PromptTemplate.deserialize(serializedPrompt);
+    const { example_prompt } = data;
+    if (!example_prompt) {
+      throw new Error("Missing example prompt");
+    }
+    const examplePrompt = await PromptTemplate.deserialize(example_prompt);
 
     let examples: Example[];
 
-    if (typeof data.examples === "string") {
-      examples = await parseFileConfig(data.examples, ".json", [
-        ".json",
-        ".yml",
-        ".yaml",
-      ]);
-    } else if (Array.isArray(data.examples)) {
+    if (Array.isArray(data.examples)) {
       examples = data.examples;
     } else {
       throw new Error(
@@ -221,8 +207,8 @@ export class FewShotPromptTemplate
       examplePrompt,
       examples,
       exampleSeparator: data.example_separator,
-      prefix: await resolveTemplateFromFile("prefix", data),
-      suffix: await resolveTemplateFromFile("suffix", data),
+      prefix: data.prefix,
+      suffix: data.suffix,
       templateFormat: data.template_format,
     });
   }
