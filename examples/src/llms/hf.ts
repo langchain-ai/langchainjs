@@ -1,4 +1,4 @@
-import { HuggingFaceInference } from "langchain/llms";
+import { HuggingFaceInference } from "langchain/llms/hf";
 
 export const run = async () => {
   const model = new HuggingFaceInference({
