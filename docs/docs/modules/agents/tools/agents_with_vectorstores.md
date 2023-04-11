@@ -9,7 +9,8 @@ First, you'll want to import the relevant modules:
 ```typescript
 import { OpenAI } from "langchain/llms/openai";
 import { initializeAgentExecutor } from "langchain/agents";
-import { SerpAPI, Calculator, ChainTool } from "langchain/tools";
+import { SerpAPI, ChainTool } from "langchain/tools";
+import { Calculator } from "langchain/tools/calculator";
 import { VectorDBQAChain } from "langchain/chains";
 import { HNSWLib } from "langchain/vectorstores/hnswlib";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
