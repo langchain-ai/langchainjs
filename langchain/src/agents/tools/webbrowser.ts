@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios, { isAxiosError } from "axios";
 import * as cheerio from "cheerio";
 import { URL } from "url";
 import { BaseLanguageModel } from "base_language/index.js";
@@ -77,20 +77,35 @@ export class WebBrowser extends Tool {
     const inputArray = inputs.split(",");
     // remove errant spaces and quotes
     const baseUrl = inputArray[0].trim().replace(/^"|"$/g, "").trim();
-    const domain = new URL(baseUrl).hostname;
+    let domain;
+    try {
+      domain = new URL(baseUrl).hostname;
+    } catch (e: unknown) {
+      if (e) {
+        return e.toString();
+      }
+      return "An error has occured parsing the url";
+    }
 
     const headers = { ...this.headers };
     // these appear to be positional, which means they have to exist in the headers passed in
     headers.Host = domain;
     headers["Alt-Used"] = domain;
 
-    const htmlResponse = await axios.get(baseUrl, {
-      withCredentials: true,
-      headers,
-    });
-
-    if (htmlResponse.status !== 200) {
-      return Promise.resolve(`http response ${htmlResponse.status}`);
+    let htmlResponse;
+    try {
+      htmlResponse = await axios.get(baseUrl, {
+        withCredentials: true,
+        headers,
+      });
+    } catch (e) {
+      if (isAxiosError(e) && e.response) {
+        return `http response ${e.response.status}`;
+      }
+      if (e) {
+        return e.toString();
+      }
+      return "An error has occured connecting to url";
     }
 
     const text = getText(htmlResponse.data, baseUrl);
