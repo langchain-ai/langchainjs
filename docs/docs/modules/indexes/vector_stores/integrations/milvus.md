@@ -4,7 +4,7 @@ sidebar_class_name: node-only
 
 # Milvus
 
-[Milvus](https://milvus.io/) is an vector database built for embedding similarity search and AI applications.
+[Milvus](https://milvus.io/) is a vector database built for embeddings similarity search and AI applications.
 
 :::tip Compatibility
 Only available on Node.js.
@@ -12,7 +12,7 @@ Only available on Node.js.
 
 ## Setup
 
-1. Run milvus instance inside of docker on your computer [docs](https://milvus.io/docs/v2.1.x/install_standalone-docker.md)
+1. Run Milvus instance with Docker on your computer [docs](https://milvus.io/docs/v2.1.x/install_standalone-docker.md)
 2. Install the Milvus Node.js SDK.
 
 ```bash npm2yarn
