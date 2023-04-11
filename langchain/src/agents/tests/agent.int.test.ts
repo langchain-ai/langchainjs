@@ -2,8 +2,8 @@ import { test } from "@jest/globals";
 import { OpenAI } from "../../llms/openai.js";
 import { loadAgent } from "../load.js";
 import { AgentExecutor, Tool } from "../index.js";
-import { SerpAPI } from "../tools/serpapi.js";
-import { Calculator } from "../tools/calculator.js";
+import { SerpAPI } from "../../tools/serpapi.js";
+import { Calculator } from "../../tools/calculator.js";
 import { initializeAgentExecutor } from "../initialize.js";
 
 test("Run agent from hub", async () => {

@@ -22,7 +22,7 @@ To get started, follow the [installation instructions](./install) to install Lan
 This section covers how to get started with chat models. The interface is based around messages rather than raw text.
 
 ```typescript
-import { ChatOpenAI } from "langchain/chat_models";
+import { ChatOpenAI } from "langchain/chat_models/openai";
 import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
 
 const chat = new ChatOpenAI({ temperature: 0 });

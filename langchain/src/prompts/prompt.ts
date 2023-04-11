@@ -5,7 +5,6 @@ import {
   renderTemplate,
   TemplateFormat,
 } from "./template.js";
-import { resolveTemplateFromFile } from "../util/index.js";
 import { SerializedPromptTemplate } from "./serde.js";
 import { InputValues, PartialValues } from "../schema/index.js";
 
@@ -168,9 +167,12 @@ export class PromptTemplate
   static async deserialize(
     data: SerializedPromptTemplate
   ): Promise<PromptTemplate> {
+    if (!data.template) {
+      throw new Error("Prompt template must have a template");
+    }
     const res = new PromptTemplate({
       inputVariables: data.input_variables,
-      template: await resolveTemplateFromFile("template", data),
+      template: data.template,
       templateFormat: data.template_format,
     });
     return res;

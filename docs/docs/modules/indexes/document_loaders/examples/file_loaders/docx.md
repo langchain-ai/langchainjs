@@ -15,7 +15,7 @@ npm install mammoth
 # Usage
 
 ```typescript
-import { DocxLoader } from "langchain/document_loaders";
+import { DocxLoader } from "langchain/document_loaders/fs/docx";
 
 const loader = new DocxLoader(
   "src/document_loaders/tests/example_data/attention.docx"

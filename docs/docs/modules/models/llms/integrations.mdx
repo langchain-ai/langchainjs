@@ -10,7 +10,7 @@ LangChain offers a number of LLM implementations that integrate with various mod
 ## `OpenAI`
 
 ```typescript
-import { OpenAI } from "langchain/llms";
+import { OpenAI } from "langchain/llms/openai";
 
 const model = new OpenAI({
   temperature: 0.9,
@@ -29,7 +29,7 @@ npm install @huggingface/inference
 ```
 
 ```typescript
-import { HuggingFaceInference } from "langchain/llms";
+import { HuggingFaceInference } from "langchain/llms/hf";
 
 const model = new HuggingFaceInference({
   model: "gpt2",
@@ -46,7 +46,7 @@ npm install cohere-ai
 ```
 
 ```typescript
-import { Cohere } from "langchain/llms";
+import { Cohere } from "langchain/llms/cohere";
 
 const model = new Cohere({
   maxTokens: 20,
@@ -65,7 +65,7 @@ npm install replicate
 ```
 
 ```typescript
-import { Replicate } from "langchain/llms";
+import { Replicate } from "langchain/llms/replicate";
 
 const model = new Replicate({
   model:
@@ -88,6 +88,8 @@ LangChain integrates with PromptLayer for logging and debugging prompts and resp
 2. Create an API token and pass it either as `promptLayerApiKey` argument in the `PromptLayerOpenAI` constructor or in the `PROMPTLAYER_API_KEY` environment variable.
 
 ```typescript
+import { PromptLayerOpenAI } from "langchain/llms/openai";
+
 const model = new PromptLayerOpenAI({
   temperature: 0.9,
   openAIApiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.OPENAI_API_KEY

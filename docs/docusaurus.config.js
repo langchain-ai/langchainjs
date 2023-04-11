@@ -78,42 +78,6 @@ const config = {
         docs: {
           sidebarPath: require.resolve("./sidebars.js"),
           editUrl: "https://github.com/hwchase17/langchainjs/edit/main/docs/",
-          async sidebarItemsGenerator({
-            defaultSidebarItemsGenerator,
-            ...args
-          }) {
-            const allInternal = [];
-            const filterInternal = (items) =>
-              items
-                .filter((item) => {
-                  const isInternal = item.label?.includes("internal");
-                  if (isInternal) {
-                    allInternal.push(item);
-                  }
-                  return !isInternal;
-                })
-                .map((item) => {
-                  if (item.items && Array.isArray(item.items)) {
-                    return { ...item, items: filterInternal(item.items) };
-                  }
-                  return item;
-                });
-            const sidebarItems = await defaultSidebarItemsGenerator(args);
-            const filtered = filterInternal(sidebarItems);
-            if (allInternal.length > 0) {
-              return [
-                ...filtered,
-                {
-                  type: "category",
-                  label: "Internal",
-                  collapsible: true,
-                  collapsed: true,
-                  items: allInternal,
-                },
-              ];
-            }
-            return filtered;
-          },
           remarkPlugins: [
             [require("@docusaurus/remark-plugin-npm2yarn"), { sync: true }],
           ],

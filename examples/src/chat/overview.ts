@@ -1,7 +1,6 @@
-import { LLMChain } from "langchain";
 import { AgentExecutor, ChatAgent } from "langchain/agents";
-import { ConversationChain } from "langchain/chains";
-import { ChatOpenAI } from "langchain/chat_models";
+import { ConversationChain, LLMChain } from "langchain/chains";
+import { ChatOpenAI } from "langchain/chat_models/openai";
 import { BufferMemory } from "langchain/memory";
 import {
   ChatPromptTemplate,
