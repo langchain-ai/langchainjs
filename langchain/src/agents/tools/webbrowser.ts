@@ -108,6 +108,23 @@ export class WebBrowser extends Tool {
       return "An error has occured connecting to url";
     }
 
+    const allowedContentTypes = [
+      "text/html",
+      "application/json",
+      "application/xml",
+      "application/javascript",
+      "text/plain",
+    ];
+
+    const contentType = htmlResponse.headers["content-type"];
+    const contentTypeArray = contentType.split(";");
+    if (
+      contentTypeArray[0] &&
+      !allowedContentTypes.includes(contentTypeArray[0])
+    ) {
+      return "returned page was not utf8";
+    }
+
     const text = getText(htmlResponse.data, baseUrl);
 
     // todo need to pass in tokenizer i guess
