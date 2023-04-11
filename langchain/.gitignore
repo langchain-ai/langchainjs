@@ -106,6 +106,9 @@ document_loaders/web/cheerio.d.ts
 document_loaders/web/puppeteer.cjs
 document_loaders/web/puppeteer.js
 document_loaders/web/puppeteer.d.ts
+document_loaders/web/playwright.cjs
+document_loaders/web/playwright.js
+document_loaders/web/playwright.d.ts
 document_loaders/web/college_confidential.cjs
 document_loaders/web/college_confidential.js
 document_loaders/web/college_confidential.d.ts

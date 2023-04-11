@@ -56,6 +56,7 @@ const entrypoints = {
   "document_loaders/base": "document_loaders/base",
   "document_loaders/web/cheerio": "document_loaders/web/cheerio",
   "document_loaders/web/puppeteer": "document_loaders/web/puppeteer",
+  "document_loaders/web/playwright": "document_loaders/web/playwright",
   "document_loaders/web/college_confidential":
     "document_loaders/web/college_confidential",
   "document_loaders/web/gitbook": "document_loaders/web/gitbook",
@@ -127,6 +128,7 @@ const requiresOptionalDependency = [
   "vectorstores/supabase",
   "document_loaders/web/cheerio",
   "document_loaders/web/puppeteer",
+  "document_loaders/web/playwright",
   "document_loaders/web/college_confidential",
   "document_loaders/web/gitbook",
   "document_loaders/web/hn",

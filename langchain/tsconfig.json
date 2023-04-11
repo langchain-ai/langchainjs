@@ -66,6 +66,7 @@
       "src/document_loaders/base.ts",
       "src/document_loaders/web/cheerio.ts",
       "src/document_loaders/web/puppeteer.ts",
+      "src/document_loaders/web/playwright.ts",
       "src/document_loaders/web/college_confidential.ts",
       "src/document_loaders/web/gitbook.ts",
       "src/document_loaders/web/hn.ts",
