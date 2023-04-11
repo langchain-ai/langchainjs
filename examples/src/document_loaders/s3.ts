@@ -1,4 +1,4 @@
-import { S3Loader } from "langchain/document_loaders";
+import { S3Loader } from "langchain/document_loaders/web/s3";
 
 const loader = new S3Loader(
   "my-document-bucket-123",
