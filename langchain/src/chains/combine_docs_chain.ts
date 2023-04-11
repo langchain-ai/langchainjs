@@ -343,15 +343,17 @@ export class RefineDocumentsChain
   }
 
   static async deserialize(data: SerializedRefineDocumentsChain) {
-    const SerializedLLMChain = await resolveConfigFromFile<
-      "llm_chain",
-      SerializedLLMChain
-    >("llm_chain", data);
+    const SerializedLLMChain = data.llm_chain;
 
-    const SerializedRefineDocumentChain = await resolveConfigFromFile<
-      "refine_llm_chain",
-      SerializedLLMChain
-    >("refine_llm_chain", data);
+    if (!SerializedLLMChain) {
+      throw new Error("Missing llm_chain");
+    }
+
+    const SerializedRefineDocumentChain = data.refine_llm_chain;
+
+    if (!SerializedRefineDocumentChain) {
+      throw new Error("Missing refine_llm_chain");
+    }
 
     return new RefineDocumentsChain({
       llmChain: await LLMChain.deserialize(SerializedLLMChain),

@@ -49,9 +49,7 @@ export type SerializedMapReduceDocumentsChain = {
 export type SerializedRefineDocumentsChain = {
   _type: "refine_documents_chain";
   llm_chain?: SerializedLLMChain;
-  llm_chain_path?: string;
   refine_llm_chain?: SerializedLLMChain;
-  refine_llm_chain_path?: string;
 };
 
 export type SerializedAnalyzeDocumentChain = {
