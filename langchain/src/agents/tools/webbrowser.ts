@@ -11,8 +11,11 @@ export const getText = (html: string, baseUrl: string): string => {
 
   let text = "";
 
+  // I think theres a bug in noscript text, it always prints all its children nodes in full
+  // take :not(noscript) out when patched
+  // https://github.com/cheeriojs/cheerio/issues/3121
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  $("*:not(style):not(script):not(svg)").each((_i, elem: any) => {
+  $("*:not(style):not(script):not(svg):not(noscript)").each((_i, elem: any) => {
     // we dont want duplicated content as we drill down so remove children
     let content = $(elem).clone().children().remove().end().text().trim();
     const $el = $(elem);
