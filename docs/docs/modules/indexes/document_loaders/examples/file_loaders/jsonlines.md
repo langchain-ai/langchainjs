@@ -16,7 +16,7 @@ Example JSONLines file:
 Example code:
 
 ```typescript
-import { JSONLinesLoader } from "langchain/document_loaders";
+import { JSONLinesLoader } from "langchain/document_loaders/fs/json";
 
 const loader = new JSONLinesLoader(
   "src/document_loaders/example_data/example.jsonl",

@@ -1,5 +1,5 @@
 {
-  "name": "langchain-examples",
+  "name": "examples",
   "version": "0.0.0",
   "private": true,
   "description": "Langchain examples",
@@ -19,12 +19,11 @@
     "format": "prettier --write \"**/*.ts\"",
     "format:check": "prettier --check \"**/*.ts\""
   },
-  "author": "Langchain",
+  "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@dqbd/tiktoken": "^1.0.2",
     "@getmetal/metal-sdk": "^1.0.12",
-    "@pinecone-database/pinecone": "^0.0.10",
+    "@pinecone-database/pinecone": "^0.0.12",
     "@prisma/client": "^4.11.0",
     "@supabase/supabase-js": "^2.10.0",
     "@zilliz/milvus2-sdk-node": "^2.2.0",

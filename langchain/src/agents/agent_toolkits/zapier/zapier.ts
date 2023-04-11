@@ -1,6 +1,6 @@
 import { Toolkit } from "../base.js";
-import { Tool } from "../../tools/index.js";
-import { ZapierNLARunAction, ZapierNLAWrapper } from "../../tools/zapier.js";
+import { Tool } from "../../../tools/base.js";
+import { ZapierNLARunAction, ZapierNLAWrapper } from "../../../tools/zapier.js";
 
 export class ZapierToolKit extends Toolkit {
   tools: Tool[] = [];

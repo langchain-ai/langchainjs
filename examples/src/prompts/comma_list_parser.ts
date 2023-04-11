@@ -1,4 +1,5 @@
-import { OpenAI, PromptTemplate } from "langchain";
+import { OpenAI } from "langchain/llms/openai";
+import { PromptTemplate } from "langchain/prompts";
 import { CommaSeparatedListOutputParser } from "langchain/output_parsers";
 
 export const run = async () => {
