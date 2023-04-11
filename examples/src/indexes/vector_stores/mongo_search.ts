@@ -1,5 +1,5 @@
-import { MongoVectorStore } from "langchain/vectorstores";
-import { CohereEmbeddings } from "langchain/embeddings";
+import { MongoVectorStore } from "langchain/vectorstores/mongo";
+import { CohereEmbeddings } from "langchain/embeddings/cohere";
 import { MongoClient } from "mongodb";
 
 export const run = async () => {

@@ -1,13 +1,12 @@
-
-import { MongoVectorStore } from "langchain/vectorstores";
-import { CohereEmbeddings } from "langchain/embeddings";
+import { MongoVectorStore } from "langchain/vectorstores/mongo";
+import { CohereEmbeddings } from "langchain/embeddings/cohere";
 import { MongoClient } from "mongodb";
 
 export const run = async () => {
   const client = new MongoClient(process.env.MONGO_URI || "");
-  
+
   const collection = client.db("langchain").collection("test");
-  
+
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const vectorStore = await MongoVectorStore.fromTexts(
     ["Hello world", "Bye bye", "What's this?"],

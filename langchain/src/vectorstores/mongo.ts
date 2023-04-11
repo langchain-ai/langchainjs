@@ -1,4 +1,8 @@
-import { MongoClient, Collection, Document as MongoDocument } from "mongodb";
+import type {
+  MongoClient,
+  Collection,
+  Document as MongoDocument,
+} from "mongodb";
 import { VectorStore } from "./base.js";
 import { Embeddings } from "../embeddings/base.js";
 import { Document } from "../document.js";
