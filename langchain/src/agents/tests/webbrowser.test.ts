@@ -16,7 +16,7 @@ test("parse html to text and links", async () => {
 
   const wordOfTheDayHtml = await fs.readFile(filePath, "utf-8");
 
-  const text = getText(wordOfTheDayHtml, baseUrl);
+  const text = getText(wordOfTheDayHtml, baseUrl, false);
   expect(text).toContain("Word of the Day: Foible");
 }, 3000000);
 
@@ -45,7 +45,7 @@ test.skip("get url and parse html to text and links", async () => {
     },
   });
 
-  const text = getText(htmlResponse.data, baseUrl);
+  const text = getText(htmlResponse.data, baseUrl, false);
   console.log(text);
 }, 3000000);
 
@@ -79,7 +79,7 @@ test.skip("get url and parse html to text and links with fetch", async () => {
 
   const htmlResponse = await response.text();
 
-  const text = getText(htmlResponse, baseUrl);
+  const text = getText(htmlResponse, baseUrl, false);
   console.log(text);
 }, 3000000);
 
@@ -96,6 +96,6 @@ test.skip("get url and parse html to text and links wih puppeteer", async () => 
   const html = await page.content();
   await browser.close();
 
-  const text = getText(html, baseUrl);
+  const text = getText(html, baseUrl, false);
   console.log(text);
 }, 3000000);
