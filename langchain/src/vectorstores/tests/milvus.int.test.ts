@@ -13,7 +13,7 @@ beforeAll(async () => {
   collectionName = `test_collection_${Math.random().toString(36).substring(7)}`;
 });
 
-test("Test Milvus.fromtext", async () => {
+test.skip("Test Milvus.fromtext", async () => {
   const texts = [
     `Tortoise: Labyrinth? Labyrinth? Could it Are we in the notorious Little 
 Harmonic Labyrinth of the dreaded Majotaur?`,
@@ -53,7 +53,7 @@ Harmonic Labyrinth of the dreaded Majotaur?`,
   ]);
 });
 
-test("Test Milvus.fromExistingCollection", async () => {
+test.skip("Test Milvus.fromExistingCollection", async () => {
   const milvus = await Milvus.fromExistingCollection(embeddings, {
     collectionName,
   });
@@ -73,6 +73,8 @@ test("Test Milvus.fromExistingCollection", async () => {
 });
 
 afterAll(async () => {
+  // eslint-disable-next-line no-process-env
+  if (!process.env.MILVUS_URL) return;
   // eslint-disable-next-line no-process-env
   const client = new MilvusClient(process.env.MILVUS_URL as string);
   const dropRes = await client.collectionManager.dropCollection({
