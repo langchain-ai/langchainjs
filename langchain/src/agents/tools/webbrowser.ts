@@ -89,6 +89,10 @@ export class WebBrowser extends Tool {
       headers,
     });
 
+    if (htmlResponse.status !== 200) {
+      return Promise.resolve(`http response ${htmlResponse.status}`);
+    }
+
     const text = getText(htmlResponse.data, baseUrl);
 
     // todo need to pass in tokenizer i guess
