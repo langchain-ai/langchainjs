@@ -28,6 +28,8 @@ export function listExternals() {
     /node\:/,
     "axios", // axios is a dependency of openai
     "pdf-parse/lib/pdf-parse.js",
+    "@zilliz/milvus2-sdk-node/dist/milvus/const/Milvus.js",
+    "@zilliz/milvus2-sdk-node/dist/milvus/types.js",
   ];
 }
 

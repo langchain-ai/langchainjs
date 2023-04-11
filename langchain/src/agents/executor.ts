@@ -41,8 +41,7 @@ export class AgentExecutor extends BaseChain {
     super(input.memory, input.verbose, input.callbackManager);
     this.agent = input.agent;
     this.tools = input.tools;
-    // eslint-disable-next-line no-instanceof/no-instanceof
-    if (this.agent instanceof BaseMultiActionAgent) {
+    if (this.agent._agentActionType() === "multi") {
       for (const tool of this.tools) {
         if (tool.returnDirect) {
           throw new Error(

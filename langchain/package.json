@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.52",
+  "version": "0.0.53",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -91,6 +91,9 @@
     "vectorstores/supabase.cjs",
     "vectorstores/supabase.js",
     "vectorstores/supabase.d.ts",
+    "vectorstores/milvus.cjs",
+    "vectorstores/milvus.js",
+    "vectorstores/milvus.d.ts",
     "vectorstores/prisma.cjs",
     "vectorstores/prisma.js",
     "vectorstores/prisma.d.ts",
@@ -118,6 +121,9 @@
     "document_loaders/web/puppeteer.cjs",
     "document_loaders/web/puppeteer.js",
     "document_loaders/web/puppeteer.d.ts",
+    "document_loaders/web/playwright.cjs",
+    "document_loaders/web/playwright.js",
+    "document_loaders/web/playwright.d.ts",
     "document_loaders/web/college_confidential.cjs",
     "document_loaders/web/college_confidential.js",
     "document_loaders/web/college_confidential.d.ts",
@@ -133,6 +139,9 @@
     "document_loaders/web/github.cjs",
     "document_loaders/web/github.js",
     "document_loaders/web/github.d.ts",
+    "document_loaders/web/s3.cjs",
+    "document_loaders/web/s3.js",
+    "document_loaders/web/s3.d.ts",
     "document_loaders/fs/directory.cjs",
     "document_loaders/fs/directory.js",
     "document_loaders/fs/directory.d.ts",
@@ -202,6 +211,9 @@
     "retrievers/metal.cjs",
     "retrievers/metal.js",
     "retrievers/metal.d.ts",
+    "retrievers/databerry.cjs",
+    "retrievers/databerry.js",
+    "retrievers/databerry.d.ts",
     "cache.cjs",
     "cache.js",
     "cache.d.ts",
@@ -234,6 +246,7 @@
   "author": "LangChain",
   "license": "MIT",
   "devDependencies": {
+    "@aws-sdk/client-s3": "^3.310.0",
     "@faker-js/faker": "^7.6.0",
     "@getmetal/metal-sdk": "^1.0.12",
     "@huggingface/inference": "^1.5.1",
@@ -267,6 +280,7 @@
     "jest": "^29.5.0",
     "mammoth": "^1.5.1",
     "pdfjs-dist": "^3.4.120",
+    "playwright": "^1.32.1",
     "prettier": "^2.8.3",
     "puppeteer": "^19.7.2",
     "redis": "^4.6.4",
@@ -280,10 +294,12 @@
     "typescript": "^4.9.5"
   },
   "peerDependencies": {
+    "@aws-sdk/client-s3": "^3.310.0",
     "@getmetal/metal-sdk": "*",
     "@huggingface/inference": "^1.5.1",
     "@pinecone-database/pinecone": "*",
     "@supabase/supabase-js": "^2.10.0",
+    "@zilliz/milvus2-sdk-node": "^2.2.0",
     "cheerio": "^1.0.0-rc.12",
     "chromadb": "^1.3.0",
     "cohere-ai": "^5.0.2",
@@ -293,6 +309,7 @@
     "html-to-text": "^9.0.5",
     "mammoth": "*",
     "pdfjs-dist": "^3.4.120",
+    "playwright": "^1.32.1",
     "puppeteer": "^19.7.2",
     "redis": "^4.6.4",
     "replicate": "^0.9.0",
@@ -300,6 +317,9 @@
     "typeorm": "^0.3.12"
   },
   "peerDependenciesMeta": {
+    "@aws-sdk/client-s3": {
+      "optional": true
+    },
     "@getmetal/metal-sdk": {
       "optional": true
     },
@@ -310,6 +330,9 @@
       "optional": true
     },
     "@supabase/supabase-js": {
+      "optional": true
+    },
+    "@zilliz/milvus2-sdk-node": {
       "optional": true
     },
     "cheerio": {
@@ -337,6 +360,9 @@
       "optional": true
     },
     "pdfjs-dist": {
+      "optional": true
+    },
+    "playwright": {
       "optional": true
     },
     "puppeteer": {
@@ -536,6 +562,11 @@
       "import": "./vectorstores/supabase.js",
       "require": "./vectorstores/supabase.cjs"
     },
+    "./vectorstores/milvus": {
+      "types": "./vectorstores/milvus.d.ts",
+      "import": "./vectorstores/milvus.js",
+      "require": "./vectorstores/milvus.cjs"
+    },
     "./vectorstores/prisma": {
       "types": "./vectorstores/prisma.d.ts",
       "import": "./vectorstores/prisma.js",
@@ -583,6 +614,11 @@
       "import": "./document_loaders/web/puppeteer.js",
       "require": "./document_loaders/web/puppeteer.cjs"
     },
+    "./document_loaders/web/playwright": {
+      "types": "./document_loaders/web/playwright.d.ts",
+      "import": "./document_loaders/web/playwright.js",
+      "require": "./document_loaders/web/playwright.cjs"
+    },
     "./document_loaders/web/college_confidential": {
       "types": "./document_loaders/web/college_confidential.d.ts",
       "import": "./document_loaders/web/college_confidential.js",
@@ -607,6 +643,11 @@
       "types": "./document_loaders/web/github.d.ts",
       "import": "./document_loaders/web/github.js",
       "require": "./document_loaders/web/github.cjs"
+    },
+    "./document_loaders/web/s3": {
+      "types": "./document_loaders/web/s3.d.ts",
+      "import": "./document_loaders/web/s3.js",
+      "require": "./document_loaders/web/s3.cjs"
     },
     "./document_loaders/fs/directory": {
       "types": "./document_loaders/fs/directory.d.ts",
@@ -726,6 +767,11 @@
       "types": "./retrievers/metal.d.ts",
       "import": "./retrievers/metal.js",
       "require": "./retrievers/metal.cjs"
+    },
+    "./retrievers/databerry": {
+      "types": "./retrievers/databerry.d.ts",
+      "import": "./retrievers/databerry.js",
+      "require": "./retrievers/databerry.cjs"
     },
     "./cache": {
       "types": "./cache.d.ts",

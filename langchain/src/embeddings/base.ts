@@ -7,7 +7,7 @@ export abstract class Embeddings {
    * The async caller should be used by subclasses to make any async calls,
    * which will thus benefit from the concurrency and retry logic.
    */
-  protected caller: AsyncCaller;
+  caller: AsyncCaller;
 
   constructor(params: EmbeddingsParams) {
     this.caller = new AsyncCaller(params ?? {});
