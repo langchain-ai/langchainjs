@@ -1,6 +1,6 @@
 import { PineconeClient } from "@pinecone-database/pinecone";
-import { OpenAIEmbeddings } from "langchain/embeddings";
-import { PineconeStore } from "langchain/vectorstores";
+import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { PineconeStore } from "langchain/vectorstores/pinecone";
 
 export const run = async () => {
   if (

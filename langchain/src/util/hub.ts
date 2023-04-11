@@ -1,6 +1,19 @@
-import { backOff } from "exponential-backoff";
+import pRetry from "p-retry";
 
-import { fetchWithTimeout, extname, FileLoader, LoadValues } from "./index.js";
+import { FileLoader, LoadValues } from "./load.js";
+import { extname } from "./extname.js";
+
+const fetchWithTimeout = async (
+  url: string,
+  init: Omit<RequestInit, "signal"> & { timeout: number }
+) => {
+  const { timeout, ...rest } = init;
+  const res = await fetch(url, {
+    ...rest,
+    signal: AbortSignal.timeout(timeout),
+  });
+  return res;
+};
 
 const HUB_PATH_REGEX = /lc(@[^:]+)?:\/\/(.*)/;
 
@@ -41,8 +54,8 @@ export const loadFromHub = async <T>(
   }
 
   const url = [LANGCHAIN_HUB_URL_BASE, ref, remotePath].join("/");
-  const res = await backOff(() => fetchWithTimeout(url, { timeout: 5000 }), {
-    numOfAttempts: 6,
+  const res = await pRetry(() => fetchWithTimeout(url, { timeout: 5000 }), {
+    retries: 6,
   });
   if (res.status !== 200) {
     throw new Error(`Could not find file at ${url}`);

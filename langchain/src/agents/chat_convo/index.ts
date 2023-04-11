@@ -1,11 +1,11 @@
-import { LLMChain } from "../../chains/index.js";
+import { LLMChain } from "../../chains/llm_chain.js";
 import { Agent } from "../agent.js";
 import {
   SystemMessagePromptTemplate,
   HumanMessagePromptTemplate,
   ChatPromptTemplate,
   MessagesPlaceholder,
-} from "../../prompts/index.js";
+} from "../../prompts/chat.js";
 import { renderTemplate } from "../../prompts/template.js";
 import {
   PREFIX,
@@ -22,7 +22,7 @@ import {
   BaseOutputParser,
 } from "../../schema/index.js";
 import { AgentInput } from "../types.js";
-import { Tool } from "../tools/base.js";
+import { Tool } from "../../tools/base.js";
 
 export class ChatConversationalAgentOutputParser extends BaseOutputParser {
   async parse(text: string): Promise<unknown> {

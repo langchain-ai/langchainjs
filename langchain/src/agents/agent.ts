@@ -1,6 +1,6 @@
 import { BaseLanguageModel } from "../base_language/index.js";
 import { LLMChain } from "../chains/llm_chain.js";
-import { BasePromptTemplate } from "../prompts/index.js";
+import { BasePromptTemplate } from "../prompts/base.js";
 import {
   AgentAction,
   AgentFinish,
@@ -14,7 +14,7 @@ import {
   StoppingMethod,
   AgentActionOutputParser,
 } from "./types.js";
-import { Tool } from "./tools/base.js";
+import { Tool } from "../tools/base.js";
 
 class ParseError extends Error {
   output: string;
@@ -42,6 +42,11 @@ export abstract class BaseAgent {
   _agentType(): string {
     throw new Error("Not implemented");
   }
+
+  /**
+   * Return the string type key uniquely identifying multi or single action agents.
+   */
+  abstract _agentActionType(): string;
 
   /**
    * Return response when agent has been stopped due to max iterations
@@ -73,6 +78,10 @@ export abstract class BaseAgent {
 }
 
 export abstract class BaseSingleActionAgent extends BaseAgent {
+  _agentActionType(): string {
+    return "single" as const;
+  }
+
   /**
    * Decide what to do, given some input.
    *
@@ -88,6 +97,10 @@ export abstract class BaseSingleActionAgent extends BaseAgent {
 }
 
 export abstract class BaseMultiActionAgent extends BaseAgent {
+  _agentActionType(): string {
+    return "multi" as const;
+  }
+
   /**
    * Decide what to do, given some input.
    *

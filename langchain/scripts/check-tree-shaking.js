@@ -13,7 +13,7 @@ export function listEntrypoints() {
     }
     if (typeof value === "string") {
       entrypoints.push(value);
-    } else if (typeof value === "object") {
+    } else if (typeof value === "object" && value.import) {
       entrypoints.push(value.import);
     }
   }
@@ -27,7 +27,6 @@ export function listExternals() {
     ...Object.keys(packageJson.peerDependencies),
     /node\:/,
     "axios", // axios is a dependency of openai
-    "@fortaine/fetch-event-source/parse",
     "pdf-parse/lib/pdf-parse.js",
   ];
 }
