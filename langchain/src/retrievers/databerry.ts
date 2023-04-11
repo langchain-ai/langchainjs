@@ -1,11 +1,13 @@
 import { BaseRetriever } from "../schema/index.js";
 import { Document } from "../document.js";
+import { AsyncCaller, AsyncCallerParams } from "../util/async_caller.js";
 
-interface DataberryRetrieverArgs {
+interface DataberryRetrieverArgs extends AsyncCallerParams {
   datastoreUrl: string;
   topK?: number;
   apiKey?: string;
 }
+
 interface Berry {
   text: string;
   score: number;
@@ -14,22 +16,25 @@ interface Berry {
 }
 
 export class DataberryRetriever extends BaseRetriever {
+  caller: AsyncCaller;
+
   datastoreUrl: string;
 
   topK?: number;
 
   apiKey?: string;
 
-  constructor({ datastoreUrl, apiKey, topK }: DataberryRetrieverArgs) {
+  constructor({ datastoreUrl, apiKey, topK, ...rest }: DataberryRetrieverArgs) {
     super();
 
+    this.caller = new AsyncCaller(rest);
     this.datastoreUrl = datastoreUrl;
     this.apiKey = apiKey;
     this.topK = topK;
   }
 
   async getRelevantDocuments(query: string): Promise<Document[]> {
-    const r = await fetch(this.datastoreUrl, {
+    const r = await this.caller.call(fetch, this.datastoreUrl, {
       method: "POST",
       body: JSON.stringify({
         query,
