@@ -42,16 +42,33 @@ export const getText = (html: string, baseUrl: string): string => {
   return text;
 };
 
+const DEFAULT_HEADERS = {
+  Accept:
+    "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+  "Accept-Encoding": "gzip, deflate, br",
+  "Accept-Language": "en-US,en;q=0.5",
+  "Alt-Used": "LEAVE-THIS-KEY-SET-BY-TOOL",
+  Connection: "keep-alive",
+  Host: "LEAVE-THIS-KEY-SET-BY-TOOL",
+  Referer: "https://www.google.com/",
+  "Sec-Fetch-Dest": "document",
+  "Sec-Fetch-Mode": "navigate",
+  "Sec-Fetch-Site": "cross-site",
+  "Upgrade-Insecure-Requests": "1",
+  "User-Agent":
+    "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/111.0",
+};
+
 export class WebBrowser extends Tool {
   protected model: BaseLanguageModel;
 
   headers: Record<string, any>;
 
-  constructor(model: BaseLanguageModel, headers: Record<string, any>) {
+  constructor(model: BaseLanguageModel, headers?: Record<string, any>) {
     super();
 
     this.model = model;
-    this.headers = headers;
+    this.headers = headers || DEFAULT_HEADERS;
   }
 
   name = "web-browser";
