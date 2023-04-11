@@ -2,8 +2,8 @@ import fsDefault from "fs";
 import path from "path";
 import os from "os";
 import { Readable } from "stream";
-import { BaseDocumentLoader } from "./base.js";
-import { UnstructuredLoader as UnstructuredLoaderDefault } from "./unstructured.js";
+import { BaseDocumentLoader } from "../base.js";
+import { UnstructuredLoader as UnstructuredLoaderDefault } from "../fs/unstructured.js";
 
 export class S3Loader extends BaseDocumentLoader {
   private bucket: string;
@@ -53,6 +53,7 @@ export class S3Loader extends BaseDocumentLoader {
       const objectData = await new Promise<Buffer>((resolve, reject) => {
         const chunks: Buffer[] = [];
 
+        // eslint-disable-next-line no-instanceof/no-instanceof
         if (response.Body instanceof Readable) {
           response.Body.on("data", (chunk: Buffer) => chunks.push(chunk));
           response.Body.on("end", () => resolve(Buffer.concat(chunks)));

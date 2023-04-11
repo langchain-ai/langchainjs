@@ -5,8 +5,8 @@ import S3Client from "@aws-sdk/client-s3";
 import fs from "fs";
 import * as path from "path";
 import { Readable } from "stream";
-import { S3Loader } from "../s3.js";
-import { UnstructuredLoader } from "../unstructured.js";
+import { S3Loader } from "../web/s3.js";
+import { UnstructuredLoader } from "../fs/unstructured.js";
 
 const fsMock = {
   ...fs,
