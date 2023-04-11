@@ -31,7 +31,7 @@ const executor = await initializeAgentExecutor(
   model,
   "zero-shot-react-description"
 );
-const input = `Find out the capital of Croatia. Once you have it, email the answer to holtkam2@gmail.com.`;
+const input = `Find out the capital of Croatia. Once you have it, email the answer to testing123@gmail.com.`;
 const result = await executor.call({ input });
 console.log(result);
 ```
