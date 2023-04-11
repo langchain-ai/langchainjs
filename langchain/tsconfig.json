@@ -93,6 +93,7 @@
       "src/retrievers/remote/index.ts",
       "src/retrievers/supabase.ts",
       "src/retrievers/metal.ts",
+      "src/retrievers/databerry.ts",
       "src/cache.ts"
     ],
     "excludePrivate": true,

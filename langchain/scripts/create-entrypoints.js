@@ -92,6 +92,7 @@ const entrypoints = {
   "retrievers/remote": "retrievers/remote/index",
   "retrievers/supabase": "retrievers/supabase",
   "retrievers/metal": "retrievers/metal",
+  "retrievers/databerry": "retrievers/databerry",
   // cache
   cache: "cache",
 };

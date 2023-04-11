@@ -193,6 +193,9 @@ retrievers/supabase.d.ts
 retrievers/metal.cjs
 retrievers/metal.js
 retrievers/metal.d.ts
+retrievers/databerry.cjs
+retrievers/databerry.js
+retrievers/databerry.d.ts
 cache.cjs
 cache.js
 cache.d.ts

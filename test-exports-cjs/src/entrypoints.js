@@ -22,4 +22,5 @@ const schema = require("langchain/schema");
 const callbacks = require("langchain/callbacks");
 const output_parsers = require("langchain/output_parsers");
 const retrievers_remote = require("langchain/retrievers/remote");
+const retrievers_databerry = require("langchain/retrievers/databerry");
 const cache = require("langchain/cache");

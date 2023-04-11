@@ -205,6 +205,9 @@
     "retrievers/metal.cjs",
     "retrievers/metal.js",
     "retrievers/metal.d.ts",
+    "retrievers/databerry.cjs",
+    "retrievers/databerry.js",
+    "retrievers/databerry.d.ts",
     "cache.cjs",
     "cache.js",
     "cache.d.ts",
@@ -738,6 +741,11 @@
       "types": "./retrievers/metal.d.ts",
       "import": "./retrievers/metal.js",
       "require": "./retrievers/metal.cjs"
+    },
+    "./retrievers/databerry": {
+      "types": "./retrievers/databerry.d.ts",
+      "import": "./retrievers/databerry.js",
+      "require": "./retrievers/databerry.cjs"
     },
     "./cache": {
       "types": "./cache.d.ts",
