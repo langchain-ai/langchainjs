@@ -91,6 +91,9 @@
     "vectorstores/supabase.cjs",
     "vectorstores/supabase.js",
     "vectorstores/supabase.d.ts",
+    "vectorstores/milvus.cjs",
+    "vectorstores/milvus.js",
+    "vectorstores/milvus.d.ts",
     "vectorstores/prisma.cjs",
     "vectorstores/prisma.js",
     "vectorstores/prisma.d.ts",
@@ -311,6 +314,9 @@
       "optional": true
     },
     "@supabase/supabase-js": {
+      "optional": true
+    },
+    "@zilliz/milvus2-sdk-node": {
       "optional": true
     },
     "cheerio": {
@@ -535,6 +541,11 @@
       "types": "./vectorstores/supabase.d.ts",
       "import": "./vectorstores/supabase.js",
       "require": "./vectorstores/supabase.cjs"
+    },
+    "./vectorstores/milvus": {
+      "types": "./vectorstores/milvus.d.ts",
+      "import": "./vectorstores/milvus.js",
+      "require": "./vectorstores/milvus.cjs"
     },
     "./vectorstores/prisma": {
       "types": "./vectorstores/prisma.d.ts",

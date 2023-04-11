@@ -58,6 +58,7 @@
       "src/vectorstores/hnswlib.ts",
       "src/vectorstores/pinecone.ts",
       "src/vectorstores/supabase.ts",
+      "src/vectorstores/milvus.ts",
       "src/vectorstores/prisma.ts",
       "src/text_splitter.ts",
       "src/memory/index.ts",

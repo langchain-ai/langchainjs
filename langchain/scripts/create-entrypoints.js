@@ -42,6 +42,7 @@ const entrypoints = {
   "vectorstores/hnswlib": "vectorstores/hnswlib",
   "vectorstores/pinecone": "vectorstores/pinecone",
   "vectorstores/supabase": "vectorstores/supabase",
+  "vectorstores/milvus": "vectorstores/milvus",
   "vectorstores/prisma": "vectorstores/prisma",
   // text_splitter
   text_splitter: "text_splitter",
@@ -123,6 +124,7 @@ const requiresOptionalDependency = [
   "vectorstores/hnswlib",
   "vectorstores/pinecone",
   "vectorstores/supabase",
+  "vectorstores/milvus",
   "document_loaders/web/cheerio",
   "document_loaders/web/puppeteer",
   "document_loaders/web/college_confidential",
