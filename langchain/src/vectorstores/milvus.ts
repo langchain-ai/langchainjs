@@ -47,12 +47,6 @@ const MILVUS_PRIMARY_FIELD_NAME = "langchain_primaryid";
 const MILVUS_VECTOR_FIELD_NAME = "langchain_vector";
 const MILVUS_TEXT_FIELD_NAME = "langchain_text";
 const MILVUS_COLLECTION_NAME_PREFIX = "langchain_col";
-const MILVUS_INDEX_CREATE_PARAMS = {
-  index_type: "HNSW",
-  metric_type: "L2",
-  params: JSON.stringify({ M: 8, efConstruction: 64 }),
-};
-const MILVUS_INDEX_SEARCH_PARAMS = JSON.stringify({ ef: 64 });
 
 export class Milvus extends VectorStore {
   collectionName: string;
@@ -88,6 +82,14 @@ export class Milvus extends VectorStore {
     IVF_HNSW: { params: { nprobe: 10, ef: 10 } },
     ANNOY: { params: { search_k: 10 } },
   };
+
+  indexCreateParams = {
+    index_type: "HNSW",
+    metric_type: "L2",
+    params: JSON.stringify({ M: 8, efConstruction: 64 }),
+  };
+
+  indexSearchParams = JSON.stringify({ ef: 64 });
 
   constructor(embeddings: Embeddings, args: MilvusLibArgs) {
     super(embeddings, args);
@@ -216,8 +218,8 @@ export class Milvus extends VectorStore {
       search_params: {
         anns_field: this.vectorField,
         topk: k.toString(),
-        metric_type: MILVUS_INDEX_CREATE_PARAMS.metric_type,
-        params: MILVUS_INDEX_SEARCH_PARAMS,
+        metric_type: this.indexCreateParams.metric_type,
+        params: this.indexSearchParams,
       },
       output_fields: outputFields,
       vector_type: DataType.FloatVector,
@@ -322,7 +324,7 @@ export class Milvus extends VectorStore {
     await this.idxMgr.createIndex({
       collection_name: this.collectionName,
       field_name: this.vectorField,
-      extra_params: MILVUS_INDEX_CREATE_PARAMS,
+      extra_params: this.indexCreateParams,
     });
   }
 
