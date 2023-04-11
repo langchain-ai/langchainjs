@@ -1,4 +1,4 @@
-import { CollegeConfidentialLoader } from "langchain/document_loaders";
+import { CollegeConfidentialLoader } from "langchain/document_loaders/web/college_confidential";
 
 export const run = async () => {
   const loader = new CollegeConfidentialLoader(

@@ -16,7 +16,7 @@ Embeddings can be used to create a numerical representation of textual data. Thi
 Below is an example of how to use the OpenAI embeddings. Embeddings occasionally have different embedding methods for queries versus documents, so the embedding class exposes a `embedQuery` and `embedDocuments` method.
 
 ```typescript
-import { OpenAIEmbeddings } from "langchain/embeddings";
+import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 
 /* Create instance */
 const embeddings = new OpenAIEmbeddings();

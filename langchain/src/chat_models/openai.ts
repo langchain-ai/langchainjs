@@ -173,7 +173,10 @@ export class ChatOpenAI extends BaseChatModel implements OpenAIInput {
   ) {
     super(fields ?? {});
 
-    const apiKey = fields?.openAIApiKey ?? process.env.OPENAI_API_KEY;
+    const apiKey =
+      fields?.openAIApiKey ??
+      // eslint-disable-next-line no-process-env
+      (typeof process !== "undefined" ? process.env.OPENAI_API_KEY : undefined);
     if (!apiKey) {
       throw new Error("OpenAI API key not found");
     }
@@ -198,7 +201,7 @@ export class ChatOpenAI extends BaseChatModel implements OpenAIInput {
     }
 
     this.clientConfig = {
-      apiKey: fields?.openAIApiKey ?? process.env.OPENAI_API_KEY,
+      apiKey,
       ...configuration,
     };
   }
@@ -247,7 +250,7 @@ export class ChatOpenAI extends BaseChatModel implements OpenAIInput {
    *
    * @example
    * ```ts
-   * import { OpenAI } from "langchain/llms";
+   * import { OpenAI } from "langchain/llms/openai";
    * const openai = new OpenAI();
    * const response = await openai.generate(["Tell me a joke."]);
    * ```
@@ -352,7 +355,7 @@ export class ChatOpenAI extends BaseChatModel implements OpenAIInput {
       : await this.completionWithRetry({
           ...params,
           messages: messagesMapped,
-        }).then((res) => res.data);
+        });
 
     const {
       completion_tokens: completionTokens,
@@ -435,11 +438,13 @@ export class ChatOpenAI extends BaseChatModel implements OpenAIInput {
       });
       this.client = new OpenAIApi(clientConfig);
     }
-    return this.caller.call(
-      this.client.createChatCompletion.bind(this.client),
-      request,
-      options
-    );
+    return this.caller
+      .call(
+        this.client.createChatCompletion.bind(this.client),
+        request,
+        options
+      )
+      .then((res) => res.data);
   }
 
   _llmType() {

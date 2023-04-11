@@ -1,5 +1,3 @@
-import fs from "node:fs/promises";
-import path from "node:path";
 import type {
   HierarchicalNSW as HierarchicalNSWT,
   SpaceName,
@@ -133,6 +131,8 @@ export class HNSWLib extends SaveableVectorStore {
   }
 
   async save(directory: string) {
+    const fs = await import("node:fs/promises");
+    const path = await import("node:path");
     await fs.mkdir(directory, { recursive: true });
     await Promise.all([
       this.index.writeIndex(path.join(directory, "hnswlib.index")),
@@ -148,6 +148,8 @@ export class HNSWLib extends SaveableVectorStore {
   }
 
   static async load(directory: string, embeddings: Embeddings) {
+    const fs = await import("node:fs/promises");
+    const path = await import("node:path");
     const args = JSON.parse(
       await fs.readFile(path.join(directory, "args.json"), "utf8")
     );

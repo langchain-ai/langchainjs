@@ -1,4 +1,4 @@
-import { Tool } from "./tools/index.js";
+import { Tool } from "../tools/base.js";
 import { AgentExecutor } from "./executor.js";
 import { ZeroShotAgent } from "./mrkl/index.js";
 import { ChatConversationalAgent } from "./chat_convo/index.js";
