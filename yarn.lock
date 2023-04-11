@@ -223,6 +223,7 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@aws-crypto/crc32c@npm:3.0.0":
   version: 3.0.0
   resolution: "@aws-crypto/crc32c@npm:3.0.0"
   dependencies:
