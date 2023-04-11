@@ -1,5 +1,5 @@
 import { BaseChain } from "./base.js";
-import { BaseLLM } from "../llms/index.js";
+import { BaseLLM } from "../llms/base.js";
 import { SerializedVectorDBQAChain } from "./serde.js";
 import { ChainValues, BaseRetriever } from "../schema/index.js";
 import { loadQAStuffChain } from "./question_answering/load.js";

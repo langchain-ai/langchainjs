@@ -8,8 +8,8 @@ import {
   OpenAIApi,
 } from "openai";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
-import type { StreamingAxiosConfiguration } from "../util/axios-fetch-adapter.js";
-import { chunkArray } from "../util/index.js";
+import type { StreamingAxiosConfiguration } from "../util/axios-types.js";
+import { chunkArray } from "../util/chunk.js";
 import { BaseLLM, BaseLLMParams } from "./base.js";
 import { calculateMaxTokens } from "../base_language/count_tokens.js";
 import { OpenAIChat } from "./openai-chat.js";
@@ -146,7 +146,10 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
     }
     super(fields ?? {});
 
-    const apiKey = fields?.openAIApiKey ?? process.env.OPENAI_API_KEY;
+    const apiKey =
+      fields?.openAIApiKey ??
+      // eslint-disable-next-line no-process-env
+      (typeof process !== "undefined" ? process.env.OPENAI_API_KEY : undefined);
     if (!apiKey) {
       throw new Error("OpenAI API key not found");
     }
@@ -227,7 +230,7 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
    *
    * @example
    * ```ts
-   * import { OpenAI } from "langchain/llms";
+   * import { OpenAI } from "langchain/llms/openai";
    * const openai = new OpenAI();
    * const response = await openai.generate(["Tell me a joke."]);
    * ```
@@ -317,7 +320,7 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
         : await this.completionWithRetry({
             ...params,
             prompt: subPrompts[i],
-          }).then((res) => res.data);
+          });
 
       choices.push(...data.choices);
 
@@ -372,11 +375,9 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
       });
       this.client = new OpenAIApi(clientConfig);
     }
-    return this.caller.call(
-      this.client.createCompletion.bind(this.client),
-      request,
-      options
-    );
+    return this.caller
+      .call(this.client.createCompletion.bind(this.client), request, options)
+      .then((res) => res.data);
   }
 
   _llmType() {
@@ -403,7 +404,11 @@ export class PromptLayerOpenAI extends OpenAI {
 
     this.plTags = fields?.plTags ?? [];
     this.promptLayerApiKey =
-      fields?.promptLayerApiKey ?? process.env.PROMPTLAYER_API_KEY;
+      fields?.promptLayerApiKey ??
+      (typeof process !== "undefined"
+        ? // eslint-disable-next-line no-process-env
+          process.env.PROMPTLAYER_API_KEY
+        : undefined);
 
     if (!this.promptLayerApiKey) {
       throw new Error("Missing PromptLayer API key");
@@ -434,13 +439,15 @@ export class PromptLayerOpenAI extends OpenAI {
         args: [],
         kwargs: { engine: request.model, prompt: request.prompt },
         tags: this.plTags ?? [],
-        request_response: response.data,
+        request_response: response,
         request_start_time: Math.floor(requestStartTime / 1000),
         request_end_time: Math.floor(requestEndTime / 1000),
-        api_key: process.env.PROMPTLAYER_API_KEY,
+        api_key: this.promptLayerApiKey,
       }),
     });
 
     return response;
   }
 }
+
+export { OpenAIChat } from "./openai-chat.js";

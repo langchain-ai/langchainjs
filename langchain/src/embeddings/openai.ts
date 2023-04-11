@@ -5,7 +5,7 @@ import {
   ConfigurationParameters,
 } from "openai";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
-import { chunkArray } from "../util/index.js";
+import { chunkArray } from "../util/chunk.js";
 import { Embeddings, EmbeddingsParams } from "./base.js";
 
 interface ModelParams {
@@ -51,7 +51,10 @@ export class OpenAIEmbeddings extends Embeddings implements ModelParams {
   ) {
     super(fields ?? {});
 
-    const apiKey = fields?.openAIApiKey ?? process.env.OPENAI_API_KEY;
+    const apiKey =
+      fields?.openAIApiKey ??
+      // eslint-disable-next-line no-process-env
+      (typeof process !== "undefined" ? process.env.OPENAI_API_KEY : undefined);
     if (!apiKey) {
       throw new Error("OpenAI API key not found");
     }

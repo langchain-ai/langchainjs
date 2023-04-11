@@ -1,10 +1,11 @@
+/* eslint-disable no-process-env */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { beforeEach, describe, expect, test } from "@jest/globals";
 import { faker } from "@faker-js/faker";
 import { PineconeClient } from "@pinecone-database/pinecone";
 import { v4 as uuidv4 } from "uuid";
 import { Document } from "../../document.js";
-import { OpenAIEmbeddings } from "../../embeddings/index.js";
+import { OpenAIEmbeddings } from "../../embeddings/openai.js";
 import { PineconeStore } from "../pinecone.js";
 
 describe("PineconeStore", () => {

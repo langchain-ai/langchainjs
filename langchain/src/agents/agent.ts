@@ -1,6 +1,6 @@
 import { BaseLanguageModel } from "../base_language/index.js";
 import { LLMChain } from "../chains/llm_chain.js";
-import { BasePromptTemplate } from "../prompts/index.js";
+import { BasePromptTemplate } from "../prompts/base.js";
 import {
   AgentAction,
   AgentFinish,
@@ -14,7 +14,7 @@ import {
   StoppingMethod,
   AgentActionOutputParser,
 } from "./types.js";
-import { Tool } from "./tools/base.js";
+import { Tool } from "../tools/base.js";
 
 class ParseError extends Error {
   output: string;
@@ -25,7 +25,7 @@ class ParseError extends Error {
   }
 }
 
-export abstract class BaseSingleActionAgent {
+export abstract class BaseAgent {
   abstract get inputKeys(): string[];
 
   get returnValues(): string[] {
@@ -44,17 +44,9 @@ export abstract class BaseSingleActionAgent {
   }
 
   /**
-   * Decide what to do given some input.
-   *
-   * @param steps - Steps the LLM has taken so far, along with observations from each.
-   * @param inputs - User inputs.
-   *
-   * @returns Action specifying what tool to use.
+   * Return the string type key uniquely identifying multi or single action agents.
    */
-  abstract plan(
-    steps: AgentStep[],
-    inputs: ChainValues
-  ): Promise<AgentAction | AgentFinish>;
+  abstract _agentActionType(): string;
 
   /**
    * Return response when agent has been stopped due to max iterations
@@ -85,6 +77,44 @@ export abstract class BaseSingleActionAgent {
   }
 }
 
+export abstract class BaseSingleActionAgent extends BaseAgent {
+  _agentActionType(): string {
+    return "single" as const;
+  }
+
+  /**
+   * Decide what to do, given some input.
+   *
+   * @param steps - Steps the LLM has taken so far, along with observations from each.
+   * @param inputs - User inputs.
+   *
+   * @returns Action specifying what tool to use.
+   */
+  abstract plan(
+    steps: AgentStep[],
+    inputs: ChainValues
+  ): Promise<AgentAction | AgentFinish>;
+}
+
+export abstract class BaseMultiActionAgent extends BaseAgent {
+  _agentActionType(): string {
+    return "multi" as const;
+  }
+
+  /**
+   * Decide what to do, given some input.
+   *
+   * @param steps - Steps the LLM has taken so far, along with observations from each.
+   * @param inputs - User inputs.
+   *
+   * @returns Actions specifying what tools to use.
+   */
+  abstract plan(
+    steps: AgentStep[],
+    inputs: ChainValues
+  ): Promise<AgentAction[] | AgentFinish>;
+}
+
 export interface LLMSingleActionAgentInput {
   llmChain: LLMChain;
   outputParser: AgentActionOutputParser;
@@ -100,6 +130,7 @@ export class LLMSingleActionAgent extends BaseSingleActionAgent {
 
   constructor(input: LLMSingleActionAgentInput) {
     super();
+    this.stop = input.stop;
     this.llmChain = input.llmChain;
     this.outputParser = input.outputParser;
   }
@@ -182,8 +213,8 @@ export abstract class Agent extends BaseSingleActionAgent {
   /**
    * Create a prompt for this class
    *
-   * @param tools - List of tools the agent will have access to, used to format the prompt.
-   * @param fields - Additional fields used to format the prompt.
+   * @param _tools - List of tools the agent will have access to, used to format the prompt.
+   * @param _fields - Additional fields used to format the prompt.
    *
    * @returns A PromptTemplate assembled from the given tools and fields.
    * */
@@ -311,6 +342,8 @@ export abstract class Agent extends BaseSingleActionAgent {
 
         return { returnValues: { output: action.log }, log: action.log };
       } catch (err) {
+        // fine to use instanceof because we're in the same module
+        // eslint-disable-next-line no-instanceof/no-instanceof
         if (!(err instanceof ParseError)) {
           throw err;
         }
