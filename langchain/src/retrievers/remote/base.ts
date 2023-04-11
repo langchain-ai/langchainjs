@@ -32,7 +32,7 @@ export abstract class RemoteRetriever
 
   asyncCaller: AsyncCaller;
 
-  protected constructor({ url, auth, ...rest }: RemoteRetrieverParams) {
+  constructor({ url, auth, ...rest }: RemoteRetrieverParams) {
     super();
     this.url = url;
     this.auth = auth;
