@@ -1,12 +1,7 @@
-import { PromptTemplate } from "../prompts/index.js";
+import { PromptTemplate } from "../prompts/prompt.js";
 import { BaseLanguageModel } from "../base_language/index.js";
 import { VectorStore } from "../vectorstores/base.js";
-import {
-  SerializedBaseChain,
-  SerializedChatVectorDBQAChain,
-  SerializedLLMChain,
-} from "./serde.js";
-import { resolveConfigFromFile } from "../util/index.js";
+import { SerializedChatVectorDBQAChain } from "./serde.js";
 import { ChainValues } from "../schema/index.js";
 import { BaseChain } from "./base.js";
 import { LLMChain } from "./llm_chain.js";
@@ -136,21 +131,13 @@ export class ChatVectorDBQAChain
       );
     }
     const { vectorstore } = values;
-    const serializedCombineDocumentsChain = await resolveConfigFromFile<
-      "combine_documents_chain",
-      SerializedBaseChain
-    >("combine_documents_chain", data);
-    const serializedQuestionGeneratorChain = await resolveConfigFromFile<
-      "question_generator",
-      SerializedLLMChain
-    >("question_generator", data);
 
     return new ChatVectorDBQAChain({
       combineDocumentsChain: await BaseChain.deserialize(
-        serializedCombineDocumentsChain
+        data.combine_documents_chain
       ),
       questionGeneratorChain: await LLMChain.deserialize(
-        serializedQuestionGeneratorChain
+        data.question_generator
       ),
       k: data.k,
       vectorstore,

@@ -1,4 +1,4 @@
-import { backOff } from "exponential-backoff";
+import pRetry from "p-retry";
 import PQueueMod from "p-queue";
 
 export interface AsyncCallerParams {
@@ -32,7 +32,7 @@ export class AsyncCaller {
 
   protected maxRetries: AsyncCallerParams["maxRetries"];
 
-  protected queue: PQueueMod.default;
+  private queue: typeof import("p-queue")["default"]["prototype"];
 
   constructor(params: AsyncCallerParams) {
     this.maxConcurrency = params.maxConcurrency ?? Infinity;
@@ -49,12 +49,23 @@ export class AsyncCaller {
   ): Promise<Awaited<ReturnType<T>>> {
     return this.queue.add(
       () =>
-        backOff(() => callable(...args), {
-          numOfAttempts: this.maxRetries,
-          jitter: "full",
-          // If needed we can change some of the defaults here,
-          // but they're quite sensible.
-        }),
+        pRetry(
+          () =>
+            callable(...args).catch((error) => {
+              // eslint-disable-next-line no-instanceof/no-instanceof
+              if (error instanceof Error) {
+                throw error;
+              } else {
+                throw new Error(error);
+              }
+            }),
+          {
+            retries: this.maxRetries,
+            randomize: true,
+            // If needed we can change some of the defaults here,
+            // but they're quite sensible.
+          }
+        ),
       { throwOnTimeout: true }
     );
   }

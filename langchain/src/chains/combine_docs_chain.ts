@@ -1,16 +1,16 @@
 import type {
-  SerializedLLMChain,
-  SerializedBaseChain,
   SerializedStuffDocumentsChain,
   SerializedMapReduceDocumentsChain,
+  SerializedRefineDocumentsChain,
 } from "./serde.js";
 import { BaseChain } from "./base.js";
 import { LLMChain } from "./llm_chain.js";
 
 import { Document } from "../document.js";
 
-import { resolveConfigFromFile } from "../util/index.js";
 import { ChainValues } from "../schema/index.js";
+import { BasePromptTemplate } from "../prompts/base.js";
+import { PromptTemplate } from "../prompts/prompt.js";
 
 export interface StuffDocumentsChainInput {
   /** LLM Wrapper to use after formatting documents */
@@ -75,13 +75,12 @@ export class StuffDocumentsChain
   }
 
   static async deserialize(data: SerializedStuffDocumentsChain) {
-    const SerializedLLMChain = await resolveConfigFromFile<
-      "llm_chain",
-      SerializedLLMChain
-    >("llm_chain", data);
+    if (!data.llm_chain) {
+      throw new Error("Missing llm_chain");
+    }
 
     return new StuffDocumentsChain({
-      llmChain: await LLMChain.deserialize(SerializedLLMChain),
+      llmChain: await LLMChain.deserialize(data.llm_chain),
     });
   }
 
@@ -100,7 +99,7 @@ export interface MapReduceDocumentsChainInput extends StuffDocumentsChainInput {
 }
 
 /**
- * Chain that combines documents by stuffing into context.
+ * Combine documents by mapping a chain over them, then combining results.
  * @augments BaseChain
  * @augments StuffDocumentsChainInput
  */
@@ -195,20 +194,18 @@ export class MapReduceDocumentsChain
   }
 
   static async deserialize(data: SerializedMapReduceDocumentsChain) {
-    const SerializedLLMChain = await resolveConfigFromFile<
-      "llm_chain",
-      SerializedLLMChain
-    >("llm_chain", data);
+    if (!data.llm_chain) {
+      throw new Error("Missing llm_chain");
+    }
 
-    const SerializedCombineDocumentChain = await resolveConfigFromFile<
-      "combine_document_chain",
-      SerializedBaseChain
-    >("combine_document_chain", data);
+    if (!data.combine_document_chain) {
+      throw new Error("Missing combine_document_chain");
+    }
 
     return new MapReduceDocumentsChain({
-      llmChain: await LLMChain.deserialize(SerializedLLMChain),
+      llmChain: await LLMChain.deserialize(data.llm_chain),
       combineDocumentChain: await BaseChain.deserialize(
-        SerializedCombineDocumentChain
+        data.combine_document_chain
       ),
     });
   }
@@ -218,6 +215,157 @@ export class MapReduceDocumentsChain
       _type: this._chainType(),
       llm_chain: this.llmChain.serialize(),
       combine_document_chain: this.combineDocumentChain.serialize(),
+    };
+  }
+}
+
+export interface RefineDocumentsChainInput extends StuffDocumentsChainInput {
+  refineLLMChain: LLMChain;
+  documentPrompt: BasePromptTemplate;
+}
+
+/**
+ * Combine documents by doing a first pass and then refining on more documents.
+ * @augments BaseChain
+ * @augments RefineDocumentsChainInput
+ */
+export class RefineDocumentsChain
+  extends BaseChain
+  implements RefineDocumentsChainInput
+{
+  llmChain: LLMChain;
+
+  inputKey = "input_documents";
+
+  outputKey = "output_text";
+
+  documentVariableName = "context";
+
+  initialResponseName = "existing_answer";
+
+  refineLLMChain: LLMChain;
+
+  get defaultDocumentPrompt(): BasePromptTemplate {
+    return new PromptTemplate({
+      inputVariables: ["page_content"],
+      template: "{page_content}",
+    });
+  }
+
+  documentPrompt = this.defaultDocumentPrompt;
+
+  get inputKeys() {
+    return [this.inputKey, ...this.refineLLMChain.inputKeys];
+  }
+
+  constructor(fields: {
+    llmChain: LLMChain;
+    refineLLMChain: LLMChain;
+    inputKey?: string;
+    outputKey?: string;
+    documentVariableName?: string;
+    documentPrompt?: BasePromptTemplate;
+    initialResponseName?: string;
+  }) {
+    super();
+    this.llmChain = fields.llmChain;
+    this.refineLLMChain = fields.refineLLMChain;
+    this.documentVariableName =
+      fields.documentVariableName ?? this.documentVariableName;
+    this.inputKey = fields.inputKey ?? this.inputKey;
+    this.documentPrompt = fields.documentPrompt ?? this.documentPrompt;
+    this.initialResponseName =
+      fields.initialResponseName ?? this.initialResponseName;
+  }
+
+  _constructInitialInputs(doc: Document, rest: Record<string, unknown>) {
+    const baseInfo: Record<string, unknown> = {
+      page_content: doc.pageContent,
+      ...doc.metadata,
+    };
+    const documentInfo: Record<string, unknown> = {};
+    this.documentPrompt.inputVariables.forEach((value) => {
+      documentInfo[value] = baseInfo[value];
+    });
+
+    const baseInputs: Record<string, unknown> = {
+      [this.documentVariableName]: this.documentPrompt.format({
+        ...documentInfo,
+      }),
+    };
+    const inputs = { ...baseInputs, ...rest };
+    return inputs;
+  }
+
+  _constructRefineInputs(doc: Document, res: string) {
+    const baseInfo: Record<string, unknown> = {
+      page_content: doc.pageContent,
+      ...doc.metadata,
+    };
+    const documentInfo: Record<string, unknown> = {};
+    this.documentPrompt.inputVariables.forEach((value) => {
+      documentInfo[value] = baseInfo[value];
+    });
+    const baseInputs: Record<string, unknown> = {
+      [this.documentVariableName]: this.documentPrompt.format({
+        ...documentInfo,
+      }),
+    };
+    const inputs = { [this.initialResponseName]: res, ...baseInputs };
+    return inputs;
+  }
+
+  async _call(values: ChainValues): Promise<ChainValues> {
+    if (!(this.inputKey in values)) {
+      throw new Error(`Document key ${this.inputKey} not found.`);
+    }
+    const { [this.inputKey]: docs, ...rest } = values;
+
+    const currentDocs = docs as Document[];
+
+    const initialInputs = this._constructInitialInputs(currentDocs[0], rest);
+    let res = await this.llmChain.predict({ ...initialInputs });
+
+    const refineSteps = [res];
+
+    for (let i = 1; i < currentDocs.length; i += 1) {
+      const refineInputs = this._constructRefineInputs(currentDocs[i], res);
+      const inputs = { ...refineInputs, ...rest };
+      res = await this.refineLLMChain.predict({ ...inputs });
+      refineSteps.push(res);
+    }
+
+    return { [this.outputKey]: res };
+  }
+
+  _chainType() {
+    return "refine_documents_chain" as const;
+  }
+
+  static async deserialize(data: SerializedRefineDocumentsChain) {
+    const SerializedLLMChain = data.llm_chain;
+
+    if (!SerializedLLMChain) {
+      throw new Error("Missing llm_chain");
+    }
+
+    const SerializedRefineDocumentChain = data.refine_llm_chain;
+
+    if (!SerializedRefineDocumentChain) {
+      throw new Error("Missing refine_llm_chain");
+    }
+
+    return new RefineDocumentsChain({
+      llmChain: await LLMChain.deserialize(SerializedLLMChain),
+      refineLLMChain: await LLMChain.deserialize(SerializedRefineDocumentChain),
+    });
+  }
+
+  serialize(): SerializedRefineDocumentsChain {
+    return {
+      _type: this._chainType(),
+      llm_chain: this.llmChain.serialize(),
+      refine_llm_chain: this.refineLLMChain.serialize(),
     };
   }
 }
