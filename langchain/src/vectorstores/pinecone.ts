@@ -1,4 +1,3 @@
-import type { VectorOperationsApi } from "@pinecone-database/pinecone/dist/pinecone-generated-ts-fetch";
 import { v4 as uuidv4 } from "uuid";
 import flatten from "flat";
 
@@ -8,6 +7,10 @@ import { Document } from "../document.js";
 
 // eslint-disable-next-line @typescript-eslint/ban-types, @typescript-eslint/no-explicit-any
 type PineconeMetadata = Record<string, any>;
+
+type VectorOperationsApi = ReturnType<
+  import("@pinecone-database/pinecone").PineconeClient["Index"]
+>;
 
 export interface PineconeLibArgs {
   pineconeIndex: VectorOperationsApi;
@@ -50,14 +53,26 @@ export class PineconeStore extends VectorStore {
     ids?: string[]
   ): Promise<void> {
     const documentIds = ids == null ? documents.map(() => uuidv4()) : ids;
-    const pineconeVectors = vectors.map((values, idx) => ({
-      id: documentIds[idx],
-      metadata: flatten({
+    const pineconeVectors = vectors.map((values, idx) => {
+      // Pinecone doesn't support nested objects, so we flatten them
+      const metadata: {
+        [key: string]: string | number | boolean | null;
+      } = flatten({
         ...documents[idx].metadata,
         [this.textKey]: documents[idx].pageContent,
-      }) as object,
-      values,
-    }));
+      });
+      // Pinecone doesn't support null values, so we remove them
+      for (const key of Object.keys(metadata)) {
+        if (metadata[key] == null) {
+          delete metadata[key];
+        }
+      }
+      return {
+        id: documentIds[idx],
+        metadata,
+        values,
+      };
+    });
 
     // Pinecone recommends a limit of 100 vectors per upsert request
     const chunkSize = 50;

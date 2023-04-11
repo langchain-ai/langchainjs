@@ -1,15 +1,15 @@
+import { Tool } from "../../../tools/base.js";
 import {
-  Tool,
   InfoSqlTool,
   ListTablesSqlTool,
   QueryCheckerTool,
   QuerySqlTool,
-} from "../../tools/index.js";
+} from "../../../tools/sql.js";
 import { Toolkit } from "../base.js";
 import { BaseLanguageModel } from "../../../base_language/index.js";
 import { SQL_PREFIX, SQL_SUFFIX } from "./prompt.js";
 import { renderTemplate } from "../../../prompts/template.js";
-import { LLMChain } from "../../../chains/index.js";
+import { LLMChain } from "../../../chains/llm_chain.js";
 import { ZeroShotAgent, CreatePromptArgs } from "../../mrkl/index.js";
 import { AgentExecutor } from "../../executor.js";
 import { SqlDatabase } from "../../../sql_db.js";

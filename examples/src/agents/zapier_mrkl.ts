@@ -1,4 +1,4 @@
-import { OpenAI } from "langchain";
+import { OpenAI } from "langchain/llms/openai";
 import { initializeAgentExecutor, ZapierToolKit } from "langchain/agents";
 import { ZapierNLAWrapper } from "langchain/tools";
 

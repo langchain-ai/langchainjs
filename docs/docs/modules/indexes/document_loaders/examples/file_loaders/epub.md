@@ -15,7 +15,7 @@ npm install epub2 html-to-text
 # Usage, one document per chapter
 
 ```typescript
-import { EPubLoader } from "langchain/document_loaders";
+import { EPubLoader } from "langchain/document_loaders/fs/epub";
 
 const loader = new EPubLoader("src/document_loaders/example_data/example.epub");
 
@@ -25,7 +25,7 @@ const docs = await loader.load();
 # Usage, one document per file
 
 ```typescript
-import { EPubLoader } from "langchain/document_loaders";
+import { EPubLoader } from "langchain/document_loaders/fs/epub";
 
 const loader = new EPubLoader(
   "src/document_loaders/example_data/example.epub",

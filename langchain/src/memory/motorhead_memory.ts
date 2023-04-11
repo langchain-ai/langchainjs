@@ -5,7 +5,6 @@ import {
   MemoryVariables,
   getBufferString,
 } from "./base.js";
-import { fetchWithTimeout } from "../util/index.js";
 import { AsyncCaller, AsyncCallerParams } from "../util/async_caller.js";
 
 export interface MotorheadMemoryMessage {
@@ -57,10 +56,10 @@ export class MotorheadMemory extends BaseChatMemory {
 
   async init(): Promise<void> {
     const res = await this.caller.call(
-      fetchWithTimeout,
+      fetch,
       `${this.motorheadURL}/sessions/${this.sessionId}/memory`,
       {
-        timeout: this.timeout,
+        signal: this.timeout ? AbortSignal.timeout(this.timeout) : undefined,
         headers: {
           "Content-Type": "application/json",
         },
@@ -101,10 +100,10 @@ export class MotorheadMemory extends BaseChatMemory {
   ): Promise<void> {
     await Promise.all([
       this.caller.call(
-        fetchWithTimeout,
+        fetch,
         `${this.motorheadURL}/sessions/${this.sessionId}/memory`,
         {
-          timeout: this.timeout,
+          signal: this.timeout ? AbortSignal.timeout(this.timeout) : undefined,
           method: "POST",
           body: JSON.stringify({
             messages: [

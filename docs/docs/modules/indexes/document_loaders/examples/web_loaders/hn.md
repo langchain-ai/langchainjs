@@ -15,7 +15,7 @@ npm install cheerio
 ## Usage
 
 ```typescript
-import { HNLoader } from "langchain/document_loaders";
+import { HNLoader } from "langchain/document_loaders/web/hn";
 
 const loader = new HNLoader("https://news.ycombinator.com/item?id=34817881");
 

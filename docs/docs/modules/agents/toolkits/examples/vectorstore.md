@@ -3,9 +3,9 @@
 This example shows how to load and use an agent with a vectorstore toolkit.
 
 ```typescript
-import { OpenAI } from "langchain";
-import { HNSWLib } from "langchain/vectorstores";
-import { OpenAIEmbeddings } from "langchain/embeddings";
+import { OpenAI } from "langchain/llms/openai";
+import { HNSWLib } from "langchain/vectorstores/hnswlib";
+import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import * as fs from "fs";
 import {

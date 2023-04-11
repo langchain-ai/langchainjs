@@ -1,6 +1,6 @@
 import { PineconeClient } from "@pinecone-database/pinecone";
-import { OpenAIEmbeddings } from "langchain/embeddings";
-import { PineconeStore } from "langchain/vectorstores";
+import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { PineconeStore } from "langchain/vectorstores/pinecone";
 
 // To run this example, first [create a Pinecone index](https://app.pinecone.io/organizations)
 // It must have 1536 dimensions, to match the OpenAI embedding size.

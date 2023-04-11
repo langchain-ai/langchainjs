@@ -1,5 +1,5 @@
-import { PromptTemplate } from "../prompts/index.js";
-import { BaseLLM } from "../llms/index.js";
+import { PromptTemplate } from "../prompts/prompt.js";
+import { BaseLLM } from "../llms/base.js";
 import { SerializedChatVectorDBQAChain } from "./serde.js";
 import { ChainValues, BaseRetriever } from "../schema/index.js";
 import { BaseChain } from "./base.js";
