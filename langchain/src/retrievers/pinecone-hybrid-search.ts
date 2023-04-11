@@ -58,7 +58,7 @@ export class PineconeHybridSearchRetriever extends BaseRetriever {
     });
   }
 
-  async addTexts(texts: string[]): Promise<void> {
+  async addTexts(texts: string[], metadatas: object[] | object): Promise<void> {
     const batchSize = 32;
 
     for (let i = 0; i < texts.length; i += batchSize) {
@@ -67,7 +67,6 @@ export class PineconeHybridSearchRetriever extends BaseRetriever {
       const ids = Array.from({ length: iEnd - i }, (_, idx) =>
         (i + idx).toString()
       );
-      const meta = contextBatch.map((context) => ({ context }));
 
       const denseEmbeds = await this.embeddings.embedDocuments(contextBatch);
       const tokenIdsBatch = contextBatch.map((text) =>
@@ -75,12 +74,18 @@ export class PineconeHybridSearchRetriever extends BaseRetriever {
       );
       const sparseEmbeds = this.buildDict(tokenIdsBatch);
 
-      const vectors = ids.map((id, idx) => ({
-        id,
-        sparse_values: sparseEmbeds[idx],
-        values: denseEmbeds[idx],
-        metadata: meta[idx],
-      }));
+      const vectors = ids.map((id, idx) => {
+        const metadata = Array.isArray(metadatas)
+          ? metadatas[i + idx]
+          : metadatas;
+
+        return {
+          id,
+          sparse_values: sparseEmbeds[idx],
+          values: denseEmbeds[idx],
+          metadata: { [this.textKey]: contextBatch[idx], ...metadata },
+        };
+      });
 
       await this.pineconeIndex.upsert({
         upsertRequest: { vectors, namespace: this.namespace },
