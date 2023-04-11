@@ -27,7 +27,7 @@ export const getText = (html: string, baseUrl: string): string => {
         href = new URL(href, baseUrl).toString();
       }
 
-      const imgAlt = $el.find("img[alt]").attr("alt");
+      const imgAlt = $el.find("img[alt]").attr("alt")?.trim();
       if (imgAlt) {
         content += ` ${imgAlt}`;
       }
@@ -40,7 +40,7 @@ export const getText = (html: string, baseUrl: string): string => {
     }
   });
 
-  text = text.replace(/\n/g, " ");
+  text = text.trim().replace(/\n+/g, " ");
   return text;
 };
 
