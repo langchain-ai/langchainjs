@@ -1,4 +1,4 @@
-import {DataberryRetriever} from "langchain/retrievers/databerry";
+import { DataberryRetriever } from "langchain/retrievers/databerry";
 
 export const run = async () => {
   const retriever = new DataberryRetriever({
