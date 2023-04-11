@@ -91,6 +91,9 @@
     "vectorstores/supabase.cjs",
     "vectorstores/supabase.js",
     "vectorstores/supabase.d.ts",
+    "vectorstores/milvus.cjs",
+    "vectorstores/milvus.js",
+    "vectorstores/milvus.d.ts",
     "vectorstores/prisma.cjs",
     "vectorstores/prisma.js",
     "vectorstores/prisma.d.ts",
@@ -296,6 +299,7 @@
     "@huggingface/inference": "^1.5.1",
     "@pinecone-database/pinecone": "*",
     "@supabase/supabase-js": "^2.10.0",
+    "@zilliz/milvus2-sdk-node": "^2.2.0",
     "cheerio": "^1.0.0-rc.12",
     "chromadb": "^1.3.0",
     "cohere-ai": "^5.0.2",
@@ -326,6 +330,9 @@
       "optional": true
     },
     "@supabase/supabase-js": {
+      "optional": true
+    },
+    "@zilliz/milvus2-sdk-node": {
       "optional": true
     },
     "cheerio": {
@@ -553,6 +560,11 @@
       "types": "./vectorstores/supabase.d.ts",
       "import": "./vectorstores/supabase.js",
       "require": "./vectorstores/supabase.cjs"
+    },
+    "./vectorstores/milvus": {
+      "types": "./vectorstores/milvus.d.ts",
+      "import": "./vectorstores/milvus.js",
+      "require": "./vectorstores/milvus.cjs"
     },
     "./vectorstores/prisma": {
       "types": "./vectorstores/prisma.d.ts",

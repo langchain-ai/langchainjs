@@ -79,6 +79,9 @@ vectorstores/pinecone.d.ts
 vectorstores/supabase.cjs
 vectorstores/supabase.js
 vectorstores/supabase.d.ts
+vectorstores/milvus.cjs
+vectorstores/milvus.js
+vectorstores/milvus.d.ts
 vectorstores/prisma.cjs
 vectorstores/prisma.js
 vectorstores/prisma.d.ts
