@@ -1,9 +1,14 @@
 ---
 sidebar_position: 3
 hide_table_of_contents: true
+sidebar_class_name: node-only
 ---
 
 # Webpages, with Playwright
+
+:::tip Compatibility
+Only available on Node.js.
+:::
 
 This example goes over how to load data from webpages using Playwright. One document will be created for each webpage.
 
