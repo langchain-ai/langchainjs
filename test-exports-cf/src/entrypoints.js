@@ -22,4 +22,5 @@ export * from "langchain/schema";
 export * from "langchain/callbacks";
 export * from "langchain/output_parsers";
 export * from "langchain/retrievers/remote";
+export * from "langchain/retrievers/databerry";
 export * from "langchain/cache";
