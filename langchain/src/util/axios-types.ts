@@ -1,4 +1,4 @@
-import type { EventSourceMessage } from "@fortaine/fetch-event-source";
+import type { EventSourceMessage } from "./event-source-parse.js";
 
 export interface StreamingAxiosConfiguration {
   responseType: "stream";

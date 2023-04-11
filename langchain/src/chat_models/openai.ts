@@ -250,7 +250,7 @@ export class ChatOpenAI extends BaseChatModel implements OpenAIInput {
    *
    * @example
    * ```ts
-   * import { OpenAI } from "langchain/llms";
+   * import { OpenAI } from "langchain/llms/openai";
    * const openai = new OpenAI();
    * const response = await openai.generate(["Tell me a joke."]);
    * ```
@@ -355,7 +355,7 @@ export class ChatOpenAI extends BaseChatModel implements OpenAIInput {
       : await this.completionWithRetry({
           ...params,
           messages: messagesMapped,
-        }).then((res) => res.data);
+        });
 
     const {
       completion_tokens: completionTokens,
@@ -438,11 +438,13 @@ export class ChatOpenAI extends BaseChatModel implements OpenAIInput {
       });
       this.client = new OpenAIApi(clientConfig);
     }
-    return this.caller.call(
-      this.client.createChatCompletion.bind(this.client),
-      request,
-      options
-    );
+    return this.caller
+      .call(
+        this.client.createChatCompletion.bind(this.client),
+        request,
+        options
+      )
+      .then((res) => res.data);
   }
 
   _llmType() {

@@ -1,4 +1,4 @@
-import { Replicate } from "langchain/llms";
+import { Replicate } from "langchain/llms/replicate";
 
 export const run = async () => {
   const modelA = new Replicate({

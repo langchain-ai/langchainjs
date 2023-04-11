@@ -12,12 +12,12 @@
  */
 
 import axios from "axios";
-import { EventStreamContentType } from "@fortaine/fetch-event-source";
 import {
+  EventStreamContentType,
   getLines,
   getBytes,
   getMessages,
-} from "@fortaine/fetch-event-source/parse";
+} from "./event-source-parse.js";
 
 /**
  * In order to avoid import issues with axios 1.x, copying here the internal
@@ -314,6 +314,10 @@ function createRequest(config) {
   }
   if (config.timeout && config.timeout > 0) {
     options.signal = AbortSignal.timeout(config.timeout);
+  }
+  if (config.signal) {
+    // this overrides the timeout signal if both are set
+    options.signal = config.signal;
   }
   // This config is similar to XHR’s withCredentials flag, but with three available values instead of two.
   // So if withCredentials is not set, default value 'same-origin' will be used

@@ -1,5 +1,5 @@
 import { BaseOutputParser, OutputParserException } from "../schema/index.js";
-import { BasePromptTemplate } from "../prompts/index.js";
+import { BasePromptTemplate } from "../prompts/base.js";
 import { LLMChain } from "../chains/llm_chain.js";
 import { BaseLanguageModel } from "../base_language/index.js";
 import { NAIVE_FIX_PROMPT } from "./prompts.js";
@@ -37,6 +37,7 @@ export class OutputFixingParser extends BaseOutputParser {
     try {
       return await this.parser.parse(completion);
     } catch (e) {
+      // eslint-disable-next-line no-instanceof/no-instanceof
       if (e instanceof OutputParserException) {
         const result = await this.retryChain.call({
           instructions: this.parser.getFormatInstructions(),
