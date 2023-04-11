@@ -53,14 +53,26 @@ export class PineconeStore extends VectorStore {
     ids?: string[]
   ): Promise<void> {
     const documentIds = ids == null ? documents.map(() => uuidv4()) : ids;
-    const pineconeVectors = vectors.map((values, idx) => ({
-      id: documentIds[idx],
-      metadata: flatten({
+    const pineconeVectors = vectors.map((values, idx) => {
+      // Pinecone doesn't support nested objects, so we flatten them
+      const metadata: {
+        [key: string]: string | number | boolean | null;
+      } = flatten({
         ...documents[idx].metadata,
         [this.textKey]: documents[idx].pageContent,
-      }) as object,
-      values,
-    }));
+      });
+      // Pinecone doesn't support null values, so we remove them
+      for (const key of Object.keys(metadata)) {
+        if (metadata[key] == null) {
+          delete metadata[key];
+        }
+      }
+      return {
+        id: documentIds[idx],
+        metadata,
+        values,
+      };
+    });
 
     // Pinecone recommends a limit of 100 vectors per upsert request
     const chunkSize = 50;
