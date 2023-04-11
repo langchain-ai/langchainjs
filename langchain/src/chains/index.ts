@@ -3,6 +3,7 @@ export { LLMChain, ConversationChain } from "./llm_chain.js";
 export {
   StuffDocumentsChain,
   MapReduceDocumentsChain,
+  RefineDocumentsChain,
 } from "./combine_docs_chain.js";
 export { ChatVectorDBQAChain } from "./chat_vector_db_chain.js";
 export { AnalyzeDocumentChain } from "./analyze_documents_chain.js";
@@ -11,6 +12,7 @@ export {
   loadQAChain,
   loadQAStuffChain,
   loadQAMapReduceChain,
+  loadQARefineChain,
 } from "./question_answering/load.js";
 export { loadSummarizationChain } from "./summarization/load.js";
 export { SqlDatabaseChain } from "./sql_db/sql_db_chain.js";
@@ -25,4 +27,5 @@ export {
   SerializedMapReduceDocumentsChain,
   SerializedStuffDocumentsChain,
   SerializedVectorDBQAChain,
+  SerializedRefineDocumentsChain,
 } from "./serde.js";
