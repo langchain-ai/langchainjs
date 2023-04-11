@@ -1,8 +1,8 @@
-import { LLMChain } from "langchain";
+import { LLMChain } from "langchain/chains";
 import { AgentExecutor, ZeroShotAgent } from "langchain/agents";
 import { CallbackManager } from "langchain/callbacks";
-import { ChatOpenAI } from "langchain/chat_models";
-import { Calculator } from "langchain/tools";
+import { ChatOpenAI } from "langchain/chat_models/openai";
+import { Calculator } from "langchain/tools/calculator";
 
 export const run = async () => {
   // Create a callback manager that will be used throughout

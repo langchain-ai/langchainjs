@@ -48,9 +48,7 @@ export const importTiktoken = async () => {
     return { encoding_for_model };
   } catch (error) {
     console.log(error);
-    throw new Error(
-      "Please install @dqbd/tiktoken as a dependency with, e.g. `yarn add @dqbd/tiktoken`"
-    );
+    return { encoding_for_model: null };
   }
 };
 
@@ -60,15 +58,27 @@ export const calculateMaxTokens = async ({
 }: CalculateMaxTokenProps) => {
   const { encoding_for_model } = await importTiktoken();
 
-  const encoding = encoding_for_model(getModelNameForTiktoken(modelName));
+  // fallback to approximate calculation if tiktoken is not available
+  let numTokens = Math.ceil(prompt.length / 4);
 
-  const tokenized = encoding.encode(prompt);
+  try {
+    if (encoding_for_model) {
+      const encoding = encoding_for_model(getModelNameForTiktoken(modelName));
 
-  const numTokens = tokenized.length;
+      const tokenized = encoding.encode(prompt);
+
+      numTokens = tokenized.length;
+
+      encoding.free();
+    }
+  } catch (error) {
+    console.warn(
+      "Failed to calculate number of tokens with tiktoken, falling back to approximate count",
+      error
+    );
+  }
 
   const maxTokens = getModelContextSize(modelName);
-
-  encoding.free();
 
   return maxTokens - numTokens;
 };

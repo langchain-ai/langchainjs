@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as yaml from "js-yaml";
 import { JsonSpec, JsonObject } from "langchain/tools";
 import { createOpenApiAgent, OpenApiToolkit } from "langchain/agents";
-import { OpenAI } from "langchain";
+import { OpenAI } from "langchain/llms/openai";
 
 export const run = async () => {
   let data: JsonObject;
