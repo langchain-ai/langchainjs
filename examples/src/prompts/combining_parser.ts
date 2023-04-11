@@ -1,15 +1,22 @@
 import { OpenAI } from "langchain/llms/openai";
 import { PromptTemplate } from "langchain/prompts";
-import { StructuredOutputParser, RegexParser, CombiningOutputParser } from "langchain/output_parsers";
+import {
+  StructuredOutputParser,
+  RegexParser,
+  CombiningOutputParser,
+} from "langchain/output_parsers";
 
 export const run = async () => {
-
   const answerParser = StructuredOutputParser.fromNamesAndDescriptions({
     answer: "answer to the user's question",
     source: "source used to answer the user's question, should be a website.",
   });
 
-  const confidenceParser = new RegexParser(/Confidence: (A|B|C), Explanation: (.*)/, ["confidence", "explanation"], "noConfidence");
+  const confidenceParser = new RegexParser(
+    /Confidence: (A|B|C), Explanation: (.*)/,
+    ["confidence", "explanation"],
+    "noConfidence"
+  );
 
   const parser = new CombiningOutputParser(answerParser, confidenceParser);
   const formatInstructions = parser.getFormatInstructions();
