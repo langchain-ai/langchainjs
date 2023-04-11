@@ -43,6 +43,7 @@ const entrypoints = {
   "vectorstores/pinecone": "vectorstores/pinecone",
   "vectorstores/supabase": "vectorstores/supabase",
   "vectorstores/prisma": "vectorstores/prisma",
+  "vectorstores/xata": "vectorstores/xata",
   // text_splitter
   text_splitter: "text_splitter",
   // memory
@@ -123,6 +124,7 @@ const requiresOptionalDependency = [
   "vectorstores/hnswlib",
   "vectorstores/pinecone",
   "vectorstores/supabase",
+  "vectorstores/xata",
   "document_loaders/web/cheerio",
   "document_loaders/web/puppeteer",
   "document_loaders/web/college_confidential",

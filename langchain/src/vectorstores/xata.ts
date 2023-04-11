@@ -1,4 +1,4 @@
-import { SchemaPluginResult, ColumnsByValue } from "@xata.io/client";
+import type { SchemaPluginResult, ColumnsByValue } from "@xata.io/client";
 import { VectorStore } from "./base.js";
 import { Embeddings } from "../embeddings/base.js";
 import { Document } from "../document.js";
@@ -6,6 +6,7 @@ import { Document } from "../document.js";
 type InferColumns<T> = T extends SchemaPluginResult<infer U> ? U : never;
 
 type XataVectorStoreArgs<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Xata extends SchemaPluginResult<any>,
   TableName extends keyof Xata,
   Schema extends InferColumns<Xata>
@@ -17,6 +18,7 @@ type XataVectorStoreArgs<
 };
 
 export class XataVectorStore<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Xata extends SchemaPluginResult<any>,
   TableName extends keyof Xata,
   Schema extends InferColumns<Xata>
@@ -29,12 +31,7 @@ export class XataVectorStore<
 
   constructor(
     embeddings: Embeddings,
-    args: {
-      xataDB: Xata;
-      tableName: TableName;
-      vectorColumnName: ColumnsByValue<Schema[TableName], number[]>;
-      contentColumnName: ColumnsByValue<Schema[TableName], string>;
-    }
+    args: XataVectorStoreArgs<Xata, TableName, Schema>
   ) {
     super(embeddings, args);
     this.client = args.xataDB[args.tableName];
@@ -64,8 +61,8 @@ export class XataVectorStore<
           [this.contentColumnName]: row.content,
           [this.vectorColumnName]: row.embedding,
         });
-      } catch (err: any) {
-        throw new Error(`Error inserting: ${err.message}`);
+      } catch (err) {
+        throw new Error(`Error inserting: ${err}`);
       }
     }
   }
@@ -83,12 +80,14 @@ export class XataVectorStore<
           size: k,
         }
       );
-    } catch (err: any) {
+    } catch (err) {
       throw new Error(`Error searching for documents: ${err}`);
     }
 
     const result: [Document, number][] = records.map(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (record: Record<string, any>) => {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { id, ...rest } = record;
 
         const content = rest[this.contentColumnName];
@@ -99,14 +98,14 @@ export class XataVectorStore<
             acc[key] = record[key];
           }
           return acc;
-        }, {} as Record<string, any>);
+        }, {} as typeof record);
 
         return [
           new Document({
             metadata,
             pageContent: content,
           }),
-          record.xata.score,
+          record?.xata?.score,
         ];
       }
     );
@@ -115,6 +114,7 @@ export class XataVectorStore<
   }
 
   static async fromTexts<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     Xata extends SchemaPluginResult<any>,
     TableName extends keyof Xata,
     Schema extends InferColumns<Xata>
@@ -124,7 +124,7 @@ export class XataVectorStore<
     embeddings: Embeddings,
     dbConfig: XataVectorStoreArgs<Xata, TableName, Schema>
   ): Promise<XataVectorStore<Xata, TableName, Schema>> {
-    const docs = [];
+    const docs: Document[] = [];
     for (let i = 0; i < texts.length; i += 1) {
       const metadata = Array.isArray(metadatas) ? metadatas[i] : metadatas;
       const newDoc = new Document({
@@ -137,6 +137,7 @@ export class XataVectorStore<
   }
 
   static async fromDocuments<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     Xata extends SchemaPluginResult<any>,
     TableName extends keyof Xata,
     Schema extends InferColumns<Xata>
@@ -145,12 +146,13 @@ export class XataVectorStore<
     embeddings: Embeddings,
     dbConfig: XataVectorStoreArgs<Xata, TableName, Schema>
   ): Promise<XataVectorStore<Xata, TableName, Schema>> {
-    const instance = new this(embeddings, dbConfig as any) as any;
+    const instance = new this(embeddings, dbConfig);
     await instance.addDocuments(docs);
     return instance;
   }
 
   static async fromExistingIndex<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     Xata extends SchemaPluginResult<any>,
     TableName extends keyof Xata,
     Schema extends InferColumns<Xata>
@@ -158,7 +160,7 @@ export class XataVectorStore<
     embeddings: Embeddings,
     dbConfig: XataVectorStoreArgs<Xata, TableName, Schema>
   ): Promise<XataVectorStore<Xata, TableName, Schema>> {
-    const instance = new this(embeddings, dbConfig as any) as any;
+    const instance = new this(embeddings, dbConfig);
     return instance;
   }
 }

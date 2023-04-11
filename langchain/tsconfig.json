@@ -22,13 +22,7 @@
     "useDefineForClassFields": true,
     "strictPropertyInitialization": false,
     "allowJs": true,
-    "strict": true,
-    "paths": {
-      "@xata.io/client": ["../../node_modules/@xata.io/client/dist/index.d.ts"]
-    },
-    "typeRoots": [
-      "../node_modules"
-    ]
+    "strict": true
   },
   "include": [
     "src/**/*"
@@ -65,6 +59,7 @@
       "src/vectorstores/pinecone.ts",
       "src/vectorstores/supabase.ts",
       "src/vectorstores/prisma.ts",
+      "src/vectorstores/xata.ts",
       "src/text_splitter.ts",
       "src/memory/index.ts",
       "src/document.ts",

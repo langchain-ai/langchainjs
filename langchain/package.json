@@ -94,6 +94,9 @@
     "vectorstores/prisma.cjs",
     "vectorstores/prisma.js",
     "vectorstores/prisma.d.ts",
+    "vectorstores/xata.cjs",
+    "vectorstores/xata.js",
+    "vectorstores/xata.d.ts",
     "text_splitter.cjs",
     "text_splitter.js",
     "text_splitter.d.ts",
@@ -544,6 +547,11 @@
       "types": "./vectorstores/prisma.d.ts",
       "import": "./vectorstores/prisma.js",
       "require": "./vectorstores/prisma.cjs"
+    },
+    "./vectorstores/xata": {
+      "types": "./vectorstores/xata.d.ts",
+      "import": "./vectorstores/xata.js",
+      "require": "./vectorstores/xata.cjs"
     },
     "./text_splitter": {
       "types": "./text_splitter.d.ts",
