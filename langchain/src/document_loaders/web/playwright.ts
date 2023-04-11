@@ -75,7 +75,7 @@ export class PlaywrightWebBaseLoader
   }
 
   static async imports(): Promise<{
-    chromium: any;
+    chromium: typeof import("playwright").chromium;
   }> {
     try {
       const { chromium } = await import("playwright");
