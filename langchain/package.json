@@ -313,6 +313,8 @@
     "mammoth": "*",
     "pdfjs-dist": "^3.4.120",
     "playwright": "^1.32.1",
+    "pg": "*",
+    "pgvector": "*",
     "puppeteer": "^19.7.2",
     "redis": "^4.6.4",
     "replicate": "^0.9.0",
