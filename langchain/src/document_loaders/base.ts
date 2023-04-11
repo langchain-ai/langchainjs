@@ -10,7 +10,7 @@ export interface DocumentLoader {
 }
 
 export abstract class BaseDocumentLoader implements DocumentLoader {
-  abstract load(selector?: unknown): Promise<Document[]>;
+  abstract load(): Promise<Document[]>;
 
   async loadAndSplit(
     splitter: TextSplitter = new RecursiveCharacterTextSplitter()
