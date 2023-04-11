@@ -121,6 +121,9 @@ document_loaders/web/imsdb.d.ts
 document_loaders/web/github.cjs
 document_loaders/web/github.js
 document_loaders/web/github.d.ts
+document_loaders/web/s3.cjs
+document_loaders/web/s3.js
+document_loaders/web/s3.d.ts
 document_loaders/fs/directory.cjs
 document_loaders/fs/directory.js
 document_loaders/fs/directory.d.ts

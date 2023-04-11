@@ -1,10 +1,9 @@
 /* eslint-disable tree-shaking/no-side-effects-in-initialization */
 import { test, jest, expect } from "@jest/globals";
-// eslint-disable-next-line import/no-extraneous-dependencies
 import S3Client from "@aws-sdk/client-s3";
-import fs from "fs";
-import * as path from "path";
-import { Readable } from "stream";
+import * as fs from "node:fs";
+import * as path from "node:path";
+import { Readable } from "node:stream";
 import { S3Loader } from "../web/s3.js";
 import { UnstructuredLoader } from "../fs/unstructured.js";
 
@@ -40,13 +39,13 @@ test("Test S3 loader", async () => {
     // this is to avoid a linting error. S3Client is mocked above.
   }
 
-  const loader = new S3Loader(
-    "test-bucket-123",
-    "AccountingOverview.pdf",
-    "http://localhost:8000/general/v0/general",
-    fsMock as typeof fs,
-    UnstructuredLoaderMock as typeof UnstructuredLoader
-  );
+  const loader = new S3Loader({
+    bucket: "test-bucket-123",
+    key: "AccountingOverview.pdf",
+    unstructuredAPIURL: "http://localhost:8000/general/v0/general",
+    fs: fsMock as typeof fs,
+    UnstructuredLoader: UnstructuredLoaderMock as typeof UnstructuredLoader,
+  });
 
   const result = await loader.load();
 

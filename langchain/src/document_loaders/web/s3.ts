@@ -1,9 +1,18 @@
-import fsDefault from "fs";
-import path from "path";
-import os from "os";
-import { Readable } from "stream";
+import * as fsDefault from "node:fs";
+import * as path from "node:path";
+import * as os from "node:os";
+import { Readable } from "node:stream";
 import { BaseDocumentLoader } from "../base.js";
 import { UnstructuredLoader as UnstructuredLoaderDefault } from "../fs/unstructured.js";
+
+export interface S3LoaderParams {
+  bucket: string;
+  key: string;
+  unstructuredAPIURL: string;
+
+  fs?: typeof fsDefault;
+  UnstructuredLoader?: typeof UnstructuredLoaderDefault;
+}
 
 export class S3Loader extends BaseDocumentLoader {
   private bucket: string;
@@ -16,19 +25,19 @@ export class S3Loader extends BaseDocumentLoader {
 
   private _UnstructuredLoader: typeof UnstructuredLoaderDefault;
 
-  constructor(
-    bucket: string,
-    key: string,
-    unstructuredAPIURL: string,
-    _fs = fsDefault,
-    _UnstructuredLoader = UnstructuredLoaderDefault
-  ) {
+  constructor({
+    bucket,
+    key,
+    unstructuredAPIURL,
+    fs = fsDefault,
+    UnstructuredLoader = UnstructuredLoaderDefault,
+  }: S3LoaderParams) {
     super();
     this.bucket = bucket;
     this.key = key;
     this.unstructuredAPIURL = unstructuredAPIURL;
-    this._fs = _fs;
-    this._UnstructuredLoader = _UnstructuredLoader;
+    this._fs = fs;
+    this._UnstructuredLoader = UnstructuredLoader;
   }
 
   public async load() {
