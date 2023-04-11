@@ -1,4 +1,4 @@
-import { chunkArray } from "../util/index.js";
+import { chunkArray } from "../util/chunk.js";
 import { Embeddings, EmbeddingsParams } from "./base.js";
 
 interface ModelParams {

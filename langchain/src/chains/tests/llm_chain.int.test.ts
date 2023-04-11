@@ -1,6 +1,6 @@
 import { test } from "@jest/globals";
 import { OpenAI } from "../../llms/openai.js";
-import { ChatOpenAI } from "../../chat_models/index.js";
+import { ChatOpenAI } from "../../chat_models/openai.js";
 import {
   ChatPromptTemplate,
   HumanMessagePromptTemplate,

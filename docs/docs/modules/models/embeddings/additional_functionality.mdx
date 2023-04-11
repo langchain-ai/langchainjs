@@ -26,7 +26,7 @@ For example, if you set `maxConcurrency: 5`, then LangChain will only send 5 req
 To use this feature, simply pass `maxConcurrency: <number>` when you instantiate the LLM. For example:
 
 ```typescript
-import { OpenAIEmbeddings } from "langchain/embeddings";
+import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 
 const model = new OpenAIEmbeddings({ maxConcurrency: 5 });
 ```
@@ -36,7 +36,7 @@ const model = new OpenAIEmbeddings({ maxConcurrency: 5 });
 If the model provider returns an error from their API, by default LangChain will retry up to 6 times on an exponential backoff. This enables error recovery without any additional effort from you. If you want to change this behavior, you can pass a `maxRetries` option when you instantiate the model. For example:
 
 ```typescript
-import { OpenAIEmbeddings } from "langchain/embeddings";
+import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 
 const model = new OpenAIEmbeddings({ maxRetries: 10 });
 ```

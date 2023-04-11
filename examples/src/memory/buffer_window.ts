@@ -1,4 +1,4 @@
-import { OpenAI } from "langchain/llms";
+import { OpenAI } from "langchain/llms/openai";
 import { BufferWindowMemory } from "langchain/memory";
 import { LLMChain } from "langchain/chains";
 import { PromptTemplate } from "langchain/prompts";

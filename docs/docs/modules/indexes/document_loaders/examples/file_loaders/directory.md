@@ -20,13 +20,13 @@ src/document_loaders/example_data/example/
 Example code:
 
 ```typescript
+import { DirectoryLoader } from "langchain/document_loaders/fs/directory";
 import {
-  DirectoryLoader,
   JSONLoader,
   JSONLinesLoader,
-  TextLoader,
-  CSVLoader,
-} from "langchain/document_loaders";
+} from "langchain/document_loaders/fs/json";
+import { TextLoader } from "langchain/document_loaders/fs/text";
+import { CSVLoader } from "langchain/document_loaders/fs/csv";
 
 const loader = new DirectoryLoader(
   "src/document_loaders/example_data/example",

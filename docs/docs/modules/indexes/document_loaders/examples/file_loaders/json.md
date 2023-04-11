@@ -18,7 +18,7 @@ Example JSON file:
 Example code:
 
 ```typescript
-import { JSONLoader } from "langchain/document_loaders";
+import { JSONLoader } from "langchain/document_loaders/fs/json";
 
 const loader = new JSONLoader("src/document_loaders/example_data/example.json");
 
@@ -73,7 +73,7 @@ In this example, we want to only extract information from "from" and "surname" e
 Example code:
 
 ```typescript
-import { JSONLoader } from "langchain/document_loaders";
+import { JSONLoader } from "langchain/document_loaders/fs/json";
 
 const loader = new JSONLoader(
   "src/document_loaders/example_data/example.json",

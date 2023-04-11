@@ -1,4 +1,4 @@
-import { ChatGPTPluginRetriever } from "langchain/retrievers";
+import { ChatGPTPluginRetriever } from "langchain/retrievers/remote";
 
 export const run = async () => {
   const retriever = new ChatGPTPluginRetriever({

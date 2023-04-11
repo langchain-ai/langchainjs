@@ -1,5 +1,7 @@
 import { CallbackManager, ConsoleCallbackHandler } from "langchain/callbacks";
-import { OpenAI, PromptTemplate, LLMChain } from "langchain";
+import { LLMChain } from "langchain/chains";
+import { OpenAI } from "langchain/llms/openai";
+import { PromptTemplate } from "langchain/prompts";
 
 export const run = async () => {
   const callbackManager = new CallbackManager();

@@ -1,6 +1,7 @@
-import { ChatOpenAI } from "langchain/chat_models";
+import { ChatOpenAI } from "langchain/chat_models/openai";
 import { initializeAgentExecutor } from "langchain/agents";
-import { SerpAPI, Calculator } from "langchain/tools";
+import { SerpAPI } from "langchain/tools";
+import { Calculator } from "langchain/tools/calculator";
 
 export const run = async () => {
   const model = new ChatOpenAI({ temperature: 0 });
