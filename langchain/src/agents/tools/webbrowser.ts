@@ -35,8 +35,7 @@ export const getText = (html: string, baseUrl: string): string => {
       text += ` [${content}](${href})`;
     }
     // otherwise just print the content
-    // found some tricky sites putting 404 text in title, probably updating in js to remove it?, not sure how common?
-    else if (content !== "" && content !== "404 Page Not Found") {
+    else if (content !== "") {
       text += ` ${content}`;
     }
   });
