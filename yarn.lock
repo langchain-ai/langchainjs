@@ -15925,6 +15925,8 @@ __metadata:
       optional: true
     "@supabase/supabase-js":
       optional: true
+    "@zilliz/milvus2-sdk-node":
+      optional: true
     cheerio:
       optional: true
     chromadb:
