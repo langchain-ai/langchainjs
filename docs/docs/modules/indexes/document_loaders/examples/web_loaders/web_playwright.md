@@ -2,6 +2,7 @@
 sidebar_position: 3
 hide_table_of_contents: true
 sidebar_class_name: node-only
+sidebar_label: Playwright
 ---
 
 # Webpages, with Playwright
