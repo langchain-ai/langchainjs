@@ -73,7 +73,7 @@ export class MemoryVectorStore extends VectorStore {
     texts: string[],
     metadatas: object[] | object,
     embeddings: Embeddings,
-    dbConfig: MemoryVectorStoreArgs
+    dbConfig?: MemoryVectorStoreArgs
   ): Promise<MemoryVectorStore> {
     const docs: Document[] = [];
     for (let i = 0; i < texts.length; i += 1) {
@@ -90,7 +90,7 @@ export class MemoryVectorStore extends VectorStore {
   static async fromDocuments(
     docs: Document[],
     embeddings: Embeddings,
-    dbConfig: MemoryVectorStoreArgs
+    dbConfig?: MemoryVectorStoreArgs
   ): Promise<MemoryVectorStore> {
     const instance = new this(embeddings, dbConfig);
     await instance.addDocuments(docs);
@@ -99,7 +99,7 @@ export class MemoryVectorStore extends VectorStore {
 
   static async fromExistingIndex(
     embeddings: Embeddings,
-    dbConfig: MemoryVectorStoreArgs
+    dbConfig?: MemoryVectorStoreArgs
   ): Promise<MemoryVectorStore> {
     const instance = new this(embeddings, dbConfig);
     return instance;

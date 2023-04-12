@@ -83,7 +83,8 @@ abstract class BaseVectorStore implements VectorStore {
 
 Here's a quick guide to help you pick the right vector store for your use case:
 
-- If you're after something that can just run inside your application, in-memory, without any other servers to stand up, then go for [HNSWLib](./integrations/hnswlib)
+- If you're after something that can just run inside your Node.js application, in-memory, without any other servers to stand up, then go for [HNSWLib](./integrations/hnswlib)
+- If you're looking for something that can run in-memory in browser-like environments, then go for [MemoryVectorStore](./integrations/memory)
 - If you come from Python and you were looking for something similar to FAISS, pick [HNSWLib](./integrations/hnswlib)
 - If you're looking for an open-source full-featured vector database that you can run locally in a docker container, then go for [Chroma](./integrations/chroma)
 - If you're using Supabase already then look at the [Supabase](./integrations/supabase) vector store to use the same Postgres database for your embeddings too
