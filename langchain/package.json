@@ -291,7 +291,8 @@
     "srt-parser-2": "^1.2.2",
     "ts-jest": "^29.0.5",
     "typeorm": "^0.3.12",
-    "typescript": "^4.9.5"
+    "typescript": "^4.9.5",
+    "weaviate-ts-client": "1.0.0"
   },
   "peerDependencies": {
     "@aws-sdk/client-s3": "^3.310.0",
@@ -314,7 +315,8 @@
     "redis": "^4.6.4",
     "replicate": "^0.9.0",
     "srt-parser-2": "^1.2.2",
-    "typeorm": "^0.3.12"
+    "typeorm": "^0.3.12",
+    "weaviate-ts-client": "1.0.0"
   },
   "peerDependenciesMeta": {
     "@aws-sdk/client-s3": {
@@ -378,6 +380,9 @@
       "optional": true
     },
     "typeorm": {
+      "optional": true
+    },
+    "weaviate-ts-client": {
       "optional": true
     }
   },
