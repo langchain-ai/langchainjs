@@ -13,7 +13,7 @@ These chains are the building blocks more complex chains for processing unstruct
 
 - `StuffDocumentsChain`: This chain is the simplest of the 3 chains and simply injects all documents passes in into the prompt. It then returns the answer to the question, using all documents as context. It is suitable for QA tasks over a small number of documents.
 - `MapReduceDocumentsChain`: This chain adds a preprocessing step to select relevant portions of each document until the total number of tokens is less than the maximum number of tokens allowed by the model. It then uses the transformed docs as context to answer the question. It is suitable for QA tasks over larger documents.
-- `RefineDocumentsChain`: This chain iterates over the documents one by one to update a running answer, using the previous intermediate answer and the next doc as context each time. It is suitable for QA tasks over a large number of documents.
+- `RefineDocumentsChain`: This chain iterates over the documents one by one to update a running answer, at each turn using the previous version of the answer and the next doc as context. It is suitable for QA tasks over a large number of documents.
 
 ## Usage, `StuffDocumentsChain` and `MapReduceDocumentsChain`
 
