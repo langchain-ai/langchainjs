@@ -17163,12 +17163,9 @@ __metadata:
     husky: ^8.0.3
     lint-staged: ^13.1.1
     pg: ^8.10.0
-    pgvector: ^0.1.2
     prettier: ^2.8.3
     turbo: ^1.7.4
     typescript: ^4.9.5
-  peerDependencies:
-    pgvector: "*"
   languageName: unknown
   linkType: soft
 
@@ -19617,12 +19614,6 @@ __metadata:
   checksum: 947ac096c031eebdf08d989de2e9f6f156b8133d6858c7c2c06c041e1e71dda6f5f3bad3c0ec1e96a09497bbc6ef89e762eefe703b5ef9cb2804392ec52ec400
   languageName: node
   linkType: hard
-
-"pgvector@portal:../pgvector-node::locator=langchainjs%40workspace%3A.":
-  version: 0.0.0-use.local
-  resolution: "pgvector@portal:../pgvector-node::locator=langchainjs%40workspace%3A."
-  languageName: node
-  linkType: soft
 
 "picocolors@npm:^0.2.1":
   version: 0.2.1
