@@ -43,9 +43,13 @@ interface GoogleParameters extends BaseParameters {
   q: string;
   /**
    * Location
-   * Parameter defines from where you want the search to originate. If several
-   * locations match the location requested, we'll pick the most popular one. Head to
-   * the [/locations.json API](https://serpapi.com/locations-api) if you need more
+   * Parameter defines from where you want the search to originate. Serpapi advises
+   * that if you do not provide a location, any location from around the world might
+   * be used including a different region and language. Location can be a canonical
+   * name (e.g., "Austin,Texas,United States") or the location id
+   * (e.g., "585069efee19ad271e9c9b36") If several locations match the location
+   * requested, we'll pick the most popular one. Head to the
+   * [/locations.json API](https://serpapi.com/locations-api) if you need more
    * precise control. location and uule parameters can't be used together. Avoid
    * utilizing location when setting the location outside the U.S. when using Google
    * Shopping and/or Google Product API.
