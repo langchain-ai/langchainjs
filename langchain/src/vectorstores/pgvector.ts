@@ -1,5 +1,5 @@
 import type { Client } from "pg";
-import * as pgvector from "pgvector/pg";
+import { types as pgTypes } from "pg";
 import { VectorStore } from "./base.js";
 import { Embeddings } from "../embeddings/base.js";
 import { Document } from "../document.js";
@@ -43,10 +43,10 @@ export class PGVectorStore extends VectorStore {
       embedding,
       metadata: documents[idx].metadata,
     }));
-    await pgvector.registerType(this.client);
+    await this.registerType(this.client);
     await Promise.all(rows.map(r => this.client.query(
       `insert into documents (content, metadata, embedding) VALUES ($1, $2, $3)`,
-      [r.content, r.metadata, pgvector.toSql(r.embedding)]
+      [r.content, r.metadata, this.toSql(r.embedding)]
     )));
   }
 
@@ -65,7 +65,7 @@ export class PGVectorStore extends VectorStore {
     };
 
     const {rows} = await this.client.query(
-      'select * from match_documents($1, $2)', [pgvector.toSql(matchDocumentsParams.query_embedding), matchDocumentsParams.match_count],
+      'select * from match_documents($1, $2)', [this.toSql(matchDocumentsParams.query_embedding), matchDocumentsParams.match_count],
     );
     const result: [Document, number][] = rows.map((row: SearchEmbeddingsResponse) => [
       new Document({
@@ -83,5 +83,24 @@ export class PGVectorStore extends VectorStore {
     await instance.addDocuments(docs);
     return instance;
   }
+
+  // Taken from https://github.com/pgvector/pgvector-node
+  // This node module isn't ES modulified yet and it was causing an issue when importing.
+  async registerType(client: Client): Promise<void> {
+    const result = await client.query('SELECT typname, oid, typarray FROM pg_type WHERE typname = $1', ['vector']);
+    if (result.rowCount < 1) {
+      throw new Error('vector type not found in the database');
+    }
+    const {oid} = result.rows[0];
+    pgTypes.setTypeParser(oid, 'text', (value: string) => value.substring(1, value.length - 1).split(',').map((v) => parseFloat(v)));
+  }
+  
+  toSql(value: number[]): string {
+    if (!Array.isArray(value)) {
+      throw new Error('expected array');
+    }
+    return JSON.stringify(value);
+  }
+
 
 }

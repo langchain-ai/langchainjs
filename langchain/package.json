@@ -88,6 +88,9 @@
     "vectorstores/hnswlib.cjs",
     "vectorstores/hnswlib.js",
     "vectorstores/hnswlib.d.ts",
+    "vectorstores/pgvector.cjs",
+    "vectorstores/pgvector.js",
+    "vectorstores/pgvector.d.ts",
     "vectorstores/pinecone.cjs",
     "vectorstores/pinecone.js",
     "vectorstores/pinecone.d.ts",
@@ -262,6 +265,7 @@
     "@types/html-to-text": "^9",
     "@types/object-hash": "^3.0.2",
     "@types/pdf-parse": "^1.1.1",
+    "@types/pg": "^8",
     "@types/uuid": "^9",
     "@typescript-eslint/eslint-plugin": "^5.51.0",
     "@typescript-eslint/parser": "^5.51.0",
@@ -283,7 +287,11 @@
     "jest": "^29.5.0",
     "mammoth": "^1.5.1",
     "pdfjs-dist": "^3.4.120",
+<<<<<<< HEAD
     "playwright": "^1.32.1",
+=======
+    "pg": "^8.10.0",
+>>>>>>> d04ac12 (Copy pgvector-node specifics in)
     "prettier": "^2.8.3",
     "puppeteer": "^19.7.2",
     "redis": "^4.6.4",
@@ -312,9 +320,12 @@
     "html-to-text": "^9.0.5",
     "mammoth": "*",
     "pdfjs-dist": "^3.4.120",
+<<<<<<< HEAD
     "playwright": "^1.32.1",
     "pg": "*",
     "pgvector": "*",
+=======
+>>>>>>> d04ac12 (Copy pgvector-node specifics in)
     "puppeteer": "^19.7.2",
     "redis": "^4.6.4",
     "replicate": "^0.9.0",
@@ -561,6 +572,11 @@
       "types": "./vectorstores/hnswlib.d.ts",
       "import": "./vectorstores/hnswlib.js",
       "require": "./vectorstores/hnswlib.cjs"
+    },
+    "./vectorstores/pgvector": {
+      "types": "./vectorstores/pgvector.d.ts",
+      "import": "./vectorstores/pgvector.js",
+      "require": "./vectorstores/pgvector.cjs"
     },
     "./vectorstores/pinecone": {
       "types": "./vectorstores/pinecone.d.ts",

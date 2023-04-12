@@ -17029,6 +17029,7 @@ __metadata:
     "@types/html-to-text": ^9
     "@types/object-hash": ^3.0.2
     "@types/pdf-parse": ^1.1.1
+    "@types/pg": ^8
     "@types/uuid": ^9
     "@typescript-eslint/eslint-plugin": ^5.51.0
     "@typescript-eslint/parser": ^5.51.0
@@ -17060,7 +17061,11 @@ __metadata:
     p-queue: ^6.6.2
     p-retry: 4
     pdfjs-dist: ^3.4.120
+<<<<<<< HEAD
     playwright: ^1.32.1
+=======
+    pg: ^8.10.0
+>>>>>>> d04ac12 (Copy pgvector-node specifics in)
     prettier: ^2.8.3
     puppeteer: ^19.7.2
     redis: ^4.6.4
@@ -17091,9 +17096,12 @@ __metadata:
     html-to-text: ^9.0.5
     mammoth: "*"
     pdfjs-dist: ^3.4.120
+<<<<<<< HEAD
     playwright: ^1.32.1
     pg: "*"
     pgvector: "*"
+=======
+>>>>>>> d04ac12 (Copy pgvector-node specifics in)
     puppeteer: ^19.7.2
     redis: ^4.6.4
     replicate: ^0.9.0
