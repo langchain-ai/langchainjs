@@ -17159,6 +17159,8 @@ __metadata:
     prettier: ^2.8.3
     turbo: ^1.7.4
     typescript: ^4.9.5
+  peerDependencies:
+    pgvector: "*"
   languageName: unknown
   linkType: soft
 
@@ -19608,12 +19610,11 @@ __metadata:
   languageName: node
   linkType: hard
 
-"pgvector@npm:^0.1.2":
-  version: 0.1.2
-  resolution: "pgvector@npm:0.1.2"
-  checksum: d1620c0de9db306cf12a0ec2b63a696638303ae23ee32dc87093855f967db176f173b4c234f6cc5f1b15e394942b68c1624849721dc2c4dcfa7d3ccf18e83ba7
+"pgvector@portal:../pgvector-node::locator=langchainjs%40workspace%3A.":
+  version: 0.0.0-use.local
+  resolution: "pgvector@portal:../pgvector-node::locator=langchainjs%40workspace%3A."
   languageName: node
-  linkType: hard
+  linkType: soft
 
 "picocolors@npm:^0.2.1":
   version: 0.2.1

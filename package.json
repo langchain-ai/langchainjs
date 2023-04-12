@@ -55,7 +55,8 @@
     "turbo": "^1.7.4"
   },
   "resolutions": {
-    "dpdm@^3.12.0": "patch:dpdm@npm%3A3.12.0#./.yarn/patches/dpdm-npm-3.12.0-0dfdd8e3b8.patch"
+    "dpdm@^3.12.0": "patch:dpdm@npm%3A3.12.0#./.yarn/patches/dpdm-npm-3.12.0-0dfdd8e3b8.patch",
+    "pgvector": "portal:../pgvector-node"
   },
   "lint-staged": {
     "**/*.{ts,tsx}": [
@@ -63,5 +64,8 @@
       "eslint --cache --fix"
     ],
     "*.md": "prettier --write"
+  },
+  "peerDependencies": {
+    "pgvector": "*"
   }
 }
