@@ -1,4 +1,4 @@
-import { OpenAI } from "langchain/llms";
+import { OpenAI } from "langchain/llms/openai";
 import { loadSummarizationChain, AnalyzeDocumentChain } from "langchain/chains";
 import * as fs from "fs";
 

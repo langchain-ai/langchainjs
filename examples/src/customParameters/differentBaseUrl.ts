@@ -1,4 +1,4 @@
-import { OpenAI } from "langchain";
+import { OpenAI } from "langchain/llms/openai";
 
 export const run = async () => {
   const model = new OpenAI(

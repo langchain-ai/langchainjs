@@ -52,11 +52,6 @@ begin
 end;
 $$;
 
--- Create an index to be used by the similarity search function
-create index on documents
-  using ivfflat (embedding vector_cosine_ops)
-  with (lists = 100);
-
 -- Create a function to keyword search for documents
 create function kw_match_documents(query_text text, match_count int)
 returns table (id bigint, content text, metadata jsonb, similarity real)
