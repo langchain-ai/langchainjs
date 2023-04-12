@@ -181,5 +181,5 @@ export class WebBrowser extends Tool {
     return Promise.resolve(generations[0][0].text);
   }
 
-  description = `a web browser. useful for when you need to find something or summarize a url. input should be a comma seperated list of "url","what you want to find on the page".`;
+  description = `a web browser. useful for when you need to find something on or summarize a webpage. input should be a comma seperated list of "valid URL including protocol","what you want to find on the page".`;
 }
