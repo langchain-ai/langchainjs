@@ -56,7 +56,7 @@ export const getText = (
   return text;
 };
 
-const getHtml = async (baseUrl: string, h: Record<string, any>) => {
+const getHtml = async (baseUrl: string, h: Headers) => {
   const domain = new URL(baseUrl).hostname;
 
   const headers = { ...h };
@@ -113,12 +113,15 @@ const DEFAULT_HEADERS = {
     "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/111.0",
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Headers = Record<string, any>;
+
 export class WebBrowser extends Tool {
   protected model: BaseLanguageModel;
 
-  headers: Record<string, any>;
+  headers: Headers;
 
-  constructor(model: BaseLanguageModel, headers?: Record<string, any>) {
+  constructor(model: BaseLanguageModel, headers?: Headers) {
     super();
 
     this.model = model;
@@ -128,15 +131,18 @@ export class WebBrowser extends Tool {
   name = "web-browser";
 
   async _call(inputs: string) {
-    const inputArray = inputs.split(",");
-    // remove errant spaces and quotes
-    const baseUrl = inputArray[0].trim().replace(/^"|"$/g, "").trim();
-    const summary = !inputArray[1].trim();
+    const [baseUrl, task] = inputs.split(",").map((input) => {
+      let t = input.trim();
+      t = t.startsWith('"') ? t.slice(1) : t;
+      t = t.endsWith('"') ? t.slice(0, -1) : t;
+      return t.trim();
+    });
+    const doSummary = !task;
 
     let text;
     try {
       const html = await getHtml(baseUrl, this.headers);
-      text = getText(html, baseUrl, summary);
+      text = getText(html, baseUrl, doSummary);
     } catch (e) {
       if (e) {
         return e.toString();
@@ -151,10 +157,10 @@ export class WebBrowser extends Tool {
     const texts = await textSplitter.splitText(text);
 
     // if we have a summary grab first 4
-    if (summary) {
+    if (doSummary) {
       text = texts.slice(0, 4).join("\n");
     }
-    // search term well embed and grab top k
+    // search term well embed and grab top 4
     else {
       const docs = texts.map(
         (pageContent) =>
@@ -166,19 +172,17 @@ export class WebBrowser extends Tool {
 
       const vectorStore = new MemoryVectorStore(new OpenAIEmbeddings());
       await vectorStore.addDocuments(docs);
-      const results = await vectorStore.similaritySearch(inputArray[1], 4);
+      const results = await vectorStore.similaritySearch(task, 4);
       text = results.map((res) => res.pageContent).join("\n");
     }
 
-    const input = `I need ${
-      summary ? "a summary" : inputArray[1]
-    } from the following html, also provide up to 5 html links from within that would be of interest. Text:\n${text}`;
+    const input = `${text}\n\nI need ${
+      doSummary ? "a summary" : task
+    } from the previous text, also provide up to 5 markdown links from within that would be of interest\n`;
 
-    const { generations } = await this.model.generatePrompt([
-      new StringPromptValue(input),
-    ]);
+    const res = await this.model.generatePrompt([new StringPromptValue(input)]);
 
-    return Promise.resolve(generations[0][0].text);
+    return Promise.resolve(res.generations[0][0].text);
   }
 
   description = `a web browser. useful for when you need to find something on or summarize a webpage. input should be a comma seperated list of "valid URL including protocol","what you want to find on the page".`;
