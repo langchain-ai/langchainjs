@@ -54,6 +54,7 @@
       "src/prompts/index.ts",
       "src/prompts/load.ts",
       "src/vectorstores/base.ts",
+      "src/vectorstores/memory.ts",
       "src/vectorstores/chroma.ts",
       "src/vectorstores/hnswlib.ts",
       "src/vectorstores/pinecone.ts",

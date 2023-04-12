@@ -1,20 +1,31 @@
-import * as math from "mathjs";
+import { similarity as ml_distance_similarity } from "ml-distance";
 import { VectorStore } from "./base.js";
 import { Embeddings } from "../embeddings/base.js";
 import { Document } from "../document.js";
 
-type MemoryVector = {
+interface MemoryVector {
   content: string;
   embedding: number[];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   metadata: Record<string, any>;
-};
+}
+
+export interface MemoryVectorStoreArgs {
+  similarity?: typeof ml_distance_similarity.cosine;
+}
 
 export class MemoryVectorStore extends VectorStore {
   memoryVectors: MemoryVector[] = [];
 
-  constructor(embeddings: Embeddings, args?: Record<string, any>) {
-    super(embeddings, args || {});
+  similarity: typeof ml_distance_similarity.cosine;
+
+  constructor(
+    embeddings: Embeddings,
+    { similarity, ...rest }: MemoryVectorStoreArgs = {}
+  ) {
+    super(embeddings, rest);
+
+    this.similarity = similarity ?? ml_distance_similarity.cosine;
   }
 
   async addDocuments(documents: Document[]): Promise<void> {
@@ -39,13 +50,13 @@ export class MemoryVectorStore extends VectorStore {
     query: number[],
     k: number
   ): Promise<[Document, number][]> {
-    let searches = this.memoryVectors.map((vector, index) => ({
-      similarity: math.dot(query, vector.embedding),
-      index,
-    }));
-
-    searches.sort((a, b) => (a.similarity > b.similarity ? -1 : 0));
-    searches = searches.slice(0, k);
+    const searches = this.memoryVectors
+      .map((vector, index) => ({
+        similarity: this.similarity(query, vector.embedding),
+        index,
+      }))
+      .sort((a, b) => (a.similarity > b.similarity ? -1 : 0))
+      .slice(0, k);
 
     const result: [Document, number][] = searches.map((search) => [
       new Document({
@@ -62,9 +73,9 @@ export class MemoryVectorStore extends VectorStore {
     texts: string[],
     metadatas: object[] | object,
     embeddings: Embeddings,
-    dbConfig: Record<string, any>
+    dbConfig: MemoryVectorStoreArgs
   ): Promise<MemoryVectorStore> {
-    const docs = [];
+    const docs: Document[] = [];
     for (let i = 0; i < texts.length; i += 1) {
       const metadata = Array.isArray(metadatas) ? metadatas[i] : metadatas;
       const newDoc = new Document({
@@ -79,7 +90,7 @@ export class MemoryVectorStore extends VectorStore {
   static async fromDocuments(
     docs: Document[],
     embeddings: Embeddings,
-    dbConfig: Record<string, any>
+    dbConfig: MemoryVectorStoreArgs
   ): Promise<MemoryVectorStore> {
     const instance = new this(embeddings, dbConfig);
     await instance.addDocuments(docs);
@@ -88,7 +99,7 @@ export class MemoryVectorStore extends VectorStore {
 
   static async fromExistingIndex(
     embeddings: Embeddings,
-    dbConfig: Record<string, any>
+    dbConfig: MemoryVectorStoreArgs
   ): Promise<MemoryVectorStore> {
     const instance = new this(embeddings, dbConfig);
     return instance;
