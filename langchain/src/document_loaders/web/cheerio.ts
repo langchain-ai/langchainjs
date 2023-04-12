@@ -1,4 +1,4 @@
-import type { CheerioAPI, load as LoadT } from "cheerio";
+import type { CheerioAPI, load as LoadT, SelectorType } from "cheerio";
 import { Document } from "../document.js";
 import { BaseDocumentLoader } from "./base.js";
 import type { DocumentLoader } from "./base.js";
@@ -19,11 +19,14 @@ export class CheerioWebBaseLoader
 
   caller: AsyncCaller;
 
-  constructor(public webPath: string, fields?: WebBaseLoaderParams) {
+  selector?: SelectorType;
+
+  constructor(public webPath: string, fields?: WebBaseLoaderParams, selector?: SelectorType) {
     super();
     const { timeout, ...rest } = fields ?? {};
     this.timeout = timeout ?? 10000;
     this.caller = new AsyncCaller(rest);
+    this.selector = selector;
   }
 
   static async _scrape(
@@ -49,7 +52,7 @@ export class CheerioWebBaseLoader
 
   async load(): Promise<Document[]> {
     const $ = await this.scrape();
-    const text = $("body").text();
+    const text = $(this.selector ?? "body").text();
     const metadata = { source: this.webPath };
     return [new Document({ pageContent: text, metadata })];
   }
