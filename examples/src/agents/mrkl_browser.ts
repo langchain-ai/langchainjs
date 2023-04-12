@@ -5,7 +5,9 @@ import { SerpAPI, Calculator, WebBrowser } from "langchain/tools";
 export const run = async () => {
   const model = new OpenAI({ temperature: 0 });
   const tools = [
-    new SerpAPI(undefined, { location: "Austin,Texas,United States" }),
+    new SerpAPI(process.env.SERPAPI_API_KEY, {
+      location: "Austin,Texas,United States",
+    }),
     new Calculator(),
     new WebBrowser(model),
   ];
