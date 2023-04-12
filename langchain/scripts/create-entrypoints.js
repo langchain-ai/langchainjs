@@ -41,6 +41,7 @@ const entrypoints = {
   "vectorstores/memory": "vectorstores/memory",
   "vectorstores/chroma": "vectorstores/chroma",
   "vectorstores/hnswlib": "vectorstores/hnswlib",
+  "vectorstores/pgvector": "vectorstores/pgvector",
   "vectorstores/pinecone": "vectorstores/pinecone",
   "vectorstores/supabase": "vectorstores/supabase",
   "vectorstores/milvus": "vectorstores/milvus",
