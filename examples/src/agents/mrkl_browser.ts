@@ -14,7 +14,7 @@ export const run = async () => {
   );
   console.log("Loaded agent.");
 
-  const input = `Whats the word of the day on https://www.merriam-webster.com/word-of-the-day?`;
+  const input = `What is the word of the day on merriam webster. What is the top result on google for that word`;
 
   console.log(`Executing with input "${input}"...`);
 
