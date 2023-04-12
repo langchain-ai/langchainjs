@@ -7,7 +7,12 @@ import { BufferMemory } from "langchain/memory";
 export const run = async () => {
   process.env.LANGCHAIN_HANDLER = "langchain";
   const model = new ChatOpenAI({ temperature: 0 });
-  const tools = [new SerpAPI(), new Calculator()];
+  const tools = [
+    new SerpAPI(process.env.SERPAPI_API_KEY, {
+      location: "Austin,Texas,United States",
+    }),
+    new Calculator(),
+  ];
 
   const executor = await initializeAgentExecutor(
     tools,
