@@ -1,13 +1,13 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { test, expect } from "@jest/globals";
 
-import * as pg from 'pg';
+import * as pg from "pg";
 
 import { OpenAIEmbeddings } from "../../embeddings/index.js";
 import { Document } from "../../document.js";
 import { PGVectorStore } from "../pgvector.js";
 
-const {Client} = pg;
+const { Client } = pg;
 
 test("PGVectorStore with external ids", async () => {
   const client = new Client();
