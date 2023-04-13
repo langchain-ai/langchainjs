@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.52",
+  "version": "0.0.54",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -79,6 +79,9 @@
     "vectorstores/base.cjs",
     "vectorstores/base.js",
     "vectorstores/base.d.ts",
+    "vectorstores/memory.cjs",
+    "vectorstores/memory.js",
+    "vectorstores/memory.d.ts",
     "vectorstores/chroma.cjs",
     "vectorstores/chroma.js",
     "vectorstores/chroma.d.ts",
@@ -402,6 +405,7 @@
     "expr-eval": "^2.0.2",
     "flat": "^5.0.2",
     "jsonpointer": "^5.0.1",
+    "ml-distance": "^4.0.0",
     "object-hash": "^3.0.0",
     "openai": "^3.2.0",
     "p-queue": "^6.6.2",
@@ -553,6 +557,11 @@
       "types": "./vectorstores/base.d.ts",
       "import": "./vectorstores/base.js",
       "require": "./vectorstores/base.cjs"
+    },
+    "./vectorstores/memory": {
+      "types": "./vectorstores/memory.d.ts",
+      "import": "./vectorstores/memory.js",
+      "require": "./vectorstores/memory.cjs"
     },
     "./vectorstores/chroma": {
       "types": "./vectorstores/chroma.d.ts",

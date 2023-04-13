@@ -9,7 +9,8 @@ First, you'll want to import the relevant modules:
 ```typescript
 import { OpenAI } from "langchain/llms/openai";
 import { initializeAgentExecutor } from "langchain/agents";
-import { SerpAPI, Calculator, ChainTool } from "langchain/tools";
+import { SerpAPI, ChainTool } from "langchain/tools";
+import { Calculator } from "langchain/tools/calculator";
 import { VectorDBQAChain } from "langchain/chains";
 import { HNSWLib } from "langchain/vectorstores/hnswlib";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
@@ -46,7 +47,15 @@ const qaTool = new ChainTool({
 Now you can construct and using the tool just as you would any other!
 
 ```typescript
-const tools = [new SerpAPI(), new Calculator(), qaTool];
+const tools = [
+  new SerpAPI(process.env.SERPAPI_API_KEY, {
+    location: "Austin,Texas,United States",
+    hl: "en",
+    gl: "us",
+  }),
+  new Calculator(),
+  qaTool,
+];
 
 const executor = await initializeAgentExecutor(
   tools,

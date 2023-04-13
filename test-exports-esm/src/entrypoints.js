@@ -9,6 +9,7 @@ import * as llms_base from "langchain/llms/base";
 import * as llms_openai from "langchain/llms/openai";
 import * as prompts from "langchain/prompts";
 import * as vectorstores_base from "langchain/vectorstores/base";
+import * as vectorstores_memory from "langchain/vectorstores/memory";
 import * as vectorstores_prisma from "langchain/vectorstores/prisma";
 import * as text_splitter from "langchain/text_splitter";
 import * as memory from "langchain/memory";

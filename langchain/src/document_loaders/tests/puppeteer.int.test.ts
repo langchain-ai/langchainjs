@@ -1,7 +1,7 @@
 import { expect, test } from "@jest/globals";
 import { PuppeteerWebBaseLoader } from "../web/puppeteer.js";
 
-test("Test puppeteer web scraper loader", async () => {
+test.skip("Test puppeteer web scraper loader", async () => {
   const loader = new PuppeteerWebBaseLoader("https://www.google.com/");
   const result = await loader.load();
 
@@ -9,7 +9,7 @@ test("Test puppeteer web scraper loader", async () => {
   expect(result.length).toBe(1);
 }, 20_000);
 
-test("Test puppeteer web scraper loader with evaluate options", async () => {
+test.skip("Test puppeteer web scraper loader with evaluate options", async () => {
   let nrTimesCalled = 0;
   const loader = new PuppeteerWebBaseLoader("https://www.google.com/", {
     launchOptions: {

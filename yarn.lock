@@ -5299,15 +5299,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@mendable/search@npm:^0.0.79":
-  version: 0.0.79
-  resolution: "@mendable/search@npm:0.0.79"
+"@mendable/search@npm:^0.0.83":
+  version: 0.0.83
+  resolution: "@mendable/search@npm:0.0.83"
   dependencies:
     posthog-js: ^1.45.1
   peerDependencies:
     react: ^17.x || ^18.x
     react-dom: ^17.x || ^18.x
-  checksum: 22b110a0afcdb0475c30f8e78b8fa5df0b227315a811ca37168e6759463caeb4922623ffd4e0843fbe69ebadec58e94b512aeb144ee7e731bd2fb4dea55eafba
+  checksum: 00e04dd564fe1ac89b0744e9113455889c99b35114147da6e5a9cf5bf774c97b9f416770e782bda3c4e3f420d654565adedc64fd26c2b7b5a99978e51a71119c
   languageName: node
   linkType: hard
 
@@ -9056,6 +9056,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"binary-search@npm:^1.3.5":
+  version: 1.3.6
+  resolution: "binary-search@npm:1.3.6"
+  checksum: 2e6b3459a9c1ba1bd674a6a855a5ef7505f70707422244430e3510e989c0df6074a49fe60784a98b93b51545c9bcace1db1defee06ff861b124c036a2f2836bf
+  languageName: node
+  linkType: hard
+
 "bindings@npm:^1.5.0":
   version: 1.5.0
   resolution: "bindings@npm:1.5.0"
@@ -11336,7 +11343,7 @@ __metadata:
     "@docusaurus/preset-classic": 2.4.0
     "@docusaurus/remark-plugin-npm2yarn": ^2.4.0
     "@mdx-js/react": ^1.6.22
-    "@mendable/search": ^0.0.79
+    "@mendable/search": ^0.0.83
     clsx: ^1.2.1
     docusaurus-plugin-typedoc: ^0.18.0
     eslint: ^8.19.0
@@ -12918,6 +12925,7 @@ __metadata:
     js-yaml: ^4.1.0
     langchain: "workspace:*"
     pickleparser: ^0.0.2-alpha.0
+    ml-distance: ^4.0.0
     prettier: ^2.8.3
     prisma: ^4.11.0
     sqlite3: ^5.1.4
@@ -14978,6 +14986,13 @@ __metadata:
     is-alphabetical: ^1.0.0
     is-decimal: ^1.0.0
   checksum: e2e491acc16fcf5b363f7c726f666a9538dba0a043665740feb45bba1652457a73441e7c5179c6768a638ed396db3437e9905f403644ec7c468fb41f4813d03f
+  languageName: node
+  linkType: hard
+
+"is-any-array@npm:^2.0.0":
+  version: 2.0.0
+  resolution: "is-any-array@npm:2.0.0"
+  checksum: 911f060b89ee20f6648e967f4e673c5e553331c1bde4a2832e0b7b38f59acff347fa83010639a7859d16d07933eb812f7e882cb8bc7320576b307fe50c4801c8
   languageName: node
   linkType: hard
 
@@ -17050,6 +17065,7 @@ __metadata:
     jest: ^29.5.0
     jsonpointer: ^5.0.1
     mammoth: ^1.5.1
+    ml-distance: ^4.0.0
     object-hash: ^3.0.0
     openai: ^3.2.0
     p-queue: ^6.6.2
@@ -18190,6 +18206,52 @@ __metadata:
   languageName: node
   linkType: hard
 
+"ml-array-mean@npm:^1.1.6":
+  version: 1.1.6
+  resolution: "ml-array-mean@npm:1.1.6"
+  dependencies:
+    ml-array-sum: ^1.1.6
+  checksum: 81999dac8bad3bf2dafb23a9bc71883879b9d55889e48d00b91dd4a2568957a6f5373632ae57324760d1e1d7d29ad45ab4ea7ae32de67ce144d57a21e36dd9c2
+  languageName: node
+  linkType: hard
+
+"ml-array-sum@npm:^1.1.6":
+  version: 1.1.6
+  resolution: "ml-array-sum@npm:1.1.6"
+  dependencies:
+    is-any-array: ^2.0.0
+  checksum: 369dbb3681e3f8b0d0facba9fcfc981656dac49a80924859c3ed8f0a5880fb6db2d6e534f8b7b9c3cda59248152e61b27d6419d19c69539de7c3aa6aea3094eb
+  languageName: node
+  linkType: hard
+
+"ml-distance-euclidean@npm:^2.0.0":
+  version: 2.0.0
+  resolution: "ml-distance-euclidean@npm:2.0.0"
+  checksum: e31f98a947ce6971c35d74e6d2521800f0d219efb34c78b20b5f52debd206008d52e677685c09839e6bab5d2ed233aa009314236e4e548d5fafb60f2f71e2b3e
+  languageName: node
+  linkType: hard
+
+"ml-distance@npm:^4.0.0":
+  version: 4.0.0
+  resolution: "ml-distance@npm:4.0.0"
+  dependencies:
+    ml-array-mean: ^1.1.6
+    ml-distance-euclidean: ^2.0.0
+    ml-tree-similarity: ^1.0.0
+  checksum: 37d07d52c5f1d185833336d73764e97dcdf8abe37e276fd6a3f7d536cf373e7cbfd6497f433192bd7d100b0b95518a616a8ae6df53b74c5b0d5fbfa7a971ae4d
+  languageName: node
+  linkType: hard
+
+"ml-tree-similarity@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "ml-tree-similarity@npm:1.0.0"
+  dependencies:
+    binary-search: ^1.3.5
+    num-sort: ^2.0.0
+  checksum: f99e217dc94acf75c089469dc3c278f388146e43c82212160b6b75daa14309902f84eb0a00c67d502fc79dc171cf15a33d392326e024b2e89881adc585d15513
+  languageName: node
+  linkType: hard
+
 "mlly@npm:^1.1.0, mlly@npm:^1.1.1":
   version: 1.2.0
   resolution: "mlly@npm:1.2.0"
@@ -18729,6 +18791,13 @@ __metadata:
   dependencies:
     boolbase: ^1.0.0
   checksum: 5afc3dafcd1573b08877ca8e6148c52abd565f1d06b1eb08caf982e3fa289a82f2cae697ffb55b5021e146d60443f1590a5d6b944844e944714a5b549675bcd3
+  languageName: node
+  linkType: hard
+
+"num-sort@npm:^2.0.0":
+  version: 2.1.0
+  resolution: "num-sort@npm:2.1.0"
+  checksum: 5a80cd0456c8847f71fb80ad3c3596714cebede76de585aa4fed2b9a4fb0907631edca1f7bb31c24dbb9928b66db3d03059994cc365d2ae011b80ddddac28f6e
   languageName: node
   linkType: hard
 

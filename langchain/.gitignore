@@ -67,6 +67,9 @@ vectorstores.d.ts
 vectorstores/base.cjs
 vectorstores/base.js
 vectorstores/base.d.ts
+vectorstores/memory.cjs
+vectorstores/memory.js
+vectorstores/memory.d.ts
 vectorstores/chroma.cjs
 vectorstores/chroma.js
 vectorstores/chroma.d.ts

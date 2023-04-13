@@ -37,9 +37,9 @@ export abstract class BaseLanguageModel implements BaseLanguageModelParams {
    * The async caller should be used by subclasses to make any async calls,
    * which will thus benefit from the concurrency and retry logic.
    */
-  protected caller: AsyncCaller;
+  caller: AsyncCaller;
 
-  protected constructor(params: BaseLanguageModelParams) {
+  constructor(params: BaseLanguageModelParams) {
     this.verbose =
       params.verbose ?? (params.callbackManager ? true : getVerbosity());
     this.callbackManager = params.callbackManager ?? getCallbackManager();
