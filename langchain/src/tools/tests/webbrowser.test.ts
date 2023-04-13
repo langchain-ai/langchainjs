@@ -3,7 +3,7 @@ import { readFileSync } from "fs";
 import { getText } from "../webbrowser.js";
 
 describe("webbrowser Test suite", () => {
-  const html = readFileSync("./src/agents/tests/wordoftheday.html", "utf8");
+  const html = readFileSync("./src/tools/fixtures/wordoftheday.html", "utf8");
 
   test("parse html to text and links", async () => {
     const baseUrl = "https://www.merriam-webster.com/word-of-the-day";
