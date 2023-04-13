@@ -1,4 +1,4 @@
-import { TiktokenModel } from "@dqbd/tiktoken";
+import type { TiktokenModel } from "@dqbd/tiktoken";
 import { DEFAULT_SQL_DATABASE_PROMPT } from "./sql_db_prompt.js";
 import { BaseChain } from "../base.js";
 import type { OpenAI } from "../../llms/openai.js";
