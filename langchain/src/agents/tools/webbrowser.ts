@@ -14,46 +14,41 @@ export const getText = (
   baseUrl: string,
   summary: boolean
 ): string => {
-  const $ = cheerio.load(html);
+  // scriptingEnabled so noscript elements are parsed
+  const $ = cheerio.load(html, { scriptingEnabled: true });
 
   let text = "";
 
   // lets only get the body if its a summary, dont need to summarize header or footer etc
   const rootElement = summary ? "body " : "*";
 
-  // I think theres a bug in noscript text, it always prints all its children nodes in full
-  // take :not(noscript) out when patched
-  // https://github.com/cheeriojs/cheerio/issues/3121
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  $(`${rootElement}:not(style):not(script):not(svg):not(noscript)`).each(
-    (_i, elem: any) => {
-      // we dont want duplicated content as we drill down so remove children
-      let content = $(elem).clone().children().remove().end().text().trim();
-      const $el = $(elem);
+  $(`${rootElement}:not(style):not(script):not(svg)`).each((_i, elem: any) => {
+    // we dont want duplicated content as we drill down so remove children
+    let content = $(elem).clone().children().remove().end().text().trim();
+    const $el = $(elem);
 
-      // if its an ahref, print the conent and url
-      let href = $el.attr("href");
-      if ($el.prop("tagName")?.toLowerCase() === "a" && href) {
-        if (!href.startsWith("http")) {
-          href = new URL(href, baseUrl).toString();
-        }
-
-        const imgAlt = $el.find("img[alt]").attr("alt")?.trim();
-        if (imgAlt) {
-          content += ` ${imgAlt}`;
-        }
-
-        text += ` [${content}](${href})`;
+    // if its an ahref, print the content and url
+    let href = $el.attr("href");
+    if ($el.prop("tagName")?.toLowerCase() === "a" && href) {
+      if (!href.startsWith("http")) {
+        href = new URL(href, baseUrl).toString();
       }
-      // otherwise just print the content
-      else if (content !== "") {
-        text += ` ${content}`;
+
+      const imgAlt = $el.find("img[alt]").attr("alt")?.trim();
+      if (imgAlt) {
+        content += ` ${imgAlt}`;
       }
+
+      text += ` [${content}](${href})`;
     }
-  );
+    // otherwise just print the content
+    else if (content !== "") {
+      text += ` ${content}`;
+    }
+  });
 
-  text = text.trim().replace(/\n+/g, " ");
-  return text;
+  return text.trim().replace(/\n+/g, " ");
 };
 
 const getHtml = async (baseUrl: string, h: Headers) => {
@@ -178,12 +173,12 @@ export class WebBrowser extends Tool {
 
     const input = `${text}\n\nI need ${
       doSummary ? "a summary" : task
-    } from the previous text, also provide up to 5 markdown links from within that would be of interest\n`;
+    } from the previous text, also provide up to 5 markdown links from within that would be of interest`;
 
     const res = await this.model.generatePrompt([new StringPromptValue(input)]);
 
     return Promise.resolve(res.generations[0][0].text);
   }
 
-  description = `a web browser. useful for when you need to find something on or summarize a webpage. input should be a comma seperated list of "valid URL including protocol","what you want to find on the page or empty string for a summary".`;
+  description = `useful for when you need to find something on or summarize a webpage. input should be a comma seperated list of "valid URL including protocol","what you want to find on the page or empty string for a summary".`;
 }
