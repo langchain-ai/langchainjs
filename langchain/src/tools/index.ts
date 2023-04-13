@@ -18,7 +18,6 @@ export {
   JsonObject,
   Json,
 } from "./json.js";
-export { WebBrowser } from "./webbrowser.js";
 export { RequestsGetTool, RequestsPostTool } from "./requests.js";
 export { VectorStoreQATool } from "./vectorstore.js";
 export { ZapierNLARunAction, ZapierNLAWrapper } from "./zapier.js";

@@ -25,6 +25,9 @@
     "tools/calculator.cjs",
     "tools/calculator.js",
     "tools/calculator.d.ts",
+    "tools/webbrowser.cjs",
+    "tools/webbrowser.js",
+    "tools/webbrowser.d.ts",
     "chains.cjs",
     "chains.js",
     "chains.d.ts",
@@ -449,6 +452,11 @@
       "types": "./tools/calculator.d.ts",
       "import": "./tools/calculator.js",
       "require": "./tools/calculator.cjs"
+    },
+    "./tools/webbrowser": {
+      "types": "./tools/webbrowser.d.ts",
+      "import": "./tools/webbrowser.js",
+      "require": "./tools/webbrowser.cjs"
     },
     "./chains": {
       "types": "./chains.d.ts",

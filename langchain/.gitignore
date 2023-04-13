@@ -13,6 +13,9 @@ tools.d.ts
 tools/calculator.cjs
 tools/calculator.js
 tools/calculator.d.ts
+tools/webbrowser.cjs
+tools/webbrowser.js
+tools/webbrowser.d.ts
 chains.cjs
 chains.js
 chains.d.ts
