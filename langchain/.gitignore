@@ -76,6 +76,9 @@ vectorstores/chroma.d.ts
 vectorstores/hnswlib.cjs
 vectorstores/hnswlib.js
 vectorstores/hnswlib.d.ts
+vectorstores/mongo.cjs
+vectorstores/mongo.js
+vectorstores/mongo.d.ts
 vectorstores/pinecone.cjs
 vectorstores/pinecone.js
 vectorstores/pinecone.d.ts

@@ -88,6 +88,9 @@
     "vectorstores/hnswlib.cjs",
     "vectorstores/hnswlib.js",
     "vectorstores/hnswlib.d.ts",
+    "vectorstores/mongo.cjs",
+    "vectorstores/mongo.js",
+    "vectorstores/mongo.d.ts",
     "vectorstores/pinecone.cjs",
     "vectorstores/pinecone.js",
     "vectorstores/pinecone.d.ts",
@@ -282,6 +285,7 @@
     "html-to-text": "^9.0.5",
     "jest": "^29.5.0",
     "mammoth": "^1.5.1",
+    "mongodb": "^5.2.0",
     "pdfjs-dist": "^3.4.120",
     "playwright": "^1.32.1",
     "prettier": "^2.8.3",
@@ -311,6 +315,7 @@
     "hnswlib-node": "^1.4.2",
     "html-to-text": "^9.0.5",
     "mammoth": "*",
+    "mongodb": "^5.2.0",
     "pdfjs-dist": "^3.4.120",
     "playwright": "^1.32.1",
     "puppeteer": "^19.7.2",
@@ -360,6 +365,9 @@
       "optional": true
     },
     "mammoth": {
+      "optional": true
+    },
+    "mongodb": {
       "optional": true
     },
     "pdfjs-dist": {
@@ -559,6 +567,11 @@
       "types": "./vectorstores/hnswlib.d.ts",
       "import": "./vectorstores/hnswlib.js",
       "require": "./vectorstores/hnswlib.cjs"
+    },
+    "./vectorstores/mongo": {
+      "types": "./vectorstores/mongo.d.ts",
+      "import": "./vectorstores/mongo.js",
+      "require": "./vectorstores/mongo.cjs"
     },
     "./vectorstores/pinecone": {
       "types": "./vectorstores/pinecone.d.ts",
