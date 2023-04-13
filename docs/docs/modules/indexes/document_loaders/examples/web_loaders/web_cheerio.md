@@ -29,3 +29,18 @@ const loader = new CheerioWebBaseLoader(
 
 const docs = await loader.load();
 ```
+
+## Usage, with a custom selector
+
+```typescript
+import { CheerioWebBaseLoader } from "langchain/document_loaders/web/cheerio";
+
+const loader = new CheerioWebBaseLoader(
+  "https://news.ycombinator.com/item?id=34817881",
+  {
+    selector: "p.athing",
+  }
+);
+
+const docs = await loader.load();
+```
