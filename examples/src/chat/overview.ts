@@ -125,7 +125,13 @@ export const run = async () => {
   // other abilities, such as search, or a calculator
 
   // Define the list of tools the agent can use
-  const tools = [new SerpAPI()];
+  const tools = [
+    new SerpAPI(process.env.SERPAPI_API_KEY, {
+      location: "Austin,Texas,United States",
+      hl: "en",
+      gl: "us",
+    }),
+  ];
   // Create the agent from the chat model and the tools
   const agent = ChatAgent.fromLLMAndTools(new ChatOpenAI(), tools);
   // Create an executor, which calls to the agent until an answer is found
