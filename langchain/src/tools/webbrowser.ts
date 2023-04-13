@@ -1,4 +1,3 @@
-import axios, { isAxiosError } from "axios";
 import * as cheerio from "cheerio";
 import { BaseLanguageModel } from "../base_language/index.js";
 import { RecursiveCharacterTextSplitter } from "../text_splitter.js";
@@ -64,17 +63,12 @@ const getHtml = async (baseUrl: string, h: Headers) => {
   headers.Host = domain;
   headers["Alt-Used"] = domain;
 
-  let htmlResponse;
-  try {
-    htmlResponse = await axios.get(baseUrl, {
-      withCredentials: true,
-      headers,
-    });
-  } catch (e) {
-    if (isAxiosError(e) && e.response && e.response.status) {
-      throw new Error(`http response ${e.response.status}`);
-    }
-    throw e;
+  const htmlResponse = await fetch(baseUrl, {
+    credentials: "include",
+    headers,
+  });
+  if (!htmlResponse.ok) {
+    throw new Error(`http response ${htmlResponse.status}`);
   }
 
   const allowedContentTypes = [
@@ -85,15 +79,11 @@ const getHtml = async (baseUrl: string, h: Headers) => {
     "text/plain",
   ];
 
-  const contentType = htmlResponse.headers["content-type"];
-  const contentTypeArray = contentType.split(";");
-  if (
-    contentTypeArray[0] &&
-    !allowedContentTypes.includes(contentTypeArray[0])
-  ) {
+  const contentType = htmlResponse.headers.get("content-type");
+  if (contentType && !allowedContentTypes.includes(contentType.split(";")[0])) {
     throw new Error("returned page was not utf8");
   }
-  return htmlResponse.data;
+  return htmlResponse.text();
 };
 
 const DEFAULT_HEADERS = {
@@ -102,7 +92,6 @@ const DEFAULT_HEADERS = {
   "Accept-Encoding": "gzip, deflate",
   "Accept-Language": "en-US,en;q=0.5",
   "Alt-Used": "LEAVE-THIS-KEY-SET-BY-TOOL",
-  Connection: "keep-alive",
   Host: "LEAVE-THIS-KEY-SET-BY-TOOL",
   Referer: "https://www.google.com/",
   "Sec-Fetch-Dest": "document",

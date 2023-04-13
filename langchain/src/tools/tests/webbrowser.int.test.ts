@@ -99,9 +99,8 @@ describe("webbrowser Test suite", () => {
       `"https://www.hDjRBKoAD0EIbF29TWM4rbXDGGM5Nhy4uzNEAdDS.com","word of the day"`
     );
 
-    expect(result).toEqual(
-      "Error: getaddrinfo ENOTFOUND www.hdjrbkoad0eibf29twm4rbxdggm5nhy4uzneadds.com"
-    );
+    // todo should we improve this error message, remap code: 'ENOTFOUND'
+    expect(result).toEqual("TypeError: fetch failed");
   });
 
   test("get a summary of a page that detects scraping", async () => {
@@ -116,7 +115,7 @@ describe("webbrowser Test suite", () => {
     expect(result).not.toEqual("Error: http response 403");
   });
 
-  // cant we figure the headers to fix this?
+  // neither fetch nor axios get this page, cant we figure the headers to fix this?
   test.skip("get a summary of a page that detects scraping 2", async () => {
     const model = new ChatOpenAI({ temperature: 0 });
     const embeddings = new OpenAIEmbeddings();
@@ -128,6 +127,7 @@ describe("webbrowser Test suite", () => {
     expect(result).not.toEqual("Error: http response 403");
   });
 
+  // works with axios, but with fetch and even passing in rejectUnauthorized: false fails
   test("get a summary of a page that rejects unauthorized", async () => {
     const model = new ChatOpenAI({ temperature: 0 });
     const embeddings = new OpenAIEmbeddings();
@@ -154,6 +154,7 @@ describe("webbrowser Test suite", () => {
   // other urls that have done this too
   // "https://wsimag.com/economy-and-politics/15473-power-and-money",
   // "https://thriveglobal.com/stories/sleep-what-to-do-what-not-to-do",
+  // works with axios, but with fetch and even passing in maxRedicts: 40 still fails
   test("get a summary of a page that redirects too many times", async () => {
     const model = new ChatOpenAI({ temperature: 0 });
     const embeddings = new OpenAIEmbeddings();
