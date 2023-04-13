@@ -14,6 +14,7 @@ const entrypoints = {
   base_language: "base_language/index",
   // tools
   tools: "tools/index",
+  "tools/aws_lambda": "tools/aws_lambda",
   "tools/calculator": "tools/calculator",
   // chains
   chains: "chains/index",
@@ -115,6 +116,7 @@ const deprecatedNodeOnly = [
 // Therefore they are no tested in the generated test-exports-* packages.
 const requiresOptionalDependency = [
   "agents/load",
+  "tools/aws_lambda",
   "tools/calculator",
   "chains/load",
   "embeddings/cohere",

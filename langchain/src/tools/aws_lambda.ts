@@ -1,4 +1,4 @@
-import { Tool } from "./base.js";
+import { DynamicTool, DynamicToolParams } from "./dynamic.js";
 
 interface LambdaConfig {
   region: string;
@@ -7,26 +7,24 @@ interface LambdaConfig {
   functionName: string;
 }
 
-class AWSLambda extends Tool {
-  name: string;
-
-  description: string;
-
+class AWSLambda extends DynamicTool {
   private lambdaConfig: LambdaConfig;
 
-  constructor(
-    toolName: string,
-    toolDescription: string,
-    lambdaConfig: LambdaConfig
-  ) {
-    super();
+  constructor({
+    name,
+    description,
+    ...rest
+  }: LambdaConfig & Omit<DynamicToolParams, "func">) {
+    super({
+      name,
+      description,
+      func: async (input: string) => this._func(input),
+    });
 
-    this.name = toolName;
-    this.description = toolDescription;
-    this.lambdaConfig = lambdaConfig;
+    this.lambdaConfig = rest;
   }
 
-  async _call(input: string): Promise<string> {
+  async _func(input: string): Promise<string> {
     const { Client, Invoker } = await LambdaImports();
 
     const lambdaClient = new Client({

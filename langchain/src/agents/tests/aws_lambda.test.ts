@@ -1,7 +1,7 @@
 import { test, jest, expect } from "@jest/globals";
-// eslint-disable-next-line import/no-extraneous-dependencies
 import LambdaClient from "@aws-sdk/client-lambda";
-import { AWSLambda } from "../../tools/AWSLambda.js";
+
+import { AWSLambda } from "../../tools/aws_lambda.js";
 
 // eslint-disable-next-line tree-shaking/no-side-effects-in-initialization
 jest.mock("@aws-sdk/client-lambda", () => ({
@@ -22,16 +22,15 @@ test("AWSLambda invokes the correct lambda function and returns the response.bod
     // this is to avoid a linting error. S3Client is mocked above.
   }
 
-  const lambda = new AWSLambda(
-    "email-sender",
-    "Sends an email with the specified content to holtkam2@gmail.com",
-    {
-      region: "us-east-1",
-      accessKeyId: "abc123",
-      secretAccessKey: "xyz456/1T+PzUZ2fd",
-      functionName: "testFunction1",
-    }
-  );
+  const lambda = new AWSLambda({
+    name: "email-sender",
+    description:
+      "Sends an email with the specified content to holtkam2@gmail.com",
+    region: "us-east-1",
+    accessKeyId: "abc123",
+    secretAccessKey: "xyz456/1T+PzUZ2fd",
+    functionName: "testFunction1",
+  });
 
   const result = await lambda.call("Hello world! This is an email.");
 
