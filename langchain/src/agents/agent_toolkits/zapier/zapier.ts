@@ -5,10 +5,6 @@ import { ZapierNLARunAction, ZapierNLAWrapper } from "../../../tools/zapier.js";
 export class ZapierToolKit extends Toolkit {
   tools: Tool[] = [];
 
-  protected constructor() {
-    super();
-  }
-
   static async fromZapierNLAWrapper(
     zapierNLAWrapper: ZapierNLAWrapper
   ): Promise<ZapierToolKit> {

@@ -1,3 +1,5 @@
+import type { basename as BasenameT } from "node:path";
+import type { readFile as ReaFileT } from "node:fs/promises";
 import { getEnv } from "../../util/env.js";
 import { Document } from "../../document.js";
 import { BaseDocumentLoader } from "../base.js";
@@ -20,15 +22,16 @@ export class UnstructuredLoader extends BaseDocumentLoader {
   }
 
   async _partition() {
-    const { readFile } = await this.imports();
+    const { readFile, basename } = await this.imports();
 
     const buffer = await readFile(this.filePath);
+    const fileName = basename(this.filePath);
 
     // I'm aware this reads the file into memory first, but we have lots of work
     // to do on then consuming Documents in a streaming fashion anyway, so not
     // worried about this for now.
     const formData = new FormData();
-    formData.append("files", new Blob([buffer]));
+    formData.append("files", new Blob([buffer]), fileName);
 
     const response = await fetch(this.webPath, {
       method: "POST",
@@ -73,11 +76,13 @@ export class UnstructuredLoader extends BaseDocumentLoader {
   }
 
   async imports(): Promise<{
-    readFile: typeof import("node:fs/promises")["readFile"];
+    readFile: typeof ReaFileT;
+    basename: typeof BasenameT;
   }> {
     try {
       const { readFile } = await import("node:fs/promises");
-      return { readFile };
+      const { basename } = await import("node:path");
+      return { readFile, basename };
     } catch (e) {
       console.error(e);
       throw new Error(

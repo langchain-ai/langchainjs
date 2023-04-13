@@ -27,7 +27,14 @@ test("Test LangChain tracer", async () => {
 test.skip("Test Traced Agent with concurrency (skipped until we fix concurrency)", async () => {
   process.env.LANGCHAIN_HANDLER = "langchain";
   const model = new OpenAI({ temperature: 0 });
-  const tools = [new SerpAPI(), new Calculator()];
+  const tools = [
+    new SerpAPI(undefined, {
+      location: "Austin,Texas,United States",
+      hl: "en",
+      gl: "us",
+    }),
+    new Calculator(),
+  ];
 
   const executor = await initializeAgentExecutor(
     tools,

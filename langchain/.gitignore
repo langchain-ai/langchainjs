@@ -67,6 +67,9 @@ vectorstores.d.ts
 vectorstores/base.cjs
 vectorstores/base.js
 vectorstores/base.d.ts
+vectorstores/memory.cjs
+vectorstores/memory.js
+vectorstores/memory.d.ts
 vectorstores/chroma.cjs
 vectorstores/chroma.js
 vectorstores/chroma.d.ts
@@ -82,6 +85,9 @@ vectorstores/pinecone.d.ts
 vectorstores/supabase.cjs
 vectorstores/supabase.js
 vectorstores/supabase.d.ts
+vectorstores/milvus.cjs
+vectorstores/milvus.js
+vectorstores/milvus.d.ts
 vectorstores/prisma.cjs
 vectorstores/prisma.js
 vectorstores/prisma.d.ts
@@ -109,6 +115,9 @@ document_loaders/web/cheerio.d.ts
 document_loaders/web/puppeteer.cjs
 document_loaders/web/puppeteer.js
 document_loaders/web/puppeteer.d.ts
+document_loaders/web/playwright.cjs
+document_loaders/web/playwright.js
+document_loaders/web/playwright.d.ts
 document_loaders/web/college_confidential.cjs
 document_loaders/web/college_confidential.js
 document_loaders/web/college_confidential.d.ts
@@ -124,6 +133,9 @@ document_loaders/web/imsdb.d.ts
 document_loaders/web/github.cjs
 document_loaders/web/github.js
 document_loaders/web/github.d.ts
+document_loaders/web/s3.cjs
+document_loaders/web/s3.js
+document_loaders/web/s3.d.ts
 document_loaders/fs/directory.cjs
 document_loaders/fs/directory.js
 document_loaders/fs/directory.d.ts
@@ -193,6 +205,9 @@ retrievers/supabase.d.ts
 retrievers/metal.cjs
 retrievers/metal.js
 retrievers/metal.d.ts
+retrievers/databerry.cjs
+retrievers/databerry.js
+retrievers/databerry.d.ts
 cache.cjs
 cache.js
 cache.d.ts
