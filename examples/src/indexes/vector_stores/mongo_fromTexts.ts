@@ -7,8 +7,7 @@ export const run = async () => {
 
   const collection = client.db("langchain").collection("test");
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const vectorStore = await MongoVectorStore.fromTexts(
+  await MongoVectorStore.fromTexts(
     ["Hello world", "Bye bye", "What's this?"],
     [{ id: 2 }, { id: 1 }, { id: 3 }],
     new CohereEmbeddings(),
