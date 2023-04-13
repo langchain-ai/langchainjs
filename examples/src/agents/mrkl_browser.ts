@@ -1,9 +1,13 @@
-import { OpenAI } from "langchain";
+import { OpenAI } from "langchain/llms/openai";
 import { initializeAgentExecutor } from "langchain/agents";
-import { SerpAPI, Calculator, WebBrowser } from "langchain/tools";
+import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { SerpAPI } from "langchain/tools";
+import { Calculator } from "langchain/tools/calculator";
+import { WebBrowser } from "langchain/tools/webbrowser";
 
 export const run = async () => {
   const model = new OpenAI({ temperature: 0 });
+  const embeddings = new OpenAIEmbeddings();
   const tools = [
     new SerpAPI(process.env.SERPAPI_API_KEY, {
       location: "Austin,Texas,United States",
@@ -11,7 +15,7 @@ export const run = async () => {
       gl: "us",
     }),
     new Calculator(),
-    new WebBrowser(model),
+    new WebBrowser({ model, embeddings }),
   ];
 
   const executor = await initializeAgentExecutor(
