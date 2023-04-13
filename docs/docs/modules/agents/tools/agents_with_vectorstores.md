@@ -50,6 +50,8 @@ Now you can construct and using the tool just as you would any other!
 const tools = [
   new SerpAPI(process.env.SERPAPI_API_KEY, {
     location: "Austin,Texas,United States",
+    hl: "en",
+    gl: "us",
   }),
   new Calculator(),
   qaTool,

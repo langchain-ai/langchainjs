@@ -28,8 +28,10 @@ test.skip("Test Traced Agent with concurrency (skipped until we fix concurrency)
   process.env.LANGCHAIN_HANDLER = "langchain";
   const model = new OpenAI({ temperature: 0 });
   const tools = [
-    new SerpAPI(process.env.SERPAPI_API_KEY, {
+    new SerpAPI(undefined, {
       location: "Austin,Texas,United States",
+      hl: "en",
+      gl: "us",
     }),
     new Calculator(),
   ];

@@ -33,6 +33,8 @@ const model = new OpenAI({ temperature: 0 });
 const tools = [
   new SerpAPI(process.env.SERPAPI_API_KEY, {
     location: "Austin,Texas,United States",
+    hl: "en",
+    gl: "us",
   }),
   new Calculator(),
 ];

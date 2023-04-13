@@ -21,6 +21,8 @@ export const run = async () => {
   const tools = [
     new SerpAPI(process.env.SERPAPI_API_KEY, {
       location: "Austin,Texas,United States",
+      hl: "en",
+      gl: "us",
     }),
     new Calculator(),
   ];
@@ -63,6 +65,8 @@ export const run = async () => {
   const tools = [
     new SerpAPI(process.env.SERPAPI_API_KEY, {
       location: "Austin,Texas,United States",
+      hl: "en",
+      gl: "us",
     }),
     new Calculator(),
   ];
@@ -103,6 +107,8 @@ export const run = async () => {
     const tools = [
       new SerpAPI(process.env.SERPAPI_API_KEY, {
         location: "Austin,Texas,United States",
+        hl: "en",
+        gl: "us",
       }),
       new Calculator(),
     ];
