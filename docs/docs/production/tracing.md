@@ -9,15 +9,23 @@ You can also use the `langchain-server` command if you have the python `langchai
 Here's an example of how to use tracing in `langchain.js`. All that needs to be done is setting the `LANGCHAIN_HANDLER` environment variable to `langchain`.
 
 ```typescript
-import { OpenAI } from "langchain";
+import { OpenAI } from "langchain/llms/openai";
 import { initializeAgentExecutor } from "langchain/agents";
-import { SerpAPI, Calculator } from "langchain/tools";
+import { SerpAPI } from "langchain/tools";
+import { Calculator } from "langchain/tools/calculator";
 import process from "process";
 
 export const run = async () => {
   process.env.LANGCHAIN_HANDLER = "langchain";
   const model = new OpenAI({ temperature: 0 });
-  const tools = [new SerpAPI(), new Calculator()];
+  const tools = [
+    new SerpAPI(process.env.SERPAPI_API_KEY, {
+      location: "Austin,Texas,United States",
+      hl: "en",
+      gl: "us",
+    }),
+    new Calculator(),
+  ];
 
   const executor = await initializeAgentExecutor(
     tools,
@@ -40,9 +48,10 @@ export const run = async () => {
 We are actively working on improving tracing to work better with concurrency. For now, the best way to use tracing with concurrency is to follow the below example:
 
 ```typescript
-import { OpenAI } from "langchain";
+import { OpenAI } from "langchain/llms/openai";
 import { initializeAgentExecutor } from "langchain/agents";
-import { SerpAPI, Calculator } from "langchain/tools";
+import { SerpAPI } from "langchain/tools";
+import { Calculator } from "langchain/tools/calculator";
 import process from "process";
 import {
   CallbackManager,
@@ -53,7 +62,14 @@ import {
 export const run = async () => {
   process.env.LANGCHAIN_HANDLER = "langchain";
   const model = new OpenAI({ temperature: 0 });
-  const tools = [new SerpAPI(), new Calculator()];
+  const tools = [
+    new SerpAPI(process.env.SERPAPI_API_KEY, {
+      location: "Austin,Texas,United States",
+      hl: "en",
+      gl: "us",
+    }),
+    new Calculator(),
+  ];
 
   const executor = await initializeAgentExecutor(
     tools,
@@ -88,7 +104,14 @@ export const run = async () => {
     callbackManager.addHandler(new LangChainTracer());
 
     const model = new OpenAI({ temperature: 0, callbackManager });
-    const tools = [new SerpAPI(), new Calculator()];
+    const tools = [
+      new SerpAPI(process.env.SERPAPI_API_KEY, {
+        location: "Austin,Texas,United States",
+        hl: "en",
+        gl: "us",
+      }),
+      new Calculator(),
+    ];
     for (const tool of tools) {
       tool.callbackManager = callbackManager;
     }

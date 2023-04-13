@@ -3,7 +3,7 @@
 import { test, expect } from "@jest/globals";
 import { createClient } from "@supabase/supabase-js";
 
-import { OpenAIEmbeddings } from "../../embeddings/index.js";
+import { OpenAIEmbeddings } from "../../embeddings/openai.js";
 import { Document } from "../../document.js";
 import { SupabaseVectorStore } from "../supabase.js";
 

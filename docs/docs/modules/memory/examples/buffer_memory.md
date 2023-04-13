@@ -3,7 +3,7 @@
 BufferMemory is the simplest type of memory - it just remembers previous conversational back and forths directly.
 
 ```typescript
-import { OpenAI } from "langchain/llms";
+import { OpenAI } from "langchain/llms/openai";
 import { BufferMemory } from "langchain/memory";
 import { ConversationChain } from "langchain/chains";
 

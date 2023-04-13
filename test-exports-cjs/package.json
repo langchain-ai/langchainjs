@@ -5,22 +5,26 @@
   "description": "CJS Tests for the things exported by the langchain package",
   "main": "./index.mjs",
   "scripts": {
-    "test": "npm run test:esm && npm run test:cjs && npm run test:cjs:import && npm run test:cjs:entrypoints && npm run test:ts",
-    "test:esm": "node ./index.mjs",
-    "test:cjs": "node ./require.js",
-    "test:cjs:import": "node ./import.js",
-    "test:cjs:entrypoints": "node ./entrypoints.js",
-    "test:ts": "tsc && node dist/index.js",
-    "format": "prettier --write \"**/*.ts\"",
-    "format:check": "prettier --list-different \"**/*.ts\""
+    "build": "tsc",
+    "test": "npm run test:esm && npm run test:cjs && npm run test:cjs:import && npm run test:entrypoints && npm run test:ts",
+    "test:esm": "node src/index.mjs",
+    "test:cjs": "node src/require.js",
+    "test:cjs:import": "node src/import.js",
+    "test:entrypoints": "node src/entrypoints.js",
+    "test:ts": "node dist/index.js",
+    "format": "prettier --write src",
+    "format:check": "prettier --check src"
   },
-  "author": "Langchain",
+  "author": "LangChain",
   "license": "MIT",
   "dependencies": {
+    "d3-dsv": "2",
+    "hnswlib-node": "^1.4.2",
     "langchain": "workspace:*"
   },
   "devDependencies": {
     "@tsconfig/recommended": "^1.0.2",
+    "@types/node": "^18.15.11",
     "prettier": "^2.8.3",
     "typescript": "^4.9.5"
   }

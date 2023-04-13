@@ -1,7 +1,7 @@
 # This workflow will do a clean installation of node dependencies, cache/restore them, build the source code and run tests across different versions of node
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs
 
-name: Node.js CI
+name: CI
 
 on:
   push:
@@ -55,7 +55,7 @@ jobs:
         run: yarn run build
 
   test:
-    name: Test
+    name: Unit Tests
     strategy:
       matrix:
         os: [macos-latest, windows-latest, ubuntu-latest]
@@ -75,3 +75,20 @@ jobs:
         run: yarn run build --filter="!docs"
       - name: Test
         run: yarn run test:unit
+
+  test-exports:
+    name: Environment Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js 18.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+          cache: "yarn"
+      - name: Install dependencies
+        run: yarn install --immutable
+      - name: Build
+        run: yarn run build --filter="!docs"
+      - name: Test Exports
+        run: yarn run test:exports:docker

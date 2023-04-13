@@ -35,6 +35,8 @@ module.exports = {
               "it",
               "beforeEach",
               "afterEach",
+              "beforeAll",
+              "afterAll",
               "skip",
               "each",
               "only",

@@ -15,10 +15,8 @@ export {
   ChatConversationalAgentOutputParser,
   ChatConversationalAgentInput,
 } from "./chat_convo/index.js";
-export { Tool } from "./tools/index.js";
+export { Tool } from "../tools/base.js";
 export { initializeAgentExecutor } from "./initialize.js";
-
-export { loadAgent } from "./load.js";
 
 export {
   SqlToolkit,
