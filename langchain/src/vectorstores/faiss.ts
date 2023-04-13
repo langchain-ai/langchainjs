@@ -166,16 +166,15 @@ export class FaissStore extends SaveableVectorStore {
 
     const readStore = async (directory: string) => {
       const pkl = await fs.readFile(path.join(directory, "index.pkl"), "binary");
-      const pickle = await import('./pickle.js');
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (pickle.emulated as Record<string, any>)['langchain.docstore.in_memory.InMemoryDocstore'] = PyInMemoryDocstore;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (pickle.emulated as Record<string, any>)['langchain.schema.Document'] = PyDocument;
-      const [pydoc, mapping]: [pydoc: PyInMemoryDocstore, mapping: Record<number, string>] = pickle.loads(pkl);
+      const buffer = Buffer.from(pkl, 'binary');
+      const { Parser } = await import('pickleparser');
+      const pickleparser = new Parser(buffer);
+      pickleparser.registry.register('langchain.docstore.in_memory', 'InMemoryDocstore', PyInMemoryDocstore);
+      pickleparser.registry.register('langchain.schema', 'Document', PyDocument);
+      const [pydoc, mapping]: [pydoc: PyInMemoryDocstore, mapping: Record<number, string>] = pickleparser.load();
       const store = pydoc.toInMemoryDocstore();
 
       return { store, mapping };
-
     };
     const readIndex = async (directory: string) => {
       const { IndexFlatL2 } = await this.imports();

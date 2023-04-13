@@ -1,5 +1,5 @@
-import { FaissStore } from "langchain/vectorstores";
-import { OpenAIEmbeddings } from "langchain/embeddings";
+import { FaissStore } from "langchain/vectorstores/faiss";
+import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 
 export const run = async () => {
   // Save the vector store to a directory

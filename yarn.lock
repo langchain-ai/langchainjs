@@ -12914,8 +12914,10 @@ __metadata:
     eslint-config-prettier: ^8.6.0
     eslint-plugin-import: ^2.27.5
     eslint-plugin-prettier: ^4.2.1
+    faiss-node: ^0.1.1
     js-yaml: ^4.1.0
     langchain: "workspace:*"
+    pickleparser: ^0.0.2-alpha.0
     prettier: ^2.8.3
     prisma: ^4.11.0
     sqlite3: ^5.1.4
@@ -12998,6 +13000,13 @@ __metadata:
   version: 0.1.2
   resolution: "exit@npm:0.1.2"
   checksum: abc407f07a875c3961e4781dfcb743b58d6c93de9ab263f4f8c9d23bb6da5f9b7764fc773f86b43dd88030444d5ab8abcb611cb680fba8ca075362b77114bba3
+  languageName: node
+  linkType: hard
+
+"expand-template@npm:^2.0.3":
+  version: 2.0.3
+  resolution: "expand-template@npm:2.0.3"
+  checksum: 588c19847216421ed92befb521767b7018dc88f88b0576df98cb242f20961425e96a92cbece525ef28cc5becceae5d544ae0f5b9b5e2aa05acb13716ca5b3099
   languageName: node
   linkType: hard
 
@@ -17046,6 +17055,7 @@ __metadata:
     p-queue: ^6.6.2
     p-retry: 4
     pdfjs-dist: ^3.4.120
+    pickleparser: ^0.0.2-alpha.0
     playwright: ^1.32.1
     prettier: ^2.8.3
     puppeteer: ^19.7.2
@@ -17078,6 +17088,7 @@ __metadata:
     html-to-text: ^9.0.5
     mammoth: "*"
     pdfjs-dist: ^3.4.120
+    pickleparser: ^0.0.2-alpha.0
     playwright: ^1.32.1
     puppeteer: ^19.7.2
     redis: ^4.6.4
@@ -17116,6 +17127,8 @@ __metadata:
     mammoth:
       optional: true
     pdfjs-dist:
+      optional: true
+    pickleparser:
       optional: true
     playwright:
       optional: true
@@ -19473,6 +19486,13 @@ __metadata:
   version: 2.1.0
   resolution: "performance-now@npm:2.1.0"
   checksum: 534e641aa8f7cba160f0afec0599b6cecefbb516a2e837b512be0adbe6c1da5550e89c78059c7fabc5c9ffdf6627edabe23eb7c518c4500067a898fa65c2b550
+  languageName: node
+  linkType: hard
+
+"pickleparser@npm:^0.0.2-alpha.0":
+  version: 0.0.2-alpha.0
+  resolution: "pickleparser@npm:0.0.2-alpha.0"
+  checksum: 47c71e1fa68fd9404a3adf816da4649299a699526f0778c8179c308a37beec32c8ab4c2fea2f57426c74765429dd0db772d8804534100fb693ec32821b4ef11f
   languageName: node
   linkType: hard
 
