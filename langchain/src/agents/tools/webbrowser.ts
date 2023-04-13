@@ -19,7 +19,7 @@ export const getText = (
   let text = "";
 
   // lets only get the body if its a summary, dont need to summarize header or footer etc
-  const rootElement = summary ? "body" : "*";
+  const rootElement = summary ? "body " : "*";
 
   // I think theres a bug in noscript text, it always prints all its children nodes in full
   // take :not(noscript) out when patched
@@ -185,5 +185,5 @@ export class WebBrowser extends Tool {
     return Promise.resolve(res.generations[0][0].text);
   }
 
-  description = `a web browser. useful for when you need to find something on or summarize a webpage. input should be a comma seperated list of "valid URL including protocol","what you want to find on the page".`;
+  description = `a web browser. useful for when you need to find something on or summarize a webpage. input should be a comma seperated list of "valid URL including protocol","what you want to find on the page or empty string for a summary".`;
 }
