@@ -12924,8 +12924,8 @@ __metadata:
     faiss-node: ^0.1.1
     js-yaml: ^4.1.0
     langchain: "workspace:*"
-    pickleparser: ^0.0.2-alpha.0
     ml-distance: ^4.0.0
+    pickleparser: ^0.0.2-alpha.0
     prettier: ^2.8.3
     prisma: ^4.11.0
     sqlite3: ^5.1.4
