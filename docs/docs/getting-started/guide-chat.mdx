@@ -2,6 +2,9 @@
 sidebar_position: 3
 ---
 
+import CodeBlock from "@theme/CodeBlock";
+import Example from "@examples/models/chat/chat_streaming_stdout.ts";
+
 # Quickstart, using Chat Models
 
 Chat models are a variation on language models.
@@ -19,7 +22,7 @@ To get started, follow the [installation instructions](./install) to install Lan
 This section covers how to get started with chat models. The interface is based around messages rather than raw text.
 
 ```typescript
-import { ChatOpenAI } from "langchain/chat_models";
+import { ChatOpenAI } from "langchain/chat_models/openai";
 import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
 
 const chat = new ChatOpenAI({ temperature: 0 });
@@ -168,7 +171,7 @@ This pattern of asking for the completion of a formatted prompt is quite common,
 
 ```typescript
 const chain = new LLMChain({
-  prompt: chatPrompt,
+  prompt: translationPrompt,
   llm: chat,
 });
 ```
@@ -275,7 +278,13 @@ And finally, we can use the AgentExecutor to run an agent:
 
 ```typescript
 // Define the list of tools the agent can use
-const tools = [new SerpAPI()];
+const tools = [
+  new SerpAPI(process.env.SERPAPI_API_KEY, {
+    location: "Austin,Texas,United States",
+    hl: "en",
+    gl: "us",
+  }),
+];
 // Create the agent from the chat model and the tools
 const agent = ChatAgent.fromLLMAndTools(new ChatOpenAI(), tools);
 // Create an executor, which calls to the agent until an answer is found
@@ -316,62 +325,4 @@ const chain = new ConversationChain({
 
 You can also use the streaming API to get words streamed back to you as they are generated. This is useful for eg. chatbots, where you want to show the user what is being generated as it is being generated. Note: OpenAI as of this writing does not support `tokenUsage` reporting while streaming is enabled.
 
-```typescript
-let s = "";
-const chatStreaming = new ChatOpenAI({
-  streaming: true,
-  callbackManager: CallbackManager.fromHandlers({
-    async handleLLMNewToken(token: string) {
-      console.clear();
-      s += token;
-      console.log(s);
-    },
-  }),
-});
-
-const responseD = await chatStreaming.call([
-  new HumanChatMessage("Write me a song about sparkling water."),
-]);
-```
-
-```
-Verse 1:
-Bubbles in the bottle,
-Light and refreshing,
-It's the drink that I love,
-My thirst quenching blessing.
-
-Chorus:
-Sparkling water, my fountain of youth,
-I can't get enough, it's the perfect truth,
-It's fizzy and fun, and oh so clear,
-Sparkling water, it's crystal clear.
-
-Verse 2:
-No calories or sugars,
-Just a burst of delight,
-It's the perfect cooler,
-On a hot summer night.
-
-Chorus:
-Sparkling water, my fountain of youth,
-I can't get enough, it's the perfect truth,
-It's fizzy and fun, and oh so clear,
-Sparkling water, it's crystal clear.
-
-Bridge:
-It's my happy place,
-In every situation,
-My daily dose of hydration,
-Always bringing satisfaction.
-
-Chorus:
-Sparkling water, my fountain of youth,
-I can't get enough, it's the perfect truth,
-It's fizzy and fun, and oh so clear,
-Sparkling water, it's crystal clear.
-
-Outro:
-Sparkling water, it's crystal clear,
-My love for you will never disappear.
-```
+<CodeBlock language="typescript">{Example}</CodeBlock>

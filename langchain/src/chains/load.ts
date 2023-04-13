@@ -1,11 +1,7 @@
 import { BaseChain } from "./base.js";
 import { loadFromHub } from "../util/hub.js";
-import {
-  FileLoader,
-  parseFileConfig,
-  LoadValues,
-  loadFromFile,
-} from "../util/index.js";
+import { FileLoader, LoadValues, loadFromFile } from "../util/load.js";
+import { parseFileConfig } from "../util/parse.js";
 
 const loadChainFromFile: FileLoader<BaseChain> = async (
   file: string,
@@ -22,7 +18,7 @@ const loadChainFromFile: FileLoader<BaseChain> = async (
  * @example
  * Loading from LangchainHub:
  * ```ts
- * import { loadChain } from "langchain/chains";
+ * import { loadChain } from "langchain/chains/load";
  * const chain = await loadChain("lc://chains/hello-world/chain.json");
  * const res = await chain.call({ topic: "my favorite color" });
  * ```
@@ -30,7 +26,7 @@ const loadChainFromFile: FileLoader<BaseChain> = async (
  * @example
  * Loading from local filesystem:
  * ```ts
- * import { loadChain } from "langchain/chains";
+ * import { loadChain } from "langchain/chains/load";
  * const chain = await loadChain("/path/to/chain.json");
  * ```
  */

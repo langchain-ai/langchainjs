@@ -15,7 +15,7 @@ npm install cheerio
 ## Usage
 
 ```typescript
-import { CollegeConfidentialLoader } from "langchain/document_loaders";
+import { CollegeConfidentialLoader } from "langchain/document_loaders/web/college_confidential";
 
 const loader = new CollegeConfidentialLoader(
   "https://www.collegeconfidential.com/colleges/brown-university/"

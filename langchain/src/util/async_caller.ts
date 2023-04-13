@@ -1,5 +1,5 @@
-import { backOff } from "exponential-backoff";
-import PQueue from "p-queue";
+import pRetry from "p-retry";
+import PQueueMod from "p-queue";
 
 export interface AsyncCallerParams {
   /**
@@ -32,12 +32,13 @@ export class AsyncCaller {
 
   protected maxRetries: AsyncCallerParams["maxRetries"];
 
-  protected queue: PQueue;
+  private queue: typeof import("p-queue")["default"]["prototype"];
 
   constructor(params: AsyncCallerParams) {
     this.maxConcurrency = params.maxConcurrency ?? Infinity;
     this.maxRetries = params.maxRetries ?? 6;
 
+    const PQueue = "default" in PQueueMod ? PQueueMod.default : PQueueMod;
     this.queue = new PQueue({ concurrency: this.maxConcurrency });
   }
 
@@ -45,15 +46,26 @@ export class AsyncCaller {
   call<A extends any[], T extends (...args: A) => Promise<any>>(
     callable: T,
     ...args: Parameters<T>
-  ): Promise<ReturnType<T>> {
+  ): Promise<Awaited<ReturnType<T>>> {
     return this.queue.add(
       () =>
-        backOff(() => callable(...args), {
-          numOfAttempts: this.maxRetries,
-          jitter: "full",
-          // If needed we can change some of the defaults here,
-          // but they're quite sensible.
-        }),
+        pRetry(
+          () =>
+            callable(...args).catch((error) => {
+              // eslint-disable-next-line no-instanceof/no-instanceof
+              if (error instanceof Error) {
+                throw error;
+              } else {
+                throw new Error(error);
+              }
+            }),
+          {
+            retries: this.maxRetries,
+            randomize: true,
+            // If needed we can change some of the defaults here,
+            // but they're quite sensible.
+          }
+        ),
       { throwOnTimeout: true }
     );
   }

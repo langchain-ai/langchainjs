@@ -1,4 +1,4 @@
-import { OpenAI } from "langchain";
+import { OpenAI } from "langchain/llms/openai";
 import { SqlDatabase } from "langchain/sql_db";
 import { createSqlAgent, SqlToolkit } from "langchain/agents";
 import { DataSource } from "typeorm";
@@ -15,9 +15,9 @@ export const run = async () => {
   const db = await SqlDatabase.fromDataSourceParams({
     appDataSource: datasource,
   });
-  const tookit = new SqlToolkit(db);
+  const toolkit = new SqlToolkit(db);
   const model = new OpenAI({ temperature: 0 });
-  const executor = createSqlAgent(model, tookit);
+  const executor = createSqlAgent(model, toolkit);
 
   const input = `List the total sales per country. Which country's customers spent the most?`;
 

@@ -1,7 +1,7 @@
 import { test, expect } from "@jest/globals";
-import url from "node:url";
-import path from "node:path";
-import { EPubLoader } from "../epub.js";
+import * as url from "node:url";
+import * as path from "node:path";
+import { EPubLoader } from "../fs/epub.js";
 
 test("Test EPub loader from file", async () => {
   const filePath = path.resolve(

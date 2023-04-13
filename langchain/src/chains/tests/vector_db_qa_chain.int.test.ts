@@ -6,7 +6,7 @@ import { loadChain } from "../load.js";
 import { StuffDocumentsChain } from "../combine_docs_chain.js";
 import { VectorDBQAChain } from "../vector_db_qa.js";
 import { HNSWLib } from "../../vectorstores/hnswlib.js";
-import { OpenAIEmbeddings } from "../../embeddings/index.js";
+import { OpenAIEmbeddings } from "../../embeddings/openai.js";
 
 test("Test VectorDBQAChain", async () => {
   const model = new OpenAI({ modelName: "text-ada-001" });

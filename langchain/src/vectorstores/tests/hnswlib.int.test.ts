@@ -1,10 +1,10 @@
 import { test, expect } from "@jest/globals";
-import fs from "node:fs/promises";
-import path from "node:path";
-import os from "node:os";
+import * as fs from "node:fs/promises";
+import * as path from "node:path";
+import * as os from "node:os";
 
 import { HNSWLib } from "../hnswlib.js";
-import { OpenAIEmbeddings } from "../../embeddings/index.js";
+import { OpenAIEmbeddings } from "../../embeddings/openai.js";
 import { Document } from "../../document.js";
 
 test("Test HNSWLib.fromTexts", async () => {

@@ -64,7 +64,7 @@ export class Replicate extends LLM implements ReplicateInput {
   }
 
   static async imports(): Promise<{
-    Replicate: typeof import("replicate").Replicate;
+    Replicate: typeof import("replicate").default;
   }> {
     try {
       const { default: Replicate } = await import("replicate");
