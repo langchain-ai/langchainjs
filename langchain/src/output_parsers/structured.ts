@@ -1,10 +1,7 @@
 /* eslint-disable no-instanceof/no-instanceof */
 import { z } from "zod";
 
-import {
-  BaseOutputParser,
-  OutputParserException,
-} from "../schema/index.js";
+import { BaseOutputParser, OutputParserException } from "../schema/index.js";
 
 function printSchema(schema: z.ZodTypeAny, depth = 0): string {
   if (
@@ -42,14 +39,15 @@ function printSchema(schema: z.ZodTypeAny, depth = 0): string {
     const indentIn = "\t".repeat(depth + 1);
     return `{${schema._def.description ? ` // ${schema._def.description}` : ""}
 ${Object.entries(schema.shape)
-        .map(
-          ([key, value]) =>
-            `${indentIn}"${key}": ${printSchema(value as z.ZodTypeAny, depth + 1)}${(value as z.ZodTypeAny)._def.description
-              ? ` // ${(value as z.ZodTypeAny)._def.description}`
-              : ""
-            }`
-        )
-        .join("\n")}
+  .map(
+    ([key, value]) =>
+      `${indentIn}"${key}": ${printSchema(value as z.ZodTypeAny, depth + 1)}${
+        (value as z.ZodTypeAny)._def.description
+          ? ` // ${(value as z.ZodTypeAny)._def.description}`
+          : ""
+      }`
+  )
+  .join("\n")}
 ${indent}}`;
   }
 
