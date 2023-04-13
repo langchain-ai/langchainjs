@@ -285,6 +285,7 @@
     "html-to-text": "^9.0.5",
     "jest": "^29.5.0",
     "mammoth": "^1.5.1",
+    "mongodb": "^5.2.0",
     "pdfjs-dist": "^3.4.120",
     "playwright": "^1.32.1",
     "prettier": "^2.8.3",

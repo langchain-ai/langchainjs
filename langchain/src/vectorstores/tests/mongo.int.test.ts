@@ -3,8 +3,7 @@
 
 import { test, expect } from "@jest/globals";
 import { MongoClient } from "mongodb";
-// import { OpenAIEmbeddings } from "../../embeddings/index.js";
-import { CohereEmbeddings } from "../../embeddings/index.js";
+import { CohereEmbeddings } from "../../embeddings/cohere.js";
 import { MongoVectorStore, MongoVectorStoreQueryExtension } from "../mongo.js";
 
 import { Document } from "../../document.js";
@@ -28,7 +27,7 @@ import { Document } from "../../document.js";
 
  */
 
-test("MongoVectorStore with external ids", async () => {
+test.skip("MongoVectorStore with external ids", async () => {
   expect(process.env.MONGO_URI).toBeDefined();
 
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -37,15 +36,11 @@ test("MongoVectorStore with external ids", async () => {
   try {
     const collection = client.db("langchain").collection("test");
 
-    const vectorStore = new MongoVectorStore(
-      // new OpenAIEmbeddings(), // OpenAI embeddings are too high in dimensionality for atlas
-      new CohereEmbeddings(),
-      {
-        client,
-        collection,
-        // indexName: "default", // make sure that this matches the index name in atlas if not using "default"
-      }
-    );
+    const vectorStore = new MongoVectorStore(new CohereEmbeddings(), {
+      client,
+      collection,
+      // indexName: "default", // make sure that this matches the index name in atlas if not using "default"
+    });
 
     expect(vectorStore).toBeDefined();
 

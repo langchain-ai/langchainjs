@@ -109,7 +109,7 @@ export class MongoVectorStore extends VectorStore {
       const count = await this.collection.countDocuments();
 
       if (count !== 0) {
-        console.log(
+        console.warn(
           "MongoDB search query returned no results where results were expected:\n" +
             "This may be because the index is improperly configured or because the indexing over recently added documents has not yet completed."
         );
@@ -125,7 +125,7 @@ export class MongoVectorStore extends VectorStore {
     embeddings: Embeddings,
     dbConfig: MongoLibArgs
   ): Promise<MongoVectorStore> {
-    const docs = [];
+    const docs: Document[] = [];
     for (let i = 0; i < texts.length; i += 1) {
       const metadata = Array.isArray(metadatas) ? metadatas[i] : metadatas;
       const newDoc = new Document({

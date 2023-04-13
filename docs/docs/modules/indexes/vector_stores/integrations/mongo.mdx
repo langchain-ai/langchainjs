@@ -32,7 +32,7 @@ Select your cluster and proceed to the create index wizard.
 
 Using the json editor add the following index to the collection you wish to use. The `dimension` field should match the dimensions of the vector you wish to store. At the time of writing this documentation doing this through the visual editor is not possible.
 
-**Note:** OpenAI embeddings are to large in dimensionality for Atlas coming in at 1536. However, the Cohere embeddings are perfectly usable with a dimensionality of 1024. (See [limitations](#limitations).)
+**Note:** OpenAI embeddings are too large in dimensionality for Atlas coming in at 1536. However, the Cohere embeddings are perfectly usable with a dimensionality of 1024. (See [limitations](#limitations).)
 
 ```json
 {
@@ -50,7 +50,7 @@ Using the json editor add the following index to the collection you wish to use.
 }
 ```
 
-By default the vector store expect an index name of `default` although the configuration options allow this name to be arbitrary.
+By default the vector store expects an index name of `default` although the configuration options allow this name to be arbitrary.
 
 Finally, proceed to build the index.
 

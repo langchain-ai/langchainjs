@@ -17062,6 +17062,7 @@ __metadata:
     jsonpointer: ^5.0.1
     mammoth: ^1.5.1
     ml-distance: ^4.0.0
+    mongodb: ^5.2.0
     object-hash: ^3.0.0
     openai: ^3.2.0
     p-queue: ^6.6.2
