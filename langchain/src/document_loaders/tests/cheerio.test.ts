@@ -10,8 +10,10 @@ test("Test cheerio web scraper loader", async () => {
 
 test("Test cheerio web scraper loader with selector", async () => {
   const selectH1 = "h1";
-  const loader = new CheerioWebBaseLoader("https://about.google/commitments/", {}, selectH1);
-  
+  const loader = new CheerioWebBaseLoader("https://about.google/commitments/", {
+    selector: selectH1,
+  });
+
   const doc = await loader.load();
   expect(doc[0].pageContent.trim()).toBe(
     "Committed to significantly improving the lives of as many people as possible."
