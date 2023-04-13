@@ -1,8 +1,8 @@
 import axios from "axios";
 import { test, expect, describe } from "@jest/globals";
+import { readFileSync } from "fs";
 import { getText, WebBrowser } from "../tools/webbrowser.js";
 import { ChatOpenAI } from "../../chat_models/openai.js";
-import { readFileSync } from "fs";
 
 describe("webbrowser Test suite", () => {
   // todo when we have the fetch adapter presumably that can be used to mock axios as well?
@@ -19,7 +19,7 @@ describe("webbrowser Test suite", () => {
     expect(result).toContain("Word of the Day:");
   }, 30000);
 
-  test("get a summary of the page", async () => {
+  test("get a summary of the page when empty request", async () => {
     const model = new ChatOpenAI({
       temperature: 0,
     });
@@ -27,6 +27,48 @@ describe("webbrowser Test suite", () => {
     const browser = new WebBrowser(model);
     const result = await browser.call(
       `"https://www.merriam-webster.com/word-of-the-day",""`
+    );
+
+    // fuzzy, sometimes its capped and others not
+    expect(result).toMatch(/word of the day/i);
+  }, 30000);
+
+  test("get a summary of the page if it drops second request quote", async () => {
+    const model = new ChatOpenAI({
+      temperature: 0,
+    });
+
+    const browser = new WebBrowser(model);
+    const result = await browser.call(
+      `"https://www.merriam-webster.com/word-of-the-day","`
+    );
+
+    // fuzzy, sometimes its capped and others not
+    expect(result).toMatch(/word of the day/i);
+  }, 30000);
+
+  test("get a summary of the page if it gives nothing after comma", async () => {
+    const model = new ChatOpenAI({
+      temperature: 0,
+    });
+
+    const browser = new WebBrowser(model);
+    const result = await browser.call(
+      `"https://www.merriam-webster.com/word-of-the-day",`
+    );
+
+    // fuzzy, sometimes its capped and others not
+    expect(result).toMatch(/word of the day/i);
+  }, 30000);
+
+  test("get a summary of the page if it gives no comma", async () => {
+    const model = new ChatOpenAI({
+      temperature: 0,
+    });
+
+    const browser = new WebBrowser(model);
+    const result = await browser.call(
+      `"https://www.merriam-webster.com/word-of-the-day"`
     );
 
     // fuzzy, sometimes its capped and others not
@@ -73,6 +115,7 @@ describe("webbrowser Test suite", () => {
   }, 30000);
 
   // random site I saw my agent try to use and received a sneaky 403 if headers are altered
+  // test any new header changes against this
   test.skip("get url and parse html to text and links", async () => {
     const baseUrl = "https://www.musicgateway.com/spotify-pre-save";
     const domain = new URL(baseUrl).hostname;
@@ -101,6 +144,7 @@ describe("webbrowser Test suite", () => {
     console.log(text);
   }, 30000);
 
+  // todo make fetch work and stub axios
   // fetch gives InvalidArgumentError: invalid connection header
   // if you remove the Connection: "keep-alive" it 'works' but is back to giving 403
   test.skip("get url and parse html to text and links with fetch", async () => {

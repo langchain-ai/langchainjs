@@ -32,7 +32,12 @@ export const getText = (
     let href = $el.attr("href");
     if ($el.prop("tagName")?.toLowerCase() === "a" && href) {
       if (!href.startsWith("http")) {
-        href = new URL(href, baseUrl).toString();
+        try {
+          href = new URL(href, baseUrl).toString();
+        } catch {
+          // if this fails thats fine, just no url for this
+          href = "";
+        }
       }
 
       const imgAlt = $el.find("img[alt]").attr("alt")?.trim();
@@ -151,9 +156,10 @@ export class WebBrowser extends Tool {
     });
     const texts = await textSplitter.splitText(text);
 
+    let context;
     // if we have a summary grab first 4
     if (doSummary) {
-      text = texts.slice(0, 4).join("\n");
+      context = texts.slice(0, 4).join("\n");
     }
     // search term well embed and grab top 4
     else {
@@ -168,10 +174,10 @@ export class WebBrowser extends Tool {
       const vectorStore = new MemoryVectorStore(new OpenAIEmbeddings());
       await vectorStore.addDocuments(docs);
       const results = await vectorStore.similaritySearch(task, 4);
-      text = results.map((res) => res.pageContent).join("\n");
+      context = results.map((res) => res.pageContent).join("\n");
     }
 
-    const input = `${text}\n\nI need ${
+    const input = `${context}\n\nI need ${
       doSummary ? "a summary" : task
     } from the previous text, also provide up to 5 markdown links from within that would be of interest`;
 
