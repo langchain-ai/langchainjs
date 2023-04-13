@@ -20,7 +20,9 @@ export class Document<
   metadata: Metadata;
 
   constructor(fields?: Partial<DocumentParams<Metadata>>) {
-    this.pageContent = fields?.pageContent ?? this.pageContent;
+    this.pageContent = fields?.pageContent
+      ? fields.pageContent.toString()
+      : this.pageContent;
     this.metadata = fields?.metadata ?? ({} as Metadata);
   }
 }
