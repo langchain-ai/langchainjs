@@ -1,6 +1,7 @@
 /* eslint-disable no-process-env */
 import { expect, test } from "@jest/globals";
 import { OpenAI } from "../../llms/openai.js";
+import { OpenAIEmbeddings } from "../../embeddings/openai.js";
 import { loadAgent } from "../load.js";
 import { AgentExecutor, Tool } from "../index.js";
 import { SerpAPI } from "../../tools/serpapi.js";
@@ -69,7 +70,7 @@ test("Run tool web-browser", async () => {
       gl: "us",
     }),
     new Calculator(),
-    new WebBrowser(model),
+    new WebBrowser({ model, embeddings: new OpenAIEmbeddings() }),
   ];
 
   const executor = await initializeAgentExecutor(

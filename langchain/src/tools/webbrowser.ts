@@ -1,12 +1,13 @@
 import axios, { isAxiosError } from "axios";
 import * as cheerio from "cheerio";
 import { BaseLanguageModel } from "../base_language/index.js";
-import { OpenAIEmbeddings } from "../embeddings/openai.js";
 import { RecursiveCharacterTextSplitter } from "../text_splitter.js";
 import { MemoryVectorStore } from "../vectorstores/memory.js";
-import { StringPromptValue } from "../prompts/index.js";
+import { StringPromptValue } from "../prompts/base.js";
 import { Document } from "../document.js";
 import { Tool } from "./base.js";
+import { CallbackManager } from "../callbacks/base.js";
+import { Embeddings } from "../embeddings/base.js";
 
 export const getText = (
   html: string,
@@ -115,19 +116,38 @@ const DEFAULT_HEADERS = {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Headers = Record<string, any>;
 
+interface WebBrowserArgs {
+  model: BaseLanguageModel;
+
+  embeddings: Embeddings;
+
+  headers?: Headers;
+
+  verbose?: boolean;
+
+  callbackManager?: CallbackManager;
+}
+
 export class WebBrowser extends Tool {
-  protected model: BaseLanguageModel;
+  private model: BaseLanguageModel;
+
+  private embeddings: Embeddings;
 
   headers: Headers;
 
-  constructor(model: BaseLanguageModel, headers?: Headers) {
-    super();
+  constructor({
+    model,
+    headers,
+    embeddings,
+    verbose,
+    callbackManager,
+  }: WebBrowserArgs) {
+    super(verbose, callbackManager);
 
     this.model = model;
+    this.embeddings = embeddings;
     this.headers = headers || DEFAULT_HEADERS;
   }
-
-  name = "web-browser";
 
   async _call(inputs: string) {
     const [baseUrl, task] = inputs.split(",").map((input) => {
@@ -170,8 +190,10 @@ export class WebBrowser extends Tool {
           })
       );
 
-      const vectorStore = new MemoryVectorStore(new OpenAIEmbeddings());
-      await vectorStore.addDocuments(docs);
+      const vectorStore = await MemoryVectorStore.fromDocuments(
+        docs,
+        this.embeddings
+      );
       const results = await vectorStore.similaritySearch(task, 4);
       context = results.map((res) => res.pageContent).join("\n");
     }
@@ -182,8 +204,10 @@ export class WebBrowser extends Tool {
 
     const res = await this.model.generatePrompt([new StringPromptValue(input)]);
 
-    return Promise.resolve(res.generations[0][0].text);
+    return res.generations[0][0].text;
   }
+
+  name = "web-browser";
 
   description = `useful for when you need to find something on or summarize a webpage. input should be a comma seperated list of "valid URL including protocol","what you want to find on the page or empty string for a summary".`;
 }
