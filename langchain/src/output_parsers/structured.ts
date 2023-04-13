@@ -1,7 +1,10 @@
 /* eslint-disable no-instanceof/no-instanceof */
 import { z } from "zod";
 
-import { BaseOutputParser, OutputParserException } from "../schema/index.js";
+import {
+  BaseOutputParser,
+  OutputParserException,
+} from "../schema/index.js";
 
 function printSchema(schema: z.ZodTypeAny, depth = 0): string {
   if (
@@ -22,6 +25,12 @@ function printSchema(schema: z.ZodTypeAny, depth = 0): string {
   if (schema instanceof z.ZodDate) {
     return "date";
   }
+  if (schema instanceof z.ZodNullable) {
+    return `${printSchema(schema._def.innerType, depth)} // Nullable`;
+  }
+  if (schema instanceof z.ZodTransformer) {
+    return `${printSchema(schema._def.schema, depth)}`;
+  }
   if (schema instanceof z.ZodOptional) {
     return `${printSchema(schema._def.innerType, depth)} // Optional`;
   }
@@ -33,18 +42,18 @@ function printSchema(schema: z.ZodTypeAny, depth = 0): string {
     const indentIn = "\t".repeat(depth + 1);
     return `{${schema._def.description ? ` // ${schema._def.description}` : ""}
 ${Object.entries(schema.shape)
-  .map(
-    ([key, value]) =>
-      `${indentIn}"${key}": ${printSchema(value as z.ZodTypeAny, depth + 1)}${
-        (value as z.ZodTypeAny)._def.description
-          ? ` // ${(value as z.ZodTypeAny)._def.description}`
-          : ""
-      }`
-  )
-  .join("\n")}
+        .map(
+          ([key, value]) =>
+            `${indentIn}"${key}": ${printSchema(value as z.ZodTypeAny, depth + 1)}${(value as z.ZodTypeAny)._def.description
+              ? ` // ${(value as z.ZodTypeAny)._def.description}`
+              : ""
+            }`
+        )
+        .join("\n")}
 ${indent}}`;
   }
-  throw new Error(`Unsupported type: ${schema._def.innerType}`);
+
+  throw new Error(`Unsupported type: ${schema._def.innerType.typeName}`);
 }
 
 export class StructuredOutputParser<
@@ -79,6 +88,8 @@ export class StructuredOutputParser<
 \`\`\`json
 ${printSchema(this.schema)}
 \`\`\`
+
+Including the leading and trailing "\`\`\`json" and "\`\`\`"
 `;
   }
 
@@ -88,7 +99,7 @@ ${printSchema(this.schema)}
       return this.schema.parse(JSON.parse(json));
     } catch (e) {
       throw new OutputParserException(
-        `Failed to parse. Text: ${text}. Error: ${e}`
+        `Failed to parse. Text: "${text}". Error: ${e}`
       );
     }
   }
