@@ -21,6 +21,7 @@ export default function SearchBarWrapper() {
         style={{ accentColor: "#4F956C", darkMode: false }}
         placeholder="Search..."
         dialogPlaceholder="How do I use a LLM Chain?"
+        messageSettings={{ openSourcesInNewTab: false }}
         showSimpleSearch
       />
     </div>
