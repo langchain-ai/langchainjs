@@ -288,11 +288,18 @@ export class RefineDocumentsChain
       documentInfo[value] = baseInfo[value];
     });
 
+    console.log({ documentInfo });
+    console.log(
+      this.documentPrompt.format({
+        ...documentInfo,
+      })
+    );
     const baseInputs: Record<string, unknown> = {
       [this.documentVariableName]: this.documentPrompt.format({
         ...documentInfo,
       }),
     };
+    console.log({ baseInputs });
     const inputs = { ...baseInputs, ...rest };
     return inputs;
   }
