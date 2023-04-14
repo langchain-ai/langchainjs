@@ -1,7 +1,8 @@
 {
   "github": {
     "release": true,
-    "autoGenerate": true
+    "autoGenerate": true,
+    "tokenRef": "GITHUB_TOKEN_RELEASE"
   },
   "npm": {
     "versionArgs": [
