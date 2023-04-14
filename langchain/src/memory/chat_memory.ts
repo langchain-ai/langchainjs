@@ -27,7 +27,7 @@ export class ChatMessageHistory extends BaseChatMessageHistory {
     this.messages.push(new AIChatMessage(message));
   }
 
-  clear(): void {
+  async clear(): Promise<void> {
     this.messages = [];
   }
 }
@@ -66,7 +66,7 @@ export abstract class BaseChatMemory extends BaseMemory {
     );
   }
 
-  clear() {
-    this.chatHistory.clear();
+  async clear(): Promise<void> {
+    await this.chatHistory.clear();
   }
 }

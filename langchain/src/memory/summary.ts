@@ -20,12 +20,18 @@ export type ConversationSummaryMemoryInput = BaseMemoryInput & {
 };
 
 export class ConversationSummaryMemory extends BaseChatMemory {
-  buffer: string = "";
-  memoryKey: string = "history";
-  humanPrefix: string = "Human";
-  aiPrefix: string = "AI";
+  buffer = "";
+
+  memoryKey = "history";
+
+  humanPrefix = "Human";
+
+  aiPrefix = "AI";
+
   llm: BaseLanguageModel;
+
   prompt: BasePromptTemplate = SUMMARY_PROMPT;
+
   summaryChatMessageClass: new (content: string) => BaseChatMessage =
     SystemChatMessage;
 
@@ -79,15 +85,15 @@ export class ConversationSummaryMemory extends BaseChatMemory {
     inputValues: InputValues,
     outputValues: OutputValues
   ): Promise<void> {
-    super.saveContext(inputValues, outputValues);
+    await super.saveContext(inputValues, outputValues);
     this.buffer = await this.predictNewSummary(
       this.chatHistory.messages.slice(-2),
       this.buffer
     );
   }
 
-  clear() {
-    super.clear();
+  async clear() {
+    await super.clear();
     this.buffer = "";
   }
 }
