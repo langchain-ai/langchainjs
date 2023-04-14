@@ -17,7 +17,8 @@ This quick start will demonstrate how an Agent could use a Lambda function to se
 
 ```typescript
 import { OpenAI } from "langchain";
-import { SerpAPI, AWSLambda } from "langchain/tools";
+import { SerpAPI } from "langchain/tools";
+import { AWSLambda } from "langchain/tools/aws_lambda";
 import { initializeAgentExecutor } from "langchain/agents";
 
 const model = new OpenAI({ temperature: 0 });
