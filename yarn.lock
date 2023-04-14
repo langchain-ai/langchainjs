@@ -17079,7 +17079,7 @@ __metadata:
     typeorm: ^0.3.12
     typescript: ^4.9.5
     uuid: ^9.0.0
-    weaviate-ts-client: 1.0.0
+    weaviate-ts-client: ^1.0.0
     yaml: ^2.2.1
     zod: ^3.21.4
   peerDependencies:
@@ -17104,7 +17104,7 @@ __metadata:
     replicate: ^0.9.0
     srt-parser-2: ^1.2.2
     typeorm: ^0.3.12
-    weaviate-ts-client: 1.0.0
+    weaviate-ts-client: ^1.0.0
   peerDependenciesMeta:
     "@aws-sdk/client-s3":
       optional: true
@@ -25242,7 +25242,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"weaviate-ts-client@npm:1.0.0":
+"weaviate-ts-client@npm:^1.0.0":
   version: 1.0.0
   resolution: "weaviate-ts-client@npm:1.0.0"
   dependencies:
