@@ -218,7 +218,7 @@ export class WebBrowser extends Tool {
 
     const input = `${context}\n\nI need ${
       doSummary ? "a summary" : task
-    } from the previous text, also provide up to 5 markdown links from within that would be of interest`;
+    } from the previous text, also provide up to 5 markdown links from within that would be of interest (always including URL and text). Links should be provided, if present, in markdown syntax as a list under the heading "Relevant Links:".`;
 
     const res = await this.model.generatePrompt([new StringPromptValue(input)]);
 
