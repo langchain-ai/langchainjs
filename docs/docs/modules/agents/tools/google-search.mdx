@@ -1,0 +1,52 @@
+---
+hide_table_of_contents: true
+---
+
+import CodeBlock from "@theme/CodeBlock";
+import Example from "@examples/agents/aiplugin-tool.ts";
+
+# Google Search
+
+This section describes how to use the `GoogleSearchAPIWrapper` class to search Google.
+The `GoogleSearchAPIWrapper` class is a wrapper for the Google Custom Search API that makes it easy to search for information on the web. You can use this class to search for information, get metadata about search results, and more.
+
+## Setup
+
+First, you need to set up the proper API keys and environment variables. To set it up, create the GOOGLE_API_KEY in the Google Cloud credential console (https://console.cloud.google.com/apis/credentials) and a GOOGLE_CSE_ID using the Programmable Search Enginge (https://programmablesearchengine.google.com/controlpanel/create).
+Next, it is good to follow the instructions found [here](https://stackoverflow.com/questions/37083058/programmatically-searching-google-in-python-using-custom-search).
+
+## Usage
+
+To use the `GoogleSearchAPIWrapper` class in your project, first import the class:
+
+```typescript
+import GoogleSearchAPIWrapper from "langchain/tools/google-search";
+```
+
+You can then create a new instance of the class:
+
+```typescript
+const search = new GoogleSearchAPIWrapper();
+```
+
+Once you have an instance of the class, you can use it to run a search query:
+
+```typescript
+const response = await search.run("docusaurus search");
+console.log(response);
+```
+
+This will search Google for the query "docusaurus search" and return the search response object. You can then use the results method to get metadata about the top search results:
+
+```typescript
+const results = await search.results("docusaurus search", 10);
+console.log(results);
+```
+
+This will return an array of metadata objects that represent the top 10 search results for the query "docusaurus search".
+You can also pass in a custom number of search results to get back by changing the second parameter in the results method call.
+
+```typescript
+const results = await search.results("docusaurus search", 5);
+console.log(results);
+```
