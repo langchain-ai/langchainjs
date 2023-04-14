@@ -1,8 +1,6 @@
-// Run with: yarn example src/indexes/vector_stores/opensearch/opensearch.ts
-
 import { Client } from "@opensearch-project/opensearch";
-import { OpenAIEmbeddings } from "langchain/embeddings";
-import { OpenSearchVectorStore } from "langchain/vectorstores";
+import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { OpenSearchVectorStore } from "langchain/vectorstores/opensearch";
 
 export async function run() {
   const client = new Client({

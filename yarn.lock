@@ -17143,6 +17143,8 @@ __metadata:
       optional: true
     "@huggingface/inference":
       optional: true
+    "@opensearch-project/opensearch":
+      optional: true
     "@pinecone-database/pinecone":
       optional: true
     "@supabase/supabase-js":

@@ -1,22 +1,32 @@
+---
+sidebar_class_name: node-only
+---
+
 # OpenSearch
 
-Langchain.js accepts [@opensearch-project/opensearch](https://opensearch.org/docs/latest/clients/javascript/index/)
-as the client for OpenSearch vectorstore. Install the client with
+:::tip Compatibility
+Only available on Node.js.
+:::
+
+[OpenSearch](https://opensearch.org/) is a fork of [Elasticsearch](https://www.elastic.co/elasticsearch/) that is fully compatible with the Elasticsearch API. Read more about their support for Approximate Nearest Neighbors [here](https://opensearch.org/docs/latest/search-plugins/knn/approximate-knn/).
+
+Langchain.js accepts [@opensearch-project/opensearch](https://opensearch.org/docs/latest/clients/javascript/index/) as the client for OpenSearch vectorstore.
+
+## Setup
 
 ```bash npm2yarn
-npm install -S dotenv langchain @opensearch-project/opensearch
+npm install -S @opensearch-project/opensearch
 ```
+
+You'll also need to have an OpenSearch instance running. You can use the [official Docker image](https://opensearch.org/docs/latest/opensearch/install/docker/) to get started. You can also find an example docker-compose file [here](https://github.com/hwchase17/langchainjs/blob/main/examples/src/indexes/vector_stores/opensearch/docker-compose.yml).
 
 ## Index docs
 
 ```typescript
 import { Client } from "@opensearch-project/opensearch";
-import * as dotenv from "dotenv";
 import { Document } from "langchain/document";
 import { OpenAIEmbeddings } from "langchain/embeddings";
 import { OpenSearchVectorStore } from "langchain/vectorstores";
-
-dotenv.config();
 
 const client = new Client({
   nodes: [process.env.OPENSEARCH_URL ?? "http://127.0.0.1:9200"],
@@ -37,7 +47,8 @@ const docs = [
   }),
   new Document({
     metadata: { baz: "qux" },
-    pageContent: "OpenSearch is a scalable, flexible, and extensible open-source software suite for search, analytics, and observability applications",
+    pageContent:
+      "OpenSearch is a scalable, flexible, and extensible open-source software suite for search, analytics, and observability applications",
   }),
 ];
 
@@ -51,13 +62,10 @@ await OpenSearchVectorStore.fromDocuments(docs, new OpenAIEmbeddings(), {
 
 ```typescript
 import { Client } from "@opensearch-project/opensearch";
-import * as dotenv from "dotenv";
 import { VectorDBQAChain } from "langchain/chains";
 import { OpenAIEmbeddings } from "langchain/embeddings";
 import { OpenAI } from "langchain/llms";
 import { OpenSearchVectorStore } from "langchain/vectorstores";
-
-dotenv.config();
 
 const client = new Client({
   nodes: [process.env.OPENSEARCH_URL ?? "http://127.0.0.1:9200"],
@@ -86,6 +94,7 @@ const chain = VectorDBQAChain.fromLLM(model, vectorStore, {
   returnSourceDocuments: true,
 });
 const response = await chain.call({ query: "What is opensearch?" });
+
 console.log(JSON.stringify(response, null, 2));
 /* 
   {

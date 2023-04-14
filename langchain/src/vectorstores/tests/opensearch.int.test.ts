@@ -1,13 +1,17 @@
 /* eslint-disable no-process-env */
 import { test, expect } from "@jest/globals";
 import { Client } from "@opensearch-project/opensearch";
-import { OpenAIEmbeddings } from "../../embeddings/index.js";
+import { OpenAIEmbeddings } from "../../embeddings/openai.js";
 import { OpenSearchVectorStore } from "../opensearch.js";
 import { Document } from "../../document.js";
 
 test("OpenSearchVectorStore integration", async () => {
+  if (!process.env.OPENSEARCH_URL) {
+    throw new Error("OPENSEARCH_URL not set");
+  }
+
   const client = new Client({
-    nodes: [process.env.OPENSEARCH_URL!],
+    nodes: [process.env.OPENSEARCH_URL],
   });
 
   const indexName = "test_index";

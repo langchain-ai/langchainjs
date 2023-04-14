@@ -1,7 +1,7 @@
 /* eslint-disable no-instanceof/no-instanceof */
-import { Embeddings } from "embeddings/base.js";
 import { Client, RequestParams, errors } from "@opensearch-project/opensearch";
 import { v4 as uuid } from "uuid";
+import { Embeddings } from "../embeddings/base.js";
 import { Document } from "../document.js";
 import { VectorStore } from "./base.js";
 
