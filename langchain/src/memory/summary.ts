@@ -12,6 +12,7 @@ import { BaseChatMemory, BaseMemoryInput } from "./chat_memory.js";
 import { SUMMARY_PROMPT } from "./prompt.js";
 
 export type ConversationSummaryMemoryInput = BaseMemoryInput & {
+  memoryKey?: string;
   humanPrefix?: string;
   aiPrefix?: string;
   llm: BaseLanguageModel;
@@ -50,6 +51,7 @@ export class ConversationSummaryMemory extends BaseChatMemory {
 
     super({ returnMessages, inputKey, outputKey, chatHistory });
 
+    this.memoryKey = fields?.memoryKey ?? this.memoryKey;
     this.humanPrefix = humanPrefix ?? this.humanPrefix;
     this.aiPrefix = aiPrefix ?? this.aiPrefix;
     this.llm = llm ?? this.llm;
