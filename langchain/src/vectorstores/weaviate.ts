@@ -161,4 +161,11 @@ export class WeaviateStore extends VectorStore {
     await instance.addDocuments(docs);
     return instance;
   }
+
+  static async fromExistingIndex(
+    embeddings: Embeddings,
+    args: WeaviateLibArgs
+  ): Promise<WeaviateStore> {
+    return new this(embeddings, args);
+  }
 }

@@ -1,4 +1,3 @@
-/* eslint-disable no-instanceof/no-instanceof */
 import { Client, RequestParams, errors } from "@opensearch-project/opensearch";
 import { v4 as uuid } from "uuid";
 import { Embeddings } from "../embeddings/base.js";
@@ -111,6 +110,7 @@ export class OpenSearchVectorStore extends VectorStore {
 
     const { body } = await this.client.search(search);
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return body.hits.hits.map((hit: any) => [
       new Document({
         pageContent: hit._source.text,
@@ -125,7 +125,7 @@ export class OpenSearchVectorStore extends VectorStore {
     metadatas: object[] | object,
     embeddings: Embeddings,
     args: OpenSearchClientArgs
-  ): Promise<VectorStore> {
+  ): Promise<OpenSearchVectorStore> {
     const documents = texts.map((text, idx) => {
       const metadata = Array.isArray(metadatas) ? metadatas[idx] : metadatas;
       return new Document({ pageContent: text, metadata });
@@ -138,9 +138,18 @@ export class OpenSearchVectorStore extends VectorStore {
     docs: Document[],
     embeddings: Embeddings,
     dbConfig: OpenSearchClientArgs
-  ): Promise<VectorStore> {
+  ): Promise<OpenSearchVectorStore> {
     const store = new OpenSearchVectorStore(embeddings, dbConfig);
     await store.addDocuments(docs).then(() => store);
+    return store;
+  }
+
+  static async fromExistingIndex(
+    embeddings: Embeddings,
+    dbConfig: OpenSearchClientArgs
+  ): Promise<OpenSearchVectorStore> {
+    const store = new OpenSearchVectorStore(embeddings, dbConfig);
+    await store.client.cat.indices({ index: store.indexName });
     return store;
   }
 
@@ -210,6 +219,7 @@ export class OpenSearchVectorStore extends VectorStore {
       await this.client.cat.indices({ index: this.indexName });
       return true;
     } catch (err: unknown) {
+      // eslint-disable-next-line no-instanceof/no-instanceof
       if (err instanceof errors.ResponseError && err.statusCode === 404) {
         return false;
       }
