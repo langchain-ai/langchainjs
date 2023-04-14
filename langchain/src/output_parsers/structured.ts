@@ -64,7 +64,7 @@ ${Object.entries(shape)
 ${indent}}`;
   }
 
-  throw new Error(`Unsupported type: ${schema._def.innerType.typeName}`);
+  throw new Error(`Unsupported type: ${schema._def.typeName}`);
 }
 
 export class StructuredOutputParser<
