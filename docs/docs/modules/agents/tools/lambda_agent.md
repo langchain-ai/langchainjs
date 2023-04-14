@@ -1,3 +1,8 @@
+---
+sidebar_label: Agent with AWS Lambda
+hide_table_of_contents: true
+---
+
 # Agent with AWS Lambda Integration
 
 Full docs here: https://docs.aws.amazon.com/lambda/index.html
