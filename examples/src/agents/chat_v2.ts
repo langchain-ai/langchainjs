@@ -1,11 +1,9 @@
-import { AgentExecutor, ChatAgentV2 } from "langchain/agents";
+import { initializeAgentExecutor } from "langchain/agents";
 import { ChatOpenAI } from "langchain/chat_models/openai";
-import { BufferMemory } from "langchain/memory";
 import { SerpAPI } from "langchain/tools";
 import { Calculator } from "langchain/tools/calculator";
 
 export const run = async () => {
-  process.env.LANGCHAIN_HANDLER = "langchain";
   const model = new ChatOpenAI({ temperature: 0 });
   const tools = [
     new SerpAPI(process.env.SERPAPI_API_KEY, {
@@ -16,35 +14,20 @@ export const run = async () => {
     new Calculator(),
   ];
 
-  const agent = ChatAgentV2.fromLLMAndTools(model, tools);
-
-  const executor = new AgentExecutor({
-    agent,
+  const executor = await initializeAgentExecutor(
     tools,
-  });
-
-  executor.memory = new BufferMemory({
-    returnMessages: true,
-    memoryKey: "chat_history",
-    inputKey: "input",
-  });
+    model,
+    "chat-zero-shot-react-description-v2"
+  );
   console.log("Loaded agent.");
 
-  const input0 = "hi, i am bob";
+  const input = `Who is Olivia Wilde's boyfriend? What is his current age raised to the 0.23 power?`;
 
-  const result0 = await executor.call({ input: input0 });
+  console.log(`Executing with input "${input}"...`);
 
-  console.log(`Got output ${result0.output}`);
+  const result = await executor.call({ input });
 
-  const input1 = "whats my name?";
+  console.log(result);
 
-  const result1 = await executor.call({ input: input1 });
-
-  console.log(`Got output ${result1.output}`);
-
-  const input2 = "whats the weather in pomfret?";
-
-  const result2 = await executor.call({ input: input2 });
-
-  console.log(`Got output ${result2.output}`);
+  console.log(`Got output ${result.output}`);
 };

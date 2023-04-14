@@ -10,8 +10,8 @@ import { ZeroShotAgent } from "./mrkl/index.js";
 type AgentType =
   | "zero-shot-react-description"
   | "chat-zero-shot-react-description"
-  | "chat-conversational-react-description"
-  | "chat-conversational-react-description-v2";
+  | "chat-zero-shot-react-description-v2"
+  | "chat-conversational-react-description";
 
 export const initializeAgentExecutor = async (
   tools: Tool[],
@@ -48,7 +48,7 @@ export const initializeAgentExecutor = async (
         callbackManager,
       });
 
-    case "chat-conversational-react-description-v2":
+    case "chat-zero-shot-react-description-v2":
       return AgentExecutor.fromAgentAndTools({
         agent: ChatAgentV2.fromLLMAndTools(llm, tools),
         tools,

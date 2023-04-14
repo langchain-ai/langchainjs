@@ -5,16 +5,16 @@ import {
   AgentAction,
   AgentFinish,
   AgentStep,
-  ChainValues,
   BaseChatMessage,
+  ChainValues,
 } from "../schema/index.js";
+import { Tool } from "../tools/base.js";
 import {
+  AgentActionOutputParser,
   AgentInput,
   SerializedAgent,
   StoppingMethod,
-  AgentActionOutputParser,
 } from "./types.js";
-import { Tool } from "../tools/base.js";
 
 class ParseError extends Error {
   output: string;

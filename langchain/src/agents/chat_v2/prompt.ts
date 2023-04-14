@@ -39,7 +39,7 @@ export const createPrompt = ({
   prefix = PREFIX,
   suffix = SUFFIX,
   formatInstructions = FORMAT_INSTRUCTIONS,
-  inputVariables,
+  inputVariables = ["input", "intermediate_steps"],
 }: {
   tools: Tool[];
   prefix: string;
@@ -64,6 +64,7 @@ export const createPrompt = ({
     formatInstructionsWithTools,
     suffix,
   ].join("\n\n");
+
   const messages = [
     SystemMessagePromptTemplate.fromTemplate(template),
     HumanMessagePromptTemplate.fromTemplate("{input}\n\n{agent_scratchpad}"),
@@ -71,20 +72,18 @@ export const createPrompt = ({
 
   return new AgentScratchPadChatPromptTemplate({
     promptMessages: messages,
-    inputVariables: inputVariables ?? ["input", "intermediate_steps"],
+    inputVariables,
   });
 };
 
 export class ChatOutputParser extends AgentActionOutputParser {
   async parse(text: string): Promise<AgentAction | AgentFinish> {
     if (text.includes("Final Answer:")) {
-      const output = text.split("Final Answer:").pop()?.trim() || "";
-
-      // Return values is generally always a dictionary with a single `output` key
-      // It is not recommended to try anything else at the moment :)
-      return { returnValues: { output }, log: text };
+      return {
+        returnValues: { output: text.split("Final Answer:").pop()?.trim() },
+        log: text,
+      };
     }
-
     try {
       const [, action] = text.split("```");
       const response = JSON.parse(action.trim());
@@ -93,7 +92,6 @@ export class ChatOutputParser extends AgentActionOutputParser {
         toolInput: response.action_input,
         log: text,
       };
-
       return agentAction;
     } catch (error) {
       throw new Error(`Could not parse LLM output: ${text}`);
