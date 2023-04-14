@@ -1,4 +1,5 @@
-import axios, { isAxiosError } from "axios";
+import axiosMod, { AxiosRequestConfig } from "axios";
+import { isNode } from "browser-or-node";
 import * as cheerio from "cheerio";
 import { BaseLanguageModel } from "../base_language/index.js";
 import { RecursiveCharacterTextSplitter } from "../text_splitter.js";
@@ -8,6 +9,9 @@ import { Document } from "../document.js";
 import { Tool } from "./base.js";
 import { CallbackManager } from "../callbacks/base.js";
 import { Embeddings } from "../embeddings/base.js";
+import fetchAdapter from "../util/axios-fetch-adapter.js";
+
+const axios = "default" in axiosMod ? axiosMod.default : axiosMod;
 
 export const getText = (
   html: string,
@@ -56,7 +60,11 @@ export const getText = (
   return text.trim().replace(/\n+/g, " ");
 };
 
-const getHtml = async (baseUrl: string, h: Headers) => {
+const getHtml = async (
+  baseUrl: string,
+  h: Headers,
+  config: AxiosRequestConfig
+) => {
   const domain = new URL(baseUrl).hostname;
 
   const headers = { ...h };
@@ -67,11 +75,11 @@ const getHtml = async (baseUrl: string, h: Headers) => {
   let htmlResponse;
   try {
     htmlResponse = await axios.get(baseUrl, {
-      withCredentials: true,
+      ...config,
       headers,
     });
   } catch (e) {
-    if (isAxiosError(e) && e.response && e.response.status) {
+    if (axios.isAxiosError(e) && e.response && e.response.status) {
       throw new Error(`http response ${e.response.status}`);
     }
     throw e;
@@ -123,6 +131,8 @@ interface WebBrowserArgs {
 
   headers?: Headers;
 
+  axiosConfig?: Omit<AxiosRequestConfig, "url">;
+
   verbose?: boolean;
 
   callbackManager?: CallbackManager;
@@ -133,7 +143,9 @@ export class WebBrowser extends Tool {
 
   private embeddings: Embeddings;
 
-  headers: Headers;
+  private headers: Headers;
+
+  private axiosConfig: Omit<AxiosRequestConfig, "url">;
 
   constructor({
     model,
@@ -141,12 +153,18 @@ export class WebBrowser extends Tool {
     embeddings,
     verbose,
     callbackManager,
+    axiosConfig,
   }: WebBrowserArgs) {
     super(verbose, callbackManager);
 
     this.model = model;
     this.embeddings = embeddings;
     this.headers = headers || DEFAULT_HEADERS;
+    this.axiosConfig = {
+      withCredentials: true,
+      adapter: isNode ? undefined : fetchAdapter,
+      ...axiosConfig,
+    };
   }
 
   async _call(inputs: string) {
@@ -160,7 +178,7 @@ export class WebBrowser extends Tool {
 
     let text;
     try {
-      const html = await getHtml(baseUrl, this.headers);
+      const html = await getHtml(baseUrl, this.headers, this.axiosConfig);
       text = getText(html, baseUrl, doSummary);
     } catch (e) {
       if (e) {

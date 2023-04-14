@@ -2,6 +2,7 @@ import { test, expect, describe } from "@jest/globals";
 import { WebBrowser } from "../webbrowser.js";
 import { ChatOpenAI } from "../../chat_models/openai.js";
 import { OpenAIEmbeddings } from "../../embeddings/openai.js";
+import fetchAdapter from "../../util/axios-fetch-adapter.js";
 
 describe("webbrowser Test suite", () => {
   test("get word of the day", async () => {
@@ -9,6 +10,24 @@ describe("webbrowser Test suite", () => {
     const embeddings = new OpenAIEmbeddings();
 
     const browser = new WebBrowser({ model, embeddings });
+    const result = await browser.call(
+      `"https://www.merriam-webster.com/word-of-the-day","word of the day"`
+    );
+
+    expect(result).toContain("Word of the Day:");
+  });
+
+  test("get word of the day with fetch adapter", async () => {
+    const model = new ChatOpenAI({ temperature: 0 });
+    const embeddings = new OpenAIEmbeddings();
+
+    const browser = new WebBrowser({
+      model,
+      embeddings,
+      axiosConfig: {
+        adapter: fetchAdapter,
+      },
+    });
     const result = await browser.call(
       `"https://www.merriam-webster.com/word-of-the-day","word of the day"`
     );
