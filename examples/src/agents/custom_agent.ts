@@ -43,7 +43,5 @@ Question: {input}
 
   const result = await agentExecutor.call({ input });
 
-  console.log({ result });
-
   console.log(`Got output ${result.output}`);
 };

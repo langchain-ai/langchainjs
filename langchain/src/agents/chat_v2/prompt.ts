@@ -99,6 +99,6 @@ export class ChatOutputParser extends AgentActionOutputParser {
   }
 
   getFormatInstructions(): string {
-    throw new Error("_type not implemented");
+    throw new Error("Not implemented");
   }
 }

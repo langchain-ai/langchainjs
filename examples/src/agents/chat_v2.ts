@@ -29,7 +29,5 @@ export const run = async () => {
 
   const result = await executor.call({ input });
 
-  console.log(result);
-
   console.log(`Got output ${result.output}`);
 };
