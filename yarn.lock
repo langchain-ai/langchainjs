@@ -324,6 +324,53 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@aws-sdk/client-lambda@npm:^3.310.0":
+  version: 3.310.0
+  resolution: "@aws-sdk/client-lambda@npm:3.310.0"
+  dependencies:
+    "@aws-crypto/sha256-browser": 3.0.0
+    "@aws-crypto/sha256-js": 3.0.0
+    "@aws-sdk/client-sts": 3.310.0
+    "@aws-sdk/config-resolver": 3.310.0
+    "@aws-sdk/credential-provider-node": 3.310.0
+    "@aws-sdk/eventstream-serde-browser": 3.310.0
+    "@aws-sdk/eventstream-serde-config-resolver": 3.310.0
+    "@aws-sdk/eventstream-serde-node": 3.310.0
+    "@aws-sdk/fetch-http-handler": 3.310.0
+    "@aws-sdk/hash-node": 3.310.0
+    "@aws-sdk/invalid-dependency": 3.310.0
+    "@aws-sdk/middleware-content-length": 3.310.0
+    "@aws-sdk/middleware-endpoint": 3.310.0
+    "@aws-sdk/middleware-host-header": 3.310.0
+    "@aws-sdk/middleware-logger": 3.310.0
+    "@aws-sdk/middleware-recursion-detection": 3.310.0
+    "@aws-sdk/middleware-retry": 3.310.0
+    "@aws-sdk/middleware-serde": 3.310.0
+    "@aws-sdk/middleware-signing": 3.310.0
+    "@aws-sdk/middleware-stack": 3.310.0
+    "@aws-sdk/middleware-user-agent": 3.310.0
+    "@aws-sdk/node-config-provider": 3.310.0
+    "@aws-sdk/node-http-handler": 3.310.0
+    "@aws-sdk/protocol-http": 3.310.0
+    "@aws-sdk/smithy-client": 3.310.0
+    "@aws-sdk/types": 3.310.0
+    "@aws-sdk/url-parser": 3.310.0
+    "@aws-sdk/util-base64": 3.310.0
+    "@aws-sdk/util-body-length-browser": 3.310.0
+    "@aws-sdk/util-body-length-node": 3.310.0
+    "@aws-sdk/util-defaults-mode-browser": 3.310.0
+    "@aws-sdk/util-defaults-mode-node": 3.310.0
+    "@aws-sdk/util-endpoints": 3.310.0
+    "@aws-sdk/util-retry": 3.310.0
+    "@aws-sdk/util-user-agent-browser": 3.310.0
+    "@aws-sdk/util-user-agent-node": 3.310.0
+    "@aws-sdk/util-utf8": 3.310.0
+    "@aws-sdk/util-waiter": 3.310.0
+    tslib: ^2.5.0
+  checksum: e0416e32f25727f4591a1bbca534c3ccd2be6c98d0b8dd4b5954dd417428a38d74da152d34ac62cbf5ba3eb191bb97d83ad756cd04b7078ba8d64b3c13774621
+  languageName: node
+  linkType: hard
+
 "@aws-sdk/client-s3@npm:^3.310.0":
   version: 3.310.0
   resolution: "@aws-sdk/client-s3@npm:3.310.0"
@@ -17023,6 +17070,7 @@ __metadata:
   resolution: "langchain@workspace:langchain"
   dependencies:
     "@anthropic-ai/sdk": ^0.4.3
+    "@aws-sdk/client-lambda": ^3.310.0
     "@aws-sdk/client-s3": ^3.310.0
     "@dqbd/tiktoken": ^1.0.4
     "@faker-js/faker": ^7.6.0
@@ -17086,6 +17134,7 @@ __metadata:
     yaml: ^2.2.1
     zod: ^3.21.4
   peerDependencies:
+    "@aws-sdk/client-lambda": ^3.310.0
     "@aws-sdk/client-s3": ^3.310.0
     "@getmetal/metal-sdk": "*"
     "@huggingface/inference": ^1.5.1
@@ -17110,6 +17159,8 @@ __metadata:
     srt-parser-2: ^1.2.2
     typeorm: ^0.3.12
   peerDependenciesMeta:
+    "@aws-sdk/client-lambda":
+      optional: true
     "@aws-sdk/client-s3":
       optional: true
     "@getmetal/metal-sdk":

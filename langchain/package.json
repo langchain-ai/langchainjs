@@ -22,6 +22,9 @@
     "tools.cjs",
     "tools.js",
     "tools.d.ts",
+    "tools/aws_lambda.cjs",
+    "tools/aws_lambda.js",
+    "tools/aws_lambda.d.ts",
     "tools/calculator.cjs",
     "tools/calculator.js",
     "tools/calculator.d.ts",
@@ -255,6 +258,7 @@
   "author": "LangChain",
   "license": "MIT",
   "devDependencies": {
+    "@aws-sdk/client-lambda": "^3.310.0",
     "@aws-sdk/client-s3": "^3.310.0",
     "@faker-js/faker": "^7.6.0",
     "@getmetal/metal-sdk": "^1.0.12",
@@ -305,6 +309,7 @@
     "typescript": "^4.9.5"
   },
   "peerDependencies": {
+    "@aws-sdk/client-lambda": "^3.310.0",
     "@aws-sdk/client-s3": "^3.310.0",
     "@getmetal/metal-sdk": "*",
     "@huggingface/inference": "^1.5.1",
@@ -330,6 +335,9 @@
     "typeorm": "^0.3.12"
   },
   "peerDependenciesMeta": {
+    "@aws-sdk/client-lambda": {
+      "optional": true
+    },
     "@aws-sdk/client-s3": {
       "optional": true
     },
@@ -459,6 +467,11 @@
       "types": "./tools.d.ts",
       "import": "./tools.js",
       "require": "./tools.cjs"
+    },
+    "./tools/aws_lambda": {
+      "types": "./tools/aws_lambda.d.ts",
+      "import": "./tools/aws_lambda.js",
+      "require": "./tools/aws_lambda.cjs"
     },
     "./tools/calculator": {
       "types": "./tools/calculator.d.ts",
