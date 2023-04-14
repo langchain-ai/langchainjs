@@ -19,23 +19,25 @@ This quick start will demonstrate how an Agent could use a Lambda function to se
 import { OpenAI } from "langchain";
 import { SerpAPI, AWSLambda } from "langchain/tools";
 import { initializeAgentExecutor } from "langchain/agents";
+
 const model = new OpenAI({ temperature: 0 });
-const emailSenderTool = new AWSLambda(
-  "email-sender", // name: tell the Agent what this tool is called
-  "Sends an email with the specified content to testing123@gmail.com", // description: tell the Agent precisely what the tool does
-  {
-    region: "us-east-1", // the region in which the function is deployed in the AWS cloud
-    accessKeyId: "abc123", // the access key for a user which has the IAM permissions necessary to invoke the function
-    secretAccessKey: "xyz456", // the secret access key for a user which has the IAM permissions necessary to invoke the function
-    functionName: "SendEmailViaSES", // the function name as seen in the AWS Lambda console
-  }
-);
+const emailSenderTool = new AWSLambda({
+  name: "email-sender",
+  // tell the Agent precisely what the tool does
+  description:
+    "Sends an email with the specified content to testing123@gmail.com",
+  region: "us-east-1", // AWS region in which the function is deployed
+  accessKeyId: "abc123", // access key id for a IAM user with invoke permissions
+  secretAccessKey: "xyz456", // secret access key for that IAM user
+  functionName: "SendEmailViaSES", // the function name as seen in AWS Console
+});
 const tools = [emailSenderTool, new SerpAPI("api_key_goes_here")];
 const executor = await initializeAgentExecutor(
   tools,
   model,
   "zero-shot-react-description"
 );
+
 const input = `Find out the capital of Croatia. Once you have it, email the answer to testing123@gmail.com.`;
 const result = await executor.call({ input });
 console.log(result);
