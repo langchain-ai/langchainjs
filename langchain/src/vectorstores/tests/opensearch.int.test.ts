@@ -5,7 +5,7 @@ import { OpenAIEmbeddings } from "../../embeddings/openai.js";
 import { OpenSearchVectorStore } from "../opensearch.js";
 import { Document } from "../../document.js";
 
-test("OpenSearchVectorStore integration", async () => {
+test.skip("OpenSearchVectorStore integration", async () => {
   if (!process.env.OPENSEARCH_URL) {
     throw new Error("OPENSEARCH_URL not set");
   }

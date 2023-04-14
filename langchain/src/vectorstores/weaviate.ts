@@ -10,9 +10,12 @@ import { Document } from "../document.js";
 
 export interface WeaviateLibArgs {
   client: WeaviateClient;
+  /**
+   * The name of the class in Weaviate. Must start with a capital letter.
+   */
   indexName: string;
-  textKey: string;
-  attributes?: string[];
+  textKey?: string;
+  metadataKeys?: string[];
 }
 
 interface ResultRow {
@@ -39,11 +42,11 @@ export class WeaviateStore extends VectorStore {
 
     this.client = args.client;
     this.indexName = args.indexName;
-    this.textKey = args.textKey;
+    this.textKey = args.textKey || "text";
     this.queryAttrs = [this.textKey];
 
-    if (args.attributes) {
-      this.queryAttrs = this.queryAttrs.concat(args.attributes);
+    if (args.metadataKeys) {
+      this.queryAttrs = this.queryAttrs.concat(args.metadataKeys);
     }
   }
 
@@ -73,6 +76,22 @@ export class WeaviateStore extends VectorStore {
       await this.embeddings.embedDocuments(documents.map((d) => d.pageContent)),
       documents
     );
+  }
+
+  async similaritySearch(
+    query: string,
+    k: number,
+    filter?: WeaviateFilter
+  ): Promise<Document[]> {
+    return super.similaritySearch(query, k, filter);
+  }
+
+  async similaritySearchWithScore(
+    query: string,
+    k: number,
+    filter?: WeaviateFilter
+  ): Promise<[Document, number][]> {
+    return super.similaritySearchWithScore(query, k, filter);
   }
 
   async similaritySearchVectorWithScore(
@@ -120,7 +139,7 @@ export class WeaviateStore extends VectorStore {
     metadatas: object | object[],
     embeddings: Embeddings,
     args: WeaviateLibArgs
-  ): Promise<VectorStore> {
+  ): Promise<WeaviateStore> {
     const docs: Document[] = [];
     for (let i = 0; i < texts.length; i += 1) {
       const metadata = Array.isArray(metadatas) ? metadatas[i] : metadatas;
@@ -137,7 +156,7 @@ export class WeaviateStore extends VectorStore {
     docs: Document[],
     embeddings: Embeddings,
     args: WeaviateLibArgs
-  ): Promise<VectorStore> {
+  ): Promise<WeaviateStore> {
     const instance = new this(embeddings, args);
     await instance.addDocuments(docs);
     return instance;
