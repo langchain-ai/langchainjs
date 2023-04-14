@@ -15,6 +15,7 @@ const entrypoints = {
   // tools
   tools: "tools/index",
   "tools/calculator": "tools/calculator",
+  "tools/webbrowser": "tools/webbrowser",
   // chains
   chains: "chains/index",
   "chains/load": "chains/load",
@@ -118,6 +119,7 @@ const deprecatedNodeOnly = [
 const requiresOptionalDependency = [
   "agents/load",
   "tools/calculator",
+  "tools/webbrowser",
   "chains/load",
   "embeddings/cohere",
   "llms/load",

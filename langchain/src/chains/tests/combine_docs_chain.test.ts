@@ -1,6 +1,6 @@
 import { test, expect } from "@jest/globals";
 import { Document } from "../../document.js";
-import { BaseLLM } from "../../llms/index.js";
+import { BaseLLM } from "../../llms/base.js";
 import { loadQAMapReduceChain } from "../question_answering/load.js";
 import { LLMResult } from "../../schema/index.js";
 
