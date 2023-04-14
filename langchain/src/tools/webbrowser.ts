@@ -11,8 +11,6 @@ import { CallbackManager } from "../callbacks/base.js";
 import { Embeddings } from "../embeddings/base.js";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
 
-const axios = "default" in axiosMod ? axiosMod.default : axiosMod;
-
 export const getText = (
   html: string,
   baseUrl: string,
@@ -65,6 +63,8 @@ const getHtml = async (
   h: Headers,
   config: AxiosRequestConfig
 ) => {
+  const axios = "default" in axiosMod ? axiosMod.default : axiosMod;
+
   const domain = new URL(baseUrl).hostname;
 
   const headers = { ...h };
@@ -194,7 +194,7 @@ export class WebBrowser extends Tool {
     const texts = await textSplitter.splitText(text);
 
     let context;
-    // if we have a summary grab first 4
+    // if we want a summary grab first 4
     if (doSummary) {
       context = texts.slice(0, 4).join("\n");
     }
