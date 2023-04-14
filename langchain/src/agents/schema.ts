@@ -6,6 +6,7 @@ import { AgentStep, InputValues } from "../schema/index.js";
 
 export class AgentScratchPadChatPromptTemplate extends ChatPromptTemplate {
   constructor(input: Exclude<ChatPromptTemplateInput, "validateTemplate">) {
+    // Skip validation of the template, since it is missing the agent_scratchpad
     super({ ...input, validateTemplate: false });
   }
 
