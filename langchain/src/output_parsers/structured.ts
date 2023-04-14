@@ -48,8 +48,10 @@ function printSchema(schema: z.ZodTypeAny, depth = 0): string {
   if (schema instanceof z.ZodObject || schema._def.typeName === "ZodObject") {
     const indent = "\t".repeat(depth);
     const indentIn = "\t".repeat(depth + 1);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { shape } = schema as z.ZodObject<any>;
     return `{${schema._def.description ? ` // ${schema._def.description}` : ""}
-${Object.entries((schema as z.ZodObject<any>).shape)
+${Object.entries(shape)
   .map(
     ([key, value]) =>
       `${indentIn}"${key}": ${printSchema(value as z.ZodTypeAny, depth + 1)}${
