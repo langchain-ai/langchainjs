@@ -12,7 +12,14 @@ import {
 export const run = async () => {
   process.env.LANGCHAIN_HANDLER = "langchain";
   const model = new OpenAI({ temperature: 0 });
-  const tools = [new SerpAPI(), new Calculator()];
+  const tools = [
+    new SerpAPI(process.env.SERPAPI_API_KEY, {
+      location: "Austin,Texas,United States",
+      hl: "en",
+      gl: "us",
+    }),
+    new Calculator(),
+  ];
 
   const executor = await initializeAgentExecutor(
     tools,
@@ -47,7 +54,14 @@ export const run = async () => {
     callbackManager.addHandler(new LangChainTracer());
 
     const model = new OpenAI({ temperature: 0, callbackManager });
-    const tools = [new SerpAPI(), new Calculator()];
+    const tools = [
+      new SerpAPI(process.env.SERPAPI_API_KEY, {
+        location: "Austin,Texas,United States",
+        hl: "en",
+        gl: "us",
+      }),
+      new Calculator(),
+    ];
     for (const tool of tools) {
       tool.callbackManager = callbackManager;
     }

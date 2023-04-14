@@ -278,7 +278,7 @@ export class RefineDocumentsChain
       fields.initialResponseName ?? this.initialResponseName;
   }
 
-  _constructInitialInputs(doc: Document, rest: Record<string, unknown>) {
+  async _constructInitialInputs(doc: Document, rest: Record<string, unknown>) {
     const baseInfo: Record<string, unknown> = {
       page_content: doc.pageContent,
       ...doc.metadata,
@@ -289,7 +289,7 @@ export class RefineDocumentsChain
     });
 
     const baseInputs: Record<string, unknown> = {
-      [this.documentVariableName]: this.documentPrompt.format({
+      [this.documentVariableName]: await this.documentPrompt.format({
         ...documentInfo,
       }),
     };
@@ -297,7 +297,7 @@ export class RefineDocumentsChain
     return inputs;
   }
 
-  _constructRefineInputs(doc: Document, res: string) {
+  async _constructRefineInputs(doc: Document, res: string) {
     const baseInfo: Record<string, unknown> = {
       page_content: doc.pageContent,
       ...doc.metadata,
@@ -307,7 +307,7 @@ export class RefineDocumentsChain
       documentInfo[value] = baseInfo[value];
     });
     const baseInputs: Record<string, unknown> = {
-      [this.documentVariableName]: this.documentPrompt.format({
+      [this.documentVariableName]: await this.documentPrompt.format({
         ...documentInfo,
       }),
     };
@@ -323,13 +323,19 @@ export class RefineDocumentsChain
 
     const currentDocs = docs as Document[];
 
-    const initialInputs = this._constructInitialInputs(currentDocs[0], rest);
+    const initialInputs = await this._constructInitialInputs(
+      currentDocs[0],
+      rest
+    );
     let res = await this.llmChain.predict({ ...initialInputs });
 
     const refineSteps = [res];
 
     for (let i = 1; i < currentDocs.length; i += 1) {
-      const refineInputs = this._constructRefineInputs(currentDocs[i], res);
+      const refineInputs = await this._constructRefineInputs(
+        currentDocs[i],
+        res
+      );
       const inputs = { ...refineInputs, ...rest };
       res = await this.refineLLMChain.predict({ ...inputs });
       refineSteps.push(res);

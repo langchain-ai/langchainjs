@@ -1,11 +1,17 @@
+import type { TiktokenModel } from "@dqbd/tiktoken";
 import { DEFAULT_SQL_DATABASE_PROMPT } from "./sql_db_prompt.js";
 import { BaseChain } from "../base.js";
+import type { OpenAI } from "../../llms/openai.js";
 import { BaseMemory } from "../../memory/base.js";
 import { LLMChain } from "../llm_chain.js";
 import type { SqlDatabase } from "../../sql_db.js";
 import { ChainValues } from "../../schema/index.js";
 import { SerializedSqlDatabaseChain } from "../serde.js";
 import { BaseLanguageModel } from "../../base_language/index.js";
+import {
+  calculateMaxTokens,
+  getModelContextSize,
+} from "../../base_language/count_tokens.js";
 
 export class SqlDatabaseChain extends BaseChain {
   // LLM wrapper to use
@@ -64,8 +70,9 @@ export class SqlDatabaseChain extends BaseChain {
       table_info: tableInfo,
       stop: ["\nSQLResult:"],
     };
+    await this.verifyNumberOfTokens(inputText, tableInfo);
 
-    const intermediateStep = [];
+    const intermediateStep: string[] = [];
     const sqlCommand = await lLMChain.predict(llmInputs);
     intermediateStep.push(sqlCommand);
     let queryResult = "";
@@ -117,5 +124,33 @@ export class SqlDatabaseChain extends BaseChain {
       llm: this.llm.serialize(),
       sql_database: this.database.serialize(),
     };
+  }
+
+  private async verifyNumberOfTokens(
+    inputText: string,
+    tableinfo: string
+  ): Promise<void> {
+    // We verify it only for OpenAI for the moment
+    if (this.llm._llmType() !== "openai") {
+      return;
+    }
+    const llm = this.llm as OpenAI;
+    const promptTemplate = this.prompt.template;
+    const stringWeSend = `${inputText}${promptTemplate}${tableinfo}`;
+
+    const maxToken = await calculateMaxTokens({
+      prompt: stringWeSend,
+      // Cast here to allow for other models that may not fit the union
+      modelName: llm.modelName as TiktokenModel,
+    });
+
+    if (maxToken < llm.maxTokens) {
+      throw new Error(`The combination of the database structure and your question is too big for the model ${
+        llm.modelName
+      } which can compute only a max tokens of ${getModelContextSize(
+        llm.modelName
+      )}.
+      We suggest you to use the includeTables parameters when creating the SqlDatabase object to select only a subset of the tables. You can also use a model which can handle more tokens.`);
+    }
   }
 }

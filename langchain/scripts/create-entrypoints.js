@@ -39,8 +39,10 @@ const entrypoints = {
   // vectorstores
   vectorstores: "vectorstores/index",
   "vectorstores/base": "vectorstores/base",
+  "vectorstores/memory": "vectorstores/memory",
   "vectorstores/chroma": "vectorstores/chroma",
   "vectorstores/hnswlib": "vectorstores/hnswlib",
+  "vectorstores/mongo": "vectorstores/mongo",
   "vectorstores/pinecone": "vectorstores/pinecone",
   "vectorstores/supabase": "vectorstores/supabase",
   "vectorstores/milvus": "vectorstores/milvus",
@@ -127,6 +129,7 @@ const requiresOptionalDependency = [
   "prompts/load",
   "vectorstores/chroma",
   "vectorstores/hnswlib",
+  "vectorstores/mongo",
   "vectorstores/pinecone",
   "vectorstores/supabase",
   "vectorstores/milvus",

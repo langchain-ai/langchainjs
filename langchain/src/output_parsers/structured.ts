@@ -22,6 +22,12 @@ function printSchema(schema: z.ZodTypeAny, depth = 0): string {
   if (schema instanceof z.ZodDate) {
     return "date";
   }
+  if (schema instanceof z.ZodNullable) {
+    return `${printSchema(schema._def.innerType, depth)} // Nullable`;
+  }
+  if (schema instanceof z.ZodTransformer) {
+    return `${printSchema(schema._def.schema, depth)}`;
+  }
   if (schema instanceof z.ZodOptional) {
     return `${printSchema(schema._def.innerType, depth)} // Optional`;
   }
@@ -44,7 +50,8 @@ ${Object.entries(schema.shape)
   .join("\n")}
 ${indent}}`;
   }
-  throw new Error(`Unsupported type: ${schema._def.innerType}`);
+
+  throw new Error(`Unsupported type: ${schema._def.innerType.typeName}`);
 }
 
 export class StructuredOutputParser<
@@ -79,6 +86,8 @@ export class StructuredOutputParser<
 \`\`\`json
 ${printSchema(this.schema)}
 \`\`\`
+
+Including the leading and trailing "\`\`\`json" and "\`\`\`"
 `;
   }
 
@@ -88,7 +97,7 @@ ${printSchema(this.schema)}
       return this.schema.parse(JSON.parse(json));
     } catch (e) {
       throw new OutputParserException(
-        `Failed to parse. Text: ${text}. Error: ${e}`
+        `Failed to parse. Text: "${text}". Error: ${e}`
       );
     }
   }
