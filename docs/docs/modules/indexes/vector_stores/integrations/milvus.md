@@ -55,7 +55,7 @@ const vectorStore = await Milvus.fromTexts(
 
 // or alternatively from docs
 const vectorStore = await Milvus.fromDocuments(docs, new OpenAIEmbeddings(), {
-  collectionName: "goldel-escher-bach",
+  collectionName: "goldel_escher_bach",
 });
 
 const response = await vectorStore.similaritySearch("scared", 2);
