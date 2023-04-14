@@ -82,6 +82,9 @@ vectorstores/chroma.d.ts
 vectorstores/hnswlib.cjs
 vectorstores/hnswlib.js
 vectorstores/hnswlib.d.ts
+vectorstores/weaviate.cjs
+vectorstores/weaviate.js
+vectorstores/weaviate.d.ts
 vectorstores/mongo.cjs
 vectorstores/mongo.js
 vectorstores/mongo.d.ts
