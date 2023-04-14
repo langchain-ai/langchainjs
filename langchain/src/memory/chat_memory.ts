@@ -26,6 +26,10 @@ export class ChatMessageHistory extends BaseChatMessageHistory {
   addAIChatMessage(message: string): void {
     this.messages.push(new AIChatMessage(message));
   }
+
+  clear(): void {
+    this.messages = [];
+  }
 }
 
 export interface BaseMemoryInput {
@@ -60,5 +64,9 @@ export abstract class BaseChatMemory extends BaseMemory {
     this.chatHistory.addAIChatMessage(
       getInputValue(outputValues, this.outputKey)
     );
+  }
+
+  clear() {
+    this.chatHistory.clear();
   }
 }
