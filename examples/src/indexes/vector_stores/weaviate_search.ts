@@ -14,7 +14,7 @@ export async function run() {
   });
 
   // Create a store for an existing index
-  const store = new WeaviateStore(new OpenAIEmbeddings(), {
+  const store = await WeaviateStore.fromExistingIndex(new OpenAIEmbeddings(), {
     client,
     indexName: "Test",
     metadataKeys: ["foo"],
