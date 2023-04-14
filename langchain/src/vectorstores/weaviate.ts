@@ -1,5 +1,9 @@
 import { v4 } from "uuid";
-import { WeaviateObject, type WeaviateClient } from "weaviate-ts-client";
+import type {
+  WeaviateObject,
+  WeaviateClient,
+  WhereFilter,
+} from "weaviate-ts-client";
 import { VectorStore } from "./base.js";
 import { Embeddings } from "../embeddings/base.js";
 import { Document } from "../document.js";
@@ -9,6 +13,16 @@ export interface WeaviateLibArgs {
   indexName: string;
   textKey: string;
   attributes?: string[];
+}
+
+interface ResultRow {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [key: string]: any;
+}
+
+export interface WeaviateFilter {
+  distance?: number;
+  where: WhereFilter;
 }
 
 export class WeaviateStore extends VectorStore {
@@ -33,14 +47,11 @@ export class WeaviateStore extends VectorStore {
     }
   }
 
-  addVectors(_vectors: number[][], _documents: Document[]): Promise<void> {
-    throw new Error("Not Implemented");
-  }
-
-  async addDocuments(documents: Document[]): Promise<void> {
-    const batch: WeaviateObject[] = documents.map((document) => ({
+  async addVectors(vectors: number[][], documents: Document[]): Promise<void> {
+    const batch: WeaviateObject[] = documents.map((document, index) => ({
       class: this.indexName,
       id: v4(),
+      vector: vectors[index],
       properties: {
         [this.textKey]: document.pageContent,
         ...document.metadata,
@@ -57,66 +68,51 @@ export class WeaviateStore extends VectorStore {
     }
   }
 
-  similaritySearchVectorWithScore(
-    _query: number[],
-    _k: number,
-    _filter?: object
-  ): Promise<[Document, number][]> {
-    throw new Error("Not Implemented");
+  async addDocuments(documents: Document[]): Promise<void> {
+    return this.addVectors(
+      await this.embeddings.embedDocuments(documents.map((d) => d.pageContent)),
+      documents
+    );
   }
 
-  async similaritySearch(
-    query: string,
+  async similaritySearchVectorWithScore(
+    query: number[],
     k: number,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    filter?: Record<string, any> | undefined
-  ): Promise<Document[]> {
-    const content: {
-      concepts: string[];
-      certainty?: number;
-    } = {
-      concepts: [query],
-    };
-
-    if (filter?.searchDistance) {
-      content.certainty = filter.searchDistance;
-    }
-
+    filter?: WeaviateFilter
+  ): Promise<[Document, number][]> {
     try {
-      const result = await this.client.graphql
+      let builder = await this.client.graphql
         .get()
         .withClassName(this.indexName)
-        .withFields(this.queryAttrs.join(" "))
-        .withNearText({ concepts: [query] })
-        .withLimit(k)
-        .do();
+        .withFields(`${this.queryAttrs.join(" ")} _additional { distance }`)
+        .withNearVector({
+          vector: query,
+          distance: filter?.distance,
+        })
+        .withLimit(k);
 
-      const documents = [];
+      if (filter?.where) {
+        builder = builder.withWhere(filter.where);
+      }
+
+      const result = await builder.do();
+
+      const documents: [Document, number][] = [];
       for (const data of result.data.Get[this.indexName]) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const record: Record<string, any> = data;
-        const text = record[this.textKey];
-        delete record[this.textKey];
+        const { [this.textKey]: text, _additional, ...rest }: ResultRow = data;
 
-        documents.push(
+        documents.push([
           new Document({
             pageContent: text,
-            metadata: record,
-          })
-        );
+            metadata: rest,
+          }),
+          _additional.distance,
+        ]);
       }
       return documents;
     } catch (e) {
       throw Error(`'Error in similaritySearch' ${e}`);
     }
-  }
-
-  similaritySearchWithScore(
-    _query: string,
-    _k?: number,
-    _filter?: object | undefined
-  ): Promise<[object, number][]> {
-    throw Error("Not Implemented");
   }
 
   static fromTexts(
@@ -125,7 +121,7 @@ export class WeaviateStore extends VectorStore {
     embeddings: Embeddings,
     args: WeaviateLibArgs
   ): Promise<VectorStore> {
-    const docs = [];
+    const docs: Document[] = [];
     for (let i = 0; i < texts.length; i += 1) {
       const metadata = Array.isArray(metadatas) ? metadatas[i] : metadatas;
       const newDoc = new Document({
