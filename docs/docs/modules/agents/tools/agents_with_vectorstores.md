@@ -47,7 +47,15 @@ const qaTool = new ChainTool({
 Now you can construct and using the tool just as you would any other!
 
 ```typescript
-const tools = [new SerpAPI(), new Calculator(), qaTool];
+const tools = [
+  new SerpAPI(process.env.SERPAPI_API_KEY, {
+    location: "Austin,Texas,United States",
+    hl: "en",
+    gl: "us",
+  }),
+  new Calculator(),
+  qaTool,
+];
 
 const executor = await initializeAgentExecutor(
   tools,

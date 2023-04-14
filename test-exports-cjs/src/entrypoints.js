@@ -9,6 +9,7 @@ const llms_base = require("langchain/llms/base");
 const llms_openai = require("langchain/llms/openai");
 const prompts = require("langchain/prompts");
 const vectorstores_base = require("langchain/vectorstores/base");
+const vectorstores_memory = require("langchain/vectorstores/memory");
 const vectorstores_prisma = require("langchain/vectorstores/prisma");
 const text_splitter = require("langchain/text_splitter");
 const memory = require("langchain/memory");

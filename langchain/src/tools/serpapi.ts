@@ -5,6 +5,9 @@ import { Tool } from "./base.js";
  * when used in `jest` tests. Part of the issue seems to be that the `serpapi`
  * package imports a wasm module to use instead of native `fetch`, which we
  * don't want anyway.
+ *
+ * NOTE: you must provide location, gl and hl or your region and language will
+ * may not match your location, and will not be deterministic.
  */
 
 // Copied over from `serpapi` package
@@ -45,7 +48,7 @@ interface GoogleParameters extends BaseParameters {
    * Location
    * Parameter defines from where you want the search to originate. If several
    * locations match the location requested, we'll pick the most popular one. Head to
-   * the [/locations.json API](https://serpapi.com/locations-api) if you need more
+   * [/locations.json API](https://serpapi.com/locations-api) if you need more
    * precise control. location and uule parameters can't be used together. Avoid
    * utilizing location when setting the location outside the U.S. when using Google
    * Shopping and/or Google Product API.

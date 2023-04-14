@@ -226,11 +226,16 @@ async function getResponse(request, config) {
     return createError("Network Error", config, "ERR_NETWORK", request);
   }
 
+  const headers = {};
+  stageOne.headers.forEach((value, key) => {
+    headers[key] = value;
+  });
+
   const response = {
     ok: stageOne.ok,
     status: stageOne.status,
     statusText: stageOne.statusText,
-    headers: new Headers(stageOne.headers), // Make a copy of headers
+    headers,
     config,
     request,
   };
