@@ -1,0 +1,42 @@
+# Reference:
+#   https://opensearch.org/docs/latest/install-and-configure/install-opensearch/docker/#sample-docker-composeyml
+version: '3'
+services:
+  opensearch:
+    image: opensearchproject/opensearch:2.6.0
+    container_name: opensearch
+    environment:
+      - cluster.name=opensearch
+      - node.name=opensearch
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
+      - "DISABLE_INSTALL_DEMO_CONFIG=true"
+      - "DISABLE_SECURITY_PLUGIN=true"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - opensearch_data:/usr/share/opensearch/data
+    ports:
+      - 9200:9200
+      - 9600:9600
+    networks:
+      - opensearch
+  opensearch-dashboards:
+    image: opensearchproject/opensearch-dashboards:latest # Make sure the version of opensearch-dashboards matches the version of opensearch installed on other nodes
+    container_name: opensearch-dashboards
+    ports:
+      - 5601:5601 # Map host port 5601 to container port 5601
+    expose:
+      - "5601" # Expose port 5601 for web access to OpenSearch Dashboards
+    environment:
+      OPENSEARCH_HOSTS: '["http://opensearch:9200"]' # Define the OpenSearch nodes that OpenSearch Dashboards will query
+      DISABLE_SECURITY_DASHBOARDS_PLUGIN: "true" # disables security dashboards plugin in OpenSearch Dashboards
+    networks:
+      - opensearch
+networks:
+  opensearch:
+volumes:
+  opensearch_data:
