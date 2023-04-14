@@ -49,7 +49,7 @@ const vectorStore = await Milvus.fromTexts(
   [{ id: 2 }, { id: 1 }, { id: 3 }, { id: 4 }, { id: 5 }],
   new OpenAIEmbeddings(),
   {
-    collectionName: "goldel-escher-bach",
+    collectionName: "goldel_escher_bach",
   }
 );
 
@@ -70,7 +70,7 @@ import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 const vectorStore = await Milvus.fromExistingCollection(
   new OpenAIEmbeddings(),
   {
-    collectionName: "goldel-escher-bach",
+    collectionName: "goldel_escher_bach",
   }
 );
 
