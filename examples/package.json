@@ -23,6 +23,7 @@
   "license": "MIT",
   "dependencies": {
     "@getmetal/metal-sdk": "^1.0.12",
+    "@opensearch-project/opensearch": "^2.2.0",
     "@pinecone-database/pinecone": "^0.0.12",
     "@prisma/client": "^4.11.0",
     "@supabase/supabase-js": "^2.10.0",

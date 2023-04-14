@@ -5873,6 +5873,19 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@opensearch-project/opensearch@npm:^2.2.0":
+  version: 2.2.0
+  resolution: "@opensearch-project/opensearch@npm:2.2.0"
+  dependencies:
+    aws4: ^1.11.0
+    debug: ^4.3.1
+    hpagent: ^1.2.0
+    ms: ^2.1.3
+    secure-json-parse: ^2.4.0
+  checksum: cceb5bb2c194a7d4bfab3c1b4a3230ea1457ae8976f39bb9e0c5e0067dc450a418a4649536988f0d48a746d7d3ed2002c32d9fde48dfc3112158e964bafa6e76
+  languageName: node
+  linkType: hard
+
 "@pinecone-database/pinecone@npm:^0.0.12":
   version: 0.0.12
   resolution: "@pinecone-database/pinecone@npm:0.0.12"
@@ -8750,6 +8763,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"aws4@npm:^1.11.0":
+  version: 1.12.0
+  resolution: "aws4@npm:1.12.0"
+  checksum: 68f79708ac7c335992730bf638286a3ee0a645cf12575d557860100767c500c08b30e24726b9f03265d74116417f628af78509e1333575e9f8d52a80edfe8cbc
+  languageName: node
+  linkType: hard
+
 "axe-core@npm:^4.6.2":
   version: 4.6.3
   resolution: "axe-core@npm:4.6.3"
@@ -10994,7 +11014,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"debug@npm:4, debug@npm:4.3.4, debug@npm:^4.1.0, debug@npm:^4.1.1, debug@npm:^4.3.2, debug@npm:^4.3.3, debug@npm:^4.3.4":
+"debug@npm:4, debug@npm:4.3.4, debug@npm:^4.1.0, debug@npm:^4.1.1, debug@npm:^4.3.1, debug@npm:^4.3.2, debug@npm:^4.3.3, debug@npm:^4.3.4":
   version: 4.3.4
   resolution: "debug@npm:4.3.4"
   dependencies:
@@ -12977,6 +12997,7 @@ __metadata:
   resolution: "examples@workspace:examples"
   dependencies:
     "@getmetal/metal-sdk": ^1.0.12
+    "@opensearch-project/opensearch": ^2.2.0
     "@pinecone-database/pinecone": ^0.0.12
     "@prisma/client": ^4.11.0
     "@supabase/supabase-js": ^2.10.0
@@ -14455,6 +14476,13 @@ __metadata:
     readable-stream: ^2.0.1
     wbuf: ^1.1.0
   checksum: 2de144115197967ad6eeee33faf41096c6ba87078703c5cb011632dcfbffeb45784569e0cf02c317bd79c48375597c8ec88c30fff5bb0b023e8f654fb6e9c06e
+  languageName: node
+  linkType: hard
+
+"hpagent@npm:^1.2.0":
+  version: 1.2.0
+  resolution: "hpagent@npm:1.2.0"
+  checksum: b029da695edae438cee4da2a437386f9db4ac27b3ceb7306d02e1b586c9c194741ed2e943c8a222e0cfefaf27ee3f863aca7ba1721b0950a2a19bf25bc0d85e2
   languageName: node
   linkType: hard
 
@@ -17077,6 +17105,7 @@ __metadata:
     "@getmetal/metal-sdk": ^1.0.12
     "@huggingface/inference": ^1.5.1
     "@jest/globals": ^29.5.0
+    "@opensearch-project/opensearch": ^2.2.0
     "@pinecone-database/pinecone": ^0.0.12
     "@supabase/supabase-js": ^2.10.0
     "@tsconfig/recommended": ^1.0.2
@@ -17138,6 +17167,7 @@ __metadata:
     "@aws-sdk/client-s3": ^3.310.0
     "@getmetal/metal-sdk": "*"
     "@huggingface/inference": ^1.5.1
+    "@opensearch-project/opensearch": "*"
     "@pinecone-database/pinecone": "*"
     "@supabase/supabase-js": ^2.10.0
     "@zilliz/milvus2-sdk-node": ^2.2.0
@@ -17166,6 +17196,8 @@ __metadata:
     "@getmetal/metal-sdk":
       optional: true
     "@huggingface/inference":
+      optional: true
+    "@opensearch-project/opensearch":
       optional: true
     "@pinecone-database/pinecone":
       optional: true
@@ -18377,7 +18409,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ms@npm:2.1.3, ms@npm:^2.0.0, ms@npm:^2.1.1":
+"ms@npm:2.1.3, ms@npm:^2.0.0, ms@npm:^2.1.1, ms@npm:^2.1.3":
   version: 2.1.3
   resolution: "ms@npm:2.1.3"
   checksum: aa92de608021b242401676e35cfa5aa42dd70cbdc082b916da7fb925c542173e36bce97ea3e804923fe92c0ad991434e4a38327e15a1b5b5f945d66df615ae6d
@@ -22443,6 +22475,13 @@ __metadata:
     extend-shallow: ^2.0.1
     kind-of: ^6.0.0
   checksum: 3cc4131705493b2955729b075dcf562359bba66183debb0332752dc9cad35616f6da7a23e42b6cab45cd2e4bb5cda113e9e84c8f05aee77adb6b0289a0229101
+  languageName: node
+  linkType: hard
+
+"secure-json-parse@npm:^2.4.0":
+  version: 2.7.0
+  resolution: "secure-json-parse@npm:2.7.0"
+  checksum: d9d7d5a01fc6db6115744ba23cf9e67ecfe8c524d771537c062ee05ad5c11b64c730bc58c7f33f60bd6877f96b86f0ceb9ea29644e4040cb757f6912d4dd6737
   languageName: node
   linkType: hard
 

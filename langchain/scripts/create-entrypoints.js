@@ -46,6 +46,7 @@ const entrypoints = {
   "vectorstores/mongo": "vectorstores/mongo",
   "vectorstores/pinecone": "vectorstores/pinecone",
   "vectorstores/supabase": "vectorstores/supabase",
+  "vectorstores/opensearch": "vectorstores/opensearch",
   "vectorstores/milvus": "vectorstores/milvus",
   "vectorstores/prisma": "vectorstores/prisma",
   // text_splitter
@@ -134,6 +135,7 @@ const requiresOptionalDependency = [
   "vectorstores/mongo",
   "vectorstores/pinecone",
   "vectorstores/supabase",
+  "vectorstores/opensearch",
   "vectorstores/milvus",
   "document_loaders/web/cheerio",
   "document_loaders/web/puppeteer",

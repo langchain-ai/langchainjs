@@ -103,6 +103,9 @@
     "vectorstores/supabase.cjs",
     "vectorstores/supabase.js",
     "vectorstores/supabase.d.ts",
+    "vectorstores/opensearch.cjs",
+    "vectorstores/opensearch.js",
+    "vectorstores/opensearch.d.ts",
     "vectorstores/milvus.cjs",
     "vectorstores/milvus.js",
     "vectorstores/milvus.d.ts",
@@ -264,6 +267,7 @@
     "@getmetal/metal-sdk": "^1.0.12",
     "@huggingface/inference": "^1.5.1",
     "@jest/globals": "^29.5.0",
+    "@opensearch-project/opensearch": "^2.2.0",
     "@pinecone-database/pinecone": "^0.0.12",
     "@supabase/supabase-js": "^2.10.0",
     "@tsconfig/recommended": "^1.0.2",
@@ -313,6 +317,7 @@
     "@aws-sdk/client-s3": "^3.310.0",
     "@getmetal/metal-sdk": "*",
     "@huggingface/inference": "^1.5.1",
+    "@opensearch-project/opensearch": "*",
     "@pinecone-database/pinecone": "*",
     "@supabase/supabase-js": "^2.10.0",
     "@zilliz/milvus2-sdk-node": "^2.2.0",
@@ -345,6 +350,9 @@
       "optional": true
     },
     "@huggingface/inference": {
+      "optional": true
+    },
+    "@opensearch-project/opensearch": {
       "optional": true
     },
     "@pinecone-database/pinecone": {
@@ -608,6 +616,11 @@
       "types": "./vectorstores/supabase.d.ts",
       "import": "./vectorstores/supabase.js",
       "require": "./vectorstores/supabase.cjs"
+    },
+    "./vectorstores/opensearch": {
+      "types": "./vectorstores/opensearch.d.ts",
+      "import": "./vectorstores/opensearch.js",
+      "require": "./vectorstores/opensearch.cjs"
     },
     "./vectorstores/milvus": {
       "types": "./vectorstores/milvus.d.ts",

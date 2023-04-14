@@ -62,6 +62,7 @@
       "src/vectorstores/mongo.ts",
       "src/vectorstores/pinecone.ts",
       "src/vectorstores/supabase.ts",
+      "src/vectorstores/opensearch.ts",
       "src/vectorstores/milvus.ts",
       "src/vectorstores/prisma.ts",
       "src/text_splitter.ts",
