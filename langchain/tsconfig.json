@@ -59,6 +59,7 @@
       "src/vectorstores/memory.ts",
       "src/vectorstores/chroma.ts",
       "src/vectorstores/hnswlib.ts",
+      "src/vectorstores/weaviate.ts",
       "src/vectorstores/mongo.ts",
       "src/vectorstores/pinecone.ts",
       "src/vectorstores/supabase.ts",
