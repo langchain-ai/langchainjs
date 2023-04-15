@@ -1,6 +1,5 @@
 /* eslint-disable no-instanceof/no-instanceof */
 import { z } from "zod";
-
 import { BaseOutputParser, OutputParserException } from "../schema/index.js";
 
 function printSchema(schema: z.ZodTypeAny, depth = 0): string {
@@ -21,6 +20,9 @@ function printSchema(schema: z.ZodTypeAny, depth = 0): string {
   }
   if (schema instanceof z.ZodDate) {
     return "date";
+  }
+  if (schema instanceof z.ZodEnum) {
+    return schema.Values.map((value: string) => `"${value}"`).join(" | ");
   }
   if (schema instanceof z.ZodOptional) {
     return `${printSchema(schema._def.innerType, depth)} // Optional`;
