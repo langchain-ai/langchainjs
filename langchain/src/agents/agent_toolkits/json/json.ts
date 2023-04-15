@@ -1,12 +1,12 @@
-import { BaseLLM } from "../../../llms/index.js";
+import { BaseLanguageModel } from "../../../base_language/index.js";
+import { Tool } from "../../../tools/base.js";
 import {
   JsonGetValueTool,
   JsonListKeysTool,
   JsonSpec,
-  Tool,
-} from "../../tools/index.js";
+} from "../../../tools/json.js";
 import { JSON_PREFIX, JSON_SUFFIX } from "./prompt.js";
-import { LLMChain } from "../../../chains/index.js";
+import { LLMChain } from "../../../chains/llm_chain.js";
 import { CreatePromptArgs, ZeroShotAgent } from "../../mrkl/index.js";
 import { Toolkit } from "../base.js";
 import { AgentExecutor } from "../../executor.js";
@@ -24,7 +24,7 @@ export class JsonToolkit extends Toolkit {
 }
 
 export function createJsonAgent(
-  llm: BaseLLM,
+  llm: BaseLanguageModel,
   toolkit: JsonToolkit,
   args?: CreatePromptArgs
 ) {

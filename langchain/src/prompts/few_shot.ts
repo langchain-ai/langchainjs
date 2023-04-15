@@ -8,17 +8,8 @@ import {
   checkValidTemplate,
   renderTemplate,
 } from "./template.js";
-import {
-  resolveTemplateFromFile,
-  resolveConfigFromFile,
-  parseFileConfig,
-} from "../util/index.js";
 import { PromptTemplate } from "./prompt.js";
-import { BaseOutputParser } from "../output_parsers/index.js";
-import {
-  SerializedFewShotTemplate,
-  SerializedPromptTemplate,
-} from "./serde.js";
+import { SerializedFewShotTemplate } from "./serde.js";
 import { Example, InputValues, PartialValues } from "../schema/index.js";
 
 export interface FewShotPromptTemplateInput extends BasePromptTemplateInput {
@@ -175,10 +166,14 @@ export class FewShotPromptTemplate
         "Serializing an example selector is not currently supported"
       );
     }
+    if (this.outputParser !== undefined) {
+      throw new Error(
+        "Serializing an output parser is not currently supported"
+      );
+    }
     return {
       _type: this._getPromptType(),
       input_variables: this.inputVariables,
-      output_parser: this.outputParser?.serialize(),
       example_prompt: this.examplePrompt.serialize(),
       example_separator: this.exampleSeparator,
       suffix: this.suffix,
@@ -191,21 +186,15 @@ export class FewShotPromptTemplate
   static async deserialize(
     data: SerializedFewShotTemplate
   ): Promise<FewShotPromptTemplate> {
-    const serializedPrompt = await resolveConfigFromFile<
-      "example_prompt",
-      SerializedPromptTemplate
-    >("example_prompt", data);
-    const examplePrompt = await PromptTemplate.deserialize(serializedPrompt);
+    const { example_prompt } = data;
+    if (!example_prompt) {
+      throw new Error("Missing example prompt");
+    }
+    const examplePrompt = await PromptTemplate.deserialize(example_prompt);
 
     let examples: Example[];
 
-    if (typeof data.examples === "string") {
-      examples = await parseFileConfig(data.examples, ".json", [
-        ".json",
-        ".yml",
-        ".yaml",
-      ]);
-    } else if (Array.isArray(data.examples)) {
+    if (Array.isArray(data.examples)) {
       examples = data.examples;
     } else {
       throw new Error(
@@ -215,14 +204,11 @@ export class FewShotPromptTemplate
 
     return new FewShotPromptTemplate({
       inputVariables: data.input_variables,
-      outputParser: data.output_parser
-        ? await BaseOutputParser.deserialize(data.output_parser)
-        : undefined,
       examplePrompt,
       examples,
       exampleSeparator: data.example_separator,
-      prefix: await resolveTemplateFromFile("prefix", data),
-      suffix: await resolveTemplateFromFile("suffix", data),
+      prefix: data.prefix,
+      suffix: data.suffix,
       templateFormat: data.template_format,
     });
   }

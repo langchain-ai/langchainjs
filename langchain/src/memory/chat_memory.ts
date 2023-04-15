@@ -2,6 +2,7 @@ import {
   HumanChatMessage,
   AIChatMessage,
   BaseChatMessage,
+  BaseChatMessageHistory,
 } from "../schema/index.js";
 import {
   BaseMemory,
@@ -10,10 +11,11 @@ import {
   getInputValue,
 } from "./base.js";
 
-export class ChatMessageHistory {
+export class ChatMessageHistory extends BaseChatMessageHistory {
   messages: BaseChatMessage[] = [];
 
   constructor(messages?: BaseChatMessage[]) {
+    super();
     this.messages = messages ?? [];
   }
 
@@ -27,8 +29,8 @@ export class ChatMessageHistory {
 }
 
 export interface BaseMemoryInput {
-  chatHistory: ChatMessageHistory;
-  returnMessages: boolean;
+  chatHistory?: ChatMessageHistory;
+  returnMessages?: boolean;
   inputKey?: string;
   outputKey?: string;
 }
@@ -42,7 +44,7 @@ export abstract class BaseChatMemory extends BaseMemory {
 
   outputKey?: string;
 
-  constructor(fields?: Partial<BaseMemoryInput>) {
+  constructor(fields?: BaseMemoryInput) {
     super();
     this.chatHistory = fields?.chatHistory ?? new ChatMessageHistory();
     this.returnMessages = fields?.returnMessages ?? this.returnMessages;

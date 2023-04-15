@@ -1,7 +1,4 @@
 import { TiktokenModel } from "@dqbd/tiktoken";
-import { createParser } from "eventsource-parser";
-import { backOff } from "exponential-backoff";
-import type { IncomingMessage } from "http";
 import {
   Configuration,
   ConfigurationParameters,
@@ -11,12 +8,13 @@ import {
   OpenAIApi,
 } from "openai";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
-import { chunkArray } from "../util/index.js";
+import type { StreamingAxiosConfiguration } from "../util/axios-types.js";
+import { chunkArray } from "../util/chunk.js";
 import { BaseLLM, BaseLLMParams } from "./base.js";
-import { calculateMaxTokens } from "./calculateMaxTokens.js";
+import { calculateMaxTokens } from "../base_language/count_tokens.js";
 import { OpenAIChat } from "./openai-chat.js";
 import { LLMResult } from "../schema/index.js";
-import { CallbackManager } from "../callbacks/index.js";
+import {CallbackManager} from "../callbacks/base.js";
 
 interface ModelParams {
   /** Sampling temperature to use */
@@ -67,11 +65,13 @@ interface OpenAIInput extends ModelParams {
   /** Batch size to use when passing multiple documents to generate */
   batchSize: number;
 
-  /** Maximum number of retries to make when generating */
-  maxRetries: number;
-
   /** List of stop words to use when generating */
   stop?: string[];
+
+  /**
+   * Timeout to use when making requests to OpenAI.
+   */
+  timeout?: number;
 }
 
 type TokenUsage = {
@@ -121,17 +121,13 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
 
   batchSize = 20;
 
-  maxRetries = 6;
+  timeout?: number;
 
   stop?: string[];
 
   streaming = false;
 
-  // Used for non-streaming requests
-  private batchClient: OpenAIApi;
-
-  // Used for streaming requests
-  private streamingClient: OpenAIApi;
+  private client: OpenAIApi;
 
   private clientConfig: ConfigurationParameters;
 
@@ -151,7 +147,10 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
     }
     super(fields ?? {});
 
-    const apiKey = fields?.openAIApiKey ?? process.env.OPENAI_API_KEY;
+    const apiKey =
+      fields?.openAIApiKey ??
+      // eslint-disable-next-line no-process-env
+      (typeof process !== "undefined" ? process.env.OPENAI_API_KEY : undefined);
     if (!apiKey) {
       throw new Error("OpenAI API key not found");
     }
@@ -159,7 +158,7 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
     this.modelName = fields?.modelName ?? this.modelName;
     this.modelKwargs = fields?.modelKwargs ?? {};
     this.batchSize = fields?.batchSize ?? this.batchSize;
-    this.maxRetries = fields?.maxRetries ?? this.maxRetries;
+    this.timeout = fields?.timeout;
 
     this.temperature = fields?.temperature ?? this.temperature;
     this.maxTokens = fields?.maxTokens ?? this.maxTokens;
@@ -227,29 +226,21 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
    *
    * @param prompts - The prompts to pass into the model.
    * @param [stop] - Optional list of stop words to use when generating.
-   * @param [callbackManager] - Optional callback manager to use for streaming
-   * requests.
-   * @param [runId] - Optional run ID to use for callbacks.
+   * @param [callbackManager] - Optional callback manager to use when generating.
    *
    * @returns The full LLM output.
    *
    * @example
    * ```ts
-   * import { OpenAI } from "langchain/llms";
+   * import { OpenAI } from "langchain/llms/openai";
    * const openai = new OpenAI();
    * const response = await openai.generate(["Tell me a joke."]);
    * ```
    */
-  async _generate(
-    prompts: string[],
-    stop?: string[],
-    callbackManager?: CallbackManager,
-    runId?: string
-  ): Promise<LLMResult> {
+  async _generate(prompts: string[], stop?: string[], callbackManager?: CallbackManager): Promise<LLMResult> {
     const subPrompts = chunkArray(prompts, this.batchSize);
     const choices: CreateCompletionResponseChoicesInner[] = [];
     const tokenUsage: TokenUsage = {};
-    const callbackManager_ = callbackManager ?? this.callbackManager;
 
     if (this.stop && stop) {
       throw new Error("Stop found in input and default params");
@@ -272,54 +263,68 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
     }
 
     for (let i = 0; i < subPrompts.length; i += 1) {
-      const { data } = await this.completionWithRetry({
-        ...params,
-        prompt: subPrompts[i],
-      });
-
-      if (params.stream) {
-        const choice = await new Promise<CreateCompletionResponseChoicesInner>(
-          (resolve, reject) => {
+      const data = params.stream
+        ? await new Promise<CreateCompletionResponse>((resolve, reject) => {
             const choice: CreateCompletionResponseChoicesInner = {};
-            const parser = createParser((event) => {
-              if (event.type === "event") {
-                if (event.data === "[DONE]") {
-                  resolve(choice);
-                } else {
-                  const response = JSON.parse(event.data) as Omit<
-                    CreateCompletionResponse,
-                    "usage"
-                  >;
+            let response: Omit<CreateCompletionResponse, "choices">;
+            let rejected = false;
+            this.completionWithRetry(
+              {
+                ...params,
+                prompt: subPrompts[i],
+              },
+              {
+                responseType: "stream",
+                onmessage: (event) => {
+                  if (event.data?.trim?.() === "[DONE]") {
+                    resolve({
+                      ...response,
+                      choices: [choice],
+                    });
+                  } else {
+                    const message = JSON.parse(event.data) as Omit<
+                      CreateCompletionResponse,
+                      "usage"
+                    >;
 
-                  const part = response.choices[0];
-                  if (part != null) {
-                    choice.text = (choice.text ?? "") + (part.text ?? "");
-                    choice.finish_reason = part.finish_reason;
-                    choice.logprobs = part.logprobs;
-                    // eslint-disable-next-line no-void
-                    void callbackManager_.handleLLMNewToken(
-                      part.text ?? "",
-                      runId ?? "",
-                      true
-                    );
+                    // on the first message set the response properties
+                    if (!response) {
+                      response = {
+                        id: message.id,
+                        object: message.object,
+                        created: message.created,
+                        model: message.model,
+                      };
+                    }
+
+                    // on all messages, update choice
+                    const part = message.choices[0];
+                    if (part != null) {
+                      choice.text = (choice.text ?? "") + (part.text ?? "");
+                      choice.finish_reason = part.finish_reason;
+                      choice.logprobs = part.logprobs;
+                      // eslint-disable-next-line no-void
+                      void callbackManager?.handleLLMNewToken(
+                        part.text ?? "",
+                        true
+                      );
+                    }
                   }
-                }
+                },
+              }
+            ).catch((error) => {
+              if (!rejected) {
+                rejected = true;
+                reject(error);
               }
             });
+          })
+        : await this.completionWithRetry({
+            ...params,
+            prompt: subPrompts[i],
+          });
 
-            // workaround for incorrect axios types
-            const stream = data as unknown as IncomingMessage;
-            stream.on("data", (data: Buffer) =>
-              parser.feed(data.toString("utf-8"))
-            );
-            stream.on("error", (error) => reject(error));
-          }
-        );
-
-        choices.push(choice);
-      } else {
-        choices.push(...data.choices);
-      }
+      choices.push(...data.choices);
 
       const {
         completion_tokens: completionTokens,
@@ -357,33 +362,24 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
   }
 
   /** @ignore */
-  async completionWithRetry(request: CreateCompletionRequest) {
-    if (!request.stream && !this.batchClient) {
+  async completionWithRetry(
+    request: CreateCompletionRequest,
+    options?: StreamingAxiosConfiguration
+  ) {
+    if (!this.client) {
       const clientConfig = new Configuration({
         ...this.clientConfig,
         baseOptions: {
-          ...this.clientConfig.baseOptions,
+          timeout: this.timeout,
           adapter: fetchAdapter,
+          ...this.clientConfig.baseOptions,
         },
       });
-      this.batchClient = new OpenAIApi(clientConfig);
+      this.client = new OpenAIApi(clientConfig);
     }
-    if (request.stream && !this.streamingClient) {
-      const clientConfig = new Configuration(this.clientConfig);
-      this.streamingClient = new OpenAIApi(clientConfig);
-    }
-    const client = !request.stream ? this.batchClient : this.streamingClient;
-    const makeCompletionRequest = async () =>
-      client.createCompletion(
-        request,
-        request.stream ? { responseType: "stream" } : undefined
-      );
-    return backOff(makeCompletionRequest, {
-      startingDelay: 4,
-      maxDelay: 10,
-      numOfAttempts: this.maxRetries,
-      // TODO(sean) pass custom retry function to check error types.
-    });
+    return this.caller
+      .call(this.client.createCompletion.bind(this.client), request, options)
+      .then((res) => res.data);
   }
 
   _llmType() {
@@ -410,16 +406,23 @@ export class PromptLayerOpenAI extends OpenAI {
 
     this.plTags = fields?.plTags ?? [];
     this.promptLayerApiKey =
-      fields?.promptLayerApiKey ?? process.env.PROMPTLAYER_API_KEY;
+      fields?.promptLayerApiKey ??
+      (typeof process !== "undefined"
+        ? // eslint-disable-next-line no-process-env
+          process.env.PROMPTLAYER_API_KEY
+        : undefined);
 
     if (!this.promptLayerApiKey) {
       throw new Error("Missing PromptLayer API key");
     }
   }
 
-  async completionWithRetry(request: CreateCompletionRequest) {
+  async completionWithRetry(
+    request: CreateCompletionRequest,
+    options?: StreamingAxiosConfiguration
+  ) {
     if (request.stream) {
-      return super.completionWithRetry(request);
+      return super.completionWithRetry(request, options);
     }
 
     const requestStartTime = Date.now();
@@ -427,7 +430,7 @@ export class PromptLayerOpenAI extends OpenAI {
     const requestEndTime = Date.now();
 
     // https://github.com/MagnivOrg/promptlayer-js-helper
-    await fetch("https://api.promptlayer.com/track-request", {
+    await this.caller.call(fetch, "https://api.promptlayer.com/track-request", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -438,13 +441,15 @@ export class PromptLayerOpenAI extends OpenAI {
         args: [],
         kwargs: { engine: request.model, prompt: request.prompt },
         tags: this.plTags ?? [],
-        request_response: response.data,
+        request_response: response,
         request_start_time: Math.floor(requestStartTime / 1000),
         request_end_time: Math.floor(requestEndTime / 1000),
-        api_key: process.env.PROMPTLAYER_API_KEY,
+        api_key: this.promptLayerApiKey,
       }),
     });
 
     return response;
   }
 }
+
+export { OpenAIChat } from "./openai-chat.js";

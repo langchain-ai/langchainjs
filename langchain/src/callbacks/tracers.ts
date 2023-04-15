@@ -274,7 +274,10 @@ export abstract class BaseTracer extends BaseCallbackHandler {
 
 export class LangChainTracer extends BaseTracer {
   protected endpoint =
-    process.env.LANGCHAIN_ENDPOINT || "http://localhost:8000";
+    (typeof process !== "undefined"
+      ? // eslint-disable-next-line no-process-env
+        process.env.LANGCHAIN_ENDPOINT
+      : undefined) || "http://localhost:8000";
 
   protected headers: Record<string, string> = {
     "Content-Type": "application/json",
@@ -282,7 +285,9 @@ export class LangChainTracer extends BaseTracer {
 
   constructor() {
     super();
-    if (process.env.LANGCHAIN_API_KEY) {
+    // eslint-disable-next-line no-process-env
+    if (typeof process !== "undefined" && process.env.LANGCHAIN_API_KEY) {
+      // eslint-disable-next-line no-process-env
       this.headers["x-api-key"] = process.env.LANGCHAIN_API_KEY;
     }
   }

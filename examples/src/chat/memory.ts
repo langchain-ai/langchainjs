@@ -1,5 +1,5 @@
 import { ConversationChain } from "langchain/chains";
-import { ChatOpenAI } from "langchain/chat_models";
+import { ChatOpenAI } from "langchain/chat_models/openai";
 import {
   ChatPromptTemplate,
   HumanMessagePromptTemplate,
@@ -20,7 +20,7 @@ export const run = async () => {
   ]);
 
   const chain = new ConversationChain({
-    memory: new BufferMemory({ returnMessages: true }),
+    memory: new BufferMemory({ returnMessages: true, memoryKey: "history" }),
     prompt: chatPrompt,
     llm: chat,
   });

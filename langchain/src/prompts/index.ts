@@ -12,7 +12,6 @@ export {
   FewShotPromptTemplate,
   FewShotPromptTemplateInput,
 } from "./few_shot.js";
-export { loadPrompt } from "./load.js";
 export {
   ChatPromptTemplate,
   HumanMessagePromptTemplate,
@@ -20,6 +19,7 @@ export {
   SystemMessagePromptTemplate,
   ChatMessagePromptTemplate,
   MessagesPlaceholder,
+  BaseChatPromptTemplate,
 } from "./chat.js";
 export {
   SerializedPromptTemplate,
@@ -28,3 +28,4 @@ export {
   SerializedMessagePromptTemplate,
   SerializedChatPromptTemplate,
 } from "./serde.js";
+export { parseTemplate, renderTemplate } from "./template.js";

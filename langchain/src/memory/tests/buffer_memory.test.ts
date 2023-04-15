@@ -1,5 +1,6 @@
 import { test, expect } from "@jest/globals";
 import { BufferMemory } from "../buffer_memory.js";
+import { ChatMessageHistory } from "../chat_memory.js";
 import { HumanChatMessage, AIChatMessage } from "../../schema/index.js";
 
 test("Test buffer memory", async () => {
@@ -25,4 +26,17 @@ test("Test buffer memory return messages", async () => {
   ];
   const result2 = await memory.loadMemoryVariables({});
   expect(result2).toStrictEqual({ history: expectedResult });
+});
+
+test("Test buffer memory with pre-loaded history", async () => {
+  const pastMessages = [
+    new HumanChatMessage("My name's Jonas"),
+    new AIChatMessage("Nice to meet you, Jonas!"),
+  ];
+  const memory = new BufferMemory({
+    returnMessages: true,
+    chatHistory: new ChatMessageHistory(pastMessages),
+  });
+  const result = await memory.loadMemoryVariables({});
+  expect(result).toStrictEqual({ history: pastMessages });
 });

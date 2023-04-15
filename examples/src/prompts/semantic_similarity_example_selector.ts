@@ -1,10 +1,10 @@
-import { OpenAIEmbeddings } from "langchain/embeddings";
+import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import {
   SemanticSimilarityExampleSelector,
   PromptTemplate,
   FewShotPromptTemplate,
 } from "langchain/prompts";
-import { HNSWLib } from "langchain/vectorstores";
+import { HNSWLib } from "langchain/vectorstores/hnswlib";
 
 export async function run() {
   // Create a prompt template that will be used to format the examples.
@@ -39,25 +39,25 @@ export async function run() {
 
   // Input is about the weather, so should select eg. the sunny/gloomy example
   console.log(await dynamicPrompt.format({ adjective: "rainy" }));
-  /**
-   * Give the antonym of every input
-   *
-   * Input: sunny
-   * Output: gloomy
-   *
-   * Input: rainy
-   * Output:
+  /*
+   Give the antonym of every input
+
+   Input: sunny
+   Output: gloomy
+
+   Input: rainy
+   Output:
    */
 
   // Input is a measurement, so should select the tall/short example
   console.log(await dynamicPrompt.format({ adjective: "large" }));
-  /**
-   * Give the antonym of every input
-   *
-   * Input: tall
-   * Output: short
-   *
-   * Input: large
-   * Output:
+  /*
+   Give the antonym of every input
+
+   Input: tall
+   Output: short
+
+   Input: large
+   Output:
    */
 }

@@ -20,94 +20,94 @@ abstract class BaseCallbackHandlerMethods {
   handleLLMStart?(
     llm: { name: string },
     prompts: string[],
-    runId: string,
     verbose?: boolean,
+    runId?: string,
     parentRunId?: string
-  ): Promise<void | string>;
+  ): Promise<void>;
 
   handleLLMNewToken?(
     token: string,
-    runId: string,
     verbose?: boolean,
+    runId?: string,
     parentRunId?: string
   ): Promise<void>;
 
   handleLLMError?(
     err: Error,
-    runId: string,
     verbose?: boolean,
+    runId?: string,
     parentRunId?: string
   ): Promise<void>;
 
   handleLLMEnd?(
     output: LLMResult,
-    runId: string,
     verbose?: boolean,
+    runId?: string,
     parentRunId?: string
   ): Promise<void>;
 
   handleChainStart?(
     chain: { name: string },
     inputs: ChainValues,
-    runId: string,
     verbose?: boolean,
+    runId?: string,
     parentRunId?: string
-  ): Promise<void | string>;
+  ): Promise<void>;
 
   handleChainError?(
     err: Error,
-    runId: string,
     verbose?: boolean,
+    runId?: string,
     parentRunId?: string
   ): Promise<void>;
 
   handleChainEnd?(
     outputs: ChainValues,
-    runId: string,
     verbose?: boolean,
+    runId?: string,
     parentRunId?: string
   ): Promise<void>;
 
   handleToolStart?(
     tool: { name: string },
     input: string,
-    runId: string,
     verbose?: boolean,
+    runId?: string,
     parentRunId?: string
-  ): Promise<void | string>;
+  ): Promise<void>;
 
   handleToolError?(
     err: Error,
-    runId: string,
     verbose?: boolean,
+    runId?: string,
     parentRunId?: string
   ): Promise<void>;
 
   handleToolEnd?(
     output: string,
-    runId: string,
     verbose?: boolean,
+    runId?: string,
     parentRunId?: string
   ): Promise<void>;
 
   handleText?(
     text: string,
-    runId: string,
     verbose?: boolean,
+    runId?: string,
     parentRunId?: string
   ): Promise<void>;
 
   handleAgentAction?(
     action: AgentAction,
-    runId: string,
     verbose?: boolean,
+    runId?: string,
     parentRunId?: string
   ): Promise<void>;
 
   handleAgentEnd?(
     action: AgentFinish,
-    runId: string,
     verbose?: boolean,
+    runId?: string,
     parentRunId?: string
   ): Promise<void>;
 }
@@ -163,9 +163,9 @@ export class CallbackManager extends BaseCallbackManager {
   async handleLLMStart(
     llm: { name: string },
     prompts: string[],
+    verbose = false,
     runId: string = uuidv4(),
-    verbose = false
-  ): Promise<string> {
+  ): Promise<void> {
     await Promise.all(
       this.handlers.map(async (handler) => {
         if (!handler.ignoreLLM && (verbose || handler.alwaysVerbose)) {
@@ -173,8 +173,8 @@ export class CallbackManager extends BaseCallbackManager {
             await handler.handleLLMStart?.(
               llm,
               prompts,
-              runId,
               undefined,
+              runId,
               this._parentRunId
             );
           } catch (err) {
@@ -186,12 +186,10 @@ export class CallbackManager extends BaseCallbackManager {
       })
     );
     this._currentRunId = runId;
-    return runId;
   }
 
   async handleLLMNewToken(
     token: string,
-    runId: string,
     verbose?: boolean
   ): Promise<void> {
     await Promise.all(
@@ -200,8 +198,8 @@ export class CallbackManager extends BaseCallbackManager {
           try {
             await handler.handleLLMNewToken?.(
               token,
-              runId,
               undefined,
+              this._currentRunId,
               this._parentRunId
             );
           } catch (err) {
@@ -216,7 +214,6 @@ export class CallbackManager extends BaseCallbackManager {
 
   async handleLLMError(
     err: Error,
-    runId: string,
     verbose?: boolean
   ): Promise<void> {
     await Promise.all(
@@ -225,8 +222,8 @@ export class CallbackManager extends BaseCallbackManager {
           try {
             await handler.handleLLMError?.(
               err,
-              runId,
               undefined,
+              this._currentRunId,
               this._parentRunId
             );
           } catch (err) {
@@ -241,7 +238,6 @@ export class CallbackManager extends BaseCallbackManager {
 
   async handleLLMEnd(
     output: LLMResult,
-    runId: string,
     verbose?: boolean
   ): Promise<void> {
     await Promise.all(
@@ -250,8 +246,8 @@ export class CallbackManager extends BaseCallbackManager {
           try {
             await handler.handleLLMEnd?.(
               output,
-              runId,
               undefined,
+              this._currentRunId,
               this._parentRunId
             );
           } catch (err) {
@@ -267,9 +263,9 @@ export class CallbackManager extends BaseCallbackManager {
   async handleChainStart(
     chain: { name: string },
     inputs: ChainValues,
+    verbose = false,
     runId = uuidv4(),
-    verbose = false
-  ): Promise<string> {
+  ): Promise<void> {
     await Promise.all(
       this.handlers.map(async (handler) => {
         if (!handler.ignoreChain && (verbose || handler.alwaysVerbose)) {
@@ -277,8 +273,8 @@ export class CallbackManager extends BaseCallbackManager {
             await handler.handleChainStart?.(
               chain,
               inputs,
-              runId,
               undefined,
+              this._currentRunId,
               this._parentRunId
             );
           } catch (err) {
@@ -290,12 +286,10 @@ export class CallbackManager extends BaseCallbackManager {
       })
     );
     this._currentRunId = runId;
-    return runId;
   }
 
   async handleChainError(
     err: Error,
-    runId: string,
     verbose?: boolean
   ): Promise<void> {
     await Promise.all(
@@ -304,8 +298,8 @@ export class CallbackManager extends BaseCallbackManager {
           try {
             await handler.handleChainError?.(
               err,
-              runId,
               undefined,
+              this._currentRunId,
               this._parentRunId
             );
           } catch (err) {
@@ -320,7 +314,6 @@ export class CallbackManager extends BaseCallbackManager {
 
   async handleChainEnd(
     output: ChainValues,
-    runId: string,
     verbose?: boolean
   ): Promise<void> {
     await Promise.all(
@@ -329,8 +322,8 @@ export class CallbackManager extends BaseCallbackManager {
           try {
             await handler.handleChainEnd?.(
               output,
-              runId,
               undefined,
+              this._currentRunId,
               this._parentRunId
             );
           } catch (err) {
@@ -346,9 +339,9 @@ export class CallbackManager extends BaseCallbackManager {
   async handleToolStart(
     tool: { name: string },
     input: string,
+    verbose = false,
     runId = uuidv4(),
-    verbose = false
-  ): Promise<string> {
+  ): Promise<void> {
     await Promise.all(
       this.handlers.map(async (handler) => {
         if (!handler.ignoreAgent && (verbose || handler.alwaysVerbose)) {
@@ -356,8 +349,8 @@ export class CallbackManager extends BaseCallbackManager {
             await handler.handleToolStart?.(
               tool,
               input,
-              runId,
               undefined,
+              this._currentRunId,
               this._parentRunId
             );
           } catch (err) {
@@ -369,12 +362,10 @@ export class CallbackManager extends BaseCallbackManager {
       })
     );
     this._currentRunId = runId;
-    return runId;
   }
 
   async handleToolError(
     err: Error,
-    runId: string,
     verbose?: boolean
   ): Promise<void> {
     await Promise.all(
@@ -383,8 +374,8 @@ export class CallbackManager extends BaseCallbackManager {
           try {
             await handler.handleToolError?.(
               err,
-              runId,
               undefined,
+              this._currentRunId,
               this._parentRunId
             );
           } catch (err) {
@@ -399,14 +390,13 @@ export class CallbackManager extends BaseCallbackManager {
 
   async handleToolEnd(
     output: string,
-    runId: string,
     verbose?: boolean
   ): Promise<void> {
     await Promise.all(
       this.handlers.map(async (handler) => {
         if (!handler.ignoreAgent && (verbose || handler.alwaysVerbose)) {
           try {
-            await handler.handleToolEnd?.(output, runId);
+            await handler.handleToolEnd?.(output, undefined, this._currentRunId, this._parentRunId);
           } catch (err) {
             console.error(
               `Error in handler ${handler.constructor.name}, handleToolEnd: ${err}`
@@ -419,7 +409,6 @@ export class CallbackManager extends BaseCallbackManager {
 
   async handleText(
     text: string,
-    runId: string,
     verbose?: boolean
   ): Promise<void> {
     await Promise.all(
@@ -428,8 +417,8 @@ export class CallbackManager extends BaseCallbackManager {
           try {
             await handler.handleText?.(
               text,
-              runId,
               undefined,
+              this._currentRunId,
               this._parentRunId
             );
           } catch (err) {
@@ -444,7 +433,6 @@ export class CallbackManager extends BaseCallbackManager {
 
   async handleAgentAction(
     action: AgentAction,
-    runId: string,
     verbose?: boolean
   ): Promise<void> {
     await Promise.all(
@@ -453,8 +441,8 @@ export class CallbackManager extends BaseCallbackManager {
           try {
             await handler.handleAgentAction?.(
               action,
-              runId,
               undefined,
+              this._currentRunId,
               this._parentRunId
             );
           } catch (err) {
@@ -469,7 +457,6 @@ export class CallbackManager extends BaseCallbackManager {
 
   async handleAgentEnd(
     action: AgentFinish,
-    runId: string,
     verbose?: boolean
   ): Promise<void> {
     await Promise.all(
@@ -478,8 +465,8 @@ export class CallbackManager extends BaseCallbackManager {
           try {
             await handler.handleAgentEnd?.(
               action,
-              runId,
               undefined,
+              this._currentRunId,
               this._parentRunId
             );
           } catch (err) {

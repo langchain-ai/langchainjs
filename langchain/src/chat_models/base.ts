@@ -1,4 +1,3 @@
-import GPT3Tokenizer from "gpt3-tokenizer";
 import {
   AIChatMessage,
   BaseChatMessage,
@@ -11,10 +10,17 @@ import {
   BaseLanguageModel,
   BaseLanguageModelParams,
 } from "../base_language/index.js";
+import { CallbackManager } from "../callbacks/base.js";
 import { getBufferString } from "../memory/base.js";
-import { CallbackManager } from "../callbacks/index.js";
 
 export type SerializedChatModel = {
+  _model: string;
+  _type: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+} & Record<string, any>;
+
+// todo?
+export type SerializedLLM = {
   _model: string;
   _type: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -23,59 +29,53 @@ export type SerializedChatModel = {
 export type BaseChatModelParams = BaseLanguageModelParams;
 
 export abstract class BaseChatModel extends BaseLanguageModel {
-  protected constructor({ ...rest }: BaseChatModelParams) {
-    super(rest);
+  constructor(fields: BaseChatModelParams) {
+    super(fields);
   }
+
+  abstract _combineLLMOutput?(
+    ...llmOutputs: LLMResult["llmOutput"][]
+  ): LLMResult["llmOutput"];
 
   async generate(
     messages: BaseChatMessage[][],
     stop?: string[],
-    callbackManager?: CallbackManager
+    callbackManager?: CallbackManager,
   ): Promise<LLMResult> {
+    const callbackManager_ =
+        callbackManager?.copy(this.callbackManager.handlers) ??
+        this.callbackManager;
     const generations: ChatGeneration[][] = [];
-    let llmOutput = {};
+    const llmOutputs: LLMResult["llmOutput"][] = [];
     const messageStrings: string[] = messages.map((messageList) =>
       getBufferString(messageList)
     );
-    const callbackManager_ =
-      callbackManager?.copy(this.callbackManager.handlers) ??
-      this.callbackManager;
-    const runId = await callbackManager_.handleLLMStart(
+    await callbackManager_.handleLLMStart(
       { name: this._llmType() },
       messageStrings,
-      undefined,
       this.verbose
     );
     try {
       for (const message of messages) {
-        const result = await this._generate(
-          message,
-          stop,
-          callbackManager,
-          runId
-        );
-        llmOutput = result.llmOutput ?? {};
+        const result = await this._generate(message, stop);
+        if (result.llmOutput) {
+          llmOutputs.push(result.llmOutput);
+        }
         generations.push(result.generations);
       }
     } catch (err) {
-      await callbackManager_.handleLLMError(err, runId, this.verbose);
+      await callbackManager_.handleLLMError(err, this.verbose);
       throw err;
     }
 
     const output: LLMResult = {
       generations,
-      llmOutput: { ...llmOutput, runId },
+      llmOutput: llmOutputs.length
+        ? this._combineLLMOutput?.(...llmOutputs)
+        : undefined,
     };
-    await callbackManager_.handleLLMEnd(output, runId, this.verbose);
+    await callbackManager_.handleLLMEnd(output, this.verbose);
     return output;
-  }
-
-  /**
-   * Get the identifying parameters of the LLM.
-   */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  _identifyingParams(): Record<string, any> {
-    return {};
   }
 
   _modelType(): string {
@@ -84,36 +84,10 @@ export abstract class BaseChatModel extends BaseLanguageModel {
 
   abstract _llmType(): string;
 
-  /**
-   * Return a json-like object representing this Chat model.
-   */
-  serialize(): SerializedChatModel {
-    return {
-      ...this._identifyingParams(),
-      _type: this._llmType(),
-      _model: this._modelType(),
-    };
-  }
-
-  // TODO deserialize
-
-  private _tokenizer?: GPT3Tokenizer.default;
-
-  getNumTokens(text: string): number {
-    // TODOs copied from py implementation
-    // TODO: this method may not be exact.
-    // TODO: this method may differ based on model (eg codex, gpt-3.5).
-    if (this._tokenizer === undefined) {
-      const Constructor = GPT3Tokenizer.default;
-      this._tokenizer = new Constructor({ type: "gpt3" });
-    }
-    return this._tokenizer.encode(text).bpe.length;
-  }
-
   async generatePrompt(
     promptValues: BasePromptValue[],
     stop?: string[],
-    callbackManager?: CallbackManager
+    callbackManager?: CallbackManager,
   ): Promise<LLMResult> {
     const promptMessages: BaseChatMessage[][] = promptValues.map(
       (promptValue) => promptValue.toChatMessages()
@@ -125,7 +99,6 @@ export abstract class BaseChatModel extends BaseLanguageModel {
     messages: BaseChatMessage[],
     stop?: string[],
     callbackManager?: CallbackManager,
-    runId?: string
   ): Promise<ChatResult>;
 
   async call(
@@ -149,13 +122,14 @@ export abstract class BaseChatModel extends BaseLanguageModel {
 }
 
 export abstract class SimpleChatModel extends BaseChatModel {
-  abstract _call(messages: BaseChatMessage[], stop?: string[]): Promise<string>;
+  abstract _call(messages: BaseChatMessage[], stop?: string[], callbackManager?: CallbackManager): Promise<string>;
 
   async _generate(
     messages: BaseChatMessage[],
-    stop?: string[]
+    stop?: string[],
+    callbackManager?: CallbackManager
   ): Promise<ChatResult> {
-    const text = await this._call(messages, stop);
+    const text = await this._call(messages, stop, callbackManager);
     const message = new AIChatMessage(text);
     return {
       generations: [

@@ -1,5 +1,5 @@
-import { LLMChain } from "langchain";
-import { ChatOpenAI } from "langchain/chat_models";
+import { LLMChain } from "langchain/chains";
+import { ChatOpenAI } from "langchain/chat_models/openai";
 import { ZeroShotAgent, AgentExecutor } from "langchain/agents";
 import { SerpAPI } from "langchain/tools";
 import {
@@ -9,7 +9,13 @@ import {
 } from "langchain/prompts";
 
 export const run = async () => {
-  const tools = [new SerpAPI()];
+  const tools = [
+    new SerpAPI(process.env.SERPAPI_API_KEY, {
+      location: "Austin,Texas,United States",
+      hl: "en",
+      gl: "us",
+    }),
+  ];
 
   const prompt = ZeroShotAgent.createPrompt(tools, {
     prefix: `Answer the following questions as best you can, but speaking as a pirate might speak. You have access to the following tools:`,

@@ -1,5 +1,3 @@
-import fs from "node:fs/promises";
-import path from "node:path";
 import type {
   HierarchicalNSW as HierarchicalNSWT,
   SpaceName,
@@ -133,6 +131,8 @@ export class HNSWLib extends SaveableVectorStore {
   }
 
   async save(directory: string) {
+    const fs = await import("node:fs/promises");
+    const path = await import("node:path");
     await fs.mkdir(directory, { recursive: true });
     await Promise.all([
       this.index.writeIndex(path.join(directory, "hnswlib.index")),
@@ -148,6 +148,8 @@ export class HNSWLib extends SaveableVectorStore {
   }
 
   static async load(directory: string, embeddings: Embeddings) {
+    const fs = await import("node:fs/promises");
+    const path = await import("node:path");
     const args = JSON.parse(
       await fs.readFile(path.join(directory, "args.json"), "utf8")
     );
@@ -167,7 +169,7 @@ export class HNSWLib extends SaveableVectorStore {
 
   static async fromTexts(
     texts: string[],
-    metadatas: object[],
+    metadatas: object[] | object,
     embeddings: Embeddings,
     dbConfig?: {
       docstore?: InMemoryDocstore;
@@ -175,9 +177,10 @@ export class HNSWLib extends SaveableVectorStore {
   ): Promise<HNSWLib> {
     const docs: Document[] = [];
     for (let i = 0; i < texts.length; i += 1) {
+      const metadata = Array.isArray(metadatas) ? metadatas[i] : metadatas;
       const newDoc = new Document({
         pageContent: texts[i],
-        metadata: metadatas[i],
+        metadata,
       });
       docs.push(newDoc);
     }

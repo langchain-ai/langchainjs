@@ -5,8 +5,6 @@ import {
   renderTemplate,
   TemplateFormat,
 } from "./template.js";
-import { resolveTemplateFromFile } from "../util/index.js";
-import { BaseOutputParser } from "../output_parsers/index.js";
 import { SerializedPromptTemplate } from "./serde.js";
 import { InputValues, PartialValues } from "../schema/index.js";
 
@@ -118,9 +116,15 @@ export class PromptTemplate
   /**
    * Load prompt template from a template f-string
    */
-  static fromTemplate(template: string) {
+  static fromTemplate(
+    template: string,
+    {
+      templateFormat = "f-string",
+      ...rest
+    }: Omit<PromptTemplateInput, "template" | "inputVariables"> = {}
+  ) {
     const names = new Set<string>();
-    parseTemplate(template, "f-string").forEach((node) => {
+    parseTemplate(template, templateFormat).forEach((node) => {
       if (node.type === "variable") {
         names.add(node.name);
       }
@@ -128,7 +132,9 @@ export class PromptTemplate
 
     return new PromptTemplate({
       inputVariables: [...names],
+      templateFormat,
       template,
+      ...rest,
     });
   }
 
@@ -145,10 +151,14 @@ export class PromptTemplate
   }
 
   serialize(): SerializedPromptTemplate {
+    if (this.outputParser !== undefined) {
+      throw new Error(
+        "Cannot serialize a prompt template with an output parser"
+      );
+    }
     return {
       _type: this._getPromptType(),
       input_variables: this.inputVariables,
-      output_parser: this.outputParser?.serialize(),
       template: this.template,
       template_format: this.templateFormat,
     };
@@ -157,12 +167,12 @@ export class PromptTemplate
   static async deserialize(
     data: SerializedPromptTemplate
   ): Promise<PromptTemplate> {
+    if (!data.template) {
+      throw new Error("Prompt template must have a template");
+    }
     const res = new PromptTemplate({
       inputVariables: data.input_variables,
-      outputParser: data.output_parser
-        ? await BaseOutputParser.deserialize(data.output_parser)
-        : undefined,
-      template: await resolveTemplateFromFile("template", data),
+      template: data.template,
       templateFormat: data.template_format,
     });
     return res;

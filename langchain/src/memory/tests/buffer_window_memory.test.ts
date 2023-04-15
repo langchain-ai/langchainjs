@@ -1,8 +1,9 @@
 import { test, expect } from "@jest/globals";
 import { BufferWindowMemory } from "../buffer_window_memory.js";
+import { ChatMessageHistory } from "../chat_memory.js";
 import { HumanChatMessage, AIChatMessage } from "../../schema/index.js";
 
-test("Test buffer memory", async () => {
+test("Test buffer window memory", async () => {
   const memory = new BufferWindowMemory({ k: 1 });
   const result1 = await memory.loadMemoryVariables({});
   expect(result1).toStrictEqual({ history: "" });
@@ -18,7 +19,7 @@ test("Test buffer memory", async () => {
   expect(result3).toStrictEqual({ history: expectedString3 });
 });
 
-test("Test buffer memory return messages", async () => {
+test("Test buffer window memory return messages", async () => {
   const memory = new BufferWindowMemory({ k: 1, returnMessages: true });
   const result1 = await memory.loadMemoryVariables({});
   expect(result1).toStrictEqual({ history: [] });
@@ -38,4 +39,17 @@ test("Test buffer memory return messages", async () => {
   ];
   const result3 = await memory.loadMemoryVariables({});
   expect(result3).toStrictEqual({ history: expectedResult2 });
+});
+
+test("Test buffer window memory with pre-loaded history", async () => {
+  const pastMessages = [
+    new HumanChatMessage("My name's Jonas"),
+    new AIChatMessage("Nice to meet you, Jonas!"),
+  ];
+  const memory = new BufferWindowMemory({
+    returnMessages: true,
+    chatHistory: new ChatMessageHistory(pastMessages),
+  });
+  const result = await memory.loadMemoryVariables({});
+  expect(result).toStrictEqual({ history: pastMessages });
 });

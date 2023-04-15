@@ -14,7 +14,11 @@ export class SingletonCallbackManager extends CallbackManager {
       SingletonCallbackManager.instance.addHandler(
         new ConsoleCallbackHandler()
       );
-      if (process.env.LANGCHAIN_HANDLER === "langchain") {
+      if (
+        typeof process !== "undefined" &&
+        // eslint-disable-next-line no-process-env
+        process.env.LANGCHAIN_HANDLER === "langchain"
+      ) {
         SingletonCallbackManager.instance.addHandler(new LangChainTracer());
       }
     }
@@ -45,6 +49,8 @@ export async function setTracerSession(
   callbackManager: CallbackManager = getCallbackManager()
 ) {
   for (const handler of callbackManager.handlers) {
+    // fine to use instanceof here because we're in the same package
+    // eslint-disable-next-line no-instanceof/no-instanceof
     if (handler instanceof LangChainTracer) {
       const sessionName = options?.sessionName;
       if (sessionName) {

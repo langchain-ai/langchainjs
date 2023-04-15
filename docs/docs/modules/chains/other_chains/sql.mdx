@@ -1,0 +1,37 @@
+import CodeBlock from "@theme/CodeBlock";
+import SqlDBExample from "@examples/chains/sql_db.ts";
+
+# `SqlDatabaseChain`
+
+The `SqlDatabaseChain` allows you to answer questions over a SQL database.
+This example uses Chinook database, which is a sample database available for SQL Server, Oracle, MySQL, etc.
+
+## Set up
+
+First install `typeorm`:
+
+```bash npm2yarn
+npm install typeorm
+```
+
+Then install the dependencies needed for your database. For example, for SQLite:
+
+```bash npm2yarn
+npm install sqlite3
+```
+
+For other databases see https://typeorm.io/#installation
+
+Finally follow the instructions on https://database.guide/2-sample-databases-sqlite/ to get the sample database for this example.
+
+<CodeBlock language="typescript">{SqlDBExample}</CodeBlock>
+
+You can include or exclude tables when creating the `SqlDatabase` object to help the chain focus on the tables you want.
+It can also reduce the number of tokens used in the chain.
+
+```typescript
+const db = await SqlDatabase.fromDataSourceParams({
+  appDataSource: datasource,
+  includeTables: ["Track"],
+});
+```

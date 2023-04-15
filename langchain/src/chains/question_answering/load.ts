@@ -1,9 +1,9 @@
-import { BaseLLM } from "../../llms/index.js";
 import { LLMChain } from "../llm_chain.js";
-import { PromptTemplate } from "../../prompts/index.js";
+import { BasePromptTemplate } from "../../prompts/base.js";
 import {
   StuffDocumentsChain,
   MapReduceDocumentsChain,
+  RefineDocumentsChain,
 } from "../combine_docs_chain.js";
 import { QA_PROMPT_SELECTOR, DEFAULT_QA_PROMPT } from "./stuff_prompts.js";
 import {
@@ -12,14 +12,24 @@ import {
   COMBINE_PROMPT_SELECTOR,
   COMBINE_QA_PROMPT_SELECTOR,
 } from "./map_reduce_prompts.js";
+import { BaseLanguageModel } from "../../base_language/index.js";
+import {
+  QUESTION_PROMPT_SELECTOR,
+  REFINE_PROMPT_SELECTOR,
+} from "./refine_prompts.js";
 
 interface qaChainParams {
-  prompt?: PromptTemplate;
-  combineMapPrompt?: PromptTemplate;
-  combinePrompt?: PromptTemplate;
+  prompt?: BasePromptTemplate;
+  combineMapPrompt?: BasePromptTemplate;
+  combinePrompt?: BasePromptTemplate;
+  questionPrompt?: BasePromptTemplate;
+  refinePrompt?: BasePromptTemplate;
   type?: string;
 }
-export const loadQAChain = (llm: BaseLLM, params: qaChainParams = {}) => {
+export const loadQAChain = (
+  llm: BaseLanguageModel,
+  params: qaChainParams = {}
+) => {
   const {
     prompt = DEFAULT_QA_PROMPT,
     combineMapPrompt = DEFAULT_COMBINE_QA_PROMPT,
@@ -44,15 +54,29 @@ export const loadQAChain = (llm: BaseLLM, params: qaChainParams = {}) => {
     });
     return chain;
   }
+  if (type === "refine") {
+    const {
+      questionPrompt = QUESTION_PROMPT_SELECTOR.getPrompt(llm),
+      refinePrompt = REFINE_PROMPT_SELECTOR.getPrompt(llm),
+    } = params;
+    const llmChain = new LLMChain({ prompt: questionPrompt, llm });
+    const refineLLMChain = new LLMChain({ prompt: refinePrompt, llm });
+
+    const chain = new RefineDocumentsChain({
+      llmChain,
+      refineLLMChain,
+    });
+    return chain;
+  }
   throw new Error(`Invalid _type: ${type}`);
 };
 
 interface StuffQAChainParams {
-  prompt?: PromptTemplate;
+  prompt?: BasePromptTemplate;
 }
 
 export const loadQAStuffChain = (
-  llm: BaseLLM,
+  llm: BaseLanguageModel,
   params: StuffQAChainParams = {}
 ) => {
   const { prompt = QA_PROMPT_SELECTOR.getPrompt(llm) } = params;
@@ -62,12 +86,12 @@ export const loadQAStuffChain = (
 };
 
 interface MapReduceQAChainParams {
-  combineMapPrompt?: PromptTemplate;
-  combinePrompt?: PromptTemplate;
+  combineMapPrompt?: BasePromptTemplate;
+  combinePrompt?: BasePromptTemplate;
 }
 
 export const loadQAMapReduceChain = (
-  llm: BaseLLM,
+  llm: BaseLanguageModel,
   params: MapReduceQAChainParams = {}
 ) => {
   const {
@@ -83,6 +107,29 @@ export const loadQAMapReduceChain = (
   const chain = new MapReduceDocumentsChain({
     llmChain,
     combineDocumentChain,
+  });
+  return chain;
+};
+
+interface RefineQAChainParams {
+  questionPrompt?: BasePromptTemplate;
+  refinePrompt?: BasePromptTemplate;
+}
+
+export const loadQARefineChain = (
+  llm: BaseLanguageModel,
+  params: RefineQAChainParams = {}
+) => {
+  const {
+    questionPrompt = QUESTION_PROMPT_SELECTOR.getPrompt(llm),
+    refinePrompt = REFINE_PROMPT_SELECTOR.getPrompt(llm),
+  } = params;
+  const llmChain = new LLMChain({ prompt: questionPrompt, llm });
+  const refineLLMChain = new LLMChain({ prompt: refinePrompt, llm });
+
+  const chain = new RefineDocumentsChain({
+    llmChain,
+    refineLLMChain,
   });
   return chain;
 };

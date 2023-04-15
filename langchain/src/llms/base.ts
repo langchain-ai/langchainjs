@@ -1,13 +1,10 @@
-import GPT3Tokenizer from "gpt3-tokenizer";
-import PQueue from "p-queue";
-
 import { BaseCache, InMemoryCache } from "../cache.js";
 import { BasePromptValue, LLMResult } from "../schema/index.js";
 import {
   BaseLanguageModel,
   BaseLanguageModelParams,
 } from "../base_language/index.js";
-import { CallbackManager } from "../callbacks/index.js";
+import { CallbackManager } from "../callbacks/base.js";
 
 export type SerializedLLM = {
   _model: string;
@@ -16,6 +13,9 @@ export type SerializedLLM = {
 } & Record<string, any>;
 
 export interface BaseLLMParams extends BaseLanguageModelParams {
+  /**
+   * @deprecated Use `maxConcurrency` instead
+   */
   concurrency?: number;
   cache?: BaseCache | boolean;
 }
@@ -31,25 +31,15 @@ export abstract class BaseLLM extends BaseLanguageModel {
 
   cache?: BaseCache;
 
-  /**
-   * Maximum number of concurrent calls to this chain,
-   * additional calls are queued up. Defaults to Infinity.
-   */
-  concurrency?: number;
-
-  protected queue: PQueue;
-
-  constructor({ concurrency, cache, ...rest }: BaseLLMParams) {
-    super(rest);
-    if (cache instanceof BaseCache) {
+  constructor({ cache, concurrency, ...rest }: BaseLLMParams) {
+    super(concurrency ? { maxConcurrency: concurrency, ...rest } : rest);
+    if (typeof cache === "object") {
       this.cache = cache;
     } else if (cache) {
       this.cache = InMemoryCache.global();
     } else {
       this.cache = undefined;
     }
-    this.concurrency = concurrency ?? Infinity;
-    this.queue = new PQueue({ concurrency: this.concurrency });
   }
 
   async generatePrompt(
@@ -66,12 +56,7 @@ export abstract class BaseLLM extends BaseLanguageModel {
   /**
    * Run the LLM on the given prompts and input.
    */
-  abstract _generate(
-    prompts: string[],
-    stop?: string[],
-    callbackManager?: CallbackManager,
-    runId?: string
-  ): Promise<LLMResult>;
+  abstract _generate(prompts: string[], stop?: string[], callbackManager?: CallbackManager): Promise<LLMResult>;
 
   /** @ignore */
   async _generateUncached(
@@ -80,47 +65,29 @@ export abstract class BaseLLM extends BaseLanguageModel {
     callbackManager?: CallbackManager
   ): Promise<LLMResult> {
     const callbackManager_ =
-      callbackManager?.copy(this.callbackManager.handlers) ??
-      this.callbackManager;
-    const runId = await callbackManager_.handleLLMStart(
+        callbackManager?.copy(this.callbackManager.handlers) ??
+        this.callbackManager;
+    await callbackManager_.handleLLMStart(
       { name: this._llmType() },
       prompts,
-      undefined,
       this.verbose
     );
     let output;
     try {
-      output = await this.queue.add(
-        () => this._generate(prompts, stop, callbackManager, runId),
-        {
-          throwOnTimeout: true,
-        }
-      );
+      output = await this._generate(prompts, stop);
     } catch (err) {
-      await callbackManager_.handleLLMError(err, runId, this.verbose);
+      await callbackManager_.handleLLMError(err, this.verbose);
       throw err;
     }
 
-    await callbackManager_.handleLLMEnd(output, runId, this.verbose);
-    if (output.llmOutput) {
-      output.llmOutput = {
-        ...output.llmOutput,
-        ...{ runId },
-      };
-    } else {
-      output.llmOutput = { runId };
-    }
+    await callbackManager_.handleLLMEnd(output, this.verbose);
     return output;
   }
 
   /**
-   * Run the LLM on the given prompts an input, handling caching.
+   * Run the LLM on the given propmts an input, handling caching.
    */
-  async generate(
-    prompts: string[],
-    stop?: string[],
-    callbackManager?: CallbackManager
-  ): Promise<LLMResult> {
+  async generate(prompts: string[], stop?: string[], callbackManager?: CallbackManager): Promise<LLMResult> {
     if (!Array.isArray(prompts)) {
       throw new Error("Argument 'prompts' is expected to be a string[]");
     }
@@ -168,16 +135,8 @@ export abstract class BaseLLM extends BaseLanguageModel {
   /**
    * Convenience wrapper for {@link generate} that takes in a single string prompt and returns a single string output.
    */
-  async call(
-    prompt: string,
-    stop?: string[],
-    callbackManager?: CallbackManager
-  ) {
-    const { generations } = await this.generate(
-      [prompt],
-      stop,
-      callbackManager
-    );
+  async call(prompt: string, stop?: string[], callbackManager?: CallbackManager) {
+    const { generations } = await this.generate([prompt], stop, callbackManager);
     return generations[0][0].text;
   }
 
@@ -225,21 +184,6 @@ export abstract class BaseLLM extends BaseLanguageModel {
     }
     return new Cls(rest);
   }
-
-  private _tokenizer?: GPT3Tokenizer.default;
-
-  getNumTokens(text: string): number {
-    // TODOs copied from py implementation
-    // TODO: this method may not be exact.
-    // TODO: this method may differ based on model (eg codex, gpt-3.5).
-    if (this._tokenizer === undefined) {
-      const Constructor = GPT3Tokenizer.default;
-      this._tokenizer = new Constructor({ type: "gpt3" });
-    }
-    return this._tokenizer.encode(text).bpe.length;
-  }
-
-  // TODO(sean): save to disk
 }
 
 /**
@@ -253,27 +197,12 @@ export abstract class LLM extends BaseLLM {
   /**
    * Run the LLM on the given prompt and input.
    */
-  abstract _call(
-    prompt: string,
-    stop?: string[],
-    callbackManager?: CallbackManager,
-    runId?: string
-  ): Promise<string>;
+  abstract _call(prompt: string, stop?: string[], callbackManager?: CallbackManager): Promise<string>;
 
-  async _generate(
-    prompts: string[],
-    stop?: string[],
-    callbackManager?: CallbackManager,
-    runId?: string
-  ): Promise<LLMResult> {
+  async _generate(prompts: string[], stop?: string[], callbackManager?: CallbackManager): Promise<LLMResult> {
     const generations = [];
     for (let i = 0; i < prompts.length; i += 1) {
-      const text = await this.queue.add(
-        () => this._call(prompts[i], stop, callbackManager, runId),
-        {
-          throwOnTimeout: true,
-        }
-      );
+      const text = await this._call(prompts[i], stop, callbackManager);
       generations.push([{ text }]);
     }
     return { generations };

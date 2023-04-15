@@ -1,11 +1,11 @@
-import url from "node:url";
-import path from "node:path";
+import * as url from "node:url";
+import * as path from "node:path";
 import { test, expect } from "@jest/globals";
-import { DirectoryLoader, UnknownHandling } from "../directory.js";
-import { CSVLoader } from "../csv.js";
-import { PDFLoader } from "../pdf.js";
-import { TextLoader } from "../text.js";
-import { JSONLoader } from "../json.js";
+import { DirectoryLoader, UnknownHandling } from "../fs/directory.js";
+import { CSVLoader } from "../fs/csv.js";
+import { PDFLoader } from "../fs/pdf.js";
+import { TextLoader } from "../fs/text.js";
+import { JSONLoader } from "../fs/json.js";
 
 test("Test Directory loader", async () => {
   const directoryPath = path.resolve(
@@ -24,10 +24,12 @@ test("Test Directory loader", async () => {
     UnknownHandling.Ignore
   );
   const docs = await loader.load();
-  expect(docs.length).toBe(76);
+  expect(docs.length).toBe(90);
   expect(docs.map((d) => d.metadata.source).sort()).toEqual([
     // PDF
-    path.resolve(directoryPath, "1706.03762.pdf"),
+    ...Array.from({ length: 15 }, (_) =>
+      path.resolve(directoryPath, "1706.03762.pdf")
+    ),
     // CSV
     ...Array.from({ length: 32 }, (_) =>
       path.resolve(

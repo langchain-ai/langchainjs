@@ -12,6 +12,12 @@
  */
 
 import axios from "axios";
+import {
+  EventStreamContentType,
+  getLines,
+  getBytes,
+  getMessages,
+} from "./event-source-parse.js";
 
 /**
  * In order to avoid import issues with axios 1.x, copying here the internal
@@ -194,22 +200,8 @@ function isStandardBrowserEnv() {
  */
 export default async function fetchAdapter(config) {
   const request = createRequest(config);
-  const promiseChain = [getResponse(request, config)];
+  const data = await getResponse(request, config);
 
-  if (config.timeout && config.timeout > 0) {
-    promiseChain.push(
-      new Promise((res) => {
-        setTimeout(() => {
-          const message = config.timeoutErrorMessage
-            ? config.timeoutErrorMessage
-            : `timeout of ${config.timeout}ms exceeded`;
-          res(createError(message, config, "ECONNABORTED", request));
-        }, config.timeout);
-      })
-    );
-  }
-
-  const data = await Promise.race(promiseChain);
   return new Promise((resolve, reject) => {
     if (data instanceof Error) {
       reject(data);
@@ -244,22 +236,32 @@ async function getResponse(request, config) {
   };
 
   if (stageOne.status >= 200 && stageOne.status !== 204) {
-    switch (config.responseType) {
-      case "arraybuffer":
-        response.data = await stageOne.arrayBuffer();
-        break;
-      case "blob":
-        response.data = await stageOne.blob();
-        break;
-      case "json":
-        response.data = await stageOne.json();
-        break;
-      case "formData":
-        response.data = await stageOne.formData();
-        break;
-      default:
-        response.data = await stageOne.text();
-        break;
+    if (config.responseType === "stream") {
+      const contentType = stageOne.headers.get("content-type");
+      if (!contentType?.startsWith(EventStreamContentType)) {
+        throw new Error(
+          `Expected content-type to be ${EventStreamContentType}, Actual: ${contentType}`
+        );
+      }
+      await getBytes(stageOne.body, getLines(getMessages(config.onmessage)));
+    } else {
+      switch (config.responseType) {
+        case "arraybuffer":
+          response.data = await stageOne.arrayBuffer();
+          break;
+        case "blob":
+          response.data = await stageOne.blob();
+          break;
+        case "json":
+          response.data = await stageOne.json();
+          break;
+        case "formData":
+          response.data = await stageOne.formData();
+          break;
+        default:
+          response.data = await stageOne.text();
+          break;
+      }
     }
   }
 
@@ -310,10 +312,21 @@ function createRequest(config) {
   if (config.referrer) {
     options.referrer = config.referrer;
   }
+  if (config.timeout && config.timeout > 0) {
+    options.signal = AbortSignal.timeout(config.timeout);
+  }
+  if (config.signal) {
+    // this overrides the timeout signal if both are set
+    options.signal = config.signal;
+  }
   // This config is similar to XHR’s withCredentials flag, but with three available values instead of two.
   // So if withCredentials is not set, default value 'same-origin' will be used
   if (!isUndefined(config.withCredentials)) {
     options.credentials = config.withCredentials ? "include" : "omit";
+  }
+  // for streaming
+  if (config.responseType === "stream") {
+    options.headers.set("Accept", EventStreamContentType);
   }
 
   const fullPath = buildFullPath(config.baseURL, config.url);

@@ -1,0 +1,24 @@
+---
+hide_table_of_contents: true
+sidebar_label: LLMs
+---
+
+import CodeBlock from "@theme/CodeBlock";
+import Example from "@examples/models/llm/llm_quick_start.ts";
+import DocCardList from "@theme/DocCardList";
+
+# Getting Started: LLMs
+
+:::info
+[Conceptual Guide](https://docs.langchain.com/docs/components/models/language-model)
+:::
+
+LangChain provides a standard interface for using a variety of LLMs.
+
+To get started, simply use the `call` method of an `LLM` implementation, passing in a `string` input. In this example, we are using the `OpenAI` implementation:
+
+<CodeBlock language="typescript">{Example}</CodeBlock>
+
+## Dig deeper
+
+<DocCardList />

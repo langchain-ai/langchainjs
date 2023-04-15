@@ -1,15 +1,15 @@
+import { Tool } from "../../../tools/base.js";
 import {
-  Tool,
   InfoSqlTool,
   ListTablesSqlTool,
   QueryCheckerTool,
   QuerySqlTool,
-} from "../../tools/index.js";
+} from "../../../tools/sql.js";
 import { Toolkit } from "../base.js";
-import { BaseLLM } from "../../../llms/index.js";
+import { BaseLanguageModel } from "../../../base_language/index.js";
 import { SQL_PREFIX, SQL_SUFFIX } from "./prompt.js";
-import { interpolateFString } from "../../../prompts/template.js";
-import { LLMChain } from "../../../chains/index.js";
+import { renderTemplate } from "../../../prompts/template.js";
+import { LLMChain } from "../../../chains/llm_chain.js";
 import { ZeroShotAgent, CreatePromptArgs } from "../../mrkl/index.js";
 import { AgentExecutor } from "../../executor.js";
 import { SqlDatabase } from "../../../sql_db.js";
@@ -39,7 +39,7 @@ export class SqlToolkit extends Toolkit {
 }
 
 export function createSqlAgent(
-  llm: BaseLLM,
+  llm: BaseLanguageModel,
   toolkit: SqlToolkit,
   args?: SqlCreatePromptArgs
 ) {
@@ -50,10 +50,11 @@ export function createSqlAgent(
     topK = 10,
   } = args ?? {};
   const { tools } = toolkit;
-  const formattedPrefix = interpolateFString(prefix, {
+  const formattedPrefix = renderTemplate(prefix, "f-string", {
     dialect: toolkit.dialect,
     top_k: topK,
   });
+
   const prompt = ZeroShotAgent.createPrompt(tools, {
     prefix: formattedPrefix,
     suffix,

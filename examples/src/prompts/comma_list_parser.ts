@@ -1,7 +1,9 @@
-import { OpenAI, PromptTemplate } from "langchain";
+import { OpenAI } from "langchain/llms/openai";
+import { PromptTemplate } from "langchain/prompts";
 import { CommaSeparatedListOutputParser } from "langchain/output_parsers";
 
 export const run = async () => {
+  // With a `CommaSeparatedListOutputParser`, we can parse a comma separated list.
   const parser = new CommaSeparatedListOutputParser();
 
   const formatInstructions = parser.getFormatInstructions();
@@ -17,10 +19,23 @@ export const run = async () => {
   const input = await prompt.format({ subject: "ice cream flavors" });
   const response = await model.call(input);
 
-  console.log("Prompt:");
   console.log(input);
-  console.log("Raw response:");
+  /*
+   List five ice cream flavors.
+   Your response should be a list of comma separated values, eg: `foo, bar, baz`
+  */
+
   console.log(response);
-  console.log("Parsed response:");
+  // Vanilla, Chocolate, Strawberry, Mint Chocolate Chip, Cookies and Cream
+
   console.log(parser.parse(response));
+  /*
+  [
+    'Vanilla',
+    'Chocolate',
+    'Strawberry',
+    'Mint Chocolate Chip',
+    'Cookies and Cream'
+  ]
+  */
 };

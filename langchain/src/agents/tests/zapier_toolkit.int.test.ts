@@ -1,34 +1,38 @@
-import { expect, test } from "@jest/globals";
+import { beforeEach, describe, expect, test } from "@jest/globals";
 import { ZapierToolKit } from "../agent_toolkits/zapier/zapier.js";
-import { ZapierNLAWrapper } from "../tools/zapier.js";
+import { ZapierNLAWrapper, ZapierValues } from "../../tools/zapier.js";
 
-test("Test ZapierToolkit", async () => {
-  const zapier = new ZapierNLAWrapper();
-  const toolkit = await ZapierToolKit.fromZapierNLAWrapper(zapier);
-  console.log(toolkit.tools);
-});
+describe("ZapierNLAWrapper", () => {
+  let actions: ZapierValues[] = [];
+  let zapier: ZapierNLAWrapper;
 
-test("Test ZapierNLAWrapper", async () => {
-  const zapier = new ZapierNLAWrapper();
-  const actions = await zapier.listActions();
-  expect(actions.length).toBeGreaterThan(0);
-  console.log("listActions: ", actions);
+  beforeEach(async () => {
+    zapier = new ZapierNLAWrapper();
+    actions = await zapier.listActions();
+  });
 
-  // find the action with description "Gmail: Find Email"
-  const action = actions.find(
-    (action) => action.description === "Gmail: Find Email"
-  );
-  expect(action).not.toBeUndefined();
-  console.log("action: ", action);
-  const data = await zapier.previewAction(
-    action?.id ?? "",
-    "Find an email with Silicon Valley Bank"
-  );
-  console.log("previewData: ", data);
+  test("loads ZapierToolKit", async () => {
+    const toolkit = await ZapierToolKit.fromZapierNLAWrapper(zapier);
 
-  const result = await zapier.runAction(
-    action?.id ?? "",
-    "Find an email with Silicon Valley Bank"
-  );
-  console.log("result: ", result);
+    expect(toolkit).toBeDefined();
+  });
+
+  test("Zapier NLA has connected actions", async () => {
+    expect(actions.length).toBeGreaterThan(0);
+  });
+
+  describe("Giphy action", () => {
+    test("returns a GIF", async () => {
+      const giphy = actions.find(
+        (action) => action.description === "Giphy: Find GIF"
+      );
+      const result = await zapier.runAction(giphy?.id, "cats");
+
+      expect(result).toMatchObject({
+        keyword: "cats",
+        size: expect.any(String),
+        url: expect.stringContaining("https://"),
+      });
+    });
+  });
 });

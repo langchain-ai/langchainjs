@@ -1,15 +1,15 @@
-import { LLMChain } from "../../chains/index.js";
+import { LLMChain } from "../../chains/llm_chain.js";
 import { Agent } from "../agent.js";
 import {
   SystemMessagePromptTemplate,
   HumanMessagePromptTemplate,
   ChatPromptTemplate,
-} from "../../prompts/index.js";
+} from "../../prompts/chat.js";
 import { PREFIX, SUFFIX, FORMAT_INSTRUCTIONS } from "./prompt.js";
 import { BaseLanguageModel } from "../../base_language/index.js";
 import { AgentStep } from "../../schema/index.js";
 import { AgentInput } from "../types.js";
-import { Tool } from "../tools/base.js";
+import { Tool } from "../../tools/base.js";
 
 const FINAL_ANSWER_ACTION = "Final Answer:";
 
@@ -104,7 +104,9 @@ export class ChatAgent extends Agent {
     });
   }
 
-  extractToolAndInput(text: string): { tool: string; input: string } | null {
+  async extractToolAndInput(
+    text: string
+  ): Promise<{ tool: string; input: string } | null> {
     if (text.includes(FINAL_ANSWER_ACTION)) {
       const parts = text.split(FINAL_ANSWER_ACTION);
       const input = parts[parts.length - 1].trim();

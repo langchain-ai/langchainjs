@@ -3,7 +3,6 @@ import {
   BaseStringPromptTemplate,
   BasePromptTemplateInput,
 } from "./base.js";
-import { DEFAULT_FORMATTER_MAPPING, TemplateFormat } from "./template.js";
 import {
   AIChatMessage,
   BaseChatMessage,
@@ -30,6 +29,23 @@ export abstract class BaseMessagePromptTemplate {
       _type: this.constructor.name,
       ...JSON.parse(JSON.stringify(this)),
     };
+  }
+}
+
+export class ChatPromptValue extends BasePromptValue {
+  messages: BaseChatMessage[];
+
+  constructor(messages: BaseChatMessage[]) {
+    super();
+    this.messages = messages;
+  }
+
+  toString() {
+    return JSON.stringify(this.messages);
+  }
+
+  toChatMessages() {
+    return this.messages;
   }
 }
 
@@ -66,6 +82,23 @@ export abstract class BaseMessageStringPromptTemplate extends BaseMessagePromptT
 
   async formatMessages(values: InputValues): Promise<BaseChatMessage[]> {
     return [await this.format(values)];
+  }
+}
+
+export abstract class BaseChatPromptTemplate extends BasePromptTemplate {
+  constructor(input: BasePromptTemplateInput) {
+    super(input);
+  }
+
+  abstract formatMessages(values: InputValues): Promise<BaseChatMessage[]>;
+
+  async format(values: InputValues): Promise<string> {
+    return (await this.formatPromptValue(values)).toString();
+  }
+
+  async formatPromptValue(values: InputValues): Promise<BasePromptValue> {
+    const resultMessages = await this.formatMessages(values);
+    return new ChatPromptValue(resultMessages);
   }
 }
 
@@ -128,35 +161,11 @@ export class SystemMessagePromptTemplate extends BaseMessageStringPromptTemplate
   }
 }
 
-export class ChatPromptValue extends BasePromptValue {
-  messages: BaseChatMessage[];
-
-  constructor(messages: BaseChatMessage[]) {
-    super();
-    this.messages = messages;
-  }
-
-  toString() {
-    return JSON.stringify(this.messages);
-  }
-
-  toChatMessages() {
-    return this.messages;
-  }
-}
-
 export interface ChatPromptTemplateInput extends BasePromptTemplateInput {
   /**
    * The prompt messages
    */
   promptMessages: BaseMessagePromptTemplate[];
-
-  /**
-   * The format of the prompt template. Options are 'f-string', 'jinja-2'
-   *
-   * @defaultValue 'f-string'
-   */
-  templateFormat?: TemplateFormat;
 
   /**
    * Whether to try validating the template on initialization
@@ -167,12 +176,10 @@ export interface ChatPromptTemplateInput extends BasePromptTemplateInput {
 }
 
 export class ChatPromptTemplate
-  extends BasePromptTemplate
+  extends BaseChatPromptTemplate
   implements ChatPromptTemplateInput
 {
   promptMessages: BaseMessagePromptTemplate[];
-
-  templateFormat: TemplateFormat = "f-string";
 
   validateTemplate = true;
 
@@ -181,19 +188,21 @@ export class ChatPromptTemplate
     Object.assign(this, input);
 
     if (this.validateTemplate) {
-      if (!(this.templateFormat in DEFAULT_FORMATTER_MAPPING)) {
-        const validFormats = Object.keys(DEFAULT_FORMATTER_MAPPING);
-        throw new Error(`Invalid template format. Got \`${this.templateFormat}\`;
-                         should be one of ${validFormats}`);
-      }
-      const inputVariables = new Set<string>();
+      const inputVariablesMessages = new Set<string>();
       for (const promptMessage of this.promptMessages) {
         for (const inputVariable of promptMessage.inputVariables) {
-          inputVariables.add(inputVariable);
+          inputVariablesMessages.add(inputVariable);
         }
       }
+      const inputVariablesInstance = new Set(
+        this.partialVariables
+          ? this.inputVariables.concat(Object.keys(this.partialVariables))
+          : this.inputVariables
+      );
       const difference = new Set(
-        [...this.inputVariables].filter((x) => !inputVariables.has(x))
+        [...inputVariablesInstance].filter(
+          (x) => !inputVariablesMessages.has(x)
+        )
       );
       if (difference.size > 0) {
         throw new Error(
@@ -202,9 +211,10 @@ export class ChatPromptTemplate
           ]}\` are not used in any of the prompt messages.`
         );
       }
-      const thisInputVariables = new Set(this.inputVariables);
       const otherDifference = new Set(
-        [...inputVariables].filter((x) => !thisInputVariables.has(x))
+        [...inputVariablesMessages].filter(
+          (x) => !inputVariablesInstance.has(x)
+        )
       );
       if (otherDifference.size > 0) {
         throw new Error(
@@ -220,39 +230,50 @@ export class ChatPromptTemplate
     return "chat";
   }
 
-  async format(values: InputValues): Promise<string> {
-    return (await this.formatPromptValue(values)).toString();
-  }
+  async formatMessages(values: InputValues): Promise<BaseChatMessage[]> {
+    const allValues = await this.mergePartialAndUserVariables(values);
 
-  async formatPromptValue(values: InputValues): Promise<BasePromptValue> {
     let resultMessages: BaseChatMessage[] = [];
     for (const promptMessage of this.promptMessages) {
       const inputValues: InputValues = {};
       for (const inputVariable of promptMessage.inputVariables) {
-        if (!(inputVariable in values)) {
+        if (!(inputVariable in allValues)) {
           throw new Error(
             `Missing value for input variable \`${inputVariable}\``
           );
         }
-        inputValues[inputVariable] = values[inputVariable];
+        inputValues[inputVariable] = allValues[inputVariable];
       }
       const message = await promptMessage.formatMessages(inputValues);
       resultMessages = resultMessages.concat(message);
     }
-    return new ChatPromptValue(resultMessages);
+    return resultMessages;
   }
 
   serialize(): SerializedChatPromptTemplate {
+    if (this.outputParser !== undefined) {
+      throw new Error(
+        "ChatPromptTemplate cannot be serialized if outputParser is set"
+      );
+    }
     return {
       input_variables: this.inputVariables,
-      output_parser: this.outputParser?.serialize(),
-      template_format: this.templateFormat,
       prompt_messages: this.promptMessages.map((m) => m.serialize()),
     };
   }
 
-  async partial(_: PartialValues): Promise<BasePromptTemplate> {
-    throw new Error("ChatPromptTemplate.partial() not yet implemented");
+  async partial(values: PartialValues): Promise<BasePromptTemplate> {
+    // This is implemented in a way it doesn't require making
+    // BaseMessagePromptTemplate aware of .partial()
+    const promptDict: ChatPromptTemplateInput = { ...this };
+    promptDict.inputVariables = this.inputVariables.filter(
+      (iv) => !(iv in values)
+    );
+    promptDict.partialVariables = {
+      ...(this.partialVariables ?? {}),
+      ...values,
+    };
+    return new ChatPromptTemplate(promptDict);
   }
 
   static fromPromptMessages(

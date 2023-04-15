@@ -1,5 +1,5 @@
 import { DataSource } from "typeorm";
-import { OpenAI } from "langchain/llms";
+import { OpenAI } from "langchain/llms/openai";
 import { SqlDatabase } from "langchain/sql_db";
 import { SqlDatabaseChain } from "langchain/chains";
 
@@ -8,7 +8,6 @@ import { SqlDatabaseChain } from "langchain/chains";
  * To set it up follow the instructions on https://database.guide/2-sample-databases-sqlite/, placing the .db file
  * in the examples folder.
  */
-
 export const run = async () => {
   const datasource = new DataSource({
     type: "sqlite",
@@ -26,4 +25,5 @@ export const run = async () => {
 
   const res = await chain.run("How many tracks are there?");
   console.log(res);
+  // There are 3503 tracks.
 };

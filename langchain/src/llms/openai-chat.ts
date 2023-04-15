@@ -4,13 +4,13 @@ import {
   ChatCompletionRequestMessage,
   CreateChatCompletionRequest,
   ConfigurationParameters,
+  ChatCompletionResponseMessageRoleEnum,
+  CreateChatCompletionResponse,
 } from "openai";
-import type { IncomingMessage } from "http";
-import { createParser } from "eventsource-parser";
-import { backOff } from "exponential-backoff";
+import type { StreamingAxiosConfiguration } from "../util/axios-types.js";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
 import { BaseLLMParams, LLM } from "./base.js";
-import { CallbackManager } from "../callbacks/index.js";
+import {CallbackManager} from "../callbacks/base.js";
 
 interface ModelParams {
   /** Sampling temperature to use, between 0 and 2, defaults to 1 */
@@ -52,11 +52,19 @@ interface OpenAIInput extends ModelParams {
    */
   modelKwargs?: Kwargs;
 
-  /** Maximum number of retries to make when generating */
-  maxRetries: number;
-
   /** List of stop words to use when generating */
   stop?: string[];
+
+  /**
+   * Timeout to use when making requests to OpenAI.
+   */
+  timeout?: number;
+
+  /**
+   * Maximum number of tokens to generate in the completion.  If not specified,
+   * defaults to the maximum number of tokens allowed by the model.
+   */
+  maxTokens?: number;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -90,23 +98,21 @@ export class OpenAIChat extends LLM implements OpenAIInput {
 
   logitBias?: Record<string, number>;
 
+  maxTokens?: number;
+
   modelName = "gpt-3.5-turbo";
 
   prefixMessages?: ChatCompletionRequestMessage[];
 
   modelKwargs?: Kwargs;
 
-  maxRetries = 6;
+  timeout?: number;
 
   stop?: string[];
 
   streaming = false;
 
-  // Used for non-streaming requests
-  private batchClient: OpenAIApi;
-
-  // Used for streaming requests
-  private streamingClient: OpenAIApi;
+  private client: OpenAIApi;
 
   private clientConfig: ConfigurationParameters;
 
@@ -119,7 +125,10 @@ export class OpenAIChat extends LLM implements OpenAIInput {
   ) {
     super(fields ?? {});
 
-    const apiKey = fields?.openAIApiKey ?? process.env.OPENAI_API_KEY;
+    const apiKey =
+      fields?.openAIApiKey ??
+      // eslint-disable-next-line no-process-env
+      (typeof process !== "undefined" ? process.env.OPENAI_API_KEY : undefined);
     if (!apiKey) {
       throw new Error("OpenAI API key not found");
     }
@@ -127,7 +136,7 @@ export class OpenAIChat extends LLM implements OpenAIInput {
     this.modelName = fields?.modelName ?? this.modelName;
     this.prefixMessages = fields?.prefixMessages ?? this.prefixMessages;
     this.modelKwargs = fields?.modelKwargs ?? {};
-    this.maxRetries = fields?.maxRetries ?? this.maxRetries;
+    this.timeout = fields?.timeout;
 
     this.temperature = fields?.temperature ?? this.temperature;
     this.topP = fields?.topP ?? this.topP;
@@ -135,6 +144,7 @@ export class OpenAIChat extends LLM implements OpenAIInput {
     this.presencePenalty = fields?.presencePenalty ?? this.presencePenalty;
     this.n = fields?.n ?? this.n;
     this.logitBias = fields?.logitBias;
+    this.maxTokens = fields?.maxTokens;
     this.stop = fields?.stop;
 
     this.streaming = fields?.streaming ?? false;
@@ -161,6 +171,7 @@ export class OpenAIChat extends LLM implements OpenAIInput {
       presence_penalty: this.presencePenalty,
       n: this.n,
       logit_bias: this.logitBias,
+      max_tokens: this.maxTokens,
       stop: this.stop,
       stream: this.streaming,
       ...this.modelKwargs,
@@ -200,114 +211,133 @@ export class OpenAIChat extends LLM implements OpenAIInput {
    * @param prompt - The prompt to pass into the model.
    * @param [stop] - Optional list of stop words to use when generating.
    * @param [callbackManager] - Optional callback manager to use for streaming
-   * requests.
-   * @param [runId] - Optional run ID to use for streaming requests.
    *
    * @returns The full LLM output.
    *
    * @example
    * ```ts
-   * import { OpenAI } from "langchain/llms";
+   * import { OpenAI } from "langchain/llms/openai";
    * const openai = new OpenAI();
    * const response = await openai.generate(["Tell me a joke."]);
    * ```
    */
-  async _call(
-    prompt: string,
-    stop?: string[],
-    callbackManager?: CallbackManager,
-    runId?: string
-  ): Promise<string> {
+  async _call(prompt: string, stop?: string[], callbackManager?: CallbackManager): Promise<string> {
     if (this.stop && stop) {
       throw new Error("Stop found in input and default params");
     }
-    const callbackManager_ = callbackManager ?? new CallbackManager();
 
     const params = this.invocationParams();
     params.stop = stop ?? params.stop;
 
-    const { data } = await this.completionWithRetry({
-      ...params,
-      messages: this.formatMessages(prompt),
-    });
+    const data = params.stream
+      ? await new Promise<CreateChatCompletionResponse>((resolve, reject) => {
+          let response: CreateChatCompletionResponse;
+          let rejected = false;
+          this.completionWithRetry(
+            {
+              ...params,
+              messages: this.formatMessages(prompt),
+            },
+            {
+              responseType: "stream",
+              onmessage: (event) => {
+                if (event.data?.trim?.() === "[DONE]") {
+                  resolve(response);
+                } else {
+                  const message = JSON.parse(event.data) as {
+                    id: string;
+                    object: string;
+                    created: number;
+                    model: string;
+                    choices: Array<{
+                      index: number;
+                      finish_reason: string | null;
+                      delta: { content?: string; role?: string };
+                    }>;
+                  };
 
-    let completion = "";
+                  // on the first message set the response properties
+                  if (!response) {
+                    response = {
+                      id: message.id,
+                      object: message.object,
+                      created: message.created,
+                      model: message.model,
+                      choices: [],
+                    };
+                  }
 
-    if (params.stream) {
-      completion = await new Promise<string>((resolve, reject) => {
-        let innerCompletion = "";
-        const parser = createParser((event) => {
-          if (event.type === "event") {
-            if (event.data === "[DONE]") {
-              resolve(innerCompletion);
-            } else {
-              const response = JSON.parse(event.data) as {
-                id: string;
-                object: string;
-                created: number;
-                model: string;
-                choices: Array<{
-                  index: number;
-                  finish_reason: string | null;
-                  delta: { content?: string; role?: string };
-                }>;
-              };
+                  // on all messages, update choice
+                  const part = message.choices[0];
+                  if (part != null) {
+                    let choice = response.choices.find(
+                      (c) => c.index === part.index
+                    );
 
-              const part = response.choices[0];
-              if (part != null) {
-                innerCompletion += part.delta?.content ?? "";
-                // eslint-disable-next-line no-void
-                void callbackManager_.handleLLMNewToken(
-                  part.delta?.content ?? "",
-                  runId ?? "",
-                  true
-                );
-              }
+                    if (!choice) {
+                      choice = {
+                        index: part.index,
+                        finish_reason: part.finish_reason ?? undefined,
+                      };
+                      response.choices.push(choice);
+                    }
+
+                    if (!choice.message) {
+                      choice.message = {
+                        role: part.delta
+                          ?.role as ChatCompletionResponseMessageRoleEnum,
+                        content: part.delta?.content ?? "",
+                      };
+                    }
+
+                    choice.message.content += part.delta?.content ?? "";
+                    // eslint-disable-next-line no-void
+                    void callbackManager?.handleLLMNewToken(
+                      part.delta?.content ?? "",
+                      true
+                    );
+                  }
+                }
+              },
             }
-          }
+          ).catch((error) => {
+            if (!rejected) {
+              rejected = true;
+              reject(error);
+            }
+          });
+        })
+      : await this.completionWithRetry({
+          ...params,
+          messages: this.formatMessages(prompt),
         });
 
-        // workaround for incorrect axios types
-        const stream = data as unknown as IncomingMessage;
-        stream.on("data", (data: Buffer) =>
-          parser.feed(data.toString("utf-8"))
-        );
-        stream.on("error", (error) => reject(error));
-      });
-    } else {
-      completion = data.choices[0].message?.content ?? "";
-    }
-    return completion;
+    return data.choices[0].message?.content ?? "";
   }
 
   /** @ignore */
-  async completionWithRetry(request: CreateChatCompletionRequest) {
-    if (!request.stream && !this.batchClient) {
+  async completionWithRetry(
+    request: CreateChatCompletionRequest,
+    options?: StreamingAxiosConfiguration
+  ) {
+    if (!this.client) {
       const clientConfig = new Configuration({
         ...this.clientConfig,
         baseOptions: {
-          ...this.clientConfig.baseOptions,
+          timeout: this.timeout,
           adapter: fetchAdapter,
+          ...this.clientConfig.baseOptions,
         },
       });
-      this.batchClient = new OpenAIApi(clientConfig);
+      this.client = new OpenAIApi(clientConfig);
     }
-    if (request.stream && !this.streamingClient) {
-      const clientConfig = new Configuration(this.clientConfig);
-      this.streamingClient = new OpenAIApi(clientConfig);
-    }
-    const client = !request.stream ? this.batchClient : this.streamingClient;
-    const makeCompletionRequest = async () =>
-      client.createChatCompletion(
+    return this.caller
+      .call(
+        this.client.createChatCompletion.bind(this.client),
         request,
-        request.stream ? { responseType: "stream" } : undefined
-      );
-    return backOff(makeCompletionRequest, {
-      startingDelay: 4,
-      maxDelay: 10,
-      numOfAttempts: this.maxRetries,
-      // TODO(sean) pass custom retry function to check error types.
-    });
+        options
+      )
+      .then((res) => res.data);
   }
 
   _llmType() {

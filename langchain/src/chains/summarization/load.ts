@@ -1,6 +1,6 @@
-import { BaseLLM } from "../../llms/index.js";
+import { BaseLanguageModel } from "../../base_language/index.js";
 import { LLMChain } from "../llm_chain.js";
-import { PromptTemplate } from "../../prompts/index.js";
+import { BasePromptTemplate } from "../../prompts/base.js";
 import {
   StuffDocumentsChain,
   MapReduceDocumentsChain,
@@ -8,13 +8,13 @@ import {
 import { DEFAULT_PROMPT } from "./stuff_prompts.js";
 
 interface summarizationChainParams {
-  prompt?: PromptTemplate;
-  combineMapPrompt?: PromptTemplate;
-  combinePrompt?: PromptTemplate;
+  prompt?: BasePromptTemplate;
+  combineMapPrompt?: BasePromptTemplate;
+  combinePrompt?: BasePromptTemplate;
   type?: "map_reduce" | "stuff";
 }
 export const loadSummarizationChain = (
-  llm: BaseLLM,
+  llm: BaseLanguageModel,
   params: summarizationChainParams = {}
 ) => {
   const {
