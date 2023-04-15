@@ -101,7 +101,7 @@ export class EntityMemory extends BaseChatMemory implements EntityMemoryInput {
     this.llm = fields?.llm ?? this.llm;
     this.entityExtractionPrompt =
       fields?.entityExtractionPrompt ?? this.entityExtractionPrompt;
-    this.entityExtractionPrompt =
+    this.entitySummarizationPrompt =
       fields?.entitySummarizationPrompt ?? this.entitySummarizationPrompt;
     this.entityStore =
       fields?.entityStore ?? (this.entityStore as InMemoryEntityStore);
@@ -183,7 +183,8 @@ export class EntityMemory extends BaseChatMemory implements EntityMemoryInput {
   }
 
   // Clear memory contents.
-  clear(): void {
+  async clear() {
+    await super.clear();
     this.chatHistory = new ChatMessageHistory();
     this.entityStore = new InMemoryEntityStore();
   }

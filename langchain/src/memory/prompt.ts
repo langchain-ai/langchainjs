@@ -46,10 +46,12 @@ Last line:
 Human: {input}
 You:`;
 
-export const ENTITY_MEMORY_CONVERSATION_TEMPLATE = new PromptTemplate({
-  inputVariables: ["entities", "history", "input"],
-  template: _DEFAULT_ENTITY_MEMORY_CONVERSATION_TEMPLATE,
-});
+export const ENTITY_MEMORY_CONVERSATION_TEMPLATE =
+  // eslint-disable-next-line spaced-comment
+  /*#__PURE__*/ new PromptTemplate({
+    inputVariables: ["entities", "history", "input"],
+    template: _DEFAULT_ENTITY_MEMORY_CONVERSATION_TEMPLATE,
+  });
 
 export const _DEFAULT_ENTITY_EXTRACTION_TEMPLATE = `You are an AI assistant reading the transcript of a conversation between an AI and a human. Extract all of the proper nouns from the last line of conversation. As a guideline, a proper noun is generally capitalized. You should definitely extract all names and places.
 
@@ -86,7 +88,8 @@ Human: {input}
 
 Output:`;
 
-export const ENTITY_EXTRACTION_PROMPT = new PromptTemplate({
+// eslint-disable-next-line spaced-comment
+export const ENTITY_EXTRACTION_PROMPT = /*#__PURE__*/ new PromptTemplate({
   inputVariables: ["history", "input"],
   template: _DEFAULT_ENTITY_EXTRACTION_TEMPLATE,
 });
@@ -109,7 +112,8 @@ Last line of conversation:
 Human: {input}
 Updated summary:`;
 
-export const ENTITY_SUMMARIZATION_PROMPT = new PromptTemplate({
+// eslint-disable-next-line spaced-comment
+export const ENTITY_SUMMARIZATION_PROMPT = /*#__PURE__*/ new PromptTemplate({
   inputVariables: ["entity", "summary", "history", "input"],
   template: _DEFAULT_ENTITY_SUMMARIZATION_TEMPLATE,
 });
