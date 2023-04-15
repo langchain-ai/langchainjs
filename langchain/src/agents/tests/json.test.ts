@@ -1,5 +1,9 @@
 import { test, expect } from "@jest/globals";
-import { JsonListKeysTool, JsonSpec, JsonGetValueTool } from "../tools/json.js";
+import {
+  JsonListKeysTool,
+  JsonSpec,
+  JsonGetValueTool,
+} from "../../tools/json.js";
 
 test("JsonListKeysTool", async () => {
   const jsonSpec = new JsonSpec({

@@ -1,6 +1,33 @@
-/* eslint-disable tree-shaking/no-side-effects-in-initialization */
-/* eslint-disable spaced-comment */
+// eslint-disable-next-line tree-shaking/no-side-effects-in-initialization
 import { PromptTemplate } from "../prompts/prompt.js";
+
+const _DEFAULT_SUMMARIZER_TEMPLATE = `Progressively summarize the lines of conversation provided, adding onto the previous summary returning a new summary.
+
+EXAMPLE
+Current summary:
+The human asks what the AI thinks of artificial intelligence. The AI thinks artificial intelligence is a force for good.
+
+New lines of conversation:
+Human: Why do you think artificial intelligence is a force for good?
+AI: Because artificial intelligence will help humans reach their full potential.
+
+New summary:
+The human asks what the AI thinks of artificial intelligence. The AI thinks artificial intelligence is a force for good because it will help humans reach their full potential.
+END OF EXAMPLE
+
+Current summary:
+{summary}
+
+New lines of conversation:
+{new_lines}
+
+New summary:`;
+
+// eslint-disable-next-line spaced-comment
+export const SUMMARY_PROMPT = /*#__PURE__*/ new PromptTemplate({
+  inputVariables: ["summary", "new_lines"],
+  template: _DEFAULT_SUMMARIZER_TEMPLATE,
+});
 
 export const _DEFAULT_ENTITY_MEMORY_CONVERSATION_TEMPLATE = `You are an assistant to a human, powered by a large language model trained by OpenAI.
 
@@ -62,33 +89,6 @@ Output:`;
 export const ENTITY_EXTRACTION_PROMPT = new PromptTemplate({
   inputVariables: ["history", "input"],
   template: _DEFAULT_ENTITY_EXTRACTION_TEMPLATE,
-});
-
-export const _DEFAULT_SUMMARIZER_TEMPLATE = `Progressively summarize the lines of conversation provided, adding onto the previous summary returning a new summary.
-
-EXAMPLE
-Current summary:
-The human asks what the AI thinks of artificial intelligence. The AI thinks artificial intelligence is a force for good.
-
-New lines of conversation:
-Human: Why do you think artificial intelligence is a force for good?
-AI: Because artificial intelligence will help humans reach their full potential.
-
-New summary:
-The human asks what the AI thinks of artificial intelligence. The AI thinks artificial intelligence is a force for good because it will help humans reach their full potential.
-END OF EXAMPLE
-
-Current summary:
-{summary}
-
-New lines of conversation:
-{new_lines}
-
-New summary:`;
-
-export const SUMMARY_PROMPT = new PromptTemplate({
-  inputVariables: ["summary", "new_lines"],
-  template: _DEFAULT_SUMMARIZER_TEMPLATE,
 });
 
 export const _DEFAULT_ENTITY_SUMMARIZATION_TEMPLATE = `You are an AI assistant helping a human keep track of facts about relevant people, places, and concepts in their life. Update the summary of the provided entity in the "Entity" section based on the last line of your conversation with the human. If you are writing the summary for the first time, return a single sentence.

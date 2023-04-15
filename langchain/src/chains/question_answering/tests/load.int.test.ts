@@ -1,6 +1,10 @@
 import { test } from "@jest/globals";
 import { OpenAI } from "../../../llms/openai.js";
-import { loadQAMapReduceChain, loadQAStuffChain } from "../load.js";
+import {
+  loadQAMapReduceChain,
+  loadQARefineChain,
+  loadQAStuffChain,
+} from "../load.js";
 import { Document } from "../../../document.js";
 
 test("Test loadQAStuffChain", async () => {
@@ -24,5 +28,19 @@ test("Test loadQAMapReduceChain", async () => {
     new Document({ pageContent: "baz" }),
   ];
   const res = await chain.call({ input_documents: docs, question: "Whats up" });
+  console.log({ res });
+});
+
+test("Test loadQARefineChain", async () => {
+  const model = new OpenAI({ modelName: "text-ada-001" });
+  const chain = loadQARefineChain(model);
+  const docs = [
+    new Document({ pageContent: "Harrison went to Harvard." }),
+    new Document({ pageContent: "Ankush went to Princeton." }),
+  ];
+  const res = await chain.call({
+    input_documents: docs,
+    question: "Where did Harrison go to college?",
+  });
   console.log({ res });
 });
