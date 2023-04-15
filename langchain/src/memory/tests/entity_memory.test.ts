@@ -1,8 +1,8 @@
 import { test, expect } from "@jest/globals";
-import { BaseLLM } from "llms/base.js";
 
 import { LLMResult } from "../../schema/index.js";
 import { EntityMemory } from "../entity_memory.js";
+import { BaseLLM } from "../../llms/base.js";
 
 class FakeLLM extends BaseLLM {
   _llmType(): string {
