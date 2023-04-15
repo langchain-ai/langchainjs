@@ -1,15 +1,23 @@
 import { test, expect } from "@jest/globals";
-import { BasePromptValue } from "../../schema/index.js";
+import { BaseLLM } from "llms/base.js";
+
+import { LLMResult } from "../../schema/index.js";
 import { EntityMemory } from "../entity_memory.js";
 
+class FakeLLM extends BaseLLM {
+  _llmType(): string {
+    return "fake";
+  }
+
+  async _generate(prompts: string[], _?: string[]): Promise<LLMResult> {
+    const mockVal = { generations: [[{ text: "foo" }]] };
+    return mockVal;
+  }
+}
+
 test("Test entity memory", async () => {
-  const mockLLM = {
-    generatePrompt: (promptValues: BasePromptValue[], stop?: string[]) => {
-      const mockVal = { generations: [[{ text: "foo" }]] };
-      return mockVal;
-    },
-  };
-  const memory = new EntityMemory({ llm: mockLLM });
+  const model = new FakeLLM({});
+  const memory = new EntityMemory({ llm: model });
   const result1 = await memory.loadMemoryVariables({ input: "foo" });
   const expectedResult1 = { history: "", entities: { foo: "" } };
   expect(result1).toStrictEqual(expectedResult1);
