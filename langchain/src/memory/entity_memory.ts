@@ -1,5 +1,4 @@
 import { BaseLanguageModel } from "base_language/index.js";
-import { LLMChain, PromptTemplate } from "index.js";
 import { BaseChatMessage } from "../schema/index.js";
 
 import {
@@ -18,6 +17,8 @@ import {
   getBufferString,
   getPromptInputKey,
 } from "./base.js";
+import { LLMChain } from "../chains/llm_chain.js";
+import { PromptTemplate } from "../prompts/prompt.js";
 
 interface BaseEntityStore {
   get(key: string, defaultValue?: string): string | undefined;
