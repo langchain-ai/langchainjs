@@ -45,13 +45,15 @@ class BingSerpAPI extends Tool {
     }
 
     const res = await response.json();
-    const results:[] = res.webPages.value;
+    const results: [] = res.webPages.value;
 
     if (results.length === 0) {
-        return "No good results found.";
+      return "No good results found.";
     }
-    const snippets = results.map((result)=>result["snippet"]).join(" ")
-    
+    const snippets = results
+      .map((result: { snippet: string }) => result.snippet)
+      .join(" ");
+
     return snippets;
   }
 }
