@@ -7,7 +7,7 @@ import {
 } from "../../schema/index.js";
 import { EntityMemory } from "../entity_memory.js";
 import { BaseLLM } from "../../llms/base.js";
-import { ChatMessageHistory } from "memory/chat_memory.js";
+import { ChatMessageHistory } from "../chat_memory.js";
 
 class FakeLLM extends BaseLLM {
   _llmType(): string {
