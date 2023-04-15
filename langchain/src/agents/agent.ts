@@ -294,7 +294,7 @@ export abstract class Agent extends BaseSingleActionAgent {
     }
 
     const output = await this.llmChain.predict(newInputs, callbackManager);
-    const parsed = this.extractToolAndInput(output);
+    const parsed = await this.extractToolAndInput(output);
     if (!parsed) {
       throw new ParseError(`Invalid output: ${output}`, output);
     }
