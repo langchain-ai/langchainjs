@@ -9,7 +9,7 @@ import {
   AgentStep,
   ChainValues,
 } from "../schema/index.js";
-import {CallbackManager} from "../callbacks/index.js";
+import { CallbackManager } from "../callbacks/index.js";
 
 interface AgentExecutorInput extends ChainInputs {
   agent: BaseSingleActionAgent | BaseMultiActionAgent;
@@ -67,7 +67,10 @@ export class AgentExecutor extends BaseChain {
     return this.maxIterations === undefined || iterations < this.maxIterations;
   }
 
-  async _call(inputs: ChainValues, callbackManager?: CallbackManager): Promise<ChainValues> {
+  async _call(
+    inputs: ChainValues,
+    callbackManager?: CallbackManager
+  ): Promise<ChainValues> {
     const toolsByName = Object.fromEntries(
       this.tools.map((t) => [t.name.toLowerCase(), t])
     );
@@ -86,7 +89,11 @@ export class AgentExecutor extends BaseChain {
     };
 
     while (this.shouldContinue(iterations)) {
-      const output = await this.agent.plan(steps, inputs, callbackManager?.getChild());
+      const output = await this.agent.plan(
+        steps,
+        inputs,
+        callbackManager?.getChild()
+      );
       // Check if the agent has finished
       if ("returnValues" in output) {
         return getOutput(output);
@@ -105,7 +112,11 @@ export class AgentExecutor extends BaseChain {
 
           const tool = toolsByName[action.tool?.toLowerCase()];
           const observation = tool
-            ? await tool.call(action.toolInput, this.verbose, callbackManager?.getChild())
+            ? await tool.call(
+                action.toolInput,
+                this.verbose,
+                callbackManager?.getChild()
+              )
             : `${action.tool} is not a valid tool, try another one.`;
 
           return { action, observation };

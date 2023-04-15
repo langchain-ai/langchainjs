@@ -260,7 +260,7 @@ export class ChatOpenAI extends BaseChatModel implements OpenAIInput {
   async _generate(
     messages: BaseChatMessage[],
     stop?: string[],
-    callbackManager?: CallbackManager,
+    callbackManager?: CallbackManager
   ): Promise<ChatResult> {
     const tokenUsage: TokenUsage = {};
     if (this.stop && stop) {

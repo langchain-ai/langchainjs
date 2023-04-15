@@ -164,7 +164,7 @@ export class CallbackManager extends BaseCallbackManager {
     llm: { name: string },
     prompts: string[],
     verbose = false,
-    runId: string = uuidv4(),
+    runId: string = uuidv4()
   ): Promise<void> {
     await Promise.all(
       this.handlers.map(async (handler) => {
@@ -188,10 +188,7 @@ export class CallbackManager extends BaseCallbackManager {
     this._currentRunId = runId;
   }
 
-  async handleLLMNewToken(
-    token: string,
-    verbose?: boolean
-  ): Promise<void> {
+  async handleLLMNewToken(token: string, verbose?: boolean): Promise<void> {
     await Promise.all(
       this.handlers.map(async (handler) => {
         if (!handler.ignoreLLM && (verbose || handler.alwaysVerbose)) {
@@ -212,10 +209,7 @@ export class CallbackManager extends BaseCallbackManager {
     );
   }
 
-  async handleLLMError(
-    err: Error,
-    verbose?: boolean
-  ): Promise<void> {
+  async handleLLMError(err: Error, verbose?: boolean): Promise<void> {
     await Promise.all(
       this.handlers.map(async (handler) => {
         if (!handler.ignoreLLM && (verbose || handler.alwaysVerbose)) {
@@ -236,10 +230,7 @@ export class CallbackManager extends BaseCallbackManager {
     );
   }
 
-  async handleLLMEnd(
-    output: LLMResult,
-    verbose?: boolean
-  ): Promise<void> {
+  async handleLLMEnd(output: LLMResult, verbose?: boolean): Promise<void> {
     await Promise.all(
       this.handlers.map(async (handler) => {
         if (!handler.ignoreLLM && (verbose || handler.alwaysVerbose)) {
@@ -264,7 +255,7 @@ export class CallbackManager extends BaseCallbackManager {
     chain: { name: string },
     inputs: ChainValues,
     verbose = false,
-    runId = uuidv4(),
+    runId = uuidv4()
   ): Promise<void> {
     await Promise.all(
       this.handlers.map(async (handler) => {
@@ -288,10 +279,7 @@ export class CallbackManager extends BaseCallbackManager {
     this._currentRunId = runId;
   }
 
-  async handleChainError(
-    err: Error,
-    verbose?: boolean
-  ): Promise<void> {
+  async handleChainError(err: Error, verbose?: boolean): Promise<void> {
     await Promise.all(
       this.handlers.map(async (handler) => {
         if (!handler.ignoreChain && (verbose || handler.alwaysVerbose)) {
@@ -312,10 +300,7 @@ export class CallbackManager extends BaseCallbackManager {
     );
   }
 
-  async handleChainEnd(
-    output: ChainValues,
-    verbose?: boolean
-  ): Promise<void> {
+  async handleChainEnd(output: ChainValues, verbose?: boolean): Promise<void> {
     await Promise.all(
       this.handlers.map(async (handler) => {
         if (!handler.ignoreChain && (verbose || handler.alwaysVerbose)) {
@@ -340,7 +325,7 @@ export class CallbackManager extends BaseCallbackManager {
     tool: { name: string },
     input: string,
     verbose = false,
-    runId = uuidv4(),
+    runId = uuidv4()
   ): Promise<void> {
     await Promise.all(
       this.handlers.map(async (handler) => {
@@ -364,10 +349,7 @@ export class CallbackManager extends BaseCallbackManager {
     this._currentRunId = runId;
   }
 
-  async handleToolError(
-    err: Error,
-    verbose?: boolean
-  ): Promise<void> {
+  async handleToolError(err: Error, verbose?: boolean): Promise<void> {
     await Promise.all(
       this.handlers.map(async (handler) => {
         if (!handler.ignoreAgent && (verbose || handler.alwaysVerbose)) {
@@ -388,15 +370,17 @@ export class CallbackManager extends BaseCallbackManager {
     );
   }
 
-  async handleToolEnd(
-    output: string,
-    verbose?: boolean
-  ): Promise<void> {
+  async handleToolEnd(output: string, verbose?: boolean): Promise<void> {
     await Promise.all(
       this.handlers.map(async (handler) => {
         if (!handler.ignoreAgent && (verbose || handler.alwaysVerbose)) {
           try {
-            await handler.handleToolEnd?.(output, undefined, this._currentRunId, this._parentRunId);
+            await handler.handleToolEnd?.(
+              output,
+              undefined,
+              this._currentRunId,
+              this._parentRunId
+            );
           } catch (err) {
             console.error(
               `Error in handler ${handler.constructor.name}, handleToolEnd: ${err}`
@@ -407,10 +391,7 @@ export class CallbackManager extends BaseCallbackManager {
     );
   }
 
-  async handleText(
-    text: string,
-    verbose?: boolean
-  ): Promise<void> {
+  async handleText(text: string, verbose?: boolean): Promise<void> {
     await Promise.all(
       this.handlers.map(async (handler) => {
         if (verbose || handler.alwaysVerbose) {
@@ -455,10 +436,7 @@ export class CallbackManager extends BaseCallbackManager {
     );
   }
 
-  async handleAgentEnd(
-    action: AgentFinish,
-    verbose?: boolean
-  ): Promise<void> {
+  async handleAgentEnd(action: AgentFinish, verbose?: boolean): Promise<void> {
     await Promise.all(
       this.handlers.map(async (handler) => {
         if (!handler.ignoreAgent && (verbose || handler.alwaysVerbose)) {

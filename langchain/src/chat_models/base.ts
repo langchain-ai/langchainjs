@@ -40,11 +40,11 @@ export abstract class BaseChatModel extends BaseLanguageModel {
   async generate(
     messages: BaseChatMessage[][],
     stop?: string[],
-    callbackManager?: CallbackManager,
+    callbackManager?: CallbackManager
   ): Promise<LLMResult> {
     const callbackManager_ =
-        callbackManager?.copy(this.callbackManager.handlers) ??
-        this.callbackManager;
+      callbackManager?.copy(this.callbackManager.handlers) ??
+      this.callbackManager;
     const generations: ChatGeneration[][] = [];
     const llmOutputs: LLMResult["llmOutput"][] = [];
     const messageStrings: string[] = messages.map((messageList) =>
@@ -87,7 +87,7 @@ export abstract class BaseChatModel extends BaseLanguageModel {
   async generatePrompt(
     promptValues: BasePromptValue[],
     stop?: string[],
-    callbackManager?: CallbackManager,
+    callbackManager?: CallbackManager
   ): Promise<LLMResult> {
     const promptMessages: BaseChatMessage[][] = promptValues.map(
       (promptValue) => promptValue.toChatMessages()
@@ -98,7 +98,7 @@ export abstract class BaseChatModel extends BaseLanguageModel {
   abstract _generate(
     messages: BaseChatMessage[],
     stop?: string[],
-    callbackManager?: CallbackManager,
+    callbackManager?: CallbackManager
   ): Promise<ChatResult>;
 
   async call(
@@ -122,7 +122,11 @@ export abstract class BaseChatModel extends BaseLanguageModel {
 }
 
 export abstract class SimpleChatModel extends BaseChatModel {
-  abstract _call(messages: BaseChatMessage[], stop?: string[], callbackManager?: CallbackManager): Promise<string>;
+  abstract _call(
+    messages: BaseChatMessage[],
+    stop?: string[],
+    callbackManager?: CallbackManager
+  ): Promise<string>;
 
   async _generate(
     messages: BaseChatMessage[],

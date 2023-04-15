@@ -56,7 +56,11 @@ export abstract class BaseLLM extends BaseLanguageModel {
   /**
    * Run the LLM on the given prompts and input.
    */
-  abstract _generate(prompts: string[], stop?: string[], callbackManager?: CallbackManager): Promise<LLMResult>;
+  abstract _generate(
+    prompts: string[],
+    stop?: string[],
+    callbackManager?: CallbackManager
+  ): Promise<LLMResult>;
 
   /** @ignore */
   async _generateUncached(
@@ -65,8 +69,8 @@ export abstract class BaseLLM extends BaseLanguageModel {
     callbackManager?: CallbackManager
   ): Promise<LLMResult> {
     const callbackManager_ =
-        callbackManager?.copy(this.callbackManager.handlers) ??
-        this.callbackManager;
+      callbackManager?.copy(this.callbackManager.handlers) ??
+      this.callbackManager;
     await callbackManager_.handleLLMStart(
       { name: this._llmType() },
       prompts,
@@ -87,7 +91,11 @@ export abstract class BaseLLM extends BaseLanguageModel {
   /**
    * Run the LLM on the given propmts an input, handling caching.
    */
-  async generate(prompts: string[], stop?: string[], callbackManager?: CallbackManager): Promise<LLMResult> {
+  async generate(
+    prompts: string[],
+    stop?: string[],
+    callbackManager?: CallbackManager
+  ): Promise<LLMResult> {
     if (!Array.isArray(prompts)) {
       throw new Error("Argument 'prompts' is expected to be a string[]");
     }
@@ -135,8 +143,16 @@ export abstract class BaseLLM extends BaseLanguageModel {
   /**
    * Convenience wrapper for {@link generate} that takes in a single string prompt and returns a single string output.
    */
-  async call(prompt: string, stop?: string[], callbackManager?: CallbackManager) {
-    const { generations } = await this.generate([prompt], stop, callbackManager);
+  async call(
+    prompt: string,
+    stop?: string[],
+    callbackManager?: CallbackManager
+  ) {
+    const { generations } = await this.generate(
+      [prompt],
+      stop,
+      callbackManager
+    );
     return generations[0][0].text;
   }
 
@@ -197,9 +213,17 @@ export abstract class LLM extends BaseLLM {
   /**
    * Run the LLM on the given prompt and input.
    */
-  abstract _call(prompt: string, stop?: string[], callbackManager?: CallbackManager): Promise<string>;
+  abstract _call(
+    prompt: string,
+    stop?: string[],
+    callbackManager?: CallbackManager
+  ): Promise<string>;
 
-  async _generate(prompts: string[], stop?: string[], callbackManager?: CallbackManager): Promise<LLMResult> {
+  async _generate(
+    prompts: string[],
+    stop?: string[],
+    callbackManager?: CallbackManager
+  ): Promise<LLMResult> {
     const generations = [];
     for (let i = 0; i < prompts.length; i += 1) {
       const text = await this._call(prompts[i], stop, callbackManager);

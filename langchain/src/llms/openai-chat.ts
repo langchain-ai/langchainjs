@@ -10,7 +10,7 @@ import {
 import type { StreamingAxiosConfiguration } from "../util/axios-types.js";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
 import { BaseLLMParams, LLM } from "./base.js";
-import {CallbackManager} from "../callbacks/base.js";
+import { CallbackManager } from "../callbacks/base.js";
 
 interface ModelParams {
   /** Sampling temperature to use, between 0 and 2, defaults to 1 */
@@ -221,7 +221,11 @@ export class OpenAIChat extends LLM implements OpenAIInput {
    * const response = await openai.generate(["Tell me a joke."]);
    * ```
    */
-  async _call(prompt: string, stop?: string[], callbackManager?: CallbackManager): Promise<string> {
+  async _call(
+    prompt: string,
+    stop?: string[],
+    callbackManager?: CallbackManager
+  ): Promise<string> {
     if (this.stop && stop) {
       throw new Error("Stop found in input and default params");
     }

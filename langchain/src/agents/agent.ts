@@ -117,7 +117,7 @@ export abstract class BaseMultiActionAgent extends BaseAgent {
   abstract plan(
     steps: AgentStep[],
     inputs: ChainValues,
-    callbackManager?: CallbackManager,
+    callbackManager?: CallbackManager
   ): Promise<AgentAction[] | AgentFinish>;
 }
 
@@ -157,7 +157,7 @@ export class LLMSingleActionAgent extends BaseSingleActionAgent {
   async plan(
     steps: AgentStep[],
     inputs: ChainValues,
-    callbackManager?: CallbackManager,
+    callbackManager?: CallbackManager
   ): Promise<AgentAction | AgentFinish> {
     const output = await this.llmChain.call({
       intermediate_steps: steps,

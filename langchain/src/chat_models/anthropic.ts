@@ -237,10 +237,13 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
       ? stopSequences.concat(DEFAULT_STOP_SEQUENCES)
       : params.stop_sequences;
 
-    const response = await this.completionWithRetry({
-      ...params,
-      prompt: this.formatMessagesAsPrompt(messages),
-    }, callbackManager);
+    const response = await this.completionWithRetry(
+      {
+        ...params,
+        prompt: this.formatMessagesAsPrompt(messages),
+      },
+      callbackManager
+    );
 
     const generations: ChatGeneration[] = response.completion
       .split(AI_PROMPT)
