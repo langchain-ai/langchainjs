@@ -10,9 +10,15 @@ base_language.d.ts
 tools.cjs
 tools.js
 tools.d.ts
+tools/aws_lambda.cjs
+tools/aws_lambda.js
+tools/aws_lambda.d.ts
 tools/calculator.cjs
 tools/calculator.js
 tools/calculator.d.ts
+tools/webbrowser.cjs
+tools/webbrowser.js
+tools/webbrowser.d.ts
 chains.cjs
 chains.js
 chains.d.ts
@@ -76,6 +82,9 @@ vectorstores/chroma.d.ts
 vectorstores/hnswlib.cjs
 vectorstores/hnswlib.js
 vectorstores/hnswlib.d.ts
+vectorstores/weaviate.cjs
+vectorstores/weaviate.js
+vectorstores/weaviate.d.ts
 vectorstores/mongo.cjs
 vectorstores/mongo.js
 vectorstores/mongo.d.ts
@@ -85,6 +94,9 @@ vectorstores/pinecone.d.ts
 vectorstores/supabase.cjs
 vectorstores/supabase.js
 vectorstores/supabase.d.ts
+vectorstores/opensearch.cjs
+vectorstores/opensearch.js
+vectorstores/opensearch.d.ts
 vectorstores/milvus.cjs
 vectorstores/milvus.js
 vectorstores/milvus.d.ts

@@ -131,7 +131,7 @@ export class SqlDatabaseChain extends BaseChain {
     tableinfo: string
   ): Promise<void> {
     // We verify it only for OpenAI for the moment
-    if (this.llm._modelType() !== "openai") {
+    if (this.llm._llmType() !== "openai") {
       return;
     }
     const llm = this.llm as OpenAI;

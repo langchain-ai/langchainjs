@@ -1,10 +1,13 @@
-import { test } from "@jest/globals";
+/* eslint-disable no-process-env */
+import { expect, test } from "@jest/globals";
 import { OpenAI } from "../../llms/openai.js";
+import { OpenAIEmbeddings } from "../../embeddings/openai.js";
 import { loadAgent } from "../load.js";
 import { AgentExecutor, Tool } from "../index.js";
 import { SerpAPI } from "../../tools/serpapi.js";
 import { Calculator } from "../../tools/calculator.js";
 import { initializeAgentExecutor } from "../initialize.js";
+import { WebBrowser } from "../../tools/webbrowser.js";
 
 test("Run agent from hub", async () => {
   const model = new OpenAI({ temperature: 0, modelName: "text-babbage-001" });
@@ -56,4 +59,35 @@ test("Run agent locally", async () => {
   const result = await executor.call({ input });
 
   console.log(`Got output ${result.output}`);
+}, 30000);
+
+test("Run tool web-browser", async () => {
+  const model = new OpenAI({ temperature: 0 });
+  const tools = [
+    new SerpAPI(process.env.SERPAPI_API_KEY, {
+      location: "Austin,Texas,United States",
+      hl: "en",
+      gl: "us",
+    }),
+    new Calculator(),
+    new WebBrowser({ model, embeddings: new OpenAIEmbeddings() }),
+  ];
+
+  const executor = await initializeAgentExecutor(
+    tools,
+    model,
+    "zero-shot-react-description"
+  );
+  console.log("Loaded agent.");
+
+  const input = `What is the word of the day on merriam webster`;
+  console.log(`Executing with input "${input}"...`);
+
+  const result = await executor.call({ input });
+
+  console.log(`Got output ${result.output}`);
+
+  expect(result.intermediateSteps.length).toEqual(1);
+  expect(result.intermediateSteps[0].action.tool).toEqual("web-browser");
+  expect(result.output).not.toEqual("");
 }, 30000);
