@@ -265,7 +265,7 @@ export class CallbackManager extends BaseCallbackManager {
               chain,
               inputs,
               undefined,
-              this._currentRunId,
+              runId,
               this._parentRunId
             );
           } catch (err) {
@@ -335,7 +335,7 @@ export class CallbackManager extends BaseCallbackManager {
               tool,
               input,
               undefined,
-              this._currentRunId,
+              runId,
               this._parentRunId
             );
           } catch (err) {
