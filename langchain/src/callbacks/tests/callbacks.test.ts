@@ -126,9 +126,9 @@ test("CallbackManager", async () => {
   );
   await chainCb.handleChainEnd({ test: "test" });
   await chainCb.handleChainError(new Error("test"));
-  await manager.handleToolStart({ name: "test" }, "test");
-  await manager.handleToolEnd("test");
-  await manager.handleToolError(new Error("test"));
+  const toolCb = await manager.handleToolStart({ name: "test" }, "test");
+  await toolCb.handleToolEnd("test");
+  await toolCb.handleToolError(new Error("test"));
   await manager.handleText("test");
   await chainCb.handleAgentAction({
     tool: "test",
@@ -198,9 +198,9 @@ test("CallbackHandler with ignoreAgent", async () => {
   });
   const manager = new CallbackManager();
   manager.addHandler(handler);
-  await manager.handleToolStart({ name: "test" }, "test");
-  await manager.handleToolEnd("test");
-  await manager.handleToolError(new Error("test"));
+  const toolCb = await manager.handleToolStart({ name: "test" }, "test");
+  await toolCb.handleToolEnd("test");
+  await toolCb.handleToolError(new Error("test"));
   const chainCb = await manager.handleChainStart(
     { name: "agent_executor" },
     {}

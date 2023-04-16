@@ -179,6 +179,56 @@ export class CallbackManagerForChainRun {
   }
 }
 
+export class CallbackManagerForToolRun {
+  constructor(
+    private handlers: BaseCallbackHandler[],
+    public runId: string,
+    private _parentRunId?: string
+  ) {}
+
+  getChild(): CallbackManager {
+    const manager = new CallbackManager(undefined, this.runId);
+    manager.setHandlers(this.handlers);
+    return manager;
+  }
+
+  async handleToolError(err: Error | unknown): Promise<void> {
+    await Promise.all(
+      this.handlers.map(async (handler) => {
+        if (!handler.ignoreAgent) {
+          try {
+            await handler.handleToolError?.(err, this.runId, this._parentRunId);
+          } catch (err) {
+            console.error(
+              `Error in handler ${handler.constructor.name}, handleToolError: ${err}`
+            );
+          }
+        }
+      })
+    );
+  }
+
+  async handleToolEnd(output: string): Promise<void> {
+    await Promise.all(
+      this.handlers.map(async (handler) => {
+        if (!handler.ignoreAgent) {
+          try {
+            await handler.handleToolEnd?.(
+              output,
+              this.runId,
+              this._parentRunId
+            );
+          } catch (err) {
+            console.error(
+              `Error in handler ${handler.constructor.name}, handleToolEnd: ${err}`
+            );
+          }
+        }
+      })
+    );
+  }
+}
+
 export class CallbackManager
   extends BaseCallbackManager
   implements BaseCallbackManagerMethods
@@ -274,7 +324,7 @@ export class CallbackManager
     tool: { name: string },
     input: string,
     runId = uuidv4()
-  ): Promise<void> {
+  ): Promise<CallbackManagerForToolRun> {
     await Promise.all(
       this.handlers.map(async (handler) => {
         if (!handler.ignoreAgent) {
@@ -293,46 +343,10 @@ export class CallbackManager
         }
       })
     );
-    this._currentRunId = runId;
-  }
-
-  async handleToolError(err: Error | unknown): Promise<void> {
-    await Promise.all(
-      this.handlers.map(async (handler) => {
-        if (!handler.ignoreAgent) {
-          try {
-            await handler.handleToolError?.(
-              err,
-              this._currentRunId ?? uuidv4(),
-              this._parentRunId
-            );
-          } catch (err) {
-            console.error(
-              `Error in handler ${handler.constructor.name}, handleToolError: ${err}`
-            );
-          }
-        }
-      })
-    );
-  }
-
-  async handleToolEnd(output: string): Promise<void> {
-    await Promise.all(
-      this.handlers.map(async (handler) => {
-        if (!handler.ignoreAgent) {
-          try {
-            await handler.handleToolEnd?.(
-              output,
-              this._currentRunId ?? uuidv4(),
-              this._parentRunId
-            );
-          } catch (err) {
-            console.error(
-              `Error in handler ${handler.constructor.name}, handleToolEnd: ${err}`
-            );
-          }
-        }
-      })
+    return new CallbackManagerForToolRun(
+      this.handlers,
+      runId,
+      this._parentRunId
     );
   }
 
