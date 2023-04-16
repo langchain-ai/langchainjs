@@ -56,7 +56,8 @@ export abstract class VectorStore {
   async similaritySearch(
     query: string,
     k = 4,
-    filter: this["FilterType"] | undefined = undefined
+    filter: this["FilterType"] | undefined = undefined,
+    minSimilarityScore = -Infinity
   ): Promise<Document[]> {
     const results = await this.similaritySearchVectorWithScore(
       await this.embeddings.embedQuery(query),
@@ -64,7 +65,9 @@ export abstract class VectorStore {
       filter
     );
 
-    return results.map((result) => result[0]);
+    return results
+      .filter((result) => result[1] >= minSimilarityScore)
+      .map((result) => result[0]);
   }
 
   async similaritySearchWithScore(

@@ -24,7 +24,8 @@ interface VectorStore {
   similaritySearch(
     query: string,
     k?: number,
-    filter?: object | undefined
+    filter?: object,
+    minSimilarityScore?: number
   ): Promise<Document[]>;
 
   /**
@@ -33,8 +34,8 @@ interface VectorStore {
    */
   similaritySearchWithScore(
     query: string,
-    k = 4,
-    filter: object | undefined = undefined
+    k?: number,
+    filter?: object
   ): Promise<[object, number][]>;
 
   /**

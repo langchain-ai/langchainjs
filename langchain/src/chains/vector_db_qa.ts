@@ -15,6 +15,8 @@ export interface VectorDBQAChainInput extends Omit<ChainInputs, "memory"> {
   returnSourceDocuments?: boolean;
   k?: number;
   inputKey?: string;
+  minSimilarityScore?: number;
+
 }
 
 export class VectorDBQAChain extends BaseChain implements VectorDBQAChainInput {
@@ -38,6 +40,8 @@ export class VectorDBQAChain extends BaseChain implements VectorDBQAChainInput {
 
   returnSourceDocuments = false;
 
+  minSimilarityScore = -Infinity;
+
   constructor(fields: VectorDBQAChainInput) {
     super(undefined, fields.verbose, fields.callbackManager);
     this.vectorstore = fields.vectorstore;
@@ -46,6 +50,8 @@ export class VectorDBQAChain extends BaseChain implements VectorDBQAChainInput {
     this.k = fields.k ?? this.k;
     this.returnSourceDocuments =
       fields.returnSourceDocuments ?? this.returnSourceDocuments;
+    this.minSimilarityScore =
+      fields.minSimilarityScore ?? this.minSimilarityScore;
   }
 
   async _call(values: ChainValues): Promise<ChainValues> {
@@ -53,7 +59,12 @@ export class VectorDBQAChain extends BaseChain implements VectorDBQAChainInput {
       throw new Error(`Question key ${this.inputKey} not found.`);
     }
     const question: string = values[this.inputKey];
-    const docs = await this.vectorstore.similaritySearch(question, this.k);
+    const docs = await this.vectorstore.similaritySearch(
+      question,
+      this.k,
+      undefined,
+      this.minSimilarityScore
+    );
     const inputs = { question, input_documents: docs };
     const result = await this.combineDocumentsChain.call(inputs);
     if (this.returnSourceDocuments) {
