@@ -3,6 +3,7 @@ import { ChainValues } from "../schema/index.js";
 import { CallbackManager } from "../callbacks/index.js";
 import { SerializedBaseChain } from "./serde.js";
 import { BaseLangChain } from "../base_language/index.js";
+import { CallbackManagerForChainRun } from "../callbacks/manager.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type LoadValues = Record<string, any>;
@@ -33,8 +34,7 @@ export abstract class BaseChain extends BaseLangChain implements ChainInputs {
    */
   abstract _call(
     values: ChainValues,
-    callbackManager?: CallbackManager,
-    runId?: string
+    runManager?: CallbackManagerForChainRun
   ): Promise<ChainValues>;
 
   /**
@@ -77,7 +77,6 @@ export abstract class BaseChain extends BaseLangChain implements ChainInputs {
     values: ChainValues,
     callbackManager?: CallbackManager
   ): Promise<ChainValues> {
-    const localCallbackManager = this.configureCallbackManager(callbackManager);
     const fullValues = { ...values } as typeof values;
     if (!(this.memory == null)) {
       const newValues = await this.memory.loadMemoryVariables(values);
@@ -85,21 +84,17 @@ export abstract class BaseChain extends BaseLangChain implements ChainInputs {
         fullValues[key] = value;
       }
     }
-    await localCallbackManager?.handleChainStart(
-      { name: this._chainType() },
-      fullValues
-    );
-    if (callbackManager) {
-      callbackManager.setCurrentRunId(localCallbackManager?.currentRunId);
-    }
+    const runManager = await this.configureCallbackManager(
+      callbackManager
+    )?.handleChainStart({ name: this._chainType() }, fullValues);
     let outputValues;
     try {
-      outputValues = await this._call(fullValues, callbackManager);
+      outputValues = await this._call(fullValues, runManager);
     } catch (e) {
-      await localCallbackManager?.handleChainError(e);
+      await runManager?.handleChainError(e);
       throw e;
     }
-    await localCallbackManager?.handleChainEnd(outputValues);
+    await runManager?.handleChainEnd(outputValues);
     if (!(this.memory == null)) {
       await this.memory.saveContext(values, outputValues);
     }
