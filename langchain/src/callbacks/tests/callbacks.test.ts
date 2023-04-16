@@ -1,9 +1,6 @@
 import { test, expect } from "@jest/globals";
-import {
-  CallbackManager,
-  BaseCallbackHandler,
-  BaseCallbackHandlerInput,
-} from "../base.js";
+import { CallbackManager } from "../manager.js";
+import { BaseCallbackHandler, BaseCallbackHandlerInput } from "../base.js";
 import {
   AgentAction,
   AgentFinish,

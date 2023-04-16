@@ -14,7 +14,7 @@ import { BaseLLM, BaseLLMParams } from "./base.js";
 import { calculateMaxTokens } from "../base_language/count_tokens.js";
 import { OpenAIChat } from "./openai-chat.js";
 import { LLMResult } from "../schema/index.js";
-import { CallbackManager } from "../callbacks/base.js";
+import { CallbackManager } from "../callbacks/manager.js";
 
 interface ModelParams {
   /** Sampling temperature to use */

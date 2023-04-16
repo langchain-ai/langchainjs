@@ -1,5 +1,5 @@
 import { LangChainTracer } from "./tracers.js";
-import { CallbackManager } from "./base.js";
+import { CallbackManager } from "./manager.js";
 
 export async function getTracingCallbackManager(
   session?: string

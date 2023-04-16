@@ -1,4 +1,4 @@
-import { CallbackManager } from "../callbacks/base.js";
+import { CallbackManager } from "../callbacks/manager.js";
 import { BaseLangChain } from "../base_language/index.js";
 
 export interface ToolParams {
