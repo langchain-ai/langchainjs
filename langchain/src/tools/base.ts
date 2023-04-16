@@ -1,35 +1,14 @@
-import { CallbackManager, ConsoleCallbackHandler } from "../callbacks/base.js";
-
-const getVerbosity = () => false;
+import { CallbackManager } from "../callbacks/base.js";
+import { BaseLangChain } from "../base_language/index.js";
 
 export interface ToolParams {
   verbose?: boolean;
   callbackManager?: CallbackManager;
 }
 
-export abstract class Tool {
-  verbose: boolean;
-
-  callbackManager?: CallbackManager;
-
+export abstract class Tool extends BaseLangChain {
   constructor(verbose?: boolean, callbackManager?: CallbackManager) {
-    this.verbose = verbose ?? (callbackManager ? true : getVerbosity());
-    this.callbackManager = callbackManager;
-  }
-
-  protected configureCallbackManager(
-    callbackManager?: CallbackManager
-  ): CallbackManager | undefined {
-    let callbackManager_ =
-      callbackManager?.copy(this.callbackManager?.handlers) ??
-      this.callbackManager;
-    if (this.verbose) {
-      if (!callbackManager_) {
-        callbackManager_ = new CallbackManager();
-      }
-      callbackManager_.addHandler(new ConsoleCallbackHandler());
-    }
-    return callbackManager_;
+    super(verbose, callbackManager);
   }
 
   protected abstract _call(

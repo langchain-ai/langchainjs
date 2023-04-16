@@ -98,6 +98,8 @@ export abstract class BaseCallbackHandler
   extends BaseCallbackHandlerMethods
   implements BaseCallbackHandlerInput
 {
+  abstract name: string;
+
   ignoreLLM = false;
 
   ignoreChain = false;
@@ -128,6 +130,8 @@ export abstract class BaseCallbackManager extends BaseCallbackHandler {
 
 export class CallbackManager extends BaseCallbackManager {
   handlers: BaseCallbackHandler[];
+
+  name = "callback_manager";
 
   private _currentRunId?: string;
 
@@ -441,7 +445,7 @@ export class CallbackManager extends BaseCallbackManager {
 
   static fromHandlers(handlers: BaseCallbackHandlerMethods) {
     class Handler extends BaseCallbackHandler {
-      alwaysVerbose = true;
+      name = "handler";
 
       constructor() {
         super();
@@ -456,6 +460,8 @@ export class CallbackManager extends BaseCallbackManager {
 }
 
 export class ConsoleCallbackHandler extends BaseCallbackHandler {
+  name = "console_callback_handler";
+
   async handleChainStart(chain: { name: string }) {
     console.log(`Entering new ${chain.name} chain...`);
   }

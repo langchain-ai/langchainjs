@@ -12,6 +12,8 @@ import {
 } from "../../schema/index.js";
 
 class FakeCallbackHandler extends BaseCallbackHandler {
+  name = "fake_callback_handler";
+
   starts = 0;
 
   ends = 0;

@@ -269,6 +269,8 @@ export abstract class BaseTracer extends BaseCallbackHandler {
 }
 
 export class LangChainTracer extends BaseTracer {
+  name = "langchain_tracer";
+
   protected endpoint =
     (typeof process !== "undefined"
       ? // eslint-disable-next-line no-process-env

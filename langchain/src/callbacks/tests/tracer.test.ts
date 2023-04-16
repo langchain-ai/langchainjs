@@ -16,6 +16,8 @@ const _DATE = 1620000000000;
 Date.now = jest.fn(() => _DATE);
 
 class FakeTracer extends BaseTracer {
+  name = "fake_tracer";
+
   runs: (LLMRun | ChainRun | ToolRun)[] = [];
 
   constructor() {

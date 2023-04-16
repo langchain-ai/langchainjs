@@ -13,6 +13,45 @@ export type SerializedLLM = {
 } & Record<string, any>;
 
 /**
+ * Base class for language models, chains, tools.
+ */
+export abstract class BaseLangChain {
+  /**
+   * Whether to print out response text.
+   */
+  verbose: boolean;
+
+  callbackManager?: CallbackManager;
+
+  protected configureCallbackManager(
+    callbackManager?: CallbackManager
+  ): CallbackManager | undefined {
+    let callbackManager_ =
+      callbackManager?.copy(this.callbackManager?.handlers) ??
+      this.callbackManager;
+    if (this.verbose) {
+      if (!callbackManager_) {
+        callbackManager_ = new CallbackManager();
+      }
+      const consoleHandler = new ConsoleCallbackHandler();
+      if (
+        !callbackManager_.handlers.some(
+          (handler) => handler.name === consoleHandler.name
+        )
+      ) {
+        callbackManager_.addHandler(consoleHandler);
+      }
+    }
+    return callbackManager_;
+  }
+
+  constructor(verbose?: boolean, callbackManager?: CallbackManager) {
+    this.verbose = verbose ?? getVerbosity();
+    this.callbackManager = callbackManager;
+  }
+}
+
+/**
  * Base interface for language model parameters.
  * A subclass of {@link BaseLanguageModel} should have a constructor that
  * takes in a parameter that extends this interface.
@@ -25,14 +64,10 @@ export interface BaseLanguageModelParams extends AsyncCallerParams {
 /**
  * Base class for language models.
  */
-export abstract class BaseLanguageModel implements BaseLanguageModelParams {
-  /**
-   * Whether to print out response text.
-   */
-  verbose: boolean;
-
-  callbackManager?: CallbackManager;
-
+export abstract class BaseLanguageModel
+  extends BaseLangChain
+  implements BaseLanguageModelParams
+{
   /**
    * The async caller should be used by subclasses to make any async calls,
    * which will thus benefit from the concurrency and retry logic.
@@ -40,25 +75,8 @@ export abstract class BaseLanguageModel implements BaseLanguageModelParams {
   caller: AsyncCaller;
 
   constructor(params: BaseLanguageModelParams) {
-    this.verbose =
-      params.verbose ?? (params.callbackManager ? true : getVerbosity());
-    this.callbackManager = params.callbackManager;
+    super(params.verbose, params.callbackManager);
     this.caller = new AsyncCaller(params ?? {});
-  }
-
-  protected configureCallbackManager(
-    callbackManager?: CallbackManager
-  ): CallbackManager | undefined {
-    let callbackManager_ =
-      callbackManager?.copy(this.callbackManager?.handlers) ??
-      this.callbackManager;
-    if (this.verbose) {
-      if (!callbackManager_) {
-        callbackManager_ = new CallbackManager();
-      }
-      callbackManager_.addHandler(new ConsoleCallbackHandler());
-    }
-    return callbackManager_;
   }
 
   abstract generatePrompt(

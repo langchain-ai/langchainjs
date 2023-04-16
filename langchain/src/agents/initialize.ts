@@ -4,7 +4,7 @@ import { ZeroShotAgent } from "./mrkl/index.js";
 import { ChatConversationalAgent } from "./chat_convo/index.js";
 import { ChatAgent } from "./chat/index.js";
 import { BaseLanguageModel } from "../base_language/index.js";
-import { CallbackManager, getCallbackManager } from "../callbacks/index.js";
+import { CallbackManager } from "../callbacks/index.js";
 
 type AgentType =
   | "zero-shot-react-description"
@@ -19,8 +19,8 @@ export const initializeAgentExecutor = async (
   _callbackManager?: CallbackManager
 ): Promise<AgentExecutor> => {
   const agentType = _agentType ?? "zero-shot-react-description";
-  const verbose = _verbose ?? !!_callbackManager;
-  const callbackManager = _callbackManager ?? getCallbackManager();
+  const verbose = _verbose;
+  const callbackManager = _callbackManager;
   switch (agentType) {
     case "zero-shot-react-description":
       return AgentExecutor.fromAgentAndTools({

@@ -6,8 +6,4 @@ export {
 
 export { LangChainTracer } from "./tracers.js";
 
-export {
-  getCallbackManager,
-  setTracerSession,
-  getTracingCallbackManager,
-} from "./utils.js";
+export { getTracingCallbackManager } from "./utils.js";

@@ -1,7 +1,8 @@
 import { BaseMemory } from "../memory/base.js";
 import { ChainValues } from "../schema/index.js";
-import { CallbackManager, ConsoleCallbackHandler } from "../callbacks/index.js";
+import { CallbackManager } from "../callbacks/index.js";
 import { SerializedBaseChain } from "./serde.js";
+import { BaseLangChain } from "../base_language/index.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type LoadValues = Record<string, any>;
@@ -12,26 +13,19 @@ export interface ChainInputs {
   callbackManager?: CallbackManager;
 }
 
-const getVerbosity = () => false;
-
 /**
  * Base interface that all chains must implement.
  */
-export abstract class BaseChain implements ChainInputs {
+export abstract class BaseChain extends BaseLangChain implements ChainInputs {
   memory?: BaseMemory;
-
-  verbose: boolean;
-
-  callbackManager?: CallbackManager;
 
   constructor(
     memory?: BaseMemory,
     verbose?: boolean,
     callbackManager?: CallbackManager
   ) {
+    super(verbose, callbackManager);
     this.memory = memory;
-    this.verbose = verbose ?? (callbackManager ? true : getVerbosity());
-    this.callbackManager = callbackManager;
   }
 
   /**
@@ -72,21 +66,6 @@ export abstract class BaseChain implements ChainInputs {
     throw new Error(
       "return values have multiple keys, `run` only supported when one key currently"
     );
-  }
-
-  protected configureCallbackManager(
-    callbackManager?: CallbackManager
-  ): CallbackManager | undefined {
-    let callbackManager_ =
-      callbackManager?.copy(this.callbackManager?.handlers) ??
-      this.callbackManager;
-    if (this.verbose) {
-      if (!callbackManager_) {
-        callbackManager_ = new CallbackManager();
-      }
-      callbackManager_.addHandler(new ConsoleCallbackHandler());
-    }
-    return callbackManager_;
   }
 
   /**
