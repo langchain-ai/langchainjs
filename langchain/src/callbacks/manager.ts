@@ -47,7 +47,10 @@ class BaseRunManager {
   }
 }
 
-export class CallbackManagerForLLMRun extends BaseRunManager {
+export class CallbackManagerForLLMRun
+  extends BaseRunManager
+  implements BaseCallbackManagerMethods
+{
   async handleLLMNewToken(token: string): Promise<void> {
     await Promise.all(
       this.handlers.map(async (handler) => {
@@ -101,7 +104,10 @@ export class CallbackManagerForLLMRun extends BaseRunManager {
   }
 }
 
-export class CallbackManagerForChainRun extends BaseRunManager {
+export class CallbackManagerForChainRun
+  extends BaseRunManager
+  implements BaseCallbackManagerMethods
+{
   getChild(): CallbackManager {
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
     const manager = new CallbackManager(this.runId);
@@ -190,7 +196,10 @@ export class CallbackManagerForChainRun extends BaseRunManager {
   }
 }
 
-export class CallbackManagerForToolRun extends BaseRunManager {
+export class CallbackManagerForToolRun
+  extends BaseRunManager
+  implements BaseCallbackManagerMethods
+{
   getChild(): CallbackManager {
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
     const manager = new CallbackManager(this.runId);
