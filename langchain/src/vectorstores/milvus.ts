@@ -402,10 +402,7 @@ export class Milvus extends VectorStore {
 
   static async fromExistingCollection(
     embeddings: Embeddings,
-    dbConfig: {
-      collectionName: string;
-      url?: string;
-    }
+    dbConfig: MilvusLibArgs
   ): Promise<Milvus> {
     const instance = new this(embeddings, dbConfig);
     await instance.ensureCollection();
