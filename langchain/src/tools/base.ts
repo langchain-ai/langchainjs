@@ -23,6 +23,9 @@ export abstract class Tool extends BaseLangChain {
   ): Promise<string> {
     const localCallbackManager = this.configureCallbackManager(callbackManager);
     await localCallbackManager?.handleToolStart({ name: this.name }, arg);
+    if (callbackManager) {
+      callbackManager.setCurrentRunId(localCallbackManager?.currentRunId);
+    }
     let result;
     try {
       result = await this._call(arg, callbackManager);

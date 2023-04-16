@@ -52,6 +52,9 @@ export abstract class BaseChatModel extends BaseLanguageModel {
       { name: this._llmType() },
       messageStrings
     );
+    if (callbackManager) {
+      callbackManager.setCurrentRunId(localCallbackManager?.currentRunId);
+    }
     try {
       for (const message of messages) {
         const result = await this._generate(message, stop, callbackManager);

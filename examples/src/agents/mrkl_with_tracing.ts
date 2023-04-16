@@ -3,9 +3,9 @@ import { initializeAgentExecutor } from "langchain/agents";
 import { SerpAPI } from "langchain/tools";
 import { Calculator } from "langchain/tools/calculator";
 import process from "process";
+import { getTracingCallbackManager } from "langchain/callbacks";
 
 export const run = async () => {
-  process.env.LANGCHAIN_HANDLER = "langchain";
   const model = new OpenAI({ temperature: 0 });
   const tools = [
     new SerpAPI(process.env.SERPAPI_API_KEY, {
@@ -28,7 +28,10 @@ export const run = async () => {
 
   console.log(`Executing with input "${input}"...`);
 
-  const result = await executor.call({ input });
+  const result = await executor.call(
+    { input },
+    await getTracingCallbackManager()
+  );
 
   console.log(`Got output ${result.output}`);
 };

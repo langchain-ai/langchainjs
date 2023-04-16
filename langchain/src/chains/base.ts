@@ -89,6 +89,9 @@ export abstract class BaseChain extends BaseLangChain implements ChainInputs {
       { name: this._chainType() },
       fullValues
     );
+    if (callbackManager) {
+      callbackManager.setCurrentRunId(localCallbackManager?.currentRunId);
+    }
     let outputValues;
     try {
       outputValues = await this._call(fullValues, callbackManager);

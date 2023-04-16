@@ -137,10 +137,20 @@ export class CallbackManager extends BaseCallbackManager {
 
   private readonly _parentRunId?: string;
 
-  constructor(parentRunId?: string) {
+  constructor(currentRunId?: string, parentRunId?: string) {
     super();
     this.handlers = [];
+    this._currentRunId = currentRunId;
     this._parentRunId = parentRunId;
+  }
+
+  get currentRunId(): string | undefined {
+    return this._currentRunId;
+  }
+
+  // needed to avoid ESLint no-param-reassign error
+  setCurrentRunId(runId: string | undefined) {
+    this._currentRunId = runId;
   }
 
   async handleLLMStart(
@@ -432,13 +442,13 @@ export class CallbackManager extends BaseCallbackManager {
   }
 
   getChild(): CallbackManager {
-    const manager = new CallbackManager(this._currentRunId);
+    const manager = new CallbackManager(undefined, this._currentRunId);
     manager.setHandlers(this.handlers);
     return manager;
   }
 
   copy(additionalHandlers: BaseCallbackHandler[] = []): CallbackManager {
-    const manager = new CallbackManager(this._parentRunId);
+    const manager = new CallbackManager(this._currentRunId, this._parentRunId);
     manager.setHandlers([...this.handlers, ...additionalHandlers]);
     return manager;
   }

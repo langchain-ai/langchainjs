@@ -73,6 +73,9 @@ export abstract class BaseLLM extends BaseLanguageModel {
       { name: this._llmType() },
       prompts
     );
+    if (callbackManager) {
+      callbackManager.setCurrentRunId(localCallbackManager?.currentRunId);
+    }
     let output;
     try {
       output = await this._generate(prompts, stop, callbackManager);
