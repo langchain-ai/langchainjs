@@ -340,10 +340,9 @@ export class ChatOpenAI extends BaseChatModel implements OpenAIInput {
 
                     choice.message.content += part.delta?.content ?? "";
                     // eslint-disable-next-line no-void
-                    void callbackManager?.handleLLMNewToken(
-                      part.delta?.content ?? "",
-                      true
-                    );
+                    void this.configureCallbackManager(
+                      callbackManager
+                    )?.handleLLMNewToken(part.delta?.content ?? "");
                   }
                 }
               },

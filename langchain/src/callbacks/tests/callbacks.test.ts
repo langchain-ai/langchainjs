@@ -112,8 +112,8 @@ class FakeCallbackHandler extends BaseCallbackHandler {
 
 test("CallbackManager", async () => {
   const manager = new CallbackManager();
-  const handler1 = new FakeCallbackHandler({ alwaysVerbose: true });
-  const handler2 = new FakeCallbackHandler({ alwaysVerbose: false });
+  const handler1 = new FakeCallbackHandler();
+  const handler2 = new FakeCallbackHandler();
   manager.addHandler(handler1);
   manager.addHandler(handler2);
 
@@ -135,75 +135,24 @@ test("CallbackManager", async () => {
   });
   await manager.handleAgentEnd({ returnValues: { test: "test" }, log: "test" });
 
-  expect(handler1.starts).toBe(4);
-  expect(handler1.ends).toBe(4);
-  expect(handler1.errors).toBe(3);
-  expect(handler1.llmStarts).toBe(1);
-  expect(handler1.llmEnds).toBe(1);
-  expect(handler1.llmStreams).toBe(1);
-  expect(handler1.chainStarts).toBe(1);
-  expect(handler1.chainEnds).toBe(1);
-  expect(handler1.toolStarts).toBe(2);
-  expect(handler1.toolEnds).toBe(1);
-  expect(handler1.agentEnds).toBe(1);
-  expect(handler1.texts).toBe(1);
-
-  expect(handler2.starts).toBe(0);
-  expect(handler2.ends).toBe(0);
-  expect(handler2.errors).toBe(0);
-  expect(handler2.llmStarts).toBe(0);
-  expect(handler2.llmEnds).toBe(0);
-  expect(handler2.llmStreams).toBe(0);
-  expect(handler2.chainStarts).toBe(0);
-  expect(handler2.chainEnds).toBe(0);
-  expect(handler2.toolStarts).toBe(0);
-  expect(handler2.toolEnds).toBe(0);
-  expect(handler2.agentEnds).toBe(0);
-  expect(handler2.texts).toBe(0);
-});
-
-test("CallbackManager with verbose passed in", async () => {
-  const manager = new CallbackManager();
-  const handler = new FakeCallbackHandler({ alwaysVerbose: false });
-  manager.addHandler(handler);
-
-  await manager.handleLLMStart({ name: "test" }, ["test"], true);
-  await manager.handleLLMEnd({ generations: [] }, true);
-  await manager.handleLLMNewToken("test", true);
-  await manager.handleLLMError(new Error("test"), true);
-  await manager.handleChainStart({ name: "test" }, { test: "test" }, true);
-  await manager.handleChainEnd({ test: "test" }, true);
-  await manager.handleChainError(new Error("test"), true);
-  await manager.handleToolStart({ name: "test" }, "test", true);
-  await manager.handleToolEnd("test", true);
-  await manager.handleToolError(new Error("test"), true);
-  await manager.handleText("test", true);
-  await manager.handleAgentAction(
-    { tool: "test", toolInput: "test", log: "test" },
-    true
-  );
-  await manager.handleAgentEnd(
-    { returnValues: { test: "test" }, log: "test" },
-    true
-  );
-
-  expect(handler.starts).toBe(4);
-  expect(handler.ends).toBe(4);
-  expect(handler.errors).toBe(3);
-  expect(handler.llmStarts).toBe(1);
-  expect(handler.llmEnds).toBe(1);
-  expect(handler.llmStreams).toBe(1);
-  expect(handler.chainStarts).toBe(1);
-  expect(handler.chainEnds).toBe(1);
-  expect(handler.toolStarts).toBe(2);
-  expect(handler.toolEnds).toBe(1);
-  expect(handler.agentEnds).toBe(1);
-  expect(handler.texts).toBe(1);
+  for (const handler of [handler1, handler2]) {
+    expect(handler.starts).toBe(4);
+    expect(handler.ends).toBe(4);
+    expect(handler.errors).toBe(3);
+    expect(handler.llmStarts).toBe(1);
+    expect(handler.llmEnds).toBe(1);
+    expect(handler.llmStreams).toBe(1);
+    expect(handler.chainStarts).toBe(1);
+    expect(handler.chainEnds).toBe(1);
+    expect(handler.toolStarts).toBe(2);
+    expect(handler.toolEnds).toBe(1);
+    expect(handler.agentEnds).toBe(1);
+    expect(handler.texts).toBe(1);
+  }
 });
 
 test("CallbackHandler with ignoreLLM", async () => {
   const handler = new FakeCallbackHandler({
-    alwaysVerbose: true,
     ignoreLLM: true,
   });
   const manager = new CallbackManager();
@@ -223,7 +172,6 @@ test("CallbackHandler with ignoreLLM", async () => {
 
 test("CallbackHandler with ignoreChain", async () => {
   const handler = new FakeCallbackHandler({
-    alwaysVerbose: true,
     ignoreChain: true,
   });
   const manager = new CallbackManager();
@@ -241,7 +189,6 @@ test("CallbackHandler with ignoreChain", async () => {
 
 test("CallbackHandler with ignoreAgent", async () => {
   const handler = new FakeCallbackHandler({
-    alwaysVerbose: true,
     ignoreAgent: true,
   });
   const manager = new CallbackManager();
@@ -273,7 +220,6 @@ test("CallbackManager with child manager", async () => {
     async handleLLMStart(
       _llm: { name: string },
       _prompts: string[],
-      _verbose?: boolean,
       runId?: string,
       parentRunId?: string
     ) {
@@ -284,7 +230,6 @@ test("CallbackManager with child manager", async () => {
     async handleChainStart(
       _chain: { name: string },
       _inputs: ChainValues,
-      _verbose?: boolean,
       runId?: string,
       parentRunId?: string
     ) {
@@ -296,12 +241,9 @@ test("CallbackManager with child manager", async () => {
   await manager.handleChainStart(
     { name: "test" },
     { test: "test" },
-    undefined,
     chainRunId
   );
-  await manager
-    .getChild()
-    .handleLLMStart({ name: "test" }, ["test"], undefined, llmRunId);
+  await manager.getChild().handleLLMStart({ name: "test" }, ["test"], llmRunId);
   expect(llmWasCalled).toBe(true);
   expect(chainWasCalled).toBe(true);
 });

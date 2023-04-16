@@ -57,7 +57,6 @@ export abstract class BaseTracer extends BaseCallbackHandler {
 
   protected constructor() {
     super();
-    this.alwaysVerbose = true;
   }
 
   abstract loadSession(sessionName: string): Promise<TracerSession>;
@@ -127,7 +126,6 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     llm: { name: string },
     prompts: string[],
     runId: string,
-    _verbose?: boolean,
     parentRunId?: string
   ): Promise<void> {
     if (this.session === undefined) {
@@ -174,7 +172,6 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     chain: { name: string },
     inputs: ChainValues,
     runId: string,
-    _verbose?: boolean,
     parentRunId?: string
   ): Promise<void> {
     if (this.session === undefined) {
@@ -224,7 +221,6 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     tool: { name: string },
     input: string,
     runId: string,
-    _verbose?: boolean,
     parentRunId?: string
   ): Promise<void> {
     if (this.session === undefined) {

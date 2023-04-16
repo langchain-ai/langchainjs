@@ -68,23 +68,20 @@ export abstract class BaseLLM extends BaseLanguageModel {
     stop?: string[],
     callbackManager?: CallbackManager
   ): Promise<LLMResult> {
-    const callbackManager_ =
-      callbackManager?.copy(this.callbackManager.handlers) ??
-      this.callbackManager;
-    await callbackManager_.handleLLMStart(
+    const localCallbackManager = this.configureCallbackManager(callbackManager);
+    await localCallbackManager?.handleLLMStart(
       { name: this._llmType() },
-      prompts,
-      this.verbose
+      prompts
     );
     let output;
     try {
-      output = await this._generate(prompts, stop);
+      output = await this._generate(prompts, stop, callbackManager);
     } catch (err) {
-      await callbackManager_.handleLLMError(err, this.verbose);
+      await localCallbackManager?.handleLLMError(err);
       throw err;
     }
 
-    await callbackManager_.handleLLMEnd(output, this.verbose);
+    await localCallbackManager?.handleLLMEnd(output);
     return output;
   }
 

@@ -1,6 +1,6 @@
 import { BaseMemory } from "../memory/base.js";
 import { ChainValues } from "../schema/index.js";
-import { CallbackManager, getCallbackManager } from "../callbacks/index.js";
+import { CallbackManager, ConsoleCallbackHandler } from "../callbacks/index.js";
 import { SerializedBaseChain } from "./serde.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -22,7 +22,7 @@ export abstract class BaseChain implements ChainInputs {
 
   verbose: boolean;
 
-  callbackManager: CallbackManager;
+  callbackManager?: CallbackManager;
 
   constructor(
     memory?: BaseMemory,
@@ -31,7 +31,7 @@ export abstract class BaseChain implements ChainInputs {
   ) {
     this.memory = memory;
     this.verbose = verbose ?? (callbackManager ? true : getVerbosity());
-    this.callbackManager = callbackManager ?? getCallbackManager();
+    this.callbackManager = callbackManager;
   }
 
   /**
@@ -74,6 +74,21 @@ export abstract class BaseChain implements ChainInputs {
     );
   }
 
+  protected configureCallbackManager(
+    callbackManager?: CallbackManager
+  ): CallbackManager | undefined {
+    let callbackManager_ =
+      callbackManager?.copy(this.callbackManager?.handlers) ??
+      this.callbackManager;
+    if (this.verbose) {
+      if (!callbackManager_) {
+        callbackManager_ = new CallbackManager();
+      }
+      callbackManager_.addHandler(new ConsoleCallbackHandler());
+    }
+    return callbackManager_;
+  }
+
   /**
    * Run the core logic of this chain and add to output if desired.
    *
@@ -83,30 +98,26 @@ export abstract class BaseChain implements ChainInputs {
     values: ChainValues,
     callbackManager?: CallbackManager
   ): Promise<ChainValues> {
+    const localCallbackManager = this.configureCallbackManager(callbackManager);
     const fullValues = { ...values } as typeof values;
-    const callbackManager_ =
-      callbackManager?.copy(this.callbackManager.handlers) ??
-      this.callbackManager;
     if (!(this.memory == null)) {
       const newValues = await this.memory.loadMemoryVariables(values);
       for (const [key, value] of Object.entries(newValues)) {
         fullValues[key] = value;
       }
     }
-    const runId = await callbackManager_.handleChainStart(
+    await localCallbackManager?.handleChainStart(
       { name: this._chainType() },
-      fullValues,
-      undefined,
-      this.verbose
+      fullValues
     );
     let outputValues;
     try {
-      outputValues = await this._call(fullValues, callbackManager, runId);
+      outputValues = await this._call(fullValues, callbackManager);
     } catch (e) {
-      await callbackManager_.handleChainError(e, runId, this.verbose);
+      await localCallbackManager?.handleChainError(e);
       throw e;
     }
-    await callbackManager_.handleChainEnd(outputValues, runId, this.verbose);
+    await localCallbackManager?.handleChainEnd(outputValues);
     if (!(this.memory == null)) {
       await this.memory.saveContext(values, outputValues);
     }

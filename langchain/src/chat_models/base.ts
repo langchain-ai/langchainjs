@@ -42,29 +42,26 @@ export abstract class BaseChatModel extends BaseLanguageModel {
     stop?: string[],
     callbackManager?: CallbackManager
   ): Promise<LLMResult> {
-    const callbackManager_ =
-      callbackManager?.copy(this.callbackManager.handlers) ??
-      this.callbackManager;
+    const localCallbackManager = this.configureCallbackManager(callbackManager);
     const generations: ChatGeneration[][] = [];
     const llmOutputs: LLMResult["llmOutput"][] = [];
     const messageStrings: string[] = messages.map((messageList) =>
       getBufferString(messageList)
     );
-    await callbackManager_.handleLLMStart(
+    await localCallbackManager?.handleLLMStart(
       { name: this._llmType() },
-      messageStrings,
-      this.verbose
+      messageStrings
     );
     try {
       for (const message of messages) {
-        const result = await this._generate(message, stop);
+        const result = await this._generate(message, stop, callbackManager);
         if (result.llmOutput) {
           llmOutputs.push(result.llmOutput);
         }
         generations.push(result.generations);
       }
     } catch (err) {
-      await callbackManager_.handleLLMError(err, this.verbose);
+      await localCallbackManager?.handleLLMError(err);
       throw err;
     }
 
@@ -74,7 +71,7 @@ export abstract class BaseChatModel extends BaseLanguageModel {
         ? this._combineLLMOutput?.(...llmOutputs)
         : undefined,
     };
-    await callbackManager_.handleLLMEnd(output, this.verbose);
+    await localCallbackManager?.handleLLMEnd(output);
     return output;
   }
 

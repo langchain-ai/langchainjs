@@ -282,7 +282,9 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
               const delta = part.slice(currentCompletion.length);
               currentCompletion += delta ?? "";
               // eslint-disable-next-line no-void
-              void callbackManager?.handleLLMNewToken(delta ?? "", true);
+              void this.configureCallbackManager(
+                callbackManager
+              )?.handleLLMNewToken(delta ?? "");
             }
           },
         });

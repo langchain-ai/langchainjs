@@ -1,4 +1,4 @@
-import { CallbackManager, getCallbackManager } from "../callbacks/index.js";
+import { CallbackManager, ConsoleCallbackHandler } from "../callbacks/base.js";
 
 const getVerbosity = () => false;
 
@@ -10,11 +10,26 @@ export interface ToolParams {
 export abstract class Tool {
   verbose: boolean;
 
-  callbackManager: CallbackManager;
+  callbackManager?: CallbackManager;
 
   constructor(verbose?: boolean, callbackManager?: CallbackManager) {
     this.verbose = verbose ?? (callbackManager ? true : getVerbosity());
-    this.callbackManager = callbackManager ?? getCallbackManager();
+    this.callbackManager = callbackManager;
+  }
+
+  protected configureCallbackManager(
+    callbackManager?: CallbackManager
+  ): CallbackManager | undefined {
+    let callbackManager_ =
+      callbackManager?.copy(this.callbackManager?.handlers) ??
+      this.callbackManager;
+    if (this.verbose) {
+      if (!callbackManager_) {
+        callbackManager_ = new CallbackManager();
+      }
+      callbackManager_.addHandler(new ConsoleCallbackHandler());
+    }
+    return callbackManager_;
   }
 
   protected abstract _call(
@@ -24,30 +39,19 @@ export abstract class Tool {
 
   async call(
     arg: string,
-    verbose?: boolean,
+    _verbose?: boolean,
     callbackManager?: CallbackManager
   ): Promise<string> {
-    const verbose_ = verbose ?? this.verbose;
-    const callbackManager_ =
-      callbackManager?.copy(this.callbackManager.handlers) ??
-      this.callbackManager;
-    for (const handler of this.callbackManager.handlers) {
-      callbackManager_.addHandler(handler);
-    }
-    const runId = await callbackManager_.handleToolStart(
-      { name: this.name },
-      arg,
-      undefined,
-      verbose_
-    );
+    const localCallbackManager = this.configureCallbackManager(callbackManager);
+    await localCallbackManager?.handleToolStart({ name: this.name }, arg);
     let result;
     try {
       result = await this._call(arg, callbackManager);
     } catch (e) {
-      await callbackManager_.handleToolError(e, runId, verbose_);
+      await localCallbackManager?.handleToolError(e);
       throw e;
     }
-    await callbackManager_.handleToolEnd(result, runId, verbose_);
+    await localCallbackManager?.handleToolEnd(result);
     return result;
   }
 

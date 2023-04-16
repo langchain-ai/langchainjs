@@ -1,6 +1,6 @@
 import type { Tiktoken } from "@dqbd/tiktoken";
 import { BasePromptValue, LLMResult } from "../schema/index.js";
-import { CallbackManager, getCallbackManager } from "../callbacks/index.js";
+import { CallbackManager, ConsoleCallbackHandler } from "../callbacks/index.js";
 import { AsyncCaller, AsyncCallerParams } from "../util/async_caller.js";
 import { getModelNameForTiktoken, importTiktoken } from "./count_tokens.js";
 
@@ -31,7 +31,7 @@ export abstract class BaseLanguageModel implements BaseLanguageModelParams {
    */
   verbose: boolean;
 
-  callbackManager: CallbackManager;
+  callbackManager?: CallbackManager;
 
   /**
    * The async caller should be used by subclasses to make any async calls,
@@ -42,8 +42,23 @@ export abstract class BaseLanguageModel implements BaseLanguageModelParams {
   constructor(params: BaseLanguageModelParams) {
     this.verbose =
       params.verbose ?? (params.callbackManager ? true : getVerbosity());
-    this.callbackManager = params.callbackManager ?? getCallbackManager();
+    this.callbackManager = params.callbackManager;
     this.caller = new AsyncCaller(params ?? {});
+  }
+
+  protected configureCallbackManager(
+    callbackManager?: CallbackManager
+  ): CallbackManager | undefined {
+    let callbackManager_ =
+      callbackManager?.copy(this.callbackManager?.handlers) ??
+      this.callbackManager;
+    if (this.verbose) {
+      if (!callbackManager_) {
+        callbackManager_ = new CallbackManager();
+      }
+      callbackManager_.addHandler(new ConsoleCallbackHandler());
+    }
+    return callbackManager_;
   }
 
   abstract generatePrompt(

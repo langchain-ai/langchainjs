@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from "uuid";
 /* eslint-disable no-process-env */
-import { test, expect } from "@jest/globals";
+import { test } from "@jest/globals";
 
 import { LangChainTracer } from "../tracers.js";
 import { OpenAI } from "../../llms/openai.js";
@@ -10,25 +10,12 @@ import { initializeAgentExecutor } from "../../agents/index.js";
 
 test("Test LangChain tracer", async () => {
   const tracer = new LangChainTracer();
-  expect(tracer.alwaysVerbose).toBe(true);
   const chainRunId = uuidv4();
   const toolRunId = uuidv4();
   const llmRunId = uuidv4();
   await tracer.handleChainStart({ name: "test" }, { foo: "bar" }, chainRunId);
-  await tracer.handleToolStart(
-    { name: "test" },
-    "test",
-    toolRunId,
-    undefined,
-    chainRunId
-  );
-  await tracer.handleLLMStart(
-    { name: "test" },
-    ["test"],
-    llmRunId,
-    undefined,
-    toolRunId
-  );
+  await tracer.handleToolStart({ name: "test" }, "test", toolRunId, chainRunId);
+  await tracer.handleLLMStart({ name: "test" }, ["test"], llmRunId, toolRunId);
   await tracer.handleLLMEnd({ generations: [[]] }, llmRunId);
   await tracer.handleToolEnd("output", toolRunId);
   const llmRunId2 = uuidv4();
@@ -36,7 +23,6 @@ test("Test LangChain tracer", async () => {
     { name: "test2" },
     ["test"],
     llmRunId2,
-    undefined,
     chainRunId
   );
   await tracer.handleLLMEnd({ generations: [[]] }, llmRunId2);

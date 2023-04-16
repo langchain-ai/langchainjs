@@ -308,10 +308,9 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
                       choice.finish_reason = part.finish_reason;
                       choice.logprobs = part.logprobs;
                       // eslint-disable-next-line no-void
-                      void callbackManager?.handleLLMNewToken(
-                        part.text ?? "",
-                        true
-                      );
+                      void this.configureCallbackManager(
+                        callbackManager
+                      )?.handleLLMNewToken(part.text ?? "");
                     }
                   }
                 },

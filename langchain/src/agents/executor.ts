@@ -84,7 +84,9 @@ export class AgentExecutor extends BaseChain {
       if (this.returnIntermediateSteps) {
         return { ...returnValues, intermediateSteps: steps, ...additional };
       }
-      await callbackManager?.handleAgentEnd(finishStep, this.verbose);
+      await this.configureCallbackManager(callbackManager)?.handleAgentEnd(
+        finishStep
+      );
       return { ...returnValues, ...additional };
     };
 
@@ -108,7 +110,9 @@ export class AgentExecutor extends BaseChain {
 
       const newSteps = await Promise.all(
         actions.map(async (action) => {
-          await callbackManager?.handleAgentAction(action, this.verbose);
+          await this.configureCallbackManager(
+            callbackManager
+          )?.handleAgentAction(action);
 
           const tool = toolsByName[action.tool?.toLowerCase()];
           const observation = tool
