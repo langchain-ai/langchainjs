@@ -103,6 +103,7 @@ export class CallbackManagerForLLMRun extends BaseRunManager {
 
 export class CallbackManagerForChainRun extends BaseRunManager {
   getChild(): CallbackManager {
+    // eslint-disable-next-line @typescript-eslint/no-use-before-define
     const manager = new CallbackManager(this.runId);
     manager.setHandlers(this.handlers);
     return manager;
@@ -191,6 +192,7 @@ export class CallbackManagerForChainRun extends BaseRunManager {
 
 export class CallbackManagerForToolRun extends BaseRunManager {
   getChild(): CallbackManager {
+    // eslint-disable-next-line @typescript-eslint/no-use-before-define
     const manager = new CallbackManager(this.runId);
     manager.setHandlers(this.handlers);
     return manager;
