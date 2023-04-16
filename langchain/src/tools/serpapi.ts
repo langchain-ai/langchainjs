@@ -347,28 +347,35 @@ export class SerpAPI extends Tool {
       throw new Error(`Got error from serpAPI: ${res.error}`);
     }
 
+    let links = "";
+    if (res.organic_results) {
+      links = res.organic_results
+        .map((r: { title: string; link: string }) => `[${r.title}](${r.link})`)
+        .join();
+    }
+
     if (res.answer_box?.answer) {
-      return res.answer_box.answer;
+      return `${res.answer_box.answer}\n${links}`;
     }
 
     if (res.answer_box?.snippet) {
-      return res.answer_box.snippet;
+      return `${res.answer_box.snippet}\n${links}`;
     }
 
     if (res.answer_box?.snippet_highlighted_words) {
-      return res.answer_box.snippet_highlighted_words[0];
+      return `${res.answer_box.snippet_highlighted_words[0]}\n${links}`;
     }
 
     if (res.sports_results?.game_spotlight) {
-      return res.sports_results.game_spotlight;
+      return `${res.sports_results.game_spotlight}\n${links}`;
     }
 
     if (res.knowledge_graph?.description) {
-      return res.knowledge_graph.description;
+      return `${res.knowledge_graph.description}\n${links}`;
     }
 
     if (res.organic_results?.[0]?.snippet) {
-      return res.organic_results[0].snippet;
+      return `${res.organic_results[0].snippet}\n${links}`;
     }
 
     return "No good search result found";
