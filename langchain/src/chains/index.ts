@@ -1,5 +1,6 @@
 export { BaseChain, ChainInputs } from "./base.js";
 export { LLMChain, ConversationChain } from "./llm_chain.js";
+export { SimpleSequentialChain } from "./simple_sequential_chain.js";
 export {
   StuffDocumentsChain,
   MapReduceDocumentsChain,
@@ -20,6 +21,7 @@ export { ConversationalRetrievalQAChain } from "./conversational_retrieval_chain
 export { RetrievalQAChain } from "./retrieval_qa.js";
 export {
   SerializedLLMChain,
+  SerializedSimpleSequentialChain,
   SerializedSqlDatabaseChain,
   SerializedAnalyzeDocumentChain,
   SerializedBaseChain,
