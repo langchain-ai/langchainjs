@@ -28,7 +28,7 @@ export abstract class BaseCallbackManager {
 export class CallbackManagerForLLMRun {
   constructor(
     private handlers: BaseCallbackHandler[],
-    private _currentRunId: string,
+    public runId: string,
     private _parentRunId?: string
   ) {}
 
@@ -39,7 +39,7 @@ export class CallbackManagerForLLMRun {
           try {
             await handler.handleLLMNewToken?.(
               token,
-              this._currentRunId ?? uuidv4(),
+              this.runId,
               this._parentRunId
             );
           } catch (err) {
@@ -57,11 +57,7 @@ export class CallbackManagerForLLMRun {
       this.handlers.map(async (handler) => {
         if (!handler.ignoreLLM) {
           try {
-            await handler.handleLLMError?.(
-              err,
-              this._currentRunId ?? uuidv4(),
-              this._parentRunId
-            );
+            await handler.handleLLMError?.(err, this.runId, this._parentRunId);
           } catch (err) {
             console.error(
               `Error in handler ${handler.constructor.name}, handleLLMError: ${err}`
@@ -77,11 +73,7 @@ export class CallbackManagerForLLMRun {
       this.handlers.map(async (handler) => {
         if (!handler.ignoreLLM) {
           try {
-            await handler.handleLLMEnd?.(
-              output,
-              this._currentRunId ?? uuidv4(),
-              this._parentRunId
-            );
+            await handler.handleLLMEnd?.(output, this.runId, this._parentRunId);
           } catch (err) {
             console.error(
               `Error in handler ${handler.constructor.name}, handleLLMEnd: ${err}`

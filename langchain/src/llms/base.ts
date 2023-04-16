@@ -62,7 +62,7 @@ export abstract class BaseLLM extends BaseLanguageModel {
   abstract _generate(
     prompts: string[],
     stop?: string[],
-    callbackManager?: CallbackManagerForLLMRun
+    runManager?: CallbackManagerForLLMRun
   ): Promise<LLMResult>;
 
   /** @ignore */
@@ -71,18 +71,18 @@ export abstract class BaseLLM extends BaseLanguageModel {
     stop?: string[],
     callbackManager?: CallbackManager
   ): Promise<LLMResult> {
-    const localCallbackManager = await this.configureCallbackManager(
+    const runManager = await this.configureCallbackManager(
       callbackManager
     )?.handleLLMStart({ name: this._llmType() }, prompts);
     let output;
     try {
-      output = await this._generate(prompts, stop, localCallbackManager);
+      output = await this._generate(prompts, stop, runManager);
     } catch (err) {
-      await localCallbackManager?.handleLLMError(err);
+      await runManager?.handleLLMError(err);
       throw err;
     }
 
-    await localCallbackManager?.handleLLMEnd(output);
+    await runManager?.handleLLMEnd(output);
     return output;
   }
 
@@ -214,17 +214,17 @@ export abstract class LLM extends BaseLLM {
   abstract _call(
     prompt: string,
     stop?: string[],
-    callbackManager?: CallbackManagerForLLMRun
+    runManager?: CallbackManagerForLLMRun
   ): Promise<string>;
 
   async _generate(
     prompts: string[],
     stop?: string[],
-    callbackManager?: CallbackManagerForLLMRun
+    runManager?: CallbackManagerForLLMRun
   ): Promise<LLMResult> {
     const generations = [];
     for (let i = 0; i < prompts.length; i += 1) {
-      const text = await this._call(prompts[i], stop, callbackManager);
+      const text = await this._call(prompts[i], stop, runManager);
       generations.push([{ text }]);
     }
     return { generations };

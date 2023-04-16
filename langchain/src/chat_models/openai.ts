@@ -260,7 +260,7 @@ export class ChatOpenAI extends BaseChatModel implements OpenAIInput {
   async _generate(
     messages: BaseChatMessage[],
     stop?: string[],
-    callbackManager?: CallbackManagerForLLMRun
+    runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
     const tokenUsage: TokenUsage = {};
     if (this.stop && stop) {
@@ -340,7 +340,7 @@ export class ChatOpenAI extends BaseChatModel implements OpenAIInput {
 
                     choice.message.content += part.delta?.content ?? "";
                     // eslint-disable-next-line no-void
-                    void callbackManager?.handleLLMNewToken(
+                    void runManager?.handleLLMNewToken(
                       part.delta?.content ?? ""
                     );
                   }

@@ -240,7 +240,7 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
   async _generate(
     prompts: string[],
     stop?: string[],
-    callbackManager?: CallbackManagerForLLMRun
+    runManager?: CallbackManagerForLLMRun
   ): Promise<LLMResult> {
     const subPrompts = chunkArray(prompts, this.batchSize);
     const choices: CreateCompletionResponseChoicesInner[] = [];
@@ -308,7 +308,7 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
                       choice.finish_reason = part.finish_reason;
                       choice.logprobs = part.logprobs;
                       // eslint-disable-next-line no-void
-                      void callbackManager?.handleLLMNewToken(part.text ?? "");
+                      void runManager?.handleLLMNewToken(part.text ?? "");
                     }
                   }
                 },

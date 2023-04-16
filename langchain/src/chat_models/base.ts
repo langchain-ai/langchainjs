@@ -50,23 +50,19 @@ export abstract class BaseChatModel extends BaseLanguageModel {
     const messageStrings: string[] = messages.map((messageList) =>
       getBufferString(messageList)
     );
-    const localCallbackManager = await this.configureCallbackManager(
+    const runManager = await this.configureCallbackManager(
       callbackManager
     )?.handleLLMStart({ name: this._llmType() }, messageStrings);
     try {
       for (const message of messages) {
-        const result = await this._generate(
-          message,
-          stop,
-          localCallbackManager
-        );
+        const result = await this._generate(message, stop, runManager);
         if (result.llmOutput) {
           llmOutputs.push(result.llmOutput);
         }
         generations.push(result.generations);
       }
     } catch (err) {
-      await localCallbackManager?.handleLLMError(err);
+      await runManager?.handleLLMError(err);
       throw err;
     }
 
@@ -76,7 +72,7 @@ export abstract class BaseChatModel extends BaseLanguageModel {
         ? this._combineLLMOutput?.(...llmOutputs)
         : undefined,
     };
-    await localCallbackManager?.handleLLMEnd(output);
+    await runManager?.handleLLMEnd(output);
     return output;
   }
 
@@ -100,7 +96,7 @@ export abstract class BaseChatModel extends BaseLanguageModel {
   abstract _generate(
     messages: BaseChatMessage[],
     stop?: string[],
-    callbackManager?: CallbackManagerForLLMRun
+    runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult>;
 
   async call(
@@ -127,15 +123,15 @@ export abstract class SimpleChatModel extends BaseChatModel {
   abstract _call(
     messages: BaseChatMessage[],
     stop?: string[],
-    callbackManager?: CallbackManagerForLLMRun
+    runManager?: CallbackManagerForLLMRun
   ): Promise<string>;
 
   async _generate(
     messages: BaseChatMessage[],
     stop?: string[],
-    callbackManager?: CallbackManagerForLLMRun
+    runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
-    const text = await this._call(messages, stop, callbackManager);
+    const text = await this._call(messages, stop, runManager);
     const message = new AIChatMessage(text);
     return {
       generations: [

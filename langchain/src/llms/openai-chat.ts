@@ -210,7 +210,7 @@ export class OpenAIChat extends LLM implements OpenAIInput {
    *
    * @param prompt - The prompt to pass into the model.
    * @param [stop] - Optional list of stop words to use when generating.
-   * @param [callbackManager] - Optional callback manager to use for streaming
+   * @param [runManager] - Optional callback manager to use for streaming
    *
    * @returns The full LLM output.
    *
@@ -224,7 +224,7 @@ export class OpenAIChat extends LLM implements OpenAIInput {
   async _call(
     prompt: string,
     stop?: string[],
-    callbackManager?: CallbackManagerForLLMRun
+    runManager?: CallbackManagerForLLMRun
   ): Promise<string> {
     if (this.stop && stop) {
       throw new Error("Stop found in input and default params");
@@ -296,7 +296,7 @@ export class OpenAIChat extends LLM implements OpenAIInput {
 
                     choice.message.content += part.delta?.content ?? "";
                     // eslint-disable-next-line no-void
-                    void callbackManager?.handleLLMNewToken(
+                    void runManager?.handleLLMNewToken(
                       part.delta?.content ?? ""
                     );
                   }

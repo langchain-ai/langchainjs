@@ -224,7 +224,7 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
   async _generate(
     messages: BaseChatMessage[],
     stopSequences?: string[],
-    callbackManager?: CallbackManagerForLLMRun
+    runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
     if (this.stopSequences && stopSequences) {
       throw new Error(
@@ -242,7 +242,7 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
         ...params,
         prompt: this.formatMessagesAsPrompt(messages),
       },
-      callbackManager
+      runManager
     );
 
     const generations: ChatGeneration[] = response.completion
