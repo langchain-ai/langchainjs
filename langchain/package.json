@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.54",
+  "version": "0.0.56",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -22,9 +22,15 @@
     "tools.cjs",
     "tools.js",
     "tools.d.ts",
+    "tools/aws_lambda.cjs",
+    "tools/aws_lambda.js",
+    "tools/aws_lambda.d.ts",
     "tools/calculator.cjs",
     "tools/calculator.js",
     "tools/calculator.d.ts",
+    "tools/webbrowser.cjs",
+    "tools/webbrowser.js",
+    "tools/webbrowser.d.ts",
     "chains.cjs",
     "chains.js",
     "chains.d.ts",
@@ -91,12 +97,21 @@
     "vectorstores/faiss.cjs",
     "vectorstores/faiss.js",
     "vectorstores/faiss.d.ts",
+    "vectorstores/weaviate.cjs",
+    "vectorstores/weaviate.js",
+    "vectorstores/weaviate.d.ts",
+    "vectorstores/mongo.cjs",
+    "vectorstores/mongo.js",
+    "vectorstores/mongo.d.ts",
     "vectorstores/pinecone.cjs",
     "vectorstores/pinecone.js",
     "vectorstores/pinecone.d.ts",
     "vectorstores/supabase.cjs",
     "vectorstores/supabase.js",
     "vectorstores/supabase.d.ts",
+    "vectorstores/opensearch.cjs",
+    "vectorstores/opensearch.js",
+    "vectorstores/opensearch.d.ts",
     "vectorstores/milvus.cjs",
     "vectorstores/milvus.js",
     "vectorstores/milvus.d.ts",
@@ -252,11 +267,13 @@
   "author": "LangChain",
   "license": "MIT",
   "devDependencies": {
+    "@aws-sdk/client-lambda": "^3.310.0",
     "@aws-sdk/client-s3": "^3.310.0",
     "@faker-js/faker": "^7.6.0",
     "@getmetal/metal-sdk": "^1.0.12",
     "@huggingface/inference": "^1.5.1",
     "@jest/globals": "^29.5.0",
+    "@opensearch-project/opensearch": "^2.2.0",
     "@pinecone-database/pinecone": "^0.0.12",
     "@supabase/supabase-js": "^2.10.0",
     "@tsconfig/recommended": "^1.0.2",
@@ -268,6 +285,7 @@
     "@types/uuid": "^9",
     "@typescript-eslint/eslint-plugin": "^5.51.0",
     "@typescript-eslint/parser": "^5.51.0",
+    "axios": "^0.26.0",
     "cheerio": "^1.0.0-rc.12",
     "cohere-ai": "^5.0.2",
     "d3-dsv": "^2.0.0",
@@ -282,10 +300,12 @@
     "eslint-plugin-prettier": "^4.2.1",
     "eslint-plugin-tree-shaking": "^1.10.0",
     "faiss-node": "^0.1.1",
+    "graphql": "^16.6.0",
     "hnswlib-node": "^1.4.2",
     "html-to-text": "^9.0.5",
     "jest": "^29.5.0",
     "mammoth": "^1.5.1",
+    "mongodb": "^5.2.0",
     "pdfjs-dist": "^3.4.120",
     "pickleparser": "^0.0.2-alpha.0",
     "playwright": "^1.32.1",
@@ -299,15 +319,19 @@
     "srt-parser-2": "^1.2.2",
     "ts-jest": "^29.0.5",
     "typeorm": "^0.3.12",
-    "typescript": "^4.9.5"
+    "typescript": "^4.9.5",
+    "weaviate-ts-client": "^1.0.0"
   },
   "peerDependencies": {
+    "@aws-sdk/client-lambda": "^3.310.0",
     "@aws-sdk/client-s3": "^3.310.0",
     "@getmetal/metal-sdk": "*",
     "@huggingface/inference": "^1.5.1",
+    "@opensearch-project/opensearch": "*",
     "@pinecone-database/pinecone": "*",
     "@supabase/supabase-js": "^2.10.0",
     "@zilliz/milvus2-sdk-node": "^2.2.0",
+    "axios": "^0.26.0",
     "cheerio": "^1.0.0-rc.12",
     "chromadb": "^1.3.0",
     "cohere-ai": "^5.0.2",
@@ -317,6 +341,7 @@
     "hnswlib-node": "^1.4.2",
     "html-to-text": "^9.0.5",
     "mammoth": "*",
+    "mongodb": "^5.2.0",
     "pdfjs-dist": "^3.4.120",
     "pickleparser": "^0.0.2-alpha.0",
     "playwright": "^1.32.1",
@@ -324,9 +349,13 @@
     "redis": "^4.6.4",
     "replicate": "^0.9.0",
     "srt-parser-2": "^1.2.2",
-    "typeorm": "^0.3.12"
+    "typeorm": "^0.3.12",
+    "weaviate-ts-client": "^1.0.0"
   },
   "peerDependenciesMeta": {
+    "@aws-sdk/client-lambda": {
+      "optional": true
+    },
     "@aws-sdk/client-s3": {
       "optional": true
     },
@@ -336,6 +365,9 @@
     "@huggingface/inference": {
       "optional": true
     },
+    "@opensearch-project/opensearch": {
+      "optional": true
+    },
     "@pinecone-database/pinecone": {
       "optional": true
     },
@@ -343,6 +375,9 @@
       "optional": true
     },
     "@zilliz/milvus2-sdk-node": {
+      "optional": true
+    },
+    "axios": {
       "optional": true
     },
     "cheerio": {
@@ -372,6 +407,9 @@
     "mammoth": {
       "optional": true
     },
+    "mongodb": {
+      "optional": true
+    },
     "pdfjs-dist": {
       "optional": true
     },
@@ -394,6 +432,9 @@
       "optional": true
     },
     "typeorm": {
+      "optional": true
+    },
+    "weaviate-ts-client": {
       "optional": true
     }
   },
@@ -457,10 +498,20 @@
       "import": "./tools.js",
       "require": "./tools.cjs"
     },
+    "./tools/aws_lambda": {
+      "types": "./tools/aws_lambda.d.ts",
+      "import": "./tools/aws_lambda.js",
+      "require": "./tools/aws_lambda.cjs"
+    },
     "./tools/calculator": {
       "types": "./tools/calculator.d.ts",
       "import": "./tools/calculator.js",
       "require": "./tools/calculator.cjs"
+    },
+    "./tools/webbrowser": {
+      "types": "./tools/webbrowser.d.ts",
+      "import": "./tools/webbrowser.js",
+      "require": "./tools/webbrowser.cjs"
     },
     "./chains": {
       "types": "./chains.d.ts",
@@ -578,6 +629,16 @@
       "import": "./vectorstores/faiss.js",
       "require": "./vectorstores/faiss.cjs"
     },
+    "./vectorstores/weaviate": {
+      "types": "./vectorstores/weaviate.d.ts",
+      "import": "./vectorstores/weaviate.js",
+      "require": "./vectorstores/weaviate.cjs"
+    },
+    "./vectorstores/mongo": {
+      "types": "./vectorstores/mongo.d.ts",
+      "import": "./vectorstores/mongo.js",
+      "require": "./vectorstores/mongo.cjs"
+    },
     "./vectorstores/pinecone": {
       "types": "./vectorstores/pinecone.d.ts",
       "import": "./vectorstores/pinecone.js",
@@ -587,6 +648,11 @@
       "types": "./vectorstores/supabase.d.ts",
       "import": "./vectorstores/supabase.js",
       "require": "./vectorstores/supabase.cjs"
+    },
+    "./vectorstores/opensearch": {
+      "types": "./vectorstores/opensearch.d.ts",
+      "import": "./vectorstores/opensearch.js",
+      "require": "./vectorstores/opensearch.cjs"
     },
     "./vectorstores/milvus": {
       "types": "./vectorstores/milvus.d.ts",
