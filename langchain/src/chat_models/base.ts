@@ -10,8 +10,11 @@ import {
   BaseLanguageModel,
   BaseLanguageModelParams,
 } from "../base_language/index.js";
-import { CallbackManager } from "../callbacks/manager.js";
 import { getBufferString } from "../memory/base.js";
+import {
+  CallbackManager,
+  CallbackManagerForLLMRun,
+} from "../callbacks/manager.js";
 
 export type SerializedChatModel = {
   _model: string;
@@ -42,22 +45,21 @@ export abstract class BaseChatModel extends BaseLanguageModel {
     stop?: string[],
     callbackManager?: CallbackManager
   ): Promise<LLMResult> {
-    const localCallbackManager = this.configureCallbackManager(callbackManager);
     const generations: ChatGeneration[][] = [];
     const llmOutputs: LLMResult["llmOutput"][] = [];
     const messageStrings: string[] = messages.map((messageList) =>
       getBufferString(messageList)
     );
-    await localCallbackManager?.handleLLMStart(
-      { name: this._llmType() },
-      messageStrings
-    );
-    if (callbackManager) {
-      callbackManager.setCurrentRunId(localCallbackManager?.currentRunId);
-    }
+    const localCallbackManager = await this.configureCallbackManager(
+      callbackManager
+    )?.handleLLMStart({ name: this._llmType() }, messageStrings);
     try {
       for (const message of messages) {
-        const result = await this._generate(message, stop, callbackManager);
+        const result = await this._generate(
+          message,
+          stop,
+          localCallbackManager
+        );
         if (result.llmOutput) {
           llmOutputs.push(result.llmOutput);
         }
@@ -98,7 +100,7 @@ export abstract class BaseChatModel extends BaseLanguageModel {
   abstract _generate(
     messages: BaseChatMessage[],
     stop?: string[],
-    callbackManager?: CallbackManager
+    callbackManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult>;
 
   async call(
@@ -125,13 +127,13 @@ export abstract class SimpleChatModel extends BaseChatModel {
   abstract _call(
     messages: BaseChatMessage[],
     stop?: string[],
-    callbackManager?: CallbackManager
+    callbackManager?: CallbackManagerForLLMRun
   ): Promise<string>;
 
   async _generate(
     messages: BaseChatMessage[],
     stop?: string[],
-    callbackManager?: CallbackManager
+    callbackManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
     const text = await this._call(messages, stop, callbackManager);
     const message = new AIChatMessage(text);

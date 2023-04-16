@@ -10,7 +10,7 @@ import {
 import type { StreamingAxiosConfiguration } from "../util/axios-types.js";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
 import { BaseLLMParams, LLM } from "./base.js";
-import { CallbackManager } from "../callbacks/manager.js";
+import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
 
 interface ModelParams {
   /** Sampling temperature to use, between 0 and 2, defaults to 1 */
@@ -224,7 +224,7 @@ export class OpenAIChat extends LLM implements OpenAIInput {
   async _call(
     prompt: string,
     stop?: string[],
-    callbackManager?: CallbackManager
+    callbackManager?: CallbackManagerForLLMRun
   ): Promise<string> {
     if (this.stop && stop) {
       throw new Error("Stop found in input and default params");
@@ -296,9 +296,9 @@ export class OpenAIChat extends LLM implements OpenAIInput {
 
                     choice.message.content += part.delta?.content ?? "";
                     // eslint-disable-next-line no-void
-                    void this.configureCallbackManager(
-                      callbackManager
-                    )?.handleLLMNewToken(part.delta?.content ?? "");
+                    void callbackManager?.handleLLMNewToken(
+                      part.delta?.content ?? ""
+                    );
                   }
                 }
               },

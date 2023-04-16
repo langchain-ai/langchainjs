@@ -116,10 +116,10 @@ test("CallbackManager", async () => {
   manager.addHandler(handler1);
   manager.addHandler(handler2);
 
-  await manager.handleLLMStart({ name: "test" }, ["test"]);
-  await manager.handleLLMEnd({ generations: [] });
-  await manager.handleLLMNewToken("test");
-  await manager.handleLLMError(new Error("test"));
+  const llmCb = await manager.handleLLMStart({ name: "test" }, ["test"]);
+  await llmCb.handleLLMEnd({ generations: [] });
+  await llmCb.handleLLMNewToken("test");
+  await llmCb.handleLLMError(new Error("test"));
   await manager.handleChainStart({ name: "test" }, { test: "test" });
   await manager.handleChainEnd({ test: "test" });
   await manager.handleChainError(new Error("test"));
@@ -156,10 +156,10 @@ test("CallbackHandler with ignoreLLM", async () => {
   });
   const manager = new CallbackManager();
   manager.addHandler(handler);
-  await manager.handleLLMStart({ name: "test" }, ["test"]);
-  await manager.handleLLMEnd({ generations: [] });
-  await manager.handleLLMNewToken("test");
-  await manager.handleLLMError(new Error("test"));
+  const llmCb = await manager.handleLLMStart({ name: "test" }, ["test"]);
+  await llmCb.handleLLMEnd({ generations: [] });
+  await llmCb.handleLLMNewToken("test");
+  await llmCb.handleLLMError(new Error("test"));
 
   expect(handler.starts).toBe(0);
   expect(handler.ends).toBe(0);

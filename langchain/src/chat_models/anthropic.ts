@@ -13,7 +13,7 @@ import {
   ChatResult,
   MessageType,
 } from "../schema/index.js";
-import { CallbackManager } from "../callbacks/manager.js";
+import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
 
 function getAnthropicPromptFromMessage(type: MessageType): string {
   switch (type) {
@@ -224,7 +224,7 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
   async _generate(
     messages: BaseChatMessage[],
     stopSequences?: string[],
-    callbackManager?: CallbackManager
+    callbackManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
     if (this.stopSequences && stopSequences) {
       throw new Error(
@@ -260,7 +260,7 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
   /** @ignore */
   async completionWithRetry(
     request: SamplingParameters & Kwargs,
-    callbackManager?: CallbackManager
+    callbackManager?: CallbackManagerForLLMRun
   ): Promise<CompletionResponse> {
     if (!this.apiKey) {
       throw new Error("Missing Anthropic API key.");
@@ -282,9 +282,7 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
               const delta = part.slice(currentCompletion.length);
               currentCompletion += delta ?? "";
               // eslint-disable-next-line no-void
-              void this.configureCallbackManager(
-                callbackManager
-              )?.handleLLMNewToken(delta ?? "");
+              void callbackManager?.handleLLMNewToken(delta ?? "");
             }
           },
         });

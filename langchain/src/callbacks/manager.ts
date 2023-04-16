@@ -7,7 +7,13 @@ import {
 } from "../schema/index.js";
 import { BaseCallbackHandler, BaseCallbackHandlerMethods } from "./base.js";
 
-export abstract class BaseCallbackManager extends BaseCallbackHandler {
+type BaseCallbackManagerMethods = {
+  [K in keyof BaseCallbackHandlerMethods]?: (
+    ...args: Parameters<Required<BaseCallbackHandlerMethods>[K]>
+  ) => Promise<unknown>;
+};
+
+export abstract class BaseCallbackManager {
   abstract addHandler(handler: BaseCallbackHandler): void;
 
   abstract removeHandler(handler: BaseCallbackHandler): void;
@@ -19,11 +25,15 @@ export abstract class BaseCallbackManager extends BaseCallbackHandler {
   }
 }
 
-export class CallbackManager extends BaseCallbackManager {
+export class CallbackManager
+  extends BaseCallbackManager
+  implements BaseCallbackManagerMethods
+{
   handlers: BaseCallbackHandler[];
 
   name = "callback_manager";
 
+  // TODO remove
   private _currentRunId?: string;
 
   private readonly _parentRunId?: string;
@@ -35,10 +45,12 @@ export class CallbackManager extends BaseCallbackManager {
     this._parentRunId = parentRunId;
   }
 
+  // TODO remove
   get currentRunId(): string | undefined {
     return this._currentRunId;
   }
 
+  // TODO remove
   // needed to avoid ESLint no-param-reassign error
   setCurrentRunId(runId: string | undefined) {
     this._currentRunId = runId;
@@ -48,7 +60,7 @@ export class CallbackManager extends BaseCallbackManager {
     llm: { name: string },
     prompts: string[],
     runId: string = uuidv4()
-  ): Promise<void> {
+  ): Promise<CallbackManagerForLLMRun> {
     await Promise.all(
       this.handlers.map(async (handler) => {
         if (!handler.ignoreLLM) {
@@ -67,66 +79,10 @@ export class CallbackManager extends BaseCallbackManager {
         }
       })
     );
-    this._currentRunId = runId;
-  }
-
-  async handleLLMNewToken(token: string): Promise<void> {
-    await Promise.all(
-      this.handlers.map(async (handler) => {
-        if (!handler.ignoreLLM) {
-          try {
-            await handler.handleLLMNewToken?.(
-              token,
-              this._currentRunId ?? uuidv4(),
-              this._parentRunId
-            );
-          } catch (err) {
-            console.error(
-              `Error in handler ${handler.constructor.name}, handleLLMNewToken: ${err}`
-            );
-          }
-        }
-      })
-    );
-  }
-
-  async handleLLMError(err: Error | unknown): Promise<void> {
-    await Promise.all(
-      this.handlers.map(async (handler) => {
-        if (!handler.ignoreLLM) {
-          try {
-            await handler.handleLLMError?.(
-              err,
-              this._currentRunId ?? uuidv4(),
-              this._parentRunId
-            );
-          } catch (err) {
-            console.error(
-              `Error in handler ${handler.constructor.name}, handleLLMError: ${err}`
-            );
-          }
-        }
-      })
-    );
-  }
-
-  async handleLLMEnd(output: LLMResult): Promise<void> {
-    await Promise.all(
-      this.handlers.map(async (handler) => {
-        if (!handler.ignoreLLM) {
-          try {
-            await handler.handleLLMEnd?.(
-              output,
-              this._currentRunId ?? uuidv4(),
-              this._parentRunId
-            );
-          } catch (err) {
-            console.error(
-              `Error in handler ${handler.constructor.name}, handleLLMEnd: ${err}`
-            );
-          }
-        }
-      })
+    return new CallbackManagerForLLMRun(
+      this.handlers,
+      runId,
+      this._parentRunId
     );
   }
 
@@ -357,5 +313,73 @@ export class CallbackManager extends BaseCallbackManager {
     const manager = new this();
     manager.addHandler(new Handler());
     return manager;
+  }
+}
+
+export class CallbackManagerForLLMRun {
+  constructor(
+    private handlers: CallbackManager["handlers"],
+    private _currentRunId: string,
+    private _parentRunId?: string
+  ) {}
+
+  async handleLLMNewToken(token: string): Promise<void> {
+    await Promise.all(
+      this.handlers.map(async (handler) => {
+        if (!handler.ignoreLLM) {
+          try {
+            await handler.handleLLMNewToken?.(
+              token,
+              this._currentRunId ?? uuidv4(),
+              this._parentRunId
+            );
+          } catch (err) {
+            console.error(
+              `Error in handler ${handler.constructor.name}, handleLLMNewToken: ${err}`
+            );
+          }
+        }
+      })
+    );
+  }
+
+  async handleLLMError(err: Error | unknown): Promise<void> {
+    await Promise.all(
+      this.handlers.map(async (handler) => {
+        if (!handler.ignoreLLM) {
+          try {
+            await handler.handleLLMError?.(
+              err,
+              this._currentRunId ?? uuidv4(),
+              this._parentRunId
+            );
+          } catch (err) {
+            console.error(
+              `Error in handler ${handler.constructor.name}, handleLLMError: ${err}`
+            );
+          }
+        }
+      })
+    );
+  }
+
+  async handleLLMEnd(output: LLMResult): Promise<void> {
+    await Promise.all(
+      this.handlers.map(async (handler) => {
+        if (!handler.ignoreLLM) {
+          try {
+            await handler.handleLLMEnd?.(
+              output,
+              this._currentRunId ?? uuidv4(),
+              this._parentRunId
+            );
+          } catch (err) {
+            console.error(
+              `Error in handler ${handler.constructor.name}, handleLLMEnd: ${err}`
+            );
+          }
+        }
+      })
+    );
   }
 }
