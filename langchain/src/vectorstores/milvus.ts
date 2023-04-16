@@ -405,6 +405,9 @@ export class Milvus extends VectorStore {
     dbConfig: {
       collectionName: string;
       url?: string;
+      ssl?: boolean;
+      username?: string;
+      password?: string;
     }
   ): Promise<Milvus> {
     const instance = new this(embeddings, dbConfig);
