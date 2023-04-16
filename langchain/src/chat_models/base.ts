@@ -10,7 +10,7 @@ import {
   BaseLanguageModel,
   BaseLanguageModelParams,
 } from "../base_language/index.js";
-import { CallbackManager } from "../callbacks/base.js";
+import { CallbackManager } from "../callbacks/manager.js";
 import { getBufferString } from "../memory/base.js";
 
 export type SerializedChatModel = {

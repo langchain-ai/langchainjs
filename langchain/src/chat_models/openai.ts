@@ -21,7 +21,7 @@ import {
   SystemChatMessage,
 } from "../schema/index.js";
 import { getModelNameForTiktoken } from "../base_language/count_tokens.js";
-import { CallbackManager } from "../callbacks/base.js";
+import { CallbackManager } from "../callbacks/manager.js";
 
 interface TokenUsage {
   completionTokens?: number;

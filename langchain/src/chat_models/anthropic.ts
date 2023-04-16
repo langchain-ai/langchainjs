@@ -13,7 +13,7 @@ import {
   ChatResult,
   MessageType,
 } from "../schema/index.js";
-import { CallbackManager } from "../callbacks/base.js";
+import { CallbackManager } from "../callbacks/manager.js";
 
 function getAnthropicPromptFromMessage(type: MessageType): string {
   switch (type) {

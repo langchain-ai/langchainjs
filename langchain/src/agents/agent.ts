@@ -14,7 +14,7 @@ import {
   StoppingMethod,
   AgentActionOutputParser,
 } from "./types.js";
-import { CallbackManager } from "../callbacks/base.js";
+import { CallbackManager } from "../callbacks/manager.js";
 import { Tool } from "../tools/base.js";
 
 class ParseError extends Error {
