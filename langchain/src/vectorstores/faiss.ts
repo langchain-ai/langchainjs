@@ -132,7 +132,7 @@ export class FaissStore extends SaveableVectorStore {
   }
 
 
-  static async loadFormPython(directory: string, embeddings: Embeddings) {
+  static async loadFromPython(directory: string, embeddings: Embeddings) {
     const fs = await import("node:fs/promises");
     const path = await import("node:path");
 

@@ -6,7 +6,7 @@ export const run = async () => {
   const directory = "faiss_index";
 
   // Load the vector store from the same directory
-  const loadedVectorStore = await FaissStore.loadFormPython(
+  const loadedVectorStore = await FaissStore.loadFromPython(
     directory,
     new OpenAIEmbeddings()
   );
