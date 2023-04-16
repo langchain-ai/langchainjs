@@ -13024,12 +13024,12 @@ __metadata:
     eslint-plugin-import: ^2.27.5
     eslint-plugin-prettier: ^4.2.1
     faiss-node: ^0.1.1
-    pickleparser: ^0.0.2-alpha.0
     graphql: ^16.6.0
     js-yaml: ^4.1.0
     langchain: "workspace:*"
     ml-distance: ^4.0.0
     mongodb: ^5.2.0
+    pickleparser: ^0.0.2-alpha.2
     prettier: ^2.8.3
     prisma: ^4.11.0
     sqlite3: ^5.1.4
@@ -17226,7 +17226,7 @@ __metadata:
     p-queue: ^6.6.2
     p-retry: 4
     pdfjs-dist: ^3.4.120
-    pickleparser: ^0.0.2-alpha.0
+    pickleparser: ^0.0.2-alpha.2
     playwright: ^1.32.1
     prettier: ^2.8.3
     puppeteer: ^19.7.2
@@ -17264,7 +17264,7 @@ __metadata:
     mammoth: "*"
     mongodb: ^5.2.0
     pdfjs-dist: ^3.4.120
-    pickleparser: ^0.0.2-alpha.0
+    pickleparser: ^0.0.2-alpha.2
     playwright: ^1.32.1
     puppeteer: ^19.7.2
     redis: ^4.6.4
@@ -19772,10 +19772,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"pickleparser@npm:^0.0.2-alpha.0":
-  version: 0.0.2-alpha.0
-  resolution: "pickleparser@npm:0.0.2-alpha.0"
-  checksum: 47c71e1fa68fd9404a3adf816da4649299a699526f0778c8179c308a37beec32c8ab4c2fea2f57426c74765429dd0db772d8804534100fb693ec32821b4ef11f
+"pickleparser@npm:^0.0.2-alpha.2":
+  version: 0.0.2-alpha.2
+  resolution: "pickleparser@npm:0.0.2-alpha.2"
+  bin:
+    pickleparser: bin/pickletojson.js
+    pickletojson: bin/pickletojson.js
+  checksum: 0ade3a6e3e247195d03311914f93aca7f6eed163fd726ac4db65d306b3649007ef81006553d0b3ed2252e6c49c75539cc97dad706c3f7278392853666a9408a1
   languageName: node
   linkType: hard
 
