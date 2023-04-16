@@ -1,0 +1,41 @@
+---
+sidebar_class_name: node-only
+---
+
+import CodeBlock from "@theme/CodeBlock";
+
+# Faiss
+
+:::tip Compatibility
+Only available on Node.js.
+:::
+
+Faiss is an in-memory vectorstore that can be saved to a file. It uses [faiss](https://github.com/facebookresearch/faiss).
+
+## Setup
+
+You can install it with
+
+```bash npm2yarn
+npm install faiss-node
+```
+
+## Usage
+
+### Create a new index from texts
+
+import ExampleTexts from "@examples/indexes/vector_stores/faiss.ts";
+
+<CodeBlock language="typescript">{ExampleTexts}</CodeBlock>
+
+### Create a new index from a loader
+
+import ExampleLoader from "@examples/indexes/vector_stores/faiss_fromdocs.ts";
+
+<CodeBlock language="typescript">{ExampleLoader}</CodeBlock>
+
+### Save an index to a file and load it again
+
+import ExampleSave from "@examples/indexes/vector_stores/faiss_saveload.ts";
+
+<CodeBlock language="typescript">{ExampleSave}</CodeBlock>
