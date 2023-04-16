@@ -129,7 +129,7 @@ test("CallbackManager", async () => {
   const toolCb = await manager.handleToolStart({ name: "test" }, "test");
   await toolCb.handleToolEnd("test");
   await toolCb.handleToolError(new Error("test"));
-  await manager.handleText("test");
+  await chainCb.handleText("test");
   await chainCb.handleAgentAction({
     tool: "test",
     toolInput: "test",

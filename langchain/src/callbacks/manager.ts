@@ -25,13 +25,29 @@ export abstract class BaseCallbackManager {
   }
 }
 
-export class CallbackManagerForLLMRun {
+class BaseRunManager {
   constructor(
-    private handlers: BaseCallbackHandler[],
-    public runId: string,
-    private _parentRunId?: string
+    public readonly runId: string,
+    protected readonly handlers: BaseCallbackHandler[],
+    protected readonly _parentRunId?: string
   ) {}
 
+  async handleText(text: string): Promise<void> {
+    await Promise.all(
+      this.handlers.map(async (handler) => {
+        try {
+          await handler.handleText?.(text, this.runId, this._parentRunId);
+        } catch (err) {
+          console.error(
+            `Error in handler ${handler.constructor.name}, handleText: ${err}`
+          );
+        }
+      })
+    );
+  }
+}
+
+export class CallbackManagerForLLMRun extends BaseRunManager {
   async handleLLMNewToken(token: string): Promise<void> {
     await Promise.all(
       this.handlers.map(async (handler) => {
@@ -85,15 +101,9 @@ export class CallbackManagerForLLMRun {
   }
 }
 
-export class CallbackManagerForChainRun {
-  constructor(
-    private handlers: BaseCallbackHandler[],
-    public runId: string,
-    private _parentRunId?: string
-  ) {}
-
+export class CallbackManagerForChainRun extends BaseRunManager {
   getChild(): CallbackManager {
-    const manager = new CallbackManager(undefined, this.runId);
+    const manager = new CallbackManager(this.runId);
     manager.setHandlers(this.handlers);
     return manager;
   }
@@ -179,15 +189,9 @@ export class CallbackManagerForChainRun {
   }
 }
 
-export class CallbackManagerForToolRun {
-  constructor(
-    private handlers: BaseCallbackHandler[],
-    public runId: string,
-    private _parentRunId?: string
-  ) {}
-
+export class CallbackManagerForToolRun extends BaseRunManager {
   getChild(): CallbackManager {
-    const manager = new CallbackManager(undefined, this.runId);
+    const manager = new CallbackManager(this.runId);
     manager.setHandlers(this.handlers);
     return manager;
   }
@@ -237,27 +241,12 @@ export class CallbackManager
 
   name = "callback_manager";
 
-  // TODO remove
-  private _currentRunId?: string;
-
   private readonly _parentRunId?: string;
 
-  constructor(currentRunId?: string, parentRunId?: string) {
+  constructor(parentRunId?: string) {
     super();
     this.handlers = [];
-    this._currentRunId = currentRunId;
     this._parentRunId = parentRunId;
-  }
-
-  // TODO remove
-  get currentRunId(): string | undefined {
-    return this._currentRunId;
-  }
-
-  // TODO remove
-  // needed to avoid ESLint no-param-reassign error
-  setCurrentRunId(runId: string | undefined) {
-    this._currentRunId = runId;
   }
 
   async handleLLMStart(
@@ -284,8 +273,8 @@ export class CallbackManager
       })
     );
     return new CallbackManagerForLLMRun(
-      this.handlers,
       runId,
+      this.handlers,
       this._parentRunId
     );
   }
@@ -314,8 +303,8 @@ export class CallbackManager
       })
     );
     return new CallbackManagerForChainRun(
-      this.handlers,
       runId,
+      this.handlers,
       this._parentRunId
     );
   }
@@ -344,27 +333,9 @@ export class CallbackManager
       })
     );
     return new CallbackManagerForToolRun(
-      this.handlers,
       runId,
+      this.handlers,
       this._parentRunId
-    );
-  }
-
-  async handleText(text: string): Promise<void> {
-    await Promise.all(
-      this.handlers.map(async (handler) => {
-        try {
-          await handler.handleText?.(
-            text,
-            this._currentRunId ?? uuidv4(),
-            this._parentRunId
-          );
-        } catch (err) {
-          console.error(
-            `Error in handler ${handler.constructor.name}, handleText: ${err}`
-          );
-        }
-      })
     );
   }
 
@@ -380,14 +351,8 @@ export class CallbackManager
     this.handlers = handlers;
   }
 
-  getChild(parentRunId: string): CallbackManager {
-    const manager = new CallbackManager(undefined, parentRunId);
-    manager.setHandlers(this.handlers);
-    return manager;
-  }
-
   copy(additionalHandlers: BaseCallbackHandler[] = []): CallbackManager {
-    const manager = new CallbackManager(this._currentRunId, this._parentRunId);
+    const manager = new CallbackManager(this._parentRunId);
     manager.setHandlers([...this.handlers, ...additionalHandlers]);
     return manager;
   }
