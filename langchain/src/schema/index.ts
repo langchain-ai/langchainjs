@@ -178,9 +178,11 @@ export class OutputParserException extends Error {
 }
 
 export abstract class BaseChatMessageHistory {
-  public abstract get messages(): BaseChatMessage[];
+  public abstract getMessages(): Promise<BaseChatMessage[]>;
 
-  public abstract addUserMessage(message: string): void;
+  public abstract addUserMessage(message: string): Promise<void>;
 
-  public abstract addAIChatMessage(message: string): void;
+  public abstract addAIChatMessage(message: string): Promise<void>;
+
+  public abstract clear(): Promise<void>;
 }
