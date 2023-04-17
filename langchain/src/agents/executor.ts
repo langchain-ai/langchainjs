@@ -9,7 +9,7 @@ import {
   AgentStep,
   ChainValues,
 } from "../schema/index.js";
-import { CallbackManager } from "../callbacks/index.js";
+import { CallbackManagerForChainRun } from "../callbacks/manager.js";
 
 interface AgentExecutorInput extends ChainInputs {
   agent: BaseSingleActionAgent | BaseMultiActionAgent;
@@ -69,7 +69,7 @@ export class AgentExecutor extends BaseChain {
 
   async _call(
     inputs: ChainValues,
-    callbackManager?: CallbackManager
+    runManager?: CallbackManagerForChainRun
   ): Promise<ChainValues> {
     const toolsByName = Object.fromEntries(
       this.tools.map((t) => [t.name.toLowerCase(), t])
@@ -84,9 +84,7 @@ export class AgentExecutor extends BaseChain {
       if (this.returnIntermediateSteps) {
         return { ...returnValues, intermediateSteps: steps, ...additional };
       }
-      await this.configureCallbackManager(callbackManager)?.handleAgentEnd(
-        finishStep
-      );
+      await runManager?.handleAgentEnd(finishStep);
       return { ...returnValues, ...additional };
     };
 
@@ -94,7 +92,7 @@ export class AgentExecutor extends BaseChain {
       const output = await this.agent.plan(
         steps,
         inputs,
-        callbackManager?.getChild()
+        runManager?.getChild()
       );
       // Check if the agent has finished
       if ("returnValues" in output) {
@@ -110,16 +108,14 @@ export class AgentExecutor extends BaseChain {
 
       const newSteps = await Promise.all(
         actions.map(async (action) => {
-          await this.configureCallbackManager(
-            callbackManager
-          )?.handleAgentAction(action);
+          await runManager?.handleAgentAction(action);
 
           const tool = toolsByName[action.tool?.toLowerCase()];
           const observation = tool
             ? await tool.call(
                 action.toolInput,
                 this.verbose,
-                callbackManager?.getChild()
+                runManager?.getChild()
               )
             : `${action.tool} is not a valid tool, try another one.`;
 

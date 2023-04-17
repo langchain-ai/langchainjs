@@ -26,20 +26,24 @@ export abstract class BaseLangChain {
   protected configureCallbackManager(
     callbackManager?: CallbackManager
   ): CallbackManager | undefined {
-    let callbackManager_ =
-      callbackManager?.copy(this.callbackManager?.handlers) ??
-      this.callbackManager;
+    let callbackManager_;
+    if (callbackManager) {
+      callbackManager_ = callbackManager.copy(
+        this.callbackManager?.handlers,
+        false
+      );
+    } else {
+      callbackManager_ = new CallbackManager();
+      callbackManager_.setHandlers(this.callbackManager?.handlers ?? [], false);
+    }
     if (this.verbose) {
-      if (!callbackManager_) {
-        callbackManager_ = new CallbackManager();
-      }
       const consoleHandler = new ConsoleCallbackHandler();
       if (
         !callbackManager_.handlers.some(
           (handler) => handler.name === consoleHandler.name
         )
       ) {
-        callbackManager_.addHandler(consoleHandler);
+        callbackManager_.addHandler(consoleHandler, false);
       }
     }
     return callbackManager_;
