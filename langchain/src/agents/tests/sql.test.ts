@@ -1,3 +1,4 @@
+/* eslint-disable no-process-env */
 import { test, expect, beforeEach, afterEach } from "@jest/globals";
 import { DataSource } from "typeorm";
 import {
@@ -5,7 +6,7 @@ import {
   QuerySqlTool,
   ListTablesSqlTool,
   QueryCheckerTool,
-} from "../tools/sql.js";
+} from "../../tools/sql.js";
 import { SqlDatabase } from "../../sql_db.js";
 
 const previousEnv = process.env;

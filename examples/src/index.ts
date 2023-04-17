@@ -3,6 +3,11 @@ import url from "url";
 
 const [exampleName, ...args] = process.argv.slice(2);
 
+if (!exampleName) {
+  console.error("Please provide path to example to run");
+  process.exit(1);
+}
+
 // Allow people to pass all possible variations of a path to an example
 // ./src/foo.ts, ./dist/foo.js, src/foo.ts, dist/foo.js, foo.ts
 let exampleRelativePath: string;
@@ -30,12 +35,14 @@ try {
   throw new Error(`Could not load example ${exampleName}: ${e}`);
 }
 
-const maybePromise = runExample(args);
+if (runExample) {
+  const maybePromise = runExample(args);
 
-if (maybePromise instanceof Promise) {
-  maybePromise.catch((e) => {
-    console.error(`Example failed with:`);
-    console.error(e);
-    process.exit(1);
-  });
+  if (maybePromise instanceof Promise) {
+    maybePromise.catch((e) => {
+      console.error(`Example failed with:`);
+      console.error(e);
+      process.exit(1);
+    });
+  }
 }

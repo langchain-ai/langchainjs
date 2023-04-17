@@ -1,7 +1,6 @@
-import { LLMChain } from "langchain";
 import { AgentExecutor, ChatAgent } from "langchain/agents";
-import { ConversationChain } from "langchain/chains";
-import { ChatOpenAI } from "langchain/chat_models";
+import { ConversationChain, LLMChain } from "langchain/chains";
+import { ChatOpenAI } from "langchain/chat_models/openai";
 import { BufferMemory } from "langchain/memory";
 import {
   ChatPromptTemplate,
@@ -126,7 +125,13 @@ export const run = async () => {
   // other abilities, such as search, or a calculator
 
   // Define the list of tools the agent can use
-  const tools = [new SerpAPI()];
+  const tools = [
+    new SerpAPI(process.env.SERPAPI_API_KEY, {
+      location: "Austin,Texas,United States",
+      hl: "en",
+      gl: "us",
+    }),
+  ];
   // Create the agent from the chat model and the tools
   const agent = ChatAgent.fromLLMAndTools(new ChatOpenAI(), tools);
   // Create an executor, which calls to the agent until an answer is found

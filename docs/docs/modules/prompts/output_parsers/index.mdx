@@ -1,5 +1,4 @@
 ---
-hide_table_of_contents: true
 sidebar_label: Output Parsers
 sidebar_position: 2
 ---
@@ -35,7 +34,7 @@ import Structured from "@examples/prompts/structured_parser.ts";
 
 ## Structured Output Parser with Zod Schema
 
-This output parser can be also be used when you want to define the output schema using Zod, a TypeScript validation library.
+This output parser can be also be used when you want to define the output schema using Zod, a TypeScript validation library. The Zod schema passed in needs be parseable from a JSON string, so eg. `z.date()` is not allowed, but `z.coerce.date()` is.
 
 import StructuredZod from "@examples/prompts/structured_parser_zod.ts";
 
@@ -56,3 +55,11 @@ This output parser can be used when you want to return a list of items.
 import Comma from "@examples/prompts/comma_list_parser.ts";
 
 <CodeBlock language="typescript">{Comma}</CodeBlock>
+
+## Combinining Output Parsers
+
+Output parsers can be combined using `CombininingOutputParser`. This output parser takes in a list of output parsers, and will ask for (and parse) a combined output that contains all the fields of all the parsers.
+
+import Combining from "@examples/prompts/combining_parser.ts";
+
+<CodeBlock language="typescript">{Combining}</CodeBlock>

@@ -6,6 +6,7 @@ import CodeBlock from "@theme/CodeBlock";
 import Example from "@examples/models/llm/llm.ts";
 import DebuggingExample from "@examples/models/llm/llm_debugging.ts";
 import StreamingExample from "@examples/models/llm/llm_streaming.ts";
+import TimeoutExample from "@examples/models/llm/llm_timeout.ts";
 
 # Additional Functionality: LLMs
 
@@ -38,7 +39,7 @@ The default cache is stored in-memory. This means that if you restart your appli
 To enable it you can pass `cache: true` when you instantiate the LLM. For example:
 
 ```typescript
-import { OpenAI } from "langchain/llms";
+import { OpenAI } from "langchain/llms/openai";
 
 const model = new OpenAI({ cache: true });
 ```
@@ -54,7 +55,7 @@ npm install redis
 Then, you can pass a `cache` option when you instantiate the LLM. For example:
 
 ```typescript
-import { OpenAI } from "langchain/llms";
+import { OpenAI } from "langchain/llms/openai";
 import { RedisCache } from "langchain/cache";
 import { createClient } from "redis";
 
@@ -65,6 +66,14 @@ const cache = new RedisCache(client);
 const model = new OpenAI({ cache });
 ```
 
+## Adding a timeout
+
+By default, LangChain will wait indefinitely for a response from the model provider. If you want to add a timeout, you can pass a `timeout` option, in milliseconds, when you instantiate the model. For example, for OpenAI:
+
+<CodeBlock language="typescript">{TimeoutExample}</CodeBlock>
+
+Currently, the timeout option is only supported for OpenAI models.
+
 ## Dealing with Rate Limits
 
 Some LLM providers have rate limits. If you exceed the rate limit, you'll get an error. To help you deal with this, LangChain provides a `maxConcurrency` option when instantiating an LLM. This option allows you to specify the maximum number of concurrent requests you want to make to the LLM provider. If you exceed this number, LangChain will automatically queue up your requests to be sent as previous requests complete.
@@ -74,7 +83,7 @@ For example, if you set `maxConcurrency: 5`, then LangChain will only send 5 req
 To use this feature, simply pass `maxConcurrency: <number>` when you instantiate the LLM. For example:
 
 ```typescript
-import { OpenAI } from "langchain/llms";
+import { OpenAI } from "langchain/llms/openai";
 
 const model = new OpenAI({ maxConcurrency: 5 });
 ```
@@ -84,7 +93,7 @@ const model = new OpenAI({ maxConcurrency: 5 });
 If the model provider returns an error from their API, by default LangChain will retry up to 6 times on an exponential backoff. This enables error recovery without any additional effort from you. If you want to change this behavior, you can pass a `maxRetries` option when you instantiate the model. For example:
 
 ```typescript
-import { OpenAI } from "langchain/llms";
+import { OpenAI } from "langchain/llms/openai";
 
 const model = new OpenAI({ maxRetries: 10 });
 ```

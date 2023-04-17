@@ -46,6 +46,9 @@ export abstract class BaseChatMessage {
   /** The text of the message. */
   text: string;
 
+  /** The name of the message sender in a multi-user chat. */
+  name?: string;
+
   /** The type of the message. */
   abstract _getType(): MessageType;
 
@@ -172,4 +175,14 @@ export class OutputParserException extends Error {
   constructor(message: string) {
     super(message);
   }
+}
+
+export abstract class BaseChatMessageHistory {
+  public abstract getMessages(): Promise<BaseChatMessage[]>;
+
+  public abstract addUserMessage(message: string): Promise<void>;
+
+  public abstract addAIChatMessage(message: string): Promise<void>;
+
+  public abstract clear(): Promise<void>;
 }

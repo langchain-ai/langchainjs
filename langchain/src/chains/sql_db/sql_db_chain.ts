@@ -1,14 +1,26 @@
+import type { TiktokenModel } from "@dqbd/tiktoken";
 import { DEFAULT_SQL_DATABASE_PROMPT } from "./sql_db_prompt.js";
 import { BaseChain } from "../base.js";
-import { BaseMemory } from "../../memory/index.js";
-import { SerializedLLM } from "../../llms/index.js";
+import type { OpenAI } from "../../llms/openai.js";
+import { BaseMemory } from "../../memory/base.js";
 import { LLMChain } from "../llm_chain.js";
-import { SqlDatabase } from "../../sql_db.js";
-import { resolveConfigFromFile } from "../../util/index.js";
-import { SerializedSqlDatabase } from "../../util/sql_utils.js";
+import type { SqlDatabase } from "../../sql_db.js";
 import { ChainValues } from "../../schema/index.js";
 import { SerializedSqlDatabaseChain } from "../serde.js";
 import { BaseLanguageModel } from "../../base_language/index.js";
+import {
+  calculateMaxTokens,
+  getModelContextSize,
+} from "../../base_language/count_tokens.js";
+
+interface SqlDatabaseChainInput {
+  llm: BaseLanguageModel;
+  database: SqlDatabase;
+  topK?: number;
+  inputKey?: string;
+  outputKey?: string;
+  memory?: BaseMemory;
+}
 
 export class SqlDatabaseChain extends BaseChain {
   // LLM wrapper to use
@@ -30,17 +42,11 @@ export class SqlDatabaseChain extends BaseChain {
   // Whether to return the result of querying the SQL table directly.
   returnDirect = false;
 
-  constructor(fields: {
-    llm: BaseLanguageModel;
-    database: SqlDatabase;
-    inputKey?: string;
-    outputKey?: string;
-    memory?: BaseMemory;
-  }) {
-    const { memory } = fields;
-    super(memory);
+  constructor(fields: SqlDatabaseChainInput) {
+    super(fields.memory);
     this.llm = fields.llm;
     this.database = fields.database;
+    this.topK = fields.topK ?? this.topK;
     this.inputKey = fields.inputKey ?? this.inputKey;
     this.outputKey = fields.outputKey ?? this.outputKey;
   }
@@ -67,8 +73,9 @@ export class SqlDatabaseChain extends BaseChain {
       table_info: tableInfo,
       stop: ["\nSQLResult:"],
     };
+    await this.verifyNumberOfTokens(inputText, tableInfo);
 
-    const intermediateStep = [];
+    const intermediateStep: string[] = [];
     const sqlCommand = await lLMChain.predict(llmInputs);
     intermediateStep.push(sqlCommand);
     let queryResult = "";
@@ -81,13 +88,13 @@ export class SqlDatabaseChain extends BaseChain {
 
     let finalResult;
     if (this.returnDirect) {
-      finalResult = { result: queryResult };
+      finalResult = { [this.outputKey]: queryResult };
     } else {
       inputText += `${+sqlCommand}\nSQLResult: ${JSON.stringify(
         queryResult
       )}\nAnswer:`;
       llmInputs.input = inputText;
-      finalResult = { result: await lLMChain.predict(llmInputs) };
+      finalResult = { [this.outputKey]: await lLMChain.predict(llmInputs) };
     }
 
     return finalResult;
@@ -101,18 +108,16 @@ export class SqlDatabaseChain extends BaseChain {
     return [this.inputKey];
   }
 
-  static async deserialize(data: SerializedSqlDatabaseChain) {
-    const serializedLLM = await resolveConfigFromFile<"llm", SerializedLLM>(
-      "llm",
-      data
-    );
-    const llm = await BaseLanguageModel.deserialize(serializedLLM);
-    const serializedDatabase = await resolveConfigFromFile<
-      "sql_database",
-      SerializedSqlDatabase
-    >("sql_database", data);
+  get outputKeys(): string[] {
+    return [this.outputKey];
+  }
 
-    const sqlDataBase = await SqlDatabase.fromOptionsParams(serializedDatabase);
+  static async deserialize(
+    data: SerializedSqlDatabaseChain,
+    SqlDatabaseFromOptionsParams: (typeof SqlDatabase)["fromOptionsParams"]
+  ) {
+    const llm = await BaseLanguageModel.deserialize(data.llm);
+    const sqlDataBase = await SqlDatabaseFromOptionsParams(data.sql_database);
 
     return new SqlDatabaseChain({
       llm,
@@ -126,5 +131,33 @@ export class SqlDatabaseChain extends BaseChain {
       llm: this.llm.serialize(),
       sql_database: this.database.serialize(),
     };
+  }
+
+  private async verifyNumberOfTokens(
+    inputText: string,
+    tableinfo: string
+  ): Promise<void> {
+    // We verify it only for OpenAI for the moment
+    if (this.llm._llmType() !== "openai") {
+      return;
+    }
+    const llm = this.llm as OpenAI;
+    const promptTemplate = this.prompt.template;
+    const stringWeSend = `${inputText}${promptTemplate}${tableinfo}`;
+
+    const maxToken = await calculateMaxTokens({
+      prompt: stringWeSend,
+      // Cast here to allow for other models that may not fit the union
+      modelName: llm.modelName as TiktokenModel,
+    });
+
+    if (maxToken < llm.maxTokens) {
+      throw new Error(`The combination of the database structure and your question is too big for the model ${
+        llm.modelName
+      } which can compute only a max tokens of ${getModelContextSize(
+        llm.modelName
+      )}.
+      We suggest you to use the includeTables parameters when creating the SqlDatabase object to select only a subset of the tables. You can also use a model which can handle more tokens.`);
+    }
   }
 }

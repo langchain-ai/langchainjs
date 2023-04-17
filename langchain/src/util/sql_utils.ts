@@ -109,20 +109,20 @@ export const getTableAndColumnsName = async (
 ): Promise<Array<SqlTable>> => {
   let sql;
   if (appDataSource.options.type === "postgres") {
-    sql =
-      "SELECT\n" +
-      "    t.table_name,\n" +
-      "    c.*\n" +
-      "FROM\n" +
-      "    information_schema.tables t\n" +
-      "        JOIN information_schema.columns c\n" +
-      "             ON t.table_name = c.table_name\n" +
-      "WHERE\n" +
-      "        t.table_schema = 'public'\n" +
-      "ORDER BY\n" +
-      "    t.table_name,\n" +
-      "    c.ordinal_position;";
-
+    const schema = appDataSource.options?.schema ?? "public";
+    sql = `SELECT 
+            t.table_name, 
+            c.* 
+          FROM 
+            information_schema.tables t 
+              JOIN information_schema.columns c 
+                ON t.table_name = c.table_name 
+          WHERE 
+            t.table_schema = '${schema}' 
+              AND c.table_schema = '${schema}' 
+          ORDER BY 
+            t.table_name,
+            c.ordinal_position;`;
     const rep = await appDataSource.query(sql);
 
     return formatToSqlTable(rep);
@@ -197,7 +197,13 @@ export const generateTableInfoFromTables = async (
   let globalString = "";
   for (const currentTable of tables) {
     // Add the creation of the table in SQL
-    let sqlCreateTableQuery = `CREATE TABLE ${currentTable.tableName} (\n`;
+    const schema =
+      appDataSource.options.type === "postgres"
+        ? appDataSource.options?.schema ?? "public"
+        : null;
+    let sqlCreateTableQuery = schema
+      ? `CREATE TABLE "${schema}"."${currentTable.tableName}" (\n`
+      : `CREATE TABLE ${currentTable.tableName} (\n`;
     for (const [key, currentColumn] of currentTable.columns.entries()) {
       if (key > 0) {
         sqlCreateTableQuery += ", ";
@@ -212,6 +218,9 @@ export const generateTableInfoFromTables = async (
     if (appDataSource.options.type === "mysql") {
       // We use backticks to quote the table names and thus allow for example spaces in table names
       sqlSelectInfoQuery = `SELECT * FROM \`${currentTable.tableName}\` LIMIT ${nbSampleRow};\n`;
+    } else if (appDataSource.options.type === "postgres") {
+      const schema = appDataSource.options?.schema ?? "public";
+      sqlSelectInfoQuery = `SELECT * FROM "${schema}"."${currentTable.tableName}" LIMIT ${nbSampleRow};\n`;
     } else {
       sqlSelectInfoQuery = `SELECT * FROM "${currentTable.tableName}" LIMIT ${nbSampleRow};\n`;
     }
@@ -223,7 +232,9 @@ export const generateTableInfoFromTables = async (
 
     let sample = "";
     try {
-      const infoObjectResult = await appDataSource.query(sqlSelectInfoQuery);
+      const infoObjectResult = nbSampleRow
+        ? await appDataSource.query(sqlSelectInfoQuery)
+        : null;
       sample = formatSqlResponseToSimpleTableString(infoObjectResult);
     } catch (error) {
       // If the request fails we catch it and only display a log message

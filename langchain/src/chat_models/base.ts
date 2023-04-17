@@ -1,4 +1,3 @@
-import GPT3Tokenizer from "gpt3-tokenizer";
 import {
   AIChatMessage,
   BaseChatMessage,
@@ -29,8 +28,8 @@ export type SerializedLLM = {
 export type BaseChatModelParams = BaseLanguageModelParams;
 
 export abstract class BaseChatModel extends BaseLanguageModel {
-  protected constructor({ ...rest }: BaseChatModelParams) {
-    super(rest);
+  constructor(fields: BaseChatModelParams) {
+    super(fields);
   }
 
   abstract _combineLLMOutput?(
@@ -79,19 +78,6 @@ export abstract class BaseChatModel extends BaseLanguageModel {
   }
 
   abstract _llmType(): string;
-
-  private _tokenizer?: GPT3Tokenizer.default;
-
-  getNumTokens(text: string): number {
-    // TODOs copied from py implementation
-    // TODO: this method may not be exact.
-    // TODO: this method may differ based on model (eg codex, gpt-3.5).
-    if (this._tokenizer === undefined) {
-      const Constructor = GPT3Tokenizer.default;
-      this._tokenizer = new Constructor({ type: "gpt3" });
-    }
-    return this._tokenizer.encode(text).bpe.length;
-  }
 
   async generatePrompt(
     promptValues: BasePromptValue[],

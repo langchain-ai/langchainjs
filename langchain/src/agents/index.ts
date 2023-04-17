@@ -4,8 +4,9 @@ export {
   AgentInput,
   SerializedZeroShotAgent,
   SerializedAgent,
+  AgentActionOutputParser,
 } from "./types.js";
-export { Agent } from "./agent.js";
+export { Agent, BaseSingleActionAgent, LLMSingleActionAgent } from "./agent.js";
 export { AgentExecutor } from "./executor.js";
 export { ZeroShotAgent } from "./mrkl/index.js";
 export { ChatAgent } from "./chat/index.js";
@@ -14,13 +15,11 @@ export {
   ChatConversationalAgentOutputParser,
   ChatConversationalAgentInput,
 } from "./chat_convo/index.js";
-export { Tool } from "./tools/index.js";
+export { Tool } from "../tools/base.js";
 export {
   initializeAgentExecutor,
   initializeAgentExecutorWithOptions,
 } from "./initialize.js";
-
-export { loadAgent } from "./load.js";
 
 export {
   SqlToolkit,

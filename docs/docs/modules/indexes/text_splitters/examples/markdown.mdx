@@ -39,7 +39,9 @@ This is even more content.`;
 
 const splitter = new MarkdownTextSplitter();
 
-const output = splitter.createDocuments([text], { metadata: "something" });
+const output = await splitter.createDocuments([text], {
+  metadata: "something",
+});
 /*
 [
   {

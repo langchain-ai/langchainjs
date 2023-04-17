@@ -6,7 +6,6 @@ export type SerializedPromptTemplate = {
   input_variables: string[];
   template_format?: TemplateFormat;
   template?: string;
-  template_path?: string;
 };
 
 export type SerializedFewShotTemplate = {
@@ -14,12 +13,9 @@ export type SerializedFewShotTemplate = {
   input_variables: string[];
   examples: string | Example[];
   example_prompt?: SerializedPromptTemplate;
-  example_prompt_path?: string;
   example_separator: string;
   prefix?: string;
-  prefix_path?: string;
   suffix?: string;
-  suffix_path?: string;
   template_format: TemplateFormat;
 };
 

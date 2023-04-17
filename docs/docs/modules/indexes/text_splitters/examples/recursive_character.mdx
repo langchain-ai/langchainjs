@@ -18,7 +18,8 @@ const splitter = new RecursiveCharacterTextSplitter({
   chunkSize: 10,
   chunkOverlap: 1,
 });
-const output = splitter.createDocuments([text]);
+
+const output = await splitter.createDocuments([text]);
 ```
 
 You'll note that in the above example we are splitting a raw text string and getting back a list of documents. We can also split documents directly.
@@ -34,7 +35,8 @@ const splitter = new RecursiveCharacterTextSplitter({
   chunkSize: 10,
   chunkOverlap: 1,
 });
-const docOutput = splitter.splitDocuments([
+
+const docOutput = await splitter.splitDocuments([
   new Document({ pageContent: text }),
 ]);
 ```

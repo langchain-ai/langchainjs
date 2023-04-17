@@ -1,30 +1,29 @@
-import { BaseChain } from "../chains/index.js";
-import { Agent } from "./agent.js";
-import { Tool } from "./tools/base.js";
+import { BaseChain, ChainInputs } from "../chains/base.js";
+import { BaseMultiActionAgent, BaseSingleActionAgent } from "./agent.js";
+import { Tool } from "../tools/base.js";
 import { StoppingMethod } from "./types.js";
 import { SerializedLLMChain } from "../chains/serde.js";
-import { AgentFinish, AgentStep, ChainValues } from "../schema/index.js";
-import { CallbackManager } from "../callbacks/index.js";
-import { BaseMemory } from "../memory/base.js";
+import {
+  AgentAction,
+  AgentFinish,
+  AgentStep,
+  ChainValues,
+} from "../schema/index.js";
 
-type AgentExecutorInput = {
-  agent: Agent;
+interface AgentExecutorInput extends ChainInputs {
+  agent: BaseSingleActionAgent | BaseMultiActionAgent;
   tools: Tool[];
   returnIntermediateSteps?: boolean;
   maxIterations?: number;
   earlyStoppingMethod?: StoppingMethod;
-  memory?: BaseMemory;
-
-  verbose?: boolean;
-  callbackManager?: CallbackManager;
-};
+}
 
 /**
  * A chain managing an agent using tools.
  * @augments BaseChain
  */
 export class AgentExecutor extends BaseChain {
-  agent: Agent;
+  agent: BaseSingleActionAgent | BaseMultiActionAgent;
 
   tools: Tool[];
 
@@ -38,10 +37,23 @@ export class AgentExecutor extends BaseChain {
     return this.agent.inputKeys;
   }
 
+  get outputKeys() {
+    return this.agent.returnValues;
+  }
+
   constructor(input: AgentExecutorInput) {
     super(input.memory, input.verbose, input.callbackManager);
     this.agent = input.agent;
     this.tools = input.tools;
+    if (this.agent._agentActionType() === "multi") {
+      for (const tool of this.tools) {
+        if (tool.returnDirect) {
+          throw new Error(
+            `Tool with return direct ${tool.name} not supported for multi-action agent.`
+          );
+        }
+      }
+    }
     this.returnIntermediateSteps =
       input.returnIntermediateSteps ?? this.returnIntermediateSteps;
     this.maxIterations = input.maxIterations ?? this.maxIterations;
@@ -50,13 +62,7 @@ export class AgentExecutor extends BaseChain {
   }
 
   /** Create from agent and a list of tools. */
-  static fromAgentAndTools(
-    fields: {
-      agent: Agent;
-      tools: Tool[];
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } & Record<string, any>
-  ): AgentExecutor {
+  static fromAgentAndTools(fields: AgentExecutorInput): AgentExecutor {
     return new AgentExecutor(fields);
   }
 
@@ -65,7 +71,6 @@ export class AgentExecutor extends BaseChain {
   }
 
   async _call(inputs: ChainValues): Promise<ChainValues> {
-    this.agent.prepareForNewCall();
     const toolsByName = Object.fromEntries(
       this.tools.map((t) => [t.name.toLowerCase(), t])
     );
@@ -84,23 +89,44 @@ export class AgentExecutor extends BaseChain {
     };
 
     while (this.shouldContinue(iterations)) {
-      const action = await this.agent.plan(steps, inputs);
-      if ("returnValues" in action) {
-        return getOutput(action);
+      const output = await this.agent.plan(steps, inputs);
+      // Check if the agent has finished
+      if ("returnValues" in output) {
+        return getOutput(output);
       }
-      await this.callbackManager.handleAgentAction(action, this.verbose);
 
-      const tool = toolsByName[action.tool.toLowerCase()];
-      const observation = tool
-        ? await tool.call(action.toolInput, this.verbose)
-        : `${action.tool} is not a valid tool, try another one.`;
-      steps.push({ action, observation });
-      if (tool?.returnDirect) {
+      let actions: AgentAction[];
+      if (Array.isArray(output)) {
+        actions = output as AgentAction[];
+      } else {
+        actions = [output as AgentAction];
+      }
+
+      const newSteps = await Promise.all(
+        actions.map(async (action) => {
+          await this.callbackManager.handleAgentAction(action, this.verbose);
+
+          const tool = toolsByName[action.tool?.toLowerCase()];
+          const observation = tool
+            ? await tool.call(action.toolInput, this.verbose)
+            : `${action.tool} is not a valid tool, try another one.`;
+
+          return { action, observation };
+        })
+      );
+
+      steps.push(...newSteps);
+
+      const lastStep = steps[steps.length - 1];
+      const lastTool = toolsByName[lastStep.action.tool?.toLowerCase()];
+
+      if (lastTool?.returnDirect) {
         return getOutput({
-          returnValues: { [this.agent.returnValues[0]]: observation },
+          returnValues: { [this.agent.returnValues[0]]: lastStep.observation },
           log: "",
         });
       }
+
       iterations += 1;
     }
 

@@ -14,7 +14,7 @@ export class VectorStoreRetriever extends BaseRetriever {
   }
 
   async getRelevantDocuments(query: string): Promise<Document[]> {
-    const results = await this.vectorStore.similaritySearch(query, 4);
+    const results = await this.vectorStore.similaritySearch(query, this.k);
     return results;
   }
 }
@@ -58,7 +58,7 @@ export abstract class VectorStore {
     query: string,
     k = 4,
     filter: object | undefined = undefined
-  ): Promise<[object, number][]> {
+  ): Promise<[Document, number][]> {
     return this.similaritySearchVectorWithScore(
       await this.embeddings.embedQuery(query),
       k,

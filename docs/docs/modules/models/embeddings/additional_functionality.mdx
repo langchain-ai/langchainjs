@@ -2,9 +2,20 @@
 sidebar_label: Additional Functionality
 ---
 
+import CodeBlock from "@theme/CodeBlock";
+import TimeoutExample from "@examples/models/embeddings/openai_timeout.ts";
+
 # Additional Functionality: Embeddings
 
 We offer a number of additional features for chat models. In the examples below, we'll be using the `ChatOpenAI` model.
+
+## Adding a timeout
+
+By default, LangChain will wait indefinitely for a response from the model provider. If you want to add a timeout, you can pass a `timeout` option, in milliseconds, when you instantiate the model. For example, for OpenAI:
+
+<CodeBlock language="typescript">{TimeoutExample}</CodeBlock>
+
+Currently, the timeout option is only supported for OpenAI models.
 
 ## Dealing with Rate Limits
 
@@ -15,7 +26,7 @@ For example, if you set `maxConcurrency: 5`, then LangChain will only send 5 req
 To use this feature, simply pass `maxConcurrency: <number>` when you instantiate the LLM. For example:
 
 ```typescript
-import { OpenAIEmbeddings } from "langchain/embeddings";
+import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 
 const model = new OpenAIEmbeddings({ maxConcurrency: 5 });
 ```
@@ -25,7 +36,7 @@ const model = new OpenAIEmbeddings({ maxConcurrency: 5 });
 If the model provider returns an error from their API, by default LangChain will retry up to 6 times on an exponential backoff. This enables error recovery without any additional effort from you. If you want to change this behavior, you can pass a `maxRetries` option when you instantiate the model. For example:
 
 ```typescript
-import { OpenAIEmbeddings } from "langchain/embeddings";
+import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 
 const model = new OpenAIEmbeddings({ maxRetries: 10 });
 ```

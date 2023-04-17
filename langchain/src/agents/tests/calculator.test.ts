@@ -1,5 +1,5 @@
 import { test, expect } from "@jest/globals";
-import { Calculator } from "../tools/calculator.js";
+import { Calculator } from "../../tools/calculator.js";
 
 test("Calculator tool, sum", async () => {
   const calculator = new Calculator();

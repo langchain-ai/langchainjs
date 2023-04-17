@@ -162,6 +162,14 @@ To run only integration tests, run:
 yarn test:int
 ```
 
+**Environment tests** test whether LangChain works across different JS environments, including Node.js (both ESM and CJS), Edge environments (eg. Cloudflare Workers), and browsers (using Webpack).
+
+To run the environment tests with Docker run:
+
+```bash
+yarn test:exports:docker
+```
+
 ### Building
 
 To build the project, run:
@@ -183,21 +191,23 @@ level of the repo.
 
 ### Adding an Entrypoint
 
-Langchain exposes multiple multiple subpaths the user can import from, e.g.
+LangChain exposes multiple subpaths the user can import from, e.g.
 
 ```ts
-import { OpenAI } from "langchain/llms";
+import { OpenAI } from "langchain/llms/openai";
 ```
 
+We call these subpaths "entrypoints". In general, you should create a new entrypoint if you are adding a new integration with a 3rd party library. If you're adding self-contained functionality without any external dependencies, you can add it to an existing entrypoint.
+
 In order to declare a new entrypoint that users can import from, you
-should edit the `langchain/create-entrypoints.js` script. To add an
-entrypoint `tools` that imports from `agents/tools/index.ts` you could add
+should edit the `langchain/scripts/create-entrypoints.js` script. To add an
+entrypoint `tools` that imports from `tools/index.ts` you'd add
 the following to the `entrypoints` variable:
 
 ```ts
 const entrypoints = {
   // ...
-  tools: "agents/tools/index.ts",
+  tools: "tools/index",
 };
 ```
 

@@ -1,6 +1,7 @@
-import { OpenAI } from "langchain";
-import { initializeAgentExecutorWithOptions } from "langchain/agents";
-import { SerpAPI, Calculator } from "langchain/tools";
+import { OpenAI } from "langchain/llms/openai";
+import { initializeAgentExecutorWithOptions, Agent } from "langchain/agents";
+import { SerpAPI } from "langchain/tools";
+import { Calculator } from "langchain/tools/calculator";
 import process from "process";
 import {
   CallbackManager,
@@ -11,7 +12,14 @@ import {
 export const run = async () => {
   process.env.LANGCHAIN_HANDLER = "langchain";
   const model = new OpenAI({ temperature: 0 });
-  const tools = [new SerpAPI(), new Calculator()];
+  const tools = [
+    new SerpAPI(process.env.SERPAPI_API_KEY, {
+      location: "Austin,Texas,United States",
+      hl: "en",
+      gl: "us",
+    }),
+    new Calculator(),
+  ];
 
   const executor = await initializeAgentExecutorWithOptions(tools, model, {
     agentType: "zero-shot-react-description",
@@ -44,7 +52,14 @@ export const run = async () => {
     callbackManager.addHandler(new LangChainTracer());
 
     const model = new OpenAI({ temperature: 0, callbackManager });
-    const tools = [new SerpAPI(), new Calculator()];
+    const tools = [
+      new SerpAPI(process.env.SERPAPI_API_KEY, {
+        location: "Austin,Texas,United States",
+        hl: "en",
+        gl: "us",
+      }),
+      new Calculator(),
+    ];
     for (const tool of tools) {
       tool.callbackManager = callbackManager;
     }
@@ -53,7 +68,8 @@ export const run = async () => {
       verbose: true,
       callbackManager,
     });
-    executor.agent.llmChain.callbackManager = callbackManager;
+    const agent = executor.agent as Agent;
+    agent.llmChain.callbackManager = callbackManager;
     executors.push(executor);
   }
 
