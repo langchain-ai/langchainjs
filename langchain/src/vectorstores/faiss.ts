@@ -1,3 +1,4 @@
+import { v4 as uuidv4 } from "uuid";
 import type { IndexFlatL2 } from "faiss-node";
 import { Embeddings } from "../embeddings/base.js";
 import { SaveableVectorStore } from "./base.js";
@@ -13,14 +14,17 @@ export interface FaissLibArgs {
 export class FaissStore extends SaveableVectorStore {
   _index?: IndexFlatL2;
 
+  _mapping: Record<number, string>;
+
   docstore: InMemoryDocstore;
 
   args: FaissLibArgs;
 
   constructor(embeddings: Embeddings, args: FaissLibArgs) {
     super(embeddings, args);
-    this._index = args.index;
     this.args = args;
+    this._index = args.index;
+    this._mapping = args.mapping ?? {};
     this.embeddings = embeddings;
     this.docstore = args?.docstore ?? new InMemoryDocstore();
   }
@@ -67,8 +71,11 @@ export class FaissStore extends SaveableVectorStore {
 
     const docstoreSize = this.docstore.count;
     for (let i = 0; i < vectors.length; i += 1) {
+      const uuid = uuidv4();
+      const id = docstoreSize + i;
       this.index.add(vectors[i]);
-      this.docstore.add({ [docstoreSize + i]: documents[i] });
+      this._mapping[id] = uuid;
+      this.docstore.add({ uuid: documents[i] });
     }
   }
 
@@ -88,17 +95,13 @@ export class FaissStore extends SaveableVectorStore {
       k = total;
     }
     const result = this.index.search(query, k);
-    const getId = (index: number) =>
-      this.args.mapping
-        ? (this.args.mapping as Record<number, string>)[index]
-        : String(index);
-    return result.labels.map(
-      (docIndex, resultIndex) =>
-        [
-          this.docstore.search(getId(docIndex)),
-          result.distances[resultIndex],
-        ] as [Document, number]
-    );
+    return result.labels.map((id, index) => {
+      const uuid = this._mapping[id];
+      return [this.docstore.search(uuid), result.distances[index]] as [
+        Document,
+        number
+      ];
+    });
   }
 
   async save(directory: string) {
@@ -139,15 +142,15 @@ export class FaissStore extends SaveableVectorStore {
 
     class WindowsPath {
       path: string;
-    
+
       constructor(...args: string[]) {
         this.path = args.join("\\");
       }
     }
-    
+
     class PosixPath {
       path: string;
-    
+
       constructor(...args: string[]) {
         this.path = args.join("/");
       }
@@ -196,11 +199,7 @@ export class FaissStore extends SaveableVectorStore {
       );
       pickleparser.registry.register("pathlib", "WindowsPath", WindowsPath);
       pickleparser.registry.register("pathlib", "PosixPath", PosixPath);
-      const [store, mapping]: [
-        pydoc: PyInMemoryDocstore,
-        mapping: Record<number, string>
-      ] = pickleparser.load();
-
+      const [store, mapping] = pickleparser.load();
       return { store, mapping };
     };
     const readIndex = async (directory: string) => {
