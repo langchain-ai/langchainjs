@@ -49,6 +49,10 @@ export class ChatVectorDBQAChain
 
   outputKey = "result";
 
+  get outputKeys() {
+    return [this.outputKey];
+  }
+
   vectorstore: VectorStore;
 
   combineDocumentsChain: BaseChain;

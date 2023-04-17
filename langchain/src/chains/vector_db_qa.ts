@@ -11,11 +11,10 @@ export type LoadValues = Record<string, any>;
 
 export interface VectorDBQAChainInput {
   vectorstore: VectorStore;
-  k: number;
   combineDocumentsChain: BaseChain;
-  outputKey: string;
-  inputKey: string;
   returnSourceDocuments?: boolean;
+  k?: number;
+  inputKey?: string;
 }
 
 export class VectorDBQAChain extends BaseChain implements VectorDBQAChainInput {
@@ -27,7 +26,11 @@ export class VectorDBQAChain extends BaseChain implements VectorDBQAChainInput {
     return [this.inputKey];
   }
 
-  outputKey = "result";
+  get outputKeys() {
+    return this.combineDocumentsChain.outputKeys.concat(
+      this.returnSourceDocuments ? ["sourceDocuments"] : []
+    );
+  }
 
   vectorstore: VectorStore;
 
@@ -35,19 +38,11 @@ export class VectorDBQAChain extends BaseChain implements VectorDBQAChainInput {
 
   returnSourceDocuments = false;
 
-  constructor(fields: {
-    vectorstore: VectorStore;
-    combineDocumentsChain: BaseChain;
-    inputKey?: string;
-    outputKey?: string;
-    k?: number;
-    returnSourceDocuments?: boolean;
-  }) {
+  constructor(fields: VectorDBQAChainInput) {
     super();
     this.vectorstore = fields.vectorstore;
     this.combineDocumentsChain = fields.combineDocumentsChain;
     this.inputKey = fields.inputKey ?? this.inputKey;
-    this.outputKey = fields.outputKey ?? this.outputKey;
     this.k = fields.k ?? this.k;
     this.returnSourceDocuments =
       fields.returnSourceDocuments ?? this.returnSourceDocuments;

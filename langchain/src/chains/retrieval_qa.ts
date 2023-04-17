@@ -10,8 +10,7 @@ export type LoadValues = Record<string, any>;
 export interface RetrievalQAChainInput {
   retriever: BaseRetriever;
   combineDocumentsChain: BaseChain;
-  outputKey: string;
-  inputKey: string;
+  inputKey?: string;
   returnSourceDocuments?: boolean;
 }
 
@@ -25,7 +24,11 @@ export class RetrievalQAChain
     return [this.inputKey];
   }
 
-  outputKey = "result";
+  get outputKeys() {
+    return this.combineDocumentsChain.outputKeys.concat(
+      this.returnSourceDocuments ? ["sourceDocuments"] : []
+    );
+  }
 
   retriever: BaseRetriever;
 
@@ -33,18 +36,11 @@ export class RetrievalQAChain
 
   returnSourceDocuments = false;
 
-  constructor(fields: {
-    retriever: BaseRetriever;
-    combineDocumentsChain: BaseChain;
-    inputKey?: string;
-    outputKey?: string;
-    returnSourceDocuments?: boolean;
-  }) {
+  constructor(fields: RetrievalQAChainInput) {
     super();
     this.retriever = fields.retriever;
     this.combineDocumentsChain = fields.combineDocumentsChain;
     this.inputKey = fields.inputKey ?? this.inputKey;
-    this.outputKey = fields.outputKey ?? this.outputKey;
     this.returnSourceDocuments =
       fields.returnSourceDocuments ?? this.returnSourceDocuments;
   }
