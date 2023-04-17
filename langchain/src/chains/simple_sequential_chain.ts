@@ -53,8 +53,11 @@ export class SimpleSequentialChain
   implements SimpleSequentialChainInput
 {
   chains: Array<BaseChain>;
+
   inputKey = "input";
+
   outputKey = "output";
+
   trimOutputs: boolean;
 
   get inputKeys() {
@@ -87,7 +90,7 @@ export class SimpleSequentialChain
       if (this.trimOutputs) {
         input = input.trim();
       }
-      this.callbackManager.handleText(input, this.verbose);
+      await this.callbackManager.handleText(input, this.verbose);
     }
     return { [this.outputKey]: input };
   }

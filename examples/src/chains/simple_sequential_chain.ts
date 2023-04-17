@@ -35,6 +35,7 @@ const overallChain = new SimpleSequentialChain({
   verbose: true,
 });
 const review = await overallChain.run("Tragedy at sunset on the beach");
+console.log(review);
 /*
     variable review contains the generated play review based on the input title and synopsis generated in the first step:
 
