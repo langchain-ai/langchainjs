@@ -68,13 +68,15 @@ export class MotorheadMemory extends BaseChatMemory {
 
     const { messages = [], context = "NONE" } = await res.json();
 
-    messages.forEach((message: MotorheadMemoryMessage) => {
-      if (message.role === "AI") {
-        this.chatHistory.addAIChatMessage(message.content);
-      } else {
-        this.chatHistory.addUserMessage(message.content);
-      }
-    });
+    await Promise.all(
+      messages.map(async (message: MotorheadMemoryMessage) => {
+        if (message.role === "AI") {
+          await this.chatHistory.addAIChatMessage(message.content);
+        } else {
+          await this.chatHistory.addUserMessage(message.content);
+        }
+      })
+    );
 
     if (context && context !== "NONE") {
       this.context = context;
