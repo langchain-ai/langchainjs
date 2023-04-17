@@ -4609,6 +4609,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@graphql-typed-document-node/core@npm:^3.1.1":
+  version: 3.2.0
+  resolution: "@graphql-typed-document-node/core@npm:3.2.0"
+  peerDependencies:
+    graphql: ^0.8.0 || ^0.9.0 || ^0.10.0 || ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
+  checksum: fa44443accd28c8cf4cb96aaaf39d144a22e8b091b13366843f4e97d19c7bfeaf609ce3c7603a4aeffe385081eaf8ea245d078633a7324c11c5ec4b2011bb76d
+  languageName: node
+  linkType: hard
+
 "@grpc/grpc-js@npm:^1.2.12":
   version: 1.8.13
   resolution: "@grpc/grpc-js@npm:1.8.13"
@@ -13014,6 +13023,7 @@ __metadata:
     eslint-config-prettier: ^8.6.0
     eslint-plugin-import: ^2.27.5
     eslint-plugin-prettier: ^4.2.1
+    graphql: ^16.6.0
     js-yaml: ^4.1.0
     langchain: "workspace:*"
     ml-distance: ^4.0.0
@@ -13024,6 +13034,7 @@ __metadata:
     tsx: ^3.12.3
     typeorm: ^0.3.12
     typescript: ^4.9.5
+    weaviate-ts-client: ^1.0.0
     zod: ^3.21.4
   languageName: unknown
   linkType: soft
@@ -13207,6 +13218,13 @@ __metadata:
     iconv-lite: ^0.4.24
     tmp: ^0.0.33
   checksum: 1c2a616a73f1b3435ce04030261bed0e22d4737e14b090bb48e58865da92529c9f2b05b893de650738d55e692d071819b45e1669259b2b354bc3154d27a698c7
+  languageName: node
+  linkType: hard
+
+"extract-files@npm:^9.0.0":
+  version: 9.0.0
+  resolution: "extract-files@npm:9.0.0"
+  checksum: c31781d090f8d8f62cc541f1023b39ea863f24bd6fb3d4011922d71cbded70cef8191f2b70b43ec6cb5c5907cdad1dc5e9f29f78228936c10adc239091d8ab64
   languageName: node
   linkType: hard
 
@@ -14191,6 +14209,27 @@ __metadata:
   version: 1.0.4
   resolution: "grapheme-splitter@npm:1.0.4"
   checksum: 0c22ec54dee1b05cd480f78cf14f732cb5b108edc073572c4ec205df4cd63f30f8db8025afc5debc8835a8ddeacf648a1c7992fe3dcd6ad38f9a476d84906620
+  languageName: node
+  linkType: hard
+
+"graphql-request@npm:^5.1.0":
+  version: 5.2.0
+  resolution: "graphql-request@npm:5.2.0"
+  dependencies:
+    "@graphql-typed-document-node/core": ^3.1.1
+    cross-fetch: ^3.1.5
+    extract-files: ^9.0.0
+    form-data: ^3.0.0
+  peerDependencies:
+    graphql: 14 - 16
+  checksum: a8aa37816378898e6fc8c4db04a1c114c98f98d90718cf1680bd96b22724bd43b1210619f9b0d328b5c1acb4f7b76d2227a2537cd5ab059bb54cf0debecb33bf
+  languageName: node
+  linkType: hard
+
+"graphql@npm:^16.6.0":
+  version: 16.6.0
+  resolution: "graphql@npm:16.6.0"
+  checksum: bf1d9e3c1938ce3c1a81e909bd3ead1ae4707c577f91cff1ca2eca474bfbc7873d5d7b942e1e9777ff5a8304421dba57a4b76d7a29eb19de8711cb70e3c2415e
   languageName: node
   linkType: hard
 
@@ -15623,6 +15662,16 @@ __metadata:
   version: 3.0.1
   resolution: "isobject@npm:3.0.1"
   checksum: db85c4c970ce30693676487cca0e61da2ca34e8d4967c2e1309143ff910c207133a969f9e4ddb2dc6aba670aabce4e0e307146c310350b298e74a31f7d464703
+  languageName: node
+  linkType: hard
+
+"isomorphic-fetch@npm:^3.0.0":
+  version: 3.0.0
+  resolution: "isomorphic-fetch@npm:3.0.0"
+  dependencies:
+    node-fetch: ^2.6.1
+    whatwg-fetch: ^3.4.1
+  checksum: e5ab79a56ce5af6ddd21265f59312ad9a4bc5a72cebc98b54797b42cb30441d5c5f8d17c5cd84a99e18101c8af6f90c081ecb8d12fd79e332be1778d58486d75
   languageName: node
   linkType: hard
 
@@ -17135,6 +17184,7 @@ __metadata:
     eslint-plugin-tree-shaking: ^1.10.0
     expr-eval: ^2.0.2
     flat: ^5.0.2
+    graphql: ^16.6.0
     hnswlib-node: ^1.4.2
     html-to-text: ^9.0.5
     jest: ^29.5.0
@@ -17160,6 +17210,7 @@ __metadata:
     typeorm: ^0.3.12
     typescript: ^4.9.5
     uuid: ^9.0.0
+    weaviate-ts-client: ^1.0.0
     yaml: ^2.2.1
     zod: ^3.21.4
   peerDependencies:
@@ -17188,6 +17239,7 @@ __metadata:
     replicate: ^0.9.0
     srt-parser-2: ^1.2.2
     typeorm: ^0.3.12
+    weaviate-ts-client: ^1.0.0
   peerDependenciesMeta:
     "@aws-sdk/client-lambda":
       optional: true
@@ -17238,6 +17290,8 @@ __metadata:
     srt-parser-2:
       optional: true
     typeorm:
+      optional: true
+    weaviate-ts-client:
       optional: true
   languageName: unknown
   linkType: soft
@@ -18673,7 +18727,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"node-fetch@npm:^2.6.7":
+"node-fetch@npm:^2.6.1, node-fetch@npm:^2.6.7":
   version: 2.6.9
   resolution: "node-fetch@npm:2.6.9"
   dependencies:
@@ -23711,7 +23765,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tar@npm:^6.0.2, tar@npm:^6.1.11, tar@npm:^6.1.2":
+"tar@npm:^6.0.2, tar@npm:^6.1.11, tar@npm:^6.1.13, tar@npm:^6.1.2":
   version: 6.1.13
   resolution: "tar@npm:6.1.13"
   dependencies:
@@ -25452,6 +25506,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"weaviate-ts-client@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "weaviate-ts-client@npm:1.0.0"
+  dependencies:
+    graphql-request: ^5.1.0
+    isomorphic-fetch: ^3.0.0
+    tar: ^6.1.13
+  checksum: ffa3c13913cf8999a1bfd3db1cc1952d7bfd4e6ca3d2f6eadfb17a56595bfc74fd9f068d1e9d73677b87281d53486ba333d5d5aedb31f072f05d6a5d8e7b2502
+  languageName: node
+  linkType: hard
+
 "web-namespaces@npm:^1.0.0":
   version: 1.1.4
   resolution: "web-namespaces@npm:1.1.4"
@@ -25821,7 +25886,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"whatwg-fetch@npm:^3.6.2":
+"whatwg-fetch@npm:^3.4.1, whatwg-fetch@npm:^3.6.2":
   version: 3.6.2
   resolution: "whatwg-fetch@npm:3.6.2"
   checksum: ee976b7249e7791edb0d0a62cd806b29006ad7ec3a3d89145921ad8c00a3a67e4be8f3fb3ec6bc7b58498724fd568d11aeeeea1f7827e7e1e5eae6c8a275afed
