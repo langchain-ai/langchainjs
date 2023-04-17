@@ -4,7 +4,10 @@ import {
   BaseLanguageModel,
   BaseLanguageModelParams,
 } from "../base_language/index.js";
-import { CallbackManager } from "../callbacks/base.js";
+import {
+  CallbackManager,
+  CallbackManagerForLLMRun,
+} from "../callbacks/manager.js";
 
 export type SerializedLLM = {
   _model: string;
@@ -59,7 +62,7 @@ export abstract class BaseLLM extends BaseLanguageModel {
   abstract _generate(
     prompts: string[],
     stop?: string[],
-    callbackManager?: CallbackManager
+    runManager?: CallbackManagerForLLMRun
   ): Promise<LLMResult>;
 
   /** @ignore */
@@ -68,23 +71,18 @@ export abstract class BaseLLM extends BaseLanguageModel {
     stop?: string[],
     callbackManager?: CallbackManager
   ): Promise<LLMResult> {
-    const localCallbackManager = this.configureCallbackManager(callbackManager);
-    await localCallbackManager?.handleLLMStart(
-      { name: this._llmType() },
-      prompts
-    );
-    if (callbackManager) {
-      callbackManager.setCurrentRunId(localCallbackManager?.currentRunId);
-    }
+    const runManager = await this.configureCallbackManager(
+      callbackManager
+    )?.handleLLMStart({ name: this._llmType() }, prompts);
     let output;
     try {
-      output = await this._generate(prompts, stop, callbackManager);
+      output = await this._generate(prompts, stop, runManager);
     } catch (err) {
-      await localCallbackManager?.handleLLMError(err);
+      await runManager?.handleLLMError(err);
       throw err;
     }
 
-    await localCallbackManager?.handleLLMEnd(output);
+    await runManager?.handleLLMEnd(output);
     return output;
   }
 
@@ -216,17 +214,17 @@ export abstract class LLM extends BaseLLM {
   abstract _call(
     prompt: string,
     stop?: string[],
-    callbackManager?: CallbackManager
+    runManager?: CallbackManagerForLLMRun
   ): Promise<string>;
 
   async _generate(
     prompts: string[],
     stop?: string[],
-    callbackManager?: CallbackManager
+    runManager?: CallbackManagerForLLMRun
   ): Promise<LLMResult> {
     const generations = [];
     for (let i = 0; i < prompts.length; i += 1) {
-      const text = await this._call(prompts[i], stop, callbackManager);
+      const text = await this._call(prompts[i], stop, runManager);
       generations.push([{ text }]);
     }
     return { generations };

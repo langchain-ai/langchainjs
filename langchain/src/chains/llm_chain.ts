@@ -12,6 +12,7 @@ import {
 } from "../schema/index.js";
 import { SerializedLLMChain } from "./serde.js";
 import { CallbackManager } from "../callbacks/index.js";
+import { CallbackManagerForChainRun } from "../callbacks/manager.js";
 
 export interface LLMChainInput extends ChainInputs {
   /** Prompt object to use */
@@ -85,7 +86,7 @@ export class LLMChain extends BaseChain implements LLMChainInput {
 
   async _call(
     values: ChainValues,
-    callbackManager?: CallbackManager
+    runManager?: CallbackManagerForChainRun
   ): Promise<ChainValues> {
     let stop;
     if ("stop" in values && Array.isArray(values.stop)) {
@@ -95,7 +96,7 @@ export class LLMChain extends BaseChain implements LLMChainInput {
     const { generations } = await this.llm.generatePrompt(
       [promptValue],
       stop,
-      callbackManager?.getChild()
+      runManager?.getChild()
     );
     return {
       [this.outputKey]: await this._getFinalOutput(generations[0], promptValue),

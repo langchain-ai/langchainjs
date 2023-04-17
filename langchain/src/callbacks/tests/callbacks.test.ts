@@ -1,9 +1,8 @@
 import { test, expect } from "@jest/globals";
-import {
-  CallbackManager,
-  BaseCallbackHandler,
-  BaseCallbackHandlerInput,
-} from "../base.js";
+// eslint-disable-next-line tree-shaking/no-side-effects-in-initialization
+import { v4 as uuidv4 } from "uuid";
+import { CallbackManager } from "../manager.js";
+import { BaseCallbackHandler, BaseCallbackHandlerInput } from "../base.js";
 import {
   AgentAction,
   AgentFinish,
@@ -12,7 +11,7 @@ import {
 } from "../../schema/index.js";
 
 class FakeCallbackHandler extends BaseCallbackHandler {
-  name = "fake_callback_handler";
+  name = `fake-${uuidv4()}`;
 
   starts = 0;
 
@@ -119,23 +118,26 @@ test("CallbackManager", async () => {
   manager.addHandler(handler1);
   manager.addHandler(handler2);
 
-  await manager.handleLLMStart({ name: "test" }, ["test"]);
-  await manager.handleLLMEnd({ generations: [] });
-  await manager.handleLLMNewToken("test");
-  await manager.handleLLMError(new Error("test"));
-  await manager.handleChainStart({ name: "test" }, { test: "test" });
-  await manager.handleChainEnd({ test: "test" });
-  await manager.handleChainError(new Error("test"));
-  await manager.handleToolStart({ name: "test" }, "test");
-  await manager.handleToolEnd("test");
-  await manager.handleToolError(new Error("test"));
-  await manager.handleText("test");
-  await manager.handleAgentAction({
+  const llmCb = await manager.handleLLMStart({ name: "test" }, ["test"]);
+  await llmCb.handleLLMEnd({ generations: [] });
+  await llmCb.handleLLMNewToken("test");
+  await llmCb.handleLLMError(new Error("test"));
+  const chainCb = await manager.handleChainStart(
+    { name: "test" },
+    { test: "test" }
+  );
+  await chainCb.handleChainEnd({ test: "test" });
+  await chainCb.handleChainError(new Error("test"));
+  const toolCb = await manager.handleToolStart({ name: "test" }, "test");
+  await toolCb.handleToolEnd("test");
+  await toolCb.handleToolError(new Error("test"));
+  await chainCb.handleText("test");
+  await chainCb.handleAgentAction({
     tool: "test",
     toolInput: "test",
     log: "test",
   });
-  await manager.handleAgentEnd({ returnValues: { test: "test" }, log: "test" });
+  await chainCb.handleAgentEnd({ returnValues: { test: "test" }, log: "test" });
 
   for (const handler of [handler1, handler2]) {
     expect(handler.starts).toBe(4);
@@ -159,10 +161,10 @@ test("CallbackHandler with ignoreLLM", async () => {
   });
   const manager = new CallbackManager();
   manager.addHandler(handler);
-  await manager.handleLLMStart({ name: "test" }, ["test"]);
-  await manager.handleLLMEnd({ generations: [] });
-  await manager.handleLLMNewToken("test");
-  await manager.handleLLMError(new Error("test"));
+  const llmCb = await manager.handleLLMStart({ name: "test" }, ["test"]);
+  await llmCb.handleLLMEnd({ generations: [] });
+  await llmCb.handleLLMNewToken("test");
+  await llmCb.handleLLMError(new Error("test"));
 
   expect(handler.starts).toBe(0);
   expect(handler.ends).toBe(0);
@@ -178,9 +180,12 @@ test("CallbackHandler with ignoreChain", async () => {
   });
   const manager = new CallbackManager();
   manager.addHandler(handler);
-  await manager.handleChainStart({ name: "test" }, { test: "test" });
-  await manager.handleChainEnd({ test: "test" });
-  await manager.handleChainError(new Error("test"));
+  const chainCb = await manager.handleChainStart(
+    { name: "test" },
+    { test: "test" }
+  );
+  await chainCb.handleChainEnd({ test: "test" });
+  await chainCb.handleChainError(new Error("test"));
 
   expect(handler.starts).toBe(0);
   expect(handler.ends).toBe(0);
@@ -195,17 +200,21 @@ test("CallbackHandler with ignoreAgent", async () => {
   });
   const manager = new CallbackManager();
   manager.addHandler(handler);
-  await manager.handleToolStart({ name: "test" }, "test");
-  await manager.handleToolEnd("test");
-  await manager.handleToolError(new Error("test"));
-  await manager.handleAgentAction({
+  const toolCb = await manager.handleToolStart({ name: "test" }, "test");
+  await toolCb.handleToolEnd("test");
+  await toolCb.handleToolError(new Error("test"));
+  const chainCb = await manager.handleChainStart(
+    { name: "agent_executor" },
+    {}
+  );
+  await chainCb.handleAgentAction({
     tool: "test",
     toolInput: "test",
     log: "test",
   });
-  await manager.handleAgentEnd({ returnValues: { test: "test" }, log: "test" });
+  await chainCb.handleAgentEnd({ returnValues: { test: "test" }, log: "test" });
 
-  expect(handler.starts).toBe(0);
+  expect(handler.starts).toBe(1);
   expect(handler.ends).toBe(0);
   expect(handler.errors).toBe(0);
   expect(handler.toolStarts).toBe(0);
@@ -240,12 +249,60 @@ test("CallbackManager with child manager", async () => {
       chainWasCalled = true;
     },
   });
-  await manager.handleChainStart(
+  const chainCb = await manager.handleChainStart(
     { name: "test" },
     { test: "test" },
     chainRunId
   );
-  await manager.getChild().handleLLMStart({ name: "test" }, ["test"], llmRunId);
+  await chainCb.getChild().handleLLMStart({ name: "test" }, ["test"], llmRunId);
   expect(llmWasCalled).toBe(true);
   expect(chainWasCalled).toBe(true);
+});
+
+test("CallbackManager with child manager inherited handlers", async () => {
+  const callbackManager1 = new CallbackManager();
+  const handler1 = new FakeCallbackHandler();
+  const handler2 = new FakeCallbackHandler();
+  const handler3 = new FakeCallbackHandler();
+  const handler4 = new FakeCallbackHandler();
+
+  callbackManager1.setHandlers([handler1, handler2]);
+  expect(callbackManager1.handlers).toEqual([handler1, handler2]);
+  expect(callbackManager1.inheritedHandlers).toEqual([handler1, handler2]);
+
+  const callbackManager2 = callbackManager1.copy([handler3, handler4]);
+  expect(callbackManager2.handlers).toEqual([
+    handler1,
+    handler2,
+    handler3,
+    handler4,
+  ]);
+  expect(callbackManager2.inheritedHandlers).toEqual([
+    handler1,
+    handler2,
+    handler3,
+    handler4,
+  ]);
+
+  const callbackManager3 = callbackManager1.copy([handler3, handler4], false);
+  expect(callbackManager3.handlers).toEqual([
+    handler1,
+    handler2,
+    handler3,
+    handler4,
+  ]);
+  expect(callbackManager3.inheritedHandlers).toEqual([handler1, handler2]);
+
+  const chainCb = await callbackManager3.handleChainStart(
+    { name: "test" },
+    { test: "test" }
+  );
+  const childManager = chainCb.getChild();
+  expect(childManager.handlers).toEqual([handler1, handler2]);
+  expect(childManager.inheritedHandlers).toEqual([handler1, handler2]);
+
+  const toolCb = await childManager.handleToolStart({ name: "test" }, "test");
+  const childManager2 = toolCb.getChild();
+  expect(childManager2.handlers).toEqual([handler1, handler2]);
+  expect(childManager2.inheritedHandlers).toEqual([handler1, handler2]);
 });

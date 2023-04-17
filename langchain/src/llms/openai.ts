@@ -14,7 +14,7 @@ import { BaseLLM, BaseLLMParams } from "./base.js";
 import { calculateMaxTokens } from "../base_language/count_tokens.js";
 import { OpenAIChat } from "./openai-chat.js";
 import { LLMResult } from "../schema/index.js";
-import { CallbackManager } from "../callbacks/base.js";
+import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
 
 interface ModelParams {
   /** Sampling temperature to use */
@@ -240,7 +240,7 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
   async _generate(
     prompts: string[],
     stop?: string[],
-    callbackManager?: CallbackManager
+    runManager?: CallbackManagerForLLMRun
   ): Promise<LLMResult> {
     const subPrompts = chunkArray(prompts, this.batchSize);
     const choices: CreateCompletionResponseChoicesInner[] = [];
@@ -308,9 +308,7 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
                       choice.finish_reason = part.finish_reason;
                       choice.logprobs = part.logprobs;
                       // eslint-disable-next-line no-void
-                      void this.configureCallbackManager(
-                        callbackManager
-                      )?.handleLLMNewToken(part.text ?? "");
+                      void runManager?.handleLLMNewToken(part.text ?? "");
                     }
                   }
                 },
