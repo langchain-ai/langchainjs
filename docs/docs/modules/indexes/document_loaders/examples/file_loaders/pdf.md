@@ -36,6 +36,10 @@ By default we use the `pdfjs` build bundled with `pdf-parse`, which is compatibl
 
 In the following example we use the "legacy" (see [pdfjs docs](https://github.com/mozilla/pdf.js/wiki/Frequently-Asked-Questions#which-browsersenvironments-are-supported)) build of `pdfjs-dist`, which includes several polyfills not included in the default build.
 
+```bash npm2yarn
+npm install pdfjs-dist
+```
+
 ```typescript
 import { PDFLoader } from "langchain/document_loaders/fs/pdf";
 
