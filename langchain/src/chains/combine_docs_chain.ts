@@ -95,7 +95,7 @@ export class StuffDocumentsChain
 export interface MapReduceDocumentsChainInput extends StuffDocumentsChainInput {
   maxTokens: number;
   maxIterations: number;
-  combineDocumentsChain: BaseChain;
+  combineDocumentChain: BaseChain;
 }
 
 /**
@@ -105,7 +105,7 @@ export interface MapReduceDocumentsChainInput extends StuffDocumentsChainInput {
  */
 export class MapReduceDocumentsChain
   extends BaseChain
-  implements StuffDocumentsChainInput
+  implements MapReduceDocumentsChainInput
 {
   llmChain: LLMChain;
 
