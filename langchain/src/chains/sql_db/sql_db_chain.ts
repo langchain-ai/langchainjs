@@ -13,6 +13,15 @@ import {
   getModelContextSize,
 } from "../../base_language/count_tokens.js";
 
+interface SqlDatabaseChainInput {
+  llm: BaseLanguageModel;
+  database: SqlDatabase;
+  topK?: number;
+  inputKey?: string;
+  outputKey?: string;
+  memory?: BaseMemory;
+}
+
 export class SqlDatabaseChain extends BaseChain {
   // LLM wrapper to use
   llm: BaseLanguageModel;
@@ -33,17 +42,11 @@ export class SqlDatabaseChain extends BaseChain {
   // Whether to return the result of querying the SQL table directly.
   returnDirect = false;
 
-  constructor(fields: {
-    llm: BaseLanguageModel;
-    database: SqlDatabase;
-    inputKey?: string;
-    outputKey?: string;
-    memory?: BaseMemory;
-  }) {
-    const { memory } = fields;
-    super(memory);
+  constructor(fields: SqlDatabaseChainInput) {
+    super(fields.memory);
     this.llm = fields.llm;
     this.database = fields.database;
+    this.topK = fields.topK ?? this.topK;
     this.inputKey = fields.inputKey ?? this.inputKey;
     this.outputKey = fields.outputKey ?? this.outputKey;
   }
@@ -85,13 +88,13 @@ export class SqlDatabaseChain extends BaseChain {
 
     let finalResult;
     if (this.returnDirect) {
-      finalResult = { result: queryResult };
+      finalResult = { [this.outputKey]: queryResult };
     } else {
       inputText += `${+sqlCommand}\nSQLResult: ${JSON.stringify(
         queryResult
       )}\nAnswer:`;
       llmInputs.input = inputText;
-      finalResult = { result: await lLMChain.predict(llmInputs) };
+      finalResult = { [this.outputKey]: await lLMChain.predict(llmInputs) };
     }
 
     return finalResult;
@@ -103,6 +106,10 @@ export class SqlDatabaseChain extends BaseChain {
 
   get inputKeys(): string[] {
     return [this.inputKey];
+  }
+
+  get outputKeys(): string[] {
+    return [this.outputKey];
   }
 
   static async deserialize(

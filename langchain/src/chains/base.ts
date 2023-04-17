@@ -51,6 +51,8 @@ export abstract class BaseChain implements ChainInputs {
 
   abstract get inputKeys(): string[];
 
+  abstract get outputKeys(): string[];
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async run(input: any): Promise<string> {
     const isKeylessInput = this.inputKeys.length === 1;
