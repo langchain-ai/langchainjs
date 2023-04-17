@@ -5,7 +5,7 @@ import { LangChainTracer } from "../tracers.js";
 import { OpenAI } from "../../llms/openai.js";
 import { SerpAPI } from "../../tools/index.js";
 import { Calculator } from "../../tools/calculator.js";
-import { initializeAgentExecutor } from "../../agents/index.js";
+import { initializeAgentExecutorWithOptions } from "../../agents/index.js";
 
 test("Test LangChain tracer", async () => {
   const tracer = new LangChainTracer();
@@ -36,12 +36,10 @@ test.skip("Test Traced Agent with concurrency (skipped until we fix concurrency)
     new Calculator(),
   ];
 
-  const executor = await initializeAgentExecutor(
-    tools,
-    model,
-    "zero-shot-react-description",
-    true
-  );
+  const executor = await initializeAgentExecutorWithOptions(tools, model, {
+    agentType: "zero-shot-react-description",
+    verbose: true,
+  });
 
   const input = `Who is Olivia Wilde's boyfriend? What is his current age raised to the 0.23 power?`;
 

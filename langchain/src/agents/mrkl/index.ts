@@ -23,7 +23,7 @@ export type CreatePromptArgs = {
   inputVariables?: string[];
 };
 
-type ZeroShotAgentInput = Optional<AgentInput, "outputParser">;
+export type ZeroShotAgentInput = Optional<AgentInput, "outputParser">;
 
 /**
  * Agent for the MRKL chain.

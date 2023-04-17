@@ -8,7 +8,7 @@ First, you'll want to import the relevant modules:
 
 ```typescript
 import { OpenAI } from "langchain/llms/openai";
-import { initializeAgentExecutor } from "langchain/agents";
+import { initializeAgentExecutorWithOptions } from "langchain/agents";
 import { SerpAPI, ChainTool } from "langchain/tools";
 import { Calculator } from "langchain/tools/calculator";
 import { VectorDBQAChain } from "langchain/chains";
@@ -57,11 +57,9 @@ const tools = [
   qaTool,
 ];
 
-const executor = await initializeAgentExecutor(
-  tools,
-  model,
-  "zero-shot-react-description"
-);
+const executor = await initializeAgentExecutorWithOptions(tools, model, {
+  agentType: "zero-shot-react-description",
+});
 console.log("Loaded agent.");
 
 const input = `What did biden say about ketanji brown jackson is the state of the union address?`;

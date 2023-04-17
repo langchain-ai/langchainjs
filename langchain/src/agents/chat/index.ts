@@ -36,7 +36,7 @@ export class ChatAgent extends Agent {
   }
 
   _agentType() {
-    return "zero-shot-react-description" as const;
+    return "chat-zero-shot-react-description" as const;
   }
 
   observationPrefix() {

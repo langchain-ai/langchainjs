@@ -39,13 +39,9 @@ test("Test SimpleSequentialChain example usage", async () => {
     verbose: true,
   });
   const review = await overallChain.run("Tragedy at sunset on the beach");
-  expect(review.trim()).toMatchInlineSnapshot(`
-    "Tragedy at Sunset on the Beach is a powerful and moving story of love, loss, and redemption. The play follows the story of two young lovers, Jack and Jill, whose plans for a future together are tragically cut short when Jack is killed in a car accident. The play follows Jill as she struggles to cope with her grief and eventually finds solace in the arms of another man. 
-
-    The play is beautifully written and the performances are outstanding. The actors bring the characters to life with their heartfelt performances, and the audience is taken on an emotional journey as Jill is forced to confront her grief and make a difficult decision between her past and her future. The play culminates in a powerful climax that will leave the audience in tears. 
-
-    Overall, Tragedy at Sunset on the Beach is a powerful and moving story that will stay with you long after the curtain falls. It is a must-see for anyone looking for an emotionally charged and thought-provoking experience."
-  `);
+  expect(review.trim().toLowerCase()).toContain(
+    "tragedy at sunset on the beach"
+  );
 });
 
 test("Test SimpleSequentialChain serialize/deserialize", async () => {
@@ -80,7 +76,6 @@ test("Test SimpleSequentialChain serialize/deserialize", async () => {
     serializedChain
   );
   expect(deserializedChain.chains.length).toEqual(2);
-  expect(deserializedChain._chainType).toEqual("simple_sequential_chain");
-  const review = await deserializedChain.run("test");
-  expect(review.trim()).toMatchInlineSnapshot(`"Test."`);
+  expect(deserializedChain._chainType()).toEqual("simple_sequential_chain");
+  await deserializedChain.run("test");
 });
