@@ -3,14 +3,12 @@ import { CallbackManager, getCallbackManager } from "../callbacks/index.js";
 import { Tool } from "../tools/base.js";
 import { ChatAgent } from "./chat/index.js";
 import { ChatConversationalAgent } from "./chat_convo/index.js";
-import { ChatAgentV2 } from "./chat_v2/index.js";
 import { AgentExecutor } from "./executor.js";
 import { ZeroShotAgent } from "./mrkl/index.js";
 
 type AgentType =
   | "zero-shot-react-description"
   | "chat-zero-shot-react-description"
-  | "chat-zero-shot-react-description-v2"
   | "chat-conversational-react-description";
 
 export const initializeAgentExecutor = async (
@@ -43,14 +41,6 @@ export const initializeAgentExecutor = async (
     case "chat-conversational-react-description":
       return AgentExecutor.fromAgentAndTools({
         agent: ChatConversationalAgent.fromLLMAndTools(llm, tools),
-        tools,
-        verbose,
-        callbackManager,
-      });
-
-    case "chat-zero-shot-react-description-v2":
-      return AgentExecutor.fromAgentAndTools({
-        agent: ChatAgentV2.fromLLMAndTools(llm, tools),
         tools,
         verbose,
         callbackManager,

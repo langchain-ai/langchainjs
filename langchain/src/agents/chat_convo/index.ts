@@ -10,7 +10,6 @@ import {
 import { renderTemplate } from "../../prompts/template.js";
 import {
   AIChatMessage,
-  AgentAction,
   AgentStep,
   BaseChatMessage,
   HumanChatMessage,
@@ -18,39 +17,8 @@ import {
 import { Tool } from "../../tools/base.js";
 import { Agent, AgentArgs } from "../agent.js";
 import { AgentActionOutputParser, AgentInput } from "../types.js";
-import {
-  FORMAT_INSTRUCTIONS,
-  PREFIX,
-  SUFFIX,
-  TEMPLATE_TOOL_RESPONSE,
-} from "./prompt.js";
-
-export class ChatConversationalAgentOutputParser extends AgentActionOutputParser {
-  async parse(text: string): Promise<AgentAction> {
-    let jsonOutput = text.trim();
-    if (jsonOutput.includes("```json")) {
-      jsonOutput = jsonOutput.split("```json")[1].trimStart();
-    }
-    if (jsonOutput.includes("```")) {
-      jsonOutput = jsonOutput.split("```")[0].trimEnd();
-    }
-    if (jsonOutput.startsWith("```")) {
-      jsonOutput = jsonOutput.slice(3).trimStart();
-    }
-    if (jsonOutput.endsWith("```")) {
-      jsonOutput = jsonOutput.slice(0, -3).trimEnd();
-    }
-    const response = JSON.parse(jsonOutput);
-
-    // TODO: Handle Finish and ensure parse returns AgentAction | AgentFinish
-
-    return { tool: response.action, toolInput: response.action_input, log: "" };
-  }
-
-  getFormatInstructions(): string {
-    return FORMAT_INSTRUCTIONS;
-  }
-}
+import { ChatConversationalAgentOutputParser } from "./outputParser.js";
+import { PREFIX, SUFFIX, TEMPLATE_TOOL_RESPONSE } from "./prompt.js";
 
 export type CreatePromptArgs = {
   /** String to put after the list of tools. */
@@ -172,18 +140,5 @@ export class ChatConversationalAgent extends Agent {
       outputParser,
       allowedTools: tools.map((t) => t.name),
     });
-  }
-
-  async extractToolAndInput(
-    text: string
-  ): Promise<{ tool: string; input: string } | null> {
-    try {
-      const response = (await this.outputParser.parse(text)) as AgentAction;
-      return { tool: response.tool, input: response.toolInput };
-    } catch {
-      throw new Error(
-        `Unable to parse JSON response from chat agent.\n\n${text}`
-      );
-    }
   }
 }

@@ -15,14 +15,16 @@ export {
   createVectorStoreAgent,
 } from "./agent_toolkits/index.js";
 export { ChatAgent } from "./chat/index.js";
+export { ChatAgentOutputParser } from "./chat/outputParser.js";
 export {
   ChatConversationalAgent,
   ChatConversationalAgentInput,
-  ChatConversationalAgentOutputParser,
 } from "./chat_convo/index.js";
+export { ChatConversationalAgentOutputParser } from "./chat_convo/outputParser.js";
 export { AgentExecutor } from "./executor.js";
 export { initializeAgentExecutor } from "./initialize.js";
 export { ZeroShotAgent } from "./mrkl/index.js";
+export { ZeroShotAgentOutputParser } from "./mrkl/outputParser.js";
 export {
   AgentActionOutputParser,
   AgentInput,

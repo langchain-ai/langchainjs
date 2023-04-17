@@ -1,8 +1,9 @@
-import { Optional } from "util/type-utils.js";
 import { BaseLanguageModel } from "../../base_language/index.js";
 import { LLMChain } from "../../chains/llm_chain.js";
 import { PromptTemplate } from "../../prompts/prompt.js";
+import { renderTemplate } from "../../prompts/template.js";
 import { Tool } from "../../tools/base.js";
+import { Optional } from "../../util/type-utils.js";
 import { Agent, AgentArgs } from "../agent.js";
 import { deserializeHelper } from "../helpers.js";
 import {
@@ -10,9 +11,10 @@ import {
   SerializedFromLLMAndTools,
   SerializedZeroShotAgent,
 } from "../types.js";
-import { PREFIX, SUFFIX, formatInstructions } from "./prompt.js";
+import { ZeroShotAgentOutputParser } from "./outputParser.js";
+import { FORMAT_INSTRUCTIONS, PREFIX, SUFFIX } from "./prompt.js";
 
-const FINAL_ANSWER_ACTION = "Final Answer:";
+export const FINAL_ANSWER_ACTION = "Final Answer:";
 
 export type CreatePromptArgs = {
   /** String to put after the list of tools. */
@@ -48,6 +50,10 @@ export class ZeroShotAgent extends Agent {
     return "Thought:";
   }
 
+  static getDefaultOutputParser() {
+    return new ZeroShotAgentOutputParser();
+  }
+
   static validateTools(tools: Tool[]) {
     const invalidTool = tools.find((tool) => !tool.description);
     if (invalidTool) {
@@ -76,9 +82,16 @@ export class ZeroShotAgent extends Agent {
     const toolStrings = tools
       .map((tool) => `${tool.name}: ${tool.description}`)
       .join("\n");
-    const toolNames = tools.map((tool) => tool.name).join("\n");
-    const instructions = formatInstructions(toolNames);
-    const template = [prefix, toolStrings, instructions, suffix].join("\n\n");
+
+    const toolNames = tools.map((tool) => tool.name);
+
+    const formatInstructions = renderTemplate(FORMAT_INSTRUCTIONS, "f-string", {
+      tool_names: toolNames,
+    });
+
+    const template = [prefix, toolStrings, formatInstructions, suffix].join(
+      "\n\n"
+    );
 
     return new PromptTemplate({
       template,

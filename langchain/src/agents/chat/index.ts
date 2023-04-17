@@ -10,9 +10,10 @@ import { AgentStep } from "../../schema/index.js";
 import { Tool } from "../../tools/base.js";
 import { Agent, AgentArgs } from "../agent.js";
 import { AgentInput } from "../types.js";
+import { ChatAgentOutputParser } from "./outputParser.js";
 import { FORMAT_INSTRUCTIONS, PREFIX, SUFFIX } from "./prompt.js";
 
-const FINAL_ANSWER_ACTION = "Final Answer:";
+export const FINAL_ANSWER_ACTION = "Final Answer:";
 
 export type CreatePromptArgs = {
   /** String to put after the list of tools. */
@@ -62,6 +63,10 @@ export class ChatAgent extends Agent {
     }
   }
 
+  static getDefaultOutputParser() {
+    return new ChatAgentOutputParser();
+  }
+
   constructScratchPad(steps: AgentStep[]): string {
     const agentScratchpad = super.constructScratchPad(steps);
     if (agentScratchpad) {
@@ -103,31 +108,11 @@ export class ChatAgent extends Agent {
     const chain = new LLMChain({ prompt, llm });
     const outputParser =
       args?.outputParser ?? ChatAgent.getDefaultOutputParser();
+
     return new ChatAgent({
       llmChain: chain,
       outputParser,
       allowedTools: tools.map((t) => t.name),
     });
-  }
-
-  async extractToolAndInput(
-    text: string
-  ): Promise<{ tool: string; input: string } | null> {
-    if (text.includes(FINAL_ANSWER_ACTION)) {
-      const parts = text.split(FINAL_ANSWER_ACTION);
-      const input = parts[parts.length - 1].trim();
-      return { tool: "Final Answer", input };
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const [_, action, __] = text.split("```");
-    try {
-      const response = JSON.parse(action.trim());
-      return { tool: response.action, input: response.action_input };
-    } catch {
-      throw new Error(
-        `Unable to parse JSON response from chat agent.\n\n${text}`
-      );
-    }
   }
 }
