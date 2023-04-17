@@ -52,7 +52,7 @@ export class UnstructuredLoader extends BaseDocumentLoader {
         `Expected partitioning request to return an array, but got ${elements}`
       );
     }
-    return elements as Element[];
+    return elements.filter((el) => typeof el.text === "string") as Element[];
   }
 
   async load(): Promise<Document[]> {
