@@ -28,8 +28,8 @@ export type SerializedLLM = {
 export type BaseChatModelParams = BaseLanguageModelParams;
 
 export abstract class BaseChatModel extends BaseLanguageModel {
-  protected constructor({ ...rest }: BaseChatModelParams) {
-    super(rest);
+  constructor(fields: BaseChatModelParams) {
+    super(fields);
   }
 
   abstract _combineLLMOutput?(

@@ -5,7 +5,7 @@ import { LLMChain } from "../llm_chain.js";
 import { StuffDocumentsChain } from "../combine_docs_chain.js";
 import { ChatVectorDBQAChain } from "../chat_vector_db_chain.js";
 import { HNSWLib } from "../../vectorstores/hnswlib.js";
-import { OpenAIEmbeddings } from "../../embeddings/index.js";
+import { OpenAIEmbeddings } from "../../embeddings/openai.js";
 
 test("Test ChatVectorDBQAChain", async () => {
   const model = new OpenAI({ modelName: "text-ada-001" });

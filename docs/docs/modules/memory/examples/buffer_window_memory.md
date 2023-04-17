@@ -3,7 +3,7 @@
 BufferWindowMemory keeps track of the back-and-forths in conversation, and then uses a window of size `k` to surface the last `k` back-and-forths to use as memory.
 
 ```typescript
-import { OpenAI } from "langchain/llms";
+import { OpenAI } from "langchain/llms/openai";
 import { BufferWindowMemory } from "langchain/memory";
 import { ConversationChain } from "langchain/chains";
 

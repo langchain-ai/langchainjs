@@ -58,7 +58,7 @@ export abstract class VectorStore {
     query: string,
     k = 4,
     filter: object | undefined = undefined
-  ): Promise<[object, number][]> {
+  ): Promise<[Document, number][]> {
     return this.similaritySearchVectorWithScore(
       await this.embeddings.embedQuery(query),
       k,

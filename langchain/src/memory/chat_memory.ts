@@ -26,11 +26,15 @@ export class ChatMessageHistory extends BaseChatMessageHistory {
   addAIChatMessage(message: string): void {
     this.messages.push(new AIChatMessage(message));
   }
+
+  async clear(): Promise<void> {
+    this.messages = [];
+  }
 }
 
 export interface BaseMemoryInput {
-  chatHistory: ChatMessageHistory;
-  returnMessages: boolean;
+  chatHistory?: ChatMessageHistory;
+  returnMessages?: boolean;
   inputKey?: string;
   outputKey?: string;
 }
@@ -44,7 +48,7 @@ export abstract class BaseChatMemory extends BaseMemory {
 
   outputKey?: string;
 
-  constructor(fields?: Partial<BaseMemoryInput>) {
+  constructor(fields?: BaseMemoryInput) {
     super();
     this.chatHistory = fields?.chatHistory ?? new ChatMessageHistory();
     this.returnMessages = fields?.returnMessages ?? this.returnMessages;
@@ -60,5 +64,9 @@ export abstract class BaseChatMemory extends BaseMemory {
     this.chatHistory.addAIChatMessage(
       getInputValue(outputValues, this.outputKey)
     );
+  }
+
+  async clear(): Promise<void> {
+    await this.chatHistory.clear();
   }
 }

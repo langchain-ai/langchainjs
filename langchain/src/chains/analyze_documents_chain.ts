@@ -3,13 +3,8 @@ import {
   TextSplitter,
   RecursiveCharacterTextSplitter,
 } from "../text_splitter.js";
-
-import { resolveConfigFromFile } from "../util/index.js";
 import { ChainValues } from "../schema/index.js";
-import {
-  SerializedAnalyzeDocumentChain,
-  SerializedBaseChain,
-} from "./serde.js";
+import { SerializedAnalyzeDocumentChain } from "./serde.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type LoadValues = Record<string, any>;
@@ -83,14 +78,15 @@ export class AnalyzeDocumentChain
     }
     const { text_splitter } = values;
 
-    const SerializedCombineDocumentChain = await resolveConfigFromFile<
-      "combine_document_chain",
-      SerializedBaseChain
-    >("combine_document_chain", data);
+    if (!data.combine_document_chain) {
+      throw new Error(
+        `Need to pass in a combine_document_chain to deserialize AnalyzeDocumentChain.`
+      );
+    }
 
     return new AnalyzeDocumentChain({
       combineDocumentsChain: await BaseChain.deserialize(
-        SerializedCombineDocumentChain
+        data.combine_document_chain
       ),
       textSplitter: text_splitter,
     });
