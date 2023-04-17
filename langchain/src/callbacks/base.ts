@@ -113,6 +113,12 @@ export abstract class BaseCallbackHandler
       this.ignoreAgent = input.ignoreAgent ?? this.ignoreAgent;
     }
   }
+
+  copy(): BaseCallbackHandler {
+    return new (this.constructor as new (
+      input?: BaseCallbackHandlerInput
+    ) => BaseCallbackHandler)(this);
+  }
 }
 
 export class ConsoleCallbackHandler extends BaseCallbackHandler {

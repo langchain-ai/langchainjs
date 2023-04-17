@@ -28,10 +28,12 @@ export const run = async () => {
 
   console.log(`Executing with input "${input}"...`);
 
+  const tracingCallbackManager = await getTracingCallbackManager();
+
   const [resultA, resultB, resultC] = await Promise.all([
-    executor.call({ input }, await getTracingCallbackManager()),
-    executor.call({ input }, await getTracingCallbackManager()),
-    executor.call({ input }, await getTracingCallbackManager()),
+    executor.call({ input }, tracingCallbackManager),
+    executor.call({ input }, tracingCallbackManager),
+    executor.call({ input }, tracingCallbackManager),
   ]);
 
   console.log(`Got output ${resultA.output}`);

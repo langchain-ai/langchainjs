@@ -112,10 +112,7 @@ export class AgentExecutor extends BaseChain {
 
           const tool = toolsByName[action.tool?.toLowerCase()];
           const observation = tool
-            ? await tool.call(
-                action.toolInput,
-                runManager?.getChild()
-              )
+            ? await tool.call(action.toolInput, runManager?.getChild())
             : `${action.tool} is not a valid tool, try another one.`;
 
           return { action, observation };

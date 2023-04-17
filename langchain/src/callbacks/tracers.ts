@@ -376,4 +376,17 @@ export class LangChainTracer extends BaseTracer {
     this.session = tracerSession;
     return tracerSession;
   }
+
+  copy(): LangChainTracer {
+    // TODO: this is a hack to get tracing to work with the current backend
+    // we need to not use execution order, then remove this check
+    if (this.executionOrder === 1) {
+      const copy = new LangChainTracer();
+      copy.session = this.session;
+      copy.runMap = new Map(this.runMap);
+      copy.executionOrder = this.executionOrder;
+      return copy;
+    }
+    return this;
+  }
 }

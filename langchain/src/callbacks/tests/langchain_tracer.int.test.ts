@@ -7,6 +7,7 @@ import { OpenAI } from "../../llms/openai.js";
 import { SerpAPI } from "../../tools/index.js";
 import { Calculator } from "../../tools/calculator.js";
 import { initializeAgentExecutor } from "../../agents/index.js";
+import { getTracingCallbackManager } from "../utils.js";
 
 test("Test LangChain tracer", async () => {
   const tracer = new LangChainTracer();
@@ -33,11 +34,10 @@ test("Test LangChain tracer", async () => {
   await tracer.handleLLMEnd({ generations: [[]] }, llmRunId3);
 });
 
-test.skip("Test Traced Agent with concurrency (skipped until we fix concurrency)", async () => {
-  process.env.LANGCHAIN_HANDLER = "langchain";
+test("Test Traced Agent with concurrency", async () => {
   const model = new OpenAI({ temperature: 0 });
   const tools = [
-    new SerpAPI(undefined, {
+    new SerpAPI(process.env.SERPAPI_API_KEY, {
       location: "Austin,Texas,United States",
       hl: "en",
       gl: "us",
@@ -51,15 +51,18 @@ test.skip("Test Traced Agent with concurrency (skipped until we fix concurrency)
     "zero-shot-react-description",
     true
   );
+  console.log("Loaded agent.");
 
   const input = `Who is Olivia Wilde's boyfriend? What is his current age raised to the 0.23 power?`;
 
   console.log(`Executing with input "${input}"...`);
 
+  const tracingCallbackManager = await getTracingCallbackManager();
+
   const [resultA, resultB, resultC] = await Promise.all([
-    executor.call({ input }),
-    executor.call({ input }),
-    executor.call({ input }),
+    executor.call({ input }, tracingCallbackManager),
+    executor.call({ input }, tracingCallbackManager),
+    executor.call({ input }, tracingCallbackManager),
   ]);
 
   console.log(`Got output ${resultA.output}`);
