@@ -114,7 +114,6 @@ export class AgentExecutor extends BaseChain {
           const observation = tool
             ? await tool.call(
                 action.toolInput,
-                this.verbose,
                 runManager?.getChild()
               )
             : `${action.tool} is not a valid tool, try another one.`;

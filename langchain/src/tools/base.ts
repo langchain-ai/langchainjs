@@ -21,7 +21,6 @@ export abstract class Tool extends BaseLangChain {
 
   async call(
     arg: string,
-    _verbose?: boolean,
     callbackManager?: CallbackManager
   ): Promise<string> {
     const runManager = await this.configureCallbackManager(
