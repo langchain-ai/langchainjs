@@ -35,12 +35,14 @@ try {
   throw new Error(`Could not load example ${exampleName}: ${e}`);
 }
 
-const maybePromise = runExample(args);
+if (runExample) {
+  const maybePromise = runExample(args);
 
-if (maybePromise instanceof Promise) {
-  maybePromise.catch((e) => {
-    console.error(`Example failed with:`);
-    console.error(e);
-    process.exit(1);
-  });
+  if (maybePromise instanceof Promise) {
+    maybePromise.catch((e) => {
+      console.error(`Example failed with:`);
+      console.error(e);
+      process.exit(1);
+    });
+  }
 }
