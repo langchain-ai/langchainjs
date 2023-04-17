@@ -69,7 +69,7 @@ ${indent}}`;
 
 export class StructuredOutputParser<
   T extends z.ZodTypeAny
-> extends BaseOutputParser<T> {
+> extends BaseOutputParser<z.infer<T>> {
   constructor(public schema: T) {
     super();
   }

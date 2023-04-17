@@ -3,7 +3,7 @@ import { LLMChain } from "../../chains/llm_chain.js";
 import { PromptTemplate } from "../../prompts/prompt.js";
 import { renderTemplate } from "../../prompts/template.js";
 import { Tool } from "../../tools/base.js";
-import { Optional } from "../../util/type-utils.js";
+import { Optional } from "../../types/type-utils.js";
 import { Agent, AgentArgs } from "../agent.js";
 import { deserializeHelper } from "../helpers.js";
 import {

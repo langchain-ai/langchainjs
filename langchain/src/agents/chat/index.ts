@@ -1,4 +1,3 @@
-import { Optional } from "util/type-utils.js";
 import { BaseLanguageModel } from "../../base_language/index.js";
 import { LLMChain } from "../../chains/llm_chain.js";
 import {
@@ -8,6 +7,7 @@ import {
 } from "../../prompts/chat.js";
 import { AgentStep } from "../../schema/index.js";
 import { Tool } from "../../tools/base.js";
+import { Optional } from "../../types/type-utils.js";
 import { Agent, AgentArgs } from "../agent.js";
 import { AgentInput } from "../types.js";
 import { ChatAgentOutputParser } from "./outputParser.js";

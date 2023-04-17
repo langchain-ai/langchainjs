@@ -14,7 +14,7 @@ import {
   HumanChatMessage,
 } from "../../schema/index.js";
 import { Tool } from "../../tools/base.js";
-import { Optional } from "../../util/type-utils.js";
+import { Optional } from "../../types/type-utils.js";
 import { Agent, AgentArgs } from "../agent.js";
 import { AgentActionOutputParser, AgentInput } from "../types.js";
 import { ChatConversationalAgentOutputParser } from "./outputParser.js";
