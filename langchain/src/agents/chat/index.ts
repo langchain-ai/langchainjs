@@ -13,8 +13,6 @@ import { AgentInput } from "../types.js";
 import { ChatAgentOutputParser } from "./outputParser.js";
 import { FORMAT_INSTRUCTIONS, PREFIX, SUFFIX } from "./prompt.js";
 
-export const FINAL_ANSWER_ACTION = "Final Answer:";
-
 export type CreatePromptArgs = {
   /** String to put after the list of tools. */
   suffix?: string;

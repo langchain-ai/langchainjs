@@ -1,8 +1,8 @@
 import { AgentActionOutputParser } from "../../agents/types.js";
 import { AgentFinish } from "../../schema/index.js";
-import { FINAL_ANSWER_ACTION } from "./index.js";
 import { FORMAT_INSTRUCTIONS } from "./prompt.js";
 
+export const FINAL_ANSWER_ACTION = "Final Answer:";
 export class ChatAgentOutputParser extends AgentActionOutputParser {
   async parse(text: string) {
     if (text.includes(FINAL_ANSWER_ACTION)) {
