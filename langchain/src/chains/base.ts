@@ -134,6 +134,18 @@ export abstract class BaseChain implements ChainInputs {
         const { StuffDocumentsChain } = await import("./combine_docs_chain.js");
         return StuffDocumentsChain.deserialize(data);
       }
+      case "map_reduce_documents_chain": {
+        const { MapReduceDocumentsChain } = await import(
+          "./combine_docs_chain.js"
+        );
+        return MapReduceDocumentsChain.deserialize(data);
+      }
+      case "refine_documents_chain": {
+        const { RefineDocumentsChain } = await import(
+          "./combine_docs_chain.js"
+        );
+        return RefineDocumentsChain.deserialize(data);
+      }
       case "vector_db_qa": {
         const { VectorDBQAChain } = await import("./vector_db_qa.js");
         return VectorDBQAChain.deserialize(data, values);
