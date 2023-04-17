@@ -29,7 +29,7 @@ interface BaseEntityStore {
 }
 
 class InMemoryEntityStore implements BaseEntityStore {
-  private store: Record<string, string | undefined> = {};
+  private store: Record<string, string | undefined> = Object.create(null);
 
   public get(
     key: string,
@@ -51,7 +51,7 @@ class InMemoryEntityStore implements BaseEntityStore {
   }
 
   public clear(): void {
-    this.store = {};
+    this.store = Object.create(null);
   }
 }
 

@@ -14,8 +14,7 @@ class FakeLLM extends BaseLLM {
     return "fake";
   }
 
-  async _generate(prompts: string[], _?: string[]): Promise<LLMResult> {
-    console.log(prompts);
+  async _generate(_prompts: string[], _?: string[]): Promise<LLMResult> {
     const mockVal = { generations: [[{ text: "foo" }]] };
     return mockVal;
   }
