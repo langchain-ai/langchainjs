@@ -1,5 +1,5 @@
-import { CallbackManager } from "callbacks/base.js";
 import { BaseLanguageModel } from "../base_language/index.js";
+import { CallbackManager } from "../callbacks/base.js";
 import { LLMChain } from "../chains/llm_chain.js";
 import { BasePromptTemplate } from "../prompts/base.js";
 import {

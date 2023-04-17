@@ -1,5 +1,5 @@
-import { AgentFinish } from "schema/index.js";
 import { AgentActionOutputParser } from "../../agents/types.js";
+import { AgentFinish } from "../../schema/index.js";
 import { FINAL_ANSWER_ACTION } from "./index.js";
 import { FORMAT_INSTRUCTIONS } from "./prompt.js";
 

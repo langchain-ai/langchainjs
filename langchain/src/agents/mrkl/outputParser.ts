@@ -1,4 +1,3 @@
-import { AgentFinish } from "schema/index.js";
 import { AgentActionOutputParser } from "../../agents/types.js";
 import { FINAL_ANSWER_ACTION } from "./index.js";
 import { FORMAT_INSTRUCTIONS } from "./prompt.js";
@@ -11,7 +10,7 @@ export class ZeroShotAgentOutputParser extends AgentActionOutputParser {
       return {
         returnValues: { output },
         log: text,
-      } satisfies AgentFinish;
+      };
     }
 
     const match = /Action: (.*)\nAction Input: (.*)/s.exec(text);
