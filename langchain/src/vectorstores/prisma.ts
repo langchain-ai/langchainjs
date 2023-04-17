@@ -262,10 +262,10 @@ export class PrismaVectorStore<
     const results: [Document<SimilarityModel<TModel, TSelectModel>>, number][] =
       [];
     for (const article of articles) {
-      if (article._distance != null) {
+      if (article._distance != null && article[this.contentColumn] != null) {
         results.push([
           new Document({
-            pageContent: article[this.contentColumn] as string | undefined,
+            pageContent: article[this.contentColumn] as string,
             metadata: article,
           }),
           article._distance,

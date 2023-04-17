@@ -10,7 +10,12 @@ export class SRTLoader extends TextLoader {
     const { SRTParser2 } = await SRTLoaderImports();
     const parser = new SRTParser2();
     const srts = parser.fromSrt(raw);
-    return [srts.map((srt) => srt.text).join(" ")];
+    return [
+      srts
+        .map((srt) => srt.text)
+        .filter(Boolean)
+        .join(" "),
+    ];
   }
 }
 

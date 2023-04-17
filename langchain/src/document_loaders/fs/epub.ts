@@ -17,8 +17,10 @@ export class EPubLoader extends BaseDocumentLoader {
     const chapters = await Promise.all(
       epub.flow.map(async (chapter) => {
         if (!chapter.id) return null as never;
+        const html: string = await epub.getChapterRawAsync(chapter.id);
+        if (!html) return null as never;
         return {
-          html: await epub.getChapterRawAsync(chapter.id),
+          html,
           title: chapter.title,
         };
       })
@@ -37,6 +39,9 @@ export class EPubLoader extends BaseDocumentLoader {
 
     const parsed = await this.parse(epub);
     const metadata = { source: this.filePath };
+
+    if (parsed.length === 0) return [];
+
     return this.splitChapters
       ? parsed.map(
           (chapter) =>

@@ -34,6 +34,11 @@ export class PDFLoader extends BufferLoader {
     for (let i = 1; i <= pdf.numPages; i += 1) {
       const page = await pdf.getPage(i);
       const content = await page.getTextContent();
+
+      if (content.items.length === 0) {
+        continue;
+      }
+
       const text = content.items
         .map((item) => (item as TextItem).str)
         .join("\n");
@@ -59,6 +64,10 @@ export class PDFLoader extends BufferLoader {
 
     if (this.splitPages) {
       return documents;
+    }
+
+    if (documents.length === 0) {
+      return [];
     }
 
     return [
