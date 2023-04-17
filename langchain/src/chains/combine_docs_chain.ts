@@ -16,7 +16,6 @@ export interface StuffDocumentsChainInput {
   /** LLM Wrapper to use after formatting documents */
   llmChain: LLMChain;
   inputKey: string;
-  outputKey: string;
   /** Variable name in the LLM chain to put the documents in */
   documentVariableName: string;
 }
@@ -34,12 +33,14 @@ export class StuffDocumentsChain
 
   inputKey = "input_documents";
 
-  outputKey = "output_text";
-
   documentVariableName = "context";
 
   get inputKeys() {
     return [this.inputKey, ...this.llmChain.inputKeys];
+  }
+
+  get outputKeys() {
+    return this.llmChain.outputKeys;
   }
 
   constructor(fields: {
@@ -53,7 +54,6 @@ export class StuffDocumentsChain
     this.documentVariableName =
       fields.documentVariableName ?? this.documentVariableName;
     this.inputKey = fields.inputKey ?? this.inputKey;
-    this.outputKey = fields.outputKey ?? this.outputKey;
   }
 
   async _call(values: ChainValues): Promise<ChainValues> {
