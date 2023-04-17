@@ -5,7 +5,7 @@ This example goes over how to load data from PDF files. By default, one document
 ## Setup
 
 ```bash npm2yarn
-npm install pdfjs-dist
+npm install pdf-parse
 ```
 
 ## Usage, one document per page
@@ -30,11 +30,11 @@ const loader = new PDFLoader("src/document_loaders/example_data/example.pdf", {
 const docs = await loader.load();
 ```
 
-## Usage, "legacy" environments
+## Usage, custom `pdfjs` build
 
-In "legacy" environments (note this is what `pdfjs` calls them, not what LangChain calls them, see [pdfjs docs](https://github.com/mozilla/pdf.js/wiki/Frequently-Asked-Questions#which-browsersenvironments-are-supported) for more info), you can use the `pdfjs` option to provide a function that returns a promise that resolves to the `PDFJS` object. This is useful if you want to use a custom build of `pdfjs-dist` or if you want to use a different version of `pdfjs-dist`.
+By default we use the `pdfjs` build bundled with `pdf-parse`, which is compatible with most environments, including Node.js and modern browsers. If you want to use a more recent version of `pdfjs-dist` or if you want to use a custom build of `pdfjs-dist`, you can do so by providing a custom `pdfjs` function that returns a promise that resolves to the `PDFJS` object.
 
-Here we use the legacy build of `pdfjs-dist`, which includes several polyfills not included in the default build.
+In the following example we use the "legacy" (see [pdfjs docs](https://github.com/mozilla/pdf.js/wiki/Frequently-Asked-Questions#which-browsersenvironments-are-supported)) build of `pdfjs-dist`, which includes several polyfills not included in the default build.
 
 ```typescript
 import { PDFLoader } from "langchain/document_loaders/fs/pdf";
@@ -42,21 +42,5 @@ import { PDFLoader } from "langchain/document_loaders/fs/pdf";
 const loader = new PDFLoader("src/document_loaders/example_data/example.pdf", {
   // you may need to add `.then(m => m.default)` to the end of the import
   pdfjs: () => import("pdfjs-dist/legacy/build/pdf.js"),
-});
-```
-
-Alternatively, if the legacy build of `pdfjs-dist` doesn't work for you, you can use an older version bundled with `pdf-parse`:
-
-```bash npm2yarn
-npm rm pdfjs-dist # if you had installed it before
-npm install pdf-parse
-```
-
-```typescript
-import { PDFLoader } from "langchain/document_loaders/fs/pdf";
-
-const loader = new PDFLoader("src/document_loaders/example_data/example.pdf", {
-  // you may need to add `.then(m => m.default)` to the end of the import
-  pdfjs: () => import("pdf-parse/lib/pdf.js/v1.10.100/build/pdf.js"),
 });
 ```
