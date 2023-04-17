@@ -78,9 +78,8 @@ export class ChatConversationalAgent extends Agent {
       outputParser ?? new ChatConversationalAgentOutputParser();
   }
 
-  _agentType(): string {
-    /** Not turning on serialization until more sure of abstractions. */
-    throw new Error("Method not implemented.");
+  _agentType() {
+    return "chat-conversational-react-description" as const;
   }
 
   observationPrefix() {
