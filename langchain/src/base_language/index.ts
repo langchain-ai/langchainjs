@@ -97,7 +97,7 @@ export abstract class BaseLanguageModel
         // modelName only exists in openai subclasses, but tiktoken only supports
         // openai tokenisers anyway, so for other subclasses we default to gpt2
         if (encoding_for_model) {
-          this._encoding = encoding_for_model(
+          this._encoding = await encoding_for_model(
             "modelName" in this
               ? getModelNameForTiktoken(this.modelName as string)
               : "gpt2"

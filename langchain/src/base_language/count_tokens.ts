@@ -57,9 +57,26 @@ interface CalculateMaxTokenProps {
   modelName: TiktokenModel;
 }
 
-export const importTiktoken = async () => {
+export const importTiktoken = /* @__PURE__ */ async () => {
   try {
-    const { encoding_for_model } = await import("@dqbd/tiktoken");
+    const [{ Tiktoken }, { load }, { default: registry }, { default: models }] =
+      await Promise.all([
+        import("@dqbd/tiktoken/lite"),
+        import("@dqbd/tiktoken/load"),
+        import("@dqbd/tiktoken/registry.json"),
+        import("@dqbd/tiktoken/model_to_encoding.json"),
+      ]);
+
+    const encoding_for_model = async (modelName: TiktokenModel) => {
+      const model = await load(
+        registry[
+          models[modelName as keyof typeof models] as keyof typeof registry
+        ]
+      );
+
+      return new Tiktoken(model.bpe_ranks, model.special_tokens, model.pat_str);
+    };
+
     return { encoding_for_model };
   } catch (error) {
     console.log(error);
@@ -78,7 +95,9 @@ export const calculateMaxTokens = async ({
 
   try {
     if (encoding_for_model) {
-      const encoding = encoding_for_model(getModelNameForTiktoken(modelName));
+      const encoding = await encoding_for_model(
+        getModelNameForTiktoken(modelName)
+      );
 
       const tokenized = encoding.encode(prompt);
 
