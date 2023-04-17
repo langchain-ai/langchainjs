@@ -14,7 +14,7 @@ import { InputValues, PartialValues } from "../schema/index.js";
  */
 export interface PromptTemplateInput extends BasePromptTemplateInput {
   /**
-   * The propmt template
+   * The prompt template
    */
   template: string;
 
