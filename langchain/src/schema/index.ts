@@ -184,3 +184,15 @@ export abstract class BaseChatMessageHistory {
 
   public abstract addAIChatMessage(message: string): void;
 }
+
+export abstract class BaseEntityStore {
+  abstract get(key: string, defaultValue?: string): Promise<string | undefined>;
+
+  abstract set(key: string, value?: string): Promise<void>;
+
+  abstract delete(key: string): Promise<void>;
+
+  abstract exists(key: string): Promise<boolean>;
+
+  abstract clear(): Promise<void>;
+}

@@ -1,11 +1,7 @@
 import { BaseLanguageModel } from "base_language/index.js";
-import { BaseChatMessage } from "../schema/index.js";
+import { BaseChatMessage, BaseEntityStore } from "../schema/index.js";
 
-import {
-  BaseChatMemory,
-  BaseMemoryInput,
-  ChatMessageHistory,
-} from "./chat_memory.js";
+import { BaseChatMemory, BaseMemoryInput } from "./chat_memory.js";
 import {
   ENTITY_EXTRACTION_PROMPT,
   ENTITY_SUMMARIZATION_PROMPT,
@@ -19,52 +15,19 @@ import {
 } from "./base.js";
 import { LLMChain } from "../chains/llm_chain.js";
 import { PromptTemplate } from "../prompts/prompt.js";
-
-interface BaseEntityStore {
-  get(key: string, defaultValue?: string): string | undefined;
-  set(key: string, value?: string): void;
-  delete(key: string): void;
-  exists(key: string): boolean;
-  clear(): void;
-}
-
-class InMemoryEntityStore implements BaseEntityStore {
-  private store: Record<string, string | undefined> = Object.create(null);
-
-  public get(
-    key: string,
-    defaultValue: string | undefined
-  ): string | undefined {
-    return key in this.store ? this.store[key] : defaultValue;
-  }
-
-  public set(key: string, value: string | undefined): void {
-    this.store[key] = value;
-  }
-
-  public delete(key: string): void {
-    delete this.store[key];
-  }
-
-  public exists(key: string): boolean {
-    return key in this.store;
-  }
-
-  public clear(): void {
-    this.store = Object.create(null);
-  }
-}
+import { InMemoryEntityStore } from "./stores/entity/in_memory.js";
 
 export interface EntityMemoryInput extends BaseMemoryInput {
-  humanPrefix: string;
-  aiPrefix: string;
   llm: BaseLanguageModel;
-  entityExtractionPrompt: PromptTemplate;
-  entitySummarizationPrompt: PromptTemplate;
-  entityCache: string[];
-  k: number;
-  chatHistoryKey: string;
-  entityStore: InMemoryEntityStore;
+  humanPrefix?: string;
+  aiPrefix?: string;
+  entityExtractionPrompt?: PromptTemplate;
+  entitySummarizationPrompt?: PromptTemplate;
+  entityCache?: string[];
+  k?: number;
+  chatHistoryKey?: string;
+  entitiesKey?: string;
+  entityStore?: BaseEntityStore;
 }
 
 // Entity extractor & summarizer to memory.
@@ -77,7 +40,7 @@ export class EntityMemory extends BaseChatMemory implements EntityMemoryInput {
 
   entitySummarizationPrompt = ENTITY_SUMMARIZATION_PROMPT;
 
-  entityStore = new InMemoryEntityStore();
+  entityStore: BaseEntityStore;
 
   entityCache: string[];
 
@@ -89,25 +52,25 @@ export class EntityMemory extends BaseChatMemory implements EntityMemoryInput {
 
   entitiesKey = "entities";
 
-  constructor(fields?: Partial<EntityMemoryInput>) {
+  constructor(fields: EntityMemoryInput) {
     super({
-      chatHistory: fields?.chatHistory,
-      returnMessages: fields?.returnMessages ?? false,
-      inputKey: fields?.inputKey,
-      outputKey: fields?.outputKey,
+      chatHistory: fields.chatHistory,
+      returnMessages: fields.returnMessages ?? false,
+      inputKey: fields.inputKey,
+      outputKey: fields.outputKey,
     });
-    this.humanPrefix = fields?.humanPrefix ?? this.humanPrefix;
-    this.aiPrefix = fields?.aiPrefix ?? this.aiPrefix;
-    this.chatHistoryKey = fields?.chatHistoryKey ?? this.chatHistoryKey;
-    this.llm = fields?.llm ?? this.llm;
+    this.llm = fields.llm;
+    this.humanPrefix = fields.humanPrefix ?? this.humanPrefix;
+    this.aiPrefix = fields.aiPrefix ?? this.aiPrefix;
+    this.chatHistoryKey = fields.chatHistoryKey ?? this.chatHistoryKey;
+    this.entitiesKey = fields.entitiesKey ?? this.entitiesKey;
     this.entityExtractionPrompt =
-      fields?.entityExtractionPrompt ?? this.entityExtractionPrompt;
+      fields.entityExtractionPrompt ?? this.entityExtractionPrompt;
     this.entitySummarizationPrompt =
-      fields?.entitySummarizationPrompt ?? this.entitySummarizationPrompt;
-    this.entityStore =
-      fields?.entityStore ?? (this.entityStore as InMemoryEntityStore);
-    this.entityCache = fields?.entityCache ?? this.entityCache;
-    this.k = fields?.k ?? this.k;
+      fields.entitySummarizationPrompt ?? this.entitySummarizationPrompt;
+    this.entityStore = fields.entityStore ?? new InMemoryEntityStore();
+    this.entityCache = fields.entityCache ?? this.entityCache;
+    this.k = fields.k ?? this.k;
   }
 
   get buffer(): BaseChatMessage[] {
@@ -172,21 +135,20 @@ export class EntityMemory extends BaseChatMemory implements EntityMemoryInput {
     });
 
     for (const entity of this.entityCache) {
-      const existingSummary = this.entityStore.get(entity, "");
+      const existingSummary = await this.entityStore.get(entity, "");
       const output = await chain.predict({
         summary: existingSummary,
         entity,
         history: bufferString,
         input: inputData,
       });
-      this.entityStore.set(entity, output.trim());
+      await this.entityStore.set(entity, output.trim());
     }
   }
 
   // Clear memory contents.
   async clear() {
     await super.clear();
-    this.chatHistory = new ChatMessageHistory();
-    this.entityStore = new InMemoryEntityStore();
+    await this.entityStore.clear();
   }
 }
