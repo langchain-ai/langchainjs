@@ -28,7 +28,10 @@ export abstract class BaseLangChain {
   ): CallbackManager | undefined {
     let callbackManager_;
     if (callbackManager) {
-        callbackManager_ = callbackManager.copy(this.callbackManager?.handlers, false);
+      callbackManager_ = callbackManager.copy(
+        this.callbackManager?.handlers,
+        false
+      );
     } else {
       callbackManager_ = new CallbackManager();
       callbackManager_.setHandlers(this.callbackManager?.handlers ?? [], false);

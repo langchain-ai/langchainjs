@@ -367,7 +367,7 @@ export class CallbackManager
   removeHandler(handler: BaseCallbackHandler): void {
     this.handlers = this.handlers.filter((_handler) => _handler !== handler);
     this.inheritedHandlers = this.inheritedHandlers.filter(
-        (_handler) => _handler !== handler
+      (_handler) => _handler !== handler
     );
   }
 
@@ -376,7 +376,10 @@ export class CallbackManager
     this.inheritedHandlers = inherit ? handlers : [];
   }
 
-  copy(additionalHandlers: BaseCallbackHandler[] = [], inherit = true): CallbackManager {
+  copy(
+    additionalHandlers: BaseCallbackHandler[] = [],
+    inherit = true
+  ): CallbackManager {
     const manager = new CallbackManager(this._parentRunId);
     manager.setHandlers([...this.handlers], true);
     for (const handler of additionalHandlers) {
