@@ -119,9 +119,7 @@ export class ChatAgent extends Agent {
       const response = JSON.parse(action.trim());
       return { tool: response.action, input: response.action_input };
     } catch {
-      throw new Error(
-        `Unable to parse JSON response from chat agent.\n\n${text}`
-      );
+      return null;
     }
   }
 }

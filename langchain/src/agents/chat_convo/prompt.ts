@@ -6,6 +6,13 @@ Assistant is constantly learning and improving, and its capabilities are constan
 
 Overall, Assistant is a powerful system that can help with a wide range of tasks and provide valuable insights and information on a wide range of topics. Whether you need help with a specific question or just want to have a conversation about a particular topic, Assistant is here to assist.`;
 
+export const OPTION_1_JSON = `\`\`\`json
+{{{{
+    "action": string \\ The action to take. Must be one of {tool_names}
+    "action_input": string \\ The input to the action
+}}}}
+\`\`\``;
+
 export const FORMAT_INSTRUCTIONS = `RESPONSE FORMAT INSTRUCTIONS
 ----------------------------
 
@@ -15,12 +22,7 @@ When responding to me please, please output a response in one of two formats:
 Use this if you want the human to use a tool.
 Markdown code snippet formatted in the following schema:
 
-\`\`\`json
-{{{{
-    "action": string \\ The action to take. Must be one of {tool_names}
-    "action_input": string \\ The input to the action
-}}}}
-\`\`\`
+${OPTION_1_JSON}
 
 **Option #2:**
 Use this if you want to respond directly to the human. Markdown code snippet formatted in the following schema:

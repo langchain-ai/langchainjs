@@ -7,6 +7,7 @@ import {
   AgentStep,
   ChainValues,
   BaseChatMessage,
+  AgentError,
 } from "../schema/index.js";
 import {
   AgentInput,
@@ -15,6 +16,7 @@ import {
   AgentActionOutputParser,
 } from "./types.js";
 import { Tool } from "../tools/base.js";
+import { OPTION_1_JSON } from "./chat_convo/prompt.js";
 
 class ParseError extends Error {
   output: string;
@@ -93,7 +95,7 @@ export abstract class BaseSingleActionAgent extends BaseAgent {
   abstract plan(
     steps: AgentStep[],
     inputs: ChainValues
-  ): Promise<AgentAction | AgentFinish>;
+  ): Promise<AgentAction | AgentFinish | AgentError>;
 }
 
 export abstract class BaseMultiActionAgent extends BaseAgent {
@@ -272,7 +274,7 @@ export abstract class Agent extends BaseSingleActionAgent {
     steps: AgentStep[],
     inputs: ChainValues,
     suffix?: string
-  ): Promise<AgentAction | AgentFinish> {
+  ): Promise<AgentAction | AgentFinish | AgentError> {
     const thoughts = this.constructScratchPad(steps);
     const newInputs: ChainValues = {
       ...inputs,
@@ -286,7 +288,14 @@ export abstract class Agent extends BaseSingleActionAgent {
     const output = await this.llmChain.predict(newInputs);
     const parsed = await this.extractToolAndInput(output);
     if (!parsed) {
-      throw new ParseError(`Invalid output: ${output}`, output);
+      return {
+        error: `Could not parse LLM output: ${JSON.stringify(
+          output
+        )}. Remember the format: Markdown code snippet formatted in the following schema:
+
+${OPTION_1_JSON}`,
+        log: output,
+      };
     }
     const action = {
       tool: parsed.tool,
@@ -310,7 +319,7 @@ export abstract class Agent extends BaseSingleActionAgent {
   plan(
     steps: AgentStep[],
     inputs: ChainValues
-  ): Promise<AgentAction | AgentFinish> {
+  ): Promise<AgentAction | AgentFinish | AgentError> {
     return this._plan(steps, inputs);
   }
 

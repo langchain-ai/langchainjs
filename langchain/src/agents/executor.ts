@@ -3,12 +3,7 @@ import { BaseMultiActionAgent, BaseSingleActionAgent } from "./agent.js";
 import { Tool } from "../tools/base.js";
 import { StoppingMethod } from "./types.js";
 import { SerializedLLMChain } from "../chains/serde.js";
-import {
-  AgentAction,
-  AgentFinish,
-  AgentStep,
-  ChainValues,
-} from "../schema/index.js";
+import { AgentFinish, AgentStep, ChainValues } from "../schema/index.js";
 
 interface AgentExecutorInput extends ChainInputs {
   agent: BaseSingleActionAgent | BaseMultiActionAgent;
@@ -91,39 +86,49 @@ export class AgentExecutor extends BaseChain {
         return getOutput(output);
       }
 
-      let actions: AgentAction[];
-      if (Array.isArray(output)) {
-        actions = output as AgentAction[];
-      } else {
-        actions = [output as AgentAction];
-      }
-
-      const newSteps = await Promise.all(
-        actions.map(async (action) => {
-          await this.callbackManager.handleAgentAction(action, this.verbose);
-
-          const tool = toolsByName[action.tool?.toLowerCase()];
-          const observation = tool
-            ? await tool.call(action.toolInput, this.verbose)
-            : `${action.tool} is not a valid tool, try another one.`;
-
-          return { action, observation };
-        })
-      );
-
-      steps.push(...newSteps);
-
-      const lastStep = steps[steps.length - 1];
-      const lastTool = toolsByName[lastStep.action.tool?.toLowerCase()];
-
-      if (lastTool?.returnDirect) {
-        return getOutput({
-          returnValues: { [this.agent.returnValues[0]]: lastStep.observation },
-          log: "",
+      // Check if the agent has errored
+      if ("error" in output) {
+        steps.push({
+          action: { error: output.error, log: output.log },
+          observation: output.error,
         });
-      }
+      } else {
+        let actions;
+        if (Array.isArray(output)) {
+          actions = output;
+        } else {
+          actions = [output];
+        }
 
-      iterations += 1;
+        const newSteps = await Promise.all(
+          actions.map(async (action) => {
+            await this.callbackManager.handleAgentAction(action, this.verbose);
+
+            const tool = toolsByName[action.tool?.toLowerCase()];
+            const observation = tool
+              ? await tool.call(action.toolInput, this.verbose)
+              : `${action.tool} is not a valid tool, try another one.`;
+
+            return { action, observation };
+          })
+        );
+
+        steps.push(...newSteps);
+
+        const lastStep = newSteps[newSteps.length - 1];
+        const lastTool = toolsByName[lastStep.action.tool?.toLowerCase()];
+
+        if (lastTool?.returnDirect) {
+          return getOutput({
+            returnValues: {
+              [this.agent.returnValues[0]]: lastStep.observation,
+            },
+            log: "",
+          });
+        }
+
+        iterations += 1;
+      }
     }
 
     const finish = await this.agent.returnStoppedResponse(
