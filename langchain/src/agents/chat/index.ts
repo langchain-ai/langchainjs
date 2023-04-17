@@ -105,7 +105,11 @@ export class ChatAgent extends Agent {
   ) {
     ChatAgent.validateTools(tools);
     const prompt = ChatAgent.createPrompt(tools, args);
-    const chain = new LLMChain({ prompt, llm });
+    const chain = new LLMChain({
+      prompt,
+      llm,
+      callbackManager: args?.callbackManager,
+    });
     const outputParser =
       args?.outputParser ?? ChatAgent.getDefaultOutputParser();
 

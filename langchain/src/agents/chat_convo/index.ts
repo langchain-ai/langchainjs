@@ -131,7 +131,11 @@ export class ChatConversationalAgent extends Agent {
   ) {
     ChatConversationalAgent.validateTools(tools);
     const prompt = ChatConversationalAgent.createPrompt(tools, args);
-    const chain = new LLMChain({ prompt, llm });
+    const chain = new LLMChain({
+      prompt,
+      llm,
+      callbackManager: args?.callbackManager,
+    });
     const outputParser =
       args?.outputParser ?? ChatConversationalAgent.getDefaultOutputParser();
 

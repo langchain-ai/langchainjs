@@ -121,26 +121,6 @@ export class ZeroShotAgent extends Agent {
     });
   }
 
-  async extractToolAndInput(
-    text: string
-  ): Promise<{ tool: string; input: string } | null> {
-    if (text.includes(FINAL_ANSWER_ACTION)) {
-      const parts = text.split(FINAL_ANSWER_ACTION);
-      const input = parts[parts.length - 1].trim();
-      return { tool: "Final Answer", input };
-    }
-
-    const match = /Action: (.*)\nAction Input: (.*)/s.exec(text);
-    if (!match) {
-      throw new Error(`Could not parse LLM output: ${text}`);
-    }
-
-    return {
-      tool: match[1].trim(),
-      input: match[2].trim().replace(/^"+|"+$/g, ""),
-    };
-  }
-
   static async deserialize(
     data: SerializedZeroShotAgent & { llm?: BaseLanguageModel; tools?: Tool[] }
   ): Promise<ZeroShotAgent> {
