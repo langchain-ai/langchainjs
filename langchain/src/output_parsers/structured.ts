@@ -24,7 +24,9 @@ function printSchema(schema: z.ZodTypeAny, depth = 0): string {
     return "date";
   }
   if (schema instanceof z.ZodEnum || schema._def.typeName === "ZodEnum") {
-    return schema.Values.map((value: string) => `"${value}"`).join(" | ");
+    return (schema as z.ZodEnum<[string, ...string[]]>).options
+      .map((value) => `"${value}"`)
+      .join(" | ");
   }
   if (
     schema instanceof z.ZodNullable ||
