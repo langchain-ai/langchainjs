@@ -251,7 +251,7 @@ export class CallbackManager
 {
   handlers: BaseCallbackHandler[];
 
-  inheritedHandlers: BaseCallbackHandler[] = [];
+  inheritedHandlers: BaseCallbackHandler[];
 
   name = "callback_manager";
 
@@ -372,8 +372,11 @@ export class CallbackManager
   }
 
   setHandlers(handlers: BaseCallbackHandler[], inherit = true): void {
-    this.handlers = handlers;
-    this.inheritedHandlers = inherit ? handlers : [];
+    this.handlers = [];
+    this.inheritedHandlers = [];
+    for (const handler of handlers) {
+      this.addHandler(handler, inherit);
+    }
   }
 
   copy(

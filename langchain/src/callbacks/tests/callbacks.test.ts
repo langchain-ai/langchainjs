@@ -1,4 +1,6 @@
 import { test, expect } from "@jest/globals";
+// eslint-disable-next-line tree-shaking/no-side-effects-in-initialization
+import { v4 as uuidv4 } from "uuid";
 import { CallbackManager } from "../manager.js";
 import { BaseCallbackHandler, BaseCallbackHandlerInput } from "../base.js";
 import {
@@ -9,7 +11,7 @@ import {
 } from "../../schema/index.js";
 
 class FakeCallbackHandler extends BaseCallbackHandler {
-  name = "fake_callback_handler";
+  name = `fake-${uuidv4()}`;
 
   starts = 0;
 
@@ -255,4 +257,52 @@ test("CallbackManager with child manager", async () => {
   await chainCb.getChild().handleLLMStart({ name: "test" }, ["test"], llmRunId);
   expect(llmWasCalled).toBe(true);
   expect(chainWasCalled).toBe(true);
+});
+
+test("CallbackManager with child manager inherited handlers", async () => {
+  const callbackManager1 = new CallbackManager();
+  const handler1 = new FakeCallbackHandler();
+  const handler2 = new FakeCallbackHandler();
+  const handler3 = new FakeCallbackHandler();
+  const handler4 = new FakeCallbackHandler();
+
+  callbackManager1.setHandlers([handler1, handler2]);
+  expect(callbackManager1.handlers).toEqual([handler1, handler2]);
+  expect(callbackManager1.inheritedHandlers).toEqual([handler1, handler2]);
+
+  const callbackManager2 = callbackManager1.copy([handler3, handler4]);
+  expect(callbackManager2.handlers).toEqual([
+    handler1,
+    handler2,
+    handler3,
+    handler4,
+  ]);
+  expect(callbackManager2.inheritedHandlers).toEqual([
+    handler1,
+    handler2,
+    handler3,
+    handler4,
+  ]);
+
+  const callbackManager3 = callbackManager1.copy([handler3, handler4], false);
+  expect(callbackManager3.handlers).toEqual([
+    handler1,
+    handler2,
+    handler3,
+    handler4,
+  ]);
+  expect(callbackManager3.inheritedHandlers).toEqual([handler1, handler2]);
+
+  const chainCb = await callbackManager3.handleChainStart(
+    { name: "test" },
+    { test: "test" }
+  );
+  const childManager = chainCb.getChild();
+  expect(childManager.handlers).toEqual([handler1, handler2]);
+  expect(childManager.inheritedHandlers).toEqual([handler1, handler2]);
+
+  const toolCb = await childManager.handleToolStart({ name: "test" }, "test");
+  const childManager2 = toolCb.getChild();
+  expect(childManager2.handlers).toEqual([handler1, handler2]);
+  expect(childManager2.inheritedHandlers).toEqual([handler1, handler2]);
 });
