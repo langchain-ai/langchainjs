@@ -1,52 +1,24 @@
+import { BaseLanguageModel } from "../../base_language/index.js";
 import { LLMChain } from "../../chains/llm_chain.js";
-import { Agent } from "../agent.js";
 import {
-  SystemMessagePromptTemplate,
-  HumanMessagePromptTemplate,
   ChatPromptTemplate,
+  HumanMessagePromptTemplate,
   MessagesPlaceholder,
+  SystemMessagePromptTemplate,
 } from "../../prompts/chat.js";
 import { renderTemplate } from "../../prompts/template.js";
 import {
-  PREFIX,
-  SUFFIX,
-  FORMAT_INSTRUCTIONS,
-  TEMPLATE_TOOL_RESPONSE,
-} from "./prompt.js";
-import { BaseLanguageModel } from "../../base_language/index.js";
-import {
+  AIChatMessage,
   AgentStep,
   BaseChatMessage,
-  AIChatMessage,
   HumanChatMessage,
-  BaseOutputParser,
 } from "../../schema/index.js";
-import { AgentInput } from "../types.js";
 import { Tool } from "../../tools/base.js";
-
-export class ChatConversationalAgentOutputParser extends BaseOutputParser {
-  async parse(text: string): Promise<unknown> {
-    let jsonOutput = text.trim();
-    if (jsonOutput.includes("```json")) {
-      jsonOutput = jsonOutput.split("```json")[1].trimStart();
-    }
-    if (jsonOutput.includes("```")) {
-      jsonOutput = jsonOutput.split("```")[0].trimEnd();
-    }
-    if (jsonOutput.startsWith("```")) {
-      jsonOutput = jsonOutput.slice(3).trimStart();
-    }
-    if (jsonOutput.endsWith("```")) {
-      jsonOutput = jsonOutput.slice(0, -3).trimEnd();
-    }
-    const response = JSON.parse(jsonOutput);
-    return { action: response.action, action_input: response.action_input };
-  }
-
-  getFormatInstructions(): string {
-    return FORMAT_INSTRUCTIONS;
-  }
-}
+import { Optional } from "../../types/type-utils.js";
+import { Agent, AgentArgs } from "../agent.js";
+import { AgentActionOutputParser, AgentInput } from "../types.js";
+import { ChatConversationalAgentOutputParser } from "./outputParser.js";
+import { PREFIX, SUFFIX, TEMPLATE_TOOL_RESPONSE } from "./prompt.js";
 
 export type CreatePromptArgs = {
   /** String to put after the list of tools. */
@@ -56,25 +28,20 @@ export type CreatePromptArgs = {
   /** List of input variables the final prompt will expect. */
   inputVariables?: string[];
   /** Output parser to use for formatting. */
-  outputParser?: BaseOutputParser;
+  outputParser?: AgentActionOutputParser;
 };
 
-export type ChatConversationalAgentInput = AgentInput;
+export type ChatConversationalAgentInput = Optional<AgentInput, "outputParser">;
 
 /**
  * Agent for the MRKL chain.
  * @augments Agent
  */
 export class ChatConversationalAgent extends Agent {
-  outputParser: BaseOutputParser;
-
-  constructor(
-    input: ChatConversationalAgentInput,
-    outputParser?: BaseOutputParser
-  ) {
-    super(input);
-    this.outputParser =
-      outputParser ?? new ChatConversationalAgentOutputParser();
+  constructor(input: ChatConversationalAgentInput) {
+    const outputParser =
+      input.outputParser ?? ChatConversationalAgent.getDefaultOutputParser();
+    super({ ...input, outputParser });
   }
 
   _agentType(): string {
@@ -119,6 +86,10 @@ export class ChatConversationalAgent extends Agent {
     return thoughts;
   }
 
+  static getDefaultOutputParser(): AgentActionOutputParser {
+    return new ChatConversationalAgentOutputParser();
+  }
+
   /**
    * Create prompt in the style of the zero shot agent.
    *
@@ -156,35 +127,22 @@ export class ChatConversationalAgent extends Agent {
   static fromLLMAndTools(
     llm: BaseLanguageModel,
     tools: Tool[],
-    args?: CreatePromptArgs
+    args?: CreatePromptArgs & AgentArgs
   ) {
     ChatConversationalAgent.validateTools(tools);
     const prompt = ChatConversationalAgent.createPrompt(tools, args);
-    const chain = new LLMChain({ prompt, llm });
-    const { outputParser = new ChatConversationalAgentOutputParser() } =
-      args ?? {};
-    return new ChatConversationalAgent(
-      {
-        llmChain: chain,
-        allowedTools: tools.map((t) => t.name),
-      },
-      outputParser
-    );
-  }
+    const chain = new LLMChain({
+      prompt,
+      llm,
+      callbackManager: args?.callbackManager,
+    });
+    const outputParser =
+      args?.outputParser ?? ChatConversationalAgent.getDefaultOutputParser();
 
-  async extractToolAndInput(
-    text: string
-  ): Promise<{ tool: string; input: string } | null> {
-    try {
-      const response = (await this.outputParser.parse(text)) as {
-        action: string;
-        action_input: string;
-      };
-      return { tool: response.action, input: response.action_input };
-    } catch {
-      throw new Error(
-        `Unable to parse JSON response from chat agent.\n\n${text}`
-      );
-    }
+    return new ChatConversationalAgent({
+      llmChain: chain,
+      outputParser,
+      allowedTools: tools.map((t) => t.name),
+    });
   }
 }
