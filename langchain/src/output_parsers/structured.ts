@@ -23,7 +23,7 @@ function printSchema(schema: z.ZodTypeAny, depth = 0): string {
   if (schema instanceof z.ZodDate || schema._def.typeName === "ZodDate") {
     return "date";
   }
-  if (schema instanceof z.ZodEnum) {
+  if (schema instanceof z.ZodEnum || schema._def.typeName === "ZodEnum") {
     return schema.Values.map((value: string) => `"${value}"`).join(" | ");
   }
   if (
