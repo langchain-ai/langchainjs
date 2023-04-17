@@ -1,15 +1,16 @@
+import { Optional } from "util/type-utils.js";
+import { BaseLanguageModel } from "../../base_language/index.js";
 import { LLMChain } from "../../chains/llm_chain.js";
 import { PromptTemplate } from "../../prompts/prompt.js";
-import { PREFIX, SUFFIX, formatInstructions } from "./prompt.js";
+import { Tool } from "../../tools/base.js";
+import { Agent, AgentArgs } from "../agent.js";
 import { deserializeHelper } from "../helpers.js";
-import { BaseLanguageModel } from "../../base_language/index.js";
 import {
   AgentInput,
   SerializedFromLLMAndTools,
   SerializedZeroShotAgent,
 } from "../types.js";
-import { Agent } from "../agent.js";
-import { Tool } from "../../tools/base.js";
+import { PREFIX, SUFFIX, formatInstructions } from "./prompt.js";
 
 const FINAL_ANSWER_ACTION = "Final Answer:";
 
@@ -22,7 +23,7 @@ export type CreatePromptArgs = {
   inputVariables?: string[];
 };
 
-type ZeroShotAgentInput = AgentInput;
+type ZeroShotAgentInput = Optional<AgentInput, "outputParser">;
 
 /**
  * Agent for the MRKL chain.
@@ -30,7 +31,9 @@ type ZeroShotAgentInput = AgentInput;
  */
 export class ZeroShotAgent extends Agent {
   constructor(input: ZeroShotAgentInput) {
-    super(input);
+    const outputParser =
+      input?.outputParser ?? ZeroShotAgent.getDefaultOutputParser();
+    super({ ...input, outputParser });
   }
 
   _agentType() {
@@ -86,14 +89,22 @@ export class ZeroShotAgent extends Agent {
   static fromLLMAndTools(
     llm: BaseLanguageModel,
     tools: Tool[],
-    args?: CreatePromptArgs
+    args?: CreatePromptArgs & AgentArgs
   ) {
     ZeroShotAgent.validateTools(tools);
     const prompt = ZeroShotAgent.createPrompt(tools, args);
-    const chain = new LLMChain({ prompt, llm });
+    const outputParser =
+      args?.outputParser ?? ZeroShotAgent.getDefaultOutputParser();
+    const chain = new LLMChain({
+      prompt,
+      llm,
+      callbackManager: args?.callbackManager,
+    });
+
     return new ZeroShotAgent({
       llmChain: chain,
       allowedTools: tools.map((t) => t.name),
+      outputParser,
     });
   }
 

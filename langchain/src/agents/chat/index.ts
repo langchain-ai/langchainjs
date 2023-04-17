@@ -1,15 +1,16 @@
-import { LLMChain } from "../../chains/llm_chain.js";
-import { Agent } from "../agent.js";
-import {
-  SystemMessagePromptTemplate,
-  HumanMessagePromptTemplate,
-  ChatPromptTemplate,
-} from "../../prompts/chat.js";
-import { PREFIX, SUFFIX, FORMAT_INSTRUCTIONS } from "./prompt.js";
+import { Optional } from "util/type-utils.js";
 import { BaseLanguageModel } from "../../base_language/index.js";
+import { LLMChain } from "../../chains/llm_chain.js";
+import {
+  ChatPromptTemplate,
+  HumanMessagePromptTemplate,
+  SystemMessagePromptTemplate,
+} from "../../prompts/chat.js";
 import { AgentStep } from "../../schema/index.js";
-import { AgentInput } from "../types.js";
 import { Tool } from "../../tools/base.js";
+import { Agent, AgentArgs } from "../agent.js";
+import { AgentInput } from "../types.js";
+import { FORMAT_INSTRUCTIONS, PREFIX, SUFFIX } from "./prompt.js";
 
 const FINAL_ANSWER_ACTION = "Final Answer:";
 
@@ -22,15 +23,17 @@ export type CreatePromptArgs = {
   inputVariables?: string[];
 };
 
-type ZeroShotAgentInput = AgentInput;
+type ChatAgentInput = Optional<AgentInput, "outputParser">;
 
 /**
  * Agent for the MRKL chain.
  * @augments Agent
  */
 export class ChatAgent extends Agent {
-  constructor(input: ZeroShotAgentInput) {
-    super(input);
+  constructor(input: ChatAgentInput) {
+    const outputParser =
+      input?.outputParser ?? ChatAgent.getDefaultOutputParser();
+    super({ ...input, outputParser });
   }
 
   _agentType() {
@@ -93,13 +96,16 @@ export class ChatAgent extends Agent {
   static fromLLMAndTools(
     llm: BaseLanguageModel,
     tools: Tool[],
-    args?: CreatePromptArgs
+    args?: CreatePromptArgs & AgentArgs
   ) {
     ChatAgent.validateTools(tools);
     const prompt = ChatAgent.createPrompt(tools, args);
     const chain = new LLMChain({ prompt, llm });
+    const outputParser =
+      args?.outputParser ?? ChatAgent.getDefaultOutputParser();
     return new ChatAgent({
       llmChain: chain,
+      outputParser,
       allowedTools: tools.map((t) => t.name),
     });
   }

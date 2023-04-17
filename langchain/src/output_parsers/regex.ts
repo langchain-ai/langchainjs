@@ -4,7 +4,7 @@ import { BaseOutputParser, OutputParserException } from "../schema/index.js";
  * Class to parse the output of an LLM call into a dictionary.
  * @augments BaseOutputParser
  */
-export class RegexParser extends BaseOutputParser {
+export class RegexParser extends BaseOutputParser<Record<string, string>> {
   regex: string | RegExp;
 
   outputKeys: string[];

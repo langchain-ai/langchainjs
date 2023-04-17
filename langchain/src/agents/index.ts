@@ -20,7 +20,6 @@ export {
   ChatConversationalAgentInput,
   ChatConversationalAgentOutputParser,
 } from "./chat_convo/index.js";
-export { ChatAgentV2 } from "./chat_v2/index.js";
 export { AgentExecutor } from "./executor.js";
 export { initializeAgentExecutor } from "./initialize.js";
 export { ZeroShotAgent } from "./mrkl/index.js";
