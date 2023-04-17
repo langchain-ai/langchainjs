@@ -2,7 +2,7 @@ import axiosMod, { AxiosRequestConfig } from "axios";
 import { isNode } from "browser-or-node";
 import * as cheerio from "cheerio";
 import { BaseLanguageModel } from "../base_language/index.js";
-import { RecursiveCharacterTextSplitter } from "../text_splitter.js";
+import { RecursiveCharacterTextSplitter, RecursiveCharacterTextSplitterParams } from "../text_splitter.js";
 import { MemoryVectorStore } from "../vectorstores/memory.js";
 import { StringPromptValue } from "../prompts/base.js";
 import { Document } from "../document.js";
@@ -129,6 +129,8 @@ interface WebBrowserArgs {
 
   embeddings: Embeddings;
 
+  textSplitterParams?: Partial<RecursiveCharacterTextSplitterParams>;
+
   headers?: Headers;
 
   axiosConfig?: Omit<AxiosRequestConfig, "url">;
@@ -145,12 +147,15 @@ export class WebBrowser extends Tool {
 
   private headers: Headers;
 
+  private textSplitterParams: Partial<RecursiveCharacterTextSplitterParams>;
+
   private axiosConfig: Omit<AxiosRequestConfig, "url">;
 
   constructor({
     model,
     headers,
     embeddings,
+    textSplitterParams,
     verbose,
     callbackManager,
     axiosConfig,
@@ -159,6 +164,10 @@ export class WebBrowser extends Tool {
 
     this.model = model;
     this.embeddings = embeddings;
+    this.textSplitterParams = textSplitterParams || {
+      chunkSize: 2000,
+      chunkOverlap: 200,
+    };
     this.headers = headers || DEFAULT_HEADERS;
     this.axiosConfig = {
       withCredentials: true,
@@ -189,10 +198,7 @@ export class WebBrowser extends Tool {
       return "There was a problem connecting to the site";
     }
 
-    const textSplitter = new RecursiveCharacterTextSplitter({
-      chunkSize: 2000,
-      chunkOverlap: 200,
-    });
+    const textSplitter = new RecursiveCharacterTextSplitter(this.textSplitterParams);
     const texts = await textSplitter.splitText(text);
 
     let context;
