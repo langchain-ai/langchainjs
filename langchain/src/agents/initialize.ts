@@ -106,7 +106,6 @@ export const initializeAgentExecutorWithOptions = async (
       const executor = AgentExecutor.fromAgentAndTools({
         agent: ChatConversationalAgent.fromLLMAndTools(llm, tools, agentArgs),
         tools,
-        ...rest,
         memory:
           memory ??
           new BufferMemory({
@@ -114,6 +113,7 @@ export const initializeAgentExecutorWithOptions = async (
             memoryKey: "chat_history",
             inputKey: "input",
           }),
+        ...rest,
       });
       return executor;
     }
