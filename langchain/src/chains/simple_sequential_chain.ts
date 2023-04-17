@@ -64,6 +64,10 @@ export class SimpleSequentialChain
     return [this.inputKey];
   }
 
+  get outputKeys(): string[] {
+    return [this.outputKey];
+  }
+
   constructor(fields: SimpleSequentialChainInput) {
     super(fields.memory, fields.verbose, fields.callbackManager);
     this.chains = fields.chains;
@@ -77,6 +81,13 @@ export class SimpleSequentialChain
         throw new Error(
           `Chains used in SimpleSequentialChain should all have one input, got ${
             chain.inputKeys.length
+          } for ${chain._chainType()}.`
+        );
+      }
+      if (chain.outputKeys.length !== 1) {
+        throw new Error(
+          `Chains used in SimpleSequentialChain should all have one output, got ${
+            chain.outputKeys.length
           } for ${chain._chainType()}.`
         );
       }
