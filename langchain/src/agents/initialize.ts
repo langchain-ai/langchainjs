@@ -1,11 +1,11 @@
-import { Tool } from "../tools/base.js";
-import { AgentExecutor } from "./executor.js";
-import { ZeroShotAgent } from "./mrkl/index.js";
-import { ChatConversationalAgent } from "./chat_convo/index.js";
-import { ChatAgent } from "./chat/index.js";
 import { BaseLanguageModel } from "../base_language/index.js";
 import { CallbackManager, getCallbackManager } from "../callbacks/index.js";
-import { BufferMemory } from "../memory/index.js";
+import { BufferMemory } from "../memory/buffer_memory.js";
+import { Tool } from "../tools/base.js";
+import { ChatAgent } from "./chat/index.js";
+import { ChatConversationalAgent } from "./chat_convo/index.js";
+import { AgentExecutor } from "./executor.js";
+import { ZeroShotAgent } from "./mrkl/index.js";
 
 type AgentType =
   | "zero-shot-react-description"

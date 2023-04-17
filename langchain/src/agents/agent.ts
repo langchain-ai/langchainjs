@@ -1,20 +1,21 @@
 import { BaseLanguageModel } from "../base_language/index.js";
+import { CallbackManager } from "../callbacks/base.js";
 import { LLMChain } from "../chains/llm_chain.js";
 import { BasePromptTemplate } from "../prompts/base.js";
 import {
   AgentAction,
   AgentFinish,
   AgentStep,
-  ChainValues,
   BaseChatMessage,
+  ChainValues,
 } from "../schema/index.js";
+import { Tool } from "../tools/base.js";
 import {
+  AgentActionOutputParser,
   AgentInput,
   SerializedAgent,
   StoppingMethod,
-  AgentActionOutputParser,
 } from "./types.js";
-import { Tool } from "../tools/base.js";
 
 class ParseError extends Error {
   output: string;
@@ -160,6 +161,11 @@ export class LLMSingleActionAgent extends BaseSingleActionAgent {
   }
 }
 
+export interface AgentArgs {
+  outputParser?: AgentActionOutputParser;
+  callbackManager?: CallbackManager;
+}
+
 /**
  * Class responsible for calling a language model and deciding an action.
  *
@@ -169,6 +175,8 @@ export class LLMSingleActionAgent extends BaseSingleActionAgent {
  */
 export abstract class Agent extends BaseSingleActionAgent {
   llmChain: LLMChain;
+
+  outputParser: AgentActionOutputParser;
 
   private _allowedTools?: string[] = undefined;
 
@@ -184,15 +192,7 @@ export abstract class Agent extends BaseSingleActionAgent {
     super();
     this.llmChain = input.llmChain;
     this._allowedTools = input.allowedTools;
-  }
-
-  /**
-   * Extract tool and tool input from LLM output.
-   */
-  async extractToolAndInput(
-    _input: string
-  ): Promise<{ tool: string; input: string } | null> {
-    throw new Error("Not implemented");
+    this.outputParser = input.outputParser;
   }
 
   /**
@@ -209,6 +209,13 @@ export abstract class Agent extends BaseSingleActionAgent {
    * Return the string type key uniquely identifying this class of agent.
    */
   abstract _agentType(): string;
+
+  /**
+   * Get the default output parser for this agent.
+   */
+  static getDefaultOutputParser(): AgentActionOutputParser {
+    throw new Error("Not implemented");
+  }
 
   /**
    * Create a prompt for this class
@@ -231,7 +238,7 @@ export abstract class Agent extends BaseSingleActionAgent {
     _llm: BaseLanguageModel,
     _tools: Tool[],
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    _args?: Record<string, any>
+    _args?: AgentArgs
   ): Agent {
     throw new Error("Not implemented");
   }
@@ -284,19 +291,7 @@ export abstract class Agent extends BaseSingleActionAgent {
     }
 
     const output = await this.llmChain.predict(newInputs);
-    const parsed = await this.extractToolAndInput(output);
-    if (!parsed) {
-      throw new ParseError(`Invalid output: ${output}`, output);
-    }
-    const action = {
-      tool: parsed.tool,
-      toolInput: parsed.input,
-      log: output,
-    };
-    if (action.tool === this.finishToolName()) {
-      return { returnValues: { output: action.toolInput }, log: action.log };
-    }
-    return action;
+    return this.outputParser.parse(output);
   }
 
   /**

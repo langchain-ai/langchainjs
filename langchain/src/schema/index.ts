@@ -135,19 +135,16 @@ export abstract class BaseRetriever {
 }
 /** Class to parse the output of an LLM call.
  */
-export abstract class BaseOutputParser {
+export abstract class BaseOutputParser<T = unknown> {
   /**
    * Parse the output of an LLM call.
    *
    * @param text - LLM output to parse.
    * @returns Parsed output.
    */
-  abstract parse(text: string): Promise<unknown>;
+  abstract parse(text: string): Promise<T>;
 
-  async parseWithPrompt(
-    text: string,
-    _prompt: BasePromptValue
-  ): Promise<unknown> {
+  async parseWithPrompt(text: string, _prompt: BasePromptValue): Promise<T> {
     return this.parse(text);
   }
 

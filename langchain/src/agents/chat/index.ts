@@ -1,17 +1,17 @@
-import { LLMChain } from "../../chains/llm_chain.js";
-import { Agent } from "../agent.js";
-import {
-  SystemMessagePromptTemplate,
-  HumanMessagePromptTemplate,
-  ChatPromptTemplate,
-} from "../../prompts/chat.js";
-import { PREFIX, SUFFIX, FORMAT_INSTRUCTIONS } from "./prompt.js";
 import { BaseLanguageModel } from "../../base_language/index.js";
+import { LLMChain } from "../../chains/llm_chain.js";
+import {
+  ChatPromptTemplate,
+  HumanMessagePromptTemplate,
+  SystemMessagePromptTemplate,
+} from "../../prompts/chat.js";
 import { AgentStep } from "../../schema/index.js";
-import { AgentInput } from "../types.js";
 import { Tool } from "../../tools/base.js";
-
-const FINAL_ANSWER_ACTION = "Final Answer:";
+import { Optional } from "../../types/type-utils.js";
+import { Agent, AgentArgs } from "../agent.js";
+import { AgentInput } from "../types.js";
+import { ChatAgentOutputParser } from "./outputParser.js";
+import { FORMAT_INSTRUCTIONS, PREFIX, SUFFIX } from "./prompt.js";
 
 export type CreatePromptArgs = {
   /** String to put after the list of tools. */
@@ -22,15 +22,17 @@ export type CreatePromptArgs = {
   inputVariables?: string[];
 };
 
-type ZeroShotAgentInput = AgentInput;
+type ChatAgentInput = Optional<AgentInput, "outputParser">;
 
 /**
  * Agent for the MRKL chain.
  * @augments Agent
  */
 export class ChatAgent extends Agent {
-  constructor(input: ZeroShotAgentInput) {
-    super(input);
+  constructor(input: ChatAgentInput) {
+    const outputParser =
+      input?.outputParser ?? ChatAgent.getDefaultOutputParser();
+    super({ ...input, outputParser });
   }
 
   _agentType() {
@@ -57,6 +59,10 @@ export class ChatAgent extends Agent {
         ` This agent requires descriptions for all tools.`;
       throw new Error(msg);
     }
+  }
+
+  static getDefaultOutputParser() {
+    return new ChatAgentOutputParser();
   }
 
   constructScratchPad(steps: AgentStep[]): string {
@@ -93,35 +99,22 @@ export class ChatAgent extends Agent {
   static fromLLMAndTools(
     llm: BaseLanguageModel,
     tools: Tool[],
-    args?: CreatePromptArgs
+    args?: CreatePromptArgs & AgentArgs
   ) {
     ChatAgent.validateTools(tools);
     const prompt = ChatAgent.createPrompt(tools, args);
-    const chain = new LLMChain({ prompt, llm });
+    const chain = new LLMChain({
+      prompt,
+      llm,
+      callbackManager: args?.callbackManager,
+    });
+    const outputParser =
+      args?.outputParser ?? ChatAgent.getDefaultOutputParser();
+
     return new ChatAgent({
       llmChain: chain,
+      outputParser,
       allowedTools: tools.map((t) => t.name),
     });
-  }
-
-  async extractToolAndInput(
-    text: string
-  ): Promise<{ tool: string; input: string } | null> {
-    if (text.includes(FINAL_ANSWER_ACTION)) {
-      const parts = text.split(FINAL_ANSWER_ACTION);
-      const input = parts[parts.length - 1].trim();
-      return { tool: "Final Answer", input };
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const [_, action, __] = text.split("```");
-    try {
-      const response = JSON.parse(action.trim());
-      return { tool: response.action, input: response.action_input };
-    } catch {
-      throw new Error(
-        `Unable to parse JSON response from chat agent.\n\n${text}`
-      );
-    }
   }
 }
