@@ -29,6 +29,7 @@ class BaseRunManager {
   constructor(
     public readonly runId: string,
     protected readonly handlers: BaseCallbackHandler[],
+    protected readonly inheritedHandlers: BaseCallbackHandler[],
     protected readonly _parentRunId?: string
   ) {}
 
@@ -111,7 +112,7 @@ export class CallbackManagerForChainRun
   getChild(): CallbackManager {
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
     const manager = new CallbackManager(this.runId);
-    manager.setHandlers(this.handlers);
+    manager.setHandlers(this.inheritedHandlers);
     return manager;
   }
 
@@ -203,7 +204,7 @@ export class CallbackManagerForToolRun
   getChild(): CallbackManager {
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
     const manager = new CallbackManager(this.runId);
-    manager.setHandlers(this.handlers);
+    manager.setHandlers(this.inheritedHandlers);
     return manager;
   }
 
@@ -250,6 +251,8 @@ export class CallbackManager
 {
   handlers: BaseCallbackHandler[];
 
+  inheritedHandlers: BaseCallbackHandler[];
+
   name = "callback_manager";
 
   private readonly _parentRunId?: string;
@@ -257,6 +260,7 @@ export class CallbackManager
   constructor(parentRunId?: string) {
     super();
     this.handlers = [];
+    this.inheritedHandlers = [];
     this._parentRunId = parentRunId;
   }
 
@@ -286,6 +290,7 @@ export class CallbackManager
     return new CallbackManagerForLLMRun(
       runId,
       this.handlers,
+      this.inheritedHandlers,
       this._parentRunId
     );
   }
@@ -316,6 +321,7 @@ export class CallbackManager
     return new CallbackManagerForChainRun(
       runId,
       this.handlers,
+      this.inheritedHandlers,
       this._parentRunId
     );
   }
@@ -346,25 +352,42 @@ export class CallbackManager
     return new CallbackManagerForToolRun(
       runId,
       this.handlers,
+      this.inheritedHandlers,
       this._parentRunId
     );
   }
 
-  addHandler(handler: BaseCallbackHandler): void {
+  addHandler(handler: BaseCallbackHandler, inherit = true): void {
     this.handlers.push(handler);
+    if (inherit) {
+      this.inheritedHandlers.push(handler);
+    }
   }
 
   removeHandler(handler: BaseCallbackHandler): void {
     this.handlers = this.handlers.filter((_handler) => _handler !== handler);
+    this.inheritedHandlers = this.inheritedHandlers.filter(
+      (_handler) => _handler !== handler
+    );
   }
 
-  setHandlers(handlers: BaseCallbackHandler[]): void {
-    this.handlers = handlers;
+  setHandlers(handlers: BaseCallbackHandler[], inherit = true): void {
+    this.handlers = [];
+    this.inheritedHandlers = [];
+    for (const handler of handlers) {
+      this.addHandler(handler, inherit);
+    }
   }
 
-  copy(additionalHandlers: BaseCallbackHandler[] = []): CallbackManager {
+  copy(
+    additionalHandlers: BaseCallbackHandler[] = [],
+    inherit = true
+  ): CallbackManager {
     const manager = new CallbackManager(this._parentRunId);
-    manager.setHandlers([...this.handlers, ...additionalHandlers]);
+    manager.setHandlers([...this.handlers], true);
+    for (const handler of additionalHandlers) {
+      manager.addHandler(handler, inherit);
+    }
     return manager;
   }
 
