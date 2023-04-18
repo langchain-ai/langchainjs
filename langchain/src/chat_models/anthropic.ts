@@ -29,7 +29,10 @@ function getAnthropicPromptFromMessage(type: MessageType): string {
 
 const DEFAULT_STOP_SEQUENCES = [HUMAN_PROMPT];
 
-interface ModelParams {
+/**
+ * Input to AnthropicChat class.
+ */
+export interface AnthropicInput {
   /** Amount of randomness injected into the response. Ranges
    * from 0 to 1. Use temp closer to 0 for analytical /
    * multiple choice, and temp closer to 1 for creative
@@ -57,20 +60,14 @@ interface ModelParams {
   maxTokensToSample: number;
 
   /** A list of strings upon which to stop generating.
-   * You probably want ["\n\nHuman:"], as that's the cue for
+   * You probably want `["\n\nHuman:"]`, as that's the cue for
    * the next turn in the dialog agent.
    */
   stopSequences?: string[];
 
   /** Whether to stream the results or not */
   streaming?: boolean;
-}
 
-/**
- * Input to AnthropicChat class.
- * @augments ModelParams
- */
-interface AnthropicInput extends ModelParams {
   /** Anthropic API key */
   apiKey?: string;
 
@@ -99,8 +96,6 @@ type Kwargs = Record<string, any>;
  * `anthropic.complete`} can be passed through {@link invocationKwargs},
  * even if not explicitly available on this class.
  *
- * @augments BaseLLM
- * @augments AnthropicInput
  */
 export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
   apiKey?: string;
@@ -174,6 +169,7 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
     };
   }
 
+  /** @ignore */
   _identifyingParams() {
     return {
       model_name: this.modelName,
@@ -204,21 +200,7 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
     );
   }
 
-  /**
-   * Call out to Anthropic's endpoint with k unique prompts
-   *
-   * @param messages - The messages to pass into the model.
-   * @param [stopSequences] - Optional list of stop sequences to use when generating.
-   *
-   * @returns The full LLM output.
-   *
-   * @example
-   * ```ts
-   * import { ChatAnthropic } from "langchain/chat_models/openai";
-   * const anthropic = new ChatAnthropic();
-   * const response = await anthropic.generate(new HumanChatMessage(["Tell me a joke."]));
-   * ```
-   */
+  /** @ignore */
   async _generate(
     messages: BaseChatMessage[],
     stopSequences?: string[]
@@ -293,6 +275,7 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
     return "anthropic";
   }
 
+  /** @ignore */
   _combineLLMOutput() {
     return [];
   }

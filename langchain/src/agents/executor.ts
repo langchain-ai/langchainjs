@@ -10,7 +10,7 @@ import {
   ChainValues,
 } from "../schema/index.js";
 
-interface AgentExecutorInput extends ChainInputs {
+export interface AgentExecutorInput extends ChainInputs {
   agent: BaseSingleActionAgent | BaseMultiActionAgent;
   tools: Tool[];
   returnIntermediateSteps?: boolean;

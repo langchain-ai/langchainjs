@@ -22,7 +22,7 @@ export type CreatePromptArgs = {
   inputVariables?: string[];
 };
 
-type ChatAgentInput = Optional<AgentInput, "outputParser">;
+export type ChatAgentInput = Optional<AgentInput, "outputParser">;
 
 /**
  * Agent for the MRKL chain.

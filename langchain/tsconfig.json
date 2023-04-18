@@ -107,6 +107,9 @@
     "excludePrivate": true,
     "excludeInternal": true,
     "excludeExternals": true,
+    "excludeNotDocumented": false,
+    "includeVersion": true,
+    "sourceLinkTemplate": "https://github.com/hwchase17/langchainjs/blob/{gitRevision}/{path}#L{line}",
     "readme": "none",
     "out": "docs"
   }

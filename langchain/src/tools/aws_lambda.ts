@@ -32,6 +32,7 @@ class AWSLambda extends DynamicTool {
     this.lambdaConfig = rest;
   }
 
+  /** @ignore */
   async _func(input: string): Promise<string> {
     const { Client, Invoker } = await LambdaImports();
 

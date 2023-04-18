@@ -1,6 +1,6 @@
 import { Tool } from "./base.js";
 
-type GoogleParameters = {
+export type SerperParameters = {
   gl?: string;
   hl?: string;
 };
@@ -15,14 +15,14 @@ type GoogleParameters = {
 export class Serper extends Tool {
   protected key: string;
 
-  protected params: Partial<GoogleParameters>;
+  protected params: Partial<SerperParameters>;
 
   constructor(
     apiKey: string | undefined = typeof process !== "undefined"
       ? // eslint-disable-next-line no-process-env
         process.env.SERPER_API_KEY
       : undefined,
-    params: Partial<GoogleParameters> = {}
+    params: Partial<SerperParameters> = {}
   ) {
     super();
 
@@ -38,9 +38,7 @@ export class Serper extends Tool {
 
   name = "search";
 
-  /**
-   * Run query through SerpAPI and parse result
-   */
+  /** @ignore */
   async _call(input: string) {
     const options = {
       method: "POST",
