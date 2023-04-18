@@ -17,7 +17,7 @@ function Imports({ imports }) {
       }}
     >
       <h4 style={{ paddingLeft: "0.65rem", marginBottom: "0.45rem" }}>
-        Reference Docs:
+        API Reference:
       </h4>
       <ul style={{ paddingBottom: "1rem" }}>
         {imports.map(({ local, source, docs }) => (
