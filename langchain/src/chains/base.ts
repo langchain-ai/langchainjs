@@ -124,6 +124,12 @@ export abstract class BaseChain implements ChainInputs {
         const { LLMChain } = await import("./llm_chain.js");
         return LLMChain.deserialize(data);
       }
+      case "sequential_chain": {
+        const { SequentialChain } = await import(
+          "./simple_sequential_chain.js"
+        );
+        return SequentialChain.deserialize(data);
+      }
       case "simple_sequential_chain": {
         const { SimpleSequentialChain } = await import(
           "./simple_sequential_chain.js"

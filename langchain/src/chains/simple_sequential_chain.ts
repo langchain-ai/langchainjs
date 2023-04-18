@@ -2,8 +2,172 @@ import { BaseChain, ChainInputs } from "./base.js";
 import { ChainValues } from "../schema/index.js";
 import {
   SerializedBaseChain,
+  SerializedSequentialChain,
   SerializedSimpleSequentialChain,
 } from "./serde.js";
+import { intersection, union, difference } from "../util/set.js";
+
+export interface SequentialChainInput extends ChainInputs {
+  /** Array of chains to run as a sequence. The chains are run in order they appear in the array. */
+  chains: BaseChain[];
+  /** Defines which variables should be passed as initial input to the first chain. */
+  inputVariables: string[];
+  /** Which variables should be returned as a result of executing the chain. If not specified, output of the last of the chains is used. */
+  outputVariables?: string[];
+  /** Whether or not to return all intermediate outputs and variables (excluding initial input variables). */
+  returnAll?: boolean;
+}
+
+/**
+ * Chain where the outputs of one chain feed directly into next.
+ */
+export class SequentialChain extends BaseChain implements SequentialChainInput {
+  chains: BaseChain[];
+  inputVariables: string[];
+  outputVariables: string[];
+  returnAll?: boolean | undefined;
+
+  get inputKeys() {
+    return this.inputVariables;
+  }
+
+  get outputKeys(): string[] {
+    return this.outputVariables;
+  }
+
+  constructor(fields: SequentialChainInput) {
+    super(fields.memory, fields.verbose, fields.callbackManager);
+    this.chains = fields.chains;
+    this.inputVariables = fields.inputVariables;
+    this.outputVariables = fields.outputVariables ?? [];
+    if (this.outputVariables.length > 0 && fields.returnAll) {
+      throw new Error(
+        "Either specify variables to return using `outputVariables` or use `returnAll` param. Cannot apply both conditions at the same time."
+      );
+    }
+    this.returnAll = fields.returnAll ?? false;
+    this._validateChains();
+  }
+
+  _validateChains() {
+    if (this.chains.length === 0) {
+      //@TODO how to deal with it?
+    }
+    const memoryKeys: string[] = [];
+    if (this.memory) {
+      //@TODO deal with retrieving the memory keys
+    }
+
+    function formatSet(input: Set<string>) {
+      return Array.from(input)
+        .map((i) => `"${i}"`)
+        .join(", ");
+    }
+
+    const inputKeysSet = new Set(this.inputKeys);
+    const memoryKeysSet = new Set(memoryKeys);
+    const keysIntersection = intersection(inputKeysSet, memoryKeysSet);
+    if (keysIntersection.size > 0) {
+      throw new Error(
+        `The following keys: ${formatSet(
+          keysIntersection
+        )} are overlapping between memory and input keys of the chain variables. This can lead to unexpected behaviour. Please use input and memory keys that don't overlap.`
+      );
+    }
+
+    const availableKeys = union(inputKeysSet, memoryKeysSet);
+    for (const chain of this.chains) {
+      const missingKeys = difference(new Set(chain.inputKeys), availableKeys);
+      if (missingKeys.size > 0) {
+        throw new Error(
+          `Missing variables for chain "${chain._chainType()}": ${formatSet(
+            missingKeys
+          )}. Only got the following variables: ${formatSet(availableKeys)}.`
+        );
+      }
+      const outputKeysSet = new Set(chain.outputKeys);
+      const overlappinOutputKeys = intersection(availableKeys, outputKeysSet);
+      if (overlappinOutputKeys.size > 0) {
+        throw new Error(
+          `The following output variables for chain "${chain._chainType()}" are overlapping: ${formatSet(
+            overlappinOutputKeys
+          )}. This can lead to unexpected behaviour.`
+        );
+      }
+
+      for (const outputKey of outputKeysSet) {
+        availableKeys.add(outputKey);
+      }
+    }
+
+    if (this.outputVariables.length === 0) {
+      if (this.returnAll) {
+        const outputKeys = difference(availableKeys, inputKeysSet);
+        this.outputVariables = Array.from(outputKeys);
+      } else {
+        this.outputVariables = this.chains[this.chains.length - 1].outputKeys;
+      }
+    } else {
+      const missingKeys = difference(
+        new Set(this.outputVariables),
+        new Set(availableKeys)
+      );
+      if (missingKeys.size > 0) {
+        throw new Error(
+          `The following output variables were expected to be in the final chain output but were not found: ${formatSet(
+            missingKeys
+          )}.`
+        );
+      }
+    }
+  }
+
+  async _call(values: ChainValues): Promise<ChainValues> {
+    let input: ChainValues = values;
+    const allChainValues: ChainValues = {};
+    for (const chain of this.chains) {
+      input = await chain.call(input);
+      for (const key of Object.keys(input)) {
+        allChainValues[key] = input[key];
+      }
+    }
+    const output: ChainValues = {};
+    for (const key of this.outputVariables) {
+      output[key] = allChainValues[key];
+    }
+
+    return output;
+  }
+
+  _chainType() {
+    return "sequential_chain" as const;
+  }
+
+  static async deserialize(data: SerializedSequentialChain) {
+    const chains: BaseChain[] = [];
+    const inputVariables: string[] = data.input_variables;
+    const outputVariables: string[] = data.output_variables;
+    const serializedChains = data.chains;
+    for (const serializedChain of serializedChains) {
+      const deserializedChain = await BaseChain.deserialize(serializedChain);
+      chains.push(deserializedChain);
+    }
+    return new SequentialChain({ chains, inputVariables, outputVariables });
+  }
+
+  serialize(): SerializedSequentialChain {
+    const chains: SerializedBaseChain[] = [];
+    for (const chain of this.chains) {
+      chains.push(chain.serialize());
+    }
+    return {
+      _type: this._chainType(),
+      input_variables: this.inputVariables,
+      output_variables: this.outputVariables,
+      chains,
+    };
+  }
+}
 
 export interface SimpleSequentialChainInput extends ChainInputs {
   /** Array of chains to run as a sequence. The chains are run in order they appear in the array. */
