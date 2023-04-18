@@ -25,4 +25,3 @@ const output_parsers = require("langchain/output_parsers");
 const retrievers_remote = require("langchain/retrievers/remote");
 const retrievers_databerry = require("langchain/retrievers/databerry");
 const cache = require("langchain/cache");
-const cache_redis = require("langchain/cache/redis");
