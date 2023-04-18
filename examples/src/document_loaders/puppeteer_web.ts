@@ -1,4 +1,4 @@
-import { PuppeteerWebBaseLoader } from "langchain/document_loaders/web/puppeteer";
+import { PuppeteerWebBaseLoader } from "langchain/document_loaders";
 
 export const run = async () => {
   const loader = new PuppeteerWebBaseLoader("https://www.tabnews.com.br/");

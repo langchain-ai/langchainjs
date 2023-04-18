@@ -1,4 +1,4 @@
-import { IMSDBLoader } from "langchain/document_loaders/web/imsdb";
+import { IMSDBLoader } from "langchain/document_loaders";
 
 export const run = async () => {
   const loader = new IMSDBLoader(

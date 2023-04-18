@@ -1,4 +1,4 @@
-import { CheerioWebBaseLoader } from "langchain/document_loaders/web/cheerio";
+import { CheerioWebBaseLoader } from "langchain/document_loaders";
 
 export const run = async () => {
   const loader = new CheerioWebBaseLoader(

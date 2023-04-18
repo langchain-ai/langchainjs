@@ -1,4 +1,4 @@
-import { NotionLoader } from "langchain/document_loaders/fs/notion";
+import { NotionLoader } from "langchain/document_loaders";
 
 export const run = async () => {
   /** Provide the directory path of your notion folder */
