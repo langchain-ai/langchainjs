@@ -100,8 +100,9 @@ export abstract class BaseChain extends BaseLangChain implements ChainInputs {
       }
     }
     const callbackManager_ = await CallbackManager.configure(
-      Array.isArray(callbacks) ? callbacks : callbacks?.handlers,
-      this.callbackHandlers ?? this.callbackManager?.handlers
+      callbacks,
+      this.callbackHandlers ?? this.callbackManager?.handlers,
+      { verbose: this.verbose }
     );
     const runManager = await callbackManager_?.handleChainStart(
       { name: this._chainType() },

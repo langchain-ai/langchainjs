@@ -35,8 +35,9 @@ export abstract class Tool extends BaseLangChain {
     callbacks?: CallbackManager | BaseCallbackHandler[]
   ): Promise<string> {
     const callbackManager_ = await CallbackManager.configure(
-      Array.isArray(callbacks) ? callbacks : callbacks?.handlers,
-      this.callbackHandlers ?? this.callbackManager?.handlers
+      callbacks,
+      this.callbackHandlers ?? this.callbackManager?.handlers,
+      { verbose: this.verbose }
     );
     const runManager = await callbackManager_?.handleToolStart(
       { name: this.name },

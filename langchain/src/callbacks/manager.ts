@@ -16,8 +16,8 @@ type BaseCallbackManagerMethods = {
 };
 
 interface CallbackManagerOptions {
-  verbose: boolean;
-  tracing: boolean;
+  verbose?: boolean;
+  tracing?: boolean;
 }
 
 export abstract class BaseCallbackManager {
@@ -414,42 +414,44 @@ export class CallbackManager
   }
 
   static async configure(
-    inheritedHandlers?: BaseCallbackHandler[],
+    inheritedHandlers?: CallbackManager | BaseCallbackHandler[],
     localHandlers?: BaseCallbackHandler[],
     options?: CallbackManagerOptions
   ): Promise<CallbackManager | undefined> {
-    let callbackManager_;
+    let callbackManager: CallbackManager | undefined;
     if (inheritedHandlers || localHandlers) {
-      callbackManager_ = new CallbackManager();
-      callbackManager_.setHandlers(inheritedHandlers ?? [], true);
-      for (const handler of localHandlers ?? []) {
-        callbackManager_.addHandler(handler, false);
+      if (Array.isArray(inheritedHandlers) || !inheritedHandlers) {
+        callbackManager = new CallbackManager();
+        callbackManager.setHandlers(inheritedHandlers ?? [], true);
+      } else {
+        callbackManager = inheritedHandlers;
       }
+      callbackManager.copy(localHandlers, false);
     }
     // eslint-disable-next-line no-process-env
     if (options?.verbose || process.env.LANGCHAIN_TRACING !== undefined) {
-      if (!callbackManager_) {
-        callbackManager_ = new CallbackManager();
+      if (!callbackManager) {
+        callbackManager = new CallbackManager();
       }
       const consoleHandler = new ConsoleCallbackHandler();
       if (
         options?.verbose &&
-        !callbackManager_.handlers.some(
+        !callbackManager.handlers.some(
           (handler) => handler.name === consoleHandler.name
         )
       ) {
-        callbackManager_.addHandler(consoleHandler, false);
+        callbackManager.addHandler(consoleHandler, false);
       }
       if (
         // eslint-disable-next-line no-process-env
         process.env.LANGCHAIN_TRACING !== undefined &&
-        !callbackManager_.handlers.some(
+        !callbackManager.handlers.some(
           (handler) => handler.name === "langchain_tracer"
         )
       ) {
-        callbackManager_.addHandler(await getTracingCallbackHandler(), true);
+        callbackManager.addHandler(await getTracingCallbackHandler(), true);
       }
     }
-    return callbackManager_;
+    return callbackManager;
   }
 }
