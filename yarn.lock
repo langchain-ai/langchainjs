@@ -4600,12 +4600,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@getmetal/metal-sdk@npm:^1.0.12":
-  version: 1.0.12
-  resolution: "@getmetal/metal-sdk@npm:1.0.12"
+"@getmetal/metal-sdk@npm:^2.0.1":
+  version: 2.0.1
+  resolution: "@getmetal/metal-sdk@npm:2.0.1"
   dependencies:
     axios: ^1.3.2
-  checksum: 46e3f7876b2aaad759c32a348df078c093fae89205e7050040f80300d04a0c7f1973562d1b9df74b453e2aad316fbfa5d88565e38b33c285d474cdb0356f18f3
+  checksum: 44e4da237ea22b280c9c019fde6bc5c3492527f94a384ad5d7b25900aa1dc235af439e28d44febf1686797d0692daae9a87ccef4c73d8710e38052e1a0898ad0
   languageName: node
   linkType: hard
 
@@ -13005,7 +13005,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "examples@workspace:examples"
   dependencies:
-    "@getmetal/metal-sdk": ^1.0.12
+    "@getmetal/metal-sdk": ^2.0.1
     "@opensearch-project/opensearch": ^2.2.0
     "@pinecone-database/pinecone": ^0.0.12
     "@prisma/client": ^4.11.0
@@ -17151,7 +17151,7 @@ __metadata:
     "@aws-sdk/client-s3": ^3.310.0
     "@dqbd/tiktoken": ^1.0.4
     "@faker-js/faker": ^7.6.0
-    "@getmetal/metal-sdk": ^1.0.12
+    "@getmetal/metal-sdk": ^2.0.1
     "@huggingface/inference": ^1.5.1
     "@jest/globals": ^29.5.0
     "@opensearch-project/opensearch": ^2.2.0
