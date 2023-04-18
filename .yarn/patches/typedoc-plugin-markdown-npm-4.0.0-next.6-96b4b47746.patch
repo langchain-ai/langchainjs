@@ -11,7 +11,7 @@ index 4346548126fcf7e3687f243ee53fd0456778c29c..73cefe121e927285d305d57e89f3c87f
 +        typedoc_1.ReflectionKind.Module,
 +        typedoc_1.ReflectionKind.Namespace,
 +    ]) ? [
-+        "`langchain/<wbr>" + (fullname ? reflection.getFullName() : reflection.name) + "`",
++        "`langchain/" + (fullname ? reflection.getFullName() : reflection.name) + "`",
 +    ] : [
          (0, utils_1.escapeChars)(fullname ? reflection.getFullName() : reflection.name),
      ];
