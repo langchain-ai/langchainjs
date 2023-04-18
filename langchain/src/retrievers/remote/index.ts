@@ -1,3 +1,15 @@
-export { RemoteRetriever } from "./base.js";
-export { ChatGPTPluginRetriever } from "./chatgpt-plugin.js";
-export { RemoteLangChainRetriever } from "./remote-retriever.js";
+export {
+  RemoteRetriever,
+  RemoteRetrieverParams,
+  RemoteRetrieverAuth,
+  RemoteRetrieverValues,
+} from "./base.js";
+export {
+  ChatGPTPluginRetriever,
+  ChatGPTPluginRetrieverFilter,
+  ChatGPTPluginRetrieverParams,
+} from "./chatgpt-plugin.js";
+export {
+  RemoteLangChainRetriever,
+  RemoteLangChainRetrieverParams,
+} from "./remote-retriever.js";

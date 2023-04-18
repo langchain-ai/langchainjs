@@ -70,6 +70,7 @@ export class AgentExecutor extends BaseChain {
     return this.maxIterations === undefined || iterations < this.maxIterations;
   }
 
+  /** @ignore */
   async _call(inputs: ChainValues): Promise<ChainValues> {
     const toolsByName = Object.fromEntries(
       this.tools.map((t) => [t.name.toLowerCase(), t])

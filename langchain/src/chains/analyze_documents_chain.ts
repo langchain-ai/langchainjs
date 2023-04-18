@@ -46,6 +46,7 @@ export class AnalyzeDocumentChain
     return this.combineDocumentsChain.outputKeys;
   }
 
+  /** @ignore */
   async _call(values: ChainValues): Promise<ChainValues> {
     if (!(this.inputKey in values)) {
       throw new Error(`Document key ${this.inputKey} not found.`);

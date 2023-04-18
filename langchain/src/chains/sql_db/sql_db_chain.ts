@@ -49,6 +49,7 @@ export class SqlDatabaseChain extends BaseChain {
     this.outputKey = fields.outputKey ?? this.outputKey;
   }
 
+  /** @ignore */
   async _call(values: ChainValues): Promise<ChainValues> {
     const lLMChain = new LLMChain({
       prompt: this.prompt,
