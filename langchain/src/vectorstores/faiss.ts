@@ -75,7 +75,7 @@ export class FaissStore extends SaveableVectorStore {
       const id = docstoreSize + i;
       this.index.add(vectors[i]);
       this._mapping[id] = uuid;
-      this.docstore.add({ uuid: documents[i] });
+      this.docstore.add({ [uuid]: documents[i] });
     }
   }
 
@@ -112,7 +112,7 @@ export class FaissStore extends SaveableVectorStore {
       this.index.write(path.join(directory, "faiss.index")),
       await fs.writeFile(
         path.join(directory, "docstore.json"),
-        JSON.stringify(Array.from(this.docstore._docs.entries()))
+        JSON.stringify([Array.from(this.docstore._docs.entries()), this._mapping])
       ),
     ]);
   }
@@ -123,17 +123,17 @@ export class FaissStore extends SaveableVectorStore {
     const readStore = (directory: string) =>
       fs
         .readFile(path.join(directory, "docstore.json"), "utf8")
-        .then(JSON.parse) as Promise<Map<string, Document>>;
+        .then(JSON.parse) as Promise<[Map<string, Document>, Record<number, string>]>;
     const readIndex = async (directory: string) => {
       const { IndexFlatL2 } = await this.imports();
       return IndexFlatL2.read(path.join(directory, "faiss.index"));
     };
-    const [docstoreFiles, index] = await Promise.all([
+    const [[docstoreFiles, mapping], index] = await Promise.all([
       readStore(directory),
       readIndex(directory),
     ]);
     const docstore = new InMemoryDocstore(new Map(docstoreFiles));
-    return new this(embeddings, { docstore, index });
+    return new this(embeddings, { docstore, index, mapping });
   }
 
   static async loadFromPython(directory: string, embeddings: Embeddings) {
