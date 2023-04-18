@@ -1,8 +1,7 @@
 import type { TiktokenModel } from "@dqbd/tiktoken";
 import { DEFAULT_SQL_DATABASE_PROMPT } from "./sql_db_prompt.js";
-import { BaseChain } from "../base.js";
+import { BaseChain, ChainInputs } from "../base.js";
 import type { OpenAI } from "../../llms/openai.js";
-import { BaseMemory } from "../../memory/base.js";
 import { LLMChain } from "../llm_chain.js";
 import type { SqlDatabase } from "../../sql_db.js";
 import { ChainValues } from "../../schema/index.js";
@@ -13,13 +12,12 @@ import {
   getModelContextSize,
 } from "../../base_language/count_tokens.js";
 
-interface SqlDatabaseChainInput {
+export interface SqlDatabaseChainInput extends ChainInputs {
   llm: BaseLanguageModel;
   database: SqlDatabase;
   topK?: number;
   inputKey?: string;
   outputKey?: string;
-  memory?: BaseMemory;
 }
 
 export class SqlDatabaseChain extends BaseChain {
@@ -43,7 +41,7 @@ export class SqlDatabaseChain extends BaseChain {
   returnDirect = false;
 
   constructor(fields: SqlDatabaseChainInput) {
-    super(fields.memory);
+    super(fields.memory, fields.verbose, fields.callbackManager);
     this.llm = fields.llm;
     this.database = fields.database;
     this.topK = fields.topK ?? this.topK;

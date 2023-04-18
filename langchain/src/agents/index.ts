@@ -17,13 +17,19 @@ export {
   createJsonAgent,
   createOpenApiAgent,
   createSqlAgent,
+  SqlCreatePromptArgs,
   createVectorStoreAgent,
 } from "./agent_toolkits/index.js";
-export { ChatAgent, ChatAgentInput } from "./chat/index.js";
+export {
+  ChatAgent,
+  ChatAgentInput,
+  ChatCreatePromptArgs,
+} from "./chat/index.js";
 export { ChatAgentOutputParser } from "./chat/outputParser.js";
 export {
   ChatConversationalAgent,
   ChatConversationalAgentInput,
+  ChatConversationalCreatePromptArgs,
 } from "./chat_convo/index.js";
 export { ChatConversationalAgentOutputParser } from "./chat_convo/outputParser.js";
 export { AgentExecutor, AgentExecutorInput } from "./executor.js";
@@ -32,7 +38,11 @@ export {
   initializeAgentExecutorWithOptions,
   InitializeAgentExecutorOptions,
 } from "./initialize.js";
-export { ZeroShotAgent, ZeroShotAgentInput } from "./mrkl/index.js";
+export {
+  ZeroShotAgent,
+  ZeroShotAgentInput,
+  ZeroShotCreatePromptArgs,
+} from "./mrkl/index.js";
 export { ZeroShotAgentOutputParser } from "./mrkl/outputParser.js";
 export {
   AgentActionOutputParser,
