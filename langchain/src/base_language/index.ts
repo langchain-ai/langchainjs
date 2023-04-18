@@ -21,21 +21,14 @@ export abstract class BaseLangChain {
    */
   verbose: boolean;
 
-  callbackHandlers?: BaseCallbackHandler[];
-
-  /**
-   * @deprecated Use `callbackHandlers` instead
-   */
-  callbackManager?: CallbackManager;
+  callbacks?: CallbackManager | BaseCallbackHandler[];
 
   constructor(
     verbose?: boolean,
-    callbackHandlers?: BaseCallbackHandler[],
-    callbackManager?: CallbackManager
+    callbacks?: CallbackManager | BaseCallbackHandler[]
   ) {
     this.verbose = verbose ?? getVerbosity();
-    this.callbackHandlers = callbackHandlers;
-    this.callbackManager = callbackManager;
+    this.callbacks = callbacks;
   }
 }
 
@@ -46,10 +39,10 @@ export abstract class BaseLangChain {
  */
 export interface BaseLanguageModelParams extends AsyncCallerParams {
   verbose?: boolean;
-  callbackHandlers?: BaseCallbackHandler[];
+  callbacks?: CallbackManager | BaseCallbackHandler[];
 
   /**
-   * @deprecated Use `callbackHandlers` instead
+   * @deprecated Use `callbacks` instead
    */
   callbackManager?: CallbackManager;
 }
@@ -68,7 +61,7 @@ export abstract class BaseLanguageModel
   caller: AsyncCaller;
 
   constructor(params: BaseLanguageModelParams) {
-    super(params.verbose, params.callbackHandlers, params.callbackManager);
+    super(params.verbose, params.callbacks ?? params.callbackManager);
     this.caller = new AsyncCaller(params ?? {});
   }
 

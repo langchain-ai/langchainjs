@@ -8,10 +8,10 @@ import { BaseCallbackHandler } from "../callbacks/index.js";
 export interface ToolParams {
   verbose?: boolean;
 
-  callbackHandlers?: BaseCallbackHandler[];
+  callbacks?: CallbackManager | BaseCallbackHandler[];
 
   /**
-   * @deprecated Use `callbackHandlers` instead
+   * @deprecated Use `callbacks` instead
    */
   callbackManager?: CallbackManager;
 }
@@ -19,10 +19,9 @@ export interface ToolParams {
 export abstract class Tool extends BaseLangChain {
   constructor(
     verbose?: boolean,
-    callbackManager?: CallbackManager,
-    callbackHandlers?: BaseCallbackHandler[]
+    callbacks?: CallbackManager | BaseCallbackHandler[]
   ) {
-    super(verbose, callbackHandlers, callbackManager);
+    super(verbose, callbacks);
   }
 
   protected abstract _call(
@@ -36,7 +35,7 @@ export abstract class Tool extends BaseLangChain {
   ): Promise<string> {
     const callbackManager_ = await CallbackManager.configure(
       callbacks,
-      this.callbackHandlers ?? this.callbackManager?.handlers,
+      Array.isArray(this.callbacks) ? this.callbacks : this.callbacks?.handlers,
       { verbose: this.verbose }
     );
     const runManager = await callbackManager_?.handleToolStart(

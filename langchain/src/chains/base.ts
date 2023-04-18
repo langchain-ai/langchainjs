@@ -12,10 +12,10 @@ export interface ChainInputs {
   memory?: BaseMemory;
   verbose?: boolean;
 
-  callbackHandlers?: BaseCallbackHandler[];
+  callbacks?: CallbackManager | BaseCallbackHandler[];
 
   /**
-   * @deprecated Use `callbackHandlers` instead
+   * @deprecated Use `callbacks` instead
    */
   callbackManager?: CallbackManager;
 }
@@ -29,10 +29,9 @@ export abstract class BaseChain extends BaseLangChain implements ChainInputs {
   constructor(
     memory?: BaseMemory,
     verbose?: boolean,
-    callbackManager?: CallbackManager,
-    callbackHandlers?: BaseCallbackHandler[]
+    callbacks?: CallbackManager | BaseCallbackHandler[]
   ) {
-    super(verbose, callbackHandlers, callbackManager);
+    super(verbose, callbacks);
     this.memory = memory;
   }
 
@@ -101,7 +100,7 @@ export abstract class BaseChain extends BaseLangChain implements ChainInputs {
     }
     const callbackManager_ = await CallbackManager.configure(
       callbacks,
-      this.callbackHandlers ?? this.callbackManager?.handlers,
+      Array.isArray(this.callbacks) ? this.callbacks : this.callbacks?.handlers,
       { verbose: this.verbose }
     );
     const runManager = await callbackManager_?.handleChainStart(

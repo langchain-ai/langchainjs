@@ -53,7 +53,7 @@ export abstract class BaseChatModel extends BaseLanguageModel {
     );
     const callbackManager_ = await CallbackManager.configure(
       callbacks,
-      this.callbackHandlers ?? this.callbackManager?.handlers,
+      Array.isArray(this.callbacks) ? this.callbacks : this.callbacks?.handlers,
       { verbose: this.verbose }
     );
     const runManager = await callbackManager_?.handleLLMStart(
