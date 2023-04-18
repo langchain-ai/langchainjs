@@ -235,6 +235,9 @@
     "cache.cjs",
     "cache.js",
     "cache.d.ts",
+    "cache/redis.cjs",
+    "cache/redis.js",
+    "cache/redis.d.ts",
     "index.cjs",
     "index.js",
     "index.d.ts"
@@ -852,6 +855,11 @@
       "types": "./cache.d.ts",
       "import": "./cache.js",
       "require": "./cache.cjs"
+    },
+    "./cache/redis": {
+      "types": "./cache/redis.d.ts",
+      "import": "./cache/redis.js",
+      "require": "./cache/redis.cjs"
     },
     "./package.json": "./package.json"
   }
