@@ -30,9 +30,6 @@ const config = {
       "docusaurus-plugin-typedoc",
       {
         tsconfig: "../langchain/tsconfig.json",
-        sidebar: {
-          fullNames: true,
-        },
       },
     ],
     () => ({
@@ -56,7 +53,7 @@ const config = {
           rules: [
             {
               test: examplesPath,
-              use: "raw-loader",
+              use: ["json-loader", "./code-block-loader.js"],
             },
             {
               test: /\.m?js/,
