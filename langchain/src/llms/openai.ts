@@ -70,11 +70,11 @@ export interface OpenAIInput {
   timeout?: number;
 }
 
-type TokenUsage = {
+interface TokenUsage {
   completionTokens?: number;
   promptTokens?: number;
   totalTokens?: number;
-};
+}
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Kwargs = Record<string, any>;

@@ -1,4 +1,4 @@
-import { BaseChatMemory, BaseMemoryInput } from "./chat_memory.js";
+import { BaseChatMemory, BaseChatMemoryInput } from "./chat_memory.js";
 import {
   InputValues,
   OutputValues,
@@ -13,7 +13,10 @@ export interface MotorheadMemoryMessage {
   content: string;
 }
 
-export type MotorheadMemoryInput = BaseMemoryInput &
+/**
+ * @interface
+ */
+export type MotorheadMemoryInput = BaseChatMemoryInput &
   AsyncCallerParams & {
     sessionId: string;
     motorheadURL?: string;

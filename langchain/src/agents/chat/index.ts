@@ -13,14 +13,14 @@ import { AgentInput } from "../types.js";
 import { ChatAgentOutputParser } from "./outputParser.js";
 import { FORMAT_INSTRUCTIONS, PREFIX, SUFFIX } from "./prompt.js";
 
-export type CreatePromptArgs = {
+export interface ChatCreatePromptArgs {
   /** String to put after the list of tools. */
   suffix?: string;
   /** String to put before the list of tools. */
   prefix?: string;
   /** List of input variables the final prompt will expect. */
   inputVariables?: string[];
-};
+}
 
 export type ChatAgentInput = Optional<AgentInput, "outputParser">;
 
@@ -81,7 +81,7 @@ export class ChatAgent extends Agent {
    * @param args.suffix - String to put after the list of tools.
    * @param args.prefix - String to put before the list of tools.
    */
-  static createPrompt(tools: Tool[], args?: CreatePromptArgs) {
+  static createPrompt(tools: Tool[], args?: ChatCreatePromptArgs) {
     const { prefix = PREFIX, suffix = SUFFIX } = args ?? {};
     const toolStrings = tools
       .map((tool) => `${tool.name}: ${tool.description}`)
@@ -99,7 +99,7 @@ export class ChatAgent extends Agent {
   static fromLLMAndTools(
     llm: BaseLanguageModel,
     tools: Tool[],
-    args?: CreatePromptArgs & AgentArgs
+    args?: ChatCreatePromptArgs & AgentArgs
   ) {
     ChatAgent.validateTools(tools);
     const prompt = ChatAgent.createPrompt(tools, args);

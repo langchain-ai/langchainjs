@@ -1,4 +1,4 @@
-import { BaseChain } from "./base.js";
+import { BaseChain, ChainInputs } from "./base.js";
 import { VectorStore } from "../vectorstores/base.js";
 import { SerializedVectorDBQAChain } from "./serde.js";
 import { BaseLanguageModel } from "../base_language/index.js";
@@ -9,7 +9,7 @@ import { loadQAStuffChain } from "./question_answering/load.js";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type LoadValues = Record<string, any>;
 
-export interface VectorDBQAChainInput {
+export interface VectorDBQAChainInput extends Omit<ChainInputs, "memory"> {
   vectorstore: VectorStore;
   combineDocumentsChain: BaseChain;
   returnSourceDocuments?: boolean;
@@ -39,7 +39,7 @@ export class VectorDBQAChain extends BaseChain implements VectorDBQAChainInput {
   returnSourceDocuments = false;
 
   constructor(fields: VectorDBQAChainInput) {
-    super();
+    super(undefined, fields.verbose, fields.callbackManager);
     this.vectorstore = fields.vectorstore;
     this.combineDocumentsChain = fields.combineDocumentsChain;
     this.inputKey = fields.inputKey ?? this.inputKey;
