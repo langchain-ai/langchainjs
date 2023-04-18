@@ -1,0 +1,16 @@
+diff --git a/dist/theme.js b/dist/theme.js
+index f6eaa7c35c0b377a019f4f948531917eef5fe302..dd9e5ac90b4f86740fca3d0f0b55369efcfcded6 100644
+--- a/dist/theme.js
++++ b/dist/theme.js
+@@ -131,11 +131,6 @@ class MarkdownTheme extends typedoc_1.Theme {
+                     parts.splice(namespaceIndex, 0, this.mappings[typedoc_1.ReflectionKind.Namespace].directory);
+                 }
+             });
+-            if (reflection.kindOf(typedoc_1.ReflectionKind.Namespace))
+-                parts[parts.length - 1] = `${typedoc_1.ReflectionKind.singularString(typedoc_1.ReflectionKind.Namespace).toLowerCase()}.${parts[parts.length - 1]}`;
+-        }
+-        if (!isModuleOrNamespace) {
+-            parts[parts.length - 1] = `${typedoc_1.ReflectionKind.singularString(reflection.kind).toLowerCase()}.${parts[parts.length - 1]}`;
+         }
+         return parts.join(this.flattenOutputFiles ? '.' : '/') + '.md';
+     }
