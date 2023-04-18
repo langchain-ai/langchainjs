@@ -6,10 +6,10 @@ function Imports({ imports }) {
   return (
     <div
       style={{
-        paddingTop: "0.85rem",
+        paddingTop: "1.1rem",
         background: "var(--prism-background-color)",
         color: "var(--prism-color)",
-        marginTop: "calc(-1 * var(--ifm-leading))",
+        marginTop: "calc(-1 * var(--ifm-leading) - 5px)",
         marginBottom: "var(--ifm-leading)",
         boxShadow: "var(--ifm-global-shadow-lw)",
         borderBottomLeftRadius: "var(--ifm-code-border-radius)",
