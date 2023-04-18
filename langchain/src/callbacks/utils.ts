@@ -1,16 +1,13 @@
 import { LangChainTracer } from "./tracers.js";
-import { CallbackManager } from "./manager.js";
 
-export async function getTracingCallbackManager(
+export async function getTracingCallbackHandler(
   session?: string
-): Promise<CallbackManager> {
-  const manager = new CallbackManager();
+): Promise<LangChainTracer> {
   const tracer = new LangChainTracer();
   if (session) {
     await tracer.loadSession(session);
   } else {
     await tracer.loadDefaultSession();
   }
-  manager.addHandler(tracer);
-  return manager;
+  return tracer;
 }

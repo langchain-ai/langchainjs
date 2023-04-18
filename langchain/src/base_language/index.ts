@@ -1,6 +1,10 @@
 import type { Tiktoken } from "@dqbd/tiktoken";
 import { BasePromptValue, LLMResult } from "../schema/index.js";
-import { CallbackManager, ConsoleCallbackHandler } from "../callbacks/index.js";
+import {
+  CallbackManager,
+  ConsoleCallbackHandler,
+  getTracingCallbackHandler,
+} from "../callbacks/index.js";
 import { AsyncCaller, AsyncCallerParams } from "../util/async_caller.js";
 import { getModelNameForTiktoken, importTiktoken } from "./count_tokens.js";
 
@@ -23,9 +27,9 @@ export abstract class BaseLangChain {
 
   callbackManager?: CallbackManager;
 
-  protected configureCallbackManager(
+  protected async configureCallbackManager(
     callbackManager?: CallbackManager
-  ): CallbackManager | undefined {
+  ): Promise<CallbackManager | undefined> {
     let callbackManager_;
     if (callbackManager) {
       callbackManager_ = callbackManager.copy(
@@ -36,17 +40,28 @@ export abstract class BaseLangChain {
       callbackManager_ = new CallbackManager();
       callbackManager_.setHandlers(this.callbackManager?.handlers ?? [], false);
     }
-    if (this.verbose) {
+    // eslint-disable-next-line no-process-env
+    if (this.verbose || process.env.LANGCHAIN_TRACING !== undefined) {
       if (!callbackManager_) {
         callbackManager_ = new CallbackManager();
       }
       const consoleHandler = new ConsoleCallbackHandler();
       if (
+        this.verbose &&
         !callbackManager_.handlers.some(
           (handler) => handler.name === consoleHandler.name
         )
       ) {
         callbackManager_.addHandler(consoleHandler, false);
+      }
+      if (
+        // eslint-disable-next-line no-process-env
+        process.env.LANGCHAIN_TRACING !== undefined &&
+        !callbackManager_.handlers.some(
+          (handler) => handler.name === "langchain_tracer"
+        )
+      ) {
+        callbackManager_.addHandler(await getTracingCallbackHandler(), true);
       }
     }
     return callbackManager_;

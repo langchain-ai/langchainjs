@@ -71,9 +71,13 @@ export abstract class BaseLLM extends BaseLanguageModel {
     stop?: string[],
     callbackManager?: CallbackManager
   ): Promise<LLMResult> {
-    const runManager = await this.configureCallbackManager(
+    const callbackManager_ = await this.configureCallbackManager(
       callbackManager
-    )?.handleLLMStart({ name: this._llmType() }, prompts);
+    );
+    const runManager = await callbackManager_?.handleLLMStart(
+      { name: this._llmType() },
+      prompts
+    );
     let output;
     try {
       output = await this._generate(prompts, stop, runManager);

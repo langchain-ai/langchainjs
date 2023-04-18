@@ -6,7 +6,6 @@ import { LangChainTracer } from "../tracers.js";
 import { OpenAI } from "../../llms/openai.js";
 import { SerpAPI } from "../../tools/index.js";
 import { Calculator } from "../../tools/calculator.js";
-import { getTracingCallbackManager } from "../utils.js";
 import { initializeAgentExecutorWithOptions } from "../../agents/index.js";
 
 test("Test LangChain tracer", async () => {
@@ -35,6 +34,7 @@ test("Test LangChain tracer", async () => {
 });
 
 test("Test Traced Agent with concurrency", async () => {
+  process.env.LANGCHAIN_TRACING = "true";
   const model = new OpenAI({ temperature: 0 });
   const tools = [
     new SerpAPI(process.env.SERPAPI_API_KEY, {
@@ -54,12 +54,10 @@ test("Test Traced Agent with concurrency", async () => {
 
   console.log(`Executing with input "${input}"...`);
 
-  const tracingCallbackManager = await getTracingCallbackManager();
-
   const [resultA, resultB, resultC] = await Promise.all([
-    executor.call({ input }, tracingCallbackManager),
-    executor.call({ input }, tracingCallbackManager),
-    executor.call({ input }, tracingCallbackManager),
+    executor.call({ input }),
+    executor.call({ input }),
+    executor.call({ input }),
   ]);
 
   console.log(`Got output ${resultA.output}`);

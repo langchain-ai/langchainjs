@@ -50,9 +50,13 @@ export abstract class BaseChatModel extends BaseLanguageModel {
     const messageStrings: string[] = messages.map((messageList) =>
       getBufferString(messageList)
     );
-    const runManager = await this.configureCallbackManager(
+    const callbackManager_ = await this.configureCallbackManager(
       callbackManager
-    )?.handleLLMStart({ name: this._llmType() }, messageStrings);
+    );
+    const runManager = await callbackManager_?.handleLLMStart(
+      { name: this._llmType() },
+      messageStrings
+    );
     try {
       for (const message of messages) {
         const result = await this._generate(message, stop, runManager);

@@ -20,9 +20,13 @@ export abstract class Tool extends BaseLangChain {
   ): Promise<string>;
 
   async call(arg: string, callbackManager?: CallbackManager): Promise<string> {
-    const runManager = await this.configureCallbackManager(
+    const callbackManager_ = await this.configureCallbackManager(
       callbackManager
-    )?.handleToolStart({ name: this.name }, arg);
+    );
+    const runManager = await callbackManager_?.handleToolStart(
+      { name: this.name },
+      arg
+    );
     let result;
     try {
       result = await this._call(arg, runManager);
