@@ -68,13 +68,15 @@ export class MotorheadMemory extends BaseChatMemory {
 
     const { messages = [], context = "NONE" } = await res.json();
 
-    messages.forEach((message: MotorheadMemoryMessage) => {
-      if (message.role === "AI") {
-        this.chatHistory.addAIChatMessage(message.content);
-      } else {
-        this.chatHistory.addUserMessage(message.content);
-      }
-    });
+    await Promise.all(
+      messages.map(async (message: MotorheadMemoryMessage) => {
+        if (message.role === "AI") {
+          await this.chatHistory.addAIChatMessage(message.content);
+        } else {
+          await this.chatHistory.addUserMessage(message.content);
+        }
+      })
+    );
 
     if (context && context !== "NONE") {
       this.context = context;
@@ -82,14 +84,15 @@ export class MotorheadMemory extends BaseChatMemory {
   }
 
   async loadMemoryVariables(_values: InputValues): Promise<MemoryVariables> {
+    const messages = await this.chatHistory.getMessages();
     if (this.returnMessages) {
       const result = {
-        [this.memoryKey]: this.chatHistory.messages,
+        [this.memoryKey]: messages,
       };
       return result;
     }
     const result = {
-      [this.memoryKey]: getBufferString(this.chatHistory.messages),
+      [this.memoryKey]: getBufferString(messages),
     };
     return result;
   }

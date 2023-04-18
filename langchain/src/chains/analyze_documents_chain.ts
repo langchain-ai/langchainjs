@@ -25,8 +25,6 @@ export class AnalyzeDocumentChain
 {
   inputKey = "input_document";
 
-  outputKey = "output_text";
-
   combineDocumentsChain: BaseChain;
 
   textSplitter: TextSplitter;
@@ -40,13 +38,16 @@ export class AnalyzeDocumentChain
     super();
     this.combineDocumentsChain = fields.combineDocumentsChain;
     this.inputKey = fields.inputKey ?? this.inputKey;
-    this.outputKey = fields.outputKey ?? this.outputKey;
     this.textSplitter =
       fields.textSplitter ?? new RecursiveCharacterTextSplitter();
   }
 
   get inputKeys(): string[] {
     return [this.inputKey];
+  }
+
+  get outputKeys(): string[] {
+    return this.combineDocumentsChain.outputKeys;
   }
 
   async _call(values: ChainValues): Promise<ChainValues> {

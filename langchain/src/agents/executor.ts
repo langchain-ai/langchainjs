@@ -37,6 +37,10 @@ export class AgentExecutor extends BaseChain {
     return this.agent.inputKeys;
   }
 
+  get outputKeys() {
+    return this.agent.returnValues;
+  }
+
   constructor(input: AgentExecutorInput) {
     super(input.memory, input.verbose, input.callbackManager);
     this.agent = input.agent;

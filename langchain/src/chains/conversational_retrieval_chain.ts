@@ -27,8 +27,8 @@ export interface ConversationalRetrievalQAChainInput {
   retriever: BaseRetriever;
   combineDocumentsChain: BaseChain;
   questionGeneratorChain: LLMChain;
-  outputKey: string;
-  inputKey: string;
+  returnSourceDocuments?: boolean;
+  inputKey?: string;
 }
 
 export class ConversationalRetrievalQAChain
@@ -43,7 +43,11 @@ export class ConversationalRetrievalQAChain
     return [this.inputKey, this.chatHistoryKey];
   }
 
-  outputKey = "result";
+  get outputKeys() {
+    return this.combineDocumentsChain.outputKeys.concat(
+      this.returnSourceDocuments ? ["sourceDocuments"] : []
+    );
+  }
 
   retriever: BaseRetriever;
 
@@ -53,20 +57,12 @@ export class ConversationalRetrievalQAChain
 
   returnSourceDocuments = false;
 
-  constructor(fields: {
-    retriever: BaseRetriever;
-    combineDocumentsChain: BaseChain;
-    questionGeneratorChain: LLMChain;
-    inputKey?: string;
-    outputKey?: string;
-    returnSourceDocuments?: boolean;
-  }) {
+  constructor(fields: ConversationalRetrievalQAChainInput) {
     super();
     this.retriever = fields.retriever;
     this.combineDocumentsChain = fields.combineDocumentsChain;
     this.questionGeneratorChain = fields.questionGeneratorChain;
     this.inputKey = fields.inputKey ?? this.inputKey;
-    this.outputKey = fields.outputKey ?? this.outputKey;
     this.returnSourceDocuments =
       fields.returnSourceDocuments ?? this.returnSourceDocuments;
   }

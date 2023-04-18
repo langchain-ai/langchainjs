@@ -51,6 +51,8 @@ export abstract class BaseChain implements ChainInputs {
 
   abstract get inputKeys(): string[];
 
+  abstract get outputKeys(): string[];
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async run(input: any): Promise<string> {
     const isKeylessInput = this.inputKeys.length === 1;
@@ -122,9 +124,27 @@ export abstract class BaseChain implements ChainInputs {
         const { LLMChain } = await import("./llm_chain.js");
         return LLMChain.deserialize(data);
       }
+      case "simple_sequential_chain": {
+        const { SimpleSequentialChain } = await import(
+          "./simple_sequential_chain.js"
+        );
+        return SimpleSequentialChain.deserialize(data);
+      }
       case "stuff_documents_chain": {
         const { StuffDocumentsChain } = await import("./combine_docs_chain.js");
         return StuffDocumentsChain.deserialize(data);
+      }
+      case "map_reduce_documents_chain": {
+        const { MapReduceDocumentsChain } = await import(
+          "./combine_docs_chain.js"
+        );
+        return MapReduceDocumentsChain.deserialize(data);
+      }
+      case "refine_documents_chain": {
+        const { RefineDocumentsChain } = await import(
+          "./combine_docs_chain.js"
+        );
+        return RefineDocumentsChain.deserialize(data);
       }
       case "vector_db_qa": {
         const { VectorDBQAChain } = await import("./vector_db_qa.js");

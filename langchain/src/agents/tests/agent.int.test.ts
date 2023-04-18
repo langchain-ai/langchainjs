@@ -6,7 +6,7 @@ import { loadAgent } from "../load.js";
 import { AgentExecutor, Tool } from "../index.js";
 import { SerpAPI } from "../../tools/serpapi.js";
 import { Calculator } from "../../tools/calculator.js";
-import { initializeAgentExecutor } from "../initialize.js";
+import { initializeAgentExecutorWithOptions } from "../initialize.js";
 import { WebBrowser } from "../../tools/webbrowser.js";
 
 test("Run agent from hub", async () => {
@@ -46,11 +46,9 @@ test("Run agent locally", async () => {
     new Calculator(),
   ];
 
-  const executor = await initializeAgentExecutor(
-    tools,
-    model,
-    "zero-shot-react-description"
-  );
+  const executor = await initializeAgentExecutorWithOptions(tools, model, {
+    agentType: "zero-shot-react-description",
+  });
   console.log("Loaded agent.");
 
   const input = `Who is Olivia Wilde's boyfriend? What is his current age raised to the 0.23 power?`;
@@ -73,11 +71,10 @@ test("Run tool web-browser", async () => {
     new WebBrowser({ model, embeddings: new OpenAIEmbeddings() }),
   ];
 
-  const executor = await initializeAgentExecutor(
-    tools,
-    model,
-    "zero-shot-react-description"
-  );
+  const executor = await initializeAgentExecutorWithOptions(tools, model, {
+    agentType: "zero-shot-react-description",
+    returnIntermediateSteps: true,
+  });
   console.log("Loaded agent.");
 
   const input = `What is the word of the day on merriam webster`;

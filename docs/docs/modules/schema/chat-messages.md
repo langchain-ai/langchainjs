@@ -12,6 +12,8 @@ The primary interface through which end users interact with LLMs is a chat inter
 A chat message representing information that should be instructions to the AI system.
 
 ```typescript
+import { SystemChatMessage } from "langchain/schema";
+
 new SystemChatMessage("You are a nice assistant");
 ```
 
@@ -20,6 +22,8 @@ new SystemChatMessage("You are a nice assistant");
 A chat message representing information coming from a human interacting with the AI system.
 
 ```typescript
+import { HumanChatMessage } from "langchain/schema";
+
 new HumanChatMessage("Hello, how are you?");
 ```
 
@@ -28,5 +32,7 @@ new HumanChatMessage("Hello, how are you?");
 A chat message representing information coming from the AI system.
 
 ```typescript
+import { AIChatMessage } from "langchain/schema";
+
 new AIChatMessage("I am doing well, thank you!");
 ```
