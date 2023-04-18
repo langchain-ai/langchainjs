@@ -63,7 +63,7 @@ function openAIResponseToChatMessage(
   }
 }
 
-interface ModelParams {
+export interface OpenAIInput {
   /** Sampling temperature to use, between 0 and 2, defaults to 1 */
   temperature: number;
 
@@ -90,13 +90,7 @@ interface ModelParams {
    * defaults to the maximum number of tokens allowed by the model.
    */
   maxTokens?: number;
-}
 
-/**
- * Input to OpenAI class.
- * @augments ModelParams
- */
-interface OpenAIInput extends ModelParams {
   /** Model name to use */
   modelName: string;
 
@@ -225,6 +219,7 @@ export class ChatOpenAI extends BaseChatModel implements OpenAIInput {
     };
   }
 
+  /** @ignore */
   _identifyingParams() {
     return {
       model_name: this.modelName,
@@ -240,21 +235,7 @@ export class ChatOpenAI extends BaseChatModel implements OpenAIInput {
     return this._identifyingParams();
   }
 
-  /**
-   * Call out to OpenAI's endpoint with k unique prompts
-   *
-   * @param messages - The messages to pass into the model.
-   * @param [stop] - Optional list of stop words to use when generating.
-   *
-   * @returns The full LLM output.
-   *
-   * @example
-   * ```ts
-   * import { OpenAI } from "langchain/llms/openai";
-   * const openai = new OpenAI();
-   * const response = await openai.generate(["Tell me a joke."]);
-   * ```
-   */
+  /** @ignore */
   async _generate(
     messages: BaseChatMessage[],
     stop?: string[]
@@ -451,6 +432,7 @@ export class ChatOpenAI extends BaseChatModel implements OpenAIInput {
     return "openai";
   }
 
+  /** @ignore */
   _combineLLMOutput(...llmOutputs: OpenAILLMOutput[]): OpenAILLMOutput {
     return llmOutputs.reduce<{
       [key in keyof OpenAILLMOutput]: Required<OpenAILLMOutput[key]>;
