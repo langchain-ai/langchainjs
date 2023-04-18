@@ -1,10 +1,6 @@
 import type { Tiktoken } from "@dqbd/tiktoken";
 import { BasePromptValue, LLMResult } from "../schema/index.js";
-import {
-  CallbackManager,
-  ConsoleCallbackHandler,
-  getTracingCallbackHandler,
-} from "../callbacks/index.js";
+import { BaseCallbackHandler, CallbackManager } from "../callbacks/index.js";
 import { AsyncCaller, AsyncCallerParams } from "../util/async_caller.js";
 import { getModelNameForTiktoken, importTiktoken } from "./count_tokens.js";
 
@@ -25,50 +21,20 @@ export abstract class BaseLangChain {
    */
   verbose: boolean;
 
+  callbackHandlers?: BaseCallbackHandler[];
+
+  /**
+   * @deprecated Use `callbackHandlers` instead
+   */
   callbackManager?: CallbackManager;
 
-  protected async configureCallbackManager(
+  constructor(
+    verbose?: boolean,
+    callbackHandlers?: BaseCallbackHandler[],
     callbackManager?: CallbackManager
-  ): Promise<CallbackManager | undefined> {
-    let callbackManager_;
-    if (callbackManager) {
-      callbackManager_ = callbackManager.copy(
-        this.callbackManager?.handlers,
-        false
-      );
-    } else if (this.callbackManager) {
-      callbackManager_ = new CallbackManager();
-      callbackManager_.setHandlers(this.callbackManager?.handlers ?? [], false);
-    }
-    // eslint-disable-next-line no-process-env
-    if (this.verbose || process.env.LANGCHAIN_TRACING !== undefined) {
-      if (!callbackManager_) {
-        callbackManager_ = new CallbackManager();
-      }
-      const consoleHandler = new ConsoleCallbackHandler();
-      if (
-        this.verbose &&
-        !callbackManager_.handlers.some(
-          (handler) => handler.name === consoleHandler.name
-        )
-      ) {
-        callbackManager_.addHandler(consoleHandler, false);
-      }
-      if (
-        // eslint-disable-next-line no-process-env
-        process.env.LANGCHAIN_TRACING !== undefined &&
-        !callbackManager_.handlers.some(
-          (handler) => handler.name === "langchain_tracer"
-        )
-      ) {
-        callbackManager_.addHandler(await getTracingCallbackHandler(), true);
-      }
-    }
-    return callbackManager_;
-  }
-
-  constructor(verbose?: boolean, callbackManager?: CallbackManager) {
+  ) {
     this.verbose = verbose ?? getVerbosity();
+    this.callbackHandlers = callbackHandlers;
     this.callbackManager = callbackManager;
   }
 }
@@ -80,6 +46,11 @@ export abstract class BaseLangChain {
  */
 export interface BaseLanguageModelParams extends AsyncCallerParams {
   verbose?: boolean;
+  callbackHandlers?: BaseCallbackHandler[];
+
+  /**
+   * @deprecated Use `callbackHandlers` instead
+   */
   callbackManager?: CallbackManager;
 }
 
@@ -97,14 +68,14 @@ export abstract class BaseLanguageModel
   caller: AsyncCaller;
 
   constructor(params: BaseLanguageModelParams) {
-    super(params.verbose, params.callbackManager);
+    super(params.verbose, params.callbackHandlers, params.callbackManager);
     this.caller = new AsyncCaller(params ?? {});
   }
 
   abstract generatePrompt(
     promptValues: BasePromptValue[],
     stop?: string[],
-    callbackManager?: CallbackManager
+    callbacks?: CallbackManager | BaseCallbackHandler[]
   ): Promise<LLMResult>;
 
   abstract _modelType(): string;

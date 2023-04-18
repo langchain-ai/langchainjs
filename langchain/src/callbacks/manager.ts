@@ -6,12 +6,19 @@ import {
   LLMResult,
 } from "../schema/index.js";
 import { BaseCallbackHandler, BaseCallbackHandlerMethods } from "./base.js";
+import { ConsoleCallbackHandler } from "./handlers/console.js";
+import { getTracingCallbackHandler } from "./handlers/initialize.js";
 
 type BaseCallbackManagerMethods = {
   [K in keyof BaseCallbackHandlerMethods]?: (
     ...args: Parameters<Required<BaseCallbackHandlerMethods>[K]>
   ) => Promise<unknown>;
 };
+
+interface CallbackManagerOptions {
+  verbose: boolean;
+  tracing: boolean;
+}
 
 export abstract class BaseCallbackManager {
   abstract addHandler(handler: BaseCallbackHandler): void;
@@ -404,5 +411,45 @@ export class CallbackManager
     const manager = new this();
     manager.addHandler(new Handler());
     return manager;
+  }
+
+  static async configure(
+    inheritedHandlers?: BaseCallbackHandler[],
+    localHandlers?: BaseCallbackHandler[],
+    options?: CallbackManagerOptions
+  ): Promise<CallbackManager | undefined> {
+    let callbackManager_;
+    if (inheritedHandlers || localHandlers) {
+      callbackManager_ = new CallbackManager();
+      callbackManager_.setHandlers(inheritedHandlers ?? [], true);
+      for (const handler of localHandlers ?? []) {
+        callbackManager_.addHandler(handler, false);
+      }
+    }
+    // eslint-disable-next-line no-process-env
+    if (options?.verbose || process.env.LANGCHAIN_TRACING !== undefined) {
+      if (!callbackManager_) {
+        callbackManager_ = new CallbackManager();
+      }
+      const consoleHandler = new ConsoleCallbackHandler();
+      if (
+        options?.verbose &&
+        !callbackManager_.handlers.some(
+          (handler) => handler.name === consoleHandler.name
+        )
+      ) {
+        callbackManager_.addHandler(consoleHandler, false);
+      }
+      if (
+        // eslint-disable-next-line no-process-env
+        process.env.LANGCHAIN_TRACING !== undefined &&
+        !callbackManager_.handlers.some(
+          (handler) => handler.name === "langchain_tracer"
+        )
+      ) {
+        callbackManager_.addHandler(await getTracingCallbackHandler(), true);
+      }
+    }
+    return callbackManager_;
   }
 }

@@ -7,7 +7,7 @@ import {
   ToolRun,
   TracerSession,
   TracerSessionCreate,
-} from "../tracers.js";
+} from "../handlers/tracers.js";
 
 const TEST_SESSION_ID = 2023;
 const _DATE = 1620000000000;

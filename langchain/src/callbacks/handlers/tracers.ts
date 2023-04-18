@@ -1,5 +1,5 @@
-import { ChainValues, LLMResult } from "../schema/index.js";
-import { BaseCallbackHandler } from "./base.js";
+import { ChainValues, LLMResult } from "../../schema/index.js";
+import { BaseCallbackHandler } from "../base.js";
 
 export type RunType = "llm" | "chain" | "tool";
 
