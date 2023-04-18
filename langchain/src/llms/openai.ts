@@ -15,7 +15,10 @@ import { calculateMaxTokens } from "../base_language/count_tokens.js";
 import { OpenAIChat } from "./openai-chat.js";
 import { LLMResult } from "../schema/index.js";
 
-interface ModelParams {
+/**
+ * Input to OpenAI class.
+ */
+export interface OpenAIInput {
   /** Sampling temperature to use */
   temperature: number;
 
@@ -45,13 +48,7 @@ interface ModelParams {
 
   /** Whether to stream the results or not. Enabling disables tokenUsage reporting */
   streaming: boolean;
-}
 
-/**
- * Input to OpenAI class.
- * @augments ModelParams
- */
-interface OpenAIInput extends ModelParams {
   /** Model name to use */
   modelName: string;
 
@@ -450,4 +447,4 @@ export class PromptLayerOpenAI extends OpenAI {
   }
 }
 
-export { OpenAIChat } from "./openai-chat.js";
+export { OpenAIChat, OpenAIChatInput } from "./openai-chat.js";
