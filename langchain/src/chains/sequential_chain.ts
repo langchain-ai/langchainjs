@@ -23,8 +23,11 @@ export interface SequentialChainInput extends ChainInputs {
  */
 export class SequentialChain extends BaseChain implements SequentialChainInput {
   chains: BaseChain[];
+
   inputVariables: string[];
+
   outputVariables: string[];
+
   returnAll?: boolean | undefined;
 
   get inputKeys() {
@@ -51,11 +54,11 @@ export class SequentialChain extends BaseChain implements SequentialChainInput {
 
   _validateChains() {
     if (this.chains.length === 0) {
-      //@TODO how to deal with it?
+      // @TODO how to deal with it?
     }
     const memoryKeys: string[] = [];
     if (this.memory) {
-      //@TODO deal with retrieving the memory keys
+      // @TODO deal with retrieving the memory keys
     }
 
     function formatSet(input: Set<string>) {

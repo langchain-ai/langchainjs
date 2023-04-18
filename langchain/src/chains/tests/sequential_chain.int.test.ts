@@ -71,7 +71,7 @@ test("Test SequentialChain example usage", async () => {
   `);
 });
 
-xit("Test SequentialChain serialize/deserialize", async () => {
+test.skip("Test SequentialChain serialize/deserialize", async () => {
   const llm1 = new ChatOpenAI();
   const template1 = `Echo back "{foo} {bar}"`;
   const promptTemplate1 = new PromptTemplate({
