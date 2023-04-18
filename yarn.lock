@@ -9662,14 +9662,14 @@ __metadata:
   linkType: hard
 
 "canvas@npm:^2.11.0":
-  version: 2.11.0
-  resolution: "canvas@npm:2.11.0"
+  version: 2.11.2
+  resolution: "canvas@npm:2.11.2"
   dependencies:
     "@mapbox/node-pre-gyp": ^1.0.0
     nan: ^2.17.0
     node-gyp: latest
     simple-get: ^3.0.3
-  checksum: a69a6e0c90014a1b02e52c4c38a627d1a01ffe9539047bec84105cb3554907a947cf39b4a333be43fc1583dd142b641bb5480a4e23f59c6098618c33bf78f67f
+  checksum: 61e554aef80022841dc836964534082ec21435928498032562089dfb7736215f039c7d99ee546b0cf10780232d9bf310950f8b4d489dc394e0fb6f6adfc97994
   languageName: node
   linkType: hard
 
@@ -11035,7 +11035,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"debug@npm:^3.2.7":
+"debug@npm:^3.1.0, debug@npm:^3.2.7":
   version: 3.2.7
   resolution: "debug@npm:3.2.7"
   dependencies:
@@ -17184,6 +17184,7 @@ __metadata:
     openai: ^3.2.0
     p-queue: ^6.6.2
     p-retry: 4
+    pdf-parse: 1.1.1
     pdfjs-dist: ^3.4.120
     playwright: ^1.32.1
     prettier: ^2.8.3
@@ -17220,7 +17221,7 @@ __metadata:
     html-to-text: ^9.0.5
     mammoth: "*"
     mongodb: ^5.2.0
-    pdfjs-dist: ^3.4.120
+    pdf-parse: 1.1.1
     playwright: ^1.32.1
     puppeteer: ^19.7.2
     redis: ^4.6.4
@@ -17265,7 +17266,7 @@ __metadata:
       optional: true
     mongodb:
       optional: true
-    pdfjs-dist:
+    pdf-parse:
       optional: true
     playwright:
       optional: true
@@ -18690,6 +18691,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"node-ensure@npm:^0.0.0":
+  version: 0.0.0
+  resolution: "node-ensure@npm:0.0.0"
+  checksum: 1124623beb1dec66889794286ec1761ac3bfac42ce93b8652903efa5af14227edce5bafa06c4e0675cdc850360931d7c9413e3b5406150f05b2c9bf5bb3ccce4
+  languageName: node
+  linkType: hard
+
 "node-fetch@npm:2.6.7":
   version: 2.6.7
   resolution: "node-fetch@npm:2.6.7"
@@ -19673,9 +19681,19 @@ __metadata:
   languageName: node
   linkType: hard
 
+"pdf-parse@npm:1.1.1":
+  version: 1.1.1
+  resolution: "pdf-parse@npm:1.1.1"
+  dependencies:
+    debug: ^3.1.0
+    node-ensure: ^0.0.0
+  checksum: 5d63a8be1b3b8915618b1b76350409513fdd7fe03c77056b2dd7a1c2da28a11e297645e33bb4e953e2c1cd0ae66980f30fd0bed2979877f894347962d9647241
+  languageName: node
+  linkType: hard
+
 "pdfjs-dist@npm:^3.4.120":
-  version: 3.4.120
-  resolution: "pdfjs-dist@npm:3.4.120"
+  version: 3.5.141
+  resolution: "pdfjs-dist@npm:3.5.141"
   dependencies:
     canvas: ^2.11.0
     path2d-polyfill: ^2.0.1
@@ -19683,7 +19701,7 @@ __metadata:
   dependenciesMeta:
     canvas:
       optional: true
-  checksum: c4b095706c351c26ee235f1a0db8dbe9205be85ab0873fa8236b0b3f466e9b1d4aabb8e0c0d9b7e3a79d8e65c9872deb95d0120b5a4972643812a0d784a0aca2
+  checksum: b58e801b92a0d7b58b3799c0cf48f35deb45e140ef488744251a3e3dd148acef7aef4edfb8c7622b342c7068e8b7c01b754546ed0e60897e48665fa45af9d845
   languageName: node
   linkType: hard
 
