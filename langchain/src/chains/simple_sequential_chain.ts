@@ -105,7 +105,7 @@ export class SimpleSequentialChain
       if (this.trimOutputs) {
         input = input.trim();
       }
-      await runManager.handleText(input);
+      await runManager?.handleText(input);
     }
     return { [this.outputKey]: input };
   }

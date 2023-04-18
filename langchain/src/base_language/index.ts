@@ -32,11 +32,14 @@ export abstract class BaseLangChain {
         this.callbackManager?.handlers,
         false
       );
-    } else {
+    } else if (this.callbackManager) {
       callbackManager_ = new CallbackManager();
       callbackManager_.setHandlers(this.callbackManager?.handlers ?? [], false);
     }
     if (this.verbose) {
+      if (!callbackManager_) {
+        callbackManager_ = new CallbackManager();
+      }
       const consoleHandler = new ConsoleCallbackHandler();
       if (
         !callbackManager_.handlers.some(

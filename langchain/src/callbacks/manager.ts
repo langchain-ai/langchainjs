@@ -384,11 +384,9 @@ export class CallbackManager
     inherit = true
   ): CallbackManager {
     const manager = new CallbackManager(this._parentRunId);
-    manager.setHandlers(
-      [...this.handlers, ...additionalHandlers].map((handler) => handler.copy())
-    );
+    manager.setHandlers([...this.handlers].map((handler) => handler.copy()));
     for (const handler of additionalHandlers) {
-      manager.addHandler(handler, inherit);
+      manager.addHandler(handler.copy(), inherit);
     }
     return manager;
   }

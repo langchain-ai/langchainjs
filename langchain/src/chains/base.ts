@@ -62,8 +62,11 @@ export abstract class BaseChain extends BaseLangChain implements ChainInputs {
     const values = { [this.inputKeys[0]]: input };
     const returnValues = await this.call(values, callbackManager);
     const keys = Object.keys(returnValues);
-    if (keys.length === 1) {
-      return returnValues[keys[0]];
+    // Filter out the __runMetadata field
+    const filteredKeys = keys.filter((key) => key !== "__runMetadata");
+
+    if (filteredKeys.length === 1) {
+      return returnValues[filteredKeys[0]];
     }
     throw new Error(
       "return values have multiple keys, `run` only supported when one key currently"
@@ -100,6 +103,10 @@ export abstract class BaseChain extends BaseLangChain implements ChainInputs {
     if (!(this.memory == null)) {
       await this.memory.saveContext(values, outputValues);
     }
+    // add the runManager's currentRunId to the outputValues
+    outputValues.__runMetadata = runManager
+      ? { __runId: runManager?.runId }
+      : undefined;
     return outputValues;
   }
 

@@ -3,7 +3,7 @@ import { initializeAgentExecutorWithOptions } from "langchain/agents";
 import { SerpAPI } from "langchain/tools";
 import { Calculator } from "langchain/tools/calculator";
 import process from "process";
-import {getTracingCallbackManager} from "langchain/callbacks";
+import { getTracingCallbackManager } from "langchain/callbacks";
 
 export const run = async () => {
   process.env.LANGCHAIN_HANDLER = "langchain";
@@ -36,7 +36,7 @@ export const run = async () => {
     executor.call({ input }, tracingCallbackManager),
   ]);
 
-  console.log(`Got output ${resultA.output}`);
-  console.log(`Got output ${resultB.output}`);
-  console.log(`Got output ${resultC.output}`);
+  console.log(`Got output ${resultA.output} ${resultA.__runMetadata.__runId}`);
+  console.log(`Got output ${resultB.output} ${resultB.__runMetadata.__runId}`);
+  console.log(`Got output ${resultC.output} ${resultC.__runMetadata.__runId}`);
 };

@@ -83,6 +83,7 @@ export abstract class BaseLLM extends BaseLanguageModel {
     }
 
     await runManager?.handleLLMEnd(output);
+    output.__runMetadata = { __runId: runManager?.runId };
     return output;
   }
 

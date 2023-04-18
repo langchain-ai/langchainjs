@@ -226,7 +226,7 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
    *
    * @param prompts - The prompts to pass into the model.
    * @param [stop] - Optional list of stop words to use when generating.
-   * @param [callbackManager] - Optional callback manager to use when generating.
+   * @param [runManager] - Optional callback manager to use when generating.
    *
    * @returns The full LLM output.
    *

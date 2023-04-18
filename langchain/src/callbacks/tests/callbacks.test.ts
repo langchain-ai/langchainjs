@@ -109,6 +109,25 @@ class FakeCallbackHandler extends BaseCallbackHandler {
     this.ends += 1;
     this.agentEnds += 1;
   }
+
+  copy(): FakeCallbackHandler {
+    const newInstance = new FakeCallbackHandler();
+    newInstance.name = this.name;
+    newInstance.starts = this.starts;
+    newInstance.ends = this.ends;
+    newInstance.errors = this.errors;
+    newInstance.chainStarts = this.chainStarts;
+    newInstance.chainEnds = this.chainEnds;
+    newInstance.llmStarts = this.llmStarts;
+    newInstance.llmEnds = this.llmEnds;
+    newInstance.llmStreams = this.llmStreams;
+    newInstance.toolStarts = this.toolStarts;
+    newInstance.toolEnds = this.toolEnds;
+    newInstance.agentEnds = this.agentEnds;
+    newInstance.texts = this.texts;
+
+    return newInstance;
+  }
 }
 
 test("CallbackManager", async () => {
@@ -298,11 +317,23 @@ test("CallbackManager with child manager inherited handlers", async () => {
     { test: "test" }
   );
   const childManager = chainCb.getChild();
-  expect(childManager.handlers).toEqual([handler1, handler2]);
-  expect(childManager.inheritedHandlers).toEqual([handler1, handler2]);
+  expect(childManager.handlers.map((h) => h.name)).toEqual([
+    handler1.name,
+    handler2.name,
+  ]);
+  expect(childManager.inheritedHandlers.map((h) => h.name)).toEqual([
+    handler1.name,
+    handler2.name,
+  ]);
 
   const toolCb = await childManager.handleToolStart({ name: "test" }, "test");
   const childManager2 = toolCb.getChild();
-  expect(childManager2.handlers).toEqual([handler1, handler2]);
-  expect(childManager2.inheritedHandlers).toEqual([handler1, handler2]);
+  expect(childManager2.handlers.map((h) => h.name)).toEqual([
+    handler1.name,
+    handler2.name,
+  ]);
+  expect(childManager2.inheritedHandlers.map((h) => h.name)).toEqual([
+    handler1.name,
+    handler2.name,
+  ]);
 });
