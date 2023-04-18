@@ -107,6 +107,7 @@
     "excludePrivate": true,
     "excludeInternal": true,
     "excludeExternals": true,
+    "excludeNotDocumented": false,
     "readme": "none",
     "out": "docs"
   }

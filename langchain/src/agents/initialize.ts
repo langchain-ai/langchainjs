@@ -51,7 +51,7 @@ export const initializeAgentExecutor = async (
   }
 };
 
-type AgentExecutorOptions =
+export type InitializeAgentExecutorOptions =
   | ({
       agentType: "zero-shot-react-description";
       agentArgs?: Parameters<typeof ZeroShotAgent.fromLLMAndTools>[2];
@@ -74,10 +74,17 @@ type AgentExecutorOptions =
       "agent" | "tools"
     >);
 
+/**
+ * Initialize an agent executor with options
+ * @param tools Array of tools to use in the agent
+ * @param llm LLM or ChatModel to use in the agent
+ * @param options Options for the agent, including agentType, agentArgs, and other options for AgentExecutor.fromAgentAndTools
+ * @returns AgentExecutor
+ */
 export const initializeAgentExecutorWithOptions = async (
   tools: Tool[],
   llm: BaseLanguageModel,
-  options: AgentExecutorOptions = {
+  options: InitializeAgentExecutorOptions = {
     agentType:
       llm._modelType() === "base_chat_model"
         ? "chat-zero-shot-react-description"

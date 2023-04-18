@@ -19,7 +19,7 @@ const zapierNLABaseDescription: string =
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ZapierValues = Record<string, any>;
 
-interface ZapiterNLAWrapperParams extends AsyncCallerParams {
+export interface ZapiterNLAWrapperParams extends AsyncCallerParams {
   apiKey?: string;
 }
 
@@ -221,6 +221,7 @@ export class ZapierNLARunAction extends Tool {
     });
   }
 
+  /** @ignore */
   async _call(arg: string): Promise<string> {
     return this.apiWrapper.runAsString(this.actionId, arg, this.params);
   }

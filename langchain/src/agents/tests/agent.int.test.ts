@@ -3,11 +3,12 @@ import { expect, test } from "@jest/globals";
 import { OpenAI } from "../../llms/openai.js";
 import { OpenAIEmbeddings } from "../../embeddings/openai.js";
 import { loadAgent } from "../load.js";
-import { AgentExecutor, Tool } from "../index.js";
+import { AgentExecutor } from "../index.js";
 import { SerpAPI } from "../../tools/serpapi.js";
 import { Calculator } from "../../tools/calculator.js";
 import { initializeAgentExecutorWithOptions } from "../initialize.js";
 import { WebBrowser } from "../../tools/webbrowser.js";
+import { Tool } from "../../tools/base.js";
 
 test("Run agent from hub", async () => {
   const model = new OpenAI({ temperature: 0, modelName: "text-babbage-001" });

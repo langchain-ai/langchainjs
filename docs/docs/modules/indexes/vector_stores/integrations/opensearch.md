@@ -25,8 +25,8 @@ You'll also need to have an OpenSearch instance running. You can use the [offici
 ```typescript
 import { Client } from "@opensearch-project/opensearch";
 import { Document } from "langchain/document";
-import { OpenAIEmbeddings } from "langchain/embeddings";
-import { OpenSearchVectorStore } from "langchain/vectorstores";
+import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { OpenSearchVectorStore } from "langchain/vectorstores/opensearch";
 
 const client = new Client({
   nodes: [process.env.OPENSEARCH_URL ?? "http://127.0.0.1:9200"],
@@ -63,9 +63,9 @@ await OpenSearchVectorStore.fromDocuments(docs, new OpenAIEmbeddings(), {
 ```typescript
 import { Client } from "@opensearch-project/opensearch";
 import { VectorDBQAChain } from "langchain/chains";
-import { OpenAIEmbeddings } from "langchain/embeddings";
-import { OpenAI } from "langchain/llms";
-import { OpenSearchVectorStore } from "langchain/vectorstores";
+import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { OpenAI } from "langchain/llms/openai";
+import { OpenSearchVectorStore } from "langchain/vectorstores/opensearch";
 
 const client = new Client({
   nodes: [process.env.OPENSEARCH_URL ?? "http://127.0.0.1:9200"],
