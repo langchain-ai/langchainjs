@@ -24485,11 +24485,11 @@ __metadata:
 
 "typedoc-plugin-markdown@patch:typedoc-plugin-markdown@npm%3A4.0.0-next.6#./.yarn/patches/typedoc-plugin-markdown-npm-4.0.0-next.6-96b4b47746.patch::locator=langchainjs%40workspace%3A.":
   version: 4.0.0-next.6
-  resolution: "typedoc-plugin-markdown@patch:typedoc-plugin-markdown@npm%3A4.0.0-next.6#./.yarn/patches/typedoc-plugin-markdown-npm-4.0.0-next.6-96b4b47746.patch::version=4.0.0-next.6&hash=ecd24f&locator=langchainjs%40workspace%3A."
+  resolution: "typedoc-plugin-markdown@patch:typedoc-plugin-markdown@npm%3A4.0.0-next.6#./.yarn/patches/typedoc-plugin-markdown-npm-4.0.0-next.6-96b4b47746.patch::version=4.0.0-next.6&hash=a0cf58&locator=langchainjs%40workspace%3A."
   peerDependencies:
     prettier: ">=1.8.0"
     typedoc: ">=0.24.0"
-  checksum: f5af63330d21848d01bc2b17c25063bbb2d011e2bd14f8b5739355c320cd7a22539a4134554676a56cbf8fc00ea38d2610c9aea7cdbf4d865672f148076a91ee
+  checksum: f6c8d4c2e2c3da6fa1b56f9f77668286ceb62455f6b7008921f949aca1e41fcf50987f64f13c1e809c043a6c66da8c6e0693e55f99c2a4ad2be07bb137b2f3c8
   languageName: node
   linkType: hard
 
