@@ -124,6 +124,15 @@
 }
 
 .markdown > h4 {
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.2rem;
+  font-weight: 600;
+}
+
+.markdown > h4:has(+ table) {
+  margin-bottom: 0.4rem;
+}
+
+.markdown > h5 {
+  margin-bottom: 0.2rem;
   font-weight: 600;
 }
