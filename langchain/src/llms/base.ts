@@ -1,5 +1,5 @@
-import { BaseCache, InMemoryCache } from "../cache.js";
-import { BasePromptValue, LLMResult } from "../schema/index.js";
+import { InMemoryCache } from "../cache/index.js";
+import { BaseCache, BasePromptValue, LLMResult } from "../schema/index.js";
 import {
   BaseLanguageModel,
   BaseLanguageModelParams,

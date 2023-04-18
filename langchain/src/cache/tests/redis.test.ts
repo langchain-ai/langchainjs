@@ -1,15 +1,9 @@
-import hash from "object-hash";
 import { test, expect, jest } from "@jest/globals";
+import hash from "object-hash";
 
-import { InMemoryCache, RedisCache } from "../cache.js";
+import { RedisCache } from "../redis.js";
 
 const sha256 = (str: string) => hash(str);
-
-test("InMemoryCache", async () => {
-  const cache = new InMemoryCache();
-  await cache.update("foo", "bar", [{ text: "baz" }]);
-  expect(await cache.lookup("foo", "bar")).toEqual([{ text: "baz" }]);
-});
 
 test("RedisCache", async () => {
   const redis = {

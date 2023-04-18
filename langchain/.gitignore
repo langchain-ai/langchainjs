@@ -223,6 +223,9 @@ retrievers/databerry.d.ts
 cache.cjs
 cache.js
 cache.d.ts
+cache/redis.cjs
+cache/redis.js
+cache/redis.d.ts
 index.cjs
 index.js
 index.d.ts

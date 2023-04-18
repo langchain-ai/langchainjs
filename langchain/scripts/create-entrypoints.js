@@ -102,7 +102,8 @@ const entrypoints = {
   "retrievers/metal": "retrievers/metal",
   "retrievers/databerry": "retrievers/databerry",
   // cache
-  cache: "cache",
+  cache: "cache/index",
+  "cache/redis": "cache/redis",
 };
 
 // Entrypoints in this list will
