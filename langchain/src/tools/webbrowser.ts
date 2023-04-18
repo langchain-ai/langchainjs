@@ -172,6 +172,8 @@ export class WebBrowser extends Tool {
       let t = input.trim();
       t = t.startsWith('"') ? t.slice(1) : t;
       t = t.endsWith('"') ? t.slice(0, -1) : t;
+      // it likes to put / at the end of urls, wont matter for task
+      t = t.endsWith("/") ? t.slice(0, -1) : t;
       return t.trim();
     });
     const doSummary = !task;
@@ -216,9 +218,9 @@ export class WebBrowser extends Tool {
       context = results.map((res) => res.pageContent).join("\n");
     }
 
-    const input = `${context}\n\nI need ${
+    const input = `Text:${context}\n\nI need ${
       doSummary ? "a summary" : task
-    } from the previous text, also provide up to 5 markdown links from within that would be of interest (always including URL and text). Links should be provided, if present, in markdown syntax as a list under the heading "Relevant Links:".`;
+    } from the above text, also provide up to 5 markdown links from within that would be of interest (always including URL and text). Links should be provided, if present, in markdown syntax as a list under the heading "Relevant Links:".`;
 
     const res = await this.model.generatePrompt([new StringPromptValue(input)]);
 
@@ -227,5 +229,5 @@ export class WebBrowser extends Tool {
 
   name = "web-browser";
 
-  description = `useful for when you need to find something on or summarize a webpage. input should be a comma seperated list of "valid URL including protocol","what you want to find on the page or empty string for a summary".`;
+  description = `useful for when you need to find something on or summarize a webpage. input should be a comma seperated list of "ONE valid http URL including protocol","what you want to find on the page or empty string for a summary".`;
 }

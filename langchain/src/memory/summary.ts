@@ -88,10 +88,8 @@ export class ConversationSummaryMemory extends BaseChatMemory {
     outputValues: OutputValues
   ): Promise<void> {
     await super.saveContext(inputValues, outputValues);
-    this.buffer = await this.predictNewSummary(
-      this.chatHistory.messages.slice(-2),
-      this.buffer
-    );
+    const messages = await this.chatHistory.getMessages();
+    this.buffer = await this.predictNewSummary(messages.slice(-2), this.buffer);
   }
 
   async clear() {

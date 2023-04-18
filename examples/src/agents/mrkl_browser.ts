@@ -1,5 +1,5 @@
 import { OpenAI } from "langchain/llms/openai";
-import { initializeAgentExecutor } from "langchain/agents";
+import { initializeAgentExecutorWithOptions } from "langchain/agents";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { SerpAPI } from "langchain/tools";
 import { Calculator } from "langchain/tools/calculator";
@@ -18,12 +18,10 @@ export const run = async () => {
     new WebBrowser({ model, embeddings }),
   ];
 
-  const executor = await initializeAgentExecutor(
-    tools,
-    model,
-    "zero-shot-react-description",
-    true
-  );
+  const executor = await initializeAgentExecutorWithOptions(tools, model, {
+    agentType: "zero-shot-react-description",
+    verbose: true,
+  });
   console.log("Loaded agent.");
 
   const input = `What is the word of the day on merriam webster. What is the top result on google for that word`;

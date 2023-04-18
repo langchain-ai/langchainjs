@@ -25,7 +25,7 @@ Now we can get started!
 
 ```typescript
 import { OpenAI } from "langchain/llms/openai";
-import { initializeAgentExecutor } from "langchain/agents";
+import { initializeAgentExecutorWithOptions } from "langchain/agents";
 import { SerpAPI } from "langchain/tools";
 import { Calculator } from "langchain/tools/calculator";
 
@@ -39,11 +39,9 @@ const tools = [
   new Calculator(),
 ];
 
-const executor = await initializeAgentExecutor(
-  tools,
-  model,
-  "zero-shot-react-description"
-);
+const executor = await initializeAgentExecutorWithOptions(tools, model, {
+  agentType: "zero-shot-react-description",
+});
 console.log("Loaded agent.");
 
 const input =

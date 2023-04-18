@@ -8,6 +8,11 @@ export type SerializedLLMChain = {
   prompt?: SerializedBasePromptTemplate;
 };
 
+export type SerializedSimpleSequentialChain = {
+  _type: "simple_sequential_chain";
+  chains: Array<SerializedBaseChain>;
+};
+
 export type SerializedSqlDatabaseChain = {
   _type: "sql_database_chain";
   sql_database: SerializedSqlDatabase;
@@ -51,6 +56,7 @@ export type SerializedAnalyzeDocumentChain = {
 
 export type SerializedBaseChain =
   | SerializedLLMChain
+  | SerializedSimpleSequentialChain
   | SerializedVectorDBQAChain
   | SerializedStuffDocumentsChain
   | SerializedSqlDatabaseChain

@@ -4,7 +4,7 @@ export interface DocumentParams<
 > {
   pageContent: string;
 
-  metadata: Metadata;
+  metadata?: Metadata;
 }
 
 /**
@@ -19,10 +19,10 @@ export class Document<
 
   metadata: Metadata;
 
-  constructor(fields?: Partial<DocumentParams<Metadata>>) {
-    this.pageContent = fields?.pageContent
+  constructor(fields: DocumentParams<Metadata>) {
+    this.pageContent = fields.pageContent
       ? fields.pageContent.toString()
       : this.pageContent;
-    this.metadata = fields?.metadata ?? ({} as Metadata);
+    this.metadata = fields.metadata ?? ({} as Metadata);
   }
 }

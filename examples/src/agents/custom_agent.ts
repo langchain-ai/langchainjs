@@ -1,8 +1,8 @@
+import { AgentExecutor, ZeroShotAgent } from "langchain/agents";
+import { LLMChain } from "langchain/chains";
 import { OpenAI } from "langchain/llms/openai";
-import { ZeroShotAgent, AgentExecutor } from "langchain/agents";
 import { SerpAPI } from "langchain/tools";
 import { Calculator } from "langchain/tools/calculator";
-import { LLMChain } from "langchain/chains";
 
 export const run = async () => {
   const model = new OpenAI({ temperature: 0 });
@@ -28,8 +28,6 @@ Question: {input}
   };
 
   const prompt = ZeroShotAgent.createPrompt(tools, createPromptArgs);
-
-  console.log(prompt.template);
 
   const llmChain = new LLMChain({ llm: model, prompt });
   const agent = new ZeroShotAgent({

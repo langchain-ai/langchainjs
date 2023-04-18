@@ -1,51 +1,45 @@
-/* eslint-disable no-instanceof/no-instanceof */
 import { z } from "zod";
-
 import { BaseOutputParser, OutputParserException } from "../schema/index.js";
 
 function printSchema(schema: z.ZodTypeAny, depth = 0): string {
   if (
-    (schema instanceof z.ZodString || schema._def.typeName === "ZodString") &&
+    schema._def.typeName === "ZodString" &&
     (schema as z.ZodString)._def.checks.some(
       (check) => check.kind === "datetime"
     )
   ) {
     return "datetime";
   }
-  if (schema instanceof z.ZodString || schema._def.typeName === "ZodString") {
+  if (schema._def.typeName === "ZodString") {
     return "string";
   }
-  if (schema instanceof z.ZodNumber || schema._def.typeName === "ZodNumber") {
+  if (schema._def.typeName === "ZodNumber") {
     return "number";
   }
-  if (schema instanceof z.ZodBoolean || schema._def.typeName === "ZodBoolean") {
+  if (schema._def.typeName === "ZodBoolean") {
     return "boolean";
   }
-  if (schema instanceof z.ZodDate || schema._def.typeName === "ZodDate") {
+  if (schema._def.typeName === "ZodDate") {
     return "date";
   }
-  if (
-    schema instanceof z.ZodNullable ||
-    schema._def.typeName === "ZodNullable"
-  ) {
+  if (schema._def.typeName === "ZodEnum") {
+    return (schema as z.ZodEnum<[string, ...string[]]>).options
+      .map((value) => `"${value}"`)
+      .join(" | ");
+  }
+  if (schema._def.typeName === "ZodNullable") {
     return `${printSchema(schema._def.innerType, depth)} // Nullable`;
   }
-  if (
-    schema instanceof z.ZodTransformer ||
-    schema._def.typeName === "ZodTransformer"
-  ) {
+  if (schema._def.typeName === "ZodTransformer") {
     return `${printSchema(schema._def.schema, depth)}`;
   }
-  if (
-    schema instanceof z.ZodOptional ||
-    schema._def.typeName === "ZodOptional"
-  ) {
+  if (schema._def.typeName === "ZodOptional") {
     return `${printSchema(schema._def.innerType, depth)} // Optional`;
   }
-  if (schema instanceof z.ZodArray || schema._def.typeName === "ZodArray") {
+  if (schema._def.typeName === "ZodArray") {
     return `${printSchema(schema._def.type, depth)}[]`;
   }
-  if (schema instanceof z.ZodObject || schema._def.typeName === "ZodObject") {
+  if (schema._def.typeName === "ZodObject") {
     const indent = "\t".repeat(depth);
     const indentIn = "\t".repeat(depth + 1);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -69,7 +63,7 @@ ${indent}}`;
 
 export class StructuredOutputParser<
   T extends z.ZodTypeAny
-> extends BaseOutputParser {
+> extends BaseOutputParser<z.infer<T>> {
   constructor(public schema: T) {
     super();
   }
