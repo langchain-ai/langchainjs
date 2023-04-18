@@ -1,6 +1,6 @@
 export { BaseChain, ChainInputs } from "./base.js";
 export { LLMChain, ConversationChain } from "./llm_chain.js";
-export { SequentialChain, SimpleSequentialChain } from "./simple_sequential_chain.js";
+export { SequentialChain, SimpleSequentialChain } from "./sequential_chain.js";
 export {
   StuffDocumentsChain,
   MapReduceDocumentsChain,

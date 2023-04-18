@@ -3,7 +3,7 @@ import { BaseLLM } from "../../llms/base.js";
 import { LLMResult } from "../../schema/index.js";
 import { LLMChain } from "../llm_chain.js";
 import { PromptTemplate } from "../../prompts/index.js";
-import { SequentialChain } from "../simple_sequential_chain.js";
+import { SequentialChain } from "../sequential_chain.js";
 
 class FakeLLM1 extends BaseLLM {
   nrMapCalls = 0;

@@ -2,7 +2,7 @@ import { test } from "@jest/globals";
 import { OpenAI } from "../../llms/openai.js";
 import { PromptTemplate } from "../../prompts/index.js";
 import { LLMChain } from "../llm_chain.js";
-import { SimpleSequentialChain } from "../simple_sequential_chain.js";
+import { SimpleSequentialChain } from "../sequential_chain.js";
 import { ChatOpenAI } from "../../chat_models/openai.js";
 
 test("Test SimpleSequentialChain example usage", async () => {
