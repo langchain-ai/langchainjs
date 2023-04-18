@@ -6,7 +6,7 @@ function Imports({ imports }) {
   return (
     <div
       style={{
-        paddingTop: "1.1rem",
+        paddingTop: "1.3rem",
         background: "var(--prism-background-color)",
         color: "var(--prism-color)",
         marginTop: "calc(-1 * var(--ifm-leading) - 5px)",
