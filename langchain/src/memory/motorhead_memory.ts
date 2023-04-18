@@ -4,6 +4,7 @@ import {
   OutputValues,
   MemoryVariables,
   getBufferString,
+  getInputValue,
 } from "./base.js";
 import { AsyncCaller, AsyncCallerParams } from "../util/async_caller.js";
 
@@ -101,6 +102,8 @@ export class MotorheadMemory extends BaseChatMemory {
     inputValues: InputValues,
     outputValues: OutputValues
   ): Promise<void> {
+    const input = getInputValue(inputValues, this.inputKey);
+    const output = getInputValue(outputValues, this.outputKey);
     await Promise.all([
       this.caller.call(
         fetch,
@@ -110,8 +113,8 @@ export class MotorheadMemory extends BaseChatMemory {
           method: "POST",
           body: JSON.stringify({
             messages: [
-              { role: "Human", content: `${inputValues.input}` },
-              { role: "AI", content: `${outputValues.response}` },
+              { role: "Human", content: `${input}` },
+              { role: "AI", content: `${output}` },
             ],
           }),
           headers: {
