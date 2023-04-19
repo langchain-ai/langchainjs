@@ -1,4 +1,4 @@
-import { StructuredTool } from "../../../tools/base.js";
+import { Tool } from "../../../tools/base.js";
 import {
   InfoSqlTool,
   ListTablesSqlTool,
@@ -20,7 +20,7 @@ export interface SqlCreatePromptArgs extends ZeroShotCreatePromptArgs {
 }
 
 export class SqlToolkit extends Toolkit {
-  tools: StructuredTool[];
+  tools: Tool[];
 
   db: SqlDatabase;
 

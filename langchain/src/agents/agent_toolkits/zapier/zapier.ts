@@ -1,9 +1,9 @@
 import { Toolkit } from "../base.js";
-import { StructuredTool } from "../../../tools/base.js";
+import { Tool } from "../../../tools/base.js";
 import { ZapierNLARunAction, ZapierNLAWrapper } from "../../../tools/zapier.js";
 
 export class ZapierToolKit extends Toolkit {
-  tools: StructuredTool[] = [];
+  tools: Tool[] = [];
 
   static async fromZapierNLAWrapper(
     zapierNLAWrapper: ZapierNLAWrapper

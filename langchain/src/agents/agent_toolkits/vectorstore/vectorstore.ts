@@ -1,4 +1,4 @@
-import { StructuredTool } from "../../../tools/base.js";
+import { Tool } from "../../../tools/base.js";
 import { VectorStoreQATool } from "../../../tools/vectorstore.js";
 import { VectorStore } from "../../../vectorstores/base.js";
 import { Toolkit } from "../base.js";
@@ -16,7 +16,7 @@ export interface VectorStoreInfo {
 }
 
 export class VectorStoreToolkit extends Toolkit {
-  tools: StructuredTool[];
+  tools: Tool[];
 
   llm: BaseLanguageModel;
 
@@ -37,7 +37,7 @@ export class VectorStoreToolkit extends Toolkit {
 }
 
 export class VectorStoreRouterToolkit extends Toolkit {
-  tools: StructuredTool[];
+  tools: Tool[];
 
   vectorStoreInfos: VectorStoreInfo[];
 
