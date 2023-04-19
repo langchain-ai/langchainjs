@@ -6,7 +6,7 @@ function getLengthBased(text: string): number {
   return text.split(/\n| /).length;
 }
 
-interface LengthBasedExampleSelectorArgs {
+export interface LengthBasedExampleSelectorInput {
   examplePrompt: PromptTemplate;
   maxLength?: number;
   getTextLength?: (text: string) => number;
@@ -23,7 +23,7 @@ export class LengthBasedExampleSelector implements BaseExampleSelector {
 
   exampleTextLengths: number[] = [];
 
-  constructor(data: LengthBasedExampleSelectorArgs) {
+  constructor(data: LengthBasedExampleSelectorInput) {
     this.examplePrompt = data.examplePrompt;
     this.maxLength = data.maxLength ?? 2048;
     this.getTextLength = data.getTextLength ?? getLengthBased;
@@ -72,7 +72,7 @@ export class LengthBasedExampleSelector implements BaseExampleSelector {
 
   static async fromExamples(
     examples: Example[],
-    args: LengthBasedExampleSelectorArgs
+    args: LengthBasedExampleSelectorInput
   ) {
     const selector = new LengthBasedExampleSelector(args);
     await Promise.all(examples.map((eg) => selector.addExample(eg)));

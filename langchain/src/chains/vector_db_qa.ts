@@ -48,6 +48,7 @@ export class VectorDBQAChain extends BaseChain implements VectorDBQAChainInput {
       fields.returnSourceDocuments ?? this.returnSourceDocuments;
   }
 
+  /** @ignore */
   async _call(values: ChainValues): Promise<ChainValues> {
     if (!(this.inputKey in values)) {
       throw new Error(`Question key ${this.inputKey} not found.`);
