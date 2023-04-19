@@ -13028,7 +13028,7 @@ __metadata:
     langchain: "workspace:*"
     ml-distance: ^4.0.0
     mongodb: ^5.2.0
-    pickleparser: ^0.0.2-alpha.2
+    pickleparser: ^0.0.2-alpha.3
     prettier: ^2.8.3
     prisma: ^4.11.0
     sqlite3: ^5.1.4
@@ -17215,7 +17215,7 @@ __metadata:
     p-retry: 4
     pdf-parse: 1.1.1
     pdfjs-dist: ^3.4.120
-    pickleparser: ^0.0.2-alpha.2
+    pickleparser: ^0.0.2-alpha.3
     playwright: ^1.32.1
     prettier: ^2.8.3
     puppeteer: ^19.7.2
@@ -17252,9 +17252,9 @@ __metadata:
     html-to-text: ^9.0.5
     mammoth: "*"
     mongodb: ^5.2.0
-    pdfjs-dist: ^3.4.120
-    pickleparser: ^0.0.2-alpha.2
     pdf-parse: 1.1.1
+    pdfjs-dist: ^3.4.120
+    pickleparser: ^0.0.2-alpha.3
     playwright: ^1.32.1
     puppeteer: ^19.7.2
     redis: ^4.6.4
@@ -19779,13 +19779,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"pickleparser@npm:^0.0.2-alpha.2":
-  version: 0.0.2-alpha.2
-  resolution: "pickleparser@npm:0.0.2-alpha.2"
+"pickleparser@npm:^0.0.2-alpha.3":
+  version: 0.0.2-alpha.3
+  resolution: "pickleparser@npm:0.0.2-alpha.3"
   bin:
     pickleparser: bin/pickletojson.js
     pickletojson: bin/pickletojson.js
-  checksum: 0ade3a6e3e247195d03311914f93aca7f6eed163fd726ac4db65d306b3649007ef81006553d0b3ed2252e6c49c75539cc97dad706c3f7278392853666a9408a1
+  checksum: 889fd795131996c2eb575e38650e086997bc61044f72c34dafaab800aae852e06e8695261cf3e43a441d0f492b8118739dbdc8045a346325438ed3520b454115
   languageName: node
   linkType: hard
 
@@ -21325,18 +21325,6 @@ __metadata:
     iconv-lite: 0.4.24
     unpipe: 1.0.0
   checksum: ba1583c8d8a48e8fbb7a873fdbb2df66ea4ff83775421bfe21ee120140949ab048200668c47d9ae3880012f6e217052690628cf679ddfbd82c9fc9358d574676
-  languageName: node
-  linkType: hard
-
-"raw-loader@npm:^4.0.2":
-  version: 4.0.2
-  resolution: "raw-loader@npm:4.0.2"
-  dependencies:
-    loader-utils: ^2.0.0
-    schema-utils: ^3.0.0
-  peerDependencies:
-    webpack: ^4.0.0 || ^5.0.0
-  checksum: 51cc1b0d0e8c37c4336b5318f3b2c9c51d6998ad6f56ea09612afcfefc9c1f596341309e934a744ae907177f28efc9f1654eacd62151e82853fcc6d37450e795
   languageName: node
   linkType: hard
 

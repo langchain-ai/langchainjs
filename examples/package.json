@@ -36,7 +36,7 @@
     "langchain": "workspace:*",
     "ml-distance": "^4.0.0",
     "mongodb": "^5.2.0",
-    "pickleparser": "^0.0.2-alpha.2",
+    "pickleparser": "^0.0.2-alpha.3",
     "prisma": "^4.11.0",
     "sqlite3": "^5.1.4",
     "typeorm": "^0.3.12",
