@@ -113,8 +113,10 @@ export class GithubRepoLoader
     return this.ignoreFiles.some((pattern) => {
       if (typeof pattern === "string") {
         return path === pattern;
-      } else {
+      } else (pattern instanceof RegExp) {
         return pattern.test(path);
+      } else {
+        throw new Error(`Invalid ignore files pattern: ${pattern}`);
       }
     });
   }
