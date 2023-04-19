@@ -71,6 +71,7 @@
       "src/document.ts",
       "src/docstore/index.ts",
       "src/document_loaders/base.ts",
+      "src/document_loaders/web/apify_dataset.ts",
       "src/document_loaders/web/cheerio.ts",
       "src/document_loaders/web/puppeteer.ts",
       "src/document_loaders/web/playwright.ts",

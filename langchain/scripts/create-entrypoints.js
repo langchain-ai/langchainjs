@@ -61,6 +61,7 @@ const entrypoints = {
   // document_loaders
   document_loaders: "document_loaders/index",
   "document_loaders/base": "document_loaders/base",
+  "document_loaders/web/apify_dataset": "document_loaders/web/apify_dataset",
   "document_loaders/web/cheerio": "document_loaders/web/cheerio",
   "document_loaders/web/puppeteer": "document_loaders/web/puppeteer",
   "document_loaders/web/playwright": "document_loaders/web/playwright",

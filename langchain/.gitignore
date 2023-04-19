@@ -121,6 +121,9 @@ document_loaders.d.ts
 document_loaders/base.cjs
 document_loaders/base.js
 document_loaders/base.d.ts
+document_loaders/web/apify_dataset.cjs
+document_loaders/web/apify_dataset.js
+document_loaders/web/apify_dataset.d.ts
 document_loaders/web/cheerio.cjs
 document_loaders/web/cheerio.js
 document_loaders/web/cheerio.d.ts
