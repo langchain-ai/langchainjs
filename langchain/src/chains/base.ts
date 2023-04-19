@@ -57,8 +57,8 @@ export abstract class BaseChain extends BaseLangChain implements ChainInputs {
 
   abstract get outputKeys(): string[];
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async run(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     input: any,
     callbacks?: CallbackManager | BaseCallbackHandler[]
   ): Promise<string> {

@@ -400,7 +400,7 @@ export class CallbackManager
 
   static fromHandlers(handlers: BaseCallbackHandlerMethods) {
     class Handler extends BaseCallbackHandler {
-      name = "handler";
+      name = uuidv4();
 
       constructor() {
         super();
