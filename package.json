@@ -41,7 +41,6 @@
   "author": "LangChain",
   "license": "MIT",
   "devDependencies": {
-    "@babel/preset-typescript": "^7.21.4",
     "@tsconfig/recommended": "^1.0.2",
     "dotenv": "^16.0.3",
     "husky": "^8.0.3",
@@ -50,7 +49,6 @@
     "typescript": "^4.9.5"
   },
   "dependencies": {
-    "embedbase-js": "^1.7.9",
     "turbo": "latest"
   },
   "resolutions": {
