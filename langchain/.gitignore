@@ -94,6 +94,9 @@ vectorstores/pinecone.d.ts
 vectorstores/supabase.cjs
 vectorstores/supabase.js
 vectorstores/supabase.d.ts
+vectorstores/embedbase.cjs
+vectorstores/embedbase.js
+vectorstores/embedbase.d.ts
 vectorstores/opensearch.cjs
 vectorstores/opensearch.js
 vectorstores/opensearch.d.ts
