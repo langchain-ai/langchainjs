@@ -9,8 +9,11 @@ export interface ToolParams {
   callbackManager?: CallbackManager;
 }
 
-export abstract class StructuredTool<T extends z.ZodTypeAny = z.ZodTypeAny> {
-  abstract schema: T;
+export abstract class StructuredTool<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  T extends z.ZodObject<any, any, any, any> = z.ZodObject<any, any, any, any>
+> {
+  abstract schema: T | z.ZodEffects<T>;
 
   verbose: boolean;
 
@@ -21,9 +24,12 @@ export abstract class StructuredTool<T extends z.ZodTypeAny = z.ZodTypeAny> {
     this.callbackManager = callbackManager ?? getCallbackManager();
   }
 
-  protected abstract _call(arg: z.infer<T>): Promise<string>;
+  protected abstract _call(arg: z.output<T>): Promise<string>;
 
-  async call(arg: z.infer<T>, verbose?: boolean): Promise<string> {
+  async call(
+    arg: (z.output<T> extends string ? string : never) | z.input<T>,
+    verbose?: boolean
+  ): Promise<string> {
     const _verbose = verbose ?? this.verbose;
     const parsed = await this.schema.parseAsync(arg);
     await this.callbackManager.handleToolStart(
@@ -50,6 +56,16 @@ export abstract class StructuredTool<T extends z.ZodTypeAny = z.ZodTypeAny> {
 }
 
 export abstract class Tool extends StructuredTool {
-  // eslint-disable-next-line tree-shaking/no-side-effects-in-initialization
-  schema = /* #__PURE__ */ z.string();
+  schema = /* #__PURE__ */ z
+    // eslint-disable-next-line tree-shaking/no-side-effects-in-initialization
+    .object({ input: /* #__PURE__ */ z.string() })
+    // eslint-disable-next-line tree-shaking/no-side-effects-in-initialization
+    /* #__PURE__ */ .transform((obj) => obj.input);
+
+  call(
+    arg: string | z.input<this["schema"]>,
+    verbose?: boolean | undefined
+  ): Promise<string> {
+    return super.call(typeof arg === "string" ? { input: arg } : arg, verbose);
+  }
 }
