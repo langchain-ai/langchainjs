@@ -282,7 +282,7 @@ export abstract class Agent extends BaseSingleActionAgent {
     inputs: ChainValues,
     suffix?: string
   ): Promise<AgentAction | AgentFinish> {
-    const thoughts = this.constructScratchPad(steps);
+    const thoughts = await this.constructScratchPad(steps);
     const newInputs: ChainValues = {
       ...inputs,
       agent_scratchpad: suffix ? `${thoughts}${suffix}` : thoughts,
