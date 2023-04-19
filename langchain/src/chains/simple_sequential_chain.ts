@@ -76,6 +76,7 @@ export class SimpleSequentialChain
     this._validateChains();
   }
 
+  /** @ignore */
   _validateChains() {
     for (const chain of this.chains) {
       if (chain.inputKeys.length !== 1) {
@@ -95,6 +96,7 @@ export class SimpleSequentialChain
     }
   }
 
+  /** @ignore */
   async _call(
     values: ChainValues,
     runManager: CallbackManagerForChainRun

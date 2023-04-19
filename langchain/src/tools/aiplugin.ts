@@ -28,6 +28,7 @@ export class AIPluginTool extends Tool implements AIPluginToolParams {
     this.apiSpec = params.apiSpec;
   }
 
+  /** @ignore */
   async _call(_input: string) {
     return this.apiSpec;
   }

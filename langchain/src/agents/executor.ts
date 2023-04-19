@@ -11,7 +11,7 @@ import {
 } from "../schema/index.js";
 import { CallbackManagerForChainRun } from "../callbacks/manager.js";
 
-interface AgentExecutorInput extends ChainInputs {
+export interface AgentExecutorInput extends ChainInputs {
   agent: BaseSingleActionAgent | BaseMultiActionAgent;
   tools: Tool[];
   returnIntermediateSteps?: boolean;
@@ -71,6 +71,7 @@ export class AgentExecutor extends BaseChain {
     return this.maxIterations === undefined || iterations < this.maxIterations;
   }
 
+  /** @ignore */
   async _call(
     inputs: ChainValues,
     runManager?: CallbackManagerForChainRun

@@ -37,10 +37,10 @@ export const getModelContextSize = (modelName: string): number => {
   }
 };
 
-type CalculateMaxTokenProps = {
+interface CalculateMaxTokenProps {
   prompt: string;
   modelName: TiktokenModel;
-};
+}
 
 export const importTiktoken = async () => {
   try {

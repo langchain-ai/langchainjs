@@ -1,4 +1,4 @@
-import type { TextItem } from "pdfjs-dist/types/src/display/api.js";
+import type { TextItem } from "pdf-parse/lib/pdf.js/v1.10.100/build/pdf.js";
 import { Document } from "../../document.js";
 import { BufferLoader } from "./buffer.js";
 
@@ -89,13 +89,15 @@ export class PDFLoader extends BufferLoader {
 
 async function PDFLoaderImports() {
   try {
-    const { default: mod } = await import("pdfjs-dist");
+    const { default: mod } = await import(
+      "pdf-parse/lib/pdf.js/v1.10.100/build/pdf.js"
+    );
     const { getDocument, version } = mod;
     return { getDocument, version };
   } catch (e) {
     console.error(e);
     throw new Error(
-      "Failed to load pdfjs-dist. Please install it with eg. `npm install pdfjs-dist`."
+      "Failed to load pdf-parse. Please install it with eg. `npm install pdf-parse`."
     );
   }
 }

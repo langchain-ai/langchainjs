@@ -52,7 +52,8 @@
     "turbo": "latest"
   },
   "resolutions": {
-    "dpdm@^3.12.0": "patch:dpdm@npm%3A3.12.0#./.yarn/patches/dpdm-npm-3.12.0-0dfdd8e3b8.patch"
+    "dpdm@^3.12.0": "patch:dpdm@npm%3A3.12.0#./.yarn/patches/dpdm-npm-3.12.0-0dfdd8e3b8.patch",
+    "typedoc-plugin-markdown@next": "patch:typedoc-plugin-markdown@npm%3A4.0.0-next.6#./.yarn/patches/typedoc-plugin-markdown-npm-4.0.0-next.6-96b4b47746.patch"
   },
   "lint-staged": {
     "**/*.{ts,tsx}": [

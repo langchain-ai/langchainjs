@@ -16,7 +16,10 @@ import { OpenAIChat } from "./openai-chat.js";
 import { LLMResult } from "../schema/index.js";
 import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
 
-interface ModelParams {
+/**
+ * Input to OpenAI class.
+ */
+export interface OpenAIInput {
   /** Sampling temperature to use */
   temperature: number;
 
@@ -46,13 +49,7 @@ interface ModelParams {
 
   /** Whether to stream the results or not. Enabling disables tokenUsage reporting */
   streaming: boolean;
-}
 
-/**
- * Input to OpenAI class.
- * @augments ModelParams
- */
-interface OpenAIInput extends ModelParams {
   /** Model name to use */
   modelName: string;
 
@@ -74,11 +71,11 @@ interface OpenAIInput extends ModelParams {
   timeout?: number;
 }
 
-type TokenUsage = {
+interface TokenUsage {
   completionTokens?: number;
   promptTokens?: number;
   totalTokens?: number;
-};
+}
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Kwargs = Record<string, any>;
@@ -453,4 +450,4 @@ export class PromptLayerOpenAI extends OpenAI {
   }
 }
 
-export { OpenAIChat } from "./openai-chat.js";
+export { OpenAIChat, OpenAIChatInput } from "./openai-chat.js";

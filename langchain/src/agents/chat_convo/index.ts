@@ -25,7 +25,7 @@ import {
   TEMPLATE_TOOL_RESPONSE,
 } from "./prompt.js";
 
-export type CreatePromptArgs = {
+export interface ChatConversationalCreatePromptArgs {
   /** String to put after the list of tools. */
   systemMessage?: string;
   /** String to put before the list of tools. */
@@ -34,7 +34,7 @@ export type CreatePromptArgs = {
   inputVariables?: string[];
   /** Output parser to use for formatting. */
   outputParser?: AgentActionOutputParser;
-};
+}
 
 export type ChatConversationalAgentInput = Optional<AgentInput, "outputParser">;
 
@@ -102,7 +102,10 @@ export class ChatConversationalAgent extends Agent {
    * @param args.systemMessage - String to put before the list of tools.
    * @param args.humanMessage - String to put after the list of tools.
    */
-  static createPrompt(tools: Tool[], args?: CreatePromptArgs) {
+  static createPrompt(
+    tools: Tool[],
+    args?: ChatConversationalCreatePromptArgs
+  ) {
     const systemMessage = (args?.systemMessage ?? DEFAULT_PREFIX) + PREFIX_END;
     const humanMessage = args?.humanMessage ?? DEFAULT_SUFFIX;
     const outputParser =
@@ -130,7 +133,7 @@ export class ChatConversationalAgent extends Agent {
   static fromLLMAndTools(
     llm: BaseLanguageModel,
     tools: Tool[],
-    args?: CreatePromptArgs & AgentArgs
+    args?: ChatConversationalCreatePromptArgs & AgentArgs
   ) {
     ChatConversationalAgent.validateTools(tools);
     const prompt = ChatConversationalAgent.createPrompt(tools, args);

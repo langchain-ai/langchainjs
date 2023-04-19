@@ -29,6 +29,8 @@ export interface WeaviateFilter {
 }
 
 export class WeaviateStore extends VectorStore {
+  declare FilterType: WeaviateFilter;
+
   private client: WeaviateClient;
 
   private indexName: string;
@@ -76,22 +78,6 @@ export class WeaviateStore extends VectorStore {
       await this.embeddings.embedDocuments(documents.map((d) => d.pageContent)),
       documents
     );
-  }
-
-  async similaritySearch(
-    query: string,
-    k: number,
-    filter?: WeaviateFilter
-  ): Promise<Document[]> {
-    return super.similaritySearch(query, k, filter);
-  }
-
-  async similaritySearchWithScore(
-    query: string,
-    k: number,
-    filter?: WeaviateFilter
-  ): Promise<[Document, number][]> {
-    return super.similaritySearchWithScore(query, k, filter);
   }
 
   async similaritySearchVectorWithScore(

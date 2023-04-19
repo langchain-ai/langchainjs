@@ -30,9 +30,6 @@ const config = {
       "docusaurus-plugin-typedoc",
       {
         tsconfig: "../langchain/tsconfig.json",
-        sidebar: {
-          fullNames: true,
-        },
       },
     ],
     () => ({
@@ -56,7 +53,7 @@ const config = {
           rules: [
             {
               test: examplesPath,
-              use: "raw-loader",
+              use: ["json-loader", "./code-block-loader.js"],
             },
             {
               test: /\.m?js/,
@@ -81,6 +78,25 @@ const config = {
           remarkPlugins: [
             [require("@docusaurus/remark-plugin-npm2yarn"), { sync: true }],
           ],
+          async sidebarItemsGenerator({
+            defaultSidebarItemsGenerator,
+            ...args
+          }) {
+            const sidebarItems = await defaultSidebarItemsGenerator(args);
+            sidebarItems.forEach((subItem) => {
+              // This allows breaking long sidebar labels into multiple lines
+              // by inserting a zero-width space after each slash.
+              if (
+                "label" in subItem &&
+                subItem.label &&
+                subItem.label.includes("/")
+              ) {
+                // eslint-disable-next-line no-param-reassign
+                subItem.label = subItem.label.replace(/\//g, "/\u200B");
+              }
+            });
+            return sidebarItems;
+          },
         },
         pages: {
           remarkPlugins: [require("@docusaurus/remark-plugin-npm2yarn")],

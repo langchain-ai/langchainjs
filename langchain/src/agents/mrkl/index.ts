@@ -14,14 +14,14 @@ import {
 import { ZeroShotAgentOutputParser } from "./outputParser.js";
 import { FORMAT_INSTRUCTIONS, PREFIX, SUFFIX } from "./prompt.js";
 
-export type CreatePromptArgs = {
+export interface ZeroShotCreatePromptArgs {
   /** String to put after the list of tools. */
   suffix?: string;
   /** String to put before the list of tools. */
   prefix?: string;
   /** List of input variables the final prompt will expect. */
   inputVariables?: string[];
-};
+}
 
 export type ZeroShotAgentInput = Optional<AgentInput, "outputParser">;
 
@@ -71,7 +71,7 @@ export class ZeroShotAgent extends Agent {
    * @param args.prefix - String to put before the list of tools.
    * @param args.inputVariables - List of input variables the final prompt will expect.
    */
-  static createPrompt(tools: Tool[], args?: CreatePromptArgs) {
+  static createPrompt(tools: Tool[], args?: ZeroShotCreatePromptArgs) {
     const {
       prefix = PREFIX,
       suffix = SUFFIX,
@@ -100,7 +100,7 @@ export class ZeroShotAgent extends Agent {
   static fromLLMAndTools(
     llm: BaseLanguageModel,
     tools: Tool[],
-    args?: CreatePromptArgs & AgentArgs
+    args?: ZeroShotCreatePromptArgs & AgentArgs
   ) {
     ZeroShotAgent.validateTools(tools);
     const prompt = ZeroShotAgent.createPrompt(tools, args);

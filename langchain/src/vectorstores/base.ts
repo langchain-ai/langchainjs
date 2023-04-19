@@ -2,24 +2,37 @@ import { Embeddings } from "../embeddings/base.js";
 import { Document } from "../document.js";
 import { BaseRetriever } from "../schema/index.js";
 
-export class VectorStoreRetriever extends BaseRetriever {
-  vectorStore: VectorStore;
+export class VectorStoreRetriever<V extends VectorStore> extends BaseRetriever {
+  vectorStore: V;
 
   k = 4;
 
-  constructor(fields: { vectorStore: VectorStore; k?: number }) {
+  filter?: V["FilterType"];
+
+  constructor(fields: {
+    vectorStore: V;
+    k?: number;
+    filter?: V["FilterType"];
+  }) {
     super();
     this.vectorStore = fields.vectorStore;
     this.k = fields.k ?? this.k;
+    this.filter = fields.filter;
   }
 
   async getRelevantDocuments(query: string): Promise<Document[]> {
-    const results = await this.vectorStore.similaritySearch(query, this.k);
+    const results = await this.vectorStore.similaritySearch(
+      query,
+      this.k,
+      this.filter
+    );
     return results;
   }
 }
 
 export abstract class VectorStore {
+  declare FilterType: object;
+
   embeddings: Embeddings;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -37,13 +50,13 @@ export abstract class VectorStore {
   abstract similaritySearchVectorWithScore(
     query: number[],
     k: number,
-    filter?: object
+    filter?: this["FilterType"]
   ): Promise<[Document, number][]>;
 
   async similaritySearch(
     query: string,
     k = 4,
-    filter: object | undefined = undefined
+    filter: this["FilterType"] | undefined = undefined
   ): Promise<Document[]> {
     const results = await this.similaritySearchVectorWithScore(
       await this.embeddings.embedQuery(query),
@@ -57,7 +70,7 @@ export abstract class VectorStore {
   async similaritySearchWithScore(
     query: string,
     k = 4,
-    filter: object | undefined = undefined
+    filter: this["FilterType"] | undefined = undefined
   ): Promise<[Document, number][]> {
     return this.similaritySearchVectorWithScore(
       await this.embeddings.embedQuery(query),
@@ -89,8 +102,8 @@ export abstract class VectorStore {
     );
   }
 
-  asRetriever(k?: number): BaseRetriever {
-    return new VectorStoreRetriever({ vectorStore: this, k });
+  asRetriever(k?: number, filter?: this["FilterType"]): BaseRetriever {
+    return new VectorStoreRetriever({ vectorStore: this, k, filter });
   }
 }
 

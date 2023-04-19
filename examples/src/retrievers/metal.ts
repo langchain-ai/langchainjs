@@ -8,7 +8,7 @@ export const run = async () => {
   const client = new MetalSDK(
     process.env.METAL_API_KEY!,
     process.env.METAL_CLIENT_ID!,
-    process.env.METAL_APP_ID
+    process.env.METAL_INDEX_ID
   );
   const retriever = new MetalRetriever({ client });
 

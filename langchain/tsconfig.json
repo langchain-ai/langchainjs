@@ -102,11 +102,22 @@
       "src/retrievers/supabase.ts",
       "src/retrievers/metal.ts",
       "src/retrievers/databerry.ts",
-      "src/cache.ts"
+      "src/cache/index.ts",
+      "src/cache/redis.ts"
+    ],
+    "sort": [
+      "kind",
+      "visibility",
+      "instance-first",
+      "required-first",
+      "alphabetical"
     ],
     "excludePrivate": true,
     "excludeInternal": true,
     "excludeExternals": true,
+    "excludeNotDocumented": false,
+    "includeVersion": true,
+    "sourceLinkTemplate": "https://github.com/hwchase17/langchainjs/blob/{gitRevision}/{path}#L{line}",
     "readme": "none",
     "out": "docs"
   }

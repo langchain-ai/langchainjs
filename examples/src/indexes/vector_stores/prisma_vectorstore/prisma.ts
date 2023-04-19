@@ -1,5 +1,5 @@
 import { PrismaVectorStore } from "langchain/vectorstores/prisma";
-import { OpenAIEmbeddings } from "langchain/embeddings";
+import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { PrismaClient, Prisma, Document } from "@prisma/client";
 
 export const run = async () => {

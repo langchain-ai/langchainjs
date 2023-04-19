@@ -188,3 +188,9 @@ export abstract class BaseChatMessageHistory {
 
   public abstract clear(): Promise<void>;
 }
+
+export abstract class BaseCache<T = Generation[]> {
+  abstract lookup(prompt: string, llmKey: string): Promise<T | null>;
+
+  abstract update(prompt: string, llmKey: string, value: T): Promise<void>;
+}

@@ -56,7 +56,7 @@ Then, you can pass a `cache` option when you instantiate the LLM. For example:
 
 ```typescript
 import { OpenAI } from "langchain/llms/openai";
-import { RedisCache } from "langchain/cache";
+import { RedisCache } from "langchain/cache/redis";
 import { createClient } from "redis";
 
 // See https://github.com/redis/node-redis for connection options

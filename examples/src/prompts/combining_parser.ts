@@ -42,12 +42,14 @@ export const run = async () => {
 
   ```json
   {
-      "answer": string // answer to the user's question
-      "source": string // source used to answer the user's question, should be a website.
+    "answer": string // answer to the user's question
+    "source": string // source used to answer the user's question, should be a website.
   }
   ```
-  Complete that output fully. Then produce another output: Your response should match the following regex: //Confidence: (A|B|C), Explanation: (.*)//
 
+  Including the leading and trailing "```json" and "```"
+
+  Complete that output fully. Then produce another output: Your response should match the following regex: /Confidence: (A|B|C), Explanation: (.*)/
   What is the capital of France?
   */
 
@@ -55,20 +57,20 @@ export const run = async () => {
   /*
   ```json
   {
-      "answer": "Paris",
-      "source": "https://en.wikipedia.org/wiki/France"
+    "answer": "Paris",
+    "source": "https://en.wikipedia.org/wiki/Paris"
   }
   ```
-  //Confidence: A, Explanation: Paris is the capital of France according to Wikipedia.//
+  Confidence: A, Explanation: Paris is the capital of France, according to Wikipedia.
   */
 
   console.log(await parser.parse(response));
   /*
   {
     answer: 'Paris',
-    source: 'https://en.wikipedia.org/wiki/France',
+    source: 'https://en.wikipedia.org/wiki/Paris',
     confidence: 'A',
-    explanation: 'Paris is the capital of France according to Wikipedia.//'
-    }
+    explanation: 'Paris is the capital of France, according to Wikipedia.'
+  }
   */
 };
