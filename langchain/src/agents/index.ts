@@ -20,6 +20,7 @@ export {
   SqlCreatePromptArgs,
   createVectorStoreAgent,
 } from "./agent_toolkits/index.js";
+export { Toolkit } from "./agent_toolkits/base.js";
 export {
   ChatAgent,
   ChatAgentInput,

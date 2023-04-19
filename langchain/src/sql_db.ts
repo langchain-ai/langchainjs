@@ -11,6 +11,8 @@ import {
   verifyListTablesExistInDatabase,
 } from "./util/sql_utils.js";
 
+export { SqlDatabaseDataSourceParams, SqlDatabaseOptionsParams };
+
 export class SqlDatabase
   implements SqlDatabaseOptionsParams, SqlDatabaseDataSourceParams
 {
@@ -142,6 +144,7 @@ export class SqlDatabase
     };
   }
 
+  /** @ignore */
   static async imports() {
     try {
       const { DataSource } = await import("typeorm");
