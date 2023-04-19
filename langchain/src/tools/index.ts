@@ -27,3 +27,5 @@ export {
 } from "./zapier.js";
 export { Serper, SerperParameters } from "./serper.js";
 export { AIPluginTool } from "./aiplugin.js";
+export { WebBrowser, WebBrowserArgs } from "./webbrowser.js";
+export { AWSLambda } from "./aws_lambda.js";
