@@ -1,46 +1,52 @@
 import { LLMChain } from "langchain/chains";
 import { AgentExecutor, ZeroShotAgent } from "langchain/agents";
-import { CallbackManager } from "langchain/callbacks";
+import { BaseCallbackHandler } from "langchain/callbacks";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { Calculator } from "langchain/tools/calculator";
+import { AgentAction } from "langchain/schema";
 
 export const run = async () => {
-  // Create a callback manager that will be used throughout
-  const callbackManager = CallbackManager.fromHandlers({
+  // Create a callback handler that will be used throughout
+  class CustomHandler extends BaseCallbackHandler {
+    name = "custom_handler";
+
     async handleLLMNewToken(token: string) {
       console.log("token", { token });
-    },
-    async handleLLMStart(llm, _prompts: string[]) {
+    }
+
+    async handleLLMStart(llm: { name: string }, _prompts: string[]) {
       console.log("handleLLMStart", { llm });
-    },
-    async handleChainStart(chain) {
+    }
+
+    async handleChainStart(chain: { name: string }) {
       console.log("handleChainStart", { chain });
-    },
-    async handleAgentAction(action) {
+    }
+
+    async handleAgentAction(action: AgentAction) {
       console.log("handleAgentAction", action);
-    },
-    async handleToolStart(tool) {
+    }
+
+    async handleToolStart(tool: { name: string }) {
       console.log("handleToolStart", { tool });
-    },
-  });
+    }
+  }
+
+  const handler = new CustomHandler();
 
   const model = new ChatOpenAI({
     temperature: 0,
-    callbackManager, // this is needed to see handleLLMStart and handleLLMNewToken
+    callbacks: [handler], // this is needed to see handleLLMStart and handleLLMNewToken
     streaming: true, // needed to enable streaming, which enables handleLLMNewToken
   });
 
   const tools = [
-    new Calculator(
-      true,
-      callbackManager /* this is needed to see handleToolStart */
-    ),
+    new Calculator(true, [handler] /* this is needed to see handleToolStart */),
   ];
   const agentPrompt = ZeroShotAgent.createPrompt(tools);
   const llmChain = new LLMChain({
     llm: model,
     prompt: agentPrompt,
-    callbackManager, // this is needed to see handleChainStart
+    callbacks: [handler], // this is needed to see handleChainStart
   });
   const agent = new ZeroShotAgent({
     llmChain,
@@ -50,7 +56,7 @@ export const run = async () => {
   const agentExecutor = AgentExecutor.fromAgentAndTools({
     agent,
     tools,
-    callbackManager, // this is needed to see handleAgentAction
+    callbacks: [handler], // this is needed to see handleAgentAction
   });
 
   const result = await agentExecutor.call({
@@ -116,6 +122,9 @@ export const run = async () => {
 
   console.log(result);
   /*
-  { output: '256' }
+  {
+    output: '256',
+    __runMetadata: { runId: '9795247e-4640-495b-841d-f0db1eddf5f1' }
+  }
   */
 };
