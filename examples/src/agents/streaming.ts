@@ -56,11 +56,8 @@ export const run = async () => {
     streaming: true, // needed to enable streaming, which enables handleLLMNewToken
   });
 
-  const tools = [
-    new Calculator(),
-  ];
+  const tools = [new Calculator()];
   const agentPrompt = ZeroShotAgent.createPrompt(tools);
-
 
   const llmChain = new LLMChain({
     llm: model,
@@ -85,9 +82,12 @@ export const run = async () => {
    * The `handler2` callback handler will only be used for callbacks related to the
    * LLMChain and LLM, since we passed it to the LLMChain and LLM objects upon creation.
    */
-  const result = await agentExecutor.call({
-    input: "What is 2 to the power of 8",
-  }, [handler1]); // this is needed to see handleAgentAction
+  const result = await agentExecutor.call(
+    {
+      input: "What is 2 to the power of 8",
+    },
+    [handler1]
+  ); // this is needed to see handleAgentAction
   /*
   handleChainStart { chain: { name: 'agent_executor' } }
   handleChainStart { chain: { name: 'llm_chain' } }
