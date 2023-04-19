@@ -374,8 +374,8 @@ export class SerpAPI extends Tool {
       return `${res.knowledge_graph.description}\n${links}`;
     }
 
-    if (res.organic_results?.[0]?.snippet) {
-      return `${res.organic_results[0].snippet}\n${links}`;
+    if (res.organic_results.length) {
+      return links;
     }
 
     return "No good search result found";
