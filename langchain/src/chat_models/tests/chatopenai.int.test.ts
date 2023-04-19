@@ -103,7 +103,7 @@ test("Test ChatOpenAI in streaming mode", async () => {
     modelName: "gpt-3.5-turbo",
     streaming: true,
     maxTokens: 10,
-    callbackManager: CallbackManager.fromHandlers({
+    callbacks: CallbackManager.fromHandlers({
       async handleLLMNewToken(token: string) {
         nrNewTokens += 1;
         streamedCompletion += token;
