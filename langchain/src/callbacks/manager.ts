@@ -426,7 +426,7 @@ export class CallbackManager
       } else {
         callbackManager = inheritedHandlers;
       }
-      callbackManager.copy(localHandlers, false);
+      callbackManager = callbackManager.copy(localHandlers, false);
     }
     // eslint-disable-next-line no-process-env
     if (options?.verbose || process.env.LANGCHAIN_TRACING !== undefined) {
