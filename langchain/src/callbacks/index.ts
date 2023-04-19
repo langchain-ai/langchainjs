@@ -1,7 +1,8 @@
-export { ConsoleCallbackHandler, BaseCallbackHandler } from "./base.js";
+export { BaseCallbackHandler } from "./base.js";
 
-export { LangChainTracer } from "./tracers.js";
+export { LangChainTracer } from "./handlers/tracers.js";
 
-export { getTracingCallbackHandler } from "./utils.js";
+export { getTracingCallbackHandler } from "./handlers/initialize.js";
 
 export { CallbackManager } from "./manager.js";
+export { ConsoleCallbackHandler } from "./handlers/console.js";

@@ -4,7 +4,7 @@ import { SerpAPI } from "langchain/tools";
 import { Calculator } from "langchain/tools/calculator";
 
 export const run = async () => {
-  process.env.LANGCHAIN_HANDLER = "langchain";
+  process.env.LANGCHAIN_TRACING = "true";
   const model = new ChatOpenAI({ temperature: 0 });
   const tools = [
     new SerpAPI(process.env.SERPAPI_API_KEY, {

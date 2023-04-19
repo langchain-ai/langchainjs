@@ -43,7 +43,11 @@ export class AgentExecutor extends BaseChain {
   }
 
   constructor(input: AgentExecutorInput) {
-    super(input.memory, input.verbose, input.callbackManager);
+    super(
+      input.memory,
+      input.verbose,
+      input.callbacks ?? input.callbackManager
+    );
     this.agent = input.agent;
     this.tools = input.tools;
     if (this.agent._agentActionType() === "multi") {

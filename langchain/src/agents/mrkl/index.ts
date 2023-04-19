@@ -109,7 +109,7 @@ export class ZeroShotAgent extends Agent {
     const chain = new LLMChain({
       prompt,
       llm,
-      callbackManager: args?.callbackManager,
+      callbacks: args?.callbacks ?? args?.callbackManager,
     });
 
     return new ZeroShotAgent({

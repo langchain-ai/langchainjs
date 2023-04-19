@@ -70,7 +70,11 @@ export class SimpleSequentialChain
   }
 
   constructor(fields: SimpleSequentialChainInput) {
-    super(fields.memory, fields.verbose, fields.callbackManager);
+    super(
+      fields.memory,
+      fields.verbose,
+      fields.callbacks ?? fields.callbackManager
+    );
     this.chains = fields.chains;
     this.trimOutputs = fields.trimOutputs ?? false;
     this._validateChains();

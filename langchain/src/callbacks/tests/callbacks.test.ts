@@ -287,7 +287,7 @@ test("CallbackManager with child manager inherited handlers", async () => {
 
   callbackManager1.setHandlers([handler1, handler2]);
   expect(callbackManager1.handlers).toEqual([handler1, handler2]);
-  expect(callbackManager1.inheritedHandlers).toEqual([handler1, handler2]);
+  expect(callbackManager1.inheritableHandlers).toEqual([handler1, handler2]);
 
   const callbackManager2 = callbackManager1.copy([handler3, handler4]);
   expect(callbackManager2.handlers).toEqual([
@@ -296,7 +296,7 @@ test("CallbackManager with child manager inherited handlers", async () => {
     handler3,
     handler4,
   ]);
-  expect(callbackManager2.inheritedHandlers).toEqual([
+  expect(callbackManager2.inheritableHandlers).toEqual([
     handler1,
     handler2,
     handler3,
@@ -310,7 +310,7 @@ test("CallbackManager with child manager inherited handlers", async () => {
     handler3,
     handler4,
   ]);
-  expect(callbackManager3.inheritedHandlers).toEqual([handler1, handler2]);
+  expect(callbackManager3.inheritableHandlers).toEqual([handler1, handler2]);
 
   const chainCb = await callbackManager3.handleChainStart(
     { name: "test" },
@@ -321,7 +321,7 @@ test("CallbackManager with child manager inherited handlers", async () => {
     handler1.name,
     handler2.name,
   ]);
-  expect(childManager.inheritedHandlers.map((h) => h.name)).toEqual([
+  expect(childManager.inheritableHandlers.map((h) => h.name)).toEqual([
     handler1.name,
     handler2.name,
   ]);
@@ -332,7 +332,7 @@ test("CallbackManager with child manager inherited handlers", async () => {
     handler1.name,
     handler2.name,
   ]);
-  expect(childManager2.inheritedHandlers.map((h) => h.name)).toEqual([
+  expect(childManager2.inheritableHandlers.map((h) => h.name)).toEqual([
     handler1.name,
     handler2.name,
   ]);

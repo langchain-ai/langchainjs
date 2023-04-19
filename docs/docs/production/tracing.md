@@ -6,7 +6,7 @@ You can view an overview of tracing [here.](https://langchain.readthedocs.io/en/
 To spin up the tracing backend, run `docker compose up` (or `docker-compose up` if on using an older version of `docker`) in the `langchain` directory.
 You can also use the `langchain-server` command if you have the python `langchain` package installed.
 
-Here's an example of how to use tracing in `langchain.js`. All that needs to be done is setting the `LANGCHAIN_HANDLER` environment variable to `langchain`.
+Here's an example of how to use tracing in `langchain.js`. All that needs to be done is setting the `LANGCHAIN_TRACING` environment variable to `true`.
 
 ```typescript
 import { OpenAI } from "langchain/llms/openai";
@@ -16,7 +16,7 @@ import { Calculator } from "langchain/tools/calculator";
 import process from "process";
 
 export const run = async () => {
-  process.env.LANGCHAIN_HANDLER = "langchain";
+  process.env.LANGCHAIN_TRACING = "true";
   const model = new OpenAI({ temperature: 0 });
   const tools = [
     new SerpAPI(process.env.SERPAPI_API_KEY, {
@@ -43,7 +43,9 @@ export const run = async () => {
 };
 ```
 
-We are actively working on improving tracing to work better with concurrency. For now, the best way to use tracing with concurrency is to follow the below example:
+## Concurrency
+
+Tracing works with concurrency out of the box.
 
 ```typescript
 import { OpenAI } from "langchain/llms/openai";
@@ -51,14 +53,9 @@ import { initializeAgentExecutorWithOptions } from "langchain/agents";
 import { SerpAPI } from "langchain/tools";
 import { Calculator } from "langchain/tools/calculator";
 import process from "process";
-import {
-  CallbackManager,
-  LangChainTracer,
-  ConsoleCallbackHandler,
-} from "langchain/callbacks";
 
 export const run = async () => {
-  process.env.LANGCHAIN_HANDLER = "langchain";
+  process.env.LANGCHAIN_TRACING = "true";
   const model = new OpenAI({ temperature: 0 });
   const tools = [
     new SerpAPI(process.env.SERPAPI_API_KEY, {
@@ -73,6 +70,7 @@ export const run = async () => {
     agentType: "zero-shot-react-description",
     verbose: true,
   });
+
   console.log("Loaded agent.");
 
   const input = `Who is Olivia Wilde's boyfriend? What is his current age raised to the 0.23 power?`;
@@ -86,45 +84,14 @@ export const run = async () => {
     executor.call({ input }),
   ]);
 
-  console.log(`Got output ${resultA.output}`);
-  console.log(`Got output ${resultB.output}`);
-  console.log(`Got output ${resultC.output}`);
+  console.log(`Got output ${resultA.output} ${resultA.__run.runId}`);
+  console.log(`Got output ${resultB.output} ${resultB.__run.runId}`);
+  console.log(`Got output ${resultC.output} ${resultC.__run.runId}`);
 
-  // This will work, because each executor has its own Tracer, avoiding concurrency issues.
-  console.log("---Now with concurrency-safe tracing---");
-
-  const executors = [];
-  for (let i = 0; i < 3; i += 1) {
-    const callbackManager = new CallbackManager();
-    callbackManager.addHandler(new ConsoleCallbackHandler());
-    callbackManager.addHandler(new LangChainTracer());
-
-    const model = new OpenAI({ temperature: 0, callbackManager });
-    const tools = [
-      new SerpAPI(process.env.SERPAPI_API_KEY, {
-        location: "Austin,Texas,United States",
-        hl: "en",
-        gl: "us",
-      }),
-      new Calculator(),
-    ];
-    for (const tool of tools) {
-      tool.callbackManager = callbackManager;
-    }
-    const executor = await initializeAgentExecutorWithOptions(tools, model, {
-      agentType: "zero-shot-react-description",
-      verbose: true,
-      callbackManager,
-    });
-    executor.agent.llmChain.callbackManager = callbackManager;
-    executors.push(executor);
-  }
-
-  const results = await Promise.all(
-    executors.map((executor) => executor.call({ input }))
-  );
-  for (const result of results) {
-    console.log(`Got output ${result.output}`);
-  }
+  /*
+    Got output Harry Styles, Olivia Wilde's boyfriend, is 29 years old and his age raised to the 0.23 power is 2.169459462491557. b8fb98aa-07a5-45bd-b593-e8d7376b05ca
+    Got output Harry Styles, Olivia Wilde's boyfriend, is 29 years old and his age raised to the 0.23 power is 2.169459462491557. c8d916d5-ca1d-4702-8dd7-cab5e438578b
+    Got output Harry Styles, Olivia Wilde's boyfriend, is 29 years old and his age raised to the 0.23 power is 2.169459462491557. bf5fe04f-ef29-4e55-8ce1-e4aa974f9484
+    */
 };
 ```
