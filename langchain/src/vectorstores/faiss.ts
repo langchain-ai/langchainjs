@@ -112,7 +112,10 @@ export class FaissStore extends SaveableVectorStore {
       this.index.write(path.join(directory, "faiss.index")),
       await fs.writeFile(
         path.join(directory, "docstore.json"),
-        JSON.stringify([Array.from(this.docstore._docs.entries()), this._mapping])
+        JSON.stringify([
+          Array.from(this.docstore._docs.entries()),
+          this._mapping,
+        ])
       ),
     ]);
   }
@@ -123,7 +126,9 @@ export class FaissStore extends SaveableVectorStore {
     const readStore = (directory: string) =>
       fs
         .readFile(path.join(directory, "docstore.json"), "utf8")
-        .then(JSON.parse) as Promise<[Map<string, Document>, Record<number, string>]>;
+        .then(JSON.parse) as Promise<
+        [Map<string, Document>, Record<number, string>]
+      >;
     const readIndex = async (directory: string) => {
       const { IndexFlatL2 } = await this.imports();
       return IndexFlatL2.read(path.join(directory, "faiss.index"));
@@ -156,26 +161,31 @@ export class FaissStore extends SaveableVectorStore {
       }
     }
 
-    class PyDocument extends Document {
-      __setstate__(state: {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        __dict__: { page_content: string; metadata: Record<string, any> };
-      }) {
-        this.pageContent = state.__dict__.page_content;
-        Object.entries(state.__dict__.metadata).forEach(([k, v]) => {
+    class PyDocument extends Map {
+      toDocument(): Document {
+        const metadata = this.get("metadata");
+        Object.entries(metadata).forEach(([k, v]) => {
           // eslint-disable-next-line no-instanceof/no-instanceof
           if (v instanceof PosixPath || v instanceof WindowsPath) {
-            this.metadata[k] = v.path;
-          } else {
-            this.metadata[k] = v;
+            metadata[k] = v.path;
           }
+        });
+        return new Document({
+          pageContent: this.get("page_content"),
+          metadata,
         });
       }
     }
 
-    class PyInMemoryDocstore extends InMemoryDocstore {
-      __setstate__(state: { _dict: Record<string, Document> }) {
-        this._docs = new Map(Object.entries(state._dict));
+    class PyInMemoryDocstore {
+      _dict: Map<string, PyDocument>;
+
+      toInMemoryDocstore(): InMemoryDocstore {
+        const s = new InMemoryDocstore();
+        for (const [key, value] of Object.entries(this._dict)) {
+          s._docs.set(key, value.toDocument());
+        }
+        return s;
       }
     }
 
@@ -199,7 +209,9 @@ export class FaissStore extends SaveableVectorStore {
       );
       pickleparser.registry.register("pathlib", "WindowsPath", WindowsPath);
       pickleparser.registry.register("pathlib", "PosixPath", PosixPath);
-      const [store, mapping] = pickleparser.load();
+      const [rawStore, mapping]: [PyInMemoryDocstore, Record<number, string>] =
+        pickleparser.load();
+      const store = rawStore.toInMemoryDocstore();
       return { store, mapping };
     };
     const readIndex = async (directory: string) => {
