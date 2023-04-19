@@ -189,3 +189,9 @@ export abstract class BaseCache<T = Generation[]> {
 
   abstract update(prompt: string, llmKey: string, value: T): Promise<void>;
 }
+
+export abstract class BaseFileStore {
+  abstract readFile(path: string): Promise<string>;
+
+  abstract writeFile(path: string, contents: string): Promise<void>;
+}

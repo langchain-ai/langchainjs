@@ -25,3 +25,5 @@ const output_parsers = require("langchain/output_parsers");
 const retrievers_remote = require("langchain/retrievers/remote");
 const retrievers_databerry = require("langchain/retrievers/databerry");
 const cache = require("langchain/cache");
+const stores_file_in_memory = require("langchain/stores/file/in_memory");
+const experimental_autogpt = require("langchain/experimental/autogpt");
