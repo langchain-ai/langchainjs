@@ -113,13 +113,13 @@ export class GithubRepoLoader
     return this.ignoreFiles.some((pattern) => {
       if (typeof pattern === "string") {
         return path === pattern;
-      } 
-        try {
-          return pattern.test(path);
-        } catch {
-          throw new Error(`Unknown ignore file pattern: ${pattern}`);
-        }
+      }
 
+      try {
+        return pattern.test(path);
+      } catch {
+        throw new Error(`Unknown ignore file pattern: ${pattern}`);
+      }
     });
   }
 
