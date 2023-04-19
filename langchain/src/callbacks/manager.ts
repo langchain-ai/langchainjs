@@ -6,12 +6,19 @@ import {
   LLMResult,
 } from "../schema/index.js";
 import { BaseCallbackHandler, BaseCallbackHandlerMethods } from "./base.js";
+import { ConsoleCallbackHandler } from "./handlers/console.js";
+import { getTracingCallbackHandler } from "./handlers/initialize.js";
 
 type BaseCallbackManagerMethods = {
   [K in keyof BaseCallbackHandlerMethods]?: (
     ...args: Parameters<Required<BaseCallbackHandlerMethods>[K]>
   ) => Promise<unknown>;
 };
+
+export interface CallbackManagerOptions {
+  verbose?: boolean;
+  tracing?: boolean;
+}
 
 export abstract class BaseCallbackManager {
   abstract addHandler(handler: BaseCallbackHandler): void;
@@ -29,7 +36,7 @@ class BaseRunManager {
   constructor(
     public readonly runId: string,
     protected readonly handlers: BaseCallbackHandler[],
-    protected readonly inheritedHandlers: BaseCallbackHandler[],
+    protected readonly inheritableHandlers: BaseCallbackHandler[],
     protected readonly _parentRunId?: string
   ) {}
 
@@ -112,7 +119,7 @@ export class CallbackManagerForChainRun
   getChild(): CallbackManager {
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
     const manager = new CallbackManager(this.runId);
-    manager.setHandlers(this.inheritedHandlers);
+    manager.setHandlers(this.inheritableHandlers);
     return manager;
   }
 
@@ -204,7 +211,7 @@ export class CallbackManagerForToolRun
   getChild(): CallbackManager {
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
     const manager = new CallbackManager(this.runId);
-    manager.setHandlers(this.inheritedHandlers);
+    manager.setHandlers(this.inheritableHandlers);
     return manager;
   }
 
@@ -251,7 +258,7 @@ export class CallbackManager
 {
   handlers: BaseCallbackHandler[];
 
-  inheritedHandlers: BaseCallbackHandler[];
+  inheritableHandlers: BaseCallbackHandler[];
 
   name = "callback_manager";
 
@@ -260,7 +267,7 @@ export class CallbackManager
   constructor(parentRunId?: string) {
     super();
     this.handlers = [];
-    this.inheritedHandlers = [];
+    this.inheritableHandlers = [];
     this._parentRunId = parentRunId;
   }
 
@@ -290,7 +297,7 @@ export class CallbackManager
     return new CallbackManagerForLLMRun(
       runId,
       this.handlers,
-      this.inheritedHandlers,
+      this.inheritableHandlers,
       this._parentRunId
     );
   }
@@ -321,7 +328,7 @@ export class CallbackManager
     return new CallbackManagerForChainRun(
       runId,
       this.handlers,
-      this.inheritedHandlers,
+      this.inheritableHandlers,
       this._parentRunId
     );
   }
@@ -352,7 +359,7 @@ export class CallbackManager
     return new CallbackManagerForToolRun(
       runId,
       this.handlers,
-      this.inheritedHandlers,
+      this.inheritableHandlers,
       this._parentRunId
     );
   }
@@ -360,20 +367,20 @@ export class CallbackManager
   addHandler(handler: BaseCallbackHandler, inherit = true): void {
     this.handlers.push(handler);
     if (inherit) {
-      this.inheritedHandlers.push(handler);
+      this.inheritableHandlers.push(handler);
     }
   }
 
   removeHandler(handler: BaseCallbackHandler): void {
     this.handlers = this.handlers.filter((_handler) => _handler !== handler);
-    this.inheritedHandlers = this.inheritedHandlers.filter(
+    this.inheritableHandlers = this.inheritableHandlers.filter(
       (_handler) => _handler !== handler
     );
   }
 
   setHandlers(handlers: BaseCallbackHandler[], inherit = true): void {
     this.handlers = [];
-    this.inheritedHandlers = [];
+    this.inheritableHandlers = [];
     for (const handler of handlers) {
       this.addHandler(handler, inherit);
     }
@@ -393,7 +400,7 @@ export class CallbackManager
 
   static fromHandlers(handlers: BaseCallbackHandlerMethods) {
     class Handler extends BaseCallbackHandler {
-      name = "handler";
+      name = uuidv4();
 
       constructor() {
         super();
@@ -404,5 +411,47 @@ export class CallbackManager
     const manager = new this();
     manager.addHandler(new Handler());
     return manager;
+  }
+
+  static async configure(
+    inheritableHandlers?: CallbackManager | BaseCallbackHandler[],
+    localHandlers?: BaseCallbackHandler[],
+    options?: CallbackManagerOptions
+  ): Promise<CallbackManager | undefined> {
+    let callbackManager: CallbackManager | undefined;
+    if (inheritableHandlers || localHandlers) {
+      if (Array.isArray(inheritableHandlers) || !inheritableHandlers) {
+        callbackManager = new CallbackManager();
+        callbackManager.setHandlers(inheritableHandlers ?? [], true);
+      } else {
+        callbackManager = inheritableHandlers;
+      }
+      callbackManager = callbackManager.copy(localHandlers, false);
+    }
+    // eslint-disable-next-line no-process-env
+    if (options?.verbose || process.env.LANGCHAIN_TRACING !== undefined) {
+      if (!callbackManager) {
+        callbackManager = new CallbackManager();
+      }
+      const consoleHandler = new ConsoleCallbackHandler();
+      if (
+        options?.verbose &&
+        !callbackManager.handlers.some(
+          (handler) => handler.name === consoleHandler.name
+        )
+      ) {
+        callbackManager.addHandler(consoleHandler, false);
+      }
+      if (
+        // eslint-disable-next-line no-process-env
+        process.env.LANGCHAIN_TRACING !== undefined &&
+        !callbackManager.handlers.some(
+          (handler) => handler.name === "langchain_tracer"
+        )
+      ) {
+        callbackManager.addHandler(await getTracingCallbackHandler(), true);
+      }
+    }
+    return callbackManager;
   }
 }

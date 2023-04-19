@@ -12,6 +12,9 @@ type AgentType =
   | "chat-zero-shot-react-description"
   | "chat-conversational-react-description";
 
+/**
+ * @deprecated use initializeExecutorWithOptions instead
+ */
 export const initializeAgentExecutor = async (
   tools: Tool[],
   llm: BaseLanguageModel,

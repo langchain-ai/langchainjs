@@ -1,3 +1,4 @@
+import { v4 as uuidv4 } from "uuid";
 import {
   AgentAction,
   AgentFinish,
@@ -119,32 +120,16 @@ export abstract class BaseCallbackHandler
       input?: BaseCallbackHandlerInput
     ) => BaseCallbackHandler)(this);
   }
-}
 
-export class ConsoleCallbackHandler extends BaseCallbackHandler {
-  name = "console_callback_handler";
+  static fromMethods(methods: BaseCallbackHandlerMethods) {
+    class Handler extends BaseCallbackHandler {
+      name = uuidv4();
 
-  async handleChainStart(chain: { name: string }) {
-    console.log(`Entering new ${chain.name} chain...`);
-  }
-
-  async handleChainEnd(_output: ChainValues) {
-    console.log("Finished chain.");
-  }
-
-  async handleAgentAction(action: AgentAction) {
-    console.log(action.log);
-  }
-
-  async handleToolEnd(output: string) {
-    console.log(output);
-  }
-
-  async handleText(text: string) {
-    console.log(text);
-  }
-
-  async handleAgentEnd(action: AgentFinish) {
-    console.log(action.log);
+      constructor() {
+        super();
+        Object.assign(this, methods);
+      }
+    }
+    return new Handler();
   }
 }

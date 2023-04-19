@@ -68,7 +68,7 @@ test("Test OpenAI in streaming mode", async () => {
     maxTokens: 5,
     modelName: "text-ada-001",
     streaming: true,
-    callbackManager: CallbackManager.fromHandlers({
+    callbacks: CallbackManager.fromHandlers({
       async handleLLMNewToken(token: string) {
         nrNewTokens += 1;
         streamedCompletion += token;

@@ -43,7 +43,7 @@ export type LLMResult = {
    * Dictionary of run metadata
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  __runMetadata?: Record<string, any>;
+  __run?: Record<string, any>;
 };
 export type MessageType = "human" | "ai" | "generic" | "system";
 

@@ -1,16 +1,19 @@
 import { BaseMemory } from "../memory/base.js";
 import { ChainValues } from "../schema/index.js";
-import { CallbackManager } from "../callbacks/index.js";
+import { BaseCallbackHandler, CallbackManager } from "../callbacks/index.js";
 import { SerializedBaseChain } from "./serde.js";
-import { BaseLangChain } from "../base_language/index.js";
+import { BaseLangChain, BaseLangChainParams } from "../base_language/index.js";
 import { CallbackManagerForChainRun } from "../callbacks/manager.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type LoadValues = Record<string, any>;
 
-export interface ChainInputs {
+export interface ChainInputs extends BaseLangChainParams {
   memory?: BaseMemory;
-  verbose?: boolean;
+
+  /**
+   * @deprecated Use `callbacks` instead
+   */
   callbackManager?: CallbackManager;
 }
 
@@ -23,9 +26,9 @@ export abstract class BaseChain extends BaseLangChain implements ChainInputs {
   constructor(
     memory?: BaseMemory,
     verbose?: boolean,
-    callbackManager?: CallbackManager
+    callbacks?: CallbackManager | BaseCallbackHandler[]
   ) {
-    super(verbose, callbackManager);
+    super({ verbose, callbacks });
     this.memory = memory;
   }
 
@@ -51,8 +54,11 @@ export abstract class BaseChain extends BaseLangChain implements ChainInputs {
 
   abstract get outputKeys(): string[];
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async run(input: any, callbackManager?: CallbackManager): Promise<string> {
+  async run(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    input: any,
+    callbacks?: CallbackManager | BaseCallbackHandler[]
+  ): Promise<string> {
     const isKeylessInput = this.inputKeys.length === 1;
     if (!isKeylessInput) {
       throw new Error(
@@ -60,10 +66,10 @@ export abstract class BaseChain extends BaseLangChain implements ChainInputs {
       );
     }
     const values = { [this.inputKeys[0]]: input };
-    const returnValues = await this.call(values, callbackManager);
+    const returnValues = await this.call(values, callbacks);
     const keys = Object.keys(returnValues);
-    // Filter out the __runMetadata field
-    const filteredKeys = keys.filter((key) => key !== "__runMetadata");
+    // Filter out the __run field
+    const filteredKeys = keys.filter((key) => key !== "__run");
 
     if (filteredKeys.length === 1) {
       return returnValues[filteredKeys[0]];
@@ -80,7 +86,7 @@ export abstract class BaseChain extends BaseLangChain implements ChainInputs {
    */
   async call(
     values: ChainValues,
-    callbackManager?: CallbackManager
+    callbacks?: CallbackManager | BaseCallbackHandler[]
   ): Promise<ChainValues> {
     const fullValues = { ...values } as typeof values;
     if (!(this.memory == null)) {
@@ -89,8 +95,10 @@ export abstract class BaseChain extends BaseLangChain implements ChainInputs {
         fullValues[key] = value;
       }
     }
-    const callbackManager_ = await this.configureCallbackManager(
-      callbackManager
+    const callbackManager_ = await CallbackManager.configure(
+      callbacks,
+      Array.isArray(this.callbacks) ? this.callbacks : this.callbacks?.handlers,
+      { verbose: this.verbose }
     );
     const runManager = await callbackManager_?.handleChainStart(
       { name: this._chainType() },
@@ -108,9 +116,7 @@ export abstract class BaseChain extends BaseLangChain implements ChainInputs {
       await this.memory.saveContext(values, outputValues);
     }
     // add the runManager's currentRunId to the outputValues
-    outputValues.__runMetadata = runManager
-      ? { __runId: runManager?.runId }
-      : undefined;
+    outputValues.__run = runManager ? { runId: runManager?.runId } : undefined;
     return outputValues;
   }
 
@@ -119,10 +125,10 @@ export abstract class BaseChain extends BaseLangChain implements ChainInputs {
    */
   async apply(
     inputs: ChainValues[],
-    callbackManagers?: CallbackManager[]
+    callbacks?: CallbackManager[] | BaseCallbackHandler[][]
   ): Promise<ChainValues> {
     return Promise.all(
-      inputs.map(async (i, idx) => this.call(i, callbackManagers?.[idx]))
+      inputs.map(async (i, idx) => this.call(i, callbacks?.[idx]))
     );
   }
 

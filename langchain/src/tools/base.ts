@@ -2,16 +2,22 @@ import {
   CallbackManager,
   CallbackManagerForToolRun,
 } from "../callbacks/manager.js";
-import { BaseLangChain } from "../base_language/index.js";
+import { BaseLangChain, BaseLangChainParams } from "../base_language/index.js";
+import { BaseCallbackHandler } from "../callbacks/index.js";
 
-export interface ToolParams {
-  verbose?: boolean;
+export interface ToolParams extends BaseLangChainParams {
+  /**
+   * @deprecated Use `callbacks` instead
+   */
   callbackManager?: CallbackManager;
 }
 
 export abstract class Tool extends BaseLangChain {
-  constructor(verbose?: boolean, callbackManager?: CallbackManager) {
-    super(verbose, callbackManager);
+  constructor(
+    verbose?: boolean,
+    callbacks?: CallbackManager | BaseCallbackHandler[]
+  ) {
+    super({ verbose, callbacks });
   }
 
   protected abstract _call(
@@ -19,9 +25,14 @@ export abstract class Tool extends BaseLangChain {
     callbackManager?: CallbackManagerForToolRun
   ): Promise<string>;
 
-  async call(arg: string, callbackManager?: CallbackManager): Promise<string> {
-    const callbackManager_ = await this.configureCallbackManager(
-      callbackManager
+  async call(
+    arg: string,
+    callbacks?: CallbackManager | BaseCallbackHandler[]
+  ): Promise<string> {
+    const callbackManager_ = await CallbackManager.configure(
+      callbacks,
+      Array.isArray(this.callbacks) ? this.callbacks : this.callbacks?.handlers,
+      { verbose: this.verbose }
     );
     const runManager = await callbackManager_?.handleToolStart(
       { name: this.name },

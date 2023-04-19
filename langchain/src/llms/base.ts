@@ -8,6 +8,7 @@ import {
   CallbackManager,
   CallbackManagerForLLMRun,
 } from "../callbacks/manager.js";
+import { BaseCallbackHandler } from "../callbacks/index.js";
 
 export type SerializedLLM = {
   _model: string;
@@ -48,12 +49,12 @@ export abstract class BaseLLM extends BaseLanguageModel {
   async generatePrompt(
     promptValues: BasePromptValue[],
     stop?: string[],
-    callbackManager?: CallbackManager
+    callbacks?: CallbackManager | BaseCallbackHandler[]
   ): Promise<LLMResult> {
     const prompts: string[] = promptValues.map((promptValue) =>
       promptValue.toString()
     );
-    return this.generate(prompts, stop, callbackManager);
+    return this.generate(prompts, stop, callbacks);
   }
 
   /**
@@ -69,10 +70,12 @@ export abstract class BaseLLM extends BaseLanguageModel {
   async _generateUncached(
     prompts: string[],
     stop?: string[],
-    callbackManager?: CallbackManager
+    callbacks?: CallbackManager | BaseCallbackHandler[]
   ): Promise<LLMResult> {
-    const callbackManager_ = await this.configureCallbackManager(
-      callbackManager
+    const callbackManager_ = await CallbackManager.configure(
+      callbacks,
+      Array.isArray(this.callbacks) ? this.callbacks : this.callbacks?.handlers,
+      { verbose: this.verbose }
     );
     const runManager = await callbackManager_?.handleLLMStart(
       { name: this._llmType() },
@@ -87,7 +90,7 @@ export abstract class BaseLLM extends BaseLanguageModel {
     }
 
     await runManager?.handleLLMEnd(output);
-    output.__runMetadata = { __runId: runManager?.runId };
+    output.__run = runManager ? { runId: runManager?.runId } : undefined;
     return output;
   }
 
@@ -97,14 +100,14 @@ export abstract class BaseLLM extends BaseLanguageModel {
   async generate(
     prompts: string[],
     stop?: string[],
-    callbackManager?: CallbackManager
+    callbacks?: CallbackManager | BaseCallbackHandler[]
   ): Promise<LLMResult> {
     if (!Array.isArray(prompts)) {
       throw new Error("Argument 'prompts' is expected to be a string[]");
     }
 
     if (!this.cache) {
-      return this._generateUncached(prompts, stop, callbackManager);
+      return this._generateUncached(prompts, stop, callbacks);
     }
 
     const { cache } = this;
@@ -128,7 +131,7 @@ export abstract class BaseLLM extends BaseLanguageModel {
       const results = await this._generateUncached(
         missingPromptIndices.map((i) => prompts[i]),
         stop,
-        callbackManager
+        callbacks
       );
       await Promise.all(
         results.generations.map(async (generation, index) => {
@@ -149,13 +152,9 @@ export abstract class BaseLLM extends BaseLanguageModel {
   async call(
     prompt: string,
     stop?: string[],
-    callbackManager?: CallbackManager
+    callbacks?: CallbackManager | BaseCallbackHandler[]
   ) {
-    const { generations } = await this.generate(
-      [prompt],
-      stop,
-      callbackManager
-    );
+    const { generations } = await this.generate([prompt], stop, callbacks);
     return generations[0][0].text;
   }
 
