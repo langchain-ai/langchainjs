@@ -90,9 +90,7 @@ export abstract class BaseLLM extends BaseLanguageModel {
     }
 
     await runManager?.handleLLMEnd(output);
-    output.__runMetadata = runManager
-      ? { runId: runManager?.runId }
-      : undefined;
+    output.__run = runManager ? { runId: runManager?.runId } : undefined;
     return output;
   }
 

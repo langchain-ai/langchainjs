@@ -12,10 +12,15 @@ export type SerializedLLM = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 } & Record<string, any>;
 
+export interface BaseLangChainParams {
+  verbose?: boolean;
+  callbacks?: CallbackManager | BaseCallbackHandler[];
+}
+
 /**
  * Base class for language models, chains, tools.
  */
-export abstract class BaseLangChain {
+export abstract class BaseLangChain implements BaseLangChainParams {
   /**
    * Whether to print out response text.
    */
@@ -23,12 +28,9 @@ export abstract class BaseLangChain {
 
   callbacks?: CallbackManager | BaseCallbackHandler[];
 
-  constructor(
-    verbose?: boolean,
-    callbacks?: CallbackManager | BaseCallbackHandler[]
-  ) {
-    this.verbose = verbose ?? getVerbosity();
-    this.callbacks = callbacks;
+  constructor(params: BaseLangChainParams) {
+    this.verbose = params.verbose ?? getVerbosity();
+    this.callbacks = params.callbacks;
   }
 }
 
@@ -37,10 +39,9 @@ export abstract class BaseLangChain {
  * A subclass of {@link BaseLanguageModel} should have a constructor that
  * takes in a parameter that extends this interface.
  */
-export interface BaseLanguageModelParams extends AsyncCallerParams {
-  verbose?: boolean;
-  callbacks?: CallbackManager | BaseCallbackHandler[];
-
+export interface BaseLanguageModelParams
+  extends AsyncCallerParams,
+    BaseLangChainParams {
   /**
    * @deprecated Use `callbacks` instead
    */
@@ -61,7 +62,10 @@ export abstract class BaseLanguageModel
   caller: AsyncCaller;
 
   constructor(params: BaseLanguageModelParams) {
-    super(params.verbose, params.callbacks ?? params.callbackManager);
+    super({
+      verbose: params.verbose,
+      callbacks: params.callbacks ?? params.callbackManager,
+    });
     this.caller = new AsyncCaller(params ?? {});
   }
 

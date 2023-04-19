@@ -2,14 +2,10 @@ import {
   CallbackManager,
   CallbackManagerForToolRun,
 } from "../callbacks/manager.js";
-import { BaseLangChain } from "../base_language/index.js";
+import { BaseLangChain, BaseLangChainParams } from "../base_language/index.js";
 import { BaseCallbackHandler } from "../callbacks/index.js";
 
-export interface ToolParams {
-  verbose?: boolean;
-
-  callbacks?: CallbackManager | BaseCallbackHandler[];
-
+export interface ToolParams extends BaseLangChainParams {
   /**
    * @deprecated Use `callbacks` instead
    */
@@ -21,7 +17,7 @@ export abstract class Tool extends BaseLangChain {
     verbose?: boolean,
     callbacks?: CallbackManager | BaseCallbackHandler[]
   ) {
-    super(verbose, callbacks);
+    super({ verbose, callbacks });
   }
 
   protected abstract _call(

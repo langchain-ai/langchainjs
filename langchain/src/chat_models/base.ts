@@ -80,9 +80,7 @@ export abstract class BaseChatModel extends BaseLanguageModel {
         : undefined,
     };
     await runManager?.handleLLMEnd(output);
-    output.__runMetadata = runManager
-      ? { runId: runManager?.runId }
-      : undefined;
+    output.__run = runManager ? { runId: runManager?.runId } : undefined;
     return output;
   }
 

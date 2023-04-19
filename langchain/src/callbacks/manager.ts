@@ -15,7 +15,7 @@ type BaseCallbackManagerMethods = {
   ) => Promise<unknown>;
 };
 
-interface CallbackManagerOptions {
+export interface CallbackManagerOptions {
   verbose?: boolean;
   tracing?: boolean;
 }
@@ -36,7 +36,7 @@ class BaseRunManager {
   constructor(
     public readonly runId: string,
     protected readonly handlers: BaseCallbackHandler[],
-    protected readonly inheritedHandlers: BaseCallbackHandler[],
+    protected readonly inheritableHandlers: BaseCallbackHandler[],
     protected readonly _parentRunId?: string
   ) {}
 
@@ -119,7 +119,7 @@ export class CallbackManagerForChainRun
   getChild(): CallbackManager {
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
     const manager = new CallbackManager(this.runId);
-    manager.setHandlers(this.inheritedHandlers);
+    manager.setHandlers(this.inheritableHandlers);
     return manager;
   }
 
@@ -211,7 +211,7 @@ export class CallbackManagerForToolRun
   getChild(): CallbackManager {
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
     const manager = new CallbackManager(this.runId);
-    manager.setHandlers(this.inheritedHandlers);
+    manager.setHandlers(this.inheritableHandlers);
     return manager;
   }
 
@@ -258,7 +258,7 @@ export class CallbackManager
 {
   handlers: BaseCallbackHandler[];
 
-  inheritedHandlers: BaseCallbackHandler[];
+  inheritableHandlers: BaseCallbackHandler[];
 
   name = "callback_manager";
 
@@ -267,7 +267,7 @@ export class CallbackManager
   constructor(parentRunId?: string) {
     super();
     this.handlers = [];
-    this.inheritedHandlers = [];
+    this.inheritableHandlers = [];
     this._parentRunId = parentRunId;
   }
 
@@ -297,7 +297,7 @@ export class CallbackManager
     return new CallbackManagerForLLMRun(
       runId,
       this.handlers,
-      this.inheritedHandlers,
+      this.inheritableHandlers,
       this._parentRunId
     );
   }
@@ -328,7 +328,7 @@ export class CallbackManager
     return new CallbackManagerForChainRun(
       runId,
       this.handlers,
-      this.inheritedHandlers,
+      this.inheritableHandlers,
       this._parentRunId
     );
   }
@@ -359,7 +359,7 @@ export class CallbackManager
     return new CallbackManagerForToolRun(
       runId,
       this.handlers,
-      this.inheritedHandlers,
+      this.inheritableHandlers,
       this._parentRunId
     );
   }
@@ -367,20 +367,20 @@ export class CallbackManager
   addHandler(handler: BaseCallbackHandler, inherit = true): void {
     this.handlers.push(handler);
     if (inherit) {
-      this.inheritedHandlers.push(handler);
+      this.inheritableHandlers.push(handler);
     }
   }
 
   removeHandler(handler: BaseCallbackHandler): void {
     this.handlers = this.handlers.filter((_handler) => _handler !== handler);
-    this.inheritedHandlers = this.inheritedHandlers.filter(
+    this.inheritableHandlers = this.inheritableHandlers.filter(
       (_handler) => _handler !== handler
     );
   }
 
   setHandlers(handlers: BaseCallbackHandler[], inherit = true): void {
     this.handlers = [];
-    this.inheritedHandlers = [];
+    this.inheritableHandlers = [];
     for (const handler of handlers) {
       this.addHandler(handler, inherit);
     }
@@ -414,17 +414,17 @@ export class CallbackManager
   }
 
   static async configure(
-    inheritedHandlers?: CallbackManager | BaseCallbackHandler[],
+    inheritableHandlers?: CallbackManager | BaseCallbackHandler[],
     localHandlers?: BaseCallbackHandler[],
     options?: CallbackManagerOptions
   ): Promise<CallbackManager | undefined> {
     let callbackManager: CallbackManager | undefined;
-    if (inheritedHandlers || localHandlers) {
-      if (Array.isArray(inheritedHandlers) || !inheritedHandlers) {
+    if (inheritableHandlers || localHandlers) {
+      if (Array.isArray(inheritableHandlers) || !inheritableHandlers) {
         callbackManager = new CallbackManager();
-        callbackManager.setHandlers(inheritedHandlers ?? [], true);
+        callbackManager.setHandlers(inheritableHandlers ?? [], true);
       } else {
-        callbackManager = inheritedHandlers;
+        callbackManager = inheritableHandlers;
       }
       callbackManager = callbackManager.copy(localHandlers, false);
     }

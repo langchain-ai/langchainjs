@@ -34,7 +34,7 @@ export const run = async () => {
     executor.call({ input }),
   ]);
 
-  console.log(`Got output ${resultA.output} ${resultA.__runMetadata.runId}`);
-  console.log(`Got output ${resultB.output} ${resultB.__runMetadata.runId}`);
-  console.log(`Got output ${resultC.output} ${resultC.__runMetadata.runId}`);
+  console.log(`Got output ${resultA.output} ${resultA.__run.runId}`);
+  console.log(`Got output ${resultB.output} ${resultB.__run.runId}`);
+  console.log(`Got output ${resultC.output} ${resultC.__run.runId}`);
 };

@@ -140,17 +140,13 @@ export const run = async () => {
   token { token: ' ' }
   token { token: '256' }
   token { token: '' }
-  {
-    output: '256',
-    __runMetadata: { runId: '5e1128e2-5f5e-4ba9-93b5-03fd1b6120d2' }
-  }
   */
 
   console.log(result);
   /*
   {
     output: '256',
-    __runMetadata: { runId: '9795247e-4640-495b-841d-f0db1eddf5f1' }
+    __run: { runId: '26d481a6-4410-4f39-b74d-f9a4f572379a' }
   }
   */
 };

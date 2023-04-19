@@ -2,17 +2,14 @@ import { BaseMemory } from "../memory/base.js";
 import { ChainValues } from "../schema/index.js";
 import { BaseCallbackHandler, CallbackManager } from "../callbacks/index.js";
 import { SerializedBaseChain } from "./serde.js";
-import { BaseLangChain } from "../base_language/index.js";
+import { BaseLangChain, BaseLangChainParams } from "../base_language/index.js";
 import { CallbackManagerForChainRun } from "../callbacks/manager.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type LoadValues = Record<string, any>;
 
-export interface ChainInputs {
+export interface ChainInputs extends BaseLangChainParams {
   memory?: BaseMemory;
-  verbose?: boolean;
-
-  callbacks?: CallbackManager | BaseCallbackHandler[];
 
   /**
    * @deprecated Use `callbacks` instead
@@ -31,7 +28,7 @@ export abstract class BaseChain extends BaseLangChain implements ChainInputs {
     verbose?: boolean,
     callbacks?: CallbackManager | BaseCallbackHandler[]
   ) {
-    super(verbose, callbacks);
+    super({ verbose, callbacks });
     this.memory = memory;
   }
 
@@ -71,8 +68,8 @@ export abstract class BaseChain extends BaseLangChain implements ChainInputs {
     const values = { [this.inputKeys[0]]: input };
     const returnValues = await this.call(values, callbacks);
     const keys = Object.keys(returnValues);
-    // Filter out the __runMetadata field
-    const filteredKeys = keys.filter((key) => key !== "__runMetadata");
+    // Filter out the __run field
+    const filteredKeys = keys.filter((key) => key !== "__run");
 
     if (filteredKeys.length === 1) {
       return returnValues[filteredKeys[0]];
@@ -119,9 +116,7 @@ export abstract class BaseChain extends BaseLangChain implements ChainInputs {
       await this.memory.saveContext(values, outputValues);
     }
     // add the runManager's currentRunId to the outputValues
-    outputValues.__runMetadata = runManager
-      ? { runId: runManager?.runId }
-      : undefined;
+    outputValues.__run = runManager ? { runId: runManager?.runId } : undefined;
     return outputValues;
   }
 
