@@ -5,7 +5,7 @@ import { Tool } from "./base.js";
 *    or unsure of what to do next.
 *    @extends Tool
 */
-export class HumanTools extends Tool {
+export class HumanTool extends Tool {
     /**
     * The name of the tool.
     * @type {string}
