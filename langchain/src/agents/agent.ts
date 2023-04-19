@@ -262,7 +262,9 @@ export abstract class Agent extends BaseSingleActionAgent {
   /**
    * Construct a scratchpad to let the agent continue its thought process
    */
-  constructScratchPad(steps: AgentStep[]): string | BaseChatMessage[] {
+  async constructScratchPad(
+    steps: AgentStep[]
+  ): Promise<string | BaseChatMessage[]> {
     return steps.reduce(
       (thoughts, { action, observation }) =>
         thoughts +
