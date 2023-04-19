@@ -9,7 +9,7 @@ import {
   BaseChatMessage,
   ChainValues,
 } from "../schema/index.js";
-import { Tool } from "../tools/base.js";
+import { StructuredTool } from "../tools/base.js";
 import {
   AgentActionOutputParser,
   AgentInput,
@@ -226,7 +226,7 @@ export abstract class Agent extends BaseSingleActionAgent {
    * @returns A PromptTemplate assembled from the given tools and fields.
    * */
   static createPrompt(
-    _tools: Tool[],
+    _tools: StructuredTool[],
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     _fields?: Record<string, any>
   ): BasePromptTemplate {
@@ -236,7 +236,7 @@ export abstract class Agent extends BaseSingleActionAgent {
   /** Construct an agent from an LLM and a list of tools */
   static fromLLMAndTools(
     _llm: BaseLanguageModel,
-    _tools: Tool[],
+    _tools: StructuredTool[],
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     _args?: AgentArgs
   ): Agent {
@@ -246,7 +246,7 @@ export abstract class Agent extends BaseSingleActionAgent {
   /**
    * Validate that appropriate tools are passed in
    */
-  static validateTools(_tools: Tool[]): void {}
+  static validateTools(_tools: StructuredTool[]): void {}
 
   _stop(): string[] {
     return [`\n${this.observationPrefix()}`];
@@ -353,7 +353,10 @@ export abstract class Agent extends BaseSingleActionAgent {
    * Load an agent from a json-like object describing it.
    */
   static async deserialize(
-    data: SerializedAgent & { llm?: BaseLanguageModel; tools?: Tool[] }
+    data: SerializedAgent & {
+      llm?: BaseLanguageModel;
+      tools?: StructuredTool[];
+    }
   ): Promise<Agent> {
     switch (data._type) {
       case "zero-shot-react-description": {

@@ -2,7 +2,7 @@ import { BaseLanguageModel } from "../../base_language/index.js";
 import { LLMChain } from "../../chains/llm_chain.js";
 import { PromptTemplate } from "../../prompts/prompt.js";
 import { renderTemplate } from "../../prompts/template.js";
-import { Tool } from "../../tools/base.js";
+import { StructuredTool } from "../../tools/base.js";
 import { Optional } from "../../types/type-utils.js";
 import { Agent, AgentArgs } from "../agent.js";
 import { deserializeHelper } from "../helpers.js";
@@ -52,7 +52,7 @@ export class ZeroShotAgent extends Agent {
     return new ZeroShotAgentOutputParser();
   }
 
-  static validateTools(tools: Tool[]) {
+  static validateTools(tools: StructuredTool[]) {
     const invalidTool = tools.find((tool) => !tool.description);
     if (invalidTool) {
       const msg =
@@ -71,7 +71,10 @@ export class ZeroShotAgent extends Agent {
    * @param args.prefix - String to put before the list of tools.
    * @param args.inputVariables - List of input variables the final prompt will expect.
    */
-  static createPrompt(tools: Tool[], args?: ZeroShotCreatePromptArgs) {
+  static createPrompt(
+    tools: StructuredTool[],
+    args?: ZeroShotCreatePromptArgs
+  ) {
     const {
       prefix = PREFIX,
       suffix = SUFFIX,
@@ -99,7 +102,7 @@ export class ZeroShotAgent extends Agent {
 
   static fromLLMAndTools(
     llm: BaseLanguageModel,
-    tools: Tool[],
+    tools: StructuredTool[],
     args?: ZeroShotCreatePromptArgs & AgentArgs
   ) {
     ZeroShotAgent.validateTools(tools);
@@ -120,7 +123,10 @@ export class ZeroShotAgent extends Agent {
   }
 
   static async deserialize(
-    data: SerializedZeroShotAgent & { llm?: BaseLanguageModel; tools?: Tool[] }
+    data: SerializedZeroShotAgent & {
+      llm?: BaseLanguageModel;
+      tools?: StructuredTool[];
+    }
   ): Promise<ZeroShotAgent> {
     const { llm, tools, ...rest } = data;
     return deserializeHelper(
@@ -129,7 +135,7 @@ export class ZeroShotAgent extends Agent {
       rest,
       (
         llm: BaseLanguageModel,
-        tools: Tool[],
+        tools: StructuredTool[],
         args: SerializedFromLLMAndTools
       ) =>
         ZeroShotAgent.fromLLMAndTools(llm, tools, {

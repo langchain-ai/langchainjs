@@ -1,5 +1,5 @@
-import { Tool } from "../../tools/base.js";
+import { StructuredTool } from "../../tools/base.js";
 
 export abstract class Toolkit {
-  abstract tools: Tool[];
+  abstract tools: StructuredTool[];
 }

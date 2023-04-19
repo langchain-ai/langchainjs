@@ -6,7 +6,7 @@ import {
   SystemMessagePromptTemplate,
 } from "../../prompts/chat.js";
 import { AgentStep } from "../../schema/index.js";
-import { Tool } from "../../tools/base.js";
+import { StructuredTool } from "../../tools/base.js";
 import { Optional } from "../../types/type-utils.js";
 import { Agent, AgentArgs } from "../agent.js";
 import { AgentInput } from "../types.js";
@@ -51,7 +51,7 @@ export class ChatAgent extends Agent {
     return ["Observation:"];
   }
 
-  static validateTools(tools: Tool[]) {
+  static validateTools(tools: StructuredTool[]) {
     const invalidTool = tools.find((tool) => !tool.description);
     if (invalidTool) {
       const msg =
@@ -81,7 +81,7 @@ export class ChatAgent extends Agent {
    * @param args.suffix - String to put after the list of tools.
    * @param args.prefix - String to put before the list of tools.
    */
-  static createPrompt(tools: Tool[], args?: ChatCreatePromptArgs) {
+  static createPrompt(tools: StructuredTool[], args?: ChatCreatePromptArgs) {
     const { prefix = PREFIX, suffix = SUFFIX } = args ?? {};
     const toolStrings = tools
       .map((tool) => `${tool.name}: ${tool.description}`)
@@ -98,7 +98,7 @@ export class ChatAgent extends Agent {
 
   static fromLLMAndTools(
     llm: BaseLanguageModel,
-    tools: Tool[],
+    tools: StructuredTool[],
     args?: ChatCreatePromptArgs & AgentArgs
   ) {
     ChatAgent.validateTools(tools);

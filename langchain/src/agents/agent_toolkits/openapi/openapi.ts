@@ -1,5 +1,5 @@
 import { BaseLanguageModel } from "../../../base_language/index.js";
-import { Tool } from "../../../tools/base.js";
+import { StructuredTool } from "../../../tools/base.js";
 import { DynamicTool } from "../../../tools/dynamic.js";
 import { JsonSpec } from "../../../tools/json.js";
 import { AgentExecutor } from "../../executor.js";
@@ -19,7 +19,7 @@ import {
 import { createJsonAgent, JsonToolkit } from "../json/json.js";
 
 export class RequestsToolkit extends Toolkit {
-  tools: Tool[];
+  tools: StructuredTool[];
 
   constructor(headers?: Headers) {
     super();

@@ -1,7 +1,7 @@
 import { BaseLanguageModel } from "../base_language/index.js";
 import { CallbackManager, getCallbackManager } from "../callbacks/index.js";
 import { BufferMemory } from "../memory/buffer_memory.js";
-import { Tool } from "../tools/base.js";
+import { StructuredTool } from "../tools/base.js";
 import { ChatAgent } from "./chat/index.js";
 import { ChatConversationalAgent } from "./chat_convo/index.js";
 import { AgentExecutor, AgentExecutorInput } from "./executor.js";
@@ -13,7 +13,7 @@ type AgentType =
   | "chat-conversational-react-description";
 
 export const initializeAgentExecutor = async (
-  tools: Tool[],
+  tools: StructuredTool[],
   llm: BaseLanguageModel,
   _agentType?: AgentType,
   _verbose?: boolean,
@@ -75,10 +75,9 @@ export type InitializeAgentExecutorOptions =
  * @param tools Array of tools to use in the agent
  * @param llm LLM or ChatModel to use in the agent
  * @param options Options for the agent, including agentType, agentArgs, and other options for AgentExecutor.fromAgentAndTools
- * @returns AgentExecutor
  */
 export const initializeAgentExecutorWithOptions = async (
-  tools: Tool[],
+  tools: StructuredTool[],
   llm: BaseLanguageModel,
   options: InitializeAgentExecutorOptions = {
     agentType:

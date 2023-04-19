@@ -1,5 +1,5 @@
 import { BaseLanguageModel } from "../../../base_language/index.js";
-import { Tool } from "../../../tools/base.js";
+import { StructuredTool } from "../../../tools/base.js";
 import {
   JsonGetValueTool,
   JsonListKeysTool,
@@ -12,7 +12,7 @@ import { Toolkit } from "../base.js";
 import { AgentExecutor } from "../../executor.js";
 
 export class JsonToolkit extends Toolkit {
-  tools: Tool[];
+  tools: StructuredTool[];
 
   constructor(public jsonSpec: JsonSpec) {
     super();

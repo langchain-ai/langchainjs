@@ -13,7 +13,7 @@ import {
   BaseChatMessage,
   HumanChatMessage,
 } from "../../schema/index.js";
-import { Tool } from "../../tools/base.js";
+import { StructuredTool } from "../../tools/base.js";
 import { Optional } from "../../types/type-utils.js";
 import { Agent, AgentArgs } from "../agent.js";
 import { AgentActionOutputParser, AgentInput } from "../types.js";
@@ -65,7 +65,7 @@ export class ChatConversationalAgent extends Agent {
     return ["Observation:"];
   }
 
-  static validateTools(tools: Tool[]) {
+  static validateTools(tools: StructuredTool[]) {
     const invalidTool = tools.find((tool) => !tool.description);
     if (invalidTool) {
       const msg =
@@ -103,7 +103,7 @@ export class ChatConversationalAgent extends Agent {
    * @param args.humanMessage - String to put after the list of tools.
    */
   static createPrompt(
-    tools: Tool[],
+    tools: StructuredTool[],
     args?: ChatConversationalCreatePromptArgs
   ) {
     const systemMessage = (args?.systemMessage ?? DEFAULT_PREFIX) + PREFIX_END;
@@ -132,7 +132,7 @@ export class ChatConversationalAgent extends Agent {
 
   static fromLLMAndTools(
     llm: BaseLanguageModel,
-    tools: Tool[],
+    tools: StructuredTool[],
     args?: ChatConversationalCreatePromptArgs & AgentArgs
   ) {
     ChatConversationalAgent.validateTools(tools);
