@@ -35,6 +35,7 @@ export class EmbedbaseVectorStore extends VectorStore {
     super(new FakeEmbeddings(), args.embedbase);
 
     this.embedbase = args.embedbase;
+    this.datasetId = args.datasetId || "default";
   }
 
   async addDocuments(documents: Document[]): Promise<void> {

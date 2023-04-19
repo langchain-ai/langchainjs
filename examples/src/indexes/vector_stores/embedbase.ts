@@ -25,10 +25,17 @@ export const run = async () => {
     new FakeEmbeddings(),
     {
       embedbase: client,
+      datasetId: "my-dataset",
     }
   );
 
   const resultOne = await vectorStore.similaritySearch("Hello world", 1);
 
   console.log("Embedbase result one:", resultOne);
+
+  // now head to https://app.embedbase.xyz/dashboard/explorer/my-dataset?page=0
+  // to see the results
+
+  // or https://app.embedbase.xyz/dashboard/playground to talk to your dataset
+  // (tick the my-dataset box)
 };
