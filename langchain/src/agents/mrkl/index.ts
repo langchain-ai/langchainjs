@@ -4,7 +4,7 @@ import { PromptTemplate } from "../../prompts/prompt.js";
 import { renderTemplate } from "../../prompts/template.js";
 import { Tool } from "../../tools/base.js";
 import { Optional } from "../../types/type-utils.js";
-import { Agent, AgentArgs } from "../agent.js";
+import { Agent, AgentArgs, OutputParserArgs } from "../agent.js";
 import { deserializeHelper } from "../helpers.js";
 import {
   AgentInput,
@@ -32,7 +32,8 @@ export type ZeroShotAgentInput = Optional<AgentInput, "outputParser">;
 export class ZeroShotAgent extends Agent {
   constructor(input: ZeroShotAgentInput) {
     const outputParser =
-      input?.outputParser ?? ZeroShotAgent.getDefaultOutputParser();
+      input?.outputParser ??
+      ZeroShotAgent.getDefaultOutputParser({ finishToolName: "Final Answer:" });
     super({ ...input, outputParser });
   }
 
@@ -48,8 +49,8 @@ export class ZeroShotAgent extends Agent {
     return "Thought:";
   }
 
-  static getDefaultOutputParser() {
-    return new ZeroShotAgentOutputParser();
+  static getDefaultOutputParser(fields?: OutputParserArgs) {
+    return new ZeroShotAgentOutputParser(fields);
   }
 
   static validateTools(tools: Tool[]) {

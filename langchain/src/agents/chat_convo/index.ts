@@ -15,7 +15,7 @@ import {
 } from "../../schema/index.js";
 import { Tool } from "../../tools/base.js";
 import { Optional } from "../../types/type-utils.js";
-import { Agent, AgentArgs } from "../agent.js";
+import { Agent, AgentArgs, OutputParserArgs } from "../agent.js";
 import { AgentActionOutputParser, AgentInput } from "../types.js";
 import { ChatConversationalAgentOutputParser } from "./outputParser.js";
 import {
@@ -90,7 +90,9 @@ export class ChatConversationalAgent extends Agent {
     return thoughts;
   }
 
-  static getDefaultOutputParser(): AgentActionOutputParser {
+  static getDefaultOutputParser(
+    _fields?: OutputParserArgs
+  ): AgentActionOutputParser {
     return new ChatConversationalAgentOutputParser();
   }
 
