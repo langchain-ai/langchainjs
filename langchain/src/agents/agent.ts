@@ -16,6 +16,7 @@ import {
   SerializedAgent,
   StoppingMethod,
 } from "./types.js";
+import { BaseCallbackHandler } from "../callbacks/index.js";
 
 class ParseError extends Error {
   output: string;
@@ -171,6 +172,12 @@ export class LLMSingleActionAgent extends BaseSingleActionAgent {
 
 export interface AgentArgs {
   outputParser?: AgentActionOutputParser;
+
+  callbacks?: CallbackManager | BaseCallbackHandler[];
+
+  /**
+   * @deprecated Use `callbacks` instead.
+   */
   callbackManager?: CallbackManager;
 }
 

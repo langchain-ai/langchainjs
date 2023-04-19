@@ -5,7 +5,7 @@ import { Calculator } from "langchain/tools/calculator";
 import process from "process";
 
 export const run = async () => {
-  process.env.LANGCHAIN_HANDLER = "langchain";
+  process.env.LANGCHAIN_TRACING = "true";
   const model = new OpenAI({ temperature: 0 });
   const tools = [
     new SerpAPI(process.env.SERPAPI_API_KEY, {
@@ -34,7 +34,7 @@ export const run = async () => {
     executor.call({ input }),
   ]);
 
-  console.log(`Got output ${resultA.output} ${resultA.__runMetadata.__runId}`);
-  console.log(`Got output ${resultB.output} ${resultB.__runMetadata.__runId}`);
-  console.log(`Got output ${resultC.output} ${resultC.__runMetadata.__runId}`);
+  console.log(`Got output ${resultA.output} ${resultA.__runMetadata.runId}`);
+  console.log(`Got output ${resultB.output} ${resultB.__runMetadata.runId}`);
+  console.log(`Got output ${resultC.output} ${resultC.__runMetadata.runId}`);
 };
