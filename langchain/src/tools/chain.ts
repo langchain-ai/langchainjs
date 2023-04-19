@@ -1,3 +1,4 @@
+import { CallbackManager } from "callbacks/base.js";
 import { Tool } from "./base.js";
 import { BaseChain } from "../chains/base.js";
 
@@ -15,8 +16,10 @@ export class ChainTool extends Tool {
     description: string;
     chain: BaseChain;
     returnDirect?: boolean;
+    verbose?: boolean;
+    callbackManager?: CallbackManager
   }) {
-    super();
+    super(fields.verbose, fields.callbackManager);
     this.name = fields.name;
     this.description = fields.description;
     this.chain = fields.chain;
