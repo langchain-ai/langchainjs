@@ -1,11 +1,11 @@
 import { EmbedbaseVectorStore } from "langchain/vectorstores/embedbase";
 import { createClient } from "embedbase-js";
-import { FakeEmbeddings } from "langchain/embeddings";
+import { FakeEmbeddings } from "langchain/embeddings/fake";
 
 // First, follow set-up instructions at
 // https://js.langchain.com/docs/modules/indexes/vector_stores/integrations/embedbase
-console.log(process.env);
-const apiKey = process.env.EMBEDBASE_KEY;
+
+const apiKey = process.env.EMBEDBASE_API_KEY;
 if (!apiKey) throw new Error(`Expected env var EMBEDBASE_API_KEY`);
 
 const url = process.env.EMBEDBASE_URL;
@@ -30,5 +30,5 @@ export const run = async () => {
 
   const resultOne = await vectorStore.similaritySearch("Hello world", 1);
 
-  console.log(resultOne);
+  console.log("Embedbase result one:", resultOne);
 };
