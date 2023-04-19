@@ -7,7 +7,7 @@ import {
 } from "./base.js";
 import { ChatMessageHistory } from "./stores/message/in_memory.js";
 
-export interface BaseMemoryInput {
+export interface BaseChatMemoryInput {
   chatHistory?: BaseChatMessageHistory;
   returnMessages?: boolean;
   inputKey?: string;
@@ -23,7 +23,7 @@ export abstract class BaseChatMemory extends BaseMemory {
 
   outputKey?: string;
 
-  constructor(fields?: BaseMemoryInput) {
+  constructor(fields?: BaseChatMemoryInput) {
     super();
     this.chatHistory = fields?.chatHistory ?? new ChatMessageHistory();
     this.returnMessages = fields?.returnMessages ?? this.returnMessages;

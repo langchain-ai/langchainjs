@@ -1,6 +1,6 @@
 import { LLM, BaseLLMParams } from "./base.js";
 
-interface CohereInput extends BaseLLMParams {
+export interface CohereInput extends BaseLLMParams {
   /** Sampling temperature to use */
   temperature?: number;
 
@@ -49,6 +49,7 @@ export class Cohere extends LLM implements CohereInput {
     return "cohere";
   }
 
+  /** @ignore */
   async _call(prompt: string, _stop?: string[]): Promise<string> {
     const { cohere } = await Cohere.imports();
 
@@ -72,6 +73,7 @@ export class Cohere extends LLM implements CohereInput {
     }
   }
 
+  /** @ignore */
   static async imports(): Promise<{
     cohere: typeof import("cohere-ai");
   }> {

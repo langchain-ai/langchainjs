@@ -4,7 +4,7 @@ import { BufferMemory } from "../memory/buffer_memory.js";
 import { Tool } from "../tools/base.js";
 import { ChatAgent } from "./chat/index.js";
 import { ChatConversationalAgent } from "./chat_convo/index.js";
-import { AgentExecutor } from "./executor.js";
+import { AgentExecutor, AgentExecutorInput } from "./executor.js";
 import { ZeroShotAgent } from "./mrkl/index.js";
 
 type AgentType =
@@ -51,33 +51,36 @@ export const initializeAgentExecutor = async (
   }
 };
 
-type AgentExecutorOptions =
+/**
+ * @interface
+ */
+export type InitializeAgentExecutorOptions =
   | ({
       agentType: "zero-shot-react-description";
       agentArgs?: Parameters<typeof ZeroShotAgent.fromLLMAndTools>[2];
-    } & Omit<
-      Parameters<typeof AgentExecutor.fromAgentAndTools>[0],
-      "agent" | "tools" | "memory"
-    >)
+      memory?: never;
+    } & Omit<AgentExecutorInput, "agent" | "tools">)
   | ({
       agentType: "chat-zero-shot-react-description";
       agentArgs?: Parameters<typeof ChatAgent.fromLLMAndTools>[2];
-    } & Omit<
-      Parameters<typeof AgentExecutor.fromAgentAndTools>[0],
-      "agent" | "tools" | "memory"
-    >)
+      memory?: never;
+    } & Omit<AgentExecutorInput, "agent" | "tools">)
   | ({
       agentType: "chat-conversational-react-description";
       agentArgs?: Parameters<typeof ChatConversationalAgent.fromLLMAndTools>[2];
-    } & Omit<
-      Parameters<typeof AgentExecutor.fromAgentAndTools>[0],
-      "agent" | "tools"
-    >);
+    } & Omit<AgentExecutorInput, "agent" | "tools">);
 
+/**
+ * Initialize an agent executor with options
+ * @param tools Array of tools to use in the agent
+ * @param llm LLM or ChatModel to use in the agent
+ * @param options Options for the agent, including agentType, agentArgs, and other options for AgentExecutor.fromAgentAndTools
+ * @returns AgentExecutor
+ */
 export const initializeAgentExecutorWithOptions = async (
   tools: Tool[],
   llm: BaseLanguageModel,
-  options: AgentExecutorOptions = {
+  options: InitializeAgentExecutorOptions = {
     agentType:
       llm._modelType() === "base_chat_model"
         ? "chat-zero-shot-react-description"

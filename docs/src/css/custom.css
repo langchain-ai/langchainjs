@@ -101,3 +101,13 @@
   pointer-events: none;
   font-size: 0.85rem;
 }
+
+.theme-doc-sidebar-item-category > div > a {
+  flex: 1 1 0;
+  overflow: hidden;
+  word-break: break-word;
+}
+
+.theme-doc-sidebar-item-category > div > button {
+  opacity: 0.5;
+}

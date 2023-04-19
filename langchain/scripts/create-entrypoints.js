@@ -102,7 +102,8 @@ const entrypoints = {
   "retrievers/metal": "retrievers/metal",
   "retrievers/databerry": "retrievers/databerry",
   // cache
-  cache: "cache",
+  cache: "cache/index",
+  "cache/redis": "cache/redis",
 };
 
 // Entrypoints in this list will
@@ -162,6 +163,7 @@ const requiresOptionalDependency = [
   "sql_db",
   "retrievers/supabase",
   "retrievers/metal",
+  "cache/redis",
 ];
 
 // List of test-exports-* packages which we use to test that the exports field

@@ -34,7 +34,7 @@ interface BaseParameters {
   timeout?: number;
 }
 
-interface GoogleParameters extends BaseParameters {
+export interface SerpAPIParameters extends BaseParameters {
   /**
    * Search Query
    * Parameter defines the query you want to search. You can use anything that you
@@ -302,14 +302,14 @@ function buildUrl<P extends UrlParameters>(
 export class SerpAPI extends Tool {
   protected key: string;
 
-  protected params: Partial<GoogleParameters>;
+  protected params: Partial<SerpAPIParameters>;
 
   constructor(
     apiKey: string | undefined = typeof process !== "undefined"
       ? // eslint-disable-next-line no-process-env
         process.env.SERPAPI_API_KEY
       : undefined,
-    params: Partial<GoogleParameters> = {}
+    params: Partial<SerpAPIParameters> = {}
   ) {
     super();
 
@@ -325,9 +325,7 @@ export class SerpAPI extends Tool {
 
   name = "search";
 
-  /**
-   * Run query through SerpAPI and parse result
-   */
+  /** @ignore */
   async _call(input: string) {
     const { timeout, ...params } = this.params;
     const resp = await fetch(

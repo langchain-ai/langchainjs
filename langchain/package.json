@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.57",
+  "version": "0.0.59",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -235,6 +235,9 @@
     "cache.cjs",
     "cache.js",
     "cache.d.ts",
+    "cache/redis.cjs",
+    "cache/redis.js",
+    "cache/redis.d.ts",
     "index.cjs",
     "index.js",
     "index.d.ts"
@@ -267,7 +270,7 @@
     "@aws-sdk/client-lambda": "^3.310.0",
     "@aws-sdk/client-s3": "^3.310.0",
     "@faker-js/faker": "^7.6.0",
-    "@getmetal/metal-sdk": "^1.0.12",
+    "@getmetal/metal-sdk": "^2.0.1",
     "@huggingface/inference": "^1.5.1",
     "@jest/globals": "^29.5.0",
     "@opensearch-project/opensearch": "^2.2.0",
@@ -302,6 +305,7 @@
     "jest": "^29.5.0",
     "mammoth": "^1.5.1",
     "mongodb": "^5.2.0",
+    "pdf-parse": "1.1.1",
     "pdfjs-dist": "^3.4.120",
     "playwright": "^1.32.1",
     "prettier": "^2.8.3",
@@ -336,7 +340,7 @@
     "html-to-text": "^9.0.5",
     "mammoth": "*",
     "mongodb": "^5.2.0",
-    "pdfjs-dist": "^3.4.120",
+    "pdf-parse": "1.1.1",
     "playwright": "^1.32.1",
     "puppeteer": "^19.7.2",
     "redis": "^4.6.4",
@@ -400,7 +404,7 @@
     "mongodb": {
       "optional": true
     },
-    "pdfjs-dist": {
+    "pdf-parse": {
       "optional": true
     },
     "playwright": {
@@ -851,6 +855,11 @@
       "types": "./cache.d.ts",
       "import": "./cache.js",
       "require": "./cache.cjs"
+    },
+    "./cache/redis": {
+      "types": "./cache/redis.d.ts",
+      "import": "./cache/redis.js",
+      "require": "./cache/redis.cjs"
     },
     "./package.json": "./package.json"
   }

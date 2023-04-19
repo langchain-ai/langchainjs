@@ -11,7 +11,10 @@ import type { StreamingAxiosConfiguration } from "../util/axios-types.js";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
 import { BaseLLMParams, LLM } from "./base.js";
 
-interface ModelParams {
+/**
+ * Input to OpenAI class.
+ */
+export interface OpenAIChatInput {
   /** Sampling temperature to use, between 0 and 2, defaults to 1 */
   temperature: number;
 
@@ -32,13 +35,7 @@ interface ModelParams {
 
   /** Whether to stream the results or not */
   streaming: boolean;
-}
 
-/**
- * Input to OpenAI class.
- * @augments ModelParams
- */
-interface OpenAIInput extends ModelParams {
   /** Model name to use */
   modelName: string;
 
@@ -84,7 +81,7 @@ type Kwargs = Record<string, any>;
  * @augments BaseLLM
  * @augments OpenAIInput
  */
-export class OpenAIChat extends LLM implements OpenAIInput {
+export class OpenAIChat extends LLM implements OpenAIChatInput {
   temperature = 1;
 
   topP = 1;
@@ -116,7 +113,7 @@ export class OpenAIChat extends LLM implements OpenAIInput {
   private clientConfig: ConfigurationParameters;
 
   constructor(
-    fields?: Partial<OpenAIInput> &
+    fields?: Partial<OpenAIChatInput> &
       BaseLLMParams & {
         openAIApiKey?: string;
       },
@@ -177,6 +174,7 @@ export class OpenAIChat extends LLM implements OpenAIInput {
     };
   }
 
+  /** @ignore */
   _identifyingParams() {
     return {
       model_name: this.modelName,
@@ -204,21 +202,7 @@ export class OpenAIChat extends LLM implements OpenAIInput {
     return this.prefixMessages ? [...this.prefixMessages, message] : [message];
   }
 
-  /**
-   * Call out to OpenAI's endpoint with k unique prompts
-   *
-   * @param prompt - The prompt to pass into the model.
-   * @param [stop] - Optional list of stop words to use when generating.
-   *
-   * @returns The full LLM output.
-   *
-   * @example
-   * ```ts
-   * import { OpenAI } from "langchain/llms/openai";
-   * const openai = new OpenAI();
-   * const response = await openai.generate(["Tell me a joke."]);
-   * ```
-   */
+  /** @ignore */
   async _call(prompt: string, stop?: string[]): Promise<string> {
     if (this.stop && stop) {
       throw new Error("Stop found in input and default params");
