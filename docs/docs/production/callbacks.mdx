@@ -64,7 +64,9 @@ abstract class BaseCallbackHandler {
 
 ## Using an existing handler
 
-LangChain provides a few built-in handlers that you can use to get started. These are available in the `langchain/callbacks` module. The most basic handler is the `ConsoleCallbackHandler`, which simply logs all events to the console. In the future we will add more default handlers to the library.
+LangChain provides a few built-in handlers that you can use to get started. These are available in the `langchain/callbacks` module. The most basic handler is the `ConsoleCallbackHandler`, which simply logs all events to the console. In the future we will add more default handlers to the library. Note that when the `verbose` flag on the object is set to `true`, the `ConsoleCallbackHandler` will be invoked even without being explicitly passed in.
+
+````typescript
 
 import ConsoleExample from "@examples/callbacks/console_handler.ts";
 
@@ -110,6 +112,6 @@ export class MyCallbackHandler extends BaseCallbackHandler {
     console.log(action.log);
   }
 }
-```
+````
 
 You could then use it as described in the [section](#using-an-existing-handler) above.
