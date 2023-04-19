@@ -1,9 +1,10 @@
-import { BaseChatMemory, BaseMemoryInput } from "./chat_memory.js";
+import { BaseChatMemory, BaseChatMemoryInput } from "./chat_memory.js";
 import {
   InputValues,
   OutputValues,
   MemoryVariables,
   getBufferString,
+  getInputValue,
 } from "./base.js";
 import { AsyncCaller, AsyncCallerParams } from "../util/async_caller.js";
 
@@ -12,7 +13,10 @@ export interface MotorheadMemoryMessage {
   content: string;
 }
 
-export type MotorheadMemoryInput = BaseMemoryInput &
+/**
+ * @interface
+ */
+export type MotorheadMemoryInput = BaseChatMemoryInput &
   AsyncCallerParams & {
     sessionId: string;
     motorheadURL?: string;
@@ -101,6 +105,8 @@ export class MotorheadMemory extends BaseChatMemory {
     inputValues: InputValues,
     outputValues: OutputValues
   ): Promise<void> {
+    const input = getInputValue(inputValues, this.inputKey);
+    const output = getInputValue(outputValues, this.outputKey);
     await Promise.all([
       this.caller.call(
         fetch,
@@ -110,8 +116,8 @@ export class MotorheadMemory extends BaseChatMemory {
           method: "POST",
           body: JSON.stringify({
             messages: [
-              { role: "Human", content: `${inputValues.input}` },
-              { role: "AI", content: `${outputValues.response}` },
+              { role: "Human", content: `${input}` },
+              { role: "AI", content: `${output}` },
             ],
           }),
           headers: {

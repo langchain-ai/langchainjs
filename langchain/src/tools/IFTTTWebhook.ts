@@ -48,6 +48,7 @@ export class IFTTTWebhook extends Tool {
     this.description = description;
   }
 
+  /** @ignore */
   async _call(input: string): Promise<string> {
     const headers = { "Content-Type": "application/json" };
     const body = JSON.stringify({ this: input });

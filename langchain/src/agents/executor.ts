@@ -10,7 +10,7 @@ import {
   ChainValues,
 } from "../schema/index.js";
 
-interface AgentExecutorInput extends ChainInputs {
+export interface AgentExecutorInput extends ChainInputs {
   agent: BaseSingleActionAgent | BaseMultiActionAgent;
   tools: Tool[];
   returnIntermediateSteps?: boolean;
@@ -70,6 +70,7 @@ export class AgentExecutor extends BaseChain {
     return this.maxIterations === undefined || iterations < this.maxIterations;
   }
 
+  /** @ignore */
   async _call(inputs: ChainValues): Promise<ChainValues> {
     const toolsByName = Object.fromEntries(
       this.tools.map((t) => [t.name.toLowerCase(), t])

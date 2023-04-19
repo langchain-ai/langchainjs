@@ -22,7 +22,11 @@ export interface OpenSearchClientArgs {
   readonly vectorSearchOptions?: VectorSearchOptions;
 }
 
+type OpenSearchFilter = object;
+
 export class OpenSearchVectorStore extends VectorStore {
+  declare FilterType: OpenSearchFilter;
+
   private readonly client: Client;
 
   private readonly indexName: string;
@@ -87,7 +91,7 @@ export class OpenSearchVectorStore extends VectorStore {
   async similaritySearchVectorWithScore(
     query: number[],
     k: number,
-    filter?: object | undefined
+    filter?: OpenSearchFilter | undefined
   ): Promise<[Document, number][]> {
     const search: RequestParams.Search = {
       index: this.indexName,
@@ -204,7 +208,7 @@ export class OpenSearchVectorStore extends VectorStore {
   }
 
   private buildMetadataTerms(
-    filter?: object
+    filter?: OpenSearchFilter
   ): { term: Record<string, unknown> }[] {
     if (filter == null) return [];
     const result = [];

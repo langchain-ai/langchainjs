@@ -29,6 +29,7 @@ class BingSerpAPI extends Tool {
     this.params = params;
   }
 
+  /** @ignore */
   async _call(input: string): Promise<string> {
     const headers = { "Ocp-Apim-Subscription-Key": this.key };
     const params = { q: input, textDecorations: "true", textFormat: "HTML" };

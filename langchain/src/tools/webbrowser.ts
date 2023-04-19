@@ -124,7 +124,7 @@ const DEFAULT_HEADERS = {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Headers = Record<string, any>;
 
-interface WebBrowserArgs {
+export interface WebBrowserArgs {
   model: BaseLanguageModel;
 
   embeddings: Embeddings;
@@ -167,6 +167,7 @@ export class WebBrowser extends Tool {
     };
   }
 
+  /** @ignore */
   async _call(inputs: string) {
     const [baseUrl, task] = inputs.split(",").map((input) => {
       let t = input.trim();

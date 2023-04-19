@@ -4600,12 +4600,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@getmetal/metal-sdk@npm:^1.0.12":
-  version: 1.0.12
-  resolution: "@getmetal/metal-sdk@npm:1.0.12"
+"@getmetal/metal-sdk@npm:^2.0.1":
+  version: 2.0.1
+  resolution: "@getmetal/metal-sdk@npm:2.0.1"
   dependencies:
     axios: ^1.3.2
-  checksum: 46e3f7876b2aaad759c32a348df078c093fae89205e7050040f80300d04a0c7f1973562d1b9df74b453e2aad316fbfa5d88565e38b33c285d474cdb0356f18f3
+  checksum: 44e4da237ea22b280c9c019fde6bc5c3492527f94a384ad5d7b25900aa1dc235af439e28d44febf1686797d0692daae9a87ccef4c73d8710e38052e1a0898ad0
   languageName: node
   linkType: hard
 
@@ -9662,14 +9662,14 @@ __metadata:
   linkType: hard
 
 "canvas@npm:^2.11.0":
-  version: 2.11.0
-  resolution: "canvas@npm:2.11.0"
+  version: 2.11.2
+  resolution: "canvas@npm:2.11.2"
   dependencies:
     "@mapbox/node-pre-gyp": ^1.0.0
     nan: ^2.17.0
     node-gyp: latest
     simple-get: ^3.0.3
-  checksum: a69a6e0c90014a1b02e52c4c38a627d1a01ffe9539047bec84105cb3554907a947cf39b4a333be43fc1583dd142b641bb5480a4e23f59c6098618c33bf78f67f
+  checksum: 61e554aef80022841dc836964534082ec21435928498032562089dfb7736215f039c7d99ee546b0cf10780232d9bf310950f8b4d489dc394e0fb6f6adfc97994
   languageName: node
   linkType: hard
 
@@ -11035,7 +11035,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"debug@npm:^3.2.7":
+"debug@npm:^3.1.0, debug@npm:^3.2.7":
   version: 3.2.7
   resolution: "debug@npm:3.2.7"
   dependencies:
@@ -11445,7 +11445,7 @@ __metadata:
     "@mdx-js/react": ^1.6.22
     "@mendable/search": ^0.0.83
     clsx: ^1.2.1
-    docusaurus-plugin-typedoc: ^0.18.0
+    docusaurus-plugin-typedoc: next
     eslint: ^8.19.0
     eslint-config-airbnb: ^19.0.4
     eslint-config-prettier: ^8.5.0
@@ -11454,13 +11454,13 @@ __metadata:
     eslint-plugin-jsx-a11y: ^6.6.0
     eslint-plugin-react: ^7.30.1
     eslint-plugin-react-hooks: ^4.6.0
+    json-loader: ^0.5.7
     prettier: ^2.7.1
     process: ^0.11.10
-    raw-loader: ^4.0.2
     react: ^17.0.2
     react-dom: ^17.0.2
-    typedoc: ^0.23.28
-    typedoc-plugin-markdown: ^3.14.0
+    typedoc: ^0.24.4
+    typedoc-plugin-markdown: next
     webpack: ^5.75.0
   languageName: unknown
   linkType: soft
@@ -11483,13 +11483,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"docusaurus-plugin-typedoc@npm:^0.18.0":
-  version: 0.18.0
-  resolution: "docusaurus-plugin-typedoc@npm:0.18.0"
+"docusaurus-plugin-typedoc@npm:next":
+  version: 1.0.0-next.5
+  resolution: "docusaurus-plugin-typedoc@npm:1.0.0-next.5"
   peerDependencies:
-    typedoc: ">=0.23.0"
-    typedoc-plugin-markdown: ">=3.13.0"
-  checksum: e5e8780888ad07e71e9c0a98024f4bee6e3e520c7a3417d6b4951aa91c0fb63caa19d1cd5e0712b75d0add7c1fabe2df36b910e3ecb6e4a914c679c0ff75fc16
+    typedoc-plugin-markdown: ">=4.0.0-next.6"
+  checksum: 0386e62a3c77cc8aed23558e4630a1b80cd2bae723b93e872207a04538ee49497a39cbcdbb05824a4de6c8216914953dc30b8ae0ed01ed086c0d35a4eb2a0efb
   languageName: node
   linkType: hard
 
@@ -13005,7 +13004,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "examples@workspace:examples"
   dependencies:
-    "@getmetal/metal-sdk": ^1.0.12
+    "@getmetal/metal-sdk": ^2.0.1
     "@opensearch-project/opensearch": ^2.2.0
     "@pinecone-database/pinecone": ^0.0.12
     "@prisma/client": ^4.11.0
@@ -14286,24 +14285,6 @@ __metadata:
   version: 2.0.1
   resolution: "handle-thing@npm:2.0.1"
   checksum: 68071f313062315cd9dce55710e9496873945f1dd425107007058fc1629f93002a7649fcc3e464281ce02c7e809a35f5925504ab8105d972cf649f1f47cb7d6c
-  languageName: node
-  linkType: hard
-
-"handlebars@npm:^4.7.7":
-  version: 4.7.7
-  resolution: "handlebars@npm:4.7.7"
-  dependencies:
-    minimist: ^1.2.5
-    neo-async: ^2.6.0
-    source-map: ^0.6.1
-    uglify-js: ^3.1.4
-    wordwrap: ^1.0.0
-  dependenciesMeta:
-    uglify-js:
-      optional: true
-  bin:
-    handlebars: bin/handlebars
-  checksum: 1e79a43f5e18d15742977cb987923eab3e2a8f44f2d9d340982bcb69e1735ed049226e534d7c1074eaddaf37e4fb4f471a8adb71cddd5bc8cf3f894241df5cee
   languageName: node
   linkType: hard
 
@@ -17008,6 +16989,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"json-loader@npm:^0.5.7":
+  version: 0.5.7
+  resolution: "json-loader@npm:0.5.7"
+  checksum: c7d054edf7fd5338847f49008df3cdf744f64507584dff3e6d28f500604eedd9130ca1639caa61747b36ab141e7e8db0e86f8514b2244b6d8b0eb634f1154875
+  languageName: node
+  linkType: hard
+
 "json-parse-even-better-errors@npm:^2.3.0, json-parse-even-better-errors@npm:^2.3.1":
   version: 2.3.1
   resolution: "json-parse-even-better-errors@npm:2.3.1"
@@ -17179,7 +17167,7 @@ __metadata:
     "@aws-sdk/client-s3": ^3.310.0
     "@dqbd/tiktoken": ^1.0.4
     "@faker-js/faker": ^7.6.0
-    "@getmetal/metal-sdk": ^1.0.12
+    "@getmetal/metal-sdk": ^2.0.1
     "@huggingface/inference": ^1.5.1
     "@jest/globals": ^29.5.0
     "@opensearch-project/opensearch": ^2.2.0
@@ -17225,6 +17213,7 @@ __metadata:
     openai: ^3.2.0
     p-queue: ^6.6.2
     p-retry: 4
+    pdf-parse: 1.1.1
     pdfjs-dist: ^3.4.120
     pickleparser: ^0.0.2-alpha.2
     playwright: ^1.32.1
@@ -17265,6 +17254,7 @@ __metadata:
     mongodb: ^5.2.0
     pdfjs-dist: ^3.4.120
     pickleparser: ^0.0.2-alpha.2
+    pdf-parse: 1.1.1
     playwright: ^1.32.1
     puppeteer: ^19.7.2
     redis: ^4.6.4
@@ -17311,7 +17301,7 @@ __metadata:
       optional: true
     mongodb:
       optional: true
-    pdfjs-dist:
+    pdf-parse:
       optional: true
     pickleparser:
       optional: true
@@ -17913,7 +17903,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"marked@npm:^4.2.12":
+"marked@npm:^4.3.0":
   version: 4.3.0
   resolution: "marked@npm:4.3.0"
   bin:
@@ -18233,12 +18223,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"minimatch@npm:^7.1.3":
-  version: 7.4.5
-  resolution: "minimatch@npm:7.4.5"
+"minimatch@npm:^9.0.0":
+  version: 9.0.0
+  resolution: "minimatch@npm:9.0.0"
   dependencies:
     brace-expansion: ^2.0.1
-  checksum: dfb82497bd9007d3dde3f5e033ea4e314e221186ece26863521a8fa955e73f58f0fd11704b79eec37ba29be460be0cf92a7a6455dd41d5763b5b12072c6013c3
+  checksum: 7bd57899edd1d1b0560f50b5b2d1ea4ad2a366c5a2c8e0a943372cf2f200b64c256bae45a87a80915adbce27fa36526264296ace0da57b600481fe5ea3e372e5
   languageName: node
   linkType: hard
 
@@ -18600,7 +18590,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"neo-async@npm:^2.6.0, neo-async@npm:^2.6.2":
+"neo-async@npm:^2.6.2":
   version: 2.6.2
   resolution: "neo-async@npm:2.6.2"
   checksum: deac9f8d00eda7b2e5cd1b2549e26e10a0faa70adaa6fdadca701cc55f49ee9018e427f424bac0c790b7c7e2d3068db97f3093f1093975f2acb8f8818b936ed9
@@ -18751,6 +18741,13 @@ __metadata:
   dependencies:
     lodash: ^4.17.21
   checksum: e8c856c04a1645062112a72e59a98b203505ed5111ff84a3a5f40611afa229b578c7d50f1e6a7f17aa62baeea4a640d2e2f61f63afc05423aa267af10977fb2b
+  languageName: node
+  linkType: hard
+
+"node-ensure@npm:^0.0.0":
+  version: 0.0.0
+  resolution: "node-ensure@npm:0.0.0"
+  checksum: 1124623beb1dec66889794286ec1761ac3bfac42ce93b8652903efa5af14227edce5bafa06c4e0675cdc850360931d7c9413e3b5406150f05b2c9bf5bb3ccce4
   languageName: node
   linkType: hard
 
@@ -19737,9 +19734,19 @@ __metadata:
   languageName: node
   linkType: hard
 
+"pdf-parse@npm:1.1.1":
+  version: 1.1.1
+  resolution: "pdf-parse@npm:1.1.1"
+  dependencies:
+    debug: ^3.1.0
+    node-ensure: ^0.0.0
+  checksum: 5d63a8be1b3b8915618b1b76350409513fdd7fe03c77056b2dd7a1c2da28a11e297645e33bb4e953e2c1cd0ae66980f30fd0bed2979877f894347962d9647241
+  languageName: node
+  linkType: hard
+
 "pdfjs-dist@npm:^3.4.120":
-  version: 3.4.120
-  resolution: "pdfjs-dist@npm:3.4.120"
+  version: 3.5.141
+  resolution: "pdfjs-dist@npm:3.5.141"
   dependencies:
     canvas: ^2.11.0
     path2d-polyfill: ^2.0.1
@@ -19747,7 +19754,7 @@ __metadata:
   dependenciesMeta:
     canvas:
       optional: true
-  checksum: c4b095706c351c26ee235f1a0db8dbe9205be85ab0873fa8236b0b3f466e9b1d4aabb8e0c0d9b7e3a79d8e65c9872deb95d0120b5a4972643812a0d784a0aca2
+  checksum: b58e801b92a0d7b58b3799c0cf48f35deb45e140ef488744251a3e3dd148acef7aef4edfb8c7622b342c7068e8b7c01b754546ed0e60897e48665fa45af9d845
   languageName: node
   linkType: hard
 
@@ -24601,30 +24608,39 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typedoc-plugin-markdown@npm:^3.14.0":
-  version: 3.14.0
-  resolution: "typedoc-plugin-markdown@npm:3.14.0"
-  dependencies:
-    handlebars: ^4.7.7
+"typedoc-plugin-markdown@npm:4.0.0-next.6":
+  version: 4.0.0-next.6
+  resolution: "typedoc-plugin-markdown@npm:4.0.0-next.6"
   peerDependencies:
-    typedoc: ">=0.23.0"
-  checksum: 6205600052185b4b193ab8a253d9df5ccbc95002c948a07f9024bcd26f0f23fbcc089fda4d6b4c8f4172f4eaca2bf9c32129989f6baaace7261cf4a0e41c976b
+    prettier: ">=1.8.0"
+    typedoc: ">=0.24.0"
+  checksum: e672e162e68375b51e5f2e22d727c4359ae18884805450f5504cde76a6d2182b9ede9e6529c9f12041e23d5c8b9465445a2777b2cfce4fc31bb13a2de0944a94
   languageName: node
   linkType: hard
 
-"typedoc@npm:^0.23.28":
-  version: 0.23.28
-  resolution: "typedoc@npm:0.23.28"
+"typedoc-plugin-markdown@patch:typedoc-plugin-markdown@npm%3A4.0.0-next.6#./.yarn/patches/typedoc-plugin-markdown-npm-4.0.0-next.6-96b4b47746.patch::locator=langchainjs%40workspace%3A.":
+  version: 4.0.0-next.6
+  resolution: "typedoc-plugin-markdown@patch:typedoc-plugin-markdown@npm%3A4.0.0-next.6#./.yarn/patches/typedoc-plugin-markdown-npm-4.0.0-next.6-96b4b47746.patch::version=4.0.0-next.6&hash=a0cf58&locator=langchainjs%40workspace%3A."
+  peerDependencies:
+    prettier: ">=1.8.0"
+    typedoc: ">=0.24.0"
+  checksum: f6c8d4c2e2c3da6fa1b56f9f77668286ceb62455f6b7008921f949aca1e41fcf50987f64f13c1e809c043a6c66da8c6e0693e55f99c2a4ad2be07bb137b2f3c8
+  languageName: node
+  linkType: hard
+
+"typedoc@npm:^0.24.4":
+  version: 0.24.4
+  resolution: "typedoc@npm:0.24.4"
   dependencies:
     lunr: ^2.3.9
-    marked: ^4.2.12
-    minimatch: ^7.1.3
+    marked: ^4.3.0
+    minimatch: ^9.0.0
     shiki: ^0.14.1
   peerDependencies:
     typescript: 4.6.x || 4.7.x || 4.8.x || 4.9.x || 5.0.x
   bin:
     typedoc: bin/typedoc
-  checksum: 40eb4e207aac1b734e09400cf03f543642cc7b11000895198dd5a0d3166315759ccf4ac30a2915153597c5c186101c72bac2f1fc12b428184a9274d3a0e44c5e
+  checksum: c6762aff2b40eb574fc348c82921471fa1c1dc8a83adc284457aab30ea61768770be469f424340ab646944472653290578fd8e6308d55ec2e611577472067dae
   languageName: node
   linkType: hard
 
@@ -24761,15 +24777,6 @@ __metadata:
   version: 1.1.1
   resolution: "ufo@npm:1.1.1"
   checksum: 6bd210ed93d8c0dedd76c456b1d1dfb0e3b08c2216ee6080e61f0f545de0bac24b3d3a5530cd6a403810855f8d8fc3922583965296142e04cfc287442635e6c7
-  languageName: node
-  linkType: hard
-
-"uglify-js@npm:^3.1.4":
-  version: 3.17.4
-  resolution: "uglify-js@npm:3.17.4"
-  bin:
-    uglifyjs: bin/uglifyjs
-  checksum: 7b3897df38b6fc7d7d9f4dcd658599d81aa2b1fb0d074829dd4e5290f7318dbca1f4af2f45acb833b95b1fe0ed4698662ab61b87e94328eb4c0a0d3435baf924
   languageName: node
   linkType: hard
 
@@ -26190,13 +26197,6 @@ __metadata:
   version: 1.2.3
   resolution: "word-wrap@npm:1.2.3"
   checksum: 30b48f91fcf12106ed3186ae4fa86a6a1842416df425be7b60485de14bec665a54a68e4b5156647dec3a70f25e84d270ca8bc8cd23182ed095f5c7206a938c1f
-  languageName: node
-  linkType: hard
-
-"wordwrap@npm:^1.0.0":
-  version: 1.0.0
-  resolution: "wordwrap@npm:1.0.0"
-  checksum: 2a44b2788165d0a3de71fd517d4880a8e20ea3a82c080ce46e294f0b68b69a2e49cff5f99c600e275c698a90d12c5ea32aff06c311f0db2eb3f1201f3e7b2a04
   languageName: node
   linkType: hard
 

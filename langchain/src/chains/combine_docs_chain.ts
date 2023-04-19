@@ -51,6 +51,7 @@ export class StuffDocumentsChain
     this.inputKey = fields.inputKey ?? this.inputKey;
   }
 
+  /** @ignore */
   async _call(values: ChainValues): Promise<ChainValues> {
     if (!(this.inputKey in values)) {
       throw new Error(`Document key ${this.inputKey} not found.`);
@@ -137,6 +138,7 @@ export class MapReduceDocumentsChain
     this.maxIterations = fields.maxIterations ?? this.maxIterations;
   }
 
+  /** @ignore */
   async _call(values: ChainValues): Promise<ChainValues> {
     if (!(this.inputKey in values)) {
       throw new Error(`Document key ${this.inputKey} not found.`);
@@ -266,6 +268,7 @@ export class RefineDocumentsChain
       fields.initialResponseName ?? this.initialResponseName;
   }
 
+  /** @ignore */
   async _constructInitialInputs(doc: Document, rest: Record<string, unknown>) {
     const baseInfo: Record<string, unknown> = {
       page_content: doc.pageContent,
@@ -285,6 +288,7 @@ export class RefineDocumentsChain
     return inputs;
   }
 
+  /** @ignore */
   async _constructRefineInputs(doc: Document, res: string) {
     const baseInfo: Record<string, unknown> = {
       page_content: doc.pageContent,
@@ -303,6 +307,7 @@ export class RefineDocumentsChain
     return inputs;
   }
 
+  /** @ignore */
   async _call(values: ChainValues): Promise<ChainValues> {
     if (!(this.inputKey in values)) {
       throw new Error(`Document key ${this.inputKey} not found.`);
