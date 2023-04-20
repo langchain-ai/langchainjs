@@ -169,18 +169,20 @@ export class ChatVectorDBQAChain
       returnSourceDocuments?: boolean;
       questionGeneratorTemplate?: string;
       qaTemplate?: string;
+      verbose?: boolean;
     } = {}
   ): ChatVectorDBQAChain {
-    const { questionGeneratorTemplate, qaTemplate, ...rest } = options;
+    const { questionGeneratorTemplate, qaTemplate, verbose, ...rest } = options;
     const question_generator_prompt = PromptTemplate.fromTemplate(
       questionGeneratorTemplate || question_generator_template
     );
     const qa_prompt = PromptTemplate.fromTemplate(qaTemplate || qa_template);
 
-    const qaChain = loadQAStuffChain(llm, { prompt: qa_prompt });
+    const qaChain = loadQAStuffChain(llm, { prompt: qa_prompt, verbose });
     const questionGeneratorChain = new LLMChain({
       prompt: question_generator_prompt,
       llm,
+      verbose,
     });
     const instance = new this({
       vectorstore,
