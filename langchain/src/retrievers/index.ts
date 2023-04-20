@@ -4,6 +4,7 @@
 );
 
 export { RemoteRetriever } from "./remote/base.js";
+export { ContextualCompressionRetriever } from "./contextual_compression.js";
 export { ChatGPTPluginRetriever } from "./remote/chatgpt-plugin.js";
 export {
   SupabaseHybridSearch,
