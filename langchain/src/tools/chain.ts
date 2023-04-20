@@ -17,7 +17,7 @@ export class ChainTool extends Tool {
     chain: BaseChain;
     returnDirect?: boolean;
     verbose?: boolean;
-    callbackManager?: CallbackManager
+    callbackManager?: CallbackManager;
   }) {
     super(fields.verbose, fields.callbackManager);
     this.name = fields.name;
