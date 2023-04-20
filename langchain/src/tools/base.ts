@@ -19,25 +19,31 @@ export abstract class StructuredTool<
 > extends BaseLangChain {
   abstract schema: T | z.ZodEffects<T>;
 
-  constructor(verbose?: boolean, callbacks?: CallbackManager | BaseCallbackHandler[]) {
+  constructor(
+    verbose?: boolean,
+    callbacks?: CallbackManager | BaseCallbackHandler[]
+  ) {
     super({ verbose, callbacks });
   }
 
-  protected abstract _call(arg: z.output<T>, callbackManager?: CallbackManagerForToolRun): Promise<string>;
+  protected abstract _call(
+    arg: z.output<T>,
+    callbackManager?: CallbackManagerForToolRun
+  ): Promise<string>;
 
   async call(
     arg: (z.output<T> extends string ? string : never) | z.input<T>,
-    callbacks?: CallbackManager | BaseCallbackHandler[],
+    callbacks?: CallbackManager | BaseCallbackHandler[]
   ): Promise<string> {
     const parsed = await this.schema.parseAsync(arg);
     const callbackManager_ = await CallbackManager.configure(
-        callbacks,
-        Array.isArray(this.callbacks) ? this.callbacks : this.callbacks?.handlers,
-        { verbose: this.verbose }
+      callbacks,
+      Array.isArray(this.callbacks) ? this.callbacks : this.callbacks?.handlers,
+      { verbose: this.verbose }
     );
     const runManager = await callbackManager_?.handleToolStart(
       { name: this.name },
-      typeof parsed === "string" ? parsed : JSON.stringify(parsed),
+      typeof parsed === "string" ? parsed : JSON.stringify(parsed)
     );
     let result;
     try {
@@ -68,6 +74,9 @@ export abstract class Tool extends StructuredTool {
     arg: string | z.input<this["schema"]>,
     callbacks?: CallbackManager | BaseCallbackHandler[]
   ): Promise<string> {
-    return super.call(typeof arg === "string" ? { input: arg } : arg, callbacks);
+    return super.call(
+      typeof arg === "string" ? { input: arg } : arg,
+      callbacks
+    );
   }
 }
