@@ -2,7 +2,7 @@ import { VectorStore } from "vectorstores/base.js";
 import { Document } from "../document.js";
 import { BaseRetriever } from "../schema/index.js";
 
-export interface TimeWeightedVectorStoreRetrieverFields {
+interface TimeWeightedVectorStoreRetrieverFields {
   vectorStore: VectorStore;
   searchKwargs?: number;
   memoryStream?: Document[];
@@ -14,26 +14,34 @@ export interface TimeWeightedVectorStoreRetrieverFields {
 
 export const LAST_ACCESSED_AT_KEY = "last_accessed_at";
 export const BUFFER_IDX = "buffer_idx";
-/**
- * https://github.com/hwchase17/langchain/blob/master/langchain/retrievers/time_weighted_retriever.py
-*/
-export class TimeWeightedVectorStoreRetriever extends BaseRetriever {
 
+/**
+ * TimeWeightedVectorStoreRetriever is a class that retrieves documents based on their time-weighted relevance.
+ * ref: https://github.com/hwchase17/langchain/blob/master/langchain/retrievers/time_weighted_retriever.py
+ */
+export class TimeWeightedVectorStoreRetriever extends BaseRetriever {
+  // The vectorstore to store documents and determine salience.
   private vectorStore: VectorStore;
 
+  // The number of top K most relevant documents to consider when searching.
   private searchKwargs: number;
 
+  // The memory_stream of documents to search through.
   private memoryStream: Document[];
 
+  // The exponential decay factor used as (1.0-decay_rate)**(hrs_passed).
   private decayRate: number;
 
+  // The maximum number of documents to retrieve in a given call.
   private k: number;
 
+  // Other keys in the metadata to factor into the score, e.g. 'importance'.
   private otherScoreKeys: string[];
 
+  // The salience to assign memories not retrieved from the vector store.
   private defaultSalience: number | null;
 
-
+  // Constructor to initialize the required fields
   constructor(fields: TimeWeightedVectorStoreRetrieverFields) {
     super();
     this.vectorStore = fields.vectorStore;
@@ -45,17 +53,50 @@ export class TimeWeightedVectorStoreRetriever extends BaseRetriever {
     this.defaultSalience = fields.defaultSalience ?? null;
   }
 
+  // Get relevant documents based on time-weighted relevance
   async getRelevantDocuments(query: string): Promise<Document[]> {
     const now = Math.floor(Date.now() / 1000);
+    const memoryDocsAndScores = this.getMemoryDocsAndScores();
+
+    const salientDocsAndScores = await this.getSalientDocuments(query);
+    const docsAndScores = { ...memoryDocsAndScores, ...salientDocsAndScores };
+
+    return this.computeResults(docsAndScores, now);
+  }
+
+  // Add documents to the memoryStream and vectorStore
+  async addDocuments(docs: Document[]): Promise<void> {
+    const now = Math.floor(Date.now() / 1000);
+    const savedDocs = this.prepareDocuments(docs, now);
+
+    this.memoryStream.push(...savedDocs);
+    await this.vectorStore.addDocuments(savedDocs);
+  }
+
+  // Get memory documents and their scores
+  private getMemoryDocsAndScores(): Record<number, { doc: Document, score: number }> {
     const memoryDocsAndScores: Record<number, { doc: Document, score: number }> = {};
     for (const doc of this.memoryStream.slice(-this.k)) {
       const bufferIdx = doc.metadata[BUFFER_IDX];
       memoryDocsAndScores[bufferIdx] = { doc, score: this.defaultSalience ?? 0 };
     }
+    return memoryDocsAndScores;
+  }
 
-    const salientDocsAndScores = await this.getSalientDocuments(query);
-    const docsAndScores = { ...memoryDocsAndScores, ...salientDocsAndScores };
+  // Get salient documents and their scores based on the query
+  private async getSalientDocuments(query: string): Promise<Record<number, { doc: Document, score: number }>> {
+    const docAndScores: [Document, number][] = await this.vectorStore.similaritySearchWithScore(query, this.searchKwargs);
+    const results: Record<number, { doc: Document, score: number }> = {};
+    for (const [fetchedDoc, score] of docAndScores) {
+      const bufferIdx = fetchedDoc.metadata[BUFFER_IDX];
+      const doc = this.memoryStream[bufferIdx];
+      results[bufferIdx] = { doc, score };
+    }
+    return results;
+  }
 
+  // Compute the final result set of documents based on the combined scores
+  private computeResults(docsAndScores: Record<number, { doc: Document, score: number }>, now: number): Document[] {
     const recordedDocs = Object.values(docsAndScores)
       .map(({ doc, score }) => ({ doc, score: this.getCombinedScore(doc, score, now) }))
       .sort((a, b) => b.score - a.score);
@@ -69,10 +110,9 @@ export class TimeWeightedVectorStoreRetriever extends BaseRetriever {
     return results;
   }
 
-  async addDocuments(docs: Document[]): Promise<void> {
-    const now = Math.floor(Date.now() / 1000);
-
-    const savedDocs = docs.map((doc, i) => ({
+  // Prepare documents with necessary metadata before saving
+  private prepareDocuments(docs: Document[], now: number): Document[] {
+    return docs.map((doc, i) => ({
       ...doc,
       metadata: {
         [LAST_ACCESSED_AT_KEY]: doc.metadata[LAST_ACCESSED_AT_KEY] ?? now,
@@ -80,21 +120,9 @@ export class TimeWeightedVectorStoreRetriever extends BaseRetriever {
         [BUFFER_IDX]: this.memoryStream.length + i,
       }
     }));
-    this.memoryStream.push(...savedDocs);
-    await this.vectorStore.addDocuments(savedDocs);
   }
 
-  private async getSalientDocuments(query: string): Promise<Record<number, { doc: Document, score: number }>> {
-    const docAndScores: [Document, number][] = await this.vectorStore.similaritySearchWithScore(query, this.searchKwargs);
-    const results: Record<number, { doc: Document, score: number }> = {};
-    for (const [fetchedDoc, score] of docAndScores) {
-      const bufferIdx = fetchedDoc.metadata[BUFFER_IDX];
-      const doc = this.memoryStream[bufferIdx];
-      results[bufferIdx] = { doc, score };
-    }
-    return results;
-  }
-
+  // Calculate the combined score based on vector relevance and other factors
   private getCombinedScore(doc: Document, vectorRelevance: number | null, nowMsec: number): number {
     const hoursPassed = this.getHoursPassed(nowMsec, doc.metadata[LAST_ACCESSED_AT_KEY]);
     let score = (1.0 - this.decayRate) ** hoursPassed;
@@ -107,7 +135,7 @@ export class TimeWeightedVectorStoreRetriever extends BaseRetriever {
     return score;
   }
 
-
+  // Calculate the hours passed between two time points
   private getHoursPassed(time: number, refTime: number): number {
     return (time - refTime) / 3600;
   }
