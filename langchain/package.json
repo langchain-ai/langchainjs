@@ -238,6 +238,15 @@
     "cache/redis.cjs",
     "cache/redis.js",
     "cache/redis.d.ts",
+    "stores/file/in_memory.cjs",
+    "stores/file/in_memory.js",
+    "stores/file/in_memory.d.ts",
+    "stores/file/node.cjs",
+    "stores/file/node.js",
+    "stores/file/node.d.ts",
+    "experimental/autogpt.cjs",
+    "experimental/autogpt.js",
+    "experimental/autogpt.d.ts",
     "index.cjs",
     "index.js",
     "index.d.ts"
@@ -444,7 +453,8 @@
     "p-retry": "4",
     "uuid": "^9.0.0",
     "yaml": "^2.2.1",
-    "zod": "^3.21.4"
+    "zod": "^3.21.4",
+    "zod-to-json-schema": "^3.20.4"
   },
   "publishConfig": {
     "access": "public"
@@ -860,6 +870,21 @@
       "types": "./cache/redis.d.ts",
       "import": "./cache/redis.js",
       "require": "./cache/redis.cjs"
+    },
+    "./stores/file/in_memory": {
+      "types": "./stores/file/in_memory.d.ts",
+      "import": "./stores/file/in_memory.js",
+      "require": "./stores/file/in_memory.cjs"
+    },
+    "./stores/file/node": {
+      "types": "./stores/file/node.d.ts",
+      "import": "./stores/file/node.js",
+      "require": "./stores/file/node.cjs"
+    },
+    "./experimental/autogpt": {
+      "types": "./experimental/autogpt.d.ts",
+      "import": "./experimental/autogpt.js",
+      "require": "./experimental/autogpt.cjs"
     },
     "./package.json": "./package.json"
   }

@@ -10,17 +10,22 @@ if (!exampleName) {
 
 // Allow people to pass all possible variations of a path to an example
 // ./src/foo.ts, ./dist/foo.js, src/foo.ts, dist/foo.js, foo.ts
-let exampleRelativePath: string;
-if (exampleName.startsWith("./src/")) {
-  exampleRelativePath = exampleName.slice(6);
-} else if (exampleName.startsWith("./dist/")) {
-  exampleRelativePath = exampleName.slice(7);
-} else if (exampleName.startsWith("src/")) {
-  exampleRelativePath = exampleName.slice(4);
-} else if (exampleName.startsWith("dist/")) {
-  exampleRelativePath = exampleName.slice(5);
-} else {
-  exampleRelativePath = exampleName;
+let exampleRelativePath = exampleName;
+
+if (exampleRelativePath.startsWith("./examples/")) {
+  exampleRelativePath = exampleName.slice(11);
+} else if (exampleRelativePath.startsWith("examples/")) {
+  exampleRelativePath = exampleName.slice(9);
+}
+
+if (exampleRelativePath.startsWith("./src/")) {
+  exampleRelativePath = exampleRelativePath.slice(6);
+} else if (exampleRelativePath.startsWith("./dist/")) {
+  exampleRelativePath = exampleRelativePath.slice(7);
+} else if (exampleRelativePath.startsWith("src/")) {
+  exampleRelativePath = exampleRelativePath.slice(4);
+} else if (exampleRelativePath.startsWith("dist/")) {
+  exampleRelativePath = exampleRelativePath.slice(5);
 }
 
 let runExample;

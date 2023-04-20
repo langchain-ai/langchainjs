@@ -75,7 +75,7 @@ export class ChatConversationalAgent extends Agent {
     }
   }
 
-  constructScratchPad(steps: AgentStep[]): BaseChatMessage[] {
+  async constructScratchPad(steps: AgentStep[]): Promise<BaseChatMessage[]> {
     const thoughts: BaseChatMessage[] = [];
     for (const step of steps) {
       thoughts.push(new AIChatMessage(step.action.log));

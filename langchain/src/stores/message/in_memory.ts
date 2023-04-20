@@ -3,7 +3,7 @@ import {
   AIChatMessage,
   BaseChatMessage,
   BaseChatMessageHistory,
-} from "../../../schema/index.js";
+} from "../../schema/index.js";
 
 export class ChatMessageHistory extends BaseChatMessageHistory {
   private messages: BaseChatMessage[] = [];

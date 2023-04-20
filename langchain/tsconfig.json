@@ -103,7 +103,10 @@
       "src/retrievers/metal.ts",
       "src/retrievers/databerry.ts",
       "src/cache/index.ts",
-      "src/cache/redis.ts"
+      "src/cache/redis.ts",
+      "src/stores/file/in_memory.ts",
+      "src/stores/file/node.ts",
+      "src/experimental/autogpt/index.ts"
     ],
     "sort": [
       "kind",

@@ -33,7 +33,7 @@
     "test:int": "turbo run test:integration",
     "test:exports:docker": "docker compose up",
     "publish": "bash scripts/release-branch.sh && turbo run build lint test test:integration && yarn run test:exports:docker && yarn workspace langchain run release && echo '🔗 Open https://github.com/hwchase17/langchainjs/compare/release?expand=1 and merge the release PR'",
-    "example": "turbo run start --filter examples --",
+    "example": "yarn workspace examples start",
     "prepare": "husky install",
     "precommit": "turbo run precommit",
     "docs": "yarn workspace docs start"
