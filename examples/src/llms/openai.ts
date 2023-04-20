@@ -4,7 +4,6 @@ export const run = async () => {
   const model = new OpenAI({
     modelName: "gpt-4",
     temperature: 0.7,
-    verbose: true,
     maxTokens: 1000,
     maxRetries: 5,
   });
