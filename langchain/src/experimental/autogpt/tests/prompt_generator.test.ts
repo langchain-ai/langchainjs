@@ -27,7 +27,7 @@ class FakeBrowserTool extends StructuredTool {
   }
 }
 
-test("prompt with 3 tool", () => {
+test("prompt with several tools", () => {
   const store = new InMemoryFileStore();
   const tools = [
     new FakeBrowserTool(),
