@@ -226,6 +226,15 @@ cache.d.ts
 cache/redis.cjs
 cache/redis.js
 cache/redis.d.ts
+stores/file/in_memory.cjs
+stores/file/in_memory.js
+stores/file/in_memory.d.ts
+stores/file/node.cjs
+stores/file/node.js
+stores/file/node.d.ts
+experimental/autogpt.cjs
+experimental/autogpt.js
+experimental/autogpt.d.ts
 index.cjs
 index.js
 index.d.ts

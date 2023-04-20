@@ -65,8 +65,8 @@ export class ChatAgent extends Agent {
     return new ChatAgentOutputParser();
   }
 
-  constructScratchPad(steps: AgentStep[]): string {
-    const agentScratchpad = super.constructScratchPad(steps);
+  async constructScratchPad(steps: AgentStep[]): Promise<string> {
+    const agentScratchpad = await super.constructScratchPad(steps);
     if (agentScratchpad) {
       return `This was your previous work (but I haven't seen any of it! I only see what you return as final answer):\n${agentScratchpad}`;
     }

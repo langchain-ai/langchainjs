@@ -5,7 +5,7 @@ import {
   OutputValues,
   getInputValue,
 } from "./base.js";
-import { ChatMessageHistory } from "./stores/message/in_memory.js";
+import { ChatMessageHistory } from "../stores/message/in_memory.js";
 
 export interface BaseChatMemoryInput {
   chatHistory?: BaseChatMessageHistory;
