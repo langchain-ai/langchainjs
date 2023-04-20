@@ -33,6 +33,7 @@ export interface ChatVectorDBQAChainInput {
   inputKey: string;
 }
 
+/** @deprecated use `ConversationalRetrievalQAChain` instead. */
 export class ChatVectorDBQAChain
   extends BaseChain
   implements ChatVectorDBQAChainInput
