@@ -8,7 +8,7 @@ import {
   BUFFER_IDX,
   LAST_ACCESSED_AT_KEY,
   TimeWeightedVectorStoreRetriever,
-} from "../time_weighted3.js";
+} from "../time_weighted.js";
 
 // eslint-disable-next-line tree-shaking/no-side-effects-in-initialization
 jest.useFakeTimers();
