@@ -5,6 +5,8 @@ import { z } from "zod";
 import { getPrompt } from "../prompt_generator.js";
 import { StructuredTool } from "../../../tools/base.js";
 import { Calculator } from "../../../tools/calculator.js";
+import { ReadFileTool, WriteFileTool } from "../../../tools/fs.js";
+import { InMemoryFileStore } from "../../../stores/file/in_memory.js";
 
 class FakeBrowserTool extends StructuredTool {
   schema = z.object({
@@ -25,8 +27,14 @@ class FakeBrowserTool extends StructuredTool {
   }
 }
 
-test("prompt with 1 tool", () => {
-  const tools = [new FakeBrowserTool(), new Calculator()];
+test("prompt with 3 tool", () => {
+  const store = new InMemoryFileStore();
+  const tools = [
+    new FakeBrowserTool(),
+    new Calculator(),
+    new ReadFileTool({ store }),
+    new WriteFileTool({ store }),
+  ];
   const prompt = getPrompt(tools);
   expect(prompt).toMatchInlineSnapshot(`
     "Constraints:
@@ -38,7 +46,9 @@ test("prompt with 1 tool", () => {
     Commands:
     1. fake_browser_tool: useful for when you need to find something on the web or summarize a webpage., args json schema: {"url":{"type":"string"},"query":{"type":"string"}}
     2. calculator: Useful for getting the result of a math expression. The input to this tool should be a valid mathematical expression that could be executed by a simple calculator., args json schema: {"input":{"type":"string"}}
-    3. finish: use this to signal that you have finished all your objectives, args: "response": "final response to let people know you have finished your objectives"
+    3. read_file: Read file from disk, args json schema: {"file_path":{"type":"string","description":"name of file"}}
+    4. write_file: Write file from disk, args json schema: {"file_path":{"type":"string","description":"name of file"},"text":{"type":"string","description":"text to write to file"}}
+    5. finish: use this to signal that you have finished all your objectives, args: "response": "final response to let people know you have finished your objectives"
 
     Resources:
     1. Internet access for searches and information gathering.
