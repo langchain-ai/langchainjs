@@ -1,4 +1,4 @@
-import { AgentActionOutputParser } from "../../agents/types.js";
+import { AgentActionOutputParser } from "../types.js";
 import { AgentFinish } from "../../schema/index.js";
 import { FORMAT_INSTRUCTIONS } from "./prompt.js";
 

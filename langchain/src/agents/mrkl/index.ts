@@ -32,8 +32,7 @@ export type ZeroShotAgentInput = Optional<AgentInput, "outputParser">;
 export class ZeroShotAgent extends Agent {
   constructor(input: ZeroShotAgentInput) {
     const outputParser =
-      input?.outputParser ??
-      ZeroShotAgent.getDefaultOutputParser({ finishToolName: "Final Answer:" });
+      input?.outputParser ?? ZeroShotAgent.getDefaultOutputParser();
     super({ ...input, outputParser });
   }
 
