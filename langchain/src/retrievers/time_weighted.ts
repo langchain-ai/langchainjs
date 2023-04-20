@@ -2,14 +2,14 @@ import { VectorStore } from "vectorstores/base.js";
 import { Document } from "../document.js";
 import { BaseRetriever } from "../schema/index.js";
 
-interface TimeWeightedVectorStoreRetrieverFields {
+export interface TimeWeightedVectorStoreRetrieverFields {
   vectorStore: VectorStore;
   searchKwargs?: number;
   memoryStream?: Document[];
   decayRate?: number;
   k?: number;
   otherScoreKeys?: string[];
-  defaultSalience?: number
+  defaultSalience?: number;
 }
 
 export const LAST_ACCESSED_AT_KEY = "last_accessed_at";
@@ -53,7 +53,11 @@ export class TimeWeightedVectorStoreRetriever extends BaseRetriever {
     this.defaultSalience = fields.defaultSalience ?? null;
   }
 
-  // Get relevant documents based on time-weighted relevance
+  /**
+   * Get relevant documents based on time-weighted relevance
+   * @param query The query to search for
+   * @returns The relevant documents
+   */
   async getRelevantDocuments(query: string): Promise<Document[]> {
     const now = Math.floor(Date.now() / 1000);
     const memoryDocsAndScores = this.getMemoryDocsAndScores();
@@ -64,7 +68,14 @@ export class TimeWeightedVectorStoreRetriever extends BaseRetriever {
     return this.computeResults(docsAndScores, now);
   }
 
-  // Add documents to the memoryStream and vectorStore
+  /**
+   * NOTE: When adding documents to a vector store, use addDocuments
+   * via retriever instead of directly to the vector store.
+   * This is because it is necessary to process the document
+   * in prepareDocuments.
+   *
+   * @param docs The documents to add to vector store in the retriever
+   */
   async addDocuments(docs: Document[]): Promise<void> {
     const now = Math.floor(Date.now() / 1000);
     const savedDocs = this.prepareDocuments(docs, now);
@@ -74,19 +85,34 @@ export class TimeWeightedVectorStoreRetriever extends BaseRetriever {
   }
 
   // Get memory documents and their scores
-  private getMemoryDocsAndScores(): Record<number, { doc: Document, score: number }> {
-    const memoryDocsAndScores: Record<number, { doc: Document, score: number }> = {};
+  private getMemoryDocsAndScores(): Record<
+    number,
+    { doc: Document; score: number }
+  > {
+    const memoryDocsAndScores: Record<
+      number,
+      { doc: Document; score: number }
+    > = {};
     for (const doc of this.memoryStream.slice(-this.k)) {
       const bufferIdx = doc.metadata[BUFFER_IDX];
-      memoryDocsAndScores[bufferIdx] = { doc, score: this.defaultSalience ?? 0 };
+      memoryDocsAndScores[bufferIdx] = {
+        doc,
+        score: this.defaultSalience ?? 0,
+      };
     }
     return memoryDocsAndScores;
   }
 
   // Get salient documents and their scores based on the query
-  private async getSalientDocuments(query: string): Promise<Record<number, { doc: Document, score: number }>> {
-    const docAndScores: [Document, number][] = await this.vectorStore.similaritySearchWithScore(query, this.searchKwargs);
-    const results: Record<number, { doc: Document, score: number }> = {};
+  private async getSalientDocuments(
+    query: string
+  ): Promise<Record<number, { doc: Document; score: number }>> {
+    const docAndScores: [Document, number][] =
+      await this.vectorStore.similaritySearchWithScore(
+        query,
+        this.searchKwargs
+      );
+    const results: Record<number, { doc: Document; score: number }> = {};
     for (const [fetchedDoc, score] of docAndScores) {
       const bufferIdx = fetchedDoc.metadata[BUFFER_IDX];
       const doc = this.memoryStream[bufferIdx];
@@ -96,9 +122,15 @@ export class TimeWeightedVectorStoreRetriever extends BaseRetriever {
   }
 
   // Compute the final result set of documents based on the combined scores
-  private computeResults(docsAndScores: Record<number, { doc: Document, score: number }>, now: number): Document[] {
+  private computeResults(
+    docsAndScores: Record<number, { doc: Document; score: number }>,
+    now: number
+  ): Document[] {
     const recordedDocs = Object.values(docsAndScores)
-      .map(({ doc, score }) => ({ doc, score: this.getCombinedScore(doc, score, now) }))
+      .map(({ doc, score }) => ({
+        doc,
+        score: this.getCombinedScore(doc, score, now),
+      }))
       .sort((a, b) => b.score - a.score);
 
     const results: Document[] = [];
@@ -118,13 +150,20 @@ export class TimeWeightedVectorStoreRetriever extends BaseRetriever {
         [LAST_ACCESSED_AT_KEY]: doc.metadata[LAST_ACCESSED_AT_KEY] ?? now,
         created_at: doc.metadata.created_at ?? now,
         [BUFFER_IDX]: this.memoryStream.length + i,
-      }
+      },
     }));
   }
 
   // Calculate the combined score based on vector relevance and other factors
-  private getCombinedScore(doc: Document, vectorRelevance: number | null, nowMsec: number): number {
-    const hoursPassed = this.getHoursPassed(nowMsec, doc.metadata[LAST_ACCESSED_AT_KEY]);
+  private getCombinedScore(
+    doc: Document,
+    vectorRelevance: number | null,
+    nowMsec: number
+  ): number {
+    const hoursPassed = this.getHoursPassed(
+      nowMsec,
+      doc.metadata[LAST_ACCESSED_AT_KEY]
+    );
     let score = (1.0 - this.decayRate) ** hoursPassed;
     for (const key of this.otherScoreKeys) {
       score += doc.metadata[key];

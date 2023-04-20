@@ -4,7 +4,11 @@ import { describe, expect, jest, test } from "@jest/globals";
 import { Document } from "../../document.js";
 import { FakeEmbeddings } from "../../embeddings/fake.js";
 import { MemoryVectorStore } from "../../vectorstores/memory.js";
-import { BUFFER_IDX, LAST_ACCESSED_AT_KEY, TimeWeightedVectorStoreRetriever } from "../time_weighted3.js";
+import {
+  BUFFER_IDX,
+  LAST_ACCESSED_AT_KEY,
+  TimeWeightedVectorStoreRetriever,
+} from "../time_weighted3.js";
 
 // eslint-disable-next-line tree-shaking/no-side-effects-in-initialization
 jest.useFakeTimers();
@@ -49,9 +53,9 @@ describe("Test getRelevantDocuments", () => {
       searchKwargs: 2,
     });
     await retriever.addDocuments([
-      { pageContent: "aaa", metadata: {}},
-      { pageContent: "aaaa", metadata: {}},
-      { pageContent: "bbb", metadata: {}},
+      { pageContent: "aaa", metadata: {} },
+      { pageContent: "aaaa", metadata: {} },
+      { pageContent: "bbb", metadata: {} },
     ]);
 
     const query = "aaa";
@@ -87,12 +91,17 @@ describe("Test getRelevantDocuments", () => {
 
   test("Return in descending order of lastAccessedAt when memoryStream of the same pageContent", async () => {
     const samePageContent = "Test query";
-    const samePageContentMemoryStream = getMemoryStream().map(doc => ({ ...doc, pageContent: samePageContent }));
+    const samePageContentMemoryStream = getMemoryStream().map((doc) => ({
+      ...doc,
+      pageContent: samePageContent,
+    }));
     const retriever = new TimeWeightedVectorStoreRetriever({
       vectorStore: new MemoryVectorStore(new FakeEmbeddings()),
       memoryStream: samePageContentMemoryStream,
     });
-    await retriever.addDocuments([{ pageContent: samePageContent, metadata: {}}]);
+    await retriever.addDocuments([
+      { pageContent: samePageContent, metadata: {} },
+    ]);
 
     const query = "Test query";
     const resultsDocs = await retriever.getRelevantDocuments(query);
@@ -137,7 +146,7 @@ describe("Test getRelevantDocuments", () => {
       vectorStore: new MemoryVectorStore(new FakeEmbeddings()),
       memoryStream: getMemoryStream(),
     });
-    await retriever.addDocuments([{ pageContent: "qux", metadata: {}}]);
+    await retriever.addDocuments([{ pageContent: "qux", metadata: {} }]);
 
     const query = "Test query";
     const resultsDocs = await retriever.getRelevantDocuments(query);
@@ -184,7 +193,7 @@ describe("Test getRelevantDocuments", () => {
       memoryStream: getMemoryStream(),
       decayRate,
     });
-    await retriever.addDocuments([{ pageContent: "qux", metadata: {}}]);
+    await retriever.addDocuments([{ pageContent: "qux", metadata: {} }]);
 
     const query = "Test query";
     const resultsDocs = await retriever.getRelevantDocuments(query);
@@ -230,7 +239,7 @@ describe("Test getRelevantDocuments", () => {
       memoryStream: getMemoryStream(),
       k: 3,
     });
-    await retriever.addDocuments([{ pageContent: "qux", metadata: {}}]);
+    await retriever.addDocuments([{ pageContent: "qux", metadata: {} }]);
 
     const query = "Test query";
     const resultsDocs = await retriever.getRelevantDocuments(query);
@@ -268,7 +277,11 @@ describe("Test getRelevantDocuments", () => {
       memoryStream: getMemoryStream(),
       searchKwargs: 2,
     });
-    await retriever.addDocuments([{ pageContent: "qux", metadata: {}}, { pageContent: "quux", metadata: {}}, { pageContent: "corge", metadata: {}}]);
+    await retriever.addDocuments([
+      { pageContent: "qux", metadata: {} },
+      { pageContent: "quux", metadata: {} },
+      { pageContent: "corge", metadata: {} },
+    ]);
 
     const query = "Test query";
     const resultsDocs = await retriever.getRelevantDocuments(query);

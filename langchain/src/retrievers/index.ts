@@ -11,4 +11,4 @@ export {
   SupabaseHybridSearch,
   SupabaseHybridSearchParams
 } from "./supabase.js";
-export { TimeWeightedVectorStoreRetriever } from "./time_weighted.js";
+export { TimeWeightedVectorStoreRetriever, TimeWeightedVectorStoreRetrieverFields } from "./time_weighted.js";
