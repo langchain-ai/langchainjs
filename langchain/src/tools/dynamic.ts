@@ -1,10 +1,17 @@
+import { BaseCallbackHandler } from "../callbacks/base.js";
+import {
+  CallbackManagerForToolRun,
+  CallbackManager,
+} from "../callbacks/manager.js";
 import { Tool } from "./base.js";
 
-export interface DynamicToolParams {
+export interface DynamicToolInput {
   name: string;
   description: string;
   func: (arg1: string) => Promise<string>;
   returnDirect?: boolean;
+  verbose?: boolean;
+  callbacks?: BaseCallbackHandler[] | CallbackManager;
 }
 
 export class DynamicTool extends Tool {
@@ -14,8 +21,8 @@ export class DynamicTool extends Tool {
 
   func: (arg1: string) => Promise<string>;
 
-  constructor(fields: DynamicToolParams) {
-    super();
+  constructor(fields: DynamicToolInput) {
+    super(fields.verbose, fields.callbacks);
     this.name = fields.name;
     this.description = fields.description;
     this.func = fields.func;
@@ -23,7 +30,10 @@ export class DynamicTool extends Tool {
   }
 
   /** @ignore */
-  async _call(input: string): Promise<string> {
+  async _call(
+    input: string,
+    _runManager?: CallbackManagerForToolRun
+  ): Promise<string> {
     return this.func(input);
   }
 }
