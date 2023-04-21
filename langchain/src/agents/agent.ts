@@ -1,5 +1,5 @@
 import { BaseLanguageModel } from "../base_language/index.js";
-import { CallbackManager } from "../callbacks/manager.js";
+import { CallbackManager, Callbacks } from "../callbacks/manager.js";
 import { LLMChain } from "../chains/llm_chain.js";
 import { BasePromptTemplate } from "../prompts/base.js";
 import {
@@ -16,7 +16,6 @@ import {
   SerializedAgent,
   StoppingMethod,
 } from "./types.js";
-import { BaseCallbackHandler } from "../callbacks/index.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type OutputParserArgs = Record<string, any>;
@@ -176,7 +175,7 @@ export class LLMSingleActionAgent extends BaseSingleActionAgent {
 export interface AgentArgs {
   outputParser?: AgentActionOutputParser;
 
-  callbacks?: CallbackManager | BaseCallbackHandler[];
+  callbacks?: Callbacks;
 
   /**
    * @deprecated Use `callbacks` instead.

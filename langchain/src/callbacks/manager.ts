@@ -20,6 +20,10 @@ export interface CallbackManagerOptions {
   tracing?: boolean;
 }
 
+export type Callbacks =
+  | CallbackManager
+  | (BaseCallbackHandler | BaseCallbackHandlerMethods)[];
+
 export abstract class BaseCallbackManager {
   abstract addHandler(handler: BaseCallbackHandler): void;
 
@@ -414,19 +418,27 @@ export class CallbackManager
   }
 
   static async configure(
-    inheritableHandlers?: CallbackManager | BaseCallbackHandler[],
-    localHandlers?: BaseCallbackHandler[],
+    inheritableHandlers?: Callbacks,
+    localHandlers?: Callbacks,
     options?: CallbackManagerOptions
   ): Promise<CallbackManager | undefined> {
     let callbackManager: CallbackManager | undefined;
     if (inheritableHandlers || localHandlers) {
       if (Array.isArray(inheritableHandlers) || !inheritableHandlers) {
         callbackManager = new CallbackManager();
-        callbackManager.setHandlers(inheritableHandlers ?? [], true);
+        callbackManager.setHandlers(
+          inheritableHandlers?.map(ensureHandler) ?? [],
+          true
+        );
       } else {
         callbackManager = inheritableHandlers;
       }
-      callbackManager = callbackManager.copy(localHandlers, false);
+      callbackManager = callbackManager.copy(
+        Array.isArray(localHandlers)
+          ? localHandlers.map(ensureHandler)
+          : localHandlers?.handlers,
+        false
+      );
     }
     // eslint-disable-next-line no-process-env
     if (options?.verbose || process.env.LANGCHAIN_TRACING !== undefined) {
@@ -454,4 +466,14 @@ export class CallbackManager
     }
     return callbackManager;
   }
+}
+
+function ensureHandler(
+  handler: BaseCallbackHandler | BaseCallbackHandlerMethods
+): BaseCallbackHandler {
+  if ("name" in handler) {
+    return handler;
+  }
+
+  return BaseCallbackHandler.fromMethods(handler);
 }

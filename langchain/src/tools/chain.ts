@@ -1,8 +1,4 @@
-import { BaseCallbackHandler } from "../callbacks/base.js";
-import {
-  CallbackManager,
-  CallbackManagerForToolRun,
-} from "../callbacks/manager.js";
+import { CallbackManagerForToolRun } from "../callbacks/manager.js";
 import { DynamicToolInput } from "./dynamic.js";
 import { BaseChain } from "../chains/base.js";
 import { Tool } from "./base.js";
@@ -20,14 +16,7 @@ export class ChainTool extends Tool {
 
   returnDirect: boolean;
 
-  constructor(fields: {
-    name: string;
-    description: string;
-    chain: BaseChain;
-    returnDirect?: boolean;
-    verbose?: boolean;
-    callbacks?: CallbackManager | BaseCallbackHandler[];
-  }) {
+  constructor(fields: ChainToolInput) {
     super(fields.verbose, fields.callbacks);
     this.name = fields.name;
     this.description = fields.description;

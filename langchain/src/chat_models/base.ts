@@ -15,8 +15,8 @@ import { getBufferString } from "../memory/base.js";
 import {
   CallbackManager,
   CallbackManagerForLLMRun,
+  Callbacks,
 } from "../callbacks/manager.js";
-import { BaseCallbackHandler } from "../callbacks/base.js";
 
 export type SerializedChatModel = {
   _model: string;
@@ -45,7 +45,7 @@ export abstract class BaseChatModel extends BaseLanguageModel {
   async generate(
     messages: BaseChatMessage[][],
     stop?: string[],
-    callbacks?: CallbackManager | BaseCallbackHandler[]
+    callbacks?: Callbacks
   ): Promise<LLMResult> {
     const generations: ChatGeneration[][] = [];
     const llmOutputs: LLMResult["llmOutput"][] = [];
@@ -54,7 +54,7 @@ export abstract class BaseChatModel extends BaseLanguageModel {
     );
     const callbackManager_ = await CallbackManager.configure(
       callbacks,
-      Array.isArray(this.callbacks) ? this.callbacks : this.callbacks?.handlers,
+      this.callbacks,
       { verbose: this.verbose }
     );
     const runManager = await callbackManager_?.handleLLMStart(
@@ -96,7 +96,7 @@ export abstract class BaseChatModel extends BaseLanguageModel {
   async generatePrompt(
     promptValues: BasePromptValue[],
     stop?: string[],
-    callbacks?: CallbackManager | BaseCallbackHandler[]
+    callbacks?: Callbacks
   ): Promise<LLMResult> {
     const promptMessages: BaseChatMessage[][] = promptValues.map(
       (promptValue) => promptValue.toChatMessages()
@@ -113,7 +113,7 @@ export abstract class BaseChatModel extends BaseLanguageModel {
   async call(
     messages: BaseChatMessage[],
     stop?: string[],
-    callbacks?: CallbackManager | BaseCallbackHandler[]
+    callbacks?: Callbacks
   ): Promise<BaseChatMessage> {
     const result = await this.generate([messages], stop, callbacks);
     const generations = result.generations as ChatGeneration[][];
@@ -123,7 +123,7 @@ export abstract class BaseChatModel extends BaseLanguageModel {
   async callPrompt(
     promptValue: BasePromptValue,
     stop?: string[],
-    callbacks?: CallbackManager | BaseCallbackHandler[]
+    callbacks?: Callbacks
   ): Promise<BaseChatMessage> {
     const promptMessages: BaseChatMessage[] = promptValue.toChatMessages();
     return this.call(promptMessages, stop, callbacks);

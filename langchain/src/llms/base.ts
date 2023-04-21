@@ -13,8 +13,8 @@ import {
 import {
   CallbackManager,
   CallbackManagerForLLMRun,
+  Callbacks,
 } from "../callbacks/manager.js";
-import { BaseCallbackHandler } from "../callbacks/index.js";
 
 export type SerializedLLM = {
   _model: string;
@@ -55,7 +55,7 @@ export abstract class BaseLLM extends BaseLanguageModel {
   async generatePrompt(
     promptValues: BasePromptValue[],
     stop?: string[],
-    callbacks?: CallbackManager | BaseCallbackHandler[]
+    callbacks?: Callbacks
   ): Promise<LLMResult> {
     const prompts: string[] = promptValues.map((promptValue) =>
       promptValue.toString()
@@ -76,11 +76,11 @@ export abstract class BaseLLM extends BaseLanguageModel {
   async _generateUncached(
     prompts: string[],
     stop?: string[],
-    callbacks?: CallbackManager | BaseCallbackHandler[]
+    callbacks?: Callbacks
   ): Promise<LLMResult> {
     const callbackManager_ = await CallbackManager.configure(
       callbacks,
-      Array.isArray(this.callbacks) ? this.callbacks : this.callbacks?.handlers,
+      this.callbacks,
       { verbose: this.verbose }
     );
     const runManager = await callbackManager_?.handleLLMStart(
@@ -111,7 +111,7 @@ export abstract class BaseLLM extends BaseLanguageModel {
   async generate(
     prompts: string[],
     stop?: string[],
-    callbacks?: CallbackManager | BaseCallbackHandler[]
+    callbacks?: Callbacks
   ): Promise<LLMResult> {
     if (!Array.isArray(prompts)) {
       throw new Error("Argument 'prompts' is expected to be a string[]");
@@ -160,11 +160,7 @@ export abstract class BaseLLM extends BaseLanguageModel {
   /**
    * Convenience wrapper for {@link generate} that takes in a single string prompt and returns a single string output.
    */
-  async call(
-    prompt: string,
-    stop?: string[],
-    callbacks?: CallbackManager | BaseCallbackHandler[]
-  ) {
+  async call(prompt: string, stop?: string[], callbacks?: Callbacks) {
     const { generations } = await this.generate([prompt], stop, callbacks);
     return generations[0][0].text;
   }

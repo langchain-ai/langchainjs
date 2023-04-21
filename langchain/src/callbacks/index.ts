@@ -1,6 +1,16 @@
-export { BaseCallbackHandler } from "./base.js";
+export {
+  BaseCallbackHandler,
+  BaseCallbackHandlerMethods,
+  BaseCallbackHandlerInput,
+} from "./base.js";
 
-export { LangChainTracer } from "./handlers/tracers.js";
+export {
+  LangChainTracer,
+  BaseRun,
+  LLMRun,
+  ChainRun,
+  ToolRun,
+} from "./handlers/tracers.js";
 
 export { getTracingCallbackHandler } from "./handlers/initialize.js";
 
