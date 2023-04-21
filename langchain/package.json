@@ -317,7 +317,8 @@
     "redis": "^4.6.4",
     "replicate": "^0.9.0",
     "srt-parser-2": "^1.2.2",
-    "typeorm": "^0.3.12"
+    "typeorm": "^0.3.12",
+    "wikipedia": "^2.0.0"
   },
   "peerDependenciesMeta": {
     "@aws-sdk/client-s3": {
@@ -381,6 +382,9 @@
       "optional": true
     },
     "typeorm": {
+      "optional": true
+    },
+    "wikipedia": {
       "optional": true
     }
   },

@@ -1,8 +1,8 @@
-import wikipedia from "wikipedia";
+import wiki, { Page } from "wikipedia";
 import { Document } from "../../document.js";
-import { BaseDocumentLoader } from "document_loaders/base.js";
+import { BaseDocumentLoader } from "../base.js";
 
-const discardCategories = [
+const DISCARDCATEGORIES = [
   "See also",
   "References",
   "External links",
@@ -24,40 +24,42 @@ const discardCategories = [
 ];
 
 export class WikipediaLoader extends BaseDocumentLoader {
-  constructor(public webPath: string) {
+  discardCategories: string[];
+
+  constructor(public webPath: string, discardCategories?: string[]) {
     super();
+    this.discardCategories = discardCategories ?? DISCARDCATEGORIES;
   }
 
-  public async load(url: string): Promise<Document[]> {
-    // load from page title or url?
-
-    console.log(url);
-    if (!url.includes("wikipedia")) {
-      throw new Error("not wiki url");
+  public async load(): Promise<Document[]> {
+    const matchResult = this.webPath.match(/\/wiki\/(.+)/);
+    if (!matchResult) {
+      throw new Error(
+        "Invalid webPath format. Use full url like https://en.wikipedia.org/wiki/2020_Summer_Olympics"
+      );
     }
-    const pageTitle = decodeURIComponent(url.match(/\/wiki\/(.+)/)[1]);
 
-    const page = await wikipedia.page(pageTitle);
+    const pageTitle = decodeURIComponent(matchResult[1]);
+    const page: Page = await wiki.page(pageTitle);
     const content = await page.content();
     const sections = this.extractSections(
       content,
       page.title,
-      discardCategories
+      this.discardCategories
     );
 
     const docs = sections.map(
       (section) =>
         new Document({
           pageContent: section,
-          //   metadata: { url },
+          metadata: { source: this.webPath },
         })
     );
     return docs;
   }
 
-  // chatgpt converted from the openai cookbook example
+  // converted from the openai cookbook example
   // https://github.com/openai/openai-cookbook/blob/main/examples/fine-tuned_qa/olympics-1-collect-data.ipynb
-
   private extractSections(
     wikiText: string,
     title: string,
@@ -102,6 +104,7 @@ export class WikipediaLoader extends BaseDocumentLoader {
 
       if (numEquals > removeGroupLevel) {
         if (numEquals <= keepGroupLevel) {
+          // eslint-disable-next-line no-continue
           continue;
         }
       }
@@ -109,6 +112,7 @@ export class WikipediaLoader extends BaseDocumentLoader {
       if (discard.has(plainHeading)) {
         removeGroupLevel = numEquals;
         keepGroupLevel = maxLevel;
+        // eslint-disable-next-line no-continue
         continue;
       }
       nheadings.push(heading.replace(/=/g, "").trim());
