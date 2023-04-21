@@ -13,17 +13,17 @@ export class ConsoleCallbackHandler extends BaseCallbackHandler {
     console.log(
       `Starting LLM ${runId} with name ${llm.name} with prompts: ${prompts.join(
         ", "
-      )}`
+      )}\n`
     );
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   handleLLMError(err: any, runId: string) {
-    console.log(`LLM ${runId} errored: ${err}`);
+    console.log(`LLM ${runId} errored: ${err}\n`);
   }
 
   handleLLMEnd(output: LLMResult, runId: string) {
-    console.log(`LLM ${runId} finished: ${output}`);
+    console.log(`LLM ${runId} finished: ${JSON.stringify(output)}\n`);
   }
 
   handleChainStart(chain: { name: string }) {
