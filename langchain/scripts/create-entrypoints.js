@@ -101,6 +101,8 @@ const entrypoints = {
   "retrievers/supabase": "retrievers/supabase",
   "retrievers/metal": "retrievers/metal",
   "retrievers/databerry": "retrievers/databerry",
+  "retrievers/contextual_compression": "retrievers/contextual_compression",
+  "retrievers/document_compressors": "retrievers/document_compressors/index",
   // cache
   cache: "cache/index",
   "cache/redis": "cache/redis",
