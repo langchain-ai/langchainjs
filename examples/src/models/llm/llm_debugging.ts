@@ -1,5 +1,4 @@
 import { LLMResult } from "langchain/schema";
-import { CallbackManager, BaseCallbackHandler } from "langchain/callbacks";
 import { OpenAI } from "langchain/llms/openai";
 
 export const run = async () => {
@@ -7,7 +6,7 @@ export const run = async () => {
   const model = new OpenAI({
     verbose: true,
     callbacks: [
-      BaseCallbackHandler.fromMethods({
+      {
         handleLLMStart: async (llm: { name: string }, prompts: string[]) => {
           console.log(JSON.stringify(llm, null, 2));
           console.log(JSON.stringify(prompts, null, 2));
@@ -18,7 +17,7 @@ export const run = async () => {
         handleLLMError: async (err: Error) => {
           console.error(err);
         },
-      }),
+      },
     ],
   });
 

@@ -1,4 +1,3 @@
-import { BaseCallbackHandler } from "langchain/callbacks";
 import { OpenAI } from "langchain/llms/openai";
 
 export const run = async () => {
@@ -8,11 +7,11 @@ export const run = async () => {
     maxTokens: 25,
     streaming: true,
     callbacks: [
-      BaseCallbackHandler.fromMethods({
+      {
         async handleLLMNewToken(token: string) {
           console.log({ token });
         },
-      }),
+      },
     ],
   });
 
