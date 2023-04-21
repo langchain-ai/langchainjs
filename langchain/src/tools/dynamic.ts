@@ -1,8 +1,4 @@
-import { BaseCallbackHandler } from "../callbacks/base.js";
-import {
-  CallbackManagerForToolRun,
-  CallbackManager,
-} from "../callbacks/manager.js";
+import { CallbackManagerForToolRun, Callbacks } from "../callbacks/manager.js";
 import { Tool } from "./base.js";
 
 export interface DynamicToolInput {
@@ -11,7 +7,7 @@ export interface DynamicToolInput {
   func: (arg1: string) => Promise<string>;
   returnDirect?: boolean;
   verbose?: boolean;
-  callbacks?: BaseCallbackHandler[] | CallbackManager;
+  callbacks?: Callbacks;
 }
 
 export class DynamicTool extends Tool {

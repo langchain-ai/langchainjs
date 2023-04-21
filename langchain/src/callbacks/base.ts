@@ -21,77 +21,81 @@ export abstract class BaseCallbackHandlerMethods {
     prompts: string[],
     runId: string,
     parentRunId?: string
-  ): Promise<void>;
+  ): Promise<void> | void;
 
   handleLLMNewToken?(
     token: string,
     runId: string,
     parentRunId?: string
-  ): Promise<void>;
+  ): Promise<void> | void;
 
   handleLLMError?(
     err: Error,
     runId: string,
     parentRunId?: string
-  ): Promise<void>;
+  ): Promise<void> | void;
 
   handleLLMEnd?(
     output: LLMResult,
     runId: string,
     parentRunId?: string
-  ): Promise<void>;
+  ): Promise<void> | void;
 
   handleChainStart?(
     chain: { name: string },
     inputs: ChainValues,
     runId: string,
     parentRunId?: string
-  ): Promise<void>;
+  ): Promise<void> | void;
 
   handleChainError?(
     err: Error,
     runId: string,
     parentRunId?: string
-  ): Promise<void>;
+  ): Promise<void> | void;
 
   handleChainEnd?(
     outputs: ChainValues,
     runId: string,
     parentRunId?: string
-  ): Promise<void>;
+  ): Promise<void> | void;
 
   handleToolStart?(
     tool: { name: string },
     input: string,
     runId: string,
     parentRunId?: string
-  ): Promise<void>;
+  ): Promise<void> | void;
 
   handleToolError?(
     err: Error,
     runId: string,
     parentRunId?: string
-  ): Promise<void>;
+  ): Promise<void> | void;
 
   handleToolEnd?(
     output: string,
     runId: string,
     parentRunId?: string
-  ): Promise<void>;
+  ): Promise<void> | void;
 
-  handleText?(text: string, runId: string, parentRunId?: string): Promise<void>;
+  handleText?(
+    text: string,
+    runId: string,
+    parentRunId?: string
+  ): Promise<void> | void;
 
   handleAgentAction?(
     action: AgentAction,
     runId: string,
     parentRunId?: string
-  ): Promise<void>;
+  ): Promise<void> | void;
 
   handleAgentEnd?(
     action: AgentFinish,
     runId: string,
     parentRunId?: string
-  ): Promise<void>;
+  ): Promise<void> | void;
 }
 
 export abstract class BaseCallbackHandler

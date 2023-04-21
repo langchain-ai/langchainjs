@@ -98,6 +98,7 @@ export class ChatVectorDBQAChain
         chat_history: chatHistory,
       });
       const keys = Object.keys(result);
+      console.log("_call", values, keys);
       if (keys.length === 1) {
         newQuestion = result[keys[0]];
       } else {

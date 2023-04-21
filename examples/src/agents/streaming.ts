@@ -10,23 +10,23 @@ export const run = async () => {
   class CustomHandler extends BaseCallbackHandler {
     name = "custom_handler";
 
-    async handleLLMNewToken(token: string) {
+    handleLLMNewToken(token: string) {
       console.log("token", { token });
     }
 
-    async handleLLMStart(llm: { name: string }, _prompts: string[]) {
+    handleLLMStart(llm: { name: string }, _prompts: string[]) {
       console.log("handleLLMStart", { llm });
     }
 
-    async handleChainStart(chain: { name: string }) {
+    handleChainStart(chain: { name: string }) {
       console.log("handleChainStart", { chain });
     }
 
-    async handleAgentAction(action: AgentAction) {
+    handleAgentAction(action: AgentAction) {
       console.log("handleAgentAction", action);
     }
 
-    async handleToolStart(tool: { name: string }) {
+    handleToolStart(tool: { name: string }) {
       console.log("handleToolStart", { tool });
     }
   }
@@ -35,16 +35,16 @@ export const run = async () => {
 
   // Additionally, you can use the `fromMethods` method to create a callback handler
   const handler2 = BaseCallbackHandler.fromMethods({
-    async handleLLMStart(llm, _prompts: string[]) {
+    handleLLMStart(llm, _prompts: string[]) {
       console.log("handleLLMStart: I'm the second handler!!", { llm });
     },
-    async handleChainStart(chain) {
+    handleChainStart(chain) {
       console.log("handleChainStart: I'm the second handler!!", { chain });
     },
-    async handleAgentAction(action) {
+    handleAgentAction(action) {
       console.log("handleAgentAction", action);
     },
-    async handleToolStart(tool) {
+    handleToolStart(tool) {
       console.log("handleToolStart", { tool });
     },
   });
