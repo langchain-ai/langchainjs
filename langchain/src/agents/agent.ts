@@ -18,6 +18,9 @@ import {
 } from "./types.js";
 import { BaseCallbackHandler } from "../callbacks/index.js";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type OutputParserArgs = Record<string, any>;
+
 class ParseError extends Error {
   output: string;
 
@@ -228,7 +231,9 @@ export abstract class Agent extends BaseSingleActionAgent {
   /**
    * Get the default output parser for this agent.
    */
-  static getDefaultOutputParser(): AgentActionOutputParser {
+  static getDefaultOutputParser(
+    _fields?: OutputParserArgs
+  ): AgentActionOutputParser {
     throw new Error("Not implemented");
   }
 
