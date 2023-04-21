@@ -145,34 +145,11 @@ export class FaissStore extends SaveableVectorStore {
     const fs = await import("node:fs/promises");
     const path = await import("node:path");
 
-    class WindowsPath {
-      path: string;
-
-      constructor(...args: string[]) {
-        this.path = args.join("\\");
-      }
-    }
-
-    class PosixPath {
-      path: string;
-
-      constructor(...args: string[]) {
-        this.path = args.join("/");
-      }
-    }
-
     class PyDocument extends Map {
       toDocument(): Document {
-        const metadata = this.get("metadata");
-        Object.entries(metadata).forEach(([k, v]) => {
-          // eslint-disable-next-line no-instanceof/no-instanceof
-          if (v instanceof PosixPath || v instanceof WindowsPath) {
-            metadata[k] = v.path;
-          }
-        });
         return new Document({
           pageContent: this.get("page_content"),
-          metadata,
+          metadata: this.get("metadata"),
         });
       }
     }
@@ -207,8 +184,8 @@ export class FaissStore extends SaveableVectorStore {
         "Document",
         PyDocument
       );
-      pickleparser.registry.register("pathlib", "WindowsPath", WindowsPath);
-      pickleparser.registry.register("pathlib", "PosixPath", PosixPath);
+      pickleparser.registry.register("pathlib", "WindowsPath", (...args)=>args.join("\\"));
+      pickleparser.registry.register("pathlib", "PosixPath", (...args)=>args.join("/"));
       const [rawStore, mapping]: [PyInMemoryDocstore, Record<number, string>] =
         pickleparser.load();
       const store = rawStore.toInMemoryDocstore();
