@@ -5,13 +5,13 @@ import {
   ChainValues,
   LLMResult,
 } from "../schema/index.js";
-import { BaseCallbackHandler, BaseCallbackHandlerMethods } from "./base.js";
+import { BaseCallbackHandler, CallbackHandlerMethods } from "./base.js";
 import { ConsoleCallbackHandler } from "./handlers/console.js";
 import { getTracingCallbackHandler } from "./handlers/initialize.js";
 
 type BaseCallbackManagerMethods = {
-  [K in keyof BaseCallbackHandlerMethods]?: (
-    ...args: Parameters<Required<BaseCallbackHandlerMethods>[K]>
+  [K in keyof CallbackHandlerMethods]?: (
+    ...args: Parameters<Required<CallbackHandlerMethods>[K]>
   ) => Promise<unknown>;
 };
 
@@ -22,7 +22,7 @@ export interface CallbackManagerOptions {
 
 export type Callbacks =
   | CallbackManager
-  | (BaseCallbackHandler | BaseCallbackHandlerMethods)[];
+  | (BaseCallbackHandler | CallbackHandlerMethods)[];
 
 export abstract class BaseCallbackManager {
   abstract addHandler(handler: BaseCallbackHandler): void;
@@ -402,7 +402,7 @@ export class CallbackManager
     return manager;
   }
 
-  static fromHandlers(handlers: BaseCallbackHandlerMethods) {
+  static fromHandlers(handlers: CallbackHandlerMethods) {
     class Handler extends BaseCallbackHandler {
       name = uuidv4();
 
@@ -472,7 +472,7 @@ export class CallbackManager
 }
 
 function ensureHandler(
-  handler: BaseCallbackHandler | BaseCallbackHandlerMethods
+  handler: BaseCallbackHandler | CallbackHandlerMethods
 ): BaseCallbackHandler {
   if ("name" in handler) {
     return handler;

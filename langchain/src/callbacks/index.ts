@@ -1,6 +1,6 @@
 export {
   BaseCallbackHandler,
-  BaseCallbackHandlerMethods,
+  CallbackHandlerMethods,
   BaseCallbackHandlerInput,
 } from "./base.js";
 
