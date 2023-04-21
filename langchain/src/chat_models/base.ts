@@ -5,6 +5,7 @@ import {
   ChatGeneration,
   ChatResult,
   LLMResult,
+  RUN_KEY,
 } from "../schema/index.js";
 import {
   BaseLanguageModel,
@@ -80,7 +81,9 @@ export abstract class BaseChatModel extends BaseLanguageModel {
         : undefined,
     };
     await runManager?.handleLLMEnd(output);
-    output.__run = runManager ? { runId: runManager?.runId } : undefined;
+    Object.defineProperty(output, RUN_KEY, {
+      value: runManager ? { runId: runManager?.runId } : undefined,
+    });
     return output;
   }
 

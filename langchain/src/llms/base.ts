@@ -1,5 +1,11 @@
 import { InMemoryCache } from "../cache/index.js";
-import { BaseCache, BasePromptValue, LLMResult } from "../schema/index.js";
+import {
+  BaseCache,
+  BasePromptValue,
+  Generation,
+  LLMResult,
+  RUN_KEY,
+} from "../schema/index.js";
 import {
   BaseLanguageModel,
   BaseLanguageModelParams,
@@ -90,7 +96,12 @@ export abstract class BaseLLM extends BaseLanguageModel {
     }
 
     await runManager?.handleLLMEnd(output);
-    output.__run = runManager ? { runId: runManager?.runId } : undefined;
+    // This defines RUN_KEY as a non-enumerable property on the output object
+    // so that it is not serialized when the output is stringified, and so that
+    // it isnt included when listing the keys of the output object.
+    Object.defineProperty(output, RUN_KEY, {
+      value: runManager ? { runId: runManager?.runId } : undefined,
+    });
     return output;
   }
 
@@ -226,7 +237,7 @@ export abstract class LLM extends BaseLLM {
     stop?: string[],
     runManager?: CallbackManagerForLLMRun
   ): Promise<LLMResult> {
-    const generations = [];
+    const generations: Generation[][] = [];
     for (let i = 0; i < prompts.length; i += 1) {
       const text = await this._call(prompts[i], stop, runManager);
       generations.push([{ text }]);
