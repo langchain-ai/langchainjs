@@ -27,3 +27,4 @@ export {
 } from "./zapier.js";
 export { Serper, SerperParameters } from "./serper.js";
 export { AIPluginTool } from "./aiplugin.js";
+export { ReadFileTool, WriteFileTool } from "./fs.js";

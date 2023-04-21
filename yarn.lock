@@ -17202,6 +17202,7 @@ __metadata:
     weaviate-ts-client: ^1.0.0
     yaml: ^2.2.1
     zod: ^3.21.4
+    zod-to-json-schema: ^3.20.4
   peerDependencies:
     "@aws-sdk/client-lambda": ^3.310.0
     "@aws-sdk/client-s3": ^3.310.0
@@ -26650,6 +26651,15 @@ __metadata:
     mustache: ^4.2.0
     stack-trace: 0.0.10
   checksum: e81644ad9469a26949a85cb2e1a3f9c9faf11daa67a265e9ad0361942b2c06cf02ee1dc8c85d74fe7ad25d35bbc2fee34717a54c5a0b8eeb82dc9276d139906b
+  languageName: node
+  linkType: hard
+
+"zod-to-json-schema@npm:^3.20.4":
+  version: 3.20.4
+  resolution: "zod-to-json-schema@npm:3.20.4"
+  peerDependencies:
+    zod: ^3.20.0
+  checksum: 55bc649dbc82ce25fbfbfdd42ca530d883d83be5d02cb81e89f6401d54bca151fc6b8cc57999c75eb6a3dcaa3f000697315fbd4f505637472621570ed52784d8
   languageName: node
   linkType: hard
 

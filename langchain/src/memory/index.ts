@@ -9,5 +9,5 @@ export {
   BufferWindowMemoryInput,
 } from "./buffer_window_memory.js";
 export { BaseChatMemory, BaseChatMemoryInput } from "./chat_memory.js";
-export { ChatMessageHistory } from "./stores/message/in_memory.js";
+export { ChatMessageHistory } from "../stores/message/in_memory.js";
 export { MotorheadMemory, MotorheadMemoryInput } from "./motorhead_memory.js";
