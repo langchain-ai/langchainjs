@@ -1,5 +1,5 @@
 import { BaseMemory } from "../memory/base.js";
-import { ChainValues } from "../schema/index.js";
+import { ChainValues, RUN_KEY } from "../schema/index.js";
 import { BaseCallbackHandler, CallbackManager } from "../callbacks/index.js";
 import { SerializedBaseChain } from "./serde.js";
 import { BaseLangChain, BaseLangChainParams } from "../base_language/index.js";
@@ -68,11 +68,9 @@ export abstract class BaseChain extends BaseLangChain implements ChainInputs {
     const values = { [this.inputKeys[0]]: input };
     const returnValues = await this.call(values, callbacks);
     const keys = Object.keys(returnValues);
-    // Filter out the __run field
-    const filteredKeys = keys.filter((key) => key !== "__run");
 
-    if (filteredKeys.length === 1) {
-      return returnValues[filteredKeys[0]];
+    if (keys.length === 1) {
+      return returnValues[keys[0]];
     }
     throw new Error(
       "return values have multiple keys, `run` only supported when one key currently"
@@ -116,7 +114,9 @@ export abstract class BaseChain extends BaseLangChain implements ChainInputs {
       await this.memory.saveContext(values, outputValues);
     }
     // add the runManager's currentRunId to the outputValues
-    outputValues.__run = runManager ? { runId: runManager?.runId } : undefined;
+    Object.defineProperty(outputValues, RUN_KEY, {
+      value: runManager ? { runId: runManager?.runId } : undefined,
+    });
     return outputValues;
   }
 
