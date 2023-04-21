@@ -39,6 +39,11 @@ export type LLMResult = {
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   llmOutput?: Record<string, any>;
+  /**
+   * Dictionary of run metadata
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  __run?: Record<string, any>;
 };
 export type MessageType = "human" | "ai" | "generic" | "system";
 
@@ -188,4 +193,10 @@ export abstract class BaseCache<T = Generation[]> {
   abstract lookup(prompt: string, llmKey: string): Promise<T | null>;
 
   abstract update(prompt: string, llmKey: string, value: T): Promise<void>;
+}
+
+export abstract class BaseFileStore {
+  abstract readFile(path: string): Promise<string>;
+
+  abstract writeFile(path: string, contents: string): Promise<void>;
 }

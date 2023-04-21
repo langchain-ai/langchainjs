@@ -10,6 +10,7 @@ import {
 import type { StreamingAxiosConfiguration } from "../util/axios-types.js";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
 import { BaseLLMParams, LLM } from "./base.js";
+import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
 
 /**
  * Input to OpenAI class.
@@ -203,7 +204,11 @@ export class OpenAIChat extends LLM implements OpenAIChatInput {
   }
 
   /** @ignore */
-  async _call(prompt: string, stop?: string[]): Promise<string> {
+  async _call(
+    prompt: string,
+    stop?: string[],
+    runManager?: CallbackManagerForLLMRun
+  ): Promise<string> {
     if (this.stop && stop) {
       throw new Error("Stop found in input and default params");
     }
@@ -274,9 +279,8 @@ export class OpenAIChat extends LLM implements OpenAIChatInput {
 
                     choice.message.content += part.delta?.content ?? "";
                     // eslint-disable-next-line no-void
-                    void this.callbackManager.handleLLMNewToken(
-                      part.delta?.content ?? "",
-                      true
+                    void runManager?.handleLLMNewToken(
+                      part.delta?.content ?? ""
                     );
                   }
                 }

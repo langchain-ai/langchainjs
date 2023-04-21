@@ -3,7 +3,7 @@ import { LLMResult } from "../../schema/index.js";
 import { OpenAIChat } from "../openai-chat.js";
 import { OpenAI } from "../openai.js";
 import { StringPromptValue } from "../../prompts/index.js";
-import { BaseCallbackHandler, CallbackManager } from "../../callbacks/index.js";
+import { CallbackManager } from "../../callbacks/index.js";
 
 test("Test OpenAI", async () => {
   const model = new OpenAI({ maxTokens: 5, modelName: "text-ada-001" });
@@ -61,31 +61,25 @@ test("Test ChatOpenAI tokenUsage", async () => {
 });
 
 test("Test OpenAI in streaming mode", async () => {
-  class StreamCallbackHandler extends BaseCallbackHandler {
-    nrNewTokens = 0;
+  let nrNewTokens = 0;
+  let streamedCompletion = "";
 
-    streamedCompletion = "";
-
-    async handleLLMNewToken(token: string) {
-      this.nrNewTokens += 1;
-      this.streamedCompletion += token;
-    }
-  }
-
-  const streamCallbackHandler = new StreamCallbackHandler();
-  const callbackManager = new CallbackManager();
-  callbackManager.addHandler(streamCallbackHandler);
   const model = new OpenAI({
     maxTokens: 5,
     modelName: "text-ada-001",
     streaming: true,
-    callbackManager,
+    callbacks: CallbackManager.fromHandlers({
+      async handleLLMNewToken(token: string) {
+        nrNewTokens += 1;
+        streamedCompletion += token;
+      },
+    }),
   });
   const res = await model.call("Print hello world");
   console.log({ res });
 
-  expect(streamCallbackHandler.nrNewTokens > 0).toBe(true);
-  expect(res).toBe(streamCallbackHandler.streamedCompletion);
+  expect(nrNewTokens > 0).toBe(true);
+  expect(res).toBe(streamedCompletion);
 });
 
 test("Test OpenAI prompt value", async () => {

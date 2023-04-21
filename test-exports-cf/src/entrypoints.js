@@ -25,3 +25,5 @@ export * from "langchain/output_parsers";
 export * from "langchain/retrievers/remote";
 export * from "langchain/retrievers/databerry";
 export * from "langchain/cache";
+export * from "langchain/stores/file/in_memory";
+export * from "langchain/experimental/autogpt";

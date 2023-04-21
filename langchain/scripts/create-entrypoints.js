@@ -105,6 +105,11 @@ const entrypoints = {
   // cache
   cache: "cache/index",
   "cache/redis": "cache/redis",
+  // stores
+  "stores/file/in_memory": "stores/file/in_memory",
+  "stores/file/node": "stores/file/node",
+  // experimental
+  "experimental/autogpt": "experimental/autogpt/index",
 };
 
 // Entrypoints in this list will
@@ -166,6 +171,7 @@ const requiresOptionalDependency = [
   "retrievers/supabase",
   "retrievers/metal",
   "cache/redis",
+  "stores/file/node",
 ];
 
 // List of test-exports-* packages which we use to test that the exports field

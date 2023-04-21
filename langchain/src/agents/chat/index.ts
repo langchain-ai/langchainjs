@@ -8,7 +8,7 @@ import {
 import { AgentStep } from "../../schema/index.js";
 import { Tool } from "../../tools/base.js";
 import { Optional } from "../../types/type-utils.js";
-import { Agent, AgentArgs } from "../agent.js";
+import { Agent, AgentArgs, OutputParserArgs } from "../agent.js";
 import { AgentInput } from "../types.js";
 import { ChatAgentOutputParser } from "./outputParser.js";
 import { FORMAT_INSTRUCTIONS, PREFIX, SUFFIX } from "./prompt.js";
@@ -61,12 +61,12 @@ export class ChatAgent extends Agent {
     }
   }
 
-  static getDefaultOutputParser() {
+  static getDefaultOutputParser(_fields?: OutputParserArgs) {
     return new ChatAgentOutputParser();
   }
 
-  constructScratchPad(steps: AgentStep[]): string {
-    const agentScratchpad = super.constructScratchPad(steps);
+  async constructScratchPad(steps: AgentStep[]): Promise<string> {
+    const agentScratchpad = await super.constructScratchPad(steps);
     if (agentScratchpad) {
       return `This was your previous work (but I haven't seen any of it! I only see what you return as final answer):\n${agentScratchpad}`;
     }
@@ -106,7 +106,7 @@ export class ChatAgent extends Agent {
     const chain = new LLMChain({
       prompt,
       llm,
-      callbackManager: args?.callbackManager,
+      callbacks: args?.callbacks ?? args?.callbackManager,
     });
     const outputParser =
       args?.outputParser ?? ChatAgent.getDefaultOutputParser();

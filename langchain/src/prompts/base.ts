@@ -45,7 +45,6 @@ export interface BasePromptTemplateInput {
 /**
  * Base class for prompt templates. Exposes a format method that returns a
  * string prompt given a set of input values.
- * @augments BasePromptTemplateInput
  */
 export abstract class BasePromptTemplate implements BasePromptTemplateInput {
   inputVariables: string[];
