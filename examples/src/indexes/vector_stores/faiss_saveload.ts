@@ -21,7 +21,6 @@ export const run = async () => {
   );
 
   // vectorStore and loadedVectorStore are identical
-
   const result = await loadedVectorStore.similaritySearch("hello world", 1);
   console.log(result);
 };

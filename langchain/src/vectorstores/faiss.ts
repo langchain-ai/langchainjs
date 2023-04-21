@@ -144,6 +144,7 @@ export class FaissStore extends SaveableVectorStore {
   static async loadFromPython(directory: string, embeddings: Embeddings) {
     const fs = await import("node:fs/promises");
     const path = await import("node:path");
+    const { Parser } = await import("pickleparser");
 
     class PyDocument extends Map {
       toDocument(): Document {
@@ -172,7 +173,6 @@ export class FaissStore extends SaveableVectorStore {
         "binary"
       );
       const buffer = Buffer.from(pkl, "binary");
-      const { Parser } = await import("pickleparser");
       const pickleparser = new Parser(buffer);
       pickleparser.registry.register(
         "langchain.docstore.in_memory",
