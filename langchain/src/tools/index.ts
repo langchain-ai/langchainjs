@@ -1,7 +1,7 @@
 export { SerpAPI, SerpAPIParameters } from "./serpapi.js";
 export { DadJokeAPI } from "./dadjokeapi.js";
 export { BingSerpAPI } from "./bingserpapi.js";
-export { Tool, ToolParams } from "./base.js";
+export { Tool, ToolParams, StructuredTool } from "./base.js";
 export { DynamicTool, DynamicToolInput } from "./dynamic.js";
 export { IFTTTWebhook } from "./IFTTTWebhook.js";
 export { ChainTool, ChainToolInput } from "./chain.js";
