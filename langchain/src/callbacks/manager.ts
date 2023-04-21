@@ -440,8 +440,12 @@ export class CallbackManager
         false
       );
     }
-    // eslint-disable-next-line no-process-env
-    if (options?.verbose || process.env.LANGCHAIN_TRACING !== undefined) {
+    const tracingEnabled =
+      typeof process !== "undefined"
+        ? // eslint-disable-next-line no-process-env
+          process.env.LANGCHAIN_TRACING !== undefined
+        : false;
+    if (options?.verbose || tracingEnabled) {
       if (!callbackManager) {
         callbackManager = new CallbackManager();
       }
@@ -455,8 +459,7 @@ export class CallbackManager
         callbackManager.addHandler(consoleHandler, true);
       }
       if (
-        // eslint-disable-next-line no-process-env
-        process.env.LANGCHAIN_TRACING !== undefined &&
+        tracingEnabled &&
         !callbackManager.handlers.some(
           (handler) => handler.name === "langchain_tracer"
         )
