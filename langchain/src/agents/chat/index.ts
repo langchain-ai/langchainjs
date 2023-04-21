@@ -106,7 +106,7 @@ export class ChatAgent extends Agent {
     const chain = new LLMChain({
       prompt,
       llm,
-      callbackManager: args?.callbackManager,
+      callbacks: args?.callbacks ?? args?.callbackManager,
     });
     const outputParser =
       args?.outputParser ?? ChatAgent.getDefaultOutputParser();

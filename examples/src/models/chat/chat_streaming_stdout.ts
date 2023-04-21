@@ -1,14 +1,16 @@
-import { CallbackManager } from "langchain/callbacks";
+import { BaseCallbackHandler } from "langchain/callbacks";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { HumanChatMessage } from "langchain/schema";
 
 const chat = new ChatOpenAI({
   streaming: true,
-  callbackManager: CallbackManager.fromHandlers({
-    async handleLLMNewToken(token: string) {
-      process.stdout.write(token);
-    },
-  }),
+  callbacks: [
+    BaseCallbackHandler.fromMethods({
+      async handleLLMNewToken(token: string) {
+        process.stdout.write(token);
+      },
+    }),
+  ],
 });
 
 await chat.call([

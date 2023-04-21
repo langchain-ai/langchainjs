@@ -21,6 +21,7 @@ import {
   SystemChatMessage,
 } from "../schema/index.js";
 import { getModelNameForTiktoken } from "../base_language/count_tokens.js";
+import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
 
 interface TokenUsage {
   completionTokens?: number;
@@ -238,7 +239,8 @@ export class ChatOpenAI extends BaseChatModel implements OpenAIInput {
   /** @ignore */
   async _generate(
     messages: BaseChatMessage[],
-    stop?: string[]
+    stop?: string[],
+    runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
     const tokenUsage: TokenUsage = {};
     if (this.stop && stop) {
@@ -318,9 +320,8 @@ export class ChatOpenAI extends BaseChatModel implements OpenAIInput {
 
                     choice.message.content += part.delta?.content ?? "";
                     // eslint-disable-next-line no-void
-                    void this.callbackManager.handleLLMNewToken(
-                      part.delta?.content ?? "",
-                      true
+                    void runManager?.handleLLMNewToken(
+                      part.delta?.content ?? ""
                     );
                   }
                 }

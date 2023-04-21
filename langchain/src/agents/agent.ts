@@ -1,5 +1,5 @@
 import { BaseLanguageModel } from "../base_language/index.js";
-import { CallbackManager } from "../callbacks/base.js";
+import { CallbackManager } from "../callbacks/manager.js";
 import { LLMChain } from "../chains/llm_chain.js";
 import { BasePromptTemplate } from "../prompts/base.js";
 import {
@@ -16,6 +16,7 @@ import {
   SerializedAgent,
   StoppingMethod,
 } from "./types.js";
+import { BaseCallbackHandler } from "../callbacks/index.js";
 
 class ParseError extends Error {
   output: string;
@@ -55,7 +56,8 @@ export abstract class BaseAgent {
   returnStoppedResponse(
     earlyStoppingMethod: StoppingMethod,
     _steps: AgentStep[],
-    _inputs: ChainValues
+    _inputs: ChainValues,
+    _callbackManager?: CallbackManager
   ): Promise<AgentFinish> {
     if (earlyStoppingMethod === "force") {
       return Promise.resolve({
@@ -88,12 +90,14 @@ export abstract class BaseSingleActionAgent extends BaseAgent {
    *
    * @param steps - Steps the LLM has taken so far, along with observations from each.
    * @param inputs - User inputs.
+   * @param callbackManager - Callback manager.
    *
    * @returns Action specifying what tool to use.
    */
   abstract plan(
     steps: AgentStep[],
-    inputs: ChainValues
+    inputs: ChainValues,
+    callbackManager?: CallbackManager
   ): Promise<AgentAction | AgentFinish>;
 }
 
@@ -107,12 +111,14 @@ export abstract class BaseMultiActionAgent extends BaseAgent {
    *
    * @param steps - Steps the LLM has taken so far, along with observations from each.
    * @param inputs - User inputs.
+   * @param callbackManager - Callback manager.
    *
    * @returns Actions specifying what tools to use.
    */
   abstract plan(
     steps: AgentStep[],
-    inputs: ChainValues
+    inputs: ChainValues,
+    callbackManager?: CallbackManager
   ): Promise<AgentAction[] | AgentFinish>;
 }
 
@@ -145,17 +151,20 @@ export class LLMSingleActionAgent extends BaseSingleActionAgent {
    *
    * @param steps - Steps the LLM has taken so far, along with observations from each.
    * @param inputs - User inputs.
+   * @param callbackManager - Callback manager.
    *
    * @returns Action specifying what tool to use.
    */
   async plan(
     steps: AgentStep[],
-    inputs: ChainValues
+    inputs: ChainValues,
+    callbackManager?: CallbackManager
   ): Promise<AgentAction | AgentFinish> {
     const output = await this.llmChain.call({
       intermediate_steps: steps,
       stop: this.stop,
       ...inputs,
+      callbackManager,
     });
     return this.outputParser.parse(output[this.llmChain.outputKey]);
   }
@@ -163,6 +172,12 @@ export class LLMSingleActionAgent extends BaseSingleActionAgent {
 
 export interface AgentArgs {
   outputParser?: AgentActionOutputParser;
+
+  callbacks?: CallbackManager | BaseCallbackHandler[];
+
+  /**
+   * @deprecated Use `callbacks` instead.
+   */
   callbackManager?: CallbackManager;
 }
 
@@ -280,7 +295,8 @@ export abstract class Agent extends BaseSingleActionAgent {
   private async _plan(
     steps: AgentStep[],
     inputs: ChainValues,
-    suffix?: string
+    suffix?: string,
+    callbackManager?: CallbackManager
   ): Promise<AgentAction | AgentFinish> {
     const thoughts = await this.constructScratchPad(steps);
     const newInputs: ChainValues = {
@@ -292,7 +308,7 @@ export abstract class Agent extends BaseSingleActionAgent {
       newInputs.stop = this._stop();
     }
 
-    const output = await this.llmChain.predict(newInputs);
+    const output = await this.llmChain.predict(newInputs, callbackManager);
     return this.outputParser.parse(output);
   }
 
@@ -301,14 +317,16 @@ export abstract class Agent extends BaseSingleActionAgent {
    *
    * @param steps - Steps the LLM has taken so far, along with observations from each.
    * @param inputs - User inputs.
+   * @param callbackManager - Callback manager to use for this call.
    *
    * @returns Action specifying what tool to use.
    */
   plan(
     steps: AgentStep[],
-    inputs: ChainValues
+    inputs: ChainValues,
+    callbackManager?: CallbackManager
   ): Promise<AgentAction | AgentFinish> {
-    return this._plan(steps, inputs);
+    return this._plan(steps, inputs, undefined, callbackManager);
   }
 
   /**
@@ -317,7 +335,8 @@ export abstract class Agent extends BaseSingleActionAgent {
   async returnStoppedResponse(
     earlyStoppingMethod: StoppingMethod,
     steps: AgentStep[],
-    inputs: ChainValues
+    inputs: ChainValues,
+    callbackManager?: CallbackManager
   ): Promise<AgentFinish> {
     if (earlyStoppingMethod === "force") {
       return {
@@ -331,7 +350,8 @@ export abstract class Agent extends BaseSingleActionAgent {
         const action = await this._plan(
           steps,
           inputs,
-          "\n\nI now need to return a final answer based on the previous steps:"
+          "\n\nI now need to return a final answer based on the previous steps:",
+          callbackManager
         );
         if ("returnValues" in action) {
           return action;
