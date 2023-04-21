@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { BaseOutputParser, OutputParserException } from "../schema/index.js";
+import { util } from "zod";
 
 function printSchema(schema: z.ZodTypeAny, depth = 0): string {
   if (
@@ -24,6 +25,12 @@ function printSchema(schema: z.ZodTypeAny, depth = 0): string {
   }
   if (schema._def.typeName === "ZodEnum") {
     return (schema as z.ZodEnum<[string, ...string[]]>).options
+      .map((value) => `"${value}"`)
+      .join(" | ");
+  }
+  if (schema._def.typeName === "ZodNativeEnum") {
+    return util
+      .getValidEnumValues((schema as z.ZodNativeEnum<never>)._def.values)
       .map((value) => `"${value}"`)
       .join(" | ");
   }

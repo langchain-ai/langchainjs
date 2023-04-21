@@ -27,6 +27,12 @@ Including the leading and trailing "\`\`\`json" and "\`\`\`"
 `);
 });
 
+enum StateProvinceEnum {
+  Alabama = "AL",
+  Alaska = "AK",
+  Arizona = "AZ",
+}
+
 test("StructuredOutputParser.fromZodSchema", async () => {
   const parser = StructuredOutputParser.fromZodSchema(
     z.object({ url: z.string().describe("A link to the resource") })
@@ -108,6 +114,10 @@ test("StructuredOutputParser.fromZodSchema", async () => {
               .string()
               .optional()
               .describe("The address of the author"),
+            stateProvince: z
+              .nativeEnum(StateProvinceEnum)
+              .optional()
+              .describe("The state or province of the author"),
           })
         ),
       })
@@ -116,7 +126,7 @@ test("StructuredOutputParser.fromZodSchema", async () => {
 
   expect(
     await parser.parse(
-      '```json\n{"url": "value", "title": "value", "year": 2011, "createdAt": "2023-03-29T16:07:09.600Z", "createdAtDate": "2023-03-29", "authors": [{"name": "value", "email": "value"}]}```'
+      '```json\n{"url": "value", "title": "value", "year": 2011, "createdAt": "2023-03-29T16:07:09.600Z", "createdAtDate": "2023-03-29", "authors": [{"name": "value", "email": "value", "stateProvince": "AZ"}]}```'
     )
   ).toEqual({
     url: "value",
@@ -124,7 +134,7 @@ test("StructuredOutputParser.fromZodSchema", async () => {
     year: 2011,
     createdAt: "2023-03-29T16:07:09.600Z",
     createdAtDate: new Date("2023-03-29T00:00:00.000Z"),
-    authors: [{ name: "value", email: "value" }],
+    authors: [{ name: "value", email: "value", stateProvince: "AZ" }],
   });
 
   expect(parser.getFormatInstructions()).toMatchInlineSnapshot(`
@@ -142,6 +152,7 @@ test("StructuredOutputParser.fromZodSchema", async () => {
 		"email": string // The email of the author
 		"type": "author" | "editor" // Optional
 		"address": string // Optional // The address of the author
+		"stateProvince": "AL" | "AK" | "AZ" // Optional // The state or province of the author
 	}[]
 }
 \`\`\`
