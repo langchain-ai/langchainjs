@@ -452,7 +452,7 @@ export class CallbackManager
           (handler) => handler.name === consoleHandler.name
         )
       ) {
-        callbackManager.addHandler(consoleHandler, false);
+        callbackManager.addHandler(consoleHandler, true);
       }
       if (
         // eslint-disable-next-line no-process-env
