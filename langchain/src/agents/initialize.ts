@@ -4,13 +4,15 @@ import { BufferMemory } from "../memory/buffer_memory.js";
 import { Tool } from "../tools/base.js";
 import { ChatAgent } from "./chat/index.js";
 import { ChatConversationalAgent } from "./chat_convo/index.js";
+import { ChatConversationalAgent2 } from "./chat_convo2/index.js";
 import { AgentExecutor, AgentExecutorInput } from "./executor.js";
 import { ZeroShotAgent } from "./mrkl/index.js";
 
 type AgentType =
   | "zero-shot-react-description"
   | "chat-zero-shot-react-description"
-  | "chat-conversational-react-description";
+  | "chat-conversational-react-description"
+  | "chat-conversational-react-description2";
 
 /**
  * @deprecated use initializeExecutorWithOptions instead
@@ -49,6 +51,13 @@ export const initializeAgentExecutor = async (
         verbose,
         callbackManager,
       });
+    case "chat-conversational-react-description2":
+      return AgentExecutor.fromAgentAndTools({
+        agent: ChatConversationalAgent2.fromLLMAndTools(llm, tools),
+        tools,
+        verbose,
+        callbackManager,
+      });
     default:
       throw new Error("Unknown agent type");
   }
@@ -71,6 +80,12 @@ export type InitializeAgentExecutorOptions =
   | ({
       agentType: "chat-conversational-react-description";
       agentArgs?: Parameters<typeof ChatConversationalAgent.fromLLMAndTools>[2];
+    } & Omit<AgentExecutorInput, "agent" | "tools">)
+  | ({
+      agentType: "chat-conversational-react-description2";
+      agentArgs?: Parameters<
+        typeof ChatConversationalAgent2.fromLLMAndTools
+      >[2];
     } & Omit<AgentExecutorInput, "agent" | "tools">);
 
 /**
@@ -123,6 +138,23 @@ export const initializeAgentExecutorWithOptions = async (
       });
       return executor;
     }
+    case "chat-conversational-react-description2": {
+      const { agentArgs, memory, ...rest } = options;
+      const executor = AgentExecutor.fromAgentAndTools({
+        agent: ChatConversationalAgent2.fromLLMAndTools(llm, tools, agentArgs),
+        tools,
+        memory:
+          memory ??
+          new BufferMemory({
+            returnMessages: true,
+            memoryKey: "chat_history",
+            inputKey: "input",
+          }),
+        ...rest,
+      });
+      return executor;
+    }
+
     default: {
       throw new Error("Unknown agent type");
     }
