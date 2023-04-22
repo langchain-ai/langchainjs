@@ -1,6 +1,6 @@
 import { FaissStore } from "langchain/vectorstores/faiss";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
-import { TextLoader } from "langchain/document_loaders";
+import { TextLoader } from "langchain/document_loaders/fs/text";
 
 export const run = async () => {
   // Create docs with a loader
