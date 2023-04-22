@@ -24,4 +24,8 @@ export * from "langchain/callbacks";
 export * from "langchain/output_parsers";
 export * from "langchain/retrievers/remote";
 export * from "langchain/retrievers/databerry";
+export * from "langchain/retrievers/contextual_compression";
+export * from "langchain/retrievers/document_compressors";
 export * from "langchain/cache";
+export * from "langchain/stores/file/in_memory";
+export * from "langchain/experimental/autogpt";

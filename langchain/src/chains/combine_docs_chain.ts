@@ -15,10 +15,9 @@ import { PromptTemplate } from "../prompts/prompt.js";
 export interface StuffDocumentsChainInput {
   /** LLM Wrapper to use after formatting documents */
   llmChain: LLMChain;
-  inputKey: string;
-  outputKey: string;
+  inputKey?: string;
   /** Variable name in the LLM chain to put the documents in */
-  documentVariableName: string;
+  documentVariableName?: string;
 }
 
 /**
@@ -34,28 +33,25 @@ export class StuffDocumentsChain
 
   inputKey = "input_documents";
 
-  outputKey = "output_text";
-
   documentVariableName = "context";
 
   get inputKeys() {
     return [this.inputKey, ...this.llmChain.inputKeys];
   }
 
-  constructor(fields: {
-    llmChain: LLMChain;
-    inputKey?: string;
-    outputKey?: string;
-    documentVariableName?: string;
-  }) {
+  get outputKeys() {
+    return this.llmChain.outputKeys;
+  }
+
+  constructor(fields: StuffDocumentsChainInput) {
     super();
     this.llmChain = fields.llmChain;
     this.documentVariableName =
       fields.documentVariableName ?? this.documentVariableName;
     this.inputKey = fields.inputKey ?? this.inputKey;
-    this.outputKey = fields.outputKey ?? this.outputKey;
   }
 
+  /** @ignore */
   async _call(values: ChainValues): Promise<ChainValues> {
     if (!(this.inputKey in values)) {
       throw new Error(`Document key ${this.inputKey} not found.`);
@@ -93,9 +89,10 @@ export class StuffDocumentsChain
 }
 
 export interface MapReduceDocumentsChainInput extends StuffDocumentsChainInput {
-  maxTokens: number;
-  maxIterations: number;
-  combineDocumentsChain: BaseChain;
+  maxTokens?: number;
+  maxIterations?: number;
+  ensureMapStep?: boolean;
+  combineDocumentChain: BaseChain;
 }
 
 /**
@@ -105,18 +102,20 @@ export interface MapReduceDocumentsChainInput extends StuffDocumentsChainInput {
  */
 export class MapReduceDocumentsChain
   extends BaseChain
-  implements StuffDocumentsChainInput
+  implements MapReduceDocumentsChainInput
 {
   llmChain: LLMChain;
 
   inputKey = "input_documents";
 
-  outputKey = "output_text";
-
   documentVariableName = "context";
 
   get inputKeys() {
     return [this.inputKey, ...this.combineDocumentChain.inputKeys];
+  }
+
+  get outputKeys() {
+    return this.combineDocumentChain.outputKeys;
   }
 
   maxTokens = 3000;
@@ -127,16 +126,7 @@ export class MapReduceDocumentsChain
 
   combineDocumentChain: BaseChain;
 
-  constructor(fields: {
-    llmChain: LLMChain;
-    combineDocumentChain: BaseChain;
-    ensureMapStep?: boolean;
-    inputKey?: string;
-    outputKey?: string;
-    documentVariableName?: string;
-    maxTokens?: number;
-    maxIterations?: number;
-  }) {
+  constructor(fields: MapReduceDocumentsChainInput) {
     super();
     this.llmChain = fields.llmChain;
     this.combineDocumentChain = fields.combineDocumentChain;
@@ -144,11 +134,11 @@ export class MapReduceDocumentsChain
       fields.documentVariableName ?? this.documentVariableName;
     this.ensureMapStep = fields.ensureMapStep ?? this.ensureMapStep;
     this.inputKey = fields.inputKey ?? this.inputKey;
-    this.outputKey = fields.outputKey ?? this.outputKey;
     this.maxTokens = fields.maxTokens ?? this.maxTokens;
     this.maxIterations = fields.maxIterations ?? this.maxIterations;
   }
 
+  /** @ignore */
   async _call(values: ChainValues): Promise<ChainValues> {
     if (!(this.inputKey in values)) {
       throw new Error(`Document key ${this.inputKey} not found.`);
@@ -221,7 +211,10 @@ export class MapReduceDocumentsChain
 
 export interface RefineDocumentsChainInput extends StuffDocumentsChainInput {
   refineLLMChain: LLMChain;
-  documentPrompt: BasePromptTemplate;
+  documentPrompt?: BasePromptTemplate;
+  initialResponseName?: string;
+  documentVariableName?: string;
+  outputKey?: string;
 }
 
 /**
@@ -258,26 +251,24 @@ export class RefineDocumentsChain
     return [this.inputKey, ...this.refineLLMChain.inputKeys];
   }
 
-  constructor(fields: {
-    llmChain: LLMChain;
-    refineLLMChain: LLMChain;
-    inputKey?: string;
-    outputKey?: string;
-    documentVariableName?: string;
-    documentPrompt?: BasePromptTemplate;
-    initialResponseName?: string;
-  }) {
+  get outputKeys() {
+    return [this.outputKey];
+  }
+
+  constructor(fields: RefineDocumentsChainInput) {
     super();
     this.llmChain = fields.llmChain;
     this.refineLLMChain = fields.refineLLMChain;
     this.documentVariableName =
       fields.documentVariableName ?? this.documentVariableName;
     this.inputKey = fields.inputKey ?? this.inputKey;
+    this.outputKey = fields.outputKey ?? this.outputKey;
     this.documentPrompt = fields.documentPrompt ?? this.documentPrompt;
     this.initialResponseName =
       fields.initialResponseName ?? this.initialResponseName;
   }
 
+  /** @ignore */
   async _constructInitialInputs(doc: Document, rest: Record<string, unknown>) {
     const baseInfo: Record<string, unknown> = {
       page_content: doc.pageContent,
@@ -297,6 +288,7 @@ export class RefineDocumentsChain
     return inputs;
   }
 
+  /** @ignore */
   async _constructRefineInputs(doc: Document, res: string) {
     const baseInfo: Record<string, unknown> = {
       page_content: doc.pageContent,
@@ -315,6 +307,7 @@ export class RefineDocumentsChain
     return inputs;
   }
 
+  /** @ignore */
   async _call(values: ChainValues): Promise<ChainValues> {
     if (!(this.inputKey in values)) {
       throw new Error(`Document key ${this.inputKey} not found.`);

@@ -107,6 +107,9 @@ export class HNSWLib extends SaveableVectorStore {
   }
 
   async similaritySearchVectorWithScore(query: number[], k: number) {
+    if (this.args.numDimensions && !this._index) {
+      await this.initIndex([[]]);
+    }
     if (query.length !== this.args.numDimensions) {
       throw new Error(
         `Query vector must have the same length as the number of dimensions (${this.args.numDimensions})`

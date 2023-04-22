@@ -33,7 +33,7 @@
     "test:int": "turbo run test:integration",
     "test:exports:docker": "docker compose up",
     "publish": "bash scripts/release-branch.sh && turbo run build lint test test:integration && yarn run test:exports:docker && yarn workspace langchain run release && echo '🔗 Open https://github.com/hwchase17/langchainjs/compare/release?expand=1 and merge the release PR'",
-    "example": "turbo run start --filter examples --",
+    "example": "yarn workspace examples start",
     "prepare": "husky install",
     "precommit": "turbo run precommit",
     "docs": "yarn workspace docs start"
@@ -49,10 +49,11 @@
     "typescript": "^4.9.5"
   },
   "dependencies": {
-    "turbo": "^1.7.4"
+    "turbo": "latest"
   },
   "resolutions": {
-    "dpdm@^3.12.0": "patch:dpdm@npm%3A3.12.0#./.yarn/patches/dpdm-npm-3.12.0-0dfdd8e3b8.patch"
+    "dpdm@^3.12.0": "patch:dpdm@npm%3A3.12.0#./.yarn/patches/dpdm-npm-3.12.0-0dfdd8e3b8.patch",
+    "typedoc-plugin-markdown@next": "patch:typedoc-plugin-markdown@npm%3A4.0.0-next.6#./.yarn/patches/typedoc-plugin-markdown-npm-4.0.0-next.6-96b4b47746.patch"
   },
   "lint-staged": {
     "**/*.{ts,tsx}": [

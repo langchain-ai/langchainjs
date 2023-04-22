@@ -230,20 +230,21 @@ export class Milvus extends VectorStore {
     }
     const results: [Document, number][] = [];
     searchResp.results.forEach((result) => {
-      const doc = new Document();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const fields = { pageContent: "", metadata: {} as Record<string, any> };
       Object.keys(result).forEach((key) => {
         if (key === this.textField) {
-          doc.pageContent = result[key];
+          fields.pageContent = result[key];
         } else if (this.fields.includes(key)) {
           if (typeof result[key] === "string") {
             const { isJson, obj } = checkJsonString(result[key]);
-            doc.metadata[key] = isJson ? obj : result[key];
+            fields.metadata[key] = isJson ? obj : result[key];
           } else {
-            doc.metadata[key] = result[key];
+            fields.metadata[key] = result[key];
           }
         }
       });
-      results.push([doc, result.score]);
+      results.push([new Document(fields), result.score]);
     });
     // console.log("Search result: " + JSON.stringify(results, null, 2));
     return results;
@@ -402,10 +403,7 @@ export class Milvus extends VectorStore {
 
   static async fromExistingCollection(
     embeddings: Embeddings,
-    dbConfig: {
-      collectionName: string;
-      url?: string;
-    }
+    dbConfig: MilvusLibArgs
   ): Promise<Milvus> {
     const instance = new this(embeddings, dbConfig);
     await instance.ensureCollection();

@@ -1,4 +1,4 @@
-import { BaseChain } from "./base.js";
+import { BaseChain, ChainInputs } from "./base.js";
 import { BaseLLM } from "../llms/base.js";
 import { SerializedVectorDBQAChain } from "./serde.js";
 import { ChainValues, BaseRetriever } from "../schema/index.js";
@@ -7,11 +7,10 @@ import { loadQAStuffChain } from "./question_answering/load.js";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type LoadValues = Record<string, any>;
 
-export interface RetrievalQAChainInput {
+export interface RetrievalQAChainInput extends Omit<ChainInputs, "memory"> {
   retriever: BaseRetriever;
   combineDocumentsChain: BaseChain;
-  outputKey: string;
-  inputKey: string;
+  inputKey?: string;
   returnSourceDocuments?: boolean;
 }
 
@@ -25,7 +24,11 @@ export class RetrievalQAChain
     return [this.inputKey];
   }
 
-  outputKey = "result";
+  get outputKeys() {
+    return this.combineDocumentsChain.outputKeys.concat(
+      this.returnSourceDocuments ? ["sourceDocuments"] : []
+    );
+  }
 
   retriever: BaseRetriever;
 
@@ -33,22 +36,16 @@ export class RetrievalQAChain
 
   returnSourceDocuments = false;
 
-  constructor(fields: {
-    retriever: BaseRetriever;
-    combineDocumentsChain: BaseChain;
-    inputKey?: string;
-    outputKey?: string;
-    returnSourceDocuments?: boolean;
-  }) {
-    super();
+  constructor(fields: RetrievalQAChainInput) {
+    super(undefined, fields.verbose, fields.callbackManager);
     this.retriever = fields.retriever;
     this.combineDocumentsChain = fields.combineDocumentsChain;
     this.inputKey = fields.inputKey ?? this.inputKey;
-    this.outputKey = fields.outputKey ?? this.outputKey;
     this.returnSourceDocuments =
       fields.returnSourceDocuments ?? this.returnSourceDocuments;
   }
 
+  /** @ignore */
   async _call(values: ChainValues): Promise<ChainValues> {
     if (!(this.inputKey in values)) {
       throw new Error(`Question key ${this.inputKey} not found.`);

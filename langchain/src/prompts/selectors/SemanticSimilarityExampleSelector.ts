@@ -10,6 +10,13 @@ function sortedValues<T>(values: Record<string, T>): T[] {
     .map((key) => values[key]);
 }
 
+export interface SemanticSimilarityExampleSelectorInput {
+  vectorStore: VectorStore;
+  k?: number;
+  exampleKeys?: string[];
+  inputKeys?: string[];
+}
+
 export class SemanticSimilarityExampleSelector implements BaseExampleSelector {
   vectorStore: VectorStore;
 
@@ -19,12 +26,7 @@ export class SemanticSimilarityExampleSelector implements BaseExampleSelector {
 
   inputKeys?: string[];
 
-  constructor(data: {
-    vectorStore: VectorStore;
-    k?: number;
-    exampleKeys?: string[];
-    inputKeys?: string[];
-  }) {
+  constructor(data: SemanticSimilarityExampleSelectorInput) {
     this.vectorStore = data.vectorStore;
     this.k = data.k ?? 4;
     this.exampleKeys = data.exampleKeys;

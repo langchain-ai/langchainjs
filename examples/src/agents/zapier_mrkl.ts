@@ -1,5 +1,8 @@
 import { OpenAI } from "langchain/llms/openai";
-import { initializeAgentExecutor, ZapierToolKit } from "langchain/agents";
+import {
+  initializeAgentExecutorWithOptions,
+  ZapierToolKit,
+} from "langchain/agents";
 import { ZapierNLAWrapper } from "langchain/tools";
 
 export const run = async () => {
@@ -7,11 +10,13 @@ export const run = async () => {
   const zapier = new ZapierNLAWrapper();
   const toolkit = await ZapierToolKit.fromZapierNLAWrapper(zapier);
 
-  const executor = await initializeAgentExecutor(
+  const executor = await initializeAgentExecutorWithOptions(
     toolkit.tools,
     model,
-    "zero-shot-react-description",
-    true
+    {
+      agentType: "zero-shot-react-description",
+      verbose: true,
+    }
   );
   console.log("Loaded agent.");
 

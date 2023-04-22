@@ -1,12 +1,12 @@
 import { InputValues, MemoryVariables, getBufferString } from "./base.js";
 
-import { BaseChatMemory, BaseMemoryInput } from "./chat_memory.js";
+import { BaseChatMemory, BaseChatMemoryInput } from "./chat_memory.js";
 
-export interface BufferWindowMemoryInput extends BaseMemoryInput {
-  humanPrefix: string;
-  aiPrefix: string;
-  memoryKey: string;
-  k: number;
+export interface BufferWindowMemoryInput extends BaseChatMemoryInput {
+  humanPrefix?: string;
+  aiPrefix?: string;
+  memoryKey?: string;
+  k?: number;
 }
 
 export class BufferWindowMemory
@@ -21,7 +21,7 @@ export class BufferWindowMemory
 
   k = 5;
 
-  constructor(fields?: Partial<BufferWindowMemoryInput>) {
+  constructor(fields?: BufferWindowMemoryInput) {
     super({
       returnMessages: fields?.returnMessages ?? false,
       chatHistory: fields?.chatHistory,
@@ -33,16 +33,15 @@ export class BufferWindowMemory
   }
 
   async loadMemoryVariables(_values: InputValues): Promise<MemoryVariables> {
+    const messages = await this.chatHistory.getMessages();
     if (this.returnMessages) {
       const result = {
-        [this.memoryKey]: this.chatHistory.messages.slice(-this.k * 2),
+        [this.memoryKey]: messages.slice(-this.k * 2),
       };
       return result;
     }
     const result = {
-      [this.memoryKey]: getBufferString(
-        this.chatHistory.messages.slice(-this.k * 2)
-      ),
+      [this.memoryKey]: getBufferString(messages.slice(-this.k * 2)),
     };
     return result;
   }

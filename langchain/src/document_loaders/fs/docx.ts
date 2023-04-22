@@ -14,6 +14,9 @@ export class DocxLoader extends BufferLoader {
     const docx = await extractRawText({
       buffer: raw,
     });
+
+    if (!docx.value) return [];
+
     return [
       new Document({
         pageContent: docx.value,

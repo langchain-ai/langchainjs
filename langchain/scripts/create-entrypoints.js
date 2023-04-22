@@ -14,7 +14,9 @@ const entrypoints = {
   base_language: "base_language/index",
   // tools
   tools: "tools/index",
+  "tools/aws_lambda": "tools/aws_lambda",
   "tools/calculator": "tools/calculator",
+  "tools/webbrowser": "tools/webbrowser",
   // chains
   chains: "chains/index",
   "chains/load": "chains/load",
@@ -41,9 +43,11 @@ const entrypoints = {
   "vectorstores/memory": "vectorstores/memory",
   "vectorstores/chroma": "vectorstores/chroma",
   "vectorstores/hnswlib": "vectorstores/hnswlib",
+  "vectorstores/weaviate": "vectorstores/weaviate",
   "vectorstores/mongo": "vectorstores/mongo",
   "vectorstores/pinecone": "vectorstores/pinecone",
   "vectorstores/supabase": "vectorstores/supabase",
+  "vectorstores/opensearch": "vectorstores/opensearch",
   "vectorstores/milvus": "vectorstores/milvus",
   "vectorstores/prisma": "vectorstores/prisma",
   // text_splitter
@@ -97,8 +101,16 @@ const entrypoints = {
   "retrievers/supabase": "retrievers/supabase",
   "retrievers/metal": "retrievers/metal",
   "retrievers/databerry": "retrievers/databerry",
+  "retrievers/contextual_compression": "retrievers/contextual_compression",
+  "retrievers/document_compressors": "retrievers/document_compressors/index",
   // cache
-  cache: "cache",
+  cache: "cache/index",
+  "cache/redis": "cache/redis",
+  // stores
+  "stores/file/in_memory": "stores/file/in_memory",
+  "stores/file/node": "stores/file/node",
+  // experimental
+  "experimental/autogpt": "experimental/autogpt/index",
 };
 
 // Entrypoints in this list will
@@ -117,7 +129,9 @@ const deprecatedNodeOnly = [
 // Therefore they are no tested in the generated test-exports-* packages.
 const requiresOptionalDependency = [
   "agents/load",
+  "tools/aws_lambda",
   "tools/calculator",
+  "tools/webbrowser",
   "chains/load",
   "embeddings/cohere",
   "llms/load",
@@ -127,9 +141,11 @@ const requiresOptionalDependency = [
   "prompts/load",
   "vectorstores/chroma",
   "vectorstores/hnswlib",
+  "vectorstores/weaviate",
   "vectorstores/mongo",
   "vectorstores/pinecone",
   "vectorstores/supabase",
+  "vectorstores/opensearch",
   "vectorstores/milvus",
   "document_loaders/web/cheerio",
   "document_loaders/web/puppeteer",
@@ -154,6 +170,8 @@ const requiresOptionalDependency = [
   "sql_db",
   "retrievers/supabase",
   "retrievers/metal",
+  "cache/redis",
+  "stores/file/node",
 ];
 
 // List of test-exports-* packages which we use to test that the exports field

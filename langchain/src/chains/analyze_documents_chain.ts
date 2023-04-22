@@ -1,4 +1,4 @@
-import { BaseChain } from "./base.js";
+import { BaseChain, ChainInputs } from "./base.js";
 import {
   TextSplitter,
   RecursiveCharacterTextSplitter,
@@ -9,9 +9,10 @@ import { SerializedAnalyzeDocumentChain } from "./serde.js";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type LoadValues = Record<string, any>;
 
-export interface AnalyzeDocumentChainInput {
-  textSplitter: TextSplitter;
+export interface AnalyzeDocumentChainInput extends Omit<ChainInputs, "memory"> {
   combineDocumentsChain: BaseChain;
+  textSplitter?: TextSplitter;
+  inputKey?: string;
 }
 
 /**
@@ -25,22 +26,14 @@ export class AnalyzeDocumentChain
 {
   inputKey = "input_document";
 
-  outputKey = "output_text";
-
   combineDocumentsChain: BaseChain;
 
   textSplitter: TextSplitter;
 
-  constructor(fields: {
-    combineDocumentsChain: BaseChain;
-    inputKey?: string;
-    outputKey?: string;
-    textSplitter?: TextSplitter;
-  }) {
-    super();
+  constructor(fields: AnalyzeDocumentChainInput) {
+    super(undefined, fields.verbose, fields.callbackManager);
     this.combineDocumentsChain = fields.combineDocumentsChain;
     this.inputKey = fields.inputKey ?? this.inputKey;
-    this.outputKey = fields.outputKey ?? this.outputKey;
     this.textSplitter =
       fields.textSplitter ?? new RecursiveCharacterTextSplitter();
   }
@@ -49,6 +42,11 @@ export class AnalyzeDocumentChain
     return [this.inputKey];
   }
 
+  get outputKeys(): string[] {
+    return this.combineDocumentsChain.outputKeys;
+  }
+
+  /** @ignore */
   async _call(values: ChainValues): Promise<ChainValues> {
     if (!(this.inputKey in values)) {
       throw new Error(`Document key ${this.inputKey} not found.`);

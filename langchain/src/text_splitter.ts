@@ -1,7 +1,7 @@
 import type * as tiktoken from "@dqbd/tiktoken";
 import { Document } from "./document.js";
 
-interface TextSplitterParams {
+export interface TextSplitterParams {
   chunkSize: number;
 
   chunkOverlap: number;
@@ -77,8 +77,11 @@ export abstract class TextSplitter implements TextSplitterParams {
   }
 
   async splitDocuments(documents: Document[]): Promise<Document[]> {
-    const texts = documents.map((doc) => doc.pageContent);
-    const metadatas = documents.map((doc) => doc.metadata);
+    const selectedDocuments = documents.filter(
+      (doc) => doc.pageContent !== undefined
+    );
+    const texts = selectedDocuments.map((doc) => doc.pageContent);
+    const metadatas = selectedDocuments.map((doc) => doc.metadata);
     return this.createDocuments(texts, metadatas);
   }
 

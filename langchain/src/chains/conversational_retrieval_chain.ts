@@ -2,7 +2,7 @@ import { PromptTemplate } from "../prompts/prompt.js";
 import { BaseLLM } from "../llms/base.js";
 import { SerializedChatVectorDBQAChain } from "./serde.js";
 import { ChainValues, BaseRetriever } from "../schema/index.js";
-import { BaseChain } from "./base.js";
+import { BaseChain, ChainInputs } from "./base.js";
 import { LLMChain } from "./llm_chain.js";
 import { loadQAStuffChain } from "./question_answering/load.js";
 
@@ -23,12 +23,13 @@ const qa_template = `Use the following pieces of context to answer the question 
 Question: {question}
 Helpful Answer:`;
 
-export interface ConversationalRetrievalQAChainInput {
+export interface ConversationalRetrievalQAChainInput
+  extends Omit<ChainInputs, "memory"> {
   retriever: BaseRetriever;
   combineDocumentsChain: BaseChain;
   questionGeneratorChain: LLMChain;
-  outputKey: string;
-  inputKey: string;
+  returnSourceDocuments?: boolean;
+  inputKey?: string;
 }
 
 export class ConversationalRetrievalQAChain
@@ -43,7 +44,11 @@ export class ConversationalRetrievalQAChain
     return [this.inputKey, this.chatHistoryKey];
   }
 
-  outputKey = "result";
+  get outputKeys() {
+    return this.combineDocumentsChain.outputKeys.concat(
+      this.returnSourceDocuments ? ["sourceDocuments"] : []
+    );
+  }
 
   retriever: BaseRetriever;
 
@@ -53,24 +58,17 @@ export class ConversationalRetrievalQAChain
 
   returnSourceDocuments = false;
 
-  constructor(fields: {
-    retriever: BaseRetriever;
-    combineDocumentsChain: BaseChain;
-    questionGeneratorChain: LLMChain;
-    inputKey?: string;
-    outputKey?: string;
-    returnSourceDocuments?: boolean;
-  }) {
-    super();
+  constructor(fields: ConversationalRetrievalQAChainInput) {
+    super(undefined, fields.verbose, fields.callbackManager);
     this.retriever = fields.retriever;
     this.combineDocumentsChain = fields.combineDocumentsChain;
     this.questionGeneratorChain = fields.questionGeneratorChain;
     this.inputKey = fields.inputKey ?? this.inputKey;
-    this.outputKey = fields.outputKey ?? this.outputKey;
     this.returnSourceDocuments =
       fields.returnSourceDocuments ?? this.returnSourceDocuments;
   }
 
+  /** @ignore */
   async _call(values: ChainValues): Promise<ChainValues> {
     if (!(this.inputKey in values)) {
       throw new Error(`Question key ${this.inputKey} not found.`);

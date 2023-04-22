@@ -1,4 +1,4 @@
-import { BaseChain } from "./base.js";
+import { BaseChain, ChainInputs } from "./base.js";
 import { VectorStore } from "../vectorstores/base.js";
 import { SerializedVectorDBQAChain } from "./serde.js";
 import { BaseLanguageModel } from "../base_language/index.js";
@@ -9,13 +9,12 @@ import { loadQAStuffChain } from "./question_answering/load.js";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type LoadValues = Record<string, any>;
 
-export interface VectorDBQAChainInput {
+export interface VectorDBQAChainInput extends Omit<ChainInputs, "memory"> {
   vectorstore: VectorStore;
-  k: number;
   combineDocumentsChain: BaseChain;
-  outputKey: string;
-  inputKey: string;
   returnSourceDocuments?: boolean;
+  k?: number;
+  inputKey?: string;
 }
 
 export class VectorDBQAChain extends BaseChain implements VectorDBQAChainInput {
@@ -27,7 +26,11 @@ export class VectorDBQAChain extends BaseChain implements VectorDBQAChainInput {
     return [this.inputKey];
   }
 
-  outputKey = "result";
+  get outputKeys() {
+    return this.combineDocumentsChain.outputKeys.concat(
+      this.returnSourceDocuments ? ["sourceDocuments"] : []
+    );
+  }
 
   vectorstore: VectorStore;
 
@@ -35,24 +38,17 @@ export class VectorDBQAChain extends BaseChain implements VectorDBQAChainInput {
 
   returnSourceDocuments = false;
 
-  constructor(fields: {
-    vectorstore: VectorStore;
-    combineDocumentsChain: BaseChain;
-    inputKey?: string;
-    outputKey?: string;
-    k?: number;
-    returnSourceDocuments?: boolean;
-  }) {
-    super();
+  constructor(fields: VectorDBQAChainInput) {
+    super(undefined, fields.verbose, fields.callbackManager);
     this.vectorstore = fields.vectorstore;
     this.combineDocumentsChain = fields.combineDocumentsChain;
     this.inputKey = fields.inputKey ?? this.inputKey;
-    this.outputKey = fields.outputKey ?? this.outputKey;
     this.k = fields.k ?? this.k;
     this.returnSourceDocuments =
       fields.returnSourceDocuments ?? this.returnSourceDocuments;
   }
 
+  /** @ignore */
   async _call(values: ChainValues): Promise<ChainValues> {
     if (!(this.inputKey in values)) {
       throw new Error(`Question key ${this.inputKey} not found.`);

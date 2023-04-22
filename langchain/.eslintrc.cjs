@@ -71,9 +71,12 @@ module.exports = {
     "no-console": 0,
     "no-restricted-syntax": 0,
     "no-shadow": 0,
+    "no-continue": 0,
     "no-underscore-dangle": 0,
     "no-use-before-define": 0,
     "no-useless-constructor": 0,
+    "no-return-await": 0,
+    "new-cap": ["error", { properties: false, capIsNew: false }],
     semi: ["error", "always"],
   },
 };

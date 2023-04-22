@@ -32,6 +32,7 @@ export class VectorStoreQATool extends Tool implements VectorStoreTool {
     return `Useful for when you need to answer questions about ${name}. Whenever you need information about ${description} you should ALWAYS use this. Input should be a fully formed question.`;
   }
 
+  /** @ignore */
   async _call(input: string) {
     return this.chain.run(input);
   }

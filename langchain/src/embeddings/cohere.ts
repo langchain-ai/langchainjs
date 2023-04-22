@@ -1,20 +1,25 @@
 import { chunkArray } from "../util/chunk.js";
 import { Embeddings, EmbeddingsParams } from "./base.js";
 
-interface ModelParams {
+export interface CohereEmbeddingsParams extends EmbeddingsParams {
   modelName: string;
-}
-
-/**
- * A class for generating embeddings using the Cohere API.
- */
-export class CohereEmbeddings extends Embeddings implements ModelParams {
-  modelName = "small";
 
   /**
    * The maximum number of documents to embed in a single request. This is
    * limited by the Cohere API to a maximum of 96.
    */
+  batchSize?: number;
+}
+
+/**
+ * A class for generating embeddings using the Cohere API.
+ */
+export class CohereEmbeddings
+  extends Embeddings
+  implements CohereEmbeddingsParams
+{
+  modelName = "small";
+
   batchSize = 48;
 
   private apiKey: string;
@@ -26,12 +31,10 @@ export class CohereEmbeddings extends Embeddings implements ModelParams {
    * @param fields - An optional object with properties to configure the instance.
    */
   constructor(
-    fields?: EmbeddingsParams &
-      Partial<ModelParams> & {
-        verbose?: boolean;
-        batchSize?: number;
-        apiKey?: string;
-      }
+    fields?: Partial<CohereEmbeddingsParams> & {
+      verbose?: boolean;
+      apiKey?: string;
+    }
   ) {
     super(fields ?? {});
 
@@ -115,11 +118,7 @@ export class CohereEmbeddings extends Embeddings implements ModelParams {
     }
   }
 
-  /**
-   * Dynamically imports the required dependencies for the CohereEmbeddings class.
-   * @returns An object containing the imported cohere-ai module.
-   * @throws An error if the cohere-ai dependency is not installed.
-   */
+  /** @ignore */
   static async imports(): Promise<{
     cohere: typeof import("cohere-ai");
   }> {

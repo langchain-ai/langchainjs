@@ -1,5 +1,5 @@
 import { OpenAI } from "langchain/llms/openai";
-import { initializeAgentExecutor } from "langchain/agents";
+import { initializeAgentExecutorWithOptions } from "langchain/agents";
 import { DynamicTool } from "langchain/tools";
 
 export const run = async () => {
@@ -25,11 +25,9 @@ export const run = async () => {
     }),
   ];
 
-  const executor = await initializeAgentExecutor(
-    tools,
-    model,
-    "zero-shot-react-description"
-  );
+  const executor = await initializeAgentExecutorWithOptions(tools, model, {
+    agentType: "zero-shot-react-description",
+  });
 
   console.log("Loaded agent.");
 

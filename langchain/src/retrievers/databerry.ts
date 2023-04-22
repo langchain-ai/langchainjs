@@ -2,7 +2,7 @@ import { BaseRetriever } from "../schema/index.js";
 import { Document } from "../document.js";
 import { AsyncCaller, AsyncCallerParams } from "../util/async_caller.js";
 
-interface DataberryRetrieverArgs extends AsyncCallerParams {
+export interface DataberryRetrieverArgs extends AsyncCallerParams {
   datastoreUrl: string;
   topK?: number;
   apiKey?: string;

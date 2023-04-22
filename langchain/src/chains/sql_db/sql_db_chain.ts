@@ -1,8 +1,7 @@
 import type { TiktokenModel } from "@dqbd/tiktoken";
 import { DEFAULT_SQL_DATABASE_PROMPT } from "./sql_db_prompt.js";
-import { BaseChain } from "../base.js";
+import { BaseChain, ChainInputs } from "../base.js";
 import type { OpenAI } from "../../llms/openai.js";
-import { BaseMemory } from "../../memory/base.js";
 import { LLMChain } from "../llm_chain.js";
 import type { SqlDatabase } from "../../sql_db.js";
 import { ChainValues } from "../../schema/index.js";
@@ -12,6 +11,14 @@ import {
   calculateMaxTokens,
   getModelContextSize,
 } from "../../base_language/count_tokens.js";
+
+export interface SqlDatabaseChainInput extends ChainInputs {
+  llm: BaseLanguageModel;
+  database: SqlDatabase;
+  topK?: number;
+  inputKey?: string;
+  outputKey?: string;
+}
 
 export class SqlDatabaseChain extends BaseChain {
   // LLM wrapper to use
@@ -33,21 +40,16 @@ export class SqlDatabaseChain extends BaseChain {
   // Whether to return the result of querying the SQL table directly.
   returnDirect = false;
 
-  constructor(fields: {
-    llm: BaseLanguageModel;
-    database: SqlDatabase;
-    inputKey?: string;
-    outputKey?: string;
-    memory?: BaseMemory;
-  }) {
-    const { memory } = fields;
-    super(memory);
+  constructor(fields: SqlDatabaseChainInput) {
+    super(fields.memory, fields.verbose, fields.callbackManager);
     this.llm = fields.llm;
     this.database = fields.database;
+    this.topK = fields.topK ?? this.topK;
     this.inputKey = fields.inputKey ?? this.inputKey;
     this.outputKey = fields.outputKey ?? this.outputKey;
   }
 
+  /** @ignore */
   async _call(values: ChainValues): Promise<ChainValues> {
     const lLMChain = new LLMChain({
       prompt: this.prompt,
@@ -85,13 +87,13 @@ export class SqlDatabaseChain extends BaseChain {
 
     let finalResult;
     if (this.returnDirect) {
-      finalResult = { result: queryResult };
+      finalResult = { [this.outputKey]: queryResult };
     } else {
       inputText += `${+sqlCommand}\nSQLResult: ${JSON.stringify(
         queryResult
       )}\nAnswer:`;
       llmInputs.input = inputText;
-      finalResult = { result: await lLMChain.predict(llmInputs) };
+      finalResult = { [this.outputKey]: await lLMChain.predict(llmInputs) };
     }
 
     return finalResult;
@@ -103,6 +105,10 @@ export class SqlDatabaseChain extends BaseChain {
 
   get inputKeys(): string[] {
     return [this.inputKey];
+  }
+
+  get outputKeys(): string[] {
+    return [this.outputKey];
   }
 
   static async deserialize(

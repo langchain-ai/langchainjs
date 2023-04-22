@@ -203,8 +203,8 @@ export class PrismaVectorStore<
   async addModels(models: TModel[]) {
     return this.addDocuments(
       models.map((metadata) => {
-        const pageContent = typeof metadata[this.contentColumn];
-        if (pageContent !== "string")
+        const pageContent = metadata[this.contentColumn];
+        if (typeof pageContent !== "string")
           throw new Error("Content column must be a string");
         return new Document({ pageContent, metadata });
       })
@@ -262,10 +262,10 @@ export class PrismaVectorStore<
     const results: [Document<SimilarityModel<TModel, TSelectModel>>, number][] =
       [];
     for (const article of articles) {
-      if (article._distance != null) {
+      if (article._distance != null && article[this.contentColumn] != null) {
         results.push([
           new Document({
-            pageContent: article[this.contentColumn] as string | undefined,
+            pageContent: article[this.contentColumn] as string,
             metadata: article,
           }),
           article._distance,
