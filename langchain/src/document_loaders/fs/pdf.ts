@@ -40,8 +40,12 @@ export class PDFLoader extends BufferLoader {
       }
 
       const text = content.items
-        .map((item) => (item as TextItem).str)
-        .join("\n");
+      .map((i) => {
+        const item = i as TextItem;
+        if (item.hasEOL) {return `${item.str}\n`;}
+        return item.str;
+      })
+      .join("");
 
       documents.push(
         new Document({
