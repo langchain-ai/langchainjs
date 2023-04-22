@@ -1,4 +1,4 @@
-import { DynamicTool, DynamicToolParams } from "./dynamic.js";
+import { DynamicTool, DynamicToolInput } from "./dynamic.js";
 
 interface LambdaConfig {
   functionName: string;
@@ -22,7 +22,7 @@ class AWSLambda extends DynamicTool {
     name,
     description,
     ...rest
-  }: LambdaConfig & Omit<DynamicToolParams, "func">) {
+  }: LambdaConfig & Omit<DynamicToolInput, "func">) {
     super({
       name,
       description,

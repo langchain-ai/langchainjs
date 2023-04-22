@@ -1,6 +1,6 @@
 import type { Tiktoken } from "@dqbd/tiktoken";
 import { BasePromptValue, LLMResult } from "../schema/index.js";
-import { BaseCallbackHandler, CallbackManager } from "../callbacks/index.js";
+import { CallbackManager, Callbacks } from "../callbacks/manager.js";
 import { AsyncCaller, AsyncCallerParams } from "../util/async_caller.js";
 import { getModelNameForTiktoken, importTiktoken } from "./count_tokens.js";
 
@@ -14,7 +14,7 @@ export type SerializedLLM = {
 
 export interface BaseLangChainParams {
   verbose?: boolean;
-  callbacks?: CallbackManager | BaseCallbackHandler[];
+  callbacks?: Callbacks;
 }
 
 /**
@@ -26,7 +26,7 @@ export abstract class BaseLangChain implements BaseLangChainParams {
    */
   verbose: boolean;
 
-  callbacks?: CallbackManager | BaseCallbackHandler[];
+  callbacks?: Callbacks;
 
   constructor(params: BaseLangChainParams) {
     this.verbose = params.verbose ?? getVerbosity();
@@ -72,7 +72,7 @@ export abstract class BaseLanguageModel
   abstract generatePrompt(
     promptValues: BasePromptValue[],
     stop?: string[],
-    callbacks?: CallbackManager | BaseCallbackHandler[]
+    callbacks?: Callbacks
   ): Promise<LLMResult>;
 
   abstract _modelType(): string;
