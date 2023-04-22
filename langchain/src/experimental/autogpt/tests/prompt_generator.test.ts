@@ -44,10 +44,10 @@ test("prompt with several tools", () => {
     4. Exclusively use the commands listed in double quotes e.g. "command name"
 
     Commands:
-    1. fake_browser_tool: useful for when you need to find something on the web or summarize a webpage., args json schema: {"url":{"type":"string"},"query":{"type":"string"}}
-    2. calculator: Useful for getting the result of a math expression. The input to this tool should be a valid mathematical expression that could be executed by a simple calculator., args json schema: {"input":{"type":"string"}}
-    3. read_file: Read file from disk, args json schema: {"file_path":{"type":"string","description":"name of file"}}
-    4. write_file: Write file from disk, args json schema: {"file_path":{"type":"string","description":"name of file"},"text":{"type":"string","description":"text to write to file"}}
+    1. "fake_browser_tool": useful for when you need to find something on the web or summarize a webpage., args json schema: {"url":{"type":"string"},"query":{"type":"string"}}
+    2. "calculator": Useful for getting the result of a math expression. The input to this tool should be a valid mathematical expression that could be executed by a simple calculator., args json schema: {"input":{"type":"string"}}
+    3. "read_file": Read file from disk, args json schema: {"file_path":{"type":"string","description":"name of file"}}
+    4. "write_file": Write file from disk, args json schema: {"file_path":{"type":"string","description":"name of file"},"text":{"type":"string","description":"text to write to file"}}
     5. finish: use this to signal that you have finished all your objectives, args: "response": "final response to let people know you have finished your objectives"
 
     Resources:
