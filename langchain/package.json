@@ -313,7 +313,6 @@
     "eslint-plugin-import": "^2.27.5",
     "eslint-plugin-no-instanceof": "^1.0.1",
     "eslint-plugin-prettier": "^4.2.1",
-    "eslint-plugin-tree-shaking": "^1.10.0",
     "graphql": "^16.6.0",
     "hnswlib-node": "^1.4.2",
     "html-to-text": "^9.0.5",

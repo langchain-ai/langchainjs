@@ -62,9 +62,7 @@ export abstract class StructuredTool<
 
 export abstract class Tool extends StructuredTool {
   schema = /* #__PURE__ */ z
-    // eslint-disable-next-line tree-shaking/no-side-effects-in-initialization
     .object({ input: /* #__PURE__ */ z.string().optional() })
-    // eslint-disable-next-line tree-shaking/no-side-effects-in-initialization
     /* #__PURE__ */ .transform((obj) => obj.input);
 
   call(

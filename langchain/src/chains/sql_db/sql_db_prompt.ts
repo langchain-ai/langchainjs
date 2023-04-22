@@ -1,4 +1,3 @@
-/* eslint-disable tree-shaking/no-side-effects-in-initialization */
 /* eslint-disable spaced-comment */
 import { PromptTemplate } from "../../prompts/prompt.js";
 

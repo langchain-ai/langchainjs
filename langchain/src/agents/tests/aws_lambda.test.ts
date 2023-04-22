@@ -3,7 +3,6 @@ import LambdaClient from "@aws-sdk/client-lambda";
 
 import { AWSLambda } from "../../tools/aws_lambda.js";
 
-// eslint-disable-next-line tree-shaking/no-side-effects-in-initialization
 jest.mock("@aws-sdk/client-lambda", () => ({
   LambdaClient: jest.fn().mockImplementation(() => ({
     send: jest.fn().mockImplementation(() =>
