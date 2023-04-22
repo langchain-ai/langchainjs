@@ -61,9 +61,9 @@ export abstract class StructuredTool<
 }
 
 export abstract class Tool extends StructuredTool {
-  schema = /* #__PURE__ */ z
-    .object({ input: /* #__PURE__ */ z.string().optional() })
-    /* #__PURE__ */ .transform((obj) => obj.input);
+  schema = z
+    .object({ input: z.string().optional() })
+    .transform((obj) => obj.input);
 
   call(
     arg: string | undefined | z.input<this["schema"]>,

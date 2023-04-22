@@ -7,8 +7,8 @@ interface ReadFileParams extends ToolParams {
 }
 
 export class ReadFileTool extends StructuredTool {
-  schema = /* #__PURE__ */ z.object({
-    file_path: /* #__PURE__ */ z.string().describe("name of file"),
+  schema = z.object({
+    file_path: z.string().describe("name of file"),
   });
 
   name = "read_file";
@@ -33,9 +33,9 @@ interface WriteFileParams extends ToolParams {
 }
 
 export class WriteFileTool extends StructuredTool {
-  schema = /* #__PURE__ */ z.object({
-    file_path: /* #__PURE__ */ z.string().describe("name of file"),
-    text: /* #__PURE__ */ z.string().describe("text to write to file"),
+  schema = z.object({
+    file_path: z.string().describe("name of file"),
+    text: z.string().describe("text to write to file"),
   });
 
   name = "write_file";
