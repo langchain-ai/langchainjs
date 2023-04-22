@@ -39,13 +39,23 @@ export class PDFLoader extends BufferLoader {
         continue;
       }
 
-      const text = content.items
-      .map((i) => {
-        const item = i as TextItem;
-        if (item.hasEOL) {return `${item.str}\n`;}
-        return item.str;
-      })
-      .join("");
+      let lastY: number | undefined;
+      let text = "";
+      // Adapted from https://gitlab.com/autokent/pdf-parse/-/blob/master/lib/pdf-parse.js#L21
+      // https://github.com/mozilla/pdf.js/issues/8963
+      // https://github.com/mozilla/pdf.js/issues/2140
+      // https://gist.github.com/hubgit/600ec0c224481e910d2a0f883a7b98e3
+      // https://gist.github.com/hubgit/600ec0c224481e910d2a0f883a7b98e3
+      for (const item of content.items) {
+        // eslint-disable-next-line eqeqeq
+        if (lastY == (item as TextItem)?.transform[5] || !lastY) {
+          text += (item as TextItem).str;
+        } else {
+          text += `\n${(item as TextItem).str}`;
+        }
+        // eslint-disable-next-line prefer-destructuring
+        lastY = (item as TextItem).transform[5];
+      }
 
       documents.push(
         new Document({
