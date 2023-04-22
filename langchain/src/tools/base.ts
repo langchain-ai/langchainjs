@@ -63,16 +63,16 @@ export abstract class StructuredTool<
 export abstract class Tool extends StructuredTool {
   schema = /* #__PURE__ */ z
     // eslint-disable-next-line tree-shaking/no-side-effects-in-initialization
-    .object({ input: /* #__PURE__ */ z.string() })
+    .object({ input: /* #__PURE__ */ z.string().optional() })
     // eslint-disable-next-line tree-shaking/no-side-effects-in-initialization
     /* #__PURE__ */ .transform((obj) => obj.input);
 
   call(
-    arg: string | z.input<this["schema"]>,
+    arg: string | undefined | z.input<this["schema"]>,
     callbacks?: Callbacks
   ): Promise<string> {
     return super.call(
-      typeof arg === "string" ? { input: arg } : arg,
+      typeof arg === "string" || !arg ? { input: arg } : arg,
       callbacks
     );
   }
