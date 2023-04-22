@@ -4,7 +4,7 @@ import { Tool } from "./base.js";
 export interface DynamicToolInput {
   name: string;
   description: string;
-  func: (arg1: string) => Promise<string>;
+  func: (input: string, _runManager?: CallbackManagerForToolRun) => Promise<string>;
   returnDirect?: boolean;
   verbose?: boolean;
   callbacks?: Callbacks;
@@ -15,7 +15,7 @@ export class DynamicTool extends Tool {
 
   description: string;
 
-  func: (arg1: string) => Promise<string>;
+  func: DynamicToolInput['func'];
 
   constructor(fields: DynamicToolInput) {
     super(fields.verbose, fields.callbacks);
@@ -30,6 +30,6 @@ export class DynamicTool extends Tool {
     input: string,
     _runManager?: CallbackManagerForToolRun
   ): Promise<string> {
-    return this.func(input);
+    return this.func(input, _runManager);
   }
 }
