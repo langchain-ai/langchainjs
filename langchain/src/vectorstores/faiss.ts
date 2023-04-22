@@ -1,9 +1,11 @@
-import { v4 as uuidv4 } from "uuid";
 import type { IndexFlatL2 } from "faiss-node";
+import type { Parser } from "pickleparser";
+import { v4 as uuidv4 } from "uuid";
 import { Embeddings } from "../embeddings/base.js";
 import { SaveableVectorStore } from "./base.js";
 import { Document } from "../document.js";
 import { InMemoryDocstore } from "../docstore/index.js";
+
 
 export interface FaissLibArgs {
   docstore?: InMemoryDocstore;
@@ -55,11 +57,11 @@ export class FaissStore extends SaveableVectorStore {
       return;
     }
     if (vectors.length !== documents.length) {
-      throw new Error(`Vectors and metadatas must have the same length`);
+      throw new Error(`Vectors and documents must have the same length`);
     }
     const dv = vectors[0].length;
     if (!this._index) {
-      const { IndexFlatL2 } = await FaissStore.imports();
+      const { IndexFlatL2 } = await FaissStore.importFaiss();
       this._index = new IndexFlatL2(dv);
     }
     const d = this.index.getDimension();
@@ -130,7 +132,7 @@ export class FaissStore extends SaveableVectorStore {
         [Map<string, Document>, Record<number, string>]
       >;
     const readIndex = async (directory: string) => {
-      const { IndexFlatL2 } = await this.imports();
+      const { IndexFlatL2 } = await this.importFaiss();
       return IndexFlatL2.read(path.join(directory, "faiss.index"));
     };
     const [[docstoreFiles, mapping], index] = await Promise.all([
@@ -144,7 +146,7 @@ export class FaissStore extends SaveableVectorStore {
   static async loadFromPython(directory: string, embeddings: Embeddings) {
     const fs = await import("node:fs/promises");
     const path = await import("node:path");
-    const { Parser } = await import("pickleparser");
+    const { Parser } = await this.importPickleparser();
 
     class PyDocument extends Map {
       toDocument(): Document {
@@ -192,7 +194,7 @@ export class FaissStore extends SaveableVectorStore {
       return { store, mapping };
     };
     const readIndex = async (directory: string) => {
-      const { IndexFlatL2 } = await this.imports();
+      const { IndexFlatL2 } = await this.importFaiss();
       return IndexFlatL2.read(path.join(directory, "index.faiss"));
     };
     const [store, index] = await Promise.all([
@@ -241,7 +243,7 @@ export class FaissStore extends SaveableVectorStore {
     return instance;
   }
 
-  static async imports(): Promise<{ IndexFlatL2: typeof IndexFlatL2 }> {
+  static async importFaiss(): Promise<{ IndexFlatL2: typeof IndexFlatL2 }> {
     try {
       const {
         default: { IndexFlatL2 },
@@ -251,6 +253,20 @@ export class FaissStore extends SaveableVectorStore {
     } catch (err) {
       throw new Error(
         "Please install faiss-node as a dependency with, e.g. `npm install -S faiss-node`"
+      );
+    }
+  }
+
+  static async importPickleparser(): Promise<{ Parser: typeof Parser }> {
+    try {
+      const {
+        default: { Parser },
+      } = await import("pickleparser");
+
+      return { Parser };
+    } catch (err) {
+      throw new Error(
+        "Please install pickleparser as a dependency with, e.g. `npm install -S pickleparser`"
       );
     }
   }
