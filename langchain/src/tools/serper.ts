@@ -20,7 +20,7 @@ export class Serper extends Tool {
   constructor(
     apiKey: string | undefined = typeof process !== "undefined"
       ? // eslint-disable-next-line no-process-env
-        process.env.SERPER_API_KEY
+        process.env?.SERPER_API_KEY
       : undefined,
     params: Partial<SerperParameters> = {}
   ) {

@@ -170,8 +170,10 @@ export class ChatOpenAI extends BaseChatModel implements OpenAIInput {
 
     const apiKey =
       fields?.openAIApiKey ??
-      // eslint-disable-next-line no-process-env
-      (typeof process !== "undefined" ? process.env.OPENAI_API_KEY : undefined);
+      (typeof process !== "undefined"
+        ? // eslint-disable-next-line no-process-env
+          process.env?.OPENAI_API_KEY
+        : undefined);
     if (!apiKey) {
       throw new Error("OpenAI API key not found");
     }

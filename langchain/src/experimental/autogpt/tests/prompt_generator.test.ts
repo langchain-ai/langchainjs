@@ -1,4 +1,3 @@
-/* eslint-disable tree-shaking/no-side-effects-in-initialization */
 import { test, expect } from "@jest/globals";
 import { z } from "zod";
 

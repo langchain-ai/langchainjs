@@ -307,7 +307,7 @@ export class SerpAPI extends Tool {
   constructor(
     apiKey: string | undefined = typeof process !== "undefined"
       ? // eslint-disable-next-line no-process-env
-        process.env.SERPAPI_API_KEY
+        process.env?.SERPAPI_API_KEY
       : undefined,
     params: Partial<SerpAPIParameters> = {}
   ) {
