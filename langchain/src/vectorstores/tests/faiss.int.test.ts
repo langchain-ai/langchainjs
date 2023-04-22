@@ -90,28 +90,104 @@ test("Test FaissStore.load and FaissStore.save", async () => {
 test("Test FaissStore.loadFromPython", async () => {
   const __filename = fileURLToPath(import.meta.url);
   const __dirname = path.dirname(__filename);
-  const loadedVectorStore = await FaissStore.loadFromPython(
+  const loadedFromPythonVectorStore = await FaissStore.loadFromPython(
     path.join(__dirname, "faiss.int.test.data/faiss_index"),
     new OpenAIEmbeddings()
   );
-  expect(loadedVectorStore.index?.ntotal()).toBe(42);
+  expect(loadedFromPythonVectorStore.index?.ntotal()).toBe(42);
 
-  const results = await loadedVectorStore.similaritySearch(
+  const results0 = await loadedFromPythonVectorStore.similaritySearch(
     "What did the president say about Ketanji Brown Jackson"
   );
 
-  expect(results).toHaveLength(4);
-
-  expect(results[0]).toEqual(
-    new Document({
-      metadata: { source: "../../../../../examples/state_of_the_union.txt" },
-      pageContent: `Tonight. I call on the Senate to: Pass the Freedom to Vote Act. Pass the John Lewis Voting Rights Act. And while you’re at it, pass the Disclose Act so Americans can know who is funding our elections. 
+  const expectedResultofPythonSaved = new Document({
+    metadata: { source: "../../../../../examples/state_of_the_union.txt" },
+    pageContent: `Tonight. I call on the Senate to: Pass the Freedom to Vote Act. Pass the John Lewis Voting Rights Act. And while you’re at it, pass the Disclose Act so Americans can know who is funding our elections. 
 
 Tonight, I’d like to honor someone who has dedicated his life to serve this country: Justice Stephen Breyer—an Army veteran, Constitutional scholar, and retiring Justice of the United States Supreme Court. Justice Breyer, thank you for your service. 
 
 One of the most serious constitutional responsibilities a President has is nominating someone to serve on the United States Supreme Court. 
 
 And I did that 4 days ago, when I nominated Circuit Court of Appeals Judge Ketanji Brown Jackson. One of our nation’s top legal minds, who will continue Justice Breyer’s legacy of excellence.`,
+  });
+
+  expect(results0).toHaveLength(4);
+
+  expect(results0[0]).toEqual(expectedResultofPythonSaved);
+
+  await loadedFromPythonVectorStore.addDocuments([
+    new Document({
+      metadata: {
+        source: "addDocuments_0",
+      },
+      pageContent: "hello",
+    }),
+    new Document({
+      metadata: {
+        source: "addDocuments_1",
+      },
+      pageContent: "你好吗？",
+    }),
+    new Document({
+      metadata: {
+        source: "addDocuments_2",
+      },
+      pageContent: "おはようございます。",
+    }),
+    new Document({
+      metadata: {
+        source: "addDocuments_3",
+      },
+      pageContent: "こんにちは！",
+    }),
+  ]);
+
+  const results1 = await loadedFromPythonVectorStore.similaritySearch("hello");
+
+  expect(results1).toEqual([
+    new Document({
+      pageContent: "hello",
+      metadata: { source: "addDocuments_0" },
+    }),
+    new Document({
+      pageContent: "こんにちは！",
+      metadata: { source: "addDocuments_3" },
+    }),
+    new Document({
+      pageContent: "你好吗？",
+      metadata: { source: "addDocuments_1" },
+    }),
+    new Document({
+      pageContent: "おはようございます。",
+      metadata: { source: "addDocuments_2" },
+    }),
+  ]);
+
+  const tempDirectory = await fs.mkdtemp(path.join(os.tmpdir(), "lcjs-"));
+
+  console.log(tempDirectory);
+
+  await loadedFromPythonVectorStore.save(tempDirectory);
+
+  const loadedVectorStore = await FaissStore.load(
+    tempDirectory,
+    new OpenAIEmbeddings()
+  );
+
+  const results2 = await loadedVectorStore.similaritySearch("早上", 1);
+
+  expect(results2).toHaveLength(1);
+
+  expect(results2[0]).toEqual(
+    new Document({
+      pageContent: "おはようございます。",
+      metadata: { source: "addDocuments_2" },
     })
   );
+
+  const results3 = await loadedVectorStore.similaritySearch("What did the president say about Ketanji Brown Jackson", 1);
+
+  expect(results3).toHaveLength(1);
+
+  expect(results3[0]).toEqual(expectedResultofPythonSaved);
 });
