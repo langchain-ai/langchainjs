@@ -146,8 +146,10 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
 
     const apiKey =
       fields?.openAIApiKey ??
-      // eslint-disable-next-line no-process-env
-      (typeof process !== "undefined" ? process.env.OPENAI_API_KEY : undefined);
+      (typeof process !== "undefined"
+        ? // eslint-disable-next-line no-process-env
+          process.env?.OPENAI_API_KEY
+        : undefined);
     if (!apiKey) {
       throw new Error("OpenAI API key not found");
     }
@@ -407,7 +409,7 @@ export class PromptLayerOpenAI extends OpenAI {
       fields?.promptLayerApiKey ??
       (typeof process !== "undefined"
         ? // eslint-disable-next-line no-process-env
-          process.env.PROMPTLAYER_API_KEY
+          process.env?.PROMPTLAYER_API_KEY
         : undefined);
 
     if (!this.promptLayerApiKey) {

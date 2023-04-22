@@ -62,7 +62,7 @@ export class GithubRepoLoader
     {
       accessToken = typeof process !== "undefined"
         ? // eslint-disable-next-line no-process-env
-          process.env.GITHUB_ACCESS_TOKEN
+          process.env?.GITHUB_ACCESS_TOKEN
         : undefined,
       branch = "main",
       recursive = true,
