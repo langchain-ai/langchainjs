@@ -40,7 +40,7 @@ export class PromptGenerator {
   }
 
   _generate_command_string(tool: ObjectTool): string {
-    let output = `${tool.name}: ${tool.description}`;
+    let output = `"${tool.name}": ${tool.description}`;
     output += `, args json schema: ${JSON.stringify(
       (zodToJsonSchema(tool.schema) as JsonSchema7ObjectType).properties
     )}`;

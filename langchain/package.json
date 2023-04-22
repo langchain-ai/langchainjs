@@ -232,6 +232,12 @@
     "retrievers/databerry.cjs",
     "retrievers/databerry.js",
     "retrievers/databerry.d.ts",
+    "retrievers/contextual_compression.cjs",
+    "retrievers/contextual_compression.js",
+    "retrievers/contextual_compression.d.ts",
+    "retrievers/document_compressors.cjs",
+    "retrievers/document_compressors.js",
+    "retrievers/document_compressors.d.ts",
     "cache.cjs",
     "cache.js",
     "cache.d.ts",
@@ -860,6 +866,16 @@
       "types": "./retrievers/databerry.d.ts",
       "import": "./retrievers/databerry.js",
       "require": "./retrievers/databerry.cjs"
+    },
+    "./retrievers/contextual_compression": {
+      "types": "./retrievers/contextual_compression.d.ts",
+      "import": "./retrievers/contextual_compression.js",
+      "require": "./retrievers/contextual_compression.cjs"
+    },
+    "./retrievers/document_compressors": {
+      "types": "./retrievers/document_compressors.d.ts",
+      "import": "./retrievers/document_compressors.js",
+      "require": "./retrievers/document_compressors.cjs"
     },
     "./cache": {
       "types": "./cache.d.ts",
