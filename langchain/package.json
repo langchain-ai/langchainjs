@@ -356,7 +356,6 @@
     "mammoth": "*",
     "mongodb": "^5.2.0",
     "pdf-parse": "1.1.1",
-    "pdfjs-dist": "^3.4.120",
     "pickleparser": "^0.0.4",
     "playwright": "^1.32.1",
     "puppeteer": "^19.7.2",
