@@ -20,6 +20,12 @@ export const getModelNameForTiktoken = (modelName: string): TiktokenModel => {
 
 export const getModelContextSize = (modelName: string): number => {
   switch (getModelNameForTiktoken(modelName)) {
+    case "gpt-3.5-turbo":
+      return 4096;
+    case "gpt-4-32k":
+      return 32768;
+    case "gpt-4":
+      return 8192;
     case "text-davinci-003":
       return 4097;
     case "text-curie-001":
