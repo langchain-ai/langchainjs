@@ -45,6 +45,13 @@ const vectorStore = await Chroma.fromDocuments(docs, new OpenAIEmbeddings(), {
   collectionName: "goldel-escher-bach",
 });
 
+// or alternatively from a existing collection
+const vectorStore = await Chroma.fromExistingCollection(new OpenAIEmbeddings(),
+  {
+    collectionName: "goldel-escher-bach",
+  }
+);
+
 const response = await vectorStore.similaritySearch("scared", 2);
 ```
 
@@ -54,12 +61,9 @@ const response = await vectorStore.similaritySearch("scared", 2);
 import { Chroma } from "langchain/vectorstores/chroma";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 
-const vectorStore = await Chroma.fromExistingCollection(
-  new OpenAIEmbeddings(),
-  {
-    collectionName: "goldel-escher-bach",
-  }
-);
+const vectorStore = await Chroma.getVectorStore(new OpenAIEmbeddings(), {
+  collectionName: collection,
+});
 
 const response = await vectorStore.similaritySearch("scared", 2);
 ```
