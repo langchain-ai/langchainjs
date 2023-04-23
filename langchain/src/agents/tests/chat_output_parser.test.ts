@@ -43,10 +43,10 @@ test("Can parse JSON with text in front of it", async () => {
     } else {
       expect(parsed.tool).toEqual(message.tool);
 
-      if (message.toolInput instanceof Array) {
+      if (typeof message.toolInput === "object") {
         expect(message.toolInput).toEqual(parsed.toolInput);
       }
-      if (message.toolInput instanceof String) {
+      if (typeof message.toolInput === "string") {
         expect(message.toolInput).toContain(parsed.toolInput);
       }
     }
