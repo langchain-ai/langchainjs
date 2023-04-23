@@ -1,9 +1,9 @@
 import { test, expect } from "@jest/globals";
+import type { RedisClientType } from "redis";
+import { createClient } from "redis";
 import { RedisMemory } from "../redis_memory.js";
 import { HumanChatMessage, AIChatMessage } from "../../schema/index.js";
-import { RedisClientType, createClient } from "@redis/client";
 
-// TODO Update docs with correct prompt example
 test("Test Redis memory without messages", async () => {
   const client = createClient();
 
@@ -49,20 +49,21 @@ test("Test Redis memory with messages", async () => {
 });
 
 test("Test Redis memory with pre-loaded history", async () => {
-  const sessionId = "three";
+  const sessionIdentifier = "three";
   const client = createClient();
   await client.connect();
   const pastMessages = [
     JSON.stringify({ role: "Human", content: "My name is Ozzy" }),
     JSON.stringify({ role: "AI", content: "Nice to meet you, Ozzy!" }),
   ];
-  await client.lPush(`history${sessionId}`, pastMessages);
+  await client.lPush(`history${sessionIdentifier}`, pastMessages);
   await client.disconnect();
 
   const memory = new RedisMemory(client as RedisClientType, {
     returnMessages: true,
-    sessionId: sessionId,
+    sessionId: sessionIdentifier,
   });
+
   await memory.init();
   const result = await memory.loadMemoryVariables({});
   const expectedHuman = new HumanChatMessage("My name is Ozzy");

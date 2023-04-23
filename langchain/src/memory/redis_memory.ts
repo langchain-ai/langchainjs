@@ -1,4 +1,4 @@
-import type { RedisClientType } from "@redis/client";
+import type { RedisClientType } from "redis";
 import { BaseChatMemory, BaseChatMemoryInput } from "./chat_memory.js";
 import {
   InputValues,
@@ -21,11 +21,11 @@ export type RedisMemoryInput = BaseChatMemoryInput & {
 export class RedisMemory extends BaseChatMemory {
   client: RedisClientType;
 
-  memoryKey: string = "history";
+  memoryKey = "history";
 
   sessionId: string;
 
-  memoryTTL: number = 300;
+  memoryTTL = 300;
 
   constructor(client: RedisClientType, fields: RedisMemoryInput) {
     const {
@@ -42,7 +42,9 @@ export class RedisMemory extends BaseChatMemory {
     this.sessionId = this.memoryKey + sessionId;
     this.memoryTTL = memoryTTL ?? this.memoryTTL;
     this.client = client;
-    this.client.connect();
+    this.client.connect().catch((err) => {
+      console.log(err);
+    });
   }
 
   async init(): Promise<void> {
@@ -52,9 +54,13 @@ export class RedisMemory extends BaseChatMemory {
       .map((message) => JSON.parse(message));
     orderedMessages.forEach((message: RedisMemoryMessage) => {
       if (message.role === "AI") {
-        this.chatHistory.addAIChatMessage(message.content);
+        this.chatHistory.addAIChatMessage(message.content).catch((err) => {
+          console.log(err);
+        });
       } else {
-        this.chatHistory.addUserMessage(message.content);
+        this.chatHistory.addUserMessage(message.content).catch((err) => {
+          console.log(err);
+        });
       }
     });
   }
@@ -81,8 +87,10 @@ export class RedisMemory extends BaseChatMemory {
       JSON.stringify({ role: "Human", content: `${inputValues.input}` }),
       JSON.stringify({ role: "AI", content: `${outputValues.response}` }),
     ];
-    await this.client.lPush(this.sessionId, messagesToAdd);
+    await this.client.lPush(this.sessionId, messagesToAdd).catch((err) => {
+      console.log(err);
+    });
     await this.client.expire(this.sessionId, this.memoryTTL);
-    super.saveContext(inputValues, outputValues);
+    await super.saveContext(inputValues, outputValues);
   }
 }

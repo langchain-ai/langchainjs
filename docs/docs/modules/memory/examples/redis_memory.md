@@ -25,7 +25,7 @@ const memory = new RedisMemory(client, {
 });
 
 //Instantiate any history from a prior session
-await memory.loadMemoryVariables({})
+await memory.loadMemoryVariables({});
 
 const chatPrompt = ChatPromptTemplate.fromPromptMessages([
   SystemMessagePromptTemplate.fromTemplate(
