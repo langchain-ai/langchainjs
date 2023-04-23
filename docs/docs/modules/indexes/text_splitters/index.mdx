@@ -16,11 +16,27 @@ Language Models are often limited by the amount of text that you can pass to the
 
 Using a Text Splitter can also help improve the results from vector store searches, as eg. smaller chunks may sometimes be more likely to match a query. Testing different chunk sizes (and chunk overlap) is a worthwhile exercise to tailor the results to your use case.
 
+## Parameters
+- `chunkSize?: number = 1000`: The maximum number of characters in each chunk. The default value is 1000 tokens.
+- `chunkOverlap?: number = 200`: The number of overlapping characters between adjacent chunks. The default value is 200 tokens.
+- `chunkHeader?: string = ""`: A user-defined string that will be added as a header to each generated chunk.
+- `chunkOverlapHeader?: string = "(cont'd) "`: A user-defined string that will be added as a header for all subsequent chunks, indicating the continuation of the document. The default value is (cont'd) .
+- `showChunkOverlapHeader?: boolean = false`: A boolean flag indicating whether to add the chunkOverlapHeader to subsequent chunks. The default value is false, meaning the overlap header will not be added unless explicitly set to true.
+
+### When to use `chunkHeader` and `chunkOverlapHeader`
+Consider a scenario where you want to store a collection of large documents in a vector store and perform Q&A tasks on them. Simply splitting documents with overlapping text may not provide sufficient context for LLMs to determine if multiple chunks are referencing the same information. This feature addresses this issue by allowing users to include additional contextual information in chunk headers.
+
 ```typescript
 interface TextSplitter {
   chunkSize: number;
 
   chunkOverlap: number;
+
+  chunkHeader: string;
+
+  chunkOverlapHeader: string;
+
+  showChunkOverlapHeader: boolean;
 
   createDocuments(
     texts: string[],
@@ -35,7 +51,7 @@ Text Splitters expose two methods, `createDocuments` and `splitDocuments`. The f
 
 ## All Text Splitters
 
-<DocCardList />
+<DocCardList/>
 
 ## Advanced
 
