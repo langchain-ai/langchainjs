@@ -1,5 +1,4 @@
 import { test, expect } from "@jest/globals";
-// eslint-disable-next-line tree-shaking/no-side-effects-in-initialization
 import { v4 as uuidv4 } from "uuid";
 import { CallbackManager } from "../manager.js";
 import { BaseCallbackHandler, BaseCallbackHandlerInput } from "../base.js";

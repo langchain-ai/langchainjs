@@ -12732,13 +12732,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint-plugin-tree-shaking@npm:^1.10.0":
-  version: 1.10.0
-  resolution: "eslint-plugin-tree-shaking@npm:1.10.0"
-  checksum: 839047134c3009f5fcc5b2cb7d908fffd9def46663a1642e6abe8f4be4bc77416e7214259430dbb1d26445b4cf54673227092a0e2a23d2d2a88189212aed7974
-  languageName: node
-  linkType: hard
-
 "eslint-scope@npm:5.1.1, eslint-scope@npm:^5.1.1":
   version: 5.1.1
   resolution: "eslint-scope@npm:5.1.1"
@@ -17321,7 +17314,6 @@ __metadata:
     eslint-plugin-import: ^2.27.5
     eslint-plugin-no-instanceof: ^1.0.1
     eslint-plugin-prettier: ^4.2.1
-    eslint-plugin-tree-shaking: ^1.10.0
     expr-eval: ^2.0.2
     flat: ^5.0.2
     gaxios: ^5.1.0
