@@ -103,11 +103,11 @@ export class SimpleSequentialChain
   /** @ignore */
   async _call(
     values: ChainValues,
-    runManager: CallbackManagerForChainRun
+    runManager?: CallbackManagerForChainRun
   ): Promise<ChainValues> {
     let input: string = values[this.inputKey];
     for (const chain of this.chains) {
-      input = await chain.run(input);
+      input = await chain.run(input, runManager?.getChild());
       if (this.trimOutputs) {
         input = input.trim();
       }

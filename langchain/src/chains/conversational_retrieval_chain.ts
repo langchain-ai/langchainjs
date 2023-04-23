@@ -5,6 +5,7 @@ import { ChainValues, BaseRetriever } from "../schema/index.js";
 import { BaseChain, ChainInputs } from "./base.js";
 import { LLMChain } from "./llm_chain.js";
 import { loadQAStuffChain } from "./question_answering/load.js";
+import { CallbackManagerForChainRun } from "../callbacks/manager.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type LoadValues = Record<string, any>;
@@ -69,7 +70,10 @@ export class ConversationalRetrievalQAChain
   }
 
   /** @ignore */
-  async _call(values: ChainValues): Promise<ChainValues> {
+  async _call(
+    values: ChainValues,
+    runManager?: CallbackManagerForChainRun
+  ): Promise<ChainValues> {
     if (!(this.inputKey in values)) {
       throw new Error(`Question key ${this.inputKey} not found.`);
     }
@@ -80,10 +84,13 @@ export class ConversationalRetrievalQAChain
     const chatHistory: string = values[this.chatHistoryKey];
     let newQuestion = question;
     if (chatHistory.length > 0) {
-      const result = await this.questionGeneratorChain.call({
-        question,
-        chat_history: chatHistory,
-      });
+      const result = await this.questionGeneratorChain.call(
+        {
+          question,
+          chat_history: chatHistory,
+        },
+        runManager?.getChild()
+      );
       const keys = Object.keys(result);
       if (keys.length === 1) {
         newQuestion = result[keys[0]];
@@ -99,7 +106,10 @@ export class ConversationalRetrievalQAChain
       input_documents: docs,
       chat_history: chatHistory,
     };
-    const result = await this.combineDocumentsChain.call(inputs);
+    const result = await this.combineDocumentsChain.call(
+      inputs,
+      runManager?.getChild()
+    );
     if (this.returnSourceDocuments) {
       return {
         ...result,
