@@ -37,29 +37,13 @@ volumes:
 
 ### Create a new schema
 
-Assuming you haven't created a schema yet, create a new model with a `vector` field of type `Unsupported("vector")`:
+Assuming you haven't created a schema yet, create a new schema and a model with a `vector` field of type `Unsupported("vector")`:
 
-```prisma
-model Document {
-  id      String                 @id @default(cuid())
-  content String
-  vector  Unsupported("vector")?
-}
-```
+import Schema from "@examples/indexes/vector_stores/prisma_vectorstore/prisma/schema.prisma";
 
-Afterwards, create a new migration with `--create-only` to avoid running the migration directly.
+<CodeBlock language="prisma">{Schema}</CodeBlock>
 
-```bash npm2yarn
-npm run prisma migrate dev --create-only
-```
-
-Add the following line to the newly created migration to enable `pgvector` extension if it hasn't been enabled yet:
-
-```sql
-CREATE EXTENSION IF NOT EXISTS vector;
-```
-
-Run the migration afterwards:
+Run the migration :
 
 ```bash npm2yarn
 npm run prisma migrate dev
@@ -69,12 +53,7 @@ npm run prisma migrate dev
 
 import CodeBlock from "@theme/CodeBlock";
 import Example from "@examples/indexes/vector_stores/prisma_vectorstore/prisma.ts";
-import Schema from "@examples/indexes/vector_stores/prisma_vectorstore/prisma/schema.prisma";
 
 Use the `withModel` method to get proper type hints for `metadata` field:
 
 <CodeBlock language="typescript">{Example}</CodeBlock>
-
-The sample above uses the following schema:
-
-<CodeBlock language="prisma">{Schema}</CodeBlock>
