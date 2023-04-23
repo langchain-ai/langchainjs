@@ -83,6 +83,7 @@ export abstract class BaseChatModel extends BaseLanguageModel {
     await runManager?.handleLLMEnd(output);
     Object.defineProperty(output, RUN_KEY, {
       value: runManager ? { runId: runManager?.runId } : undefined,
+      configurable: true,
     });
     return output;
   }

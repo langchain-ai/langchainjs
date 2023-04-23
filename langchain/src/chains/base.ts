@@ -58,13 +58,13 @@ export abstract class BaseChain extends BaseLangChain implements ChainInputs {
     input: any,
     callbacks?: Callbacks
   ): Promise<string> {
-    const isKeylessInput = this.inputKeys.length === 1;
+    const isKeylessInput = this.inputKeys.length <= 1;
     if (!isKeylessInput) {
       throw new Error(
         `Chain ${this._chainType()} expects multiple inputs, cannot use 'run' `
       );
     }
-    const values = { [this.inputKeys[0]]: input };
+    const values = this.inputKeys.length ? { [this.inputKeys[0]]: input } : {};
     const returnValues = await this.call(values, callbacks);
     const keys = Object.keys(returnValues);
 
@@ -112,6 +112,7 @@ export abstract class BaseChain extends BaseLangChain implements ChainInputs {
     // add the runManager's currentRunId to the outputValues
     Object.defineProperty(outputValues, RUN_KEY, {
       value: runManager ? { runId: runManager?.runId } : undefined,
+      configurable: true,
     });
     return outputValues;
   }
