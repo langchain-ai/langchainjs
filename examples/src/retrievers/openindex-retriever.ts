@@ -10,7 +10,7 @@ export const run = async () => {
   }
 
   const retriever = new ChatGPTPluginRetriever({
-    url: "https://oiretriever.openindex.ai",
+    url: "https://retriever.openindex.ai",
     auth: {
       bearer: apiKey,
     },
