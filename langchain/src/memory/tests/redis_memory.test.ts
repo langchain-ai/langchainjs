@@ -4,7 +4,6 @@ import { HumanChatMessage, AIChatMessage } from "../../schema/index.js";
 import { RedisClientType, createClient } from "@redis/client";
 
 // TODO Update docs with correct prompt example
-// TODO Figure out typing for client instantiation
 test("Test Redis memory without messages", async () => {
   const client = createClient();
 

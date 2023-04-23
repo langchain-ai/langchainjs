@@ -1,5 +1,5 @@
 import type { RedisClientType } from "@redis/client";
-import { BaseChatMemory, BaseMemoryInput } from "./chat_memory.js";
+import { BaseChatMemory, BaseChatMemoryInput } from "./chat_memory.js";
 import {
   InputValues,
   OutputValues,
@@ -12,7 +12,7 @@ export interface RedisMemoryMessage {
   content: string;
 }
 
-export type RedisMemoryInput = BaseMemoryInput & {
+export type RedisMemoryInput = BaseChatMemoryInput & {
   sessionId: string;
   memoryKey?: string;
   memoryTTL?: number;
@@ -60,14 +60,15 @@ export class RedisMemory extends BaseChatMemory {
   }
 
   async loadMemoryVariables(_values: InputValues): Promise<MemoryVariables> {
+    const messages = await this.chatHistory.getMessages();
     if (this.returnMessages) {
       const result = {
-        [this.memoryKey]: this.chatHistory.messages,
+        [this.memoryKey]: messages,
       };
       return result;
     }
     const result = {
-      [this.memoryKey]: getBufferString(this.chatHistory.messages),
+      [this.memoryKey]: getBufferString(messages),
     };
     return result;
   }

@@ -8,13 +8,13 @@ See instructions at [Redis](https://redis.io/docs/getting-started/) for running 
 
 ## Usage
 
-You will need to connect to Redis using the `createClient()` method from the built-in Redis library. You have full access to all the configuration options. Pass that client to the Memory module.
+You will need to connect to Redis using the `createClient()` method from the built-in Redis library. You have full access to all the configuration options. Pass that client to the Memory module. If you need access to the history, use the `loadMemoryVariables()` function.
 
 ```typescript
 import { ConversationChain } from "langchain/chains";
 import { ChatOpenAI } from "langchain/chat_models";
 import { RedisMemory } from "langchain/memory";
-import { createClient } from "redis";
+import { createClient } from "@redis/client";
 
 const model = new ChatOpenAI({});
 //Create your client and instantiate your Memory Storage
@@ -29,7 +29,7 @@ await memory.loadMemoryVariables({})
 
 const chatPrompt = ChatPromptTemplate.fromPromptMessages([
   SystemMessagePromptTemplate.fromTemplate(
-    `The following is a friendly conversation between a human and an AI. The AI is talkative and provides lots of specific details from its context. If the AI does not know the answer to a question, it truthfully says it does not know.${context}`
+    `The following is a friendly conversation between a human and an AI. The AI is talkative and provides lots of specific details from its context. If the AI does not know the answer to a question, it truthfully says it does not know.`
   ),
   new MessagesPlaceholder("history"),
   HumanMessagePromptTemplate.fromTemplate("{input}"),
