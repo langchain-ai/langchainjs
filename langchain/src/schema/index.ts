@@ -1,5 +1,7 @@
 import { Document } from "../document.js";
 
+export const RUN_KEY = "__run";
+
 export type Example = Record<string, string>;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -39,6 +41,11 @@ export type LLMResult = {
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   llmOutput?: Record<string, any>;
+  /**
+   * Dictionary of run metadata
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [RUN_KEY]?: Record<string, any>;
 };
 export type MessageType = "human" | "ai" | "generic" | "system";
 

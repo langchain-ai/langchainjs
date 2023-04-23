@@ -1,30 +1,19 @@
-import { Tool } from "./base.js";
+import { DynamicTool, DynamicToolInput } from "./dynamic.js";
 import { BaseChain } from "../chains/base.js";
 
-export class ChainTool extends Tool {
-  name: string;
+export interface ChainToolInput extends Omit<DynamicToolInput, "func"> {
+  chain: BaseChain;
+}
 
-  description: string;
-
+export class ChainTool extends DynamicTool {
   chain: BaseChain;
 
-  returnDirect: boolean;
-
-  constructor(fields: {
-    name: string;
-    description: string;
-    chain: BaseChain;
-    returnDirect?: boolean;
-  }) {
-    super();
-    this.name = fields.name;
-    this.description = fields.description;
-    this.chain = fields.chain;
-    this.returnDirect = fields.returnDirect ?? this.returnDirect;
-  }
-
-  /** @ignore */
-  async _call(input: string): Promise<string> {
-    return this.chain.run(input);
+  constructor({ chain, ...rest }: ChainToolInput) {
+    super({
+      ...rest,
+      func: async (input, runManager) =>
+        chain.run(input, runManager?.getChild()),
+    });
+    this.chain = chain;
   }
 }

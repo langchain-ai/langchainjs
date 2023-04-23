@@ -14,6 +14,7 @@ import { BaseLLM, BaseLLMParams } from "./base.js";
 import { calculateMaxTokens } from "../base_language/count_tokens.js";
 import { OpenAIChat } from "./openai-chat.js";
 import { LLMResult } from "../schema/index.js";
+import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
 
 /**
  * Input to OpenAI class.
@@ -145,8 +146,10 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
 
     const apiKey =
       fields?.openAIApiKey ??
-      // eslint-disable-next-line no-process-env
-      (typeof process !== "undefined" ? process.env.OPENAI_API_KEY : undefined);
+      (typeof process !== "undefined"
+        ? // eslint-disable-next-line no-process-env
+          process.env?.OPENAI_API_KEY
+        : undefined);
     if (!apiKey) {
       throw new Error("OpenAI API key not found");
     }
@@ -222,6 +225,7 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
    *
    * @param prompts - The prompts to pass into the model.
    * @param [stop] - Optional list of stop words to use when generating.
+   * @param [runManager] - Optional callback manager to use when generating.
    *
    * @returns The full LLM output.
    *
@@ -232,7 +236,11 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
    * const response = await openai.generate(["Tell me a joke."]);
    * ```
    */
-  async _generate(prompts: string[], stop?: string[]): Promise<LLMResult> {
+  async _generate(
+    prompts: string[],
+    stop?: string[],
+    runManager?: CallbackManagerForLLMRun
+  ): Promise<LLMResult> {
     const subPrompts = chunkArray(prompts, this.batchSize);
     const choices: CreateCompletionResponseChoicesInner[] = [];
     const tokenUsage: TokenUsage = {};
@@ -299,10 +307,7 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
                       choice.finish_reason = part.finish_reason;
                       choice.logprobs = part.logprobs;
                       // eslint-disable-next-line no-void
-                      void this.callbackManager.handleLLMNewToken(
-                        part.text ?? "",
-                        true
-                      );
+                      void runManager?.handleLLMNewToken(part.text ?? "");
                     }
                   }
                 },
@@ -404,7 +409,7 @@ export class PromptLayerOpenAI extends OpenAI {
       fields?.promptLayerApiKey ??
       (typeof process !== "undefined"
         ? // eslint-disable-next-line no-process-env
-          process.env.PROMPTLAYER_API_KEY
+          process.env?.PROMPTLAYER_API_KEY
         : undefined);
 
     if (!this.promptLayerApiKey) {

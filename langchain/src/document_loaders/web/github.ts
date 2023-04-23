@@ -32,6 +32,7 @@ export interface GithubRepoLoaderParams {
   recursive?: boolean;
   unknown?: UnknownHandling;
   accessToken?: string;
+  ignoreFiles?: (string | RegExp)[];
 }
 
 export class GithubRepoLoader
@@ -54,16 +55,19 @@ export class GithubRepoLoader
 
   public accessToken?: string;
 
+  public ignoreFiles: (string | RegExp)[];
+
   constructor(
     githubUrl: string,
     {
       accessToken = typeof process !== "undefined"
         ? // eslint-disable-next-line no-process-env
-          process.env.GITHUB_ACCESS_TOKEN
+          process.env?.GITHUB_ACCESS_TOKEN
         : undefined,
       branch = "main",
       recursive = true,
       unknown = UnknownHandling.Warn,
+      ignoreFiles = [],
     }: GithubRepoLoaderParams = {}
   ) {
     super();
@@ -75,6 +79,7 @@ export class GithubRepoLoader
     this.recursive = recursive;
     this.unknown = unknown;
     this.accessToken = accessToken;
+    this.ignoreFiles = ignoreFiles;
     if (this.accessToken) {
       this.headers = {
         Authorization: `Bearer ${this.accessToken}`,
@@ -104,6 +109,20 @@ export class GithubRepoLoader
     return documents;
   }
 
+  private shouldIgnore(path: string): boolean {
+    return this.ignoreFiles.some((pattern) => {
+      if (typeof pattern === "string") {
+        return path === pattern;
+      }
+
+      try {
+        return pattern.test(path);
+      } catch {
+        throw new Error(`Unknown ignore file pattern: ${pattern}`);
+      }
+    });
+  }
+
   private async processDirectory(
     path: string,
     documents: Document[]
@@ -118,7 +137,7 @@ export class GithubRepoLoader
           }
         } else {
           try {
-            if (!isBinaryPath(file.name)) {
+            if (!isBinaryPath(file.name) && !this.shouldIgnore(file.path)) {
               const fileContent = await this.fetchFileContent(file);
               const metadata = { source: file.path };
               documents.push(

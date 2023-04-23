@@ -220,6 +220,12 @@ retrievers/metal.d.ts
 retrievers/databerry.cjs
 retrievers/databerry.js
 retrievers/databerry.d.ts
+retrievers/contextual_compression.cjs
+retrievers/contextual_compression.js
+retrievers/contextual_compression.d.ts
+retrievers/document_compressors.cjs
+retrievers/document_compressors.js
+retrievers/document_compressors.d.ts
 cache.cjs
 cache.js
 cache.d.ts

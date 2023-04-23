@@ -21,6 +21,8 @@ See the docs [here](https://js.langchain.com/docs/modules/indexes/document_loade
 
 Once Unstructured is configured, you can use the S3 loader to load files and then convert them into a Document.
 
+You can optionally provide a s3Config parameter to specify your bucket region, access key, and secret access key. If these are not provided, you will need to have them in your environment (e.g., by running `aws configure`).
+
 import CodeBlock from "@theme/CodeBlock";
 import Example from "@examples/document_loaders/s3.ts";
 

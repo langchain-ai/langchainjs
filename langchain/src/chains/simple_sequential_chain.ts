@@ -4,6 +4,7 @@ import {
   SerializedBaseChain,
   SerializedSimpleSequentialChain,
 } from "./serde.js";
+import { CallbackManagerForChainRun } from "../callbacks/manager.js";
 
 export interface SimpleSequentialChainInput extends ChainInputs {
   /** Array of chains to run as a sequence. The chains are run in order they appear in the array. */
@@ -69,7 +70,11 @@ export class SimpleSequentialChain
   }
 
   constructor(fields: SimpleSequentialChainInput) {
-    super(fields.memory, fields.verbose, fields.callbackManager);
+    super(
+      fields.memory,
+      fields.verbose,
+      fields.callbacks ?? fields.callbackManager
+    );
     this.chains = fields.chains;
     this.trimOutputs = fields.trimOutputs ?? false;
     this._validateChains();
@@ -96,14 +101,17 @@ export class SimpleSequentialChain
   }
 
   /** @ignore */
-  async _call(values: ChainValues): Promise<ChainValues> {
+  async _call(
+    values: ChainValues,
+    runManager: CallbackManagerForChainRun
+  ): Promise<ChainValues> {
     let input: string = values[this.inputKey];
     for (const chain of this.chains) {
       input = await chain.run(input);
       if (this.trimOutputs) {
         input = input.trim();
       }
-      await this.callbackManager.handleText(input, this.verbose);
+      await runManager?.handleText(input);
     }
     return { [this.outputKey]: input };
   }

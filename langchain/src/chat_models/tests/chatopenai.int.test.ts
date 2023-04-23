@@ -103,12 +103,14 @@ test("Test ChatOpenAI in streaming mode", async () => {
     modelName: "gpt-3.5-turbo",
     streaming: true,
     maxTokens: 10,
-    callbackManager: CallbackManager.fromHandlers({
-      async handleLLMNewToken(token: string) {
-        nrNewTokens += 1;
-        streamedCompletion += token;
+    callbacks: [
+      {
+        async handleLLMNewToken(token: string) {
+          nrNewTokens += 1;
+          streamedCompletion += token;
+        },
       },
-    }),
+    ],
   });
   const message = new HumanChatMessage("Hello!");
   const res = await model.call([message]);

@@ -1,5 +1,5 @@
-import { ChainValues, LLMResult } from "../schema/index.js";
-import { BaseCallbackHandler } from "./base.js";
+import { ChainValues, LLMResult } from "../../schema/index.js";
+import { BaseCallbackHandler } from "../base.js";
 
 export type RunType = "llm" | "chain" | "tool";
 
@@ -15,7 +15,8 @@ export interface TracerSession extends BaseTracerSession {
 }
 
 export interface BaseRun {
-  id?: number;
+  uuid: string;
+  parent_uuid?: string;
   start_time: number;
   end_time: number;
   execution_order: number;
@@ -50,13 +51,12 @@ export interface ToolRun extends BaseRun {
 export abstract class BaseTracer extends BaseCallbackHandler {
   protected session?: TracerSession;
 
-  protected stack: (LLMRun | ChainRun | ToolRun)[] = [];
+  protected runMap: Map<string, LLMRun | ChainRun | ToolRun> = new Map();
 
   protected executionOrder = 1;
 
   protected constructor() {
     super();
-    this.alwaysVerbose = true;
   }
 
   abstract loadSession(sessionName: string): Promise<TracerSession>;
@@ -99,38 +99,41 @@ export abstract class BaseTracer extends BaseCallbackHandler {
   protected _startTrace(run: LLMRun | ChainRun | ToolRun) {
     this.executionOrder += 1;
 
-    if (this.stack.length > 0) {
-      if (
-        !(
-          this.stack.at(-1)?.type === "tool" ||
-          this.stack.at(-1)?.type === "chain"
-        )
-      ) {
-        throw new Error("Nested run can only be logged for tool or chain");
+    if (run.parent_uuid) {
+      const parentRun = this.runMap.get(run.parent_uuid);
+      if (parentRun) {
+        if (!(parentRun.type === "tool" || parentRun.type === "chain")) {
+          throw new Error("Caller run can only be a tool or chain");
+        } else {
+          this._addChildRun(parentRun as ChainRun | ToolRun, run);
+        }
+      } else {
+        throw new Error(`Caller run ${run.parent_uuid} not found`);
       }
-      const parentRun = this.stack.at(-1) as ChainRun | ToolRun;
-      this._addChildRun(parentRun, run);
     }
-    this.stack.push(run);
+    this.runMap.set(run.uuid, run);
   }
 
-  protected async _endTrace() {
-    const run = this.stack.pop();
-    if (this.stack.length === 0 && run) {
-      this.executionOrder = 1;
+  protected async _endTrace(run: LLMRun | ChainRun | ToolRun): Promise<void> {
+    if (!run.parent_uuid) {
       await this.persistRun(run);
+      this.executionOrder = 1;
     }
+    this.runMap.delete(run.uuid);
   }
 
   async handleLLMStart(
     llm: { name: string },
     prompts: string[],
-    _verbose?: boolean
+    runId: string,
+    parentRunId?: string
   ): Promise<void> {
     if (this.session === undefined) {
       this.session = await this.loadDefaultSession();
     }
     const run: LLMRun = {
+      uuid: runId,
+      parent_uuid: parentRunId,
       start_time: Date.now(),
       end_time: 0,
       serialized: llm,
@@ -143,35 +146,40 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     this._startTrace(run);
   }
 
-  async handleLLMEnd(output: LLMResult, _verbose?: boolean): Promise<void> {
-    if (this.stack.length === 0 || this.stack.at(-1)?.type !== "llm") {
+  async handleLLMEnd(output: LLMResult, runId: string): Promise<void> {
+    const run = this.runMap.get(runId);
+    if (!run || run?.type !== "llm") {
       throw new Error("No LLM run to end.");
     }
-    const run = this.stack.at(-1) as LLMRun;
-    run.end_time = Date.now();
-    run.response = output;
-    await this._endTrace();
+    const llmRun = run as LLMRun;
+    llmRun.end_time = Date.now();
+    llmRun.response = output;
+    await this._endTrace(llmRun);
   }
 
-  async handleLLMError(error: Error, _verbose?: boolean): Promise<void> {
-    if (this.stack.length === 0 || this.stack.at(-1)?.type !== "llm") {
+  async handleLLMError(error: Error, runId: string): Promise<void> {
+    const run = this.runMap.get(runId);
+    if (!run || run?.type !== "llm") {
       throw new Error("No LLM run to end.");
     }
-    const run = this.stack.at(-1) as LLMRun;
-    run.end_time = Date.now();
-    run.error = error.message;
-    await this._endTrace();
+    const llmRun = run as LLMRun;
+    llmRun.end_time = Date.now();
+    llmRun.error = error.message;
+    await this._endTrace(llmRun);
   }
 
   async handleChainStart(
     chain: { name: string },
     inputs: ChainValues,
-    _verbose?: boolean
+    runId: string,
+    parentRunId?: string
   ): Promise<void> {
     if (this.session === undefined) {
       this.session = await this.loadDefaultSession();
     }
     const run: ChainRun = {
+      uuid: runId,
+      parent_uuid: parentRunId,
       start_time: Date.now(),
       end_time: 0,
       serialized: chain,
@@ -187,38 +195,40 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     this._startTrace(run);
   }
 
-  async handleChainEnd(
-    outputs: ChainValues,
-    _verbose?: boolean
-  ): Promise<void> {
-    if (this.stack.length === 0 || this.stack.at(-1)?.type !== "chain") {
+  async handleChainEnd(outputs: ChainValues, runId: string): Promise<void> {
+    const run = this.runMap.get(runId);
+    if (!run || run?.type !== "chain") {
       throw new Error("No chain run to end.");
     }
-    const run = this.stack.at(-1) as ChainRun;
-    run.end_time = Date.now();
-    run.outputs = outputs;
-    await this._endTrace();
+    const chainRun = run as ChainRun;
+    chainRun.end_time = Date.now();
+    chainRun.outputs = outputs;
+    await this._endTrace(chainRun);
   }
 
-  async handleChainError(error: Error, _verbose?: boolean): Promise<void> {
-    if (this.stack.length === 0 || this.stack.at(-1)?.type !== "chain") {
+  async handleChainError(error: Error, runId: string): Promise<void> {
+    const run = this.runMap.get(runId);
+    if (!run || run?.type !== "chain") {
       throw new Error("No chain run to end.");
     }
-    const run = this.stack.at(-1) as ChainRun;
-    run.end_time = Date.now();
-    run.error = error.message;
-    await this._endTrace();
+    const chainRun = run as ChainRun;
+    chainRun.end_time = Date.now();
+    chainRun.error = error.message;
+    await this._endTrace(chainRun);
   }
 
   async handleToolStart(
     tool: { name: string },
     input: string,
-    _verbose?: boolean
+    runId: string,
+    parentRunId?: string
   ): Promise<void> {
     if (this.session === undefined) {
       this.session = await this.loadDefaultSession();
     }
     const run: ToolRun = {
+      uuid: runId,
+      parent_uuid: parentRunId,
       start_time: Date.now(),
       end_time: 0,
       serialized: tool,
@@ -235,32 +245,36 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     this._startTrace(run);
   }
 
-  async handleToolEnd(output: string, _verbose?: boolean): Promise<void> {
-    if (this.stack.length === 0 || this.stack.at(-1)?.type !== "tool") {
+  async handleToolEnd(output: string, runId: string): Promise<void> {
+    const run = this.runMap.get(runId);
+    if (!run || run?.type !== "tool") {
       throw new Error("No tool run to end");
     }
-    const run = this.stack.at(-1) as ToolRun;
-    run.end_time = Date.now();
-    run.output = output;
-    await this._endTrace();
+    const toolRun = run as ToolRun;
+    toolRun.end_time = Date.now();
+    toolRun.output = output;
+    await this._endTrace(toolRun);
   }
 
-  async handleToolError(error: Error, _verbose?: boolean): Promise<void> {
-    if (this.stack.length === 0 || this.stack.at(-1)?.type !== "tool") {
-      throw new Error("No tool run to end.");
+  async handleToolError(error: Error, runId: string): Promise<void> {
+    const run = this.runMap.get(runId);
+    if (!run || run?.type !== "tool") {
+      throw new Error("No tool run to end");
     }
-    const run = this.stack.at(-1) as ToolRun;
-    run.end_time = Date.now();
-    run.error = error.message;
-    await this._endTrace();
+    const toolRun = run as ToolRun;
+    toolRun.end_time = Date.now();
+    toolRun.error = error.message;
+    await this._endTrace(toolRun);
   }
 }
 
 export class LangChainTracer extends BaseTracer {
+  name = "langchain_tracer";
+
   protected endpoint =
     (typeof process !== "undefined"
       ? // eslint-disable-next-line no-process-env
-        process.env.LANGCHAIN_ENDPOINT
+        process.env?.LANGCHAIN_ENDPOINT
       : undefined) || "http://localhost:8000";
 
   protected headers: Record<string, string> = {
@@ -270,9 +284,9 @@ export class LangChainTracer extends BaseTracer {
   constructor() {
     super();
     // eslint-disable-next-line no-process-env
-    if (typeof process !== "undefined" && process.env.LANGCHAIN_API_KEY) {
+    if (typeof process !== "undefined" && process.env?.LANGCHAIN_API_KEY) {
       // eslint-disable-next-line no-process-env
-      this.headers["x-api-key"] = process.env.LANGCHAIN_API_KEY;
+      this.headers["x-api-key"] = process.env?.LANGCHAIN_API_KEY;
     }
   }
 
@@ -361,5 +375,18 @@ export class LangChainTracer extends BaseTracer {
     [tracerSession] = resp;
     this.session = tracerSession;
     return tracerSession;
+  }
+
+  copy(): LangChainTracer {
+    // TODO: this is a hack to get tracing to work with the current backend
+    // we need to not use execution order, then remove this check
+    if (this.executionOrder === 1) {
+      const copy = new LangChainTracer();
+      copy.session = this.session;
+      copy.runMap = new Map(this.runMap);
+      copy.executionOrder = this.executionOrder;
+      return copy;
+    }
+    return this;
   }
 }

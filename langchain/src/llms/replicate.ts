@@ -25,7 +25,7 @@ export class Replicate extends LLM implements ReplicateInput {
     const apiKey =
       fields?.apiKey ??
       // eslint-disable-next-line no-process-env
-      (typeof process !== "undefined" && process.env.REPLICATE_API_KEY);
+      (typeof process !== "undefined" && process.env?.REPLICATE_API_KEY);
 
     if (!apiKey) {
       throw new Error("Please set the REPLICATE_API_KEY environment variable");

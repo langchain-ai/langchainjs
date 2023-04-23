@@ -4,6 +4,7 @@ export {
   BaseSingleActionAgent,
   LLMSingleActionAgent,
   LLMSingleActionAgentInput,
+  OutputParserArgs,
 } from "./agent.js";
 export {
   JsonToolkit,
