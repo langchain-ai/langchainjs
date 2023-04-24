@@ -53,6 +53,7 @@ export class SequentialChain extends BaseChain implements SequentialChainInput {
     this._validateChains();
   }
 
+  /** @ignore */
   _validateChains() {
     if (this.chains.length === 0) {
       // @TODO how to deal with it?
@@ -126,11 +127,15 @@ export class SequentialChain extends BaseChain implements SequentialChainInput {
     }
   }
 
-  async _call(values: ChainValues): Promise<ChainValues> {
+  /** @ignore */
+  async _call(
+    values: ChainValues,
+    runManager?: CallbackManagerForChainRun
+  ): Promise<ChainValues> {
     let input: ChainValues = values;
     const allChainValues: ChainValues = {};
     for (const chain of this.chains) {
-      input = await chain.call(input);
+      input = await chain.call(input, runManager?.getChild());
       for (const key of Object.keys(input)) {
         allChainValues[key] = input[key];
       }
@@ -270,11 +275,11 @@ export class SimpleSequentialChain
   /** @ignore */
   async _call(
     values: ChainValues,
-    runManager: CallbackManagerForChainRun
+    runManager?: CallbackManagerForChainRun
   ): Promise<ChainValues> {
     let input: string = values[this.inputKey];
     for (const chain of this.chains) {
-      input = await chain.run(input);
+      input = await chain.run(input, runManager?.getChild());
       if (this.trimOutputs) {
         input = input.trim();
       }

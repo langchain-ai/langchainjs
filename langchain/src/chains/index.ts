@@ -3,6 +3,7 @@ export { LLMChain, LLMChainInput } from "./llm_chain.js";
 export { ConversationChain } from "./conversation.js";
 export {
   SequentialChain,
+  SequentialChainInput,
   SimpleSequentialChain,
   SimpleSequentialChainInput,
 } from "./sequential_chain.js";
