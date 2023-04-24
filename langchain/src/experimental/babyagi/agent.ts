@@ -99,15 +99,16 @@ export class BabyAGI extends BaseChain implements BabyAGIInputs {
   ): Promise<Optional<Task, "taskID">[]> {
     const taskNames = this.taskList.map((t) => t.taskName);
     const incomplete_tasks = taskNames.join(", ");
-    const { text } = await this.creationChain.call(
-      {
-        result,
-        task_description,
-        incomplete_tasks,
-        objective,
-      },
-      runManager?.getChild()
-    );
+    const { [this.creationChain.outputKeys[0]]: text } =
+      await this.creationChain.call(
+        {
+          result,
+          task_description,
+          incomplete_tasks,
+          objective,
+        },
+        runManager?.getChild()
+      );
     const newTasks = (text as string).split("\n");
     return newTasks
       .filter((taskName) => taskName.trim())
@@ -121,14 +122,15 @@ export class BabyAGI extends BaseChain implements BabyAGIInputs {
   ) {
     const taskNames = this.taskList.map((t) => t.taskName);
     const nextTaskID = thisTaskID + 1;
-    const { text } = await this.prioritizationChain.call(
-      {
-        task_names: taskNames.join(", "),
-        next_task_id: String(nextTaskID),
-        objective,
-      },
-      runManager?.getChild()
-    );
+    const { [this.prioritizationChain.outputKeys[0]]: text } =
+      await this.prioritizationChain.call(
+        {
+          task_names: taskNames.join(", "),
+          next_task_id: String(nextTaskID),
+          objective,
+        },
+        runManager?.getChild()
+      );
     const newTasks = (text as string).trim().split("\n");
     const prioritizedTaskList = [];
     for (const taskString of newTasks) {
@@ -156,14 +158,15 @@ export class BabyAGI extends BaseChain implements BabyAGIInputs {
     runManager?: CallbackManagerForChainRun
   ) {
     const context = await this.getTopTasks(objective);
-    const { text } = await this.executionChain.call(
-      {
-        objective,
-        context: context.join("\n"),
-        task,
-      },
-      runManager?.getChild()
-    );
+    const { [this.executionChain.outputKeys[0]]: text } =
+      await this.executionChain.call(
+        {
+          objective,
+          context: context.join("\n"),
+          task,
+        },
+        runManager?.getChild()
+      );
     return text as string;
   }
 
