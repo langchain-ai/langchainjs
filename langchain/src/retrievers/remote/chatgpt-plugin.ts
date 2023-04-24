@@ -5,7 +5,7 @@ import {
   RemoteRetrieverValues,
 } from "./base.js";
 
-interface ChatGPTPluginRetrieverFilter {
+export interface ChatGPTPluginRetrieverFilter {
   document_id?: string;
   source?: string;
   source_id?: string;
@@ -14,7 +14,7 @@ interface ChatGPTPluginRetrieverFilter {
   end_date?: string;
 }
 
-interface ChatGPTPluginRetrieverParams extends RemoteRetrieverParams {
+export interface ChatGPTPluginRetrieverParams extends RemoteRetrieverParams {
   /**
    * The number of results to request from the ChatGPTRetrievalPlugin server
    */

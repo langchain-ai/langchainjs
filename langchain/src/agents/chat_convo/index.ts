@@ -15,12 +15,17 @@ import {
 } from "../../schema/index.js";
 import { Tool } from "../../tools/base.js";
 import { Optional } from "../../types/type-utils.js";
-import { Agent, AgentArgs } from "../agent.js";
+import { Agent, AgentArgs, OutputParserArgs } from "../agent.js";
 import { AgentActionOutputParser, AgentInput } from "../types.js";
 import { ChatConversationalAgentOutputParser } from "./outputParser.js";
-import { PREFIX, SUFFIX, TEMPLATE_TOOL_RESPONSE } from "./prompt.js";
+import {
+  PREFIX_END,
+  DEFAULT_PREFIX,
+  DEFAULT_SUFFIX,
+  TEMPLATE_TOOL_RESPONSE,
+} from "./prompt.js";
 
-export type CreatePromptArgs = {
+export interface ChatConversationalCreatePromptArgs {
   /** String to put after the list of tools. */
   systemMessage?: string;
   /** String to put before the list of tools. */
@@ -29,7 +34,7 @@ export type CreatePromptArgs = {
   inputVariables?: string[];
   /** Output parser to use for formatting. */
   outputParser?: AgentActionOutputParser;
-};
+}
 
 export type ChatConversationalAgentInput = Optional<AgentInput, "outputParser">;
 
@@ -44,9 +49,8 @@ export class ChatConversationalAgent extends Agent {
     super({ ...input, outputParser });
   }
 
-  _agentType(): string {
-    /** Not turning on serialization until more sure of abstractions. */
-    throw new Error("Method not implemented.");
+  _agentType() {
+    return "chat-conversational-react-description" as const;
   }
 
   observationPrefix() {
@@ -71,7 +75,7 @@ export class ChatConversationalAgent extends Agent {
     }
   }
 
-  constructScratchPad(steps: AgentStep[]): BaseChatMessage[] {
+  async constructScratchPad(steps: AgentStep[]): Promise<BaseChatMessage[]> {
     const thoughts: BaseChatMessage[] = [];
     for (const step of steps) {
       thoughts.push(new AIChatMessage(step.action.log));
@@ -86,24 +90,28 @@ export class ChatConversationalAgent extends Agent {
     return thoughts;
   }
 
-  static getDefaultOutputParser(): AgentActionOutputParser {
+  static getDefaultOutputParser(
+    _fields?: OutputParserArgs
+  ): AgentActionOutputParser {
     return new ChatConversationalAgentOutputParser();
   }
 
   /**
-   * Create prompt in the style of the zero shot agent.
+   * Create prompt in the style of the ChatConversationAgent.
    *
    * @param tools - List of tools the agent will have access to, used to format the prompt.
    * @param args - Arguments to create the prompt with.
-   * @param args.suffix - String to put after the list of tools.
-   * @param args.prefix - String to put before the list of tools.
+   * @param args.systemMessage - String to put before the list of tools.
+   * @param args.humanMessage - String to put after the list of tools.
    */
-  static createPrompt(tools: Tool[], args?: CreatePromptArgs) {
-    const {
-      systemMessage = PREFIX,
-      humanMessage = SUFFIX,
-      outputParser = new ChatConversationalAgentOutputParser(),
-    } = args ?? {};
+  static createPrompt(
+    tools: Tool[],
+    args?: ChatConversationalCreatePromptArgs
+  ) {
+    const systemMessage = (args?.systemMessage ?? DEFAULT_PREFIX) + PREFIX_END;
+    const humanMessage = args?.humanMessage ?? DEFAULT_SUFFIX;
+    const outputParser =
+      args?.outputParser ?? new ChatConversationalAgentOutputParser();
     const toolStrings = tools
       .map((tool) => `${tool.name}: ${tool.description}`)
       .join("\n");
@@ -127,14 +135,14 @@ export class ChatConversationalAgent extends Agent {
   static fromLLMAndTools(
     llm: BaseLanguageModel,
     tools: Tool[],
-    args?: CreatePromptArgs & AgentArgs
+    args?: ChatConversationalCreatePromptArgs & AgentArgs
   ) {
     ChatConversationalAgent.validateTools(tools);
     const prompt = ChatConversationalAgent.createPrompt(tools, args);
     const chain = new LLMChain({
       prompt,
       llm,
-      callbackManager: args?.callbackManager,
+      callbacks: args?.callbacks ?? args?.callbackManager,
     });
     const outputParser =
       args?.outputParser ?? ChatConversationalAgent.getDefaultOutputParser();

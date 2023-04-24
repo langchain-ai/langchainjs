@@ -29,12 +29,12 @@ export const loadFromHub = async <T>(
   const LANGCHAIN_HUB_DEFAULT_REF =
     (typeof process !== "undefined"
       ? // eslint-disable-next-line no-process-env
-        process.env.LANGCHAIN_HUB_DEFAULT_REF
+        process.env?.LANGCHAIN_HUB_DEFAULT_REF
       : undefined) ?? "master";
   const LANGCHAIN_HUB_URL_BASE =
     (typeof process !== "undefined"
       ? // eslint-disable-next-line no-process-env
-        process.env.LANGCHAIN_HUB_URL_BASE
+        process.env?.LANGCHAIN_HUB_URL_BASE
       : undefined) ??
     "https://raw.githubusercontent.com/hwchase17/langchain-hub/";
 

@@ -1,15 +1,16 @@
-import { CallbackManager } from "langchain/callbacks";
 import { OpenAI } from "langchain/llms/openai";
 
 // To enable streaming, we pass in `streaming: true` to the LLM constructor.
-// Additionally, we pass in a `CallbackManager` with a handler set up for the `handleLLMNewToken` event.
+// Additionally, we pass in a handler for the `handleLLMNewToken` event.
 const chat = new OpenAI({
   streaming: true,
-  callbackManager: CallbackManager.fromHandlers({
-    async handleLLMNewToken(token: string) {
-      process.stdout.write(token);
+  callbacks: [
+    {
+      handleLLMNewToken(token: string) {
+        process.stdout.write(token);
+      },
     },
-  }),
+  ],
 });
 
 await chat.call("Write me a song about sparkling water.");

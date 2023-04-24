@@ -1,39 +1,55 @@
-import { CallbackManager, getCallbackManager } from "../callbacks/index.js";
+import { z } from "zod";
+import {
+  CallbackManager,
+  CallbackManagerForToolRun,
+  Callbacks,
+} from "../callbacks/manager.js";
+import { BaseLangChain, BaseLangChainParams } from "../base_language/index.js";
 
-const getVerbosity = () => false;
-
-export interface ToolParams {
-  verbose?: boolean;
+export interface ToolParams extends BaseLangChainParams {
+  /**
+   * @deprecated Use `callbacks` instead
+   */
   callbackManager?: CallbackManager;
 }
 
-export abstract class Tool {
-  verbose: boolean;
+export abstract class StructuredTool<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  T extends z.ZodObject<any, any, any, any> = z.ZodObject<any, any, any, any>
+> extends BaseLangChain {
+  abstract schema: T | z.ZodEffects<T>;
 
-  callbackManager: CallbackManager;
-
-  constructor(verbose?: boolean, callbackManager?: CallbackManager) {
-    this.verbose = verbose ?? (callbackManager ? true : getVerbosity());
-    this.callbackManager = callbackManager ?? getCallbackManager();
+  constructor(verbose?: boolean, callbacks?: Callbacks) {
+    super({ verbose, callbacks });
   }
 
-  protected abstract _call(arg: string): Promise<string>;
+  protected abstract _call(
+    arg: z.output<T>,
+    callbackManager?: CallbackManagerForToolRun
+  ): Promise<string>;
 
-  async call(arg: string, verbose?: boolean): Promise<string> {
-    const _verbose = verbose ?? this.verbose;
-    await this.callbackManager.handleToolStart(
+  async call(
+    arg: (z.output<T> extends string ? string : never) | z.input<T>,
+    callbacks?: Callbacks
+  ): Promise<string> {
+    const parsed = await this.schema.parseAsync(arg);
+    const callbackManager_ = await CallbackManager.configure(
+      callbacks,
+      this.callbacks,
+      { verbose: this.verbose }
+    );
+    const runManager = await callbackManager_?.handleToolStart(
       { name: this.name },
-      arg,
-      _verbose
+      typeof parsed === "string" ? parsed : JSON.stringify(parsed)
     );
     let result;
     try {
-      result = await this._call(arg);
+      result = await this._call(parsed, runManager);
     } catch (e) {
-      await this.callbackManager.handleToolError(e, _verbose);
+      await runManager?.handleToolError(e);
       throw e;
     }
-    await this.callbackManager.handleToolEnd(result, _verbose);
+    await runManager?.handleToolEnd(result);
     return result;
   }
 
@@ -42,4 +58,20 @@ export abstract class Tool {
   abstract description: string;
 
   returnDirect = false;
+}
+
+export abstract class Tool extends StructuredTool {
+  schema = z
+    .object({ input: z.string().optional() })
+    .transform((obj) => obj.input);
+
+  call(
+    arg: string | undefined | z.input<this["schema"]>,
+    callbacks?: Callbacks
+  ): Promise<string> {
+    return super.call(
+      typeof arg === "string" || !arg ? { input: arg } : arg,
+      callbacks
+    );
+  }
 }

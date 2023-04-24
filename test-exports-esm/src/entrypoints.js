@@ -24,4 +24,8 @@ import * as callbacks from "langchain/callbacks";
 import * as output_parsers from "langchain/output_parsers";
 import * as retrievers_remote from "langchain/retrievers/remote";
 import * as retrievers_databerry from "langchain/retrievers/databerry";
+import * as retrievers_contextual_compression from "langchain/retrievers/contextual_compression";
+import * as retrievers_document_compressors from "langchain/retrievers/document_compressors";
 import * as cache from "langchain/cache";
+import * as stores_file_in_memory from "langchain/stores/file/in_memory";
+import * as experimental_autogpt from "langchain/experimental/autogpt";

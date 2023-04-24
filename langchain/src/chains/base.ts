@@ -1,43 +1,43 @@
 import { BaseMemory } from "../memory/base.js";
-import { ChainValues } from "../schema/index.js";
-import { CallbackManager, getCallbackManager } from "../callbacks/index.js";
+import { ChainValues, RUN_KEY } from "../schema/index.js";
+import {
+  CallbackManagerForChainRun,
+  CallbackManager,
+  Callbacks,
+} from "../callbacks/manager.js";
 import { SerializedBaseChain } from "./serde.js";
+import { BaseLangChain, BaseLangChainParams } from "../base_language/index.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type LoadValues = Record<string, any>;
 
-export interface ChainInputs {
+export interface ChainInputs extends BaseLangChainParams {
   memory?: BaseMemory;
-  verbose?: boolean;
+
+  /**
+   * @deprecated Use `callbacks` instead
+   */
   callbackManager?: CallbackManager;
 }
-
-const getVerbosity = () => false;
 
 /**
  * Base interface that all chains must implement.
  */
-export abstract class BaseChain implements ChainInputs {
+export abstract class BaseChain extends BaseLangChain implements ChainInputs {
   memory?: BaseMemory;
 
-  verbose: boolean;
-
-  callbackManager: CallbackManager;
-
-  constructor(
-    memory?: BaseMemory,
-    verbose?: boolean,
-    callbackManager?: CallbackManager
-  ) {
+  constructor(memory?: BaseMemory, verbose?: boolean, callbacks?: Callbacks) {
+    super({ verbose, callbacks });
     this.memory = memory;
-    this.verbose = verbose ?? (callbackManager ? true : getVerbosity());
-    this.callbackManager = callbackManager ?? getCallbackManager();
   }
 
   /**
    * Run the core logic of this chain and return the output
    */
-  abstract _call(values: ChainValues): Promise<ChainValues>;
+  abstract _call(
+    values: ChainValues,
+    runManager?: CallbackManagerForChainRun
+  ): Promise<ChainValues>;
 
   /**
    * Return the string type key uniquely identifying this class of chain.
@@ -53,20 +53,23 @@ export abstract class BaseChain implements ChainInputs {
 
   abstract get outputKeys(): string[];
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async run(input: any): Promise<string> {
-    const isKeylessInput = this.inputKeys.length === 1;
+  async run(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    input: any,
+    callbacks?: Callbacks
+  ): Promise<string> {
+    const isKeylessInput = this.inputKeys.length <= 1;
     if (!isKeylessInput) {
       throw new Error(
         `Chain ${this._chainType()} expects multiple inputs, cannot use 'run' `
       );
     }
-    const values = { [this.inputKeys[0]]: input };
-    const returnValues = await this.call(values);
+    const values = this.inputKeys.length ? { [this.inputKeys[0]]: input } : {};
+    const returnValues = await this.call(values, callbacks);
     const keys = Object.keys(returnValues);
+
     if (keys.length === 1) {
-      const finalReturn = returnValues[keys[0]];
-      return finalReturn;
+      return returnValues[keys[0]];
     }
     throw new Error(
       "return values have multiple keys, `run` only supported when one key currently"
@@ -78,7 +81,7 @@ export abstract class BaseChain implements ChainInputs {
    *
    * Wraps {@link _call} and handles memory.
    */
-  async call(values: ChainValues): Promise<ChainValues> {
+  async call(values: ChainValues, callbacks?: Callbacks): Promise<ChainValues> {
     const fullValues = { ...values } as typeof values;
     if (!(this.memory == null)) {
       const newValues = await this.memory.loadMemoryVariables(values);
@@ -86,30 +89,44 @@ export abstract class BaseChain implements ChainInputs {
         fullValues[key] = value;
       }
     }
-    await this.callbackManager.handleChainStart(
+    const callbackManager_ = await CallbackManager.configure(
+      callbacks,
+      this.callbacks,
+      { verbose: this.verbose }
+    );
+    const runManager = await callbackManager_?.handleChainStart(
       { name: this._chainType() },
-      fullValues,
-      this.verbose
+      fullValues
     );
     let outputValues;
     try {
-      outputValues = await this._call(fullValues);
+      outputValues = await this._call(fullValues, runManager);
     } catch (e) {
-      await this.callbackManager.handleChainError(e, this.verbose);
+      await runManager?.handleChainError(e);
       throw e;
     }
-    await this.callbackManager.handleChainEnd(outputValues, this.verbose);
+    await runManager?.handleChainEnd(outputValues);
     if (!(this.memory == null)) {
       await this.memory.saveContext(values, outputValues);
     }
+    // add the runManager's currentRunId to the outputValues
+    Object.defineProperty(outputValues, RUN_KEY, {
+      value: runManager ? { runId: runManager?.runId } : undefined,
+      configurable: true,
+    });
     return outputValues;
   }
 
   /**
    * Call the chain on all inputs in the list
    */
-  async apply(inputs: ChainValues[]): Promise<ChainValues> {
-    return Promise.all(inputs.map(async (i) => this.call(i)));
+  async apply(
+    inputs: ChainValues[],
+    callbacks?: Callbacks[]
+  ): Promise<ChainValues> {
+    return Promise.all(
+      inputs.map(async (i, idx) => this.call(i, callbacks?.[idx]))
+    );
   }
 
   /**

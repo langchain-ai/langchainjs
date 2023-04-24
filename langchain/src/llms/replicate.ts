@@ -1,6 +1,6 @@
 import { LLM, BaseLLMParams } from "./base.js";
 
-interface ReplicateInput {
+export interface ReplicateInput {
   // owner/model_name:version
   model: `${string}/${string}:${string}`;
 
@@ -25,7 +25,7 @@ export class Replicate extends LLM implements ReplicateInput {
     const apiKey =
       fields?.apiKey ??
       // eslint-disable-next-line no-process-env
-      (typeof process !== "undefined" && process.env.REPLICATE_API_KEY);
+      (typeof process !== "undefined" && process.env?.REPLICATE_API_KEY);
 
     if (!apiKey) {
       throw new Error("Please set the REPLICATE_API_KEY environment variable");
@@ -40,6 +40,7 @@ export class Replicate extends LLM implements ReplicateInput {
     return "replicate";
   }
 
+  /** @ignore */
   async _call(prompt: string, _stop?: string[]): Promise<string> {
     const imports = await Replicate.imports();
 
@@ -63,6 +64,7 @@ export class Replicate extends LLM implements ReplicateInput {
     return String(output);
   }
 
+  /** @ignore */
   static async imports(): Promise<{
     Replicate: typeof import("replicate").default;
   }> {

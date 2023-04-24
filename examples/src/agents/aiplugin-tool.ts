@@ -1,5 +1,5 @@
 import { ChatOpenAI } from "langchain/chat_models/openai";
-import { initializeAgentExecutor } from "langchain/agents";
+import { initializeAgentExecutorWithOptions } from "langchain/agents";
 import {
   RequestsGetTool,
   RequestsPostTool,
@@ -14,11 +14,10 @@ export const run = async () => {
       "https://www.klarna.com/.well-known/ai-plugin.json"
     ),
   ];
-  const agent = await initializeAgentExecutor(
+  const agent = await initializeAgentExecutorWithOptions(
     tools,
     new ChatOpenAI({ temperature: 0 }),
-    "chat-zero-shot-react-description",
-    true
+    { agentType: "chat-zero-shot-react-description", verbose: true }
   );
 
   const result = await agent.call({

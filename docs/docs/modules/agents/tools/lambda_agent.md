@@ -21,10 +21,10 @@ This quick start will demonstrate how an Agent could use a Lambda function to se
 - The IAM role corresponding to those credentials must have permission to invoke the lambda function.
 
 ```typescript
-import { OpenAI } from "langchain";
+import { OpenAI } from "langchain/llms/openai";
 import { SerpAPI } from "langchain/tools";
 import { AWSLambda } from "langchain/tools/aws_lambda";
-import { initializeAgentExecutor } from "langchain/agents";
+import { initializeAgentExecutorWithOptions } from "langchain/agents";
 
 const model = new OpenAI({ temperature: 0 });
 const emailSenderTool = new AWSLambda({
@@ -38,11 +38,9 @@ const emailSenderTool = new AWSLambda({
   functionName: "SendEmailViaSES", // the function name as seen in AWS Console
 });
 const tools = [emailSenderTool, new SerpAPI("api_key_goes_here")];
-const executor = await initializeAgentExecutor(
-  tools,
-  model,
-  "zero-shot-react-description"
-);
+const executor = await initializeAgentExecutorWithOptions(tools, model, {
+  agentType: "zero-shot-react-description",
+});
 
 const input = `Find out the capital of Croatia. Once you have it, email the answer to testing123@gmail.com.`;
 const result = await executor.call({ input });

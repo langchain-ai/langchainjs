@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.56",
+  "version": "0.0.62",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -232,9 +232,27 @@
     "retrievers/databerry.cjs",
     "retrievers/databerry.js",
     "retrievers/databerry.d.ts",
+    "retrievers/contextual_compression.cjs",
+    "retrievers/contextual_compression.js",
+    "retrievers/contextual_compression.d.ts",
+    "retrievers/document_compressors.cjs",
+    "retrievers/document_compressors.js",
+    "retrievers/document_compressors.d.ts",
     "cache.cjs",
     "cache.js",
     "cache.d.ts",
+    "cache/redis.cjs",
+    "cache/redis.js",
+    "cache/redis.d.ts",
+    "stores/file/in_memory.cjs",
+    "stores/file/in_memory.js",
+    "stores/file/in_memory.d.ts",
+    "stores/file/node.cjs",
+    "stores/file/node.js",
+    "stores/file/node.d.ts",
+    "experimental/autogpt.cjs",
+    "experimental/autogpt.js",
+    "experimental/autogpt.d.ts",
     "index.cjs",
     "index.js",
     "index.d.ts"
@@ -267,7 +285,7 @@
     "@aws-sdk/client-lambda": "^3.310.0",
     "@aws-sdk/client-s3": "^3.310.0",
     "@faker-js/faker": "^7.6.0",
-    "@getmetal/metal-sdk": "^1.0.12",
+    "@getmetal/metal-sdk": "^2.0.1",
     "@huggingface/inference": "^1.5.1",
     "@jest/globals": "^29.5.0",
     "@opensearch-project/opensearch": "^2.2.0",
@@ -284,6 +302,7 @@
     "@typescript-eslint/parser": "^5.51.0",
     "axios": "^0.26.0",
     "cheerio": "^1.0.0-rc.12",
+    "chromadb": "^1.4.0",
     "cohere-ai": "^5.0.2",
     "d3-dsv": "^2.0.0",
     "dotenv": "^16.0.3",
@@ -295,13 +314,13 @@
     "eslint-plugin-import": "^2.27.5",
     "eslint-plugin-no-instanceof": "^1.0.1",
     "eslint-plugin-prettier": "^4.2.1",
-    "eslint-plugin-tree-shaking": "^1.10.0",
     "graphql": "^16.6.0",
     "hnswlib-node": "^1.4.2",
     "html-to-text": "^9.0.5",
     "jest": "^29.5.0",
     "mammoth": "^1.5.1",
     "mongodb": "^5.2.0",
+    "pdf-parse": "1.1.1",
     "pdfjs-dist": "^3.4.120",
     "playwright": "^1.32.1",
     "prettier": "^2.8.3",
@@ -328,7 +347,7 @@
     "@zilliz/milvus2-sdk-node": "^2.2.0",
     "axios": "^0.26.0",
     "cheerio": "^1.0.0-rc.12",
-    "chromadb": "^1.3.0",
+    "chromadb": "^1.4.0",
     "cohere-ai": "^5.0.2",
     "d3-dsv": "^2.0.0",
     "epub2": "^3.0.1",
@@ -336,7 +355,7 @@
     "html-to-text": "^9.0.5",
     "mammoth": "*",
     "mongodb": "^5.2.0",
-    "pdfjs-dist": "^3.4.120",
+    "pdf-parse": "1.1.1",
     "playwright": "^1.32.1",
     "puppeteer": "^19.7.2",
     "redis": "^4.6.4",
@@ -400,7 +419,7 @@
     "mongodb": {
       "optional": true
     },
-    "pdfjs-dist": {
+    "pdf-parse": {
       "optional": true
     },
     "playwright": {
@@ -440,7 +459,8 @@
     "p-retry": "4",
     "uuid": "^9.0.0",
     "yaml": "^2.2.1",
-    "zod": "^3.21.4"
+    "zod": "^3.21.4",
+    "zod-to-json-schema": "^3.20.4"
   },
   "publishConfig": {
     "access": "public"
@@ -847,10 +867,40 @@
       "import": "./retrievers/databerry.js",
       "require": "./retrievers/databerry.cjs"
     },
+    "./retrievers/contextual_compression": {
+      "types": "./retrievers/contextual_compression.d.ts",
+      "import": "./retrievers/contextual_compression.js",
+      "require": "./retrievers/contextual_compression.cjs"
+    },
+    "./retrievers/document_compressors": {
+      "types": "./retrievers/document_compressors.d.ts",
+      "import": "./retrievers/document_compressors.js",
+      "require": "./retrievers/document_compressors.cjs"
+    },
     "./cache": {
       "types": "./cache.d.ts",
       "import": "./cache.js",
       "require": "./cache.cjs"
+    },
+    "./cache/redis": {
+      "types": "./cache/redis.d.ts",
+      "import": "./cache/redis.js",
+      "require": "./cache/redis.cjs"
+    },
+    "./stores/file/in_memory": {
+      "types": "./stores/file/in_memory.d.ts",
+      "import": "./stores/file/in_memory.js",
+      "require": "./stores/file/in_memory.cjs"
+    },
+    "./stores/file/node": {
+      "types": "./stores/file/node.d.ts",
+      "import": "./stores/file/node.js",
+      "require": "./stores/file/node.cjs"
+    },
+    "./experimental/autogpt": {
+      "types": "./experimental/autogpt.d.ts",
+      "import": "./experimental/autogpt.js",
+      "require": "./experimental/autogpt.cjs"
     },
     "./package.json": "./package.json"
   }

@@ -12,6 +12,7 @@ class DadJokeAPI extends Tool {
       "a dad joke generator. get a dad joke about a specific topic. input should be a search term.";
   }
 
+  /** @ignore */
   async _call(input: string): Promise<string> {
     const headers = { Accept: "application/json" };
     const searchUrl = `https://icanhazdadjoke.com/search?term=${input}`;

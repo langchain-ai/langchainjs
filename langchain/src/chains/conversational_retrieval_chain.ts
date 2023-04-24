@@ -2,7 +2,7 @@ import { PromptTemplate } from "../prompts/prompt.js";
 import { BaseLLM } from "../llms/base.js";
 import { SerializedChatVectorDBQAChain } from "./serde.js";
 import { ChainValues, BaseRetriever } from "../schema/index.js";
-import { BaseChain } from "./base.js";
+import { BaseChain, ChainInputs } from "./base.js";
 import { LLMChain } from "./llm_chain.js";
 import { loadQAStuffChain } from "./question_answering/load.js";
 
@@ -23,7 +23,8 @@ const qa_template = `Use the following pieces of context to answer the question 
 Question: {question}
 Helpful Answer:`;
 
-export interface ConversationalRetrievalQAChainInput {
+export interface ConversationalRetrievalQAChainInput
+  extends Omit<ChainInputs, "memory"> {
   retriever: BaseRetriever;
   combineDocumentsChain: BaseChain;
   questionGeneratorChain: LLMChain;
@@ -58,7 +59,7 @@ export class ConversationalRetrievalQAChain
   returnSourceDocuments = false;
 
   constructor(fields: ConversationalRetrievalQAChainInput) {
-    super();
+    super(undefined, fields.verbose, fields.callbackManager);
     this.retriever = fields.retriever;
     this.combineDocumentsChain = fields.combineDocumentsChain;
     this.questionGeneratorChain = fields.questionGeneratorChain;
@@ -67,6 +68,7 @@ export class ConversationalRetrievalQAChain
       fields.returnSourceDocuments ?? this.returnSourceDocuments;
   }
 
+  /** @ignore */
   async _call(values: ChainValues): Promise<ChainValues> {
     if (!(this.inputKey in values)) {
       throw new Error(`Question key ${this.inputKey} not found.`);

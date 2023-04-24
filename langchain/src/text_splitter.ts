@@ -1,7 +1,7 @@
 import type * as tiktoken from "@dqbd/tiktoken";
 import { Document } from "./document.js";
 
-interface TextSplitterParams {
+export interface TextSplitterParams {
   chunkSize: number;
 
   chunkOverlap: number;

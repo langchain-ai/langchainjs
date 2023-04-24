@@ -17,7 +17,7 @@ export class RegexParser extends BaseOutputParser<Record<string, string>> {
     defaultOutputKey?: string
   ) {
     super();
-    this.regex = regex;
+    this.regex = typeof regex === "string" ? new RegExp(regex) : regex;
     this.outputKeys = outputKeys;
     this.defaultOutputKey = defaultOutputKey;
   }
@@ -46,6 +46,6 @@ export class RegexParser extends BaseOutputParser<Record<string, string>> {
   }
 
   getFormatInstructions(): string {
-    return `Your response should match the following regex: /${this.regex}/`;
+    return `Your response should match the following regex: ${this.regex}`;
   }
 }

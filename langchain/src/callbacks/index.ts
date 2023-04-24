@@ -1,9 +1,25 @@
 export {
-  CallbackManager,
-  ConsoleCallbackHandler,
   BaseCallbackHandler,
+  CallbackHandlerMethods,
+  BaseCallbackHandlerInput,
 } from "./base.js";
 
-export { LangChainTracer } from "./tracers.js";
+export {
+  LangChainTracer,
+  BaseRun,
+  LLMRun,
+  ChainRun,
+  ToolRun,
+} from "./handlers/tracers.js";
 
-export { getCallbackManager, setTracerSession } from "./utils.js";
+export { getTracingCallbackHandler } from "./handlers/initialize.js";
+
+export {
+  CallbackManager,
+  CallbackManagerForChainRun,
+  CallbackManagerForLLMRun,
+  CallbackManagerForToolRun,
+  CallbackManagerOptions,
+  Callbacks,
+} from "./manager.js";
+export { ConsoleCallbackHandler } from "./handlers/console.js";

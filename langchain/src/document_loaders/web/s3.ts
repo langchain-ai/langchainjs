@@ -9,9 +9,16 @@ export interface S3LoaderParams {
   bucket: string;
   key: string;
   unstructuredAPIURL: string;
+  s3Config?: S3Config;
 
   fs?: typeof fsDefault;
   UnstructuredLoader?: typeof UnstructuredLoaderDefault;
+}
+
+interface S3Config {
+  region?: string;
+  accessKeyId?: string;
+  secretAccessKey?: string;
 }
 
 export class S3Loader extends BaseDocumentLoader {
@@ -21,6 +28,8 @@ export class S3Loader extends BaseDocumentLoader {
 
   private unstructuredAPIURL: string;
 
+  private s3Config: S3Config;
+
   private _fs: typeof fsDefault;
 
   private _UnstructuredLoader: typeof UnstructuredLoaderDefault;
@@ -29,6 +38,7 @@ export class S3Loader extends BaseDocumentLoader {
     bucket,
     key,
     unstructuredAPIURL,
+    s3Config = {},
     fs = fsDefault,
     UnstructuredLoader = UnstructuredLoaderDefault,
   }: S3LoaderParams) {
@@ -36,6 +46,7 @@ export class S3Loader extends BaseDocumentLoader {
     this.bucket = bucket;
     this.key = key;
     this.unstructuredAPIURL = unstructuredAPIURL;
+    this.s3Config = s3Config;
     this._fs = fs;
     this._UnstructuredLoader = UnstructuredLoader;
   }
@@ -50,7 +61,7 @@ export class S3Loader extends BaseDocumentLoader {
     const filePath = path.join(tempDir, this.key);
 
     try {
-      const s3Client = new S3Client({});
+      const s3Client = new S3Client(this.s3Config);
 
       const getObjectCommand = new GetObjectCommand({
         Bucket: this.bucket,

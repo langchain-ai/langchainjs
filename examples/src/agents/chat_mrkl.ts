@@ -1,4 +1,4 @@
-import { initializeAgentExecutor } from "langchain/agents";
+import { initializeAgentExecutorWithOptions } from "langchain/agents";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { SerpAPI } from "langchain/tools";
 import { Calculator } from "langchain/tools/calculator";
@@ -14,11 +14,9 @@ export const run = async () => {
     new Calculator(),
   ];
 
-  const executor = await initializeAgentExecutor(
-    tools,
-    model,
-    "chat-zero-shot-react-description"
-  );
+  const executor = await initializeAgentExecutorWithOptions(tools, model, {
+    agentType: "chat-zero-shot-react-description",
+  });
   console.log("Loaded agent.");
 
   const input = `Who is Olivia Wilde's boyfriend? What is his current age raised to the 0.23 power?`;

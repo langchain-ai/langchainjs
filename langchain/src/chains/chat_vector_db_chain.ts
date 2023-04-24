@@ -81,6 +81,7 @@ export class ChatVectorDBQAChain
       fields.returnSourceDocuments ?? this.returnSourceDocuments;
   }
 
+  /** @ignore */
   async _call(values: ChainValues): Promise<ChainValues> {
     if (!(this.inputKey in values)) {
       throw new Error(`Question key ${this.inputKey} not found.`);
@@ -97,6 +98,7 @@ export class ChatVectorDBQAChain
         chat_history: chatHistory,
       });
       const keys = Object.keys(result);
+      console.log("_call", values, keys);
       if (keys.length === 1) {
         newQuestion = result[keys[0]];
       } else {

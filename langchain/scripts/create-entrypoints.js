@@ -101,8 +101,16 @@ const entrypoints = {
   "retrievers/supabase": "retrievers/supabase",
   "retrievers/metal": "retrievers/metal",
   "retrievers/databerry": "retrievers/databerry",
+  "retrievers/contextual_compression": "retrievers/contextual_compression",
+  "retrievers/document_compressors": "retrievers/document_compressors/index",
   // cache
-  cache: "cache",
+  cache: "cache/index",
+  "cache/redis": "cache/redis",
+  // stores
+  "stores/file/in_memory": "stores/file/in_memory",
+  "stores/file/node": "stores/file/node",
+  // experimental
+  "experimental/autogpt": "experimental/autogpt/index",
 };
 
 // Entrypoints in this list will
@@ -162,6 +170,8 @@ const requiresOptionalDependency = [
   "sql_db",
   "retrievers/supabase",
   "retrievers/metal",
+  "cache/redis",
+  "stores/file/node",
 ];
 
 // List of test-exports-* packages which we use to test that the exports field

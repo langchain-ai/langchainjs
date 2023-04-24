@@ -8,7 +8,7 @@ import fetchAdapter from "../util/axios-fetch-adapter.js";
 import { chunkArray } from "../util/chunk.js";
 import { Embeddings, EmbeddingsParams } from "./base.js";
 
-interface ModelParams {
+export interface OpenAIEmbeddingsParams extends EmbeddingsParams {
   /** Model name to use */
   modelName: string;
 
@@ -16,21 +16,28 @@ interface ModelParams {
    * Timeout to use when making requests to OpenAI.
    */
   timeout?: number;
-}
-
-export class OpenAIEmbeddings extends Embeddings implements ModelParams {
-  modelName = "text-embedding-ada-002";
 
   /**
    * The maximum number of documents to embed in a single request. This is
    * limited by the OpenAI API to a maximum of 2048.
    */
-  batchSize = 512;
+  batchSize?: number;
 
   /**
    * Whether to strip new lines from the input text. This is recommended by
    * OpenAI, but may not be suitable for all use cases.
    */
+  stripNewLines?: boolean;
+}
+
+export class OpenAIEmbeddings
+  extends Embeddings
+  implements OpenAIEmbeddingsParams
+{
+  modelName = "text-embedding-ada-002";
+
+  batchSize = 512;
+
   stripNewLines = true;
 
   timeout?: number;
@@ -40,13 +47,10 @@ export class OpenAIEmbeddings extends Embeddings implements ModelParams {
   private clientConfig: ConfigurationParameters;
 
   constructor(
-    fields?: Partial<ModelParams> &
-      EmbeddingsParams & {
-        verbose?: boolean;
-        batchSize?: number;
-        openAIApiKey?: string;
-        stripNewLines?: boolean;
-      },
+    fields?: Partial<OpenAIEmbeddingsParams> & {
+      verbose?: boolean;
+      openAIApiKey?: string;
+    },
     configuration?: ConfigurationParameters
   ) {
     super(fields ?? {});

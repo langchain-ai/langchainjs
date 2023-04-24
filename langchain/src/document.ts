@@ -1,4 +1,4 @@
-export interface DocumentParams<
+export interface DocumentInput<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Metadata extends Record<string, any> = Record<string, any>
 > {
@@ -13,13 +13,13 @@ export interface DocumentParams<
 export class Document<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Metadata extends Record<string, any> = Record<string, any>
-> implements DocumentParams
+> implements DocumentInput
 {
   pageContent: string;
 
   metadata: Metadata;
 
-  constructor(fields: DocumentParams<Metadata>) {
+  constructor(fields: DocumentInput<Metadata>) {
     this.pageContent = fields.pageContent
       ? fields.pageContent.toString()
       : this.pageContent;
