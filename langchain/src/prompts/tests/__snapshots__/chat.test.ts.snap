@@ -1,0 +1,62 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Test serialize 1`] = `
+{
+  "input_variables": [
+    "context",
+    "foo",
+    "bar",
+  ],
+  "prompt_messages": [
+    {
+      "_type": "SystemMessagePromptTemplate",
+      "prompt": {
+        "inputVariables": [
+          "context",
+        ],
+        "template": "Here's some context: {context}",
+        "templateFormat": "f-string",
+        "validateTemplate": true,
+      },
+    },
+    {
+      "_type": "HumanMessagePromptTemplate",
+      "prompt": {
+        "inputVariables": [
+          "foo",
+          "bar",
+          "context",
+        ],
+        "template": "Hello {foo}, I'm {bar}. Thanks for the {context}",
+        "templateFormat": "f-string",
+        "validateTemplate": true,
+      },
+    },
+    {
+      "_type": "AIMessagePromptTemplate",
+      "prompt": {
+        "inputVariables": [
+          "foo",
+          "bar",
+        ],
+        "template": "I'm an AI. I'm {foo}. I'm {bar}.",
+        "templateFormat": "f-string",
+        "validateTemplate": true,
+      },
+    },
+    {
+      "_type": "ChatMessagePromptTemplate",
+      "prompt": {
+        "inputVariables": [
+          "foo",
+          "bar",
+        ],
+        "template": "I'm a generic message. I'm {foo}. I'm {bar}.",
+        "templateFormat": "f-string",
+        "validateTemplate": true,
+      },
+      "role": "test",
+    },
+  ],
+}
+`;

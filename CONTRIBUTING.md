@@ -1,11 +1,23 @@
 # Contributing to LangChain
 
-Hi there! Thank you for even being interested in contributing to LangChain.
+👋 Hi there! Thank you for even being interested in contributing to LangChain.
 As an open source project in a rapidly developing field, we are extremely open
 to contributions, whether it be in the form of a new feature, improved infra, or better documentation.
 
-To contribute to this project, please follow a ["fork and pull request"](https://docs.github.com/en/get-started/quickstart/contributing-to-projects) workflow.
-Please do not try to push directly to this repo unless you are maintainer.
+To contribute to this project, please follow a ["fork and pull request"](https://docs.github.com/en/get-started/quickstart/contributing-to-projects) workflow. Please do not try to push directly to this repo unless you are a maintainer.
+
+## Quick Links
+
+### Not sure what to work on?
+
+If you are not sure what to work on, we have a few suggestions:
+
+- Look at the issues with the [help wanted](https://github.com/hwchase17/langchainjs/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22) label. These are issues that we think are good targets for new contributors. If you are interested in working on one of these, please comment on the issue so that we can assign it to you. And any questions let us know, we're happy to guide you!
+- At the moment our main focus is reaching parity with the Python version across both [integrations](https://langchain.com/integrations.html) and [features](https://langchain.com/features.html). If you are interested in working on a specific integration or feature, just pick anything from those lists not done yet, please let us know and we can help you get started.
+
+### New abstractions
+
+We are currently trying to keep API parity between the Python and JS versions of LangChain, where possible. As such we ask that if you have an idea for a new abstraction, please open an issue first to discuss it. This will help us make sure that the API is consistent across both versions. If you're not sure what to work on, we recommend looking at the links above first.
 
 ## 🗺️Contributing Guidelines
 
@@ -46,7 +58,8 @@ good code into the codebase.
 
 ### 🏭Release process
 
-# TODO:
+> TODO:
+
 As of now, LangChain has an ad hoc release process: releases are cut with high frequency via by
 a developer and published to [npm](https://www.npmjs.com/package/langchain).
 
@@ -68,31 +81,101 @@ with if you plan to contribute:
 - **[prettier](https://prettier.io/)** - enforcing standard code formatting
 - **[jest](https://jestjs.io/)** - testing code
 - **[TypeDoc](https://typedoc.org/)** - reference doc generation from
-    comments
+  comments
 - **[Docusaurus](https://docusaurus.io/)** - static site generation for documentation
-
 
 Now, you should be able to run the common tasks in the following section.
 
 ## ✅Common Tasks
 
+Our primary goal is to make it as easy as possible for you to contribute to this project.
+To that end, we have configured the most common actions to be directly runnable from the root of the project (unless otherwise noted).
+
+### Setup
+
+To get started, you will need to install the dependencies for the project. To do so, run:
+
+```bash
+yarn
+```
+
+### Linting
+
+We use [eslint](https://eslint.org/) to enforce standard lint rules.
+To run the linter, run:
+
+```bash
+yarn lint
+```
+
+To automatically fix linting errors, run:
+
+```bash
+yarn lint:fix
+```
+
+### Formatting
+
+We use [prettier](https://prettier.io) to enforce code formatting style.
+To run the formatter, run:
+
+```bash
+yarn format
+```
+
+To just check for formatting differences, without fixing them, run:
+
+```bash
+yarn format:check
+```
+
 ### Testing
-
-**Unit tests** cover modular logic that does not require calls to outside APIs.
-
-If you add new logic, please add a unit test.
-
-**Integration tests** cover logic that requires making calls to outside APIs (often integration with other services).
-
-If you add support for a new external API, please add a new integration test.
 
 Tests should be added within a `tests/` folder alongside the modules they
 are testing.
 
-To run tests, run:
+To run all tests, run:
 
 ```bash
 yarn test
+```
+
+**Unit tests** cover modular logic that does not require calls to outside APIs.
+
+If you add new logic, please add a unit test.
+Unit tests should be called `*.test.ts`.
+
+To run only unit tests, run:
+
+```bash
+yarn test:unit
+```
+
+**Integration tests** cover logic that requires making calls to outside APIs (often integration with other services).
+
+If you add support for a new external API, please add a new integration test.
+Integration tests should be called `*.int.test.ts`.
+
+To run only integration tests, run:
+
+```bash
+yarn test:int
+```
+
+**Environment tests** test whether LangChain works across different JS environments, including Node.js (both ESM and CJS), Edge environments (eg. Cloudflare Workers), and browsers (using Webpack).
+
+To run the environment tests with Docker run:
+
+```bash
+yarn test:exports:docker
+```
+
+### Building
+
+To build the project, run:
+
+```bash
+yarn build
 ```
 
 ### Running examples
@@ -108,22 +191,24 @@ level of the repo.
 
 ### Adding an Entrypoint
 
-Langchain let's user import from multiple subpaths, e.g.
+LangChain exposes multiple subpaths the user can import from, e.g.
 
 ```ts
-import { OpenAI } from "langchain/llms"
+import { OpenAI } from "langchain/llms/openai";
 ```
 
+We call these subpaths "entrypoints". In general, you should create a new entrypoint if you are adding a new integration with a 3rd party library. If you're adding self-contained functionality without any external dependencies, you can add it to an existing entrypoint.
+
 In order to declare a new entrypoint that users can import from, you
-should edit the `langchain/create-entrypoints.js` script. To add an
-entrypoint `tools` that imports from `agents/tools/index.ts` you could add
+should edit the `langchain/scripts/create-entrypoints.js` script. To add an
+entrypoint `tools` that imports from `tools/index.ts` you'd add
 the following to the `entrypoints` variable:
 
 ```ts
 const entrypoints = {
   // ...
-  "tools": "agents/tools/index.ts",
-}
+  tools: "tools/index",
+};
 ```
 
 This will make sure the entrypoint is included in the published package,
@@ -144,6 +229,8 @@ Similar to linting, we recognize documentation can be annoying. If you do not wa
 You can run a hot-reloading dev version of the docs static site by
 running:
 
+To generate and view the documentation locally, run:
+
 ```bash
-cd docs && yarn start
+yarn docs
 ```

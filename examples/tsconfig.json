@@ -2,8 +2,13 @@
   "extends": "@tsconfig/recommended",
   "compilerOptions": {
     "outDir": "dist",
-    "lib": ["ESNext", "DOM"],
-    "moduleResolution": "nodenext",
+    "lib": [
+      "ES2021",
+      "ES2022.Object",
+      "DOM"
+    ],
+    "target": "ES2021",
+    "module": "nodenext",
     "sourceMap": true,
     "allowSyntheticDefaultImports": true,
     "baseUrl": "./src",
@@ -11,11 +16,16 @@
     "experimentalDecorators": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
-    "noUnusedLocals": true,
     "noUnusedParameters": true,
     "useDefineForClassFields": true,
     "strictPropertyInitialization": false
   },
-  "exclude": ["node_modules/", "dist/", "tests/"],
-  "include": ["./src"]
+  "exclude": [
+    "node_modules/",
+    "dist/",
+    "tests/"
+  ],
+  "include": [
+    "./src"
+  ]
 }

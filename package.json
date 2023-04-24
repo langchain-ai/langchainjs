@@ -1,25 +1,44 @@
 {
+  "name": "langchainjs",
   "version": "0.0.4",
   "private": true,
   "engines": {
     "node": ">=18"
   },
   "workspaces": [
+    "langchain",
     "examples",
     "docs",
-    "langchain"
+    "test-exports-esm",
+    "test-exports-cjs",
+    "test-exports-cf",
+    "test-exports-cra",
+    "test-exports-vercel",
+    "test-exports-vite"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hwchase17/langchainjs.git"
+  },
   "packageManager": "yarn@3.4.1",
   "scripts": {
+    "ci": "turbo run ci",
     "build": "turbo run build",
+    "format": "turbo run format",
+    "format:check": "turbo run format:check",
     "lint": "turbo run lint",
     "lint:fix": "yarn lint -- --fix",
-    "test": "turbo run test",
-    "publish": "turbo run build lint test && yarn workspace langchain npm publish",
-    "example": "turbo run start --filter langchain-examples --",
-    "prepare": "husky install"
+    "test": "turbo run test test:integration && yarn test:exports:docker",
+    "test:unit": "turbo run test",
+    "test:int": "turbo run test:integration",
+    "test:exports:docker": "docker compose up",
+    "publish": "bash scripts/release-branch.sh && turbo run build lint test test:integration && yarn run test:exports:docker && yarn workspace langchain run release && echo '🔗 Open https://github.com/hwchase17/langchainjs/compare/release?expand=1 and merge the release PR'",
+    "example": "yarn workspace examples start",
+    "prepare": "husky install",
+    "precommit": "turbo run precommit",
+    "docs": "yarn workspace docs start"
   },
-  "author": "Langchain",
+  "author": "LangChain",
   "license": "MIT",
   "devDependencies": {
     "@tsconfig/recommended": "^1.0.2",
@@ -30,6 +49,17 @@
     "typescript": "^4.9.5"
   },
   "dependencies": {
-    "turbo": "^1.7.4"
+    "turbo": "latest"
+  },
+  "resolutions": {
+    "dpdm@^3.12.0": "patch:dpdm@npm%3A3.12.0#./.yarn/patches/dpdm-npm-3.12.0-0dfdd8e3b8.patch",
+    "typedoc-plugin-markdown@next": "patch:typedoc-plugin-markdown@npm%3A4.0.0-next.6#./.yarn/patches/typedoc-plugin-markdown-npm-4.0.0-next.6-96b4b47746.patch"
+  },
+  "lint-staged": {
+    "**/*.{ts,tsx}": [
+      "prettier --write --ignore-unknown",
+      "eslint --cache --fix"
+    ],
+    "*.md": "prettier --write"
   }
 }

@@ -1,5 +1,6 @@
 node_modules/
 dist/
+dist-cjs/
 lib/
 .turbo
 .eslintcache
@@ -15,4 +16,11 @@ yarn-error.log
 
 langchain/docs/
 
+.idea/
+
 .DS_Store
+
+Chinook.db
+Chinook_Sqlite.sql
+
+.envrc

@@ -1,0 +1,31 @@
+---
+hide_table_of_contents: true
+---
+
+# Agent Executors
+
+:::info
+[Conceptual Guide](https://docs.langchain.com/docs/components/agents/agent-executor)
+:::
+
+To make agents more powerful we need to make them iterative, ie. call the model multiple times until they arrive at the final answer. That's the job of the AgentExecutor.
+
+```typescript
+class AgentExecutor {
+  // a simplified implementation
+  run(inputs: object) {
+    const steps = [];
+    while (true) {
+      const step = await this.agent.plan(steps, inputs);
+      if (step instanceof AgentFinish) {
+        return step.returnValues;
+      }
+      steps.push(step);
+    }
+  }
+}
+```
+
+import DocCardList from "@theme/DocCardList";
+
+<DocCardList />

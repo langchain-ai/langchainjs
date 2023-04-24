@@ -1,0 +1,72 @@
+---
+sidebar_label: Memory
+sidebar_position: 5
+---
+
+import DocCardList from "@theme/DocCardList";
+
+# Getting Started: Memory
+
+:::info
+[Conceptual Guide](https://docs.langchain.com/docs/components/memory)
+:::
+
+Memory is the concept of storing and retrieving data in the process of a conversation. There are two main methods, `loadMemoryVariables` and `saveContext`. The first method is used to retrieve data from memory (optionally using the current input values), and the second method is used to store data in memory.
+
+```typescript
+export type InputValues = Record<string, any>;
+
+export type OutputValues = Record<string, any>;
+
+interface BaseMemory {
+  loadMemoryVariables(values: InputValues): Promise<MemoryVariables>;
+
+  saveContext(
+    inputValues: InputValues,
+    outputValues: OutputValues
+  ): Promise<void>;
+}
+```
+
+:::note
+Do not share the same memory instance between two different chains, a memory instance represents the history of a single conversation
+:::
+
+:::note
+If you deploy your LangChain app on a serverless environment do not store memory instances in a variable, as your hosting provider may have reset it by the next time the function is called.
+:::
+
+## All Memory classes
+
+<DocCardList />
+
+## Advanced
+
+To implement your own memory class you have two options:
+
+### Subclassing `BaseChatMemory`
+
+This is the easiest way to implement your own memory class. You can subclass `BaseChatMemory`, which takes care of `saveContext` by saving inputs and outputs as [Chat Messages](../schema/chat-messages.md), and implement only the `loadMemoryVariables` method. This method is responsible for returning the memory variables that are relevant for the current input values.
+
+```typescript
+abstract class BaseChatMemory extends BaseMemory {
+  chatHistory: ChatMessageHistory;
+
+  abstract loadMemoryVariables(values: InputValues): Promise<MemoryVariables>;
+}
+```
+
+### Subclassing `BaseMemory`
+
+If you want to implement a more custom memory class, you can subclass `BaseMemory` and implement both `loadMemoryVariables` and `saveContext` methods. The `saveContext` method is responsible for storing the input and output values in memory. The `loadMemoryVariables` method is responsible for returning the memory variables that are relevant for the current input values.
+
+```typescript
+abstract class BaseMemory {
+  abstract loadMemoryVariables(values: InputValues): Promise<MemoryVariables>;
+
+  abstract saveContext(
+    inputValues: InputValues,
+    outputValues: OutputValues
+  ): Promise<void>;
+}
+```

@@ -1,0 +1,66 @@
+version: '3'
+services:
+  test-exports-esm:
+    image: node:18
+    working_dir: /app
+    volumes:
+      - ./test-exports-esm:/package
+      - ./langchain:/langchain
+      - ./scripts:/scripts
+    command: bash /scripts/docker-ci-entrypoint.sh
+  test-exports-cjs:
+    image: node:18
+    working_dir: /app
+    volumes:
+      - ./test-exports-cjs:/package
+      - ./langchain:/langchain
+      - ./scripts:/scripts
+    command: bash /scripts/docker-ci-entrypoint.sh
+  test-exports-cra:
+    image: node:18
+    working_dir: /app
+    volumes:
+      - ./test-exports-cra:/package
+      - ./langchain:/langchain
+      - ./scripts:/scripts
+    command: bash /scripts/docker-ci-entrypoint.sh
+  test-exports-cf:
+    image: node:18
+    working_dir: /app
+    volumes:
+      - ./test-exports-cf:/package
+      - ./langchain:/langchain
+      - ./scripts:/scripts
+    command: bash /scripts/docker-ci-entrypoint.sh
+  test-exports-vercel:
+    image: node:18
+    working_dir: /app
+    volumes:
+      - ./test-exports-vercel:/package
+      - ./langchain:/langchain
+      - ./scripts:/scripts
+    command: bash /scripts/docker-ci-entrypoint.sh
+  test-exports-vite:
+    image: node:18
+    working_dir: /app
+    volumes:
+      - ./test-exports-vite:/package
+      - ./langchain:/langchain
+      - ./scripts:/scripts
+    command: bash /scripts/docker-ci-entrypoint.sh
+  success:
+    image: alpine:3.14
+    command: echo "Success"
+    depends_on:
+      test-exports-esm:
+        condition: service_completed_successfully
+      test-exports-cjs:
+        condition: service_completed_successfully
+      test-exports-cra:
+        condition: service_completed_successfully
+      test-exports-cf:
+        condition: service_completed_successfully
+      test-exports-vercel:
+        condition: service_completed_successfully
+      test-exports-vite:
+        condition: service_completed_successfully

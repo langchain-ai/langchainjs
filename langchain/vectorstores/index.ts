@@ -1,1 +1,0 @@
-export { HNSWLib } from "./hnswlib";
