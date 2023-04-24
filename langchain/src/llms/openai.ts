@@ -84,10 +84,10 @@ export interface OpenAICallOptions extends BaseLLMCallOptions {
   options?: AxiosRequestConfig;
 }
 
-export interface AzureOpenAIInput { 
+export interface AzureOpenAIInput {
   /**
-     * API version to use when making requests to Azure OpenAI.
-     */
+   * API version to use when making requests to Azure OpenAI.
+   */
   azureOpenAIApiVersion?: string;
 
   /**
@@ -128,11 +128,11 @@ type Kwargs = Record<string, any>;
  * `OPENAI_API_KEY` environment variable set.
  *
  * To use with Azure you should have the `openai` package installed, with the
- * `AZURE_OPENAI_API_KEY`, 
- * `AZURE_OPENAI_API_INSTANCE_NAME`, 
- * `AZURE_OPENAI_API_DEPLOYMENT_NAME` 
+ * `AZURE_OPENAI_API_KEY`,
+ * `AZURE_OPENAI_API_INSTANCE_NAME`,
+ * `AZURE_OPENAI_API_DEPLOYMENT_NAME`
  * and `AZURE_OPENAI_API_VERSION` environment variable set.
- * 
+ *
  * @remarks
  * Any parameters that are valid to be passed to {@link
  * https://platform.openai.com/docs/api-reference/completions/create |
@@ -187,7 +187,8 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
   private clientConfig: ConfigurationParameters;
 
   constructor(
-    fields?: Partial<OpenAIInput> & Partial<AzureOpenAIInput> &
+    fields?: Partial<OpenAIInput> &
+      Partial<AzureOpenAIInput> &
       BaseLLMParams & {
         openAIApiKey?: string;
       },
@@ -209,7 +210,7 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
           process.env?.OPENAI_API_KEY
         : undefined);
 
-    const azureApiKey = 
+    const azureApiKey =
       fields?.azureOpenAIApiKey ??
       (typeof process !== "undefined"
         ? // eslint-disable-next-line no-process-env
@@ -225,21 +226,20 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
         ? // eslint-disable-next-line no-process-env
           process.env?.AZURE_OPENAI_API_INSTANCE_NAME
         : undefined);
-    
+
     const azureApiDeploymentName =
       fields?.azureOpenAIApiDeploymentName ??
       (typeof process !== "undefined"
         ? // eslint-disable-next-line no-process-env
           process.env?.AZURE_OPENAI_API_DEPLOYMENT_NAME
         : undefined);
-    
+
     const azureApiVersion =
       fields?.azureOpenAIApiVersion ??
       (typeof process !== "undefined"
         ? // eslint-disable-next-line no-process-env
           process.env?.AZURE_OPENAI_API_VERSION
         : undefined);
-
 
     this.modelName = fields?.modelName ?? this.modelName;
     this.modelKwargs = fields?.modelKwargs ?? {};
@@ -481,7 +481,9 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
     options?: StreamingAxiosConfiguration
   ) {
     if (!this.client) {
-      const endpoint = this.azureOpenAIApiKey ? `https://${this.azureOpenAIApiInstanceName}.openai.azure.com/openai/deployments/${this.azureOpenAIApiDeploymentName}/` : this.clientConfig.basePath;
+      const endpoint = this.azureOpenAIApiKey
+        ? `https://${this.azureOpenAIApiInstanceName}.openai.azure.com/openai/deployments/${this.azureOpenAIApiDeploymentName}/`
+        : this.clientConfig.basePath;
       const clientConfig = new Configuration({
         ...this.clientConfig,
         basePath: endpoint,
@@ -493,19 +495,24 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
       });
       this.client = new OpenAIApi(clientConfig);
     }
-    const axiosOptions = (options ?? {}) as StreamingAxiosConfiguration & OpenAICallOptions;
+    const axiosOptions = (options ?? {}) as StreamingAxiosConfiguration &
+      OpenAICallOptions;
     if (this.azureOpenAIApiKey) {
       axiosOptions.headers = {
         "api-key": this.azureOpenAIApiKey,
         ...axiosOptions.headers,
-      },
+      };
       axiosOptions.params = {
         "api-version": this.azureOpenAIApiVersion,
         ...axiosOptions.params,
-      }
+      };
     }
     return this.caller
-      .call(this.client.createCompletion.bind(this.client), request, axiosOptions)
+      .call(
+        this.client.createCompletion.bind(this.client),
+        request,
+        axiosOptions
+      )
       .then((res) => res.data);
   }
 
@@ -579,4 +586,9 @@ export class PromptLayerOpenAI extends OpenAI {
   }
 }
 
-export { OpenAIChat, OpenAIChatInput, OpenAIChatCallOptions, AzureOpenAIChatInput } from "./openai-chat.js";
+export {
+  OpenAIChat,
+  OpenAIChatInput,
+  OpenAIChatCallOptions,
+  AzureOpenAIChatInput,
+} from "./openai-chat.js";

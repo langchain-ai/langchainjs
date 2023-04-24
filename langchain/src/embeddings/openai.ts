@@ -4,6 +4,7 @@ import {
   CreateEmbeddingRequest,
   ConfigurationParameters,
 } from "openai";
+import type { AxiosRequestConfig } from "axios";
 import { StreamingAxiosConfiguration } from "util/axios-types.js";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
 import { chunkArray } from "../util/chunk.js";
@@ -33,8 +34,8 @@ export interface OpenAIEmbeddingsParams extends EmbeddingsParams {
 
 export interface AzureOpenAIEmbeddingsParams {
   /**
-     * API version to use when making requests to Azure OpenAI.
-     */
+   * API version to use when making requests to Azure OpenAI.
+   */
   azureOpenAIApiVersion?: string;
 
   /**
@@ -84,10 +85,11 @@ export class OpenAIEmbeddings
   private clientConfig: ConfigurationParameters;
 
   constructor(
-    fields?: Partial<OpenAIEmbeddingsParams> & Partial<AzureOpenAIEmbeddingsParams> & {
-      verbose?: boolean;
-      openAIApiKey?: string;
-    },
+    fields?: Partial<OpenAIEmbeddingsParams> &
+      Partial<AzureOpenAIEmbeddingsParams> & {
+        verbose?: boolean;
+        openAIApiKey?: string;
+      },
     configuration?: ConfigurationParameters
   ) {
     super(fields ?? {});
@@ -99,7 +101,7 @@ export class OpenAIEmbeddings
           process.env?.OPENAI_API_KEY
         : undefined);
 
-    const azureApiKey = 
+    const azureApiKey =
       fields?.azureOpenAIApiKey ??
       (typeof process !== "undefined"
         ? // eslint-disable-next-line no-process-env
@@ -115,14 +117,14 @@ export class OpenAIEmbeddings
         ? // eslint-disable-next-line no-process-env
           process.env?.AZURE_OPENAI_API_INSTANCE_NAME
         : undefined);
-    
+
     const azureApiDeploymentName =
       fields?.azureOpenAIApiDeploymentName ??
       (typeof process !== "undefined"
         ? // eslint-disable-next-line no-process-env
           process.env?.AZURE_OPENAI_API_DEPLOYMENT_NAME
         : undefined);
-    
+
     const azureApiVersion =
       fields?.azureOpenAIApiVersion ??
       (typeof process !== "undefined"
@@ -190,7 +192,9 @@ export class OpenAIEmbeddings
 
   private async embeddingWithRetry(request: CreateEmbeddingRequest) {
     if (!this.client) {
-      const endpoint = this.azureOpenAIApiKey ? `https://${this.azureOpenAIApiInstanceName}.openai.azure.com/openai/deployments/${this.azureOpenAIApiDeploymentName}/` : this.clientConfig.basePath;
+      const endpoint = this.azureOpenAIApiKey
+        ? `https://${this.azureOpenAIApiInstanceName}.openai.azure.com/openai/deployments/${this.azureOpenAIApiDeploymentName}/`
+        : this.clientConfig.basePath;
       const clientConfig = new Configuration({
         ...this.clientConfig,
         basePath: endpoint,
@@ -202,16 +206,16 @@ export class OpenAIEmbeddings
       });
       this.client = new OpenAIApi(clientConfig);
     }
-    const axiosOptions = {} as StreamingAxiosConfiguration;
+    const axiosOptions = {} as StreamingAxiosConfiguration & AxiosRequestConfig;
     if (this.azureOpenAIApiKey) {
       axiosOptions.headers = {
         "api-key": this.azureOpenAIApiKey,
         ...axiosOptions.headers,
-      },
+      };
       axiosOptions.params = {
         "api-version": this.azureOpenAIApiVersion,
         ...axiosOptions.params,
-      }
+      };
     }
     return this.caller.call(
       this.client.createEmbedding.bind(this.client),

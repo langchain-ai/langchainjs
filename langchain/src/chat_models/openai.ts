@@ -127,10 +127,10 @@ export interface ChatOpenAICallOptions extends BaseChatModelCallOptions {
   options?: AxiosRequestConfig;
 }
 
-export interface AzureOpenAIInput { 
+export interface AzureOpenAIInput {
   /**
-     * API version to use when making requests to Azure OpenAI.
-     */
+   * API version to use when making requests to Azure OpenAI.
+   */
   azureOpenAIApiVersion?: string;
 
   /**
@@ -163,11 +163,11 @@ type Kwargs = Record<string, any>;
  *
  * To use you should have the `openai` package installed, with the
  * `OPENAI_API_KEY` environment variable set.
- * 
+ *
  * To use with Azure you should have the `openai` package installed, with the
- * `AZURE_OPENAI_API_KEY`, 
- * `AZURE_OPENAI_API_INSTANCE_NAME`, 
- * `AZURE_OPENAI_API_DEPLOYMENT_NAME` 
+ * `AZURE_OPENAI_API_KEY`,
+ * `AZURE_OPENAI_API_INSTANCE_NAME`,
+ * `AZURE_OPENAI_API_DEPLOYMENT_NAME`
  * and `AZURE_OPENAI_API_VERSION` environment variable set.
  *
  * @remarks
@@ -180,9 +180,12 @@ type Kwargs = Record<string, any>;
  * @augments OpenAIInput
  * @augments AzureOpenAIInput
  */
-export class ChatOpenAI extends BaseChatModel implements OpenAIInput, AzureOpenAIInput {
+export class ChatOpenAI
+  extends BaseChatModel
+  implements OpenAIInput, AzureOpenAIInput
+{
   declare CallOptions: ChatOpenAICallOptions;
-  
+
   temperature = 1;
 
   topP = 1;
@@ -220,7 +223,8 @@ export class ChatOpenAI extends BaseChatModel implements OpenAIInput, AzureOpenA
   private clientConfig: ConfigurationParameters;
 
   constructor(
-    fields?: Partial<OpenAIInput> & Partial<AzureOpenAIInput> &
+    fields?: Partial<OpenAIInput> &
+      Partial<AzureOpenAIInput> &
       BaseChatModelParams & {
         concurrency?: number;
         cache?: boolean;
@@ -237,7 +241,7 @@ export class ChatOpenAI extends BaseChatModel implements OpenAIInput, AzureOpenA
           process.env?.OPENAI_API_KEY
         : undefined);
 
-    const azureApiKey = 
+    const azureApiKey =
       fields?.azureOpenAIApiKey ??
       (typeof process !== "undefined"
         ? // eslint-disable-next-line no-process-env
@@ -253,14 +257,14 @@ export class ChatOpenAI extends BaseChatModel implements OpenAIInput, AzureOpenA
         ? // eslint-disable-next-line no-process-env
           process.env?.AZURE_OPENAI_API_INSTANCE_NAME
         : undefined);
-    
+
     const azureApiDeploymentName =
       fields?.azureOpenAIApiDeploymentName ??
       (typeof process !== "undefined"
         ? // eslint-disable-next-line no-process-env
           process.env?.AZURE_OPENAI_API_DEPLOYMENT_NAME
         : undefined);
-    
+
     const azureApiVersion =
       fields?.azureOpenAIApiVersion ??
       (typeof process !== "undefined"
@@ -529,7 +533,9 @@ export class ChatOpenAI extends BaseChatModel implements OpenAIInput, AzureOpenA
     options?: StreamingAxiosConfiguration
   ) {
     if (!this.client) {
-      const endpoint = this.azureOpenAIApiKey ? `https://${this.azureOpenAIApiInstanceName}.openai.azure.com/openai/deployments/${this.azureOpenAIApiDeploymentName}/` : this.clientConfig.basePath;
+      const endpoint = this.azureOpenAIApiKey
+        ? `https://${this.azureOpenAIApiInstanceName}.openai.azure.com/openai/deployments/${this.azureOpenAIApiDeploymentName}/`
+        : this.clientConfig.basePath;
       const clientConfig = new Configuration({
         ...this.clientConfig,
         basePath: endpoint,
@@ -541,16 +547,17 @@ export class ChatOpenAI extends BaseChatModel implements OpenAIInput, AzureOpenA
       });
       this.client = new OpenAIApi(clientConfig);
     }
-    const axiosOptions = (options ?? {}) as StreamingAxiosConfiguration & ChatOpenAICallOptions;
+    const axiosOptions = (options ?? {}) as StreamingAxiosConfiguration &
+      ChatOpenAICallOptions;
     if (this.azureOpenAIApiKey) {
       axiosOptions.headers = {
         "api-key": this.azureOpenAIApiKey,
         ...axiosOptions.headers,
-      },
+      };
       axiosOptions.params = {
         "api-version": this.azureOpenAIApiVersion,
         ...axiosOptions.params,
-      }
+      };
     }
     return this.caller
       .call(
