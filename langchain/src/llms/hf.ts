@@ -53,7 +53,7 @@ export class HuggingFaceInference extends LLM implements HFInput {
       fields?.apiKey ??
       (typeof process !== "undefined"
         ? // eslint-disable-next-line no-process-env
-          process.env.HUGGINGFACEHUB_API_KEY
+          process.env?.HUGGINGFACEHUB_API_KEY
         : undefined);
     if (!this.apiKey) {
       throw new Error(

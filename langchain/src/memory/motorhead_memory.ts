@@ -58,6 +58,10 @@ export class MotorheadMemory extends BaseChatMemory {
     this.timeout = timeout ?? this.timeout;
   }
 
+  get memoryKeys() {
+    return [this.memoryKey];
+  }
+
   async init(): Promise<void> {
     const res = await this.caller.call(
       fetch,

@@ -101,6 +101,7 @@ export abstract class BaseLLM extends BaseLanguageModel {
     // it isnt included when listing the keys of the output object.
     Object.defineProperty(output, RUN_KEY, {
       value: runManager ? { runId: runManager?.runId } : undefined,
+      configurable: true,
     });
     return output;
   }

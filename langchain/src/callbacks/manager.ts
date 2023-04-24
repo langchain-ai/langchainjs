@@ -443,7 +443,7 @@ export class CallbackManager
     const tracingEnabled =
       typeof process !== "undefined"
         ? // eslint-disable-next-line no-process-env
-          process.env.LANGCHAIN_TRACING !== undefined
+          process.env?.LANGCHAIN_TRACING !== undefined
         : false;
     if (options?.verbose || tracingEnabled) {
       if (!callbackManager) {

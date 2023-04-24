@@ -1,15 +1,28 @@
 ---
 hide_table_of_contents: true
-sidebar_label: SimpleSequentialChain
+sidebar_label: SequentialChain
 ---
 
 import CodeBlock from "@theme/CodeBlock";
-import Example from "@examples/chains/simple_sequential_chain.ts";
+import SimpleSequentialChainExample from "@examples/chains/simple_sequential_chain.ts";
+import SequentialChainExample from "@examples/chains/sequential_chain.ts";
 
-# Getting Started: SimpleSequentialChain
+# SequentialChain
+
+Sequential chains allow you to connect multiple chains and compose them into pipelines that execute some specific scenario.
+
+## SimpleSequentialChain
+
+Let's start with the simplest possible case which is `SimpleSequentialChain`.
 
 An `SimpleSequentialChain` is a chain that allows you to join multiple single-input/single-output chains into one chain.
 
 The example below shows a sample usecase. In the first step, given a title, a synopsis of a play is generated. In the second step, based on the generated synopsis, a review of the play is generated.
 
-<CodeBlock language="typescript">{Example}</CodeBlock>
+<CodeBlock language="typescript">{SimpleSequentialChainExample}</CodeBlock>
+
+## SequentialChain
+
+More advanced scenario assumes you have multiple chains that have more than one input or ouput.
+
+<CodeBlock language="typescript">{SequentialChainExample}</CodeBlock>

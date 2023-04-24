@@ -81,7 +81,9 @@ export class SupabaseVectorStore extends VectorStore {
     );
 
     if (error) {
-      throw new Error(`Error searching for documents: ${error}`);
+      throw new Error(
+        `Error searching for documents: ${error.code} ${error.message} ${error.details}`
+      );
     }
 
     const result: [Document, number][] = (
