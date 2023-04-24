@@ -98,6 +98,9 @@ export class Chroma extends VectorStore {
     const result = await collection.query(query, k);
 
     const { ids, distances, documents, metadatas } = result;
+    if (!ids || !distances || !documents || !metadatas) {
+      return [];
+    }
     // get the result data from the first and only query vector
     const [firstIds] = ids;
     const [firstDistances] = distances;
