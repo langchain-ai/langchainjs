@@ -1,11 +1,10 @@
 import type { IndexFlatL2 } from "faiss-node";
-import type { Parser } from "pickleparser";
+import { NameRegistry, Parser } from "pickleparser";
 import { v4 as uuidv4 } from "uuid";
 import { Embeddings } from "../embeddings/base.js";
 import { SaveableVectorStore } from "./base.js";
 import { Document } from "../document.js";
 import { InMemoryDocstore } from "../docstore/index.js";
-
 
 export interface FaissLibArgs {
   docstore?: InMemoryDocstore;
@@ -175,21 +174,23 @@ export class FaissStore extends SaveableVectorStore {
         "binary"
       );
       const buffer = Buffer.from(pkl, "binary");
-      const pickleparser = new Parser(buffer);
-      pickleparser.registry.register(
+
+      const registry = new NameRegistry();
+      registry.register(
         "langchain.docstore.in_memory",
         "InMemoryDocstore",
         PyInMemoryDocstore
       );
-      pickleparser.registry.register(
-        "langchain.schema",
-        "Document",
-        PyDocument
-      );
-      pickleparser.registry.register("pathlib", "WindowsPath", (...args)=>args.join("\\"));
-      pickleparser.registry.register("pathlib", "PosixPath", (...args)=>args.join("/"));
-      const [rawStore, mapping]: [PyInMemoryDocstore, Record<number, string>] =
-        pickleparser.load();
+      registry.register("langchain.schema", "Document", PyDocument);
+      registry.register("pathlib", "WindowsPath", (...args) => args.join("\\"));
+      registry.register("pathlib", "PosixPath", (...args) => args.join("/"));
+      const pickleparser = new Parser({
+        nameResolver: registry,
+      });
+      const [rawStore, mapping] =
+        pickleparser.parse<[PyInMemoryDocstore, Record<number, string>]>(
+          buffer
+        );
       const store = rawStore.toInMemoryDocstore();
       return { store, mapping };
     };

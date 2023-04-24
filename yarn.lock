@@ -13021,7 +13021,7 @@ __metadata:
     langchain: "workspace:*"
     ml-distance: ^4.0.0
     mongodb: ^5.2.0
-    pickleparser: ^0.0.4
+    pickleparser: ^0.1.0-beta.0
     prettier: ^2.8.3
     prisma: ^4.11.0
     sqlite3: ^5.1.4
@@ -17208,7 +17208,7 @@ __metadata:
     p-retry: 4
     pdf-parse: 1.1.1
     pdfjs-dist: ^3.4.120
-    pickleparser: ^0.0.4
+    pickleparser: ^0.1.0-beta.0
     playwright: ^1.32.1
     prettier: ^2.8.3
     puppeteer: ^19.7.2
@@ -17247,7 +17247,7 @@ __metadata:
     mammoth: "*"
     mongodb: ^5.2.0
     pdf-parse: 1.1.1
-    pickleparser: ^0.0.4
+    pickleparser: ^0.1.0-beta.0
     playwright: ^1.32.1
     puppeteer: ^19.7.2
     redis: ^4.6.4
@@ -19772,13 +19772,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"pickleparser@npm:^0.0.4":
-  version: 0.0.4
-  resolution: "pickleparser@npm:0.0.4"
+"pickleparser@npm:^0.1.0-beta.0":
+  version: 0.1.0-beta.0
+  resolution: "pickleparser@npm:0.1.0-beta.0"
   bin:
     pickleparser: bin/pickletojson.js
     pickletojson: bin/pickletojson.js
-  checksum: b20badf61314e3ab503bc2d3d513ddf39ec694364070947ebab8231cd356b38eb8d36c41d191e3c2404a6f64133f17d7c3b2c85dcf2ffcfcc6d1527de7bcce8e
+  checksum: 2754f350a678165deacdcb51eab711628e1125c93cfcd7b415b09d7fd8f4cdba35896072434bba1e13c5c3e62daeb34bfc81f0f39dcef30be60404a7a98e1169
   languageName: node
   linkType: hard
 
