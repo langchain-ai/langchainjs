@@ -5,10 +5,9 @@ import { FakeEmbeddings } from "../../embeddings/fake.js";
 import { XataStore } from "../xata.js";
 
 describe("Xata Vector Store", () => {
-
   beforeEach(() => {
     jest.resetAllMocks();
-  })
+  });
 
   test("Xata Vector Store with generated ids", async () => {
     const mockData = {
@@ -21,7 +20,9 @@ describe("Xata Vector Store", () => {
       ],
     };
 
-    const mockFetch = (..._args: Parameters<typeof fetch>): Promise<Response> => {
+    const mockFetch = (
+      ..._args: Parameters<typeof fetch>
+    ): Promise<Response> => {
       const mockResponse = new Response(JSON.stringify(mockData), {
         status: 200,
         headers: { "Content-type": "application/json" },
@@ -30,7 +31,6 @@ describe("Xata Vector Store", () => {
       return Promise.resolve(mockResponse);
     };
     jest.spyOn(global, "fetch").mockImplementation(mockFetch);
-
 
     const embeddings = new FakeEmbeddings();
     const store = new XataStore(embeddings, {
@@ -66,14 +66,14 @@ describe("Xata Vector Store", () => {
     const mockPost = {
       queryVector: [0.1, 0.2, 0.3, 0.4],
       size: 1,
-      column: 'test-vector-column'
-    }
+      column: "test-vector-column",
+    };
 
     const mockData = {
       records: [
         {
-          "xata": {
-            "score": 1,
+          xata: {
+            score: 1,
           },
           "test-text-column": "hello",
           "test-vector-column": [0.1, 0.2, 0.3, 0.4],
@@ -82,7 +82,9 @@ describe("Xata Vector Store", () => {
       ],
     };
 
-    const mockFetch = (..._args: Parameters<typeof fetch>): Promise<Response> => {
+    const mockFetch = (
+      ..._args: Parameters<typeof fetch>
+    ): Promise<Response> => {
       const mockResponse = new Response(JSON.stringify(mockData), {
         status: 200,
         headers: { "Content-type": "application/json" },
@@ -106,7 +108,7 @@ describe("Xata Vector Store", () => {
     });
 
     expect(store).toBeDefined();
-    await store.similaritySearch('test', 1)
+    await store.similaritySearch("test", 1);
     expect(global.fetch).toHaveBeenCalledTimes(1);
     expect(global.fetch).toHaveBeenCalledWith(
       "https://test-workspace.test-region.xata.sh/db/test-db:main/tables/test-table/vectorSearch",
@@ -119,5 +121,5 @@ describe("Xata Vector Store", () => {
         },
       }
     );
-  })
+  });
 });
