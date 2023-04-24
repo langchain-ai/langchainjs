@@ -2,7 +2,7 @@ import { BaseChain, ChainInputs } from "./base.js";
 import { VectorStore } from "../vectorstores/base.js";
 import { SerializedVectorDBQAChain } from "./serde.js";
 import { BaseLanguageModel } from "../base_language/index.js";
-
+import { CallbackManagerForChainRun } from "../callbacks/manager.js";
 import { ChainValues } from "../schema/index.js";
 import { loadQAStuffChain } from "./question_answering/load.js";
 
@@ -49,14 +49,20 @@ export class VectorDBQAChain extends BaseChain implements VectorDBQAChainInput {
   }
 
   /** @ignore */
-  async _call(values: ChainValues): Promise<ChainValues> {
+  async _call(
+    values: ChainValues,
+    runManager?: CallbackManagerForChainRun
+  ): Promise<ChainValues> {
     if (!(this.inputKey in values)) {
       throw new Error(`Question key ${this.inputKey} not found.`);
     }
     const question: string = values[this.inputKey];
     const docs = await this.vectorstore.similaritySearch(question, this.k);
     const inputs = { question, input_documents: docs };
-    const result = await this.combineDocumentsChain.call(inputs);
+    const result = await this.combineDocumentsChain.call(
+      inputs,
+      runManager?.getChild()
+    );
     if (this.returnSourceDocuments) {
       return {
         ...result,
