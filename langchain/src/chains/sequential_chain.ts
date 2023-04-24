@@ -8,6 +8,12 @@ import {
 import { intersection, union, difference } from "../util/set.js";
 import { CallbackManagerForChainRun } from "../callbacks/manager.js";
 
+function formatSet(input: Set<string>) {
+  return Array.from(input)
+    .map((i) => `"${i}"`)
+    .join(", ");
+}
+
 export interface SequentialChainInput extends ChainInputs {
   /** Array of chains to run as a sequence. The chains are run in order they appear in the array. */
   chains: BaseChain[];
@@ -56,19 +62,10 @@ export class SequentialChain extends BaseChain implements SequentialChainInput {
   /** @ignore */
   _validateChains() {
     if (this.chains.length === 0) {
-      // @TODO how to deal with it?
-    }
-    const memoryKeys: string[] = [];
-    if (this.memory) {
-      // @TODO deal with retrieving the memory keys
+      throw new Error("Sequential chain must have at least one chain.");
     }
 
-    function formatSet(input: Set<string>) {
-      return Array.from(input)
-        .map((i) => `"${i}"`)
-        .join(", ");
-    }
-
+    const memoryKeys = this.memory?.memoryKeys ?? [];
     const inputKeysSet = new Set(this.inputKeys);
     const memoryKeysSet = new Set(memoryKeys);
     const keysIntersection = intersection(inputKeysSet, memoryKeysSet);
