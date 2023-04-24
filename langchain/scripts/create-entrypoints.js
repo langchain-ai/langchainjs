@@ -50,6 +50,7 @@ const entrypoints = {
   "vectorstores/opensearch": "vectorstores/opensearch",
   "vectorstores/milvus": "vectorstores/milvus",
   "vectorstores/prisma": "vectorstores/prisma",
+  "vectorstores/xata": "vectorstores/xata",
   // text_splitter
   text_splitter: "text_splitter",
   // memory
