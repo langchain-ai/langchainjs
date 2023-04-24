@@ -24,7 +24,10 @@ const memory = new RedisMemory(client, {
   redisUrl: "redis://localhost:6379",
 });
 
-//Instantiate any history from a prior session
+// Connect to your specified Redis client
+await memory.init()
+
+//OPTIONAL: Instantiate any history from a prior session
 await memory.loadMemoryVariables({});
 
 const chatPrompt = ChatPromptTemplate.fromPromptMessages([
