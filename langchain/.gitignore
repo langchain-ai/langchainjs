@@ -241,6 +241,9 @@ stores/file/node.d.ts
 experimental/autogpt.cjs
 experimental/autogpt.js
 experimental/autogpt.d.ts
+experimental/babyagi.cjs
+experimental/babyagi.js
+experimental/babyagi.d.ts
 index.cjs
 index.js
 index.d.ts

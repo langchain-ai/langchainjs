@@ -108,7 +108,8 @@
       "src/cache/redis.ts",
       "src/stores/file/in_memory.ts",
       "src/stores/file/node.ts",
-      "src/experimental/autogpt/index.ts"
+      "src/experimental/autogpt/index.ts",
+      "src/experimental/babyagi/index.ts"
     ],
     "sort": [
       "kind",

@@ -29,3 +29,4 @@ const retrievers_document_compressors = require("langchain/retrievers/document_c
 const cache = require("langchain/cache");
 const stores_file_in_memory = require("langchain/stores/file/in_memory");
 const experimental_autogpt = require("langchain/experimental/autogpt");
+const experimental_babyagi = require("langchain/experimental/babyagi");
