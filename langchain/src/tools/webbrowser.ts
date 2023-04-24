@@ -1,4 +1,4 @@
-import axiosMod, { AxiosRequestConfig } from "axios";
+import axiosMod, { AxiosRequestConfig, AxiosStatic } from "axios";
 import { isNode } from "browser-or-node";
 import * as cheerio from "cheerio";
 import { BaseLanguageModel } from "../base_language/index.js";
@@ -63,7 +63,9 @@ const getHtml = async (
   h: Headers,
   config: AxiosRequestConfig
 ) => {
-  const axios = "default" in axiosMod ? axiosMod.default : axiosMod;
+  const axios = (
+    "default" in axiosMod ? axiosMod.default : axiosMod
+  ) as AxiosStatic;
 
   const domain = new URL(baseUrl).hostname;
 

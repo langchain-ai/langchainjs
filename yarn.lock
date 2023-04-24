@@ -8804,6 +8804,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"axios@npm:^1.0.0":
+  version: 1.3.6
+  resolution: "axios@npm:1.3.6"
+  dependencies:
+    follow-redirects: ^1.15.0
+    form-data: ^4.0.0
+    proxy-from-env: ^1.1.0
+  checksum: c90497ebf738723654a6e80147dc294186ad9d7b08f95f5a22fd48f826c7e06a576229b8dff3137195ca627349a4312e00fa78e4f1c499250b9860596adef44a
+  languageName: node
+  linkType: hard
+
 "axios@npm:^1.3.2":
   version: 1.3.4
   resolution: "axios@npm:1.3.4"
@@ -13007,7 +13018,7 @@ __metadata:
     "@typescript-eslint/eslint-plugin": ^5.51.0
     "@typescript-eslint/parser": ^5.51.0
     "@zilliz/milvus2-sdk-node": ^2.2.0
-    axios: ^0.26.0
+    axios: ^1.0.0
     chromadb: ^1.4.0
     dotenv: ^16.0.3
     eslint: ^8.33.0
@@ -17147,7 +17158,7 @@ __metadata:
     "@types/uuid": ^9
     "@typescript-eslint/eslint-plugin": ^5.51.0
     "@typescript-eslint/parser": ^5.51.0
-    axios: ^0.26.0
+    axios: ^1.0.0
     binary-extensions: ^2.2.0
     browser-or-node: ^2.1.1
     cheerio: ^1.0.0-rc.12
@@ -17205,7 +17216,7 @@ __metadata:
     "@pinecone-database/pinecone": "*"
     "@supabase/supabase-js": ^2.10.0
     "@zilliz/milvus2-sdk-node": ^2.2.0
-    axios: ^0.26.0
+    axios: "*"
     cheerio: ^1.0.0-rc.12
     chromadb: ^1.4.0
     cohere-ai: ^5.0.2
