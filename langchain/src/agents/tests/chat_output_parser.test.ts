@@ -31,16 +31,25 @@ test("Can parse JSON with text in front of it", async () => {
         '{"action":"blogpost","action_input":"```sql\\nSELECT * FROM orders\\nJOIN users ON users.id = orders.user_id\\nWHERE users.email = \'bud\'```"}',
       tool: "blogpost",
       toolInput:
-        "```sql\\nSELECT * FROM orders\\nJOIN users ON users.id = orders.user_id\\nWHERE users.email = 'bud'```",
+        "```sql\nSELECT * FROM orders\nJOIN users ON users.id = orders.user_id\nWHERE users.email = 'bud'```",
+    },
+    {
+      input:
+        'Here we have some boilerplate nonsense```json\n{\n \t\r\n"action": "blogpost",\n\t\r  "action_input": "```sql\\nSELECT * FROM orders\\nJOIN users ON users.id = orders.user_id\\nWHERE users.email = \'bud\'```"\n\t\r}\n\n\n\t\r``` and at the end there is more nonsense',
+      output:
+        '{"action":"blogpost","action_input":"```sql\\nSELECT * FROM orders\\nJOIN users ON users.id = orders.user_id\\nWHERE users.email = \'bud\'```"}',
+      tool: "blogpost",
+      toolInput:
+        "```sql\nSELECT * FROM orders\nJOIN users ON users.id = orders.user_id\nWHERE users.email = 'bud'```",
     },
   ];
 
   const p = new ChatConversationalAgentOutputParser();
   for (const message of testCases) {
     const parsed = await p.parse(message.input);
-    expect(parsed).toBeDefined;
+    expect(parsed).toBeDefined();
     if (message.tool === "Final Answer") {
-      expect(parsed.returnValues).toBeDefined;
+      expect(parsed.returnValues).toBeDefined();
     } else {
       expect(parsed.tool).toEqual(message.tool);
 
