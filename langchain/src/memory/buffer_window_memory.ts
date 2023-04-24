@@ -32,6 +32,10 @@ export class BufferWindowMemory
     this.k = fields?.k ?? this.k;
   }
 
+  get memoryKeys() {
+    return [this.memoryKey];
+  }
+
   async loadMemoryVariables(_values: InputValues): Promise<MemoryVariables> {
     const messages = await this.chatHistory.getMessages();
     if (this.returnMessages) {
