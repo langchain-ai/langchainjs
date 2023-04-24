@@ -9,7 +9,6 @@ const babyAGI = BabyAGI.fromLLM({
   llm: new OpenAI({ temperature: 0 }),
   vectorstore: vectorStore,
   maxIterations: 3,
-  // verbose: true,
 });
 
 await babyAGI.call({ objective: "Write a weather report for SF today" });
