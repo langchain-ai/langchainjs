@@ -21,7 +21,9 @@ the service locally using the instructions found
 You can use Unstructured in`langchainjs` with the following code.
 Replace the filename with the file you would like to process.
 If you are running the container locally, switch the url to
-`https://api.unstructured.io/general/v0/general`.
+`https://api.unstructured.io/general/v0/general
+Check out the [API documentation page](https://api.unstructured.io/general/docs)
+for additional details.
 
 ```typescript
 import { UnstructuredLoader } from "langchain/document_loaders/fs/unstructured";

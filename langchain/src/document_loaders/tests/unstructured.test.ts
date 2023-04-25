@@ -11,7 +11,7 @@ test("Test Unstructured base loader", async () => {
   );
 
   const loader = new UnstructuredLoader(
-    "https://api.unstructured.io/general/v0.0.12/general",
+    "https://api.unstructured.io/general/v0/general",
     filePath
   );
   const docs = await loader.load();
