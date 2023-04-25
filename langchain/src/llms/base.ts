@@ -8,6 +8,7 @@ import {
 } from "../schema/index.js";
 import {
   BaseLanguageModel,
+  BaseLanguageModelCallOptions,
   BaseLanguageModelParams,
 } from "../base_language/index.js";
 import {
@@ -30,14 +31,14 @@ export interface BaseLLMParams extends BaseLanguageModelParams {
   cache?: BaseCache | boolean;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+export interface BaseLLMCallOptions extends BaseLanguageModelCallOptions {}
+
 /**
  * LLM Wrapper. Provides an {@link call} (an {@link generate}) function that takes in a prompt (or prompts) and returns a string.
  */
 export abstract class BaseLLM extends BaseLanguageModel {
-  /**
-   * The name of the LLM class
-   */
-  name: string;
+  declare CallOptions: BaseLanguageModelCallOptions;
 
   cache?: BaseCache;
 
@@ -54,7 +55,7 @@ export abstract class BaseLLM extends BaseLanguageModel {
 
   async generatePrompt(
     promptValues: BasePromptValue[],
-    stop?: string[],
+    stop?: string[] | this["CallOptions"],
     callbacks?: Callbacks
   ): Promise<LLMResult> {
     const prompts: string[] = promptValues.map((promptValue) =>
@@ -68,14 +69,14 @@ export abstract class BaseLLM extends BaseLanguageModel {
    */
   abstract _generate(
     prompts: string[],
-    stop?: string[],
+    stop?: string[] | this["CallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<LLMResult>;
 
   /** @ignore */
   async _generateUncached(
     prompts: string[],
-    stop?: string[],
+    stop?: string[] | this["CallOptions"],
     callbacks?: Callbacks
   ): Promise<LLMResult> {
     const callbackManager_ = await CallbackManager.configure(
@@ -111,7 +112,7 @@ export abstract class BaseLLM extends BaseLanguageModel {
    */
   async generate(
     prompts: string[],
-    stop?: string[],
+    stop?: string[] | this["CallOptions"],
     callbacks?: Callbacks
   ): Promise<LLMResult> {
     if (!Array.isArray(prompts)) {
@@ -161,7 +162,11 @@ export abstract class BaseLLM extends BaseLanguageModel {
   /**
    * Convenience wrapper for {@link generate} that takes in a single string prompt and returns a single string output.
    */
-  async call(prompt: string, stop?: string[], callbacks?: Callbacks) {
+  async call(
+    prompt: string,
+    stop?: string[] | this["CallOptions"],
+    callbacks?: Callbacks
+  ) {
     const { generations } = await this.generate([prompt], stop, callbacks);
     return generations[0][0].text;
   }
@@ -225,13 +230,13 @@ export abstract class LLM extends BaseLLM {
    */
   abstract _call(
     prompt: string,
-    stop?: string[],
+    stop?: string[] | this["CallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<string>;
 
   async _generate(
     prompts: string[],
-    stop?: string[],
+    stop?: string[] | this["CallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<LLMResult> {
     const generations: Generation[][] = [];
