@@ -59,8 +59,6 @@ export abstract class BaseTracer extends BaseCallbackHandler {
 
   protected runMap: Map<string, Run> = new Map();
 
-  protected executionOrder = 1;
-
   protected constructor() {
     super();
   }
@@ -98,8 +96,6 @@ export abstract class BaseTracer extends BaseCallbackHandler {
   }
 
   protected _startTrace(run: Run) {
-    this.executionOrder += 1;
-
     if (run.parent_uuid) {
       const parentRun = this.runMap.get(run.parent_uuid);
       if (parentRun) {
@@ -118,9 +114,38 @@ export abstract class BaseTracer extends BaseCallbackHandler {
   protected async _endTrace(run: Run): Promise<void> {
     if (!run.parent_uuid) {
       await this.persistRun(run);
-      this.executionOrder = 1;
     }
     this.runMap.delete(run.uuid);
+  }
+
+  protected _getExecutionOrder(parentRunId: string | undefined): number {
+    // If a run has no parent then execution order is 1
+    if (parentRunId === undefined) {
+      return 1;
+    }
+
+    const parentRun = this.runMap.get(parentRunId);
+
+    if (parentRun === undefined) {
+      throw new Error(`Parent run ${parentRunId} not found`);
+    }
+
+    // If a run has a parent then execution order is
+    // parent's execution order + (count of previous child runs) + 1
+
+    let executionOrder = parentRun.execution_order;
+
+    if (parentRun.type === "chain" || parentRun.type === "tool") {
+      const run = parentRun as ChainRun | ToolRun;
+      executionOrder +=
+        run.child_chain_runs.length +
+        run.child_llm_runs.length +
+        run.child_tool_runs.length;
+    }
+
+    executionOrder += 1;
+
+    return executionOrder;
   }
 
   async handleLLMStart(
@@ -140,7 +165,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       serialized: llm,
       prompts,
       session_id: this.session.id,
-      execution_order: this.executionOrder,
+      execution_order: this._getExecutionOrder(parentRunId),
       type: "llm",
     };
 
@@ -189,7 +214,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       serialized: chain,
       inputs,
       session_id: this.session.id,
-      execution_order: this.executionOrder,
+      execution_order: this._getExecutionOrder(parentRunId),
       type: "chain",
       child_llm_runs: [],
       child_chain_runs: [],
@@ -241,7 +266,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       serialized: tool,
       tool_input: input,
       session_id: this.session.id,
-      execution_order: this.executionOrder,
+      execution_order: this._getExecutionOrder(parentRunId),
       type: "tool",
       action: JSON.stringify(tool), // TODO: this is duplicate info, not needed
       child_llm_runs: [],
@@ -427,15 +452,6 @@ export class LangChainTracer extends BaseTracer {
   }
 
   copy(): LangChainTracer {
-    // TODO: this is a hack to get tracing to work with the current backend
-    // we need to not use execution order, then remove this check
-    if (this.executionOrder === 1) {
-      const copy = new LangChainTracer();
-      copy.session = this.session;
-      copy.runMap = new Map(this.runMap);
-      copy.executionOrder = this.executionOrder;
-      return copy;
-    }
     return this;
   }
 }
