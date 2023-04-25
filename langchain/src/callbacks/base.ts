@@ -6,8 +6,6 @@ import {
   LLMResult,
 } from "../schema/index.js";
 
-import { colorLog, LogColor } from "../util/chalk.js";
-
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Error = any;
 
