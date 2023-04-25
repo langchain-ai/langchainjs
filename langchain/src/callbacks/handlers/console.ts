@@ -16,10 +16,18 @@ function wrap(style: CSPair, text: string) {
 
 function tryJsonStringify(obj: unknown, fallback: string) {
   try {
-    return JSON.stringify(obj);
+    return JSON.stringify(obj, null, 2);
   } catch (err) {
     return fallback;
   }
+}
+
+function elapsed(run: Run): string {
+  const elapsed = run.end_time - run.start_time;
+  if (elapsed < 1000) {
+    return `${elapsed}ms`;
+  }
+  return `${(elapsed / 1000).toFixed(2)}s`;
 }
 
 const { color } = styles;
@@ -76,12 +84,10 @@ export class ConsoleCallbackHandler extends BaseTracer {
   getBreadcrumbs(run: Run) {
     const parents = this.getParents(run).reverse();
     const string = [...parents, run]
-      .map((parent, i, arr) =>
-        i === arr.length - 1
-          ? wrap(styles.bold, parent.serialized?.name)
-          : parent.serialized?.name
-      )
-      .filter(Boolean)
+      .map((parent, i, arr) => {
+        const name = `${parent.type}:${parent.serialized?.name}`;
+        return i === arr.length - 1 ? wrap(styles.bold, name) : name;
+      })
       .join(" > ");
     return wrap(color.grey, string);
   }
@@ -94,36 +100,34 @@ export class ConsoleCallbackHandler extends BaseTracer {
       `${wrap(
         color.green,
         "[chain/start]"
-      )} [${crumbs}] Entering Chain run with ${tryJsonStringify(
+      )} [${crumbs}] Entering Chain run with input: ${tryJsonStringify(
         run.inputs,
         "[inputs]"
-      )}\n`
+      )}`
     );
   }
 
   onChainEnd(run: ChainRun) {
     const crumbs = this.getBreadcrumbs(run);
     console.log(
-      `${wrap(
-        color.cyan,
-        "[chain/end]"
-      )} [${crumbs}] Exiting Chain run with ${tryJsonStringify(
+      `${wrap(color.cyan, "[chain/end]")} [${crumbs}] [${elapsed(
+        run
+      )}] Exiting Chain run with output: ${tryJsonStringify(
         run.outputs,
         "[outputs]"
-      )}\n`
+      )}`
     );
   }
 
   onChainError(run: ChainRun) {
     const crumbs = this.getBreadcrumbs(run);
     console.log(
-      `${wrap(
-        color.red,
-        "[chain/error]"
-      )} [${crumbs}] Chain run errored with ${tryJsonStringify(
+      `${wrap(color.red, "[chain/error]")} [${crumbs}] [${elapsed(
+        run
+      )}] Chain run errored with error: ${tryJsonStringify(
         run.error,
         "[error]"
-      )}\n`
+      )}`
     );
   }
 
@@ -133,35 +137,31 @@ export class ConsoleCallbackHandler extends BaseTracer {
       `${wrap(
         color.green,
         "[llm/start]"
-      )} [${crumbs}] Entering LLM run with "${run.prompts
-        .map((p) => p.trim())
-        .join("\n---\n")}" \n`
+      )} [${crumbs}] Entering LLM run with input: ${tryJsonStringify(
+        { prompts: run.prompts.map((p) => p.trim()) },
+        "[inputs]"
+      )}`
     );
   }
 
   onLLMEnd(run: LLMRun) {
     const crumbs = this.getBreadcrumbs(run);
     console.log(
-      `${wrap(
-        color.cyan,
-        "[llm/end]"
-      )} [${crumbs}] Exiting LLM run with ${tryJsonStringify(
+      `${wrap(color.cyan, "[llm/end]")} [${crumbs}] [${elapsed(
+        run
+      )}] Exiting LLM run with output: ${tryJsonStringify(
         run.response,
         "[response]"
-      )}\n`
+      )}`
     );
   }
 
   onLLMError(run: LLMRun) {
     const crumbs = this.getBreadcrumbs(run);
     console.log(
-      `${wrap(
-        color.red,
-        "[llm/error]"
-      )} [${crumbs}] LLM run errored with ${tryJsonStringify(
-        run.error,
-        "[error]"
-      )}\n`
+      `${wrap(color.red, "[llm/error]")} [${crumbs}] [${elapsed(
+        run
+      )}] LLM run errored with error: ${tryJsonStringify(run.error, "[error]")}`
     );
   }
 
@@ -171,30 +171,28 @@ export class ConsoleCallbackHandler extends BaseTracer {
       `${wrap(
         color.green,
         "[tool/start]"
-      )} [${crumbs}] Entering Tool run with "${run.tool_input?.trim()}"\n`
+      )} [${crumbs}] Entering Tool run with input: "${run.tool_input?.trim()}"`
     );
   }
 
   onToolEnd(run: ToolRun) {
     const crumbs = this.getBreadcrumbs(run);
     console.log(
-      `${wrap(
-        color.cyan,
-        "[tool/end]"
-      )} [${crumbs}] Exiting Tool run with "${run.output?.trim()}"\n`
+      `${wrap(color.cyan, "[tool/end]")} [${crumbs}] [${elapsed(
+        run
+      )}] Exiting Tool run with output: "${run.output?.trim()}"`
     );
   }
 
   onToolError(run: ToolRun) {
     const crumbs = this.getBreadcrumbs(run);
     console.log(
-      `${wrap(
-        color.red,
-        "[tool/error]"
-      )} [${crumbs}] Tool run errored with ${tryJsonStringify(
+      `${wrap(color.red, "[tool/error]")} [${crumbs}] [${elapsed(
+        run
+      )}] Tool run errored with error: ${tryJsonStringify(
         run.error,
         "[error]"
-      )}\n`
+      )}`
     );
   }
 
@@ -204,10 +202,10 @@ export class ConsoleCallbackHandler extends BaseTracer {
       `${wrap(
         color.blue,
         "[agent/action]"
-      )} [${crumbs}] Agent selected action ${tryJsonStringify(
+      )} [${crumbs}] Agent selected action: ${tryJsonStringify(
         run.actions[run.actions.length - 1],
         "[action]"
-      )}\n`
+      )}`
     );
   }
 }
