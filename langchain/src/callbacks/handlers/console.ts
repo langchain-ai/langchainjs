@@ -133,7 +133,9 @@ export class ConsoleCallbackHandler extends BaseTracer {
       `${wrap(
         color.green,
         "[llm/start]"
-      )} [${crumbs}] Entering LLM run with "${run.prompts.join("\n---\n")}" \n`
+      )} [${crumbs}] Entering LLM run with "${run.prompts
+        .map((p) => p.trim())
+        .join("\n---\n")}" \n`
     );
   }
 
@@ -169,16 +171,17 @@ export class ConsoleCallbackHandler extends BaseTracer {
       `${wrap(
         color.green,
         "[tool/start]"
-      )} [${crumbs}] Entering Tool run with "${run.tool_input}"\n`
+      )} [${crumbs}] Entering Tool run with "${run.tool_input?.trim()}"\n`
     );
   }
 
   onToolEnd(run: ToolRun) {
     const crumbs = this.getBreadcrumbs(run);
     console.log(
-      `${wrap(color.cyan, "[tool/end]")} [${crumbs}] Exiting Tool run with "${
-        run.output
-      }"\n`
+      `${wrap(
+        color.cyan,
+        "[tool/end]"
+      )} [${crumbs}] Exiting Tool run with "${run.output?.trim()}"\n`
     );
   }
 
