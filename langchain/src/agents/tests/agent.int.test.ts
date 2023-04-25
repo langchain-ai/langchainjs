@@ -36,7 +36,7 @@ test("Run agent from hub", async () => {
   console.log(res);
 }, 30000);
 
-test.only("Run agent locally", async () => {
+test("Run agent locally", async () => {
   const model = new OpenAI({ temperature: 0, modelName: "text-babbage-001" });
   const tools = [
     new SerpAPI(undefined, {
@@ -49,7 +49,6 @@ test.only("Run agent locally", async () => {
 
   const executor = await initializeAgentExecutorWithOptions(tools, model, {
     agentType: "zero-shot-react-description",
-    verbose: true,
   });
   console.log("Loaded agent.");
 
