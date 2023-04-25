@@ -4,7 +4,6 @@ import { test, expect } from "@jest/globals";
 import { UnstructuredLoader } from "../fs/unstructured.js";
 
 test("Test Unstructured base loader", async () => {
-
   const filePath = path.resolve(
     path.dirname(url.fileURLToPath(import.meta.url)),
     "./example_data/example.txt"
