@@ -67,7 +67,7 @@ export class ConsoleCallbackHandler extends BaseTracer {
   // utility methods
 
   getParents(run: Run) {
-    const parents = [];
+    const parents: Run[] = [];
     let currentRun = run;
     while (currentRun.parent_uuid) {
       const parent = this.runMap.get(currentRun.parent_uuid);
