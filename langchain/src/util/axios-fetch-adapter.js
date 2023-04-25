@@ -223,6 +223,12 @@ async function getResponse(request, config) {
   try {
     stageOne = await fetch(request);
   } catch (e) {
+    if (e && e.name === "AbortError") {
+      return createError("Request aborted", config, "ECONNABORTED", request);
+    }
+    if (e && e.name === "TimeoutError") {
+      return createError("Request timeout", config, "ECONNABORTED", request);
+    }
     return createError("Network Error", config, "ERR_NETWORK", request);
   }
 

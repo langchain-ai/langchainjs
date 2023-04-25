@@ -7,9 +7,10 @@ import {
   ChatCompletionResponseMessageRoleEnum,
   CreateChatCompletionResponse,
 } from "openai";
+import type { AxiosRequestConfig } from "axios";
 import type { StreamingAxiosConfiguration } from "../util/axios-types.js";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
-import { BaseLLMParams, LLM } from "./base.js";
+import { BaseLLMCallOptions, BaseLLMParams, LLM } from "./base.js";
 import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
 
 /**
@@ -64,6 +65,18 @@ export interface OpenAIChatInput {
   maxTokens?: number;
 }
 
+export interface OpenAIChatCallOptions extends BaseLLMCallOptions {
+  /**
+   * List of stop words to use when generating
+   */
+  stop?: string[];
+
+  /**
+   * Additional options to pass to the underlying axios request.
+   */
+  options?: AxiosRequestConfig;
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Kwargs = Record<string, any>;
 
@@ -78,11 +91,10 @@ type Kwargs = Record<string, any>;
  * https://platform.openai.com/docs/api-reference/chat/create |
  * `openai.createCompletion`} can be passed through {@link modelKwargs}, even
  * if not explicitly available on this class.
- *
- * @augments BaseLLM
- * @augments OpenAIInput
  */
 export class OpenAIChat extends LLM implements OpenAIChatInput {
+  declare CallOptions: OpenAIChatCallOptions;
+
   temperature = 1;
 
   topP = 1;
@@ -206,9 +218,16 @@ export class OpenAIChat extends LLM implements OpenAIChatInput {
   /** @ignore */
   async _call(
     prompt: string,
-    stop?: string[],
+    stopOrOptions?: string[] | this["CallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<string> {
+    const stop = Array.isArray(stopOrOptions)
+      ? stopOrOptions
+      : stopOrOptions?.stop;
+    const options = Array.isArray(stopOrOptions)
+      ? {}
+      : stopOrOptions?.options ?? {};
+
     if (this.stop && stop) {
       throw new Error("Stop found in input and default params");
     }
@@ -226,6 +245,7 @@ export class OpenAIChat extends LLM implements OpenAIChatInput {
               messages: this.formatMessages(prompt),
             },
             {
+              ...options,
               responseType: "stream",
               onmessage: (event) => {
                 if (event.data?.trim?.() === "[DONE]") {
@@ -293,10 +313,13 @@ export class OpenAIChat extends LLM implements OpenAIChatInput {
             }
           });
         })
-      : await this.completionWithRetry({
-          ...params,
-          messages: this.formatMessages(prompt),
-        });
+      : await this.completionWithRetry(
+          {
+            ...params,
+            messages: this.formatMessages(prompt),
+          },
+          options
+        );
 
     return data.choices[0].message?.content ?? "";
   }

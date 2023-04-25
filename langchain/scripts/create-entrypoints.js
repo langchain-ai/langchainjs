@@ -112,6 +112,7 @@ const entrypoints = {
   "stores/file/node": "stores/file/node",
   // experimental
   "experimental/autogpt": "experimental/autogpt/index",
+  "experimental/babyagi": "experimental/babyagi/index",
 };
 
 // Entrypoints in this list will

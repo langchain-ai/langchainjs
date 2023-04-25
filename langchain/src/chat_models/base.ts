@@ -9,6 +9,7 @@ import {
 } from "../schema/index.js";
 import {
   BaseLanguageModel,
+  BaseLanguageModelCallOptions,
   BaseLanguageModelParams,
 } from "../base_language/index.js";
 import { getBufferString } from "../memory/base.js";
@@ -33,7 +34,11 @@ export type SerializedLLM = {
 
 export type BaseChatModelParams = BaseLanguageModelParams;
 
+export type BaseChatModelCallOptions = BaseLanguageModelCallOptions;
+
 export abstract class BaseChatModel extends BaseLanguageModel {
+  declare CallOptions: BaseChatModelCallOptions;
+
   constructor(fields: BaseChatModelParams) {
     super(fields);
   }
@@ -44,7 +49,7 @@ export abstract class BaseChatModel extends BaseLanguageModel {
 
   async generate(
     messages: BaseChatMessage[][],
-    stop?: string[],
+    stop?: string[] | this["CallOptions"],
     callbacks?: Callbacks
   ): Promise<LLMResult> {
     const generations: ChatGeneration[][] = [];
@@ -96,7 +101,7 @@ export abstract class BaseChatModel extends BaseLanguageModel {
 
   async generatePrompt(
     promptValues: BasePromptValue[],
-    stop?: string[],
+    stop?: string[] | this["CallOptions"],
     callbacks?: Callbacks
   ): Promise<LLMResult> {
     const promptMessages: BaseChatMessage[][] = promptValues.map(
@@ -107,13 +112,13 @@ export abstract class BaseChatModel extends BaseLanguageModel {
 
   abstract _generate(
     messages: BaseChatMessage[],
-    stop?: string[],
+    stop?: string[] | this["CallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult>;
 
   async call(
     messages: BaseChatMessage[],
-    stop?: string[],
+    stop?: string[] | this["CallOptions"],
     callbacks?: Callbacks
   ): Promise<BaseChatMessage> {
     const result = await this.generate([messages], stop, callbacks);
@@ -123,7 +128,7 @@ export abstract class BaseChatModel extends BaseLanguageModel {
 
   async callPrompt(
     promptValue: BasePromptValue,
-    stop?: string[],
+    stop?: string[] | this["CallOptions"],
     callbacks?: Callbacks
   ): Promise<BaseChatMessage> {
     const promptMessages: BaseChatMessage[] = promptValue.toChatMessages();
@@ -134,13 +139,13 @@ export abstract class BaseChatModel extends BaseLanguageModel {
 export abstract class SimpleChatModel extends BaseChatModel {
   abstract _call(
     messages: BaseChatMessage[],
-    stop?: string[],
+    stop?: string[] | this["CallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<string>;
 
   async _generate(
     messages: BaseChatMessage[],
-    stop?: string[],
+    stop?: string[] | this["CallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
     const text = await this._call(messages, stop, runManager);
