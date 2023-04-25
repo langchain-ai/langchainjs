@@ -1,11 +1,11 @@
 import {
-  BaseOutputParser,
   BasePromptValue,
   Example,
   HumanChatMessage,
   InputValues,
   PartialValues,
 } from "../schema/index.js";
+import { BaseOutputParser } from "../schema/output_parser.js";
 import { SerializedBasePromptTemplate } from "./serde.js";
 
 export class StringPromptValue {
