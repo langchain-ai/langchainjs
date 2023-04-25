@@ -1,5 +1,5 @@
 import type { IndexFlatL2 } from "faiss-node";
-import { NameRegistry, Parser } from "pickleparser";
+import type { NameRegistry, Parser } from "pickleparser";
 import { v4 as uuidv4 } from "uuid";
 import { Embeddings } from "../embeddings/base.js";
 import { SaveableVectorStore } from "./base.js";
@@ -145,7 +145,7 @@ export class FaissStore extends SaveableVectorStore {
   static async loadFromPython(directory: string, embeddings: Embeddings) {
     const fs = await import("node:fs/promises");
     const path = await import("node:path");
-    const { Parser } = await this.importPickleparser();
+    const { Parser, NameRegistry } = await this.importPickleparser();
 
     class PyDocument extends Map {
       toDocument(): Document {
@@ -258,13 +258,16 @@ export class FaissStore extends SaveableVectorStore {
     }
   }
 
-  static async importPickleparser(): Promise<{ Parser: typeof Parser }> {
+  static async importPickleparser(): Promise<{
+    Parser: typeof Parser;
+    NameRegistry: typeof NameRegistry;
+  }> {
     try {
       const {
-        default: { Parser },
+        default: { Parser, NameRegistry },
       } = await import("pickleparser");
 
-      return { Parser };
+      return { Parser, NameRegistry };
     } catch (err) {
       throw new Error(
         "Please install pickleparser as a dependency with, e.g. `npm install -S pickleparser`"

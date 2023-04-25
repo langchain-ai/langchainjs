@@ -12702,6 +12702,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"eslint-plugin-tree-shaking@npm:^1.10.0":
+  version: 1.10.0
+  resolution: "eslint-plugin-tree-shaking@npm:1.10.0"
+  checksum: 839047134c3009f5fcc5b2cb7d908fffd9def46663a1642e6abe8f4be4bc77416e7214259430dbb1d26445b4cf54673227092a0e2a23d2d2a88189212aed7974
+  languageName: node
+  linkType: hard
+
 "eslint-scope@npm:5.1.1, eslint-scope@npm:^5.1.1":
   version: 5.1.1
   resolution: "eslint-scope@npm:5.1.1"
@@ -13021,7 +13028,7 @@ __metadata:
     langchain: "workspace:*"
     ml-distance: ^4.0.0
     mongodb: ^5.2.0
-    pickleparser: ^0.1.0-beta.0
+    pickleparser: ^0.1.0
     prettier: ^2.8.3
     prisma: ^4.11.0
     sqlite3: ^5.1.4
@@ -17191,6 +17198,7 @@ __metadata:
     eslint-plugin-import: ^2.27.5
     eslint-plugin-no-instanceof: ^1.0.1
     eslint-plugin-prettier: ^4.2.1
+    eslint-plugin-tree-shaking: ^1.10.0
     expr-eval: ^2.0.2
     faiss-node: ^0.1.1
     flat: ^5.0.2
@@ -17208,7 +17216,7 @@ __metadata:
     p-retry: 4
     pdf-parse: 1.1.1
     pdfjs-dist: ^3.4.120
-    pickleparser: ^0.1.0-beta.0
+    pickleparser: ^0.1.0
     playwright: ^1.32.1
     prettier: ^2.8.3
     puppeteer: ^19.7.2
@@ -17247,7 +17255,7 @@ __metadata:
     mammoth: "*"
     mongodb: ^5.2.0
     pdf-parse: 1.1.1
-    pickleparser: ^0.1.0-beta.0
+    pickleparser: ^0.1.0
     playwright: ^1.32.1
     puppeteer: ^19.7.2
     redis: ^4.6.4
@@ -19772,13 +19780,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"pickleparser@npm:^0.1.0-beta.0":
-  version: 0.1.0-beta.0
-  resolution: "pickleparser@npm:0.1.0-beta.0"
+"pickleparser@npm:^0.1.0":
+  version: 0.1.0
+  resolution: "pickleparser@npm:0.1.0"
   bin:
     pickleparser: bin/pickletojson.js
     pickletojson: bin/pickletojson.js
-  checksum: 2754f350a678165deacdcb51eab711628e1125c93cfcd7b415b09d7fd8f4cdba35896072434bba1e13c5c3e62daeb34bfc81f0f39dcef30be60404a7a98e1169
+  checksum: 6b0be95990743edf19ea8abccf0dea9ffd244c1bc97873fb94b7dd7f057b1643a85ef795b8180fdede61298afaeb83eb733456abf4b607b7d04f97f71a0322e3
   languageName: node
   linkType: hard
 
