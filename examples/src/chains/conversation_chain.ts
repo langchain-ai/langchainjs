@@ -1,4 +1,4 @@
-import { OpenAI } from "langchain/llms";
+import { OpenAI } from "langchain/llms/openai";
 import { ConversationChain } from "langchain/chains";
 
 export const run = async () => {

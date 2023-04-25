@@ -1,6 +1,7 @@
 import { BasePromptTemplate } from "./base.js";
 import { loadFromHub } from "../util/hub.js";
-import { parseFileConfig, FileLoader, loadFromFile } from "../util/index.js";
+import { FileLoader, loadFromFile } from "../util/load.js";
+import { parseFileConfig } from "../util/parse.js";
 
 const loadPromptFromFile: FileLoader<BasePromptTemplate> = (text, path) =>
   BasePromptTemplate.deserialize(parseFileConfig(text, path));
@@ -11,14 +12,14 @@ const loadPromptFromFile: FileLoader<BasePromptTemplate> = (text, path) =>
  * @example
  * Loading from LangchainHub:
  * ```ts
- * import { loadPrompt } from "langchain/prompts";
+ * import { loadPrompt } from "langchain/prompts/load";
  * const prompt = await loadPrompt("lc://prompts/hello-world/prompt.yaml");
  * ```
  *
  * @example
  * Loading from local filesystem:
  * ```ts
- * import { loadPrompt } from "langchain/prompts";
+ * import { loadPrompt } from "langchain/prompts/load";
  * const prompt = await loadPrompt("/path/to/prompt.json");
  * ```
  */

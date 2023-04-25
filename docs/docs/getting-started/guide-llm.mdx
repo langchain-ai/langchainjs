@@ -2,6 +2,9 @@
 sidebar_position: 2
 ---
 
+import CodeBlock from "@theme/CodeBlock";
+import Example from "@examples/models/llm/llm_streaming_stdout.ts";
+
 # Quickstart, using LLMs
 
 This tutorial gives you a quick walkthrough about building an end-to-end language model application with LangChain.
@@ -29,7 +32,7 @@ The most basic building block of LangChain is calling an LLM on some input. Let'
 In order to do this, we first need to import the LLM wrapper.
 
 ```typescript
-import { OpenAI } from "langchain";
+import { OpenAI } from "langchain/llms/openai";
 ```
 
 We will then need to set the environment variable for the OpenAI key. Three options here:
@@ -107,7 +110,7 @@ The most core type of chain is an LLMChain, which consists of a PromptTemplate a
 Extending the previous example, we can construct an LLMChain which takes user input, formats it with a PromptTemplate, and then passes the formatted response to an LLM.
 
 ```typescript
-import { OpenAI } from "langchain/llms";
+import { OpenAI } from "langchain/llms/openai";
 import { PromptTemplate } from "langchain/prompts";
 
 const model = new OpenAI({ temperature: 0.9 });
@@ -159,21 +162,33 @@ For this example, you'll need to set the SerpAPI environment variables in the `.
 SERPAPI_API_KEY="..."
 ```
 
+Install `serpapi` package (Google Search API):
+
+```bash npm2yarn
+npm install -S serpapi
+```
+
 Now we can get started!
 
 ```typescript
-import { OpenAI } from "langchain";
-import { initializeAgentExecutor } from "langchain/agents";
-import { SerpAPI, Calculator } from "langchain/tools";
+import { OpenAI } from "langchain/llms/openai";
+import { initializeAgentExecutorWithOptions } from "langchain/agents";
+import { SerpAPI } from "langchain/tools";
+import { Calculator } from "langchain/tools/calculator";
 
 const model = new OpenAI({ temperature: 0 });
-const tools = [new SerpAPI(), new Calculator()];
+const tools = [
+  new SerpAPI(process.env.SERPAPI_API_KEY, {
+    location: "Austin,Texas,United States",
+    hl: "en",
+    gl: "us",
+  }),
+  new Calculator(),
+];
 
-const executor = await initializeAgentExecutor(
-  tools,
-  model,
-  "zero-shot-react-description"
-);
+const executor = await initializeAgentExecutorWithOptions(tools, model, {
+  agentType: "zero-shot-react-description",
+});
 console.log("Loaded agent.");
 
 const input =
@@ -200,7 +215,7 @@ LangChain provides several specially created chains just for this purpose. This 
 By default, the `ConversationChain` has a simple type of memory that remembers all previous inputs/outputs and adds them to the context that is passed. Let's take a look at using this chain.
 
 ```typescript
-import { OpenAI } from "langchain/llms";
+import { OpenAI } from "langchain/llms/openai";
 import { BufferMemory } from "langchain/memory";
 import { ConversationChain } from "langchain/chains";
 
@@ -228,53 +243,4 @@ console.log(res2);
 
 You can also use the streaming API to get words streamed back to you as they are generated. This is useful for eg. chatbots, where you want to show the user what is being generated as it is being generated. Note: OpenAI as of this writing does not support `tokenUsage` reporting while streaming is enabled.
 
-```typescript
-const chat = new OpenAI({
-  streaming: true,
-  callbackManager: CallbackManager.fromHandlers({
-    async handleLLMNewToken(token: string) {
-      console.log(token);
-    },
-  }),
-});
-
-const response = await chat.call("Write me a song about sparkling water.");
-console.log(response);
-```
-
-```
-Verse 1
-
-On a hot summer day, I'm looking for a treat
-I'm thirsty for something cool and sweet
-When I open up the fridge, what do I see?
-A bottle of sparkling water, it's calling out to me
-
-Chorus
-
-Sparkling water, it's so refreshing
-It quenches my thirst, it's the perfect thing
-It's so light and bubbly, it's like a dream
-And I'm loving every sip of sparkling water
-
-Verse 2
-
-I take it out of the fridge and pour some in a glass
-It's so light and bubbly, I can feel the fizz
-I take a sip and suddenly I'm revived
-This sparkling water's just what I need to survive
-
-Chorus
-
-Sparkling water, it's so refreshing
-It quenches my thirst, it's the perfect thing
-It's so light and bubbly, it's like a dream
-And I'm loving every sip of sparkling water
-
-Bridge
-
-It's like drinking sunshine between my hands
-It's so light and bubbly, I'm in a trance
-The summer heat's no match for sparkling water
-It's my favorite
-```
+<CodeBlock language="typescript">{Example}</CodeBlock>

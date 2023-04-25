@@ -1,11 +1,12 @@
-import { Tool, VectorStoreQATool } from "../../tools/index.js";
-import { VectorStore } from "../../../vectorstores/index.js";
+import { Tool } from "../../../tools/base.js";
+import { VectorStoreQATool } from "../../../tools/vectorstore.js";
+import { VectorStore } from "../../../vectorstores/base.js";
 import { Toolkit } from "../base.js";
 import { BaseLanguageModel } from "../../../base_language/index.js";
-import { CreatePromptArgs, ZeroShotAgent } from "../../mrkl/index.js";
+import { ZeroShotCreatePromptArgs, ZeroShotAgent } from "../../mrkl/index.js";
 import { VECTOR_PREFIX, VECTOR_ROUTER_PREFIX } from "./prompt.js";
 import { SUFFIX } from "../../mrkl/prompt.js";
-import { LLMChain } from "../../../chains/index.js";
+import { LLMChain } from "../../../chains/llm_chain.js";
 import { AgentExecutor } from "../../executor.js";
 
 export interface VectorStoreInfo {
@@ -62,7 +63,7 @@ export class VectorStoreRouterToolkit extends Toolkit {
 export function createVectorStoreAgent(
   llm: BaseLanguageModel,
   toolkit: VectorStoreToolkit,
-  args?: CreatePromptArgs
+  args?: ZeroShotCreatePromptArgs
 ) {
   const {
     prefix = VECTOR_PREFIX,
@@ -90,7 +91,7 @@ export function createVectorStoreAgent(
 export function createVectorStoreRouterAgent(
   llm: BaseLanguageModel,
   toolkit: VectorStoreRouterToolkit,
-  args?: CreatePromptArgs
+  args?: ZeroShotCreatePromptArgs
 ) {
   const {
     prefix = VECTOR_ROUTER_PREFIX,

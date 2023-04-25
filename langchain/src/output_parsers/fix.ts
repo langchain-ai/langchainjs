@@ -1,31 +1,31 @@
 import { BaseOutputParser, OutputParserException } from "../schema/index.js";
-import { BasePromptTemplate } from "../prompts/index.js";
+import { BasePromptTemplate } from "../prompts/base.js";
 import { LLMChain } from "../chains/llm_chain.js";
 import { BaseLanguageModel } from "../base_language/index.js";
 import { NAIVE_FIX_PROMPT } from "./prompts.js";
 
-export class OutputFixingParser extends BaseOutputParser {
-  parser: BaseOutputParser;
+export class OutputFixingParser<T> extends BaseOutputParser<T> {
+  parser: BaseOutputParser<T>;
 
   retryChain: LLMChain;
 
-  static fromLLM(
+  static fromLLM<T>(
     llm: BaseLanguageModel,
-    parser: BaseOutputParser,
+    parser: BaseOutputParser<T>,
     fields?: {
       prompt?: BasePromptTemplate;
     }
   ) {
     const prompt = fields?.prompt ?? NAIVE_FIX_PROMPT;
     const chain = new LLMChain({ llm, prompt });
-    return new OutputFixingParser({ parser, retryChain: chain });
+    return new OutputFixingParser<T>({ parser, retryChain: chain });
   }
 
   constructor({
     parser,
     retryChain,
   }: {
-    parser: BaseOutputParser;
+    parser: BaseOutputParser<T>;
     retryChain: LLMChain;
   }) {
     super();

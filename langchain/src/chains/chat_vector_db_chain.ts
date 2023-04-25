@@ -1,16 +1,12 @@
-import { PromptTemplate } from "../prompts/index.js";
+import { PromptTemplate } from "../prompts/prompt.js";
 import { BaseLanguageModel } from "../base_language/index.js";
 import { VectorStore } from "../vectorstores/base.js";
-import {
-  SerializedBaseChain,
-  SerializedChatVectorDBQAChain,
-  SerializedLLMChain,
-} from "./serde.js";
-import { resolveConfigFromFile } from "../util/index.js";
+import { SerializedChatVectorDBQAChain } from "./serde.js";
 import { ChainValues } from "../schema/index.js";
 import { BaseChain } from "./base.js";
 import { LLMChain } from "./llm_chain.js";
 import { loadQAStuffChain } from "./question_answering/load.js";
+import { CallbackManagerForChainRun } from "../callbacks/manager.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type LoadValues = Record<string, any>;
@@ -54,6 +50,10 @@ export class ChatVectorDBQAChain
 
   outputKey = "result";
 
+  get outputKeys() {
+    return [this.outputKey];
+  }
+
   vectorstore: VectorStore;
 
   combineDocumentsChain: BaseChain;
@@ -82,7 +82,11 @@ export class ChatVectorDBQAChain
       fields.returnSourceDocuments ?? this.returnSourceDocuments;
   }
 
-  async _call(values: ChainValues): Promise<ChainValues> {
+  /** @ignore */
+  async _call(
+    values: ChainValues,
+    runManager?: CallbackManagerForChainRun
+  ): Promise<ChainValues> {
     if (!(this.inputKey in values)) {
       throw new Error(`Question key ${this.inputKey} not found.`);
     }
@@ -93,11 +97,15 @@ export class ChatVectorDBQAChain
     const chatHistory: string = values[this.chatHistoryKey];
     let newQuestion = question;
     if (chatHistory.length > 0) {
-      const result = await this.questionGeneratorChain.call({
-        question,
-        chat_history: chatHistory,
-      });
+      const result = await this.questionGeneratorChain.call(
+        {
+          question,
+          chat_history: chatHistory,
+        },
+        runManager?.getChild()
+      );
       const keys = Object.keys(result);
+      console.log("_call", values, keys);
       if (keys.length === 1) {
         newQuestion = result[keys[0]];
       } else {
@@ -112,7 +120,10 @@ export class ChatVectorDBQAChain
       input_documents: docs,
       chat_history: chatHistory,
     };
-    const result = await this.combineDocumentsChain.call(inputs);
+    const result = await this.combineDocumentsChain.call(
+      inputs,
+      runManager?.getChild()
+    );
     if (this.returnSourceDocuments) {
       return {
         ...result,
@@ -136,21 +147,13 @@ export class ChatVectorDBQAChain
       );
     }
     const { vectorstore } = values;
-    const serializedCombineDocumentsChain = await resolveConfigFromFile<
-      "combine_documents_chain",
-      SerializedBaseChain
-    >("combine_documents_chain", data);
-    const serializedQuestionGeneratorChain = await resolveConfigFromFile<
-      "question_generator",
-      SerializedLLMChain
-    >("question_generator", data);
 
     return new ChatVectorDBQAChain({
       combineDocumentsChain: await BaseChain.deserialize(
-        serializedCombineDocumentsChain
+        data.combine_documents_chain
       ),
       questionGeneratorChain: await LLMChain.deserialize(
-        serializedQuestionGeneratorChain
+        data.question_generator
       ),
       k: data.k,
       vectorstore,

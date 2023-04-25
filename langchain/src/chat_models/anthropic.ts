@@ -13,6 +13,7 @@ import {
   ChatResult,
   MessageType,
 } from "../schema/index.js";
+import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
 
 function getAnthropicPromptFromMessage(type: MessageType): string {
   switch (type) {
@@ -29,7 +30,10 @@ function getAnthropicPromptFromMessage(type: MessageType): string {
 
 const DEFAULT_STOP_SEQUENCES = [HUMAN_PROMPT];
 
-interface ModelParams {
+/**
+ * Input to AnthropicChat class.
+ */
+export interface AnthropicInput {
   /** Amount of randomness injected into the response. Ranges
    * from 0 to 1. Use temp closer to 0 for analytical /
    * multiple choice, and temp closer to 1 for creative
@@ -57,20 +61,14 @@ interface ModelParams {
   maxTokensToSample: number;
 
   /** A list of strings upon which to stop generating.
-   * You probably want ["\n\nHuman:"], as that's the cue for
+   * You probably want `["\n\nHuman:"]`, as that's the cue for
    * the next turn in the dialog agent.
    */
   stopSequences?: string[];
 
   /** Whether to stream the results or not */
   streaming?: boolean;
-}
 
-/**
- * Input to AnthropicChat class.
- * @augments ModelParams
- */
-interface AnthropicInput extends ModelParams {
   /** Anthropic API key */
   apiKey?: string;
 
@@ -99,8 +97,6 @@ type Kwargs = Record<string, any>;
  * `anthropic.complete`} can be passed through {@link invocationKwargs},
  * even if not explicitly available on this class.
  *
- * @augments BaseLLM
- * @augments AnthropicInput
  */
 export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
   apiKey?: string;
@@ -139,7 +135,7 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
       fields?.anthropicApiKey ??
       (typeof process !== "undefined"
         ? // eslint-disable-next-line no-process-env
-          process.env.ANTHROPIC_API_KEY
+          process.env?.ANTHROPIC_API_KEY
         : undefined);
     if (!this.apiKey) {
       throw new Error("Anthropic API key not found");
@@ -174,6 +170,7 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
     };
   }
 
+  /** @ignore */
   _identifyingParams() {
     return {
       model_name: this.modelName,
@@ -204,24 +201,11 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
     );
   }
 
-  /**
-   * Call out to Anthropic's endpoint with k unique prompts
-   *
-   * @param messages - The messages to pass into the model.
-   * @param [stopSequences] - Optional list of stop sequences to use when generating.
-   *
-   * @returns The full LLM output.
-   *
-   * @example
-   * ```ts
-   * import { ChatAnthropic } from "langchain/llms";
-   * const anthropic = new ChatAnthropic();
-   * const response = await anthropic.generate(new HumanChatMessage(["Tell me a joke."]));
-   * ```
-   */
+  /** @ignore */
   async _generate(
     messages: BaseChatMessage[],
-    stopSequences?: string[]
+    stopSequences?: string[],
+    runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
     if (this.stopSequences && stopSequences) {
       throw new Error(
@@ -234,10 +218,13 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
       ? stopSequences.concat(DEFAULT_STOP_SEQUENCES)
       : params.stop_sequences;
 
-    const response = await this.completionWithRetry({
-      ...params,
-      prompt: this.formatMessagesAsPrompt(messages),
-    });
+    const response = await this.completionWithRetry(
+      {
+        ...params,
+        prompt: this.formatMessagesAsPrompt(messages),
+      },
+      runManager
+    );
 
     const generations: ChatGeneration[] = response.completion
       .split(AI_PROMPT)
@@ -253,7 +240,8 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
 
   /** @ignore */
   async completionWithRetry(
-    request: SamplingParameters & Kwargs
+    request: SamplingParameters & Kwargs,
+    runManager?: CallbackManagerForLLMRun
   ): Promise<CompletionResponse> {
     if (!this.apiKey) {
       throw new Error("Missing Anthropic API key.");
@@ -275,7 +263,7 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
               const delta = part.slice(currentCompletion.length);
               currentCompletion += delta ?? "";
               // eslint-disable-next-line no-void
-              void this.callbackManager.handleLLMNewToken(delta ?? "", true);
+              void runManager?.handleLLMNewToken(delta ?? "");
             }
           },
         });
@@ -293,6 +281,7 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
     return "anthropic";
   }
 
+  /** @ignore */
   _combineLLMOutput() {
     return [];
   }

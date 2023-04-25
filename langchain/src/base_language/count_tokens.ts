@@ -18,8 +18,23 @@ export const getModelNameForTiktoken = (modelName: string): TiktokenModel => {
   return modelName as TiktokenModel;
 };
 
+export const getEmbeddingContextSize = (modelName?: string): number => {
+  switch (modelName) {
+    case "text-embedding-ada-002":
+      return 8191;
+    default:
+      return 2046;
+  }
+};
+
 export const getModelContextSize = (modelName: string): number => {
   switch (getModelNameForTiktoken(modelName)) {
+    case "gpt-3.5-turbo":
+      return 4096;
+    case "gpt-4-32k":
+      return 32768;
+    case "gpt-4":
+      return 8192;
     case "text-davinci-003":
       return 4097;
     case "text-curie-001":
@@ -37,10 +52,10 @@ export const getModelContextSize = (modelName: string): number => {
   }
 };
 
-type CalculateMaxTokenProps = {
+interface CalculateMaxTokenProps {
   prompt: string;
   modelName: TiktokenModel;
-};
+}
 
 export const importTiktoken = async () => {
   try {
@@ -48,9 +63,7 @@ export const importTiktoken = async () => {
     return { encoding_for_model };
   } catch (error) {
     console.log(error);
-    throw new Error(
-      "Please install @dqbd/tiktoken as a dependency with, e.g. `yarn add @dqbd/tiktoken`"
-    );
+    return { encoding_for_model: null };
   }
 };
 
@@ -60,15 +73,27 @@ export const calculateMaxTokens = async ({
 }: CalculateMaxTokenProps) => {
   const { encoding_for_model } = await importTiktoken();
 
-  const encoding = encoding_for_model(getModelNameForTiktoken(modelName));
+  // fallback to approximate calculation if tiktoken is not available
+  let numTokens = Math.ceil(prompt.length / 4);
 
-  const tokenized = encoding.encode(prompt);
+  try {
+    if (encoding_for_model) {
+      const encoding = encoding_for_model(getModelNameForTiktoken(modelName));
 
-  const numTokens = tokenized.length;
+      const tokenized = encoding.encode(prompt);
+
+      numTokens = tokenized.length;
+
+      encoding.free();
+    }
+  } catch (error) {
+    console.warn(
+      "Failed to calculate number of tokens with tiktoken, falling back to approximate count",
+      error
+    );
+  }
 
   const maxTokens = getModelContextSize(modelName);
-
-  encoding.free();
 
   return maxTokens - numTokens;
 };

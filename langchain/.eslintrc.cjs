@@ -11,7 +11,7 @@ module.exports = {
     project: "./tsconfig.json",
     sourceType: "module",
   },
-  plugins: ["@typescript-eslint", "tree-shaking", "no-instanceof"],
+  plugins: ["@typescript-eslint", "no-instanceof"],
   ignorePatterns: [
     ".eslintrc.cjs",
     "scripts",
@@ -23,26 +23,6 @@ module.exports = {
     "*.d.ts",
   ],
   rules: {
-    "tree-shaking/no-side-effects-in-initialization": [
-      2,
-      {
-        noSideEffectsWhenCalled: [
-          {
-            module: "@jest/globals",
-            functions: [
-              "test",
-              "describe",
-              "it",
-              "beforeEach",
-              "afterEach",
-              "skip",
-              "each",
-              "only",
-            ],
-          },
-        ],
-      },
-    ],
     "no-process-env": 2,
     "no-instanceof/no-instanceof": 2,
     "@typescript-eslint/explicit-module-boundary-types": 0,
@@ -54,7 +34,7 @@ module.exports = {
     "@typescript-eslint/no-misused-promises": "error",
     camelcase: 0,
     "class-methods-use-this": 0,
-    "import/extensions": 0,
+    "import/extensions": [2, "ignorePackages"],
     "import/no-extraneous-dependencies": [
       "error",
       { devDependencies: ["**/*.test.ts"] },
@@ -69,9 +49,11 @@ module.exports = {
     "no-console": 0,
     "no-restricted-syntax": 0,
     "no-shadow": 0,
+    "no-continue": 0,
     "no-underscore-dangle": 0,
     "no-use-before-define": 0,
     "no-useless-constructor": 0,
-    semi: ["error", "always"],
+    "no-return-await": 0,
+    "new-cap": ["error", { properties: false, capIsNew: false }],
   },
 };

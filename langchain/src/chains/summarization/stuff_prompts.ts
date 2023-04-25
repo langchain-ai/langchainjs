@@ -1,6 +1,5 @@
-/* eslint-disable tree-shaking/no-side-effects-in-initialization */
 /* eslint-disable spaced-comment */
-import { PromptTemplate } from "../../prompts/index.js";
+import { PromptTemplate } from "../../prompts/prompt.js";
 
 const template = `Write a concise summary of the following:
 

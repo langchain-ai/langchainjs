@@ -1,5 +1,17 @@
-import { backOff } from "exponential-backoff";
+import pRetry from "p-retry";
 import PQueueMod from "p-queue";
+
+const STATUS_NO_RETRY = [
+  400, // Bad Request
+  401, // Unauthorized
+  403, // Forbidden
+  404, // Not Found
+  405, // Method Not Allowed
+  406, // Not Acceptable
+  407, // Proxy Authentication Required
+  408, // Request Timeout
+  409, // Conflict
+];
 
 export interface AsyncCallerParams {
   /**
@@ -32,7 +44,7 @@ export class AsyncCaller {
 
   protected maxRetries: AsyncCallerParams["maxRetries"];
 
-  protected queue: PQueueMod.default;
+  private queue: typeof import("p-queue")["default"]["prototype"];
 
   constructor(params: AsyncCallerParams) {
     this.maxConcurrency = params.maxConcurrency ?? Infinity;
@@ -49,13 +61,48 @@ export class AsyncCaller {
   ): Promise<Awaited<ReturnType<T>>> {
     return this.queue.add(
       () =>
-        backOff(() => callable(...args), {
-          numOfAttempts: this.maxRetries,
-          jitter: "full",
-          // If needed we can change some of the defaults here,
-          // but they're quite sensible.
-        }),
+        pRetry(
+          () =>
+            callable(...args).catch((error) => {
+              // eslint-disable-next-line no-instanceof/no-instanceof
+              if (error instanceof Error) {
+                throw error;
+              } else {
+                throw new Error(error);
+              }
+            }),
+          {
+            onFailedAttempt(error) {
+              if (
+                error.message.startsWith("Cancel") ||
+                error.message.startsWith("TimeoutError") ||
+                error.message.startsWith("AbortError")
+              ) {
+                throw error;
+              }
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              if ((error as any)?.code === "ECONNABORTED") {
+                throw error;
+              }
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              const status = (error as any)?.response?.status;
+              if (status && STATUS_NO_RETRY.includes(+status)) {
+                throw error;
+              }
+            },
+            retries: this.maxRetries,
+            randomize: true,
+            // If needed we can change some of the defaults here,
+            // but they're quite sensible.
+          }
+        ),
       { throwOnTimeout: true }
+    );
+  }
+
+  fetch(...args: Parameters<typeof fetch>): ReturnType<typeof fetch> {
+    return this.call(() =>
+      fetch(...args).then((res) => (res.ok ? res : Promise.reject(res)))
     );
   }
 }

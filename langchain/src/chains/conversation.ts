@@ -1,8 +1,7 @@
-import { LLMChain } from "./llm_chain.js";
-import { BasePromptTemplate, PromptTemplate } from "../prompts/index.js";
-
-import { BaseMemory, BufferMemory } from "../memory/index.js";
-import { BaseLanguageModel } from "../base_language/index.js";
+import { LLMChain, LLMChainInput } from "./llm_chain.js";
+import { PromptTemplate } from "../prompts/prompt.js";
+import { BufferMemory } from "../memory/buffer_memory.js";
+import { Optional } from "../types/type-utils.js";
 
 const defaultTemplate = `The following is a friendly conversation between a human and an AI. The AI is talkative and provides lots of specific details from its context. If the AI does not know the answer to a question, it truthfully says it does not know.
 
@@ -12,22 +11,22 @@ Human: {input}
 AI:`;
 
 export class ConversationChain extends LLMChain {
-  constructor(fields: {
-    llm: BaseLanguageModel;
-    prompt?: BasePromptTemplate;
-    outputKey?: string;
-    memory?: BaseMemory;
-  }) {
+  constructor({
+    prompt,
+    outputKey,
+    memory,
+    ...rest
+  }: Optional<LLMChainInput, "prompt">) {
     super({
       prompt:
-        fields.prompt ??
+        prompt ??
         new PromptTemplate({
           template: defaultTemplate,
           inputVariables: ["history", "input"],
         }),
-      llm: fields.llm,
-      outputKey: fields.outputKey ?? "response",
+      outputKey: outputKey ?? "response",
+      memory: memory ?? new BufferMemory(),
+      ...rest,
     });
-    this.memory = fields.memory ?? new BufferMemory();
   }
 }

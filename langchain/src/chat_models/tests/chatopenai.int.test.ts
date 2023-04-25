@@ -103,12 +103,14 @@ test("Test ChatOpenAI in streaming mode", async () => {
     modelName: "gpt-3.5-turbo",
     streaming: true,
     maxTokens: 10,
-    callbackManager: CallbackManager.fromHandlers({
-      async handleLLMNewToken(token: string) {
-        nrNewTokens += 1;
-        streamedCompletion += token;
+    callbacks: [
+      {
+        async handleLLMNewToken(token: string) {
+          nrNewTokens += 1;
+          streamedCompletion += token;
+        },
       },
-    }),
+    ],
   });
   const message = new HumanChatMessage("Hello!");
   const res = await model.call([message]);
@@ -158,3 +160,66 @@ test("OpenAI Chat, docs, prompt templates", async () => {
 
   console.log(responseA.generations);
 }, 50000);
+
+test("Test OpenAI with stop", async () => {
+  const model = new ChatOpenAI({ maxTokens: 5 });
+  const res = await model.call(
+    [new HumanChatMessage("Print hello world")],
+    ["world"]
+  );
+  console.log({ res });
+});
+
+test("Test OpenAI with stop in object", async () => {
+  const model = new ChatOpenAI({ maxTokens: 5 });
+  const res = await model.call([new HumanChatMessage("Print hello world")], {
+    stop: ["world"],
+  });
+  console.log({ res });
+});
+
+test("Test OpenAI with timeout in call options", async () => {
+  const model = new ChatOpenAI({ maxTokens: 5 });
+  await expect(() =>
+    model.call([new HumanChatMessage("Print hello world")], {
+      options: { timeout: 10 },
+    })
+  ).rejects.toThrow();
+}, 5000);
+
+test("Test OpenAI with timeout in call options and node adapter", async () => {
+  const model = new ChatOpenAI({ maxTokens: 5 });
+  await expect(() =>
+    model.call([new HumanChatMessage("Print hello world")], {
+      options: { timeout: 10, adapter: undefined },
+    })
+  ).rejects.toThrow();
+}, 5000);
+
+test("Test OpenAI with signal in call options", async () => {
+  const model = new ChatOpenAI({ maxTokens: 5 });
+  const controller = new AbortController();
+  await expect(() => {
+    const ret = model.call([new HumanChatMessage("Print hello world")], {
+      options: { signal: controller.signal },
+    });
+
+    controller.abort();
+
+    return ret;
+  }).rejects.toThrow();
+}, 5000);
+
+test("Test OpenAI with signal in call options and node adapter", async () => {
+  const model = new ChatOpenAI({ maxTokens: 5, modelName: "text-ada-001" });
+  const controller = new AbortController();
+  await expect(() => {
+    const ret = model.call([new HumanChatMessage("Print hello world")], {
+      options: { signal: controller.signal, adapter: undefined },
+    });
+
+    controller.abort();
+
+    return ret;
+  }).rejects.toThrow();
+}, 5000);

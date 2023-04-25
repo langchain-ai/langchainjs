@@ -1,5 +1,6 @@
-import { test, expect } from "@jest/globals";
 import { z } from "zod";
+
+import { expect, test } from "@jest/globals";
 
 import { StructuredOutputParser } from "../structured.js";
 
@@ -20,6 +21,8 @@ test("StructuredOutputParser.fromNamesAndDescriptions", async () => {
 	"url": string // A link to the resource
 }
 \`\`\`
+
+Including the leading and trailing "\`\`\`json" and "\`\`\`"
 "
 `);
 });
@@ -41,6 +44,8 @@ test("StructuredOutputParser.fromZodSchema", async () => {
 	"url": string // A link to the resource
 }
 \`\`\`
+
+Including the leading and trailing "\`\`\`json" and "\`\`\`"
 "
 `);
 });
@@ -73,6 +78,8 @@ test("StructuredOutputParser.fromZodSchema", async () => {
 	"sources": string[] // sources used to answer the question, should be websites.
 }
 \`\`\`
+
+Including the leading and trailing "\`\`\`json" and "\`\`\`"
 "
 `);
 });
@@ -96,6 +103,7 @@ test("StructuredOutputParser.fromZodSchema", async () => {
           z.object({
             name: z.string().describe("The name of the author"),
             email: z.string().describe("The email of the author"),
+            type: z.enum(["author", "editor"]).optional(),
             address: z
               .string()
               .optional()
@@ -132,10 +140,13 @@ test("StructuredOutputParser.fromZodSchema", async () => {
 	"authors": {
 		"name": string // The name of the author
 		"email": string // The email of the author
+		"type": "author" | "editor" // Optional
 		"address": string // Optional // The address of the author
 	}[]
 }
 \`\`\`
+
+Including the leading and trailing "\`\`\`json" and "\`\`\`"
 "
 `);
 });

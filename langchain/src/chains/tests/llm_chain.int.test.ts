@@ -1,12 +1,12 @@
 import { test } from "@jest/globals";
 import { OpenAI } from "../../llms/openai.js";
-import { ChatOpenAI } from "../../chat_models/index.js";
+import { ChatOpenAI } from "../../chat_models/openai.js";
 import {
   ChatPromptTemplate,
   HumanMessagePromptTemplate,
   PromptTemplate,
 } from "../../prompts/index.js";
-import { LLMChain, ConversationChain } from "../llm_chain.js";
+import { LLMChain } from "../llm_chain.js";
 import { loadChain } from "../load.js";
 
 test("Test OpenAI", async () => {
@@ -45,13 +45,6 @@ test("Test apply", async () => {
 test("Load chain from hub", async () => {
   const chain = await loadChain("lc://chains/hello-world/chain.json");
   const res = await chain.call({ topic: "my favorite color" });
-  console.log({ res });
-});
-
-test("Test ConversationChain", async () => {
-  const model = new OpenAI({ modelName: "text-ada-001" });
-  const chain = new ConversationChain({ llm: model });
-  const res = await chain.call({ input: "my favorite color" });
   console.log({ res });
 });
 

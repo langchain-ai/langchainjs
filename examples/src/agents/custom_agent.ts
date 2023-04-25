@@ -1,11 +1,19 @@
-import { OpenAI } from "langchain/llms";
-import { ZeroShotAgent, AgentExecutor } from "langchain/agents";
-import { SerpAPI, Calculator } from "langchain/tools";
+import { AgentExecutor, ZeroShotAgent } from "langchain/agents";
 import { LLMChain } from "langchain/chains";
+import { OpenAI } from "langchain/llms/openai";
+import { SerpAPI } from "langchain/tools";
+import { Calculator } from "langchain/tools/calculator";
 
 export const run = async () => {
   const model = new OpenAI({ temperature: 0 });
-  const tools = [new SerpAPI(), new Calculator()];
+  const tools = [
+    new SerpAPI(process.env.SERPAPI_API_KEY, {
+      location: "Austin,Texas,United States",
+      hl: "en",
+      gl: "us",
+    }),
+    new Calculator(),
+  ];
 
   const prefix = `Answer the following questions as best you can, but speaking as a pirate might speak. You have access to the following tools:`;
   const suffix = `Begin! Remember to speak as a pirate when giving your final answer. Use lots of "Args"
@@ -20,8 +28,6 @@ Question: {input}
   };
 
   const prompt = ZeroShotAgent.createPrompt(tools, createPromptArgs);
-
-  console.log(prompt.template);
 
   const llmChain = new LLMChain({ llm: model, prompt });
   const agent = new ZeroShotAgent({

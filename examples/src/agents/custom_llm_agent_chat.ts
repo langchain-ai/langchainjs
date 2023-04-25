@@ -1,26 +1,27 @@
 import {
-  LLMSingleActionAgent,
   AgentActionOutputParser,
   AgentExecutor,
+  LLMSingleActionAgent,
 } from "langchain/agents";
 import { LLMChain } from "langchain/chains";
-import { ChatOpenAI } from "langchain/chat_models";
+import { ChatOpenAI } from "langchain/chat_models/openai";
 import {
+  BaseChatPromptTemplate,
   BasePromptTemplate,
   SerializedBasePromptTemplate,
   renderTemplate,
-  BaseChatPromptTemplate,
 } from "langchain/prompts";
 import {
-  InputValues,
-  PartialValues,
-  AgentStep,
   AgentAction,
   AgentFinish,
+  AgentStep,
   BaseChatMessage,
   HumanChatMessage,
+  InputValues,
+  PartialValues,
 } from "langchain/schema";
-import { SerpAPI, Calculator, Tool } from "langchain/tools";
+import { SerpAPI, Tool } from "langchain/tools";
+import { Calculator } from "langchain/tools/calculator";
 
 const PREFIX = `Answer the following questions as best you can. You have access to the following tools:`;
 const formatInstructions = (toolNames: string) => `Use the following format:
@@ -109,7 +110,14 @@ class CustomOutputParser extends AgentActionOutputParser {
 
 export const run = async () => {
   const model = new ChatOpenAI({ temperature: 0 });
-  const tools = [new SerpAPI(), new Calculator()];
+  const tools = [
+    new SerpAPI(process.env.SERPAPI_API_KEY, {
+      location: "Austin,Texas,United States",
+      hl: "en",
+      gl: "us",
+    }),
+    new Calculator(),
+  ];
 
   const llmChain = new LLMChain({
     prompt: new CustomPromptTemplate({

@@ -13,7 +13,7 @@ export function listEntrypoints() {
     }
     if (typeof value === "string") {
       entrypoints.push(value);
-    } else if (typeof value === "object") {
+    } else if (typeof value === "object" && value.import) {
       entrypoints.push(value.import);
     }
   }
@@ -27,8 +27,9 @@ export function listExternals() {
     ...Object.keys(packageJson.peerDependencies),
     /node\:/,
     "axios", // axios is a dependency of openai
-    "@fortaine/fetch-event-source/parse",
-    "pdf-parse/lib/pdf-parse.js",
+    "pdf-parse/lib/pdf.js/v1.10.100/build/pdf.js",
+    "@zilliz/milvus2-sdk-node/dist/milvus/const/Milvus.js",
+    "@zilliz/milvus2-sdk-node/dist/milvus/types.js",
   ];
 }
 

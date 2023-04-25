@@ -1,4 +1,3 @@
-/* eslint-disable tree-shaking/no-side-effects-in-initialization */
 import { expect, test, describe } from "@jest/globals";
 import { interpolateFString } from "../template.js";
 

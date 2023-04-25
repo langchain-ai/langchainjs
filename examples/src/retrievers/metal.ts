@@ -1,5 +1,6 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import Metal from "@getmetal/metal-sdk";
-import { MetalRetriever } from "langchain/retrievers";
+import { MetalRetriever } from "langchain/retrievers/metal";
 
 export const run = async () => {
   const MetalSDK = Metal.default;
@@ -7,7 +8,7 @@ export const run = async () => {
   const client = new MetalSDK(
     process.env.METAL_API_KEY!,
     process.env.METAL_CLIENT_ID!,
-    process.env.METAL_APP_ID
+    process.env.METAL_INDEX_ID
   );
   const retriever = new MetalRetriever({ client });
 

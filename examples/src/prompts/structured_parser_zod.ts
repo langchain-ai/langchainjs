@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { OpenAI, PromptTemplate } from "langchain";
+import { OpenAI } from "langchain/llms/openai";
+import { PromptTemplate } from "langchain/prompts";
 import { StructuredOutputParser } from "langchain/output_parsers";
 
 export const run = async () => {

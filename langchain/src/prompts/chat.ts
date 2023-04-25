@@ -1,18 +1,18 @@
 import {
-  BasePromptTemplate,
-  BaseStringPromptTemplate,
-  BasePromptTemplateInput,
-} from "./base.js";
-import {
   AIChatMessage,
   BaseChatMessage,
   BasePromptValue,
   ChatMessage,
   HumanChatMessage,
-  SystemChatMessage,
   InputValues,
   PartialValues,
+  SystemChatMessage,
 } from "../schema/index.js";
+import {
+  BasePromptTemplate,
+  BasePromptTemplateInput,
+  BaseStringPromptTemplate,
+} from "./base.js";
 import { PromptTemplate } from "./prompt.js";
 import {
   SerializedChatPromptTemplate,
@@ -234,16 +234,20 @@ export class ChatPromptTemplate
     const allValues = await this.mergePartialAndUserVariables(values);
 
     let resultMessages: BaseChatMessage[] = [];
+
     for (const promptMessage of this.promptMessages) {
-      const inputValues: InputValues = {};
-      for (const inputVariable of promptMessage.inputVariables) {
-        if (!(inputVariable in allValues)) {
-          throw new Error(
-            `Missing value for input variable \`${inputVariable}\``
-          );
-        }
-        inputValues[inputVariable] = allValues[inputVariable];
-      }
+      const inputValues = promptMessage.inputVariables.reduce(
+        (acc, inputVariable) => {
+          if (!(inputVariable in allValues)) {
+            throw new Error(
+              `Missing value for input variable \`${inputVariable}\``
+            );
+          }
+          acc[inputVariable] = allValues[inputVariable];
+          return acc;
+        },
+        {} as InputValues
+      );
       const message = await promptMessage.formatMessages(inputValues);
       resultMessages = resultMessages.concat(message);
     }

@@ -1,16 +1,17 @@
-import { CallbackManager } from "langchain/callbacks";
-import { ChatOpenAI } from "langchain/chat_models";
+import { ChatOpenAI } from "langchain/chat_models/openai";
 import { HumanChatMessage } from "langchain/schema";
 
 export const run = async () => {
   const chat = new ChatOpenAI({
     maxTokens: 25,
     streaming: true,
-    callbackManager: CallbackManager.fromHandlers({
-      async handleLLMNewToken(token: string) {
-        console.log({ token });
+    callbacks: [
+      {
+        handleLLMNewToken(token: string) {
+          console.log({ token });
+        },
       },
-    }),
+    ],
   });
 
   const response = await chat.call([new HumanChatMessage("Tell me a joke.")]);

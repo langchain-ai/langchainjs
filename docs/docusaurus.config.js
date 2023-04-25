@@ -30,9 +30,6 @@ const config = {
       "docusaurus-plugin-typedoc",
       {
         tsconfig: "../langchain/tsconfig.json",
-        sidebar: {
-          fullNames: true,
-        },
       },
     ],
     () => ({
@@ -56,7 +53,7 @@ const config = {
           rules: [
             {
               test: examplesPath,
-              use: "raw-loader",
+              use: ["json-loader", "./code-block-loader.js"],
             },
             {
               test: /\.m?js/,
@@ -78,45 +75,28 @@ const config = {
         docs: {
           sidebarPath: require.resolve("./sidebars.js"),
           editUrl: "https://github.com/hwchase17/langchainjs/edit/main/docs/",
+          remarkPlugins: [
+            [require("@docusaurus/remark-plugin-npm2yarn"), { sync: true }],
+          ],
           async sidebarItemsGenerator({
             defaultSidebarItemsGenerator,
             ...args
           }) {
-            const allInternal = [];
-            const filterInternal = (items) =>
-              items
-                .filter((item) => {
-                  const isInternal = item.label?.includes("internal");
-                  if (isInternal) {
-                    allInternal.push(item);
-                  }
-                  return !isInternal;
-                })
-                .map((item) => {
-                  if (item.items && Array.isArray(item.items)) {
-                    return { ...item, items: filterInternal(item.items) };
-                  }
-                  return item;
-                });
             const sidebarItems = await defaultSidebarItemsGenerator(args);
-            const filtered = filterInternal(sidebarItems);
-            if (allInternal.length > 0) {
-              return [
-                ...filtered,
-                {
-                  type: "category",
-                  label: "Internal",
-                  collapsible: true,
-                  collapsed: true,
-                  items: allInternal,
-                },
-              ];
-            }
-            return filtered;
+            sidebarItems.forEach((subItem) => {
+              // This allows breaking long sidebar labels into multiple lines
+              // by inserting a zero-width space after each slash.
+              if (
+                "label" in subItem &&
+                subItem.label &&
+                subItem.label.includes("/")
+              ) {
+                // eslint-disable-next-line no-param-reassign
+                subItem.label = subItem.label.replace(/\//g, "/\u200B");
+              }
+            });
+            return sidebarItems;
           },
-          remarkPlugins: [
-            [require("@docusaurus/remark-plugin-npm2yarn"), { sync: true }],
-          ],
         },
         pages: {
           remarkPlugins: [require("@docusaurus/remark-plugin-npm2yarn")],
