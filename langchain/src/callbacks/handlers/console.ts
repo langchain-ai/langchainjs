@@ -85,7 +85,7 @@ export class ConsoleCallbackHandler extends BaseTracer {
     const parents = this.getParents(run).reverse();
     const string = [...parents, run]
       .map((parent, i, arr) => {
-        const name = `${parent.type}:${parent.serialized?.name}`;
+        const name = `${parent.execution_order}:${parent.type}:${parent.serialized?.name}`;
         return i === arr.length - 1 ? wrap(styles.bold, name) : name;
       })
       .join(" > ");
