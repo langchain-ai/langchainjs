@@ -253,6 +253,9 @@
     "experimental/autogpt.cjs",
     "experimental/autogpt.js",
     "experimental/autogpt.d.ts",
+    "experimental/babyagi.cjs",
+    "experimental/babyagi.js",
+    "experimental/babyagi.d.ts",
     "index.cjs",
     "index.js",
     "index.d.ts"
@@ -901,6 +904,11 @@
       "types": "./experimental/autogpt.d.ts",
       "import": "./experimental/autogpt.js",
       "require": "./experimental/autogpt.cjs"
+    },
+    "./experimental/babyagi": {
+      "types": "./experimental/babyagi.d.ts",
+      "import": "./experimental/babyagi.js",
+      "require": "./experimental/babyagi.cjs"
     },
     "./package.json": "./package.json"
   }
