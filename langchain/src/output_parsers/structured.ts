@@ -1,5 +1,8 @@
 import { z } from "zod";
-import { BaseOutputParser, OutputParserException } from "../schema/index.js";
+import {
+  BaseOutputParser,
+  OutputParserException,
+} from "../schema/output_parser.js";
 
 function printSchema(schema: z.ZodTypeAny, depth = 0): string {
   if (

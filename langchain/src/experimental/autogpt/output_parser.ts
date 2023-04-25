@@ -1,4 +1,4 @@
-import { BaseOutputParser } from "../../schema/index.js";
+import { BaseOutputParser } from "../../schema/output_parser.js";
 import { AutoGPTAction } from "./schema.js";
 
 export function preprocessJsonInput(inputStr: string): string {
