@@ -1,6 +1,6 @@
 import type { basename as BasenameT } from "node:path";
 import type { readFile as ReaFileT } from "node:fs/promises";
-import { DirectoryLoader, UnknownHandling } from "directory.js";
+import { DirectoryLoader, UnknownHandling } from "./directory.js";
 import { getEnv } from "../../util/env.js";
 import { Document } from "../../document.js";
 import { BaseDocumentLoader } from "../base.js";
@@ -103,8 +103,8 @@ export class UnstructuredDirectoryLoader extends DirectoryLoader {
   ) {
 
     const loaders = {
-      ".txt": (p) => new UnstructuredLoader(webPath, p),
+      ".txt": (p: string) => new UnstructuredLoader(webPath, p),
     }
-    super(directoryPath, loaders, recursive, unkown);
+    super(directoryPath, loaders, recursive, unknown);
   }
 }

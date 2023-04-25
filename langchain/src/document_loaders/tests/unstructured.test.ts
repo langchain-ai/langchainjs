@@ -1,6 +1,7 @@
 import * as url from "node:url";
 import * as path from "node:path";
 import { test, expect } from "@jest/globals";
+import { UnknownHandling } from "../fs/directory.js";
 import { UnstructuredLoader, UnstructuredDirectoryLoader } from "../fs/unstructured.js";
 
 test.skip("Test Unstructured base loader", async () => {
@@ -26,6 +27,8 @@ test("Test Unstructured base loader", async () => {
   const loader = new UnstructuredDirectoryLoader(
     "https://api.unstructured.io/general/v0/general",
     directoryPath,
+    true,
+    UnknownHandling.Ignore,
   );
   const docs = await loader.load();
 
