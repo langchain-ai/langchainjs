@@ -1,4 +1,4 @@
-import { ChainValues, LLMResult } from "../../schema/index.js";
+import { AgentAction, ChainValues, LLMResult } from "../../schema/index.js";
 import { BaseCallbackHandler } from "../base.js";
 
 export type RunType = "llm" | "chain" | "tool";
@@ -37,6 +37,10 @@ export interface ChainRun extends BaseRun {
   child_llm_runs: LLMRun[];
   child_chain_runs: ChainRun[];
   child_tool_runs: ToolRun[];
+}
+
+export interface AgentRun extends ChainRun {
+  actions: AgentAction[];
 }
 
 export interface ToolRun extends BaseRun {
@@ -273,6 +277,17 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     await this._endTrace(toolRun);
   }
 
+  async handleAgentAction(action: AgentAction, runId: string): Promise<void> {
+    const run = this.runMap.get(runId);
+    if (!run || run?.type !== "chain") {
+      return;
+    }
+    const agentRun = run as AgentRun;
+    agentRun.actions = agentRun.actions || [];
+    agentRun.actions.push(action);
+    await this.onAgentAction?.(run as AgentRun);
+  }
+
   // custom event handlers
 
   onLLMStart?(run: LLMRun): void | Promise<void>;
@@ -293,7 +308,9 @@ export abstract class BaseTracer extends BaseCallbackHandler {
 
   onToolError?(run: ToolRun): void | Promise<void>;
 
-  // onAgentAction?(run: ChainRun): void | Promise<void>;
+  onAgentAction?(run: AgentRun): void | Promise<void>;
+
+  // TODO Implement handleAgentEnd, handleText
 
   // onAgentEnd?(run: ChainRun): void | Promise<void>;
 

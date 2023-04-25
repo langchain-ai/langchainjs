@@ -1,15 +1,25 @@
 import type { CSPair } from "ansi-styles";
 import styles from "ansi-styles";
 import {
-  AgentAction,
-  AgentFinish,
-  ChainValues,
-  LLMResult,
-} from "../../schema/index.js";
-import { BaseTracer, BaseTracerSession, LLMRun, Run } from "./tracers.js";
+  AgentRun,
+  BaseTracer,
+  BaseTracerSession,
+  ChainRun,
+  LLMRun,
+  Run,
+  ToolRun,
+} from "./tracers.js";
 
 function wrap(style: CSPair, text: string) {
   return `${style.open}${text}${style.close}`;
+}
+
+function tryJsonStringify(obj: unknown, fallback: string) {
+  try {
+    return JSON.stringify(obj);
+  } catch (err) {
+    return fallback;
+  }
 }
 
 const { color } = styles;
@@ -42,6 +52,10 @@ export class ConsoleCallbackHandler extends BaseTracer {
     return this.newSession(sessionName);
   }
 
+  copy() {
+    return this;
+  }
+
   // utility methods
 
   getParents(run: Run) {
@@ -61,52 +75,136 @@ export class ConsoleCallbackHandler extends BaseTracer {
 
   getBreadcrumbs(run: Run) {
     const parents = this.getParents(run).reverse();
-    return [...parents, run]
-      .map((parent) => parent.serialized?.name)
+    const string = [...parents, run]
+      .map((parent, i, arr) =>
+        i === arr.length - 1
+          ? wrap(styles.bold, parent.serialized?.name)
+          : parent.serialized?.name
+      )
       .filter(Boolean)
       .join(" > ");
+    return wrap(color.grey, string);
   }
 
   // logging methods
 
-  onLLMStart(run: LLMRun) {
-    console.log("yoooooo");
+  onChainStart(run: ChainRun) {
     const crumbs = this.getBreadcrumbs(run);
     console.log(
-      `${wrap(color.green, "[llm/start]")} ${wrap(color.grey, crumbs)}\n`
+      `${wrap(
+        color.green,
+        "[chain/start]"
+      )} [${crumbs}] Entering Chain run with ${tryJsonStringify(
+        run.inputs,
+        "[inputs]"
+      )}\n`
     );
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async handleLLMError(err: any, runId: string) {
-    console.log(`LLM ${runId} errored: ${err}\n`);
+  onChainEnd(run: ChainRun) {
+    const crumbs = this.getBreadcrumbs(run);
+    console.log(
+      `${wrap(
+        color.cyan,
+        "[chain/end]"
+      )} [${crumbs}] Exiting Chain run with ${tryJsonStringify(
+        run.outputs,
+        "[outputs]"
+      )}\n`
+    );
   }
 
-  async handleLLMEnd(output: LLMResult, runId: string) {
-    console.log(`LLM ${runId} finished: ${JSON.stringify(output)}\n`);
+  onChainError(run: ChainRun) {
+    const crumbs = this.getBreadcrumbs(run);
+    console.log(
+      `${wrap(
+        color.red,
+        "[chain/error]"
+      )} [${crumbs}] Chain run errored with ${tryJsonStringify(
+        run.error,
+        "[error]"
+      )}\n`
+    );
   }
 
-  async handleChainStart(chain: { name: string }) {
-    console.log(`Entering new ${chain.name} chain...`);
+  onLLMStart(run: LLMRun) {
+    const crumbs = this.getBreadcrumbs(run);
+    console.log(
+      `${wrap(
+        color.green,
+        "[llm/start]"
+      )} [${crumbs}] Entering LLM run with "${run.prompts.join("\n---\n")}" \n`
+    );
   }
 
-  async handleChainEnd(_output: ChainValues) {
-    console.log("Finished chain.");
+  onLLMEnd(run: LLMRun) {
+    const crumbs = this.getBreadcrumbs(run);
+    console.log(
+      `${wrap(
+        color.cyan,
+        "[llm/end]"
+      )} [${crumbs}] Exiting LLM run with ${tryJsonStringify(
+        run.response,
+        "[response]"
+      )}\n`
+    );
   }
 
-  async handleAgentAction(action: AgentAction) {
-    console.log(action.log);
+  onLLMError(run: LLMRun) {
+    const crumbs = this.getBreadcrumbs(run);
+    console.log(
+      `${wrap(
+        color.red,
+        "[llm/error]"
+      )} [${crumbs}] LLM run errored with ${tryJsonStringify(
+        run.error,
+        "[error]"
+      )}\n`
+    );
   }
 
-  async handleToolEnd(output: string) {
-    console.log(output);
+  onToolStart(run: ToolRun) {
+    const crumbs = this.getBreadcrumbs(run);
+    console.log(
+      `${wrap(
+        color.green,
+        "[tool/start]"
+      )} [${crumbs}] Entering Tool run with "${run.tool_input}"\n`
+    );
   }
 
-  async handleText(text: string) {
-    console.log(text);
+  onToolEnd(run: ToolRun) {
+    const crumbs = this.getBreadcrumbs(run);
+    console.log(
+      `${wrap(color.cyan, "[tool/end]")} [${crumbs}] Exiting Tool run with "${
+        run.output
+      }"\n`
+    );
   }
 
-  async handleAgentEnd(action: AgentFinish) {
-    console.log(action.log);
+  onToolError(run: ToolRun) {
+    const crumbs = this.getBreadcrumbs(run);
+    console.log(
+      `${wrap(
+        color.red,
+        "[tool/error]"
+      )} [${crumbs}] Tool run errored with ${tryJsonStringify(
+        run.error,
+        "[error]"
+      )}\n`
+    );
+  }
+
+  onAgentAction(run: AgentRun) {
+    const crumbs = this.getBreadcrumbs(run);
+    console.log(
+      `${wrap(
+        color.blue,
+        "[agent/action]"
+      )} [${crumbs}] Agent selected action ${tryJsonStringify(
+        run.actions[run.actions.length - 1],
+        "[action]"
+      )}\n`
+    );
   }
 }

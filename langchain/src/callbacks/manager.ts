@@ -401,6 +401,9 @@ export class CallbackManager
       manager.addHandler(copied, inheritable);
     }
     for (const handler of additionalHandlers) {
+      if (manager.handlers.some((h) => h.name === handler.name)) {
+        continue;
+      }
       manager.addHandler(handler.copy(), inherit);
     }
     return manager;
