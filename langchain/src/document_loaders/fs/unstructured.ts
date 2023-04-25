@@ -104,6 +104,19 @@ export class UnstructuredDirectoryLoader extends DirectoryLoader {
 
     const loaders = {
       ".txt": (p: string) => new UnstructuredLoader(webPath, p),
+      ".text": (p: string) => new UnstructuredLoader(webPath, p),
+      ".pdf": (p: string) => new UnstructuredLoader(webPath, p),
+      ".docx": (p: string) => new UnstructuredLoader(webPath, p),
+      ".doc": (p: string) => new UnstructuredLoader(webPath, p),
+      ".jpg": (p: string) => new UnstructuredLoader(webPath, p),
+      ".jpeg": (p: string) => new UnstructuredLoader(webPath, p),
+      ".eml": (p: string) => new UnstructuredLoader(webPath, p),
+      ".html": (p: string) => new UnstructuredLoader(webPath, p),
+      ".md": (p: string) => new UnstructuredLoader(webPath, p),
+      ".pptx": (p: string) => new UnstructuredLoader(webPath, p),
+      ".ppt": (p: string) => new UnstructuredLoader(webPath, p),
+      ".rtf": (p: string) => new UnstructuredLoader(webPath, p),
+      ".msg": (p: string) => new UnstructuredLoader(webPath, p),
     }
     super(directoryPath, loaders, recursive, unknown);
   }

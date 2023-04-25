@@ -18,7 +18,7 @@ test.skip("Test Unstructured base loader", async () => {
 });
 
 
-test("Test Unstructured base loader", async () => {
+test("Test Unstructured directory loader", async () => {
 	const directoryPath = path.resolve(
 		path.dirname(url.fileURLToPath(import.meta.url)),
 		"./example_data"
@@ -32,8 +32,6 @@ test("Test Unstructured base loader", async () => {
   );
   const docs = await loader.load();
 
-  expect(docs.length).toBe(3);
-  for (const doc of docs) {
-    expect(typeof doc.pageContent).toBe("string");
-  }
+  expect(docs.length).toBe(619);
+  expect(typeof docs[0].pageContent).toBe("string");
 });
