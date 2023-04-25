@@ -395,7 +395,11 @@ export class CallbackManager
     inherit = true
   ): CallbackManager {
     const manager = new CallbackManager(this._parentRunId);
-    manager.setHandlers([...this.handlers].map((handler) => handler.copy()));
+    for (const handler of this.handlers) {
+      const inheritable = this.inheritableHandlers.includes(handler);
+      const copied = handler.copy();
+      manager.addHandler(copied, inheritable);
+    }
     for (const handler of additionalHandlers) {
       manager.addHandler(handler.copy(), inherit);
     }
@@ -449,13 +453,13 @@ export class CallbackManager
       if (!callbackManager) {
         callbackManager = new CallbackManager();
       }
-      const consoleHandler = new ConsoleCallbackHandler();
       if (
         options?.verbose &&
         !callbackManager.handlers.some(
-          (handler) => handler.name === consoleHandler.name
+          (handler) => handler.name === ConsoleCallbackHandler.prototype.name
         )
       ) {
+        const consoleHandler = new ConsoleCallbackHandler();
         callbackManager.addHandler(consoleHandler, true);
       }
       if (

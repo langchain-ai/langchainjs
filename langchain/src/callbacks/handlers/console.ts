@@ -1,52 +1,112 @@
+import type { CSPair } from "ansi-styles";
+import styles from "ansi-styles";
 import {
   AgentAction,
   AgentFinish,
   ChainValues,
   LLMResult,
 } from "../../schema/index.js";
-import { BaseCallbackHandler } from "../base.js";
+import { BaseTracer, BaseTracerSession, LLMRun, Run } from "./tracers.js";
 
-export class ConsoleCallbackHandler extends BaseCallbackHandler {
-  name = "console_callback_handler";
+function wrap(style: CSPair, text: string) {
+  return `${style.open}${text}${style.close}`;
+}
 
-  handleLLMStart(llm: { name: string }, prompts: string[], runId: string) {
+const { color } = styles;
+
+export class ConsoleCallbackHandler extends BaseTracer {
+  name = "console_callback_handler" as const;
+
+  // boilerplate to work with the base tracer class
+
+  constructor() {
+    super();
+  }
+
+  i = 0;
+
+  protected persistSession(session: BaseTracerSession) {
+    // eslint-disable-next-line no-plusplus
+    return Promise.resolve({ ...session, id: this.i++ });
+  }
+
+  protected persistRun(_run: Run) {
+    return Promise.resolve();
+  }
+
+  loadDefaultSession() {
+    return this.newSession();
+  }
+
+  loadSession(sessionName: string) {
+    return this.newSession(sessionName);
+  }
+
+  // utility methods
+
+  getParents(run: Run) {
+    const parents = [];
+    let currentRun = run;
+    while (currentRun.parent_uuid) {
+      const parent = this.runMap.get(currentRun.parent_uuid);
+      if (parent) {
+        parents.push(parent);
+        currentRun = parent;
+      } else {
+        break;
+      }
+    }
+    return parents;
+  }
+
+  getBreadcrumbs(run: Run) {
+    const parents = this.getParents(run).reverse();
+    return [...parents, run]
+      .map((parent) => parent.serialized?.name)
+      .filter(Boolean)
+      .join(" > ");
+  }
+
+  // logging methods
+
+  onLLMStart(run: LLMRun) {
+    console.log("yoooooo");
+    const crumbs = this.getBreadcrumbs(run);
     console.log(
-      `Starting LLM ${runId} with name ${llm.name} with prompts: ${prompts.join(
-        ", "
-      )}\n`
+      `${wrap(color.green, "[llm/start]")} ${wrap(color.grey, crumbs)}\n`
     );
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  handleLLMError(err: any, runId: string) {
+  async handleLLMError(err: any, runId: string) {
     console.log(`LLM ${runId} errored: ${err}\n`);
   }
 
-  handleLLMEnd(output: LLMResult, runId: string) {
+  async handleLLMEnd(output: LLMResult, runId: string) {
     console.log(`LLM ${runId} finished: ${JSON.stringify(output)}\n`);
   }
 
-  handleChainStart(chain: { name: string }) {
+  async handleChainStart(chain: { name: string }) {
     console.log(`Entering new ${chain.name} chain...`);
   }
 
-  handleChainEnd(_output: ChainValues) {
+  async handleChainEnd(_output: ChainValues) {
     console.log("Finished chain.");
   }
 
-  handleAgentAction(action: AgentAction) {
+  async handleAgentAction(action: AgentAction) {
     console.log(action.log);
   }
 
-  handleToolEnd(output: string) {
+  async handleToolEnd(output: string) {
     console.log(output);
   }
 
-  handleText(text: string) {
+  async handleText(text: string) {
     console.log(text);
   }
 
-  handleAgentEnd(action: AgentFinish) {
+  async handleAgentEnd(action: AgentFinish) {
     console.log(action.log);
   }
 }

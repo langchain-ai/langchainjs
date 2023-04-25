@@ -17147,6 +17147,7 @@ __metadata:
     "@types/uuid": ^9
     "@typescript-eslint/eslint-plugin": ^5.51.0
     "@typescript-eslint/parser": ^5.51.0
+    ansi-styles: ^5.0.0
     axios: ^0.26.0
     binary-extensions: ^2.2.0
     browser-or-node: ^2.1.1

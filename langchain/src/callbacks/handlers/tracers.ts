@@ -48,10 +48,12 @@ export interface ToolRun extends BaseRun {
   child_tool_runs: ToolRun[];
 }
 
+export type Run = LLMRun | ChainRun | ToolRun;
+
 export abstract class BaseTracer extends BaseCallbackHandler {
   protected session?: TracerSession;
 
-  protected runMap: Map<string, LLMRun | ChainRun | ToolRun> = new Map();
+  protected runMap: Map<string, Run> = new Map();
 
   protected executionOrder = 1;
 
@@ -63,9 +65,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
 
   abstract loadDefaultSession(): Promise<TracerSession>;
 
-  protected abstract persistRun(
-    run: LLMRun | ChainRun | ToolRun
-  ): Promise<void>;
+  protected abstract persistRun(run: Run): Promise<void>;
 
   protected abstract persistSession(
     session: TracerSessionCreate
@@ -81,10 +81,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     return session;
   }
 
-  protected _addChildRun(
-    parentRun: ChainRun | ToolRun,
-    childRun: LLMRun | ChainRun | ToolRun
-  ) {
+  protected _addChildRun(parentRun: ChainRun | ToolRun, childRun: Run) {
     if (childRun.type === "llm") {
       parentRun.child_llm_runs.push(childRun as LLMRun);
     } else if (childRun.type === "chain") {
@@ -96,7 +93,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     }
   }
 
-  protected _startTrace(run: LLMRun | ChainRun | ToolRun) {
+  protected _startTrace(run: Run) {
     this.executionOrder += 1;
 
     if (run.parent_uuid) {
@@ -114,7 +111,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     this.runMap.set(run.uuid, run);
   }
 
-  protected async _endTrace(run: LLMRun | ChainRun | ToolRun): Promise<void> {
+  protected async _endTrace(run: Run): Promise<void> {
     if (!run.parent_uuid) {
       await this.persistRun(run);
       this.executionOrder = 1;
@@ -144,6 +141,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     };
 
     this._startTrace(run);
+    await this.onLLMStart?.(run);
   }
 
   async handleLLMEnd(output: LLMResult, runId: string): Promise<void> {
@@ -154,6 +152,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     const llmRun = run as LLMRun;
     llmRun.end_time = Date.now();
     llmRun.response = output;
+    await this.onLLMEnd?.(llmRun);
     await this._endTrace(llmRun);
   }
 
@@ -165,6 +164,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     const llmRun = run as LLMRun;
     llmRun.end_time = Date.now();
     llmRun.error = error.message;
+    await this.onLLMError?.(llmRun);
     await this._endTrace(llmRun);
   }
 
@@ -193,6 +193,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     };
 
     this._startTrace(run);
+    await this.onChainStart?.(run);
   }
 
   async handleChainEnd(outputs: ChainValues, runId: string): Promise<void> {
@@ -203,6 +204,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     const chainRun = run as ChainRun;
     chainRun.end_time = Date.now();
     chainRun.outputs = outputs;
+    await this.onChainEnd?.(chainRun);
     await this._endTrace(chainRun);
   }
 
@@ -214,6 +216,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     const chainRun = run as ChainRun;
     chainRun.end_time = Date.now();
     chainRun.error = error.message;
+    await this.onChainError?.(chainRun);
     await this._endTrace(chainRun);
   }
 
@@ -243,6 +246,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     };
 
     this._startTrace(run);
+    await this.onToolStart?.(run);
   }
 
   async handleToolEnd(output: string, runId: string): Promise<void> {
@@ -253,6 +257,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     const toolRun = run as ToolRun;
     toolRun.end_time = Date.now();
     toolRun.output = output;
+    await this.onToolEnd?.(toolRun);
     await this._endTrace(toolRun);
   }
 
@@ -264,8 +269,35 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     const toolRun = run as ToolRun;
     toolRun.end_time = Date.now();
     toolRun.error = error.message;
+    await this.onToolError?.(toolRun);
     await this._endTrace(toolRun);
   }
+
+  // custom event handlers
+
+  onLLMStart?(run: LLMRun): void | Promise<void>;
+
+  onLLMEnd?(run: LLMRun): void | Promise<void>;
+
+  onLLMError?(run: LLMRun): void | Promise<void>;
+
+  onChainStart?(run: ChainRun): void | Promise<void>;
+
+  onChainEnd?(run: ChainRun): void | Promise<void>;
+
+  onChainError?(run: ChainRun): void | Promise<void>;
+
+  onToolStart?(run: ToolRun): void | Promise<void>;
+
+  onToolEnd?(run: ToolRun): void | Promise<void>;
+
+  onToolError?(run: ToolRun): void | Promise<void>;
+
+  // onAgentAction?(run: ChainRun): void | Promise<void>;
+
+  // onAgentEnd?(run: ChainRun): void | Promise<void>;
+
+  // onText?(run: Run): void | Promise<void>;
 }
 
 export class LangChainTracer extends BaseTracer {

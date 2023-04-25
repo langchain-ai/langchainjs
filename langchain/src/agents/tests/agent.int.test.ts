@@ -9,6 +9,7 @@ import { Calculator } from "../../tools/calculator.js";
 import { initializeAgentExecutorWithOptions } from "../initialize.js";
 import { WebBrowser } from "../../tools/webbrowser.js";
 import { Tool } from "../../tools/base.js";
+import { ConsoleCallbackHandler } from "../../callbacks/index.js";
 
 test("Run agent from hub", async () => {
   const model = new OpenAI({ temperature: 0, modelName: "text-babbage-001" });
@@ -36,7 +37,7 @@ test("Run agent from hub", async () => {
   console.log(res);
 }, 30000);
 
-test("Run agent locally", async () => {
+test.only("Run agent locally", async () => {
   const model = new OpenAI({ temperature: 0, modelName: "text-babbage-001" });
   const tools = [
     new SerpAPI(undefined, {
@@ -49,6 +50,7 @@ test("Run agent locally", async () => {
 
   const executor = await initializeAgentExecutorWithOptions(tools, model, {
     agentType: "zero-shot-react-description",
+    callbacks: [new ConsoleCallbackHandler()],
   });
   console.log("Loaded agent.");
 
