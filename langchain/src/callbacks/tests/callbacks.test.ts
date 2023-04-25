@@ -337,7 +337,7 @@ test("CallbackManager with child manager inherited handlers", async () => {
   ]);
 });
 
-test.only("CallbackManager.copy()", () => {
+test("CallbackManager.copy()", () => {
   const callbackManager1 = new CallbackManager();
   const handler1 = new FakeCallbackHandler();
   const handler2 = new FakeCallbackHandler();
