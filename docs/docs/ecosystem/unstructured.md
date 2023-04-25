@@ -56,7 +56,6 @@ Currently, the `UnstructuredLoader` supports the following document types:
 - Emails (`.eml`/`.msg`)
 - HTML (`.html`)
 - Markdown Files (`.md`)
-- Rich Text Files (`.rtf`)
 
 The output from the `UnstructuredLoader` will be an array of `Document` objects that looks
 like the following:

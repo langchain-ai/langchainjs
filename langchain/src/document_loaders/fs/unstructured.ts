@@ -113,7 +113,6 @@ export class UnstructuredDirectoryLoader extends DirectoryLoader {
       ".md": (p: string) => new UnstructuredLoader(webPath, p),
       ".pptx": (p: string) => new UnstructuredLoader(webPath, p),
       ".ppt": (p: string) => new UnstructuredLoader(webPath, p),
-      ".rtf": (p: string) => new UnstructuredLoader(webPath, p),
       ".msg": (p: string) => new UnstructuredLoader(webPath, p),
     };
     super(directoryPath, loaders, recursive, unknown);
