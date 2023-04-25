@@ -2,7 +2,10 @@ import * as url from "node:url";
 import * as path from "node:path";
 import { test, expect } from "@jest/globals";
 import { UnknownHandling } from "../fs/directory.js";
-import { UnstructuredLoader, UnstructuredDirectoryLoader } from "../fs/unstructured.js";
+import {
+  UnstructuredLoader,
+  UnstructuredDirectoryLoader,
+} from "../fs/unstructured.js";
 
 test.skip("Test Unstructured base loader", async () => {
   const loader = new UnstructuredLoader(
@@ -17,18 +20,17 @@ test.skip("Test Unstructured base loader", async () => {
   }
 });
 
-
 test("Test Unstructured directory loader", async () => {
-	const directoryPath = path.resolve(
-		path.dirname(url.fileURLToPath(import.meta.url)),
-		"./example_data"
-	);
+  const directoryPath = path.resolve(
+    path.dirname(url.fileURLToPath(import.meta.url)),
+    "./example_data"
+  );
 
   const loader = new UnstructuredDirectoryLoader(
     "https://api.unstructured.io/general/v0/general",
     directoryPath,
     true,
-    UnknownHandling.Ignore,
+    UnknownHandling.Ignore
   );
   const docs = await loader.load();
 

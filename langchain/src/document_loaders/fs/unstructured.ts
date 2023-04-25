@@ -93,15 +93,13 @@ export class UnstructuredLoader extends BaseDocumentLoader {
   }
 }
 
-
 export class UnstructuredDirectoryLoader extends DirectoryLoader {
   constructor(
     public webPath: string,
     public directoryPath: string,
     public recursive: boolean = true,
-    public unknown: UnknownHandling = UnknownHandling.Warn,
+    public unknown: UnknownHandling = UnknownHandling.Warn
   ) {
-
     const loaders = {
       ".txt": (p: string) => new UnstructuredLoader(webPath, p),
       ".text": (p: string) => new UnstructuredLoader(webPath, p),
@@ -117,7 +115,7 @@ export class UnstructuredDirectoryLoader extends DirectoryLoader {
       ".ppt": (p: string) => new UnstructuredLoader(webPath, p),
       ".rtf": (p: string) => new UnstructuredLoader(webPath, p),
       ".msg": (p: string) => new UnstructuredLoader(webPath, p),
-    }
+    };
     super(directoryPath, loaders, recursive, unknown);
   }
 }

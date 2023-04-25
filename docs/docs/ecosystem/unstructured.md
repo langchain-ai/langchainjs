@@ -41,22 +41,22 @@ import { UnstructuredDirectoryLoader } from "langchain/document_loaders/fs/unstr
 
 const loader = new UnstructuredDirectoryLoader(
   "https://api.unstructured.io/general/v0/general",
-  "langchain/src/document_loaders/tests/example_data",
+  "langchain/src/document_loaders/tests/example_data"
 );
 const docs = await loader.load();
 ```
 
 Currently, the `UnstructuredLoader` supports the following document types:
 
-* Plain text files (`.txt`/`.text`)
-* PDFs (`.pdf`)
-* Word Documents (`.doc`/`.docx`)
-* PowerPoints (`.ppt`/`.pptx`)
-* Images (`.jpg`/`.jpeg`)
-* Emails (`.eml`/`.msg`)
-* HTML (`.html`)
-* Markdown Files (`.md`)
-* Rich Text Files (`.rtf`)
+- Plain text files (`.txt`/`.text`)
+- PDFs (`.pdf`)
+- Word Documents (`.doc`/`.docx`)
+- PowerPoints (`.ppt`/`.pptx`)
+- Images (`.jpg`/`.jpeg`)
+- Emails (`.eml`/`.msg`)
+- HTML (`.html`)
+- Markdown Files (`.md`)
+- Rich Text Files (`.rtf`)
 
 The output from the `UnstructuredLoader` will be an array of `Document` objects that looks
 like the following:
