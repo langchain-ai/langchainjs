@@ -79,7 +79,7 @@ export abstract class BaseChain extends BaseLangChain implements ChainInputs {
   /**
    * Run the core logic of this chain and add to output if desired.
    *
-   * Wraps {@link _call} and handles memory.
+   * Wraps _call and handles memory.
    */
   async call(values: ChainValues, callbacks?: Callbacks): Promise<ChainValues> {
     const fullValues = { ...values } as typeof values;

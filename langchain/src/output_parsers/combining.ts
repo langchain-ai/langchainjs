@@ -1,4 +1,5 @@
-import { BaseOutputParser } from "../schema/index.js";
+import { Callbacks } from "../callbacks/manager.js";
+import { BaseOutputParser } from "../schema/output_parser.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type CombinedOutput = Record<string, any>;
@@ -15,10 +16,10 @@ export class CombiningOutputParser extends BaseOutputParser {
     this.parsers = parsers;
   }
 
-  async parse(input: string): Promise<CombinedOutput> {
+  async parse(input: string, callbacks?: Callbacks): Promise<CombinedOutput> {
     const ret: CombinedOutput = {};
     for (const p of this.parsers) {
-      Object.assign(ret, await p.parse(input));
+      Object.assign(ret, await p.parse(input, callbacks));
     }
     return ret;
   }
