@@ -140,46 +140,6 @@ export type ChainValues = Record<string, any>;
 export abstract class BaseRetriever {
   abstract getRelevantDocuments(query: string): Promise<Document[]>;
 }
-/** Class to parse the output of an LLM call.
- */
-export abstract class BaseOutputParser<T = unknown> {
-  /**
-   * Parse the output of an LLM call.
-   *
-   * @param text - LLM output to parse.
-   * @returns Parsed output.
-   */
-  abstract parse(text: string): Promise<T>;
-
-  async parseWithPrompt(text: string, _prompt: BasePromptValue): Promise<T> {
-    return this.parse(text);
-  }
-
-  /**
-   * Return a string describing the format of the output.
-   * @returns Format instructions.
-   * @example
-   * ```json
-   * {
-   *  "foo": "bar"
-   * }
-   * ```
-   */
-  abstract getFormatInstructions(): string;
-
-  /**
-   * Return the string type key uniquely identifying this class of parser
-   */
-  _type(): string {
-    throw new Error("_type not implemented");
-  }
-}
-
-export class OutputParserException extends Error {
-  constructor(message: string) {
-    super(message);
-  }
-}
 
 export abstract class BaseChatMessageHistory {
   public abstract getMessages(): Promise<BaseChatMessage[]>;

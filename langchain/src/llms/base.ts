@@ -31,7 +31,6 @@ export interface BaseLLMParams extends BaseLanguageModelParams {
   cache?: BaseCache | boolean;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface BaseLLMCallOptions extends BaseLanguageModelCallOptions {}
 
 /**

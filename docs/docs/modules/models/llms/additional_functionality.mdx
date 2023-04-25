@@ -7,6 +7,7 @@ import Example from "@examples/models/llm/llm.ts";
 import DebuggingExample from "@examples/models/llm/llm_debugging.ts";
 import StreamingExample from "@examples/models/llm/llm_streaming.ts";
 import TimeoutExample from "@examples/models/llm/llm_timeout.ts";
+import CancellationExample from "@examples/models/llm/openai_cancellation.ts";
 
 # Additional Functionality: LLMs
 
@@ -73,6 +74,14 @@ By default, LangChain will wait indefinitely for a response from the model provi
 <CodeBlock language="typescript">{TimeoutExample}</CodeBlock>
 
 Currently, the timeout option is only supported for OpenAI models.
+
+## Cancelling requests
+
+You can cancel a request by passing a `signal` option when you call the model. For example, for OpenAI:
+
+<CodeBlock language="typescript">{CancellationExample}</CodeBlock>
+
+Currently, the signal option is only supported for OpenAI models.
 
 ## Dealing with Rate Limits
 
