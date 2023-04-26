@@ -18,11 +18,11 @@ class FakeLLM extends BaseLLM {
   async _generate(prompts: string[], _?: string[]): Promise<LLMResult> {
     return {
       generations: prompts.map((prompt) => [
-          {
-            text: prompt,
-            score: 0,
-          },
-        ]),
+        {
+          text: prompt,
+          score: 0,
+        },
+      ]),
     };
   }
 }
