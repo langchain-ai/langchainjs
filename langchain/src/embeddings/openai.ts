@@ -4,8 +4,8 @@ import {
   CreateEmbeddingRequest,
   ConfigurationParameters,
 } from "openai";
-import type { AxiosRequestConfig } from "axios";
-import { StreamingAxiosConfiguration } from "util/axios-types.js";
+import { AzureOpenAIInput, OpenAICallOptions } from "types/open-ai-types.js";
+import { StreamingAxiosConfiguration } from "../util/axios-types.js";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
 import { chunkArray } from "../util/chunk.js";
 import { Embeddings, EmbeddingsParams } from "./base.js";
@@ -32,38 +32,12 @@ export interface OpenAIEmbeddingsParams extends EmbeddingsParams {
   stripNewLines?: boolean;
 }
 
-export interface AzureOpenAIEmbeddingsParams {
-  /**
-   * API version to use when making requests to Azure OpenAI.
-   */
-  azureOpenAIApiVersion?: string;
-
-  /**
-   * API key to use when making requests to Azure OpenAI.
-   */
-  azureOpenAIApiKey?: string;
-
-  /**
-   * Azure OpenAI API instance name to use when making requests to Azure OpenAI.
-   * this is the name of the instance you created in the Azure portal.
-   * e.g. "my-openai-instance"
-   * this will be used in the endpoint URL: https://my-openai-instance.openai.azure.com/openai/deployments/{DeploymentName}/
-   */
-  azureOpenAIApiInstanceName?: string;
-
-  /**
-   * Azure OpenAI API deployment name to use when making requests to Azure OpenAI.
-   * this is the name of the deployment you created in the Azure portal.
-   * e.g. "my-openai-deployment"
-   * this will be used in the endpoint URL: https://{InstanceName}.openai.azure.com/openai/deployments/my-openai-deployment/
-   */
-  azureOpenAIApiDeploymentName?: string;
-}
-
 export class OpenAIEmbeddings
   extends Embeddings
-  implements OpenAIEmbeddingsParams, AzureOpenAIEmbeddingsParams
+  implements OpenAIEmbeddingsParams, AzureOpenAIInput
 {
+  declare CallOptions: OpenAICallOptions;
+
   modelName = "text-embedding-ada-002";
 
   batchSize = 512;
@@ -86,7 +60,7 @@ export class OpenAIEmbeddings
 
   constructor(
     fields?: Partial<OpenAIEmbeddingsParams> &
-      Partial<AzureOpenAIEmbeddingsParams> & {
+      Partial<AzureOpenAIInput> & {
         verbose?: boolean;
         openAIApiKey?: string;
       },
@@ -206,7 +180,7 @@ export class OpenAIEmbeddings
       });
       this.client = new OpenAIApi(clientConfig);
     }
-    const axiosOptions = {} as StreamingAxiosConfiguration & AxiosRequestConfig;
+    const axiosOptions = {} as StreamingAxiosConfiguration & OpenAICallOptions;
     if (this.azureOpenAIApiKey) {
       axiosOptions.headers = {
         "api-key": this.azureOpenAIApiKey,

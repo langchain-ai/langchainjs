@@ -7,106 +7,16 @@ import {
   ChatCompletionResponseMessageRoleEnum,
   CreateChatCompletionResponse,
 } from "openai";
-import type { AxiosRequestConfig } from "axios";
+import {
+  AzureOpenAIInput,
+  Kwargs,
+  OpenAICallOptions,
+  OpenAIChatInput,
+} from "types/open-ai-types.js";
 import type { StreamingAxiosConfiguration } from "../util/axios-types.js";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
-import { BaseLLMCallOptions, BaseLLMParams, LLM } from "./base.js";
+import { BaseLLMParams, LLM } from "./base.js";
 import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
-
-/**
- * Input to OpenAI class.
- */
-export interface OpenAIChatInput {
-  /** Sampling temperature to use, between 0 and 2, defaults to 1 */
-  temperature: number;
-
-  /** Total probability mass of tokens to consider at each step, between 0 and 1, defaults to 1 */
-  topP: number;
-
-  /** Penalizes repeated tokens according to frequency */
-  frequencyPenalty: number;
-
-  /** Penalizes repeated tokens */
-  presencePenalty: number;
-
-  /** Number of chat completions to generate for each prompt */
-  n: number;
-
-  /** Dictionary used to adjust the probability of specific tokens being generated */
-  logitBias?: Record<string, number>;
-
-  /** Whether to stream the results or not */
-  streaming: boolean;
-
-  /** Model name to use */
-  modelName: string;
-
-  /** ChatGPT messages to pass as a prefix to the prompt */
-  prefixMessages?: ChatCompletionRequestMessage[];
-
-  /** Holds any additional parameters that are valid to pass to {@link
-   * https://platform.openai.com/docs/api-reference/completions/create |
-   * `openai.create`} that are not explicitly specified on this class.
-   */
-  modelKwargs?: Kwargs;
-
-  /** List of stop words to use when generating */
-  stop?: string[];
-
-  /**
-   * Timeout to use when making requests to OpenAI.
-   */
-  timeout?: number;
-
-  /**
-   * Maximum number of tokens to generate in the completion.  If not specified,
-   * defaults to the maximum number of tokens allowed by the model.
-   */
-  maxTokens?: number;
-}
-
-export interface OpenAIChatCallOptions extends BaseLLMCallOptions {
-  /**
-   * List of stop words to use when generating
-   */
-  stop?: string[];
-
-  /**
-   * Additional options to pass to the underlying axios request.
-   */
-  options?: AxiosRequestConfig;
-}
-
-export interface AzureOpenAIChatInput {
-  /**
-   * API version to use when making requests to Azure OpenAI.
-   */
-  azureOpenAIApiVersion?: string;
-
-  /**
-   * API key to use when making requests to Azure OpenAI.
-   */
-  azureOpenAIApiKey?: string;
-
-  /**
-   * Azure OpenAI API instance name to use when making requests to Azure OpenAI.
-   * this is the name of the instance you created in the Azure portal.
-   * e.g. "my-openai-instance"
-   * this will be used in the endpoint URL: https://my-openai-instance.openai.azure.com/openai/deployments/{DeploymentName}/
-   */
-  azureOpenAIApiInstanceName?: string;
-
-  /**
-   * Azure OpenAI API deployment name to use when making requests to Azure OpenAI.
-   * this is the name of the deployment you created in the Azure portal.
-   * e.g. "my-openai-deployment"
-   * this will be used in the endpoint URL: https://{InstanceName}.openai.azure.com/openai/deployments/my-openai-deployment/
-   */
-  azureOpenAIApiDeploymentName?: string;
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type Kwargs = Record<string, any>;
 
 /**
  * Wrapper around OpenAI large language models that use the Chat endpoint.
@@ -132,9 +42,9 @@ type Kwargs = Record<string, any>;
  */
 export class OpenAIChat
   extends LLM
-  implements OpenAIChatInput, AzureOpenAIChatInput
+  implements OpenAIChatInput, AzureOpenAIInput
 {
-  declare CallOptions: OpenAIChatCallOptions;
+  declare CallOptions: OpenAICallOptions;
 
   temperature = 1;
 
@@ -176,7 +86,7 @@ export class OpenAIChat
 
   constructor(
     fields?: Partial<OpenAIChatInput> &
-      Partial<AzureOpenAIChatInput> &
+      Partial<AzureOpenAIInput> &
       BaseLLMParams & {
         openAIApiKey?: string;
       },
@@ -442,7 +352,7 @@ export class OpenAIChat
       this.client = new OpenAIApi(clientConfig);
     }
     const axiosOptions = (options ?? {}) as StreamingAxiosConfiguration &
-      OpenAIChatCallOptions;
+      OpenAICallOptions;
     if (this.azureOpenAIApiKey) {
       axiosOptions.headers = {
         "api-key": this.azureOpenAIApiKey,

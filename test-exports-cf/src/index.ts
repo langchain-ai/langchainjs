@@ -23,7 +23,11 @@ import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { HNLoader } from "langchain/document_loaders/web/hn";
 
 export interface Env {
-  OPENAI_API_KEY: string;
+  OPENAI_API_KEY?: string;
+  AZURE_OPENAI_API_KEY?: string;
+  AZURE_OPENAI_API_INSTANCE_NAME?: string;
+  AZURE_OPENAI_API_DEPLOYMENT_NAME?: string;
+  AZURE_OPENAI_API_VERSION?: string;
 }
 
 export default {
@@ -32,16 +36,28 @@ export default {
     env: Env,
     ctx: ExecutionContext
   ): Promise<Response> {
+
+    const constructorParameters
+      = env.AZURE_OPENAI_API_KEY ? {
+        azureOpenAIApiKey: env.AZURE_OPENAI_API_KEY,
+        azureOpenAIApiInstanceName: env.AZURE_OPENAI_API_INSTANCE_NAME,
+        azureOpenAIApiDeploymentName: env.AZURE_OPENAI_API_DEPLOYMENT_NAME,
+        azureOpenAIApiVersion: env.AZURE_OPENAI_API_VERSION,
+      } 
+      : {
+        openAIApiKey: env.OPENAI_API_KEY,
+      }
+
     // Intantiate a few things to test the exports
-    new OpenAI({ openAIApiKey: env.OPENAI_API_KEY });
-    const emb = new OpenAIEmbeddings({ openAIApiKey: env.OPENAI_API_KEY });
+    new OpenAI(constructorParameters);
+    const emb = new OpenAIEmbeddings(constructorParameters);
 
     // Test a document loader
     new HNLoader("https://news.ycombinator.com/item?id=28275939");
 
     // Test a chain + prompt + model
     const chain = new LLMChain({
-      llm: new ChatOpenAI({ openAIApiKey: env.OPENAI_API_KEY }),
+      llm: new ChatOpenAI(constructorParameters),
       prompt: ChatPromptTemplate.fromPromptMessages([
         HumanMessagePromptTemplate.fromTemplate("{input}"),
       ]),
