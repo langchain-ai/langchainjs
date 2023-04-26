@@ -108,9 +108,9 @@ export class UnstructuredDirectoryLoader extends DirectoryLoader {
   constructor(
     public webPath: string,
     public directoryPath: string,
+    public apiKey: string = "",
     public recursive: boolean = true,
-    public unknown: UnknownHandling = UnknownHandling.Warn,
-    public apiKey: string = ""
+    public unknown: UnknownHandling = UnknownHandling.Warn
   ) {
     const loaders = {
       ".txt": (p: string) => new UnstructuredLoader(webPath, p, apiKey),
