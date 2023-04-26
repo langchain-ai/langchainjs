@@ -15,6 +15,17 @@ Please fill out [this form](https://forms.gle/57d8AmXBYp8PP8tZA) and we'll set u
 import { OpenAI } from "langchain/llms/openai";
 ```
 
+## Supported Environments
+
+LangChain is written in TypeScript and can be used in:
+
+- Node.js (ESM and CommonJS) - 18.x, 19.x, 20.x
+- Cloudflare Workers
+- Vercel / Next.js (Browser, Serverless and Edge functions)
+- Supabase Edge Functions
+- Browser
+- Deno
+
 ## 🤔 What is this?
 
 Large language models (LLMs) are emerging as a transformative technology, enabling
