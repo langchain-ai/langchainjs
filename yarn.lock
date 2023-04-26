@@ -5895,12 +5895,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@pinecone-database/pinecone@npm:^0.0.12":
-  version: 0.0.12
-  resolution: "@pinecone-database/pinecone@npm:0.0.12"
+"@pinecone-database/pinecone@npm:^0.0.14":
+  version: 0.0.14
+  resolution: "@pinecone-database/pinecone@npm:0.0.14"
   dependencies:
     cross-fetch: ^3.1.5
-  checksum: 010eb85b5c300f04c41d7939ec306f9c0f5b99bba9f31904ef19b57d1c4625c5ea2256fa2d1721075da267fe42db36c9f870c2a06cc45fcca4f610a7c660a134
+  checksum: 3af7a4936bef92e456203307c59eaf5e07447308e47a7fad18060b2a6a04f15ad49f00f378cdbbe709e6e60cb07d1ed71d612f1e6b2b78e56e85b97852448d09
   languageName: node
   linkType: hard
 
@@ -12999,7 +12999,7 @@ __metadata:
   dependencies:
     "@getmetal/metal-sdk": ^2.0.1
     "@opensearch-project/opensearch": ^2.2.0
-    "@pinecone-database/pinecone": ^0.0.12
+    "@pinecone-database/pinecone": ^0.0.14
     "@prisma/client": ^4.11.0
     "@supabase/supabase-js": ^2.10.0
     "@tsconfig/recommended": ^1.0.2
@@ -17136,7 +17136,7 @@ __metadata:
     "@huggingface/inference": ^1.5.1
     "@jest/globals": ^29.5.0
     "@opensearch-project/opensearch": ^2.2.0
-    "@pinecone-database/pinecone": ^0.0.12
+    "@pinecone-database/pinecone": ^0.0.14
     "@supabase/supabase-js": ^2.10.0
     "@tsconfig/recommended": ^1.0.2
     "@types/d3-dsv": ^2

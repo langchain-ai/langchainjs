@@ -28,6 +28,10 @@ test("Test PDF loader from file to single document", async () => {
 });
 
 test("Test PDF loader from file using custom pdfjs", async () => {
+  if (process.version.startsWith("v20")) {
+    // `pdfjs-dist` doesn't support Node 20 (`canvas` doesn't support Node 20)
+    return;
+  }
   const filePath = path.resolve(
     path.dirname(url.fileURLToPath(import.meta.url)),
     "./example_data/1706.03762.pdf"
