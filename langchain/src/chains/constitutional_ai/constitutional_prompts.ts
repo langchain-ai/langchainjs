@@ -12,7 +12,7 @@ Revision request: {revision_request}
     
 Revision: {revision}`;
 
-export const critiqueExample = new PromptTemplate({
+export const critiqueExample = /* #__PURE__ */ new PromptTemplate({
   template: constitutionalPrompt,
   inputVariables: [
     "input_prompt",
@@ -69,7 +69,7 @@ export const examples = [
   },
 ];
 
-export const CRITIQUE_PROMPT = new FewShotPromptTemplate({
+export const CRITIQUE_PROMPT = /* #__PURE__ */ new FewShotPromptTemplate({
   examplePrompt: critiqueExample,
   examples,
   prefix: "Below is conversation between a human and an AI model.",
@@ -83,7 +83,7 @@ Critique:`,
   inputVariables: ["input_prompt", "output_from_model", "critique_request"],
 });
 
-export const REVISION_PROMPT = new FewShotPromptTemplate({
+export const REVISION_PROMPT = /* #__PURE__ */ new FewShotPromptTemplate({
   examplePrompt: critiqueExample,
   examples,
   prefix: "Below is conversation between a human and an AI model.",
