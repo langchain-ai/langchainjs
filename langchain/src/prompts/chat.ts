@@ -292,6 +292,13 @@ export class ChatPromptTemplate
         ),
       [] as BaseMessagePromptTemplate[]
     );
+    const flattenedPartialVariables = promptMessages.reduce(
+      (acc, promptMessage) =>
+        promptMessage instanceof ChatPromptTemplate
+          ? Object.assign(acc, promptMessage.partialVariables)
+          : acc,
+      {} as PartialValues
+    );
 
     const inputVariables = new Set<string>();
     for (const promptMessage of flattenedMessages) {
@@ -302,6 +309,7 @@ export class ChatPromptTemplate
     return new ChatPromptTemplate({
       inputVariables: [...inputVariables],
       promptMessages: flattenedMessages,
+      partialVariables: flattenedPartialVariables,
     });
   }
 }
