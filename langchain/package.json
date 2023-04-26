@@ -292,7 +292,7 @@
     "@huggingface/inference": "^1.5.1",
     "@jest/globals": "^29.5.0",
     "@opensearch-project/opensearch": "^2.2.0",
-    "@pinecone-database/pinecone": "^0.0.12",
+    "@pinecone-database/pinecone": "^0.0.14",
     "@supabase/supabase-js": "^2.10.0",
     "@tsconfig/recommended": "^1.0.2",
     "@types/d3-dsv": "^2",
