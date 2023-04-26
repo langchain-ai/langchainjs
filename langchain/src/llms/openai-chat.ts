@@ -407,7 +407,7 @@ export class PromptLayerChatOpenAI extends ChatOpenAI {
       body: JSON.stringify({
         function_name: "openai.ChatCompletion.create",
         args: [],
-        kwargs: { engine: request.model, prompt: request.prompt },
+        kwargs: { engine: request.model, messages: request.messages },
         tags: this.plTags ?? [],
         request_response: response,
         request_start_time: Math.floor(requestStartTime / 1000),
