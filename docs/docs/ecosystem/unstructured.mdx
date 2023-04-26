@@ -19,15 +19,11 @@ If you are running the container locally, switch the url to
 Check out the [API documentation page](https://api.unstructured.io/general/docs)
 for additional details.
 
-```typescript
-import { UnstructuredLoader } from "langchain/document_loaders/fs/unstructured";
+import SingleExample from "@examples/document_loaders/unstructured.ts";
 
-const loader = new UnstructuredLoader(
-  "https://api.unstructured.io/general/v0/general",
-  "langchain/src/document_loaders/tests/example_data/example.txt"
-);
-const docs = await loader.load();
-```
+<CodeBlock language="typescript">{SingleExample}</CodeBlock>
+
+## Directories
 
 You can also load all of the files in the directory using `UnstructuredDirectoryLoader`, which inherits from [`DirectoryLoader`](../modules/indexes/document_loaders/examples/file_loaders/directory.md):
 
