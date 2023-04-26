@@ -1,10 +1,17 @@
+import * as url from "node:url";
+import * as path from "node:path";
 import { test, expect } from "@jest/globals";
 import { UnstructuredLoader } from "../fs/unstructured.js";
 
-test.skip("Test Unstructured base loader", async () => {
+test("Test Unstructured base loader", async () => {
+  const filePath = path.resolve(
+    path.dirname(url.fileURLToPath(import.meta.url)),
+    "./example_data/example.txt"
+  );
+
   const loader = new UnstructuredLoader(
-    "http://127.0.0.1:8000/general/v0.0.4/general",
-    "langchain/src/document_loaders/tests/example_data/example.txt"
+    "https://api.unstructured.io/general/v0/general",
+    filePath
   );
   const docs = await loader.load();
 
