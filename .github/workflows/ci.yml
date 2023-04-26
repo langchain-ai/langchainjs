@@ -20,7 +20,7 @@ jobs:
           node-version: 18.x
           cache: "yarn"
       - name: Install dependencies
-        run: yarn install --immutable
+        run: yarn install --immutable --mode=skip-build
       - name: Check formatting
         run: yarn run format:check
 
@@ -35,7 +35,7 @@ jobs:
           node-version: 18.x
           cache: "yarn"
       - name: Install dependencies
-        run: yarn install --immutable
+        run: yarn install --immutable --mode=skip-build
       - name: Check linting
         run: yarn run lint
 
