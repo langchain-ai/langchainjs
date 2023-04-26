@@ -365,7 +365,7 @@ export class PromptLayerChatOpenAI extends ChatOpenAI {
   plTags?: string[];
 
   constructor(
-    fields?: ConstructorParameters<typeof OpenAI>[0] & {
+    fields?: ConstructorParameters<typeof ChatOpenAI>[0] & {
       promptLayerApiKey?: string;
       plTags?: string[];
     }
@@ -386,7 +386,7 @@ export class PromptLayerChatOpenAI extends ChatOpenAI {
   }
 
   async completionWithRetry(
-    request: CreateCompletionRequest,
+    request: CreateChatCompletionRequest,
     options?: StreamingAxiosConfiguration
   ) {
     if (request.stream) {
