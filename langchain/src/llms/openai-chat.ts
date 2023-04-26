@@ -354,10 +354,8 @@ export class OpenAIChat extends LLM implements OpenAIChatInput {
   }
 }
 
-
 /**
- * PromptLayer wrapper to ChatOpenAI
- * @augments ChatOpenAI
+ * PromptLayer wrapper to OpenAIChat
  */
 export class PromptLayerOpenAIChat extends OpenAIChat {
   promptLayerApiKey?: string;
@@ -365,7 +363,7 @@ export class PromptLayerOpenAIChat extends OpenAIChat {
   plTags?: string[];
 
   constructor(
-    fields?: ConstructorParameters<typeof ChatOpenAI>[0] & {
+    fields?: ConstructorParameters<typeof OpenAIChat>[0] & {
       promptLayerApiKey?: string;
       plTags?: string[];
     }
