@@ -212,6 +212,23 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@apify/consts@npm:^2.13.0, @apify/consts@npm:^2.9.0":
+  version: 2.13.0
+  resolution: "@apify/consts@npm:2.13.0"
+  checksum: c7e2db4220c9ee563e9d6801d12ffa7fc543ff83ea8af0b92d815483d5410399c468291af28f10ef5f5296dd29ce67c38f14db30a900a940c2aeae3b6292179a
+  languageName: node
+  linkType: hard
+
+"@apify/log@npm:^2.2.6":
+  version: 2.2.13
+  resolution: "@apify/log@npm:2.2.13"
+  dependencies:
+    "@apify/consts": ^2.13.0
+    ansi-colors: ^4.1.1
+  checksum: 52bc8848f25a144a46e4c54327ec2664d0f1e82a70053beddb872471d294a57b579e1eb592f87edf7d490c95f17abdcf54322390419faec3809a37328a406c00
+  languageName: node
+  linkType: hard
+
 "@aws-crypto/crc32@npm:3.0.0":
   version: 3.0.0
   resolution: "@aws-crypto/crc32@npm:3.0.0"
@@ -3253,6 +3270,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@crawlee/types@npm:^3.3.0":
+  version: 3.3.1
+  resolution: "@crawlee/types@npm:3.3.1"
+  dependencies:
+    tslib: ^2.4.0
+  checksum: da8042b4876c88ad4e0b3f811851e1a861d3736f7e1de1610a745b54b752f140ed3c7ce4723339a22e4de1a9ef7ffc36ad6b82d334b7b7991394cd6934603a44
+  languageName: node
+  linkType: hard
+
 "@csstools/normalize.css@npm:*":
   version: 12.0.0
   resolution: "@csstools/normalize.css@npm:12.0.0"
@@ -6279,6 +6305,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@sindresorhus/is@npm:^4.2.0":
+  version: 4.6.0
+  resolution: "@sindresorhus/is@npm:4.6.0"
+  checksum: 83839f13da2c29d55c97abc3bc2c55b250d33a0447554997a85c539e058e57b8da092da396e252b11ec24a0279a0bed1f537fa26302209327060643e327f81d2
+  languageName: node
+  linkType: hard
+
 "@sindresorhus/is@npm:^5.2.0":
   version: 5.3.0
   resolution: "@sindresorhus/is@npm:5.3.0"
@@ -8382,6 +8415,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"ansi-colors@npm:^4.1.1":
+  version: 4.1.3
+  resolution: "ansi-colors@npm:4.1.3"
+  checksum: a9c2ec842038a1fabc7db9ece7d3177e2fe1c5dc6f0c51ecfbf5f39911427b89c00b5dc6b8bd95f82a26e9b16aaae2e83d45f060e98070ce4d1333038edceb0e
+  languageName: node
+  linkType: hard
+
 "ansi-escapes@npm:^4.2.1, ansi-escapes@npm:^4.3.0, ansi-escapes@npm:^4.3.1":
   version: 4.3.2
   resolution: "ansi-escapes@npm:4.3.2"
@@ -8476,6 +8516,24 @@ __metadata:
     normalize-path: ^3.0.0
     picomatch: ^2.0.4
   checksum: 3e044fd6d1d26545f235a9fe4d7a534e2029d8e59fa7fd9f2a6eb21230f6b5380ea1eaf55136e60cbf8e613544b3b766e7a6fa2102e2a3a117505466e3025dc2
+  languageName: node
+  linkType: hard
+
+"apify-client@npm:^2.7.1":
+  version: 2.7.1
+  resolution: "apify-client@npm:2.7.1"
+  dependencies:
+    "@apify/consts": ^2.9.0
+    "@apify/log": ^2.2.6
+    "@crawlee/types": ^3.3.0
+    agentkeepalive: ^4.2.1
+    async-retry: ^1.3.3
+    axios: ^0.21.1
+    content-type: ^1.0.5
+    ow: ^0.28.2
+    tslib: ^2.5.0
+    type-fest: ^3.6.1
+  checksum: 6871c8bf2df318eeea06ce5e0c7b026d48e44861263d21d4b7508233b2eabd7eeed140935d8660ff6103cb868c33ada27d6450fafd2f4857befe67d5ad7b0833
   languageName: node
   linkType: hard
 
@@ -8699,7 +8757,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"async-retry@npm:1.3.3":
+"async-retry@npm:1.3.3, async-retry@npm:^1.3.3":
   version: 1.3.3
   resolution: "async-retry@npm:1.3.3"
   dependencies:
@@ -8783,6 +8841,15 @@ __metadata:
   version: 4.6.3
   resolution: "axe-core@npm:4.6.3"
   checksum: d0c46be92b9707c48b88a53cd5f471b155a2bfc8bf6beffb514ecd14e30b4863e340b5fc4f496d82a3c562048088c1f3ff5b93b9b3b026cb9c3bfacfd535da10
+  languageName: node
+  linkType: hard
+
+"axios@npm:^0.21.1":
+  version: 0.21.4
+  resolution: "axios@npm:0.21.4"
+  dependencies:
+    follow-redirects: ^1.14.0
+  checksum: 44245f24ac971e7458f3120c92f9d66d1fc695e8b97019139de5b0cc65d9b8104647db01e5f46917728edfc0cfd88eb30fc4c55e6053eef4ace76768ce95ff3c
   languageName: node
   linkType: hard
 
@@ -9590,7 +9657,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"callsites@npm:^3.0.0":
+"callsites@npm:^3.0.0, callsites@npm:^3.1.0":
   version: 3.1.0
   resolution: "callsites@npm:3.1.0"
   checksum: 072d17b6abb459c2ba96598918b55868af677154bec7e73d222ef95a8fdb9bbf7dae96a8421085cdad8cd190d86653b5b6dc55a4484f2e5b2e27d5e0c3fc15b3
@@ -10379,7 +10446,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"content-type@npm:~1.0.4":
+"content-type@npm:^1.0.5, content-type@npm:~1.0.4":
   version: 1.0.5
   resolution: "content-type@npm:1.0.5"
   checksum: 566271e0a251642254cde0f845f9dd4f9856e52d988f4eb0d0dcffbb7a1f8ec98de7a5215fc628f3bce30fe2fb6fd2bc064b562d721658c59b544e2d34ea2766
@@ -13554,7 +13621,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"follow-redirects@npm:^1.0.0, follow-redirects@npm:^1.14.7, follow-redirects@npm:^1.14.8, follow-redirects@npm:^1.15.0":
+"follow-redirects@npm:^1.0.0, follow-redirects@npm:^1.14.0, follow-redirects@npm:^1.14.7, follow-redirects@npm:^1.14.8, follow-redirects@npm:^1.15.0":
   version: 1.15.2
   resolution: "follow-redirects@npm:1.15.2"
   peerDependenciesMeta:
@@ -17147,6 +17214,7 @@ __metadata:
     "@types/uuid": ^9
     "@typescript-eslint/eslint-plugin": ^5.51.0
     "@typescript-eslint/parser": ^5.51.0
+    apify-client: ^2.7.1
     axios: ^0.26.0
     binary-extensions: ^2.2.0
     browser-or-node: ^2.1.1
@@ -17205,6 +17273,7 @@ __metadata:
     "@pinecone-database/pinecone": "*"
     "@supabase/supabase-js": ^2.10.0
     "@zilliz/milvus2-sdk-node": ^2.2.0
+    apify-client: ^2.7.1
     axios: "*"
     cheerio: ^1.0.0-rc.12
     chromadb: ^1.4.0
@@ -17239,6 +17308,8 @@ __metadata:
     "@supabase/supabase-js":
       optional: true
     "@zilliz/milvus2-sdk-node":
+      optional: true
+    apify-client:
       optional: true
     axios:
       optional: true
@@ -17538,6 +17609,13 @@ __metadata:
   version: 3.5.0
   resolution: "lodash.flow@npm:3.5.0"
   checksum: a9a62ad344e3c5a1f42bc121da20f64dd855aaafecee24b1db640f29b88bd165d81c37ff7e380a7191de6f70b26f5918abcebbee8396624f78f3618a0b18634c
+  languageName: node
+  linkType: hard
+
+"lodash.isequal@npm:^4.5.0":
+  version: 4.5.0
+  resolution: "lodash.isequal@npm:4.5.0"
+  checksum: da27515dc5230eb1140ba65ff8de3613649620e8656b19a6270afe4866b7bd461d9ba2ac8a48dcc57f7adac4ee80e1de9f965d89d4d81a0ad52bb3eec2609644
   languageName: node
   linkType: hard
 
@@ -19240,6 +19318,19 @@ __metadata:
   version: 1.0.2
   resolution: "os-tmpdir@npm:1.0.2"
   checksum: 5666560f7b9f10182548bf7013883265be33620b1c1b4a4d405c25be2636f970c5488ff3e6c48de75b55d02bde037249fe5dbfbb4c0fb7714953d56aed062e6d
+  languageName: node
+  linkType: hard
+
+"ow@npm:^0.28.2":
+  version: 0.28.2
+  resolution: "ow@npm:0.28.2"
+  dependencies:
+    "@sindresorhus/is": ^4.2.0
+    callsites: ^3.1.0
+    dot-prop: ^6.0.1
+    lodash.isequal: ^4.5.0
+    vali-date: ^1.0.0
+  checksum: 518fed6c3d685bb2d90941fdfd9b7d731b4a3c6112f7e05a1a0da45cf6d448067cc42477e273e9e82e45bc94e483af53d36e031108ec0eb437e538695129c122
   languageName: node
   linkType: hard
 
@@ -24434,6 +24525,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"type-fest@npm:^3.6.1":
+  version: 3.9.0
+  resolution: "type-fest@npm:3.9.0"
+  checksum: daec3f72db7af2b285ac10a27231675a18418dea073a5fe40d9720472072786b6e38263a41e1c91daf99d7ecda80d5cf914b5bb0dd308593fa33ad9d3ff410dc
+  languageName: node
+  linkType: hard
+
 "type-is@npm:~1.6.18":
   version: 1.6.18
   resolution: "type-is@npm:1.6.18"
@@ -25198,6 +25296,13 @@ __metadata:
     "@types/istanbul-lib-coverage": ^2.0.1
     convert-source-map: ^1.6.0
   checksum: 2069d59ee46cf8d83b4adfd8a5c1a90834caffa9f675e4360f1157ffc8578ef0f763c8f32d128334424159bb6b01f3876acd39cd13297b2769405a9da241f8d1
+  languageName: node
+  linkType: hard
+
+"vali-date@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "vali-date@npm:1.0.0"
+  checksum: 6464369cb77003a966591f2bd17b7c938c480956992e254b3455fd1651a3b7633e23aac8a03b974bbdfbd2357da52b98d46357bb6f292ffd28768a6d3959e61e
   languageName: node
   linkType: hard
 

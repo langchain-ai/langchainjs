@@ -133,6 +133,9 @@
     "document_loaders/base.cjs",
     "document_loaders/base.js",
     "document_loaders/base.d.ts",
+    "document_loaders/web/apify_dataset.cjs",
+    "document_loaders/web/apify_dataset.js",
+    "document_loaders/web/apify_dataset.d.ts",
     "document_loaders/web/cheerio.cjs",
     "document_loaders/web/cheerio.js",
     "document_loaders/web/cheerio.d.ts",
@@ -303,6 +306,7 @@
     "@types/uuid": "^9",
     "@typescript-eslint/eslint-plugin": "^5.51.0",
     "@typescript-eslint/parser": "^5.51.0",
+    "apify-client": "^2.7.1",
     "axios": "^0.26.0",
     "cheerio": "^1.0.0-rc.12",
     "chromadb": "^1.4.0",
@@ -348,6 +352,7 @@
     "@pinecone-database/pinecone": "*",
     "@supabase/supabase-js": "^2.10.0",
     "@zilliz/milvus2-sdk-node": "^2.2.0",
+    "apify-client": "^2.7.1",
     "axios": "*",
     "cheerio": "^1.0.0-rc.12",
     "chromadb": "^1.4.0",
@@ -390,6 +395,9 @@
       "optional": true
     },
     "@zilliz/milvus2-sdk-node": {
+      "optional": true
+    },
+    "apify-client": {
       "optional": true
     },
     "axios": {
@@ -700,6 +708,11 @@
       "types": "./document_loaders/base.d.ts",
       "import": "./document_loaders/base.js",
       "require": "./document_loaders/base.cjs"
+    },
+    "./document_loaders/web/apify_dataset": {
+      "types": "./document_loaders/web/apify_dataset.d.ts",
+      "import": "./document_loaders/web/apify_dataset.js",
+      "require": "./document_loaders/web/apify_dataset.cjs"
     },
     "./document_loaders/web/cheerio": {
       "types": "./document_loaders/web/cheerio.d.ts",

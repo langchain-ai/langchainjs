@@ -10,6 +10,7 @@ export { CollegeConfidentialLoader } from "./web/college_confidential.js";
 export { GitbookLoader } from "./web/gitbook.js";
 export { HNLoader } from "./web/hn.js";
 export { IMSDBLoader } from "./web/imsdb.js";
+export { ApifyDatasetLoader } from "./web/apify_dataset.js";
 export { DirectoryLoader, UnknownHandling } from "./fs/directory.js";
 export { SRTLoader } from "./fs/srt.js";
 export { PDFLoader } from "./fs/pdf.js";
