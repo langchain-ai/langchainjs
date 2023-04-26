@@ -14,13 +14,9 @@ import {
   OpenAIChatInput,
   OpenAIInput,
 } from "types/open-ai-types.js";
-import fetchAdapter from "util/axios-fetch-adapter.js";
+import fetchAdapter from "../util/axios-fetch-adapter.js";
 import type { StreamingAxiosConfiguration } from "../util/axios-types.js";
-import {
-  BaseChatModel,
-  BaseChatModelCallOptions,
-  BaseChatModelParams,
-} from "./base.js";
+import { BaseChatModel, BaseChatModelParams } from "./base.js";
 import {
   AIChatMessage,
   BaseChatMessage,
