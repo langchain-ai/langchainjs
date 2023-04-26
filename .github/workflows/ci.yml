@@ -50,7 +50,7 @@ jobs:
           node-version: 18.x
           cache: "yarn"
       - name: Install dependencies
-        run: yarn install --immutable --mode=skip-build
+        run: yarn install --immutable
       - name: Build and check types
         run: yarn run build
 
@@ -70,7 +70,7 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: "yarn"
       - name: Install dependencies
-        run: yarn install --immutable --mode=skip-build
+        run: yarn install --immutable
       - name: Build
         run: yarn run build --filter="!docs"
       - name: Test
@@ -87,7 +87,7 @@ jobs:
           node-version: 18.x
           cache: "yarn"
       - name: Install dependencies
-        run: yarn install --immutable --mode=skip-build
+        run: yarn install --immutable
       - name: Build
         run: yarn run build --filter="!docs"
       - name: Test Exports
