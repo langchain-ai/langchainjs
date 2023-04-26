@@ -359,7 +359,7 @@ export class OpenAIChat extends LLM implements OpenAIChatInput {
  * PromptLayer wrapper to ChatOpenAI
  * @augments ChatOpenAI
  */
-export class PromptLayerOpenAI extends ChatOpenAI {
+export class PromptLayerChatOpenAI extends ChatOpenAI {
   promptLayerApiKey?: string;
 
   plTags?: string[];
