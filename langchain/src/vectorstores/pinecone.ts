@@ -67,6 +67,8 @@ export class PineconeStore extends VectorStore {
       for (const key of Object.keys(metadata)) {
         if (metadata[key] == null) {
           delete metadata[key];
+        } else if(typeof metadata[key] == 'object' && Object.keys(metadata[key]).length === 0){
+            delete metadata[key];
         }
       }
       return {
