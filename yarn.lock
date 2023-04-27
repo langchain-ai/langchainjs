@@ -4618,17 +4618,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@grpc/grpc-js@npm:^1.2.12":
-  version: 1.8.13
-  resolution: "@grpc/grpc-js@npm:1.8.13"
+"@grpc/grpc-js@npm:^1.8.14":
+  version: 1.8.14
+  resolution: "@grpc/grpc-js@npm:1.8.14"
   dependencies:
     "@grpc/proto-loader": ^0.7.0
     "@types/node": ">=12.12.47"
-  checksum: bc74a6aa4c677ec7824c26f94b9270cab2489b2ebe9731d8acc2a15e882b6d2a9d20e1205938862fc20296e9784a33b0818427e426718ebdd123e621041fd26c
+  checksum: 7b889ae67cde5eb9b4feb92d54e73945d881309b9b879a2dde478fa7850b99835efa7592a8154a0f923851d7a18a177c106f5f52b45061180bb04aef7783c1c9
   languageName: node
   linkType: hard
 
-"@grpc/proto-loader@npm:^0.7.0, @grpc/proto-loader@npm:^0.7.3":
+"@grpc/proto-loader@npm:^0.7.0, @grpc/proto-loader@npm:^0.7.6":
   version: 0.7.6
   resolution: "@grpc/proto-loader@npm:0.7.6"
   dependencies:
@@ -8133,14 +8133,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@zilliz/milvus2-sdk-node@npm:^2.2.0":
-  version: 2.2.4
-  resolution: "@zilliz/milvus2-sdk-node@npm:2.2.4"
+"@zilliz/milvus2-sdk-node@npm:^2.2.7":
+  version: 2.2.7
+  resolution: "@zilliz/milvus2-sdk-node@npm:2.2.7"
   dependencies:
-    "@grpc/grpc-js": ^1.2.12
-    "@grpc/proto-loader": ^0.7.3
-    protobufjs: ^7.1.2
-  checksum: 63484614585d26ae6b28293ef3b0ef8f4080e82aea4365996879a23ed81cb7454c549a897d050e9e7b09bac91a2a4dd48fd1c7908999bb8d4971fe20d982504f
+    "@grpc/grpc-js": ^1.8.14
+    "@grpc/proto-loader": ^0.7.6
+    protobufjs: ^7.2.3
+  checksum: e6bfa6e016593e4e3fc5bb6f8484d39a8d315756da48b94cb7f534fcb8b960b1243f8c9ccb43bd35b6cb2f7ba6df204675ee29122b550feb9efe7fd444bace49
   languageName: node
   linkType: hard
 
@@ -12985,7 +12985,7 @@ __metadata:
     "@types/js-yaml": ^4
     "@typescript-eslint/eslint-plugin": ^5.51.0
     "@typescript-eslint/parser": ^5.51.0
-    "@zilliz/milvus2-sdk-node": ^2.2.0
+    "@zilliz/milvus2-sdk-node": ^2.2.7
     axios: ^0.26.0
     chromadb: ^1.4.0
     dotenv: ^16.0.3
@@ -20916,7 +20916,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"protobufjs@npm:^7.0.0, protobufjs@npm:^7.1.2":
+"protobufjs@npm:^7.0.0, protobufjs@npm:^7.2.3":
   version: 7.2.3
   resolution: "protobufjs@npm:7.2.3"
   dependencies:
