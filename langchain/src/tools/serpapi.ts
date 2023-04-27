@@ -298,10 +298,10 @@ export class SerpAPI extends Tool {
   constructor(
     apiKey: string | undefined = typeof process !== "undefined"
       ? // eslint-disable-next-line no-process-env
-      process.env?.SERPAPI_API_KEY
+        process.env?.SERPAPI_API_KEY
       : undefined,
     params: Partial<SerpAPIParameters> = {},
-    baseUrl: string = "https://serpapi.com"
+    baseUrl = "https://serpapi.com"
   ) {
     super();
 
@@ -329,7 +329,6 @@ export class SerpAPI extends Tool {
     const searchParams = new URLSearchParams(nonUndefinedParams);
     return `${baseUrl}/${path}?${searchParams}`;
   }
-
 
   /** @ignore */
   async _call(input: string) {
