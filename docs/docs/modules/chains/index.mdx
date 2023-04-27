@@ -29,7 +29,7 @@ import SubclassInterface from "@examples/chains/advanced_subclass.ts";
 
 ### Subclassing `BaseChain`
 
-The `_call` method is the main method of a chain. It takes a record of inputs and returns a record of outputs. The inputs received should conform the `inputKeys` array, and the outputs returned should conform to the `outputKeys` array.
+The `_call` method is the main method custom chains must implement. It takes a record of inputs and returns a record of outputs. The inputs received should conform the `inputKeys` array, and the outputs returned should conform to the `outputKeys` array.
 
 When implementing this method in a custom chain it's worth paying special attention to the `runManager` argument, which is what allows your custom chains to participate in the same [callbacks system](../../production/callbacks/) as the built-in chains.
 
