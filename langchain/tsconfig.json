@@ -47,6 +47,7 @@
       "src/embeddings/fake.ts",
       "src/embeddings/openai.ts",
       "src/embeddings/cohere.ts",
+      "src/embeddings/tensorflow.ts",
       "src/llms/load.ts",
       "src/llms/base.ts",
       "src/llms/openai.ts",

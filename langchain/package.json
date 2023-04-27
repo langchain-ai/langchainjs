@@ -52,6 +52,9 @@
     "embeddings/cohere.cjs",
     "embeddings/cohere.js",
     "embeddings/cohere.d.ts",
+    "embeddings/tensorflow.cjs",
+    "embeddings/tensorflow.js",
+    "embeddings/tensorflow.d.ts",
     "llms.cjs",
     "llms.js",
     "llms.d.ts",
@@ -574,6 +577,11 @@
       "types": "./embeddings/cohere.d.ts",
       "import": "./embeddings/cohere.js",
       "require": "./embeddings/cohere.cjs"
+    },
+    "./embeddings/tensorflow": {
+      "types": "./embeddings/tensorflow.d.ts",
+      "import": "./embeddings/tensorflow.js",
+      "require": "./embeddings/tensorflow.cjs"
     },
     "./llms": {
       "node": {
