@@ -24,7 +24,7 @@ export interface ChainInputs extends BaseLangChainParams {
  * Base interface that all chains must implement.
  */
 export abstract class BaseChain extends BaseLangChain implements ChainInputs {
-  memory?: BaseMemory;
+  declare memory?: BaseMemory;
 
   constructor(
     fields?: BaseMemory | ChainInputs,
