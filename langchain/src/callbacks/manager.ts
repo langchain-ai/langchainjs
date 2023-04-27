@@ -464,7 +464,15 @@ export class CallbackManager
           (handler) => handler.name === "langchain_tracer"
         )
       ) {
-        callbackManager.addHandler(await getTracingCallbackHandler(), true);
+        const session =
+          typeof process !== "undefined"
+            ? // eslint-disable-next-line no-process-env
+              process.env?.LANGCHAIN_SESSION
+            : undefined;
+        callbackManager.addHandler(
+          await getTracingCallbackHandler(session),
+          true
+        );
       }
     }
     return callbackManager;
