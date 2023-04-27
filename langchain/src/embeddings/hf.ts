@@ -33,10 +33,12 @@ export class HuggingFaceInferenceEmbeddings
   async _embed(texts: string[]): Promise<number[][]> {
     // replace newlines, which can negatively affect performance.
     const clean = texts.map((text) => text.replace(/\n/g, " "));
-    return this.client.featureExtraction({
-      model: this.model,
-      inputs: clean,
-    }) as Promise<number[][]>;
+    return this.caller.call(() =>
+      this.client.featureExtraction({
+        model: this.model,
+        inputs: clean,
+      })
+    ) as Promise<number[][]>;
   }
 
   embedQuery(document: string): Promise<number[]> {
