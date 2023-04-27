@@ -3,7 +3,7 @@ import { BaseLanguageModel } from "../base_language/index.js";
 import { VectorStore } from "../vectorstores/base.js";
 import { SerializedChatVectorDBQAChain } from "./serde.js";
 import { ChainValues } from "../schema/index.js";
-import { BaseChain } from "./base.js";
+import { BaseChain, ChainInputs } from "./base.js";
 import { LLMChain } from "./llm_chain.js";
 import { loadQAStuffChain } from "./question_answering/load.js";
 import { CallbackManagerForChainRun } from "../callbacks/manager.js";
@@ -25,13 +25,14 @@ const qa_template = `Use the following pieces of context to answer the question 
 Question: {question}
 Helpful Answer:`;
 
-export interface ChatVectorDBQAChainInput {
+export interface ChatVectorDBQAChainInput extends ChainInputs {
   vectorstore: VectorStore;
-  k: number;
   combineDocumentsChain: BaseChain;
   questionGeneratorChain: LLMChain;
-  outputKey: string;
-  inputKey: string;
+  returnSourceDocuments?: boolean;
+  outputKey?: string;
+  inputKey?: string;
+  k?: number;
 }
 
 export class ChatVectorDBQAChain
@@ -62,16 +63,8 @@ export class ChatVectorDBQAChain
 
   returnSourceDocuments = false;
 
-  constructor(fields: {
-    vectorstore: VectorStore;
-    combineDocumentsChain: BaseChain;
-    questionGeneratorChain: LLMChain;
-    inputKey?: string;
-    outputKey?: string;
-    k?: number;
-    returnSourceDocuments?: boolean;
-  }) {
-    super();
+  constructor(fields: ChatVectorDBQAChainInput) {
+    super(fields);
     this.vectorstore = fields.vectorstore;
     this.combineDocumentsChain = fields.combineDocumentsChain;
     this.questionGeneratorChain = fields.questionGeneratorChain;
