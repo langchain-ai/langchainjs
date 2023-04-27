@@ -449,6 +449,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.4.3",
+    "@aws-sdk/client-dynamodb": "^3.321.1",
     "@dqbd/tiktoken": "^1.0.4",
     "binary-extensions": "^2.2.0",
     "browser-or-node": "^2.1.1",
