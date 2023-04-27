@@ -5,13 +5,13 @@ import {
   ChainValues,
   LLMResult,
 } from "../schema/index.js";
-import { BaseCallbackHandler, BaseCallbackHandlerMethods } from "./base.js";
+import { BaseCallbackHandler, CallbackHandlerMethods } from "./base.js";
 import { ConsoleCallbackHandler } from "./handlers/console.js";
 import { getTracingCallbackHandler } from "./handlers/initialize.js";
 
 type BaseCallbackManagerMethods = {
-  [K in keyof BaseCallbackHandlerMethods]?: (
-    ...args: Parameters<Required<BaseCallbackHandlerMethods>[K]>
+  [K in keyof CallbackHandlerMethods]?: (
+    ...args: Parameters<Required<CallbackHandlerMethods>[K]>
   ) => Promise<unknown>;
 };
 
@@ -19,6 +19,10 @@ export interface CallbackManagerOptions {
   verbose?: boolean;
   tracing?: boolean;
 }
+
+export type Callbacks =
+  | CallbackManager
+  | (BaseCallbackHandler | CallbackHandlerMethods)[];
 
 export abstract class BaseCallbackManager {
   abstract addHandler(handler: BaseCallbackHandler): void;
@@ -398,7 +402,7 @@ export class CallbackManager
     return manager;
   }
 
-  static fromHandlers(handlers: BaseCallbackHandlerMethods) {
+  static fromHandlers(handlers: CallbackHandlerMethods) {
     class Handler extends BaseCallbackHandler {
       name = uuidv4();
 
@@ -414,22 +418,34 @@ export class CallbackManager
   }
 
   static async configure(
-    inheritableHandlers?: CallbackManager | BaseCallbackHandler[],
-    localHandlers?: BaseCallbackHandler[],
+    inheritableHandlers?: Callbacks,
+    localHandlers?: Callbacks,
     options?: CallbackManagerOptions
   ): Promise<CallbackManager | undefined> {
     let callbackManager: CallbackManager | undefined;
     if (inheritableHandlers || localHandlers) {
       if (Array.isArray(inheritableHandlers) || !inheritableHandlers) {
         callbackManager = new CallbackManager();
-        callbackManager.setHandlers(inheritableHandlers ?? [], true);
+        callbackManager.setHandlers(
+          inheritableHandlers?.map(ensureHandler) ?? [],
+          true
+        );
       } else {
         callbackManager = inheritableHandlers;
       }
-      callbackManager = callbackManager.copy(localHandlers, false);
+      callbackManager = callbackManager.copy(
+        Array.isArray(localHandlers)
+          ? localHandlers.map(ensureHandler)
+          : localHandlers?.handlers,
+        false
+      );
     }
-    // eslint-disable-next-line no-process-env
-    if (options?.verbose || process.env.LANGCHAIN_TRACING !== undefined) {
+    const tracingEnabled =
+      typeof process !== "undefined"
+        ? // eslint-disable-next-line no-process-env
+          process.env?.LANGCHAIN_TRACING !== undefined
+        : false;
+    if (options?.verbose || tracingEnabled) {
       if (!callbackManager) {
         callbackManager = new CallbackManager();
       }
@@ -440,11 +456,10 @@ export class CallbackManager
           (handler) => handler.name === consoleHandler.name
         )
       ) {
-        callbackManager.addHandler(consoleHandler, false);
+        callbackManager.addHandler(consoleHandler, true);
       }
       if (
-        // eslint-disable-next-line no-process-env
-        process.env.LANGCHAIN_TRACING !== undefined &&
+        tracingEnabled &&
         !callbackManager.handlers.some(
           (handler) => handler.name === "langchain_tracer"
         )
@@ -454,4 +469,14 @@ export class CallbackManager
     }
     return callbackManager;
   }
+}
+
+function ensureHandler(
+  handler: BaseCallbackHandler | CallbackHandlerMethods
+): BaseCallbackHandler {
+  if ("name" in handler) {
+    return handler;
+  }
+
+  return BaseCallbackHandler.fromMethods(handler);
 }

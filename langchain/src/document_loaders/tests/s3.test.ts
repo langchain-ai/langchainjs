@@ -1,4 +1,3 @@
-/* eslint-disable tree-shaking/no-side-effects-in-initialization */
 import { test, jest, expect } from "@jest/globals";
 import S3Client from "@aws-sdk/client-s3";
 import * as fs from "node:fs";

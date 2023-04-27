@@ -1,4 +1,3 @@
-import { BaseCallbackHandler } from "langchain/callbacks";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { HumanChatMessage } from "langchain/schema";
 
@@ -7,11 +6,11 @@ export const run = async () => {
     maxTokens: 25,
     streaming: true,
     callbacks: [
-      BaseCallbackHandler.fromMethods({
-        async handleLLMNewToken(token: string) {
+      {
+        handleLLMNewToken(token: string) {
           console.log({ token });
         },
-      }),
+      },
     ],
   });
 

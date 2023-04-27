@@ -11,6 +11,7 @@ import {
   calculateMaxTokens,
   getModelContextSize,
 } from "../../base_language/count_tokens.js";
+import { CallbackManagerForChainRun } from "../../callbacks/manager.js";
 
 export interface SqlDatabaseChainInput extends ChainInputs {
   llm: BaseLanguageModel;
@@ -50,8 +51,11 @@ export class SqlDatabaseChain extends BaseChain {
   }
 
   /** @ignore */
-  async _call(values: ChainValues): Promise<ChainValues> {
-    const lLMChain = new LLMChain({
+  async _call(
+    values: ChainValues,
+    runManager?: CallbackManagerForChainRun
+  ): Promise<ChainValues> {
+    const llmChain = new LLMChain({
       prompt: this.prompt,
       llm: this.llm,
       outputKey: this.outputKey,
@@ -75,7 +79,10 @@ export class SqlDatabaseChain extends BaseChain {
     await this.verifyNumberOfTokens(inputText, tableInfo);
 
     const intermediateStep: string[] = [];
-    const sqlCommand = await lLMChain.predict(llmInputs);
+    const sqlCommand = await llmChain.predict(
+      llmInputs,
+      runManager?.getChild()
+    );
     intermediateStep.push(sqlCommand);
     let queryResult = "";
     try {
@@ -93,7 +100,12 @@ export class SqlDatabaseChain extends BaseChain {
         queryResult
       )}\nAnswer:`;
       llmInputs.input = inputText;
-      finalResult = { [this.outputKey]: await lLMChain.predict(llmInputs) };
+      finalResult = {
+        [this.outputKey]: await llmChain.predict(
+          llmInputs,
+          runManager?.getChild()
+        ),
+      };
     }
 
     return finalResult;

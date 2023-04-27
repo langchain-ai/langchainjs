@@ -7,9 +7,14 @@ import {
   ChatCompletionResponseMessageRoleEnum,
   ChatCompletionRequestMessage,
 } from "openai";
+import type { AxiosRequestConfig } from "axios";
 import type { StreamingAxiosConfiguration } from "../util/axios-types.js";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
-import { BaseChatModel, BaseChatModelParams } from "./base.js";
+import {
+  BaseChatModel,
+  BaseChatModelCallOptions,
+  BaseChatModelParams,
+} from "./base.js";
 import {
   AIChatMessage,
   BaseChatMessage,
@@ -110,6 +115,18 @@ export interface OpenAIInput {
   timeout?: number;
 }
 
+export interface ChatOpenAICallOptions extends BaseChatModelCallOptions {
+  /**
+   * List of stop words to use when generating
+   */
+  stop?: string[];
+
+  /**
+   * Additional options to pass to the underlying axios request.
+   */
+  options?: AxiosRequestConfig;
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Kwargs = Record<string, any>;
 
@@ -124,11 +141,10 @@ type Kwargs = Record<string, any>;
  * https://platform.openai.com/docs/api-reference/chat/create |
  * `openai.createCompletion`} can be passed through {@link modelKwargs}, even
  * if not explicitly available on this class.
- *
- * @augments BaseLLM
- * @augments OpenAIInput
  */
 export class ChatOpenAI extends BaseChatModel implements OpenAIInput {
+  declare CallOptions: ChatOpenAICallOptions;
+
   temperature = 1;
 
   topP = 1;
@@ -170,8 +186,10 @@ export class ChatOpenAI extends BaseChatModel implements OpenAIInput {
 
     const apiKey =
       fields?.openAIApiKey ??
-      // eslint-disable-next-line no-process-env
-      (typeof process !== "undefined" ? process.env.OPENAI_API_KEY : undefined);
+      (typeof process !== "undefined"
+        ? // eslint-disable-next-line no-process-env
+          process.env?.OPENAI_API_KEY
+        : undefined);
     if (!apiKey) {
       throw new Error("OpenAI API key not found");
     }
@@ -239,9 +257,15 @@ export class ChatOpenAI extends BaseChatModel implements OpenAIInput {
   /** @ignore */
   async _generate(
     messages: BaseChatMessage[],
-    stop?: string[],
+    stopOrOptions?: string[] | this["CallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
+    const stop = Array.isArray(stopOrOptions)
+      ? stopOrOptions
+      : stopOrOptions?.stop;
+    const options = Array.isArray(stopOrOptions)
+      ? {}
+      : stopOrOptions?.options ?? {};
     const tokenUsage: TokenUsage = {};
     if (this.stop && stop) {
       throw new Error("Stop found in input and default params");
@@ -267,6 +291,7 @@ export class ChatOpenAI extends BaseChatModel implements OpenAIInput {
               messages: messagesMapped,
             },
             {
+              ...options,
               responseType: "stream",
               onmessage: (event) => {
                 if (event.data?.trim?.() === "[DONE]") {
@@ -334,10 +359,13 @@ export class ChatOpenAI extends BaseChatModel implements OpenAIInput {
             }
           });
         })
-      : await this.completionWithRetry({
-          ...params,
-          messages: messagesMapped,
-        });
+      : await this.completionWithRetry(
+          {
+            ...params,
+            messages: messagesMapped,
+          },
+          options
+        );
 
     const {
       completion_tokens: completionTokens,

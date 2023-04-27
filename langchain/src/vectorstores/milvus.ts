@@ -105,7 +105,7 @@ export class Milvus extends VectorStore {
     const url =
       args.url ??
       // eslint-disable-next-line no-process-env
-      (typeof process !== "undefined" ? process.env.MILVUS_URL : undefined);
+      (typeof process !== "undefined" ? process.env?.MILVUS_URL : undefined);
     if (!url) {
       throw new Error("Milvus URL address is not provided.");
     }

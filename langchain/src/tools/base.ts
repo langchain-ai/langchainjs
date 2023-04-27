@@ -2,16 +2,11 @@ import { z } from "zod";
 import {
   CallbackManager,
   CallbackManagerForToolRun,
+  Callbacks,
 } from "../callbacks/manager.js";
 import { BaseLangChain, BaseLangChainParams } from "../base_language/index.js";
-import { BaseCallbackHandler } from "../callbacks/index.js";
 
-export interface ToolParams extends BaseLangChainParams {
-  /**
-   * @deprecated Use `callbacks` instead
-   */
-  callbackManager?: CallbackManager;
-}
+export interface ToolParams extends BaseLangChainParams {}
 
 export abstract class StructuredTool<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -19,26 +14,23 @@ export abstract class StructuredTool<
 > extends BaseLangChain {
   abstract schema: T | z.ZodEffects<T>;
 
-  constructor(
-    verbose?: boolean,
-    callbacks?: CallbackManager | BaseCallbackHandler[]
-  ) {
-    super({ verbose, callbacks });
+  constructor(fields?: ToolParams) {
+    super(fields ?? {});
   }
 
   protected abstract _call(
     arg: z.output<T>,
-    callbackManager?: CallbackManagerForToolRun
+    runManager?: CallbackManagerForToolRun
   ): Promise<string>;
 
   async call(
     arg: (z.output<T> extends string ? string : never) | z.input<T>,
-    callbacks?: CallbackManager | BaseCallbackHandler[]
+    callbacks?: Callbacks
   ): Promise<string> {
     const parsed = await this.schema.parseAsync(arg);
     const callbackManager_ = await CallbackManager.configure(
       callbacks,
-      Array.isArray(this.callbacks) ? this.callbacks : this.callbacks?.handlers,
+      this.callbacks,
       { verbose: this.verbose }
     );
     const runManager = await callbackManager_?.handleToolStart(
@@ -64,18 +56,20 @@ export abstract class StructuredTool<
 }
 
 export abstract class Tool extends StructuredTool {
-  schema = /* #__PURE__ */ z
-    // eslint-disable-next-line tree-shaking/no-side-effects-in-initialization
-    .object({ input: /* #__PURE__ */ z.string() })
-    // eslint-disable-next-line tree-shaking/no-side-effects-in-initialization
-    /* #__PURE__ */ .transform((obj) => obj.input);
+  schema = z
+    .object({ input: z.string().optional() })
+    .transform((obj) => obj.input);
+
+  constructor(verbose?: boolean, callbacks?: Callbacks) {
+    super({ verbose, callbacks });
+  }
 
   call(
-    arg: string | z.input<this["schema"]>,
-    callbacks?: CallbackManager | BaseCallbackHandler[]
+    arg: string | undefined | z.input<this["schema"]>,
+    callbacks?: Callbacks
   ): Promise<string> {
     return super.call(
-      typeof arg === "string" ? { input: arg } : arg,
+      typeof arg === "string" || !arg ? { input: arg } : arg,
       callbacks
     );
   }

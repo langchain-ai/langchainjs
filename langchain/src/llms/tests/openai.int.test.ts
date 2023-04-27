@@ -11,6 +11,64 @@ test("Test OpenAI", async () => {
   console.log({ res });
 });
 
+test("Test OpenAI with stop", async () => {
+  const model = new OpenAI({ maxTokens: 5, modelName: "text-ada-001" });
+  const res = await model.call("Print hello world", ["world"]);
+  console.log({ res });
+});
+
+test("Test OpenAI with stop in object", async () => {
+  const model = new OpenAI({ maxTokens: 5, modelName: "text-ada-001" });
+  const res = await model.call("Print hello world", { stop: ["world"] });
+  console.log({ res });
+});
+
+test("Test OpenAI with timeout in call options", async () => {
+  const model = new OpenAI({ maxTokens: 5, modelName: "text-ada-001" });
+  await expect(() =>
+    model.call("Print hello world", {
+      options: { timeout: 10 },
+    })
+  ).rejects.toThrow();
+}, 5000);
+
+test("Test OpenAI with timeout in call options and node adapter", async () => {
+  const model = new OpenAI({ maxTokens: 5, modelName: "text-ada-001" });
+  await expect(() =>
+    model.call("Print hello world", {
+      options: { timeout: 10, adapter: undefined },
+    })
+  ).rejects.toThrow();
+}, 5000);
+
+test("Test OpenAI with signal in call options", async () => {
+  const model = new OpenAI({ maxTokens: 5, modelName: "text-ada-001" });
+  const controller = new AbortController();
+  await expect(() => {
+    const ret = model.call("Print hello world", {
+      options: { signal: controller.signal },
+    });
+
+    controller.abort();
+
+    return ret;
+  }).rejects.toThrow();
+}, 5000);
+
+test("Test OpenAI with signal in call options and node adapter", async () => {
+  const model = new OpenAI({ maxTokens: 5, modelName: "text-ada-001" });
+  const controller = new AbortController();
+  await expect(() => {
+    const ret = model.call("Print hello world", {
+      options: { signal: controller.signal, adapter: undefined },
+    });
+
+    controller.abort();
+
+    return ret;
+  }).rejects.toThrow();
+}, 5000);
+
 test("Test OpenAI with concurrency == 1", async () => {
   const model = new OpenAI({
     maxTokens: 5,
