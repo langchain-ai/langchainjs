@@ -65,7 +65,9 @@ export abstract class BaseChain extends BaseLangChain implements ChainInputs {
   /**
    * Return a json-like object representing this chain.
    */
-  abstract serialize(): SerializedBaseChain;
+  serialize(): SerializedBaseChain {
+    throw new Error("Method not implemented.");
+  }
 
   abstract get inputKeys(): string[];
 
