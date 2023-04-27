@@ -2,7 +2,7 @@ import { Document } from "../../document.js";
 import { LLMChain } from "../../chains/llm_chain.js";
 import { PromptTemplate } from "../../prompts/index.js";
 import { BaseLanguageModel } from "../../base_language/index.js";
-import { BaseOutputParser } from "../../schema/index.js";
+import { BaseOutputParser } from "../../schema/output_parser.js";
 import { BaseDocumentCompressor } from "./index.js";
 import { prompt_template } from "./chain_extract_prompt.js";
 
