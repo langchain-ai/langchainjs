@@ -447,7 +447,7 @@ export class ChatOpenAI
   ) {
     if (!this.client) {
       const endpoint = this.azureOpenAIApiKey
-        ? `https://${this.azureOpenAIApiInstanceName}.openai.azure.com/openai/deployments/${this.azureOpenAIApiDeploymentName}/`
+        ? `https://${this.azureOpenAIApiInstanceName}.openai.azure.com/openai/deployments/${this.azureOpenAIApiDeploymentName}`
         : this.clientConfig.basePath;
       const clientConfig = new Configuration({
         ...this.clientConfig,

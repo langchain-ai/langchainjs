@@ -94,12 +94,31 @@ export declare interface AzureOpenAIInput {
   azureOpenAIApiInstanceName?: string;
 
   /**
-   * Azure OpenAI API deployment name to use when making requests to Azure OpenAI.
-   * this is the name of the deployment you created in the Azure portal.
+   * Azure OpenAI API deployment name to use for completions when making requests to Azure OpenAI.
+   * This is the name of the deployment you created in the Azure portal.
    * e.g. "my-openai-deployment"
    * this will be used in the endpoint URL: https://{InstanceName}.openai.azure.com/openai/deployments/my-openai-deployment/
    */
   azureOpenAIApiDeploymentName?: string;
+
+  /**
+   * Azure OpenAI API deployment name to use for embedding when making requests to Azure OpenAI.
+   * This is the name of the deployment you created in the Azure portal.
+   * This will fallback to azureOpenAIApiDeploymentName if not provided.
+   * e.g. "my-openai-deployment"
+   * this will be used in the endpoint URL: https://{InstanceName}.openai.azure.com/openai/deployments/my-openai-deployment/
+   */
+  azureOpenAIApiEmbeddingsDeploymentName?: string;
+
+  /**
+   * Azure OpenAI API deployment name to use for completions when making requests to Azure OpenAI.
+   * Completions are only available for gpt-3.5-turbo and text-davinci-003 deployments.
+   * This is the name of the deployment you created in the Azure portal.
+   * This will fallback to azureOpenAIApiDeploymentName if not provided.
+   * e.g. "my-openai-deployment"
+   * this will be used in the endpoint URL: https://{InstanceName}.openai.azure.com/openai/deployments/my-openai-deployment/
+   */
+  azureOpenAIApiCompletionsDeploymentName?: string;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

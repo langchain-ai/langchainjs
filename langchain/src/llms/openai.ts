@@ -103,7 +103,8 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
   ) {
     if (
       fields?.modelName?.startsWith("gpt-3.5-turbo") ||
-      fields?.modelName?.startsWith("gpt-4")
+      fields?.modelName?.startsWith("gpt-4") ||
+      fields?.modelName?.startsWith("gpt-4-32k")
     ) {
       // eslint-disable-next-line no-constructor-return, @typescript-eslint/no-explicit-any
       return new OpenAIChat(fields, configuration) as any as OpenAI;
@@ -135,9 +136,12 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
         : undefined);
 
     const azureApiDeploymentName =
-      fields?.azureOpenAIApiDeploymentName ??
+      (fields?.azureOpenAIApiCompletionsDeploymentName ||
+        fields?.azureOpenAIApiDeploymentName) ??
       (typeof process !== "undefined"
         ? // eslint-disable-next-line no-process-env
+          process.env?.AZURE_OPENAI_API_COMPLETIONS_DEPLOYMENT_NAME ||
+          // eslint-disable-next-line no-process-env
           process.env?.AZURE_OPENAI_API_DEPLOYMENT_NAME
         : undefined);
 
@@ -389,7 +393,7 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
   ) {
     if (!this.client) {
       const endpoint = this.azureOpenAIApiKey
-        ? `https://${this.azureOpenAIApiInstanceName}.openai.azure.com/openai/deployments/${this.azureOpenAIApiDeploymentName}/`
+        ? `https://${this.azureOpenAIApiInstanceName}.openai.azure.com/openai/deployments/${this.azureOpenAIApiDeploymentName}`
         : this.clientConfig.basePath;
       const clientConfig = new Configuration({
         ...this.clientConfig,

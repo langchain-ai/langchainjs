@@ -93,9 +93,12 @@ export class OpenAIEmbeddings
         : undefined);
 
     const azureApiDeploymentName =
-      fields?.azureOpenAIApiDeploymentName ??
+      (fields?.azureOpenAIApiEmbeddingsDeploymentName ||
+        fields?.azureOpenAIApiDeploymentName) ??
       (typeof process !== "undefined"
         ? // eslint-disable-next-line no-process-env
+          process.env?.AZURE_OPENAI_API_EMBEDDINGS_DEPLOYMENT_NAME ||
+          // eslint-disable-next-line no-process-env
           process.env?.AZURE_OPENAI_API_DEPLOYMENT_NAME
         : undefined);
 
@@ -167,7 +170,7 @@ export class OpenAIEmbeddings
   private async embeddingWithRetry(request: CreateEmbeddingRequest) {
     if (!this.client) {
       const endpoint = this.azureOpenAIApiKey
-        ? `https://${this.azureOpenAIApiInstanceName}.openai.azure.com/openai/deployments/${this.azureOpenAIApiDeploymentName}/`
+        ? `https://${this.azureOpenAIApiInstanceName}.openai.azure.com/openai/deployments/${this.azureOpenAIApiDeploymentName}`
         : this.clientConfig.basePath;
       const clientConfig = new Configuration({
         ...this.clientConfig,
