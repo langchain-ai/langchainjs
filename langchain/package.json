@@ -55,6 +55,9 @@
     "embeddings/tensorflow.cjs",
     "embeddings/tensorflow.js",
     "embeddings/tensorflow.d.ts",
+    "embeddings/hf.cjs",
+    "embeddings/hf.js",
+    "embeddings/hf.d.ts",
     "llms.cjs",
     "llms.js",
     "llms.d.ts",
@@ -582,6 +585,11 @@
       "types": "./embeddings/tensorflow.d.ts",
       "import": "./embeddings/tensorflow.js",
       "require": "./embeddings/tensorflow.cjs"
+    },
+    "./embeddings/hf": {
+      "types": "./embeddings/hf.d.ts",
+      "import": "./embeddings/hf.js",
+      "require": "./embeddings/hf.cjs"
     },
     "./llms": {
       "node": {

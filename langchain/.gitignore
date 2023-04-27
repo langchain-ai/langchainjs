@@ -43,6 +43,9 @@ embeddings/cohere.d.ts
 embeddings/tensorflow.cjs
 embeddings/tensorflow.js
 embeddings/tensorflow.d.ts
+embeddings/hf.cjs
+embeddings/hf.js
+embeddings/hf.d.ts
 llms.cjs
 llms.js
 llms.d.ts
