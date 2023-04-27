@@ -11,15 +11,21 @@ $ yarn
 ### Local Development
 
 ```
-$ yarn start
+$ yarn run build && yarn run serve
 ```
 
 This command starts a local development server and opens up a browser window. Most changes are reflected live without having to restart the server.
 
+To ensure proper organization, commit your translations under the `/i18n/{language}/docusaurus-plugin-content-docs/current` directory, matching the original English markdown docs path in the `/docs` folder.
+
+For example, if you want to translate a markdown document located at `/docs/api/agents_load.md`, you should commit the translated file to the `i18n/ko/docusaurus-plugin-content-docs/current/api/agents_load.md` path.
+
+See more info on the [official](https://knowledge.optimisemedia.com/docs/tutorial-extras/translate-your-site/) documentation of [i18n plugin](https://docusaurus.io/docs/i18n/tutorial).
+
 ### Build
 
 ```
-$ yarn build
+$ yarn run build
 ```
 
 This command generates static content into the `build` directory and can be served using any static contents hosting service.
