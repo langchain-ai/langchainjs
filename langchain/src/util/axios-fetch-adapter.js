@@ -250,16 +250,18 @@ async function getResponse(request, config) {
     if (config.responseType === "stream") {
       const contentType = stageOne.headers.get("content-type");
       if (!contentType?.startsWith(EventStreamContentType)) {
-        if (contentType?.startsWith('application/json')) {
-          // If the response is JSON, try to parse it and throw a more specific error
-          response.data = await stageOne.json();
-          if (response.data?.error instanceof Error) {
-            throw response.data.error;
+        // If the content-type is not stream, response is most likely an error
+        if (stageOne.status >= 400) {
+          // If the error is a JSON, parse it. Otherwise, return as text
+          if (contentType?.startsWith("application/json")) {
+            response.data = await stageOne.json();
+            return response;
+          } else {
+            response.data = await stageOne.text();
+            return response;
           }
-          throw new Error(
-              `Expected content-type to be ${EventStreamContentType}, Actual: ${contentType}. Error: ${response.data?.error?.message}`
-          );
         }
+        // If the non-stream response is also not an error, throw
         throw new Error(
           `Expected content-type to be ${EventStreamContentType}, Actual: ${contentType}`
         );
