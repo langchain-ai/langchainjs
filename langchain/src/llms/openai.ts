@@ -478,4 +478,5 @@ export {
   OpenAIChat,
   OpenAIChatInput,
   OpenAIChatCallOptions,
+  PromptLayerOpenAIChat,
 } from "./openai-chat.js";
