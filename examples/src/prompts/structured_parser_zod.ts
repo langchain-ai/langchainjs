@@ -34,6 +34,17 @@ export const run = async () => {
   /*
   Answer the users question as best as possible.
   The output should be a markdown code snippet formatted in the following schema:
+
+  ```json
+  {
+      "answer": string // answer to the user's question
+      "sources": string[] // sources used to answer the question, should be websites.
+  }
+  ```
+
+  Including the leading and trailing "```json" and "```"
+
+  What is the capital of France?
   */
 
   console.log(response);

@@ -43,4 +43,47 @@ test.skip("WeaviateStore", async () => {
   expect(results2).toEqual([
     new Document({ pageContent: "hi there", metadata: { foo: "baz" } }),
   ]);
+
+  const testDocumentWithObjectMetadata = new Document({
+    pageContent: "this is the deep document world!",
+    metadata: {
+      deep: {
+        string: "deep string",
+        deepdeep: {
+          string: "even a deeper string",
+        },
+      },
+    },
+  });
+  const documentStore = await WeaviateStore.fromDocuments(
+    [testDocumentWithObjectMetadata],
+    new OpenAIEmbeddings(),
+    {
+      client,
+      indexName: "DocumentTest",
+      textKey: "text",
+      metadataKeys: ["deep.string", "deep.deepdeep.string"],
+    }
+  );
+
+  const result3 = await documentStore.similaritySearch(
+    "this is the deep document world!",
+    1,
+    {
+      where: {
+        operator: "Equal",
+        path: ["deep.string"],
+        valueText: "deep string",
+      },
+    }
+  );
+  expect(result3).toEqual([
+    new Document({
+      pageContent: "this is the deep document world!",
+      metadata: {
+        "deep.string": "deep string",
+        "deep.deepdeep.string": "even a deeper string",
+      },
+    }),
+  ]);
 });
