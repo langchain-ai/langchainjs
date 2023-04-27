@@ -1,11 +1,11 @@
 import { test, expect } from "@jest/globals";
 import "@tensorflow/tfjs-backend-cpu";
-import { TensorFlowEmbeddingsBase } from "../tensorflow.js";
+import { TensorFlowEmbeddings } from "../tensorflow.js";
 import { MemoryVectorStore } from "../../vectorstores/memory.js";
 import { Document } from "../../document.js";
 
-test("TensorflowEmbeddingsBase", async () => {
-  const embeddings = new TensorFlowEmbeddingsBase();
+test("TensorflowEmbeddings", async () => {
+  const embeddings = new TensorFlowEmbeddings();
 
   const documents = [
     "Hello world!",

@@ -5,7 +5,7 @@ import { Embeddings, EmbeddingsParams } from "./base.js";
 
 export interface TensorFlowEmbeddingsParams extends EmbeddingsParams {}
 
-export class TensorFlowEmbeddingsBase extends Embeddings {
+export class TensorFlowEmbeddings extends Embeddings {
   constructor(fields?: TensorFlowEmbeddingsParams) {
     super(fields ?? {});
 
