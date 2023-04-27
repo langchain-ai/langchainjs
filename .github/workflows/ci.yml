@@ -42,6 +42,9 @@ jobs:
   build:
     name: Build and check types
     runs-on: ubuntu-latest
+    env:
+      PUPPETEER_SKIP_DOWNLOAD: "true"
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
     steps:
       - uses: actions/checkout@v3
       - name: Use Node.js 18.x
@@ -58,10 +61,18 @@ jobs:
     name: Unit Tests
     strategy:
       matrix:
-        os: [macos-latest, windows-latest, ubuntu-latest]
+        os: [ubuntu-latest]
         node-version: [18.x, 19.x, 20.x]
         # See Node.js release schedule at https://nodejs.org/en/about/releases/
+        include:
+          - os: windows-latest
+            node-version: 20.x
+          - os: macos-latest
+            node-version: 20.x
     runs-on: ${{ matrix.os }}
+    env:
+      PUPPETEER_SKIP_DOWNLOAD: "true"
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
     steps:
       - uses: actions/checkout@v3
       - name: Use Node.js ${{ matrix.node-version }}
@@ -81,6 +92,9 @@ jobs:
   test-exports:
     name: Environment Tests
     runs-on: ubuntu-latest
+    env:
+      PUPPETEER_SKIP_DOWNLOAD: "true"
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
     steps:
       - uses: actions/checkout@v3
       - name: Use Node.js 18.x
