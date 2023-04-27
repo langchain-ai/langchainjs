@@ -278,7 +278,7 @@ export interface SerpAPIParameters extends BaseParameters {
   ijn?: string;
 }
 
-export type UrlParameters = Record<
+type UrlParameters = Record<
   string,
   string | number | boolean | undefined | null
 >;
