@@ -49,11 +49,7 @@ export class LLMChain extends BaseChain implements LLMChainInput {
   }
 
   constructor(fields: LLMChainInput) {
-    super(
-      fields.memory,
-      fields.verbose,
-      fields.callbacks ?? fields.callbackManager
-    );
+    super(fields);
     this.prompt = fields.prompt;
     this.llm = fields.llm;
     this.outputKey = fields.outputKey ?? this.outputKey;

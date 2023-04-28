@@ -3,7 +3,7 @@ import type {
   SerializedMapReduceDocumentsChain,
   SerializedRefineDocumentsChain,
 } from "./serde.js";
-import { BaseChain } from "./base.js";
+import { BaseChain, ChainInputs } from "./base.js";
 import { LLMChain } from "./llm_chain.js";
 
 import { Document } from "../document.js";
@@ -13,7 +13,7 @@ import { BasePromptTemplate } from "../prompts/base.js";
 import { PromptTemplate } from "../prompts/prompt.js";
 import { CallbackManagerForChainRun } from "../callbacks/manager.js";
 
-export interface StuffDocumentsChainInput {
+export interface StuffDocumentsChainInput extends ChainInputs {
   /** LLM Wrapper to use after formatting documents */
   llmChain: LLMChain;
   inputKey?: string;
@@ -45,7 +45,7 @@ export class StuffDocumentsChain
   }
 
   constructor(fields: StuffDocumentsChainInput) {
-    super();
+    super(fields);
     this.llmChain = fields.llmChain;
     this.documentVariableName =
       fields.documentVariableName ?? this.documentVariableName;
@@ -134,7 +134,7 @@ export class MapReduceDocumentsChain
   combineDocumentChain: BaseChain;
 
   constructor(fields: MapReduceDocumentsChainInput) {
-    super();
+    super(fields);
     this.llmChain = fields.llmChain;
     this.combineDocumentChain = fields.combineDocumentChain;
     this.documentVariableName =
@@ -272,7 +272,7 @@ export class RefineDocumentsChain
   }
 
   constructor(fields: RefineDocumentsChainInput) {
-    super();
+    super(fields);
     this.llmChain = fields.llmChain;
     this.refineLLMChain = fields.refineLLMChain;
     this.documentVariableName =

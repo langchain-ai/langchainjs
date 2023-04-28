@@ -5,6 +5,7 @@ sidebar_position: 6
 ---
 
 import DocCardList from "@theme/DocCardList";
+import CodeBlock from "@theme/CodeBlock";
 
 # Getting Started: Chains
 
@@ -17,3 +18,23 @@ Using a language model in isolation is fine for some applications, but it is oft
 LangChain provides a standard interface for chains, as well as a number of built-in chains that can be used out of the box. You can also create your own chains.
 
 <DocCardList />
+
+## Advanced
+
+To implement your own custom chain you can subclass `BaseChain` and implement the following methods:
+
+import SubclassInterface from "@examples/chains/advanced_subclass.ts";
+
+<CodeBlock language="typescript">{SubclassInterface}</CodeBlock>
+
+### Subclassing `BaseChain`
+
+The `_call` method is the main method custom chains must implement. It takes a record of inputs and returns a record of outputs. The inputs received should conform the `inputKeys` array, and the outputs returned should conform to the `outputKeys` array.
+
+When implementing this method in a custom chain it's worth paying special attention to the `runManager` argument, which is what allows your custom chains to participate in the same [callbacks system](../../production/callbacks/) as the built-in chains.
+
+If you call into another chain/model/agent inside your custom chain then you should pass it the result of calling `runManager?.getChild()` which will produce a new callback manager scoped to that inner run. An example:
+
+import SubclassCall from "@examples/chains/advanced_subclass_call.ts";
+
+<CodeBlock language="typescript">{SubclassCall}</CodeBlock>
