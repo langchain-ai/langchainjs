@@ -12,7 +12,7 @@ LangChain 프레임워크는 위의 원칙들을 염두에 두고 설계되었�
 LangChain을 사용하여 언어 모델 애플리케이션을 만드는 방법을 안내하는 아래 가이드를 확인하세요.
 
 - [빠른 시작, 대규모 언어 모델(LLM) 사용](./getting-started/guide-llm.mdx)
-- [빠른 시작, 채팅 모델 사용](./getting-started/guide-chat.mdx)
+- [빠른 시작, 대화 모델 사용](./getting-started/guide-chat.mdx)
 
 ## 컴포넌트
 
@@ -22,7 +22,7 @@ LangChain은 여러 가지 주요 모듈을 지원하며, 각 모듈의 사용�
 
 - [스키마(Schema)](./modules/schema/): 라이브러리 전체에서 사용되는 인터페이스와 기본 클래스를 포함하고 있습니다.
 
-- [모델(Models)](./modules/models/): 다양한 LLM, 채팅 모델, 임베딩 모델과의 통합을 포함하고 있습니다.
+- [모델(Models)](./modules/models/): 다양한 LLM, 대화 모델, 임베딩 모델과의 통합을 포함하고 있습니다.
 
 - [프롬프트(Prompts)](./modules/prompts/): 프롬프트 템플릿 및 결괏값 파서(Output Parsers), 예시 선택기(Example Selectors)와 같은 프롬프트를 작업 기능을 포함하고 있습니다.
 
