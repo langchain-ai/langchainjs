@@ -18,12 +18,17 @@ export class UnstructuredLoader extends BaseDocumentLoader {
   constructor(
     public filePath: string,
     public webPath: string = "https://api.unstructured.io/general/v0/general",
-    public apiKey: string = ""
+    public options: object = {},
   ) {
     super();
 
     this.filePath = filePath;
     this.webPath = webPath;
+
+    let apiKey = "";
+    if ( "apiKey" in options ){
+      apiKey = options["apiKey"];
+    }
     this.apiKey = apiKey;
   }
 
@@ -108,24 +113,24 @@ export class UnstructuredDirectoryLoader extends DirectoryLoader {
   constructor(
     public directoryPath: string,
     public webPath: string = "https://api.unstructured.io/general/v0/general",
-    public apiKey: string = "",
+    public options: object = {},
     public recursive: boolean = true,
     public unknown: UnknownHandling = UnknownHandling.Warn
   ) {
     const loaders = {
-      ".txt": (p: string) => new UnstructuredLoader(webPath, p, apiKey),
-      ".text": (p: string) => new UnstructuredLoader(webPath, p, apiKey),
-      ".pdf": (p: string) => new UnstructuredLoader(webPath, p, apiKey),
-      ".docx": (p: string) => new UnstructuredLoader(webPath, p, apiKey),
-      ".doc": (p: string) => new UnstructuredLoader(webPath, p, apiKey),
-      ".jpg": (p: string) => new UnstructuredLoader(webPath, p, apiKey),
-      ".jpeg": (p: string) => new UnstructuredLoader(webPath, p, apiKey),
-      ".eml": (p: string) => new UnstructuredLoader(webPath, p, apiKey),
-      ".html": (p: string) => new UnstructuredLoader(webPath, p, apiKey),
-      ".md": (p: string) => new UnstructuredLoader(webPath, p, apiKey),
-      ".pptx": (p: string) => new UnstructuredLoader(webPath, p, apiKey),
-      ".ppt": (p: string) => new UnstructuredLoader(webPath, p, apiKey),
-      ".msg": (p: string) => new UnstructuredLoader(webPath, p, apiKey),
+      ".txt": (p: string) => new UnstructuredLoader(webPath, p, options),
+      ".text": (p: string) => new UnstructuredLoader(webPath, p, options),
+      ".pdf": (p: string) => new UnstructuredLoader(webPath, p, options),
+      ".docx": (p: string) => new UnstructuredLoader(webPath, p, options),
+      ".doc": (p: string) => new UnstructuredLoader(webPath, p, options),
+      ".jpg": (p: string) => new UnstructuredLoader(webPath, p, options),
+      ".jpeg": (p: string) => new UnstructuredLoader(webPath, p, options),
+      ".eml": (p: string) => new UnstructuredLoader(webPath, p, options),
+      ".html": (p: string) => new UnstructuredLoader(webPath, p, options),
+      ".md": (p: string) => new UnstructuredLoader(webPath, p, options),
+      ".pptx": (p: string) => new UnstructuredLoader(webPath, p, options),
+      ".ppt": (p: string) => new UnstructuredLoader(webPath, p, options),
+      ".msg": (p: string) => new UnstructuredLoader(webPath, p, options),
     };
     super(directoryPath, loaders, recursive, unknown);
   }
