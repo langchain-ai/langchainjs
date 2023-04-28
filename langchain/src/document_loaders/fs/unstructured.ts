@@ -15,24 +15,20 @@ interface Element {
 }
 
 interface UnstructuredOptions {
-  apiKey: string;
+  apiKey?: string;
 }
 
 export class UnstructuredLoader extends BaseDocumentLoader {
   constructor(
     public filePath: string,
     public webPath: string = "https://api.unstructured.io/general/v0/general",
-    public options: UnstructuredOptions = {},
+    public options: UnstructuredOptions = {}
   ) {
     super();
 
     this.filePath = filePath;
     this.webPath = webPath;
-
-    this.apiKey = "";
-    if ( "apiKey" in options ){
-      this.apiKey = options["apiKey"];
-    }
+    this.options = options;
   }
 
   async _partition() {
@@ -47,9 +43,14 @@ export class UnstructuredLoader extends BaseDocumentLoader {
     const formData = new FormData();
     formData.append("files", new Blob([buffer]), fileName);
 
+    let apiKey = "";
+    if ("apiKey" in this.options && typeof this.options.apiKey === "string") {
+      apiKey = this.options.apiKey;
+    }
+
     const headers = {
       "Content-Type": "application/json",
-      "UNSTRUCTURED-API-KEY": this.apiKey,
+      "UNSTRUCTURED-API-KEY": apiKey,
     };
 
     const response = await fetch(this.webPath, {

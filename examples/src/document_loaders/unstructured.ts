@@ -1,7 +1,7 @@
 import { UnstructuredLoader } from "langchain/document_loaders/fs/unstructured";
 
 const options = {
-  "apiKey": "MY_API_KEY"
+  apiKey: "MY_API_KEY",
 };
 
 const loader = new UnstructuredLoader(

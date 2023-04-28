@@ -14,7 +14,7 @@ test("Test Unstructured base loader", async () => {
   );
 
   const options = {
-    "apiKey": "MY_API_KEY"
+    apiKey: "MY_API_KEY",
   };
 
   const loader = new UnstructuredLoader(
@@ -37,7 +37,7 @@ test("Test Unstructured directory loader", async () => {
   );
 
   const options = {
-    "apiKey": "MY_API_KEY"
+    apiKey: "MY_API_KEY",
   };
 
   const loader = new UnstructuredDirectoryLoader(
