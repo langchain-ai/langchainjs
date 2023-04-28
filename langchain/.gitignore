@@ -40,6 +40,9 @@ embeddings/openai.d.ts
 embeddings/cohere.cjs
 embeddings/cohere.js
 embeddings/cohere.d.ts
+embeddings/tensorflow.cjs
+embeddings/tensorflow.js
+embeddings/tensorflow.d.ts
 llms.cjs
 llms.js
 llms.d.ts
@@ -241,6 +244,9 @@ stores/file/node.d.ts
 experimental/autogpt.cjs
 experimental/autogpt.js
 experimental/autogpt.d.ts
+experimental/babyagi.cjs
+experimental/babyagi.js
+experimental/babyagi.d.ts
 index.cjs
 index.js
 index.d.ts

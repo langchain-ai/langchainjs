@@ -1,0 +1,13 @@
+import CodeBlock from "@theme/CodeBlock";
+
+# Creating callback handlers
+
+## Creating a custom handler
+
+You can also create your own handler by implementing the `BaseCallbackHandler` interface. This is useful if you want to do something more complex than just logging to the console, eg. send the events to a logging service. As an example here is a simple implementation of a handler that logs to the console:
+
+import CustomHandlerExample from "@examples/callbacks/custom_handler.ts";
+
+<CodeBlock language="typescript">{CustomHandlerExample}</CodeBlock>
+
+You could then use it as described in the [section](#built-in-handlers) above.

@@ -7,10 +7,11 @@ import {
   CreateCompletionResponseChoicesInner,
   OpenAIApi,
 } from "openai";
+import type { AxiosRequestConfig } from "axios";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
 import type { StreamingAxiosConfiguration } from "../util/axios-types.js";
 import { chunkArray } from "../util/chunk.js";
-import { BaseLLM, BaseLLMParams } from "./base.js";
+import { BaseLLM, BaseLLMCallOptions, BaseLLMParams } from "./base.js";
 import { calculateMaxTokens } from "../base_language/count_tokens.js";
 import { OpenAIChat } from "./openai-chat.js";
 import { LLMResult } from "../schema/index.js";
@@ -71,6 +72,18 @@ export interface OpenAIInput {
   timeout?: number;
 }
 
+export interface OpenAICallOptions extends BaseLLMCallOptions {
+  /**
+   * List of stop words to use when generating
+   */
+  stop?: string[];
+
+  /**
+   * Additional options to pass to the underlying axios request.
+   */
+  options?: AxiosRequestConfig;
+}
+
 interface TokenUsage {
   completionTokens?: number;
   promptTokens?: number;
@@ -91,11 +104,10 @@ type Kwargs = Record<string, any>;
  * https://platform.openai.com/docs/api-reference/completions/create |
  * `openai.createCompletion`} can be passed through {@link modelKwargs}, even
  * if not explicitly available on this class.
- *
- * @augments BaseLLM
- * @augments OpenAIInput
  */
 export class OpenAI extends BaseLLM implements OpenAIInput {
+  declare CallOptions: OpenAICallOptions;
+
   temperature = 0.7;
 
   maxTokens = 256;
@@ -238,9 +250,15 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
    */
   async _generate(
     prompts: string[],
-    stop?: string[],
+    stopOrOptions?: string[] | this["CallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<LLMResult> {
+    const stop = Array.isArray(stopOrOptions)
+      ? stopOrOptions
+      : stopOrOptions?.stop;
+    const options = Array.isArray(stopOrOptions)
+      ? {}
+      : stopOrOptions?.options ?? {};
     const subPrompts = chunkArray(prompts, this.batchSize);
     const choices: CreateCompletionResponseChoicesInner[] = [];
     const tokenUsage: TokenUsage = {};
@@ -277,6 +295,7 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
                 prompt: subPrompts[i],
               },
               {
+                ...options,
                 responseType: "stream",
                 onmessage: (event) => {
                   if (event.data?.trim?.() === "[DONE]") {
@@ -319,10 +338,13 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
               }
             });
           })
-        : await this.completionWithRetry({
-            ...params,
-            prompt: subPrompts[i],
-          });
+        : await this.completionWithRetry(
+            {
+              ...params,
+              prompt: subPrompts[i],
+            },
+            options
+          );
 
       choices.push(...data.choices);
 
@@ -452,4 +474,8 @@ export class PromptLayerOpenAI extends OpenAI {
   }
 }
 
-export { OpenAIChat, OpenAIChatInput } from "./openai-chat.js";
+export {
+  OpenAIChat,
+  OpenAIChatInput,
+  OpenAIChatCallOptions,
+} from "./openai-chat.js";

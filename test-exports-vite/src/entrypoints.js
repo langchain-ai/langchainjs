@@ -29,3 +29,4 @@ export * from "langchain/retrievers/document_compressors";
 export * from "langchain/cache";
 export * from "langchain/stores/file/in_memory";
 export * from "langchain/experimental/autogpt";
+export * from "langchain/experimental/babyagi";

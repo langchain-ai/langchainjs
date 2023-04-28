@@ -162,13 +162,18 @@ export class LLMSingleActionAgent extends BaseSingleActionAgent {
     inputs: ChainValues,
     callbackManager?: CallbackManager
   ): Promise<AgentAction | AgentFinish> {
-    const output = await this.llmChain.call({
-      intermediate_steps: steps,
-      stop: this.stop,
-      ...inputs,
-      callbackManager,
-    });
-    return this.outputParser.parse(output[this.llmChain.outputKey]);
+    const output = await this.llmChain.call(
+      {
+        intermediate_steps: steps,
+        stop: this.stop,
+        ...inputs,
+      },
+      callbackManager
+    );
+    return this.outputParser.parse(
+      output[this.llmChain.outputKey],
+      callbackManager
+    );
   }
 }
 
@@ -313,7 +318,7 @@ export abstract class Agent extends BaseSingleActionAgent {
     }
 
     const output = await this.llmChain.predict(newInputs, callbackManager);
-    return this.outputParser.parse(output);
+    return this.outputParser.parse(output, callbackManager);
   }
 
   /**
