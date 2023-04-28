@@ -16,8 +16,8 @@ interface Element {
 
 export class UnstructuredLoader extends BaseDocumentLoader {
   constructor(
-    public webPath: string,
     public filePath: string,
+    public webPath: string = "https://api.unstructured.io/general/v0/general",
     public apiKey: string = ""
   ) {
     super();
@@ -106,8 +106,8 @@ export class UnstructuredLoader extends BaseDocumentLoader {
 
 export class UnstructuredDirectoryLoader extends DirectoryLoader {
   constructor(
-    public webPath: string,
     public directoryPath: string,
+    public webPath: string = "https://api.unstructured.io/general/v0/general",
     public apiKey: string = "",
     public recursive: boolean = true,
     public unknown: UnknownHandling = UnknownHandling.Warn
