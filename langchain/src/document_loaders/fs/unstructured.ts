@@ -14,22 +14,25 @@ interface Element {
   };
 }
 
+interface UnstructuredOptions {
+  apiKey: string;
+}
+
 export class UnstructuredLoader extends BaseDocumentLoader {
   constructor(
     public filePath: string,
     public webPath: string = "https://api.unstructured.io/general/v0/general",
-    public options: object = {},
+    public options: UnstructuredOptions = {},
   ) {
     super();
 
     this.filePath = filePath;
     this.webPath = webPath;
 
-    let apiKey = "";
+    this.apiKey = "";
     if ( "apiKey" in options ){
-      apiKey = options["apiKey"];
+      this.apiKey = options["apiKey"];
     }
-    this.apiKey = apiKey;
   }
 
   async _partition() {
@@ -113,7 +116,7 @@ export class UnstructuredDirectoryLoader extends DirectoryLoader {
   constructor(
     public directoryPath: string,
     public webPath: string = "https://api.unstructured.io/general/v0/general",
-    public options: object = {},
+    public options: UnstructuredOptions = {},
     public recursive: boolean = true,
     public unknown: UnknownHandling = UnknownHandling.Warn
   ) {
