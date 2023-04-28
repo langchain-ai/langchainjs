@@ -1,3 +1,4 @@
+import { TiktokenModel } from "@dqbd/tiktoken";
 import {
   Configuration,
   OpenAIApi,
@@ -247,7 +248,7 @@ export class OpenAIChat extends LLM implements OpenAIChatInput {
       params.max_tokens = await calculateMaxTokens({
         prompt: promptAndPrefixes,
         // Cast here to allow for other models that may not fit the union
-        modelName: this.modelName,
+        modelName: this.modelName as TiktokenModel,
       });
   }
     const data = params.stream
