@@ -3993,10 +3993,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@dqbd/tiktoken@npm:^1.0.4":
-  version: 1.0.4
-  resolution: "@dqbd/tiktoken@npm:1.0.4"
-  checksum: d07c98b14c971f30a36f4655f35ee40e212f641460736a336552b95297a15f067a71652aaf3c9573e85fd4c9ff6206bfd8a75c1716de9812ee8df4650ca3e315
+"@dqbd/tiktoken@npm:^1.0.7-alpha.0":
+  version: 1.0.7-alpha.0
+  resolution: "@dqbd/tiktoken@npm:1.0.7-alpha.0"
+  checksum: 89123a627218dd2f15755342d6a5c3cc32f2e6efc35ba0b10602e5d8ae451cd1c5aa966ad652ec4af71851b24c0bcc5f641624c785334e33bf08ca2ede120441
   languageName: node
   linkType: hard
 
@@ -17184,7 +17184,7 @@ __metadata:
     "@anthropic-ai/sdk": ^0.4.3
     "@aws-sdk/client-lambda": ^3.310.0
     "@aws-sdk/client-s3": ^3.310.0
-    "@dqbd/tiktoken": ^1.0.4
+    "@dqbd/tiktoken": ^1.0.7-alpha.0
     "@faker-js/faker": ^7.6.0
     "@getmetal/metal-sdk": ^2.0.1
     "@huggingface/inference": ^1.5.1
