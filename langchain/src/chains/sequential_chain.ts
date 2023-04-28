@@ -46,7 +46,7 @@ export class SequentialChain extends BaseChain implements SequentialChainInput {
   }
 
   constructor(fields: SequentialChainInput) {
-    super(fields.memory, fields.verbose, fields.callbackManager);
+    super(fields);
     this.chains = fields.chains;
     this.inputVariables = fields.inputVariables;
     this.outputVariables = fields.outputVariables ?? [];

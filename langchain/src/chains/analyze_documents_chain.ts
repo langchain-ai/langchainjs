@@ -32,7 +32,7 @@ export class AnalyzeDocumentChain
   textSplitter: TextSplitter;
 
   constructor(fields: AnalyzeDocumentChainInput) {
-    super(undefined, fields.verbose, fields.callbackManager);
+    super(fields);
     this.combineDocumentsChain = fields.combineDocumentsChain;
     this.inputKey = fields.inputKey ?? this.inputKey;
     this.textSplitter =
