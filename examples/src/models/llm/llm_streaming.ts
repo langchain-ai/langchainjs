@@ -6,16 +6,15 @@ export const run = async () => {
   const chat = new OpenAI({
     maxTokens: 25,
     streaming: true,
-    callbacks: [
-      {
-        handleLLMNewToken(token: string) {
-          console.log({ token });
-        },
-      },
-    ],
   });
 
-  const response = await chat.call("Tell me a joke.");
+  const response = await chat.call("Tell me a joke.", undefined, [
+    {
+      handleLLMNewToken(token: string) {
+        console.log({ token });
+      },
+    },
+  ]);
   console.log(response);
   /*
   { token: '\n' }

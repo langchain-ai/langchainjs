@@ -5,16 +5,19 @@ export const run = async () => {
   const chat = new ChatOpenAI({
     maxTokens: 25,
     streaming: true,
-    callbacks: [
+  });
+
+  const response = await chat.call(
+    [new HumanChatMessage("Tell me a joke.")],
+    undefined,
+    [
       {
         handleLLMNewToken(token: string) {
           console.log({ token });
         },
       },
-    ],
-  });
-
-  const response = await chat.call([new HumanChatMessage("Tell me a joke.")]);
+    ]
+  );
 
   console.log(response);
   // { token: '' }
