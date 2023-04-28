@@ -26,7 +26,7 @@ LangChain은 여러 가지 주요 모듈을 지원하며, 각 모듈의 사용�
 
 - [프롬프트(Prompts)](./modules/prompts/): 프롬프트 템플릿 및 결괏값 파서(Output Parsers), 예시 선택기(Example Selectors)와 같은 프롬프트를 작업 기능을 포함하고 있습니다.
 
-- [인덱스(Indexes)](./modules/indexes/): 자체 데이터 작업 및 언어 모델과 상호작용할 수 있도록 준비하는 패턴과 기능을 포함하고 있습니다 (예: 문서 불러오기(document loaders), 벡터 저장소(vectorstores), 텍스트 분할기(text splitters) 및 리트리버(retrievers)).
+- [인덱스(Indexes)](./modules/indexes/): 자체 데이터 작업 및 언어 모델과 상호작용할 수 있도록 준비하는 패턴과 기능을 포함하고 있습니다 (예: 문서 로더(document loaders), 벡터 저장소(vectorstores), 텍스트 분할기(text splitters) 및 리트리버(retrievers)).
 
 - [메모리(Memory)](./modules/memory/): 메모리는 체인/에이전트의 호출 사이에 상태를 유지하는 개념입니다. LangChain은 메모리에 대한 표준 인터페이스, 메모리 구현 방식 모음 및 메모리를 사용하는 체인/에이전트 예제를 제공합니다. 
 
