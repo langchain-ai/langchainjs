@@ -13056,6 +13056,7 @@ __metadata:
     "@pinecone-database/pinecone": ^0.0.14
     "@prisma/client": ^4.11.0
     "@supabase/supabase-js": ^2.10.0
+    "@tensorflow/tfjs-backend-cpu": ^4.4.0
     "@tsconfig/recommended": ^1.0.2
     "@types/js-yaml": ^4
     "@typescript-eslint/eslint-plugin": ^5.51.0

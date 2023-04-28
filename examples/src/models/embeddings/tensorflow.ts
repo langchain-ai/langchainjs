@@ -1,5 +1,3 @@
-/* eslint-disable import/no-extraneous-dependencies */
-
 import "@tensorflow/tfjs-backend-cpu";
 import { Document } from "langchain/document";
 import { TensorFlowEmbeddings } from "langchain/embeddings/tensorflow";
