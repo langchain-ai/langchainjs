@@ -238,7 +238,7 @@ export class OpenAIChat extends LLM implements OpenAIChatInput {
     params.stop = stop ?? params.stop;
 
     if (params.max_tokens === -1) {
-      // Include prefixes in the token count, as this will be enforced 
+      // Include prefixes in the token count, as this will be enforced
       // (if prefixes exist) by the OpenAI API token limits:
       // https://platform.openai.com/docs/api-reference/completions/create#max_tokens
       // Dump this all into one big blob of text with `.strigify` to
@@ -250,7 +250,7 @@ export class OpenAIChat extends LLM implements OpenAIChatInput {
         // Cast here to allow for other models that may not fit the union
         modelName: this.modelName as TiktokenModel,
       });
-  }
+    }
     const data = params.stream
       ? await new Promise<CreateChatCompletionResponse>((resolve, reject) => {
           let response: CreateChatCompletionResponse;
