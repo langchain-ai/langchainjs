@@ -10,6 +10,7 @@ import {
 import type { AxiosRequestConfig } from "axios";
 import type { StreamingAxiosConfiguration } from "../util/axios-types.js";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
+import { calculateMaxTokens } from "../base_language/count_tokens.js";
 import { BaseLLMCallOptions, BaseLLMParams, LLM } from "./base.js";
 import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
 
@@ -235,6 +236,20 @@ export class OpenAIChat extends LLM implements OpenAIChatInput {
     const params = this.invocationParams();
     params.stop = stop ?? params.stop;
 
+    if (params.max_tokens === -1) {
+      // Include prefixes in the token count, as this will be enforced 
+      // (if prefixes exist) by the OpenAI API token limits:
+      // https://platform.openai.com/docs/api-reference/completions/create#max_tokens
+      // Dump this all into one big blob of text with `.strigify` to
+      // ensure that we are pessimistic about the token count and don't
+      // leave anything out!
+      const promptAndPrefixes = JSON.stringify(this.formatMessages(prompt));
+      params.max_tokens = await calculateMaxTokens({
+        prompt: promptAndPrefixes,
+        // Cast here to allow for other models that may not fit the union
+        modelName: this.modelName,
+      });
+  }
     const data = params.stream
       ? await new Promise<CreateChatCompletionResponse>((resolve, reject) => {
           let response: CreateChatCompletionResponse;
