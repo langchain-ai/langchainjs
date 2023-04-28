@@ -110,7 +110,7 @@ Including the leading and trailing "\`\`\`json" and "\`\`\`"
   async parse(text: string): Promise<z.infer<T>> {
     try {
       const json = text.trim().split("```json")[1].split("```")[0].trim();
-      return this.schema.parse(JSON.parse(json));
+      return this.schema.parseAsync(JSON.parse(json));
     } catch (e) {
       throw new OutputParserException(
         `Failed to parse. Text: "${text}". Error: ${e}`
