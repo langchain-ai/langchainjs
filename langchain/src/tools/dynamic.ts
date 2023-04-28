@@ -13,6 +13,9 @@ export interface DynamicToolInput {
   callbacks?: Callbacks;
 }
 
+/**
+ * A tool that can be created dynamically from a function, name, and description.
+ */
 export class DynamicTool extends Tool {
   name: string;
 
