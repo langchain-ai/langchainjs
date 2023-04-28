@@ -5,57 +5,57 @@ sidebar_position: 2
 import CodeBlock from "@theme/CodeBlock";
 import Example from "@examples/models/llm/llm_streaming_stdout.ts";
 
-# Quickstart, using LLMs
+# 빠른 시작, LLM 사용
 
-This tutorial gives you a quick walkthrough about building an end-to-end language model application with LangChain.
+이 튜토리얼은 LangChain을 사용하여 end-to-end 언어 모델 애플리케이션을 구축하는 방법에 대한 빠른 안내서를 제공합니다.
 
-## Installation and Setup
+## 초기 세팅과 설치
 
-To get started, follow the [installation instructions](./install) to install LangChain.
+시작하려면, [설치 가이드](./install)을 참고해 LangChain을 설치하세요.
 
-## Picking up a LLM
+## LLM 선택하기
 
-Using LangChain will usually require integrations with one or more model providers, data stores, apis, etc.
+LangChain을 사용하면 대개 하나 이상의 모델 제공자, 데이터 저장소, API 등과 통합이 필요합니다.
 
-For this example, we will be using OpenAI's APIs, so no additional setup is required.
+이 예제에서는 OpenAI의 API를 사용하므로 추가 설정이 필요하지 않습니다.
 
-## Building a Language Model Application
+## 언어 모델 애플리케이션 구축하기
 
-Now that we have installed LangChain, we can start building our language model application.
+LangChain을 설치했다면, 이제 언어 모델 애플리케이션을 구축할 수 있습니다.
 
-LangChain provides many modules that can be used to build language model applications. Modules can be combined to create more complex applications, or be used individually for simple applications.
+LangChain은 언어 모델 애플리케이션을 구축하는 데 사용할 수 있는 많은 모듈을 제공합니다. 모듈은 더 복잡한 애플리케이션을 만들기 위해 결합되거나, 간단한 애플리케이션에 대해 개별적으로 사용될 수 있습니다.
 
-### LLMs: Get Predictions from a Language Model
+### LLMs: 언어모델로부터 예측 결과 얻기
 
-The most basic building block of LangChain is calling an LLM on some input. Let's walk through a simple example of how to do this. For this purpose, let's pretend we are building a service that generates a company name based on what the company makes.
+LangChain의 가장 기본적인 구성 요소는 입력값에 대해 LLM을 호출하는 것입니다. 간단한 예제를 살펴보겠습니다. 이를 위해 우리는 회사가 제작하는 제품을 기반으로 회사 이름을 생성하는 서비스를 구축하고 있다고 가정해봅시다.
 
-In order to do this, we first need to import the LLM wrapper.
+가장 먼저 LLM 래퍼(wrapper)를 가져와야 합니다.
 
 ```typescript
 import { OpenAI } from "langchain/llms/openai";
 ```
 
-We will then need to set the environment variable for the OpenAI key. Three options here:
+그런 다음 OpenAI 키에 대한 환경 변수를 설정해야 합니다. 세 가지 옵션이 있습니다.
 
-1. We can do this by setting the value in a `.env` file and use the [dotenv](https://github.com/motdotla/dotenv) package to read it.
+1. `.env` 파일에 값을 설정하고 [dotenv](https://github.com/motdotla/dotenv) 패키지를 사용하여 읽을 수 있습니다.
 
 ```bash
 OPENAI_API_KEY="..."
 ```
 
-2. Or we can export the environment variable with the following command in your shell:
+2. 또는 shell에서 다음 명령을 사용하여 환경 변수를 설정할 수 있습니다.
 
 ```bash
 export OPENAI_API_KEY=sk-....
 ```
 
-3. Or we can do it when initializing the wrapper along with other arguments. In this example, we probably want the outputs to be MORE random, so we'll initialize it with a HIGH temperature.
+3. 또는 래퍼를 초기화할 때 다른 인자와 함께 설정해줘도 됩니다. 이 예시에서는 출력이 더 무작위적이기를 원하므로 높은 `temperature` 값으로 초기화하겠습니다.
 
 ```typescript
 const model = new OpenAI({ openAIApiKey: "sk-...", temperature: 0.9 });
 ```
 
-Once we have initialized the wrapper, we can now call it on some input!
+래퍼를 초기화했다면, 이제 입력값을 넣어 호출해 볼 수 있습니다!
 
 ```typescript
 const res = await model.call(
@@ -68,15 +68,15 @@ console.log(res);
 { res: '\n\nFantasy Sockery' }
 ```
 
-### Prompt Templates: Manage Prompts for LLMs
+### 프롬프트 템플릿: LLM 프롬프트 관리
 
-Calling an LLM is a great first step, but it's just the beginning. Normally when you use an LLM in an application, you are not sending user input directly to the LLM. Instead, you are probably taking user input and constructing a prompt, and then sending that to the LLM.
+LLM을 호출하는 것은 좋은 첫 단계이지만, 시작에 불과합니다. 일반적으로 애플리케이션에서 LLM을 사용할 때 사용자 입력을 LLM에 직접 전송하지 않습니다. 대신 사용자 입력을 가져와 프롬프트를 구성한 다음 LLM에 전송하게 될 것입니다.
 
-For example, in the previous example, the text we passed in was hardcoded to ask for a name for a company that made colorful socks. In this imaginary service, what we would want to do is take only the user input describing what the company does, and then format the prompt with that information.
+예를 들어, 이전 예제에서는 컬러풀한 양말을 만드는 회사의 이름을 요청하는 하드코딩된 텍스트를 전달했습니다. 이제 이것을 회사가 무엇을 하는지 설명하는 사용자 입력을 받아 그 정보로 프롬프트를 만든 후 전달하도록 수정해보겠습니다.
 
-This is easy to do with LangChain!
+LangChain을 사용하면 쉽게 할 수 있습니다!
 
-First lets define the prompt template:
+먼저 프롬프트 템플릿을 정의합시다.
 
 ```typescript
 import { PromptTemplate } from "langchain/prompts";
@@ -88,7 +88,7 @@ const prompt = new PromptTemplate({
 });
 ```
 
-Let's now see how this works! We can call the `.format` method to format it.
+이제 어떻게 작동하는지 살펴보겠습니다! `.format` 메서드를 호출하여 형식을 지정할 수 있습니다.
 
 ```typescript
 const res = await prompt.format({ product: "colorful socks" });
@@ -99,15 +99,15 @@ console.log(res);
 { res: 'What is a good name for a company that makes colorful socks?' }
 ```
 
-### Chains: Combine LLMs and Prompts in Multi-Step Workflows
+### 체인: 다단계 워크플로우에서 LLM과 프롬프트 결합하기
 
-Up until now, we've worked with the PromptTemplate and LLM primitives by themselves. But of course, a real application is not just one primitive, but rather a combination of them.
+지금까지 PromptTemplate과 LLM 기본 요소를 각각 사용해봤습니다. 하지만 실제 애플리케이션은 이렇게 하나의 기본 요소가 아니라 여러 요소들의 조합으로 이뤄집니다.
 
-A chain in LangChain is made up of links, which can be either primitives like LLMs or other chains.
+LangChain에서 체인은 LLM과 같은 기본 요소나 다른 체인들로이 링크처럼 구성되어 있는 형태입니다.
 
-The most core type of chain is an LLMChain, which consists of a PromptTemplate and an LLM.
+가장 핵심적인 체인 타입은 LLMChain으로, 이는 PromptTemplate과 LLM으로 구성됩니다.
 
-Extending the previous example, we can construct an LLMChain which takes user input, formats it with a PromptTemplate, and then passes the formatted response to an LLM.
+이전 예제를 확장하여, 사용자 입력을 받아 PromptTemplate으로 형식을 지정한 후 그 프롬프트를 LLM에 전달하는 LLMChain을 구성해보겠습니다.
 
 ```typescript
 import { OpenAI } from "langchain/llms/openai";
@@ -121,7 +121,7 @@ const prompt = new PromptTemplate({
 });
 ```
 
-We can now create a very simple chain that will take user input, format the prompt with it, and then send it to the LLM:
+사용자 입력을 받아 프롬프트로 형식을 지정한 다음 LLM으로 전송하는 매우 간단한 체인을 만들어 봅시다.
 
 ```typescript
 import { LLMChain } from "langchain/chains";
@@ -129,7 +129,7 @@ import { LLMChain } from "langchain/chains";
 const chain = new LLMChain({ llm: model, prompt: prompt });
 ```
 
-Now we can run that chain only specifying the product!
+이제 제품이 뭔지만 입력해주면 이 체인을 실행할 수 있습니다!
 
 ```typescript
 const res = await chain.call({ product: "colorful socks" });
@@ -140,35 +140,35 @@ console.log(res);
 { res: { text: '\n\nColorfulCo Sockery.' } }
 ```
 
-There we go! There's the first chain - an LLM Chain. This is one of the simpler types of chains, but understanding how it works will set you up well for working with more complex chains.
+다 됐습니다! 우리는 첫 번째 체인으로 LLM 체인을 만들어봤습니다. LLM 체인은 간단한 편에 속하지만, 분명 더 복잡한 체인을 이해하는 데에 도움이 될 것입니다.
 
-### Agents: Dynamically Run Chains Based on User Input
+### 에이전트: 사용자 입력에 기반하여 동적으로 체인 실행하기
 
-So far the chains we've looked at run in a predetermined order.
+지금까지 살펴본 체인은 우리가 미리 결정해 놓은 순서로 실행됩니다.
 
-Agents no longer do: they use an LLM to determine which actions to take and in what order. An action can either be using a tool and observing its output, or returning to the user.
+하지만, 에이전트를 사용하면 더 이상 그렇게 할 필요가 없습니다. 에이전트는 어떤 작업을 수행하고 어떤 순서로 할지를 결정하기 위해 LLM을 사용합니다. 이 에이전트가 취할 수 있는 액션은 도구를 사용하고 그 결과를 관찰하거나, 혹은 사용자에게 결괏값을 돌려주는 것입니다.
 
-When used correctly agents can be extremely powerful. In this tutorial, we show you how to easily use agents through the simplest, highest level API.
+올바르게만 사용된다면 에이전트는 매우 강력할 수 있습니다. 이 튜토리얼에서는 가장 간단하지만 높은 수준의 API를 통해 에이전트를 쉽게 사용하는 방법을 보여줍니다.
 
-In order to load agents, you should understand the following concepts:
+에이전트를 로드하려면 다음 개념을 이해해야 합니다.
 
-- Tool: A function that performs a specific duty. This can be things like: Google Search, Database lookup, code REPL, other chains. The interface for a tool is currently a function that is expected to have a string as an input, with a string as an output.
-- LLM: The language model powering the agent.
-- Agent: The agent to use. This should be a string that references a support agent class. Because this tutorial focuses on the simplest, highest level API, this only covers using the standard supported agents.
+- 도구(Tool): 특정 업무를 수행하는 함수입니다. Google 검색, 데이터베이스 조회, 코드 REPL, 다른 체인 등이 있을 수 있습니다. 도구의 인터페이스는 현재 string을 입력으로 받아 string을 출력하는 함수입니다.
+- LLM: 에이전트를 구동하는 언어 모델입니다.
+- 에이전트(Agent): 사용할 에이전트입니다. 이는 특정 에이전트 클래스를 참조하는 string이어야 합니다. 이 튜토리얼은 가장 간단하지만 높은 수준의 API에 중점을 두고 있으므로 기본적인 에이전트만 다룹니다.
 
-For this example, you'll need to set the SerpAPI environment variables in the `.env` file.
+이 예제를 따라하기 위해서는 `.env` 파일에 SerpAPI 환경 변수를 설정해야 합니다.
 
 ```bash
 SERPAPI_API_KEY="..."
 ```
 
-Install `serpapi` package (Google Search API):
+`serpapi` 패키지를 설치합니다. (Google Search API)
 
 ```bash npm2yarn
 npm install -S serpapi
 ```
 
-Now we can get started!
+이제 본격적으로 시작해보겠습니다!
 
 ```typescript
 import { OpenAI } from "langchain/llms/openai";
@@ -206,13 +206,13 @@ langchain-examples:start: Executing with input "Who is Olivia Wilde's boyfriend?
 langchain-examples:start: Got output Olivia Wilde's boyfriend is Jason Sudeikis, and his current age raised to the 0.23 power is 2.4242784855673896.
 ```
 
-### Memory: Add State to Chains and Agents
+### 메모리: 체인과 에이전트에 상태 추가하기
 
-So far, all the chains and agents we've gone through have been stateless. But often, you may want a chain or agent to have some concept of "memory" so that it may remember information about its previous interactions. The clearest and simple example of this is when designing a chatbot - you want it to remember previous messages so it can use context from that to have a better conversation. This would be a type of "short-term memory". On the more complex side, you could imagine a chain/agent remembering key pieces of information over time - this would be a form of "long-term memory".
+지금까지 살펴본 모든 체인과 에이전트에는 상태가 없습니다. 그러나 종종 체인이나 에이전트에 이전 상호작용에 대한 정보를 기억하는 "메모리" 개념이 필요할 수 있습니다. 가장 명확하고 간단한 예로, 채팅봇을 설계할 때 이전 메시지를 기억하여 더 나은 대화를 나눌 수 있도록 그 맥락을 사용하고 싶을 수 있습니다. 이것은 "단기 메모리"의 한 형태입니다. 더 복잡하게는 체인/에이전트가 시간이 지남에 따라 중요한 정보를 기억하는 것을 상상해 볼 수도 있습니다. 이것은 "장기 메모리"의 한 형태가 될 것입니다.
 
-LangChain provides several specially created chains just for this purpose. This section walks through using one of those chains (the `ConversationChain`).
+LangChain은 이를 위해 특별히 만들어진 여러 체인을 제공합니다. 이 섹션에서는 그러한 체인 중 하나인 `ConversationChain`을 사용하는 방법에 대해 알아봅니다.
 
-By default, the `ConversationChain` has a simple type of memory that remembers all previous inputs/outputs and adds them to the context that is passed. Let's take a look at using this chain.
+기본적으로 `ConversationChain`은 이전 입/출력을 모두 기억하고 맥락에 추가하는 간단한 유형의 메모리를 가지고 있습니다. 이 체인을 사용하는 방법을 살펴보겠습니다.
 
 ```typescript
 import { OpenAI } from "langchain/llms/openai";
@@ -239,8 +239,8 @@ console.log(res2);
 {response: ' You said your name is Jim. Is there anything else you would like to talk about?'}
 ```
 
-## Streaming
+## 스트리밍
 
-You can also use the streaming API to get words streamed back to you as they are generated. This is useful for eg. chatbots, where you want to show the user what is being generated as it is being generated. Note: OpenAI as of this writing does not support `tokenUsage` reporting while streaming is enabled.
+스트리밍 API를 사용하여 각 단어가 생성될 때마다 단어를 실시간 스트림으로 받을 수도 있습니다. 예를 들어 채팅봇에서 사용자에게 생성되는 내용을 생성되는 즉시 보여주고자 할 때 유용하게 사용할 수 있습니다. 참고로, 이 문서를 작성하는 시점에는 스트리밍 옵션이 활성화되면 OpenAI에서 `tokenUsage`를 지원하지 않습니다.
 
 <CodeBlock language="typescript">{Example}</CodeBlock>
