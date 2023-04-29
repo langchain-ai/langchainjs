@@ -50,11 +50,19 @@ import Fix from "@examples/prompts/fix_parser.ts";
 
 ## Comma-separated List Parser
 
-This output parser can be used when you want to return a list of items.
+This output parser can be used when you want to return a list of comma-separated items.
 
 import Comma from "@examples/prompts/comma_list_parser.ts";
 
 <CodeBlock language="typescript">{Comma}</CodeBlock>
+
+## Custom List Parser
+
+This output parser can be used when you want to return a list of items, with a specific length and separator.
+
+import CustomList from "@examples/prompts/custom_list_parser.ts";
+
+<CodeBlock language="typescript">{CustomList}</CodeBlock>
 
 ## Combining Output Parsers
 

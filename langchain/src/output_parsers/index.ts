@@ -3,3 +3,4 @@ export { RegexParser } from "./regex.js";
 export { StructuredOutputParser } from "./structured.js";
 export { OutputFixingParser } from "./fix.js";
 export { CombiningOutputParser } from "./combining.js";
+export { CustomListOutputParser } from "./list.js";
