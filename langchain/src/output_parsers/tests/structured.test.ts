@@ -14,7 +14,7 @@ test("StructuredOutputParser.fromNamesAndDescriptions", async () => {
   });
 
   expect(parser.getFormatInstructions()).toMatchInlineSnapshot(`
-"The output should be a markdown code snippet formatted in the following schema:
+"Your output must be a markdown code snippet formatted in the following schema:
 
 \`\`\`json
 {
@@ -43,7 +43,7 @@ test("StructuredOutputParser.fromZodSchema", async () => {
   });
 
   expect(parser.getFormatInstructions()).toMatchInlineSnapshot(`
-"The output should be a markdown code snippet formatted in the following schema:
+"Your output must be a markdown code snippet formatted in the following schema:
 
 \`\`\`json
 {
@@ -76,7 +76,7 @@ test("StructuredOutputParser.fromZodSchema", async () => {
   });
 
   expect(parser.getFormatInstructions()).toMatchInlineSnapshot(`
-"The output should be a markdown code snippet formatted in the following schema:
+"Your output must be a markdown code snippet formatted in the following schema:
 
 \`\`\`json
 {
@@ -138,7 +138,7 @@ test("StructuredOutputParser.fromZodSchema", async () => {
   });
 
   expect(parser.getFormatInstructions()).toMatchInlineSnapshot(`
-"The output should be a markdown code snippet formatted in the following schema:
+"Your output must be a markdown code snippet formatted in the following schema:
 
 \`\`\`json
 { // Only One object
