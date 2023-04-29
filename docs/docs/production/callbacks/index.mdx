@@ -14,12 +14,31 @@ import DocCardList from "@theme/DocCardList";
 
 ## How to use callbacks
 
-The `callbacks` argument is available on most objects throughout the API (Chains, Models, Tools, Agents, etc.) in two different places:
+The `callbacks` argument is available on most objects throughout the API ([Chains](../../modules/chains/), [Models](../../modules/models/), [Tools](../../modules/agents/tools/), [Agents](../../modules/agents/agents/), etc.) in two different places:
 
-- **Constructor callbacks**: defined in the constructor, eg. `new LLMChain({ callbacks: [handler] })`, which will be used for all calls made on that object, and will be scoped to that object only, eg. if you pass a handler to the `LLMChain` constructor, it will not be used by the Model attached to that chain.
-- **Request callbacks**: defined in the `call()`/`run()`/`apply()` methods used for issuing a request, eg. `chain.call({ input: '...' }, [handler])`, which will be used for that specific request only, and all sub-requests that it contains (eg. a call to an LLMChain triggers a call to a Model, which uses the same handler passed in the `call()` method).
+### Constructor callbacks
+
+Defined in the constructor, eg. `new LLMChain({ callbacks: [handler] })`, which will be used for all calls made on that object, and will be scoped to that object only, eg. if you pass a handler to the `LLMChain` constructor, it will not be used by the Model attached to that chain.
+
+import ConstructorExample from "@examples/callbacks/docs_constructor_callbacks.ts";
+
+<CodeBlock language="typescript">{ConstructorExample}</CodeBlock>
+
+### Request callbacks
+
+Defined in the `call()`/`run()`/`apply()` methods used for issuing a request, eg. `chain.call({ input: '...' }, [handler])`, which will be used for that specific request only, and all sub-requests that it contains (eg. a call to an LLMChain triggers a call to a Model, which uses the same handler passed in the `call()` method).
+
+import RequestExample from "@examples/callbacks/docs_request_callbacks.ts";
+
+<CodeBlock language="typescript">{RequestExample}</CodeBlock>
+
+### Verbose mode
 
 The `verbose` argument is available on most objects throughout the API (Chains, Models, Tools, Agents, etc.) as a constructor argument, eg. `new LLMChain({ verbose: true })`, and it is equivalent to passing a `ConsoleCallbackHandler` to the `callbacks` argument of that object and all child objects. This is useful for debugging, as it will log all events to the console.
+
+import VerboseExample from "@examples/callbacks/docs_verbose.ts";
+
+<CodeBlock language="typescript">{VerboseExample}</CodeBlock>
 
 ### When do you want to use each of these?
 

@@ -26,6 +26,7 @@ const entrypoints = {
   "embeddings/fake": "embeddings/fake",
   "embeddings/openai": "embeddings/openai",
   "embeddings/cohere": "embeddings/cohere",
+  "embeddings/tensorflow": "embeddings/tensorflow",
   // llms
   llms: "llms/index",
   "llms/load": "llms/load",
@@ -135,6 +136,7 @@ const requiresOptionalDependency = [
   "tools/webbrowser",
   "chains/load",
   "embeddings/cohere",
+  "embeddings/tensorflow",
   "llms/load",
   "llms/cohere",
   "llms/hf",
