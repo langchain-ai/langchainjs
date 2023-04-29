@@ -40,6 +40,9 @@ embeddings/openai.d.ts
 embeddings/cohere.cjs
 embeddings/cohere.js
 embeddings/cohere.d.ts
+embeddings/tensorflow.cjs
+embeddings/tensorflow.js
+embeddings/tensorflow.d.ts
 llms.cjs
 llms.js
 llms.d.ts
