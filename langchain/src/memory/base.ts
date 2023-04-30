@@ -23,7 +23,7 @@ export abstract class BaseMemory {
  * If there are multiple input values, the inputKey must be specified.
  * Keys can be nested using dot notation, e.g. "key1.key2".
  */
-export const getInputValue = (inputValues: InputValues, inputKey?: string) => {
+export const getInputValue = (inputValues: InputValues, inputKey?: string): any => {
   if (inputKey !== undefined) {
     const levels = inputKey.split('.')
     return levels[1] !== undefined
