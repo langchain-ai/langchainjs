@@ -1,3 +1,5 @@
+import { S3Loader } from "langchain/document_loaders/web/s3";
+
 export const run = async () => {
   const loader = new S3Loader({
     bucket: 'my-document-bucket-123',
