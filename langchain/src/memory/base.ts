@@ -21,10 +21,14 @@ export abstract class BaseMemory {
  * This function is used by memory classes to select the input value
  * to use for the memory. If there is only one input value, it is used.
  * If there are multiple input values, the inputKey must be specified.
+ * Keys can be nested using dot notation, e.g. "key1.key2".
  */
 export const getInputValue = (inputValues: InputValues, inputKey?: string) => {
   if (inputKey !== undefined) {
-    return inputValues[inputKey];
+    const levels = inputKey.split('.')
+    return levels[1] !== undefined
+      ? getInputValue(inputValues[levels[0]], levels.slice(1).join('.'))
+      : inputValues[levels[0]];
   }
   const keys = Object.keys(inputValues);
   if (keys.length === 1) {
