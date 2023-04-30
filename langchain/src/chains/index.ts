@@ -53,3 +53,4 @@ export {
   SerializedVectorDBQAChain,
   SerializedRefineDocumentsChain,
 } from "./serde.js";
+export { OpenAIModerationChain } from "./moderation.js";
