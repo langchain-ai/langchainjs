@@ -29,4 +29,4 @@ import { Document } from "langchain/document";
 const doc = new Document({ pageContent: "foo", metadata: { source: "1" } });
 ```
 
-다양한 출저로 부터 도큐먼트를 로딩 하는 방법을 알고 싶다면 [Document Loaders](../indexes/document_loaders/)를 확인해보세요.
+다양한 출저들로 부터 Document 를 로딩 하는 방법을 알고 싶다면 [Document Loaders](../indexes/document_loaders/)를 확인해보세요.
