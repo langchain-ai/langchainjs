@@ -24,3 +24,6 @@ Chinook.db
 Chinook_Sqlite.sql
 
 .envrc
+*.swp
+*.swo
+
