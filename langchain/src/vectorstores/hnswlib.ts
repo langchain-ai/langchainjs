@@ -135,7 +135,7 @@ export class HNSWLib extends SaveableVectorStore {
       }
       const document = this.docstore.search(String(label));
       // eslint-disable-next-line no-instanceof/no-instanceof
-      if (document instanceof Document) {
+      if (typeof document !== "string") {
         return filter(document);
       }
       return false;
