@@ -353,3 +353,67 @@ export class OpenAIChat extends LLM implements OpenAIChatInput {
     return "openai";
   }
 }
+
+/**
+ * PromptLayer wrapper to OpenAIChat
+ */
+export class PromptLayerOpenAIChat extends OpenAIChat {
+  promptLayerApiKey?: string;
+
+  plTags?: string[];
+
+  constructor(
+    fields?: ConstructorParameters<typeof OpenAIChat>[0] & {
+      promptLayerApiKey?: string;
+      plTags?: string[];
+    }
+  ) {
+    super(fields);
+
+    this.plTags = fields?.plTags ?? [];
+    this.promptLayerApiKey =
+      fields?.promptLayerApiKey ??
+      (typeof process !== "undefined"
+        ? // eslint-disable-next-line no-process-env
+          process.env?.PROMPTLAYER_API_KEY
+        : undefined);
+
+    if (!this.promptLayerApiKey) {
+      throw new Error("Missing PromptLayer API key");
+    }
+  }
+
+  async completionWithRetry(
+    request: CreateChatCompletionRequest,
+    options?: StreamingAxiosConfiguration
+  ) {
+    if (request.stream) {
+      return super.completionWithRetry(request, options);
+    }
+
+    const requestStartTime = Date.now();
+    const response = await super.completionWithRetry(request);
+    const requestEndTime = Date.now();
+
+    // https://github.com/MagnivOrg/promptlayer-js-helper
+    await this.caller.call(fetch, "https://api.promptlayer.com/track-request", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify({
+        function_name: "openai.ChatCompletion.create",
+        args: [],
+        kwargs: { engine: request.model, messages: request.messages },
+        tags: this.plTags ?? [],
+        request_response: response,
+        request_start_time: Math.floor(requestStartTime / 1000),
+        request_end_time: Math.floor(requestEndTime / 1000),
+        api_key: this.promptLayerApiKey,
+      }),
+    });
+
+    return response;
+  }
+}
