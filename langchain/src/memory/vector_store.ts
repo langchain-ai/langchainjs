@@ -8,7 +8,7 @@ import {
   OutputValues,
 } from "./base.js";
 
-interface VectorStoreMemoryParams {
+export interface VectorStoreRetrieverMemoryParams {
   vectorStoreRetriever: VectorStoreRetriever;
   inputKey?: string;
   outputKey?: string;
@@ -16,7 +16,10 @@ interface VectorStoreMemoryParams {
   returnDocs?: boolean;
 }
 
-export class VectorStoreRetrieverMemory extends BaseMemory {
+export class VectorStoreRetrieverMemory
+  extends BaseMemory
+  implements VectorStoreRetrieverMemoryParams
+{
   vectorStoreRetriever: VectorStoreRetriever;
 
   inputKey?: string;
@@ -25,7 +28,7 @@ export class VectorStoreRetrieverMemory extends BaseMemory {
 
   returnDocs: boolean;
 
-  constructor(fields: VectorStoreMemoryParams) {
+  constructor(fields: VectorStoreRetrieverMemoryParams) {
     super();
     this.vectorStoreRetriever = fields.vectorStoreRetriever;
     this.inputKey = fields.inputKey;
