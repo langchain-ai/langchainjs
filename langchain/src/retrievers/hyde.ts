@@ -1,42 +1,47 @@
-import { Document } from "document.js";
-import { PromptTemplate } from "index.js";
-import { LLM } from "llms/base.js";
-import { VectorStore, VectorStoreRetriever } from "vectorstores/base.js";
+import { Document } from "../document.js";
+import { BasePromptTemplate, StringPromptValue } from "../prompts/base.js";
+import {
+  VectorStore,
+  VectorStoreRetriever,
+  VectorStoreRetrieverInput,
+} from "../vectorstores/base.js";
+import { BaseLanguageModel } from "../base_language/index.js";
+import { BasePromptValue } from "../schema/index.js";
 
-interface HydeRetrieverOptions {
-  llm: LLM;
-  promptTemplate?: PromptTemplate;
-  vectorStore: VectorStore;
-  k?: number;
-  filter?: VectorStore["FilterType"];
+interface HydeRetrieverOptions<V extends VectorStore>
+  extends VectorStoreRetrieverInput<V> {
+  llm: BaseLanguageModel;
+  promptTemplate?: BasePromptTemplate;
 }
 
-export class HydeRetriever extends VectorStoreRetriever {
-  llm: LLM;
-  promptTemplate?: PromptTemplate;
+export class HydeRetriever<
+  V extends VectorStore = VectorStore
+> extends VectorStoreRetriever<V> {
+  llm: BaseLanguageModel;
 
-  constructor(fields: HydeRetrieverOptions) {
-    super({
-      vectorStore: fields.vectorStore,
-      k: fields.k,
-      filter: fields.filter,
-    });
+  promptTemplate?: BasePromptTemplate;
+
+  constructor(fields: HydeRetrieverOptions<V>) {
+    super(fields);
     this.llm = fields.llm;
     this.promptTemplate = fields.promptTemplate;
   }
 
   async getRelevantDocuments(query: string): Promise<Document[]> {
+    let value: BasePromptValue = new StringPromptValue(query);
+
     // Use a custom template if provided
     if (this.promptTemplate) {
-      query = await this.promptTemplate.format({ question: query });
+      value = await this.promptTemplate.formatPromptValue({ question: query });
     }
 
     // Get a hypothetical answer from the LLM
-    const res = await this.llm.call(query);
+    const res = await this.llm.generatePrompt([value]);
+    const answer = res.generations[0][0].text;
 
     // Retrieve relevant documents based on the hypothetical answer
     const results = await this.vectorStore.similaritySearch(
-      res,
+      answer,
       this.k,
       this.filter
     );
