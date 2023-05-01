@@ -55,7 +55,7 @@ export class AIPluginTool extends Tool implements AIPluginToolParams {
       description: `Call this tool to get the OpenAPI spec (and usage guide) for interacting with the ${aiPluginJson.name_for_human} API. You should only call this ONCE! What is the ${aiPluginJson.name_for_human} API useful for? ${aiPluginJson.description_for_human}`,
       apiSpec: `Usage Guide: ${aiPluginJson.description_for_model}
 
-OpenAPI Spec: ${apiUrlJson}`,
+OpenAPI Spec in JSON or YAML format:\n${apiUrlJson}`,
     });
   }
 }
