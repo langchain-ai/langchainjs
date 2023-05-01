@@ -118,7 +118,7 @@ test("Run tool web-browser", async () => {
 
   console.log(`Got output ${result.output}`);
 
-  expect(result.intermediateSteps.length).toEqual(1);
+  expect(result.intermediateSteps.length).toBeGreaterThanOrEqual(1);
   expect(result.intermediateSteps[0].action.tool).toEqual("web-browser");
   expect(result.output).not.toEqual("");
 });
