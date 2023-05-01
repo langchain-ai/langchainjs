@@ -20,6 +20,8 @@ export interface PineconeLibArgs {
 }
 
 export class PineconeStore extends VectorStore {
+  declare FilterType: PineconeMetadata;
+
   textKey: string;
 
   namespace?: string;
@@ -65,6 +67,11 @@ export class PineconeStore extends VectorStore {
       for (const key of Object.keys(metadata)) {
         if (metadata[key] == null) {
           delete metadata[key];
+        } else if (
+          typeof metadata[key] === "object" &&
+          Object.keys(metadata[key] as unknown as object).length === 0
+        ) {
+          delete metadata[key];
         }
       }
       return {
@@ -90,7 +97,7 @@ export class PineconeStore extends VectorStore {
   async similaritySearchVectorWithScore(
     query: number[],
     k: number,
-    filter?: object
+    filter?: PineconeMetadata
   ): Promise<[Document, number][]> {
     if (filter && this.filter) {
       throw new Error("cannot provide both `filter` and `this.filter`");

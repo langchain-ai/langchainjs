@@ -1,5 +1,11 @@
-export { Tool } from "../tools/base.js";
-export { Agent, BaseSingleActionAgent, LLMSingleActionAgent } from "./agent.js";
+export {
+  Agent,
+  AgentArgs,
+  BaseSingleActionAgent,
+  LLMSingleActionAgent,
+  LLMSingleActionAgentInput,
+  OutputParserArgs,
+} from "./agent.js";
 export {
   JsonToolkit,
   OpenApiToolkit,
@@ -12,21 +18,33 @@ export {
   createJsonAgent,
   createOpenApiAgent,
   createSqlAgent,
+  SqlCreatePromptArgs,
   createVectorStoreAgent,
 } from "./agent_toolkits/index.js";
-export { ChatAgent } from "./chat/index.js";
+export { Toolkit } from "./agent_toolkits/base.js";
+export {
+  ChatAgent,
+  ChatAgentInput,
+  ChatCreatePromptArgs,
+} from "./chat/index.js";
 export { ChatAgentOutputParser } from "./chat/outputParser.js";
 export {
   ChatConversationalAgent,
   ChatConversationalAgentInput,
+  ChatConversationalCreatePromptArgs,
 } from "./chat_convo/index.js";
 export { ChatConversationalAgentOutputParser } from "./chat_convo/outputParser.js";
-export { AgentExecutor } from "./executor.js";
+export { AgentExecutor, AgentExecutorInput } from "./executor.js";
 export {
   initializeAgentExecutor,
   initializeAgentExecutorWithOptions,
+  InitializeAgentExecutorOptions,
 } from "./initialize.js";
-export { ZeroShotAgent } from "./mrkl/index.js";
+export {
+  ZeroShotAgent,
+  ZeroShotAgentInput,
+  ZeroShotCreatePromptArgs,
+} from "./mrkl/index.js";
 export { ZeroShotAgentOutputParser } from "./mrkl/outputParser.js";
 export {
   AgentActionOutputParser,

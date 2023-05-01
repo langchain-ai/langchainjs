@@ -7,6 +7,7 @@ import type {
 import { VectorStore } from "./base.js";
 import { Embeddings } from "../embeddings/base.js";
 import { Document } from "../document.js";
+import { flattenObject } from "../util/flatten.js";
 
 export interface WeaviateLibArgs {
   client: WeaviateClient;
@@ -29,6 +30,8 @@ export interface WeaviateFilter {
 }
 
 export class WeaviateStore extends VectorStore {
+  declare FilterType: WeaviateFilter;
+
   private client: WeaviateClient;
 
   private indexName: string;
@@ -51,15 +54,23 @@ export class WeaviateStore extends VectorStore {
   }
 
   async addVectors(vectors: number[][], documents: Document[]): Promise<void> {
-    const batch: WeaviateObject[] = documents.map((document, index) => ({
-      class: this.indexName,
-      id: v4(),
-      vector: vectors[index],
-      properties: {
-        [this.textKey]: document.pageContent,
-        ...document.metadata,
-      },
-    }));
+    const batch: WeaviateObject[] = documents.map((document, index) => {
+      if (Object.hasOwn(document.metadata, "id"))
+        throw new Error(
+          "Document inserted to Weaviate vectorstore should not have `id` in their metadata."
+        );
+
+      const flattenedMetadata = flattenObject(document.metadata);
+      return {
+        class: this.indexName,
+        id: v4(),
+        vector: vectors[index],
+        properties: {
+          [this.textKey]: document.pageContent,
+          ...flattenedMetadata,
+        },
+      };
+    });
 
     try {
       await this.client.batch
@@ -76,22 +87,6 @@ export class WeaviateStore extends VectorStore {
       await this.embeddings.embedDocuments(documents.map((d) => d.pageContent)),
       documents
     );
-  }
-
-  async similaritySearch(
-    query: string,
-    k: number,
-    filter?: WeaviateFilter
-  ): Promise<Document[]> {
-    return super.similaritySearch(query, k, filter);
-  }
-
-  async similaritySearchWithScore(
-    query: string,
-    k: number,
-    filter?: WeaviateFilter
-  ): Promise<[Document, number][]> {
-    return super.similaritySearchWithScore(query, k, filter);
   }
 
   async similaritySearchVectorWithScore(

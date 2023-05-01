@@ -53,7 +53,7 @@ test("Test ChatAnthropic in streaming mode", async () => {
   const model = new ChatAnthropic({
     modelName: "claude-instant-v1",
     streaming: true,
-    callbackManager: CallbackManager.fromHandlers({
+    callbacks: CallbackManager.fromHandlers({
       async handleLLMNewToken(token: string) {
         nrNewTokens += 1;
         streamedCompletion += token;

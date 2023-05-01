@@ -8,21 +8,21 @@ import {
 import { AgentStep } from "../../schema/index.js";
 import { Tool } from "../../tools/base.js";
 import { Optional } from "../../types/type-utils.js";
-import { Agent, AgentArgs } from "../agent.js";
+import { Agent, AgentArgs, OutputParserArgs } from "../agent.js";
 import { AgentInput } from "../types.js";
 import { ChatAgentOutputParser } from "./outputParser.js";
 import { FORMAT_INSTRUCTIONS, PREFIX, SUFFIX } from "./prompt.js";
 
-export type CreatePromptArgs = {
+export interface ChatCreatePromptArgs {
   /** String to put after the list of tools. */
   suffix?: string;
   /** String to put before the list of tools. */
   prefix?: string;
   /** List of input variables the final prompt will expect. */
   inputVariables?: string[];
-};
+}
 
-type ChatAgentInput = Optional<AgentInput, "outputParser">;
+export type ChatAgentInput = Optional<AgentInput, "outputParser">;
 
 /**
  * Agent for the MRKL chain.
@@ -61,12 +61,12 @@ export class ChatAgent extends Agent {
     }
   }
 
-  static getDefaultOutputParser() {
+  static getDefaultOutputParser(_fields?: OutputParserArgs) {
     return new ChatAgentOutputParser();
   }
 
-  constructScratchPad(steps: AgentStep[]): string {
-    const agentScratchpad = super.constructScratchPad(steps);
+  async constructScratchPad(steps: AgentStep[]): Promise<string> {
+    const agentScratchpad = await super.constructScratchPad(steps);
     if (agentScratchpad) {
       return `This was your previous work (but I haven't seen any of it! I only see what you return as final answer):\n${agentScratchpad}`;
     }
@@ -81,7 +81,7 @@ export class ChatAgent extends Agent {
    * @param args.suffix - String to put after the list of tools.
    * @param args.prefix - String to put before the list of tools.
    */
-  static createPrompt(tools: Tool[], args?: CreatePromptArgs) {
+  static createPrompt(tools: Tool[], args?: ChatCreatePromptArgs) {
     const { prefix = PREFIX, suffix = SUFFIX } = args ?? {};
     const toolStrings = tools
       .map((tool) => `${tool.name}: ${tool.description}`)
@@ -99,14 +99,14 @@ export class ChatAgent extends Agent {
   static fromLLMAndTools(
     llm: BaseLanguageModel,
     tools: Tool[],
-    args?: CreatePromptArgs & AgentArgs
+    args?: ChatCreatePromptArgs & AgentArgs
   ) {
     ChatAgent.validateTools(tools);
     const prompt = ChatAgent.createPrompt(tools, args);
     const chain = new LLMChain({
       prompt,
       llm,
-      callbackManager: args?.callbackManager,
+      callbacks: args?.callbacks ?? args?.callbackManager,
     });
     const outputParser =
       args?.outputParser ?? ChatAgent.getDefaultOutputParser();

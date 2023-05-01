@@ -3,28 +3,20 @@ sidebar_position: 3
 sidebar_label: Integrations
 ---
 
+import CodeBlock from "@theme/CodeBlock";
+
 # Integrations: Chat Models
 
 LangChain offers a number of Chat Models implementations that integrate with various model providers. These are:
 
-## `OpenAI`
+## `ChatOpenAI`
 
-```typescript
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import OpenAI from "@examples/models/chat/integration_openai.ts";
 
-const model = new ChatOpenAI({
-  temperature: 0.9,
-  openAIApiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.OPENAI_API_KEY
-});
-```
+<CodeBlock language="typescript">{OpenAI}</CodeBlock>
 
-## `Anthropic`
+## `ChatAnthropic`
 
-```typescript
-import { ChatAnthropic } from "langchain/chat_models/anthropic";
+import Anthropic from "@examples/models/chat/integration_anthropic.ts";
 
-const model = new ChatAnthropic({
-  temperature: 0.9,
-  apiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.ANTHROPIC_API_KEY
-});
-```
+<CodeBlock language="typescript">{Anthropic}</CodeBlock>

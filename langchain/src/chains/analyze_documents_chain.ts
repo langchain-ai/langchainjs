@@ -1,17 +1,19 @@
-import { BaseChain } from "./base.js";
+import { BaseChain, ChainInputs } from "./base.js";
 import {
   TextSplitter,
   RecursiveCharacterTextSplitter,
 } from "../text_splitter.js";
 import { ChainValues } from "../schema/index.js";
 import { SerializedAnalyzeDocumentChain } from "./serde.js";
+import { CallbackManagerForChainRun } from "../callbacks/manager.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type LoadValues = Record<string, any>;
 
-export interface AnalyzeDocumentChainInput {
-  textSplitter: TextSplitter;
+export interface AnalyzeDocumentChainInput extends Omit<ChainInputs, "memory"> {
   combineDocumentsChain: BaseChain;
+  textSplitter?: TextSplitter;
+  inputKey?: string;
 }
 
 /**
@@ -29,13 +31,8 @@ export class AnalyzeDocumentChain
 
   textSplitter: TextSplitter;
 
-  constructor(fields: {
-    combineDocumentsChain: BaseChain;
-    inputKey?: string;
-    outputKey?: string;
-    textSplitter?: TextSplitter;
-  }) {
-    super();
+  constructor(fields: AnalyzeDocumentChainInput) {
+    super(fields);
     this.combineDocumentsChain = fields.combineDocumentsChain;
     this.inputKey = fields.inputKey ?? this.inputKey;
     this.textSplitter =
@@ -50,7 +47,11 @@ export class AnalyzeDocumentChain
     return this.combineDocumentsChain.outputKeys;
   }
 
-  async _call(values: ChainValues): Promise<ChainValues> {
+  /** @ignore */
+  async _call(
+    values: ChainValues,
+    runManager?: CallbackManagerForChainRun
+  ): Promise<ChainValues> {
     if (!(this.inputKey in values)) {
       throw new Error(`Document key ${this.inputKey} not found.`);
     }
@@ -60,7 +61,10 @@ export class AnalyzeDocumentChain
     const currentDocs = await this.textSplitter.createDocuments([currentDoc]);
 
     const newInputs = { input_documents: currentDocs, ...rest };
-    const result = await this.combineDocumentsChain.call(newInputs);
+    const result = await this.combineDocumentsChain.call(
+      newInputs,
+      runManager?.getChild()
+    );
     return result;
   }
 

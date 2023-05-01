@@ -3,7 +3,7 @@ import type {
   SerializedMapReduceDocumentsChain,
   SerializedRefineDocumentsChain,
 } from "./serde.js";
-import { BaseChain } from "./base.js";
+import { BaseChain, ChainInputs } from "./base.js";
 import { LLMChain } from "./llm_chain.js";
 
 import { Document } from "../document.js";
@@ -11,8 +11,9 @@ import { Document } from "../document.js";
 import { ChainValues } from "../schema/index.js";
 import { BasePromptTemplate } from "../prompts/base.js";
 import { PromptTemplate } from "../prompts/prompt.js";
+import { CallbackManagerForChainRun } from "../callbacks/manager.js";
 
-export interface StuffDocumentsChainInput {
+export interface StuffDocumentsChainInput extends ChainInputs {
   /** LLM Wrapper to use after formatting documents */
   llmChain: LLMChain;
   inputKey?: string;
@@ -44,24 +45,31 @@ export class StuffDocumentsChain
   }
 
   constructor(fields: StuffDocumentsChainInput) {
-    super();
+    super(fields);
     this.llmChain = fields.llmChain;
     this.documentVariableName =
       fields.documentVariableName ?? this.documentVariableName;
     this.inputKey = fields.inputKey ?? this.inputKey;
   }
 
-  async _call(values: ChainValues): Promise<ChainValues> {
+  /** @ignore */
+  async _call(
+    values: ChainValues,
+    runManager?: CallbackManagerForChainRun
+  ): Promise<ChainValues> {
     if (!(this.inputKey in values)) {
       throw new Error(`Document key ${this.inputKey} not found.`);
     }
     const { [this.inputKey]: docs, ...rest } = values;
     const texts = (docs as Document[]).map(({ pageContent }) => pageContent);
     const text = texts.join("\n\n");
-    const result = await this.llmChain.call({
-      ...rest,
-      [this.documentVariableName]: text,
-    });
+    const result = await this.llmChain.call(
+      {
+        ...rest,
+        [this.documentVariableName]: text,
+      },
+      runManager?.getChild()
+    );
     return result;
   }
 
@@ -126,7 +134,7 @@ export class MapReduceDocumentsChain
   combineDocumentChain: BaseChain;
 
   constructor(fields: MapReduceDocumentsChainInput) {
-    super();
+    super(fields);
     this.llmChain = fields.llmChain;
     this.combineDocumentChain = fields.combineDocumentChain;
     this.documentVariableName =
@@ -137,7 +145,11 @@ export class MapReduceDocumentsChain
     this.maxIterations = fields.maxIterations ?? this.maxIterations;
   }
 
-  async _call(values: ChainValues): Promise<ChainValues> {
+  /** @ignore */
+  async _call(
+    values: ChainValues,
+    runManager?: CallbackManagerForChainRun
+  ): Promise<ChainValues> {
     if (!(this.inputKey in values)) {
       throw new Error(`Document key ${this.inputKey} not found.`);
     }
@@ -165,7 +177,10 @@ export class MapReduceDocumentsChain
         break;
       }
 
-      const results = await this.llmChain.apply(inputs);
+      const results = await this.llmChain.apply(
+        inputs,
+        runManager ? [runManager.getChild()] : undefined
+      );
       const { outputKey } = this.llmChain;
 
       currentDocs = results.map((r: ChainValues) => ({
@@ -173,7 +188,10 @@ export class MapReduceDocumentsChain
       }));
     }
     const newInputs = { input_documents: currentDocs, ...rest };
-    const result = await this.combineDocumentChain.call(newInputs);
+    const result = await this.combineDocumentChain.call(
+      newInputs,
+      runManager?.getChild()
+    );
     return result;
   }
 
@@ -254,7 +272,7 @@ export class RefineDocumentsChain
   }
 
   constructor(fields: RefineDocumentsChainInput) {
-    super();
+    super(fields);
     this.llmChain = fields.llmChain;
     this.refineLLMChain = fields.refineLLMChain;
     this.documentVariableName =
@@ -266,6 +284,7 @@ export class RefineDocumentsChain
       fields.initialResponseName ?? this.initialResponseName;
   }
 
+  /** @ignore */
   async _constructInitialInputs(doc: Document, rest: Record<string, unknown>) {
     const baseInfo: Record<string, unknown> = {
       page_content: doc.pageContent,
@@ -285,6 +304,7 @@ export class RefineDocumentsChain
     return inputs;
   }
 
+  /** @ignore */
   async _constructRefineInputs(doc: Document, res: string) {
     const baseInfo: Record<string, unknown> = {
       page_content: doc.pageContent,
@@ -303,7 +323,11 @@ export class RefineDocumentsChain
     return inputs;
   }
 
-  async _call(values: ChainValues): Promise<ChainValues> {
+  /** @ignore */
+  async _call(
+    values: ChainValues,
+    runManager?: CallbackManagerForChainRun
+  ): Promise<ChainValues> {
     if (!(this.inputKey in values)) {
       throw new Error(`Document key ${this.inputKey} not found.`);
     }
@@ -315,7 +339,10 @@ export class RefineDocumentsChain
       currentDocs[0],
       rest
     );
-    let res = await this.llmChain.predict({ ...initialInputs });
+    let res = await this.llmChain.predict(
+      { ...initialInputs },
+      runManager?.getChild()
+    );
 
     const refineSteps = [res];
 
@@ -325,7 +352,10 @@ export class RefineDocumentsChain
         res
       );
       const inputs = { ...refineInputs, ...rest };
-      res = await this.refineLLMChain.predict({ ...inputs });
+      res = await this.refineLLMChain.predict(
+        { ...inputs },
+        runManager?.getChild()
+      );
       refineSteps.push(res);
     }
 

@@ -15,7 +15,7 @@ import {
 } from "../../schema/index.js";
 import { Tool } from "../../tools/base.js";
 import { Optional } from "../../types/type-utils.js";
-import { Agent, AgentArgs } from "../agent.js";
+import { Agent, AgentArgs, OutputParserArgs } from "../agent.js";
 import { AgentActionOutputParser, AgentInput } from "../types.js";
 import { ChatConversationalAgentOutputParser } from "./outputParser.js";
 import {
@@ -25,7 +25,7 @@ import {
   TEMPLATE_TOOL_RESPONSE,
 } from "./prompt.js";
 
-export type CreatePromptArgs = {
+export interface ChatConversationalCreatePromptArgs {
   /** String to put after the list of tools. */
   systemMessage?: string;
   /** String to put before the list of tools. */
@@ -34,7 +34,7 @@ export type CreatePromptArgs = {
   inputVariables?: string[];
   /** Output parser to use for formatting. */
   outputParser?: AgentActionOutputParser;
-};
+}
 
 export type ChatConversationalAgentInput = Optional<AgentInput, "outputParser">;
 
@@ -75,7 +75,7 @@ export class ChatConversationalAgent extends Agent {
     }
   }
 
-  constructScratchPad(steps: AgentStep[]): BaseChatMessage[] {
+  async constructScratchPad(steps: AgentStep[]): Promise<BaseChatMessage[]> {
     const thoughts: BaseChatMessage[] = [];
     for (const step of steps) {
       thoughts.push(new AIChatMessage(step.action.log));
@@ -90,7 +90,9 @@ export class ChatConversationalAgent extends Agent {
     return thoughts;
   }
 
-  static getDefaultOutputParser(): AgentActionOutputParser {
+  static getDefaultOutputParser(
+    _fields?: OutputParserArgs
+  ): AgentActionOutputParser {
     return new ChatConversationalAgentOutputParser();
   }
 
@@ -102,7 +104,10 @@ export class ChatConversationalAgent extends Agent {
    * @param args.systemMessage - String to put before the list of tools.
    * @param args.humanMessage - String to put after the list of tools.
    */
-  static createPrompt(tools: Tool[], args?: CreatePromptArgs) {
+  static createPrompt(
+    tools: Tool[],
+    args?: ChatConversationalCreatePromptArgs
+  ) {
     const systemMessage = (args?.systemMessage ?? DEFAULT_PREFIX) + PREFIX_END;
     const humanMessage = args?.humanMessage ?? DEFAULT_SUFFIX;
     const outputParser =
@@ -130,14 +135,14 @@ export class ChatConversationalAgent extends Agent {
   static fromLLMAndTools(
     llm: BaseLanguageModel,
     tools: Tool[],
-    args?: CreatePromptArgs & AgentArgs
+    args?: ChatConversationalCreatePromptArgs & AgentArgs
   ) {
     ChatConversationalAgent.validateTools(tools);
     const prompt = ChatConversationalAgent.createPrompt(tools, args);
     const chain = new LLMChain({
       prompt,
       llm,
-      callbackManager: args?.callbackManager,
+      callbacks: args?.callbacks ?? args?.callbackManager,
     });
     const outputParser =
       args?.outputParser ?? ChatConversationalAgent.getDefaultOutputParser();

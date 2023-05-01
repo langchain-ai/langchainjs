@@ -1,4 +1,7 @@
-import { BaseOutputParser, OutputParserException } from "../schema/index.js";
+import {
+  BaseOutputParser,
+  OutputParserException,
+} from "../schema/output_parser.js";
 
 /**
  * Class to parse the output of an LLM call into a dictionary.
@@ -17,7 +20,7 @@ export class RegexParser extends BaseOutputParser<Record<string, string>> {
     defaultOutputKey?: string
   ) {
     super();
-    this.regex = regex;
+    this.regex = typeof regex === "string" ? new RegExp(regex) : regex;
     this.outputKeys = outputKeys;
     this.defaultOutputKey = defaultOutputKey;
   }
@@ -46,6 +49,6 @@ export class RegexParser extends BaseOutputParser<Record<string, string>> {
   }
 
   getFormatInstructions(): string {
-    return `Your response should match the following regex: /${this.regex}/`;
+    return `Your response should match the following regex: ${this.regex}`;
   }
 }

@@ -7,15 +7,20 @@ import {
   CreateCompletionResponseChoicesInner,
   OpenAIApi,
 } from "openai";
+import type { AxiosRequestConfig } from "axios";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
 import type { StreamingAxiosConfiguration } from "../util/axios-types.js";
 import { chunkArray } from "../util/chunk.js";
-import { BaseLLM, BaseLLMParams } from "./base.js";
+import { BaseLLM, BaseLLMCallOptions, BaseLLMParams } from "./base.js";
 import { calculateMaxTokens } from "../base_language/count_tokens.js";
 import { OpenAIChat } from "./openai-chat.js";
 import { LLMResult } from "../schema/index.js";
+import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
 
-interface ModelParams {
+/**
+ * Input to OpenAI class.
+ */
+export interface OpenAIInput {
   /** Sampling temperature to use */
   temperature: number;
 
@@ -45,13 +50,7 @@ interface ModelParams {
 
   /** Whether to stream the results or not. Enabling disables tokenUsage reporting */
   streaming: boolean;
-}
 
-/**
- * Input to OpenAI class.
- * @augments ModelParams
- */
-interface OpenAIInput extends ModelParams {
   /** Model name to use */
   modelName: string;
 
@@ -73,11 +72,23 @@ interface OpenAIInput extends ModelParams {
   timeout?: number;
 }
 
-type TokenUsage = {
+export interface OpenAICallOptions extends BaseLLMCallOptions {
+  /**
+   * List of stop words to use when generating
+   */
+  stop?: string[];
+
+  /**
+   * Additional options to pass to the underlying axios request.
+   */
+  options?: AxiosRequestConfig;
+}
+
+interface TokenUsage {
   completionTokens?: number;
   promptTokens?: number;
   totalTokens?: number;
-};
+}
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Kwargs = Record<string, any>;
@@ -93,11 +104,10 @@ type Kwargs = Record<string, any>;
  * https://platform.openai.com/docs/api-reference/completions/create |
  * `openai.createCompletion`} can be passed through {@link modelKwargs}, even
  * if not explicitly available on this class.
- *
- * @augments BaseLLM
- * @augments OpenAIInput
  */
 export class OpenAI extends BaseLLM implements OpenAIInput {
+  declare CallOptions: OpenAICallOptions;
+
   temperature = 0.7;
 
   maxTokens = 256;
@@ -148,8 +158,10 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
 
     const apiKey =
       fields?.openAIApiKey ??
-      // eslint-disable-next-line no-process-env
-      (typeof process !== "undefined" ? process.env.OPENAI_API_KEY : undefined);
+      (typeof process !== "undefined"
+        ? // eslint-disable-next-line no-process-env
+          process.env?.OPENAI_API_KEY
+        : undefined);
     if (!apiKey) {
       throw new Error("OpenAI API key not found");
     }
@@ -225,6 +237,7 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
    *
    * @param prompts - The prompts to pass into the model.
    * @param [stop] - Optional list of stop words to use when generating.
+   * @param [runManager] - Optional callback manager to use when generating.
    *
    * @returns The full LLM output.
    *
@@ -235,7 +248,17 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
    * const response = await openai.generate(["Tell me a joke."]);
    * ```
    */
-  async _generate(prompts: string[], stop?: string[]): Promise<LLMResult> {
+  async _generate(
+    prompts: string[],
+    stopOrOptions?: string[] | this["CallOptions"],
+    runManager?: CallbackManagerForLLMRun
+  ): Promise<LLMResult> {
+    const stop = Array.isArray(stopOrOptions)
+      ? stopOrOptions
+      : stopOrOptions?.stop;
+    const options = Array.isArray(stopOrOptions)
+      ? {}
+      : stopOrOptions?.options ?? {};
     const subPrompts = chunkArray(prompts, this.batchSize);
     const choices: CreateCompletionResponseChoicesInner[] = [];
     const tokenUsage: TokenUsage = {};
@@ -272,6 +295,7 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
                 prompt: subPrompts[i],
               },
               {
+                ...options,
                 responseType: "stream",
                 onmessage: (event) => {
                   if (event.data?.trim?.() === "[DONE]") {
@@ -302,10 +326,7 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
                       choice.finish_reason = part.finish_reason;
                       choice.logprobs = part.logprobs;
                       // eslint-disable-next-line no-void
-                      void this.callbackManager.handleLLMNewToken(
-                        part.text ?? "",
-                        true
-                      );
+                      void runManager?.handleLLMNewToken(part.text ?? "");
                     }
                   }
                 },
@@ -317,10 +338,13 @@ export class OpenAI extends BaseLLM implements OpenAIInput {
               }
             });
           })
-        : await this.completionWithRetry({
-            ...params,
-            prompt: subPrompts[i],
-          });
+        : await this.completionWithRetry(
+            {
+              ...params,
+              prompt: subPrompts[i],
+            },
+            options
+          );
 
       choices.push(...data.choices);
 
@@ -407,7 +431,7 @@ export class PromptLayerOpenAI extends OpenAI {
       fields?.promptLayerApiKey ??
       (typeof process !== "undefined"
         ? // eslint-disable-next-line no-process-env
-          process.env.PROMPTLAYER_API_KEY
+          process.env?.PROMPTLAYER_API_KEY
         : undefined);
 
     if (!this.promptLayerApiKey) {
@@ -450,4 +474,9 @@ export class PromptLayerOpenAI extends OpenAI {
   }
 }
 
-export { OpenAIChat } from "./openai-chat.js";
+export {
+  OpenAIChat,
+  OpenAIChatInput,
+  OpenAIChatCallOptions,
+  PromptLayerOpenAIChat,
+} from "./openai-chat.js";

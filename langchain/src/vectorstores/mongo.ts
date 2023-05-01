@@ -18,6 +18,8 @@ export type MongoVectorStoreQueryExtension = {
 };
 
 export class MongoVectorStore extends VectorStore {
+  declare FilterType: MongoVectorStoreQueryExtension;
+
   collection: Collection<MongoDocument>;
 
   client: MongoClient;

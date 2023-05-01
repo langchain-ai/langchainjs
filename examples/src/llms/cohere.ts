@@ -3,7 +3,6 @@ import { Cohere } from "langchain/llms/cohere";
 export const run = async () => {
   const model = new Cohere({
     temperature: 0.7,
-    verbose: true,
     maxTokens: 20,
     maxRetries: 5,
   });

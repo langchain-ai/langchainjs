@@ -34,7 +34,7 @@ interface BaseParameters {
   timeout?: number;
 }
 
-interface GoogleParameters extends BaseParameters {
+export interface SerpAPIParameters extends BaseParameters {
   /**
    * Search Query
    * Parameter defines the query you want to search. You can use anything that you
@@ -283,17 +283,6 @@ type UrlParameters = Record<
   string | number | boolean | undefined | null
 >;
 
-function buildUrl<P extends UrlParameters>(
-  path: string,
-  parameters: P
-): string {
-  const nonUndefinedParams: [string, string][] = Object.entries(parameters)
-    .filter(([_, value]) => value !== undefined)
-    .map(([key, value]) => [key, `${value}`]);
-  const searchParams = new URLSearchParams(nonUndefinedParams);
-  return `https://serpapi.com/${path}?${searchParams}`;
-}
-
 /**
  * Wrapper around SerpAPI.
  *
@@ -302,14 +291,17 @@ function buildUrl<P extends UrlParameters>(
 export class SerpAPI extends Tool {
   protected key: string;
 
-  protected params: Partial<GoogleParameters>;
+  protected params: Partial<SerpAPIParameters>;
+
+  protected baseUrl: string;
 
   constructor(
     apiKey: string | undefined = typeof process !== "undefined"
       ? // eslint-disable-next-line no-process-env
-        process.env.SERPAPI_API_KEY
+        process.env?.SERPAPI_API_KEY
       : undefined,
-    params: Partial<GoogleParameters> = {}
+    params: Partial<SerpAPIParameters> = {},
+    baseUrl = "https://serpapi.com"
   ) {
     super();
 
@@ -321,21 +313,36 @@ export class SerpAPI extends Tool {
 
     this.key = apiKey;
     this.params = params;
+    this.baseUrl = baseUrl;
   }
 
   name = "search";
 
-  /**
-   * Run query through SerpAPI and parse result
-   */
+  protected buildUrl<P extends UrlParameters>(
+    path: string,
+    parameters: P,
+    baseUrl: string
+  ): string {
+    const nonUndefinedParams: [string, string][] = Object.entries(parameters)
+      .filter(([_, value]) => value !== undefined)
+      .map(([key, value]) => [key, `${value}`]);
+    const searchParams = new URLSearchParams(nonUndefinedParams);
+    return `${baseUrl}/${path}?${searchParams}`;
+  }
+
+  /** @ignore */
   async _call(input: string) {
     const { timeout, ...params } = this.params;
     const resp = await fetch(
-      buildUrl("search", {
-        ...params,
-        api_key: this.key,
-        q: input,
-      }),
+      this.buildUrl(
+        "search",
+        {
+          ...params,
+          api_key: this.key,
+          q: input,
+        },
+        this.baseUrl
+      ),
       {
         signal: timeout ? AbortSignal.timeout(timeout) : undefined,
       }

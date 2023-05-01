@@ -9,7 +9,7 @@ import {
   JSON_EXPLORER_DESCRIPTION,
 } from "./prompt.js";
 import { LLMChain } from "../../../chains/llm_chain.js";
-import { CreatePromptArgs, ZeroShotAgent } from "../../mrkl/index.js";
+import { ZeroShotCreatePromptArgs, ZeroShotAgent } from "../../mrkl/index.js";
 import { Toolkit } from "../base.js";
 import {
   Headers,
@@ -48,7 +48,7 @@ export class OpenApiToolkit extends RequestsToolkit {
 export function createOpenApiAgent(
   llm: BaseLanguageModel,
   openApiToolkit: OpenApiToolkit,
-  args?: CreatePromptArgs
+  args?: ZeroShotCreatePromptArgs
 ) {
   const {
     prefix = OPENAPI_PREFIX,
