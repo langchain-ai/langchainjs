@@ -50,7 +50,7 @@ model Document {
 Afterwards, create a new migration with `--create-only` to avoid running the migration directly.
 
 ```bash npm2yarn
-npm run prisma migrate dev --create-only
+npx prisma migrate dev --create-only
 ```
 
 Add the following line to the newly created migration to enable `pgvector` extension if it hasn't been enabled yet:
@@ -62,7 +62,7 @@ CREATE EXTENSION IF NOT EXISTS vector;
 Run the migration afterwards:
 
 ```bash npm2yarn
-npm run prisma migrate dev
+npx prisma migrate dev
 ```
 
 ## Usage

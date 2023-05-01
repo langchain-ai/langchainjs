@@ -1,7 +1,8 @@
+import { v4 as uuidv4 } from "uuid";
 /* eslint-disable no-process-env */
-import { test, expect } from "@jest/globals";
+import { test } from "@jest/globals";
 
-import { LangChainTracer } from "../tracers.js";
+import { LangChainTracer } from "../handlers/tracers.js";
 import { OpenAI } from "../../llms/openai.js";
 import { SerpAPI } from "../../tools/index.js";
 import { Calculator } from "../../tools/calculator.js";
@@ -9,26 +10,34 @@ import { initializeAgentExecutorWithOptions } from "../../agents/index.js";
 
 test("Test LangChain tracer", async () => {
   const tracer = new LangChainTracer();
-  expect(tracer.alwaysVerbose).toBe(true);
+  const chainRunId = uuidv4();
+  const toolRunId = uuidv4();
+  const llmRunId = uuidv4();
+  await tracer.handleChainStart({ name: "test" }, { foo: "bar" }, chainRunId);
+  await tracer.handleToolStart({ name: "test" }, "test", toolRunId, chainRunId);
+  await tracer.handleLLMStart({ name: "test" }, ["test"], llmRunId, toolRunId);
+  await tracer.handleLLMEnd({ generations: [[]] }, llmRunId);
+  await tracer.handleToolEnd("output", toolRunId);
+  const llmRunId2 = uuidv4();
+  await tracer.handleLLMStart(
+    { name: "test2" },
+    ["test"],
+    llmRunId2,
+    chainRunId
+  );
+  await tracer.handleLLMEnd({ generations: [[]] }, llmRunId2);
+  await tracer.handleChainEnd({ foo: "bar" }, chainRunId);
 
-  await tracer.handleChainStart({ name: "test" }, { foo: "bar" });
-  await tracer.handleToolStart({ name: "test" }, "test");
-  await tracer.handleLLMStart({ name: "test" }, ["test"]);
-  await tracer.handleLLMEnd({ generations: [[]] });
-  await tracer.handleToolEnd("output");
-  await tracer.handleLLMStart({ name: "test2" }, ["test"]);
-  await tracer.handleLLMEnd({ generations: [[]] });
-  await tracer.handleChainEnd({ foo: "bar" });
-
-  await tracer.handleLLMStart({ name: "test" }, ["test"]);
-  await tracer.handleLLMEnd({ generations: [[]] });
+  const llmRunId3 = uuidv4();
+  await tracer.handleLLMStart({ name: "test" }, ["test"], llmRunId3);
+  await tracer.handleLLMEnd({ generations: [[]] }, llmRunId3);
 });
 
-test.skip("Test Traced Agent with concurrency (skipped until we fix concurrency)", async () => {
-  process.env.LANGCHAIN_HANDLER = "langchain";
+test("Test Traced Agent with concurrency", async () => {
+  process.env.LANGCHAIN_TRACING = "true";
   const model = new OpenAI({ temperature: 0 });
   const tools = [
-    new SerpAPI(undefined, {
+    new SerpAPI(process.env.SERPAPI_API_KEY, {
       location: "Austin,Texas,United States",
       hl: "en",
       gl: "us",

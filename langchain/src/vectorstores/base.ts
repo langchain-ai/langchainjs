@@ -2,18 +2,22 @@ import { Embeddings } from "../embeddings/base.js";
 import { Document } from "../document.js";
 import { BaseRetriever } from "../schema/index.js";
 
-export class VectorStoreRetriever<V extends VectorStore> extends BaseRetriever {
+export interface VectorStoreRetrieverInput<V extends VectorStore> {
+  vectorStore: V;
+  k?: number;
+  filter?: V["FilterType"];
+}
+
+export class VectorStoreRetriever<
+  V extends VectorStore = VectorStore
+> extends BaseRetriever {
   vectorStore: V;
 
   k = 4;
 
   filter?: V["FilterType"];
 
-  constructor(fields: {
-    vectorStore: V;
-    k?: number;
-    filter?: V["FilterType"];
-  }) {
+  constructor(fields: VectorStoreRetrieverInput<V>) {
     super();
     this.vectorStore = fields.vectorStore;
     this.k = fields.k ?? this.k;
@@ -27,6 +31,10 @@ export class VectorStoreRetriever<V extends VectorStore> extends BaseRetriever {
       this.filter
     );
     return results;
+  }
+
+  async addDocuments(documents: Document[]): Promise<void> {
+    await this.vectorStore.addDocuments(documents);
   }
 }
 
@@ -102,7 +110,10 @@ export abstract class VectorStore {
     );
   }
 
-  asRetriever(k?: number, filter?: this["FilterType"]): BaseRetriever {
+  asRetriever(
+    k?: number,
+    filter?: this["FilterType"]
+  ): VectorStoreRetriever<this> {
     return new VectorStoreRetriever({ vectorStore: this, k, filter });
   }
 }

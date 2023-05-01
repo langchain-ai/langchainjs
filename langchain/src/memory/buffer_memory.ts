@@ -26,6 +26,10 @@ export class BufferMemory extends BaseChatMemory implements BufferMemoryInput {
     this.memoryKey = fields?.memoryKey ?? this.memoryKey;
   }
 
+  get memoryKeys() {
+    return [this.memoryKey];
+  }
+
   async loadMemoryVariables(_values: InputValues): Promise<MemoryVariables> {
     const messages = await this.chatHistory.getMessages();
     if (this.returnMessages) {

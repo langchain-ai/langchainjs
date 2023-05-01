@@ -1,13 +1,11 @@
 import { BaseChain, ChainInputs } from "./base.js";
 import { BasePromptTemplate } from "../prompts/base.js";
 import { BaseLanguageModel } from "../base_language/index.js";
-import {
-  ChainValues,
-  Generation,
-  BasePromptValue,
-  BaseOutputParser,
-} from "../schema/index.js";
+import { ChainValues, Generation, BasePromptValue } from "../schema/index.js";
+import { BaseOutputParser } from "../schema/output_parser.js";
 import { SerializedLLMChain } from "./serde.js";
+import { CallbackManager } from "../callbacks/index.js";
+import { CallbackManagerForChainRun } from "../callbacks/manager.js";
 
 export interface LLMChainInput extends ChainInputs {
   /** Prompt object to use */
@@ -51,7 +49,7 @@ export class LLMChain extends BaseChain implements LLMChainInput {
   }
 
   constructor(fields: LLMChainInput) {
-    super(fields.memory, fields.verbose, fields.callbackManager);
+    super(fields);
     this.prompt = fields.prompt;
     this.llm = fields.llm;
     this.outputKey = fields.outputKey ?? this.outputKey;
@@ -67,14 +65,16 @@ export class LLMChain extends BaseChain implements LLMChainInput {
   /** @ignore */
   async _getFinalOutput(
     generations: Generation[],
-    promptValue: BasePromptValue
+    promptValue: BasePromptValue,
+    runManager?: CallbackManagerForChainRun
   ): Promise<unknown> {
     const completion = generations[0].text;
     let finalCompletion: unknown;
     if (this.outputParser) {
       finalCompletion = await this.outputParser.parseWithPrompt(
         completion,
-        promptValue
+        promptValue,
+        runManager?.getChild()
       );
     } else {
       finalCompletion = completion;
@@ -83,15 +83,26 @@ export class LLMChain extends BaseChain implements LLMChainInput {
   }
 
   /** @ignore */
-  async _call(values: ChainValues): Promise<ChainValues> {
+  async _call(
+    values: ChainValues,
+    runManager?: CallbackManagerForChainRun
+  ): Promise<ChainValues> {
     let stop;
     if ("stop" in values && Array.isArray(values.stop)) {
       stop = values.stop;
     }
     const promptValue = await this.prompt.formatPromptValue(values);
-    const { generations } = await this.llm.generatePrompt([promptValue], stop);
+    const { generations } = await this.llm.generatePrompt(
+      [promptValue],
+      stop,
+      runManager?.getChild()
+    );
     return {
-      [this.outputKey]: await this._getFinalOutput(generations[0], promptValue),
+      [this.outputKey]: await this._getFinalOutput(
+        generations[0],
+        promptValue,
+        runManager
+      ),
     };
   }
 
@@ -99,6 +110,7 @@ export class LLMChain extends BaseChain implements LLMChainInput {
    * Format prompt with values and pass to LLM
    *
    * @param values - keys to pass to prompt template
+   * @param callbackManager - CallbackManager to use
    * @returns Completion from LLM.
    *
    * @example
@@ -106,8 +118,11 @@ export class LLMChain extends BaseChain implements LLMChainInput {
    * llm.predict({ adjective: "funny" })
    * ```
    */
-  async predict(values: ChainValues): Promise<string> {
-    const output = await this.call(values);
+  async predict(
+    values: ChainValues,
+    callbackManager?: CallbackManager
+  ): Promise<string> {
+    const output = await this.call(values, callbackManager);
     return output[this.outputKey];
   }
 

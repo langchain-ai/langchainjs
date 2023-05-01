@@ -15,7 +15,7 @@ import {
 } from "../../schema/index.js";
 import { Tool } from "../../tools/base.js";
 import { Optional } from "../../types/type-utils.js";
-import { Agent, AgentArgs } from "../agent.js";
+import { Agent, AgentArgs, OutputParserArgs } from "../agent.js";
 import { AgentActionOutputParser, AgentInput } from "../types.js";
 import { ChatConversationalAgentOutputParser } from "./outputParser.js";
 import {
@@ -75,7 +75,7 @@ export class ChatConversationalAgent extends Agent {
     }
   }
 
-  constructScratchPad(steps: AgentStep[]): BaseChatMessage[] {
+  async constructScratchPad(steps: AgentStep[]): Promise<BaseChatMessage[]> {
     const thoughts: BaseChatMessage[] = [];
     for (const step of steps) {
       thoughts.push(new AIChatMessage(step.action.log));
@@ -90,7 +90,9 @@ export class ChatConversationalAgent extends Agent {
     return thoughts;
   }
 
-  static getDefaultOutputParser(): AgentActionOutputParser {
+  static getDefaultOutputParser(
+    _fields?: OutputParserArgs
+  ): AgentActionOutputParser {
     return new ChatConversationalAgentOutputParser();
   }
 
@@ -140,7 +142,7 @@ export class ChatConversationalAgent extends Agent {
     const chain = new LLMChain({
       prompt,
       llm,
-      callbackManager: args?.callbackManager,
+      callbacks: args?.callbacks ?? args?.callbackManager,
     });
     const outputParser =
       args?.outputParser ?? ChatConversationalAgent.getDefaultOutputParser();

@@ -1,6 +1,6 @@
 import { test, expect } from "@jest/globals";
 import { BufferMemory } from "../buffer_memory.js";
-import { ChatMessageHistory } from "../stores/message/in_memory.js";
+import { ChatMessageHistory } from "../../stores/message/in_memory.js";
 import { HumanChatMessage, AIChatMessage } from "../../schema/index.js";
 
 test("Test buffer memory", async () => {

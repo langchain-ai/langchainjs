@@ -1,5 +1,5 @@
 import { BaseLanguageModel } from "../base_language/index.js";
-import { CallbackManager, getCallbackManager } from "../callbacks/index.js";
+import { CallbackManager } from "../callbacks/manager.js";
 import { BufferMemory } from "../memory/buffer_memory.js";
 import { Tool } from "../tools/base.js";
 import { ChatAgent } from "./chat/index.js";
@@ -12,6 +12,9 @@ type AgentType =
   | "chat-zero-shot-react-description"
   | "chat-conversational-react-description";
 
+/**
+ * @deprecated use initializeAgentExecutorWithOptions instead
+ */
 export const initializeAgentExecutor = async (
   tools: Tool[],
   llm: BaseLanguageModel,
@@ -20,8 +23,8 @@ export const initializeAgentExecutor = async (
   _callbackManager?: CallbackManager
 ): Promise<AgentExecutor> => {
   const agentType = _agentType ?? "zero-shot-react-description";
-  const verbose = _verbose ?? !!_callbackManager;
-  const callbackManager = _callbackManager ?? getCallbackManager();
+  const verbose = _verbose;
+  const callbackManager = _callbackManager;
   switch (agentType) {
     case "zero-shot-react-description":
       return AgentExecutor.fromAgentAndTools({

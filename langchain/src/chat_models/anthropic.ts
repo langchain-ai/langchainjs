@@ -13,6 +13,7 @@ import {
   ChatResult,
   MessageType,
 } from "../schema/index.js";
+import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
 
 function getAnthropicPromptFromMessage(type: MessageType): string {
   switch (type) {
@@ -134,7 +135,7 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
       fields?.anthropicApiKey ??
       (typeof process !== "undefined"
         ? // eslint-disable-next-line no-process-env
-          process.env.ANTHROPIC_API_KEY
+          process.env?.ANTHROPIC_API_KEY
         : undefined);
     if (!this.apiKey) {
       throw new Error("Anthropic API key not found");
@@ -203,7 +204,8 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
   /** @ignore */
   async _generate(
     messages: BaseChatMessage[],
-    stopSequences?: string[]
+    stopSequences?: string[],
+    runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
     if (this.stopSequences && stopSequences) {
       throw new Error(
@@ -216,10 +218,13 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
       ? stopSequences.concat(DEFAULT_STOP_SEQUENCES)
       : params.stop_sequences;
 
-    const response = await this.completionWithRetry({
-      ...params,
-      prompt: this.formatMessagesAsPrompt(messages),
-    });
+    const response = await this.completionWithRetry(
+      {
+        ...params,
+        prompt: this.formatMessagesAsPrompt(messages),
+      },
+      runManager
+    );
 
     const generations: ChatGeneration[] = response.completion
       .split(AI_PROMPT)
@@ -235,7 +240,8 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
 
   /** @ignore */
   async completionWithRetry(
-    request: SamplingParameters & Kwargs
+    request: SamplingParameters & Kwargs,
+    runManager?: CallbackManagerForLLMRun
   ): Promise<CompletionResponse> {
     if (!this.apiKey) {
       throw new Error("Missing Anthropic API key.");
@@ -257,7 +263,7 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
               const delta = part.slice(currentCompletion.length);
               currentCompletion += delta ?? "";
               // eslint-disable-next-line no-void
-              void this.callbackManager.handleLLMNewToken(delta ?? "", true);
+              void runManager?.handleLLMNewToken(delta ?? "");
             }
           },
         });
