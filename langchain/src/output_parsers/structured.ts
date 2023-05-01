@@ -46,7 +46,9 @@ ${JSON.stringify(zodToJsonSchema(this.schema))}
 
   async parse(text: string): Promise<z.infer<T>> {
     try {
-      const json = text.trim().split("```")[1].split("```")[0].trim();
+      const json = text.includes("```")
+        ? text.trim().split(/```(?:json)?/)[1]
+        : text.trim();
       return this.schema.parseAsync(JSON.parse(json));
     } catch (e) {
       throw new OutputParserException(

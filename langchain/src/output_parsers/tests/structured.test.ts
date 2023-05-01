@@ -75,6 +75,24 @@ test("StructuredOutputParser.fromZodSchema", async () => {
     sources: ["this-source"],
   });
 
+  expect(
+    await parser.parse(
+      '```json\n{"answer": "value", "sources": ["this-source"]}```'
+    )
+  ).toEqual({
+    answer: "value",
+    sources: ["this-source"],
+  });
+
+  expect(
+    await parser.parse(
+      'some other stuff```json\n{"answer": "value", "sources": ["this-source"]}```some other stuff at the end'
+    )
+  ).toEqual({
+    answer: "value",
+    sources: ["this-source"],
+  });
+
   expect(parser.getFormatInstructions()).toMatchInlineSnapshot(`
 "The output should be formatted as a JSON instance that conforms to the JSON schema below.
 
