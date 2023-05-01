@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.66",
+  "version": "0.0.67",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -55,6 +55,9 @@
     "embeddings/tensorflow.cjs",
     "embeddings/tensorflow.js",
     "embeddings/tensorflow.d.ts",
+    "embeddings/hf.cjs",
+    "embeddings/hf.js",
+    "embeddings/hf.d.ts",
     "llms.cjs",
     "llms.js",
     "llms.d.ts",
@@ -241,6 +244,9 @@
     "retrievers/document_compressors.cjs",
     "retrievers/document_compressors.js",
     "retrievers/document_compressors.d.ts",
+    "retrievers/hyde.cjs",
+    "retrievers/hyde.js",
+    "retrievers/hyde.d.ts",
     "cache.cjs",
     "cache.js",
     "cache.d.ts",
@@ -468,6 +474,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.4.3",
     "@dqbd/tiktoken": "^1.0.7",
+    "ansi-styles": "^5.0.0",
     "binary-extensions": "^2.2.0",
     "browser-or-node": "^2.1.1",
     "expr-eval": "^2.0.2",
@@ -582,6 +589,11 @@
       "types": "./embeddings/tensorflow.d.ts",
       "import": "./embeddings/tensorflow.js",
       "require": "./embeddings/tensorflow.cjs"
+    },
+    "./embeddings/hf": {
+      "types": "./embeddings/hf.d.ts",
+      "import": "./embeddings/hf.js",
+      "require": "./embeddings/hf.cjs"
     },
     "./llms": {
       "node": {
@@ -902,6 +914,11 @@
       "types": "./retrievers/document_compressors.d.ts",
       "import": "./retrievers/document_compressors.js",
       "require": "./retrievers/document_compressors.cjs"
+    },
+    "./retrievers/hyde": {
+      "types": "./retrievers/hyde.d.ts",
+      "import": "./retrievers/hyde.js",
+      "require": "./retrievers/hyde.cjs"
     },
     "./cache": {
       "types": "./cache.d.ts",

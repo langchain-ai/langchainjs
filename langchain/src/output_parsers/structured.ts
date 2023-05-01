@@ -1,6 +1,5 @@
 import { z } from "zod";
-import { printZodSchema } from "../util/zod.js";
-
+import { zodToJsonSchema } from "zod-to-json-schema";
 import {
   BaseOutputParser,
   OutputParserException,
@@ -33,19 +32,25 @@ export class StructuredOutputParser<
   }
 
   getFormatInstructions(): string {
-    return `Your output must be a markdown code snippet formatted in the following schema:
+    return `Your final output must be formatted as a JSON instance that conforms to the JSON schema below.
 
+As an example, for the schema {{"properties": {{"foo": {{"title": "Foo", "description": "a list of strings", "type": "array", "items": {{"type": "string"}}}}}}, "required": ["foo"]}}}}
+the object {{"foo": ["bar", "baz"]}} is a well-formatted instance of the schema. The object {{"properties": {{"foo": ["bar", "baz"]}}}} is not well-formatted.
+
+Here is the output schema:
 \`\`\`json
-${printZodSchema(this.schema)}
+${JSON.stringify(zodToJsonSchema(this.schema))}
 \`\`\`
 
-Including the leading and trailing "\`\`\`json" and "\`\`\`"
+Your final output will be parsed as a markdown block with valid JSON inside, so include the leading and trailing "\`\`\`json" and "\`\`\`" but do not output anything else.
 `;
   }
 
   async parse(text: string): Promise<z.infer<T>> {
     try {
-      const json = text.trim().split("```json")[1].split("```")[0].trim();
+      const json = text.includes("```")
+        ? text.trim().split(/```(?:json)?/)[1]
+        : text.trim();
       return this.schema.parseAsync(JSON.parse(json));
     } catch (e) {
       throw new OutputParserException(

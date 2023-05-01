@@ -27,6 +27,7 @@ const entrypoints = {
   "embeddings/openai": "embeddings/openai",
   "embeddings/cohere": "embeddings/cohere",
   "embeddings/tensorflow": "embeddings/tensorflow",
+  "embeddings/hf": "embeddings/hf",
   // llms
   llms: "llms/index",
   "llms/load": "llms/load",
@@ -104,6 +105,7 @@ const entrypoints = {
   "retrievers/databerry": "retrievers/databerry",
   "retrievers/contextual_compression": "retrievers/contextual_compression",
   "retrievers/document_compressors": "retrievers/document_compressors/index",
+  "retrievers/hyde": "retrievers/hyde",
   // cache
   cache: "cache/index",
   "cache/redis": "cache/redis",
@@ -137,6 +139,7 @@ const requiresOptionalDependency = [
   "chains/load",
   "embeddings/cohere",
   "embeddings/tensorflow",
+  "embeddings/hf",
   "llms/load",
   "llms/cohere",
   "llms/hf",

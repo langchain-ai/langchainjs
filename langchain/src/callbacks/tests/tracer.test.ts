@@ -67,6 +67,7 @@ test("Test LLMRun", async () => {
     start_time: _DATE,
     end_time: _DATE,
     execution_order: 1,
+    child_execution_order: 1,
     serialized: { name: "test" },
     session_id: TEST_SESSION_ID,
     prompts: ["test"],
@@ -94,6 +95,7 @@ test("Test Chain Run", async () => {
     start_time: _DATE,
     end_time: _DATE,
     execution_order: 1,
+    child_execution_order: 1,
     serialized: { name: "test" },
     session_id: TEST_SESSION_ID,
     inputs: { foo: "bar" },
@@ -119,6 +121,7 @@ test("Test Tool Run", async () => {
     start_time: _DATE,
     end_time: _DATE,
     execution_order: 1,
+    child_execution_order: 1,
     serialized: { name: "test" },
     session_id: TEST_SESSION_ID,
     tool_input: "test",
@@ -164,6 +167,7 @@ test("Test nested runs", async () => {
         parent_uuid: chainRunId,
         end_time: 1620000000000,
         execution_order: 4,
+        child_execution_order: 4,
         prompts: ["test"],
         response: {
           generations: [[]],
@@ -188,6 +192,7 @@ test("Test nested runs", async () => {
             parent_uuid: toolRunId,
             end_time: 1620000000000,
             execution_order: 3,
+            child_execution_order: 3,
             prompts: ["test"],
             response: {
               generations: [[]],
@@ -203,6 +208,7 @@ test("Test nested runs", async () => {
         child_tool_runs: [],
         end_time: 1620000000000,
         execution_order: 2,
+        child_execution_order: 3,
         output: "output",
         serialized: {
           name: "test",
@@ -216,6 +222,7 @@ test("Test nested runs", async () => {
     uuid: chainRunId,
     end_time: 1620000000000,
     execution_order: 1,
+    child_execution_order: 4,
     inputs: {
       foo: "bar",
     },

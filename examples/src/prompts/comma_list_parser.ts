@@ -28,7 +28,7 @@ export const run = async () => {
   console.log(response);
   // Vanilla, Chocolate, Strawberry, Mint Chocolate Chip, Cookies and Cream
 
-  console.log(parser.parse(response));
+  console.log(await parser.parse(response));
   /*
   [
     'Vanilla',

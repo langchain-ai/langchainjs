@@ -9,7 +9,7 @@ import { PromptTemplate } from "../../prompts/index.js";
 test("Test StructuredInputParser with a simple input", async () => {
   const chat = new ChatOpenAI({ modelName: "gpt-3.5-turbo", temperature: 0 });
   const inputParser = StructuredInputParser.fromZodSchema(
-    z.string().describe("a potential English word")
+    z.string().describe("a word")
   );
   const chain = new LLMChain({
     llm: chat,
@@ -29,8 +29,8 @@ test("Test StructuredInputParser with a simple input", async () => {
   });
 
   const res = await chain.call({
-    query: `Is the input a valid English word?.`,
-    input: await inputParser.parse("Hello"),
+    query: `How many letters does the input have?.`,
+    input: await inputParser.parse("LangChain"),
   });
 
   console.log({ res });
@@ -43,15 +43,13 @@ test("Test StructuredInputParser with a more complex input", async () => {
       .array(
         z.object({
           id: z.string().describe("the unique record id"),
-          created_at: z
-            .string()
-            .describe("creation date of the database record"),
           fields: z.object({
             title: z.string().describe("the book title"),
             seriesId: z
               .string()
               .describe("id of the series the book belongs to"),
-            createdAt: z.string().describe("publish date of the book"),
+            createdAt: z.string().datetime().describe("publication date of the book"),
+            reprintedAt: z.string().datetime().describe("reprint date of the book").optional(),
           }),
         })
       )
@@ -74,46 +72,46 @@ test("Test StructuredInputParser with a more complex input", async () => {
     }),
   });
 
+  const inputData = await inputParser.parse([
+    {
+      id: "rec0",
+      fields: {
+        title: "Novel 1",
+        seriesId: "1",
+        createdAt: "1996-08-01T00:00:00.000Z",
+        reprintedAt: "2014-08-01T00:00:00.000Z",
+      },
+    },
+    {
+      id: "rec1",
+      fields: {
+        title: "Novel 2",
+        seriesId: "1",
+        createdAt: "1999-08-01T00:00:00.000Z",
+        reprintedAt: "2014-08-01T00:00:00.000Z",
+      },
+    },
+    {
+      id: "rec3",
+      fields: {
+        title: "Novel 3",
+        seriesId: "2",
+        createdAt: "2010-08-31T00:00:00.000Z",
+      },
+    },
+    {
+      id: "rec4",
+      fields: {
+        title: "Novel 4",
+        seriesId: "2",
+        createdAt: "2011-09-01T00:00:00.000Z",
+      },
+    },
+  ]);
+
   const res = await chain.call({
     query: `List all the books published before 2000.`,
-    input: await inputParser.parse([
-      {
-        id: "rec0",
-        created_at: "2021-11-06T00:00:00.000Z",
-        fields: {
-          title: "Book 1",
-          seriesId: "1",
-          createdAt: "1996-08-01T00:00:00.000Z",
-        },
-      },
-      {
-        id: "rec1",
-        created_at: "2022-08-17T00:00:00.000Z",
-        fields: {
-          title: "Book 2",
-          seriesId: "1",
-          createdAt: "1999-08-01T00:00:00.000Z",
-        },
-      },
-      {
-        id: "rec3",
-        created_at: "1994-01-08T00:00:00.000Z",
-        fields: {
-          title: "Novel 1",
-          seriesId: "2",
-          createdAt: "2010-08-31T00:00:00.000Z",
-        },
-      },
-      {
-        id: "rec4",
-        created_at: "1995-01-08T00:00:00.000Z",
-        fields: {
-          title: "Novel 2",
-          seriesId: "2",
-          createdAt: "2011-09-01T00:00:00.000Z",
-        },
-      },
-    ]),
+    input: inputData,
   });
 
   console.log({ res });
@@ -125,11 +123,11 @@ test("Test StructuredInputParser with a StructuredOutputParser", async () => {
     .array(
       z.object({
         id: z.string().describe("the unique record id"),
-        created_at: z.string().describe("creation date of the database record"),
         fields: z.object({
           title: z.string().describe("the book title"),
           seriesId: z.string().describe("id of the series the book belongs to"),
-          createdAt: z.string().describe("publish date of the book"),
+          createdAt: z.string().datetime().describe("publication date of the book"),
+          reprintedAt: z.string().datetime().describe("reprint date of the book").optional(),
         }),
       })
     )
@@ -156,46 +154,47 @@ test("Test StructuredInputParser with a StructuredOutputParser", async () => {
     }),
   });
 
+  const inputData = await inputParser.parse([
+    {
+      id: "rec0",
+      fields: {
+        title: "Novel 1",
+        seriesId: "1",
+        createdAt: "1996-08-01T00:00:00.000Z",
+        reprintedAt: "2014-08-01T00:00:00.000Z",
+      },
+    },
+    {
+      id: "rec1",
+      fields: {
+        title: "Novel 2",
+        seriesId: "1",
+        createdAt: "1999-08-01T00:00:00.000Z",
+        reprintedAt: "2014-08-01T00:00:00.000Z",
+      },
+    },
+    {
+      id: "rec3",
+      fields: {
+        title: "Novel 3",
+        seriesId: "2",
+        createdAt: "2010-08-31T00:00:00.000Z",
+      },
+    },
+    {
+      id: "rec4",
+      fields: {
+        title: "Novel 4",
+        seriesId: "2",
+        createdAt: "2011-09-01T00:00:00.000Z",
+      },
+    },
+  ]);
+  console.log(inputParser.getFormatInstructions(), inputData);
+
   const res = await chain.call({
     query: `List all the books published before 2000.`,
-    input: await inputParser.parse([
-      {
-        id: "rec0",
-        created_at: "2021-11-06T00:00:00.000Z",
-        fields: {
-          title: "Book 1",
-          seriesId: "1",
-          createdAt: "1996-08-01T00:00:00.000Z",
-        },
-      },
-      {
-        id: "rec1",
-        created_at: "2022-08-17T00:00:00.000Z",
-        fields: {
-          title: "Book 2",
-          seriesId: "1",
-          createdAt: "1999-08-01T00:00:00.000Z",
-        },
-      },
-      {
-        id: "rec3",
-        created_at: "1994-01-08T00:00:00.000Z",
-        fields: {
-          title: "Novel 1",
-          seriesId: "2",
-          createdAt: "2010-08-31T00:00:00.000Z",
-        },
-      },
-      {
-        id: "rec4",
-        created_at: "1995-01-08T00:00:00.000Z",
-        fields: {
-          title: "Novel 2",
-          seriesId: "2",
-          createdAt: "2011-09-01T00:00:00.000Z",
-        },
-      },
-    ]),
+    input: inputData,
   });
 
   console.log(await outputParser.parse(res.text));
