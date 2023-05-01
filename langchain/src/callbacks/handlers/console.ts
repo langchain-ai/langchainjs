@@ -60,10 +60,6 @@ export class ConsoleCallbackHandler extends BaseTracer {
     return this.newSession(sessionName);
   }
 
-  copy() {
-    return this;
-  }
-
   // utility methods
 
   getParents(run: Run) {
