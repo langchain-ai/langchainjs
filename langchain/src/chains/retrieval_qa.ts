@@ -38,7 +38,7 @@ export class RetrievalQAChain
   returnSourceDocuments = false;
 
   constructor(fields: RetrievalQAChainInput) {
-    super(undefined, fields.verbose, fields.callbackManager);
+    super(fields);
     this.retriever = fields.retriever;
     this.combineDocumentsChain = fields.combineDocumentsChain;
     this.inputKey = fields.inputKey ?? this.inputKey;

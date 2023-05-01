@@ -6,10 +6,26 @@ import { RecursiveCharacterTextSplitter } from "../text_splitter.js";
 import { MemoryVectorStore } from "../vectorstores/memory.js";
 import { StringPromptValue } from "../prompts/base.js";
 import { Document } from "../document.js";
-import { Tool } from "./base.js";
-import { CallbackManager } from "../callbacks/manager.js";
+import { Tool, ToolParams } from "./base.js";
+import {
+  CallbackManager,
+  CallbackManagerForToolRun,
+} from "../callbacks/manager.js";
 import { Embeddings } from "../embeddings/base.js";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
+
+export const parseInputs = (inputs: string): [string, string] => {
+  const [baseUrl, task] = inputs.split(",").map((input) => {
+    let t = input.trim();
+    t = t.startsWith('"') ? t.slice(1) : t;
+    t = t.endsWith('"') ? t.slice(0, -1) : t;
+    // it likes to put / at the end of urls, wont matter for task
+    t = t.endsWith("/") ? t.slice(0, -1) : t;
+    return t.trim();
+  });
+
+  return [baseUrl, task];
+};
 
 export const getText = (
   html: string,
@@ -126,7 +142,7 @@ const DEFAULT_HEADERS = {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Headers = Record<string, any>;
 
-export interface WebBrowserArgs {
+export interface WebBrowserArgs extends ToolParams {
   model: BaseLanguageModel;
 
   embeddings: Embeddings;
@@ -135,8 +151,7 @@ export interface WebBrowserArgs {
 
   axiosConfig?: Omit<AxiosRequestConfig, "url">;
 
-  verbose?: boolean;
-
+  /** @deprecated */
   callbackManager?: CallbackManager;
 }
 
@@ -154,10 +169,11 @@ export class WebBrowser extends Tool {
     headers,
     embeddings,
     verbose,
+    callbacks,
     callbackManager,
     axiosConfig,
   }: WebBrowserArgs) {
-    super(verbose, callbackManager);
+    super(verbose, callbacks ?? callbackManager);
 
     this.model = model;
     this.embeddings = embeddings;
@@ -170,15 +186,8 @@ export class WebBrowser extends Tool {
   }
 
   /** @ignore */
-  async _call(inputs: string) {
-    const [baseUrl, task] = inputs.split(",").map((input) => {
-      let t = input.trim();
-      t = t.startsWith('"') ? t.slice(1) : t;
-      t = t.endsWith('"') ? t.slice(0, -1) : t;
-      // it likes to put / at the end of urls, wont matter for task
-      t = t.endsWith("/") ? t.slice(0, -1) : t;
-      return t.trim();
-    });
+  async _call(inputs: string, runManager?: CallbackManagerForToolRun) {
+    const [baseUrl, task] = parseInputs(inputs);
     const doSummary = !task;
 
     let text;
@@ -225,7 +234,11 @@ export class WebBrowser extends Tool {
       doSummary ? "a summary" : task
     } from the above text, also provide up to 5 markdown links from within that would be of interest (always including URL and text). Links should be provided, if present, in markdown syntax as a list under the heading "Relevant Links:".`;
 
-    const res = await this.model.generatePrompt([new StringPromptValue(input)]);
+    const res = await this.model.generatePrompt(
+      [new StringPromptValue(input)],
+      undefined,
+      runManager?.getChild()
+    );
 
     return res.generations[0][0].text;
   }

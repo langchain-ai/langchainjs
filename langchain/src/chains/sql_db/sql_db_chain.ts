@@ -42,7 +42,7 @@ export class SqlDatabaseChain extends BaseChain {
   returnDirect = false;
 
   constructor(fields: SqlDatabaseChainInput) {
-    super(fields.memory, fields.verbose, fields.callbackManager);
+    super(fields);
     this.llm = fields.llm;
     this.database = fields.database;
     this.topK = fields.topK ?? this.topK;
@@ -96,7 +96,7 @@ export class SqlDatabaseChain extends BaseChain {
     if (this.returnDirect) {
       finalResult = { [this.outputKey]: queryResult };
     } else {
-      inputText += `${+sqlCommand}\nSQLResult: ${JSON.stringify(
+      inputText += `${sqlCommand}\nSQLResult: ${JSON.stringify(
         queryResult
       )}\nAnswer:`;
       llmInputs.input = inputText;

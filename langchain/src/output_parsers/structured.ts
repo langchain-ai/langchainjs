@@ -1,5 +1,8 @@
-import { z } from "zod";
-import { BaseOutputParser, OutputParserException } from "../schema/index.js";
+import { z, util } from "zod";
+import {
+  BaseOutputParser,
+  OutputParserException,
+} from "../schema/output_parser.js";
 
 function printSchema(schema: z.ZodTypeAny, depth = 0): string {
   if (
@@ -24,6 +27,12 @@ function printSchema(schema: z.ZodTypeAny, depth = 0): string {
   }
   if (schema._def.typeName === "ZodEnum") {
     return (schema as z.ZodEnum<[string, ...string[]]>).options
+      .map((value) => `"${value}"`)
+      .join(" | ");
+  }
+  if (schema._def.typeName === "ZodNativeEnum") {
+    return util
+      .getValidEnumValues((schema as z.ZodNativeEnum<never>)._def.values)
       .map((value) => `"${value}"`)
       .join(" | ");
   }
@@ -101,7 +110,7 @@ Including the leading and trailing "\`\`\`json" and "\`\`\`"
   async parse(text: string): Promise<z.infer<T>> {
     try {
       const json = text.trim().split("```json")[1].split("```")[0].trim();
-      return this.schema.parse(JSON.parse(json));
+      return this.schema.parseAsync(JSON.parse(json));
     } catch (e) {
       throw new OutputParserException(
         `Failed to parse. Text: "${text}". Error: ${e}`

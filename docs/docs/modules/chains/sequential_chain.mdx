@@ -1,17 +1,17 @@
 ---
 hide_table_of_contents: true
-sidebar_label: SequentialChain
+sidebar_position: 3
 ---
 
 import CodeBlock from "@theme/CodeBlock";
 import SimpleSequentialChainExample from "@examples/chains/simple_sequential_chain.ts";
 import SequentialChainExample from "@examples/chains/sequential_chain.ts";
 
-# SequentialChain
+# Sequential Chain
 
 Sequential chains allow you to connect multiple chains and compose them into pipelines that execute some specific scenario.
 
-## SimpleSequentialChain
+## `SimpleSequentialChain`
 
 Let's start with the simplest possible case which is `SimpleSequentialChain`.
 
@@ -21,8 +21,8 @@ The example below shows a sample usecase. In the first step, given a title, a sy
 
 <CodeBlock language="typescript">{SimpleSequentialChainExample}</CodeBlock>
 
-## SequentialChain
+## `SequentialChain`
 
-More advanced scenario assumes you have multiple chains that have more than one input or ouput.
+More advanced scenario useful when you have multiple chains that have more than one input or ouput keys.
 
 <CodeBlock language="typescript">{SequentialChainExample}</CodeBlock>

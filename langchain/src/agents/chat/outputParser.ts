@@ -12,7 +12,6 @@ export class ChatAgentOutputParser extends AgentActionOutputParser {
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-
     const [_, action, __] = text.split(/```(?:json)?/g);
     try {
       const response = JSON.parse(action.trim());
