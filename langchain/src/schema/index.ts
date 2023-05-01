@@ -1,5 +1,7 @@
 import { Document } from "../document.js";
 
+export { BaseOutputParser, OutputParserException } from "./output_parser.js";
+
 export const RUN_KEY = "__run";
 
 export type Example = Record<string, string>;
