@@ -30,7 +30,10 @@ export {
   loadQAMapReduceChain,
   loadQARefineChain,
 } from "./question_answering/load.js";
-export { loadSummarizationChain } from "./summarization/load.js";
+export {
+  loadSummarizationChain,
+  SummarizationChainParams,
+} from "./summarization/load.js";
 export {
   SqlDatabaseChain,
   SqlDatabaseChainInput,
