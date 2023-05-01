@@ -19,6 +19,14 @@ import {
   getMessages,
 } from "./event-source-parse.js";
 
+function tryJsonStringify(data) {
+  try {
+    return JSON.stringify(data);
+  } catch (e) {
+    return data;
+  }
+}
+
 /**
  * In order to avoid import issues with axios 1.x, copying here the internal
  * utility functions that we used to import directly from axios.
@@ -32,7 +40,11 @@ function settle(resolve, reject, response) {
   } else {
     reject(
       createError(
-        `Request failed with status code ${response.status}`,
+        `Request failed with status code ${response.status} and body ${
+          typeof response.data === "string"
+            ? response.data
+            : tryJsonStringify(response.data)
+        }`,
         response.config,
         null,
         response.request,
