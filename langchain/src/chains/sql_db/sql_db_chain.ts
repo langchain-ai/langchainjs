@@ -96,7 +96,7 @@ export class SqlDatabaseChain extends BaseChain {
     if (this.returnDirect) {
       finalResult = { [this.outputKey]: queryResult };
     } else {
-      inputText += `${+sqlCommand}\nSQLResult: ${JSON.stringify(
+      inputText += `${sqlCommand}\nSQLResult: ${JSON.stringify(
         queryResult
       )}\nAnswer:`;
       llmInputs.input = inputText;

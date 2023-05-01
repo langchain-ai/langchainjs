@@ -83,7 +83,7 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
       - name: Build
-        run: yarn run build
+        run: yarn run build --filter="!docs"
       - name: Test
         run: yarn run test:unit --filter="!test-exports-cra"
         # test-exports-cra is still run in test-exports task, currently not

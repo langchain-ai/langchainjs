@@ -55,6 +55,9 @@
     "embeddings/tensorflow.cjs",
     "embeddings/tensorflow.js",
     "embeddings/tensorflow.d.ts",
+    "embeddings/hf.cjs",
+    "embeddings/hf.js",
+    "embeddings/hf.d.ts",
     "llms.cjs",
     "llms.js",
     "llms.d.ts",
@@ -241,6 +244,9 @@
     "retrievers/document_compressors.cjs",
     "retrievers/document_compressors.js",
     "retrievers/document_compressors.d.ts",
+    "retrievers/hyde.cjs",
+    "retrievers/hyde.js",
+    "retrievers/hyde.d.ts",
     "cache.cjs",
     "cache.js",
     "cache.d.ts",
@@ -583,6 +589,11 @@
       "import": "./embeddings/tensorflow.js",
       "require": "./embeddings/tensorflow.cjs"
     },
+    "./embeddings/hf": {
+      "types": "./embeddings/hf.d.ts",
+      "import": "./embeddings/hf.js",
+      "require": "./embeddings/hf.cjs"
+    },
     "./llms": {
       "node": {
         "types": "./llms.d.ts",
@@ -902,6 +913,11 @@
       "types": "./retrievers/document_compressors.d.ts",
       "import": "./retrievers/document_compressors.js",
       "require": "./retrievers/document_compressors.cjs"
+    },
+    "./retrievers/hyde": {
+      "types": "./retrievers/hyde.d.ts",
+      "import": "./retrievers/hyde.js",
+      "require": "./retrievers/hyde.cjs"
     },
     "./cache": {
       "types": "./cache.d.ts",

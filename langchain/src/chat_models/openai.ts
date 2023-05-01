@@ -229,7 +229,7 @@ export class ChatOpenAI extends BaseChatModel implements OpenAIInput {
       top_p: this.topP,
       frequency_penalty: this.frequencyPenalty,
       presence_penalty: this.presencePenalty,
-      max_tokens: this.maxTokens,
+      max_tokens: this.maxTokens === -1 ? undefined : this.maxTokens,
       n: this.n,
       logit_bias: this.logitBias,
       stop: this.stop,

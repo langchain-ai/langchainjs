@@ -51,3 +51,19 @@ const embeddings = new TensorFlowEmbeddings();
 ```
 
 This example uses the CPU backend, which works in any JS environment. However, you can use any of the backends supported by TensorFlow.js, including GPU and WebAssembly, which will be a lot faster. For Node.js you can use the `@tensorflow/tfjs-node` package, and for the browser you can use the `@tensorflow/tfjs-backend-webgl` package. See the [TensorFlow.js documentation](https://www.tensorflow.org/js/guide/platform_environment) for more information.
+
+## `HuggingFaceInferenceEmbeddings`
+
+This Embeddings integration uses the HuggingFace Inference API to generate embeddings for a given text using by default the `sentence-transformers/distilbert-base-nli-mean-tokens` model. You can pass a different model name to the constructor to use a different model.
+
+```bash npm2yarn
+npm install @huggingface/inference@1
+```
+
+```typescript
+import { HuggingFaceInferenceEmbeddings } from "langchain/embeddings/hf";
+
+const embeddings = new HuggingFaceInferenceEmbeddings({
+  apiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.HUGGINGFACEHUB_API_KEY
+});
+```
