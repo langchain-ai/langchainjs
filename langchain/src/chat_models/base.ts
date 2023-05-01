@@ -67,8 +67,12 @@ export abstract class BaseChatModel extends BaseLanguageModel {
       messageStrings
     );
     try {
-      for (const message of messages) {
-        const result = await this._generate(message, stop, runManager);
+      const results = await Promise.all(
+        messages.map((messageList) =>
+          this._generate(messageList, stop, runManager)
+        )
+      );
+      for (const result of results) {
         if (result.llmOutput) {
           llmOutputs.push(result.llmOutput);
         }
