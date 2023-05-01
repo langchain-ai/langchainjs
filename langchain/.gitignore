@@ -232,6 +232,9 @@ retrievers/contextual_compression.d.ts
 retrievers/document_compressors.cjs
 retrievers/document_compressors.js
 retrievers/document_compressors.d.ts
+retrievers/hyde.cjs
+retrievers/hyde.js
+retrievers/hyde.d.ts
 cache.cjs
 cache.js
 cache.d.ts

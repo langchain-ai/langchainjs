@@ -244,6 +244,9 @@
     "retrievers/document_compressors.cjs",
     "retrievers/document_compressors.js",
     "retrievers/document_compressors.d.ts",
+    "retrievers/hyde.cjs",
+    "retrievers/hyde.js",
+    "retrievers/hyde.d.ts",
     "cache.cjs",
     "cache.js",
     "cache.d.ts",
@@ -910,6 +913,11 @@
       "types": "./retrievers/document_compressors.d.ts",
       "import": "./retrievers/document_compressors.js",
       "require": "./retrievers/document_compressors.cjs"
+    },
+    "./retrievers/hyde": {
+      "types": "./retrievers/hyde.d.ts",
+      "import": "./retrievers/hyde.js",
+      "require": "./retrievers/hyde.cjs"
     },
     "./cache": {
       "types": "./cache.d.ts",
