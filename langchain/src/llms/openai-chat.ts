@@ -180,7 +180,7 @@ export class OpenAIChat extends LLM implements OpenAIChatInput {
       presence_penalty: this.presencePenalty,
       n: this.n,
       logit_bias: this.logitBias,
-      max_tokens: this.maxTokens,
+      max_tokens: this.maxTokens === -1 ? undefined : this.maxTokens,
       stop: this.stop,
       stream: this.streaming,
       ...this.modelKwargs,
