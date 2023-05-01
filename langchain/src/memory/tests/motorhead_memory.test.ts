@@ -8,8 +8,8 @@ test("Test motörhead memory", async () => {
       json: () =>
         Promise.resolve({
           messages: [
-            { role: "AI", content: "Ozzy Osbourne" },
             { role: "Human", content: "Who is the best vocalist?" },
+            { role: "AI", content: "Ozzy Osbourne" },
           ],
         }),
     } as Response)
