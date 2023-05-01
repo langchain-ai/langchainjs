@@ -63,6 +63,10 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     super();
   }
 
+  copy(): this {
+    return this;
+  }
+
   abstract loadSession(sessionName: string): Promise<TracerSession>;
 
   abstract loadDefaultSession(): Promise<TracerSession>;
@@ -449,9 +453,5 @@ export class LangChainTracer extends BaseTracer {
     [tracerSession] = resp;
     this.session = tracerSession;
     return tracerSession;
-  }
-
-  copy(): LangChainTracer {
-    return this;
   }
 }
