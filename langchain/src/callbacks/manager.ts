@@ -401,7 +401,12 @@ export class CallbackManager
       manager.addHandler(copied, inheritable);
     }
     for (const handler of additionalHandlers) {
-      if (manager.handlers.some((h) => h.name === handler.name)) {
+      if (
+        // Prevent multiple copies of console_callback_handler
+        manager.handlers
+          .filter((h) => h.name === "console_callback_handler")
+          .some((h) => h.name === handler.name)
+      ) {
         continue;
       }
       manager.addHandler(handler.copy(), inherit);
