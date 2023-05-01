@@ -33,16 +33,20 @@ ${JSON.stringify({
 `);
 
   expect(parser.getFormatInstructions()).toMatchInlineSnapshot(`
-"The input data you receive will be structured according to the following schema.
-If present, the clearest source of semantic information for each field is the provided description (starting with "//") immediately following the field.
-The field names themselves or inferences from the schema structure can be ambiguous or misleading.
-Therefore, this description should override information from all other contexts.
+"The input data you receive will be a JSON value structured according to a given "JSON Schema" instance.
 
-Input data schema:
+"JSON Schema" is a declarative language that allows you to annotate and validate JSON documents.
+For example, the example "JSON Schema" instance {{"properties": {{"foo": {{"description": "a list of test words", "type": "array", "items": {{"type": "string"}}}}}}, "required": ["foo"]}}}}
+would match an object with one required property, an array called "foo". "foo" is semantically described as "a list of test words" by the "description" meta-field, and the items within "foo" must be strings.
+Thus, the object {{"foo": ["bar", "baz"]}} is a well-formatted instance of this example "JSON Schema". The object {{"properties": {{"foo": ["bar", "baz"]}}}} is not well-formatted.
+
+If present, the "description" meta-field is the clearest source of semantic information for a schema property.
+The property names themselves can be ambiguous, conflicting, or misleading.
+Therefore, context from the "description" meta-field should override all other cues.
+
+Here is the input data schema:
 \`\`\`json
-{
-	"url": string // A link to the resource
-}
+{"type":"object","properties":{"url":{"type":"string","description":"A link to the resource"}},"required":["url"],"additionalProperties":false,"$schema":"http://json-schema.org/draft-07/schema#"}
 \`\`\`
 "
 `);
@@ -84,16 +88,20 @@ ${JSON.stringify({
 \`\`\`
 `);
   expect(parser.getFormatInstructions()).toMatchInlineSnapshot(`
-"The input data you receive will be structured according to the following schema.
-If present, the clearest source of semantic information for each field is the provided description (starting with "//") immediately following the field.
-The field names themselves or inferences from the schema structure can be ambiguous or misleading.
-Therefore, this description should override information from all other contexts.
+"The input data you receive will be a JSON value structured according to a given "JSON Schema" instance.
 
-Input data schema:
+"JSON Schema" is a declarative language that allows you to annotate and validate JSON documents.
+For example, the example "JSON Schema" instance {{"properties": {{"foo": {{"description": "a list of test words", "type": "array", "items": {{"type": "string"}}}}}}, "required": ["foo"]}}}}
+would match an object with one required property, an array called "foo". "foo" is semantically described as "a list of test words" by the "description" meta-field, and the items within "foo" must be strings.
+Thus, the object {{"foo": ["bar", "baz"]}} is a well-formatted instance of this example "JSON Schema". The object {{"properties": {{"foo": ["bar", "baz"]}}}} is not well-formatted.
+
+If present, the "description" meta-field is the clearest source of semantic information for a schema property.
+The property names themselves can be ambiguous, conflicting, or misleading.
+Therefore, context from the "description" meta-field should override all other cues.
+
+Here is the input data schema:
 \`\`\`json
-{
-	"url": string // A link to the resource
-}
+{"type":"object","properties":{"url":{"type":"string","description":"A link to the resource"}},"required":["url"],"additionalProperties":false,"$schema":"http://json-schema.org/draft-07/schema#"}
 \`\`\`
 "
 `);
@@ -167,27 +175,20 @@ ${JSON.stringify({
 `);
 
   expect(parser.getFormatInstructions()).toMatchInlineSnapshot(`
-"The input data you receive will be structured according to the following schema.
-If present, the clearest source of semantic information for each field is the provided description (starting with "//") immediately following the field.
-The field names themselves or inferences from the schema structure can be ambiguous or misleading.
-Therefore, this description should override information from all other contexts.
+"The input data you receive will be a JSON value structured according to a given "JSON Schema" instance.
 
-Input data schema:
+"JSON Schema" is a declarative language that allows you to annotate and validate JSON documents.
+For example, the example "JSON Schema" instance {{"properties": {{"foo": {{"description": "a list of test words", "type": "array", "items": {{"type": "string"}}}}}}, "required": ["foo"]}}}}
+would match an object with one required property, an array called "foo". "foo" is semantically described as "a list of test words" by the "description" meta-field, and the items within "foo" must be strings.
+Thus, the object {{"foo": ["bar", "baz"]}} is a well-formatted instance of this example "JSON Schema". The object {{"properties": {{"foo": ["bar", "baz"]}}}} is not well-formatted.
+
+If present, the "description" meta-field is the clearest source of semantic information for a schema property.
+The property names themselves can be ambiguous, conflicting, or misleading.
+Therefore, context from the "description" meta-field should override all other cues.
+
+Here is the input data schema:
 \`\`\`json
-{ // Only One object
-	"url": string // A link to the resource
-	"title": string // A title for the resource
-	"year": number // The year the resource was created
-	"createdAt": datetime // The date and time the resource was created
-	"createdAtDate": date // Optional // The date the resource was created
-	"authors": {
-		"name": string // The name of the author
-		"email": string // The email of the author
-		"type": "author" | "editor" // Optional
-		"address": string // Optional // The address of the author
-		"stateProvince": "AL" | "AK" | "AZ" // Optional // The state or province of the author
-	}[]
-}
+{"type":"object","properties":{"url":{"type":"string","description":"A link to the resource"},"title":{"type":"string","description":"A title for the resource"},"year":{"type":"number","description":"The year the resource was created"},"createdAt":{"type":"string","format":"date-time","description":"The date and time the resource was created"},"createdAtDate":{"type":"string","format":"date-time","description":"The date the resource was created"},"authors":{"type":"array","items":{"type":"object","properties":{"name":{"type":"string","description":"The name of the author"},"email":{"type":"string","description":"The email of the author"},"type":{"type":"string","enum":["author","editor"]},"address":{"type":"string","description":"The address of the author"},"stateProvince":{"type":"string","enum":["AL","AK","AZ"],"description":"The state or province of the author"}},"required":["name","email"],"additionalProperties":false}}},"required":["url","title","year","createdAt","authors"],"additionalProperties":false,"description":"Only One object","$schema":"http://json-schema.org/draft-07/schema#"}
 \`\`\`
 "
 `);

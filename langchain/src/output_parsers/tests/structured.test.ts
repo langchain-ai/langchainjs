@@ -14,13 +14,15 @@ test("StructuredOutputParser.fromNamesAndDescriptions", async () => {
   });
 
   expect(parser.getFormatInstructions()).toMatchInlineSnapshot(`
-"The output should be formatted as a JSON instance that conforms to the JSON schema below.
+"Your output must be formatted as a JSON instance that conforms to the JSON schema below.
 
 As an example, for the schema {{"properties": {{"foo": {{"title": "Foo", "description": "a list of strings", "type": "array", "items": {{"type": "string"}}}}}}, "required": ["foo"]}}}}
 the object {{"foo": ["bar", "baz"]}} is a well-formatted instance of the schema. The object {{"properties": {{"foo": ["bar", "baz"]}}}} is not well-formatted.
 
+Your output will be parsed as a markdown block with valid JSON inside, so include the leading and trailing "\`\`\`json" and "\`\`\`" but do not output anything else.
+
 Here is the output schema:
-\`\`\`
+\`\`\`json
 {"type":"object","properties":{"url":{"type":"string","description":"A link to the resource"}},"required":["url"],"additionalProperties":false,"$schema":"http://json-schema.org/draft-07/schema#"}
 \`\`\`
 "
@@ -43,13 +45,15 @@ test("StructuredOutputParser.fromZodSchema", async () => {
   });
 
   expect(parser.getFormatInstructions()).toMatchInlineSnapshot(`
-"The output must be formatted as a JSON instance that conforms to the JSON schema below.
+"Your output must be formatted as a JSON instance that conforms to the JSON schema below.
 
 As an example, for the schema {{"properties": {{"foo": {{"title": "Foo", "description": "a list of strings", "type": "array", "items": {{"type": "string"}}}}}}, "required": ["foo"]}}}}
 the object {{"foo": ["bar", "baz"]}} is a well-formatted instance of the schema. The object {{"properties": {{"foo": ["bar", "baz"]}}}} is not well-formatted.
 
+Your output will be parsed as a markdown block with valid JSON inside, so include the leading and trailing "\`\`\`json" and "\`\`\`" but do not output anything else.
+
 Here is the output schema:
-\`\`\`
+\`\`\`json
 {"type":"object","properties":{"url":{"type":"string","description":"A link to the resource"}},"required":["url"],"additionalProperties":false,"$schema":"http://json-schema.org/draft-07/schema#"}
 \`\`\`
 "
@@ -94,13 +98,15 @@ test("StructuredOutputParser.fromZodSchema", async () => {
   });
 
   expect(parser.getFormatInstructions()).toMatchInlineSnapshot(`
-"The output should be formatted as a JSON instance that conforms to the JSON schema below.
+"Your output must be formatted as a JSON instance that conforms to the JSON schema below.
 
 As an example, for the schema {{"properties": {{"foo": {{"title": "Foo", "description": "a list of strings", "type": "array", "items": {{"type": "string"}}}}}}, "required": ["foo"]}}}}
 the object {{"foo": ["bar", "baz"]}} is a well-formatted instance of the schema. The object {{"properties": {{"foo": ["bar", "baz"]}}}} is not well-formatted.
 
+Your output will be parsed as a markdown block with valid JSON inside, so include the leading and trailing "\`\`\`json" and "\`\`\`" but do not output anything else.
+
 Here is the output schema:
-\`\`\`
+\`\`\`json
 {"type":"object","properties":{"answer":{"type":"string","description":"answer to the user's question"},"sources":{"type":"array","items":{"type":"string"},"description":"sources used to answer the question, should be websites."}},"required":["answer","sources"],"additionalProperties":false,"$schema":"http://json-schema.org/draft-07/schema#"}
 \`\`\`
 "
@@ -155,13 +161,15 @@ test("StructuredOutputParser.fromZodSchema", async () => {
   });
 
   expect(parser.getFormatInstructions()).toMatchInlineSnapshot(`
-"The output should be formatted as a JSON instance that conforms to the JSON schema below.
+"Your output must be formatted as a JSON instance that conforms to the JSON schema below.
 
 As an example, for the schema {{"properties": {{"foo": {{"title": "Foo", "description": "a list of strings", "type": "array", "items": {{"type": "string"}}}}}}, "required": ["foo"]}}}}
 the object {{"foo": ["bar", "baz"]}} is a well-formatted instance of the schema. The object {{"properties": {{"foo": ["bar", "baz"]}}}} is not well-formatted.
 
+Your output will be parsed as a markdown block with valid JSON inside, so include the leading and trailing "\`\`\`json" and "\`\`\`" but do not output anything else.
+
 Here is the output schema:
-\`\`\`
+\`\`\`json
 {"type":"object","properties":{"url":{"type":"string","description":"A link to the resource"},"title":{"type":"string","description":"A title for the resource"},"year":{"type":"number","description":"The year the resource was created"},"createdAt":{"type":"string","format":"date-time","description":"The date and time the resource was created"},"createdAtDate":{"type":"string","format":"date-time","description":"The date the resource was created"},"authors":{"type":"array","items":{"type":"object","properties":{"name":{"type":"string","description":"The name of the author"},"email":{"type":"string","description":"The email of the author"},"type":{"type":"string","enum":["author","editor"]},"address":{"type":"string","description":"The address of the author"},"stateProvince":{"type":"string","enum":["AL","AK","AZ"],"description":"The state or province of the author"}},"required":["name","email"],"additionalProperties":false}}},"required":["url","title","year","createdAt","authors"],"additionalProperties":false,"description":"Only One object","$schema":"http://json-schema.org/draft-07/schema#"}
 \`\`\`
 "

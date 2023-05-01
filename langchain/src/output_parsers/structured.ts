@@ -32,17 +32,17 @@ export class StructuredOutputParser<
   }
 
   getFormatInstructions(): string {
-    return `Your final output must be formatted as a JSON instance that conforms to the JSON schema below.
+    return `Your output must be formatted as a JSON instance that conforms to the JSON schema below.
 
 As an example, for the schema {{"properties": {{"foo": {{"title": "Foo", "description": "a list of strings", "type": "array", "items": {{"type": "string"}}}}}}, "required": ["foo"]}}}}
 the object {{"foo": ["bar", "baz"]}} is a well-formatted instance of the schema. The object {{"properties": {{"foo": ["bar", "baz"]}}}} is not well-formatted.
+
+Your output will be parsed as a markdown block with valid JSON inside, so include the leading and trailing "\`\`\`json" and "\`\`\`" but do not output anything else.
 
 Here is the output schema:
 \`\`\`json
 ${JSON.stringify(zodToJsonSchema(this.schema))}
 \`\`\`
-
-Your final output will be parsed as a markdown block with valid JSON inside, so include the leading and trailing "\`\`\`json" and "\`\`\`" but do not output anything else.
 `;
   }
 

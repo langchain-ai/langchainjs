@@ -48,8 +48,15 @@ test("Test StructuredInputParser with a more complex input", async () => {
             seriesId: z
               .string()
               .describe("id of the series the book belongs to"),
-            createdAt: z.string().datetime().describe("publication date of the book"),
-            reprintedAt: z.string().datetime().describe("reprint date of the book").optional(),
+            createdAt: z
+              .string()
+              .datetime()
+              .describe("publication date of the book"),
+            reprintedAt: z
+              .string()
+              .datetime()
+              .describe("reprint date of the book")
+              .optional(),
           }),
         })
       )
@@ -126,8 +133,15 @@ test("Test StructuredInputParser with a StructuredOutputParser", async () => {
         fields: z.object({
           title: z.string().describe("the book title"),
           seriesId: z.string().describe("id of the series the book belongs to"),
-          createdAt: z.string().datetime().describe("publication date of the book"),
-          reprintedAt: z.string().datetime().describe("reprint date of the book").optional(),
+          createdAt: z
+            .string()
+            .datetime()
+            .describe("publication date of the book"),
+          reprintedAt: z
+            .string()
+            .datetime()
+            .describe("reprint date of the book")
+            .optional(),
         }),
       })
     )
@@ -190,7 +204,6 @@ test("Test StructuredInputParser with a StructuredOutputParser", async () => {
       },
     },
   ]);
-  console.log(inputParser.getFormatInstructions(), inputData);
 
   const res = await chain.call({
     query: `List all the books published before 2000.`,
