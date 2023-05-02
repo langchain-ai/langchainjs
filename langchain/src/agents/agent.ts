@@ -9,7 +9,7 @@ import {
   BaseChatMessage,
   ChainValues,
 } from "../schema/index.js";
-import { Tool } from "../tools/base.js";
+import { StructuredTool, Tool } from "../tools/base.js";
 import {
   AgentActionOutputParser,
   AgentInput,
@@ -195,7 +195,10 @@ export interface AgentArgs {
  * include a variable called "agent_scratchpad" where the agent can put its
  * intermediary work.
  */
-export abstract class Agent extends BaseSingleActionAgent {
+export abstract class Agent<
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+T extends StructuredTool<any> = Tool
+> extends BaseSingleActionAgent {
   llmChain: LLMChain;
 
   outputParser: AgentActionOutputParser;
@@ -270,7 +273,7 @@ export abstract class Agent extends BaseSingleActionAgent {
   /**
    * Validate that appropriate tools are passed in
    */
-  static validateTools(_tools: Tool[]): void {}
+  static validateTools(_tools: StructuredTool[]): void {}
 
   _stop(): string[] {
     return [`\n${this.observationPrefix()}`];
