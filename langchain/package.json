@@ -311,6 +311,7 @@
     "@types/d3-dsv": "^2",
     "@types/flat": "^5.0.2",
     "@types/html-to-text": "^9",
+    "@types/minimatch": "^5.1.2",
     "@types/object-hash": "^3.0.2",
     "@types/pdf-parse": "^1.1.1",
     "@types/uuid": "^9",
@@ -335,6 +336,7 @@
     "html-to-text": "^9.0.5",
     "jest": "^29.5.0",
     "mammoth": "^1.5.1",
+    "minimatch": "^9.0.0",
     "mongodb": "^5.2.0",
     "pdf-parse": "1.1.1",
     "playwright": "^1.32.1",
@@ -372,6 +374,7 @@
     "hnswlib-node": "^1.4.2",
     "html-to-text": "^9.0.5",
     "mammoth": "*",
+    "minimatch": "*",
     "mongodb": "^5.2.0",
     "pdf-parse": "1.1.1",
     "playwright": "^1.32.1",
@@ -441,6 +444,9 @@
       "optional": true
     },
     "mammoth": {
+      "optional": true
+    },
+    "minimatch": {
       "optional": true
     },
     "mongodb": {

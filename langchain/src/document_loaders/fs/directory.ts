@@ -39,6 +39,7 @@ export class DirectoryLoader extends BaseDocumentLoader {
   }
 
   public async load(): Promise<Document[]> {
+    const { minimatch } = await minimatchImports();
     const { readdir, extname, resolve } = await DirectoryLoader.imports();
     const files = await readdir(this.directoryPath, { withFileTypes: true });
 
@@ -57,11 +58,15 @@ export class DirectoryLoader extends BaseDocumentLoader {
           documents.push(...(await loader.load()));
         }
       } else {
-        // I'm aware some things won't be files,
-        // but they will be caught by the "unknown" handling below.
-        const loaderFactory = this.loaders[extname(file.name)];
-        if (loaderFactory) {
-          const loader = loaderFactory(fullPath);
+        let matchedLoader = null;
+        for (const pattern in this.loaders) {
+          if (minimatch(extname(file.name), pattern)) {
+            matchedLoader = this.loaders[pattern];
+            break;
+          }
+        }
+        if (matchedLoader) {
+          const loader = matchedLoader(fullPath);
           documents.push(...(await loader.load()));
         } else {
           switch (this.unknown) {
@@ -97,5 +102,17 @@ export class DirectoryLoader extends BaseDocumentLoader {
         `Failed to load fs/promises. DirectoryLoader available only on environment 'node'. It appears you are running environment '${getEnv()}'. See https://<link to docs> for alternatives.`
       );
     }
+  }
+}
+
+async function minimatchImports() {
+  try {
+    const { minimatch } = await import("minimatch");
+    return { minimatch };
+  } catch (e) {
+    console.error(e);
+    throw new Error(
+      "Failed to load minimatch. Please install it with eg. `npm install minimatch`."
+    );
   }
 }
