@@ -214,6 +214,9 @@
     "schema.cjs",
     "schema.js",
     "schema.d.ts",
+    "schema/output_parser.cjs",
+    "schema/output_parser.js",
+    "schema/output_parser.d.ts",
     "sql_db.cjs",
     "sql_db.js",
     "sql_db.d.ts",
@@ -862,6 +865,11 @@
       "types": "./schema.d.ts",
       "import": "./schema.js",
       "require": "./schema.cjs"
+    },
+    "./schema/output_parser": {
+      "types": "./schema/output_parser.d.ts",
+      "import": "./schema/output_parser.js",
+      "require": "./schema/output_parser.cjs"
     },
     "./sql_db": {
       "types": "./sql_db.d.ts",

@@ -20,6 +20,7 @@ export * from "langchain/chat_models/base";
 export * from "langchain/chat_models/openai";
 export * from "langchain/chat_models/anthropic";
 export * from "langchain/schema";
+export * from "langchain/schema/output_parser";
 export * from "langchain/callbacks";
 export * from "langchain/output_parsers";
 export * from "langchain/retrievers/remote";

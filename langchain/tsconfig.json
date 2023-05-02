@@ -97,6 +97,7 @@
       "src/chat_models/openai.ts",
       "src/chat_models/anthropic.ts",
       "src/schema/index.ts",
+      "src/schema/output_parser.ts",
       "src/sql_db.ts",
       "src/callbacks/index.ts",
       "src/output_parsers/index.ts",
