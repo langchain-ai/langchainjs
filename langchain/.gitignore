@@ -235,6 +235,9 @@ retrievers/document_compressors.d.ts
 retrievers/hyde.cjs
 retrievers/hyde.js
 retrievers/hyde.d.ts
+retrievers/vespa.cjs
+retrievers/vespa.js
+retrievers/vespa.d.ts
 cache.cjs
 cache.js
 cache.d.ts

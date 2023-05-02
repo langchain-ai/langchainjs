@@ -247,6 +247,9 @@
     "retrievers/hyde.cjs",
     "retrievers/hyde.js",
     "retrievers/hyde.d.ts",
+    "retrievers/vespa.cjs",
+    "retrievers/vespa.js",
+    "retrievers/vespa.d.ts",
     "cache.cjs",
     "cache.js",
     "cache.d.ts",
@@ -919,6 +922,11 @@
       "types": "./retrievers/hyde.d.ts",
       "import": "./retrievers/hyde.js",
       "require": "./retrievers/hyde.cjs"
+    },
+    "./retrievers/vespa": {
+      "types": "./retrievers/vespa.d.ts",
+      "import": "./retrievers/vespa.js",
+      "require": "./retrievers/vespa.cjs"
     },
     "./cache": {
       "types": "./cache.d.ts",

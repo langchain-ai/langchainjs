@@ -106,6 +106,7 @@ const entrypoints = {
   "retrievers/contextual_compression": "retrievers/contextual_compression",
   "retrievers/document_compressors": "retrievers/document_compressors/index",
   "retrievers/hyde": "retrievers/hyde",
+  "retrievers/vespa": "retrievers/vespa",
   // cache
   cache: "cache/index",
   "cache/redis": "cache/redis",
