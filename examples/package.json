@@ -22,7 +22,7 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@getmetal/metal-sdk": "^2.0.1",
+    "@getmetal/metal-sdk": "^3.0.0",
     "@opensearch-project/opensearch": "^2.2.0",
     "@pinecone-database/pinecone": "^0.0.14",
     "@prisma/client": "^4.11.0",
