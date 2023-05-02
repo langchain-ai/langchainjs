@@ -1,25 +1,24 @@
 import { LLMResult } from "langchain/schema";
-import { CallbackManager } from "langchain/callbacks";
 import { OpenAI } from "langchain/llms/openai";
 
 export const run = async () => {
-  // We can pass in a `CallbackManager` to the LLM constructor to get callbacks for various events.
-  const callbackManager = CallbackManager.fromHandlers({
-    handleLLMStart: async (llm: { name: string }, prompts: string[]) => {
-      console.log(JSON.stringify(llm, null, 2));
-      console.log(JSON.stringify(prompts, null, 2));
-    },
-    handleLLMEnd: async (output: LLMResult) => {
-      console.log(JSON.stringify(output, null, 2));
-    },
-    handleLLMError: async (err: Error) => {
-      console.error(err);
-    },
-  });
-
+  // We can pass in a list of CallbackHandlers to the LLM constructor to get callbacks for various events.
   const model = new OpenAI({
     verbose: true,
-    callbackManager,
+    callbacks: [
+      {
+        handleLLMStart: async (llm: { name: string }, prompts: string[]) => {
+          console.log(JSON.stringify(llm, null, 2));
+          console.log(JSON.stringify(prompts, null, 2));
+        },
+        handleLLMEnd: async (output: LLMResult) => {
+          console.log(JSON.stringify(output, null, 2));
+        },
+        handleLLMError: async (err: Error) => {
+          console.error(err);
+        },
+      },
+    ],
   });
 
   await model.call(

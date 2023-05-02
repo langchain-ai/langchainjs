@@ -9,8 +9,9 @@ import {
   AgentStep,
   ChainValues,
 } from "../schema/index.js";
+import { CallbackManagerForChainRun } from "../callbacks/manager.js";
 
-interface AgentExecutorInput extends ChainInputs {
+export interface AgentExecutorInput extends ChainInputs {
   agent: BaseSingleActionAgent | BaseMultiActionAgent;
   tools: Tool[];
   returnIntermediateSteps?: boolean;
@@ -42,7 +43,11 @@ export class AgentExecutor extends BaseChain {
   }
 
   constructor(input: AgentExecutorInput) {
-    super(input.memory, input.verbose, input.callbackManager);
+    super(
+      input.memory,
+      input.verbose,
+      input.callbacks ?? input.callbackManager
+    );
     this.agent = input.agent;
     this.tools = input.tools;
     if (this.agent._agentActionType() === "multi") {
@@ -70,7 +75,11 @@ export class AgentExecutor extends BaseChain {
     return this.maxIterations === undefined || iterations < this.maxIterations;
   }
 
-  async _call(inputs: ChainValues): Promise<ChainValues> {
+  /** @ignore */
+  async _call(
+    inputs: ChainValues,
+    runManager?: CallbackManagerForChainRun
+  ): Promise<ChainValues> {
     const toolsByName = Object.fromEntries(
       this.tools.map((t) => [t.name.toLowerCase(), t])
     );
@@ -84,12 +93,16 @@ export class AgentExecutor extends BaseChain {
       if (this.returnIntermediateSteps) {
         return { ...returnValues, intermediateSteps: steps, ...additional };
       }
-      await this.callbackManager.handleAgentEnd(finishStep, this.verbose);
+      await runManager?.handleAgentEnd(finishStep);
       return { ...returnValues, ...additional };
     };
 
     while (this.shouldContinue(iterations)) {
-      const output = await this.agent.plan(steps, inputs);
+      const output = await this.agent.plan(
+        steps,
+        inputs,
+        runManager?.getChild()
+      );
       // Check if the agent has finished
       if ("returnValues" in output) {
         return getOutput(output);
@@ -104,11 +117,11 @@ export class AgentExecutor extends BaseChain {
 
       const newSteps = await Promise.all(
         actions.map(async (action) => {
-          await this.callbackManager.handleAgentAction(action, this.verbose);
+          await runManager?.handleAgentAction(action);
 
           const tool = toolsByName[action.tool?.toLowerCase()];
           const observation = tool
-            ? await tool.call(action.toolInput, this.verbose)
+            ? await tool.call(action.toolInput, runManager?.getChild())
             : `${action.tool} is not a valid tool, try another one.`;
 
           return { action, observation };

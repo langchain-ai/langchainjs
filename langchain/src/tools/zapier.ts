@@ -19,7 +19,7 @@ const zapierNLABaseDescription: string =
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ZapierValues = Record<string, any>;
 
-interface ZapiterNLAWrapperParams extends AsyncCallerParams {
+export interface ZapiterNLAWrapperParams extends AsyncCallerParams {
   apiKey?: string;
 }
 
@@ -37,7 +37,7 @@ export class ZapierNLAWrapper {
       zapierNlaApiKey ??
       (typeof process !== "undefined"
         ? // eslint-disable-next-line no-process-env
-          process.env.ZAPIER_NLA_API_KEY
+          process.env?.ZAPIER_NLA_API_KEY
         : undefined);
     if (!apiKey) {
       throw new Error("ZAPIER_NLA_API_KEY not set");
@@ -221,6 +221,7 @@ export class ZapierNLARunAction extends Tool {
     });
   }
 
+  /** @ignore */
   async _call(arg: string): Promise<string> {
     return this.apiWrapper.runAsString(this.actionId, arg, this.params);
   }

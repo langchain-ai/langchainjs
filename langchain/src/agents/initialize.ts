@@ -1,10 +1,10 @@
 import { BaseLanguageModel } from "../base_language/index.js";
-import { CallbackManager, getCallbackManager } from "../callbacks/index.js";
+import { CallbackManager } from "../callbacks/manager.js";
 import { BufferMemory } from "../memory/buffer_memory.js";
 import { Tool } from "../tools/base.js";
 import { ChatAgent } from "./chat/index.js";
 import { ChatConversationalAgent } from "./chat_convo/index.js";
-import { AgentExecutor } from "./executor.js";
+import { AgentExecutor, AgentExecutorInput } from "./executor.js";
 import { ZeroShotAgent } from "./mrkl/index.js";
 
 type AgentType =
@@ -12,6 +12,9 @@ type AgentType =
   | "chat-zero-shot-react-description"
   | "chat-conversational-react-description";
 
+/**
+ * @deprecated use initializeAgentExecutorWithOptions instead
+ */
 export const initializeAgentExecutor = async (
   tools: Tool[],
   llm: BaseLanguageModel,
@@ -20,8 +23,8 @@ export const initializeAgentExecutor = async (
   _callbackManager?: CallbackManager
 ): Promise<AgentExecutor> => {
   const agentType = _agentType ?? "zero-shot-react-description";
-  const verbose = _verbose ?? !!_callbackManager;
-  const callbackManager = _callbackManager ?? getCallbackManager();
+  const verbose = _verbose;
+  const callbackManager = _callbackManager;
   switch (agentType) {
     case "zero-shot-react-description":
       return AgentExecutor.fromAgentAndTools({
@@ -51,33 +54,36 @@ export const initializeAgentExecutor = async (
   }
 };
 
-type AgentExecutorOptions =
+/**
+ * @interface
+ */
+export type InitializeAgentExecutorOptions =
   | ({
       agentType: "zero-shot-react-description";
       agentArgs?: Parameters<typeof ZeroShotAgent.fromLLMAndTools>[2];
-    } & Omit<
-      Parameters<typeof AgentExecutor.fromAgentAndTools>[0],
-      "agent" | "tools" | "memory"
-    >)
+      memory?: never;
+    } & Omit<AgentExecutorInput, "agent" | "tools">)
   | ({
       agentType: "chat-zero-shot-react-description";
       agentArgs?: Parameters<typeof ChatAgent.fromLLMAndTools>[2];
-    } & Omit<
-      Parameters<typeof AgentExecutor.fromAgentAndTools>[0],
-      "agent" | "tools" | "memory"
-    >)
+      memory?: never;
+    } & Omit<AgentExecutorInput, "agent" | "tools">)
   | ({
       agentType: "chat-conversational-react-description";
       agentArgs?: Parameters<typeof ChatConversationalAgent.fromLLMAndTools>[2];
-    } & Omit<
-      Parameters<typeof AgentExecutor.fromAgentAndTools>[0],
-      "agent" | "tools"
-    >);
+    } & Omit<AgentExecutorInput, "agent" | "tools">);
 
+/**
+ * Initialize an agent executor with options
+ * @param tools Array of tools to use in the agent
+ * @param llm LLM or ChatModel to use in the agent
+ * @param options Options for the agent, including agentType, agentArgs, and other options for AgentExecutor.fromAgentAndTools
+ * @returns AgentExecutor
+ */
 export const initializeAgentExecutorWithOptions = async (
   tools: Tool[],
   llm: BaseLanguageModel,
-  options: AgentExecutorOptions = {
+  options: InitializeAgentExecutorOptions = {
     agentType:
       llm._modelType() === "base_chat_model"
         ? "chat-zero-shot-react-description"

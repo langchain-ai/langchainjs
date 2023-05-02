@@ -1,6 +1,6 @@
 import { LLM, BaseLLMParams } from "./base.js";
 
-interface HFInput {
+export interface HFInput {
   /** Model to use */
   model: string;
 
@@ -53,7 +53,7 @@ export class HuggingFaceInference extends LLM implements HFInput {
       fields?.apiKey ??
       (typeof process !== "undefined"
         ? // eslint-disable-next-line no-process-env
-          process.env.HUGGINGFACEHUB_API_KEY
+          process.env?.HUGGINGFACEHUB_API_KEY
         : undefined);
     if (!this.apiKey) {
       throw new Error(
@@ -66,6 +66,7 @@ export class HuggingFaceInference extends LLM implements HFInput {
     return "huggingface_hub";
   }
 
+  /** @ignore */
   async _call(prompt: string, _stop?: string[]): Promise<string> {
     const { HfInference } = await HuggingFaceInference.imports();
     const hf = new HfInference(this.apiKey);
@@ -85,6 +86,7 @@ export class HuggingFaceInference extends LLM implements HFInput {
     return res.generated_text;
   }
 
+  /** @ignore */
   static async imports(): Promise<{
     HfInference: typeof import("@huggingface/inference").HfInference;
   }> {

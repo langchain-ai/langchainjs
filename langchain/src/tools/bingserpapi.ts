@@ -13,7 +13,7 @@ class BingSerpAPI extends Tool {
   constructor(
     apiKey: string | undefined = typeof process !== "undefined"
       ? // eslint-disable-next-line no-process-env
-        process.env.BingApiKey
+        process.env?.BingApiKey
       : undefined,
     params: Record<string, string> = {}
   ) {
@@ -29,6 +29,7 @@ class BingSerpAPI extends Tool {
     this.params = params;
   }
 
+  /** @ignore */
   async _call(input: string): Promise<string> {
     const headers = { "Ocp-Apim-Subscription-Key": this.key };
     const params = { q: input, textDecorations: "true", textFormat: "HTML" };

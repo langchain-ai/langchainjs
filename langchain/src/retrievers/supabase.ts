@@ -97,7 +97,9 @@ export class SupabaseHybridSearch extends BaseRetriever {
     );
 
     if (error) {
-      throw new Error(`Error searching for documents: ${error}`);
+      throw new Error(
+        `Error searching for documents: ${error.code} ${error.message} ${error.details}`
+      );
     }
 
     return (searches as SearchResponseRow[]).map((resp) => [
@@ -125,7 +127,9 @@ export class SupabaseHybridSearch extends BaseRetriever {
     );
 
     if (error) {
-      throw new Error(`Error searching for documents: ${error}`);
+      throw new Error(
+        `Error searching for documents: ${error.code} ${error.message} ${error.details}`
+      );
     }
 
     return (searches as SearchResponseRow[]).map((resp) => [

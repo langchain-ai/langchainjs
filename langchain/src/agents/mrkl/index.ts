@@ -4,7 +4,7 @@ import { PromptTemplate } from "../../prompts/prompt.js";
 import { renderTemplate } from "../../prompts/template.js";
 import { Tool } from "../../tools/base.js";
 import { Optional } from "../../types/type-utils.js";
-import { Agent, AgentArgs } from "../agent.js";
+import { Agent, AgentArgs, OutputParserArgs } from "../agent.js";
 import { deserializeHelper } from "../helpers.js";
 import {
   AgentInput,
@@ -14,14 +14,14 @@ import {
 import { ZeroShotAgentOutputParser } from "./outputParser.js";
 import { FORMAT_INSTRUCTIONS, PREFIX, SUFFIX } from "./prompt.js";
 
-export type CreatePromptArgs = {
+export interface ZeroShotCreatePromptArgs {
   /** String to put after the list of tools. */
   suffix?: string;
   /** String to put before the list of tools. */
   prefix?: string;
   /** List of input variables the final prompt will expect. */
   inputVariables?: string[];
-};
+}
 
 export type ZeroShotAgentInput = Optional<AgentInput, "outputParser">;
 
@@ -48,8 +48,8 @@ export class ZeroShotAgent extends Agent {
     return "Thought:";
   }
 
-  static getDefaultOutputParser() {
-    return new ZeroShotAgentOutputParser();
+  static getDefaultOutputParser(fields?: OutputParserArgs) {
+    return new ZeroShotAgentOutputParser(fields);
   }
 
   static validateTools(tools: Tool[]) {
@@ -71,7 +71,7 @@ export class ZeroShotAgent extends Agent {
    * @param args.prefix - String to put before the list of tools.
    * @param args.inputVariables - List of input variables the final prompt will expect.
    */
-  static createPrompt(tools: Tool[], args?: CreatePromptArgs) {
+  static createPrompt(tools: Tool[], args?: ZeroShotCreatePromptArgs) {
     const {
       prefix = PREFIX,
       suffix = SUFFIX,
@@ -100,7 +100,7 @@ export class ZeroShotAgent extends Agent {
   static fromLLMAndTools(
     llm: BaseLanguageModel,
     tools: Tool[],
-    args?: CreatePromptArgs & AgentArgs
+    args?: ZeroShotCreatePromptArgs & AgentArgs
   ) {
     ZeroShotAgent.validateTools(tools);
     const prompt = ZeroShotAgent.createPrompt(tools, args);
@@ -109,7 +109,7 @@ export class ZeroShotAgent extends Agent {
     const chain = new LLMChain({
       prompt,
       llm,
-      callbackManager: args?.callbackManager,
+      callbacks: args?.callbacks ?? args?.callbackManager,
     });
 
     return new ZeroShotAgent({

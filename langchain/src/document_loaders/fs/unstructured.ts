@@ -1,5 +1,6 @@
 import type { basename as BasenameT } from "node:path";
 import type { readFile as ReaFileT } from "node:fs/promises";
+import { DirectoryLoader, UnknownHandling } from "./directory.js";
 import { getEnv } from "../../util/env.js";
 import { Document } from "../../document.js";
 import { BaseDocumentLoader } from "../base.js";
@@ -91,3 +92,31 @@ export class UnstructuredLoader extends BaseDocumentLoader {
     }
   }
 }
+
+export class UnstructuredDirectoryLoader extends DirectoryLoader {
+  constructor(
+    public webPath: string,
+    public directoryPath: string,
+    public recursive: boolean = true,
+    public unknown: UnknownHandling = UnknownHandling.Warn
+  ) {
+    const loaders = {
+      ".txt": (p: string) => new UnstructuredLoader(webPath, p),
+      ".text": (p: string) => new UnstructuredLoader(webPath, p),
+      ".pdf": (p: string) => new UnstructuredLoader(webPath, p),
+      ".docx": (p: string) => new UnstructuredLoader(webPath, p),
+      ".doc": (p: string) => new UnstructuredLoader(webPath, p),
+      ".jpg": (p: string) => new UnstructuredLoader(webPath, p),
+      ".jpeg": (p: string) => new UnstructuredLoader(webPath, p),
+      ".eml": (p: string) => new UnstructuredLoader(webPath, p),
+      ".html": (p: string) => new UnstructuredLoader(webPath, p),
+      ".md": (p: string) => new UnstructuredLoader(webPath, p),
+      ".pptx": (p: string) => new UnstructuredLoader(webPath, p),
+      ".ppt": (p: string) => new UnstructuredLoader(webPath, p),
+      ".msg": (p: string) => new UnstructuredLoader(webPath, p),
+    };
+    super(directoryPath, loaders, recursive, unknown);
+  }
+}
+
+export { UnknownHandling };
