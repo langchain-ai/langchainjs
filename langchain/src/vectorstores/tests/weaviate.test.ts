@@ -17,12 +17,12 @@ test("flattenObjectForWeaviate", () => {
     })
   ).toMatchInlineSnapshot(`
     {
-      "deep.array3": [
+      "deep_array3": [
         1,
         3,
       ],
-      "deep.deepdeep.string": "even a deeper string",
-      "deep.string": "deep string",
+      "deep_deepdeep_string": "even a deeper string",
+      "deep_string": "deep string",
     }
   `);
 });
