@@ -205,6 +205,9 @@ chat_models/anthropic.d.ts
 schema.cjs
 schema.js
 schema.d.ts
+schema/output_parser.cjs
+schema/output_parser.js
+schema/output_parser.d.ts
 sql_db.cjs
 sql_db.js
 sql_db.d.ts

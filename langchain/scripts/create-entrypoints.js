@@ -92,6 +92,7 @@ const entrypoints = {
   "chat_models/anthropic": "chat_models/anthropic",
   // schema
   schema: "schema/index",
+  "schema/output_parser": "schema/output_parser",
   // sql_db
   sql_db: "sql_db",
   // callbacks
