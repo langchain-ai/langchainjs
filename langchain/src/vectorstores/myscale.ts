@@ -7,6 +7,8 @@ import { Document } from "../document.js";
 
 export interface MyScaleLibArgs {
   host: string;
+  port: string | number;
+  protocol?: string;
   username: string;
   password: string;
   indexType?: string;
@@ -63,7 +65,7 @@ export class MyScaleStore extends VectorStore {
     this.metric = args.metric || "cosine";
 
     this.client = createClient({
-      host: args.host,
+      host: `${args.protocol ?? "https://"}${args.host}:${args.port}`,
       username: args.username,
       password: args.password,
       session_id: uuid(),
