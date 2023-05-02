@@ -5,6 +5,7 @@ import {
   StuffDocumentsChain,
   MapReduceDocumentsChain,
   RefineDocumentsChain,
+  MapReduceDocumentsChainInput,
 } from "../combine_docs_chain.js";
 import { DEFAULT_PROMPT } from "./stuff_prompts.js";
 import { REFINE_PROMPT } from "./refine_prompts.js";
@@ -14,11 +15,11 @@ export type SummarizationChainParams =
       type?: "stuff";
       prompt?: BasePromptTemplate;
     }
-  | {
+  | ({
       type?: "map_reduce";
       combineMapPrompt?: BasePromptTemplate;
       combinePrompt?: BasePromptTemplate;
-    }
+    } & Pick<MapReduceDocumentsChainInput, "returnIntermediateSteps">)
   | {
       type?: "refine";
       refinePrompt?: BasePromptTemplate;
@@ -53,6 +54,7 @@ export const loadSummarizationChain = (
       llmChain,
       combineDocumentChain,
       documentVariableName: "text",
+      returnIntermediateSteps: params.returnIntermediateSteps,
     });
     return chain;
   }
