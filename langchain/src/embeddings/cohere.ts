@@ -70,7 +70,7 @@ export class CohereEmbeddings
       const input = subPrompts[i];
       const { body } = await this.embeddingWithRetry({
         model: this.modelName,
-        texts,
+        input,
       });
       for (let j = 0; j < input.length; j += 1) {
         embeddings.push(body.embeddings[j]);
