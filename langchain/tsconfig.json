@@ -47,6 +47,8 @@
       "src/embeddings/fake.ts",
       "src/embeddings/openai.ts",
       "src/embeddings/cohere.ts",
+      "src/embeddings/tensorflow.ts",
+      "src/embeddings/hf.ts",
       "src/llms/load.ts",
       "src/llms/base.ts",
       "src/llms/openai.ts",
@@ -103,11 +105,15 @@
       "src/retrievers/supabase.ts",
       "src/retrievers/metal.ts",
       "src/retrievers/databerry.ts",
+      "src/retrievers/contextual_compression.ts",
+      "src/retrievers/document_compressors/index.ts",
+      "src/retrievers/hyde.ts",
       "src/cache/index.ts",
       "src/cache/redis.ts",
       "src/stores/file/in_memory.ts",
       "src/stores/file/node.ts",
-      "src/experimental/autogpt/index.ts"
+      "src/experimental/autogpt/index.ts",
+      "src/experimental/babyagi/index.ts"
     ],
     "sort": [
       "kind",

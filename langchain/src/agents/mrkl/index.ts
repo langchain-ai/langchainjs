@@ -4,7 +4,7 @@ import { PromptTemplate } from "../../prompts/prompt.js";
 import { renderTemplate } from "../../prompts/template.js";
 import { Tool } from "../../tools/base.js";
 import { Optional } from "../../types/type-utils.js";
-import { Agent, AgentArgs } from "../agent.js";
+import { Agent, AgentArgs, OutputParserArgs } from "../agent.js";
 import { deserializeHelper } from "../helpers.js";
 import {
   AgentInput,
@@ -48,8 +48,8 @@ export class ZeroShotAgent extends Agent {
     return "Thought:";
   }
 
-  static getDefaultOutputParser() {
-    return new ZeroShotAgentOutputParser();
+  static getDefaultOutputParser(fields?: OutputParserArgs) {
+    return new ZeroShotAgentOutputParser(fields);
   }
 
   static validateTools(tools: Tool[]) {
@@ -109,7 +109,7 @@ export class ZeroShotAgent extends Agent {
     const chain = new LLMChain({
       prompt,
       llm,
-      callbackManager: args?.callbackManager,
+      callbacks: args?.callbacks ?? args?.callbackManager,
     });
 
     return new ZeroShotAgent({

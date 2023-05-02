@@ -1,5 +1,7 @@
 import { Document } from "../document.js";
 
+export const RUN_KEY = "__run";
+
 export type Example = Record<string, string>;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -39,6 +41,11 @@ export type LLMResult = {
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   llmOutput?: Record<string, any>;
+  /**
+   * Dictionary of run metadata
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [RUN_KEY]?: Record<string, any>;
 };
 export type MessageType = "human" | "ai" | "generic" | "system";
 
@@ -132,46 +139,6 @@ export type ChainValues = Record<string, any>;
  */
 export abstract class BaseRetriever {
   abstract getRelevantDocuments(query: string): Promise<Document[]>;
-}
-/** Class to parse the output of an LLM call.
- */
-export abstract class BaseOutputParser<T = unknown> {
-  /**
-   * Parse the output of an LLM call.
-   *
-   * @param text - LLM output to parse.
-   * @returns Parsed output.
-   */
-  abstract parse(text: string): Promise<T>;
-
-  async parseWithPrompt(text: string, _prompt: BasePromptValue): Promise<T> {
-    return this.parse(text);
-  }
-
-  /**
-   * Return a string describing the format of the output.
-   * @returns Format instructions.
-   * @example
-   * ```json
-   * {
-   *  "foo": "bar"
-   * }
-   * ```
-   */
-  abstract getFormatInstructions(): string;
-
-  /**
-   * Return the string type key uniquely identifying this class of parser
-   */
-  _type(): string {
-    throw new Error("_type not implemented");
-  }
-}
-
-export class OutputParserException extends Error {
-  constructor(message: string) {
-    super(message);
-  }
 }
 
 export abstract class BaseChatMessageHistory {

@@ -1,50 +1,53 @@
 import { z } from "zod";
+import {
+  CallbackManager,
+  CallbackManagerForToolRun,
+  Callbacks,
+} from "../callbacks/manager.js";
+import { BaseLangChain, BaseLangChainParams } from "../base_language/index.js";
 
-import { CallbackManager, getCallbackManager } from "../callbacks/index.js";
+export interface ToolParams extends BaseLangChainParams {}
 
-const getVerbosity = () => false;
-
-export interface ToolParams {
-  verbose?: boolean;
-  callbackManager?: CallbackManager;
-}
-
+/**
+ * Base class for Tools that accept input of any shape defined by a Zod schema.
+ */
 export abstract class StructuredTool<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   T extends z.ZodObject<any, any, any, any> = z.ZodObject<any, any, any, any>
-> {
+> extends BaseLangChain {
   abstract schema: T | z.ZodEffects<T>;
 
-  verbose: boolean;
-
-  callbackManager: CallbackManager;
-
-  constructor(verbose?: boolean, callbackManager?: CallbackManager) {
-    this.verbose = verbose ?? (callbackManager ? true : getVerbosity());
-    this.callbackManager = callbackManager ?? getCallbackManager();
+  constructor(fields?: ToolParams) {
+    super(fields ?? {});
   }
 
-  protected abstract _call(arg: z.output<T>): Promise<string>;
+  protected abstract _call(
+    arg: z.output<T>,
+    runManager?: CallbackManagerForToolRun
+  ): Promise<string>;
 
   async call(
     arg: (z.output<T> extends string ? string : never) | z.input<T>,
-    verbose?: boolean
+    callbacks?: Callbacks
   ): Promise<string> {
-    const _verbose = verbose ?? this.verbose;
     const parsed = await this.schema.parseAsync(arg);
-    await this.callbackManager.handleToolStart(
+    const callbackManager_ = await CallbackManager.configure(
+      callbacks,
+      this.callbacks,
+      { verbose: this.verbose }
+    );
+    const runManager = await callbackManager_?.handleToolStart(
       { name: this.name },
-      typeof parsed === "string" ? parsed : JSON.stringify(parsed),
-      _verbose
+      typeof parsed === "string" ? parsed : JSON.stringify(parsed)
     );
     let result;
     try {
-      result = await this._call(parsed);
+      result = await this._call(parsed, runManager);
     } catch (e) {
-      await this.callbackManager.handleToolError(e, _verbose);
+      await runManager?.handleToolError(e);
       throw e;
     }
-    await this.callbackManager.handleToolEnd(result, _verbose);
+    await runManager?.handleToolEnd(result);
     return result;
   }
 
@@ -55,17 +58,25 @@ export abstract class StructuredTool<
   returnDirect = false;
 }
 
+/**
+ * Base class for Tools that accept input as a string.
+ */
 export abstract class Tool extends StructuredTool {
-  schema = /* #__PURE__ */ z
-    // eslint-disable-next-line tree-shaking/no-side-effects-in-initialization
-    .object({ input: /* #__PURE__ */ z.string() })
-    // eslint-disable-next-line tree-shaking/no-side-effects-in-initialization
-    /* #__PURE__ */ .transform((obj) => obj.input);
+  schema = z
+    .object({ input: z.string().optional() })
+    .transform((obj) => obj.input);
+
+  constructor(verbose?: boolean, callbacks?: Callbacks) {
+    super({ verbose, callbacks });
+  }
 
   call(
-    arg: string | z.input<this["schema"]>,
-    verbose?: boolean | undefined
+    arg: string | undefined | z.input<this["schema"]>,
+    callbacks?: Callbacks
   ): Promise<string> {
-    return super.call(typeof arg === "string" ? { input: arg } : arg, verbose);
+    return super.call(
+      typeof arg === "string" || !arg ? { input: arg } : arg,
+      callbacks
+    );
   }
 }

@@ -37,7 +37,7 @@ export class ZapierNLAWrapper {
       zapierNlaApiKey ??
       (typeof process !== "undefined"
         ? // eslint-disable-next-line no-process-env
-          process.env.ZAPIER_NLA_API_KEY
+          process.env?.ZAPIER_NLA_API_KEY
         : undefined);
     if (!apiKey) {
       throw new Error("ZAPIER_NLA_API_KEY not set");

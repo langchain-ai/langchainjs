@@ -7,10 +7,8 @@ interface ReadFileParams extends ToolParams {
 }
 
 export class ReadFileTool extends StructuredTool {
-  // eslint-disable-next-line tree-shaking/no-side-effects-in-initialization
-  schema = /* #__PURE__ */ z.object({
-    // eslint-disable-next-line tree-shaking/no-side-effects-in-initialization
-    file_path: /* #__PURE__ */ z.string().describe("name of file"),
+  schema = z.object({
+    file_path: z.string().describe("name of file"),
   });
 
   name = "read_file";
@@ -19,8 +17,8 @@ export class ReadFileTool extends StructuredTool {
 
   store: BaseFileStore;
 
-  constructor({ verbose, callbackManager, store }: ReadFileParams) {
-    super(verbose, callbackManager);
+  constructor({ store, ...rest }: ReadFileParams) {
+    super(rest);
 
     this.store = store;
   }
@@ -35,12 +33,9 @@ interface WriteFileParams extends ToolParams {
 }
 
 export class WriteFileTool extends StructuredTool {
-  // eslint-disable-next-line tree-shaking/no-side-effects-in-initialization
-  schema = /* #__PURE__ */ z.object({
-    // eslint-disable-next-line tree-shaking/no-side-effects-in-initialization
-    file_path: /* #__PURE__ */ z.string().describe("name of file"),
-    // eslint-disable-next-line tree-shaking/no-side-effects-in-initialization
-    text: /* #__PURE__ */ z.string().describe("text to write to file"),
+  schema = z.object({
+    file_path: z.string().describe("name of file"),
+    text: z.string().describe("text to write to file"),
   });
 
   name = "write_file";
@@ -49,8 +44,8 @@ export class WriteFileTool extends StructuredTool {
 
   store: BaseFileStore;
 
-  constructor({ verbose, callbackManager, store }: WriteFileParams) {
-    super(verbose, callbackManager);
+  constructor({ store, ...rest }: WriteFileParams) {
+    super(rest);
 
     this.store = store;
   }

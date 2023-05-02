@@ -7,9 +7,11 @@ import {
   ChatCompletionResponseMessageRoleEnum,
   CreateChatCompletionResponse,
 } from "openai";
+import type { AxiosRequestConfig } from "axios";
 import type { StreamingAxiosConfiguration } from "../util/axios-types.js";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
-import { BaseLLMParams, LLM } from "./base.js";
+import { BaseLLMCallOptions, BaseLLMParams, LLM } from "./base.js";
+import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
 
 /**
  * Input to OpenAI class.
@@ -63,6 +65,18 @@ export interface OpenAIChatInput {
   maxTokens?: number;
 }
 
+export interface OpenAIChatCallOptions extends BaseLLMCallOptions {
+  /**
+   * List of stop words to use when generating
+   */
+  stop?: string[];
+
+  /**
+   * Additional options to pass to the underlying axios request.
+   */
+  options?: AxiosRequestConfig;
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Kwargs = Record<string, any>;
 
@@ -77,11 +91,10 @@ type Kwargs = Record<string, any>;
  * https://platform.openai.com/docs/api-reference/chat/create |
  * `openai.createCompletion`} can be passed through {@link modelKwargs}, even
  * if not explicitly available on this class.
- *
- * @augments BaseLLM
- * @augments OpenAIInput
  */
 export class OpenAIChat extends LLM implements OpenAIChatInput {
+  declare CallOptions: OpenAIChatCallOptions;
+
   temperature = 1;
 
   topP = 1;
@@ -167,7 +180,7 @@ export class OpenAIChat extends LLM implements OpenAIChatInput {
       presence_penalty: this.presencePenalty,
       n: this.n,
       logit_bias: this.logitBias,
-      max_tokens: this.maxTokens,
+      max_tokens: this.maxTokens === -1 ? undefined : this.maxTokens,
       stop: this.stop,
       stream: this.streaming,
       ...this.modelKwargs,
@@ -203,7 +216,18 @@ export class OpenAIChat extends LLM implements OpenAIChatInput {
   }
 
   /** @ignore */
-  async _call(prompt: string, stop?: string[]): Promise<string> {
+  async _call(
+    prompt: string,
+    stopOrOptions?: string[] | this["CallOptions"],
+    runManager?: CallbackManagerForLLMRun
+  ): Promise<string> {
+    const stop = Array.isArray(stopOrOptions)
+      ? stopOrOptions
+      : stopOrOptions?.stop;
+    const options = Array.isArray(stopOrOptions)
+      ? {}
+      : stopOrOptions?.options ?? {};
+
     if (this.stop && stop) {
       throw new Error("Stop found in input and default params");
     }
@@ -221,6 +245,7 @@ export class OpenAIChat extends LLM implements OpenAIChatInput {
               messages: this.formatMessages(prompt),
             },
             {
+              ...options,
               responseType: "stream",
               onmessage: (event) => {
                 if (event.data?.trim?.() === "[DONE]") {
@@ -274,9 +299,8 @@ export class OpenAIChat extends LLM implements OpenAIChatInput {
 
                     choice.message.content += part.delta?.content ?? "";
                     // eslint-disable-next-line no-void
-                    void this.callbackManager.handleLLMNewToken(
-                      part.delta?.content ?? "",
-                      true
+                    void runManager?.handleLLMNewToken(
+                      part.delta?.content ?? ""
                     );
                   }
                 }
@@ -289,10 +313,13 @@ export class OpenAIChat extends LLM implements OpenAIChatInput {
             }
           });
         })
-      : await this.completionWithRetry({
-          ...params,
-          messages: this.formatMessages(prompt),
-        });
+      : await this.completionWithRetry(
+          {
+            ...params,
+            messages: this.formatMessages(prompt),
+          },
+          options
+        );
 
     return data.choices[0].message?.content ?? "";
   }
@@ -324,5 +351,69 @@ export class OpenAIChat extends LLM implements OpenAIChatInput {
 
   _llmType() {
     return "openai";
+  }
+}
+
+/**
+ * PromptLayer wrapper to OpenAIChat
+ */
+export class PromptLayerOpenAIChat extends OpenAIChat {
+  promptLayerApiKey?: string;
+
+  plTags?: string[];
+
+  constructor(
+    fields?: ConstructorParameters<typeof OpenAIChat>[0] & {
+      promptLayerApiKey?: string;
+      plTags?: string[];
+    }
+  ) {
+    super(fields);
+
+    this.plTags = fields?.plTags ?? [];
+    this.promptLayerApiKey =
+      fields?.promptLayerApiKey ??
+      (typeof process !== "undefined"
+        ? // eslint-disable-next-line no-process-env
+          process.env?.PROMPTLAYER_API_KEY
+        : undefined);
+
+    if (!this.promptLayerApiKey) {
+      throw new Error("Missing PromptLayer API key");
+    }
+  }
+
+  async completionWithRetry(
+    request: CreateChatCompletionRequest,
+    options?: StreamingAxiosConfiguration
+  ) {
+    if (request.stream) {
+      return super.completionWithRetry(request, options);
+    }
+
+    const requestStartTime = Date.now();
+    const response = await super.completionWithRetry(request);
+    const requestEndTime = Date.now();
+
+    // https://github.com/MagnivOrg/promptlayer-js-helper
+    await this.caller.call(fetch, "https://api.promptlayer.com/track-request", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify({
+        function_name: "openai.ChatCompletion.create",
+        args: [],
+        kwargs: { engine: request.model, messages: request.messages },
+        tags: this.plTags ?? [],
+        request_response: response,
+        request_start_time: Math.floor(requestStartTime / 1000),
+        request_end_time: Math.floor(requestEndTime / 1000),
+        api_key: this.promptLayerApiKey,
+      }),
+    });
+
+    return response;
   }
 }

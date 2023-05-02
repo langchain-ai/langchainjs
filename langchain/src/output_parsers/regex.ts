@@ -1,4 +1,7 @@
-import { BaseOutputParser, OutputParserException } from "../schema/index.js";
+import {
+  BaseOutputParser,
+  OutputParserException,
+} from "../schema/output_parser.js";
 
 /**
  * Class to parse the output of an LLM call into a dictionary.
