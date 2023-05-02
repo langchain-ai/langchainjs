@@ -1,3 +1,6 @@
+import { zodToJsonSchema } from "zod-to-json-schema";
+import { JsonSchema7ObjectType } from "zod-to-json-schema/src/parsers/object.js";
+
 import { BaseLanguageModel } from "../../base_language/index.js";
 import { LLMChain } from "../../chains/llm_chain.js";
 import {
@@ -12,8 +15,6 @@ import { Agent, AgentArgs, OutputParserArgs } from "../agent.js";
 import { AgentInput } from "../types.js";
 import { StructuredChatOutputParserWithRetries } from "./outputParser.js";
 import { FORMAT_INSTRUCTIONS, PREFIX, SUFFIX } from "./prompt.js";
-import { zodToJsonSchema } from "zod-to-json-schema";
-import { JsonSchema7ObjectType } from "zod-to-json-schema/src/parsers/object.js";
 
 export interface ChatCreatePromptArgs {
   /** String to put after the list of tools. */
@@ -27,7 +28,7 @@ export interface ChatCreatePromptArgs {
 export type ChatAgentInput = Optional<AgentInput, "outputParser">;
 
 /**
- * Agent that interoperates with Structured Tool's using a React logic.
+ * Agent that interoperates with Structured Tool's using React logic.
  * @augments Agent
  */
 export class StructuredChatAgent extends Agent {
@@ -63,8 +64,11 @@ export class StructuredChatAgent extends Agent {
     }
   }
 
-  static getDefaultOutputParser(_fields?: OutputParserArgs, llm?: BaseLanguageModel) {
-    return StructuredChatOutputParserWithRetries.fromLLM(llm);
+  static getDefaultOutputParser(fields?: OutputParserArgs) {
+    if (fields?.llm) {
+      return StructuredChatOutputParserWithRetries.fromLLM(fields.llm);
+    }
+    return new StructuredChatOutputParserWithRetries();
   }
 
   async constructScratchPad(steps: AgentStep[]): Promise<string> {
@@ -86,9 +90,12 @@ export class StructuredChatAgent extends Agent {
   static createPrompt(tools: StructuredTool[], args?: ChatCreatePromptArgs) {
     const { prefix = PREFIX, suffix = SUFFIX } = args ?? {};
     const toolStrings = tools
-      .map((tool) => `${tool.name}: ${tool.description}, args: ${JSON.stringify(
-        (zodToJsonSchema(tool.schema) as JsonSchema7ObjectType).properties
-      )}`)
+      .map(
+        (tool) =>
+          `${tool.name}: ${tool.description}, args: ${JSON.stringify(
+            (zodToJsonSchema(tool.schema) as JsonSchema7ObjectType).properties
+          )}`
+      )
       .join("\n");
     const template = [prefix, toolStrings, FORMAT_INSTRUCTIONS, suffix].join(
       "\n\n"
@@ -110,14 +117,14 @@ export class StructuredChatAgent extends Agent {
     const chain = new LLMChain({
       prompt,
       llm,
-      callbacks: args?.callbacks ?? args?.callbackManager,
+      callbacks: args?.callbacks,
     });
-    const outputParser =
-      args?.outputParser ?? StructuredChatAgent.getDefaultOutputParser(llm);
 
     return new StructuredChatAgent({
       llmChain: chain,
-      outputParser,
+      outputParser:
+        args?.outputParser ??
+        StructuredChatAgent.getDefaultOutputParser({ llm }),
       allowedTools: tools.map((t) => t.name),
     });
   }

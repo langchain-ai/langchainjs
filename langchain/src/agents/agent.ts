@@ -195,10 +195,7 @@ export interface AgentArgs {
  * include a variable called "agent_scratchpad" where the agent can put its
  * intermediary work.
  */
-export abstract class Agent<
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-T extends StructuredTool<any> = Tool
-> extends BaseSingleActionAgent {
+export abstract class Agent extends BaseSingleActionAgent {
   llmChain: LLMChain;
 
   outputParser: AgentActionOutputParser;
@@ -253,7 +250,7 @@ T extends StructuredTool<any> = Tool
    * @returns A PromptTemplate assembled from the given tools and fields.
    * */
   static createPrompt(
-    _tools: Tool[],
+    _tools: StructuredTool[],
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     _fields?: Record<string, any>
   ): BasePromptTemplate {
@@ -263,7 +260,7 @@ T extends StructuredTool<any> = Tool
   /** Construct an agent from an LLM and a list of tools */
   static fromLLMAndTools(
     _llm: BaseLanguageModel,
-    _tools: Tool[],
+    _tools: StructuredTool[],
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     _args?: AgentArgs
   ): Agent {
