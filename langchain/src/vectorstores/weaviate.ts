@@ -27,7 +27,7 @@ export const flattenObjectForWeaviate = (
 
       for (const deepKey in recursiveResult) {
         if (Object.hasOwn(obj, key)) {
-          flattenedObject[`${key}.${deepKey}`] = recursiveResult[deepKey];
+          flattenedObject[`${key}_${deepKey}`] = recursiveResult[deepKey];
         }
       }
     } else if (Array.isArray(value)) {

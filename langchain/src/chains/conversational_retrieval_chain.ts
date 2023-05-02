@@ -1,5 +1,5 @@
 import { PromptTemplate } from "../prompts/prompt.js";
-import { BaseLLM } from "../llms/base.js";
+import { BaseLanguageModel } from "../base_language/index.js";
 import { SerializedChatVectorDBQAChain } from "./serde.js";
 import { ChainValues, BaseRetriever } from "../schema/index.js";
 import { BaseChain, ChainInputs } from "./base.js";
@@ -135,7 +135,7 @@ export class ConversationalRetrievalQAChain
   }
 
   static fromLLM(
-    llm: BaseLLM,
+    llm: BaseLanguageModel,
     retriever: BaseRetriever,
     options: {
       outputKey?: string; // not used
