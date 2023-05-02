@@ -123,7 +123,7 @@ export class MapReduceDocumentsChain
 
   documentVariableName = "context";
 
-  returnIntermediateSteps: boolean = false;
+  returnIntermediateSteps = false;
 
   get inputKeys() {
     return [this.inputKey, ...this.combineDocumentChain.inputKeys];
