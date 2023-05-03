@@ -1,28 +1,39 @@
 import { AgentActionOutputParser } from "../types.js";
-import { FORMAT_INSTRUCTIONS } from "./prompt.js";
+import { AGENT_ACTION_FORMAT_INSTRUCTIONS, FORMAT_INSTRUCTIONS } from "./prompt.js";
 import { OutputFixingParser } from "../../output_parsers/fix.js";
 import { BaseLanguageModel } from "../../base_language/index.js";
 import { AgentAction, AgentFinish } from "../../schema/index.js";
+import { OutputParserException } from "../../schema/output_parser.js";
 
 export class StructuredChatOutputParser extends AgentActionOutputParser {
   async parse(text: string): Promise<AgentAction | AgentFinish> {
-    const regex = /```(.*?)```?/gs;
-    const actionMatch = regex.exec(text);
+    console.log('about to parse something');
+    console.log('incoming text', text)
+    try {
+      const regex = /```(?:json)?(.*)(```)/gs;
+      const actionMatch = regex.exec(text);
+      console.log('action match', actionMatch && actionMatch[1]);
 
-    if (actionMatch !== null) {
-      const response = JSON.parse(actionMatch[1].trim());
-      const { action, action_input } = response;
+      if (actionMatch !== null) {
+        const response = JSON.parse(actionMatch[1].trim());
+        const { action, action_input } = response;
 
-      if (action === "Final Answer") {
-        return { returnValues: { output: action_input }, log: text };
+        if (action === "Final Answer") {
+          return { returnValues: { output: action_input }, log: text };
+        }
+        return { tool: action, toolInput: action_input || {}, log: text };
       }
-      return { tool: action, toolInput: action_input || {}, log: text };
+      return { returnValues: { output: text }, log: text };
+    } catch (e) {
+      console.log('parse failed', e);
+      throw new OutputParserException(
+        `Failed to parse. Text: "${text}". Error: ${e}`
+      );
     }
-    return { returnValues: { output: text }, log: text };
   }
 
   getFormatInstructions(): string {
-    return FORMAT_INSTRUCTIONS;
+    return AGENT_ACTION_FORMAT_INSTRUCTIONS;
   }
 }
 
@@ -50,7 +61,7 @@ export class StructuredChatOutputParserWithRetries extends AgentActionOutputPars
   }
 
   getFormatInstructions(): string {
-    return this.baseParser.getFormatInstructions();
+    return FORMAT_INSTRUCTIONS;
   }
 
   static fromLLM(

@@ -75,14 +75,6 @@ export class ChatConversationalAgent extends Agent {
         ` This agent requires descriptions for all tools.`;
       throw new Error(msg);
     }
-    // eslint-disable-next-line no-instanceof/no-instanceof
-    const complexTool = tools.find((tool) => !(tool instanceof Tool));
-    if (complexTool) {
-      const msg =
-        `Found a tool ${complexTool.name} that can take a non-string input.` +
-        ` This agent only supports tools that take a string parameter.`;
-      throw new Error(msg);
-    }
   }
 
   async constructScratchPad(steps: AgentStep[]): Promise<BaseChatMessage[]> {
