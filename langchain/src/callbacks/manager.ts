@@ -397,8 +397,7 @@ export class CallbackManager
     const manager = new CallbackManager(this._parentRunId);
     for (const handler of this.handlers) {
       const inheritable = this.inheritableHandlers.includes(handler);
-      const copied = handler.copy();
-      manager.addHandler(copied, inheritable);
+      manager.addHandler(handler, inheritable);
     }
     for (const handler of additionalHandlers) {
       if (
@@ -409,7 +408,7 @@ export class CallbackManager
       ) {
         continue;
       }
-      manager.addHandler(handler.copy(), inherit);
+      manager.addHandler(handler, inherit);
     }
     return manager;
   }
