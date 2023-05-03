@@ -115,6 +115,11 @@ export class TimeWeightedVectorStoreRetriever extends BaseRetriever {
     > = {};
     for (const doc of this.memoryStream.slice(-this.k)) {
       const bufferIdx = doc.metadata[BUFFER_IDX];
+      if (bufferIdx === undefined) {
+        throw new Error(
+          `Found a document in the vector store that is missing required metadata. This retriever only supports vector stores with documents that have been added through the "addDocuments" method on a TimeWeightedVectorStoreRetriever, not directly added or loaded into the backing vector store.`
+        );
+      }
       memoryDocsAndScores[bufferIdx] = {
         doc,
         score: this.defaultSalience ?? 0,
@@ -139,6 +144,11 @@ export class TimeWeightedVectorStoreRetriever extends BaseRetriever {
     const results: Record<number, { doc: Document; score: number }> = {};
     for (const [fetchedDoc, score] of docAndScores) {
       const bufferIdx = fetchedDoc.metadata[BUFFER_IDX];
+      if (bufferIdx === undefined) {
+        throw new Error(
+          `Found a document in the vector store that is missing required metadata. This retriever only supports vector stores with documents that have been added through the "addDocuments" method on a TimeWeightedVectorStoreRetriever, not directly added or loaded into the backing vector store.`
+        );
+      }
       const doc = this.memoryStream[bufferIdx];
       results[bufferIdx] = { doc, score };
     }
