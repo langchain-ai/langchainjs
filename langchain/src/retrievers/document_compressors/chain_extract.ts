@@ -4,7 +4,7 @@ import { PromptTemplate } from "../../prompts/index.js";
 import { BaseLanguageModel } from "../../base_language/index.js";
 import { BaseOutputParser } from "../../schema/output_parser.js";
 import { BaseDocumentCompressor } from "./index.js";
-import { prompt_template } from "./chain_extract_prompt.js";
+import { PROMPT_TEMPLATE } from "./chain_extract_prompt.js";
 
 function defaultGetInput(
   query: string,
@@ -31,7 +31,7 @@ class NoOutputParser extends BaseOutputParser<string> {
 
 function getDefaultChainPrompt(): PromptTemplate {
   const outputParser = new NoOutputParser();
-  const template = prompt_template(outputParser.noOutputStr);
+  const template = PROMPT_TEMPLATE(outputParser.noOutputStr);
   return new PromptTemplate({
     template,
     inputVariables: ["question", "context"],
