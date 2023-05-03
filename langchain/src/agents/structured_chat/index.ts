@@ -100,7 +100,6 @@ export class StructuredChatAgent extends Agent {
       .join("\n");
     const template = [
       prefix,
-      "{tool_strings}",
       FORMAT_INSTRUCTIONS,
       suffix,
     ].join("\n\n");

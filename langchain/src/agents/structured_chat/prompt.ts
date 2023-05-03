@@ -1,11 +1,10 @@
-export const PREFIX = `Answer the following questions truthfully and as best you can. You have access to the following tools:`;
-export const AGENT_ACTION_FORMAT_INSTRUCTIONS = `Output a JSON markdown code snippet containing a JSON blob (denoted below by $JSON_BLOB).
+export const PREFIX = `Answer the following questions truthfully and as best you can.`;
+export const AGENT_ACTION_FORMAT_INSTRUCTIONS = `Output a JSON markdown code snippet containing a valid JSON blob (denoted below by $JSON_BLOB).
 This $JSON_BLOB must have a "action" key (with the name of the tool to use) and an "action_input" key (tool input).
 
-Valid "action" values: "Final Answer" (which you must use when giving your final response to the user), or an available tool.
-If you are using a tool, "action_input" must adhere to the tool's input schema, given above.
+Valid "action" values: "Final Answer" (which you must use when giving your final response to the user), or one of {tool_names}.
 
-The $JSON_BLOB must only contain a SINGLE action. Do NOT return a list of multiple actions. Here is an example of an acceptable output:
+The $JSON_BLOB must be valid, parseable JSON and only contain a SINGLE action. Here is an example of an acceptable output:
 
 \`\`\`json
 {{
@@ -13,12 +12,20 @@ The $JSON_BLOB must only contain a SINGLE action. Do NOT return a list of multip
   "action_input": $INPUT
 }}
 \`\`\`
+
+Remember to include the surrounding markdown code snippet delimiters (begin with "\`\`\`" json and close with "\`\`\`")!
 `;
-export const FORMAT_INSTRUCTIONS = `The way you use the tools is as follows:
+export const FORMAT_INSTRUCTIONS = `You have access to the following tools:
+
+{tool_strings}
+
+The way you use the tools is as follows:
 
 ------------------------
 
 ${AGENT_ACTION_FORMAT_INSTRUCTIONS}
+
+If you are using a tool, "action_input" must adhere to the tool's input schema, given above.
 
 ------------------------
 

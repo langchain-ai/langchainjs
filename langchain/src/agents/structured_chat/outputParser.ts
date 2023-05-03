@@ -7,25 +7,20 @@ import { OutputParserException } from "../../schema/output_parser.js";
 
 export class StructuredChatOutputParser extends AgentActionOutputParser {
   async parse(text: string): Promise<AgentAction | AgentFinish> {
-    console.log('about to parse something');
-    console.log('incoming text', text)
     try {
       const regex = /```(?:json)?(.*)(```)/gs;
       const actionMatch = regex.exec(text);
-      console.log('action match', actionMatch && actionMatch[1]);
-
-      if (actionMatch !== null) {
-        const response = JSON.parse(actionMatch[1].trim());
-        const { action, action_input } = response;
-
-        if (action === "Final Answer") {
-          return { returnValues: { output: action_input }, log: text };
-        }
-        return { tool: action, toolInput: action_input || {}, log: text };
+      if (actionMatch === null) {
+        throw new OutputParserException(`Could not parse an action. The agent action must be within a markdown code block, and "action" must be a provided tool or "Final Answer"`);
       }
-      return { returnValues: { output: text }, log: text };
+      const response = JSON.parse(actionMatch[1].trim());
+      const { action, action_input } = response;
+
+      if (action === "Final Answer") {
+        return { returnValues: { output: action_input }, log: text };
+      }
+      return { tool: action, toolInput: action_input || {}, log: text };
     } catch (e) {
-      console.log('parse failed', e);
       throw new OutputParserException(
         `Failed to parse. Text: "${text}". Error: ${e}`
       );
