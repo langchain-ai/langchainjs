@@ -7,8 +7,8 @@ if (username && accessToken) {
   const loader = new ConfluencePagesLoader({
     baseUrl: "https://example.atlassian.net/wiki",
     spaceKey: "~EXAMPLE362906de5d343d49dcdbae5dEXAMPLE",
-    username: process.env.CONFLUENCE_USERNAME!,
-    accessToken: process.env.CONFLUENCE_ACCESS_TOKEN!,
+    username,
+    accessToken,
     limit: 100,
   });
 

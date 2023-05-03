@@ -1,6 +1,12 @@
-// confluence_loader.int.test.ts
 import { test } from "@jest/globals";
-import { ConfluencePagesLoader } from "../web/confluence.js";
+import {
+  ConfluencePagesLoader,
+  ConfluenceAPIResponse,
+} from "../web/confluence.js";
+
+type TestConfluencePagesLoaderType = ConfluencePagesLoader & {
+  fetchConfluenceData: (url: string) => Promise<ConfluenceAPIResponse>;
+};
 
 test("Test ConfluenceLoader and fetchConfluenceData calls", async () => {
   // Stub the fetchConfluenceData method to return a fake response
@@ -18,10 +24,18 @@ test("Test ConfluenceLoader and fetchConfluenceData calls", async () => {
     },
   ];
 
+  // Initialize the loader and load the documents
+  const loader = new ConfluencePagesLoader({
+    baseUrl: "https://example.atlassian.net/wiki",
+    spaceKey: "SPACEKEY",
+    username: "username@email.com",
+    accessToken: "accessToken",
+  }) as TestConfluencePagesLoaderType;
+
   // Our fetchConfluenceData function is called recursively
   // until the size of the response is 0
   const fetchConfluenceDataMock = jest
-    .spyOn(ConfluencePagesLoader.prototype as any, "fetchConfluenceData")
+    .spyOn(loader, "fetchConfluenceData")
     .mockImplementationOnce(() =>
       Promise.resolve({ size: 2, results: fakeResponse })
     )
@@ -30,13 +44,6 @@ test("Test ConfluenceLoader and fetchConfluenceData calls", async () => {
     )
     .mockImplementationOnce(() => Promise.resolve({ size: 0, results: [] }));
 
-  // Initialize the loader and load the documents
-  const loader = new ConfluencePagesLoader({
-    baseUrl: "https://example.atlassian.net/wiki",
-    spaceKey: "SPACEKEY",
-    username: "username@email.com",
-    accessToken: "accessToken",
-  });
   const documents = await loader.load();
 
   // Validate the test results

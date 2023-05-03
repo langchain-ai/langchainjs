@@ -10,11 +10,30 @@ export interface ConfluencePagesLoaderParams {
   limit?: number;
 }
 
+export interface ConfluencePage {
+  id: string;
+  title: string;
+  body: {
+    storage: {
+      value: string;
+    };
+  };
+}
+
+export interface ConfluenceAPIResponse {
+  size: number;
+  results: ConfluencePage[];
+}
+
 export class ConfluencePagesLoader extends BaseDocumentLoader {
   public readonly baseUrl: string;
+
   public readonly spaceKey: string;
+
   public readonly username: string;
+
   public readonly accessToken: string;
+
   public readonly limit: number;
 
   constructor({
@@ -42,7 +61,9 @@ export class ConfluencePagesLoader extends BaseDocumentLoader {
     }
   }
 
-  private async fetchConfluenceData(url: string): Promise<any> {
+  protected async fetchConfluenceData(
+    url: string
+  ): Promise<ConfluenceAPIResponse> {
     try {
       const authToken = Buffer.from(
         `${this.username}:${this.accessToken}`
@@ -68,7 +89,7 @@ export class ConfluencePagesLoader extends BaseDocumentLoader {
     }
   }
 
-  private async fetchAllPagesInSpace(start = 0): Promise<any[]> {
+  private async fetchAllPagesInSpace(start = 0): Promise<ConfluencePage[]> {
     const url = `${this.baseUrl}/rest/api/content?spaceKey=${this.spaceKey}&limit=${this.limit}&start=${start}&expand=body.storage`;
     const data = await this.fetchConfluenceData(url);
 
@@ -82,7 +103,7 @@ export class ConfluencePagesLoader extends BaseDocumentLoader {
     return data.results.concat(nextPageResults);
   }
 
-  private createDocumentFromPage(page: any): Document {
+  private createDocumentFromPage(page: ConfluencePage): Document {
     // Convert the HTML content to plain text
     const plainTextContent = htmlToText(page.body.storage.value, {
       wordwrap: false,
