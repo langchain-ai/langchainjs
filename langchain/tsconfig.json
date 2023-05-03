@@ -104,6 +104,7 @@
       "src/retrievers/databerry.ts",
       "src/retrievers/contextual_compression.ts",
       "src/retrievers/document_compressors/index.ts",
+      "src/retrievers/time_weighted.ts",
       "src/cache/index.ts",
       "src/cache/redis.ts",
       "src/stores/file/in_memory.ts",

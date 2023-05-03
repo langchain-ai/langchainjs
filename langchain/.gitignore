@@ -226,6 +226,9 @@ retrievers/contextual_compression.d.ts
 retrievers/document_compressors.cjs
 retrievers/document_compressors.js
 retrievers/document_compressors.d.ts
+retrievers/time_weighted.cjs
+retrievers/time_weighted.js
+retrievers/time_weighted.d.ts
 cache.cjs
 cache.js
 cache.d.ts
