@@ -42,6 +42,22 @@ const getMemoryStream = (): Document[] => [
 ];
 
 describe("Test getRelevantDocuments", () => {
+  test("Should fail on a vector store with documents that have not been added through the addDocuments method on the retriever", async () => {
+    const vectorStore = new MemoryVectorStore(new FakeEmbeddings());
+    const retriever = new TimeWeightedVectorStoreRetriever({
+      vectorStore,
+      memoryStream: [],
+      searchKwargs: 2,
+    });
+    await vectorStore.addDocuments([
+      { pageContent: "aaa", metadata: {} },
+      { pageContent: "aaaa", metadata: {} },
+      { pageContent: "bbb", metadata: {} },
+    ]);
+
+    const query = "aaa";
+    await expect(() => retriever.getRelevantDocuments(query)).rejects.toThrow();
+  });
   test("For different pageContent with the same lastAccessedAt, return in descending order of similar words.", async () => {
     const retriever = new TimeWeightedVectorStoreRetriever({
       vectorStore: new MemoryVectorStore(new FakeEmbeddings()),
