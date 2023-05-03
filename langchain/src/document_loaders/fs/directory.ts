@@ -19,7 +19,7 @@ export class DirectoryLoader extends BaseDocumentLoader {
   constructor(
     public directoryPath: string,
     public loaders: {
-      [extension: string]: (filePath: string) => BaseDocumentLoader;
+      [extension: `.${string}`]: (filePath: string) => BaseDocumentLoader;
     },
     public recursive: boolean = true,
     public unknown: UnknownHandling = UnknownHandling.Warn
@@ -61,7 +61,7 @@ export class DirectoryLoader extends BaseDocumentLoader {
         let matchedLoader = null;
         for (const pattern in this.loaders) {
           if (minimatch(extname(file.name), pattern)) {
-            matchedLoader = this.loaders[pattern];
+            matchedLoader = this.loaders[pattern as `.${string}`];
             break;
           }
         }
