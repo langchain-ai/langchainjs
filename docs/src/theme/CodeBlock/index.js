@@ -20,10 +20,10 @@ function Imports({ imports }) {
         API Reference:
       </h4>
       <ul style={{ paddingBottom: "1rem" }}>
-        {imports.map(({ local, source, docs }) => (
+        {imports.map(({ imported, source, docs }) => (
           <li>
             <a href={docs}>
-              <span>{local}</span>
+              <span>{imported}</span>
             </a>{" "}
             from <code>{source}</code>
           </li>

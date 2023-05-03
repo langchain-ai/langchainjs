@@ -2,9 +2,11 @@ export { BaseChain, ChainInputs } from "./base.js";
 export { LLMChain, LLMChainInput } from "./llm_chain.js";
 export { ConversationChain } from "./conversation.js";
 export {
+  SequentialChain,
+  SequentialChainInput,
   SimpleSequentialChain,
   SimpleSequentialChainInput,
-} from "./simple_sequential_chain.js";
+} from "./sequential_chain.js";
 export {
   StuffDocumentsChain,
   StuffDocumentsChainInput,
@@ -28,7 +30,10 @@ export {
   loadQAMapReduceChain,
   loadQARefineChain,
 } from "./question_answering/load.js";
-export { loadSummarizationChain } from "./summarization/load.js";
+export {
+  loadSummarizationChain,
+  SummarizationChainParams,
+} from "./summarization/load.js";
 export {
   SqlDatabaseChain,
   SqlDatabaseChainInput,
@@ -40,6 +45,7 @@ export {
 export { RetrievalQAChain, RetrievalQAChainInput } from "./retrieval_qa.js";
 export {
   SerializedLLMChain,
+  SerializedSequentialChain,
   SerializedSimpleSequentialChain,
   SerializedSqlDatabaseChain,
   SerializedAnalyzeDocumentChain,

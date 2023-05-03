@@ -60,6 +60,10 @@ export class ConversationSummaryMemory extends BaseChatMemory {
       summaryChatMessageClass ?? this.summaryChatMessageClass;
   }
 
+  get memoryKeys() {
+    return [this.memoryKey];
+  }
+
   async predictNewSummary(
     messages: BaseChatMessage[],
     existingSummary: string

@@ -6,26 +6,24 @@ import {
 } from "../callbacks/manager.js";
 import { BaseLangChain, BaseLangChainParams } from "../base_language/index.js";
 
-export interface ToolParams extends BaseLangChainParams {
-  /**
-   * @deprecated Use `callbacks` instead
-   */
-  callbackManager?: CallbackManager;
-}
+export interface ToolParams extends BaseLangChainParams {}
 
+/**
+ * Base class for Tools that accept input of any shape defined by a Zod schema.
+ */
 export abstract class StructuredTool<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   T extends z.ZodObject<any, any, any, any> = z.ZodObject<any, any, any, any>
 > extends BaseLangChain {
   abstract schema: T | z.ZodEffects<T>;
 
-  constructor(verbose?: boolean, callbacks?: Callbacks) {
-    super({ verbose, callbacks });
+  constructor(fields?: ToolParams) {
+    super(fields ?? {});
   }
 
   protected abstract _call(
     arg: z.output<T>,
-    callbackManager?: CallbackManagerForToolRun
+    runManager?: CallbackManagerForToolRun
   ): Promise<string>;
 
   async call(
@@ -60,10 +58,17 @@ export abstract class StructuredTool<
   returnDirect = false;
 }
 
+/**
+ * Base class for Tools that accept input as a string.
+ */
 export abstract class Tool extends StructuredTool {
   schema = z
     .object({ input: z.string().optional() })
     .transform((obj) => obj.input);
+
+  constructor(verbose?: boolean, callbacks?: Callbacks) {
+    super({ verbose, callbacks });
+  }
 
   call(
     arg: string | undefined | z.input<this["schema"]>,

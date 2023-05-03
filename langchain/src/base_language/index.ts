@@ -48,6 +48,8 @@ export interface BaseLanguageModelParams
   callbackManager?: CallbackManager;
 }
 
+export interface BaseLanguageModelCallOptions {}
+
 /**
  * Base class for language models.
  */
@@ -55,6 +57,8 @@ export abstract class BaseLanguageModel
   extends BaseLangChain
   implements BaseLanguageModelParams
 {
+  declare CallOptions: BaseLanguageModelCallOptions;
+
   /**
    * The async caller should be used by subclasses to make any async calls,
    * which will thus benefit from the concurrency and retry logic.
@@ -71,7 +75,7 @@ export abstract class BaseLanguageModel
 
   abstract generatePrompt(
     promptValues: BasePromptValue[],
-    stop?: string[],
+    stop?: string[] | this["CallOptions"],
     callbacks?: Callbacks
   ): Promise<LLMResult>;
 

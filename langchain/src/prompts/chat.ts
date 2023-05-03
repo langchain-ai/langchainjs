@@ -266,7 +266,7 @@ export class ChatPromptTemplate
     };
   }
 
-  async partial(values: PartialValues): Promise<BasePromptTemplate> {
+  async partial(values: PartialValues): Promise<ChatPromptTemplate> {
     // This is implemented in a way it doesn't require making
     // BaseMessagePromptTemplate aware of .partial()
     const promptDict: ChatPromptTemplateInput = { ...this };
@@ -281,17 +281,40 @@ export class ChatPromptTemplate
   }
 
   static fromPromptMessages(
-    promptMessages: BaseMessagePromptTemplate[]
+    promptMessages: (BaseMessagePromptTemplate | ChatPromptTemplate)[]
   ): ChatPromptTemplate {
+    const flattenedMessages = promptMessages.reduce(
+      (acc, promptMessage) =>
+        acc.concat(
+          // eslint-disable-next-line no-instanceof/no-instanceof
+          promptMessage instanceof ChatPromptTemplate
+            ? promptMessage.promptMessages
+            : [promptMessage]
+        ),
+      [] as BaseMessagePromptTemplate[]
+    );
+    const flattenedPartialVariables = promptMessages.reduce(
+      (acc, promptMessage) =>
+        // eslint-disable-next-line no-instanceof/no-instanceof
+        promptMessage instanceof ChatPromptTemplate
+          ? Object.assign(acc, promptMessage.partialVariables)
+          : acc,
+      Object.create(null) as PartialValues
+    );
+
     const inputVariables = new Set<string>();
-    for (const promptMessage of promptMessages) {
+    for (const promptMessage of flattenedMessages) {
       for (const inputVariable of promptMessage.inputVariables) {
+        if (inputVariable in flattenedPartialVariables) {
+          continue;
+        }
         inputVariables.add(inputVariable);
       }
     }
     return new ChatPromptTemplate({
       inputVariables: [...inputVariables],
-      promptMessages,
+      promptMessages: flattenedMessages,
+      partialVariables: flattenedPartialVariables,
     });
   }
 }

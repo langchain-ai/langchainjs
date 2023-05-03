@@ -26,6 +26,8 @@ const entrypoints = {
   "embeddings/fake": "embeddings/fake",
   "embeddings/openai": "embeddings/openai",
   "embeddings/cohere": "embeddings/cohere",
+  "embeddings/tensorflow": "embeddings/tensorflow",
+  "embeddings/hf": "embeddings/hf",
   // llms
   llms: "llms/index",
   "llms/load": "llms/load",
@@ -89,6 +91,7 @@ const entrypoints = {
   "chat_models/anthropic": "chat_models/anthropic",
   // schema
   schema: "schema/index",
+  "schema/output_parser": "schema/output_parser",
   // sql_db
   sql_db: "sql_db",
   // callbacks
@@ -104,6 +107,7 @@ const entrypoints = {
   "retrievers/contextual_compression": "retrievers/contextual_compression",
   "retrievers/document_compressors": "retrievers/document_compressors/index",
   "retrievers/time_weighted": "retrievers/time_weighted",
+  "retrievers/hyde": "retrievers/hyde",
   // cache
   cache: "cache/index",
   "cache/redis": "cache/redis",
@@ -112,6 +116,7 @@ const entrypoints = {
   "stores/file/node": "stores/file/node",
   // experimental
   "experimental/autogpt": "experimental/autogpt/index",
+  "experimental/babyagi": "experimental/babyagi/index",
 };
 
 // Entrypoints in this list will
@@ -135,6 +140,8 @@ const requiresOptionalDependency = [
   "tools/webbrowser",
   "chains/load",
   "embeddings/cohere",
+  "embeddings/tensorflow",
+  "embeddings/hf",
   "llms/load",
   "llms/cohere",
   "llms/hf",
