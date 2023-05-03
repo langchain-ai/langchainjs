@@ -13,7 +13,7 @@ import {
   BaseChatMessage,
   HumanChatMessage,
 } from "../../schema/index.js";
-import { StructuredTool, Tool } from "../../tools/base.js";
+import { Tool } from "../../tools/base.js";
 import { Optional } from "../../types/type-utils.js";
 import { Agent, AgentArgs, OutputParserArgs } from "../agent.js";
 import { AgentActionOutputParser, AgentInput } from "../types.js";
@@ -43,6 +43,8 @@ export type ChatConversationalAgentInput = Optional<AgentInput, "outputParser">;
  * @augments Agent
  */
 export class ChatConversationalAgent extends Agent {
+  declare ToolType: Tool;
+
   constructor(input: ChatConversationalAgentInput) {
     const outputParser =
       input.outputParser ?? ChatConversationalAgent.getDefaultOutputParser();
@@ -65,7 +67,7 @@ export class ChatConversationalAgent extends Agent {
     return ["Observation:"];
   }
 
-  static validateTools(tools: StructuredTool[]) {
+  static validateTools(tools: Tool[]) {
     const descriptionlessTool = tools.find((tool) => !tool.description);
     if (descriptionlessTool) {
       const msg =
@@ -113,7 +115,7 @@ export class ChatConversationalAgent extends Agent {
    * @param args.humanMessage - String to put after the list of tools.
    */
   static createPrompt(
-    tools: StructuredTool[],
+    tools: Tool[],
     args?: ChatConversationalCreatePromptArgs
   ) {
     const systemMessage = (args?.systemMessage ?? DEFAULT_PREFIX) + PREFIX_END;
@@ -142,7 +144,7 @@ export class ChatConversationalAgent extends Agent {
 
   static fromLLMAndTools(
     llm: BaseLanguageModel,
-    tools: StructuredTool[],
+    tools: Tool[],
     args?: ChatConversationalCreatePromptArgs & AgentArgs
   ) {
     ChatConversationalAgent.validateTools(tools);

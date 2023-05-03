@@ -30,6 +30,8 @@ class ParseError extends Error {
 }
 
 export abstract class BaseAgent {
+  declare ToolType: StructuredTool;
+
   abstract get inputKeys(): string[];
 
   get returnValues(): string[] {

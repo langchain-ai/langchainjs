@@ -11,8 +11,7 @@ import { ZeroShotAgent } from "./mrkl/index.js";
 type AgentType =
   | "zero-shot-react-description"
   | "chat-zero-shot-react-description"
-  | "chat-conversational-react-description"
-  | "structured-chat-zero-shot-react-description";
+  | "chat-conversational-react-description";
 
 /**
  * @deprecated use initializeAgentExecutorWithOptions instead
@@ -73,12 +72,17 @@ export type InitializeAgentExecutorOptions =
   | ({
       agentType: "chat-conversational-react-description";
       agentArgs?: Parameters<typeof ChatConversationalAgent.fromLLMAndTools>[2];
-    } & Omit<AgentExecutorInput, "agent" | "tools">)
-  | ({
+    } & Omit<AgentExecutorInput, "agent" | "tools">);
+
+/**
+ * @interface
+ */
+export type InitializeAgentExecutorOptionsStructured =
+  | {
       agentType: "structured-chat-zero-shot-react-description";
       agentArgs?: Parameters<typeof StructuredChatAgent.fromLLMAndTools>[2];
       memory?: never;
-    } & Omit<AgentExecutorInput, "agent" | "tools">);
+    } & Omit<AgentExecutorInput, "agent" | "tools">;
 
 /**
  * Initialize an agent executor with options
@@ -87,21 +91,36 @@ export type InitializeAgentExecutorOptions =
  * @param options Options for the agent, including agentType, agentArgs, and other options for AgentExecutor.fromAgentAndTools
  * @returns AgentExecutor
  */
-export const initializeAgentExecutorWithOptions = async (
+export async function initializeAgentExecutorWithOptions(
   tools: StructuredTool[],
   llm: BaseLanguageModel,
-  options: InitializeAgentExecutorOptions = {
+  options: InitializeAgentExecutorOptionsStructured
+): Promise<AgentExecutor>;
+export async function initializeAgentExecutorWithOptions(
+  tools: Tool[],
+  llm: BaseLanguageModel,
+  options?: InitializeAgentExecutorOptions
+): Promise<AgentExecutor>;
+export async function initializeAgentExecutorWithOptions(
+  tools: StructuredTool[] | Tool[],
+  llm: BaseLanguageModel,
+  options:
+    | InitializeAgentExecutorOptions
+    | InitializeAgentExecutorOptionsStructured = {
     agentType:
       llm._modelType() === "base_chat_model"
         ? "chat-zero-shot-react-description"
         : "zero-shot-react-description",
   }
-): Promise<AgentExecutor> => {
+): Promise<AgentExecutor> {
+  // Note this tools cast is safe as the overload signatures prevent
+  // the function from being called with a StructuredTool[] when
+  // the agentType is not in InitializeAgentExecutorOptionsStructured
   switch (options.agentType) {
     case "zero-shot-react-description": {
       const { agentArgs, ...rest } = options;
       return AgentExecutor.fromAgentAndTools({
-        agent: ZeroShotAgent.fromLLMAndTools(llm, tools, agentArgs),
+        agent: ZeroShotAgent.fromLLMAndTools(llm, tools as Tool[], agentArgs),
         tools,
         ...rest,
       });
@@ -109,7 +128,7 @@ export const initializeAgentExecutorWithOptions = async (
     case "chat-zero-shot-react-description": {
       const { agentArgs, ...rest } = options;
       return AgentExecutor.fromAgentAndTools({
-        agent: ChatAgent.fromLLMAndTools(llm, tools, agentArgs),
+        agent: ChatAgent.fromLLMAndTools(llm, tools as Tool[], agentArgs),
         tools,
         ...rest,
       });
@@ -117,7 +136,11 @@ export const initializeAgentExecutorWithOptions = async (
     case "chat-conversational-react-description": {
       const { agentArgs, memory, ...rest } = options;
       const executor = AgentExecutor.fromAgentAndTools({
-        agent: ChatConversationalAgent.fromLLMAndTools(llm, tools, agentArgs),
+        agent: ChatConversationalAgent.fromLLMAndTools(
+          llm,
+          tools as Tool[],
+          agentArgs
+        ),
         tools,
         memory:
           memory ??
@@ -143,4 +166,4 @@ export const initializeAgentExecutorWithOptions = async (
       throw new Error("Unknown agent type");
     }
   }
-};
+}
