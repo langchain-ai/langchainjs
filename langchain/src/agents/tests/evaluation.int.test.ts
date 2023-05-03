@@ -2,7 +2,7 @@
 import { describe } from "@jest/globals";
 import { ChatOpenAI } from "../../chat_models/openai.js";
 import { initializeAgentExecutorWithOptions } from "../initialize.js";
-// import { OpenAI } from "../../llms/openai.js";
+import { OpenAI } from "../../llms/openai.js";
 import { Tool } from "../../tools/base.js";
 import { SerpAPI } from "../../tools/serpapi.js";
 import { Calculator } from "../../tools/calculator.js";
@@ -10,22 +10,22 @@ import { RequestsGetTool, RequestsPostTool } from "../../tools/requests.js";
 import { AIPluginTool } from "../../tools/aiplugin.js";
 
 const agents = [
-  // (tools) =>
-  //   initializeAgentExecutorWithOptions(
-  //     tools,
-  //     new ChatOpenAI({ temperature: 0 }),
-  //     { agentType: "chat-zero-shot-react-description" }
-  //   ),
-  // (tools) =>
-  //   initializeAgentExecutorWithOptions(
-  //     tools,
-  //     new ChatOpenAI({ temperature: 0 }),
-  //     { agentType: "chat-conversational-react-description" }
-  //   ),
-  // (tools) =>
-  //   initializeAgentExecutorWithOptions(tools, new OpenAI({ temperature: 0 }), {
-  //     agentType: "zero-shot-react-description",
-  //   }),
+  (tools) =>
+    initializeAgentExecutorWithOptions(
+      tools,
+      new ChatOpenAI({ temperature: 0 }),
+      { agentType: "chat-zero-shot-react-description" }
+    ),
+  (tools) =>
+    initializeAgentExecutorWithOptions(
+      tools,
+      new ChatOpenAI({ temperature: 0 }),
+      { agentType: "chat-conversational-react-description" }
+    ),
+  (tools) =>
+    initializeAgentExecutorWithOptions(tools, new OpenAI({ temperature: 0 }), {
+      agentType: "zero-shot-react-description",
+    }),
   (tools) =>
     initializeAgentExecutorWithOptions(
       tools,

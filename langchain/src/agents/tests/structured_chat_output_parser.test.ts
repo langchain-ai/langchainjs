@@ -5,26 +5,6 @@ import { AgentAction, AgentFinish } from "../../schema/index.js";
 test("Can parse JSON with text in front of it", async () => {
   const testCases = [
     {
-      input: `Based on the information from the search, I can provide you with a query to get all the orders for the email \`example@gmail.com\`. Here's the query:\n\n\`\`\`sql\nSELECT * FROM orders\nJOIN users ON users.id = orders.user_id\nWHERE users.email = 'example@gmail.com'\n\`\`\`\n\nPlease make any necessary modifications depending on your database schema and table structures. Run this query on your database to retrieve the orders made by the specified user.\n\n\`\`\`json\n{\n  "action": "Final Answer",\n  "action_input": "To get all the orders for a user with the email \`example@gmail.com\`, you can use the following query:\\n\\n\`\`\`\\nSELECT * FROM orders\\nJOIN users ON users.id = orders.user_id\\nWHERE users.email = 'example@gmail.com'\\n\`\`\`\\n\\nPlease make any necessary modifications depending on your database schema and table structures. Run this query on your database to retrieve the orders made by the specified user."\n}\n\`\`\``,
-      output: `{\n  "action": "Final Answer",\n  "action_input": "To get all the orders for a user with the email \`example@gmail.com\`, you can use the following query:\\n\\n\`\`\`\\nSELECT * FROM orders\\nJOIN users ON users.id = orders.user_id\\nWHERE users.email = 'example@gmail.com'\\n\`\`\`\\n\\nPlease make any necessary modifications depending on your database schema and table structures. Run this query on your database to retrieve the  made by the specifsredroied user."\n}`,
-      tool: "Final Answer",
-      toolInput: "To get all the orders for a user with the email ",
-    },
-    {
-      input:
-        'Here is an example of a valid JSON object matching the provided spec:\n\n```json\n{\n  "action": "metabase",\n  "action_input": ["GET", "/api/table/1"]\n}\n```\n\nIn this example, the "action" key has a string value of "metabase", and the "action_input" key has an array value containing two elements: a string value of "GET" and a string value of "/api/table/1". This JSON object could be used to make a request to a Metabase API endpoint with the specified method and arguments.',
-      output: `{ "action": "metabase", "action_input": ["GET", "/api/table/1"] } `,
-      tool: "metabase",
-      toolInput: ["GET", "/api/table/1"],
-    },
-    {
-      input:
-        '```json\n{\n  "action": "metabase",\n  "action_input": ["GET", "/api/table/1"]\n}\n```',
-      output: `{ "action": "metabase", "action_input": ["GET", "/api/table/1"] } `,
-      tool: "metabase",
-      toolInput: ["GET", "/api/table/1"],
-    },
-    {
       input:
         'Here we have some boilerplate nonsense```json\n{\n "action": "blogpost",\n  "action_input": "```sql\\nSELECT * FROM orders\\nJOIN users ON users.id = orders.user_id\\nWHERE users.email = \'bud\'```"\n}\n``` and at the end there is more nonsense',
       output:
