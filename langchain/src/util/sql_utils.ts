@@ -1,4 +1,11 @@
 import type { DataSource, DataSourceOptions } from "typeorm";
+import {
+  DEFAULT_SQL_DATABASE_PROMPT,
+  SQL_MYSQL_PROMPT,
+  SQL_POSTGRES_PROMPT,
+  SQL_SQLITE_PROMPT,
+} from "../chains/sql_db/sql_db_prompt.js";
+import { PromptTemplate } from "../prompts/index.js";
 
 interface RawResultTableAndColumn {
   table_name: string;
@@ -250,4 +257,22 @@ export const generateTableInfoFromTables = async (
   }
 
   return globalString;
+};
+
+export const getPromptTemplateFromDataSource = (
+  appDataSource: DataSource
+): PromptTemplate => {
+  if (appDataSource.options.type === "postgres") {
+    return SQL_POSTGRES_PROMPT;
+  }
+
+  if (appDataSource.options.type === "sqlite") {
+    return SQL_SQLITE_PROMPT;
+  }
+
+  if (appDataSource.options.type === "mysql") {
+    return SQL_MYSQL_PROMPT;
+  }
+
+  return DEFAULT_SQL_DATABASE_PROMPT;
 };
