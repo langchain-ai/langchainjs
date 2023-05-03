@@ -16,7 +16,6 @@ export * from "langchain/memory";
 export * from "langchain/document";
 export * from "langchain/docstore";
 export * from "langchain/document_loaders/base";
-export * from "langchain/document_loaders/web/confluence";
 export * from "langchain/chat_models/base";
 export * from "langchain/chat_models/openai";
 export * from "langchain/chat_models/anthropic";

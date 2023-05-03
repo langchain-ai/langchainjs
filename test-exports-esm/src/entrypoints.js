@@ -16,7 +16,6 @@ import * as memory from "langchain/memory";
 import * as document from "langchain/document";
 import * as docstore from "langchain/docstore";
 import * as document_loaders_base from "langchain/document_loaders/base";
-import * as document_loaders_web_confluence from "langchain/document_loaders/web/confluence";
 import * as chat_models_base from "langchain/chat_models/base";
 import * as chat_models_openai from "langchain/chat_models/openai";
 import * as chat_models_anthropic from "langchain/chat_models/anthropic";
