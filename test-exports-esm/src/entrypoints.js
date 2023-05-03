@@ -20,6 +20,7 @@ import * as chat_models_base from "langchain/chat_models/base";
 import * as chat_models_openai from "langchain/chat_models/openai";
 import * as chat_models_anthropic from "langchain/chat_models/anthropic";
 import * as schema from "langchain/schema";
+import * as schema_output_parser from "langchain/schema/output_parser";
 import * as callbacks from "langchain/callbacks";
 import * as output_parsers from "langchain/output_parsers";
 import * as retrievers_remote from "langchain/retrievers/remote";
