@@ -3,6 +3,7 @@ import { JsonSchema7ObjectType } from "zod-to-json-schema/src/parsers/object.js"
 
 import { BaseLanguageModel } from "../../base_language/index.js";
 import { LLMChain } from "../../chains/llm_chain.js";
+import { PromptTemplate } from "../../prompts/prompt.js";
 import {
   ChatPromptTemplate,
   HumanMessagePromptTemplate,
@@ -28,7 +29,7 @@ export interface ChatCreatePromptArgs {
 export type ChatAgentInput = Optional<AgentInput, "outputParser">;
 
 /**
- * Agent that interoperates with Structured Tool's using React logic.
+ * Agent that interoperates with Structured Tools using React logic.
  * @augments Agent
  */
 export class StructuredChatAgent extends Agent {
@@ -55,10 +56,10 @@ export class StructuredChatAgent extends Agent {
   }
 
   static validateTools(tools: StructuredTool[]) {
-    const invalidTool = tools.find((tool) => !tool.description);
-    if (invalidTool) {
+    const descriptionlessTool = tools.find((tool) => !tool.description);
+    if (descriptionlessTool) {
       const msg =
-        `Got a tool ${invalidTool.name} without a description.` +
+        `Got a tool ${descriptionlessTool.name} without a description.` +
         ` This agent requires descriptions for all tools.`;
       throw new Error(msg);
     }
@@ -80,7 +81,7 @@ export class StructuredChatAgent extends Agent {
   }
 
   /**
-   * Create prompt in the style of the zero shot agent.
+   * Create prompt in the style of the agent.
    *
    * @param tools - List of tools the agent will have access to, used to format the prompt.
    * @param args - Arguments to create the prompt with.
@@ -97,11 +98,22 @@ export class StructuredChatAgent extends Agent {
           )}`
       )
       .join("\n");
-    const template = [prefix, toolStrings, FORMAT_INSTRUCTIONS, suffix].join(
-      "\n\n"
-    );
+    const template = [
+      prefix,
+      "{tool_strings}",
+      FORMAT_INSTRUCTIONS,
+      suffix,
+    ].join("\n\n");
     const messages = [
-      SystemMessagePromptTemplate.fromTemplate(template),
+      new SystemMessagePromptTemplate(
+        new PromptTemplate({
+          template,
+          inputVariables: [],
+          partialVariables: {
+            tool_strings: toolStrings,
+          },
+        })
+      ),
       HumanMessagePromptTemplate.fromTemplate("{input}\n\n{agent_scratchpad}"),
     ];
     return ChatPromptTemplate.fromPromptMessages(messages);

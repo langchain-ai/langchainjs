@@ -2,7 +2,7 @@ import { BaseLanguageModel } from "../../base_language/index.js";
 import { LLMChain } from "../../chains/llm_chain.js";
 import { PromptTemplate } from "../../prompts/prompt.js";
 import { renderTemplate } from "../../prompts/template.js";
-import { Tool } from "../../tools/base.js";
+import { StructuredTool, Tool } from "../../tools/base.js";
 import { Optional } from "../../types/type-utils.js";
 import { Agent, AgentArgs, OutputParserArgs } from "../agent.js";
 import { deserializeHelper } from "../helpers.js";
@@ -52,12 +52,20 @@ export class ZeroShotAgent extends Agent {
     return new ZeroShotAgentOutputParser(fields);
   }
 
-  static validateTools(tools: Tool[]) {
-    const invalidTool = tools.find((tool) => !tool.description);
-    if (invalidTool) {
+  static validateTools(tools: StructuredTool[]) {
+    const descriptionlessTool = tools.find((tool) => !tool.description);
+    if (descriptionlessTool) {
       const msg =
-        `Got a tool ${invalidTool.name} without a description.` +
+        `Got a tool ${descriptionlessTool.name} without a description.` +
         ` This agent requires descriptions for all tools.`;
+      throw new Error(msg);
+    }
+    // eslint-disable-next-line no-instanceof/no-instanceof
+    const complexTool = tools.find((tool) => !(tool instanceof Tool));
+    if (complexTool) {
+      const msg =
+        `Found a tool ${complexTool.name} that can take a non-string input.` +
+        ` This agent only supports tools that take a string parameter.`;
       throw new Error(msg);
     }
   }
@@ -71,7 +79,10 @@ export class ZeroShotAgent extends Agent {
    * @param args.prefix - String to put before the list of tools.
    * @param args.inputVariables - List of input variables the final prompt will expect.
    */
-  static createPrompt(tools: Tool[], args?: ZeroShotCreatePromptArgs) {
+  static createPrompt(
+    tools: StructuredTool[],
+    args?: ZeroShotCreatePromptArgs
+  ) {
     const {
       prefix = PREFIX,
       suffix = SUFFIX,
@@ -99,7 +110,7 @@ export class ZeroShotAgent extends Agent {
 
   static fromLLMAndTools(
     llm: BaseLanguageModel,
-    tools: Tool[],
+    tools: StructuredTool[],
     args?: ZeroShotCreatePromptArgs & AgentArgs
   ) {
     ZeroShotAgent.validateTools(tools);

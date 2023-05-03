@@ -1,16 +1,18 @@
 import { BaseLanguageModel } from "../base_language/index.js";
 import { CallbackManager } from "../callbacks/manager.js";
 import { BufferMemory } from "../memory/buffer_memory.js";
-import { Tool } from "../tools/base.js";
+import { StructuredTool, Tool } from "../tools/base.js";
 import { ChatAgent } from "./chat/index.js";
 import { ChatConversationalAgent } from "./chat_convo/index.js";
+import { StructuredChatAgent } from "./structured_chat/index.js";
 import { AgentExecutor, AgentExecutorInput } from "./executor.js";
 import { ZeroShotAgent } from "./mrkl/index.js";
 
 type AgentType =
   | "zero-shot-react-description"
   | "chat-zero-shot-react-description"
-  | "chat-conversational-react-description";
+  | "chat-conversational-react-description"
+  | "structured-chat-zero-shot-react-description";
 
 /**
  * @deprecated use initializeAgentExecutorWithOptions instead
@@ -71,6 +73,11 @@ export type InitializeAgentExecutorOptions =
   | ({
       agentType: "chat-conversational-react-description";
       agentArgs?: Parameters<typeof ChatConversationalAgent.fromLLMAndTools>[2];
+    } & Omit<AgentExecutorInput, "agent" | "tools">)
+  | ({
+      agentType: "structured-chat-zero-shot-react-description";
+      agentArgs?: Parameters<typeof StructuredChatAgent.fromLLMAndTools>[2];
+      memory?: never;
     } & Omit<AgentExecutorInput, "agent" | "tools">);
 
 /**
@@ -81,7 +88,7 @@ export type InitializeAgentExecutorOptions =
  * @returns AgentExecutor
  */
 export const initializeAgentExecutorWithOptions = async (
-  tools: Tool[],
+  tools: StructuredTool[],
   llm: BaseLanguageModel,
   options: InitializeAgentExecutorOptions = {
     agentType:
@@ -119,6 +126,15 @@ export const initializeAgentExecutorWithOptions = async (
             memoryKey: "chat_history",
             inputKey: "input",
           }),
+        ...rest,
+      });
+      return executor;
+    }
+    case "structured-chat-zero-shot-react-description": {
+      const { agentArgs, ...rest } = options;
+      const executor = AgentExecutor.fromAgentAndTools({
+        agent: StructuredChatAgent.fromLLMAndTools(llm, tools, agentArgs),
+        tools,
         ...rest,
       });
       return executor;
