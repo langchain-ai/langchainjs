@@ -1,5 +1,5 @@
 import { test } from "@jest/globals";
-import { OpenAIModerationChain } from "../moderation.js";
+import { OpenAIModerationChain } from "../openai_moderation.js";
 
 test("OpenAI Moderation Test", async () => {
   const badString = "I hate myself and want to do harm to myself";

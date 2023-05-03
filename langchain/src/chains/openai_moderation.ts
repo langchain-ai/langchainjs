@@ -7,15 +7,18 @@ import {
 } from "openai";
 import { BaseChain, ChainInputs } from "./base.js";
 import { ChainValues } from "../schema/index.js";
+import fetchAdapter from "../util/axios-fetch-adapter.js";
 
-export interface ModerationChainInput extends ChainInputs {
+export interface OpenAIModerationChainInput extends ChainInputs {
   openAIApiKey?: string;
   openAIOrganization?: string;
+  throwError?: boolean;
+  configuration?: ConfigurationParameters;
 }
 
 export class OpenAIModerationChain
   extends BaseChain
-  implements ModerationChainInput
+  implements OpenAIModerationChainInput
 {
   inputKey = "input";
 
@@ -31,13 +34,9 @@ export class OpenAIModerationChain
 
   throwError: boolean;
 
-  constructor(
-    fields?: ModerationChainInput,
-    configuration?: ConfigurationParameters,
-    throwError = false
-  ) {
+  constructor(fields?: OpenAIModerationChainInput) {
     super(fields);
-    this.throwError = throwError;
+    this.throwError = fields?.throwError ?? false;
     this.openAIApiKey =
       fields?.openAIApiKey ??
       // eslint-disable-next-line no-process-env
@@ -47,17 +46,16 @@ export class OpenAIModerationChain
       throw new Error("OpenAI API key not found");
     }
 
-    this.openAIOrganization =
-      fields?.openAIOrganization ??
-      (typeof process !== "undefined"
-        ? // eslint-disable-next-line no-process-env
-          process.env.OPENAI_ORGANIZATION
-        : undefined);
+    this.openAIOrganization = fields?.openAIOrganization;
 
     this.clientConfig = new Configuration({
-      ...configuration,
+      ...fields?.configuration,
       apiKey: this.openAIApiKey,
       organization: this.openAIOrganization,
+      baseOptions: {
+        adapter: fetchAdapter,
+        ...fields?.configuration?.baseOptions,
+      },
     });
 
     this.client = new OpenAIApi(this.clientConfig);
@@ -79,7 +77,6 @@ export class OpenAIModerationChain
   }
 
   async _call(values: ChainValues): Promise<ChainValues> {
-    console.log(values);
     const text = values[this.inputKey];
     const moderationRequest: CreateModerationRequest = {
       input: text,
