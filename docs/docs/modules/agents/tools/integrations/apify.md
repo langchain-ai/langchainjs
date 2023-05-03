@@ -1,6 +1,9 @@
 # Apify
 
-This guide shows how to use the [Apify integration](../../../../ecosystem/apify.md) for LangChain.
+This guide shows how to use the [Apify integration](../../../../ecosystem/apify.md) for LangChain,
+to run Actors and feed their results into LangChain.
+
+## Overview
 
 [Apify](https://apify.com) is a cloud platform for web scraping and data extraction,
 which provides an [ecosystem](https://apify.com/store) of more than a thousand
@@ -10,6 +13,8 @@ For example, you can use it to extract Google Search results, Instagram and Face
 In this example, we'll use the [Website Content Crawler](https://apify.com/apify/website-content-crawler) Actor,
 which can deeply crawl websites such as documentation, knowledge bases, help centers, or blogs,
 and extract text content from the web pages. Then we feed the documents into a vector index and answer questions from it.
+
+## Setup
 
 ```bash npm2yarn
 npm install apify-client

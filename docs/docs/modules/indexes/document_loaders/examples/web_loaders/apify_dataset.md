@@ -1,10 +1,28 @@
 # Apify Dataset
 
-This guide shows how to load Apify datasets to LangChain.
+This guide shows how to use the [Apify integration](../../../../../ecosystem/apify.md) for LangChain,
+to load documents from an Apify Dataset.
 
-[Apify Dataset](https://docs.apify.com/platform/storage/dataset) is a scaleable append-only storage with sequential access built for storing structured web scraping results, such as a list of products or Google SERPs, and then export them to various formats like JSON, CSV, or Excel. Datasets are mainly used to save results of [Apify Actors](https://apify.com/store)—serverless cloud programs for varius web scraping, crawling, and data extraction use cases.
+## Overview
 
-## Prerequisites
+[Apify](https://apify.com) is a cloud platform for web scraping and data extraction,
+which provides an [ecosystem](https://apify.com/store) of more than a thousand
+ready-made apps called _Actors_ for various web scraping, crawling, and data extraction use cases.
+
+This guide shows how to load documents
+from an [Apify Dataset](https://docs.apify.com/platform/storage/dataset)—a scalable append-only
+storage built for storing structured web scraping results,
+such as a list of products or Google SERPs, and then export them to various
+formats like JSON, CSV, or Excel.
+
+Datasets are typically used to save results of Actors.
+For example, [Website Content Crawler](https://apify.com/apify/website-content-crawler) Actor
+deeply crawls websites such as documentation, knowledge bases, help centers, or blogs,
+and then stores the text content of webpages into a dataset,
+from which you can feed the documents into a vector index and answer questions from it.
+For details, see [this guide](../../../../agents/tools/integrations/apify.md).
+
+## Setup
 
 ```bash npm2yarn
 npm install apify-client
