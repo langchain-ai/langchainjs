@@ -166,6 +166,9 @@
     "document_loaders/web/s3.cjs",
     "document_loaders/web/s3.js",
     "document_loaders/web/s3.d.ts",
+    "document_loaders/web/confluence.cjs",
+    "document_loaders/web/confluence.js",
+    "document_loaders/web/confluence.d.ts",
     "document_loaders/fs/directory.cjs",
     "document_loaders/fs/directory.js",
     "document_loaders/fs/directory.d.ts",
@@ -783,6 +786,11 @@
       "types": "./document_loaders/web/s3.d.ts",
       "import": "./document_loaders/web/s3.js",
       "require": "./document_loaders/web/s3.cjs"
+    },
+    "./document_loaders/web/confluence": {
+      "types": "./document_loaders/web/confluence.d.ts",
+      "import": "./document_loaders/web/confluence.js",
+      "require": "./document_loaders/web/confluence.cjs"
     },
     "./document_loaders/fs/directory": {
       "types": "./document_loaders/fs/directory.d.ts",

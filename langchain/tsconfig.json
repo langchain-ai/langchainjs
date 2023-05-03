@@ -82,6 +82,7 @@
       "src/document_loaders/web/imsdb.ts",
       "src/document_loaders/web/github.ts",
       "src/document_loaders/web/s3.ts",
+      "src/document_loaders/web/confluence.ts",
       "src/document_loaders/fs/directory.ts",
       "src/document_loaders/fs/buffer.ts",
       "src/document_loaders/fs/text.ts",
