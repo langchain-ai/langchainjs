@@ -21,7 +21,7 @@ export class CommaSeparatedListOutputParser extends ListOutputParser {
         .split(",")
         .map((s) => s.trim());
     } catch (e) {
-      throw new OutputParserException(`Could not parse output: ${text}`);
+      throw new OutputParserException(`Could not parse output: ${text}`, text);
     }
   }
 

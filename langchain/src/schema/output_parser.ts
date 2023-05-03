@@ -41,7 +41,10 @@ export abstract class BaseOutputParser<T = unknown> {
 }
 
 export class OutputParserException extends Error {
-  constructor(message: string) {
+  output?: string;
+
+  constructor(message: string, output?: string) {
     super(message);
+    this.output = output;
   }
 }

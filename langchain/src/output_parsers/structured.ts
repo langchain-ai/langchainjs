@@ -52,7 +52,8 @@ ${JSON.stringify(zodToJsonSchema(this.schema))}
       return this.schema.parseAsync(JSON.parse(json));
     } catch (e) {
       throw new OutputParserException(
-        `Failed to parse. Text: "${text}". Error: ${e}`
+        `Failed to parse. Text: "${text}". Error: ${e}`,
+        text
       );
     }
   }
