@@ -57,7 +57,8 @@ export class VectorDBQAChain extends BaseChain implements VectorDBQAChainInput {
       throw new Error(`Question key ${this.inputKey} not found.`);
     }
     const question: string = values[this.inputKey];
-    const docs = await this.vectorstore.similaritySearch(question, this.k);
+    const filter = values["filter"]
+    const docs = await this.vectorstore.similaritySearch(question, this.k, filter);
     const inputs = { question, input_documents: docs };
     const result = await this.combineDocumentsChain.call(
       inputs,
