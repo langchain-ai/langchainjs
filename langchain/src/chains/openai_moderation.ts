@@ -8,8 +8,11 @@ import {
 import { BaseChain, ChainInputs } from "./base.js";
 import { ChainValues } from "../schema/index.js";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
+import { AsyncCaller, AsyncCallerParams } from "../util/async_caller.js";
 
-export interface OpenAIModerationChainInput extends ChainInputs {
+export interface OpenAIModerationChainInput
+  extends ChainInputs,
+    AsyncCallerParams {
   openAIApiKey?: string;
   openAIOrganization?: string;
   throwError?: boolean;
@@ -33,6 +36,8 @@ export class OpenAIModerationChain
   client: OpenAIApi;
 
   throwError: boolean;
+
+  caller: AsyncCaller;
 
   constructor(fields?: OpenAIModerationChainInput) {
     super(fields);
@@ -59,6 +64,8 @@ export class OpenAIModerationChain
     });
 
     this.client = new OpenAIApi(this.clientConfig);
+
+    this.caller = new AsyncCaller(fields ?? {});
   }
 
   _moderate(
@@ -83,7 +90,9 @@ export class OpenAIModerationChain
     };
     let mod;
     try {
-      mod = await this.client.createModeration(moderationRequest);
+      mod = await this.caller.call(() =>
+        this.client.createModeration(moderationRequest)
+      );
     } catch (error) {
       // eslint-disable-next-line no-instanceof/no-instanceof
       if (error instanceof Error) {
