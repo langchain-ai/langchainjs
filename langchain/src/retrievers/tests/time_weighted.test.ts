@@ -8,10 +8,8 @@ import {
   TimeWeightedVectorStoreRetriever,
 } from "../time_weighted.js";
 
-// eslint-disable-next-line tree-shaking/no-side-effects-in-initialization
 jest.useFakeTimers();
 const mockNow = new Date("2023-04-18 15:30");
-// eslint-disable-next-line tree-shaking/no-side-effects-in-initialization
 jest.setSystemTime(mockNow);
 
 const getSec = (date: Date) => Math.floor(date.getTime() / 1000);
