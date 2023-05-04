@@ -79,7 +79,7 @@ export class SupabaseVectorStore extends VectorStore {
   async similaritySearchVectorWithScore(
     query: number[],
     k: number,
-    filter?: SupabaseMetadata
+    filter?: this["FilterType"]
   ): Promise<[Document, number][]> {
     if (filter && this.filter) {
       throw new Error("cannot provide both `filter` and `this.filter`");

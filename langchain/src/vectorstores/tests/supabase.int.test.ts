@@ -34,3 +34,41 @@ test("SupabaseVectorStore with external ids", async () => {
     new Document({ metadata: { a: 1 }, pageContent: "hello" }),
   ]);
 });
+
+test("Search a SupabaseVectorStore using a metadata filter", async () => {
+  const client = createClient(
+    process.env.SUPABASE_URL!,
+    process.env.SUPABASE_PRIVATE_KEY!
+  );
+
+  const embeddings = new OpenAIEmbeddings();
+
+  const store = new SupabaseVectorStore(embeddings, {
+    client,
+    tableName: "documents",
+  });
+
+  expect(store).toBeDefined();
+
+  const createdAt = new Date().getTime();
+
+  await store.addDocuments([
+    { pageContent: "hello 0", metadata: { created_at: createdAt } },
+    { pageContent: "hello 1", metadata: { created_at: createdAt + 1 } },
+    { pageContent: "hello 2", metadata: { created_at: createdAt + 2 } },
+    { pageContent: "hello 3", metadata: { created_at: createdAt + 3 } },
+  ]);
+
+  const results = await store.similaritySearch("hello", 1, {
+    created_at: createdAt + 2,
+  });
+
+  expect(results).toHaveLength(1);
+
+  expect(results).toEqual([
+    new Document({
+      metadata: { created_at: createdAt + 2 },
+      pageContent: "hello 2",
+    }),
+  ]);
+});
