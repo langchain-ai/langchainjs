@@ -19,7 +19,6 @@ test("Test Unstructured base loader", async () => {
 
   const loader = new UnstructuredLoader(
     filePath,
-    "https://api.unstructured.io/general/v0/general",
     options
   );
   const docs = await loader.load();
@@ -42,7 +41,6 @@ test("Test Unstructured directory loader", async () => {
 
   const loader = new UnstructuredDirectoryLoader(
     directoryPath,
-    "https://api.unstructured.io/general/v0/general",
     options,
     true,
     UnknownHandling.Ignore
