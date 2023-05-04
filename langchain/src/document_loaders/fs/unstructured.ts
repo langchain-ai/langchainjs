@@ -78,7 +78,6 @@ export class UnstructuredLoader extends BaseDocumentLoader {
     formData.append("files", new Blob([buffer]), fileName);
 
     const headers = {
-      "Content-Type": "application/json",
       "UNSTRUCTURED-API-KEY": this.apiKey ?? "",
     };
 
