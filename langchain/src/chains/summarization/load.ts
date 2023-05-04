@@ -43,6 +43,7 @@ export const loadSummarizationChain = (
     const {
       combineMapPrompt = DEFAULT_PROMPT,
       combinePrompt = DEFAULT_PROMPT,
+      returnIntermediateSteps,
     } = params;
     const llmChain = new LLMChain({ prompt: combineMapPrompt, llm });
     const combineLLMChain = new LLMChain({ prompt: combinePrompt, llm });
@@ -54,7 +55,7 @@ export const loadSummarizationChain = (
       llmChain,
       combineDocumentChain,
       documentVariableName: "text",
-      returnIntermediateSteps: params.returnIntermediateSteps,
+      returnIntermediateSteps,
     });
     return chain;
   }

@@ -113,6 +113,7 @@ export const loadQAMapReduceChain = (
     combineMapPrompt = COMBINE_QA_PROMPT_SELECTOR.getPrompt(llm),
     combinePrompt = COMBINE_PROMPT_SELECTOR.getPrompt(llm),
     verbose,
+    returnIntermediateSteps,
   } = params;
   const llmChain = new LLMChain({ prompt: combineMapPrompt, llm, verbose });
   const combineLLMChain = new LLMChain({ prompt: combinePrompt, llm, verbose });
@@ -123,7 +124,7 @@ export const loadQAMapReduceChain = (
   const chain = new MapReduceDocumentsChain({
     llmChain,
     combineDocumentChain,
-    returnIntermediateSteps: params.returnIntermediateSteps,
+    returnIntermediateSteps,
   });
   return chain;
 };
