@@ -247,6 +247,9 @@
     "retrievers/document_compressors.cjs",
     "retrievers/document_compressors.js",
     "retrievers/document_compressors.d.ts",
+    "retrievers/document_compressors/chain_extract.cjs",
+    "retrievers/document_compressors/chain_extract.js",
+    "retrievers/document_compressors/chain_extract.d.ts",
     "retrievers/hyde.cjs",
     "retrievers/hyde.js",
     "retrievers/hyde.d.ts",
@@ -922,6 +925,11 @@
       "types": "./retrievers/document_compressors.d.ts",
       "import": "./retrievers/document_compressors.js",
       "require": "./retrievers/document_compressors.cjs"
+    },
+    "./retrievers/document_compressors/chain_extract": {
+      "types": "./retrievers/document_compressors/chain_extract.d.ts",
+      "import": "./retrievers/document_compressors/chain_extract.js",
+      "require": "./retrievers/document_compressors/chain_extract.cjs"
     },
     "./retrievers/hyde": {
       "types": "./retrievers/hyde.d.ts",
