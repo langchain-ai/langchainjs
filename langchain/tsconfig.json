@@ -107,6 +107,7 @@
       "src/retrievers/databerry.ts",
       "src/retrievers/contextual_compression.ts",
       "src/retrievers/document_compressors/index.ts",
+      "src/retrievers/time_weighted.ts",
       "src/retrievers/document_compressors/chain_extract.ts",
       "src/retrievers/hyde.ts",
       "src/cache/index.ts",

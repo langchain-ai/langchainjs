@@ -235,6 +235,9 @@ retrievers/contextual_compression.d.ts
 retrievers/document_compressors.cjs
 retrievers/document_compressors.js
 retrievers/document_compressors.d.ts
+retrievers/time_weighted.cjs
+retrievers/time_weighted.js
+retrievers/time_weighted.d.ts
 retrievers/document_compressors/chain_extract.cjs
 retrievers/document_compressors/chain_extract.js
 retrievers/document_compressors/chain_extract.d.ts

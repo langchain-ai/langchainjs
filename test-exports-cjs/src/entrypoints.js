@@ -27,6 +27,7 @@ const retrievers_remote = require("langchain/retrievers/remote");
 const retrievers_databerry = require("langchain/retrievers/databerry");
 const retrievers_contextual_compression = require("langchain/retrievers/contextual_compression");
 const retrievers_document_compressors = require("langchain/retrievers/document_compressors");
+const retrievers_time_weighted = require("langchain/retrievers/time_weighted");
 const retrievers_document_compressors_chain_extract = require("langchain/retrievers/document_compressors/chain_extract");
 const retrievers_hyde = require("langchain/retrievers/hyde");
 const cache = require("langchain/cache");

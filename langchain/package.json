@@ -247,6 +247,9 @@
     "retrievers/document_compressors.cjs",
     "retrievers/document_compressors.js",
     "retrievers/document_compressors.d.ts",
+    "retrievers/time_weighted.cjs",
+    "retrievers/time_weighted.js",
+    "retrievers/time_weighted.d.ts",
     "retrievers/document_compressors/chain_extract.cjs",
     "retrievers/document_compressors/chain_extract.js",
     "retrievers/document_compressors/chain_extract.d.ts",
@@ -925,6 +928,11 @@
       "types": "./retrievers/document_compressors.d.ts",
       "import": "./retrievers/document_compressors.js",
       "require": "./retrievers/document_compressors.cjs"
+    },
+    "./retrievers/time_weighted": {
+      "types": "./retrievers/time_weighted.d.ts",
+      "import": "./retrievers/time_weighted.js",
+      "require": "./retrievers/time_weighted.cjs"
     },
     "./retrievers/document_compressors/chain_extract": {
       "types": "./retrievers/document_compressors/chain_extract.d.ts",
