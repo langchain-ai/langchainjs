@@ -9,7 +9,6 @@ if (username && accessToken) {
     spaceKey: "~EXAMPLE362906de5d343d49dcdbae5dEXAMPLE",
     username,
     accessToken,
-    limit: 100,
   });
 
   const documents = await loader.load();
