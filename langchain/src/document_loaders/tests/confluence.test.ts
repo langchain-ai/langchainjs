@@ -1,4 +1,4 @@
-import { test } from "@jest/globals";
+import { test, jest, expect } from "@jest/globals";
 import {
   ConfluencePagesLoader,
   ConfluenceAPIResponse,
