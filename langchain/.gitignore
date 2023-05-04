@@ -109,6 +109,9 @@ vectorstores/milvus.d.ts
 vectorstores/prisma.cjs
 vectorstores/prisma.js
 vectorstores/prisma.d.ts
+vectorstores/myscale.cjs
+vectorstores/myscale.js
+vectorstores/myscale.d.ts
 text_splitter.cjs
 text_splitter.js
 text_splitter.d.ts

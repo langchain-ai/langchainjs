@@ -121,6 +121,9 @@
     "vectorstores/prisma.cjs",
     "vectorstores/prisma.js",
     "vectorstores/prisma.d.ts",
+    "vectorstores/myscale.cjs",
+    "vectorstores/myscale.js",
+    "vectorstores/myscale.d.ts",
     "text_splitter.cjs",
     "text_splitter.js",
     "text_splitter.d.ts",
@@ -305,6 +308,7 @@
   "devDependencies": {
     "@aws-sdk/client-lambda": "^3.310.0",
     "@aws-sdk/client-s3": "^3.310.0",
+    "@clickhouse/client": "^0.0.14",
     "@faker-js/faker": "^7.6.0",
     "@getmetal/metal-sdk": "^2.0.1",
     "@huggingface/inference": "^1.5.1",
@@ -363,6 +367,7 @@
   "peerDependencies": {
     "@aws-sdk/client-lambda": "^3.310.0",
     "@aws-sdk/client-s3": "^3.310.0",
+    "@clickhouse/client": "^0.0.14",
     "@getmetal/metal-sdk": "*",
     "@huggingface/inference": "^1.5.1",
     "@opensearch-project/opensearch": "*",
@@ -396,6 +401,9 @@
       "optional": true
     },
     "@aws-sdk/client-s3": {
+      "optional": true
+    },
+    "@clickhouse/client": {
       "optional": true
     },
     "@getmetal/metal-sdk": {
@@ -712,6 +720,11 @@
       "types": "./vectorstores/prisma.d.ts",
       "import": "./vectorstores/prisma.js",
       "require": "./vectorstores/prisma.cjs"
+    },
+    "./vectorstores/myscale": {
+      "types": "./vectorstores/myscale.d.ts",
+      "import": "./vectorstores/myscale.js",
+      "require": "./vectorstores/myscale.cjs"
     },
     "./text_splitter": {
       "types": "./text_splitter.d.ts",
