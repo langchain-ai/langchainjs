@@ -278,8 +278,8 @@ export interface SerpAPIParameters extends BaseParameters {
   ijn?: string;
 }
 
-
-export type SerpAPIResponseExtractor = (response: any) => Promise<string>
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type SerpAPIResponseExtractor = (response: any) => Promise<string>;
 
 type UrlParameters = Record<
   string,

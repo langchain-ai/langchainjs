@@ -5,7 +5,8 @@ export type SerperParameters = {
   hl?: string;
 };
 
-export type SerperResponseExtractor = (response: any) => Promise<string>
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type SerperResponseExtractor = (response: any) => Promise<string>;
 
 /**
  * Wrapper around serper.
