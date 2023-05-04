@@ -298,16 +298,16 @@ export class SerpAPI extends Tool {
 
   protected baseUrl: string;
 
-  protected responseExtractor?: SerpAPIResponseExtractor;
+  protected responseExtractor: SerpAPIResponseExtractor;
 
   constructor(
     apiKey: string | undefined = typeof process !== "undefined"
       ? // eslint-disable-next-line no-process-env
-      process.env?.SERPAPI_API_KEY
+        process.env?.SERPAPI_API_KEY
       : undefined,
     params: Partial<SerpAPIParameters> = {},
     baseUrl = "https://serpapi.com",
-    responseExtractor?: SerpAPIResponseExtractor,
+    responseExtractor: SerpAPIResponseExtractor = defaultResponseExtractor
   ) {
     super();
 
@@ -357,42 +357,42 @@ export class SerpAPI extends Tool {
 
     const res = await resp.json();
 
-    if (this.responseExtractor) {
-      return await this.responseExtractor(res);
-    }
-
-
-    if (res.error) {
-      throw new Error(`Got error from serpAPI: ${res.error}`);
-    }
-
-    if (res.answer_box?.answer) {
-      return res.answer_box.answer;
-    }
-
-    if (res.answer_box?.snippet) {
-      return res.answer_box.snippet;
-    }
-
-    if (res.answer_box?.snippet_highlighted_words) {
-      return res.answer_box.snippet_highlighted_words[0];
-    }
-
-    if (res.sports_results?.game_spotlight) {
-      return res.sports_results.game_spotlight;
-    }
-
-    if (res.knowledge_graph?.description) {
-      return res.knowledge_graph.description;
-    }
-
-    if (res.organic_results?.[0]?.snippet) {
-      return res.organic_results[0].snippet;
-    }
-
-    return "No good search result found";
+    return await this.responseExtractor(res);
   }
 
   description =
     "a search engine. useful for when you need to answer questions about current events. input should be a search query.";
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function defaultResponseExtractor(res: any) {
+  if (res.error) {
+    throw new Error(`Got error from serpAPI: ${res.error}`);
+  }
+
+  if (res.answer_box?.answer) {
+    return res.answer_box.answer;
+  }
+
+  if (res.answer_box?.snippet) {
+    return res.answer_box.snippet;
+  }
+
+  if (res.answer_box?.snippet_highlighted_words) {
+    return res.answer_box.snippet_highlighted_words[0];
+  }
+
+  if (res.sports_results?.game_spotlight) {
+    return res.sports_results.game_spotlight;
+  }
+
+  if (res.knowledge_graph?.description) {
+    return res.knowledge_graph.description;
+  }
+
+  if (res.organic_results?.[0]?.snippet) {
+    return res.organic_results[0].snippet;
+  }
+
+  return "No good search result found";
 }
