@@ -27,6 +27,8 @@ export * from "langchain/retrievers/remote";
 export * from "langchain/retrievers/databerry";
 export * from "langchain/retrievers/contextual_compression";
 export * from "langchain/retrievers/document_compressors";
+export * from "langchain/retrievers/time_weighted";
+export * from "langchain/retrievers/document_compressors/chain_extract";
 export * from "langchain/retrievers/hyde";
 export * from "langchain/cache";
 export * from "langchain/stores/file/in_memory";

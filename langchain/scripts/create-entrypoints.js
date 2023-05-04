@@ -106,6 +106,9 @@ const entrypoints = {
   "retrievers/databerry": "retrievers/databerry",
   "retrievers/contextual_compression": "retrievers/contextual_compression",
   "retrievers/document_compressors": "retrievers/document_compressors/index",
+  "retrievers/time_weighted": "retrievers/time_weighted",
+  "retrievers/document_compressors/chain_extract":
+    "retrievers/document_compressors/chain_extract",
   "retrievers/hyde": "retrievers/hyde",
   // cache
   cache: "cache/index",
