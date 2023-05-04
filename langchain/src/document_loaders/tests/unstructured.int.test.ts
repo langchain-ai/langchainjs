@@ -17,10 +17,7 @@ test("Test Unstructured base loader", async () => {
     apiKey: "MY_API_KEY",
   };
 
-  const loader = new UnstructuredLoader(
-    filePath,
-    options
-  );
+  const loader = new UnstructuredLoader(filePath, options);
   const docs = await loader.load();
 
   expect(docs.length).toBe(3);
