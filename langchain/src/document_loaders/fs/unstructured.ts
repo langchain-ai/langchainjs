@@ -5,6 +5,22 @@ import { getEnv } from "../../util/env.js";
 import { Document } from "../../document.js";
 import { BaseDocumentLoader } from "../base.js";
 
+const UNSTRUCTURED_API_FILETYPES = [
+  ".txt",
+  ".text",
+  ".pdf",
+  ".docx",
+  ".doc",
+  ".jpg",
+  ".jpeg",
+  ".eml",
+  ".html",
+  ".md",
+  ".pptx",
+  ".ppt",
+  ".msg",
+];
+
 interface Element {
   type: string;
   text: string;
@@ -16,6 +32,10 @@ interface Element {
 
 interface UnstructuredOptions {
   apiKey?: string;
+}
+
+interface LoadersMapping {
+  [key: string]: (p: string) => UnstructuredLoader;
 }
 
 export class UnstructuredLoader extends BaseDocumentLoader {
@@ -121,23 +141,15 @@ export class UnstructuredDirectoryLoader extends DirectoryLoader {
     public recursive: boolean = true,
     public unknown: UnknownHandling = UnknownHandling.Warn
   ) {
-    const loaders = {
-      ".txt": (p: string) => new UnstructuredLoader(webPath, p, options),
-      ".text": (p: string) => new UnstructuredLoader(webPath, p, options),
-      ".pdf": (p: string) => new UnstructuredLoader(webPath, p, options),
-      ".docx": (p: string) => new UnstructuredLoader(webPath, p, options),
-      ".doc": (p: string) => new UnstructuredLoader(webPath, p, options),
-      ".jpg": (p: string) => new UnstructuredLoader(webPath, p, options),
-      ".jpeg": (p: string) => new UnstructuredLoader(webPath, p, options),
-      ".eml": (p: string) => new UnstructuredLoader(webPath, p, options),
-      ".html": (p: string) => new UnstructuredLoader(webPath, p, options),
-      ".md": (p: string) => new UnstructuredLoader(webPath, p, options),
-      ".pptx": (p: string) => new UnstructuredLoader(webPath, p, options),
-      ".ppt": (p: string) => new UnstructuredLoader(webPath, p, options),
-      ".msg": (p: string) => new UnstructuredLoader(webPath, p, options),
-    };
+    const loaders = UNSTRUCTURED_API_FILETYPES.reduce(
+      (loadersObject: LoadersMapping, filetype: string) => {
+        const _loadersObject: LoadersMapping = { ...loadersObject };
+        _loadersObject[filetype] = (p: string) =>
+          new UnstructuredLoader(webPath, p, options);
+        return _loadersObject;
+      },
+      {}
+    );
     super(directoryPath, loaders, recursive, unknown);
   }
 }
-
-export { UnknownHandling };
