@@ -134,7 +134,7 @@ test("StructuredOutputParser deals special chars in prompt with chat model 2", a
   console.log("response", result);
   const parsed = await parser.parse(result.questions);
 
-  expect(parsed.questions).toHaveProperty("question1");
-  expect(parsed.questions).toHaveProperty("question2");
-  expect(parsed.questions).toHaveProperty("question3");
+  expect(parsed).toHaveProperty("question1");
+  expect(parsed).toHaveProperty("question2");
+  expect(parsed).toHaveProperty("question3");
 });
