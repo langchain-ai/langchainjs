@@ -5,9 +5,9 @@ hide_table_of_contents: true
 
 # Folders with multiple files
 
-This example goes over how to load data from folders with multiple files. The second argument is a map of file extensions to loader factories. Each file will be passed to the matching loader, and the resulting documents will be concatenated together.
+이 예제에서는 여러 file들을 가지고 있는 folder에서 data를 로드하는 방법에 대해 설명합니다. 두 번째 인자는 loader factories로 넘길 파일 확장자에 대한 map입니다. 각 file은 매칭되는 loader로 전달되고 결과로 나온 document들은 하나로 연결됩니다.
 
-Example folder:
+폴더 예시:
 
 ```text
 src/document_loaders/example_data/example/
@@ -17,7 +17,7 @@ src/document_loaders/example_data/example/
 └── example.csv
 ```
 
-Example code:
+코드 예시:
 
 ```typescript
 import { DirectoryLoader } from "langchain/document_loaders/fs/directory";
