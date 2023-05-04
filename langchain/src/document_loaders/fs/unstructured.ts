@@ -21,6 +21,8 @@ const UNSTRUCTURED_API_FILETYPES = [
   ".msg",
 ];
 
+const UNSTRUCTURED_API_URL = "https://api.unstructured.io/general/v0/general";
+
 interface Element {
   type: string;
   text: string;
@@ -32,6 +34,7 @@ interface Element {
 
 interface UnstructuredOptions {
   apiKey?: string;
+  webPath?: string;
 }
 
 interface LoadersMapping {
@@ -41,13 +44,11 @@ interface LoadersMapping {
 export class UnstructuredLoader extends BaseDocumentLoader {
   constructor(
     public filePath: string,
-    public webPath: string = "https://api.unstructured.io/general/v0/general",
     public options: UnstructuredOptions = {}
   ) {
     super();
 
     this.filePath = filePath;
-    this.webPath = webPath;
     this.options = options;
   }
 
@@ -68,12 +69,17 @@ export class UnstructuredLoader extends BaseDocumentLoader {
       apiKey = this.options.apiKey;
     }
 
+    let webPath = UNSTRUCTURED_API_URL;
+    if ("webPath" in this.options && typeof this.options.webPath === "string") {
+      webPath = this.options.webPath;
+    }
+
     const headers = {
       "Content-Type": "application/json",
       "UNSTRUCTURED-API-KEY": apiKey,
     };
 
-    const response = await fetch(this.webPath, {
+    const response = await fetch(webPath, {
       method: "POST",
       body: formData,
       headers,
@@ -136,7 +142,6 @@ export class UnstructuredLoader extends BaseDocumentLoader {
 export class UnstructuredDirectoryLoader extends DirectoryLoader {
   constructor(
     public directoryPath: string,
-    public webPath: string = "https://api.unstructured.io/general/v0/general",
     public options: UnstructuredOptions = {},
     public recursive: boolean = true,
     public unknown: UnknownHandling = UnknownHandling.Warn
@@ -145,7 +150,7 @@ export class UnstructuredDirectoryLoader extends DirectoryLoader {
       (loadersObject: LoadersMapping, filetype: string) => {
         const _loadersObject: LoadersMapping = { ...loadersObject };
         _loadersObject[filetype] = (p: string) =>
-          new UnstructuredLoader(webPath, p, options);
+          new UnstructuredLoader(p, options);
         return _loadersObject;
       },
       {}
@@ -153,3 +158,5 @@ export class UnstructuredDirectoryLoader extends DirectoryLoader {
     super(directoryPath, loaders, recursive, unknown);
   }
 }
+
+export { UnknownHandling };
