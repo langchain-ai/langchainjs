@@ -5,13 +5,13 @@ sidebar_position: 1
 
 import DocCardList from "@theme/DocCardList";
 
-# Getting Started: Document Loaders
+# 시작하기: Document Loaders
 
 :::info
 [Conceptual Guide](https://docs.langchain.com/docs/components/indexing/document-loaders)
 :::
 
-Document loaders make it easy to create [Documents](../../schema/document.md) from a variety of sources. These documents can then be loaded onto [Vector Stores](../vector_stores/) to load documents from a source.
+Document loaders를 사용하면 다양한 자료로부터 [Documents](../../schema/document.md)를 쉽게 생성할 수 있습니다. 그런 다음 [Vector Stores](../vector_stores/)에 해당 document를 로드하여 자료로부터 document를 불러올 수 있습니다.
 
 ```typescript
 interface DocumentLoader {
@@ -21,19 +21,19 @@ interface DocumentLoader {
 }
 ```
 
-Document Loaders expose two methods, `load` and `loadAndSplit`. `load` will load the documents from the source and return them as an array of [Documents](../../schema/document.md). `loadAndSplit` will load the documents from the source, split them using the provided [TextSplitter](../text_splitters/index.mdx), and return them as an array of [Documents](../../schema/document.md).
+Document Loaders는 `load`와 `loadAndSplit` 두 메소드를 제공합니다. `load`는 자료로부터 document를 로드하고 [Documents](../../schema/document.md)의 배열의 형태로 반환합니다. `loadAndSplit`은 자료로부터 document를 로드하고 제공된 [TextSplitter](../text_splitters/index.mdx)를 이용해 document를 분할하여 [Documents](../../schema/document.md)의 배열 형태로 반환합니다.
 
-## All Document Loaders
+## 모든 Document Loaders
 
 <DocCardList />
 
-## Advanced
+## 심화
 
-If you want to implement your own Document Loader, you have a few options.
+자체 Document Loader를 구현하려는 경우 몇가지 옵션이 있습니다.
 
-### Subclassing `BaseDocumentLoader`
+### `BaseDocumentLoader` 서브 클래스화
 
-You can extend the `BaseDocumentLoader` class directly. The `BaseDocumentLoader` class provides a few convenience methods for loading documents from a variety of sources.
+`BaseDocumentLoader`를 직접 상속할 수 있습니다. `BaseDocumentLoader` 클래스는 다양한 자료로부터 문서를 로드하기 위해 몇 가지 편리한 메소드를 제공합니다.
 
 ```typescript
 abstract class BaseDocumentLoader implements DocumentLoader {
@@ -41,9 +41,9 @@ abstract class BaseDocumentLoader implements DocumentLoader {
 }
 ```
 
-### Subclassing `TextLoader`
+### `TextLoader` 서브 클래스화
 
-If you want to load documents from a text file, you can extend the `TextLoader` class. The `TextLoader` class takes care of reading the file, so all you have to do is implement a parse method.
+텍스트 파일에서 document를 로드하고 싶다면, `TextLoader` 클래스를 상속할 수 있습니다. `TextLoader` 클래스는 파일 읽기를 처리하므로, parse 메소드만 구현하면 됩니다.
 
 ```typescript
 abstract class TextLoader extends BaseDocumentLoader {
@@ -51,9 +51,9 @@ abstract class TextLoader extends BaseDocumentLoader {
 }
 ```
 
-### Subclassing `BufferLoader`
+### `BufferLoader` 서브 클래스화
 
-If you want to load documents from a binary file, you can extend the `BufferLoader` class. The `BufferLoader` class takes care of reading the file, so all you have to do is implement a parse method.
+바이너리 파일에서 document를 로드하고 싶다면, `BufferLoader` 클래스를 상속할 수 있습니다. `BufferLoader` 클래스는 파일 읽기를 처리하므로, parse 메소드만 구현하면 됩니다.
 
 ```typescript
 abstract class BufferLoader extends BaseDocumentLoader {
