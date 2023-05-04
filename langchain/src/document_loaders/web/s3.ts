@@ -93,7 +93,7 @@ export class S3Loader extends BaseDocumentLoader {
     }
 
     try {
-      const options = { webPath: this.unstructuredAPIURL };
+      const options = { apiUrl: this.unstructuredAPIURL };
       const unstructuredLoader = new this._UnstructuredLoader(
         filePath,
         options

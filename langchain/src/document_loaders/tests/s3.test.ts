@@ -48,7 +48,7 @@ test("Test S3 loader", async () => {
 
   const result = await loader.load();
   const unstructuredOptions = {
-    webPath: "http://localhost:8000/general/v0/general",
+    apiUrl: "http://localhost:8000/general/v0/general",
   };
 
   expect(fsMock.mkdtempSync).toHaveBeenCalled();

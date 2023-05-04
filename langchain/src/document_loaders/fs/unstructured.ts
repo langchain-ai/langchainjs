@@ -1,5 +1,5 @@
 import type { basename as BasenameT } from "node:path";
-import type { readFile as ReaFileT } from "node:fs/promises";
+import type { readFile as ReadFileT } from "node:fs/promises";
 import { DirectoryLoader, UnknownHandling } from "./directory.js";
 import { getEnv } from "../../util/env.js";
 import { Document } from "../../document.js";
@@ -21,8 +21,6 @@ const UNSTRUCTURED_API_FILETYPES = [
   ".msg",
 ];
 
-const UNSTRUCTURED_API_URL = "https://api.unstructured.io/general/v0/general";
-
 interface Element {
   type: string;
   text: string;
@@ -34,7 +32,7 @@ interface Element {
 
 interface UnstructuredOptions {
   apiKey?: string;
-  webPath?: string;
+  apiUrl?: string;
 }
 
 interface LoadersMapping {
@@ -42,14 +40,29 @@ interface LoadersMapping {
 }
 
 export class UnstructuredLoader extends BaseDocumentLoader {
+  public filePath: string;
+
+  private apiUrl = "https://api.unstructured.io/general/v0/general";
+
+  private apiKey?: string;
+
   constructor(
-    public filePath: string,
-    public options: UnstructuredOptions = {}
+    filePathOrLegacyApiUrl: string,
+    optionsOrLegacyFilePath: UnstructuredOptions | string = {}
   ) {
     super();
 
-    this.filePath = filePath;
-    this.options = options;
+    // Temporary shim to avoid breaking existing users
+    // Remove when API keys are enforced by Unstructured and existing code will break anyway
+    const isLegacySyntax = typeof optionsOrLegacyFilePath === "string";
+    if (isLegacySyntax) {
+      this.filePath = optionsOrLegacyFilePath;
+      this.apiUrl = filePathOrLegacyApiUrl;
+    } else {
+      this.filePath = filePathOrLegacyApiUrl;
+      this.apiKey = optionsOrLegacyFilePath.apiKey;
+      this.apiUrl = optionsOrLegacyFilePath.apiUrl ?? this.apiUrl;
+    }
   }
 
   async _partition() {
@@ -64,22 +77,12 @@ export class UnstructuredLoader extends BaseDocumentLoader {
     const formData = new FormData();
     formData.append("files", new Blob([buffer]), fileName);
 
-    let apiKey = "";
-    if ("apiKey" in this.options && typeof this.options.apiKey === "string") {
-      apiKey = this.options.apiKey;
-    }
-
-    let webPath = UNSTRUCTURED_API_URL;
-    if ("webPath" in this.options && typeof this.options.webPath === "string") {
-      webPath = this.options.webPath;
-    }
-
     const headers = {
       "Content-Type": "application/json",
-      "UNSTRUCTURED-API-KEY": apiKey,
+      "UNSTRUCTURED-API-KEY": this.apiKey ?? "",
     };
 
-    const response = await fetch(webPath, {
+    const response = await fetch(this.apiUrl, {
       method: "POST",
       body: formData,
       headers,
@@ -123,7 +126,7 @@ export class UnstructuredLoader extends BaseDocumentLoader {
   }
 
   async imports(): Promise<{
-    readFile: typeof ReaFileT;
+    readFile: typeof ReadFileT;
     basename: typeof BasenameT;
   }> {
     try {
@@ -141,11 +144,25 @@ export class UnstructuredLoader extends BaseDocumentLoader {
 
 export class UnstructuredDirectoryLoader extends DirectoryLoader {
   constructor(
-    public directoryPath: string,
-    public options: UnstructuredOptions = {},
+    directoryPathOrLegacyApiUrl: string,
+    optionsOrLegacyDirectoryPath: UnstructuredOptions | string,
     public recursive: boolean = true,
     public unknown: UnknownHandling = UnknownHandling.Warn
   ) {
+    let directoryPath;
+    let options: UnstructuredOptions;
+    // Temporary shim to avoid breaking existing users
+    // Remove when API keys are enforced by Unstructured and existing code will break anyway
+    const isLegacySyntax = typeof optionsOrLegacyDirectoryPath === "string";
+    if (isLegacySyntax) {
+      directoryPath = optionsOrLegacyDirectoryPath;
+      options = {
+        apiUrl: directoryPathOrLegacyApiUrl,
+      };
+    } else {
+      directoryPath = directoryPathOrLegacyApiUrl;
+      options = optionsOrLegacyDirectoryPath;
+    }
     const loaders = UNSTRUCTURED_API_FILETYPES.reduce(
       (loadersObject: LoadersMapping, filetype: string) => {
         const _loadersObject: LoadersMapping = { ...loadersObject };
