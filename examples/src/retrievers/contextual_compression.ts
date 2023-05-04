@@ -1,4 +1,4 @@
-import fs from "fs";
+import * as fs from 'fs';
 
 import { OpenAI } from "langchain/llms/openai";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
