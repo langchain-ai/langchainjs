@@ -48,6 +48,14 @@ export {
 } from "./conversational_retrieval_chain.js";
 export { RetrievalQAChain, RetrievalQAChainInput } from "./retrieval_qa.js";
 export {
+  ConstitutionalChainInput,
+  ConstitutionalChain,
+} from "./constitutional_ai/constitutional_chain.js";
+export {
+  ConstitutionalPrinciple,
+  PRINCIPLES,
+} from "./constitutional_ai/constitutional_principle.js";
+export {
   SerializedLLMChain,
   SerializedSequentialChain,
   SerializedSimpleSequentialChain,
