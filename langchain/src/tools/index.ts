@@ -1,4 +1,4 @@
-export { SerpAPI, SerpAPIParameters } from "./serpapi.js";
+export { SerpAPI, SerpAPIParameters, SerpAPIResponseExtractor } from "./serpapi.js";
 export { DadJokeAPI } from "./dadjokeapi.js";
 export { BingSerpAPI } from "./bingserpapi.js";
 export { Tool, ToolParams, StructuredTool } from "./base.js";
@@ -25,6 +25,6 @@ export {
   ZapierNLAWrapper,
   ZapiterNLAWrapperParams,
 } from "./zapier.js";
-export { Serper, SerperParameters } from "./serper.js";
+export { Serper, SerperParameters, SerperResponseExtractor } from "./serper.js";
 export { AIPluginTool } from "./aiplugin.js";
 export { ReadFileTool, WriteFileTool } from "./fs.js";

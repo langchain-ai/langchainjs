@@ -5,6 +5,8 @@ export type SerperParameters = {
   hl?: string;
 };
 
+export type SerperResponseExtractor = (response: any) => Promise<string>
+
 /**
  * Wrapper around serper.
  *
@@ -17,12 +19,15 @@ export class Serper extends Tool {
 
   protected params: Partial<SerperParameters>;
 
+  protected responseExtractor?: SerperResponseExtractor;
+
   constructor(
     apiKey: string | undefined = typeof process !== "undefined"
       ? // eslint-disable-next-line no-process-env
-        process.env?.SERPER_API_KEY
+      process.env?.SERPER_API_KEY
       : undefined,
-    params: Partial<SerperParameters> = {}
+    params: Partial<SerperParameters> = {},
+    responseExtractor?: SerperResponseExtractor
   ) {
     super();
 
@@ -34,6 +39,7 @@ export class Serper extends Tool {
 
     this.key = apiKey;
     this.params = params;
+    this.responseExtractor = responseExtractor;
   }
 
   name = "search";
@@ -59,6 +65,10 @@ export class Serper extends Tool {
     }
 
     const json = await res.json();
+
+    if (this.responseExtractor) {
+      return await this.responseExtractor(json);
+    }
 
     if (json.answerBox?.answer) {
       return json.answerBox.answer;

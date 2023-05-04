@@ -278,6 +278,9 @@ export interface SerpAPIParameters extends BaseParameters {
   ijn?: string;
 }
 
+
+export type SerpAPIResponseExtractor = (response: any) => Promise<string>
+
 type UrlParameters = Record<
   string,
   string | number | boolean | undefined | null
@@ -295,13 +298,16 @@ export class SerpAPI extends Tool {
 
   protected baseUrl: string;
 
+  protected responseExtractor?: SerpAPIResponseExtractor;
+
   constructor(
     apiKey: string | undefined = typeof process !== "undefined"
       ? // eslint-disable-next-line no-process-env
-        process.env?.SERPAPI_API_KEY
+      process.env?.SERPAPI_API_KEY
       : undefined,
     params: Partial<SerpAPIParameters> = {},
-    baseUrl = "https://serpapi.com"
+    baseUrl = "https://serpapi.com",
+    responseExtractor?: SerpAPIResponseExtractor,
   ) {
     super();
 
@@ -314,6 +320,7 @@ export class SerpAPI extends Tool {
     this.key = apiKey;
     this.params = params;
     this.baseUrl = baseUrl;
+    this.responseExtractor = responseExtractor;
   }
 
   name = "search";
@@ -349,6 +356,11 @@ export class SerpAPI extends Tool {
     );
 
     const res = await resp.json();
+
+    if (this.responseExtractor) {
+      return await this.responseExtractor(res);
+    }
+
 
     if (res.error) {
       throw new Error(`Got error from serpAPI: ${res.error}`);
