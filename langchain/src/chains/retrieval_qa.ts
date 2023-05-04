@@ -1,5 +1,5 @@
 import { BaseChain, ChainInputs } from "./base.js";
-import { BaseLLM } from "../llms/base.js";
+import { BaseLanguageModel } from "../base_language/index.js";
 import { SerializedVectorDBQAChain } from "./serde.js";
 import { ChainValues, BaseRetriever } from "../schema/index.js";
 import { loadQAStuffChain } from "./question_answering/load.js";
@@ -86,7 +86,7 @@ export class RetrievalQAChain
   }
 
   static fromLLM(
-    llm: BaseLLM,
+    llm: BaseLanguageModel,
     retriever: BaseRetriever,
     options?: Partial<
       Omit<RetrievalQAChainInput, "combineDocumentsChain" | "index">

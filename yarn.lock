@@ -3230,6 +3230,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@clickhouse/client@npm:^0.0.14":
+  version: 0.0.14
+  resolution: "@clickhouse/client@npm:0.0.14"
+  dependencies:
+    node-abort-controller: ^3.0.1
+    uuid: ^9.0.0
+  checksum: dc4ce8091856497ffaa50a68194c7ff555357f2a6b0355cfa35cb335d0629000a10ef60c15a2cc33d1cd368730056c2bdd164c80a520f0550ab57c5bbfb7ad2c
+  languageName: node
+  linkType: hard
+
 "@cloudflare/kv-asset-handler@npm:^0.2.0":
   version: 0.2.0
   resolution: "@cloudflare/kv-asset-handler@npm:0.2.0"
@@ -13051,6 +13061,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "examples@workspace:examples"
   dependencies:
+    "@clickhouse/client": ^0.0.14
     "@getmetal/metal-sdk": ^2.0.1
     "@opensearch-project/opensearch": ^2.2.0
     "@pinecone-database/pinecone": ^0.0.14
@@ -17185,6 +17196,7 @@ __metadata:
     "@anthropic-ai/sdk": ^0.4.3
     "@aws-sdk/client-lambda": ^3.310.0
     "@aws-sdk/client-s3": ^3.310.0
+    "@clickhouse/client": ^0.0.14
     "@dqbd/tiktoken": ^1.0.7
     "@faker-js/faker": ^7.6.0
     "@getmetal/metal-sdk": ^2.0.1
@@ -17206,6 +17218,7 @@ __metadata:
     "@types/uuid": ^9
     "@typescript-eslint/eslint-plugin": ^5.51.0
     "@typescript-eslint/parser": ^5.51.0
+    ansi-styles: ^5.0.0
     axios: ^0.26.0
     binary-extensions: ^2.2.0
     browser-or-node: ^2.1.1
@@ -17257,6 +17270,7 @@ __metadata:
   peerDependencies:
     "@aws-sdk/client-lambda": ^3.310.0
     "@aws-sdk/client-s3": ^3.310.0
+    "@clickhouse/client": ^0.0.14
     "@getmetal/metal-sdk": "*"
     "@huggingface/inference": ^1.5.1
     "@opensearch-project/opensearch": "*"
@@ -17288,6 +17302,8 @@ __metadata:
     "@aws-sdk/client-lambda":
       optional: true
     "@aws-sdk/client-s3":
+      optional: true
+    "@clickhouse/client":
       optional: true
     "@getmetal/metal-sdk":
       optional: true
@@ -18699,6 +18715,13 @@ __metadata:
     lower-case: ^2.0.2
     tslib: ^2.0.3
   checksum: 0b2ebc113dfcf737d48dde49cfebf3ad2d82a8c3188e7100c6f375e30eafbef9e9124aadc3becef237b042fd5eb0aad2fd78669c20972d045bbe7fea8ba0be5c
+  languageName: node
+  linkType: hard
+
+"node-abort-controller@npm:^3.0.1":
+  version: 3.1.1
+  resolution: "node-abort-controller@npm:3.1.1"
+  checksum: 2c340916af9710328b11c0828223fc65ba320e0d082214a211311bf64c2891028e42ef276b9799188c4ada9e6e1c54cf7a0b7c05dd9d59fcdc8cd633304c8047
   languageName: node
   linkType: hard
 

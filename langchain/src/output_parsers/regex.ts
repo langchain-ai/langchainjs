@@ -39,7 +39,7 @@ export class RegexParser extends BaseOutputParser<Record<string, string>> {
     }
 
     if (this.defaultOutputKey === undefined) {
-      throw new OutputParserException(`Could not parse output: ${text}`);
+      throw new OutputParserException(`Could not parse output: ${text}`, text);
     }
 
     return this.outputKeys.reduce((acc, key) => {

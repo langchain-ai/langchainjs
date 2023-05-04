@@ -1,4 +1,4 @@
-import { ChainValues, LLMResult } from "../../schema/index.js";
+import { AgentAction, ChainValues, LLMResult } from "../../schema/index.js";
 import { BaseCallbackHandler } from "../base.js";
 
 export type RunType = "llm" | "chain" | "tool";
@@ -20,6 +20,7 @@ export interface BaseRun {
   start_time: number;
   end_time: number;
   execution_order: number;
+  child_execution_order: number;
   serialized: { name: string };
   session_id: number;
   error?: string;
@@ -39,6 +40,10 @@ export interface ChainRun extends BaseRun {
   child_tool_runs: ToolRun[];
 }
 
+export interface AgentRun extends ChainRun {
+  actions: AgentAction[];
+}
+
 export interface ToolRun extends BaseRun {
   tool_input: string;
   output?: string;
@@ -48,24 +53,26 @@ export interface ToolRun extends BaseRun {
   child_tool_runs: ToolRun[];
 }
 
+export type Run = LLMRun | ChainRun | ToolRun;
+
 export abstract class BaseTracer extends BaseCallbackHandler {
   protected session?: TracerSession;
 
-  protected runMap: Map<string, LLMRun | ChainRun | ToolRun> = new Map();
-
-  protected executionOrder = 1;
+  protected runMap: Map<string, Run> = new Map();
 
   protected constructor() {
     super();
+  }
+
+  copy(): this {
+    return this;
   }
 
   abstract loadSession(sessionName: string): Promise<TracerSession>;
 
   abstract loadDefaultSession(): Promise<TracerSession>;
 
-  protected abstract persistRun(
-    run: LLMRun | ChainRun | ToolRun
-  ): Promise<void>;
+  protected abstract persistRun(run: Run): Promise<void>;
 
   protected abstract persistSession(
     session: TracerSessionCreate
@@ -81,10 +88,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     return session;
   }
 
-  protected _addChildRun(
-    parentRun: ChainRun | ToolRun,
-    childRun: LLMRun | ChainRun | ToolRun
-  ) {
+  protected _addChildRun(parentRun: ChainRun | ToolRun, childRun: Run) {
     if (childRun.type === "llm") {
       parentRun.child_llm_runs.push(childRun as LLMRun);
     } else if (childRun.type === "chain") {
@@ -96,9 +100,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     }
   }
 
-  protected _startTrace(run: LLMRun | ChainRun | ToolRun) {
-    this.executionOrder += 1;
-
+  protected _startTrace(run: Run) {
     if (run.parent_uuid) {
       const parentRun = this.runMap.get(run.parent_uuid);
       if (parentRun) {
@@ -114,12 +116,37 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     this.runMap.set(run.uuid, run);
   }
 
-  protected async _endTrace(run: LLMRun | ChainRun | ToolRun): Promise<void> {
+  protected async _endTrace(run: Run): Promise<void> {
     if (!run.parent_uuid) {
       await this.persistRun(run);
-      this.executionOrder = 1;
+    } else {
+      const parentRun = this.runMap.get(run.parent_uuid);
+
+      if (parentRun === undefined) {
+        throw new Error(`Parent run ${run.parent_uuid} not found`);
+      }
+
+      parentRun.child_execution_order = Math.max(
+        parentRun.child_execution_order,
+        run.child_execution_order
+      );
     }
     this.runMap.delete(run.uuid);
+  }
+
+  protected _getExecutionOrder(parentRunId: string | undefined): number {
+    // If a run has no parent then execution order is 1
+    if (parentRunId === undefined) {
+      return 1;
+    }
+
+    const parentRun = this.runMap.get(parentRunId);
+
+    if (parentRun === undefined) {
+      throw new Error(`Parent run ${parentRunId} not found`);
+    }
+
+    return parentRun.child_execution_order + 1;
   }
 
   async handleLLMStart(
@@ -131,6 +158,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     if (this.session === undefined) {
       this.session = await this.loadDefaultSession();
     }
+    const execution_order = this._getExecutionOrder(parentRunId);
     const run: LLMRun = {
       uuid: runId,
       parent_uuid: parentRunId,
@@ -139,11 +167,13 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       serialized: llm,
       prompts,
       session_id: this.session.id,
-      execution_order: this.executionOrder,
+      execution_order,
+      child_execution_order: execution_order,
       type: "llm",
     };
 
     this._startTrace(run);
+    await this.onLLMStart?.(run);
   }
 
   async handleLLMEnd(output: LLMResult, runId: string): Promise<void> {
@@ -154,6 +184,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     const llmRun = run as LLMRun;
     llmRun.end_time = Date.now();
     llmRun.response = output;
+    await this.onLLMEnd?.(llmRun);
     await this._endTrace(llmRun);
   }
 
@@ -165,6 +196,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     const llmRun = run as LLMRun;
     llmRun.end_time = Date.now();
     llmRun.error = error.message;
+    await this.onLLMError?.(llmRun);
     await this._endTrace(llmRun);
   }
 
@@ -177,6 +209,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     if (this.session === undefined) {
       this.session = await this.loadDefaultSession();
     }
+    const execution_order = this._getExecutionOrder(parentRunId);
     const run: ChainRun = {
       uuid: runId,
       parent_uuid: parentRunId,
@@ -185,7 +218,8 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       serialized: chain,
       inputs,
       session_id: this.session.id,
-      execution_order: this.executionOrder,
+      execution_order,
+      child_execution_order: execution_order,
       type: "chain",
       child_llm_runs: [],
       child_chain_runs: [],
@@ -193,6 +227,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     };
 
     this._startTrace(run);
+    await this.onChainStart?.(run);
   }
 
   async handleChainEnd(outputs: ChainValues, runId: string): Promise<void> {
@@ -203,6 +238,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     const chainRun = run as ChainRun;
     chainRun.end_time = Date.now();
     chainRun.outputs = outputs;
+    await this.onChainEnd?.(chainRun);
     await this._endTrace(chainRun);
   }
 
@@ -214,6 +250,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     const chainRun = run as ChainRun;
     chainRun.end_time = Date.now();
     chainRun.error = error.message;
+    await this.onChainError?.(chainRun);
     await this._endTrace(chainRun);
   }
 
@@ -226,6 +263,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     if (this.session === undefined) {
       this.session = await this.loadDefaultSession();
     }
+    const execution_order = this._getExecutionOrder(parentRunId);
     const run: ToolRun = {
       uuid: runId,
       parent_uuid: parentRunId,
@@ -234,7 +272,8 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       serialized: tool,
       tool_input: input,
       session_id: this.session.id,
-      execution_order: this.executionOrder,
+      execution_order,
+      child_execution_order: execution_order,
       type: "tool",
       action: JSON.stringify(tool), // TODO: this is duplicate info, not needed
       child_llm_runs: [],
@@ -243,6 +282,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     };
 
     this._startTrace(run);
+    await this.onToolStart?.(run);
   }
 
   async handleToolEnd(output: string, runId: string): Promise<void> {
@@ -253,6 +293,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     const toolRun = run as ToolRun;
     toolRun.end_time = Date.now();
     toolRun.output = output;
+    await this.onToolEnd?.(toolRun);
     await this._endTrace(toolRun);
   }
 
@@ -264,8 +305,48 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     const toolRun = run as ToolRun;
     toolRun.end_time = Date.now();
     toolRun.error = error.message;
+    await this.onToolError?.(toolRun);
     await this._endTrace(toolRun);
   }
+
+  async handleAgentAction(action: AgentAction, runId: string): Promise<void> {
+    const run = this.runMap.get(runId);
+    if (!run || run?.type !== "chain") {
+      return;
+    }
+    const agentRun = run as AgentRun;
+    agentRun.actions = agentRun.actions || [];
+    agentRun.actions.push(action);
+    await this.onAgentAction?.(run as AgentRun);
+  }
+
+  // custom event handlers
+
+  onLLMStart?(run: LLMRun): void | Promise<void>;
+
+  onLLMEnd?(run: LLMRun): void | Promise<void>;
+
+  onLLMError?(run: LLMRun): void | Promise<void>;
+
+  onChainStart?(run: ChainRun): void | Promise<void>;
+
+  onChainEnd?(run: ChainRun): void | Promise<void>;
+
+  onChainError?(run: ChainRun): void | Promise<void>;
+
+  onToolStart?(run: ToolRun): void | Promise<void>;
+
+  onToolEnd?(run: ToolRun): void | Promise<void>;
+
+  onToolError?(run: ToolRun): void | Promise<void>;
+
+  onAgentAction?(run: AgentRun): void | Promise<void>;
+
+  // TODO Implement handleAgentEnd, handleText
+
+  // onAgentEnd?(run: ChainRun): void | Promise<void>;
+
+  // onText?(run: Run): void | Promise<void>;
 }
 
 export class LangChainTracer extends BaseTracer {
@@ -375,18 +456,5 @@ export class LangChainTracer extends BaseTracer {
     [tracerSession] = resp;
     this.session = tracerSession;
     return tracerSession;
-  }
-
-  copy(): LangChainTracer {
-    // TODO: this is a hack to get tracing to work with the current backend
-    // we need to not use execution order, then remove this check
-    if (this.executionOrder === 1) {
-      const copy = new LangChainTracer();
-      copy.session = this.session;
-      copy.runMap = new Map(this.runMap);
-      copy.executionOrder = this.executionOrder;
-      return copy;
-    }
-    return this;
   }
 }

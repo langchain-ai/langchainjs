@@ -96,10 +96,16 @@ export class StuffDocumentsChain
 }
 
 export interface MapReduceDocumentsChainInput extends StuffDocumentsChainInput {
+  /** The maximum number of tokens before requiring to do the reduction */
   maxTokens?: number;
+  /** The maximum number of iterations to run through the map */
   maxIterations?: number;
+  /** Ensures that the map step is taken regardless of max tokens */
   ensureMapStep?: boolean;
+  /** Chain to use to combine results of applying llm_chain to documents. */
   combineDocumentChain: BaseChain;
+  /** Return the results of the map steps in the output. */
+  returnIntermediateSteps?: boolean;
 }
 
 /**
@@ -116,6 +122,8 @@ export class MapReduceDocumentsChain
   inputKey = "input_documents";
 
   documentVariableName = "context";
+
+  returnIntermediateSteps = false;
 
   get inputKeys() {
     return [this.inputKey, ...this.combineDocumentChain.inputKeys];
@@ -143,6 +151,7 @@ export class MapReduceDocumentsChain
     this.inputKey = fields.inputKey ?? this.inputKey;
     this.maxTokens = fields.maxTokens ?? this.maxTokens;
     this.maxIterations = fields.maxIterations ?? this.maxIterations;
+    this.returnIntermediateSteps = fields.returnIntermediateSteps ?? false;
   }
 
   /** @ignore */
@@ -156,12 +165,16 @@ export class MapReduceDocumentsChain
     const { [this.inputKey]: docs, ...rest } = values;
 
     let currentDocs = docs as Document[];
+    let intermediateSteps: string[] = [];
 
+    // For each iteration, we'll use the `llmChain` to get a new result
     for (let i = 0; i < this.maxIterations; i += 1) {
       const inputs = currentDocs.map((d) => ({
         [this.documentVariableName]: d.pageContent,
         ...rest,
       }));
+
+      // Calculate the total tokens required in the input
       const promises = inputs.map(async (i) => {
         const prompt = await this.llmChain.prompt.format(i);
         return this.llmChain.llm.getNumTokens(prompt);
@@ -173,6 +186,8 @@ export class MapReduceDocumentsChain
 
       const canSkipMapStep = i !== 0 || !this.ensureMapStep;
       const withinTokenLimit = length < this.maxTokens;
+      // If we can skip the map step, and we're within the token limit, we don't
+      // need to run the map step, so just break out of the loop.
       if (canSkipMapStep && withinTokenLimit) {
         break;
       }
@@ -183,15 +198,30 @@ export class MapReduceDocumentsChain
       );
       const { outputKey } = this.llmChain;
 
+      // If the flag is set, then concat that to the intermediate steps
+      if (this.returnIntermediateSteps) {
+        intermediateSteps = intermediateSteps.concat(
+          results.map((r: ChainValues) => r[outputKey])
+        );
+      }
+
       currentDocs = results.map((r: ChainValues) => ({
         pageContent: r[outputKey],
       }));
     }
+
+    // Now, with the final result of all the inputs from the `llmChain`, we can
+    // run the `combineDocumentChain` over them.
     const newInputs = { input_documents: currentDocs, ...rest };
     const result = await this.combineDocumentChain.call(
       newInputs,
       runManager?.getChild()
     );
+
+    // Return the intermediate steps results if the flag is set
+    if (this.returnIntermediateSteps) {
+      return { ...result, intermediateSteps };
+    }
     return result;
   }
 
