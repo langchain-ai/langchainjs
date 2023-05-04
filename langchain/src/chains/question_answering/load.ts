@@ -19,7 +19,7 @@ import {
   REFINE_PROMPT_SELECTOR,
 } from "./refine_prompts.js";
 
-type qaChainParams =
+export type QAChainParams =
   | ({
       type?: "stuff";
     } & StuffQAChainParams)
@@ -32,7 +32,7 @@ type qaChainParams =
 
 export const loadQAChain = (
   llm: BaseLanguageModel,
-  params: qaChainParams = { type: "stuff" }
+  params: QAChainParams = { type: "stuff" }
 ) => {
   const { type, verbose } = params;
   if (type === "stuff") {
@@ -84,7 +84,7 @@ export const loadQAChain = (
   throw new Error(`Invalid _type: ${type}`);
 };
 
-interface StuffQAChainParams {
+export interface StuffQAChainParams {
   prompt?: BasePromptTemplate;
   verbose?: boolean;
 }
@@ -99,11 +99,12 @@ export const loadQAStuffChain = (
   return chain;
 };
 
-type MapReduceQAChainParams = {
+export interface MapReduceQAChainParams {
+  returnIntermediateSteps?: MapReduceDocumentsChainInput["returnIntermediateSteps"];
   combineMapPrompt?: BasePromptTemplate;
   combinePrompt?: BasePromptTemplate;
   verbose?: boolean;
-} & Pick<MapReduceDocumentsChainInput, "returnIntermediateSteps">;
+}
 
 export const loadQAMapReduceChain = (
   llm: BaseLanguageModel,
@@ -129,7 +130,7 @@ export const loadQAMapReduceChain = (
   return chain;
 };
 
-interface RefineQAChainParams {
+export interface RefineQAChainParams {
   questionPrompt?: BasePromptTemplate;
   refinePrompt?: BasePromptTemplate;
   verbose?: boolean;
