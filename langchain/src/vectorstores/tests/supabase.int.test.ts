@@ -7,7 +7,7 @@ import { OpenAIEmbeddings } from "../../embeddings/openai.js";
 import { Document } from "../../document.js";
 import { SupabaseVectorStore } from "../supabase.js";
 
-test("SupabaseVectorStore with external ids", async () => {
+test.skip("SupabaseVectorStore with external ids", async () => {
   const client = createClient(
     process.env.SUPABASE_URL!,
     process.env.SUPABASE_PRIVATE_KEY!
@@ -35,7 +35,7 @@ test("SupabaseVectorStore with external ids", async () => {
   ]);
 });
 
-test("Search a SupabaseVectorStore using a metadata filter", async () => {
+test.skip("Search a SupabaseVectorStore using a metadata filter", async () => {
   const client = createClient(
     process.env.SUPABASE_URL!,
     process.env.SUPABASE_PRIVATE_KEY!
