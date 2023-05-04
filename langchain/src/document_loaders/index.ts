@@ -21,7 +21,3 @@ export { CSVLoader } from "./fs/csv.js";
 export { NotionLoader } from "./fs/notion.js";
 export { GithubRepoLoader, GithubRepoLoaderParams } from "./web/github.js";
 export { UnstructuredLoader } from "./fs/unstructured.js";
-export {
-  ConfluencePagesLoader,
-  ConfluencePagesLoaderParams,
-} from "./web/confluence.js";
