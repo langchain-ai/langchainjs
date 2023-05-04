@@ -17,11 +17,7 @@ test("Test Unstructured base loader", async () => {
     apiKey: "MY_API_KEY",
   };
 
-  const loader = new UnstructuredLoader(
-    filePath,
-    "https://api.unstructured.io/general/v0/general",
-    options
-  );
+  const loader = new UnstructuredLoader(filePath, options);
   const docs = await loader.load();
 
   expect(docs.length).toBe(3);
@@ -42,7 +38,6 @@ test("Test Unstructured directory loader", async () => {
 
   const loader = new UnstructuredDirectoryLoader(
     directoryPath,
-    "https://api.unstructured.io/general/v0/general",
     options,
     true,
     UnknownHandling.Ignore
