@@ -33,6 +33,8 @@ export interface MyScaleFilter {
 }
 
 export class MyScaleStore extends VectorStore {
+  declare FilterType: MyScaleFilter;
+
   private client: ClickHouseClient;
 
   private indexType: string;
@@ -78,8 +80,7 @@ export class MyScaleStore extends VectorStore {
     }
 
     if (!this.isInitialized) {
-      await this.initialize();
-      this.isInitialized = true;
+      await this.initialize(vectors[0].length);
     }
 
     const queryStr = this.buildInsertQuery(vectors, documents);
@@ -96,8 +97,11 @@ export class MyScaleStore extends VectorStore {
   async similaritySearchVectorWithScore(
     query: number[],
     k: number,
-    filter?: MyScaleFilter
+    filter?: this["FilterType"]
   ): Promise<[Document, number][]> {
+    if (!this.isInitialized) {
+      await this.initialize(query.length);
+    }
     const queryStr = this.buildSearchQuery(query, k, filter);
 
     const queryResultSet = await this.client.query({ query: queryStr });
@@ -111,22 +115,6 @@ export class MyScaleStore extends VectorStore {
     ]);
 
     return result;
-  }
-
-  async similaritySearch(
-    query: string,
-    k: number,
-    filter?: MyScaleFilter
-  ): Promise<Document[]> {
-    return super.similaritySearch(query, k, filter);
-  }
-
-  async similaritySearchWithScore(
-    query: string,
-    k: number,
-    filter?: MyScaleFilter
-  ): Promise<[Document, number][]> {
-    return super.similaritySearchWithScore(query, k, filter);
   }
 
   static async fromTexts(
@@ -167,8 +155,8 @@ export class MyScaleStore extends VectorStore {
     return instance;
   }
 
-  private async initialize(): Promise<void> {
-    const dim = (await this.embeddings.embedQuery("try this out")).length;
+  private async initialize(dimension?: number): Promise<void> {
+    const dim = dimension ?? (await this.embeddings.embedQuery("test")).length;
 
     let indexParamStr = "";
     for (const [key, value] of Object.entries(this.indexParam)) {
@@ -191,6 +179,7 @@ export class MyScaleStore extends VectorStore {
       query: "SET output_format_json_named_tuples_as_objects = 1",
     });
     await this.client.exec({ query });
+    this.isInitialized = true;
   }
 
   private buildInsertQuery(vectors: number[][], documents: Document[]): string {
