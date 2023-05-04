@@ -14,7 +14,7 @@ test("StructuredOutputParser.fromNamesAndDescriptions", async () => {
   });
 
   expect(parser.getFormatInstructions()).toMatchInlineSnapshot(`
-"You must format your response as a JSON value that adheres to a given "JSON Schema" instance.
+"You must format your output as a JSON value that adheres to a given "JSON Schema" instance.
 
 "JSON Schema" is a declarative language that allows you to annotate and validate JSON documents.
 
@@ -24,7 +24,7 @@ Thus, the object {{"foo": ["bar", "baz"]}} is a well-formatted instance of this 
 
 Your output will be parsed and type-checked according to the provided schema instance, so make sure all fields in your output match exactly!
 
-Here is the JSON Schema instance your response must adhere to:
+Here is the JSON Schema instance your output must adhere to:
 \`\`\`json
 {"type":"object","properties":{"url":{"type":"string","description":"A link to the resource"}},"required":["url"],"additionalProperties":false,"$schema":"http://json-schema.org/draft-07/schema#"}
 \`\`\`
@@ -48,7 +48,7 @@ test("StructuredOutputParser.fromZodSchema", async () => {
   });
 
   expect(parser.getFormatInstructions()).toMatchInlineSnapshot(`
-"You must format your response as a JSON value that adheres to a given "JSON Schema" instance.
+"You must format your output as a JSON value that adheres to a given "JSON Schema" instance.
 
 "JSON Schema" is a declarative language that allows you to annotate and validate JSON documents.
 
@@ -58,7 +58,7 @@ Thus, the object {{"foo": ["bar", "baz"]}} is a well-formatted instance of this 
 
 Your output will be parsed and type-checked according to the provided schema instance, so make sure all fields in your output match exactly!
 
-Here is the JSON Schema instance your response must adhere to:
+Here is the JSON Schema instance your output must adhere to:
 \`\`\`json
 {"type":"object","properties":{"url":{"type":"string","description":"A link to the resource"}},"required":["url"],"additionalProperties":false,"$schema":"http://json-schema.org/draft-07/schema#"}
 \`\`\`
@@ -104,7 +104,7 @@ test("StructuredOutputParser.fromZodSchema", async () => {
   });
 
   expect(parser.getFormatInstructions()).toMatchInlineSnapshot(`
-"You must format your response as a JSON value that adheres to a given "JSON Schema" instance.
+"You must format your output as a JSON value that adheres to a given "JSON Schema" instance.
 
 "JSON Schema" is a declarative language that allows you to annotate and validate JSON documents.
 
@@ -114,7 +114,7 @@ Thus, the object {{"foo": ["bar", "baz"]}} is a well-formatted instance of this 
 
 Your output will be parsed and type-checked according to the provided schema instance, so make sure all fields in your output match exactly!
 
-Here is the JSON Schema instance your response must adhere to:
+Here is the JSON Schema instance your output must adhere to:
 \`\`\`json
 {"type":"object","properties":{"answer":{"type":"string","description":"answer to the user's question"},"sources":{"type":"array","items":{"type":"string"},"description":"sources used to answer the question, should be websites."}},"required":["answer","sources"],"additionalProperties":false,"$schema":"http://json-schema.org/draft-07/schema#"}
 \`\`\`
@@ -170,7 +170,7 @@ test("StructuredOutputParser.fromZodSchema", async () => {
   });
 
   expect(parser.getFormatInstructions()).toMatchInlineSnapshot(`
-"You must format your response as a JSON value that adheres to a given "JSON Schema" instance.
+"You must format your output as a JSON value that adheres to a given "JSON Schema" instance.
 
 "JSON Schema" is a declarative language that allows you to annotate and validate JSON documents.
 
@@ -180,7 +180,7 @@ Thus, the object {{"foo": ["bar", "baz"]}} is a well-formatted instance of this 
 
 Your output will be parsed and type-checked according to the provided schema instance, so make sure all fields in your output match exactly!
 
-Here is the JSON Schema instance your response must adhere to:
+Here is the JSON Schema instance your output must adhere to:
 \`\`\`json
 {"type":"object","properties":{"url":{"type":"string","description":"A link to the resource"},"title":{"type":"string","description":"A title for the resource"},"year":{"type":"number","description":"The year the resource was created"},"createdAt":{"type":"string","format":"date-time","description":"The date and time the resource was created"},"createdAtDate":{"type":"string","format":"date-time","description":"The date the resource was created"},"authors":{"type":"array","items":{"type":"object","properties":{"name":{"type":"string","description":"The name of the author"},"email":{"type":"string","description":"The email of the author"},"type":{"type":"string","enum":["author","editor"]},"address":{"type":"string","description":"The address of the author"},"stateProvince":{"type":"string","enum":["AL","AK","AZ"],"description":"The state or province of the author"}},"required":["name","email"],"additionalProperties":false}}},"required":["url","title","year","createdAt","authors"],"additionalProperties":false,"description":"Only One object","$schema":"http://json-schema.org/draft-07/schema#"}
 \`\`\`

@@ -32,7 +32,7 @@ export class StructuredOutputParser<
   }
 
   getFormatInstructions(): string {
-    return `You must format your response as a JSON value that adheres to a given "JSON Schema" instance.
+    return `You must format your output as a JSON value that adheres to a given "JSON Schema" instance.
 
 "JSON Schema" is a declarative language that allows you to annotate and validate JSON documents.
 
@@ -42,7 +42,7 @@ Thus, the object {{"foo": ["bar", "baz"]}} is a well-formatted instance of this 
 
 Your output will be parsed and type-checked according to the provided schema instance, so make sure all fields in your output match exactly!
 
-Here is the JSON Schema instance your response must adhere to:
+Here is the JSON Schema instance your output must adhere to:
 \`\`\`json
 ${JSON.stringify(zodToJsonSchema(this.schema))}
 \`\`\`
