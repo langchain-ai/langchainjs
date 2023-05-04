@@ -20,7 +20,7 @@ jobs:
           node-version: 18.x
           cache: "yarn"
       - name: Install dependencies
-        run: yarn install --immutable
+        run: yarn install --immutable --mode=skip-build
       - name: Check formatting
         run: yarn run format:check
 
@@ -35,13 +35,16 @@ jobs:
           node-version: 18.x
           cache: "yarn"
       - name: Install dependencies
-        run: yarn install --immutable
+        run: yarn install --immutable --mode=skip-build
       - name: Check linting
         run: yarn run lint
 
   build:
     name: Build and check types
     runs-on: ubuntu-latest
+    env:
+      PUPPETEER_SKIP_DOWNLOAD: "true"
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
     steps:
       - uses: actions/checkout@v3
       - name: Use Node.js 18.x
@@ -58,10 +61,18 @@ jobs:
     name: Unit Tests
     strategy:
       matrix:
-        os: [macos-latest, windows-latest, ubuntu-latest]
-        node-version: [18.x, 19.x]
-        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+        os: [ubuntu-latest]
+        node-version: [18.x, 19.x, 20.x]
+        # See Node.js release schedule at https://nodejs.org/en/about/releases/
+        include:
+          - os: windows-latest
+            node-version: 20.x
+          - os: macos-latest
+            node-version: 20.x
     runs-on: ${{ matrix.os }}
+    env:
+      PUPPETEER_SKIP_DOWNLOAD: "true"
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
     steps:
       - uses: actions/checkout@v3
       - name: Use Node.js ${{ matrix.node-version }}
@@ -74,11 +85,19 @@ jobs:
       - name: Build
         run: yarn run build --filter="!docs"
       - name: Test
-        run: yarn run test:unit
+        run: yarn run test:unit --filter="!test-exports-cra"
+        # test-exports-cra is still run in test-exports task, currently not
+        # compatible with Node.js 20.x, so disabling here
+        # Note it is useful to run the others here in addition to test-exports
+        # because it would catch any issues that only manifest
+        # when optional peer deps are installed
 
   test-exports:
     name: Environment Tests
     runs-on: ubuntu-latest
+    env:
+      PUPPETEER_SKIP_DOWNLOAD: "true"
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
     steps:
       - uses: actions/checkout@v3
       - name: Use Node.js 18.x
@@ -89,6 +108,6 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
       - name: Build
-        run: yarn run build --filter="!docs"
+        run: yarn workspace langchain build
       - name: Test Exports
         run: yarn run test:exports:docker

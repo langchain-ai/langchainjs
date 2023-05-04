@@ -58,6 +58,10 @@ export class MotorheadMemory extends BaseChatMemory {
     this.timeout = timeout ?? this.timeout;
   }
 
+  get memoryKeys() {
+    return [this.memoryKey];
+  }
+
   async init(): Promise<void> {
     const res = await this.caller.call(
       fetch,
@@ -73,7 +77,7 @@ export class MotorheadMemory extends BaseChatMemory {
     const { messages = [], context = "NONE" } = await res.json();
 
     await Promise.all(
-      messages.map(async (message: MotorheadMemoryMessage) => {
+      messages.reverse().map(async (message: MotorheadMemoryMessage) => {
         if (message.role === "AI") {
           await this.chatHistory.addAIChatMessage(message.content);
         } else {

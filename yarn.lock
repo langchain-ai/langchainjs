@@ -3993,10 +3993,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@dqbd/tiktoken@npm:^1.0.4":
-  version: 1.0.4
-  resolution: "@dqbd/tiktoken@npm:1.0.4"
-  checksum: d07c98b14c971f30a36f4655f35ee40e212f641460736a336552b95297a15f067a71652aaf3c9573e85fd4c9ff6206bfd8a75c1716de9812ee8df4650ca3e315
+"@dqbd/tiktoken@npm:^1.0.7":
+  version: 1.0.7
+  resolution: "@dqbd/tiktoken@npm:1.0.7"
+  checksum: 81049797dcffa101c57b68a78be19b11958edf6e6cfffab7ccd3ec2e5290e3b27bc25f1060a1c34e1cb94f22e0f46d9aafa925d383fb4559738b644aa01c0fb1
   languageName: node
   linkType: hard
 
@@ -5895,12 +5895,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@pinecone-database/pinecone@npm:^0.0.12":
-  version: 0.0.12
-  resolution: "@pinecone-database/pinecone@npm:0.0.12"
+"@pinecone-database/pinecone@npm:^0.0.14":
+  version: 0.0.14
+  resolution: "@pinecone-database/pinecone@npm:0.0.14"
   dependencies:
     cross-fetch: ^3.1.5
-  checksum: 010eb85b5c300f04c41d7939ec306f9c0f5b99bba9f31904ef19b57d1c4625c5ea2256fa2d1721075da267fe42db36c9f870c2a06cc45fcca4f610a7c660a134
+  checksum: 3af7a4936bef92e456203307c59eaf5e07447308e47a7fad18060b2a6a04f15ad49f00f378cdbbe709e6e60cb07d1ed71d612f1e6b2b78e56e85b97852448d09
   languageName: node
   linkType: hard
 
@@ -6849,6 +6849,53 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@tensorflow-models/universal-sentence-encoder@npm:^1.3.3":
+  version: 1.3.3
+  resolution: "@tensorflow-models/universal-sentence-encoder@npm:1.3.3"
+  peerDependencies:
+    "@tensorflow/tfjs-converter": ^3.6.0
+    "@tensorflow/tfjs-core": ^3.6.0
+  checksum: 99fea126088a11385501f104983fbc3de2a3cb4414aad94d08200cd40678f7f7711c7e8735ad570369151834b6ec8acb970d7b464c76d40ff9f102e476e45f57
+  languageName: node
+  linkType: hard
+
+"@tensorflow/tfjs-backend-cpu@npm:^4.4.0":
+  version: 4.4.0
+  resolution: "@tensorflow/tfjs-backend-cpu@npm:4.4.0"
+  dependencies:
+    "@types/seedrandom": ^2.4.28
+    seedrandom: ^3.0.5
+  peerDependencies:
+    "@tensorflow/tfjs-core": 4.4.0
+  checksum: e84eee75989ea7d2fcf7090a59021a44fbc9428cf4264cbaaaa0bba16664728a4edf5f229d5ee9c5e860c62b00d052b9e41204ca5b5b1a24cebf614f43deebe8
+  languageName: node
+  linkType: hard
+
+"@tensorflow/tfjs-converter@npm:^4.4.0":
+  version: 4.4.0
+  resolution: "@tensorflow/tfjs-converter@npm:4.4.0"
+  peerDependencies:
+    "@tensorflow/tfjs-core": 4.4.0
+  checksum: 5e0c71f53ed9ee48122f6580ae35ef3b82ed84caeab3ee5f6ea24d88f9761c01649d9fe5d2603558fa9c133bf0cc55e60b17db2e62ea1a38349e123418852fdf
+  languageName: node
+  linkType: hard
+
+"@tensorflow/tfjs-core@npm:^4.4.0":
+  version: 4.4.0
+  resolution: "@tensorflow/tfjs-core@npm:4.4.0"
+  dependencies:
+    "@types/long": ^4.0.1
+    "@types/offscreencanvas": ~2019.7.0
+    "@types/seedrandom": ^2.4.28
+    "@types/webgl-ext": 0.0.30
+    "@webgpu/types": 0.1.30
+    long: 4.0.0
+    node-fetch: ~2.6.1
+    seedrandom: ^3.0.5
+  checksum: 89b1c7a726cf0d640bc0dcc7404fc29b3b8ee229de52ab0c58f665b9933958f9ec140684e4ceb868860cdf97b9e4fa70c5df679a81bfae7c77f3783ba71c02c2
+  languageName: node
+  linkType: hard
+
 "@testing-library/dom@npm:^8.5.0":
   version: 8.20.0
   resolution: "@testing-library/dom@npm:8.20.0"
@@ -7352,6 +7399,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/offscreencanvas@npm:~2019.7.0":
+  version: 2019.7.0
+  resolution: "@types/offscreencanvas@npm:2019.7.0"
+  checksum: 018cfcd19e0c59c44d14ba61caaca7246f77fbb512839c7881654b7f2b6591dbdd5857362eccbf49f29cdc93724e71a4b37c8b6cf203388f9c04e913a53ea390
+  languageName: node
+  linkType: hard
+
 "@types/parse-json@npm:^4.0.0":
   version: 4.0.0
   resolution: "@types/parse-json@npm:4.0.0"
@@ -7526,6 +7580,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/seedrandom@npm:^2.4.28":
+  version: 2.4.30
+  resolution: "@types/seedrandom@npm:2.4.30"
+  checksum: 1bcf634bb0146b5de443d4581556795e52186f830072ef12f42efb6f15a4e9950630f1c4322356df0f39e953436d4fb17b5fb2834e867ff6cf6e5570849ebad2
+  languageName: node
+  linkType: hard
+
 "@types/semver@npm:^7.3.12":
   version: 7.3.13
   resolution: "@types/semver@npm:7.3.13"
@@ -7609,6 +7670,13 @@ __metadata:
   version: 9.0.1
   resolution: "@types/uuid@npm:9.0.1"
   checksum: c472b8a77cbeded4bc529220b8611afa39bd64677f507838f8083d8aac8033b1f88cb9ddaa2f8589e0dcd2317291d0f6e1379f82d5ceebd6f74f3b4825288e00
+  languageName: node
+  linkType: hard
+
+"@types/webgl-ext@npm:0.0.30":
+  version: 0.0.30
+  resolution: "@types/webgl-ext@npm:0.0.30"
+  checksum: c98aa8af2d24d54dc29d836aed0ca5acff45903dc91879d62110e84e615024ca071af69d1dcff26857aa2ab80c86bea9373d718616dcc61dbfdc6a6dd917a064
   languageName: node
   linkType: hard
 
@@ -8116,6 +8184,13 @@ __metadata:
     "@webassemblyjs/ast": 1.11.1
     "@xtuc/long": 4.2.2
   checksum: f15ae4c2441b979a3b4fce78f3d83472fb22350c6dc3fd34bfe7c3da108e0b2360718734d961bba20e7716cb8578e964b870da55b035e209e50ec9db0378a3f7
+  languageName: node
+  linkType: hard
+
+"@webgpu/types@npm:0.1.30":
+  version: 0.1.30
+  resolution: "@webgpu/types@npm:0.1.30"
+  checksum: c07516879c60617214717d63789f4a512004d004e845ed0439449f564fb8b94bd48882d599918e7db26914d584c70aecda25e90a327aabc32e57c90aa818ac06
   languageName: node
   linkType: hard
 
@@ -9661,18 +9736,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"canvas@npm:^2.11.0":
-  version: 2.11.2
-  resolution: "canvas@npm:2.11.2"
-  dependencies:
-    "@mapbox/node-pre-gyp": ^1.0.0
-    nan: ^2.17.0
-    node-gyp: latest
-    simple-get: ^3.0.3
-  checksum: 61e554aef80022841dc836964534082ec21435928498032562089dfb7736215f039c7d99ee546b0cf10780232d9bf310950f8b4d489dc394e0fb6f6adfc97994
-  languageName: node
-  linkType: hard
-
 "case-sensitive-paths-webpack-plugin@npm:^2.4.0":
   version: 2.4.0
   resolution: "case-sensitive-paths-webpack-plugin@npm:2.4.0"
@@ -11057,15 +11120,6 @@ __metadata:
   dependencies:
     mimic-response: ^1.0.0
   checksum: 952552ac3bd7de2fc18015086b09468645c9638d98a551305e485230ada278c039c91116e946d07894b39ee53c0f0d5b6473f25a224029344354513b412d7380
-  languageName: node
-  linkType: hard
-
-"decompress-response@npm:^4.2.0":
-  version: 4.2.1
-  resolution: "decompress-response@npm:4.2.1"
-  dependencies:
-    mimic-response: ^2.0.0
-  checksum: 4e783ca4dfe9417354d61349750fe05236f565a4415a6ca20983a311be2371debaedd9104c0b0e7b36e5f167aeaae04f84f1a0b3f8be4162f1d7d15598b8fdba
   languageName: node
   linkType: hard
 
@@ -12999,9 +13053,10 @@ __metadata:
   dependencies:
     "@getmetal/metal-sdk": ^2.0.1
     "@opensearch-project/opensearch": ^2.2.0
-    "@pinecone-database/pinecone": ^0.0.12
+    "@pinecone-database/pinecone": ^0.0.14
     "@prisma/client": ^4.11.0
     "@supabase/supabase-js": ^2.10.0
+    "@tensorflow/tfjs-backend-cpu": ^4.4.0
     "@tsconfig/recommended": ^1.0.2
     "@types/js-yaml": ^4
     "@typescript-eslint/eslint-plugin": ^5.51.0
@@ -17130,14 +17185,18 @@ __metadata:
     "@anthropic-ai/sdk": ^0.4.3
     "@aws-sdk/client-lambda": ^3.310.0
     "@aws-sdk/client-s3": ^3.310.0
-    "@dqbd/tiktoken": ^1.0.4
+    "@dqbd/tiktoken": ^1.0.7
     "@faker-js/faker": ^7.6.0
     "@getmetal/metal-sdk": ^2.0.1
     "@huggingface/inference": ^1.5.1
     "@jest/globals": ^29.5.0
     "@opensearch-project/opensearch": ^2.2.0
-    "@pinecone-database/pinecone": ^0.0.12
+    "@pinecone-database/pinecone": ^0.0.14
     "@supabase/supabase-js": ^2.10.0
+    "@tensorflow-models/universal-sentence-encoder": ^1.3.3
+    "@tensorflow/tfjs-backend-cpu": ^4.4.0
+    "@tensorflow/tfjs-converter": ^4.4.0
+    "@tensorflow/tfjs-core": ^4.4.0
     "@tsconfig/recommended": ^1.0.2
     "@types/d3-dsv": ^2
     "@types/flat": ^5.0.2
@@ -17147,6 +17206,7 @@ __metadata:
     "@types/uuid": ^9
     "@typescript-eslint/eslint-plugin": ^5.51.0
     "@typescript-eslint/parser": ^5.51.0
+    ansi-styles: ^5.0.0
     axios: ^0.26.0
     binary-extensions: ^2.2.0
     browser-or-node: ^2.1.1
@@ -17178,7 +17238,6 @@ __metadata:
     p-queue: ^6.6.2
     p-retry: 4
     pdf-parse: 1.1.1
-    pdfjs-dist: ^3.4.120
     playwright: ^1.32.1
     prettier: ^2.8.3
     puppeteer: ^19.7.2
@@ -17204,8 +17263,11 @@ __metadata:
     "@opensearch-project/opensearch": "*"
     "@pinecone-database/pinecone": "*"
     "@supabase/supabase-js": ^2.10.0
+    "@tensorflow-models/universal-sentence-encoder": "*"
+    "@tensorflow/tfjs-converter": "*"
+    "@tensorflow/tfjs-core": "*"
     "@zilliz/milvus2-sdk-node": ^2.2.0
-    axios: ^0.26.0
+    axios: "*"
     cheerio: ^1.0.0-rc.12
     chromadb: ^1.4.0
     cohere-ai: ^5.0.2
@@ -17237,6 +17299,12 @@ __metadata:
     "@pinecone-database/pinecone":
       optional: true
     "@supabase/supabase-js":
+      optional: true
+    "@tensorflow-models/universal-sentence-encoder":
+      optional: true
+    "@tensorflow/tfjs-converter":
+      optional: true
+    "@tensorflow/tfjs-core":
       optional: true
     "@zilliz/milvus2-sdk-node":
       optional: true
@@ -17629,7 +17697,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"long@npm:^4.0.0":
+"long@npm:4.0.0, long@npm:^4.0.0":
   version: 4.0.0
   resolution: "long@npm:4.0.0"
   checksum: 16afbe8f749c7c849db1f4de4e2e6a31ac6e617cead3bdc4f9605cb703cd20e1e9fc1a7baba674ffcca57d660a6e5b53a9e236d7b25a295d3855cca79cc06744
@@ -18063,13 +18131,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"mimic-response@npm:^2.0.0":
-  version: 2.1.0
-  resolution: "mimic-response@npm:2.1.0"
-  checksum: 014fad6ab936657e5f2f48bd87af62a8e928ebe84472aaf9e14fec4fcb31257a5edff77324d8ac13ddc6685ba5135cf16e381efac324e5f174fb4ddbf902bf07
-  languageName: node
-  linkType: hard
-
 "mimic-response@npm:^3.1.0":
   version: 3.1.0
   resolution: "mimic-response@npm:3.1.0"
@@ -18492,15 +18553,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"nan@npm:^2.17.0":
-  version: 2.17.0
-  resolution: "nan@npm:2.17.0"
-  dependencies:
-    node-gyp: latest
-  checksum: ec609aeaf7e68b76592a3ba96b372aa7f5df5b056c1e37410b0f1deefbab5a57a922061e2c5b369bae9c7c6b5e6eecf4ad2dac8833a1a7d3a751e0a7c7f849ed
-  languageName: node
-  linkType: hard
-
 "nanoid@npm:^3.3.3":
   version: 3.3.6
   resolution: "nanoid@npm:3.3.6"
@@ -18717,7 +18769,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"node-fetch@npm:^2.6.1, node-fetch@npm:^2.6.7":
+"node-fetch@npm:^2.6.1, node-fetch@npm:^2.6.7, node-fetch@npm:~2.6.1":
   version: 2.6.9
   resolution: "node-fetch@npm:2.6.9"
   dependencies:
@@ -19654,13 +19706,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"path2d-polyfill@npm:^2.0.1":
-  version: 2.0.1
-  resolution: "path2d-polyfill@npm:2.0.1"
-  checksum: e38a4f920be3550e8334b899cc56f4fca0a976ca69404ee10d656a45d422996b7e27e294e2cf0aac2e410ce59d6977cde9f95586e62a24e6c904716695e059f8
-  languageName: node
-  linkType: hard
-
 "pathe@npm:^1.1.0":
   version: 1.1.0
   resolution: "pathe@npm:1.1.0"
@@ -19682,20 +19727,6 @@ __metadata:
     debug: ^3.1.0
     node-ensure: ^0.0.0
   checksum: 5d63a8be1b3b8915618b1b76350409513fdd7fe03c77056b2dd7a1c2da28a11e297645e33bb4e953e2c1cd0ae66980f30fd0bed2979877f894347962d9647241
-  languageName: node
-  linkType: hard
-
-"pdfjs-dist@npm:^3.4.120":
-  version: 3.5.141
-  resolution: "pdfjs-dist@npm:3.5.141"
-  dependencies:
-    canvas: ^2.11.0
-    path2d-polyfill: ^2.0.1
-    web-streams-polyfill: ^3.2.1
-  dependenciesMeta:
-    canvas:
-      optional: true
-  checksum: b58e801b92a0d7b58b3799c0cf48f35deb45e140ef488744251a3e3dd148acef7aef4edfb8c7622b342c7068e8b7c01b754546ed0e60897e48665fa45af9d845
   languageName: node
   linkType: hard
 
@@ -22527,6 +22558,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"seedrandom@npm:^3.0.5":
+  version: 3.0.5
+  resolution: "seedrandom@npm:3.0.5"
+  checksum: 728b56bc3bc1b9ddeabd381e449b51cb31bdc0aa86e27fcd0190cea8c44613d5bcb2f6bb63ed79f78180cbe791c20b8ec31a9627f7b7fc7f476fd2bdb7e2da9f
+  languageName: node
+  linkType: hard
+
 "selderee@npm:^0.11.0":
   version: 0.11.0
   resolution: "selderee@npm:0.11.0"
@@ -22821,24 +22859,6 @@ __metadata:
   version: 3.0.7
   resolution: "signal-exit@npm:3.0.7"
   checksum: a2f098f247adc367dffc27845853e9959b9e88b01cb301658cfe4194352d8d2bb32e18467c786a7fe15f1d44b233ea35633d076d5e737870b7139949d1ab6318
-  languageName: node
-  linkType: hard
-
-"simple-concat@npm:^1.0.0":
-  version: 1.0.1
-  resolution: "simple-concat@npm:1.0.1"
-  checksum: 4d211042cc3d73a718c21ac6c4e7d7a0363e184be6a5ad25c8a1502e49df6d0a0253979e3d50dbdd3f60ef6c6c58d756b5d66ac1e05cda9cacd2e9fc59e3876a
-  languageName: node
-  linkType: hard
-
-"simple-get@npm:^3.0.3":
-  version: 3.1.1
-  resolution: "simple-get@npm:3.1.1"
-  dependencies:
-    decompress-response: ^4.2.0
-    once: ^1.3.1
-    simple-concat: ^1.0.0
-  checksum: 80195e70bf171486e75c31e28e5485468195cc42f85940f8b45c4a68472160144d223eb4d07bc82ef80cb974b7c401db021a540deb2d34ac4b3b8883da2d6401
   languageName: node
   linkType: hard
 
@@ -25512,7 +25532,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"web-streams-polyfill@npm:^3.0.3, web-streams-polyfill@npm:^3.2.1":
+"web-streams-polyfill@npm:^3.0.3":
   version: 3.2.1
   resolution: "web-streams-polyfill@npm:3.2.1"
   checksum: b119c78574b6d65935e35098c2afdcd752b84268e18746606af149e3c424e15621b6f1ff0b42b2676dc012fc4f0d313f964b41a4b5031e525faa03997457da02

@@ -53,14 +53,14 @@ AIChatMessage { text: "J'aime programmer." }
 OpenAI's chat-based models (currently `gpt-3.5-turbo` and `gpt-4`) support multiple messages as input. See [here](https://platform.openai.com/docs/guides/chat/chat-vs-completions) for more information. Here is an example of sending a system and user message to the chat model:
 
 ```typescript
-response = await chat.call([
+const responseB = await chat.call([
   new SystemChatMessage(
     "You are a helpful assistant that translates English to French."
   ),
   new HumanChatMessage("Translate: I love programming."),
 ]);
 
-console.log(response);
+console.log(responseB);
 ```
 
 ```

@@ -1,6 +1,7 @@
 ---
 hide_table_of_contents: true
 sidebar_label: LLM Chain
+sidebar_position: 1
 ---
 
 import CodeBlock from "@theme/CodeBlock";
@@ -14,7 +15,7 @@ import Example from "@examples/chains/llm_chain.ts";
 
 An `LLMChain` is a simple chain that adds some functionality around language models. It is used widely throughout LangChain, including in other chains and agents.
 
-An `LLMChain` consists of a `PromptTemplate` and a language model (either and LLM or chat model).
+An `LLMChain` consists of a `PromptTemplate` and a language model (either an [LLM](../models/llms/) or [chat model](../models/chat/)).
 
 We can construct an LLMChain which takes user input, formats it with a PromptTemplate, and then passes the formatted response to an LLM:
 

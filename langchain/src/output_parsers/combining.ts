@@ -1,4 +1,5 @@
-import { BaseOutputParser } from "../schema/index.js";
+import { Callbacks } from "../callbacks/manager.js";
+import { BaseOutputParser } from "../schema/output_parser.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type CombinedOutput = Record<string, any>;
@@ -15,23 +16,33 @@ export class CombiningOutputParser extends BaseOutputParser {
     this.parsers = parsers;
   }
 
-  async parse(input: string): Promise<CombinedOutput> {
+  async parse(input: string, callbacks?: Callbacks): Promise<CombinedOutput> {
+    const inputs = input
+      .trim()
+      .split(/Output \d+:/)
+      .slice(1);
     const ret: CombinedOutput = {};
-    for (const p of this.parsers) {
-      Object.assign(ret, await p.parse(input));
+    for (const [i, p] of this.parsers.entries()) {
+      let parsed;
+      try {
+        const extracted = inputs[i].includes("```")
+          ? inputs[i].trim().split(/```/)[1]
+          : inputs[i].trim();
+        parsed = await p.parse(extracted, callbacks);
+      } catch (e) {
+        parsed = await p.parse(input.trim(), callbacks);
+      }
+      Object.assign(ret, parsed);
     }
     return ret;
   }
 
   getFormatInstructions(): string {
-    const initial = `For your first output: ${this?.parsers?.[0]?.getFormatInstructions()}`;
-    const subsequent = this.parsers
-      .slice(1)
-      .map(
-        (p) =>
-          `Complete that output fully. Then produce another output: ${p.getFormatInstructions()}`
-      )
-      .join("\n");
-    return `${initial}\n${subsequent}`;
+    return `${[
+      `Return the following ${this.parsers.length} outputs, each formatted as described below:`,
+      ...this.parsers.map(
+        (p, i) => `Output ${i + 1}:\n${p.getFormatInstructions().trim()}`
+      ),
+    ].join("\n\n")}\n`;
   }
 }

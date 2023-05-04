@@ -1,6 +1,7 @@
 import { LLMChain } from "../chains/llm_chain.js";
 import { SerializedLLMChain } from "../chains/serde.js";
-import { AgentAction, AgentFinish, BaseOutputParser } from "../schema/index.js";
+import { AgentAction, AgentFinish } from "../schema/index.js";
+import { BaseOutputParser } from "../schema/output_parser.js";
 
 export interface AgentInput {
   llmChain: LLMChain;

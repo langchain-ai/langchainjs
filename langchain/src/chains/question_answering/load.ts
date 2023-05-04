@@ -25,7 +25,9 @@ interface qaChainParams {
   questionPrompt?: BasePromptTemplate;
   refinePrompt?: BasePromptTemplate;
   type?: string;
+  verbose?: boolean;
 }
+
 export const loadQAChain = (
   llm: BaseLanguageModel,
   params: qaChainParams = {}
@@ -35,15 +37,20 @@ export const loadQAChain = (
     combineMapPrompt = DEFAULT_COMBINE_QA_PROMPT,
     combinePrompt = COMBINE_PROMPT,
     type = "stuff",
+    verbose,
   } = params;
   if (type === "stuff") {
-    const llmChain = new LLMChain({ prompt, llm });
+    const llmChain = new LLMChain({ prompt, llm, verbose });
     const chain = new StuffDocumentsChain({ llmChain });
     return chain;
   }
   if (type === "map_reduce") {
-    const llmChain = new LLMChain({ prompt: combineMapPrompt, llm });
-    const combineLLMChain = new LLMChain({ prompt: combinePrompt, llm });
+    const llmChain = new LLMChain({ prompt: combineMapPrompt, llm, verbose });
+    const combineLLMChain = new LLMChain({
+      prompt: combinePrompt,
+      llm,
+      verbose,
+    });
     const combineDocumentChain = new StuffDocumentsChain({
       llmChain: combineLLMChain,
       documentVariableName: "summaries",
@@ -59,8 +66,8 @@ export const loadQAChain = (
       questionPrompt = QUESTION_PROMPT_SELECTOR.getPrompt(llm),
       refinePrompt = REFINE_PROMPT_SELECTOR.getPrompt(llm),
     } = params;
-    const llmChain = new LLMChain({ prompt: questionPrompt, llm });
-    const refineLLMChain = new LLMChain({ prompt: refinePrompt, llm });
+    const llmChain = new LLMChain({ prompt: questionPrompt, llm, verbose });
+    const refineLLMChain = new LLMChain({ prompt: refinePrompt, llm, verbose });
 
     const chain = new RefineDocumentsChain({
       llmChain,
@@ -73,14 +80,15 @@ export const loadQAChain = (
 
 interface StuffQAChainParams {
   prompt?: BasePromptTemplate;
+  verbose?: boolean;
 }
 
 export const loadQAStuffChain = (
   llm: BaseLanguageModel,
   params: StuffQAChainParams = {}
 ) => {
-  const { prompt = QA_PROMPT_SELECTOR.getPrompt(llm) } = params;
-  const llmChain = new LLMChain({ prompt, llm });
+  const { prompt = QA_PROMPT_SELECTOR.getPrompt(llm), verbose } = params;
+  const llmChain = new LLMChain({ prompt, llm, verbose });
   const chain = new StuffDocumentsChain({ llmChain });
   return chain;
 };
@@ -88,6 +96,7 @@ export const loadQAStuffChain = (
 interface MapReduceQAChainParams {
   combineMapPrompt?: BasePromptTemplate;
   combinePrompt?: BasePromptTemplate;
+  verbose?: boolean;
 }
 
 export const loadQAMapReduceChain = (
@@ -97,9 +106,10 @@ export const loadQAMapReduceChain = (
   const {
     combineMapPrompt = COMBINE_QA_PROMPT_SELECTOR.getPrompt(llm),
     combinePrompt = COMBINE_PROMPT_SELECTOR.getPrompt(llm),
+    verbose,
   } = params;
-  const llmChain = new LLMChain({ prompt: combineMapPrompt, llm });
-  const combineLLMChain = new LLMChain({ prompt: combinePrompt, llm });
+  const llmChain = new LLMChain({ prompt: combineMapPrompt, llm, verbose });
+  const combineLLMChain = new LLMChain({ prompt: combinePrompt, llm, verbose });
   const combineDocumentChain = new StuffDocumentsChain({
     llmChain: combineLLMChain,
     documentVariableName: "summaries",
@@ -114,6 +124,7 @@ export const loadQAMapReduceChain = (
 interface RefineQAChainParams {
   questionPrompt?: BasePromptTemplate;
   refinePrompt?: BasePromptTemplate;
+  verbose?: boolean;
 }
 
 export const loadQARefineChain = (
@@ -123,9 +134,10 @@ export const loadQARefineChain = (
   const {
     questionPrompt = QUESTION_PROMPT_SELECTOR.getPrompt(llm),
     refinePrompt = REFINE_PROMPT_SELECTOR.getPrompt(llm),
+    verbose,
   } = params;
-  const llmChain = new LLMChain({ prompt: questionPrompt, llm });
-  const refineLLMChain = new LLMChain({ prompt: refinePrompt, llm });
+  const llmChain = new LLMChain({ prompt: questionPrompt, llm, verbose });
+  const refineLLMChain = new LLMChain({ prompt: refinePrompt, llm, verbose });
 
   const chain = new RefineDocumentsChain({
     llmChain,

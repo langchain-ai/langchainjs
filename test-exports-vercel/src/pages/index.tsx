@@ -2,7 +2,6 @@
 import "../entrypoints.js";
 
 import Head from "next/head";
-import { Inter } from "next/font/google";
 import styles from "@/styles/Home.module.css";
 import { useCallback } from "react";
 import { ChatOpenAI } from "langchain/chat_models/openai";
@@ -12,8 +11,6 @@ import {
   ChatPromptTemplate,
   HumanMessagePromptTemplate,
 } from "langchain/prompts";
-
-const inter = Inter({ subsets: ["latin"] });
 
 // Don't do this in your app, it would leak your API key
 const OPENAI_API_KEY = process.env.NEXT_PUBLIC_OPENAI_API_KEY;
@@ -53,7 +50,7 @@ export default function Home() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <main className={`${styles.main} ${inter.className}`}>
+      <main className={styles.main}>
         <button onClick={runChain}>Click to run a chain</button>
       </main>
     </>
