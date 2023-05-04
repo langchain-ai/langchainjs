@@ -26,9 +26,13 @@ export {
 export { VectorDBQAChain, VectorDBQAChainInput } from "./vector_db_qa.js";
 export {
   loadQAChain,
+  QAChainParams,
   loadQAStuffChain,
+  StuffQAChainParams,
   loadQAMapReduceChain,
+  MapReduceQAChainParams,
   loadQARefineChain,
+  RefineQAChainParams,
 } from "./question_answering/load.js";
 export {
   loadSummarizationChain,
