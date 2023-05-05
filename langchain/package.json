@@ -285,6 +285,7 @@
   "author": "LangChain",
   "license": "MIT",
   "devDependencies": {
+    "@aws-sdk/client-dynamodb": "^3.310.0",
     "@aws-sdk/client-lambda": "^3.310.0",
     "@aws-sdk/client-s3": "^3.310.0",
     "@faker-js/faker": "^7.6.0",
@@ -340,6 +341,7 @@
     "weaviate-ts-client": "^1.0.0"
   },
   "peerDependencies": {
+    "@aws-sdk/client-dynamodb": "^3.310.0",
     "@aws-sdk/client-lambda": "^3.310.0",
     "@aws-sdk/client-s3": "^3.310.0",
     "@getmetal/metal-sdk": "*",
@@ -368,6 +370,9 @@
     "weaviate-ts-client": "^1.0.0"
   },
   "peerDependenciesMeta": {
+    "@aws-sdk/client-dynamodb": {
+      "optional": true
+    },
     "@aws-sdk/client-lambda": {
       "optional": true
     },
@@ -449,7 +454,6 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.4.3",
-    "@aws-sdk/client-dynamodb": "^3.321.1",
     "@dqbd/tiktoken": "^1.0.4",
     "binary-extensions": "^2.2.0",
     "browser-or-node": "^2.1.1",

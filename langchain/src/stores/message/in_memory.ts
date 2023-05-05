@@ -1,11 +1,9 @@
 import {
-  HumanChatMessage,
-  AIChatMessage,
   BaseChatMessage,
-  BaseChatMessageHistory,
+  BaseListChatMessageHistory,
 } from "../../schema/index.js";
 
-export class ChatMessageHistory extends BaseChatMessageHistory {
+export class ChatMessageHistory extends BaseListChatMessageHistory {
   private messages: BaseChatMessage[] = [];
 
   constructor(messages?: BaseChatMessage[]) {
@@ -17,12 +15,8 @@ export class ChatMessageHistory extends BaseChatMessageHistory {
     return this.messages;
   }
 
-  async addUserMessage(message: string) {
-    this.messages.push(new HumanChatMessage(message));
-  }
-
-  async addAIChatMessage(message: string) {
-    this.messages.push(new AIChatMessage(message));
+  async addMessage(message: BaseChatMessage) {
+    this.messages.push(message);
   }
 
   async clear() {

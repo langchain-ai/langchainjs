@@ -1,107 +1,90 @@
 import {
-  HumanChatMessage,
-  AIChatMessage,
-  BaseChatMessage,
-  BaseChatMessageHistory,
-  SystemChatMessage,
-  ChatMessage,
-} from "../../schema/index.js";
-
-import {
-    DynamoDBClient,
-    GetItemCommand,
-    GetItemCommandInput,
-    PutItemCommand,
-    PutItemCommandInput
+  DynamoDBClient,
+  DynamoDBClientConfig,
+  GetItemCommand,
+  GetItemCommandInput,
+  PutItemCommand,
+  PutItemCommandInput,
 } from "@aws-sdk/client-dynamodb";
 
+import {
+  BaseChatMessage,
+  BaseListChatMessageHistory,
+} from "../../schema/index.js";
+import {
+  StoredMessage,
+  mapChatMessagesToStoredMessages,
+  mapStoredMessagesToChatMessages,
+} from "./utils.js";
 
-export class DynamoDBChatMessageHistory extends BaseChatMessageHistory {
-    private tableName: string;
-    private sessionId: string;
-    private client: DynamoDBClient;
+export interface DynamoDBChatMessageHistoryFields {
+  tableName: string;
+  sessionId: string;
+  config?: DynamoDBClientConfig;
+}
 
-    constructor(tableName: string, sessionId: string) {
-        super();
-        this.tableName = tableName;
-        this.sessionId = sessionId;
-        this.client = new DynamoDBClient({});
-    }
+export class DynamoDBChatMessageHistory extends BaseListChatMessageHistory {
+  private tableName: string;
 
-    async getMessages(): Promise<BaseChatMessage[]> {
-        const params: GetItemCommandInput = {
-            TableName: this.tableName,
-            Key: { id: { S: this.sessionId } },
-        }
-        const response = await this.client.send(new GetItemCommand(params));
-        const items = response.Item?.messages.L ?? [];
-        const messages = items.map(item => {
-            return {
-                type: item.M?.type.S!,
-                text: item.M?.text.S!
-            }
-        });
-        return this.messagesFromDict(messages);
-    }
+  private sessionId: string;
 
-    async addUserMessage(message: string): Promise<void> {
-        await this.putItem(new HumanChatMessage(message));
-    }
+  private client: DynamoDBClient;
 
-    async addAIChatMessage(message: string): Promise<void> {
-        await this.putItem(new AIChatMessage(message));
-    }
+  constructor({
+    tableName,
+    sessionId,
+    config,
+  }: DynamoDBChatMessageHistoryFields) {
+    super();
+    this.tableName = tableName;
+    this.sessionId = sessionId;
+    this.client = new DynamoDBClient(config ?? {});
+  }
 
-    async clear(): Promise<void> {
-        throw new Error("Method not implemented.");
-    }
+  async getMessages(): Promise<BaseChatMessage[]> {
+    const params: GetItemCommandInput = {
+      TableName: this.tableName,
+      Key: { id: { S: this.sessionId } },
+    };
+    const response = await this.client.send(new GetItemCommand(params));
+    const items = response.Item?.messages.L ?? [];
+    const messages = items
+      .map((item) => ({
+        type: item.M?.type.S,
+        role: item.M?.role.S,
+        text: item.M?.text.S,
+      }))
+      .filter(
+        (x): x is StoredMessage => x.type !== undefined && x.text !== undefined
+      );
+    return mapStoredMessagesToChatMessages(messages);
+  }
 
-    private async putItem(message: BaseChatMessage) {
-        const messages = this.messagesToDict(await this.getMessages());
-        messages.push({ type: message._getType(), text: message.text });
+  async clear(): Promise<void> {
+    throw new Error("Method not implemented.");
+  }
 
-        const params: PutItemCommandInput = {
-            TableName: this.tableName,
-            Item: {
-                id: { S: this.sessionId },
-                messages: {
-                    L: messages.map(x => {
-                        return {
-                            M: {
-                                type: { S: x.type },
-                                text: { S: x.text },
-                            }
-                        };
-                    }),
-                },
+  protected async addMessage(message: BaseChatMessage) {
+    const currentMessages = await this.getMessages();
+    const messages = mapChatMessagesToStoredMessages([
+      ...currentMessages,
+      message,
+    ]);
+
+    const params: PutItemCommandInput = {
+      TableName: this.tableName,
+      Item: {
+        id: { S: this.sessionId },
+        messages: {
+          L: messages.map((x) => ({
+            M: {
+              type: { S: x.type },
+              text: { S: x.text },
             },
-        };
-        await new DynamoDBClient({}).send(new PutItemCommand(params));
-    }
-
-    private messagesFromDict(messages: { type: string, text: string }[]): BaseChatMessage[] {
-        return messages.map(x => {
-            switch (x.type) {
-                case "human":
-                    return new HumanChatMessage(x.text);
-                case "ai":
-                    return new AIChatMessage(x.text);
-                case "system":
-                    return new SystemChatMessage(x.text);
-                case "chat":
-                    return new ChatMessage(x.text, x.type);
-                default:
-                    throw new Error("Invalid message type: " + x.type);
-            }
-        });
-    }
-
-    private messagesToDict(messages: BaseChatMessage[]): { type: string, text: string }[] {
-        return messages.map(x => {
-            return {
-                type: x._getType(),
-                text: x.text,
-            };
-        });
-    }
+          })),
+        },
+      },
+    };
+    await new DynamoDBClient({}).send(new PutItemCommand(params));
+  }
 }
