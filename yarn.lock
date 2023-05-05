@@ -13863,7 +13863,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"gaxios@npm:^5.0.0, gaxios@npm:^5.0.1, gaxios@npm:^5.1.0":
+"gaxios@npm:^5.0.0, gaxios@npm:^5.0.1":
   version: 5.1.0
   resolution: "gaxios@npm:5.1.0"
   dependencies:
@@ -17316,7 +17316,6 @@ __metadata:
     eslint-plugin-prettier: ^4.2.1
     expr-eval: ^2.0.2
     flat: ^5.0.2
-    gaxios: ^5.1.0
     googleapis: ^117.0.0
     graphql: ^16.6.0
     hnswlib-node: ^1.4.2
@@ -17364,6 +17363,7 @@ __metadata:
     cohere-ai: ^5.0.2
     d3-dsv: ^2.0.0
     epub2: ^3.0.1
+    googleapis: "*"
     hnswlib-node: ^1.4.2
     html-to-text: ^9.0.5
     mammoth: "*"
@@ -17404,6 +17404,8 @@ __metadata:
     d3-dsv:
       optional: true
     epub2:
+      optional: true
+    googleapis:
       optional: true
     hnswlib-node:
       optional: true
