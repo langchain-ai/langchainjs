@@ -31,7 +31,10 @@ export interface LLMChainInput extends ChainInputs {
  * const llm = new LLMChain({ llm: new OpenAI(), prompt });
  * ```
  */
-export class LLMChain extends BaseChain implements LLMChainInput {
+export class LLMChain<T extends string | { [name: string]: any } = string>
+  extends BaseChain
+  implements LLMChainInput
+{
   prompt: BasePromptTemplate;
 
   llm: BaseLanguageModel;
@@ -121,7 +124,7 @@ export class LLMChain extends BaseChain implements LLMChainInput {
   async predict(
     values: ChainValues,
     callbackManager?: CallbackManager
-  ): Promise<string> {
+  ): Promise<T> {
     const output = await this.call(values, callbackManager);
     return output[this.outputKey];
   }
