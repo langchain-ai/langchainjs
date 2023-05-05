@@ -3,14 +3,14 @@ import { SupabaseClient } from "@supabase/supabase-js";
 
 import { SupabaseVectorStore } from "../supabase.js";
 
-import { OpenAIEmbeddings } from "../../embeddings/openai.js";
+import { FakeEmbeddings } from "../../embeddings/fake.js";
 
 test("similaritySearchVectorWithScore should call RPC with the vectorstore filters", async () => {
   const supabaseClientMock = {
     rpc: jest.fn().mockReturnValue(Promise.resolve({ data: [] })),
   } as Partial<SupabaseClient>;
 
-  const embeddings = new OpenAIEmbeddings();
+  const embeddings = new FakeEmbeddings();
   const vectorStore = new SupabaseVectorStore(embeddings, {
     client: supabaseClientMock as SupabaseClient,
     tableName: "documents",
@@ -30,7 +30,7 @@ test("similaritySearchVectorWithScore should call RPC with the passed filters", 
     rpc: jest.fn().mockReturnValue(Promise.resolve({ data: [] })),
   } as Partial<SupabaseClient>;
 
-  const embeddings = new OpenAIEmbeddings();
+  const embeddings = new FakeEmbeddings();
   const vectorStore = new SupabaseVectorStore(embeddings, {
     client: supabaseClientMock as SupabaseClient,
     tableName: "documents",
