@@ -4,26 +4,34 @@ import { BasePromptTemplate } from "../../prompts/base.js";
 import {
   StuffDocumentsChain,
   MapReduceDocumentsChain,
+  RefineDocumentsChain,
+  MapReduceDocumentsChainInput,
 } from "../combine_docs_chain.js";
 import { DEFAULT_PROMPT } from "./stuff_prompts.js";
+import { REFINE_PROMPT } from "./refine_prompts.js";
 
-interface summarizationChainParams {
-  prompt?: BasePromptTemplate;
-  combineMapPrompt?: BasePromptTemplate;
-  combinePrompt?: BasePromptTemplate;
-  type?: "map_reduce" | "stuff";
-}
+export type SummarizationChainParams =
+  | {
+      type?: "stuff";
+      prompt?: BasePromptTemplate;
+    }
+  | ({
+      type?: "map_reduce";
+      combineMapPrompt?: BasePromptTemplate;
+      combinePrompt?: BasePromptTemplate;
+    } & Pick<MapReduceDocumentsChainInput, "returnIntermediateSteps">)
+  | {
+      type?: "refine";
+      refinePrompt?: BasePromptTemplate;
+      questionPrompt?: BasePromptTemplate;
+    };
+
 export const loadSummarizationChain = (
   llm: BaseLanguageModel,
-  params: summarizationChainParams = {}
+  params: SummarizationChainParams = { type: "map_reduce" }
 ) => {
-  const {
-    prompt = DEFAULT_PROMPT,
-    combineMapPrompt = DEFAULT_PROMPT,
-    combinePrompt = DEFAULT_PROMPT,
-    type = "map_reduce",
-  } = params;
-  if (type === "stuff") {
+  if (params.type === "stuff") {
+    const { prompt = DEFAULT_PROMPT } = params;
     const llmChain = new LLMChain({ prompt, llm });
     const chain = new StuffDocumentsChain({
       llmChain,
@@ -31,7 +39,12 @@ export const loadSummarizationChain = (
     });
     return chain;
   }
-  if (type === "map_reduce") {
+  if (params.type === "map_reduce") {
+    const {
+      combineMapPrompt = DEFAULT_PROMPT,
+      combinePrompt = DEFAULT_PROMPT,
+      returnIntermediateSteps,
+    } = params;
     const llmChain = new LLMChain({ prompt: combineMapPrompt, llm });
     const combineLLMChain = new LLMChain({ prompt: combinePrompt, llm });
     const combineDocumentChain = new StuffDocumentsChain({
@@ -42,8 +55,21 @@ export const loadSummarizationChain = (
       llmChain,
       combineDocumentChain,
       documentVariableName: "text",
+      returnIntermediateSteps,
     });
     return chain;
   }
-  throw new Error(`Invalid _type: ${type}`);
+  if (params.type === "refine") {
+    const { refinePrompt = REFINE_PROMPT, questionPrompt = DEFAULT_PROMPT } =
+      params;
+    const llmChain = new LLMChain({ prompt: questionPrompt, llm });
+    const refineLLMChain = new LLMChain({ prompt: refinePrompt, llm });
+    const chain = new RefineDocumentsChain({
+      llmChain,
+      refineLLMChain,
+      documentVariableName: "text",
+    });
+    return chain;
+  }
+  throw new Error(`Invalid _type: ${params.type}`);
 };

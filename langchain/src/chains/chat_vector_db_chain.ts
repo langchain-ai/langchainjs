@@ -3,7 +3,7 @@ import { BaseLanguageModel } from "../base_language/index.js";
 import { VectorStore } from "../vectorstores/base.js";
 import { SerializedChatVectorDBQAChain } from "./serde.js";
 import { ChainValues } from "../schema/index.js";
-import { BaseChain } from "./base.js";
+import { BaseChain, ChainInputs } from "./base.js";
 import { LLMChain } from "./llm_chain.js";
 import { loadQAStuffChain } from "./question_answering/load.js";
 import { CallbackManagerForChainRun } from "../callbacks/manager.js";
@@ -25,15 +25,17 @@ const qa_template = `Use the following pieces of context to answer the question 
 Question: {question}
 Helpful Answer:`;
 
-export interface ChatVectorDBQAChainInput {
+export interface ChatVectorDBQAChainInput extends ChainInputs {
   vectorstore: VectorStore;
-  k: number;
   combineDocumentsChain: BaseChain;
   questionGeneratorChain: LLMChain;
-  outputKey: string;
-  inputKey: string;
+  returnSourceDocuments?: boolean;
+  outputKey?: string;
+  inputKey?: string;
+  k?: number;
 }
 
+/** @deprecated use `ConversationalRetrievalQAChain` instead. */
 export class ChatVectorDBQAChain
   extends BaseChain
   implements ChatVectorDBQAChainInput
@@ -62,16 +64,8 @@ export class ChatVectorDBQAChain
 
   returnSourceDocuments = false;
 
-  constructor(fields: {
-    vectorstore: VectorStore;
-    combineDocumentsChain: BaseChain;
-    questionGeneratorChain: LLMChain;
-    inputKey?: string;
-    outputKey?: string;
-    k?: number;
-    returnSourceDocuments?: boolean;
-  }) {
-    super();
+  constructor(fields: ChatVectorDBQAChainInput) {
+    super(fields);
     this.vectorstore = fields.vectorstore;
     this.combineDocumentsChain = fields.combineDocumentsChain;
     this.questionGeneratorChain = fields.questionGeneratorChain;
@@ -179,18 +173,20 @@ export class ChatVectorDBQAChain
       returnSourceDocuments?: boolean;
       questionGeneratorTemplate?: string;
       qaTemplate?: string;
+      verbose?: boolean;
     } = {}
   ): ChatVectorDBQAChain {
-    const { questionGeneratorTemplate, qaTemplate, ...rest } = options;
+    const { questionGeneratorTemplate, qaTemplate, verbose, ...rest } = options;
     const question_generator_prompt = PromptTemplate.fromTemplate(
       questionGeneratorTemplate || question_generator_template
     );
     const qa_prompt = PromptTemplate.fromTemplate(qaTemplate || qa_template);
 
-    const qaChain = loadQAStuffChain(llm, { prompt: qa_prompt });
+    const qaChain = loadQAStuffChain(llm, { prompt: qa_prompt, verbose });
     const questionGeneratorChain = new LLMChain({
       prompt: question_generator_prompt,
       llm,
+      verbose,
     });
     const instance = new this({
       vectorstore,

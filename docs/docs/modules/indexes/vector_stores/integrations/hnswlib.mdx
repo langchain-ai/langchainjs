@@ -14,6 +14,12 @@ HNSWLib is an in-memory vectorstore that can be saved to a file. It uses [HNSWLi
 
 ## Setup
 
+:::caution
+
+**On Windows**, you might need to install [Visual Studio](https://visualstudio.microsoft.com/downloads/) first in order to properly build the `hnswlib-node` package.
+
+:::
+
 You can install it with
 
 ```bash npm2yarn
@@ -39,3 +45,9 @@ import ExampleLoader from "@examples/indexes/vector_stores/hnswlib_fromdocs.ts";
 import ExampleSave from "@examples/indexes/vector_stores/hnswlib_saveload.ts";
 
 <CodeBlock language="typescript">{ExampleSave}</CodeBlock>
+
+### Filter documents
+
+import ExampleFilter from "@examples/indexes/vector_stores/hnswlib_filter.ts";
+
+<CodeBlock language="typescript">{ExampleFilter}</CodeBlock>

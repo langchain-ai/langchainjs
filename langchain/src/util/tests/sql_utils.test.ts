@@ -1,8 +1,11 @@
 import { test, expect } from "@jest/globals";
+import { DataSource } from "typeorm";
 import {
+  getPromptTemplateFromDataSource,
   verifyIgnoreTablesExistInDatabase,
   verifyIncludeTablesExistInDatabase,
 } from "../sql_utils.js";
+import { SQL_SQLITE_PROMPT } from "../../chains/sql_db/sql_db_prompt.js";
 
 test("Find include tables when there are there", () => {
   const includeTables = ["user", "score"];
@@ -56,4 +59,14 @@ test("Throw Error when include tables are not there", () => {
   expect(() =>
     verifyIgnoreTablesExistInDatabase(allTables, includeTables)
   ).toThrow();
+});
+
+test("return sqlite template when the DataSource is sqlite", () => {
+  const datasource = new DataSource({
+    type: "sqlite",
+    database: "Chinook.db",
+  });
+
+  const promptTemplate = getPromptTemplateFromDataSource(datasource);
+  expect(promptTemplate).toEqual(SQL_SQLITE_PROMPT);
 });

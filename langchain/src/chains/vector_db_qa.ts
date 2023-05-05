@@ -39,7 +39,7 @@ export class VectorDBQAChain extends BaseChain implements VectorDBQAChainInput {
   returnSourceDocuments = false;
 
   constructor(fields: VectorDBQAChainInput) {
-    super(undefined, fields.verbose, fields.callbackManager);
+    super(fields);
     this.vectorstore = fields.vectorstore;
     this.combineDocumentsChain = fields.combineDocumentsChain;
     this.inputKey = fields.inputKey ?? this.inputKey;
