@@ -4,8 +4,8 @@ import {
   CreateEmbeddingRequest,
   ConfigurationParameters,
 } from "openai";
-import { AzureOpenAIInput, OpenAICallOptions } from "types/open-ai-types.js";
-import { StreamingAxiosConfiguration } from "../util/axios-types.js";
+import type { AxiosRequestConfig } from "axios";
+import { AzureOpenAIInput } from "../types/open-ai-types.js";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
 import { chunkArray } from "../util/chunk.js";
 import { Embeddings, EmbeddingsParams } from "./base.js";
@@ -36,8 +36,6 @@ export class OpenAIEmbeddings
   extends Embeddings
   implements OpenAIEmbeddingsParams, AzureOpenAIInput
 {
-  declare CallOptions: OpenAICallOptions;
-
   modelName = "text-embedding-ada-002";
 
   batchSize = 512;
@@ -183,7 +181,7 @@ export class OpenAIEmbeddings
       });
       this.client = new OpenAIApi(clientConfig);
     }
-    const axiosOptions = {} as StreamingAxiosConfiguration & OpenAICallOptions;
+    const axiosOptions: AxiosRequestConfig = {};
     if (this.azureOpenAIApiKey) {
       axiosOptions.headers = {
         "api-key": this.azureOpenAIApiKey,
