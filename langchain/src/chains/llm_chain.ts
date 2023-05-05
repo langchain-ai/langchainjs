@@ -7,7 +7,8 @@ import { SerializedLLMChain } from "./serde.js";
 import { CallbackManager } from "../callbacks/index.js";
 import { CallbackManagerForChainRun } from "../callbacks/manager.js";
 
-export interface LLMChainInput<T> extends ChainInputs {
+export interface LLMChainInput<T extends string | object = string>
+  extends ChainInputs {
   /** Prompt object to use */
   prompt: BasePromptTemplate;
   /** LLM Wrapper to use */
