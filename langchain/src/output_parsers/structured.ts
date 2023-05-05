@@ -1,68 +1,9 @@
 import { z } from "zod";
+import { zodToJsonSchema } from "zod-to-json-schema";
 import {
   BaseOutputParser,
   OutputParserException,
 } from "../schema/output_parser.js";
-
-function printSchema(schema: z.ZodTypeAny, depth = 0): string {
-  if (
-    schema._def.typeName === "ZodString" &&
-    (schema as z.ZodString)._def.checks.some(
-      (check) => check.kind === "datetime"
-    )
-  ) {
-    return "datetime";
-  }
-  if (schema._def.typeName === "ZodString") {
-    return "string";
-  }
-  if (schema._def.typeName === "ZodNumber") {
-    return "number";
-  }
-  if (schema._def.typeName === "ZodBoolean") {
-    return "boolean";
-  }
-  if (schema._def.typeName === "ZodDate") {
-    return "date";
-  }
-  if (schema._def.typeName === "ZodEnum") {
-    return (schema as z.ZodEnum<[string, ...string[]]>).options
-      .map((value) => `"${value}"`)
-      .join(" | ");
-  }
-  if (schema._def.typeName === "ZodNullable") {
-    return `${printSchema(schema._def.innerType, depth)} // Nullable`;
-  }
-  if (schema._def.typeName === "ZodTransformer") {
-    return `${printSchema(schema._def.schema, depth)}`;
-  }
-  if (schema._def.typeName === "ZodOptional") {
-    return `${printSchema(schema._def.innerType, depth)} // Optional`;
-  }
-  if (schema._def.typeName === "ZodArray") {
-    return `${printSchema(schema._def.type, depth)}[]`;
-  }
-  if (schema._def.typeName === "ZodObject") {
-    const indent = "\t".repeat(depth);
-    const indentIn = "\t".repeat(depth + 1);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { shape } = schema as z.ZodObject<any>;
-    return `{${schema._def.description ? ` // ${schema._def.description}` : ""}
-${Object.entries(shape)
-  .map(
-    ([key, value]) =>
-      `${indentIn}"${key}": ${printSchema(value as z.ZodTypeAny, depth + 1)}${
-        (value as z.ZodTypeAny)._def.description
-          ? ` // ${(value as z.ZodTypeAny)._def.description}`
-          : ""
-      }`
-  )
-  .join("\n")}
-${indent}}`;
-  }
-
-  throw new Error(`Unsupported type: ${schema._def.typeName}`);
-}
 
 export class StructuredOutputParser<
   T extends z.ZodTypeAny
@@ -91,23 +32,33 @@ export class StructuredOutputParser<
   }
 
   getFormatInstructions(): string {
-    return `The output should be a markdown code snippet formatted in the following schema:
+    return `You must format your output as a JSON value that adheres to a given "JSON Schema" instance.
 
+"JSON Schema" is a declarative language that allows you to annotate and validate JSON documents.
+
+For example, the example "JSON Schema" instance {{"properties": {{"foo": {{"description": "a list of test words", "type": "array", "items": {{"type": "string"}}}}}}, "required": ["foo"]}}}}
+would match an object with one required property, "foo". The "type" property specifies "foo" must be an "array", and the "description" property semantically describes it as "a list of test words". The items within "foo" must be strings.
+Thus, the object {{"foo": ["bar", "baz"]}} is a well-formatted instance of this example "JSON Schema". The object {{"properties": {{"foo": ["bar", "baz"]}}}} is not well-formatted.
+
+Your output will be parsed and type-checked according to the provided schema instance, so make sure all fields in your output match exactly!
+
+Here is the JSON Schema instance your output must adhere to:
 \`\`\`json
-${printSchema(this.schema)}
+${JSON.stringify(zodToJsonSchema(this.schema))}
 \`\`\`
-
-Including the leading and trailing "\`\`\`json" and "\`\`\`"
 `;
   }
 
   async parse(text: string): Promise<z.infer<T>> {
     try {
-      const json = text.trim().split("```json")[1].split("```")[0].trim();
-      return this.schema.parse(JSON.parse(json));
+      const json = text.includes("```")
+        ? text.trim().split(/```(?:json)?/)[1]
+        : text.trim();
+      return this.schema.parseAsync(JSON.parse(json));
     } catch (e) {
       throw new OutputParserException(
-        `Failed to parse. Text: "${text}". Error: ${e}`
+        `Failed to parse. Text: "${text}". Error: ${e}`,
+        text
       );
     }
   }

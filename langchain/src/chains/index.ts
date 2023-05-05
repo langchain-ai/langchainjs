@@ -26,11 +26,18 @@ export {
 export { VectorDBQAChain, VectorDBQAChainInput } from "./vector_db_qa.js";
 export {
   loadQAChain,
+  QAChainParams,
   loadQAStuffChain,
+  StuffQAChainParams,
   loadQAMapReduceChain,
+  MapReduceQAChainParams,
   loadQARefineChain,
+  RefineQAChainParams,
 } from "./question_answering/load.js";
-export { loadSummarizationChain } from "./summarization/load.js";
+export {
+  loadSummarizationChain,
+  SummarizationChainParams,
+} from "./summarization/load.js";
 export {
   SqlDatabaseChain,
   SqlDatabaseChainInput,
@@ -40,6 +47,14 @@ export {
   ConversationalRetrievalQAChainInput,
 } from "./conversational_retrieval_chain.js";
 export { RetrievalQAChain, RetrievalQAChainInput } from "./retrieval_qa.js";
+export {
+  ConstitutionalChainInput,
+  ConstitutionalChain,
+} from "./constitutional_ai/constitutional_chain.js";
+export {
+  ConstitutionalPrinciple,
+  PRINCIPLES,
+} from "./constitutional_ai/constitutional_principle.js";
 export {
   SerializedLLMChain,
   SerializedSequentialChain,
@@ -53,3 +68,4 @@ export {
   SerializedVectorDBQAChain,
   SerializedRefineDocumentsChain,
 } from "./serde.js";
+export { OpenAIModerationChain } from "./openai_moderation.js";

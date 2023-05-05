@@ -497,4 +497,9 @@ export class PromptLayerOpenAI extends OpenAI {
   }
 }
 
-export { OpenAIChat } from "./openai-chat.js";
+export {
+  OpenAIChat,
+  OpenAIChatInput,
+  OpenAIChatCallOptions,
+  PromptLayerOpenAIChat,
+} from "./openai-chat.js";

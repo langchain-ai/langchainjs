@@ -6,15 +6,13 @@ export class ChatConversationalAgentOutputParser extends AgentActionOutputParser
     let jsonOutput = text.trim();
     if (jsonOutput.includes("```json")) {
       jsonOutput = jsonOutput.split("```json")[1].trimStart();
+    } else if (jsonOutput.includes("```")) {
+      const firstIndex = jsonOutput.indexOf("```");
+      jsonOutput = jsonOutput.slice(firstIndex + 3).trimStart();
     }
-    if (jsonOutput.includes("```")) {
-      jsonOutput = jsonOutput.split("```")[0].trimEnd();
-    }
-    if (jsonOutput.startsWith("```")) {
-      jsonOutput = jsonOutput.slice(3).trimStart();
-    }
-    if (jsonOutput.endsWith("```")) {
-      jsonOutput = jsonOutput.slice(0, -3).trimEnd();
+    const lastIndex = jsonOutput.lastIndexOf("```");
+    if (lastIndex !== -1) {
+      jsonOutput = jsonOutput.slice(0, lastIndex).trimEnd();
     }
 
     const response = JSON.parse(jsonOutput);

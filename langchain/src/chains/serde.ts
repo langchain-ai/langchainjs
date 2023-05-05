@@ -61,6 +61,21 @@ export type SerializedAnalyzeDocumentChain = {
   combine_document_chain?: SerializedBaseChain;
 };
 
+export type SerializedConstitutionalPrinciple = {
+  _type: "constitutional_principle";
+  critiqueRequest: string;
+  revisionRequest: string;
+  name: string;
+};
+
+export type SerializedConstitutionalChain = {
+  _type: "constitutional_chain";
+  chain?: SerializedLLMChain;
+  critiqueChain?: SerializedBaseChain;
+  revisionChain?: SerializedBaseChain;
+  ConstitutionalPrinciple?: SerializedConstitutionalPrinciple[];
+};
+
 export type SerializedBaseChain =
   | SerializedLLMChain
   | SerializedSequentialChain
@@ -71,4 +86,5 @@ export type SerializedBaseChain =
   | SerializedChatVectorDBQAChain
   | SerializedMapReduceDocumentsChain
   | SerializedAnalyzeDocumentChain
-  | SerializedRefineDocumentsChain;
+  | SerializedRefineDocumentsChain
+  | SerializedConstitutionalChain;

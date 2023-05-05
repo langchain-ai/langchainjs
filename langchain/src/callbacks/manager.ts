@@ -395,9 +395,20 @@ export class CallbackManager
     inherit = true
   ): CallbackManager {
     const manager = new CallbackManager(this._parentRunId);
-    manager.setHandlers([...this.handlers].map((handler) => handler.copy()));
+    for (const handler of this.handlers) {
+      const inheritable = this.inheritableHandlers.includes(handler);
+      manager.addHandler(handler, inheritable);
+    }
     for (const handler of additionalHandlers) {
-      manager.addHandler(handler.copy(), inherit);
+      if (
+        // Prevent multiple copies of console_callback_handler
+        manager.handlers
+          .filter((h) => h.name === "console_callback_handler")
+          .some((h) => h.name === handler.name)
+      ) {
+        continue;
+      }
+      manager.addHandler(handler, inherit);
     }
     return manager;
   }
@@ -449,13 +460,13 @@ export class CallbackManager
       if (!callbackManager) {
         callbackManager = new CallbackManager();
       }
-      const consoleHandler = new ConsoleCallbackHandler();
       if (
         options?.verbose &&
         !callbackManager.handlers.some(
-          (handler) => handler.name === consoleHandler.name
+          (handler) => handler.name === ConsoleCallbackHandler.prototype.name
         )
       ) {
+        const consoleHandler = new ConsoleCallbackHandler();
         callbackManager.addHandler(consoleHandler, true);
       }
       if (
@@ -464,7 +475,15 @@ export class CallbackManager
           (handler) => handler.name === "langchain_tracer"
         )
       ) {
-        callbackManager.addHandler(await getTracingCallbackHandler(), true);
+        const session =
+          typeof process !== "undefined"
+            ? // eslint-disable-next-line no-process-env
+              process.env?.LANGCHAIN_SESSION
+            : undefined;
+        callbackManager.addHandler(
+          await getTracingCallbackHandler(session),
+          true
+        );
       }
     }
     return callbackManager;

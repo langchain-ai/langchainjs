@@ -57,14 +57,14 @@ OpenAI's chat-based models (currently `gpt-3.5-turbo` and `gpt-4` and in case of
 > **&#9432;** Note, if you are using Azure OpenAI make sure to change the deployment name to the deployment for the model you choose.
 
 ```typescript
-response = await chat.call([
+const responseB = await chat.call([
   new SystemChatMessage(
     "You are a helpful assistant that translates English to French."
   ),
   new HumanChatMessage("Translate: I love programming."),
 ]);
 
-console.log(response);
+console.log(responseB);
 ```
 
 ```

@@ -6,13 +6,21 @@ export interface Headers {
 
 export interface RequestTool {
   headers: Headers;
+  maxOutputLength: number;
 }
 
 export class RequestsGetTool extends Tool implements RequestTool {
   name = "requests_get";
 
-  constructor(public headers: Headers = {}) {
+  maxOutputLength = 2000;
+
+  constructor(
+    public headers: Headers = {},
+    { maxOutputLength }: { maxOutputLength?: number } = {}
+  ) {
     super();
+
+    this.maxOutputLength = maxOutputLength ?? this.maxOutputLength;
   }
 
   /** @ignore */
@@ -20,7 +28,8 @@ export class RequestsGetTool extends Tool implements RequestTool {
     const res = await fetch(input, {
       headers: this.headers,
     });
-    return res.text();
+    const text = await res.text();
+    return text.slice(0, this.maxOutputLength);
   }
 
   description = `A portal to the internet. Use this when you need to get specific content from a website. 
@@ -30,8 +39,15 @@ export class RequestsGetTool extends Tool implements RequestTool {
 export class RequestsPostTool extends Tool implements RequestTool {
   name = "requests_post";
 
-  constructor(public headers: Headers = {}) {
+  maxOutputLength = Infinity;
+
+  constructor(
+    public headers: Headers = {},
+    { maxOutputLength }: { maxOutputLength?: number } = {}
+  ) {
     super();
+
+    this.maxOutputLength = maxOutputLength ?? this.maxOutputLength;
   }
 
   /** @ignore */
@@ -43,7 +59,8 @@ export class RequestsPostTool extends Tool implements RequestTool {
         headers: this.headers,
         body: JSON.stringify(data),
       });
-      return res.text();
+      const text = await res.text();
+      return text.slice(0, this.maxOutputLength);
     } catch (error) {
       return `${error}`;
     }
