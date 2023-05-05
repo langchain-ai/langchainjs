@@ -71,6 +71,6 @@ The below example shows how to perform a basic similarity search with Supabase:
 
 Given the above `match_documents` Postgres function, you can also pass a filter parameter to only documents with a specific metadata field value.
 
-**Note:** If you've previously been using `SupabaseVectorStore`, you may need to create a separate Postgres function with a different name and an additional `filter jsonb DEFAULT '{}'` parameter to use this functionality.
+**Note:** If you've previously been using `SupabaseVectorStore`, you may need to drop and recreate the `match_documents` function per the updated SQL above to use this functionality.
 
 <CodeBlock language="typescript">{MetadataFilterExample}</CodeBlock>
