@@ -28,7 +28,9 @@ import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
 const chat = new ChatOpenAI({ temperature: 0 });
 ```
 
-Here we create a chat model using the API key stored in the environment variable `OPENAI_API_KEY`. We'll be calling this chat model throughout this section.
+Here we create a chat model using the API key stored in the environment variable `OPENAI_API_KEY` or `AZURE_OPENAI_API_KEY` in case you are using Azure OpenAI. We'll be calling this chat model throughout this section.
+
+> **&#9432;** Note, if you are using Azure OpenAI make sure to also set the environment variables `AZURE_OPENAI_API_INSTANCE_NAME`, `AZURE_OPENAI_API_DEPLOYMENT_NAME` and `AZURE_OPENAI_API_VERSION`.
 
 ### Chat Models: Message in, Message out
 
@@ -50,7 +52,9 @@ AIChatMessage { text: "J'aime programmer." }
 
 #### Multiple Messages
 
-OpenAI's chat-based models (currently `gpt-3.5-turbo` and `gpt-4`) support multiple messages as input. See [here](https://platform.openai.com/docs/guides/chat/chat-vs-completions) for more information. Here is an example of sending a system and user message to the chat model:
+OpenAI's chat-based models (currently `gpt-3.5-turbo` and `gpt-4` and in case of azure OpenAI `gpt-4-32k`) support multiple messages as input. See [here](https://platform.openai.com/docs/guides/chat/chat-vs-completions) for more information. Here is an example of sending a system and user message to the chat model:
+
+> **&#9432;** Note, if you are using Azure OpenAI make sure to change the deployment name to the deployment for the model you choose.
 
 ```typescript
 const responseB = await chat.call([
