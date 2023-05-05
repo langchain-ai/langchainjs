@@ -44,10 +44,6 @@ type UnstructuredDirectoryLoaderOptions = UnstructuredLoaderOptions & {
   unknown?: UnknownHandling;
 };
 
-type LoadersMapping = {
-  [key: string]: (p: string) => UnstructuredLoader;
-};
-
 export class UnstructuredLoader extends BaseDocumentLoader {
   public filePath: string;
 
