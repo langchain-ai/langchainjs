@@ -6,7 +6,7 @@ import { initializeAgentExecutorWithOptions } from "../initialize.js";
 import { DynamicTool } from "../../tools/dynamic.js";
 
 test("Run agent locally with GPT-3.5", async () => {
-  const model = new ChatOpenAI({ temperature: 0, modelName: 'gpt-3.5-turbo' });
+  const model = new ChatOpenAI({ temperature: 0, modelName: "gpt-3.5-turbo" });
   const tools = [
     new SerpAPI(undefined, {
       location: "Austin,Texas,United States",
@@ -17,10 +17,8 @@ test("Run agent locally with GPT-3.5", async () => {
     new DynamicTool({
       name: "foo",
       description: "Some other tool that does foo",
-      func: async () => {
-        return "bar";
-      }
-    })
+      func: async () => "bar",
+    }),
   ];
 
   const executor = await initializeAgentExecutorWithOptions(tools, model, {
@@ -36,7 +34,7 @@ test("Run agent locally with GPT-3.5", async () => {
 });
 
 test("Run agent locally with GPT-4", async () => {
-  const model = new ChatOpenAI({ temperature: 0, modelName: 'gpt-4' });
+  const model = new ChatOpenAI({ temperature: 0, modelName: "gpt-4" });
   const tools = [
     new SerpAPI(undefined, {
       location: "Austin,Texas,United States",
@@ -47,10 +45,8 @@ test("Run agent locally with GPT-4", async () => {
     new DynamicTool({
       name: "foo",
       description: "Some other tool that does foo",
-      func: async () => {
-        return "bar";
-      }
-    })
+      func: async () => "bar",
+    }),
   ];
 
   const executor = await initializeAgentExecutorWithOptions(tools, model, {
