@@ -5365,15 +5365,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@mendable/search@npm:^0.0.83":
-  version: 0.0.83
-  resolution: "@mendable/search@npm:0.0.83"
+"@mendable/search@npm:^0.0.93":
+  version: 0.0.93
+  resolution: "@mendable/search@npm:0.0.93"
   dependencies:
     posthog-js: ^1.45.1
   peerDependencies:
     react: ^17.x || ^18.x
     react-dom: ^17.x || ^18.x
-  checksum: 00e04dd564fe1ac89b0744e9113455889c99b35114147da6e5a9cf5bf774c97b9f416770e782bda3c4e3f420d654565adedc64fd26c2b7b5a99978e51a71119c
+  checksum: edad3ba1e82c36473de1e6f6261671a7ecc84375db3dc939f469d0ea3fdde5d1117e8ec2e860e18ce4359caa2ce7aa108910f8f234268e45ab56b29c4bf69f9e
   languageName: node
   linkType: hard
 
@@ -11507,7 +11507,7 @@ __metadata:
     "@docusaurus/preset-classic": 2.4.0
     "@docusaurus/remark-plugin-npm2yarn": ^2.4.0
     "@mdx-js/react": ^1.6.22
-    "@mendable/search": ^0.0.83
+    "@mendable/search": ^0.0.93
     clsx: ^1.2.1
     docusaurus-plugin-typedoc: next
     eslint: ^8.19.0
