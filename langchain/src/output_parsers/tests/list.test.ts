@@ -22,12 +22,13 @@ test("CustomListOutputParser", async () => {
 
   expect(await parser1.parse("a; b;c")).toEqual(["a", "b", "c"]);
 
-  // without try/catch, the test will fail
-  try {
-    expect(await parser1.parse("a; b c")).toThrow(OutputParserException);
-  } catch (e) {
-    expect(e).toBeInstanceOf(OutputParserException);
-  }
+  await expect(() => parser1.parse("a; b c")).rejects.toThrow(
+    OutputParserException
+  );
+
+  await expect(() => parser1.parse("a; b; c; d")).rejects.toThrow(
+    OutputParserException
+  );
 
   const parser2 = new CustomListOutputParser({ separator: "\n" });
 
