@@ -1,6 +1,10 @@
 import type { basename as BasenameT } from "node:path";
 import type { readFile as ReadFileT } from "node:fs/promises";
-import { DirectoryLoader, UnknownHandling } from "./directory.js";
+import {
+  DirectoryLoader,
+  UnknownHandling,
+  LoadersMapping,
+} from "./directory.js";
 import { getEnv } from "../../util/env.js";
 import { Document } from "../../document.js";
 import { BaseDocumentLoader } from "../base.js";
@@ -169,12 +173,12 @@ export class UnstructuredDirectoryLoader extends DirectoryLoader {
       directoryPath = directoryPathOrLegacyApiUrl;
       options = optionsOrLegacyDirectoryPath;
     }
+    const loader = (p: string) => new UnstructuredLoader(p, options);
     const loaders = UNSTRUCTURED_API_FILETYPES.reduce(
       (loadersObject: LoadersMapping, filetype: string) => {
-        const _loadersObject: LoadersMapping = { ...loadersObject };
-        _loadersObject[filetype] = (p: string) =>
-          new UnstructuredLoader(p, options);
-        return _loadersObject;
+        // eslint-disable-next-line no-param-reassign
+        loadersObject[filetype] = loader;
+        return loadersObject;
       },
       {}
     );
