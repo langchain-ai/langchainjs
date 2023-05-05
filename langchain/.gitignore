@@ -97,6 +97,9 @@ vectorstores/mongo.d.ts
 vectorstores/pinecone.cjs
 vectorstores/pinecone.js
 vectorstores/pinecone.d.ts
+vectorstores/qdrant.cjs
+vectorstores/qdrant.js
+vectorstores/qdrant.d.ts
 vectorstores/supabase.cjs
 vectorstores/supabase.js
 vectorstores/supabase.d.ts

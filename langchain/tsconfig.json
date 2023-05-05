@@ -64,6 +64,7 @@
       "src/vectorstores/weaviate.ts",
       "src/vectorstores/mongo.ts",
       "src/vectorstores/pinecone.ts",
+      "src/vectorstores/qdrant.ts",
       "src/vectorstores/supabase.ts",
       "src/vectorstores/opensearch.ts",
       "src/vectorstores/milvus.ts",
