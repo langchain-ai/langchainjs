@@ -22,6 +22,8 @@ import { OpenAIChat } from "./openai-chat.js";
 import { LLMResult } from "../schema/index.js";
 import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
 
+export { OpenAICallOptions, AzureOpenAIInput, OpenAIInput };
+
 interface TokenUsage {
   completionTokens?: number;
   promptTokens?: number;
@@ -497,9 +499,4 @@ export class PromptLayerOpenAI extends OpenAI {
   }
 }
 
-export {
-  OpenAIChat,
-  OpenAIChatInput,
-  OpenAIChatCallOptions,
-  PromptLayerOpenAIChat,
-} from "./openai-chat.js";
+export { OpenAIChat, PromptLayerOpenAIChat } from "./openai-chat.js";

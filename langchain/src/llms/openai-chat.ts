@@ -12,11 +12,13 @@ import {
   Kwargs,
   OpenAICallOptions,
   OpenAIChatInput,
-} from "types/open-ai-types.js";
+} from "../types/open-ai-types.js";
 import type { StreamingAxiosConfiguration } from "../util/axios-types.js";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
 import { BaseLLMParams, LLM } from "./base.js";
 import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
+
+export { OpenAICallOptions, OpenAIChatInput, AzureOpenAIInput };
 
 /**
  * Wrapper around OpenAI large language models that use the Chat endpoint.
