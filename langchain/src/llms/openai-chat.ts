@@ -9,7 +9,6 @@ import {
 } from "openai";
 import {
   AzureOpenAIInput,
-  Kwargs,
   OpenAICallOptions,
   OpenAIChatInput,
 } from "../types/open-ai-types.js";
@@ -66,7 +65,7 @@ export class OpenAIChat
 
   prefixMessages?: ChatCompletionRequestMessage[];
 
-  modelKwargs?: Kwargs;
+  modelKwargs?: OpenAIChatInput["modelKwargs"];
 
   timeout?: number;
 
@@ -180,7 +179,7 @@ export class OpenAIChat
   /**
    * Get the parameters used to invoke the model
    */
-  invocationParams(): Omit<CreateChatCompletionRequest, "messages"> & Kwargs {
+  invocationParams(): Omit<CreateChatCompletionRequest, "messages"> {
     return {
       model: this.modelName,
       temperature: this.temperature,

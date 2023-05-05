@@ -9,7 +9,6 @@ import {
 } from "openai";
 import {
   AzureOpenAIInput,
-  Kwargs,
   OpenAICallOptions,
   OpenAIInput,
 } from "types/open-ai-types.js";
@@ -47,10 +46,6 @@ interface TokenUsage {
  * https://platform.openai.com/docs/api-reference/completions/create |
  * `openai.createCompletion`} can be passed through {@link modelKwargs}, even
  * if not explicitly available on this class.
- *
- * @augments BaseLLM
- * @augments OpenAIInput
- * @augments AzureOpenAIInput
  */
 export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
   declare CallOptions: OpenAICallOptions;
@@ -73,7 +68,7 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
 
   modelName = "text-davinci-003";
 
-  modelKwargs?: Kwargs;
+  modelKwargs?: OpenAIInput["modelKwargs"];
 
   batchSize = 20;
 
@@ -205,7 +200,7 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
   /**
    * Get the parameters used to invoke the model
    */
-  invocationParams(): CreateCompletionRequest & Kwargs {
+  invocationParams(): CreateCompletionRequest {
     return {
       model: this.modelName,
       temperature: this.temperature,

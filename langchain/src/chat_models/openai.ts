@@ -9,10 +9,8 @@ import {
 } from "openai";
 import {
   AzureOpenAIInput,
-  Kwargs,
   OpenAICallOptions,
   OpenAIChatInput,
-  OpenAIInput,
 } from "types/open-ai-types.js";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
 import type { StreamingAxiosConfiguration } from "../util/axios-types.js";
@@ -29,6 +27,8 @@ import {
 } from "../schema/index.js";
 import { getModelNameForTiktoken } from "../base_language/count_tokens.js";
 import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
+
+export { OpenAICallOptions, OpenAIChatInput, AzureOpenAIInput };
 
 interface TokenUsage {
   completionTokens?: number;
@@ -88,10 +88,6 @@ function openAIResponseToChatMessage(
  * https://platform.openai.com/docs/api-reference/chat/create |
  * `openai.createCompletion`} can be passed through {@link modelKwargs}, even
  * if not explicitly available on this class.
- *
- * @augments BaseLLM
- * @augments OpenAIInput
- * @augments AzureOpenAIInput
  */
 export class ChatOpenAI
   extends BaseChatModel
@@ -113,7 +109,7 @@ export class ChatOpenAI
 
   modelName = "gpt-3.5-turbo";
 
-  modelKwargs?: Kwargs;
+  modelKwargs?: OpenAIChatInput["modelKwargs"];
 
   stop?: string[];
 
@@ -136,7 +132,7 @@ export class ChatOpenAI
   private clientConfig: ConfigurationParameters;
 
   constructor(
-    fields?: Partial<OpenAIInput> &
+    fields?: Partial<OpenAIChatInput> &
       Partial<AzureOpenAIInput> &
       BaseChatModelParams & {
         concurrency?: number;
@@ -230,7 +226,7 @@ export class ChatOpenAI
   /**
    * Get the parameters used to invoke the model
    */
-  invocationParams(): Omit<CreateChatCompletionRequest, "messages"> & Kwargs {
+  invocationParams(): Omit<CreateChatCompletionRequest, "messages"> {
     return {
       model: this.modelName,
       temperature: this.temperature,

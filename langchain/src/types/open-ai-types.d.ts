@@ -35,7 +35,7 @@ export declare interface OpenAIBaseInput {
    * https://platform.openai.com/docs/api-reference/completions/create |
    * `openai.createCompletion`} that are not explicitly specified on this class.
    */
-  modelKwargs?: Kwargs;
+  modelKwargs?: Record<string, any>;
 
   /** List of stop words to use when generating */
   stop?: string[];
@@ -120,6 +120,3 @@ export declare interface AzureOpenAIInput {
    */
   azureOpenAIApiCompletionsDeploymentName?: string;
 }
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export declare type Kwargs = Record<string, any>;
