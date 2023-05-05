@@ -330,8 +330,8 @@
     "@types/object-hash": "^3.0.2",
     "@types/pdf-parse": "^1.1.1",
     "@types/uuid": "^9",
-    "@typescript-eslint/eslint-plugin": "^5.51.0",
-    "@typescript-eslint/parser": "^5.51.0",
+    "@typescript-eslint/eslint-plugin": "^5.58.0",
+    "@typescript-eslint/parser": "^5.58.0",
     "axios": "^0.26.0",
     "cheerio": "^1.0.0-rc.12",
     "chromadb": "^1.4.0",
@@ -362,9 +362,9 @@
     "rollup": "^3.19.1",
     "sqlite3": "^5.1.4",
     "srt-parser-2": "^1.2.2",
-    "ts-jest": "^29.0.5",
+    "ts-jest": "^29.1.0",
     "typeorm": "^0.3.12",
-    "typescript": "^4.9.5",
+    "typescript": "^5.0.0",
     "weaviate-ts-client": "^1.0.0"
   },
   "peerDependencies": {
