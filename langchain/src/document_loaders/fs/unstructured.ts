@@ -21,23 +21,28 @@ const UNSTRUCTURED_API_FILETYPES = [
   ".msg",
 ];
 
-interface Element {
+type Element = {
   type: string;
   text: string;
   // this is purposefully loosely typed
   metadata: {
     [key: string]: unknown;
   };
-}
+};
 
-interface UnstructuredOptions {
+type UnstructuredLoaderOptions = {
   apiKey?: string;
   apiUrl?: string;
-}
+};
 
-interface LoadersMapping {
+type UnstructuredDirectoryLoaderOptions = UnstructuredLoaderOptions & {
+  recursive?: boolean;
+  unknown?: UnknownHandling;
+};
+
+type LoadersMapping = {
   [key: string]: (p: string) => UnstructuredLoader;
-}
+};
 
 export class UnstructuredLoader extends BaseDocumentLoader {
   public filePath: string;
@@ -48,7 +53,7 @@ export class UnstructuredLoader extends BaseDocumentLoader {
 
   constructor(
     filePathOrLegacyApiUrl: string,
-    optionsOrLegacyFilePath: UnstructuredOptions | string = {}
+    optionsOrLegacyFilePath: UnstructuredLoaderOptions | string = {}
   ) {
     super();
 
@@ -144,12 +149,12 @@ export class UnstructuredLoader extends BaseDocumentLoader {
 export class UnstructuredDirectoryLoader extends DirectoryLoader {
   constructor(
     directoryPathOrLegacyApiUrl: string,
-    optionsOrLegacyDirectoryPath: UnstructuredOptions | string,
-    public recursive: boolean = true,
-    public unknown: UnknownHandling = UnknownHandling.Warn
+    optionsOrLegacyDirectoryPath: UnstructuredDirectoryLoaderOptions | string,
+    legacyOptionRecursive = true,
+    legacyOptionUnknown: UnknownHandling = UnknownHandling.Warn
   ) {
     let directoryPath;
-    let options: UnstructuredOptions;
+    let options: UnstructuredDirectoryLoaderOptions;
     // Temporary shim to avoid breaking existing users
     // Remove when API keys are enforced by Unstructured and existing code will break anyway
     const isLegacySyntax = typeof optionsOrLegacyDirectoryPath === "string";
@@ -157,6 +162,8 @@ export class UnstructuredDirectoryLoader extends DirectoryLoader {
       directoryPath = optionsOrLegacyDirectoryPath;
       options = {
         apiUrl: directoryPathOrLegacyApiUrl,
+        recursive: legacyOptionRecursive,
+        unknown: legacyOptionUnknown,
       };
     } else {
       directoryPath = directoryPathOrLegacyApiUrl;
@@ -171,7 +178,7 @@ export class UnstructuredDirectoryLoader extends DirectoryLoader {
       },
       {}
     );
-    super(directoryPath, loaders, recursive, unknown);
+    super(directoryPath, loaders, options.recursive, options.unknown);
   }
 }
 
