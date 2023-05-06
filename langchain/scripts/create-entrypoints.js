@@ -187,7 +187,7 @@ const requiresOptionalDependency = [
   "retrievers/metal",
   "cache/redis",
   "stores/file/node",
-  "stores/messages/dynamodb",
+  "stores/message/dynamodb",
 ];
 
 // List of test-exports-* packages which we use to test that the exports field
