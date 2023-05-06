@@ -4,6 +4,7 @@ import {
   CreateEmbeddingRequest,
   ConfigurationParameters,
 } from "openai";
+import { isNode } from "browser-or-node";
 import type { AxiosRequestConfig } from "axios";
 import { AzureOpenAIInput } from "../types/open-ai-types.js";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
@@ -175,7 +176,7 @@ export class OpenAIEmbeddings
         basePath: endpoint,
         baseOptions: {
           timeout: this.timeout,
-          adapter: fetchAdapter,
+          adapter: isNode ? undefined : fetchAdapter,
           ...this.clientConfig.baseOptions,
         },
       });

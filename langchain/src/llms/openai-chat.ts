@@ -1,3 +1,4 @@
+import { isNode } from "browser-or-node";
 import {
   Configuration,
   OpenAIApi,
@@ -254,6 +255,7 @@ export class OpenAIChat
             },
             {
               ...options,
+              adapter: fetchAdapter, // default adapter doesn't do streaming
               responseType: "stream",
               onmessage: (event) => {
                 if (event.data?.trim?.() === "[DONE]") {
@@ -346,14 +348,16 @@ export class OpenAIChat
         basePath: endpoint,
         baseOptions: {
           timeout: this.timeout,
-          adapter: fetchAdapter,
           ...this.clientConfig.baseOptions,
         },
       });
       this.client = new OpenAIApi(clientConfig);
     }
-    const axiosOptions = (options ?? {}) as StreamingAxiosConfiguration &
-      OpenAICallOptions;
+    const axiosOptions = {
+      adapter: isNode ? undefined : fetchAdapter,
+      ...this.clientConfig.baseOptions,
+      ...options,
+    } as StreamingAxiosConfiguration;
     if (this.azureOpenAIApiKey) {
       axiosOptions.headers = {
         "api-key": this.azureOpenAIApiKey,
