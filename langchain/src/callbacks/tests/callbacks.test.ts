@@ -1,5 +1,5 @@
 import { test, expect } from "@jest/globals";
-import { v4 as uuidv4 } from "uuid";
+import * as uuid from "uuid";
 import { CallbackManager } from "../manager.js";
 import { BaseCallbackHandler, BaseCallbackHandlerInput } from "../base.js";
 import {
@@ -10,7 +10,7 @@ import {
 } from "../../schema/index.js";
 
 class FakeCallbackHandler extends BaseCallbackHandler {
-  name = `fake-${uuidv4()}`;
+  name = `fake-${uuid.v4()}`;
 
   starts = 0;
 
