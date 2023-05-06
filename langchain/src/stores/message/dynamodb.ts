@@ -3,8 +3,11 @@ import {
   DynamoDBClientConfig,
   GetItemCommand,
   GetItemCommandInput,
-  PutItemCommand,
-  PutItemCommandInput,
+  UpdateItemCommand,
+  UpdateItemCommandInput,
+  DeleteItemCommand,
+  DeleteItemCommandInput,
+  AttributeValue,
 } from "@aws-sdk/client-dynamodb";
 
 import {
@@ -20,7 +23,24 @@ import {
 export interface DynamoDBChatMessageHistoryFields {
   tableName: string;
   sessionId: string;
+  partitionKey?: string;
+  sortKey?: string;
+  messageAttributeName?: string;
   config?: DynamoDBClientConfig;
+}
+
+interface DynamoDBSerializedChatMessage {
+  M: {
+    type: {
+      S: string;
+    };
+    text: {
+      S: string;
+    };
+    role?: {
+      S: string;
+    };
+  };
 }
 
 export class DynamoDBChatMessageHistory extends BaseListChatMessageHistory {
@@ -30,28 +50,52 @@ export class DynamoDBChatMessageHistory extends BaseListChatMessageHistory {
 
   private client: DynamoDBClient;
 
+  private partitionKey = "id";
+
+  private sortKey?: string;
+
+  private messageAttributeName = "messages";
+
+  private dynamoKey: Record<string, AttributeValue>;
+
   constructor({
     tableName,
     sessionId,
+    partitionKey,
+    sortKey,
+    messageAttributeName,
     config,
   }: DynamoDBChatMessageHistoryFields) {
     super();
     this.tableName = tableName;
     this.sessionId = sessionId;
     this.client = new DynamoDBClient(config ?? {});
+    this.partitionKey = partitionKey ?? this.partitionKey;
+    this.sortKey = sortKey;
+    this.messageAttributeName =
+      messageAttributeName ?? this.messageAttributeName;
+
+    this.dynamoKey = {};
+    this.dynamoKey[this.partitionKey] = { S: this.sessionId };
+    if (this.sortKey) {
+      this.dynamoKey[this.sortKey] = { S: this.sortKey };
+    }
   }
 
   async getMessages(): Promise<BaseChatMessage[]> {
     const params: GetItemCommandInput = {
       TableName: this.tableName,
-      Key: { id: { S: this.sessionId } },
+      Key: this.dynamoKey,
     };
+
     const response = await this.client.send(new GetItemCommand(params));
-    const items = response.Item?.messages.L ?? [];
+    const items = response.Item
+      ? response.Item[this.messageAttributeName]?.L ?? []
+      : [];
     const messages = items
       .map((item) => ({
         type: item.M?.type.S,
-        role: item.M?.role.S,
+        role: item.M?.role?.S,
         text: item.M?.text.S,
       }))
       .filter(
@@ -61,30 +105,48 @@ export class DynamoDBChatMessageHistory extends BaseListChatMessageHistory {
   }
 
   async clear(): Promise<void> {
-    throw new Error("Method not implemented.");
+    const params: DeleteItemCommandInput = {
+      TableName: this.tableName,
+      Key: this.dynamoKey,
+    };
+    await this.client.send(new DeleteItemCommand(params));
   }
 
   protected async addMessage(message: BaseChatMessage) {
-    const currentMessages = await this.getMessages();
-    const messages = mapChatMessagesToStoredMessages([
-      ...currentMessages,
-      message,
-    ]);
+    const messages = mapChatMessagesToStoredMessages([message]);
 
-    const params: PutItemCommandInput = {
+    const params: UpdateItemCommandInput = {
       TableName: this.tableName,
-      Item: {
-        id: { S: this.sessionId },
-        messages: {
-          L: messages.map((x) => ({
-            M: {
-              type: { S: x.type },
-              text: { S: x.text },
-            },
-          })),
+      Key: this.dynamoKey,
+      ExpressionAttributeNames: {
+        "#m": this.messageAttributeName,
+      },
+      ExpressionAttributeValues: {
+        ":empty_list": {
+          L: [],
+        },
+        ":m": {
+          L: messages.map((message) => {
+            const dynamoSerializedMessage: DynamoDBSerializedChatMessage = {
+              M: {
+                type: {
+                  S: message.type,
+                },
+                text: {
+                  S: message.text,
+                },
+              },
+            };
+            if (message.role) {
+              dynamoSerializedMessage.M.role = { S: message.role };
+            }
+            return dynamoSerializedMessage;
+          }),
         },
       },
+      UpdateExpression:
+        "SET #m = list_append(if_not_exists(#m, :empty_list), :m)",
     };
-    await new DynamoDBClient({}).send(new PutItemCommand(params));
+    await this.client.send(new UpdateItemCommand(params));
   }
 }

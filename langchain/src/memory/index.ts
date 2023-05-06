@@ -10,6 +10,7 @@ export {
 } from "./buffer_window_memory.js";
 export { BaseChatMemory, BaseChatMemoryInput } from "./chat_memory.js";
 export { ChatMessageHistory } from "../stores/message/in_memory.js";
+export { DynamoDBChatMessageHistory } from "../stores/message/dynamodb.js";
 export { MotorheadMemory, MotorheadMemoryInput } from "./motorhead_memory.js";
 export {
   VectorStoreRetrieverMemory,
