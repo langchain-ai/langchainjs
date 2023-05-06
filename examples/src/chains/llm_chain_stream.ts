@@ -1,18 +1,17 @@
 import { OpenAI } from "langchain/llms/openai";
 import { PromptTemplate } from "langchain/prompts";
 import { LLMChain } from "langchain/chains";
-import { BaseCallbackHandler } from "langchain/callbacks";
 
 export const run = async () => {
   const model = new OpenAI({
     temperature: 0.9,
     streaming: true,
     callbacks: [
-      BaseCallbackHandler.fromMethods({
-        async handleLLMNewToken(token: string) {
+      {
+        handleLLMNewToken(token: string) {
           console.log({ token });
         },
-      }),
+      },
     ],
   });
 

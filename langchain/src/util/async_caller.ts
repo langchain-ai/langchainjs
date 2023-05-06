@@ -1,6 +1,18 @@
 import pRetry from "p-retry";
 import PQueueMod from "p-queue";
 
+const STATUS_NO_RETRY = [
+  400, // Bad Request
+  401, // Unauthorized
+  403, // Forbidden
+  404, // Not Found
+  405, // Method Not Allowed
+  406, // Not Acceptable
+  407, // Proxy Authentication Required
+  408, // Request Timeout
+  409, // Conflict
+];
+
 export interface AsyncCallerParams {
   /**
    * The maximum number of concurrent calls that can be made.
@@ -60,6 +72,24 @@ export class AsyncCaller {
               }
             }),
           {
+            onFailedAttempt(error) {
+              if (
+                error.message.startsWith("Cancel") ||
+                error.message.startsWith("TimeoutError") ||
+                error.message.startsWith("AbortError")
+              ) {
+                throw error;
+              }
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              if ((error as any)?.code === "ECONNABORTED") {
+                throw error;
+              }
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              const status = (error as any)?.response?.status;
+              if (status && STATUS_NO_RETRY.includes(+status)) {
+                throw error;
+              }
+            },
             retries: this.maxRetries,
             randomize: true,
             // If needed we can change some of the defaults here,
@@ -67,6 +97,12 @@ export class AsyncCaller {
           }
         ),
       { throwOnTimeout: true }
+    );
+  }
+
+  fetch(...args: Parameters<typeof fetch>): ReturnType<typeof fetch> {
+    return this.call(() =>
+      fetch(...args).then((res) => (res.ok ? res : Promise.reject(res)))
     );
   }
 }

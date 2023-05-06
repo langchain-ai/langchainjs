@@ -38,7 +38,8 @@ async function webpackLoader(content, map, meta) {
         node.specifiers.forEach((specifier) => {
           if (specifier.type === "ImportSpecifier") {
             const local = specifier.local.name;
-            imports.push({ local, source });
+            const imported = specifier.imported.name;
+            imports.push({ local, imported, source });
           } else {
             throw new Error("Unsupported import type");
           }
@@ -46,22 +47,22 @@ async function webpackLoader(content, map, meta) {
       }
     });
 
-    imports.forEach((imported) => {
-      const { local, source } = imported;
+    imports.forEach((imp) => {
+      const { imported, source } = imp;
       const moduleName = source.split("/").slice(1).join("_");
       const docsPath = path.resolve(__dirname, "docs", "api", moduleName);
       const available = fs.readdirSync(docsPath, { withFileTypes: true });
       const found = available.find(
         (dirent) =>
           dirent.isDirectory() &&
-          fs.existsSync(path.resolve(docsPath, dirent.name, local + ".md"))
+          fs.existsSync(path.resolve(docsPath, dirent.name, imported + ".md"))
       );
       if (found) {
-        imported.docs =
-          "/" + path.join("docs", "api", moduleName, found.name, local);
+        imp.docs =
+          "/" + path.join("docs", "api", moduleName, found.name, imported);
       } else {
         throw new Error(
-          `Could not find docs for ${source}.${local} in docs/api/`
+          `Could not find docs for ${source}.${imported} in docs/api/`
         );
       }
     });

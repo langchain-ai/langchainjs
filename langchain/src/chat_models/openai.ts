@@ -1,3 +1,4 @@
+import { isNode } from "browser-or-node";
 import {
   Configuration,
   OpenAIApi,
@@ -7,8 +8,13 @@ import {
   ChatCompletionResponseMessageRoleEnum,
   ChatCompletionRequestMessage,
 } from "openai";
-import type { StreamingAxiosConfiguration } from "../util/axios-types.js";
+import {
+  AzureOpenAIInput,
+  OpenAICallOptions,
+  OpenAIChatInput,
+} from "../types/open-ai-types.js";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
+import type { StreamingAxiosConfiguration } from "../util/axios-types.js";
 import { BaseChatModel, BaseChatModelParams } from "./base.js";
 import {
   AIChatMessage,
@@ -22,6 +28,8 @@ import {
 } from "../schema/index.js";
 import { getModelNameForTiktoken } from "../base_language/count_tokens.js";
 import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
+
+export { OpenAICallOptions, OpenAIChatInput, AzureOpenAIInput };
 
 interface TokenUsage {
   completionTokens?: number;
@@ -64,71 +72,30 @@ function openAIResponseToChatMessage(
   }
 }
 
-export interface OpenAIInput {
-  /** Sampling temperature to use, between 0 and 2, defaults to 1 */
-  temperature: number;
-
-  /** Total probability mass of tokens to consider at each step, between 0 and 1, defaults to 1 */
-  topP: number;
-
-  /** Penalizes repeated tokens according to frequency */
-  frequencyPenalty: number;
-
-  /** Penalizes repeated tokens */
-  presencePenalty: number;
-
-  /** Number of chat completions to generate for each prompt */
-  n: number;
-
-  /** Dictionary used to adjust the probability of specific tokens being generated */
-  logitBias?: Record<string, number>;
-
-  /** Whether to stream the results or not. Enabling disables tokenUsage reporting */
-  streaming: boolean;
-
-  /**
-   * Maximum number of tokens to generate in the completion. If not specified,
-   * defaults to the maximum number of tokens allowed by the model.
-   */
-  maxTokens?: number;
-
-  /** Model name to use */
-  modelName: string;
-
-  /** Holds any additional parameters that are valid to pass to {@link
-   * https://platform.openai.com/docs/api-reference/completions/create |
-   * `openai.create`} that are not explicitly specified on this class.
-   */
-  modelKwargs?: Kwargs;
-
-  /** List of stop words to use when generating */
-  stop?: string[];
-
-  /**
-   * Timeout to use when making requests to OpenAI.
-   */
-  timeout?: number;
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type Kwargs = Record<string, any>;
-
 /**
  * Wrapper around OpenAI large language models that use the Chat endpoint.
  *
  * To use you should have the `openai` package installed, with the
  * `OPENAI_API_KEY` environment variable set.
  *
+ * To use with Azure you should have the `openai` package installed, with the
+ * `AZURE_OPENAI_API_KEY`,
+ * `AZURE_OPENAI_API_INSTANCE_NAME`,
+ * `AZURE_OPENAI_API_DEPLOYMENT_NAME`
+ * and `AZURE_OPENAI_API_VERSION` environment variable set.
+ *
  * @remarks
  * Any parameters that are valid to be passed to {@link
  * https://platform.openai.com/docs/api-reference/chat/create |
  * `openai.createCompletion`} can be passed through {@link modelKwargs}, even
  * if not explicitly available on this class.
- *
- * @augments BaseLLM
- * @augments OpenAIInput
  */
-export class ChatOpenAI extends BaseChatModel implements OpenAIInput {
+export class ChatOpenAI
+  extends BaseChatModel
+  implements OpenAIChatInput, AzureOpenAIInput
+{
+  declare CallOptions: OpenAICallOptions;
+
   temperature = 1;
 
   topP = 1;
@@ -143,7 +110,7 @@ export class ChatOpenAI extends BaseChatModel implements OpenAIInput {
 
   modelName = "gpt-3.5-turbo";
 
-  modelKwargs?: Kwargs;
+  modelKwargs?: OpenAIChatInput["modelKwargs"];
 
   stop?: string[];
 
@@ -153,12 +120,21 @@ export class ChatOpenAI extends BaseChatModel implements OpenAIInput {
 
   maxTokens?: number;
 
+  azureOpenAIApiVersion?: string;
+
+  azureOpenAIApiKey?: string;
+
+  azureOpenAIApiInstanceName?: string;
+
+  azureOpenAIApiDeploymentName?: string;
+
   private client: OpenAIApi;
 
   private clientConfig: ConfigurationParameters;
 
   constructor(
-    fields?: Partial<OpenAIInput> &
+    fields?: Partial<OpenAIChatInput> &
+      Partial<AzureOpenAIInput> &
       BaseChatModelParams & {
         concurrency?: number;
         cache?: boolean;
@@ -170,11 +146,41 @@ export class ChatOpenAI extends BaseChatModel implements OpenAIInput {
 
     const apiKey =
       fields?.openAIApiKey ??
-      // eslint-disable-next-line no-process-env
-      (typeof process !== "undefined" ? process.env.OPENAI_API_KEY : undefined);
-    if (!apiKey) {
-      throw new Error("OpenAI API key not found");
+      (typeof process !== "undefined"
+        ? // eslint-disable-next-line no-process-env
+          process.env?.OPENAI_API_KEY
+        : undefined);
+
+    const azureApiKey =
+      fields?.azureOpenAIApiKey ??
+      (typeof process !== "undefined"
+        ? // eslint-disable-next-line no-process-env
+          process.env?.AZURE_OPENAI_API_KEY
+        : undefined);
+    if (!azureApiKey && !apiKey) {
+      throw new Error("(Azure) OpenAI API key not found");
     }
+
+    const azureApiInstanceName =
+      fields?.azureOpenAIApiInstanceName ??
+      (typeof process !== "undefined"
+        ? // eslint-disable-next-line no-process-env
+          process.env?.AZURE_OPENAI_API_INSTANCE_NAME
+        : undefined);
+
+    const azureApiDeploymentName =
+      fields?.azureOpenAIApiDeploymentName ??
+      (typeof process !== "undefined"
+        ? // eslint-disable-next-line no-process-env
+          process.env?.AZURE_OPENAI_API_DEPLOYMENT_NAME
+        : undefined);
+
+    const azureApiVersion =
+      fields?.azureOpenAIApiVersion ??
+      (typeof process !== "undefined"
+        ? // eslint-disable-next-line no-process-env
+          process.env?.AZURE_OPENAI_API_VERSION
+        : undefined);
 
     this.modelName = fields?.modelName ?? this.modelName;
     this.modelKwargs = fields?.modelKwargs ?? {};
@@ -191,8 +197,25 @@ export class ChatOpenAI extends BaseChatModel implements OpenAIInput {
 
     this.streaming = fields?.streaming ?? false;
 
+    this.azureOpenAIApiVersion = azureApiVersion;
+    this.azureOpenAIApiKey = azureApiKey;
+    this.azureOpenAIApiInstanceName = azureApiInstanceName;
+    this.azureOpenAIApiDeploymentName = azureApiDeploymentName;
+
     if (this.streaming && this.n > 1) {
       throw new Error("Cannot stream results when n > 1");
+    }
+
+    if (this.azureOpenAIApiKey) {
+      if (!this.azureOpenAIApiInstanceName) {
+        throw new Error("Azure OpenAI API instance name not found");
+      }
+      if (!this.azureOpenAIApiDeploymentName) {
+        throw new Error("Azure OpenAI API deployment name not found");
+      }
+      if (!this.azureOpenAIApiVersion) {
+        throw new Error("Azure OpenAI API version not found");
+      }
     }
 
     this.clientConfig = {
@@ -204,14 +227,14 @@ export class ChatOpenAI extends BaseChatModel implements OpenAIInput {
   /**
    * Get the parameters used to invoke the model
    */
-  invocationParams(): Omit<CreateChatCompletionRequest, "messages"> & Kwargs {
+  invocationParams(): Omit<CreateChatCompletionRequest, "messages"> {
     return {
       model: this.modelName,
       temperature: this.temperature,
       top_p: this.topP,
       frequency_penalty: this.frequencyPenalty,
       presence_penalty: this.presencePenalty,
-      max_tokens: this.maxTokens,
+      max_tokens: this.maxTokens === -1 ? undefined : this.maxTokens,
       n: this.n,
       logit_bias: this.logitBias,
       stop: this.stop,
@@ -239,9 +262,15 @@ export class ChatOpenAI extends BaseChatModel implements OpenAIInput {
   /** @ignore */
   async _generate(
     messages: BaseChatMessage[],
-    stop?: string[],
+    stopOrOptions?: string[] | this["CallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
+    const stop = Array.isArray(stopOrOptions)
+      ? stopOrOptions
+      : stopOrOptions?.stop;
+    const options = Array.isArray(stopOrOptions)
+      ? {}
+      : stopOrOptions?.options ?? {};
     const tokenUsage: TokenUsage = {};
     if (this.stop && stop) {
       throw new Error("Stop found in input and default params");
@@ -267,6 +296,8 @@ export class ChatOpenAI extends BaseChatModel implements OpenAIInput {
               messages: messagesMapped,
             },
             {
+              ...options,
+              adapter: fetchAdapter, // default adapter doesn't do streaming
               responseType: "stream",
               onmessage: (event) => {
                 if (event.data?.trim?.() === "[DONE]") {
@@ -334,10 +365,13 @@ export class ChatOpenAI extends BaseChatModel implements OpenAIInput {
             }
           });
         })
-      : await this.completionWithRetry({
-          ...params,
-          messages: messagesMapped,
-        });
+      : await this.completionWithRetry(
+          {
+            ...params,
+            messages: messagesMapped,
+          },
+          options
+        );
 
     const {
       completion_tokens: completionTokens,
@@ -410,21 +444,39 @@ export class ChatOpenAI extends BaseChatModel implements OpenAIInput {
     options?: StreamingAxiosConfiguration
   ) {
     if (!this.client) {
+      const endpoint = this.azureOpenAIApiKey
+        ? `https://${this.azureOpenAIApiInstanceName}.openai.azure.com/openai/deployments/${this.azureOpenAIApiDeploymentName}`
+        : this.clientConfig.basePath;
       const clientConfig = new Configuration({
         ...this.clientConfig,
+        basePath: endpoint,
         baseOptions: {
           timeout: this.timeout,
-          adapter: fetchAdapter,
           ...this.clientConfig.baseOptions,
         },
       });
       this.client = new OpenAIApi(clientConfig);
     }
+    const axiosOptions = {
+      adapter: isNode ? undefined : fetchAdapter,
+      ...this.clientConfig.baseOptions,
+      ...options,
+    } as StreamingAxiosConfiguration;
+    if (this.azureOpenAIApiKey) {
+      axiosOptions.headers = {
+        "api-key": this.azureOpenAIApiKey,
+        ...axiosOptions.headers,
+      };
+      axiosOptions.params = {
+        "api-version": this.azureOpenAIApiVersion,
+        ...axiosOptions.params,
+      };
+    }
     return this.caller
       .call(
         this.client.createChatCompletion.bind(this.client),
         request,
-        options
+        axiosOptions
       )
       .then((res) => res.data);
   }

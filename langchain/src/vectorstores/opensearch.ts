@@ -1,5 +1,5 @@
 import { Client, RequestParams, errors } from "@opensearch-project/opensearch";
-import { v4 as uuid } from "uuid";
+import * as uuid from "uuid";
 import { Embeddings } from "../embeddings/base.js";
 import { Document } from "../document.js";
 import { VectorStore } from "./base.js";
@@ -75,7 +75,7 @@ export class OpenSearchVectorStore extends VectorStore {
       {
         index: {
           _index: this.indexName,
-          _id: uuid(),
+          _id: uuid.v4(),
         },
       },
       {

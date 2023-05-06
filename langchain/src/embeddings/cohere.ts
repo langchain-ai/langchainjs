@@ -40,8 +40,10 @@ export class CohereEmbeddings
 
     const apiKey =
       fields?.apiKey ||
-      // eslint-disable-next-line no-process-env
-      (typeof process !== "undefined" ? process.env.COHERE_API_KEY : undefined);
+      (typeof process !== "undefined"
+        ? // eslint-disable-next-line no-process-env
+          process.env?.COHERE_API_KEY
+        : undefined);
 
     if (!apiKey) {
       throw new Error("Cohere API key not found");
@@ -62,13 +64,13 @@ export class CohereEmbeddings
 
     const subPrompts = chunkArray(texts, this.batchSize);
 
-    const embeddings = [];
+    const embeddings: number[][] = [];
 
     for (let i = 0; i < subPrompts.length; i += 1) {
       const input = subPrompts[i];
       const { body } = await this.embeddingWithRetry({
         model: this.modelName,
-        texts,
+        texts: input,
       });
       for (let j = 0; j < input.length; j += 1) {
         embeddings.push(body.embeddings[j]);

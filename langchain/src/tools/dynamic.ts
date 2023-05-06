@@ -1,25 +1,27 @@
-import { BaseCallbackHandler } from "../callbacks/base.js";
-import {
-  CallbackManagerForToolRun,
-  CallbackManager,
-} from "../callbacks/manager.js";
+import { CallbackManagerForToolRun, Callbacks } from "../callbacks/manager.js";
 import { Tool } from "./base.js";
 
 export interface DynamicToolInput {
   name: string;
   description: string;
-  func: (arg1: string) => Promise<string>;
+  func: (
+    input: string,
+    runManager?: CallbackManagerForToolRun
+  ) => Promise<string>;
   returnDirect?: boolean;
   verbose?: boolean;
-  callbacks?: BaseCallbackHandler[] | CallbackManager;
+  callbacks?: Callbacks;
 }
 
+/**
+ * A tool that can be created dynamically from a function, name, and description.
+ */
 export class DynamicTool extends Tool {
   name: string;
 
   description: string;
 
-  func: (arg1: string) => Promise<string>;
+  func: DynamicToolInput["func"];
 
   constructor(fields: DynamicToolInput) {
     super(fields.verbose, fields.callbacks);
@@ -32,8 +34,8 @@ export class DynamicTool extends Tool {
   /** @ignore */
   async _call(
     input: string,
-    _runManager?: CallbackManagerForToolRun
+    runManager?: CallbackManagerForToolRun
   ): Promise<string> {
-    return this.func(input);
+    return this.func(input, runManager);
   }
 }

@@ -1,7 +1,6 @@
 import { LLMChain } from "../../chains/llm_chain.js";
 import { BaseChatModel } from "../../chat_models/base.js";
 import { VectorStoreRetriever } from "../../vectorstores/base.js";
-import { Document } from "../../document.js";
 import { Tool } from "../../tools/base.js";
 
 import { AutoGPTOutputParser } from "./output_parser.js";
@@ -14,6 +13,11 @@ import {
 } from "../../schema/index.js";
 // import { HumanInputRun } from "./tools/human/tool"; // TODO
 import { ObjectTool, FINISH_NAME } from "./schema.js";
+import { TokenTextSplitter } from "../../text_splitter.js";
+import {
+  getEmbeddingContextSize,
+  getModelContextSize,
+} from "../../base_language/count_tokens.js";
 
 export interface AutoGPTInput {
   aiName: string;
@@ -43,6 +47,9 @@ export class AutoGPT {
 
   maxIterations: number;
 
+  // Currently not generic enough to support any text splitter.
+  textSplitter: TokenTextSplitter;
+
   constructor({
     aiName,
     memory,
@@ -65,6 +72,15 @@ export class AutoGPT {
     this.tools = tools;
     this.feedbackTool = feedbackTool;
     this.maxIterations = maxIterations;
+    const chunkSize = getEmbeddingContextSize(
+      "modelName" in memory.vectorStore.embeddings
+        ? (memory.vectorStore.embeddings.modelName as string)
+        : undefined
+    );
+    this.textSplitter = new TokenTextSplitter({
+      chunkSize,
+      chunkOverlap: Math.round(chunkSize / 10),
+    });
   }
 
   static fromLLMAndTools(
@@ -84,6 +100,9 @@ export class AutoGPT {
       aiRole,
       tools,
       tokenCounter: llm.getNumTokens.bind(llm),
+      sendTokenLimit: getModelContextSize(
+        "modelName" in llm ? (llm.modelName as string) : "gpt2"
+      ),
     });
     // const feedbackTool = humanInTheLoop ? new HumanInputRun() : null;
     const chain = new LLMChain({ llm, prompt });
@@ -151,9 +170,8 @@ export class AutoGPT {
         memoryToAdd += feedback;
       }
 
-      await this.memory.addDocuments([
-        new Document({ pageContent: memoryToAdd }),
-      ]);
+      const documents = await this.textSplitter.createDocuments([memoryToAdd]);
+      await this.memory.addDocuments(documents);
       this.fullMessageHistory.push(new SystemChatMessage(result));
     }
 

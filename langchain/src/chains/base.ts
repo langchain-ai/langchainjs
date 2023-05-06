@@ -1,9 +1,12 @@
 import { BaseMemory } from "../memory/base.js";
-import { ChainValues } from "../schema/index.js";
-import { BaseCallbackHandler, CallbackManager } from "../callbacks/index.js";
+import { ChainValues, RUN_KEY } from "../schema/index.js";
+import {
+  CallbackManagerForChainRun,
+  CallbackManager,
+  Callbacks,
+} from "../callbacks/manager.js";
 import { SerializedBaseChain } from "./serde.js";
 import { BaseLangChain, BaseLangChainParams } from "../base_language/index.js";
-import { CallbackManagerForChainRun } from "../callbacks/manager.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type LoadValues = Record<string, any>;
@@ -21,15 +24,29 @@ export interface ChainInputs extends BaseLangChainParams {
  * Base interface that all chains must implement.
  */
 export abstract class BaseChain extends BaseLangChain implements ChainInputs {
-  memory?: BaseMemory;
+  declare memory?: BaseMemory;
 
   constructor(
-    memory?: BaseMemory,
+    fields?: BaseMemory | ChainInputs,
+    /** @deprecated */
     verbose?: boolean,
-    callbacks?: CallbackManager | BaseCallbackHandler[]
+    /** @deprecated */
+    callbacks?: Callbacks
   ) {
-    super({ verbose, callbacks });
-    this.memory = memory;
+    if (
+      arguments.length === 1 &&
+      typeof fields === "object" &&
+      !("saveContext" in fields)
+    ) {
+      // fields is not a BaseMemory
+      const { memory, callbackManager, ...rest } = fields;
+      super({ ...rest, callbacks: callbackManager ?? rest.callbacks });
+      this.memory = memory;
+    } else {
+      // fields is a BaseMemory
+      super({ verbose, callbacks });
+      this.memory = fields as BaseMemory;
+    }
   }
 
   /**
@@ -48,7 +65,9 @@ export abstract class BaseChain extends BaseLangChain implements ChainInputs {
   /**
    * Return a json-like object representing this chain.
    */
-  abstract serialize(): SerializedBaseChain;
+  serialize(): SerializedBaseChain {
+    throw new Error("Method not implemented.");
+  }
 
   abstract get inputKeys(): string[];
 
@@ -57,22 +76,20 @@ export abstract class BaseChain extends BaseLangChain implements ChainInputs {
   async run(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     input: any,
-    callbacks?: CallbackManager | BaseCallbackHandler[]
+    callbacks?: Callbacks
   ): Promise<string> {
-    const isKeylessInput = this.inputKeys.length === 1;
+    const isKeylessInput = this.inputKeys.length <= 1;
     if (!isKeylessInput) {
       throw new Error(
         `Chain ${this._chainType()} expects multiple inputs, cannot use 'run' `
       );
     }
-    const values = { [this.inputKeys[0]]: input };
+    const values = this.inputKeys.length ? { [this.inputKeys[0]]: input } : {};
     const returnValues = await this.call(values, callbacks);
     const keys = Object.keys(returnValues);
-    // Filter out the __run field
-    const filteredKeys = keys.filter((key) => key !== "__run");
 
-    if (filteredKeys.length === 1) {
-      return returnValues[filteredKeys[0]];
+    if (keys.length === 1) {
+      return returnValues[keys[0]];
     }
     throw new Error(
       "return values have multiple keys, `run` only supported when one key currently"
@@ -82,12 +99,9 @@ export abstract class BaseChain extends BaseLangChain implements ChainInputs {
   /**
    * Run the core logic of this chain and add to output if desired.
    *
-   * Wraps {@link _call} and handles memory.
+   * Wraps _call and handles memory.
    */
-  async call(
-    values: ChainValues,
-    callbacks?: CallbackManager | BaseCallbackHandler[]
-  ): Promise<ChainValues> {
+  async call(values: ChainValues, callbacks?: Callbacks): Promise<ChainValues> {
     const fullValues = { ...values } as typeof values;
     if (!(this.memory == null)) {
       const newValues = await this.memory.loadMemoryVariables(values);
@@ -97,7 +111,7 @@ export abstract class BaseChain extends BaseLangChain implements ChainInputs {
     }
     const callbackManager_ = await CallbackManager.configure(
       callbacks,
-      Array.isArray(this.callbacks) ? this.callbacks : this.callbacks?.handlers,
+      this.callbacks,
       { verbose: this.verbose }
     );
     const runManager = await callbackManager_?.handleChainStart(
@@ -116,7 +130,10 @@ export abstract class BaseChain extends BaseLangChain implements ChainInputs {
       await this.memory.saveContext(values, outputValues);
     }
     // add the runManager's currentRunId to the outputValues
-    outputValues.__run = runManager ? { runId: runManager?.runId } : undefined;
+    Object.defineProperty(outputValues, RUN_KEY, {
+      value: runManager ? { runId: runManager?.runId } : undefined,
+      configurable: true,
+    });
     return outputValues;
   }
 
@@ -125,7 +142,7 @@ export abstract class BaseChain extends BaseLangChain implements ChainInputs {
    */
   async apply(
     inputs: ChainValues[],
-    callbacks?: CallbackManager[] | BaseCallbackHandler[][]
+    callbacks?: Callbacks[]
   ): Promise<ChainValues> {
     return Promise.all(
       inputs.map(async (i, idx) => this.call(i, callbacks?.[idx]))
@@ -144,10 +161,12 @@ export abstract class BaseChain extends BaseLangChain implements ChainInputs {
         const { LLMChain } = await import("./llm_chain.js");
         return LLMChain.deserialize(data);
       }
+      case "sequential_chain": {
+        const { SequentialChain } = await import("./sequential_chain.js");
+        return SequentialChain.deserialize(data);
+      }
       case "simple_sequential_chain": {
-        const { SimpleSequentialChain } = await import(
-          "./simple_sequential_chain.js"
-        );
+        const { SimpleSequentialChain } = await import("./sequential_chain.js");
         return SimpleSequentialChain.deserialize(data);
       }
       case "stuff_documents_chain": {

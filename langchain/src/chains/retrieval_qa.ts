@@ -1,8 +1,9 @@
 import { BaseChain, ChainInputs } from "./base.js";
-import { BaseLLM } from "../llms/base.js";
+import { BaseLanguageModel } from "../base_language/index.js";
 import { SerializedVectorDBQAChain } from "./serde.js";
 import { ChainValues, BaseRetriever } from "../schema/index.js";
 import { loadQAStuffChain } from "./question_answering/load.js";
+import { CallbackManagerForChainRun } from "../callbacks/manager.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type LoadValues = Record<string, any>;
@@ -37,7 +38,7 @@ export class RetrievalQAChain
   returnSourceDocuments = false;
 
   constructor(fields: RetrievalQAChainInput) {
-    super(undefined, fields.verbose, fields.callbackManager);
+    super(fields);
     this.retriever = fields.retriever;
     this.combineDocumentsChain = fields.combineDocumentsChain;
     this.inputKey = fields.inputKey ?? this.inputKey;
@@ -46,14 +47,20 @@ export class RetrievalQAChain
   }
 
   /** @ignore */
-  async _call(values: ChainValues): Promise<ChainValues> {
+  async _call(
+    values: ChainValues,
+    runManager?: CallbackManagerForChainRun
+  ): Promise<ChainValues> {
     if (!(this.inputKey in values)) {
       throw new Error(`Question key ${this.inputKey} not found.`);
     }
     const question: string = values[this.inputKey];
     const docs = await this.retriever.getRelevantDocuments(question);
     const inputs = { question, input_documents: docs };
-    const result = await this.combineDocumentsChain.call(inputs);
+    const result = await this.combineDocumentsChain.call(
+      inputs,
+      runManager?.getChild()
+    );
     if (this.returnSourceDocuments) {
       return {
         ...result,
@@ -79,7 +86,7 @@ export class RetrievalQAChain
   }
 
   static fromLLM(
-    llm: BaseLLM,
+    llm: BaseLanguageModel,
     retriever: BaseRetriever,
     options?: Partial<
       Omit<RetrievalQAChainInput, "combineDocumentsChain" | "index">

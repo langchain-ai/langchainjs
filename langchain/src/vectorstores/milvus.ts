@@ -1,4 +1,4 @@
-import { v4 as uuidv4 } from "uuid";
+import * as uuid from "uuid";
 import { MilvusClient } from "@zilliz/milvus2-sdk-node";
 import {
   DataType,
@@ -105,7 +105,7 @@ export class Milvus extends VectorStore {
     const url =
       args.url ??
       // eslint-disable-next-line no-process-env
-      (typeof process !== "undefined" ? process.env.MILVUS_URL : undefined);
+      (typeof process !== "undefined" ? process.env?.MILVUS_URL : undefined);
     if (!url) {
       throw new Error("Milvus URL address is not provided.");
     }
@@ -487,7 +487,7 @@ function createFieldTypeForMetadata(documents: Document[]): FieldType[] {
 }
 
 function genCollectionName(): string {
-  return `${MILVUS_COLLECTION_NAME_PREFIX}_${uuidv4().replaceAll("-", "")}`;
+  return `${MILVUS_COLLECTION_NAME_PREFIX}_${uuid.v4().replaceAll("-", "")}`;
 }
 
 function getTextFieldMaxLength(documents: Document[]) {

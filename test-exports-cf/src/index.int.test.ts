@@ -22,5 +22,5 @@ describe("Worker", () => {
       const text = await resp.text();
       expect(text.startsWith("Hello")).toBe(true);
     }
-  });
+  }, 30000);
 });

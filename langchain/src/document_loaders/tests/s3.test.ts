@@ -1,4 +1,3 @@
-/* eslint-disable tree-shaking/no-side-effects-in-initialization */
 import { test, jest, expect } from "@jest/globals";
 import S3Client from "@aws-sdk/client-s3";
 import * as fs from "node:fs";
@@ -48,13 +47,16 @@ test("Test S3 loader", async () => {
   });
 
   const result = await loader.load();
+  const unstructuredOptions = {
+    apiUrl: "http://localhost:8000/general/v0/general",
+  };
 
   expect(fsMock.mkdtempSync).toHaveBeenCalled();
   expect(fsMock.mkdirSync).toHaveBeenCalled();
   expect(fsMock.writeFileSync).toHaveBeenCalled();
   expect(UnstructuredLoaderMock).toHaveBeenCalledWith(
-    "http://localhost:8000/general/v0/general",
-    path.join("tmp", "s3fileloader-12345", "AccountingOverview.pdf")
+    path.join("tmp", "s3fileloader-12345", "AccountingOverview.pdf"),
+    unstructuredOptions
   );
   expect(result).toEqual(["fake document"]);
 });

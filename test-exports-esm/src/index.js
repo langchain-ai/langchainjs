@@ -7,6 +7,7 @@ import { HNSWLib } from "langchain/vectorstores/hnswlib";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { InMemoryDocstore, Document } from "langchain/docstore";
 import { CSVLoader } from "langchain/document_loaders/fs/csv";
+import { CallbackManager } from "langchain/callbacks";
 
 // Test exports
 assert(typeof OpenAI === "function");
@@ -14,6 +15,8 @@ assert(typeof LLMChain === "function");
 assert(typeof loadPrompt === "function");
 assert(typeof ChatPromptTemplate === "function");
 assert(typeof HNSWLib === "function");
+assert(typeof OpenAIEmbeddings === "function");
+assert(typeof CallbackManager === "function");
 
 // Test dynamic imports of peer dependencies
 const { HierarchicalNSW } = await HNSWLib.imports();
