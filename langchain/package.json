@@ -274,6 +274,9 @@
     "stores/file/node.cjs",
     "stores/file/node.js",
     "stores/file/node.d.ts",
+    "stores/message/dynamodb.cjs",
+    "stores/message/dynamodb.js",
+    "stores/message/dynamodb.d.ts",
     "experimental/autogpt.cjs",
     "experimental/autogpt.js",
     "experimental/autogpt.d.ts",
@@ -989,6 +992,11 @@
       "types": "./stores/file/node.d.ts",
       "import": "./stores/file/node.js",
       "require": "./stores/file/node.cjs"
+    },
+    "./stores/message/dynamodb": {
+      "types": "./stores/message/dynamodb.d.ts",
+      "import": "./stores/message/dynamodb.js",
+      "require": "./stores/message/dynamodb.cjs"
     },
     "./experimental/autogpt": {
       "types": "./experimental/autogpt.d.ts",

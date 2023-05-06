@@ -32,5 +32,6 @@ const retrievers_document_compressors_chain_extract = require("langchain/retriev
 const retrievers_hyde = require("langchain/retrievers/hyde");
 const cache = require("langchain/cache");
 const stores_file_in_memory = require("langchain/stores/file/in_memory");
+const stores_message_dynamodb = require("langchain/stores/message/dynamodb");
 const experimental_autogpt = require("langchain/experimental/autogpt");
 const experimental_babyagi = require("langchain/experimental/babyagi");

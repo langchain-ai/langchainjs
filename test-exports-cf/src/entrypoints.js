@@ -32,5 +32,6 @@ export * from "langchain/retrievers/document_compressors/chain_extract";
 export * from "langchain/retrievers/hyde";
 export * from "langchain/cache";
 export * from "langchain/stores/file/in_memory";
+export * from "langchain/stores/message/dynamodb";
 export * from "langchain/experimental/autogpt";
 export * from "langchain/experimental/babyagi";
