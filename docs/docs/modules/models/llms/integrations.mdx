@@ -22,6 +22,24 @@ const res = await model.call(
 console.log({ res });
 ```
 
+## Azure `OpenAI`
+
+```typescript
+import { OpenAI } from "langchain/llms/openai";
+
+const model = new OpenAI({
+  temperature: 0.9,
+  azureOpenAIApiKey: "YOUR-API-KEY",
+  azureOpenAIApiInstanceName: "YOUR-INSTANCE-NAME",
+  azureOpenAIApiDeploymentName: "YOUR-DEPLOYMENT-NAME",
+  azureOpenAIApiVersion: "YOUR-API-VERSION",
+});
+const res = await model.call(
+  "What would be a good company name a company that makes colorful socks?"
+);
+console.log({ res });
+```
+
 ## `HuggingFaceInference`
 
 ```bash npm2yarn
@@ -93,6 +111,33 @@ import { PromptLayerOpenAI } from "langchain/llms/openai";
 const model = new PromptLayerOpenAI({
   temperature: 0.9,
   openAIApiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.OPENAI_API_KEY
+  promptLayerApiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.PROMPTLAYER_API_KEY
+});
+const res = await model.call(
+  "What would be a good company name a company that makes colorful socks?"
+);
+```
+
+### Azure `PromptLayerOpenAI`
+
+LangChain integrates with PromptLayer for logging and debugging prompts and responses. To add support for PromptLayer:
+
+1. Create a PromptLayer account here: [https://promptlayer.com](https://promptlayer.com).
+2. Create an API token and pass it either as `promptLayerApiKey` argument in the `PromptLayerOpenAI` constructor or in the `PROMPTLAYER_API_KEY` environment variable.
+
+```typescript
+import { PromptLayerOpenAI } from "langchain/llms/openai";
+
+const model = new PromptLayerOpenAI({
+  temperature: 0.9,
+  azureOpenAIApiKey: "YOUR-AOAI-API-KEY", // In Node.js defaults to process.env.AZURE_OPENAI_API_KEY
+  azureOpenAIApiInstanceName: "YOUR-AOAI-INSTANCE-NAME", // In Node.js defaults to process.env.AZURE_OPENAI_API_INSTANCE_NAME
+  azureOpenAIApiDeploymentName: "YOUR-AOAI-DEPLOYMENT-NAME", // In Node.js defaults to process.env.AZURE_OPENAI_API_DEPLOYMENT_NAME
+  azureOpenAIApiCompletionsDeploymentName:
+    "YOUR-AOAI-COMPLETIONS-DEPLOYMENT-NAME", // In Node.js defaults to process.env.AZURE_OPENAI_API_COMPLETIONS_DEPLOYMENT_NAME
+  azureOpenAIApiEmbeddingsDeploymentName:
+    "YOUR-AOAI-EMBEDDINGS-DEPLOYMENT-NAME", // In Node.js defaults to process.env.AZURE_OPENAI_API_EMBEDDINGS_DEPLOYMENT_NAME
+  azureOpenAIApiVersion: "YOUR-AOAI-API-VERSION", // In Node.js defaults to process.env.AZURE_OPENAI_API_VERSION
   promptLayerApiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.PROMPTLAYER_API_KEY
 });
 const res = await model.call(
