@@ -25,7 +25,7 @@ const memory = new RedisMemory(client, {
 });
 
 // Connect to your specified Redis client
-await memory.init()
+await memory.init();
 
 //OPTIONAL: Instantiate any history from a prior session
 await memory.loadMemoryVariables({});
