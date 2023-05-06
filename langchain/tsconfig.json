@@ -12,7 +12,6 @@
     "module": "ES2020",
     "moduleResolution": "nodenext",
     "esModuleInterop": true,
-    "baseUrl": "./src",
     "declaration": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
