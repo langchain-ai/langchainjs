@@ -70,22 +70,32 @@ ${JSON.stringify(zodToJsonSchema(this.schema))}
     schemaInput: JsonSchema7Type,
     indent = 2
   ): string {
-    const schema = schemaInput as (
-      | JsonSchema7ArrayType
+    const schema = schemaInput as Extract<
+      JsonSchema7Type,
       | JsonSchema7ObjectType
+      | JsonSchema7ArrayType
       | JsonSchema7StringType
       | JsonSchema7NumberType
-    ) & { description?: string };
+    >;
+
+    let nullable = false;
+    if (Array.isArray(schema.type)) {
+      const [actualType, nullStr] = schema.type;
+      nullable = nullStr === "null";
+      schema.type = actualType;
+    }
 
     if (schema.type === "object" && schema.properties) {
       const description = schema.description ? ` // ${schema.description}` : "";
       const properties = Object.entries(schema.properties)
         .map(([key, value]) => {
-          const optional = schema.required?.includes(key) ? "" : " (optional)";
+          const isOptional = schema.required?.includes(key)
+            ? ""
+            : " (optional)";
           return `${" ".repeat(indent)}"${key}": ${this._schemaToInstruction(
             value,
             indent + 2
-          )}${optional}`;
+          )}${isOptional}`;
         })
         .join("\n");
       return `{\n${properties}\n${" ".repeat(indent - 2)}}${description}`;
@@ -96,8 +106,9 @@ ${JSON.stringify(zodToJsonSchema(this.schema))}
         schema.items
       )}\n${" ".repeat(indent - 2)}] ${description}`;
     }
+    const isNullable = nullable ? " (nullable)" : "";
     const description = schema.description ? ` // ${schema.description}` : "";
-    return `${schema.type}${description}`;
+    return `${schema.type}${description}${isNullable}`;
   }
 
   async parse(text: string): Promise<z.infer<T>> {
