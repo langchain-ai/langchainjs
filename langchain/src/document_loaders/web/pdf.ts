@@ -35,23 +35,25 @@ export class PdfWebBaseLoader
     this.urlOrPdfContent = urlOrPdfContent;
     this.pdfjs = pdfjs;
     this.splitPages = splitPages;
-  
+
     if (workerSrc) {
-      this.setWorkerSrc(workerSrc).then(() => {
-        console.log('Worker source set');
-      }).catch((error) => {
-        console.error('Failed to set worker source:', error);
-      });
+      this.setWorkerSrc(workerSrc)
+        .then(() => {
+          console.log("Worker source set");
+        })
+        .catch((error) => {
+          console.error("Failed to set worker source:", error);
+        });
     }
   }
-  
+
   private setWorkerSrc(workerSrc: string): Promise<void> {
-    return import(
-      "pdf-parse/lib/pdf.js/v2.0.550/build/pdf.js"
-    ).then(({ default: importedMod }) => {
-      const mod = importedMod;
-      mod.GlobalWorkerOptions.workerSrc = workerSrc;
-    });
+    return import("pdf-parse/lib/pdf.js/v2.0.550/build/pdf.js").then(
+      ({ default: importedMod }) => {
+        const mod = importedMod;
+        mod.GlobalWorkerOptions.workerSrc = workerSrc;
+      }
+    );
   }
 
   async load(): Promise<Document[]> {
@@ -78,7 +80,7 @@ export class PdfWebBaseLoader
       const { numPages } = pdf;
       const documents: Document[] = [];
 
-      for (let i = 1; i <= numPages; i+=1) {
+      for (let i = 1; i <= numPages; i += 1) {
         const page = await pdf.getPage(i);
         const content = await page.getTextContent();
 

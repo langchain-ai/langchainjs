@@ -21,14 +21,14 @@ test("Test PDF loader from URL", async () => {
 });
 
 test("Test PDF loader from URL to single document", async () => {
- const pdfUrl = "https://arxiv.org/pdf/1706.03762.pdf";
+  const pdfUrl = "https://arxiv.org/pdf/1706.03762.pdf";
   const requireFunc = createRequire(import.meta.url);
   const workerSrc = requireFunc.resolve(
     "pdf-parse/lib/pdf.js/v2.0.550/build/pdf.js"
   );
   const loader = new PdfWebBaseLoader(pdfUrl, {
     workerSrc,
-    splitPages: false
+    splitPages: false,
   });
   const docs = await loader.load();
 
