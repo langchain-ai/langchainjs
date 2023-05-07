@@ -1,5 +1,10 @@
 import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
+import { JsonSchema7Type } from "zod-to-json-schema/src/parseDef.js";
+import { JsonSchema7ArrayType } from "zod-to-json-schema/src/parsers/array.js";
+import { JsonSchema7ObjectType } from "zod-to-json-schema/src/parsers/object.js";
+import { JsonSchema7StringType } from "zod-to-json-schema/src/parsers/string.js";
+import { JsonSchema7NumberType } from "zod-to-json-schema/src/parsers/number.js";
 import {
   BaseOutputParser,
   OutputParserException,
@@ -47,6 +52,52 @@ Here is the JSON Schema instance your output must adhere to:
 ${JSON.stringify(zodToJsonSchema(this.schema))}
 \`\`\`
 `;
+  }
+
+  schemaToMarkdownJsonInstruction(interpolateDepth = 1) {
+    if (interpolateDepth < 1) {
+      throw new Error("f string interpolate depth must be at least 1");
+    }
+
+    return `Return a markdown code snippet with a JSON object formatted to look like:\n\`\`\`json\n${this._schemaToInstruction(
+      zodToJsonSchema(this.schema)
+    )
+      .replaceAll("{", "{".repeat(interpolateDepth))
+      .replaceAll("}", "}".repeat(interpolateDepth))}\n\`\`\``;
+  }
+
+  private _schemaToInstruction(
+    schemaInput: JsonSchema7Type,
+    indent = 2
+  ): string {
+    const schema = schemaInput as (
+      | JsonSchema7ArrayType
+      | JsonSchema7ObjectType
+      | JsonSchema7StringType
+      | JsonSchema7NumberType
+    ) & { description?: string };
+
+    if (schema.type === "object" && schema.properties) {
+      const description = schema.description ? ` // ${schema.description}` : "";
+      const properties = Object.entries(schema.properties)
+        .map(([key, value]) => {
+          const optional = schema.required?.includes(key) ? "" : " (optional)";
+          return `${" ".repeat(indent)}"${key}": ${this._schemaToInstruction(
+            value,
+            indent + 2
+          )}${optional}`;
+        })
+        .join("\n");
+      return `{\n${properties}\n${" ".repeat(indent - 2)}}${description}`;
+    }
+    if (schema.type === "array" && schema.items) {
+      const description = schema.description ? ` // ${schema.description}` : "";
+      return `array[\n${" ".repeat(indent)}${this._schemaToInstruction(
+        schema.items
+      )}\n${" ".repeat(indent - 2)}] ${description}`;
+    }
+    const description = schema.description ? ` // ${schema.description}` : "";
+    return `${schema.type}${description}`;
   }
 
   async parse(text: string): Promise<z.infer<T>> {

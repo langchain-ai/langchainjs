@@ -2,9 +2,11 @@ import { BaseChain, ChainInputs } from "./base.js";
 import { BaseLanguageModel } from "../base_language/index.js";
 import { SerializedVectorDBQAChain } from "./serde.js";
 import { ChainValues, BaseRetriever } from "../schema/index.js";
-import { loadQAStuffChain } from "./question_answering/load.js";
+import {
+  StuffQAChainParams,
+  loadQAStuffChain,
+} from "./question_answering/load.js";
 import { CallbackManagerForChainRun } from "../callbacks/manager.js";
-import { BasePromptTemplate } from "index.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type LoadValues = Record<string, any>;
@@ -90,12 +92,13 @@ export class RetrievalQAChain
     llm: BaseLanguageModel,
     retriever: BaseRetriever,
     options?: Partial<
-      Omit<RetrievalQAChainInput, "combineDocumentsChain" | "index"> & {
-        prompt?: BasePromptTemplate;
-      }
-    >
+      Omit<RetrievalQAChainInput, "combineDocumentsChain" | "index">
+    > &
+      StuffQAChainParams
   ): RetrievalQAChain {
-    const qaChain = loadQAStuffChain(llm, { prompt: options?.prompt });
+    const qaChain = loadQAStuffChain(llm, {
+      prompt: options?.prompt ? options.prompt : undefined,
+    });
     return new this({
       retriever,
       combineDocumentsChain: qaChain,

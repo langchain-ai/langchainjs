@@ -1,10 +1,17 @@
-import { CallbackManagerForChainRun, Callbacks } from "callbacks/manager.js";
-import { BaseChain, ChainInputs } from "chains/base.js";
-import { ChainValues } from "schema/index.js";
+import {
+  CallbackManagerForChainRun,
+  Callbacks,
+} from "../../callbacks/manager.js";
+import { BaseChain, ChainInputs } from "../../chains/base.js";
+import { ChainValues } from "../../schema/index.js";
+
+type Inputs = {
+  [key: string]: Inputs | Inputs[] | string | string[] | number | number[];
+};
 
 export interface Route {
   destination?: string;
-  nextInputs: { [key: string]: any };
+  nextInputs: { [key: string]: Inputs };
 }
 
 export interface MultiRouteChainInput extends ChainInputs {
@@ -30,9 +37,12 @@ export abstract class RouterChain extends BaseChain {
 
 export class MultiRouteChain extends BaseChain {
   routerChain: RouterChain;
+
   destinationChains: { [name: string]: BaseChain };
+
   defaultChain: BaseChain;
-  silentErrors: boolean = false;
+
+  silentErrors = false;
 
   constructor(fields: MultiRouteChainInput) {
     super(fields.memory, fields.verbose, fields.callbackManager);
@@ -58,22 +68,33 @@ export class MultiRouteChain extends BaseChain {
       values,
       runManager?.getChild()
     );
-    runManager?.handleText(`${destination}: ${JSON.stringify(nextInputs)}`);
-
+    await runManager?.handleText(
+      `${destination}: ${JSON.stringify(nextInputs)}`
+    );
     if (!destination) {
-      return this.defaultChain.call(nextInputs, runManager?.getChild());
-    } else if (destination in this.destinationChains) {
-      return this.destinationChains[destination].call(
-        nextInputs,
-        runManager?.getChild()
-      );
-    } else if (this.silentErrors) {
-      return this.defaultChain.call(nextInputs, runManager?.getChild());
-    } else {
-      throw new Error(
-        `Destination ${destination} not found in destination chains.`
-      );
+      return this.defaultChain
+        .call(nextInputs, runManager?.getChild())
+        .catch((err) => {
+          throw new Error(`Error in default chain: ${err}`);
+        });
     }
+    if (destination in this.destinationChains) {
+      return this.destinationChains[destination]
+        .call(nextInputs, runManager?.getChild())
+        .catch((err) => {
+          throw new Error(`Error in ${destination} chain: ${err}`);
+        });
+    }
+    if (this.silentErrors) {
+      return this.defaultChain
+        .call(nextInputs, runManager?.getChild())
+        .catch((err) => {
+          throw new Error(`Error in default chain: ${err}`);
+        });
+    }
+    throw new Error(
+      `Destination ${destination} not found in destination chains.`
+    );
   }
 
   _chainType(): string {
