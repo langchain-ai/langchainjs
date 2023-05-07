@@ -1,6 +1,6 @@
 import type { IndexFlatL2 } from "faiss-node";
 import type { NameRegistry, Parser } from "pickleparser";
-import { v4 as uuidv4 } from "uuid";
+import * as uuid from "uuid";
 import { Embeddings } from "../embeddings/base.js";
 import { SaveableVectorStore } from "./base.js";
 import { Document } from "../document.js";
@@ -72,11 +72,11 @@ export class FaissStore extends SaveableVectorStore {
 
     const docstoreSize = this.docstore.count;
     for (let i = 0; i < vectors.length; i += 1) {
-      const uuid = uuidv4();
+      const documentId = uuid.v4();
       const id = docstoreSize + i;
       this.index.add(vectors[i]);
-      this._mapping[id] = uuid;
-      this.docstore.add({ [uuid]: documents[i] });
+      this._mapping[id] = documentId;
+      this.docstore.add({ [documentId]: documents[i] });
     }
   }
 
