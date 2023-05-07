@@ -18,7 +18,7 @@ export function zipEntries(...arrays: unknown[][]): unknown[][] {
   const zipped: unknown[][] = [];
 
   // Iterate through each element of the first input array
-  for (let i = 0; i < firstArrayLength; i++) {
+  for (let i = 0; i < firstArrayLength; i += 1) {
     // Create an array to store the zipped elements at the current index
     const zippedElement: unknown[] = [];
 
