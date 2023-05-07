@@ -1,6 +1,7 @@
 /**
  * Type definitions adapted from pdfjs-dist
  * https://github.com/mozilla/pdfjs-dist/blob/master/types/src/display/api.d.ts
+ * https://github.com/mozilla/pdfjs-dist/blob/master/types/src/display/metadata.d.ts
  */
 
 declare module "pdf-parse/lib/pdf.js/v1.10.100/build/pdf.js" {
@@ -1406,4 +1407,43 @@ declare module "pdf-parse/lib/pdf.js/v1.10.100/build/pdf.js" {
   }
   /** @type {string} */
   export const version: string;
+
+  export class Metadata {
+    constructor({ parsedData, rawData }: { parsedData: any; rawData: any });
+    getRaw(): any;
+    get(name: any): any;
+    getAll(): any;
+    has(name: any): any;
+    #private;
+  }
+}
+
+declare module "pdf-parse/lib/pdf.js/v2.0.550/build/pdf.js" {
+  export type GlobalWorkerOptionsType = {
+    /**
+     * - Defines global port for worker
+     * process. Overrides the `workerSrc` option.
+     */
+    workerPort: Worker | null;
+    /**
+     * - A string containing the path and filename
+     * of the worker file.
+     *
+     * NOTE: The `workerSrc` option should always be set, in order to prevent any
+     * issues when using the PDF.js library.
+     */
+    workerSrc: string;
+  };
+  /**
+   * @typedef {Object} GlobalWorkerOptionsType
+   * @property {Worker | null} workerPort - Defines global port for worker
+   *   process. Overrides the `workerSrc` option.
+   * @property {string} workerSrc - A string containing the path and filename
+   *   of the worker file.
+   *
+   *   NOTE: The `workerSrc` option should always be set, in order to prevent any
+   *         issues when using the PDF.js library.
+   */
+  /** @type {GlobalWorkerOptionsType} */
+  export const GlobalWorkerOptions: GlobalWorkerOptionsType;
 }
