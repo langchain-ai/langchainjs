@@ -54,16 +54,16 @@ ${JSON.stringify(zodToJsonSchema(this.schema))}
 `;
   }
 
-  schemaToMarkdownJsonInstruction(interpolateDepth = 1) {
-    if (interpolateDepth < 1) {
-      throw new Error("f string interpolate depth must be at least 1");
+  getMarkdownJsonInstructionFromSchema(interpolationDepth = 1) {
+    if (interpolationDepth < 1) {
+      throw new Error("f string interpolation depth must be at least 1");
     }
 
     return `Return a markdown code snippet with a JSON object formatted to look like:\n\`\`\`json\n${this._schemaToInstruction(
       zodToJsonSchema(this.schema)
     )
-      .replaceAll("{", "{".repeat(interpolateDepth))
-      .replaceAll("}", "}".repeat(interpolateDepth))}\n\`\`\``;
+      .replaceAll("{", "{".repeat(interpolationDepth))
+      .replaceAll("}", "}".repeat(interpolationDepth))}\n\`\`\``;
   }
 
   private _schemaToInstruction(

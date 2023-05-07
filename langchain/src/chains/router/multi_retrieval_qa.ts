@@ -66,7 +66,7 @@ export class MultiRetrievalQAChain extends MultiRouteChain {
     const destinationsStr = destinations.join("\n");
     const routerTemplate = interpolateFString(
       STRUCTURED_MULTI_RETRIEVAL_ROUTER_TEMPLATE(
-        outputParser.schemaToMarkdownJsonInstruction(4)
+        outputParser.getMarkdownJsonInstructionFromSchema(4)
       ),
       {
         destinations: destinationsStr,
