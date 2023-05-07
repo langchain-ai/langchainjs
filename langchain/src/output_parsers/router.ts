@@ -4,7 +4,6 @@ import { OutputParserException } from "../schema/output_parser.js";
 
 export type RouterOutputParserInput = {
   defaultDestination?: string;
-  nextInputInnerKey?: string;
 };
 
 export class RouterOutputParser<

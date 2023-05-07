@@ -31,7 +31,7 @@ export class LLMRouterChain extends RouterChain {
   async _call(
     values: ChainValues,
     runManager?: CallbackManagerForChainRun | undefined
-  ): Promise<ChainValues> {
+  ): Promise<z.infer<RouterOutputSchema>> {
     return this.llmChain.predict(values, runManager?.getChild());
   }
 
