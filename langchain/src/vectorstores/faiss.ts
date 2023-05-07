@@ -175,15 +175,16 @@ export class FaissStore extends SaveableVectorStore {
       );
       const buffer = Buffer.from(pkl, "binary");
 
-      const registry = new NameRegistry();
-      registry.register(
-        "langchain.docstore.in_memory",
-        "InMemoryDocstore",
-        PyInMemoryDocstore
-      );
-      registry.register("langchain.schema", "Document", PyDocument);
-      registry.register("pathlib", "WindowsPath", (...args) => args.join("\\"));
-      registry.register("pathlib", "PosixPath", (...args) => args.join("/"));
+      const registry = new NameRegistry()
+        .register(
+          "langchain.docstore.in_memory",
+          "InMemoryDocstore",
+          PyInMemoryDocstore
+        )
+        .register("langchain.schema", "Document", PyDocument)
+        .register("pathlib", "WindowsPath", (...args) => args.join("\\"))
+        .register("pathlib", "PosixPath", (...args) => args.join("/"));
+
       const pickleparser = new Parser({
         nameResolver: registry,
       });
