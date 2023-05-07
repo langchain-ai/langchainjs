@@ -1,7 +1,13 @@
+import {
+  RediSearchSchema,
+  RedisClientType,
+  SchemaFieldTypes,
+  SearchOptions,
+  VectorAlgorithms,
+} from "redis";
+import { Embeddings } from "embeddings/base.js";
 import { VectorStore } from "./base.js";
 import { Document } from "../document.js";
-import { Embeddings } from "embeddings/base.js";
-import { RediSearchSchema, RedisClientType, SchemaFieldTypes, SearchOptions, VectorAlgorithms } from "redis";
 
 export type RedisVectorStoreConfig = {
   redisClient: RedisClientType;
@@ -19,10 +25,15 @@ export class RedisVectorStore extends VectorStore {
   declare FilterType: RedisVectorStoreFilterType;
 
   redisClient: RedisClientType;
+
   indexName: string;
+
   keyPrefix: string;
+
   contentKey: string;
+
   metadataKey: string;
+
   vectorKey: string;
 
   filter?: RedisVectorStoreFilterType;
@@ -33,13 +44,17 @@ export class RedisVectorStore extends VectorStore {
     this.redisClient = _dbConfig.redisClient;
     this.indexName = _dbConfig.indexName;
     this.keyPrefix = _dbConfig.keyPrefix ?? `doc:${this.indexName}:`;
-    this.contentKey = _dbConfig.contentKey ?? 'content';
-    this.metadataKey = _dbConfig.metadataKey ?? 'metadata';
-    this.vectorKey = _dbConfig.vectorKey ?? 'content_vector';
+    this.contentKey = _dbConfig.contentKey ?? "content";
+    this.metadataKey = _dbConfig.metadataKey ?? "metadata";
+    this.vectorKey = _dbConfig.vectorKey ?? "content_vector";
     this.filter = _dbConfig.filter;
   }
 
-  async addDocuments(documents: Document[], keys?: string[], batchSize?: number): Promise<void> {
+  async addDocuments(
+    documents: Document[],
+    keys?: string[],
+    batchSize?: number
+  ): Promise<void> {
     const texts = documents.map(({ pageContent }) => pageContent);
     await this.addVectors(
       await this.embeddings.embedDocuments(texts),
@@ -53,7 +68,7 @@ export class RedisVectorStore extends VectorStore {
     vectors: number[][],
     documents: Document[],
     keys: string[] = [],
-    batchSize: number = 1000
+    batchSize = 1000
   ): Promise<void> {
     // check if the index exists and create it if it doesn't
     await this.createIndex(vectors[0].length);
@@ -62,7 +77,10 @@ export class RedisVectorStore extends VectorStore {
 
     vectors.map(async (vector, idx) => {
       const key = keys && keys.length ? keys[idx] : `${this.keyPrefix}${idx}`;
-      const metadata = documents[idx] && documents[idx].metadata ? documents[idx].metadata : {};
+      const metadata =
+        documents[idx] && documents[idx].metadata
+          ? documents[idx].metadata
+          : {};
 
       multi.hSet(key, {
         [this.vectorKey]: this.getFloat32Buffer(vector),
@@ -84,13 +102,16 @@ export class RedisVectorStore extends VectorStore {
     query: number[],
     k: number,
     filter?: RedisVectorStoreFilterType
-  ): Promise<[Document<Record<string, any>>, number][]> {
+  ): Promise<[Document, number][]> {
     if (filter && this.filter) {
-      throw new Error('cannot provide both `filter` and `this.filter`');
+      throw new Error("cannot provide both `filter` and `this.filter`");
     }
 
     const _filter = filter ?? this.filter;
-    const results = await this.redisClient.ft.search(this.indexName, ...this.buildQuery(query, k, _filter));
+    const results = await this.redisClient.ft.search(
+      this.indexName,
+      ...this.buildQuery(query, k, _filter)
+    );
     const result: [Document, number][] = [];
 
     if (results.total) {
@@ -101,10 +122,12 @@ export class RedisVectorStore extends VectorStore {
             result.push([
               new Document({
                 pageContent: document[this.contentKey] as string,
-                metadata: JSON.parse(this.unEscapeSpecialChars(document.metadata as string)),
+                metadata: JSON.parse(
+                  this.unEscapeSpecialChars(document.metadata as string)
+                ),
               }),
               Number(document.vector_score),
-            ])
+            ]);
           }
         }
       }
@@ -152,7 +175,7 @@ export class RedisVectorStore extends VectorStore {
     return true;
   }
 
-  async createIndex(dimensions: number = 1536): Promise<void> {
+  async createIndex(dimensions = 1536): Promise<void> {
     if (await this.checkIndexExists()) {
       return;
     }
@@ -161,18 +184,21 @@ export class RedisVectorStore extends VectorStore {
       [this.vectorKey]: {
         type: SchemaFieldTypes.VECTOR,
         ALGORITHM: VectorAlgorithms.FLAT,
-        TYPE: 'FLOAT32',
+        TYPE: "FLOAT32",
         DIM: dimensions,
-        DISTANCE_METRIC: 'L2',
+        DISTANCE_METRIC: "L2",
       },
       [this.contentKey]: SchemaFieldTypes.TEXT,
       [this.metadataKey]: SchemaFieldTypes.TEXT,
     };
 
-    await this.redisClient.ft.create(this.indexName, schema, { ON: 'HASH', PREFIX: this.keyPrefix });
+    await this.redisClient.ft.create(this.indexName, schema, {
+      ON: "HASH",
+      PREFIX: this.keyPrefix,
+    });
   }
 
-  async dropIndex(): Promise<Boolean> {
+  async dropIndex(): Promise<boolean> {
     try {
       await this.redisClient.ft.dropIndex(this.indexName);
 
@@ -182,10 +208,14 @@ export class RedisVectorStore extends VectorStore {
     }
   }
 
-  private buildQuery(query: number[], k: number, filter?: RedisVectorStoreFilterType): [string, SearchOptions] {
-    const vectorScoreField = 'vector_score';
+  private buildQuery(
+    query: number[],
+    k: number,
+    filter?: RedisVectorStoreFilterType
+  ): [string, SearchOptions] {
+    const vectorScoreField = "vector_score";
 
-    let hybridFields: string = '*';
+    let hybridFields = "*";
     // if a filter is set, modify the hybrid query
     if (filter && filter.length) {
       // `filter` is a list of strings, then it's applied using the OR operator in the metadata key
@@ -206,14 +236,14 @@ export class RedisVectorStore extends VectorStore {
       LIMIT: {
         from: 0,
         size: k,
-      }
+      },
     };
 
     return [baseQuery, options];
   }
 
   private prepareFilter(filter: RedisVectorStoreFilterType) {
-    return filter.map(this.escapeSpecialChars).join('|');
+    return filter.map(this.escapeSpecialChars).join("|");
   }
 
   /**
@@ -226,7 +256,7 @@ export class RedisVectorStore extends VectorStore {
    * @returns
    */
   private escapeSpecialChars(str: string) {
-    return str.replaceAll('-', '\\-');
+    return str.replaceAll("-", "\\-");
   }
 
   /**
@@ -236,7 +266,7 @@ export class RedisVectorStore extends VectorStore {
    * @returns
    */
   private unEscapeSpecialChars(str: string) {
-    return str.replaceAll('\\-', '-');
+    return str.replaceAll("\\-", "-");
   }
 
   /**

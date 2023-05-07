@@ -17,12 +17,10 @@ const createRedisClientMockup = () => {
       }),
     },
     hSet: hSetMock,
-    multi: jest.fn<any>().mockImplementation(() => {
-      return {
-        exec: jest.fn(),
-        hSet: hSetMock,
-      }
-    }),
+    multi: jest.fn<any>().mockImplementation(() => ({
+      exec: jest.fn(),
+      hSet: hSetMock,
+    })),
   };
 };
 
@@ -32,7 +30,7 @@ test("RedisVectorStore with external keys", async () => {
 
   const store = new RedisVectorStore(embeddings, {
     redisClient: client as any,
-    indexName: "documents"
+    indexName: "documents",
   });
 
   expect(store).toBeDefined();
@@ -68,7 +66,7 @@ test("RedisVectorStore with generated keys", async () => {
 
   const store = new RedisVectorStore(embeddings, {
     redisClient: client as any,
-    indexName: "documents"
+    indexName: "documents",
   });
 
   expect(store).toBeDefined();
@@ -88,12 +86,12 @@ test("RedisVectorStore with filters", async () => {
 
   const store = new RedisVectorStore(embeddings, {
     redisClient: client as any,
-    indexName: "documents"
+    indexName: "documents",
   });
 
   expect(store).toBeDefined();
 
-  await store.similaritySearch("hello", 1, ['a']);
+  await store.similaritySearch("hello", 1, ["a"]);
 
   expect(client.ft.search).toHaveBeenCalledWith(
     "documents",
@@ -108,7 +106,7 @@ test("RedisVectorStore with filters", async () => {
       LIMIT: {
         from: 0,
         size: 1,
-      }
+      },
     }
   );
 });
