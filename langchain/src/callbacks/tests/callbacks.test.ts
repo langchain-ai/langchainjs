@@ -1,5 +1,5 @@
 import { test, expect } from "@jest/globals";
-import { v4 as uuidv4 } from "uuid";
+import * as uuid from "uuid";
 import { CallbackManager } from "../manager.js";
 import { BaseCallbackHandler, BaseCallbackHandlerInput } from "../base.js";
 import {
@@ -10,7 +10,7 @@ import {
 } from "../../schema/index.js";
 
 class FakeCallbackHandler extends BaseCallbackHandler {
-  name = `fake-${uuidv4()}`;
+  name = `fake-${uuid.v4()}`;
 
   starts = 0;
 
@@ -334,5 +334,41 @@ test("CallbackManager with child manager inherited handlers", async () => {
   expect(childManager2.inheritableHandlers.map((h) => h.name)).toEqual([
     handler1.name,
     handler2.name,
+  ]);
+});
+
+test("CallbackManager.copy()", () => {
+  const callbackManager1 = new CallbackManager();
+  const handler1 = new FakeCallbackHandler();
+  const handler2 = new FakeCallbackHandler();
+  const handler3 = new FakeCallbackHandler();
+  const handler4 = new FakeCallbackHandler();
+
+  callbackManager1.addHandler(handler1, true);
+  callbackManager1.addHandler(handler2, false);
+  expect(callbackManager1.handlers).toEqual([handler1, handler2]);
+  expect(callbackManager1.inheritableHandlers).toEqual([handler1]);
+
+  const callbackManager2 = callbackManager1.copy([handler3]);
+  expect(callbackManager2.handlers.map((h) => h.name)).toEqual([
+    handler1.name,
+    handler2.name,
+    handler3.name,
+  ]);
+  expect(callbackManager2.inheritableHandlers.map((h) => h.name)).toEqual([
+    handler1.name,
+    handler3.name,
+  ]);
+
+  const callbackManager3 = callbackManager2.copy([handler4], false);
+  expect(callbackManager3.handlers.map((h) => h.name)).toEqual([
+    handler1.name,
+    handler2.name,
+    handler3.name,
+    handler4.name,
+  ]);
+  expect(callbackManager3.inheritableHandlers.map((h) => h.name)).toEqual([
+    handler1.name,
+    handler3.name,
   ]);
 });

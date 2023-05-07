@@ -1,4 +1,12 @@
+---
+sidebar_class_name: node-only
+---
+
 # Pinecone
+
+:::tip Compatibility
+Only available on Node.js.
+:::
 
 Langchain.js accepts [@pinecone-database/pinecone](https://docs.pinecone.io/docs/node-client) as the client for Pinecone vectorstore. Install the library with
 

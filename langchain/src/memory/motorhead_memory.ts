@@ -77,7 +77,7 @@ export class MotorheadMemory extends BaseChatMemory {
     const { messages = [], context = "NONE" } = await res.json();
 
     await Promise.all(
-      messages.map(async (message: MotorheadMemoryMessage) => {
+      messages.reverse().map(async (message: MotorheadMemoryMessage) => {
         if (message.role === "AI") {
           await this.chatHistory.addAIChatMessage(message.content);
         } else {

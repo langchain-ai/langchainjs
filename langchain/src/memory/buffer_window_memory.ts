@@ -25,6 +25,8 @@ export class BufferWindowMemory
     super({
       returnMessages: fields?.returnMessages ?? false,
       chatHistory: fields?.chatHistory,
+      inputKey: fields?.inputKey,
+      outputKey: fields?.outputKey,
     });
     this.humanPrefix = fields?.humanPrefix ?? this.humanPrefix;
     this.aiPrefix = fields?.aiPrefix ?? this.aiPrefix;

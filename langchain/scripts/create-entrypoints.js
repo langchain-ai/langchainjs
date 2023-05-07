@@ -26,6 +26,8 @@ const entrypoints = {
   "embeddings/fake": "embeddings/fake",
   "embeddings/openai": "embeddings/openai",
   "embeddings/cohere": "embeddings/cohere",
+  "embeddings/tensorflow": "embeddings/tensorflow",
+  "embeddings/hf": "embeddings/hf",
   // llms
   llms: "llms/index",
   "llms/load": "llms/load",
@@ -51,6 +53,7 @@ const entrypoints = {
   "vectorstores/opensearch": "vectorstores/opensearch",
   "vectorstores/milvus": "vectorstores/milvus",
   "vectorstores/prisma": "vectorstores/prisma",
+  "vectorstores/myscale": "vectorstores/myscale",
   // text_splitter
   text_splitter: "text_splitter",
   // memory
@@ -72,6 +75,7 @@ const entrypoints = {
   "document_loaders/web/imsdb": "document_loaders/web/imsdb",
   "document_loaders/web/github": "document_loaders/web/github",
   "document_loaders/web/s3": "document_loaders/web/s3",
+  "document_loaders/web/confluence": "document_loaders/web/confluence",
   "document_loaders/fs/directory": "document_loaders/fs/directory",
   "document_loaders/fs/buffer": "document_loaders/fs/buffer",
   "document_loaders/fs/text": "document_loaders/fs/text",
@@ -90,6 +94,7 @@ const entrypoints = {
   "chat_models/anthropic": "chat_models/anthropic",
   // schema
   schema: "schema/index",
+  "schema/output_parser": "schema/output_parser",
   // sql_db
   sql_db: "sql_db",
   // callbacks
@@ -104,6 +109,10 @@ const entrypoints = {
   "retrievers/databerry": "retrievers/databerry",
   "retrievers/contextual_compression": "retrievers/contextual_compression",
   "retrievers/document_compressors": "retrievers/document_compressors/index",
+  "retrievers/time_weighted": "retrievers/time_weighted",
+  "retrievers/document_compressors/chain_extract":
+    "retrievers/document_compressors/chain_extract",
+  "retrievers/hyde": "retrievers/hyde",
   // cache
   cache: "cache/index",
   "cache/redis": "cache/redis",
@@ -136,6 +145,8 @@ const requiresOptionalDependency = [
   "tools/webbrowser",
   "chains/load",
   "embeddings/cohere",
+  "embeddings/tensorflow",
+  "embeddings/hf",
   "llms/load",
   "llms/cohere",
   "llms/hf",
@@ -150,6 +161,7 @@ const requiresOptionalDependency = [
   "vectorstores/supabase",
   "vectorstores/opensearch",
   "vectorstores/milvus",
+  "vectorstores/myscale",
   "document_loaders/web/cheerio",
   "document_loaders/web/puppeteer",
   "document_loaders/web/playwright",
@@ -159,6 +171,7 @@ const requiresOptionalDependency = [
   "document_loaders/web/imsdb",
   "document_loaders/web/github",
   "document_loaders/web/s3",
+  "document_loaders/web/confluence",
   "document_loaders/fs/directory",
   "document_loaders/fs/buffer",
   "document_loaders/fs/text",
