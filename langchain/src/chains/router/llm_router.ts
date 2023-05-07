@@ -1,4 +1,3 @@
-import { z } from "zod";
 import { BasePromptTemplate } from "../../prompts/base.js";
 import { LLMChain } from "../../chains/llm_chain.js";
 import { RouterChain } from "./multi_route.js";
@@ -7,17 +6,17 @@ import { ChainValues } from "../../schema/index.js";
 import { BaseLanguageModel } from "../../base_language/index.js";
 import { ChainInputs } from "../../chains/base.js";
 
-export type RouterOutputSchema = z.ZodObject<{
-  destination: z.ZodNullable<z.ZodString>;
-  next_inputs: z.ZodRecord<z.ZodString, z.ZodAny>;
-}>;
+export type RouterOutputSchema = {
+  destination: string;
+  next_inputs: { [key: string]: string };
+};
 
 export interface LLMRouterChainInput extends ChainInputs {
-  llmChain: LLMChain<z.infer<RouterOutputSchema>>;
+  llmChain: LLMChain<RouterOutputSchema>;
 }
 
-export class LLMRouterChain extends RouterChain {
-  llmChain: LLMChain<z.infer<RouterOutputSchema>>;
+export class LLMRouterChain extends RouterChain implements LLMRouterChainInput {
+  llmChain: LLMChain<RouterOutputSchema>;
 
   constructor(fields: LLMRouterChainInput) {
     super(fields.memory, fields.verbose, fields.callbackManager);
@@ -31,7 +30,7 @@ export class LLMRouterChain extends RouterChain {
   async _call(
     values: ChainValues,
     runManager?: CallbackManagerForChainRun | undefined
-  ): Promise<z.infer<RouterOutputSchema>> {
+  ): Promise<RouterOutputSchema> {
     return this.llmChain.predict(values, runManager?.getChild());
   }
 
@@ -44,7 +43,7 @@ export class LLMRouterChain extends RouterChain {
     prompt: BasePromptTemplate,
     options?: Omit<LLMRouterChainInput, "llm">
   ) {
-    const llmChain = new LLMChain<z.infer<RouterOutputSchema>>({ llm, prompt });
+    const llmChain = new LLMChain<RouterOutputSchema>({ llm, prompt });
     return new LLMRouterChain({ ...options, llmChain });
   }
 }
