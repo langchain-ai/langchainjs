@@ -11,6 +11,7 @@ export * from "langchain/prompts";
 export * from "langchain/vectorstores/base";
 export * from "langchain/vectorstores/memory";
 export * from "langchain/vectorstores/prisma";
+export * from "langchain/vectorstores/redis";
 export * from "langchain/text_splitter";
 export * from "langchain/memory";
 export * from "langchain/document";

@@ -53,6 +53,7 @@ const entrypoints = {
   "vectorstores/milvus": "vectorstores/milvus",
   "vectorstores/prisma": "vectorstores/prisma",
   "vectorstores/myscale": "vectorstores/myscale",
+  "vectorstores/redis": "vectorstores/redis",
   // text_splitter
   text_splitter: "text_splitter",
   // memory

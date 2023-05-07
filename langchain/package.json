@@ -124,6 +124,9 @@
     "vectorstores/myscale.cjs",
     "vectorstores/myscale.js",
     "vectorstores/myscale.d.ts",
+    "vectorstores/redis.cjs",
+    "vectorstores/redis.js",
+    "vectorstores/redis.d.ts",
     "text_splitter.cjs",
     "text_splitter.js",
     "text_splitter.d.ts",
@@ -728,6 +731,11 @@
       "types": "./vectorstores/myscale.d.ts",
       "import": "./vectorstores/myscale.js",
       "require": "./vectorstores/myscale.cjs"
+    },
+    "./vectorstores/redis": {
+      "types": "./vectorstores/redis.d.ts",
+      "import": "./vectorstores/redis.js",
+      "require": "./vectorstores/redis.cjs"
     },
     "./text_splitter": {
       "types": "./text_splitter.d.ts",

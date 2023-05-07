@@ -112,6 +112,9 @@ vectorstores/prisma.d.ts
 vectorstores/myscale.cjs
 vectorstores/myscale.js
 vectorstores/myscale.d.ts
+vectorstores/redis.cjs
+vectorstores/redis.js
+vectorstores/redis.d.ts
 text_splitter.cjs
 text_splitter.js
 text_splitter.d.ts
