@@ -1,4 +1,5 @@
 import { TiktokenModel } from "@dqbd/tiktoken";
+import { isNode } from "browser-or-node";
 import {
   Configuration,
   ConfigurationParameters,
@@ -11,7 +12,7 @@ import {
   AzureOpenAIInput,
   OpenAICallOptions,
   OpenAIInput,
-} from "types/open-ai-types.js";
+} from "../types/openai-types.js";
 import type { StreamingAxiosConfiguration } from "../util/axios-types.js";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
 import { chunkArray } from "../util/chunk.js";
@@ -296,6 +297,7 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
               },
               {
                 ...options,
+                adapter: fetchAdapter, // default adapter doesn't do streaming
                 responseType: "stream",
                 onmessage: (event) => {
                   if (event.data?.trim?.() === "[DONE]") {
@@ -397,14 +399,16 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
         basePath: endpoint,
         baseOptions: {
           timeout: this.timeout,
-          adapter: fetchAdapter,
           ...this.clientConfig.baseOptions,
         },
       });
       this.client = new OpenAIApi(clientConfig);
     }
-    const axiosOptions = (options ?? {}) as StreamingAxiosConfiguration &
-      OpenAICallOptions;
+    const axiosOptions: StreamingAxiosConfiguration = {
+      adapter: isNode ? undefined : fetchAdapter,
+      ...this.clientConfig.baseOptions,
+      ...options,
+    };
     if (this.azureOpenAIApiKey) {
       axiosOptions.headers = {
         "api-key": this.azureOpenAIApiKey,

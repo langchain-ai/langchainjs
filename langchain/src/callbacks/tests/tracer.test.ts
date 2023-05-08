@@ -1,5 +1,5 @@
 import { test, expect, jest } from "@jest/globals";
-import { v4 as uuidv4 } from "uuid";
+import * as uuid from "uuid";
 import {
   BaseTracer,
   LLMRun,
@@ -57,7 +57,7 @@ class FakeTracer extends BaseTracer {
 test("Test LLMRun", async () => {
   const tracer = new FakeTracer();
   await tracer.newSession();
-  const runId = uuidv4();
+  const runId = uuid.v4();
   await tracer.handleLLMStart({ name: "test" }, ["test"], runId);
   await tracer.handleLLMEnd({ generations: [] }, runId);
   expect(tracer.runs.length).toBe(1);
@@ -80,7 +80,7 @@ test("Test LLMRun", async () => {
 test("Test LLM Run no start", async () => {
   const tracer = new FakeTracer();
   await tracer.newSession();
-  const runId = uuidv4();
+  const runId = uuid.v4();
   await expect(tracer.handleLLMEnd({ generations: [] }, runId)).rejects.toThrow(
     "No LLM run to end"
   );
@@ -89,7 +89,7 @@ test("Test LLM Run no start", async () => {
 test("Test Chain Run", async () => {
   const tracer = new FakeTracer();
   await tracer.newSession();
-  const runId = uuidv4();
+  const runId = uuid.v4();
   const compareRun: ChainRun = {
     uuid: runId,
     start_time: _DATE,
@@ -115,7 +115,7 @@ test("Test Chain Run", async () => {
 test("Test Tool Run", async () => {
   const tracer = new FakeTracer();
   await tracer.newSession();
-  const runId = uuidv4();
+  const runId = uuid.v4();
   const compareRun: ToolRun = {
     uuid: runId,
     start_time: _DATE,
@@ -142,15 +142,15 @@ test("Test Tool Run", async () => {
 test("Test nested runs", async () => {
   const tracer = new FakeTracer();
   await tracer.newSession();
-  const chainRunId = uuidv4();
-  const toolRunId = uuidv4();
-  const llmRunId = uuidv4();
+  const chainRunId = uuid.v4();
+  const toolRunId = uuid.v4();
+  const llmRunId = uuid.v4();
   await tracer.handleChainStart({ name: "test" }, { foo: "bar" }, chainRunId);
   await tracer.handleToolStart({ name: "test" }, "test", toolRunId, chainRunId);
   await tracer.handleLLMStart({ name: "test" }, ["test"], llmRunId, toolRunId);
   await tracer.handleLLMEnd({ generations: [[]] }, llmRunId);
   await tracer.handleToolEnd("output", toolRunId);
-  const llmRunId2 = uuidv4();
+  const llmRunId2 = uuid.v4();
   await tracer.handleLLMStart(
     { name: "test2" },
     ["test"],
@@ -239,7 +239,7 @@ test("Test nested runs", async () => {
   expect(tracer.runs.length).toBe(1);
   expect(tracer.runs[0]).toEqual(compareRun);
 
-  const llmRunId3 = uuidv4();
+  const llmRunId3 = uuid.v4();
   await tracer.handleLLMStart({ name: "test" }, ["test"], llmRunId3);
   await tracer.handleLLMEnd({ generations: [[]] }, llmRunId3);
   expect(tracer.runs.length).toBe(2);
