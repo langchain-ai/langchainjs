@@ -1,7 +1,7 @@
 import { createClient } from "redis";
 import { OpenAI } from "langchain/llms/openai";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
-import { VectorDBQAChain } from "langchain/chains";
+import { RetrievalQAChain } from "langchain/chains";
 import { RedisVectorStore } from "langchain/vectorstores/redis";
 
 const client = createClient({
@@ -44,8 +44,7 @@ console.log(filterRes);
 
 /* Usage as part of a chain */
 const model = new OpenAI();
-const chain = VectorDBQAChain.fromLLM(model, vectorStore, {
-  k: 1,
+const chain = RetrievalQAChain.fromLLM(model, vectorStore.asRetriever(1), {
   returnSourceDocuments: true,
 });
 const chainRes = await chain.call({ query: "What did the fox do?" });
