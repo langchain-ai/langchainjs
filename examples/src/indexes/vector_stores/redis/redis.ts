@@ -1,27 +1,46 @@
-import { createClient, RedisClientType } from "redis";
+import { createClient, createCluster } from "redis";
+import { Document } from "langchain/document";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { RedisVectorStore } from "langchain/vectorstores/redis";
 
-export const run = async () => {
-  const redisClient = createClient({
-    url: process.env.REDIS_URL ?? "redis://localhost:6379",
-  });
-  await redisClient.connect();
-
-  const texts = ["Hello world", "Bye bye", "hello nice world"];
-  const metadatas = [{ id: 2 }, { id: 1 }, { id: 3 }];
-  const vectorStore = await RedisVectorStore.fromTexts(
-    texts,
-    metadatas,
-    new OpenAIEmbeddings(),
+const client = createClient({
+  url: process.env.REDIS_URL ?? "redis://localhost:6379",
+});
+const cluster = createCluster({
+  rootNodes: [
     {
-      redisClient: redisClient as RedisClientType,
-      indexName: "documents",
-    }
-  );
+      url: process.env.REDIS_URL ?? "redis://localhost:6379",
+    },
+  ],
+});
+await client.connect();
 
-  const resultOne = await vectorStore.similaritySearch("hello world", 1);
-  console.log(resultOne);
+const docs = [
+  new Document({
+    metadata: { foo: "bar" },
+    pageContent: "redis is fast",
+  }),
+  new Document({
+    metadata: { foo: "bar" },
+    pageContent: "the quick brown fox jumped over the lazy dog",
+  }),
+  new Document({
+    metadata: { baz: "qux" },
+    pageContent: "lorem ipsum dolor sit amet",
+  }),
+  new Document({
+    metadata: { baz: "qux" },
+    pageContent: "consectetur adipiscing elit",
+  }),
+];
 
-  await redisClient.disconnect();
-};
+const vectorStore = await RedisVectorStore.fromDocuments(
+  docs,
+  new OpenAIEmbeddings(),
+  {
+    redisClient: cluster,
+    indexName: "docs",
+  }
+);
+
+await client.disconnect();

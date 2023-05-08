@@ -1,32 +1,68 @@
-import {
+import type {
+  createCluster,
+  createClient,
   RediSearchSchema,
-  RedisClientType,
-  SchemaFieldTypes,
   SearchOptions,
-  VectorAlgorithms,
 } from "redis";
+import { SchemaFieldTypes, VectorAlgorithms } from "redis";
 import { Embeddings } from "embeddings/base.js";
 import { VectorStore } from "./base.js";
 import { Document } from "../document.js";
 
-export type RedisVectorStoreConfig = {
-  redisClient: RedisClientType;
+// Adapated from internal redis types which aren't exported
+export type CreateSchemaVectorField<
+  T extends VectorAlgorithms,
+  A extends Record<string, unknown>
+> = {
+  ALGORITHM: T;
+  DISTANCE_METRIC: "L2" | "IP" | "COSINE";
+  INITIAL_CAP?: number;
+} & A;
+export type CreateSchemaFlatVectorField = CreateSchemaVectorField<
+  VectorAlgorithms.FLAT,
+  {
+    BLOCK_SIZE?: number;
+  }
+>;
+export type CreateSchemaHNSWVectorField = CreateSchemaVectorField<
+  VectorAlgorithms.HNSW,
+  {
+    M?: number;
+    EF_CONSTRUCTION?: number;
+    EF_RUNTIME?: number;
+  }
+>;
+
+export interface RedisVectorStoreConfig {
+  redisClient:
+    | ReturnType<typeof createClient>
+    | ReturnType<typeof createCluster>;
   indexName: string;
+  indexOptions?: CreateSchemaFlatVectorField | CreateSchemaHNSWVectorField;
   keyPrefix?: string;
   contentKey?: string;
   metadataKey?: string;
   vectorKey?: string;
   filter?: RedisVectorStoreFilterType;
-};
+}
+
+export interface RedisAddOptions {
+  keys?: string[];
+  batchSize?: number;
+}
 
 export type RedisVectorStoreFilterType = string[];
 
 export class RedisVectorStore extends VectorStore {
   declare FilterType: RedisVectorStoreFilterType;
 
-  redisClient: RedisClientType;
+  private redisClient:
+    | ReturnType<typeof createClient>
+    | ReturnType<typeof createCluster>;
 
   indexName: string;
+
+  indexOptions: CreateSchemaFlatVectorField | CreateSchemaHNSWVectorField;
 
   keyPrefix: string;
 
@@ -43,6 +79,10 @@ export class RedisVectorStore extends VectorStore {
 
     this.redisClient = _dbConfig.redisClient;
     this.indexName = _dbConfig.indexName;
+    this.indexOptions = _dbConfig.indexOptions ?? {
+      ALGORITHM: VectorAlgorithms.HNSW,
+      DISTANCE_METRIC: "COSINE",
+    };
     this.keyPrefix = _dbConfig.keyPrefix ?? `doc:${this.indexName}:`;
     this.contentKey = _dbConfig.contentKey ?? "content";
     this.metadataKey = _dbConfig.metadataKey ?? "metadata";
@@ -52,23 +92,20 @@ export class RedisVectorStore extends VectorStore {
 
   async addDocuments(
     documents: Document[],
-    keys?: string[],
-    batchSize?: number
+    options?: RedisAddOptions
   ): Promise<void> {
     const texts = documents.map(({ pageContent }) => pageContent);
     await this.addVectors(
       await this.embeddings.embedDocuments(texts),
       documents,
-      keys,
-      batchSize
+      options
     );
   }
 
   async addVectors(
     vectors: number[][],
     documents: Document[],
-    keys: string[] = [],
-    batchSize = 1000
+    { keys, batchSize = 1000 }: RedisAddOptions = {}
   ): Promise<void> {
     // check if the index exists and create it if it doesn't
     await this.createIndex(vectors[0].length);
@@ -94,7 +131,7 @@ export class RedisVectorStore extends VectorStore {
       }
     });
 
-    // cleanup final batch
+    // insert final batch
     await multi.exec();
   }
 
@@ -183,10 +220,9 @@ export class RedisVectorStore extends VectorStore {
     const schema: RediSearchSchema = {
       [this.vectorKey]: {
         type: SchemaFieldTypes.VECTOR,
-        ALGORITHM: VectorAlgorithms.FLAT,
         TYPE: "FLOAT32",
         DIM: dimensions,
-        DISTANCE_METRIC: "L2",
+        ...this.indexOptions,
       },
       [this.contentKey]: SchemaFieldTypes.TEXT,
       [this.metadataKey]: SchemaFieldTypes.TEXT,
