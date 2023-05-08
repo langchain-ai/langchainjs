@@ -1,3 +1,4 @@
+import { ZodError } from "zod";
 import {
   BaseOutputParser,
   OutputParserException,
@@ -42,7 +43,7 @@ export class OutputFixingParser<T> extends BaseOutputParser<T> {
       return await this.parser.parse(completion, callbacks);
     } catch (e) {
       // eslint-disable-next-line no-instanceof/no-instanceof
-      if (e instanceof OutputParserException) {
+      if (e instanceof OutputParserException || e instanceof ZodError) {
         const result = await this.retryChain.call(
           {
             instructions: this.parser.getFormatInstructions(),
