@@ -248,6 +248,7 @@ export class OpenAIChat
       ? await new Promise<CreateChatCompletionResponse>((resolve, reject) => {
           let response: CreateChatCompletionResponse;
           let rejected = false;
+          let resolved = false;
           this.completionWithRetry(
             {
               ...params,
@@ -259,6 +260,10 @@ export class OpenAIChat
               responseType: "stream",
               onmessage: (event) => {
                 if (event.data?.trim?.() === "[DONE]") {
+                  if (resolved) {
+                    return;
+                  }
+                  resolved = true;
                   resolve(response);
                 } else {
                   const message = JSON.parse(event.data) as {
@@ -285,33 +290,43 @@ export class OpenAIChat
                   }
 
                   // on all messages, update choice
-                  const part = message.choices[0];
-                  if (part != null) {
-                    let choice = response.choices.find(
-                      (c) => c.index === part.index
-                    );
+                  for (const part of message.choices) {
+                    if (part != null) {
+                      let choice = response.choices.find(
+                        (c) => c.index === part.index
+                      );
 
-                    if (!choice) {
-                      choice = {
-                        index: part.index,
-                        finish_reason: part.finish_reason ?? undefined,
-                      };
-                      response.choices.push(choice);
+                      if (!choice) {
+                        choice = {
+                          index: part.index,
+                          finish_reason: part.finish_reason ?? undefined,
+                        };
+                        response.choices.push(choice);
+                      }
+
+                      if (!choice.message) {
+                        choice.message = {
+                          role: part.delta
+                            ?.role as ChatCompletionResponseMessageRoleEnum,
+                          content: part.delta?.content ?? "",
+                        };
+                      }
+
+                      choice.message.content += part.delta?.content ?? "";
+                      // eslint-disable-next-line no-void
+                      void runManager?.handleLLMNewToken(
+                        part.delta?.content ?? ""
+                      );
                     }
+                  }
 
-                    if (!choice.message) {
-                      choice.message = {
-                        role: part.delta
-                          ?.role as ChatCompletionResponseMessageRoleEnum,
-                        content: part.delta?.content ?? "",
-                      };
-                    }
-
-                    choice.message.content += part.delta?.content ?? "";
-                    // eslint-disable-next-line no-void
-                    void runManager?.handleLLMNewToken(
-                      part.delta?.content ?? ""
-                    );
+                  // when all messages are finished, resolve
+                  if (
+                    !resolved &&
+                    message.choices.every((c) => c.finish_reason != null)
+                  ) {
+                    resolved = true;
+                    resolve(response);
                   }
                 }
               },
