@@ -40,9 +40,9 @@ For example, the example "JSON Schema" instance {{"properties": {{"foo": {{"desc
 would match an object with one required property, "foo". The "type" property specifies "foo" must be an "array", and the "description" property semantically describes it as "a list of test words". The items within "foo" must be strings.
 Thus, the object {{"foo": ["bar", "baz"]}} is a well-formatted instance of this example "JSON Schema". The object {{"properties": {{"foo": ["bar", "baz"]}}}} is not well-formatted.
 
-Your output will be parsed and type-checked according to the provided schema instance, so make sure all fields in your output match exactly!
+Your output will be parsed and type-checked according to the provided schema instance, so make sure all fields in your output match the schema exactly and there are no trailing commas!
 
-Here is the JSON Schema instance your output must adhere to:
+Here is the JSON Schema instance your output must adhere to. Include the enclosing markdown codeblock:
 \`\`\`json
 ${JSON.stringify(zodToJsonSchema(this.schema))}
 \`\`\`
