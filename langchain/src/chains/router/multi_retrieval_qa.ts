@@ -41,9 +41,10 @@ export class MultiRetrievalQAChain extends MultiRouteChain {
         "`default_retriever` must be specified if `default_prompt` is \nprovided. Received only `default_prompt`."
       );
     }
-    const destinations = zipEntries(retrieverNames, retrieverDescriptions).map(
-      ([name, desc]) => `${name}: ${desc}`
-    );
+    const destinations = zipEntries<[string, string]>(
+      retrieverNames,
+      retrieverDescriptions
+    ).map(([name, desc]) => `${name}: ${desc}`);
 
     const structuredOutputParserSchema = z.object({
       destination: z
@@ -80,18 +81,19 @@ export class MultiRetrievalQAChain extends MultiRouteChain {
 
     const routerChain = LLMRouterChain.fromLLM(llm, routerPrompt);
     const prompts = retrieverPrompts ?? retrievers.map(() => null);
-    const destinationChains = zipEntries(
-      retrieverNames,
-      retrievers,
-      prompts
-    ).reduce((acc, [name, retriever, prompt]) => {
-      acc[name as string] = RetrievalQAChain.fromLLM(
-        llm,
-        retriever as BaseRetriever,
-        { prompt: prompt as PromptTemplate }
-      );
-      return acc;
-    }, {} as { [name: string]: RetrievalQAChain });
+    const destinationChains = zipEntries<
+      [string, BaseRetriever, PromptTemplate | null]
+    >(retrieverNames, retrievers, prompts).reduce(
+      (acc, [name, retriever, prompt]) => {
+        acc[name as string] = RetrievalQAChain.fromLLM(
+          llm,
+          retriever as BaseRetriever,
+          { prompt: prompt as PromptTemplate }
+        );
+        return acc;
+      },
+      {} as { [name: string]: RetrievalQAChain }
+    );
 
     let _defaultChain;
     if (defaultChain) {

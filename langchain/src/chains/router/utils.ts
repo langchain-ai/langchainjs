@@ -1,4 +1,9 @@
-export function zipEntries(...arrays: unknown[][]): unknown[][] {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function zipEntries<T extends any[]>(
+  ...arrays: {
+    [P in keyof T]: T[P][];
+  }
+): T[] {
   // Check for empty input
   if (arrays.length === 0) {
     return [];
@@ -15,12 +20,12 @@ export function zipEntries(...arrays: unknown[][]): unknown[][] {
   }
 
   // Create an empty array to store the zipped arrays
-  const zipped: unknown[][] = [];
+  const zipped: T[] = [];
 
   // Iterate through each element of the first input array
   for (let i = 0; i < firstArrayLength; i += 1) {
     // Create an array to store the zipped elements at the current index
-    const zippedElement: unknown[] = [];
+    const zippedElement: T[keyof T][] = [];
 
     // Iterate through each input array
     for (const array of arrays) {
@@ -29,7 +34,7 @@ export function zipEntries(...arrays: unknown[][]): unknown[][] {
     }
 
     // Add the zipped element array to the zipped array
-    zipped.push(zippedElement);
+    zipped.push(zippedElement as T);
   }
 
   return zipped;

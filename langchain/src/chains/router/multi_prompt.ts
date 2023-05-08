@@ -20,9 +20,10 @@ export class MultiPromptChain extends MultiRouteChain {
     defaultChain?: BaseChain,
     options?: Omit<MultiRouteChainInput, "defaultChain">
   ) {
-    const destinations = zipEntries(promptNames, promptDescriptions).map(
-      ([name, desc]) => `${name}: ${desc}`
-    );
+    const destinations = zipEntries<[string, string]>(
+      promptNames,
+      promptDescriptions
+    ).map(([name, desc]) => `${name}: ${desc}`);
 
     const structuredOutputParserSchema = z.object({
       destination: z
@@ -59,28 +60,28 @@ export class MultiPromptChain extends MultiRouteChain {
     });
 
     const routerChain = LLMRouterChain.fromLLM(llm, routerPrompt);
-    const destinationChains = zipEntries(promptNames, promptTemplates).reduce(
-      (acc, [name, template]) => {
-        let myPrompt: string | PromptTemplate;
-        // eslint-disable-next-line no-instanceof/no-instanceof
-        if (template instanceof PromptTemplate) {
-          myPrompt = template;
-        } else if (typeof template === "string") {
-          myPrompt = new PromptTemplate({
-            template: template as string,
-            inputVariables: ["input"],
-          });
-        } else {
-          throw new Error("Invalid prompt template");
-        }
-        acc[name as string] = new LLMChain({
-          llm,
-          prompt: myPrompt,
+    const destinationChains = zipEntries<[string, string | PromptTemplate]>(
+      promptNames,
+      promptTemplates
+    ).reduce((acc, [name, template]) => {
+      let myPrompt: string | PromptTemplate;
+      // eslint-disable-next-line no-instanceof/no-instanceof
+      if (template instanceof PromptTemplate) {
+        myPrompt = template;
+      } else if (typeof template === "string") {
+        myPrompt = new PromptTemplate({
+          template: template as string,
+          inputVariables: ["input"],
         });
-        return acc;
-      },
-      {} as { [name: string]: LLMChain }
-    );
+      } else {
+        throw new Error("Invalid prompt template");
+      }
+      acc[name as string] = new LLMChain({
+        llm,
+        prompt: myPrompt,
+      });
+      return acc;
+    }, {} as { [name: string]: LLMChain });
 
     const convChain = new ConversationChain({
       llm,
