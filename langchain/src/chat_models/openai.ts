@@ -12,7 +12,7 @@ import {
   AzureOpenAIInput,
   OpenAICallOptions,
   OpenAIChatInput,
-} from "../types/open-ai-types.js";
+} from "../types/openai-types.js";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
 import type { StreamingAxiosConfiguration } from "../util/axios-types.js";
 import { BaseChatModel, BaseChatModelParams } from "./base.js";
