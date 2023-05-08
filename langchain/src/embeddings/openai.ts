@@ -6,7 +6,7 @@ import {
 } from "openai";
 import { isNode } from "browser-or-node";
 import type { AxiosRequestConfig } from "axios";
-import { AzureOpenAIInput } from "../types/open-ai-types.js";
+import { AzureOpenAIInput } from "../types/openai-types.js";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
 import { chunkArray } from "../util/chunk.js";
 import { Embeddings, EmbeddingsParams } from "./base.js";
