@@ -95,4 +95,8 @@ export class MultiPromptChain extends MultiRouteChain {
       ...options,
     });
   }
+
+  _chainType(): string {
+    return "multi_prompt_chain";
+  }
 }

@@ -122,4 +122,8 @@ export class MultiRetrievalQAChain extends MultiRouteChain {
       ...options,
     });
   }
+
+  _chainType(): string {
+    return "multi_retrieval_qa_chain";
+  }
 }
