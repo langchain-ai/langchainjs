@@ -4,7 +4,6 @@ import { BaseLLM } from "../../../llms/base.js";
 import { BaseRetriever, LLMResult } from "../../../schema/index.js";
 import { Document } from "../../../document.js";
 import { PromptTemplate } from "../../../prompts/prompt.js";
-import { ConsoleCallbackHandler } from "../../../callbacks/index.js";
 
 class FakeRetrievers extends BaseRetriever {
   name: string;
@@ -68,9 +67,7 @@ class FakeLLM extends BaseLLM {
 }
 
 test("Test MultiRetrievalQAChain No Defaults With Retriever Prompts", async () => {
-  const llm = new FakeLLM({
-    callbacks: [new ConsoleCallbackHandler()],
-  });
+  const llm = new FakeLLM({});
   const retrieverNames = ["retriever1", "retriever2", "retriever3"];
   const retrieverDescriptions = [
     "description1",

@@ -85,11 +85,11 @@ export class MultiRetrievalQAChain extends MultiRouteChain {
       [string, BaseRetriever, PromptTemplate | null]
     >(retrieverNames, retrievers, prompts).reduce(
       (acc, [name, retriever, prompt]) => {
-        acc[name as string] = RetrievalQAChain.fromLLM(
-          llm,
-          retriever as BaseRetriever,
-          { prompt: prompt as PromptTemplate }
-        );
+        let opt: { prompt: PromptTemplate } | undefined;
+        if (prompt) {
+          opt = { prompt };
+        }
+        acc[name] = RetrievalQAChain.fromLLM(llm, retriever, opt);
         return acc;
       },
       {} as { [name: string]: RetrievalQAChain }

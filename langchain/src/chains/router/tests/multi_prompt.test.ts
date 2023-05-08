@@ -2,7 +2,6 @@ import { test, expect } from "@jest/globals";
 import { MultiPromptChain } from "../multi_prompt.js";
 import { BaseLLM } from "../../../llms/base.js";
 import { LLMResult } from "../../../schema/index.js";
-import { ConsoleCallbackHandler } from "../../../callbacks/index.js";
 
 let pickedPrompt: string;
 
@@ -49,9 +48,7 @@ class FakeLLM extends BaseLLM {
 }
 
 test("Test MultiPromptChain", async () => {
-  const llm = new FakeLLM({
-    callbacks: [new ConsoleCallbackHandler()],
-  });
+  const llm = new FakeLLM({});
   const promptNames = ["prompt1", "prompt2", "prompt3"];
   const promptDescriptions = ["description1", "description2", "description3"];
   const promptTemplates = [
