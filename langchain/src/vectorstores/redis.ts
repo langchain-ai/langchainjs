@@ -5,7 +5,7 @@ import type {
   SearchOptions,
 } from "redis";
 import { SchemaFieldTypes, VectorAlgorithms } from "redis";
-import { Embeddings } from "embeddings/base.js";
+import { Embeddings } from "../embeddings/base.js";
 import { VectorStore } from "./base.js";
 import { Document } from "../document.js";
 
