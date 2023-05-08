@@ -1,4 +1,5 @@
 import { expect, test } from "@jest/globals";
+import { z } from "zod";
 
 import { StructuredOutputParser } from "../structured.js";
 import { OpenAI } from "../../llms/openai.js";
@@ -137,4 +138,50 @@ test("StructuredOutputParser deals special chars in prompt with chat model 2", a
   expect(parsed).toHaveProperty("question1");
   expect(parsed).toHaveProperty("question2");
   expect(parsed).toHaveProperty("question3");
+});
+
+test("StructuredOutputParser handles a longer and more complex schema", async () => {
+  const parser = StructuredOutputParser.fromZodSchema(
+    z.object({
+      name: z.string().describe("Human name"),
+      surname: z.string().describe("Human surname"),
+      age: z.number().describe("Human age"),
+      appearance: z.string().describe("Human appearance description"),
+      shortBio: z.string().describe("Short bio secription"),
+      university: z.string().optional().describe("University name if attended"),
+      gender: z.string().describe("Gender of the human"),
+      interests: z
+        .array(z.string())
+        .describe("json array of strings human interests"),
+    })
+  );
+
+  const formatInstructions = parser.getFormatInstructions();
+
+  const prompt = new PromptTemplate({
+    template:
+      "Generate details of a hypothetical person.\n{format_instructions}\nPerson description: {inputText}",
+    inputVariables: ["inputText"],
+    partialVariables: { format_instructions: formatInstructions },
+  });
+
+  const model = new OpenAI({ temperature: 0.5, modelName: "gpt-3.5-turbo" });
+
+  const input = await prompt.format({
+    inputText: "A man, living in Poland.",
+  });
+  const response = await model.call(input);
+  console.log("response", response);
+
+  const parsed = await parser.parse(response);
+
+  expect(parsed).toHaveProperty("name");
+  expect(parsed).toHaveProperty("surname");
+  expect(parsed).toHaveProperty("age");
+  expect(parsed).toHaveProperty("appearance");
+  expect(parsed).toHaveProperty("shortBio");
+  expect(parsed).toHaveProperty("age");
+  expect(parsed).toHaveProperty("gender");
+  expect(parsed).toHaveProperty("interests");
+  expect(parsed.interests.length).toBeGreaterThan(0);
 });
