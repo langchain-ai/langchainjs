@@ -1,4 +1,4 @@
-import { v4 as uuid } from "uuid";
+import * as uuid from "uuid";
 import { ClickHouseClient, createClient } from "@clickhouse/client";
 
 import { Embeddings } from "../embeddings/base.js";
@@ -70,7 +70,7 @@ export class MyScaleStore extends VectorStore {
       host: `${args.protocol ?? "https://"}${args.host}:${args.port}`,
       username: args.username,
       password: args.password,
-      session_id: uuid(),
+      session_id: uuid.v4(),
     });
   }
 
@@ -190,7 +190,7 @@ export class MyScaleStore extends VectorStore {
       const vector = vectors[i];
       const document = documents[i];
       const item = [
-        `'${uuid()}'`,
+        `'${uuid.v4()}'`,
         `'${this.escapeString(document.pageContent)}'`,
         `[${vector}]`,
         `'${JSON.stringify(document.metadata)}'`,

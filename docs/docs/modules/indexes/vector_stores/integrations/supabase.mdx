@@ -29,7 +29,8 @@ create table documents (
 -- Create a function to search for documents
 create function match_documents (
   query_embedding vector(1536),
-  match_count int
+  match_count int,
+  filter jsonb DEFAULT '{}'
 ) returns table (
   id bigint,
   content text,
@@ -47,6 +48,7 @@ begin
     metadata,
     1 - (documents.embedding <=> query_embedding) as similarity
   from documents
+  where metadata @> filter
   order by documents.embedding <=> query_embedding
   limit match_count;
 end;
@@ -57,5 +59,18 @@ $$;
 
 import CodeBlock from "@theme/CodeBlock";
 import Example from "@examples/indexes/vector_stores/supabase.ts";
+import MetadataFilterExample from "@examples/indexes/vector_stores/supabase_with_metadata_filter.ts";
+
+### Standard Usage
+
+The below example shows how to perform a basic similarity search with Supabase:
 
 <CodeBlock language="typescript">{Example}</CodeBlock>
+
+### Metadata Filtering
+
+Given the above `match_documents` Postgres function, you can also pass a filter parameter to only documents with a specific metadata field value.
+
+**Note:** If you've previously been using `SupabaseVectorStore`, you may need to drop and recreate the `match_documents` function per the updated SQL above to use this functionality.
+
+<CodeBlock language="typescript">{MetadataFilterExample}</CodeBlock>

@@ -7,13 +7,14 @@ import { SerializedLLMChain } from "./serde.js";
 import { CallbackManager } from "../callbacks/index.js";
 import { CallbackManagerForChainRun } from "../callbacks/manager.js";
 
-export interface LLMChainInput extends ChainInputs {
+export interface LLMChainInput<T extends string | object = string>
+  extends ChainInputs {
   /** Prompt object to use */
   prompt: BasePromptTemplate;
   /** LLM Wrapper to use */
   llm: BaseLanguageModel;
   /** OutputParser to use */
-  outputParser?: BaseOutputParser;
+  outputParser?: BaseOutputParser<T>;
   /** Key to use for output, defaults to `text` */
   outputKey?: string;
 }
@@ -31,14 +32,17 @@ export interface LLMChainInput extends ChainInputs {
  * const llm = new LLMChain({ llm: new OpenAI(), prompt });
  * ```
  */
-export class LLMChain extends BaseChain implements LLMChainInput {
+export class LLMChain<T extends string | object = string>
+  extends BaseChain
+  implements LLMChainInput<T>
+{
   prompt: BasePromptTemplate;
 
   llm: BaseLanguageModel;
 
   outputKey = "text";
 
-  outputParser?: BaseOutputParser;
+  outputParser?: BaseOutputParser<T>;
 
   get inputKeys() {
     return this.prompt.inputVariables;
@@ -48,7 +52,7 @@ export class LLMChain extends BaseChain implements LLMChainInput {
     return [this.outputKey];
   }
 
-  constructor(fields: LLMChainInput) {
+  constructor(fields: LLMChainInput<T>) {
     super(fields);
     this.prompt = fields.prompt;
     this.llm = fields.llm;
@@ -58,7 +62,7 @@ export class LLMChain extends BaseChain implements LLMChainInput {
       if (this.outputParser) {
         throw new Error("Cannot set both outputParser and prompt.outputParser");
       }
-      this.outputParser = this.prompt.outputParser;
+      this.outputParser = this.prompt.outputParser as BaseOutputParser<T>;
     }
   }
 
@@ -121,7 +125,7 @@ export class LLMChain extends BaseChain implements LLMChainInput {
   async predict(
     values: ChainValues,
     callbackManager?: CallbackManager
-  ): Promise<string> {
+  ): Promise<T> {
     const output = await this.call(values, callbackManager);
     return output[this.outputKey];
   }
