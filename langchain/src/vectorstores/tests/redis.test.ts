@@ -45,7 +45,7 @@ test("RedisVectorStore with external keys", async () => {
         },
       },
     ],
-    ["id1"]
+    { keys: ["id1"] }
   );
 
   expect(client.hSet).toHaveBeenCalledTimes(1);

@@ -41,10 +41,9 @@ describe("RedisVectorStore", () => {
     const documentKey = `test:${uuidv4()}`;
     const pageContent = faker.lorem.sentence(5);
 
-    await vectorStore.addDocuments(
-      [{ pageContent, metadata: {} }],
-      [documentKey]
-    );
+    await vectorStore.addDocuments([{ pageContent, metadata: {} }], {
+      keys: [documentKey],
+    });
 
     const results = await vectorStore.similaritySearch(pageContent, 1);
 
