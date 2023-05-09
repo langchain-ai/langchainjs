@@ -622,8 +622,7 @@ export class LangChainTracerV2 extends LangChainTracer {
         ...chainRun.child_chain_runs,
         ...chainRun.child_tool_runs,
       ];
-    } else {
-      // run.type === "tool"
+    } else if (run.type === "tool") {
       const toolRun = run as ToolRun;
       inputs = { input: toolRun.tool_input };
       outputs = toolRun.output ? { output: toolRun.output } : {};
@@ -632,6 +631,9 @@ export class LangChainTracerV2 extends LangChainTracer {
         ...toolRun.child_chain_runs,
         ...toolRun.child_tool_runs,
       ];
+    }
+    else {
+      throw new Error(`Unknown run type: ${run.type}`);
     }
 
     return {
