@@ -101,7 +101,6 @@ export interface RunV2 extends RunV2Create {
 
 export interface AgentRunV2 extends RunV2 {
   actions: AgentAction[];
-  parent_run_id?: string; // uuid
 }
 
 export abstract class BaseTracer extends BaseCallbackHandler {
