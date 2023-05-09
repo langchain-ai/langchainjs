@@ -11659,7 +11659,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"debug@npm:^3.1.0, debug@npm:^3.2.7":
+"debug@npm:^3.1.0, debug@npm:^3.2.6, debug@npm:^3.2.7":
   version: 3.2.7
   resolution: "debug@npm:3.2.7"
   dependencies:
@@ -12323,6 +12323,16 @@ __metadata:
   bin:
     dpdm: lib/bin/dpdm.js
   checksum: 458d48c62cc48437f89814adfcfae0a22d920080d32549b4d68d32a33f4ad10b404f29a14a10d7a808814651b652631216a999853381fa9671ea6ede1cee3b5d
+  languageName: node
+  linkType: hard
+
+"duck-duck-scrape@npm:^2.2.3":
+  version: 2.2.3
+  resolution: "duck-duck-scrape@npm:2.2.3"
+  dependencies:
+    html-entities: ^2.3.3
+    needle: ^3.2.0
+  checksum: 0fdfaa9b0d8f8bb4ef4215652263b79a02bd39c9e261432377b3ba8b979e6cb974ff96c7ffa32e12efc123514da15df059511768b05d04712f6510bf0c44e54e
   languageName: node
   linkType: hard
 
@@ -15134,7 +15144,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"html-entities@npm:^2.1.0, html-entities@npm:^2.3.2":
+"html-entities@npm:^2.1.0, html-entities@npm:^2.3.2, html-entities@npm:^2.3.3":
   version: 2.3.3
   resolution: "html-entities@npm:2.3.3"
   checksum: 92521501da8aa5f66fee27f0f022d6e9ceae62667dae93aa6a2f636afa71ad530b7fb24a18d4d6c124c9885970cac5f8a52dbf1731741161002816ae43f98196
@@ -17780,6 +17790,7 @@ __metadata:
     d3-dsv: ^2.0.0
     dotenv: ^16.0.3
     dpdm: ^3.12.0
+    duck-duck-scrape: ^2.2.3
     epub2: ^3.0.1
     eslint: ^8.33.0
     eslint-config-airbnb-base: ^15.0.0
@@ -19161,6 +19172,19 @@ __metadata:
   version: 1.4.0
   resolution: "natural-compare@npm:1.4.0"
   checksum: 23ad088b08f898fc9b53011d7bb78ec48e79de7627e01ab5518e806033861bef68d5b0cd0e2205c2f36690ac9571ff6bcb05eb777ced2eeda8d4ac5b44592c3d
+  languageName: node
+  linkType: hard
+
+"needle@npm:^3.2.0":
+  version: 3.2.0
+  resolution: "needle@npm:3.2.0"
+  dependencies:
+    debug: ^3.2.6
+    iconv-lite: ^0.6.3
+    sax: ^1.2.4
+  bin:
+    needle: bin/needle
+  checksum: d6f3e8668bbaf943d28ced0ad843eff793b56025e80152e511fd02313b8974e4dd9674bcbe3d8f9aa31882adb190dafe29ea5fce03a92b4724adf4850070bcfc
   languageName: node
   linkType: hard
 
