@@ -301,7 +301,7 @@ export abstract class Agent extends BaseSingleActionAgent {
     );
   }
 
-  private async _plan(
+  async _plan(
     steps: AgentStep[],
     inputs: ChainValues,
     suffix?: string,
