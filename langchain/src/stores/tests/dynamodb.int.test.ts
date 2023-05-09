@@ -14,7 +14,7 @@ test("Test DynamoDB message history store", async () => {
     tableName: "langchain",
     sessionId,
     config: {
-      region: "us-east-2",
+      region: process.env.AWS_REGION!,
       credentials: {
         accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
         secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
@@ -38,7 +38,7 @@ test("Test DynamoDB message history store", async () => {
     tableName: "langchain",
     sessionId,
     config: {
-      region: "us-east-2",
+      region: process.env.AWS_REGION!,
       credentials: {
         accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
         secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
@@ -60,7 +60,7 @@ test("Test DynamoDB message history store in a BufferMemory", async () => {
       tableName: "langchain",
       sessionId: new Date().toISOString(),
       config: {
-        region: "us-east-2",
+        region: process.env.AWS_REGION!,
         credentials: {
           accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
           secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
@@ -87,7 +87,7 @@ test("Test DynamoDB message history store in an LLM chain", async () => {
       tableName: "langchain",
       sessionId: new Date().toISOString(),
       config: {
-        region: "us-east-2",
+        region: process.env.AWS_REGION!,
         credentials: {
           accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
           secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
