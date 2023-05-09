@@ -45,7 +45,7 @@ export class MultiRouteChain extends BaseChain {
   silentErrors = false;
 
   constructor(fields: MultiRouteChainInput) {
-    super(fields.memory, fields.verbose, fields.callbackManager);
+    super(fields);
     this.routerChain = fields.routerChain;
     this.destinationChains = fields.destinationChains;
     this.defaultChain = fields.defaultChain;
@@ -93,7 +93,9 @@ export class MultiRouteChain extends BaseChain {
         });
     }
     throw new Error(
-      `Destination ${destination} not found in destination chains.`
+      `Destination ${destination} not found in destination chains with keys ${Object.keys(
+        this.destinationChains
+      )}`
     );
   }
 

@@ -19,7 +19,7 @@ export class LLMRouterChain extends RouterChain implements LLMRouterChainInput {
   llmChain: LLMChain<RouterOutputSchema>;
 
   constructor(fields: LLMRouterChainInput) {
-    super(fields.memory, fields.verbose, fields.callbackManager);
+    super(fields);
     this.llmChain = fields.llmChain;
   }
 
@@ -41,7 +41,7 @@ export class LLMRouterChain extends RouterChain implements LLMRouterChainInput {
   static fromLLM(
     llm: BaseLanguageModel,
     prompt: BasePromptTemplate,
-    options?: Omit<LLMRouterChainInput, "llm">
+    options?: Omit<LLMRouterChainInput, "llmChain">
   ) {
     const llmChain = new LLMChain<RouterOutputSchema>({ llm, prompt });
     return new LLMRouterChain({ ...options, llmChain });
