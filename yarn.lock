@@ -15615,7 +15615,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ignore@npm:^5.2.0":
+"ignore@npm:^5.2.0, ignore@npm:^5.2.4":
   version: 5.2.4
   resolution: "ignore@npm:5.2.4"
   checksum: 3d4c309c6006e2621659311783eaea7ebcd41fe4ca1d78c91c473157ad6666a57a2df790fe0d07a12300d9aac2888204d7be8d59f9aaf665b1c7fcdb432517ef
@@ -18095,6 +18095,7 @@ __metadata:
     "@tsconfig/recommended": ^1.0.2
     dotenv: ^16.0.3
     husky: ^8.0.3
+    ignore: ^5.2.4
     lint-staged: ^13.1.1
     prettier: ^2.8.3
     turbo: latest

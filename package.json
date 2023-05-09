@@ -50,6 +50,7 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
+    "ignore": "^5.2.4",
     "turbo": "latest"
   },
   "resolutions": {

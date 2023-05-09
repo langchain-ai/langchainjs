@@ -3,6 +3,7 @@ import { Document } from "../../document.js";
 import { BaseDocumentLoader } from "../base.js";
 import { UnknownHandling } from "../fs/directory.js";
 import { extname } from "../../util/extname.js";
+import ignore, { Ignore } from 'ignore'
 
 const extensions = new Set(binaryExtensions);
 
@@ -32,7 +33,7 @@ export interface GithubRepoLoaderParams {
   recursive?: boolean;
   unknown?: UnknownHandling;
   accessToken?: string;
-  ignoreFiles?: (string | RegExp)[];
+  ignorePaths?: string[]
 }
 
 export class GithubRepoLoader
@@ -55,7 +56,7 @@ export class GithubRepoLoader
 
   public accessToken?: string;
 
-  public ignoreFiles: (string | RegExp)[];
+  private ignore:Ignore;
 
   constructor(
     githubUrl: string,
@@ -67,7 +68,7 @@ export class GithubRepoLoader
       branch = "main",
       recursive = true,
       unknown = UnknownHandling.Warn,
-      ignoreFiles = [],
+      ignorePaths = [],
     }: GithubRepoLoaderParams = {}
   ) {
     super();
@@ -79,7 +80,7 @@ export class GithubRepoLoader
     this.recursive = recursive;
     this.unknown = unknown;
     this.accessToken = accessToken;
-    this.ignoreFiles = ignoreFiles;
+    this.ignore = ignore().add(ignorePaths)
     if (this.accessToken) {
       this.headers = {
         Authorization: `Bearer ${this.accessToken}`,
@@ -109,18 +110,8 @@ export class GithubRepoLoader
     return documents;
   }
 
-  private shouldIgnore(path: string): boolean {
-    return this.ignoreFiles.some((pattern) => {
-      if (typeof pattern === "string") {
-        return path === pattern;
-      }
-
-      try {
-        return pattern.test(path);
-      } catch {
-        throw new Error(`Unknown ignore file pattern: ${pattern}`);
-      }
-    });
+  shouldIgnore(path: string) {
+    return this.ignore.ignores(path)
   }
 
   private async processDirectory(
@@ -131,6 +122,10 @@ export class GithubRepoLoader
       const files = await this.fetchRepoFiles(path);
 
       for (const file of files) {
+        if (this.shouldIgnore(file.path)) {
+          continue;
+        }
+        
         if (file.type === "dir") {
           if (this.recursive) {
             await this.processDirectory(file.path, documents);
