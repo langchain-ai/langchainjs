@@ -23,15 +23,15 @@ export interface TracerSession extends BaseTracerSession {
 }
 
 export interface BaseTracerSessionV2 extends BaseTracerSession {
-  tenant_id: string; // v4 uuid
+  tenant_id: string; // uuid
 }
 
 export interface TracerSessionCreateV2 extends BaseTracerSessionV2 {
-  id?: string; // v4 uuid. Auto-generated if not provided
+  id?: string; // uuid. Auto-generated if not provided
 }
 
 export interface TracerSessionV2 extends BaseTracerSessionV2 {
-  id: string; // v4 uuid
+  id: string; // uuid
 }
 
 export interface BaseRun {
@@ -76,7 +76,7 @@ export interface ToolRun extends BaseRun {
 export type Run = LLMRun | ChainRun | ToolRun;
 
 export interface RunV2Base {
-  id: string; // v4 uuid
+  id: string;
   start_time: number;
   end_time: number;
   extra: object;
@@ -85,19 +85,19 @@ export interface RunV2Base {
   serialized: object;
   inputs: RunInputs;
   outputs: RunOutputs;
-  session_id: string; // v4 uuid
-  reference_example_id?: string; // v4 uuid
+  session_id: string; // uuid
+  reference_example_id?: string; // uuid
   run_type: RunType;
 }
 
 export interface RunV2Create extends RunV2Base {
-  name?: string;
+  name?: string; // uuid if not provided
   child_runs?: RunV2Create[];
 }
 
 export interface RunV2 extends RunV2Base {
   name: string;
-  parent_run_id?: string; // v4 uuid
+  parent_run_id?: string; // uuid
 }
 
 export abstract class BaseTracer extends BaseCallbackHandler {
