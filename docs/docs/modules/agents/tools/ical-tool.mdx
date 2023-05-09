@@ -1,0 +1,27 @@
+---
+hide_table_of_contents: true
+---
+
+import CodeBlock from "@theme/CodeBlock";
+
+# iCal Tool
+
+The iCal Tool gives your agent the ability to create iCal events. It is described to the agent as
+
+```
+Useful for creating iCal calendar events. Input should be sentences describing what type of events to create.
+```
+
+## Setup
+
+To use the iCal Tool you need to install the dependencies:
+
+```bash npm2yarn
+npm install ical-generator
+```
+
+## Usage, standalone
+
+import ToolExample from "@examples/tools/ical.ts";
+
+<CodeBlock language="typescript">{ToolExample}</CodeBlock>
