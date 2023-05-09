@@ -115,6 +115,7 @@
       "src/stores/file/in_memory.ts",
       "src/stores/file/node.ts",
       "src/stores/message/dynamodb.ts",
+      "src/stores/message/redis.ts",
       "src/experimental/autogpt/index.ts",
       "src/experimental/babyagi/index.ts"
     ],

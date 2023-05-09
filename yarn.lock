@@ -6552,6 +6552,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@redis/client@npm:1.5.7":
+  version: 1.5.7
+  resolution: "@redis/client@npm:1.5.7"
+  dependencies:
+    cluster-key-slot: 1.1.2
+    generic-pool: 3.9.0
+    yallist: 4.0.0
+  checksum: 3ded14d947b1aba9121fb2608c99960d89716b1ef9baf48ef68384a30fc8e2fe2f1be7a959247d81e7ce15a38ea9e3fce512f3fdce5a400da88dc96496b09e89
+  languageName: node
+  linkType: hard
+
 "@redis/graph@npm:1.1.0":
   version: 1.1.0
   resolution: "@redis/graph@npm:1.1.0"
@@ -6576,6 +6587,15 @@ __metadata:
   peerDependencies:
     "@redis/client": ^1.0.0
   checksum: 5c574679e803530d0b1a704eb7c22292849e0a36dfc9a84a5359051f9da6e0dab72e11ade5654a69d9984bb45d2f7cdf901111135247670824013145cf28d326
+  languageName: node
+  linkType: hard
+
+"@redis/search@npm:1.1.2":
+  version: 1.1.2
+  resolution: "@redis/search@npm:1.1.2"
+  peerDependencies:
+    "@redis/client": ^1.0.0
+  checksum: fc3c0bd62c150ea7f8b3f08b0e67893b4e8df71b4820d750de6ba00ccff3720fdc5d4f50618e385c9e183c784635185e2e98a3e6c3d20ac30f2c60996f38b992
   languageName: node
   linkType: hard
 
@@ -13639,6 +13659,7 @@ __metadata:
     mongodb: ^5.2.0
     prettier: ^2.8.3
     prisma: ^4.11.0
+    redis: ^4.6.6
     sqlite3: ^5.1.4
     tsx: ^3.12.3
     typeorm: ^0.3.12
@@ -22288,6 +22309,20 @@ __metadata:
     "@redis/search": 1.1.1
     "@redis/time-series": 1.0.4
   checksum: b9263985de512a381d419b471bf040989dda80df070d7f548669e6c241a33ca789273ed7834a74e2408b610bb20089ab210fe4493415cf269b8549a29824ccb2
+  languageName: node
+  linkType: hard
+
+"redis@npm:^4.6.6":
+  version: 4.6.6
+  resolution: "redis@npm:4.6.6"
+  dependencies:
+    "@redis/bloom": 1.2.0
+    "@redis/client": 1.5.7
+    "@redis/graph": 1.1.0
+    "@redis/json": 1.0.4
+    "@redis/search": 1.1.2
+    "@redis/time-series": 1.0.4
+  checksum: fb2e667d91406105c229964ddaf120a8eaae02c1f583f384f68962e166542199300fd75af9572285af988870636b8e75b04562e6d9c250ab95e43c3d87a1cb72
   languageName: node
   linkType: hard
 

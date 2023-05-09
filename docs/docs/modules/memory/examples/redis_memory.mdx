@@ -1,0 +1,29 @@
+---
+hide_table_of_contents: true
+---
+
+import CodeBlock from "@theme/CodeBlock";
+
+# Redis Memory
+
+For longer-term persistence across chat sessions, you can swap out the default in-memory `chatHistory` that backs chat memory classes like `BufferMemory` for a [Redis](https://redis.io/) instance.
+
+## Setup
+
+Redis is already included in Langchain dependencies. See instructions at [Redis](https://redis.io/docs/getting-started/) for running the server locally. There are also multiple providers who will manage Redis as a service. You will need to adapt your client connection parameters to your own provider requirements.
+
+## Usage
+
+You will need to connect to Redis using the `createClient()` method from the built-in Redis library. You have full access to all the configuration options. Pass that client to the BufferMemory module.
+
+import Example from "@examples/memory/redis.ts";
+
+<CodeBlock language="typescript">{Example}</CodeBlock>
+
+### Settings
+
+You have three settings:
+
+- `sessionId`: String to store all conversations in the same key (Required)
+- `memoryTTL`: How long the memory will persist in Redis (Default: 300s)
+- `redisUrl`: Connection string to your Redis instance. Defaults to `"redis://localhost:6379"`
