@@ -631,8 +631,7 @@ export class LangChainTracerV2 extends LangChainTracer {
         ...toolRun.child_chain_runs,
         ...toolRun.child_tool_runs,
       ];
-    }
-    else {
+    } else {
       throw new Error(`Unknown run type: ${run.type}`);
     }
 
@@ -649,7 +648,6 @@ export class LangChainTracerV2 extends LangChainTracer {
       outputs,
       session_id: session.id,
       run_type: run.type,
-      reference_example_id: this.exampleId,
       child_runs: await Promise.all(
         child_runs.map((child) => this.convertRunToV2Run(child))
       ),
@@ -658,6 +656,7 @@ export class LangChainTracerV2 extends LangChainTracer {
 
   protected async persistRun(run: LLMRun | ChainRun | ToolRun): Promise<void> {
     const runV2 = await this.convertRunToV2Run(run);
+    runV2.reference_example_id = this.exampleId;
     const endpoint = `${this.endpoint}/runs`;
     const response = await fetch(endpoint, {
       method: "POST",
