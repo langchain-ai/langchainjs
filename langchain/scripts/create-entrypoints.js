@@ -16,6 +16,7 @@ const entrypoints = {
   tools: "tools/index",
   "tools/aws_lambda": "tools/aws_lambda",
   "tools/calculator": "tools/calculator",
+  "tools/ical": "tools/ical",
   "tools/webbrowser": "tools/webbrowser",
   // chains
   chains: "chains/index",

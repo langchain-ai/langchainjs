@@ -1,6 +1,7 @@
 import * as agents from "langchain/agents";
 import * as base_language from "langchain/base_language";
 import * as tools from "langchain/tools";
+import * as tools_ical from "langchain/tools/ical";
 import * as chains from "langchain/chains";
 import * as embeddings_base from "langchain/embeddings/base";
 import * as embeddings_fake from "langchain/embeddings/fake";

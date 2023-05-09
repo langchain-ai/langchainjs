@@ -16,6 +16,9 @@ tools/aws_lambda.d.ts
 tools/calculator.cjs
 tools/calculator.js
 tools/calculator.d.ts
+tools/ical.cjs
+tools/ical.js
+tools/ical.d.ts
 tools/webbrowser.cjs
 tools/webbrowser.js
 tools/webbrowser.d.ts

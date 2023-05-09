@@ -28,6 +28,9 @@
     "tools/calculator.cjs",
     "tools/calculator.js",
     "tools/calculator.d.ts",
+    "tools/ical.cjs",
+    "tools/ical.js",
+    "tools/ical.d.ts",
     "tools/webbrowser.cjs",
     "tools/webbrowser.js",
     "tools/webbrowser.d.ts",
@@ -572,6 +575,11 @@
       "types": "./tools/calculator.d.ts",
       "import": "./tools/calculator.js",
       "require": "./tools/calculator.cjs"
+    },
+    "./tools/ical": {
+      "types": "./tools/ical.d.ts",
+      "import": "./tools/ical.js",
+      "require": "./tools/ical.cjs"
     },
     "./tools/webbrowser": {
       "types": "./tools/webbrowser.d.ts",
