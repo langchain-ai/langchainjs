@@ -42,6 +42,14 @@ test("Can parse JSON with text in front of it", async () => {
       toolInput:
         "```sql\nSELECT * FROM orders\nJOIN users ON users.id = orders.user_id\nWHERE users.email = 'bud'```",
     },
+    {
+      input:
+        '{"action":"ToolWithJson","action_input":"The tool input ```json\\n{\\"yes\\":true}\\n```"}',
+      output:
+        '{"action":"ToolWithJson","action_input":"The tool input ```json\\n{\\"yes\\":true}\\n```"}',
+      tool: "ToolWithJson",
+      toolInput: 'The tool input ```json\n{"yes":true}\n```',
+    },
   ];
 
   const p = new ChatConversationalAgentOutputParser();
@@ -60,5 +68,68 @@ test("Can parse JSON with text in front of it", async () => {
         expect(message.toolInput).toContain(parsed.toolInput);
       }
     }
+  }
+});
+
+test("will throw exceptions if action or action_input are not found", async () => {
+  const parser = new ChatConversationalAgentOutputParser();
+
+  type MissingItem = "action" | "action_input";
+  type TestCase = { message: string; missing: MissingItem };
+
+  const testCases: TestCase[] = [
+    {
+      message: "",
+      missing: "action",
+    },
+    {
+      message: '{"action": "Final Answer"}',
+      missing: "action_input",
+    },
+    {
+      message: '{"action_input": "I have no action"}',
+      missing: "action",
+    },
+    {
+      message:
+        'I have a prefix ```json\n{"action_input": "I have no action"}```',
+      missing: "action",
+    },
+    {
+      message: 'I have a prefix ```{"action_input": "I have no action"}```',
+      missing: "action",
+    },
+    {
+      message:
+        'I have a prefix ```json\n{"action_input": "I have no action"}\n```',
+      missing: "action",
+    },
+    {
+      message: 'I have a prefix ```\n{"action_input": "I have no action"}\n```',
+      missing: "action",
+    },
+
+    {
+      message: 'I have a prefix ```json\n{"action": "ToolThing"}```',
+      missing: "action_input",
+    },
+    {
+      message: 'I have a prefix ```{"action": "ToolThing"}```',
+      missing: "action_input",
+    },
+    {
+      message: 'I have a prefix ```json\n{"action": "ToolThing"}\n```',
+      missing: "action_input",
+    },
+    {
+      message: 'I have a prefix ```\n{"action": "ToolThing"}\n```',
+      missing: "action_input",
+    },
+  ];
+
+  for (const { message, missing } of testCases) {
+    await expect(parser.parse(message)).rejects.toThrow(
+      `\`${missing}\` could not be found in: "${message}"`
+    );
   }
 });
