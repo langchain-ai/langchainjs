@@ -1,8 +1,15 @@
 import CodeBlock from "@theme/CodeBlock";
 import SummarizeExample from "@examples/chains/summarization_map_reduce.ts";
+import SummarizeExampleIntermediateSteps from "@examples/chains/summarization_map_reduce_intermediate_steps.ts";
 
 # Summarization
 
 A summarization chain can be used to summarize multiple documents. One way is to input multiple smaller documents, after they have been divided into chunks, and operate over them with a `MapReduceDocumentsChain`. You can also choose instead for the chain that does summarization to be a StuffDocumentsChain, or a RefineDocumentsChain. See more about the differences between them [here](../index_related_chains/document_qa)
 
 <CodeBlock language="typescript">{SummarizeExample}</CodeBlock>
+
+## Intermediate Steps
+
+We can also return the intermediate steps for `map_reduce` chains, should we want to inspect them. This is done with the `returnIntermediateSteps` parameter.
+
+<CodeBlock language="typescript">{SummarizeExampleIntermediateSteps}</CodeBlock>

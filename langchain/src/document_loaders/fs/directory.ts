@@ -15,12 +15,14 @@ export const UnknownHandling = {
 export type UnknownHandling =
   (typeof UnknownHandling)[keyof typeof UnknownHandling];
 
+export interface LoadersMapping {
+  [extension: string]: (filePath: string) => BaseDocumentLoader;
+}
+
 export class DirectoryLoader extends BaseDocumentLoader {
   constructor(
     public directoryPath: string,
-    public loaders: {
-      [extension: string]: (filePath: string) => BaseDocumentLoader;
-    },
+    public loaders: LoadersMapping,
     public recursive: boolean = true,
     public unknown: UnknownHandling = UnknownHandling.Warn
   ) {

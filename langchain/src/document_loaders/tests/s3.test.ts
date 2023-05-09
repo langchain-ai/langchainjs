@@ -47,13 +47,16 @@ test("Test S3 loader", async () => {
   });
 
   const result = await loader.load();
+  const unstructuredOptions = {
+    apiUrl: "http://localhost:8000/general/v0/general",
+  };
 
   expect(fsMock.mkdtempSync).toHaveBeenCalled();
   expect(fsMock.mkdirSync).toHaveBeenCalled();
   expect(fsMock.writeFileSync).toHaveBeenCalled();
   expect(UnstructuredLoaderMock).toHaveBeenCalledWith(
-    "http://localhost:8000/general/v0/general",
-    path.join("tmp", "s3fileloader-12345", "AccountingOverview.pdf")
+    path.join("tmp", "s3fileloader-12345", "AccountingOverview.pdf"),
+    unstructuredOptions
   );
   expect(result).toEqual(["fake document"]);
 });
