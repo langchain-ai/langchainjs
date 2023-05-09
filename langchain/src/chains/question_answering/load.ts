@@ -48,13 +48,19 @@ export const loadQAChain = (
 export interface StuffQAChainParams {
   prompt?: BasePromptTemplate;
   verbose?: boolean;
+  prefix?: string;
 }
 
 export function loadQAStuffChain(
   llm: BaseLanguageModel,
   params: StuffQAChainParams = {}
 ) {
-  const { prompt = QA_PROMPT_SELECTOR.getPrompt(llm), verbose } = params;
+  const {
+    prompt = QA_PROMPT_SELECTOR.getPrompt(llm, {
+      partialVariables: { prefix: params.prefix ?? "" },
+    }),
+    verbose,
+  } = params;
   const llmChain = new LLMChain({ prompt, llm, verbose });
   const chain = new StuffDocumentsChain({ llmChain, verbose });
   return chain;

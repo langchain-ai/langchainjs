@@ -2,24 +2,43 @@ import { BaseChatModel } from "../chat_models/base.js";
 import { BasePromptTemplate } from "../prompts/base.js";
 import { BaseLanguageModel } from "../base_language/index.js";
 import { BaseLLM } from "../llms/base.js";
+import { PartialValues } from "../schema/index.js";
+
+export type BasePromptTemplateGeneratorOptions = {
+  partialVariables?: PartialValues;
+};
+
+export type BasePromptTemplateGenerator = (
+  options: BasePromptTemplateGeneratorOptions
+) => BasePromptTemplate;
+
+export type GetPromptOptions = {
+  partialVariables?: PartialValues;
+};
 
 export abstract class BasePromptSelector {
-  abstract getPrompt(llm: BaseLanguageModel): BasePromptTemplate;
+  abstract getPrompt(
+    llm: BaseLanguageModel,
+    options: GetPromptOptions
+  ): BasePromptTemplate;
 }
 
 export class ConditionalPromptSelector extends BasePromptSelector {
-  defaultPrompt: BasePromptTemplate;
+  defaultPrompt: BasePromptTemplate | BasePromptTemplateGenerator;
 
   conditionals: Array<
-    [condition: (llm: BaseLanguageModel) => boolean, prompt: BasePromptTemplate]
+    [
+      condition: (llm: BaseLanguageModel) => boolean,
+      prompt: BasePromptTemplate | BasePromptTemplateGenerator
+    ]
   >;
 
   constructor(
-    default_prompt: BasePromptTemplate,
+    default_prompt: BasePromptTemplate | BasePromptTemplateGenerator,
     conditionals: Array<
       [
         condition: (llm: BaseLanguageModel) => boolean,
-        prompt: BasePromptTemplate
+        prompt: BasePromptTemplate | BasePromptTemplateGenerator
       ]
     > = []
   ) {
@@ -28,11 +47,22 @@ export class ConditionalPromptSelector extends BasePromptSelector {
     this.conditionals = conditionals;
   }
 
-  getPrompt(llm: BaseLanguageModel): BasePromptTemplate {
+  getPrompt(
+    llm: BaseLanguageModel,
+    options?: GetPromptOptions
+  ): BasePromptTemplate {
     for (const [condition, prompt] of this.conditionals) {
       if (condition(llm)) {
+        if (typeof prompt === "function") {
+          return prompt({ partialVariables: options?.partialVariables });
+        }
         return prompt;
       }
+    }
+    if (typeof this.defaultPrompt === "function") {
+      return this.defaultPrompt({
+        partialVariables: options?.partialVariables,
+      });
     }
     return this.defaultPrompt;
   }

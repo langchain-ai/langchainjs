@@ -90,9 +90,9 @@ export class RetrievalQAChain
     retriever: BaseRetriever,
     options?: Partial<
       Omit<RetrievalQAChainInput, "combineDocumentsChain" | "index">
-    >
+    > & { prefix?: string }
   ): RetrievalQAChain {
-    const qaChain = loadQAStuffChain(llm);
+    const qaChain = loadQAStuffChain(llm, { prefix: options?.prefix });
     return new this({
       retriever,
       combineDocumentsChain: qaChain,
