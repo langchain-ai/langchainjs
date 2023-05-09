@@ -1,4 +1,5 @@
 import { TiktokenModel } from "@dqbd/tiktoken";
+import { isNode } from "browser-or-node";
 import {
   Configuration,
   ConfigurationParameters,
@@ -11,7 +12,7 @@ import {
   AzureOpenAIInput,
   OpenAICallOptions,
   OpenAIInput,
-} from "types/open-ai-types.js";
+} from "../types/openai-types.js";
 import type { StreamingAxiosConfiguration } from "../util/axios-types.js";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
 import { chunkArray } from "../util/chunk.js";
@@ -286,9 +287,10 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
     for (let i = 0; i < subPrompts.length; i += 1) {
       const data = params.stream
         ? await new Promise<CreateCompletionResponse>((resolve, reject) => {
-            const choice: CreateCompletionResponseChoicesInner = {};
+            const choices: CreateCompletionResponseChoicesInner[] = [];
             let response: Omit<CreateCompletionResponse, "choices">;
             let rejected = false;
+            let resolved = false;
             this.completionWithRetry(
               {
                 ...params,
@@ -296,12 +298,17 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
               },
               {
                 ...options,
+                adapter: fetchAdapter, // default adapter doesn't do streaming
                 responseType: "stream",
                 onmessage: (event) => {
                   if (event.data?.trim?.() === "[DONE]") {
+                    if (resolved) {
+                      return;
+                    }
+                    resolved = true;
                     resolve({
                       ...response,
-                      choices: [choice],
+                      choices,
                     });
                   } else {
                     const message = JSON.parse(event.data) as Omit<
@@ -320,13 +327,30 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
                     }
 
                     // on all messages, update choice
-                    const part = message.choices[0];
-                    if (part != null) {
-                      choice.text = (choice.text ?? "") + (part.text ?? "");
-                      choice.finish_reason = part.finish_reason;
-                      choice.logprobs = part.logprobs;
-                      // eslint-disable-next-line no-void
-                      void runManager?.handleLLMNewToken(part.text ?? "");
+                    for (const part of message.choices) {
+                      if (part != null && part.index != null) {
+                        if (!choices[part.index]) choices[part.index] = {};
+                        const choice = choices[part.index];
+                        choice.text = (choice.text ?? "") + (part.text ?? "");
+                        choice.finish_reason = part.finish_reason;
+                        choice.logprobs = part.logprobs;
+                        // TODO this should pass part.index to the callback
+                        // when that's supported there
+                        // eslint-disable-next-line no-void
+                        void runManager?.handleLLMNewToken(part.text ?? "");
+                      }
+                    }
+
+                    // when all messages are finished, resolve
+                    if (
+                      !resolved &&
+                      choices.every((c) => c.finish_reason != null)
+                    ) {
+                      resolved = true;
+                      resolve({
+                        ...response,
+                        choices,
+                      });
                     }
                   }
                 },
@@ -397,14 +421,16 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
         basePath: endpoint,
         baseOptions: {
           timeout: this.timeout,
-          adapter: fetchAdapter,
           ...this.clientConfig.baseOptions,
         },
       });
       this.client = new OpenAIApi(clientConfig);
     }
-    const axiosOptions = (options ?? {}) as StreamingAxiosConfiguration &
-      OpenAICallOptions;
+    const axiosOptions: StreamingAxiosConfiguration = {
+      adapter: isNode ? undefined : fetchAdapter,
+      ...this.clientConfig.baseOptions,
+      ...options,
+    };
     if (this.azureOpenAIApiKey) {
       axiosOptions.headers = {
         "api-key": this.azureOpenAIApiKey,

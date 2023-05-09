@@ -1,4 +1,4 @@
-import { v4 } from "uuid";
+import * as uuid from "uuid";
 import type {
   WeaviateObject,
   WeaviateClient,
@@ -103,7 +103,7 @@ export class WeaviateStore extends VectorStore {
       const flattenedMetadata = flattenObjectForWeaviate(document.metadata);
       return {
         class: this.indexName,
-        id: v4(),
+        id: uuid.v4(),
         vector: vectors[index],
         properties: {
           [this.textKey]: document.pageContent,

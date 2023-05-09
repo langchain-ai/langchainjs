@@ -1,4 +1,4 @@
-import { v4 as uuidv4 } from "uuid";
+import * as uuid from "uuid";
 import {
   AgentAction,
   AgentFinish,
@@ -179,7 +179,7 @@ export abstract class BaseCallbackHandler
 
   static fromMethods(methods: CallbackHandlerMethods) {
     class Handler extends BaseCallbackHandler {
-      name = uuidv4();
+      name = uuid.v4();
 
       constructor() {
         super();

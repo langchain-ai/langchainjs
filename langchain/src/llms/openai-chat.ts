@@ -1,3 +1,4 @@
+import { isNode } from "browser-or-node";
 import {
   Configuration,
   OpenAIApi,
@@ -11,7 +12,7 @@ import {
   AzureOpenAIInput,
   OpenAICallOptions,
   OpenAIChatInput,
-} from "../types/open-ai-types.js";
+} from "../types/openai-types.js";
 import type { StreamingAxiosConfiguration } from "../util/axios-types.js";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
 import { BaseLLMParams, LLM } from "./base.js";
@@ -247,6 +248,7 @@ export class OpenAIChat
       ? await new Promise<CreateChatCompletionResponse>((resolve, reject) => {
           let response: CreateChatCompletionResponse;
           let rejected = false;
+          let resolved = false;
           this.completionWithRetry(
             {
               ...params,
@@ -254,9 +256,14 @@ export class OpenAIChat
             },
             {
               ...options,
+              adapter: fetchAdapter, // default adapter doesn't do streaming
               responseType: "stream",
               onmessage: (event) => {
                 if (event.data?.trim?.() === "[DONE]") {
+                  if (resolved) {
+                    return;
+                  }
+                  resolved = true;
                   resolve(response);
                 } else {
                   const message = JSON.parse(event.data) as {
@@ -283,33 +290,43 @@ export class OpenAIChat
                   }
 
                   // on all messages, update choice
-                  const part = message.choices[0];
-                  if (part != null) {
-                    let choice = response.choices.find(
-                      (c) => c.index === part.index
-                    );
+                  for (const part of message.choices) {
+                    if (part != null) {
+                      let choice = response.choices.find(
+                        (c) => c.index === part.index
+                      );
 
-                    if (!choice) {
-                      choice = {
-                        index: part.index,
-                        finish_reason: part.finish_reason ?? undefined,
-                      };
-                      response.choices.push(choice);
+                      if (!choice) {
+                        choice = {
+                          index: part.index,
+                          finish_reason: part.finish_reason ?? undefined,
+                        };
+                        response.choices.push(choice);
+                      }
+
+                      if (!choice.message) {
+                        choice.message = {
+                          role: part.delta
+                            ?.role as ChatCompletionResponseMessageRoleEnum,
+                          content: part.delta?.content ?? "",
+                        };
+                      }
+
+                      choice.message.content += part.delta?.content ?? "";
+                      // eslint-disable-next-line no-void
+                      void runManager?.handleLLMNewToken(
+                        part.delta?.content ?? ""
+                      );
                     }
+                  }
 
-                    if (!choice.message) {
-                      choice.message = {
-                        role: part.delta
-                          ?.role as ChatCompletionResponseMessageRoleEnum,
-                        content: part.delta?.content ?? "",
-                      };
-                    }
-
-                    choice.message.content += part.delta?.content ?? "";
-                    // eslint-disable-next-line no-void
-                    void runManager?.handleLLMNewToken(
-                      part.delta?.content ?? ""
-                    );
+                  // when all messages are finished, resolve
+                  if (
+                    !resolved &&
+                    message.choices.every((c) => c.finish_reason != null)
+                  ) {
+                    resolved = true;
+                    resolve(response);
                   }
                 }
               },
@@ -346,14 +363,16 @@ export class OpenAIChat
         basePath: endpoint,
         baseOptions: {
           timeout: this.timeout,
-          adapter: fetchAdapter,
           ...this.clientConfig.baseOptions,
         },
       });
       this.client = new OpenAIApi(clientConfig);
     }
-    const axiosOptions = (options ?? {}) as StreamingAxiosConfiguration &
-      OpenAICallOptions;
+    const axiosOptions = {
+      adapter: isNode ? undefined : fetchAdapter,
+      ...this.clientConfig.baseOptions,
+      ...options,
+    } as StreamingAxiosConfiguration;
     if (this.azureOpenAIApiKey) {
       axiosOptions.headers = {
         "api-key": this.azureOpenAIApiKey,

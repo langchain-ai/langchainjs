@@ -1,4 +1,4 @@
-import { VectorStore } from "vectorstores/base.js";
+import { VectorStore } from "../vectorstores/base.js";
 import { Document } from "../document.js";
 import { BaseRetriever } from "../schema/index.js";
 
