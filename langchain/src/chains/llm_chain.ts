@@ -98,7 +98,7 @@ export class LLMChain<T extends string | object = string>
     const promptValue = await this.prompt.formatPromptValue(values);
     const { generations } = await this.llm.generatePrompt(
       [promptValue],
-      stop,
+      stop || values["options"],
       runManager?.getChild()
     );
     return {
