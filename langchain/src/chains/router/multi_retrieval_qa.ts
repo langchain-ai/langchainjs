@@ -62,12 +62,12 @@ export class MultiRetrievalQAChain extends MultiRouteChain {
 
     const outputParser = new RouterOutputParser<
       typeof structuredOutputParserSchema
-    >(structuredOutputParserSchema, { interpolationDepth: 4 });
+    >(structuredOutputParserSchema);
 
     const destinationsStr = destinations.join("\n");
     const routerTemplate = interpolateFString(
       STRUCTURED_MULTI_RETRIEVAL_ROUTER_TEMPLATE(
-        outputParser.getFormatInstructions()
+        outputParser.getFormatInstructions({ interpolationDepth: 4 })
       ),
       {
         destinations: destinationsStr,

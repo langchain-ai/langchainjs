@@ -1,6 +1,11 @@
 import { Callbacks } from "../callbacks/manager.js";
 import { BasePromptValue } from "./index.js";
 
+/**
+ * Options for formatting instructions.
+ */
+export interface FormatInstructionsOptions {}
+
 /** Class to parse the output of an LLM call.
  */
 export abstract class BaseOutputParser<T = unknown> {
@@ -30,7 +35,7 @@ export abstract class BaseOutputParser<T = unknown> {
    * }
    * ```
    */
-  abstract getFormatInstructions(): string;
+  abstract getFormatInstructions(options?: FormatInstructionsOptions): string;
 
   /**
    * Return the string type key uniquely identifying this class of parser

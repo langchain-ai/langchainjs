@@ -13,7 +13,7 @@ export class RouterOutputParser<
   defaultDestination = "DEFAULT";
 
   constructor(schema: Y, options?: RouterOutputParserInput) {
-    super(schema, options);
+    super(schema);
     this.defaultDestination =
       options?.defaultDestination ?? this.defaultDestination;
   }

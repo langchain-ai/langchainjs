@@ -7,12 +7,18 @@ import { JsonSchema7StringType } from "zod-to-json-schema/src/parsers/string.js"
 import { JsonSchema7NumberType } from "zod-to-json-schema/src/parsers/number.js";
 import {
   BaseOutputParser,
+  FormatInstructionsOptions,
   OutputParserException,
 } from "../schema/output_parser.js";
 
 export type JsonMarkdownStructuredOutputParserInput = {
   interpolationDepth?: number;
 };
+
+export interface JsonMarkdownFormatInstructionsOptions
+  extends FormatInstructionsOptions {
+  interpolationDepth?: number;
+}
 
 export class StructuredOutputParser<
   T extends z.ZodTypeAny
@@ -76,30 +82,19 @@ ${JSON.stringify(zodToJsonSchema(this.schema))}
 export class JsonMarkdownStructuredOutputParser<
   T extends z.ZodTypeAny
 > extends StructuredOutputParser<T> {
-  interpolationDepth: number;
-
-  constructor(
-    public schema: T,
-    options?: JsonMarkdownStructuredOutputParserInput
-  ) {
+  getFormatInstructions(
+    options?: JsonMarkdownFormatInstructionsOptions
+  ): string {
     const interpolationDepth = options?.interpolationDepth ?? 1;
     if (interpolationDepth < 1) {
-      throw new Error("f string interpolation depth must be at least 1");
-    }
-    super(schema);
-    this.interpolationDepth = interpolationDepth;
-  }
-
-  getFormatInstructions(): string {
-    if (this.interpolationDepth < 1) {
       throw new Error("f string interpolation depth must be at least 1");
     }
 
     return `Return a markdown code snippet with a JSON object formatted to look like:\n\`\`\`json\n${this._schemaToInstruction(
       zodToJsonSchema(this.schema)
     )
-      .replaceAll("{", "{".repeat(this.interpolationDepth))
-      .replaceAll("}", "}".repeat(this.interpolationDepth))}\n\`\`\``;
+      .replaceAll("{", "{".repeat(interpolationDepth))
+      .replaceAll("}", "}".repeat(interpolationDepth))}\n\`\`\``;
   }
 
   private _schemaToInstruction(
