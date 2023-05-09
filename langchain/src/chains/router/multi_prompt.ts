@@ -20,10 +20,9 @@ export class MultiPromptChain extends MultiRouteChain {
     defaultChain?: BaseChain,
     options?: Omit<MultiRouteChainInput, "defaultChain">
   ) {
-    const destinations = zipEntries<[string, string]>(
-      promptNames,
-      promptDescriptions
-    ).map(([name, desc]) => `${name}: ${desc}`);
+    const destinations = zipEntries(promptNames, promptDescriptions).map(
+      ([name, desc]) => `${name}: ${desc}`
+    );
 
     const structuredOutputParserSchema = z.object({
       destination: z
@@ -39,9 +38,7 @@ export class MultiPromptChain extends MultiRouteChain {
         .describe("input to be fed to the next model"),
     });
 
-    const outputParser = new RouterOutputParser<
-      typeof structuredOutputParserSchema
-    >(structuredOutputParserSchema);
+    const outputParser = new RouterOutputParser(structuredOutputParserSchema);
 
     const destinationsStr = destinations.join("\n");
     const routerTemplate = interpolateFString(
@@ -65,8 +62,7 @@ export class MultiPromptChain extends MultiRouteChain {
       promptTemplates
     ).reduce((acc, [name, template]) => {
       let myPrompt: string | PromptTemplate;
-      // eslint-disable-next-line no-instanceof/no-instanceof
-      if (template instanceof PromptTemplate) {
+      if (typeof template === "object") {
         myPrompt = template;
       } else if (typeof template === "string") {
         myPrompt = new PromptTemplate({

@@ -97,7 +97,7 @@ export class RetrievalQAChain
       StuffQAChainParams
   ): RetrievalQAChain {
     const qaChain = loadQAStuffChain(llm, {
-      prompt: options?.prompt ? options.prompt : undefined,
+      prompt: options?.prompt,
     });
     return new this({
       retriever,
