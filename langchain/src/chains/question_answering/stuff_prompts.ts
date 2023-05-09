@@ -38,7 +38,7 @@ const GET_CHAT_PROMPT: BasePromptTemplateGenerator = (options) => {
   });
 };
 
-export const QA_PROMPT_SELECTOR = new ConditionalPromptSelector(
+export const QA_PROMPT_SELECTOR = /*#__PURE__*/ new ConditionalPromptSelector(
   GET_DEFAULT_QA_PROMPT,
   [[isChatModel, GET_CHAT_PROMPT]]
 );
