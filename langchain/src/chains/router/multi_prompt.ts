@@ -41,12 +41,12 @@ export class MultiPromptChain extends MultiRouteChain {
 
     const outputParser = new RouterOutputParser<
       typeof structuredOutputParserSchema
-    >(structuredOutputParserSchema);
+    >(structuredOutputParserSchema, { interpolationDepth: 4 });
 
     const destinationsStr = destinations.join("\n");
     const routerTemplate = interpolateFString(
       STRUCTURED_MULTI_PROMPT_ROUTER_TEMPLATE(
-        outputParser.getMarkdownJsonInstructionFromSchema(4)
+        outputParser.getFormatInstructions()
       ),
       {
         destinations: destinationsStr,

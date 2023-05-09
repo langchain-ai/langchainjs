@@ -1,18 +1,19 @@
 import { z } from "zod";
-import { StructuredOutputParser } from "./structured.js";
+import { JsonMarkdownStructuredOutputParser } from "./structured.js";
 import { OutputParserException } from "../schema/output_parser.js";
 
 export type RouterOutputParserInput = {
   defaultDestination?: string;
+  interpolationDepth?: number;
 };
 
 export class RouterOutputParser<
   Y extends z.ZodTypeAny
-> extends StructuredOutputParser<Y> {
+> extends JsonMarkdownStructuredOutputParser<Y> {
   defaultDestination = "DEFAULT";
 
   constructor(schema: Y, options?: RouterOutputParserInput) {
-    super(schema);
+    super(schema, options);
     this.defaultDestination =
       options?.defaultDestination ?? this.defaultDestination;
   }

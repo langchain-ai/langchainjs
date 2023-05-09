@@ -10,6 +10,10 @@ import {
   OutputParserException,
 } from "../schema/output_parser.js";
 
+export type JsonMarkdownStructuredOutputParserInput = {
+  interpolationDepth?: number;
+};
+
 export class StructuredOutputParser<
   T extends z.ZodTypeAny
 > extends BaseOutputParser<z.infer<T>> {
@@ -54,16 +58,48 @@ ${JSON.stringify(zodToJsonSchema(this.schema))}
 `;
   }
 
-  getMarkdownJsonInstructionFromSchema(interpolationDepth = 1) {
+  async parse(text: string): Promise<z.infer<T>> {
+    try {
+      const json = text.includes("```")
+        ? text.trim().split(/```(?:json)?/)[1]
+        : text.trim();
+      return this.schema.parseAsync(JSON.parse(json));
+    } catch (e) {
+      throw new OutputParserException(
+        `Failed to parse. Text: "${text}". Error: ${e}`,
+        text
+      );
+    }
+  }
+}
+
+export class JsonMarkdownStructuredOutputParser<
+  T extends z.ZodTypeAny
+> extends StructuredOutputParser<T> {
+  interpolationDepth: number;
+
+  constructor(
+    public schema: T,
+    options?: JsonMarkdownStructuredOutputParserInput
+  ) {
+    const interpolationDepth = options?.interpolationDepth ?? 1;
     if (interpolationDepth < 1) {
+      throw new Error("f string interpolation depth must be at least 1");
+    }
+    super(schema);
+    this.interpolationDepth = interpolationDepth;
+  }
+
+  getFormatInstructions(): string {
+    if (this.interpolationDepth < 1) {
       throw new Error("f string interpolation depth must be at least 1");
     }
 
     return `Return a markdown code snippet with a JSON object formatted to look like:\n\`\`\`json\n${this._schemaToInstruction(
       zodToJsonSchema(this.schema)
     )
-      .replaceAll("{", "{".repeat(interpolationDepth))
-      .replaceAll("}", "}".repeat(interpolationDepth))}\n\`\`\``;
+      .replaceAll("{", "{".repeat(this.interpolationDepth))
+      .replaceAll("}", "}".repeat(this.interpolationDepth))}\n\`\`\``;
   }
 
   private _schemaToInstruction(
@@ -109,19 +145,5 @@ ${JSON.stringify(zodToJsonSchema(this.schema))}
     const isNullable = nullable ? " (nullable)" : "";
     const description = schema.description ? ` // ${schema.description}` : "";
     return `${schema.type}${description}${isNullable}`;
-  }
-
-  async parse(text: string): Promise<z.infer<T>> {
-    try {
-      const json = text.includes("```")
-        ? text.trim().split(/```(?:json)?/)[1]
-        : text.trim();
-      return this.schema.parseAsync(JSON.parse(json));
-    } catch (e) {
-      throw new OutputParserException(
-        `Failed to parse. Text: "${text}". Error: ${e}`,
-        text
-      );
-    }
   }
 }
