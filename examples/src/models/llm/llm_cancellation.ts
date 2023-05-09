@@ -9,11 +9,7 @@ export const run = async () => {
 
   const res = await model.call(
     "What would be a good company name a company that makes colorful socks?",
-    {
-      options: {
-        signal: controller.signal,
-      },
-    }
+    { signal: controller.signal }
   );
 
   console.log(res);
