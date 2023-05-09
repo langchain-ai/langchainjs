@@ -28,6 +28,7 @@ export abstract class BaseOutputParser<T = unknown> {
   /**
    * Return a string describing the format of the output.
    * @returns Format instructions.
+   * @param options - Options for formatting instructions.
    * @example
    * ```json
    * {
