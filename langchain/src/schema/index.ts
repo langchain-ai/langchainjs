@@ -151,6 +151,18 @@ export abstract class BaseChatMessageHistory {
   public abstract clear(): Promise<void>;
 }
 
+export abstract class BaseListChatMessageHistory {
+  protected abstract addMessage(message: BaseChatMessage): Promise<void>;
+
+  public addUserMessage(message: string): Promise<void> {
+    return this.addMessage(new HumanChatMessage(message));
+  }
+
+  public addAIChatMessage(message: string): Promise<void> {
+    return this.addMessage(new AIChatMessage(message));
+  }
+}
+
 export abstract class BaseCache<T = Generation[]> {
   abstract lookup(prompt: string, llmKey: string): Promise<T | null>;
 

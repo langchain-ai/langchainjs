@@ -31,7 +31,7 @@ export const getInputValue = (inputValues: InputValues, inputKey?: string) => {
     return inputValues[keys[0]];
   }
   throw new Error(
-    `input values have multiple keys, memory only supported when one key currently: ${keys}`
+    `input values have ${keys.length} keys, you must specify an input key or pass only 1 key as input`
   );
 };
 

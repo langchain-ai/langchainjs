@@ -8,7 +8,7 @@ import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { InMemoryDocstore, Document } from "langchain/docstore";
 import { CSVLoader } from "langchain/document_loaders/fs/csv";
 
-async function test() {
+async function test(useAzure: boolean = false) {
   // Test exports
   assert(typeof OpenAI === "function");
   assert(typeof LLMChain === "function");
@@ -18,7 +18,16 @@ async function test() {
 
   // Test dynamic imports of peer dependencies
   const { HierarchicalNSW } = await HNSWLib.imports();
-
+  const openAIParameters = useAzure
+    ? {
+        azureOpenAIApiKey: "sk-XXXX",
+        azureOpenAIApiInstanceName: "XXXX",
+        azureOpenAIApiDeploymentName: "XXXX",
+        azureOpenAIApiVersion: "XXXX",
+      }
+    : {
+        openAIApiKey: "sk-XXXX",
+      };
   const vs = new HNSWLib(new OpenAIEmbeddings({ openAIApiKey: "sk-XXXX" }), {
     space: "ip",
     numDimensions: 3,
@@ -51,8 +60,14 @@ async function test() {
   assert(docs.length === 2);
 }
 
-test()
-  .then(() => console.log("success"))
+test(false)
+  .then(() => console.log("openAI Api success"))
+  .catch((e) => {
+    console.error(e);
+    process.exit(1);
+  });
+test(true)
+  .then(() => console.log("azure openAI Api success"))
   .catch((e) => {
     console.error(e);
     process.exit(1);
