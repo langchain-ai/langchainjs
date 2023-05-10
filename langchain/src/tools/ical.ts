@@ -14,7 +14,7 @@ interface ICalParams extends ToolParams {
 export class ICalTool extends Tool {
   name = 'iCal';
 
-  description = 'Useful for creating iCal calendar events. Input should be sentences describing what type of events to create.';
+  description = 'Useful for creating iCal calendar events. Input should be an instruction describing what event(s) to create.';
 
   eventsSchema = z.object({
     name: z.string().describe('Name of the event event'),
