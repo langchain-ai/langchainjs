@@ -18,6 +18,7 @@ export { EPubLoader } from "./fs/epub.js";
 export { TextLoader } from "./fs/text.js";
 export { JSONLoader, JSONLinesLoader } from "./fs/json.js";
 export { CSVLoader } from "./fs/csv.js";
+export { MarkdownLoader } from "./fs/md.js";
 export { NotionLoader } from "./fs/notion.js";
 export { GithubRepoLoader, GithubRepoLoaderParams } from "./web/github.js";
 export { UnstructuredLoader } from "./fs/unstructured.js";

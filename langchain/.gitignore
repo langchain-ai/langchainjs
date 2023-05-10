@@ -187,6 +187,9 @@ document_loaders/fs/epub.d.ts
 document_loaders/fs/csv.cjs
 document_loaders/fs/csv.js
 document_loaders/fs/csv.d.ts
+document_loaders/fs/md.cjs
+document_loaders/fs/md.js
+document_loaders/fs/md.d.ts
 document_loaders/fs/notion.cjs
 document_loaders/fs/notion.js
 document_loaders/fs/notion.d.ts
