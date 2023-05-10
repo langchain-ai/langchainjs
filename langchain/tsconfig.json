@@ -72,12 +72,16 @@
       "src/llms/raycast.ts",
       "src/llms/ollama.ts",
       "src/llms/replicate.ts",
+<<<<<<< HEAD
       "src/llms/googlevertexai.ts",
       "src/llms/googlepalm.ts",
       "src/llms/sagemaker_endpoint.ts",
       "src/llms/bedrock.ts",
       "src/llms/llama_cpp.ts",
       "src/llms/writer.ts",
+=======
+      "src/llms/gpt4all.ts",
+>>>>>>> 9f9ccb66 (Introduce GPT4All to langchainjs)
       "src/prompts/index.ts",
       "src/prompts/load.ts",
       "src/vectorstores/analyticdb.ts",

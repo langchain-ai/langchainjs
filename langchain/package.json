@@ -136,6 +136,7 @@
     "llms/replicate.cjs",
     "llms/replicate.js",
     "llms/replicate.d.ts",
+<<<<<<< HEAD
     "llms/googlevertexai.cjs",
     "llms/googlevertexai.js",
     "llms/googlevertexai.d.ts",
@@ -154,6 +155,11 @@
     "llms/writer.cjs",
     "llms/writer.js",
     "llms/writer.d.ts",
+=======
+    "llms/gpt4all.cjs",
+    "llms/gpt4all.js",
+    "llms/gpt4all.d.ts",
+>>>>>>> 9f9ccb66 (Introduce GPT4All to langchainjs)
     "prompts.cjs",
     "prompts.js",
     "prompts.d.ts",
@@ -684,9 +690,13 @@
     "eslint-plugin-import": "^2.27.5",
     "eslint-plugin-no-instanceof": "^1.0.1",
     "eslint-plugin-prettier": "^4.2.1",
+<<<<<<< HEAD
     "faiss-node": "^0.3.0",
     "firebase-admin": "^11.9.0",
     "google-auth-library": "^8.9.0",
+=======
+    "gpt4all": "^1.0.0",
+>>>>>>> 9f9ccb66 (Introduce GPT4All to langchainjs)
     "graphql": "^16.6.0",
     "hnswlib-node": "^1.4.2",
     "html-to-text": "^9.0.5",
@@ -773,9 +783,13 @@
     "cohere-ai": "^5.0.2",
     "d3-dsv": "^2.0.0",
     "epub2": "^3.0.1",
+<<<<<<< HEAD
     "faiss-node": "^0.3.0",
     "firebase-admin": "^11.9.0",
     "google-auth-library": "^8.9.0",
+=======
+    "gpt4all": "^1.0.0",
+>>>>>>> 9f9ccb66 (Introduce GPT4All to langchainjs)
     "hnswlib-node": "^1.4.2",
     "html-to-text": "^9.0.5",
     "ignore": "^5.2.0",
@@ -942,6 +956,7 @@
     "epub2": {
       "optional": true
     },
+<<<<<<< HEAD
     "faiss-node": {
       "optional": true
     },
@@ -949,6 +964,9 @@
       "optional": true
     },
     "google-auth-library": {
+=======
+    "gpt4all": {
+>>>>>>> 9f9ccb66 (Introduce GPT4All to langchainjs)
       "optional": true
     },
     "hnswlib-node": {
@@ -1299,6 +1317,7 @@
       "import": "./llms/replicate.js",
       "require": "./llms/replicate.cjs"
     },
+<<<<<<< HEAD
     "./llms/googlevertexai": {
       "types": "./llms/googlevertexai.d.ts",
       "import": "./llms/googlevertexai.js",
@@ -1328,6 +1347,12 @@
       "types": "./llms/writer.d.ts",
       "import": "./llms/writer.js",
       "require": "./llms/writer.cjs"
+=======
+    "./llms/gpt4all": {
+      "types": "./llms/gpt4all.d.ts",
+      "import": "./llms/gpt4all.js",
+      "require": "./llms/gpt4all.cjs"
+>>>>>>> 9f9ccb66 (Introduce GPT4All to langchainjs)
     },
     "./prompts": {
       "types": "./prompts.d.ts",

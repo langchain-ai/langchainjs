@@ -124,6 +124,7 @@ llms/ollama.d.ts
 llms/replicate.cjs
 llms/replicate.js
 llms/replicate.d.ts
+<<<<<<< HEAD
 llms/googlevertexai.cjs
 llms/googlevertexai.js
 llms/googlevertexai.d.ts
@@ -142,6 +143,11 @@ llms/llama_cpp.d.ts
 llms/writer.cjs
 llms/writer.js
 llms/writer.d.ts
+=======
+llms/gpt4all.cjs
+llms/gpt4all.js
+llms/gpt4all.d.ts
+>>>>>>> 9f9ccb66 (Introduce GPT4All to langchainjs)
 prompts.cjs
 prompts.js
 prompts.d.ts
