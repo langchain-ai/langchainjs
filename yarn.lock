@@ -17899,6 +17899,8 @@ __metadata:
       optional: true
     mammoth:
       optional: true
+    minimatch:
+      optional: true
     mongodb:
       optional: true
     pdf-parse:

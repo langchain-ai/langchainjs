@@ -16,7 +16,7 @@ export type UnknownHandling =
   (typeof UnknownHandling)[keyof typeof UnknownHandling];
 
 export interface LoadersMapping {
-  [extension: `.${string}`]: (filePath: string) => BaseDocumentLoader;
+  [extension: string]: (filePath: string) => BaseDocumentLoader;
 }
 
 export class DirectoryLoader extends BaseDocumentLoader {
@@ -109,8 +109,8 @@ export class DirectoryLoader extends BaseDocumentLoader {
 
 async function minimatchImports() {
   try {
-    const { minimatch } = await import("minimatch");
-    return { minimatch };
+    const minimatch = await import("minimatch");
+    return { minimatch: minimatch.minimatch };
   } catch (e) {
     console.error(e);
     throw new Error(
