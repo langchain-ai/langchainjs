@@ -460,11 +460,11 @@ export class CallbackManager
           process.env?.LANGCHAIN_TRACING_V2 !== undefined
         : false;
     const tracingEnabled =
-      typeof process !== "undefined"
+      tracingV2Enabled ||
+      (typeof process !== "undefined"
         ? // eslint-disable-next-line no-process-env
           process.env?.LANGCHAIN_TRACING !== undefined
-        : tracingV2Enabled;
-
+        : false);
     if (options?.verbose || tracingEnabled) {
       if (!callbackManager) {
         callbackManager = new CallbackManager();
