@@ -6,14 +6,14 @@ import {
 
 export const PLANNER_SYSTEM_PROMPT_MESSAGE_TEMPLATE = [
   `Let's first understand the problem and devise a plan to solve the problem.`,
-  `Please output the plan starting with the header 'Plan:'`,
+  `Please output the plan starting with the header "Plan:"`,
   `and then followed by a numbered list of steps.`,
   `Please make the plan the minimum number of steps required`,
-  `while also completing the task to the highest degree of accuracy and precision possible,`,
-  `and try to return exactly what the user asks for. If the task is a question,`,
-  `the final step must be: 'Given the above steps taken,`,
-  `please respond to the original query.`,
-  `At the end of your plan, say '<END_OF_PLAN>'`,
+  `to answer the query or complete the task accurately and precisely.`,
+  `Your steps should be general, and should not require a specific method to solve a step. If the task is a question,`,
+  `the final step in the plan must be the following: "Given the above steps taken,`,
+  `please respond to the original query."`,
+  `At the end of your plan, say "<END_OF_PLAN>"`,
 ].join(" ");
 
 export const PLANNER_CHAT_PROMPT =

@@ -1,12 +1,11 @@
 /* eslint-disable no-process-env */
-import { Tool } from "../../../tools/base.js";
 import { PlanAndExecuteAgentExecutor } from "../agent_executor.js";
 import { Calculator } from "../../../tools/calculator.js";
 import { ChatOpenAI } from "../../../chat_models/openai.js";
 import { SerpAPI } from "../../../tools/serpapi.js";
 
-test.only("Run agent", async () => {
-  const tools: Tool[] = [new Calculator(), new SerpAPI()];
+test.only("Run agent on a simple input", async () => {
+  const tools = [new Calculator(), new SerpAPI()];
   const model = new ChatOpenAI({
     temperature: 0,
     modelName: "gpt-3.5-turbo",
@@ -15,14 +14,31 @@ test.only("Run agent", async () => {
   const executor = PlanAndExecuteAgentExecutor.fromLLMAndTools(model, tools);
 
   const result = await executor.call({
-    input: `Who is the current president of the United States? What is their current age raised to the 0.43 power?`,
+    input: `What is 80 raised to the second power?`,
   });
 
   console.log({ result });
 });
 
 test("Run agent", async () => {
-  const tools: Tool[] = [new Calculator()];
+  const tools = [new Calculator(), new SerpAPI()];
+  const model = new ChatOpenAI({
+    temperature: 0,
+    modelName: "gpt-3.5-turbo",
+    verbose: true,
+  });
+  const executor = PlanAndExecuteAgentExecutor.fromLLMAndTools(model, tools);
+
+  const result = await executor.call({
+    input: `Who is the current president of the United States? What is their current age raised to the second power?`,
+  });
+
+  console.log({ result });
+});
+
+// TODO: Improve prompt to store compressed context to support this input
+test("Run agent with a sequential math problem", async () => {
+  const tools = [new Calculator()];
   const model = new ChatOpenAI({
     temperature: 0,
     modelName: "gpt-3.5-turbo",
