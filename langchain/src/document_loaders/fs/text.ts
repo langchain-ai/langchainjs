@@ -8,7 +8,7 @@ export class TextLoader extends BaseDocumentLoader {
     super();
   }
 
-  protected async parse(raw: string): Promise<string[]> {
+  protected async parse(raw: string): Promise<(string | Document)[]> {
     return [raw];
   }
 
@@ -31,10 +31,11 @@ export class TextLoader extends BaseDocumentLoader {
         );
       }
     });
-    return parsed.map(
-      (pageContent, i) =>
-        new Document({
-          pageContent,
+
+    return parsed.map((parsedDoc, i) => {
+      if (typeof parsedDoc === "string") {
+        return new Document({
+          pageContent: parsedDoc,
           metadata:
             parsed.length === 1
               ? metadata
@@ -42,8 +43,20 @@ export class TextLoader extends BaseDocumentLoader {
                   ...metadata,
                   line: i + 1,
                 },
-        })
-    );
+        });
+      }
+      return new Document({
+        ...parsedDoc,
+        metadata:
+          parsed.length === 1
+            ? { ...metadata, ...parsedDoc.metadata }
+            : {
+                ...metadata,
+                line: i + 1,
+                ...parsedDoc.metadata,
+              },
+      });
+    });
   }
 
   static async imports(): Promise<{
