@@ -18082,6 +18082,7 @@ __metadata:
     hnswlib-node: ^1.4.2
     html-to-text: ^9.0.5
     mammoth: "*"
+    marked: ^5.0.1
     mongodb: ^5.2.0
     pdf-parse: 1.1.1
     playwright: ^1.32.1
@@ -18135,6 +18136,8 @@ __metadata:
     html-to-text:
       optional: true
     mammoth:
+      optional: true
+    marked:
       optional: true
     mongodb:
       optional: true
