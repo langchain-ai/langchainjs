@@ -13,11 +13,15 @@ import { AgentInput } from "../types.js";
 import { ChatAgentOutputParser } from "./outputParser.js";
 import { FORMAT_INSTRUCTIONS, PREFIX, SUFFIX } from "./prompt.js";
 
+const DEFAULT_HUMAN_MESSAGE_TEMPLATE = "{input}\n\n{agent_scratchpad}";
+
 export interface ChatCreatePromptArgs {
   /** String to put after the list of tools. */
   suffix?: string;
   /** String to put before the list of tools. */
   prefix?: string;
+  /** String to use directly as the human message template. */
+  humanMessageTemplate?: string;
   /** List of input variables the final prompt will expect. */
   inputVariables?: string[];
 }
@@ -80,9 +84,14 @@ export class ChatAgent extends Agent {
    * @param args - Arguments to create the prompt with.
    * @param args.suffix - String to put after the list of tools.
    * @param args.prefix - String to put before the list of tools.
+   * @param args.humanMessageTemplate - String to use directly as the human message template
    */
   static createPrompt(tools: Tool[], args?: ChatCreatePromptArgs) {
-    const { prefix = PREFIX, suffix = SUFFIX } = args ?? {};
+    const {
+      prefix = PREFIX,
+      suffix = SUFFIX,
+      humanMessageTemplate = DEFAULT_HUMAN_MESSAGE_TEMPLATE,
+    } = args ?? {};
     const toolStrings = tools
       .map((tool) => `${tool.name}: ${tool.description}`)
       .join("\n");
@@ -91,7 +100,7 @@ export class ChatAgent extends Agent {
     );
     const messages = [
       SystemMessagePromptTemplate.fromTemplate(template),
-      HumanMessagePromptTemplate.fromTemplate("{input}\n\n{agent_scratchpad}"),
+      HumanMessagePromptTemplate.fromTemplate(humanMessageTemplate),
     ];
     return ChatPromptTemplate.fromPromptMessages(messages);
   }

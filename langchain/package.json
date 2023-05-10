@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.71",
+  "version": "0.0.74",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -283,6 +283,9 @@
     "experimental/babyagi.cjs",
     "experimental/babyagi.js",
     "experimental/babyagi.d.ts",
+    "experimental/plan_and_execute.cjs",
+    "experimental/plan_and_execute.js",
+    "experimental/plan_and_execute.d.ts",
     "index.cjs",
     "index.js",
     "index.d.ts"
@@ -1007,6 +1010,11 @@
       "types": "./experimental/babyagi.d.ts",
       "import": "./experimental/babyagi.js",
       "require": "./experimental/babyagi.cjs"
+    },
+    "./experimental/plan_and_execute": {
+      "types": "./experimental/plan_and_execute.d.ts",
+      "import": "./experimental/plan_and_execute.js",
+      "require": "./experimental/plan_and_execute.cjs"
     },
     "./package.json": "./package.json"
   }
