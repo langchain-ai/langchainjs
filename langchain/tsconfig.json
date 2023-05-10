@@ -4,7 +4,11 @@
     "outDir": "../dist",
     "rootDir": "./src",
     "target": "ES2021",
-    "lib": ["ES2021", "ES2022.Object", "DOM"],
+    "lib": [
+      "ES2021",
+      "ES2022.Object",
+      "DOM"
+    ],
     "module": "ES2020",
     "moduleResolution": "nodenext",
     "esModuleInterop": true,
@@ -18,8 +22,14 @@
     "allowJs": true,
     "strict": true
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "docs"],
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "docs"
+  ],
   "typedocOptions": {
     "entryPoints": [
       "src/agents/index.ts",
@@ -81,7 +91,6 @@
       "src/document_loaders/fs/docx.ts",
       "src/document_loaders/fs/epub.ts",
       "src/document_loaders/fs/csv.ts",
-      "src/document_loaders/fs/md.ts",
       "src/document_loaders/fs/notion.ts",
       "src/document_loaders/fs/unstructured.ts",
       "src/chat_models/base.ts",

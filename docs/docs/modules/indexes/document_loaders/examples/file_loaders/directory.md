@@ -27,6 +27,7 @@ import {
 } from "langchain/document_loaders/fs/json";
 import { TextLoader } from "langchain/document_loaders/fs/text";
 import { CSVLoader } from "langchain/document_loaders/fs/csv";
+import { MarkdownLoader } from "langchain/document_loaders/fs/md";
 
 const loader = new DirectoryLoader(
   "src/document_loaders/example_data/example",
@@ -35,6 +36,7 @@ const loader = new DirectoryLoader(
     ".jsonl": (path) => new JSONLinesLoader(path, "/html"),
     ".txt": (path) => new TextLoader(path),
     ".csv": (path) => new CSVLoader(path, "text"),
+    ".md": (path) => new MarkdownLoader(path),
   }
 );
 const docs = await loader.load();
