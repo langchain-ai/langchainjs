@@ -10,7 +10,10 @@ export const run = async () => {
   const docs = await loader.load();
 
   // Load the docs into the vector store
-  const vectorStore = await FaissStore.fromDocuments(docs, new OpenAIEmbeddings());
+  const vectorStore = await FaissStore.fromDocuments(
+    docs,
+    new OpenAIEmbeddings()
+  );
 
   // Search for the most similar document
   const resultOne = await vectorStore.similaritySearch("hello world", 1);
