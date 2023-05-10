@@ -277,7 +277,7 @@
     "stores/message/dynamodb.cjs",
     "stores/message/dynamodb.js",
     "stores/message/dynamodb.d.ts",
-    "stores/message/rediscjs",
+    "stores/message/redis.cjs",
     "stores/message/redis.js",
     "stores/message/redis.d.ts",
     "experimental/autogpt.cjs",

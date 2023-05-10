@@ -1,19 +1,23 @@
 import { BufferMemory } from "langchain/memory";
-import { RedisChatMemory } from "langchain/stores/message/redis";
+import { RedisChatMessageHistory } from "langchain/stores/message/redis";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { ConversationChain } from "langchain/chains";
-import { createClient, RedisClientType } from "redis";
-
-const client = createClient();
 
 const memory = new BufferMemory({
-  chatHistory: new RedisChatMemory(client as RedisClientType, {
-    sessionId: "four",
-    // redisUrl: "redis://localhost:6379", This is the default, but you can specify any URL you want
+  chatHistory: new RedisChatMessageHistory({
+    sessionId: new Date().toISOString(), // Or some other unique identifier for the conversation
+    sessionTTL: 300, // 5 minutes, omit this parameter to make sessions never expire
+    config: {
+      url: "redis://localhost:6379", // Default value, override with your own instance's URL
+    },
   }),
 });
 
-const model = new ChatOpenAI();
+const model = new ChatOpenAI({
+  modelName: "gpt-3.5-turbo",
+  temperature: 0,
+});
+
 const chain = new ConversationChain({ llm: model, memory });
 
 const res1 = await chain.call({ input: "Hi! I'm Jim." });
