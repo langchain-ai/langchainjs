@@ -69,3 +69,15 @@ export {
   SerializedRefineDocumentsChain,
 } from "./serde.js";
 export { OpenAIModerationChain } from "./openai_moderation.js";
+export {
+  MultiRouteChain,
+  MultiRouteChainInput,
+  RouterChain,
+} from "./router/multi_route.js";
+export {
+  LLMRouterChain,
+  LLMRouterChainInput,
+  RouterOutputSchema,
+} from "./router/llm_router.js";
+export { MultiPromptChain } from "./router/multi_prompt.js";
+export { MultiRetrievalQAChain } from "./router/multi_retrieval_qa.js";

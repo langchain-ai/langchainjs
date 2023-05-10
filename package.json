@@ -9,6 +9,7 @@
     "langchain",
     "examples",
     "docs",
+    "test-exports-esbuild",
     "test-exports-esm",
     "test-exports-cjs",
     "test-exports-cf",
