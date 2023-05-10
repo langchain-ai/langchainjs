@@ -42,6 +42,7 @@ type UnstructuredLoaderOptions = {
 type UnstructuredDirectoryLoaderOptions = UnstructuredLoaderOptions & {
   recursive?: boolean;
   unknown?: UnknownHandling;
+  strategy?: string;
 };
 
 export class UnstructuredLoader extends BaseDocumentLoader {
@@ -50,6 +51,8 @@ export class UnstructuredLoader extends BaseDocumentLoader {
   private apiUrl = "https://api.unstructured.io/general/v0/general";
 
   private apiKey?: string;
+
+  private strategy?: string;
 
   constructor(
     filePathOrLegacyApiUrl: string,
@@ -84,6 +87,7 @@ export class UnstructuredLoader extends BaseDocumentLoader {
 
     const headers = {
       "UNSTRUCTURED-API-KEY": this.apiKey ?? "",
+      strategy: this.strategy ?? "hi_res",
     };
 
     const response = await fetch(this.apiUrl, {
