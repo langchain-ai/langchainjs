@@ -276,7 +276,7 @@ export class RefineDocumentsChain
 
   inputKey = "input_documents";
 
-  outputKey = "output_text";
+  outputKey = "text";
 
   documentVariableName = "context";
 
