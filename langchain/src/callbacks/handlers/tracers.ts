@@ -99,6 +99,11 @@ export interface AgentRun extends Run {
   actions: AgentAction[];
 }
 
+export interface RunResult extends BaseRun {
+  name: string;
+  parent_run_id?: string; // uuid
+}
+
 export abstract class BaseTracer extends BaseCallbackHandler {
   protected session?: TracerSessionV1 | TracerSession;
 
