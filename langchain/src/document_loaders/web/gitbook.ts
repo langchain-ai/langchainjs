@@ -10,10 +10,10 @@ export class GitbookLoader extends CheerioWebBaseLoader {
   shouldLoadAllPaths = false;
 
   constructor(public webPath: string, params: GitbookLoaderParams = {}) {
-    if (params.shouldLoadAllPaths === true)
-      webPath += '/sitemap.xml'
+    const path =
+      params.shouldLoadAllPaths === true ? webPath : `${webPath}/sitemap.xml`;
+    super(path);
 
-    super(webPath);
     this.shouldLoadAllPaths =
       params.shouldLoadAllPaths ?? this.shouldLoadAllPaths;
   }
@@ -50,7 +50,7 @@ export class GitbookLoader extends CheerioWebBaseLoader {
   private async loadAllPaths($: CheerioAPI): Promise<Document[]> {
     const urls = $("loc")
       .toArray()
-      .map((element) => $(element).text())
+      .map((element) => $(element).text());
 
     const documents: Document[] = [];
     for (const url of urls) {
