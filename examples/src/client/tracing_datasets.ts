@@ -5,11 +5,16 @@ import { SerpAPI } from "langchain/tools";
 import { Calculator } from "langchain/tools/calculator";
 import { initializeAgentExecutorWithOptions } from "langchain/agents";
 
-// Developing applications with language models can be uniquely challenging. To manage this complexity and ensure reliable performance, LangChain provides tracing and evaluation functionality. This notebook demonstrates how to run Chains, which are language model functions, as well as Chat models, and LLMs on previously captured datasets or traces. Some common use cases for this approach include:
-
-// - Running an evaluation chain to grade previous runs.
-// - Comparing different chains, LLMs, and agents on traced datasets.
-// - Executing a stochastic chain multiple times over a dataset to generate metrics before deployment.
+// LangChain wants to make developing and deploying safe, high-quality
+// language model applications as easy as possible.
+// To manage the complexity and challenges of working with LLMs,
+// LangChain provides tracing and evaluation functionality.
+// This notebook demonstrates how to run Chains,
+// which are language model functions on traced datasets.
+// Some common use cases for this approach include:
+//    - Running an evaluation chain to grade previous runs.
+//    - Comparing different chains, LLMs, and agents on traced datasets.
+//    - Executing a stochastic chain multiple times over a dataset to generate metrics before deployment.
 // Please note that this example assumes you have LangChain+ tracing running in the background.
 // It is configured to work only with the V2 endpoints.
 
