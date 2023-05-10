@@ -721,12 +721,12 @@ export class LangChainTracerV2 extends LangChainTracer {
       end_time: run.end_time,
       run_type: run.run_type,
       reference_example_id: example_id,
-      extra: run.extra,
+      extra: run.extra ?? {},
       execution_order: run.execution_order,
       serialized: run.serialized,
       error: run.error,
       inputs: run.inputs,
-      outputs: run.outputs,
+      outputs: run.outputs ?? {},
       session_id: run.session_id,
       child_runs: await Promise.all(
         run.child_runs.map((child_run) => this._convertToCreate(child_run))
