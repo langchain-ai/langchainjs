@@ -50,7 +50,7 @@ test("Test Traced Agent with concurrency", async () => {
     verbose: true,
   });
 
-  const input = `Who is Olivia Wilde's boyfriend? What is his current age raised to the 0.23 power?`;
+  const input = `What is 24,678,987 raised to the 0.23 power?`;
 
   console.log(`Executing with input "${input}"...`);
 
