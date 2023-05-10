@@ -1,4 +1,3 @@
-import { URL } from "url";
 import { LangChainTracerV2, RunResult } from "../callbacks/handlers/tracers.js";
 import {
   ChainValues,
@@ -48,7 +47,8 @@ export type DatasetRunResults = Record<
 
 // utility functions
 const isLocalhost = (url: string): boolean => {
-  const { hostname } = new URL(url);
+  const strippedUrl = url.replace("http://", "").replace("https://", "");
+  const hostname = strippedUrl.split("/")[0].split(":")[0];
   return (
     hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1"
   );
@@ -173,9 +173,18 @@ export class LangChainPlusClient {
     queryParams: { [param: string]: string } = {}
   ): Promise<T> {
     const params = { ...this.queryParams, ...queryParams };
-    const url = new URL(path, this.apiUrl);
-    url.search = new URLSearchParams(params).toString();
-    const response = await fetch(url.toString(), {
+    let queryString = "";
+    for (const key in params) {
+      if (Object.prototype.hasOwnProperty.call(params, key)) {
+        queryString = queryString
+          ? `${queryString}&${encodeURIComponent(key)}=${encodeURIComponent(
+              params[key]
+            )}`
+          : `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`;
+      }
+    }
+    const url = `${this.apiUrl}${path}${queryString ? `?${queryString}` : ""}`;
+    const response = await fetch(url, {
       method: "GET",
       headers: this.headers,
     });
@@ -194,7 +203,7 @@ export class LangChainPlusClient {
     inputKeys: string[],
     outputKeys: string[]
   ): Promise<Dataset> {
-    const url = new URL("/datasets/upload", this.apiUrl);
+    const url = `${this.apiUrl}/datasets/upload`;
     const formData = new FormData();
     formData.append("file", csvFile, fileName);
     formData.append("input_keys", inputKeys.join(","));
@@ -202,7 +211,7 @@ export class LangChainPlusClient {
     formData.append("description", description);
     formData.append("tenant_id", this.tenantId);
 
-    const response = await fetch(url.toString(), {
+    const response = await fetch(url, {
       method: "POST",
       headers: this.headers,
       body: formData,
@@ -284,8 +293,7 @@ export class LangChainPlusClient {
     } else {
       throw new Error("Must provide datasetName or datasetId");
     }
-    const url = new URL(path, this.apiUrl);
-    const response = await fetch(url.toString(), {
+    const response = await fetch(this.apiUrl + path, {
       method: "DELETE",
       headers: this.headers,
     });
@@ -323,8 +331,7 @@ export class LangChainPlusClient {
       created_at: createdAt_.toISOString(),
     };
 
-    const url = new URL("/examples", this.apiUrl);
-    const response = await fetch(url.toString(), {
+    const response = await fetch(`${this.apiUrl}/examples`, {
       method: "POST",
       headers: { ...this.headers, "Content-Type": "application/json" },
       body: JSON.stringify(data),
@@ -373,8 +380,7 @@ export class LangChainPlusClient {
 
   public async deleteExample(exampleId: string): Promise<Example> {
     const path = `/examples/${exampleId}`;
-    const url = new URL(path, this.apiUrl);
-    const response = await fetch(url.toString(), {
+    const response = await fetch(this.apiUrl + path, {
       method: "DELETE",
       headers: this.headers,
     });

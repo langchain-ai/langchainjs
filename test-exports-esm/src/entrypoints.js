@@ -35,3 +35,5 @@ import * as stores_file_in_memory from "langchain/stores/file/in_memory";
 import * as experimental_autogpt from "langchain/experimental/autogpt";
 import * as experimental_babyagi from "langchain/experimental/babyagi";
 import * as experimental_plan_and_execute from "langchain/experimental/plan_and_execute";
+import * as client from "langchain/client";
+import * as client_langchainplus from "langchain/client/langchainplus";
