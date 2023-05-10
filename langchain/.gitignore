@@ -4,6 +4,9 @@ agents.d.ts
 agents/load.cjs
 agents/load.js
 agents/load.d.ts
+agents/plan_and_execute.cjs
+agents/plan_and_execute.js
+agents/plan_and_execute.d.ts
 base_language.cjs
 base_language.js
 base_language.d.ts

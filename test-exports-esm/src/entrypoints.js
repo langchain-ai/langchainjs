@@ -1,4 +1,5 @@
 import * as agents from "langchain/agents";
+import * as agents_plan_and_execute from "langchain/agents/plan_and_execute";
 import * as base_language from "langchain/base_language";
 import * as tools from "langchain/tools";
 import * as chains from "langchain/chains";

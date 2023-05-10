@@ -10,6 +10,7 @@ const entrypoints = {
   // agents
   agents: "agents/index",
   "agents/load": "agents/load",
+  "agents/plan_and_execute": "agents/plan_and_execute/index",
   // base language
   base_language: "base_language/index",
   // tools

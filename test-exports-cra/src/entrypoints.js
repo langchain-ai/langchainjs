@@ -1,4 +1,5 @@
 export * from "langchain/agents";
+export * from "langchain/agents/plan_and_execute";
 export * from "langchain/base_language";
 export * from "langchain/tools";
 export * from "langchain/chains";

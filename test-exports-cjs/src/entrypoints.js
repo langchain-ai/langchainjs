@@ -1,4 +1,5 @@
 const agents = require("langchain/agents");
+const agents_plan_and_execute = require("langchain/agents/plan_and_execute");
 const base_language = require("langchain/base_language");
 const tools = require("langchain/tools");
 const chains = require("langchain/chains");

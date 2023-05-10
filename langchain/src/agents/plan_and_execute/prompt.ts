@@ -16,12 +16,13 @@ export const PLANNER_SYSTEM_PROMPT_MESSAGE_TEMPLATE = [
   `At the end of your plan, say '<END_OF_PLAN>'`,
 ].join(" ");
 
-export const PLANNER_CHAT_PROMPT = ChatPromptTemplate.fromPromptMessages([
-  SystemMessagePromptTemplate.fromTemplate(
-    PLANNER_SYSTEM_PROMPT_MESSAGE_TEMPLATE
-  ),
-  HumanMessagePromptTemplate.fromTemplate(`{input}`),
-]);
+export const PLANNER_CHAT_PROMPT =
+  /* #__PURE__ */ ChatPromptTemplate.fromPromptMessages([
+    /* #__PURE__ */ SystemMessagePromptTemplate.fromTemplate(
+      PLANNER_SYSTEM_PROMPT_MESSAGE_TEMPLATE
+    ),
+    /* #__PURE__ */ HumanMessagePromptTemplate.fromTemplate(`{input}`),
+  ]);
 
 export const DEFAULT_STEP_EXECUTOR_HUMAN_CHAT_MESSAGE_TEMPLATE = `Previous steps: {previous_steps}
 
