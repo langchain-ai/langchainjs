@@ -11,7 +11,7 @@ export class GitbookLoader extends CheerioWebBaseLoader {
 
   constructor(public webPath: string, params: GitbookLoaderParams = {}) {
     const path =
-      params.shouldLoadAllPaths === true ? webPath : `${webPath}/sitemap.xml`;
+      params.shouldLoadAllPaths === true ? `${webPath}/sitemap.xml` : webPath;
     super(path);
 
     this.shouldLoadAllPaths =
