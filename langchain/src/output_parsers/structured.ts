@@ -1,9 +1,24 @@
 import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
+import { JsonSchema7Type } from "zod-to-json-schema/src/parseDef.js";
+import { JsonSchema7ArrayType } from "zod-to-json-schema/src/parsers/array.js";
+import { JsonSchema7ObjectType } from "zod-to-json-schema/src/parsers/object.js";
+import { JsonSchema7StringType } from "zod-to-json-schema/src/parsers/string.js";
+import { JsonSchema7NumberType } from "zod-to-json-schema/src/parsers/number.js";
 import {
   BaseOutputParser,
+  FormatInstructionsOptions,
   OutputParserException,
 } from "../schema/output_parser.js";
+
+export type JsonMarkdownStructuredOutputParserInput = {
+  interpolationDepth?: number;
+};
+
+export interface JsonMarkdownFormatInstructionsOptions
+  extends FormatInstructionsOptions {
+  interpolationDepth?: number;
+}
 
 export class StructuredOutputParser<
   T extends z.ZodTypeAny
@@ -61,5 +76,69 @@ ${JSON.stringify(zodToJsonSchema(this.schema))}
         text
       );
     }
+  }
+}
+
+export class JsonMarkdownStructuredOutputParser<
+  T extends z.ZodTypeAny
+> extends StructuredOutputParser<T> {
+  getFormatInstructions(
+    options?: JsonMarkdownFormatInstructionsOptions
+  ): string {
+    const interpolationDepth = options?.interpolationDepth ?? 1;
+    if (interpolationDepth < 1) {
+      throw new Error("f string interpolation depth must be at least 1");
+    }
+
+    return `Return a markdown code snippet with a JSON object formatted to look like:\n\`\`\`json\n${this._schemaToInstruction(
+      zodToJsonSchema(this.schema)
+    )
+      .replaceAll("{", "{".repeat(interpolationDepth))
+      .replaceAll("}", "}".repeat(interpolationDepth))}\n\`\`\``;
+  }
+
+  private _schemaToInstruction(
+    schemaInput: JsonSchema7Type,
+    indent = 2
+  ): string {
+    const schema = schemaInput as Extract<
+      JsonSchema7Type,
+      | JsonSchema7ObjectType
+      | JsonSchema7ArrayType
+      | JsonSchema7StringType
+      | JsonSchema7NumberType
+    >;
+
+    let nullable = false;
+    if (Array.isArray(schema.type)) {
+      const [actualType, nullStr] = schema.type;
+      nullable = nullStr === "null";
+      schema.type = actualType;
+    }
+
+    if (schema.type === "object" && schema.properties) {
+      const description = schema.description ? ` // ${schema.description}` : "";
+      const properties = Object.entries(schema.properties)
+        .map(([key, value]) => {
+          const isOptional = schema.required?.includes(key)
+            ? ""
+            : " (optional)";
+          return `${" ".repeat(indent)}"${key}": ${this._schemaToInstruction(
+            value,
+            indent + 2
+          )}${isOptional}`;
+        })
+        .join("\n");
+      return `{\n${properties}\n${" ".repeat(indent - 2)}}${description}`;
+    }
+    if (schema.type === "array" && schema.items) {
+      const description = schema.description ? ` // ${schema.description}` : "";
+      return `array[\n${" ".repeat(indent)}${this._schemaToInstruction(
+        schema.items
+      )}\n${" ".repeat(indent - 2)}] ${description}`;
+    }
+    const isNullable = nullable ? " (nullable)" : "";
+    const description = schema.description ? ` // ${schema.description}` : "";
+    return `${schema.type}${description}${isNullable}`;
   }
 }
