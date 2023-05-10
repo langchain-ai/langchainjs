@@ -38,7 +38,6 @@ export abstract class BaseStepContainer {
   abstract getSteps(): Step[];
 
   abstract getFinalResponse(): string;
-
 }
 
 export class ListStepContainer extends BaseStepContainer {
@@ -78,7 +77,6 @@ export class ChainStepExecutor extends BaseStepExecutor {
 
   async step(inputs: ChainValues): Promise<StepResult> {
     const chainResponse = await this.chain.call(inputs);
-    console.log("step run", inputs, chainResponse);
     return { response: chainResponse.output };
   }
 }

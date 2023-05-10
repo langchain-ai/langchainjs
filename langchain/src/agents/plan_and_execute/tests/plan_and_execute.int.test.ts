@@ -15,10 +15,10 @@ test.only("Run agent", async () => {
   const executor = PlanAndExecuteAgentExecutor.fromLLMAndTools(model, tools);
 
   const result = await executor.call({
-    input: `Who is Leo DiCaprio's girlfriend? What is her current age raised to the 0.43 power?`,
+    input: `Who is the current president of the United States? What is their current age raised to the 0.43 power?`,
   });
 
-  console.log(result);
+  console.log({ result });
 });
 
 test("Run agent", async () => {

@@ -13,7 +13,7 @@ export class PlanOutputParser extends BaseOutputParser<Plan> {
       steps: text
         .split(/\n\d+\.\s?/)
         .slice(1)
-        .map((step) => ({ text: step })),
+        .map((step) => ({ text: step.replace(`<END_OF_PLAN>`, "") })),
     };
   }
 

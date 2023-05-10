@@ -8,7 +8,10 @@ import {
   ChainStepExecutor,
 } from "./base.js";
 import { AgentExecutor } from "../executor.js";
-import { PLANNER_CHAT_PROMPT } from "./prompt.js";
+import {
+  DEFAULT_STEP_EXECUTOR_HUMAN_CHAT_MESSAGE_TEMPLATE,
+  PLANNER_CHAT_PROMPT,
+} from "./prompt.js";
 import { ChainValues } from "../../schema/index.js";
 import { BaseLanguageModel } from "../../base_language/index.js";
 import { CallbackManagerForChainRun } from "../../callbacks/manager.js";
@@ -58,14 +61,13 @@ export class PlanAndExecuteAgentExecutor extends BaseChain {
     const plannerLlmChain = new LLMChain({
       llm,
       prompt: PLANNER_CHAT_PROMPT,
-      verbose: true,
     });
     return new LLMPlanner(plannerLlmChain, new PlanOutputParser());
   }
 
   static getDefaultStepExecutor(llm: BaseLanguageModel, tools: Tool[]) {
     const agent = ChatAgent.fromLLMAndTools(llm, tools, {
-      humanMessageTemplate: `Previous steps: {previous_steps}\n\nCurrent objective: {current_step}\n\n{agent_scratchpad}`,
+      humanMessageTemplate: DEFAULT_STEP_EXECUTOR_HUMAN_CHAT_MESSAGE_TEMPLATE,
     });
     return new ChainStepExecutor(
       AgentExecutor.fromAgentAndTools({
@@ -97,6 +99,9 @@ export class PlanAndExecuteAgentExecutor extends BaseChain {
         "Could not create and parse a plan to answer your question - please try again."
       );
     }
+    plan.steps[
+      plan.steps.length - 1
+    ].text += ` The original question was: ${inputs.input}.`;
     for (const step of plan.steps) {
       const newInputs = {
         ...inputs,
