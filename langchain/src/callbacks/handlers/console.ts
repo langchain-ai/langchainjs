@@ -1,6 +1,6 @@
 import type { CSPair } from "ansi-styles";
 import styles from "ansi-styles";
-import { BaseTracer, BaseTracerSession, AgentRunV2, RunV2 } from "./tracers.js";
+import { BaseTracer, BaseTracerSession, AgentRun, Run } from "./tracers.js";
 
 function wrap(style: CSPair, text: string) {
   return `${style.open}${text}${style.close}`;
@@ -14,7 +14,7 @@ function tryJsonStringify(obj: unknown, fallback: string) {
   }
 }
 
-function elapsed(run: RunV2): string {
+function elapsed(run: Run): string {
   const elapsed = run.end_time - run.start_time;
   if (elapsed < 1000) {
     return `${elapsed}ms`;
@@ -40,7 +40,7 @@ export class ConsoleCallbackHandler extends BaseTracer {
     return Promise.resolve({ ...session, id: this.i++ });
   }
 
-  protected persistRun(_run: RunV2) {
+  protected persistRun(_run: Run) {
     return Promise.resolve();
   }
 
@@ -54,8 +54,8 @@ export class ConsoleCallbackHandler extends BaseTracer {
 
   // utility methods
 
-  getParents(run: RunV2) {
-    const parents: RunV2[] = [];
+  getParents(run: Run) {
+    const parents: Run[] = [];
     let currentRun = run;
     while (currentRun.parent_run_id) {
       const parent = this.runMap.get(currentRun.parent_run_id);
@@ -69,7 +69,7 @@ export class ConsoleCallbackHandler extends BaseTracer {
     return parents;
   }
 
-  getBreadcrumbs(run: RunV2) {
+  getBreadcrumbs(run: Run) {
     const parents = this.getParents(run).reverse();
     const string = [...parents, run]
       .map((parent, i, arr) => {
@@ -82,7 +82,7 @@ export class ConsoleCallbackHandler extends BaseTracer {
 
   // logging methods
 
-  onChainStart(run: RunV2) {
+  onChainStart(run: Run) {
     const crumbs = this.getBreadcrumbs(run);
     console.log(
       `${wrap(
@@ -95,7 +95,7 @@ export class ConsoleCallbackHandler extends BaseTracer {
     );
   }
 
-  onChainEnd(run: RunV2) {
+  onChainEnd(run: Run) {
     const crumbs = this.getBreadcrumbs(run);
     console.log(
       `${wrap(color.cyan, "[chain/end]")} [${crumbs}] [${elapsed(
@@ -107,7 +107,7 @@ export class ConsoleCallbackHandler extends BaseTracer {
     );
   }
 
-  onChainError(run: RunV2) {
+  onChainError(run: Run) {
     const crumbs = this.getBreadcrumbs(run);
     console.log(
       `${wrap(color.red, "[chain/error]")} [${crumbs}] [${elapsed(
@@ -119,7 +119,7 @@ export class ConsoleCallbackHandler extends BaseTracer {
     );
   }
 
-  onLLMStart(run: RunV2) {
+  onLLMStart(run: Run) {
     const crumbs = this.getBreadcrumbs(run);
     const prompts = run.inputs.prompts as string[];
     console.log(
@@ -133,7 +133,7 @@ export class ConsoleCallbackHandler extends BaseTracer {
     );
   }
 
-  onLLMEnd(run: RunV2) {
+  onLLMEnd(run: Run) {
     const crumbs = this.getBreadcrumbs(run);
     console.log(
       `${wrap(color.cyan, "[llm/end]")} [${crumbs}] [${elapsed(
@@ -145,7 +145,7 @@ export class ConsoleCallbackHandler extends BaseTracer {
     );
   }
 
-  onLLMError(run: RunV2) {
+  onLLMError(run: Run) {
     const crumbs = this.getBreadcrumbs(run);
     console.log(
       `${wrap(color.red, "[llm/error]")} [${crumbs}] [${elapsed(
@@ -154,7 +154,7 @@ export class ConsoleCallbackHandler extends BaseTracer {
     );
   }
 
-  onToolStart(run: RunV2) {
+  onToolStart(run: Run) {
     const crumbs = this.getBreadcrumbs(run);
     console.log(
       `${wrap(
@@ -164,16 +164,16 @@ export class ConsoleCallbackHandler extends BaseTracer {
     );
   }
 
-  onToolEnd(run: RunV2) {
+  onToolEnd(run: Run) {
     const crumbs = this.getBreadcrumbs(run);
     console.log(
       `${wrap(color.cyan, "[tool/end]")} [${crumbs}] [${elapsed(
         run
-      )}] Exiting Tool run with output: "${run.outputs.output?.trim()}"`
+      )}] Exiting Tool run with output: "${run.outputs?.output?.trim()}"`
     );
   }
 
-  onToolError(run: RunV2) {
+  onToolError(run: Run) {
     const crumbs = this.getBreadcrumbs(run);
     console.log(
       `${wrap(color.red, "[tool/error]")} [${crumbs}] [${elapsed(
@@ -185,8 +185,8 @@ export class ConsoleCallbackHandler extends BaseTracer {
     );
   }
 
-  onAgentAction(run: RunV2) {
-    const agentRun = run as AgentRunV2;
+  onAgentAction(run: Run) {
+    const agentRun = run as AgentRun;
     const crumbs = this.getBreadcrumbs(run);
     console.log(
       `${wrap(

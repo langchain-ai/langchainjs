@@ -17,7 +17,7 @@ export interface BaseTracerSession {
 
 export type TracerSessionCreate = BaseTracerSession;
 
-export interface TracerSession extends BaseTracerSession {
+export interface TracerSessionV1 extends BaseTracerSession {
   id: number;
 }
 
@@ -29,11 +29,11 @@ export interface TracerSessionCreateV2 extends BaseTracerSessionV2 {
   id?: string; // uuid. Auto-generated if not provided
 }
 
-export interface TracerSessionV2 extends BaseTracerSessionV2 {
+export interface TracerSession extends BaseTracerSessionV2 {
   id: string; // uuid
 }
 
-export interface BaseRun {
+export interface BaseRunV1 {
   uuid: string;
   parent_uuid?: string;
   start_time: number;
@@ -46,12 +46,12 @@ export interface BaseRun {
   type: RunType;
 }
 
-export interface LLMRun extends BaseRun {
+export interface LLMRun extends BaseRunV1 {
   prompts: string[];
   response?: LLMResult;
 }
 
-export interface ChainRun extends BaseRun {
+export interface ChainRun extends BaseRunV1 {
   inputs: ChainValues;
   outputs?: ChainValues;
   child_llm_runs: LLMRun[];
@@ -59,11 +59,7 @@ export interface ChainRun extends BaseRun {
   child_tool_runs: ToolRun[];
 }
 
-export interface AgentRun extends ChainRun {
-  actions: AgentAction[];
-}
-
-export interface ToolRun extends BaseRun {
+export interface ToolRun extends BaseRunV1 {
   tool_input: string;
   output?: string;
   action: string;
@@ -72,41 +68,41 @@ export interface ToolRun extends BaseRun {
   child_tool_runs: ToolRun[];
 }
 
-export type Run = LLMRun | ChainRun | ToolRun;
-
-export interface BaseRunV2 {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type Extra = Record<string, any>;
+export interface BaseRun {
   id: string;
   name: string;
   start_time: number;
   end_time: number;
-  extra: object;
+  extra?: Extra;
   error?: string;
   execution_order: number;
   serialized: object;
   inputs: RunInputs;
-  outputs: RunOutputs;
+  outputs?: RunOutputs;
   session_id: string; // uuid
   reference_example_id?: string; // uuid
   run_type: RunType;
 }
 
-export interface RunV2Create extends BaseRunV2 {
-  child_runs: RunV2Create[];
+export interface RunCreate extends BaseRun {
+  child_runs: RunCreate[];
 }
-export interface RunV2 extends RunV2Create {
+export interface Run extends RunCreate {
   child_execution_order: number;
-  child_runs: RunV2[];
+  child_runs: Run[];
   parent_run_id?: string; // uuid
 }
 
-export interface AgentRunV2 extends RunV2 {
+export interface AgentRun extends Run {
   actions: AgentAction[];
 }
 
 export abstract class BaseTracer extends BaseCallbackHandler {
-  protected session?: TracerSession | TracerSessionV2;
+  protected session?: TracerSessionV1 | TracerSession;
 
-  protected runMap: Map<string, RunV2> = new Map();
+  protected runMap: Map<string, Run> = new Map();
 
   protected constructor() {
     super();
@@ -118,19 +114,19 @@ export abstract class BaseTracer extends BaseCallbackHandler {
 
   abstract loadSession(
     sessionName: string
-  ): Promise<TracerSession | TracerSessionV2>;
+  ): Promise<TracerSessionV1 | TracerSession>;
 
-  abstract loadDefaultSession(): Promise<TracerSession | TracerSessionV2>;
+  abstract loadDefaultSession(): Promise<TracerSessionV1 | TracerSession>;
 
-  protected abstract persistRun(run: RunV2): Promise<void>;
+  protected abstract persistRun(run: Run): Promise<void>;
 
   protected abstract persistSession(
     session: BaseTracerSession
-  ): Promise<TracerSession | TracerSessionV2>;
+  ): Promise<TracerSessionV1 | TracerSession>;
 
   async newSession(
     sessionName?: string
-  ): Promise<TracerSession | TracerSessionV2> {
+  ): Promise<TracerSessionV1 | TracerSession> {
     const sessionCreate: TracerSessionCreate = {
       start_time: Date.now(),
       name: sessionName,
@@ -140,11 +136,11 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     return session;
   }
 
-  protected _addChildRun(parentRun: RunV2, childRun: RunV2) {
+  protected _addChildRun(parentRun: Run, childRun: Run) {
     parentRun.child_runs.push(childRun);
   }
 
-  protected _startTrace(run: RunV2) {
+  protected _startTrace(run: Run) {
     if (run.parent_run_id !== undefined) {
       const parentRun = this.runMap.get(run.parent_run_id);
       if (parentRun) {
@@ -156,7 +152,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     this.runMap.set(run.id, run);
   }
 
-  protected async _endTrace(run: RunV2): Promise<void> {
+  protected async _endTrace(run: Run): Promise<void> {
     if (!run.parent_run_id) {
       await this.persistRun(run);
     } else {
@@ -199,17 +195,15 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       this.session = await this.loadDefaultSession();
     }
     const execution_order = this._getExecutionOrder(parentRunId);
-    const session = this.session as TracerSessionV2;
-    const run: RunV2 = {
+    const session = this.session as TracerSession;
+    const run: Run = {
       id: runId,
       name: llm.name,
-      extra: {},
       parent_run_id: parentRunId,
       start_time: Date.now(),
       end_time: 0,
       serialized: llm,
       inputs: { prompts },
-      outputs: {},
       session_id: session.id,
       execution_order,
       child_runs: [],
@@ -252,9 +246,9 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     if (this.session === undefined) {
       this.session = await this.loadDefaultSession();
     }
-    const session = this.session as TracerSessionV2;
+    const session = this.session as TracerSession;
     const execution_order = this._getExecutionOrder(parentRunId);
-    const run: RunV2 = {
+    const run: Run = {
       id: runId,
       name: chain.name,
       parent_run_id: parentRunId,
@@ -267,8 +261,6 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       child_execution_order: execution_order,
       run_type: "chain",
       child_runs: [],
-      extra: {},
-      outputs: {},
     };
 
     this._startTrace(run);
@@ -306,9 +298,9 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     if (this.session === undefined) {
       this.session = await this.loadDefaultSession();
     }
-    const session = this.session as TracerSessionV2;
+    const session = this.session as TracerSession;
     const execution_order = this._getExecutionOrder(parentRunId);
-    const run: RunV2 = {
+    const run: Run = {
       id: runId,
       name: tool.name,
       parent_run_id: parentRunId,
@@ -316,13 +308,11 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       end_time: 0,
       serialized: tool,
       inputs: { input },
-      outputs: {},
       session_id: session.id,
       execution_order,
       child_execution_order: execution_order,
       run_type: "tool",
       child_runs: [],
-      extra: {},
     };
 
     this._startTrace(run);
@@ -356,33 +346,33 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     if (!run || run?.run_type !== "chain") {
       return;
     }
-    const agentRun = run as AgentRunV2;
+    const agentRun = run as AgentRun;
     agentRun.actions = agentRun.actions || [];
     agentRun.actions.push(action);
-    await this.onAgentAction?.(run as AgentRunV2);
+    await this.onAgentAction?.(run as AgentRun);
   }
 
   // custom event handlers
 
-  onLLMStart?(run: RunV2): void | Promise<void>;
+  onLLMStart?(run: Run): void | Promise<void>;
 
-  onLLMEnd?(run: RunV2): void | Promise<void>;
+  onLLMEnd?(run: Run): void | Promise<void>;
 
-  onLLMError?(run: RunV2): void | Promise<void>;
+  onLLMError?(run: Run): void | Promise<void>;
 
-  onChainStart?(run: RunV2): void | Promise<void>;
+  onChainStart?(run: Run): void | Promise<void>;
 
-  onChainEnd?(run: RunV2): void | Promise<void>;
+  onChainEnd?(run: Run): void | Promise<void>;
 
-  onChainError?(run: RunV2): void | Promise<void>;
+  onChainError?(run: Run): void | Promise<void>;
 
-  onToolStart?(run: RunV2): void | Promise<void>;
+  onToolStart?(run: Run): void | Promise<void>;
 
-  onToolEnd?(run: RunV2): void | Promise<void>;
+  onToolEnd?(run: Run): void | Promise<void>;
 
-  onToolError?(run: RunV2): void | Promise<void>;
+  onToolError?(run: Run): void | Promise<void>;
 
-  onAgentAction?(run: RunV2): void | Promise<void>;
+  onAgentAction?(run: Run): void | Promise<void>;
 
   // TODO Implement handleAgentEnd, handleText
 
@@ -414,10 +404,10 @@ export class LangChainTracer extends BaseTracer {
   }
 
   protected async convertV2RunToRun(
-    run: RunV2
+    run: Run
   ): Promise<LLMRun | ChainRun | ToolRun> {
     const session = (this.session ??
-      this.loadDefaultSession()) as TracerSession;
+      this.loadDefaultSession()) as TracerSessionV1;
 
     const serialized = run.serialized as { name: string };
     let runResult: LLMRun | ChainRun | ToolRun;
@@ -476,7 +466,7 @@ export class LangChainTracer extends BaseTracer {
         type: run.run_type,
         session_id: session.id,
         tool_input: run.inputs.input,
-        output: run.outputs.output,
+        output: run.outputs?.output,
         action: JSON.stringify(serialized),
         child_llm_runs: child_runs.filter(
           (child_run) => child_run.type === "llm"
@@ -497,12 +487,12 @@ export class LangChainTracer extends BaseTracer {
   }
 
   protected async persistRun(
-    run: RunV2 | LLMRun | ChainRun | ToolRun
+    run: Run | LLMRun | ChainRun | ToolRun
   ): Promise<void> {
     let endpoint;
     let v1Run: LLMRun | ChainRun | ToolRun;
-    if ((run as RunV2).run_type !== undefined) {
-      v1Run = await this.convertV2RunToRun(run as RunV2);
+    if ((run as Run).run_type !== undefined) {
+      v1Run = await this.convertV2RunToRun(run as Run);
     } else {
       v1Run = run as LLMRun | ChainRun | ToolRun;
     }
@@ -528,7 +518,7 @@ export class LangChainTracer extends BaseTracer {
 
   protected async persistSession(
     sessionCreate: BaseTracerSession | BaseTracerSessionV2
-  ): Promise<TracerSession | TracerSessionV2> {
+  ): Promise<TracerSessionV1 | TracerSession> {
     const endpoint = `${this.endpoint}/sessions`;
     const response = await fetch(endpoint, {
       method: "POST",
@@ -552,24 +542,24 @@ export class LangChainTracer extends BaseTracer {
 
   async loadSession(
     sessionName: string
-  ): Promise<TracerSession | TracerSessionV2> {
+  ): Promise<TracerSessionV1 | TracerSession> {
     const endpoint = `${this.endpoint}/sessions?name=${sessionName}`;
     return this._handleSessionResponse(endpoint);
   }
 
-  async loadDefaultSession(): Promise<TracerSession | TracerSessionV2> {
+  async loadDefaultSession(): Promise<TracerSessionV1 | TracerSession> {
     const endpoint = `${this.endpoint}/sessions?name=default`;
     return this._handleSessionResponse(endpoint);
   }
 
   protected async _handleSessionResponse(
     endpoint: string
-  ): Promise<TracerSession | TracerSessionV2> {
+  ): Promise<TracerSessionV1 | TracerSession> {
     const response = await fetch(endpoint, {
       method: "GET",
       headers: this.headers,
     });
-    let tracerSession: TracerSession;
+    let tracerSession: TracerSessionV1;
     if (!response.ok) {
       console.error(
         `Failed to load session: ${response.status} ${response.statusText}`
@@ -581,7 +571,7 @@ export class LangChainTracer extends BaseTracer {
       this.session = tracerSession;
       return tracerSession;
     }
-    const resp = (await response.json()) as TracerSession[];
+    const resp = (await response.json()) as TracerSessionV1[];
     if (resp.length === 0) {
       tracerSession = {
         id: 1,
@@ -614,7 +604,7 @@ export class LangChainTracerV2 extends LangChainTracer {
 
   protected async persistSession(
     sessionCreate: BaseTracerSessionV2 | BaseTracerSession
-  ): Promise<TracerSession | TracerSessionV2> {
+  ): Promise<TracerSessionV1 | TracerSession> {
     const endpoint = `${this.endpoint}/sessions`;
     const tenant_id = this.tenantId ?? (await this.updateTenantId());
     const response = await fetch(endpoint, {
@@ -648,7 +638,7 @@ export class LangChainTracerV2 extends LangChainTracer {
     };
   }
 
-  async newSession(sessionName?: string): Promise<TracerSessionV2> {
+  async newSession(sessionName?: string): Promise<TracerSession> {
     const tenantId = this.tenantId ?? (await this.updateTenantId());
     const sessionCreate: TracerSessionCreateV2 = {
       start_time: Date.now(),
@@ -657,7 +647,7 @@ export class LangChainTracerV2 extends LangChainTracer {
     };
     const session = await this.persistSession(sessionCreate);
     this.session = session;
-    return session as TracerSessionV2;
+    return session as TracerSession;
   }
 
   async updateTenantId(): Promise<string> {
@@ -685,14 +675,14 @@ export class LangChainTracerV2 extends LangChainTracer {
 
   protected async _handleSessionResponse(
     endpoint: string
-  ): Promise<TracerSession | TracerSessionV2> {
+  ): Promise<TracerSessionV1 | TracerSession> {
     const tenantId = this.tenantId ?? (await this.updateTenantId());
     const configured_endpoint = `${endpoint}&tenant_id=${this.tenantId}`;
     const response = await fetch(configured_endpoint, {
       method: "GET",
       headers: this.headers,
     });
-    let tracerSession: TracerSessionV2;
+    let tracerSession: TracerSession;
     if (!response.ok) {
       console.error(
         `Failed to load session: ${response.status} ${response.statusText}`
@@ -705,7 +695,7 @@ export class LangChainTracerV2 extends LangChainTracer {
       this.session = tracerSession;
       return tracerSession;
     }
-    const resp = (await response.json()) as TracerSessionV2[];
+    const resp = (await response.json()) as TracerSession[];
     if (resp.length === 0) {
       tracerSession = {
         id: uuid.v4(),
@@ -721,10 +711,10 @@ export class LangChainTracerV2 extends LangChainTracer {
   }
 
   private async _convertToCreate(
-    run: RunV2,
+    run: Run,
     example_id: string | undefined = undefined
-  ): Promise<RunV2Create> {
-    const persistedRun: RunV2Create = {
+  ): Promise<RunCreate> {
+    const persistedRun: RunCreate = {
       id: run.id,
       name: run.name,
       start_time: run.start_time,
@@ -745,8 +735,8 @@ export class LangChainTracerV2 extends LangChainTracer {
     return persistedRun;
   }
 
-  protected async persistRun(run: RunV2): Promise<void> {
-    const persistedRun: RunV2Create = await this._convertToCreate(
+  protected async persistRun(run: Run): Promise<void> {
+    const persistedRun: RunCreate = await this._convertToCreate(
       run,
       this.exampleId
     );

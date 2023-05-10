@@ -2,8 +2,8 @@ import { test, expect, jest } from "@jest/globals";
 import * as uuid from "uuid";
 import {
   BaseTracer,
-  RunV2,
-  TracerSessionV2,
+  Run,
+  TracerSession,
   TracerSessionCreateV2,
 } from "../handlers/tracers.js";
 
@@ -16,27 +16,27 @@ Date.now = jest.fn(() => _DATE);
 class FakeTracer extends BaseTracer {
   name = "fake_tracer";
 
-  runs: RunV2[] = [];
+  runs: Run[] = [];
 
   constructor() {
     super();
   }
 
-  protected persistRun(run: RunV2): Promise<void> {
+  protected persistRun(run: Run): Promise<void> {
     this.runs.push(run);
     return Promise.resolve();
   }
 
   protected persistSession(
     session: TracerSessionCreateV2
-  ): Promise<TracerSessionV2> {
+  ): Promise<TracerSession> {
     return Promise.resolve({
       id: TEST_SESSION_ID,
       ...session,
     });
   }
 
-  async loadSession(sessionName: string): Promise<TracerSessionV2> {
+  async loadSession(sessionName: string): Promise<TracerSession> {
     return Promise.resolve({
       id: TEST_SESSION_ID,
       name: sessionName,
@@ -45,7 +45,7 @@ class FakeTracer extends BaseTracer {
     });
   }
 
-  async loadDefaultSession(): Promise<TracerSessionV2> {
+  async loadDefaultSession(): Promise<TracerSession> {
     return Promise.resolve({
       id: TEST_SESSION_ID,
       name: "default",
@@ -63,7 +63,7 @@ test("Test LLMRun", async () => {
   await tracer.handleLLMEnd({ generations: [] }, runId);
   expect(tracer.runs.length).toBe(1);
   const run = tracer.runs[0];
-  const compareRun: RunV2 = {
+  const compareRun: Run = {
     id: runId,
     name: "test",
     start_time: _DATE,
@@ -75,7 +75,6 @@ test("Test LLMRun", async () => {
     inputs: { prompts: ["test"] },
     run_type: "llm",
     outputs: { generations: [] },
-    extra: {},
     child_runs: [],
   };
   expect(run).toEqual(compareRun);
@@ -94,7 +93,7 @@ test("Test Chain Run", async () => {
   const tracer = new FakeTracer();
   await tracer.newSession();
   const runId = uuid.v4();
-  const compareRun: RunV2 = {
+  const compareRun: Run = {
     id: runId,
     name: "test",
     start_time: _DATE,
@@ -107,7 +106,6 @@ test("Test Chain Run", async () => {
     outputs: { foo: "bar" },
     run_type: "chain",
     child_runs: [],
-    extra: {},
   };
   await tracer.handleChainStart({ name: "test" }, { foo: "bar" }, runId);
   await tracer.handleChainEnd({ foo: "bar" }, runId);
@@ -120,7 +118,7 @@ test("Test Tool Run", async () => {
   const tracer = new FakeTracer();
   await tracer.newSession();
   const runId = uuid.v4();
-  const compareRun: RunV2 = {
+  const compareRun: Run = {
     id: runId,
     name: "test",
     start_time: _DATE,
@@ -133,7 +131,6 @@ test("Test Tool Run", async () => {
     outputs: { output: "output" },
     run_type: "tool",
     child_runs: [],
-    extra: {},
   };
   await tracer.handleToolStart({ name: "test" }, "test", runId);
   await tracer.handleToolEnd("output", runId);
@@ -172,7 +169,7 @@ test("Test nested runs", async () => {
   );
   await tracer.handleLLMEnd({ generations: [[]] }, llmRunId2);
   await tracer.handleChainEnd({ foo: "bar" }, chainRunId);
-  const compareRun: RunV2 = {
+  const compareRun: Run = {
     child_runs: [
       {
         id: toolRunId,
@@ -197,7 +194,6 @@ test("Test nested runs", async () => {
             start_time: 1620000000000,
             run_type: "llm",
             child_runs: [],
-            extra: {},
           },
         ],
         end_time: 1620000000000,
@@ -211,7 +207,6 @@ test("Test nested runs", async () => {
         start_time: 1620000000000,
         inputs: { input: "test" },
         run_type: "tool",
-        extra: {},
       },
       {
         id: llmRunId2,
@@ -231,7 +226,6 @@ test("Test nested runs", async () => {
         start_time: 1620000000000,
         run_type: "llm",
         child_runs: [],
-        extra: {},
       },
     ],
     id: chainRunId,
@@ -251,7 +245,6 @@ test("Test nested runs", async () => {
     session_id: TEST_SESSION_ID,
     start_time: 1620000000000,
     run_type: "chain",
-    extra: {},
   };
   expect(tracer.runs.length).toBe(1);
   expect(tracer.runs[0]).toEqual(compareRun);
