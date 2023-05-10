@@ -12,23 +12,24 @@ interface ICalParams extends ToolParams {
 }
 
 export class ICalTool extends Tool {
-  name = 'iCal';
+  name = "iCal";
 
-  description = 'Useful for creating iCal calendar events. Input should be an instruction describing what event(s) to create.';
+  description =
+    "Useful for creating iCal calendar events. Input should be an instruction describing what event(s) to create.";
 
   eventsSchema = z.object({
-    name: z.string().describe('Name of the event event'),
+    name: z.string().describe("Name of the event event"),
     events: z.array(
       z.object({
-        start: z.string().describe('Start date of the event'),
-        end: z.string().describe('Env date of the event'),
-        summary: z.string().describe('Summary of the event'),
-        description: z.string().describe('Description of the event'),
+        start: z.string().describe("Start date of the event"),
+        end: z.string().describe("Env date of the event"),
+        summary: z.string().describe("Summary of the event"),
+        description: z.string().describe("Description of the event"),
         location: z
           .string()
-          .describe('Location of the event if any')
+          .describe("Location of the event if any")
           .optional(),
-        url: z.string().describe('URL of the event if any').optional(),
+        url: z.string().describe("URL of the event if any").optional(),
       })
     ),
   });
@@ -45,36 +46,40 @@ export class ICalTool extends Tool {
 
   /** @ignore */
   async _call(input: string): Promise<string> {
-    const { name, events } = await this.getEventsObject(input);
-    const { ical } = await this.imports();
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    const calendar = ical.default({ name });
+    try {
+      const { name, events } = await this.getEventsObject(input);
+      const { ical } = await this.imports();
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      const calendar = ical.default({ name });
 
-    for (const event of events) {
-      calendar.createEvent({
-        start: new Date(event.start),
-        end: new Date(event.end),
-        summary: event.summary,
-        description: event.description,
-        location: event.location,
-        url: event.url,
-      });
+      for (const event of events) {
+        calendar.createEvent({
+          start: new Date(event.start),
+          end: new Date(event.end),
+          summary: event.summary,
+          description: event.description,
+          location: event.location,
+          url: event.url,
+        });
+      }
+
+      await this.store.writeFile(`${name}.ics`, calendar.toString());
+
+      return `${name}.ics created successfully`;
+    } catch (err) {
+      return "Failed to create calendar event.";
     }
-
-    await this.store.writeFile(`${name}.ics`, calendar.toString());
-
-    return `${name}.ics created successfully`;
   }
 
   private async imports() {
     try {
-      const ical = await import('ical-generator');
+      const ical = await import("ical-generator");
       return { ical };
     } catch (e) {
       console.error(e);
       throw new Error(
-        'Failed to load ical-generator. Please install it with eg. `npm install ical-generator`.'
+        "Failed to load ical-generator. Please install it with eg. `npm install ical-generator`."
       );
     }
   }
@@ -88,8 +93,8 @@ export class ICalTool extends Tool {
 
     const prompt = new PromptTemplate({
       template:
-        'You are an amazing events planner / scheduler. Your job is to create calendar invites for different tasks. Create a plan for the following situation:\n\n{action}\n\n{format_instructions}',
-      inputVariables: ['action'],
+        "You are an amazing events planner / scheduler. Your job is to create calendar invites for different tasks. Create a plan for the following situation:\n\n{action}\n\n{format_instructions}",
+      inputVariables: ["action"],
       partialVariables: { format_instructions: formatInstructions },
     });
 

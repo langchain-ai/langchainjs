@@ -70,5 +70,15 @@ describe("ICalTool", () => {
           .replace(/\r\n/g, "\n")
       ).toEqual(getIcsString());
     });
+
+    it("should not fail and return failure message", async () => {
+      const inputStr = getInputCommand();
+
+      jest.spyOn(llm, "call").mockResolvedValueOnce("some invalid response");
+
+      await expect(tool._call(inputStr)).resolves.toEqual(
+        "Failed to create calendar event."
+      );
+    });
   });
 });

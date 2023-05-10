@@ -143,6 +143,7 @@ const requiresOptionalDependency = [
   "agents/load",
   "tools/aws_lambda",
   "tools/calculator",
+  "tools/ical",
   "tools/webbrowser",
   "chains/load",
   "embeddings/cohere",

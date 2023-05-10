@@ -1,5 +1,5 @@
 import { ICalTool } from "langchain/tools/ical";
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { OpenAIChat } from "langchain/llms/openai";
 import { NodeFileStore } from 'langchain/stores/file/node';
 
 export async function run() {
@@ -7,7 +7,7 @@ export async function run() {
 
   const iCalTool = new ICalTool({
     store: new NodeFileStore(outputDir),
-    llm:  new ChatOpenAI({ temperature: 0 }),
+    llm:  new OpenAIChat({ temperature: 0 }),
   });
 
   const result = await iCalTool.call(

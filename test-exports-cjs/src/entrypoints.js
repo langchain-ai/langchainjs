@@ -1,7 +1,6 @@
 const agents = require("langchain/agents");
 const base_language = require("langchain/base_language");
 const tools = require("langchain/tools");
-const tools_ical = require("langchain/tools/ical");
 const chains = require("langchain/chains");
 const embeddings_base = require("langchain/embeddings/base");
 const embeddings_fake = require("langchain/embeddings/fake");
