@@ -122,6 +122,7 @@ const entrypoints = {
   // experimental
   "experimental/autogpt": "experimental/autogpt/index",
   "experimental/babyagi": "experimental/babyagi/index",
+  "experimental/plan_and_execute": "experimental/plan_and_execute/index",
 };
 
 // Entrypoints in this list will
