@@ -1,5 +1,4 @@
 const agents = require("langchain/agents");
-const agents_plan_and_execute = require("langchain/agents/plan_and_execute");
 const base_language = require("langchain/base_language");
 const tools = require("langchain/tools");
 const chains = require("langchain/chains");
@@ -35,3 +34,4 @@ const cache = require("langchain/cache");
 const stores_file_in_memory = require("langchain/stores/file/in_memory");
 const experimental_autogpt = require("langchain/experimental/autogpt");
 const experimental_babyagi = require("langchain/experimental/babyagi");
+const experimental_plan_and_execute = require("langchain/experimental/plan_and_execute");

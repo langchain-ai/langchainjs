@@ -10,7 +10,6 @@ const entrypoints = {
   // agents
   agents: "agents/index",
   "agents/load": "agents/load",
-  "agents/plan_and_execute": "agents/plan_and_execute/index",
   // base language
   base_language: "base_language/index",
   // tools
@@ -123,6 +122,7 @@ const entrypoints = {
   // experimental
   "experimental/autogpt": "experimental/autogpt/index",
   "experimental/babyagi": "experimental/babyagi/index",
+  "experimental/plan_and_execute": "experimental/plan_and_execute/index",
 };
 
 // Entrypoints in this list will
