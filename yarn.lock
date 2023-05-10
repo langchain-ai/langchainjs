@@ -18111,7 +18111,7 @@ __metadata:
     epub2: ^3.0.1
     hnswlib-node: ^1.4.2
     html-to-text: ^9.0.5
-    ical-generator: "*"
+    ical-generator: ^4.0.0
     mammoth: "*"
     mongodb: ^5.2.0
     pdf-parse: 1.1.1
@@ -18164,6 +18164,8 @@ __metadata:
     hnswlib-node:
       optional: true
     html-to-text:
+      optional: true
+    ical-generator:
       optional: true
     mammoth:
       optional: true
