@@ -7,7 +7,10 @@ import {
 } from "../schema/index.js";
 import { BaseCallbackHandler, CallbackHandlerMethods } from "./base.js";
 import { ConsoleCallbackHandler } from "./handlers/console.js";
-import { getTracingCallbackHandler } from "./handlers/initialize.js";
+import {
+  getTracingCallbackHandler,
+  getTracingV2CallbackHandler,
+} from "./handlers/initialize.js";
 
 type BaseCallbackManagerMethods = {
   [K in keyof CallbackHandlerMethods]?: (
@@ -451,11 +454,17 @@ export class CallbackManager
         false
       );
     }
+    const tracingV2Enabled =
+      typeof process !== "undefined"
+        ? // eslint-disable-next-line no-process-env
+          process.env?.LANGCHAIN_TRACING_V2 !== undefined
+        : false;
     const tracingEnabled =
       typeof process !== "undefined"
         ? // eslint-disable-next-line no-process-env
           process.env?.LANGCHAIN_TRACING !== undefined
-        : false;
+        : tracingV2Enabled;
+
     if (options?.verbose || tracingEnabled) {
       if (!callbackManager) {
         callbackManager = new CallbackManager();
@@ -480,10 +489,17 @@ export class CallbackManager
             ? // eslint-disable-next-line no-process-env
               process.env?.LANGCHAIN_SESSION
             : undefined;
-        callbackManager.addHandler(
-          await getTracingCallbackHandler(session),
-          true
-        );
+        if (tracingV2Enabled) {
+          callbackManager.addHandler(
+            await getTracingV2CallbackHandler(session),
+            true
+          );
+        } else {
+          callbackManager.addHandler(
+            await getTracingCallbackHandler(session),
+            true
+          );
+        }
       }
     }
     return callbackManager;
