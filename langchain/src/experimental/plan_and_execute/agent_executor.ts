@@ -57,7 +57,7 @@ export class PlanAndExecuteAgentExecutor extends BaseChain {
     return [this.outputKey];
   }
 
-  static getDefaultPlanner(llm: BaseLanguageModel) {
+  static getDefaultPlanner({ llm }: { llm: BaseLanguageModel }) {
     const plannerLlmChain = new LLMChain({
       llm,
       prompt: PLANNER_CHAT_PROMPT,
@@ -65,9 +65,17 @@ export class PlanAndExecuteAgentExecutor extends BaseChain {
     return new LLMPlanner(plannerLlmChain, new PlanOutputParser());
   }
 
-  static getDefaultStepExecutor(llm: BaseLanguageModel, tools: Tool[]) {
+  static getDefaultStepExecutor({
+    llm,
+    tools,
+    humanMessageTemplate = DEFAULT_STEP_EXECUTOR_HUMAN_CHAT_MESSAGE_TEMPLATE,
+  }: {
+    llm: BaseLanguageModel;
+    tools: Tool[];
+    humanMessageTemplate?: string;
+  }) {
     const agent = ChatAgent.fromLLMAndTools(llm, tools, {
-      humanMessageTemplate: DEFAULT_STEP_EXECUTOR_HUMAN_CHAT_MESSAGE_TEMPLATE,
+      humanMessageTemplate,
     });
     return new ChainStepExecutor(
       AgentExecutor.fromAgentAndTools({
@@ -77,13 +85,22 @@ export class PlanAndExecuteAgentExecutor extends BaseChain {
     );
   }
 
-  static fromLLMAndTools(llm: BaseLanguageModel, tools: Tool[]) {
+  static fromLLMAndTools({
+    llm,
+    tools,
+    humanMessageTemplate,
+  }: {
+    llm: BaseLanguageModel;
+    tools: Tool[];
+    humanMessageTemplate?: string;
+  } & Omit<PlanAndExecuteAgentExecutorInput, "planner" | "stepExecutor">) {
     const executor = new PlanAndExecuteAgentExecutor({
-      planner: PlanAndExecuteAgentExecutor.getDefaultPlanner(llm),
-      stepExecutor: PlanAndExecuteAgentExecutor.getDefaultStepExecutor(
+      planner: PlanAndExecuteAgentExecutor.getDefaultPlanner({ llm }),
+      stepExecutor: PlanAndExecuteAgentExecutor.getDefaultStepExecutor({
         llm,
-        tools
-      ),
+        tools,
+        humanMessageTemplate,
+      }),
     });
     return executor;
   }

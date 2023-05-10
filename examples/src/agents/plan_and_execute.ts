@@ -9,7 +9,10 @@ const model = new ChatOpenAI({
   modelName: "gpt-3.5-turbo",
   verbose: true,
 });
-const executor = PlanAndExecuteAgentExecutor.fromLLMAndTools(model, tools);
+const executor = PlanAndExecuteAgentExecutor.fromLLMAndTools({
+  llm: model,
+  tools,
+});
 
 const result = await executor.call({
   input: `Who is the current president of the United States? What is their current age raised to the second power?`,
