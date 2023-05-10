@@ -254,8 +254,23 @@ export class TokenTextSplitter
 
   async splitText(text: string): Promise<string[]> {
     if (!this.tokenizer) {
-      const tiktoken = await TokenTextSplitter.imports();
-      this.tokenizer = tiktoken.get_encoding(this.encodingName);
+      const [{ Tiktoken }, { load }, { default: registry }] = await Promise.all(
+        [
+          import("@dqbd/tiktoken/lite"),
+          import("@dqbd/tiktoken/load"),
+          import("@dqbd/tiktoken/registry.json"),
+        ]
+      );
+
+      const model = await load(
+        registry[this.encodingName as keyof typeof registry]
+      );
+
+      this.tokenizer = new Tiktoken(
+        model.bpe_ranks,
+        model.special_tokens,
+        model.pat_str
+      );
       // We need to register a finalizer to free the tokenizer when the
       // splitter is garbage collected.
       this.registry = new FinalizationRegistry((t) => t.free());
@@ -287,7 +302,7 @@ export class TokenTextSplitter
     return splits;
   }
 
-  static async imports(): Promise<typeof tiktoken> {
+  private static async imports(): Promise<typeof tiktoken> {
     try {
       return await import("@dqbd/tiktoken");
     } catch (err) {
