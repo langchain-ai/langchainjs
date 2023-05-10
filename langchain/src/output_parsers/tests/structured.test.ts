@@ -2,7 +2,10 @@ import { z } from "zod";
 
 import { expect, test } from "@jest/globals";
 
-import { StructuredOutputParser } from "../structured.js";
+import {
+  JsonMarkdownStructuredOutputParser,
+  StructuredOutputParser,
+} from "../structured.js";
 
 test("StructuredOutputParser.fromNamesAndDescriptions", async () => {
   const parser = StructuredOutputParser.fromNamesAndDescriptions({
@@ -186,4 +189,87 @@ Here is the JSON Schema instance your output must adhere to. Include the enclosi
 \`\`\`
 "
 `);
+});
+
+test("JsonMarkdownStructuredOutputParser.fromZodSchema", async () => {
+  const schema = z
+    .object({
+      url: z.string().describe("A link to the resource"),
+      title: z.string().describe("A title for the resource"),
+      year: z.number().describe("The year the resource was created"),
+      createdAt: z
+        .string()
+        .datetime()
+        .describe("The date and time the resource was created"),
+      createdAtDate: z.coerce
+        .date()
+        .describe("The date the resource was created")
+        .optional(),
+      authors: z.array(
+        z.object({
+          name: z.string().describe("The name of the author"),
+          email: z.string().describe("The email of the author"),
+          type: z.enum(["author", "editor"]).optional(),
+          address: z.string().optional().describe("The address of the author"),
+          stateProvince: z
+            .nativeEnum(StateProvinceEnum)
+            .optional()
+            .describe("The state or province of the author"),
+        })
+      ),
+    })
+    .describe("Only One object");
+
+  const parser =
+    JsonMarkdownStructuredOutputParser.fromZodSchema<typeof schema>(schema);
+  expect(
+    await parser.parse(
+      '```\n{"url": "value", "title": "value", "year": 2011, "createdAt": "2023-03-29T16:07:09.600Z", "createdAtDate": "2023-03-29", "authors": [{"name": "value", "email": "value", "stateProvince": "AZ"}]}```'
+    )
+  ).toEqual({
+    url: "value",
+    title: "value",
+    year: 2011,
+    createdAt: "2023-03-29T16:07:09.600Z",
+    createdAtDate: new Date("2023-03-29T00:00:00.000Z"),
+    authors: [{ name: "value", email: "value", stateProvince: "AZ" }],
+  });
+});
+
+test("JsonMarkdownStructuredOutputParser.fromZodSchema with weird structure", async () => {
+  const schema = z.object({
+    a: z
+      .array(
+        z
+          .union([z.string().describe("a"), z.number().describe("b")])
+          .describe("a or b")
+      )
+      .describe("a list of a or b"),
+    b: z
+      .array(
+        z
+          .union([
+            z.string().nullable().describe("a"),
+            z.number().describe("b"),
+            z.object({ l: z.string().optional().describe("z") }),
+          ])
+          .describe("a or b")
+      )
+      .describe("a list of a or b"),
+    c: z.object({
+      a: z.number(),
+      x: z.string(),
+    }),
+    l: z.array(
+      z.object({
+        p: z.string(),
+      })
+    ),
+  });
+
+  const parser =
+    JsonMarkdownStructuredOutputParser.fromZodSchema<typeof schema>(schema);
+  const data = `{ "a": [1, "a"], "b": [1, "a", {"l": "z"}], "c": { "a": 1, "x": "a" }, "l": [{"p": "a"}, {"p": "b"}] }`;
+  console.log(parser.getFormatInstructions());
+  expect(await parser.parse(data)).toEqual(JSON.parse(data));
 });
