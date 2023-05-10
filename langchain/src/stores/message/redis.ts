@@ -20,6 +20,7 @@ export type RedisChatMessageHistoryInput = {
   sessionId: string;
   sessionTTL?: number;
   config?: RedisClientOptions;
+  client?: RedisClientType<RedisModules, RedisFunctions, RedisScripts>;
 };
 
 export class RedisChatMessageHistory extends BaseListChatMessageHistory {
@@ -30,9 +31,9 @@ export class RedisChatMessageHistory extends BaseListChatMessageHistory {
   private sessionTTL?: number;
 
   constructor(fields: RedisChatMessageHistoryInput) {
-    const { sessionId, sessionTTL, config } = fields;
+    const { sessionId, sessionTTL, config, client } = fields;
     super();
-    this.client = createClient(config ?? {});
+    this.client = client ?? createClient(config ?? {});
     this.sessionId = sessionId;
     this.sessionTTL = sessionTTL;
   }
