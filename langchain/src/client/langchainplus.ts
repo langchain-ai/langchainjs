@@ -49,16 +49,10 @@ const getSeededTenantId = async (
   let response;
 
   try {
-    let requestInit: { [param: string]: string | object } = {
+    response = await fetch(url, {
       method: "GET",
-    };
-    if (apiKey) {
-      requestInit = {
-        ...requestInit,
-        headers: { authorization: `Bearer ${apiKey}` },
-      };
-    }
-    response = await fetch(url, requestInit);
+      headers: apiKey ? { authorization: `Bearer ${apiKey}` } : undefined,
+    });
   } catch (err) {
     throw new Error("Unable to get seeded tenant ID. Please manually provide.");
   }
@@ -87,7 +81,7 @@ export class LangChainPlusClient {
 
   private tenantId: string;
 
-  constructor(apiUrl: string, apiKey: string | undefined, tenantId: string) {
+  constructor(apiUrl: string, tenantId: string, apiKey?: string) {
     this.apiUrl = apiUrl;
     this.apiKey = apiKey;
     this.tenantId = tenantId;
@@ -103,17 +97,15 @@ export class LangChainPlusClient {
     if (!tenantId_) {
       tenantId_ = await getSeededTenantId(apiUrl, apiKey);
     }
-    return new LangChainPlusClient(apiUrl, apiKey, tenantId_);
+    return new LangChainPlusClient(apiUrl, tenantId_, apiKey);
   }
 
   private validateApiKeyIfHosted(): void {
     const isLocal = isLocalhost(this.apiUrl);
-    if (!isLocal) {
-      if (!this.apiKey) {
-        throw new Error(
-          "API key must be provided when using hosted LangChain+ API"
-        );
-      }
+    if (!isLocal && !this.apiKey) {
+      throw new Error(
+        "API key must be provided when using hosted LangChain+ API"
+      );
     }
   }
 
