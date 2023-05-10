@@ -25,12 +25,9 @@ export class TextLoader extends BaseDocumentLoader {
     }
     const parsed = await this.parse(text);
     parsed.forEach((pageContent, i) => {
-      if (
-        typeof pageContent !== "string" &&
-        !(pageContent instanceof Document)
-      ) {
+      if (typeof pageContent !== "string" && !pageContent.pageContent) {
         throw new Error(
-          `Expected string, at position ${i} got ${typeof pageContent}`
+          `Expected string or Document, at position ${i} got ${typeof pageContent}`
         );
       }
     });

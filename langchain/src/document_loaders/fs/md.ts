@@ -64,8 +64,11 @@ type MarkdownLoaderConfig =
  */
 export class MarkdownLoader extends TextLoader {
   private splitSection: boolean;
+
   private headerDepth: number;
+
   private splitOnHorizontalRule: boolean;
+
   /**
    * @param filePathOrBlob The file path or blob to load
    * @param config The configuration for the loader
