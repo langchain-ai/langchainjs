@@ -57,23 +57,24 @@ export class LLMChainExtractor extends BaseDocumentCompressor {
   }
 
   async compressDocuments(
-    documents: Document[],
-    query: string
+      documents: Document[],
+      query: string
   ): Promise<Document[]> {
     const compressedDocs: Document[] = [];
-    for (const doc of documents) {
-      const input = this.getInput(query, doc);
-      const output = await this.llmChain.predict(input);
-      if (output.length === 0) {
-        continue;
-      }
-      compressedDocs.push(
-        new Document({
+    const promises = documents.map(doc => {
+      return (async () => {
+        const input = this.getInput(query, doc);
+        const output = await this.llmChain.predict(input);
+        if (output.length === 0) {
+          return;
+        }
+        compressedDocs.push(new Document({
           pageContent: output,
           metadata: doc.metadata,
-        })
-      );
-    }
+        }));
+      })();
+    });
+    await Promise.all(promises);
     return compressedDocs;
   }
 
