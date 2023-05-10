@@ -108,7 +108,10 @@ export class PlanAndExecuteAgentExecutor extends BaseChain {
         previous_steps: JSON.stringify(this.stepContainer.getSteps()),
         current_step: step.text,
       };
-      const response = await this.stepExecutor.step(newInputs, runManager?.getChild());
+      const response = await this.stepExecutor.step(
+        newInputs,
+        runManager?.getChild()
+      );
       this.stepContainer.addStep(step, response);
     }
     return { [this.outputKey]: this.stepContainer.getFinalResponse() };

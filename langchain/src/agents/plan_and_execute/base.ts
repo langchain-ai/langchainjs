@@ -29,7 +29,10 @@ export abstract class BasePlanner {
 }
 
 export abstract class BaseStepExecutor {
-  abstract step(inputs: ChainValues, runManager?: CallbackManager): Promise<StepResult>;
+  abstract step(
+    inputs: ChainValues,
+    runManager?: CallbackManager
+  ): Promise<StepResult>;
 }
 
 export abstract class BaseStepContainer {
@@ -75,7 +78,10 @@ export class ChainStepExecutor extends BaseStepExecutor {
     super();
   }
 
-  async step(inputs: ChainValues, runManager?: CallbackManager): Promise<StepResult> {
+  async step(
+    inputs: ChainValues,
+    runManager?: CallbackManager
+  ): Promise<StepResult> {
     const chainResponse = await this.chain.call(inputs, runManager);
     return { response: chainResponse.output };
   }
