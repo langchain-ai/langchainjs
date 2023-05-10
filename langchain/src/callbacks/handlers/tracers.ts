@@ -95,6 +95,10 @@ export interface Run extends RunCreate {
   parent_run_id?: string; // uuid
 }
 
+export interface RunResult extends BaseRun {
+  name: string;
+  parent_run_id?: string; // uuid
+}
 export interface AgentRun extends Run {
   actions: AgentAction[];
 }
