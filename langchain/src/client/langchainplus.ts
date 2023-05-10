@@ -1,6 +1,14 @@
-import { URL } from "url";
-import { RunResult } from "../callbacks/handlers/tracers.js";
-import { RunInputs, RunOutputs } from "../schema/index.js";
+import { LangChainTracerV2, RunResult } from "../callbacks/handlers/tracers.js";
+import {
+  ChainValues,
+  LLMResult,
+  RunInputs,
+  RunOutputs,
+} from "../schema/index.js";
+import { BaseLanguageModel } from "../base_language/index.js";
+import { BaseChain } from "../chains/base.js";
+import { BaseLLM } from "../llms/base.js";
+import { BaseChatModel } from "../chat_models/base.js";
 
 export interface BaseDataset {
   name: string;
@@ -32,9 +40,15 @@ export interface Example extends BaseExample {
   runs: RunResult[];
 }
 
+export type DatasetRunResults = Record<
+  string,
+  (string | LLMResult | ChainValues)[]
+>;
+
 // utility functions
 const isLocalhost = (url: string): boolean => {
-  const { hostname } = new URL(url);
+  const strippedUrl = url.replace("http://", "").replace("https://", "");
+  const hostname = strippedUrl.split("/")[0].split(":")[0];
   return (
     hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1"
   );
@@ -73,6 +87,39 @@ const getSeededTenantId = async (
 
   return tenants[0].id;
 };
+
+const stringifyError = (err: Error | unknown): string => {
+  let result: string;
+  if (err == null) {
+    result = "Error null or undefined";
+  } else {
+    const error = err as Error;
+    result = `Error: ${error?.name}: ${error?.message}`;
+  }
+  return result;
+};
+
+export function isLLM(llm: BaseLanguageModel | BaseChain): llm is BaseLLM {
+  const blm = llm as BaseLanguageModel;
+  return (
+    typeof blm?._modelType === "function" && blm?._modelType() === "base_llm"
+  );
+}
+
+export function isChatModel(llm: BaseLanguageModel): llm is BaseChatModel {
+  const blm = llm as BaseLanguageModel;
+  return (
+    typeof blm?._modelType === "function" &&
+    blm?._modelType() === "base_chat_model"
+  );
+}
+
+export function isChain(llm: BaseLanguageModel | BaseChain): llm is BaseChain {
+  const bch = llm as BaseChain;
+  return (
+    typeof bch?._chainType === "function" && bch?._chainType() !== undefined
+  );
+}
 
 export class LangChainPlusClient {
   private apiKey?: string;
@@ -126,9 +173,18 @@ export class LangChainPlusClient {
     queryParams: { [param: string]: string } = {}
   ): Promise<T> {
     const params = { ...this.queryParams, ...queryParams };
-    const url = new URL(path, this.apiUrl);
-    url.search = new URLSearchParams(params).toString();
-    const response = await fetch(url.toString(), {
+    let queryString = "";
+    for (const key in params) {
+      if (Object.prototype.hasOwnProperty.call(params, key)) {
+        queryString = queryString
+          ? `${queryString}&${encodeURIComponent(key)}=${encodeURIComponent(
+              params[key]
+            )}`
+          : `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`;
+      }
+    }
+    const url = `${this.apiUrl}${path}${queryString ? `?${queryString}` : ""}`;
+    const response = await fetch(url, {
       method: "GET",
       headers: this.headers,
     });
@@ -147,7 +203,7 @@ export class LangChainPlusClient {
     inputKeys: string[],
     outputKeys: string[]
   ): Promise<Dataset> {
-    const url = new URL("/datasets/upload", this.apiUrl);
+    const url = `${this.apiUrl}/datasets/upload`;
     const formData = new FormData();
     formData.append("file", csvFile, fileName);
     formData.append("input_keys", inputKeys.join(","));
@@ -155,7 +211,7 @@ export class LangChainPlusClient {
     formData.append("description", description);
     formData.append("tenant_id", this.tenantId);
 
-    const response = await fetch(url.toString(), {
+    const response = await fetch(url, {
       method: "POST",
       headers: this.headers,
       body: formData,
@@ -237,8 +293,7 @@ export class LangChainPlusClient {
     } else {
       throw new Error("Must provide datasetName or datasetId");
     }
-    const url = new URL(path, this.apiUrl);
-    const response = await fetch(url.toString(), {
+    const response = await fetch(this.apiUrl + path, {
       method: "DELETE",
       headers: this.headers,
     });
@@ -276,8 +331,7 @@ export class LangChainPlusClient {
       created_at: createdAt_.toISOString(),
     };
 
-    const url = new URL("/examples", this.apiUrl);
-    const response = await fetch(url.toString(), {
+    const response = await fetch(`${this.apiUrl}/examples`, {
       method: "POST",
       headers: { ...this.headers, "Content-Type": "application/json" },
       body: JSON.stringify(data),
@@ -326,8 +380,7 @@ export class LangChainPlusClient {
 
   public async deleteExample(exampleId: string): Promise<Example> {
     const path = `/examples/${exampleId}`;
-    const url = new URL(path, this.apiUrl);
-    const response = await fetch(url.toString(), {
+    const response = await fetch(this.apiUrl + path, {
       method: "DELETE",
       headers: this.headers,
     });
@@ -338,5 +391,83 @@ export class LangChainPlusClient {
     }
     const result = await response.json();
     return result as Example;
+  }
+
+  protected async runLLM(
+    example: Example,
+    tracer: LangChainTracerV2,
+    llm: BaseLLM,
+    numRepetitions = 1
+  ): Promise<(LLMResult | string)[]> {
+    const results: (LLMResult | string)[] = [];
+    for (let i = 0; i < numRepetitions; i += 1) {
+      try {
+        const prompts = example.inputs.prompts as string[];
+        results.push(await llm.generate(prompts, undefined, [tracer]));
+      } catch (e) {
+        console.error(e);
+        results.push(stringifyError(e));
+      }
+    }
+    return results;
+  }
+
+  protected async runChain(
+    example: Example,
+    tracer: LangChainTracerV2,
+    chain: BaseChain,
+    numRepetitions = 1
+  ): Promise<(ChainValues | string)[]> {
+    const results: (ChainValues | string)[] = [];
+    for (let i = 0; i < numRepetitions; i += 1) {
+      try {
+        results.push(await chain.call(example.inputs, [tracer]));
+      } catch (e) {
+        console.error(e);
+        results.push(stringifyError(e));
+      }
+    }
+    return results;
+  }
+
+  public async runOnDataset(
+    datasetName: string,
+    llmOrChain: BaseLanguageModel | BaseChain,
+    numRepetitions = 1,
+    sessionName: string | undefined = undefined
+  ): Promise<DatasetRunResults> {
+    const examples = await this.listExamples(undefined, datasetName);
+    let sessionName_ = sessionName;
+    if (sessionName === undefined) {
+      const currentTime = new Date().toISOString();
+      sessionName_ = `${datasetName}-${llmOrChain.constructor.name}-${currentTime}`;
+    }
+    const results: DatasetRunResults = {};
+    const tracer = new LangChainTracerV2();
+    await tracer.newSession(sessionName_);
+    for (const example of examples) {
+      if (isLLM(llmOrChain)) {
+        const llmResult = await this.runLLM(
+          example,
+          tracer,
+          llmOrChain,
+          numRepetitions
+        );
+        results[example.id] = llmResult;
+      } else if (isChain(llmOrChain)) {
+        const ChainResult = await this.runChain(
+          example,
+          tracer,
+          llmOrChain,
+          numRepetitions
+        );
+        results[example.id] = ChainResult;
+      } else if (isChatModel(llmOrChain)) {
+        throw new Error("Chat models not yet supported");
+      } else {
+        throw new Error(` llm or chain type: ${llmOrChain}`);
+      }
+    }
+    return results;
   }
 }
