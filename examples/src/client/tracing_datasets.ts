@@ -20,7 +20,7 @@ import { initializeAgentExecutorWithOptions } from "langchain/agents";
 
 export const run = async () => {
   // Capture traces by setting the LANGCHAIN_TRACING_V2 environment variable
-  process.env.LANGCHAIN_TRACING_V2 = "langchain";
+  process.env.LANGCHAIN_TRACING_V2 = "true";
   const model = new ChatOpenAI({ temperature: 0 });
   const tools = [
     new SerpAPI(process.env.SERPAPI_API_KEY, {
