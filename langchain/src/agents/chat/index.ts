@@ -87,7 +87,11 @@ export class ChatAgent extends Agent {
    * @param args.humanMessageTemplate - String to use directly as the human message template
    */
   static createPrompt(tools: Tool[], args?: ChatCreatePromptArgs) {
-    const { prefix = PREFIX, suffix = SUFFIX, humanMessageTemplate = DEFAULT_HUMAN_MESSAGE_TEMPLATE } = args ?? {};
+    const {
+      prefix = PREFIX,
+      suffix = SUFFIX,
+      humanMessageTemplate = DEFAULT_HUMAN_MESSAGE_TEMPLATE,
+    } = args ?? {};
     const toolStrings = tools
       .map((tool) => `${tool.name}: ${tool.description}`)
       .join("\n");

@@ -1,9 +1,8 @@
 import { BaseOutputParser } from "../../schema/output_parser.js";
 import { Plan } from "./base.js";
 
-import { FORMAT_INSTRUCTIONS } from "./prompt.js";
+import { PLANNER_SYSTEM_PROMPT_MESSAGE_TEMPLATE } from "./prompt.js";
 
-// export const FINAL_ANSWER_ACTION = "Final Answer:";
 export class PlanOutputParser extends BaseOutputParser<Plan> {
   constructor() {
     super();
@@ -11,11 +10,14 @@ export class PlanOutputParser extends BaseOutputParser<Plan> {
 
   async parse(text: string): Promise<Plan> {
     return {
-      steps: text.split(/\n\d+\.\s?/).slice(1).map((step) => ({text: step}))
+      steps: text
+        .split(/\n\d+\.\s?/)
+        .slice(1)
+        .map((step) => ({ text: step })),
     };
   }
 
   getFormatInstructions(): string {
-    return FORMAT_INSTRUCTIONS;
+    return PLANNER_SYSTEM_PROMPT_MESSAGE_TEMPLATE;
   }
 }
