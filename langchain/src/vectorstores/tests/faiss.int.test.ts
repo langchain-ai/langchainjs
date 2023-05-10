@@ -185,7 +185,10 @@ And I did that 4 days ago, when I nominated Circuit Court of Appeals Judge Ketan
     })
   );
 
-  const results3 = await loadedVectorStore.similaritySearch("What did the president say about Ketanji Brown Jackson", 1);
+  const results3 = await loadedVectorStore.similaritySearch(
+    "What did the president say about Ketanji Brown Jackson",
+    1
+  );
 
   expect(results3).toHaveLength(1);
 
