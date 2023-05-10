@@ -7,7 +7,7 @@ import {
   LLMPlanner,
   ChainStepExecutor,
 } from "./base.js";
-import { AgentExecutor } from "../executor.js";
+import { AgentExecutor } from "../../agents/executor.js";
 import {
   DEFAULT_STEP_EXECUTOR_HUMAN_CHAT_MESSAGE_TEMPLATE,
   PLANNER_CHAT_PROMPT,
@@ -18,7 +18,7 @@ import { CallbackManagerForChainRun } from "../../callbacks/manager.js";
 import { LLMChain } from "../../chains/llm_chain.js";
 import { PlanOutputParser } from "./outputParser.js";
 import { Tool } from "../../tools/base.js";
-import { ChatAgent } from "../chat/index.js";
+import { ChatAgent } from "../../agents/chat/index.js";
 import { SerializedLLMChain } from "../../chains/serde.js";
 
 export interface PlanAndExecuteAgentExecutorInput extends ChainInputs {
