@@ -6,6 +6,7 @@ import { LangChainTracerV2 } from "../handlers/tracers.js";
 
 test("Test LangChain V2 tracer", async () => {
   const tracer = new LangChainTracerV2();
+  await tracer.newSession(`Some Session Name - ${uuid.v4()}`);
   const chainRunId = uuid.v4();
   const toolRunId = uuid.v4();
   const llmRunId = uuid.v4();

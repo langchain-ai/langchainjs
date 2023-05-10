@@ -527,8 +527,8 @@ export class LangChainTracer extends BaseTracer {
   }
 
   protected async persistSession(
-    sessionCreate: BaseTracerSession
-  ): Promise<TracerSession> {
+    sessionCreate: BaseTracerSession | BaseTracerSessionV2
+  ): Promise<TracerSession | TracerSessionV2> {
     const endpoint = `${this.endpoint}/sessions`;
     const response = await fetch(endpoint, {
       method: "POST",
@@ -610,6 +610,54 @@ export class LangChainTracerV2 extends LangChainTracer {
           process.env?.LANGCHAIN_TENANT_ID
         : undefined);
     this.exampleId = exampleId;
+  }
+
+  protected async persistSession(
+    sessionCreate: BaseTracerSessionV2 | BaseTracerSession
+  ): Promise<TracerSession | TracerSessionV2> {
+    const endpoint = `${this.endpoint}/sessions`;
+    const tenant_id = this.tenantId ?? (await this.updateTenantId());
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: this.headers,
+      body: JSON.stringify(sessionCreate),
+    });
+    if (!response.ok) {
+      if (sessionCreate.name !== undefined) {
+        try {
+          return await this.loadSession(sessionCreate.name);
+        } catch (e) {
+          console.error(
+            `Failed to load session: ${response.status} ${response.statusText}.`
+          );
+        }
+      }
+      console.error(
+        `Failed to persist session: ${response.status} ${response.statusText}, using default session.`
+      );
+      return {
+        id: uuid.v4(),
+        tenant_id,
+        ...sessionCreate,
+      };
+    }
+    return {
+      id: (await response.json()).id,
+      tenant_id,
+      ...sessionCreate,
+    };
+  }
+
+  async newSession(sessionName?: string): Promise<TracerSessionV2> {
+    const tenantId = this.tenantId ?? (await this.updateTenantId());
+    const sessionCreate: TracerSessionCreateV2 = {
+      start_time: Date.now(),
+      name: sessionName,
+      tenant_id: tenantId,
+    };
+    const session = await this.persistSession(sessionCreate);
+    this.session = session;
+    return session as TracerSessionV2;
   }
 
   async updateTenantId(): Promise<string> {
