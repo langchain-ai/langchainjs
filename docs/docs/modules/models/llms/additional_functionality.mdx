@@ -69,7 +69,7 @@ const model = new OpenAI({ cache });
 
 ## Adding a timeout
 
-By default, LangChain will wait indefinitely for a response from the model provider. If you want to add a timeout, you can pass a `timeout` option, in milliseconds, when you instantiate the model. For example, for OpenAI:
+By default, LangChain will wait indefinitely for a response from the model provider. If you want to add a timeout, you can pass a `timeout` option, in milliseconds, when you call the model. For example, for OpenAI:
 
 <CodeBlock language="typescript">{TimeoutExample}</CodeBlock>
 
@@ -105,8 +105,10 @@ import { OpenAI } from "langchain/llms/openai";
 const model = new OpenAI({ maxRetries: 10 });
 ```
 
-## Logging for Debugging
+## Subscribing to events
 
-Especially when using an agent, there can be a lot of back-and-forth going on behind the scenes as a LLM processes a chain. For agents, the response object contains an intermediateSteps object that you can print to see an overview of the steps it took to get there. If that's not enough and you want to see every exchange with the LLM, you can use the LLMCallbackManager to write yourself custom logging (or anything else you want to do) as the model goes through the steps:
+Especially when using an agent, there can be a lot of back-and-forth going on behind the scenes as a LLM processes a prompt. For agents, the response object contains an intermediateSteps object that you can print to see an overview of the steps it took to get there. If that's not enough and you want to see every exchange with the LLM, you can pass callbacks to the LLM for custom logging (or anything else you want to do) as the model goes through the steps:
+
+For more info on the events available see the [Callbacks](/docs/production/callbacks/) section of the docs.
 
 <CodeBlock language="typescript">{DebuggingExample}</CodeBlock>
