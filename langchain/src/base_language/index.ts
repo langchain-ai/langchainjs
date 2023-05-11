@@ -77,7 +77,7 @@ export abstract class BaseLanguageModel
   declare CallOptions: BaseLanguageModelCallOptions;
 
   /**
-   * Keys that the language model accepts as call options. Defaults to `["stop"]`.
+   * Keys that the language model accepts as call options.
    */
   get callKeys(): string[] {
     return ["stop", "timeout", "signal"];

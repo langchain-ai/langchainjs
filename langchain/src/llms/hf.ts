@@ -69,12 +69,12 @@ export class HuggingFaceInference extends LLM implements HFInput {
   /** @ignore */
   async _call(
     prompt: string,
-    options?: Omit<this["CallOptions"], "timeout">
+    options: this["ParsedCallOptions"]
   ): Promise<string> {
     const { HfInference } = await HuggingFaceInference.imports();
     const hf = new HfInference(this.apiKey);
     const res = await this.caller.callWithOptions(
-      { signal: options?.signal },
+      { signal: options.signal },
       hf.textGeneration.bind(hf),
       {
         model: this.model,

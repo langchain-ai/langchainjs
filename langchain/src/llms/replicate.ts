@@ -43,7 +43,7 @@ export class Replicate extends LLM implements ReplicateInput {
   /** @ignore */
   async _call(
     prompt: string,
-    options?: Omit<this["CallOptions"], "timeout">
+    options: this["ParsedCallOptions"]
   ): Promise<string> {
     const imports = await Replicate.imports();
 
@@ -53,7 +53,7 @@ export class Replicate extends LLM implements ReplicateInput {
     });
 
     const output = await this.caller.callWithOptions(
-      { signal: options?.signal },
+      { signal: options.signal },
       () =>
         replicate.run(this.model, {
           wait: true,

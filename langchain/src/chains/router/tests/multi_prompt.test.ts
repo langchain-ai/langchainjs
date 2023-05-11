@@ -10,7 +10,10 @@ class FakeLLM extends BaseLLM {
     return "fake";
   }
 
-  async _generate(prompts: string[], _?: string[]): Promise<LLMResult> {
+  async _generate(
+    prompts: string[],
+    _: this["ParsedCallOptions"]
+  ): Promise<LLMResult> {
     function buildResponse(name: string) {
       return `\`\`\`\n{\n\t"destination": "${name}",\n\t"next_inputs": {\n\t\t"input": "<from ${name}>"\n\t}\n}\n\`\`\``;
     }

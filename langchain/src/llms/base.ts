@@ -39,6 +39,8 @@ export interface BaseLLMCallOptions extends BaseLanguageModelCallOptions {}
 export abstract class BaseLLM extends BaseLanguageModel {
   declare CallOptions: BaseLLMCallOptions;
 
+  declare ParsedCallOptions: Omit<this["CallOptions"], "timeout">;
+
   cache?: BaseCache;
 
   constructor({ cache, concurrency, ...rest }: BaseLLMParams) {
@@ -68,14 +70,14 @@ export abstract class BaseLLM extends BaseLanguageModel {
    */
   abstract _generate(
     prompts: string[],
-    options?: Omit<this["CallOptions"], "timeout">,
+    options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<LLMResult>;
 
   /** @ignore */
   async _generateUncached(
     prompts: string[],
-    options?: this["CallOptions"],
+    options: this["CallOptions"],
     callbacks?: Callbacks
   ): Promise<LLMResult> {
     const callbackManager_ = await CallbackManager.configure(
@@ -118,21 +120,25 @@ export abstract class BaseLLM extends BaseLanguageModel {
       throw new Error("Argument 'prompts' is expected to be a string[]");
     }
 
+    let parsedOptions: this["CallOptions"];
     if (Array.isArray(options)) {
-      // eslint-disable-next-line no-param-reassign
-      options = { stop: options } as this["CallOptions"];
+      parsedOptions = { stop: options } as this["ParsedCallOptions"];
     } else if (options?.timeout && !options.signal) {
-      // eslint-disable-next-line no-param-reassign
-      options = { ...options, signal: AbortSignal.timeout(options.timeout) };
+      parsedOptions = {
+        ...options,
+        signal: AbortSignal.timeout(options.timeout),
+      };
+    } else {
+      parsedOptions = options ?? {};
     }
 
     if (!this.cache) {
-      return this._generateUncached(prompts, options, callbacks);
+      return this._generateUncached(prompts, parsedOptions, callbacks);
     }
 
     const { cache } = this;
     const params = this.serialize();
-    params.stop = options?.stop ?? params.stop;
+    params.stop = parsedOptions.stop ?? params.stop;
 
     const llmStringKey = `${Object.entries(params).sort()}`;
     const missingPromptIndices: number[] = [];
@@ -150,7 +156,7 @@ export abstract class BaseLLM extends BaseLanguageModel {
     if (missingPromptIndices.length > 0) {
       const results = await this._generateUncached(
         missingPromptIndices.map((i) => prompts[i]),
-        options,
+        parsedOptions,
         callbacks
       );
       await Promise.all(
@@ -174,7 +180,11 @@ export abstract class BaseLLM extends BaseLanguageModel {
     options?: string[] | this["CallOptions"],
     callbacks?: Callbacks
   ) {
-    const { generations } = await this.generate([prompt], options, callbacks);
+    const { generations } = await this.generate(
+      [prompt],
+      options ?? {},
+      callbacks
+    );
     return generations[0][0].text;
   }
 
@@ -237,13 +247,13 @@ export abstract class LLM extends BaseLLM {
    */
   abstract _call(
     prompt: string,
-    options?: Omit<this["CallOptions"], "timeout">,
+    options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<string>;
 
   async _generate(
     prompts: string[],
-    options?: Omit<this["CallOptions"], "timeout">,
+    options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<LLMResult> {
     const generations: Generation[][] = await Promise.all(

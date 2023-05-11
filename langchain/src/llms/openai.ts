@@ -255,10 +255,10 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
    */
   async _generate(
     prompts: string[],
-    options?: this["CallOptions"],
+    options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<LLMResult> {
-    const stop = options?.stop;
+    const { stop } = options;
     const subPrompts = chunkArray(prompts, this.batchSize);
     const choices: CreateCompletionResponseChoicesInner[] = [];
     const tokenUsage: TokenUsage = {};
@@ -296,8 +296,8 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
                 prompt: subPrompts[i],
               },
               {
-                signal: options?.signal,
-                ...options?.options,
+                signal: options.signal,
+                ...options.options,
                 adapter: fetchAdapter, // default adapter doesn't do streaming
                 responseType: "stream",
                 onmessage: (event) => {
@@ -368,8 +368,8 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
               prompt: subPrompts[i],
             },
             {
-              signal: options?.signal,
-              ...options?.options,
+              signal: options.signal,
+              ...options.options,
             }
           );
 

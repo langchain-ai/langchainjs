@@ -52,7 +52,7 @@ export class Cohere extends LLM implements CohereInput {
   /** @ignore */
   async _call(
     prompt: string,
-    options?: Omit<this["CallOptions"], "timeout">
+    options: this["ParsedCallOptions"]
   ): Promise<string> {
     const { cohere } = await Cohere.imports();
 
@@ -60,14 +60,14 @@ export class Cohere extends LLM implements CohereInput {
 
     // Hit the `generate` endpoint on the `large` model
     const generateResponse = await this.caller.callWithOptions(
-      { signal: options?.signal },
+      { signal: options.signal },
       cohere.generate.bind(cohere),
       {
         prompt,
         model: this.model,
         max_tokens: this.maxTokens,
         temperature: this.temperature,
-        end_sequences: options?.stop,
+        end_sequences: options.stop,
       }
     );
     try {

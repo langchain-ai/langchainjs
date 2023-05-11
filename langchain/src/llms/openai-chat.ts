@@ -231,10 +231,10 @@ export class OpenAIChat
   /** @ignore */
   async _call(
     prompt: string,
-    options?: this["CallOptions"],
+    options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<string> {
-    const stop = options?.stop;
+    const { stop } = options;
 
     const params = this.invocationParams();
     params.stop = stop ?? params.stop;
@@ -250,8 +250,8 @@ export class OpenAIChat
               messages: this.formatMessages(prompt),
             },
             {
-              signal: options?.signal,
-              ...options?.options,
+              signal: options.signal,
+              ...options.options,
               adapter: fetchAdapter, // default adapter doesn't do streaming
               responseType: "stream",
               onmessage: (event) => {
@@ -340,8 +340,8 @@ export class OpenAIChat
             messages: this.formatMessages(prompt),
           },
           {
-            signal: options?.signal,
-            ...options?.options,
+            signal: options.signal,
+            ...options.options,
           }
         );
 

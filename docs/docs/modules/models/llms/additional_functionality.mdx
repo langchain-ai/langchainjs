@@ -79,7 +79,7 @@ You can cancel a request by passing a `signal` option when you call the model. F
 
 <CodeBlock language="typescript">{CancellationExample}</CodeBlock>
 
-Note, for some providers this won't cancel the underlying request as they expose that option. Where made available by the provider, LangChain will cancel the underlying request, otherwise it will cancel the processing of the response.
+Note, this will only cancel the outgoing request if the underlying provider exposes that option. LangChain will cancel the underlying request if possible, otherwise it will cancel the processing of the response.
 
 ## Dealing with Rate Limits
 
