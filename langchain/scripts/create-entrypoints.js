@@ -125,7 +125,6 @@ const entrypoints = {
   "experimental/babyagi": "experimental/babyagi/index",
   "experimental/plan_and_execute": "experimental/plan_and_execute/index",
   client: "client/index",
-  "client/langchainplus": "client/langchainplus",
 };
 
 // Entrypoints in this list will

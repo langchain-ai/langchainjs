@@ -292,9 +292,6 @@
     "client.cjs",
     "client.js",
     "client.d.ts",
-    "client/langchainplus.cjs",
-    "client/langchainplus.js",
-    "client/langchainplus.d.ts",
     "index.cjs",
     "index.js",
     "index.d.ts"
@@ -1034,11 +1031,6 @@
       "types": "./client.d.ts",
       "import": "./client.js",
       "require": "./client.cjs"
-    },
-    "./client/langchainplus": {
-      "types": "./client/langchainplus.d.ts",
-      "import": "./client/langchainplus.js",
-      "require": "./client/langchainplus.cjs"
     },
     "./package.json": "./package.json"
   }

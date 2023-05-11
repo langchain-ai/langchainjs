@@ -1,6 +1,6 @@
 /* eslint-disable no-process-env */
 import { ChatOpenAI } from "langchain/chat_models/openai";
-import { LangChainPlusClient, Dataset } from "langchain/client/langchainplus";
+import { LangChainPlusClient, Dataset } from "langchain/client";
 import { SerpAPI } from "langchain/tools";
 import { Calculator } from "langchain/tools/calculator";
 import { initializeAgentExecutorWithOptions } from "langchain/agents";
