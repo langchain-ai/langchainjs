@@ -94,7 +94,7 @@ test("Test Chat Message Run", async () => {
     execution_order: 1,
     child_execution_order: 1,
     serialized: { name: "test" },
-    inputs: { messages: [[{ _type: "human", content: "Avast" }]] },
+    inputs: { messages: [[{ type: "human", data: {content: "Avast", role: undefined}}]] },
     run_type: "llm",
     outputs: { generations: [] },
     child_runs: [],
