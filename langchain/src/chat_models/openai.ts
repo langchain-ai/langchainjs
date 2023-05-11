@@ -446,13 +446,21 @@ export class ChatOpenAI
     const countPerMessage = await Promise.all(
       messages.map(async (message) => {
         const textCount = await this.getNumTokens(message.text);
-        const count =
-          textCount + tokensPerMessage + (message.name ? tokensPerName : 0);
+        const roleCount = await this.getNumTokens(
+          messageTypeToOpenAIRole(message._getType())
+        );
+        const nameCount =
+          message.name !== undefined
+            ? tokensPerName + (await this.getNumTokens(message.name))
+            : 0;
+        const count = textCount + tokensPerMessage + roleCount + nameCount;
 
         totalCount += count;
         return count;
       })
     );
+
+    totalCount += 3; // every reply is primed with <|start|>assistant<|message|>
 
     return { totalCount, countPerMessage };
   }
