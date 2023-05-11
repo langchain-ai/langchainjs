@@ -1,9 +1,10 @@
-import { LangChainTracer, LangChainTracerV2 } from "./tracers.js";
+import { LangChainTracer } from "./tracer_langchain.js";
+import { LangChainTracerV1 } from "./tracer_langchain_v1.js";
 
 export async function getTracingCallbackHandler(
   session?: string
-): Promise<LangChainTracer> {
-  const tracer = new LangChainTracer();
+): Promise<LangChainTracerV1> {
+  const tracer = new LangChainTracerV1();
   if (session) {
     await tracer.loadSession(session);
   } else {
@@ -14,8 +15,8 @@ export async function getTracingCallbackHandler(
 
 export async function getTracingV2CallbackHandler(
   session?: string
-): Promise<LangChainTracerV2> {
-  const tracer = new LangChainTracerV2();
+): Promise<LangChainTracer> {
+  const tracer = new LangChainTracer();
   if (session) {
     await tracer.loadSession(session);
   } else {

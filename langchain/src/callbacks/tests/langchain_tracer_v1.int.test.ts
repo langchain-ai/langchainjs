@@ -2,30 +2,21 @@
 import * as uuid from "uuid";
 import { test } from "@jest/globals";
 
-import { LangChainTracer } from "../handlers/tracer_langchain.js";
+import { LangChainTracerV1 } from "../handlers/tracer_langchain_v1.js";
 import { OpenAI } from "../../llms/openai.js";
-import { SerpAPI } from "../../tools/serpapi.js";
+import { SerpAPI } from "../../tools/index.js";
 import { Calculator } from "../../tools/calculator.js";
-import { initializeAgentExecutorWithOptions } from "../../agents/initialize.js";
-import { HumanChatMessage } from "../../schema/index.js";
+import { initializeAgentExecutorWithOptions } from "../../agents/index.js";
 
-test("Test LangChain V2 tracer", async () => {
-  const tracer = new LangChainTracer();
-  await tracer.newSession(`Some Session Name - ${uuid.v4()}`);
+test("Test LangChain tracer", async () => {
+  const tracer = new LangChainTracerV1();
   const chainRunId = uuid.v4();
   const toolRunId = uuid.v4();
   const llmRunId = uuid.v4();
-  const chatRunId = uuid.v4();
   await tracer.handleChainStart({ name: "test" }, { foo: "bar" }, chainRunId);
   await tracer.handleToolStart({ name: "test" }, "test", toolRunId, chainRunId);
   await tracer.handleLLMStart({ name: "test" }, ["test"], llmRunId, toolRunId);
   await tracer.handleLLMEnd({ generations: [[]] }, llmRunId);
-  await tracer.handleChatModelStart(
-    { name: "testChatModel" },
-    [[new HumanChatMessage("I'm a human.")]],
-    chatRunId
-  );
-  await tracer.handleLLMEnd({ generations: [[]] }, chatRunId);
   await tracer.handleToolEnd("output", toolRunId);
   const llmRunId2 = uuid.v4();
   await tracer.handleLLMStart(
@@ -43,7 +34,7 @@ test("Test LangChain V2 tracer", async () => {
 });
 
 test("Test Traced Agent with concurrency", async () => {
-  process.env.LANGCHAIN_TRACING_V2 = "true";
+  process.env.LANGCHAIN_TRACING = "true";
   const model = new OpenAI({ temperature: 0 });
   const tools = [
     new SerpAPI(process.env.SERPAPI_API_KEY, {
