@@ -1,6 +1,7 @@
 import * as uuid from "uuid";
 import {
   AgentAction,
+  BaseChatMessage,
   ChainValues,
   LLMResult,
   RunInputs,
@@ -209,6 +210,42 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       end_time: 0,
       serialized: llm,
       inputs: { prompts },
+      session_id: session.id,
+      execution_order,
+      child_runs: [],
+      child_execution_order: execution_order,
+      run_type: "llm",
+    };
+
+    this._startTrace(run);
+    await this.onLLMStart?.(run);
+  }
+
+  async handleChatModelStart(
+    llm: { name: string },
+    messages: BaseChatMessage[][],
+    runId: string,
+    parentRunId?: string
+  ): Promise<void> {
+    if (this.session === undefined) {
+      this.session = await this.loadDefaultSession();
+    }
+    const execution_order = this._getExecutionOrder(parentRunId);
+    const session = this.session as TracerSession;
+    const convertedMessages = messages.map((batch) =>
+      batch.map((message) => ({
+        _type: message._getType(),
+        content: message.text, // TODO: Unify serialization btwn languages
+      }))
+    );
+    const run: Run = {
+      id: runId,
+      name: llm.name,
+      parent_run_id: parentRunId,
+      start_time: Date.now(),
+      end_time: 0,
+      serialized: llm,
+      inputs: { messages: convertedMessages },
       session_id: session.id,
       execution_order,
       child_runs: [],

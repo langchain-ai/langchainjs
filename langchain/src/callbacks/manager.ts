@@ -2,6 +2,7 @@ import { v4 as uuidv4 } from "uuid";
 import {
   AgentAction,
   AgentFinish,
+  BaseChatMessage,
   ChainValues,
   LLMResult,
 } from "../schema/index.js";
@@ -11,6 +12,7 @@ import {
   getTracingCallbackHandler,
   getTracingV2CallbackHandler,
 } from "./handlers/initialize.js";
+import { getBufferString } from "../memory/base.js";
 
 type BaseCallbackManagerMethods = {
   [K in keyof CallbackHandlerMethods]?: (
@@ -293,6 +295,48 @@ export class CallbackManager
               runId,
               this._parentRunId
             );
+          } catch (err) {
+            console.error(
+              `Error in handler ${handler.constructor.name}, handleLLMStart: ${err}`
+            );
+          }
+        }
+      })
+    );
+    return new CallbackManagerForLLMRun(
+      runId,
+      this.handlers,
+      this.inheritableHandlers,
+      this._parentRunId
+    );
+  }
+
+  async handleChatModelStart(
+    llm: { name: string },
+    messages: BaseChatMessage[][],
+    runId: string = uuidv4()
+  ): Promise<CallbackManagerForLLMRun> {
+    let messageStrings: string[];
+    await Promise.all(
+      this.handlers.map(async (handler) => {
+        if (!handler.ignoreLLM) {
+          try {
+            if (handler.handleChatModelStart)
+              await handler.handleChatModelStart?.(
+                llm,
+                messages,
+                runId,
+                this._parentRunId
+              );
+            else if (handler.handleLLMStart) {
+              messageStrings = messages.map((x) => getBufferString(x));
+              await handler.handleLLMStart?.(
+                llm,
+                messageStrings,
+                runId,
+                this._parentRunId
+              );
+            }
           } catch (err) {
             console.error(
               `Error in handler ${handler.constructor.name}, handleLLMStart: ${err}`

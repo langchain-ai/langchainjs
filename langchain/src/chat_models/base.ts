@@ -12,7 +12,6 @@ import {
   BaseLanguageModelCallOptions,
   BaseLanguageModelParams,
 } from "../base_language/index.js";
-import { getBufferString } from "../memory/base.js";
 import {
   CallbackManager,
   CallbackManagerForLLMRun,
@@ -56,9 +55,6 @@ export abstract class BaseChatModel extends BaseLanguageModel {
   ): Promise<LLMResult> {
     const generations: ChatGeneration[][] = [];
     const llmOutputs: LLMResult["llmOutput"][] = [];
-    const messageStrings: string[] = messages.map((messageList) =>
-      getBufferString(messageList)
-    );
     let parsedOptions: this["CallOptions"];
     if (Array.isArray(options)) {
       parsedOptions = { stop: options } as this["CallOptions"];
@@ -75,9 +71,9 @@ export abstract class BaseChatModel extends BaseLanguageModel {
       this.callbacks,
       { verbose: this.verbose }
     );
-    const runManager = await callbackManager_?.handleLLMStart(
+    const runManager = await callbackManager_?.handleChatModelStart(
       { name: this._llmType() },
-      messageStrings
+      messages
     );
     try {
       const results = await Promise.all(

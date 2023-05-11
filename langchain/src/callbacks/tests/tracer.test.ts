@@ -6,6 +6,7 @@ import {
   TracerSession,
   TracerSessionCreateV2,
 } from "../handlers/tracers.js";
+import { HumanChatMessage } from "../../schema/index.js";
 
 const TEST_SESSION_ID = `32f2a267-b052-4c45-8c9f-ae5558c94a6a`;
 const TENANT_ID = `531d2426-49c4-40f4-b2c7-775aef1db176`;
@@ -73,6 +74,32 @@ test("Test LLMRun", async () => {
     serialized: { name: "test" },
     session_id: TEST_SESSION_ID,
     inputs: { prompts: ["test"] },
+    run_type: "llm",
+    outputs: { generations: [] },
+    child_runs: [],
+  };
+  expect(run).toEqual(compareRun);
+});
+
+test("Test Chat Message Run", async () => {
+  const tracer = new FakeTracer();
+  await tracer.newSession();
+  const runId = uuid.v4();
+  const messages = [[new HumanChatMessage("Avast")]];
+  await tracer.handleChatModelStart({ name: "test" }, messages, runId);
+  await tracer.handleLLMEnd({ generations: [] }, runId);
+  expect(tracer.runs.length).toBe(1);
+  const run = tracer.runs[0];
+  const compareRun: Run = {
+    id: runId,
+    name: "test",
+    start_time: _DATE,
+    end_time: _DATE,
+    execution_order: 1,
+    child_execution_order: 1,
+    serialized: { name: "test" },
+    session_id: TEST_SESSION_ID,
+    inputs: { messages: [[{ _type: "human", content: "Avast" }]] },
     run_type: "llm",
     outputs: { generations: [] },
     child_runs: [],
