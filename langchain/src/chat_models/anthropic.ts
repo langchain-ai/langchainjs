@@ -262,48 +262,53 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
       }
       makeCompletionRequest = async () => {
         let currentCompletion = "";
-        return this.streamingClient.completeStream(request, {
-          onUpdate: (data: CompletionResponse) => {
-            if (data.stop_reason) {
-              return;
-            }
-            const part = data.completion;
-            if (part) {
-              const delta = part.slice(currentCompletion.length);
-              currentCompletion += delta ?? "";
-              // eslint-disable-next-line no-void
-              void runManager?.handleLLMNewToken(delta ?? "");
-            }
-          },
-          signal: options.signal,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        }).catch((e: any) => {
-          // Anthropic doesn't actually throw JavaScript error objects at the moment.
-          // We convert the error so the async caller can recognize it correctly.
-          if (e?.name === "AbortError") {
-            throw new Error(`${e.name}: ${e.message}`);
-          }
-          throw e;
-        });
+        return (
+          this.streamingClient
+            .completeStream(request, {
+              onUpdate: (data: CompletionResponse) => {
+                if (data.stop_reason) {
+                  return;
+                }
+                const part = data.completion;
+                if (part) {
+                  const delta = part.slice(currentCompletion.length);
+                  currentCompletion += delta ?? "";
+                  // eslint-disable-next-line no-void
+                  void runManager?.handleLLMNewToken(delta ?? "");
+                }
+              },
+              signal: options.signal,
+            })
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            .catch((e: any) => {
+              // Anthropic doesn't actually throw JavaScript error objects at the moment.
+              // We convert the error so the async caller can recognize it correctly.
+              if (e?.name === "AbortError") {
+                throw new Error(`${e.name}: ${e.message}`);
+              }
+              throw e;
+            })
+        );
       };
     } else {
       if (!this.batchClient) {
         this.batchClient = new AnthropicApi(this.apiKey);
       }
       makeCompletionRequest = async () =>
-        this.batchClient.complete(request, {
-          signal: options.signal,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        }).catch((e: any) => {
-          console.log(e);
-          // Anthropic doesn't actually throw JavaScript error objects at the moment.
-          // We convert the error so the async caller can recognize it correctly.
-          if (e?.type === "aborted") {
-            throw new Error(`${e.name}: ${e.message}`);
-          }
-          throw e;
-        });
-
+        this.batchClient
+          .complete(request, {
+            signal: options.signal,
+          })
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .catch((e: any) => {
+            console.log(e);
+            // Anthropic doesn't actually throw JavaScript error objects at the moment.
+            // We convert the error so the async caller can recognize it correctly.
+            if (e?.type === "aborted") {
+              throw new Error(`${e.name}: ${e.message}`);
+            }
+            throw e;
+          });
     }
     return this.caller.call(makeCompletionRequest);
   }
