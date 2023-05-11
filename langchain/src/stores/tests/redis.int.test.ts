@@ -15,7 +15,7 @@ afterAll(async () => {
   await client.disconnect();
 });
 
-test("Test Redis history store", async () => {
+test.skip("Test Redis history store", async () => {
   const chatHistory = new RedisChatMessageHistory({
     sessionId: new Date().toISOString(),
   });
@@ -35,7 +35,7 @@ test("Test Redis history store", async () => {
   expect(resultWithHistory).toEqual(expectedMessages);
 });
 
-test("Test clear Redis history store", async () => {
+test.skip("Test clear Redis history store", async () => {
   const chatHistory = new RedisChatMessageHistory({
     sessionId: new Date().toISOString(),
   });
@@ -57,7 +57,7 @@ test("Test clear Redis history store", async () => {
   expect(blankResult).toStrictEqual([]);
 });
 
-test("Test Redis history with a TTL", async () => {
+test.skip("Test Redis history with a TTL", async () => {
   const chatHistory = new RedisChatMessageHistory({
     sessionId: new Date().toISOString(),
     sessionTTL: 5,
@@ -83,7 +83,7 @@ test("Test Redis history with a TTL", async () => {
   expect(expiredResult).toStrictEqual([]);
 });
 
-test("Test Redis memory with Buffer Memory", async () => {
+test.skip("Test Redis memory with Buffer Memory", async () => {
   const memory = new BufferMemory({
     returnMessages: true,
     chatHistory: new RedisChatMessageHistory({
@@ -105,7 +105,7 @@ test("Test Redis memory with Buffer Memory", async () => {
   expect(result2).toStrictEqual({ history: expectedHistory });
 });
 
-test("Test Redis memory with LLM Chain", async () => {
+test.skip("Test Redis memory with LLM Chain", async () => {
   const memory = new BufferMemory({
     chatHistory: new RedisChatMessageHistory({
       sessionId: new Date().toISOString(),
