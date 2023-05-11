@@ -100,13 +100,16 @@ export class ConsoleCallbackHandler extends BaseTracer {
 
   onLLMStart(run: Run) {
     const crumbs = this.getBreadcrumbs(run);
-    const prompts = run.inputs.prompts as string[];
+    const inputs =
+      "prompts" in run.inputs
+        ? { prompts: (run.inputs.prompts as string[]).map((p) => p.trim()) }
+        : run.inputs;
     console.log(
       `${wrap(
         color.green,
         "[llm/start]"
       )} [${crumbs}] Entering LLM run with input: ${tryJsonStringify(
-        { prompts: prompts.map((p) => p.trim()) },
+        inputs,
         "[inputs]"
       )}`
     );
