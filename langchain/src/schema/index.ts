@@ -134,6 +134,12 @@ export type AgentStep = {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ChainValues = Record<string, any>;
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type RunInputs = Record<string, any>;
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type RunOutputs = Record<string, any>;
+
 /**
  * Base Index class. All indexes should extend this class.
  */
