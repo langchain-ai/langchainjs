@@ -31,6 +31,26 @@ test("Run agent locally", async () => {
   console.log(`Got output ${result.output}`);
 });
 
+test("Run chat agent locally with an abort signal", async () => {
+  const model = new ChatOpenAI({ temperature: 0 });
+  const tools = [new Calculator()];
+
+  const executor = await initializeAgentExecutorWithOptions(tools, model, {
+    agentType: "chat-zero-shot-react-description",
+  });
+  console.log("Loaded agent.");
+
+  const input = `What is 3 to the fourth power?`;
+  console.log(`Executing with input "${input}"...`);
+
+  const controller = new AbortController();
+  await expect(() => {
+    const result = executor.call({ input, signal: controller.signal });
+    controller.abort();
+    return result;
+  }).rejects.toThrow();
+});
+
 test("Run agent with klarna and requests tools", async () => {
   const tools = [
     new RequestsGetTool(),

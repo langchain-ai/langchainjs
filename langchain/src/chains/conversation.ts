@@ -3,7 +3,7 @@ import { PromptTemplate } from "../prompts/prompt.js";
 import { BufferMemory } from "../memory/buffer_memory.js";
 import { Optional } from "../types/type-utils.js";
 
-const defaultTemplate = `The following is a friendly conversation between a human and an AI. The AI is talkative and provides lots of specific details from its context. If the AI does not know the answer to a question, it truthfully says it does not know.
+export const DEFAULT_TEMPLATE = `The following is a friendly conversation between a human and an AI. The AI is talkative and provides lots of specific details from its context. If the AI does not know the answer to a question, it truthfully says it does not know.
 
 Current conversation:
 {history}
@@ -21,7 +21,7 @@ export class ConversationChain extends LLMChain {
       prompt:
         prompt ??
         new PromptTemplate({
-          template: defaultTemplate,
+          template: DEFAULT_TEMPLATE,
           inputVariables: ["history", "input"],
         }),
       outputKey: outputKey ?? "response",
