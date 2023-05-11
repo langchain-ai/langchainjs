@@ -60,6 +60,82 @@ test("Test LangChainPlus Client Dataset CRD", async () => {
   expect(deleted.id).toBe(datasetId);
 });
 
+test("Test LangChainPlus Client Run Chat Model Over Simple Dataset", async () => {
+  const client: LangChainPlusClient = await LangChainPlusClient.create(
+    "http://localhost:8000"
+  );
+  const datasetName = "chat-test.json";
+  const description = "Asking a chat model test things";
+  // Check if dataset name exists in listDatasets
+  const datasets = await client.listDatasets();
+  if (!datasets.map((d) => d.name).includes(datasetName)) {
+    const newDataset = await client.createDataset(datasetName, description);
+    await client.createExample(
+      {
+        messages: [
+          {
+            text: "What is the airspeed velocity of an unladen swallow?",
+            type: "human",
+          },
+        ],
+      },
+      {
+        generations: [
+          {
+            text: "The average airspeed velocity of an unladen European Swallow is about 24 miles per hour or 39 kilometers per hour.",
+          },
+        ],
+      },
+      newDataset.id
+    );
+  }
+  const model = new ChatOpenAI({ temperature: 0 });
+
+  const results = await client.runOnDataset(datasetName, model);
+  console.log(results);
+  expect(Object.keys(results).length).toEqual(1);
+});
+
+test("Test LangChainPlus Client Run Chain Over Simple Dataset", async () => {
+  const client: LangChainPlusClient = await LangChainPlusClient.create(
+    "http://localhost:8000"
+  );
+  const csvContent = `
+input,output
+what is 8 to the third power?,8 to the third power is 512
+what is 1213 divided by 4345?,approximately 0.2791714614499425
+`;
+  const blobData = new Blob([Buffer.from(csvContent)]);
+
+  const datasetName = "simplemath.csv";
+  const description = "Simple Math Dataset";
+  const inputKeys = ["input"];
+  const outputKeys = ["output"];
+  // Check if dataset name exists in listDatasets
+  const datasets = await client.listDatasets();
+  if (!datasets.map((d) => d.name).includes(datasetName)) {
+    await client.uploadCsv(
+      blobData,
+      datasetName,
+      description,
+      inputKeys,
+      outputKeys
+    );
+  }
+  const model = new ChatOpenAI({ temperature: 0 });
+  const tools = [new Calculator()];
+
+  const executor = await initializeAgentExecutorWithOptions(tools, model, {
+    agentType: "chat-conversational-react-description",
+    verbose: true,
+  });
+  console.log("Loaded agent.");
+
+  const results = await client.runOnDataset(datasetName, executor);
+  console.log(results);
+  expect(Object.keys(results).length).toEqual(2);
+});
+
 test("Test LangChainPlus Client Run Chain Over Dataset", async () => {
   const client: LangChainPlusClient = await LangChainPlusClient.create(
     "http://localhost:8000"

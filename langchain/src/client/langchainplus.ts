@@ -10,6 +10,10 @@ import { BaseLanguageModel } from "../base_language/index.js";
 import { BaseChain } from "../chains/base.js";
 import { BaseLLM } from "../llms/base.js";
 import { BaseChatModel } from "../chat_models/base.js";
+import {
+  StoredMessage,
+  mapStoredMessagesToChatMessages,
+} from "../stores/message/utils.js";
 
 export interface RunResult extends BaseRun {
   name: string;
@@ -238,6 +242,34 @@ export class LangChainPlusClient {
     return result as Dataset;
   }
 
+  public async createDataset(
+    name: string,
+    description: string
+  ): Promise<Dataset> {
+    const response = await fetch(`${this.apiUrl}/datasets`, {
+      method: "POST",
+      headers: { ...this.headers, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name,
+        description,
+        tenant_id: this.tenantId,
+      }),
+    });
+
+    if (!response.ok) {
+      const result = await response.json();
+      if (result.detail && result.detail.includes("already exists")) {
+        throw new Error(`Dataset ${name} already exists`);
+      }
+      throw new Error(
+        `Failed to upload CSV: ${response.status} ${response.statusText}`
+      );
+    }
+
+    const result = await response.json();
+    return result as Dataset;
+  }
+
   public async readDataset(
     datasetId: string | undefined,
     datasetName: string | undefined
@@ -410,7 +442,7 @@ export class LangChainPlusClient {
       Array.from({ length: numRepetitions }).map(async () => {
         try {
           const prompts = example.inputs.prompts as string[];
-          return await llm.generate(prompts, undefined, [tracer]);
+          return llm.generate(prompts, undefined, [tracer]);
         } catch (e) {
           console.error(e);
           return stringifyError(e);
@@ -429,7 +461,31 @@ export class LangChainPlusClient {
     const results: (ChainValues | string)[] = await Promise.all(
       Array.from({ length: numRepetitions }).map(async () => {
         try {
-          return await chain.call(example.inputs, [tracer]);
+          return chain.call(example.inputs, [tracer]);
+        } catch (e) {
+          console.error(e);
+          return stringifyError(e);
+        }
+      })
+    );
+    return results;
+  }
+
+  protected async runChatModel(
+    example: Example,
+    tracer: LangChainTracer,
+    chatModel: BaseChatModel,
+    numRepetitions = 1
+  ): Promise<(LLMResult | string)[]> {
+    const results: (LLMResult | string)[] = await Promise.all(
+      Array.from({ length: numRepetitions }).map(async () => {
+        try {
+          const messages = example.inputs.messages as StoredMessage[];
+          return chatModel.generate(
+            [mapStoredMessagesToChatMessages(messages)],
+            undefined,
+            [tracer]
+          );
         } catch (e) {
           console.error(e);
           return stringifyError(e);
@@ -468,15 +524,21 @@ export class LangChainPlusClient {
           );
           results[example.id] = llmResult;
         } else if (isChain(llmOrChain)) {
-          const ChainResult = await this.runChain(
+          const chainResult = await this.runChain(
             example,
             tracer,
             llmOrChain,
             numRepetitions
           );
-          results[example.id] = ChainResult;
+          results[example.id] = chainResult;
         } else if (isChatModel(llmOrChain)) {
-          throw new Error("Chat models not yet supported");
+          const chatModelResult = await this.runChatModel(
+            example,
+            tracer,
+            llmOrChain,
+            numRepetitions
+          );
+          results[example.id] = chatModelResult;
         } else {
           throw new Error(` llm or chain type: ${llmOrChain}`);
         }
