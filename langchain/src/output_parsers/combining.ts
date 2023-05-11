@@ -11,6 +11,8 @@ export type CombinedOutput = Record<string, any>;
 export class CombiningOutputParser extends BaseOutputParser {
   parsers: BaseOutputParser[];
 
+  outputDelimiter = "-----";
+
   constructor(...parsers: BaseOutputParser[]) {
     super();
     this.parsers = parsers;
@@ -19,15 +21,20 @@ export class CombiningOutputParser extends BaseOutputParser {
   async parse(input: string, callbacks?: Callbacks): Promise<CombinedOutput> {
     const inputs = input
       .trim()
-      .split(/Output \d+:/)
+      .split(
+        new RegExp(`${this.outputDelimiter}Output \\d+${this.outputDelimiter}`)
+      )
       .slice(1);
     const ret: CombinedOutput = {};
     for (const [i, p] of this.parsers.entries()) {
       let parsed;
       try {
-        const extracted = inputs[i].includes("```")
+        let extracted = inputs[i].includes("```")
           ? inputs[i].trim().split(/```/)[1]
           : inputs[i].trim();
+        if (extracted.endsWith(this.outputDelimiter)) {
+          extracted = extracted.slice(0, -this.outputDelimiter.length);
+        }
         parsed = await p.parse(extracted, callbacks);
       } catch (e) {
         parsed = await p.parse(input.trim(), callbacks);
@@ -39,9 +46,12 @@ export class CombiningOutputParser extends BaseOutputParser {
 
   getFormatInstructions(): string {
     return `${[
-      `Return the following ${this.parsers.length} outputs, each formatted as described below:`,
+      `Return the following ${this.parsers.length} outputs, each formatted as described below. Include the delimiter characters "${this.outputDelimiter}" in your response:`,
       ...this.parsers.map(
-        (p, i) => `Output ${i + 1}:\n${p.getFormatInstructions().trim()}`
+        (p, i) =>
+          `${this.outputDelimiter}Output ${i + 1}${this.outputDelimiter}\n${p
+            .getFormatInstructions()
+            .trim()}\n${this.outputDelimiter}`
       ),
     ].join("\n\n")}\n`;
   }

@@ -134,6 +134,12 @@ export type AgentStep = {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ChainValues = Record<string, any>;
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type RunInputs = Record<string, any>;
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type RunOutputs = Record<string, any>;
+
 /**
  * Base Index class. All indexes should extend this class.
  */
@@ -149,6 +155,18 @@ export abstract class BaseChatMessageHistory {
   public abstract addAIChatMessage(message: string): Promise<void>;
 
   public abstract clear(): Promise<void>;
+}
+
+export abstract class BaseListChatMessageHistory {
+  protected abstract addMessage(message: BaseChatMessage): Promise<void>;
+
+  public addUserMessage(message: string): Promise<void> {
+    return this.addMessage(new HumanChatMessage(message));
+  }
+
+  public addAIChatMessage(message: string): Promise<void> {
+    return this.addMessage(new AIChatMessage(message));
+  }
 }
 
 export abstract class BaseCache<T = Generation[]> {

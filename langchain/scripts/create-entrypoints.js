@@ -119,9 +119,13 @@ const entrypoints = {
   // stores
   "stores/file/in_memory": "stores/file/in_memory",
   "stores/file/node": "stores/file/node",
+  "stores/message/dynamodb": "stores/message/dynamodb",
   // experimental
   "experimental/autogpt": "experimental/autogpt/index",
   "experimental/babyagi": "experimental/babyagi/index",
+  "experimental/plan_and_execute": "experimental/plan_and_execute/index",
+  client: "client/index",
+  "client/langchainplus": "client/langchainplus",
 };
 
 // Entrypoints in this list will
@@ -137,7 +141,7 @@ const deprecatedNodeOnly = [
 ];
 
 // Entrypoints in this list require an optional dependency to be installed.
-// Therefore they are no tested in the generated test-exports-* packages.
+// Therefore they are not tested in the generated test-exports-* packages.
 const requiresOptionalDependency = [
   "agents/load",
   "tools/aws_lambda",
@@ -188,6 +192,7 @@ const requiresOptionalDependency = [
   "retrievers/metal",
   "cache/redis",
   "stores/file/node",
+  "stores/message/dynamodb",
 ];
 
 // List of test-exports-* packages which we use to test that the exports field

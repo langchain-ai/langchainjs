@@ -1,6 +1,6 @@
 {
-  "name": "@tant/langchain",
-  "version": "0.0.69",
+  "name": "langchain",
+  "version": "0.0.74",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -277,12 +277,24 @@
     "stores/file/node.cjs",
     "stores/file/node.js",
     "stores/file/node.d.ts",
+    "stores/message/dynamodb.cjs",
+    "stores/message/dynamodb.js",
+    "stores/message/dynamodb.d.ts",
     "experimental/autogpt.cjs",
     "experimental/autogpt.js",
     "experimental/autogpt.d.ts",
     "experimental/babyagi.cjs",
     "experimental/babyagi.js",
     "experimental/babyagi.d.ts",
+    "experimental/plan_and_execute.cjs",
+    "experimental/plan_and_execute.js",
+    "experimental/plan_and_execute.d.ts",
+    "client.cjs",
+    "client.js",
+    "client.d.ts",
+    "client/langchainplus.cjs",
+    "client/langchainplus.js",
+    "client/langchainplus.d.ts",
     "index.cjs",
     "index.js",
     "index.d.ts"
@@ -312,6 +324,7 @@
   "author": "LangChain",
   "license": "MIT",
   "devDependencies": {
+    "@aws-sdk/client-dynamodb": "^3.310.0",
     "@aws-sdk/client-lambda": "^3.310.0",
     "@aws-sdk/client-s3": "^3.310.0",
     "@clickhouse/client": "^0.0.14",
@@ -334,8 +347,8 @@
     "@types/object-hash": "^3.0.2",
     "@types/pdf-parse": "^1.1.1",
     "@types/uuid": "^9",
-    "@typescript-eslint/eslint-plugin": "^5.51.0",
-    "@typescript-eslint/parser": "^5.51.0",
+    "@typescript-eslint/eslint-plugin": "^5.58.0",
+    "@typescript-eslint/parser": "^5.58.0",
     "axios": "^0.26.0",
     "cheerio": "^1.0.0-rc.12",
     "chromadb": "^1.4.0",
@@ -366,12 +379,13 @@
     "rollup": "^3.19.1",
     "sqlite3": "^5.1.4",
     "srt-parser-2": "^1.2.2",
-    "ts-jest": "^29.0.5",
+    "ts-jest": "^29.1.0",
     "typeorm": "^0.3.12",
-    "typescript": "^4.9.5",
+    "typescript": "^5.0.0",
     "weaviate-ts-client": "^1.0.0"
   },
   "peerDependencies": {
+    "@aws-sdk/client-dynamodb": "^3.310.0",
     "@aws-sdk/client-lambda": "^3.310.0",
     "@aws-sdk/client-s3": "^3.310.0",
     "@clickhouse/client": "^0.0.14",
@@ -405,6 +419,9 @@
     "weaviate-ts-client": "^1.0.0"
   },
   "peerDependenciesMeta": {
+    "@aws-sdk/client-dynamodb": {
+      "optional": true
+    },
     "@aws-sdk/client-lambda": {
       "optional": true
     },
@@ -998,6 +1015,11 @@
       "import": "./stores/file/node.js",
       "require": "./stores/file/node.cjs"
     },
+    "./stores/message/dynamodb": {
+      "types": "./stores/message/dynamodb.d.ts",
+      "import": "./stores/message/dynamodb.js",
+      "require": "./stores/message/dynamodb.cjs"
+    },
     "./experimental/autogpt": {
       "types": "./experimental/autogpt.d.ts",
       "import": "./experimental/autogpt.js",
@@ -1007,6 +1029,21 @@
       "types": "./experimental/babyagi.d.ts",
       "import": "./experimental/babyagi.js",
       "require": "./experimental/babyagi.cjs"
+    },
+    "./experimental/plan_and_execute": {
+      "types": "./experimental/plan_and_execute.d.ts",
+      "import": "./experimental/plan_and_execute.js",
+      "require": "./experimental/plan_and_execute.cjs"
+    },
+    "./client": {
+      "types": "./client.d.ts",
+      "import": "./client.js",
+      "require": "./client.cjs"
+    },
+    "./client/langchainplus": {
+      "types": "./client/langchainplus.d.ts",
+      "import": "./client/langchainplus.js",
+      "require": "./client/langchainplus.cjs"
     },
     "./package.json": "./package.json"
   }

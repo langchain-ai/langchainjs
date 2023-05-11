@@ -39,21 +39,61 @@ We will then need to set the environment variable for the OpenAI key. Three opti
 
 1. We can do this by setting the value in a `.env` file and use the [dotenv](https://github.com/motdotla/dotenv) package to read it.
 
-```bash
-OPENAI_API_KEY="..."
-```
+   1.1. For OpenAI Api
+
+   ```bash
+   OPENAI_API_KEY="..."
+   ```
+
+   1.2. For Azure OpenAI:
+
+   ```bash
+   AZURE_OPENAI_API_KEY="..."
+   AZURE_OPENAI_API_INSTANCE_NAME="..."
+   AZURE_OPENAI_API_DEPLOYMENT_NAME="..."
+   AZURE_OPENAI_API_COMPLETIONS_DEPLOYMENT_NAME="..."
+   AZURE_OPENAI_API_EMBEDDINGS_DEPLOYMENT_NAME="..."
+   AZURE_OPENAI_API_VERSION="..."
+   ```
 
 2. Or we can export the environment variable with the following command in your shell:
 
-```bash
-export OPENAI_API_KEY=sk-....
-```
+   2.1. For OpenAI Api
+
+   ```bash
+   export OPENAI_API_KEY=sk-....
+   ```
+
+   2.2. For Azure OpenAI:
+
+   ```bash
+   export AZURE_OPENAI_API_KEY="..."
+   export AZURE_OPENAI_API_INSTANCE_NAME="..."
+   export AZURE_OPENAI_API_DEPLOYMENT_NAME="..."
+   export AZURE_OPENAI_API_COMPLETIONS_DEPLOYMENT_NAME="..."
+   export AZURE_OPENAI_API_EMBEDDINGS_DEPLOYMENT_NAME="..."
+   export AZURE_OPENAI_API_VERSION="..."
+   ```
 
 3. Or we can do it when initializing the wrapper along with other arguments. In this example, we probably want the outputs to be MORE random, so we'll initialize it with a HIGH temperature.
 
-```typescript
-const model = new OpenAI({ openAIApiKey: "sk-...", temperature: 0.9 });
-```
+   3.1. For OpenAI Api
+
+   ```typescript
+   const model = new OpenAI({ openAIApiKey: "sk-...", temperature: 0.9 });
+   ```
+
+   3.2. For Azure OpenAI:
+
+   ```bash
+   const model = new OpenAI({
+     azureOpenAIApiKey: "...",
+     azureOpenAIApiInstanceName: "....",
+     azureOpenAIApiDeploymentName: "....",
+     azureOpenAIApiVersion: "....",
+     temperature: 0.9
+   });
+   ```
 
 Once we have initialized the wrapper, we can now call it on some input!
 

@@ -3,6 +3,7 @@ import { DataSource } from "typeorm";
 import { OpenAI } from "../../llms/openai.js";
 import { SqlDatabaseChain } from "../sql_db/sql_db_chain.js";
 import { SqlDatabase } from "../../sql_db.js";
+import { SQL_SQLITE_PROMPT } from "../sql_db/sql_db_prompt.js";
 
 test("Test SqlDatabaseChain", async () => {
   const datasource = new DataSource({
@@ -33,6 +34,8 @@ test("Test SqlDatabaseChain", async () => {
     llm: new OpenAI({ temperature: 0 }),
     database: db,
   });
+
+  expect(chain.prompt).toBe(SQL_SQLITE_PROMPT);
 
   const res = await chain.run("How many users are there?");
   console.log(res);
