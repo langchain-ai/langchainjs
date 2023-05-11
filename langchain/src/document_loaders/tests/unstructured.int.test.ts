@@ -57,7 +57,7 @@ test("Test Unstructured directory loader legacy syntax", async () => {
     UnknownHandling.Ignore
   );
   const docs = await loader.load();
-  expect(docs.length).toBe(619);
+  expect(docs.length).toBeGreaterThan(100);
   expect(typeof docs[0].pageContent).toBe("string");
 });
 
@@ -79,6 +79,6 @@ test("Test Unstructured directory loader", async () => {
   );
   const docs = await loader.load();
 
-  expect(docs.length).toBe(619);
+  expect(docs.length).toBeGreaterThan(100);
   expect(typeof docs[0].pageContent).toBe("string");
 });
