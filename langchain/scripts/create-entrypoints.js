@@ -53,6 +53,7 @@ const entrypoints = {
   "vectorstores/milvus": "vectorstores/milvus",
   "vectorstores/prisma": "vectorstores/prisma",
   "vectorstores/myscale": "vectorstores/myscale",
+  "vectorstores/tigris": "vectorstores/tigris",
   // text_splitter
   text_splitter: "text_splitter",
   // memory
@@ -164,6 +165,7 @@ const requiresOptionalDependency = [
   "vectorstores/opensearch",
   "vectorstores/milvus",
   "vectorstores/myscale",
+  "vectorstores/tigris",
   "document_loaders/web/cheerio",
   "document_loaders/web/puppeteer",
   "document_loaders/web/playwright",

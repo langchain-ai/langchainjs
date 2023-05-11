@@ -5250,6 +5250,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@grpc/grpc-js@npm:^1.6.10":
+  version: 1.8.14
+  resolution: "@grpc/grpc-js@npm:1.8.14"
+  dependencies:
+    "@grpc/proto-loader": ^0.7.0
+    "@types/node": ">=12.12.47"
+  checksum: 7b889ae67cde5eb9b4feb92d54e73945d881309b9b879a2dde478fa7850b99835efa7592a8154a0f923851d7a18a177c106f5f52b45061180bb04aef7783c1c9
+  languageName: node
+  linkType: hard
+
 "@grpc/proto-loader@npm:^0.7.0, @grpc/proto-loader@npm:^0.7.3":
   version: 0.7.6
   resolution: "@grpc/proto-loader@npm:0.7.6"
@@ -7545,6 +7555,30 @@ __metadata:
   peerDependencies:
     "@testing-library/dom": ">=7.21.4"
   checksum: 16319de685fbb7008f1ba667928f458b2d08196918002daca56996de80ef35e6d9de26e9e1ece7d00a004692b95a597cf9142fff0dc53f2f51606a776584f549
+  languageName: node
+  linkType: hard
+
+"@tigrisdata/core@npm:latest":
+  version: 1.0.0
+  resolution: "@tigrisdata/core@npm:1.0.0"
+  dependencies:
+    "@grpc/grpc-js": ^1.6.10
+    app-root-path: ^3.1.0
+    chalk: 4.1.2
+    dotenv: ^16.0.3
+    google-protobuf: ^3.21.0
+    json-bigint: "github:sidorares/json-bigint"
+    reflect-metadata: ^0.1.13
+  checksum: bfee9d3dc5f5fc786a9716315add31e7cca62faec1abd99bc82f132923d2eb4846c5c01218dc6ab3b8302fa336744791edc713780c90723514d60c088831a6bf
+  languageName: node
+  linkType: hard
+
+"@tigrisdata/vector@npm:^1.1.0":
+  version: 1.1.0
+  resolution: "@tigrisdata/vector@npm:1.1.0"
+  dependencies:
+    "@tigrisdata/core": latest
+  checksum: 8e2baa880a0620267bc09740bb8f99f988725bbc66c4619236b39061618579f3ff184949e5542651961a03d7650f7d8a2c24bc9de4be061d92150e6970a883eb
   languageName: node
   linkType: hard
 
@@ -9932,6 +9966,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"bignumber.js@npm:^9.0.0":
+  version: 9.1.1
+  resolution: "bignumber.js@npm:9.1.1"
+  checksum: ad243b7e2f9120b112d670bb3d674128f0bd2ca1745b0a6c9df0433bd2c0252c43e6315d944c2ac07b4c639e7496b425e46842773cf89c6a2dcd4f31e5c4b11e
+  languageName: node
+  linkType: hard
+
 "binary-extensions@npm:^2.0.0, binary-extensions@npm:^2.2.0":
   version: 2.2.0
   resolution: "binary-extensions@npm:2.2.0"
@@ -10480,6 +10521,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"chalk@npm:4.1.2, chalk@npm:^4.0.0, chalk@npm:^4.0.2, chalk@npm:^4.1.0, chalk@npm:^4.1.2":
+  version: 4.1.2
+  resolution: "chalk@npm:4.1.2"
+  dependencies:
+    ansi-styles: ^4.1.0
+    supports-color: ^7.1.0
+  checksum: fe75c9d5c76a7a98d45495b91b2172fa3b7a09e0cc9370e5c8feb1c567b85c4288e2b3fded7cfdd7359ac28d6b3844feb8b82b8686842e93d23c827c417e83fc
+  languageName: node
+  linkType: hard
+
 "chalk@npm:5.2.0, chalk@npm:^5.0.0, chalk@npm:^5.0.1, chalk@npm:^5.2.0":
   version: 5.2.0
   resolution: "chalk@npm:5.2.0"
@@ -10505,16 +10556,6 @@ __metadata:
     ansi-styles: ^4.1.0
     supports-color: ^7.1.0
   checksum: 8e3ddf3981c4da405ddbd7d9c8d91944ddf6e33d6837756979f7840a29272a69a5189ecae0ff84006750d6d1e92368d413335eab4db5476db6e6703a1d1e0505
-  languageName: node
-  linkType: hard
-
-"chalk@npm:^4.0.0, chalk@npm:^4.0.2, chalk@npm:^4.1.0, chalk@npm:^4.1.2":
-  version: 4.1.2
-  resolution: "chalk@npm:4.1.2"
-  dependencies:
-    ansi-styles: ^4.1.0
-    supports-color: ^7.1.0
-  checksum: fe75c9d5c76a7a98d45495b91b2172fa3b7a09e0cc9370e5c8feb1c567b85c4288e2b3fded7cfdd7359ac28d6b3844feb8b82b8686842e93d23c827c417e83fc
   languageName: node
   linkType: hard
 
@@ -13850,6 +13891,7 @@ __metadata:
     "@prisma/client": ^4.11.0
     "@supabase/supabase-js": ^2.10.0
     "@tensorflow/tfjs-backend-cpu": ^4.4.0
+    "@tigrisdata/vector": ^1.1.0
     "@tsconfig/recommended": ^1.0.2
     "@types/js-yaml": ^4
     "@typescript-eslint/eslint-plugin": ^5.51.0
@@ -14988,6 +15030,13 @@ __metadata:
   version: 0.1.2
   resolution: "globrex@npm:0.1.2"
   checksum: adca162494a176ce9ecf4dd232f7b802956bb1966b37f60c15e49d2e7d961b66c60826366dc2649093cad5a0d69970cfa8875bd1695b5a1a2f33dcd2aa88da3c
+  languageName: node
+  linkType: hard
+
+"google-protobuf@npm:^3.21.0":
+  version: 3.21.2
+  resolution: "google-protobuf@npm:3.21.2"
+  checksum: 3caa2e1e2654714cc1a201ac5e5faabcaa48f5fba3d8ff9b64ca66fe19e4e0506b94053f32eddc77bf3a7a47ac1660315c6744185c1e2bb27654fd76fe91b988
   languageName: node
   linkType: hard
 
@@ -17788,6 +17837,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"json-bigint@github:sidorares/json-bigint":
+  version: 1.0.0
+  resolution: "json-bigint@https://github.com/sidorares/json-bigint.git#commit=3391780b2a3f613bb51536c47e6cddbca31013eb"
+  dependencies:
+    bignumber.js: ^9.0.0
+  checksum: ea2e403b224460496e58d0396029faafc68af9c73c8f4a1b737d6473eb310f9e223a78c1d9e532fd19df9cd67a2fd4a7be069429bf73207b11b4805df240d4cd
+  languageName: node
+  linkType: hard
+
 "json-buffer@npm:3.0.0":
   version: 3.0.0
   resolution: "json-buffer@npm:3.0.0"
@@ -17992,6 +18050,7 @@ __metadata:
     "@tensorflow/tfjs-backend-cpu": ^4.4.0
     "@tensorflow/tfjs-converter": ^4.4.0
     "@tensorflow/tfjs-core": ^4.4.0
+    "@tigrisdata/vector": ^1.1.0
     "@tsconfig/recommended": ^1.0.2
     "@types/d3-dsv": ^2
     "@types/flat": ^5.0.2
@@ -18063,6 +18122,7 @@ __metadata:
     "@tensorflow-models/universal-sentence-encoder": "*"
     "@tensorflow/tfjs-converter": "*"
     "@tensorflow/tfjs-core": "*"
+    "@tigrisdata/vector": ^1.1.0
     "@zilliz/milvus2-sdk-node": ^2.2.0
     axios: "*"
     cheerio: ^1.0.0-rc.12
@@ -18106,6 +18166,8 @@ __metadata:
     "@tensorflow/tfjs-converter":
       optional: true
     "@tensorflow/tfjs-core":
+      optional: true
+    "@tigrisdata/vector":
       optional: true
     "@zilliz/milvus2-sdk-node":
       optional: true
