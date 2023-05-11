@@ -34,3 +34,6 @@ export * from "langchain/cache";
 export * from "langchain/stores/file/in_memory";
 export * from "langchain/experimental/autogpt";
 export * from "langchain/experimental/babyagi";
+export * from "langchain/experimental/plan_and_execute";
+export * from "langchain/client";
+export * from "langchain/client/langchainplus";
