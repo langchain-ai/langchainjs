@@ -6,10 +6,11 @@ export {
 
 export {
   LangChainTracer,
-  BaseRun,
+  BaseRunV1,
   LLMRun,
   ChainRun,
   ToolRun,
+  BaseRun,
 } from "./handlers/tracers.js";
 
 export { getTracingCallbackHandler } from "./handlers/initialize.js";

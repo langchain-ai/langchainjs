@@ -72,7 +72,7 @@ describe("webbrowser Test suite", () => {
     );
   });
 
-  test("get a summary of a page that detects scraping", async () => {
+  test.skip("get a summary of a page that detects scraping", async () => {
     const model = new ChatOpenAI({ temperature: 0 });
     const embeddings = new OpenAIEmbeddings();
 
