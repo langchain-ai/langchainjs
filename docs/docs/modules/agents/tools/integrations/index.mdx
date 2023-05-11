@@ -1,6 +1,7 @@
 ---
 sidebar_label: Integrations
 hide_table_of_contents: true
+sidebar_position: 1
 ---
 
 import DocCardList from "@theme/DocCardList";
@@ -9,13 +10,32 @@ import DocCardList from "@theme/DocCardList";
 
 LangChain provides the following tools you can use out of the box:
 
-- `AWSLambda` - A wrapper around the AWS Lambda API, invoked via the Amazon Web Services Node.js SDK. Useful for invoking serverless functions with any behavior which you need to provide to an Agent.
-- `BingSerpAPI` - A wrapper around the Bing Search API. Useful for when you need to answer questions about current events. Input should be a search query.
-- `Calculator` - Useful for getting the result of a math expression. The input to this tool should be a valid mathematical expression that could be executed by a simple calculator.
-- `IFTTTWebHook` - A wrapper around the IFTTT Webhook API. Useful for triggering IFTTT actions.
-- `JsonListKeys` and `JsonGetValue` - Useful for extracting data from JSON objects. These tools can be used collectively in a `JsonToolkit`.
-- `RequestsGet` and `RequestsPost` - Useful for making HTTP requests.
-- `SerpAPI` - A wrapper around the SerpAPI API. Useful for when you need to answer questions about current events. Input should be a search query.
-- `QuerySqlTool`, `InfoSqlTool`, `ListTablesSqlTool`, and `SqlCheckerTool` - Useful for interacting with SQL databases. Can be used together in a `SqlToolkit`.
-- `VectorStoreQATool` - Useful for retrieving relevant text data from a vector store.
-- `ZapierNLARunAction` - A wrapper around the Zapier NLP API. Useful for triggering Zapier actions with a natural language input. Best when used in a `ZapierToolkit`.
+- [`AWSLambda`][AWSLambda] - A wrapper around the AWS Lambda API, invoked via the Amazon Web Services Node.js SDK. Useful for invoking serverless functions with any behavior which you need to provide to an Agent.
+- [`BingSerpAPI`][BingSerpAPI] - A wrapper around the Bing Search API. Useful for when you need to answer questions about current events. Input should be a search query.
+- [`Calculator`][Calculator] - Useful for getting the result of a math expression. The input to this tool should be a valid mathematical expression that could be executed by a simple calculator.
+- [`IFTTTWebHook`][IFTTTWebHook] - A wrapper around the IFTTT Webhook API. Useful for triggering IFTTT actions.
+- [`JsonListKeysTool`][JsonListKeysTool] and [`JsonGetValueTool`][JsonGetValueTool] - Useful for extracting data from JSON objects. These tools can be used collectively in a [`JsonToolkit`][JsonToolkit].
+- [`RequestsGetTool`][RequestsGetTool] and [`RequestsPostTool`][RequestsPostTool] - Useful for making HTTP requests.
+- [`SerpAPI`][SerpAPI] - A wrapper around the SerpAPI API. Useful for when you need to answer questions about current events. Input should be a search query.
+- [`QuerySqlTool`][QuerySqlTool], [`InfoSqlTool`][InfoSqlTool], [`ListTablesSqlTool`][ListTablesSqlTool], and [`QueryCheckerTool`][QueryCheckerTool] - Useful for interacting with SQL databases. Can be used together in a [`SqlToolkit`][SqlToolkit].
+- [`VectorStoreQATool`][VectorStoreQATool] - Useful for retrieving relevant text data from a vector store.
+- [`ZapierNLARunAction`][ZapierNLARunAction] - A wrapper around the Zapier NLP API. Useful for triggering Zapier actions with a natural language input. Best when used in a [`ZapierToolkit`][ZapierToolkit].
+
+[AWSLambda]: /docs/api/tools_aws_lambda/classes/AWSLambda
+[BingSerpAPI]: /docs/api/tools/classes/BingSerpAPI
+[Calculator]: /docs/api/tools_calculator/classes/Calculator
+[IFTTTWebHook]: /docs/api/tools/classes/IFTTTWebHook
+[JsonListKeysTool]: /docs/api/tools/classes/JsonListKeysTool
+[JsonGetValueTool]: /docs/api/tools/classes/JsonGetValueTool
+[JsonToolkit]: ../../toolkits/json
+[RequestsGetTool]: /docs/api/tools/classes/RequestsGetTool
+[RequestsPostTool]: /docs/api/tools/classes/RequestsPostTool
+[SerpAPI]: /docs/api/tools/classes/SerpAPI
+[QuerySqlTool]: /docs/api/tools/classes/QuerySqlTool
+[InfoSqlTool]: /docs/api/tools/classes/InfoSqlTool
+[ListTablesSqlTool]: /docs/api/tools/classes/ListTablesSqlTool
+[QueryCheckerTool]: /docs/api/tools/classes/QueryCheckerTool
+[SqlToolkit]: ../../toolkits/sql
+[VectorStoreQATool]: /docs/api/tools/classes/VectorStoreQATool
+[ZapierNLARunAction]: /docs/api/tools/classes/ZapierNLARunAction
+[ZapierToolkit]: ../zapier_agent

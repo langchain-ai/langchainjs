@@ -12,6 +12,8 @@ import {
   getModelContextSize,
 } from "../../base_language/count_tokens.js";
 import { CallbackManagerForChainRun } from "../../callbacks/manager.js";
+import { getPromptTemplateFromDataSource } from "../../util/sql_utils.js";
+import { PromptTemplate } from "../../prompts/index.js";
 
 export interface SqlDatabaseChainInput extends ChainInputs {
   llm: BaseLanguageModel;
@@ -19,6 +21,7 @@ export interface SqlDatabaseChainInput extends ChainInputs {
   topK?: number;
   inputKey?: string;
   outputKey?: string;
+  prompt?: PromptTemplate;
 }
 
 export class SqlDatabaseChain extends BaseChain {
@@ -42,12 +45,15 @@ export class SqlDatabaseChain extends BaseChain {
   returnDirect = false;
 
   constructor(fields: SqlDatabaseChainInput) {
-    super(fields.memory, fields.verbose, fields.callbackManager);
+    super(fields);
     this.llm = fields.llm;
     this.database = fields.database;
     this.topK = fields.topK ?? this.topK;
     this.inputKey = fields.inputKey ?? this.inputKey;
     this.outputKey = fields.outputKey ?? this.outputKey;
+    this.prompt =
+      fields.prompt ??
+      getPromptTemplateFromDataSource(this.database.appDataSource);
   }
 
   /** @ignore */
@@ -96,7 +102,7 @@ export class SqlDatabaseChain extends BaseChain {
     if (this.returnDirect) {
       finalResult = { [this.outputKey]: queryResult };
     } else {
-      inputText += `${+sqlCommand}\nSQLResult: ${JSON.stringify(
+      inputText += `${sqlCommand}\nSQLResult: ${JSON.stringify(
         queryResult
       )}\nAnswer:`;
       llmInputs.input = inputText;

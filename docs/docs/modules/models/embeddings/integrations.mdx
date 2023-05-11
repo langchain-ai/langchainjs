@@ -19,7 +19,24 @@ const embeddings = new OpenAIEmbeddings({
 });
 ```
 
+## Azure `OpenAIEmbeddings`
+
+The `OpenAIEmbeddings` class uses the OpenAI API on Azure to generate embeddings for a given text. By default it strips new line characters from the text, as recommended by OpenAI, but you can disable this by passing `stripNewLines: false` to the constructor.
+
+```typescript
+import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+
+const embeddings = new OpenAIEmbeddings({
+  azureOpenAIApiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.AZURE_OPENAI_API_KEY
+  azureOpenAIApiInstanceName: "YOUR-INSTANCE-NAME", // In Node.js defaults to process.env.AZURE_OPENAI_API_INSTANCE_NAME
+  azureOpenAIApiDeploymentName: "YOUR-DEPLOYMENT-NAME", // In Node.js defaults to process.env.AZURE_OPENAI_API_DEPLOYMENT_NAME
+  azureOpenAIApiVersion: "YOUR-API-VERSION", // In Node.js defaults to process.env.AZURE_OPENAI_API_VERSION
+});
+```
+
 ## `CohereEmbeddings`
+
+The `CohereEmbeddings` class uses the Cohere API to generate embeddings for a given text.
 
 ```bash npm2yarn
 npm install cohere-ai
@@ -30,5 +47,38 @@ import { CohereEmbeddings } from "langchain/embeddings/cohere";
 
 const embeddings = new CohereEmbeddings({
   apiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.COHERE_API_KEY
+});
+```
+
+## `TensorFlowEmbeddings`
+
+This Embeddings integration runs the embeddings entirely in your browser or Node.js environment, using [TensorFlow.js](https://www.tensorflow.org/js). This means that your data isn't sent to any third party, and you don't need to sign up for any API keys. However, it does require more memory and processing power than the other integrations.
+
+```bash npm2yarn
+npm install @tensorflow/tfjs-core @tensorflow/tfjs-converter @tensorflow-models/universal-sentence-encoder @tensorflow/tfjs-backend-cpu
+```
+
+```typescript
+import "@tensorflow/tfjs-backend-cpu";
+import { TensorFlowEmbeddings } from "langchain/embeddings/tensorflow";
+
+const embeddings = new TensorFlowEmbeddings();
+```
+
+This example uses the CPU backend, which works in any JS environment. However, you can use any of the backends supported by TensorFlow.js, including GPU and WebAssembly, which will be a lot faster. For Node.js you can use the `@tensorflow/tfjs-node` package, and for the browser you can use the `@tensorflow/tfjs-backend-webgl` package. See the [TensorFlow.js documentation](https://www.tensorflow.org/js/guide/platform_environment) for more information.
+
+## `HuggingFaceInferenceEmbeddings`
+
+This Embeddings integration uses the HuggingFace Inference API to generate embeddings for a given text using by default the `sentence-transformers/distilbert-base-nli-mean-tokens` model. You can pass a different model name to the constructor to use a different model.
+
+```bash npm2yarn
+npm install @huggingface/inference@1
+```
+
+```typescript
+import { HuggingFaceInferenceEmbeddings } from "langchain/embeddings/hf";
+
+const embeddings = new HuggingFaceInferenceEmbeddings({
+  apiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.HUGGINGFACEHUB_API_KEY
 });
 ```

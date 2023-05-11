@@ -6,7 +6,11 @@ import { Document } from "../document.js";
 interface SearchEmbeddingsParams {
   query_embedding: number[];
   match_count: number; // int
+  filter?: SupabaseMetadata;
 }
+
+// eslint-disable-next-line @typescript-eslint/ban-types, @typescript-eslint/no-explicit-any
+type SupabaseMetadata = Record<string, any>;
 
 interface SearchEmbeddingsResponse {
   id: number;
@@ -19,14 +23,19 @@ export interface SupabaseLibArgs {
   client: SupabaseClient;
   tableName?: string;
   queryName?: string;
+  filter?: SupabaseMetadata;
 }
 
 export class SupabaseVectorStore extends VectorStore {
+  declare FilterType: SupabaseMetadata;
+
   client: SupabaseClient;
 
   tableName: string;
 
   queryName: string;
+
+  filter?: SupabaseMetadata;
 
   constructor(embeddings: Embeddings, args: SupabaseLibArgs) {
     super(embeddings, args);
@@ -34,6 +43,7 @@ export class SupabaseVectorStore extends VectorStore {
     this.client = args.client;
     this.tableName = args.tableName || "documents";
     this.queryName = args.queryName || "match_documents";
+    this.filter = args.filter;
   }
 
   async addDocuments(documents: Document[]): Promise<void> {
@@ -68,9 +78,15 @@ export class SupabaseVectorStore extends VectorStore {
 
   async similaritySearchVectorWithScore(
     query: number[],
-    k: number
+    k: number,
+    filter?: this["FilterType"]
   ): Promise<[Document, number][]> {
+    if (filter && this.filter) {
+      throw new Error("cannot provide both `filter` and `this.filter`");
+    }
+    const _filter = filter ?? this.filter;
     const matchDocumentsParams: SearchEmbeddingsParams = {
+      filter: _filter,
       query_embedding: query,
       match_count: k,
     };

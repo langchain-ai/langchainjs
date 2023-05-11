@@ -14,6 +14,19 @@ import {
 import { Embeddings } from "../embeddings/base.js";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
 
+export const parseInputs = (inputs: string): [string, string] => {
+  const [baseUrl, task] = inputs.split(",").map((input) => {
+    let t = input.trim();
+    t = t.startsWith('"') ? t.slice(1) : t;
+    t = t.endsWith('"') ? t.slice(0, -1) : t;
+    // it likes to put / at the end of urls, wont matter for task
+    t = t.endsWith("/") ? t.slice(0, -1) : t;
+    return t.trim();
+  });
+
+  return [baseUrl, task];
+};
+
 export const getText = (
   html: string,
   baseUrl: string,
@@ -174,14 +187,7 @@ export class WebBrowser extends Tool {
 
   /** @ignore */
   async _call(inputs: string, runManager?: CallbackManagerForToolRun) {
-    const [baseUrl, task] = inputs.split(",").map((input) => {
-      let t = input.trim();
-      t = t.startsWith('"') ? t.slice(1) : t;
-      t = t.endsWith('"') ? t.slice(0, -1) : t;
-      // it likes to put / at the end of urls, wont matter for task
-      t = t.endsWith("/") ? t.slice(0, -1) : t;
-      return t.trim();
-    });
+    const [baseUrl, task] = parseInputs(inputs);
     const doSummary = !task;
 
     let text;
@@ -239,5 +245,5 @@ export class WebBrowser extends Tool {
 
   name = "web-browser";
 
-  description = `useful for when you need to find something on or summarize a webpage. input should be a comma seperated list of "ONE valid http URL including protocol","what you want to find on the page or empty string for a summary".`;
+  description = `useful for when you need to find something on or summarize a webpage. input should be a comma separated list of "ONE valid http URL including protocol","what you want to find on the page or empty string for a summary".`;
 }

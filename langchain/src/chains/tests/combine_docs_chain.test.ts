@@ -78,3 +78,29 @@ test("Test MapReduceDocumentsChain with content above maxTokens", async () => {
   expect(model.nrMapCalls).toBe(2); // above maxTokens
   expect(model.nrReduceCalls).toBe(1);
 });
+
+test("Test MapReduceDocumentsChain with content above maxTokens and intermediate steps", async () => {
+  const model = new FakeLLM({});
+  const chain = loadQAMapReduceChain(model, {
+    returnIntermediateSteps: true,
+  });
+  const aString = "a".repeat(10000);
+  const bString = "b".repeat(10000);
+  const docs = [
+    new Document({ pageContent: aString }),
+    new Document({ pageContent: bString }),
+  ];
+
+  const res = await chain.call({
+    input_documents: docs,
+    question: "Is the letter c present in the document",
+  });
+  console.log({ res });
+
+  expect(res).toEqual({
+    text: "a final answer",
+    intermediateSteps: ["a portion of context", "a portion of context"],
+  });
+  expect(model.nrMapCalls).toBe(2); // above maxTokens
+  expect(model.nrReduceCalls).toBe(1);
+});

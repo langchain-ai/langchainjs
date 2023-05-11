@@ -1,4 +1,11 @@
-import { ChainValues, LLMResult } from "../../schema/index.js";
+import * as uuid from "uuid";
+import {
+  AgentAction,
+  ChainValues,
+  LLMResult,
+  RunInputs,
+  RunOutputs,
+} from "../../schema/index.js";
 import { BaseCallbackHandler } from "../base.js";
 
 export type RunType = "llm" | "chain" | "tool";
@@ -10,28 +17,41 @@ export interface BaseTracerSession {
 
 export type TracerSessionCreate = BaseTracerSession;
 
-export interface TracerSession extends BaseTracerSession {
+export interface TracerSessionV1 extends BaseTracerSession {
   id: number;
 }
 
-export interface BaseRun {
+export interface BaseTracerSessionV2 extends BaseTracerSession {
+  tenant_id: string; // uuid
+}
+
+export interface TracerSessionCreateV2 extends BaseTracerSessionV2 {
+  id?: string; // uuid. Auto-generated if not provided
+}
+
+export interface TracerSession extends BaseTracerSessionV2 {
+  id: string; // uuid
+}
+
+export interface BaseRunV1 {
   uuid: string;
   parent_uuid?: string;
   start_time: number;
   end_time: number;
   execution_order: number;
+  child_execution_order: number;
   serialized: { name: string };
   session_id: number;
   error?: string;
   type: RunType;
 }
 
-export interface LLMRun extends BaseRun {
+export interface LLMRun extends BaseRunV1 {
   prompts: string[];
   response?: LLMResult;
 }
 
-export interface ChainRun extends BaseRun {
+export interface ChainRun extends BaseRunV1 {
   inputs: ChainValues;
   outputs?: ChainValues;
   child_llm_runs: LLMRun[];
@@ -39,7 +59,7 @@ export interface ChainRun extends BaseRun {
   child_tool_runs: ToolRun[];
 }
 
-export interface ToolRun extends BaseRun {
+export interface ToolRun extends BaseRunV1 {
   tool_input: string;
   output?: string;
   action: string;
@@ -48,30 +68,70 @@ export interface ToolRun extends BaseRun {
   child_tool_runs: ToolRun[];
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type Extra = Record<string, any>;
+export interface BaseRun {
+  id: string;
+  name: string;
+  start_time: number;
+  end_time: number;
+  extra?: Extra;
+  error?: string;
+  execution_order: number;
+  serialized: object;
+  inputs: RunInputs;
+  outputs?: RunOutputs;
+  session_id: string; // uuid
+  reference_example_id?: string; // uuid
+  run_type: RunType;
+}
+
+export interface RunCreate extends BaseRun {
+  child_runs: RunCreate[];
+}
+export interface Run extends RunCreate {
+  child_execution_order: number;
+  child_runs: Run[];
+  parent_run_id?: string; // uuid
+}
+
+export interface AgentRun extends Run {
+  actions: AgentAction[];
+}
+
+export interface RunResult extends BaseRun {
+  name: string;
+  parent_run_id?: string; // uuid
+}
+
 export abstract class BaseTracer extends BaseCallbackHandler {
-  protected session?: TracerSession;
+  protected session?: TracerSessionV1 | TracerSession;
 
-  protected runMap: Map<string, LLMRun | ChainRun | ToolRun> = new Map();
-
-  protected executionOrder = 1;
+  protected runMap: Map<string, Run> = new Map();
 
   protected constructor() {
     super();
   }
 
-  abstract loadSession(sessionName: string): Promise<TracerSession>;
+  copy(): this {
+    return this;
+  }
 
-  abstract loadDefaultSession(): Promise<TracerSession>;
+  abstract loadSession(
+    sessionName: string
+  ): Promise<TracerSessionV1 | TracerSession>;
 
-  protected abstract persistRun(
-    run: LLMRun | ChainRun | ToolRun
-  ): Promise<void>;
+  abstract loadDefaultSession(): Promise<TracerSessionV1 | TracerSession>;
+
+  protected abstract persistRun(run: Run): Promise<void>;
 
   protected abstract persistSession(
-    session: TracerSessionCreate
-  ): Promise<TracerSession>;
+    session: BaseTracerSession
+  ): Promise<TracerSessionV1 | TracerSession>;
 
-  async newSession(sessionName?: string): Promise<TracerSession> {
+  async newSession(
+    sessionName?: string
+  ): Promise<TracerSessionV1 | TracerSession> {
     const sessionCreate: TracerSessionCreate = {
       start_time: Date.now(),
       name: sessionName,
@@ -81,45 +141,53 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     return session;
   }
 
-  protected _addChildRun(
-    parentRun: ChainRun | ToolRun,
-    childRun: LLMRun | ChainRun | ToolRun
-  ) {
-    if (childRun.type === "llm") {
-      parentRun.child_llm_runs.push(childRun as LLMRun);
-    } else if (childRun.type === "chain") {
-      parentRun.child_chain_runs.push(childRun as ChainRun);
-    } else if (childRun.type === "tool") {
-      parentRun.child_tool_runs.push(childRun as ToolRun);
-    } else {
-      throw new Error("Invalid run type");
-    }
+  protected _addChildRun(parentRun: Run, childRun: Run) {
+    parentRun.child_runs.push(childRun);
   }
 
-  protected _startTrace(run: LLMRun | ChainRun | ToolRun) {
-    this.executionOrder += 1;
-
-    if (run.parent_uuid) {
-      const parentRun = this.runMap.get(run.parent_uuid);
+  protected _startTrace(run: Run) {
+    if (run.parent_run_id !== undefined) {
+      const parentRun = this.runMap.get(run.parent_run_id);
       if (parentRun) {
-        if (!(parentRun.type === "tool" || parentRun.type === "chain")) {
-          throw new Error("Caller run can only be a tool or chain");
-        } else {
-          this._addChildRun(parentRun as ChainRun | ToolRun, run);
-        }
+        this._addChildRun(parentRun, run);
       } else {
-        throw new Error(`Caller run ${run.parent_uuid} not found`);
+        throw new Error(`Caller run ${run.parent_run_id} not found`);
       }
     }
-    this.runMap.set(run.uuid, run);
+    this.runMap.set(run.id, run);
   }
 
-  protected async _endTrace(run: LLMRun | ChainRun | ToolRun): Promise<void> {
-    if (!run.parent_uuid) {
+  protected async _endTrace(run: Run): Promise<void> {
+    if (!run.parent_run_id) {
       await this.persistRun(run);
-      this.executionOrder = 1;
+    } else {
+      const parentRun = this.runMap.get(run.parent_run_id);
+
+      if (parentRun === undefined) {
+        throw new Error(`Parent run ${run.parent_run_id} not found`);
+      }
+
+      parentRun.child_execution_order = Math.max(
+        parentRun.child_execution_order,
+        run.child_execution_order
+      );
     }
-    this.runMap.delete(run.uuid);
+    this.runMap.delete(run.id);
+  }
+
+  protected _getExecutionOrder(parentRunId: string | undefined): number {
+    // If a run has no parent then execution order is 1
+    if (parentRunId === undefined) {
+      return 1;
+    }
+
+    const parentRun = this.runMap.get(parentRunId);
+
+    if (parentRun === undefined) {
+      throw new Error(`Parent run ${parentRunId} not found`);
+    }
+
+    return parentRun.child_execution_order + 1;
   }
 
   async handleLLMStart(
@@ -131,41 +199,47 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     if (this.session === undefined) {
       this.session = await this.loadDefaultSession();
     }
-    const run: LLMRun = {
-      uuid: runId,
-      parent_uuid: parentRunId,
+    const execution_order = this._getExecutionOrder(parentRunId);
+    const session = this.session as TracerSession;
+    const run: Run = {
+      id: runId,
+      name: llm.name,
+      parent_run_id: parentRunId,
       start_time: Date.now(),
       end_time: 0,
       serialized: llm,
-      prompts,
-      session_id: this.session.id,
-      execution_order: this.executionOrder,
-      type: "llm",
+      inputs: { prompts },
+      session_id: session.id,
+      execution_order,
+      child_runs: [],
+      child_execution_order: execution_order,
+      run_type: "llm",
     };
 
     this._startTrace(run);
+    await this.onLLMStart?.(run);
   }
 
   async handleLLMEnd(output: LLMResult, runId: string): Promise<void> {
     const run = this.runMap.get(runId);
-    if (!run || run?.type !== "llm") {
+    if (!run || run?.run_type !== "llm") {
       throw new Error("No LLM run to end.");
     }
-    const llmRun = run as LLMRun;
-    llmRun.end_time = Date.now();
-    llmRun.response = output;
-    await this._endTrace(llmRun);
+    run.end_time = Date.now();
+    run.outputs = output;
+    await this.onLLMEnd?.(run);
+    await this._endTrace(run);
   }
 
   async handleLLMError(error: Error, runId: string): Promise<void> {
     const run = this.runMap.get(runId);
-    if (!run || run?.type !== "llm") {
+    if (!run || run?.run_type !== "llm") {
       throw new Error("No LLM run to end.");
     }
-    const llmRun = run as LLMRun;
-    llmRun.end_time = Date.now();
-    llmRun.error = error.message;
-    await this._endTrace(llmRun);
+    run.end_time = Date.now();
+    run.error = error.message;
+    await this.onLLMError?.(run);
+    await this._endTrace(run);
   }
 
   async handleChainStart(
@@ -177,44 +251,47 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     if (this.session === undefined) {
       this.session = await this.loadDefaultSession();
     }
-    const run: ChainRun = {
-      uuid: runId,
-      parent_uuid: parentRunId,
+    const session = this.session as TracerSession;
+    const execution_order = this._getExecutionOrder(parentRunId);
+    const run: Run = {
+      id: runId,
+      name: chain.name,
+      parent_run_id: parentRunId,
       start_time: Date.now(),
       end_time: 0,
       serialized: chain,
       inputs,
-      session_id: this.session.id,
-      execution_order: this.executionOrder,
-      type: "chain",
-      child_llm_runs: [],
-      child_chain_runs: [],
-      child_tool_runs: [],
+      session_id: session.id,
+      execution_order,
+      child_execution_order: execution_order,
+      run_type: "chain",
+      child_runs: [],
     };
 
     this._startTrace(run);
+    await this.onChainStart?.(run);
   }
 
   async handleChainEnd(outputs: ChainValues, runId: string): Promise<void> {
     const run = this.runMap.get(runId);
-    if (!run || run?.type !== "chain") {
+    if (!run || run?.run_type !== "chain") {
       throw new Error("No chain run to end.");
     }
-    const chainRun = run as ChainRun;
-    chainRun.end_time = Date.now();
-    chainRun.outputs = outputs;
-    await this._endTrace(chainRun);
+    run.end_time = Date.now();
+    run.outputs = outputs;
+    await this.onChainEnd?.(run);
+    await this._endTrace(run);
   }
 
   async handleChainError(error: Error, runId: string): Promise<void> {
     const run = this.runMap.get(runId);
-    if (!run || run?.type !== "chain") {
+    if (!run || run?.run_type !== "chain") {
       throw new Error("No chain run to end.");
     }
-    const chainRun = run as ChainRun;
-    chainRun.end_time = Date.now();
-    chainRun.error = error.message;
-    await this._endTrace(chainRun);
+    run.end_time = Date.now();
+    run.error = error.message;
+    await this.onChainError?.(run);
+    await this._endTrace(run);
   }
 
   async handleToolStart(
@@ -226,46 +303,87 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     if (this.session === undefined) {
       this.session = await this.loadDefaultSession();
     }
-    const run: ToolRun = {
-      uuid: runId,
-      parent_uuid: parentRunId,
+    const session = this.session as TracerSession;
+    const execution_order = this._getExecutionOrder(parentRunId);
+    const run: Run = {
+      id: runId,
+      name: tool.name,
+      parent_run_id: parentRunId,
       start_time: Date.now(),
       end_time: 0,
       serialized: tool,
-      tool_input: input,
-      session_id: this.session.id,
-      execution_order: this.executionOrder,
-      type: "tool",
-      action: JSON.stringify(tool), // TODO: this is duplicate info, not needed
-      child_llm_runs: [],
-      child_chain_runs: [],
-      child_tool_runs: [],
+      inputs: { input },
+      session_id: session.id,
+      execution_order,
+      child_execution_order: execution_order,
+      run_type: "tool",
+      child_runs: [],
     };
 
     this._startTrace(run);
+    await this.onToolStart?.(run);
   }
 
   async handleToolEnd(output: string, runId: string): Promise<void> {
     const run = this.runMap.get(runId);
-    if (!run || run?.type !== "tool") {
+    if (!run || run?.run_type !== "tool") {
       throw new Error("No tool run to end");
     }
-    const toolRun = run as ToolRun;
-    toolRun.end_time = Date.now();
-    toolRun.output = output;
-    await this._endTrace(toolRun);
+    run.end_time = Date.now();
+    run.outputs = { output };
+    await this.onToolEnd?.(run);
+    await this._endTrace(run);
   }
 
   async handleToolError(error: Error, runId: string): Promise<void> {
     const run = this.runMap.get(runId);
-    if (!run || run?.type !== "tool") {
+    if (!run || run?.run_type !== "tool") {
       throw new Error("No tool run to end");
     }
-    const toolRun = run as ToolRun;
-    toolRun.end_time = Date.now();
-    toolRun.error = error.message;
-    await this._endTrace(toolRun);
+    run.end_time = Date.now();
+    run.error = error.message;
+    await this.onToolError?.(run);
+    await this._endTrace(run);
   }
+
+  async handleAgentAction(action: AgentAction, runId: string): Promise<void> {
+    const run = this.runMap.get(runId);
+    if (!run || run?.run_type !== "chain") {
+      return;
+    }
+    const agentRun = run as AgentRun;
+    agentRun.actions = agentRun.actions || [];
+    agentRun.actions.push(action);
+    await this.onAgentAction?.(run as AgentRun);
+  }
+
+  // custom event handlers
+
+  onLLMStart?(run: Run): void | Promise<void>;
+
+  onLLMEnd?(run: Run): void | Promise<void>;
+
+  onLLMError?(run: Run): void | Promise<void>;
+
+  onChainStart?(run: Run): void | Promise<void>;
+
+  onChainEnd?(run: Run): void | Promise<void>;
+
+  onChainError?(run: Run): void | Promise<void>;
+
+  onToolStart?(run: Run): void | Promise<void>;
+
+  onToolEnd?(run: Run): void | Promise<void>;
+
+  onToolError?(run: Run): void | Promise<void>;
+
+  onAgentAction?(run: Run): void | Promise<void>;
+
+  // TODO Implement handleAgentEnd, handleText
+
+  // onAgentEnd?(run: ChainRun): void | Promise<void>;
+
+  // onText?(run: Run): void | Promise<void>;
 }
 
 export class LangChainTracer extends BaseTracer {
@@ -290,11 +408,102 @@ export class LangChainTracer extends BaseTracer {
     }
   }
 
-  protected async persistRun(run: LLMRun | ChainRun | ToolRun): Promise<void> {
+  protected async convertV2RunToRun(
+    run: Run
+  ): Promise<LLMRun | ChainRun | ToolRun> {
+    const session = (this.session ??
+      this.loadDefaultSession()) as TracerSessionV1;
+
+    const serialized = run.serialized as { name: string };
+    let runResult: LLMRun | ChainRun | ToolRun;
+    if (run.run_type === "llm") {
+      const llmRun: LLMRun = {
+        uuid: run.id,
+        start_time: run.start_time,
+        end_time: run.end_time,
+        execution_order: run.execution_order,
+        child_execution_order: run.child_execution_order,
+        serialized,
+        type: run.run_type,
+        session_id: session.id,
+        prompts: run.inputs.prompts,
+        response: run.outputs as LLMResult,
+      };
+      runResult = llmRun;
+    } else if (run.run_type === "chain") {
+      const child_runs = await Promise.all(
+        run.child_runs.map((child_run) => this.convertV2RunToRun(child_run))
+      );
+      const chainRun: ChainRun = {
+        uuid: run.id,
+        start_time: run.start_time,
+        end_time: run.end_time,
+        execution_order: run.execution_order,
+        child_execution_order: run.child_execution_order,
+        serialized,
+        type: run.run_type,
+        session_id: session.id,
+        inputs: run.inputs,
+        outputs: run.outputs,
+        child_llm_runs: child_runs.filter(
+          (child_run) => child_run.type === "llm"
+        ) as LLMRun[],
+        child_chain_runs: child_runs.filter(
+          (child_run) => child_run.type === "chain"
+        ) as ChainRun[],
+        child_tool_runs: child_runs.filter(
+          (child_run) => child_run.type === "tool"
+        ) as ToolRun[],
+      };
+
+      runResult = chainRun;
+    } else if (run.run_type === "tool") {
+      const child_runs = await Promise.all(
+        run.child_runs.map((child_run) => this.convertV2RunToRun(child_run))
+      );
+      const toolRun: ToolRun = {
+        uuid: run.id,
+        start_time: run.start_time,
+        end_time: run.end_time,
+        execution_order: run.execution_order,
+        child_execution_order: run.child_execution_order,
+        serialized,
+        type: run.run_type,
+        session_id: session.id,
+        tool_input: run.inputs.input,
+        output: run.outputs?.output,
+        action: JSON.stringify(serialized),
+        child_llm_runs: child_runs.filter(
+          (child_run) => child_run.type === "llm"
+        ) as LLMRun[],
+        child_chain_runs: child_runs.filter(
+          (child_run) => child_run.type === "chain"
+        ) as ChainRun[],
+        child_tool_runs: child_runs.filter(
+          (child_run) => child_run.type === "tool"
+        ) as ToolRun[],
+      };
+
+      runResult = toolRun;
+    } else {
+      throw new Error(`Unknown run type: ${run.run_type}`);
+    }
+    return runResult;
+  }
+
+  protected async persistRun(
+    run: Run | LLMRun | ChainRun | ToolRun
+  ): Promise<void> {
     let endpoint;
-    if (run.type === "llm") {
+    let v1Run: LLMRun | ChainRun | ToolRun;
+    if ((run as Run).run_type !== undefined) {
+      v1Run = await this.convertV2RunToRun(run as Run);
+    } else {
+      v1Run = run as LLMRun | ChainRun | ToolRun;
+    }
+    if (v1Run.type === "llm") {
       endpoint = `${this.endpoint}/llm-runs`;
-    } else if (run.type === "chain") {
+    } else if (v1Run.type === "chain") {
       endpoint = `${this.endpoint}/chain-runs`;
     } else {
       endpoint = `${this.endpoint}/tool-runs`;
@@ -303,7 +512,7 @@ export class LangChainTracer extends BaseTracer {
     const response = await fetch(endpoint, {
       method: "POST",
       headers: this.headers,
-      body: JSON.stringify(run),
+      body: JSON.stringify(v1Run),
     });
     if (!response.ok) {
       console.error(
@@ -313,8 +522,8 @@ export class LangChainTracer extends BaseTracer {
   }
 
   protected async persistSession(
-    sessionCreate: TracerSessionCreate
-  ): Promise<TracerSession> {
+    sessionCreate: BaseTracerSession | BaseTracerSessionV2
+  ): Promise<TracerSessionV1 | TracerSession> {
     const endpoint = `${this.endpoint}/sessions`;
     const response = await fetch(endpoint, {
       method: "POST",
@@ -336,22 +545,26 @@ export class LangChainTracer extends BaseTracer {
     };
   }
 
-  async loadSession(sessionName: string): Promise<TracerSession> {
+  async loadSession(
+    sessionName: string
+  ): Promise<TracerSessionV1 | TracerSession> {
     const endpoint = `${this.endpoint}/sessions?name=${sessionName}`;
     return this._handleSessionResponse(endpoint);
   }
 
-  async loadDefaultSession(): Promise<TracerSession> {
+  async loadDefaultSession(): Promise<TracerSessionV1 | TracerSession> {
     const endpoint = `${this.endpoint}/sessions?name=default`;
     return this._handleSessionResponse(endpoint);
   }
 
-  private async _handleSessionResponse(endpoint: string) {
+  protected async _handleSessionResponse(
+    endpoint: string
+  ): Promise<TracerSessionV1 | TracerSession> {
     const response = await fetch(endpoint, {
       method: "GET",
       headers: this.headers,
     });
-    let tracerSession: TracerSession;
+    let tracerSession: TracerSessionV1;
     if (!response.ok) {
       console.error(
         `Failed to load session: ${response.status} ${response.statusText}`
@@ -363,7 +576,7 @@ export class LangChainTracer extends BaseTracer {
       this.session = tracerSession;
       return tracerSession;
     }
-    const resp = (await response.json()) as TracerSession[];
+    const resp = (await response.json()) as TracerSessionV1[];
     if (resp.length === 0) {
       tracerSession = {
         id: 1,
@@ -376,17 +589,172 @@ export class LangChainTracer extends BaseTracer {
     this.session = tracerSession;
     return tracerSession;
   }
+}
 
-  copy(): LangChainTracer {
-    // TODO: this is a hack to get tracing to work with the current backend
-    // we need to not use execution order, then remove this check
-    if (this.executionOrder === 1) {
-      const copy = new LangChainTracer();
-      copy.session = this.session;
-      copy.runMap = new Map(this.runMap);
-      copy.executionOrder = this.executionOrder;
-      return copy;
+export class LangChainTracerV2 extends LangChainTracer {
+  exampleId?: string;
+
+  tenantId?: string;
+
+  constructor(exampleId?: string, tenantId?: string) {
+    super();
+    this.tenantId =
+      tenantId ??
+      (typeof process !== "undefined"
+        ? // eslint-disable-next-line no-process-env
+          process.env?.LANGCHAIN_TENANT_ID
+        : undefined);
+    this.exampleId = exampleId;
+  }
+
+  protected async persistSession(
+    sessionCreate: BaseTracerSessionV2 | BaseTracerSession
+  ): Promise<TracerSessionV1 | TracerSession> {
+    const endpoint = `${this.endpoint}/sessions`;
+    const tenant_id = this.tenantId ?? (await this.updateTenantId());
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: this.headers,
+      body: JSON.stringify(sessionCreate),
+    });
+    if (!response.ok) {
+      if (sessionCreate.name !== undefined) {
+        try {
+          return await this.loadSession(sessionCreate.name);
+        } catch (e) {
+          console.error(
+            `Failed to load session: ${response.status} ${response.statusText}.`
+          );
+        }
+      }
+      console.error(
+        `Failed to persist session: ${response.status} ${response.statusText}, using default session.`
+      );
+      return {
+        id: uuid.v4(),
+        tenant_id,
+        ...sessionCreate,
+      };
     }
-    return this;
+    return {
+      id: (await response.json()).id,
+      tenant_id,
+      ...sessionCreate,
+    };
+  }
+
+  async newSession(sessionName?: string): Promise<TracerSession> {
+    const tenantId = this.tenantId ?? (await this.updateTenantId());
+    const sessionCreate: TracerSessionCreateV2 = {
+      start_time: Date.now(),
+      name: sessionName,
+      tenant_id: tenantId,
+    };
+    const session = await this.persistSession(sessionCreate);
+    this.session = session;
+    return session as TracerSession;
+  }
+
+  async updateTenantId(): Promise<string> {
+    const endpoint = `${this.endpoint}/tenants`;
+    const response = await fetch(endpoint, {
+      method: "GET",
+      headers: this.headers,
+    });
+
+    if (!response.ok) {
+      throw new Error(
+        `Failed to fetch tenant ID: ${response.status} ${response.statusText}`
+      );
+    }
+
+    const tenants = await response.json();
+    if (!tenants || tenants.length === 0) {
+      throw new Error(`No tenants found for endpoint ${endpoint}`);
+    }
+
+    const tenantId = tenants[0].id;
+    this.tenantId = tenantId;
+    return tenantId;
+  }
+
+  protected async _handleSessionResponse(
+    endpoint: string
+  ): Promise<TracerSessionV1 | TracerSession> {
+    const tenantId = this.tenantId ?? (await this.updateTenantId());
+    const configured_endpoint = `${endpoint}&tenant_id=${this.tenantId}`;
+    const response = await fetch(configured_endpoint, {
+      method: "GET",
+      headers: this.headers,
+    });
+    let tracerSession: TracerSession;
+    if (!response.ok) {
+      console.error(
+        `Failed to load session: ${response.status} ${response.statusText}`
+      );
+      tracerSession = {
+        id: uuid.v4(),
+        start_time: Date.now(),
+        tenant_id: tenantId,
+      };
+      this.session = tracerSession;
+      return tracerSession;
+    }
+    const resp = (await response.json()) as TracerSession[];
+    if (resp.length === 0) {
+      tracerSession = {
+        id: uuid.v4(),
+        start_time: Date.now(),
+        tenant_id: tenantId,
+      };
+      this.session = tracerSession;
+      return tracerSession;
+    }
+    [tracerSession] = resp;
+    this.session = tracerSession;
+    return tracerSession;
+  }
+
+  private async _convertToCreate(
+    run: Run,
+    example_id: string | undefined = undefined
+  ): Promise<RunCreate> {
+    const persistedRun: RunCreate = {
+      id: run.id,
+      name: run.name,
+      start_time: run.start_time,
+      end_time: run.end_time,
+      run_type: run.run_type,
+      reference_example_id: example_id,
+      extra: run.extra ?? {},
+      execution_order: run.execution_order,
+      serialized: run.serialized,
+      error: run.error,
+      inputs: run.inputs,
+      outputs: run.outputs ?? {},
+      session_id: run.session_id,
+      child_runs: await Promise.all(
+        run.child_runs.map((child_run) => this._convertToCreate(child_run))
+      ),
+    };
+    return persistedRun;
+  }
+
+  protected async persistRun(run: Run): Promise<void> {
+    const persistedRun: RunCreate = await this._convertToCreate(
+      run,
+      this.exampleId
+    );
+    const endpoint = `${this.endpoint}/runs`;
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: this.headers,
+      body: JSON.stringify(persistedRun),
+    });
+    if (!response.ok) {
+      console.error(
+        `Failed to persist run: ${response.status} ${response.statusText}`
+      );
+    }
   }
 }
