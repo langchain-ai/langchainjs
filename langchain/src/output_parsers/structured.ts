@@ -5,12 +5,12 @@ import { JsonSchema7ArrayType } from "zod-to-json-schema/src/parsers/array.js";
 import { JsonSchema7ObjectType } from "zod-to-json-schema/src/parsers/object.js";
 import { JsonSchema7StringType } from "zod-to-json-schema/src/parsers/string.js";
 import { JsonSchema7NumberType } from "zod-to-json-schema/src/parsers/number.js";
+import { JsonSchema7NullableType } from "zod-to-json-schema/src/parsers/nullable.js";
 import {
   BaseOutputParser,
   FormatInstructionsOptions,
   OutputParserException,
 } from "../schema/output_parser.js";
-import { JsonSchema7NullableType } from "zod-to-json-schema/src/parsers/nullable.js";
 
 export type JsonMarkdownStructuredOutputParserInput = {
   interpolationDepth?: number;
@@ -113,7 +113,7 @@ export class JsonMarkdownStructuredOutputParser<
 
     if ("type" in schema) {
       let nullable = false;
-      let type: string | string[] = schema.type;
+      let type: string;
       if (Array.isArray(schema.type)) {
         const nullIdx = schema.type.findIndex((type) => type === "null");
         if (nullIdx !== -1) {
@@ -121,6 +121,8 @@ export class JsonMarkdownStructuredOutputParser<
           schema.type.splice(nullIdx, 1);
         }
         type = schema.type.join(" | ") as string;
+      } else {
+        type = schema.type;
       }
 
       if (schema.type === "object" && schema.properties) {
@@ -152,13 +154,15 @@ export class JsonMarkdownStructuredOutputParser<
       const isNullable = nullable ? " (nullable)" : "";
       const description = schema.description ? ` // ${schema.description}` : "";
       return `${type}${description}${isNullable}`;
-    } else if ("anyOf" in schema) {
+    }
+
+    if ("anyOf" in schema) {
       return schema.anyOf
         .map((s) => this._schemaToInstruction(s, indent))
         .join(`\n${" ".repeat(indent - 2)}`);
-    } else {
-      throw new Error("unsupported schema type");
     }
+
+    throw new Error("unsupported schema type");
   }
 
   static fromZodSchema<T extends z.ZodTypeAny>(schema: T) {
