@@ -352,7 +352,6 @@
     "jest": "^29.5.0",
     "mammoth": "^1.5.1",
     "mongodb": "^5.2.0",
-    "mssql": "^9.1.1",
     "pdf-parse": "1.1.1",
     "playwright": "^1.32.1",
     "prettier": "^2.8.3",
@@ -465,9 +464,6 @@
       "optional": true
     },
     "mongodb": {
-      "optional": true
-    },
-    "mssql": {
       "optional": true
     },
     "pdf-parse": {
