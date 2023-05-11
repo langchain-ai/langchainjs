@@ -270,7 +270,33 @@ test("JsonMarkdownStructuredOutputParser.fromZodSchema with weird structure", as
   const parser =
     JsonMarkdownStructuredOutputParser.fromZodSchema<typeof schema>(schema);
   const data = `{ "a": [1, "a"], "b": [1, "a", {"l": "z"}], "c": { "a": 1, "x": "a" }, "l": [{"p": "a"}, {"p": "b"}] }`;
-  console.log(parser.getFormatInstructions());
-  
+
+  const correctInstruction = `Return a markdown code snippet with a JSON object formatted to look like:
+\`\`\`json
+{
+  "a": array[
+    string | number // a or b
+  ]  // a list of a or b
+  "b": array[
+    string // a (nullable)
+    number // b
+    {
+      "l": string // z (optional)
+    }
+  ]  // a list of a or b
+  "c": {
+    "a": number
+    "x": string
+  }
+  "l": array[
+    {
+      "p": string
+    }
+  ] 
+}
+\`\`\``;
+  const instruction = parser.getFormatInstructions();
+
+  expect(instruction).toEqual(correctInstruction);
   expect(await parser.parse(data)).toEqual(JSON.parse(data));
 });
