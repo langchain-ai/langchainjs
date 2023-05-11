@@ -13,7 +13,7 @@ class FakeLLM extends BaseLLM {
     return "fake";
   }
 
-  async _generate(prompts: string[], _?: string[]): Promise<LLMResult> {
+  async _generate(prompts: string[]): Promise<LLMResult> {
     return {
       generations: prompts.map((prompt) => {
         let completion = "";

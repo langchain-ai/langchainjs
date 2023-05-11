@@ -39,6 +39,8 @@ export type BaseChatModelCallOptions = BaseLanguageModelCallOptions;
 export abstract class BaseChatModel extends BaseLanguageModel {
   declare CallOptions: BaseChatModelCallOptions;
 
+  declare ParsedCallOptions: Omit<this["CallOptions"], "timeout">;
+
   constructor(fields: BaseChatModelParams) {
     super(fields);
   }
@@ -49,7 +51,7 @@ export abstract class BaseChatModel extends BaseLanguageModel {
 
   async generate(
     messages: BaseChatMessage[][],
-    stop?: string[] | this["CallOptions"],
+    options?: string[] | this["CallOptions"],
     callbacks?: Callbacks
   ): Promise<LLMResult> {
     const generations: ChatGeneration[][] = [];
@@ -57,6 +59,17 @@ export abstract class BaseChatModel extends BaseLanguageModel {
     const messageStrings: string[] = messages.map((messageList) =>
       getBufferString(messageList)
     );
+    let parsedOptions: this["CallOptions"];
+    if (Array.isArray(options)) {
+      parsedOptions = { stop: options } as this["CallOptions"];
+    } else if (options?.timeout && !options.signal) {
+      parsedOptions = {
+        ...options,
+        signal: AbortSignal.timeout(options.timeout),
+      };
+    } else {
+      parsedOptions = options ?? {};
+    }
     const callbackManager_ = await CallbackManager.configure(
       callbacks,
       this.callbacks,
@@ -69,7 +82,7 @@ export abstract class BaseChatModel extends BaseLanguageModel {
     try {
       const results = await Promise.all(
         messages.map((messageList) =>
-          this._generate(messageList, stop, runManager)
+          this._generate(messageList, parsedOptions, runManager)
         )
       );
       for (const result of results) {
@@ -105,54 +118,54 @@ export abstract class BaseChatModel extends BaseLanguageModel {
 
   async generatePrompt(
     promptValues: BasePromptValue[],
-    stop?: string[] | this["CallOptions"],
+    options?: string[] | this["CallOptions"],
     callbacks?: Callbacks
   ): Promise<LLMResult> {
     const promptMessages: BaseChatMessage[][] = promptValues.map(
       (promptValue) => promptValue.toChatMessages()
     );
-    return this.generate(promptMessages, stop, callbacks);
+    return this.generate(promptMessages, options, callbacks);
   }
 
   abstract _generate(
     messages: BaseChatMessage[],
-    stop?: string[] | this["CallOptions"],
+    options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult>;
 
   async call(
     messages: BaseChatMessage[],
-    stop?: string[] | this["CallOptions"],
+    options?: string[] | this["CallOptions"],
     callbacks?: Callbacks
   ): Promise<BaseChatMessage> {
-    const result = await this.generate([messages], stop, callbacks);
+    const result = await this.generate([messages], options, callbacks);
     const generations = result.generations as ChatGeneration[][];
     return generations[0][0].message;
   }
 
   async callPrompt(
     promptValue: BasePromptValue,
-    stop?: string[] | this["CallOptions"],
+    options?: string[] | this["CallOptions"],
     callbacks?: Callbacks
   ): Promise<BaseChatMessage> {
     const promptMessages: BaseChatMessage[] = promptValue.toChatMessages();
-    return this.call(promptMessages, stop, callbacks);
+    return this.call(promptMessages, options, callbacks);
   }
 }
 
 export abstract class SimpleChatModel extends BaseChatModel {
   abstract _call(
     messages: BaseChatMessage[],
-    stop?: string[] | this["CallOptions"],
+    options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<string>;
 
   async _generate(
     messages: BaseChatMessage[],
-    stop?: string[] | this["CallOptions"],
+    options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
-    const text = await this._call(messages, stop, runManager);
+    const text = await this._call(messages, options, runManager);
     const message = new AIChatMessage(text);
     return {
       generations: [
