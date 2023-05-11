@@ -6,10 +6,17 @@ import {
   SystemChatMessage,
 } from "../../schema/index.js";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type AdditionalKwargs = Record<string, any>;
+export interface StoredMessageData {
+  content: string;
+  role: string | undefined;
+  additional_kwargs?: AdditionalKwargs;
+}
+
 export interface StoredMessage {
   type: string;
-  role: string | undefined;
-  text: string;
+  data: StoredMessageData;
 }
 
 export function mapStoredMessagesToChatMessages(
@@ -18,17 +25,21 @@ export function mapStoredMessagesToChatMessages(
   return messages.map((message) => {
     switch (message.type) {
       case "human":
-        return new HumanChatMessage(message.text);
+        return new HumanChatMessage(message.data.content);
       case "ai":
-        return new AIChatMessage(message.text);
+        return new AIChatMessage(message.data.content);
       case "system":
-        return new SystemChatMessage(message.text);
-      default: {
-        if (message.role === undefined) {
-          throw new Error("Role must be defined for generic messages");
+        return new SystemChatMessage(message.data.content);
+      case "chat":
+        if (message.data?.additional_kwargs?.role === undefined) {
+          throw new Error("Role must be defined for chat messages");
         }
-        return new ChatMessage(message.text, message.role);
-      }
+        return new ChatMessage(
+          message.data.content,
+          message.data.additional_kwargs.role
+        );
+      default:
+        throw new Error(`Got unexpected type: ${message.type}`);
     }
   });
 }
@@ -38,7 +49,9 @@ export function mapChatMessagesToStoredMessages(
 ): StoredMessage[] {
   return messages.map((message) => ({
     type: message._getType(),
-    role: "role" in message ? (message.role as string) : undefined,
-    text: message.text,
+    data: {
+      content: message.text,
+      role: "role" in message ? (message.role as string) : undefined,
+    },
   }));
 }
