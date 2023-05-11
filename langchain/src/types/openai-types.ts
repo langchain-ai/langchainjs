@@ -1,3 +1,6 @@
+import { AxiosRequestConfig } from "axios";
+import { ChatCompletionRequestMessage } from "openai";
+
 import { BaseLanguageModelCallOptions } from "../base_language/index.js";
 
 export declare interface OpenAIBaseInput {
@@ -35,6 +38,7 @@ export declare interface OpenAIBaseInput {
    * https://platform.openai.com/docs/api-reference/completions/create |
    * `openai.createCompletion`} that are not explicitly specified on this class.
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   modelKwargs?: Record<string, any>;
 
   /** List of stop words to use when generating */
@@ -48,9 +52,10 @@ export declare interface OpenAIBaseInput {
 
 export interface OpenAICallOptions extends BaseLanguageModelCallOptions {
   /**
-   * List of stop words to use when generating
+   * Abort signal to use for cancelling in-flight requests.
+   * @see https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal
    */
-  stop?: string[];
+  signal?: AbortSignal;
 
   /**
    * Additional options to pass to the underlying axios request.

@@ -12,7 +12,7 @@ import {
   AzureOpenAIInput,
   OpenAICallOptions,
   OpenAIChatInput,
-} from "../types/open-ai-types.js";
+} from "../types/openai-types.js";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
 import type { StreamingAxiosConfiguration } from "../util/axios-types.js";
 import { BaseChatModel, BaseChatModelParams } from "./base.js";
@@ -95,6 +95,10 @@ export class ChatOpenAI
   implements OpenAIChatInput, AzureOpenAIInput
 {
   declare CallOptions: OpenAICallOptions;
+
+  get callKeys(): (keyof OpenAICallOptions)[] {
+    return ["stop", "signal", "timeout", "options"];
+  }
 
   temperature = 1;
 
@@ -262,22 +266,16 @@ export class ChatOpenAI
   /** @ignore */
   async _generate(
     messages: BaseChatMessage[],
-    stopOrOptions?: string[] | this["CallOptions"],
+    options?: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
-    const stop = Array.isArray(stopOrOptions)
-      ? stopOrOptions
-      : stopOrOptions?.stop;
-    const options = Array.isArray(stopOrOptions)
-      ? {}
-      : stopOrOptions?.options ?? {};
     const tokenUsage: TokenUsage = {};
-    if (this.stop && stop) {
+    if (this.stop && options?.stop) {
       throw new Error("Stop found in input and default params");
     }
 
     const params = this.invocationParams();
-    params.stop = stop ?? params.stop;
+    params.stop = options?.stop ?? params.stop;
     const messagesMapped: ChatCompletionRequestMessage[] = messages.map(
       (message) => ({
         role: messageTypeToOpenAIRole(message._getType()),
@@ -290,17 +288,23 @@ export class ChatOpenAI
       ? await new Promise<CreateChatCompletionResponse>((resolve, reject) => {
           let response: CreateChatCompletionResponse;
           let rejected = false;
+          let resolved = false;
           this.completionWithRetry(
             {
               ...params,
               messages: messagesMapped,
             },
             {
-              ...options,
+              signal: options?.signal,
+              ...options?.options,
               adapter: fetchAdapter, // default adapter doesn't do streaming
               responseType: "stream",
               onmessage: (event) => {
                 if (event.data?.trim?.() === "[DONE]") {
+                  if (resolved) {
+                    return;
+                  }
+                  resolved = true;
                   resolve(response);
                 } else {
                   const message = JSON.parse(event.data) as {
@@ -327,33 +331,45 @@ export class ChatOpenAI
                   }
 
                   // on all messages, update choice
-                  const part = message.choices[0];
-                  if (part != null) {
-                    let choice = response.choices.find(
-                      (c) => c.index === part.index
-                    );
+                  for (const part of message.choices) {
+                    if (part != null) {
+                      let choice = response.choices.find(
+                        (c) => c.index === part.index
+                      );
 
-                    if (!choice) {
-                      choice = {
-                        index: part.index,
-                        finish_reason: part.finish_reason ?? undefined,
-                      };
-                      response.choices.push(choice);
+                      if (!choice) {
+                        choice = {
+                          index: part.index,
+                          finish_reason: part.finish_reason ?? undefined,
+                        };
+                        response.choices[part.index] = choice;
+                      }
+
+                      if (!choice.message) {
+                        choice.message = {
+                          role: part.delta
+                            ?.role as ChatCompletionResponseMessageRoleEnum,
+                          content: part.delta?.content ?? "",
+                        };
+                      }
+
+                      choice.message.content += part.delta?.content ?? "";
+                      // TODO this should pass part.index to the callback
+                      // when that's supported there
+                      // eslint-disable-next-line no-void
+                      void runManager?.handleLLMNewToken(
+                        part.delta?.content ?? ""
+                      );
                     }
+                  }
 
-                    if (!choice.message) {
-                      choice.message = {
-                        role: part.delta
-                          ?.role as ChatCompletionResponseMessageRoleEnum,
-                        content: part.delta?.content ?? "",
-                      };
-                    }
-
-                    choice.message.content += part.delta?.content ?? "";
-                    // eslint-disable-next-line no-void
-                    void runManager?.handleLLMNewToken(
-                      part.delta?.content ?? ""
-                    );
+                  // when all messages are finished, resolve
+                  if (
+                    !resolved &&
+                    message.choices.every((c) => c.finish_reason != null)
+                  ) {
+                    resolved = true;
+                    resolve(response);
                   }
                 }
               },
@@ -370,7 +386,10 @@ export class ChatOpenAI
             ...params,
             messages: messagesMapped,
           },
-          options
+          {
+            signal: options?.signal,
+            ...options?.options,
+          }
         );
 
     const {

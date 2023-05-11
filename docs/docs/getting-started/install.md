@@ -83,7 +83,7 @@ LangChain can be used in Vercel / Next.js. We support using LangChain in fronten
 import { OpenAI } from "langchain/llms/openai";
 ```
 
-If you want to use LangChain in frontend `pages`, you need to add the following to your `next.config.js` to enable support for WebAssembly modules (which is required by the tokenizer library `@dqbd/tiktoken`):
+To use LangChain with Next.js (either with app/ or pages/), add the following to your `next.config.js` to enable support for WebAssembly modules (which is required by the tokenizer library `@dqbd/tiktoken`):
 
 ```js title="next.config.js"
 const nextConfig = {
