@@ -14,6 +14,7 @@ type BaseParams = {
   verbose?: boolean;
 };
 
+/** @interface */
 export type SummarizationChainParams = BaseParams &
   (
     | {
