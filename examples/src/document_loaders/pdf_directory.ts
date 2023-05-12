@@ -3,7 +3,7 @@ import { PDFLoader } from "langchain/document_loaders/fs/pdf";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 
 export const run = async () => {
-  /* load raw docs from the all files in the directory */
+  /* Load all PDFs within the specified directory */
   const directoryLoader = new DirectoryLoader(
     "src/document_loaders/example_data/",
     {
@@ -11,16 +11,16 @@ export const run = async () => {
     }
   );
 
-  const documents = await directoryLoader.load();
+  const docs = await directoryLoader.load();
 
-  console.log({ documents });
+  console.log({ docs });
 
-  /* Additionnal steps : Split text into chunks */
+  /* Additionnal steps : Split text into chunks with any TextSplitter. You can then use it as context or save it to memory afterwards. */
   const textSplitter = new RecursiveCharacterTextSplitter({
     chunkSize: 1000,
     chunkOverlap: 200,
   });
 
-  const splittedDocuments = await textSplitter.splitDocuments(documents);
-  console.log({ splittedDocuments });
+  const splitDocs = await textSplitter.splitDocuments(docs);
+  console.log({ splitDocs });
 };
