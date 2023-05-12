@@ -56,7 +56,7 @@ interface Config {
 /**
  * Typesense vector store.
  */
-export class TypesenseVectorStore extends VectorStore {
+export class Typesense extends VectorStore {
   private client: Client;
   private schemaName: string;
   private searchParams: MultiSearchRequestSchema;
@@ -226,8 +226,8 @@ export class TypesenseVectorStore extends VectorStore {
     docs: Document[],
     embeddings: Embeddings,
     config: Config
-  ): Promise<TypesenseVectorStore> {
-    const instance = new TypesenseVectorStore(embeddings, config);
+  ): Promise<Typesense> {
+    const instance = new Typesense(embeddings, config);
     await instance.addDocuments(docs);
 
     return instance;

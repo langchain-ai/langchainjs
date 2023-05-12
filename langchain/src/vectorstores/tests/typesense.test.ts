@@ -1,11 +1,11 @@
 import { Client } from "typesense";
 import { Document } from "../../document.js";
 import { FakeEmbeddings } from "../../embeddings/fake.js";
-import { TypesenseVectorStore } from "../typesense.js";
+import { Typesense } from "../typesense.js";
 
 test("documentsToTypesenseRecords should return the correct typesense records", async () => {
   const embeddings = new FakeEmbeddings();
-  const vectorstore = new TypesenseVectorStore(embeddings, {
+  const vectorstore = new Typesense(embeddings, {
     schemaName: "test",
     typesenseClient: {} as unknown as Client,
     columnNames: {
@@ -60,7 +60,7 @@ test("documentsToTypesenseRecords should return the correct typesense records", 
 
 test("typesenseRecordsToDocuments should return the correct langchain documents", async () => {
   const embeddings = new FakeEmbeddings();
-  const vectorstore = new TypesenseVectorStore(embeddings, {
+  const vectorstore = new Typesense(embeddings, {
     schemaName: "test",
     typesenseClient: {} as unknown as Client,
     columnNames: {
