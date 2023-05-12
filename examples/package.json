@@ -38,6 +38,7 @@
     "ml-distance": "^4.0.0",
     "mongodb": "^5.2.0",
     "prisma": "^4.11.0",
+    "redis": "^4.6.6",
     "sqlite3": "^5.1.4",
     "typeorm": "^0.3.12",
     "weaviate-ts-client": "^1.0.0",

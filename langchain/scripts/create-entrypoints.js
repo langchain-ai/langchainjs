@@ -119,10 +119,12 @@ const entrypoints = {
   "stores/file/in_memory": "stores/file/in_memory",
   "stores/file/node": "stores/file/node",
   "stores/message/dynamodb": "stores/message/dynamodb",
+  "stores/message/redis": "stores/message/redis",
   // experimental
   "experimental/autogpt": "experimental/autogpt/index",
   "experimental/babyagi": "experimental/babyagi/index",
   "experimental/plan_and_execute": "experimental/plan_and_execute/index",
+  client: "client/index",
 };
 
 // Entrypoints in this list will
@@ -189,6 +191,7 @@ const requiresOptionalDependency = [
   "cache/redis",
   "stores/file/node",
   "stores/message/dynamodb",
+  "stores/message/redis",
 ];
 
 // List of test-exports-* packages which we use to test that the exports field

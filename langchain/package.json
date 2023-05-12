@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.74",
+  "version": "0.0.75",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -277,6 +277,9 @@
     "stores/message/dynamodb.cjs",
     "stores/message/dynamodb.js",
     "stores/message/dynamodb.d.ts",
+    "stores/message/redis.cjs",
+    "stores/message/redis.js",
+    "stores/message/redis.d.ts",
     "experimental/autogpt.cjs",
     "experimental/autogpt.js",
     "experimental/autogpt.d.ts",
@@ -286,6 +289,9 @@
     "experimental/plan_and_execute.cjs",
     "experimental/plan_and_execute.js",
     "experimental/plan_and_execute.d.ts",
+    "client.cjs",
+    "client.js",
+    "client.d.ts",
     "index.cjs",
     "index.js",
     "index.d.ts"
@@ -1001,6 +1007,11 @@
       "import": "./stores/message/dynamodb.js",
       "require": "./stores/message/dynamodb.cjs"
     },
+    "./stores/message/redis": {
+      "types": "./stores/message/redis.d.ts",
+      "import": "./stores/message/redis.js",
+      "require": "./stores/message/redis.cjs"
+    },
     "./experimental/autogpt": {
       "types": "./experimental/autogpt.d.ts",
       "import": "./experimental/autogpt.js",
@@ -1015,6 +1026,11 @@
       "types": "./experimental/plan_and_execute.d.ts",
       "import": "./experimental/plan_and_execute.js",
       "require": "./experimental/plan_and_execute.cjs"
+    },
+    "./client": {
+      "types": "./client.d.ts",
+      "import": "./client.js",
+      "require": "./client.cjs"
     },
     "./package.json": "./package.json"
   }
