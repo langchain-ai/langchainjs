@@ -302,7 +302,13 @@ export class PrismaVectorStore<
 
   buildSqlFilterStr(filter: PrismaSqlFilter) {
     return Object.keys(filter)
-      .map((key) => `${key} = '${filter[key]}'`)
+      .map((key) => {
+        const value = filter[key];
+        if (typeof value === 'number') {
+          return `${key} = ${value}`;
+        }
+        return `${key} = '${value}'`;
+      })
       .join(' AND ');
   }
 
