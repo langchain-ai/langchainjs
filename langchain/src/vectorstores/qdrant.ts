@@ -14,7 +14,7 @@ interface QdrantSearchResponse {
   };
 }
 
-export interface QdrantArgs {
+export interface QdrantLibArgs {
   client: QdrantClient;
   collectionName?: string;
 }
@@ -24,7 +24,7 @@ export class QdrantVectorStore extends VectorStore {
 
   collectionName: string;
 
-  constructor(embeddings: Embeddings, args: QdrantArgs) {
+  constructor(embeddings: Embeddings, args: QdrantLibArgs) {
     super(embeddings, args);
     this.client = args.client;
     this.collectionName = args.collectionName || "documents";
@@ -56,21 +56,23 @@ export class QdrantVectorStore extends VectorStore {
 
   async similaritySearchVectorWithScore(
     query: number[],
-    k: number
+    k: number,
+    filter: any
   ): Promise<[Document, number][]> {
     const results = await this.client.search(this.collectionName, {
       vector: query,
       limit: k,
+      filter,
     });
 
     const result: [Document, number][] = (
       results as unknown as QdrantSearchResponse[]
-    ).map((resp) => [
+    ).map((res) => [
       new Document({
-        metadata: resp.payload.metadata,
-        pageContent: resp.payload.content,
+        metadata: res.payload.metadata,
+        pageContent: res.payload.content,
       }),
-      resp.score,
+      res.score,
     ]);
 
     return result;
@@ -80,7 +82,7 @@ export class QdrantVectorStore extends VectorStore {
     texts: string[],
     metadatas: object[] | object,
     embeddings: Embeddings,
-    dbConfig: QdrantArgs
+    dbConfig: QdrantLibArgs
   ): Promise<QdrantVectorStore> {
     const docs = [];
     for (let i = 0; i < texts.length; i += 1) {
@@ -97,7 +99,7 @@ export class QdrantVectorStore extends VectorStore {
   static async fromDocuments(
     docs: Document[],
     embeddings: Embeddings,
-    dbConfig: QdrantArgs
+    dbConfig: QdrantLibArgs
   ): Promise<QdrantVectorStore> {
     const instance = new this(embeddings, dbConfig);
     await instance.addDocuments(docs);
@@ -106,7 +108,7 @@ export class QdrantVectorStore extends VectorStore {
 
   static async fromExistingIndex(
     embeddings: Embeddings,
-    dbConfig: QdrantArgs
+    dbConfig: QdrantLibArgs
   ): Promise<QdrantVectorStore> {
     const instance = new this(embeddings, dbConfig);
     return instance;

@@ -6686,6 +6686,25 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@qdrant/js-client-rest@npm:^1.1.5":
+  version: 1.1.6
+  resolution: "@qdrant/js-client-rest@npm:1.1.6"
+  dependencies:
+    "@qdrant/openapi-typescript-fetch": ^1.2.0
+    "@sevinf/maybe": ^0.5.0
+  peerDependencies:
+    typescript: ">=4.1"
+  checksum: d2fb0ff9486c2f0e9fca74b69768894d12c2f46e810c81616206a0eba0ea575589955829c77f2a9a595b18e99f3b467b0d27c1365c948d011e0ca43d142fdbc0
+  languageName: node
+  linkType: hard
+
+"@qdrant/openapi-typescript-fetch@npm:^1.2.0":
+  version: 1.2.0
+  resolution: "@qdrant/openapi-typescript-fetch@npm:1.2.0"
+  checksum: dfddfe29bb843d957dc043b111618c7ae9ca7163fff9eca04c2d9ba2cd2fc00003548a2623e3ac0a1c79f2c9aae164eab0739ccb7d4d956d744d2263692a8d31
+  languageName: node
+  linkType: hard
+
 "@redis/bloom@npm:1.2.0":
   version: 1.2.0
   resolution: "@redis/bloom@npm:1.2.0"
@@ -6826,6 +6845,13 @@ __metadata:
     domhandler: ^5.0.3
     selderee: ^0.11.0
   checksum: 6deafedd153e492359f8f0407d20903d82f2ef4950e420f4b2ee6ffbb955753524631aac7d6a5fe61dc7c7893e6928b4d8409e886157ad64a60ab37bc08b17c4
+  languageName: node
+  linkType: hard
+
+"@sevinf/maybe@npm:^0.5.0":
+  version: 0.5.0
+  resolution: "@sevinf/maybe@npm:0.5.0"
+  checksum: 406151dde7af0e05c51f2650eb0ccff429afe776f88e7c3cecb72197f28eb96f906eacace17d780052ce5aa6d2cd4b04a045a5ffabe3364ad6cdb9dfe42af3eb
   languageName: node
   linkType: hard
 
@@ -17987,6 +18013,7 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@opensearch-project/opensearch": ^2.2.0
     "@pinecone-database/pinecone": ^0.0.14
+    "@qdrant/js-client-rest": ^1.1.5
     "@supabase/supabase-js": ^2.10.0
     "@tensorflow-models/universal-sentence-encoder": ^1.3.3
     "@tensorflow/tfjs-backend-cpu": ^4.4.0
@@ -18059,6 +18086,7 @@ __metadata:
     "@huggingface/inference": ^1.5.1
     "@opensearch-project/opensearch": "*"
     "@pinecone-database/pinecone": "*"
+    "@qdrant/js-client-rest": ^1.1.5
     "@supabase/supabase-js": ^2.10.0
     "@tensorflow-models/universal-sentence-encoder": "*"
     "@tensorflow/tfjs-converter": "*"
@@ -18098,6 +18126,8 @@ __metadata:
     "@opensearch-project/opensearch":
       optional: true
     "@pinecone-database/pinecone":
+      optional: true
+    "@qdrant/js-client-rest":
       optional: true
     "@supabase/supabase-js":
       optional: true
