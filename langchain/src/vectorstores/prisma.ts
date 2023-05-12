@@ -265,16 +265,14 @@ export class PrismaVectorStore<
 
     const vectorQuery = `[${query.join(",")}]`;
 
-    let whereCond = '';
-    if (filter) whereCond = this.buildSqlFilterStr(filter);
-    else if (this.filter) whereCond = this.buildSqlFilterStr(this.filter);
-
-    const filterSql = this.Prisma.raw(whereCond ? `WHERE ${whereCond}` : '');
+    // build up the where condition
+    const whereCond = this.buildSqlFilterStr(filter ?? this.filter ?? {});
+    const whereSql = this.Prisma.raw(whereCond ? `WHERE ${whereCond}` : '');
 
     const articles = await this.db.$queryRaw<Array<SimilarityModel<TModel, TSelectModel>>>`
       SELECT ${this.selectSql}, ${this.vectorColumnSql} <=> ${vectorQuery}::vector as "_distance"
       FROM ${this.tableSql}
-      ${filterSql}
+      ${whereSql}
       ORDER BY "_distance" ASC
       LIMIT ${k};
     `;
