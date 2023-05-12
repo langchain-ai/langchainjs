@@ -28,7 +28,8 @@ interface StoredMessageV1 {
 export function mapV1MessageToStoredMessage(
   message: StoredMessage | StoredMessageV1
 ): StoredMessage {
-  if ("data" in message) {
+  // TODO: Remove this mapper when we deprecate the old message format.
+  if ((message as StoredMessage).data !== undefined) {
     return message as StoredMessage;
   } else {
     const v1Message = message as StoredMessageV1;
@@ -46,24 +47,24 @@ export function mapStoredMessagesToChatMessages(
   messages: StoredMessage[]
 ): BaseChatMessage[] {
   return messages.map((message) => {
-    const stored_msg = mapV1MessageToStoredMessage(message);
-    switch (stored_msg.type) {
+    const storedMessage = mapV1MessageToStoredMessage(message);
+    switch (storedMessage.type) {
       case "human":
-        return new HumanChatMessage(stored_msg.data.content);
+        return new HumanChatMessage(storedMessage.data.content);
       case "ai":
-        return new AIChatMessage(stored_msg.data.content);
+        return new AIChatMessage(storedMessage.data.content);
       case "system":
-        return new SystemChatMessage(stored_msg.data.content);
+        return new SystemChatMessage(storedMessage.data.content);
       case "chat":
-        if (stored_msg.data?.additional_kwargs?.role === undefined) {
+        if (storedMessage.data?.additional_kwargs?.role === undefined) {
           throw new Error("Role must be defined for chat messages");
         }
         return new ChatMessage(
-          stored_msg.data.content,
-          stored_msg.data.additional_kwargs.role
+          storedMessage.data.content,
+          storedMessage.data.additional_kwargs.role
         );
       default:
-        throw new Error(`Got unexpected type: ${stored_msg.type}`);
+        throw new Error(`Got unexpected type: ${storedMessage.type}`);
     }
   });
 }
