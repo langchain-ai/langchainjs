@@ -1,4 +1,3 @@
-import type { Tiktoken } from "@dqbd/tiktoken";
 import {
   BaseChatMessage,
   BasePromptValue,
@@ -6,7 +5,8 @@ import {
 } from "../schema/index.js";
 import { CallbackManager, Callbacks } from "../callbacks/manager.js";
 import { AsyncCaller, AsyncCallerParams } from "../util/async_caller.js";
-import { getModelNameForTiktoken, importTiktoken } from "./count_tokens.js";
+import { getModelNameForTiktoken } from "./count_tokens.js";
+import { LiteTokenizer, isLiteTokenizerApplicable } from "../util/tokenizer.js";
 
 const getVerbosity = () => false;
 
@@ -123,39 +123,31 @@ export abstract class BaseLanguageModel
 
   abstract _llmType(): string;
 
-  private _encoding?: Tiktoken;
-
-  private _registry?: FinalizationRegistry<Tiktoken>;
+  private _encoding?: LiteTokenizer;
 
   async getNumTokens(text: string) {
     // fallback to approximate calculation if tiktoken is not available
     let numTokens = Math.ceil(text.length / 4);
 
-    try {
-      if (!this._encoding) {
-        const { encoding_for_model } = await importTiktoken();
-        // modelName only exists in openai subclasses, but tiktoken only supports
-        // openai tokenisers anyway, so for other subclasses we default to gpt2
-        if (encoding_for_model) {
-          this._encoding = encoding_for_model(
+    if (!this._encoding) {
+      if (
+        isLiteTokenizerApplicable(
+          getModelNameForTiktoken(
             "modelName" in this
               ? getModelNameForTiktoken(this.modelName as string)
               : "gpt2"
-          );
-          // We need to register a finalizer to free the tokenizer when the
-          // model is garbage collected.
-          this._registry = new FinalizationRegistry((t) => t.free());
-          this._registry.register(this, this._encoding);
-        }
+          )
+        )
+      ) {
+        this._encoding = new LiteTokenizer();
       }
+    }
 
-      if (this._encoding) {
-        numTokens = this._encoding.encode(text).length;
-      }
-    } catch (error) {
+    if (this._encoding) {
+      numTokens = this._encoding.encode(text).length;
+    } else {
       console.warn(
-        "Failed to calculate number of tokens with tiktoken, falling back to approximate count",
-        error
+        "Failed to calculate number of tokens, falling back to approximate count"
       );
     }
 

@@ -58,40 +58,19 @@ interface CalculateMaxTokenProps {
   modelName: TiktokenModel;
 }
 
-export const importTiktoken = async () => {
-  try {
-    const { encoding_for_model } = await import("@dqbd/tiktoken");
-    return { encoding_for_model };
-  } catch (error) {
-    return { encoding_for_model: null };
-  }
-};
-
 export const calculateMaxTokens = async ({
   prompt,
   modelName,
 }: CalculateMaxTokenProps) => {
-  const { encoding_for_model } = await importTiktoken();
-
   // fallback to approximate calculation if tiktoken is not available
   let numTokens = Math.ceil(prompt.length / 4);
 
-  try {
-    if (encoding_for_model) {
-      const encoding = encoding_for_model(getModelNameForTiktoken(modelName));
-      const tokenized = encoding.encode(prompt);
-      numTokens = tokenized.length;
-      encoding.free();
-    }
-
-    if (isLiteTokenizerApplicable(modelName)) {
-      const liteEncoder = new LiteTokenizer();
-      return liteEncoder.encode(prompt).length;
-    }
-  } catch (error) {
+  if (isLiteTokenizerApplicable(getModelNameForTiktoken(modelName))) {
+    const liteEncoder = new LiteTokenizer();
+    numTokens = liteEncoder.encode(prompt).length;
+  } else {
     console.warn(
-      "Failed to calculate number of tokens with tiktoken, falling back to approximate count",
-      error
+      "Failed to calculate number of tokens, falling back to approximate count"
     );
   }
 
