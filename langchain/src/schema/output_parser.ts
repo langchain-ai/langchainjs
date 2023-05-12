@@ -38,7 +38,7 @@ export abstract class BaseOutputParser<T = unknown> {
    */
   abstract getFormatInstructions(
     options?: FormatInstructionsOptions
-  ): string | Promise<string>;
+  ): string;
 
   /**
    * Return the string type key uniquely identifying this class of parser

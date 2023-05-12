@@ -7,7 +7,7 @@ import { OutputFixingParser } from "../../output_parsers/fix.js";
 import { BaseLanguageModel } from "../../base_language/index.js";
 import { AgentAction, AgentFinish } from "../../schema/index.js";
 import { OutputParserException } from "../../schema/output_parser.js";
-import { PromptTemplate } from "../../prompts/index.js";
+import { renderTemplate } from "../../prompts/index.js";
 
 export class StructuredChatOutputParser extends AgentActionOutputParser {
   constructor(private toolNames: string[]) {
@@ -37,16 +37,10 @@ export class StructuredChatOutputParser extends AgentActionOutputParser {
     }
   }
 
-  async getFormatInstructions(): Promise<string> {
-    const template = PromptTemplate.fromTemplate(
-      AGENT_ACTION_FORMAT_INSTRUCTIONS,
-      {
-        partialVariables: {
-          tool_names: this.toolNames.join(", "),
-        },
-      }
-    );
-    return template.format({});
+  getFormatInstructions(): string {
+    return renderTemplate(AGENT_ACTION_FORMAT_INSTRUCTIONS, "f-string", {
+      tool_names: this.toolNames.join(", "),
+    });
   }
 }
 
@@ -78,7 +72,7 @@ export class StructuredChatOutputParserWithRetries extends AgentActionOutputPars
     return this.baseParser.parse(text);
   }
 
-  async getFormatInstructions(): Promise<string> {
+  getFormatInstructions(): string {
     return FORMAT_INSTRUCTIONS;
   }
 

@@ -45,7 +45,7 @@ export class OutputFixingParser<T> extends BaseOutputParser<T> {
       if (e instanceof OutputParserException) {
         const result = await this.retryChain.call(
           {
-            instructions: await this.parser.getFormatInstructions(),
+            instructions: this.parser.getFormatInstructions(),
             completion,
             error: e,
           },
