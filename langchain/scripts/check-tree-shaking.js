@@ -26,6 +26,7 @@ export function listExternals() {
     ...Object.keys(packageJson.dependencies),
     ...Object.keys(packageJson.peerDependencies),
     /node\:/,
+    "@dqbd/tiktoken",
     "axios", // axios is a dependency of openai
     "pdf-parse/lib/pdf.js/v1.10.100/build/pdf.js",
     "@zilliz/milvus2-sdk-node/dist/milvus/const/Milvus.js",
