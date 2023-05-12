@@ -21,7 +21,7 @@ class FakeWebSearchTool extends StructuredTool {
     max_results,
   }: z.infer<this["schema"]>): Promise<string> {
     return [...Array(max_results).keys()]
-      .map((n) => `https://langchain.com/${n}`)
+      .map((n) => `https://langchain.com/tutorial/${n}`)
       .join(", ");
   }
 }
@@ -32,7 +32,6 @@ test("Run structured chat agent", async () => {
 
   const executor = await initializeAgentExecutorWithOptions(tools, model, {
     agentType: "structured-chat-zero-shot-react-description",
-    verbose: true,
   });
   console.log("Loaded agent.");
 
@@ -42,7 +41,7 @@ test("Run structured chat agent", async () => {
 
   console.log(`Got output ${result0.output}`);
 
-  const input1 = `Give me some URLs for tutorial articles on LangChain.`;
+  const input1 = `Give me some URLs for tutorial articles on LangChain as a comma separated list.`;
 
   const result1 = await executor.call({ input: input1 });
 

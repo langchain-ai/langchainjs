@@ -65,11 +65,19 @@ export class StructuredChatAgent extends Agent {
     }
   }
 
-  static getDefaultOutputParser(fields?: OutputParserArgs) {
-    if (fields?.llm) {
-      return StructuredChatOutputParserWithRetries.fromLLM(fields.llm);
+  static getDefaultOutputParser(
+    fields?: OutputParserArgs & {
+      toolNames: string[];
     }
-    return new StructuredChatOutputParserWithRetries();
+  ) {
+    if (fields?.llm) {
+      return StructuredChatOutputParserWithRetries.fromLLM(fields.llm, {
+        toolNames: fields.toolNames,
+      });
+    }
+    return new StructuredChatOutputParserWithRetries({
+      toolNames: fields?.toolNames,
+    });
   }
 
   async constructScratchPad(steps: AgentStep[]): Promise<string> {
@@ -78,6 +86,17 @@ export class StructuredChatAgent extends Agent {
       return `This was your previous work (but I haven't seen any of it! I only see what you return as final answer):\n${agentScratchpad}`;
     }
     return agentScratchpad;
+  }
+
+  static createToolSchemasString(tools: StructuredTool[]) {
+    return tools
+      .map(
+        (tool) =>
+          `${tool.name}: ${tool.description}, args: ${JSON.stringify(
+            (zodToJsonSchema(tool.schema) as JsonSchema7ObjectType).properties
+          )}`
+      )
+      .join("\n");
   }
 
   /**
@@ -90,26 +109,15 @@ export class StructuredChatAgent extends Agent {
    */
   static createPrompt(tools: StructuredTool[], args?: ChatCreatePromptArgs) {
     const { prefix = PREFIX, suffix = SUFFIX } = args ?? {};
-    const toolStrings = tools
-      .map(
-        (tool) =>
-          `${tool.name}: ${tool.description}, args: ${JSON.stringify(
-            (zodToJsonSchema(tool.schema) as JsonSchema7ObjectType).properties
-          )}`
-      )
-      .join("\n");
-    const template = [
-      prefix,
-      FORMAT_INSTRUCTIONS,
-      suffix,
-    ].join("\n\n");
+    const template = [prefix, FORMAT_INSTRUCTIONS, suffix].join("\n\n");
     const messages = [
       new SystemMessagePromptTemplate(
         new PromptTemplate({
           template,
           inputVariables: [],
           partialVariables: {
-            tool_strings: toolStrings,
+            tool_schemas: StructuredChatAgent.createToolSchemasString(tools),
+            tool_names: tools.map((tool) => tool.name).join(", "),
           },
         })
       ),
@@ -125,6 +133,12 @@ export class StructuredChatAgent extends Agent {
   ) {
     StructuredChatAgent.validateTools(tools);
     const prompt = StructuredChatAgent.createPrompt(tools, args);
+    const outputParser =
+      args?.outputParser ??
+      StructuredChatAgent.getDefaultOutputParser({
+        llm,
+        toolNames: tools.map((tool) => tool.name),
+      });
     const chain = new LLMChain({
       prompt,
       llm,
@@ -133,9 +147,7 @@ export class StructuredChatAgent extends Agent {
 
     return new StructuredChatAgent({
       llmChain: chain,
-      outputParser:
-        args?.outputParser ??
-        StructuredChatAgent.getDefaultOutputParser({ llm }),
+      outputParser,
       allowedTools: tools.map((t) => t.name),
     });
   }

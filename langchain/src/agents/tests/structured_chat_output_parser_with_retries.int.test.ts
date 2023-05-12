@@ -17,8 +17,9 @@ test("Can parse JSON with text in front of it", async () => {
         'Here we have an invalid format (missing markdown block) with a structured tool that the parser should retry and fix: {\n \t\r\n"action": "blogpost",\n\t\r  "action_input": {"query": "SELECT * FROM orders\\nJOIN users ON users.id = orders.user_id\\nWHERE users.email = $1",\n\t"parameters": ["bud"]\n\t}\n\t\r}\n\n\n\t\r and at the end there is more nonsense',
       tool: "blogpost",
       toolInput: {
-        query: "SELECT * FROM orders\nJOIN users ON users.id = orders.user_id\nWHERE users.email = $1",
-        parameters: ["bud"]
+        query:
+          "SELECT * FROM orders\nJOIN users ON users.id = orders.user_id\nWHERE users.email = $1",
+        parameters: ["bud"],
       },
     },
     {
@@ -28,7 +29,12 @@ test("Can parse JSON with text in front of it", async () => {
     },
   ];
 
-  const p = StructuredChatOutputParserWithRetries.fromLLM(new ChatOpenAI({temperature: 0, modelName: 'gpt-3.5-turbo'}));
+  const p = StructuredChatOutputParserWithRetries.fromLLM(
+    new ChatOpenAI({ temperature: 0, modelName: "gpt-3.5-turbo" }),
+    {
+      toolNames: ["blogpost"],
+    }
+  );
   for (const message of testCases) {
     const parsed = await p.parse(message.input);
     expect(parsed).toBeDefined();
