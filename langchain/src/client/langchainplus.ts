@@ -108,14 +108,18 @@ const stringifyError = (err: Error | unknown): string => {
   return result;
 };
 
-export function isLLM(llm: BaseLanguageModel | BaseChain): llm is BaseLLM {
+export function isLLM(
+  llm: BaseLanguageModel | (() => Promise<BaseChain>)
+): llm is BaseLLM {
   const blm = llm as BaseLanguageModel;
   return (
     typeof blm?._modelType === "function" && blm?._modelType() === "base_llm"
   );
 }
 
-export function isChatModel(llm: BaseLanguageModel): llm is BaseChatModel {
+export function isChatModel(
+  llm: BaseLanguageModel | (() => Promise<BaseChain>)
+): llm is BaseChatModel {
   const blm = llm as BaseLanguageModel;
   return (
     typeof blm?._modelType === "function" &&
@@ -123,11 +127,36 @@ export function isChatModel(llm: BaseLanguageModel): llm is BaseChatModel {
   );
 }
 
-export function isChain(llm: BaseLanguageModel | BaseChain): llm is BaseChain {
-  const bch = llm as BaseChain;
+export async function isChain(
+  llm: BaseLanguageModel | (() => Promise<BaseChain>)
+): Promise<boolean> {
+  if (isLLM(llm)) {
+    return false;
+  }
+  const bchFactory = llm as () => Promise<BaseChain>;
+  const bch = await bchFactory();
   return (
     typeof bch?._chainType === "function" && bch?._chainType() !== undefined
   );
+}
+
+type _ModelType = "llm" | "chatModel" | "chainFactory";
+
+async function getModelOrFactoryType(
+  llm: BaseLanguageModel | (() => Promise<BaseChain>)
+): Promise<_ModelType> {
+  if (isLLM(llm)) {
+    return "llm";
+  }
+  if (isChatModel(llm)) {
+    return "chatModel";
+  }
+  const bchFactory = llm as () => Promise<BaseChain>;
+  const bch = await bchFactory();
+  if (typeof bch?._chainType === "function") {
+    return "chainFactory";
+  }
+  throw new Error("Unknown model or factory type");
 }
 
 export class LangChainPlusClient {
@@ -453,12 +482,13 @@ export class LangChainPlusClient {
   protected async runChain(
     example: Example,
     tracer: LangChainTracer,
-    chain: BaseChain,
+    chainFactory: () => Promise<BaseChain>,
     numRepetitions = 1
   ): Promise<(ChainValues | string)[]> {
     const results: (ChainValues | string)[] = await Promise.all(
       Array.from({ length: numRepetitions }).map(async () => {
         try {
+          const chain = await chainFactory();
           return chain.call(example.inputs, [tracer]);
         } catch (e) {
           console.error(e);
@@ -495,7 +525,7 @@ export class LangChainPlusClient {
 
   public async runOnDataset(
     datasetName: string,
-    llmOrChain: BaseLanguageModel | BaseChain,
+    llmOrChainFactory: BaseLanguageModel | (() => Promise<BaseChain>),
     numRepetitions = 1,
     sessionName: string | undefined = undefined
   ): Promise<DatasetRunResults> {
@@ -503,43 +533,47 @@ export class LangChainPlusClient {
     let sessionName_: string;
     if (sessionName === undefined) {
       const currentTime = new Date().toISOString();
-      sessionName_ = `${datasetName}-${llmOrChain.constructor.name}-${currentTime}`;
+      sessionName_ = `${datasetName}-${llmOrChainFactory.constructor.name}-${currentTime}`;
     } else {
       sessionName_ = sessionName;
     }
     const results: DatasetRunResults = {};
+    const modelOrFactoryType = await getModelOrFactoryType(llmOrChainFactory);
     await Promise.all(
       examples.map(async (example) => {
         const tracer = new LangChainTracer({
           exampleId: example.id,
           sessionName: sessionName_,
         });
-        if (isLLM(llmOrChain)) {
+        if (modelOrFactoryType === "llm") {
+          const llm = llmOrChainFactory as BaseLLM;
           const llmResult = await this.runLLM(
             example,
             tracer,
-            llmOrChain,
+            llm,
             numRepetitions
           );
           results[example.id] = llmResult;
-        } else if (isChain(llmOrChain)) {
+        } else if (modelOrFactoryType === "chainFactory") {
+          const chainFactory = llmOrChainFactory as () => Promise<BaseChain>;
           const chainResult = await this.runChain(
             example,
             tracer,
-            llmOrChain,
+            chainFactory,
             numRepetitions
           );
           results[example.id] = chainResult;
-        } else if (isChatModel(llmOrChain)) {
+        } else if (modelOrFactoryType === "chatModel") {
+          const chatModel = llmOrChainFactory as BaseChatModel;
           const chatModelResult = await this.runChatModel(
             example,
             tracer,
-            llmOrChain,
+            chatModel,
             numRepetitions
           );
           results[example.id] = chatModelResult;
         } else {
-          throw new Error(` llm or chain type: ${llmOrChain}`);
+          throw new Error(` llm or chain type: ${llmOrChainFactory}`);
         }
       })
     );
