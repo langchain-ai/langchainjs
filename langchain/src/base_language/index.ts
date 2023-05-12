@@ -48,7 +48,24 @@ export interface BaseLanguageModelParams
   callbackManager?: CallbackManager;
 }
 
-export interface BaseLanguageModelCallOptions {}
+export interface BaseLanguageModelCallOptions {
+  /**
+   * Stop tokens to use for this call.
+   * If not provided, the default stop tokens for the model will be used.
+   */
+  stop?: string[];
+
+  /**
+   * Timeout for this call in milliseconds.
+   */
+  timeout?: number;
+
+  /**
+   * Abort signal for this call.
+   * If provided, the call will be aborted when the signal is aborted.
+   */
+  signal?: AbortSignal;
+}
 
 /**
  * Base class for language models.
@@ -58,6 +75,13 @@ export abstract class BaseLanguageModel
   implements BaseLanguageModelParams
 {
   declare CallOptions: BaseLanguageModelCallOptions;
+
+  /**
+   * Keys that the language model accepts as call options.
+   */
+  get callKeys(): string[] {
+    return ["stop", "timeout", "signal"];
+  }
 
   /**
    * The async caller should be used by subclasses to make any async calls,
@@ -75,7 +99,7 @@ export abstract class BaseLanguageModel
 
   abstract generatePrompt(
     promptValues: BasePromptValue[],
-    stop?: string[] | this["CallOptions"],
+    options?: string[] | this["CallOptions"],
     callbacks?: Callbacks
   ): Promise<LLMResult>;
 

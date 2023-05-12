@@ -41,7 +41,10 @@ export class Replicate extends LLM implements ReplicateInput {
   }
 
   /** @ignore */
-  async _call(prompt: string, _stop?: string[]): Promise<string> {
+  async _call(
+    prompt: string,
+    options: this["ParsedCallOptions"]
+  ): Promise<string> {
     const imports = await Replicate.imports();
 
     const replicate = new imports.Replicate({
@@ -49,14 +52,16 @@ export class Replicate extends LLM implements ReplicateInput {
       auth: this.apiKey,
     });
 
-    const output = await this.caller.call(() =>
-      replicate.run(this.model, {
-        wait: true,
-        input: {
-          ...this.input,
-          prompt,
-        },
-      })
+    const output = await this.caller.callWithOptions(
+      { signal: options.signal },
+      () =>
+        replicate.run(this.model, {
+          wait: true,
+          input: {
+            ...this.input,
+            prompt,
+          },
+        })
     );
 
     // Note this is a little odd, but the output format is not consistent

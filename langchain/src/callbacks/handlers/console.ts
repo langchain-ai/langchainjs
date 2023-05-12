@@ -1,6 +1,6 @@
 import type { CSPair } from "ansi-styles";
 import styles from "ansi-styles";
-import { BaseTracer, BaseTracerSession, AgentRun, Run } from "./tracers.js";
+import { BaseTracer, AgentRun, Run } from "./tracer.js";
 
 function wrap(style: CSPair, text: string) {
   return `${style.open}${text}${style.close}`;
@@ -27,29 +27,8 @@ const { color } = styles;
 export class ConsoleCallbackHandler extends BaseTracer {
   name = "console_callback_handler" as const;
 
-  // boilerplate to work with the base tracer class
-
-  constructor() {
-    super();
-  }
-
-  i = 0;
-
-  protected persistSession(session: BaseTracerSession) {
-    // eslint-disable-next-line no-plusplus
-    return Promise.resolve({ ...session, id: this.i++ });
-  }
-
   protected persistRun(_run: Run) {
     return Promise.resolve();
-  }
-
-  loadDefaultSession() {
-    return this.newSession();
-  }
-
-  loadSession(sessionName: string) {
-    return this.newSession(sessionName);
   }
 
   // utility methods
@@ -121,13 +100,16 @@ export class ConsoleCallbackHandler extends BaseTracer {
 
   onLLMStart(run: Run) {
     const crumbs = this.getBreadcrumbs(run);
-    const prompts = run.inputs.prompts as string[];
+    const inputs =
+      "prompts" in run.inputs
+        ? { prompts: (run.inputs.prompts as string[]).map((p) => p.trim()) }
+        : run.inputs;
     console.log(
       `${wrap(
         color.green,
         "[llm/start]"
       )} [${crumbs}] Entering LLM run with input: ${tryJsonStringify(
-        { prompts: prompts.map((p) => p.trim()) },
+        inputs,
         "[inputs]"
       )}`
     );
