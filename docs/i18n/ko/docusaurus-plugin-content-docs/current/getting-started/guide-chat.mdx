@@ -5,21 +5,21 @@ sidebar_position: 3
 import CodeBlock from "@theme/CodeBlock";
 import Example from "@examples/models/chat/chat_streaming_stdout.ts";
 
-# Quickstart, using Chat Models
+# 빠른 시작, 대화 모델 사용
 
-Chat models are a variation on language models.
-While chat models use language models under the hood, the interface they expose is a bit different.
-Rather than expose a "text in, text out" API, they expose an interface where "chat messages" are the inputs and outputs.
+대화 모델은 언어 모델의 한 종류입니다.
+대화 모델은 내부적으로 언어 모델을 사용하지만, 노출하는 인터페이스는 약간 다릅니다.
+텍스트를 입력 받고 텍스트를 출력하는 API를 제공하는 대신, 입력과 출력이 "채팅 메시지"인 인터페이스를 가지고 있습니다.
 
-Chat model APIs are fairly new, so we are still figuring out the correct abstractions.
+대화 모델 API는 아직 매우 새로운 것이기 때문에, 올바르게 추상화하기 위해 우리는 아직 많은 고민을 하고 있습니다.
 
-## Installation and Setup
+## 설치하기
 
-To get started, follow the [installation instructions](./install) to install LangChain.
+시작하려면, [설치 가이드](./install)를 따라 LangChain을 설치하세요.
 
-## Getting Started
+## 시작하기
 
-This section covers how to get started with chat models. The interface is based around messages rather than raw text.
+이 섹션은 Langchain으로 대화 모델을 다루는 방법을 설명합니다. 인터페이스는 원시 텍스트(raw text)가 아닌 메시지를 기반으로 합니다.
 
 ```typescript
 import { ChatOpenAI } from "langchain/chat_models/openai";
@@ -28,16 +28,16 @@ import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
 const chat = new ChatOpenAI({ temperature: 0 });
 ```
 
-Here we create a chat model using the API key stored in the environment variable `OPENAI_API_KEY`. We'll be calling this chat model throughout this section.
+여기서 우리는 환경 변수 `OPENAI_API_KEY`에 저장된 API 키를 사용하여 대화 모델을 만듭니다. 이 섹션이 진행되는 동안 우리는 이 대화 모델을 계속 호출하게 될 것입니다.
 
-### Chat Models: Message in, Message out
+### 대화 모델: 메시지 입출력
 
-You can get chat completions by passing one or more messages to the chat model. The response will also be a message. The types of messages currently supported in LangChain are `AIChatMessage`, `HumanChatMessage`, `SystemChatMessage`, and a generic `ChatMessage` -- ChatMessage takes in an arbitrary role parameter, which we won't be using here. Most of the time, you'll just be dealing with `HumanChatMessage`, `AIChatMessage`, and `SystemChatMessage`.
+대화 완성(chat completions)을 받기 위해서는, 하나 이상의 메시지를 대화 모델에 전달하면 됩니다. 응답 역시 메시지가 됩니다. 현재 LangChain에서 지원하는 메시지 유형은 `AIChatMessage`, `HumanChatMessage`, `SystemChatMessage`와 일반적인 `ChatMessage`입니다. -- ChatMessage는 임의의 역할(role) 매개 변수를 받습니다. (이 내용에 대해서는 여기서 다루지 않습니다.) 대부분의 경우, `HumanChatMessage`, `AIChatMessage`와 `SystemChatMessage`를 주로 사용하게 될 것입니다.
 
 ```typescript
 const response = await chat.call([
   new HumanChatMessage(
-    "Translate this sentence from English to French. I love programming."
+    "Translate this sentence from English to Korean. I love programming."
   ),
 ]);
 
@@ -45,17 +45,17 @@ console.log(response);
 ```
 
 ```
-AIChatMessage { text: "J'aime programmer." }
+AIChatMessage { text: "저는 프로그래밍을 사랑합니다." }
 ```
 
-#### Multiple Messages
+#### 여러 개의 메시지
 
-OpenAI's chat-based models (currently `gpt-3.5-turbo` and `gpt-4`) support multiple messages as input. See [here](https://platform.openai.com/docs/guides/chat/chat-vs-completions) for more information. Here is an example of sending a system and user message to the chat model:
+OpenAI의 채팅 기반 모델(현재 `gpt-3.5-turbo`와 `gpt-4`)은 입력으로 여러 메시지를 지원합니다. 자세한 내용은 [여기](https://platform.openai.com/docs/guides/chat/chat-vs-completions)를 참고하세요. 여기서는 시스템(system)과 사용자(user) 메시지를 채팅 모델에 보내는 예제를 보여줍니다.
 
 ```typescript
 response = await chat.call([
   new SystemChatMessage(
-    "You are a helpful assistant that translates English to French."
+    "You are a helpful assistant that translates English to Korean."
   ),
   new HumanChatMessage("Translate: I love programming."),
 ]);
@@ -64,29 +64,29 @@ console.log(response);
 ```
 
 ```
-AIChatMessage { text: "J'aime programmer." }
+AIChatMessage { text: "저는 프로그래밍을 사랑합니다." }
 ```
 
-#### Multiple Completions
+#### 여러 개의 완성(Completions)
 
-You can go one step further and generate completions for multiple sets of messages using generate. This returns an LLMResult with an additional message parameter.
+`generate`를 사용하여 여러 메시지 셋에 대한 완성(completion)을 생성할 수 있습니다. 이렇게 하면 메시지 매개변수가 추가된 LLMResult가 반환됩니다.
 
 ```typescript
 const responseC = await chat.generate([
   [
     new SystemChatMessage(
-      "You are a helpful assistant that translates English to French."
+      "You are a helpful assistant that translates English to Korean."
     ),
     new HumanChatMessage(
-      "Translate this sentence from English to French. I love programming."
+      "Translate this sentence from English to Korean. I love programming."
     ),
   ],
   [
     new SystemChatMessage(
-      "You are a helpful assistant that translates English to French."
+      "You are a helpful assistant that translates English to Korean."
     ),
     new HumanChatMessage(
-      "Translate this sentence from English to French. I love artificial intelligence."
+      "Translate this sentence from English to Korean. I love artificial intelligence."
     ),
   ],
 ]);
@@ -99,25 +99,25 @@ console.log(responseC);
   generations: [
     [
       {
-        text: "J'aime programmer.",
-        message: AIChatMessage { text: "J'aime programmer." },
+        text: "저는 프로그래밍을 사랑합니다.",
+        message: AIChatMessage { text: "저는 프로그래밍을 사랑합니다." },
       }
     ],
     [
       {
-        text: "J'aime l'intelligence artificielle.",
-        message: AIChatMessage { text: "J'aime l'intelligence artificielle." }
+        text: "저는 인공지능을 사랑합니다.",
+        message: AIChatMessage { text: "저는 인공지능을 사랑합니다." }
       }
     ]
   ]
 }
 ```
 
-### Chat Prompt Templates: Manage Prompts for Chat Models
+### 대화 프롬프트 템플릿: 대화 모델을 위한 프롬프트 관리
 
-You can make use of templating by using a `MessagePromptTemplate`. You can build a `ChatPromptTemplate` from one or more `MessagePromptTemplates`. You can use `ChatPromptTemplate`'s `formatPromptValue` -- this returns a `PromptValue`, which you can convert to a string or Message object, depending on whether you want to use the formatted value as input to an llm or chat model.
+`MessagePromptTemplate`을 활용하면 템플릿을 만들 수 있습니다. 하나 이상의 `MessagePromptTemplate`을 묶어 `ChatPromptTemplate`으로 구성할 수도 있습니다. `ChatPromptTemplate`의 `formatPromptValue`를 사용하면 `PromptValue`가 반환되는데, 입력값을 언어 모델 또는 채팅 모델로 중 어느 것으로 사용하고자 하는지에 따라 문자열이나 메시지 객체로 변환해 사용할 수 있습니다.
 
-Continuing with the previous example:
+이전 예시에 이어서 진행합니다.
 
 ```typescript
 import {
@@ -127,7 +127,7 @@ import {
 } from "langchain/prompts";
 ```
 
-First we create a reusable template:
+가장 먼저, 재사용 가능한 템플릿을 만듭니다.
 
 ```typescript
 const translationPrompt = ChatPromptTemplate.fromPromptMessages([
@@ -138,13 +138,13 @@ const translationPrompt = ChatPromptTemplate.fromPromptMessages([
 ]);
 ```
 
-Then we can use the template to generate a response:
+그 후에 템플릿을 사용하여 응답을 생성합니다.
 
 ```typescript
 const responseA = await chat.generatePrompt([
   await translationPrompt.formatPromptValue({
     input_language: "English",
-    output_language: "French",
+    output_language: "Korean",
     text: "I love programming.",
   }),
 ]);
@@ -157,17 +157,17 @@ console.log(responseA);
   generations: [
     [
       {
-        text: "J'aime programmer.",
-        message: AIChatMessage { text: "J'aime programmer." }
+        text: "저는 프로그래밍을 사랑합니다.",
+        message: AIChatMessage { text: "저는 프로그래밍을 사랑합니다." }
       }
     ]
   ]
 }
 ```
 
-### Model + Prompt = LLMChain
+### 모델 + 프롬프트 = LLMChain
 
-This pattern of asking for the completion of a formatted prompt is quite common, so we introduce the next piece of the puzzle: LLMChain
+프롬프트로 대화 완성(completion)을 요청하는 경우는 매우 많으므로, LLMChain을 통해 간결하게 구현할 수 있도록 해두었습니다.
 
 ```typescript
 const chain = new LLMChain({
@@ -176,12 +176,12 @@ const chain = new LLMChain({
 });
 ```
 
-Then you can call the chain:
+그 후에 바로 체인을 호출하면 됩니다.
 
 ```typescript
 const responseB = await chain.call({
   input_language: "English",
-  output_language: "French",
+  output_language: "Korean",
   text: "I love programming.",
 });
 
@@ -189,10 +189,10 @@ console.log(responseB);
 ```
 
 ```
-{ text: "J'aime programmer." }
+{ text: "저는 프로그래밍을 사랑합니다." }
 ```
 
-The chain will internally accumulate the messages sent to the model, and the ones received as output. Then it will inject the messages into the prompt on the next call. So you can call the chain a few times, and it remembers previous messages:
+체인은 내부적으로 모델에 보내진 메시지와 출력된 메시지를 누적시켜놓고, 다음 호출 시 프롬프트에 메시지를 주입합니다. 따라서 체인을 여러 번 호출하면 이전 메시지를 기억합니다.
 
 ```typescript
 const responseD = await chain.call({
@@ -220,11 +220,11 @@ console.log(responseE);
 }
 ```
 
-### Agents: Dynamically Run Chains Based on User Input
+### 에이전트: 사용자 입력에 따라 동적으로 체인 실행하기
 
-Finally, we introduce Tools and Agents, which extend the model with other abilities, such as search, or a calculator.
+이제 드디어 검색 또는 계산기와 같은 다른 기능을 추가하여 모델을 확장하는 도구와 에이전트를 소개합니다.
 
-A tool is a function that takes a string (such as a search query) and returns a string (such as a search result). They also have a name and description, which are used by the chat model to identify which tool it should call.
+도구(Tool)는 문자열(예: 검색 쿼리)을 입력으로 받아 문자열(예: 검색 결과)을 반환하는 함수입니다. 또한 `name`과 `description`을 가지고 있는데, 채팅 모델이 어떤 도구를 호출해야 하는지 식별하는 데 사용됩니다.
 
 ```typescript
 class Tool {
@@ -234,7 +234,7 @@ class Tool {
 }
 ```
 
-An agent is a stateless wrapper around an agent prompt chain (such as MRKL) which takes care of formatting tools into the prompt, as well as parsing the responses obtained from the chat model.
+에이전트는 에이전트 프롬프트 체인(예: MRKL)을 상태 관리 없이 감싸는 래퍼(wrapper)로, 도구를 프롬프트로 포맷하고 채팅 모델로부터 얻은 응답을 파싱하는 작업을 처리합니다.
 
 ```typescript
 interface AgentStep {
@@ -256,7 +256,7 @@ class Agent {
 }
 ```
 
-To make agents more powerful we need to make them iterative, ie. call the model multiple times until they arrive at the final answer. That's the job of the AgentExecutor.
+에이전트를 더 강력하게 만들기 위해서는, 최종 답변에 도달할 때까지 모델을 여러 번 호출해야 합니다. 이것이 AgentExecutor의 역할입니다.
 
 ```typescript
 class AgentExecutor {
@@ -274,7 +274,7 @@ class AgentExecutor {
 }
 ```
 
-And finally, we can use the AgentExecutor to run an agent:
+그리고 마지막으로, AgentExecutor를 사용하여 에이전트를 실행할 수 있습니다.
 
 ```typescript
 // Define the list of tools the agent can use
@@ -301,9 +301,9 @@ console.log(responseG);
 38,626,704.
 ```
 
-### Memory: Add State to Chains and Agents
+### 메모리: 체인과 에이전트에 상태 추가하기
 
-You can also use the chain to store state. This is useful for eg. chatbots, where you want to keep track of the conversation history. MessagesPlaceholder is a special prompt template that will be replaced with the messages passed in each call.
+체인을 사용하여 상태를 저장할 수도 있습니다. 챗봇이 대화 내용을 기억하게 하고 싶은 경우에 유용하게 사용할 수 있습니다. MessagesPlaceholder는 각 호출에 전달된 메시지로 대체될 특수한 프롬프트 템플릿입니다.
 
 ```typescript
 const chatPrompt = ChatPromptTemplate.fromPromptMessages([
@@ -323,6 +323,6 @@ const chain = new ConversationChain({
 
 ## Streaming
 
-You can also use the streaming API to get words streamed back to you as they are generated. This is useful for eg. chatbots, where you want to show the user what is being generated as it is being generated. Note: OpenAI as of this writing does not support `tokenUsage` reporting while streaming is enabled.
+스트리밍 API를 사용하여 각 단어가 생성될 때마다 단어를 실시간 스트림으로 받을 수도 있습니다. 예를 들어 채팅봇에서 사용자에게 생성되는 내용을 생성되는 즉시 보여주고자 할 때 유용하게 사용할 수 있습니다. 참고로, 이 문서를 작성하는 시점에는 스트리밍 옵션이 활성화되면 OpenAI에서 `tokenUsage`를 지원하지 않습니다.
 
 <CodeBlock language="typescript">{Example}</CodeBlock>

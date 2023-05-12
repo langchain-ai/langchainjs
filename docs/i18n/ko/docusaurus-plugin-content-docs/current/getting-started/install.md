@@ -2,15 +2,15 @@
 sidebar_position: 1
 ---
 
-# Setup and Installation
+# 초기 세팅과 설치
 
 :::info
-Updating from <0.0.52? See [this section](#updating-from-0052) for instructions.
+0.0.52 이하 버전에서 업데이트 하고 계신가요? [이 섹션](#updating-from-0052)을 참고하세요.
 :::
 
-## Supported Environments
+## 지원 환경
 
-LangChain is written in TypeScript and can be used in:
+LangChain은 TypeScript로 작성되었으며 다음 환경에서 사용할 수 있습니다.
 
 - Node.js (ESM and CommonJS) - 18.x, 19.x, 20.x
 - Cloudflare Workers
@@ -19,15 +19,15 @@ LangChain is written in TypeScript and can be used in:
 - Browser
 - Deno
 
-## Quickstart
+## 빠른 시작
 
-If you want to get started quickly on using LangChain in Node.js, [clone this repository](https://github.com/domeccleston/langchain-ts-starter) and follow the README instructions for a boilerplate project with those dependencies set up.
+Node.js에서 LangChain을 빠르게 사용해보고 싶다면, [이 저장소](https://github.com/domeccleston/langchain-ts-starter)를 클론하고 README에 따라 프로젝트를 설정하세요.
 
-If you prefer to set things up yourself, or you want to run LangChain in other environments, read on for instructions.
+직접 설정하거나 다른 환경에서 LangChain을 실행하려는 경우, 아래 설명을 읽어보세요.
 
-## Installation
+## 설치
 
-To get started, install LangChain with the following command:
+시작하려면, 다음 명령어로 LangChain을 설치하세요.
 
 ```bash npm2yarn
 npm install -S langchain
@@ -35,19 +35,19 @@ npm install -S langchain
 
 ### TypeScript
 
-LangChain is written in TypeScript and provides type definitions for all of its public APIs.
+LangChain은 TypeScript로 작성되었으며, 모든 퍼블릭 API에 대한 타입 정의를 제공합니다.
 
-## Loading the library
+## 라이브러리 로딩
 
 ### ESM
 
-LangChain provides an ESM build targeting Node.js environments. You can import it using the following syntax:
+LangChain은 Node.js 환경을 대상으로 ESM 빌드를 제공합니다. 다음 구문을 사용하여 가져올 수 있습니다.
 
 ```typescript
 import { OpenAI } from "langchain/llms/openai";
 ```
 
-If you are using TypeScript in an ESM project we suggest updating your `tsconfig.json` to include the following:
+ESM 프로젝트에서 TypeScript를 사용하는 경우, 다음을 포함하여 `tsconfig.json`을 업데이트하는 것이 좋습니다.
 
 ```json title="tsconfig.json"
 {
@@ -61,7 +61,7 @@ If you are using TypeScript in an ESM project we suggest updating your `tsconfig
 
 ### CommonJS
 
-LangChain provides a CommonJS build targeting Node.js environments. You can import it using the following syntax:
+LangChain은 Node.js의 CommonJS 빌드를 제공합니다. 다음 구문을 사용하여 가져올 수 있습니다.
 
 ```typescript
 const { OpenAI } = require("langchain/llms/openai");
@@ -69,7 +69,7 @@ const { OpenAI } = require("langchain/llms/openai");
 
 ### Cloudflare Workers
 
-LangChain can be used in Cloudflare Workers. You can import it using the following syntax:
+LangChain은 Cloudflare Workers에서 사용할 수 있습니다. 다음 구문을 사용하여 가져올 수 있습니다.
 
 ```typescript
 import { OpenAI } from "langchain/llms/openai";
@@ -77,13 +77,14 @@ import { OpenAI } from "langchain/llms/openai";
 
 ### Vercel / Next.js
 
-LangChain can be used in Vercel / Next.js. We support using LangChain in frontend components, in Serverless functions and in Edge functions. You can import it using the following syntax:
+LangChain은 Vercel / Next.js에서 사용할 수 있습니다. LangChain을 프론트엔드 컴포넌트, 서버리스 함수, Edge 함수에서 사용할 수 있습니다. 다음 구문을 사용하여 가져올 수 있습니다.
 
 ```typescript
 import { OpenAI } from "langchain/llms/openai";
 ```
 
-If you want to use LangChain in frontend `pages`, you need to add the following to your `next.config.js` to enable support for WebAssembly modules (which is required by the tokenizer library `@dqbd/tiktoken`):
+프론트엔드 `pages`에서 LangChain을 사용하려면, 토크나이저 라이브러리인 `@dqbd/tiktoken`가 필요로 하는 WebAssembly 모듈을 지원하도록 다음을 `next.config.js`에 추가해야 합니다.
+
 
 ```js title="next.config.js"
 const nextConfig = {
@@ -100,17 +101,17 @@ const nextConfig = {
 
 ### Deno / Supabase Edge Functions
 
-LangChain can be used in Deno / Supabase Edge Functions. You can import it using the following syntax:
+LangChain은 Deno / Supabase Edge Functions에서 사용할 수 있습니다. 다음 구문을 사용하여 가져올 수 있습니다.
 
 ```typescript
 import { OpenAI } from "https://esm.sh/langchain/llms/openai";
 ```
 
-We recommend looking at our [Supabase Template](https://github.com/langchain-ai/langchain-template-supabase) for an example of how to use LangChain in Supabase Edge Functions.
+LangChain을 Supabase Edge Functions에서 사용하는 방법에 대한 예제는 [Supabase Template](https://github.com/langchain-ai/langchain-template-supabase)를 참고하세요.
 
 ### Browser
 
-LangChain can be used in the browser. In our CI we test bundling LangChain with Webpack and Vite, but other bundlers should work too. You can import it using the following syntax:
+LangChain은 브라우저에서 사용할 수 있습니다. CI에서는 Webpack과 Vite로 LangChain을 번들링하고 있지만, 다른 번들러도 작동할 것입니다. 다음 구문을 사용하여 가져올 수 있습니다.
 
 ```typescript
 import { OpenAI } from "langchain/llms/openai";
@@ -118,11 +119,11 @@ import { OpenAI } from "langchain/llms/openai";
 
 #### Create React App
 
-If you're using `create-react-app` by default it doesn't support WebAssembly modules, so the tokenizer library `@dqbd/tiktoken` will not work in the browser. You can follow the instructions [here](https://github.com/dqbd/tiktoken/tree/main/js#create-react-app) to enable support for WebAssembly modules.
+만약 `create-react-app`을 사용하고 있다면, 기본적으로 WebAssembly 모듈을 지원하지 않기 때문에 토크나이저 라이브러리인 `@dqbd/tiktoken`이 브라우저에서 작동하지 않습니다. WebAssembly 모듈을 지원하도록 하려면 [여기](https://github.com/dqbd/tiktoken/tree/main/js#create-react-app) 설명을 참고하세요.
 
 #### Vite
 
-If you're using Vite, you need to add the following to your `vite.config.js` to enable support for WebAssembly modules (which is required by the tokenizer library `@dqbd/tiktoken`):
+Vite를 사용하는 경우, WebAssembly 모듈을 지원하도록 다음을 `vite.config.js`에 추가해야 합니다. (토크나이저 라이브러리인 `@dqbd/tiktoken`이 필요로 합니다.)
 
 ```bash npm2yarn
 npm install -D vite-plugin-wasm vite-plugin-top-level-await
@@ -140,53 +141,53 @@ export default defineConfig({
 
 ## Updating from <0.0.52
 
-If you are updating from a version of LangChain prior to 0.0.52, you will need to update your imports to use the new path structure.
+만약 0.0.52 이전 버전의 LangChain을 업데이트하려면, 새로운 경로 구조를 사용하도록 import를 업데이트해야 합니다.
 
-For example, if you were previously doing
+예를 들면, 이전에 이렇게 사용했다면,
 
 ```typescript
 import { OpenAI } from "langchain/llms";
 ```
 
-you will now need to do
+이렇게 바꿔주어야 합니다.
 
 ```typescript
 import { OpenAI } from "langchain/llms/openai";
 ```
 
-This applies to all imports from the following 6 modules, which have been split into submodules for each integration. The combined modules are deprecated, do not work outside of Node.js, and will be removed in a future version.
+이는 각 통합에 대한 하위 모듈로 분리된 다음 6개 모듈에 적용됩니다. 이전 모듈은 사용이 중지되었으며, Node.js 외부에서 작동하지 않습니다. 향후 버전에서 제거될 예정입니다.
 
-- If you were using `langchain/llms`, see [LLMs](../modules/models/llms/integrations) for updated import paths.
-- If you were using `langchain/chat_models`, see [Chat Models](../modules/models/chat/integrations) for updated import paths.
-- If you were using `langchain/embeddings`, see [Embeddings](../modules/models/embeddings/integrations) for updated import paths.
-- If you were using `langchain/vectorstores`, see [Vector Stores](../modules/indexes/vector_stores/integrations/) for updated import paths.
-- If you were using `langchain/document_loaders`, see [Document Loaders](../modules/indexes/document_loaders/examples/) for updated import paths.
-- If you were using `langchain/retrievers`, see [Retrievers](../modules/indexes/retrievers/) for updated import paths.
+- `langchain/llms`을 사용하고 있다면, [대규모 언어 모델(LLM)](../modules/models/llms/integrations)에서 업데이트 된 import 경로를 찾을 수 있습니다.
+- `langchain/chat_models`을 사용하고 있다면, [채팅 모델](../modules/models/chat/integrations)에서 업데이트 된 import 경로를 찾을 수 있습니다.
+- `langchain/embeddings`을 사용하고 있다면, [임베딩](../modules/models/embeddings/integrations)에서 업데이트 된 import 경로를 찾을 수 있습니다.
+- `langchain/vectorstores`을 사용하고 있다면, [벡터 저장소](../modules/indexes/vector_stores/integrations/)에서 업데이트 된 import 경로를 찾을 수 있습니다.
+- `langchain/document_loaders`을 사용하고 있다면, [문서 로더](../modules/indexes/document_loaders/examples/)에서 업데이트 된 import 경로를 찾을 수 있습니다.
+- `langchain/retrievers`을 사용하고 있다면, [리트리버](../modules/indexes/retrievers/)에서 업데이트 된 import 경로를 찾을 수 있습니다.
 
-Other modules are not affected by this change, and you can continue to import them from the same path.
+다른 모듈은 영향을 받지 않으며, 이전과 동일한 경로에서 가져올 수 있습니다.
 
-Additionally, there are some breaking changes that were needed to support new environments:
+추가로, 새로운 환경을 지원하기 위해 필요한 몇 가지 변경 사항이 있습니다.
 
-- `import { Calculator } from "langchain/tools";` now moved to
-  - `import { Calculator } from "langchain/tools/calculator";`
-- `import { loadLLM } from "langchain/llms";` now moved to
-  - `import { loadLLM } from "langchain/llms/load";`
-- `import { loadAgent } from "langchain/agents";` now moved to
-  - `import { loadAgent } from "langchain/agents/load";`
-- `import { loadPrompt } from "langchain/prompts";` now moved to
-  - `import { loadPrompt } from "langchain/prompts/load";`
-- `import { loadChain } from "langchain/chains";` now moved to
-  - `import { loadChain } from "langchain/chains/load";`
+- `import { Calculator } from "langchain/tools";`은 이제
+  - `import { Calculator } from "langchain/tools/calculator";`로 이동되었습니다.
+- `import { loadLLM } from "langchain/llms";`은 이제
+  - `import { loadLLM } from "langchain/llms/load";`로 이동되었습니다.
+- `import { loadAgent } from "langchain/agents";`은 이제
+  - `import { loadAgent } from "langchain/agents/load";`로 이동되었습니다.
+- `import { loadPrompt } from "langchain/prompts";`은 이제
+  - `import { loadPrompt } from "langchain/prompts/load";`로 이동되었습니다.
+- `import { loadChain } from "langchain/chains";`은 이제
+  - `import { loadChain } from "langchain/chains/load";`로 이동되었습니다.
 
 ## Unsupported: Node.js 16
 
-We do not support Node.js 16, but if you still want to run LangChain on Node.js 16, you will need to follow the instructions in this section. We do not guarantee that these instructions will continue to work in the future.
+우리는 Node.js 16을 지원하지 않지만, 그럼에도 Node.js 16에서 LangChain을 실행하려 한다면 이 섹션의 설명을 따라야 합니다. 미래에도 계속 작동할 것은 보장하지 않습니다.
 
-You will have to make `fetch` available globally, either:
+`fetch` 함수를 전역으로 사용할 수 있도록 해야 합니다. 다음 중 하나를 사용하세요.
 
-- run your application with `NODE_OPTIONS='--experimental-fetch' node ...`, or
-- install `node-fetch` and follow the instructions [here](https://github.com/node-fetch/node-fetch#providing-global-access)
+- 당신의 애플리케이션을 `NODE_OPTIONS='--experimental-fetch' node ...`와 함께 실행하거나,
+- `node-fetch`를 설치하고 [여기](https://github.com/node-fetch/node-fetch#providing-global-access)의 설명을 따르세요.
 
-Additionally you'll have to polyfill `unstructuredClone`, eg. by installing `core-js` and following the instructions [here](https://github.com/zloirock/core-js).
+추가로, `unstructuredClone`을 지원 가능하도록 변환해야 합니다. 예를 들면, `core-js`를 설치하고 [여기](https://github.com/zloirock/core-js)의 설명을 따르세요.
 
-If you are running this on Node.js 18+, you do not need to do anything.
+Node.js 18 이상에서 실행하는 경우, 아무것도 할 필요가 없습니다.
