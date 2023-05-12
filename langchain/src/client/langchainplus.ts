@@ -441,8 +441,8 @@ export class LangChainPlusClient {
     const results: (LLMResult | string)[] = await Promise.all(
       Array.from({ length: numRepetitions }).map(async () => {
         try {
-          const prompts = example.inputs.prompts as string[];
-          return llm.generate(prompts, undefined, [tracer]);
+          const prompt = example.inputs.prompt as string;
+          return llm.generate([prompt], undefined, [tracer]);
         } catch (e) {
           console.error(e);
           return stringifyError(e);
