@@ -1,0 +1,46 @@
+---
+sidebar_label: LLM Chain
+sidebar_position: 1
+---
+
+import CodeBlock from "@theme/CodeBlock";
+import ExampleLLM from "@examples/chains/llm_chain.ts";
+import ExampleChat from "@examples/chains/llm_chain_chat.ts";
+import ExampleStream from "@examples/chains/llm_chain_stream.ts";
+import ExampleCancellation from "@examples/chains/llm_chain_cancellation.ts";
+
+# Getting Started: LLMChain
+
+:::info
+[Conceptual Guide](https://docs.langchain.com/docs/components/chains/llm-chain)
+:::
+
+An `LLMChain` is a simple chain that adds some functionality around language models. It is used widely throughout LangChain, including in other chains and agents.
+
+An `LLMChain` consists of a `PromptTemplate` and a language model (either an [LLM](../models/llms/) or [chat model](../models/chat/)).
+
+## Usage with LLMs
+
+We can construct an LLMChain which takes user input, formats it with a PromptTemplate, and then passes the formatted response to an LLM:
+
+<CodeBlock language="typescript">{ExampleLLM}</CodeBlock>
+
+## Usage with Chat Models
+
+We can also construct an LLMChain which takes user input, formats it with a PromptTemplate, and then passes the formatted response to a ChatModel:
+
+<CodeBlock language="typescript">{ExampleChat}</CodeBlock>
+
+## Usage in Streaming Mode
+
+We can also construct an LLMChain which takes user input, formats it with a PromptTemplate, and then passes the formatted response to an LLM in streaming mode, which will stream back tokens as they are generated:
+
+<CodeBlock language="typescript">{ExampleStream}</CodeBlock>
+
+## Cancelling a running LLMChain
+
+We can also cancel a running LLMChain by passing an AbortSignal to the `call` method:
+
+<CodeBlock language="typescript">{ExampleCancellation}</CodeBlock>
+
+In this example we show cancellation in streaming mode, but it works the same way in non-streaming mode.
