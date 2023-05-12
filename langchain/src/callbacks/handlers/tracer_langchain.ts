@@ -108,7 +108,6 @@ export class LangChainTracer
       );
     }
     const session = await res.json();
-    console.log(session);
     this.session = session;
     return session;
   }
