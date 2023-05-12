@@ -15,7 +15,7 @@ export const run = async () => {
 
   console.log({ docs });
 
-  /* Additionnal steps : Split text into chunks with any TextSplitter. You can then use it as context or save it to memory afterwards. */
+  /* Additional steps : Split text into chunks with any TextSplitter. You can then use it as context or save it to memory afterwards. */
   const textSplitter = new RecursiveCharacterTextSplitter({
     chunkSize: 1000,
     chunkOverlap: 200,
