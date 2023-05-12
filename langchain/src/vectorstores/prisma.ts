@@ -25,6 +25,10 @@ type PrismaNamespace = {
   raw: (sql: string) => Sql;
 };
 
+type PrismaSqlFilter = {
+  [key: string]: string|number
+}
+
 type PrismaClient = {
   $queryRaw<T = unknown>(
     query: TemplateStringsArray | Sql,
@@ -74,6 +78,8 @@ export class PrismaVectorStore<
 
   selectSql: Sql;
 
+  filterSql?: Sql;
+
   idColumn: keyof TModel & string;
 
   contentColumn: keyof TModel & string;
@@ -94,6 +100,7 @@ export class PrismaVectorStore<
       tableName: TModelName;
       vectorColumnName: string;
       columns: TSelectModel;
+      filter?: PrismaSqlFilter;
     }
   ) {
     super(embeddings, {});
@@ -123,6 +130,12 @@ export class PrismaVectorStore<
         .map((key) => `"${key}"`)
         .join(", ")
     );
+
+    // build up the filter string
+    if (config.filter) {
+      const filterStr = this.buildSqlFilterStr(config.filter);
+      this.filterSql = this.Prisma.raw(`"${filterStr}"`);
+    }
   }
 
   static withModel<TModel extends Record<string, unknown>>(db: PrismaClient) {
@@ -247,14 +260,21 @@ export class PrismaVectorStore<
 
   async similaritySearchVectorWithScore(
     query: number[],
-    k: number
+    k: number,
+    filter?: PrismaSqlFilter
   ): Promise<[Document<SimilarityModel<TModel, TSelectModel>>, number][]> {
+
     const vectorQuery = `[${query.join(",")}]`;
-    const articles = await this.db.$queryRaw<
-      Array<SimilarityModel<TModel, TSelectModel>>
-    >`
-      SELECT ${this.selectSql}, ${this.vectorColumnSql} <=> ${vectorQuery}::vector as "_distance" 
+
+    // Override with the local filter if exists
+    const filterSql = filter
+        ? this.Prisma.raw(this.buildSqlFilterStr(filter))
+        : this.filterSql;
+
+    const articles = await this.db.$queryRaw<Array<SimilarityModel<TModel, TSelectModel>>>`
+      SELECT ${this.selectSql}, ${this.vectorColumnSql} <=> ${vectorQuery}::vector as "_distance"
       FROM ${this.tableSql}
+      ${filterSql ? `WHERE ${filterSql}` : ''}
       ORDER BY "_distance" ASC
       LIMIT ${k};
     `;
@@ -274,6 +294,12 @@ export class PrismaVectorStore<
     }
 
     return results;
+  }
+
+  buildSqlFilterStr(filter: PrismaSqlFilter) {
+    return Object.keys(filter)
+      .map((key) => `${key} = '${filter[key]}'`)
+      .join(' AND ');
   }
 
   static async fromTexts(
