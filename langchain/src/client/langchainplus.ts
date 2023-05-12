@@ -406,16 +406,17 @@ export class LangChainPlusClient {
     llm: BaseLLM,
     numRepetitions = 1
   ): Promise<(LLMResult | string)[]> {
-    const results: (LLMResult | string)[] = [];
-    for (let i = 0; i < numRepetitions; i += 1) {
-      try {
-        const prompts = example.inputs.prompts as string[];
-        results.push(await llm.generate(prompts, undefined, [tracer]));
-      } catch (e) {
-        console.error(e);
-        results.push(stringifyError(e));
-      }
-    }
+    const results: (LLMResult | string)[] = await Promise.all(
+      Array.from({ length: numRepetitions }).map(async () => {
+        try {
+          const prompts = example.inputs.prompts as string[];
+          return await llm.generate(prompts, undefined, [tracer]);
+        } catch (e) {
+          console.error(e);
+          return stringifyError(e);
+        }
+      })
+    );
     return results;
   }
 
@@ -425,15 +426,16 @@ export class LangChainPlusClient {
     chain: BaseChain,
     numRepetitions = 1
   ): Promise<(ChainValues | string)[]> {
-    const results: (ChainValues | string)[] = [];
-    for (let i = 0; i < numRepetitions; i += 1) {
-      try {
-        results.push(await chain.call(example.inputs, [tracer]));
-      } catch (e) {
-        console.error(e);
-        results.push(stringifyError(e));
-      }
-    }
+    const results: (ChainValues | string)[] = await Promise.all(
+      Array.from({ length: numRepetitions }).map(async () => {
+        try {
+          return await chain.call(example.inputs, [tracer]);
+        } catch (e) {
+          console.error(e);
+          return stringifyError(e);
+        }
+      })
+    );
     return results;
   }
 
@@ -444,37 +446,42 @@ export class LangChainPlusClient {
     sessionName: string | undefined = undefined
   ): Promise<DatasetRunResults> {
     const examples = await this.listExamples(undefined, datasetName);
-    let sessionName_ = sessionName;
+    let sessionName_: string;
     if (sessionName === undefined) {
       const currentTime = new Date().toISOString();
       sessionName_ = `${datasetName}-${llmOrChain.constructor.name}-${currentTime}`;
+    } else {
+      sessionName_ = sessionName;
     }
     const results: DatasetRunResults = {};
-    const tracer = new LangChainTracer();
-    await tracer.newSession(sessionName_);
-    for (const example of examples) {
-      if (isLLM(llmOrChain)) {
-        const llmResult = await this.runLLM(
-          example,
-          tracer,
-          llmOrChain,
-          numRepetitions
-        );
-        results[example.id] = llmResult;
-      } else if (isChain(llmOrChain)) {
-        const ChainResult = await this.runChain(
-          example,
-          tracer,
-          llmOrChain,
-          numRepetitions
-        );
-        results[example.id] = ChainResult;
-      } else if (isChatModel(llmOrChain)) {
-        throw new Error("Chat models not yet supported");
-      } else {
-        throw new Error(` llm or chain type: ${llmOrChain}`);
-      }
-    }
+    await new LangChainTracer().newSession(sessionName_);
+    await Promise.all(
+      examples.map(async (example) => {
+        const tracer = new LangChainTracer(example.id);
+        await tracer.loadSession(sessionName_);
+        if (isLLM(llmOrChain)) {
+          const llmResult = await this.runLLM(
+            example,
+            tracer,
+            llmOrChain,
+            numRepetitions
+          );
+          results[example.id] = llmResult;
+        } else if (isChain(llmOrChain)) {
+          const ChainResult = await this.runChain(
+            example,
+            tracer,
+            llmOrChain,
+            numRepetitions
+          );
+          results[example.id] = ChainResult;
+        } else if (isChatModel(llmOrChain)) {
+          throw new Error("Chat models not yet supported");
+        } else {
+          throw new Error(` llm or chain type: ${llmOrChain}`);
+        }
+      })
+    );
     return results;
   }
 }

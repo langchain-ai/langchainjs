@@ -60,7 +60,7 @@ test("Test LangChainPlus Client Dataset CRD", async () => {
   expect(deleted.id).toBe(datasetId);
 });
 
-test.skip("Test LangChainPlus Client Run Chain Over Dataset", async () => {
+test("Test LangChainPlus Client Run Chain Over Dataset", async () => {
   const client: LangChainPlusClient = await LangChainPlusClient.create(
     "http://localhost:8000"
   );
@@ -112,5 +112,5 @@ what is 1213 divided by 4345?,approximately 0.2791714614499425
 
   const results = await client.runOnDataset(datasetName, executor);
   console.log(results);
-  expect(results.length).toEqual(10);
+  expect(Object.keys(results).length).toEqual(10);
 });
