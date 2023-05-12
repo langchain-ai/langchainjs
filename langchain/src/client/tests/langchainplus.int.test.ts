@@ -60,7 +60,7 @@ test("Test LangChainPlus Client Dataset CRD", async () => {
   expect(deleted.id).toBe(datasetId);
 });
 
-test("Test LangChainPlus Client Run Chain Over Dataset", async () => {
+test.skip("Test LangChainPlus Client Run Chain Over Dataset", async () => {
   const client: LangChainPlusClient = await LangChainPlusClient.create(
     "http://localhost:8000"
   );

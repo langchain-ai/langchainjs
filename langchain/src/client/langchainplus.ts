@@ -1,4 +1,5 @@
-import { LangChainTracerV2, RunResult } from "../callbacks/handlers/tracers.js";
+import { BaseRun } from "../callbacks/handlers/tracer.js";
+import { LangChainTracer } from "../callbacks/handlers/tracer_langchain.js";
 import {
   ChainValues,
   LLMResult,
@@ -9,6 +10,12 @@ import { BaseLanguageModel } from "../base_language/index.js";
 import { BaseChain } from "../chains/base.js";
 import { BaseLLM } from "../llms/base.js";
 import { BaseChatModel } from "../chat_models/base.js";
+
+export interface RunResult extends BaseRun {
+  name: string;
+  session_id: string; // uuid
+  parent_run_id?: string; // uuid
+}
 
 export interface BaseDataset {
   name: string;
@@ -395,7 +402,7 @@ export class LangChainPlusClient {
 
   protected async runLLM(
     example: Example,
-    tracer: LangChainTracerV2,
+    tracer: LangChainTracer,
     llm: BaseLLM,
     numRepetitions = 1
   ): Promise<(LLMResult | string)[]> {
@@ -414,7 +421,7 @@ export class LangChainPlusClient {
 
   protected async runChain(
     example: Example,
-    tracer: LangChainTracerV2,
+    tracer: LangChainTracer,
     chain: BaseChain,
     numRepetitions = 1
   ): Promise<(ChainValues | string)[]> {
@@ -443,7 +450,7 @@ export class LangChainPlusClient {
       sessionName_ = `${datasetName}-${llmOrChain.constructor.name}-${currentTime}`;
     }
     const results: DatasetRunResults = {};
-    const tracer = new LangChainTracerV2();
+    const tracer = new LangChainTracer();
     await tracer.newSession(sessionName_);
     for (const example of examples) {
       if (isLLM(llmOrChain)) {
