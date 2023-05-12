@@ -233,6 +233,30 @@ export class Typesense extends VectorStore {
     return instance;
   }
 
+  /**
+   * Create a vector store from texts.
+   * @param texts
+   * @param metadatas
+   * @param embeddings
+   * @param config
+   * @returns Typesense vector store
+   */
+  static async fromTexts(
+    texts: string[],
+    metadatas: object[],
+    embeddings: Embeddings,
+    config: Config
+  ) {
+    const instance = new Typesense(embeddings, config);
+    const documents = texts.map((text, i) => ({
+      pageContent: text,
+      metadata: metadatas[i],
+    }));
+    await instance.addDocuments(documents);
+
+    return instance;
+  }
+
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async addVectors(_vectors: number[][]) {
     throw new Error("Method not implemented");
