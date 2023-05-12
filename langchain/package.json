@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.68",
+  "version": "0.0.75",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -121,6 +121,9 @@
     "vectorstores/prisma.cjs",
     "vectorstores/prisma.js",
     "vectorstores/prisma.d.ts",
+    "vectorstores/myscale.cjs",
+    "vectorstores/myscale.js",
+    "vectorstores/myscale.d.ts",
     "text_splitter.cjs",
     "text_splitter.js",
     "text_splitter.d.ts",
@@ -166,6 +169,9 @@
     "document_loaders/web/s3.cjs",
     "document_loaders/web/s3.js",
     "document_loaders/web/s3.d.ts",
+    "document_loaders/web/confluence.cjs",
+    "document_loaders/web/confluence.js",
+    "document_loaders/web/confluence.d.ts",
     "document_loaders/fs/directory.cjs",
     "document_loaders/fs/directory.js",
     "document_loaders/fs/directory.d.ts",
@@ -247,6 +253,12 @@
     "retrievers/document_compressors.cjs",
     "retrievers/document_compressors.js",
     "retrievers/document_compressors.d.ts",
+    "retrievers/time_weighted.cjs",
+    "retrievers/time_weighted.js",
+    "retrievers/time_weighted.d.ts",
+    "retrievers/document_compressors/chain_extract.cjs",
+    "retrievers/document_compressors/chain_extract.js",
+    "retrievers/document_compressors/chain_extract.d.ts",
     "retrievers/hyde.cjs",
     "retrievers/hyde.js",
     "retrievers/hyde.d.ts",
@@ -262,12 +274,24 @@
     "stores/file/node.cjs",
     "stores/file/node.js",
     "stores/file/node.d.ts",
+    "stores/message/dynamodb.cjs",
+    "stores/message/dynamodb.js",
+    "stores/message/dynamodb.d.ts",
+    "stores/message/redis.cjs",
+    "stores/message/redis.js",
+    "stores/message/redis.d.ts",
     "experimental/autogpt.cjs",
     "experimental/autogpt.js",
     "experimental/autogpt.d.ts",
     "experimental/babyagi.cjs",
     "experimental/babyagi.js",
     "experimental/babyagi.d.ts",
+    "experimental/plan_and_execute.cjs",
+    "experimental/plan_and_execute.js",
+    "experimental/plan_and_execute.d.ts",
+    "client.cjs",
+    "client.js",
+    "client.d.ts",
     "index.cjs",
     "index.js",
     "index.d.ts"
@@ -297,8 +321,10 @@
   "author": "LangChain",
   "license": "MIT",
   "devDependencies": {
+    "@aws-sdk/client-dynamodb": "^3.310.0",
     "@aws-sdk/client-lambda": "^3.310.0",
     "@aws-sdk/client-s3": "^3.310.0",
+    "@clickhouse/client": "^0.0.14",
     "@faker-js/faker": "^7.6.0",
     "@getmetal/metal-sdk": "^2.0.1",
     "@huggingface/inference": "^1.5.1",
@@ -317,8 +343,8 @@
     "@types/object-hash": "^3.0.2",
     "@types/pdf-parse": "^1.1.1",
     "@types/uuid": "^9",
-    "@typescript-eslint/eslint-plugin": "^5.51.0",
-    "@typescript-eslint/parser": "^5.51.0",
+    "@typescript-eslint/eslint-plugin": "^5.58.0",
+    "@typescript-eslint/parser": "^5.58.0",
     "axios": "^0.26.0",
     "cheerio": "^1.0.0-rc.12",
     "chromadb": "^1.4.0",
@@ -349,14 +375,16 @@
     "rollup": "^3.19.1",
     "sqlite3": "^5.1.4",
     "srt-parser-2": "^1.2.2",
-    "ts-jest": "^29.0.5",
+    "ts-jest": "^29.1.0",
     "typeorm": "^0.3.12",
-    "typescript": "^4.9.5",
+    "typescript": "^5.0.0",
     "weaviate-ts-client": "^1.0.0"
   },
   "peerDependencies": {
+    "@aws-sdk/client-dynamodb": "^3.310.0",
     "@aws-sdk/client-lambda": "^3.310.0",
     "@aws-sdk/client-s3": "^3.310.0",
+    "@clickhouse/client": "^0.0.14",
     "@getmetal/metal-sdk": "*",
     "@huggingface/inference": "^1.5.1",
     "@opensearch-project/opensearch": "*",
@@ -386,10 +414,16 @@
     "weaviate-ts-client": "^1.0.0"
   },
   "peerDependenciesMeta": {
+    "@aws-sdk/client-dynamodb": {
+      "optional": true
+    },
     "@aws-sdk/client-lambda": {
       "optional": true
     },
     "@aws-sdk/client-s3": {
+      "optional": true
+    },
+    "@clickhouse/client": {
       "optional": true
     },
     "@getmetal/metal-sdk": {
@@ -707,6 +741,11 @@
       "import": "./vectorstores/prisma.js",
       "require": "./vectorstores/prisma.cjs"
     },
+    "./vectorstores/myscale": {
+      "types": "./vectorstores/myscale.d.ts",
+      "import": "./vectorstores/myscale.js",
+      "require": "./vectorstores/myscale.cjs"
+    },
     "./text_splitter": {
       "types": "./text_splitter.d.ts",
       "import": "./text_splitter.js",
@@ -783,6 +822,11 @@
       "types": "./document_loaders/web/s3.d.ts",
       "import": "./document_loaders/web/s3.js",
       "require": "./document_loaders/web/s3.cjs"
+    },
+    "./document_loaders/web/confluence": {
+      "types": "./document_loaders/web/confluence.d.ts",
+      "import": "./document_loaders/web/confluence.js",
+      "require": "./document_loaders/web/confluence.cjs"
     },
     "./document_loaders/fs/directory": {
       "types": "./document_loaders/fs/directory.d.ts",
@@ -923,6 +967,16 @@
       "import": "./retrievers/document_compressors.js",
       "require": "./retrievers/document_compressors.cjs"
     },
+    "./retrievers/time_weighted": {
+      "types": "./retrievers/time_weighted.d.ts",
+      "import": "./retrievers/time_weighted.js",
+      "require": "./retrievers/time_weighted.cjs"
+    },
+    "./retrievers/document_compressors/chain_extract": {
+      "types": "./retrievers/document_compressors/chain_extract.d.ts",
+      "import": "./retrievers/document_compressors/chain_extract.js",
+      "require": "./retrievers/document_compressors/chain_extract.cjs"
+    },
     "./retrievers/hyde": {
       "types": "./retrievers/hyde.d.ts",
       "import": "./retrievers/hyde.js",
@@ -948,6 +1002,16 @@
       "import": "./stores/file/node.js",
       "require": "./stores/file/node.cjs"
     },
+    "./stores/message/dynamodb": {
+      "types": "./stores/message/dynamodb.d.ts",
+      "import": "./stores/message/dynamodb.js",
+      "require": "./stores/message/dynamodb.cjs"
+    },
+    "./stores/message/redis": {
+      "types": "./stores/message/redis.d.ts",
+      "import": "./stores/message/redis.js",
+      "require": "./stores/message/redis.cjs"
+    },
     "./experimental/autogpt": {
       "types": "./experimental/autogpt.d.ts",
       "import": "./experimental/autogpt.js",
@@ -957,6 +1021,16 @@
       "types": "./experimental/babyagi.d.ts",
       "import": "./experimental/babyagi.js",
       "require": "./experimental/babyagi.cjs"
+    },
+    "./experimental/plan_and_execute": {
+      "types": "./experimental/plan_and_execute.d.ts",
+      "import": "./experimental/plan_and_execute.js",
+      "require": "./experimental/plan_and_execute.cjs"
+    },
+    "./client": {
+      "types": "./client.d.ts",
+      "import": "./client.js",
+      "require": "./client.cjs"
     },
     "./package.json": "./package.json"
   }

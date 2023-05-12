@@ -52,6 +52,7 @@ const entrypoints = {
   "vectorstores/opensearch": "vectorstores/opensearch",
   "vectorstores/milvus": "vectorstores/milvus",
   "vectorstores/prisma": "vectorstores/prisma",
+  "vectorstores/myscale": "vectorstores/myscale",
   // text_splitter
   text_splitter: "text_splitter",
   // memory
@@ -73,6 +74,7 @@ const entrypoints = {
   "document_loaders/web/imsdb": "document_loaders/web/imsdb",
   "document_loaders/web/github": "document_loaders/web/github",
   "document_loaders/web/s3": "document_loaders/web/s3",
+  "document_loaders/web/confluence": "document_loaders/web/confluence",
   "document_loaders/fs/directory": "document_loaders/fs/directory",
   "document_loaders/fs/buffer": "document_loaders/fs/buffer",
   "document_loaders/fs/text": "document_loaders/fs/text",
@@ -106,6 +108,9 @@ const entrypoints = {
   "retrievers/databerry": "retrievers/databerry",
   "retrievers/contextual_compression": "retrievers/contextual_compression",
   "retrievers/document_compressors": "retrievers/document_compressors/index",
+  "retrievers/time_weighted": "retrievers/time_weighted",
+  "retrievers/document_compressors/chain_extract":
+    "retrievers/document_compressors/chain_extract",
   "retrievers/hyde": "retrievers/hyde",
   // cache
   cache: "cache/index",
@@ -113,9 +118,13 @@ const entrypoints = {
   // stores
   "stores/file/in_memory": "stores/file/in_memory",
   "stores/file/node": "stores/file/node",
+  "stores/message/dynamodb": "stores/message/dynamodb",
+  "stores/message/redis": "stores/message/redis",
   // experimental
   "experimental/autogpt": "experimental/autogpt/index",
   "experimental/babyagi": "experimental/babyagi/index",
+  "experimental/plan_and_execute": "experimental/plan_and_execute/index",
+  client: "client/index",
 };
 
 // Entrypoints in this list will
@@ -131,7 +140,7 @@ const deprecatedNodeOnly = [
 ];
 
 // Entrypoints in this list require an optional dependency to be installed.
-// Therefore they are no tested in the generated test-exports-* packages.
+// Therefore they are not tested in the generated test-exports-* packages.
 const requiresOptionalDependency = [
   "agents/load",
   "tools/aws_lambda",
@@ -154,6 +163,7 @@ const requiresOptionalDependency = [
   "vectorstores/supabase",
   "vectorstores/opensearch",
   "vectorstores/milvus",
+  "vectorstores/myscale",
   "document_loaders/web/cheerio",
   "document_loaders/web/puppeteer",
   "document_loaders/web/playwright",
@@ -163,6 +173,7 @@ const requiresOptionalDependency = [
   "document_loaders/web/imsdb",
   "document_loaders/web/github",
   "document_loaders/web/s3",
+  "document_loaders/web/confluence",
   "document_loaders/fs/directory",
   "document_loaders/fs/buffer",
   "document_loaders/fs/text",
@@ -179,6 +190,8 @@ const requiresOptionalDependency = [
   "retrievers/metal",
   "cache/redis",
   "stores/file/node",
+  "stores/message/dynamodb",
+  "stores/message/redis",
 ];
 
 // List of test-exports-* packages which we use to test that the exports field

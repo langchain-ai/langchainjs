@@ -1,5 +1,13 @@
 version: '3'
 services:
+  test-exports-esbuild:
+    image: node:18
+    working_dir: /app
+    volumes:
+      - ./test-exports-esbuild:/package
+      - ./langchain:/langchain
+      - ./scripts:/scripts
+    command: bash /scripts/docker-ci-entrypoint.sh
   test-exports-esm:
     image: node:18
     working_dir: /app
@@ -52,6 +60,8 @@ services:
     image: alpine:3.14
     command: echo "Success"
     depends_on:
+      test-exports-esbuild:
+        condition: service_completed_successfully
       test-exports-esm:
         condition: service_completed_successfully
       test-exports-cjs:

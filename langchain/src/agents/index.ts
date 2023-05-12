@@ -20,6 +20,7 @@ export {
   createSqlAgent,
   SqlCreatePromptArgs,
   createVectorStoreAgent,
+  createVectorStoreRouterAgent,
 } from "./agent_toolkits/index.js";
 export { Toolkit } from "./agent_toolkits/base.js";
 export {

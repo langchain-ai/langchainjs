@@ -1,3 +1,4 @@
+import { isNode } from "browser-or-node";
 import {
   Configuration,
   OpenAIApi,
@@ -7,78 +8,17 @@ import {
   ChatCompletionResponseMessageRoleEnum,
   CreateChatCompletionResponse,
 } from "openai";
-import type { AxiosRequestConfig } from "axios";
+import {
+  AzureOpenAIInput,
+  OpenAICallOptions,
+  OpenAIChatInput,
+} from "../types/openai-types.js";
 import type { StreamingAxiosConfiguration } from "../util/axios-types.js";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
-import { BaseLLMCallOptions, BaseLLMParams, LLM } from "./base.js";
+import { BaseLLMParams, LLM } from "./base.js";
 import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
 
-/**
- * Input to OpenAI class.
- */
-export interface OpenAIChatInput {
-  /** Sampling temperature to use, between 0 and 2, defaults to 1 */
-  temperature: number;
-
-  /** Total probability mass of tokens to consider at each step, between 0 and 1, defaults to 1 */
-  topP: number;
-
-  /** Penalizes repeated tokens according to frequency */
-  frequencyPenalty: number;
-
-  /** Penalizes repeated tokens */
-  presencePenalty: number;
-
-  /** Number of chat completions to generate for each prompt */
-  n: number;
-
-  /** Dictionary used to adjust the probability of specific tokens being generated */
-  logitBias?: Record<string, number>;
-
-  /** Whether to stream the results or not */
-  streaming: boolean;
-
-  /** Model name to use */
-  modelName: string;
-
-  /** ChatGPT messages to pass as a prefix to the prompt */
-  prefixMessages?: ChatCompletionRequestMessage[];
-
-  /** Holds any additional parameters that are valid to pass to {@link
-   * https://platform.openai.com/docs/api-reference/completions/create |
-   * `openai.create`} that are not explicitly specified on this class.
-   */
-  modelKwargs?: Kwargs;
-
-  /** List of stop words to use when generating */
-  stop?: string[];
-
-  /**
-   * Timeout to use when making requests to OpenAI.
-   */
-  timeout?: number;
-
-  /**
-   * Maximum number of tokens to generate in the completion.  If not specified,
-   * defaults to the maximum number of tokens allowed by the model.
-   */
-  maxTokens?: number;
-}
-
-export interface OpenAIChatCallOptions extends BaseLLMCallOptions {
-  /**
-   * List of stop words to use when generating
-   */
-  stop?: string[];
-
-  /**
-   * Additional options to pass to the underlying axios request.
-   */
-  options?: AxiosRequestConfig;
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type Kwargs = Record<string, any>;
+export { OpenAICallOptions, OpenAIChatInput, AzureOpenAIInput };
 
 /**
  * Wrapper around OpenAI large language models that use the Chat endpoint.
@@ -86,14 +26,31 @@ type Kwargs = Record<string, any>;
  * To use you should have the `openai` package installed, with the
  * `OPENAI_API_KEY` environment variable set.
  *
+ * To use with Azure you should have the `openai` package installed, with the
+ * `AZURE_OPENAI_API_KEY`,
+ * `AZURE_OPENAI_API_INSTANCE_NAME`,
+ * `AZURE_OPENAI_API_DEPLOYMENT_NAME`
+ * and `AZURE_OPENAI_API_VERSION` environment variable set.
+ *
  * @remarks
  * Any parameters that are valid to be passed to {@link
  * https://platform.openai.com/docs/api-reference/chat/create |
  * `openai.createCompletion`} can be passed through {@link modelKwargs}, even
  * if not explicitly available on this class.
+ *
+ * @augments BaseLLM
+ * @augments OpenAIInput
+ * @augments AzureOpenAIChatInput
  */
-export class OpenAIChat extends LLM implements OpenAIChatInput {
-  declare CallOptions: OpenAIChatCallOptions;
+export class OpenAIChat
+  extends LLM
+  implements OpenAIChatInput, AzureOpenAIInput
+{
+  declare CallOptions: OpenAICallOptions;
+
+  get callKeys(): (keyof OpenAICallOptions)[] {
+    return ["stop", "signal", "timeout", "options"];
+  }
 
   temperature = 1;
 
@@ -113,7 +70,7 @@ export class OpenAIChat extends LLM implements OpenAIChatInput {
 
   prefixMessages?: ChatCompletionRequestMessage[];
 
-  modelKwargs?: Kwargs;
+  modelKwargs?: OpenAIChatInput["modelKwargs"];
 
   timeout?: number;
 
@@ -121,12 +78,21 @@ export class OpenAIChat extends LLM implements OpenAIChatInput {
 
   streaming = false;
 
+  azureOpenAIApiVersion?: string;
+
+  azureOpenAIApiKey?: string;
+
+  azureOpenAIApiInstanceName?: string;
+
+  azureOpenAIApiDeploymentName?: string;
+
   private client: OpenAIApi;
 
   private clientConfig: ConfigurationParameters;
 
   constructor(
     fields?: Partial<OpenAIChatInput> &
+      Partial<AzureOpenAIInput> &
       BaseLLMParams & {
         openAIApiKey?: string;
       },
@@ -136,11 +102,41 @@ export class OpenAIChat extends LLM implements OpenAIChatInput {
 
     const apiKey =
       fields?.openAIApiKey ??
-      // eslint-disable-next-line no-process-env
-      (typeof process !== "undefined" ? process.env.OPENAI_API_KEY : undefined);
-    if (!apiKey) {
-      throw new Error("OpenAI API key not found");
+      (typeof process !== "undefined"
+        ? // eslint-disable-next-line no-process-env
+          process.env?.OPENAI_API_KEY
+        : undefined);
+
+    const azureApiKey =
+      fields?.azureOpenAIApiKey ??
+      (typeof process !== "undefined"
+        ? // eslint-disable-next-line no-process-env
+          process.env?.AZURE_OPENAI_API_KEY
+        : undefined);
+    if (!azureApiKey && !apiKey) {
+      throw new Error("(Azure) OpenAI API key not found");
     }
+
+    const azureApiInstanceName =
+      fields?.azureOpenAIApiInstanceName ??
+      (typeof process !== "undefined"
+        ? // eslint-disable-next-line no-process-env
+          process.env?.AZURE_OPENAI_API_INSTANCE_NAME
+        : undefined);
+
+    const azureApiDeploymentName =
+      fields?.azureOpenAIApiDeploymentName ??
+      (typeof process !== "undefined"
+        ? // eslint-disable-next-line no-process-env
+          process.env?.AZURE_OPENAI_API_DEPLOYMENT_NAME
+        : undefined);
+
+    const azureApiVersion =
+      fields?.azureOpenAIApiVersion ??
+      (typeof process !== "undefined"
+        ? // eslint-disable-next-line no-process-env
+          process.env?.AZURE_OPENAI_API_VERSION
+        : undefined);
 
     this.modelName = fields?.modelName ?? this.modelName;
     this.prefixMessages = fields?.prefixMessages ?? this.prefixMessages;
@@ -158,8 +154,25 @@ export class OpenAIChat extends LLM implements OpenAIChatInput {
 
     this.streaming = fields?.streaming ?? false;
 
+    this.azureOpenAIApiVersion = azureApiVersion;
+    this.azureOpenAIApiKey = azureApiKey;
+    this.azureOpenAIApiInstanceName = azureApiInstanceName;
+    this.azureOpenAIApiDeploymentName = azureApiDeploymentName;
+
     if (this.streaming && this.n > 1) {
       throw new Error("Cannot stream results when n > 1");
+    }
+
+    if (this.azureOpenAIApiKey) {
+      if (!this.azureOpenAIApiInstanceName) {
+        throw new Error("Azure OpenAI API instance name not found");
+      }
+      if (!this.azureOpenAIApiDeploymentName) {
+        throw new Error("Azure OpenAI API deployment name not found");
+      }
+      if (!this.azureOpenAIApiVersion) {
+        throw new Error("Azure OpenAI API version not found");
+      }
     }
 
     this.clientConfig = {
@@ -171,7 +184,7 @@ export class OpenAIChat extends LLM implements OpenAIChatInput {
   /**
    * Get the parameters used to invoke the model
    */
-  invocationParams(): Omit<CreateChatCompletionRequest, "messages"> & Kwargs {
+  invocationParams(): Omit<CreateChatCompletionRequest, "messages"> {
     return {
       model: this.modelName,
       temperature: this.temperature,
@@ -218,19 +231,10 @@ export class OpenAIChat extends LLM implements OpenAIChatInput {
   /** @ignore */
   async _call(
     prompt: string,
-    stopOrOptions?: string[] | this["CallOptions"],
+    options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<string> {
-    const stop = Array.isArray(stopOrOptions)
-      ? stopOrOptions
-      : stopOrOptions?.stop;
-    const options = Array.isArray(stopOrOptions)
-      ? {}
-      : stopOrOptions?.options ?? {};
-
-    if (this.stop && stop) {
-      throw new Error("Stop found in input and default params");
-    }
+    const { stop } = options;
 
     const params = this.invocationParams();
     params.stop = stop ?? params.stop;
@@ -239,16 +243,23 @@ export class OpenAIChat extends LLM implements OpenAIChatInput {
       ? await new Promise<CreateChatCompletionResponse>((resolve, reject) => {
           let response: CreateChatCompletionResponse;
           let rejected = false;
+          let resolved = false;
           this.completionWithRetry(
             {
               ...params,
               messages: this.formatMessages(prompt),
             },
             {
-              ...options,
+              signal: options.signal,
+              ...options.options,
+              adapter: fetchAdapter, // default adapter doesn't do streaming
               responseType: "stream",
               onmessage: (event) => {
                 if (event.data?.trim?.() === "[DONE]") {
+                  if (resolved) {
+                    return;
+                  }
+                  resolved = true;
                   resolve(response);
                 } else {
                   const message = JSON.parse(event.data) as {
@@ -275,33 +286,43 @@ export class OpenAIChat extends LLM implements OpenAIChatInput {
                   }
 
                   // on all messages, update choice
-                  const part = message.choices[0];
-                  if (part != null) {
-                    let choice = response.choices.find(
-                      (c) => c.index === part.index
-                    );
+                  for (const part of message.choices) {
+                    if (part != null) {
+                      let choice = response.choices.find(
+                        (c) => c.index === part.index
+                      );
 
-                    if (!choice) {
-                      choice = {
-                        index: part.index,
-                        finish_reason: part.finish_reason ?? undefined,
-                      };
-                      response.choices.push(choice);
+                      if (!choice) {
+                        choice = {
+                          index: part.index,
+                          finish_reason: part.finish_reason ?? undefined,
+                        };
+                        response.choices.push(choice);
+                      }
+
+                      if (!choice.message) {
+                        choice.message = {
+                          role: part.delta
+                            ?.role as ChatCompletionResponseMessageRoleEnum,
+                          content: part.delta?.content ?? "",
+                        };
+                      }
+
+                      choice.message.content += part.delta?.content ?? "";
+                      // eslint-disable-next-line no-void
+                      void runManager?.handleLLMNewToken(
+                        part.delta?.content ?? ""
+                      );
                     }
+                  }
 
-                    if (!choice.message) {
-                      choice.message = {
-                        role: part.delta
-                          ?.role as ChatCompletionResponseMessageRoleEnum,
-                        content: part.delta?.content ?? "",
-                      };
-                    }
-
-                    choice.message.content += part.delta?.content ?? "";
-                    // eslint-disable-next-line no-void
-                    void runManager?.handleLLMNewToken(
-                      part.delta?.content ?? ""
-                    );
+                  // when all messages are finished, resolve
+                  if (
+                    !resolved &&
+                    message.choices.every((c) => c.finish_reason != null)
+                  ) {
+                    resolved = true;
+                    resolve(response);
                   }
                 }
               },
@@ -318,7 +339,10 @@ export class OpenAIChat extends LLM implements OpenAIChatInput {
             ...params,
             messages: this.formatMessages(prompt),
           },
-          options
+          {
+            signal: options.signal,
+            ...options.options,
+          }
         );
 
     return data.choices[0].message?.content ?? "";
@@ -330,21 +354,39 @@ export class OpenAIChat extends LLM implements OpenAIChatInput {
     options?: StreamingAxiosConfiguration
   ) {
     if (!this.client) {
+      const endpoint = this.azureOpenAIApiKey
+        ? `https://${this.azureOpenAIApiInstanceName}.openai.azure.com/openai/deployments/${this.azureOpenAIApiDeploymentName}`
+        : this.clientConfig.basePath;
       const clientConfig = new Configuration({
         ...this.clientConfig,
+        basePath: endpoint,
         baseOptions: {
           timeout: this.timeout,
-          adapter: fetchAdapter,
           ...this.clientConfig.baseOptions,
         },
       });
       this.client = new OpenAIApi(clientConfig);
     }
+    const axiosOptions = {
+      adapter: isNode ? undefined : fetchAdapter,
+      ...this.clientConfig.baseOptions,
+      ...options,
+    } as StreamingAxiosConfiguration;
+    if (this.azureOpenAIApiKey) {
+      axiosOptions.headers = {
+        "api-key": this.azureOpenAIApiKey,
+        ...axiosOptions.headers,
+      };
+      axiosOptions.params = {
+        "api-version": this.azureOpenAIApiVersion,
+        ...axiosOptions.params,
+      };
+    }
     return this.caller
       .call(
         this.client.createChatCompletion.bind(this.client),
         request,
-        options
+        axiosOptions
       )
       .then((res) => res.data);
   }

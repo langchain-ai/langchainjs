@@ -245,5 +245,5 @@ export class WebBrowser extends Tool {
 
   name = "web-browser";
 
-  description = `useful for when you need to find something on or summarize a webpage. input should be a comma seperated list of "ONE valid http URL including protocol","what you want to find on the page or empty string for a summary".`;
+  description = `useful for when you need to find something on or summarize a webpage. input should be a comma separated list of "ONE valid http URL including protocol","what you want to find on the page or empty string for a summary".`;
 }
