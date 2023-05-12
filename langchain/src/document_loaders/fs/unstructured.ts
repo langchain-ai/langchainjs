@@ -37,6 +37,7 @@ type Element = {
 type UnstructuredLoaderOptions = {
   apiKey?: string;
   apiUrl?: string;
+  strategy?: string;
 };
 
 type UnstructuredDirectoryLoaderOptions = UnstructuredLoaderOptions & {
@@ -70,6 +71,7 @@ export class UnstructuredLoader extends BaseDocumentLoader {
       this.filePath = filePathOrLegacyApiUrl;
       this.apiKey = optionsOrLegacyFilePath.apiKey;
       this.apiUrl = optionsOrLegacyFilePath.apiUrl ?? this.apiUrl;
+      this.strategy = optionsOrLegacyFilePath.strategy;
     }
   }
 
