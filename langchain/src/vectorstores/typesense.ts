@@ -111,8 +111,8 @@ export class Typesense extends VectorStore {
         },
       ],
       apiKey: typesenseConfig.apiKey,
-      numRetries: 3, // A total of 4 tries
-      connectionTimeoutSeconds: TEN_MINUTES_IN_SECONDS, // Longer timeout for large imports
+      numRetries: 3,
+      connectionTimeoutSeconds: TEN_MINUTES_IN_SECONDS,
     });
 
     const chunkSize = 2000;
@@ -248,9 +248,9 @@ export class Typesense extends VectorStore {
     config: Config
   ) {
     const instance = new Typesense(embeddings, config);
-    const documents = texts.map((text, i) => ({
+    const documents: Document[] = texts.map((text, i) => ({
       pageContent: text,
-      metadata: metadatas[i],
+      metadata: metadatas[i] || {},
     }));
     await instance.addDocuments(documents);
 

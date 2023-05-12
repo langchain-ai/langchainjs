@@ -1,6 +1,21 @@
 import { Typesense } from "langchain/vectorstores/typesense";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
-import { vectorTypesenseClient } from "./your-typesense-client";
+import { Client } from "typesense";
+
+const vectorTypesenseClient = new Client({
+  nodes: [
+    {
+      // Ideally should come from your .env file
+      host: "...",
+      port: 123,
+      protocol: "https",
+    },
+  ],
+  // Ideally should come from your .env file
+  apiKey: "...",
+  numRetries: 3,
+  connectionTimeoutSeconds: 60,
+});
 
 const typesenseVectorStoreConfig = {
   // Typesense client
@@ -13,10 +28,7 @@ const typesenseVectorStoreConfig = {
     // "text" is the default name for the text column in Typesense but you can change it to whatever you want
     pageContent: "text",
     // Names of the columns that you will save in your typesense schema and need to be retrieved as metadata when searching
-    metadataColumnNames: {
-      foo: "bar",
-      bar: "foo",
-    },
+    metadataColumnNames: ["foo", "bar", "baz"],
   },
 };
 
