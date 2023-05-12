@@ -1,9 +1,11 @@
+/* eslint-disable no-process-env */
 import { test, expect } from "@jest/globals";
 import { StructuredChatOutputParserWithRetries } from "../structured_chat/outputParser.js";
 import { ChatOpenAI } from "../../chat_models/openai.js";
 import { AgentAction, AgentFinish } from "../../schema/index.js";
 
 test("Can parse JSON with text in front of it", async () => {
+  process.env.LANGCHAIN_TRACING_V2 = "true";
   const testCases = [
     {
       input:
@@ -45,4 +47,4 @@ test("Can parse JSON with text in front of it", async () => {
       }
     }
   }
-});
+}, 100000);
