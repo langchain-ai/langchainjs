@@ -28,3 +28,38 @@ const splitter = new TokenTextSplitter({
 
 const output = await splitter.createDocuments([text]);
 ```
+
+### Vercel / Next.js
+
+Add the following to your `next.config.js` to enable support for WebAssembly modules.
+
+```js title="next.config.js"
+const nextConfig = {
+  webpack(config) {
+    config.experiments = {
+      asyncWebAssembly: true,
+      layers: true,
+    };
+
+    return config;
+  },
+};
+```
+
+#### Vite
+
+If you're using Vite, you need to add the following to your `vite.config.js` to enable support for WebAssembly modules.
+
+```bash npm2yarn
+npm install -D vite-plugin-wasm vite-plugin-top-level-await
+```
+
+```js title="vite.config.js"
+import wasm from "vite-plugin-wasm";
+import topLevelAwait from "vite-plugin-top-level-await";
+import { defineConfig } from "vite";
+
+export default defineConfig({
+  plugins: [wasm(), topLevelAwait()],
+});
+```

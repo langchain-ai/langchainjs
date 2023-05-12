@@ -1,4 +1,5 @@
 import type { TiktokenModel } from "@dqbd/tiktoken";
+import { LiteTokenizer, isLiteTokenizerApplicable } from "../util/tokenizer.js";
 
 // https://www.npmjs.com/package/@dqbd/tiktoken
 
@@ -62,7 +63,6 @@ export const importTiktoken = async () => {
     const { encoding_for_model } = await import("@dqbd/tiktoken");
     return { encoding_for_model };
   } catch (error) {
-    console.log(error);
     return { encoding_for_model: null };
   }
 };
@@ -79,12 +79,14 @@ export const calculateMaxTokens = async ({
   try {
     if (encoding_for_model) {
       const encoding = encoding_for_model(getModelNameForTiktoken(modelName));
-
       const tokenized = encoding.encode(prompt);
-
       numTokens = tokenized.length;
-
       encoding.free();
+    }
+
+    if (isLiteTokenizerApplicable(modelName)) {
+      const liteEncoder = new LiteTokenizer();
+      return liteEncoder.encode(prompt).length;
     }
   } catch (error) {
     console.warn(
@@ -94,6 +96,5 @@ export const calculateMaxTokens = async ({
   }
 
   const maxTokens = getModelContextSize(modelName);
-
   return maxTokens - numTokens;
 };
