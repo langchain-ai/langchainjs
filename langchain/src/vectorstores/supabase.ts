@@ -7,6 +7,7 @@ interface SearchEmbeddingsParams {
   query_embedding: number[];
   match_count: number; // int
   filter?: SupabaseMetadata;
+  bucket_id?: string;
 }
 
 // eslint-disable-next-line @typescript-eslint/ban-types, @typescript-eslint/no-explicit-any
@@ -19,11 +20,19 @@ interface SearchEmbeddingsResponse {
   similarity: number;
 }
 
+interface SupabaseCallbacks {
+  // This is used to insert data into the table when we add vectors
+  // this is really useful for things like updatedAt or createdAt
+  onInsert?: () => Promise<Record<string, unknown>>;
+}
+
 export interface SupabaseLibArgs {
   client: SupabaseClient;
   tableName?: string;
   queryName?: string;
   filter?: SupabaseMetadata;
+  bucketId?: string;
+  callbacks?: SupabaseCallbacks;
 }
 
 export class SupabaseVectorStore extends VectorStore {
@@ -37,13 +46,19 @@ export class SupabaseVectorStore extends VectorStore {
 
   filter?: SupabaseMetadata;
 
+  bucketId?: string;
+
+  callbacks?: SupabaseCallbacks;
+
+
   constructor(embeddings: Embeddings, args: SupabaseLibArgs) {
     super(embeddings, args);
-
     this.client = args.client;
     this.tableName = args.tableName || "documents";
     this.queryName = args.queryName || "match_documents";
     this.filter = args.filter;
+    this.bucketId = args.bucketId;
+    this.callbacks = args.callbacks;
   }
 
   async addDocuments(documents: Document[]): Promise<void> {
@@ -55,11 +70,28 @@ export class SupabaseVectorStore extends VectorStore {
   }
 
   async addVectors(vectors: number[][], documents: Document[]): Promise<void> {
-    const rows = vectors.map((embedding, idx) => ({
-      content: documents[idx].pageContent,
-      embedding,
-      metadata: documents[idx].metadata,
-    }));
+    let extraData: Record<string, unknown> = {};
+
+    // This makes it so that we are backwards compatible with the old sql functions that don't have the bucket_id column
+    if (this.bucketId) {
+      extraData = { bucketId: this.bucketId };
+    }
+
+    // If the user has provided a callback, we will call it and add the data to the extraData
+    if (this.callbacks?.onInsert) {
+      const insertData = await this.callbacks.onInsert();
+      extraData = { ...extraData, ...insertData };
+    }
+
+    const rows = vectors.map((embedding, idx) => {
+      const returnData = {
+        content: documents[idx].pageContent,
+        embedding,
+        metadata: documents[idx].metadata,
+        ...extraData,
+      }
+      return returnData;
+    });
 
     // upsert returns 500/502/504 (yes really any of them) if given too many rows/characters
     // ~2000 trips it, but my data is probably smaller than average pageContent and metadata
@@ -89,6 +121,7 @@ export class SupabaseVectorStore extends VectorStore {
       filter: _filter,
       query_embedding: query,
       match_count: k,
+      bucket_id: this.bucketId,
     };
 
     const { data: searches, error } = await this.client.rpc(

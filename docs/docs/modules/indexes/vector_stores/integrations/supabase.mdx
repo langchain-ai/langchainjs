@@ -24,13 +24,15 @@ create table documents (
   content text, -- corresponds to Document.pageContent
   metadata jsonb, -- corresponds to Document.metadata
   embedding vector(1536) -- 1536 works for OpenAI embeddings, change if needed
+  bucketId text, -- used to separate out different buckets of vectors
 );
 
 -- Create a function to search for documents
-create function match_documents (
+CREATE OR REPLACE FUNCTION match_documents (
   query_embedding vector(1536),
   match_count int,
-  filter jsonb DEFAULT '{}'
+  filter jsonb DEFAULT '{}',
+  bucket_id text DEFAULT NULL
 ) returns table (
   id bigint,
   content text,
@@ -49,10 +51,25 @@ begin
     1 - (documents.embedding <=> query_embedding) as similarity
   from documents
   where metadata @> filter
+  and (bucket_id IS NULL or documents."bucketId" = bucket_id)
   order by documents.embedding <=> query_embedding
   limit match_count;
 end;
 $$;
+```
+
+### Privileges
+
+You will need to add privileges inside supabase sql for the wanted role to be able to use this function. Here is an example how to do that with service_role
+
+```sql
+GRANT USAGE ON SCHEMA public TO service_role;
+
+GRANT EXECUTE ON FUNCTION public.match_documents TO service_role;
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON "documents" TO service_role;
+
+GRANT USAGE, SELECT ON SEQUENCE documents_id_seq TO service_role;
 ```
 
 ## Usage
