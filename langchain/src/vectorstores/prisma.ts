@@ -78,7 +78,7 @@ export class PrismaVectorStore<
 
   selectSql: Sql;
 
-  filterSql?: Sql;
+  filter?: PrismaSqlFilter;
 
   idColumn: keyof TModel & string;
 
@@ -132,7 +132,7 @@ export class PrismaVectorStore<
     );
 
     if (config.filter) {
-      this.setSqlFilter(config.filter);
+      this.filter = config.filter;
     }
   }
 
@@ -265,10 +265,11 @@ export class PrismaVectorStore<
 
     const vectorQuery = `[${query.join(",")}]`;
 
-    // Override with the local filter if exists
-    const filterSql = filter
-      ? this.Prisma.raw(`WHERE ${this.buildSqlFilterStr(filter)}`)
-      : this.filterSql;
+    let whereCond = '';
+    if (filter) whereCond = this.buildSqlFilterStr(filter);
+    else if (this.filter) whereCond = this.buildSqlFilterStr(this.filter);
+
+    const filterSql = this.Prisma.raw(whereCond ? `WHERE ${whereCond}` : '');
 
     const articles = await this.db.$queryRaw<Array<SimilarityModel<TModel, TSelectModel>>>`
       SELECT ${this.selectSql}, ${this.vectorColumnSql} <=> ${vectorQuery}::vector as "_distance"
@@ -293,11 +294,6 @@ export class PrismaVectorStore<
     }
 
     return results;
-  }
-
-  setSqlFilter(filter: PrismaSqlFilter) {
-    const filterStr = this.buildSqlFilterStr(filter);
-    this.filterSql = this.Prisma.raw(`WHERE ${filterStr}`);
   }
 
   buildSqlFilterStr(filter: PrismaSqlFilter) {
