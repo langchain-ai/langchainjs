@@ -19,27 +19,51 @@ export interface StoredMessage {
   data: StoredMessageData;
 }
 
+interface StoredMessageV1 {
+  type: string;
+  role: string | undefined;
+  text: string;
+}
+
+export function mapV1MessageToStoredMessage(
+  message: StoredMessage | StoredMessageV1
+): StoredMessage {
+  if ("data" in message) {
+    return message as StoredMessage;
+  } else {
+    const v1Message = message as StoredMessageV1;
+    return {
+      type: v1Message.type,
+      data: {
+        content: v1Message.text,
+        role: v1Message.role,
+      },
+    };
+  }
+}
+
 export function mapStoredMessagesToChatMessages(
   messages: StoredMessage[]
 ): BaseChatMessage[] {
   return messages.map((message) => {
-    switch (message.type) {
+    const stored_msg = mapV1MessageToStoredMessage(message);
+    switch (stored_msg.type) {
       case "human":
-        return new HumanChatMessage(message.data.content);
+        return new HumanChatMessage(stored_msg.data.content);
       case "ai":
-        return new AIChatMessage(message.data.content);
+        return new AIChatMessage(stored_msg.data.content);
       case "system":
-        return new SystemChatMessage(message.data.content);
+        return new SystemChatMessage(stored_msg.data.content);
       case "chat":
-        if (message.data?.additional_kwargs?.role === undefined) {
+        if (stored_msg.data?.additional_kwargs?.role === undefined) {
           throw new Error("Role must be defined for chat messages");
         }
         return new ChatMessage(
-          message.data.content,
-          message.data.additional_kwargs.role
+          stored_msg.data.content,
+          stored_msg.data.additional_kwargs.role
         );
       default:
-        throw new Error(`Got unexpected type: ${message.type}`);
+        throw new Error(`Got unexpected type: ${stored_msg.type}`);
     }
   });
 }
