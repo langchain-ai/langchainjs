@@ -7,7 +7,7 @@ import { VectorStore, VectorStoreRetriever } from "./base.js";
 /**
  * Typesense vector store configuration.
  */
-interface Config {
+export interface TypesenseConfig {
   /**
    * Typesense client.
    */
@@ -68,7 +68,7 @@ export class Typesense extends VectorStore {
     collectionName: string
   ) => Promise<void>;
 
-  constructor(embeddings: Embeddings, config: Config) {
+  constructor(embeddings: Embeddings, config: TypesenseConfig) {
     super(embeddings, {});
 
     // Assign config values to class properties.
@@ -225,7 +225,7 @@ export class Typesense extends VectorStore {
   static async fromDocuments(
     docs: Document[],
     embeddings: Embeddings,
-    config: Config
+    config: TypesenseConfig
   ): Promise<Typesense> {
     const instance = new Typesense(embeddings, config);
     await instance.addDocuments(docs);
@@ -245,7 +245,7 @@ export class Typesense extends VectorStore {
     texts: string[],
     metadatas: object[],
     embeddings: Embeddings,
-    config: Config
+    config: TypesenseConfig
   ) {
     const instance = new Typesense(embeddings, config);
     const documents: Document[] = texts.map((text, i) => ({
