@@ -40,6 +40,7 @@ export const run = async () => {
         id: PrismaVectorStore.IdColumn,
         content: PrismaVectorStore.ContentColumn,
       },
+      // the filter only support AND relation, and the value can be either number or string
       filter: {
         namespace: 'default'
       }
@@ -56,7 +57,7 @@ export const run = async () => {
   const resultTwo = await vectorStore.similaritySearch("Hello world", 1);
   console.log(resultTwo.at(0)?.metadata.content);
 
-  // Override the default filter
+  // Override the local filter
   const resultThree = await vectorStore.similaritySearch("Hello world", 1, { namespace: 'different_namespace' });
   console.log(resultThree.at(0)?.metadata.content);
 };
