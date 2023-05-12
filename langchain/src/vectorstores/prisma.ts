@@ -133,8 +133,7 @@ export class PrismaVectorStore<
 
     // build up the filter string
     if (config.filter) {
-      const filterStr = this.buildSqlFilterStr(config.filter);
-      this.filterSql = this.Prisma.raw(`"${filterStr}"`);
+      this.setSqlFilter(config.filter);
     }
   }
 
@@ -149,6 +148,7 @@ export class PrismaVectorStore<
         tableName: keyof TPrisma["ModelName"] & string;
         vectorColumnName: string;
         columns: TColumns;
+        filter?: PrismaSqlFilter;
       }
     ) {
       type ModelName = keyof TPrisma["ModelName"] & string;
@@ -199,7 +199,7 @@ export class PrismaVectorStore<
         tableName: keyof TPrisma["ModelName"] & string;
         vectorColumnName: string;
         columns: TColumns;
-      }
+      },
     ) {
       type ModelName = keyof TPrisma["ModelName"] & string;
       const instance = new PrismaVectorStore<TModel, ModelName, TColumns>(
@@ -294,6 +294,11 @@ export class PrismaVectorStore<
     }
 
     return results;
+  }
+
+  setSqlFilter(filter: PrismaSqlFilter) {
+    const filterStr = this.buildSqlFilterStr(filter);
+    this.filterSql = this.Prisma.raw(`"${filterStr}"`);
   }
 
   buildSqlFilterStr(filter: PrismaSqlFilter) {

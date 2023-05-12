@@ -58,6 +58,6 @@ export const run = async () => {
   console.log(resultTwo.at(0)?.metadata.content);
 
   // Override the local filter
-  const resultThree = await vectorStore.similaritySearch("Hello world", 1, { namespace: 'different_namespace' });
-  console.log(resultThree.at(0)?.metadata.content);
+  const resultThree = await vectorStore.similaritySearchWithScore("Hello world", 1, { namespace: 'different_namespace' });
+  resultThree.forEach(([document]) => console.log(document.metadata.content));
 };
