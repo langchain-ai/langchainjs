@@ -131,7 +131,6 @@ export class PrismaVectorStore<
         .join(", ")
     );
 
-    // build up the filter string
     if (config.filter) {
       this.setSqlFilter(config.filter);
     }
