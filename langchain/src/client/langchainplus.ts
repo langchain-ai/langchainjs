@@ -262,7 +262,7 @@ export class LangChainPlusClient {
         throw new Error(`Dataset ${name} already exists`);
       }
       throw new Error(
-        `Failed to upload CSV: ${response.status} ${response.statusText}`
+        `Failed to create dataset ${response.status} ${response.statusText}`
       );
     }
 
