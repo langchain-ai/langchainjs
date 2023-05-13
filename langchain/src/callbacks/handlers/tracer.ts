@@ -2,12 +2,10 @@ import {
   AgentAction,
   BaseChatMessage,
   ChainValues,
-  ChatGeneration,
   LLMResult,
   RunInputs,
   RunOutputs,
 } from "../../schema/index.js";
-import { mapChatMessagesToStoredMessages } from "../../stores/message/utils.js";
 import { BaseCallbackHandler } from "../base.js";
 
 export type RunType = "llm" | "chain" | "tool";
@@ -133,9 +131,6 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     parentRunId?: string
   ): Promise<void> {
     const execution_order = this._getExecutionOrder(parentRunId);
-    const convertedMessages = messages.map((batch) =>
-      mapChatMessagesToStoredMessages(batch)
-    );
     const run: Run = {
       id: runId,
       name: llm.name,
@@ -143,7 +138,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       start_time: Date.now(),
       end_time: 0,
       serialized: llm,
-      inputs: { messages: convertedMessages },
+      inputs: { messages },
       execution_order,
       child_runs: [],
       child_execution_order: execution_order,
@@ -160,24 +155,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       throw new Error("No LLM run to end.");
     }
     run.end_time = Date.now();
-    run.outputs = {
-      ...output,
-      generations: output.generations.map((generations) =>
-        generations.map((generation) => {
-          if ("message" in generation) {
-            const chatGeneration = generation as ChatGeneration;
-            return {
-              ...chatGeneration,
-              message: mapChatMessagesToStoredMessages([
-                chatGeneration.message,
-              ])[0],
-            };
-          } else {
-            return generation;
-          }
-        })
-      ),
-    };
+    run.outputs = output;
     await this.onLLMEnd?.(run);
     await this._endTrace(run);
   }
