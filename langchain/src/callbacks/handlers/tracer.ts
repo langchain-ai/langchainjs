@@ -6,6 +6,7 @@ import {
   RunInputs,
   RunOutputs,
 } from "../../schema/index.js";
+import { mapChatMessagesToStoredMessages } from "../../stores/message/utils.js";
 import { BaseCallbackHandler } from "../base.js";
 
 export type RunType = "llm" | "chain" | "tool";
@@ -132,10 +133,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
   ): Promise<void> {
     const execution_order = this._getExecutionOrder(parentRunId);
     const convertedMessages = messages.map((batch) =>
-      batch.map((message) => ({
-        _type: message._getType(),
-        content: message.text, // TODO: Unify serialization btwn languages
-      }))
+      mapChatMessagesToStoredMessages(batch)
     );
     const run: Run = {
       id: runId,

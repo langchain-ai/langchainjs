@@ -60,11 +60,14 @@ export class RedisChatMessageHistory extends BaseListChatMessageHistory {
     const previousMessages = orderedMessages
       .map((item) => ({
         type: item.type,
-        role: item.role,
-        text: item.text,
+        data: {
+          role: item.role,
+          content: item.text,
+        },
       }))
       .filter(
-        (x): x is StoredMessage => x.type !== undefined && x.text !== undefined
+        (x): x is StoredMessage =>
+          x.type !== undefined && x.data.content !== undefined
       );
     return mapStoredMessagesToChatMessages(previousMessages);
   }
