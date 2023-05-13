@@ -4,6 +4,7 @@ import {
   BasePromptValue,
   ChatGeneration,
   ChatResult,
+  HumanChatMessage,
   LLMResult,
   RUN_KEY,
 } from "../schema/index.js";
@@ -146,6 +147,24 @@ export abstract class BaseChatModel extends BaseLanguageModel {
   ): Promise<BaseChatMessage> {
     const promptMessages: BaseChatMessage[] = promptValue.toChatMessages();
     return this.call(promptMessages, options, callbacks);
+  }
+
+  async predictMessages(
+    messages: BaseChatMessage[],
+    options?: string[] | this["CallOptions"],
+    callbacks?: Callbacks
+  ): Promise<BaseChatMessage> {
+    return this.call(messages, options, callbacks);
+  }
+
+  async predict(
+    text: string,
+    options?: string[] | this["CallOptions"],
+    callbacks?: Callbacks
+  ): Promise<string> {
+    const message = new HumanChatMessage(text);
+    const result = await this.call([message], options, callbacks);
+    return result.text;
   }
 }
 
