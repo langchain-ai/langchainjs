@@ -2,6 +2,7 @@ import {
   AgentAction,
   BaseChatMessage,
   ChainValues,
+  ChatGeneration,
   LLMResult,
   RunInputs,
   RunOutputs,
@@ -159,7 +160,24 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       throw new Error("No LLM run to end.");
     }
     run.end_time = Date.now();
-    run.outputs = output;
+    run.outputs = {
+      ...output,
+      generations: output.generations.map((generations) =>
+        generations.map((generation) => {
+          if ("message" in generation) {
+            const chatGeneration = generation as ChatGeneration;
+            return {
+              ...chatGeneration,
+              message: mapChatMessagesToStoredMessages([
+                chatGeneration.message,
+              ])[0],
+            };
+          } else {
+            return generation;
+          }
+        })
+      ),
+    };
     await this.onLLMEnd?.(run);
     await this._endTrace(run);
   }
