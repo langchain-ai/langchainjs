@@ -55,3 +55,12 @@ export {
   SerializedZeroShotAgent,
   StoppingMethod,
 } from "./types.js";
+export {
+  StructuredChatAgent,
+  StructuredChatAgentInput,
+  StructuredChatCreatePromptArgs,
+} from "./structured_chat/index.js";
+export {
+  StructuredChatOutputParser,
+  StructuredChatOutputParserWithRetries,
+} from "./structured_chat/outputParser.js";

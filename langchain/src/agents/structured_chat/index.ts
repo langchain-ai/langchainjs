@@ -17,7 +17,7 @@ import { AgentInput } from "../types.js";
 import { StructuredChatOutputParserWithRetries } from "./outputParser.js";
 import { FORMAT_INSTRUCTIONS, PREFIX, SUFFIX } from "./prompt.js";
 
-export interface ChatCreatePromptArgs {
+export interface StructuredChatCreatePromptArgs {
   /** String to put after the list of tools. */
   suffix?: string;
   /** String to put before the list of tools. */
@@ -26,14 +26,14 @@ export interface ChatCreatePromptArgs {
   inputVariables?: string[];
 }
 
-export type ChatAgentInput = Optional<AgentInput, "outputParser">;
+export type StructuredChatAgentInput = Optional<AgentInput, "outputParser">;
 
 /**
  * Agent that interoperates with Structured Tools using React logic.
  * @augments Agent
  */
 export class StructuredChatAgent extends Agent {
-  constructor(input: ChatAgentInput) {
+  constructor(input: StructuredChatAgentInput) {
     const outputParser =
       input?.outputParser ?? StructuredChatAgent.getDefaultOutputParser();
     super({ ...input, outputParser });
@@ -107,7 +107,10 @@ export class StructuredChatAgent extends Agent {
    * @param args.suffix - String to put after the list of tools.
    * @param args.prefix - String to put before the list of tools.
    */
-  static createPrompt(tools: StructuredTool[], args?: ChatCreatePromptArgs) {
+  static createPrompt(
+    tools: StructuredTool[],
+    args?: StructuredChatCreatePromptArgs
+  ) {
     const { prefix = PREFIX, suffix = SUFFIX } = args ?? {};
     const template = [prefix, FORMAT_INSTRUCTIONS, suffix].join("\n\n");
     const messages = [
@@ -129,7 +132,7 @@ export class StructuredChatAgent extends Agent {
   static fromLLMAndTools(
     llm: BaseLanguageModel,
     tools: StructuredTool[],
-    args?: ChatCreatePromptArgs & AgentArgs
+    args?: StructuredChatCreatePromptArgs & AgentArgs
   ) {
     StructuredChatAgent.validateTools(tools);
     const prompt = StructuredChatAgent.createPrompt(tools, args);
