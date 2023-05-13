@@ -37,6 +37,8 @@ export class SqlDatabaseChain extends BaseChain {
   // Number of results to return from the query
   topK = 5;
 
+  intermediateStep: string[];
+
   inputKey = "query";
 
   outputKey = "result";
@@ -97,6 +99,8 @@ export class SqlDatabaseChain extends BaseChain {
     } catch (error) {
       console.error(error);
     }
+
+    this.intermediateStep = intermediateStep;
 
     let finalResult;
     if (this.returnDirect) {
