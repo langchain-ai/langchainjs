@@ -53,7 +53,7 @@ export class UnstructuredLoader extends BaseDocumentLoader {
 
   private apiKey?: string;
 
-  private strategy?: string;
+  private strategy: string;
 
   constructor(
     filePathOrLegacyApiUrl: string,
@@ -71,7 +71,7 @@ export class UnstructuredLoader extends BaseDocumentLoader {
       this.filePath = filePathOrLegacyApiUrl;
       this.apiKey = optionsOrLegacyFilePath.apiKey;
       this.apiUrl = optionsOrLegacyFilePath.apiUrl ?? this.apiUrl;
-      this.strategy = optionsOrLegacyFilePath.strategy;
+      this.strategy = optionsOrLegacyFilePath.strategy ?? "hi_res";
     }
   }
 
@@ -89,7 +89,7 @@ export class UnstructuredLoader extends BaseDocumentLoader {
 
     const headers = {
       "UNSTRUCTURED-API-KEY": this.apiKey ?? "",
-      strategy: this.strategy ?? "hi_res",
+      strategy: this.strategy,
     };
 
     const response = await fetch(this.apiUrl, {
