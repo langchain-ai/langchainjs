@@ -26,5 +26,9 @@ export {
   ZapiterNLAWrapperParams,
 } from "./zapier.js";
 export { Serper, SerperParameters } from "./serper.js";
+export {
+  GoogleCustomSearch,
+  GoogleSearchParams,
+} from "./google_custom_search.js";
 export { AIPluginTool } from "./aiplugin.js";
 export { ReadFileTool, WriteFileTool } from "./fs.js";
