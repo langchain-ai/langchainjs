@@ -1,7 +1,4 @@
-import * as uuid from "uuid";
-
 import { BaseTracer, Run, BaseRun } from "./tracer.js";
-import { Optional } from "../../types/type-utils.js";
 
 export interface RunCreate extends BaseRun {
   child_runs: this[];
@@ -25,7 +22,17 @@ export interface TracerSession extends BaseTracerSessionV2 {
   id: string; // uuid
 }
 
-export class LangChainTracer extends BaseTracer {
+export interface LangChainTracerFields {
+  exampleId?: string;
+  tenantId?: string;
+  sessionName?: string;
+  sessionExtra?: Record<string, unknown>;
+}
+
+export class LangChainTracer
+  extends BaseTracer
+  implements LangChainTracerFields
+{
   name = "langchain_tracer";
 
   protected endpoint =
@@ -38,13 +45,22 @@ export class LangChainTracer extends BaseTracer {
     "Content-Type": "application/json",
   };
 
+  sessionName: string;
+
+  sessionExtra?: LangChainTracerFields["sessionExtra"];
+
   protected session: TracerSession;
 
   exampleId?: string;
 
   tenantId?: string;
 
-  constructor(exampleId?: string, tenantId?: string) {
+  constructor({
+    exampleId,
+    tenantId,
+    sessionName,
+    sessionExtra,
+  }: LangChainTracerFields = {}) {
     super();
 
     // eslint-disable-next-line no-process-env
@@ -59,65 +75,56 @@ export class LangChainTracer extends BaseTracer {
         ? // eslint-disable-next-line no-process-env
           process.env?.LANGCHAIN_TENANT_ID
         : undefined);
+    this.sessionName =
+      sessionName ??
+      (typeof process !== "undefined"
+        ? // eslint-disable-next-line no-process-env
+          process.env?.LANGCHAIN_SESSION
+        : undefined) ??
+      "default";
+    this.sessionExtra = sessionExtra;
     this.exampleId = exampleId;
   }
 
-  async newSession(sessionName?: string): Promise<TracerSession> {
-    const tenantId = this.tenantId ?? (await this.updateTenantId());
-    const sessionCreate: TracerSessionCreateV2 = {
-      start_time: Date.now(),
-      name: sessionName,
-      tenant_id: tenantId,
-    };
-    const session = await this.persistSession(sessionCreate);
-    this.session = session;
-    return session as TracerSession;
-  }
-
-  async loadSession(sessionName: string): Promise<TracerSession> {
-    const endpoint = `${this.endpoint}/sessions?name=${sessionName}`;
-    return this._handleSessionResponse(endpoint);
-  }
-
-  async loadDefaultSession(): Promise<TracerSession> {
-    const endpoint = `${this.endpoint}/sessions?name=default`;
-    return this._handleSessionResponse(endpoint);
-  }
-
-  protected async persistSession(
-    sessionCreate: Optional<BaseTracerSessionV2, "tenant_id">
-  ): Promise<TracerSession> {
-    const endpoint = `${this.endpoint}/sessions`;
-    const tenant_id = this.tenantId ?? (await this.updateTenantId());
-    const response = await fetch(endpoint, {
+  protected async ensureSession(): Promise<TracerSession> {
+    if (this.session) {
+      return this.session;
+    }
+    const tenantId = await this.ensureTenantId();
+    const endpoint = `${this.endpoint}/sessions?upsert=true`;
+    const res = await fetch(endpoint, {
       method: "POST",
       headers: this.headers,
-      body: JSON.stringify(sessionCreate),
+      body: JSON.stringify({
+        name: this.sessionName,
+        tenant_id: tenantId,
+        extra: this.sessionExtra,
+      }),
     });
-    if (!response.ok) {
-      if (sessionCreate.name !== undefined) {
-        return await this.loadSession(sessionCreate.name);
-      } else {
-        return await this.loadDefaultSession();
-      }
+    if (!res.ok) {
+      const body = await res.text();
+      throw new Error(
+        `Failed to create session: ${res.status} ${res.statusText} ${body}`
+      );
     }
-    return {
-      id: (await response.json()).id,
-      tenant_id,
-      ...sessionCreate,
-    };
+    const session = await res.json();
+    this.session = session;
+    return session;
   }
 
-  async updateTenantId(): Promise<string> {
+  protected async ensureTenantId(): Promise<string> {
+    if (this.tenantId) {
+      return this.tenantId;
+    }
     const endpoint = `${this.endpoint}/tenants`;
     const response = await fetch(endpoint, {
       method: "GET",
       headers: this.headers,
     });
-
     if (!response.ok) {
+      const body = await response.text();
       throw new Error(
-        `Failed to fetch tenant ID: ${response.status} ${response.statusText}`
+        `Failed to fetch tenant ID: ${response.status} ${response.statusText} ${body}`
       );
     }
 
@@ -131,41 +138,11 @@ export class LangChainTracer extends BaseTracer {
     return tenantId;
   }
 
-  protected async _handleSessionResponse(
-    endpoint: string
-  ): Promise<TracerSession> {
-    const tenantId = this.tenantId ?? (await this.updateTenantId());
-    const configured_endpoint = `${endpoint}&tenant_id=${this.tenantId}`;
-    const response = await fetch(configured_endpoint, {
-      method: "GET",
-      headers: this.headers,
-    });
-    let tracerSession: TracerSession;
-    if (!response.ok) {
-      throw new Error(
-        `Failed to fetch session: ${response.status} ${response.statusText}`
-      );
-    }
-    const resp = (await response.json()) as TracerSession[];
-    if (resp.length === 0) {
-      tracerSession = {
-        id: uuid.v4(),
-        start_time: Date.now(),
-        tenant_id: tenantId,
-      };
-      this.session = tracerSession;
-      return tracerSession;
-    }
-    [tracerSession] = resp;
-    this.session = tracerSession;
-    return tracerSession;
-  }
-
   private async _convertToCreate(
     run: Run,
     example_id: string | undefined = undefined
   ): Promise<RunCreate> {
-    const session = this.session ?? (await this.loadDefaultSession());
+    const session = await this.ensureSession();
     const persistedRun: RunCreate = {
       id: run.id,
       name: run.name,
@@ -199,8 +176,9 @@ export class LangChainTracer extends BaseTracer {
       body: JSON.stringify(persistedRun),
     });
     if (!response.ok) {
-      console.error(
-        `Failed to persist run: ${response.status} ${response.statusText}`
+      const body = await response.text();
+      throw new Error(
+        `Failed to persist run: ${response.status} ${response.statusText} ${body}`
       );
     }
   }

@@ -510,11 +510,12 @@ export class LangChainPlusClient {
       sessionName_ = sessionName;
     }
     const results: DatasetRunResults = {};
-    await new LangChainTracer().newSession(sessionName_);
     await Promise.all(
       examples.map(async (example) => {
-        const tracer = new LangChainTracer(example.id);
-        await tracer.loadSession(sessionName_);
+        const tracer = new LangChainTracer({
+          exampleId: example.id,
+          sessionName: sessionName_,
+        });
         if (isLLM(llmOrChain)) {
           const llmResult = await this.runLLM(
             example,
