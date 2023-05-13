@@ -411,6 +411,7 @@
     "replicate": "^0.9.0",
     "srt-parser-2": "^1.2.2",
     "typeorm": "^0.3.12",
+    "typescript": "^5.0.0",
     "weaviate-ts-client": "^1.0.0"
   },
   "peerDependenciesMeta": {
@@ -502,6 +503,9 @@
       "optional": true
     },
     "typeorm": {
+      "optional": true
+    },
+    "typescript": {
       "optional": true
     },
     "weaviate-ts-client": {

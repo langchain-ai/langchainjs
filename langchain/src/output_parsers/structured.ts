@@ -10,6 +10,8 @@ import {
   FormatInstructionsOptions,
   OutputParserException,
 } from "../schema/output_parser.js";
+import { Callbacks } from "../callbacks/manager.js";
+import { BasePromptValue } from "../schema/index.js";
 
 export type JsonMarkdownStructuredOutputParserInput = {
   interpolationDepth?: number;
@@ -140,5 +142,51 @@ export class JsonMarkdownStructuredOutputParser<
     const isNullable = nullable ? " (nullable)" : "";
     const description = schema.description ? ` // ${schema.description}` : "";
     return `${schema.type}${description}${isNullable}`;
+  }
+}
+
+export abstract class AssymetricStructuredOutputParser<
+  T extends z.ZodTypeAny,
+  Y = unknown
+> extends BaseOutputParser<Y> {
+  private structuredOutputParser: JsonMarkdownStructuredOutputParser<T>;
+
+  constructor(public inputSchema: T) {
+    super();
+    this.structuredOutputParser = new JsonMarkdownStructuredOutputParser(
+      inputSchema
+    );
+  }
+
+  abstract outputProcessor(input: z.infer<T>): Promise<Y>;
+
+  async parse(text: string): Promise<Y> {
+    let parsedInput;
+    try {
+      parsedInput = await this.structuredOutputParser.parse(text);
+    } catch (e) {
+      throw new OutputParserException(
+        `Failed to parse. Text: "${text}". Error: ${e}`,
+        text
+      );
+    }
+
+    return this.outputProcessor(parsedInput);
+  }
+
+  getFormatInstructions(): string {
+    return this.structuredOutputParser.getFormatInstructions();
+  }
+
+  parseWithPrompt(
+    text: string,
+    _prompt: BasePromptValue,
+    callbacks?: Callbacks | undefined
+  ): Promise<Y> {
+    return this.structuredOutputParser.parseWithPrompt(
+      text,
+      _prompt,
+      callbacks
+    );
   }
 }

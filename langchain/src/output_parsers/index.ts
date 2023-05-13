@@ -2,6 +2,7 @@ export { ListOutputParser, CommaSeparatedListOutputParser } from "./list.js";
 export { RegexParser } from "./regex.js";
 export {
   StructuredOutputParser,
+  AssymetricStructuredOutputParser,
   JsonMarkdownStructuredOutputParser,
   JsonMarkdownFormatInstructionsOptions,
   JsonMarkdownStructuredOutputParserInput,
@@ -10,3 +11,4 @@ export { OutputFixingParser } from "./fix.js";
 export { CombiningOutputParser } from "./combining.js";
 export { RouterOutputParser, RouterOutputParserInput } from "./router.js";
 export { CustomListOutputParser } from "./list.js";
+export { ExpressionParser } from "./expression.js";
