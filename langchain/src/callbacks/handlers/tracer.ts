@@ -60,41 +60,30 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       const parentRun = this.runMap.get(run.parent_run_id);
       if (parentRun) {
         this._addChildRun(parentRun, run);
-      } else {
-        throw new Error(`Caller run ${run.parent_run_id} not found`);
       }
     }
     this.runMap.set(run.id, run);
   }
 
   protected async _endTrace(run: Run): Promise<void> {
-    if (!run.parent_run_id) {
-      await this.persistRun(run);
-    } else {
-      const parentRun = this.runMap.get(run.parent_run_id);
-
-      if (parentRun === undefined) {
-        throw new Error(`Parent run ${run.parent_run_id} not found`);
-      }
-
+    const parentRun =
+      run.parent_run_id !== undefined && this.runMap.get(run.parent_run_id);
+    if (parentRun) {
       parentRun.child_execution_order = Math.max(
         parentRun.child_execution_order,
         run.child_execution_order
       );
+    } else {
+      await this.persistRun(run);
     }
     this.runMap.delete(run.id);
   }
 
   protected _getExecutionOrder(parentRunId: string | undefined): number {
+    const parentRun = parentRunId !== undefined && this.runMap.get(parentRunId);
     // If a run has no parent then execution order is 1
-    if (parentRunId === undefined) {
+    if (!parentRun) {
       return 1;
-    }
-
-    const parentRun = this.runMap.get(parentRunId);
-
-    if (parentRun === undefined) {
-      throw new Error(`Parent run ${parentRunId} not found`);
     }
 
     return parentRun.child_execution_order + 1;
