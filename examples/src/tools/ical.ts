@@ -16,6 +16,6 @@ export async function run() {
 
   console.log(result);
   /*
-  10k Run Preparation Plan.ics created successfully
+  A 1 week running plan to prepare for a 10k run event created successfully and saved as 10k Run.ics.
   */
 }
