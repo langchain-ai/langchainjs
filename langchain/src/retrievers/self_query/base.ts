@@ -7,9 +7,7 @@ import { StructuredQuery, Visitor } from "../../chains/query_constructor/ir.js";
 import { Document } from "../../document.js";
 import { BaseRetriever } from "../../schema/index.js";
 import { VectorStore } from "../../vectorstores/base.js";
-import { Chroma } from "../../vectorstores/chroma.js";
 import { PineconeStore } from "../../vectorstores/pinecone.js";
-import { ChromaTranslator } from "./chroma.js";
 import { PineconeTranslator } from "./pinecone.js";
 
 export const BUILTIN_TRANSLATORS = /* #__PURE__ */ new Map<
@@ -17,7 +15,6 @@ export const BUILTIN_TRANSLATORS = /* #__PURE__ */ new Map<
   new () => Visitor
 >([
   [PineconeStore, PineconeTranslator],
-  [Chroma, ChromaTranslator],
 ]);
 
 function _getBuiltinTranslator(vectorStore: typeof VectorStore): Visitor {

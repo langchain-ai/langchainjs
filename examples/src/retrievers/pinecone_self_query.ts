@@ -111,7 +111,7 @@ const run = async () => {
   const vectorStore = await PineconeStore.fromDocuments(docs, embeddings, {
     pineconeIndex: index,
   });
-  const selfQueryRetriever = SelfQueryRetriever.fromLLM({
+  const selfQueryRetriever = await SelfQueryRetriever.fromLLM({
     llm,
     vectorStore,
     documentContents,
