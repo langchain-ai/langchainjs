@@ -28,6 +28,9 @@
     "tools/calculator.cjs",
     "tools/calculator.js",
     "tools/calculator.d.ts",
+    "tools/datetime.cjs",
+    "tools/datetime.js",
+    "tools/datetime.d.ts",
     "tools/webbrowser.cjs",
     "tools/webbrowser.js",
     "tools/webbrowser.d.ts",
@@ -579,6 +582,11 @@
       "types": "./tools/calculator.d.ts",
       "import": "./tools/calculator.js",
       "require": "./tools/calculator.cjs"
+    },
+    "./tools/datetime": {
+      "types": "./tools/datetime.d.ts",
+      "import": "./tools/datetime.js",
+      "require": "./tools/datetime.cjs"
     },
     "./tools/webbrowser": {
       "types": "./tools/webbrowser.d.ts",

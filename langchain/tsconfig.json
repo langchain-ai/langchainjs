@@ -38,6 +38,7 @@
       "src/tools/index.ts",
       "src/tools/aws_lambda.ts",
       "src/tools/calculator.ts",
+      "src/tools/datetime.ts",
       "src/tools/webbrowser.ts",
       "src/chains/index.ts",
       "src/chains/load.ts",
