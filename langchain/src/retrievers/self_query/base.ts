@@ -56,9 +56,7 @@ export class SelfQueryRetriever
     this.verbose = options.verbose ?? false;
     this.searchParams = options.searchParams ?? this.searchParams;
 
-    this.structuredQueryTranslator = _getBuiltinTranslator(
-      options.vectorStore.constructor as typeof VectorStore
-    );
+    this.structuredQueryTranslator = options.structuredQueryTranslator;
   }
 
   async getRelevantDocuments(
