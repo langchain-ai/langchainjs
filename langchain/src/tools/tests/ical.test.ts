@@ -58,7 +58,7 @@ describe("ICalTool", () => {
 
       const result = await tool._call(inputStr);
 
-      expect(result).toEqual(`${expectedFilename} created successfully`);
+      expect(result).toContain('event created successfully');
       expect(store.writeFile).toHaveBeenCalledWith(
         expectedFilename,
         expect.any(String)

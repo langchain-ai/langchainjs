@@ -9,6 +9,7 @@ export function getOutputPrompt(): string {
 	\`\`\`json
 	{
 		"name": "events",
+		"description": "Calendar events for next week",
 		"events": [
 			{
 				"start": "2023-05-08T09:00:00.000Z",

@@ -15,14 +15,17 @@ export class ICalTool extends Tool {
   name = "iCal";
 
   description =
-    "Useful for creating iCal calendar events. Input should be an instruction describing what event(s) to create.";
+    "Useful for scheduling events and storing it locally as iCal file. It can only create new events, it cannot edit existing events. Input should be raw instruction(s) describing the event to be created in detail.";
 
   eventsSchema = z.object({
-    name: z.string().describe("Name of the event event"),
+    name: z.string().describe("Name of the event"),
+    description: z
+      .string()
+      .describe("A detailed description of the created event(s)."),
     events: z.array(
       z.object({
         start: z.string().describe("Start date of the event"),
-        end: z.string().describe("Env date of the event"),
+        end: z.string().describe("End date of the event"),
         summary: z.string().describe("Summary of the event"),
         description: z.string().describe("Description of the event"),
         location: z
@@ -47,7 +50,7 @@ export class ICalTool extends Tool {
   /** @ignore */
   async _call(input: string): Promise<string> {
     try {
-      const { name, events } = await this.getEventsObject(input);
+      const { name, description, events } = await this.getEventsObject(input);
       const { ical } = await this.imports();
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
@@ -66,7 +69,7 @@ export class ICalTool extends Tool {
 
       await this.store.writeFile(`${name}.ics`, calendar.toString());
 
-      return `${name}.ics created successfully`;
+      return `${description} event created successfully and saved as ${name}.ics.`;
     } catch (err) {
       return "Failed to create calendar event.";
     }
