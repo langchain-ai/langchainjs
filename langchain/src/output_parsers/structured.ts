@@ -5,6 +5,7 @@ import { JsonSchema7ArrayType } from "zod-to-json-schema/src/parsers/array.js";
 import { JsonSchema7ObjectType } from "zod-to-json-schema/src/parsers/object.js";
 import { JsonSchema7StringType } from "zod-to-json-schema/src/parsers/string.js";
 import { JsonSchema7NumberType } from "zod-to-json-schema/src/parsers/number.js";
+import { JsonSchema7NullableType } from "zod-to-json-schema/src/parsers/nullable.js";
 import {
   BaseOutputParser,
   FormatInstructionsOptions,
@@ -109,39 +110,80 @@ export class JsonMarkdownStructuredOutputParser<
       | JsonSchema7ArrayType
       | JsonSchema7StringType
       | JsonSchema7NumberType
+      | JsonSchema7NullableType
     >;
 
-    let nullable = false;
-    if (Array.isArray(schema.type)) {
-      const [actualType, nullStr] = schema.type;
-      nullable = nullStr === "null";
-      schema.type = actualType;
+    if ("type" in schema) {
+      let nullable = false;
+      let type: string;
+      if (Array.isArray(schema.type)) {
+        const nullIdx = schema.type.findIndex((type) => type === "null");
+        if (nullIdx !== -1) {
+          nullable = true;
+          schema.type.splice(nullIdx, 1);
+        }
+        type = schema.type.join(" | ") as string;
+      } else {
+        type = schema.type;
+      }
+
+      if (schema.type === "object" && schema.properties) {
+        const description = schema.description
+          ? ` // ${schema.description}`
+          : "";
+        const properties = Object.entries(schema.properties)
+          .map(([key, value]) => {
+            const isOptional = schema.required?.includes(key)
+              ? ""
+              : " (optional)";
+            return `${" ".repeat(indent)}"${key}": ${this._schemaToInstruction(
+              value,
+              indent + 2
+            )}${isOptional}`;
+          })
+          .join("\n");
+        return `{\n${properties}\n${" ".repeat(indent - 2)}}${description}`;
+      }
+      if (schema.type === "array" && schema.items) {
+        const description = schema.description
+          ? ` // ${schema.description}`
+          : "";
+        return `array[\n${" ".repeat(indent)}${this._schemaToInstruction(
+          schema.items,
+          indent + 2
+        )}\n${" ".repeat(indent - 2)}] ${description}`;
+      }
+      const isNullable = nullable ? " (nullable)" : "";
+      const description = schema.description ? ` // ${schema.description}` : "";
+      return `${type}${description}${isNullable}`;
     }
 
-    if (schema.type === "object" && schema.properties) {
-      const description = schema.description ? ` // ${schema.description}` : "";
-      const properties = Object.entries(schema.properties)
-        .map(([key, value]) => {
-          const isOptional = schema.required?.includes(key)
-            ? ""
-            : " (optional)";
-          return `${" ".repeat(indent)}"${key}": ${this._schemaToInstruction(
-            value,
-            indent + 2
-          )}${isOptional}`;
-        })
-        .join("\n");
-      return `{\n${properties}\n${" ".repeat(indent - 2)}}${description}`;
+    if ("anyOf" in schema) {
+      return schema.anyOf
+        .map((s) => this._schemaToInstruction(s, indent))
+        .join(`\n${" ".repeat(indent - 2)}`);
     }
-    if (schema.type === "array" && schema.items) {
-      const description = schema.description ? ` // ${schema.description}` : "";
-      return `array[\n${" ".repeat(indent)}${this._schemaToInstruction(
-        schema.items
-      )}\n${" ".repeat(indent - 2)}] ${description}`;
-    }
-    const isNullable = nullable ? " (nullable)" : "";
-    const description = schema.description ? ` // ${schema.description}` : "";
-    return `${schema.type}${description}${isNullable}`;
+
+    throw new Error("unsupported schema type");
+  }
+
+  static fromZodSchema<T extends z.ZodTypeAny>(schema: T) {
+    return new this<T>(schema);
+  }
+
+  static fromNamesAndDescriptions<S extends { [key: string]: string }>(
+    schemas: S
+  ) {
+    const zodSchema = z.object(
+      Object.fromEntries(
+        Object.entries(schemas).map(
+          ([name, description]) =>
+            [name, z.string().describe(description)] as const
+        )
+      )
+    );
+
+    return new this<typeof zodSchema>(zodSchema);
   }
 }
 
@@ -149,11 +191,11 @@ export abstract class AssymetricStructuredOutputParser<
   T extends z.ZodTypeAny,
   Y = unknown
 > extends BaseOutputParser<Y> {
-  private structuredOutputParser: JsonMarkdownStructuredOutputParser<T>;
+  private structuredInputParser: JsonMarkdownStructuredOutputParser<T>;
 
   constructor(public inputSchema: T) {
     super();
-    this.structuredOutputParser = new JsonMarkdownStructuredOutputParser(
+    this.structuredInputParser = new JsonMarkdownStructuredOutputParser(
       inputSchema
     );
   }
@@ -163,7 +205,7 @@ export abstract class AssymetricStructuredOutputParser<
   async parse(text: string): Promise<Y> {
     let parsedInput;
     try {
-      parsedInput = await this.structuredOutputParser.parse(text);
+      parsedInput = await this.structuredInputParser.parse(text);
     } catch (e) {
       throw new OutputParserException(
         `Failed to parse. Text: "${text}". Error: ${e}`,
@@ -175,7 +217,7 @@ export abstract class AssymetricStructuredOutputParser<
   }
 
   getFormatInstructions(): string {
-    return this.structuredOutputParser.getFormatInstructions();
+    return this.structuredInputParser.getFormatInstructions();
   }
 
   parseWithPrompt(
@@ -183,10 +225,6 @@ export abstract class AssymetricStructuredOutputParser<
     _prompt: BasePromptValue,
     callbacks?: Callbacks | undefined
   ): Promise<Y> {
-    return this.structuredOutputParser.parseWithPrompt(
-      text,
-      _prompt,
-      callbacks
-    );
+    return this.structuredInputParser.parseWithPrompt(text, _prompt, callbacks);
   }
 }

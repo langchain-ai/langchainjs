@@ -81,3 +81,18 @@ export {
 } from "./router/llm_router.js";
 export { MultiPromptChain } from "./router/multi_prompt.js";
 export { MultiRetrievalQAChain } from "./router/multi_retrieval_qa.js";
+export {
+  StructuredQueryOutputParser,
+  loadQueryContstructorChain,
+  QueryConstructorChainOptions,
+  formatAttributeInfo,
+} from "./query_constructor/base.js";
+export {
+  Comparator,
+  Comparison,
+  Operation,
+  Operator,
+  StructuredQuery,
+  Visitor,
+} from "./query_constructor/ir.js";
+export { AttributeInfo } from "./query_constructor/schema.js";

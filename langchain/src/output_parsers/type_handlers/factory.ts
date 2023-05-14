@@ -31,7 +31,7 @@ export class MasterHandler extends NodeHandler {
   async accepts(
     node: AcceptableNodeTypes
   ): Promise<AcceptableNodeTypes | boolean> {
-    throw new Error(`Master handler does not accept any nodes: ${  node}`);
+    throw new Error(`Master handler does not accept any nodes: ${node}`);
   }
 
   async handle(node: tst.CallExpression): Promise<ParsedType> {
@@ -42,7 +42,7 @@ export class MasterHandler extends NodeHandler {
       }
     }
 
-    throw new Error(`No handler found for node: ${  node}`);
+    throw new Error(`No handler found for node: ${node}`);
   }
 
   static createMasterHandler(): MasterHandler {

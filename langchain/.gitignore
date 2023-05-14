@@ -250,6 +250,9 @@ retrievers/document_compressors/chain_extract.d.ts
 retrievers/hyde.cjs
 retrievers/hyde.js
 retrievers/hyde.d.ts
+retrievers/self_query/base.d.ts
+retrievers/self_query/base.js
+retrievers/self_query/base.cjs
 cache.cjs
 cache.js
 cache.d.ts

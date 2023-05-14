@@ -263,8 +263,12 @@ test("ExpressionParser multiple expressions test", async () => {
     `hello("world", ["hello, "world", { hello: "world" )`,
     `l:::"""(}))))++===/...`,
   ];
-  const parsedPromise = expressions.map((expression) => parser.parse(expression));
-  const badExpressionsPromise = badExpressions.map((expression) => parser.parse(expression));
+  const parsedPromise = expressions.map((expression) =>
+    parser.parse(expression)
+  );
+  const badExpressionsPromise = badExpressions.map((expression) =>
+    parser.parse(expression)
+  );
 
   try {
     await Promise.all(badExpressionsPromise).catch(() => "bad");

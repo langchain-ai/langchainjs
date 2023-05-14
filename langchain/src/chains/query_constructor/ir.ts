@@ -12,12 +12,37 @@ export enum Comparator {
   gte = "gte",
 }
 
+export type VisitorResult =
+  | VisitorOperationResult
+  | VisitorComparisonResult
+  | VisitorStructuredQueryResult;
+export type VisitorOperationResult = {
+  [operator: string]: VisitorResult[];
+};
+export type VisitorComparisonResult = {
+  [attr: string]: {
+    [comparator: string]: string | number;
+  };
+};
+export type VisitorStructuredQueryResult = {
+  filter?:
+    | VisitorStructuredQueryResult
+    | VisitorComparisonResult
+    | VisitorOperationResult;
+};
+
 export abstract class Visitor {
-  abstract visitOperation(operation: Operation): object;
+  abstract allowedOperators: Operator[];
 
-  abstract visitComparison(comparison: Comparison): object;
+  abstract allowedComparators: Comparator[];
 
-  abstract visitStructuredQuery(structuredQuery: StructuredQuery): object;
+  abstract visitOperation(operation: Operation): VisitorOperationResult;
+
+  abstract visitComparison(comparison: Comparison): VisitorComparisonResult;
+
+  abstract visitStructuredQuery(
+    structuredQuery: StructuredQuery
+  ): VisitorStructuredQueryResult;
 }
 
 export abstract class Expression {
