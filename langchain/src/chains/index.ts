@@ -95,4 +95,3 @@ export {
   StructuredQuery,
   Visitor,
 } from "./query_constructor/ir.js";
-export { AttributeInfo } from "./query_constructor/schema.js";

@@ -1,8 +1,15 @@
 import { test } from "@jest/globals";
 import { loadQueryContstructorChain } from "../base.js";
-import { AttributeInfo } from "../schema.js";
-import { Comparators, Comparison, Operators, StructuredQuery } from "../ir.js";
+import {
+  Comparators,
+  Comparison,
+  Operation,
+  Operators,
+  StructuredQuery,
+} from "../ir.js";
 import { OpenAI } from "../../../llms/openai.js";
+import { PineconeTranslator } from "../../../retrievers/self_query/pinecone.js";
+import { AttributeInfo } from "../../../schema/query_constructor.js";
 
 test("Query Chain Test", async () => {
   const sq1 = new StructuredQuery(
@@ -17,6 +24,27 @@ test("Query Chain Test", async () => {
     "",
     new Comparison(Comparators.eq, "director", "Greta Gerwig")
   );
+  const sq5 = new StructuredQuery(
+    "",
+    new Operation(Operators.and, [
+      new Operation(Operators.or, [
+        new Comparison(Comparators.eq, "genre", "comedy"),
+        new Comparison(Comparators.eq, "genre", "drama"),
+      ]),
+      new Comparison(Comparators.lt, "length", 90),
+    ])
+  );
+
+  const filter1 = { length: { $lt: 90 } };
+  const filter3 = { rating: { $gt: 8.5 } };
+  const filter4 = { director: { $eq: "Greta Gerwig" } };
+  const filter5 = {
+    $and: [
+      { $or: [{ genre: { $eg: "comedy" } }, { genre: { $eq: "drama" } }] },
+      { length: { $lt: 90 } },
+    ],
+  };
+
   const attributeInfo: AttributeInfo[] = [
     {
       name: "genre",
@@ -66,14 +94,39 @@ test("Query Chain Test", async () => {
   const c4 = queryChain.call({
     query: "Which movies are directed by Greta Gerwig?",
   });
+  const c5 = queryChain.call({
+    query:
+      "Which movies are either comedy or drama and are less than 90 minutes?",
+  });
 
   const [
     { [queryChain.outputKey]: r1 },
     { [queryChain.outputKey]: r3 },
     { [queryChain.outputKey]: r4 },
-  ] = await Promise.all([c1, c3, c4]);
+    { [queryChain.outputKey]: r5 },
+  ] = await Promise.all([c1, c3, c4, c5]);
 
   expect(r1).toMatchObject(sq1);
   expect(r3).toMatchObject(sq3);
   expect(r4).toMatchObject(sq4);
+  expect(r5).toMatchObject(sq5);
+  const testTranslator = new PineconeTranslator();
+
+  const { filter: parsedFilter1 } = testTranslator.visitStructuredQuery(
+    r1 as StructuredQuery
+  );
+  const { filter: parsedFilter3 } = testTranslator.visitStructuredQuery(
+    r3 as StructuredQuery
+  );
+  const { filter: parsedFilter4 } = testTranslator.visitStructuredQuery(
+    r4 as StructuredQuery
+  );
+  const { filter: parsedFilter5 } = testTranslator.visitStructuredQuery(
+    r5 as StructuredQuery
+  );
+
+  expect(parsedFilter1).toMatchObject(filter1);
+  expect(parsedFilter3).toMatchObject(filter3);
+  expect(parsedFilter4).toMatchObject(filter4);
+  expect(parsedFilter5).toMatchObject(filter5);
 });

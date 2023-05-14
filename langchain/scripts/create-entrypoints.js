@@ -94,6 +94,7 @@ const entrypoints = {
   // schema
   schema: "schema/index",
   "schema/output_parser": "schema/output_parser",
+  "schema/query_constructor": "schema/query_constructor",
   // sql_db
   sql_db: "sql_db",
   // callbacks
@@ -112,7 +113,7 @@ const entrypoints = {
   "retrievers/document_compressors/chain_extract":
     "retrievers/document_compressors/chain_extract",
   "retrievers/hyde": "retrievers/hyde",
-  "retrievers/self_query": "retrievers/self_query/base",
+  "retrievers/self_query/base": "retrievers/self_query/base",
   // cache
   cache: "cache/index",
   "cache/redis": "cache/redis",

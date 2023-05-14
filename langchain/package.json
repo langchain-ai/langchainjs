@@ -223,6 +223,9 @@
     "schema/output_parser.cjs",
     "schema/output_parser.js",
     "schema/output_parser.d.ts",
+    "schema/query_constructor.cjs",
+    "schema/query_constructor.js",
+    "schema/query_constructor.d.ts",
     "sql_db.cjs",
     "sql_db.js",
     "sql_db.d.ts",
@@ -262,9 +265,9 @@
     "retrievers/hyde.cjs",
     "retrievers/hyde.js",
     "retrievers/hyde.d.ts",
-    "retrievers/self_query.cjs",
-    "retrievers/self_query.js",
-    "retrievers/self_query.d.ts",
+    "retrievers/self_query/base.cjs",
+    "retrievers/self_query/base.js",
+    "retrievers/self_query/base.d.ts",
     "cache.cjs",
     "cache.js",
     "cache.d.ts",
@@ -922,6 +925,11 @@
       "import": "./schema/output_parser.js",
       "require": "./schema/output_parser.cjs"
     },
+    "./schema/query_constructor": {
+      "types": "./schema/query_constructor.d.ts",
+      "import": "./schema/query_constructor.js",
+      "require": "./schema/query_constructor.cjs"
+    },
     "./sql_db": {
       "types": "./sql_db.d.ts",
       "import": "./sql_db.js",
@@ -989,10 +997,10 @@
       "import": "./retrievers/hyde.js",
       "require": "./retrievers/hyde.cjs"
     },
-    "./retrievers/self_query": {
-      "types": "./retrievers/self_query.d.ts",
-      "import": "./retrievers/self_query.js",
-      "require": "./retrievers/self_query.cjs"
+    "./retrievers/self_query/base": {
+      "types": "./retrievers/self_query/base.d.ts",
+      "import": "./retrievers/self_query/base.js",
+      "require": "./retrievers/self_query/base.cjs"
     },
     "./cache": {
       "types": "./cache.d.ts",

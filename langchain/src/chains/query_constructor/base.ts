@@ -7,7 +7,6 @@ import {
   Operators,
   StructuredQuery,
 } from "./ir.js";
-import { AttributeInfo } from "./schema.js";
 import { Example, InputValues } from "../../schema/index.js";
 import {
   DEFAULT_EXAMPLES,
@@ -21,6 +20,7 @@ import { LLMChain } from "../../chains/llm_chain.js";
 import { FewShotPromptTemplate } from "../../prompts/few_shot.js";
 import { BaseLanguageModel } from "../../base_language/index.js";
 import { AssymetricStructuredOutputParser } from "../../output_parsers/structured.js";
+import { AttributeInfo } from "../../schema/query_constructor.js";
 
 const queryInputSchema = /* #__PURE__ */ z.object({
   query: /* #__PURE__ */ z
