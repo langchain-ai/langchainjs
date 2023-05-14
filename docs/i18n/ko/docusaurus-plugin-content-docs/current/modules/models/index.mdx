@@ -6,29 +6,29 @@ sidebar_label: Models
 
 import DocCardList from "@theme/DocCardList";
 
-# Models
+# 모델
 
 :::info
 [Conceptual Guide](https://docs.langchain.com/docs/components/models/)
 :::
 
-Models are a core component of LangChain. LangChain is not a provider of models, but rather provides a standard interface through which you can interact with a variety of language models.
-LangChain provides support for both text-based Large Language Models (LLMs), Chat Models, and Text Embedding models.
+모델은 LangChain의 핵심 구성 요소입니다. LangChain은 모델을 제공하는 것이 아니라 다양한 언어 모델과 상호 작용할 수 있는 표준 인터페이스를 제공합니다.
+LangChain은 텍스트 기반 대규모 언어 모델(LLM), 채팅 모델, 텍스트 임베딩 모델을 모두 지원합니다.
 
-LLMs use a text-based input and output, while Chat Models use a message-based input and output.
+LLM은 텍스트 기반 입력과 출력을 사용하는 반면, 채팅 모델은 메시지 기반 입력과 출력을 사용합니다.
 
-> **_Note:_** Chat model APIs are fairly new, so we are still figuring out the correct abstractions. If you have any feedback, please let us know!
+> **_Note:_** 채팅 모델 API는 새로운 기능이기 때문에 아직 정확한 추상화를 파악하는 중입니다. 피드백이 있으시면 언제든지 알려주세요!
 
-## All Models
+## 전체 모델
 
 <DocCardList />
 
 ## Advanced
 
-_This section is for users who want a deeper technical understanding of how LangChain works. If you are just getting started, you can skip this section._
+이 섹션은 LangChain의 작동 방식에 대해 더 깊은 기술적 이해를 원하는 사용자를 위한 섹션입니다. 이제 막 시작하신다면 이 섹션을 건너뛰셔도 됩니다.
 
-Both LLMs and Chat Models are built on top of the `BaseLanguageModel` class. This class provides a common interface for all models, and allows us to easily swap out models in chains without changing the rest of the code.
+LLM과 채팅 모델은 모두 `BaseLanguageModel` 클래스를 기반으로 구축됩니다. 이 클래스는 모든 모델에 공통 인터페이스를 제공하며, 나머지 코드를 변경하지 않고도 체인에서 모델을 쉽게 교체할 수 있게 해줍니다.
 
-The `BaseLanguageModel` class has two abstract methods: `generatePrompt` and `getNumTokens`, which are implemented by `BaseChatModel` and `BaseLLM` respectively.
+BaseLanguageModel`클래스에는 두 개의 추상 메서드인`generatePrompt`와 `getNumTokens`가 있으며, 이는 각각 `BaseChatModel`과 `BaseLLM`에 의해 구현됩니다.
 
-`BaseLLM` is a subclass of `BaseLanguageModel` that provides a common interface for LLMs while `BaseChatModel` is a subclass of `BaseLanguageModel` that provides a common interface for chat models.
+BaseLLM`은 `BaseLanguageModel`의 서브클래스로 LLM에 대한 공통 인터페이스를 제공하며, `BaseChatModel`은 `BaseLanguageModel`의 서브클래스로 채팅 모델에 대한 공통 인터페이스를 제공합니다.
