@@ -13,9 +13,7 @@ import { PineconeTranslator } from "./pinecone.js";
 export const BUILTIN_TRANSLATORS = /* #__PURE__ */ new Map<
   typeof VectorStore,
   new () => Visitor
->([
-  [PineconeStore, PineconeTranslator],
-]);
+>([[PineconeStore, PineconeTranslator]]);
 
 function _getBuiltinTranslator(vectorStore: typeof VectorStore): Visitor {
   const Translator = BUILTIN_TRANSLATORS.get(vectorStore);
