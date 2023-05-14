@@ -7,34 +7,34 @@ import CodeBlock from "@theme/CodeBlock";
 import Example from "@examples/models/chat/chat_quick_start.ts";
 import DocCardList from "@theme/DocCardList";
 
-# Getting Started: Chat Models
+# Chat Models 시작하기
 
 :::info
 [Conceptual Guide](https://docs.langchain.com/docs/components/models/chat-model)
 :::
 
-LangChain provides a standard interface for using chat models. Chat models are a variation on language models.
-While chat models use language models under the hood, the interface they expose is a bit different.
-Rather than expose a "text in, text out" API, they expose an interface where "chat messages" are the inputs and outputs.
+LangChain은 채팅 모델을 사용하기 위한 표준 인터페이스를 제공합니다. 채팅 모델은 언어 모델의 변형입니다.
+채팅 모델은 내부적으로 언어 모델을 사용하지만, 노출되는 인터페이스는 약간 다릅니다.
+"텍스트 입력, 텍스트 출력" API를 노출하는 대신 "채팅 메시지"가 입력 및 출력인 인터페이스를 노출합니다.
 
-## Chat Messages
+## 채팅 메시지
 
-A `ChatMessage` is what we refer to as the modular unit of information for a chat model.
-At the moment, this consists of a `"text"` field, which refers to the content of the chat message.
+`ChatMessage`는 채팅 모델의 모듈식 정보 단위라고 할 수 있습니다.
+현재 이것은 채팅 메시지의 내용을 나타내는 `"text"` 필드로 구성되어 있습니다.
 
-There are currently four different classes of `ChatMessage` supported by LangChain:
+현재 LangChain에서 지원하는 `ChatMessage` 클래스는 네 가지가 있습니다:
 
-- `HumanChatMessage`: A chat message that is sent as if from a Human's point of view.
-- `AIChatMessage`: A chat message that is sent from the point of view of the AI system to which the Human is corresponding.
-- `SystemChatMessage`: A chat message that gives the AI system some information about the conversation. This is usually sent at the beginning of a conversation.
-- `ChatMessage`: A generic chat message, with not only a `"text"` field but also an arbitrary `"role"` field.
+- `HumanChatMessage`: 마치 사람의 관점에서 보내는 것처럼 보내는 채팅 메시지입니다.
+- `AIChatMessage`: 사람을 대응하는 인공지능 시스템의 관점에서 보내는 채팅 메시지입니다.
+- `SystemChatMessage`: 인공지능 시스템에 대화에 대한 정보를 제공하는 채팅 메시지입니다. 일반적으로 대화가 시작될 때 전송됩니다.
+- `ChatMessage`: `"text"` 필드뿐만 아니라 임의의 `"role"` 필드가 있는 일반적인 채팅 메시지입니다.
 
-> **_Note:_** Currently, the only chat-based model we support is `ChatOpenAI` (with gpt-4 and gpt-3.5-turbo), but anticipate adding more in the future.
+> **_Note:_** 현재 저희가 지원하는 유일한 채팅 기반 모델은 `ChatOpenAI`(gpt-4 및 gpt-3.5-turbo 포함)이지만, 앞으로 더 추가될 예정입니다.
 
-To get started, simply use the `call` method of an `LLM` implementation, passing in a `string` input. In this example, we are using the `ChatOpenAI` implementation:
+시작하려면 `LLM` 구현체의 `call` 메서드를 사용하여 `string` 입력을 전달하기만 하면 됩니다. 이 예제에서는 `ChatOpenAI`를 사용하여 채팅 모델을 구현하고 있습니다.
 
 <CodeBlock language="typescript">{Example}</CodeBlock>
 
-## Dig deeper
+## 더 자세히 살펴보기
 
 <DocCardList />

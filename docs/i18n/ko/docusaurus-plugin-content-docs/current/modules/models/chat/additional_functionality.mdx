@@ -1,5 +1,5 @@
 ---
-sidebar_label: Additional Functionality
+sidebar_label: 추가 기능
 ---
 
 import CodeBlock from "@theme/CodeBlock";
@@ -7,37 +7,39 @@ import Example from "@examples/models/chat/chat.ts";
 import StreamingExample from "@examples/models/chat/chat_streaming.ts";
 import TimeoutExample from "@examples/models/chat/chat_timeout.ts";
 
-# Additional Functionality: Chat Models
+# 추가 기능: Chat Models
 
-We offer a number of additional features for chat models. In the examples below, we'll be using the `ChatOpenAI` model.
+저희는 채팅 모델을 위한 여러 가지 추가 기능을 제공합니다. 아래 예제에서는 `ChatOpenAI` 모델을 사용하겠습니다.
 
-## Additional Methods
+## 추가 메소드
 
-LangChain provides a number of additional methods for interacting with chat models:
+LangChain은 채팅 모델과 상호작용하기 위한 여러 가지 추가 메서드를 제공합니다.
 
 <CodeBlock language="typescript">{Example}</CodeBlock>
 
-## Streaming
+## 스트리밍
 
-Similar to LLMs, you can stream responses from a chat model. This is useful for chatbots that need to respond to user input in real-time.
+LLM과 마찬가지로 채팅 모델에서 응답을 스트리밍할 수 있습니다. 이는 사용자 입력에 실시간으로 응답해야 하는 챗봇에 유용합니다.
 
 <CodeBlock language="typescript">{StreamingExample}</CodeBlock>
 
-## Adding a timeout
+## 타임아웃 추가
 
-By default, LangChain will wait indefinitely for a response from the model provider. If you want to add a timeout, you can pass a `timeout` option, in milliseconds, when you instantiate the model. For example, for OpenAI:
+기본적으로 LangChain은 모델 공급자의 응답을 무기한 대기합니다. 타임아웃을 추가하려면 모델을 인스턴스화할 때 밀리초 단위의 `timeout` 옵션을 전달하면 됩니다.
+
+예를 들어 OpenAI의 경우
 
 <CodeBlock language="typescript">{TimeoutExample}</CodeBlock>
 
-Currently, the timeout option is only supported for OpenAI models.
+현재 타임아웃 옵션은 OpenAI 모델에만 지원됩니다.
 
-## Dealing with Rate Limits
+## 속도 제한 처리
 
-Some providers have rate limits. If you exceed the rate limit, you'll get an error. To help you deal with this, LangChain provides a `maxConcurrency` option when instantiating a Chat Model. This option allows you to specify the maximum number of concurrent requests you want to make to the provider. If you exceed this number, LangChain will automatically queue up your requests to be sent as previous requests complete.
+일부 제공업체에는 속도 제한이 있습니다. 속도 제한을 초과하면 오류가 발생합니다. 이 문제를 해결하기 위해 LangChain은 채팅 모델을 인스턴스화할 때 '최대 동시성' 옵션을 제공합니다. 이 옵션을 사용하면 공급자에게 요청할 최대 동시 요청 수를 지정할 수 있습니다. 이 숫자를 초과하면 이전 요청이 완료될 때 전송할 요청을 자동으로 대기열에 추가합니다.
 
-For example, if you set `maxConcurrency: 5`, then LangChain will only send 5 requests to the provider at a time. If you send 10 requests, the first 5 will be sent immediately, and the next 5 will be queued up. Once one of the first 5 requests completes, the next request in the queue will be sent.
+예를 들어, '최대 동시성: 5'를 설정하면 LangChain은 한 번에 5개의 요청만 공급자에게 보냅니다. 10개의 요청을 보내면 처음 5개는 즉시 전송되고 다음 5개는 대기열에 대기합니다. 처음 5개의 요청 중 하나가 완료되면 대기열의 다음 요청이 전송됩니다.
 
-To use this feature, simply pass `maxConcurrency: <number>` when you instantiate the LLM. For example:
+이 기능을 사용하려면 `maxConcurrency: <숫자>`를 전달하면 됩니다.
 
 ```typescript
 import { ChatOpenAI } from "langchain/chat_models/openai";
@@ -45,9 +47,9 @@ import { ChatOpenAI } from "langchain/chat_models/openai";
 const model = new ChatOpenAI({ maxConcurrency: 5 });
 ```
 
-## Dealing with API Errors
+## API 에러 처리
 
-If the model provider returns an error from their API, by default LangChain will retry up to 6 times on an exponential backoff. This enables error recovery without any additional effort from you. If you want to change this behavior, you can pass a `maxRetries` option when you instantiate the model. For example:
+모델 공급자가 API에서 오류를 반환하는 경우, 기본적으로 LangChain은 지수 백오프를 사용하여 최대 6회까지 재시도합니다. 이를 통해 사용자의 추가 노력 없이 오류를 복구할 수 있습니다. 이 동작을 변경하려면 모델을 인스턴스화할 때 '최대 재시도' 옵션을 전달하면 됩니다.
 
 ```typescript
 import { ChatOpenAI } from "langchain/chat_models/openai";
