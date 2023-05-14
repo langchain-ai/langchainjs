@@ -18,7 +18,8 @@ export class TSImporter {
   static async importTS() {
     try {
       if (!TSImporter.tsInstance) {
-        TSImporter.tsInstance = await import("typescript");
+        const { default: ts } = await import("typescript");
+        TSImporter.tsInstance = ts as typeof tst;
       }
       return TSImporter.tsInstance;
     } catch (e) {

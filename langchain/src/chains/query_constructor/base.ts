@@ -53,7 +53,6 @@ export class StructuredQueryOutputParser extends AssymetricStructuredOutputParse
     );
     return new StructuredQueryOutputParser(
       async (query: string, filter?: string) => {
-        console.log("query", query);
         let myQuery = query;
         if (myQuery.length === 0) {
           myQuery = " ";

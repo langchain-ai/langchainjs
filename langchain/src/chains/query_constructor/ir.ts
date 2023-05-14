@@ -20,13 +20,28 @@ export abstract class Visitor {
   abstract visitStructuredQuery(structuredQuery: StructuredQuery): object;
 }
 
-export declare abstract class Expression {
-  accept(visitor: Visitor): object;
+export abstract class Expression {
+  abstract exprName: "Operation" | "Comparison" | "StructuredQuery";
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  accept(visitor: Visitor) {
+    if (this.exprName === "Operation") {
+      return visitor.visitOperation(this as unknown as Operation);
+    } else if (this.exprName === "Comparison") {
+      return visitor.visitComparison(this as unknown as Comparison);
+    } else if (this.exprName === "StructuredQuery") {
+      return visitor.visitStructuredQuery(this as unknown as StructuredQuery);
+    } else {
+      throw new Error("Unknown Expression type");
+    }
+  }
 }
 
 export abstract class FilterDirective extends Expression {}
 
 export class Comparison extends FilterDirective {
+  exprName = "Comparison" as const;
+
   constructor(
     public comparator: Comparator,
     public attribute: string,
@@ -37,30 +52,17 @@ export class Comparison extends FilterDirective {
 }
 
 export class Operation extends FilterDirective {
+  exprName = "Operation" as const;
+
   constructor(public operator: Operator, public args?: FilterDirective[]) {
     super();
   }
 }
 
 export class StructuredQuery extends Expression {
+  exprName = "StructuredQuery" as const;
+
   constructor(public query: string, public filter?: FilterDirective) {
     super();
   }
 }
-
-Expression.prototype.accept = function accept(visitor: Visitor) {
-  // eslint-disable-next-line no-instanceof/no-instanceof
-  if (this instanceof Operation) {
-    return visitor.visitOperation(this);
-
-    // eslint-disable-next-line no-instanceof/no-instanceof
-  } else if (this instanceof Comparison) {
-    return visitor.visitComparison(this);
-
-    // eslint-disable-next-line no-instanceof/no-instanceof
-  } else if (this instanceof StructuredQuery) {
-    return visitor.visitStructuredQuery(this);
-  } else {
-    throw new Error("Unknown Expression type");
-  }
-};
