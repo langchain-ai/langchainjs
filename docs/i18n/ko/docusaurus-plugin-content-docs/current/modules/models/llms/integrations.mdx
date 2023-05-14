@@ -3,9 +3,9 @@ sidebar_position: 3
 sidebar_label: Integrations
 ---
 
-# Integrations: LLMs
+# LLM 모델과의 통합
 
-LangChain offers a number of LLM implementations that integrate with various model providers. These are:
+LangChain은 다양한 LLM 모델 구현을 제공합니다.
 
 ## `OpenAI`
 
@@ -78,15 +78,16 @@ const res = await modelA.call(
 console.log({ res });
 ```
 
-## Additional LLM Implementations
+## 추가적인 LLM 모델 구현
 
 ### `PromptLayerOpenAI`
 
-LangChain integrates with PromptLayer for logging and debugging prompts and responses. To add support for PromptLayer:
+LangChain은 PromptLayer를 통해 prompt와 response를 로깅하고 디버깅할 수 있습니다. PromptLayer를 지원하려면 다음을 참고하세요.
 
-1. Create a PromptLayer account here: [https://promptlayer.com](https://promptlayer.com).
-2. Create an API token and pass it either as `promptLayerApiKey` argument in the `PromptLayerOpenAI` constructor or in the `PROMPTLAYER_API_KEY` environment variable.
+```bash npm2yarn
 
+1. PromptLayer 계정을 생성하세요. [https://promptlayer.com](https://promptlayer.com).
+2. API 토큰을 생성하고 `PromptLayerOpenAI` 생성자의 `promptLayerApiKey` 인자 또는 `PROMPTLAYER_API_KEY` 환경 변수에 전달하세요.
 ```typescript
 import { PromptLayerOpenAI } from "langchain/llms/openai";
 
@@ -101,5 +102,6 @@ const res = await model.call(
 ```
 
 The request and the response will be logged in the [PromptLayer dashboard](https://promptlayer.com/home).
+요청과 응답은 [PromptLayer dashboard](https://promptlayer.com/home)에 로깅됩니다.
 
-> **_Note:_** In streaming mode PromptLayer will not log the response.
+> **_참고:_** 스트리밍 모드에서는 PromptLayer가 응답을 로깅하지 않습니다.

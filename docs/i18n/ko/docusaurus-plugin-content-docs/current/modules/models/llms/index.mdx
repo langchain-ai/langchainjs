@@ -7,15 +7,17 @@ import CodeBlock from "@theme/CodeBlock";
 import Example from "@examples/models/llm/llm_quick_start.ts";
 import DocCardList from "@theme/DocCardList";
 
-# Getting Started: LLMs
+# LLM 모델 시작하기
 
 :::info
 [Conceptual Guide](https://docs.langchain.com/docs/components/models/language-model)
 :::
 
-LangChain provides a standard interface for using a variety of LLMs.
+LangChain은 다양한 LLM 모델을 사용하기 위한 표준 인터페이스를 제공합니다.
 
-To get started, simply use the `call` method of an `LLM` implementation, passing in a `string` input. In this example, we are using the `OpenAI` implementation:
+시작하기 위해서는, `string` 입력을 전달하는 `LLM` 구현의 `call` 메서드를 사용하면 됩니다. 이 예제에서는 `OpenAI` 구현을 사용합니다.
+
+```typescript
 
 <CodeBlock language="typescript">{Example}</CodeBlock>
 

@@ -10,34 +10,35 @@ import TimeoutExample from "@examples/models/llm/llm_timeout.ts";
 import CancellationExample from "@examples/models/llm/openai_cancellation.ts";
 
 # Additional Functionality: LLMs
+# 추가 기능: LLMs
 
-We offer a number of additional features for LLMs. In most of the examples below, we'll be using the `OpenAI` LLM. However, all of these features are available for all LLMs.
+우리는 LLMs에 대해 몇 가지 추가 기능을 제공합니다. 아래의 대부분의 예제에서는 `OpenAI` LLM 모델을 사용할 것입니다. 그러나 이러한 기능은 모든 LLM 모델에서 사용할 수 있습니다.
 
-## Additional Methods
+## 추가 메소드
 
-LangChain provides a number of additional methods for interacting with LLMs:
+LangChain에서는 LLM 모델과 상호작용하기 위한 추가 메소드를 제공합니다.
 
 <CodeBlock language="typescript">{Example}</CodeBlock>
 
-## Streaming Responses
+## 스트리밍 응답
 
-Some LLMs provide a streaming response. This means that instead of waiting for the entire response to be returned, you can start processing it as soon as it's available. This is useful if you want to display the response to the user as it's being generated, or if you want to process the response as it's being generated.
-LangChain currently provides streaming for the `OpenAI` LLM:
+몇몇 LLM 모델은 스트리밍 응답을 제공합니다. 이것은 전체 응답이 반환되기를 기다리는 대신, 응답이 사용 가능할 때 즉시 처리할 수 있습니다. 이것은 응답이 생성되는 동안 사용자에게 응답을 표시하거나 응답이 생성되는 동안 응답을 처리하려는 경우에 유용합니다.
+LangChain은 현재 `OpenAI` LLM 모델에 대한 스트리밍을 제공합니다.
 
 <CodeBlock language="typescript">{StreamingExample}</CodeBlock>
 
-## Caching
+## 캐싱
 
-LangChain provides an optional caching layer for LLMs. This is useful for two reasons:
+LangChain은 LLM 모델들에 대한 선택적으로 사용할 수 있는 캐싱 레이어를 제공합니다. 이것은 두 가지 이유로 유용합니다.
 
-1. It can save you money by reducing the number of API calls you make to the LLM provider, if you're often requesting the same completion multiple times.
-2. It can speed up your application by reducing the number of API calls you make to the LLM provider.
+1. 만약 여러 번 동일한 텍스트 완성을 요청하는 경우, LLM 공급자에 보내는 API 호출을 줄여 비용을 절약할 수 있습니다.
+2. LLM 공급자에게 API 호출을 줄여 애플리케이션의 속도를 높일 수 있습니다.
 
-### Caching in-memory
+### 인메모리 캐싱
 
-The default cache is stored in-memory. This means that if you restart your application, the cache will be cleared.
+기본 캐시는 메모리에 저장됩니다. 이것은 애플리케이션을 재시작하면 캐시가 지워진다는 것을 의미합니다.
 
-To enable it you can pass `cache: true` when you instantiate the LLM. For example:
+캐싱을 활성화하려면 LLM을 인스턴스화할 때 `cache: true`를 전달할 수 있습니다. 예를 들어 다음과 같습니다.
 
 ```typescript
 import { OpenAI } from "langchain/llms/openai";
@@ -45,15 +46,18 @@ import { OpenAI } from "langchain/llms/openai";
 const model = new OpenAI({ cache: true });
 ```
 
-### Caching with Redis
+### Redis를 사용한 캐싱
 
-LangChain also provides a Redis-based cache. This is useful if you want to share the cache across multiple processes or servers. To use it, you'll need to install the `redis` package:
+LangChain은 Redis 기반 캐시도 제공합니다. 이것은 여러 프로세스나 서버 간에 캐시를 공유하고 싶을 때 유용합니다. 이를 사용하려면 `redis` 패키지를 설치해야 합니다.
+
+```bash npm2yarn
 
 ```bash npm2yarn
 npm install redis
 ```
 
 Then, you can pass a `cache` option when you instantiate the LLM. For example:
+그런 다음, LLM을 인스턴스화할 때 `cache` 옵션을 전달할 수 있습니다. 예를 들어:
 
 ```typescript
 import { OpenAI } from "langchain/llms/openai";
@@ -67,29 +71,31 @@ const cache = new RedisCache(client);
 const model = new OpenAI({ cache });
 ```
 
-## Adding a timeout
+## 타임아웃 추가하기
 
-By default, LangChain will wait indefinitely for a response from the model provider. If you want to add a timeout, you can pass a `timeout` option, in milliseconds, when you instantiate the model. For example, for OpenAI:
+기본적으로 LangChain은 모델 공급자로부터 응답을 무기한으로 기다립니다. 타임아웃을 추가하려면, 모델을 인스턴스화할 때 밀리초 단위로 `timeout` 옵션을 전달할 수 있습니다. 예를 들어, OpenAI의 경우:
 
 <CodeBlock language="typescript">{TimeoutExample}</CodeBlock>
 
-Currently, the timeout option is only supported for OpenAI models.
+현재, timeout 옵션은 OpenAI 모델에서만 지원됩니다.
 
-## Cancelling requests
+## 요청 취소하기
 
 You can cancel a request by passing a `signal` option when you call the model. For example, for OpenAI:
+요청을 취소하기 위해서는 모델을 호출할 때 `signal` 옵션을 전달하면 됩니다. 예를 들어, OpenAI의 경우:
 
 <CodeBlock language="typescript">{CancellationExample}</CodeBlock>
 
-Currently, the signal option is only supported for OpenAI models.
+현재, signal 옵션은 OpenAI 모델에서만 지원됩니다.
 
-## Dealing with Rate Limits
+## Rate Limits 처리하기
 
-Some LLM providers have rate limits. If you exceed the rate limit, you'll get an error. To help you deal with this, LangChain provides a `maxConcurrency` option when instantiating an LLM. This option allows you to specify the maximum number of concurrent requests you want to make to the LLM provider. If you exceed this number, LangChain will automatically queue up your requests to be sent as previous requests complete.
+LLM 모델 공급자 중 일부는 요청 제한을 가지고 있습니다. 요청 제한을 초과하면 오류가 발생합니다. 이를 처리하기 위해 LangChain은 LLM을 인스턴스화할 때 `maxConcurrency` 옵션을 제공합니다. 이 옵션을 사용하면 LLM 모델 공급자에게 보내는 동시 요청의 최대 수를 지정할 수 있습니다. 이 수를 초과하면, LangChain은 이전 요청이 완료되면 자동으로 요청을 큐에 넣어 보낼 것입니다.
 
 For example, if you set `maxConcurrency: 5`, then LangChain will only send 5 requests to the LLM provider at a time. If you send 10 requests, the first 5 will be sent immediately, and the next 5 will be queued up. Once one of the first 5 requests completes, the next request in the queue will be sent.
+예를 들어, `maxConcurrency: 5`를 설정하면 LangChain은 한 번에 LLM 공급자에게 5개의 요청만 보냅니다. 10개의 요청을 보내면, 처음 5개는 즉시 보내지고, 다음 5개는 큐에 넣어집니다. 처음 5개의 요청 중 하나가 완료되면, 큐의 다음 요청이 보내집니다.
 
-To use this feature, simply pass `maxConcurrency: <number>` when you instantiate the LLM. For example:
+이 기능을 사용하려면, LLM을 인스턴스화할 때 `maxConcurrency: <number>`를 전달하면 됩니다. 예를 들어:
 
 ```typescript
 import { OpenAI } from "langchain/llms/openai";
@@ -97,9 +103,10 @@ import { OpenAI } from "langchain/llms/openai";
 const model = new OpenAI({ maxConcurrency: 5 });
 ```
 
-## Dealing with API Errors
+## API 오류 처리하기
 
 If the model provider returns an error from their API, by default LangChain will retry up to 6 times on an exponential backoff. This enables error recovery without any additional effort from you. If you want to change this behavior, you can pass a `maxRetries` option when you instantiate the model. For example:
+모델 공급자가 API에서 오류를 반환하면, 기본적으로 LangChain은 지수 백오프를 통해 최대 6번까지 재시도합니다. 이를 통해 추가적인 노력 없이 오류 복구가 가능합니다. 이 동작을 변경하려면, 모델을 인스턴스화할 때 `maxRetries` 옵션을 전달하면 됩니다. 예를 들어:
 
 ```typescript
 import { OpenAI } from "langchain/llms/openai";
@@ -107,8 +114,8 @@ import { OpenAI } from "langchain/llms/openai";
 const model = new OpenAI({ maxRetries: 10 });
 ```
 
-## Logging for Debugging
+## 디버깅을 위한 로깅
 
-Especially when using an agent, there can be a lot of back-and-forth going on behind the scenes as a LLM processes a chain. For agents, the response object contains an intermediateSteps object that you can print to see an overview of the steps it took to get there. If that's not enough and you want to see every exchange with the LLM, you can use the LLMCallbackManager to write yourself custom logging (or anything else you want to do) as the model goes through the steps:
+에이전트를 사용할 때, LLM 모델이 체인을 처리하는 동안 실제로는 많은 통신이 발생할 수 있습니다. 에이전트의 경우, 응답 객체에는 최종 결과에 도달하기 위해 거친 단계를 볼 수 있는 intermediateSteps 객체가 포함되어 있습니다. 만약 LLM 모델 사이에 일어난 모든 통신을 보고 싶다면, LLMCallbackManager를 사용하여 모델이 단계를 거칠 때 수행하게 될 사용자 정의 로깅 로직을 구현할 수 있습니다.
 
 <CodeBlock language="typescript">{DebuggingExample}</CodeBlock>
