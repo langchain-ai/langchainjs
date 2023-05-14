@@ -1,35 +1,35 @@
 import { test } from "@jest/globals";
 import { StructuredQueryOutputParser } from "../base.js";
 import {
-  Comparator,
+  Comparators,
   Comparison,
   Operation,
-  Operator,
+  Operators,
   StructuredQuery,
 } from "../ir.js";
 
 const correctQuery = new StructuredQuery(
   "teenager love",
-  new Operation(Operator.and, [
-    new Operation(Operator.or, [
-      new Comparison(Comparator.eq, "artist", "Taylor Swift"),
-      new Comparison(Comparator.eq, "artist", "Katy Perry"),
+  new Operation(Operators.and, [
+    new Operation(Operators.or, [
+      new Comparison(Comparators.eq, "artist", "Taylor Swift"),
+      new Comparison(Comparators.eq, "artist", "Katy Perry"),
     ]),
-    new Comparison(Comparator.lt, "length", 180),
-    new Comparison(Comparator.eq, "genre", "pop"),
+    new Comparison(Comparators.lt, "length", 180),
+    new Comparison(Comparators.eq, "genre", "pop"),
   ])
 );
 
 test("StructuredQueryOutputParser test", async () => {
   const queryParser = StructuredQueryOutputParser.fromComponents(
     [
-      Comparator.eq,
-      Comparator.gte,
-      Comparator.gt,
-      Comparator.lte,
-      Comparator.lt,
+      Comparators.eq,
+      Comparators.gte,
+      Comparators.gt,
+      Comparators.lte,
+      Comparators.lt,
     ],
-    [Operator.and, Operator.or, Operator.not]
+    [Operators.and, Operators.or, Operators.not]
   );
 
   const exampleOutput = `json\`\`\`

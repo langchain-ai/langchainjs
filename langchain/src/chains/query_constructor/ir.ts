@@ -1,16 +1,30 @@
-export enum Operator {
-  and = "and",
-  or = "or",
-  not = "not",
-}
+export type AND = "and";
+export type OR = "or";
+export type NOT = "not";
 
-export enum Comparator {
-  eq = "eq",
-  lt = "lt",
-  gt = "gt",
-  lte = "lte",
-  gte = "gte",
-}
+export type Operator = AND | OR | NOT;
+
+export type EQ = "eq";
+export type LT = "lt";
+export type GT = "gt";
+export type LTE = "lte";
+export type GTE = "gte";
+
+export type Comparator = EQ | LT | GT | LTE | GTE;
+
+export const Operators: { [key: string]: Operator } = {
+  and: "and",
+  or: "or",
+  not: "not",
+};
+
+export const Comparators: { [key: string]: Comparator } = {
+  eq: "eq",
+  lt: "lt",
+  gt: "gt",
+  lte: "lte",
+  gte: "gte",
+};
 
 export type VisitorResult =
   | VisitorOperationResult

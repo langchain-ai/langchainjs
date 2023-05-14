@@ -1,6 +1,12 @@
 import { z } from "zod";
 import { QueryTransformer } from "./parser.js";
-import { Comparator, Operator, StructuredQuery } from "./ir.js";
+import {
+  Comparator,
+  Comparators,
+  Operator,
+  Operators,
+  StructuredQuery,
+} from "./ir.js";
 import { AttributeInfo } from "./schema.js";
 import { Example, InputValues } from "../../schema/index.js";
 import {
@@ -16,9 +22,11 @@ import { FewShotPromptTemplate } from "../../prompts/few_shot.js";
 import { BaseLanguageModel } from "../../base_language/index.js";
 import { AssymetricStructuredOutputParser } from "../../output_parsers/structured.js";
 
-const queryInputSchema = z.object({
-  query: z.string().describe("text string to compare to document contents"),
-  filter: z
+const queryInputSchema = /* #__PURE__ */ z.object({
+  query: /* #__PURE__ */ z
+    .string()
+    .describe("text string to compare to document contents"),
+  filter: /* #__PURE__ */ z
     .string()
     .optional()
     .describe("logical condition statement for filtering documents"),
@@ -77,7 +85,9 @@ export function formatAttributeInfo(info: AttributeInfo[]) {
     return acc;
   }, {} as { [name: string]: { type: string; description: string } });
 
-  return JSON.stringify(infoObj, null, 2).replace("{", "{{").replace("}", "}}");
+  return JSON.stringify(infoObj, null, 2)
+    .replaceAll("{", "{{")
+    .replaceAll("}", "}}");
 }
 
 const defaultExample = DEFAULT_EXAMPLES.map((EXAMPLE) => EXAMPLE as Example);
@@ -85,14 +95,18 @@ const defaultExample = DEFAULT_EXAMPLES.map((EXAMPLE) => EXAMPLE as Example);
 function _getPrompt(
   documentContents: string,
   attributeInfo: AttributeInfo[],
-  examples: InputValues[] = defaultExample,
-  allowedComparators: Comparator[] = Object.values(Comparator),
-  allowedOperators: Operator[] = Object.values(Operator)
+  allowedComparators?: Comparator[],
+  allowedOperators?: Operator[],
+  examples: InputValues[] = defaultExample
 ) {
+  const myAllowedComparators: Comparator[] =
+    allowedComparators ?? Object.values(Comparators);
+  const myAllowedOperators: Operator[] =
+    allowedOperators ?? Object.values(Operators);
   const attributeJSON = formatAttributeInfo(attributeInfo);
   const schema = interpolateFString(DEFAULT_SCHEMA, {
-    allowed_comparators: allowedComparators.join(" | "),
-    allowed_operators: allowedOperators.join(" | "),
+    allowed_comparators: myAllowedComparators.join(" | "),
+    allowed_operators: myAllowedOperators.join(" | "),
   });
   const prefix = interpolateFString(DEFAULT_PREFIX, {
     schema,
@@ -131,9 +145,9 @@ export function loadQueryContstructorChain(opts: QueryConstructorChainOptions) {
   const prompt = _getPrompt(
     opts.documentContents,
     opts.attributeInfo,
-    opts.examples,
     opts.allowedComparators,
-    opts.allowedOperators
+    opts.allowedOperators,
+    opts.examples
   );
   return new LLMChain({
     llm: opts.llm,

@@ -21,8 +21,8 @@ export const SONG_DATA_SOURCE = `\
 }
 \`\`\`\
 `
-  .replace("{", "{{")
-  .replace("}", "}}");
+  .replaceAll("{", "{{")
+  .replaceAll("}", "}}");
 
 export const FULL_ANSWER = `\
 \`\`\`json
@@ -69,7 +69,7 @@ Structured Request:
 {structured_request}
 `;
 
-export const EXAMPLE_PROMPT = new PromptTemplate({
+export const EXAMPLE_PROMPT = /* #__PURE__ */ new PromptTemplate({
   inputVariables: ["i", "data_source", "user_query", "structured_request"],
   template: EXAMPLE_PROMPT_TEMPLATE,
 });

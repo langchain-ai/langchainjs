@@ -12,12 +12,13 @@ import { PineconeStore } from "../../vectorstores/pinecone.js";
 import { ChromaTranslator } from "./chroma.js";
 import { PineconeTranslator } from "./pinecone.js";
 
-export const BUILTIN_TRANSLATORS = new Map<
+export const BUILTIN_TRANSLATORS = /* #__PURE__ */ new Map<
   typeof VectorStore,
   new () => Visitor
->();
-BUILTIN_TRANSLATORS.set(PineconeStore, PineconeTranslator);
-BUILTIN_TRANSLATORS.set(Chroma, ChromaTranslator);
+>([
+  [PineconeStore, PineconeTranslator],
+  [Chroma, ChromaTranslator],
+]);
 
 function _getBuiltinTranslator(vectorStore: typeof VectorStore): Visitor {
   const Translator = BUILTIN_TRANSLATORS.get(vectorStore);
@@ -67,6 +68,7 @@ export class SelfQueryRetriever
 
   async getRelevantDocuments(
     query: string
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ): Promise<Document<Record<string, any>>[]> {
     const { [this.llmChain.outputKey]: output } = await this.llmChain.call({
       [this.llmChain.inputKeys[0]]: query,

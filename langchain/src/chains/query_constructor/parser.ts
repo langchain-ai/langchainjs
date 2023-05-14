@@ -1,9 +1,11 @@
 import {
   Comparator,
+  Comparators,
   Comparison,
   FilterDirective,
   Operation,
   Operator,
+  Operators,
 } from "./ir.js";
 import {
   CallExpressionType,
@@ -27,7 +29,7 @@ export class QueryTransformer {
   ) {}
 
   private matchFunctionName(funcName: string) {
-    if (funcName in Comparator) {
+    if (funcName in Comparators) {
       if (this.allowedComparators.length > 0) {
         if (this.allowedComparators.includes(funcName as Comparator)) {
           return funcName;
@@ -38,7 +40,7 @@ export class QueryTransformer {
         return funcName;
       }
     }
-    if (funcName in Operator) {
+    if (funcName in Operators) {
       if (this.allowedOperators.length > 0) {
         if (this.allowedOperators.includes(funcName as Operator)) {
           return funcName;
@@ -62,13 +64,13 @@ export class QueryTransformer {
             );
           }
           const funcName = this.matchFunctionName(node.funcCall);
-          if (funcName in Operator) {
+          if (funcName in Operators) {
             return new Operation(
               funcName as Operator,
               node.args?.map((arg) => traverse(arg)) as FilterDirective[]
             );
           }
-          if (funcName in Comparator) {
+          if (funcName in Comparators) {
             if (node.args && node.args.length === 2) {
               return new Comparison(
                 funcName as Comparator,

@@ -1,8 +1,10 @@
 import {
   Comparator,
+  Comparators,
   Comparison,
   Operation,
   Operator,
+  Operators,
   StructuredQuery,
   Visitor,
   VisitorComparisonResult,
@@ -12,12 +14,12 @@ import {
 } from "../../chains/query_constructor/ir.js";
 
 export class PineconeTranslator extends Visitor {
-  allowedOperators: Operator[] = [Operator.and, Operator.or];
+  allowedOperators: Operator[] = [Operators.and, Operators.or];
 
   allowedComparators: Comparator[] = [];
 
   private _formatFunction(func: Operator | Comparator): string {
-    if (func in Comparator) {
+    if (func in Comparators) {
       if (
         this.allowedComparators.length > 0 &&
         this.allowedComparators.indexOf(func as Comparator) === -1
@@ -28,7 +30,7 @@ export class PineconeTranslator extends Visitor {
           )}`
         );
       }
-    } else if (func in Operator) {
+    } else if (func in Operators) {
       if (
         this.allowedOperators.length > 0 &&
         this.allowedOperators.indexOf(func as Operator) === -1

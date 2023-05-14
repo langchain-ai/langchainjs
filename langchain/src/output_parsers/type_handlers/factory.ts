@@ -10,7 +10,7 @@ import { PropertyAccessExpressionHandler } from "./property_access_expression_ha
 import { PropertyAssignmentHandler } from "./property_assignment_handler.js";
 import { StringLiteralHandler } from "./string_literal_handler.js";
 import { AcceptableNodeTypes, ParsedType } from "./types.js";
-import { IdentifierHandler } from "./indentifier_handler.js";
+import { IdentifierHandler } from "./identifier_handler.js";
 
 const handlers = [
   ArrayLiteralExpressionHandler,

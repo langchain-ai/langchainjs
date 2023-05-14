@@ -11,8 +11,6 @@ import {
   FormatInstructionsOptions,
   OutputParserException,
 } from "../schema/output_parser.js";
-import { Callbacks } from "../callbacks/manager.js";
-import { BasePromptValue } from "../schema/index.js";
 
 export type JsonMarkdownStructuredOutputParserInput = {
   interpolationDepth?: number;
@@ -218,13 +216,5 @@ export abstract class AssymetricStructuredOutputParser<
 
   getFormatInstructions(): string {
     return this.structuredInputParser.getFormatInstructions();
-  }
-
-  parseWithPrompt(
-    text: string,
-    _prompt: BasePromptValue,
-    callbacks?: Callbacks | undefined
-  ): Promise<Y> {
-    return this.structuredInputParser.parseWithPrompt(text, _prompt, callbacks);
   }
 }
