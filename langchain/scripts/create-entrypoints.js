@@ -36,6 +36,7 @@ const entrypoints = {
   "llms/cohere": "llms/cohere",
   "llms/hf": "llms/hf",
   "llms/replicate": "llms/replicate",
+  "llms/googlevertexai": "llms/googlevertexai",
   // prompts
   prompts: "prompts/index",
   "prompts/load": "prompts/load",
