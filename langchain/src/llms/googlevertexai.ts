@@ -11,8 +11,26 @@ interface GoogleVertexAiBaseLLMInput extends BaseLLMParams {
    */
   maxTokens?: number;
 
+  /**
+   * Top-p changes how the model selects tokens for output.
+   *
+   * Tokens are selected from most probable to least until the sum
+   * of their probabilities equals the top-p value.
+   *
+   * For example, if tokens A, B, and C have a probability of
+   * .3, .2, and .1 and the top-p value is .5, then the model will
+   * select either A or B as the next token (using temperature).
+   */
   topP?: number;
 
+  /**
+   * Top-k changes how the model selects tokens for output.
+   *
+   * A top-k of 1 means the selected token is the most probable among
+   * all tokens in the model’s vocabulary (also called greedy decoding),
+   * while a top-k of 3 means that the next token is selected from
+   * among the 3 most probable tokens (using temperature).
+   */
   topK?: number;
 
   /** Hostname for the API call */
@@ -27,33 +45,51 @@ interface GoogleVertexAiBaseLLMInput extends BaseLLMParams {
 
 export interface GoogleVertexAiLLMInput extends GoogleVertexAiBaseLLMInput {}
 
-export const ChatRequestMessageRoleEnum = {
+export interface GoogleVertexAiChatInput extends GoogleVertexAiBaseLLMInput {
+  /** Any messages from earlier in this conversation */
+  prefixMessages?: ChatMessage[];
+
+  /** Instructions how the model should respond */
+  context?: string;
+
+  /** Help the model understand what an appropriate response is */
+  examples?: ChatExample[];
+
+  /**
+   * A map of OpenAI role names and their corresponding Vertex AI
+   * author name.
+   */
+  roleAlias?: RoleAlias;
+}
+
+export const ChatMessageRoleEnum = {
   System: "system",
   User: "user",
   Assistant: "assistant", // For OpenAI compatibility
   Bot: "bot",
 } as const;
 
-export type ChatRequestMessageRoleEnum =
-  (typeof ChatRequestMessageRoleEnum)[keyof typeof ChatRequestMessageRoleEnum];
+export type ChatMessageRoleEnum =
+  (typeof ChatMessageRoleEnum)[keyof typeof ChatMessageRoleEnum];
 
-/*
-const ChatRequestMessageRoleAlias = {
-  assistant: 'bot'
-} as const;
-*/
+type RoleAlias = Record<string, string>;
 
 /**
  * Based on OpenAI ChatCompletionRequestMessage
  */
-export interface ChatRequestMessage {
-  role: ChatRequestMessageRoleEnum;
+export interface ChatMessage {
+  role: ChatMessageRoleEnum;
   content: string;
   name?: string;
 }
 
-export interface GoogleVertexAiChatInput extends GoogleVertexAiLLMInput {
-  prefixMessages?: ChatRequestMessage[];
+/**
+ * Represents a single "example" exchange that can be provided to
+ * help illustrate what a model response should look like.
+ */
+export interface ChatExample {
+  input: ChatMessage;
+  output: ChatMessage;
 }
 
 interface Response {
@@ -62,32 +98,49 @@ interface Response {
   };
 }
 
-interface LLMInstance {
+interface GoogleVertexAiLLMTextInstance {
   content: string;
 }
+
+interface GoogleVertexAiChatExample {
+  input: GoogleVertexAiChatMessage;
+  output: GoogleVertexAiChatMessage;
+}
+
+interface GoogleVertexAiChatMessage {
+  author: ChatMessageRoleEnum;
+  content: string;
+  name?: string;
+}
+
+interface GoogleVertexAiLLMChatInstance {
+  context?: string;
+  examples?: GoogleVertexAiChatExample[];
+  messages: GoogleVertexAiChatMessage[];
+}
+
+type GoogleVertexAiLLMInstance =
+  | GoogleVertexAiLLMTextInstance
+  | GoogleVertexAiLLMChatInstance;
 
 /**
  * Models the data returned from the API call
  */
-interface Prediction {
-  content: string;
+interface BasePrediction {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   safetyAttributes?: any;
 }
 
-/**
- * Enables calls to the Google Cloud's Vertex AI AP to access Large Language Models.
- *
- * To use, you will need to have one of the following authentication
- * methods in place:
- * - You are logged into an account permitted to the Google Cloud project
- *   using Vertex AI.
- * - You are running this on a machine using a service account permitted to
- *   the Google Cloud project using Vertex AI.
- * - The `GOOGLE_APPLICATION_CREDENTIALS` environment variable is set to the
- *   path of a credentials file for a service account permitted to the
- *   Google Cloud project using Vertex AI.
- */
+interface TextPrediction extends BasePrediction {
+  content: string;
+}
+
+interface ChatPrediction extends BasePrediction {
+  candidates: ChatMessage[];
+}
+
+type Prediction = TextPrediction | ChatPrediction;
+
 abstract class GoogleVertexAiBaseLLM
   extends BaseLLM
   implements GoogleVertexAiBaseLLMInput
@@ -145,16 +198,13 @@ abstract class GoogleVertexAiBaseLLM
     options: this["ParsedCallOptions"]
   ): Promise<Generation[]> {
     const prediction = await this.predict(prompt, options);
-    return [
-      {
-        text: prediction.content,
-        generationInfo: prediction,
-      },
-    ];
+    return [this.predictionToGeneration(prediction)];
   }
 
+  abstract predictionToGeneration(prediction: Prediction): Generation;
+
   async _predict(
-    instances: [LLMInstance],
+    instances: [GoogleVertexAiLLMInstance],
     options: this["ParsedCallOptions"]
   ): Promise<Response> {
     const client = await this.auth.getClient();
@@ -190,12 +240,38 @@ abstract class GoogleVertexAiBaseLLM
     return <Response>response;
   }
 
-  abstract predict(
+  async predict(
     prompt: string,
     options: this["ParsedCallOptions"]
-  ): Promise<Prediction>;
+  ): Promise<Prediction> {
+    const response = await this._predict(
+      [this.formatInstance(prompt)],
+      options
+    );
+    return this.formatResponse(response);
+  }
+
+  abstract formatInstance(prompt: string): GoogleVertexAiLLMInstance;
+
+  formatResponse(response: Response): Prediction {
+    return response?.data?.predictions[0];
+  }
 }
 
+/**
+ * Enables calls to the Google Cloud's Vertex AI API to access
+ * Large Language Models.
+ *
+ * To use, you will need to have one of the following authentication
+ * methods in place:
+ * - You are logged into an account permitted to the Google Cloud project
+ *   using Vertex AI.
+ * - You are running this on a machine using a service account permitted to
+ *   the Google Cloud project using Vertex AI.
+ * - The `GOOGLE_APPLICATION_CREDENTIALS` environment variable is set to the
+ *   path of a credentials file for a service account permitted to the
+ *   Google Cloud project using Vertex AI.
+ */
 export class GoogleVertexAiLLM extends GoogleVertexAiBaseLLM {
   model = "text-bison";
 
@@ -205,11 +281,107 @@ export class GoogleVertexAiLLM extends GoogleVertexAiBaseLLM {
     this.model = fields?.model ?? this.model;
   }
 
-  async predict(
-    prompt: string,
-    options: this["ParsedCallOptions"]
-  ): Promise<Prediction> {
-    const response = await this._predict([{ content: prompt }], options);
-    return response.data.predictions[0];
+  formatInstance(prompt: string): GoogleVertexAiLLMTextInstance {
+    return { content: prompt };
+  }
+
+  predictionToGeneration(prediction: TextPrediction): Generation {
+    return {
+      text: prediction.content,
+      generationInfo: prediction,
+    };
+  }
+}
+
+/**
+ * Enables calls to the Google Cloud's Vertex AI API to access
+ * Large Language Models in a chat-like fashion.
+ *
+ * To use, you will need to have one of the following authentication
+ * methods in place:
+ * - You are logged into an account permitted to the Google Cloud project
+ *   using Vertex AI.
+ * - You are running this on a machine using a service account permitted to
+ *   the Google Cloud project using Vertex AI.
+ * - The `GOOGLE_APPLICATION_CREDENTIALS` environment variable is set to the
+ *   path of a credentials file for a service account permitted to the
+ *   Google Cloud project using Vertex AI.
+ */
+export class GoogleVertexAiChat
+  extends GoogleVertexAiBaseLLM
+  implements GoogleVertexAiChatInput
+{
+  model = "chat-bison";
+
+  prefixMessages: ChatMessage[] = [];
+
+  context: string;
+
+  examples: ChatExample[];
+
+  roleAlias: RoleAlias = {
+    assistant: "bot",
+  };
+
+  constructor(fields?: GoogleVertexAiChatInput) {
+    super(fields ?? {});
+
+    this.model = fields?.model ?? this.model;
+    this.prefixMessages = fields?.prefixMessages ?? this.prefixMessages;
+    this.context = fields?.context ?? this.context;
+    this.examples = fields?.examples ?? this.examples;
+    this.roleAlias = fields?.roleAlias ?? this.roleAlias;
+  }
+
+  formatMessages(prompt: string): ChatMessage[] {
+    const message: ChatMessage = {
+      role: "user",
+      content: prompt,
+    };
+    return this.prefixMessages ? [...this.prefixMessages, message] : [message];
+  }
+
+  reformatMessage(message: ChatMessage): GoogleVertexAiChatMessage {
+    const ret: GoogleVertexAiChatMessage = {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      author: this.roleAlias[message.role] ?? message.role,
+      content: message.content,
+    };
+    if (message.name) {
+      ret.name = message.name;
+    }
+    return ret;
+  }
+
+  reformatExample(example: ChatExample): GoogleVertexAiChatExample {
+    return {
+      input: this.reformatMessage(example.input),
+      output: this.reformatMessage(example.output),
+    };
+  }
+
+  reformatMessages(messages: ChatMessage[]): GoogleVertexAiChatMessage[] {
+    return messages.map((message) => this.reformatMessage(message));
+  }
+
+  reformatExamples(examples: ChatExample[]): GoogleVertexAiChatExample[] {
+    return examples.map((example) => this.reformatExample(example));
+  }
+
+  formatInstance(prompt: string): GoogleVertexAiLLMChatInstance {
+    const messages = this.formatMessages(prompt);
+    return {
+      context: this.context ?? "",
+      examples: this.reformatExamples(this.examples ?? []),
+      messages: this.reformatMessages(messages),
+    };
+  }
+
+  predictionToGeneration(prediction: ChatPrediction): Generation {
+    return {
+      text: prediction?.candidates[0]?.content,
+      generationInfo: prediction,
+    };
   }
 }
