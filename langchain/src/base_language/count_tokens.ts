@@ -1,7 +1,7 @@
 import { type TiktokenModel } from "js-tiktoken";
 import { encodingForModel } from "../util/tiktoken.js";
 
-// https://www.npmjs.com/package/@dqbd/tiktoken
+// https://www.npmjs.com/package/js-tiktoken
 
 export const getModelNameForTiktoken = (modelName: string): TiktokenModel => {
   if (modelName.startsWith("gpt-3.5-turbo-")) {

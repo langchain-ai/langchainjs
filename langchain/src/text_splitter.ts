@@ -1,5 +1,6 @@
-import type * as tiktoken from "@dqbd/tiktoken";
+import type * as tiktoken from "js-tiktoken";
 import { Document } from "./document.js";
+import { getEncoding } from "./util/tiktoken.js";
 
 export interface TextSplitterParams {
   chunkSize: number;
@@ -242,8 +243,6 @@ export class TokenTextSplitter
 
   private tokenizer: tiktoken.Tiktoken;
 
-  private registry: FinalizationRegistry<tiktoken.Tiktoken>;
-
   constructor(fields?: Partial<TokenTextSplitterParams>) {
     super(fields);
 
@@ -254,12 +253,7 @@ export class TokenTextSplitter
 
   async splitText(text: string): Promise<string[]> {
     if (!this.tokenizer) {
-      const tiktoken = await TokenTextSplitter.imports();
-      this.tokenizer = tiktoken.get_encoding(this.encodingName);
-      // We need to register a finalizer to free the tokenizer when the
-      // splitter is garbage collected.
-      this.registry = new FinalizationRegistry((t) => t.free());
-      this.registry.register(this, this.tokenizer);
+      this.tokenizer = await getEncoding(this.encodingName);
     }
 
     const splits: string[] = [];
@@ -274,10 +268,8 @@ export class TokenTextSplitter
     let cur_idx = Math.min(start_idx + this.chunkSize, input_ids.length);
     let chunk_ids = input_ids.slice(start_idx, cur_idx);
 
-    const decoder = new TextDecoder();
-
     while (start_idx < input_ids.length) {
-      splits.push(decoder.decode(this.tokenizer.decode(chunk_ids)));
+      splits.push(this.tokenizer.decode(chunk_ids));
 
       start_idx += this.chunkSize - this.chunkOverlap;
       cur_idx = Math.min(start_idx + this.chunkSize, input_ids.length);
@@ -285,17 +277,6 @@ export class TokenTextSplitter
     }
 
     return splits;
-  }
-
-  static async imports(): Promise<typeof tiktoken> {
-    try {
-      return await import("@dqbd/tiktoken");
-    } catch (err) {
-      console.error(err);
-      throw new Error(
-        "Please install @dqbd/tiktoken as a dependency with, e.g. `npm install -S @dqbd/tiktoken`"
-      );
-    }
   }
 }
 
