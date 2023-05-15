@@ -68,8 +68,9 @@ export class ApifyDatasetLoader
   static async fromActorCall(
     actorId: string,
     input: Record<string | number, unknown>,
-    config: ActorCallOptions & {
-      clientOptions: ApifyClientOptions;
+    config: {
+      callOptions?: ActorCallOptions;
+      clientOptions?: ApifyClientOptions;
       datasetMappingFunction: ApifyDatasetMappingFunction;
     }
   ): Promise<ApifyDatasetLoader> {
@@ -78,7 +79,9 @@ export class ApifyDatasetLoader
     );
     const apifyClient = new ApifyClient({ token: apifyApiToken });
 
-    const actorCall = await apifyClient.actor(actorId).call(input, config);
+    const actorCall = await apifyClient
+      .actor(actorId)
+      .call(input, config.callOptions ?? {});
 
     return new ApifyDatasetLoader(actorCall.defaultDatasetId, {
       datasetMappingFunction: config.datasetMappingFunction,

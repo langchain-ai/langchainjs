@@ -165,6 +165,7 @@ const requiresOptionalDependency = [
   "vectorstores/opensearch",
   "vectorstores/milvus",
   "vectorstores/myscale",
+  "document_loaders/web/apify_dataset",
   "document_loaders/web/cheerio",
   "document_loaders/web/puppeteer",
   "document_loaders/web/playwright",
