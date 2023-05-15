@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { ICalCalendar } from "ical-generator";
 
 import { BaseLLM } from "../llms/base.js";
 import { PromptTemplate } from "../prompts/prompt.js";
@@ -51,10 +52,7 @@ export class ICalTool extends Tool {
   async _call(input: string): Promise<string> {
     try {
       const { name, description, events } = await this.getEventsObject(input);
-      const { ical } = await this.imports();
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      const calendar = ical.default({ name });
+      const calendar = new ICalCalendar({ name });
 
       for (const event of events) {
         calendar.createEvent({
@@ -72,18 +70,6 @@ export class ICalTool extends Tool {
       return `${description} event created successfully and saved as ${name}.ics.`;
     } catch (err) {
       return "Failed to create calendar event.";
-    }
-  }
-
-  private async imports() {
-    try {
-      const ical = await import("ical-generator");
-      return { ical };
-    } catch (e) {
-      console.error(e);
-      throw new Error(
-        "Failed to load ical-generator. Please install it with eg. `npm install ical-generator`."
-      );
     }
   }
 
