@@ -5,20 +5,27 @@ import {
   TiktokenModel,
   getEncodingNameForModel,
 } from "js-tiktoken/lite";
+import { AsyncCaller } from "./async_caller.js";
 
-const cache: Record<string, TiktokenBPE> = {};
+const cache: Record<string, Promise<TiktokenBPE>> = {};
+
+const caller = new AsyncCaller({});
 
 export async function getEncoding(
   encoding: TiktokenEncoding,
   extendedSpecialTokens?: Record<string, number>
 ) {
   if (!(encoding in cache)) {
-    const res = await fetch(`https://tiktoken.pages.dev/js/${encoding}.json`);
-
-    if (!res.ok) throw new Error("Failed to fetch encoding");
-    cache[encoding] = await res.json();
+    cache[encoding] = caller
+      .fetch(`https://tiktoken.pages.dev/js/${encoding}.json`)
+      .then((res) => res.json())
+      .catch((e) => {
+        delete cache[encoding];
+        throw e;
+      });
   }
-  return new Tiktoken(cache[encoding], extendedSpecialTokens);
+
+  return new Tiktoken(await cache[encoding], extendedSpecialTokens);
 }
 
 export async function encodingForModel(
