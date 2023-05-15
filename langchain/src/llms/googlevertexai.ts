@@ -2,7 +2,7 @@ import { GoogleAuth } from "google-auth-library";
 import { BaseLLM, BaseLLMParams } from "./base.js";
 import { Generation, LLMResult } from "../schema/index.js";
 
-export interface GoogleVertexAiLLMInput extends BaseLLMParams {
+interface GoogleVertexAiBaseLLMInput extends BaseLLMParams {
   /** Sampling temperature to use */
   temperature?: number;
 
@@ -10,9 +10,6 @@ export interface GoogleVertexAiLLMInput extends BaseLLMParams {
    * Maximum number of tokens to generate in the completion.
    */
   maxTokens?: number;
-
-  /** Model to use */
-  model?: string;
 
   topP?: number;
 
@@ -23,12 +20,50 @@ export interface GoogleVertexAiLLMInput extends BaseLLMParams {
 
   /** Region where the LLM is stored */
   location?: string;
+
+  /** Model to use */
+  model?: string;
+}
+
+export interface GoogleVertexAiLLMInput extends GoogleVertexAiBaseLLMInput {
+}
+
+export const ChatRequestMessageRoleEnum = {
+  System: 'system',
+  User: 'user',
+  Assistant: 'assistant',  // For OpenAI compatibility
+  Bot: 'bot'
+} as const;
+
+export type ChatRequestMessageRoleEnum = typeof ChatRequestMessageRoleEnum[keyof typeof ChatRequestMessageRoleEnum];
+
+/*
+const ChatRequestMessageRoleAlias = {
+  assistant: 'bot'
+} as const;
+*/
+
+/**
+ * Based on OpenAI ChatCompletionRequestMessage
+ */
+export interface ChatRequestMessage {
+  role: ChatRequestMessageRoleEnum;
+  content: string;
+  name?: string;
+}
+
+export interface GoogleVertexAiChatInput extends GoogleVertexAiLLMInput {
+  prefixMessages?: ChatRequestMessage[];
 }
 
 interface Response {
   data: {
     predictions: Prediction[];
   };
+}
+
+interface LLMInstance {
+  content: string
 }
 
 /**
@@ -53,15 +88,13 @@ interface Prediction {
  *   path of a credentials file for a service account permitted to the
  *   Google Cloud project using Vertex AI.
  */
-export class GoogleVertexAiLLM
+abstract class GoogleVertexAiBaseLLM
   extends BaseLLM
-  implements GoogleVertexAiLLMInput
+  implements GoogleVertexAiBaseLLMInput
 {
   temperature = 0.7;
 
   maxTokens = 256;
-
-  model = "text-bison";
 
   topP = 0.8;
 
@@ -71,18 +104,20 @@ export class GoogleVertexAiLLM
 
   location = "us-central1";
 
+  model: string;
+
   auth: GoogleAuth;
 
-  constructor(fields?: GoogleVertexAiLLMInput) {
+  constructor(fields?: GoogleVertexAiBaseLLMInput) {
     super(fields ?? {});
 
     this.temperature = fields?.temperature ?? this.temperature;
     this.maxTokens = fields?.maxTokens ?? this.maxTokens;
-    this.model = fields?.model ?? this.model;
     this.topP = fields?.topP ?? this.topP;
     this.topK = fields?.topK ?? this.topK;
     this.endpoint = fields?.endpoint ?? this.endpoint;
     this.location = fields?.location ?? this.location;
+    this.model = fields?.model ?? this.model;
 
     this.auth = new GoogleAuth({
       scopes: "https://www.googleapis.com/auth/cloud-platform",
@@ -118,17 +153,17 @@ export class GoogleVertexAiLLM
     ];
   }
 
-  async predict(
-    prompt: string,
+  async _predict(
+    instances: [LLMInstance],
     options: this["ParsedCallOptions"]
-  ): Promise<Prediction> {
+  ): Promise<Response> {
     const client = await this.auth.getClient();
     const projectId = await this.auth.getProjectId();
     const url = `https://${this.endpoint}/v1/projects/${projectId}/locations/${this.location}/publishers/google/models/${this.model}:predict`;
     const method = "POST" as const;
 
     const data = {
-      instances: [{ content: prompt }],
+      instances,
       parameters: {
         temperature: this.temperature,
         maxOutputTokens: this.maxTokens,
@@ -152,6 +187,34 @@ export class GoogleVertexAiLLM
       request.bind(client)
     );
 
-    return (<Response>response).data.predictions[0];
+    return (<Response>response);
   }
+
+  abstract predict(
+    prompt: string,
+    options: this["ParsedCallOptions"]
+  ): Promise<Prediction>
+}
+
+export class GoogleVertexAiLLM extends GoogleVertexAiBaseLLM {
+
+  model = "text-bison";
+
+  constructor(fields?: GoogleVertexAiLLMInput) {
+    super(fields ?? {});
+
+    this.model = fields?.model ?? this.model;
+  }
+
+  async predict(
+    prompt: string,
+    options: this["ParsedCallOptions"]
+  ): Promise<Prediction> {
+    const response = await this._predict(
+      [{ content: prompt }],
+      options
+    )
+    return response.data.predictions[0];
+  }
+
 }
