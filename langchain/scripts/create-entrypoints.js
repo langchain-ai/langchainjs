@@ -188,6 +188,8 @@ const requiresOptionalDependency = [
   "document_loaders/fs/csv",
   "document_loaders/fs/notion",
   "document_loaders/fs/unstructured",
+  "retrievers/self_query/base",
+  "retrievers/self_query/translator",
   "sql_db",
   "retrievers/supabase",
   "retrievers/metal",

@@ -373,7 +373,6 @@
     "html-to-text": "^9.0.5",
     "jest": "^29.5.0",
     "mammoth": "^1.5.1",
-    "meriyah": "^4.3.7",
     "mongodb": "^5.2.0",
     "pdf-parse": "1.1.1",
     "playwright": "^1.32.1",
@@ -413,7 +412,6 @@
     "hnswlib-node": "^1.4.2",
     "html-to-text": "^9.0.5",
     "mammoth": "*",
-    "meriyah": "*",
     "mongodb": "^5.2.0",
     "pdf-parse": "1.1.1",
     "playwright": "^1.32.1",
@@ -491,9 +489,6 @@
     "mammoth": {
       "optional": true
     },
-    "meriyah": {
-      "optional": true
-    },
     "mongodb": {
       "optional": true
     },
@@ -531,6 +526,7 @@
     "expr-eval": "^2.0.2",
     "flat": "^5.0.2",
     "jsonpointer": "^5.0.1",
+    "meriyah": "^4.3.7",
     "ml-distance": "^4.0.0",
     "object-hash": "^3.0.0",
     "openai": "^3.2.0",

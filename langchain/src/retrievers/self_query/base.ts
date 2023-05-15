@@ -79,7 +79,7 @@ export class SelfQueryRetriever
       structuredQueryTranslator: BaseTranslator;
     }
   ): SelfQueryRetriever {
-    const {structuredQueryTranslator} = opts;
+    const { structuredQueryTranslator } = opts;
     const allowedComparators =
       opts.allowedComparators ?? structuredQueryTranslator.allowedComparators;
     const allowedOperators =
