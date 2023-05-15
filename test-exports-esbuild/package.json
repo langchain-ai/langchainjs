@@ -8,7 +8,7 @@
   "scripts": {
     "build": "tsc",
     "test": "yarn run test:esm && yarn run test:cjs",
-    "test:esm": "rm -rf dist-esm && esbuild --bundle src/* --outdir=dist-esm --platform=node --format=esm --external:'../node_modules/*' --external:'./node_modules/*' --supported:top-level-await=true && bash ./entrypoint.sh dist-esm",
+    "test:esm": "rm -rf dist-esm && esbuild --bundle src/* --outdir=dist-esm --platform=node --format=esm --external:'../node_modules/*' --external:'./node_modules/*' && bash ./entrypoint.sh dist-esm",
     "test:cjs": "rm -rf dist-cjs && esbuild --bundle src/*.cjs --outdir=dist-cjs --platform=node --format=cjs --external:'../node_modules/*' --external:'./node_modules/*' --out-extension:.js=.cjs && bash ./entrypoint.sh dist-cjs",
     "format": "prettier --write src",
     "format:check": "prettier --check src"
