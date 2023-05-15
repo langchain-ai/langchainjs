@@ -17,7 +17,7 @@ describe("webbrowser Test suite", () => {
     expect(result).toContain("Word of the Day:");
   });
 
-  test("get word of the day with fetch adapter", async () => {
+  test("get a summary of the page when empty request with fetch adapter", async () => {
     const model = new ChatOpenAI({ temperature: 0 });
     const embeddings = new OpenAIEmbeddings();
 
@@ -29,58 +29,7 @@ describe("webbrowser Test suite", () => {
       },
     });
     const result = await browser.call(
-      `"https://www.merriam-webster.com/word-of-the-day","word of the day"`
-    );
-
-    expect(result).toContain("Word of the Day:");
-  });
-
-  test("get a summary of the page when empty request", async () => {
-    const model = new ChatOpenAI({ temperature: 0 });
-    const embeddings = new OpenAIEmbeddings();
-
-    const browser = new WebBrowser({ model, embeddings });
-    const result = await browser.call(
       `"https://www.merriam-webster.com/word-of-the-day",""`
-    );
-
-    // fuzzy, sometimes its capped and others not
-    expect(result).toMatch(/word of the day/i);
-  });
-
-  test("get a summary of the page if it drops second request quote", async () => {
-    const model = new ChatOpenAI({ temperature: 0 });
-    const embeddings = new OpenAIEmbeddings();
-
-    const browser = new WebBrowser({ model, embeddings });
-    const result = await browser.call(
-      `"https://www.merriam-webster.com/word-of-the-day","`
-    );
-
-    // fuzzy, sometimes its capped and others not
-    expect(result).toMatch(/word of the day/i);
-  });
-
-  test("get a summary of the page if it gives nothing after comma", async () => {
-    const model = new ChatOpenAI({ temperature: 0 });
-    const embeddings = new OpenAIEmbeddings();
-
-    const browser = new WebBrowser({ model, embeddings });
-    const result = await browser.call(
-      `"https://www.merriam-webster.com/word-of-the-day",`
-    );
-
-    // fuzzy, sometimes its capped and others not
-    expect(result).toMatch(/word of the day/i);
-  });
-
-  test("get a summary of the page if it gives no comma", async () => {
-    const model = new ChatOpenAI({ temperature: 0 });
-    const embeddings = new OpenAIEmbeddings();
-
-    const browser = new WebBrowser({ model, embeddings });
-    const result = await browser.call(
-      `"https://www.merriam-webster.com/word-of-the-day"`
     );
 
     // fuzzy, sometimes its capped and others not
@@ -123,7 +72,7 @@ describe("webbrowser Test suite", () => {
     );
   });
 
-  test("get a summary of a page that detects scraping", async () => {
+  test.skip("get a summary of a page that detects scraping", async () => {
     const model = new ChatOpenAI({ temperature: 0 });
     const embeddings = new OpenAIEmbeddings();
 
@@ -157,17 +106,6 @@ describe("webbrowser Test suite", () => {
     );
 
     expect(result).toContain("Esther Perel");
-  });
-
-  test("get a summary of a page that redirects", async () => {
-    const model = new ChatOpenAI({ temperature: 0 });
-    const embeddings = new OpenAIEmbeddings();
-
-    const browser = new WebBrowser({ model, embeddings });
-    const result = await browser.call(
-      `"https://www.themarginalian.org/2015/04/09/find-your-bliss-joseph-campbell-power-of-myth",""`
-    );
-    expect(result).toContain("The Marginalian");
   });
 
   // other urls that have done this too

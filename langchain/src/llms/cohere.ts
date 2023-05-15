@@ -1,6 +1,6 @@
 import { LLM, BaseLLMParams } from "./base.js";
 
-interface CohereInput extends BaseLLMParams {
+export interface CohereInput extends BaseLLMParams {
   /** Sampling temperature to use */
   temperature?: number;
 
@@ -30,7 +30,7 @@ export class Cohere extends LLM implements CohereInput {
     const apiKey =
       fields?.apiKey ?? typeof process !== "undefined"
         ? // eslint-disable-next-line no-process-env
-          process.env.COHERE_API_KEY
+          process.env?.COHERE_API_KEY
         : undefined;
 
     if (!apiKey) {
@@ -49,19 +49,25 @@ export class Cohere extends LLM implements CohereInput {
     return "cohere";
   }
 
-  async _call(prompt: string, _stop?: string[]): Promise<string> {
+  /** @ignore */
+  async _call(
+    prompt: string,
+    options: this["ParsedCallOptions"]
+  ): Promise<string> {
     const { cohere } = await Cohere.imports();
 
     cohere.init(this.apiKey);
 
     // Hit the `generate` endpoint on the `large` model
-    const generateResponse = await this.caller.call(
+    const generateResponse = await this.caller.callWithOptions(
+      { signal: options.signal },
       cohere.generate.bind(cohere),
       {
         prompt,
         model: this.model,
         max_tokens: this.maxTokens,
         temperature: this.temperature,
+        end_sequences: options.stop,
       }
     );
     try {
@@ -72,6 +78,7 @@ export class Cohere extends LLM implements CohereInput {
     }
   }
 
+  /** @ignore */
   static async imports(): Promise<{
     cohere: typeof import("cohere-ai");
   }> {

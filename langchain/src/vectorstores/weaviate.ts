@@ -1,4 +1,4 @@
-import { v4 } from "uuid";
+import * as uuid from "uuid";
 import type {
   WeaviateObject,
   WeaviateClient,
@@ -7,6 +7,47 @@ import type {
 import { VectorStore } from "./base.js";
 import { Embeddings } from "../embeddings/base.js";
 import { Document } from "../document.js";
+
+// Note this function is not generic, it is designed specifically for Weaviate
+// https://weaviate.io/developers/weaviate/config-refs/datatypes#introduction
+export const flattenObjectForWeaviate = (
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  obj: Record<string, any>
+) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const flattenedObject: Record<string, any> = {};
+
+  for (const key in obj) {
+    if (!Object.hasOwn(obj, key)) {
+      continue;
+    }
+    const value = obj[key];
+    if (typeof obj[key] === "object" && !Array.isArray(value)) {
+      const recursiveResult = flattenObjectForWeaviate(value);
+
+      for (const deepKey in recursiveResult) {
+        if (Object.hasOwn(obj, key)) {
+          flattenedObject[`${key}_${deepKey}`] = recursiveResult[deepKey];
+        }
+      }
+    } else if (Array.isArray(value)) {
+      if (
+        value.length > 0 &&
+        typeof value[0] !== "object" &&
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        value.every((el: any) => typeof el === typeof value[0])
+      ) {
+        // Weaviate only supports arrays of primitive types,
+        // where all elements are of the same type
+        flattenedObject[key] = value;
+      }
+    } else {
+      flattenedObject[key] = value;
+    }
+  }
+
+  return flattenedObject;
+};
 
 export interface WeaviateLibArgs {
   client: WeaviateClient;
@@ -29,6 +70,8 @@ export interface WeaviateFilter {
 }
 
 export class WeaviateStore extends VectorStore {
+  declare FilterType: WeaviateFilter;
+
   private client: WeaviateClient;
 
   private indexName: string;
@@ -51,15 +94,23 @@ export class WeaviateStore extends VectorStore {
   }
 
   async addVectors(vectors: number[][], documents: Document[]): Promise<void> {
-    const batch: WeaviateObject[] = documents.map((document, index) => ({
-      class: this.indexName,
-      id: v4(),
-      vector: vectors[index],
-      properties: {
-        [this.textKey]: document.pageContent,
-        ...document.metadata,
-      },
-    }));
+    const batch: WeaviateObject[] = documents.map((document, index) => {
+      if (Object.hasOwn(document.metadata, "id"))
+        throw new Error(
+          "Document inserted to Weaviate vectorstore should not have `id` in their metadata."
+        );
+
+      const flattenedMetadata = flattenObjectForWeaviate(document.metadata);
+      return {
+        class: this.indexName,
+        id: uuid.v4(),
+        vector: vectors[index],
+        properties: {
+          [this.textKey]: document.pageContent,
+          ...flattenedMetadata,
+        },
+      };
+    });
 
     try {
       await this.client.batch
@@ -76,22 +127,6 @@ export class WeaviateStore extends VectorStore {
       await this.embeddings.embedDocuments(documents.map((d) => d.pageContent)),
       documents
     );
-  }
-
-  async similaritySearch(
-    query: string,
-    k: number,
-    filter?: WeaviateFilter
-  ): Promise<Document[]> {
-    return super.similaritySearch(query, k, filter);
-  }
-
-  async similaritySearchWithScore(
-    query: string,
-    k: number,
-    filter?: WeaviateFilter
-  ): Promise<[Document, number][]> {
-    return super.similaritySearchWithScore(query, k, filter);
   }
 
   async similaritySearchVectorWithScore(

@@ -1,20 +1,24 @@
 import { BaseLanguageModel } from "../base_language/index.js";
+import { CallbackManager, Callbacks } from "../callbacks/manager.js";
 import { LLMChain } from "../chains/llm_chain.js";
 import { BasePromptTemplate } from "../prompts/base.js";
 import {
   AgentAction,
   AgentFinish,
   AgentStep,
-  ChainValues,
   BaseChatMessage,
+  ChainValues,
 } from "../schema/index.js";
+import { Tool } from "../tools/base.js";
 import {
+  AgentActionOutputParser,
   AgentInput,
   SerializedAgent,
   StoppingMethod,
-  AgentActionOutputParser,
 } from "./types.js";
-import { Tool } from "../tools/base.js";
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type OutputParserArgs = Record<string, any>;
 
 class ParseError extends Error {
   output: string;
@@ -54,7 +58,8 @@ export abstract class BaseAgent {
   returnStoppedResponse(
     earlyStoppingMethod: StoppingMethod,
     _steps: AgentStep[],
-    _inputs: ChainValues
+    _inputs: ChainValues,
+    _callbackManager?: CallbackManager
   ): Promise<AgentFinish> {
     if (earlyStoppingMethod === "force") {
       return Promise.resolve({
@@ -87,12 +92,14 @@ export abstract class BaseSingleActionAgent extends BaseAgent {
    *
    * @param steps - Steps the LLM has taken so far, along with observations from each.
    * @param inputs - User inputs.
+   * @param callbackManager - Callback manager.
    *
    * @returns Action specifying what tool to use.
    */
   abstract plan(
     steps: AgentStep[],
-    inputs: ChainValues
+    inputs: ChainValues,
+    callbackManager?: CallbackManager
   ): Promise<AgentAction | AgentFinish>;
 }
 
@@ -106,12 +113,14 @@ export abstract class BaseMultiActionAgent extends BaseAgent {
    *
    * @param steps - Steps the LLM has taken so far, along with observations from each.
    * @param inputs - User inputs.
+   * @param callbackManager - Callback manager.
    *
    * @returns Actions specifying what tools to use.
    */
   abstract plan(
     steps: AgentStep[],
-    inputs: ChainValues
+    inputs: ChainValues,
+    callbackManager?: CallbackManager
   ): Promise<AgentAction[] | AgentFinish>;
 }
 
@@ -144,20 +153,39 @@ export class LLMSingleActionAgent extends BaseSingleActionAgent {
    *
    * @param steps - Steps the LLM has taken so far, along with observations from each.
    * @param inputs - User inputs.
+   * @param callbackManager - Callback manager.
    *
    * @returns Action specifying what tool to use.
    */
   async plan(
     steps: AgentStep[],
-    inputs: ChainValues
+    inputs: ChainValues,
+    callbackManager?: CallbackManager
   ): Promise<AgentAction | AgentFinish> {
-    const output = await this.llmChain.call({
-      intermediate_steps: steps,
-      stop: this.stop,
-      ...inputs,
-    });
-    return this.outputParser.parse(output[this.llmChain.outputKey]);
+    const output = await this.llmChain.call(
+      {
+        intermediate_steps: steps,
+        stop: this.stop,
+        ...inputs,
+      },
+      callbackManager
+    );
+    return this.outputParser.parse(
+      output[this.llmChain.outputKey],
+      callbackManager
+    );
   }
+}
+
+export interface AgentArgs {
+  outputParser?: AgentActionOutputParser;
+
+  callbacks?: Callbacks;
+
+  /**
+   * @deprecated Use `callbacks` instead.
+   */
+  callbackManager?: CallbackManager;
 }
 
 /**
@@ -169,6 +197,8 @@ export class LLMSingleActionAgent extends BaseSingleActionAgent {
  */
 export abstract class Agent extends BaseSingleActionAgent {
   llmChain: LLMChain;
+
+  outputParser: AgentActionOutputParser;
 
   private _allowedTools?: string[] = undefined;
 
@@ -184,15 +214,7 @@ export abstract class Agent extends BaseSingleActionAgent {
     super();
     this.llmChain = input.llmChain;
     this._allowedTools = input.allowedTools;
-  }
-
-  /**
-   * Extract tool and tool input from LLM output.
-   */
-  async extractToolAndInput(
-    _input: string
-  ): Promise<{ tool: string; input: string } | null> {
-    throw new Error("Not implemented");
+    this.outputParser = input.outputParser;
   }
 
   /**
@@ -209,6 +231,15 @@ export abstract class Agent extends BaseSingleActionAgent {
    * Return the string type key uniquely identifying this class of agent.
    */
   abstract _agentType(): string;
+
+  /**
+   * Get the default output parser for this agent.
+   */
+  static getDefaultOutputParser(
+    _fields?: OutputParserArgs
+  ): AgentActionOutputParser {
+    throw new Error("Not implemented");
+  }
 
   /**
    * Create a prompt for this class
@@ -231,7 +262,7 @@ export abstract class Agent extends BaseSingleActionAgent {
     _llm: BaseLanguageModel,
     _tools: Tool[],
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    _args?: Record<string, any>
+    _args?: AgentArgs
   ): Agent {
     throw new Error("Not implemented");
   }
@@ -255,7 +286,9 @@ export abstract class Agent extends BaseSingleActionAgent {
   /**
    * Construct a scratchpad to let the agent continue its thought process
    */
-  constructScratchPad(steps: AgentStep[]): string | BaseChatMessage[] {
+  async constructScratchPad(
+    steps: AgentStep[]
+  ): Promise<string | BaseChatMessage[]> {
     return steps.reduce(
       (thoughts, { action, observation }) =>
         thoughts +
@@ -271,9 +304,10 @@ export abstract class Agent extends BaseSingleActionAgent {
   private async _plan(
     steps: AgentStep[],
     inputs: ChainValues,
-    suffix?: string
+    suffix?: string,
+    callbackManager?: CallbackManager
   ): Promise<AgentAction | AgentFinish> {
-    const thoughts = this.constructScratchPad(steps);
+    const thoughts = await this.constructScratchPad(steps);
     const newInputs: ChainValues = {
       ...inputs,
       agent_scratchpad: suffix ? `${thoughts}${suffix}` : thoughts,
@@ -283,20 +317,8 @@ export abstract class Agent extends BaseSingleActionAgent {
       newInputs.stop = this._stop();
     }
 
-    const output = await this.llmChain.predict(newInputs);
-    const parsed = await this.extractToolAndInput(output);
-    if (!parsed) {
-      throw new ParseError(`Invalid output: ${output}`, output);
-    }
-    const action = {
-      tool: parsed.tool,
-      toolInput: parsed.input,
-      log: output,
-    };
-    if (action.tool === this.finishToolName()) {
-      return { returnValues: { output: action.toolInput }, log: action.log };
-    }
-    return action;
+    const output = await this.llmChain.predict(newInputs, callbackManager);
+    return this.outputParser.parse(output, callbackManager);
   }
 
   /**
@@ -304,14 +326,16 @@ export abstract class Agent extends BaseSingleActionAgent {
    *
    * @param steps - Steps the LLM has taken so far, along with observations from each.
    * @param inputs - User inputs.
+   * @param callbackManager - Callback manager to use for this call.
    *
    * @returns Action specifying what tool to use.
    */
   plan(
     steps: AgentStep[],
-    inputs: ChainValues
+    inputs: ChainValues,
+    callbackManager?: CallbackManager
   ): Promise<AgentAction | AgentFinish> {
-    return this._plan(steps, inputs);
+    return this._plan(steps, inputs, undefined, callbackManager);
   }
 
   /**
@@ -320,7 +344,8 @@ export abstract class Agent extends BaseSingleActionAgent {
   async returnStoppedResponse(
     earlyStoppingMethod: StoppingMethod,
     steps: AgentStep[],
-    inputs: ChainValues
+    inputs: ChainValues,
+    callbackManager?: CallbackManager
   ): Promise<AgentFinish> {
     if (earlyStoppingMethod === "force") {
       return {
@@ -334,7 +359,8 @@ export abstract class Agent extends BaseSingleActionAgent {
         const action = await this._plan(
           steps,
           inputs,
-          "\n\nI now need to return a final answer based on the previous steps:"
+          "\n\nI now need to return a final answer based on the previous steps:",
+          callbackManager
         );
         if ("returnValues" in action) {
           return action;

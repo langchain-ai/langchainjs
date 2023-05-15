@@ -1,10 +1,18 @@
-import { DynamicTool, DynamicToolParams } from "./dynamic.js";
+import { DynamicTool, DynamicToolInput } from "./dynamic.js";
 
 interface LambdaConfig {
-  region: string;
-  accessKeyId: string;
-  secretAccessKey: string;
   functionName: string;
+  region?: string;
+  accessKeyId?: string;
+  secretAccessKey?: string;
+}
+
+interface LambdaClientConstructorArgs {
+  region?: string;
+  credentials?: {
+    accessKeyId: string;
+    secretAccessKey: string;
+  };
 }
 
 class AWSLambda extends DynamicTool {
@@ -14,7 +22,7 @@ class AWSLambda extends DynamicTool {
     name,
     description,
     ...rest
-  }: LambdaConfig & Omit<DynamicToolParams, "func">) {
+  }: LambdaConfig & Omit<DynamicToolInput, "func">) {
     super({
       name,
       description,
@@ -24,16 +32,24 @@ class AWSLambda extends DynamicTool {
     this.lambdaConfig = rest;
   }
 
+  /** @ignore */
   async _func(input: string): Promise<string> {
     const { Client, Invoker } = await LambdaImports();
 
-    const lambdaClient = new Client({
-      region: this.lambdaConfig.region,
-      credentials: {
+    const clientConstructorArgs: LambdaClientConstructorArgs = {};
+
+    if (this.lambdaConfig.region) {
+      clientConstructorArgs.region = this.lambdaConfig.region;
+    }
+
+    if (this.lambdaConfig.accessKeyId && this.lambdaConfig.secretAccessKey) {
+      clientConstructorArgs.credentials = {
         accessKeyId: this.lambdaConfig.accessKeyId,
         secretAccessKey: this.lambdaConfig.secretAccessKey,
-      },
-    });
+      };
+    }
+
+    const lambdaClient = new Client(clientConstructorArgs);
 
     return new Promise((resolve) => {
       const payloadUint8Array = new TextEncoder().encode(JSON.stringify(input));

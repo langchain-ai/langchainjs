@@ -8,6 +8,18 @@ export type SerializedLLMChain = {
   prompt?: SerializedBasePromptTemplate;
 };
 
+export type SerializedSequentialChain = {
+  _type: "sequential_chain";
+  input_variables: string[];
+  output_variables: string[];
+  chains: SerializedBaseChain[];
+};
+
+export type SerializedSimpleSequentialChain = {
+  _type: "simple_sequential_chain";
+  chains: Array<SerializedBaseChain>;
+};
+
 export type SerializedSqlDatabaseChain = {
   _type: "sql_database_chain";
   sql_database: SerializedSqlDatabase;
@@ -49,12 +61,30 @@ export type SerializedAnalyzeDocumentChain = {
   combine_document_chain?: SerializedBaseChain;
 };
 
+export type SerializedConstitutionalPrinciple = {
+  _type: "constitutional_principle";
+  critiqueRequest: string;
+  revisionRequest: string;
+  name: string;
+};
+
+export type SerializedConstitutionalChain = {
+  _type: "constitutional_chain";
+  chain?: SerializedLLMChain;
+  critiqueChain?: SerializedBaseChain;
+  revisionChain?: SerializedBaseChain;
+  ConstitutionalPrinciple?: SerializedConstitutionalPrinciple[];
+};
+
 export type SerializedBaseChain =
   | SerializedLLMChain
+  | SerializedSequentialChain
+  | SerializedSimpleSequentialChain
   | SerializedVectorDBQAChain
   | SerializedStuffDocumentsChain
   | SerializedSqlDatabaseChain
   | SerializedChatVectorDBQAChain
   | SerializedMapReduceDocumentsChain
   | SerializedAnalyzeDocumentChain
-  | SerializedRefineDocumentsChain;
+  | SerializedRefineDocumentsChain
+  | SerializedConstitutionalChain;

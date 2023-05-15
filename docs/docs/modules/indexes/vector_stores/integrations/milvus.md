@@ -15,16 +15,30 @@ Only available on Node.js.
 1. Run Milvus instance with Docker on your computer [docs](https://milvus.io/docs/v2.1.x/install_standalone-docker.md)
 2. Install the Milvus Node.js SDK.
 
-```bash npm2yarn
-npm install -S @zilliz/milvus2-sdk-node
-```
+   ```bash npm2yarn
+   npm install -S @zilliz/milvus2-sdk-node
+   ```
 
 3. Setup Env variables for Milvus before running the code
 
-```bash
-export OPENAI_API_KEY=YOUR_OPEN_API_HERE
-export MILVUS_URL=YOUR_MILVUS_URL_HERE # for example http://localhost:19530
-```
+   3.1 OpenAI
+
+   ```bash
+   export OPENAI_API_KEY=YOUR_OPENAI_API_KEY_HERE
+   export MILVUS_URL=YOUR_MILVUS_URL_HERE # for example http://localhost:19530
+   ```
+
+   3.2 Azure OpenAI
+
+   ```bash
+   export AZURE_OPENAI_API_KEY=YOUR_AZURE_OPENAI_API_KEY_HERE
+   export AZURE_OPENAI_API_INSTANCE_NAME=YOUR_AZURE_OPENAI_INSTANCE_NAME_HERE
+   export AZURE_OPENAI_API_DEPLOYMENT_NAME=YOUR_AZURE_OPENAI_DEPLOYMENT_NAME_HERE
+   export AZURE_OPENAI_API_COMPLETIONS_DEPLOYMENT_NAME=YOUR_AZURE_OPENAI_COMPLETIONS_DEPLOYMENT_NAME_HERE
+   export AZURE_OPENAI_API_EMBEDDINGS_DEPLOYMENT_NAME=YOUR_AZURE_OPENAI_EMBEDDINGS_DEPLOYMENT_NAME_HERE
+   export AZURE_OPENAI_API_VERSION=YOUR_AZURE_OPENAI_API_VERSION_HERE
+   export MILVUS_URL=YOUR_MILVUS_URL_HERE # for example http://localhost:19530
+   ```
 
 ## Index and query docs
 

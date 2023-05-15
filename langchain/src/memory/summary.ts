@@ -8,17 +8,17 @@ import {
   MemoryVariables,
   OutputValues,
 } from "./base.js";
-import { BaseChatMemory, BaseMemoryInput } from "./chat_memory.js";
+import { BaseChatMemory, BaseChatMemoryInput } from "./chat_memory.js";
 import { SUMMARY_PROMPT } from "./prompt.js";
 
-export type ConversationSummaryMemoryInput = BaseMemoryInput & {
+export interface ConversationSummaryMemoryInput extends BaseChatMemoryInput {
+  llm: BaseLanguageModel;
   memoryKey?: string;
   humanPrefix?: string;
   aiPrefix?: string;
-  llm: BaseLanguageModel;
   prompt?: BasePromptTemplate;
   summaryChatMessageClass?: new (content: string) => BaseChatMessage;
-};
+}
 
 export class ConversationSummaryMemory extends BaseChatMemory {
   buffer = "";
@@ -36,7 +36,7 @@ export class ConversationSummaryMemory extends BaseChatMemory {
   summaryChatMessageClass: new (content: string) => BaseChatMessage =
     SystemChatMessage;
 
-  constructor(fields?: ConversationSummaryMemoryInput) {
+  constructor(fields: ConversationSummaryMemoryInput) {
     const {
       returnMessages,
       inputKey,
@@ -47,17 +47,21 @@ export class ConversationSummaryMemory extends BaseChatMemory {
       llm,
       prompt,
       summaryChatMessageClass,
-    } = fields ?? {};
+    } = fields;
 
     super({ returnMessages, inputKey, outputKey, chatHistory });
 
     this.memoryKey = fields?.memoryKey ?? this.memoryKey;
     this.humanPrefix = humanPrefix ?? this.humanPrefix;
     this.aiPrefix = aiPrefix ?? this.aiPrefix;
-    this.llm = llm ?? this.llm;
+    this.llm = llm;
     this.prompt = prompt ?? this.prompt;
     this.summaryChatMessageClass =
       summaryChatMessageClass ?? this.summaryChatMessageClass;
+  }
+
+  get memoryKeys() {
+    return [this.memoryKey];
   }
 
   async predictNewSummary(
@@ -88,10 +92,8 @@ export class ConversationSummaryMemory extends BaseChatMemory {
     outputValues: OutputValues
   ): Promise<void> {
     await super.saveContext(inputValues, outputValues);
-    this.buffer = await this.predictNewSummary(
-      this.chatHistory.messages.slice(-2),
-      this.buffer
-    );
+    const messages = await this.chatHistory.getMessages();
+    this.buffer = await this.predictNewSummary(messages.slice(-2), this.buffer);
   }
 
   async clear() {

@@ -101,3 +101,38 @@
   pointer-events: none;
   font-size: 0.85rem;
 }
+
+.theme-doc-sidebar-item-category > div > a {
+  flex: 1 1 0;
+  overflow: hidden;
+  word-break: break-word;
+}
+
+.theme-doc-sidebar-item-category > div > button {
+  opacity: 0.5;
+}
+
+.markdown > h2 {
+  margin-top: 3rem;
+  border-bottom-color: var(--ifm-color-primary);
+  border-bottom-width: 2px;
+  padding-bottom: 1rem;
+}
+
+.markdown > :not(h2) +  h3 {
+  margin-top: 4rem;
+}
+
+.markdown > h4 {
+  margin-bottom: 0.2rem;
+  font-weight: 600;
+}
+
+.markdown > h4:has(+ table) {
+  margin-bottom: 0.4rem;
+}
+
+.markdown > h5 {
+  margin-bottom: 0.2rem;
+  font-weight: 600;
+}

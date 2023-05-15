@@ -4,46 +4,88 @@ import { BasePromptTemplate } from "../../prompts/base.js";
 import {
   StuffDocumentsChain,
   MapReduceDocumentsChain,
+  RefineDocumentsChain,
+  MapReduceDocumentsChainInput,
 } from "../combine_docs_chain.js";
 import { DEFAULT_PROMPT } from "./stuff_prompts.js";
+import { REFINE_PROMPT } from "./refine_prompts.js";
 
-interface summarizationChainParams {
-  prompt?: BasePromptTemplate;
-  combineMapPrompt?: BasePromptTemplate;
-  combinePrompt?: BasePromptTemplate;
-  type?: "map_reduce" | "stuff";
-}
+type BaseParams = {
+  verbose?: boolean;
+};
+
+/** @interface */
+export type SummarizationChainParams = BaseParams &
+  (
+    | {
+        type?: "stuff";
+        prompt?: BasePromptTemplate;
+      }
+    | ({
+        type?: "map_reduce";
+        combineMapPrompt?: BasePromptTemplate;
+        combinePrompt?: BasePromptTemplate;
+      } & Pick<MapReduceDocumentsChainInput, "returnIntermediateSteps">)
+    | {
+        type?: "refine";
+        refinePrompt?: BasePromptTemplate;
+        questionPrompt?: BasePromptTemplate;
+      }
+  );
+
 export const loadSummarizationChain = (
   llm: BaseLanguageModel,
-  params: summarizationChainParams = {}
+  params: SummarizationChainParams = { type: "map_reduce" }
 ) => {
-  const {
-    prompt = DEFAULT_PROMPT,
-    combineMapPrompt = DEFAULT_PROMPT,
-    combinePrompt = DEFAULT_PROMPT,
-    type = "map_reduce",
-  } = params;
-  if (type === "stuff") {
-    const llmChain = new LLMChain({ prompt, llm });
+  const { verbose } = params;
+  if (params.type === "stuff") {
+    const { prompt = DEFAULT_PROMPT } = params;
+    const llmChain = new LLMChain({ prompt, llm, verbose });
     const chain = new StuffDocumentsChain({
       llmChain,
       documentVariableName: "text",
+      verbose,
     });
     return chain;
   }
-  if (type === "map_reduce") {
-    const llmChain = new LLMChain({ prompt: combineMapPrompt, llm });
-    const combineLLMChain = new LLMChain({ prompt: combinePrompt, llm });
+  if (params.type === "map_reduce") {
+    const {
+      combineMapPrompt = DEFAULT_PROMPT,
+      combinePrompt = DEFAULT_PROMPT,
+      returnIntermediateSteps,
+    } = params;
+    const llmChain = new LLMChain({ prompt: combineMapPrompt, llm, verbose });
+    const combineLLMChain = new LLMChain({
+      prompt: combinePrompt,
+      llm,
+      verbose,
+    });
     const combineDocumentChain = new StuffDocumentsChain({
       llmChain: combineLLMChain,
       documentVariableName: "text",
+      verbose,
     });
     const chain = new MapReduceDocumentsChain({
       llmChain,
       combineDocumentChain,
       documentVariableName: "text",
+      returnIntermediateSteps,
+      verbose,
     });
     return chain;
   }
-  throw new Error(`Invalid _type: ${type}`);
+  if (params.type === "refine") {
+    const { refinePrompt = REFINE_PROMPT, questionPrompt = DEFAULT_PROMPT } =
+      params;
+    const llmChain = new LLMChain({ prompt: questionPrompt, llm, verbose });
+    const refineLLMChain = new LLMChain({ prompt: refinePrompt, llm, verbose });
+    const chain = new RefineDocumentsChain({
+      llmChain,
+      refineLLMChain,
+      documentVariableName: "text",
+      verbose,
+    });
+    return chain;
+  }
+  throw new Error(`Invalid _type: ${params.type}`);
 };

@@ -8,8 +8,8 @@ test("Test motörhead memory", async () => {
       json: () =>
         Promise.resolve({
           messages: [
-            { role: "AI", content: "Ozzy Osbourne" },
             { role: "Human", content: "Who is the best vocalist?" },
+            { role: "AI", content: "Ozzy Osbourne" },
           ],
         }),
     } as Response)
@@ -30,8 +30,8 @@ test("Test motörhead memory", async () => {
 
 test("Test motörhead memory with pre-loaded history", async () => {
   const pastMessages = [
-    new AIChatMessage("Nice to meet you, Ozzy!"),
     new HumanChatMessage("My name is Ozzy"),
+    new AIChatMessage("Nice to meet you, Ozzy!"),
   ];
 
   global.fetch = jest.fn(() =>

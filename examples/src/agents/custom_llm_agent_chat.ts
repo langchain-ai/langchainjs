@@ -1,30 +1,32 @@
 import {
-  LLMSingleActionAgent,
   AgentActionOutputParser,
   AgentExecutor,
+  LLMSingleActionAgent,
 } from "langchain/agents";
 import { LLMChain } from "langchain/chains";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import {
+  BaseChatPromptTemplate,
   BasePromptTemplate,
   SerializedBasePromptTemplate,
   renderTemplate,
-  BaseChatPromptTemplate,
 } from "langchain/prompts";
 import {
-  InputValues,
-  PartialValues,
-  AgentStep,
   AgentAction,
   AgentFinish,
+  AgentStep,
   BaseChatMessage,
   HumanChatMessage,
+  InputValues,
+  PartialValues,
 } from "langchain/schema";
 import { SerpAPI, Tool } from "langchain/tools";
 import { Calculator } from "langchain/tools/calculator";
 
 const PREFIX = `Answer the following questions as best you can. You have access to the following tools:`;
-const formatInstructions = (toolNames: string) => `Use the following format:
+const formatInstructions = (
+  toolNames: string
+) => `Use the following format in your response:
 
 Question: the input question you must answer
 Thought: you should always think about what to do

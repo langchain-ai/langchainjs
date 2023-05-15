@@ -1,46 +1,21 @@
-import {
-  HumanChatMessage,
-  AIChatMessage,
-  BaseChatMessage,
-  BaseChatMessageHistory,
-} from "../schema/index.js";
+import { BaseChatMessageHistory } from "../schema/index.js";
 import {
   BaseMemory,
   InputValues,
   OutputValues,
   getInputValue,
 } from "./base.js";
+import { ChatMessageHistory } from "../stores/message/in_memory.js";
 
-export class ChatMessageHistory extends BaseChatMessageHistory {
-  messages: BaseChatMessage[] = [];
-
-  constructor(messages?: BaseChatMessage[]) {
-    super();
-    this.messages = messages ?? [];
-  }
-
-  addUserMessage(message: string): void {
-    this.messages.push(new HumanChatMessage(message));
-  }
-
-  addAIChatMessage(message: string): void {
-    this.messages.push(new AIChatMessage(message));
-  }
-
-  async clear(): Promise<void> {
-    this.messages = [];
-  }
-}
-
-export interface BaseMemoryInput {
-  chatHistory?: ChatMessageHistory;
+export interface BaseChatMemoryInput {
+  chatHistory?: BaseChatMessageHistory;
   returnMessages?: boolean;
   inputKey?: string;
   outputKey?: string;
 }
 
 export abstract class BaseChatMemory extends BaseMemory {
-  chatHistory: ChatMessageHistory;
+  chatHistory: BaseChatMessageHistory;
 
   returnMessages = false;
 
@@ -48,7 +23,7 @@ export abstract class BaseChatMemory extends BaseMemory {
 
   outputKey?: string;
 
-  constructor(fields?: BaseMemoryInput) {
+  constructor(fields?: BaseChatMemoryInput) {
     super();
     this.chatHistory = fields?.chatHistory ?? new ChatMessageHistory();
     this.returnMessages = fields?.returnMessages ?? this.returnMessages;
@@ -60,8 +35,11 @@ export abstract class BaseChatMemory extends BaseMemory {
     inputValues: InputValues,
     outputValues: OutputValues
   ): Promise<void> {
-    this.chatHistory.addUserMessage(getInputValue(inputValues, this.inputKey));
-    this.chatHistory.addAIChatMessage(
+    // this is purposefully done in sequence so they're saved in order
+    await this.chatHistory.addUserMessage(
+      getInputValue(inputValues, this.inputKey)
+    );
+    await this.chatHistory.addAIChatMessage(
       getInputValue(outputValues, this.outputKey)
     );
   }

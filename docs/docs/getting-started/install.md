@@ -8,6 +8,17 @@ sidebar_position: 1
 Updating from <0.0.52? See [this section](#updating-from-0052) for instructions.
 :::
 
+## Supported Environments
+
+LangChain is written in TypeScript and can be used in:
+
+- Node.js (ESM and CommonJS) - 18.x, 19.x, 20.x
+- Cloudflare Workers
+- Vercel / Next.js (Browser, Serverless and Edge functions)
+- Supabase Edge Functions
+- Browser
+- Deno
+
 ## Quickstart
 
 If you want to get started quickly on using LangChain in Node.js, [clone this repository](https://github.com/domeccleston/langchain-ts-starter) and follow the README instructions for a boilerplate project with those dependencies set up.
@@ -72,7 +83,7 @@ LangChain can be used in Vercel / Next.js. We support using LangChain in fronten
 import { OpenAI } from "langchain/llms/openai";
 ```
 
-If you want to use LangChain in frontend `pages`, you need to add the following to your `next.config.js` to enable support for WebAssembly modules (which is required by the tokenizer library `@dqbd/tiktoken`):
+To use LangChain with Next.js (either with app/ or pages/), add the following to your `next.config.js` to enable support for WebAssembly modules (which is required by the tokenizer library `@dqbd/tiktoken`):
 
 ```js title="next.config.js"
 const nextConfig = {
@@ -178,4 +189,4 @@ You will have to make `fetch` available globally, either:
 
 Additionally you'll have to polyfill `unstructuredClone`, eg. by installing `core-js` and following the instructions [here](https://github.com/zloirock/core-js).
 
-If you are running this on Node.js 18 or 19, you do not need to do anything.
+If you are running this on Node.js 18+, you do not need to do anything.

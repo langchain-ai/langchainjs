@@ -1,4 +1,3 @@
-// eslint-disable-next-line tree-shaking/no-side-effects-in-initialization
 import { PromptTemplate } from "../prompts/prompt.js";
 
 const _DEFAULT_SUMMARIZER_TEMPLATE = `Progressively summarize the lines of conversation provided, adding onto the previous summary returning a new summary.

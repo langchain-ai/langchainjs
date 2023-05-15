@@ -28,7 +28,9 @@ import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
 const chat = new ChatOpenAI({ temperature: 0 });
 ```
 
-Here we create a chat model using the API key stored in the environment variable `OPENAI_API_KEY`. We'll be calling this chat model throughout this section.
+Here we create a chat model using the API key stored in the environment variable `OPENAI_API_KEY` or `AZURE_OPENAI_API_KEY` in case you are using Azure OpenAI. We'll be calling this chat model throughout this section.
+
+> **&#9432;** Note, if you are using Azure OpenAI make sure to also set the environment variables `AZURE_OPENAI_API_INSTANCE_NAME`, `AZURE_OPENAI_API_DEPLOYMENT_NAME` and `AZURE_OPENAI_API_VERSION`.
 
 ### Chat Models: Message in, Message out
 
@@ -50,17 +52,19 @@ AIChatMessage { text: "J'aime programmer." }
 
 #### Multiple Messages
 
-OpenAI's chat-based models (currently `gpt-3.5-turbo` and `gpt-4`) support multiple messages as input. See [here](https://platform.openai.com/docs/guides/chat/chat-vs-completions) for more information. Here is an example of sending a system and user message to the chat model:
+OpenAI's chat-based models (currently `gpt-3.5-turbo` and `gpt-4` and in case of azure OpenAI `gpt-4-32k`) support multiple messages as input. See [here](https://platform.openai.com/docs/guides/chat/chat-vs-completions) for more information. Here is an example of sending a system and user message to the chat model:
+
+> **&#9432;** Note, if you are using Azure OpenAI make sure to change the deployment name to the deployment for the model you choose.
 
 ```typescript
-response = await chat.call([
+const responseB = await chat.call([
   new SystemChatMessage(
     "You are a helpful assistant that translates English to French."
   ),
   new HumanChatMessage("Translate: I love programming."),
 ]);
 
-console.log(response);
+console.log(responseB);
 ```
 
 ```
@@ -192,34 +196,6 @@ console.log(responseB);
 { text: "J'aime programmer." }
 ```
 
-The chain will internally accumulate the messages sent to the model, and the ones received as output. Then it will inject the messages into the prompt on the next call. So you can call the chain a few times, and it remembers previous messages:
-
-```typescript
-const responseD = await chain.call({
-  input: "hi from London, how are you doing today",
-});
-```
-
-```
-{
-  response: "Hello! As an AI language model, I don't have feelings, but I'm functioning properly and ready to assist you with any questions or tasks you may have. How can I help you today?"
-}
-```
-
-```typescript
-const responseE = await chain.call({
-  input: "Do you know where I am?",
-});
-
-console.log(responseE);
-```
-
-```
-{
-  response: "Yes, you mentioned that you are from London. However, as an AI language model, I don't have access to your current location unless you provide me with that information."
-}
-```
-
 ### Agents: Dynamically Run Chains Based on User Input
 
 Finally, we introduce Tools and Agents, which extend the model with other abilities, such as search, or a calculator.
@@ -319,6 +295,36 @@ const chain = new ConversationChain({
   prompt: chatPrompt,
   llm: chat,
 });
+```
+
+The chain will internally accumulate the messages sent to the model, and the ones received as output. Then it will inject the messages into the prompt on the next call. So you can call the chain a few times, and it remembers previous messages:
+
+```typescript
+const responseH = await chain.call({
+  input: "hi from London, how are you doing today",
+});
+
+console.log(responseH);
+```
+
+```
+{
+  response: "Hello! As an AI language model, I don't have feelings, but I'm functioning properly and ready to assist you with any questions or tasks you may have. How can I help you today?"
+}
+```
+
+```typescript
+const responseI = await chain.call({
+  input: "Do you know where I am?",
+});
+
+console.log(responseI);
+```
+
+```
+{
+  response: "Yes, you mentioned that you are from London. However, as an AI language model, I don't have access to your current location unless you provide me with that information."
+}
 ```
 
 ## Streaming

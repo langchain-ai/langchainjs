@@ -15,10 +15,16 @@ When an Agent uses the AWSLambda tool, it will provide an argument of type `stri
 
 This quick start will demonstrate how an Agent could use a Lambda function to send an email via [Amazon Simple Email Service](https://aws.amazon.com/ses/). The lambda code which sends the email is not provided, but if you'd like to learn how this could be done, see [here](https://repost.aws/knowledge-center/lambda-send-email-ses). Keep in mind this is an intentionally simple example; Lambda can used to execute code for a near infinite number of other purposes (including executing more Langchains)!
 
+### Note about credentials:
+
+- If you have not run [`aws configure`](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html) via the AWS CLI, the `region`, `accessKeyId`, and `secretAccessKey` must be provided to the AWSLambda constructor.
+- The IAM role corresponding to those credentials must have permission to invoke the lambda function.
+
 ```typescript
-import { OpenAI } from "langchain";
-import { SerpAPI, AWSLambda } from "langchain/tools";
-import { initializeAgentExecutor } from "langchain/agents";
+import { OpenAI } from "langchain/llms/openai";
+import { SerpAPI } from "langchain/tools";
+import { AWSLambda } from "langchain/tools/aws_lambda";
+import { initializeAgentExecutorWithOptions } from "langchain/agents";
 
 const model = new OpenAI({ temperature: 0 });
 const emailSenderTool = new AWSLambda({
@@ -26,17 +32,15 @@ const emailSenderTool = new AWSLambda({
   // tell the Agent precisely what the tool does
   description:
     "Sends an email with the specified content to testing123@gmail.com",
-  region: "us-east-1", // AWS region in which the function is deployed
-  accessKeyId: "abc123", // access key id for a IAM user with invoke permissions
-  secretAccessKey: "xyz456", // secret access key for that IAM user
+  region: "us-east-1", // optional: AWS region in which the function is deployed
+  accessKeyId: "abc123", // optional: access key id for a IAM user with invoke permissions
+  secretAccessKey: "xyz456", // optional: secret access key for that IAM user
   functionName: "SendEmailViaSES", // the function name as seen in AWS Console
 });
 const tools = [emailSenderTool, new SerpAPI("api_key_goes_here")];
-const executor = await initializeAgentExecutor(
-  tools,
-  model,
-  "zero-shot-react-description"
-);
+const executor = await initializeAgentExecutorWithOptions(tools, model, {
+  agentType: "zero-shot-react-description",
+});
 
 const input = `Find out the capital of Croatia. Once you have it, email the answer to testing123@gmail.com.`;
 const result = await executor.call({ input });

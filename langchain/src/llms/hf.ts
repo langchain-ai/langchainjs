@@ -1,6 +1,6 @@
 import { LLM, BaseLLMParams } from "./base.js";
 
-interface HFInput {
+export interface HFInput {
   /** Model to use */
   model: string;
 
@@ -53,7 +53,7 @@ export class HuggingFaceInference extends LLM implements HFInput {
       fields?.apiKey ??
       (typeof process !== "undefined"
         ? // eslint-disable-next-line no-process-env
-          process.env.HUGGINGFACEHUB_API_KEY
+          process.env?.HUGGINGFACEHUB_API_KEY
         : undefined);
     if (!this.apiKey) {
       throw new Error(
@@ -66,25 +66,34 @@ export class HuggingFaceInference extends LLM implements HFInput {
     return "huggingface_hub";
   }
 
-  async _call(prompt: string, _stop?: string[]): Promise<string> {
+  /** @ignore */
+  async _call(
+    prompt: string,
+    options: this["ParsedCallOptions"]
+  ): Promise<string> {
     const { HfInference } = await HuggingFaceInference.imports();
     const hf = new HfInference(this.apiKey);
-    const res = await this.caller.call(hf.textGeneration.bind(hf), {
-      model: this.model,
-      parameters: {
-        // make it behave similar to openai, returning only the generated text
-        return_full_text: false,
-        temperature: this.temperature,
-        max_new_tokens: this.maxTokens,
-        top_p: this.topP,
-        top_k: this.topK,
-        repetition_penalty: this.frequencyPenalty,
-      },
-      inputs: prompt,
-    });
+    const res = await this.caller.callWithOptions(
+      { signal: options.signal },
+      hf.textGeneration.bind(hf),
+      {
+        model: this.model,
+        parameters: {
+          // make it behave similar to openai, returning only the generated text
+          return_full_text: false,
+          temperature: this.temperature,
+          max_new_tokens: this.maxTokens,
+          top_p: this.topP,
+          top_k: this.topK,
+          repetition_penalty: this.frequencyPenalty,
+        },
+        inputs: prompt,
+      }
+    );
     return res.generated_text;
   }
 
+  /** @ignore */
   static async imports(): Promise<{
     HfInference: typeof import("@huggingface/inference").HfInference;
   }> {

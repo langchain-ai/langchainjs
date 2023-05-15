@@ -1,4 +1,4 @@
-import { v4 as uuidv4 } from "uuid";
+import * as uuid from "uuid";
 import flatten from "flat";
 
 import { VectorStore } from "./base.js";
@@ -20,6 +20,8 @@ export interface PineconeLibArgs {
 }
 
 export class PineconeStore extends VectorStore {
+  declare FilterType: PineconeMetadata;
+
   textKey: string;
 
   namespace?: string;
@@ -52,7 +54,7 @@ export class PineconeStore extends VectorStore {
     documents: Document[],
     ids?: string[]
   ): Promise<void> {
-    const documentIds = ids == null ? documents.map(() => uuidv4()) : ids;
+    const documentIds = ids == null ? documents.map(() => uuid.v4()) : ids;
     const pineconeVectors = vectors.map((values, idx) => {
       // Pinecone doesn't support nested objects, so we flatten them
       const metadata: {
@@ -64,6 +66,11 @@ export class PineconeStore extends VectorStore {
       // Pinecone doesn't support null values, so we remove them
       for (const key of Object.keys(metadata)) {
         if (metadata[key] == null) {
+          delete metadata[key];
+        } else if (
+          typeof metadata[key] === "object" &&
+          Object.keys(metadata[key] as unknown as object).length === 0
+        ) {
           delete metadata[key];
         }
       }
@@ -90,7 +97,7 @@ export class PineconeStore extends VectorStore {
   async similaritySearchVectorWithScore(
     query: number[],
     k: number,
-    filter?: object
+    filter?: PineconeMetadata
   ): Promise<[Document, number][]> {
     if (filter && this.filter) {
       throw new Error("cannot provide both `filter` and `this.filter`");
