@@ -1,10 +1,22 @@
+import {
+  ApifyClient,
+  ApifyClientOptions,
+  ActorCallOptions,
+} from "apify-client";
+
 import { Document } from "../../document.js";
 import { BaseDocumentLoader, DocumentLoader } from "../base.js";
+
+export type ApifyDatasetMappingFunction = (
+  item: Record<string | number, unknown>
+) => Document;
 
 export class ApifyDatasetLoader
   extends BaseDocumentLoader
   implements DocumentLoader
 {
+  protected apifyClient: ApifyClient;
+
   protected datasetId: string;
 
   protected datasetMappingFunction: (
@@ -13,33 +25,64 @@ export class ApifyDatasetLoader
 
   constructor(
     datasetId: string,
-    datasetMappingFunction: (item: Record<string | number, unknown>) => Document
+    config: {
+      datasetMappingFunction: ApifyDatasetMappingFunction;
+      clientOptions?: ApifyClientOptions;
+    }
   ) {
     super();
+    const apifyApiToken = ApifyDatasetLoader._getApifyApiToken(
+      config.clientOptions
+    );
+    this.apifyClient = new ApifyClient({
+      ...config.clientOptions,
+      token: apifyApiToken,
+    });
     this.datasetId = datasetId;
-    this.datasetMappingFunction = datasetMappingFunction;
+    this.datasetMappingFunction = config.datasetMappingFunction;
   }
 
-  static async imports(): Promise<{
-    ApifyClientClass: typeof import("apify-client").ApifyClient;
-  }> {
-    try {
-      const { ApifyClient } = await import("apify-client");
-      return { ApifyClientClass: ApifyClient };
-    } catch (e) {
-      throw new Error(
-        "Please install apify-client as a dependency with, e.g. `yarn add apify-client`"
-      );
-    }
+  private static _getApifyApiToken(config?: { token?: string }) {
+    return (
+      config?.token ??
+      // eslint-disable-next-line no-process-env
+      (typeof process !== "undefined" ? process.env.APIFY_API_TOKEN : undefined)
+    );
   }
 
   async load(): Promise<Document[]> {
-    const { ApifyClientClass } = await ApifyDatasetLoader.imports();
-    const apifyClient = new ApifyClientClass();
-
     const datasetItems = (
-      await apifyClient.dataset(this.datasetId).listItems({ clean: true })
+      await this.apifyClient.dataset(this.datasetId).listItems({ clean: true })
     ).items;
     return datasetItems.map(this.datasetMappingFunction);
+  }
+
+  /**
+   * Create an ApifyDatasetLoader by calling an Actor on the Apify platform and waiting for its results to be ready.
+   * @param actorId The ID or name of the Actor on the Apify platform.
+   * @param input The input object of the Actor that you're trying to run.
+   * @param options Options specifying settings for the Actor run.
+   * @param options.datasetMappingFunction A function that takes a single object (an Apify dataset item) and converts it to an instance of the Document class.
+   * @returns An instance of `ApifyDatasetLoader` with the results from the Actor run.
+   */
+  static async fromActorCall(
+    actorId: string,
+    input: Record<string | number, unknown>,
+    config: ActorCallOptions & {
+      clientOptions: ApifyClientOptions;
+      datasetMappingFunction: ApifyDatasetMappingFunction;
+    }
+  ): Promise<ApifyDatasetLoader> {
+    const apifyApiToken = ApifyDatasetLoader._getApifyApiToken(
+      config.clientOptions
+    );
+    const apifyClient = new ApifyClient({ token: apifyApiToken });
+
+    const actorCall = await apifyClient.actor(actorId).call(input, config);
+
+    return new ApifyDatasetLoader(actorCall.defaultDatasetId, {
+      datasetMappingFunction: config.datasetMappingFunction,
+      clientOptions: { ...config.clientOptions, token: apifyApiToken },
+    });
   }
 }
