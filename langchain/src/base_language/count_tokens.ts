@@ -1,4 +1,4 @@
-import { type TiktokenModel } from "js-tiktoken";
+import { type TiktokenModel } from "js-tiktoken/lite";
 import { encodingForModel } from "../util/tiktoken.js";
 
 // https://www.npmjs.com/package/js-tiktoken

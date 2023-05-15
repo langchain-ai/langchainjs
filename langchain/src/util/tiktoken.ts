@@ -4,7 +4,7 @@ import {
   TiktokenEncoding,
   TiktokenModel,
   getEncodingNameForModel,
-} from "js-tiktoken";
+} from "js-tiktoken/lite";
 
 const cache: Record<string, TiktokenBPE> = {};
 

@@ -17714,12 +17714,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"js-tiktoken@npm:^1.0.4":
-  version: 1.0.4
-  resolution: "js-tiktoken@npm:1.0.4"
+"js-tiktoken@npm:^1.0.5":
+  version: 1.0.5
+  resolution: "js-tiktoken@npm:1.0.5"
   dependencies:
     base64-js: ^1.5.1
-  checksum: 90cb48054ffb6cd24285e1306545f2a8def9d1ab4a953cfebf9b2f0ae4fe798e0bc838fd2efb10a4cb585e193dced6db8e9deefb7bc2ace15bb1d4ee454e004f
+  checksum: 51139b9b5507a618a5094ea04302951a10f72a775f9732f8cbb0e51c62165af568ce2c4f591bf18aeb9004ffe08bbdabbcc9b827a64a40998e617b6485ee7aad
   languageName: node
   linkType: hard
 
@@ -18086,7 +18086,7 @@ __metadata:
     hnswlib-node: ^1.4.2
     html-to-text: ^9.0.5
     jest: ^29.5.0
-    js-tiktoken: ^1.0.4
+    js-tiktoken: ^1.0.5
     jsonpointer: ^5.0.1
     mammoth: ^1.5.1
     ml-distance: ^4.0.0

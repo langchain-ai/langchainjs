@@ -1,4 +1,4 @@
-import { type Tiktoken } from "js-tiktoken";
+import { type Tiktoken } from "js-tiktoken/lite";
 import {
   BaseChatMessage,
   BasePromptValue,
