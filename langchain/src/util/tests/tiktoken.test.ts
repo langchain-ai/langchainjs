@@ -1,21 +1,27 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { test, expect, describe, afterAll } from "@jest/globals";
 import { get_encoding } from "@dqbd/tiktoken";
-import { LiteTokenizer } from "../tokenizer.js";
+import { Tiktoken } from "js-tiktoken";
+import { getEncoding } from "../tiktoken.js";
 
 describe("LiteTokenizer matches the behavior of @dqbd/tiktoken", () => {
-  const lite = new LiteTokenizer();
+  let lite: Tiktoken | undefined;
   const full = get_encoding("cl100k_base");
+
+  beforeAll(async () => {
+    lite = await getEncoding("cl100k_base");
+  });
 
   afterAll(() => full.free());
 
   test("Simple test", () => {
     const text = "hello world";
-    expect([...lite.encode(text)]).toEqual([...full.encode(text)]);
+    expect([...lite!.encode(text)]).toEqual([...full.encode(text)]);
   });
 
   test("Magic tokens", () => {
     const text = "<|fim_prefix|>test<|fim_suffix|>";
-    expect([...lite.encode(text, "all")]).toEqual([
+    expect([...lite!.encode(text, "all")]).toEqual([
       ...full.encode(text, "all"),
     ]);
   });
@@ -30,7 +36,7 @@ describe("LiteTokenizer matches the behavior of @dqbd/tiktoken", () => {
     ];
 
     for (const text of fixtures) {
-      expect([...lite.encode(text)]).toEqual([...full.encode(text)]);
+      expect([...lite!.encode(text)]).toEqual([...full.encode(text)]);
     }
   });
 });

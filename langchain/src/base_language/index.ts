@@ -1,3 +1,4 @@
+import { type Tiktoken } from "js-tiktoken";
 import {
   BaseChatMessage,
   BasePromptValue,
@@ -6,7 +7,7 @@ import {
 import { CallbackManager, Callbacks } from "../callbacks/manager.js";
 import { AsyncCaller, AsyncCallerParams } from "../util/async_caller.js";
 import { getModelNameForTiktoken } from "./count_tokens.js";
-import { LiteTokenizer, isLiteTokenizerApplicable } from "../util/tokenizer.js";
+import { encodingForModel } from "../util/tiktoken.js";
 
 const getVerbosity = () => false;
 
@@ -123,32 +124,29 @@ export abstract class BaseLanguageModel
 
   abstract _llmType(): string;
 
-  private _encoding?: LiteTokenizer;
+  private _encoding?: Tiktoken;
 
   async getNumTokens(text: string) {
     // fallback to approximate calculation if tiktoken is not available
     let numTokens = Math.ceil(text.length / 4);
 
     if (!this._encoding) {
-      if (
-        isLiteTokenizerApplicable(
-          getModelNameForTiktoken(
-            "modelName" in this
-              ? getModelNameForTiktoken(this.modelName as string)
-              : "gpt2"
-          )
-        )
-      ) {
-        this._encoding = new LiteTokenizer();
+      try {
+        this._encoding = await encodingForModel(
+          "modelName" in this
+            ? getModelNameForTiktoken(this.modelName as string)
+            : "gpt2"
+        );
+      } catch (error) {
+        console.warn(
+          "Failed to calculate number of tokens, falling back to approximate count",
+          error
+        );
       }
     }
 
     if (this._encoding) {
       numTokens = this._encoding.encode(text).length;
-    } else {
-      console.warn(
-        "Failed to calculate number of tokens, falling back to approximate count"
-      );
     }
 
     return numTokens;

@@ -1,5 +1,5 @@
-import type { TiktokenModel } from "@dqbd/tiktoken";
-import { LiteTokenizer, isLiteTokenizerApplicable } from "../util/tokenizer.js";
+import { type TiktokenModel } from "js-tiktoken";
+import { encodingForModel } from "../util/tiktoken.js";
 
 // https://www.npmjs.com/package/@dqbd/tiktoken
 
@@ -65,10 +65,9 @@ export const calculateMaxTokens = async ({
   // fallback to approximate calculation if tiktoken is not available
   let numTokens = Math.ceil(prompt.length / 4);
 
-  if (isLiteTokenizerApplicable(getModelNameForTiktoken(modelName))) {
-    const liteEncoder = new LiteTokenizer();
-    numTokens = liteEncoder.encode(prompt).length;
-  } else {
+  try {
+    numTokens = (await encodingForModel(modelName)).encode(prompt).length;
+  } catch (error) {
     console.warn(
       "Failed to calculate number of tokens, falling back to approximate count"
     );
