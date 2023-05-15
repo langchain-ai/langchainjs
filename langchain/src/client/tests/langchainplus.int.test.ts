@@ -156,13 +156,14 @@ what is 1213 divided by 4345?,approximately 0.2791714614499425
   const model = new ChatOpenAI({ temperature: 0 });
   const tools = [new Calculator()];
 
-  const executor = await initializeAgentExecutorWithOptions(tools, model, {
-    agentType: "chat-conversational-react-description",
-    verbose: true,
-  });
+  const executorFactory = async () =>
+    await initializeAgentExecutorWithOptions(tools, model, {
+      agentType: "chat-conversational-react-description",
+      verbose: true,
+    });
   console.log("Loaded agent.");
 
-  const results = await client.runOnDataset(datasetName, executor);
+  const results = await client.runOnDataset(datasetName, executorFactory);
   console.log(results);
   expect(Object.keys(results).length).toEqual(2);
 });
@@ -205,13 +206,14 @@ what was the tjtal number of points scored in the 2023 super bowl? what is that 
     new Calculator(),
   ];
 
-  const executor = await initializeAgentExecutorWithOptions(tools, model, {
-    agentType: "chat-conversational-react-description",
-    verbose: true,
-  });
+  const executorFactory = async () =>
+    await initializeAgentExecutorWithOptions(tools, model, {
+      agentType: "chat-conversational-react-description",
+      verbose: true,
+    });
   console.log("Loaded agent.");
 
-  const results = await client.runOnDataset(datasetName, executor);
+  const results = await client.runOnDataset(datasetName, executorFactory);
   console.log(results);
   expect(Object.keys(results).length).toEqual(10);
 });
