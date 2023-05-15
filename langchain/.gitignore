@@ -256,6 +256,9 @@ retrievers/hyde.d.ts
 retrievers/self_query/base.cjs
 retrievers/self_query/base.js
 retrievers/self_query/base.d.ts
+retrievers/self_query/translator.cjs
+retrievers/self_query/translator.js
+retrievers/self_query/translator.d.ts
 cache.cjs
 cache.js
 cache.d.ts

@@ -10,3 +10,8 @@ export {
 } from "./supabase.js";
 export { RemoteLangChainRetriever } from "./remote/remote-retriever.js";
 export { MetalRetriever } from "./metal.js";
+export {
+  SelfQueryRetriever,
+  SelfQueryRetrieverArgs,
+} from "./self_query/base.js";
+export { BasicTranslator, BaseTranslator } from "./self_query/translator.js";

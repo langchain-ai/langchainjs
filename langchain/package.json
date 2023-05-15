@@ -268,6 +268,9 @@
     "retrievers/self_query/base.cjs",
     "retrievers/self_query/base.js",
     "retrievers/self_query/base.d.ts",
+    "retrievers/self_query/translator.cjs",
+    "retrievers/self_query/translator.js",
+    "retrievers/self_query/translator.d.ts",
     "cache.cjs",
     "cache.js",
     "cache.d.ts",
@@ -1002,6 +1005,11 @@
       "types": "./retrievers/self_query/base.d.ts",
       "import": "./retrievers/self_query/base.js",
       "require": "./retrievers/self_query/base.cjs"
+    },
+    "./retrievers/self_query/translator": {
+      "types": "./retrievers/self_query/translator.d.ts",
+      "import": "./retrievers/self_query/translator.js",
+      "require": "./retrievers/self_query/translator.cjs"
     },
     "./cache": {
       "types": "./cache.d.ts",

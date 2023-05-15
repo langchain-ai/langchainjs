@@ -1,11 +1,10 @@
-import { PineconeClient } from "@pinecone-database/pinecone";
 import { AttributeInfo } from "langchain/schema/query_constructor";
 import { Document } from "langchain/document";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { SelfQueryRetriever } from "langchain/retrievers/self_query/base";
 import { BasicTranslator } from "langchain/retrievers/self_query/translator";
-import { PineconeStore } from "langchain/vectorstores/pinecone";
 import { OpenAI } from "langchain/llms/openai";
+import { Chroma } from "langchain/vectorstores/chroma";
 
 const run = async () => {
   /**
@@ -89,28 +88,11 @@ const run = async () => {
    * At this point we only support Chroma and Pinecone, but we will add more in the future.
    * We also need to provide an embeddings object. This is used to embed the documents.
    */
-  if (
-    !process.env.PINECONE_API_KEY ||
-    !process.env.PINECONE_ENVIRONMENT ||
-    !process.env.PINECONE_INDEX
-  ) {
-    throw new Error(
-      "PINECONE_ENVIRONMENT and PINECONE_API_KEY and PINECONE_INDEX must be set"
-    );
-  }
-
-  const client = new PineconeClient();
-  await client.init({
-    apiKey: process.env.PINECONE_API_KEY,
-    environment: process.env.PINECONE_ENVIRONMENT,
-  });
-  const index = client.Index(process.env.PINECONE_INDEX);
-
   const embeddings = new OpenAIEmbeddings();
   const llm = new OpenAI();
   const documentContents = "Brief summary of a movie";
-  const vectorStore = await PineconeStore.fromDocuments(docs, embeddings, {
-    pineconeIndex: index,
+  const vectorStore = await Chroma.fromDocuments(docs, embeddings, {
+    collectionName: "a-movie-collection",
   });
   const selfQueryRetriever = await SelfQueryRetriever.fromLLM({
     llm,

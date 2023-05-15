@@ -9,7 +9,7 @@ import {
 } from "../ir.js";
 import { OpenAI } from "../../../llms/openai.js";
 import { AttributeInfo } from "../../../schema/query_constructor.js";
-import { ChromaTranslator } from "../../../retrievers/self_query/chroma.js";
+import { BasicTranslator } from "../../../retrievers/self_query/translator.js";
 
 test("Query Chain Test", async () => {
   const sq1 = new StructuredQuery(
@@ -40,7 +40,7 @@ test("Query Chain Test", async () => {
   const filter4 = { director: { $eq: "Greta Gerwig" } };
   const filter5 = {
     $and: [
-      { $or: [{ genre: { $eg: "comedy" } }, { genre: { $eq: "drama" } }] },
+      { $or: [{ genre: { $eq: "comedy" } }, { genre: { $eq: "drama" } }] },
       { length: { $lt: 90 } },
     ],
   };
@@ -110,7 +110,7 @@ test("Query Chain Test", async () => {
   expect(r3).toMatchObject(sq3);
   expect(r4).toMatchObject(sq4);
   expect(r5).toMatchObject(sq5);
-  const testTranslator = new ChromaTranslator();
+  const testTranslator = new BasicTranslator();
 
   const { filter: parsedFilter1 } = testTranslator.visitStructuredQuery(
     r1 as StructuredQuery

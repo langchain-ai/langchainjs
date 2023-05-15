@@ -13,12 +13,27 @@ import {
   VisitorStructuredQueryResult,
 } from "../../chains/query_constructor/ir.js";
 
-export class PineconeTranslator extends Visitor {
+export abstract class BaseTranslator extends Visitor {
+  abstract allowedOperators: Operator[];
+
+  abstract allowedComparators: Comparator[];
+
+  abstract formatFunction(func: Operator | Comparator): string;
+}
+
+export class BasicTranslator extends BaseTranslator {
   allowedOperators: Operator[] = [Operators.and, Operators.or];
 
-  allowedComparators: Comparator[] = [];
+  allowedComparators: Comparator[] = [
+    Comparators.eq,
+    Comparators.neq,
+    Comparators.gt,
+    Comparators.gte,
+    Comparators.lt,
+    Comparators.lte,
+  ];
 
-  private _formatFunction(func: Operator | Comparator): string {
+  formatFunction(func: Operator | Comparator): string {
     if (func in Comparators) {
       if (
         this.allowedComparators.length > 0 &&
@@ -52,14 +67,14 @@ export class PineconeTranslator extends Visitor {
       arg.accept(this)
     ) as VisitorResult[];
     return {
-      [this._formatFunction(operation.operator)]: args,
+      [this.formatFunction(operation.operator)]: args,
     };
   }
 
   visitComparison(comparison: Comparison): VisitorComparisonResult {
     return {
       [comparison.attribute]: {
-        [this._formatFunction(comparison.comparator)]: comparison.value,
+        [this.formatFunction(comparison.comparator)]: comparison.value,
       },
     };
   }
