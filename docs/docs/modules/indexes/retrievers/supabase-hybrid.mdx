@@ -29,7 +29,8 @@ create table documents (
 -- Create a function to similarity search for documents
 create function match_documents (
   query_embedding vector(1536),
-  match_count int
+  match_count int,
+  filter jsonb DEFAULT '{}'
 ) returns table (
   id bigint,
   content text,
@@ -47,6 +48,7 @@ begin
     metadata,
     1 - (documents.embedding <=> query_embedding) as similarity
   from documents
+  where metadata @> filter
   order by documents.embedding <=> query_embedding
   limit match_count;
 end;

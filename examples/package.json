@@ -22,11 +22,13 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
+    "@clickhouse/client": "^0.0.14",
     "@getmetal/metal-sdk": "^2.0.1",
     "@opensearch-project/opensearch": "^2.2.0",
-    "@pinecone-database/pinecone": "^0.0.12",
+    "@pinecone-database/pinecone": "^0.0.14",
     "@prisma/client": "^4.11.0",
     "@supabase/supabase-js": "^2.10.0",
+    "@tensorflow/tfjs-backend-cpu": "^4.4.0",
     "@zilliz/milvus2-sdk-node": "^2.2.0",
     "axios": "^0.26.0",
     "chromadb": "^1.4.0",
@@ -36,6 +38,7 @@
     "ml-distance": "^4.0.0",
     "mongodb": "^5.2.0",
     "prisma": "^4.11.0",
+    "redis": "^4.6.6",
     "sqlite3": "^5.1.4",
     "typeorm": "^0.3.12",
     "weaviate-ts-client": "^1.0.0",
@@ -54,6 +57,6 @@
     "eslint-plugin-prettier": "^4.2.1",
     "prettier": "^2.8.3",
     "tsx": "^3.12.3",
-    "typescript": "^4.9.5"
+    "typescript": "^5.0.0"
   }
 }

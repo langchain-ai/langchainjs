@@ -1,5 +1,5 @@
 export const PREFIX = `Answer the following questions as best you can. You have access to the following tools:`;
-export const FORMAT_INSTRUCTIONS = `Use the following format:
+export const FORMAT_INSTRUCTIONS = `Use the following format in your response:
 
 Question: the input question you must answer
 Thought: you should always think about what to do

@@ -1,52 +1,183 @@
-import {
-  AgentAction,
-  AgentFinish,
-  ChainValues,
-  LLMResult,
-} from "../../schema/index.js";
-import { BaseCallbackHandler } from "../base.js";
+import type { CSPair } from "ansi-styles";
+import styles from "ansi-styles";
+import { BaseTracer, AgentRun, Run } from "./tracer.js";
 
-export class ConsoleCallbackHandler extends BaseCallbackHandler {
-  name = "console_callback_handler";
+function wrap(style: CSPair, text: string) {
+  return `${style.open}${text}${style.close}`;
+}
 
-  handleLLMStart(llm: { name: string }, prompts: string[], runId: string) {
+function tryJsonStringify(obj: unknown, fallback: string) {
+  try {
+    return JSON.stringify(obj, null, 2);
+  } catch (err) {
+    return fallback;
+  }
+}
+
+function elapsed(run: Run): string {
+  const elapsed = run.end_time - run.start_time;
+  if (elapsed < 1000) {
+    return `${elapsed}ms`;
+  }
+  return `${(elapsed / 1000).toFixed(2)}s`;
+}
+
+const { color } = styles;
+
+export class ConsoleCallbackHandler extends BaseTracer {
+  name = "console_callback_handler" as const;
+
+  protected persistRun(_run: Run) {
+    return Promise.resolve();
+  }
+
+  // utility methods
+
+  getParents(run: Run) {
+    const parents: Run[] = [];
+    let currentRun = run;
+    while (currentRun.parent_run_id) {
+      const parent = this.runMap.get(currentRun.parent_run_id);
+      if (parent) {
+        parents.push(parent);
+        currentRun = parent;
+      } else {
+        break;
+      }
+    }
+    return parents;
+  }
+
+  getBreadcrumbs(run: Run) {
+    const parents = this.getParents(run).reverse();
+    const string = [...parents, run]
+      .map((parent, i, arr) => {
+        const name = `${parent.execution_order}:${parent.run_type}:${parent.name}`;
+        return i === arr.length - 1 ? wrap(styles.bold, name) : name;
+      })
+      .join(" > ");
+    return wrap(color.grey, string);
+  }
+
+  // logging methods
+
+  onChainStart(run: Run) {
+    const crumbs = this.getBreadcrumbs(run);
     console.log(
-      `Starting LLM ${runId} with name ${llm.name} with prompts: ${prompts.join(
-        ", "
-      )}\n`
+      `${wrap(
+        color.green,
+        "[chain/start]"
+      )} [${crumbs}] Entering Chain run with input: ${tryJsonStringify(
+        run.inputs,
+        "[inputs]"
+      )}`
     );
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  handleLLMError(err: any, runId: string) {
-    console.log(`LLM ${runId} errored: ${err}\n`);
+  onChainEnd(run: Run) {
+    const crumbs = this.getBreadcrumbs(run);
+    console.log(
+      `${wrap(color.cyan, "[chain/end]")} [${crumbs}] [${elapsed(
+        run
+      )}] Exiting Chain run with output: ${tryJsonStringify(
+        run.outputs,
+        "[outputs]"
+      )}`
+    );
   }
 
-  handleLLMEnd(output: LLMResult, runId: string) {
-    console.log(`LLM ${runId} finished: ${JSON.stringify(output)}\n`);
+  onChainError(run: Run) {
+    const crumbs = this.getBreadcrumbs(run);
+    console.log(
+      `${wrap(color.red, "[chain/error]")} [${crumbs}] [${elapsed(
+        run
+      )}] Chain run errored with error: ${tryJsonStringify(
+        run.error,
+        "[error]"
+      )}`
+    );
   }
 
-  handleChainStart(chain: { name: string }) {
-    console.log(`Entering new ${chain.name} chain...`);
+  onLLMStart(run: Run) {
+    const crumbs = this.getBreadcrumbs(run);
+    const inputs =
+      "prompts" in run.inputs
+        ? { prompts: (run.inputs.prompts as string[]).map((p) => p.trim()) }
+        : run.inputs;
+    console.log(
+      `${wrap(
+        color.green,
+        "[llm/start]"
+      )} [${crumbs}] Entering LLM run with input: ${tryJsonStringify(
+        inputs,
+        "[inputs]"
+      )}`
+    );
   }
 
-  handleChainEnd(_output: ChainValues) {
-    console.log("Finished chain.");
+  onLLMEnd(run: Run) {
+    const crumbs = this.getBreadcrumbs(run);
+    console.log(
+      `${wrap(color.cyan, "[llm/end]")} [${crumbs}] [${elapsed(
+        run
+      )}] Exiting LLM run with output: ${tryJsonStringify(
+        run.outputs,
+        "[response]"
+      )}`
+    );
   }
 
-  handleAgentAction(action: AgentAction) {
-    console.log(action.log);
+  onLLMError(run: Run) {
+    const crumbs = this.getBreadcrumbs(run);
+    console.log(
+      `${wrap(color.red, "[llm/error]")} [${crumbs}] [${elapsed(
+        run
+      )}] LLM run errored with error: ${tryJsonStringify(run.error, "[error]")}`
+    );
   }
 
-  handleToolEnd(output: string) {
-    console.log(output);
+  onToolStart(run: Run) {
+    const crumbs = this.getBreadcrumbs(run);
+    console.log(
+      `${wrap(
+        color.green,
+        "[tool/start]"
+      )} [${crumbs}] Entering Tool run with input: "${run.inputs.input?.trim()}"`
+    );
   }
 
-  handleText(text: string) {
-    console.log(text);
+  onToolEnd(run: Run) {
+    const crumbs = this.getBreadcrumbs(run);
+    console.log(
+      `${wrap(color.cyan, "[tool/end]")} [${crumbs}] [${elapsed(
+        run
+      )}] Exiting Tool run with output: "${run.outputs?.output?.trim()}"`
+    );
   }
 
-  handleAgentEnd(action: AgentFinish) {
-    console.log(action.log);
+  onToolError(run: Run) {
+    const crumbs = this.getBreadcrumbs(run);
+    console.log(
+      `${wrap(color.red, "[tool/error]")} [${crumbs}] [${elapsed(
+        run
+      )}] Tool run errored with error: ${tryJsonStringify(
+        run.error,
+        "[error]"
+      )}`
+    );
+  }
+
+  onAgentAction(run: Run) {
+    const agentRun = run as AgentRun;
+    const crumbs = this.getBreadcrumbs(run);
+    console.log(
+      `${wrap(
+        color.blue,
+        "[agent/action]"
+      )} [${crumbs}] Agent selected action: ${tryJsonStringify(
+        agentRun.actions[agentRun.actions.length - 1],
+        "[action]"
+      )}`
+    );
   }
 }

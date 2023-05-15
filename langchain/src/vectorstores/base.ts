@@ -2,6 +2,12 @@ import { Embeddings } from "../embeddings/base.js";
 import { Document } from "../document.js";
 import { BaseRetriever } from "../schema/index.js";
 
+export interface VectorStoreRetrieverInput<V extends VectorStore> {
+  vectorStore: V;
+  k?: number;
+  filter?: V["FilterType"];
+}
+
 export class VectorStoreRetriever<
   V extends VectorStore = VectorStore
 > extends BaseRetriever {
@@ -11,11 +17,7 @@ export class VectorStoreRetriever<
 
   filter?: V["FilterType"];
 
-  constructor(fields: {
-    vectorStore: V;
-    k?: number;
-    filter?: V["FilterType"];
-  }) {
+  constructor(fields: VectorStoreRetrieverInput<V>) {
     super();
     this.vectorStore = fields.vectorStore;
     this.k = fields.k ?? this.k;

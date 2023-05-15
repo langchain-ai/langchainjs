@@ -4,7 +4,6 @@ import * as cheerio from "cheerio";
 import { BaseLanguageModel } from "../base_language/index.js";
 import { RecursiveCharacterTextSplitter } from "../text_splitter.js";
 import { MemoryVectorStore } from "../vectorstores/memory.js";
-import { StringPromptValue } from "../prompts/base.js";
 import { Document } from "../document.js";
 import { Tool, ToolParams } from "./base.js";
 import {
@@ -13,6 +12,19 @@ import {
 } from "../callbacks/manager.js";
 import { Embeddings } from "../embeddings/base.js";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
+
+export const parseInputs = (inputs: string): [string, string] => {
+  const [baseUrl, task] = inputs.split(",").map((input) => {
+    let t = input.trim();
+    t = t.startsWith('"') ? t.slice(1) : t;
+    t = t.endsWith('"') ? t.slice(0, -1) : t;
+    // it likes to put / at the end of urls, wont matter for task
+    t = t.endsWith("/") ? t.slice(0, -1) : t;
+    return t.trim();
+  });
+
+  return [baseUrl, task];
+};
 
 export const getText = (
   html: string,
@@ -174,14 +186,7 @@ export class WebBrowser extends Tool {
 
   /** @ignore */
   async _call(inputs: string, runManager?: CallbackManagerForToolRun) {
-    const [baseUrl, task] = inputs.split(",").map((input) => {
-      let t = input.trim();
-      t = t.startsWith('"') ? t.slice(1) : t;
-      t = t.endsWith('"') ? t.slice(0, -1) : t;
-      // it likes to put / at the end of urls, wont matter for task
-      t = t.endsWith("/") ? t.slice(0, -1) : t;
-      return t.trim();
-    });
+    const [baseUrl, task] = parseInputs(inputs);
     const doSummary = !task;
 
     let text;
@@ -228,16 +233,10 @@ export class WebBrowser extends Tool {
       doSummary ? "a summary" : task
     } from the above text, also provide up to 5 markdown links from within that would be of interest (always including URL and text). Links should be provided, if present, in markdown syntax as a list under the heading "Relevant Links:".`;
 
-    const res = await this.model.generatePrompt(
-      [new StringPromptValue(input)],
-      undefined,
-      runManager?.getChild()
-    );
-
-    return res.generations[0][0].text;
+    return this.model.predict(input, undefined, runManager?.getChild());
   }
 
   name = "web-browser";
 
-  description = `useful for when you need to find something on or summarize a webpage. input should be a comma seperated list of "ONE valid http URL including protocol","what you want to find on the page or empty string for a summary".`;
+  description = `useful for when you need to find something on or summarize a webpage. input should be a comma separated list of "ONE valid http URL including protocol","what you want to find on the page or empty string for a summary".`;
 }

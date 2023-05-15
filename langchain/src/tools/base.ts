@@ -8,6 +8,9 @@ import { BaseLangChain, BaseLangChainParams } from "../base_language/index.js";
 
 export interface ToolParams extends BaseLangChainParams {}
 
+/**
+ * Base class for Tools that accept input of any shape defined by a Zod schema.
+ */
 export abstract class StructuredTool<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   T extends z.ZodObject<any, any, any, any> = z.ZodObject<any, any, any, any>
@@ -55,6 +58,9 @@ export abstract class StructuredTool<
   returnDirect = false;
 }
 
+/**
+ * Base class for Tools that accept input as a string.
+ */
 export abstract class Tool extends StructuredTool {
   schema = z
     .object({ input: z.string().optional() })

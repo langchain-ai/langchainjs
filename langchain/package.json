@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.64",
+  "version": "0.0.75",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -52,6 +52,12 @@
     "embeddings/cohere.cjs",
     "embeddings/cohere.js",
     "embeddings/cohere.d.ts",
+    "embeddings/tensorflow.cjs",
+    "embeddings/tensorflow.js",
+    "embeddings/tensorflow.d.ts",
+    "embeddings/hf.cjs",
+    "embeddings/hf.js",
+    "embeddings/hf.d.ts",
     "llms.cjs",
     "llms.js",
     "llms.d.ts",
@@ -115,6 +121,9 @@
     "vectorstores/prisma.cjs",
     "vectorstores/prisma.js",
     "vectorstores/prisma.d.ts",
+    "vectorstores/myscale.cjs",
+    "vectorstores/myscale.js",
+    "vectorstores/myscale.d.ts",
     "text_splitter.cjs",
     "text_splitter.js",
     "text_splitter.d.ts",
@@ -163,6 +172,9 @@
     "document_loaders/web/s3.cjs",
     "document_loaders/web/s3.js",
     "document_loaders/web/s3.d.ts",
+    "document_loaders/web/confluence.cjs",
+    "document_loaders/web/confluence.js",
+    "document_loaders/web/confluence.d.ts",
     "document_loaders/fs/directory.cjs",
     "document_loaders/fs/directory.js",
     "document_loaders/fs/directory.d.ts",
@@ -211,6 +223,9 @@
     "schema.cjs",
     "schema.js",
     "schema.d.ts",
+    "schema/output_parser.cjs",
+    "schema/output_parser.js",
+    "schema/output_parser.d.ts",
     "sql_db.cjs",
     "sql_db.js",
     "sql_db.d.ts",
@@ -241,6 +256,15 @@
     "retrievers/document_compressors.cjs",
     "retrievers/document_compressors.js",
     "retrievers/document_compressors.d.ts",
+    "retrievers/time_weighted.cjs",
+    "retrievers/time_weighted.js",
+    "retrievers/time_weighted.d.ts",
+    "retrievers/document_compressors/chain_extract.cjs",
+    "retrievers/document_compressors/chain_extract.js",
+    "retrievers/document_compressors/chain_extract.d.ts",
+    "retrievers/hyde.cjs",
+    "retrievers/hyde.js",
+    "retrievers/hyde.d.ts",
     "cache.cjs",
     "cache.js",
     "cache.d.ts",
@@ -253,12 +277,24 @@
     "stores/file/node.cjs",
     "stores/file/node.js",
     "stores/file/node.d.ts",
+    "stores/message/dynamodb.cjs",
+    "stores/message/dynamodb.js",
+    "stores/message/dynamodb.d.ts",
+    "stores/message/redis.cjs",
+    "stores/message/redis.js",
+    "stores/message/redis.d.ts",
     "experimental/autogpt.cjs",
     "experimental/autogpt.js",
     "experimental/autogpt.d.ts",
     "experimental/babyagi.cjs",
     "experimental/babyagi.js",
     "experimental/babyagi.d.ts",
+    "experimental/plan_and_execute.cjs",
+    "experimental/plan_and_execute.js",
+    "experimental/plan_and_execute.d.ts",
+    "client.cjs",
+    "client.js",
+    "client.d.ts",
     "index.cjs",
     "index.js",
     "index.d.ts"
@@ -288,15 +324,21 @@
   "author": "LangChain",
   "license": "MIT",
   "devDependencies": {
+    "@aws-sdk/client-dynamodb": "^3.310.0",
     "@aws-sdk/client-lambda": "^3.310.0",
     "@aws-sdk/client-s3": "^3.310.0",
+    "@clickhouse/client": "^0.0.14",
     "@faker-js/faker": "^7.6.0",
     "@getmetal/metal-sdk": "^2.0.1",
     "@huggingface/inference": "^1.5.1",
     "@jest/globals": "^29.5.0",
     "@opensearch-project/opensearch": "^2.2.0",
-    "@pinecone-database/pinecone": "^0.0.12",
+    "@pinecone-database/pinecone": "^0.0.14",
     "@supabase/supabase-js": "^2.10.0",
+    "@tensorflow-models/universal-sentence-encoder": "^1.3.3",
+    "@tensorflow/tfjs-backend-cpu": "^4.4.0",
+    "@tensorflow/tfjs-converter": "^4.4.0",
+    "@tensorflow/tfjs-core": "^4.4.0",
     "@tsconfig/recommended": "^1.0.2",
     "@types/d3-dsv": "^2",
     "@types/flat": "^5.0.2",
@@ -304,8 +346,8 @@
     "@types/object-hash": "^3.0.2",
     "@types/pdf-parse": "^1.1.1",
     "@types/uuid": "^9",
-    "@typescript-eslint/eslint-plugin": "^5.51.0",
-    "@typescript-eslint/parser": "^5.51.0",
+    "@typescript-eslint/eslint-plugin": "^5.58.0",
+    "@typescript-eslint/parser": "^5.58.0",
     "apify-client": "^2.7.1",
     "axios": "^0.26.0",
     "cheerio": "^1.0.0-rc.12",
@@ -328,7 +370,6 @@
     "mammoth": "^1.5.1",
     "mongodb": "^5.2.0",
     "pdf-parse": "1.1.1",
-    "pdfjs-dist": "^3.4.120",
     "playwright": "^1.32.1",
     "prettier": "^2.8.3",
     "puppeteer": "^19.7.2",
@@ -338,19 +379,24 @@
     "rollup": "^3.19.1",
     "sqlite3": "^5.1.4",
     "srt-parser-2": "^1.2.2",
-    "ts-jest": "^29.0.5",
+    "ts-jest": "^29.1.0",
     "typeorm": "^0.3.12",
-    "typescript": "^4.9.5",
+    "typescript": "^5.0.0",
     "weaviate-ts-client": "^1.0.0"
   },
   "peerDependencies": {
+    "@aws-sdk/client-dynamodb": "^3.310.0",
     "@aws-sdk/client-lambda": "^3.310.0",
     "@aws-sdk/client-s3": "^3.310.0",
+    "@clickhouse/client": "^0.0.14",
     "@getmetal/metal-sdk": "*",
     "@huggingface/inference": "^1.5.1",
     "@opensearch-project/opensearch": "*",
     "@pinecone-database/pinecone": "*",
     "@supabase/supabase-js": "^2.10.0",
+    "@tensorflow-models/universal-sentence-encoder": "*",
+    "@tensorflow/tfjs-converter": "*",
+    "@tensorflow/tfjs-core": "*",
     "@zilliz/milvus2-sdk-node": "^2.2.0",
     "apify-client": "^2.7.1",
     "axios": "*",
@@ -373,10 +419,16 @@
     "weaviate-ts-client": "^1.0.0"
   },
   "peerDependenciesMeta": {
+    "@aws-sdk/client-dynamodb": {
+      "optional": true
+    },
     "@aws-sdk/client-lambda": {
       "optional": true
     },
     "@aws-sdk/client-s3": {
+      "optional": true
+    },
+    "@clickhouse/client": {
       "optional": true
     },
     "@getmetal/metal-sdk": {
@@ -392,6 +444,15 @@
       "optional": true
     },
     "@supabase/supabase-js": {
+      "optional": true
+    },
+    "@tensorflow-models/universal-sentence-encoder": {
+      "optional": true
+    },
+    "@tensorflow/tfjs-converter": {
+      "optional": true
+    },
+    "@tensorflow/tfjs-core": {
       "optional": true
     },
     "@zilliz/milvus2-sdk-node": {
@@ -457,7 +518,8 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.4.3",
-    "@dqbd/tiktoken": "^1.0.4",
+    "@dqbd/tiktoken": "^1.0.7",
+    "ansi-styles": "^5.0.0",
     "binary-extensions": "^2.2.0",
     "browser-or-node": "^2.1.1",
     "expr-eval": "^2.0.2",
@@ -568,6 +630,16 @@
       "import": "./embeddings/cohere.js",
       "require": "./embeddings/cohere.cjs"
     },
+    "./embeddings/tensorflow": {
+      "types": "./embeddings/tensorflow.d.ts",
+      "import": "./embeddings/tensorflow.js",
+      "require": "./embeddings/tensorflow.cjs"
+    },
+    "./embeddings/hf": {
+      "types": "./embeddings/hf.d.ts",
+      "import": "./embeddings/hf.js",
+      "require": "./embeddings/hf.cjs"
+    },
     "./llms": {
       "node": {
         "types": "./llms.d.ts",
@@ -677,6 +749,11 @@
       "import": "./vectorstores/prisma.js",
       "require": "./vectorstores/prisma.cjs"
     },
+    "./vectorstores/myscale": {
+      "types": "./vectorstores/myscale.d.ts",
+      "import": "./vectorstores/myscale.js",
+      "require": "./vectorstores/myscale.cjs"
+    },
     "./text_splitter": {
       "types": "./text_splitter.d.ts",
       "import": "./text_splitter.js",
@@ -758,6 +835,11 @@
       "types": "./document_loaders/web/s3.d.ts",
       "import": "./document_loaders/web/s3.js",
       "require": "./document_loaders/web/s3.cjs"
+    },
+    "./document_loaders/web/confluence": {
+      "types": "./document_loaders/web/confluence.d.ts",
+      "import": "./document_loaders/web/confluence.js",
+      "require": "./document_loaders/web/confluence.cjs"
     },
     "./document_loaders/fs/directory": {
       "types": "./document_loaders/fs/directory.d.ts",
@@ -841,6 +923,11 @@
       "import": "./schema.js",
       "require": "./schema.cjs"
     },
+    "./schema/output_parser": {
+      "types": "./schema/output_parser.d.ts",
+      "import": "./schema/output_parser.js",
+      "require": "./schema/output_parser.cjs"
+    },
     "./sql_db": {
       "types": "./sql_db.d.ts",
       "import": "./sql_db.js",
@@ -893,6 +980,21 @@
       "import": "./retrievers/document_compressors.js",
       "require": "./retrievers/document_compressors.cjs"
     },
+    "./retrievers/time_weighted": {
+      "types": "./retrievers/time_weighted.d.ts",
+      "import": "./retrievers/time_weighted.js",
+      "require": "./retrievers/time_weighted.cjs"
+    },
+    "./retrievers/document_compressors/chain_extract": {
+      "types": "./retrievers/document_compressors/chain_extract.d.ts",
+      "import": "./retrievers/document_compressors/chain_extract.js",
+      "require": "./retrievers/document_compressors/chain_extract.cjs"
+    },
+    "./retrievers/hyde": {
+      "types": "./retrievers/hyde.d.ts",
+      "import": "./retrievers/hyde.js",
+      "require": "./retrievers/hyde.cjs"
+    },
     "./cache": {
       "types": "./cache.d.ts",
       "import": "./cache.js",
@@ -913,6 +1015,16 @@
       "import": "./stores/file/node.js",
       "require": "./stores/file/node.cjs"
     },
+    "./stores/message/dynamodb": {
+      "types": "./stores/message/dynamodb.d.ts",
+      "import": "./stores/message/dynamodb.js",
+      "require": "./stores/message/dynamodb.cjs"
+    },
+    "./stores/message/redis": {
+      "types": "./stores/message/redis.d.ts",
+      "import": "./stores/message/redis.js",
+      "require": "./stores/message/redis.cjs"
+    },
     "./experimental/autogpt": {
       "types": "./experimental/autogpt.d.ts",
       "import": "./experimental/autogpt.js",
@@ -922,6 +1034,16 @@
       "types": "./experimental/babyagi.d.ts",
       "import": "./experimental/babyagi.js",
       "require": "./experimental/babyagi.cjs"
+    },
+    "./experimental/plan_and_execute": {
+      "types": "./experimental/plan_and_execute.d.ts",
+      "import": "./experimental/plan_and_execute.js",
+      "require": "./experimental/plan_and_execute.cjs"
+    },
+    "./client": {
+      "types": "./client.d.ts",
+      "import": "./client.js",
+      "require": "./client.cjs"
     },
     "./package.json": "./package.json"
   }

@@ -1,67 +1,23 @@
 import { z } from "zod";
+import { zodToJsonSchema } from "zod-to-json-schema";
+import { JsonSchema7Type } from "zod-to-json-schema/src/parseDef.js";
+import { JsonSchema7ArrayType } from "zod-to-json-schema/src/parsers/array.js";
+import { JsonSchema7ObjectType } from "zod-to-json-schema/src/parsers/object.js";
+import { JsonSchema7StringType } from "zod-to-json-schema/src/parsers/string.js";
+import { JsonSchema7NumberType } from "zod-to-json-schema/src/parsers/number.js";
 import {
   BaseOutputParser,
+  FormatInstructionsOptions,
   OutputParserException,
 } from "../schema/output_parser.js";
 
-function printSchema(schema: z.ZodTypeAny, depth = 0): string {
-  if (
-    schema._def.typeName === "ZodString" &&
-    (schema as z.ZodString)._def.checks.some(
-      (check) => check.kind === "datetime"
-    )
-  ) {
-    return "datetime";
-  }
-  if (schema._def.typeName === "ZodString") {
-    return "string";
-  }
-  if (schema._def.typeName === "ZodNumber") {
-    return "number";
-  }
-  if (schema._def.typeName === "ZodBoolean") {
-    return "boolean";
-  }
-  if (schema._def.typeName === "ZodDate") {
-    return "date";
-  }
-  if (schema._def.typeName === "ZodEnum") {
-    return (schema as z.ZodEnum<[string, ...string[]]>).options
-      .map((value) => `"${value}"`)
-      .join(" | ");
-  }
-  if (schema._def.typeName === "ZodNullable") {
-    return `${printSchema(schema._def.innerType, depth)} // Nullable`;
-  }
-  if (schema._def.typeName === "ZodTransformer") {
-    return `${printSchema(schema._def.schema, depth)}`;
-  }
-  if (schema._def.typeName === "ZodOptional") {
-    return `${printSchema(schema._def.innerType, depth)} // Optional`;
-  }
-  if (schema._def.typeName === "ZodArray") {
-    return `${printSchema(schema._def.type, depth)}[]`;
-  }
-  if (schema._def.typeName === "ZodObject") {
-    const indent = "\t".repeat(depth);
-    const indentIn = "\t".repeat(depth + 1);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { shape } = schema as z.ZodObject<any>;
-    return `{${schema._def.description ? ` // ${schema._def.description}` : ""}
-${Object.entries(shape)
-  .map(
-    ([key, value]) =>
-      `${indentIn}"${key}": ${printSchema(value as z.ZodTypeAny, depth + 1)}${
-        (value as z.ZodTypeAny)._def.description
-          ? ` // ${(value as z.ZodTypeAny)._def.description}`
-          : ""
-      }`
-  )
-  .join("\n")}
-${indent}}`;
-  }
+export type JsonMarkdownStructuredOutputParserInput = {
+  interpolationDepth?: number;
+};
 
-  throw new Error(`Unsupported type: ${schema._def.typeName}`);
+export interface JsonMarkdownFormatInstructionsOptions
+  extends FormatInstructionsOptions {
+  interpolationDepth?: number;
 }
 
 export class StructuredOutputParser<
@@ -91,24 +47,98 @@ export class StructuredOutputParser<
   }
 
   getFormatInstructions(): string {
-    return `The output should be a markdown code snippet formatted in the following schema:
+    return `You must format your output as a JSON value that adheres to a given "JSON Schema" instance.
 
+"JSON Schema" is a declarative language that allows you to annotate and validate JSON documents.
+
+For example, the example "JSON Schema" instance {{"properties": {{"foo": {{"description": "a list of test words", "type": "array", "items": {{"type": "string"}}}}}}, "required": ["foo"]}}}}
+would match an object with one required property, "foo". The "type" property specifies "foo" must be an "array", and the "description" property semantically describes it as "a list of test words". The items within "foo" must be strings.
+Thus, the object {{"foo": ["bar", "baz"]}} is a well-formatted instance of this example "JSON Schema". The object {{"properties": {{"foo": ["bar", "baz"]}}}} is not well-formatted.
+
+Your output will be parsed and type-checked according to the provided schema instance, so make sure all fields in your output match the schema exactly and there are no trailing commas!
+
+Here is the JSON Schema instance your output must adhere to. Include the enclosing markdown codeblock:
 \`\`\`json
-${printSchema(this.schema)}
+${JSON.stringify(zodToJsonSchema(this.schema))}
 \`\`\`
-
-Including the leading and trailing "\`\`\`json" and "\`\`\`"
 `;
   }
 
   async parse(text: string): Promise<z.infer<T>> {
     try {
-      const json = text.trim().split("```json")[1].split("```")[0].trim();
-      return this.schema.parse(JSON.parse(json));
+      const json = text.includes("```")
+        ? text.trim().split(/```(?:json)?/)[1]
+        : text.trim();
+      return this.schema.parseAsync(JSON.parse(json));
     } catch (e) {
       throw new OutputParserException(
-        `Failed to parse. Text: "${text}". Error: ${e}`
+        `Failed to parse. Text: "${text}". Error: ${e}`,
+        text
       );
     }
+  }
+}
+
+export class JsonMarkdownStructuredOutputParser<
+  T extends z.ZodTypeAny
+> extends StructuredOutputParser<T> {
+  getFormatInstructions(
+    options?: JsonMarkdownFormatInstructionsOptions
+  ): string {
+    const interpolationDepth = options?.interpolationDepth ?? 1;
+    if (interpolationDepth < 1) {
+      throw new Error("f string interpolation depth must be at least 1");
+    }
+
+    return `Return a markdown code snippet with a JSON object formatted to look like:\n\`\`\`json\n${this._schemaToInstruction(
+      zodToJsonSchema(this.schema)
+    )
+      .replaceAll("{", "{".repeat(interpolationDepth))
+      .replaceAll("}", "}".repeat(interpolationDepth))}\n\`\`\``;
+  }
+
+  private _schemaToInstruction(
+    schemaInput: JsonSchema7Type,
+    indent = 2
+  ): string {
+    const schema = schemaInput as Extract<
+      JsonSchema7Type,
+      | JsonSchema7ObjectType
+      | JsonSchema7ArrayType
+      | JsonSchema7StringType
+      | JsonSchema7NumberType
+    >;
+
+    let nullable = false;
+    if (Array.isArray(schema.type)) {
+      const [actualType, nullStr] = schema.type;
+      nullable = nullStr === "null";
+      schema.type = actualType;
+    }
+
+    if (schema.type === "object" && schema.properties) {
+      const description = schema.description ? ` // ${schema.description}` : "";
+      const properties = Object.entries(schema.properties)
+        .map(([key, value]) => {
+          const isOptional = schema.required?.includes(key)
+            ? ""
+            : " (optional)";
+          return `${" ".repeat(indent)}"${key}": ${this._schemaToInstruction(
+            value,
+            indent + 2
+          )}${isOptional}`;
+        })
+        .join("\n");
+      return `{\n${properties}\n${" ".repeat(indent - 2)}}${description}`;
+    }
+    if (schema.type === "array" && schema.items) {
+      const description = schema.description ? ` // ${schema.description}` : "";
+      return `array[\n${" ".repeat(indent)}${this._schemaToInstruction(
+        schema.items
+      )}\n${" ".repeat(indent - 2)}] ${description}`;
+    }
+    const isNullable = nullable ? " (nullable)" : "";
+    const description = schema.description ? ` // ${schema.description}` : "";
+    return `${schema.type}${description}${isNullable}`;
   }
 }
