@@ -401,6 +401,7 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
         generationInfo: {
           finishReason: choice.finish_reason,
           logprobs: choice.logprobs,
+          // returnPromptLayerID: ??? TODO: What is generations doing? Should I add returnPromptLayerID here?
         },
       }))
     );
@@ -464,13 +465,14 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
  */
 export class PromptLayerOpenAI extends OpenAI {
   promptLayerApiKey?: string;
-
   plTags?: string[];
+  returnPromptLayerID?: boolean;
 
   constructor(
     fields?: ConstructorParameters<typeof OpenAI>[0] & {
       promptLayerApiKey?: string;
       plTags?: string[];
+      returnPromptLayerID?: boolean;
     }
   ) {
     super(fields);
@@ -483,6 +485,7 @@ export class PromptLayerOpenAI extends OpenAI {
           process.env?.PROMPTLAYER_API_KEY
         : undefined);
 
+    this.returnPromptLayerID = true // What should the default be?
     if (!this.promptLayerApiKey) {
       throw new Error("Missing PromptLayer API key");
     }

@@ -403,16 +403,19 @@ export class PromptLayerOpenAIChat extends OpenAIChat {
   promptLayerApiKey?: string;
 
   plTags?: string[];
+  returnPromptLayerID?: boolean;
 
   constructor(
     fields?: ConstructorParameters<typeof OpenAIChat>[0] & {
       promptLayerApiKey?: string;
       plTags?: string[];
+      returnPromptLayerID?: boolean;
     }
   ) {
     super(fields);
 
     this.plTags = fields?.plTags ?? [];
+    this.returnPromptLayerID = true;
     this.promptLayerApiKey =
       fields?.promptLayerApiKey ??
       (typeof process !== "undefined"
