@@ -86,24 +86,43 @@ test("Test Chat Message Run", async () => {
   await tracer.handleLLMEnd({ generations: [] }, runId);
   expect(tracer.runs.length).toBe(1);
   const run = tracer.runs[0];
-  const compareRun: Run = {
-    id: runId,
-    name: "test",
-    start_time: _DATE,
-    end_time: _DATE,
-    execution_order: 1,
-    child_execution_order: 1,
-    serialized: { name: "test" },
-    inputs: {
-      messages: [
-        [{ type: "human", data: { content: "Avast", role: undefined } }],
-      ],
+  expect(run).toMatchInlineSnapshot(
+    {
+      id: expect.any(String),
     },
-    run_type: "llm",
-    outputs: { generations: [] },
-    child_runs: [],
-  };
-  expect(run).toEqual(compareRun);
+    `
+    {
+      "child_execution_order": 1,
+      "child_runs": [],
+      "end_time": 1620000000000,
+      "execution_order": 1,
+      "id": Any<String>,
+      "inputs": {
+        "messages": [
+          [
+            {
+              "data": {
+                "content": "Avast",
+                "role": undefined,
+              },
+              "type": "human",
+            },
+          ],
+        ],
+      },
+      "name": "test",
+      "outputs": {
+        "generations": [],
+      },
+      "parent_run_id": undefined,
+      "run_type": "llm",
+      "serialized": {
+        "name": "test",
+      },
+      "start_time": 1620000000000,
+    }
+  `
+  );
 });
 
 test("Test LLM Run no start", async () => {
