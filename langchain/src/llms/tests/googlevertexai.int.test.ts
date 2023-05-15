@@ -10,5 +10,5 @@ test("Test Google Vertex", async () => {
 test("Test Google Vertex generation", async () => {
   const model = new GoogleVertexAiLLM({ maxTokens: 50 });
   const res = await model.generate(["1 + 1 = "]);
-  console.log( JSON.stringify(res, null,1) );
+  console.log(JSON.stringify(res, null, 1));
 });

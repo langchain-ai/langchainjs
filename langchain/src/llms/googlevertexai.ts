@@ -25,17 +25,17 @@ interface GoogleVertexAiBaseLLMInput extends BaseLLMParams {
   model?: string;
 }
 
-export interface GoogleVertexAiLLMInput extends GoogleVertexAiBaseLLMInput {
-}
+export interface GoogleVertexAiLLMInput extends GoogleVertexAiBaseLLMInput {}
 
 export const ChatRequestMessageRoleEnum = {
-  System: 'system',
-  User: 'user',
-  Assistant: 'assistant',  // For OpenAI compatibility
-  Bot: 'bot'
+  System: "system",
+  User: "user",
+  Assistant: "assistant", // For OpenAI compatibility
+  Bot: "bot",
 } as const;
 
-export type ChatRequestMessageRoleEnum = typeof ChatRequestMessageRoleEnum[keyof typeof ChatRequestMessageRoleEnum];
+export type ChatRequestMessageRoleEnum =
+  (typeof ChatRequestMessageRoleEnum)[keyof typeof ChatRequestMessageRoleEnum];
 
 /*
 const ChatRequestMessageRoleAlias = {
@@ -63,7 +63,7 @@ interface Response {
 }
 
 interface LLMInstance {
-  content: string
+  content: string;
 }
 
 /**
@@ -187,17 +187,16 @@ abstract class GoogleVertexAiBaseLLM
       request.bind(client)
     );
 
-    return (<Response>response);
+    return <Response>response;
   }
 
   abstract predict(
     prompt: string,
     options: this["ParsedCallOptions"]
-  ): Promise<Prediction>
+  ): Promise<Prediction>;
 }
 
 export class GoogleVertexAiLLM extends GoogleVertexAiBaseLLM {
-
   model = "text-bison";
 
   constructor(fields?: GoogleVertexAiLLMInput) {
@@ -210,11 +209,7 @@ export class GoogleVertexAiLLM extends GoogleVertexAiBaseLLM {
     prompt: string,
     options: this["ParsedCallOptions"]
   ): Promise<Prediction> {
-    const response = await this._predict(
-      [{ content: prompt }],
-      options
-    )
+    const response = await this._predict([{ content: prompt }], options);
     return response.data.predictions[0];
   }
-
 }
