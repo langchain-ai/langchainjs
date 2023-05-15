@@ -11,7 +11,7 @@ import { LLM, BaseLLMParams } from "./base.js";
  *   contentType = "application/json"
  *   accepts = "application/json"
  *
- *   transformInput(prompt: string, modelKwargs: { [key: string]: unknown }) {
+ *   transformInput(prompt: string, modelKwargs: Record<string, unknown>) {
  *     const inputString = JSON.stringify({
  *       prompt,
  *      ...modelKwargs
@@ -41,7 +41,7 @@ export abstract class ContentHandlerBase<InputType, OutputType> {
    */
   abstract transformInput(
     prompt: InputType,
-    modelKwargs: { [key: string]: unknown }
+    modelKwargs: Record<string, unknown>
   ): Uint8Array;
 
   /**
@@ -72,12 +72,12 @@ export interface SagemakerEndpointInput extends BaseLLMParams {
   /**
    * Key word arguments to pass to the model.
    */
-  modelKwargs?: { [key: string]: unknown };
+  modelKwargs?: Record<string, unknown>;
 
   /**
    * Optional attributes passed to the InvokeEndpointCommand
    */
-  endpointKwargs?: { [key: string]: unknown };
+  endpointKwargs?: Record<string, unknown>;
 }
 
 export class SagemakerEndpoint extends LLM implements SagemakerEndpointInput {
@@ -87,9 +87,9 @@ export class SagemakerEndpoint extends LLM implements SagemakerEndpointInput {
 
   contentHandler: LLMContentHandler;
 
-  modelKwargs?: { [key: string]: unknown };
+  modelKwargs?: Record<string, unknown>;
 
-  endpointKwargs?: { [key: string]: unknown };
+  endpointKwargs?: Record<string, unknown>;
 
   constructor(fields?: SagemakerEndpointInput) {
     super(fields ?? {});
