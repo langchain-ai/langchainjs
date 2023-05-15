@@ -2,7 +2,7 @@ export { ListOutputParser, CommaSeparatedListOutputParser } from "./list.js";
 export { RegexParser } from "./regex.js";
 export {
   StructuredOutputParser,
-  AssymetricStructuredOutputParser,
+  AsymmetricStructuredOutputParser,
   JsonMarkdownStructuredOutputParser,
   JsonMarkdownFormatInstructionsOptions,
   JsonMarkdownStructuredOutputParserInput,

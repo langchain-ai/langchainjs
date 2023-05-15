@@ -185,7 +185,7 @@ export class JsonMarkdownStructuredOutputParser<
   }
 }
 
-export abstract class AssymetricStructuredOutputParser<
+export abstract class AsymmetricStructuredOutputParser<
   T extends z.ZodTypeAny,
   Y = unknown
 > extends BaseOutputParser<Y> {
