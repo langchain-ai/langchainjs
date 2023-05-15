@@ -203,6 +203,10 @@ const testExports = [
     (p) => `import * as ${p.replace(/\//g, "_")} from "langchain/${p}";`,
   ],
   [
+    "test-exports-esbuild",
+    (p) => `import * as ${p.replace(/\//g, "_")} from "langchain/${p}";`,
+  ],
+  [
     "test-exports-cjs",
     (p) => `const ${p.replace(/\//g, "_")} = require("langchain/${p}");`,
   ],
