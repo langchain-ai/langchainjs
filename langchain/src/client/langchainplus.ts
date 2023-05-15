@@ -5,15 +5,13 @@ import {
   LLMResult,
   RunInputs,
   RunOutputs,
+  StoredMessage,
 } from "../schema/index.js";
 import { BaseLanguageModel } from "../base_language/index.js";
 import { BaseChain } from "../chains/base.js";
 import { BaseLLM } from "../llms/base.js";
 import { BaseChatModel } from "../chat_models/base.js";
-import {
-  StoredMessage,
-  mapStoredMessagesToChatMessages,
-} from "../stores/message/utils.js";
+import { mapStoredMessagesToChatMessages } from "../stores/message/utils.js";
 
 export interface RunResult extends BaseRun {
   name: string;

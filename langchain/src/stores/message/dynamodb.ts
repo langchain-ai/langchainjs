@@ -11,11 +11,11 @@ import {
 } from "@aws-sdk/client-dynamodb";
 
 import {
+  StoredMessage,
   BaseChatMessage,
   BaseListChatMessageHistory,
 } from "../../schema/index.js";
 import {
-  StoredMessage,
   mapChatMessagesToStoredMessages,
   mapStoredMessagesToChatMessages,
 } from "./utils.js";
