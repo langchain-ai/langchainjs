@@ -18047,6 +18047,7 @@ __metadata:
     jest: ^29.5.0
     jsonpointer: ^5.0.1
     mammoth: ^1.5.1
+    meriyah: ^4.3.7
     ml-distance: ^4.0.0
     mongodb: ^5.2.0
     object-hash: ^3.0.0
@@ -18094,6 +18095,7 @@ __metadata:
     hnswlib-node: ^1.4.2
     html-to-text: ^9.0.5
     mammoth: "*"
+    meriyah: "*"
     mongodb: ^5.2.0
     pdf-parse: 1.1.1
     playwright: ^1.32.1
@@ -18147,6 +18149,8 @@ __metadata:
     html-to-text:
       optional: true
     mammoth:
+      optional: true
+    meriyah:
       optional: true
     mongodb:
       optional: true
@@ -18862,6 +18866,13 @@ __metadata:
   version: 1.4.1
   resolution: "merge2@npm:1.4.1"
   checksum: 7268db63ed5169466540b6fb947aec313200bcf6d40c5ab722c22e242f651994619bcd85601602972d3c85bd2cc45a358a4c61937e9f11a061919a1da569b0c2
+  languageName: node
+  linkType: hard
+
+"meriyah@npm:^4.3.7":
+  version: 4.3.7
+  resolution: "meriyah@npm:4.3.7"
+  checksum: 537fed1981bb4c2dc5fffa0c2d159fc169bff252e7a31c8b15ce3ddb9e91d8b66cacf5c932d7fc31bd522dd70d9b007e19131ac40172cd3bd27feee79c447041
   languageName: node
   linkType: hard
 

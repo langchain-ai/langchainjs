@@ -211,6 +211,9 @@ schema.d.ts
 schema/output_parser.cjs
 schema/output_parser.js
 schema/output_parser.d.ts
+schema/query_constructor.cjs
+schema/query_constructor.js
+schema/query_constructor.d.ts
 sql_db.cjs
 sql_db.js
 sql_db.d.ts
@@ -250,6 +253,9 @@ retrievers/document_compressors/chain_extract.d.ts
 retrievers/hyde.cjs
 retrievers/hyde.js
 retrievers/hyde.d.ts
+retrievers/self_query/base.cjs
+retrievers/self_query/base.js
+retrievers/self_query/base.d.ts
 cache.cjs
 cache.js
 cache.d.ts
