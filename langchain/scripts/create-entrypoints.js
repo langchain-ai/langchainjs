@@ -36,6 +36,7 @@ const entrypoints = {
   "llms/cohere": "llms/cohere",
   "llms/hf": "llms/hf",
   "llms/replicate": "llms/replicate",
+  "llms/sagemaker_endpoint": "llms/sagemaker_endpoint",
   // prompts
   prompts: "prompts/index",
   "prompts/load": "prompts/load",

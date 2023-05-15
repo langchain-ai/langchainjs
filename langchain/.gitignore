@@ -67,6 +67,9 @@ llms/hf.d.ts
 llms/replicate.cjs
 llms/replicate.js
 llms/replicate.d.ts
+llms/sagemaker_endpoint.cjs
+llms/sagemaker_endpoint.js
+llms/sagemaker_endpoint.d.ts
 prompts.cjs
 prompts.js
 prompts.d.ts

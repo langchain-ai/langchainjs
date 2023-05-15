@@ -53,6 +53,7 @@
       "src/llms/cohere.ts",
       "src/llms/hf.ts",
       "src/llms/replicate.ts",
+      "src/llms/sagemaker_endpoint.ts",
       "src/prompts/index.ts",
       "src/prompts/load.ts",
       "src/vectorstores/base.ts",
