@@ -81,7 +81,7 @@ export abstract class BaseLLM extends BaseLanguageModel {
   /**
    * Get the parameters used to invoke the model
    */
-  invocationParams(): Record<string, unknown> {
+  invocationParams(): any {
     return {};
   }
 
