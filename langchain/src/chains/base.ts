@@ -1,3 +1,5 @@
+import { z } from "zod";
+
 import { BaseMemory } from "../memory/base.js";
 import { ChainValues, RUN_KEY } from "../schema/index.js";
 import {
@@ -71,6 +73,21 @@ export abstract class BaseChain extends BaseLangChain implements ChainInputs {
 
   abstract get inputKeys(): string[];
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  get inputSchema(): z.ZodObject<any, any, any, any> {
+    return z.object(
+      /* eslint-disable no-param-reassign */
+      this.inputKeys.reduce(
+        (objectSchema: Record<string, z.ZodString>, inputKey) => {
+          objectSchema[inputKey] = z.string();
+          return objectSchema;
+        },
+        {}
+      )
+      /* eslint-enable no-param-reassign */
+    );
+  }
+
   abstract get outputKeys(): string[];
 
   async run(
@@ -78,13 +95,23 @@ export abstract class BaseChain extends BaseLangChain implements ChainInputs {
     input: any,
     callbacks?: Callbacks
   ): Promise<string> {
-    const isKeylessInput = this.inputKeys.length <= 1;
+    const requiredKeys: string[] = Object.entries(
+      this.inputSchema.shape
+    ).reduce((requiredKeysList, entry) => {
+      const schema = entry[1];
+      // eslint-disable-next-line no-instanceof/no-instanceof
+      if (!(schema instanceof z.ZodOptional)) {
+        requiredKeysList.push(entry[0]);
+      }
+      return requiredKeysList;
+    }, [] as string[]);
+    const isKeylessInput = requiredKeys.length <= 1;
     if (!isKeylessInput) {
       throw new Error(
-        `Chain ${this._chainType()} expects multiple inputs, cannot use 'run' `
+        `Chain ${this._chainType()} expects multiple inputs, cannot use 'run'`
       );
     }
-    const values = this.inputKeys.length ? { [this.inputKeys[0]]: input } : {};
+    const values = requiredKeys.length ? { [requiredKeys[0]]: input } : {};
     const returnValues = await this.call(values, callbacks);
     const keys = Object.keys(returnValues);
 

@@ -7,6 +7,7 @@ import { LLM } from "../../llms/base.js";
 import { VectorDBQAChain } from "../../chains/vector_db_qa.js";
 import { MemoryVectorStore } from "../../vectorstores/memory.js";
 import { FakeEmbeddings } from "../../embeddings/fake.js";
+import { ConversationChain } from "../../chains/conversation.js";
 
 class FakeLLM extends LLM {
   _llmType() {
@@ -133,6 +134,68 @@ test("chain tool with vectordbqa chain", async () => {
       "llm end",
       "chain end",
       "chain end",
+      "chain end",
+      "tool end",
+    ]
+  `);
+});
+
+test("chain tool with conversation chain, testing use with a chain with multiple input keys", async () => {
+  const calls: string[] = [];
+  const handleToolStart = jest.fn(() => {
+    calls.push("tool start");
+  });
+  const handleToolEnd = jest.fn(() => {
+    calls.push("tool end");
+  });
+  const handleLLMStart = jest.fn(() => {
+    calls.push("llm start");
+  });
+  const handleLLMEnd = jest.fn(() => {
+    calls.push("llm end");
+  });
+  const handleChainStart = jest.fn(() => {
+    calls.push("chain start");
+  });
+  const handleChainEnd = jest.fn(() => {
+    calls.push("chain end");
+  });
+
+  const chain = new ConversationChain({
+    llm: new FakeLLM({}),
+  });
+
+  const tool = new ChainTool({ chain, name: "fake", description: "fake" });
+  const result = await tool.call("hi", [
+    {
+      handleToolStart,
+      handleToolEnd,
+      handleLLMStart,
+      handleLLMEnd,
+      handleChainStart,
+      handleChainEnd,
+    },
+  ]);
+  expect(result).toMatchInlineSnapshot(`
+    "The following is a friendly conversation between a human and an AI. The AI is talkative and provides lots of specific details from its context. If the AI does not know the answer to a question, it truthfully says it does not know.
+
+    Current conversation:
+
+    Human: hi
+    AI:"
+  `);
+  expect(handleToolStart).toBeCalledTimes(1);
+  expect(handleToolEnd).toBeCalledTimes(1);
+  expect(handleLLMStart).toBeCalledTimes(1);
+  expect(handleLLMEnd).toBeCalledTimes(1);
+  expect(handleChainStart).toBeCalledTimes(1);
+  expect(handleChainEnd).toBeCalledTimes(1);
+  expect(calls).toMatchInlineSnapshot(`
+    [
+      "tool start",
+      "chain start",
+      "llm start",
+      "llm end",
       "chain end",
       "tool end",
     ]

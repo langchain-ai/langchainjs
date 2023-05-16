@@ -1,3 +1,5 @@
+import { z } from "zod";
+
 import { LLMChain, LLMChainInput } from "./llm_chain.js";
 import { PromptTemplate } from "../prompts/prompt.js";
 import { BufferMemory } from "../memory/buffer_memory.js";
@@ -22,7 +24,10 @@ export class ConversationChain extends LLMChain {
         prompt ??
         new PromptTemplate({
           template: DEFAULT_TEMPLATE,
-          inputVariables: ["history", "input"],
+          inputSchema: z.object({
+            history: z.optional(z.string()),
+            input: z.string(),
+          }),
         }),
       outputKey: outputKey ?? "response",
       memory: memory ?? new BufferMemory(),

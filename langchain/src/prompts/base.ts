@@ -1,3 +1,5 @@
+import { z } from "zod";
+
 import {
   BasePromptValue,
   Example,
@@ -25,14 +27,24 @@ export class StringPromptValue extends BasePromptValue {
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type BasePromptTemplateInputSchema = z.ZodObject<any, any, any, any>;
+
 /**
  * Input common to all prompt templates.
  */
-export interface BasePromptTemplateInput {
+export interface BasePromptTemplateInput<
+  InputSchema extends BasePromptTemplateInputSchema = BasePromptTemplateInputSchema
+> {
   /**
    * A list of variable names the prompt template expects
    */
-  inputVariables: string[];
+  inputVariables?: string[];
+
+  /**
+   * Schema for the variable names the prompt template expects
+   */
+  inputSchema?: InputSchema;
 
   /**
    * How to parse the output of calling an LLM on this formatted prompt
@@ -47,21 +59,56 @@ export interface BasePromptTemplateInput {
  * Base class for prompt templates. Exposes a format method that returns a
  * string prompt given a set of input values.
  */
-export abstract class BasePromptTemplate implements BasePromptTemplateInput {
+export abstract class BasePromptTemplate<
+  InputSchema extends BasePromptTemplateInputSchema = BasePromptTemplateInputSchema
+> implements BasePromptTemplateInput<BasePromptTemplateInputSchema>
+{
   inputVariables: string[];
+
+  inputSchema: InputSchema;
 
   outputParser?: BaseOutputParser;
 
   partialVariables?: InputValues;
 
-  constructor(input: BasePromptTemplateInput) {
-    const { inputVariables } = input;
-    if (inputVariables.includes("stop")) {
+  constructor(input: BasePromptTemplateInput<InputSchema>) {
+    Object.assign(this, input);
+
+    if (input.inputVariables) {
+      if (input.inputSchema) {
+        throw new Error(
+          `Please only pass in one of "inputVariables" or "inputSchema".`
+        );
+      }
+      this.inputSchema =
+        input.inputSchema ??
+        (z.object(
+          /* eslint-disable no-param-reassign */
+          input.inputVariables.reduce(
+            (objectSchema: Record<string, z.ZodString>, inputVariable) => {
+              objectSchema[inputVariable] = z.string();
+              return objectSchema;
+            },
+            {}
+          )
+          /* eslint-enable no-param-reassign */
+        ) as InputSchema);
+    }
+    if (input.inputSchema) {
+      if (input.inputVariables) {
+        throw new Error(
+          `Please only pass in one of "inputVariables" or "inputSchema".`
+        );
+      }
+      this.inputVariables =
+        input.inputVariables ?? Object.keys(input.inputSchema.shape);
+    }
+
+    if (this.inputVariables?.includes("stop")) {
       throw new Error(
         "Cannot have an input variable named 'stop', as it is used internally, please rename."
       );
     }
-    Object.assign(this, input);
   }
 
   abstract partial(values: PartialValues): Promise<BasePromptTemplate>;
@@ -148,7 +195,9 @@ export abstract class BasePromptTemplate implements BasePromptTemplateInput {
   }
 }
 
-export abstract class BaseStringPromptTemplate extends BasePromptTemplate {
+export abstract class BaseStringPromptTemplate<
+  InputSchema extends BasePromptTemplateInputSchema = BasePromptTemplateInputSchema
+> extends BasePromptTemplate<InputSchema> {
   async formatPromptValue(values: InputValues): Promise<BasePromptValue> {
     const formattedPrompt = await this.format(values);
     return new StringPromptValue(formattedPrompt);

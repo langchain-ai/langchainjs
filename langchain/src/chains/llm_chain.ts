@@ -1,5 +1,10 @@
+import { z } from "zod";
+
 import { BaseChain, ChainInputs } from "./base.js";
-import { BasePromptTemplate } from "../prompts/base.js";
+import {
+  BasePromptTemplate,
+  BasePromptTemplateInputSchema,
+} from "../prompts/base.js";
 import { BaseLanguageModel } from "../base_language/index.js";
 import { ChainValues, Generation, BasePromptValue } from "../schema/index.js";
 import { BaseOutputParser } from "../schema/output_parser.js";
@@ -7,10 +12,12 @@ import { SerializedLLMChain } from "./serde.js";
 import { CallbackManager } from "../callbacks/index.js";
 import { CallbackManagerForChainRun, Callbacks } from "../callbacks/manager.js";
 
-export interface LLMChainInput<T extends string | object = string>
-  extends ChainInputs {
+export interface LLMChainInput<
+  T extends string | object = string,
+  InputSchema extends BasePromptTemplateInputSchema = BasePromptTemplateInputSchema
+> extends ChainInputs {
   /** Prompt object to use */
-  prompt: BasePromptTemplate;
+  prompt: BasePromptTemplate<InputSchema>;
   /** LLM Wrapper to use */
   llm: BaseLanguageModel;
   /** OutputParser to use */
@@ -32,11 +39,14 @@ export interface LLMChainInput<T extends string | object = string>
  * const llm = new LLMChain({ llm: new OpenAI(), prompt });
  * ```
  */
-export class LLMChain<T extends string | object = string>
+export class LLMChain<
+    T extends string | object = string,
+    InputSchema extends BasePromptTemplateInputSchema = BasePromptTemplateInputSchema
+  >
   extends BaseChain
-  implements LLMChainInput<T>
+  implements LLMChainInput<T, InputSchema>
 {
-  prompt: BasePromptTemplate;
+  prompt: BasePromptTemplate<InputSchema>;
 
   llm: BaseLanguageModel;
 
@@ -48,11 +58,15 @@ export class LLMChain<T extends string | object = string>
     return this.prompt.inputVariables;
   }
 
+  get inputSchema() {
+    return this.prompt.inputSchema;
+  }
+
   get outputKeys() {
     return [this.outputKey];
   }
 
-  constructor(fields: LLMChainInput<T>) {
+  constructor(fields: LLMChainInput<T, InputSchema>) {
     super(fields);
     this.prompt = fields.prompt;
     this.llm = fields.llm;
@@ -92,7 +106,7 @@ export class LLMChain<T extends string | object = string>
    * Wraps _call and handles memory.
    */
   call(
-    values: ChainValues & this["llm"]["CallOptions"],
+    values: z.infer<InputSchema> & this["llm"]["CallOptions"],
     callbacks?: Callbacks | undefined
   ): Promise<ChainValues> {
     return super.call(values, callbacks);
@@ -100,7 +114,7 @@ export class LLMChain<T extends string | object = string>
 
   /** @ignore */
   async _call(
-    values: ChainValues & this["llm"]["CallOptions"],
+    values: z.infer<InputSchema> & this["llm"]["CallOptions"],
     runManager?: CallbackManagerForChainRun
   ): Promise<ChainValues> {
     const valuesForPrompt = { ...values };
@@ -139,7 +153,7 @@ export class LLMChain<T extends string | object = string>
    * ```
    */
   async predict(
-    values: ChainValues & this["llm"]["CallOptions"],
+    values: z.infer<InputSchema> & this["llm"]["CallOptions"],
     callbackManager?: CallbackManager
   ): Promise<T> {
     const output = await this.call(values, callbackManager);

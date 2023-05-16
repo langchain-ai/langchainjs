@@ -1,4 +1,8 @@
-import { BaseStringPromptTemplate, BasePromptTemplateInput } from "./base.js";
+import {
+  BaseStringPromptTemplate,
+  BasePromptTemplateInput,
+  BasePromptTemplateInputSchema,
+} from "./base.js";
 import {
   checkValidTemplate,
   parseTemplate,
@@ -12,7 +16,9 @@ import { InputValues, PartialValues } from "../schema/index.js";
  * Inputs to create a {@link PromptTemplate}
  * @augments BasePromptTemplateInput
  */
-export interface PromptTemplateInput extends BasePromptTemplateInput {
+export interface PromptTemplateInput<
+  InputSchema extends BasePromptTemplateInputSchema = BasePromptTemplateInputSchema
+> extends BasePromptTemplateInput<InputSchema> {
   /**
    * The prompt template
    */
@@ -48,9 +54,11 @@ export interface PromptTemplateInput extends BasePromptTemplateInput {
  * });
  * ```
  */
-export class PromptTemplate
-  extends BaseStringPromptTemplate
-  implements PromptTemplateInput
+export class PromptTemplate<
+    InputSchema extends BasePromptTemplateInputSchema = BasePromptTemplateInputSchema
+  >
+  extends BaseStringPromptTemplate<InputSchema>
+  implements PromptTemplateInput<InputSchema>
 {
   template: string;
 
@@ -58,7 +66,7 @@ export class PromptTemplate
 
   validateTemplate = true;
 
-  constructor(input: PromptTemplateInput) {
+  constructor(input: PromptTemplateInput<InputSchema>) {
     super(input);
     Object.assign(this, input);
 
