@@ -1,4 +1,3 @@
-import { v4 as uuidv4 } from "uuid";
 import { InMemoryCache } from "../cache/index.js";
 import {
   AIChatMessage,
@@ -100,7 +99,7 @@ export abstract class BaseLLM extends BaseLanguageModel {
     const runManager = await callbackManager_?.handleLLMStart(
       { name: this._llmType() },
       prompts,
-      uuidv4(),
+      undefined,
       undefined,
       invocationParams
     );

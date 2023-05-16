@@ -1,4 +1,3 @@
-import { v4 as uuidv4 } from "uuid";
 import {
   AIChatMessage,
   BaseChatMessage,
@@ -77,7 +76,7 @@ export abstract class BaseChatModel extends BaseLanguageModel {
     const runManager = await callbackManager_?.handleChatModelStart(
       { name: this._llmType() },
       messages,
-      uuidv4(),
+      undefined,
       undefined,
       invocationParams
     );
