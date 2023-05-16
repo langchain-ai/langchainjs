@@ -1,3 +1,4 @@
+import { v4 as uuidv4 } from "uuid";
 import {
   AIChatMessage,
   BaseChatMessage,
@@ -72,9 +73,13 @@ export abstract class BaseChatModel extends BaseLanguageModel {
       this.callbacks,
       { verbose: this.verbose }
     );
+    const invocationParams = { invocation_params: this?.invocationParams() };
     const runManager = await callbackManager_?.handleChatModelStart(
       { name: this._llmType() },
-      messages
+      messages,
+      uuidv4(),
+      undefined,
+      invocationParams
     );
     try {
       const results = await Promise.all(
@@ -105,6 +110,13 @@ export abstract class BaseChatModel extends BaseLanguageModel {
       configurable: true,
     });
     return output;
+  }
+
+  /**
+   * Get the parameters used to invoke the model
+   */
+  invocationParams(): Record<string, unknown> {
+    return {};
   }
 
   _modelType(): string {

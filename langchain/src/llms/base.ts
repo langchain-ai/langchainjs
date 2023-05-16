@@ -1,3 +1,4 @@
+import { v4 as uuidv4 } from "uuid";
 import { InMemoryCache } from "../cache/index.js";
 import {
   AIChatMessage,
@@ -77,6 +78,13 @@ export abstract class BaseLLM extends BaseLanguageModel {
     runManager?: CallbackManagerForLLMRun
   ): Promise<LLMResult>;
 
+  /**
+   * Get the parameters used to invoke the model
+   */
+  invocationParams(): Record<string, unknown> {
+    return {};
+  }
+
   /** @ignore */
   async _generateUncached(
     prompts: string[],
@@ -88,10 +96,15 @@ export abstract class BaseLLM extends BaseLanguageModel {
       this.callbacks,
       { verbose: this.verbose }
     );
+    const invocationParams = { invocation_params: this?.invocationParams() };
     const runManager = await callbackManager_?.handleLLMStart(
       { name: this._llmType() },
-      prompts
+      prompts,
+      uuidv4(),
+      undefined,
+      invocationParams
     );
+
     let output;
     try {
       output = await this._generate(prompts, options, runManager);
