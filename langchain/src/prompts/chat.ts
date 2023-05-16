@@ -62,7 +62,14 @@ export class MessagesPlaceholder extends BaseMessagePromptTemplate {
   }
 
   formatMessages(values: InputValues): Promise<BaseChatMessage[]> {
-    return Promise.resolve(values[this.variableName] as BaseChatMessage[]);
+    return Promise.resolve([
+      values[this.variableName].length > 0 &&
+      this.variableName.includes("history")
+        ? `Relevant pieces of previous conversation:: ${
+            values[this.variableName]
+          }`
+        : values[this.variableName]
+    ]);
   }
 }
 
