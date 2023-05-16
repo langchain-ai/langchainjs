@@ -1,4 +1,5 @@
-import { ChainValues, LLMResult } from "../../schema/index.js";
+import { getBufferString } from "../../memory/base.js";
+import { BaseChatMessage, ChainValues, LLMResult } from "../../schema/index.js";
 
 import { BaseTracer, RunType, Run } from "./tracer.js";
 
@@ -99,6 +100,16 @@ export class LangChainTracerV1 extends BaseTracer {
     const serialized = run.serialized as { name: string };
     let runResult: LLMRun | ChainRun | ToolRun;
     if (run.run_type === "llm") {
+      let prompts: string[];
+      if (
+        run.inputs.prompts === undefined &&
+        run.inputs.messages !== undefined
+      ) {
+        const messages = run.inputs.messages as BaseChatMessage[][];
+        prompts = messages.map((x) => getBufferString(x));
+      } else {
+        prompts = run.inputs.prompts;
+      }
       const llmRun: LLMRun = {
         uuid: run.id,
         start_time: run.start_time,
@@ -108,7 +119,7 @@ export class LangChainTracerV1 extends BaseTracer {
         serialized,
         type: run.run_type,
         session_id: session.id,
-        prompts: run.inputs.prompts,
+        prompts,
         response: run.outputs as LLMResult,
       };
       runResult = llmRun;
