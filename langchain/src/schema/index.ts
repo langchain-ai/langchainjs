@@ -47,6 +47,19 @@ export type LLMResult = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [RUN_KEY]?: Record<string, any>;
 };
+
+export interface StoredMessageData {
+  content: string;
+  role: string | undefined;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  additional_kwargs?: Record<string, any>;
+}
+
+export interface StoredMessage {
+  type: string;
+  data: StoredMessageData;
+}
+
 export type MessageType = "human" | "ai" | "generic" | "system";
 
 export abstract class BaseChatMessage {
@@ -61,6 +74,16 @@ export abstract class BaseChatMessage {
 
   constructor(text: string) {
     this.text = text;
+  }
+
+  toJSON(): StoredMessage {
+    return {
+      type: this._getType(),
+      data: {
+        content: this.text,
+        role: "role" in this ? (this.role as string) : undefined,
+      },
+    };
   }
 }
 
@@ -179,4 +202,16 @@ export abstract class BaseFileStore {
   abstract readFile(path: string): Promise<string>;
 
   abstract writeFile(path: string, contents: string): Promise<void>;
+}
+
+export abstract class BaseEntityStore {
+  abstract get(key: string, defaultValue?: string): Promise<string | undefined>;
+
+  abstract set(key: string, value?: string): Promise<void>;
+
+  abstract delete(key: string): Promise<void>;
+
+  abstract exists(key: string): Promise<boolean>;
+
+  abstract clear(): Promise<void>;
 }

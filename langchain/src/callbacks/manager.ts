@@ -283,7 +283,9 @@ export class CallbackManager
   async handleLLMStart(
     llm: { name: string },
     prompts: string[],
-    runId: string = uuidv4()
+    runId: string = uuidv4(),
+    _parentRunId: string | undefined = undefined,
+    extraParams: Record<string, unknown> | undefined = undefined
   ): Promise<CallbackManagerForLLMRun> {
     await Promise.all(
       this.handlers.map(async (handler) => {
@@ -293,7 +295,8 @@ export class CallbackManager
               llm,
               prompts,
               runId,
-              this._parentRunId
+              this._parentRunId,
+              extraParams
             );
           } catch (err) {
             console.error(
@@ -314,7 +317,9 @@ export class CallbackManager
   async handleChatModelStart(
     llm: { name: string },
     messages: BaseChatMessage[][],
-    runId: string = uuidv4()
+    runId: string = uuidv4(),
+    _parentRunId: string | undefined = undefined,
+    extraParams: Record<string, unknown> | undefined = undefined
   ): Promise<CallbackManagerForLLMRun> {
     let messageStrings: string[];
     await Promise.all(
@@ -326,7 +331,8 @@ export class CallbackManager
                 llm,
                 messages,
                 runId,
-                this._parentRunId
+                this._parentRunId,
+                extraParams
               );
             else if (handler.handleLLMStart) {
               messageStrings = messages.map((x) => getBufferString(x));
@@ -334,7 +340,8 @@ export class CallbackManager
                 llm,
                 messageStrings,
                 runId,
-                this._parentRunId
+                this._parentRunId,
+                extraParams
               );
             }
           } catch (err) {

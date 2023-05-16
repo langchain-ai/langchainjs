@@ -7,11 +7,11 @@ import {
   RedisScripts,
 } from "redis";
 import {
+  StoredMessage,
   BaseChatMessage,
   BaseListChatMessageHistory,
 } from "../../schema/index.js";
 import {
-  StoredMessage,
   mapChatMessagesToStoredMessages,
   mapStoredMessagesToChatMessages,
 } from "./utils.js";
