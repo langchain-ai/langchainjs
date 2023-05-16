@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.74",
+  "version": "0.0.75",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -145,6 +145,9 @@
     "document_loaders/base.cjs",
     "document_loaders/base.js",
     "document_loaders/base.d.ts",
+    "document_loaders/web/apify_dataset.cjs",
+    "document_loaders/web/apify_dataset.js",
+    "document_loaders/web/apify_dataset.d.ts",
     "document_loaders/web/cheerio.cjs",
     "document_loaders/web/cheerio.js",
     "document_loaders/web/cheerio.d.ts",
@@ -280,6 +283,9 @@
     "stores/message/dynamodb.cjs",
     "stores/message/dynamodb.js",
     "stores/message/dynamodb.d.ts",
+    "stores/message/redis.cjs",
+    "stores/message/redis.js",
+    "stores/message/redis.d.ts",
     "experimental/autogpt.cjs",
     "experimental/autogpt.js",
     "experimental/autogpt.d.ts",
@@ -292,9 +298,6 @@
     "client.cjs",
     "client.js",
     "client.d.ts",
-    "client/langchainplus.cjs",
-    "client/langchainplus.js",
-    "client/langchainplus.d.ts",
     "index.cjs",
     "index.js",
     "index.d.ts"
@@ -349,6 +352,7 @@
     "@types/uuid": "^9",
     "@typescript-eslint/eslint-plugin": "^5.58.0",
     "@typescript-eslint/parser": "^5.58.0",
+    "apify-client": "^2.7.1",
     "axios": "^0.26.0",
     "cheerio": "^1.0.0-rc.12",
     "chromadb": "^1.4.0",
@@ -399,6 +403,7 @@
     "@tensorflow/tfjs-core": "*",
     "@tigrisdata/vector": "^1.1.0",
     "@zilliz/milvus2-sdk-node": "^2.2.0",
+    "apify-client": "^2.7.1",
     "axios": "*",
     "cheerio": "^1.0.0-rc.12",
     "chromadb": "^1.4.0",
@@ -459,6 +464,9 @@
       "optional": true
     },
     "@zilliz/milvus2-sdk-node": {
+      "optional": true
+    },
+    "apify-client": {
       "optional": true
     },
     "axios": {
@@ -791,6 +799,11 @@
       "import": "./document_loaders/base.js",
       "require": "./document_loaders/base.cjs"
     },
+    "./document_loaders/web/apify_dataset": {
+      "types": "./document_loaders/web/apify_dataset.d.ts",
+      "import": "./document_loaders/web/apify_dataset.js",
+      "require": "./document_loaders/web/apify_dataset.cjs"
+    },
     "./document_loaders/web/cheerio": {
       "types": "./document_loaders/web/cheerio.d.ts",
       "import": "./document_loaders/web/cheerio.js",
@@ -1020,6 +1033,11 @@
       "import": "./stores/message/dynamodb.js",
       "require": "./stores/message/dynamodb.cjs"
     },
+    "./stores/message/redis": {
+      "types": "./stores/message/redis.d.ts",
+      "import": "./stores/message/redis.js",
+      "require": "./stores/message/redis.cjs"
+    },
     "./experimental/autogpt": {
       "types": "./experimental/autogpt.d.ts",
       "import": "./experimental/autogpt.js",
@@ -1039,11 +1057,6 @@
       "types": "./client.d.ts",
       "import": "./client.js",
       "require": "./client.cjs"
-    },
-    "./client/langchainplus": {
-      "types": "./client/langchainplus.d.ts",
-      "import": "./client/langchainplus.js",
-      "require": "./client/langchainplus.cjs"
     },
     "./package.json": "./package.json"
   }

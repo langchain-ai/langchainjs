@@ -27,7 +27,7 @@ test("Test OpenAI with timeout in call options", async () => {
   const model = new OpenAI({ maxTokens: 5, modelName: "text-ada-001" });
   await expect(() =>
     model.call("Print hello world", {
-      options: { timeout: 10 },
+      timeout: 10,
     })
   ).rejects.toThrow();
 }, 5000);
@@ -36,7 +36,8 @@ test("Test OpenAI with timeout in call options and node adapter", async () => {
   const model = new OpenAI({ maxTokens: 5, modelName: "text-ada-001" });
   await expect(() =>
     model.call("Print hello world", {
-      options: { timeout: 10, adapter: undefined },
+      timeout: 10,
+      options: { adapter: undefined },
     })
   ).rejects.toThrow();
 }, 5000);
@@ -46,7 +47,7 @@ test("Test OpenAI with signal in call options", async () => {
   const controller = new AbortController();
   await expect(() => {
     const ret = model.call("Print hello world", {
-      options: { signal: controller.signal },
+      signal: controller.signal,
     });
 
     controller.abort();
@@ -60,7 +61,8 @@ test("Test OpenAI with signal in call options and node adapter", async () => {
   const controller = new AbortController();
   await expect(() => {
     const ret = model.call("Print hello world", {
-      options: { signal: controller.signal, adapter: undefined },
+      signal: controller.signal,
+      options: { adapter: undefined },
     });
 
     controller.abort();

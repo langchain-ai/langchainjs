@@ -133,6 +133,9 @@ document_loaders.d.ts
 document_loaders/base.cjs
 document_loaders/base.js
 document_loaders/base.d.ts
+document_loaders/web/apify_dataset.cjs
+document_loaders/web/apify_dataset.js
+document_loaders/web/apify_dataset.d.ts
 document_loaders/web/cheerio.cjs
 document_loaders/web/cheerio.js
 document_loaders/web/cheerio.d.ts
@@ -268,6 +271,9 @@ stores/file/node.d.ts
 stores/message/dynamodb.cjs
 stores/message/dynamodb.js
 stores/message/dynamodb.d.ts
+stores/message/redis.cjs
+stores/message/redis.js
+stores/message/redis.d.ts
 experimental/autogpt.cjs
 experimental/autogpt.js
 experimental/autogpt.d.ts
@@ -280,9 +286,6 @@ experimental/plan_and_execute.d.ts
 client.cjs
 client.js
 client.d.ts
-client/langchainplus.cjs
-client/langchainplus.js
-client/langchainplus.d.ts
 index.cjs
 index.js
 index.d.ts

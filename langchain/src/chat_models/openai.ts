@@ -96,6 +96,10 @@ export class ChatOpenAI
 {
   declare CallOptions: OpenAICallOptions;
 
+  get callKeys(): (keyof OpenAICallOptions)[] {
+    return ["stop", "signal", "timeout", "options"];
+  }
+
   temperature = 1;
 
   topP = 1;
@@ -262,22 +266,16 @@ export class ChatOpenAI
   /** @ignore */
   async _generate(
     messages: BaseChatMessage[],
-    stopOrOptions?: string[] | this["CallOptions"],
+    options?: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
-    const stop = Array.isArray(stopOrOptions)
-      ? stopOrOptions
-      : stopOrOptions?.stop;
-    const options = Array.isArray(stopOrOptions)
-      ? {}
-      : stopOrOptions?.options ?? {};
     const tokenUsage: TokenUsage = {};
-    if (this.stop && stop) {
+    if (this.stop && options?.stop) {
       throw new Error("Stop found in input and default params");
     }
 
     const params = this.invocationParams();
-    params.stop = stop ?? params.stop;
+    params.stop = options?.stop ?? params.stop;
     const messagesMapped: ChatCompletionRequestMessage[] = messages.map(
       (message) => ({
         role: messageTypeToOpenAIRole(message._getType()),
@@ -297,7 +295,8 @@ export class ChatOpenAI
               messages: messagesMapped,
             },
             {
-              ...options,
+              signal: options?.signal,
+              ...options?.options,
               adapter: fetchAdapter, // default adapter doesn't do streaming
               responseType: "stream",
               onmessage: (event) => {
@@ -387,7 +386,10 @@ export class ChatOpenAI
             ...params,
             messages: messagesMapped,
           },
-          options
+          {
+            signal: options?.signal,
+            ...options?.options,
+          }
         );
 
     const {
@@ -444,13 +446,21 @@ export class ChatOpenAI
     const countPerMessage = await Promise.all(
       messages.map(async (message) => {
         const textCount = await this.getNumTokens(message.text);
-        const count =
-          textCount + tokensPerMessage + (message.name ? tokensPerName : 0);
+        const roleCount = await this.getNumTokens(
+          messageTypeToOpenAIRole(message._getType())
+        );
+        const nameCount =
+          message.name !== undefined
+            ? tokensPerName + (await this.getNumTokens(message.name))
+            : 0;
+        const count = textCount + tokensPerMessage + roleCount + nameCount;
 
         totalCount += count;
         return count;
       })
     );
+
+    totalCount += 3; // every reply is primed with <|start|>assistant<|message|>
 
     return { totalCount, countPerMessage };
   }

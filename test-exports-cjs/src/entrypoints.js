@@ -36,4 +36,3 @@ const experimental_autogpt = require("langchain/experimental/autogpt");
 const experimental_babyagi = require("langchain/experimental/babyagi");
 const experimental_plan_and_execute = require("langchain/experimental/plan_and_execute");
 const client = require("langchain/client");
-const client_langchainplus = require("langchain/client/langchainplus");

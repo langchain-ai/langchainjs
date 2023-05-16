@@ -2,6 +2,7 @@ import { v4 as uuidv4 } from "uuid";
 import {
   AgentAction,
   AgentFinish,
+  BaseChatMessage,
   ChainValues,
   LLMResult,
 } from "../schema/index.js";
@@ -11,6 +12,7 @@ import {
   getTracingCallbackHandler,
   getTracingV2CallbackHandler,
 } from "./handlers/initialize.js";
+import { getBufferString } from "../memory/base.js";
 
 type BaseCallbackManagerMethods = {
   [K in keyof CallbackHandlerMethods]?: (
@@ -309,6 +311,48 @@ export class CallbackManager
     );
   }
 
+  async handleChatModelStart(
+    llm: { name: string },
+    messages: BaseChatMessage[][],
+    runId: string = uuidv4()
+  ): Promise<CallbackManagerForLLMRun> {
+    let messageStrings: string[];
+    await Promise.all(
+      this.handlers.map(async (handler) => {
+        if (!handler.ignoreLLM) {
+          try {
+            if (handler.handleChatModelStart)
+              await handler.handleChatModelStart?.(
+                llm,
+                messages,
+                runId,
+                this._parentRunId
+              );
+            else if (handler.handleLLMStart) {
+              messageStrings = messages.map((x) => getBufferString(x));
+              await handler.handleLLMStart?.(
+                llm,
+                messageStrings,
+                runId,
+                this._parentRunId
+              );
+            }
+          } catch (err) {
+            console.error(
+              `Error in handler ${handler.constructor.name}, handleLLMStart: ${err}`
+            );
+          }
+        }
+      })
+    );
+    return new CallbackManagerForLLMRun(
+      runId,
+      this.handlers,
+      this.inheritableHandlers,
+      this._parentRunId
+    );
+  }
+
   async handleChainStart(
     chain: { name: string },
     inputs: ChainValues,
@@ -460,11 +504,11 @@ export class CallbackManager
           process.env?.LANGCHAIN_TRACING_V2 !== undefined
         : false;
     const tracingEnabled =
-      typeof process !== "undefined"
+      tracingV2Enabled ||
+      (typeof process !== "undefined"
         ? // eslint-disable-next-line no-process-env
           process.env?.LANGCHAIN_TRACING !== undefined
-        : tracingV2Enabled;
-
+        : false);
     if (options?.verbose || tracingEnabled) {
       if (!callbackManager) {
         callbackManager = new CallbackManager();
@@ -484,17 +528,14 @@ export class CallbackManager
           (handler) => handler.name === "langchain_tracer"
         )
       ) {
-        const session =
-          typeof process !== "undefined"
-            ? // eslint-disable-next-line no-process-env
-              process.env?.LANGCHAIN_SESSION
-            : undefined;
         if (tracingV2Enabled) {
-          callbackManager.addHandler(
-            await getTracingV2CallbackHandler(session),
-            true
-          );
+          callbackManager.addHandler(await getTracingV2CallbackHandler(), true);
         } else {
+          const session =
+            typeof process !== "undefined"
+              ? // eslint-disable-next-line no-process-env
+                process.env?.LANGCHAIN_SESSION
+              : undefined;
           callbackManager.addHandler(
             await getTracingCallbackHandler(session),
             true

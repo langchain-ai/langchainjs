@@ -2,6 +2,7 @@ import * as uuid from "uuid";
 import {
   AgentAction,
   AgentFinish,
+  BaseChatMessage,
   ChainValues,
   LLMResult,
 } from "../schema/index.js";
@@ -50,6 +51,17 @@ abstract class BaseCallbackHandlerMethodsClass {
    */
   handleLLMEnd?(
     output: LLMResult,
+    runId: string,
+    parentRunId?: string
+  ): Promise<void> | void;
+
+  /**
+   * Called at the start of a Chat Model run, with the prompt(s)
+   * and the run ID.
+   */
+  handleChatModelStart?(
+    llm: { name: string },
+    messages: BaseChatMessage[][],
     runId: string,
     parentRunId?: string
   ): Promise<void> | void;

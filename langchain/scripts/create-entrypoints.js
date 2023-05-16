@@ -65,6 +65,7 @@ const entrypoints = {
   // document_loaders
   document_loaders: "document_loaders/index",
   "document_loaders/base": "document_loaders/base",
+  "document_loaders/web/apify_dataset": "document_loaders/web/apify_dataset",
   "document_loaders/web/cheerio": "document_loaders/web/cheerio",
   "document_loaders/web/puppeteer": "document_loaders/web/puppeteer",
   "document_loaders/web/playwright": "document_loaders/web/playwright",
@@ -120,12 +121,12 @@ const entrypoints = {
   "stores/file/in_memory": "stores/file/in_memory",
   "stores/file/node": "stores/file/node",
   "stores/message/dynamodb": "stores/message/dynamodb",
+  "stores/message/redis": "stores/message/redis",
   // experimental
   "experimental/autogpt": "experimental/autogpt/index",
   "experimental/babyagi": "experimental/babyagi/index",
   "experimental/plan_and_execute": "experimental/plan_and_execute/index",
   client: "client/index",
-  "client/langchainplus": "client/langchainplus",
 };
 
 // Entrypoints in this list will
@@ -166,6 +167,7 @@ const requiresOptionalDependency = [
   "vectorstores/milvus",
   "vectorstores/myscale",
   "vectorstores/tigris",
+  "document_loaders/web/apify_dataset",
   "document_loaders/web/cheerio",
   "document_loaders/web/puppeteer",
   "document_loaders/web/playwright",
@@ -193,6 +195,7 @@ const requiresOptionalDependency = [
   "cache/redis",
   "stores/file/node",
   "stores/message/dynamodb",
+  "stores/message/redis",
 ];
 
 // List of test-exports-* packages which we use to test that the exports field
@@ -201,6 +204,10 @@ const requiresOptionalDependency = [
 const testExports = [
   [
     "test-exports-esm",
+    (p) => `import * as ${p.replace(/\//g, "_")} from "langchain/${p}";`,
+  ],
+  [
+    "test-exports-esbuild",
     (p) => `import * as ${p.replace(/\//g, "_")} from "langchain/${p}";`,
   ],
   [
