@@ -270,13 +270,18 @@ export class ChatPromptTemplate
     // This is implemented in a way it doesn't require making
     // BaseMessagePromptTemplate aware of .partial()
     const promptDict: ChatPromptTemplateInput = { ...this };
-    promptDict.inputVariables = this.inputVariables.filter(
-      (iv) => !(iv in values)
-    );
+
+    delete promptDict.inputVariables;
     promptDict.partialVariables = {
       ...(this.partialVariables ?? {}),
       ...values,
     };
+
+    for (const key of Object.keys(values)) {
+      promptDict.inputSchema = promptDict.inputSchema?.omit({
+        [key]: true
+      });
+    }
     return new ChatPromptTemplate(promptDict);
   }
 

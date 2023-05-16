@@ -148,13 +148,18 @@ export class PromptTemplate<
 
   async partial(values: PartialValues): Promise<PromptTemplate> {
     const promptDict: PromptTemplateInput = { ...this };
-    promptDict.inputVariables = this.inputVariables.filter(
-      (iv) => !(iv in values)
-    );
+    delete promptDict.inputVariables;
     promptDict.partialVariables = {
       ...(this.partialVariables ?? {}),
       ...values,
     };
+
+    for (const key of Object.keys(values)) {
+      promptDict.inputSchema = promptDict.inputSchema?.omit({
+        [key]: true
+      });
+    }
+
     return new PromptTemplate(promptDict);
   }
 

@@ -11,6 +11,18 @@ exports[`Test serialize 1`] = `
     {
       "_type": "SystemMessagePromptTemplate",
       "prompt": {
+        "inputSchema": {
+          "_cached": null,
+          "_def": {
+            "catchall": {
+              "_def": {
+                "typeName": "ZodNever",
+              },
+            },
+            "typeName": "ZodObject",
+            "unknownKeys": "strip",
+          },
+        },
         "inputVariables": [
           "context",
         ],
@@ -22,6 +34,18 @@ exports[`Test serialize 1`] = `
     {
       "_type": "HumanMessagePromptTemplate",
       "prompt": {
+        "inputSchema": {
+          "_cached": null,
+          "_def": {
+            "catchall": {
+              "_def": {
+                "typeName": "ZodNever",
+              },
+            },
+            "typeName": "ZodObject",
+            "unknownKeys": "strip",
+          },
+        },
         "inputVariables": [
           "foo",
           "bar",
@@ -35,6 +59,18 @@ exports[`Test serialize 1`] = `
     {
       "_type": "AIMessagePromptTemplate",
       "prompt": {
+        "inputSchema": {
+          "_cached": null,
+          "_def": {
+            "catchall": {
+              "_def": {
+                "typeName": "ZodNever",
+              },
+            },
+            "typeName": "ZodObject",
+            "unknownKeys": "strip",
+          },
+        },
         "inputVariables": [
           "foo",
           "bar",
@@ -47,6 +83,18 @@ exports[`Test serialize 1`] = `
     {
       "_type": "ChatMessagePromptTemplate",
       "prompt": {
+        "inputSchema": {
+          "_cached": null,
+          "_def": {
+            "catchall": {
+              "_def": {
+                "typeName": "ZodNever",
+              },
+            },
+            "typeName": "ZodObject",
+            "unknownKeys": "strip",
+          },
+        },
         "inputVariables": [
           "foo",
           "bar",

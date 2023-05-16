@@ -136,14 +136,18 @@ export class FewShotPromptTemplate
   }
 
   async partial(values: PartialValues): Promise<FewShotPromptTemplate> {
-    const promptDict: FewShotPromptTemplate = { ...this };
-    promptDict.inputVariables = this.inputVariables.filter(
-      (iv) => !(iv in values)
-    );
+    const promptDict: FewShotPromptTemplateInput = { ...this };
+    delete promptDict.inputVariables;
     promptDict.partialVariables = {
       ...(this.partialVariables ?? {}),
       ...values,
     };
+
+    for (const key of Object.keys(values)) {
+      promptDict.inputSchema = promptDict.inputSchema?.omit({
+        [key]: true
+      });
+    }
     return new FewShotPromptTemplate(promptDict);
   }
 
