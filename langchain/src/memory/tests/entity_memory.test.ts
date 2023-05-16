@@ -7,14 +7,14 @@ import {
 } from "../../schema/index.js";
 import { EntityMemory } from "../entity_memory.js";
 import { BaseLLM } from "../../llms/base.js";
-import { ChatMessageHistory } from "../chat_memory.js";
+import { ChatMessageHistory } from "../../stores/message/in_memory.js";
 
 class FakeLLM extends BaseLLM {
   _llmType(): string {
     return "fake";
   }
 
-  async _generate(_prompts: string[], _?: string[]): Promise<LLMResult> {
+  async _generate(_prompts: string[]): Promise<LLMResult> {
     const mockVal = { generations: [[{ text: "foo" }]] };
     return mockVal;
   }

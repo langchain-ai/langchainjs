@@ -8,13 +8,13 @@ import { LLMChain } from "langchain/chains";
 export const run = async () => {
   const memory = new EntityMemory({
     llm: new OpenAI({ temperature: 0 }),
-    chatHistoryKey: "history", // default value
-    entitiesKey: "entities", // default value
+    chatHistoryKey: "history", // Default value
+    entitiesKey: "entities", // Default value
   });
   const model = new OpenAI({ temperature: 0.9 });
   const chain = new LLMChain({
     llm: model,
-    prompt: ENTITY_MEMORY_CONVERSATION_TEMPLATE,
+    prompt: ENTITY_MEMORY_CONVERSATION_TEMPLATE, // Default prompt - must include the set chatHistoryKey and entitiesKey as input variables.
     memory,
   });
 

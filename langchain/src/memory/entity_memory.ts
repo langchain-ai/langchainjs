@@ -1,7 +1,7 @@
-import { BaseLanguageModel } from "base_language/index.js";
-import { BaseChatMessage, BaseEntityStore } from "../schema/index.js";
+import { BaseLanguageModel } from "../base_language/index.js";
+import { BaseEntityStore } from "../schema/index.js";
 
-import { BaseChatMemory, BaseMemoryInput } from "./chat_memory.js";
+import { BaseChatMemory, BaseChatMemoryInput } from "./chat_memory.js";
 import {
   ENTITY_EXTRACTION_PROMPT,
   ENTITY_SUMMARIZATION_PROMPT,
@@ -17,7 +17,7 @@ import { LLMChain } from "../chains/llm_chain.js";
 import { PromptTemplate } from "../prompts/prompt.js";
 import { InMemoryEntityStore } from "./stores/entity/in_memory.js";
 
-export interface EntityMemoryInput extends BaseMemoryInput {
+export interface EntityMemoryInput extends BaseChatMemoryInput {
   llm: BaseLanguageModel;
   humanPrefix?: string;
   aiPrefix?: string;
@@ -32,17 +32,13 @@ export interface EntityMemoryInput extends BaseMemoryInput {
 
 // Entity extractor & summarizer to memory.
 export class EntityMemory extends BaseChatMemory implements EntityMemoryInput {
-  humanPrefix = "Human";
+  private entityExtractionChain: LLMChain;
 
-  aiPrefix = "AI";
-
-  entityExtractionPrompt = ENTITY_EXTRACTION_PROMPT;
-
-  entitySummarizationPrompt = ENTITY_SUMMARIZATION_PROMPT;
+  private entitySummarizationChain: LLMChain;
 
   entityStore: BaseEntityStore;
 
-  entityCache: string[];
+  entityCache: string[] = [];
 
   k = 3;
 
@@ -52,6 +48,10 @@ export class EntityMemory extends BaseChatMemory implements EntityMemoryInput {
 
   entitiesKey = "entities";
 
+  humanPrefix?: string;
+
+  aiPrefix?: string;
+
   constructor(fields: EntityMemoryInput) {
     super({
       chatHistory: fields.chatHistory,
@@ -60,21 +60,25 @@ export class EntityMemory extends BaseChatMemory implements EntityMemoryInput {
       outputKey: fields.outputKey,
     });
     this.llm = fields.llm;
-    this.humanPrefix = fields.humanPrefix ?? this.humanPrefix;
-    this.aiPrefix = fields.aiPrefix ?? this.aiPrefix;
+    this.humanPrefix = fields.humanPrefix;
+    this.aiPrefix = fields.aiPrefix;
     this.chatHistoryKey = fields.chatHistoryKey ?? this.chatHistoryKey;
     this.entitiesKey = fields.entitiesKey ?? this.entitiesKey;
-    this.entityExtractionPrompt =
-      fields.entityExtractionPrompt ?? this.entityExtractionPrompt;
-    this.entitySummarizationPrompt =
-      fields.entitySummarizationPrompt ?? this.entitySummarizationPrompt;
+    this.entityExtractionChain = new LLMChain({
+      llm: this.llm,
+      prompt: fields.entityExtractionPrompt ?? ENTITY_EXTRACTION_PROMPT,
+    });
+    this.entitySummarizationChain = new LLMChain({
+      llm: this.llm,
+      prompt: fields.entitySummarizationPrompt ?? ENTITY_SUMMARIZATION_PROMPT,
+    });
     this.entityStore = fields.entityStore ?? new InMemoryEntityStore();
     this.entityCache = fields.entityCache ?? this.entityCache;
     this.k = fields.k ?? this.k;
   }
 
-  get buffer(): BaseChatMessage[] {
-    return this.chatHistory.messages;
+  get memoryKeys() {
+    return [this.chatHistoryKey];
   }
 
   // Will always return list of memory variables.
@@ -84,19 +88,16 @@ export class EntityMemory extends BaseChatMemory implements EntityMemoryInput {
 
   // Return history buffer.
   async loadMemoryVariables(inputs: InputValues): Promise<MemoryVariables> {
-    const chain = new LLMChain({
-      llm: this.llm,
-      prompt: this.entityExtractionPrompt,
-    });
     const promptInputKey =
       this.inputKey ?? getPromptInputKey(inputs, this.memoryVariables);
-    const bufferString = getBufferString(
-      this.buffer.slice(-this.k * 2),
+    const messages = await this.chatHistory.getMessages();
+    const serializedMessages = getBufferString(
+      messages.slice(-this.k * 2),
       this.humanPrefix,
       this.aiPrefix
     );
-    const output = await chain.predict({
-      history: bufferString,
+    const output = await this.entityExtractionChain.predict({
+      history: serializedMessages,
       input: inputs[promptInputKey],
     });
     const entities: string[] =
@@ -104,12 +105,15 @@ export class EntityMemory extends BaseChatMemory implements EntityMemoryInput {
     const entitySummaries: { [key: string]: string | undefined } = {};
 
     for (const entity of entities) {
-      entitySummaries[entity] = await this.entityStore.get(entity, "");
+      entitySummaries[entity] = await this.entityStore.get(
+        entity,
+        "No current information known."
+      );
     }
     this.entityCache = [...entities];
     const buffer = this.returnMessages
-      ? this.buffer.slice(-this.k * 2)
-      : bufferString;
+      ? messages.slice(-this.k * 2)
+      : serializedMessages;
 
     return {
       [this.chatHistoryKey]: buffer,
@@ -123,26 +127,28 @@ export class EntityMemory extends BaseChatMemory implements EntityMemoryInput {
 
     const promptInputKey =
       this.inputKey ?? getPromptInputKey(inputs, this.memoryVariables);
-    const bufferString = getBufferString(
-      this.buffer.slice(-this.k * 2),
+    const messages = await this.chatHistory.getMessages();
+    const serializedMessages = getBufferString(
+      messages.slice(-this.k * 2),
       this.humanPrefix,
       this.aiPrefix
     );
     const inputData = inputs[promptInputKey];
-    const chain = new LLMChain({
-      llm: this.llm,
-      prompt: this.entitySummarizationPrompt,
-    });
 
     for (const entity of this.entityCache) {
-      const existingSummary = await this.entityStore.get(entity, "");
-      const output = await chain.predict({
+      const existingSummary = await this.entityStore.get(
+        entity,
+        "No current information known."
+      );
+      const output = await this.entitySummarizationChain.predict({
         summary: existingSummary,
         entity,
-        history: bufferString,
+        history: serializedMessages,
         input: inputData,
       });
-      await this.entityStore.set(entity, output.trim());
+      if (output.trim() !== "UNCHANGED") {
+        await this.entityStore.set(entity, output.trim());
+      }
     }
   }
 

@@ -60,13 +60,13 @@ Return the output as a single comma-separated list, or NONE if there is nothing 
 
 EXAMPLE
 Conversation history:
-Person #1: how's it going today?
+Person #1: my name is Jacob. how's it going today?
 AI: "It's going great! How about you?"
 Person #1: good! busy working on Langchain. lots to do.
 AI: "That sounds like a lot of work! What kind of things are you doing to make Langchain better?"
 Last line:
 Person #1: i'm trying to improve Langchain's interfaces, the UX, its integrations with various products the user might want ... a lot of stuff.
-Output: Langchain
+Output: Jacob,Langchain
 END OF EXAMPLE
 
 EXAMPLE
@@ -93,10 +93,10 @@ export const ENTITY_EXTRACTION_PROMPT = /*#__PURE__*/ new PromptTemplate({
   template: _DEFAULT_ENTITY_EXTRACTION_TEMPLATE,
 });
 
-export const _DEFAULT_ENTITY_SUMMARIZATION_TEMPLATE = `You are an AI assistant helping a human keep track of facts about relevant people, places, and concepts in their life. Update the summary of the provided entity in the "Entity" section based on the last line of your conversation with the human. If you are writing the summary for the first time, return a single sentence.
+export const _DEFAULT_ENTITY_SUMMARIZATION_TEMPLATE = `You are an AI assistant helping a human keep track of facts about relevant people, places, and concepts in their life. Update and add to the summary of the provided entity in the "Entity" section based on the last line of your conversation with the human. If you are writing the summary for the first time, return a single sentence.
 The update should only include facts that are relayed in the last line of conversation about the provided entity, and should only contain facts about the provided entity.
 
-If there is no new information about the provided entity or the information is not worth noting (not an important or relevant fact to remember long-term), return the existing summary unchanged.
+If there is no new information about the provided entity or the information is not worth noting (not an important or relevant fact to remember long-term), output the exact string "UNCHANGED" below.
 
 Full conversation history (for context):
 {history}
@@ -109,7 +109,7 @@ Existing summary of {entity}:
 
 Last line of conversation:
 Human: {input}
-Updated summary:`;
+Updated summary (or the exact string "UNCHANGED" if there is no new information about {entity} above):`;
 
 // eslint-disable-next-line spaced-comment
 export const ENTITY_SUMMARIZATION_PROMPT = /*#__PURE__*/ new PromptTemplate({
