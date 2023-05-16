@@ -145,7 +145,7 @@ export class FewShotPromptTemplate
 
     for (const key of Object.keys(values)) {
       promptDict.inputSchema = promptDict.inputSchema?.omit({
-        [key]: true
+        [key]: true,
       });
     }
     return new FewShotPromptTemplate(promptDict);

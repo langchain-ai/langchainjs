@@ -279,7 +279,7 @@ export class ChatPromptTemplate
 
     for (const key of Object.keys(values)) {
       promptDict.inputSchema = promptDict.inputSchema?.omit({
-        [key]: true
+        [key]: true,
       });
     }
     return new ChatPromptTemplate(promptDict);

@@ -156,7 +156,7 @@ export class PromptTemplate<
 
     for (const key of Object.keys(values)) {
       promptDict.inputSchema = promptDict.inputSchema?.omit({
-        [key]: true
+        [key]: true,
       });
     }
 
