@@ -6721,17 +6721,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@redis/client@npm:1.5.5":
-  version: 1.5.5
-  resolution: "@redis/client@npm:1.5.5"
-  dependencies:
-    cluster-key-slot: 1.1.2
-    generic-pool: 3.9.0
-    yallist: 4.0.0
-  checksum: 16ae814ea1eb28cb7f30d4fda1aa3b0ab81de515e5c23e54092ecfaded3a30f261d5b2171eb63f153f059b69e885c5d86d802368b52c741eca443885d14c4b79
-  languageName: node
-  linkType: hard
-
 "@redis/client@npm:1.5.7":
   version: 1.5.7
   resolution: "@redis/client@npm:1.5.7"
@@ -6758,15 +6747,6 @@ __metadata:
   peerDependencies:
     "@redis/client": ^1.0.0
   checksum: de07f9c37abed603dec352593eb69fc8a94475e7f86b4f65b9805394492d448a1e4181db74269d80eb9dba6f3ae8a41804204821db36bb801cd7c1e30ac7ec80
-  languageName: node
-  linkType: hard
-
-"@redis/search@npm:1.1.1":
-  version: 1.1.1
-  resolution: "@redis/search@npm:1.1.1"
-  peerDependencies:
-    "@redis/client": ^1.0.0
-  checksum: 5c574679e803530d0b1a704eb7c22292849e0a36dfc9a84a5359051f9da6e0dab72e11ade5654a69d9984bb45d2f7cdf901111135247670824013145cf28d326
   languageName: node
   linkType: hard
 
@@ -18125,7 +18105,7 @@ __metadata:
     playwright: ^1.32.1
     prettier: ^2.8.3
     puppeteer: ^19.7.2
-    redis: ^4.6.4
+    redis: ^4.6.6
     release-it: ^15.10.1
     replicate: ^0.9.0
     rollup: ^3.19.1
@@ -22617,20 +22597,6 @@ __metadata:
     indent-string: ^4.0.0
     strip-indent: ^3.0.0
   checksum: fa1ef20404a2d399235e83cc80bd55a956642e37dd197b4b612ba7327bf87fa32745aeb4a1634b2bab25467164ab4ed9c15be2c307923dd08b0fe7c52431ae6b
-  languageName: node
-  linkType: hard
-
-"redis@npm:^4.6.4":
-  version: 4.6.4
-  resolution: "redis@npm:4.6.4"
-  dependencies:
-    "@redis/bloom": 1.2.0
-    "@redis/client": 1.5.5
-    "@redis/graph": 1.1.0
-    "@redis/json": 1.0.4
-    "@redis/search": 1.1.1
-    "@redis/time-series": 1.0.4
-  checksum: b9263985de512a381d419b471bf040989dda80df070d7f548669e6c241a33ca789273ed7834a74e2408b610bb20089ab210fe4493415cf269b8549a29824ccb2
   languageName: node
   linkType: hard
 
