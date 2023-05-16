@@ -92,7 +92,8 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     llm: { name: string },
     prompts: string[],
     runId: string,
-    parentRunId?: string
+    parentRunId?: string,
+    extraParams?: Record<string, unknown>
   ): Promise<void> {
     const execution_order = this._getExecutionOrder(parentRunId);
     const run: Run = {
@@ -107,6 +108,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       child_runs: [],
       child_execution_order: execution_order,
       run_type: "llm",
+      extra: extraParams,
     };
 
     this._startTrace(run);
@@ -117,7 +119,8 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     llm: { name: string },
     messages: BaseChatMessage[][],
     runId: string,
-    parentRunId?: string
+    parentRunId?: string,
+    extraParams?: Record<string, unknown>
   ): Promise<void> {
     const execution_order = this._getExecutionOrder(parentRunId);
     const run: Run = {
@@ -132,6 +135,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       child_runs: [],
       child_execution_order: execution_order,
       run_type: "llm",
+      extra: extraParams,
     };
 
     this._startTrace(run);
