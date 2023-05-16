@@ -26,3 +26,36 @@ import AzureOpenAI from "@examples/models/chat/integration_azure_openai.ts";
 import Anthropic from "@examples/models/chat/integration_anthropic.ts";
 
 <CodeBlock language="typescript">{Anthropic}</CodeBlock>
+
+## Google Vertex AI
+
+The Vertex AI implementation is meant to be used in Node.js and not
+directly from a browser, since it requires a service account to use.
+
+Before running this code, you should make sure the Vertex AI API is
+enabled for the relevant project and that you've authenticated to
+Google Cloud using one of these methods:
+
+* You are logged into an account (using `gcloud auth application-default login`)
+  permitted to that project.
+* You are running on a machine using a service account that is permitted
+  to the project.
+* You have downloaded the credentials for a service account that is permitted
+  to the project and set the `GOOGLE_APPLICATION_CREDENTIALS` environment
+  variable to the path of this file.
+
+```typescript
+import { GoogleVertexAiChat } from "langchain/llms/googlevertexai";
+
+export const run = async () => {
+  const model = new GoogleVertexAiChat({
+    temperature: 0.7,
+    maxTokens: 1000,
+    context: "You are a helpful assistant that answers in pirate language"
+  });
+  const res = await model.call(
+    "Question: What would be a good company name a company that makes colorful socks?\nAnswer:"
+  );
+  console.log({ res });
+};
+```
