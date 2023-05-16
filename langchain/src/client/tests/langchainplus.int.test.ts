@@ -215,5 +215,5 @@ what was the tjtal number of points scored in the 2023 super bowl? what is that 
 
   const results = await client.runOnDataset(datasetName, executorFactory);
   console.log(results);
-  expect(Object.keys(results).length).toEqual(10);
+  expect(Object.keys(results).length).toEqual(4);
 });

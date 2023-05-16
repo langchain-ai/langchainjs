@@ -96,6 +96,7 @@ test("Test Chat Message Run", async () => {
       "child_runs": [],
       "end_time": 1620000000000,
       "execution_order": 1,
+      "extra": undefined,
       "id": Any<String>,
       "inputs": {
         "messages": [

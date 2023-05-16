@@ -124,6 +124,9 @@
     "vectorstores/myscale.cjs",
     "vectorstores/myscale.js",
     "vectorstores/myscale.d.ts",
+    "vectorstores/redis.cjs",
+    "vectorstores/redis.js",
+    "vectorstores/redis.d.ts",
     "text_splitter.cjs",
     "text_splitter.js",
     "text_splitter.d.ts",
@@ -373,7 +376,7 @@
     "playwright": "^1.32.1",
     "prettier": "^2.8.3",
     "puppeteer": "^19.7.2",
-    "redis": "^4.6.4",
+    "redis": "^4.6.6",
     "release-it": "^15.10.1",
     "replicate": "^0.9.0",
     "rollup": "^3.19.1",
@@ -753,6 +756,11 @@
       "types": "./vectorstores/myscale.d.ts",
       "import": "./vectorstores/myscale.js",
       "require": "./vectorstores/myscale.cjs"
+    },
+    "./vectorstores/redis": {
+      "types": "./vectorstores/redis.d.ts",
+      "import": "./vectorstores/redis.js",
+      "require": "./vectorstores/redis.cjs"
     },
     "./text_splitter": {
       "types": "./text_splitter.d.ts",

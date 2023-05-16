@@ -1,3 +1,4 @@
+import { getRuntimeEnvironment } from "../../util/env.js";
 import { BaseTracer, Run, BaseRun } from "./tracer.js";
 
 export interface RunCreate extends BaseRun {
@@ -143,6 +144,8 @@ export class LangChainTracer
     example_id: string | undefined = undefined
   ): Promise<RunCreate> {
     const session = await this.ensureSession();
+    const runExtra = run.extra ?? {};
+    runExtra.runtime = await getRuntimeEnvironment();
     const persistedRun: RunCreate = {
       id: run.id,
       name: run.name,
@@ -150,7 +153,7 @@ export class LangChainTracer
       end_time: run.end_time,
       run_type: run.run_type,
       reference_example_id: example_id,
-      extra: run.extra ?? {},
+      extra: runExtra,
       execution_order: run.execution_order,
       serialized: run.serialized,
       error: run.error,
