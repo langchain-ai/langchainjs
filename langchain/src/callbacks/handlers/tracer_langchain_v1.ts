@@ -100,16 +100,12 @@ export class LangChainTracerV1 extends BaseTracer {
     const serialized = run.serialized as { name: string };
     let runResult: LLMRun | ChainRun | ToolRun;
     if (run.run_type === "llm") {
-      let prompts: string[];
-      if (
-        run.inputs.prompts === undefined &&
-        run.inputs.messages !== undefined
-      ) {
-        const messages = run.inputs.messages as BaseChatMessage[][];
-        prompts = messages.map((x) => getBufferString(x));
-      } else {
-        prompts = run.inputs.prompts;
-      }
+      const prompts: string[] = run.inputs.prompts
+        ? run.inputs.prompts
+        : (run.inputs.messages as BaseChatMessage[][]).map((x) =>
+            getBufferString(x)
+          );
+
       const llmRun: LLMRun = {
         uuid: run.id,
         start_time: run.start_time,
