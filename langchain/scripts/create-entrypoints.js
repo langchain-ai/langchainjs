@@ -155,6 +155,7 @@ const requiresOptionalDependency = [
   "llms/cohere",
   "llms/hf",
   "llms/replicate",
+  "llms/sagemaker_endpoint",
   "prompts/load",
   "vectorstores/chroma",
   "vectorstores/hnswlib",

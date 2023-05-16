@@ -1,3 +1,8 @@
+import {
+  SageMakerRuntimeClient,
+  InvokeEndpointCommand,
+  SageMakerRuntimeClientConfig,
+} from "@aws-sdk/client-sagemaker-runtime";
 import { LLM, BaseLLMParams } from "./base.js";
 
 /**
@@ -27,7 +32,7 @@ import { LLM, BaseLLMParams } from "./base.js";
  * }
  * ```
  */
-export abstract class ContentHandlerBase<InputType, OutputType> {
+export abstract class BaseSageMakerContentHandler<InputType, OutputType> {
   /** The MIME type of the input data passed to endpoint */
   contentType = "text/plain";
 
@@ -42,32 +47,37 @@ export abstract class ContentHandlerBase<InputType, OutputType> {
   abstract transformInput(
     prompt: InputType,
     modelKwargs: Record<string, unknown>
-  ): Uint8Array;
+  ): Promise<Uint8Array>;
 
   /**
    * Transforms the output from the model to string that the LLM class expects.
    */
-  abstract transformOutput(output: Uint8Array): OutputType;
+  abstract transformOutput(output: Uint8Array): Promise<OutputType>;
 }
 
 /** Content handler for LLM class. */
-type LLMContentHandler = ContentHandlerBase<string, string>;
+export type SageMakerLLMContentHandler = BaseSageMakerContentHandler<
+  string,
+  string
+>;
 
-export interface SagemakerEndpointInput extends BaseLLMParams {
+export interface SageMakerEndpointInput extends BaseLLMParams {
   /**
-   * The name of the endpoint from the deployed Sagemaker model. Must be unique
+   * The name of the endpoint from the deployed SageMaker model. Must be unique
    * within an AWS Region.
    */
   endpointName: string;
 
-  /** The aws region where the Sagemaker model is deployed, eg. `us-west-2`. */
-  regionName: string;
+  /**
+   * Options passed to the SageMaker client.
+   */
+  clientOptions: SageMakerRuntimeClientConfig;
 
   /**
    * The content handler class that provides an input and output transform
    * functions to handle formats between LLM and the endpoint.
    */
-  contentHandler: LLMContentHandler;
+  contentHandler: SageMakerLLMContentHandler;
 
   /**
    * Key word arguments to pass to the model.
@@ -80,44 +90,48 @@ export interface SagemakerEndpointInput extends BaseLLMParams {
   endpointKwargs?: Record<string, unknown>;
 }
 
-export class SagemakerEndpoint extends LLM implements SagemakerEndpointInput {
-  regionName: string;
-
+export class SageMakerEndpoint extends LLM {
   endpointName: string;
 
-  contentHandler: LLMContentHandler;
+  contentHandler: SageMakerLLMContentHandler;
 
   modelKwargs?: Record<string, unknown>;
 
   endpointKwargs?: Record<string, unknown>;
 
-  constructor(fields?: SagemakerEndpointInput) {
+  client: SageMakerRuntimeClient;
+
+  constructor(fields: SageMakerEndpointInput) {
     super(fields ?? {});
 
-    const regionName = fields?.regionName;
+    const regionName = fields.clientOptions.region;
     if (!regionName) {
-      throw new Error("Please pass regionName field to the constructor");
+      throw new Error(
+        `Please pass a "clientOptions" object with a "region" field to the constructor`
+      );
     }
 
     const endpointName = fields?.endpointName;
     if (!endpointName) {
-      throw new Error("Please pass endpointName field to the constructor");
+      throw new Error(`Please pass an "endpointName" field to the constructor`);
     }
 
     const contentHandler = fields?.contentHandler;
     if (!contentHandler) {
-      throw new Error("Please pass contentHandler field to the constructor");
+      throw new Error(
+        `Please pass a "contentHandler" field to the constructor`
+      );
     }
 
-    this.regionName = fields.regionName;
     this.endpointName = fields.endpointName;
     this.contentHandler = fields.contentHandler;
     this.endpointKwargs = fields.endpointKwargs;
     this.modelKwargs = fields.modelKwargs;
+    this.client = new SageMakerRuntimeClient(fields.clientOptions);
   }
 
   _llmType() {
-    return "sagemaker_endpoint";
+    return "SageMaker_endpoint";
   }
 
   /** @ignore */
@@ -125,17 +139,13 @@ export class SagemakerEndpoint extends LLM implements SagemakerEndpointInput {
     prompt: string,
     options: this["ParsedCallOptions"]
   ): Promise<string> {
-    const { SageMakerRuntimeClient, InvokeEndpointCommand } =
-      await SagemakerEndpoint.imports();
-    const client = new SageMakerRuntimeClient({ region: this.regionName });
-
-    const body = this.contentHandler.transformInput(
+    const body = await this.contentHandler.transformInput(
       prompt,
       this.modelKwargs ?? {}
     );
     const { contentType, accepts } = this.contentHandler;
 
-    const response = await client.send(
+    const response = await this.client.send(
       new InvokeEndpointCommand({
         EndpointName: this.endpointName,
         Body: body,
@@ -150,25 +160,6 @@ export class SagemakerEndpoint extends LLM implements SagemakerEndpointInput {
       throw new Error("Inference result missing Body");
     }
 
-    const text = this.contentHandler.transformOutput(response.Body);
-
-    return text;
-  }
-
-  /** @ignore */
-  static async imports(): Promise<{
-    SageMakerRuntimeClient: typeof import("@aws-sdk/client-sagemaker-runtime").SageMakerRuntimeClient;
-    InvokeEndpointCommand: typeof import("@aws-sdk/client-sagemaker-runtime").InvokeEndpointCommand;
-  }> {
-    try {
-      const { SageMakerRuntimeClient, InvokeEndpointCommand } = await import(
-        "@aws-sdk/client-sagemaker-runtime"
-      );
-      return { SageMakerRuntimeClient, InvokeEndpointCommand };
-    } catch (e) {
-      throw new Error(
-        "Please install @aws-sdk/client-sagemaker-runtime as a dependency with, e.g. `yarn add @aws-sdk/client-sagemaker-runtime`"
-      );
-    }
+    return this.contentHandler.transformOutput(response.Body);
   }
 }

@@ -8,4 +8,3 @@ export { OpenAIChat } from "./openai-chat.js";
 export { Cohere } from "./cohere.js";
 export { HuggingFaceInference } from "./hf.js";
 export { Replicate } from "./replicate.js";
-export { SagemakerEndpoint } from "./sagemaker_endpoint.js";
