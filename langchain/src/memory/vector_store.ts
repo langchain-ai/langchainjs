@@ -5,7 +5,7 @@ import {
   getInputValue,
   InputValues,
   MemoryVariables,
-  OutputValues,
+  OutputValues
 } from "./base.js";
 
 export interface VectorStoreRetrieverMemoryParams {
@@ -14,6 +14,8 @@ export interface VectorStoreRetrieverMemoryParams {
   outputKey?: string;
   memoryKey?: string;
   returnDocs?: boolean;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  metadata?: Record<string, any>;
 }
 
 export class VectorStoreRetrieverMemory
@@ -28,12 +30,19 @@ export class VectorStoreRetrieverMemory
 
   returnDocs: boolean;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  metadata: Record<string, any>;
+
   constructor(fields: VectorStoreRetrieverMemoryParams) {
     super();
     this.vectorStoreRetriever = fields.vectorStoreRetriever;
     this.inputKey = fields.inputKey;
     this.memoryKey = fields.memoryKey ?? "memory";
     this.returnDocs = fields.returnDocs ?? false;
+    this.metadata = {
+      ...(fields.metadata ?? {}),
+      ...(fields.vectorStoreRetriever.filter ?? {})
+    };
   }
 
   get memoryKeys(): string[] {
@@ -46,7 +55,7 @@ export class VectorStoreRetrieverMemory
     return {
       [this.memoryKey]: this.returnDocs
         ? results
-        : results.map((r) => r.pageContent).join("\n"),
+        : results.map((r) => r.pageContent).join("\n")
     };
   }
 
@@ -60,7 +69,7 @@ export class VectorStoreRetrieverMemory
       .map(([k, v]) => `${k}: ${v}`)
       .join("\n");
     await this.vectorStoreRetriever.addDocuments([
-      new Document({ pageContent: text }),
+      new Document({ pageContent: text, metadata: this.metadata })
     ]);
   }
 }

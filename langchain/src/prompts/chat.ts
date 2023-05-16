@@ -6,17 +6,17 @@ import {
   HumanChatMessage,
   InputValues,
   PartialValues,
-  SystemChatMessage,
+  SystemChatMessage
 } from "../schema/index.js";
 import {
   BasePromptTemplate,
   BasePromptTemplateInput,
-  BaseStringPromptTemplate,
+  BaseStringPromptTemplate
 } from "./base.js";
 import { PromptTemplate } from "./prompt.js";
 import {
   SerializedChatPromptTemplate,
-  SerializedMessagePromptTemplate,
+  SerializedMessagePromptTemplate
 } from "./serde.js";
 
 export abstract class BaseMessagePromptTemplate {
@@ -27,7 +27,7 @@ export abstract class BaseMessagePromptTemplate {
   serialize(): SerializedMessagePromptTemplate {
     return {
       _type: this.constructor.name,
-      ...JSON.parse(JSON.stringify(this)),
+      ...JSON.parse(JSON.stringify(this))
     };
   }
 }
@@ -207,7 +207,7 @@ export class ChatPromptTemplate
       if (difference.size > 0) {
         throw new Error(
           `Input variables \`${[
-            ...difference,
+            ...difference
           ]}\` are not used in any of the prompt messages.`
         );
       }
@@ -219,7 +219,7 @@ export class ChatPromptTemplate
       if (otherDifference.size > 0) {
         throw new Error(
           `Input variables \`${[
-            ...otherDifference,
+            ...otherDifference
           ]}\` are used in prompt messages but not in the prompt template.`
         );
       }
@@ -262,7 +262,7 @@ export class ChatPromptTemplate
     }
     return {
       input_variables: this.inputVariables,
-      prompt_messages: this.promptMessages.map((m) => m.serialize()),
+      prompt_messages: this.promptMessages.map((m) => m.serialize())
     };
   }
 
@@ -275,7 +275,7 @@ export class ChatPromptTemplate
     );
     promptDict.partialVariables = {
       ...(this.partialVariables ?? {}),
-      ...values,
+      ...values
     };
     return new ChatPromptTemplate(promptDict);
   }
@@ -314,7 +314,7 @@ export class ChatPromptTemplate
     return new ChatPromptTemplate({
       inputVariables: [...inputVariables],
       promptMessages: flattenedMessages,
-      partialVariables: flattenedPartialVariables,
+      partialVariables: flattenedPartialVariables
     });
   }
 }
