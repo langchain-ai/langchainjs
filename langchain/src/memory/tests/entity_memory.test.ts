@@ -24,7 +24,10 @@ test("Test entity memory", async () => {
   const model = new FakeLLM({});
   const memory = new EntityMemory({ llm: model });
   const result1 = await memory.loadMemoryVariables({ input: "foo" });
-  const expectedResult1 = { history: "", entities: { foo: "No current information known." } };
+  const expectedResult1 = {
+    history: "",
+    entities: { foo: "No current information known." },
+  };
   expect(result1).toStrictEqual(expectedResult1);
 
   await memory.saveContext({ foo: "bar" }, { bar: "foo" });
