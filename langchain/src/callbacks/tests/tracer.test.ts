@@ -1,11 +1,11 @@
 import { test, expect, jest } from "@jest/globals";
 import * as uuid from "uuid";
+import { BaseTracer, Run } from "../handlers/tracer.js";
 import {
-  BaseTracer,
-  Run,
   TracerSession,
   TracerSessionCreateV2,
-} from "../handlers/tracers.js";
+} from "../handlers/tracer_langchain.js";
+import { HumanChatMessage } from "../../schema/index.js";
 
 const TEST_SESSION_ID = `32f2a267-b052-4c45-8c9f-ae5558c94a6a`;
 const TENANT_ID = `531d2426-49c4-40f4-b2c7-775aef1db176`;
@@ -57,7 +57,6 @@ class FakeTracer extends BaseTracer {
 
 test("Test LLMRun", async () => {
   const tracer = new FakeTracer();
-  await tracer.newSession();
   const runId = uuid.v4();
   await tracer.handleLLMStart({ name: "test" }, ["test"], runId);
   await tracer.handleLLMEnd({ generations: [] }, runId);
@@ -71,7 +70,6 @@ test("Test LLMRun", async () => {
     execution_order: 1,
     child_execution_order: 1,
     serialized: { name: "test" },
-    session_id: TEST_SESSION_ID,
     inputs: { prompts: ["test"] },
     run_type: "llm",
     outputs: { generations: [] },
@@ -80,9 +78,55 @@ test("Test LLMRun", async () => {
   expect(run).toEqual(compareRun);
 });
 
+test("Test Chat Message Run", async () => {
+  const tracer = new FakeTracer();
+  const runId = uuid.v4();
+  const messages = [[new HumanChatMessage("Avast")]];
+  await tracer.handleChatModelStart({ name: "test" }, messages, runId);
+  await tracer.handleLLMEnd({ generations: [] }, runId);
+  expect(tracer.runs.length).toBe(1);
+  const run = tracer.runs[0];
+  expect(run).toMatchInlineSnapshot(
+    {
+      id: expect.any(String),
+    },
+    `
+    {
+      "child_execution_order": 1,
+      "child_runs": [],
+      "end_time": 1620000000000,
+      "execution_order": 1,
+      "id": Any<String>,
+      "inputs": {
+        "messages": [
+          [
+            {
+              "data": {
+                "content": "Avast",
+                "role": undefined,
+              },
+              "type": "human",
+            },
+          ],
+        ],
+      },
+      "name": "test",
+      "outputs": {
+        "generations": [],
+      },
+      "parent_run_id": undefined,
+      "run_type": "llm",
+      "serialized": {
+        "name": "test",
+      },
+      "start_time": 1620000000000,
+    }
+  `
+  );
+});
+
 test("Test LLM Run no start", async () => {
   const tracer = new FakeTracer();
-  await tracer.newSession();
   const runId = uuid.v4();
   await expect(tracer.handleLLMEnd({ generations: [] }, runId)).rejects.toThrow(
     "No LLM run to end"
@@ -91,7 +135,6 @@ test("Test LLM Run no start", async () => {
 
 test("Test Chain Run", async () => {
   const tracer = new FakeTracer();
-  await tracer.newSession();
   const runId = uuid.v4();
   const compareRun: Run = {
     id: runId,
@@ -101,7 +144,6 @@ test("Test Chain Run", async () => {
     execution_order: 1,
     child_execution_order: 1,
     serialized: { name: "test" },
-    session_id: TEST_SESSION_ID,
     inputs: { foo: "bar" },
     outputs: { foo: "bar" },
     run_type: "chain",
@@ -116,7 +158,6 @@ test("Test Chain Run", async () => {
 
 test("Test Tool Run", async () => {
   const tracer = new FakeTracer();
-  await tracer.newSession();
   const runId = uuid.v4();
   const compareRun: Run = {
     id: runId,
@@ -126,7 +167,6 @@ test("Test Tool Run", async () => {
     execution_order: 1,
     child_execution_order: 1,
     serialized: { name: "test" },
-    session_id: TEST_SESSION_ID.toString(),
     inputs: { input: "test" },
     outputs: { output: "output" },
     run_type: "tool",
@@ -141,7 +181,6 @@ test("Test Tool Run", async () => {
 
 test("Test nested runs", async () => {
   const tracer = new FakeTracer();
-  await tracer.newSession();
   const chainRunId = uuid.v4();
   const toolRunId = uuid.v4();
   const llmRunId = uuid.v4();
@@ -190,7 +229,6 @@ test("Test nested runs", async () => {
             serialized: {
               name: "test_llm_child_run",
             },
-            session_id: TEST_SESSION_ID,
             start_time: 1620000000000,
             run_type: "llm",
             child_runs: [],
@@ -203,7 +241,6 @@ test("Test nested runs", async () => {
         serialized: {
           name: "test_tool",
         },
-        session_id: TEST_SESSION_ID,
         start_time: 1620000000000,
         inputs: { input: "test" },
         run_type: "tool",
@@ -222,7 +259,6 @@ test("Test nested runs", async () => {
         serialized: {
           name: "test_llm2",
         },
-        session_id: TEST_SESSION_ID,
         start_time: 1620000000000,
         run_type: "llm",
         child_runs: [],
@@ -242,7 +278,6 @@ test("Test nested runs", async () => {
       name: "test2",
     },
     name: "test2",
-    session_id: TEST_SESSION_ID,
     start_time: 1620000000000,
     run_type: "chain",
   };

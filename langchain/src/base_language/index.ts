@@ -1,5 +1,9 @@
 import type { Tiktoken } from "@dqbd/tiktoken";
-import { BasePromptValue, LLMResult } from "../schema/index.js";
+import {
+  BaseChatMessage,
+  BasePromptValue,
+  LLMResult,
+} from "../schema/index.js";
 import { CallbackManager, Callbacks } from "../callbacks/manager.js";
 import { AsyncCaller, AsyncCallerParams } from "../util/async_caller.js";
 import { getModelNameForTiktoken, importTiktoken } from "./count_tokens.js";
@@ -102,6 +106,18 @@ export abstract class BaseLanguageModel
     options?: string[] | this["CallOptions"],
     callbacks?: Callbacks
   ): Promise<LLMResult>;
+
+  abstract predict(
+    text: string,
+    options?: string[] | this["CallOptions"],
+    callbacks?: Callbacks
+  ): Promise<string>;
+
+  abstract predictMessages(
+    messages: BaseChatMessage[],
+    options?: string[] | this["CallOptions"],
+    callbacks?: Callbacks
+  ): Promise<BaseChatMessage>;
 
   abstract _modelType(): string;
 

@@ -4,6 +4,7 @@ import {
   BasePromptValue,
   ChatGeneration,
   ChatResult,
+  HumanChatMessage,
   LLMResult,
   RUN_KEY,
 } from "../schema/index.js";
@@ -12,7 +13,6 @@ import {
   BaseLanguageModelCallOptions,
   BaseLanguageModelParams,
 } from "../base_language/index.js";
-import { getBufferString } from "../memory/base.js";
 import {
   CallbackManager,
   CallbackManagerForLLMRun,
@@ -56,9 +56,6 @@ export abstract class BaseChatModel extends BaseLanguageModel {
   ): Promise<LLMResult> {
     const generations: ChatGeneration[][] = [];
     const llmOutputs: LLMResult["llmOutput"][] = [];
-    const messageStrings: string[] = messages.map((messageList) =>
-      getBufferString(messageList)
-    );
     let parsedOptions: this["CallOptions"];
     if (Array.isArray(options)) {
       parsedOptions = { stop: options } as this["CallOptions"];
@@ -75,9 +72,9 @@ export abstract class BaseChatModel extends BaseLanguageModel {
       this.callbacks,
       { verbose: this.verbose }
     );
-    const runManager = await callbackManager_?.handleLLMStart(
+    const runManager = await callbackManager_?.handleChatModelStart(
       { name: this._llmType() },
-      messageStrings
+      messages
     );
     try {
       const results = await Promise.all(
@@ -150,6 +147,24 @@ export abstract class BaseChatModel extends BaseLanguageModel {
   ): Promise<BaseChatMessage> {
     const promptMessages: BaseChatMessage[] = promptValue.toChatMessages();
     return this.call(promptMessages, options, callbacks);
+  }
+
+  async predictMessages(
+    messages: BaseChatMessage[],
+    options?: string[] | this["CallOptions"],
+    callbacks?: Callbacks
+  ): Promise<BaseChatMessage> {
+    return this.call(messages, options, callbacks);
+  }
+
+  async predict(
+    text: string,
+    options?: string[] | this["CallOptions"],
+    callbacks?: Callbacks
+  ): Promise<string> {
+    const message = new HumanChatMessage(text);
+    const result = await this.call([message], options, callbacks);
+    return result.text;
   }
 }
 
