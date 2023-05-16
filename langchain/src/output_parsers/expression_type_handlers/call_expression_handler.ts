@@ -1,10 +1,6 @@
 import type { ESTree } from "meriyah";
 import { NodeHandler, ASTParser } from "./base.js";
-import {
-  CallExpressionType,
-  ElementAccessExpressionType,
-  PropertyAccessType,
-} from "./types.js";
+import { CallExpressionType, MemberExpressionType } from "./types.js";
 
 export class CallExpressionHandler extends NodeHandler {
   async accepts(node: ESTree.Node): Promise<ESTree.CallExpression | boolean> {
@@ -16,18 +12,17 @@ export class CallExpressionHandler extends NodeHandler {
   }
 
   async handle(node: ESTree.CallExpression): Promise<CallExpressionType> {
-    const checkCallExpressionArgumentType =
-      function checkCallExpressionArgumentType(arg: ESTree.Node): boolean {
-        return [
-          ASTParser.isStringLiteral,
-          ASTParser.isNumericLiteral,
-          ASTParser.isBooleanLiteral,
-          ASTParser.isArrayExpression,
-          ASTParser.isObjectExpression,
-          ASTParser.isCallExpression,
-          ASTParser.isIdentifier,
-        ].reduce((acc, func) => acc || func(arg), false);
-      };
+    function checkCallExpressionArgumentType(arg: ESTree.Node): boolean {
+      return [
+        ASTParser.isStringLiteral,
+        ASTParser.isNumericLiteral,
+        ASTParser.isBooleanLiteral,
+        ASTParser.isArrayExpression,
+        ASTParser.isObjectExpression,
+        ASTParser.isCallExpression,
+        ASTParser.isIdentifier,
+      ].reduce((acc, func) => acc || func(arg), false);
+    }
     if (this.parentHandler === undefined) {
       throw new Error(
         "ArrayLiteralExpressionHandler must have a parent handler"
@@ -40,7 +35,7 @@ export class CallExpressionHandler extends NodeHandler {
     } else if (ASTParser.isMemberExpression(callee)) {
       funcCall = (await this.parentHandler.handle(
         callee as ESTree.MemberExpression
-      )) as ElementAccessExpressionType | PropertyAccessType;
+      )) as MemberExpressionType;
     } else {
       throw new Error("Unknown expression type");
     }

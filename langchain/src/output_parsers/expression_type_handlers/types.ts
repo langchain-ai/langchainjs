@@ -7,11 +7,7 @@ export type ArgumentsType =
   | CallExpressionType
   | BooleanLiteralType;
 
-export type ParsedType =
-  | ArgumentsType
-  | ElementAccessExpressionType
-  | PropertyAccessType
-  | PropertyAssignmentType;
+export type ParsedType = ArgumentsType | PropertyAssignmentType;
 
 export type ArrayLiteralType = {
   type: "array_literal";
@@ -25,13 +21,8 @@ export type BooleanLiteralType = {
 
 export type CallExpressionType = {
   type: "call_expression";
-  funcCall: string | ElementAccessExpressionType | PropertyAccessType;
+  funcCall: string | MemberExpressionType;
   args?: ArgumentsType[];
-};
-export type ElementAccessExpressionType = {
-  type: "element_access_expression";
-  identifier: string | string[];
-  key?: string | number;
 };
 
 export type NumericLiteralType = {
@@ -44,15 +35,9 @@ export type ObjectLiteralType = {
   values: PropertyAssignmentType[];
 };
 
-export type PropertyAccessType = {
-  type: "property_access_expression";
-  identifier: string | PropertyAccessType;
-  property: string;
-};
-
-export type MemberAccessType = {
+export type MemberExpressionType = {
   type: "member_access_expression";
-  identifier: string | PropertyAccessType;
+  identifier: string;
   property: string;
 };
 

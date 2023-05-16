@@ -1,6 +1,6 @@
 import type { ESTree } from "meriyah";
 import { NodeHandler, ASTParser } from "./base.js";
-import { MemberAccessType, PropertyAccessType } from "./types.js";
+import { MemberExpressionType } from "./types.js";
 
 export class MemberExpressionHandler extends NodeHandler {
   async accepts(node: ESTree.Node): Promise<ESTree.MemberExpression | boolean> {
@@ -11,14 +11,14 @@ export class MemberExpressionHandler extends NodeHandler {
     }
   }
 
-  async handle(node: ESTree.MemberExpression): Promise<MemberAccessType> {
+  async handle(node: ESTree.MemberExpression): Promise<MemberExpressionType> {
     if (!this.parentHandler) {
       throw new Error(
         "ArrayLiteralExpressionHandler must have a parent handler"
       );
     }
     const { object, property } = node;
-    let prop: string | PropertyAccessType;
+    let prop: string;
     if (ASTParser.isIdentifier(property)) {
       prop = property.name.replace(/^["'](.+(?=["']$))["']$/, "$1");
     } else if (ASTParser.isStringLiteral(property)) {

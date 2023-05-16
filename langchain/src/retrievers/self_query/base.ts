@@ -49,7 +49,7 @@ export class SelfQueryRetriever
   async getRelevantDocuments(
     query: string
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ): Promise<Document<Record<string, any>>[]> {
+  ): Promise<Document<Record<string, unknown>>[]> {
     const { [this.llmChain.outputKey]: output } = await this.llmChain.call({
       [this.llmChain.inputKeys[0]]: query,
     });

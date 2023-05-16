@@ -62,7 +62,6 @@ export abstract class Visitor {
 export abstract class Expression {
   abstract exprName: "Operation" | "Comparison" | "StructuredQuery";
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   accept(visitor: Visitor) {
     if (this.exprName === "Operation") {
       return visitor.visitOperation(this as unknown as Operation);

@@ -11,4 +11,3 @@ export { OutputFixingParser } from "./fix.js";
 export { CombiningOutputParser } from "./combining.js";
 export { RouterOutputParser, RouterOutputParserInput } from "./router.js";
 export { CustomListOutputParser } from "./list.js";
-export { ExpressionParser } from "./expression.js";

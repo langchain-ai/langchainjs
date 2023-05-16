@@ -7,7 +7,7 @@ import { ASTParser } from "./expression_type_handlers/base.js";
  * okay so we need to be able to handle the following cases:
  * ExpressionStatement
  *  CallExpression
- *      Identifier | PropertyAccessExpression | ElementAccessExpression
+ *      Identifier | MemberExpression
  *      ExpressionLiterals: [
  *          CallExpression
  *          StringLiteral
