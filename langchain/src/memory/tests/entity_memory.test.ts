@@ -24,7 +24,7 @@ test("Test entity memory", async () => {
   const model = new FakeLLM({});
   const memory = new EntityMemory({ llm: model });
   const result1 = await memory.loadMemoryVariables({ input: "foo" });
-  const expectedResult1 = { history: "", entities: { foo: "" } };
+  const expectedResult1 = { history: "", entities: { foo: "No current information known." } };
   expect(result1).toStrictEqual(expectedResult1);
 
   await memory.saveContext({ foo: "bar" }, { bar: "foo" });
@@ -51,6 +51,6 @@ test("Test entity memory with pre-loaded history", async () => {
   const result = await memory.loadMemoryVariables({ input: "foo" });
   expect(result).toStrictEqual({
     history: pastMessages,
-    entities: { foo: "" },
+    entities: { foo: "No current information known." },
   });
 });
