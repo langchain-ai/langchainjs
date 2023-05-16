@@ -164,7 +164,7 @@ const correctExps = [
   {
     type: "call_expression",
     funcCall: {
-      type: "member_access_expression",
+      type: "member_expression",
       identifier: "hello",
       property: "world",
     },
@@ -193,7 +193,7 @@ const correctExps = [
   {
     type: "call_expression",
     funcCall: {
-      type: "member_access_expression",
+      type: "member_expression",
       identifier: "hello",
       property: "world",
     },

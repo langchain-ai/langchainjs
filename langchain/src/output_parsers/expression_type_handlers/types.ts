@@ -36,7 +36,7 @@ export type ObjectLiteralType = {
 };
 
 export type MemberExpressionType = {
-  type: "member_access_expression";
+  type: "member_expression";
   identifier: string;
   property: string;
 };

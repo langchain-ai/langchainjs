@@ -44,6 +44,6 @@ export class MemberExpressionHandler extends NodeHandler {
       throw new Error("ArrayExpression is not supported");
     }
 
-    return { type: "member_access_expression", identifier, property: prop };
+    return { type: "member_expression", identifier, property: prop };
   }
 }
