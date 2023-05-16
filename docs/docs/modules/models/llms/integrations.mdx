@@ -96,6 +96,48 @@ const res = await modelA.call(
 console.log({ res });
 ```
 
+## `Sagemaker Endpoint`
+
+```bash npm2yarn
+npm install @aws-sdk/client-sagemaker-runtime
+```
+
+```typescript
+import { ContentHandlerBase, SagemakerEndpoint } from "langchain/llms/sagemaker_endpoint";
+
+class ContentHandler implements ContentHandlerBase<string, string> {
+  contentType = "application/json";
+
+  accepts = "application/json";
+
+  transformInput(prompt: string, modelKwargs: Record<string, unknown>) {
+    const inputString = JSON.stringify({
+      prompt,
+      ...modelKwargs,
+    });
+    return Buffer.from(inputString);
+  }
+
+  transformOutput(output: Uint8Array) {
+    const responseJson = JSON.parse(Buffer.from(output).toString("utf-8"));
+    return responseJson[0].generated_text;
+  }
+}
+
+const contentHandler = new ContentHandler();
+
+const model = new SagemakerEndpoint({
+  endpointName: "<endpoint_name>",
+  regionName: "us-east-1",
+  modelKwargs: { "temperature": 1e-10 },
+  contentHandler,
+});
+
+const res = await model.call("Hello, my name is ");
+
+console.log({ res });
+```
+
 ## Additional LLM Implementations
 
 ### `PromptLayerOpenAI`

@@ -30,7 +30,7 @@ test.skip("Test SagemakerEndpoint", async () => {
   const model = new SagemakerEndpoint({
     endpointName: "<endpoint_name>",
     regionName: "us-east-1",
-    modelKwargs: { "temperature": 1e-10},
+    modelKwargs: { temperature: 1e-10 },
     contentHandler,
   });
 
