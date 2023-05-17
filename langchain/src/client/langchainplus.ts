@@ -12,6 +12,7 @@ import { BaseChain } from "../chains/base.js";
 import { BaseLLM } from "../llms/base.js";
 import { BaseChatModel } from "../chat_models/base.js";
 import { mapStoredMessagesToChatMessages } from "../stores/message/utils.js";
+import { AsyncCaller, AsyncCallerParams } from "../util/async_caller.js";
 
 export interface RunResult extends BaseRun {
   name: string;
@@ -65,14 +66,16 @@ const isLocalhost = (url: string): boolean => {
 
 const getSeededTenantId = async (
   apiUrl: string,
-  apiKey: string | undefined
+  apiKey: string | undefined,
+  callerOptions: AsyncCallerParams | undefined = undefined
 ): Promise<string> => {
   // Get the tenant ID from the seeded tenant
+  const caller = new AsyncCaller(callerOptions ?? {});
   const url = `${apiUrl}/tenants`;
   let response;
 
   try {
-    response = await fetch(url, {
+    response = await caller.call(fetch, url, {
       method: "GET",
       headers: apiKey ? { authorization: `Bearer ${apiKey}` } : undefined,
     });
