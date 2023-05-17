@@ -15615,7 +15615,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ignore@npm:^5.2.0, ignore@npm:^5.2.4":
+"ignore@npm:^5.2.0":
   version: 5.2.4
   resolution: "ignore@npm:5.2.4"
   checksum: 3d4c309c6006e2621659311783eaea7ebcd41fe4ca1d78c91c473157ad6666a57a2df790fe0d07a12300d9aac2888204d7be8d59f9aaf665b1c7fcdb432517ef
@@ -17959,6 +17959,7 @@ __metadata:
     graphql: ^16.6.0
     hnswlib-node: ^1.4.2
     html-to-text: ^9.0.5
+    ignore: ^5.2.0
     jest: ^29.5.0
     js-tiktoken: ^1.0.6
     jsonpointer: ^5.0.1
@@ -18010,6 +18011,7 @@ __metadata:
     epub2: ^3.0.1
     hnswlib-node: ^1.4.2
     html-to-text: ^9.0.5
+    ignore: ^5.2.0
     mammoth: "*"
     mongodb: ^5.2.0
     pdf-parse: 1.1.1
@@ -18020,6 +18022,9 @@ __metadata:
     srt-parser-2: ^1.2.2
     typeorm: ^0.3.12
     weaviate-ts-client: ^1.0.0
+  dependenciesMeta:
+    ignore:
+      optional: true
   peerDependenciesMeta:
     "@aws-sdk/client-dynamodb":
       optional: true
@@ -18065,6 +18070,8 @@ __metadata:
       optional: true
     html-to-text:
       optional: true
+    ignore:
+      optional: true
     mammoth:
       optional: true
     mongodb:
@@ -18095,7 +18102,6 @@ __metadata:
     "@tsconfig/recommended": ^1.0.2
     dotenv: ^16.0.3
     husky: ^8.0.3
-    ignore: ^5.2.4
     lint-staged: ^13.1.1
     prettier: ^2.8.3
     turbo: latest

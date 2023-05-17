@@ -410,6 +410,7 @@
     "epub2": "^3.0.1",
     "hnswlib-node": "^1.4.2",
     "html-to-text": "^9.0.5",
+    "ignore": "^5.2.0",
     "mammoth": "*",
     "mongodb": "^5.2.0",
     "pdf-parse": "1.1.1",
@@ -486,6 +487,9 @@
       "optional": true
     },
     "html-to-text": {
+      "optional": true
+    },
+    "ignore": {
       "optional": true
     },
     "mammoth": {
