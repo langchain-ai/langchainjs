@@ -153,6 +153,7 @@ const requiresOptionalDependency = [
   "embeddings/hf",
   "llms/load",
   "llms/cohere",
+  "llms/googlevertexai",
   "llms/hf",
   "llms/replicate",
   "prompts/load",
