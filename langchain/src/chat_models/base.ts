@@ -4,6 +4,7 @@ import {
   BasePromptValue,
   ChatGeneration,
   ChatResult,
+  HumanChatMessage,
   LLMResult,
   RUN_KEY,
 } from "../schema/index.js";
@@ -71,9 +72,13 @@ export abstract class BaseChatModel extends BaseLanguageModel {
       this.callbacks,
       { verbose: this.verbose }
     );
+    const invocationParams = { invocation_params: this?.invocationParams() };
     const runManager = await callbackManager_?.handleChatModelStart(
       { name: this._llmType() },
-      messages
+      messages,
+      undefined,
+      undefined,
+      invocationParams
     );
     try {
       const results = await Promise.all(
@@ -104,6 +109,13 @@ export abstract class BaseChatModel extends BaseLanguageModel {
       configurable: true,
     });
     return output;
+  }
+
+  /**
+   * Get the parameters used to invoke the model
+   */
+  invocationParams(): any {
+    return {};
   }
 
   _modelType(): string {
@@ -146,6 +158,24 @@ export abstract class BaseChatModel extends BaseLanguageModel {
   ): Promise<BaseChatMessage> {
     const promptMessages: BaseChatMessage[] = promptValue.toChatMessages();
     return this.call(promptMessages, options, callbacks);
+  }
+
+  async predictMessages(
+    messages: BaseChatMessage[],
+    options?: string[] | this["CallOptions"],
+    callbacks?: Callbacks
+  ): Promise<BaseChatMessage> {
+    return this.call(messages, options, callbacks);
+  }
+
+  async predict(
+    text: string,
+    options?: string[] | this["CallOptions"],
+    callbacks?: Callbacks
+  ): Promise<string> {
+    const message = new HumanChatMessage(text);
+    const result = await this.call([message], options, callbacks);
+    return result.text;
   }
 }
 

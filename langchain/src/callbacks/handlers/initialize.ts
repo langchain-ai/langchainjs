@@ -13,14 +13,6 @@ export async function getTracingCallbackHandler(
   return tracer;
 }
 
-export async function getTracingV2CallbackHandler(
-  session?: string
-): Promise<LangChainTracer> {
-  const tracer = new LangChainTracer();
-  if (session) {
-    await tracer.loadSession(session);
-  } else {
-    await tracer.loadDefaultSession();
-  }
-  return tracer;
+export async function getTracingV2CallbackHandler(): Promise<LangChainTracer> {
+  return new LangChainTracer();
 }

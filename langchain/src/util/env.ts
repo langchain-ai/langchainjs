@@ -24,3 +24,24 @@ export const getEnv = () => {
 
   return env;
 };
+
+export type RuntimeEnvironment = {
+  library: string;
+  libraryVersion?: string;
+  runtime: string;
+  runtimeVersion?: string;
+};
+
+let runtimeEnvironment: RuntimeEnvironment | undefined;
+
+export async function getRuntimeEnvironment(): Promise<RuntimeEnvironment> {
+  if (runtimeEnvironment === undefined) {
+    const env = getEnv();
+
+    runtimeEnvironment = {
+      library: "langchain-js",
+      runtime: env,
+    };
+  }
+  return runtimeEnvironment;
+}

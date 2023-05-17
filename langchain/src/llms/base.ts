@@ -1,6 +1,8 @@
 import { InMemoryCache } from "../cache/index.js";
 import {
+  AIChatMessage,
   BaseCache,
+  BaseChatMessage,
   BasePromptValue,
   Generation,
   LLMResult,
@@ -16,6 +18,7 @@ import {
   CallbackManagerForLLMRun,
   Callbacks,
 } from "../callbacks/manager.js";
+import { getBufferString } from "../memory/base.js";
 
 export type SerializedLLM = {
   _model: string;
@@ -74,6 +77,13 @@ export abstract class BaseLLM extends BaseLanguageModel {
     runManager?: CallbackManagerForLLMRun
   ): Promise<LLMResult>;
 
+  /**
+   * Get the parameters used to invoke the model
+   */
+  invocationParams(): any {
+    return {};
+  }
+
   /** @ignore */
   async _generateUncached(
     prompts: string[],
@@ -85,10 +95,15 @@ export abstract class BaseLLM extends BaseLanguageModel {
       this.callbacks,
       { verbose: this.verbose }
     );
+    const invocationParams = { invocation_params: this?.invocationParams() };
     const runManager = await callbackManager_?.handleLLMStart(
       { name: this._llmType() },
-      prompts
+      prompts,
+      undefined,
+      undefined,
+      invocationParams
     );
+
     let output;
     try {
       output = await this._generate(prompts, options, runManager);
@@ -179,13 +194,31 @@ export abstract class BaseLLM extends BaseLanguageModel {
     prompt: string,
     options?: string[] | this["CallOptions"],
     callbacks?: Callbacks
-  ) {
+  ): Promise<string> {
     const { generations } = await this.generate(
       [prompt],
       options ?? {},
       callbacks
     );
     return generations[0][0].text;
+  }
+
+  async predict(
+    text: string,
+    options?: string[] | this["CallOptions"],
+    callbacks?: Callbacks
+  ): Promise<string> {
+    return this.call(text, options, callbacks);
+  }
+
+  async predictMessages(
+    messages: BaseChatMessage[],
+    options?: string[] | this["CallOptions"],
+    callbacks?: Callbacks
+  ): Promise<BaseChatMessage> {
+    const text = getBufferString(messages);
+    const prediction = await this.call(text, options, callbacks);
+    return new AIChatMessage(prediction);
   }
 
   /**
