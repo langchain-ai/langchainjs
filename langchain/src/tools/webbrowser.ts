@@ -179,7 +179,7 @@ export class WebBrowser extends Tool {
     this.headers = headers || DEFAULT_HEADERS;
     this.axiosConfig = {
       withCredentials: true,
-      adapter: isNode ? undefined : fetchAdapter,
+      adapter: isNode() ? undefined : fetchAdapter,
       ...axiosConfig,
     };
   }

@@ -176,7 +176,7 @@ export class OpenAIEmbeddings
         basePath: endpoint,
         baseOptions: {
           timeout: this.timeout,
-          adapter: isNode ? undefined : fetchAdapter,
+          adapter: isNode() ? undefined : fetchAdapter,
           ...this.clientConfig.baseOptions,
         },
       });

@@ -9,15 +9,15 @@ declare global {
     | undefined;
 }
 
-export const isBrowser =
+export const isBrowser = () =>
   typeof window !== "undefined" && typeof window.document !== "undefined";
 
-export const isWebWorker =
+export const isWebWorker = () =>
   typeof globalThis === "object" &&
   globalThis.constructor &&
   globalThis.constructor.name === "DedicatedWorkerGlobalScope";
 
-export const isJsDom =
+export const isJsDom = () =>
   (typeof window !== "undefined" && window.name === "nodejs") ||
   (typeof navigator !== "undefined" &&
     (navigator.userAgent.includes("Node.js") ||
@@ -25,10 +25,10 @@ export const isJsDom =
 
 // Supabase Edge Function provides a `Deno` global object
 // without `version` property
-export const isDeno = typeof Deno !== "undefined";
+export const isDeno = () => typeof Deno !== "undefined";
 
 // Mark not-as-node if in Supabase Edge Function
-export const isNode =
+export const isNode = () =>
   typeof process !== "undefined" &&
   process.versions != null &&
   process.versions.node != null &&
@@ -36,15 +36,15 @@ export const isNode =
 
 export const getEnv = () => {
   let env: string;
-  if (isBrowser) {
+  if (isBrowser()) {
     env = "browser";
-  } else if (isNode) {
+  } else if (isNode()) {
     env = "node";
-  } else if (isWebWorker) {
+  } else if (isWebWorker()) {
     env = "webworker";
-  } else if (isJsDom) {
+  } else if (isJsDom()) {
     env = "jsdom";
-  } else if (isDeno) {
+  } else if (isDeno()) {
     env = "deno";
   } else {
     env = "other";

@@ -368,7 +368,7 @@ export class OpenAIChat
       this.client = new OpenAIApi(clientConfig);
     }
     const axiosOptions = {
-      adapter: isNode ? undefined : fetchAdapter,
+      adapter: isNode() ? undefined : fetchAdapter,
       ...this.clientConfig.baseOptions,
       ...options,
     } as StreamingAxiosConfiguration;

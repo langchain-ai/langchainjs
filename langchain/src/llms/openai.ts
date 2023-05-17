@@ -430,7 +430,7 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
       this.client = new OpenAIApi(clientConfig);
     }
     const axiosOptions: StreamingAxiosConfiguration = {
-      adapter: isNode ? undefined : fetchAdapter,
+      adapter: isNode() ? undefined : fetchAdapter,
       ...this.clientConfig.baseOptions,
       ...options,
     };
