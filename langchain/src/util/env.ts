@@ -30,8 +30,8 @@ export const isDeno = () => typeof Deno !== "undefined";
 // Mark not-as-node if in Supabase Edge Function
 export const isNode = () =>
   typeof process !== "undefined" &&
-  process.versions != null &&
-  process.versions.node != null &&
+  typeof process.versions !== "undefined" &&
+  typeof process.versions.node !== "undefined" &&
   !isDeno();
 
 export const getEnv = () => {
