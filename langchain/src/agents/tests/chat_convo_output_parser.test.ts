@@ -1,5 +1,6 @@
 import { test, expect } from "@jest/globals";
 import { ChatConversationalAgentOutputParser } from "../chat_convo/outputParser.js";
+import { AgentAction, AgentFinish } from "../../schema/index.js";
 
 test("Can parse JSON with text in front of it", async () => {
   const testCases = [
@@ -44,21 +45,88 @@ test("Can parse JSON with text in front of it", async () => {
     },
   ];
 
-  const p = new ChatConversationalAgentOutputParser();
+  const p = new ChatConversationalAgentOutputParser([
+    "blogpost",
+    "metabase",
+    "ToolWithJson",
+  ]);
   for (const message of testCases) {
     const parsed = await p.parse(message.input);
     expect(parsed).toBeDefined();
     if (message.tool === "Final Answer") {
-      expect(parsed.returnValues).toBeDefined();
+      expect((parsed as AgentFinish).returnValues).toBeDefined();
     } else {
-      expect(parsed.tool).toEqual(message.tool);
+      expect((parsed as AgentAction).tool).toEqual(message.tool);
 
       if (typeof message.toolInput === "object") {
-        expect(message.toolInput).toEqual(parsed.toolInput);
+        expect(message.toolInput).toEqual((parsed as AgentAction).toolInput);
       }
       if (typeof message.toolInput === "string") {
-        expect(message.toolInput).toContain(parsed.toolInput);
+        expect(message.toolInput).toContain((parsed as AgentAction).toolInput);
       }
     }
   }
 });
+
+// test("will throw exceptions if action or action_input are not found", async () => {
+//   const parser = new ChatConversationalAgentOutputParser(["ToolThing"]);
+
+//   type MissingItem = "action" | "action_input";
+//   type TestCase = { message: string; missing: MissingItem };
+
+//   const testCases: TestCase[] = [
+//     {
+//       message: "",
+//       missing: "action",
+//     },
+//     {
+//       message: '{"action": "Final Answer"}',
+//       missing: "action_input",
+//     },
+//     {
+//       message: '{"action_input": "I have no action"}',
+//       missing: "action",
+//     },
+//     {
+//       message:
+//         'I have a prefix ```json\n{"action_input": "I have no action"}```',
+//       missing: "action",
+//     },
+//     {
+//       message: 'I have a prefix ```{"action_input": "I have no action"}```',
+//       missing: "action",
+//     },
+//     {
+//       message:
+//         'I have a prefix ```json\n{"action_input": "I have no action"}\n```',
+//       missing: "action",
+//     },
+//     {
+//       message: 'I have a prefix ```\n{"action_input": "I have no action"}\n```',
+//       missing: "action",
+//     },
+
+//     {
+//       message: 'I have a prefix ```json\n{"action": "ToolThing"}```',
+//       missing: "action_input",
+//     },
+//     {
+//       message: 'I have a prefix ```{"action": "ToolThing"}```',
+//       missing: "action_input",
+//     },
+//     {
+//       message: 'I have a prefix ```json\n{"action": "ToolThing"}\n```',
+//       missing: "action_input",
+//     },
+//     {
+//       message: 'I have a prefix ```\n{"action": "ToolThing"}\n```',
+//       missing: "action_input",
+//     },
+//   ];
+
+//   for (const { message, missing } of testCases) {
+//     await expect(parser.parse(message)).rejects.toThrow(
+//       `\`${missing}\` could not be found in: "${message}"`
+//     );
+//   }
+// });
