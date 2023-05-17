@@ -115,7 +115,7 @@ export class ChatConversationalAgent extends Agent {
    * @param args - Arguments to create the prompt with.
    * @param args.systemMessage - String to put before the list of tools.
    * @param args.humanMessage - String to put after the list of tools.
-   * @param args.outputParser
+   * @param args.outputParser - Output parser to use for formatting.
    */
   static createPrompt(
     tools: Tool[],
