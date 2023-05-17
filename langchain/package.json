@@ -521,11 +521,11 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.4.3",
-    "@dqbd/tiktoken": "^1.0.7",
     "ansi-styles": "^5.0.0",
     "binary-extensions": "^2.2.0",
     "expr-eval": "^2.0.2",
     "flat": "^5.0.2",
+    "js-tiktoken": "^1.0.6",
     "jsonpointer": "^5.0.1",
     "ml-distance": "^4.0.0",
     "object-hash": "^3.0.0",

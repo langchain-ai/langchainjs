@@ -1,4 +1,4 @@
-import { TiktokenModel } from "@dqbd/tiktoken";
+import type { TiktokenModel } from "js-tiktoken/lite";
 import {
   Configuration,
   ConfigurationParameters,
