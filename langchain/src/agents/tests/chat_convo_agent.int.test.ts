@@ -10,7 +10,7 @@ test("Run conversational agent with memory", async () => {
 
   const executor = await initializeAgentExecutorWithOptions(tools, model, {
     agentType: "chat-conversational-react-description",
-    // verbose: true,
+    verbose: true,
     memory: new BufferMemory({
       returnMessages: true,
       memoryKey: "chat_history",
