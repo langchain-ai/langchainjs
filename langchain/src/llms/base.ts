@@ -80,6 +80,7 @@ export abstract class BaseLLM extends BaseLanguageModel {
   /**
    * Get the parameters used to invoke the model
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   invocationParams(): any {
     return {};
   }
