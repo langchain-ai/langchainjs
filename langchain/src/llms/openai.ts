@@ -1,5 +1,4 @@
 import { TiktokenModel } from "@dqbd/tiktoken";
-import { isNode } from "browser-or-node";
 import {
   Configuration,
   ConfigurationParameters,
@@ -8,6 +7,7 @@ import {
   CreateCompletionResponseChoicesInner,
   OpenAIApi,
 } from "openai";
+import { isNode } from "../util/env.js";
 import {
   AzureOpenAIInput,
   OpenAICallOptions,

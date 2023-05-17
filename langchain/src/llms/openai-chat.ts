@@ -1,4 +1,3 @@
-import { isNode } from "browser-or-node";
 import {
   Configuration,
   OpenAIApi,
@@ -8,6 +7,7 @@ import {
   ChatCompletionResponseMessageRoleEnum,
   CreateChatCompletionResponse,
 } from "openai";
+import { isNode } from "../util/env.js";
 import {
   AzureOpenAIInput,
   OpenAICallOptions,

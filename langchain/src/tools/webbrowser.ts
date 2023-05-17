@@ -1,6 +1,6 @@
 import axiosMod, { AxiosRequestConfig, AxiosStatic } from "axios";
-import { isNode } from "browser-or-node";
 import * as cheerio from "cheerio";
+import { isNode } from "../util/env.js";
 import { BaseLanguageModel } from "../base_language/index.js";
 import { RecursiveCharacterTextSplitter } from "../text_splitter.js";
 import { MemoryVectorStore } from "../vectorstores/memory.js";
