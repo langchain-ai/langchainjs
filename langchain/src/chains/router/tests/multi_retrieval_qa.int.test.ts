@@ -61,12 +61,12 @@ test("Test MultiPromptChain", async () => {
     animaniacs.asRetriever(3),
   ];
 
-  const multiRetrievalQAChain = MultiRetrievalQAChain.fromRetrievers(
+  const multiRetrievalQAChain = MultiRetrievalQAChain.fromRetrievers({
     llm,
     retrieverNames,
     retrieverDescriptions,
-    retrievers
-  );
+    retrievers,
+  });
   const testPromise1 = multiRetrievalQAChain.call({
     input:
       "In the Aqua Teen Hunger Force theme song, who calls himself the mike rula?",

@@ -26,12 +26,12 @@ Here is a question:
 
   const promptTemplates = [physicsTemplate, mathTemplate, historyTemplate];
 
-  const multiPromptChain = MultiPromptChain.fromPrompts(
+  const multiPromptChain = MultiPromptChain.fromPrompts({
     llm,
     promptNames,
     promptDescriptions,
-    promptTemplates
-  );
+    promptTemplates,
+  });
 
   const testPromise1 = multiPromptChain.call({
     input: "What is the speed of light?",

@@ -100,9 +100,9 @@ export class RetrievalQAChain
       prompt: options?.prompt,
     });
     return new this({
+      ...options,
       retriever,
       combineDocumentsChain: qaChain,
-      ...options,
     });
   }
 }
