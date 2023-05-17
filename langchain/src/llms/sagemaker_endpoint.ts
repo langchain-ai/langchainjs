@@ -131,7 +131,7 @@ export class SageMakerEndpoint extends LLM {
   }
 
   _llmType() {
-    return "SageMaker_endpoint";
+    return "sagemaker_endpoint";
   }
 
   /** @ignore */
