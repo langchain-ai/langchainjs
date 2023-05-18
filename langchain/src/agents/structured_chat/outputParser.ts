@@ -74,7 +74,7 @@ export class StructuredChatOutputParserWithRetries extends AgentActionOutputPars
 
   getFormatInstructions(): string {
     return renderTemplate(FORMAT_INSTRUCTIONS, "f-string", {
-      tool_names: this.toolNames.join(", ")
+      tool_names: this.toolNames.join(", "),
     });
   }
 
