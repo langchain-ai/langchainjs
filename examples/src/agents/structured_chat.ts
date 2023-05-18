@@ -2,13 +2,13 @@ import { z } from "zod";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { initializeAgentExecutorWithOptions } from "langchain/agents";
 import { Calculator } from "langchain/tools/calculator";
-import { StructuredDynamicTool } from "langchain/tools";
+import { DynamicStructuredTool } from "langchain/tools";
 
 export const run = async () => {
   const model = new ChatOpenAI({ temperature: 0 });
   const tools = [
     new Calculator(), // Older existing single input tools will still work
-    new StructuredDynamicTool({
+    new DynamicStructuredTool({
       name: "random-number-generator",
       description: "generates a random number between two input numbers",
       schema: z.object({

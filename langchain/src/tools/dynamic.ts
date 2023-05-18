@@ -17,7 +17,7 @@ export interface DynamicToolInput extends BaseDynamicToolInput {
   ) => Promise<string>;
 }
 
-export interface StructuredDynamicToolInput<
+export interface DynamicStructuredToolInput<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   T extends z.ZodObject<any, any, any, any> = z.ZodObject<any, any, any, any>
 > extends BaseDynamicToolInput {
@@ -55,7 +55,7 @@ export class DynamicTool extends Tool {
   }
 }
 
-export class StructuredDynamicTool<
+export class DynamicStructuredTool<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   T extends z.ZodObject<any, any, any, any> = z.ZodObject<any, any, any, any>
 > extends StructuredTool {
@@ -63,11 +63,11 @@ export class StructuredDynamicTool<
 
   description: string;
 
-  func: StructuredDynamicToolInput["func"];
+  func: DynamicStructuredToolInput["func"];
 
   schema: T;
 
-  constructor(fields: StructuredDynamicToolInput<T>) {
+  constructor(fields: DynamicStructuredToolInput<T>) {
     super(fields);
     this.name = fields.name;
     this.description = fields.description;

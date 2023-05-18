@@ -5,8 +5,8 @@ export { Tool, ToolParams, StructuredTool } from "./base.js";
 export {
   DynamicTool,
   DynamicToolInput,
-  StructuredDynamicTool,
-  StructuredDynamicToolInput,
+  DynamicStructuredTool,
+  DynamicStructuredToolInput,
 } from "./dynamic.js";
 export { IFTTTWebhook } from "./IFTTTWebhook.js";
 export { ChainTool, ChainToolInput } from "./chain.js";
