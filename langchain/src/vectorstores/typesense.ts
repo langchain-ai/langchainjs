@@ -13,6 +13,10 @@ export interface TypesenseConfig {
    */
   typesenseClient: Client;
   /**
+   * Typesense configuration.
+   */
+  typesenseConfig: { host: string; apiKey: string };
+  /**
    * Typesense schema name in which documents will be stored and searched.
    */
   schemaName: string;
@@ -47,7 +51,7 @@ export interface TypesenseConfig {
    * @param data
    * @param collectionName
    */
-  import?<T extends Record<string, any> = Record<string, any>>(
+  import?<T extends Record<string, unknown> = Record<string, unknown>>(
     data: T[],
     collectionName: string
   ): Promise<void>;
@@ -58,13 +62,21 @@ export interface TypesenseConfig {
  */
 export class Typesense extends VectorStore {
   private client: Client;
+
   private schemaName: string;
+
   private searchParams: MultiSearchRequestSchema;
+
   private vectorColumnName: string;
+
   private pageContentColumnName: string;
+
   private metadataColumnNames: string[];
+
+  private typesenseConfig: { host: string; apiKey: string };
+
   private import: (
-    data: Record<string, any>[],
+    data: Record<string, unknown>[],
     collectionName: string
   ) => Promise<void>;
 
@@ -82,6 +94,7 @@ export class Typesense extends VectorStore {
     this.vectorColumnName = config.columnNames?.vector || "vec";
     this.pageContentColumnName = config.columnNames?.pageContent || "text";
     this.metadataColumnNames = config.columnNames?.metadataColumnNames || [];
+    this.typesenseConfig = config.typesenseConfig;
 
     // Assign import function.
     this.import = config.import || this.importToTypesense;
@@ -92,25 +105,20 @@ export class Typesense extends VectorStore {
    * @param data
    * @param collectionName
    */
-  async importToTypesense<T extends Record<string, any> = Record<string, any>>(
-    data: T[],
-    collectionName: string
-  ) {
+  async importToTypesense<
+    T extends Record<string, unknown> = Record<string, unknown>
+  >(data: T[], collectionName: string) {
     const TEN_MINUTES_IN_SECONDS = 10 * 60;
-    const typesenseConfig = {
-      host: process.env.TYPESENSE_HOST,
-      apiKey: process.env.TYPESENSE_ADMIN_API_KEY,
-    } as Record<string, string>;
 
     const typesenseClient = new Client({
       nodes: [
         {
-          host: typesenseConfig.host,
+          host: this.typesenseConfig.host,
           port: 443,
           protocol: "https",
         },
       ],
-      apiKey: typesenseConfig.apiKey,
+      apiKey: this.typesenseConfig.apiKey,
       numRetries: 3,
       connectionTimeoutSeconds: TEN_MINUTES_IN_SECONDS,
     });
@@ -138,7 +146,7 @@ export class Typesense extends VectorStore {
    */
   async documentsToTypesenseRecords(
     documents: Document[]
-  ): Promise<Record<string, any>[]> {
+  ): Promise<Record<string, unknown>[]> {
     const pageContents = documents.map((doc) => doc.pageContent);
     const vectors = await this.embeddings.embedDocuments(pageContents);
 
@@ -146,7 +154,7 @@ export class Typesense extends VectorStore {
 
     const typesenseDocuments = documents.map((doc, index) => {
       const metadata = metadatas[index];
-      const objectWithMetadatas: Record<string, any> = {};
+      const objectWithMetadatas: Record<string, unknown> = {};
 
       this.metadataColumnNames.forEach((metadataColumnName) => {
         objectWithMetadatas[metadataColumnName] = metadata[metadataColumnName];
@@ -185,7 +193,7 @@ export class Typesense extends VectorStore {
     documents: (Document & { vector: number[] })[]
   ) {
     const typesenseDocuments = documents.map((doc) => {
-      const objectWithMetadatas: Record<string, any> = {};
+      const objectWithMetadatas: Record<string, unknown> = {};
 
       this.metadataColumnNames.forEach((metadataColumnName) => {
         objectWithMetadatas[metadataColumnName] =
@@ -283,18 +291,18 @@ export class Typesense extends VectorStore {
    * @returns documents
    */
   typesenseRecordsToDocuments(
-    typesenseRecords: Record<string, any>[] | undefined
+    typesenseRecords: Record<string, unknown>[] | undefined
   ): Document[] {
     const documents =
       typesenseRecords?.map((hit) => {
-        const objectWithMetadatas: Record<string, any> = {};
+        const objectWithMetadatas: Record<string, unknown> = {};
 
         this.metadataColumnNames.forEach((metadataColumnName) => {
           objectWithMetadatas[metadataColumnName] = hit[metadataColumnName];
         });
 
         const document: Document = {
-          pageContent: hit[this.pageContentColumnName] || "",
+          pageContent: (hit[this.pageContentColumnName] as string) || "",
           metadata: objectWithMetadatas,
         };
         return document;
@@ -313,7 +321,7 @@ export class Typesense extends VectorStore {
   async similaritySearch(
     query: string,
     k?: number,
-    filter: Record<string, any> = {}
+    filter: Record<string, unknown> = {}
   ) {
     const amount = k || this.searchParams.per_page || 5;
     const vectorPrompt = await this.embeddings.embedQuery(query);
@@ -335,7 +343,7 @@ export class Typesense extends VectorStore {
 
     const results = typesenseResponse.results[0].hits;
     const hits = results?.map((hit) => hit.document) as
-      | Record<string, any>[]
+      | Record<string, unknown>[]
       | undefined;
 
     const documents = this.typesenseRecordsToDocuments(hits);
@@ -358,13 +366,13 @@ export class Typesense extends VectorStore {
 
   async similaritySearchVectorWithScore(
     _vectorPrompt: number[]
-  ): Promise<[Document<Record<string, any>>, number][]> {
+  ): Promise<[Document<Record<string, unknown>>, number][]> {
     throw new Error("Method not implemented");
   }
 
   async similaritySearchWithScore(
     _query: string
-  ): Promise<[Document<Record<string, any>>, number][]> {
+  ): Promise<[Document<Record<string, unknown>>, number][]> {
     throw new Error("Method not implemented");
   }
 }
