@@ -367,15 +367,52 @@ export class Typesense extends VectorStore {
       });
   }
 
+  /**
+   * Search for similar documents with their similarity score. All the documents has 1 as similarity score because Typesense API does not return the similarity score.
+   * @param vectorPrompt vector to search for
+   * @param k amount of results to return
+   * @returns similar documents with their similarity score
+   */
   async similaritySearchVectorWithScore(
-    _vectorPrompt: number[]
+    vectorPrompt: number[],
+    k?: number
   ): Promise<[Document<Record<string, unknown>>, number][]> {
-    throw new Error("Method not implemented");
+    const amount = k || this.searchParams.per_page || 5;
+    const vector_query = `${this.vectorColumnName}:([${vectorPrompt}], k:${amount})`;
+    const typesenseResponse = await this.client.multiSearch.perform(
+      {
+        searches: [
+          {
+            ...this.searchParams,
+            per_page: amount,
+            vector_query,
+            collection: this.schemaName,
+          },
+        ],
+      },
+      {}
+    );
+    const results = typesenseResponse.results[0].hits;
+    const hits = results?.map((hit) => hit.document) as
+      | Record<string, unknown>[]
+      | undefined;
+
+    const documents = this.typesenseRecordsToDocuments(hits).map(
+      (doc) => [doc, 1] as [Document<Record<string, unknown>>, number]
+    );
+
+    return documents;
   }
 
+  /**
+   * Search for similar documents with their similarity score. All the documents has 1 as similarity score because Typesense API does not return the similarity score.
+   * @param query prompt to search for
+   * @returns similar documents with their similarity score
+   */
   async similaritySearchWithScore(
-    _query: string
+    query: string
   ): Promise<[Document<Record<string, unknown>>, number][]> {
-    throw new Error("Method not implemented");
+    const documents = await this.similaritySearch(query);
+    return documents.map((doc) => [doc, 1] as [Document, number]);
   }
 }
