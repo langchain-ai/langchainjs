@@ -3,6 +3,7 @@ import { MultiSearchRequestSchema } from "typesense/lib/Typesense/MultiSearch.js
 import { Document } from "../document.js";
 import { Embeddings } from "../embeddings/base.js";
 import { VectorStore, VectorStoreRetriever } from "./base.js";
+import { AsyncCaller } from "../util/async_caller.js";
 
 /**
  * Typesense vector store configuration.
@@ -123,14 +124,21 @@ export class Typesense extends VectorStore {
       connectionTimeoutSeconds: TEN_MINUTES_IN_SECONDS,
     });
 
+    const asyncCaller = new AsyncCaller({
+      maxConcurrency: 4,
+      maxRetries: 5,
+    });
+
     const chunkSize = 2000;
     for (let i = 0; i < data.length; i += chunkSize) {
       const chunk = data.slice(i, i + chunkSize);
 
-      await typesenseClient
-        .collections<T>(collectionName)
-        .documents()
-        .import(chunk, { action: "emplace", dirty_values: "drop" });
+      await asyncCaller.call(async () => {
+        await typesenseClient
+          .collections<T>(collectionName)
+          .documents()
+          .import(chunk, { action: "emplace", dirty_values: "drop" });
+      });
     }
   }
 
