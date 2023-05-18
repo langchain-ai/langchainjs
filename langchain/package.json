@@ -79,6 +79,9 @@
     "llms/replicate.cjs",
     "llms/replicate.js",
     "llms/replicate.d.ts",
+    "llms/sagemaker_endpoint.cjs",
+    "llms/sagemaker_endpoint.js",
+    "llms/sagemaker_endpoint.d.ts",
     "prompts.cjs",
     "prompts.js",
     "prompts.d.ts",
@@ -330,6 +333,7 @@
     "@aws-sdk/client-dynamodb": "^3.310.0",
     "@aws-sdk/client-lambda": "^3.310.0",
     "@aws-sdk/client-s3": "^3.310.0",
+    "@aws-sdk/client-sagemaker-runtime": "^3.310.0",
     "@clickhouse/client": "^0.0.14",
     "@faker-js/faker": "^7.6.0",
     "@getmetal/metal-sdk": "^2.0.1",
@@ -391,6 +395,7 @@
     "@aws-sdk/client-dynamodb": "^3.310.0",
     "@aws-sdk/client-lambda": "^3.310.0",
     "@aws-sdk/client-s3": "^3.310.0",
+    "@aws-sdk/client-sagemaker-runtime": "^3.310.0",
     "@clickhouse/client": "^0.0.14",
     "@getmetal/metal-sdk": "*",
     "@huggingface/inference": "^1.5.1",
@@ -429,6 +434,9 @@
       "optional": true
     },
     "@aws-sdk/client-s3": {
+      "optional": true
+    },
+    "@aws-sdk/client-sagemaker-runtime": {
       "optional": true
     },
     "@clickhouse/client": {
@@ -678,6 +686,11 @@
       "types": "./llms/replicate.d.ts",
       "import": "./llms/replicate.js",
       "require": "./llms/replicate.cjs"
+    },
+    "./llms/sagemaker_endpoint": {
+      "types": "./llms/sagemaker_endpoint.d.ts",
+      "import": "./llms/sagemaker_endpoint.js",
+      "require": "./llms/sagemaker_endpoint.cjs"
     },
     "./prompts": {
       "types": "./prompts.d.ts",

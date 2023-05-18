@@ -3,6 +3,8 @@ sidebar_position: 3
 sidebar_label: Integrations
 ---
 
+import CodeBlock from "@theme/CodeBlock";
+
 # Integrations: LLMs
 
 LangChain offers a number of LLM implementations that integrate with various model providers. These are:
@@ -95,6 +97,16 @@ const res = await modelA.call(
 );
 console.log({ res });
 ```
+
+## `Sagemaker Endpoint`
+
+```bash npm2yarn
+npm install @aws-sdk/client-sagemaker-runtime
+```
+
+import SageMakerEndpointExample from "@examples/models/llm/sagemaker_endpoint.ts";
+
+<CodeBlock language="typescript">{SageMakerEndpointExample}</CodeBlock>
 
 ## Additional LLM Implementations
 
