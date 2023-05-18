@@ -59,41 +59,30 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       const parentRun = this.runMap.get(run.parent_run_id);
       if (parentRun) {
         this._addChildRun(parentRun, run);
-      } else {
-        throw new Error(`Caller run ${run.parent_run_id} not found`);
       }
     }
     this.runMap.set(run.id, run);
   }
 
   protected async _endTrace(run: Run): Promise<void> {
-    if (!run.parent_run_id) {
-      await this.persistRun(run);
-    } else {
-      const parentRun = this.runMap.get(run.parent_run_id);
-
-      if (parentRun === undefined) {
-        throw new Error(`Parent run ${run.parent_run_id} not found`);
-      }
-
+    const parentRun =
+      run.parent_run_id !== undefined && this.runMap.get(run.parent_run_id);
+    if (parentRun) {
       parentRun.child_execution_order = Math.max(
         parentRun.child_execution_order,
         run.child_execution_order
       );
+    } else {
+      await this.persistRun(run);
     }
     this.runMap.delete(run.id);
   }
 
   protected _getExecutionOrder(parentRunId: string | undefined): number {
+    const parentRun = parentRunId !== undefined && this.runMap.get(parentRunId);
     // If a run has no parent then execution order is 1
-    if (parentRunId === undefined) {
+    if (!parentRun) {
       return 1;
-    }
-
-    const parentRun = this.runMap.get(parentRunId);
-
-    if (parentRun === undefined) {
-      throw new Error(`Parent run ${parentRunId} not found`);
     }
 
     return parentRun.child_execution_order + 1;
@@ -103,7 +92,8 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     llm: { name: string },
     prompts: string[],
     runId: string,
-    parentRunId?: string
+    parentRunId?: string,
+    extraParams?: Record<string, unknown>
   ): Promise<void> {
     const execution_order = this._getExecutionOrder(parentRunId);
     const run: Run = {
@@ -118,6 +108,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       child_runs: [],
       child_execution_order: execution_order,
       run_type: "llm",
+      extra: extraParams,
     };
 
     this._startTrace(run);
@@ -128,15 +119,10 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     llm: { name: string },
     messages: BaseChatMessage[][],
     runId: string,
-    parentRunId?: string
+    parentRunId?: string,
+    extraParams?: Record<string, unknown>
   ): Promise<void> {
     const execution_order = this._getExecutionOrder(parentRunId);
-    const convertedMessages = messages.map((batch) =>
-      batch.map((message) => ({
-        _type: message._getType(),
-        content: message.text, // TODO: Unify serialization btwn languages
-      }))
-    );
     const run: Run = {
       id: runId,
       name: llm.name,
@@ -144,11 +130,12 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       start_time: Date.now(),
       end_time: 0,
       serialized: llm,
-      inputs: { messages: convertedMessages },
+      inputs: { messages },
       execution_order,
       child_runs: [],
       child_execution_order: execution_order,
       run_type: "llm",
+      extra: extraParams,
     };
 
     this._startTrace(run);

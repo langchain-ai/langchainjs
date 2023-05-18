@@ -25,7 +25,8 @@ abstract class BaseCallbackHandlerMethodsClass {
     llm: { name: string },
     prompts: string[],
     runId: string,
-    parentRunId?: string
+    parentRunId?: string,
+    extraParams?: Record<string, unknown>
   ): Promise<void> | void;
 
   /**
@@ -63,7 +64,8 @@ abstract class BaseCallbackHandlerMethodsClass {
     llm: { name: string },
     messages: BaseChatMessage[][],
     runId: string,
-    parentRunId?: string
+    parentRunId?: string,
+    extraParams?: Record<string, unknown>
   ): Promise<void> | void;
 
   /**

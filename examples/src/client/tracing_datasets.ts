@@ -89,8 +89,18 @@ what is 1213 divided by 4345?,approximately 0.2791714614499425
     );
   }
 
+  // Many chains incorporate memory. For independent trials over the dataset, we
+  // pass in a factory function that creates a new executor for each trial.
+  // If you know that your chain does not use memory, you can return the same
+  // executor for each trial.
+  const executorFactory = async () =>
+    initializeAgentExecutorWithOptions(tools, model, {
+      agentType: "chat-conversational-react-description",
+      verbose: true,
+    });
+
   // If using the traced dataset, you can update the datasetName to be
   // "calculator-example-dataset" or the custom name you chose.
-  const results = await client.runOnDataset(datasetName, executor);
+  const results = await client.runOnDataset(datasetName, executorFactory);
   console.log(results);
 };

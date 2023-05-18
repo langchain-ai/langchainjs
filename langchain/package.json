@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.75",
+  "version": "0.0.76",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -127,6 +127,9 @@
     "vectorstores/typesense.cjs",
     "vectorstores/typesense.js",
     "vectorstores/typesense.d.ts",
+    "vectorstores/redis.cjs",
+    "vectorstores/redis.js",
+    "vectorstores/redis.d.ts",
     "text_splitter.cjs",
     "text_splitter.js",
     "text_splitter.d.ts",
@@ -145,6 +148,9 @@
     "document_loaders/base.cjs",
     "document_loaders/base.js",
     "document_loaders/base.d.ts",
+    "document_loaders/web/apify_dataset.cjs",
+    "document_loaders/web/apify_dataset.js",
+    "document_loaders/web/apify_dataset.d.ts",
     "document_loaders/web/cheerio.cjs",
     "document_loaders/web/cheerio.js",
     "document_loaders/web/cheerio.d.ts",
@@ -314,7 +320,7 @@
     "clean": "rm -rf dist/ && node scripts/create-entrypoints.js clean",
     "prepack": "yarn build",
     "release": "release-it --only-version --config .release-it.json",
-    "test": "NODE_OPTIONS=--experimental-vm-modules jest --testPathIgnorePatterns=\\.int\\.test.ts",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest --testPathIgnorePatterns=\\.int\\.test.ts --testTimeout 30000",
     "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch --testPathIgnorePatterns=\\.int\\.test.ts",
     "test:integration": "NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern=\\.int\\.test.ts --testTimeout 50000",
     "test:single": "NODE_OPTIONS=--experimental-vm-modules yarn run jest --config jest.config.cjs --testTimeout 50000",
@@ -348,6 +354,7 @@
     "@types/uuid": "^9",
     "@typescript-eslint/eslint-plugin": "^5.58.0",
     "@typescript-eslint/parser": "^5.58.0",
+    "apify-client": "^2.7.1",
     "axios": "^0.26.0",
     "cheerio": "^1.0.0-rc.12",
     "chromadb": "^1.4.0",
@@ -372,7 +379,7 @@
     "playwright": "^1.32.1",
     "prettier": "^2.8.3",
     "puppeteer": "^19.7.2",
-    "redis": "^4.6.4",
+    "redis": "^4.6.6",
     "release-it": "^15.10.1",
     "replicate": "^0.9.0",
     "rollup": "^3.19.1",
@@ -397,6 +404,7 @@
     "@tensorflow/tfjs-converter": "*",
     "@tensorflow/tfjs-core": "*",
     "@zilliz/milvus2-sdk-node": "^2.2.0",
+    "apify-client": "^2.7.1",
     "axios": "*",
     "cheerio": "^1.0.0-rc.12",
     "chromadb": "^1.4.0",
@@ -456,6 +464,9 @@
     "@zilliz/milvus2-sdk-node": {
       "optional": true
     },
+    "apify-client": {
+      "optional": true
+    },
     "axios": {
       "optional": true
     },
@@ -513,12 +524,11 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.4.3",
-    "@dqbd/tiktoken": "^1.0.7",
     "ansi-styles": "^5.0.0",
     "binary-extensions": "^2.2.0",
-    "browser-or-node": "^2.1.1",
     "expr-eval": "^2.0.2",
     "flat": "^5.0.2",
+    "js-tiktoken": "^1.0.6",
     "jsonpointer": "^5.0.1",
     "ml-distance": "^4.0.0",
     "object-hash": "^3.0.0",
@@ -750,6 +760,11 @@
       "import": "./vectorstores/myscale.js",
       "require": "./vectorstores/myscale.cjs"
     },
+    "./vectorstores/redis": {
+      "types": "./vectorstores/redis.d.ts",
+      "import": "./vectorstores/redis.js",
+      "require": "./vectorstores/redis.cjs"
+    },
     "./text_splitter": {
       "types": "./text_splitter.d.ts",
       "import": "./text_splitter.js",
@@ -781,6 +796,11 @@
       "types": "./document_loaders/base.d.ts",
       "import": "./document_loaders/base.js",
       "require": "./document_loaders/base.cjs"
+    },
+    "./document_loaders/web/apify_dataset": {
+      "types": "./document_loaders/web/apify_dataset.d.ts",
+      "import": "./document_loaders/web/apify_dataset.js",
+      "require": "./document_loaders/web/apify_dataset.cjs"
     },
     "./document_loaders/web/cheerio": {
       "types": "./document_loaders/web/cheerio.d.ts",

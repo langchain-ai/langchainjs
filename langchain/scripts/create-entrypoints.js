@@ -53,6 +53,7 @@ const entrypoints = {
   "vectorstores/milvus": "vectorstores/milvus",
   "vectorstores/prisma": "vectorstores/prisma",
   "vectorstores/myscale": "vectorstores/myscale",
+  "vectorstores/redis": "vectorstores/redis",
   // text_splitter
   text_splitter: "text_splitter",
   // memory
@@ -64,6 +65,7 @@ const entrypoints = {
   // document_loaders
   document_loaders: "document_loaders/index",
   "document_loaders/base": "document_loaders/base",
+  "document_loaders/web/apify_dataset": "document_loaders/web/apify_dataset",
   "document_loaders/web/cheerio": "document_loaders/web/cheerio",
   "document_loaders/web/puppeteer": "document_loaders/web/puppeteer",
   "document_loaders/web/playwright": "document_loaders/web/playwright",
@@ -164,6 +166,8 @@ const requiresOptionalDependency = [
   "vectorstores/opensearch",
   "vectorstores/milvus",
   "vectorstores/myscale",
+  "vectorstores/redis",
+  "document_loaders/web/apify_dataset",
   "document_loaders/web/cheerio",
   "document_loaders/web/puppeteer",
   "document_loaders/web/playwright",
@@ -200,6 +204,10 @@ const requiresOptionalDependency = [
 const testExports = [
   [
     "test-exports-esm",
+    (p) => `import * as ${p.replace(/\//g, "_")} from "langchain/${p}";`,
+  ],
+  [
+    "test-exports-esbuild",
     (p) => `import * as ${p.replace(/\//g, "_")} from "langchain/${p}";`,
   ],
   [
