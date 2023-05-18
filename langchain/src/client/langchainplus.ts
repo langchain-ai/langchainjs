@@ -12,6 +12,7 @@ import { BaseChain } from "../chains/base.js";
 import { BaseLLM } from "../llms/base.js";
 import { BaseChatModel } from "../chat_models/base.js";
 import { mapStoredMessagesToChatMessages } from "../stores/message/utils.js";
+import { AsyncCaller, AsyncCallerParams } from "../util/async_caller.js";
 
 export interface RunResult extends BaseRun {
   name: string;
@@ -65,14 +66,16 @@ const isLocalhost = (url: string): boolean => {
 
 const getSeededTenantId = async (
   apiUrl: string,
-  apiKey: string | undefined
+  apiKey: string | undefined,
+  callerOptions: AsyncCallerParams | undefined = undefined
 ): Promise<string> => {
   // Get the tenant ID from the seeded tenant
+  const caller = new AsyncCaller(callerOptions ?? {});
   const url = `${apiUrl}/tenants`;
   let response;
 
   try {
-    response = await fetch(url, {
+    response = await caller.call(fetch, url, {
       method: "GET",
       headers: apiKey ? { authorization: `Bearer ${apiKey}` } : undefined,
     });
@@ -166,11 +169,19 @@ export class LangChainPlusClient {
 
   private tenantId: string;
 
-  constructor(apiUrl: string, tenantId: string, apiKey?: string) {
+  private caller: AsyncCaller;
+
+  constructor(
+    apiUrl: string,
+    tenantId: string,
+    apiKey?: string,
+    callerOptions?: AsyncCallerParams
+  ) {
     this.apiUrl = apiUrl;
     this.apiKey = apiKey;
     this.tenantId = tenantId;
     this.validateApiKeyIfHosted();
+    this.caller = new AsyncCaller(callerOptions ?? {});
   }
 
   public static async create(
@@ -218,7 +229,7 @@ export class LangChainPlusClient {
       }
     }
     const url = `${this.apiUrl}${path}${queryString ? `?${queryString}` : ""}`;
-    const response = await fetch(url, {
+    const response = await this.caller.call(fetch, url, {
       method: "GET",
       headers: this.headers,
     });
@@ -245,7 +256,7 @@ export class LangChainPlusClient {
     formData.append("description", description);
     formData.append("tenant_id", this.tenantId);
 
-    const response = await fetch(url, {
+    const response = await this.caller.call(fetch, url, {
       method: "POST",
       headers: this.headers,
       body: formData,
@@ -269,7 +280,7 @@ export class LangChainPlusClient {
     name: string,
     description: string
   ): Promise<Dataset> {
-    const response = await fetch(`${this.apiUrl}/datasets`, {
+    const response = await this.caller.call(fetch, `${this.apiUrl}/datasets`, {
       method: "POST",
       headers: { ...this.headers, "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -355,7 +366,7 @@ export class LangChainPlusClient {
     } else {
       throw new Error("Must provide datasetName or datasetId");
     }
-    const response = await fetch(this.apiUrl + path, {
+    const response = await this.caller.call(fetch, this.apiUrl + path, {
       method: "DELETE",
       headers: this.headers,
     });
@@ -393,7 +404,7 @@ export class LangChainPlusClient {
       created_at: createdAt_.toISOString(),
     };
 
-    const response = await fetch(`${this.apiUrl}/examples`, {
+    const response = await this.caller.call(fetch, `${this.apiUrl}/examples`, {
       method: "POST",
       headers: { ...this.headers, "Content-Type": "application/json" },
       body: JSON.stringify(data),
@@ -442,7 +453,7 @@ export class LangChainPlusClient {
 
   public async deleteExample(exampleId: string): Promise<Example> {
     const path = `/examples/${exampleId}`;
-    const response = await fetch(this.apiUrl + path, {
+    const response = await this.caller.call(fetch, this.apiUrl + path, {
       method: "DELETE",
       headers: this.headers,
     });
