@@ -422,6 +422,7 @@
     "replicate": "^0.9.0",
     "srt-parser-2": "^1.2.2",
     "typeorm": "^0.3.12",
+    "typesense": "^1.5.3",
     "weaviate-ts-client": "^1.0.0"
   },
   "peerDependenciesMeta": {
@@ -535,7 +536,6 @@
     "openai": "^3.2.0",
     "p-queue": "^6.6.2",
     "p-retry": "4",
-    "typesense": "^1.5.3",
     "uuid": "^9.0.0",
     "yaml": "^2.2.1",
     "zod": "^3.21.4",
