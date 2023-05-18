@@ -141,3 +141,30 @@ describe("OpenAI Stream Tests", () => {
     expect(receivedChunks).toEqual([]);
   });
 });
+
+describe("Azure OpenAI Stream Tests", () => {
+  it("should return a 200 response chunk by chunk", async () => {
+    // When stream mode enabled, Azure OpenAI responds with chunks without tailing blank line.
+    // In addition, Azure sends chunks in batch.
+    const { resp, receivedChunks, error, done } =
+      await mockFetchForOpenAIStream({
+        status: 200,
+        contentType: "text/event-stream",
+        chunks: [
+          // First batch
+          'data: {"choices":[{"delta":{"role":"assistant"},"index":0,"finish_reason":null}]}\n\n' +
+            'data: {"choices":[{"delta":{"content":"Hello"},"index":0,"finish_reason":null}]}\n\n' +
+            'data: {"choices":[{"delta":{"content":" World"},"index":0,"finish_reason":null}]}\n\n',
+          // Second batch
+          'data: {"choices":[{"delta":{"content":"!"},"index":0,"finish_reason":null}]}\n\n' +
+            'data: {"choices":[{"delta":{},"index":0,"finish_reason":"stop"}]}\n\n' +
+            "data: [DONE]\n", // no blank line
+        ],
+      });
+
+    expect(error).toEqual(null);
+    expect(resp?.status).toEqual(200);
+    expect(receivedChunks).toEqual(["", "Hello", " World", "!", ""]);
+    expect(done).toBe(true);
+  });
+});
