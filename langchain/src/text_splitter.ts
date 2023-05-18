@@ -97,7 +97,10 @@ export abstract class TextSplitter implements TextSplitterParams {
     let total = 0;
     for (const d of splits) {
       const _len = d.length;
-      if (total + _len >= this.chunkSize) {
+      if (
+        total + _len + (currentDoc.length > 0 ? separator.length : 0) >
+        this.chunkSize
+      ) {
         if (total > this.chunkSize) {
           console.warn(
             `Created a chunk of size ${total}, +
