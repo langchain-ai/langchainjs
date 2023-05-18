@@ -1,6 +1,6 @@
 import { Client } from "typesense";
-import { MultiSearchRequestSchema } from "typesense/lib/Typesense/MultiSearch.js";
-import { Document } from "../document.js";
+import type { MultiSearchRequestSchema } from "typesense/lib/Typesense/MultiSearch.js";
+import type { Document } from "../document.js";
 import { Embeddings } from "../embeddings/base.js";
 import { VectorStore, VectorStoreRetriever } from "./base.js";
 import { AsyncCaller } from "../util/async_caller.js";
