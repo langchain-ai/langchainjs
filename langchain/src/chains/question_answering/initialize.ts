@@ -54,7 +54,8 @@ export async function initializeQAStuffChain(
   llm: BaseLanguageModel,
   params: StuffQAChainParams = {}
 ) {
-  const { prompt = await QA_PROMPT_SELECTOR.getPromptAsync(llm), verbose } = params;
+  const { prompt = await QA_PROMPT_SELECTOR.getPromptAsync(llm), verbose } =
+    params;
   const llmChain = new LLMChain({ prompt, llm, verbose });
   const chain = new StuffDocumentsChain({ llmChain, verbose });
   return chain;
