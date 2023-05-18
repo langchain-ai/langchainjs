@@ -1,5 +1,5 @@
 import { OpenAI } from "langchain/llms/openai";
-import { RetrievalQAChain, intializeQARefineChain } from "langchain/chains";
+import { RetrievalQAChain, initializeQARefineChain } from "langchain/chains";
 import { HNSWLib } from "langchain/vectorstores/hnswlib";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
@@ -16,7 +16,7 @@ const vectorStore = await HNSWLib.fromDocuments(docs, new OpenAIEmbeddings());
 
 // Create a chain that uses a Refine chain and HNSWLib vector store.
 const chain = new RetrievalQAChain({
-  combineDocumentsChain: await intializeQARefineChain(model),
+  combineDocumentsChain: await initializeQARefineChain(model),
   retriever: vectorStore.asRetriever(),
 });
 const res = await chain.call({
