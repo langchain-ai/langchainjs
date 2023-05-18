@@ -20,8 +20,14 @@ const db = await SqlDatabase.fromDataSourceParams({
 const chain = new SqlDatabaseChain({
   llm: new OpenAI({ temperature: 0 }),
   database: db,
+  sqlOutputKey: "sql",
 });
 
-const res = await chain.run("How many tracks are there?");
+const res = await chain.call({ query: "How many tracks are there?" });
+/* Expected result:
+ * {
+ *   result: ' There are 3503 tracks.',
+ *   sql: ' SELECT COUNT(*) FROM "Track";'
+ * }
+ */
 console.log(res);
-// There are 3503 tracks.
