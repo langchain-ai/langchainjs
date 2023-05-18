@@ -127,15 +127,10 @@ export class Typesense extends VectorStore {
     for (let i = 0; i < data.length; i += chunkSize) {
       const chunk = data.slice(i, i + chunkSize);
 
-      try {
-        await typesenseClient
-          .collections<T>(collectionName)
-          .documents()
-          .import(chunk, { action: "emplace", dirty_values: "drop" });
-      } catch (error) {
-        console.log("Error importing data to typesense");
-        console.error(error);
-      }
+      await typesenseClient
+        .collections<T>(collectionName)
+        .documents()
+        .import(chunk, { action: "emplace", dirty_values: "drop" });
     }
   }
 
