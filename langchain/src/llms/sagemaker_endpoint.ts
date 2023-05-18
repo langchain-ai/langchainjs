@@ -145,15 +145,17 @@ export class SageMakerEndpoint extends LLM {
     );
     const { contentType, accepts } = this.contentHandler;
 
-    const response = await this.client.send(
-      new InvokeEndpointCommand({
-        EndpointName: this.endpointName,
-        Body: body,
-        ContentType: contentType,
-        Accept: accepts,
-        ...this.endpointKwargs,
-      }),
-      { abortSignal: options.signal }
+    const response = await this.caller.call(() =>
+      this.client.send(
+        new InvokeEndpointCommand({
+          EndpointName: this.endpointName,
+          Body: body,
+          ContentType: contentType,
+          Accept: accepts,
+          ...this.endpointKwargs,
+        }),
+        { abortSignal: options.signal }
+      )
     );
 
     if (response.Body === undefined) {
