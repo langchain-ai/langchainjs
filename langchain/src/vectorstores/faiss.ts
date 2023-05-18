@@ -1,5 +1,5 @@
-import type { IndexFlatL2 } from "faiss-node";
-import type { NameRegistry, Parser } from "pickleparser";
+import { IndexFlatL2 } from "faiss-node";
+import { NameRegistry, Parser } from "pickleparser";
 import * as uuid from "uuid";
 import { Embeddings } from "../embeddings/base.js";
 import { SaveableVectorStore } from "./base.js";
@@ -60,7 +60,6 @@ export class FaissStore extends SaveableVectorStore {
     }
     const dv = vectors[0].length;
     if (!this._index) {
-      const { IndexFlatL2 } = await FaissStore.importFaiss();
       this._index = new IndexFlatL2(dv);
     }
     const d = this.index.getDimension();
@@ -130,10 +129,8 @@ export class FaissStore extends SaveableVectorStore {
         .then(JSON.parse) as Promise<
         [Map<string, Document>, Record<number, string>]
       >;
-    const readIndex = async (directory: string) => {
-      const { IndexFlatL2 } = await this.importFaiss();
-      return IndexFlatL2.read(path.join(directory, "faiss.index"));
-    };
+    const readIndex = async (directory: string) =>
+      IndexFlatL2.read(path.join(directory, "faiss.index"));
     const [[docstoreFiles, mapping], index] = await Promise.all([
       readStore(directory),
       readIndex(directory),
@@ -145,7 +142,6 @@ export class FaissStore extends SaveableVectorStore {
   static async loadFromPython(directory: string, embeddings: Embeddings) {
     const fs = await import("node:fs/promises");
     const path = await import("node:path");
-    const { Parser, NameRegistry } = await this.importPickleparser();
 
     class PyDocument extends Map {
       toDocument(): Document {
@@ -195,10 +191,8 @@ export class FaissStore extends SaveableVectorStore {
       const store = rawStore.toInMemoryDocstore();
       return { store, mapping };
     };
-    const readIndex = async (directory: string) => {
-      const { IndexFlatL2 } = await this.importFaiss();
-      return IndexFlatL2.read(path.join(directory, "index.faiss"));
-    };
+    const readIndex = async (directory: string) =>
+      IndexFlatL2.read(path.join(directory, "index.faiss"));
     const [store, index] = await Promise.all([
       readStore(directory),
       readIndex(directory),
@@ -243,36 +237,5 @@ export class FaissStore extends SaveableVectorStore {
     const instance = new this(embeddings, args);
     await instance.addDocuments(docs);
     return instance;
-  }
-
-  static async importFaiss(): Promise<{ IndexFlatL2: typeof IndexFlatL2 }> {
-    try {
-      const {
-        default: { IndexFlatL2 },
-      } = await import("faiss-node");
-
-      return { IndexFlatL2 };
-    } catch (err) {
-      throw new Error(
-        "Please install faiss-node as a dependency with, e.g. `npm install -S faiss-node`"
-      );
-    }
-  }
-
-  static async importPickleparser(): Promise<{
-    Parser: typeof Parser;
-    NameRegistry: typeof NameRegistry;
-  }> {
-    try {
-      const {
-        default: { Parser, NameRegistry },
-      } = await import("pickleparser");
-
-      return { Parser, NameRegistry };
-    } catch (err) {
-      throw new Error(
-        "Please install pickleparser as a dependency with, e.g. `npm install -S pickleparser`"
-      );
-    }
   }
 }
