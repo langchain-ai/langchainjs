@@ -1,19 +1,20 @@
-import { LLMChain } from "../../chains/index.js";
-import { PromptTemplate } from "../../prompts/index.js";
-import { PREFIX, getSuffixForLLMType, formatInstructions } from "./prompt.js";
-import { deserializeHelper } from "../helpers.js";
 import { BaseLanguageModel } from "../../base_language/index.js";
+import { LLMChain } from "../../chains/llm_chain.js";
+import { PREFIX, getSuffixForLLMType, FORMAT_INSTRUCTIONS } from "./prompt.js";
+import { PromptTemplate } from "../../prompts/prompt.js";
+import { renderTemplate } from "../../prompts/template.js";
+import { Tool } from "../../tools/base.js";
+import { Optional } from "../../types/type-utils.js";
+import { Agent, AgentArgs, OutputParserArgs } from "../agent.js";
+import { deserializeHelper } from "../helpers.js";
 import {
   AgentInput,
   SerializedFromLLMAndTools,
   SerializedZeroShotAgent,
 } from "../types.js";
-import { Agent } from "../agent.js";
-import { Tool } from "../tools/base.js";
+import { ZeroShotAgentOutputParser } from "./outputParser.js";
 
-const FINAL_ANSWER_ACTION = "Final Answer:";
-
-export type CreatePromptArgs = {
+export interface ZeroShotCreatePromptArgs {
   /** String to put after the list of tools. */
   suffix?: string;
   /** String to put before the list of tools. */
@@ -24,7 +25,7 @@ export type CreatePromptArgs = {
   llmType?: string;
 };
 
-type ZeroShotAgentInput = AgentInput;
+export type ZeroShotAgentInput = Optional<AgentInput, "outputParser">;
 
 /**
  * Agent for the MRKL chain.
@@ -32,7 +33,9 @@ type ZeroShotAgentInput = AgentInput;
  */
 export class ZeroShotAgent extends Agent {
   constructor(input: ZeroShotAgentInput) {
-    super(input);
+    const outputParser =
+      input?.outputParser ?? ZeroShotAgent.getDefaultOutputParser();
+    super({ ...input, outputParser });
   }
 
   _agentType() {
@@ -45,6 +48,10 @@ export class ZeroShotAgent extends Agent {
 
   llmPrefix() {
     return "Thought:";
+  }
+
+  static getDefaultOutputParser(fields?: OutputParserArgs) {
+    return new ZeroShotAgentOutputParser(fields);
   }
 
   static validateTools(tools: Tool[]) {
@@ -67,7 +74,7 @@ export class ZeroShotAgent extends Agent {
    * @param args.inputVariables - List of input variables the final prompt will expect.
    * @param args.llmType - The type of LLM you are creating the prompt for.
    */
-  static createPrompt(tools: Tool[], args?: CreatePromptArgs) {
+  static createPrompt(tools: Tool[], args?: ZeroShotCreatePromptArgs) {
     const {
       prefix = PREFIX,
       suffix = getSuffixForLLMType(args?.llmType),
@@ -76,9 +83,16 @@ export class ZeroShotAgent extends Agent {
     const toolStrings = tools
       .map((tool) => `${tool.name}: ${tool.description}`)
       .join("\n");
-    const toolNames = tools.map((tool) => tool.name).join("\n");
-    const instructions = formatInstructions(toolNames);
-    const template = [prefix, toolStrings, instructions, suffix].join("\n\n");
+
+    const toolNames = tools.map((tool) => tool.name);
+
+    const formatInstructions = renderTemplate(FORMAT_INSTRUCTIONS, "f-string", {
+      tool_names: toolNames,
+    });
+
+    const template = [prefix, toolStrings, formatInstructions, suffix].join(
+      "\n\n"
+    );
 
     return new PromptTemplate({
       template,
@@ -89,7 +103,7 @@ export class ZeroShotAgent extends Agent {
   static fromLLMAndTools(
     llm: BaseLanguageModel,
     tools: Tool[],
-    args?: CreatePromptArgs
+    args?: ZeroShotCreatePromptArgs & AgentArgs
   ) {
     ZeroShotAgent.validateTools(tools);
     const createPromptArgs = args ?? {};
@@ -97,31 +111,11 @@ export class ZeroShotAgent extends Agent {
       createPromptArgs.llmType = llm._llmType();
     }
     const prompt = ZeroShotAgent.createPrompt(tools, createPromptArgs);
-    const chain = new LLMChain({ prompt, llm });
+    const chain = new LLMChain({ prompt, llm, callbacks: args?.callbacks ?? args?.callbackManager });
     return new ZeroShotAgent({
       llmChain: chain,
       allowedTools: tools.map((t) => t.name),
     });
-  }
-
-  async extractToolAndInput(
-    text: string
-  ): Promise<{ tool: string; input: string } | null> {
-    if (text.includes(FINAL_ANSWER_ACTION)) {
-      const parts = text.split(FINAL_ANSWER_ACTION);
-      const input = parts[parts.length - 1].trim();
-      return { tool: "Final Answer", input };
-    }
-
-    const match = /Action: (.*)\nAction Input: (.*)/s.exec(text);
-    if (!match) {
-      throw new Error(`Could not parse LLM output: ${text}`);
-    }
-
-    return {
-      tool: match[1].trim(),
-      input: match[2].trim().replace(/^"+|"+$/g, ""),
-    };
   }
 
   static async deserialize(

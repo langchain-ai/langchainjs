@@ -4,7 +4,7 @@ import {
   AgentExecutor,
 } from "langchain/agents";
 import { LLMChain } from "langchain/chains";
-import { OpenAI } from "langchain/llms";
+import { OpenAI } from "langchain/llms/openai";
 import {
   BasePromptTemplate,
   BaseStringPromptTemplate,
@@ -18,10 +18,13 @@ import {
   AgentAction,
   AgentFinish,
 } from "langchain/schema";
-import { SerpAPI, Calculator, Tool } from "langchain/tools";
+import { SerpAPI, Tool } from "langchain/tools";
+import { Calculator } from "langchain/tools/calculator";
 
 const PREFIX = `Answer the following questions as best you can. You have access to the following tools:`;
-const formatInstructions = (toolNames: string) => `Use the following format:
+const formatInstructions = (
+  toolNames: string
+) => `Use the following format in your response:
 
 Question: the input question you must answer
 Thought: you should always think about what to do
@@ -106,7 +109,14 @@ class CustomOutputParser extends AgentActionOutputParser {
 
 export const run = async () => {
   const model = new OpenAI({ temperature: 0 });
-  const tools = [new SerpAPI(), new Calculator()];
+  const tools = [
+    new SerpAPI(process.env.SERPAPI_API_KEY, {
+      location: "Austin,Texas,United States",
+      hl: "en",
+      gl: "us",
+    }),
+    new Calculator(),
+  ];
 
   const llmChain = new LLMChain({
     prompt: new CustomPromptTemplate({

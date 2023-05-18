@@ -1,4 +1,4 @@
-import { SRTLoader } from "langchain/document_loaders";
+import { SRTLoader } from "langchain/document_loaders/fs/srt";
 
 export const run = async () => {
   const loader = new SRTLoader(

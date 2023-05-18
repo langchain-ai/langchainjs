@@ -1,23 +1,23 @@
+import { Tool } from "../../../tools/base.js";
 import {
-  Tool,
   InfoSqlTool,
   ListTablesSqlTool,
   QueryCheckerTool,
   QuerySqlTool,
-} from "../../tools/index.js";
+} from "../../../tools/sql.js";
 import { Toolkit } from "../base.js";
 import { BaseLanguageModel } from "../../../base_language/index.js";
 import { SQL_PREFIX, SQL_SUFFIX } from "./prompt.js";
 import { renderTemplate } from "../../../prompts/template.js";
-import { LLMChain } from "../../../chains/index.js";
-import { ZeroShotAgent, CreatePromptArgs } from "../../mrkl/index.js";
+import { LLMChain } from "../../../chains/llm_chain.js";
+import { ZeroShotAgent, ZeroShotCreatePromptArgs } from "../../mrkl/index.js";
 import { AgentExecutor } from "../../executor.js";
 import { SqlDatabase } from "../../../sql_db.js";
 
-type SqlCreatePromptArgs = {
+export interface SqlCreatePromptArgs extends ZeroShotCreatePromptArgs {
   /** Number of results to return. */
   topK?: number;
-} & CreatePromptArgs;
+}
 
 export class SqlToolkit extends Toolkit {
   tools: Tool[];

@@ -1,5 +1,3 @@
-import fs from "node:fs/promises";
-import path from "node:path";
 import type {
   HierarchicalNSW as HierarchicalNSWT,
   SpaceName,
@@ -20,6 +18,8 @@ export interface HNSWLibArgs extends HNSWLibBase {
 }
 
 export class HNSWLib extends SaveableVectorStore {
+  declare FilterType: (doc: Document) => boolean;
+
   _index?: HierarchicalNSWT;
 
   docstore: InMemoryDocstore;
@@ -108,7 +108,14 @@ export class HNSWLib extends SaveableVectorStore {
     }
   }
 
-  async similaritySearchVectorWithScore(query: number[], k: number) {
+  async similaritySearchVectorWithScore(
+    query: number[],
+    k: number,
+    filter?: this["FilterType"]
+  ) {
+    if (this.args.numDimensions && !this._index) {
+      await this.initIndex([[]]);
+    }
     if (query.length !== this.args.numDimensions) {
       throw new Error(
         `Query vector must have the same length as the number of dimensions (${this.args.numDimensions})`
@@ -122,7 +129,22 @@ export class HNSWLib extends SaveableVectorStore {
       // eslint-disable-next-line no-param-reassign
       k = total;
     }
-    const result = this.index.searchKnn(query, k);
+    const filterFunction = (label: number): boolean => {
+      if (!filter) {
+        return true;
+      }
+      const document = this.docstore.search(String(label));
+      // eslint-disable-next-line no-instanceof/no-instanceof
+      if (typeof document !== "string") {
+        return filter(document);
+      }
+      return false;
+    };
+    const result = this.index.searchKnn(
+      query,
+      k,
+      filter ? filterFunction : undefined
+    );
     return result.neighbors.map(
       (docIndex, resultIndex) =>
         [
@@ -133,6 +155,8 @@ export class HNSWLib extends SaveableVectorStore {
   }
 
   async save(directory: string) {
+    const fs = await import("node:fs/promises");
+    const path = await import("node:path");
     await fs.mkdir(directory, { recursive: true });
     await Promise.all([
       this.index.writeIndex(path.join(directory, "hnswlib.index")),
@@ -148,6 +172,8 @@ export class HNSWLib extends SaveableVectorStore {
   }
 
   static async load(directory: string, embeddings: Embeddings) {
+    const fs = await import("node:fs/promises");
+    const path = await import("node:path");
     const args = JSON.parse(
       await fs.readFile(path.join(directory, "args.json"), "utf8")
     );

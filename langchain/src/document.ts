@@ -1,21 +1,28 @@
-export interface DocumentParams {
+export interface DocumentInput<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  Metadata extends Record<string, any> = Record<string, any>
+> {
   pageContent: string;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  metadata: Record<string, any>;
+  metadata?: Metadata;
 }
 
 /**
  * Interface for interacting with a document.
  */
-export class Document implements DocumentParams {
+export class Document<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  Metadata extends Record<string, any> = Record<string, any>
+> implements DocumentInput
+{
   pageContent: string;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  metadata: Record<string, any>;
+  metadata: Metadata;
 
-  constructor(fields?: Partial<DocumentParams>) {
-    this.pageContent = fields?.pageContent ?? this.pageContent;
-    this.metadata = fields?.metadata ?? {};
+  constructor(fields: DocumentInput<Metadata>) {
+    this.pageContent = fields.pageContent
+      ? fields.pageContent.toString()
+      : this.pageContent;
+    this.metadata = fields.metadata ?? ({} as Metadata);
   }
 }

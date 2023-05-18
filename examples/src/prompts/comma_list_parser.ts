@@ -1,4 +1,5 @@
-import { OpenAI, PromptTemplate } from "langchain";
+import { OpenAI } from "langchain/llms/openai";
+import { PromptTemplate } from "langchain/prompts";
 import { CommaSeparatedListOutputParser } from "langchain/output_parsers";
 
 export const run = async () => {
@@ -27,7 +28,7 @@ export const run = async () => {
   console.log(response);
   // Vanilla, Chocolate, Strawberry, Mint Chocolate Chip, Cookies and Cream
 
-  console.log(parser.parse(response));
+  console.log(await parser.parse(response));
   /*
   [
     'Vanilla',

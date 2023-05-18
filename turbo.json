@@ -9,7 +9,17 @@
         "^build"
       ],
       "outputs": [
-        "dist/**"
+        "dist/**",
+        "dist-cjs/**",
+        "*.js",
+        "*.cjs",
+        "*.d.ts"
+      ],
+      "inputs": [
+        "src/**",
+        "scripts/**",
+        "package.json",
+        "tsconfig.json"
       ]
     },
     "lint": {
@@ -22,6 +32,13 @@
       "outputs": []
     },
     "test": {
+      "outputs": [],
+      "dependsOn": [
+        "^build"
+      ]
+    },
+    "test:integration": {
+      "outputs": [],
       "dependsOn": [
         "^build"
       ]

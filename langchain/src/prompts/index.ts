@@ -6,13 +6,24 @@ export {
   BaseStringPromptTemplate,
 } from "./base.js";
 export { PromptTemplate, PromptTemplateInput } from "./prompt.js";
-export { LengthBasedExampleSelector } from "./selectors/LengthBasedExampleSelector.js";
-export { SemanticSimilarityExampleSelector } from "./selectors/SemanticSimilarityExampleSelector.js";
+export {
+  BasePromptSelector,
+  ConditionalPromptSelector,
+  isChatModel,
+  isLLM,
+} from "./selectors/conditional.js";
+export {
+  LengthBasedExampleSelector,
+  LengthBasedExampleSelectorInput,
+} from "./selectors/LengthBasedExampleSelector.js";
+export {
+  SemanticSimilarityExampleSelector,
+  SemanticSimilarityExampleSelectorInput,
+} from "./selectors/SemanticSimilarityExampleSelector.js";
 export {
   FewShotPromptTemplate,
   FewShotPromptTemplateInput,
 } from "./few_shot.js";
-export { loadPrompt } from "./load.js";
 export {
   ChatPromptTemplate,
   HumanMessagePromptTemplate,
@@ -29,4 +40,9 @@ export {
   SerializedMessagePromptTemplate,
   SerializedChatPromptTemplate,
 } from "./serde.js";
-export { parseTemplate, renderTemplate } from "./template.js";
+export {
+  parseTemplate,
+  renderTemplate,
+  checkValidTemplate,
+  TemplateFormat,
+} from "./template.js";

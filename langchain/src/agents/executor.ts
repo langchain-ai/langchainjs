@@ -1,12 +1,18 @@
-import { BaseChain, ChainInputs } from "../chains/index.js";
-import { BaseSingleActionAgent } from "./agent.js";
-import { Tool } from "./tools/base.js";
+import { BaseChain, ChainInputs } from "../chains/base.js";
+import { BaseMultiActionAgent, BaseSingleActionAgent } from "./agent.js";
+import { Tool } from "../tools/base.js";
 import { StoppingMethod } from "./types.js";
 import { SerializedLLMChain } from "../chains/serde.js";
-import { AgentFinish, AgentStep, ChainValues } from "../schema/index.js";
+import {
+  AgentAction,
+  AgentFinish,
+  AgentStep,
+  ChainValues,
+} from "../schema/index.js";
+import { CallbackManagerForChainRun } from "../callbacks/manager.js";
 
-interface AgentExecutorInput extends ChainInputs {
-  agent: BaseSingleActionAgent;
+export interface AgentExecutorInput extends ChainInputs {
+  agent: BaseSingleActionAgent | BaseMultiActionAgent;
   tools: Tool[];
   returnIntermediateSteps?: boolean;
   maxIterations?: number;
@@ -18,7 +24,7 @@ interface AgentExecutorInput extends ChainInputs {
  * @augments BaseChain
  */
 export class AgentExecutor extends BaseChain {
-  agent: BaseSingleActionAgent;
+  agent: BaseSingleActionAgent | BaseMultiActionAgent;
 
   tools: Tool[];
 
@@ -32,10 +38,27 @@ export class AgentExecutor extends BaseChain {
     return this.agent.inputKeys;
   }
 
+  get outputKeys() {
+    return this.agent.returnValues;
+  }
+
   constructor(input: AgentExecutorInput) {
-    super(input.memory, input.verbose, input.callbackManager);
+    super(
+      input.memory,
+      input.verbose,
+      input.callbacks ?? input.callbackManager
+    );
     this.agent = input.agent;
     this.tools = input.tools;
+    if (this.agent._agentActionType() === "multi") {
+      for (const tool of this.tools) {
+        if (tool.returnDirect) {
+          throw new Error(
+            `Tool with return direct ${tool.name} not supported for multi-action agent.`
+          );
+        }
+      }
+    }
     this.returnIntermediateSteps =
       input.returnIntermediateSteps ?? this.returnIntermediateSteps;
     this.maxIterations = input.maxIterations ?? this.maxIterations;
@@ -52,7 +75,11 @@ export class AgentExecutor extends BaseChain {
     return this.maxIterations === undefined || iterations < this.maxIterations;
   }
 
-  async _call(inputs: ChainValues): Promise<ChainValues> {
+  /** @ignore */
+  async _call(
+    inputs: ChainValues,
+    runManager?: CallbackManagerForChainRun
+  ): Promise<ChainValues> {
     const toolsByName = Object.fromEntries(
       this.tools.map((t) => [t.name.toLowerCase(), t])
     );
@@ -66,28 +93,53 @@ export class AgentExecutor extends BaseChain {
       if (this.returnIntermediateSteps) {
         return { ...returnValues, intermediateSteps: steps, ...additional };
       }
-      await this.callbackManager.handleAgentEnd(finishStep, this.verbose);
+      await runManager?.handleAgentEnd(finishStep);
       return { ...returnValues, ...additional };
     };
 
     while (this.shouldContinue(iterations)) {
-      const action = await this.agent.plan(steps, inputs);
-      if ("returnValues" in action) {
-        return getOutput(action);
+      const output = await this.agent.plan(
+        steps,
+        inputs,
+        runManager?.getChild()
+      );
+      // Check if the agent has finished
+      if ("returnValues" in output) {
+        return getOutput(output);
       }
-      await this.callbackManager.handleAgentAction(action, this.verbose);
 
-      const tool = toolsByName[action.tool?.toLowerCase()];
-      const observation = tool
-        ? await tool.call(action.toolInput, this.verbose)
-        : `${action.tool} is not a valid tool, try another one.`;
-      steps.push({ action, observation });
-      if (tool?.returnDirect) {
+      let actions: AgentAction[];
+      if (Array.isArray(output)) {
+        actions = output as AgentAction[];
+      } else {
+        actions = [output as AgentAction];
+      }
+
+      const newSteps = await Promise.all(
+        actions.map(async (action) => {
+          await runManager?.handleAgentAction(action);
+
+          const tool = toolsByName[action.tool?.toLowerCase()];
+          const observation = tool
+            ? await tool.call(action.toolInput, runManager?.getChild())
+            : `${action.tool} is not a valid tool, try another one.`;
+
+          return { action, observation };
+        })
+      );
+
+      steps.push(...newSteps);
+
+      const lastStep = steps[steps.length - 1];
+      const lastTool = toolsByName[lastStep.action.tool?.toLowerCase()];
+
+      if (lastTool?.returnDirect) {
         return getOutput({
-          returnValues: { [this.agent.returnValues[0]]: observation },
+          returnValues: { [this.agent.returnValues[0]]: lastStep.observation },
           log: "",
         });
       }
+
       iterations += 1;
     }
 

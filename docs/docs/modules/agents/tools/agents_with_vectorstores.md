@@ -7,12 +7,13 @@ The recommended method for doing so is to create a VectorDBQAChain and then use 
 First, you'll want to import the relevant modules:
 
 ```typescript
-import { OpenAI } from "langchain";
-import { initializeAgentExecutor } from "langchain/agents";
-import { SerpAPI, Calculator, ChainTool } from "langchain/tools";
+import { OpenAI } from "langchain/llms/openai";
+import { initializeAgentExecutorWithOptions } from "langchain/agents";
+import { SerpAPI, ChainTool } from "langchain/tools";
+import { Calculator } from "langchain/tools/calculator";
 import { VectorDBQAChain } from "langchain/chains";
-import { HNSWLib } from "langchain/vectorstores";
-import { OpenAIEmbeddings } from "langchain/embeddings";
+import { HNSWLib } from "langchain/vectorstores/hnswlib";
+import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import * as fs from "fs";
 ```
@@ -46,13 +47,19 @@ const qaTool = new ChainTool({
 Now you can construct and using the tool just as you would any other!
 
 ```typescript
-const tools = [new SerpAPI(), new Calculator(), qaTool];
+const tools = [
+  new SerpAPI(process.env.SERPAPI_API_KEY, {
+    location: "Austin,Texas,United States",
+    hl: "en",
+    gl: "us",
+  }),
+  new Calculator(),
+  qaTool,
+];
 
-const executor = await initializeAgentExecutor(
-  tools,
-  model,
-  "zero-shot-react-description"
-);
+const executor = await initializeAgentExecutorWithOptions(tools, model, {
+  agentType: "zero-shot-react-description",
+});
 console.log("Loaded agent.");
 
 const input = `What did biden say about ketanji brown jackson is the state of the union address?`;

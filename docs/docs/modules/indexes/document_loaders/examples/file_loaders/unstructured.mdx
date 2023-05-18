@@ -4,7 +4,7 @@ hide_table_of_contents: true
 
 # Unstructured
 
-This example covers how to use [Unstructured](https://www.unstructured.io) to load files of many types. Unstructured currently supports loading of text files, powerpoints, html, pdfs, images, and more.
+This example covers how to use [Unstructured](../../../../../ecosystem/unstructured) to load files of many types. Unstructured currently supports loading of text files, powerpoints, html, pdfs, images, and more.
 
 ## Setup
 
@@ -22,3 +22,11 @@ import CodeBlock from "@theme/CodeBlock";
 import Example from "@examples/document_loaders/unstructured.ts";
 
 <CodeBlock language="typescript">{Example}</CodeBlock>
+
+## Directories
+
+You can also load all of the files in the directory using `UnstructuredDirectoryLoader`, which inherits from [`DirectoryLoader`](./directory.md):
+
+import DirectoryExample from "@examples/document_loaders/unstructured_directory.ts";
+
+<CodeBlock language="typescript">{DirectoryExample}</CodeBlock>

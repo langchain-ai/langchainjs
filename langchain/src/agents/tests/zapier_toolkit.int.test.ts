@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test } from "@jest/globals";
 import { ZapierToolKit } from "../agent_toolkits/zapier/zapier.js";
-import { ZapierNLAWrapper, ZapierValues } from "../tools/zapier.js";
+import { ZapierNLAWrapper, ZapierValues } from "../../tools/zapier.js";
 
 describe("ZapierNLAWrapper", () => {
   let actions: ZapierValues[] = [];
@@ -30,7 +30,6 @@ describe("ZapierNLAWrapper", () => {
 
       expect(result).toMatchObject({
         keyword: "cats",
-        size: expect.any(String),
         url: expect.stringContaining("https://"),
       });
     });

@@ -12,12 +12,20 @@
  */
 
 import axios from "axios";
-import { EventStreamContentType } from "@fortaine/fetch-event-source";
 import {
+  EventStreamContentType,
   getLines,
   getBytes,
   getMessages,
-} from "@fortaine/fetch-event-source/parse";
+} from "./event-source-parse.js";
+
+function tryJsonStringify(data) {
+  try {
+    return JSON.stringify(data);
+  } catch (e) {
+    return data;
+  }
+}
 
 /**
  * In order to avoid import issues with axios 1.x, copying here the internal
@@ -32,7 +40,11 @@ function settle(resolve, reject, response) {
   } else {
     reject(
       createError(
-        `Request failed with status code ${response.status}`,
+        `Request failed with status code ${response.status} and body ${
+          typeof response.data === "string"
+            ? response.data
+            : tryJsonStringify(response.data)
+        }`,
         response.config,
         null,
         response.request,
@@ -223,14 +235,25 @@ async function getResponse(request, config) {
   try {
     stageOne = await fetch(request);
   } catch (e) {
+    if (e && e.name === "AbortError") {
+      return createError("Request aborted", config, "ECONNABORTED", request);
+    }
+    if (e && e.name === "TimeoutError") {
+      return createError("Request timeout", config, "ECONNABORTED", request);
+    }
     return createError("Network Error", config, "ERR_NETWORK", request);
   }
+
+  const headers = {};
+  stageOne.headers.forEach((value, key) => {
+    headers[key] = value;
+  });
 
   const response = {
     ok: stageOne.ok,
     status: stageOne.status,
     statusText: stageOne.statusText,
-    headers: new Headers(stageOne.headers), // Make a copy of headers
+    headers,
     config,
     request,
   };
@@ -239,6 +262,18 @@ async function getResponse(request, config) {
     if (config.responseType === "stream") {
       const contentType = stageOne.headers.get("content-type");
       if (!contentType?.startsWith(EventStreamContentType)) {
+        // If the content-type is not stream, response is most likely an error
+        if (stageOne.status >= 400) {
+          // If the error is a JSON, parse it. Otherwise, return as text
+          if (contentType?.startsWith("application/json")) {
+            response.data = await stageOne.json();
+            return response;
+          } else {
+            response.data = await stageOne.text();
+            return response;
+          }
+        }
+        // If the non-stream response is also not an error, throw
         throw new Error(
           `Expected content-type to be ${EventStreamContentType}, Actual: ${contentType}`
         );
@@ -297,6 +332,12 @@ function createRequest(config) {
       headers.delete("Content-Type");
     }
   }
+  // Some `fetch` implementations will override the Content-Type to text/plain
+  // when body is a string.
+  // See https://github.com/hwchase17/langchainjs/issues/1010
+  if (typeof options.body === "string") {
+    options.body = new TextEncoder().encode(options.body);
+  }
   if (config.mode) {
     options.mode = config.mode;
   }
@@ -314,6 +355,10 @@ function createRequest(config) {
   }
   if (config.timeout && config.timeout > 0) {
     options.signal = AbortSignal.timeout(config.timeout);
+  }
+  if (config.signal) {
+    // this overrides the timeout signal if both are set
+    options.signal = config.signal;
   }
   // This config is similar to XHR’s withCredentials flag, but with three available values instead of two.
   // So if withCredentials is not set, default value 'same-origin' will be used

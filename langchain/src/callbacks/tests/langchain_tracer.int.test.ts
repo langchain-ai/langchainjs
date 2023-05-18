@@ -1,40 +1,100 @@
-import { test, expect } from "@jest/globals";
+/* eslint-disable no-process-env */
+import * as uuid from "uuid";
+import { test } from "@jest/globals";
 
-import { LangChainTracer } from "../tracers.js";
-import { OpenAI } from "../../llms/index.js";
-import { Calculator, SerpAPI } from "../../agents/tools/index.js";
-import { initializeAgentExecutor } from "../../agents/index.js";
+import { LangChainTracer } from "../handlers/tracer_langchain.js";
+import { OpenAI } from "../../llms/openai.js";
+import { SerpAPI } from "../../tools/serpapi.js";
+import { Calculator } from "../../tools/calculator.js";
+import { initializeAgentExecutorWithOptions } from "../../agents/initialize.js";
+import { HumanChatMessage } from "../../schema/index.js";
+import { ChatOpenAI } from "../../chat_models/openai.js";
 
-test("Test LangChain tracer", async () => {
-  const tracer = new LangChainTracer();
-  expect(tracer.alwaysVerbose).toBe(true);
+test("Test LangChain V2 tracer", async () => {
+  const tracer = new LangChainTracer({
+    sessionName: `JS Int Test - ${uuid.v4()}`,
+    sessionExtra: { source: "langchain-js" },
+  });
+  const chainRunId = uuid.v4();
+  const toolRunId = uuid.v4();
+  const llmRunId = uuid.v4();
+  const chatRunId = uuid.v4();
+  await tracer.handleChainStart({ name: "test" }, { foo: "bar" }, chainRunId);
+  await tracer.handleToolStart({ name: "test" }, "test", toolRunId, chainRunId);
+  await tracer.handleLLMStart({ name: "test" }, ["test"], llmRunId, toolRunId);
+  await tracer.handleLLMEnd({ generations: [[]] }, llmRunId);
+  await tracer.handleChatModelStart(
+    { name: "testChatModel" },
+    [[new HumanChatMessage("I'm a human.")]],
+    chatRunId
+  );
+  await tracer.handleLLMEnd({ generations: [[]] }, chatRunId);
+  await tracer.handleToolEnd("output", toolRunId);
+  const llmRunId2 = uuid.v4();
+  await tracer.handleLLMStart(
+    { name: "test2" },
+    ["test"],
+    llmRunId2,
+    chainRunId
+  );
+  await tracer.handleLLMEnd({ generations: [[]] }, llmRunId2);
+  await tracer.handleChainEnd({ foo: "bar" }, chainRunId);
 
-  await tracer.handleChainStart({ name: "test" }, { foo: "bar" });
-  await tracer.handleToolStart({ name: "test" }, "test");
-  await tracer.handleLLMStart({ name: "test" }, ["test"]);
-  await tracer.handleLLMEnd({ generations: [[]] });
-  await tracer.handleToolEnd("output");
-  await tracer.handleLLMStart({ name: "test2" }, ["test"]);
-  await tracer.handleLLMEnd({ generations: [[]] });
-  await tracer.handleChainEnd({ foo: "bar" });
-
-  await tracer.handleLLMStart({ name: "test" }, ["test"]);
-  await tracer.handleLLMEnd({ generations: [[]] });
+  const llmRunId3 = uuid.v4();
+  await tracer.handleLLMStart({ name: "test" }, ["test"], llmRunId3);
+  await tracer.handleLLMEnd({ generations: [[]] }, llmRunId3);
 });
 
-test.skip("Test Traced Agent with concurrency (skipped until we fix concurrency)", async () => {
-  process.env.LANGCHAIN_HANDLER = "langchain";
+test("Test Traced Agent with concurrency", async () => {
+  process.env.LANGCHAIN_TRACING_V2 = "true";
   const model = new OpenAI({ temperature: 0 });
-  const tools = [new SerpAPI(), new Calculator()];
+  const tools = [
+    new SerpAPI(process.env.SERPAPI_API_KEY, {
+      location: "Austin,Texas,United States",
+      hl: "en",
+      gl: "us",
+    }),
+    new Calculator(),
+  ];
 
-  const executor = await initializeAgentExecutor(
-    tools,
-    model,
-    "zero-shot-react-description",
-    true
-  );
+  const executor = await initializeAgentExecutorWithOptions(tools, model, {
+    agentType: "zero-shot-react-description",
+    verbose: true,
+  });
 
-  const input = `Who is Olivia Wilde's boyfriend? What is his current age raised to the 0.23 power?`;
+  const input = `What is 24,678,987 raised to the 0.23 power?`;
+
+  console.log(`Executing with input "${input}"...`);
+
+  const [resultA, resultB, resultC] = await Promise.all([
+    executor.call({ input }),
+    executor.call({ input }),
+    executor.call({ input }),
+  ]);
+
+  console.log(`Got output ${resultA.output}`);
+  console.log(`Got output ${resultB.output}`);
+  console.log(`Got output ${resultC.output}`);
+});
+
+test("Test Traced Agent with chat model", async () => {
+  process.env.LANGCHAIN_TRACING_V2 = "true";
+  const model = new ChatOpenAI({ temperature: 0 });
+  const tools = [
+    new SerpAPI(process.env.SERPAPI_API_KEY, {
+      location: "Austin,Texas,United States",
+      hl: "en",
+      gl: "us",
+    }),
+    new Calculator(),
+  ];
+
+  const executor = await initializeAgentExecutorWithOptions(tools, model, {
+    agentType: "chat-zero-shot-react-description",
+    verbose: true,
+  });
+
+  const input = `What is 24,678,987 raised to the 0.23 power?`;
 
   console.log(`Executing with input "${input}"...`);
 

@@ -1,5 +1,6 @@
 node_modules/
 dist/
+dist-cjs/
 lib/
 .turbo
 .eslintcache
@@ -23,3 +24,6 @@ Chinook.db
 Chinook_Sqlite.sql
 
 .envrc
+*.swp
+*.swo
+

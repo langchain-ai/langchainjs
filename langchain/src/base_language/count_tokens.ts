@@ -1,6 +1,7 @@
-import type { TiktokenModel } from "@dqbd/tiktoken";
+import { type TiktokenModel } from "js-tiktoken/lite";
+import { encodingForModel } from "../util/tiktoken.js";
 
-// https://www.npmjs.com/package/@dqbd/tiktoken
+// https://www.npmjs.com/package/js-tiktoken
 
 export const getModelNameForTiktoken = (modelName: string): TiktokenModel => {
   if (modelName.startsWith("gpt-3.5-turbo-")) {
@@ -18,8 +19,23 @@ export const getModelNameForTiktoken = (modelName: string): TiktokenModel => {
   return modelName as TiktokenModel;
 };
 
+export const getEmbeddingContextSize = (modelName?: string): number => {
+  switch (modelName) {
+    case "text-embedding-ada-002":
+      return 8191;
+    default:
+      return 2046;
+  }
+};
+
 export const getModelContextSize = (modelName: string): number => {
   switch (getModelNameForTiktoken(modelName)) {
+    case "gpt-3.5-turbo":
+      return 4096;
+    case "gpt-4-32k":
+      return 32768;
+    case "gpt-4":
+      return 8192;
     case "text-davinci-003":
       return 4097;
     case "text-curie-001":
@@ -37,38 +53,26 @@ export const getModelContextSize = (modelName: string): number => {
   }
 };
 
-type CalculateMaxTokenProps = {
+interface CalculateMaxTokenProps {
   prompt: string;
   modelName: TiktokenModel;
-};
-
-export const importTiktoken = async () => {
-  try {
-    const { encoding_for_model } = await import("@dqbd/tiktoken");
-    return { encoding_for_model };
-  } catch (error) {
-    console.log(error);
-    throw new Error(
-      "Please install @dqbd/tiktoken as a dependency with, e.g. `yarn add @dqbd/tiktoken`"
-    );
-  }
-};
+}
 
 export const calculateMaxTokens = async ({
   prompt,
   modelName,
 }: CalculateMaxTokenProps) => {
-  const { encoding_for_model } = await importTiktoken();
+  // fallback to approximate calculation if tiktoken is not available
+  let numTokens = Math.ceil(prompt.length / 4);
 
-  const encoding = encoding_for_model(getModelNameForTiktoken(modelName));
-
-  const tokenized = encoding.encode(prompt);
-
-  const numTokens = tokenized.length;
+  try {
+    numTokens = (await encodingForModel(modelName)).encode(prompt).length;
+  } catch (error) {
+    console.warn(
+      "Failed to calculate number of tokens, falling back to approximate count"
+    );
+  }
 
   const maxTokens = getModelContextSize(modelName);
-
-  encoding.free();
-
   return maxTokens - numTokens;
 };

@@ -1,12 +1,14 @@
-/* eslint-disable tree-shaking/no-side-effects-in-initialization */
 /* eslint-disable spaced-comment */
+import { PromptTemplate } from "../../prompts/prompt.js";
 import {
-  PromptTemplate,
   ChatPromptTemplate,
   SystemMessagePromptTemplate,
   HumanMessagePromptTemplate,
-} from "../../prompts/index.js";
-import { ConditionalPromptSelector, isChatModel } from "../prompt_selector.js";
+} from "../../prompts/chat.js";
+import {
+  ConditionalPromptSelector,
+  isChatModel,
+} from "../../prompts/selectors/conditional.js";
 
 const qa_template = `Use the following portion of a long document to see if any of the text is relevant to answer the question. 
 Return any relevant text verbatim.
