@@ -38,6 +38,7 @@ export class MyCustomChain extends BaseChain implements MyCustomChainInputs {
     // `runManager?.getChild()` as shown below.
     const result = await this.llm.generatePrompt(
       [promptValue],
+      {},
       runManager?.getChild()
     );
 

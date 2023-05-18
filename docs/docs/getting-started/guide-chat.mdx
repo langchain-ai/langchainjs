@@ -196,34 +196,6 @@ console.log(responseB);
 { text: "J'aime programmer." }
 ```
 
-The chain will internally accumulate the messages sent to the model, and the ones received as output. Then it will inject the messages into the prompt on the next call. So you can call the chain a few times, and it remembers previous messages:
-
-```typescript
-const responseD = await chain.call({
-  input: "hi from London, how are you doing today",
-});
-```
-
-```
-{
-  response: "Hello! As an AI language model, I don't have feelings, but I'm functioning properly and ready to assist you with any questions or tasks you may have. How can I help you today?"
-}
-```
-
-```typescript
-const responseE = await chain.call({
-  input: "Do you know where I am?",
-});
-
-console.log(responseE);
-```
-
-```
-{
-  response: "Yes, you mentioned that you are from London. However, as an AI language model, I don't have access to your current location unless you provide me with that information."
-}
-```
-
 ### Agents: Dynamically Run Chains Based on User Input
 
 Finally, we introduce Tools and Agents, which extend the model with other abilities, such as search, or a calculator.
@@ -323,6 +295,36 @@ const chain = new ConversationChain({
   prompt: chatPrompt,
   llm: chat,
 });
+```
+
+The chain will internally accumulate the messages sent to the model, and the ones received as output. Then it will inject the messages into the prompt on the next call. So you can call the chain a few times, and it remembers previous messages:
+
+```typescript
+const responseH = await chain.call({
+  input: "hi from London, how are you doing today",
+});
+
+console.log(responseH);
+```
+
+```
+{
+  response: "Hello! As an AI language model, I don't have feelings, but I'm functioning properly and ready to assist you with any questions or tasks you may have. How can I help you today?"
+}
+```
+
+```typescript
+const responseI = await chain.call({
+  input: "Do you know where I am?",
+});
+
+console.log(responseI);
+```
+
+```
+{
+  response: "Yes, you mentioned that you are from London. However, as an AI language model, I don't have access to your current location unless you provide me with that information."
+}
 ```
 
 ## Streaming
