@@ -175,14 +175,10 @@ export class LangChainPlusClient {
 
   public static async create(
     apiUrl: string,
-    apiKey: string | undefined = undefined,
-    tenantId: string | undefined = undefined
+    apiKey: string | undefined = undefined
   ): Promise<LangChainPlusClient> {
-    let tenantId_ = tenantId;
-    if (!tenantId_) {
-      tenantId_ = await getSeededTenantId(apiUrl, apiKey);
-    }
-    return new LangChainPlusClient(apiUrl, tenantId_, apiKey);
+    const tenantId = await getSeededTenantId(apiUrl, apiKey);
+    return new LangChainPlusClient(apiUrl, tenantId, apiKey);
   }
 
   private validateApiKeyIfHosted(): void {
