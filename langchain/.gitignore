@@ -97,6 +97,9 @@ vectorstores/chroma.d.ts
 vectorstores/hnswlib.cjs
 vectorstores/hnswlib.js
 vectorstores/hnswlib.d.ts
+vectorstores/faiss.cjs
+vectorstores/faiss.js
+vectorstores/faiss.d.ts
 vectorstores/weaviate.cjs
 vectorstores/weaviate.js
 vectorstores/weaviate.d.ts
