@@ -20,6 +20,8 @@ const entrypoints = {
   // chains
   chains: "chains/index",
   "chains/load": "chains/load",
+  "chains/query_constructor": "chains/query_constructor/index",
+  "chains/query_constructor/ir": "chains/query_constructor/ir",
   // embeddings
   embeddings: "embeddings/index",
   "embeddings/base": "embeddings/base",
@@ -104,6 +106,7 @@ const entrypoints = {
   callbacks: "callbacks/index",
   // output_parsers
   output_parsers: "output_parsers/index",
+  "output_parsers/expression": "output_parsers/expression",
   // retrievers
   retrievers: "retrievers/index",
   "retrievers/remote": "retrievers/remote/index",
@@ -116,12 +119,7 @@ const entrypoints = {
   "retrievers/document_compressors/chain_extract":
     "retrievers/document_compressors/chain_extract",
   "retrievers/hyde": "retrievers/hyde",
-  "retrievers/self_query/base": "retrievers/self_query/base",
-  "retrievers/self_query/translator": "retrievers/self_query/translator",
-  "output_parsers/expression": "output_parsers/expression",
-  "chains/query_constructor/base": "chains/query_constructor/base",
-  "chains/query_constructor/ir": "chains/query_constructor/ir",
-  "chains/query_constructor/parser": "chains/query_constructor/parser",
+  "retrievers/self_query": "retrievers/self_query/index",
   // cache
   cache: "cache/index",
   "cache/redis": "cache/redis",
@@ -201,12 +199,10 @@ const requiresOptionalDependency = [
   "sql_db",
   "retrievers/supabase",
   "retrievers/metal",
-  "retrievers/self_query/base",
-  "retrievers/self_query/translator",
+  "retrievers/self_query",
   "output_parsers/expression",
-  "chains/query_constructor/base",
+  "chains/query_constructor",
   "chains/query_constructor/ir",
-  "chains/query_constructor/parser",
   "cache/redis",
   "stores/file/node",
   "stores/message/dynamodb",

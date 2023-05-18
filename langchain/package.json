@@ -37,6 +37,12 @@
     "chains/load.cjs",
     "chains/load.js",
     "chains/load.d.ts",
+    "chains/query_constructor.cjs",
+    "chains/query_constructor.js",
+    "chains/query_constructor.d.ts",
+    "chains/query_constructor/ir.cjs",
+    "chains/query_constructor/ir.js",
+    "chains/query_constructor/ir.d.ts",
     "embeddings.cjs",
     "embeddings.js",
     "embeddings.d.ts",
@@ -244,6 +250,9 @@
     "output_parsers.cjs",
     "output_parsers.js",
     "output_parsers.d.ts",
+    "output_parsers/expression.cjs",
+    "output_parsers/expression.js",
+    "output_parsers/expression.d.ts",
     "retrievers.cjs",
     "retrievers.js",
     "retrievers.d.ts",
@@ -274,24 +283,9 @@
     "retrievers/hyde.cjs",
     "retrievers/hyde.js",
     "retrievers/hyde.d.ts",
-    "retrievers/self_query/base.cjs",
-    "retrievers/self_query/base.js",
-    "retrievers/self_query/base.d.ts",
-    "retrievers/self_query/translator.cjs",
-    "retrievers/self_query/translator.js",
-    "retrievers/self_query/translator.d.ts",
-    "output_parsers/expression.cjs",
-    "output_parsers/expression.js",
-    "output_parsers/expression.d.ts",
-    "chains/query_constructor/base.cjs",
-    "chains/query_constructor/base.js",
-    "chains/query_constructor/base.d.ts",
-    "chains/query_constructor/ir.cjs",
-    "chains/query_constructor/ir.js",
-    "chains/query_constructor/ir.d.ts",
-    "chains/query_constructor/parser.cjs",
-    "chains/query_constructor/parser.js",
-    "chains/query_constructor/parser.d.ts",
+    "retrievers/self_query.cjs",
+    "retrievers/self_query.js",
+    "retrievers/self_query.d.ts",
     "cache.cjs",
     "cache.js",
     "cache.d.ts",
@@ -638,6 +632,16 @@
       "types": "./chains/load.d.ts",
       "import": "./chains/load.js",
       "require": "./chains/load.cjs"
+    },
+    "./chains/query_constructor": {
+      "types": "./chains/query_constructor.d.ts",
+      "import": "./chains/query_constructor.js",
+      "require": "./chains/query_constructor.cjs"
+    },
+    "./chains/query_constructor/ir": {
+      "types": "./chains/query_constructor/ir.d.ts",
+      "import": "./chains/query_constructor/ir.js",
+      "require": "./chains/query_constructor/ir.cjs"
     },
     "./embeddings": {
       "node": {
@@ -994,6 +998,11 @@
       "import": "./output_parsers.js",
       "require": "./output_parsers.cjs"
     },
+    "./output_parsers/expression": {
+      "types": "./output_parsers/expression.d.ts",
+      "import": "./output_parsers/expression.js",
+      "require": "./output_parsers/expression.cjs"
+    },
     "./retrievers": {
       "node": {
         "types": "./retrievers.d.ts",
@@ -1046,35 +1055,10 @@
       "import": "./retrievers/hyde.js",
       "require": "./retrievers/hyde.cjs"
     },
-    "./retrievers/self_query/base": {
-      "types": "./retrievers/self_query/base.d.ts",
-      "import": "./retrievers/self_query/base.js",
-      "require": "./retrievers/self_query/base.cjs"
-    },
-    "./retrievers/self_query/translator": {
-      "types": "./retrievers/self_query/translator.d.ts",
-      "import": "./retrievers/self_query/translator.js",
-      "require": "./retrievers/self_query/translator.cjs"
-    },
-    "./output_parsers/expression": {
-      "types": "./output_parsers/expression.d.ts",
-      "import": "./output_parsers/expression.js",
-      "require": "./output_parsers/expression.cjs"
-    },
-    "./chains/query_constructor/base": {
-      "types": "./chains/query_constructor/base.d.ts",
-      "import": "./chains/query_constructor/base.js",
-      "require": "./chains/query_constructor/base.cjs"
-    },
-    "./chains/query_constructor/ir": {
-      "types": "./chains/query_constructor/ir.d.ts",
-      "import": "./chains/query_constructor/ir.js",
-      "require": "./chains/query_constructor/ir.cjs"
-    },
-    "./chains/query_constructor/parser": {
-      "types": "./chains/query_constructor/parser.d.ts",
-      "import": "./chains/query_constructor/parser.js",
-      "require": "./chains/query_constructor/parser.cjs"
+    "./retrievers/self_query": {
+      "types": "./retrievers/self_query.d.ts",
+      "import": "./retrievers/self_query.js",
+      "require": "./retrievers/self_query.cjs"
     },
     "./cache": {
       "types": "./cache.d.ts",

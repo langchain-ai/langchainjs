@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { QueryTransformer } from "./parser.js";
+import { QueryTransformer, TraverseType } from "./parser.js";
 import {
   Comparator,
   Comparators,
@@ -16,11 +16,20 @@ import {
   EXAMPLE_PROMPT,
 } from "./prompt.js";
 import { interpolateFString } from "../../prompts/template.js";
-import { LLMChain } from "../../chains/llm_chain.js";
+import { LLMChain } from "../llm_chain.js";
 import { FewShotPromptTemplate } from "../../prompts/few_shot.js";
 import { BaseLanguageModel } from "../../base_language/index.js";
 import { AsymmetricStructuredOutputParser } from "../../output_parsers/structured.js";
 import { AttributeInfo } from "../../schema/query_constructor.js";
+
+export { QueryTransformer, TraverseType };
+export {
+  DEFAULT_EXAMPLES,
+  DEFAULT_PREFIX,
+  DEFAULT_SCHEMA,
+  DEFAULT_SUFFIX,
+  EXAMPLE_PROMPT,
+};
 
 const queryInputSchema = /* #__PURE__ */ z.object({
   query: /* #__PURE__ */ z
