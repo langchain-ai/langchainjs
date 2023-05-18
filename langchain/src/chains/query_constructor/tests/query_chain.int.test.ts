@@ -1,5 +1,5 @@
 import { test } from "@jest/globals";
-import { loadQueryContstructorChain } from "../base.js";
+import { loadQueryContstructorChain } from "../index.js";
 import {
   Comparators,
   Comparison,

@@ -13,7 +13,7 @@ import {
   ParsedType,
 } from "../../output_parsers/expression.js";
 
-type TraverseType =
+export type TraverseType =
   | boolean
   | Operation
   | Comparison

@@ -1,5 +1,5 @@
 import { test } from "@jest/globals";
-import { StructuredQueryOutputParser } from "../base.js";
+import { StructuredQueryOutputParser } from "../index.js";
 import {
   Comparators,
   Comparison,

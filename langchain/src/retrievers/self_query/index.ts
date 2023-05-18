@@ -2,12 +2,14 @@ import { LLMChain } from "../../chains/llm_chain.js";
 import {
   QueryConstructorChainOptions,
   loadQueryContstructorChain,
-} from "../../chains/query_constructor/base.js";
+} from "../../chains/query_constructor/index.js";
 import { StructuredQuery } from "../../chains/query_constructor/ir.js";
 import { Document } from "../../document.js";
 import { BaseRetriever } from "../../schema/index.js";
 import { VectorStore } from "../../vectorstores/base.js";
-import { BaseTranslator } from "./translator.js";
+import { BaseTranslator, BasicTranslator } from "./translator.js";
+
+export { BaseTranslator, BasicTranslator };
 
 export type SelfQueryRetrieverArgs = {
   vectorStore: VectorStore;
