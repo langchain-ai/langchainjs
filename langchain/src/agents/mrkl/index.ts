@@ -1,6 +1,6 @@
 import { BaseLanguageModel } from "../../base_language/index.js";
 import { LLMChain } from "../../chains/llm_chain.js";
-import { PREFIX, getSuffixForLLMType, FORMAT_INSTRUCTIONS } from "./prompt.js";
+import { PREFIX, getSuffixForLLM, FORMAT_INSTRUCTIONS } from "./prompt.js";
 import { PromptTemplate } from "../../prompts/prompt.js";
 import { renderTemplate } from "../../prompts/template.js";
 import { Tool } from "../../tools/base.js";
@@ -21,8 +21,8 @@ export interface ZeroShotCreatePromptArgs {
   prefix?: string;
   /** List of input variables the final prompt will expect. */
   inputVariables?: string[];
-  /** The type of LLM you are creating the prompt for. */
-  llmType?: string;
+  /** The LLM you are creating the prompt for. */
+  llm?: BaseLanguageModel;
 };
 
 export type ZeroShotAgentInput = Optional<AgentInput, "outputParser">;
@@ -77,7 +77,7 @@ export class ZeroShotAgent extends Agent {
   static createPrompt(tools: Tool[], args?: ZeroShotCreatePromptArgs) {
     const {
       prefix = PREFIX,
-      suffix = getSuffixForLLMType(args?.llmType),
+      suffix = getSuffixForLLM(args?.llm),
       inputVariables = ["input", "agent_scratchpad"],
     } = args ?? {};
     const toolStrings = tools
@@ -103,14 +103,11 @@ export class ZeroShotAgent extends Agent {
   static fromLLMAndTools(
     llm: BaseLanguageModel,
     tools: Tool[],
-    args?: ZeroShotCreatePromptArgs & AgentArgs
+    args?: Omit<ZeroShotCreatePromptArgs, "llm"> & AgentArgs
   ) {
     ZeroShotAgent.validateTools(tools);
     const createPromptArgs = args ?? {};
-    if (!createPromptArgs.llmType) {
-      createPromptArgs.llmType = llm._llmType();
-    }
-    const prompt = ZeroShotAgent.createPrompt(tools, createPromptArgs);
+    const prompt = ZeroShotAgent.createPrompt(tools, {...createPromptArgs, llm});
     const chain = new LLMChain({ prompt, llm, callbacks: args?.callbacks ?? args?.callbackManager });
     return new ZeroShotAgent({
       llmChain: chain,

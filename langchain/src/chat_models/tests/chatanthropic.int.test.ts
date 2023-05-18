@@ -10,8 +10,8 @@ import {
 } from "../../prompts/index.js";
 import { ChatAnthropic } from "../anthropic.js";
 import { CallbackManager } from "../../callbacks/index.js";
-import { Calculator } from "../../agents/tools/index.js";
-import { initializeAgentExecutor } from "../../agents/index.js";
+import { Calculator } from "../../tools/calculator.js";
+import { initializeAgentExecutorWithOptions } from "../../agents/index.js";
 
 test("Test ChatAnthropic", async () => {
   const chat = new ChatAnthropic({ modelName: "claude-instant-v1" });
@@ -178,18 +178,20 @@ test("ChatAnthropic, longer chain of messages", async () => {
   console.log(responseA.generations);
 });
 
-test("ChatAnthropic, with agent and a tool", async () => {
+test.only("ChatAnthropic, with agent and a tool", async () => {
   const model = new ChatAnthropic({
     temperature: 0,
-    modelName: "claude-instant-v1",
+    modelName: "claude-v1",
   });
   const tools = [new Calculator()];
 
-  const executor = await initializeAgentExecutor(
+  const executor = await initializeAgentExecutorWithOptions(
     tools,
     model,
-    "zero-shot-react-description",
-    true
+    {
+      agentType: "zero-shot-react-description",
+      verbose: true
+    }
   );
   console.log("Loaded agent.");
 
