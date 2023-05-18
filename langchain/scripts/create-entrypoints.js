@@ -97,6 +97,7 @@ const entrypoints = {
   // schema
   schema: "schema/index",
   "schema/output_parser": "schema/output_parser",
+  "schema/query_constructor": "schema/query_constructor",
   // sql_db
   sql_db: "sql_db",
   // callbacks
@@ -115,6 +116,12 @@ const entrypoints = {
   "retrievers/document_compressors/chain_extract":
     "retrievers/document_compressors/chain_extract",
   "retrievers/hyde": "retrievers/hyde",
+  "retrievers/self_query/base": "retrievers/self_query/base",
+  "retrievers/self_query/translator": "retrievers/self_query/translator",
+  "output_parsers/expression": "output_parsers/expression",
+  "chains/query_constructor/base": "chains/query_constructor/base",
+  "chains/query_constructor/ir": "chains/query_constructor/ir",
+  "chains/query_constructor/parser": "chains/query_constructor/parser",
   // cache
   cache: "cache/index",
   "cache/redis": "cache/redis",
@@ -194,6 +201,12 @@ const requiresOptionalDependency = [
   "sql_db",
   "retrievers/supabase",
   "retrievers/metal",
+  "retrievers/self_query/base",
+  "retrievers/self_query/translator",
+  "output_parsers/expression",
+  "chains/query_constructor/base",
+  "chains/query_constructor/ir",
+  "chains/query_constructor/parser",
   "cache/redis",
   "stores/file/node",
   "stores/message/dynamodb",

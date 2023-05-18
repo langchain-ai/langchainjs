@@ -232,6 +232,9 @@
     "schema/output_parser.cjs",
     "schema/output_parser.js",
     "schema/output_parser.d.ts",
+    "schema/query_constructor.cjs",
+    "schema/query_constructor.js",
+    "schema/query_constructor.d.ts",
     "sql_db.cjs",
     "sql_db.js",
     "sql_db.d.ts",
@@ -271,6 +274,24 @@
     "retrievers/hyde.cjs",
     "retrievers/hyde.js",
     "retrievers/hyde.d.ts",
+    "retrievers/self_query/base.cjs",
+    "retrievers/self_query/base.js",
+    "retrievers/self_query/base.d.ts",
+    "retrievers/self_query/translator.cjs",
+    "retrievers/self_query/translator.js",
+    "retrievers/self_query/translator.d.ts",
+    "output_parsers/expression.cjs",
+    "output_parsers/expression.js",
+    "output_parsers/expression.d.ts",
+    "chains/query_constructor/base.cjs",
+    "chains/query_constructor/base.js",
+    "chains/query_constructor/base.d.ts",
+    "chains/query_constructor/ir.cjs",
+    "chains/query_constructor/ir.js",
+    "chains/query_constructor/ir.d.ts",
+    "chains/query_constructor/parser.cjs",
+    "chains/query_constructor/parser.js",
+    "chains/query_constructor/parser.d.ts",
     "cache.cjs",
     "cache.js",
     "cache.d.ts",
@@ -375,6 +396,7 @@
     "html-to-text": "^9.0.5",
     "jest": "^29.5.0",
     "mammoth": "^1.5.1",
+    "meriyah": "^4.3.7",
     "mongodb": "^5.2.0",
     "pdf-parse": "1.1.1",
     "playwright": "^1.32.1",
@@ -416,6 +438,7 @@
     "hnswlib-node": "^1.4.2",
     "html-to-text": "^9.0.5",
     "mammoth": "*",
+    "meriyah": "*",
     "mongodb": "^5.2.0",
     "pdf-parse": "1.1.1",
     "playwright": "^1.32.1",
@@ -497,6 +520,9 @@
       "optional": true
     },
     "mammoth": {
+      "optional": true
+    },
+    "meriyah": {
       "optional": true
     },
     "mongodb": {
@@ -948,6 +974,11 @@
       "import": "./schema/output_parser.js",
       "require": "./schema/output_parser.cjs"
     },
+    "./schema/query_constructor": {
+      "types": "./schema/query_constructor.d.ts",
+      "import": "./schema/query_constructor.js",
+      "require": "./schema/query_constructor.cjs"
+    },
     "./sql_db": {
       "types": "./sql_db.d.ts",
       "import": "./sql_db.js",
@@ -1014,6 +1045,36 @@
       "types": "./retrievers/hyde.d.ts",
       "import": "./retrievers/hyde.js",
       "require": "./retrievers/hyde.cjs"
+    },
+    "./retrievers/self_query/base": {
+      "types": "./retrievers/self_query/base.d.ts",
+      "import": "./retrievers/self_query/base.js",
+      "require": "./retrievers/self_query/base.cjs"
+    },
+    "./retrievers/self_query/translator": {
+      "types": "./retrievers/self_query/translator.d.ts",
+      "import": "./retrievers/self_query/translator.js",
+      "require": "./retrievers/self_query/translator.cjs"
+    },
+    "./output_parsers/expression": {
+      "types": "./output_parsers/expression.d.ts",
+      "import": "./output_parsers/expression.js",
+      "require": "./output_parsers/expression.cjs"
+    },
+    "./chains/query_constructor/base": {
+      "types": "./chains/query_constructor/base.d.ts",
+      "import": "./chains/query_constructor/base.js",
+      "require": "./chains/query_constructor/base.cjs"
+    },
+    "./chains/query_constructor/ir": {
+      "types": "./chains/query_constructor/ir.d.ts",
+      "import": "./chains/query_constructor/ir.js",
+      "require": "./chains/query_constructor/ir.cjs"
+    },
+    "./chains/query_constructor/parser": {
+      "types": "./chains/query_constructor/parser.d.ts",
+      "import": "./chains/query_constructor/parser.js",
+      "require": "./chains/query_constructor/parser.cjs"
     },
     "./cache": {
       "types": "./cache.d.ts",
