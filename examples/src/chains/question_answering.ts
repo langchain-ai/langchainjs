@@ -1,11 +1,14 @@
 import { OpenAI } from "langchain/llms/openai";
-import { loadQAStuffChain, loadQAMapReduceChain } from "langchain/chains";
+import {
+  initializeQAStuffChain,
+  initializeQAMapReduceChain,
+} from "langchain/chains";
 import { Document } from "langchain/document";
 
 export const run = async () => {
   // This first example uses the `StuffDocumentsChain`.
   const llmA = new OpenAI({});
-  const chainA = loadQAStuffChain(llmA);
+  const chainA = await initializeQAStuffChain(llmA);
   const docs = [
     new Document({ pageContent: "Harrison went to Harvard." }),
     new Document({ pageContent: "Ankush went to Princeton." }),
@@ -20,7 +23,7 @@ export const run = async () => {
   // This second example uses the `MapReduceChain`.
   // Optionally limit the number of concurrent requests to the language model.
   const llmB = new OpenAI({ maxConcurrency: 10 });
-  const chainB = loadQAMapReduceChain(llmB);
+  const chainB = await initializeQAMapReduceChain(llmB);
   const resB = await chainB.call({
     input_documents: docs,
     question: "Where did Harrison go to college?",

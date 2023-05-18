@@ -1,4 +1,3 @@
-// Deprecated. Use initialize.ts instead.
 import { LLMChain } from "../llm_chain.js";
 import { BasePromptTemplate } from "../../prompts/base.js";
 import {
@@ -29,22 +28,19 @@ export type QAChainParams =
       type?: "refine";
     } & RefineQAChainParams);
 
-/**
- * @deprecated Import and use "initializeQAChain" instead
- */
-export const loadQAChain = (
+export const initializeQAChain = async (
   llm: BaseLanguageModel,
   params: QAChainParams = { type: "stuff" }
 ) => {
   const { type } = params;
   if (type === "stuff") {
-    return loadQAStuffChain(llm, params);
+    return initializeQAStuffChain(llm, params);
   }
   if (type === "map_reduce") {
-    return loadQAMapReduceChain(llm, params);
+    return initializeQAMapReduceChain(llm, params);
   }
   if (type === "refine") {
-    return loadQARefineChain(llm, params);
+    return initializeQARefineChain(llm, params);
   }
   throw new Error(`Invalid _type: ${type}`);
 };
@@ -54,14 +50,11 @@ export interface StuffQAChainParams {
   verbose?: boolean;
 }
 
-/**
- * @deprecated Import and use "initializeQAChain" instead
- */
-export function loadQAStuffChain(
+export async function initializeQAStuffChain(
   llm: BaseLanguageModel,
   params: StuffQAChainParams = {}
 ) {
-  const { prompt = QA_PROMPT_SELECTOR.getPrompt(llm), verbose } = params;
+  const { prompt = await QA_PROMPT_SELECTOR.getPromptAsync(llm), verbose } = params;
   const llmChain = new LLMChain({ prompt, llm, verbose });
   const chain = new StuffDocumentsChain({ llmChain, verbose });
   return chain;
@@ -74,16 +67,13 @@ export interface MapReduceQAChainParams {
   verbose?: boolean;
 }
 
-/**
- * @deprecated Import and use "initializeQAChain" instead
- */
-export function loadQAMapReduceChain(
+export async function initializeQAMapReduceChain(
   llm: BaseLanguageModel,
   params: MapReduceQAChainParams = {}
 ) {
   const {
-    combineMapPrompt = COMBINE_QA_PROMPT_SELECTOR.getPrompt(llm),
-    combinePrompt = COMBINE_PROMPT_SELECTOR.getPrompt(llm),
+    combineMapPrompt = await COMBINE_QA_PROMPT_SELECTOR.getPromptAsync(llm),
+    combinePrompt = await COMBINE_PROMPT_SELECTOR.getPromptAsync(llm),
     verbose,
     returnIntermediateSteps,
   } = params;
@@ -109,16 +99,13 @@ export interface RefineQAChainParams {
   verbose?: boolean;
 }
 
-/**
- * @deprecated Import and use "initializeQAChain" instead
- */
-export function loadQARefineChain(
+export async function initializeQARefineChain(
   llm: BaseLanguageModel,
   params: RefineQAChainParams = {}
 ) {
   const {
-    questionPrompt = QUESTION_PROMPT_SELECTOR.getPrompt(llm),
-    refinePrompt = REFINE_PROMPT_SELECTOR.getPrompt(llm),
+    questionPrompt = await QUESTION_PROMPT_SELECTOR.getPromptAsync(llm),
+    refinePrompt = await REFINE_PROMPT_SELECTOR.getPromptAsync(llm),
     verbose,
   } = params;
   const llmChain = new LLMChain({ prompt: questionPrompt, llm, verbose });
