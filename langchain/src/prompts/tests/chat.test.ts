@@ -222,7 +222,7 @@ test("Test using partial", async () => {
   // partial prompt has only remaining variables
   expect(partialPrompt.inputVariables).toEqual(["bar"]);
 
-  expect(await partialPrompt.format({ bar: "baz" })).toBe(
-    '[{"text":"foobaz"}]'
+  expect(await partialPrompt.format({ bar: "baz" })).toMatchInlineSnapshot(
+    `"[{"type":"human","data":{"content":"foobaz"}}]"`
   );
 });

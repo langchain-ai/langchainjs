@@ -3,21 +3,9 @@ import {
   BaseChatMessage,
   ChatMessage,
   HumanChatMessage,
+  StoredMessage,
   SystemChatMessage,
 } from "../../schema/index.js";
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type AdditionalKwargs = Record<string, any>;
-export interface StoredMessageData {
-  content: string;
-  role: string | undefined;
-  additional_kwargs?: AdditionalKwargs;
-}
-
-export interface StoredMessage {
-  type: string;
-  data: StoredMessageData;
-}
 
 interface StoredMessageV1 {
   type: string;
@@ -72,11 +60,5 @@ export function mapStoredMessagesToChatMessages(
 export function mapChatMessagesToStoredMessages(
   messages: BaseChatMessage[]
 ): StoredMessage[] {
-  return messages.map((message) => ({
-    type: message._getType(),
-    data: {
-      content: message.text,
-      role: "role" in message ? (message.role as string) : undefined,
-    },
-  }));
+  return messages.map((message) => message.toJSON());
 }

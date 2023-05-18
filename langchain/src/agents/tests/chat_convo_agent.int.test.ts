@@ -25,7 +25,7 @@ test("Run conversational agent with memory", async () => {
 
   console.log(`Got output ${result0.output}`);
 
-  const input1 = `whats is 9 to the 2nd power?`;
+  const input1 = `what is 9 to the 2nd power?`;
 
   const result1 = await executor.call({ input: input1 });
 
