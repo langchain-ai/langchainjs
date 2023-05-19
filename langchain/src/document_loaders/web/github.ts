@@ -114,7 +114,10 @@ export class GithubRepoLoader
     return documents;
   }
 
-  protected async shouldIgnore(path: string, fileType: string): Promise<boolean> {
+  protected async shouldIgnore(
+    path: string,
+    fileType: string
+  ): Promise<boolean> {
     if (fileType !== "dir" && isBinaryPath(path)) {
       return true;
     }
@@ -122,17 +125,20 @@ export class GithubRepoLoader
       const { ignore } = await GithubRepoLoader.imports();
       return ignore().add(this.ignorePaths).ignores(path);
     }
-    return fileType !== "dir" && this.ignoreFiles.some((pattern) => {
-      if (typeof pattern === "string") {
-        return path === pattern;
-      }
+    return (
+      fileType !== "dir" &&
+      this.ignoreFiles.some((pattern) => {
+        if (typeof pattern === "string") {
+          return path === pattern;
+        }
 
-      try {
-        return pattern.test(path);
-      } catch {
-        throw new Error(`Unknown ignore file pattern: ${pattern}`);
-      }
-    });
+        try {
+          return pattern.test(path);
+        } catch {
+          throw new Error(`Unknown ignore file pattern: ${pattern}`);
+        }
+      })
+    );
   }
 
   private async processDirectory(
@@ -213,7 +219,7 @@ export class GithubRepoLoader
     } catch (e) {
       console.error(e);
       throw new Error(
-        "Failed to load ignore, which is required to use this loader with the \"ignorePaths\" argument. Please install it with eg. `yarn add ignore`."
+        'Failed to load ignore, which is required to use this loader with the "ignorePaths" argument. Please install it with eg. `yarn add ignore`.'
       );
     }
   }
