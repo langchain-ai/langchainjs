@@ -85,6 +85,10 @@ export abstract class BaseChatMessage {
       },
     };
   }
+
+  typeEquals(otherMessage: BaseChatMessage): boolean {
+    return otherMessage?._getType() === this._getType();
+  }
 }
 
 export class HumanChatMessage extends BaseChatMessage {
