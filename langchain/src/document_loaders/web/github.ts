@@ -1,3 +1,4 @@
+import ignore, { Ignore } from "ignore";
 import binaryExtensions from "binary-extensions";
 import { Document } from "../../document.js";
 import { BaseDocumentLoader } from "../base.js";
@@ -58,7 +59,7 @@ export class GithubRepoLoader
 
   public ignoreFiles: (string | RegExp)[];
 
-  public ignorePaths?: string[];
+  public ignore?: Ignore;
 
   constructor(
     githubUrl: string,
@@ -84,7 +85,9 @@ export class GithubRepoLoader
     this.unknown = unknown;
     this.accessToken = accessToken;
     this.ignoreFiles = ignoreFiles;
-    this.ignorePaths = ignorePaths;
+    if (ignorePaths) {
+      this.ignore = ignore.default().add(ignorePaths);
+    }
     if (this.accessToken) {
       this.headers = {
         Authorization: `Bearer ${this.accessToken}`,
@@ -121,9 +124,8 @@ export class GithubRepoLoader
     if (fileType !== "dir" && isBinaryPath(path)) {
       return true;
     }
-    if (this.ignorePaths !== undefined) {
-      const { ignore } = await GithubRepoLoader.imports();
-      return ignore().add(this.ignorePaths).ignores(path);
+    if (this.ignore !== undefined) {
+      return this.ignore.ignores(path);
     }
     return (
       fileType !== "dir" &&
@@ -207,20 +209,6 @@ export class GithubRepoLoader
         throw new Error(message);
       default:
         throw new Error(`Unknown unknown handling: ${this.unknown}`);
-    }
-  }
-
-  // TODO: Remove when 1.0.0 is released
-  /** @ignore */
-  static async imports() {
-    try {
-      const value = await import("ignore");
-      return { ignore: value.default.default };
-    } catch (e) {
-      console.error(e);
-      throw new Error(
-        'Failed to load ignore, which is required to use this loader with the "ignorePaths" argument. Please install it with eg. `yarn add ignore`.'
-      );
     }
   }
 }

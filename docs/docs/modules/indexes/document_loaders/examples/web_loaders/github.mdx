@@ -1,4 +1,5 @@
 ---
+sidebar_class_name: node-only
 hide_table_of_contents: true
 ---
 
@@ -7,6 +8,16 @@ hide_table_of_contents: true
 This example goes over how to load data from a GitHub repository.
 You can set the `GITHUB_ACCESS_TOKEN` environment variable to a GitHub access token to increase the rate limit and access private repositories.
 
+## Setup
+
+The GitHub loader requires the [ignore npm package](https://www.npmjs.com/package/ignore) as a peer dependency. Install it like this:
+
+```bash npm2yarn
+npm install ignore
+```
+
+## Usage
+
 import CodeBlock from "@theme/CodeBlock";
 import Example from "@examples/document_loaders/github.ts";
 
@@ -14,17 +25,9 @@ import Example from "@examples/document_loaders/github.ts";
 
 The loader will ignore binary files like images.
 
-## Using .gitignore syntax
+### Using .gitignore syntax
 
-If you are using Node and would like to only load documents under a certain path, you can pass in a `ignorePaths` array to the constructor.
-
-This requires the [ignore npm package](https://www.npmjs.com/package/ignore) as a peer dependency. Install it like this:
-
-```bash npm2yarn
-npm install ignore
-```
-
-Then pass in an `ignorePaths` array into the constructor:
+To ignore specific files, you can pass in an `ignorePaths` array into the constructor:
 
 import IgnoreExample from "@examples/document_loaders/github_ignore_paths.ts";
 
