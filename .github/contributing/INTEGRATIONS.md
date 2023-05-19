@@ -17,7 +17,7 @@ The following guidelines apply broadly to all type of integrations:
 
 ### Creating a separate entrypoint
 
-To allow for the above, you should not export your new module from any generalized `index.ts` files. Instead, you should add a separate entrypoint for your integration in `langchain/scripts/create-entrypoints.js` within the `entrypoints` object:
+You should generally not export your new module from an `index.ts` file that contains many other exports. Instead, you should add a separate entrypoint for your integration in `langchain/scripts/create-entrypoints.js` within the `entrypoints` object:
 
 ```js
 import * as fs from "fs";
