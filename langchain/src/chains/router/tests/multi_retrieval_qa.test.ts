@@ -117,11 +117,23 @@ test("Test MultiRetrievalQAChain No Defaults No Retriever Prompts", async () => 
     retrieverNames,
     retrieverDescriptions,
     retrievers,
+    retrievalQAChainOpts: {
+      returnSourceDocuments: true,
+    },
   });
 
-  const { text: result } = await multiRetrievalQAChain.call({
+  const { text: result, sourceDocuments } = await multiRetrievalQAChain.call({
     input: "test input",
   });
 
+  const testDocs = ["retriever1", "retriever2", "retriever3"].map(
+    (name) =>
+      new Document({
+        pageContent: `Test document <from ${name}> ${name}`,
+        metadata: {},
+      })
+  );
+
+  expect(testDocs).toContainEqual(sourceDocuments[0]);
   expect(result).toEqual(`Helpful Answer ${pickedRetriever}`);
 });

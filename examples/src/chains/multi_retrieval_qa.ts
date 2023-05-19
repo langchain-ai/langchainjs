@@ -62,6 +62,14 @@ export const run = async () => {
     retrieverNames,
     retrieverDescriptions,
     retrievers,
+    /**
+     * You can return the document that's being used by the
+     * query by adding the following option for retrieval QA
+     * chain.
+     */
+    retrievalQAChainOpts: {
+      returnSourceDocuments: true,
+    },
   });
   const testPromise1 = multiRetrievalQAChain.call({
     input:
@@ -78,8 +86,12 @@ export const run = async () => {
       "In the Animaniacs theme song, who plays the sax while Wakko packs away the snacks?",
   });
 
-  const [{ text: result1 }, { text: result2 }, { text: result3 }] =
-    await Promise.all([testPromise1, testPromise2, testPromise3]);
+  const [
+    { text: result1, sourceDocuments: sourceDocuments1 },
+    { text: result2, sourceDocuments: sourceDocuments2 },
+    { text: result3, sourceDocuments: sourceDocuments3 },
+  ] = await Promise.all([testPromise1, testPromise2, testPromise3]);
 
+  console.log(sourceDocuments1, sourceDocuments2, sourceDocuments3);
   console.log(result1, result2, result3);
 };

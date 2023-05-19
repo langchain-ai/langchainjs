@@ -32,7 +32,9 @@ export type MultiRetrievalFromRetrieversInput = {
   retrieverPrompts?: PromptTemplate[];
   defaults?: MultiRetrievalDefaults;
   multiRetrievalChainOpts?: Omit<MultiRouteChainInput, "defaultChain">;
-  retrievalQAChainOpts?: Partial<RetrievalQAChainInput> & {
+  retrievalQAChainOpts?: Partial<
+    Omit<RetrievalQAChainInput, "retriever" | "combineDocumentsChain">
+  > & {
     prompt?: PromptTemplate;
   };
 };
@@ -119,6 +121,7 @@ export class MultiRetrievalQAChain extends MultiRouteChain {
       _defaultChain = defaultChain;
     } else if (defaultRetriever) {
       _defaultChain = RetrievalQAChain.fromLLM(llm, defaultRetriever, {
+        ...retrievalQAChainOpts,
         prompt: defaultPrompt,
       });
     } else {
