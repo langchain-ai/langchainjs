@@ -2,7 +2,10 @@ import { BaseChain, ChainInputs } from "./base.js";
 import { BaseLanguageModel } from "../base_language/index.js";
 import { SerializedVectorDBQAChain } from "./serde.js";
 import { ChainValues, BaseRetriever } from "../schema/index.js";
-import { loadQAStuffChain } from "./question_answering/load.js";
+import {
+  StuffQAChainParams,
+  loadQAStuffChain,
+} from "./question_answering/load.js";
 import { CallbackManagerForChainRun } from "../callbacks/manager.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -90,9 +93,12 @@ export class RetrievalQAChain
     retriever: BaseRetriever,
     options?: Partial<
       Omit<RetrievalQAChainInput, "combineDocumentsChain" | "index">
-    >
+    > &
+      StuffQAChainParams
   ): RetrievalQAChain {
-    const qaChain = loadQAStuffChain(llm);
+    const qaChain = loadQAStuffChain(llm, {
+      prompt: options?.prompt,
+    });
     return new this({
       retriever,
       combineDocumentsChain: qaChain,

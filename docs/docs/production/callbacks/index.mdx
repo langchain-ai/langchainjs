@@ -34,7 +34,7 @@ import RequestExample from "@examples/callbacks/docs_request_callbacks.ts";
 
 ### Verbose mode
 
-The `verbose` argument is available on most objects throughout the API (Chains, Models, Tools, Agents, etc.) as a constructor argument, eg. `new LLMChain({ verbose: true })`, and it is equivalent to passing a `ConsoleCallbackHandler` to the `callbacks` argument of that object and all child objects. This is useful for debugging, as it will log all events to the console.
+The `verbose` argument is available on most objects throughout the API (Chains, Models, Tools, Agents, etc.) as a constructor argument, eg. `new LLMChain({ verbose: true })`, and it is equivalent to passing a `ConsoleCallbackHandler` to the `callbacks` argument of that object and all child objects. This is useful for debugging, as it will log all events to the console. You can also enable verbose mode for the entire application by setting the environment variable `LANGCHAIN_VERBOSE=true`.
 
 import VerboseExample from "@examples/callbacks/docs_verbose.ts";
 

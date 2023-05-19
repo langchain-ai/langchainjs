@@ -14,7 +14,7 @@ class FakeLLM1 extends BaseLLM {
     return "fake_1";
   }
 
-  async _generate(_prompts: string[], _?: string[]): Promise<LLMResult> {
+  async _generate(_prompts: string[]): Promise<LLMResult> {
     return {
       generations: [
         [
@@ -36,7 +36,7 @@ class FakeLLM2 extends BaseLLM {
     return "fake_2";
   }
 
-  async _generate(prompts: string[], _?: string[]): Promise<LLMResult> {
+  async _generate(prompts: string[]): Promise<LLMResult> {
     let response = "I don't know what you are talking about.";
     if (prompts[0].includes("XXX")) {
       response = "final answer";

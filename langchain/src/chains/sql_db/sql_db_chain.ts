@@ -1,4 +1,4 @@
-import type { TiktokenModel } from "@dqbd/tiktoken";
+import type { TiktokenModel } from "js-tiktoken/lite";
 import { DEFAULT_SQL_DATABASE_PROMPT } from "./sql_db_prompt.js";
 import { BaseChain, ChainInputs } from "../base.js";
 import type { OpenAI } from "../../llms/openai.js";
@@ -21,6 +21,7 @@ export interface SqlDatabaseChainInput extends ChainInputs {
   topK?: number;
   inputKey?: string;
   outputKey?: string;
+  sqlOutputKey?: string;
   prompt?: PromptTemplate;
 }
 
@@ -41,6 +42,8 @@ export class SqlDatabaseChain extends BaseChain {
 
   outputKey = "result";
 
+  sqlOutputKey: string | undefined = undefined;
+
   // Whether to return the result of querying the SQL table directly.
   returnDirect = false;
 
@@ -51,6 +54,7 @@ export class SqlDatabaseChain extends BaseChain {
     this.topK = fields.topK ?? this.topK;
     this.inputKey = fields.inputKey ?? this.inputKey;
     this.outputKey = fields.outputKey ?? this.outputKey;
+    this.sqlOutputKey = fields.sqlOutputKey ?? this.sqlOutputKey;
     this.prompt =
       fields.prompt ??
       getPromptTemplateFromDataSource(this.database.appDataSource);
@@ -114,6 +118,10 @@ export class SqlDatabaseChain extends BaseChain {
       };
     }
 
+    if (this.sqlOutputKey != null) {
+      finalResult[this.sqlOutputKey] = sqlCommand;
+    }
+
     return finalResult;
   }
 
@@ -126,6 +134,9 @@ export class SqlDatabaseChain extends BaseChain {
   }
 
   get outputKeys(): string[] {
+    if (this.sqlOutputKey != null) {
+      return [this.outputKey, this.sqlOutputKey];
+    }
     return [this.outputKey];
   }
 

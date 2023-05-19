@@ -1,5 +1,4 @@
-import { TiktokenModel } from "@dqbd/tiktoken";
-import { isNode } from "browser-or-node";
+import type { TiktokenModel } from "js-tiktoken/lite";
 import {
   Configuration,
   ConfigurationParameters,
@@ -8,11 +7,12 @@ import {
   CreateCompletionResponseChoicesInner,
   OpenAIApi,
 } from "openai";
+import { isNode } from "../util/env.js";
 import {
   AzureOpenAIInput,
   OpenAICallOptions,
   OpenAIInput,
-} from "../types/open-ai-types.js";
+} from "../types/openai-types.js";
 import type { StreamingAxiosConfiguration } from "../util/axios-types.js";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
 import { chunkArray } from "../util/chunk.js";
@@ -50,6 +50,10 @@ interface TokenUsage {
  */
 export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
   declare CallOptions: OpenAICallOptions;
+
+  get callKeys(): (keyof OpenAICallOptions)[] {
+    return ["stop", "signal", "timeout", "options"];
+  }
 
   temperature = 0.7;
 
@@ -236,8 +240,8 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
   /**
    * Call out to OpenAI's endpoint with k unique prompts
    *
-   * @param prompts - The prompts to pass into the model.
-   * @param [stop] - Optional list of stop words to use when generating.
+   * @param [prompts] - The prompts to pass into the model.
+   * @param [options] - Optional list of stop words to use when generating.
    * @param [runManager] - Optional callback manager to use when generating.
    *
    * @returns The full LLM output.
@@ -251,15 +255,10 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
    */
   async _generate(
     prompts: string[],
-    stopOrOptions?: string[] | this["CallOptions"],
+    options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<LLMResult> {
-    const stop = Array.isArray(stopOrOptions)
-      ? stopOrOptions
-      : stopOrOptions?.stop;
-    const options = Array.isArray(stopOrOptions)
-      ? {}
-      : stopOrOptions?.options ?? {};
+    const { stop } = options;
     const subPrompts = chunkArray(prompts, this.batchSize);
     const choices: CreateCompletionResponseChoicesInner[] = [];
     const tokenUsage: TokenUsage = {};
@@ -287,23 +286,29 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
     for (let i = 0; i < subPrompts.length; i += 1) {
       const data = params.stream
         ? await new Promise<CreateCompletionResponse>((resolve, reject) => {
-            const choice: CreateCompletionResponseChoicesInner = {};
+            const choices: CreateCompletionResponseChoicesInner[] = [];
             let response: Omit<CreateCompletionResponse, "choices">;
             let rejected = false;
+            let resolved = false;
             this.completionWithRetry(
               {
                 ...params,
                 prompt: subPrompts[i],
               },
               {
-                ...options,
+                signal: options.signal,
+                ...options.options,
                 adapter: fetchAdapter, // default adapter doesn't do streaming
                 responseType: "stream",
                 onmessage: (event) => {
                   if (event.data?.trim?.() === "[DONE]") {
+                    if (resolved) {
+                      return;
+                    }
+                    resolved = true;
                     resolve({
                       ...response,
-                      choices: [choice],
+                      choices,
                     });
                   } else {
                     const message = JSON.parse(event.data) as Omit<
@@ -322,13 +327,30 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
                     }
 
                     // on all messages, update choice
-                    const part = message.choices[0];
-                    if (part != null) {
-                      choice.text = (choice.text ?? "") + (part.text ?? "");
-                      choice.finish_reason = part.finish_reason;
-                      choice.logprobs = part.logprobs;
-                      // eslint-disable-next-line no-void
-                      void runManager?.handleLLMNewToken(part.text ?? "");
+                    for (const part of message.choices) {
+                      if (part != null && part.index != null) {
+                        if (!choices[part.index]) choices[part.index] = {};
+                        const choice = choices[part.index];
+                        choice.text = (choice.text ?? "") + (part.text ?? "");
+                        choice.finish_reason = part.finish_reason;
+                        choice.logprobs = part.logprobs;
+                        // TODO this should pass part.index to the callback
+                        // when that's supported there
+                        // eslint-disable-next-line no-void
+                        void runManager?.handleLLMNewToken(part.text ?? "");
+                      }
+                    }
+
+                    // when all messages are finished, resolve
+                    if (
+                      !resolved &&
+                      choices.every((c) => c.finish_reason != null)
+                    ) {
+                      resolved = true;
+                      resolve({
+                        ...response,
+                        choices,
+                      });
                     }
                   }
                 },
@@ -345,7 +367,10 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
               ...params,
               prompt: subPrompts[i],
             },
-            options
+            {
+              signal: options.signal,
+              ...options.options,
+            }
           );
 
       choices.push(...data.choices);
@@ -405,7 +430,7 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
       this.client = new OpenAIApi(clientConfig);
     }
     const axiosOptions: StreamingAxiosConfiguration = {
-      adapter: isNode ? undefined : fetchAdapter,
+      adapter: isNode() ? undefined : fetchAdapter,
       ...this.clientConfig.baseOptions,
       ...options,
     };

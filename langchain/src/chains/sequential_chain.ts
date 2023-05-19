@@ -210,8 +210,8 @@ export interface SimpleSequentialChainInput extends ChainInputs {
  * Play Synopsis:
  * {synopsis}
  * Review from a New York Times play critic of the above play:`
- * const reviewPromptTempalte = new PromptTemplate({ template: reviewTemplate, inputVariables: ["synopsis"] });
- * const reviewChain = new LLMChain({ llm: reviewLLM, prompt: reviewPromptTempalte });
+ * const reviewPromptTemplate = new PromptTemplate({ template: reviewTemplate, inputVariables: ["synopsis"] });
+ * const reviewChain = new LLMChain({ llm: reviewLLM, prompt: reviewPromptTemplate });
  *
  * const overallChain = new SimpleSequentialChain({chains: [synopsisChain, reviewChain], verbose:true})
  * const review = await overallChain.run("Tragedy at sunset on the beach")
