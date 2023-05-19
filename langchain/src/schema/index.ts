@@ -55,12 +55,12 @@ export interface StoredMessageData {
   additional_kwargs?: Record<string, any>;
 }
 
+export type MessageType = "human" | "ai" | "system";
+
 export interface StoredMessage {
-  type: string;
+  type: MessageType;
   data: StoredMessageData;
 }
-
-export type MessageType = "human" | "ai" | "generic" | "system";
 
 export abstract class BaseChatMessage {
   /** The text of the message. */
@@ -70,7 +70,7 @@ export abstract class BaseChatMessage {
   name?: string;
 
   /** The type of the message. */
-  abstract _getType(): MessageType;
+  type: MessageType;
 
   constructor(text: string) {
     this.text = text;
@@ -78,7 +78,7 @@ export abstract class BaseChatMessage {
 
   toJSON(): StoredMessage {
     return {
-      type: this._getType(),
+      type: this.type,
       data: {
         content: this.text,
         role: "role" in this ? (this.role as string) : undefined,
@@ -88,33 +88,30 @@ export abstract class BaseChatMessage {
 }
 
 export class HumanChatMessage extends BaseChatMessage {
-  _getType(): MessageType {
-    return "human";
+  constructor (text: string) {
+    super(text)
+    this.type = "human"
   }
 }
 
 export class AIChatMessage extends BaseChatMessage {
-  _getType(): MessageType {
-    return "ai";
+  constructor (text: string) {
+    super(text)
+    this.type = "ai"
   }
 }
 
 export class SystemChatMessage extends BaseChatMessage {
-  _getType(): MessageType {
-    return "system";
+  constructor (text: string) {
+    super(text)
+    this.type = "system"
   }
 }
 
 export class ChatMessage extends BaseChatMessage {
-  role: string;
-
-  constructor(text: string, role: string) {
+  constructor(text: string, type: MessageType) {
     super(text);
-    this.role = role;
-  }
-
-  _getType(): MessageType {
-    return "generic";
+    this.type = type;
   }
 }
 

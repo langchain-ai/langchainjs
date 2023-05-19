@@ -200,7 +200,7 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
       messages
         .map((message) => {
           const messagePrompt = getAnthropicPromptFromMessage(
-            message._getType()
+            message.type
           );
           return `${messagePrompt} ${message.text}`;
         })

@@ -4,10 +4,10 @@ import {
   BasePromptValue,
   ChatMessage,
   HumanChatMessage,
-  InputValues,
+  InputValues, MessageType,
   PartialValues,
-  SystemChatMessage,
-} from "../schema/index.js";
+  SystemChatMessage
+} from '../schema/index.js'
 import {
   BasePromptTemplate,
   BasePromptTemplateInput,
@@ -103,18 +103,18 @@ export abstract class BaseChatPromptTemplate extends BasePromptTemplate {
 }
 
 export class ChatMessagePromptTemplate extends BaseMessageStringPromptTemplate {
-  role: string;
+  role: MessageType;
 
   async format(values: InputValues): Promise<BaseChatMessage> {
     return new ChatMessage(await this.prompt.format(values), this.role);
   }
 
-  constructor(prompt: BaseStringPromptTemplate, role: string) {
+  constructor(prompt: BaseStringPromptTemplate, role: MessageType) {
     super(prompt);
     this.role = role;
   }
 
-  static fromTemplate(template: string, role: string) {
+  static fromTemplate(template: string, role: MessageType) {
     return new this(PromptTemplate.fromTemplate(template), role);
   }
 }

@@ -11,9 +11,9 @@ import { PromptTemplate } from "../prompt.js";
 import {
   AIChatMessage,
   ChatMessage,
-  HumanChatMessage,
-  SystemChatMessage,
-} from "../../schema/index.js";
+  HumanChatMessage, MessageType,
+  SystemChatMessage
+} from '../../schema/index.js'
 
 function createChatPromptTemplate(): ChatPromptTemplate {
   const systemPrompt = new PromptTemplate({
@@ -37,7 +37,7 @@ function createChatPromptTemplate(): ChatPromptTemplate {
       new SystemMessagePromptTemplate(systemPrompt),
       new HumanMessagePromptTemplate(userPrompt),
       new AIMessagePromptTemplate(aiPrompt),
-      new ChatMessagePromptTemplate(genericPrompt, "test"),
+      new ChatMessagePromptTemplate(genericPrompt, "test" as MessageType),
     ],
     inputVariables: ["context", "foo", "bar"],
   });
@@ -56,7 +56,7 @@ test("Test format", async () => {
       "Hello Foo, I'm Bar. Thanks for the This is a context"
     ),
     new AIChatMessage("I'm an AI. I'm Foo. I'm Bar."),
-    new ChatMessage("I'm a generic message. I'm Foo. I'm Bar.", "test"),
+    new ChatMessage("I'm a generic message. I'm Foo. I'm Bar.", "test" as MessageType),
   ]);
 });
 
