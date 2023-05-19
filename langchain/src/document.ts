@@ -4,7 +4,11 @@ export interface DocumentInput<
 > {
   pageContent: string;
 
+  id?: string;
   metadata?: Metadata;
+  sourceType?: string;
+  sourceName?: string;
+  hash?: string;
 }
 
 /**
@@ -17,12 +21,23 @@ export class Document<
 {
   pageContent: string;
 
+  id?: string;
+
   metadata: Metadata;
+
+  sourceType?: string;
+
+  sourceName?: string;
+
+  hash?: string;
 
   constructor(fields: DocumentInput<Metadata>) {
     this.pageContent = fields.pageContent
       ? fields.pageContent.toString()
       : this.pageContent;
     this.metadata = fields.metadata ?? ({} as Metadata);
+    this.sourceType = fields?.sourceType;
+    this.sourceName = fields?.sourceName;
+    this.hash = fields?.hash;
   }
 }
