@@ -4,6 +4,7 @@ import { LLMChain } from "../chains/llm_chain.js";
 import { PromptTemplate } from "../prompts/prompt.js";
 import type { SqlDatabase } from "../sql_db.js";
 import { SqlTable } from "../util/sql_utils.js";
+import { BaseLanguageModel } from "../base_language/index.js";
 
 interface SqlTool {
   db: SqlDatabase;
@@ -29,7 +30,7 @@ export class QuerySqlTool extends Tool implements SqlTool {
   }
 
   description = `Input to this tool is a detailed and correct SQL query, output is a result from the database.
-  If the query is not correct, an error message will be returned. 
+  If the query is not correct, an error message will be returned.
   If an error is returned, rewrite the query, check the query, and try again.`;
 }
 
@@ -55,7 +56,7 @@ export class InfoSqlTool extends Tool implements SqlTool {
 
   description = `Input to this tool is a comma-separated list of tables, output is the schema and sample rows for those tables.
     Be sure that the tables actually exist by calling list-tables-sql first!
-    
+
     Example Input: "table1, table2, table3.`;
 }
 
@@ -84,6 +85,12 @@ export class ListTablesSqlTool extends Tool implements SqlTool {
   description = `Input is an empty string, output is a comma separated list of tables in the database.`;
 }
 
+type QueryCheckerToolArgs = {
+  llmChain?: LLMChain;
+  llm?: BaseLanguageModel;
+  _chainType?: never;
+};
+
 export class QueryCheckerTool extends Tool {
   name = "query-checker";
 
@@ -103,17 +110,22 @@ If there are any of the above mistakes, rewrite the query. If there are no mista
 
   llmChain: LLMChain;
 
-  constructor(llmChain?: LLMChain) {
+  constructor(llmChainOrOptions?: LLMChain | QueryCheckerToolArgs) {
     super();
-    if (llmChain) {
-      this.llmChain = llmChain;
+    if (typeof llmChainOrOptions?._chainType === "function") {
+      this.llmChain = llmChainOrOptions as LLMChain;
     } else {
-      const model = new OpenAI({ temperature: 0 });
-      const prompt = new PromptTemplate({
-        template: this.template,
-        inputVariables: ["query"],
-      });
-      this.llmChain = new LLMChain({ llm: model, prompt });
+      const options = llmChainOrOptions as QueryCheckerToolArgs;
+      if (options?.llmChain !== undefined) {
+        this.llmChain = options.llmChain;
+      } else {
+        const prompt = new PromptTemplate({
+          template: this.template,
+          inputVariables: ["query"],
+        });
+        const llm = options?.llm ?? new OpenAI({ temperature: 0 });
+        this.llmChain = new LLMChain({ llm, prompt });
+      }
     }
   }
 
