@@ -1,5 +1,4 @@
-import { TiktokenModel } from "@dqbd/tiktoken";
-import { isNode } from "browser-or-node";
+import type { TiktokenModel } from "js-tiktoken/lite";
 import {
   Configuration,
   ConfigurationParameters,
@@ -8,6 +7,7 @@ import {
   CreateCompletionResponseChoicesInner,
   OpenAIApi,
 } from "openai";
+import { isNode } from "../util/env.js";
 import {
   AzureOpenAIInput,
   OpenAICallOptions,
@@ -50,6 +50,10 @@ interface TokenUsage {
  */
 export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
   declare CallOptions: OpenAICallOptions;
+
+  get callKeys(): (keyof OpenAICallOptions)[] {
+    return ["stop", "signal", "timeout", "options"];
+  }
 
   temperature = 0.7;
 
@@ -236,8 +240,8 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
   /**
    * Call out to OpenAI's endpoint with k unique prompts
    *
-   * @param prompts - The prompts to pass into the model.
-   * @param [stop] - Optional list of stop words to use when generating.
+   * @param [prompts] - The prompts to pass into the model.
+   * @param [options] - Optional list of stop words to use when generating.
    * @param [runManager] - Optional callback manager to use when generating.
    *
    * @returns The full LLM output.
@@ -251,15 +255,10 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
    */
   async _generate(
     prompts: string[],
-    stopOrOptions?: string[] | this["CallOptions"],
+    options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<LLMResult> {
-    const stop = Array.isArray(stopOrOptions)
-      ? stopOrOptions
-      : stopOrOptions?.stop;
-    const options = Array.isArray(stopOrOptions)
-      ? {}
-      : stopOrOptions?.options ?? {};
+    const { stop } = options;
     const subPrompts = chunkArray(prompts, this.batchSize);
     const choices: CreateCompletionResponseChoicesInner[] = [];
     const tokenUsage: TokenUsage = {};
@@ -297,7 +296,8 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
                 prompt: subPrompts[i],
               },
               {
-                ...options,
+                signal: options.signal,
+                ...options.options,
                 adapter: fetchAdapter, // default adapter doesn't do streaming
                 responseType: "stream",
                 onmessage: (event) => {
@@ -367,7 +367,10 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
               ...params,
               prompt: subPrompts[i],
             },
-            options
+            {
+              signal: options.signal,
+              ...options.options,
+            }
           );
 
       choices.push(...data.choices);
@@ -427,7 +430,7 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
       this.client = new OpenAIApi(clientConfig);
     }
     const axiosOptions: StreamingAxiosConfiguration = {
-      adapter: isNode ? undefined : fetchAdapter,
+      adapter: isNode() ? undefined : fetchAdapter,
       ...this.clientConfig.baseOptions,
       ...options,
     };

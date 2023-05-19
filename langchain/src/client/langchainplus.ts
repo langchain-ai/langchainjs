@@ -1,14 +1,24 @@
-import { LangChainTracerV2, RunResult } from "../callbacks/handlers/tracers.js";
+import { BaseRun } from "../callbacks/handlers/tracer.js";
+import { LangChainTracer } from "../callbacks/handlers/tracer_langchain.js";
 import {
   ChainValues,
   LLMResult,
   RunInputs,
   RunOutputs,
+  StoredMessage,
 } from "../schema/index.js";
 import { BaseLanguageModel } from "../base_language/index.js";
 import { BaseChain } from "../chains/base.js";
 import { BaseLLM } from "../llms/base.js";
 import { BaseChatModel } from "../chat_models/base.js";
+import { mapStoredMessagesToChatMessages } from "../stores/message/utils.js";
+import { AsyncCaller, AsyncCallerParams } from "../util/async_caller.js";
+
+export interface RunResult extends BaseRun {
+  name: string;
+  session_id: string; // uuid
+  parent_run_id?: string; // uuid
+}
 
 export interface BaseDataset {
   name: string;
@@ -56,14 +66,16 @@ const isLocalhost = (url: string): boolean => {
 
 const getSeededTenantId = async (
   apiUrl: string,
-  apiKey: string | undefined
+  apiKey: string | undefined,
+  callerOptions: AsyncCallerParams | undefined = undefined
 ): Promise<string> => {
   // Get the tenant ID from the seeded tenant
+  const caller = new AsyncCaller(callerOptions ?? {});
   const url = `${apiUrl}/tenants`;
   let response;
 
   try {
-    response = await fetch(url, {
+    response = await caller.call(fetch, url, {
       method: "GET",
       headers: apiKey ? { authorization: `Bearer ${apiKey}` } : undefined,
     });
@@ -99,14 +111,18 @@ const stringifyError = (err: Error | unknown): string => {
   return result;
 };
 
-export function isLLM(llm: BaseLanguageModel | BaseChain): llm is BaseLLM {
+export function isLLM(
+  llm: BaseLanguageModel | (() => Promise<BaseChain>)
+): llm is BaseLLM {
   const blm = llm as BaseLanguageModel;
   return (
     typeof blm?._modelType === "function" && blm?._modelType() === "base_llm"
   );
 }
 
-export function isChatModel(llm: BaseLanguageModel): llm is BaseChatModel {
+export function isChatModel(
+  llm: BaseLanguageModel | (() => Promise<BaseChain>)
+): llm is BaseChatModel {
   const blm = llm as BaseLanguageModel;
   return (
     typeof blm?._modelType === "function" &&
@@ -114,11 +130,36 @@ export function isChatModel(llm: BaseLanguageModel): llm is BaseChatModel {
   );
 }
 
-export function isChain(llm: BaseLanguageModel | BaseChain): llm is BaseChain {
-  const bch = llm as BaseChain;
+export async function isChain(
+  llm: BaseLanguageModel | (() => Promise<BaseChain>)
+): Promise<boolean> {
+  if (isLLM(llm)) {
+    return false;
+  }
+  const bchFactory = llm as () => Promise<BaseChain>;
+  const bch = await bchFactory();
   return (
     typeof bch?._chainType === "function" && bch?._chainType() !== undefined
   );
+}
+
+type _ModelType = "llm" | "chatModel" | "chainFactory";
+
+async function getModelOrFactoryType(
+  llm: BaseLanguageModel | (() => Promise<BaseChain>)
+): Promise<_ModelType> {
+  if (isLLM(llm)) {
+    return "llm";
+  }
+  if (isChatModel(llm)) {
+    return "chatModel";
+  }
+  const bchFactory = llm as () => Promise<BaseChain>;
+  const bch = await bchFactory();
+  if (typeof bch?._chainType === "function") {
+    return "chainFactory";
+  }
+  throw new Error("Unknown model or factory type");
 }
 
 export class LangChainPlusClient {
@@ -128,23 +169,27 @@ export class LangChainPlusClient {
 
   private tenantId: string;
 
-  constructor(apiUrl: string, tenantId: string, apiKey?: string) {
+  private caller: AsyncCaller;
+
+  constructor(
+    apiUrl: string,
+    tenantId: string,
+    apiKey?: string,
+    callerOptions?: AsyncCallerParams
+  ) {
     this.apiUrl = apiUrl;
     this.apiKey = apiKey;
     this.tenantId = tenantId;
     this.validateApiKeyIfHosted();
+    this.caller = new AsyncCaller(callerOptions ?? {});
   }
 
   public static async create(
     apiUrl: string,
-    apiKey: string | undefined = undefined,
-    tenantId: string | undefined = undefined
+    apiKey: string | undefined = undefined
   ): Promise<LangChainPlusClient> {
-    let tenantId_ = tenantId;
-    if (!tenantId_) {
-      tenantId_ = await getSeededTenantId(apiUrl, apiKey);
-    }
-    return new LangChainPlusClient(apiUrl, tenantId_, apiKey);
+    const tenantId = await getSeededTenantId(apiUrl, apiKey);
+    return new LangChainPlusClient(apiUrl, tenantId, apiKey);
   }
 
   private validateApiKeyIfHosted(): void {
@@ -184,7 +229,7 @@ export class LangChainPlusClient {
       }
     }
     const url = `${this.apiUrl}${path}${queryString ? `?${queryString}` : ""}`;
-    const response = await fetch(url, {
+    const response = await this.caller.call(fetch, url, {
       method: "GET",
       headers: this.headers,
     });
@@ -211,7 +256,7 @@ export class LangChainPlusClient {
     formData.append("description", description);
     formData.append("tenant_id", this.tenantId);
 
-    const response = await fetch(url, {
+    const response = await this.caller.call(fetch, url, {
       method: "POST",
       headers: this.headers,
       body: formData,
@@ -224,6 +269,34 @@ export class LangChainPlusClient {
       }
       throw new Error(
         `Failed to upload CSV: ${response.status} ${response.statusText}`
+      );
+    }
+
+    const result = await response.json();
+    return result as Dataset;
+  }
+
+  public async createDataset(
+    name: string,
+    description: string
+  ): Promise<Dataset> {
+    const response = await this.caller.call(fetch, `${this.apiUrl}/datasets`, {
+      method: "POST",
+      headers: { ...this.headers, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name,
+        description,
+        tenant_id: this.tenantId,
+      }),
+    });
+
+    if (!response.ok) {
+      const result = await response.json();
+      if (result.detail && result.detail.includes("already exists")) {
+        throw new Error(`Dataset ${name} already exists`);
+      }
+      throw new Error(
+        `Failed to create dataset ${response.status} ${response.statusText}`
       );
     }
 
@@ -293,7 +366,7 @@ export class LangChainPlusClient {
     } else {
       throw new Error("Must provide datasetName or datasetId");
     }
-    const response = await fetch(this.apiUrl + path, {
+    const response = await this.caller.call(fetch, this.apiUrl + path, {
       method: "DELETE",
       headers: this.headers,
     });
@@ -331,7 +404,7 @@ export class LangChainPlusClient {
       created_at: createdAt_.toISOString(),
     };
 
-    const response = await fetch(`${this.apiUrl}/examples`, {
+    const response = await this.caller.call(fetch, `${this.apiUrl}/examples`, {
       method: "POST",
       headers: { ...this.headers, "Content-Type": "application/json" },
       body: JSON.stringify(data),
@@ -380,7 +453,7 @@ export class LangChainPlusClient {
 
   public async deleteExample(exampleId: string): Promise<Example> {
     const path = `/examples/${exampleId}`;
-    const response = await fetch(this.apiUrl + path, {
+    const response = await this.caller.call(fetch, this.apiUrl + path, {
       method: "DELETE",
       headers: this.headers,
     });
@@ -395,79 +468,122 @@ export class LangChainPlusClient {
 
   protected async runLLM(
     example: Example,
-    tracer: LangChainTracerV2,
+    tracer: LangChainTracer,
     llm: BaseLLM,
     numRepetitions = 1
   ): Promise<(LLMResult | string)[]> {
-    const results: (LLMResult | string)[] = [];
-    for (let i = 0; i < numRepetitions; i += 1) {
-      try {
-        const prompts = example.inputs.prompts as string[];
-        results.push(await llm.generate(prompts, undefined, [tracer]));
-      } catch (e) {
-        console.error(e);
-        results.push(stringifyError(e));
-      }
-    }
+    const results: (LLMResult | string)[] = await Promise.all(
+      Array.from({ length: numRepetitions }).map(async () => {
+        try {
+          const prompt = example.inputs.prompt as string;
+          return llm.generate([prompt], undefined, [tracer]);
+        } catch (e) {
+          console.error(e);
+          return stringifyError(e);
+        }
+      })
+    );
     return results;
   }
 
   protected async runChain(
     example: Example,
-    tracer: LangChainTracerV2,
-    chain: BaseChain,
+    tracer: LangChainTracer,
+    chainFactory: () => Promise<BaseChain>,
     numRepetitions = 1
   ): Promise<(ChainValues | string)[]> {
-    const results: (ChainValues | string)[] = [];
-    for (let i = 0; i < numRepetitions; i += 1) {
-      try {
-        results.push(await chain.call(example.inputs, [tracer]));
-      } catch (e) {
-        console.error(e);
-        results.push(stringifyError(e));
-      }
-    }
+    const results: (ChainValues | string)[] = await Promise.all(
+      Array.from({ length: numRepetitions }).map(async () => {
+        try {
+          const chain = await chainFactory();
+          return chain.call(example.inputs, [tracer]);
+        } catch (e) {
+          console.error(e);
+          return stringifyError(e);
+        }
+      })
+    );
+    return results;
+  }
+
+  protected async runChatModel(
+    example: Example,
+    tracer: LangChainTracer,
+    chatModel: BaseChatModel,
+    numRepetitions = 1
+  ): Promise<(LLMResult | string)[]> {
+    const results: (LLMResult | string)[] = await Promise.all(
+      Array.from({ length: numRepetitions }).map(async () => {
+        try {
+          const messages = example.inputs.messages as StoredMessage[];
+          return chatModel.generate(
+            [mapStoredMessagesToChatMessages(messages)],
+            undefined,
+            [tracer]
+          );
+        } catch (e) {
+          console.error(e);
+          return stringifyError(e);
+        }
+      })
+    );
     return results;
   }
 
   public async runOnDataset(
     datasetName: string,
-    llmOrChain: BaseLanguageModel | BaseChain,
+    llmOrChainFactory: BaseLanguageModel | (() => Promise<BaseChain>),
     numRepetitions = 1,
     sessionName: string | undefined = undefined
   ): Promise<DatasetRunResults> {
     const examples = await this.listExamples(undefined, datasetName);
-    let sessionName_ = sessionName;
+    let sessionName_: string;
     if (sessionName === undefined) {
       const currentTime = new Date().toISOString();
-      sessionName_ = `${datasetName}-${llmOrChain.constructor.name}-${currentTime}`;
+      sessionName_ = `${datasetName}-${llmOrChainFactory.constructor.name}-${currentTime}`;
+    } else {
+      sessionName_ = sessionName;
     }
     const results: DatasetRunResults = {};
-    const tracer = new LangChainTracerV2();
-    await tracer.newSession(sessionName_);
-    for (const example of examples) {
-      if (isLLM(llmOrChain)) {
-        const llmResult = await this.runLLM(
-          example,
-          tracer,
-          llmOrChain,
-          numRepetitions
-        );
-        results[example.id] = llmResult;
-      } else if (isChain(llmOrChain)) {
-        const ChainResult = await this.runChain(
-          example,
-          tracer,
-          llmOrChain,
-          numRepetitions
-        );
-        results[example.id] = ChainResult;
-      } else if (isChatModel(llmOrChain)) {
-        throw new Error("Chat models not yet supported");
-      } else {
-        throw new Error(` llm or chain type: ${llmOrChain}`);
-      }
-    }
+    const modelOrFactoryType = await getModelOrFactoryType(llmOrChainFactory);
+    await Promise.all(
+      examples.map(async (example) => {
+        const tracer = new LangChainTracer({
+          exampleId: example.id,
+          sessionName: sessionName_,
+        });
+        if (modelOrFactoryType === "llm") {
+          const llm = llmOrChainFactory as BaseLLM;
+          const llmResult = await this.runLLM(
+            example,
+            tracer,
+            llm,
+            numRepetitions
+          );
+          results[example.id] = llmResult;
+        } else if (modelOrFactoryType === "chainFactory") {
+          const chainFactory = llmOrChainFactory as () => Promise<BaseChain>;
+          const chainResult = await this.runChain(
+            example,
+            tracer,
+            chainFactory,
+            numRepetitions
+          );
+          results[example.id] = chainResult;
+        } else if (modelOrFactoryType === "chatModel") {
+          const chatModel = llmOrChainFactory as BaseChatModel;
+          const chatModelResult = await this.runChatModel(
+            example,
+            tracer,
+            chatModel,
+            numRepetitions
+          );
+          results[example.id] = chatModelResult;
+        } else {
+          throw new Error(` llm or chain type: ${llmOrChainFactory}`);
+        }
+      })
+    );
     return results;
   }
 }

@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.74",
+  "version": "0.0.78",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -37,6 +37,12 @@
     "chains/load.cjs",
     "chains/load.js",
     "chains/load.d.ts",
+    "chains/query_constructor.cjs",
+    "chains/query_constructor.js",
+    "chains/query_constructor.d.ts",
+    "chains/query_constructor/ir.cjs",
+    "chains/query_constructor/ir.js",
+    "chains/query_constructor/ir.d.ts",
     "embeddings.cjs",
     "embeddings.js",
     "embeddings.d.ts",
@@ -79,6 +85,9 @@
     "llms/replicate.cjs",
     "llms/replicate.js",
     "llms/replicate.d.ts",
+    "llms/sagemaker_endpoint.cjs",
+    "llms/sagemaker_endpoint.js",
+    "llms/sagemaker_endpoint.d.ts",
     "prompts.cjs",
     "prompts.js",
     "prompts.d.ts",
@@ -100,6 +109,9 @@
     "vectorstores/hnswlib.cjs",
     "vectorstores/hnswlib.js",
     "vectorstores/hnswlib.d.ts",
+    "vectorstores/faiss.cjs",
+    "vectorstores/faiss.js",
+    "vectorstores/faiss.d.ts",
     "vectorstores/weaviate.cjs",
     "vectorstores/weaviate.js",
     "vectorstores/weaviate.d.ts",
@@ -124,6 +136,9 @@
     "vectorstores/myscale.cjs",
     "vectorstores/myscale.js",
     "vectorstores/myscale.d.ts",
+    "vectorstores/redis.cjs",
+    "vectorstores/redis.js",
+    "vectorstores/redis.d.ts",
     "text_splitter.cjs",
     "text_splitter.js",
     "text_splitter.d.ts",
@@ -142,6 +157,9 @@
     "document_loaders/base.cjs",
     "document_loaders/base.js",
     "document_loaders/base.d.ts",
+    "document_loaders/web/apify_dataset.cjs",
+    "document_loaders/web/apify_dataset.js",
+    "document_loaders/web/apify_dataset.d.ts",
     "document_loaders/web/cheerio.cjs",
     "document_loaders/web/cheerio.js",
     "document_loaders/web/cheerio.d.ts",
@@ -223,6 +241,9 @@
     "schema/output_parser.cjs",
     "schema/output_parser.js",
     "schema/output_parser.d.ts",
+    "schema/query_constructor.cjs",
+    "schema/query_constructor.js",
+    "schema/query_constructor.d.ts",
     "sql_db.cjs",
     "sql_db.js",
     "sql_db.d.ts",
@@ -232,6 +253,9 @@
     "output_parsers.cjs",
     "output_parsers.js",
     "output_parsers.d.ts",
+    "output_parsers/expression.cjs",
+    "output_parsers/expression.js",
+    "output_parsers/expression.d.ts",
     "retrievers.cjs",
     "retrievers.js",
     "retrievers.d.ts",
@@ -262,6 +286,9 @@
     "retrievers/hyde.cjs",
     "retrievers/hyde.js",
     "retrievers/hyde.d.ts",
+    "retrievers/self_query.cjs",
+    "retrievers/self_query.js",
+    "retrievers/self_query.d.ts",
     "cache.cjs",
     "cache.js",
     "cache.d.ts",
@@ -277,6 +304,9 @@
     "stores/message/dynamodb.cjs",
     "stores/message/dynamodb.js",
     "stores/message/dynamodb.d.ts",
+    "stores/message/redis.cjs",
+    "stores/message/redis.js",
+    "stores/message/redis.d.ts",
     "experimental/autogpt.cjs",
     "experimental/autogpt.js",
     "experimental/autogpt.d.ts",
@@ -289,9 +319,6 @@
     "client.cjs",
     "client.js",
     "client.d.ts",
-    "client/langchainplus.cjs",
-    "client/langchainplus.js",
-    "client/langchainplus.d.ts",
     "index.cjs",
     "index.js",
     "index.d.ts"
@@ -311,10 +338,10 @@
     "clean": "rm -rf dist/ && node scripts/create-entrypoints.js clean",
     "prepack": "yarn build",
     "release": "release-it --only-version --config .release-it.json",
-    "test": "NODE_OPTIONS=--experimental-vm-modules jest --testPathIgnorePatterns=\\.int\\.test.ts",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest --testPathIgnorePatterns=\\.int\\.test.ts --testTimeout 30000",
     "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch --testPathIgnorePatterns=\\.int\\.test.ts",
-    "test:integration": "NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern=\\.int\\.test.ts --testTimeout 50000",
-    "test:single": "NODE_OPTIONS=--experimental-vm-modules yarn run jest --config jest.config.cjs --testTimeout 50000",
+    "test:integration": "NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern=\\.int\\.test.ts --testTimeout 100000",
+    "test:single": "NODE_OPTIONS=--experimental-vm-modules yarn run jest --config jest.config.cjs --testTimeout 100000",
     "format": "prettier --write \"src\"",
     "format:check": "prettier --check \"src\""
   },
@@ -324,6 +351,7 @@
     "@aws-sdk/client-dynamodb": "^3.310.0",
     "@aws-sdk/client-lambda": "^3.310.0",
     "@aws-sdk/client-s3": "^3.310.0",
+    "@aws-sdk/client-sagemaker-runtime": "^3.310.0",
     "@clickhouse/client": "^0.0.14",
     "@faker-js/faker": "^7.6.0",
     "@getmetal/metal-sdk": "^2.0.1",
@@ -345,6 +373,7 @@
     "@types/uuid": "^9",
     "@typescript-eslint/eslint-plugin": "^5.58.0",
     "@typescript-eslint/parser": "^5.58.0",
+    "apify-client": "^2.7.1",
     "axios": "^0.26.0",
     "cheerio": "^1.0.0-rc.12",
     "chromadb": "^1.4.0",
@@ -359,17 +388,20 @@
     "eslint-plugin-import": "^2.27.5",
     "eslint-plugin-no-instanceof": "^1.0.1",
     "eslint-plugin-prettier": "^4.2.1",
+    "faiss-node": "^0.1.1",
     "graphql": "^16.6.0",
     "hnswlib-node": "^1.4.2",
     "html-to-text": "^9.0.5",
     "jest": "^29.5.0",
     "mammoth": "^1.5.1",
+    "meriyah": "^4.3.7",
     "mongodb": "^5.2.0",
     "pdf-parse": "1.1.1",
+    "pickleparser": "^0.1.0",
     "playwright": "^1.32.1",
     "prettier": "^2.8.3",
     "puppeteer": "^19.7.2",
-    "redis": "^4.6.4",
+    "redis": "^4.6.6",
     "release-it": "^15.10.1",
     "replicate": "^0.9.0",
     "rollup": "^3.19.1",
@@ -384,6 +416,7 @@
     "@aws-sdk/client-dynamodb": "^3.310.0",
     "@aws-sdk/client-lambda": "^3.310.0",
     "@aws-sdk/client-s3": "^3.310.0",
+    "@aws-sdk/client-sagemaker-runtime": "^3.310.0",
     "@clickhouse/client": "^0.0.14",
     "@getmetal/metal-sdk": "*",
     "@huggingface/inference": "^1.5.1",
@@ -394,17 +427,21 @@
     "@tensorflow/tfjs-converter": "*",
     "@tensorflow/tfjs-core": "*",
     "@zilliz/milvus2-sdk-node": "^2.2.0",
+    "apify-client": "^2.7.1",
     "axios": "*",
     "cheerio": "^1.0.0-rc.12",
     "chromadb": "^1.4.0",
     "cohere-ai": "^5.0.2",
     "d3-dsv": "^2.0.0",
     "epub2": "^3.0.1",
+    "faiss-node": "^0.1.1",
     "hnswlib-node": "^1.4.2",
     "html-to-text": "^9.0.5",
     "mammoth": "*",
+    "meriyah": "*",
     "mongodb": "^5.2.0",
     "pdf-parse": "1.1.1",
+    "pickleparser": "^0.1.0",
     "playwright": "^1.32.1",
     "puppeteer": "^19.7.2",
     "redis": "^4.6.4",
@@ -421,6 +458,9 @@
       "optional": true
     },
     "@aws-sdk/client-s3": {
+      "optional": true
+    },
+    "@aws-sdk/client-sagemaker-runtime": {
       "optional": true
     },
     "@clickhouse/client": {
@@ -453,6 +493,9 @@
     "@zilliz/milvus2-sdk-node": {
       "optional": true
     },
+    "apify-client": {
+      "optional": true
+    },
     "axios": {
       "optional": true
     },
@@ -471,6 +514,9 @@
     "epub2": {
       "optional": true
     },
+    "faiss-node": {
+      "optional": true
+    },
     "hnswlib-node": {
       "optional": true
     },
@@ -480,10 +526,16 @@
     "mammoth": {
       "optional": true
     },
+    "meriyah": {
+      "optional": true
+    },
     "mongodb": {
       "optional": true
     },
     "pdf-parse": {
+      "optional": true
+    },
+    "pickleparser": {
       "optional": true
     },
     "playwright": {
@@ -510,12 +562,11 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.4.3",
-    "@dqbd/tiktoken": "^1.0.7",
     "ansi-styles": "^5.0.0",
     "binary-extensions": "^2.2.0",
-    "browser-or-node": "^2.1.1",
     "expr-eval": "^2.0.2",
     "flat": "^5.0.2",
+    "js-tiktoken": "^1.0.6",
     "jsonpointer": "^5.0.1",
     "ml-distance": "^4.0.0",
     "object-hash": "^3.0.0",
@@ -595,6 +646,16 @@
       "import": "./chains/load.js",
       "require": "./chains/load.cjs"
     },
+    "./chains/query_constructor": {
+      "types": "./chains/query_constructor.d.ts",
+      "import": "./chains/query_constructor.js",
+      "require": "./chains/query_constructor.cjs"
+    },
+    "./chains/query_constructor/ir": {
+      "types": "./chains/query_constructor/ir.d.ts",
+      "import": "./chains/query_constructor/ir.js",
+      "require": "./chains/query_constructor/ir.cjs"
+    },
     "./embeddings": {
       "node": {
         "types": "./embeddings.d.ts",
@@ -669,6 +730,11 @@
       "import": "./llms/replicate.js",
       "require": "./llms/replicate.cjs"
     },
+    "./llms/sagemaker_endpoint": {
+      "types": "./llms/sagemaker_endpoint.d.ts",
+      "import": "./llms/sagemaker_endpoint.js",
+      "require": "./llms/sagemaker_endpoint.cjs"
+    },
     "./prompts": {
       "types": "./prompts.d.ts",
       "import": "./prompts.js",
@@ -705,6 +771,11 @@
       "types": "./vectorstores/hnswlib.d.ts",
       "import": "./vectorstores/hnswlib.js",
       "require": "./vectorstores/hnswlib.cjs"
+    },
+    "./vectorstores/faiss": {
+      "types": "./vectorstores/faiss.d.ts",
+      "import": "./vectorstores/faiss.js",
+      "require": "./vectorstores/faiss.cjs"
     },
     "./vectorstores/weaviate": {
       "types": "./vectorstores/weaviate.d.ts",
@@ -746,6 +817,11 @@
       "import": "./vectorstores/myscale.js",
       "require": "./vectorstores/myscale.cjs"
     },
+    "./vectorstores/redis": {
+      "types": "./vectorstores/redis.d.ts",
+      "import": "./vectorstores/redis.js",
+      "require": "./vectorstores/redis.cjs"
+    },
     "./text_splitter": {
       "types": "./text_splitter.d.ts",
       "import": "./text_splitter.js",
@@ -777,6 +853,11 @@
       "types": "./document_loaders/base.d.ts",
       "import": "./document_loaders/base.js",
       "require": "./document_loaders/base.cjs"
+    },
+    "./document_loaders/web/apify_dataset": {
+      "types": "./document_loaders/web/apify_dataset.d.ts",
+      "import": "./document_loaders/web/apify_dataset.js",
+      "require": "./document_loaders/web/apify_dataset.cjs"
     },
     "./document_loaders/web/cheerio": {
       "types": "./document_loaders/web/cheerio.d.ts",
@@ -915,6 +996,11 @@
       "import": "./schema/output_parser.js",
       "require": "./schema/output_parser.cjs"
     },
+    "./schema/query_constructor": {
+      "types": "./schema/query_constructor.d.ts",
+      "import": "./schema/query_constructor.js",
+      "require": "./schema/query_constructor.cjs"
+    },
     "./sql_db": {
       "types": "./sql_db.d.ts",
       "import": "./sql_db.js",
@@ -929,6 +1015,11 @@
       "types": "./output_parsers.d.ts",
       "import": "./output_parsers.js",
       "require": "./output_parsers.cjs"
+    },
+    "./output_parsers/expression": {
+      "types": "./output_parsers/expression.d.ts",
+      "import": "./output_parsers/expression.js",
+      "require": "./output_parsers/expression.cjs"
     },
     "./retrievers": {
       "node": {
@@ -982,6 +1073,11 @@
       "import": "./retrievers/hyde.js",
       "require": "./retrievers/hyde.cjs"
     },
+    "./retrievers/self_query": {
+      "types": "./retrievers/self_query.d.ts",
+      "import": "./retrievers/self_query.js",
+      "require": "./retrievers/self_query.cjs"
+    },
     "./cache": {
       "types": "./cache.d.ts",
       "import": "./cache.js",
@@ -1007,6 +1103,11 @@
       "import": "./stores/message/dynamodb.js",
       "require": "./stores/message/dynamodb.cjs"
     },
+    "./stores/message/redis": {
+      "types": "./stores/message/redis.d.ts",
+      "import": "./stores/message/redis.js",
+      "require": "./stores/message/redis.cjs"
+    },
     "./experimental/autogpt": {
       "types": "./experimental/autogpt.d.ts",
       "import": "./experimental/autogpt.js",
@@ -1026,11 +1127,6 @@
       "types": "./client.d.ts",
       "import": "./client.js",
       "require": "./client.cjs"
-    },
-    "./client/langchainplus": {
-      "types": "./client/langchainplus.d.ts",
-      "import": "./client/langchainplus.js",
-      "require": "./client/langchainplus.cjs"
     },
     "./package.json": "./package.json"
   }
