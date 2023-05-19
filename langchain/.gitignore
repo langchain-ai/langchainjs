@@ -25,6 +25,12 @@ chains.d.ts
 chains/load.cjs
 chains/load.js
 chains/load.d.ts
+chains/query_constructor.cjs
+chains/query_constructor.js
+chains/query_constructor.d.ts
+chains/query_constructor/ir.cjs
+chains/query_constructor/ir.js
+chains/query_constructor/ir.d.ts
 embeddings.cjs
 embeddings.js
 embeddings.d.ts
@@ -67,6 +73,9 @@ llms/hf.d.ts
 llms/replicate.cjs
 llms/replicate.js
 llms/replicate.d.ts
+llms/sagemaker_endpoint.cjs
+llms/sagemaker_endpoint.js
+llms/sagemaker_endpoint.d.ts
 prompts.cjs
 prompts.js
 prompts.d.ts
@@ -88,6 +97,9 @@ vectorstores/chroma.d.ts
 vectorstores/hnswlib.cjs
 vectorstores/hnswlib.js
 vectorstores/hnswlib.d.ts
+vectorstores/faiss.cjs
+vectorstores/faiss.js
+vectorstores/faiss.d.ts
 vectorstores/weaviate.cjs
 vectorstores/weaviate.js
 vectorstores/weaviate.d.ts
@@ -217,6 +229,9 @@ schema.d.ts
 schema/output_parser.cjs
 schema/output_parser.js
 schema/output_parser.d.ts
+schema/query_constructor.cjs
+schema/query_constructor.js
+schema/query_constructor.d.ts
 sql_db.cjs
 sql_db.js
 sql_db.d.ts
@@ -226,6 +241,9 @@ callbacks.d.ts
 output_parsers.cjs
 output_parsers.js
 output_parsers.d.ts
+output_parsers/expression.cjs
+output_parsers/expression.js
+output_parsers/expression.d.ts
 retrievers.cjs
 retrievers.js
 retrievers.d.ts
@@ -256,6 +274,9 @@ retrievers/document_compressors/chain_extract.d.ts
 retrievers/hyde.cjs
 retrievers/hyde.js
 retrievers/hyde.d.ts
+retrievers/self_query.cjs
+retrievers/self_query.js
+retrievers/self_query.d.ts
 cache.cjs
 cache.js
 cache.d.ts

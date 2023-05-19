@@ -39,7 +39,11 @@ export class BufferMemory extends BaseChatMemory implements BufferMemoryInput {
       return result;
     }
     const result = {
-      [this.memoryKey]: getBufferString(messages),
+      [this.memoryKey]: getBufferString(
+        messages,
+        this.humanPrefix,
+        this.aiPrefix
+      ),
     };
     return result;
   }

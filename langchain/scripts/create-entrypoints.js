@@ -20,6 +20,8 @@ const entrypoints = {
   // chains
   chains: "chains/index",
   "chains/load": "chains/load",
+  "chains/query_constructor": "chains/query_constructor/index",
+  "chains/query_constructor/ir": "chains/query_constructor/ir",
   // embeddings
   embeddings: "embeddings/index",
   "embeddings/base": "embeddings/base",
@@ -36,6 +38,7 @@ const entrypoints = {
   "llms/cohere": "llms/cohere",
   "llms/hf": "llms/hf",
   "llms/replicate": "llms/replicate",
+  "llms/sagemaker_endpoint": "llms/sagemaker_endpoint",
   // prompts
   prompts: "prompts/index",
   "prompts/load": "prompts/load",
@@ -45,6 +48,7 @@ const entrypoints = {
   "vectorstores/memory": "vectorstores/memory",
   "vectorstores/chroma": "vectorstores/chroma",
   "vectorstores/hnswlib": "vectorstores/hnswlib",
+  "vectorstores/faiss": "vectorstores/faiss",
   "vectorstores/weaviate": "vectorstores/weaviate",
   "vectorstores/mongo": "vectorstores/mongo",
   "vectorstores/pinecone": "vectorstores/pinecone",
@@ -96,12 +100,14 @@ const entrypoints = {
   // schema
   schema: "schema/index",
   "schema/output_parser": "schema/output_parser",
+  "schema/query_constructor": "schema/query_constructor",
   // sql_db
   sql_db: "sql_db",
   // callbacks
   callbacks: "callbacks/index",
   // output_parsers
   output_parsers: "output_parsers/index",
+  "output_parsers/expression": "output_parsers/expression",
   // retrievers
   retrievers: "retrievers/index",
   "retrievers/remote": "retrievers/remote/index",
@@ -114,6 +120,7 @@ const entrypoints = {
   "retrievers/document_compressors/chain_extract":
     "retrievers/document_compressors/chain_extract",
   "retrievers/hyde": "retrievers/hyde",
+  "retrievers/self_query": "retrievers/self_query/index",
   // cache
   cache: "cache/index",
   "cache/redis": "cache/redis",
@@ -156,9 +163,11 @@ const requiresOptionalDependency = [
   "llms/cohere",
   "llms/hf",
   "llms/replicate",
+  "llms/sagemaker_endpoint",
   "prompts/load",
   "vectorstores/chroma",
   "vectorstores/hnswlib",
+  "vectorstores/faiss",
   "vectorstores/weaviate",
   "vectorstores/mongo",
   "vectorstores/pinecone",
@@ -192,6 +201,10 @@ const requiresOptionalDependency = [
   "sql_db",
   "retrievers/supabase",
   "retrievers/metal",
+  "retrievers/self_query",
+  "output_parsers/expression",
+  "chains/query_constructor",
+  "chains/query_constructor/ir",
   "cache/redis",
   "stores/file/node",
   "stores/message/dynamodb",
