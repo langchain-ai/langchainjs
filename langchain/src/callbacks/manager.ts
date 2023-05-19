@@ -505,6 +505,11 @@ export class CallbackManager
         false
       );
     }
+    const verboseEnabled =
+      (typeof process !== "undefined"
+        ? // eslint-disable-next-line no-process-env
+          process.env?.LANGCHAIN_VERBOSE !== undefined
+        : false) || options?.verbose;
     const tracingV2Enabled =
       typeof process !== "undefined"
         ? // eslint-disable-next-line no-process-env
@@ -516,12 +521,12 @@ export class CallbackManager
         ? // eslint-disable-next-line no-process-env
           process.env?.LANGCHAIN_TRACING !== undefined
         : false);
-    if (options?.verbose || tracingEnabled) {
+    if (verboseEnabled || tracingEnabled) {
       if (!callbackManager) {
         callbackManager = new CallbackManager();
       }
       if (
-        options?.verbose &&
+        verboseEnabled &&
         !callbackManager.handlers.some(
           (handler) => handler.name === ConsoleCallbackHandler.prototype.name
         )

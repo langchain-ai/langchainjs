@@ -25,7 +25,9 @@ export class JsonSpec {
     const pointer = jsonpointer.compile(input);
     const res = pointer.get(this.obj) as Json;
     if (typeof res === "object" && !Array.isArray(res) && res !== null) {
-      return Object.keys(res).join(", ");
+      return Object.keys(res)
+        .map((i) => i.replaceAll("~", "~0").replaceAll("/", "~1"))
+        .join(", ");
     }
 
     throw new Error(
