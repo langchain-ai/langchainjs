@@ -16,7 +16,7 @@ export const run = async () => {
   const model = new GoogleVertexAiChat({
     temperature: 0.7,
     maxTokens: 1000,
-    context: "You are a helpful assistant that answers in pirate language"
+    context: "You are a helpful assistant that answers in pirate language",
   });
   const res = await model.call(
     "Question: What would be a good company name a company that makes colorful socks?\nAnswer:"
