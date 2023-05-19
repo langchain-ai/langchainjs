@@ -4,12 +4,13 @@ In addition to the [general contribution guidelines](https://github.com/hwchase1
 
 Integrations tend to fall into one of the following categories, each of which will have their own section below. Please read the [general guidelines](#general-concepts), then see the section specific to what you're building for additional information and examples.
 
-- [LLM providers](#llm-providers) (e.g. OpenAI)
-- [Chat model providers](#chat-model-providers) (e.g. Anthropic)
-- [Memory](#memory) (e.g. Motörhead)
+- [LLM providers](#llm-providers) (e.g. OpenAI's GPT-3)
+- [Chat model providers](#chat-model-providers) (e.g. Anthropic's Claude, OpenAI's GPT-4)
+- [Memory](#memory) (used to give an LLM or chat model context of past conversations, e.g. Motörhead)
 - [Vector stores](#vector-stores) (e.g. Pinecone)
-- [Persistent message stores](#persistent-message-stores) (e.g. Redis)
-- [Document loaders](#document-loaders) (e.g. Apify)
+- [Persistent message stores](#persistent-message-stores) (used to persistently store and load raw chat histories, e.g. Redis)
+- [Document loaders](#document-loaders) (used to load documents for later storage into vector stores, e.g. Apify)
+- [Tools](#tools) (used for agents, e.g. the SERP API)
 
 ## General concepts
 
@@ -158,3 +159,5 @@ As with all contributions, make sure you run `yarn lint` and `yarn format` so th
 ## Persistent message stores
 
 ## Document loaders
+
+## Tools
