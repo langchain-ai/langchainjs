@@ -19,13 +19,13 @@ test("Test LangChainPlus Client Dataset CRD", async () => {
   const inputKeys = ["col1"];
   const outputKeys = ["col2"];
 
-  const newDataset = await client.uploadCsv(
-    blobData,
-    "some_file.csv",
+  const newDataset = await client.uploadCsv({
+    csvFile: blobData,
+    fileName: "some_file.csv",
     description,
     inputKeys,
-    outputKeys
-  );
+    outputKeys,
+  });
   expect(newDataset).toHaveProperty("id");
   expect(newDataset.description).toBe(description);
 
@@ -122,9 +122,25 @@ test("Test LangChainPlus Client Run LLM Over Simple Dataset", async () => {
     );
   }
   const model = new OpenAI({ temperature: 0 });
-  const results = await client.runOnDataset(datasetName, model);
+  const randomId = Math.random().toString(36).substring(7);
+  const sessionName = `LangChainPlus Client Test ${randomId}`;
+  const results = await client.runOnDataset(
+    datasetName,
+    model,
+    undefined,
+    sessionName
+  );
   console.log(results);
   expect(Object.keys(results).length).toEqual(1);
+  const sessions = await client.listSessions();
+  expect(sessions.map((s) => s.name)).toContain(sessionName);
+  const session = await client.readSession(undefined, sessionName);
+  expect(session.name).toBe(sessionName);
+  const runs = await client.listRuns({ sessionName });
+  expect(runs.length).toBeGreaterThan(0);
+  const firstRun = runs[0];
+  const run = await client.readRun(firstRun.id);
+  expect(run.id).toBe(firstRun.id);
 });
 
 test("Test LangChainPlus Client Run Chain Over Simple Dataset", async () => {
@@ -138,20 +154,20 @@ what is 1213 divided by 4345?,approximately 0.2791714614499425
 `;
   const blobData = new Blob([Buffer.from(csvContent)]);
 
-  const datasetName = "simplemath.csv";
+  const fileName = "simplemath.csv";
   const description = "Simple Math Dataset";
   const inputKeys = ["input"];
   const outputKeys = ["output"];
   // Check if dataset name exists in listDatasets
   const datasets = await client.listDatasets();
-  if (!datasets.map((d) => d.name).includes(datasetName)) {
-    await client.uploadCsv(
-      blobData,
-      datasetName,
-      description,
+  if (!datasets.map((d) => d.name).includes(fileName)) {
+    await client.uploadCsv({
+      csvFile: blobData,
+      fileName,
       inputKeys,
-      outputKeys
-    );
+      outputKeys,
+      description,
+    });
   }
   const model = new ChatOpenAI({ temperature: 0 });
   const tools = [new Calculator()];
@@ -163,7 +179,7 @@ what is 1213 divided by 4345?,approximately 0.2791714614499425
     });
   console.log("Loaded agent.");
 
-  const results = await client.runOnDataset(datasetName, executorFactory);
+  const results = await client.runOnDataset(fileName, executorFactory);
   console.log(results);
   expect(Object.keys(results).length).toEqual(2);
 });
@@ -188,13 +204,13 @@ what was the tjtal number of points scored in the 2023 super bowl? what is that 
   // Check if dataset name exists in listDatasets
   const datasets = await client.listDatasets();
   if (!datasets.map((d) => d.name).includes(datasetName)) {
-    await client.uploadCsv(
-      blobData,
-      datasetName,
-      description,
+    await client.uploadCsv({
+      csvFile: blobData,
+      fileName: datasetName,
       inputKeys,
-      outputKeys
-    );
+      outputKeys,
+      description,
+    });
   }
   const model = new ChatOpenAI({ temperature: 0 });
   const tools = [
