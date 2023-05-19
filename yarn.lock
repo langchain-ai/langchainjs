@@ -18101,9 +18101,6 @@ __metadata:
     srt-parser-2: ^1.2.2
     typeorm: ^0.3.12
     weaviate-ts-client: ^1.0.0
-  dependenciesMeta:
-    ignore:
-      optional: true
   peerDependenciesMeta:
     "@aws-sdk/client-dynamodb":
       optional: true

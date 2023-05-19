@@ -3,7 +3,6 @@ import { Document } from "../../document.js";
 import { BaseDocumentLoader } from "../base.js";
 import { UnknownHandling } from "../fs/directory.js";
 import { extname } from "../../util/extname.js";
-import ignore, { Ignore } from 'ignore'
 
 const extensions = new Set(binaryExtensions);
 
@@ -33,7 +32,8 @@ export interface GithubRepoLoaderParams {
   recursive?: boolean;
   unknown?: UnknownHandling;
   accessToken?: string;
-  ignorePaths?: string[]
+  ignoreFiles?: (string | RegExp)[];
+  ignorePaths?: string[];
 }
 
 export class GithubRepoLoader
@@ -56,7 +56,9 @@ export class GithubRepoLoader
 
   public accessToken?: string;
 
-  private ignore:Ignore;
+  public ignoreFiles: (string | RegExp)[];
+
+  public ignorePaths?: string[];
 
   constructor(
     githubUrl: string,
@@ -68,7 +70,8 @@ export class GithubRepoLoader
       branch = "main",
       recursive = true,
       unknown = UnknownHandling.Warn,
-      ignorePaths = [],
+      ignoreFiles = [],
+      ignorePaths,
     }: GithubRepoLoaderParams = {}
   ) {
     super();
@@ -80,7 +83,8 @@ export class GithubRepoLoader
     this.recursive = recursive;
     this.unknown = unknown;
     this.accessToken = accessToken;
-    this.ignore = ignore().add(ignorePaths)
+    this.ignoreFiles = ignoreFiles;
+    this.ignorePaths = ignorePaths;
     if (this.accessToken) {
       this.headers = {
         Authorization: `Bearer ${this.accessToken}`,
@@ -110,8 +114,25 @@ export class GithubRepoLoader
     return documents;
   }
 
-  shouldIgnore(path: string) {
-    return this.ignore.ignores(path)
+  protected async shouldIgnore(path: string, fileType: string): Promise<boolean> {
+    if (fileType !== "dir" && isBinaryPath(path)) {
+      return true;
+    }
+    if (this.ignorePaths !== undefined) {
+      const { ignore } = await GithubRepoLoader.imports();
+      return ignore().add(this.ignorePaths).ignores(path);
+    }
+    return fileType !== "dir" && this.ignoreFiles.some((pattern) => {
+      if (typeof pattern === "string") {
+        return path === pattern;
+      }
+
+      try {
+        return pattern.test(path);
+      } catch {
+        throw new Error(`Unknown ignore file pattern: ${pattern}`);
+      }
+    });
   }
 
   private async processDirectory(
@@ -122,27 +143,21 @@ export class GithubRepoLoader
       const files = await this.fetchRepoFiles(path);
 
       for (const file of files) {
-        if (this.shouldIgnore(file.path)) {
-          continue;
-        }
-        
-        if (file.type === "dir") {
-          if (this.recursive) {
-            await this.processDirectory(file.path, documents);
-          }
-        } else {
-          try {
-            if (!isBinaryPath(file.name) && !this.shouldIgnore(file.path)) {
+        if (!(await this.shouldIgnore(file.path, file.type))) {
+          if (file.type !== "dir") {
+            try {
               const fileContent = await this.fetchFileContent(file);
               const metadata = { source: file.path };
               documents.push(
                 new Document({ pageContent: fileContent, metadata })
               );
+            } catch (e) {
+              this.handleError(
+                `Failed to fetch file content: ${file.path}, ${e}`
+              );
             }
-          } catch (e) {
-            this.handleError(
-              `Failed to fetch file content: ${file.path}, ${e}`
-            );
+          } else if (this.recursive) {
+            await this.processDirectory(file.path, documents);
           }
         }
       }
@@ -186,6 +201,20 @@ export class GithubRepoLoader
         throw new Error(message);
       default:
         throw new Error(`Unknown unknown handling: ${this.unknown}`);
+    }
+  }
+
+  // TODO: Remove when 1.0.0 is released
+  /** @ignore */
+  static async imports() {
+    try {
+      const value = await import("ignore");
+      return { ignore: value.default.default };
+    } catch (e) {
+      console.error(e);
+      throw new Error(
+        "Failed to load ignore, which is required to use this loader with the \"ignorePaths\" argument. Please install it with eg. `yarn add ignore`."
+      );
     }
   }
 }
