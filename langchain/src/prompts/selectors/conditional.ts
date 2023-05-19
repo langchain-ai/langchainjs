@@ -2,9 +2,22 @@ import { BaseChatModel } from "../../chat_models/base.js";
 import { BasePromptTemplate } from "../base.js";
 import { BaseLanguageModel } from "../../base_language/index.js";
 import { BaseLLM } from "../../llms/base.js";
+import { PartialValues } from "../../schema/index.js";
+
+export type BaseGetPromptAsyncOptions = {
+  partialVariables?: PartialValues;
+};
 
 export abstract class BasePromptSelector {
   abstract getPrompt(llm: BaseLanguageModel): BasePromptTemplate;
+
+  async getPromptAsync(
+    llm: BaseLanguageModel,
+    options?: BaseGetPromptAsyncOptions
+  ): Promise<BasePromptTemplate> {
+    const prompt = this.getPrompt(llm);
+    return prompt.partial(options?.partialVariables ?? {});
+  }
 }
 
 export class ConditionalPromptSelector extends BasePromptSelector {
