@@ -8866,14 +8866,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@zilliz/milvus2-sdk-node@npm:^2.2.7":
-  version: 2.2.7
-  resolution: "@zilliz/milvus2-sdk-node@npm:2.2.7"
+"@zilliz/milvus2-sdk-node@npm:>=2.2.7, @zilliz/milvus2-sdk-node@npm:^2.2.7":
+  version: 2.2.10
+  resolution: "@zilliz/milvus2-sdk-node@npm:2.2.10"
   dependencies:
     "@grpc/grpc-js": ^1.8.14
     "@grpc/proto-loader": ^0.7.6
     protobufjs: ^7.2.3
-  checksum: e6bfa6e016593e4e3fc5bb6f8484d39a8d315756da48b94cb7f534fcb8b960b1243f8c9ccb43bd35b6cb2f7ba6df204675ee29122b550feb9efe7fd444bace49
+  checksum: 895404192618831cfe2ca5dd0c26d6b04110e62af7edca591c4477d6241f4be9c4b0c0569e0a8903fb9513d58b5cf743cf6c2322d5becc0893bf590a808148d1
   languageName: node
   linkType: hard
 
@@ -18009,6 +18009,7 @@ __metadata:
     "@types/uuid": ^9
     "@typescript-eslint/eslint-plugin": ^5.58.0
     "@typescript-eslint/parser": ^5.58.0
+    "@zilliz/milvus2-sdk-node": ">=2.2.7"
     ansi-styles: ^5.0.0
     apify-client: ^2.7.1
     axios: ^0.26.0
@@ -18076,7 +18077,7 @@ __metadata:
     "@tensorflow-models/universal-sentence-encoder": "*"
     "@tensorflow/tfjs-converter": "*"
     "@tensorflow/tfjs-core": "*"
-    "@zilliz/milvus2-sdk-node": ^2.2.0
+    "@zilliz/milvus2-sdk-node": ">=2.2.7"
     apify-client: ^2.7.1
     axios: "*"
     cheerio: ^1.0.0-rc.12
