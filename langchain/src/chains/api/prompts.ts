@@ -1,3 +1,4 @@
+/* eslint-disable spaced-comment */
 import { PromptTemplate } from "../../prompts/prompt.js";
 
 export const API_URL_PROMPT_TEMPLATE = `You are given the below API Documentation:
