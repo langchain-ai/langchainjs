@@ -11,17 +11,6 @@ import { ConversationChain } from "../../chains/conversation.js";
 import { zipEntries } from "./utils.js";
 import { RouterOutputParser } from "../../output_parsers/router.js";
 
-export type MultiPromptChainFromPromptsInput = {
-  llm: BaseLanguageModel;
-  promptNames: string[];
-  promptDescriptions: string[];
-  promptTemplates: string[] | PromptTemplate[];
-  defaultChain?: BaseChain;
-  llmChainOpts?: Omit<LLMChainInput, "llm" | "prompt">;
-  conversationChainOpts?: Omit<LLMChainInput, "llm" | "outputKey">;
-  multiRouteChainOpts?: Omit<MultiRouteChainInput, "defaultChain">;
-};
-
 export class MultiPromptChain extends MultiRouteChain {
   static fromPrompts({
     llm,
@@ -32,7 +21,16 @@ export class MultiPromptChain extends MultiRouteChain {
     llmChainOpts,
     conversationChainOpts,
     multiRouteChainOpts,
-  }: MultiPromptChainFromPromptsInput): MultiPromptChain {
+  }: {
+    llm: BaseLanguageModel;
+    promptNames: string[];
+    promptDescriptions: string[];
+    promptTemplates: string[] | PromptTemplate[];
+    defaultChain?: BaseChain;
+    llmChainOpts?: Omit<LLMChainInput, "llm" | "prompt">;
+    conversationChainOpts?: Omit<LLMChainInput, "llm" | "outputKey">;
+    multiRouteChainOpts?: Omit<MultiRouteChainInput, "defaultChain">;
+  }): MultiPromptChain {
     const destinations = zipEntries(promptNames, promptDescriptions).map(
       ([name, desc]) => `${name}: ${desc}`
     );

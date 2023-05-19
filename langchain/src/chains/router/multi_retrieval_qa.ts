@@ -24,21 +24,6 @@ export type MultiRetrievalDefaults = {
   defaultChain?: BaseChain;
 };
 
-export type MultiRetrievalFromRetrieversInput = {
-  llm: BaseLanguageModel;
-  retrieverNames: string[];
-  retrieverDescriptions: string[];
-  retrievers: BaseRetriever[];
-  retrieverPrompts?: PromptTemplate[];
-  defaults?: MultiRetrievalDefaults;
-  multiRetrievalChainOpts?: Omit<MultiRouteChainInput, "defaultChain">;
-  retrievalQAChainOpts?: Partial<
-    Omit<RetrievalQAChainInput, "retriever" | "combineDocumentsChain">
-  > & {
-    prompt?: PromptTemplate;
-  };
-};
-
 export class MultiRetrievalQAChain extends MultiRouteChain {
   get outputKeys(): string[] {
     return ["result"];
@@ -53,7 +38,20 @@ export class MultiRetrievalQAChain extends MultiRouteChain {
     defaults,
     multiRetrievalChainOpts,
     retrievalQAChainOpts,
-  }: MultiRetrievalFromRetrieversInput): MultiRetrievalQAChain {
+  }: {
+    llm: BaseLanguageModel;
+    retrieverNames: string[];
+    retrieverDescriptions: string[];
+    retrievers: BaseRetriever[];
+    retrieverPrompts?: PromptTemplate[];
+    defaults?: MultiRetrievalDefaults;
+    multiRetrievalChainOpts?: Omit<MultiRouteChainInput, "defaultChain">;
+    retrievalQAChainOpts?: Partial<
+      Omit<RetrievalQAChainInput, "retriever" | "combineDocumentsChain">
+    > & {
+      prompt?: PromptTemplate;
+    };
+  }): MultiRetrievalQAChain {
     const { defaultRetriever, defaultPrompt, defaultChain } = defaults ?? {};
     if (defaultPrompt && !defaultRetriever) {
       throw new Error(
