@@ -2,7 +2,7 @@ import { GoogleAuth } from "google-auth-library";
 import { BaseLLM, BaseLLMParams } from "./base.js";
 import { Generation, LLMResult } from "../schema/index.js";
 import { AsyncCaller } from "../util/async_caller.js";
-import {BaseLanguageModelCallOptions} from "../base_language/index.js";
+import { BaseLanguageModelCallOptions } from "../base_language/index.js";
 
 export interface GoogleVertexAiConnectionParams {
   /** Hostname for the API call */
@@ -47,13 +47,16 @@ export interface GoogleVertexAiModelParams {
   topK?: number;
 }
 
-export interface GoogleVertexAiBaseLLMInput extends BaseLLMParams, GoogleVertexAiConnectionParams, GoogleVertexAiModelParams {
-}
+export interface GoogleVertexAiBaseLLMInput
+  extends BaseLLMParams,
+    GoogleVertexAiConnectionParams,
+    GoogleVertexAiModelParams {}
 
 export interface GoogleVertexAiTextInput extends GoogleVertexAiBaseLLMInput {}
 
-
-export interface GoogleVertexAiLLMResponse<PredictionType extends GoogleVertexAiBasePrediction> {
+export interface GoogleVertexAiLLMResponse<
+  PredictionType extends GoogleVertexAiBasePrediction
+> {
   data: {
     predictions: PredictionType[];
   };
@@ -75,15 +78,12 @@ interface TextPrediction extends GoogleVertexAiBasePrediction {
   content: string;
 }
 
-
 export class GoogleVertexAiConnection<
   CallOptions extends BaseLanguageModelCallOptions,
   InstanceType,
   PredictionType extends GoogleVertexAiBasePrediction
->
-  implements GoogleVertexAiConnectionParams
+> implements GoogleVertexAiConnectionParams
 {
-
   caller: AsyncCaller;
 
   endpoint = "us-central1-aiplatform.googleapis.com";
@@ -121,7 +121,7 @@ export class GoogleVertexAiConnection<
 
     const data = {
       instances,
-      parameters
+      parameters,
     };
 
     const opts = {
@@ -141,7 +141,6 @@ export class GoogleVertexAiConnection<
 
     return <GoogleVertexAiLLMResponse<PredictionType>>response;
   }
-
 }
 
 /**
@@ -187,7 +186,7 @@ export class GoogleVertexAiTextLLM
     this.topP = fields?.topP ?? this.topP;
     this.topK = fields?.topK ?? this.topK;
 
-    this.connection = new GoogleVertexAiConnection( fields, this.caller);
+    this.connection = new GoogleVertexAiConnection(fields, this.caller);
   }
 
   _llmType(): string {
@@ -215,26 +214,29 @@ export class GoogleVertexAiTextLLM
       temperature: this.temperature,
       topK: this.topK,
       topP: this.topP,
-      maxTokens: this.maxTokens
-    }
+      maxTokens: this.maxTokens,
+    };
     const result = await this.connection.request(
       [instance],
       parameters,
       options
     );
     const prediction = this.convertResult(result);
-    return [{
-      text: prediction.content,
-      generationInfo: prediction,
-    }]
+    return [
+      {
+        text: prediction.content,
+        generationInfo: prediction,
+      },
+    ];
   }
 
   formatInstance(prompt: string): GoogleVertexAiLLMTextInstance {
     return { content: prompt };
   }
 
-  convertResult(result: GoogleVertexAiLLMResponse<TextPrediction>): TextPrediction {
+  convertResult(
+    result: GoogleVertexAiLLMResponse<TextPrediction>
+  ): TextPrediction {
     return result?.data?.predictions[0];
   }
 }
-
