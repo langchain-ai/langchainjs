@@ -1,3 +1,4 @@
+import { AsyncCaller, AsyncCallerParams } from "../../util/async_caller.js";
 import { getRuntimeEnvironment } from "../../util/env.js";
 import { BaseTracer, Run, BaseRun } from "./tracer.js";
 
@@ -28,6 +29,7 @@ export interface LangChainTracerFields {
   tenantId?: string;
   sessionName?: string;
   sessionExtra?: Record<string, unknown>;
+  callerParams?: AsyncCallerParams;
 }
 
 export class LangChainTracer
@@ -56,11 +58,14 @@ export class LangChainTracer
 
   tenantId?: string;
 
+  caller: AsyncCaller;
+
   constructor({
     exampleId,
     tenantId,
     sessionName,
     sessionExtra,
+    callerParams,
   }: LangChainTracerFields = {}) {
     super();
 
@@ -85,6 +90,7 @@ export class LangChainTracer
       "default";
     this.sessionExtra = sessionExtra;
     this.exampleId = exampleId;
+    this.caller = new AsyncCaller(callerParams ?? {});
   }
 
   protected async ensureSession(): Promise<TracerSession> {
@@ -93,7 +99,7 @@ export class LangChainTracer
     }
     const tenantId = await this.ensureTenantId();
     const endpoint = `${this.endpoint}/sessions?upsert=true`;
-    const res = await fetch(endpoint, {
+    const res = await this.caller.call(fetch, endpoint, {
       method: "POST",
       headers: this.headers,
       body: JSON.stringify({
@@ -118,7 +124,7 @@ export class LangChainTracer
       return this.tenantId;
     }
     const endpoint = `${this.endpoint}/tenants`;
-    const response = await fetch(endpoint, {
+    const response = await this.caller.call(fetch, endpoint, {
       method: "GET",
       headers: this.headers,
     });
@@ -173,7 +179,7 @@ export class LangChainTracer
       this.exampleId
     );
     const endpoint = `${this.endpoint}/runs`;
-    const response = await fetch(endpoint, {
+    const response = await this.caller.call(fetch, endpoint, {
       method: "POST",
       headers: this.headers,
       body: JSON.stringify(persistedRun),

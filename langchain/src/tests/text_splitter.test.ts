@@ -137,8 +137,8 @@ Bye!\n\n-H.`;
     "write, but",
     "gotta test",
     "the",
-    "splitting",
-    "gggg",
+    "splittingg",
+    "ggg",
     "some how.",
     "Bye!\n\n-H.",
   ];

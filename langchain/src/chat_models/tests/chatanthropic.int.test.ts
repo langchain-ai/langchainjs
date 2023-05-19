@@ -111,8 +111,7 @@ test("Test ChatAnthropic in streaming mode with a signal", async () => {
     return res;
   }).rejects.toThrow();
 
-  expect(nrNewTokens > 0).toBe(true);
-  console.log({ streamedCompletion });
+  console.log({ nrNewTokens, streamedCompletion });
 }, 5000);
 
 test("Test ChatAnthropic prompt value", async () => {

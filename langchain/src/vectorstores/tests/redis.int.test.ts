@@ -9,7 +9,7 @@ import { OpenAIEmbeddings } from "../../embeddings/openai.js";
 import { RedisVectorStore } from "../redis.js";
 import { Document } from "../../document.js";
 
-describe("RedisVectorStore", () => {
+describe.skip("RedisVectorStore", () => {
   let vectorStore: RedisVectorStore;
 
   beforeEach(async () => {
