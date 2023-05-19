@@ -5,6 +5,7 @@ import {
 } from "../text_splitter.js";
 import { ChainValues } from "../schema/index.js";
 import { SerializedAnalyzeDocumentChain } from "./serde.js";
+import { CallbackManagerForChainRun } from "../callbacks/manager.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type LoadValues = Record<string, any>;
@@ -31,7 +32,7 @@ export class AnalyzeDocumentChain
   textSplitter: TextSplitter;
 
   constructor(fields: AnalyzeDocumentChainInput) {
-    super(undefined, fields.verbose, fields.callbackManager);
+    super(fields);
     this.combineDocumentsChain = fields.combineDocumentsChain;
     this.inputKey = fields.inputKey ?? this.inputKey;
     this.textSplitter =
@@ -47,7 +48,10 @@ export class AnalyzeDocumentChain
   }
 
   /** @ignore */
-  async _call(values: ChainValues): Promise<ChainValues> {
+  async _call(
+    values: ChainValues,
+    runManager?: CallbackManagerForChainRun
+  ): Promise<ChainValues> {
     if (!(this.inputKey in values)) {
       throw new Error(`Document key ${this.inputKey} not found.`);
     }
@@ -57,7 +61,10 @@ export class AnalyzeDocumentChain
     const currentDocs = await this.textSplitter.createDocuments([currentDoc]);
 
     const newInputs = { input_documents: currentDocs, ...rest };
-    const result = await this.combineDocumentsChain.call(newInputs);
+    const result = await this.combineDocumentsChain.call(
+      newInputs,
+      runManager?.getChild()
+    );
     return result;
   }
 

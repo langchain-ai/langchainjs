@@ -26,6 +26,10 @@ export class BufferMemory extends BaseChatMemory implements BufferMemoryInput {
     this.memoryKey = fields?.memoryKey ?? this.memoryKey;
   }
 
+  get memoryKeys() {
+    return [this.memoryKey];
+  }
+
   async loadMemoryVariables(_values: InputValues): Promise<MemoryVariables> {
     const messages = await this.chatHistory.getMessages();
     if (this.returnMessages) {
@@ -35,7 +39,11 @@ export class BufferMemory extends BaseChatMemory implements BufferMemoryInput {
       return result;
     }
     const result = {
-      [this.memoryKey]: getBufferString(messages),
+      [this.memoryKey]: getBufferString(
+        messages,
+        this.humanPrefix,
+        this.aiPrefix
+      ),
     };
     return result;
   }

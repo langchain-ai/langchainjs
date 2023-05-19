@@ -3,6 +3,7 @@ import { DataSource } from "typeorm";
 import { OpenAI } from "../../llms/openai.js";
 import { SqlDatabaseChain } from "../sql_db/sql_db_chain.js";
 import { SqlDatabase } from "../../sql_db.js";
+import { SQL_SQLITE_PROMPT } from "../sql_db/sql_db_prompt.js";
 
 test("Test SqlDatabaseChain", async () => {
   const datasource = new DataSource({
@@ -34,9 +35,52 @@ test("Test SqlDatabaseChain", async () => {
     database: db,
   });
 
-  const res = await chain.run("How many users are there?");
-  console.log(res);
+  expect(chain.prompt).toBe(SQL_SQLITE_PROMPT);
 
+  const run = await chain.run("How many users are there?");
+  console.log(run);
+
+  await datasource.destroy();
+});
+
+test("Test SqlDatabaseChain with sqlOutputKey", async () => {
+  const datasource = new DataSource({
+    type: "sqlite",
+    database: ":memory:",
+    synchronize: true,
+  });
+
+  await datasource.initialize();
+  await datasource.query(`
+        CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, age INTEGER);
+    `);
+  await datasource.query(`
+        INSERT INTO users (name, age) VALUES ('Alice', 20);
+    `);
+  await datasource.query(`
+        INSERT INTO users (name, age) VALUES ('Bob', 21);
+    `);
+  await datasource.query(`
+        INSERT INTO users (name, age) VALUES ('Charlie', 22);
+    `);
+
+  const db = await SqlDatabase.fromDataSourceParams({
+    appDataSource: datasource,
+  });
+
+  const chain = new SqlDatabaseChain({
+    llm: new OpenAI({ temperature: 0 }),
+    database: db,
+    inputKey: "query",
+    sqlOutputKey: "sql",
+  });
+
+  expect(chain.prompt).toBe(SQL_SQLITE_PROMPT);
+
+  const run = await chain.call({ query: "How many users are there?" });
+  console.log(run);
+
+  expect(run).toHaveProperty("sql");
   await datasource.destroy();
 });
 

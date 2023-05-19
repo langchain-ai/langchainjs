@@ -24,11 +24,29 @@ export interface ChainInputs extends BaseLangChainParams {
  * Base interface that all chains must implement.
  */
 export abstract class BaseChain extends BaseLangChain implements ChainInputs {
-  memory?: BaseMemory;
+  declare memory?: BaseMemory;
 
-  constructor(memory?: BaseMemory, verbose?: boolean, callbacks?: Callbacks) {
-    super({ verbose, callbacks });
-    this.memory = memory;
+  constructor(
+    fields?: BaseMemory | ChainInputs,
+    /** @deprecated */
+    verbose?: boolean,
+    /** @deprecated */
+    callbacks?: Callbacks
+  ) {
+    if (
+      arguments.length === 1 &&
+      typeof fields === "object" &&
+      !("saveContext" in fields)
+    ) {
+      // fields is not a BaseMemory
+      const { memory, callbackManager, ...rest } = fields;
+      super({ ...rest, callbacks: callbackManager ?? rest.callbacks });
+      this.memory = memory;
+    } else {
+      // fields is a BaseMemory
+      super({ verbose, callbacks });
+      this.memory = fields as BaseMemory;
+    }
   }
 
   /**
@@ -47,7 +65,9 @@ export abstract class BaseChain extends BaseLangChain implements ChainInputs {
   /**
    * Return a json-like object representing this chain.
    */
-  abstract serialize(): SerializedBaseChain;
+  serialize(): SerializedBaseChain {
+    throw new Error("Method not implemented.");
+  }
 
   abstract get inputKeys(): string[];
 
@@ -58,13 +78,13 @@ export abstract class BaseChain extends BaseLangChain implements ChainInputs {
     input: any,
     callbacks?: Callbacks
   ): Promise<string> {
-    const isKeylessInput = this.inputKeys.length === 1;
+    const isKeylessInput = this.inputKeys.length <= 1;
     if (!isKeylessInput) {
       throw new Error(
         `Chain ${this._chainType()} expects multiple inputs, cannot use 'run' `
       );
     }
-    const values = { [this.inputKeys[0]]: input };
+    const values = this.inputKeys.length ? { [this.inputKeys[0]]: input } : {};
     const returnValues = await this.call(values, callbacks);
     const keys = Object.keys(returnValues);
 
@@ -79,7 +99,7 @@ export abstract class BaseChain extends BaseLangChain implements ChainInputs {
   /**
    * Run the core logic of this chain and add to output if desired.
    *
-   * Wraps {@link _call} and handles memory.
+   * Wraps _call and handles memory.
    */
   async call(values: ChainValues, callbacks?: Callbacks): Promise<ChainValues> {
     const fullValues = { ...values } as typeof values;
@@ -105,13 +125,14 @@ export abstract class BaseChain extends BaseLangChain implements ChainInputs {
       await runManager?.handleChainError(e);
       throw e;
     }
-    await runManager?.handleChainEnd(outputValues);
     if (!(this.memory == null)) {
       await this.memory.saveContext(values, outputValues);
     }
+    await runManager?.handleChainEnd(outputValues);
     // add the runManager's currentRunId to the outputValues
     Object.defineProperty(outputValues, RUN_KEY, {
       value: runManager ? { runId: runManager?.runId } : undefined,
+      configurable: true,
     });
     return outputValues;
   }
@@ -140,10 +161,12 @@ export abstract class BaseChain extends BaseLangChain implements ChainInputs {
         const { LLMChain } = await import("./llm_chain.js");
         return LLMChain.deserialize(data);
       }
+      case "sequential_chain": {
+        const { SequentialChain } = await import("./sequential_chain.js");
+        return SequentialChain.deserialize(data);
+      }
       case "simple_sequential_chain": {
-        const { SimpleSequentialChain } = await import(
-          "./simple_sequential_chain.js"
-        );
+        const { SimpleSequentialChain } = await import("./sequential_chain.js");
         return SimpleSequentialChain.deserialize(data);
       }
       case "stuff_documents_chain": {

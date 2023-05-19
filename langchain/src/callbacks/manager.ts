@@ -2,12 +2,17 @@ import { v4 as uuidv4 } from "uuid";
 import {
   AgentAction,
   AgentFinish,
+  BaseChatMessage,
   ChainValues,
   LLMResult,
 } from "../schema/index.js";
 import { BaseCallbackHandler, CallbackHandlerMethods } from "./base.js";
 import { ConsoleCallbackHandler } from "./handlers/console.js";
-import { getTracingCallbackHandler } from "./handlers/initialize.js";
+import {
+  getTracingCallbackHandler,
+  getTracingV2CallbackHandler,
+} from "./handlers/initialize.js";
+import { getBufferString } from "../memory/base.js";
 
 type BaseCallbackManagerMethods = {
   [K in keyof CallbackHandlerMethods]?: (
@@ -278,7 +283,9 @@ export class CallbackManager
   async handleLLMStart(
     llm: { name: string },
     prompts: string[],
-    runId: string = uuidv4()
+    runId: string = uuidv4(),
+    _parentRunId: string | undefined = undefined,
+    extraParams: Record<string, unknown> | undefined = undefined
   ): Promise<CallbackManagerForLLMRun> {
     await Promise.all(
       this.handlers.map(async (handler) => {
@@ -288,8 +295,55 @@ export class CallbackManager
               llm,
               prompts,
               runId,
-              this._parentRunId
+              this._parentRunId,
+              extraParams
             );
+          } catch (err) {
+            console.error(
+              `Error in handler ${handler.constructor.name}, handleLLMStart: ${err}`
+            );
+          }
+        }
+      })
+    );
+    return new CallbackManagerForLLMRun(
+      runId,
+      this.handlers,
+      this.inheritableHandlers,
+      this._parentRunId
+    );
+  }
+
+  async handleChatModelStart(
+    llm: { name: string },
+    messages: BaseChatMessage[][],
+    runId: string = uuidv4(),
+    _parentRunId: string | undefined = undefined,
+    extraParams: Record<string, unknown> | undefined = undefined
+  ): Promise<CallbackManagerForLLMRun> {
+    let messageStrings: string[];
+    await Promise.all(
+      this.handlers.map(async (handler) => {
+        if (!handler.ignoreLLM) {
+          try {
+            if (handler.handleChatModelStart)
+              await handler.handleChatModelStart?.(
+                llm,
+                messages,
+                runId,
+                this._parentRunId,
+                extraParams
+              );
+            else if (handler.handleLLMStart) {
+              messageStrings = messages.map((x) => getBufferString(x));
+              await handler.handleLLMStart?.(
+                llm,
+                messageStrings,
+                runId,
+                this._parentRunId,
+                extraParams
+              );
+            }
           } catch (err) {
             console.error(
               `Error in handler ${handler.constructor.name}, handleLLMStart: ${err}`
@@ -395,9 +449,20 @@ export class CallbackManager
     inherit = true
   ): CallbackManager {
     const manager = new CallbackManager(this._parentRunId);
-    manager.setHandlers([...this.handlers].map((handler) => handler.copy()));
+    for (const handler of this.handlers) {
+      const inheritable = this.inheritableHandlers.includes(handler);
+      manager.addHandler(handler, inheritable);
+    }
     for (const handler of additionalHandlers) {
-      manager.addHandler(handler.copy(), inherit);
+      if (
+        // Prevent multiple copies of console_callback_handler
+        manager.handlers
+          .filter((h) => h.name === "console_callback_handler")
+          .some((h) => h.name === handler.name)
+      ) {
+        continue;
+      }
+      manager.addHandler(handler, inherit);
     }
     return manager;
   }
@@ -440,22 +505,33 @@ export class CallbackManager
         false
       );
     }
-    const tracingEnabled =
+    const verboseEnabled =
+      (typeof process !== "undefined"
+        ? // eslint-disable-next-line no-process-env
+          process.env?.LANGCHAIN_VERBOSE !== undefined
+        : false) || options?.verbose;
+    const tracingV2Enabled =
       typeof process !== "undefined"
         ? // eslint-disable-next-line no-process-env
-          process.env?.LANGCHAIN_TRACING !== undefined
+          process.env?.LANGCHAIN_TRACING_V2 !== undefined
         : false;
-    if (options?.verbose || tracingEnabled) {
+    const tracingEnabled =
+      tracingV2Enabled ||
+      (typeof process !== "undefined"
+        ? // eslint-disable-next-line no-process-env
+          process.env?.LANGCHAIN_TRACING !== undefined
+        : false);
+    if (verboseEnabled || tracingEnabled) {
       if (!callbackManager) {
         callbackManager = new CallbackManager();
       }
-      const consoleHandler = new ConsoleCallbackHandler();
       if (
-        options?.verbose &&
+        verboseEnabled &&
         !callbackManager.handlers.some(
-          (handler) => handler.name === consoleHandler.name
+          (handler) => handler.name === ConsoleCallbackHandler.prototype.name
         )
       ) {
+        const consoleHandler = new ConsoleCallbackHandler();
         callbackManager.addHandler(consoleHandler, true);
       }
       if (
@@ -464,7 +540,19 @@ export class CallbackManager
           (handler) => handler.name === "langchain_tracer"
         )
       ) {
-        callbackManager.addHandler(await getTracingCallbackHandler(), true);
+        if (tracingV2Enabled) {
+          callbackManager.addHandler(await getTracingV2CallbackHandler(), true);
+        } else {
+          const session =
+            typeof process !== "undefined"
+              ? // eslint-disable-next-line no-process-env
+                process.env?.LANGCHAIN_SESSION
+              : undefined;
+          callbackManager.addHandler(
+            await getTracingCallbackHandler(session),
+            true
+          );
+        }
       }
     }
     return callbackManager;

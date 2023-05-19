@@ -3,7 +3,7 @@ import { BaseLLM } from "../../llms/base.js";
 import { LLMResult } from "../../schema/index.js";
 import { LLMChain } from "../llm_chain.js";
 import { PromptTemplate } from "../../prompts/index.js";
-import { SimpleSequentialChain } from "../simple_sequential_chain.js";
+import { SimpleSequentialChain } from "../sequential_chain.js";
 import { AnalyzeDocumentChain } from "../analyze_documents_chain.js";
 import { ConversationalRetrievalQAChain } from "../conversational_retrieval_chain.js";
 import { VectorStoreRetriever } from "../../vectorstores/base.js";
@@ -19,7 +19,7 @@ class FakeLLM1 extends BaseLLM {
     return "fake_1";
   }
 
-  async _generate(_prompts: string[], _?: string[]): Promise<LLMResult> {
+  async _generate(_prompts: string[]): Promise<LLMResult> {
     return {
       generations: [
         [
@@ -41,7 +41,7 @@ class FakeLLM2 extends BaseLLM {
     return "fake_2";
   }
 
-  async _generate(prompts: string[], _?: string[]): Promise<LLMResult> {
+  async _generate(prompts: string[]): Promise<LLMResult> {
     let response = "I don't know what you are talking about.";
     if (prompts[0].includes("XXX")) {
       response = "final answer";

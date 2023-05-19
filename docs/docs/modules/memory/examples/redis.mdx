@@ -1,0 +1,36 @@
+---
+hide_table_of_contents: true
+---
+
+import CodeBlock from "@theme/CodeBlock";
+
+# Redis-Backed Chat Memory
+
+For longer-term persistence across chat sessions, you can swap out the default in-memory `chatHistory` that backs chat memory classes like `BufferMemory` for a [Redis](https://redis.io/) instance.
+
+## Setup
+
+You will need to install [node-redis](https://github.com/redis/node-redis) in your project:
+
+```bash npm2yarn
+npm install redis
+```
+
+You will also need a Redis instance to connect to. See instructions on [the official Redis website](https://redis.io/docs/getting-started/) for running the server locally.
+
+## Usage
+
+Each chat history session stored in Redis must have a unique id. You can provide an optional `sessionTTL` to make sessions expire after a give number of seconds.
+The `config` parameter is passed directly into the `createClient` method of [node-redis](https://github.com/redis/node-redis), and takes all the same arguments.
+
+import Example from "@examples/memory/redis.ts";
+
+<CodeBlock language="typescript">{Example}</CodeBlock>
+
+## Advanced Usage
+
+You can also directly pass in a previously created [node-redis](https://github.com/redis/node-redis) client instance:
+
+import AdvancedExample from "@examples/memory/redis-advanced.ts";
+
+<CodeBlock language="typescript">{AdvancedExample}</CodeBlock>

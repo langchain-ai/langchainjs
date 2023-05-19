@@ -9,43 +9,59 @@ test("StructuredOutputParser.fromNamesAndDescriptions", async () => {
     url: "A link to the resource",
   });
 
-  expect(await parser.parse('```json\n{"url": "value"}```')).toEqual({
+  expect(await parser.parse('```\n{"url": "value"}```')).toEqual({
     url: "value",
   });
 
   expect(parser.getFormatInstructions()).toMatchInlineSnapshot(`
-"The output should be a markdown code snippet formatted in the following schema:
+"You must format your output as a JSON value that adheres to a given "JSON Schema" instance.
 
+"JSON Schema" is a declarative language that allows you to annotate and validate JSON documents.
+
+For example, the example "JSON Schema" instance {{"properties": {{"foo": {{"description": "a list of test words", "type": "array", "items": {{"type": "string"}}}}}}, "required": ["foo"]}}}}
+would match an object with one required property, "foo". The "type" property specifies "foo" must be an "array", and the "description" property semantically describes it as "a list of test words". The items within "foo" must be strings.
+Thus, the object {{"foo": ["bar", "baz"]}} is a well-formatted instance of this example "JSON Schema". The object {{"properties": {{"foo": ["bar", "baz"]}}}} is not well-formatted.
+
+Your output will be parsed and type-checked according to the provided schema instance, so make sure all fields in your output match the schema exactly and there are no trailing commas!
+
+Here is the JSON Schema instance your output must adhere to. Include the enclosing markdown codeblock:
 \`\`\`json
-{
-	"url": string // A link to the resource
-}
+{"type":"object","properties":{"url":{"type":"string","description":"A link to the resource"}},"required":["url"],"additionalProperties":false,"$schema":"http://json-schema.org/draft-07/schema#"}
 \`\`\`
-
-Including the leading and trailing "\`\`\`json" and "\`\`\`"
 "
 `);
 });
+
+enum StateProvinceEnum {
+  Alabama = "AL",
+  Alaska = "AK",
+  Arizona = "AZ",
+}
 
 test("StructuredOutputParser.fromZodSchema", async () => {
   const parser = StructuredOutputParser.fromZodSchema(
     z.object({ url: z.string().describe("A link to the resource") })
   );
 
-  expect(await parser.parse('```json\n{"url": "value"}```')).toEqual({
+  expect(await parser.parse('```\n{"url": "value"}```')).toEqual({
     url: "value",
   });
 
   expect(parser.getFormatInstructions()).toMatchInlineSnapshot(`
-"The output should be a markdown code snippet formatted in the following schema:
+"You must format your output as a JSON value that adheres to a given "JSON Schema" instance.
 
+"JSON Schema" is a declarative language that allows you to annotate and validate JSON documents.
+
+For example, the example "JSON Schema" instance {{"properties": {{"foo": {{"description": "a list of test words", "type": "array", "items": {{"type": "string"}}}}}}, "required": ["foo"]}}}}
+would match an object with one required property, "foo". The "type" property specifies "foo" must be an "array", and the "description" property semantically describes it as "a list of test words". The items within "foo" must be strings.
+Thus, the object {{"foo": ["bar", "baz"]}} is a well-formatted instance of this example "JSON Schema". The object {{"properties": {{"foo": ["bar", "baz"]}}}} is not well-formatted.
+
+Your output will be parsed and type-checked according to the provided schema instance, so make sure all fields in your output match the schema exactly and there are no trailing commas!
+
+Here is the JSON Schema instance your output must adhere to. Include the enclosing markdown codeblock:
 \`\`\`json
-{
-	"url": string // A link to the resource
-}
+{"type":"object","properties":{"url":{"type":"string","description":"A link to the resource"}},"required":["url"],"additionalProperties":false,"$schema":"http://json-schema.org/draft-07/schema#"}
 \`\`\`
-
-Including the leading and trailing "\`\`\`json" and "\`\`\`"
 "
 `);
 });
@@ -62,6 +78,15 @@ test("StructuredOutputParser.fromZodSchema", async () => {
 
   expect(
     await parser.parse(
+      '```\n{"answer": "value", "sources": ["this-source"]}```'
+    )
+  ).toEqual({
+    answer: "value",
+    sources: ["this-source"],
+  });
+
+  expect(
+    await parser.parse(
       '```json\n{"answer": "value", "sources": ["this-source"]}```'
     )
   ).toEqual({
@@ -69,17 +94,30 @@ test("StructuredOutputParser.fromZodSchema", async () => {
     sources: ["this-source"],
   });
 
+  expect(
+    await parser.parse(
+      'some other stuff```json\n{"answer": "value", "sources": ["this-source"]}```some other stuff at the end'
+    )
+  ).toEqual({
+    answer: "value",
+    sources: ["this-source"],
+  });
+
   expect(parser.getFormatInstructions()).toMatchInlineSnapshot(`
-"The output should be a markdown code snippet formatted in the following schema:
+"You must format your output as a JSON value that adheres to a given "JSON Schema" instance.
 
+"JSON Schema" is a declarative language that allows you to annotate and validate JSON documents.
+
+For example, the example "JSON Schema" instance {{"properties": {{"foo": {{"description": "a list of test words", "type": "array", "items": {{"type": "string"}}}}}}, "required": ["foo"]}}}}
+would match an object with one required property, "foo". The "type" property specifies "foo" must be an "array", and the "description" property semantically describes it as "a list of test words". The items within "foo" must be strings.
+Thus, the object {{"foo": ["bar", "baz"]}} is a well-formatted instance of this example "JSON Schema". The object {{"properties": {{"foo": ["bar", "baz"]}}}} is not well-formatted.
+
+Your output will be parsed and type-checked according to the provided schema instance, so make sure all fields in your output match the schema exactly and there are no trailing commas!
+
+Here is the JSON Schema instance your output must adhere to. Include the enclosing markdown codeblock:
 \`\`\`json
-{
-	"answer": string // answer to the user's question
-	"sources": string[] // sources used to answer the question, should be websites.
-}
+{"type":"object","properties":{"answer":{"type":"string","description":"answer to the user's question"},"sources":{"type":"array","items":{"type":"string"},"description":"sources used to answer the question, should be websites."}},"required":["answer","sources"],"additionalProperties":false,"$schema":"http://json-schema.org/draft-07/schema#"}
 \`\`\`
-
-Including the leading and trailing "\`\`\`json" and "\`\`\`"
 "
 `);
 });
@@ -108,6 +146,10 @@ test("StructuredOutputParser.fromZodSchema", async () => {
               .string()
               .optional()
               .describe("The address of the author"),
+            stateProvince: z
+              .nativeEnum(StateProvinceEnum)
+              .optional()
+              .describe("The state or province of the author"),
           })
         ),
       })
@@ -116,7 +158,7 @@ test("StructuredOutputParser.fromZodSchema", async () => {
 
   expect(
     await parser.parse(
-      '```json\n{"url": "value", "title": "value", "year": 2011, "createdAt": "2023-03-29T16:07:09.600Z", "createdAtDate": "2023-03-29", "authors": [{"name": "value", "email": "value"}]}```'
+      '```\n{"url": "value", "title": "value", "year": 2011, "createdAt": "2023-03-29T16:07:09.600Z", "createdAtDate": "2023-03-29", "authors": [{"name": "value", "email": "value", "stateProvince": "AZ"}]}```'
     )
   ).toEqual({
     url: "value",
@@ -124,29 +166,24 @@ test("StructuredOutputParser.fromZodSchema", async () => {
     year: 2011,
     createdAt: "2023-03-29T16:07:09.600Z",
     createdAtDate: new Date("2023-03-29T00:00:00.000Z"),
-    authors: [{ name: "value", email: "value" }],
+    authors: [{ name: "value", email: "value", stateProvince: "AZ" }],
   });
 
   expect(parser.getFormatInstructions()).toMatchInlineSnapshot(`
-"The output should be a markdown code snippet formatted in the following schema:
+"You must format your output as a JSON value that adheres to a given "JSON Schema" instance.
 
+"JSON Schema" is a declarative language that allows you to annotate and validate JSON documents.
+
+For example, the example "JSON Schema" instance {{"properties": {{"foo": {{"description": "a list of test words", "type": "array", "items": {{"type": "string"}}}}}}, "required": ["foo"]}}}}
+would match an object with one required property, "foo". The "type" property specifies "foo" must be an "array", and the "description" property semantically describes it as "a list of test words". The items within "foo" must be strings.
+Thus, the object {{"foo": ["bar", "baz"]}} is a well-formatted instance of this example "JSON Schema". The object {{"properties": {{"foo": ["bar", "baz"]}}}} is not well-formatted.
+
+Your output will be parsed and type-checked according to the provided schema instance, so make sure all fields in your output match the schema exactly and there are no trailing commas!
+
+Here is the JSON Schema instance your output must adhere to. Include the enclosing markdown codeblock:
 \`\`\`json
-{ // Only One object
-	"url": string // A link to the resource
-	"title": string // A title for the resource
-	"year": number // The year the resource was created
-	"createdAt": datetime // The date and time the resource was created
-	"createdAtDate": date // Optional // The date the resource was created
-	"authors": {
-		"name": string // The name of the author
-		"email": string // The email of the author
-		"type": "author" | "editor" // Optional
-		"address": string // Optional // The address of the author
-	}[]
-}
+{"type":"object","properties":{"url":{"type":"string","description":"A link to the resource"},"title":{"type":"string","description":"A title for the resource"},"year":{"type":"number","description":"The year the resource was created"},"createdAt":{"type":"string","format":"date-time","description":"The date and time the resource was created"},"createdAtDate":{"type":"string","format":"date-time","description":"The date the resource was created"},"authors":{"type":"array","items":{"type":"object","properties":{"name":{"type":"string","description":"The name of the author"},"email":{"type":"string","description":"The email of the author"},"type":{"type":"string","enum":["author","editor"]},"address":{"type":"string","description":"The address of the author"},"stateProvince":{"type":"string","enum":["AL","AK","AZ"],"description":"The state or province of the author"}},"required":["name","email"],"additionalProperties":false}}},"required":["url","title","year","createdAt","authors"],"additionalProperties":false,"description":"Only One object","$schema":"http://json-schema.org/draft-07/schema#"}
 \`\`\`
-
-Including the leading and trailing "\`\`\`json" and "\`\`\`"
 "
 `);
 });

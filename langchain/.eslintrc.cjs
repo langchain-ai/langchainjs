@@ -28,6 +28,7 @@ module.exports = {
     "@typescript-eslint/explicit-module-boundary-types": 0,
     "@typescript-eslint/no-empty-function": 0,
     "@typescript-eslint/no-shadow": 0,
+    "@typescript-eslint/no-empty-interface": 0,
     "@typescript-eslint/no-use-before-define": ["error", "nofunc"],
     "@typescript-eslint/no-unused-vars": ["warn", { args: "none" }],
     "@typescript-eslint/no-floating-promises": "error",
@@ -54,6 +55,8 @@ module.exports = {
     "no-use-before-define": 0,
     "no-useless-constructor": 0,
     "no-return-await": 0,
+    "consistent-return": 0,
+    "no-else-return": 0,
     "new-cap": ["error", { properties: false, capIsNew: false }],
   },
 };

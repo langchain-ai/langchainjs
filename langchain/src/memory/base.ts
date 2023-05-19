@@ -7,6 +7,8 @@ export type OutputValues = Record<string, any>;
 export type MemoryVariables = Record<string, any>;
 
 export abstract class BaseMemory {
+  abstract get memoryKeys(): string[];
+
   abstract loadMemoryVariables(values: InputValues): Promise<MemoryVariables>;
 
   abstract saveContext(
@@ -29,7 +31,7 @@ export const getInputValue = (inputValues: InputValues, inputKey?: string) => {
     return inputValues[keys[0]];
   }
   throw new Error(
-    `input values have multiple keys, memory only supported when one key currently: ${keys}`
+    `input values have ${keys.length} keys, you must specify an input key or pass only 1 key as input`
   );
 };
 
@@ -59,4 +61,19 @@ export function getBufferString(
     string_messages.push(`${role}: ${m.text}`);
   }
   return string_messages.join("\n");
+}
+
+export function getPromptInputKey(
+  inputs: Record<string, unknown>,
+  memoryVariables: string[]
+): string {
+  const promptInputKeys = Object.keys(inputs).filter(
+    (key) => !memoryVariables.includes(key) && key !== "stop"
+  );
+  if (promptInputKeys.length !== 1) {
+    throw new Error(
+      `One input key expected, but got ${promptInputKeys.length}`
+    );
+  }
+  return promptInputKeys[0];
 }

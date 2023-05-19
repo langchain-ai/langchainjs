@@ -17,8 +17,8 @@ export class ReadFileTool extends StructuredTool {
 
   store: BaseFileStore;
 
-  constructor({ verbose, callbacks, store }: ReadFileParams) {
-    super(verbose, callbacks);
+  constructor({ store, ...rest }: ReadFileParams) {
+    super(rest);
 
     this.store = store;
   }
@@ -44,8 +44,8 @@ export class WriteFileTool extends StructuredTool {
 
   store: BaseFileStore;
 
-  constructor({ verbose, callbacks, store }: WriteFileParams) {
-    super(verbose, callbacks);
+  constructor({ store, ...rest }: WriteFileParams) {
+    super(rest);
 
     this.store = store;
   }

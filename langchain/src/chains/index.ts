@@ -2,9 +2,11 @@ export { BaseChain, ChainInputs } from "./base.js";
 export { LLMChain, LLMChainInput } from "./llm_chain.js";
 export { ConversationChain } from "./conversation.js";
 export {
+  SequentialChain,
+  SequentialChainInput,
   SimpleSequentialChain,
   SimpleSequentialChainInput,
-} from "./simple_sequential_chain.js";
+} from "./sequential_chain.js";
 export {
   StuffDocumentsChain,
   StuffDocumentsChainInput,
@@ -24,11 +26,18 @@ export {
 export { VectorDBQAChain, VectorDBQAChainInput } from "./vector_db_qa.js";
 export {
   loadQAChain,
+  QAChainParams,
   loadQAStuffChain,
+  StuffQAChainParams,
   loadQAMapReduceChain,
+  MapReduceQAChainParams,
   loadQARefineChain,
+  RefineQAChainParams,
 } from "./question_answering/load.js";
-export { loadSummarizationChain } from "./summarization/load.js";
+export {
+  loadSummarizationChain,
+  SummarizationChainParams,
+} from "./summarization/load.js";
 export {
   SqlDatabaseChain,
   SqlDatabaseChainInput,
@@ -39,7 +48,16 @@ export {
 } from "./conversational_retrieval_chain.js";
 export { RetrievalQAChain, RetrievalQAChainInput } from "./retrieval_qa.js";
 export {
+  ConstitutionalChainInput,
+  ConstitutionalChain,
+} from "./constitutional_ai/constitutional_chain.js";
+export {
+  ConstitutionalPrinciple,
+  PRINCIPLES,
+} from "./constitutional_ai/constitutional_principle.js";
+export {
   SerializedLLMChain,
+  SerializedSequentialChain,
   SerializedSimpleSequentialChain,
   SerializedSqlDatabaseChain,
   SerializedAnalyzeDocumentChain,
@@ -50,3 +68,16 @@ export {
   SerializedVectorDBQAChain,
   SerializedRefineDocumentsChain,
 } from "./serde.js";
+export { OpenAIModerationChain } from "./openai_moderation.js";
+export {
+  MultiRouteChain,
+  MultiRouteChainInput,
+  RouterChain,
+} from "./router/multi_route.js";
+export {
+  LLMRouterChain,
+  LLMRouterChainInput,
+  RouterOutputSchema,
+} from "./router/llm_router.js";
+export { MultiPromptChain } from "./router/multi_prompt.js";
+export { MultiRetrievalQAChain } from "./router/multi_retrieval_qa.js";

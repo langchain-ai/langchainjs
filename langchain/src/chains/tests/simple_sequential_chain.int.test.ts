@@ -2,7 +2,7 @@ import { test } from "@jest/globals";
 import { OpenAI } from "../../llms/openai.js";
 import { PromptTemplate } from "../../prompts/index.js";
 import { LLMChain } from "../llm_chain.js";
-import { SimpleSequentialChain } from "../simple_sequential_chain.js";
+import { SimpleSequentialChain } from "../sequential_chain.js";
 import { ChatOpenAI } from "../../chat_models/openai.js";
 
 test("Test SimpleSequentialChain example usage", async () => {
@@ -25,13 +25,13 @@ test("Test SimpleSequentialChain example usage", async () => {
      Play Synopsis:
      {synopsis}
      Review from a New York Times play critic of the above play:`;
-  const reviewPromptTempalte = new PromptTemplate({
+  const reviewPromptTemplate = new PromptTemplate({
     template: reviewTemplate,
     inputVariables: ["synopsis"],
   });
   const reviewChain = new LLMChain({
     llm: reviewLLM,
-    prompt: reviewPromptTempalte,
+    prompt: reviewPromptTemplate,
   });
 
   const overallChain = new SimpleSequentialChain({

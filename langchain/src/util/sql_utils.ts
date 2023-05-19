@@ -1,4 +1,12 @@
 import type { DataSource, DataSourceOptions } from "typeorm";
+import {
+  DEFAULT_SQL_DATABASE_PROMPT,
+  SQL_MSSQL_PROMPT,
+  SQL_MYSQL_PROMPT,
+  SQL_POSTGRES_PROMPT,
+  SQL_SQLITE_PROMPT,
+} from "../chains/sql_db/sql_db_prompt.js";
+import { PromptTemplate } from "../prompts/index.js";
 
 interface RawResultTableAndColumn {
   table_name: string;
@@ -166,6 +174,21 @@ export const getTableAndColumnsName = async (
     return formatToSqlTable(rep);
   }
 
+  if (appDataSource.options.type === "mssql") {
+    sql =
+      "SELECT " +
+      "TABLE_NAME AS table_name, " +
+      "COLUMN_NAME AS column_name, " +
+      "DATA_TYPE AS data_type, " +
+      "IS_NULLABLE AS is_nullable " +
+      "FROM INFORMATION_SCHEMA.COLUMNS " +
+      "ORDER BY TABLE_NAME, ORDINAL_POSITION;";
+
+    const rep = await appDataSource.query(sql);
+
+    return formatToSqlTable(rep);
+  }
+
   throw new Error("Database type not implemented yet");
 };
 
@@ -221,6 +244,8 @@ export const generateTableInfoFromTables = async (
     } else if (appDataSource.options.type === "postgres") {
       const schema = appDataSource.options?.schema ?? "public";
       sqlSelectInfoQuery = `SELECT * FROM "${schema}"."${currentTable.tableName}" LIMIT ${nbSampleRow};\n`;
+    } else if (appDataSource.options.type === "mssql") {
+      sqlSelectInfoQuery = `SELECT TOP ${nbSampleRow} * FROM [${currentTable.tableName}];\n`;
     } else {
       sqlSelectInfoQuery = `SELECT * FROM "${currentTable.tableName}" LIMIT ${nbSampleRow};\n`;
     }
@@ -250,4 +275,26 @@ export const generateTableInfoFromTables = async (
   }
 
   return globalString;
+};
+
+export const getPromptTemplateFromDataSource = (
+  appDataSource: DataSource
+): PromptTemplate => {
+  if (appDataSource.options.type === "postgres") {
+    return SQL_POSTGRES_PROMPT;
+  }
+
+  if (appDataSource.options.type === "sqlite") {
+    return SQL_SQLITE_PROMPT;
+  }
+
+  if (appDataSource.options.type === "mysql") {
+    return SQL_MYSQL_PROMPT;
+  }
+
+  if (appDataSource.options.type === "mssql") {
+    return SQL_MSSQL_PROMPT;
+  }
+
+  return DEFAULT_SQL_DATABASE_PROMPT;
 };

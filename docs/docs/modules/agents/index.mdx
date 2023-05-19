@@ -11,4 +11,60 @@ import DocCardList from "@theme/DocCardList";
 [Conceptual Guide](https://docs.langchain.com/docs/components/agents)
 :::
 
+Some applications will require not just a predetermined chain of calls to LLMs/other tools, but potentially an unknown chain that depends on the user's input. In these types of chains, there is a “agent” which has access to a suite of tools. Depending on the user input, the agent can then decide which, if any, of these tools to call.
+
+At the moment, there are two main types of agents:
+
+1. **Action Agents**: these agents decide an action to take and take that action one step at a time
+2. **Plan-and-Execute Agents**: these agents first decide a plan of actions to take, and then execute those actions one at a time.
+
+When should you use each one?
+
+- Action Agents are more conventional, and good for small tasks.
+- For more complex or long running tasks, the initial planning step of Plan-and-Execute Agents helps to maintain long term objectives and focus, at the expense of generally more calls and higher latency.
+
+These two agents are also not mutually exclusive - in fact, it is often best to have an Action Agent be in charge of the execution for the Plan and Execute agent.
+
+## Action Agents
+
+The high-level pseudocode of an Action Agent looks something like:
+
+- Some user input is received
+- The `agent` decides which `tool` - if any - to use, and what the input to that tool should be
+- That `tool` is then called with that `tool input`, and an `observation` is recorded (this is just the output of calling that tool with that tool input).
+- That history of `tool`, `tool input`, and `observation` is passed back into the `agent`, and it decides what steps to take next
+- This is repeated until the `agent` decides it no longer needs to use a `tool`, and then it responds directly to the user.
+
+```typescript
+interface AgentStep {
+  action: AgentAction;
+  observation: string;
+}
+
+interface AgentAction {
+  tool: string; // Tool.name
+  toolInput: string; // Tool.call argument
+}
+
+interface AgentFinish {
+  returnValues: object;
+}
+
+class Agent {
+  plan(steps: AgentStep[], inputs: object): Promise<AgentAction | AgentFinish>;
+}
+```
+
+## Plan-and-Execute Agents
+
+The high level pseudocode of a Plan-and-Execute Agent looks something like:
+
+- Some user input is received
+- The planner lists out the steps to take
+- The executor goes through the list of steps, executing them one-by-one until outputting the final result
+
+The current implementation is to use an LLMChain as the planner and an Action Agent as the executor.
+
+## Go deeper
+
 <DocCardList />

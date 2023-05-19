@@ -1,7 +1,8 @@
-import { v4 as uuidv4 } from "uuid";
+import * as uuid from "uuid";
 import {
   AgentAction,
   AgentFinish,
+  BaseChatMessage,
   ChainValues,
   LLMResult,
 } from "../schema/index.js";
@@ -24,7 +25,8 @@ abstract class BaseCallbackHandlerMethodsClass {
     llm: { name: string },
     prompts: string[],
     runId: string,
-    parentRunId?: string
+    parentRunId?: string,
+    extraParams?: Record<string, unknown>
   ): Promise<void> | void;
 
   /**
@@ -52,6 +54,18 @@ abstract class BaseCallbackHandlerMethodsClass {
     output: LLMResult,
     runId: string,
     parentRunId?: string
+  ): Promise<void> | void;
+
+  /**
+   * Called at the start of a Chat Model run, with the prompt(s)
+   * and the run ID.
+   */
+  handleChatModelStart?(
+    llm: { name: string },
+    messages: BaseChatMessage[][],
+    runId: string,
+    parentRunId?: string,
+    extraParams?: Record<string, unknown>
   ): Promise<void> | void;
 
   /**
@@ -179,7 +193,7 @@ export abstract class BaseCallbackHandler
 
   static fromMethods(methods: CallbackHandlerMethods) {
     class Handler extends BaseCallbackHandler {
-      name = uuidv4();
+      name = uuid.v4();
 
       constructor() {
         super();
