@@ -496,6 +496,9 @@
     "@tensorflow/tfjs-core": {
       "optional": true
     },
+    "@upstash/redis": {
+      "optional": true
+    },
     "@zilliz/milvus2-sdk-node": {
       "optional": true
     },
@@ -551,9 +554,6 @@
       "optional": true
     },
     "redis": {
-      "optional": true
-    },
-    "@upstash/redis": {
       "optional": true
     },
     "replicate": {
