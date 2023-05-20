@@ -18,6 +18,10 @@ test("Test JSON loader from blob", async () => {
   expect(docs[0]).toEqual(
     new Document({
       metadata: { source: "blob", blobType: "application/json", line: 1 },
+      hash: undefined,
+      id: undefined,
+      sourceName: undefined,
+      sourceType: undefined,
       pageContent:
         "<i>Corruption discovered at the core of the Banking Clan!</i>",
     })
@@ -39,22 +43,30 @@ test("Test JSON loader from blob", async () => {
   expect(docs.length).toBe(2);
   expect(docs[0]).toMatchInlineSnapshot(`
     Document {
+      "hash": undefined,
+      "id": undefined,
       "metadata": {
         "blobType": "application/json",
         "line": 1,
         "source": "blob",
       },
       "pageContent": "This is a sentence.",
+      "sourceName": undefined,
+      "sourceType": undefined,
     }
   `);
   expect(docs[1]).toMatchInlineSnapshot(`
     Document {
+      "hash": undefined,
+      "id": undefined,
       "metadata": {
         "blobType": "application/json",
         "line": 2,
         "source": "blob",
       },
       "pageContent": "This is another sentence.",
+      "sourceName": undefined,
+      "sourceType": undefined,
     }
   `);
 });
@@ -87,22 +99,30 @@ test("Test JSON loader from blob", async () => {
   expect(docs.length).toBe(10);
   expect(docs[0]).toMatchInlineSnapshot(`
     Document {
+      "hash": undefined,
+      "id": undefined,
       "metadata": {
         "blobType": "application/json",
         "line": 1,
         "source": "blob",
       },
       "pageContent": "BD 2023 SUMMER",
+      "sourceName": undefined,
+      "sourceType": undefined,
     }
   `);
   expect(docs[1]).toMatchInlineSnapshot(`
     Document {
+      "hash": undefined,
+      "id": undefined,
       "metadata": {
         "blobType": "application/json",
         "line": 2,
         "source": "blob",
       },
       "pageContent": "LinkedIn Job",
+      "sourceName": undefined,
+      "sourceType": undefined,
     }
   `);
 });

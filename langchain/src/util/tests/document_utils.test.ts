@@ -60,14 +60,14 @@ test("should use metadata source if sourceName is not present", () => {
           to: 40,
         },
       },
-      source: "metaSource",
+      sourceName: "metaSourceName",
     },
     pageContent: "myPageContent",
     sourceType: "metaSourceType",
   };
 
   const result = getUniqueIDFromDocument(doc);
-  expect(result).toBe("metaSourceType:metaSource:30-40");
+  expect(result).toBe("metaSourceType:metaSourceName:30-40");
 });
 
 test("should generate a unique id with a random uuid if sourceName and metadata source are not present", () => {

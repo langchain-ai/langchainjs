@@ -40,22 +40,30 @@ test("Test JSONL loader from blob", async () => {
   expect(docs.length).toBe(2);
   expect(docs[0]).toMatchInlineSnapshot(`
     Document {
+      "hash": undefined,
+      "id": undefined,
       "metadata": {
         "blobType": "application/jsonl+json",
         "line": 1,
         "source": "blob",
       },
       "pageContent": "This is a sentence.",
+      "sourceName": undefined,
+      "sourceType": undefined,
     }
   `);
   expect(docs[1]).toMatchInlineSnapshot(`
     Document {
+      "hash": undefined,
+      "id": undefined,
       "metadata": {
         "blobType": "application/jsonl+json",
         "line": 2,
         "source": "blob",
       },
       "pageContent": "This is another sentence.",
+      "sourceName": undefined,
+      "sourceType": undefined,
     }
   `);
 });

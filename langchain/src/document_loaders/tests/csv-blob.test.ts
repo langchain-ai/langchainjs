@@ -46,6 +46,8 @@ test("Test CSV loader from blob", async () => {
   expect(docs.length).toBe(2);
   expect(docs[0]).toMatchInlineSnapshot(`
     Document {
+      "hash": undefined,
+      "id": undefined,
       "metadata": {
         "blobType": "text/csv",
         "line": 1,
@@ -53,10 +55,14 @@ test("Test CSV loader from blob", async () => {
       },
       "pageContent": "id: 1
     text: This is a sentence.",
+      "sourceName": undefined,
+      "sourceType": undefined,
     }
   `);
   expect(docs[1]).toMatchInlineSnapshot(`
     Document {
+      "hash": undefined,
+      "id": undefined,
       "metadata": {
         "blobType": "text/csv",
         "line": 2,
@@ -64,6 +70,8 @@ test("Test CSV loader from blob", async () => {
       },
       "pageContent": "id: 2
     text: This is another sentence.",
+      "sourceName": undefined,
+      "sourceType": undefined,
     }
   `);
 });
