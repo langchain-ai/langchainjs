@@ -15,3 +15,15 @@ test("Test ChatGoogleVertexAi generate", async () => {
   const res = await chat.generate([[message]]);
   console.log(JSON.stringify(res, null, 1));
 });
+
+test("Test ChatGoogleVertexAi context", async() => {
+  const model = new ChatGoogleVertexAi({
+    temperature: 0.7,
+    context: "You are a helpful assistant that answers in pirate language.",
+  });
+  const question = new HumanChatMessage(
+    "Question: What would be a good company name a company that makes colorful socks?\nAnswer:"
+  );
+  const res = await model.call([question]);
+  console.log({ res });
+})

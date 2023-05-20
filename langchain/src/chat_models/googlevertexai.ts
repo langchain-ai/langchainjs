@@ -150,13 +150,17 @@ export class ChatGoogleVertexAi
     // a combination (in highest to lowest priority) of the messages
     // passed in, the options passed in, and the configuration parameters
     // passed to the constructor.
+    //
+    // Note that || is used and *not* ?? because we want the empty string
+    // and the empty array to be replaced by a string or array that has
+    // something in it if available. || will do this, but ?? won't.
     const fromMessages = this.convertMessages(messages);
     const fromOptions = this.convertOptions(options);
     const instance: GoogleVertexAiChatInstance = {
       context:
-        fromMessages.context ?? fromOptions.context ?? this.context ?? "",
+        fromMessages.context || fromOptions.context || this.context || "",
       examples:
-        fromOptions.examples ?? this.convertExamples(this.examples) ?? [],
+        fromOptions.examples || this.convertExamples(this.examples) || [],
       messages: fromMessages.messages,
     };
 
