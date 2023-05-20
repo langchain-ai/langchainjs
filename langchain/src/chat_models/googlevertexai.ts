@@ -8,14 +8,14 @@ import {
   MessageType,
   SystemChatMessage,
 } from "../schema/index.js";
+import { BaseLanguageModelCallOptions } from "../base_language/index.js";
+import { GoogleVertexAiConnection } from "../util/googlevertexai-connection.js";
 import {
   GoogleVertexAiBaseLLMInput,
-  GoogleVertexAiConnection,
   GoogleVertexAiBasePrediction,
-  GoogleVertexAiModelParams,
   GoogleVertexAiLLMResponse,
-} from "../llms/googlevertexai.js";
-import { BaseLanguageModelCallOptions } from "../base_language/index.js";
+  GoogleVertexAiModelParams,
+} from "../types/googlevertexai-types.js";
 
 /**
  * Represents a single "example" exchange that can be provided to
@@ -86,7 +86,7 @@ export interface GoogleVertexAiChatCallOptions
  *   path of a credentials file for a service account permitted to the
  *   Google Cloud project using Vertex AI.
  */
-export class GoogleVertexAiChat
+export class ChatGoogleVertexAi
   extends BaseChatModel
   implements GoogleVertexAiChatInput
 {
@@ -96,7 +96,7 @@ export class GoogleVertexAiChat
 
   temperature = 0.2;
 
-  maxTokens = 256;
+  maxOutputTokens = 256;
 
   topP = 0.8;
 
@@ -129,7 +129,10 @@ export class GoogleVertexAiChat
     this.examples = fields?.examples ?? this.examples;
     this.roleAlias = fields?.roleAlias ?? this.roleAlias;
 
-    this.connection = new GoogleVertexAiConnection(fields, this.caller);
+    this.connection = new GoogleVertexAiConnection(
+      { ...fields, ...this },
+      this.caller
+    );
   }
 
   _combineLLMOutput(): // ...llmOutputs: LLMResult["llmOutput"][]
@@ -147,13 +150,17 @@ export class GoogleVertexAiChat
     // a combination (in highest to lowest priority) of the messages
     // passed in, the options passed in, and the configuration parameters
     // passed to the constructor.
+    //
+    // Note that || is used and *not* ?? because we want the empty string
+    // and the empty array to be replaced by a string or array that has
+    // something in it if available. || will do this, but ?? won't.
     const fromMessages = this.convertMessages(messages);
     const fromOptions = this.convertOptions(options);
     const instance: GoogleVertexAiChatInstance = {
       context:
-        fromMessages.context ?? fromOptions.context ?? this.context ?? "",
+        fromMessages.context || fromOptions.context || this.context || "",
       examples:
-        fromOptions.examples ?? this.convertExamples(this.examples) ?? [],
+        fromOptions.examples || this.convertExamples(this.examples) || [],
       messages: fromMessages.messages,
     };
 
@@ -161,7 +168,7 @@ export class GoogleVertexAiChat
       temperature: this.temperature,
       topK: this.topK,
       topP: this.topP,
-      maxTokens: this.maxTokens,
+      maxOutputTokens: this.maxOutputTokens,
     };
 
     const result = await this.connection.request(

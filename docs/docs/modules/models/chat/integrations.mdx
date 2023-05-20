@@ -44,18 +44,22 @@ Google Cloud using one of these methods:
   to the project and set the `GOOGLE_APPLICATION_CREDENTIALS` environment
   variable to the path of this file.
 
-```typescript
-import { GoogleVertexAiChat } from "langchain/llms/googlevertexai";
+```bash npm2yarn
+npm install google-auth-library
+```
 
-export const run = async () => {
-  const model = new GoogleVertexAiChat({
-    temperature: 0.7,
-    maxTokens: 1000,
-    context: "You are a helpful assistant that answers in pirate language",
-  });
-  const res = await model.call(
-    "Question: What would be a good company name a company that makes colorful socks?\nAnswer:"
-  );
-  console.log({ res });
-};
+```typescript
+import { ChatGoogleVertexAi } from "langchain/chat_models/googlevertexai";
+
+const model = new ChatGoogleVertexAi({
+temperature: 0.7,
+context: "You are a helpful assistant that answers in pirate language.",
+});
+
+const question = new HumanChatMessage(
+  "Question: What would be a good company name a company that makes colorful socks?\nAnswer:"
+);
+
+const res = await model.call([question]);
+console.log({ res });
 ```
