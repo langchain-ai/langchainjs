@@ -1,11 +1,10 @@
 import { FigmaFileLoader } from "langchain/document_loaders/web/figma";
 
-export const run = async () => {
-  const loader = new FigmaFileLoader({
-    accessToken: "FIGMA_ACCESS_TOKEN",
-    ids: "ids",
-    key: "key",
-  });
-  const docs = await loader.load();
-  console.log({ docs });
-};
+const loader = new FigmaFileLoader({
+  accessToken: "FIGMA_ACCESS_TOKEN",
+  ids: "ids",
+  key: "key",
+});
+const docs = await loader.load();
+
+console.log({ docs });
