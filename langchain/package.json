@@ -307,6 +307,9 @@
     "stores/message/redis.cjs",
     "stores/message/redis.js",
     "stores/message/redis.d.ts",
+    "stores/message/redis_upstash.cjs",
+    "stores/message/redis_upstash.js",
+    "stores/message/redis_upstash.d.ts",
     "experimental/autogpt.cjs",
     "experimental/autogpt.js",
     "experimental/autogpt.d.ts",
@@ -548,6 +551,9 @@
       "optional": true
     },
     "redis": {
+      "optional": true
+    },
+    "@upstash/redis": {
       "optional": true
     },
     "replicate": {
@@ -1110,6 +1116,11 @@
       "types": "./stores/message/redis.d.ts",
       "import": "./stores/message/redis.js",
       "require": "./stores/message/redis.cjs"
+    },
+    "./stores/message/redis_upstash": {
+      "types": "./stores/message/redis_upstash.d.ts",
+      "import": "./stores/message/redis_upstash.js",
+      "require": "./stores/message/redis_upstash.cjs"
     },
     "./experimental/autogpt": {
       "types": "./experimental/autogpt.d.ts",
