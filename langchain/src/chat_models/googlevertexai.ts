@@ -9,7 +9,7 @@ import {
   SystemChatMessage,
 } from "../schema/index.js";
 import { BaseLanguageModelCallOptions } from "../base_language/index.js";
-import {GoogleVertexAiConnection} from "../util/google-connection.js";
+import {GoogleVertexAiConnection} from "../util/googlevertexai-connection.js";
 import {
   GoogleVertexAiBaseLLMInput,
   GoogleVertexAiBasePrediction,

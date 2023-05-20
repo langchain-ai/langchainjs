@@ -1,6 +1,6 @@
 import { BaseLLM } from "./base.js";
 import { Generation, LLMResult } from "../schema/index.js";
-import { GoogleVertexAiConnection } from "../util/google-connection.js";
+import { GoogleVertexAiConnection } from "../util/googlevertexai-connection.js";
 import {
   GoogleVertexAiBaseLLMInput,
   GoogleVertexAiBasePrediction, GoogleVertexAiLLMResponse,
