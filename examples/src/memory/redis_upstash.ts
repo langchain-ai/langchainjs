@@ -8,8 +8,8 @@ const memory = new BufferMemory({
     sessionId: new Date().toISOString(), // Or some other unique identifier for the conversation
     sessionTTL: 300, // 5 minutes, omit this parameter to make sessions never expire
     config: {
-      url: "https://ADD_YOURS_HERE.upstash.io", // Default value, override with your own instance's URL
-      token: "********", // Default value, override with your own instance's token
+      url: "https://ADD_YOURS_HERE.upstash.io", // Override with your own instance's URL
+      token: "********", // Override with your own instance's token
     },
   }),
 });
