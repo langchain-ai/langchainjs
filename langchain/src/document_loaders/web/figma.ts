@@ -9,17 +9,15 @@ export interface FigmaFile {
   thumbnailUrl: string;
   version: string;
   document: Node;
-  schemaVersion: 0;
+  schemaVersion: number;
   mainFileKey: string;
-  branches: [
-    {
-      key: string;
-      name: string;
-      thumbnail_url: string;
-      last_modified: string;
-      link_access: string;
-    }
-  ];
+	branches: Array<{
+  	key: string;
+  	name: string;
+		thumbnail_url: string;
+  	last_modified: string;
+    link_access: string;
+	}>;
 }
 
 export interface FigmaLoaderParams {

@@ -1,7 +1,11 @@
-import type { RedisClientType } from "redis";
+import type { createCluster, createClient } from "redis";
 
 import { BaseCache, Generation } from "../schema/index.js";
 import { getCacheKey } from "./base.js";
+
+type RedisClientType =
+  | ReturnType<typeof createClient>
+  | ReturnType<typeof createCluster>;
 
 export class RedisCache extends BaseCache {
   private redisClient: RedisClientType;

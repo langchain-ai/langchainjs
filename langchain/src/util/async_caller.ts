@@ -26,6 +26,10 @@ export interface AsyncCallerParams {
   maxRetries?: number;
 }
 
+export interface AsyncCallerCallOptions {
+  signal?: AbortSignal;
+}
+
 /**
  * A class that can be used to make async calls with concurrency and retry logic.
  *
@@ -98,6 +102,27 @@ export class AsyncCaller {
         ),
       { throwOnTimeout: true }
     );
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  callWithOptions<A extends any[], T extends (...args: A) => Promise<any>>(
+    options: AsyncCallerCallOptions,
+    callable: T,
+    ...args: Parameters<T>
+  ): Promise<Awaited<ReturnType<T>>> {
+    // Note this doesn't cancel the underlying request,
+    // when available prefer to use the signal option of the underlying call
+    if (options.signal) {
+      return Promise.race([
+        this.call<A, T>(callable, ...args),
+        new Promise<never>((_, reject) => {
+          options.signal?.addEventListener("abort", () => {
+            reject(new Error("AbortError"));
+          });
+        }),
+      ]);
+    }
+    return this.call<A, T>(callable, ...args);
   }
 
   fetch(...args: Parameters<typeof fetch>): ReturnType<typeof fetch> {
