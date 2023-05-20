@@ -1,11 +1,11 @@
-import {GoogleAuth} from "google-auth-library";
-import {BaseLanguageModelCallOptions} from "../base_language/index.js";
-import {AsyncCaller} from "./async_caller.js";
+import { GoogleAuth } from "google-auth-library";
+import { BaseLanguageModelCallOptions } from "../base_language/index.js";
+import { AsyncCaller } from "./async_caller.js";
 import {
   GoogleVertexAiBasePrediction,
   GoogleVertexAiConnectionParams,
   GoogleVertexAiLLMResponse,
-  GoogleVertexAiModelParams
+  GoogleVertexAiModelParams,
 } from "../types/googlevertexai-types.js";
 
 export class GoogleVertexAiConnection<

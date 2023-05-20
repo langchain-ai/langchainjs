@@ -1,4 +1,4 @@
-import {BaseLLMParams} from "../llms/index.js";
+import { BaseLLMParams } from "../llms/index.js";
 
 export interface GoogleVertexAiConnectionParams {
   /** Hostname for the API call */
@@ -18,7 +18,7 @@ export interface GoogleVertexAiModelParams {
   /**
    * Maximum number of tokens to generate in the completion.
    */
-  maxTokens?: number;
+  maxOutputTokens?: number;
 
   /**
    * Top-p changes how the model selects tokens for output.
@@ -60,4 +60,3 @@ export interface GoogleVertexAiLLMResponse<
     predictions: PredictionType[];
   };
 }
-

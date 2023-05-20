@@ -3,8 +3,9 @@ import { Generation, LLMResult } from "../schema/index.js";
 import { GoogleVertexAiConnection } from "../util/googlevertexai-connection.js";
 import {
   GoogleVertexAiBaseLLMInput,
-  GoogleVertexAiBasePrediction, GoogleVertexAiLLMResponse,
-  GoogleVertexAiModelParams
+  GoogleVertexAiBasePrediction,
+  GoogleVertexAiLLMResponse,
+  GoogleVertexAiModelParams,
 } from "../types/googlevertexai-types.js";
 
 export interface GoogleVertexAiTextInput extends GoogleVertexAiBaseLLMInput {}
@@ -19,7 +20,6 @@ interface GoogleVertexAiLLMTextInstance {
 interface TextPrediction extends GoogleVertexAiBasePrediction {
   content: string;
 }
-
 
 /**
  * Enables calls to the Google Cloud's Vertex AI API to access
@@ -43,7 +43,7 @@ export class GoogleVertexAiTextLLM
 
   temperature = 0.7;
 
-  maxTokens = 256;
+  maxOutputTokens = 256;
 
   topP = 0.8;
 
@@ -60,11 +60,14 @@ export class GoogleVertexAiTextLLM
 
     this.model = fields?.model ?? this.model;
     this.temperature = fields?.temperature ?? this.temperature;
-    this.maxTokens = fields?.maxTokens ?? this.maxTokens;
+    this.maxOutputTokens = fields?.maxOutputTokens ?? this.maxOutputTokens;
     this.topP = fields?.topP ?? this.topP;
     this.topK = fields?.topK ?? this.topK;
 
-    this.connection = new GoogleVertexAiConnection(fields, this.caller);
+    this.connection = new GoogleVertexAiConnection(
+      { ...fields, ...this },
+      this.caller
+    );
   }
 
   _llmType(): string {
@@ -92,7 +95,7 @@ export class GoogleVertexAiTextLLM
       temperature: this.temperature,
       topK: this.topK,
       topP: this.topP,
-      maxTokens: this.maxTokens,
+      maxOutputTokens: this.maxOutputTokens,
     };
     const result = await this.connection.request(
       [instance],

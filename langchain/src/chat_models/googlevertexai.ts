@@ -9,12 +9,12 @@ import {
   SystemChatMessage,
 } from "../schema/index.js";
 import { BaseLanguageModelCallOptions } from "../base_language/index.js";
-import {GoogleVertexAiConnection} from "../util/googlevertexai-connection.js";
+import { GoogleVertexAiConnection } from "../util/googlevertexai-connection.js";
 import {
   GoogleVertexAiBaseLLMInput,
   GoogleVertexAiBasePrediction,
   GoogleVertexAiLLMResponse,
-  GoogleVertexAiModelParams
+  GoogleVertexAiModelParams,
 } from "../types/googlevertexai-types.js";
 
 /**
@@ -86,7 +86,7 @@ export interface GoogleVertexAiChatCallOptions
  *   path of a credentials file for a service account permitted to the
  *   Google Cloud project using Vertex AI.
  */
-export class GoogleVertexAiChat
+export class ChatGoogleVertexAi
   extends BaseChatModel
   implements GoogleVertexAiChatInput
 {
@@ -96,7 +96,7 @@ export class GoogleVertexAiChat
 
   temperature = 0.2;
 
-  maxTokens = 256;
+  maxOutputTokens = 256;
 
   topP = 0.8;
 
@@ -129,7 +129,10 @@ export class GoogleVertexAiChat
     this.examples = fields?.examples ?? this.examples;
     this.roleAlias = fields?.roleAlias ?? this.roleAlias;
 
-    this.connection = new GoogleVertexAiConnection(fields, this.caller);
+    this.connection = new GoogleVertexAiConnection(
+      { ...fields, ...this },
+      this.caller
+    );
   }
 
   _combineLLMOutput(): // ...llmOutputs: LLMResult["llmOutput"][]
@@ -161,7 +164,7 @@ export class GoogleVertexAiChat
       temperature: this.temperature,
       topK: this.topK,
       topP: this.topP,
-      maxTokens: this.maxTokens,
+      maxOutputTokens: this.maxOutputTokens,
     };
 
     const result = await this.connection.request(
