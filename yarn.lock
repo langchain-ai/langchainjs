@@ -13833,6 +13833,7 @@ __metadata:
     "@types/js-yaml": ^4
     "@typescript-eslint/eslint-plugin": ^5.51.0
     "@typescript-eslint/parser": ^5.51.0
+    "@upstash/redis": ^1.20.6
     "@zilliz/milvus2-sdk-node": ^2.2.7
     axios: ^0.26.0
     chromadb: ^1.4.0
@@ -18087,6 +18088,7 @@ __metadata:
     "@tensorflow-models/universal-sentence-encoder": "*"
     "@tensorflow/tfjs-converter": "*"
     "@tensorflow/tfjs-core": "*"
+    "@upstash/redis": ^1.20.6
     "@zilliz/milvus2-sdk-node": ">=2.2.7"
     apify-client: ^2.7.1
     axios: "*"
