@@ -29,7 +29,7 @@
     "@prisma/client": "^4.11.0",
     "@supabase/supabase-js": "^2.10.0",
     "@tensorflow/tfjs-backend-cpu": "^4.4.0",
-    "@zilliz/milvus2-sdk-node": "^2.2.0",
+    "@zilliz/milvus2-sdk-node": "^2.2.7",
     "axios": "^0.26.0",
     "chromadb": "^1.4.0",
     "faiss-node": "^0.1.1",

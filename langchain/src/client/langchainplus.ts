@@ -1,5 +1,8 @@
-import { BaseRun } from "../callbacks/handlers/tracer.js";
-import { LangChainTracer } from "../callbacks/handlers/tracer_langchain.js";
+import { BaseRun, Run, RunType } from "../callbacks/handlers/tracer.js";
+import {
+  LangChainTracer,
+  TracerSession,
+} from "../callbacks/handlers/tracer_langchain.js";
 import {
   ChainValues,
   LLMResult,
@@ -48,6 +51,21 @@ export interface Example extends BaseExample {
   created_at: string;
   modified_at: string;
   runs: RunResult[];
+}
+
+interface ListRunsParams {
+  sessionId?: string;
+  sessionName?: string;
+  executionOrder?: number;
+  runType?: RunType;
+  error?: boolean;
+}
+interface UploadCSVParams {
+  csvFile: Blob;
+  fileName: string;
+  inputKeys: string[];
+  outputKeys: string[];
+  description?: string;
 }
 
 export type DatasetRunResults = Record<
@@ -209,26 +227,21 @@ export class LangChainPlusClient {
     return headers;
   }
 
-  private get queryParams(): { [param: string]: string } {
-    return { tenant_id: this.tenantId };
+  private get queryParams(): URLSearchParams {
+    return new URLSearchParams({ tenant_id: this.tenantId });
   }
 
   private async _get<T>(
     path: string,
-    queryParams: { [param: string]: string } = {}
+    queryParams?: URLSearchParams
   ): Promise<T> {
-    const params = { ...this.queryParams, ...queryParams };
-    let queryString = "";
-    for (const key in params) {
-      if (Object.prototype.hasOwnProperty.call(params, key)) {
-        queryString = queryString
-          ? `${queryString}&${encodeURIComponent(key)}=${encodeURIComponent(
-              params[key]
-            )}`
-          : `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`;
-      }
+    const params = this.queryParams;
+    if (queryParams) {
+      queryParams.forEach((value, key) => {
+        params.append(key, value);
+      });
     }
-    const url = `${this.apiUrl}${path}${queryString ? `?${queryString}` : ""}`;
+    const url = `${this.apiUrl}${path}?${params.toString()}`;
     const response = await this.caller.call(fetch, url, {
       method: "GET",
       headers: this.headers,
@@ -241,20 +254,91 @@ export class LangChainPlusClient {
     return response.json() as T;
   }
 
-  public async uploadCsv(
-    csvFile: Blob,
-    fileName: string,
-    description: string,
-    inputKeys: string[],
-    outputKeys: string[]
-  ): Promise<Dataset> {
+  public async readRun(runId: string): Promise<Run> {
+    return await this._get<Run>(`/runs/${runId}`);
+  }
+
+  public async listRuns({
+    sessionId,
+    sessionName,
+    executionOrder = 1,
+    runType,
+    error,
+  }: ListRunsParams): Promise<Run[]> {
+    const queryParams = new URLSearchParams();
+    if (sessionId) {
+      queryParams.append("session_id", sessionId);
+    }
+    if (sessionName) {
+      queryParams.append("session_name", sessionName);
+    }
+    if (executionOrder) {
+      queryParams.append("execution_order", executionOrder.toString());
+    }
+    if (runType) {
+      queryParams.append("run_type", runType);
+    }
+    if (error) {
+      queryParams.append("error", error.toString());
+    }
+
+    return this._get<Run[]>("/runs", queryParams);
+  }
+
+  public async readSession(
+    sessionId?: string,
+    sessionName?: string
+  ): Promise<TracerSession> {
+    let path = "/sessions";
+    const params = new URLSearchParams();
+    if (sessionId !== undefined && sessionName !== undefined) {
+      throw new Error("Must provide either sessionName or sessionId, not both");
+    } else if (sessionId !== undefined) {
+      path += `/${sessionId}`;
+    } else if (sessionName !== undefined) {
+      params.append("name", sessionName);
+    } else {
+      throw new Error("Must provide sessionName or sessionId");
+    }
+
+    const response = await this._get<TracerSession | TracerSession[]>(
+      path,
+      params
+    );
+    let result: TracerSession;
+    if (Array.isArray(response)) {
+      if (response.length === 0) {
+        throw new Error(
+          `Session[id=${sessionId}, name=${sessionName}] not found`
+        );
+      }
+      result = response[0] as TracerSession;
+    } else {
+      result = response as TracerSession;
+    }
+    return result;
+  }
+
+  public async listSessions(): Promise<TracerSession[]> {
+    return this._get<TracerSession[]>("/sessions");
+  }
+
+  public async uploadCsv({
+    csvFile,
+    fileName,
+    inputKeys,
+    outputKeys,
+    description,
+  }: UploadCSVParams): Promise<Dataset> {
     const url = `${this.apiUrl}/datasets/upload`;
     const formData = new FormData();
     formData.append("file", csvFile, fileName);
     formData.append("input_keys", inputKeys.join(","));
     formData.append("output_keys", outputKeys.join(","));
-    formData.append("description", description);
     formData.append("tenant_id", this.tenantId);
+    if (description) {
+      formData.append("description", description);
+    }
 
     const response = await this.caller.call(fetch, url, {
       method: "POST",
@@ -309,18 +393,17 @@ export class LangChainPlusClient {
     datasetName: string | undefined
   ): Promise<Dataset> {
     let path = "/datasets";
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const params: { [param: string]: any } = { limit: 1 };
+    // limit to 1 result
+    const params = new URLSearchParams({ limit: "1" });
     if (datasetId !== undefined && datasetName !== undefined) {
       throw new Error("Must provide either datasetName or datasetId, not both");
     } else if (datasetId !== undefined) {
       path += `/${datasetId}`;
     } else if (datasetName !== undefined) {
-      params.name = datasetName;
+      params.append("name", datasetName);
     } else {
       throw new Error("Must provide datasetName or datasetId");
     }
-
     const response = await this._get<Dataset | Dataset[]>(path, params);
     let result: Dataset;
     if (Array.isArray(response)) {
@@ -338,8 +421,7 @@ export class LangChainPlusClient {
 
   public async listDatasets(limit = 100): Promise<Dataset[]> {
     const path = "/datasets";
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const params: { [param: string]: any } = { limit };
+    const params = new URLSearchParams({ limit: limit.toString() });
     const response = await this._get<Dataset[]>(path, params);
     if (!Array.isArray(response)) {
       throw new Error(
@@ -440,9 +522,10 @@ export class LangChainPlusClient {
     } else {
       throw new Error("Must provide a datasetName or datasetId");
     }
-    const response = await this._get<Example[]>("/examples", {
-      dataset: datasetId_,
-    });
+    const response = await this._get<Example[]>(
+      "/examples",
+      new URLSearchParams({ dataset_id: datasetId_ })
+    );
     if (!Array.isArray(response)) {
       throw new Error(
         `Expected /examples to return an array, but got ${response}`
