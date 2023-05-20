@@ -3,7 +3,7 @@ import { ErrorCode } from "@zilliz/milvus2-sdk-node/dist/milvus/types.js";
 import { MilvusClient } from "@zilliz/milvus2-sdk-node/dist/milvus/index.js";
 
 import { Milvus } from "../milvus.js";
-import { OpenAIEmbeddings } from "../../embeddings/index.js";
+import { OpenAIEmbeddings } from "../../embeddings/openai.js";
 
 let collectionName: string;
 let embeddings: OpenAIEmbeddings;
@@ -13,15 +13,15 @@ beforeAll(async () => {
   collectionName = `test_collection_${Math.random().toString(36).substring(7)}`;
 });
 
-test.skip("Test Milvus.fromtext", async () => {
+test("Test Milvus.fromtext", async () => {
   const texts = [
-    `Tortoise: Labyrinth? Labyrinth? Could it Are we in the notorious Little 
+    `Tortoise: Labyrinth? Labyrinth? Could it Are we in the notorious Little
 Harmonic Labyrinth of the dreaded Majotaur?`,
     "Achilles: Yiikes! What is that?",
-    `Tortoise: They say-although I person never believed it myself-that an I 
-    Majotaur has created a tiny labyrinth sits in a pit in the middle of 
-    it, waiting innocent victims to get lost in its fears complexity. 
-    Then, when they wander and dazed into the center, he laughs and 
+    `Tortoise: They say-although I person never believed it myself-that an I
+    Majotaur has created a tiny labyrinth sits in a pit in the middle of
+    it, waiting innocent victims to get lost in its fears complexity.
+    Then, when they wander and dazed into the center, he laughs and
     laughs at them-so hard, that he laughs them to death!`,
     "Achilles: Oh, no!",
     "Tortoise: But it's only a myth. Courage, Achilles.",
@@ -53,7 +53,7 @@ Harmonic Labyrinth of the dreaded Majotaur?`,
   ]);
 });
 
-test.skip("Test Milvus.fromExistingCollection", async () => {
+test("Test Milvus.fromExistingCollection", async () => {
   const milvus = await Milvus.fromExistingCollection(embeddings, {
     collectionName,
   });
@@ -77,7 +77,7 @@ afterAll(async () => {
   if (!process.env.MILVUS_URL) return;
   // eslint-disable-next-line no-process-env
   const client = new MilvusClient(process.env.MILVUS_URL as string);
-  const dropRes = await client.collectionManager.dropCollection({
+  const dropRes = await client.dropCollection({
     collection_name: collectionName,
   });
   // console.log("Drop collection response: ", dropRes)

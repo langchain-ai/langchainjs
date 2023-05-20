@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.77",
+  "version": "0.0.78",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -373,6 +373,7 @@
     "@types/uuid": "^9",
     "@typescript-eslint/eslint-plugin": "^5.58.0",
     "@typescript-eslint/parser": "^5.58.0",
+    "@zilliz/milvus2-sdk-node": ">=2.2.7",
     "apify-client": "^2.7.1",
     "axios": "^0.26.0",
     "cheerio": "^1.0.0-rc.12",
@@ -426,7 +427,7 @@
     "@tensorflow-models/universal-sentence-encoder": "*",
     "@tensorflow/tfjs-converter": "*",
     "@tensorflow/tfjs-core": "*",
-    "@zilliz/milvus2-sdk-node": "^2.2.0",
+    "@zilliz/milvus2-sdk-node": ">=2.2.7",
     "apify-client": "^2.7.1",
     "axios": "*",
     "cheerio": "^1.0.0-rc.12",

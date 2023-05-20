@@ -5302,17 +5302,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@grpc/grpc-js@npm:^1.2.12":
-  version: 1.8.13
-  resolution: "@grpc/grpc-js@npm:1.8.13"
+"@grpc/grpc-js@npm:^1.8.14":
+  version: 1.8.14
+  resolution: "@grpc/grpc-js@npm:1.8.14"
   dependencies:
     "@grpc/proto-loader": ^0.7.0
     "@types/node": ">=12.12.47"
-  checksum: bc74a6aa4c677ec7824c26f94b9270cab2489b2ebe9731d8acc2a15e882b6d2a9d20e1205938862fc20296e9784a33b0818427e426718ebdd123e621041fd26c
+  checksum: 7b889ae67cde5eb9b4feb92d54e73945d881309b9b879a2dde478fa7850b99835efa7592a8154a0f923851d7a18a177c106f5f52b45061180bb04aef7783c1c9
   languageName: node
   linkType: hard
 
-"@grpc/proto-loader@npm:^0.7.0, @grpc/proto-loader@npm:^0.7.3":
+"@grpc/proto-loader@npm:^0.7.0, @grpc/proto-loader@npm:^0.7.6":
   version: 0.7.6
   resolution: "@grpc/proto-loader@npm:0.7.6"
   dependencies:
@@ -6039,15 +6039,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@mendable/search@npm:^0.0.93":
-  version: 0.0.93
-  resolution: "@mendable/search@npm:0.0.93"
+"@mendable/search@npm:^0.0.102":
+  version: 0.0.102
+  resolution: "@mendable/search@npm:0.0.102"
   dependencies:
     posthog-js: ^1.45.1
   peerDependencies:
     react: ^17.x || ^18.x
     react-dom: ^17.x || ^18.x
-  checksum: edad3ba1e82c36473de1e6f6261671a7ecc84375db3dc939f469d0ea3fdde5d1117e8ec2e860e18ce4359caa2ce7aa108910f8f234268e45ab56b29c4bf69f9e
+  checksum: 5bcbc2a10d69532e0ec29d437c94f87a1531fe975fdd0da23d82fa9767903e1d4519bdf061edd7b8ab04d3ccfdcb60a08464ca68dc288e35a9da6c09d043d1d5
   languageName: node
   linkType: hard
 
@@ -8866,14 +8866,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@zilliz/milvus2-sdk-node@npm:^2.2.0":
-  version: 2.2.4
-  resolution: "@zilliz/milvus2-sdk-node@npm:2.2.4"
+"@zilliz/milvus2-sdk-node@npm:>=2.2.7, @zilliz/milvus2-sdk-node@npm:^2.2.7":
+  version: 2.2.10
+  resolution: "@zilliz/milvus2-sdk-node@npm:2.2.10"
   dependencies:
-    "@grpc/grpc-js": ^1.2.12
-    "@grpc/proto-loader": ^0.7.3
-    protobufjs: ^7.1.2
-  checksum: 63484614585d26ae6b28293ef3b0ef8f4080e82aea4365996879a23ed81cb7454c549a897d050e9e7b09bac91a2a4dd48fd1c7908999bb8d4971fe20d982504f
+    "@grpc/grpc-js": ^1.8.14
+    "@grpc/proto-loader": ^0.7.6
+    protobufjs: ^7.2.3
+  checksum: 895404192618831cfe2ca5dd0c26d6b04110e62af7edca591c4477d6241f4be9c4b0c0569e0a8903fb9513d58b5cf743cf6c2322d5becc0893bf590a808148d1
   languageName: node
   linkType: hard
 
@@ -12182,7 +12182,7 @@ __metadata:
     "@docusaurus/preset-classic": 2.4.0
     "@docusaurus/remark-plugin-npm2yarn": ^2.4.0
     "@mdx-js/react": ^1.6.22
-    "@mendable/search": ^0.0.93
+    "@mendable/search": ^0.0.102
     clsx: ^1.2.1
     docusaurus-plugin-typedoc: next
     eslint: ^8.19.0
@@ -13824,7 +13824,7 @@ __metadata:
     "@types/js-yaml": ^4
     "@typescript-eslint/eslint-plugin": ^5.51.0
     "@typescript-eslint/parser": ^5.51.0
-    "@zilliz/milvus2-sdk-node": ^2.2.0
+    "@zilliz/milvus2-sdk-node": ^2.2.7
     axios: ^0.26.0
     chromadb: ^1.4.0
     dotenv: ^16.0.3
@@ -18009,6 +18009,7 @@ __metadata:
     "@types/uuid": ^9
     "@typescript-eslint/eslint-plugin": ^5.58.0
     "@typescript-eslint/parser": ^5.58.0
+    "@zilliz/milvus2-sdk-node": ">=2.2.7"
     ansi-styles: ^5.0.0
     apify-client: ^2.7.1
     axios: ^0.26.0
@@ -18076,7 +18077,7 @@ __metadata:
     "@tensorflow-models/universal-sentence-encoder": "*"
     "@tensorflow/tfjs-converter": "*"
     "@tensorflow/tfjs-core": "*"
-    "@zilliz/milvus2-sdk-node": ^2.2.0
+    "@zilliz/milvus2-sdk-node": ">=2.2.7"
     apify-client: ^2.7.1
     axios: "*"
     cheerio: ^1.0.0-rc.12
@@ -21921,7 +21922,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"protobufjs@npm:^7.0.0, protobufjs@npm:^7.1.2":
+"protobufjs@npm:^7.0.0, protobufjs@npm:^7.2.3":
   version: 7.2.3
   resolution: "protobufjs@npm:7.2.3"
   dependencies:
