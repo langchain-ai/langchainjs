@@ -8,14 +8,14 @@ import {
   MessageType,
   SystemChatMessage,
 } from "../schema/index.js";
+import { BaseLanguageModelCallOptions } from "../base_language/index.js";
+import {GoogleVertexAiConnection} from "../util/google-connection.js";
 import {
   GoogleVertexAiBaseLLMInput,
-  GoogleVertexAiConnection,
   GoogleVertexAiBasePrediction,
-  GoogleVertexAiModelParams,
   GoogleVertexAiLLMResponse,
-} from "../llms/googlevertexai.js";
-import { BaseLanguageModelCallOptions } from "../base_language/index.js";
+  GoogleVertexAiModelParams
+} from "../types/googlevertexai-types.js";
 
 /**
  * Represents a single "example" exchange that can be provided to
