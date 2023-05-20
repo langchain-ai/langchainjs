@@ -169,6 +169,7 @@ const requiresOptionalDependency = [
   "document_loaders/web/hn",
   "document_loaders/web/imsdb",
   "document_loaders/web/github",
+  "document_loaders/web/notiondb",
   "document_loaders/web/s3",
   "document_loaders/web/confluence",
   "document_loaders/fs/directory",
