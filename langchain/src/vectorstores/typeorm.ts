@@ -1,9 +1,15 @@
 import { Metadata } from "@opensearch-project/opensearch/api/types.js";
+
 import { DataSource, DataSourceOptions, EntitySchema } from "typeorm";
 import { VectorStore } from "./base.js";
 import { Embeddings } from "../embeddings/base.js";
 import { Document } from "../document.js";
 import { getEnvironmentVariable } from "../util/env.js";
+import {
+  getSourceNameFromDocument,
+  getSourceTypeFromDocument,
+  getUniqueIDFromDocument,
+} from "../util/document_utils.js";
 
 export interface TypeORMVectorStoreArgs {
   postgresConnectionOptions: DataSourceOptions;
@@ -14,8 +20,6 @@ export interface TypeORMVectorStoreArgs {
 
 export class TypeORMVectorStoreDocument extends Document {
   embedding: string;
-
-  id?: string;
 }
 
 const defaultDocumentTableName = "documents";
@@ -37,37 +41,44 @@ export class TypeORMVectorStore extends VectorStore {
     super(embeddings, fields);
     this.tableName = fields.tableName || defaultDocumentTableName;
     this.filter = fields.filter;
-
     const TypeORMDocumentEntity = new EntitySchema<TypeORMVectorStoreDocument>({
-      name: fields.tableName ?? defaultDocumentTableName,
-      columns: {
-        id: {
-          generated: "uuid",
-          type: "uuid",
-          primary: true,
-        },
-        pageContent: {
-          type: String,
-        },
-        metadata: {
-          type: "jsonb",
-        },
-        embedding: {
-          type: String,
-        },
-      },
-    });
-    const appDataSource = new DataSource({
-      entities: [TypeORMDocumentEntity],
-      ...fields.postgresConnectionOptions,
-    });
-    this.appDataSource = appDataSource;
-    this.documentEntity = TypeORMDocumentEntity;
+          name: fields.tableName ?? defaultDocumentTableName,
+          columns: {
+              id: {
+                  generated: "uuid",
+                  type: "uuid",
+                  primary: true,
+              },
+              pageContent: {
+                  type: String,
+              },
+              metadata: {
+                  type: "jsonb",
+              },
+              embedding: {
+                  type: String,
+              },
+              sourceType: {
+                  type: String,
+              },
+              sourceName: {
+                  type: String,
+              },
+              hash: {
+                  type: String,
+              },
+          },
+      });
+      this.appDataSource = new DataSource({
+          entities: [TypeORMDocumentEntity],
+          ...fields.postgresConnectionOptions,
+      });
+      this.documentEntity = TypeORMDocumentEntity;
 
-    this._verbose =
-      getEnvironmentVariable("LANGCHAIN_VERBOSE") === "true" ??
-      fields.verbose ??
-      false;
+      this._verbose =
+        getEnvironmentVariable("LANGCHAIN_VERBOSE") === "true" ??
+        fields.verbose ??
+        false;
   }
 
   static async fromDataSource(
@@ -95,12 +106,20 @@ export class TypeORMVectorStore extends VectorStore {
   }
 
   async addVectors(vectors: number[][], documents: Document[]): Promise<void> {
+    const { createHash } = await import("node:crypto");
     const rows = vectors.map((embedding, idx) => {
       const embeddingString = `[${embedding.join(",")}]`;
+      const hash = createHash("sha1");
       const documentRow = {
         pageContent: documents[idx].pageContent,
         embedding: embeddingString,
         metadata: documents[idx].metadata,
+        id: documents[idx].id ?? getUniqueIDFromDocument(documents[idx]),
+        sourceType: getSourceTypeFromDocument(documents[idx]),
+        sourceName: getSourceNameFromDocument(documents[idx]),
+        hash:
+          documents[idx].hash ??
+          hash.update(documents[idx].pageContent).digest("hex"),
       };
 
       return documentRow;
@@ -110,14 +129,70 @@ export class TypeORMVectorStore extends VectorStore {
       this.documentEntity
     );
 
+    // For a given document, we delete all documents in the database that have not the same id as
+    // the ones we are trying to upsert because it means that the split of the file is not the same anymore
+    for (const doc of rows) {
+      if (!doc.sourceName || !doc.sourceType) {
+        continue;
+      }
+      // Search for existing document with sourceName and type
+      const documentsInDatabase = await documentRepository.find({
+        where: {
+          sourceName: doc.sourceName,
+          sourceType: doc.sourceType,
+        },
+      });
+
+      const documentsThatWillBeUpserted = rows.filter(
+        (d) => d.sourceName === doc.sourceName
+      );
+      const idsDocumentsThatWillBeUpserted = documentsThatWillBeUpserted.map(
+        (d) => d.id
+      );
+
+      const idsDocumentsThatWeShouldDeleted = documentsInDatabase
+        .filter((d) => !idsDocumentsThatWillBeUpserted.includes(d.id))
+        .map((d) => d.id);
+
+      // console.log('idsDocumentsThatWeShouldDeleted', idsDocumentsThatWeShouldDeleted)
+
+      await documentRepository.delete({
+        id: {
+          in: idsDocumentsThatWeShouldDeleted,
+        },
+      });
+    }
+
+    const documentsToUpsert = [];
+    for (const row of rows) {
+      // Search for existing document with same sourceName and sourcetype
+      const documentsInDatabase = (await documentRepository.findOne({
+        where: {
+          id: row.id,
+        },
+      })) as Document;
+
+      if (documentsInDatabase) {
+        if (documentsInDatabase.hash === row.hash) {
+          console.log(row.id, "same hash ignore");
+        } else {
+          documentsToUpsert.push(row);
+          console.log(row.id, "need to update");
+        }
+      } else {
+        documentsToUpsert.push(row);
+        console.log(row.id, "need to create");
+      }
+    }
+
     const chunkSize = 500;
-    for (let i = 0; i < rows.length; i += chunkSize) {
-      const chunk = rows.slice(i, i + chunkSize);
+    for (let i = 0; i < documentsToUpsert.length; i += chunkSize) {
+      const chunk = documentsToUpsert.slice(i, i + chunkSize);
 
       try {
-        await documentRepository.save(chunk);
+        await documentRepository.upsert(chunk, [`id`]);
       } catch (e) {
-        console.error(e);
+        console.log(e);
         throw new Error(`Error inserting: ${chunk[0].pageContent}`);
       }
     }
@@ -158,15 +233,14 @@ export class TypeORMVectorStore extends VectorStore {
 
   async ensureTableInDatabase(): Promise<void> {
     await this.appDataSource.query("CREATE EXTENSION IF NOT EXISTS vector;");
-    await this.appDataSource.query(
-      'CREATE EXTENSION IF NOT EXISTS "uuid-ossp";'
-    );
-
     await this.appDataSource.query(`
       CREATE TABLE IF NOT EXISTS ${this.tableName} (
-        "id" uuid NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
+        id text PRIMARY KEY,
         "pageContent" text,
         metadata jsonb,
+        "sourceType" text,
+        "sourceName" text,
+        hash text,
         embedding vector
       );
     `);
