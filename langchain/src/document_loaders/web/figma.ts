@@ -11,13 +11,13 @@ export interface FigmaFile {
   document: Node;
   schemaVersion: number;
   mainFileKey: string;
-	branches: Array<{
-  	key: string;
-  	name: string;
-		thumbnail_url: string;
-  	last_modified: string;
+  branches: Array<{
+    key: string;
+    name: string;
+    thumbnail_url: string;
+    last_modified: string;
     link_access: string;
-	}>;
+  }>;
 }
 
 export interface FigmaLoaderParams {
