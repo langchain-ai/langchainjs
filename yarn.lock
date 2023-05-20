@@ -18139,6 +18139,8 @@ __metadata:
       optional: true
     "@tensorflow/tfjs-core":
       optional: true
+    "@upstash/redis":
+      optional: true
     "@zilliz/milvus2-sdk-node":
       optional: true
     apify-client:
