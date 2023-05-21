@@ -21,6 +21,7 @@ import { calculateMaxTokens } from "../base_language/count_tokens.js";
 import { OpenAIChat } from "./openai-chat.js";
 import { LLMResult } from "../schema/index.js";
 import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
+import fetch from 'cross-fetch';
 
 export { OpenAICallOptions, AzureOpenAIInput, OpenAIInput };
 
@@ -263,6 +264,16 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
     const choices: CreateCompletionResponseChoicesInner[] = [];
     const tokenUsage: TokenUsage = {};
 
+    let promptLayerRequestID: string | undefined;
+    let promptLayerRequestIDs: any = [];
+    const getPromptLayerId = (obj: any, promptLayerRequestId: string | undefined) => {
+      if (obj instanceof PromptLayerOpenAI && obj.returnPromptLayerID === true) {
+        return promptLayerRequestId
+      }
+
+      return undefined
+    }
+
     if (this.stop && stop) {
       throw new Error("Stop found in input and default params");
     }
@@ -284,6 +295,7 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
     }
 
     for (let i = 0; i < subPrompts.length; i += 1) {
+      const requestStartTime = Date.now();
       const data = params.stream
         ? await new Promise<CreateCompletionResponse>((resolve, reject) => {
             const choices: CreateCompletionResponseChoicesInner[] = [];
@@ -373,6 +385,40 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
             }
           );
 
+      const requestEndTime = Date.now();
+      const request = {
+        ...params,
+        prompt: subPrompts[i],
+      }
+
+      // https://github.com/MagnivOrg/promptlayer-js-helper
+      const promptLayerResp = await this.caller.call(fetch, "https://api.promptlayer.com/track-request", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({
+          function_name: "openai.Completion.create",
+          args: [],
+          kwargs: { engine: request.model, prompt: request.prompt },
+          tags: this instanceof PromptLayerOpenAI ? this.plTags : [],
+          request_response: data,
+          request_start_time: Math.floor(requestStartTime / 1000),
+          request_end_time: Math.floor(requestEndTime / 1000),
+          // return_pl_id: true,
+          api_key: this instanceof PromptLayerOpenAI ? this.promptLayerApiKey : undefined,
+        }),
+      });
+
+      const promptLayerRespBody = await promptLayerResp.json()
+
+      promptLayerRequestID = undefined
+      if (promptLayerRespBody && promptLayerRespBody.success === true) {
+        promptLayerRequestID = promptLayerRespBody.request_id
+      }
+
+      promptLayerRequestIDs.push(getPromptLayerId(this, promptLayerRequestID))
       choices.push(...data.choices);
 
       const {
@@ -395,13 +441,13 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
       }
     }
 
-    const generations = chunkArray(choices, this.n).map((promptChoices) =>
+    const generations = chunkArray(choices, this.n).map((promptChoices, idx) =>
       promptChoices.map((choice) => ({
         text: choice.text ?? "",
         generationInfo: {
           finishReason: choice.finish_reason,
           logprobs: choice.logprobs,
-          // returnPromptLayerID: ??? TODO: What is generations doing? Should I add returnPromptLayerID here?
+          promptLayerRequestID: promptLayerRequestIDs[idx]
         },
       }))
     );
@@ -485,7 +531,7 @@ export class PromptLayerOpenAI extends OpenAI {
           process.env?.PROMPTLAYER_API_KEY
         : undefined);
 
-    this.returnPromptLayerID = true // What should the default be?
+    this.returnPromptLayerID = fields?.returnPromptLayerID
     if (!this.promptLayerApiKey) {
       throw new Error("Missing PromptLayer API key");
     }
@@ -499,28 +545,7 @@ export class PromptLayerOpenAI extends OpenAI {
       return super.completionWithRetry(request, options);
     }
 
-    const requestStartTime = Date.now();
     const response = await super.completionWithRetry(request);
-    const requestEndTime = Date.now();
-
-    // https://github.com/MagnivOrg/promptlayer-js-helper
-    await this.caller.call(fetch, "https://api.promptlayer.com/track-request", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      body: JSON.stringify({
-        function_name: "openai.Completion.create",
-        args: [],
-        kwargs: { engine: request.model, prompt: request.prompt },
-        tags: this.plTags ?? [],
-        request_response: response,
-        request_start_time: Math.floor(requestStartTime / 1000),
-        request_end_time: Math.floor(requestEndTime / 1000),
-        api_key: this.promptLayerApiKey,
-      }),
-    });
 
     return response;
   }
