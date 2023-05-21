@@ -5,6 +5,9 @@ export type SerperParameters = {
   hl?: string;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type SerperResponseExtractor = (response: any) => Promise<string>;
+
 /**
  * Wrapper around serper.
  *
@@ -17,12 +20,15 @@ export class Serper extends Tool {
 
   protected params: Partial<SerperParameters>;
 
+  protected responseExtractor: SerperResponseExtractor;
+
   constructor(
     apiKey: string | undefined = typeof process !== "undefined"
       ? // eslint-disable-next-line no-process-env
         process.env?.SERPER_API_KEY
       : undefined,
-    params: Partial<SerperParameters> = {}
+    params: Partial<SerperParameters> = {},
+    responseExtractor: SerperResponseExtractor = defaultResponseExtractor
   ) {
     super();
 
@@ -34,6 +40,7 @@ export class Serper extends Tool {
 
     this.key = apiKey;
     this.params = params;
+    this.responseExtractor = responseExtractor;
   }
 
   name = "search";
@@ -60,33 +67,38 @@ export class Serper extends Tool {
 
     const json = await res.json();
 
-    if (json.answerBox?.answer) {
-      return json.answerBox.answer;
-    }
-
-    if (json.answerBox?.snippet) {
-      return json.answerBox.snippet;
-    }
-
-    if (json.answerBox?.snippet_highlighted_words) {
-      return json.answerBox.snippet_highlighted_words[0];
-    }
-
-    if (json.sportsResults?.game_spotlight) {
-      return json.sportsResults.game_spotlight;
-    }
-
-    if (json.knowledgeGraph?.description) {
-      return json.knowledgeGraph.description;
-    }
-
-    if (json.organic?.[0]?.snippet) {
-      return json.organic[0].snippet;
-    }
-
-    return "No good search result found";
+    return await this.responseExtractor(json);
   }
 
   description =
     "a search engine. useful for when you need to answer questions about current events. input should be a search query.";
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function defaultResponseExtractor(json: any) {
+  if (json.answerBox?.answer) {
+    return json.answerBox.answer;
+  }
+
+  if (json.answerBox?.snippet) {
+    return json.answerBox.snippet;
+  }
+
+  if (json.answerBox?.snippet_highlighted_words) {
+    return json.answerBox.snippet_highlighted_words[0];
+  }
+
+  if (json.sportsResults?.game_spotlight) {
+    return json.sportsResults.game_spotlight;
+  }
+
+  if (json.knowledgeGraph?.description) {
+    return json.knowledgeGraph.description;
+  }
+
+  if (json.organic?.[0]?.snippet) {
+    return json.organic[0].snippet;
+  }
+
+  return "No good search result found";
 }

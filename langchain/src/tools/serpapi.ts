@@ -278,6 +278,9 @@ export interface SerpAPIParameters extends BaseParameters {
   ijn?: string;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type SerpAPIResponseExtractor = (response: any) => Promise<string>;
+
 type UrlParameters = Record<
   string,
   string | number | boolean | undefined | null
@@ -295,13 +298,16 @@ export class SerpAPI extends Tool {
 
   protected baseUrl: string;
 
+  protected responseExtractor: SerpAPIResponseExtractor;
+
   constructor(
     apiKey: string | undefined = typeof process !== "undefined"
       ? // eslint-disable-next-line no-process-env
         process.env?.SERPAPI_API_KEY
       : undefined,
     params: Partial<SerpAPIParameters> = {},
-    baseUrl = "https://serpapi.com"
+    baseUrl = "https://serpapi.com",
+    responseExtractor: SerpAPIResponseExtractor = defaultResponseExtractor
   ) {
     super();
 
@@ -314,6 +320,7 @@ export class SerpAPI extends Tool {
     this.key = apiKey;
     this.params = params;
     this.baseUrl = baseUrl;
+    this.responseExtractor = responseExtractor;
   }
 
   name = "search";
@@ -350,37 +357,42 @@ export class SerpAPI extends Tool {
 
     const res = await resp.json();
 
-    if (res.error) {
-      throw new Error(`Got error from serpAPI: ${res.error}`);
-    }
-
-    if (res.answer_box?.answer) {
-      return res.answer_box.answer;
-    }
-
-    if (res.answer_box?.snippet) {
-      return res.answer_box.snippet;
-    }
-
-    if (res.answer_box?.snippet_highlighted_words) {
-      return res.answer_box.snippet_highlighted_words[0];
-    }
-
-    if (res.sports_results?.game_spotlight) {
-      return res.sports_results.game_spotlight;
-    }
-
-    if (res.knowledge_graph?.description) {
-      return res.knowledge_graph.description;
-    }
-
-    if (res.organic_results?.[0]?.snippet) {
-      return res.organic_results[0].snippet;
-    }
-
-    return "No good search result found";
+    return await this.responseExtractor(res);
   }
 
   description =
     "a search engine. useful for when you need to answer questions about current events. input should be a search query.";
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function defaultResponseExtractor(res: any) {
+  if (res.error) {
+    throw new Error(`Got error from serpAPI: ${res.error}`);
+  }
+
+  if (res.answer_box?.answer) {
+    return res.answer_box.answer;
+  }
+
+  if (res.answer_box?.snippet) {
+    return res.answer_box.snippet;
+  }
+
+  if (res.answer_box?.snippet_highlighted_words) {
+    return res.answer_box.snippet_highlighted_words[0];
+  }
+
+  if (res.sports_results?.game_spotlight) {
+    return res.sports_results.game_spotlight;
+  }
+
+  if (res.knowledge_graph?.description) {
+    return res.knowledge_graph.description;
+  }
+
+  if (res.organic_results?.[0]?.snippet) {
+    return res.organic_results[0].snippet;
+  }
+
+  return "No good search result found";
 }
