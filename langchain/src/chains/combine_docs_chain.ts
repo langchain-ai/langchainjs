@@ -37,7 +37,9 @@ export class StuffDocumentsChain
   documentVariableName = "context";
 
   get inputKeys() {
-    return [this.inputKey, ...this.llmChain.inputKeys];
+    return [this.inputKey, ...this.llmChain.inputKeys].filter(
+      (key) => key != this.documentVariableName
+    );
   }
 
   get outputKeys() {
@@ -294,7 +296,16 @@ export class RefineDocumentsChain
   documentPrompt = this.defaultDocumentPrompt;
 
   get inputKeys() {
-    return [this.inputKey, ...this.refineLLMChain.inputKeys];
+    return [
+      ...new Set([
+        this.inputKey,
+        ...this.llmChain.inputKeys,
+        ...this.refineLLMChain.inputKeys,
+      ]),
+    ].filter(
+      (key) =>
+        key != this.documentVariableName && key != this.initialResponseName
+    );
   }
 
   get outputKeys() {
