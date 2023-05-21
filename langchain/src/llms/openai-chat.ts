@@ -17,6 +17,11 @@ import type { StreamingAxiosConfiguration } from "../util/axios-types.js";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
 import { BaseLLMParams, LLM } from "./base.js";
 import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
+import fetch from 'cross-fetch';
+import {
+  Generation,
+  LLMResult,
+} from "../schema/index.js";
 
 export { OpenAICallOptions, OpenAIChatInput, AzureOpenAIInput };
 
@@ -415,7 +420,7 @@ export class PromptLayerOpenAIChat extends OpenAIChat {
     super(fields);
 
     this.plTags = fields?.plTags ?? [];
-    this.returnPromptLayerID = true;
+    this.returnPromptLayerID = fields?.returnPromptLayerID ?? false;
     this.promptLayerApiKey =
       fields?.promptLayerApiKey ??
       (typeof process !== "undefined"
@@ -436,29 +441,59 @@ export class PromptLayerOpenAIChat extends OpenAIChat {
       return super.completionWithRetry(request, options);
     }
 
-    const requestStartTime = Date.now();
     const response = await super.completionWithRetry(request);
-    const requestEndTime = Date.now();
-
-    // https://github.com/MagnivOrg/promptlayer-js-helper
-    await this.caller.call(fetch, "https://api.promptlayer.com/track-request", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      body: JSON.stringify({
-        function_name: "openai.ChatCompletion.create",
-        args: [],
-        kwargs: { engine: request.model, messages: request.messages },
-        tags: this.plTags ?? [],
-        request_response: response,
-        request_start_time: Math.floor(requestStartTime / 1000),
-        request_end_time: Math.floor(requestEndTime / 1000),
-        api_key: this.promptLayerApiKey,
-      }),
-    });
-
+    
     return response;
+  }
+
+  async _generate(
+    prompts: string[],
+    options: this["ParsedCallOptions"],
+    runManager?: CallbackManagerForLLMRun
+  ): Promise<LLMResult> {
+    let choice: any;
+
+    const generations: Generation[][] = await Promise.all(
+      prompts.map(async (prompt) => {
+        const requestStartTime = Date.now();
+        const text = await this._call(prompt, options, runManager);
+        const requestEndTime = Date.now();
+        
+        choice = [{ text }]
+
+        if (this instanceof PromptLayerOpenAIChat && this.returnPromptLayerID === true) {
+          // https://github.com/MagnivOrg/promptlayer-js-helper
+          const promptLayerResp = await this.caller.call(fetch, "https://api.promptlayer.com/track-request", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
+            body: JSON.stringify({
+              function_name: "openai.ChatCompletion.create",
+              args: [],
+              kwargs: { engine: this.modelName, messages: prompts },
+              tags: this.plTags ?? [],
+              request_response: text,
+              request_start_time: Math.floor(requestStartTime / 1000),
+              request_end_time: Math.floor(requestEndTime / 1000),
+              api_key: this.promptLayerApiKey,
+            }),
+          });
+          
+          let promptLayerRequestID: string | undefined = undefined
+          const promptLayerRespBody = await promptLayerResp.json()
+          if (promptLayerRespBody && promptLayerRespBody.success === true) {
+            promptLayerRequestID = promptLayerRespBody.request_id
+          }
+  
+          choice[0]["generationInfo"] = { promptLayerRequestID }
+        }
+
+        return choice
+      }
+    ));
+
+    return { generations };
   }
 }
