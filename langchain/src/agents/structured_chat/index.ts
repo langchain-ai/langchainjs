@@ -111,13 +111,13 @@ export class StructuredChatAgent extends Agent {
     tools: StructuredTool[],
     args?: StructuredChatCreatePromptArgs
   ) {
-    const { prefix = PREFIX, suffix = SUFFIX } = args ?? {};
+    const { prefix = PREFIX, suffix = SUFFIX, inputVariables = [] } = args ?? {};
     const template = [prefix, FORMAT_INSTRUCTIONS, suffix].join("\n\n");
     const messages = [
       new SystemMessagePromptTemplate(
         new PromptTemplate({
           template,
-          inputVariables: [],
+          inputVariables,
           partialVariables: {
             tool_schemas: StructuredChatAgent.createToolSchemasString(tools),
             tool_names: tools.map((tool) => tool.name).join(", "),
