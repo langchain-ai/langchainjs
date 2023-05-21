@@ -116,7 +116,12 @@ export class StructuredChatAgent extends Agent {
     tools: StructuredTool[],
     args?: StructuredChatCreatePromptArgs
   ) {
-    const { prefix = PREFIX, suffix = SUFFIX, inputVariables = ["input", "agent_scratchpad"], memoryPrompts = [] } = args ?? {};
+    const {
+      prefix = PREFIX,
+      suffix = SUFFIX,
+      inputVariables = ["input", "agent_scratchpad"],
+      memoryPrompts = [],
+    } = args ?? {};
     const template = [prefix, FORMAT_INSTRUCTIONS, suffix].join("\n\n");
     const humanMessageTemplate = "{input}\n\n{agent_scratchpad}";
     const messages = [
