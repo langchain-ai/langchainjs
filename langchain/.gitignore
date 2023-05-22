@@ -253,6 +253,9 @@ retrievers/remote.d.ts
 retrievers/supabase.cjs
 retrievers/supabase.js
 retrievers/supabase.d.ts
+retrievers/zep.cjs
+retrievers/zep.js
+retrievers/zep.d.ts
 retrievers/metal.cjs
 retrievers/metal.js
 retrievers/metal.d.ts
