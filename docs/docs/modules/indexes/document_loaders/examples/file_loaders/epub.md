@@ -16,8 +16,16 @@ npm install epub2 html-to-text
 
 ```typescript
 import { EPubLoader } from "langchain/document_loaders/fs/epub";
+import * as url from "node:url";
+import * as path from "node:path";
 
-const loader = new EPubLoader("src/document_loaders/example_data/example.epub");
+
+const filePath = path.resolve(
+  path.dirname(url.fileURLToPath(import.meta.url)),
+  "src/document_loaders/example_data/example.epub"
+);
+
+const loader = new EPubLoader(filePath);
 
 const docs = await loader.load();
 ```
@@ -26,9 +34,17 @@ const docs = await loader.load();
 
 ```typescript
 import { EPubLoader } from "langchain/document_loaders/fs/epub";
+import * as url from "node:url";
+import * as path from "node:path";
+
+
+const filePath = path.resolve(
+  path.dirname(url.fileURLToPath(import.meta.url)),
+  "src/document_loaders/example_data/example.epub"
+);
 
 const loader = new EPubLoader(
-  "src/document_loaders/example_data/example.epub",
+  filePath,
   {
     splitChapters: false,
   }
