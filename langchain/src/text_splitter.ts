@@ -19,7 +19,7 @@ export abstract class TextSplitter implements TextSplitterParams {
   chunkOverlap = 200;
 
   constructor(fields?: Partial<TextSplitterParams>) {
-    this.chunkSize = fields?.chunkSize || this.chunkSize;
+    this.chunkSize = fields?.chunkSize ?? this.chunkSize;
     this.chunkOverlap = fields?.chunkOverlap ?? this.chunkOverlap;
     if (this.chunkOverlap >= this.chunkSize) {
       throw new Error("Cannot have chunkOverlap >= chunkSize");
