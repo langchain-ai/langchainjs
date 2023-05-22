@@ -4,7 +4,6 @@ import { beforeEach, describe, expect, test } from "@jest/globals";
 import { faker } from "@faker-js/faker";
 import * as uuid from "uuid";
 import { Document } from "../../document.js";
-// import { OpenAIEmbeddings } from "../../embeddings/openai.js";
 import { Chroma } from "../chroma.js";
 import { OpenAIEmbeddings } from "../../embeddings/openai.js";
 
