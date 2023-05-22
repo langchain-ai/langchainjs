@@ -181,9 +181,17 @@ async function getModelOrFactoryType(
 }
 
 export class LangChainPlusClient {
-  private apiKey?: string;
+  private apiKey?: string =
+    typeof process !== "undefined"
+      ? // eslint-disable-next-line no-process-env
+        process.env?.LANGCHAIN_API_KEY
+      : undefined;
 
-  private apiUrl: string;
+  private apiUrl =
+    (typeof process !== "undefined"
+      ? // eslint-disable-next-line no-process-env
+        process.env?.LANGCHAIN_ENDPOINT
+      : undefined) || "http://localhost:8000";
 
   private tenantId: string;
 
@@ -206,15 +214,21 @@ export class LangChainPlusClient {
     apiUrl: string | undefined = undefined,
     apiKey: string | undefined = undefined
   ): Promise<LangChainPlusClient> {
-    let url = apiUrl ?? process.env.LANGCHAIN_PLUS_API_URL;
-    if (!url) {
-      throw new Error(
-        "API URL must be provided manually or" +
-          " via environment as LANGCHAIN_PLUS_API_URL"
-      );
-    }
-    const tenantId = await getSeededTenantId(url, apiKey);
-    return new LangChainPlusClient(url, tenantId, apiKey);
+    const apiUrl_ =
+      apiUrl ??
+      ((typeof process !== "undefined"
+        ? // eslint-disable-next-line no-process-env
+          process.env?.LANGCHAIN_ENDPOINT
+        : undefined) ||
+        "http://localhost:8000");
+    const apiKey_ =
+      apiKey ??
+      (typeof process !== "undefined"
+        ? // eslint-disable-next-line no-process-env
+          process.env?.LANGCHAIN_API_KEY
+        : undefined);
+    const tenantId = await getSeededTenantId(apiUrl_, apiKey_);
+    return new LangChainPlusClient(apiUrl_, tenantId, apiKey_);
   }
 
   private validateApiKeyIfHosted(): void {
