@@ -15,6 +15,9 @@ import {
   HumanChatMessage,
 } from "../schema/index.js";
 
+import { InputValues, MemoryVariables, getBufferString } from "./base.js";
+import { BaseChatMemory, BaseChatMemoryInput } from "./chat_memory.js";
+
 /**
  * A ChatMemoryHistory implementation that uses Zep as backend Memory store for conversations. 
  * Recommended Usage::
@@ -36,7 +39,7 @@ import {
  *  https://github.com/getzep/zep-js
  * 
  */
-class ZepChatMessageHistory extends BaseChatMessageHistory {
+export class ZepChatMessageHistory extends BaseChatMessageHistory {
   private zepClient: ZepClient;
 
   private sessionID: string;
@@ -187,4 +190,64 @@ class ZepChatMessageHistory extends BaseChatMessageHistory {
   }
 }
 
-export default ZepChatMessageHistory;
+export interface ZepMemoryInput extends BaseChatMemoryInput {
+  humanPrefix?: string;
+
+  aiPrefix?: string;
+
+  memoryKey?: string;
+
+  baseURL?: string;
+
+  sessionID?: string;
+
+}
+
+export class ZepMemory extends BaseChatMemory implements ZepMemoryInput {
+  humanPrefix = "Human";
+
+  aiPrefix = "AI";
+
+  memoryKey = "history";
+
+  baseURL?: string; // Define the baseURL property
+
+  sessionID?: string; // Define the sessionID property
+
+  constructor(fields?: ZepMemoryInput) {
+    super({
+      chatHistory: fields?.chatHistory,
+      returnMessages: fields?.returnMessages ?? false,
+      inputKey: fields?.inputKey,
+      outputKey: fields?.outputKey,
+    });
+
+    this.humanPrefix = fields?.humanPrefix ?? this.humanPrefix;
+    this.aiPrefix = fields?.aiPrefix ?? this.aiPrefix;
+    this.memoryKey = fields?.memoryKey ?? this.memoryKey;
+    this.baseURL = fields?.baseURL ?? this.baseURL;
+    this.sessionID = fields?.sessionID ?? this.sessionID;
+  }
+
+  get memoryKeys() {
+    return [this.memoryKey];
+  }
+
+  async loadMemoryVariables(_values: InputValues): Promise<MemoryVariables> {
+    const messages = await this.chatHistory.getMessages();
+    if (this.returnMessages) {
+      const result = {
+        [this.memoryKey]: messages,
+      };
+      return result;
+    }
+    const result = {
+      [this.memoryKey]: getBufferString(
+        messages,
+        this.humanPrefix,
+        this.aiPrefix
+      ),
+    };
+    return result;
+  }
+}
