@@ -15,10 +15,10 @@ LangChain provides an assortment of chains specifically tailored for dealing wit
 - `MapReduceDocumentsChain`: This chain incorporates a preprocessing step to select relevant sections from each document until the total number of tokens is less than the maximum number of tokens allowed by the model. It then uses the transformed documents as context to answer the question. It is suitable for QA tasks over larger documents and can run the preprocessing step in parallel, reducing the running time.
 - `RefineDocumentsChain`: This chain iterates over the documents one by one, updating an ongoing answer with each iteration. It uses the previous version of the answer and the next document as context. It is suitable for QA tasks over a large number of documents.
 
-## Usage of `StuffDocumentsChain` and `MapReduceDocumentsChain`
+## Usage: `StuffDocumentsChain` and `MapReduceDocumentsChain`
 
 <CodeBlock language="typescript">{QAExample}</CodeBlock>
 
-## Usage of `RefineDocumentsChain`
+## Usage: `RefineDocumentsChain`
 
 <CodeBlock language="typescript">{RefineExample}</CodeBlock>
