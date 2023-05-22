@@ -16,7 +16,6 @@ import { BaseLLM } from "../llms/base.js";
 import { BaseChatModel } from "../chat_models/base.js";
 import { mapStoredMessagesToChatMessages } from "../stores/message/utils.js";
 import { AsyncCaller, AsyncCallerParams } from "../util/async_caller.js";
-import { integer } from "@opensearch-project/opensearch/api/types.js";
 
 export interface RunResult extends BaseRun {
   name: string;
@@ -199,23 +198,37 @@ export class LangChainPlusClient {
   private caller: AsyncCaller;
 
   constructor(config: {
-    tenantId: string;
+    tenantId?: string;
     apiUrl?: string;
     apiKey?: string;
     callerOptions?: AsyncCallerParams;
   }) {
     this.apiUrl = config.apiUrl ?? this.apiUrl;
     this.apiKey = config.apiKey;
-    this.tenantId = config.tenantId;
+    const tenantId =
+      config.tenantId ??
+      (typeof process !== "undefined"
+        ? // eslint-disable-next-line no-process-env
+          process.env?.LANGCHAIN_TENANT_ID
+        : undefined);
+    if (tenantId === undefined) {
+      throw new Error(
+        "No tenant ID provided and no LANGCHAIN_TENANT_ID env var"
+      );
+    } else {
+      this.tenantId = tenantId;
+    }
     this.validateApiKeyIfHosted();
     this.caller = new AsyncCaller(config.callerOptions ?? {});
   }
 
-  public static async create(config: {
-    apiUrl?: string;
-    apiKey?: string;
-    tenantId?: string;
-  }): Promise<LangChainPlusClient> {
+  public static async create(
+    config: {
+      apiUrl?: string;
+      apiKey?: string;
+      tenantId?: string;
+    } = {}
+  ): Promise<LangChainPlusClient> {
     const apiUrl_ =
       config.apiUrl ??
       ((typeof process !== "undefined"
@@ -229,12 +242,13 @@ export class LangChainPlusClient {
         ? // eslint-disable-next-line no-process-env
           process.env?.LANGCHAIN_API_KEY
         : undefined);
-    console.log(
-      `Creating LangChain+ client with API key ${apiKey_}` +
-        ` and API URL ${apiUrl_}`
-    );
     const tenantId_ =
-      config.tenantId ?? (await getSeededTenantId(apiUrl_, apiKey_));
+      config.tenantId ??
+      ((typeof process !== "undefined"
+        ? // eslint-disable-next-line no-process-env
+          process.env?.LANGCHAIN_TENANT_ID
+        : undefined) ||
+        (await getSeededTenantId(apiUrl_, apiKey_)));
     return new LangChainPlusClient({
       tenantId: tenantId_,
       apiKey: apiKey_,
@@ -298,11 +312,15 @@ export class LangChainPlusClient {
     error,
   }: ListRunsParams): Promise<Run[]> {
     const queryParams = new URLSearchParams();
-    if (sessionId) {
-      queryParams.append("session_id", sessionId);
-    }
+    let sessionId_ = sessionId;
     if (sessionName) {
-      queryParams.append("session_name", sessionName);
+      if (sessionId) {
+        throw new Error("Only one of session_id or session_name may be given");
+      }
+      sessionId_ = (await this.readSession({ sessionName })).id;
+    }
+    if (sessionId_) {
+      queryParams.append("session", sessionId_);
     }
     if (executionOrder) {
       queryParams.append("execution_order", executionOrder.toString());
@@ -310,7 +328,7 @@ export class LangChainPlusClient {
     if (runType) {
       queryParams.append("run_type", runType);
     }
-    if (error) {
+    if (error !== undefined) {
       queryParams.append("error", error.toString());
     }
 
@@ -397,7 +415,7 @@ export class LangChainPlusClient {
 
   public async createDataset(
     name: string,
-    description?: string
+    { description = undefined }: { description?: string }
   ): Promise<Dataset> {
     const response = await this.caller.call(fetch, `${this.apiUrl}/datasets`, {
       method: "POST",
@@ -460,8 +478,8 @@ export class LangChainPlusClient {
   public async listDatasets({
     limit = 100,
   }: {
-    limit?: integer;
-  }): Promise<Dataset[]> {
+    limit?: number;
+  } = {}): Promise<Dataset[]> {
     const path = "/datasets";
     const params = new URLSearchParams({ limit: limit.toString() });
     const response = await this._get<Dataset[]>(path, params);
@@ -485,7 +503,7 @@ export class LangChainPlusClient {
     if (datasetId !== undefined && datasetName !== undefined) {
       throw new Error("Must provide either datasetName or datasetId, not both");
     } else if (datasetName !== undefined) {
-      const dataset = await this.readDataset(undefined, datasetName);
+      const dataset = await this.readDataset({ datasetName });
       datasetId_ = dataset.id;
     }
     if (datasetId_ !== undefined) {
@@ -506,26 +524,26 @@ export class LangChainPlusClient {
     return results as Dataset;
   }
 
-  public async createExample({
-    inputs,
-    outputs,
-    datasetId = undefined,
-    datasetName = undefined,
-    createdAt = undefined,
-  }: {
-    inputs: RunInputs;
-    outputs: RunOutputs;
-    datasetId?: string;
-    datasetName?: string;
-    createdAt?: Date;
-  }): Promise<Example> {
+  public async createExample(
+    inputs: RunInputs,
+    outputs: RunOutputs,
+    {
+      datasetId = undefined,
+      datasetName = undefined,
+      createdAt = undefined,
+    }: {
+      datasetId?: string;
+      datasetName?: string;
+      createdAt?: Date;
+    }
+  ): Promise<Example> {
     let datasetId_ = datasetId;
     if (datasetId_ === undefined && datasetName === undefined) {
       throw new Error("Must provide either datasetName or datasetId");
     } else if (datasetId_ !== undefined && datasetName !== undefined) {
       throw new Error("Must provide either datasetName or datasetId, not both");
     } else if (datasetId_ === undefined) {
-      const dataset = await this.readDataset({ datasetName: datasetName });
+      const dataset = await this.readDataset({ datasetName });
       datasetId_ = dataset.id;
     }
 
@@ -578,7 +596,7 @@ export class LangChainPlusClient {
     }
     const response = await this._get<Example[]>(
       "/examples",
-      new URLSearchParams({ dataset_id: datasetId_ })
+      new URLSearchParams({ dataset: datasetId_ })
     );
     if (!Array.isArray(response)) {
       throw new Error(
@@ -607,7 +625,7 @@ export class LangChainPlusClient {
     example: Example,
     tracer: LangChainTracer,
     llm: BaseLLM,
-    numRepetitions = 1
+    { numRepetitions = 1 }: { numRepetitions?: number }
   ): Promise<(LLMResult | string)[]> {
     const results: (LLMResult | string)[] = await Promise.all(
       Array.from({ length: numRepetitions }).map(async () => {
@@ -627,7 +645,11 @@ export class LangChainPlusClient {
     example: Example,
     tracer: LangChainTracer,
     chainFactory: () => Promise<BaseChain>,
-    numRepetitions = 1
+    {
+      numRepetitions = 1,
+    }: {
+      numRepetitions?: number;
+    }
   ): Promise<(ChainValues | string)[]> {
     const results: (ChainValues | string)[] = await Promise.all(
       Array.from({ length: numRepetitions }).map(async () => {
@@ -647,7 +669,11 @@ export class LangChainPlusClient {
     example: Example,
     tracer: LangChainTracer,
     chatModel: BaseChatModel,
-    numRepetitions = 1
+    {
+      numRepetitions = 1,
+    }: {
+      numRepetitions?: number;
+    }
   ): Promise<(LLMResult | string)[]> {
     const results: (LLMResult | string)[] = await Promise.all(
       Array.from({ length: numRepetitions }).map(async () => {
@@ -670,10 +696,15 @@ export class LangChainPlusClient {
   public async runOnDataset(
     datasetName: string,
     llmOrChainFactory: BaseLanguageModel | (() => Promise<BaseChain>),
-    numRepetitions = 1,
-    sessionName: string | undefined = undefined
+    {
+      numRepetitions = 1,
+      sessionName = undefined,
+    }: {
+      numRepetitions?: number;
+      sessionName?: string;
+    } = {}
   ): Promise<DatasetRunResults> {
-    const examples = await this.listExamples(undefined, datasetName);
+    const examples = await this.listExamples({ datasetName });
     let sessionName_: string;
     if (sessionName === undefined) {
       const currentTime = new Date().toISOString();
@@ -691,12 +722,9 @@ export class LangChainPlusClient {
         });
         if (modelOrFactoryType === "llm") {
           const llm = llmOrChainFactory as BaseLLM;
-          const llmResult = await this.runLLM(
-            example,
-            tracer,
-            llm,
-            numRepetitions
-          );
+          const llmResult = await this.runLLM(example, tracer, llm, {
+            numRepetitions,
+          });
           results[example.id] = llmResult;
         } else if (modelOrFactoryType === "chainFactory") {
           const chainFactory = llmOrChainFactory as () => Promise<BaseChain>;
@@ -704,7 +732,7 @@ export class LangChainPlusClient {
             example,
             tracer,
             chainFactory,
-            numRepetitions
+            { numRepetitions }
           );
           results[example.id] = chainResult;
         } else if (modelOrFactoryType === "chatModel") {
@@ -713,7 +741,7 @@ export class LangChainPlusClient {
             example,
             tracer,
             chatModel,
-            numRepetitions
+            { numRepetitions }
           );
           results[example.id] = chatModelResult;
         } else {

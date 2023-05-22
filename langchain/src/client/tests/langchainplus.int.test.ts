@@ -39,11 +39,11 @@ test("Test LangChainPlus Client Dataset CRD", async () => {
   expect(datasets.map((d) => d.id)).toContain(datasetId);
 
   // Test Example CRD
-  const example = await client.createExample({
-    inputs: { col1: "addedExampleCol1" },
-    outputs: { col2: "addedExampleCol2" },
-    datasetId: newDataset.id,
-  });
+  const example = await client.createExample(
+    { col1: "addedExampleCol1" },
+    { col2: "addedExampleCol2" },
+    { datasetId: newDataset.id }
+  );
   const exampleValue = await client.readExample(example.id);
   expect(exampleValue.inputs.col1).toBe("addedExampleCol1");
   expect(exampleValue.outputs.col2).toBe("addedExampleCol2");
@@ -70,9 +70,9 @@ test("Test LangChainPlus Client Run Chat Model Over Simple Dataset", async () =>
   // Check if dataset name exists in listDatasets
   const datasets = await client.listDatasets({});
   if (!datasets.map((d) => d.name).includes(datasetName)) {
-    const newDataset = await client.createDataset(datasetName, description);
-    await client.createExample({
-      inputs: {
+    const newDataset = await client.createDataset(datasetName, { description });
+    await client.createExample(
+      {
         messages: [
           {
             text: "What is the airspeed velocity of an unladen swallow?",
@@ -80,15 +80,15 @@ test("Test LangChainPlus Client Run Chat Model Over Simple Dataset", async () =>
           },
         ],
       },
-      outputs: {
+      {
         generations: [
           {
             text: "The average airspeed velocity of an unladen European Swallow is about 24 miles per hour or 39 kilometers per hour.",
           },
         ],
       },
-      datasetId: newDataset.id,
-    });
+      { datasetId: newDataset.id }
+    );
   }
   const model = new ChatOpenAI({ temperature: 0 });
 
@@ -106,30 +106,27 @@ test("Test LangChainPlus Client Run LLM Over Simple Dataset", async () => {
   // Check if dataset name exists in listDatasets
   const datasets = await client.listDatasets({});
   if (!datasets.map((d) => d.name).includes(datasetName)) {
-    const newDataset = await client.createDataset(datasetName, description);
-    await client.createExample({
-      inputs: {
+    const newDataset = await client.createDataset(datasetName, { description });
+    await client.createExample(
+      {
         prompt: "Write LangChain backwards:",
       },
-      outputs: {
+      {
         generations: [
           {
             text: "niarhCgnaL",
           },
         ],
       },
-      datasetId: newDataset.id,
-    });
+      { datasetId: newDataset.id }
+    );
   }
   const model = new OpenAI({ temperature: 0 });
   const randomId = Math.random().toString(36).substring(7);
   const sessionName = `LangChainPlus Client Test ${randomId}`;
-  const results = await client.runOnDataset(
-    datasetName,
-    model,
-    undefined,
-    sessionName
-  );
+  const results = await client.runOnDataset(datasetName, model, {
+    sessionName,
+  });
   console.log(results);
   expect(Object.keys(results).length).toEqual(1);
   const sessions = await client.listSessions();
