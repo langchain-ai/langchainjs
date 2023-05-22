@@ -1,4 +1,4 @@
-import { v4 as uuidv4 } from "uuid";
+import * as uuid from "uuid";
 import type { ChromaClient as ChromaClientT, Collection } from "chromadb";
 
 import { Embeddings } from "../embeddings/base.js";
@@ -182,7 +182,7 @@ export class Chroma extends VectorStore {
 
 function ensureCollectionName(collectionName?: string) {
   if (!collectionName) {
-    return `langchain-${uuidv4()}`;
+    return `langchain-${uuid.v4()}`;
   }
   return collectionName;
 }

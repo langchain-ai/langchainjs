@@ -19,6 +19,21 @@ const embeddings = new OpenAIEmbeddings({
 });
 ```
 
+## Azure `OpenAIEmbeddings`
+
+The `OpenAIEmbeddings` class uses the OpenAI API on Azure to generate embeddings for a given text. By default it strips new line characters from the text, as recommended by OpenAI, but you can disable this by passing `stripNewLines: false` to the constructor.
+
+```typescript
+import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+
+const embeddings = new OpenAIEmbeddings({
+  azureOpenAIApiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.AZURE_OPENAI_API_KEY
+  azureOpenAIApiInstanceName: "YOUR-INSTANCE-NAME", // In Node.js defaults to process.env.AZURE_OPENAI_API_INSTANCE_NAME
+  azureOpenAIApiDeploymentName: "YOUR-DEPLOYMENT-NAME", // In Node.js defaults to process.env.AZURE_OPENAI_API_DEPLOYMENT_NAME
+  azureOpenAIApiVersion: "YOUR-API-VERSION", // In Node.js defaults to process.env.AZURE_OPENAI_API_VERSION
+});
+```
+
 ## `CohereEmbeddings`
 
 The `CohereEmbeddings` class uses the Cohere API to generate embeddings for a given text.

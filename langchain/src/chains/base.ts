@@ -125,10 +125,10 @@ export abstract class BaseChain extends BaseLangChain implements ChainInputs {
       await runManager?.handleChainError(e);
       throw e;
     }
-    await runManager?.handleChainEnd(outputValues);
     if (!(this.memory == null)) {
       await this.memory.saveContext(values, outputValues);
     }
+    await runManager?.handleChainEnd(outputValues);
     // add the runManager's currentRunId to the outputValues
     Object.defineProperty(outputValues, RUN_KEY, {
       value: runManager ? { runId: runManager?.runId } : undefined,
