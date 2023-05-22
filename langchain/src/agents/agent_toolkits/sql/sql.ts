@@ -26,14 +26,14 @@ export class SqlToolkit extends Toolkit {
 
   dialect = "sqlite";
 
-  constructor(db: SqlDatabase) {
+  constructor(db: SqlDatabase, llm?: BaseLanguageModel) {
     super();
     this.db = db;
     this.tools = [
       new QuerySqlTool(db),
       new InfoSqlTool(db),
       new ListTablesSqlTool(db),
-      new QueryCheckerTool(),
+      new QueryCheckerTool({ llm }),
     ];
   }
 }
