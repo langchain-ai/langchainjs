@@ -15,8 +15,6 @@ import { GoogleVertexAI } from "langchain/llms/googlevertexai";
 export const run = async () => {
   const model = new GoogleVertexAI({
     temperature: 0.7,
-    maxOutputTokens: 1000,
-    maxRetries: 5,
   });
   const res = await model.call(
     "What would be a good company name a company that makes colorful socks?"

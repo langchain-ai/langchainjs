@@ -8,7 +8,7 @@ import {
   GoogleVertexAIModelParams,
 } from "../types/googlevertexai-types.js";
 
-export class GoogleVertexAiConnection<
+export class GoogleVertexAIConnection<
   CallOptions extends BaseLanguageModelCallOptions,
   InstanceType,
   PredictionType extends GoogleVertexAIBasePrediction
@@ -61,7 +61,7 @@ export class GoogleVertexAiConnection<
     };
 
     async function _request() {
-      return await client.request(opts);
+      return client.request(opts);
     }
 
     const response = await this.caller.callWithOptions(

@@ -1,6 +1,6 @@
 import { BaseLLM } from "./base.js";
 import { Generation, LLMResult } from "../schema/index.js";
-import { GoogleVertexAiConnection } from "../util/googlevertexai-connection.js";
+import { GoogleVertexAIConnection } from "../util/googlevertexai-connection.js";
 import {
   GoogleVertexAIBaseLLMInput,
   GoogleVertexAIBasePrediction,
@@ -10,7 +10,7 @@ import {
 
 export interface GoogleVertexAITextInput extends GoogleVertexAIBaseLLMInput {}
 
-interface GoogleVertexAiLLMTextInstance {
+interface GoogleVertexAILLMTextInstance {
   content: string;
 }
 
@@ -40,15 +40,15 @@ export class GoogleVertexAI extends BaseLLM implements GoogleVertexAITextInput {
 
   temperature = 0.7;
 
-  maxOutputTokens = 256;
+  maxOutputTokens = 1024;
 
   topP = 0.8;
 
   topK = 40;
 
-  connection: GoogleVertexAiConnection<
+  private connection: GoogleVertexAIConnection<
     this["CallOptions"],
-    GoogleVertexAiLLMTextInstance,
+    GoogleVertexAILLMTextInstance,
     TextPrediction
   >;
 
@@ -61,7 +61,7 @@ export class GoogleVertexAI extends BaseLLM implements GoogleVertexAITextInput {
     this.topP = fields?.topP ?? this.topP;
     this.topK = fields?.topK ?? this.topK;
 
-    this.connection = new GoogleVertexAiConnection(
+    this.connection = new GoogleVertexAIConnection(
       { ...fields, ...this },
       this.caller
     );
@@ -75,8 +75,6 @@ export class GoogleVertexAI extends BaseLLM implements GoogleVertexAITextInput {
     prompts: string[],
     options: this["ParsedCallOptions"]
   ): Promise<LLMResult> {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
     const generations: Generation[][] = await Promise.all(
       prompts.map((prompt) => this._generatePrompt(prompt, options))
     );
@@ -99,7 +97,7 @@ export class GoogleVertexAI extends BaseLLM implements GoogleVertexAITextInput {
       parameters,
       options
     );
-    const prediction = this.convertResult(result);
+    const prediction = this.extractPredictionFromResponse(result);
     return [
       {
         text: prediction.content,
@@ -108,11 +106,11 @@ export class GoogleVertexAI extends BaseLLM implements GoogleVertexAITextInput {
     ];
   }
 
-  formatInstance(prompt: string): GoogleVertexAiLLMTextInstance {
+  formatInstance(prompt: string): GoogleVertexAILLMTextInstance {
     return { content: prompt };
   }
 
-  convertResult(
+  extractPredictionFromResponse(
     result: GoogleVertexAILLMResponse<TextPrediction>
   ): TextPrediction {
     return result?.data?.predictions[0];
