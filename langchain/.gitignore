@@ -115,6 +115,9 @@ vectorstores/myscale.d.ts
 vectorstores/redis.cjs
 vectorstores/redis.js
 vectorstores/redis.d.ts
+vectorstores/typesense.cjs
+vectorstores/typesense.js
+vectorstores/typesense.d.ts
 text_splitter.cjs
 text_splitter.js
 text_splitter.d.ts

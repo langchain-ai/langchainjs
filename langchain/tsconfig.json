@@ -68,6 +68,7 @@
       "src/vectorstores/prisma.ts",
       "src/vectorstores/myscale.ts",
       "src/vectorstores/redis.ts",
+      "src/vectorstores/typesense.ts",
       "src/text_splitter.ts",
       "src/memory/index.ts",
       "src/document.ts",
