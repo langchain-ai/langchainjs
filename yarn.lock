@@ -5284,12 +5284,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@getmetal/metal-sdk@npm:^2.0.1":
-  version: 2.0.1
-  resolution: "@getmetal/metal-sdk@npm:2.0.1"
+"@getmetal/metal-sdk@npm:^4.0.0":
+  version: 4.0.0
+  resolution: "@getmetal/metal-sdk@npm:4.0.0"
   dependencies:
     axios: ^1.3.2
-  checksum: 44e4da237ea22b280c9c019fde6bc5c3492527f94a384ad5d7b25900aa1dc235af439e28d44febf1686797d0692daae9a87ccef4c73d8710e38052e1a0898ad0
+  checksum: d7a7b79896cc58ffd5c2d071703302c62780d2aa9e89080ad6a70a5a5671ea0f5b8ed614ba4981f55d1f54ff147c8bdaa76e758910edb26df33648cd09e9335a
   languageName: node
   linkType: hard
 
@@ -13821,7 +13821,7 @@ __metadata:
   resolution: "examples@workspace:examples"
   dependencies:
     "@clickhouse/client": ^0.0.14
-    "@getmetal/metal-sdk": ^2.0.1
+    "@getmetal/metal-sdk": ^4.0.0
     "@opensearch-project/opensearch": ^2.2.0
     "@pinecone-database/pinecone": ^0.0.14
     "@prisma/client": ^4.11.0
@@ -17997,7 +17997,7 @@ __metadata:
     "@aws-sdk/client-sagemaker-runtime": ^3.310.0
     "@clickhouse/client": ^0.0.14
     "@faker-js/faker": ^7.6.0
-    "@getmetal/metal-sdk": ^2.0.1
+    "@getmetal/metal-sdk": ^4.0.0
     "@huggingface/inference": ^1.5.1
     "@jest/globals": ^29.5.0
     "@opensearch-project/opensearch": ^2.2.0
