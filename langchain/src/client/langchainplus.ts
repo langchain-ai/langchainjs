@@ -16,6 +16,7 @@ import { BaseLLM } from "../llms/base.js";
 import { BaseChatModel } from "../chat_models/base.js";
 import { mapStoredMessagesToChatMessages } from "../stores/message/utils.js";
 import { AsyncCaller, AsyncCallerParams } from "../util/async_caller.js";
+import { integer } from "@opensearch-project/opensearch/api/types.js";
 
 export interface RunResult extends BaseRun {
   name: string;
@@ -95,7 +96,7 @@ const getSeededTenantId = async (
   try {
     response = await caller.call(fetch, url, {
       method: "GET",
-      headers: apiKey ? { authorization: `Bearer ${apiKey}` } : undefined,
+      headers: apiKey ? { "x-api-key": apiKey } : undefined,
     });
   } catch (err) {
     throw new Error("Unable to get seeded tenant ID. Please manually provide.");
@@ -197,38 +198,48 @@ export class LangChainPlusClient {
 
   private caller: AsyncCaller;
 
-  constructor(
-    apiUrl: string,
-    tenantId: string,
-    apiKey?: string,
-    callerOptions?: AsyncCallerParams
-  ) {
-    this.apiUrl = apiUrl;
-    this.apiKey = apiKey;
-    this.tenantId = tenantId;
+  constructor(config: {
+    tenantId: string;
+    apiUrl?: string;
+    apiKey?: string;
+    callerOptions?: AsyncCallerParams;
+  }) {
+    this.apiUrl = config.apiUrl ?? this.apiUrl;
+    this.apiKey = config.apiKey;
+    this.tenantId = config.tenantId;
     this.validateApiKeyIfHosted();
-    this.caller = new AsyncCaller(callerOptions ?? {});
+    this.caller = new AsyncCaller(config.callerOptions ?? {});
   }
 
-  public static async create(
-    apiUrl: string | undefined = undefined,
-    apiKey: string | undefined = undefined
-  ): Promise<LangChainPlusClient> {
+  public static async create(config: {
+    apiUrl?: string;
+    apiKey?: string;
+    tenantId?: string;
+  }): Promise<LangChainPlusClient> {
     const apiUrl_ =
-      apiUrl ??
+      config.apiUrl ??
       ((typeof process !== "undefined"
         ? // eslint-disable-next-line no-process-env
           process.env?.LANGCHAIN_ENDPOINT
         : undefined) ||
         "http://localhost:8000");
     const apiKey_ =
-      apiKey ??
+      config.apiKey ??
       (typeof process !== "undefined"
         ? // eslint-disable-next-line no-process-env
           process.env?.LANGCHAIN_API_KEY
         : undefined);
-    const tenantId = await getSeededTenantId(apiUrl_, apiKey_);
-    return new LangChainPlusClient(apiUrl_, tenantId, apiKey_);
+    console.log(
+      `Creating LangChain+ client with API key ${apiKey_}` +
+        ` and API URL ${apiUrl_}`
+    );
+    const tenantId_ =
+      config.tenantId ?? (await getSeededTenantId(apiUrl_, apiKey_));
+    return new LangChainPlusClient({
+      tenantId: tenantId_,
+      apiKey: apiKey_,
+      apiUrl: apiUrl_,
+    });
   }
 
   private validateApiKeyIfHosted(): void {
@@ -306,10 +317,13 @@ export class LangChainPlusClient {
     return this._get<Run[]>("/runs", queryParams);
   }
 
-  public async readSession(
-    sessionId?: string,
-    sessionName?: string
-  ): Promise<TracerSession> {
+  public async readSession({
+    sessionId = undefined,
+    sessionName = undefined,
+  }: {
+    sessionId?: string;
+    sessionName?: string;
+  }): Promise<TracerSession> {
     let path = "/sessions";
     const params = new URLSearchParams();
     if (sessionId !== undefined && sessionName !== undefined) {
@@ -383,7 +397,7 @@ export class LangChainPlusClient {
 
   public async createDataset(
     name: string,
-    description: string
+    description?: string
   ): Promise<Dataset> {
     const response = await this.caller.call(fetch, `${this.apiUrl}/datasets`, {
       method: "POST",
@@ -409,10 +423,13 @@ export class LangChainPlusClient {
     return result as Dataset;
   }
 
-  public async readDataset(
-    datasetId: string | undefined,
-    datasetName: string | undefined
-  ): Promise<Dataset> {
+  public async readDataset({
+    datasetId = undefined,
+    datasetName = undefined,
+  }: {
+    datasetId?: string;
+    datasetName?: string;
+  }): Promise<Dataset> {
     let path = "/datasets";
     // limit to 1 result
     const params = new URLSearchParams({ limit: "1" });
@@ -440,7 +457,11 @@ export class LangChainPlusClient {
     return result;
   }
 
-  public async listDatasets(limit = 100): Promise<Dataset[]> {
+  public async listDatasets({
+    limit = 100,
+  }: {
+    limit?: integer;
+  }): Promise<Dataset[]> {
     const path = "/datasets";
     const params = new URLSearchParams({ limit: limit.toString() });
     const response = await this._get<Dataset[]>(path, params);
@@ -452,10 +473,13 @@ export class LangChainPlusClient {
     return response as Dataset[];
   }
 
-  public async deleteDataset(
-    datasetId: string | undefined,
-    datasetName: string | undefined
-  ): Promise<Dataset> {
+  public async deleteDataset({
+    datasetId = undefined,
+    datasetName = undefined,
+  }: {
+    datasetId?: string;
+    datasetName?: string;
+  }): Promise<Dataset> {
     let path = "/datasets";
     let datasetId_ = datasetId;
     if (datasetId !== undefined && datasetName !== undefined) {
@@ -482,20 +506,26 @@ export class LangChainPlusClient {
     return results as Dataset;
   }
 
-  public async createExample(
-    inputs: RunInputs,
-    outputs: RunOutputs = {},
-    datasetId: string | undefined = undefined,
-    datasetName: string | undefined = undefined,
-    createdAt: Date | undefined = undefined
-  ): Promise<Example> {
+  public async createExample({
+    inputs,
+    outputs,
+    datasetId = undefined,
+    datasetName = undefined,
+    createdAt = undefined,
+  }: {
+    inputs: RunInputs;
+    outputs: RunOutputs;
+    datasetId?: string;
+    datasetName?: string;
+    createdAt?: Date;
+  }): Promise<Example> {
     let datasetId_ = datasetId;
     if (datasetId_ === undefined && datasetName === undefined) {
       throw new Error("Must provide either datasetName or datasetId");
     } else if (datasetId_ !== undefined && datasetName !== undefined) {
       throw new Error("Must provide either datasetName or datasetId, not both");
     } else if (datasetId_ === undefined) {
-      const dataset = await this.readDataset(undefined, datasetName);
+      const dataset = await this.readDataset({ datasetName: datasetName });
       datasetId_ = dataset.id;
     }
 
@@ -528,17 +558,20 @@ export class LangChainPlusClient {
     return await this._get<Example>(path);
   }
 
-  public async listExamples(
-    datasetId: string | undefined = undefined,
-    datasetName: string | undefined = undefined
-  ): Promise<Example[]> {
+  public async listExamples({
+    datasetId = undefined,
+    datasetName = undefined,
+  }: {
+    datasetId?: string;
+    datasetName?: string;
+  }): Promise<Example[]> {
     let datasetId_;
     if (datasetId !== undefined && datasetName !== undefined) {
       throw new Error("Must provide either datasetName or datasetId, not both");
     } else if (datasetId !== undefined) {
       datasetId_ = datasetId;
     } else if (datasetName !== undefined) {
-      const dataset = await this.readDataset(undefined, datasetName);
+      const dataset = await this.readDataset({ datasetName });
       datasetId_ = dataset.id;
     } else {
       throw new Error("Must provide a datasetName or datasetId");
