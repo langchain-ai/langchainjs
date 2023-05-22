@@ -203,11 +203,18 @@ export class LangChainPlusClient {
   }
 
   public static async create(
-    apiUrl: string,
+    apiUrl: string | undefined = undefined,
     apiKey: string | undefined = undefined
   ): Promise<LangChainPlusClient> {
-    const tenantId = await getSeededTenantId(apiUrl, apiKey);
-    return new LangChainPlusClient(apiUrl, tenantId, apiKey);
+    let url = apiUrl ?? process.env.LANGCHAIN_PLUS_API_URL;
+    if (!url) {
+      throw new Error(
+        "API URL must be provided manually or" +
+          " via environment as LANGCHAIN_PLUS_API_URL"
+      );
+    }
+    const tenantId = await getSeededTenantId(url, apiKey);
+    return new LangChainPlusClient(url, tenantId, apiKey);
   }
 
   private validateApiKeyIfHosted(): void {
