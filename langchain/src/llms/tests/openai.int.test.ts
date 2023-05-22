@@ -1,7 +1,7 @@
 import { test, expect } from "@jest/globals";
 import { LLMResult } from "../../schema/index.js";
 import { OpenAIChat } from "../openai-chat.js";
-import { OpenAI } from "../openai.js";
+import { OpenAI, PromptLayerOpenAI } from "../openai.js";
 import { StringPromptValue } from "../../prompts/index.js";
 import { CallbackManager } from "../../callbacks/index.js";
 
@@ -179,4 +179,28 @@ test("Test OpenAI prompt value", async () => {
     }
   }
   console.log({ res });
+});
+
+test("Test PromptLayerOpenAI returns promptLayerID iff returnPromptLayerID=true", async () => {
+  const model = new PromptLayerOpenAI({
+    maxTokens: 5,
+    modelName: "text-ada-001",
+    returnPromptLayerID: true,
+  });
+  const res = await model.generate(["Print hello world"]);
+  console.log({ res });
+
+  expect(typeof res).toBe("string");
+  expect(typeof res.generations[0][0].generationInfo).toBe("string");
+
+  const modelB = new PromptLayerOpenAI({
+    maxTokens: 5,
+    modelName: "text-ada-001",
+  });
+  const resB = await modelB.generate(["Print hello world"]);
+  console.log({ res });
+
+  expect(typeof resB).toBe("string");
+  expect(resB.generations[0][0].generationInfo).toBeUndefined();
+
 });

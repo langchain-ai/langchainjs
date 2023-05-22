@@ -1,5 +1,5 @@
 import { expect, test } from "@jest/globals";
-import { OpenAIChat } from "../openai-chat.js";
+import { OpenAIChat, PromptLayerOpenAIChat } from "../openai-chat.js";
 import { CallbackManager } from "../../callbacks/index.js";
 
 test("Test OpenAI", async () => {
@@ -101,3 +101,34 @@ test("Test OpenAI with signal in call options and node adapter", async () => {
     return ret;
   }).rejects.toThrow();
 }, 5000);
+
+test("Test PromptLayerOpenAI returns promptLayerID iff returnPromptLayerID=true", async () => {
+  const model = new PromptLayerOpenAIChat({
+    prefixMessages: [
+      {
+        role: "system",
+        content: "You are a helpful assistant that answers in pirate language",
+      },
+    ],
+    returnPromptLayerID: true,
+  });
+  const res = await model.generate(["Print hello world"]);
+  console.log({ res });
+
+  expect(typeof res).toBe("string");
+  expect(typeof res.generations[0][0].generationInfo).toBe("string");
+
+  const modelB = new PromptLayerOpenAIChat({
+    prefixMessages: [
+      {
+        role: "system",
+        content: "You are a helpful assistant that answers in pirate language",
+      },
+    ],
+  });
+  const resB = await modelB.generate(["Print hello world"]);
+  console.log({ res });
+
+  expect(typeof resB).toBe("string");
+  expect(typeof resB.generations[0][0].generationInfo).toBeUndefined();
+});
