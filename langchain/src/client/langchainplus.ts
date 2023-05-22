@@ -53,6 +53,13 @@ export interface Example extends BaseExample {
   runs: RunResult[];
 }
 
+interface LangChainPlusClientConfig {
+  apiUrl: string;
+  tenantId?: string;
+  apiKey?: string;
+  callerOptions?: AsyncCallerParams;
+}
+
 interface ListRunsParams {
   sessionId?: string;
   sessionName?: string;
@@ -60,6 +67,7 @@ interface ListRunsParams {
   runType?: RunType;
   error?: boolean;
 }
+
 interface UploadCSVParams {
   csvFile: Blob;
   fileName: string;
@@ -181,79 +189,62 @@ async function getModelOrFactoryType(
 }
 
 export class LangChainPlusClient {
-  private apiKey?: string =
-    typeof process !== "undefined"
-      ? // eslint-disable-next-line no-process-env
-        process.env?.LANGCHAIN_API_KEY
-      : undefined;
+  private apiKey?: string;
 
-  private apiUrl =
-    (typeof process !== "undefined"
-      ? // eslint-disable-next-line no-process-env
-        process.env?.LANGCHAIN_ENDPOINT
-      : undefined) || "http://localhost:8000";
+  private apiUrl: string;
 
   private tenantId: string;
 
   private caller: AsyncCaller;
 
-  constructor(config: {
-    tenantId?: string;
-    apiUrl?: string;
-    apiKey?: string;
-    callerOptions?: AsyncCallerParams;
-  }) {
-    this.apiUrl = config.apiUrl ?? this.apiUrl;
-    this.apiKey = config.apiKey;
-    const tenantId =
-      config.tenantId ??
-      (typeof process !== "undefined"
-        ? // eslint-disable-next-line no-process-env
-          process.env?.LANGCHAIN_TENANT_ID
-        : undefined);
+  constructor(config: LangChainPlusClientConfig) {
+    const defaultConfig = LangChainPlusClient.getDefaultClientConfig();
+
+    this.apiUrl = config.apiUrl ?? defaultConfig.apiUrl;
+    this.apiKey = config.apiKey ?? defaultConfig.apiKey;
+    const tenantId = config.tenantId ?? defaultConfig.tenantId;
     if (tenantId === undefined) {
       throw new Error(
         "No tenant ID provided and no LANGCHAIN_TENANT_ID env var"
       );
-    } else {
-      this.tenantId = tenantId;
     }
+    this.tenantId = tenantId;
     this.validateApiKeyIfHosted();
     this.caller = new AsyncCaller(config.callerOptions ?? {});
   }
 
   public static async create(
-    config: {
-      apiUrl?: string;
-      apiKey?: string;
-      tenantId?: string;
-    } = {}
+    config: LangChainPlusClientConfig
   ): Promise<LangChainPlusClient> {
-    const apiUrl_ =
-      config.apiUrl ??
-      ((typeof process !== "undefined"
-        ? // eslint-disable-next-line no-process-env
-          process.env?.LANGCHAIN_ENDPOINT
-        : undefined) ||
-        "http://localhost:8000");
-    const apiKey_ =
-      config.apiKey ??
-      (typeof process !== "undefined"
-        ? // eslint-disable-next-line no-process-env
-          process.env?.LANGCHAIN_API_KEY
-        : undefined);
-    const tenantId_ =
-      config.tenantId ??
-      ((typeof process !== "undefined"
-        ? // eslint-disable-next-line no-process-env
-          process.env?.LANGCHAIN_TENANT_ID
-        : undefined) ||
-        (await getSeededTenantId(apiUrl_, apiKey_)));
-    return new LangChainPlusClient({
-      tenantId: tenantId_,
-      apiKey: apiKey_,
-      apiUrl: apiUrl_,
-    });
+    const clientConfig = {
+      ...LangChainPlusClient.getDefaultClientConfig(),
+      ...config,
+    };
+    if (clientConfig.tenantId === undefined) {
+      clientConfig.tenantId = await getSeededTenantId(
+        clientConfig.apiUrl,
+        clientConfig.apiKey
+      );
+    }
+    return new LangChainPlusClient(clientConfig);
+  }
+
+  public static getDefaultClientConfig(): LangChainPlusClientConfig {
+    if (typeof process !== "undefined") {
+      return {
+        // eslint-disable-next-line no-process-env
+        apiUrl: process.env?.LANGCHAIN_ENDPOINT ?? "http://localhost:8000",
+        // eslint-disable-next-line no-process-env
+        apiKey: process.env?.LANGCHAIN_API_KEY,
+        // eslint-disable-next-line no-process-env
+        tenantId: process.env?.LANGCHAIN_TENANT_ID,
+      };
+    }
+    return {
+      apiUrl: "http://localhost:8000",
+      apiKey: undefined,
+      tenantId: undefined,
+    };
   }
 
   private validateApiKeyIfHosted(): void {
