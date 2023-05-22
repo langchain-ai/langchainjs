@@ -23,7 +23,7 @@
   "license": "MIT",
   "dependencies": {
     "@clickhouse/client": "^0.0.14",
-    "@getmetal/metal-sdk": "^3.0.0",
+    "@getmetal/metal-sdk": "^4.0.0",
     "@opensearch-project/opensearch": "^2.2.0",
     "@pinecone-database/pinecone": "^0.0.14",
     "@prisma/client": "^4.11.0",
