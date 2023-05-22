@@ -16,7 +16,7 @@ test("Test ChatGoogleVertexAi generate", async () => {
   console.log(JSON.stringify(res, null, 1));
 });
 
-test("Test ChatGoogleVertexAi context", async() => {
+test("Test ChatGoogleVertexAi context", async () => {
   const model = new ChatGoogleVertexAi({
     temperature: 0.7,
     context: "You are a helpful assistant that answers in pirate language.",
@@ -26,4 +26,4 @@ test("Test ChatGoogleVertexAi context", async() => {
   );
   const res = await model.call([question]);
   console.log({ res });
-})
+});

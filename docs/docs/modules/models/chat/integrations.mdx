@@ -52,8 +52,8 @@ npm install google-auth-library
 import { ChatGoogleVertexAi } from "langchain/chat_models/googlevertexai";
 
 const model = new ChatGoogleVertexAi({
-temperature: 0.7,
-context: "You are a helpful assistant that answers in pirate language.",
+  temperature: 0.7,
+  context: "You are a helpful assistant that answers in pirate language.",
 });
 
 const question = new HumanChatMessage(
