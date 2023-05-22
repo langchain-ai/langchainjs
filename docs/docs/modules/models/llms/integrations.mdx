@@ -63,21 +63,8 @@ Google Cloud using one of these methods:
 npm install google-auth-library
 ```
 
-```typescript
-import { GoogleVertexAiTextLLM } from "langchain/llms/googlevertexai";
-
-export const run = async () => {
-  const model = new GoogleVertexAiTextLLM({
-    temperature: 0.7,
-    maxOutputTokens: 1000,
-    maxRetries: 5,
-  });
-  const res = await model.call(
-    "Question: What would be a good company name a company that makes colorful socks?\nAnswer:"
-  );
-  console.log({ res });
-};
-```
+import GoogleVertexAIExample from "@examples/llms/googlevertexai.ts";
+<CodeBlock language="typescript">{GoogleVertexAIExample}</CodeBlock>;
 
 ## `HuggingFaceInference`
 

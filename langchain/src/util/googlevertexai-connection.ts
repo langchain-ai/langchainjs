@@ -2,17 +2,17 @@ import { GoogleAuth } from "google-auth-library";
 import { BaseLanguageModelCallOptions } from "../base_language/index.js";
 import { AsyncCaller } from "./async_caller.js";
 import {
-  GoogleVertexAiBasePrediction,
-  GoogleVertexAiConnectionParams,
-  GoogleVertexAiLLMResponse,
-  GoogleVertexAiModelParams,
+  GoogleVertexAIBasePrediction,
+  GoogleVertexAIConnectionParams,
+  GoogleVertexAILLMResponse,
+  GoogleVertexAIModelParams,
 } from "../types/googlevertexai-types.js";
 
 export class GoogleVertexAiConnection<
   CallOptions extends BaseLanguageModelCallOptions,
   InstanceType,
-  PredictionType extends GoogleVertexAiBasePrediction
-> implements GoogleVertexAiConnectionParams
+  PredictionType extends GoogleVertexAIBasePrediction
+> implements GoogleVertexAIConnectionParams
 {
   caller: AsyncCaller;
 
@@ -25,7 +25,7 @@ export class GoogleVertexAiConnection<
   auth: GoogleAuth;
 
   constructor(
-    fields: GoogleVertexAiConnectionParams | undefined,
+    fields: GoogleVertexAIConnectionParams | undefined,
     caller: AsyncCaller
   ) {
     this.caller = caller;
@@ -41,9 +41,9 @@ export class GoogleVertexAiConnection<
 
   async request(
     instances: [InstanceType],
-    parameters: GoogleVertexAiModelParams,
+    parameters: GoogleVertexAIModelParams,
     options: CallOptions
-  ): Promise<GoogleVertexAiLLMResponse<PredictionType>> {
+  ): Promise<GoogleVertexAILLMResponse<PredictionType>> {
     const client = await this.auth.getClient();
     const projectId = await this.auth.getProjectId();
     const url = `https://${this.endpoint}/v1/projects/${projectId}/locations/${this.location}/publishers/google/models/${this.model}:predict`;
@@ -69,6 +69,6 @@ export class GoogleVertexAiConnection<
       _request.bind(client)
     );
 
-    return <GoogleVertexAiLLMResponse<PredictionType>>response;
+    return <GoogleVertexAILLMResponse<PredictionType>>response;
   }
 }

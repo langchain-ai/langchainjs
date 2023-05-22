@@ -2,13 +2,13 @@ import { BaseLLM } from "./base.js";
 import { Generation, LLMResult } from "../schema/index.js";
 import { GoogleVertexAiConnection } from "../util/googlevertexai-connection.js";
 import {
-  GoogleVertexAiBaseLLMInput,
-  GoogleVertexAiBasePrediction,
-  GoogleVertexAiLLMResponse,
-  GoogleVertexAiModelParams,
+  GoogleVertexAIBaseLLMInput,
+  GoogleVertexAIBasePrediction,
+  GoogleVertexAILLMResponse,
+  GoogleVertexAIModelParams,
 } from "../types/googlevertexai-types.js";
 
-export interface GoogleVertexAiTextInput extends GoogleVertexAiBaseLLMInput {}
+export interface GoogleVertexAITextInput extends GoogleVertexAIBaseLLMInput {}
 
 interface GoogleVertexAiLLMTextInstance {
   content: string;
@@ -17,7 +17,7 @@ interface GoogleVertexAiLLMTextInstance {
 /**
  * Models the data returned from the API call
  */
-interface TextPrediction extends GoogleVertexAiBasePrediction {
+interface TextPrediction extends GoogleVertexAIBasePrediction {
   content: string;
 }
 
@@ -35,10 +35,7 @@ interface TextPrediction extends GoogleVertexAiBasePrediction {
  *   path of a credentials file for a service account permitted to the
  *   Google Cloud project using Vertex AI.
  */
-export class GoogleVertexAiTextLLM
-  extends BaseLLM
-  implements GoogleVertexAiTextInput
-{
+export class GoogleVertexAI extends BaseLLM implements GoogleVertexAITextInput {
   model = "text-bison";
 
   temperature = 0.7;
@@ -55,7 +52,7 @@ export class GoogleVertexAiTextLLM
     TextPrediction
   >;
 
-  constructor(fields?: GoogleVertexAiTextInput) {
+  constructor(fields?: GoogleVertexAITextInput) {
     super(fields ?? {});
 
     this.model = fields?.model ?? this.model;
@@ -91,7 +88,7 @@ export class GoogleVertexAiTextLLM
     options: this["ParsedCallOptions"]
   ): Promise<Generation[]> {
     const instance = this.formatInstance(prompt);
-    const parameters: GoogleVertexAiModelParams = {
+    const parameters: GoogleVertexAIModelParams = {
       temperature: this.temperature,
       topK: this.topK,
       topP: this.topP,
@@ -116,7 +113,7 @@ export class GoogleVertexAiTextLLM
   }
 
   convertResult(
-    result: GoogleVertexAiLLMResponse<TextPrediction>
+    result: GoogleVertexAILLMResponse<TextPrediction>
   ): TextPrediction {
     return result?.data?.predictions[0];
   }

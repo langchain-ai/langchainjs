@@ -1,4 +1,4 @@
-import { GoogleVertexAiTextLLM } from "langchain/llms/googlevertexai";
+import { GoogleVertexAI } from "langchain/llms/googlevertexai";
 
 /*
  * Before running this, you should make sure you have created a
@@ -13,13 +13,13 @@ import { GoogleVertexAiTextLLM } from "langchain/llms/googlevertexai";
  *   path of a credentials file for a service account permitted to the project.
  */
 export const run = async () => {
-  const model = new GoogleVertexAiTextLLM({
+  const model = new GoogleVertexAI({
     temperature: 0.7,
     maxOutputTokens: 1000,
     maxRetries: 5,
   });
   const res = await model.call(
-    "Question: What would be a good company name a company that makes colorful socks?\nAnswer:"
+    "What would be a good company name a company that makes colorful socks?"
   );
   console.log({ res });
 };

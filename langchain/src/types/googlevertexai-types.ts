@@ -1,6 +1,6 @@
 import { BaseLLMParams } from "../llms/index.js";
 
-export interface GoogleVertexAiConnectionParams {
+export interface GoogleVertexAIConnectionParams {
   /** Hostname for the API call */
   endpoint?: string;
 
@@ -11,7 +11,7 @@ export interface GoogleVertexAiConnectionParams {
   model?: string;
 }
 
-export interface GoogleVertexAiModelParams {
+export interface GoogleVertexAIModelParams {
   /** Sampling temperature to use */
   temperature?: number;
 
@@ -43,18 +43,18 @@ export interface GoogleVertexAiModelParams {
   topK?: number;
 }
 
-export interface GoogleVertexAiBaseLLMInput
+export interface GoogleVertexAIBaseLLMInput
   extends BaseLLMParams,
-    GoogleVertexAiConnectionParams,
-    GoogleVertexAiModelParams {}
+    GoogleVertexAIConnectionParams,
+    GoogleVertexAIModelParams {}
 
-export interface GoogleVertexAiBasePrediction {
+export interface GoogleVertexAIBasePrediction {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   safetyAttributes?: any;
 }
 
-export interface GoogleVertexAiLLMResponse<
-  PredictionType extends GoogleVertexAiBasePrediction
+export interface GoogleVertexAILLMResponse<
+  PredictionType extends GoogleVertexAIBasePrediction
 > {
   data: {
     predictions: PredictionType[];
