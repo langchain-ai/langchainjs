@@ -1,6 +1,7 @@
-import { Typesense } from "langchain/vectorstores/typesense";
+import { Typesense, TypesenseConfig } from "langchain/vectorstores/typesense";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { Client } from "typesense";
+import { Document } from "langchain/document";
 
 const vectorTypesenseClient = new Client({
   nodes: [
@@ -33,7 +34,7 @@ const typesenseVectorStoreConfig = {
   },
   // Optional search parameters to be passed to Typesense when searching
   searchParams: {
-    filterBy: "foo:[fooo]",
+    filter_by: "foo:[fooo]",
   },
   // You can override the default Typesense import function if you want to do something more complex
   // Default import function:
@@ -75,34 +76,31 @@ const typesenseVectorStoreConfig = {
   //     }
   //   }
   // }
-  import: (data, collectionName) => {
+  import: async (data, collectionName) => {
     await vectorTypesenseClient
       .collections(collectionName)
       .documents()
       .import(data, { action: "emplace", dirty_values: "drop" });
   },
-};
+} satisfies TypesenseConfig;
 
 /**
  * Creates a Typesense vector store from a list of documents.
  * @param documents list of documents to create the vector store from
  * @returns Typesense vector store
  */
-const createVectorStoreWithTypesense = async (documents: Document[] = []) => {
-  return Typesense.fromDocuments(
+const createVectorStoreWithTypesense = async (documents: Document[] = []) =>
+  Typesense.fromDocuments(
     documents,
     new OpenAIEmbeddings(),
     typesenseVectorStoreConfig
   );
-};
-
 /**
  * Returns a Typesense vector store from an existing index.
  * @returns Typesense vector store
  */
-const getVectorStoreWithTypesense = async () => {
-  return new Typesense(new OpenAIEmbeddings(), typesenseVectorStoreConfig);
-};
+const getVectorStoreWithTypesense = async () =>
+  new Typesense(new OpenAIEmbeddings(), typesenseVectorStoreConfig);
 
 // Do a similarity search
 const vectorStore = await getVectorStoreWithTypesense();

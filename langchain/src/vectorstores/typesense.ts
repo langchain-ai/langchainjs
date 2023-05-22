@@ -1,22 +1,18 @@
-import { Client } from "typesense";
+import type { Client } from "typesense";
 import type { MultiSearchRequestSchema } from "typesense/lib/Typesense/MultiSearch.js";
 import type { Document } from "../document.js";
 import { Embeddings } from "../embeddings/base.js";
 import { VectorStore, VectorStoreRetriever } from "./base.js";
-import { AsyncCaller } from "../util/async_caller.js";
+import { AsyncCaller, AsyncCallerParams } from "../util/async_caller.js";
 
 /**
  * Typesense vector store configuration.
  */
-export interface TypesenseConfig {
+export interface TypesenseConfig extends AsyncCallerParams {
   /**
    * Typesense client.
    */
   typesenseClient: Client;
-  /**
-   * Typesense configuration.
-   */
-  typesenseConfig: { host: string; apiKey: string };
   /**
    * Typesense schema name in which documents will be stored and searched.
    */
@@ -74,7 +70,7 @@ export class Typesense extends VectorStore {
 
   private metadataColumnNames: string[];
 
-  private typesenseConfig: { host: string; apiKey: string };
+  private caller: AsyncCaller;
 
   private import: (
     data: Record<string, unknown>[],
@@ -95,10 +91,11 @@ export class Typesense extends VectorStore {
     this.vectorColumnName = config.columnNames?.vector || "vec";
     this.pageContentColumnName = config.columnNames?.pageContent || "text";
     this.metadataColumnNames = config.columnNames?.metadataColumnNames || [];
-    this.typesenseConfig = config.typesenseConfig;
 
     // Assign import function.
     this.import = config.import || this.importToTypesense;
+
+    this.caller = new AsyncCaller(config);
   }
 
   /**
@@ -109,32 +106,12 @@ export class Typesense extends VectorStore {
   async importToTypesense<
     T extends Record<string, unknown> = Record<string, unknown>
   >(data: T[], collectionName: string) {
-    const TEN_MINUTES_IN_SECONDS = 10 * 60;
-
-    const typesenseClient = new Client({
-      nodes: [
-        {
-          host: this.typesenseConfig.host,
-          port: 443,
-          protocol: "https",
-        },
-      ],
-      apiKey: this.typesenseConfig.apiKey,
-      numRetries: 3,
-      connectionTimeoutSeconds: TEN_MINUTES_IN_SECONDS,
-    });
-
-    const asyncCaller = new AsyncCaller({
-      maxConcurrency: 4,
-      maxRetries: 5,
-    });
-
     const chunkSize = 2000;
     for (let i = 0; i < data.length; i += chunkSize) {
       const chunk = data.slice(i, i + chunkSize);
 
-      await asyncCaller.call(async () => {
-        await typesenseClient
+      await this.caller.call(async () => {
+        await this.client
           .collections<T>(collectionName)
           .documents()
           .import(chunk, { action: "emplace", dirty_values: "drop" });
