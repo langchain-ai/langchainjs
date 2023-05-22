@@ -146,23 +146,10 @@ export class ChatGoogleVertexAi
     options: this["ParsedCallOptions"]
     // runManager is omitted since we can't issue token updates
   ): Promise<ChatResult> {
-    // Build the instances in the requeswt, which may be built from
-    // a combination (in highest to lowest priority) of the messages
-    // passed in, the options passed in, and the configuration parameters
-    // passed to the constructor.
-    //
-    // Note that || is used and *not* ?? because we want the empty string
-    // and the empty array to be replaced by a string or array that has
-    // something in it if available. || will do this, but ?? won't.
-    const fromMessages = this.convertMessages(messages);
-    const fromOptions = this.convertOptions(options);
-    const instance: GoogleVertexAiChatInstance = {
-      context:
-        fromMessages.context || fromOptions.context || this.context || "",
-      examples:
-        fromOptions.examples || this.convertExamples(this.examples) || [],
-      messages: fromMessages.messages,
-    };
+    const instance: GoogleVertexAiChatInstance = this.generateInstance(
+      messages,
+      options
+    );
 
     const parameters: GoogleVertexAiModelParams = {
       temperature: this.temperature,
@@ -182,6 +169,42 @@ export class ChatGoogleVertexAi
 
   _llmType(): string {
     return "googlevertexai";
+  }
+
+  generateInstance(
+    messages: BaseChatMessage[],
+    options: this["ParsedCallOptions"]
+  ): GoogleVertexAiChatInstance {
+    // Build the instances in the requeswt, which may be built from
+    // a combination (in highest to lowest priority) of the messages
+    // passed in, the options passed in, and the configuration parameters
+    // passed to the constructor.
+    //
+    // Note that || is used and *not* ?? because we want the empty string
+    // and the empty array to be replaced by a string or array that has
+    // something in it if available. || will do this, but ?? won't.
+    const fromMessages = this.convertMessages(messages);
+    const fromOptions = this.convertOptions(options);
+
+    const context =
+      fromMessages.context || fromOptions.context || this.context || "";
+
+    const convertedExamples = this.convertExamples(this.examples);
+    let examples: GoogleVertexAiChatExample[];
+    if (fromOptions?.examples?.length) {
+      examples = fromOptions.examples;
+    } else if (convertedExamples?.length) {
+      examples = convertedExamples;
+    } else {
+      examples = [];
+    }
+
+    const instance: GoogleVertexAiChatInstance = {
+      context,
+      examples,
+      messages: fromMessages.messages,
+    };
+    return instance;
   }
 
   convertMessages(baseMessages: BaseChatMessage[]): GoogleVertexAiChatInstance {
