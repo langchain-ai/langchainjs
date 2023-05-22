@@ -22,8 +22,15 @@ Example code:
 
 ```typescript
 import { CSVLoader } from "langchain/document_loaders/fs/csv";
+import * as url from "node:url";
+import * as path from "node:path";
 
-const loader = new CSVLoader("src/document_loaders/example_data/example.csv");
+const filePath = path.resolve(
+  path.dirname(url.fileURLToPath(import.meta.url)),
+  "src/document_loaders/example_data/example.csv"
+);
+
+const loader = new CSVLoader(filePath);
 
 const docs = await loader.load();
 /*
