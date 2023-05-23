@@ -12,8 +12,15 @@ npm install pdf-parse
 
 ```typescript
 import { PDFLoader } from "langchain/document_loaders/fs/pdf";
+import * as url from "node:url";
+import * as path from "node:path";
 
-const loader = new PDFLoader("src/document_loaders/example_data/example.pdf");
+const filePath = path.resolve(
+  path.dirname(url.fileURLToPath(import.meta.url)),
+  "src/document_loaders/example_data/example.pdf"
+);
+
+const loader = new PDFLoader(filePath);
 
 const docs = await loader.load();
 ```
@@ -22,8 +29,15 @@ const docs = await loader.load();
 
 ```typescript
 import { PDFLoader } from "langchain/document_loaders/fs/pdf";
+import * as url from "node:url";
+import * as path from "node:path";
 
-const loader = new PDFLoader("src/document_loaders/example_data/example.pdf", {
+const filePath = path.resolve(
+  path.dirname(url.fileURLToPath(import.meta.url)),
+  "src/document_loaders/example_data/example.pdf"
+);
+
+const loader = new PDFLoader(filepath), {
   splitPages: false,
 });
 
@@ -42,8 +56,15 @@ npm install pdfjs-dist
 
 ```typescript
 import { PDFLoader } from "langchain/document_loaders/fs/pdf";
+import * as url from "node:url";
+import * as path from "node:path";
 
-const loader = new PDFLoader("src/document_loaders/example_data/example.pdf", {
+const filePath = path.resolve(
+  path.dirname(url.fileURLToPath(import.meta.url)),
+  "src/document_loaders/example_data/example.pdf"
+);
+
+const loader = new PDFLoader(filePath, {
   // you may need to add `.then(m => m.default)` to the end of the import
   pdfjs: () => import("pdfjs-dist/legacy/build/pdf.js"),
 });
