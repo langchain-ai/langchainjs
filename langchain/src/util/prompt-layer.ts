@@ -1,15 +1,17 @@
 import fetch from 'cross-fetch';
+import { CreateCompletionResponse } from "openai";
+import { AsyncCaller } from "../util/async_caller.js";
 
 export const getPromptLayerRequestID = async (
-    callerFunc: any,
-    functionName: any,
-    modelName: any, 
-    messages: any,
-    plTags: any,
-    requestResponse: any,
-    startTime: any,
-    endTime: any,
-    apiKey: any
+    callerFunc: AsyncCaller,
+    functionName: string,
+    modelName: string, 
+    messages: string[],
+    plTags: string[] | undefined,
+    requestResponse: CreateCompletionResponse,
+    startTime: number,
+    endTime: number,
+    apiKey: string | undefined
   ) => {
       // https://github.com/MagnivOrg/promptlayer-js-helper
       const promptLayerResp = await callerFunc.call(fetch, "https://api.promptlayer.com/track-request", {
