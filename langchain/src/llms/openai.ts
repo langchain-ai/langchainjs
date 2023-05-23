@@ -21,8 +21,7 @@ import { calculateMaxTokens } from "../base_language/count_tokens.js";
 import { OpenAIChat } from "./openai-chat.js";
 import { LLMResult } from "../schema/index.js";
 import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
-import fetch from 'cross-fetch';
-
+import { getPromptLayerRequestID } from '../util/prompt-layer.js'
 export { OpenAICallOptions, AzureOpenAIInput, OpenAIInput };
 
 interface TokenUsage {
@@ -264,15 +263,7 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
     const choices: CreateCompletionResponseChoicesInner[] = [];
     const tokenUsage: TokenUsage = {};
 
-    let promptLayerRequestID: string | undefined;
     let promptLayerRequestIDs: any = [];
-    const getPromptLayerId = (obj: any, promptLayerRequestId: string | undefined) => {
-      if (obj instanceof PromptLayerOpenAI && obj.returnPromptLayerID === true) {
-        return promptLayerRequestId
-      }
-
-      return undefined
-    }
 
     if (this.stop && stop) {
       throw new Error("Stop found in input and default params");
@@ -386,39 +377,23 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
           );
 
       const requestEndTime = Date.now();
-      const request = {
-        ...params,
-        prompt: subPrompts[i],
+
+      let promptLayerRequestID: string | undefined = undefined;
+      if (this instanceof PromptLayerOpenAI && this.returnPromptLayerID === true) {
+        promptLayerRequestID = await getPromptLayerRequestID(
+          this.caller,
+          "openai.ChatCompletion.create",
+          this.modelName, 
+          prompts,
+          this instanceof PromptLayerOpenAI ? this.plTags : [],
+          data,
+          requestStartTime,
+          requestEndTime,
+          this instanceof PromptLayerOpenAI ? this.promptLayerApiKey : undefined,
+        )  
       }
 
-      // https://github.com/MagnivOrg/promptlayer-js-helper
-      const promptLayerResp = await this.caller.call(fetch, "https://api.promptlayer.com/track-request", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify({
-          function_name: "openai.Completion.create",
-          args: [],
-          kwargs: { engine: request.model, prompt: request.prompt },
-          tags: this instanceof PromptLayerOpenAI ? this.plTags : [],
-          request_response: data,
-          request_start_time: Math.floor(requestStartTime / 1000),
-          request_end_time: Math.floor(requestEndTime / 1000),
-          // return_pl_id: true,
-          api_key: this instanceof PromptLayerOpenAI ? this.promptLayerApiKey : undefined,
-        }),
-      });
-
-      const promptLayerRespBody = await promptLayerResp.json()
-
-      promptLayerRequestID = undefined
-      if (promptLayerRespBody && promptLayerRespBody.success === true) {
-        promptLayerRequestID = promptLayerRespBody.request_id
-      }
-
-      promptLayerRequestIDs.push(getPromptLayerId(this, promptLayerRequestID))
+      promptLayerRequestIDs.push(promptLayerRequestID)
       choices.push(...data.choices);
 
       const {

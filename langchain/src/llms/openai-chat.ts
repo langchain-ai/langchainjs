@@ -17,11 +17,11 @@ import type { StreamingAxiosConfiguration } from "../util/axios-types.js";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
 import { BaseLLMParams, LLM } from "./base.js";
 import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
-import fetch from 'cross-fetch';
 import {
   Generation,
   LLMResult,
 } from "../schema/index.js";
+import { getPromptLayerRequestID } from '../util/prompt-layer.js'
 
 export { OpenAICallOptions, OpenAIChatInput, AzureOpenAIInput };
 
@@ -461,32 +461,19 @@ export class PromptLayerOpenAIChat extends OpenAIChat {
         
         choice = [{ text }]
 
+        let promptLayerRequestID: string | undefined = undefined
         if (this instanceof PromptLayerOpenAIChat && this.returnPromptLayerID === true) {
-          // https://github.com/MagnivOrg/promptlayer-js-helper
-          const promptLayerResp = await this.caller.call(fetch, "https://api.promptlayer.com/track-request", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Accept: "application/json",
-            },
-            body: JSON.stringify({
-              function_name: "openai.ChatCompletion.create",
-              args: [],
-              kwargs: { engine: this.modelName, messages: prompts },
-              tags: this.plTags ?? [],
-              request_response: text,
-              request_start_time: Math.floor(requestStartTime / 1000),
-              request_end_time: Math.floor(requestEndTime / 1000),
-              api_key: this.promptLayerApiKey,
-            }),
-          });
-          
-          let promptLayerRequestID: string | undefined = undefined
-          const promptLayerRespBody = await promptLayerResp.json()
-          if (promptLayerRespBody && promptLayerRespBody.success === true) {
-            promptLayerRequestID = promptLayerRespBody.request_id
-          }
-  
+          promptLayerRequestID = await getPromptLayerRequestID(
+            this.caller,
+            "openai.ChatCompletion.create",
+            this.modelName, 
+            prompts,
+            this instanceof PromptLayerOpenAIChat ? this.plTags : [],
+            text,
+            requestStartTime,
+            requestEndTime,
+            this instanceof PromptLayerOpenAIChat ? this.promptLayerApiKey : undefined,
+          )  
           choice[0]["generationInfo"] = { promptLayerRequestID }
         }
 
