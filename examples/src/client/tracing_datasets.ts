@@ -55,9 +55,9 @@ export const run = async () => {
   // 4. Add the other examples to the dataset as well
 
   // So that you don't have to create the dataset manually, we will create it for you
-  const client: LangChainPlusClient = await LangChainPlusClient.create(
-    "http://localhost:8000"
-  );
+  const client: LangChainPlusClient = await LangChainPlusClient.create({
+    apiUrl: "http://localhost:1984",
+  });
   const csvContent = `
 input,output
 How many people live in canada as of 2023?,"approximately 38,625,801"

@@ -114,6 +114,39 @@ test("Test create documents with metadata method.", async () => {
   expect(docs).toEqual(expectedDocs);
 });
 
+test("Test create documents method with metadata and an added chunk header.", async () => {
+  const texts = ["foo bar", "baz"];
+  const splitter = new CharacterTextSplitter({
+    separator: " ",
+    chunkSize: 3,
+    chunkOverlap: 0,
+  });
+  const docs = await splitter.createDocuments(
+    texts,
+    [{ source: "1" }, { source: "2" }],
+    {
+      chunkHeader: `SOURCE NAME: testing\n-----\n`,
+      appendChunkOverlapHeader: true,
+    }
+  );
+  const loc = { lines: { from: 1, to: 1 } };
+  const expectedDocs = [
+    new Document({
+      pageContent: "SOURCE NAME: testing\n-----\nfoo",
+      metadata: { source: "1", loc },
+    }),
+    new Document({
+      pageContent: "SOURCE NAME: testing\n-----\n(cont'd) bar",
+      metadata: { source: "1", loc },
+    }),
+    new Document({
+      pageContent: "SOURCE NAME: testing\n-----\nbaz",
+      metadata: { source: "2", loc },
+    }),
+  ];
+  expect(docs).toEqual(expectedDocs);
+});
+
 test("Test iterative text splitter.", async () => {
   const text = `Hi.\n\nI'm Harrison.\n\nHow? Are? You?\nOkay then f f f f.
 This is a weird text to write, but gotta test the splittingggg some how.\n\n
