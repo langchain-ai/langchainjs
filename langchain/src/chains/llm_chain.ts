@@ -5,7 +5,7 @@ import { ChainValues, Generation, BasePromptValue } from "../schema/index.js";
 import { BaseOutputParser } from "../schema/output_parser.js";
 import { SerializedLLMChain } from "./serde.js";
 import { CallbackManager } from "../callbacks/index.js";
-import { CallbackManagerForChainRun } from "../callbacks/manager.js";
+import { CallbackManagerForChainRun, Callbacks } from "../callbacks/manager.js";
 
 export interface LLMChainInput<T extends string | object = string>
   extends ChainInputs {
@@ -86,19 +86,35 @@ export class LLMChain<T extends string | object = string>
     return finalCompletion;
   }
 
+  /**
+   * Run the core logic of this chain and add to output if desired.
+   *
+   * Wraps _call and handles memory.
+   */
+  call(
+    values: ChainValues & this["llm"]["CallOptions"],
+    callbacks?: Callbacks | undefined
+  ): Promise<ChainValues> {
+    return super.call(values, callbacks);
+  }
+
   /** @ignore */
   async _call(
-    values: ChainValues,
+    values: ChainValues & this["llm"]["CallOptions"],
     runManager?: CallbackManagerForChainRun
   ): Promise<ChainValues> {
-    let stop;
-    if ("stop" in values && Array.isArray(values.stop)) {
-      stop = values.stop;
+    const valuesForPrompt = { ...values };
+    const valuesForLLM: this["llm"]["CallOptions"] = {};
+    for (const key of this.llm.callKeys) {
+      if (key in values) {
+        valuesForLLM[key as keyof this["llm"]["CallOptions"]] = values[key];
+        delete valuesForPrompt[key];
+      }
     }
-    const promptValue = await this.prompt.formatPromptValue(values);
+    const promptValue = await this.prompt.formatPromptValue(valuesForPrompt);
     const { generations } = await this.llm.generatePrompt(
       [promptValue],
-      stop,
+      valuesForLLM,
       runManager?.getChild()
     );
     return {
@@ -123,7 +139,7 @@ export class LLMChain<T extends string | object = string>
    * ```
    */
   async predict(
-    values: ChainValues,
+    values: ChainValues & this["llm"]["CallOptions"],
     callbackManager?: CallbackManager
   ): Promise<T> {
     const output = await this.call(values, callbackManager);
