@@ -56,7 +56,7 @@ export const run = async () => {
 
   // So that you don't have to create the dataset manually, we will create it for you
   const client: LangChainPlusClient = await LangChainPlusClient.create({
-    apiUrl: "http://localhost:8000",
+    apiUrl: "http://localhost:1984",
   });
   const csvContent = `
 input,output

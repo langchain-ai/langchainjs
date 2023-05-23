@@ -193,7 +193,7 @@ export class LangChainPlusClient {
     (typeof process !== "undefined"
       ? // eslint-disable-next-line no-process-env
         process.env?.LANGCHAIN_ENDPOINT
-      : undefined) || "http://localhost:8000";
+      : undefined) || "http://localhost:1984";
 
   private tenantId: string;
 
@@ -237,7 +237,7 @@ export class LangChainPlusClient {
         ? // eslint-disable-next-line no-process-env
           process.env?.LANGCHAIN_ENDPOINT
         : undefined) ||
-        "http://localhost:8000");
+        "http://localhost:1984");
     const apiKey_ =
       config.apiKey ??
       (typeof process !== "undefined"
