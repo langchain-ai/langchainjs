@@ -3,8 +3,8 @@ import { PromptTemplate } from "../../prompts/prompt.js";
 export const SONG_DATA_SOURCE = `\
 \`\`\`json
 {
-    content: "Lyrics of a song",
-    attributes: {
+    "content": "Lyrics of a song",
+    "attributes": {
         "artist": {
             "type": "string",
             "description": "Name of the song artist"
@@ -100,7 +100,7 @@ A comparison statement takes the form: \`comp(attr, val)\`:
 A logical operation statement takes the form \`op(statement1, statement2, ...)\`:
 - \`op\` ({allowed_operators}): logical operator
 - \`statement1\`, \`statement2\`, ... (comparison statements or logical operation \
-statements): one or more statements to appy the operation to
+statements): one or more statements to apply the operation to
 
 Make sure that you only use the comparators and logical operators listed above and \
 no others.
@@ -122,8 +122,8 @@ export const DEFAULT_SUFFIX = `\
 Data Source:
 \`\`\`json
 {{{{
-    content: {content},
-    attributes: {attributes}
+    "content": {content},
+    "attributes": {attributes}
 }}}}
 \`\`\`
 

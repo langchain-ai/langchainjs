@@ -16,7 +16,7 @@ import { MotorheadMemory } from "langchain/memory";
 const model = new ChatOpenAI({});
 const memory = new MotorheadMemory({
   sessionId: "user-id",
-  motorheadUrl: "localhost:8080",
+  motorheadURL: "localhost:8080",
 });
 
 await memory.init(); // loads previous state from Motörhead 🤘
