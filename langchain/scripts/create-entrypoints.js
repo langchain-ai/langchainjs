@@ -38,6 +38,7 @@ const entrypoints = {
   "llms/cohere": "llms/cohere",
   "llms/hf": "llms/hf",
   "llms/replicate": "llms/replicate",
+  "llms/googlevertexai": "llms/googlevertexai",
   "llms/sagemaker_endpoint": "llms/sagemaker_endpoint",
   // prompts
   prompts: "prompts/index",
@@ -161,6 +162,7 @@ const requiresOptionalDependency = [
   "embeddings/hf",
   "llms/load",
   "llms/cohere",
+  "llms/googlevertexai",
   "llms/hf",
   "llms/replicate",
   "llms/sagemaker_endpoint",
