@@ -44,3 +44,33 @@ const res = await chain.call({
 });
 
 console.log(JSON.stringify(res, null, 2));
+
+/*
+  {
+    "text": " Red.",
+    "sourceDocuments": [
+      {
+        "pageContent": "DOCUMENT NAME: Pam Interview\n\n---\n\nMy favorite color is red.",
+        "metadata": {
+          "loc": {
+            "lines": {
+              "from": 1,
+              "to": 1
+            }
+          }
+        }
+      },
+      {
+        "pageContent": "DOCUMENT NAME: Jim Interview\n\n---\n\nMy favorite color is blue.",
+        "metadata": {
+          "loc": {
+            "lines": {
+              "from": 1,
+              "to": 1
+            }
+          }
+        }
+      }
+    ]
+  }
+*/
