@@ -1,5 +1,4 @@
 import fetch from 'cross-fetch';
-import { CreateCompletionResponse } from "openai";
 import { AsyncCaller } from "../util/async_caller.js";
 
 export const getPromptLayerRequestID = async (
@@ -8,7 +7,7 @@ export const getPromptLayerRequestID = async (
     modelName: string, 
     messages: string[],
     plTags: string[] | undefined,
-    requestResponse: CreateCompletionResponse,
+    requestResponse: string | undefined,
     startTime: number,
     endTime: number,
     apiKey: string | undefined

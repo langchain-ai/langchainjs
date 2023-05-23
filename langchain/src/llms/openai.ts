@@ -386,7 +386,7 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
           this.modelName, 
           prompts,
           this instanceof PromptLayerOpenAI ? this.plTags : [],
-          data,
+          data.choices[0].text,
           requestStartTime,
           requestEndTime,
           this instanceof PromptLayerOpenAI ? this.promptLayerApiKey : undefined,
