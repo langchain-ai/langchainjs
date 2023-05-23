@@ -10615,6 +10615,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"chromadb@npm:^1.4.2":
+  version: 1.4.2
+  resolution: "chromadb@npm:1.4.2"
+  checksum: 6fe81e889ae3f6ac39c1a168bcabe12771b0a5271be503db47aa3f8e5c159e29e5eaa7387780fb08d8ef370a42ce58455de1f0622367cb62c4486dfb3b84c20f
+  languageName: node
+  linkType: hard
+
 "chrome-trace-event@npm:^1.0.2":
   version: 1.0.3
   resolution: "chrome-trace-event@npm:1.0.3"
@@ -18015,7 +18022,7 @@ __metadata:
     axios: ^0.26.0
     binary-extensions: ^2.2.0
     cheerio: ^1.0.0-rc.12
-    chromadb: ^1.4.0
+    chromadb: ^1.4.2
     cohere-ai: ^5.0.2
     d3-dsv: ^2.0.0
     dotenv: ^16.0.3
@@ -18081,7 +18088,7 @@ __metadata:
     apify-client: ^2.7.1
     axios: "*"
     cheerio: ^1.0.0-rc.12
-    chromadb: ^1.4.0
+    chromadb: ^1.4.2
     cohere-ai: ^5.0.2
     d3-dsv: ^2.0.0
     epub2: ^3.0.1
