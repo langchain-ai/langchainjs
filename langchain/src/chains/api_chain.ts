@@ -5,6 +5,7 @@ import { BaseLanguageModel } from "../base_language/index.js";
 import { CallbackManagerForChainRun } from "../callbacks/manager.js";
 import { ChainValues } from "../schema/index.js";
 import { API_URL_PROMPT, API_RESPONSE_PROMPT } from "./api/prompts.js";
+import { BasePromptTemplate } from "../index.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type LoadValues = Record<string, any>;
@@ -14,6 +15,7 @@ export interface APIChainInput extends Omit<ChainInputs, "memory"> {
   apiRequestChain: LLMChain;
   apiDocs: string;
   inputKey?: string;
+  headers?: LoadValues;
   /** Key to use for output, defaults to `output` */
   outputKey?: string;
 }
@@ -24,6 +26,8 @@ export class APIChain extends BaseChain implements APIChainInput {
   apiRequestChain: LLMChain;
 
   apiDocs: string;
+
+  headers = {};
 
   inputKey = "question";
 
@@ -42,6 +46,7 @@ export class APIChain extends BaseChain implements APIChainInput {
     this.inputKey = fields.inputKey ?? this.inputKey;
     this.outputKey = fields.outputKey ?? this.outputKey;
     this.apiAnswerChain = fields.apiAnswerChain;
+    this.headers = fields.headers ?? this.headers;
     this.apiRequestChain = fields.apiRequestChain;
     this.apiDocs = fields.apiDocs;
   }
@@ -51,8 +56,6 @@ export class APIChain extends BaseChain implements APIChainInput {
     values: ChainValues,
     runManager?: CallbackManagerForChainRun
   ): Promise<ChainValues> {
-    console.log(`Called with values ${JSON.stringify(values)}`);
-
     const question: string = values[this.inputKey];
 
     const api_url = await this.apiRequestChain.predict(
@@ -62,7 +65,7 @@ export class APIChain extends BaseChain implements APIChainInput {
 
     await runManager?.handleText(api_url);
 
-    const res = await fetch(api_url);
+    const res = await fetch(api_url, { headers: this.headers });
     const api_response = await res.text();
 
     await runManager?.handleText(api_response);
@@ -112,16 +115,18 @@ export class APIChain extends BaseChain implements APIChainInput {
   static fromLLMAndApiDocs(
     llm: BaseLanguageModel,
     api_docs: string,
-    options?: Partial<
-      Omit<APIChainInput, "combineDocumentsChain" | "vectorstore">
-    >
+    options?: LoadValues,
+    headers: LoadValues = {},
+    api_url_prompt: BasePromptTemplate = API_URL_PROMPT,
+    api_response_prompt: BasePromptTemplate = API_RESPONSE_PROMPT
   ): APIChain {
-    const apiAnswerChain = new LLMChain({ prompt: API_URL_PROMPT, llm });
-    const apiRequestChain = new LLMChain({ prompt: API_RESPONSE_PROMPT, llm });
+    const apiAnswerChain = new LLMChain({ prompt: api_response_prompt, llm });
+    const apiRequestChain = new LLMChain({ prompt: api_url_prompt, llm });
     return new this({
       apiAnswerChain,
       apiRequestChain,
       apiDocs: api_docs,
+      headers,
       ...options,
     });
   }
