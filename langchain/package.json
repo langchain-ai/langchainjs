@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.80",
+  "version": "0.0.81",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -523,6 +523,9 @@
       "optional": true
     },
     "faiss-node": {
+      "optional": true
+    },
+    "google-auth-library": {
       "optional": true
     },
     "hnswlib-node": {
