@@ -270,7 +270,7 @@ export class LangChainPlusClient {
   private get headers(): { [header: string]: string } {
     const headers: { [header: string]: string } = {};
     if (this.apiKey) {
-      headers.authorization = `Bearer ${this.apiKey}`;
+      headers["x-api-key"] = `${this.apiKey}`;
     }
     return headers;
   }
