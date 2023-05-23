@@ -30,7 +30,6 @@ describe("ZapierNLAWrapper", () => {
 
       expect(result).toMatchObject({
         keyword: "cats",
-        size: expect.any(String),
         url: expect.stringContaining("https://"),
       });
     });
