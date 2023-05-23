@@ -5800,13 +5800,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@getzep/zep-js@npm:^0.2.6":
-  version: 0.2.6
-  resolution: "@getzep/zep-js@npm:0.2.6"
+"@getzep/zep-js@npm:0.2.9, @getzep/zep-js@npm:^0.2.9":
+  version: 0.2.9
+  resolution: "@getzep/zep-js@npm:0.2.9"
   dependencies:
     axios: ^1.4.0
     typescript: ^5.0.4
-  checksum: af7e5cc1b8ebd49b537bfa4f6f998994de9d7116cc7c20e49c143f05fc75f034356c63e9ab86df96c35db68aba3a0a55ce7706ea95edef03ae12ba87c550c6aa
+  checksum: 00c32984e9eef35e1779af277de81e657c6a4055b743f58b4c3b3dac5db14d802f846b23f3178c702a9e0a9327c988a0594551ee8413a81b3ec8841175777f9a
   languageName: node
   linkType: hard
 
@@ -5829,7 +5829,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@grpc/proto-loader@npm:^0.7.0, @grpc/proto-loader@npm:^0.7.6":
+"@grpc/proto-loader@npm:^0.7.0":
   version: 0.7.6
   resolution: "@grpc/proto-loader@npm:0.7.6"
   dependencies:
@@ -5841,6 +5841,21 @@ __metadata:
   bin:
     proto-loader-gen-types: build/bin/proto-loader-gen-types.js
   checksum: cc42649cf65c74f627ac80b1f3ed275c4cf96dbc27728cc887e91e217c69a3bd6b94dfa7571725a94538d84735af53d35e9583cc77eb65f3c035106216cc4a1b
+  languageName: node
+  linkType: hard
+
+"@grpc/proto-loader@npm:^0.7.6":
+  version: 0.7.7
+  resolution: "@grpc/proto-loader@npm:0.7.7"
+  dependencies:
+    "@types/long": ^4.0.1
+    lodash.camelcase: ^4.3.0
+    long: ^4.0.0
+    protobufjs: ^7.0.0
+    yargs: ^17.7.2
+  bin:
+    proto-loader-gen-types: build/bin/proto-loader-gen-types.js
+  checksum: 6015d99d36d0451075a53e5c5842e8912235973a515677afca038269969ad84f22a4c9fbc9badf52f034736b3f1bf864739f7c4238ba8a7e6fd3bba75cfce0ee
   languageName: node
   linkType: hard
 
@@ -12709,6 +12724,7 @@ __metadata:
     "@docusaurus/core": 2.4.0
     "@docusaurus/preset-classic": 2.4.0
     "@docusaurus/remark-plugin-npm2yarn": ^2.4.0
+    "@getzep/zep-js": ^0.2.9
     "@mdx-js/react": ^1.6.22
     "@mendable/search": ^0.0.102
     clsx: ^1.2.1
@@ -12729,7 +12745,6 @@ __metadata:
     typedoc: ^0.24.4
     typedoc-plugin-markdown: next
     webpack: ^5.75.0
-    zep-js: ^0.2.6
   languageName: unknown
   linkType: soft
 
@@ -14344,7 +14359,7 @@ __metadata:
   dependencies:
     "@clickhouse/client": ^0.0.14
     "@getmetal/metal-sdk": ^4.0.0
-    "@getzep/zep-js": ^0.2.6
+    "@getzep/zep-js": 0.2.9
     "@opensearch-project/opensearch": ^2.2.0
     "@pinecone-database/pinecone": ^0.0.14
     "@prisma/client": ^4.11.0
@@ -18521,7 +18536,7 @@ __metadata:
     "@clickhouse/client": ^0.0.14
     "@faker-js/faker": ^7.6.0
     "@getmetal/metal-sdk": ^4.0.0
-    "@getzep/zep-js": ^0.2.6
+    "@getzep/zep-js": ^0.2.9
     "@huggingface/inference": ^1.5.1
     "@jest/globals": ^29.5.0
     "@opensearch-project/opensearch": ^2.2.0
@@ -18716,6 +18731,7 @@ __metadata:
   dependencies:
     "@docusaurus/core": latest
     "@docusaurus/preset-classic": latest
+    "@getzep/zep-js": ^0.2.9
     "@tsconfig/recommended": ^1.0.2
     dotenv: ^16.0.3
     husky: ^8.0.3
@@ -18723,7 +18739,6 @@ __metadata:
     prettier: ^2.8.3
     turbo: ^1.9.8
     typescript: ^5.0.0
-    zep-js: ^0.2.6
   languageName: unknown
   linkType: soft
 
@@ -28136,6 +28151,21 @@ __metadata:
   languageName: node
   linkType: hard
 
+"yargs@npm:^17.7.2":
+  version: 17.7.2
+  resolution: "yargs@npm:17.7.2"
+  dependencies:
+    cliui: ^8.0.1
+    escalade: ^3.1.1
+    get-caller-file: ^2.0.5
+    require-directory: ^2.1.1
+    string-width: ^4.2.3
+    y18n: ^5.0.5
+    yargs-parser: ^21.1.1
+  checksum: 73b572e863aa4a8cbef323dd911d79d193b772defd5a51aab0aca2d446655216f5002c42c5306033968193bdbf892a7a4c110b0d77954a7fdf563e653967b56a
+  languageName: node
+  linkType: hard
+
 "yauzl@npm:^2.10.0":
   version: 2.10.0
   resolution: "yauzl@npm:2.10.0"
@@ -28169,16 +28199,6 @@ __metadata:
     mustache: ^4.2.0
     stack-trace: 0.0.10
   checksum: e81644ad9469a26949a85cb2e1a3f9c9faf11daa67a265e9ad0361942b2c06cf02ee1dc8c85d74fe7ad25d35bbc2fee34717a54c5a0b8eeb82dc9276d139906b
-  languageName: node
-  linkType: hard
-
-"zep-js@npm:^0.2.6":
-  version: 0.2.6
-  resolution: "zep-js@npm:0.2.6"
-  dependencies:
-    axios: ^1.4.0
-    typescript: ^5.0.4
-  checksum: 0714d667f8e9684c2568d551b2015aaaeb12e5829a93ccec3b30ecbc9275bfa10929060e32d83047264738f5ec91d3bfb859d07d803497df97aec14fe11d438a
   languageName: node
   linkType: hard
 
