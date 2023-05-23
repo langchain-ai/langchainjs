@@ -7,7 +7,6 @@ import {
   RedisScripts,
 } from "redis";
 import {
-  StoredMessage,
   BaseChatMessage,
   BaseListChatMessageHistory,
 } from "../../schema/index.js";
@@ -57,19 +56,7 @@ export class RedisChatMessageHistory extends BaseListChatMessageHistory {
     const orderedMessages = rawStoredMessages
       .reverse()
       .map((message) => JSON.parse(message));
-    const previousMessages = orderedMessages
-      .map((item) => ({
-        type: item.type,
-        data: {
-          role: item.role,
-          content: item.text,
-        },
-      }))
-      .filter(
-        (x): x is StoredMessage =>
-          x.type !== undefined && x.data.content !== undefined
-      );
-    return mapStoredMessagesToChatMessages(previousMessages);
+    return mapStoredMessagesToChatMessages(orderedMessages);
   }
 
   async addMessage(message: BaseChatMessage): Promise<void> {
