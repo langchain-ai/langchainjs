@@ -21,9 +21,9 @@ We are currently trying to keep API parity between the Python and JS versions of
 
 ## Want to add a specific integration?
 
-LangChain supports several different types of integrations with third-party providers and frameworks, including LLM providers (e.g. [OpenAI](https://github.com/hwchase17/langchainjs/blob/main/langchain/src/llms/openai.ts)), vector stores (e.g. [FAISS](https://github.com/ewfian/langchainjs/blob/main/langchain/src/vectorstores/faiss.ts)), document loaders (e.g. [Apify](https://github.com/hwchase17/langchainjs/blob/main/langchain/src/document_loaders/web/apify_dataset.ts)) persistent message history stores (e.g. [Redis](https://github.com/hwchase17/langchainjs/blob/main/langchain/src/stores/message/redis.ts)), and more.
+LangChain supports several different types of integrations with third-party providers and frameworks, including LLM providers (e.g. [OpenAI](langchain/src/llms/openai.ts)), vector stores (e.g. [FAISS](https://github.com/ewfian/langchainjs/blob/main/langchain/src/vectorstores/faiss.ts)), document loaders (e.g. [Apify](langchain/src/document_loaders/web/apify_dataset.ts)) persistent message history stores (e.g. [Redis](langchain/src/stores/message/redis.ts)), and more.
 
-We welcome such contributions, but ask that you read our dedicated [integration contribution guide](https://github.com/hwchase17/langchainjs/blob/main/.github/contributing/INTEGRATIONS.md) for specific details and patterns to consider before opening a pull request.
+We welcome such contributions, but ask that you read our dedicated [integration contribution guide](.github/contributing/INTEGRATIONS.md) for specific details and patterns to consider before opening a pull request.
 
 ## 🗺️Contributing Guidelines
 
@@ -168,7 +168,7 @@ To run only integration tests, run:
 yarn test:int
 ```
 
-Note that many integration tests require credentials or other setup. You may need to set up a `langchain/.env` file like the example [here](https://github.com/hwchase17/langchainjs/blob/main/langchain/.env.example).
+Note that many integration tests require credentials or other setup. You may need to set up a `langchain/.env` file like the example [here](langchain/.env.example).
 
 **Environment tests** test whether LangChain works across different JS environments, including Node.js (both ESM and CJS), Edge environments (eg. Cloudflare Workers), and browsers (using Webpack).
 

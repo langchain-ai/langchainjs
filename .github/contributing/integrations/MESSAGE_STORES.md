@@ -2,13 +2,13 @@
 
 This page contains some specific guidelines and examples for contributing integrations with third-party message stores.
 
-In LangChain, message stores differ from [memory](https://github.com/hwchase17/langchainjs/blob/main/.github/contributing/integrations/MEMORY.md) in that they simply serialize and persistently store chat messages, while memory, despite its name, does not actually handle persistently storing messages, but acts as a representation of the LLM or chat model's awareness of past conversations. For example, memory may perform other transformations on the messages, like summarization, or may emphasize specific pieces of pertinent information. Memory may rely on message stores as a backing class.
+In LangChain, message stores differ from [memory](.github/contributing/integrations/MEMORY.md) in that they simply serialize and persistently store chat messages, while memory, despite its name, does not actually handle persistently storing messages, but acts as a representation of the LLM or chat model's awareness of past conversations. For example, memory may perform other transformations on the messages, like summarization, or may emphasize specific pieces of pertinent information. Memory may rely on message stores as a backing class.
 
 Another key difference is that message stores are only used with chat models.
 
 Before getting started, think about whether your planned integration would be more suited as a message store or as memory!
 
-**Make sure you read the [general guidelines page](https://github.com/hwchase17/langchainjs/blob/main/.github/contributing/INTEGRATIONS.md) first!**
+**Make sure you read the [general guidelines page](.github/contributing/INTEGRATIONS.md) first!**
 
 ## Example PR
 
