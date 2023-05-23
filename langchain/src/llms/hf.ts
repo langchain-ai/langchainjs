@@ -67,22 +67,29 @@ export class HuggingFaceInference extends LLM implements HFInput {
   }
 
   /** @ignore */
-  async _call(prompt: string, _stop?: string[]): Promise<string> {
+  async _call(
+    prompt: string,
+    options: this["ParsedCallOptions"]
+  ): Promise<string> {
     const { HfInference } = await HuggingFaceInference.imports();
     const hf = new HfInference(this.apiKey);
-    const res = await this.caller.call(hf.textGeneration.bind(hf), {
-      model: this.model,
-      parameters: {
-        // make it behave similar to openai, returning only the generated text
-        return_full_text: false,
-        temperature: this.temperature,
-        max_new_tokens: this.maxTokens,
-        top_p: this.topP,
-        top_k: this.topK,
-        repetition_penalty: this.frequencyPenalty,
-      },
-      inputs: prompt,
-    });
+    const res = await this.caller.callWithOptions(
+      { signal: options.signal },
+      hf.textGeneration.bind(hf),
+      {
+        model: this.model,
+        parameters: {
+          // make it behave similar to openai, returning only the generated text
+          return_full_text: false,
+          temperature: this.temperature,
+          max_new_tokens: this.maxTokens,
+          top_p: this.topP,
+          top_k: this.topK,
+          repetition_penalty: this.frequencyPenalty,
+        },
+        inputs: prompt,
+      }
+    );
     return res.generated_text;
   }
 

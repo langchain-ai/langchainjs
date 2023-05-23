@@ -60,6 +60,26 @@ test("Run agent locally", async () => {
   console.log(`Got output ${result.output}`);
 });
 
+test("Run agent with an abort signal", async () => {
+  const model = new OpenAI({ temperature: 0, modelName: "text-babbage-001" });
+  const tools = [new Calculator()];
+
+  const executor = await initializeAgentExecutorWithOptions(tools, model, {
+    agentType: "zero-shot-react-description",
+  });
+  console.log("Loaded agent.");
+
+  const input = `What is 3 to the fourth power?`;
+  console.log(`Executing with input "${input}"...`);
+
+  const controller = new AbortController();
+  await expect(() => {
+    const result = executor.call({ input, signal: controller.signal });
+    controller.abort();
+    return result;
+  }).rejects.toThrow();
+});
+
 test("Run agent with incorrect api key should throw error", async () => {
   const model = new OpenAI({
     temperature: 0,

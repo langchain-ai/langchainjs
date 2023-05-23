@@ -7,6 +7,12 @@ export {
 } from "./base.js";
 export { PromptTemplate, PromptTemplateInput } from "./prompt.js";
 export {
+  BasePromptSelector,
+  ConditionalPromptSelector,
+  isChatModel,
+  isLLM,
+} from "./selectors/conditional.js";
+export {
   LengthBasedExampleSelector,
   LengthBasedExampleSelectorInput,
 } from "./selectors/LengthBasedExampleSelector.js";

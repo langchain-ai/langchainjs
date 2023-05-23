@@ -26,6 +26,12 @@ const agents = [
     initializeAgentExecutorWithOptions(tools, new OpenAI({ temperature: 0 }), {
       agentType: "zero-shot-react-description",
     }),
+  (tools) =>
+    initializeAgentExecutorWithOptions(
+      tools,
+      new ChatOpenAI({ temperature: 0 }),
+      { agentType: "structured-chat-zero-shot-react-description" }
+    ),
 ] as ((
   tools: Tool[]
 ) => ReturnType<typeof initializeAgentExecutorWithOptions>)[];
@@ -40,17 +46,6 @@ const scenarios = [
       ),
     ],
     input: "what t shirts are available in klarna?",
-  }),
-  async () => ({
-    tools: [
-      new SerpAPI(undefined, {
-        location: "Austin,Texas,United States",
-        hl: "en",
-        gl: "us",
-      }),
-      new Calculator(),
-    ],
-    input: `Who is Olivia Wilde's boyfriend? What is his current age raised to the 0.23 power?`,
   }),
   async () => ({
     tools: [

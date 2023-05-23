@@ -33,46 +33,56 @@ const mockFetchForOpenAIStream = async ({
   );
 
   let error: Error | null = null;
+  let done = false;
   const receivedChunks: Array<string> = [];
   const resp = await fetchAdapter({
     url: "https://example.com",
     method: "POST",
     responseType: "stream",
-    onmessage: (strChunk: { data: string }) => {
-      receivedChunks.push(
-        JSON.parse(strChunk.data).choices[0].delta.content ?? ""
-      );
+    onmessage: (event: { data: string }) => {
+      if (event.data?.trim?.() === "[DONE]") {
+        done = true;
+      } else {
+        receivedChunks.push(
+          JSON.parse(event.data).choices[0].delta.content ?? ""
+        );
+      }
     },
   } as unknown as never).catch((err) => {
     error = err;
     return null;
   });
 
-  return { resp, receivedChunks, error } as {
+  return { resp, receivedChunks, error, done } as {
     resp: AxiosResponse | null;
     receivedChunks: Array<string>;
     error: Error | null;
+    done: boolean;
   };
 };
 
 describe("OpenAI Stream Tests", () => {
   it("should return a 200 response chunk by chunk", async () => {
-    // When stream mode enabled, OpenAI responds with a stream of `data: {...}\n\n` chunks.
-    const { resp, receivedChunks, error } = await mockFetchForOpenAIStream({
-      status: 200,
-      contentType: "text/event-stream",
-      chunks: [
-        'data: {"choices":[{"delta":{"role":"assistant"},"index":0,"finish_reason":null}]}\n\n',
-        'data: {"choices":[{"delta":{"content":"Hello"},"index":0,"finish_reason":null}]}\n\n',
-        'data: {"choices":[{"delta":{"content":" World"},"index":0,"finish_reason":null}]}\n\n',
-        'data: {"choices":[{"delta":{"content":"!"},"index":0,"finish_reason":null}]}\n\n',
-        'data: {"choices":[{"delta":{},"index":0,"finish_reason":"stop"}]}\n\n',
-      ],
-    });
+    // When stream mode enabled, OpenAI responds with a stream of `data: {...}\n\n` chunks
+    // followed by `data: [DONE]\n\n`.
+    const { resp, receivedChunks, error, done } =
+      await mockFetchForOpenAIStream({
+        status: 200,
+        contentType: "text/event-stream",
+        chunks: [
+          'data: {"choices":[{"delta":{"role":"assistant"},"index":0,"finish_reason":null}]}\n\n',
+          'data: {"choices":[{"delta":{"content":"Hello"},"index":0,"finish_reason":null}]}\n\n',
+          'data: {"choices":[{"delta":{"content":" World"},"index":0,"finish_reason":null}]}\n\n',
+          'data: {"choices":[{"delta":{"content":"!"},"index":0,"finish_reason":null}]}\n\n',
+          'data: {"choices":[{"delta":{},"index":0,"finish_reason":"stop"}]}\n\n',
+          "data: [DONE]\n\n",
+        ],
+      });
 
     expect(error).toEqual(null);
     expect(resp?.status).toEqual(200);
     expect(receivedChunks).toEqual(["", "Hello", " World", "!", ""]);
+    expect(done).toBe(true);
   });
 
   it("should handle OpenAI 400 json error", async () => {
@@ -129,5 +139,32 @@ describe("OpenAI Stream Tests", () => {
       "Expected content-type to be text/event-stream, Actual: text/plain"
     );
     expect(receivedChunks).toEqual([]);
+  });
+});
+
+describe("Azure OpenAI Stream Tests", () => {
+  it("should return a 200 response chunk by chunk", async () => {
+    // When stream mode enabled, Azure OpenAI responds with chunks without tailing blank line.
+    // In addition, Azure sends chunks in batch.
+    const { resp, receivedChunks, error, done } =
+      await mockFetchForOpenAIStream({
+        status: 200,
+        contentType: "text/event-stream",
+        chunks: [
+          // First batch
+          'data: {"choices":[{"delta":{"role":"assistant"},"index":0,"finish_reason":null}]}\n\n' +
+            'data: {"choices":[{"delta":{"content":"Hello"},"index":0,"finish_reason":null}]}\n\n' +
+            'data: {"choices":[{"delta":{"content":" World"},"index":0,"finish_reason":null}]}\n\n',
+          // Second batch
+          'data: {"choices":[{"delta":{"content":"!"},"index":0,"finish_reason":null}]}\n\n' +
+            'data: {"choices":[{"delta":{},"index":0,"finish_reason":"stop"}]}\n\n' +
+            "data: [DONE]\n", // no blank line
+        ],
+      });
+
+    expect(error).toEqual(null);
+    expect(resp?.status).toEqual(200);
+    expect(receivedChunks).toEqual(["", "Hello", " World", "!", ""]);
+    expect(done).toBe(true);
   });
 });
