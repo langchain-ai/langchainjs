@@ -85,6 +85,15 @@ export abstract class BaseChatMessage {
       },
     };
   }
+
+  /**
+   * A way at runtime to determine if two BaseChatMessage objects have the same type
+   * @param otherMessage - The other BaseChatMessage we're comparing to
+   * @return True if the two objects have the same type. False otherwise.
+   */
+  typeEquals(otherMessage: BaseChatMessage): boolean {
+    return otherMessage?._getType() === this._getType();
+  }
 }
 
 export class HumanChatMessage extends BaseChatMessage {
