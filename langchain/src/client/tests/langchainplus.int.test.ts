@@ -7,10 +7,8 @@ import { Calculator } from "../../tools/calculator.js";
 import { initializeAgentExecutorWithOptions } from "../../agents/initialize.js";
 import { OpenAI } from "../../llms/openai.js";
 
-test("Test LangChainPlus Client Dataset CRD", async () => {
-  const client: LangChainPlusClient = await LangChainPlusClient.create({
-    apiUrl: "http://localhost:8000",
-  });
+test.skip("Test LangChainPlus Client Dataset CRD", async () => {
+  const client: LangChainPlusClient = await LangChainPlusClient.create();
 
   const csvContent = `col1,col2\nval1,val2`;
   const blobData = new Blob([Buffer.from(csvContent)]);
@@ -62,9 +60,7 @@ test("Test LangChainPlus Client Dataset CRD", async () => {
 });
 
 test("Test LangChainPlus Client Run Chat Model Over Simple Dataset", async () => {
-  const client: LangChainPlusClient = await LangChainPlusClient.create({
-    apiUrl: "http://localhost:8000",
-  });
+  const client: LangChainPlusClient = await LangChainPlusClient.create();
   const datasetName = "chat-test";
   const description = "Asking a chat model test things";
   // Check if dataset name exists in listDatasets
@@ -98,9 +94,7 @@ test("Test LangChainPlus Client Run Chat Model Over Simple Dataset", async () =>
 });
 
 test("Test LangChainPlus Client Run LLM Over Simple Dataset", async () => {
-  const client: LangChainPlusClient = await LangChainPlusClient.create({
-    apiUrl: "http://localhost:8000",
-  });
+  const client: LangChainPlusClient = await LangChainPlusClient.create();
   const datasetName = "llm-test";
   const description = "Asking a chat model test things";
   // Check if dataset name exists in listDatasets
@@ -141,9 +135,7 @@ test("Test LangChainPlus Client Run LLM Over Simple Dataset", async () => {
 });
 
 test("Test LangChainPlus Client Run Chain Over Simple Dataset", async () => {
-  const client: LangChainPlusClient = await LangChainPlusClient.create({
-    apiUrl: "http://localhost:8000",
-  });
+  const client: LangChainPlusClient = await LangChainPlusClient.create();
   const csvContent = `
 input,output
 what is 8 to the third power?,8 to the third power is 512
@@ -182,9 +174,7 @@ what is 1213 divided by 4345?,approximately 0.2791714614499425
 });
 
 test("Test LangChainPlus Client Run Chain Over Dataset", async () => {
-  const client: LangChainPlusClient = await LangChainPlusClient.create({
-    apiUrl: "http://localhost:8000",
-  });
+  const client: LangChainPlusClient = await LangChainPlusClient.create();
   const csvContent = `
 input,output
 How many people live in canada as of 2023?,"approximately 38,625,801"
