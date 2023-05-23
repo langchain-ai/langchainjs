@@ -61,6 +61,8 @@ A user would then import your new vector store as `import { LangCoVectorStore } 
 
 You may use third-party dependencies in new integrations, but they should be added as `peerDependencies` and `devDependencies` with an entry under `optionalDependenciesMeta` in [`langchain/package.json`](https://github.com/hwchase17/langchainjs/blob/main/langchain/package.json), **not under any core `dependencies` list**. This keeps the overall package size small, as only people who are using your integration will need to install, and allows us to support a wider range of runtimes.
 
+We suggest using caret syntax (`^`) for peer dependencies to support a wider range of people trying to use them as well as to be somewhat tolerant to non-major version updates, which should (theoretically) be the only breaking ones.
+
 Please make sure all introduced dependencies are permissively licensed (MIT is recommended) and well-supported and maintained.
 
 If your integration also uses a third-party library, you must add it under `requiresOptionalDependency` in the [`create-entrypoints.js`](https://github.com/hwchase17/langchainjs/blob/main/langchain/scripts/create-entrypoints.js) file to avoid breaking the build:
@@ -145,9 +147,12 @@ As with all contributions, make sure you run `yarn lint` and `yarn format` so th
 Below are links to guides with advice and tips for specific types of integrations:
 
 - [LLM providers](https://github.com/hwchase17/langchainjs/blob/main/.github/contributing/integrations/LLMS.md) (e.g. OpenAI's GPT-3)
-- [Chat model providers](#chat-model-providers) (e.g. Anthropic's Claude, OpenAI's GPT-4)
-- [Memory](#memory) (used to give an LLM or chat model context of past conversations, e.g. Motörhead)
-- [Vector stores](#vector-stores) (e.g. Pinecone)
+- Chat model providers (TODO) (e.g. Anthropic's Claude, OpenAI's GPT-4)
+- [Memory](https://github.com/hwchase17/langchainjs/blob/main/.github/contributing/integrations/MEMORY.md) (used to give an LLM or chat model context of past conversations, e.g. Motörhead)
+- [Vector stores](https://github.com/hwchase17/langchainjs/blob/main/.github/contributing/integrations/VECTOR_STORES.md) (e.g. Pinecone)
 - [Persistent message stores](https://github.com/hwchase17/langchainjs/blob/main/.github/contributing/integrations/LLMS.md) (used to persistently store and load raw chat histories, e.g. Redis)
 - [Document loaders](https://github.com/hwchase17/langchainjs/blob/main/.github/contributing/integrations/DOCUMENT_LOADERS.md) (used to load documents for later storage into vector stores, e.g. Apify)
-- [Tools](#tools) (used for agents, e.g. the SERP API)
+- Embeddings (TODO) (e.g. Cohere)
+- [Tools](https://github.com/hwchase17/langchainjs/blob/main/.github/contributing/integrations/TOOLS.md) (used for agents, e.g. the SERP API tool)
+
+This is a living document, so please make a pull request if we're missing anything useful!

@@ -8,8 +8,10 @@ Another key difference is that message stores are only used with chat models.
 
 **Make sure you read the [general guidelines page](https://github.com/hwchase17/langchainjs/blob/main/.github/contributing/integrations/INTEGRATIONS.md) first!**
 
+## Example PR
+
 We'll be referencing this PR adding a Redis-backed message store as an example: https://github.com/hwchase17/langchainjs/pull/951
 
-# Serializing and deserializing chat messages
+## Serializing and deserializing chat messages
 
 LangChain messages implement a `BaseChatMessage` class that contains information like the message's content and role of the speaker. In order to provide a standard way to map these messages to a storable JSON format, you should use the utility `mapChatMessagesToStoredMessages` and `mapStoredMessagesToChatMessages` functions as [shown here](https://github.com/hwchase17/langchainjs/pull/951/files#diff-4c638d231a5e5bb29a149c6fb7d8f4b24aaf1b6fcc2cc2a728346eaebb6c9c47R17).

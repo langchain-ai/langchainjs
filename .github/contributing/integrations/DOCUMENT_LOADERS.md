@@ -6,4 +6,6 @@ Document loaders are classes that pull in text from a given source and load them
 
 **Make sure you read the [general guidelines page](https://github.com/hwchase17/langchainjs/blob/main/.github/contributing/integrations/INTEGRATIONS.md) first!**
 
-You can take a look at this PR adding Apify Datasets as an example: https://github.com/hwchase17/langchainjs/pull/1271
+## Example PR
+
+You can take a look at this PR adding Apify Datasets as an example when creating your own document loader integrations: https://github.com/hwchase17/langchainjs/pull/1271

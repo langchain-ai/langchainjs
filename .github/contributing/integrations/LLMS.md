@@ -4,6 +4,9 @@ This page contains some specific guidelines and examples for contributing integr
 
 **Make sure you read the [general guidelines page](https://github.com/hwchase17/langchainjs/blob/main/.github/contributing/integrations/INTEGRATIONS.md) first!**
 
+
+## Example PR
+
 We'll be referencing this PR adding Amazon SageMaker endpoints as an example: https://github.com/hwchase17/langchainjs/pull/1267
 
 ## General ideas
