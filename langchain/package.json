@@ -525,6 +525,9 @@
     "faiss-node": {
       "optional": true
     },
+    "google-auth-library": {
+      "optional": true
+    },
     "hnswlib-node": {
       "optional": true
     },
