@@ -28,6 +28,7 @@ import {
 } from "../schema/index.js";
 import { getModelNameForTiktoken } from "../base_language/count_tokens.js";
 import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
+import { getPromptLayerRequestID } from '../util/prompt-layer.js'
 
 export { OpenAICallOptions, OpenAIChatInput, AzureOpenAIInput };
 
@@ -534,5 +535,108 @@ export class ChatOpenAI
         },
       }
     );
+  }
+}
+
+export class PromptLayerChatOpenAI extends ChatOpenAI {
+  promptLayerApiKey?: string;
+  plTags?: string[];
+  returnPromptLayerID?: boolean;
+
+  constructor(
+    fields?: ConstructorParameters<typeof ChatOpenAI>[0] & {
+      plTags?: string[];
+      returnPromptLayerID?: boolean;
+    }
+  ) {
+    super(fields);
+
+    this.plTags = fields?.plTags ?? [];
+    this.returnPromptLayerID = fields?.returnPromptLayerID ?? false;
+  }
+
+  async _generate(
+    messages: BaseChatMessage[],
+    options?: string[] | this["CallOptions"],
+    runManager?: CallbackManagerForLLMRun
+  ): Promise<ChatResult> {
+    const requestStartTime = Date.now();
+
+    let parsedOptions: this["CallOptions"];
+    if (Array.isArray(options)) {
+      parsedOptions = { stop: options } as this["CallOptions"];
+    } else if (options?.timeout && !options.signal) {
+      parsedOptions = {
+        ...options,
+        signal: AbortSignal.timeout(options.timeout),
+      };
+    } else {
+      parsedOptions = options ?? {};
+    }
+
+    const generatedResponses = await super._generate(messages, parsedOptions, runManager);
+    const requestEndTime = Date.now();
+
+    const _convertMessageToDict = (message: BaseChatMessage) => {
+      let messageDict: Record<string, any>;
+
+      if (message instanceof ChatMessage) {
+        messageDict = { role: message.role, content: message.text };
+      } else if (message instanceof HumanChatMessage) {
+        messageDict = { role: 'user', content: message.text };
+      } else if (message instanceof AIChatMessage) {
+        messageDict = { role: 'assistant', content: message.text };
+      } else if (message instanceof SystemChatMessage) {
+        messageDict = { role: 'system', content: message.text };
+      } else {
+        throw new Error(`Got unknown type ${message}`);
+      }
+
+      return messageDict;
+    }
+
+    const _createMessageDicts = (messages: BaseChatMessage[], stop?: this["CallOptions"]) => {
+      let params = {
+        ...this.invocationParams(),
+        model: this.modelName,
+      };
+
+      if (stop) {
+        if (Object.keys(params).includes('stop')) {
+          throw new Error("`stop` found in both the input and default params.");
+        }
+
+      }
+      const messageDicts = messages.map((message) => _convertMessageToDict(message));
+      return messageDicts
+    }
+
+    for (let i = 0; i < generatedResponses.generations.length; i++) {
+      const generation = generatedResponses.generations[i];
+      const messageDicts = _createMessageDicts([generation.message], parsedOptions);
+
+      let promptLayerRequestID: string | undefined = undefined
+      if (this instanceof PromptLayerChatOpenAI && this.returnPromptLayerID === true) {
+        promptLayerRequestID = await getPromptLayerRequestID(
+          this.caller,
+          "openai.ChatCompletion.create",
+          this.modelName, 
+          messageDicts, // TODO: Is this supposed to be string or what??? What is the type of the messages?
+          this instanceof PromptLayerChatOpenAI ? this.plTags : [],
+          generation.text,
+          requestStartTime,
+          requestEndTime,
+          this instanceof PromptLayerChatOpenAI ? this.promptLayerApiKey : undefined,
+        )  
+
+        if (!generation.generationInfo || typeof generation.generationInfo !== 'object') {
+          generation.generationInfo = {};
+        }
+
+        generation.generationInfo['pl_request_id'] = promptLayerRequestID;
+      }
+    }
+
+    return generatedResponses;
   }
 }

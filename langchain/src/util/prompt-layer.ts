@@ -5,7 +5,7 @@ export const getPromptLayerRequestID = async (
     callerFunc: AsyncCaller,
     functionName: string,
     modelName: string, 
-    messages: string[],
+    messages: any, // TODO: What type is this? Message or string or what?
     plTags: string[] | undefined,
     requestResponse: string | undefined,
     startTime: number,
