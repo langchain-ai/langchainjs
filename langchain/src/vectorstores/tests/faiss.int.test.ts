@@ -1,5 +1,3 @@
-// Revert to a unit test when https://github.com/hwchase17/langchainjs/issues/1383 is resolved
-
 import { test, expect } from "@jest/globals";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
