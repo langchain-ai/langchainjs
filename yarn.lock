@@ -18284,6 +18284,8 @@ __metadata:
       optional: true
     faiss-node:
       optional: true
+    google-auth-library:
+      optional: true
     hnswlib-node:
       optional: true
     html-to-text:
