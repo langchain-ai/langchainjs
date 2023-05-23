@@ -21,6 +21,7 @@ const chat_models_openai = require("langchain/chat_models/openai");
 const chat_models_anthropic = require("langchain/chat_models/anthropic");
 const schema = require("langchain/schema");
 const schema_output_parser = require("langchain/schema/output_parser");
+const schema_query_constructor = require("langchain/schema/query_constructor");
 const callbacks = require("langchain/callbacks");
 const output_parsers = require("langchain/output_parsers");
 const retrievers_remote = require("langchain/retrievers/remote");

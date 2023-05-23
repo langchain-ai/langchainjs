@@ -1,4 +1,3 @@
-import { isNode } from "browser-or-node";
 import {
   Configuration,
   OpenAIApi,
@@ -8,6 +7,7 @@ import {
   ChatCompletionResponseMessageRoleEnum,
   CreateChatCompletionResponse,
 } from "openai";
+import { isNode } from "../util/env.js";
 import {
   AzureOpenAIInput,
   OpenAICallOptions,
@@ -368,7 +368,7 @@ export class OpenAIChat
       this.client = new OpenAIApi(clientConfig);
     }
     const axiosOptions = {
-      adapter: isNode ? undefined : fetchAdapter,
+      adapter: isNode() ? undefined : fetchAdapter,
       ...this.clientConfig.baseOptions,
       ...options,
     } as StreamingAxiosConfiguration;

@@ -6,6 +6,8 @@ export CI=true
 
 cp -r ../package/* .
 
+cp ../root/yarn.lock .
+
 # Replace the workspace dependency with the local copy, and install all others
 yarn add ../langchain
 
