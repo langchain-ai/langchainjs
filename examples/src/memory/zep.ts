@@ -2,7 +2,7 @@ import { BufferMemory } from "langchain/memory";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { ConversationChain } from "langchain/chains";
 
-import { ZepChatMessageHistory } from "../../../langchain/src/memory/zep_memory.js";
+import { ZepChatMessageHistory } from "langchain/memory/";
 
 export const run = async () => {
   // Create an instance of ZepChatMessageHistory
