@@ -13881,7 +13881,6 @@ __metadata:
     "@opensearch-project/opensearch": ^2.2.0
     "@pinecone-database/pinecone": ^0.0.14
     "@prisma/client": ^4.11.0
-    "@qdrant/js-client-rest": ^1.2.0
     "@supabase/supabase-js": ^2.10.0
     "@tensorflow/tfjs-backend-cpu": ^4.4.0
     "@tsconfig/recommended": ^1.0.2
