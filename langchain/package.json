@@ -378,7 +378,6 @@
     "@typescript-eslint/parser": "^5.58.0",
     "@zilliz/milvus2-sdk-node": ">=2.2.7",
     "apify-client": "^2.7.1",
-    "axios": "^0.26.0",
     "cheerio": "^1.0.0-rc.12",
     "chromadb": "^1.4.2",
     "cohere-ai": "^5.0.2",
@@ -434,7 +433,6 @@
     "@tensorflow/tfjs-core": "*",
     "@zilliz/milvus2-sdk-node": ">=2.2.7",
     "apify-client": "^2.7.1",
-    "axios": "*",
     "cheerio": "^1.0.0-rc.12",
     "chromadb": "^1.4.2",
     "cohere-ai": "^5.0.2",
@@ -502,9 +500,6 @@
       "optional": true
     },
     "apify-client": {
-      "optional": true
-    },
-    "axios": {
       "optional": true
     },
     "cheerio": {
@@ -577,6 +572,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.4.3",
     "ansi-styles": "^5.0.0",
+    "axios": "^0.26.0",
     "binary-extensions": "^2.2.0",
     "expr-eval": "^2.0.2",
     "flat": "^5.0.2",
