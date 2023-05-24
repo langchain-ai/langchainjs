@@ -8,59 +8,149 @@ Key Features:
 - Auto-summarization of memory messages based on a configurable message window. A series of summaries are stored, providing flexibility for future summarization strategies.
 - Vector search over memories, with messages automatically embedded on creation.
 - Auto-token counting of memories and summaries, allowing finer-grained control over prompt assembly.
-- Python and JavaScript SDKs.
+- [Python](https://github.com/getzep/zep-python) and [JavaScript](https://github.com/getzep/zep-js) SDKs.
 
 ## Setup
 
 See instructions at [Zep](https://github.com/getzep/zep) for running the server locally or through an automated hosting provider.
 
-## Usage
+## Usage :
 
 ```typescript
-import { ConversationChain } from "langchain/chains";
-import { ChatOpenAI } from "langchain/chat_models";
-import { ZepMemory } from "@getzep/zep-js";
-import uuid;
+import {
+  ZepChatMessageHistory,
+  ZepMemory,
+  ZepMemoryInput,
+} from "langchain/memory";
 
-const model = new ChatOpenAI({});
-const memory = new ZepMemory({
-  sessionId: uuid.uuid4(),
-  url: "http://localhost:8000",
-});
+// Create an instance of ZepChatMessageHistory
+const chatHistory = new ZepChatMessageHistory(
+  "TestSession1234",
+  process.env.ZEP_URL || "http://localhost:8000"
+);
 
-await memory.init(); // loads previous state from Zep
-const context = memory.context
-  ? `
-Here's previous context: ${memory.context}`
-  : "";
+// Use the instance to call its methods
+await chatHistory.addUserMessage("Who was Octavia Butler?");
+await chatHistory.addAIChatMessage(
+  "Octavia Estelle Butler (June 22, 1947 – February " +
+    "24, 2006) was an American science fiction author."
+);
 
-const chatPrompt = ChatPromptTemplate.fromPromptMessages([
-  SystemMessagePromptTemplate.fromTemplate(
-    `The following is a friendly conversation between a human and an AI. The AI is talkative and provides lots of specific details from its context. If the AI does not know the answer to a question, it truthfully says it does not know.`
-  ),
-  new MessagesPlaceholder("history"),
-  HumanMessagePromptTemplate.fromTemplate("{input}"),
-]);
+await chatHistory.addUserMessage("Which books of hers were made into movies?");
+await chatHistory.addAIChatMessage(
+  "The most well-known adaptation of Octavia Butler's " +
+    "work is the FX series Kindred, based on her novel of the same name."
+);
 
-const chain = new ConversationChain({
-  memory,
-  prompt: chatPrompt,
-  llm: chat,
-});
+await chatHistory.addUserMessage("What awards did she win?");
+await chatHistory.addAIChatMessage(
+  "Octavia Butler won the Hugo Award, the Nebula Award, " +
+    "and the MacArthur Fellowship."
+);
 
-const responseH = await chain.call({ input: "hi from Vauxhall, London, how are you doing today" });
-console.log({ responseH });
+await chatHistory.addUserMessage("What was her most famous book?");
+await chatHistory.addAIChatMessage(
+  "Her most famous book is Kindred, which was published " + "in 1979."
+);
+
+await chatHistory.addUserMessage(
+  "Which other women sci-fi weiters might I want to read?"
+);
+await chatHistory.addAIChatMessage(
+  "You might want to read Ursula K. Le Guin or Joanna Russ."
+);
+
+await chatHistory.addUserMessage("What is the Parable of the Sower about?");
+await chatHistory.addAIChatMessage(
+  "Parable of the Sower is a science fiction novel by Octavia Butler," +
+    "Parable of the Sower is a science fiction novel by Octavia Butler," +
+    " published in 1993. It follows the story of Lauren Olamina, a young woman" +
+    " living in a dystopian future where society has collapsed due to" +
+    " environmental disasters, poverty, and violence."
+);
+
+// Retrieve and log the chat messages
+const messages = await chatHistory.getMessages();
+console.log(messages);
+
+// Search the Zep memory for chat messages matching a specified query
+const searchResults = await chatHistory.search("Octavia Butler", 3);
+console.log(searchResults);
+
+// Clear the Zep memory
+await chatHistory.clear();
 ```
 
 ```shell
-{response: "Hello! As an AI language model, I don't have feelings, but I'm functioning properly and ready to assist you with any questions or tasks you may have. How can I help you today?"}
-```
-
-```typescript
-const responseI = await chain.call({ input: "Do you know where I am?" });
-console.log({ resonseI });
-```
-
-```shell
-{response: 'Yes, you mentioned that you are from Vauxhall, London. However, as an AI language model, I don't have access to your current location unless you provide me with that information.'}
+[
+  AIChatMessage {
+    text: 'Parable of the Sower is a science fiction novel by Octavia Butler,Parable of the Sower is a science fiction novel by Octavia Butler, published in 1993. It follows the story of Lauren Olamina, a young woman living in a dystopian future where society has collapsed due to environmental disasters, poverty, and violence.'
+  },
+  HumanChatMessage { text: 'What is the Parable of the Sower about?' },
+  AIChatMessage {
+    text: 'You might want to read Ursula K. Le Guin or Joanna Russ.'
+  },
+  HumanChatMessage {
+    text: 'Which other women sci-fi weiters might I want to read?'
+  },
+  AIChatMessage {
+    text: 'Her most famous book is Kindred, which was published in 1979.'
+  },
+  HumanChatMessage { text: 'What was her most famous book?' },
+  AIChatMessage {
+    text: 'Octavia Butler won the Hugo Award, the Nebula Award, and the MacArthur Fellowship.'
+  },
+  HumanChatMessage { text: 'What awards did she win?' },
+  AIChatMessage {
+    text: "The most well-known adaptation of Octavia Butler's work is the FX series Kindred, based on her novel of the same name."
+  },
+  HumanChatMessage {
+    text: 'Which books of hers were made into movies?'
+  },
+  AIChatMessage {
+    text: 'Octavia Estelle Butler (June 22, 1947 – February 24, 2006) was an American science fiction author.'
+  },
+  HumanChatMessage { text: 'Who was Octavia Butler?' }
+]
+[
+  SearchResult {
+    message: Message {
+      uuid: 'a989a467-1794-4333-9e6b-4766e383d852',
+      created_at: '2023-05-23T23:03:58.625558Z',
+      role: 'human',
+      content: 'Who was Octavia Butler?',
+      token_count: 8
+    },
+    meta: {},
+    score: undefined,
+    summary: null,
+    dist: 0.9451673508603058
+  },
+  SearchResult {
+    message: Message {
+      uuid: '9fe405c7-60ff-46d3-b0f3-380c136c36f8',
+      created_at: '2023-05-23T23:03:58.642475Z',
+      role: 'ai',
+      content: 'Octavia Estelle Butler (June 22, 1947 – February 24, 2006) was an American science fiction author.',
+      token_count: 31
+    },
+    meta: {},
+    score: undefined,
+    summary: null,
+    dist: 0.9331205063596482
+  },
+  SearchResult {
+    message: Message {
+      uuid: '80d41add-dace-4b8e-abc8-4af411f156ed',
+      created_at: '2023-05-23T23:03:58.657743Z',
+      role: 'ai',
+      content: 'Octavia Butler won the Hugo Award, the Nebula Award, and the MacArthur Fellowship.',
+      token_count: 21
+    },
+    meta: {},
+    score: undefined,
+    summary: null,
+    dist: 0.911849124772129
+  },
+]
 ```

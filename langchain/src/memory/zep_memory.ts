@@ -19,25 +19,25 @@ import { InputValues, MemoryVariables, getBufferString } from "./base.js";
 import { BaseChatMemory, BaseChatMemoryInput } from "./chat_memory.js";
 
 /**
- * A ChatMemoryHistory implementation that uses Zep as backend Memory store for conversations. 
+ * A ChatMemoryHistory implementation that uses Zep as backend Memory store for conversations.
  * Recommended Usage::
  *  Setup a Zep Chat History
- *  const zepChatHistory = new ZepChatMessageHistory(sessionID, ZEP_API_URL); 
- * 
- *  Use a standard ConversationBufferMemory to encapsulate the Zep chat history 
+ *  const zepChatHistory = new ZepChatMessageHistory(sessionID, ZEP_API_URL);
+ *
+ *  Use a standard ConversationBufferMemory to encapsulate the Zep chat history
  *  const memory = new ConversationBufferMemory("chat_history", zepChatHistory);
- * 
+ *
  *  Zep provides long-term conversation storage for LLM apps. The server stores,
  *  summarizes, embeds, indexes, and enriches conversational AI chat
  *  histories, and exposes them via simple, low-latency APIs.
- * 
+ *
  *  For server installation instructions and more, see: https://getzep.github.io/
  *  This class is a thin wrapper around the zep-python package. Additional
  *  Zep functionality is exposed via the zepSummary and zepMessages properties.
- * 
+ *
  *  For more information on the zep-python package, see:
  *  https://github.com/getzep/zep-js
- * 
+ *
  */
 export class ZepChatMessageHistory extends BaseChatMessageHistory {
   private zepClient: ZepClient;
@@ -51,10 +51,10 @@ export class ZepChatMessageHistory extends BaseChatMessageHistory {
   }
 
   /**
-  *  Adds an AI chat message to the Zep memory.
-  *  @param {string} message - The content of the AI chat message.
-  *  @returns {Promise<void>} A promise that resolves when the message is added to the Zep memory.
-  */
+   *  Adds an AI chat message to the Zep memory.
+   *  @param {string} message - The content of the AI chat message.
+   *  @returns {Promise<void>} A promise that resolves when the message is added to the Zep memory.
+   */
   async addAIChatMessage(message: string): Promise<void> {
     const zepMessage: Message = {
       content: message,
@@ -82,10 +82,10 @@ export class ZepChatMessageHistory extends BaseChatMessageHistory {
   }
 
   /**
-  *  Adds a user message to the Zep memory.
-  *  @param {string} message - The content of the user message.
-  *  @returns {Promise<void>} A promise that resolves when the message is added to the Zep memory.
-  */
+   *  Adds a user message to the Zep memory.
+   *  @param {string} message - The content of the user message.
+   *  @returns {Promise<void>} A promise that resolves when the message is added to the Zep memory.
+   */
   async addUserMessage(message: string): Promise<void> {
     const zepMessage: Message = {
       content: message,
@@ -115,7 +115,7 @@ export class ZepChatMessageHistory extends BaseChatMessageHistory {
   /**
    *  Retrieves the chat messages from Zep memory.
    *  @returns {Promise<BaseChatMessage[]>} A promise that resolves to an array of chat messages.
-  */
+   */
   async getMessages(): Promise<BaseChatMessage[]> {
     let zepMemory: Memory | null = null;
 
@@ -145,11 +145,11 @@ export class ZepChatMessageHistory extends BaseChatMessageHistory {
   }
 
   /**
-  *  Searches the Zep memory for chat messages matching the specified query.
-  *  @param {string} query - The search query.
-  *  @param {number} [limit] - The maximum number of search results to return.
-  *  @returns {Promise<SearchResult[]>} A promise that resolves to an array of search results.
-  */
+   *  Searches the Zep memory for chat messages matching the specified query.
+   *  @param {string} query - The search query.
+   *  @param {number} [limit] - The maximum number of search results to return.
+   *  @returns {Promise<SearchResult[]>} A promise that resolves to an array of search results.
+   */
   async search(query: string, limit?: number): Promise<SearchResult[]> {
     const payload: SearchPayload = {
       text: query,
@@ -160,10 +160,10 @@ export class ZepChatMessageHistory extends BaseChatMessageHistory {
   }
 
   /**
-  *  Clears the Zep memory for the current session.
-  *  @returns {Promise<void>} A promise that resolves once the memory is cleared.
-  *  @throws {NotFoundError} If the session is not found in Zep.
-  */
+   *  Clears the Zep memory for the current session.
+   *  @returns {Promise<void>} A promise that resolves once the memory is cleared.
+   *  @throws {NotFoundError} If the session is not found in Zep.
+   */
   async clear(): Promise<void> {
     try {
       await this.zepClient.deleteMemory(this.sessionID);
@@ -173,10 +173,10 @@ export class ZepChatMessageHistory extends BaseChatMessageHistory {
   }
 
   /**
-  *  Retrieves the Zep memory for the current session.
-  *  @returns {Promise<Memory>} A promise that resolves with the Zep memory.
-  *  @throws {NotFoundError} If the session is not found in Zep.
-  */
+   *  Retrieves the Zep memory for the current session.
+   *  @returns {Promise<Memory>} A promise that resolves with the Zep memory.
+   *  @throws {NotFoundError} If the session is not found in Zep.
+   */
   private async _getMemory(): Promise<Memory> {
     const zepMemory: Memory | null = await this.zepClient.getMemory(
       this.sessionID
@@ -200,7 +200,6 @@ export interface ZepMemoryInput extends BaseChatMemoryInput {
   baseURL?: string;
 
   sessionID?: string;
-
 }
 
 export class ZepMemory extends BaseChatMemory implements ZepMemoryInput {
