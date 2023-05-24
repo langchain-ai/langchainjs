@@ -6,14 +6,11 @@ import {
   ChatResult,
   LLMResult,
   MessageType,
-  SystemChatMessage,
 } from "../schema/index.js";
-import { BaseLanguageModelCallOptions } from "../base_language/index.js";
 import { GoogleVertexAIConnection } from "../util/googlevertexai-connection.js";
 import {
   GoogleVertexAIBaseLLMInput,
   GoogleVertexAIBasePrediction,
-  GoogleVertexAILLMResponse,
   GoogleVertexAIModelParams,
 } from "../types/googlevertexai-types.js";
 
@@ -31,12 +28,56 @@ interface GoogleVertexAIChatExample {
   output: GoogleVertexAIChatMessage;
 }
 
-export type AuthorType = "user" | "bot";
+export type GoogleVertexAIChatAuthor = "user" | "bot" | "context";
 
-export interface GoogleVertexAIChatMessage {
-  author: AuthorType;
+export type GoogleVertexAIChatMessageFields = {
+  author?: GoogleVertexAIChatAuthor;
   content: string;
   name?: string;
+};
+
+export class GoogleVertexAIChatMessage {
+  public author?: GoogleVertexAIChatAuthor;
+
+  public content: string;
+
+  public name?: string;
+
+  constructor(fields: GoogleVertexAIChatMessageFields) {
+    this.author = fields.author;
+    this.content = fields.content;
+    this.name = fields.name;
+  }
+
+  static mapMessageTypeToVertexChatAuthor(
+    baseMessageType: MessageType
+  ): GoogleVertexAIChatAuthor {
+    switch (baseMessageType) {
+      case "ai":
+        return "bot";
+      case "human":
+        return "user";
+      case "system":
+        throw new Error(
+          `System messages are only supported as the first passed message for Google Vertex AI.`
+        );
+      case "generic":
+        throw new Error(
+          `Generic messages are not supported by Google Vertex AI.`
+        );
+      default:
+        throw new Error(`Unknown message type: ${baseMessageType}`);
+    }
+  }
+
+  static fromChatMessage(message: BaseChatMessage) {
+    return new GoogleVertexAIChatMessage({
+      author: GoogleVertexAIChatMessage.mapMessageTypeToVertexChatAuthor(
+        message._getType()
+      ),
+      content: message.text,
+    });
+  }
 }
 
 export interface GoogleVertexAIChatInstance {
@@ -56,22 +97,8 @@ export interface GoogleVertexAIChatInput extends GoogleVertexAIBaseLLMInput {
 
   /** Help the model understand what an appropriate response is */
   examples?: ChatExample[];
-
-  /**
-   * A map of OpenAI role names and their corresponding Vertex AI
-   * author name.
-   */
-  roleAlias?: RoleAlias;
 }
 
-export type RoleAlias = Record<MessageType, AuthorType | undefined>;
-
-export interface GoogleVertexAIChatCallOptions
-  extends BaseLanguageModelCallOptions {
-  context?: string;
-
-  examples?: ChatExample[];
-}
 /**
  * Enables calls to the Google Cloud's Vertex AI API to access
  * Large Language Models in a chat-like fashion.
@@ -90,28 +117,17 @@ export class ChatGoogleVertexAI
   extends BaseChatModel
   implements GoogleVertexAIChatInput
 {
-  declare CallOptions: GoogleVertexAIChatCallOptions;
-
   model = "chat-bison";
 
   temperature = 0.2;
 
-  maxOutputTokens = 256;
+  maxOutputTokens = 1024;
 
   topP = 0.8;
 
   topK = 40;
 
-  context: string;
-
-  examples: ChatExample[];
-
-  roleAlias: RoleAlias = {
-    human: "user",
-    ai: "bot",
-    generic: undefined,
-    system: undefined,
-  };
+  examples: ChatExample[] = [];
 
   connection: GoogleVertexAIConnection<
     this["CallOptions"],
@@ -119,37 +135,36 @@ export class ChatGoogleVertexAI
     GoogleVertexAIChatPrediction
   >;
 
-  SystemMessage = new SystemChatMessage("");
-
   constructor(fields?: GoogleVertexAIChatInput) {
     super(fields ?? {});
 
     this.model = fields?.model ?? this.model;
-    this.context = fields?.context ?? this.context;
+    this.temperature = fields?.temperature ?? this.temperature;
+    this.maxOutputTokens = fields?.maxOutputTokens ?? this.maxOutputTokens;
+    this.topP = fields?.topP ?? this.topP;
+    this.topK = fields?.topK ?? this.topK;
     this.examples = fields?.examples ?? this.examples;
-    this.roleAlias = fields?.roleAlias ?? this.roleAlias;
 
     this.connection = new GoogleVertexAIConnection(
-      { ...fields, ...this },
+      {
+        ...fields,
+        ...this,
+      },
       this.caller
     );
   }
 
-  _combineLLMOutput(): // ...llmOutputs: LLMResult["llmOutput"][]
-  LLMResult["llmOutput"] {
+  _combineLLMOutput(): LLMResult["llmOutput"] {
     // TODO: Combine the safetyAttributes
     return [];
   }
 
+  // TODO: Add streaming support
   async _generate(
     messages: BaseChatMessage[],
     options: this["ParsedCallOptions"]
-    // runManager is omitted since we can't issue token updates
   ): Promise<ChatResult> {
-    const instance: GoogleVertexAIChatInstance = this.generateInstance(
-      messages,
-      options
-    );
+    const instance: GoogleVertexAIChatInstance = this.createInstance(messages);
 
     const parameters: GoogleVertexAIModelParams = {
       temperature: this.temperature,
@@ -164,137 +179,67 @@ export class ChatGoogleVertexAI
       options
     );
 
-    return this.convertResult(result);
-  }
-
-  _llmType(): string {
-    return "googleVertexAI";
-  }
-
-  generateInstance(
-    messages: BaseChatMessage[],
-    options: this["ParsedCallOptions"]
-  ): GoogleVertexAIChatInstance {
-    // Build the instances in the requeswt, which may be built from
-    // a combination (in highest to lowest priority) of the messages
-    // passed in, the options passed in, and the configuration parameters
-    // passed to the constructor.
-    //
-    // Note that || is used and *not* ?? because we want the empty string
-    // and the empty array to be replaced by a string or array that has
-    // something in it if available. || will do this, but ?? won't.
-    const fromMessages = this.convertMessages(messages);
-    const fromOptions = this.convertOptions(options);
-
-    const context =
-      fromMessages.context || fromOptions.context || this.context || "";
-
-    const convertedExamples = this.convertExamples(this.examples);
-    let examples: GoogleVertexAIChatExample[];
-    if (fromOptions?.examples?.length) {
-      examples = fromOptions.examples;
-    } else if (convertedExamples?.length) {
-      examples = convertedExamples;
-    } else {
-      examples = [];
-    }
-
-    const instance: GoogleVertexAIChatInstance = {
-      context,
-      examples,
-      messages: fromMessages.messages,
-    };
-    return instance;
-  }
-
-  convertMessages(baseMessages: BaseChatMessage[]): GoogleVertexAIChatInstance {
-    let context = "";
-    const messages: GoogleVertexAIChatMessage[] = [];
-
-    baseMessages.forEach((baseMessage) => {
-      if (this.SystemMessage.typeEquals(baseMessage)) {
-        // System messages should be added to the context prompt
-        context += baseMessage.text;
-      } else {
-        // Convert the message and add it to the list of messages
-        // if it is a valid author type.
-        const message = this.convertMessage(baseMessage);
-        if (message.author) {
-          messages.push(message);
-        }
-      }
-    });
-
-    return {
-      context,
-      messages,
-    };
-  }
-
-  convertMessage(baseMessage: BaseChatMessage): GoogleVertexAIChatMessage {
-    const ret: GoogleVertexAIChatMessage = {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      author: this.roleAlias[baseMessage._getType()],
-      content: baseMessage.text,
-    };
-    return ret;
-  }
-
-  convertOptions(
-    options: GoogleVertexAIChatCallOptions
-  ): GoogleVertexAIChatInstance {
-    const examples = options?.examples
-      ? this.convertExamples(options.examples)
-      : [];
-
-    return {
-      context: options?.context,
-      examples,
-      messages: [],
-    };
-  }
-
-  convertExample(example: ChatExample): GoogleVertexAIChatExample {
-    return {
-      input: this.convertMessage(example.input),
-      output: this.convertMessage(example.output),
-    };
-  }
-
-  convertExamples(
-    examples: ChatExample[] | undefined
-  ): GoogleVertexAIChatExample[] {
-    return examples?.map((example) => this.convertExample(example)) ?? [];
-  }
-
-  convertResult(
-    result: GoogleVertexAILLMResponse<GoogleVertexAIChatPrediction>
-  ): ChatResult {
-    const generations = this.convertPredictions(result?.data?.predictions);
+    const generations =
+      result?.data?.predictions?.map((prediction) =>
+        ChatGoogleVertexAI.convertPrediction(prediction)
+      ) ?? [];
     return {
       generations,
     };
   }
 
-  convertPredictions(
-    predictions: GoogleVertexAIChatPrediction[]
-  ): ChatGeneration[] {
-    return predictions.map((prediction) => this.convertPrediction(prediction));
+  _llmType(): string {
+    return "googlevertexai";
   }
 
-  convertPrediction(prediction: GoogleVertexAIChatPrediction): ChatGeneration {
+  createInstance(messages: BaseChatMessage[]): GoogleVertexAIChatInstance {
+    let context = "";
+    let conversationMessages = messages;
+    if (messages[0]?._getType() === "system") {
+      context = messages[0].text;
+      conversationMessages = messages.slice(1);
+    }
+    // https://cloud.google.com/vertex-ai/docs/generative-ai/chat/test-chat-prompts
+    if (conversationMessages.length % 2 === 0) {
+      throw new Error(
+        `Google Vertex AI requires an odd number of messages to generate a response.`
+      );
+    }
+    const vertexChatMessages = conversationMessages.map((baseMessage, i) => {
+      // https://cloud.google.com/vertex-ai/docs/generative-ai/chat/chat-prompts#messages
+      if (
+        i > 0 &&
+        baseMessage._getType() === conversationMessages[i - 1]._getType()
+      ) {
+        throw new Error(
+          `Google Vertex AI requires AI and human messages to alternate.`
+        );
+      }
+      return GoogleVertexAIChatMessage.fromChatMessage(baseMessage);
+    });
+
+    const examples = this.examples.map((example) => ({
+      input: GoogleVertexAIChatMessage.fromChatMessage(example.input),
+      output: GoogleVertexAIChatMessage.fromChatMessage(example.output),
+    }));
+
+    const instance: GoogleVertexAIChatInstance = {
+      context,
+      examples,
+      messages: vertexChatMessages,
+    };
+
+    return instance;
+  }
+
+  static convertPrediction(
+    prediction: GoogleVertexAIChatPrediction
+  ): ChatGeneration {
     const message = prediction?.candidates[0];
     return {
       text: message?.content,
-      message: this.convertPredictionMessage(message),
+      message: new AIChatMessage(message.content),
       generationInfo: prediction,
     };
-  }
-
-  convertPredictionMessage(
-    message: GoogleVertexAIChatMessage
-  ): BaseChatMessage {
-    return new AIChatMessage(message.content);
   }
 }
