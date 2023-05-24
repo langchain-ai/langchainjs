@@ -201,6 +201,7 @@ const requiresOptionalDependency = [
   "document_loaders/fs/csv",
   "document_loaders/fs/notion",
   "document_loaders/fs/unstructured",
+  "chat_models/googlevertexai",
   "sql_db",
   "retrievers/supabase",
   "retrievers/metal",
