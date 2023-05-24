@@ -52,6 +52,9 @@ embeddings/tensorflow.d.ts
 embeddings/hf.cjs
 embeddings/hf.js
 embeddings/hf.d.ts
+embeddings/googlevertexai.cjs
+embeddings/googlevertexai.js
+embeddings/googlevertexai.d.ts
 llms.cjs
 llms.js
 llms.d.ts

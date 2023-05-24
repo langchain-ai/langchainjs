@@ -159,6 +159,7 @@ const requiresOptionalDependency = [
   "tools/webbrowser",
   "chains/load",
   "embeddings/cohere",
+  "embeddings/googlevertexai",
   "embeddings/tensorflow",
   "embeddings/hf",
   "llms/load",

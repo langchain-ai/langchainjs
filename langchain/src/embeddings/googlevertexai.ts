@@ -16,7 +16,7 @@ interface GoogleVertexAILLMEmbeddingsInstance {
   content: string;
 }
 
-interface EmbeddingsResults extends GoogleVertexAIBasePrediction {
+interface GoogleVertexEmbeddingsResults extends GoogleVertexAIBasePrediction {
   embeddings: {
     statistics: {
       token_count: number;
@@ -49,7 +49,7 @@ export class GoogleVertexAIEmbeddings
   private connection: GoogleVertexAIConnection<
     GoogleVertexAILLMEmbeddingsOptions,
     GoogleVertexAILLMEmbeddingsInstance,
-    EmbeddingsResults
+    GoogleVertexEmbeddingsResults
   >;
 
   constructor(fields?: GoogleVertexAIEmbeddingsParams) {
@@ -71,8 +71,12 @@ export class GoogleVertexAIEmbeddings
     );
     const parameters = {};
     const options = {};
-    const data = await this.connection.request(instances, parameters, options);
-    const ret: number[][] = data.data.predictions.map(
+    const response = await this.connection.request(
+      instances,
+      parameters,
+      options
+    );
+    const ret: number[][] = response.data.predictions.map(
       (result) => result.embeddings.values
     );
     return ret;

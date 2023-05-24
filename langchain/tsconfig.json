@@ -49,6 +49,7 @@
       "src/embeddings/cohere.ts",
       "src/embeddings/tensorflow.ts",
       "src/embeddings/hf.ts",
+      "src/embeddings/googlevertexai.ts",
       "src/llms/load.ts",
       "src/llms/base.ts",
       "src/llms/openai.ts",
