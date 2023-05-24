@@ -307,9 +307,9 @@
     "stores/message/redis.cjs",
     "stores/message/redis.js",
     "stores/message/redis.d.ts",
-    "stores/message/redis_upstash.cjs",
-    "stores/message/redis_upstash.js",
-    "stores/message/redis_upstash.d.ts",
+    "stores/message/upstash_redis.cjs",
+    "stores/message/upstash_redis.js",
+    "stores/message/upstash_redis.d.ts",
     "experimental/autogpt.cjs",
     "experimental/autogpt.js",
     "experimental/autogpt.d.ts",
@@ -1117,10 +1117,10 @@
       "import": "./stores/message/redis.js",
       "require": "./stores/message/redis.cjs"
     },
-    "./stores/message/redis_upstash": {
-      "types": "./stores/message/redis_upstash.d.ts",
-      "import": "./stores/message/redis_upstash.js",
-      "require": "./stores/message/redis_upstash.cjs"
+    "./stores/message/upstash_redis": {
+      "types": "./stores/message/upstash_redis.d.ts",
+      "import": "./stores/message/upstash_redis.js",
+      "require": "./stores/message/upstash_redis.cjs"
     },
     "./experimental/autogpt": {
       "types": "./experimental/autogpt.d.ts",

@@ -4,7 +4,7 @@
 
 import { test, expect } from "@jest/globals";
 
-import { RedisUpstashChatMessageHistory } from "../message/redis_upstash.js";
+import { UpstashRedisChatMessageHistory } from "../message/upstash_redis.js";
 import { HumanChatMessage, AIChatMessage } from "../../schema/index.js";
 import { ChatOpenAI } from "../../chat_models/openai.js";
 import { ConversationChain } from "../../chains/conversation.js";
@@ -15,9 +15,8 @@ const config = {
   token: process.env.UPSTASH_REDIS_REST_TOKEN!,
 };
 
-
 test("Test Redis Upstash history store", async () => {
-  const chatHistory = new RedisUpstashChatMessageHistory({
+  const chatHistory = new UpstashRedisChatMessageHistory({
     sessionId: new Date().toISOString(),
     config,
   });
@@ -38,7 +37,7 @@ test("Test Redis Upstash history store", async () => {
 });
 
 test("Test clear Redis Upstash history store", async () => {
-  const chatHistory = new RedisUpstashChatMessageHistory({
+  const chatHistory = new UpstashRedisChatMessageHistory({
     sessionId: new Date().toISOString(),
     config,
   });
@@ -61,7 +60,7 @@ test("Test clear Redis Upstash history store", async () => {
 });
 
 test("Test Redis Upstash history with a TTL", async () => {
-  const chatHistory = new RedisUpstashChatMessageHistory({
+  const chatHistory = new UpstashRedisChatMessageHistory({
     sessionId: new Date().toISOString(),
     sessionTTL: 5,
     config,
@@ -90,7 +89,7 @@ test("Test Redis Upstash history with a TTL", async () => {
 test("Test Redis Upstash memory with Buffer Memory", async () => {
   const memory = new BufferMemory({
     returnMessages: true,
-    chatHistory: new RedisUpstashChatMessageHistory({
+    chatHistory: new UpstashRedisChatMessageHistory({
       sessionId: new Date().toISOString(),
       config,
     }),
@@ -112,7 +111,7 @@ test("Test Redis Upstash memory with Buffer Memory", async () => {
 
 test("Test Redis Upstash memory with LLM Chain", async () => {
   const memory = new BufferMemory({
-    chatHistory: new RedisUpstashChatMessageHistory({
+    chatHistory: new UpstashRedisChatMessageHistory({
       sessionId: new Date().toISOString(),
       config,
     }),

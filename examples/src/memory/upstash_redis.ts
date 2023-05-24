@@ -1,10 +1,10 @@
 import { BufferMemory } from "langchain/memory";
-import { RedisUpstashChatMessageHistory } from "langchain/stores/message/redis_upstash";
+import { UpstashRedisChatMessageHistory } from "langchain/stores/message/upstash_redis";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { ConversationChain } from "langchain/chains";
 
 const memory = new BufferMemory({
-  chatHistory: new RedisUpstashChatMessageHistory({
+  chatHistory: new UpstashRedisChatMessageHistory({
     sessionId: new Date().toISOString(), // Or some other unique identifier for the conversation
     sessionTTL: 300, // 5 minutes, omit this parameter to make sessions never expire
     config: {

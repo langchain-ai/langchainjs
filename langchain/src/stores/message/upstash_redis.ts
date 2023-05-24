@@ -1,4 +1,4 @@
-import { Redis, type RedisConfigNodejs } from "@upstash/redis"
+import { Redis, type RedisConfigNodejs } from "@upstash/redis";
 import {
   StoredMessage,
   BaseChatMessage,
@@ -9,34 +9,36 @@ import {
   mapStoredMessagesToChatMessages,
 } from "./utils.js";
 
-export type RedisUpstashChatMessageHistoryInput = {
+export type UpstashRedisChatMessageHistoryInput = {
   sessionId: string;
   sessionTTL?: number;
   config: RedisConfigNodejs;
   client?: Redis;
 };
 
-export class RedisUpstashChatMessageHistory extends BaseListChatMessageHistory {
+export class UpstashRedisChatMessageHistory extends BaseListChatMessageHistory {
   public client: Redis;
 
   private sessionId: string;
 
   private sessionTTL?: number;
 
-  constructor(fields: RedisUpstashChatMessageHistoryInput) {
+  constructor(fields: UpstashRedisChatMessageHistoryInput) {
     const { sessionId, sessionTTL, config, client } = fields;
     super();
-    this.client = (client ?? new Redis(config));
+    this.client = client ?? new Redis(config);
     this.sessionId = sessionId;
     this.sessionTTL = sessionTTL;
   }
 
-
   async getMessages(): Promise<BaseChatMessage[]> {
-    const rawStoredMessages = await this.client.lrange<StoredMessage>(this.sessionId, 0, -1);
+    const rawStoredMessages: StoredMessage[] = await this.client.lrange<StoredMessage>(
+      this.sessionId,
+      0,
+      -1
+    );
 
-    const orderedMessages = rawStoredMessages
-      .reverse();
+    const orderedMessages = rawStoredMessages.reverse();
     const previousMessages = orderedMessages
       .map((item) => ({
         type: item.type,

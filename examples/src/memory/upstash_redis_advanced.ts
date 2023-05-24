@@ -1,6 +1,6 @@
-import { Redis } from '@upstash/redis';
+import { Redis } from "@upstash/redis";
 import { BufferMemory } from "langchain/memory";
-import { RedisChatMessageHistory } from "langchain/stores/message/redis";
+import { UpstashRedisChatMessageHistory } from "langchain/stores/message/upstash_redis";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { ConversationChain } from "langchain/chains";
 
@@ -11,7 +11,7 @@ const client = new Redis({
 });
 
 const memory = new BufferMemory({
-  chatHistory: new RedisChatMessageHistory({
+  chatHistory: new UpstashRedisChatMessageHistory({
     sessionId: new Date().toISOString(),
     sessionTTL: 300,
     client, // You can reuse your existing Redis client
