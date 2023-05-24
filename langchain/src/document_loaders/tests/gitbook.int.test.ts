@@ -7,7 +7,7 @@ test("Test GitbookLoader", async () => {
   );
 
   const docs = await loader.load();
-  console.log('Loaded', docs.length, 'Gitbook documents');
+  console.log("Loaded", docs.length, "Gitbook documents");
 });
 
 test.only("Test GitbookLoader with shouldLoadAllPaths", async () => {
@@ -15,5 +15,5 @@ test.only("Test GitbookLoader with shouldLoadAllPaths", async () => {
     shouldLoadAllPaths: true,
   });
   const docs = await loader.load();
-  console.log('Loaded', docs.length, 'Gitbook documents');
+  console.log("Loaded", docs.length, "Gitbook documents");
 });
