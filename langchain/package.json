@@ -64,6 +64,9 @@
     "embeddings/hf.cjs",
     "embeddings/hf.js",
     "embeddings/hf.d.ts",
+    "embeddings/googlevertexai.cjs",
+    "embeddings/googlevertexai.js",
+    "embeddings/googlevertexai.d.ts",
     "llms.cjs",
     "llms.js",
     "llms.d.ts",
@@ -706,6 +709,11 @@
       "types": "./embeddings/hf.d.ts",
       "import": "./embeddings/hf.js",
       "require": "./embeddings/hf.cjs"
+    },
+    "./embeddings/googlevertexai": {
+      "types": "./embeddings/googlevertexai.d.ts",
+      "import": "./embeddings/googlevertexai.js",
+      "require": "./embeddings/googlevertexai.cjs"
     },
     "./llms": {
       "node": {
