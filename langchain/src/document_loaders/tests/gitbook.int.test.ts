@@ -7,13 +7,13 @@ test("Test GitbookLoader", async () => {
   );
 
   const docs = await loader.load();
-  console.log(docs);
+  console.log('Loaded', docs.length, 'Gitbook documents');
 });
 
 test.only("Test GitbookLoader with shouldLoadAllPaths", async () => {
-  const loader = new GitbookLoader("https://docs.gitbook.com", {
+  const loader = new GitbookLoader("https://docs.maildrop.cc", {
     shouldLoadAllPaths: true,
   });
   const docs = await loader.load();
-  console.log(docs);
+  console.log('Loaded', docs.length, 'Gitbook documents');
 });
