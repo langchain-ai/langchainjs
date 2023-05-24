@@ -50,10 +50,7 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
-    "@docusaurus/core": "latest",
-    "@docusaurus/preset-classic": "latest",
-    "@getzep/zep-js": "^0.2.9",
-    "turbo": "^1.9.8"
+    "turbo": "latest"
   },
   "resolutions": {
     "dpdm@^3.12.0": "patch:dpdm@npm%3A3.12.0#./.yarn/patches/dpdm-npm-3.12.0-0dfdd8e3b8.patch",
