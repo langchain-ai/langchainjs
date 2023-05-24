@@ -131,6 +131,7 @@ const entrypoints = {
   "stores/file/node": "stores/file/node",
   "stores/message/dynamodb": "stores/message/dynamodb",
   "stores/message/redis": "stores/message/redis",
+  "stores/message/upstash_redis": "stores/message/upstash_redis",
   // experimental
   "experimental/autogpt": "experimental/autogpt/index",
   "experimental/babyagi": "experimental/babyagi/index",
@@ -213,6 +214,7 @@ const requiresOptionalDependency = [
   "stores/file/node",
   "stores/message/dynamodb",
   "stores/message/redis",
+  "stores/message/upstash_redis",
 ];
 
 // List of test-exports-* packages which we use to test that the exports field
