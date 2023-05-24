@@ -52,7 +52,7 @@ The ChatGoogleVertexAI class works just like other chat-based LLMs,
 with a few exceptions:
 
 1. The first `SystemChatMessage` passed in is mapped to the "context" parameter that the PaLM model expects.
-No other `SystemChatMessages` are allowed.
+   No other `SystemChatMessages` are allowed.
 2. After the first `SystemChatMessage`, there must be an odd number of messages, representing a conversation between a human and the model.
 3. Human messages must alternate with AI messages.
 

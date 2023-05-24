@@ -1,6 +1,4 @@
-import {
-  ChatGoogleVertexAI,
-} from "langchain/chat_models/googlevertexai";
+import { ChatGoogleVertexAI } from "langchain/chat_models/googlevertexai";
 import {
   AIChatMessage,
   BaseChatMessage,
