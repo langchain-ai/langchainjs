@@ -1,11 +1,12 @@
 import fetch from 'cross-fetch';
 import { AsyncCaller } from "../util/async_caller.js";
+import { CreateCompletionRequestPrompt } from "openai";
 
 export const getPromptLayerRequestID = async (
     callerFunc: AsyncCaller,
     functionName: string,
     modelName: string, 
-    messages: any, // TODO: What type is this? Message or string or what?
+    messages: CreateCompletionRequestPrompt,
     plTags: string[] | undefined,
     requestResponse: string | undefined,
     startTime: number,
