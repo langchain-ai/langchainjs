@@ -1,6 +1,6 @@
-import { v4 as uuid } from "uuid";
 import { QdrantClient } from "@qdrant/js-client-rest";
 import type { Schemas as QdrantSchemas } from "@qdrant/js-client-rest";
+import { v4 as uuid } from "uuid";
 
 import { Embeddings } from "../embeddings/base.js";
 import { VectorStore } from "./base.js";
@@ -14,14 +14,10 @@ export interface QdrantLibArgs {
 }
 
 type QdrantSearchResponse = QdrantSchemas["ScoredPoint"] & {
-  payload: Document;
-};
-
-const COLLECTION_CONFIG: QdrantSchemas["CreateCollection"] = {
-  vectors: {
-    size: 1536,
-    distance: "Cosine",
-  },
+  payload: {
+    metadata: object;
+    content: string;
+  };
 };
 
 export class QdrantVectorStore extends VectorStore {
@@ -49,9 +45,14 @@ export class QdrantVectorStore extends VectorStore {
         url,
       });
 
-    this.collectionName = args.collectionName || "documents";
+    this.collectionName = args.collectionName ?? "documents";
 
-    this.collectionConfig = args.collectionConfig || COLLECTION_CONFIG;
+    this.collectionConfig = args.collectionConfig ?? {
+      vectors: {
+        size: 1536,
+        distance: "Cosine",
+      },
+    };
   }
 
   async addDocuments(documents: Document[]): Promise<void> {
@@ -102,11 +103,11 @@ export class QdrantVectorStore extends VectorStore {
     });
 
     const result: [Document, number][] = (
-      results as unknown as QdrantSearchResponse[]
+      results as QdrantSearchResponse[]
     ).map((res) => [
       new Document({
         metadata: res.payload.metadata,
-        pageContent: res.payload.content as string,
+        pageContent: res.payload.content,
       }),
       res.score,
     ]);
@@ -157,7 +158,7 @@ export class QdrantVectorStore extends VectorStore {
     return instance;
   }
 
-  static async fromExistingIndex(
+  static async fromExistingCollection(
     embeddings: Embeddings,
     dbConfig: QdrantLibArgs
   ): Promise<QdrantVectorStore> {

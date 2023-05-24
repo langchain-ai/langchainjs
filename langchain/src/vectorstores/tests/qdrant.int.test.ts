@@ -27,6 +27,6 @@ describe("QdrantVectorStore testcase", () => {
 
     const results = await qdrantVectorStore.similaritySearch(pageContent, 1);
 
-    expect(results[0]).toEqual([new Document({ metadata: {}, pageContent })]);
+    expect(results[0]).toEqual(new Document({ metadata: {}, pageContent }));
   });
 });

@@ -6748,15 +6748,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@qdrant/js-client-rest@npm:^1.1.5":
-  version: 1.1.6
-  resolution: "@qdrant/js-client-rest@npm:1.1.6"
+"@qdrant/js-client-rest@npm:^1.2.0":
+  version: 1.2.0
+  resolution: "@qdrant/js-client-rest@npm:1.2.0"
   dependencies:
     "@qdrant/openapi-typescript-fetch": ^1.2.0
     "@sevinf/maybe": ^0.5.0
   peerDependencies:
     typescript: ">=4.1"
-  checksum: d2fb0ff9486c2f0e9fca74b69768894d12c2f46e810c81616206a0eba0ea575589955829c77f2a9a595b18e99f3b467b0d27c1365c948d011e0ca43d142fdbc0
+  checksum: 2cf7b33cbd3c912b5e063542e320b853486277afd847761abfe76c3917f02f1f80386e542e1b616ed04835af1cea7a0f5fbb4d0d56ab7213ad0e9ae44959cedf
   languageName: node
   linkType: hard
 
@@ -18156,7 +18156,7 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@opensearch-project/opensearch": ^2.2.0
     "@pinecone-database/pinecone": ^0.0.14
-    "@qdrant/js-client-rest": ^1.1.5
+    "@qdrant/js-client-rest": ^1.2.0
     "@supabase/supabase-js": ^2.10.0
     "@tensorflow-models/universal-sentence-encoder": ^1.3.3
     "@tensorflow/tfjs-backend-cpu": ^4.4.0
@@ -18237,7 +18237,7 @@ __metadata:
     "@huggingface/inference": ^1.5.1
     "@opensearch-project/opensearch": "*"
     "@pinecone-database/pinecone": "*"
-    "@qdrant/js-client-rest": ^1.1.5
+    "@qdrant/js-client-rest": ^1.2.0
     "@supabase/supabase-js": ^2.10.0
     "@tensorflow-models/universal-sentence-encoder": "*"
     "@tensorflow/tfjs-converter": "*"
