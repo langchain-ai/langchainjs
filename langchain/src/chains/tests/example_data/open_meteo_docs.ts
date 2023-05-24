@@ -18,9 +18,6 @@ start_date
 end_date	String (yyyy-mm-dd)	No		The time interval to get weather data. A day must be specified as an ISO8601 date (e.g. 2022-06-30).
 models	String array	No	auto	Manually select one or more weather models. Per default, the best suitable weather models will be combined.
 
-Hourly Parameter Definition
-The parameter &hourly= accepts the following values. Most weather variables are given as an instantaneous value for the indicated hour. Some variables like precipitation are calculated from the preceding hour as an average or sum.
-
 Variable	Valid time	Unit	Description
 temperature_2m	Instant	°C (°F)	Air temperature at 2 meters above ground
 snowfall	Preceding hour sum	cm (inch)	Snowfall amount of the preceding hour in centimeters. For the water equivalent in millimeter, divide by 7. E.g. 7 cm snow = 10 mm precipitation water equivalent
