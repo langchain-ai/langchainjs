@@ -76,9 +76,9 @@ export class GoogleVertexAIEmbeddings
       parameters,
       options
     );
-    const result: number[][] = response?.data?.predictions?.map(
-      (result) => result.embeddings.values
-    ) ?? [];
+    const result: number[][] =
+      response?.data?.predictions?.map((result) => result.embeddings.values) ??
+      [];
     return result;
   }
 
