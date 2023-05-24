@@ -226,6 +226,9 @@ chat_models/openai.d.ts
 chat_models/anthropic.cjs
 chat_models/anthropic.js
 chat_models/anthropic.d.ts
+chat_models/googlevertexai.cjs
+chat_models/googlevertexai.js
+chat_models/googlevertexai.d.ts
 schema.cjs
 schema.js
 schema.d.ts

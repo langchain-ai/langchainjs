@@ -103,6 +103,7 @@
       "src/chat_models/base.ts",
       "src/chat_models/openai.ts",
       "src/chat_models/anthropic.ts",
+      "src/chat_models/googlevertexai.ts",
       "src/schema/index.ts",
       "src/schema/output_parser.ts",
       "src/schema/query_constructor.ts",

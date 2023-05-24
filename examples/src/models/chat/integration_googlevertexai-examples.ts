@@ -10,8 +10,15 @@ import {
 } from "langchain/schema";
 
 export const run = async () => {
+  const examples: ChatExample[] = [
+    {
+      input: new HumanChatMessage("What is your favorite sock color?"),
+      output: new AIChatMessage("My favorite sock color be arrrr-ange!"),
+    },
+  ];
   const model = new ChatGoogleVertexAI({
     temperature: 0.7,
+    examples,
   });
   const questions: BaseChatMessage[] = [
     new SystemChatMessage(
@@ -19,15 +26,6 @@ export const run = async () => {
     ),
     new HumanChatMessage("What is your favorite food?"),
   ];
-  const examples: ChatExample[] = [
-    {
-      input: new HumanChatMessage("What is your favorite sock color?"),
-      output: new AIChatMessage("My favorite sock color be arrrr-ange!"),
-    },
-  ];
-  const options = {
-    examples,
-  };
-  const res = await model.call(questions, options);
+  const res = await model.call(questions);
   console.log({ res });
 };
