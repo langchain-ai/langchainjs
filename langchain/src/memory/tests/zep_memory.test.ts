@@ -1,5 +1,4 @@
 import { expect, jest } from "@jest/globals";
-import {ZepChatMessageHistory} from "../zep_memory.js";
 
 import {
   ZepClient,
@@ -9,6 +8,8 @@ import {
   MessageData,
   NotFoundError,
 } from "@getzep/zep-js";
+
+import { ZepChatMessageHistory } from "../zep_memory.js";
 
 import {
   AIChatMessage,

@@ -44,7 +44,7 @@ export class ZepChatMessageHistory extends BaseChatMessageHistory {
 
   private sessionID: string;
 
-  constructor(sessionID: string, url: string = "http://localhost:8000") {
+  constructor(sessionID: string, url: string) {
     super();
     this.zepClient = new ZepClient(url);
     this.sessionID = sessionID;
