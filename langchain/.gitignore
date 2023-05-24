@@ -298,6 +298,9 @@ stores/message/dynamodb.d.ts
 stores/message/redis.cjs
 stores/message/redis.js
 stores/message/redis.d.ts
+stores/message/upstash_redis.cjs
+stores/message/upstash_redis.js
+stores/message/upstash_redis.d.ts
 experimental/autogpt.cjs
 experimental/autogpt.js
 experimental/autogpt.d.ts
