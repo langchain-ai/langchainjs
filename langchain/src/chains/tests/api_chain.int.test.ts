@@ -2,9 +2,12 @@ import { test } from "@jest/globals";
 import { OpenAI } from "../../llms/openai.js";
 import { LLMChain } from "../llm_chain.js";
 import { loadChain } from "../load.js";
-import { APIChain, APIChainInput } from "../api_chain.js";
-import { API_URL_PROMPT, API_RESPONSE_PROMPT } from "../api/prompts.js";
-import { OPEN_METEO_DOCS } from "../api/open_meteo_docs.js";
+import { APIChain, APIChainInput } from "../api/api_chain.js";
+import {
+  API_URL_PROMPT_TEMPLATE,
+  API_RESPONSE_PROMPT_TEMPLATE,
+} from "../api/prompts.js";
+import { OPEN_METEO_DOCS } from "./example_data/open_meteo_docs.js";
 
 const test_api_docs = `
 This API endpoint will search the notes for a user.
@@ -29,9 +32,12 @@ const testApiData = {
 
 test("Test APIChain", async () => {
   const model = new OpenAI({ modelName: "text-davinci-003" });
-  const apiRequestChain = new LLMChain({ prompt: API_URL_PROMPT, llm: model });
+  const apiRequestChain = new LLMChain({
+    prompt: API_URL_PROMPT_TEMPLATE,
+    llm: model,
+  });
   const apiAnswerChain = new LLMChain({
-    prompt: API_RESPONSE_PROMPT,
+    prompt: API_RESPONSE_PROMPT_TEMPLATE,
     llm: model,
   });
 
@@ -51,7 +57,7 @@ test("Test APIChain", async () => {
 test("Test APIChain fromLLMAndApiDocs", async () => {
   // This test doesn't work as well with earlier models
   const model = new OpenAI({ modelName: "text-davinci-003" });
-  const chain = APIChain.fromLLMAndApiDocs(model, OPEN_METEO_DOCS);
+  const chain = APIChain.fromLLMAndAPIDocs(model, OPEN_METEO_DOCS);
   const res = await chain.call({
     question:
       "What is the weather like right now in Munich, Germany in degrees Farenheit?",

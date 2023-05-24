@@ -190,7 +190,7 @@ export abstract class BaseChain extends BaseLangChain implements ChainInputs {
         return VectorDBQAChain.deserialize(data, values);
       }
       case "api_chain": {
-        const { APIChain } = await import("./api_chain.js");
+        const { APIChain } = await import("./api/api_chain.js");
         return APIChain.deserialize(data);
       }
       default:

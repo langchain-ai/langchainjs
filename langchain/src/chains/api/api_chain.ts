@@ -1,24 +1,30 @@
-import { BaseChain, ChainInputs } from "./base.js";
-import { SerializedAPIChain } from "./serde.js";
-import { LLMChain } from "./llm_chain.js";
-import { BaseLanguageModel } from "../base_language/index.js";
-import { CallbackManagerForChainRun } from "../callbacks/manager.js";
-import { ChainValues } from "../schema/index.js";
-import { API_URL_PROMPT, API_RESPONSE_PROMPT } from "./api/prompts.js";
-import { BasePromptTemplate } from "../index.js";
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type LoadValues = Record<string, any>;
+import { BaseChain, ChainInputs } from "../base.js";
+import { SerializedAPIChain } from "../serde.js";
+import { LLMChain } from "../llm_chain.js";
+import { BaseLanguageModel } from "../../base_language/index.js";
+import { CallbackManagerForChainRun } from "../../callbacks/manager.js";
+import { ChainValues } from "../../schema/index.js";
+import {
+  API_URL_PROMPT_TEMPLATE,
+  API_RESPONSE_PROMPT_TEMPLATE,
+} from "./prompts.js";
+import { BasePromptTemplate } from "../../index.js";
 
 export interface APIChainInput extends Omit<ChainInputs, "memory"> {
   apiAnswerChain: LLMChain;
   apiRequestChain: LLMChain;
   apiDocs: string;
   inputKey?: string;
-  headers?: LoadValues;
+  headers?: Record<string, string>;
   /** Key to use for output, defaults to `output` */
   outputKey?: string;
 }
+
+export type APIChainOptions = {
+  headers?: Record<string, string>;
+  apiUrlPrompt?: BasePromptTemplate;
+  apiResponsePrompt?: BasePromptTemplate;
+};
 
 export class APIChain extends BaseChain implements APIChainInput {
   apiAnswerChain: LLMChain;
@@ -43,12 +49,12 @@ export class APIChain extends BaseChain implements APIChainInput {
 
   constructor(fields: APIChainInput) {
     super(fields);
+    this.apiRequestChain = fields.apiRequestChain;
+    this.apiAnswerChain = fields.apiAnswerChain;
+    this.apiDocs = fields.apiDocs;
     this.inputKey = fields.inputKey ?? this.inputKey;
     this.outputKey = fields.outputKey ?? this.outputKey;
-    this.apiAnswerChain = fields.apiAnswerChain;
     this.headers = fields.headers ?? this.headers;
-    this.apiRequestChain = fields.apiRequestChain;
-    this.apiDocs = fields.apiDocs;
   }
 
   /** @ignore */
@@ -63,12 +69,8 @@ export class APIChain extends BaseChain implements APIChainInput {
       runManager?.getChild()
     );
 
-    await runManager?.handleText(api_url);
-
     const res = await fetch(api_url, { headers: this.headers });
     const api_response = await res.text();
-
-    await runManager?.handleText(api_response);
 
     const answer = await this.apiAnswerChain.predict(
       { question, api_docs: this.apiDocs, api_url, api_response },
@@ -112,21 +114,22 @@ export class APIChain extends BaseChain implements APIChainInput {
     };
   }
 
-  static fromLLMAndApiDocs(
+  static fromLLMAndAPIDocs(
     llm: BaseLanguageModel,
-    api_docs: string,
-    options?: LoadValues,
-    headers: LoadValues = {},
-    api_url_prompt: BasePromptTemplate = API_URL_PROMPT,
-    api_response_prompt: BasePromptTemplate = API_RESPONSE_PROMPT
+    apiDocs: string,
+    options: APIChainOptions &
+      Omit<APIChainInput, "apiAnswerChain" | "apiRequestChain" | "apiDocs"> = {}
   ): APIChain {
-    const apiAnswerChain = new LLMChain({ prompt: api_response_prompt, llm });
-    const apiRequestChain = new LLMChain({ prompt: api_url_prompt, llm });
+    const {
+      apiUrlPrompt = API_URL_PROMPT_TEMPLATE,
+      apiResponsePrompt = API_RESPONSE_PROMPT_TEMPLATE,
+    } = options;
+    const apiRequestChain = new LLMChain({ prompt: apiUrlPrompt, llm });
+    const apiAnswerChain = new LLMChain({ prompt: apiResponsePrompt, llm });
     return new this({
       apiAnswerChain,
       apiRequestChain,
-      apiDocs: api_docs,
-      headers,
+      apiDocs,
       ...options,
     });
   }
