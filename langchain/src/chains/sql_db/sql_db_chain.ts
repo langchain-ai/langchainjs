@@ -88,16 +88,13 @@ export class SqlDatabaseChain extends BaseChain {
     };
     await this.verifyNumberOfTokens(inputText, tableInfo);
 
-    const intermediateStep: string[] = [];
     const sqlCommand = await llmChain.predict(
       llmInputs,
       runManager?.getChild()
     );
-    intermediateStep.push(sqlCommand);
     let queryResult = "";
     try {
       queryResult = await this.database.appDataSource.query(sqlCommand);
-      intermediateStep.push(queryResult);
     } catch (error) {
       console.error(error);
     }

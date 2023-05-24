@@ -42,7 +42,7 @@ export class LangChainTracer
     (typeof process !== "undefined"
       ? // eslint-disable-next-line no-process-env
         process.env?.LANGCHAIN_ENDPOINT
-      : undefined) || "http://localhost:8000";
+      : undefined) || "http://localhost:1984";
 
   protected headers: Record<string, string> = {
     "Content-Type": "application/json",

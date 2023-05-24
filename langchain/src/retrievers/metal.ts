@@ -1,8 +1,10 @@
+import Metal from "@getmetal/metal-sdk";
+
 import { BaseRetriever } from "../schema/index.js";
 import { Document } from "../document.js";
 
 export interface MetalRetrieverFields {
-  client: import("@getmetal/metal-sdk").default;
+  client: Metal;
 }
 
 interface ResponseItem {
@@ -11,7 +13,7 @@ interface ResponseItem {
 }
 
 export class MetalRetriever extends BaseRetriever {
-  private client: import("@getmetal/metal-sdk").default;
+  private client: Metal;
 
   constructor(fields: MetalRetrieverFields) {
     super();
