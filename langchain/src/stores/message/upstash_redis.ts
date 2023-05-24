@@ -12,7 +12,7 @@ import {
 export type UpstashRedisChatMessageHistoryInput = {
   sessionId: string;
   sessionTTL?: number;
-  config: RedisConfigNodejs;
+  config?: RedisConfigNodejs;
   client?: Redis;
 };
 
@@ -26,17 +26,22 @@ export class UpstashRedisChatMessageHistory extends BaseListChatMessageHistory {
   constructor(fields: UpstashRedisChatMessageHistoryInput) {
     const { sessionId, sessionTTL, config, client } = fields;
     super();
-    this.client = client ?? new Redis(config);
+    if (client) {
+      this.client = client;
+    } else if (config) {
+      this.client = new Redis(config);
+    } else {
+      throw new Error(
+        `Upstash Redis message stores require either a config object or a pre-configured client.`
+      );
+    }
     this.sessionId = sessionId;
     this.sessionTTL = sessionTTL;
   }
 
   async getMessages(): Promise<BaseChatMessage[]> {
-    const rawStoredMessages: StoredMessage[] = await this.client.lrange<StoredMessage>(
-      this.sessionId,
-      0,
-      -1
-    );
+    const rawStoredMessages: StoredMessage[] =
+      await this.client.lrange<StoredMessage>(this.sessionId, 0, -1);
 
     const orderedMessages = rawStoredMessages.reverse();
     const previousMessages = orderedMessages
