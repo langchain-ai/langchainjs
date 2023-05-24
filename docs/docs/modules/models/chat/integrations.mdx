@@ -49,20 +49,18 @@ npm install google-auth-library
 ```
 
 The ChatGoogleVertexAI class works just like other chat-based LLMs,
-mapping any SystemChatMessage objects into the "context" parameter
-that the PaLM model expects.
+with a few exceptions:
+
+1. The first `SystemChatMessage` passed in is mapped to the "context" parameter that the PaLM model expects.
+No other `SystemChatMessages` are allowed.
+2. After the first `SystemChatMessage`, there must be an odd number of messages, representing a conversation between a human and the model.
+3. Human messages must alternate with AI messages.
 
 import ChatGoogleVertexAI from "@examples/models/chat/integration_googlevertexai.ts";
 
 <CodeBlock language="typescript">{ChatGoogleVertexAI}</CodeBlock>
 
-However, there are options that can be provided either as part of the constructor or
-in options when calling the model.
-
-The `context` parameter provides basic instructions for how the model should respond.
-Any SystemChatMessage in the questions will override this parameter.
-
-The `examples` parameter can help the model understand what an appropriate response
+There is also an optional `examples` constructor parameter that can help the model understand what an appropriate response
 looks like.
 
 import ChatGoogleVertexAIExamples from "@examples/models/chat/integration_googlevertexai-examples.ts";

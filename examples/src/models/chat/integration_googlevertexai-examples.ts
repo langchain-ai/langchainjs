@@ -1,5 +1,4 @@
 import {
-  ChatExample,
   ChatGoogleVertexAI,
 } from "langchain/chat_models/googlevertexai";
 import {
@@ -10,7 +9,7 @@ import {
 } from "langchain/schema";
 
 export const run = async () => {
-  const examples: ChatExample[] = [
+  const examples = [
     {
       input: new HumanChatMessage("What is your favorite sock color?"),
       output: new AIChatMessage("My favorite sock color be arrrr-ange!"),
