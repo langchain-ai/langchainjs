@@ -22,7 +22,6 @@
     "@docusaurus/core": "2.4.0",
     "@docusaurus/preset-classic": "2.4.0",
     "@docusaurus/remark-plugin-npm2yarn": "^2.4.0",
-    "@getzep/zep-js": "^0.2.9",
     "@mdx-js/react": "^1.6.22",
     "@mendable/search": "^0.0.102",
     "clsx": "^1.2.1",

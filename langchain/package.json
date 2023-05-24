@@ -429,7 +429,7 @@
     "@aws-sdk/client-sagemaker-runtime": "^3.310.0",
     "@clickhouse/client": "^0.0.14",
     "@getmetal/metal-sdk": "*",
-    "@getzep/zep-js": "*",
+    "@getzep/zep-js": "^0.2.9",
     "@huggingface/inference": "^1.5.1",
     "@opensearch-project/opensearch": "*",
     "@pinecone-database/pinecone": "*",
