@@ -1,33 +1,57 @@
 import { v4 as uuid } from "uuid";
-import type { QdrantClient } from "@qdrant/js-client-rest";
+import { QdrantClient } from "@qdrant/js-client-rest";
+import type { Schemas as QdrantSchemas } from "@qdrant/js-client-rest";
 
 import { Embeddings } from "../embeddings/base.js";
 import { VectorStore } from "./base.js";
 import { Document } from "../document.js";
 
-interface QdrantSearchResponse {
-  id: number;
-  score: number;
-  payload: {
-    content: string;
-    metadata: object;
-  };
+export interface QdrantLibArgs {
+  client?: QdrantClient;
+  url?: string;
+  collectionName?: string;
+  collectionConfig?: QdrantSchemas["CreateCollection"];
 }
 
-export interface QdrantLibArgs {
-  client: QdrantClient;
-  collectionName?: string;
-}
+type QdrantSearchResponse = QdrantSchemas["ScoredPoint"] & {
+  payload: Document;
+};
+
+const COLLECTION_CONFIG: QdrantSchemas["CreateCollection"] = {
+  vectors: {
+    size: 1536,
+    distance: "Cosine",
+  },
+};
 
 export class QdrantVectorStore extends VectorStore {
   client: QdrantClient;
 
   collectionName: string;
 
+  collectionConfig: QdrantSchemas["CreateCollection"];
+
   constructor(embeddings: Embeddings, args: QdrantLibArgs) {
     super(embeddings, args);
-    this.client = args.client;
+
+    const url =
+      args.url ??
+      // eslint-disable-next-line no-process-env
+      (typeof process !== "undefined" ? process.env?.QDRANT_URL : undefined);
+
+    if (!args.client && !url) {
+      throw new Error("Qdrant client or url address must be set.");
+    }
+
+    this.client =
+      args.client ||
+      new QdrantClient({
+        url,
+      });
+
     this.collectionName = args.collectionName || "documents";
+
+    this.collectionConfig = args.collectionConfig || COLLECTION_CONFIG;
   }
 
   async addDocuments(documents: Document[]): Promise<void> {
@@ -39,6 +63,12 @@ export class QdrantVectorStore extends VectorStore {
   }
 
   async addVectors(vectors: number[][], documents: Document[]): Promise<void> {
+    if (vectors.length === 0) {
+      return;
+    }
+
+    await this.ensureCollection();
+
     const points = vectors.map((embedding, idx) => ({
       id: uuid(),
       vector: embedding,
@@ -56,9 +86,15 @@ export class QdrantVectorStore extends VectorStore {
 
   async similaritySearchVectorWithScore(
     query: number[],
-    k: number,
-    filter: any
+    k?: number,
+    filter?: QdrantSchemas["Filter"]
   ): Promise<[Document, number][]> {
+    if (!query) {
+      return [];
+    }
+
+    await this.ensureCollection();
+
     const results = await this.client.search(this.collectionName, {
       vector: query,
       limit: k,
@@ -70,12 +106,27 @@ export class QdrantVectorStore extends VectorStore {
     ).map((res) => [
       new Document({
         metadata: res.payload.metadata,
-        pageContent: res.payload.content,
+        pageContent: res.payload.content as string,
       }),
       res.score,
     ]);
 
     return result;
+  }
+
+  async ensureCollection() {
+    const response = await this.client.getCollections();
+
+    const collectionNames = response.collections.map(
+      (collection) => collection.name
+    );
+
+    if (!collectionNames.includes(this.collectionName)) {
+      await this.client.createCollection(
+        this.collectionName,
+        this.collectionConfig
+      );
+    }
   }
 
   static async fromTexts(
@@ -111,6 +162,7 @@ export class QdrantVectorStore extends VectorStore {
     dbConfig: QdrantLibArgs
   ): Promise<QdrantVectorStore> {
     const instance = new this(embeddings, dbConfig);
+    await instance.ensureCollection();
     return instance;
   }
 }
