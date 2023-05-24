@@ -76,10 +76,10 @@ export class GoogleVertexAIEmbeddings
       parameters,
       options
     );
-    const ret: number[][] = response.data.predictions.map(
+    const result: number[][] = response?.data?.predictions?.map(
       (result) => result.embeddings.values
-    );
-    return ret;
+    ) ?? [];
+    return result;
   }
 
   async embedQuery(document: string): Promise<number[]> {

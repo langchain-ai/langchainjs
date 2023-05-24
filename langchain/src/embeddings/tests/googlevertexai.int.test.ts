@@ -18,7 +18,7 @@ test("Test GoogleVertexAIEmbeddings.embedDocuments", async () => {
   expect(typeof res[1][0]).toBe("number");
 });
 
-test("Test end to end with HNSWLib and a retreival chain", async () => {
+test("Test end to end with HNSWLib", async () => {
   const vectorStore = await HNSWLib.fromTexts(
     ["Hello world", "Bye bye", "hello nice world"],
     [{ id: 2 }, { id: 1 }, { id: 3 }],
