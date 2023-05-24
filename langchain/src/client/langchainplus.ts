@@ -1,8 +1,5 @@
 import { BaseRun, Run, RunType } from "../callbacks/handlers/tracer.js";
-import {
-  LangChainTracer,
-  TracerSession,
-} from "../callbacks/handlers/tracer_langchain.js";
+import { LangChainTracer } from "../callbacks/handlers/tracer_langchain.js";
 import {
   ChainValues,
   LLMResult,
@@ -17,6 +14,12 @@ import { BaseChatModel } from "../chat_models/base.js";
 import { mapStoredMessagesToChatMessages } from "../stores/message/utils.js";
 import { AsyncCaller, AsyncCallerParams } from "../util/async_caller.js";
 import { getEnvironmentVariable } from "../util/env.js";
+
+export interface TracerSession {
+  id: string;
+  tenant_id: string;
+  name: string;
+}
 
 export interface RunResult extends BaseRun {
   name: string;
@@ -79,46 +82,11 @@ const isLocalhost = (url: string): boolean => {
   const strippedUrl = url.replace("http://", "").replace("https://", "");
   const hostname = strippedUrl.split("/")[0].split(":")[0];
   return (
-    hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1"
+    hostname === "localhost" ||
+    hostname === "127.0.0.1" ||
+    hostname === "::1" ||
+    hostname === "0.0.0.0"
   );
-};
-
-const getSeededTenantId = async (
-  apiUrl: string,
-  {
-    apiKey,
-    callerOptions,
-  }: { apiKey?: string; callerOptions?: AsyncCallerParams }
-): Promise<string> => {
-  // Get the tenant ID from the seeded tenant
-  const caller = new AsyncCaller(callerOptions ?? {});
-  const url = `${apiUrl}/tenants`;
-  let response;
-
-  try {
-    response = await caller.call(fetch, url, {
-      method: "GET",
-      headers: apiKey ? { "x-api-key": apiKey } : undefined,
-    });
-  } catch (err) {
-    throw new Error("Unable to get seeded tenant ID. Please manually provide.");
-  }
-  if (!response.ok) {
-    throw new Error(
-      `Failed to fetch seeded tenant ID: ${response.status} ${response.statusText}`
-    );
-  }
-  const tenants = await response.json();
-  if (!Array.isArray(tenants)) {
-    throw new Error(
-      `Expected tenants GET request to return an array, but got ${tenants}`
-    );
-  }
-  if (tenants.length === 0) {
-    throw new Error("No seeded tenant found");
-  }
-
-  return tenants[0].id;
 };
 
 const stringifyError = (err: Error | unknown): string => {
@@ -189,28 +157,20 @@ export class LangChainPlusClient {
   private apiUrl =
     getEnvironmentVariable("LANGCHAIN_ENDPOINT") || "http://localhost:1984";
 
-  private tenantId: string;
-
   private caller: AsyncCaller;
 
+  private timeout = 10000;
+
   constructor(config: {
-    tenantId?: string;
     apiUrl?: string;
     apiKey?: string;
+    timeout?: number;
     callerOptions?: AsyncCallerParams;
   }) {
     this.apiUrl = config.apiUrl ?? this.apiUrl;
     this.apiKey = config.apiKey;
-    const tenantId =
-      config.tenantId ?? getEnvironmentVariable("LANGCHAIN_TENANT_ID");
-    if (tenantId === undefined) {
-      throw new Error(
-        "No tenant ID provided and no LANGCHAIN_TENANT_ID env var"
-      );
-    } else {
-      this.tenantId = tenantId;
-    }
     this.validateApiKeyIfHosted();
+    this.timeout = config.timeout ?? this.timeout;
     this.caller = new AsyncCaller(config.callerOptions ?? {});
   }
 
@@ -218,7 +178,6 @@ export class LangChainPlusClient {
     config: {
       apiUrl?: string;
       apiKey?: string;
-      tenantId?: string;
     } = {}
   ): Promise<LangChainPlusClient> {
     const apiUrl_ =
@@ -226,12 +185,7 @@ export class LangChainPlusClient {
       (getEnvironmentVariable("LANGCHAIN_ENDPOINT") || "http://localhost:1984");
     const apiKey_ =
       config.apiKey ?? getEnvironmentVariable("LANGCHAIN_API_KEY");
-    const tenantId_ =
-      config.tenantId ??
-      (getEnvironmentVariable("LANGCHAIN_TENANT_ID") ||
-        (await getSeededTenantId(apiUrl_, { apiKey: apiKey_ })));
     return new LangChainPlusClient({
-      tenantId: tenantId_,
       apiKey: apiKey_,
       apiUrl: apiUrl_,
     });
@@ -254,24 +208,23 @@ export class LangChainPlusClient {
     return headers;
   }
 
-  private get queryParams(): URLSearchParams {
-    return new URLSearchParams({ tenant_id: this.tenantId });
-  }
-
   private async _get<T>(
     path: string,
     queryParams?: URLSearchParams
   ): Promise<T> {
-    const params = this.queryParams;
+    const params = new URLSearchParams();
     if (queryParams) {
       queryParams.forEach((value, key) => {
         params.append(key, value);
       });
     }
-    const url = `${this.apiUrl}${path}?${params.toString()}`;
+    const url = params.toString()
+      ? `${this.apiUrl}${path}?${params.toString()}`
+      : `${this.apiUrl}${path}`;
     const response = await this.caller.call(fetch, url, {
       method: "GET",
       headers: this.headers,
+      signal: AbortSignal.timeout(this.timeout),
     });
     if (!response.ok) {
       throw new Error(
@@ -369,7 +322,6 @@ export class LangChainPlusClient {
     formData.append("file", csvFile, fileName);
     formData.append("input_keys", inputKeys.join(","));
     formData.append("output_keys", outputKeys.join(","));
-    formData.append("tenant_id", this.tenantId);
     if (description) {
       formData.append("description", description);
     }
@@ -378,6 +330,7 @@ export class LangChainPlusClient {
       method: "POST",
       headers: this.headers,
       body: formData,
+      signal: AbortSignal.timeout(this.timeout),
     });
 
     if (!response.ok) {
@@ -404,8 +357,8 @@ export class LangChainPlusClient {
       body: JSON.stringify({
         name,
         description,
-        tenant_id: this.tenantId,
       }),
+      signal: AbortSignal.timeout(this.timeout),
     });
 
     if (!response.ok) {
@@ -495,6 +448,7 @@ export class LangChainPlusClient {
     const response = await this.caller.call(fetch, this.apiUrl + path, {
       method: "DELETE",
       headers: this.headers,
+      signal: AbortSignal.timeout(this.timeout),
     });
     if (!response.ok) {
       throw new Error(
@@ -540,6 +494,7 @@ export class LangChainPlusClient {
       method: "POST",
       headers: { ...this.headers, "Content-Type": "application/json" },
       body: JSON.stringify(data),
+      signal: AbortSignal.timeout(this.timeout),
     });
 
     if (!response.ok) {
@@ -592,6 +547,7 @@ export class LangChainPlusClient {
     const response = await this.caller.call(fetch, this.apiUrl + path, {
       method: "DELETE",
       headers: this.headers,
+      signal: AbortSignal.timeout(this.timeout),
     });
     if (!response.ok) {
       throw new Error(
