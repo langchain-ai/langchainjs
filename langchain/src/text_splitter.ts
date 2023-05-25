@@ -247,87 +247,6 @@ export class RecursiveCharacterTextSplitter
   }
 }
 
-export class LatexCharacterTextSplitter
-  extends TextSplitter
-  implements RecursiveCharacterTextSplitterParams
-{
-  separators: string[] = [
-    // First, try to split along Latex sections
-    "\n\\chapter{",
-    "\n\\section{",
-    "\n\\subsection{",
-    "\n\\subsubsection{",
-
-    // Now split by environments
-    "\n\\begin{enumerate}",
-    "\n\\begin{itemize}",
-    "\n\\begin{description}",
-    "\n\\begin{list}",
-    "\n\\begin{quote}",
-    "\n\\begin{quotation}",
-    "\n\\begin{verse}",
-    "\n\\begin{verbatim}",
-
-    // Now split by math environments
-    "\n\\begin{align}",
-    "$$",
-    "$",
-
-    // Now split by the normal type of lines
-    " ",
-    "",
-  ];
-  constructor(fields?: Partial<RecursiveCharacterTextSplitterParams>) {
-    super(fields);
-    this.separators = fields?.separators ?? this.separators;
-  }
-  async splitText(text: string): Promise<string[]> {
-    const finalChunks: string[] = [];
-
-    // Get appropriate separator to use
-    let separator: string = this.separators[this.separators.length - 1];
-    for (const s of this.separators) {
-      if (s === "") {
-        separator = s;
-        break;
-      }
-      if (text.includes(s)) {
-        separator = s;
-        break;
-      }
-    }
-
-    // Now that we have the separator, split the text
-    let splits: string[];
-    if (separator) {
-      splits = text.split(separator);
-    } else {
-      splits = text.split("");
-    }
-
-    // Now go merging things, recursively splitting longer texts.
-    let goodSplits: string[] = [];
-    for (const s of splits) {
-      if (s.length < this.chunkSize) {
-        goodSplits.push(s);
-      } else {
-        if (goodSplits.length) {
-          const mergedText = this.mergeSplits(goodSplits, separator);
-          finalChunks.push(...mergedText);
-          goodSplits = [];
-        }
-        const otherInfo = await this.splitText(s);
-        finalChunks.push(...otherInfo);
-      }
-    }
-    if (goodSplits.length) {
-      const mergedText = this.mergeSplits(goodSplits, separator);
-      finalChunks.push(...mergedText);
-    }
-    return finalChunks;
-  }
-}
-
 export interface TokenTextSplitterParams extends TextSplitterParams {
   encodingName: tiktoken.TiktokenEncoding;
   allowedSpecial: "all" | Array<string>;
@@ -417,6 +336,43 @@ export class MarkdownTextSplitter
   ];
 
   constructor(fields?: Partial<MarkdownTextSplitterParams>) {
+    super(fields);
+  }
+}
+
+export type LatexTextSplitterParams = TextSplitterParams;
+
+export class LatexTextSplitter
+  extends RecursiveCharacterTextSplitter
+  implements LatexTextSplitterParams
+{
+  separators: string[] = [
+    // First, try to split along Latex sections
+    "\n\\chapter{",
+    "\n\\section{",
+    "\n\\subsection{",
+    "\n\\subsubsection{",
+
+    // Now split by environments
+    "\n\\begin{enumerate}",
+    "\n\\begin{itemize}",
+    "\n\\begin{description}",
+    "\n\\begin{list}",
+    "\n\\begin{quote}",
+    "\n\\begin{quotation}",
+    "\n\\begin{verse}",
+    "\n\\begin{verbatim}",
+
+    // Now split by math environments
+    "\n\\begin{align}",
+    "$$",
+    "$",
+
+    // Now split by the normal type of lines
+    " ",
+    "",
+  ];
+  constructor(fields?: Partial<LatexTextSplitterParams>) {
     super(fields);
   }
 }
