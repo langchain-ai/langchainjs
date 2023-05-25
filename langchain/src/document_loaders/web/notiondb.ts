@@ -4,8 +4,9 @@ import { Document } from "../../document.js";
 const NOTION_BASE_URL = "https://api.notion.com/v1";
 
 export interface NotionDBLoaderParams {
-  integrationToken: string;
   databaseId: string;
+  notionApiVersion: string;
+  pageSizeLimit: number;
 }
 
 interface NotionPage {
@@ -33,13 +34,27 @@ export class NotionDBLoader
 
   public databaseId: string;
 
+  public notionApiVersion: string;
+
+  public pageSizeLimit: number;
+
   private headers: Record<string, string> = {};
 
-  constructor({ integrationToken, databaseId }: NotionDBLoaderParams) {
+  constructor({
+    databaseId,
+    notionApiVersion = "2022-06-28",
+    pageSizeLimit = 50,
+  }: NotionDBLoaderParams) {
     super();
 
+    const integrationToken =
+      typeof process !== "undefined"
+        ? // eslint-disable-next-line no-process-env
+          process.env?.NOTION_INTEGRATION_TOKEN
+        : undefined;
+
     if (!integrationToken) {
-      throw new Error("integrationToken must be provided");
+      throw new Error("NOTION_INTEGRATION_TOKEN must be provided");
     }
 
     if (!databaseId) {
@@ -47,13 +62,14 @@ export class NotionDBLoader
     }
 
     this.integrationToken = integrationToken;
+    this.pageSizeLimit = pageSizeLimit;
+    this.notionApiVersion = notionApiVersion;
     this.databaseId = databaseId;
 
     this.headers = {
       Authorization: `Bearer ${this.integrationToken}`,
       "Content-Type": "application/json",
-      // @see https://developers.notion.com/reference/versioning
-      "Notion-Version": "2022-06-28",
+      "Notion-Version": notionApiVersion,
     };
   }
 
@@ -73,7 +89,7 @@ export class NotionDBLoader
 
     const pageIds: string[] = [];
     const query: { page_size: number; start_cursor?: number } = {
-      page_size: 100,
+      page_size: this.pageSizeLimit,
     };
     let hasMore = true;
 
