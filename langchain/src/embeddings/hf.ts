@@ -1,5 +1,6 @@
 import { HfInference } from "@huggingface/inference";
 import { Embeddings, EmbeddingsParams } from "./base.js";
+import { getEnvironmentVariable } from "../util/env.js";
 
 export interface HuggingFaceInferenceEmbeddingsParams extends EmbeddingsParams {
   apiKey?: string;
@@ -22,11 +23,7 @@ export class HuggingFaceInferenceEmbeddings
     this.model =
       fields?.model ?? "sentence-transformers/distilbert-base-nli-mean-tokens";
     this.apiKey =
-      fields?.apiKey ??
-      (typeof process !== "undefined"
-        ? // eslint-disable-next-line no-process-env
-          process.env?.HUGGINGFACEHUB_API_KEY
-        : undefined);
+      fields?.apiKey ?? getEnvironmentVariable("HUGGINGFACEHUB_API_KEY");
     this.client = new HfInference(this.apiKey);
   }
 
