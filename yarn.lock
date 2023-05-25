@@ -5293,6 +5293,40 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@gomomento/generated-types@npm:0.62.1":
+  version: 0.62.1
+  resolution: "@gomomento/generated-types@npm:0.62.1"
+  dependencies:
+    "@grpc/grpc-js": 1.8.14
+    "@types/google-protobuf": 3.15.6
+    google-protobuf: 3.21.2
+  checksum: 7ffb49da9e196be6127b835dbbf7376a50fa28efba5db2b8b10be14bc99a2faec3216d4cd3a75308ce14ee34d8b7fb322f595292c7f603ba5d00d2c45c98c319
+  languageName: node
+  linkType: hard
+
+"@gomomento/sdk-core@npm:1.22.0":
+  version: 1.22.0
+  resolution: "@gomomento/sdk-core@npm:1.22.0"
+  dependencies:
+    buffer: ^6.0.3
+    jwt-decode: 3.1.2
+  checksum: fa756e462b8c3a7bf8ec6854575433e57d8cef6c4049c0080b1298c179e45a7b30507a2a96a349b30cc194f34243920806ea5c18e45eabc247ee12acee1dc5af
+  languageName: node
+  linkType: hard
+
+"@gomomento/sdk@npm:^1.22.0":
+  version: 1.22.0
+  resolution: "@gomomento/sdk@npm:1.22.0"
+  dependencies:
+    "@gomomento/generated-types": 0.62.1
+    "@gomomento/sdk-core": 1.22.0
+    "@grpc/grpc-js": 1.8.14
+    google-protobuf: 3.21.2
+    jwt-decode: 3.1.2
+  checksum: 21f30e833cf1797b875cea39990af5a96e899d32644565e8fe5ad1c01fc1ded75aa9d19abba26f95b732b20476e75f4f90036aed4e3c1fd67e7e14382823971b
+  languageName: node
+  linkType: hard
+
 "@graphql-typed-document-node/core@npm:^3.1.1":
   version: 3.2.0
   resolution: "@graphql-typed-document-node/core@npm:3.2.0"
@@ -5302,7 +5336,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@grpc/grpc-js@npm:^1.8.14":
+"@grpc/grpc-js@npm:1.8.14, @grpc/grpc-js@npm:^1.8.14":
   version: 1.8.14
   resolution: "@grpc/grpc-js@npm:1.8.14"
   dependencies:
@@ -7761,6 +7795,13 @@ __metadata:
     "@types/minimatch": ^5.1.2
     "@types/node": "*"
   checksum: 9101f3a9061e40137190f70626aa0e202369b5ec4012c3fabe6f5d229cce04772db9a94fa5a0eb39655e2e4ad105c38afbb4af56a56c0996a8c7d4fc72350e3d
+  languageName: node
+  linkType: hard
+
+"@types/google-protobuf@npm:3.15.6":
+  version: 3.15.6
+  resolution: "@types/google-protobuf@npm:3.15.6"
+  checksum: e8f7cd9d263093cd0a72eb10ff0bb8221e28aa8b9f601eddbe19b286932aae96fbc9ccb1f3a744525e7811fa87a6aeefd431858b6e2034f14a2dc68710a86d54
   languageName: node
   linkType: hard
 
@@ -15120,6 +15161,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"google-protobuf@npm:3.21.2":
+  version: 3.21.2
+  resolution: "google-protobuf@npm:3.21.2"
+  checksum: 3caa2e1e2654714cc1a201ac5e5faabcaa48f5fba3d8ff9b64ca66fe19e4e0506b94053f32eddc77bf3a7a47ac1660315c6744185c1e2bb27654fd76fe91b988
+  languageName: node
+  linkType: hard
+
 "gopd@npm:^1.0.1":
   version: 1.0.1
   resolution: "gopd@npm:1.0.1"
@@ -18104,6 +18152,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"jwt-decode@npm:3.1.2":
+  version: 3.1.2
+  resolution: "jwt-decode@npm:3.1.2"
+  checksum: 20a4b072d44ce3479f42d0d2c8d3dabeb353081ba4982e40b83a779f2459a70be26441be6c160bfc8c3c6eadf9f6380a036fbb06ac5406b5674e35d8c4205eeb
+  languageName: node
+  linkType: hard
+
 "keyv@npm:^3.0.0":
   version: 3.1.0
   resolution: "keyv@npm:3.1.0"
@@ -18162,6 +18217,7 @@ __metadata:
     "@clickhouse/client": ^0.0.14
     "@faker-js/faker": ^7.6.0
     "@getmetal/metal-sdk": ^4.0.0
+    "@gomomento/sdk": ^1.22.0
     "@huggingface/inference": ^1.5.1
     "@jest/globals": ^29.5.0
     "@opensearch-project/opensearch": ^2.2.0
@@ -18245,6 +18301,7 @@ __metadata:
     "@aws-sdk/client-sagemaker-runtime": ^3.310.0
     "@clickhouse/client": ^0.0.14
     "@getmetal/metal-sdk": "*"
+    "@gomomento/sdk": ^1.22.0
     "@huggingface/inference": ^1.5.1
     "@opensearch-project/opensearch": "*"
     "@pinecone-database/pinecone": "*"
@@ -18291,6 +18348,8 @@ __metadata:
     "@clickhouse/client":
       optional: true
     "@getmetal/metal-sdk":
+      optional: true
+    "@gomomento/sdk":
       optional: true
     "@huggingface/inference":
       optional: true
