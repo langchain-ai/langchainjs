@@ -15,3 +15,5 @@ export {
   VectorStoreRetrieverMemory,
   VectorStoreRetrieverMemoryParams,
 } from "./vector_store.js";
+export { EntityMemory } from "./entity_memory.js";
+export { ENTITY_MEMORY_CONVERSATION_TEMPLATE } from "./prompt.js";

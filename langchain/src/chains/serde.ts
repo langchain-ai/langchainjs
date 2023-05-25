@@ -32,6 +32,13 @@ export type SerializedVectorDBQAChain = {
   combine_documents_chain: SerializedBaseChain;
 };
 
+export type SerializedAPIChain = {
+  _type: "api_chain";
+  api_request_chain: SerializedLLMChain;
+  api_answer_chain: SerializedLLMChain;
+  api_docs: string;
+};
+
 export type SerializedStuffDocumentsChain = {
   _type: "stuff_documents_chain";
   llm_chain?: SerializedLLMChain;
@@ -81,6 +88,7 @@ export type SerializedBaseChain =
   | SerializedSequentialChain
   | SerializedSimpleSequentialChain
   | SerializedVectorDBQAChain
+  | SerializedAPIChain
   | SerializedStuffDocumentsChain
   | SerializedSqlDatabaseChain
   | SerializedChatVectorDBQAChain

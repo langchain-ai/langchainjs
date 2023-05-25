@@ -30,6 +30,8 @@ export type ZeroShotAgentInput = Optional<AgentInput, "outputParser">;
  * @augments Agent
  */
 export class ZeroShotAgent extends Agent {
+  declare ToolType: Tool;
+
   constructor(input: ZeroShotAgentInput) {
     const outputParser =
       input?.outputParser ?? ZeroShotAgent.getDefaultOutputParser();
@@ -53,10 +55,10 @@ export class ZeroShotAgent extends Agent {
   }
 
   static validateTools(tools: Tool[]) {
-    const invalidTool = tools.find((tool) => !tool.description);
-    if (invalidTool) {
+    const descriptionlessTool = tools.find((tool) => !tool.description);
+    if (descriptionlessTool) {
       const msg =
-        `Got a tool ${invalidTool.name} without a description.` +
+        `Got a tool ${descriptionlessTool.name} without a description.` +
         ` This agent requires descriptions for all tools.`;
       throw new Error(msg);
     }

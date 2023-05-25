@@ -6,6 +6,8 @@ import CodeBlock from "@theme/CodeBlock";
 import Example from "@examples/models/chat/chat.ts";
 import StreamingExample from "@examples/models/chat/chat_streaming.ts";
 import TimeoutExample from "@examples/models/chat/chat_timeout.ts";
+import CancellationExample from "@examples/models/chat/chat_cancellation.ts";
+import DebuggingExample from "@examples/models/chat/chat_debugging.ts";
 
 # Additional Functionality: Chat Models
 
@@ -25,11 +27,17 @@ Similar to LLMs, you can stream responses from a chat model. This is useful for 
 
 ## Adding a timeout
 
-By default, LangChain will wait indefinitely for a response from the model provider. If you want to add a timeout, you can pass a `timeout` option, in milliseconds, when you instantiate the model. For example, for OpenAI:
+By default, LangChain will wait indefinitely for a response from the model provider. If you want to add a timeout, you can pass a `timeout` option, in milliseconds, when you call the model. For example, for OpenAI:
 
 <CodeBlock language="typescript">{TimeoutExample}</CodeBlock>
 
-Currently, the timeout option is only supported for OpenAI models.
+## Cancelling requests
+
+You can cancel a request by passing a `signal` option when you call the model. For example, for OpenAI:
+
+<CodeBlock language="typescript">{CancellationExample}</CodeBlock>
+
+Note, this will only cancel the outgoing request if the underlying provider exposes that option. LangChain will cancel the underlying request if possible, otherwise it will cancel the processing of the response.
 
 ## Dealing with Rate Limits
 
@@ -54,3 +62,11 @@ import { ChatOpenAI } from "langchain/chat_models/openai";
 
 const model = new ChatOpenAI({ maxRetries: 10 });
 ```
+
+## Subscribing to events
+
+Especially when using an agent, there can be a lot of back-and-forth going on behind the scenes as a Chat Model processes a prompt. For agents, the response object contains an intermediateSteps object that you can print to see an overview of the steps it took to get there. If that's not enough and you want to see every exchange with the Chat Model, you can pass callbacks to the Chat Model for custom logging (or anything else you want to do) as the model goes through the steps:
+
+For more info on the events available see the [Callbacks](/docs/production/callbacks/) section of the docs.
+
+<CodeBlock language="typescript">{DebuggingExample}</CodeBlock>
