@@ -142,6 +142,9 @@
     "vectorstores/redis.cjs",
     "vectorstores/redis.js",
     "vectorstores/redis.d.ts",
+    "vectorstores/singlestore.cjs",
+    "vectorstores/singlestore.js",
+    "vectorstores/singlestore.d.ts",
     "text_splitter.cjs",
     "text_splitter.js",
     "text_splitter.d.ts",
@@ -840,6 +843,11 @@
       "types": "./vectorstores/redis.d.ts",
       "import": "./vectorstores/redis.js",
       "require": "./vectorstores/redis.cjs"
+    },
+    "./vectorstores/singlestore": {
+      "types": "./vectorstores/singlestore.d.ts",
+      "import": "./vectorstores/singlestore.js",
+      "require": "./vectorstores/singlestore.cjs"
     },
     "./text_splitter": {
       "types": "./text_splitter.d.ts",

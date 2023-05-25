@@ -43,6 +43,7 @@
   "license": "MIT",
   "devDependencies": {
     "@tsconfig/recommended": "^1.0.2",
+    "@types/mysql": "^2",
     "dotenv": "^16.0.3",
     "husky": "^8.0.3",
     "lint-staged": "^13.1.1",
@@ -50,6 +51,7 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
+    "mysql": "^2.18.1",
     "turbo": "latest"
   },
   "resolutions": {
