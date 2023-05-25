@@ -5,15 +5,10 @@ hide_table_of_contents: true
 # Notion DB
 
 This example goes over how to load data from a Notion Database
-To load data, you will need the `integrationToken` of the Notion integration and the `databaseId` of the pages you want to access. Make sure to add your integration to the database.
+To load data, you will need the your Notion integration's token and the `databaseId` of the pages you want to access.
+Make sure to add your integration to the database.
 
-```typescript
-import { NotionDBLoader } from "@examples/document_loaders/notiondb.ts";
+import CodeBlock from "@theme/CodeBlock";
+import Example from "@examples/document_loaders/notiondb.ts";
 
-const loader = new NotionDBLoader({
-  pageSizeLimit: 10,
-  notionApiVersion: "2022-06-28",
-  databaseId: "databaseId",
-});
-const docs = await loader.load();
-```
+<CodeBlock language="typescript">{Example}</CodeBlock>

@@ -5,6 +5,7 @@ const NOTION_BASE_URL = "https://api.notion.com/v1";
 
 export interface NotionDBLoaderParams {
   databaseId: string;
+  notionIntegrationToken?: string;
   notionApiVersion?: string;
   pageSizeLimit?: number;
 }
@@ -22,6 +23,7 @@ interface NotionPage {
   };
   properties: {
     // @see https://developers.notion.com/reference/retrieve-a-page
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [propertyName: string]: any;
   };
 }
@@ -43,18 +45,20 @@ export class NotionDBLoader
   constructor({
     databaseId,
     notionApiVersion = "2022-06-28",
+    notionIntegrationToken,
     pageSizeLimit = 50,
   }: NotionDBLoaderParams) {
     super();
 
     const integrationToken =
-      typeof process !== "undefined"
+      notionIntegrationToken ??
+      (typeof process !== "undefined"
         ? // eslint-disable-next-line no-process-env
           process.env?.NOTION_INTEGRATION_TOKEN
-        : undefined;
+        : undefined);
 
     if (!integrationToken) {
-      throw new Error("NOTION_INTEGRATION_TOKEN must be provided");
+      throw new Error("You must provide a Notion integration token.");
     }
 
     if (!databaseId) {
@@ -74,7 +78,7 @@ export class NotionDBLoader
   }
 
   async load(): Promise<Document[]> {
-    const pageIds = await this.retrievePagesIds();
+    const pageIds = await this.retrievePageIds();
     const documents: Document[] = [];
 
     for (const pageId of pageIds) {
@@ -84,7 +88,7 @@ export class NotionDBLoader
     return documents;
   }
 
-  private async retrievePagesIds(): Promise<string[]> {
+  private async retrievePageIds(): Promise<string[]> {
     const url = `${NOTION_BASE_URL}/databases/${this.databaseId}/query`;
 
     const pageIds: string[] = [];
@@ -99,11 +103,18 @@ export class NotionDBLoader
         body: JSON.stringify(query),
         headers: this.headers,
       });
+
       const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          `Failed to load data from Notion. Please check your integration token and database id.`
+        );
+      }
 
       const { results, has_more, next_cursor } = data;
 
-      pageIds.push(...results.map((page: NotionPage) => page.id));
+      pageIds.push(...(results?.map((page: NotionPage) => page.id) ?? []));
       hasMore = has_more;
       query.start_cursor = next_cursor;
     }
@@ -122,6 +133,7 @@ export class NotionDBLoader
       );
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const metadata: Record<string, any> = {};
     const { properties } = data;
 
@@ -145,6 +157,7 @@ export class NotionDBLoader
           break;
         case "multi_select":
           if (item?.multi_select && item?.multi_select.length > 0) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             value = item?.multi_select.map((el: any) => el.name);
           }
           break;
