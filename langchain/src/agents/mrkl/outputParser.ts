@@ -31,7 +31,7 @@ export class ZeroShotAgentOutputParser extends AgentActionOutputParser {
 
     return {
       tool: match[1].trim(),
-      toolInput: match[2].trim().replace(/^"+|"+$/g, "") ?? "",
+      toolInput: match[2].trim().replace(/^("+)(.*?)(\1)$/, "$2") ?? "",
       log: text,
     };
   }

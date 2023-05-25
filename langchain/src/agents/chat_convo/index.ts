@@ -43,6 +43,8 @@ export type ChatConversationalAgentInput = Optional<AgentInput, "outputParser">;
  * @augments Agent
  */
 export class ChatConversationalAgent extends Agent {
+  declare ToolType: Tool;
+
   constructor(input: ChatConversationalAgentInput) {
     const outputParser =
       input.outputParser ?? ChatConversationalAgent.getDefaultOutputParser();
@@ -66,10 +68,10 @@ export class ChatConversationalAgent extends Agent {
   }
 
   static validateTools(tools: Tool[]) {
-    const invalidTool = tools.find((tool) => !tool.description);
-    if (invalidTool) {
+    const descriptionlessTool = tools.find((tool) => !tool.description);
+    if (descriptionlessTool) {
       const msg =
-        `Got a tool ${invalidTool.name} without a description.` +
+        `Got a tool ${descriptionlessTool.name} without a description.` +
         ` This agent requires descriptions for all tools.`;
       throw new Error(msg);
     }

@@ -188,3 +188,9 @@ export abstract class BaseLanguageModel
     return new Cls(rest);
   }
 }
+
+/*
+ * Calculate max tokens for given model and prompt.
+ * That is the model size - number of tokens in prompt.
+ */
+export { calculateMaxTokens } from "./count_tokens.js";

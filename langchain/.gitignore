@@ -52,6 +52,9 @@ embeddings/tensorflow.d.ts
 embeddings/hf.cjs
 embeddings/hf.js
 embeddings/hf.d.ts
+embeddings/googlevertexai.cjs
+embeddings/googlevertexai.js
+embeddings/googlevertexai.d.ts
 llms.cjs
 llms.js
 llms.d.ts
@@ -73,6 +76,9 @@ llms/hf.d.ts
 llms/replicate.cjs
 llms/replicate.js
 llms/replicate.d.ts
+llms/googlevertexai.cjs
+llms/googlevertexai.js
+llms/googlevertexai.d.ts
 llms/sagemaker_endpoint.cjs
 llms/sagemaker_endpoint.js
 llms/sagemaker_endpoint.d.ts
@@ -109,6 +115,9 @@ vectorstores/mongo.d.ts
 vectorstores/pinecone.cjs
 vectorstores/pinecone.js
 vectorstores/pinecone.d.ts
+vectorstores/qdrant.cjs
+vectorstores/qdrant.js
+vectorstores/qdrant.d.ts
 vectorstores/supabase.cjs
 vectorstores/supabase.js
 vectorstores/supabase.d.ts
@@ -223,6 +232,9 @@ chat_models/openai.d.ts
 chat_models/anthropic.cjs
 chat_models/anthropic.js
 chat_models/anthropic.d.ts
+chat_models/googlevertexai.cjs
+chat_models/googlevertexai.js
+chat_models/googlevertexai.d.ts
 schema.cjs
 schema.js
 schema.d.ts
@@ -295,6 +307,9 @@ stores/message/dynamodb.d.ts
 stores/message/redis.cjs
 stores/message/redis.js
 stores/message/redis.d.ts
+stores/message/upstash_redis.cjs
+stores/message/upstash_redis.js
+stores/message/upstash_redis.d.ts
 experimental/autogpt.cjs
 experimental/autogpt.js
 experimental/autogpt.d.ts

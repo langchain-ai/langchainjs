@@ -28,10 +28,11 @@ export class Cohere extends LLM implements CohereInput {
     super(fields ?? {});
 
     const apiKey =
-      fields?.apiKey ?? typeof process !== "undefined"
+      fields?.apiKey ??
+      (typeof process !== "undefined"
         ? // eslint-disable-next-line no-process-env
           process.env?.COHERE_API_KEY
-        : undefined;
+        : undefined);
 
     if (!apiKey) {
       throw new Error(
