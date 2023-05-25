@@ -1,7 +1,6 @@
 import { ChatGoogleVertexAI } from "langchain/chat_models/googlevertexai";
 import {
   AIChatMessage,
-  BaseChatMessage,
   HumanChatMessage,
   SystemChatMessage,
 } from "langchain/schema";
@@ -17,12 +16,13 @@ export const run = async () => {
     temperature: 0.7,
     examples,
   });
-  const questions: BaseChatMessage[] = [
+  const questions = [
     new SystemChatMessage(
       "You are a funny assistant that answers in pirate language."
     ),
     new HumanChatMessage("What is your favorite food?"),
   ];
+  // You can also use the model as part of a chain
   const res = await model.call(questions);
   console.log({ res });
 };
