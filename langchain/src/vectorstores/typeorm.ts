@@ -1,5 +1,4 @@
 import { Metadata } from "@opensearch-project/opensearch/api/types.js";
-
 import { DataSource, DataSourceOptions, EntitySchema } from "typeorm";
 import { VectorStore } from "./base.js";
 import { Embeddings } from "../embeddings/base.js";
@@ -34,8 +33,6 @@ export class TypeORMVectorStore extends VectorStore {
   filter?: Metadata;
 
   appDataSource: DataSource;
-
-  _verbose?: boolean;
 
   _verbose?: boolean;
 
@@ -97,7 +94,7 @@ export class TypeORMVectorStore extends VectorStore {
       typeof process !== "undefined"
         ? // eslint-disable-next-line no-process-env
           process.env?.LANGCHAIN_VERBOSE !== undefined
-        : false;
+        : fields?.verbose ?? false;
 
     return postgresqlVectorStore;
   }
