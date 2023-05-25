@@ -175,3 +175,15 @@ test("ChatAnthropic, longer chain of messages", async () => {
 
   console.log(responseA.generations);
 });
+
+test("ChatAnthropic, Anthropic apiUrl set manually via constructor", async () => {
+  // Pass the default URL through (should use this, and work as normal)
+  const anthropicApiUrl = "https://api.anthropic.com";
+  const chat = new ChatAnthropic({
+    modelName: "claude-instant-v1",
+    anthropicApiUrl,
+  });
+  const message = new HumanChatMessage("Hello!");
+  const res = await chat.call([message]);
+  console.log({ res });
+});

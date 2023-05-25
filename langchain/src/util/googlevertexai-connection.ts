@@ -40,7 +40,7 @@ export class GoogleVertexAIConnection<
   }
 
   async request(
-    instances: [InstanceType],
+    instances: InstanceType[],
     parameters: GoogleVertexAIModelParams,
     options: CallOptions
   ): Promise<GoogleVertexAILLMResponse<PredictionType>> {

@@ -30,6 +30,7 @@ const entrypoints = {
   "embeddings/cohere": "embeddings/cohere",
   "embeddings/tensorflow": "embeddings/tensorflow",
   "embeddings/hf": "embeddings/hf",
+  "embeddings/googlevertexai": "embeddings/googlevertexai",
   // llms
   llms: "llms/index",
   "llms/load": "llms/load",
@@ -53,6 +54,7 @@ const entrypoints = {
   "vectorstores/weaviate": "vectorstores/weaviate",
   "vectorstores/mongo": "vectorstores/mongo",
   "vectorstores/pinecone": "vectorstores/pinecone",
+  "vectorstores/qdrant": "vectorstores/qdrant",
   "vectorstores/supabase": "vectorstores/supabase",
   "vectorstores/opensearch": "vectorstores/opensearch",
   "vectorstores/milvus": "vectorstores/milvus",
@@ -99,6 +101,7 @@ const entrypoints = {
   "chat_models/base": "chat_models/base",
   "chat_models/openai": "chat_models/openai",
   "chat_models/anthropic": "chat_models/anthropic",
+  "chat_models/googlevertexai": "chat_models/googlevertexai",
   // schema
   schema: "schema/index",
   "schema/output_parser": "schema/output_parser",
@@ -131,6 +134,7 @@ const entrypoints = {
   "stores/file/node": "stores/file/node",
   "stores/message/dynamodb": "stores/message/dynamodb",
   "stores/message/redis": "stores/message/redis",
+  "stores/message/upstash_redis": "stores/message/upstash_redis",
   // experimental
   "experimental/autogpt": "experimental/autogpt/index",
   "experimental/babyagi": "experimental/babyagi/index",
@@ -159,6 +163,7 @@ const requiresOptionalDependency = [
   "tools/webbrowser",
   "chains/load",
   "embeddings/cohere",
+  "embeddings/googlevertexai",
   "embeddings/tensorflow",
   "embeddings/hf",
   "llms/load",
@@ -174,6 +179,7 @@ const requiresOptionalDependency = [
   "vectorstores/weaviate",
   "vectorstores/mongo",
   "vectorstores/pinecone",
+  "vectorstores/qdrant",
   "vectorstores/supabase",
   "vectorstores/opensearch",
   "vectorstores/milvus",
@@ -202,6 +208,7 @@ const requiresOptionalDependency = [
   "document_loaders/fs/csv",
   "document_loaders/fs/notion",
   "document_loaders/fs/unstructured",
+  "chat_models/googlevertexai",
   "sql_db",
   "retrievers/supabase",
   "retrievers/metal",
@@ -213,6 +220,7 @@ const requiresOptionalDependency = [
   "stores/file/node",
   "stores/message/dynamodb",
   "stores/message/redis",
+  "stores/message/upstash_redis",
 ];
 
 // List of test-exports-* packages which we use to test that the exports field

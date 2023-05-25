@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.81",
+  "version": "0.0.82",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -64,6 +64,9 @@
     "embeddings/hf.cjs",
     "embeddings/hf.js",
     "embeddings/hf.d.ts",
+    "embeddings/googlevertexai.cjs",
+    "embeddings/googlevertexai.js",
+    "embeddings/googlevertexai.d.ts",
     "llms.cjs",
     "llms.js",
     "llms.d.ts",
@@ -124,6 +127,9 @@
     "vectorstores/pinecone.cjs",
     "vectorstores/pinecone.js",
     "vectorstores/pinecone.d.ts",
+    "vectorstores/qdrant.cjs",
+    "vectorstores/qdrant.js",
+    "vectorstores/qdrant.d.ts",
     "vectorstores/supabase.cjs",
     "vectorstores/supabase.js",
     "vectorstores/supabase.d.ts",
@@ -241,6 +247,9 @@
     "chat_models/anthropic.cjs",
     "chat_models/anthropic.js",
     "chat_models/anthropic.d.ts",
+    "chat_models/googlevertexai.cjs",
+    "chat_models/googlevertexai.js",
+    "chat_models/googlevertexai.d.ts",
     "schema.cjs",
     "schema.js",
     "schema.d.ts",
@@ -313,6 +322,9 @@
     "stores/message/redis.cjs",
     "stores/message/redis.js",
     "stores/message/redis.d.ts",
+    "stores/message/upstash_redis.cjs",
+    "stores/message/upstash_redis.js",
+    "stores/message/upstash_redis.d.ts",
     "experimental/autogpt.cjs",
     "experimental/autogpt.js",
     "experimental/autogpt.d.ts",
@@ -365,6 +377,7 @@
     "@jest/globals": "^29.5.0",
     "@opensearch-project/opensearch": "^2.2.0",
     "@pinecone-database/pinecone": "^0.0.14",
+    "@qdrant/js-client-rest": "^1.2.0",
     "@supabase/supabase-js": "^2.10.0",
     "@tensorflow-models/universal-sentence-encoder": "^1.3.3",
     "@tensorflow/tfjs-backend-cpu": "^4.4.0",
@@ -379,6 +392,7 @@
     "@types/uuid": "^9",
     "@typescript-eslint/eslint-plugin": "^5.58.0",
     "@typescript-eslint/parser": "^5.58.0",
+    "@upstash/redis": "^1.20.6",
     "@zilliz/milvus2-sdk-node": ">=2.2.7",
     "apify-client": "^2.7.1",
     "axios": "^0.26.0",
@@ -431,10 +445,12 @@
     "@huggingface/inference": "^1.5.1",
     "@opensearch-project/opensearch": "*",
     "@pinecone-database/pinecone": "*",
+    "@qdrant/js-client-rest": "^1.2.0",
     "@supabase/supabase-js": "^2.10.0",
     "@tensorflow-models/universal-sentence-encoder": "*",
     "@tensorflow/tfjs-converter": "*",
     "@tensorflow/tfjs-core": "*",
+    "@upstash/redis": "^1.20.6",
     "@zilliz/milvus2-sdk-node": ">=2.2.7",
     "apify-client": "^2.7.1",
     "axios": "*",
@@ -489,6 +505,9 @@
     "@pinecone-database/pinecone": {
       "optional": true
     },
+    "@qdrant/js-client-rest": {
+      "optional": true
+    },
     "@supabase/supabase-js": {
       "optional": true
     },
@@ -499,6 +518,9 @@
       "optional": true
     },
     "@tensorflow/tfjs-core": {
+      "optional": true
+    },
+    "@upstash/redis": {
       "optional": true
     },
     "@zilliz/milvus2-sdk-node": {
@@ -710,6 +732,11 @@
       "import": "./embeddings/hf.js",
       "require": "./embeddings/hf.cjs"
     },
+    "./embeddings/googlevertexai": {
+      "types": "./embeddings/googlevertexai.d.ts",
+      "import": "./embeddings/googlevertexai.js",
+      "require": "./embeddings/googlevertexai.cjs"
+    },
     "./llms": {
       "node": {
         "types": "./llms.d.ts",
@@ -813,6 +840,11 @@
       "types": "./vectorstores/pinecone.d.ts",
       "import": "./vectorstores/pinecone.js",
       "require": "./vectorstores/pinecone.cjs"
+    },
+    "./vectorstores/qdrant": {
+      "types": "./vectorstores/qdrant.d.ts",
+      "import": "./vectorstores/qdrant.js",
+      "require": "./vectorstores/qdrant.cjs"
     },
     "./vectorstores/supabase": {
       "types": "./vectorstores/supabase.d.ts",
@@ -1013,6 +1045,11 @@
       "import": "./chat_models/anthropic.js",
       "require": "./chat_models/anthropic.cjs"
     },
+    "./chat_models/googlevertexai": {
+      "types": "./chat_models/googlevertexai.d.ts",
+      "import": "./chat_models/googlevertexai.js",
+      "require": "./chat_models/googlevertexai.cjs"
+    },
     "./schema": {
       "types": "./schema.d.ts",
       "import": "./schema.js",
@@ -1134,6 +1171,11 @@
       "types": "./stores/message/redis.d.ts",
       "import": "./stores/message/redis.js",
       "require": "./stores/message/redis.cjs"
+    },
+    "./stores/message/upstash_redis": {
+      "types": "./stores/message/upstash_redis.d.ts",
+      "import": "./stores/message/upstash_redis.js",
+      "require": "./stores/message/upstash_redis.cjs"
     },
     "./experimental/autogpt": {
       "types": "./experimental/autogpt.d.ts",
