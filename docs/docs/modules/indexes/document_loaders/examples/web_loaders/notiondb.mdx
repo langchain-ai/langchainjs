@@ -11,7 +11,8 @@ To load data, you will need the `integrationToken` of the Notion integration and
 import { NotionDBLoader } from "@examples/document_loaders/notiondb.ts";
 
 const loader = new NotionDBLoader({
-  integrationToken: "NOTION_TOKEN",
+  pageSizeLimit: 10,
+  notionApiVersion: "2022-06-28",
   databaseId: "databaseId",
 });
 const docs = await loader.load();

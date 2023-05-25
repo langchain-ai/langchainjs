@@ -1,7 +1,7 @@
 import { NotionDBLoader } from "langchain/document_loaders/web/notiondb";
 
 const loader = new NotionDBLoader({
-  integrationToken: "NOTION_TOKEN",
+  pageSizeLimit: 10,
   databaseId: "databaseId",
 });
 const docs = await loader.load();

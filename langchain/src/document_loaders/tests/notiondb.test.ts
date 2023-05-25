@@ -4,7 +4,8 @@ import { test } from "@jest/globals";
 
 test("Test NotionDBLoader", async () => {
   const loader = new NotionDBLoader({
-    integrationToken: "NOTION_TOKEN",
+    pageSizeLimit: 10,
+    notionApiVersion: '2022-06-28',
     databaseId: "databaseId",
   });
   const documents = await loader.load();
