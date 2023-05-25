@@ -8,6 +8,7 @@ import {
   ChatPromptTemplate,
   HumanMessagePromptTemplate,
   SystemMessagePromptTemplate,
+  MessagesPlaceholder,
 } from "../../prompts/chat.js";
 import { AgentStep } from "../../schema/index.js";
 import { StructuredTool } from "../../tools/base.js";
@@ -124,6 +125,7 @@ export class StructuredChatAgent extends Agent {
           },
         })
       ),
+      new MessagesPlaceholder("chat_history"),
       HumanMessagePromptTemplate.fromTemplate("{input}\n\n{agent_scratchpad}"),
     ];
     return ChatPromptTemplate.fromPromptMessages(messages);
