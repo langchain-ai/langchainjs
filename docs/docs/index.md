@@ -45,7 +45,7 @@ These including:
 
 - [Deployment](./production/deployment): resources on how to deploy your application to production.
 - [Events/Callbacks](./production/callbacks): resources on the events exposed by LangChain modules.
-- [Tracing](./production/tracing): resouces on how to use tracing to log and debug your application.
+- [Tracing](./production/tracing): resources on how to use tracing to log and debug your application.
 
 ## Additional Resources
 

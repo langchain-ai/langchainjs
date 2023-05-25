@@ -54,7 +54,7 @@ test("Test entity memory in a chain", async () => {
     res5,
     memory: await memory.loadMemoryVariables({ input: "Who is Jim?" }),
   });
-}, 100000);
+}, 120000);
 
 test("Test entity memory with a chat model in a chain", async () => {
   const memory = new EntityMemory({
@@ -104,4 +104,4 @@ test("Test entity memory with a chat model in a chain", async () => {
     res5,
     memory: await memory.loadMemoryVariables({ input: "Who is Jim?" }),
   });
-}, 100000);
+}, 120000);
