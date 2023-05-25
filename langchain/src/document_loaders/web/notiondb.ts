@@ -5,8 +5,8 @@ const NOTION_BASE_URL = "https://api.notion.com/v1";
 
 export interface NotionDBLoaderParams {
   databaseId: string;
-  notionApiVersion: string;
-  pageSizeLimit: number;
+  notionApiVersion?: string;
+  pageSizeLimit?: number;
 }
 
 interface NotionPage {
