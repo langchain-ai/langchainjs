@@ -64,6 +64,9 @@ import GoogleVertexAIExample from "@examples/models/embeddings/googlevertexai.ts
 
 <CodeBlock language="typescript">{GoogleVertexAIExample}</CodeBlock>
 
+**Note:** The default Google Vertex AI embeddings model, `textembedding-gecko`, has a different number of dimensions than OpenAI's `text-embedding-ada-002` model
+and may not be supported by all vector store providers.
+
 ## `CohereEmbeddings`
 
 The `CohereEmbeddings` class uses the Cohere API to generate embeddings for a given text.
