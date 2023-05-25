@@ -1,3 +1,5 @@
+// Revert to a unit test when https://github.com/hwchase17/langchainjs/issues/1383 is resolved
+
 import { test, expect } from "@jest/globals";
 import { FaissStore } from "../faiss.js";
 import { Document } from "../../document.js";
