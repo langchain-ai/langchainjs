@@ -1,5 +1,6 @@
 import CodeBlock from "@theme/CodeBlock";
 import SqlDBExample from "@examples/chains/sql_db.ts";
+import SqlDBSqlOutputExample from "@examples/chains/sql_db_sql_output.ts";
 
 # `SqlDatabaseChain`
 
@@ -32,6 +33,10 @@ It can also reduce the number of tokens used in the chain.
 ```typescript
 const db = await SqlDatabase.fromDataSourceParams({
   appDataSource: datasource,
-  includeTables: ["Track"],
+  includesTables: ["Track"],
 });
 ```
+
+If desired, you can return the used SQL command when calling the chain.
+
+<CodeBlock language="typescript">{SqlDBSqlOutputExample}</CodeBlock>

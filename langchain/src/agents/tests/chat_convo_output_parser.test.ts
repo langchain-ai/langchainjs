@@ -1,5 +1,6 @@
 import { test, expect } from "@jest/globals";
 import { ChatConversationalAgentOutputParser } from "../chat_convo/outputParser.js";
+import { AgentAction, AgentFinish } from "../../schema/index.js";
 
 test("Can parse JSON with text in front of it", async () => {
   const testCases = [
@@ -44,20 +45,24 @@ test("Can parse JSON with text in front of it", async () => {
     },
   ];
 
-  const p = new ChatConversationalAgentOutputParser();
+  const p = new ChatConversationalAgentOutputParser([
+    "blogpost",
+    "metabase",
+    "ToolWithJson",
+  ]);
   for (const message of testCases) {
     const parsed = await p.parse(message.input);
     expect(parsed).toBeDefined();
     if (message.tool === "Final Answer") {
-      expect(parsed.returnValues).toBeDefined();
+      expect((parsed as AgentFinish).returnValues).toBeDefined();
     } else {
-      expect(parsed.tool).toEqual(message.tool);
+      expect((parsed as AgentAction).tool).toEqual(message.tool);
 
       if (typeof message.toolInput === "object") {
-        expect(message.toolInput).toEqual(parsed.toolInput);
+        expect(message.toolInput).toEqual((parsed as AgentAction).toolInput);
       }
       if (typeof message.toolInput === "string") {
-        expect(message.toolInput).toContain(parsed.toolInput);
+        expect(message.toolInput).toContain((parsed as AgentAction).toolInput);
       }
     }
   }

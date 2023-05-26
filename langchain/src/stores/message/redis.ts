@@ -11,7 +11,6 @@ import {
   BaseListChatMessageHistory,
 } from "../../schema/index.js";
 import {
-  StoredMessage,
   mapChatMessagesToStoredMessages,
   mapStoredMessagesToChatMessages,
 } from "./utils.js";
@@ -57,19 +56,7 @@ export class RedisChatMessageHistory extends BaseListChatMessageHistory {
     const orderedMessages = rawStoredMessages
       .reverse()
       .map((message) => JSON.parse(message));
-    const previousMessages = orderedMessages
-      .map((item) => ({
-        type: item.type,
-        data: {
-          role: item.role,
-          content: item.text,
-        },
-      }))
-      .filter(
-        (x): x is StoredMessage =>
-          x.type !== undefined && x.data.content !== undefined
-      );
-    return mapStoredMessagesToChatMessages(previousMessages);
+    return mapStoredMessagesToChatMessages(orderedMessages);
   }
 
   async addMessage(message: BaseChatMessage): Promise<void> {

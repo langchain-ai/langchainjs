@@ -20,6 +20,8 @@ const entrypoints = {
   // chains
   chains: "chains/index",
   "chains/load": "chains/load",
+  "chains/query_constructor": "chains/query_constructor/index",
+  "chains/query_constructor/ir": "chains/query_constructor/ir",
   // embeddings
   embeddings: "embeddings/index",
   "embeddings/base": "embeddings/base",
@@ -28,6 +30,7 @@ const entrypoints = {
   "embeddings/cohere": "embeddings/cohere",
   "embeddings/tensorflow": "embeddings/tensorflow",
   "embeddings/hf": "embeddings/hf",
+  "embeddings/googlevertexai": "embeddings/googlevertexai",
   // llms
   llms: "llms/index",
   "llms/load": "llms/load",
@@ -36,6 +39,8 @@ const entrypoints = {
   "llms/cohere": "llms/cohere",
   "llms/hf": "llms/hf",
   "llms/replicate": "llms/replicate",
+  "llms/googlevertexai": "llms/googlevertexai",
+  "llms/sagemaker_endpoint": "llms/sagemaker_endpoint",
   // prompts
   prompts: "prompts/index",
   "prompts/load": "prompts/load",
@@ -45,14 +50,17 @@ const entrypoints = {
   "vectorstores/memory": "vectorstores/memory",
   "vectorstores/chroma": "vectorstores/chroma",
   "vectorstores/hnswlib": "vectorstores/hnswlib",
+  "vectorstores/faiss": "vectorstores/faiss",
   "vectorstores/weaviate": "vectorstores/weaviate",
   "vectorstores/mongo": "vectorstores/mongo",
   "vectorstores/pinecone": "vectorstores/pinecone",
+  "vectorstores/qdrant": "vectorstores/qdrant",
   "vectorstores/supabase": "vectorstores/supabase",
   "vectorstores/opensearch": "vectorstores/opensearch",
   "vectorstores/milvus": "vectorstores/milvus",
   "vectorstores/prisma": "vectorstores/prisma",
   "vectorstores/myscale": "vectorstores/myscale",
+  "vectorstores/redis": "vectorstores/redis",
   // text_splitter
   text_splitter: "text_splitter",
   // memory
@@ -64,6 +72,7 @@ const entrypoints = {
   // document_loaders
   document_loaders: "document_loaders/index",
   "document_loaders/base": "document_loaders/base",
+  "document_loaders/web/apify_dataset": "document_loaders/web/apify_dataset",
   "document_loaders/web/cheerio": "document_loaders/web/cheerio",
   "document_loaders/web/puppeteer": "document_loaders/web/puppeteer",
   "document_loaders/web/playwright": "document_loaders/web/playwright",
@@ -91,15 +100,18 @@ const entrypoints = {
   "chat_models/base": "chat_models/base",
   "chat_models/openai": "chat_models/openai",
   "chat_models/anthropic": "chat_models/anthropic",
+  "chat_models/googlevertexai": "chat_models/googlevertexai",
   // schema
   schema: "schema/index",
   "schema/output_parser": "schema/output_parser",
+  "schema/query_constructor": "schema/query_constructor",
   // sql_db
   sql_db: "sql_db",
   // callbacks
   callbacks: "callbacks/index",
   // output_parsers
   output_parsers: "output_parsers/index",
+  "output_parsers/expression": "output_parsers/expression",
   // retrievers
   retrievers: "retrievers/index",
   "retrievers/remote": "retrievers/remote/index",
@@ -112,6 +124,7 @@ const entrypoints = {
   "retrievers/document_compressors/chain_extract":
     "retrievers/document_compressors/chain_extract",
   "retrievers/hyde": "retrievers/hyde",
+  "retrievers/self_query": "retrievers/self_query/index",
   // cache
   cache: "cache/index",
   "cache/redis": "cache/redis",
@@ -120,6 +133,7 @@ const entrypoints = {
   "stores/file/node": "stores/file/node",
   "stores/message/dynamodb": "stores/message/dynamodb",
   "stores/message/redis": "stores/message/redis",
+  "stores/message/upstash_redis": "stores/message/upstash_redis",
   // experimental
   "experimental/autogpt": "experimental/autogpt/index",
   "experimental/babyagi": "experimental/babyagi/index",
@@ -148,22 +162,29 @@ const requiresOptionalDependency = [
   "tools/webbrowser",
   "chains/load",
   "embeddings/cohere",
+  "embeddings/googlevertexai",
   "embeddings/tensorflow",
   "embeddings/hf",
   "llms/load",
   "llms/cohere",
+  "llms/googlevertexai",
   "llms/hf",
   "llms/replicate",
+  "llms/sagemaker_endpoint",
   "prompts/load",
   "vectorstores/chroma",
   "vectorstores/hnswlib",
+  "vectorstores/faiss",
   "vectorstores/weaviate",
   "vectorstores/mongo",
   "vectorstores/pinecone",
+  "vectorstores/qdrant",
   "vectorstores/supabase",
   "vectorstores/opensearch",
   "vectorstores/milvus",
   "vectorstores/myscale",
+  "vectorstores/redis",
+  "document_loaders/web/apify_dataset",
   "document_loaders/web/cheerio",
   "document_loaders/web/puppeteer",
   "document_loaders/web/playwright",
@@ -185,13 +206,19 @@ const requiresOptionalDependency = [
   "document_loaders/fs/csv",
   "document_loaders/fs/notion",
   "document_loaders/fs/unstructured",
+  "chat_models/googlevertexai",
   "sql_db",
   "retrievers/supabase",
   "retrievers/metal",
+  "retrievers/self_query",
+  "output_parsers/expression",
+  "chains/query_constructor",
+  "chains/query_constructor/ir",
   "cache/redis",
   "stores/file/node",
   "stores/message/dynamodb",
   "stores/message/redis",
+  "stores/message/upstash_redis",
 ];
 
 // List of test-exports-* packages which we use to test that the exports field
@@ -200,6 +227,10 @@ const requiresOptionalDependency = [
 const testExports = [
   [
     "test-exports-esm",
+    (p) => `import * as ${p.replace(/\//g, "_")} from "langchain/${p}";`,
+  ],
+  [
+    "test-exports-esbuild",
     (p) => `import * as ${p.replace(/\//g, "_")} from "langchain/${p}";`,
   ],
   [

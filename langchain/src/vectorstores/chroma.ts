@@ -10,14 +10,18 @@ export type ChromaLibArgs =
       url?: string;
       numDimensions?: number;
       collectionName?: string;
+      filter?: object;
     }
   | {
       index?: ChromaClientT;
       numDimensions?: number;
       collectionName?: string;
+      filter?: object;
     };
 
 export class Chroma extends VectorStore {
+  declare FilterType: object;
+
   index?: ChromaClientT;
 
   collection?: Collection;
@@ -27,6 +31,8 @@ export class Chroma extends VectorStore {
   numDimensions?: number;
 
   url: string;
+
+  filter?: object;
 
   constructor(embeddings: Embeddings, args: ChromaLibArgs) {
     super(embeddings, args);
@@ -38,6 +44,8 @@ export class Chroma extends VectorStore {
     } else if ("url" in args) {
       this.url = args.url || "http://localhost:8000";
     }
+
+    this.filter = args.filter;
   }
 
   async addDocuments(documents: Document[]): Promise<void> {
@@ -52,11 +60,15 @@ export class Chroma extends VectorStore {
     if (!this.collection) {
       if (!this.index) {
         const { ChromaClient } = await Chroma.imports();
-        this.index = new ChromaClient(this.url);
+        this.index = new ChromaClient({ path: this.url });
       }
-      this.collection = await this.index.getOrCreateCollection(
-        this.collectionName
-      );
+      try {
+        this.collection = await this.index.getOrCreateCollection({
+          name: this.collectionName,
+        });
+      } catch (err) {
+        throw new Error(`Chroma getOrCreateCollection error: ${err}`);
+      }
     }
 
     return this.collection;
@@ -80,22 +92,35 @@ export class Chroma extends VectorStore {
 
     const collection = await this.ensureCollection();
     const docstoreSize = await collection.count();
-    await collection.add(
-      Array.from({ length: vectors.length }, (_, i) =>
+    await collection.add({
+      ids: Array.from({ length: vectors.length }, (_, i) =>
         (docstoreSize + i).toString()
       ),
-      vectors,
-      documents.map(({ metadata }) => metadata),
-      documents.map(({ pageContent }) => pageContent)
-    );
+      embeddings: vectors,
+      metadatas: documents.map(({ metadata }) => metadata),
+      documents: documents.map(({ pageContent }) => pageContent),
+    });
   }
 
-  async similaritySearchVectorWithScore(query: number[], k: number) {
+  async similaritySearchVectorWithScore(
+    query: number[],
+    k: number,
+    filter?: this["FilterType"]
+  ) {
+    if (filter && this.filter) {
+      throw new Error("cannot provide both `filter` and `this.filter`");
+    }
+    const _filter = filter ?? this.filter;
+
     const collection = await this.ensureCollection();
 
     // similaritySearchVectorWithScore supports one query vector at a time
     // chroma supports multiple query vectors at a time
-    const result = await collection.query(query, k);
+    const result = await collection.query({
+      query_embeddings: query,
+      n_results: k,
+      where: { ..._filter },
+    });
 
     const { ids, distances, documents, metadatas } = result;
     if (!ids || !distances || !documents || !metadatas) {
@@ -111,8 +136,8 @@ export class Chroma extends VectorStore {
     for (let i = 0; i < firstIds.length; i += 1) {
       results.push([
         new Document({
-          pageContent: firstDocuments[i],
-          metadata: firstMetadatas[i],
+          pageContent: firstDocuments?.[i] ?? "",
+          metadata: firstMetadatas?.[i] ?? {},
         }),
         firstDistances[i],
       ]);

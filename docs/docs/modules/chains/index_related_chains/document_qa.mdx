@@ -9,12 +9,11 @@ import CodeBlock from "@theme/CodeBlock";
 
 # Document QA
 
-LangChain provides chains used for processing unstructured text data: `StuffDocumentsChain`, `MapReduceDocumentsChain` and `RefineDocumentsChain`.
-These chains are the building blocks more complex chains for processing unstructured text data and receive both documents and a question as input. They then utilize the language model to provide an answer to the question based on the given documents.
+LangChain provides an assortment of chains specifically tailored for dealing with unstructured text data: `StuffDocumentsChain`, `MapReduceDocumentsChain`, and `RefineDocumentsChain`. These chains form the basic building blocks for developing more complex chains that interact with such data. They are designed to take both documents and a question as input, then utilize the language model to formulate a response based on the provided documents.
 
-- `StuffDocumentsChain`: This chain is the simplest of the 3 chains and simply injects all documents passes in into the prompt. It then returns the answer to the question, using all documents as context. It is suitable for QA tasks over a small number of documents.
-- `MapReduceDocumentsChain`: This chain adds a preprocessing step to select relevant portions of each document until the total number of tokens is less than the maximum number of tokens allowed by the model. It then uses the transformed docs as context to answer the question. It is suitable for QA tasks over larger documents, and it runs the preprocessing step in parallel, which can reduce the running time.
-- `RefineDocumentsChain`: This chain iterates over the documents one by one to update a running answer, at each turn using the previous version of the answer and the next doc as context. It is suitable for QA tasks over a large number of documents.
+- `StuffDocumentsChain`: This chain is the most straightforward among the three. It simply injects all input documents into the prompt as context and returns the answer to the question. It is suitable for QA tasks over a small number of documents.
+- `MapReduceDocumentsChain`: This chain incorporates a preprocessing step to select relevant sections from each document until the total number of tokens is less than the maximum number of tokens allowed by the model. It then uses the transformed documents as context to answer the question. It is suitable for QA tasks over larger documents and can run the preprocessing step in parallel, reducing the running time.
+- `RefineDocumentsChain`: This chain iterates over the input documents one by one, updating an intermediate answer with each iteration. It uses the previous version of the answer and the next document as context. It is suitable for QA tasks over a large number of documents.
 
 ## Usage, `StuffDocumentsChain` and `MapReduceDocumentsChain`
 
