@@ -1,5 +1,6 @@
 import { BaseDocumentLoader } from "../base.js";
 import { Document } from "../../document.js";
+import { getEnvironmentVariable } from "../../util/env.js";
 
 export interface FigmaFile {
   name: string;
@@ -22,8 +23,8 @@ export interface FigmaFile {
 
 export interface FigmaLoaderParams {
   accessToken?: string;
-  ids: string;
-  key: string;
+  nodeIds: string[];
+  fileKey: string;
 }
 
 export class FigmaFileLoader
@@ -32,35 +33,34 @@ export class FigmaFileLoader
 {
   public accessToken?: string;
 
-  public ids: string;
+  public nodeIds: string[];
 
-  public key: string;
+  public fileKey: string;
 
   private headers: Record<string, string> = {};
 
   constructor({
-    accessToken = typeof process !== "undefined"
-      ? // eslint-disable-next-line no-process-env
-        process.env?.FIGMA_ACCESS_TOKEN
-      : undefined,
-    ids,
-    key,
+    accessToken = getEnvironmentVariable("FIGMA_ACCESS_TOKEN"),
+    nodeIds,
+    fileKey,
   }: FigmaLoaderParams) {
     super();
 
     this.accessToken = accessToken;
-    this.ids = ids;
-    this.key = key;
+    this.nodeIds = nodeIds;
+    this.fileKey = fileKey;
 
     if (this.accessToken) {
       this.headers = {
-        "X-Figma-Token": this.accessToken,
+        "x-figma-token": this.accessToken,
       };
     }
   }
 
   private constructFigmaApiURL(): string {
-    return `https://api.figma.com/v1/files/${this.key}/nodes?ids=${this.ids}`;
+    return `https://api.figma.com/v1/files/${
+      this.fileKey
+    }/nodes?ids=${this.nodeIds.join(",")}`;
   }
 
   private async getFigmaFile(): Promise<FigmaFile> {
@@ -70,7 +70,7 @@ export class FigmaFileLoader
 
     if (!response.ok) {
       throw new Error(
-        `Unable to get figma file ${response.status} ${JSON.stringify(data)}`
+        `Unable to get figma file: ${response.status} ${JSON.stringify(data)}`
       );
     }
 
