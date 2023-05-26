@@ -21,7 +21,7 @@ const splitter = new LatexTextSplitter({
 });
 const output = await splitter.createDocuments([text]);
 
-console.log(output)
+console.log(output);
 
 /*
 [

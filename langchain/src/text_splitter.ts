@@ -372,6 +372,7 @@ export class LatexTextSplitter
     " ",
     "",
   ];
+
   constructor(fields?: Partial<LatexTextSplitterParams>) {
     super(fields);
   }
