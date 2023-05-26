@@ -57,20 +57,22 @@ export const run = async () => {
     animaniacs.asRetriever(3),
   ];
 
-  const multiRetrievalQAChain = MultiRetrievalQAChain.fromRetrievers({
+  const multiRetrievalQAChain = MultiRetrievalQAChain.fromLLMAndRetrievers(
     llm,
-    retrieverNames,
-    retrieverDescriptions,
-    retrievers,
-    /**
-     * You can return the document that's being used by the
-     * query by adding the following option for retrieval QA
-     * chain.
-     */
-    retrievalQAChainOpts: {
-      returnSourceDocuments: true,
-    },
-  });
+    {
+      retrieverNames,
+      retrieverDescriptions,
+      retrievers,
+      /**
+       * You can return the document that's being used by the
+       * query by adding the following option for retrieval QA
+       * chain.
+       */
+      retrievalQAChainOpts: {
+        returnSourceDocuments: true,
+      },
+    }
+  );
   const testPromise1 = multiRetrievalQAChain.call({
     input:
       "In the Aqua Teen Hunger Force theme song, who calls himself the mike rula?",

@@ -87,13 +87,15 @@ test("Test MultiRetrievalQAChain No Defaults With Retriever Prompts", async () =
       })
   );
 
-  const multiRetrievalQAChain = MultiRetrievalQAChain.fromRetrievers({
+  const multiRetrievalQAChain = MultiRetrievalQAChain.fromLLMAndRetrievers(
     llm,
-    retrieverNames,
-    retrieverDescriptions,
-    retrievers,
-    retrieverPrompts,
-  });
+    {
+      retrieverNames,
+      retrieverDescriptions,
+      retrievers,
+      retrieverPrompts,
+    }
+  );
 
   const { text: result } = await multiRetrievalQAChain.call({
     input: "test input",
@@ -112,15 +114,17 @@ test("Test MultiRetrievalQAChain No Defaults No Retriever Prompts", async () => 
   ];
   const retrievers = retrieverNames.map((name) => new FakeRetrievers(name));
 
-  const multiRetrievalQAChain = MultiRetrievalQAChain.fromRetrievers({
+  const multiRetrievalQAChain = MultiRetrievalQAChain.fromLLMAndRetrievers(
     llm,
-    retrieverNames,
-    retrieverDescriptions,
-    retrievers,
-    retrievalQAChainOpts: {
-      returnSourceDocuments: true,
-    },
-  });
+    {
+      retrieverNames,
+      retrieverDescriptions,
+      retrievers,
+      retrievalQAChainOpts: {
+        returnSourceDocuments: true,
+      },
+    }
+  );
 
   const { text: result, sourceDocuments } = await multiRetrievalQAChain.call({
     input: "test input",

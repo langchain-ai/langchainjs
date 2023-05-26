@@ -29,29 +29,52 @@ export class MultiRetrievalQAChain extends MultiRouteChain {
     return ["result"];
   }
 
-  static fromRetrievers({
-    llm,
-    retrieverNames,
-    retrieverDescriptions,
-    retrievers,
-    retrieverPrompts,
-    defaults,
-    multiRetrievalChainOpts,
-    retrievalQAChainOpts,
-  }: {
-    llm: BaseLanguageModel;
-    retrieverNames: string[];
-    retrieverDescriptions: string[];
-    retrievers: BaseRetriever[];
-    retrieverPrompts?: PromptTemplate[];
-    defaults?: MultiRetrievalDefaults;
-    multiRetrievalChainOpts?: Omit<MultiRouteChainInput, "defaultChain">;
-    retrievalQAChainOpts?: Partial<
-      Omit<RetrievalQAChainInput, "retriever" | "combineDocumentsChain">
-    > & {
-      prompt?: PromptTemplate;
-    };
-  }): MultiRetrievalQAChain {
+  /**
+   * @deprecated Use `fromRetrieversAndPrompts` instead
+   */
+  static fromRetrievers(
+    llm: BaseLanguageModel,
+    retrieverNames: string[],
+    retrieverDescriptions: string[],
+    retrievers: BaseRetriever[],
+    retrieverPrompts?: PromptTemplate[],
+    defaults?: MultiRetrievalDefaults,
+    options?: Omit<MultiRouteChainInput, "defaultChain">
+  ) {
+    return MultiRetrievalQAChain.fromLLMAndRetrievers(llm, {
+      retrieverNames,
+      retrieverDescriptions,
+      retrievers,
+      retrieverPrompts,
+      defaults,
+      multiRetrievalChainOpts: options,
+    });
+  }
+
+  static fromLLMAndRetrievers(
+    llm: BaseLanguageModel,
+    {
+      retrieverNames,
+      retrieverDescriptions,
+      retrievers,
+      retrieverPrompts,
+      defaults,
+      multiRetrievalChainOpts,
+      retrievalQAChainOpts,
+    }: {
+      retrieverNames: string[];
+      retrieverDescriptions: string[];
+      retrievers: BaseRetriever[];
+      retrieverPrompts?: PromptTemplate[];
+      defaults?: MultiRetrievalDefaults;
+      multiRetrievalChainOpts?: Omit<MultiRouteChainInput, "defaultChain">;
+      retrievalQAChainOpts?: Partial<
+        Omit<RetrievalQAChainInput, "retriever" | "combineDocumentsChain">
+      > & {
+        prompt?: PromptTemplate;
+      };
+    }
+  ): MultiRetrievalQAChain {
     const { defaultRetriever, defaultPrompt, defaultChain } = defaults ?? {};
     if (defaultPrompt && !defaultRetriever) {
       throw new Error(

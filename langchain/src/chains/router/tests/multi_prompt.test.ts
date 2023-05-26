@@ -60,8 +60,7 @@ test("Test MultiPromptChain", async () => {
     "prompt template3 {input}",
   ];
 
-  const multiPromptChain = MultiPromptChain.fromPrompts({
-    llm,
+  const multiPromptChain = MultiPromptChain.fromLLMAndPrompts(llm, {
     promptNames,
     promptDescriptions,
     promptTemplates,

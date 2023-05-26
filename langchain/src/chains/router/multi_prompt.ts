@@ -12,25 +12,46 @@ import { zipEntries } from "./utils.js";
 import { RouterOutputParser } from "../../output_parsers/router.js";
 
 export class MultiPromptChain extends MultiRouteChain {
-  static fromPrompts({
-    llm,
-    promptNames,
-    promptDescriptions,
-    promptTemplates,
-    defaultChain,
-    llmChainOpts,
-    conversationChainOpts,
-    multiRouteChainOpts,
-  }: {
-    llm: BaseLanguageModel;
-    promptNames: string[];
-    promptDescriptions: string[];
-    promptTemplates: string[] | PromptTemplate[];
-    defaultChain?: BaseChain;
-    llmChainOpts?: Omit<LLMChainInput, "llm" | "prompt">;
-    conversationChainOpts?: Omit<LLMChainInput, "llm" | "outputKey">;
-    multiRouteChainOpts?: Omit<MultiRouteChainInput, "defaultChain">;
-  }): MultiPromptChain {
+  /**
+   * @deprecated Use `fromLLMAndPrompts` instead
+   */
+  static fromPrompts(
+    llm: BaseLanguageModel,
+    promptNames: string[],
+    promptDescriptions: string[],
+    promptTemplates: string[] | PromptTemplate[],
+    defaultChain?: BaseChain,
+    options?: Omit<MultiRouteChainInput, "defaultChain">
+  ) {
+    return MultiPromptChain.fromLLMAndPrompts(llm, {
+      promptNames,
+      promptDescriptions,
+      promptTemplates,
+      defaultChain,
+      multiRouteChainOpts: options,
+    });
+  }
+
+  static fromLLMAndPrompts(
+    llm: BaseLanguageModel,
+    {
+      promptNames,
+      promptDescriptions,
+      promptTemplates,
+      defaultChain,
+      llmChainOpts,
+      conversationChainOpts,
+      multiRouteChainOpts,
+    }: {
+      promptNames: string[];
+      promptDescriptions: string[];
+      promptTemplates: string[] | PromptTemplate[];
+      defaultChain?: BaseChain;
+      llmChainOpts?: Omit<LLMChainInput, "llm" | "prompt">;
+      conversationChainOpts?: Omit<LLMChainInput, "llm" | "outputKey">;
+      multiRouteChainOpts?: Omit<MultiRouteChainInput, "defaultChain">;
+    }
+  ): MultiPromptChain {
     const destinations = zipEntries(promptNames, promptDescriptions).map(
       ([name, desc]) => `${name}: ${desc}`
     );

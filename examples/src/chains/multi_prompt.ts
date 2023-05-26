@@ -10,12 +10,12 @@ export const run = async () => {
     "Good for answering questions about history",
   ];
   const physicsTemplate = `You are a very smart physics professor. You are great at answering questions about physics in a concise and easy to understand manner. When you don't know the answer to a question you admit that you don't know.
-    
+
 Here is a question:
 {input}
 `;
   const mathTemplate = `You are a very good mathematician. You are great at answering math questions. You are so good because you are able to break down hard problems into their component parts, answer the component parts, and then put them together to answer the broader question.
-    
+
 Here is a question:
 {input}`;
 
@@ -26,8 +26,7 @@ Here is a question:
 
   const promptTemplates = [physicsTemplate, mathTemplate, historyTemplate];
 
-  const multiPromptChain = MultiPromptChain.fromPrompts({
-    llm,
+  const multiPromptChain = MultiPromptChain.fromLLMAndPrompts(llm, {
     promptNames,
     promptDescriptions,
     promptTemplates,
