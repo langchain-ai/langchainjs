@@ -46,24 +46,16 @@ export class NotionDBLoader
   constructor({
     databaseId,
     notionApiVersion = "2022-06-28",
-    notionIntegrationToken,
+    notionIntegrationToken = getEnvironmentVariable("NOTION_INTEGRATION_TOKEN"),
     pageSizeLimit = 50,
   }: NotionDBLoaderParams) {
     super();
 
-    const integrationToken =
-      notionIntegrationToken ??
-      getEnvironmentVariable("NOTION_INTEGRATION_TOKEN");
-
-    if (!integrationToken) {
+    if (!notionIntegrationToken) {
       throw new Error("You must provide a Notion integration token.");
     }
 
-    if (!databaseId) {
-      throw new Error("databaseId must be provided");
-    }
-
-    this.integrationToken = integrationToken;
+    this.integrationToken = notionIntegrationToken;
     this.pageSizeLimit = pageSizeLimit;
     this.notionApiVersion = notionApiVersion;
     this.databaseId = databaseId;

@@ -193,6 +193,9 @@
     "document_loaders/web/github.cjs",
     "document_loaders/web/github.js",
     "document_loaders/web/github.d.ts",
+    "document_loaders/web/notiondb.cjs",
+    "document_loaders/web/notiondb.js",
+    "document_loaders/web/notiondb.d.ts",
     "document_loaders/web/s3.cjs",
     "document_loaders/web/s3.js",
     "document_loaders/web/s3.d.ts",
@@ -949,6 +952,11 @@
       "types": "./document_loaders/web/github.d.ts",
       "import": "./document_loaders/web/github.js",
       "require": "./document_loaders/web/github.cjs"
+    },
+    "./document_loaders/web/notiondb": {
+      "types": "./document_loaders/web/notiondb.d.ts",
+      "import": "./document_loaders/web/notiondb.js",
+      "require": "./document_loaders/web/notiondb.cjs"
     },
     "./document_loaders/web/s3": {
       "types": "./document_loaders/web/s3.d.ts",
