@@ -18,12 +18,6 @@ src/document_loaders/example_data/example/
 └── example.md
 ```
 
-## Setup
-
-```bash npm2yarn
-npm install minimatch
-```
-
 ## Usage, simple extensions
 
 ```typescript

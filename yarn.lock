@@ -18048,7 +18048,7 @@ __metadata:
     jest: ^29.5.0
     jsonpointer: ^5.0.1
     mammoth: ^1.5.1
-    minimatch: ^9.0.0
+    minimatch: ^9.0.1
     ml-distance: ^4.0.0
     mongodb: ^5.2.0
     object-hash: ^3.0.0
@@ -18096,7 +18096,6 @@ __metadata:
     hnswlib-node: ^1.4.2
     html-to-text: ^9.0.5
     mammoth: "*"
-    minimatch: "*"
     mongodb: ^5.2.0
     pdf-parse: 1.1.1
     playwright: ^1.32.1
@@ -18150,8 +18149,6 @@ __metadata:
     html-to-text:
       optional: true
     mammoth:
-      optional: true
-    minimatch:
       optional: true
     mongodb:
       optional: true
@@ -19074,6 +19071,15 @@ __metadata:
   dependencies:
     brace-expansion: ^2.0.1
   checksum: 7bd57899edd1d1b0560f50b5b2d1ea4ad2a366c5a2c8e0a943372cf2f200b64c256bae45a87a80915adbce27fa36526264296ace0da57b600481fe5ea3e372e5
+  languageName: node
+  linkType: hard
+
+"minimatch@npm:^9.0.1":
+  version: 9.0.1
+  resolution: "minimatch@npm:9.0.1"
+  dependencies:
+    brace-expansion: ^2.0.1
+  checksum: 97f5f5284bb57dc65b9415dec7f17a0f6531a33572193991c60ff18450dcfad5c2dad24ffeaf60b5261dccd63aae58cc3306e2209d57e7f88c51295a532d8ec3
   languageName: node
   linkType: hard
 

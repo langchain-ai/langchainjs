@@ -1,4 +1,5 @@
 import type { extname as ExtnameT, resolve as ResolveT } from "node:path";
+import { minimatch } from "minimatch";
 import type { readdir as ReaddirT } from "node:fs/promises";
 import { Document } from "../../document.js";
 import { getEnv } from "../../util/env.js";
@@ -41,7 +42,6 @@ export class DirectoryLoader extends BaseDocumentLoader {
   }
 
   public async load(): Promise<Document[]> {
-    const { minimatch } = await minimatchImports();
     const { readdir, extname, resolve } = await DirectoryLoader.imports();
     const files = await readdir(this.directoryPath, { withFileTypes: true });
 
@@ -63,7 +63,7 @@ export class DirectoryLoader extends BaseDocumentLoader {
         let matchedLoader = null;
         for (const pattern in this.loaders) {
           if (minimatch(extname(file.name), pattern)) {
-            matchedLoader = this.loaders[pattern as `.${string}`];
+            matchedLoader = this.loaders[pattern];
             break;
           }
         }
@@ -104,17 +104,5 @@ export class DirectoryLoader extends BaseDocumentLoader {
         `Failed to load fs/promises. DirectoryLoader available only on environment 'node'. It appears you are running environment '${getEnv()}'. See https://<link to docs> for alternatives.`
       );
     }
-  }
-}
-
-async function minimatchImports() {
-  try {
-    const minimatch = await import("minimatch");
-    return { minimatch: minimatch.minimatch };
-  } catch (e) {
-    console.error(e);
-    throw new Error(
-      "Failed to load minimatch. Please install it with eg. `npm install minimatch`."
-    );
   }
 }
