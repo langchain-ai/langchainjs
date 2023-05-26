@@ -4,9 +4,14 @@ import { getEncoding } from "./util/tiktoken.js";
 
 export interface TextSplitterParams {
   chunkSize: number;
-
   chunkOverlap: number;
 }
+
+export type TextSplitterChunkHeaderOptions = {
+  chunkHeader?: string;
+  chunkOverlapHeader?: string;
+  appendChunkOverlapHeader?: boolean;
+};
 
 export abstract class TextSplitter implements TextSplitterParams {
   chunkSize = 1000;
@@ -26,16 +31,25 @@ export abstract class TextSplitter implements TextSplitterParams {
   async createDocuments(
     texts: string[],
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    metadatas: Record<string, any>[] = []
+    metadatas: Record<string, any>[] = [],
+    chunkHeaderOptions: TextSplitterChunkHeaderOptions = {}
   ): Promise<Document[]> {
+    // if no metadata is provided, we create an empty one for each text
     const _metadatas =
       metadatas.length > 0 ? metadatas : new Array(texts.length).fill({});
+    const {
+      chunkHeader = "",
+      chunkOverlapHeader = "(cont'd) ",
+      appendChunkOverlapHeader = false,
+    } = chunkHeaderOptions;
     const documents = new Array<Document>();
     for (let i = 0; i < texts.length; i += 1) {
       const text = texts[i];
       let lineCounterIndex = 1;
       let prevChunk = null;
       for (const chunk of await this.splitText(text)) {
+        let pageContent = chunkHeader;
+
         // we need to count the \n that are in the text before getting removed by the splitting
         let numberOfIntermediateNewLines = 0;
         if (prevChunk) {
@@ -48,6 +62,9 @@ export abstract class TextSplitter implements TextSplitterParams {
           numberOfIntermediateNewLines = (
             removedNewlinesFromSplittingText.match(/\n/g) || []
           ).length;
+          if (appendChunkOverlapHeader) {
+            pageContent += chunkOverlapHeader;
+          }
         }
         lineCounterIndex += numberOfIntermediateNewLines;
         const newLinesCount = (chunk.match(/\n/g) || []).length;
@@ -64,9 +81,11 @@ export abstract class TextSplitter implements TextSplitterParams {
           ..._metadatas[i],
           loc,
         };
+
+        pageContent += chunk;
         documents.push(
           new Document({
-            pageContent: chunk,
+            pageContent,
             metadata: metadataWithLinesNumber,
           })
         );
@@ -77,13 +96,16 @@ export abstract class TextSplitter implements TextSplitterParams {
     return documents;
   }
 
-  async splitDocuments(documents: Document[]): Promise<Document[]> {
+  async splitDocuments(
+    documents: Document[],
+    chunkHeaderOptions: TextSplitterChunkHeaderOptions = {}
+  ): Promise<Document[]> {
     const selectedDocuments = documents.filter(
       (doc) => doc.pageContent !== undefined
     );
     const texts = selectedDocuments.map((doc) => doc.pageContent);
     const metadatas = selectedDocuments.map((doc) => doc.metadata);
-    return this.createDocuments(texts, metadatas);
+    return this.createDocuments(texts, metadatas, chunkHeaderOptions);
   }
 
   private joinDocs(docs: string[], separator: string): string | null {
