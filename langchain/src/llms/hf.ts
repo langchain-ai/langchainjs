@@ -1,3 +1,4 @@
+import { getEnvironmentVariable } from "../util/env.js";
 import { LLM, BaseLLMParams } from "./base.js";
 
 export interface HFInput {
@@ -50,11 +51,7 @@ export class HuggingFaceInference extends LLM implements HFInput {
     this.topK = fields?.topK ?? this.topK;
     this.frequencyPenalty = fields?.frequencyPenalty ?? this.frequencyPenalty;
     this.apiKey =
-      fields?.apiKey ??
-      (typeof process !== "undefined"
-        ? // eslint-disable-next-line no-process-env
-          process.env?.HUGGINGFACEHUB_API_KEY
-        : undefined);
+      fields?.apiKey ?? getEnvironmentVariable("HUGGINGFACEHUB_API_KEY");
     if (!this.apiKey) {
       throw new Error(
         "Please set an API key for HuggingFace Hub in the environment variable HUGGINGFACEHUB_API_KEY or in the apiKey field of the HuggingFaceInference constructor."
