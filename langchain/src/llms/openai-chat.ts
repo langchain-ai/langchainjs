@@ -116,10 +116,8 @@ export class OpenAIChat
       getEnvironmentVariable("AZURE_OPENAI_API_INSTANCE_NAME");
 
     const azureApiDeploymentName =
-      (fields?.azureOpenAIApiCompletionsDeploymentName ||
-        fields?.azureOpenAIApiDeploymentName) ??
-      (getEnvironmentVariable("AZURE_OPENAI_API_COMPLETIONS_DEPLOYMENT_NAME") ||
-        getEnvironmentVariable("AZURE_OPENAI_API_DEPLOYMENT_NAME"));
+      fields?.azureOpenAIApiDeploymentName ??
+      getEnvironmentVariable("AZURE_OPENAI_API_DEPLOYMENT_NAME");
 
     const azureApiVersion =
       fields?.azureOpenAIApiVersion ??
