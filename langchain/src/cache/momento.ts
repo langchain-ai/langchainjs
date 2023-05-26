@@ -11,7 +11,7 @@ import { BaseCache, Generation } from "../schema/index.js";
 import { getCacheKey } from "./base.js";
 
 /**
- * The properties to instantiate the Momento standard cache.
+ * The settings to instantiate the Momento standard cache.
  */
 export interface MomentoCacheProps {
   /**
@@ -33,26 +33,6 @@ export interface MomentoCacheProps {
    * Defaults to true.
    */
   ensureCacheExists?: true;
-}
-
-/**
- * Ensure that the cache exists.
- */
-async function ensureCacheExists(
-  client: ICacheClient,
-  cacheName: string
-): Promise<void> {
-  const createResponse = await client.createCache(cacheName);
-  if (
-    createResponse instanceof CreateCache.Success ||
-    createResponse instanceof CreateCache.AlreadyExists
-  ) {
-    // pass
-  } else if (createResponse instanceof CreateCache.Error) {
-    throw createResponse.innerException();
-  } else {
-    throw new Error(`Unknown response type: ${createResponse.toString()}`);
-  }
 }
 
 /**
@@ -78,7 +58,7 @@ export class MomentoCache extends BaseCache {
   /**
    * Create a new standard cache backed by Momento.
    *
-   * @param props The properties to instantiate the cache.
+   * @param props The settings to instantiate the cache.
    * @param props.cacheClient The Momento cache client.
    * @param props.cacheName The name of the cache to use to store the data.
    * @param props.ttlSeconds The time to live for the cache items. If not specified,
@@ -86,6 +66,7 @@ export class MomentoCache extends BaseCache {
    * @param props.ensureCacheExists If true, ensure that the cache exists before returning.
    * If false, the cache is not checked for existence. Defaults to true.
    * @throws InvalidArgumentError if the TTL is not strictly positive.
+   * @returns The Momento-backed cache.
    */
   public static async CreateAsync(
     props: MomentoCacheProps
@@ -161,5 +142,25 @@ export class MomentoCache extends BaseCache {
     } else {
       throw new Error(`Unknown response type: ${setResponse.toString()}`);
     }
+  }
+}
+
+/**
+ * Ensure that the cache exists.
+ */
+async function ensureCacheExists(
+  client: ICacheClient,
+  cacheName: string
+): Promise<void> {
+  const createResponse = await client.createCache(cacheName);
+  if (
+    createResponse instanceof CreateCache.Success ||
+    createResponse instanceof CreateCache.AlreadyExists
+  ) {
+    // pass
+  } else if (createResponse instanceof CreateCache.Error) {
+    throw createResponse.innerException();
+  } else {
+    throw new Error(`Unknown response type: ${createResponse.toString()}`);
   }
 }
