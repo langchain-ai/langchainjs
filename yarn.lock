@@ -13931,7 +13931,7 @@ __metadata:
     eslint-config-prettier: ^8.6.0
     eslint-plugin-import: ^2.27.5
     eslint-plugin-prettier: ^4.2.1
-    faiss-node: ^0.1.1
+    faiss-node: ^0.2.0
     graphql: ^16.6.0
     js-yaml: ^4.1.0
     langchain: "workspace:*"
@@ -14163,15 +14163,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"faiss-node@npm:^0.1.1":
-  version: 0.1.1
-  resolution: "faiss-node@npm:0.1.1"
+"faiss-node@npm:^0.2.0":
+  version: 0.2.0
+  resolution: "faiss-node@npm:0.2.0"
   dependencies:
     bindings: ^1.5.0
     node-addon-api: ^6.0.0
     node-gyp: latest
     prebuild-install: ^7.1.1
-  checksum: 9a19694eea579b9982ec2f06ef754f9c332511acea0a4b20d9a97bd72bdb015004535b06b7dea24b33019c2749a9eb2abf25a6780ea7b14f4a8470919c622f5a
+  checksum: df9623e55c1193fd42724b852bef7f3c81db68c5c2c689614974fb77eb8848eab8a75c28b5573b9e7bf4caab5b89a35aa09ab134ff450baa1fd7d9f5f6f66738
   languageName: node
   linkType: hard
 
@@ -18243,7 +18243,7 @@ __metadata:
     eslint-plugin-no-instanceof: ^1.0.1
     eslint-plugin-prettier: ^4.2.1
     expr-eval: ^2.0.2
-    faiss-node: ^0.1.1
+    faiss-node: ^0.2.0
     flat: ^5.0.2
     google-auth-library: ^8.8.0
     graphql: ^16.6.0
@@ -18305,7 +18305,7 @@ __metadata:
     cohere-ai: ^5.0.2
     d3-dsv: ^2.0.0
     epub2: ^3.0.1
-    faiss-node: ^0.1.1
+    faiss-node: ^0.2.0
     google-auth-library: ^8.8.0
     hnswlib-node: ^1.4.2
     html-to-text: ^9.0.5
