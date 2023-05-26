@@ -190,9 +190,15 @@
     "document_loaders/web/imsdb.cjs",
     "document_loaders/web/imsdb.js",
     "document_loaders/web/imsdb.d.ts",
+    "document_loaders/web/figma.cjs",
+    "document_loaders/web/figma.js",
+    "document_loaders/web/figma.d.ts",
     "document_loaders/web/github.cjs",
     "document_loaders/web/github.js",
     "document_loaders/web/github.d.ts",
+    "document_loaders/web/notiondb.cjs",
+    "document_loaders/web/notiondb.js",
+    "document_loaders/web/notiondb.d.ts",
     "document_loaders/web/s3.cjs",
     "document_loaders/web/s3.js",
     "document_loaders/web/s3.d.ts",
@@ -945,10 +951,20 @@
       "import": "./document_loaders/web/imsdb.js",
       "require": "./document_loaders/web/imsdb.cjs"
     },
+    "./document_loaders/web/figma": {
+      "types": "./document_loaders/web/figma.d.ts",
+      "import": "./document_loaders/web/figma.js",
+      "require": "./document_loaders/web/figma.cjs"
+    },
     "./document_loaders/web/github": {
       "types": "./document_loaders/web/github.d.ts",
       "import": "./document_loaders/web/github.js",
       "require": "./document_loaders/web/github.cjs"
+    },
+    "./document_loaders/web/notiondb": {
+      "types": "./document_loaders/web/notiondb.d.ts",
+      "import": "./document_loaders/web/notiondb.js",
+      "require": "./document_loaders/web/notiondb.cjs"
     },
     "./document_loaders/web/s3": {
       "types": "./document_loaders/web/s3.d.ts",
