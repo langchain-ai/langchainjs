@@ -42,9 +42,9 @@ export interface MomentoCacheProps {
 export class MomentoCache extends BaseCache {
   private client: ICacheClient;
 
-  private cacheName: string;
+  private readonly cacheName: string;
 
-  private ttlSeconds?: number;
+  private readonly ttlSeconds?: number;
 
   private constructor(props: MomentoCacheProps) {
     super();

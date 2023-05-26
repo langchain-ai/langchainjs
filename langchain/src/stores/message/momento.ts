@@ -48,13 +48,13 @@ export interface MomentoChatMessageHistoryProps {
 }
 
 export class MomentoChatMessageHistory extends BaseListChatMessageHistory {
-  private sessionId: string;
+  private readonly sessionId: string;
 
-  private client: ICacheClient;
+  private readonly client: ICacheClient;
 
-  private cacheName: string;
+  private readonly cacheName: string;
 
-  private sessionTtl: CollectionTtl;
+  private readonly sessionTtl: CollectionTtl;
 
   private constructor(props: MomentoChatMessageHistoryProps) {
     super();
