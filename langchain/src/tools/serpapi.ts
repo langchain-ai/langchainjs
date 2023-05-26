@@ -1,3 +1,4 @@
+import { getEnvironmentVariable } from "../util/env.js";
 import { Tool } from "./base.js";
 
 /**
@@ -296,10 +297,7 @@ export class SerpAPI extends Tool {
   protected baseUrl: string;
 
   constructor(
-    apiKey: string | undefined = typeof process !== "undefined"
-      ? // eslint-disable-next-line no-process-env
-        process.env?.SERPAPI_API_KEY
-      : undefined,
+    apiKey: string | undefined = getEnvironmentVariable("SERPAPI_API_KEY"),
     params: Partial<SerpAPIParameters> = {},
     baseUrl = "https://serpapi.com"
   ) {

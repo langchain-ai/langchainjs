@@ -1,3 +1,4 @@
+import { getEnvironmentVariable } from "../util/env.js";
 import { Tool } from "./base.js";
 
 export interface GoogleCustomSearchParams {
@@ -17,16 +18,8 @@ export class GoogleCustomSearch extends Tool {
 
   constructor(
     fields: GoogleCustomSearchParams = {
-      apiKey:
-        typeof process !== "undefined"
-          ? // eslint-disable-next-line no-process-env
-            process.env.GOOGLE_API_KEY
-          : undefined,
-      googleCSEId:
-        typeof process !== "undefined"
-          ? // eslint-disable-next-line no-process-env
-            process.env.GOOGLE_CSE_ID
-          : undefined,
+      apiKey: getEnvironmentVariable("GOOGLE_API_KEY"),
+      googleCSEId: getEnvironmentVariable("GOOGLE_CSE_ID"),
     }
   ) {
     super();

@@ -5,6 +5,7 @@ import { v4 as uuid } from "uuid";
 import { Embeddings } from "../embeddings/base.js";
 import { VectorStore } from "./base.js";
 import { Document } from "../document.js";
+import { getEnvironmentVariable } from "../util/env.js";
 
 export interface QdrantLibArgs {
   client?: QdrantClient;
@@ -30,10 +31,7 @@ export class QdrantVectorStore extends VectorStore {
   constructor(embeddings: Embeddings, args: QdrantLibArgs) {
     super(embeddings, args);
 
-    const url =
-      args.url ??
-      // eslint-disable-next-line no-process-env
-      (typeof process !== "undefined" ? process.env?.QDRANT_URL : undefined);
+    const url = args.url ?? getEnvironmentVariable("QDRANT_URL");
 
     if (!args.client && !url) {
       throw new Error("Qdrant client or url address must be set.");
