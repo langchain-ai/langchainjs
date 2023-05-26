@@ -5302,17 +5302,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@grpc/grpc-js@npm:^1.8.14":
-  version: 1.8.14
-  resolution: "@grpc/grpc-js@npm:1.8.14"
-  dependencies:
-    "@grpc/proto-loader": ^0.7.0
-    "@types/node": ">=12.12.47"
-  checksum: 7b889ae67cde5eb9b4feb92d54e73945d881309b9b879a2dde478fa7850b99835efa7592a8154a0f923851d7a18a177c106f5f52b45061180bb04aef7783c1c9
-  languageName: node
-  linkType: hard
-
-"@grpc/grpc-js@npm:^1.6.10":
+"@grpc/grpc-js@npm:^1.6.10, @grpc/grpc-js@npm:^1.8.14":
   version: 1.8.14
   resolution: "@grpc/grpc-js@npm:1.8.14"
   dependencies:
@@ -15127,13 +15117,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"google-protobuf@npm:^3.21.0":
-  version: 3.21.2
-  resolution: "google-protobuf@npm:3.21.2"
-  checksum: 3caa2e1e2654714cc1a201ac5e5faabcaa48f5fba3d8ff9b64ca66fe19e4e0506b94053f32eddc77bf3a7a47ac1660315c6744185c1e2bb27654fd76fe91b988
-  languageName: node
-  linkType: hard
-
 "google-auth-library@npm:^8.8.0":
   version: 8.8.0
   resolution: "google-auth-library@npm:8.8.0"
@@ -15159,6 +15142,13 @@ __metadata:
   bin:
     gp12-pem: build/src/bin/gp12-pem.js
   checksum: 59a5026331ea67455672e83770da29f09d979f02e06cb2227ea5916f8cca437887c2d3869f2602a686dc84437886ae9d2ac010780803cbe8e5f161c2d02d8efd
+  languageName: node
+  linkType: hard
+
+"google-protobuf@npm:^3.21.0":
+  version: 3.21.2
+  resolution: "google-protobuf@npm:3.21.2"
+  checksum: 3caa2e1e2654714cc1a201ac5e5faabcaa48f5fba3d8ff9b64ca66fe19e4e0506b94053f32eddc77bf3a7a47ac1660315c6744185c1e2bb27654fd76fe91b988
   languageName: node
   linkType: hard
 
@@ -17976,6 +17966,15 @@ __metadata:
   bin:
     jsesc: bin/jsesc
   checksum: b8b44cbfc92f198ad972fba706ee6a1dfa7485321ee8c0b25f5cedd538dcb20cde3197de16a7265430fce8277a12db066219369e3d51055038946039f6e20e17
+  languageName: node
+  linkType: hard
+
+"json-bigint@github:sidorares/json-bigint":
+  version: 1.0.0
+  resolution: "json-bigint@https://github.com/sidorares/json-bigint.git#commit=3391780b2a3f613bb51536c47e6cddbca31013eb"
+  dependencies:
+    bignumber.js: ^9.0.0
+  checksum: ea2e403b224460496e58d0396029faafc68af9c73c8f4a1b737d6473eb310f9e223a78c1d9e532fd19df9cd67a2fd4a7be069429bf73207b11b4805df240d4cd
   languageName: node
   linkType: hard
 

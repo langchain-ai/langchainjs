@@ -20,7 +20,7 @@ describe("TigrisVectorStore", () => {
         clientSecret: process.env.TIGRIS_CLIENT_SECRET,
       },
       indexName: "integration_test_index",
-      numDimensions: 3,
+      numDimensions: 1536,
     });
 
     const embeddings = new OpenAIEmbeddings();
@@ -65,7 +65,7 @@ describe("TigrisVectorStore", () => {
 
     // If the filter wasn't working, we'd get all 3 documents back
     const results = await tigrisStore.similaritySearch(pageContent, 3, {
-      foo: id,
+      "metadata.foo": id,
     });
 
     expect(results).toEqual([
