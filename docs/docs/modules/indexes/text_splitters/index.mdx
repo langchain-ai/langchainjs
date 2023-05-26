@@ -5,6 +5,7 @@ sidebar_position: 2
 ---
 
 import DocCardList from "@theme/DocCardList";
+import CodeBlock from "@theme/CodeBlock";
 
 # Getting Started: Text Splitters
 
@@ -16,7 +17,18 @@ Language Models are often limited by the amount of text that you can pass to the
 
 Using a Text Splitter can also help improve the results from vector store searches, as eg. smaller chunks may sometimes be more likely to match a query. Testing different chunk sizes (and chunk overlap) is a worthwhile exercise to tailor the results to your use case.
 
+## Parameters
+
+- `chunkSize?: number = 1000`: The maximum number of characters in each chunk. The default value is 1000 tokens.
+- `chunkOverlap?: number = 200`: The number of overlapping characters between adjacent chunks. The default value is 200 tokens.
+
 ```typescript
+type TextSplitterChunkHeaderOptions = {
+  chunkHeader?: string;
+  chunkOverlapHeader?: string;
+  appendChunkOverlapHeader?: boolean;
+};
+
 interface TextSplitter {
   chunkSize: number;
 
@@ -24,14 +36,32 @@ interface TextSplitter {
 
   createDocuments(
     texts: string[],
-    metadatas?: Record<string, any>[]
+    metadatas?: Record<string, any>[],
+    chunkHeaderOptions: TextSplitterChunkHeaderOptions = {}
   ): Promise<Document[]>;
 
-  splitDocuments(documents: Document[]): Promise<Document[]>;
+  splitDocuments(
+    documents: Document[],
+    chunkHeaderOptions: TextSplitterChunkHeaderOptions = {}
+  ): Promise<Document[]>;
 }
 ```
 
 Text Splitters expose two methods, `createDocuments` and `splitDocuments`. The former takes a list of raw text strings and returns a list of documents. The latter takes a list of documents and returns a list of documents. The difference is that `createDocuments` will split the raw text strings into chunks, while `splitDocuments` will split the documents into chunks.
+
+### When to use `chunkHeaderOptions`
+
+Consider a scenario where you want to store a large, arbitrary collection of documents in a vector store and perform Q&A tasks on them.
+Simply splitting documents with overlapping text may not provide sufficient context for LLMs to determine if multiple chunks are referencing the same information, or how to resolve information from contradictory sources.
+
+Tagging each document with metadata is a solution if you know what to filter against, but you may not know ahead of time exactly what kind of queries your vector store will be expected to handle.
+Including additional contextual information directly in each chunk in the form of headers can help deal with arbitrary queries.
+
+Here's an example:
+
+import ChunkHeaderExample from "@examples/indexes/text_splitter_with_chunk_header.ts";
+
+<CodeBlock language="typescript">{ChunkHeaderExample}</CodeBlock>;
 
 ## All Text Splitters
 
