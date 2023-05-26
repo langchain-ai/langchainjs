@@ -1,4 +1,5 @@
 import { Document } from "../document.js";
+import { Serializable } from "./load.js";
 
 export const RUN_KEY = "__run";
 
@@ -132,7 +133,7 @@ export interface ChatResult {
 /**
  * Base PromptValue class. All prompt values should extend this class.
  */
-export abstract class BasePromptValue {
+export abstract class BasePromptValue extends Serializable {
   abstract toString(): string;
 
   abstract toChatMessages(): BaseChatMessage[];

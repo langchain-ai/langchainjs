@@ -10,6 +10,9 @@
   "types": "./index.d.ts",
   "files": [
     "dist/",
+    "load.cjs",
+    "load.js",
+    "load.d.ts",
     "agents.cjs",
     "agents.js",
     "agents.d.ts",
@@ -404,7 +407,7 @@
     "lint": "eslint src && dpdm --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint:fix": "yarn lint --fix",
     "precommit": "tsc --noEmit && lint-staged",
-    "clean": "rm -rf dist/ && node scripts/create-entrypoints.js clean",
+    "clean": "rm -rf dist/ && node scripts/create-entrypoints.js pre",
     "prepack": "yarn build",
     "release": "release-it --only-version --config .release-it.json",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest --testPathIgnorePatterns=\\.int\\.test.ts --testTimeout 30000",
@@ -727,6 +730,11 @@
       "types": "./index.d.ts",
       "import": "./index.js",
       "require": "./index.cjs"
+    },
+    "./load": {
+      "types": "./load.d.ts",
+      "import": "./load.js",
+      "require": "./load.cjs"
     },
     "./agents": {
       "types": "./agents.d.ts",

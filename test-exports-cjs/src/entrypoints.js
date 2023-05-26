@@ -1,3 +1,4 @@
+const load = require("langchain/load");
 const agents = require("langchain/agents");
 const base_language = require("langchain/base_language");
 const tools = require("langchain/tools");

@@ -1,3 +1,4 @@
+import * as load from "langchain/load";
 import * as agents from "langchain/agents";
 import * as base_language from "langchain/base_language";
 import * as tools from "langchain/tools";

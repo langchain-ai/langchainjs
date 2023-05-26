@@ -44,6 +44,12 @@ export abstract class BaseLLM extends BaseLanguageModel {
 
   declare ParsedCallOptions: Omit<this["CallOptions"], "timeout">;
 
+  lc_namespace = ["langchain", "llms"];
+
+  get lc_name(): string {
+    return this._llmType();
+  }
+
   cache?: BaseCache;
 
   constructor({ cache, concurrency, ...rest }: BaseLLMParams) {

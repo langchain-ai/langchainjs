@@ -60,7 +60,7 @@ export class HuggingFaceInference extends LLM implements HFInput {
   }
 
   _llmType() {
-    return "huggingface_hub";
+    return "hf";
   }
 
   /** @ignore */

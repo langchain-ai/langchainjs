@@ -6,7 +6,7 @@ import {
   RunInputs,
   RunOutputs,
 } from "../../schema/index.js";
-import { BaseCallbackHandler } from "../base.js";
+import { BaseCallbackHandler, BaseCallbackHandlerInput } from "../base.js";
 
 export type RunType = "llm" | "chain" | "tool";
 
@@ -40,8 +40,8 @@ export interface AgentRun extends Run {
 export abstract class BaseTracer extends BaseCallbackHandler {
   protected runMap: Map<string, Run> = new Map();
 
-  constructor() {
-    super();
+  constructor(_fields?: BaseCallbackHandlerInput) {
+    super(...arguments);
   }
 
   copy(): this {

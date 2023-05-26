@@ -17,6 +17,12 @@ export abstract class StructuredTool<
 > extends BaseLangChain {
   abstract schema: T | z.ZodEffects<T>;
 
+  lc_namespace = ["langchain", "tools"];
+
+  get lc_name(): string {
+    throw new Error("Not implemented");
+  }
+
   constructor(fields?: ToolParams) {
     super(fields ?? {});
   }

@@ -8,6 +8,7 @@ import {
   PartialValues,
   SystemChatMessage,
 } from "../schema/index.js";
+import { Serializable } from "../schema/load.js";
 import {
   BasePromptTemplate,
   BasePromptTemplateInput,
@@ -19,7 +20,11 @@ import {
   SerializedMessagePromptTemplate,
 } from "./serde.js";
 
-export abstract class BaseMessagePromptTemplate {
+export abstract class BaseMessagePromptTemplate extends Serializable {
+  lc_namespace = ["langchain", "prompts"];
+
+  lc_name = "chat";
+
   abstract inputVariables: string[];
 
   abstract formatMessages(values: InputValues): Promise<BaseChatMessage[]>;
@@ -33,10 +38,14 @@ export abstract class BaseMessagePromptTemplate {
 }
 
 export class ChatPromptValue extends BasePromptValue {
+  lc_namespace = ["langchain", "prompts"];
+
+  lc_name = "chat";
+
   messages: BaseChatMessage[];
 
   constructor(messages: BaseChatMessage[]) {
-    super();
+    super(...arguments);
     this.messages = messages;
   }
 
@@ -53,7 +62,7 @@ export class MessagesPlaceholder extends BaseMessagePromptTemplate {
   variableName: string;
 
   constructor(variableName: string) {
-    super();
+    super(...arguments);
     this.variableName = variableName;
   }
 
@@ -69,8 +78,8 @@ export class MessagesPlaceholder extends BaseMessagePromptTemplate {
 export abstract class BaseMessageStringPromptTemplate extends BaseMessagePromptTemplate {
   prompt: BaseStringPromptTemplate;
 
-  protected constructor(prompt: BaseStringPromptTemplate) {
-    super();
+  protected constructor(prompt: BaseStringPromptTemplate, _role?: string) {
+    super(...arguments);
     this.prompt = prompt;
   }
 
@@ -112,7 +121,7 @@ export class ChatMessagePromptTemplate extends BaseMessageStringPromptTemplate {
   }
 
   constructor(prompt: BaseStringPromptTemplate, role: string) {
-    super(prompt);
+    super(prompt, role);
     this.role = role;
   }
 

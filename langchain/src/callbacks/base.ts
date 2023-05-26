@@ -6,6 +6,7 @@ import {
   ChainValues,
   LLMResult,
 } from "../schema/index.js";
+import { Serializable, Serialized } from "../schema/load.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Error = any;
@@ -166,8 +167,16 @@ export type CallbackHandlerMethods = BaseCallbackHandlerMethodsClass;
 
 export abstract class BaseCallbackHandler
   extends BaseCallbackHandlerMethodsClass
-  implements BaseCallbackHandlerInput
+  implements BaseCallbackHandlerInput, Serializable
 {
+  lc_namespace = ["langchain", "callbacks"];
+
+  get lc_name() {
+    return this.name;
+  }
+
+  lc_arguments: unknown[];
+
   abstract name: string;
 
   ignoreLLM = false;
@@ -184,6 +193,7 @@ export abstract class BaseCallbackHandler
 
   constructor(input?: BaseCallbackHandlerInput) {
     super();
+    this.lc_arguments = [input];
     if (input) {
       this.ignoreLLM = input.ignoreLLM ?? this.ignoreLLM;
       this.ignoreChain = input.ignoreChain ?? this.ignoreChain;
@@ -195,6 +205,10 @@ export abstract class BaseCallbackHandler
     return new (this.constructor as new (
       input?: BaseCallbackHandlerInput
     ) => BaseCallbackHandler)(this);
+  }
+
+  toJSON(): Serialized {
+    return Serializable.prototype.toJSON.call(this);
   }
 
   static fromMethods(methods: CallbackHandlerMethods) {
