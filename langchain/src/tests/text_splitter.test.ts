@@ -223,16 +223,16 @@ test("Test latex text splitter.", async () => {
   const text = `\\begin{document}
   \\title{🦜️🔗 LangChain}
   ⚡ Building applications with LLMs through composability ⚡
-  
+
   \\section{Quick Install}
-  
+
   \\begin{verbatim}
   Hopefully this code block isn't split
-  pip install langchain
+  yarn add langchain
   \\end{verbatim}
-  
+
   As an open source project in a rapidly developing field, we are extremely open to contributions.
-  
+
   \\end{document}`;
   const splitter = new LatexTextSplitter({
     chunkSize: 100,
@@ -241,7 +241,7 @@ test("Test latex text splitter.", async () => {
   const output = await splitter.splitText(text);
   const expectedOutput = [
     "\\begin{document}\n  \\title{🦜️🔗 LangChain}\n  ⚡ Building applications with LLMs through composability ⚡",
-    "\\section{Quick Install}\n  \n  \\begin{verbatim}\n  Hopefully this code block isn't split\n  pip install langchain",
+    "\\section{Quick Install}\n  \n  \\begin{verbatim}\n  Hopefully this code block isn't split\n  yarn add langchain",
     "\\end{verbatim}\n  \n  As an open source project in a rapidly developing field, we are extremely open to contributions.",
     "\\end{document}",
   ];
