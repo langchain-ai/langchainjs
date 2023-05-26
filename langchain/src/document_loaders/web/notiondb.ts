@@ -1,5 +1,6 @@
 import { BaseDocumentLoader } from "../base.js";
 import { Document } from "../../document.js";
+import { getEnvironmentVariable } from "../../util/env.js";
 
 const NOTION_BASE_URL = "https://api.notion.com/v1";
 
@@ -52,10 +53,7 @@ export class NotionDBLoader
 
     const integrationToken =
       notionIntegrationToken ??
-      (typeof process !== "undefined"
-        ? // eslint-disable-next-line no-process-env
-          process.env?.NOTION_INTEGRATION_TOKEN
-        : undefined);
+      getEnvironmentVariable("NOTION_INTEGRATION_TOKEN");
 
     if (!integrationToken) {
       throw new Error("You must provide a Notion integration token.");
