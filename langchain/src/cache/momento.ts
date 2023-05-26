@@ -58,14 +58,14 @@ export class MomentoCache extends BaseCache {
   /**
    * Create a new standard cache backed by Momento.
    *
-   * @param props The settings to instantiate the cache.
-   * @param props.cacheClient The Momento cache client.
-   * @param props.cacheName The name of the cache to use to store the data.
-   * @param props.ttlSeconds The time to live for the cache items. If not specified,
+   * @param {MomentoCacheProps} props The settings to instantiate the cache.
+   * @param {ICacheClient} props.client The Momento cache client.
+   * @param {string} props.cacheName The name of the cache to use to store the data.
+   * @param {number} props.ttlSeconds The time to live for the cache items. If not specified,
    * the cache client default is used.
-   * @param props.ensureCacheExists If true, ensure that the cache exists before returning.
+   * @param {boolean} props.ensureCacheExists If true, ensure that the cache exists before returning.
    * If false, the cache is not checked for existence. Defaults to true.
-   * @throws InvalidArgumentError if the TTL is not strictly positive.
+   * @throws {@link InvalidArgumentError} if {@link props.ttlSeconds} is not strictly positive.
    * @returns The Momento-backed cache.
    */
   public static async CreateAsync(

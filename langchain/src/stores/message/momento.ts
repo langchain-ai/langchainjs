@@ -72,14 +72,15 @@ export class MomentoChatMessageHistory extends BaseListChatMessageHistory {
   /**
    * Create a new chat message history backed by Momento.
    *
-   * @param props The settings to instantiate the Momento chat message history.
-   * @param props.sessionId The session ID to use to store the data.
-   * @param props.client The Momento cache client.
-   * @param props.cacheName The name of the cache to use to store the data.
-   * @param props.sessionTtl The time to live for the cache items in seconds.
+   * @param {MomentoCacheProps} props The settings to instantiate the Momento chat message history.
+   * @param {string} props.sessionId The session ID to use to store the data.
+   * @param {ICacheClient} props.client The Momento cache client.
+   * @param {string} props.cacheName The name of the cache to use to store the data.
+   * @param {number} props.sessionTtl The time to live for the cache items in seconds.
    * If not specified, the cache client default is used.
-   * @param props.ensureCacheExists If true, ensure that the cache exists before returning.
+   * @param {boolean} props.ensureCacheExists If true, ensure that the cache exists before returning.
    * If false, the cache is not checked for existence.
+   * @throws {InvalidArgumentError} If {@link props.sessionTtl} is not strictly positive.
    * @returns A new chat message history backed by Momento.
    */
   public static async CreateAsync(
