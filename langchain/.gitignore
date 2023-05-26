@@ -181,9 +181,15 @@ document_loaders/web/imsdb.d.ts
 document_loaders/web/github.cjs
 document_loaders/web/github.js
 document_loaders/web/github.d.ts
+<<<<<<< HEAD
 document_loaders/web/notiondb.cjs
 document_loaders/web/notiondb.js
 document_loaders/web/notiondb.d.ts
+=======
+document_loaders/web/figma.cjs
+document_loaders/web/figma.js
+document_loaders/web/figma.d.ts
+>>>>>>> 96038e392694f9930bcef635c3d846d6e03b795e
 document_loaders/web/s3.cjs
 document_loaders/web/s3.js
 document_loaders/web/s3.d.ts
