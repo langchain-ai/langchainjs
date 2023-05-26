@@ -239,7 +239,7 @@ test("Test latex text splitter.", async () => {
     chunkOverlap: 0,
   });
   const output = await splitter.splitText(text);
-  console.log(output);
+
   const expectedOutput = [
     "\\begin{document}\n  \\title{🦜️🔗 LangChain}\n  ⚡ Building applications with LLMs through composability ⚡",
     "\\section{Quick Install}\n\n  \\begin{verbatim}\n  Hopefully this code block isn't split\n  yarn add langchain",
