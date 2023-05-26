@@ -20,6 +20,21 @@ test("Test OpenAI", async () => {
   console.log({ res });
 });
 
+test("Test OpenAI with timeout", async () => {
+  const model = new OpenAI({ modelName: "text-ada-001" });
+  const prompt = new PromptTemplate({
+    template: "Print {foo}",
+    inputVariables: ["foo"],
+  });
+  const chain = new LLMChain({ prompt, llm: model });
+  await expect(() =>
+    chain.call({
+      foo: "my favorite color",
+      timeout: 10,
+    })
+  ).rejects.toThrow();
+});
+
 test("Test run method", async () => {
   const model = new OpenAI({ modelName: "text-ada-001" });
   const prompt = new PromptTemplate({

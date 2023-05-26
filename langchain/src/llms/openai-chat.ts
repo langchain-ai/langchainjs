@@ -48,6 +48,10 @@ export class OpenAIChat
 {
   declare CallOptions: OpenAICallOptions;
 
+  get callKeys(): (keyof OpenAICallOptions)[] {
+    return ["stop", "signal", "timeout", "options"];
+  }
+
   temperature = 1;
 
   topP = 1;
@@ -227,19 +231,10 @@ export class OpenAIChat
   /** @ignore */
   async _call(
     prompt: string,
-    stopOrOptions?: string[] | this["CallOptions"],
+    options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<string> {
-    const stop = Array.isArray(stopOrOptions)
-      ? stopOrOptions
-      : stopOrOptions?.stop;
-    const options = Array.isArray(stopOrOptions)
-      ? {}
-      : stopOrOptions?.options ?? {};
-
-    if (this.stop && stop) {
-      throw new Error("Stop found in input and default params");
-    }
+    const { stop } = options;
 
     const params = this.invocationParams();
     params.stop = stop ?? params.stop;
@@ -255,7 +250,8 @@ export class OpenAIChat
               messages: this.formatMessages(prompt),
             },
             {
-              ...options,
+              signal: options.signal,
+              ...options.options,
               adapter: fetchAdapter, // default adapter doesn't do streaming
               responseType: "stream",
               onmessage: (event) => {
@@ -343,7 +339,10 @@ export class OpenAIChat
             ...params,
             messages: this.formatMessages(prompt),
           },
-          options
+          {
+            signal: options.signal,
+            ...options.options,
+          }
         );
 
     return data.choices[0].message?.content ?? "";

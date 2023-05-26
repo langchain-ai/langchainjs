@@ -1,0 +1,22 @@
+---
+hide_table_of_contents: true
+sidebar_position: 2
+---
+
+import CodeBlock from "@theme/CodeBlock";
+import Example from "@examples/agents/plan_and_execute.ts";
+
+# Plan-and-Execute Agent
+
+This example shows how to use an agent that uses the Plan-and-Execute framework to answer a query.
+This framework works differently from the other currently supported agents (which are all classified as Action Agents) in that it uses a two step process:
+
+1. First, the agent uses an LLM to create a plan to answer the query with clear steps.
+2. Once it has a plan, it uses an embedded traditional Action Agent to solve each step.
+
+The idea is that the planning step keeps the LLM more "on track" by breaking up a larger task into simpler subtasks.
+However, this method requires more individual LLM queries and has higher latency compared to Action Agents.
+
+**Note**: This agent currently only supports Chat Models.
+
+<CodeBlock language="typescript">{Example}</CodeBlock>
