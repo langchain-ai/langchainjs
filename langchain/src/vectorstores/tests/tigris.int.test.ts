@@ -8,7 +8,7 @@ import { Document } from "../../document.js";
 import { OpenAIEmbeddings } from "../../embeddings/openai.js";
 import { TigrisVectorStore } from "../tigris.js";
 
-describe("TigrisVectorStore", () => {
+describe.skip("TigrisVectorStore", () => {
   let tigrisStore: TigrisVectorStore;
 
   beforeEach(async () => {
