@@ -61,6 +61,7 @@ const entrypoints = {
   "vectorstores/prisma": "vectorstores/prisma",
   "vectorstores/myscale": "vectorstores/myscale",
   "vectorstores/redis": "vectorstores/redis",
+  "vectorstores/tigris": "vectorstores/tigris",
   // text_splitter
   text_splitter: "text_splitter",
   // memory
@@ -186,6 +187,7 @@ const requiresOptionalDependency = [
   "vectorstores/milvus",
   "vectorstores/myscale",
   "vectorstores/redis",
+  "vectorstores/tigris",
   "document_loaders/web/apify_dataset",
   "document_loaders/web/cheerio",
   "document_loaders/web/puppeteer",

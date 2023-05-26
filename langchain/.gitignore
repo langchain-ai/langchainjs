@@ -136,6 +136,9 @@ vectorstores/myscale.d.ts
 vectorstores/redis.cjs
 vectorstores/redis.js
 vectorstores/redis.d.ts
+vectorstores/tigris.cjs
+vectorstores/tigris.js
+vectorstores/tigris.d.ts
 text_splitter.cjs
 text_splitter.js
 text_splitter.d.ts

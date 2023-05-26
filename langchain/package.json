@@ -148,6 +148,9 @@
     "vectorstores/redis.cjs",
     "vectorstores/redis.js",
     "vectorstores/redis.d.ts",
+    "vectorstores/tigris.cjs",
+    "vectorstores/tigris.js",
+    "vectorstores/tigris.d.ts",
     "text_splitter.cjs",
     "text_splitter.js",
     "text_splitter.d.ts",
@@ -386,6 +389,7 @@
     "@tensorflow/tfjs-backend-cpu": "^4.4.0",
     "@tensorflow/tfjs-converter": "^4.4.0",
     "@tensorflow/tfjs-core": "^4.4.0",
+    "@tigrisdata/vector": "^1.1.0",
     "@tsconfig/recommended": "^1.0.2",
     "@types/d3-dsv": "^2",
     "@types/flat": "^5.0.2",
@@ -453,6 +457,7 @@
     "@tensorflow-models/universal-sentence-encoder": "*",
     "@tensorflow/tfjs-converter": "*",
     "@tensorflow/tfjs-core": "*",
+    "@tigrisdata/vector": "^1.1.0",
     "@upstash/redis": "^1.20.6",
     "@zilliz/milvus2-sdk-node": ">=2.2.7",
     "apify-client": "^2.7.1",
@@ -521,6 +526,9 @@
       "optional": true
     },
     "@tensorflow/tfjs-core": {
+      "optional": true
+    },
+    "@tigrisdata/vector": {
       "optional": true
     },
     "@upstash/redis": {
@@ -878,6 +886,11 @@
       "types": "./vectorstores/redis.d.ts",
       "import": "./vectorstores/redis.js",
       "require": "./vectorstores/redis.cjs"
+    },
+    "./vectorstores/tigris": {
+      "types": "./vectorstores/tigris.d.ts",
+      "import": "./vectorstores/tigris.js",
+      "require": "./vectorstores/tigris.cjs"
     },
     "./text_splitter": {
       "types": "./text_splitter.d.ts",
