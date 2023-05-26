@@ -108,6 +108,8 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
 
   apiKey?: string;
 
+  apiUrl?: string;
+
   temperature = 1;
 
   topK = -1;
@@ -134,6 +136,7 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
     fields?: Partial<AnthropicInput> &
       BaseChatModelParams & {
         anthropicApiKey?: string;
+        anthropicApiUrl?: string;
       }
   ) {
     super(fields ?? {});
@@ -147,6 +150,9 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
     if (!this.apiKey) {
       throw new Error("Anthropic API key not found");
     }
+
+    // Support overriding the default API URL (i.e., https://api.anthropic.com)
+    this.apiUrl = fields?.anthropicApiUrl;
 
     this.modelName = fields?.modelName ?? this.modelName;
     this.invocationKwargs = fields?.invocationKwargs ?? {};
@@ -258,7 +264,8 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
     let makeCompletionRequest;
     if (request.stream) {
       if (!this.streamingClient) {
-        this.streamingClient = new AnthropicApi(this.apiKey);
+        const options = this.apiUrl ? { apiUrl: this.apiUrl } : undefined;
+        this.streamingClient = new AnthropicApi(this.apiKey, options);
       }
       makeCompletionRequest = async () => {
         let currentCompletion = "";
@@ -292,7 +299,8 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
       };
     } else {
       if (!this.batchClient) {
-        this.batchClient = new AnthropicApi(this.apiKey);
+        const options = this.apiUrl ? { apiUrl: this.apiUrl } : undefined;
+        this.batchClient = new AnthropicApi(this.apiKey, options);
       }
       makeCompletionRequest = async () =>
         this.batchClient
