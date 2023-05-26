@@ -4,8 +4,14 @@ import { type Embeddings } from "../embeddings/base.js";
 
 const IdColumnSymbol = Symbol("id");
 const ContentColumnSymbol = Symbol("content");
+const FilterColumnSymbol = Symbol("filter");
 
-type ColumnSymbol = typeof IdColumnSymbol | typeof ContentColumnSymbol;
+type ColumnSymbol =
+  | typeof IdColumnSymbol
+  | typeof ContentColumnSymbol
+  | typeof FilterColumnSymbol;
+
+type PrismaFilter = Map<string, string>;
 
 declare type Value = unknown;
 declare type RawValue = Value | Sql;
@@ -78,13 +84,21 @@ export class PrismaVectorStore<
 
   contentColumn: keyof TModel & string;
 
+  filterColumn?: keyof TModel & string;
+
   static IdColumn: typeof IdColumnSymbol = IdColumnSymbol;
 
   static ContentColumn: typeof ContentColumnSymbol = ContentColumnSymbol;
 
+  static FilterColumn: typeof FilterColumnSymbol = FilterColumnSymbol;
+
   protected db: PrismaClient;
 
   protected Prisma: PrismaNamespace;
+
+  declare FilterType: PrismaFilter;
+
+  filter?: PrismaFilter;
 
   constructor(
     embeddings: Embeddings,
@@ -94,6 +108,7 @@ export class PrismaVectorStore<
       tableName: TModelName;
       vectorColumnName: string;
       columns: TSelectModel;
+      filters: TSelectModel;
     }
   ) {
     super(embeddings, {});
@@ -106,12 +121,14 @@ export class PrismaVectorStore<
     const contentColumn = entries.find(
       (i) => i[1] === ContentColumnSymbol
     )?.[0];
+    const filterColumn = entries.find((i) => i[1] === FilterColumnSymbol)?.[0];
 
     if (idColumn == null) throw new Error("Missing ID column");
     if (contentColumn == null) throw new Error("Missing content column");
 
     this.idColumn = idColumn;
     this.contentColumn = contentColumn;
+    this.filterColumn = filterColumn;
 
     this.tableSql = this.Prisma.raw(`"${config.tableName}"`);
     this.vectorColumnSql = this.Prisma.raw(`"${config.vectorColumnName}"`);
@@ -136,6 +153,7 @@ export class PrismaVectorStore<
         tableName: keyof TPrisma["ModelName"] & string;
         vectorColumnName: string;
         columns: TColumns;
+        filters: TColumns;
       }
     ) {
       type ModelName = keyof TPrisma["ModelName"] & string;
@@ -157,6 +175,7 @@ export class PrismaVectorStore<
         tableName: keyof TPrisma["ModelName"] & string;
         vectorColumnName: string;
         columns: TColumns;
+        filters: TColumns;
       }
     ) {
       const docs: Document[] = [];
@@ -186,6 +205,7 @@ export class PrismaVectorStore<
         tableName: keyof TPrisma["ModelName"] & string;
         vectorColumnName: string;
         columns: TColumns;
+        filters: TColumns;
       }
     ) {
       type ModelName = keyof TPrisma["ModelName"] & string;
@@ -247,14 +267,29 @@ export class PrismaVectorStore<
 
   async similaritySearchVectorWithScore(
     query: number[],
-    k: number
+    k: number,
+    filter?: this["FilterType"]
   ): Promise<[Document<SimilarityModel<TModel, TSelectModel>>, number][]> {
     const vectorQuery = `[${query.join(",")}]`;
+
+    if (filter && this.filter) {
+      throw new Error("cannot provide both `filter` and `this.filter`");
+    }
+    const _filter = filter ?? this.filter;
+    let whereSql = "";
+
+    if (_filter) {
+      for (const [key, value] of _filter) {
+        const sep = whereSql ? "AND" : "WHERE";
+        whereSql += `${sep} ${key} = '${value}' `;
+      }
+    }
+
     const articles = await this.db.$queryRaw<
       Array<SimilarityModel<TModel, TSelectModel>>
     >`
       SELECT ${this.selectSql}, ${this.vectorColumnSql} <=> ${vectorQuery}::vector as "_distance" 
-      FROM ${this.tableSql}
+      FROM ${this.tableSql} ${whereSql}
       ORDER BY "_distance" ASC
       LIMIT ${k};
     `;
@@ -286,6 +321,7 @@ export class PrismaVectorStore<
       tableName: string;
       vectorColumnName: string;
       columns: ModelColumns<Record<string, unknown>>;
+      filters: ModelColumns<Record<string, unknown>>;
     }
   ): Promise<DefaultPrismaVectorStore> {
     const docs: Document[] = [];
@@ -310,6 +346,7 @@ export class PrismaVectorStore<
       tableName: string;
       vectorColumnName: string;
       columns: ModelColumns<Record<string, unknown>>;
+      filters: ModelColumns<Record<string, unknown>>;
     }
   ): Promise<DefaultPrismaVectorStore> {
     const instance = new PrismaVectorStore(embeddings, dbConfig);
