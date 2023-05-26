@@ -81,8 +81,9 @@ const entrypoints = {
   "document_loaders/web/gitbook": "document_loaders/web/gitbook",
   "document_loaders/web/hn": "document_loaders/web/hn",
   "document_loaders/web/imsdb": "document_loaders/web/imsdb",
-  "document_loaders/web/github": "document_loaders/web/github",
   "document_loaders/web/figma": "document_loaders/web/figma",
+  "document_loaders/web/github": "document_loaders/web/github",
+  "document_loaders/web/notiondb": "document_loaders/web/notiondb",
   "document_loaders/web/s3": "document_loaders/web/s3",
   "document_loaders/web/confluence": "document_loaders/web/confluence",
   "document_loaders/fs/directory": "document_loaders/fs/directory",
@@ -193,12 +194,9 @@ const requiresOptionalDependency = [
   "document_loaders/web/gitbook",
   "document_loaders/web/hn",
   "document_loaders/web/imsdb",
-  "document_loaders/web/github",
-<<<<<<< HEAD
-  "document_loaders/web/notiondb",
-=======
   "document_loaders/web/figma",
->>>>>>> 96038e392694f9930bcef635c3d846d6e03b795e
+  "document_loaders/web/github",
+  "document_loaders/web/notiondb",
   "document_loaders/web/s3",
   "document_loaders/web/confluence",
   "document_loaders/fs/directory",

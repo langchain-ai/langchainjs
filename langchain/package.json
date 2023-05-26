@@ -190,6 +190,9 @@
     "document_loaders/web/imsdb.cjs",
     "document_loaders/web/imsdb.js",
     "document_loaders/web/imsdb.d.ts",
+    "document_loaders/web/figma.cjs",
+    "document_loaders/web/figma.js",
+    "document_loaders/web/figma.d.ts",
     "document_loaders/web/github.cjs",
     "document_loaders/web/github.js",
     "document_loaders/web/github.d.ts",
@@ -947,6 +950,11 @@
       "types": "./document_loaders/web/imsdb.d.ts",
       "import": "./document_loaders/web/imsdb.js",
       "require": "./document_loaders/web/imsdb.cjs"
+    },
+    "./document_loaders/web/figma": {
+      "types": "./document_loaders/web/figma.d.ts",
+      "import": "./document_loaders/web/figma.js",
+      "require": "./document_loaders/web/figma.cjs"
     },
     "./document_loaders/web/github": {
       "types": "./document_loaders/web/github.d.ts",
