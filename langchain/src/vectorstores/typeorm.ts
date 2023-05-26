@@ -4,6 +4,7 @@ import { VectorStore } from "./base.js";
 import { Embeddings } from "../embeddings/base.js";
 import { Document } from "../document.js";
 import { getEnvironmentVariable } from "../util/env.js";
+
 import {
   getSourceNameFromDocument,
   getSourceTypeFromDocument,
