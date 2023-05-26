@@ -5304,26 +5304,26 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@gomomento/sdk-core@npm:1.22.0":
-  version: 1.22.0
-  resolution: "@gomomento/sdk-core@npm:1.22.0"
+"@gomomento/sdk-core@npm:1.23.0":
+  version: 1.23.0
+  resolution: "@gomomento/sdk-core@npm:1.23.0"
   dependencies:
     buffer: ^6.0.3
     jwt-decode: 3.1.2
-  checksum: fa756e462b8c3a7bf8ec6854575433e57d8cef6c4049c0080b1298c179e45a7b30507a2a96a349b30cc194f34243920806ea5c18e45eabc247ee12acee1dc5af
+  checksum: 2edc270fa61bc528fbba538836b53cc4fd4980bca3290ff7fbdd5c2832d42044189dc936ffa0b446cc8599fcad8ac880763c3ec37cd27667d80f2dd18e8abce8
   languageName: node
   linkType: hard
 
-"@gomomento/sdk@npm:^1.22.0":
-  version: 1.22.0
-  resolution: "@gomomento/sdk@npm:1.22.0"
+"@gomomento/sdk@npm:^1.23.0":
+  version: 1.23.0
+  resolution: "@gomomento/sdk@npm:1.23.0"
   dependencies:
     "@gomomento/generated-types": 0.62.1
-    "@gomomento/sdk-core": 1.22.0
+    "@gomomento/sdk-core": 1.23.0
     "@grpc/grpc-js": 1.8.14
     google-protobuf: 3.21.2
     jwt-decode: 3.1.2
-  checksum: 21f30e833cf1797b875cea39990af5a96e899d32644565e8fe5ad1c01fc1ded75aa9d19abba26f95b732b20476e75f4f90036aed4e3c1fd67e7e14382823971b
+  checksum: 5704ffcfaec1ff0e82d853e01ac500be9f0ea78fb74cdd6af41ba91b50a32884310d7ac12eddb0eeabf5ef5b9c68d660f5393f3219a67214c4c728d5331607e7
   languageName: node
   linkType: hard
 
@@ -18217,7 +18217,7 @@ __metadata:
     "@clickhouse/client": ^0.0.14
     "@faker-js/faker": ^7.6.0
     "@getmetal/metal-sdk": ^4.0.0
-    "@gomomento/sdk": ^1.22.0
+    "@gomomento/sdk": ^1.23.0
     "@huggingface/inference": ^1.5.1
     "@jest/globals": ^29.5.0
     "@opensearch-project/opensearch": ^2.2.0
@@ -18301,7 +18301,7 @@ __metadata:
     "@aws-sdk/client-sagemaker-runtime": ^3.310.0
     "@clickhouse/client": ^0.0.14
     "@getmetal/metal-sdk": "*"
-    "@gomomento/sdk": ^1.22.0
+    "@gomomento/sdk": ^1.23.0
     "@huggingface/inference": ^1.5.1
     "@opensearch-project/opensearch": "*"
     "@pinecone-database/pinecone": "*"
