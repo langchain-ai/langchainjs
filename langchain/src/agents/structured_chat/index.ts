@@ -125,7 +125,9 @@ export class StructuredChatAgent extends Agent {
         })
       ),
       new MessagesPlaceholder("chat_history"),
-      HumanMessagePromptTemplate.fromTemplate("{input} (Don't forget using tools and the $JSON_BLOB format)\n\n{agent_scratchpad}"),
+      HumanMessagePromptTemplate.fromTemplate(
+        "{input} (Don't forget using tools and the $JSON_BLOB format)\n\n{agent_scratchpad}"
+      ),
     ];
     return ChatPromptTemplate.fromPromptMessages(messages);
   }
