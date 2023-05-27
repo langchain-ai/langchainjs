@@ -470,6 +470,7 @@
     "epub2": "^3.0.1",
     "faiss-node": "^0.2.0",
     "google-auth-library": "^8.8.0",
+    "js-yaml": "^4.1.0",
     "hnswlib-node": "^1.4.2",
     "html-to-text": "^9.0.5",
     "ignore": "^5.2.0",
@@ -572,6 +573,9 @@
       "optional": true
     },
     "ignore": {
+      "optional": true
+    },
+    "js-yaml": {
       "optional": true
     },
     "mammoth": {
