@@ -87,7 +87,34 @@ test("StructuredOutputParser.fromZodSchema", async () => {
 
   expect(
     await parser.parse(
+      '```\n```\n{"answer": "value", "sources": ["this-source"]}```'
+    )
+  ).toEqual({
+    answer: "value",
+    sources: ["this-source"],
+  });
+
+  expect(
+    await parser.parse(
       '```json\n{"answer": "value", "sources": ["this-source"]}```'
+    )
+  ).toEqual({
+    answer: "value",
+    sources: ["this-source"],
+  });
+
+  expect(
+    await parser.parse(
+      '```\n```json\n{"answer": "value", "sources": ["this-source"]}```'
+    )
+  ).toEqual({
+    answer: "value",
+    sources: ["this-source"],
+  });
+
+  expect(
+    await parser.parse(
+      'some stuff\n``` \n```json\n{"answer": "value", "sources": ["this-source"]}```'
     )
   ).toEqual({
     answer: "value",

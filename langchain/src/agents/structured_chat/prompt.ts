@@ -13,7 +13,7 @@ The $JSON_BLOB must be valid, parseable JSON and only contain a SINGLE action. H
 }}
 \`\`\`
 
-Remember to include the surrounding markdown code snippet delimiters (begin with "\`\`\`" json and close with "\`\`\`")!
+Remember to include the surrounding markdown code snippet delimiters (begin with "\`\`\`json" and end with "\`\`\`")!
 `;
 export const FORMAT_INSTRUCTIONS = `You have access to the following tools.
 You must format your inputs to these tools to match their "JSON schema" definitions below.

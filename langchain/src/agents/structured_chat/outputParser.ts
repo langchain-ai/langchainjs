@@ -16,13 +16,14 @@ export class StructuredChatOutputParser extends AgentActionOutputParser {
 
   async parse(text: string): Promise<AgentAction | AgentFinish> {
     try {
-      const regex = /```(?:json)?(.*)(```)/gs;
+      const regex = /(?:```\s*\n*)+(?:json)?(.*)(```)/gs;
       const actionMatch = regex.exec(text);
       if (actionMatch === null) {
         throw new OutputParserException(
           `Could not parse an action. The agent action must be within a markdown code block, and "action" must be a provided tool or "Final Answer"`
         );
       }
+
       const response = JSON.parse(actionMatch[1].trim());
       const { action, action_input } = response;
 
