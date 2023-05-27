@@ -1,22 +1,22 @@
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { initializeAgentExecutorWithOptions } from "langchain/agents";
+
 import {
-  RequestsGetTool,
-  RequestsPostTool,
+  HttpRequestTool,
   AIPluginTool,
 } from "langchain/tools";
 
 export const run = async () => {
+  const model = new ChatOpenAI({ temperature: 0 });
   const tools = [
-    new RequestsGetTool(),
-    new RequestsPostTool(),
+    new HttpRequestTool(),
     await AIPluginTool.fromPluginUrl(
-      "https://www.klarna.com/.well-known/ai-plugin.json"
+      "https://www.klarna.com/.well-known/ai-plugin.json", model
     ),
   ];
   const agent = await initializeAgentExecutorWithOptions(
     tools,
-    new ChatOpenAI({ temperature: 0 }),
+    model,
     { agentType: "chat-zero-shot-react-description", verbose: true }
   );
 

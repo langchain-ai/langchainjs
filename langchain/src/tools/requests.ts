@@ -73,3 +73,53 @@ export class RequestsPostTool extends Tool implements RequestTool {
   Be careful to always use double quotes for strings in the json string
   The output will be the text response of the POST request.`;
 }
+
+export class HttpRequestTool extends Tool implements RequestTool {
+  name: string;
+  description: string;
+  headers: any;
+  maxOutputLength: number;
+
+  constructor(headers = {}, { maxOutputLength = Infinity } = {}) {
+    super();
+    this.headers = headers;
+    this.name = "http_request";
+    this.maxOutputLength = maxOutputLength ?? Infinity;
+    this.description = `Executes HTTP methods (GET, POST, PUT, DELETE, etc.). The input is an object with three keys: "url", "method", and "data". Even for GET or DELETE, include "data" key as an empty string. "method" is the HTTP method, and "url" is the desired endpoint. If POST or PUT, "data" should contain a stringified JSON representing the body to send. Only one url per use.`;
+  }
+
+  async _call(input: string) {
+    try {
+      const { url, method, data } = JSON.parse(input);
+
+      let options: { method: any; headers: any; body?: any } = {
+        method: method,
+        headers: this.headers,
+        body: undefined,
+      };
+
+      if (["POST", "PUT", "PATCH"].includes(method.toUpperCase()) && data) {
+        // If data if an object, stringify it
+        if (typeof data === "object") {
+          options.body = JSON.stringify(data);
+        } else {
+          options.body = data; // no need to stringify here
+        }
+        options.headers["Content-Type"] = "application/json";
+      }
+
+      const res = await fetch(url, options);
+
+      const text = await res.text();
+      // If "text" is an html page (check html tag), return an error
+      if (text.includes("<html")) {
+        return "This tool is not designed to browse web pages. Only use it for API calls.";
+      }
+
+      return text.slice(0, this.maxOutputLength);
+    } catch (error) {
+      console.log(error);
+      return `${error}`;
+    }
+  }
+}
