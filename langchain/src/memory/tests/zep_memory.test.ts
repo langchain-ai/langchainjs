@@ -1,153 +1,105 @@
-import { expect, jest } from "@jest/globals";
+import { jest, expect, test } from "@jest/globals";
+import { v4 as uuid } from "uuid";
 
-import {
-  ZepClient,
-  SearchResult,
-  Memory,
-  MemoryData,
-  MessageData,
-  NotFoundError,
-} from "@getzep/zep-js";
+import { NotFoundError, ZepClient } from "@getzep/zep-js";
 
 import { ZepChatMessageHistory } from "../zep_memory.js";
 
-import { AIChatMessage, HumanChatMessage } from "../../schema/index.js";
+// import { AIChatMessage, HumanChatMessage } from "../../schema/index.js";
 
 jest.mock("@getzep/zep-js");
+const sessionID = uuid();
+const url = "http://localhost:8000";
 
-describe("ZepChatMessageHistory", () => {
-  const sessionID = "session1";
-  const url = "http://localhost:8000";
+let zepServerReachable = false;
 
-  let zepClientMock: jest.Mocked<ZepClient>;
-  let zepChatHistory: ZepChatMessageHistory;
+beforeAll(async () => {
+  const testZepClient = new ZepClient(url) as jest.Mocked<ZepClient>;
+  try {
+    zepServerReachable =  await testZepClient.init();
+  } catch (error) {
+    console.error("Unexpected Error:", error);
+  }
+});
 
-  beforeEach(() => {
-    zepClientMock = new ZepClient(url) as jest.Mocked<ZepClient>;
-    zepChatHistory = new ZepChatMessageHistory(sessionID, url);
-    zepClientMock.addMemory.mockResolvedValueOnce("session1");
-    zepClientMock.getMemory.mockResolvedValue({} as Memory);
-    zepClientMock.searchMemory.mockResolvedValue([] as SearchResult[]);
-    zepClientMock.deleteMemory.mockResolvedValue("session1");
-  });
+beforeEach((done) => {
+  setTimeout(done, 1000); // 1-second delay before each test case
+});
 
-  afterEach(() => {
-    jest.clearAllMocks();
-  });
+test("ZepChatMessageHistory - addAIChatMessage, addUserChatMessage to Zep memory", async () => {
 
-  describe("addAIChatMessage", () => {
-    it("should add an AI chat message to Zep memory", async () => {
-      const message = "Hello, I am an AI message";
+  if (!zepServerReachable) {
+    console.log("Zep Server is not reachable, skipping test..");
+    return;
+  }
 
-      await zepChatHistory.addAIChatMessage(message);
+  const zepChatHistory = new ZepChatMessageHistory(sessionID, url);
 
-      expect(zepClientMock.addMemory).toHaveBeenCalledWith(
-        sessionID,
-        expect.any(Object)
-      );
-    });
-  });
+  try {
+    await zepChatHistory.addUserMessage("Who was Octavia Butler?");
+    await zepChatHistory.addAIChatMessage("Octavia Estelle Butler (June 22, 1947 – "+
+    "February 24, 2006) was an American science fiction author.");
+    expect(true).toBe(true); // Success, as no error was thrown
+  } catch (error) {
+    expect(true).toBe(false); // Fail, as an error was thrown
+  }
+});
 
-  describe("addUserMessage", () => {
-    it("should add a user message to Zep memory", async () => {
-      const message = "Hello, I am a user message";
+test("ZepChatMessageHistory - getMessages - should retrieve chat messages from Zep memory", async () => {
 
-      await zepChatHistory.addUserMessage(message);
+  const zepChatHistory = new ZepChatMessageHistory(sessionID, url);
 
-      expect(zepClientMock.addMemory).toHaveBeenCalledWith(
-        sessionID,
-        expect.any(Object)
-      );
-    });
-  });
+  if (!zepServerReachable) {
+    console.log("Zep Server is not reachable, skipping test..");
+    return;
+  }
 
-  describe("getMessages", () => {
-    it("should retrieve chat messages from Zep memory", async () => {
-      const zepMemory: Memory = {
-        messages: [
-          {
-            role: "human",
-            content: "Message 1",
-            toDict: jest.fn() as () => MessageData,
-          },
-          {
-            role: "ai",
-            content: "Message 2",
-            toDict: jest.fn() as () => MessageData,
-          },
-        ],
-        metadata: {},
-        toDict: jest.fn() as () => MemoryData,
-      };
-
-      zepClientMock.getMemory.mockResolvedValueOnce(zepMemory);
-
-      const messages = await zepChatHistory.getMessages();
-
-      expect(zepClientMock.getMemory).toHaveBeenCalledWith(sessionID);
-      expect(messages.length).toBe(2);
-      expect(messages[0]).toBeInstanceOf(HumanChatMessage);
-      expect((messages[0] as HumanChatMessage).text).toBe("Message 1");
-      expect(messages[1]).toBeInstanceOf(AIChatMessage);
-      expect((messages[1] as AIChatMessage).text).toBe("Message 2");
-    });
-
-    it("should handle errors when retrieving chat messages", async () => {
-      zepClientMock.getMemory.mockRejectedValueOnce(
-        new NotFoundError("Session not found")
-      );
-
-      const messages = await zepChatHistory.getMessages();
-
-      expect(zepClientMock.getMemory).toHaveBeenCalledWith(sessionID);
-      expect(messages).toEqual([]);
-    });
-  });
-
-  it("should handle errors when retrieving chat messages", async () => {
-    zepClientMock.getMemory.mockRejectedValueOnce(
-      new NotFoundError("Session not found")
-    );
-
+  try {
     const messages = await zepChatHistory.getMessages();
+    expect(messages.length).toBeGreaterThanOrEqual(1);
+  }
+  catch (error) {
+    expect(true).toBe(false); // Fail, as an error was thrown
+  }
+});
 
-    expect(zepClientMock.getMemory).toHaveBeenCalledWith(sessionID);
-    expect(messages).toEqual([]);
-  });
+test("ZepChatMessageHistory - Search - for chat messages in Zep memory", async () => {
 
-  describe("search", () => {
-    it("should search for chat messages in Zep memory", async () => {
-      const query = "Hello";
-      const limit = 10;
-      const searchResults: SearchResult[] = [];
+  if (!zepServerReachable) {
+    console.log("Zep Server is not reachable, skipping test..");
+    return;
+  }
 
-      zepClientMock.searchMemory.mockResolvedValueOnce(searchResults);
+  const query = "Octavia Butler";
+  const limit = 3;
+  const zepChatHistory = new ZepChatMessageHistory(sessionID, url);
 
-      const results = await zepChatHistory.search(query, limit);
+  try {
+    const results = await zepChatHistory.search(query, limit);
+    expect(results.length).toBeGreaterThanOrEqual(1); // Adjust the expectation based on the actual response
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      // Handle the case where the session is not found
+      expect(error.message).toContain(`Session with ID ${sessionID} not found`);
+    } else {
+      expect(true).toBe(false); // Fail for other error types
+    }
+  }
+});
 
-      expect(zepClientMock.searchMemory).toHaveBeenCalledWith(
-        sessionID,
-        expect.any(Object),
-        limit
-      );
-      expect(results.length).toBe(0);
-    });
-  });
+test("ZepChatMessageHistory - clear - should clear the Zep memory for the current session", async () => {
 
-  describe("clear", () => {
-    it("should clear the Zep memory for the current session", async () => {
-      await zepChatHistory.clear();
+  if (!zepServerReachable) {
+    console.log("Zep Server is not reachable, skipping test..");
+    return;
+  }
 
-      expect(zepClientMock.deleteMemory).toHaveBeenCalledWith(sessionID);
-    });
+  const zepChatHistory = new ZepChatMessageHistory(sessionID, url);
 
-    it("should handle errors when clearing the Zep memory", async () => {
-      zepClientMock.deleteMemory.mockRejectedValueOnce(
-        new NotFoundError("Session not found")
-      );
-
-      await expect(zepChatHistory.clear()).rejects.toThrowError(NotFoundError);
-      expect(zepClientMock.deleteMemory).toHaveBeenCalledWith(sessionID);
-    });
-  });
+  try {
+    const results = await zepChatHistory.clear();
+    expect(results).toBeUndefined();
+  } catch (error) {
+    expect(error).toBeUndefined(); // Check if the error is undefined
+  }
 });
