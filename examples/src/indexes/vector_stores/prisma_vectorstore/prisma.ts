@@ -15,6 +15,10 @@ export const run = async () => {
         id: PrismaVectorStore.IdColumn,
         content: PrismaVectorStore.ContentColumn,
       },
+      filters: {
+        id: PrismaVectorStore.IdColumn,
+        content: PrismaVectorStore.ContentColumn,
+      },
     }
   );
 
