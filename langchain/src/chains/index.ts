@@ -1,5 +1,6 @@
 export { BaseChain, ChainInputs } from "./base.js";
 export { LLMChain, LLMChainInput } from "./llm_chain.js";
+export { APIChain, APIChainInput, APIChainOptions } from "./api/api_chain.js";
 export { ConversationChain } from "./conversation.js";
 export {
   SequentialChain,
@@ -61,6 +62,7 @@ export {
   SerializedSimpleSequentialChain,
   SerializedSqlDatabaseChain,
   SerializedAnalyzeDocumentChain,
+  SerializedAPIChain,
   SerializedBaseChain,
   SerializedChatVectorDBQAChain,
   SerializedMapReduceDocumentsChain,
