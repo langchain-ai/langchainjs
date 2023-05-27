@@ -7,7 +7,6 @@ import { PromptTemplate } from "../../prompts/prompt.js";
 import {
   ChatPromptTemplate,
   HumanMessagePromptTemplate,
-  SystemMessagePromptTemplate,
   MessagesPlaceholder,
 } from "../../prompts/chat.js";
 import { AgentStep } from "../../schema/index.js";
@@ -115,7 +114,7 @@ export class StructuredChatAgent extends Agent {
     const { prefix = PREFIX, suffix = SUFFIX } = args ?? {};
     const template = [prefix, FORMAT_INSTRUCTIONS, suffix].join("\n\n");
     const messages = [
-      new SystemMessagePromptTemplate(
+      new HumanMessagePromptTemplate(
         new PromptTemplate({
           template,
           inputVariables: [],
