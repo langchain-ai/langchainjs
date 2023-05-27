@@ -29,8 +29,6 @@ There are currently four different classes of `ChatMessage` supported by LangCha
 - `SystemChatMessage`: A chat message that gives the AI system some information about the conversation. This is usually sent at the beginning of a conversation.
 - `ChatMessage`: A generic chat message, with not only a `"text"` field but also an arbitrary `"role"` field.
 
-> **_Note:_** Currently, the only chat-based model we support is `ChatOpenAI` (with gpt-4 and gpt-3.5-turbo), but anticipate adding more in the future.
-
 To get started, simply use the `call` method of an `LLM` implementation, passing in a `string` input. In this example, we are using the `ChatOpenAI` implementation:
 
 <CodeBlock language="typescript">{Example}</CodeBlock>
