@@ -15,6 +15,7 @@ import {
 } from "../schema/index.js";
 import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
 import { BaseLanguageModelCallOptions } from "../base_language/index.js";
+import { getEnvironmentVariable } from "../util/env.js";
 
 function getAnthropicPromptFromMessage(type: MessageType): string {
   switch (type) {
@@ -108,6 +109,8 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
 
   apiKey?: string;
 
+  apiUrl?: string;
+
   temperature = 1;
 
   topK = -1;
@@ -134,19 +137,19 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
     fields?: Partial<AnthropicInput> &
       BaseChatModelParams & {
         anthropicApiKey?: string;
+        anthropicApiUrl?: string;
       }
   ) {
     super(fields ?? {});
 
     this.apiKey =
-      fields?.anthropicApiKey ??
-      (typeof process !== "undefined"
-        ? // eslint-disable-next-line no-process-env
-          process.env?.ANTHROPIC_API_KEY
-        : undefined);
+      fields?.anthropicApiKey ?? getEnvironmentVariable("ANTHROPIC_API_KEY");
     if (!this.apiKey) {
       throw new Error("Anthropic API key not found");
     }
+
+    // Support overriding the default API URL (i.e., https://api.anthropic.com)
+    this.apiUrl = fields?.anthropicApiUrl;
 
     this.modelName = fields?.modelName ?? this.modelName;
     this.invocationKwargs = fields?.invocationKwargs ?? {};
@@ -258,7 +261,8 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
     let makeCompletionRequest;
     if (request.stream) {
       if (!this.streamingClient) {
-        this.streamingClient = new AnthropicApi(this.apiKey);
+        const options = this.apiUrl ? { apiUrl: this.apiUrl } : undefined;
+        this.streamingClient = new AnthropicApi(this.apiKey, options);
       }
       makeCompletionRequest = async () => {
         let currentCompletion = "";
@@ -292,7 +296,8 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
       };
     } else {
       if (!this.batchClient) {
-        this.batchClient = new AnthropicApi(this.apiKey);
+        const options = this.apiUrl ? { apiUrl: this.apiUrl } : undefined;
+        this.batchClient = new AnthropicApi(this.apiKey, options);
       }
       makeCompletionRequest = async () =>
         this.batchClient

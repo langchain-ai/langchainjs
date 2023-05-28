@@ -6,13 +6,6 @@ import { RedisVectorStore } from "langchain/vectorstores/redis";
 const client = createClient({
   url: process.env.REDIS_URL ?? "redis://localhost:6379",
 });
-const cluster = createCluster({
-  rootNodes: [
-    {
-      url: process.env.REDIS_URL ?? "redis://localhost:6379",
-    },
-  ],
-});
 await client.connect();
 
 const docs = [
@@ -38,7 +31,7 @@ const vectorStore = await RedisVectorStore.fromDocuments(
   docs,
   new OpenAIEmbeddings(),
   {
-    redisClient: cluster,
+    redisClient: client,
     indexName: "docs",
   }
 );

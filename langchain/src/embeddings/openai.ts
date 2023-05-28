@@ -4,8 +4,8 @@ import {
   CreateEmbeddingRequest,
   ConfigurationParameters,
 } from "openai";
-import { isNode } from "browser-or-node";
 import type { AxiosRequestConfig } from "axios";
+import { getEnvironmentVariable, isNode } from "../util/env.js";
 import { AzureOpenAIInput } from "../types/openai-types.js";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
 import { chunkArray } from "../util/chunk.js";
@@ -68,45 +68,28 @@ export class OpenAIEmbeddings
     super(fields ?? {});
 
     const apiKey =
-      fields?.openAIApiKey ??
-      (typeof process !== "undefined"
-        ? // eslint-disable-next-line no-process-env
-          process.env?.OPENAI_API_KEY
-        : undefined);
+      fields?.openAIApiKey ?? getEnvironmentVariable("OPENAI_API_KEY");
 
     const azureApiKey =
       fields?.azureOpenAIApiKey ??
-      (typeof process !== "undefined"
-        ? // eslint-disable-next-line no-process-env
-          process.env?.AZURE_OPENAI_API_KEY
-        : undefined);
+      getEnvironmentVariable("AZURE_OPENAI_API_KEY");
     if (!azureApiKey && !apiKey) {
       throw new Error("(Azure) OpenAI API key not found");
     }
 
     const azureApiInstanceName =
       fields?.azureOpenAIApiInstanceName ??
-      (typeof process !== "undefined"
-        ? // eslint-disable-next-line no-process-env
-          process.env?.AZURE_OPENAI_API_INSTANCE_NAME
-        : undefined);
+      getEnvironmentVariable("AZURE_OPENAI_API_INSTANCE_NAME");
 
     const azureApiDeploymentName =
       (fields?.azureOpenAIApiEmbeddingsDeploymentName ||
         fields?.azureOpenAIApiDeploymentName) ??
-      (typeof process !== "undefined"
-        ? // eslint-disable-next-line no-process-env
-          process.env?.AZURE_OPENAI_API_EMBEDDINGS_DEPLOYMENT_NAME ||
-          // eslint-disable-next-line no-process-env
-          process.env?.AZURE_OPENAI_API_DEPLOYMENT_NAME
-        : undefined);
+      (getEnvironmentVariable("AZURE_OPENAI_API_EMBEDDINGS_DEPLOYMENT_NAME") ||
+        getEnvironmentVariable("AZURE_OPENAI_API_DEPLOYMENT_NAME"));
 
     const azureApiVersion =
       fields?.azureOpenAIApiVersion ??
-      (typeof process !== "undefined"
-        ? // eslint-disable-next-line no-process-env
-          process.env?.AZURE_OPENAI_API_VERSION
-        : undefined);
+      getEnvironmentVariable("AZURE_OPENAI_API_VERSION");
 
     this.modelName = fields?.modelName ?? this.modelName;
     this.batchSize = fields?.batchSize ?? this.batchSize;
@@ -176,7 +159,7 @@ export class OpenAIEmbeddings
         basePath: endpoint,
         baseOptions: {
           timeout: this.timeout,
-          adapter: isNode ? undefined : fetchAdapter,
+          adapter: isNode() ? undefined : fetchAdapter,
           ...this.clientConfig.baseOptions,
         },
       });

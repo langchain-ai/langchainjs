@@ -55,9 +55,9 @@ export const run = async () => {
   // 4. Add the other examples to the dataset as well
 
   // So that you don't have to create the dataset manually, we will create it for you
-  const client: LangChainPlusClient = await LangChainPlusClient.create(
-    "http://localhost:8000"
-  );
+  const client: LangChainPlusClient = await LangChainPlusClient.create({
+    apiUrl: "http://localhost:1984",
+  });
   const csvContent = `
 input,output
 How many people live in canada as of 2023?,"approximately 38,625,801"
@@ -80,13 +80,13 @@ what is 1213 divided by 4345?,approximately 0.2791714614499425
   // Check if dataset name exists in listDatasets
   const datasets = await client.listDatasets();
   if (!datasets.map((d: Dataset) => d.name).includes(datasetName)) {
-    await client.uploadCsv(
-      blobData,
-      datasetName,
-      description,
+    await client.uploadCsv({
+      csvFile: blobData,
+      fileName: datasetName,
       inputKeys,
-      outputKeys
-    );
+      outputKeys,
+      description,
+    });
   }
 
   // Many chains incorporate memory. For independent trials over the dataset, we

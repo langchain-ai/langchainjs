@@ -61,11 +61,16 @@ test("Test MultiPromptChain", async () => {
     animaniacs.asRetriever(3),
   ];
 
-  const multiRetrievalQAChain = MultiRetrievalQAChain.fromRetrievers(
+  const multiRetrievalQAChain = MultiRetrievalQAChain.fromLLMAndRetrievers(
     llm,
-    retrieverNames,
-    retrieverDescriptions,
-    retrievers
+    {
+      retrieverNames,
+      retrieverDescriptions,
+      retrievers,
+      retrievalQAChainOpts: {
+        returnSourceDocuments: true,
+      },
+    }
   );
   const testPromise1 = multiRetrievalQAChain.call({
     input:
@@ -82,8 +87,12 @@ test("Test MultiPromptChain", async () => {
       "In the Animaniacs theme song, who plays the sax while Wakko packs away the snacks?",
   });
 
-  const [{ text: result1 }, { text: result2 }, { text: result3 }] =
-    await Promise.all([testPromise1, testPromise2, testPromise3]);
+  const [
+    { text: result1, sourceDocuments: sourceDocuments1 },
+    { text: result2, sourceDocuments: sourceDocuments2 },
+    { text: result3, sourceDocuments: sourceDocuments3 },
+  ] = await Promise.all([testPromise1, testPromise2, testPromise3]);
 
-  console.log(result1, result2, result3);
+  console.log({ sourceDocuments1, sourceDocuments2, sourceDocuments3 });
+  console.log({ result1, result2, result3 });
 });

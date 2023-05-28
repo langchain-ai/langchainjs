@@ -4,7 +4,7 @@ import { MultiRouteChain, MultiRouteChainInput } from "./multi_route.js";
 import { STRUCTURED_MULTI_PROMPT_ROUTER_TEMPLATE } from "./multi_prompt_prompt.js";
 import { BaseChain } from "../../chains/base.js";
 import { interpolateFString } from "../../prompts/template.js";
-import { LLMChain } from "../../chains/llm_chain.js";
+import { LLMChain, LLMChainInput } from "../../chains/llm_chain.js";
 import { PromptTemplate } from "../../prompts/prompt.js";
 import { LLMRouterChain } from "./llm_router.js";
 import { ConversationChain } from "../../chains/conversation.js";
@@ -12,6 +12,9 @@ import { zipEntries } from "./utils.js";
 import { RouterOutputParser } from "../../output_parsers/router.js";
 
 export class MultiPromptChain extends MultiRouteChain {
+  /**
+   * @deprecated Use `fromLLMAndPrompts` instead
+   */
   static fromPrompts(
     llm: BaseLanguageModel,
     promptNames: string[],
@@ -20,6 +23,35 @@ export class MultiPromptChain extends MultiRouteChain {
     defaultChain?: BaseChain,
     options?: Omit<MultiRouteChainInput, "defaultChain">
   ) {
+    return MultiPromptChain.fromLLMAndPrompts(llm, {
+      promptNames,
+      promptDescriptions,
+      promptTemplates,
+      defaultChain,
+      multiRouteChainOpts: options,
+    });
+  }
+
+  static fromLLMAndPrompts(
+    llm: BaseLanguageModel,
+    {
+      promptNames,
+      promptDescriptions,
+      promptTemplates,
+      defaultChain,
+      llmChainOpts,
+      conversationChainOpts,
+      multiRouteChainOpts,
+    }: {
+      promptNames: string[];
+      promptDescriptions: string[];
+      promptTemplates: string[] | PromptTemplate[];
+      defaultChain?: BaseChain;
+      llmChainOpts?: Omit<LLMChainInput, "llm" | "prompt">;
+      conversationChainOpts?: Omit<LLMChainInput, "llm" | "outputKey">;
+      multiRouteChainOpts?: Omit<MultiRouteChainInput, "defaultChain">;
+    }
+  ): MultiPromptChain {
     const destinations = zipEntries(promptNames, promptDescriptions).map(
       ([name, desc]) => `${name}: ${desc}`
     );
@@ -73,6 +105,7 @@ export class MultiPromptChain extends MultiRouteChain {
         throw new Error("Invalid prompt template");
       }
       acc[name as string] = new LLMChain({
+        ...llmChainOpts,
         llm,
         prompt: myPrompt,
       });
@@ -80,15 +113,16 @@ export class MultiPromptChain extends MultiRouteChain {
     }, {} as { [name: string]: LLMChain });
 
     const convChain = new ConversationChain({
+      ...conversationChainOpts,
       llm,
       outputKey: "text",
     });
 
     return new MultiPromptChain({
+      ...multiRouteChainOpts,
       routerChain,
       destinationChains,
       defaultChain: defaultChain ?? convChain,
-      ...options,
     });
   }
 

@@ -1,3 +1,4 @@
+import { getEnvironmentVariable } from "../util/env.js";
 import { Tool } from "./base.js";
 
 export type SerperParameters = {
@@ -18,10 +19,7 @@ export class Serper extends Tool {
   protected params: Partial<SerperParameters>;
 
   constructor(
-    apiKey: string | undefined = typeof process !== "undefined"
-      ? // eslint-disable-next-line no-process-env
-        process.env?.SERPER_API_KEY
-      : undefined,
+    apiKey: string | undefined = getEnvironmentVariable("SERPER_API_KEY"),
     params: Partial<SerperParameters> = {}
   ) {
     super();

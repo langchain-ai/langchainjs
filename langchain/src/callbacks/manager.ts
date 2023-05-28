@@ -13,6 +13,7 @@ import {
   getTracingV2CallbackHandler,
 } from "./handlers/initialize.js";
 import { getBufferString } from "../memory/base.js";
+import { getEnvironmentVariable } from "../util/env.js";
 
 type BaseCallbackManagerMethods = {
   [K in keyof CallbackHandlerMethods]?: (
@@ -505,23 +506,19 @@ export class CallbackManager
         false
       );
     }
+    const verboseEnabled =
+      getEnvironmentVariable("LANGCHAIN_VERBOSE") || options?.verbose;
     const tracingV2Enabled =
-      typeof process !== "undefined"
-        ? // eslint-disable-next-line no-process-env
-          process.env?.LANGCHAIN_TRACING_V2 !== undefined
-        : false;
+      getEnvironmentVariable("LANGCHAIN_TRACING_V2") ?? false;
     const tracingEnabled =
       tracingV2Enabled ||
-      (typeof process !== "undefined"
-        ? // eslint-disable-next-line no-process-env
-          process.env?.LANGCHAIN_TRACING !== undefined
-        : false);
-    if (options?.verbose || tracingEnabled) {
+      (getEnvironmentVariable("LANGCHAIN_TRACING") ?? false);
+    if (verboseEnabled || tracingEnabled) {
       if (!callbackManager) {
         callbackManager = new CallbackManager();
       }
       if (
-        options?.verbose &&
+        verboseEnabled &&
         !callbackManager.handlers.some(
           (handler) => handler.name === ConsoleCallbackHandler.prototype.name
         )
@@ -538,11 +535,7 @@ export class CallbackManager
         if (tracingV2Enabled) {
           callbackManager.addHandler(await getTracingV2CallbackHandler(), true);
         } else {
-          const session =
-            typeof process !== "undefined"
-              ? // eslint-disable-next-line no-process-env
-                process.env?.LANGCHAIN_SESSION
-              : undefined;
+          const session = getEnvironmentVariable("LANGCHAIN_SESSION");
           callbackManager.addHandler(
             await getTracingCallbackHandler(session),
             true

@@ -1,4 +1,8 @@
-import { getRuntimeEnvironment } from "../../util/env.js";
+import { AsyncCaller, AsyncCallerParams } from "../../util/async_caller.js";
+import {
+  getEnvironmentVariable,
+  getRuntimeEnvironment,
+} from "../../util/env.js";
 import { BaseTracer, Run, BaseRun } from "./tracer.js";
 
 export interface RunCreate extends BaseRun {
@@ -28,6 +32,7 @@ export interface LangChainTracerFields {
   tenantId?: string;
   sessionName?: string;
   sessionExtra?: Record<string, unknown>;
+  callerParams?: AsyncCallerParams;
 }
 
 export class LangChainTracer
@@ -37,10 +42,7 @@ export class LangChainTracer
   name = "langchain_tracer";
 
   protected endpoint =
-    (typeof process !== "undefined"
-      ? // eslint-disable-next-line no-process-env
-        process.env?.LANGCHAIN_ENDPOINT
-      : undefined) || "http://localhost:8000";
+    getEnvironmentVariable("LANGCHAIN_ENDPOINT") || "http://localhost:1984";
 
   protected headers: Record<string, string> = {
     "Content-Type": "application/json",
@@ -56,35 +58,28 @@ export class LangChainTracer
 
   tenantId?: string;
 
+  caller: AsyncCaller;
+
   constructor({
     exampleId,
     tenantId,
     sessionName,
     sessionExtra,
+    callerParams,
   }: LangChainTracerFields = {}) {
     super();
 
-    // eslint-disable-next-line no-process-env
-    if (typeof process !== "undefined" && process.env?.LANGCHAIN_API_KEY) {
-      // eslint-disable-next-line no-process-env
-      this.headers["x-api-key"] = process.env?.LANGCHAIN_API_KEY;
+    const apiKey = getEnvironmentVariable("LANGCHAIN_API_KEY");
+    if (apiKey) {
+      this.headers["x-api-key"] = apiKey;
     }
 
-    this.tenantId =
-      tenantId ??
-      (typeof process !== "undefined"
-        ? // eslint-disable-next-line no-process-env
-          process.env?.LANGCHAIN_TENANT_ID
-        : undefined);
+    this.tenantId = tenantId ?? getEnvironmentVariable("LANGCHAIN_TENANT_ID");
     this.sessionName =
-      sessionName ??
-      (typeof process !== "undefined"
-        ? // eslint-disable-next-line no-process-env
-          process.env?.LANGCHAIN_SESSION
-        : undefined) ??
-      "default";
+      sessionName ?? getEnvironmentVariable("LANGCHAIN_SESSION") ?? "default";
     this.sessionExtra = sessionExtra;
     this.exampleId = exampleId;
+    this.caller = new AsyncCaller(callerParams ?? {});
   }
 
   protected async ensureSession(): Promise<TracerSession> {
@@ -93,7 +88,7 @@ export class LangChainTracer
     }
     const tenantId = await this.ensureTenantId();
     const endpoint = `${this.endpoint}/sessions?upsert=true`;
-    const res = await fetch(endpoint, {
+    const res = await this.caller.call(fetch, endpoint, {
       method: "POST",
       headers: this.headers,
       body: JSON.stringify({
@@ -118,7 +113,7 @@ export class LangChainTracer
       return this.tenantId;
     }
     const endpoint = `${this.endpoint}/tenants`;
-    const response = await fetch(endpoint, {
+    const response = await this.caller.call(fetch, endpoint, {
       method: "GET",
       headers: this.headers,
     });
@@ -173,7 +168,7 @@ export class LangChainTracer
       this.exampleId
     );
     const endpoint = `${this.endpoint}/runs`;
-    const response = await fetch(endpoint, {
+    const response = await this.caller.call(fetch, endpoint, {
       method: "POST",
       headers: this.headers,
       body: JSON.stringify(persistedRun),
