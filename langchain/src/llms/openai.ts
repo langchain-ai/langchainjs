@@ -378,22 +378,6 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
 
       const requestEndTime = Date.now();
 
-      let promptLayerRequestID: string | undefined = undefined;
-      if (this instanceof PromptLayerOpenAI && this.returnPromptLayerID === true) {
-        promptLayerRequestID = await getPromptLayerRequestID(
-          this.caller,
-          "openai.ChatCompletion.create",
-          this.modelName, 
-          prompts,
-          this instanceof PromptLayerOpenAI ? this.plTags : [],
-          data.choices[0].text,
-          requestStartTime,
-          requestEndTime,
-          this instanceof PromptLayerOpenAI ? this.promptLayerApiKey : undefined,
-        )  
-      }
-
-      promptLayerRequestIDs.push(promptLayerRequestID)
       choices.push(...data.choices);
 
       const {
@@ -414,6 +398,35 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
       if (totalTokens) {
         tokenUsage.totalTokens = (tokenUsage.totalTokens ?? 0) + totalTokens;
       }
+
+      let promptLayerRequestID: string | undefined = undefined;
+      if (this instanceof PromptLayerOpenAI && this.returnPromptLayerID === true) {
+
+        console.log("datadatadatadatadata")
+        console.log("datadatadatadatadata")
+        console.log("datadatadatadatadata, ", data)
+
+        const parsedResp = {
+          "text": data.choices[0].text,
+          "llm_output": { tokenUsage },
+        }
+
+        promptLayerRequestID = await getPromptLayerRequestID(
+          this.caller,
+          "langchain.PromptLayerOpenAI",
+          [subPrompts[i][0]],
+          this._identifyingParams(),
+          this.plTags,
+          parsedResp,
+          requestStartTime,
+          requestEndTime,
+          this.promptLayerApiKey,
+        )  
+      }
+
+      promptLayerRequestIDs.push(promptLayerRequestID)
+
+
     }
 
     const generations = chunkArray(choices, this.n).map((promptChoices, idx) =>

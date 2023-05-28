@@ -463,16 +463,19 @@ export class PromptLayerOpenAIChat extends OpenAIChat {
 
         let promptLayerRequestID: string | undefined = undefined
         if (this instanceof PromptLayerOpenAIChat && this.returnPromptLayerID === true) {
+          const parsedResp = {
+            text,
+          }          
           promptLayerRequestID = await getPromptLayerRequestID(
             this.caller,
-            "openai.ChatCompletion.create",
-            this.modelName, 
-            prompts,
-            this instanceof PromptLayerOpenAIChat ? this.plTags : [],
-            text,
+            "langchain.PromptLayerOpenAIChat",
+            [prompt],
+            this._identifyingParams(), 
+            this.plTags,
+            parsedResp,
             requestStartTime,
             requestEndTime,
-            this instanceof PromptLayerOpenAIChat ? this.promptLayerApiKey : undefined,
+            this.promptLayerApiKey,
           )  
           choice[0]["generationInfo"] = { promptLayerRequestID }
         }

@@ -1,14 +1,15 @@
 import fetch from 'cross-fetch';
 import { AsyncCaller } from "../util/async_caller.js";
 import { CreateCompletionRequestPrompt } from "openai";
+import { CreateCompletionRequest } from "openai";  
 
 export const getPromptLayerRequestID = async (
     callerFunc: AsyncCaller,
     functionName: string,
-    modelName: string, 
-    messages: CreateCompletionRequestPrompt,
+    prompt: CreateCompletionRequestPrompt,
+    kwargs: CreateCompletionRequest,
     plTags: string[] | undefined,
-    requestResponse: string | undefined,
+    requestResponse: any,
     startTime: number,
     endTime: number,
     apiKey: string | undefined
@@ -22,8 +23,9 @@ export const getPromptLayerRequestID = async (
         },
         body: JSON.stringify({
           function_name: functionName,
-          args: [],
-          kwargs: { engine: modelName, messages: messages },
+          provider: "langchain",
+          args: prompt,
+          kwargs,
           tags: plTags,
           request_response: requestResponse,
           request_start_time: Math.floor(startTime / 1000),

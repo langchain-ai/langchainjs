@@ -595,13 +595,13 @@ export class PromptLayerChatOpenAI extends ChatOpenAI {
       return messageDict;
     }
 
-    const _createMessageDicts = (messages: BaseChatMessage[], stop?: this["CallOptions"]) => {
+    const _createMessageDicts = (messages: BaseChatMessage[], CallOptions?: this["CallOptions"]) => {
       let params = {
         ...this.invocationParams(),
         model: this.modelName,
       };
 
-      if (stop) {
+      if (CallOptions?.stop) {
         if (Object.keys(params).includes('stop')) {
           throw new Error("`stop` found in both the input and default params.");
         }
@@ -617,16 +617,22 @@ export class PromptLayerChatOpenAI extends ChatOpenAI {
 
       let promptLayerRequestID: string | undefined = undefined
       if (this instanceof PromptLayerChatOpenAI && this.returnPromptLayerID === true) {
+        const parsedResp = {
+          text: generation.text,
+          llm_output: generatedResponses.llmOutput,
+        }
+
+        // TODO: Why isn't this hitting PromptLayer?
         promptLayerRequestID = await getPromptLayerRequestID(
           this.caller,
-          "openai.ChatCompletion.create",
-          this.modelName, 
-          messageDicts, // TODO: Is this supposed to be string or what??? What is the type of the messages?
-          this instanceof PromptLayerChatOpenAI ? this.plTags : [],
-          generation.text,
+          "langchain.PromptLayerChatOpenAI",
+          messageDicts,
+          this._identifyingParams(), 
+          this.plTags,
+          parsedResp,
           requestStartTime,
           requestEndTime,
-          this instanceof PromptLayerChatOpenAI ? this.promptLayerApiKey : undefined,
+          this.promptLayerApiKey,
         )  
 
         if (!generation.generationInfo || typeof generation.generationInfo !== 'object') {
