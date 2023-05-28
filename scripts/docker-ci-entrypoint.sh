@@ -4,9 +4,16 @@ set -euxo pipefail
 
 export CI=true
 
-cp -r ../package/* .
+# enable extended globbing for omitting build artifacts
+shopt -s extglob
 
-cp ../root/yarn.lock .
+# avoid copying build artifacts from the host
+cp -r ../package/!(node_modules|dist|dist-cjs|dist-esm|build|.next|.turbo) .
+
+# copy cache
+mkdir -p ./.yarn
+cp -r ../root/.yarn/!(berry|cache) ./.yarn
+cp ../root/yarn.lock ../root/.yarnrc.yml .
 
 # Replace the workspace dependency with the local copy, and install all others
 yarn add ../langchain

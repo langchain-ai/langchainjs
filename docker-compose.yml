@@ -5,6 +5,9 @@ services:
     working_dir: /app
     volumes:
       - ./yarn.lock:/root/yarn.lock
+      - ./.yarnrc.yml:/root/.yarnrc.yml
+      - ./.yarn:/root/.yarn
+      - yarn-cache:/root/.yarn/berry/cache
       - ./test-exports-esbuild:/package
       - ./langchain:/langchain
       - ./scripts:/scripts
@@ -14,6 +17,9 @@ services:
     working_dir: /app
     volumes:
       - ./yarn.lock:/root/yarn.lock
+      - ./.yarnrc.yml:/root/.yarnrc.yml
+      - ./.yarn:/root/.yarn
+      - yarn-cache:/root/.yarn/berry/cache
       - ./test-exports-esm:/package
       - ./langchain:/langchain
       - ./scripts:/scripts
@@ -23,6 +29,9 @@ services:
     working_dir: /app
     volumes:
       - ./yarn.lock:/root/yarn.lock
+      - ./.yarnrc.yml:/root/.yarnrc.yml
+      - ./.yarn:/root/.yarn
+      - yarn-cache:/root/.yarn/berry/cache
       - ./test-exports-cjs:/package
       - ./langchain:/langchain
       - ./scripts:/scripts
@@ -32,6 +41,9 @@ services:
     working_dir: /app
     volumes:
       - ./yarn.lock:/root/yarn.lock
+      - ./.yarnrc.yml:/root/.yarnrc.yml
+      - ./.yarn:/root/.yarn
+      - yarn-cache:/root/.yarn/berry/cache
       - ./test-exports-cra:/package
       - ./langchain:/langchain
       - ./scripts:/scripts
@@ -41,6 +53,9 @@ services:
     working_dir: /app
     volumes:
       - ./yarn.lock:/root/yarn.lock
+      - ./.yarnrc.yml:/root/.yarnrc.yml
+      - ./.yarn:/root/.yarn
+      - yarn-cache:/root/.yarn/berry/cache
       - ./test-exports-cf:/package
       - ./langchain:/langchain
       - ./scripts:/scripts
@@ -50,6 +65,9 @@ services:
     working_dir: /app
     volumes:
       - ./yarn.lock:/root/yarn.lock
+      - ./.yarnrc.yml:/root/.yarnrc.yml
+      - ./.yarn:/root/.yarn
+      - yarn-cache:/root/.yarn/berry/cache
       - ./test-exports-vercel:/package
       - ./langchain:/langchain
       - ./scripts:/scripts
@@ -59,6 +77,9 @@ services:
     working_dir: /app
     volumes:
       - ./yarn.lock:/root/yarn.lock
+      - ./.yarnrc.yml:/root/.yarnrc.yml
+      - ./.yarn:/root/.yarn
+      - yarn-cache:/root/.yarn/berry/cache
       - ./test-exports-vite:/package
       - ./langchain:/langchain
       - ./scripts:/scripts
@@ -81,3 +102,6 @@ services:
         condition: service_completed_successfully
       test-exports-vite:
         condition: service_completed_successfully
+
+volumes:
+  yarn-cache:
