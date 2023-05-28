@@ -97,8 +97,10 @@ export class LangChainTracer
       body: JSON.stringify(persistedRun),
       signal: AbortSignal.timeout(this.timeout),
     });
+    // consume the response body to release the connection
+    // https://undici.nodejs.org/#/?id=garbage-collection
+    const body = await response.text();
     if (!response.ok) {
-      const body = await response.text();
       throw new Error(
         `Failed to persist run: ${response.status} ${response.statusText} ${body}`
       );

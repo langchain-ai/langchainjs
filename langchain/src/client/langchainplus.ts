@@ -226,12 +226,15 @@ export class LangChainPlusClient {
       headers: this.headers,
       signal: AbortSignal.timeout(this.timeout),
     });
+    // consume the response body to release the connection
+    // https://undici.nodejs.org/#/?id=garbage-collection
+    const json = await response.json();
     if (!response.ok) {
       throw new Error(
         `Failed to fetch ${path}: ${response.status} ${response.statusText}`
       );
     }
-    return response.json() as T;
+    return json as T;
   }
 
   public async readRun(runId: string): Promise<Run> {
@@ -332,9 +335,10 @@ export class LangChainPlusClient {
       body: formData,
       signal: AbortSignal.timeout(this.timeout),
     });
-
+    // consume the response body to release the connection
+    // https://undici.nodejs.org/#/?id=garbage-collection
+    const result = await response.json();
     if (!response.ok) {
-      const result = await response.json();
       if (result.detail && result.detail.includes("already exists")) {
         throw new Error(`Dataset ${fileName} already exists`);
       }
@@ -342,8 +346,6 @@ export class LangChainPlusClient {
         `Failed to upload CSV: ${response.status} ${response.statusText}`
       );
     }
-
-    const result = await response.json();
     return result as Dataset;
   }
 
@@ -360,9 +362,10 @@ export class LangChainPlusClient {
       }),
       signal: AbortSignal.timeout(this.timeout),
     });
-
+    // consume the response body to release the connection
+    // https://undici.nodejs.org/#/?id=garbage-collection
+    const result = await response.json();
     if (!response.ok) {
-      const result = await response.json();
       if (result.detail && result.detail.includes("already exists")) {
         throw new Error(`Dataset ${name} already exists`);
       }
@@ -370,8 +373,6 @@ export class LangChainPlusClient {
         `Failed to create dataset ${response.status} ${response.statusText}`
       );
     }
-
-    const result = await response.json();
     return result as Dataset;
   }
 
@@ -450,12 +451,14 @@ export class LangChainPlusClient {
       headers: this.headers,
       signal: AbortSignal.timeout(this.timeout),
     });
+    // consume the response body to release the connection
+    // https://undici.nodejs.org/#/?id=garbage-collection
+    const results = await response.json();
     if (!response.ok) {
       throw new Error(
         `Failed to delete ${path}: ${response.status} ${response.statusText}`
       );
     }
-    const results = await response.json();
     return results as Dataset;
   }
 
@@ -496,14 +499,14 @@ export class LangChainPlusClient {
       body: JSON.stringify(data),
       signal: AbortSignal.timeout(this.timeout),
     });
-
+    // consume the response body to release the connection
+    // https://undici.nodejs.org/#/?id=garbage-collection
+    const result = await response.json();
     if (!response.ok) {
       throw new Error(
         `Failed to create example: ${response.status} ${response.statusText}`
       );
     }
-
-    const result = await response.json();
     return result as Example;
   }
 
@@ -549,12 +552,14 @@ export class LangChainPlusClient {
       headers: this.headers,
       signal: AbortSignal.timeout(this.timeout),
     });
+    // consume the response body to release the connection
+    // https://undici.nodejs.org/#/?id=garbage-collection
+    const result = await response.json();
     if (!response.ok) {
       throw new Error(
         `Failed to delete ${path}: ${response.status} ${response.statusText}`
       );
     }
-    const result = await response.json();
     return result as Example;
   }
 
