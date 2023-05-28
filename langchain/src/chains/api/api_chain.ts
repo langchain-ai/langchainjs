@@ -64,12 +64,26 @@ export class APIChain extends BaseChain implements APIChainInput {
   ): Promise<ChainValues> {
     const question: string = values[this.inputKey];
 
-    const api_url = await this.apiRequestChain.predict(
+    const api_json = await this.apiRequestChain.predict(
       { question, api_docs: this.apiDocs },
       runManager?.getChild()
     );
 
-    const res = await fetch(api_url, { headers: this.headers });
+    const { api_url, api_body, api_method } = JSON.parse(api_json);
+
+    const request_options =
+      api_method === "GET" || api_body === "HEAD"
+        ? {
+            method: api_method,
+            headers: this.headers,
+          }
+        : {
+            method: api_method,
+            headers: this.headers,
+            body: JSON.stringify(api_body),
+          };
+
+    const res = await fetch(api_url, request_options);
     const api_response = await res.text();
 
     const answer = await this.apiAnswerChain.predict(

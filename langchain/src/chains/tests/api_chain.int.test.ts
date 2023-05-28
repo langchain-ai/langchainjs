@@ -8,6 +8,7 @@ import {
   API_RESPONSE_PROMPT_TEMPLATE,
 } from "../api/prompts.js";
 import { OPEN_METEO_DOCS } from "./example_data/open_meteo_docs.js";
+import { POST_API_DOCS } from "./example_data/post_api_docs.js";
 
 const test_api_docs = `
 This API endpoint will search the notes for a user.
@@ -19,10 +20,26 @@ Query parameters:
 q | string | The search term for notes
 `;
 
+const post_test_api_docs = `
+API documentation:
+Endpoint: https://httpbin.org
+
+This API is for sending Postman message
+
+POST /post
+
+POST body table:
+message | string | Message to send | required
+
+Response schema (string):
+result | string
+`;
+
 const testApiData = {
   api_docs: test_api_docs,
   question: "Search for notes containing langchain",
-  api_url: "https://httpbin.com/api/notes?q=langchain",
+  api_json:
+    '{"api_url":"https://httpbin.com/api/notes?q=langchain","api_method":"GET","api_data":{}}',
   api_response: JSON.stringify({
     success: true,
     results: [{ id: 1, content: "Langchain is awesome!" }],
@@ -61,6 +78,24 @@ test("Test APIChain fromLLMAndApiDocs", async () => {
   const res = await chain.call({
     question:
       "What is the weather like right now in Munich, Germany in degrees Farenheit?",
+  });
+  console.log({ res });
+});
+
+test("Test POST APIChain fromLLMAndApiDocs", async () => {
+  const model = new OpenAI({ modelName: "text-davinci-003" });
+  const chain = APIChain.fromLLMAndAPIDocs(model, post_test_api_docs);
+  const res = await chain.call({
+    question: "send a message hi langchain",
+  });
+  console.log({ res });
+});
+
+test("Test POST 2 APIChain fromLLMAndApiDocs", async () => {
+  const model = new OpenAI({ modelName: "text-davinci-003" });
+  const chain = APIChain.fromLLMAndAPIDocs(model, POST_API_DOCS);
+  const res = await chain.call({
+    question: "send a message hi langchain to channel3 with token5",
   });
   console.log({ res });
 });
