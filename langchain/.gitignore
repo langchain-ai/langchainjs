@@ -130,6 +130,9 @@ vectorstores/milvus.d.ts
 vectorstores/prisma.cjs
 vectorstores/prisma.js
 vectorstores/prisma.d.ts
+vectorstores/typeorm.cjs
+vectorstores/typeorm.js
+vectorstores/typeorm.d.ts
 vectorstores/myscale.cjs
 vectorstores/myscale.js
 vectorstores/myscale.d.ts
