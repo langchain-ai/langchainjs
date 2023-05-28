@@ -26,8 +26,8 @@ type PrismaNamespace = {
 };
 
 type PrismaSqlFilter = {
-  [key: string]: string|number
-}
+  [key: string]: string | number;
+};
 
 type PrismaClient = {
   $queryRaw<T = unknown>(
@@ -198,7 +198,7 @@ export class PrismaVectorStore<
         tableName: keyof TPrisma["ModelName"] & string;
         vectorColumnName: string;
         columns: TColumns;
-      },
+      }
     ) {
       type ModelName = keyof TPrisma["ModelName"] & string;
       const instance = new PrismaVectorStore<TModel, ModelName, TColumns>(
@@ -262,14 +262,15 @@ export class PrismaVectorStore<
     k: number,
     filter?: PrismaSqlFilter
   ): Promise<[Document<SimilarityModel<TModel, TSelectModel>>, number][]> {
-
     const vectorQuery = `[${query.join(",")}]`;
 
     // build up the where condition
     const whereCond = this.buildSqlFilterStr(filter ?? this.filter ?? {});
-    const whereSql = this.Prisma.raw(whereCond ? `WHERE ${whereCond}` : '');
+    const whereSql = this.Prisma.raw(whereCond ? `WHERE ${whereCond}` : "");
 
-    const articles = await this.db.$queryRaw<Array<SimilarityModel<TModel, TSelectModel>>>`
+    const articles = await this.db.$queryRaw<
+      Array<SimilarityModel<TModel, TSelectModel>>
+    >`
       SELECT ${this.selectSql}, ${this.vectorColumnSql} <=> ${vectorQuery}::vector as "_distance"
       FROM ${this.tableSql}
       ${whereSql}
@@ -298,12 +299,12 @@ export class PrismaVectorStore<
     return Object.keys(filter)
       .map((key) => {
         const value = filter[key];
-        if (typeof value === 'number') {
+        if (typeof value === "number") {
           return `${key} = ${value}`;
         }
         return `${key} = '${value}'`;
       })
-      .join(' AND ');
+      .join(" AND ");
   }
 
   static async fromTexts(
