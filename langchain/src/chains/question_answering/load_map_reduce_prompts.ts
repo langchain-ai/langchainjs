@@ -10,7 +10,7 @@ import {
   isChatModel,
 } from "../../prompts/selectors/conditional.js";
 
-const qa_template = `Use the following portion of a long document to see if any of the text is relevant to answer the question.
+const qa_template = `Use the following portion of a long document to see if any of the text is relevant to answer the question. 
 Return any relevant text verbatim.
 {context}
 Question: {question}
@@ -19,7 +19,7 @@ export const DEFAULT_COMBINE_QA_PROMPT =
   /*#__PURE__*/
   PromptTemplate.fromTemplate(qa_template);
 
-const system_template = `Use the following portion of a long document to see if any of the text is relevant to answer the question.
+const system_template = `Use the following portion of a long document to see if any of the text is relevant to answer the question. 
 Return any relevant text verbatim.
 ----------------
 {context}`;
@@ -35,7 +35,7 @@ export const COMBINE_QA_PROMPT_SELECTOR =
     [isChatModel, CHAT_QA_PROMPT],
   ]);
 
-const combine_prompt = `Given the following extracted parts of a long document and a question, create a final answer.
+const combine_prompt = `Given the following extracted parts of a long document and a question, create a final answer. 
 If you don't know the answer, just say that you don't know. Don't try to make up an answer.
 
 QUESTION: Which state/country's law governs the interpretation of the contract?
@@ -68,7 +68,7 @@ FINAL ANSWER:`;
 export const COMBINE_PROMPT =
   /*#__PURE__*/ PromptTemplate.fromTemplate(combine_prompt);
 
-const system_combine_template = `Given the following extracted parts of a long document and a question, create a final answer.
+const system_combine_template = `Given the following extracted parts of a long document and a question, create a final answer. 
 If you don't know the answer, just say that you don't know. Don't try to make up an answer.
 ----------------
 {summaries}`;
