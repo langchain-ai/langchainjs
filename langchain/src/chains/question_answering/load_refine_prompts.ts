@@ -18,7 +18,7 @@ We have the opportunity to refine the existing answer
 ------------
 {context}
 ------------
-Given the new context, refine the original answer to better answer the question. 
+Given the new context, refine the original answer to better answer the question.
 If the context isn't useful, return the original answer.`;
 export const DEFAULT_REFINE_PROMPT = /*#__PURE__*/ new PromptTemplate({
   inputVariables: ["question", "existing_answer", "context"],
@@ -32,7 +32,7 @@ We have the opportunity to refine the existing answer
 ------------
 {context}
 ------------
-Given the new context, refine the original answer to better answer the question. 
+Given the new context, refine the original answer to better answer the question.
 If the context isn't useful, return the original answer.`;
 
 const messages = [
@@ -49,7 +49,7 @@ export const REFINE_PROMPT_SELECTOR =
     [isChatModel, CHAT_REFINE_PROMPT],
   ]);
 
-export const DEFAULT_TEXT_QA_PROMPT_TMPL = `Context information is below. 
+export const DEFAULT_TEXT_QA_PROMPT_TMPL = `Context information is below.
 ---------------------
 {context}
 ---------------------
@@ -59,7 +59,7 @@ export const DEFAULT_TEXT_QA_PROMPT = /*#__PURE__*/ new PromptTemplate({
   template: DEFAULT_TEXT_QA_PROMPT_TMPL,
 });
 
-const chat_qa_prompt_template = `Context information is below. 
+const chat_qa_prompt_template = `Context information is below.
 ---------------------
 {context}
 ---------------------

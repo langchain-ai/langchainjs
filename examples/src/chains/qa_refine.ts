@@ -1,4 +1,4 @@
-import { loadQARefineChain } from "langchain/chains";
+import { initializeQARefineChain } from "langchain/chains";
 import { OpenAI } from "langchain/llms/openai";
 import { TextLoader } from "langchain/document_loaders/fs/text";
 import { MemoryVectorStore } from "langchain/vectorstores/memory";
@@ -8,7 +8,7 @@ export async function run() {
   // Create the models and chain
   const embeddings = new OpenAIEmbeddings();
   const model = new OpenAI({ temperature: 0 });
-  const chain = loadQARefineChain(model);
+  const chain = await initializeQARefineChain(model);
 
   // Load the documents and create the vector store
   const loader = new TextLoader("./state_of_the_union.txt");

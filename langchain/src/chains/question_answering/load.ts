@@ -1,3 +1,4 @@
+// Deprecated. Use methods and classes from initialize.ts instead.
 import { LLMChain } from "../llm_chain.js";
 import { BasePromptTemplate } from "../../prompts/base.js";
 import {
@@ -6,16 +7,16 @@ import {
   RefineDocumentsChain,
   MapReduceDocumentsChainInput,
 } from "../combine_docs_chain.js";
-import { QA_PROMPT_SELECTOR } from "./stuff_prompts.js";
+import { QA_PROMPT_SELECTOR } from "./load_stuff_prompts.js";
 import {
   COMBINE_PROMPT_SELECTOR,
   COMBINE_QA_PROMPT_SELECTOR,
-} from "./map_reduce_prompts.js";
+} from "./load_map_reduce_prompts.js";
 import { BaseLanguageModel } from "../../base_language/index.js";
 import {
   QUESTION_PROMPT_SELECTOR,
   REFINE_PROMPT_SELECTOR,
-} from "./refine_prompts.js";
+} from "./load_refine_prompts.js";
 
 export type QAChainParams =
   | ({
@@ -28,6 +29,9 @@ export type QAChainParams =
       type?: "refine";
     } & RefineQAChainParams);
 
+/**
+ * @deprecated Import and use "initializeQAChain" instead
+ */
 export const loadQAChain = (
   llm: BaseLanguageModel,
   params: QAChainParams = { type: "stuff" }
@@ -50,6 +54,9 @@ export interface StuffQAChainParams {
   verbose?: boolean;
 }
 
+/**
+ * @deprecated Import and use "initializeQAChain" instead
+ */
 export function loadQAStuffChain(
   llm: BaseLanguageModel,
   params: StuffQAChainParams = {}
@@ -67,6 +74,9 @@ export interface MapReduceQAChainParams {
   verbose?: boolean;
 }
 
+/**
+ * @deprecated Import and use "initializeQAChain" instead
+ */
 export function loadQAMapReduceChain(
   llm: BaseLanguageModel,
   params: MapReduceQAChainParams = {}
@@ -99,6 +109,9 @@ export interface RefineQAChainParams {
   verbose?: boolean;
 }
 
+/**
+ * @deprecated Import and use "initializeQAChain" instead
+ */
 export function loadQARefineChain(
   llm: BaseLanguageModel,
   params: RefineQAChainParams = {}

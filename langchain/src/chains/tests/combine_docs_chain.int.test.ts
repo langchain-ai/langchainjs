@@ -6,9 +6,9 @@ import { loadChain } from "../load.js";
 import { StuffDocumentsChain } from "../combine_docs_chain.js";
 import { Document } from "../../document.js";
 import {
-  loadQAMapReduceChain,
-  loadQARefineChain,
-} from "../question_answering/load.js";
+  initializeQAMapReduceChain,
+  initializeQARefineChain,
+} from "../question_answering/initialize.js";
 
 test("Test StuffDocumentsChain", async () => {
   const model = new OpenAI({ modelName: "text-ada-001" });
@@ -32,7 +32,7 @@ test("Test StuffDocumentsChain", async () => {
 
 test("Test MapReduceDocumentsChain with QA chain", async () => {
   const model = new OpenAI({ temperature: 0, modelName: "text-ada-001" });
-  const chain = loadQAMapReduceChain(model);
+  const chain = await initializeQAMapReduceChain(model);
   const docs = [
     new Document({ pageContent: "harrison went to harvard" }),
     new Document({ pageContent: "ankush went to princeton" }),
@@ -46,7 +46,7 @@ test("Test MapReduceDocumentsChain with QA chain", async () => {
 
 test("Test RefineDocumentsChain with QA chain", async () => {
   const model = new OpenAI({ temperature: 0, modelName: "text-ada-001" });
-  const chain = loadQARefineChain(model);
+  const chain = await initializeQARefineChain(model);
   const docs = [
     new Document({ pageContent: "harrison went to harvard" }),
     new Document({ pageContent: "ankush went to princeton" }),

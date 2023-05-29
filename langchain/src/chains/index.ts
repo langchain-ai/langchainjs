@@ -36,6 +36,12 @@ export {
   RefineQAChainParams,
 } from "./question_answering/load.js";
 export {
+  initializeQAChain,
+  initializeQAStuffChain,
+  initializeQAMapReduceChain,
+  initializeQARefineChain,
+} from "./question_answering/initialize.js";
+export {
   loadSummarizationChain,
   SummarizationChainParams,
 } from "./summarization/load.js";
