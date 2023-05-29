@@ -624,10 +624,7 @@ export class PromptLayerChatOpenAI extends ChatOpenAI {
 
       let promptLayerRequestID: string | undefined = undefined
       if (this instanceof PromptLayerChatOpenAI && this.returnPromptLayerID === true) {
-        const parsedResp = {
-          text: generation.text,
-          llm_output: generatedResponses.llmOutput,
-        }
+        const parsedResp = [{content: generation.text, role: messageTypeToOpenAIRole(generation.message._getType())}]
 
         promptLayerRequestID = await getPromptLayerRequestID(
           this.caller,
