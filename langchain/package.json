@@ -894,6 +894,7 @@
       "types": "./vectorstores/singlestore.d.ts",
       "import": "./vectorstores/singlestore.js",
       "require": "./vectorstores/singlestore.cjs"
+    },
     "./vectorstores/tigris": {
       "types": "./vectorstores/tigris.d.ts",
       "import": "./vectorstores/tigris.js",
