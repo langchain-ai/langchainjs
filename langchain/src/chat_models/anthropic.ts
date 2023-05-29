@@ -15,6 +15,7 @@ import {
 } from "../schema/index.js";
 import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
 import { BaseLanguageModelCallOptions } from "../base_language/index.js";
+import { getEnvironmentVariable } from "../util/env.js";
 
 function getAnthropicPromptFromMessage(type: MessageType): string {
   switch (type) {
@@ -142,11 +143,7 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
     super(fields ?? {});
 
     this.apiKey =
-      fields?.anthropicApiKey ??
-      (typeof process !== "undefined"
-        ? // eslint-disable-next-line no-process-env
-          process.env?.ANTHROPIC_API_KEY
-        : undefined);
+      fields?.anthropicApiKey ?? getEnvironmentVariable("ANTHROPIC_API_KEY");
     if (!this.apiKey) {
       throw new Error("Anthropic API key not found");
     }

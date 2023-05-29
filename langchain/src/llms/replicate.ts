@@ -1,3 +1,4 @@
+import { getEnvironmentVariable } from "../util/env.js";
 import { LLM, BaseLLMParams } from "./base.js";
 
 export interface ReplicateInput {
@@ -23,9 +24,7 @@ export class Replicate extends LLM implements ReplicateInput {
     super(fields);
 
     const apiKey =
-      fields?.apiKey ??
-      // eslint-disable-next-line no-process-env
-      (typeof process !== "undefined" && process.env?.REPLICATE_API_KEY);
+      fields?.apiKey ?? getEnvironmentVariable("REPLICATE_API_KEY");
 
     if (!apiKey) {
       throw new Error("Please set the REPLICATE_API_KEY environment variable");
