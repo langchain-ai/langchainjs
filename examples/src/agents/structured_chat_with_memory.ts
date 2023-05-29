@@ -31,7 +31,9 @@ export const run = async () => {
     }
   */
 
-  const result2 = await executor.call({ input: `what is that number squared?` });
+  const result2 = await executor.call({
+    input: `what is that number squared?`,
+  });
 
   console.log(result2);
 

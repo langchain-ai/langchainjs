@@ -70,7 +70,9 @@ test("Run structured chat agent with memory", async () => {
 
   console.log(result0);
 
-  const result1 = await executor.call({ input: `what is that number squared?` });
+  const result1 = await executor.call({
+    input: `what is that number squared?`,
+  });
 
   console.log(result1);
 });
