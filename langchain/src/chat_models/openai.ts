@@ -545,12 +545,19 @@ export class PromptLayerChatOpenAI extends ChatOpenAI {
 
   constructor(
     fields?: ConstructorParameters<typeof ChatOpenAI>[0] & {
+      promptLayerApiKey?: string;
       plTags?: string[];
       returnPromptLayerID?: boolean;
     }
   ) {
     super(fields);
 
+    this.promptLayerApiKey =
+      fields?.promptLayerApiKey ??
+      (typeof process !== "undefined"
+        ? // eslint-disable-next-line no-process-env
+          process.env?.PROMPTLAYER_API_KEY
+        : undefined);
     this.plTags = fields?.plTags ?? [];
     this.returnPromptLayerID = fields?.returnPromptLayerID ?? false;
   }
@@ -613,7 +620,7 @@ export class PromptLayerChatOpenAI extends ChatOpenAI {
 
     for (let i = 0; i < generatedResponses.generations.length; i++) {
       const generation = generatedResponses.generations[i];
-      const messageDicts = _createMessageDicts([generation.message], parsedOptions);
+      const messageDicts = _createMessageDicts(messages, parsedOptions);
 
       let promptLayerRequestID: string | undefined = undefined
       if (this instanceof PromptLayerChatOpenAI && this.returnPromptLayerID === true) {
@@ -622,7 +629,6 @@ export class PromptLayerChatOpenAI extends ChatOpenAI {
           llm_output: generatedResponses.llmOutput,
         }
 
-        // TODO: Why isn't this hitting PromptLayer?
         promptLayerRequestID = await getPromptLayerRequestID(
           this.caller,
           "langchain.PromptLayerChatOpenAI",
