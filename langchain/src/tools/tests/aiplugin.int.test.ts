@@ -1,9 +1,10 @@
 import { test, expect } from "@jest/globals";
 import { AIPluginTool } from "../aiplugin.js";
+import { ChatOpenAI } from "../../chat_models/openai.js";
 
 test("AIPluginTool", async () => {
   const tool = await AIPluginTool.fromPluginUrl(
-    "https://www.klarna.com/.well-known/ai-plugin.json"
+    "https://www.klarna.com/.well-known/ai-plugin.json", new ChatOpenAI({ temperature: 0 })
   );
 
   expect(await tool.call(undefined)).toMatchInlineSnapshot(`

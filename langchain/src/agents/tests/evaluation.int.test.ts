@@ -6,8 +6,9 @@ import { OpenAI } from "../../llms/openai.js";
 import { Tool } from "../../tools/base.js";
 import { SerpAPI } from "../../tools/serpapi.js";
 import { Calculator } from "../../tools/calculator.js";
-import { RequestsGetTool, RequestsPostTool } from "../../tools/requests.js";
+import { HttpRequestTool } from "../../tools/requests.js";
 import { AIPluginTool } from "../../tools/aiplugin.js";
+import { AgentExecutor } from "../executor.js";
 
 const agents = [
   (tools) =>
@@ -39,8 +40,7 @@ const agents = [
 const scenarios = [
   async () => ({
     tools: [
-      new RequestsGetTool(),
-      new RequestsPostTool(),
+      new HttpRequestTool(),
       await AIPluginTool.fromPluginUrl(
         "https://www.klarna.com/.well-known/ai-plugin.json", new ChatOpenAI({ temperature: 0 })
       ),
@@ -71,8 +71,8 @@ const scenarios = [
   }),
 ] as (() => Promise<{ tools: Tool[]; input: string }>)[];
 
-describe.each(agents)(`Run agent %#`, (initializeAgentExecutorWithTools) => {
-  test.concurrent.each(scenarios)(`With scenario %#`, async (scenario) => {
+describe.each(agents)(`Run agent %#`, (initializeAgentExecutorWithTools: ((tools: Tool[]) => Promise<AgentExecutor>) | ((arg0: any) => any)) => {
+  test.concurrent.each(scenarios)(`With scenario %#`, async (scenario: () => PromiseLike<{ tools: any; input: any; }> | { tools: any; input: any; }) => {
     const agentIndex = agents.indexOf(initializeAgentExecutorWithTools);
     const scenarioIndex = scenarios.indexOf(scenario);
     const { tools, input } = await scenario();

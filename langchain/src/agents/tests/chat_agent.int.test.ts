@@ -5,7 +5,7 @@ import { SerpAPI } from "../../tools/serpapi.js";
 import { Calculator } from "../../tools/calculator.js";
 import { initializeAgentExecutorWithOptions } from "../initialize.js";
 import { HumanChatMessage } from "../../schema/index.js";
-import { RequestsGetTool, RequestsPostTool } from "../../tools/requests.js";
+import { HttpRequestTool } from "../../tools/requests.js";
 import { AIPluginTool } from "../../tools/aiplugin.js";
 
 test("Run agent locally", async () => {
@@ -54,15 +54,14 @@ test("Run chat agent locally with an abort signal", async () => {
 test("Run agent with klarna and requests tools", async () => {
   const model = new ChatOpenAI({ temperature: 0 });
   const tools = [
-    new RequestsGetTool(),
-    new RequestsPostTool(),
+    new HttpRequestTool(),
     await AIPluginTool.fromPluginUrl(
       "https://www.klarna.com/.well-known/ai-plugin.json", model
     ),
   ];
   const agent = await initializeAgentExecutorWithOptions(
     tools,
-    new ChatOpenAI({ temperature: 0 }),
+    model,
     { agentType: "chat-zero-shot-react-description", verbose: true }
   );
 

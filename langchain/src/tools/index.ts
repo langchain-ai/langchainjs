@@ -23,7 +23,7 @@ export {
   JsonObject,
   Json,
 } from "./json.js";
-export { RequestsGetTool, RequestsPostTool } from "./requests.js";
+export { RequestsGetTool, RequestsPostTool, HttpRequestTool } from "./requests.js";
 export { VectorStoreQATool } from "./vectorstore.js";
 export {
   ZapierNLARunAction,

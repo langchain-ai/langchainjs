@@ -1,15 +1,13 @@
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { initializeAgentExecutorWithOptions } from "langchain/agents";
 import {
-  RequestsGetTool,
-  RequestsPostTool,
+  HttpRequestTool,
   AIPluginTool,
 } from "langchain/tools";
 
 export const run = async () => {
   const tools = [
-    new RequestsGetTool(),
-    new RequestsPostTool(),
+    new HttpRequestTool(),
     await AIPluginTool.fromPluginUrl(
       "https://www.klarna.com/.well-known/ai-plugin.json", new ChatOpenAI({ temperature: 0 })
     ),
