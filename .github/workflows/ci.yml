@@ -98,7 +98,6 @@ jobs:
     env:
       PUPPETEER_SKIP_DOWNLOAD: "true"
       PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
-      DOCKER_COMPOSE_YARN_CACHE: "/home/runner/work/langchainjs/langchainjs/.yarn/cache"
     steps:
       - uses: actions/checkout@v3
       - name: Use Node.js 18.x
