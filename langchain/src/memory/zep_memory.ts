@@ -46,6 +46,7 @@ export class ZepChatMessageHistory extends BaseChatMessageHistory {
 
   constructor(sessionID: string, url: string) {
     super();
+    console.log('Creating Client from url: ', url);
     this.zepClient = new ZepClient(url);
     this.sessionID = sessionID;
   }
@@ -212,10 +213,24 @@ export class ZepMemory extends BaseChatMemory implements ZepMemoryInput {
   baseURL?: string; // Define the baseURL property
 
   sessionID?: string; // Define the sessionID property
-
+  
   constructor(fields?: ZepMemoryInput) {
+    let chatHistory = fields?.chatHistory;
+    if (!chatHistory) {
+      if (fields?.sessionID && fields?.baseURL) {
+        chatHistory = new ZepChatMessageHistory(
+          fields.sessionID,
+          fields.baseURL
+        );
+      } else {
+        throw new Error(
+          "Please provide either a chatHistory or a sessionID and baseURL."
+        );
+      }
+    }
+
     super({
-      chatHistory: fields?.chatHistory,
+      chatHistory,
       returnMessages: fields?.returnMessages ?? false,
       inputKey: fields?.inputKey,
       outputKey: fields?.outputKey,
