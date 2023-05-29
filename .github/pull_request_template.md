@@ -10,6 +10,8 @@ If you are adding an integration (e.g. a new LLM, vector store, or memory), plea
 https://github.com/hwchase17/langchainjs/blob/main/.github/contributing/INTEGRATIONS.md
 
 Replace this block with a description of the change, the issue it fixes (if applicable), and relevant context.
+
+Finally, we'd love to show appreciation your contribution - if you'd like us to shout you out on Twitter, please also include your handle below!
 -->
 
 <!-- Remove if not applicable -->
