@@ -48,16 +48,19 @@ export const initializeQAChain = async (
 export interface InitializeStuffQAChainParams {
   prefix?: string;
   prompt?: BasePromptTemplate;
-  verbose?: boolean;}
+  verbose?: boolean;
+}
 
 export async function initializeQAStuffChain(
   llm: BaseLanguageModel,
   params: InitializeStuffQAChainParams = {}
 ) {
-  const { prompt = await QA_PROMPT_SELECTOR.getPromptAsync(llm, {
-    partialVariables: {prefix: params.prefix ?? ""}
-  }), verbose } =
-    params;
+  const {
+    prompt = await QA_PROMPT_SELECTOR.getPromptAsync(llm, {
+      partialVariables: { prefix: params.prefix ?? "" },
+    }),
+    verbose,
+  } = params;
   const llmChain = new LLMChain({ prompt, llm, verbose });
   const chain = new StuffDocumentsChain({ llmChain, verbose });
   return chain;
@@ -86,12 +89,16 @@ export async function initializeQAMapReduceChain(
     verbose,
     returnIntermediateSteps,
   } = params;
-  const mapPrompt = mapChainOptions?.prompt ?? await COMBINE_QA_PROMPT_SELECTOR.getPromptAsync(llm, {
-    partialVariables: {prefix: mapChainOptions?.prefix ?? ""}
-  });
-  const combinePrompt = combineChainOptions?.prompt ?? await COMBINE_PROMPT_SELECTOR.getPromptAsync(llm, {
-    partialVariables: {prefix: combineChainOptions?.prefix ?? ""}
-  });
+  const mapPrompt =
+    mapChainOptions?.prompt ??
+    (await COMBINE_QA_PROMPT_SELECTOR.getPromptAsync(llm, {
+      partialVariables: { prefix: mapChainOptions?.prefix ?? "" },
+    }));
+  const combinePrompt =
+    combineChainOptions?.prompt ??
+    (await COMBINE_PROMPT_SELECTOR.getPromptAsync(llm, {
+      partialVariables: { prefix: combineChainOptions?.prefix ?? "" },
+    }));
   const llmChain = new LLMChain({ prompt: mapPrompt, llm, verbose });
   const combineLLMChain = new LLMChain({ prompt: combinePrompt, llm, verbose });
   const combineDocumentChain = new StuffDocumentsChain({
@@ -116,7 +123,7 @@ export interface InitializeRefineQAChainParams {
   refineChainOptions?: {
     prefix?: string;
     prompt?: BasePromptTemplate;
-  }
+  };
   verbose?: boolean;
 }
 
@@ -124,17 +131,17 @@ export async function initializeQARefineChain(
   llm: BaseLanguageModel,
   params: InitializeRefineQAChainParams = {}
 ) {
-  const {
-    questionChainOptions,
-    refineChainOptions,
-    verbose,
-  } = params;
-  const questionPrompt = questionChainOptions?.prompt ?? await QUESTION_PROMPT_SELECTOR.getPromptAsync(llm, {
-    partialVariables: {prefix: questionChainOptions?.prefix ?? ""}
-  });
-  const refinePrompt = refineChainOptions?.prompt ?? await REFINE_PROMPT_SELECTOR.getPromptAsync(llm, {
-    partialVariables: {prefix: refineChainOptions?.prefix ?? ""}
-  });
+  const { questionChainOptions, refineChainOptions, verbose } = params;
+  const questionPrompt =
+    questionChainOptions?.prompt ??
+    (await QUESTION_PROMPT_SELECTOR.getPromptAsync(llm, {
+      partialVariables: { prefix: questionChainOptions?.prefix ?? "" },
+    }));
+  const refinePrompt =
+    refineChainOptions?.prompt ??
+    (await REFINE_PROMPT_SELECTOR.getPromptAsync(llm, {
+      partialVariables: { prefix: refineChainOptions?.prefix ?? "" },
+    }));
   const llmChain = new LLMChain({ prompt: questionPrompt, llm, verbose });
   const refineLLMChain = new LLMChain({ prompt: refinePrompt, llm, verbose });
 

@@ -37,9 +37,13 @@ export {
 } from "./question_answering/load.js";
 export {
   initializeQAChain,
+  InitializeQAChainParams,
   initializeQAStuffChain,
+  InitializeStuffQAChainParams,
   initializeQAMapReduceChain,
+  InitializeMapReduceQAChainParams,
   initializeQARefineChain,
+  InitializeRefineQAChainParams,
 } from "./question_answering/initialize.js";
 export {
   loadSummarizationChain,

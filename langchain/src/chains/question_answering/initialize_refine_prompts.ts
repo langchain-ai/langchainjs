@@ -23,7 +23,7 @@ If the context isn't useful, return the original answer.`;
 export const DEFAULT_REFINE_PROMPT = /*#__PURE__*/ new PromptTemplate({
   inputVariables: ["question", "existing_answer", "context"],
   template: DEFAULT_REFINE_PROMPT_TMPL,
-  validateTemplate: false
+  validateTemplate: false,
 });
 
 const refineTemplate = `{prefix} The original question is as follows: {question}

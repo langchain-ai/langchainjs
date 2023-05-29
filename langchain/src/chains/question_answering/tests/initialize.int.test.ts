@@ -69,7 +69,7 @@ test("Test initializeQAMapReduceChain with a custom combine chain prefix", async
   const chain = await initializeQAMapReduceChain(model, {
     combineChainOptions: {
       prefix: `You must be verbose, and output your answer like a pirate. Use plenty of args!`,
-    }
+    },
   });
   const docs = [
     new Document({ pageContent: "Harrison went to Harvard." }),
@@ -87,7 +87,7 @@ test("Test initializeQAMapReduceChain with a custom combine chain prefix and a c
   const chain = await initializeQAMapReduceChain(model, {
     combineChainOptions: {
       prefix: `You must be verbose, and output your answer like a pirate. Use plenty of args!`,
-    }
+    },
   });
   const docs = [
     new Document({ pageContent: "Harrison went to Harvard." }),
@@ -119,7 +119,7 @@ test("Test initializeQARefineChain with a custom refine chain prefix", async () 
   const chain = await initializeQARefineChain(model, {
     refineChainOptions: {
       prefix: `You must be verbose, and output your answer like a pirate. Use plenty of args!`,
-    }
+    },
   });
   const docs = [
     new Document({ pageContent: "Harrison went to Harvard." }),
@@ -137,7 +137,7 @@ test("Test initializeQARefineChain with a custom refine chain prefix and a chat 
   const chain = await initializeQARefineChain(model, {
     refineChainOptions: {
       prefix: `You must be verbose, and output your answer like a pirate. Use plenty of args!`,
-    }
+    },
   });
   const docs = [
     new Document({ pageContent: "Harrison went to Harvard." }),
