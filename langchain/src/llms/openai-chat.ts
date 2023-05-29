@@ -18,7 +18,7 @@ import fetchAdapter from "../util/axios-fetch-adapter.js";
 import { BaseLLMParams, LLM } from "./base.js";
 import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
 import { Generation, LLMResult } from "../schema/index.js";
-import { getPromptLayerRequestID } from "../util/prompt-layer.js";
+import { promptLayerTrackRequest } from "../util/prompt-layer.js";
 
 export { OpenAICallOptions, OpenAIChatInput, AzureOpenAIInput };
 
@@ -466,7 +466,7 @@ export class PromptLayerOpenAIChat extends OpenAIChat {
           const parsedResp = {
             text,
           };
-          promptLayerRequestID = await getPromptLayerRequestID(
+          let promptLayerRespBody = await promptLayerTrackRequest(
             this.caller,
             "langchain.PromptLayerOpenAIChat",
             [prompt],
@@ -477,6 +477,11 @@ export class PromptLayerOpenAIChat extends OpenAIChat {
             requestEndTime,
             this.promptLayerApiKey
           );
+
+          if (promptLayerRespBody && promptLayerRespBody.success === true) {
+            promptLayerRequestID = promptLayerRespBody.request_id;
+          }
+
           choice[0]["generationInfo"] = { promptLayerRequestID };
         }
 

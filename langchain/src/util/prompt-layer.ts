@@ -3,7 +3,7 @@ import { AsyncCaller } from "../util/async_caller.js";
 import { CreateCompletionRequestPrompt } from "openai";
 import { CreateCompletionRequest } from "openai";
 
-export const getPromptLayerRequestID = async (
+export const promptLayerTrackRequest = async (
   callerFunc: AsyncCaller,
   functionName: string,
   prompt: CreateCompletionRequestPrompt,
@@ -38,12 +38,5 @@ export const getPromptLayerRequestID = async (
     }
   );
 
-  const promptLayerRespBody = await promptLayerResp.json();
-
-  let promptLayerRequestID: string | undefined = undefined;
-  if (promptLayerRespBody && promptLayerRespBody.success === true) {
-    promptLayerRequestID = promptLayerRespBody.request_id;
-  }
-
-  return promptLayerRequestID;
+  return promptLayerResp.json();
 };

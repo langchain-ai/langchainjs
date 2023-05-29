@@ -21,7 +21,7 @@ import { calculateMaxTokens } from "../base_language/count_tokens.js";
 import { OpenAIChat } from "./openai-chat.js";
 import { LLMResult } from "../schema/index.js";
 import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
-import { getPromptLayerRequestID } from "../util/prompt-layer.js";
+import { promptLayerTrackRequest } from "../util/prompt-layer.js";
 export { OpenAICallOptions, AzureOpenAIInput, OpenAIInput };
 
 interface TokenUsage {
@@ -399,21 +399,17 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
         tokenUsage.totalTokens = (tokenUsage.totalTokens ?? 0) + totalTokens;
       }
 
-      let promptLayerRequestID: string | undefined = undefined;
+      let promptLayerRequestID;
       if (
         this instanceof PromptLayerOpenAI &&
         this.returnPromptLayerID === true
       ) {
-        console.log("datadatadatadatadata");
-        console.log("datadatadatadatadata");
-        console.log("datadatadatadatadata, ", data);
-
         const parsedResp = {
           text: data.choices[0].text,
           llm_output: { tokenUsage },
         };
 
-        promptLayerRequestID = await getPromptLayerRequestID(
+        let promptLayerRespBody = await promptLayerTrackRequest(
           this.caller,
           "langchain.PromptLayerOpenAI",
           [subPrompts[i][0]],
@@ -424,6 +420,10 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
           requestEndTime,
           this.promptLayerApiKey
         );
+
+        if (promptLayerRespBody && promptLayerRespBody.success === true) {
+          promptLayerRequestID = promptLayerRespBody.request_id;
+        }
       }
 
       promptLayerRequestIDs.push(promptLayerRequestID);

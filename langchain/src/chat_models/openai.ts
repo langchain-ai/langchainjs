@@ -28,7 +28,7 @@ import {
 } from "../schema/index.js";
 import { getModelNameForTiktoken } from "../base_language/count_tokens.js";
 import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
-import { getPromptLayerRequestID } from "../util/prompt-layer.js";
+import { promptLayerTrackRequest } from "../util/prompt-layer.js";
 
 export { OpenAICallOptions, OpenAIChatInput, AzureOpenAIInput };
 
@@ -642,7 +642,7 @@ export class PromptLayerChatOpenAI extends ChatOpenAI {
           },
         ];
 
-        promptLayerRequestID = await getPromptLayerRequestID(
+        let promptLayerRespBody = await promptLayerTrackRequest(
           this.caller,
           "langchain.PromptLayerChatOpenAI",
           messageDicts,
@@ -653,6 +653,10 @@ export class PromptLayerChatOpenAI extends ChatOpenAI {
           requestEndTime,
           this.promptLayerApiKey
         );
+
+        if (promptLayerRespBody && promptLayerRespBody.success === true) {
+          promptLayerRequestID = promptLayerRespBody.request_id;
+        }
 
         if (
           !generation.generationInfo ||
