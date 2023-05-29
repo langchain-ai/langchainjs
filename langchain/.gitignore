@@ -136,6 +136,9 @@ vectorstores/myscale.d.ts
 vectorstores/redis.cjs
 vectorstores/redis.js
 vectorstores/redis.d.ts
+vectorstores/tigris.cjs
+vectorstores/tigris.js
+vectorstores/tigris.d.ts
 text_splitter.cjs
 text_splitter.js
 text_splitter.d.ts
@@ -178,9 +181,15 @@ document_loaders/web/hn.d.ts
 document_loaders/web/imsdb.cjs
 document_loaders/web/imsdb.js
 document_loaders/web/imsdb.d.ts
+document_loaders/web/figma.cjs
+document_loaders/web/figma.js
+document_loaders/web/figma.d.ts
 document_loaders/web/github.cjs
 document_loaders/web/github.js
 document_loaders/web/github.d.ts
+document_loaders/web/notiondb.cjs
+document_loaders/web/notiondb.js
+document_loaders/web/notiondb.d.ts
 document_loaders/web/s3.cjs
 document_loaders/web/s3.js
 document_loaders/web/s3.d.ts
