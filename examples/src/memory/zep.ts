@@ -1,7 +1,5 @@
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { ConversationChain } from "langchain/chains";
-import { ChatPromptTemplate, HumanMessagePromptTemplate, MessagesPlaceholder, SystemMessagePromptTemplate } from "langchain/prompts";
-
 import { ZepMemory } from "langchain/memory/zep_memory";
 
 const sessionID = "TestSession1234";
