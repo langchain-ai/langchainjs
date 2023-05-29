@@ -7,7 +7,7 @@ import { PromptTemplate } from "../../prompts/prompt.js";
 import {
   ChatPromptTemplate,
   HumanMessagePromptTemplate,
-  SystemMessagePromptTemplate,
+  MessagesPlaceholder,
 } from "../../prompts/chat.js";
 import { AgentStep } from "../../schema/index.js";
 import { StructuredTool } from "../../tools/base.js";
@@ -114,7 +114,7 @@ export class StructuredChatAgent extends Agent {
     const { prefix = PREFIX, suffix = SUFFIX } = args ?? {};
     const template = [prefix, FORMAT_INSTRUCTIONS, suffix].join("\n\n");
     const messages = [
-      new SystemMessagePromptTemplate(
+      new HumanMessagePromptTemplate(
         new PromptTemplate({
           template,
           inputVariables: [],
@@ -124,7 +124,10 @@ export class StructuredChatAgent extends Agent {
           },
         })
       ),
-      HumanMessagePromptTemplate.fromTemplate("{input}\n\n{agent_scratchpad}"),
+      new MessagesPlaceholder("chat_history"),
+      HumanMessagePromptTemplate.fromTemplate(
+        "{input} (Don't forget using tools and the $JSON_BLOB format)\n\n{agent_scratchpad}"
+      ),
     ];
     return ChatPromptTemplate.fromPromptMessages(messages);
   }
