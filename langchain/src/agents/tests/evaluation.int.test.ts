@@ -8,7 +8,6 @@ import { SerpAPI } from "../../tools/serpapi.js";
 import { Calculator } from "../../tools/calculator.js";
 import { HttpRequestTool } from "../../tools/requests.js";
 import { AIPluginTool } from "../../tools/aiplugin.js";
-import { AgentExecutor } from "../executor.js";
 
 const agents = [
   (tools) =>
@@ -71,8 +70,8 @@ const scenarios = [
   }),
 ] as (() => Promise<{ tools: Tool[]; input: string }>)[];
 
-describe.each(agents)(`Run agent %#`, (initializeAgentExecutorWithTools: ((tools: Tool[]) => Promise<AgentExecutor>) | ((arg0: any) => any)) => {
-  test.concurrent.each(scenarios)(`With scenario %#`, async (scenario: () => PromiseLike<{ tools: any; input: any; }> | { tools: any; input: any; }) => {
+describe.each(agents)(`Run agent %#`, (initializeAgentExecutorWithTools) => {
+  test.concurrent.each(scenarios)(`With scenario %#`, async (scenario) => {
     const agentIndex = agents.indexOf(initializeAgentExecutorWithTools);
     const scenarioIndex = scenarios.indexOf(scenario);
     const { tools, input } = await scenario();
