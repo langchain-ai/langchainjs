@@ -46,7 +46,6 @@ export class ZepChatMessageHistory extends BaseChatMessageHistory {
 
   constructor(sessionID: string, url: string) {
     super();
-    console.log('Creating Client from url: ', url);
     this.zepClient = new ZepClient(url);
     this.sessionID = sessionID;
   }

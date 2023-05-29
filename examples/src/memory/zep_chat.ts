@@ -1,15 +1,15 @@
+import { BufferMemory } from "langchain/memory";
+
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { ConversationChain } from "langchain/chains";
-import { ChatPromptTemplate, HumanMessagePromptTemplate, MessagesPlaceholder, SystemMessagePromptTemplate } from "langchain/prompts";
 
-import { ZepMemory } from "langchain/memory/zep_memory";
+import { ZepChatMessageHistory } from "langchain/memory/zep_memory";
 
 const sessionID = "TestSession1234";
 const zepURL = "http://localhost:8000";
 
-const memory = new ZepMemory({
-  sessionID: sessionID,
-  baseURL: zepURL,
+const memory = new BufferMemory({
+    chatHistory: new ZepChatMessageHistory(sessionID, zepURL),
 });
 
 const model = new ChatOpenAI({

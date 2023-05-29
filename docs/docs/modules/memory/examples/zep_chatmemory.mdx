@@ -1,0 +1,20 @@
+---
+hide_table_of_contents: true
+---
+
+# Zep Chat Memory
+For longer-term persistence across chat sessions, you can swap out the default in-memory chatHistory that backs chat memory classes like BufferMemory for a Zep instance.
+
+## Setup
+[Zep](https://github.com/getzep/zep) is a memory server that stores, summarizes, embeds, indexes, and enriches conversational AI chat histories, autonomous agent histories, document Q&A histories and exposes them via simple, low-latency APIs.
+See instructions at [Zep](https://github.com/getzep/zep) for running the server locally or through an automated hosting provider.
+
+## Usage :
+
+You can use Zep Chat Memory to provide long term storage for conversational memory related your chats. 
+
+import CodeBlock from "@theme/CodeBlock";
+import Example from "@examples/memory/zep_chat.ts";
+
+<CodeBlock language="typescript">{Example}</CodeBlock>
+
