@@ -27,7 +27,7 @@ export const run = async () => {
   );
 
   const resultOne = await vectorStore.similaritySearch("Hello world", 1);
-  console.log(resultOne.at(0)?.metadata.content);
+  console.log(resultOne);
 
   // create an instance with default filter
   const vectorStore2 = PrismaVectorStore.withModel<Document>(db).create(
@@ -40,10 +40,11 @@ export const run = async () => {
         id: PrismaVectorStore.IdColumn,
         content: PrismaVectorStore.ContentColumn,
       },
-      // the filter only support AND relation, and the value can be either number or string
       filter: {
-        namespace: 'default'
-      }
+        namespace: {
+          equals: "default",
+        },
+      },
     }
   );
 
@@ -55,9 +56,13 @@ export const run = async () => {
 
   // Use the default filter a.k.a {namespace : 'default'}
   const resultTwo = await vectorStore.similaritySearch("Hello world", 1);
-  console.log(resultTwo.at(0)?.metadata.content);
+  console.log(resultTwo);
 
   // Override the local filter
-  const resultThree = await vectorStore.similaritySearchWithScore("Hello world", 1, { namespace: 'different_namespace' });
-  resultThree.forEach(([document]) => console.log(document.metadata.content));
+  const resultThree = await vectorStore.similaritySearchWithScore(
+    "Hello world",
+    1,
+    { namespace: { equals: "different_namespace" } }
+  );
+  console.log(resultThree);
 };

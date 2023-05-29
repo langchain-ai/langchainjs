@@ -23,10 +23,13 @@ type PrismaNamespace = {
   ModelName: Record<string, string>;
   Sql: typeof Sql;
   raw: (sql: string) => Sql;
-};
-
-type PrismaSqlFilter = {
-  [key: string]: string | number;
+  join: (
+    values: RawValue[],
+    separator?: string,
+    prefix?: string,
+    suffix?: string
+  ) => Sql;
+  sql: (strings: ReadonlyArray<string>, ...values: RawValue[]) => Sql;
 };
 
 type PrismaClient = {
@@ -54,6 +57,26 @@ type ModelColumns<TModel extends Record<string, unknown>> = {
   [K in keyof TModel]?: true | ColumnSymbol;
 };
 
+type PrismaSqlFilter<TModel extends Record<string, unknown>> = {
+  [K in keyof TModel]?: {
+    equals?: TModel[K];
+    lt?: TModel[K];
+    lte?: TModel[K];
+    gt?: TModel[K];
+    gte?: TModel[K];
+    not?: TModel[K];
+  };
+};
+
+const OpMap = {
+  equals: "=",
+  lt: "<",
+  lte: "<=",
+  gt: ">",
+  gte: ">=",
+  not: "<>",
+};
+
 type SimilarityModel<
   TModel extends Record<string, unknown> = Record<string, unknown>,
   TColumns extends ModelColumns<TModel> = ModelColumns<TModel>
@@ -64,13 +87,15 @@ type SimilarityModel<
 type DefaultPrismaVectorStore = PrismaVectorStore<
   Record<string, unknown>,
   string,
-  ModelColumns<Record<string, unknown>>
+  ModelColumns<Record<string, unknown>>,
+  PrismaSqlFilter<Record<string, unknown>>
 >;
 
 export class PrismaVectorStore<
   TModel extends Record<string, unknown>,
   TModelName extends string,
-  TSelectModel extends ModelColumns<TModel>
+  TSelectModel extends ModelColumns<TModel>,
+  TFilterModel extends PrismaSqlFilter<TModel>
 > extends VectorStore {
   tableSql: Sql;
 
@@ -78,7 +103,7 @@ export class PrismaVectorStore<
 
   selectSql: Sql;
 
-  filter?: PrismaSqlFilter;
+  filter?: TFilterModel;
 
   idColumn: keyof TModel & string;
 
@@ -100,7 +125,7 @@ export class PrismaVectorStore<
       tableName: TModelName;
       vectorColumnName: string;
       columns: TSelectModel;
-      filter?: PrismaSqlFilter;
+      filter?: TFilterModel;
     }
   ) {
     super(embeddings, {});
@@ -139,7 +164,8 @@ export class PrismaVectorStore<
   static withModel<TModel extends Record<string, unknown>>(db: PrismaClient) {
     function create<
       TPrisma extends PrismaNamespace,
-      TColumns extends ModelColumns<TModel>
+      TColumns extends ModelColumns<TModel>,
+      TFilters extends PrismaSqlFilter<TModel>
     >(
       embeddings: Embeddings,
       config: {
@@ -147,14 +173,14 @@ export class PrismaVectorStore<
         tableName: keyof TPrisma["ModelName"] & string;
         vectorColumnName: string;
         columns: TColumns;
-        filter?: PrismaSqlFilter;
+        filter?: TFilters;
       }
     ) {
       type ModelName = keyof TPrisma["ModelName"] & string;
-      return new PrismaVectorStore<TModel, ModelName, TColumns>(embeddings, {
-        ...config,
-        db,
-      });
+      return new PrismaVectorStore<TModel, ModelName, TColumns, TFilters>(
+        embeddings,
+        { ...config, db }
+      );
     }
 
     async function fromTexts<
@@ -189,7 +215,8 @@ export class PrismaVectorStore<
 
     async function fromDocuments<
       TPrisma extends PrismaNamespace,
-      TColumns extends ModelColumns<TModel>
+      TColumns extends ModelColumns<TModel>,
+      TFilters extends PrismaSqlFilter<TModel>
     >(
       docs: Document<TModel>[],
       embeddings: Embeddings,
@@ -201,10 +228,12 @@ export class PrismaVectorStore<
       }
     ) {
       type ModelName = keyof TPrisma["ModelName"] & string;
-      const instance = new PrismaVectorStore<TModel, ModelName, TColumns>(
-        embeddings,
-        { ...dbConfig, db }
-      );
+      const instance = new PrismaVectorStore<
+        TModel,
+        ModelName,
+        TColumns,
+        TFilters
+      >(embeddings, { ...dbConfig, db });
       await instance.addDocuments(docs);
       return instance;
     }
@@ -257,26 +286,38 @@ export class PrismaVectorStore<
     return results.map((result) => result[0]);
   }
 
+  async similaritySearchWithScore(
+    query: string,
+    k?: number,
+    filter?: TFilterModel
+  ) {
+    return super.similaritySearchWithScore(query, k, filter);
+  }
+
   async similaritySearchVectorWithScore(
     query: number[],
     k: number,
-    filter?: PrismaSqlFilter
+    filter?: TFilterModel
   ): Promise<[Document<SimilarityModel<TModel, TSelectModel>>, number][]> {
     const vectorQuery = `[${query.join(",")}]`;
-
-    // build up the where condition
-    const whereCond = this.buildSqlFilterStr(filter ?? this.filter ?? {});
-    const whereSql = this.Prisma.raw(whereCond ? `WHERE ${whereCond}` : "");
-
     const articles = await this.db.$queryRaw<
       Array<SimilarityModel<TModel, TSelectModel>>
-    >`
-      SELECT ${this.selectSql}, ${this.vectorColumnSql} <=> ${vectorQuery}::vector as "_distance"
-      FROM ${this.tableSql}
-      ${whereSql}
-      ORDER BY "_distance" ASC
-      LIMIT ${k};
-    `;
+    >(
+      this.Prisma.join(
+        [
+          this.Prisma.sql`
+            SELECT ${this.selectSql}, ${this.vectorColumnSql} <=> ${vectorQuery}::vector as "_distance"
+            FROM ${this.tableSql}
+          `,
+          this.buildSqlFilterStr(filter ?? this.filter),
+          this.Prisma.sql`
+            ORDER BY "_distance" ASC
+            LIMIT ${k};
+          `,
+        ].filter((x) => x != null),
+        ""
+      )
+    );
 
     const results: [Document<SimilarityModel<TModel, TSelectModel>>, number][] =
       [];
@@ -295,16 +336,19 @@ export class PrismaVectorStore<
     return results;
   }
 
-  buildSqlFilterStr(filter: PrismaSqlFilter) {
-    return Object.keys(filter)
-      .map((key) => {
-        const value = filter[key];
-        if (typeof value === "number") {
-          return `${key} = ${value}`;
-        }
-        return `${key} = '${value}'`;
-      })
-      .join(" AND ");
+  buildSqlFilterStr(filter?: TFilterModel) {
+    if (filter == null) return null;
+    return this.Prisma.join(
+      Object.entries(filter).flatMap(([key, ops]) =>
+        Object.entries(ops).map(([opName, value]) => {
+          const col = this.Prisma.raw(`"${key}"`);
+          const op = this.Prisma.raw(OpMap[opName as keyof typeof OpMap]);
+          return this.Prisma.sql`${col} ${op} ${value}`;
+        })
+      ),
+      " AND ",
+      " WHERE "
+    );
   }
 
   static async fromTexts(
