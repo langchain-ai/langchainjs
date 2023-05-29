@@ -12,7 +12,10 @@ import {
 import { BaseRetriever } from "../../schema/index.js";
 import { STRUCTURED_MULTI_RETRIEVAL_ROUTER_TEMPLATE } from "./multi_retrieval_prompt.js";
 import { zipEntries } from "./utils.js";
-import { RetrievalQAChain } from "../../chains/retrieval_qa.js";
+import {
+  RetrievalQAChain,
+  RetrievalQAChainInput,
+} from "../../chains/retrieval_qa.js";
 import { RouterOutputParser } from "../../output_parsers/router.js";
 
 export type MultiRetrievalDefaults = {
@@ -26,6 +29,9 @@ export class MultiRetrievalQAChain extends MultiRouteChain {
     return ["result"];
   }
 
+  /**
+   * @deprecated Use `fromRetrieversAndPrompts` instead
+   */
   static fromRetrievers(
     llm: BaseLanguageModel,
     retrieverNames: string[],
@@ -35,6 +41,40 @@ export class MultiRetrievalQAChain extends MultiRouteChain {
     defaults?: MultiRetrievalDefaults,
     options?: Omit<MultiRouteChainInput, "defaultChain">
   ) {
+    return MultiRetrievalQAChain.fromLLMAndRetrievers(llm, {
+      retrieverNames,
+      retrieverDescriptions,
+      retrievers,
+      retrieverPrompts,
+      defaults,
+      multiRetrievalChainOpts: options,
+    });
+  }
+
+  static fromLLMAndRetrievers(
+    llm: BaseLanguageModel,
+    {
+      retrieverNames,
+      retrieverDescriptions,
+      retrievers,
+      retrieverPrompts,
+      defaults,
+      multiRetrievalChainOpts,
+      retrievalQAChainOpts,
+    }: {
+      retrieverNames: string[];
+      retrieverDescriptions: string[];
+      retrievers: BaseRetriever[];
+      retrieverPrompts?: PromptTemplate[];
+      defaults?: MultiRetrievalDefaults;
+      multiRetrievalChainOpts?: Omit<MultiRouteChainInput, "defaultChain">;
+      retrievalQAChainOpts?: Partial<
+        Omit<RetrievalQAChainInput, "retriever" | "combineDocumentsChain">
+      > & {
+        prompt?: PromptTemplate;
+      };
+    }
+  ): MultiRetrievalQAChain {
     const { defaultRetriever, defaultPrompt, defaultChain } = defaults ?? {};
     if (defaultPrompt && !defaultRetriever) {
       throw new Error(
@@ -85,9 +125,11 @@ export class MultiRetrievalQAChain extends MultiRouteChain {
       [string, BaseRetriever, PromptTemplate | null]
     >(retrieverNames, retrievers, prompts).reduce(
       (acc, [name, retriever, prompt]) => {
-        let opt: { prompt: PromptTemplate } | undefined;
+        const opt: Partial<RetrievalQAChainInput> & {
+          prompt?: PromptTemplate;
+        } = retrievalQAChainOpts ?? {};
         if (prompt) {
-          opt = { prompt };
+          opt.prompt = prompt;
         }
         acc[name] = RetrievalQAChain.fromLLM(llm, retriever, opt);
         return acc;
@@ -100,6 +142,7 @@ export class MultiRetrievalQAChain extends MultiRouteChain {
       _defaultChain = defaultChain;
     } else if (defaultRetriever) {
       _defaultChain = RetrievalQAChain.fromLLM(llm, defaultRetriever, {
+        ...retrievalQAChainOpts,
         prompt: defaultPrompt,
       });
     } else {
@@ -116,10 +159,10 @@ export class MultiRetrievalQAChain extends MultiRouteChain {
     }
 
     return new MultiRetrievalQAChain({
+      ...multiRetrievalChainOpts,
       routerChain,
       destinationChains,
       defaultChain: _defaultChain,
-      ...options,
     });
   }
 
