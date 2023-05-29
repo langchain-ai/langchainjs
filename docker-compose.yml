@@ -1,4 +1,4 @@
-version: '3'
+version: "3"
 services:
   test-exports-esbuild:
     image: node:18
@@ -7,7 +7,6 @@ services:
       - ./yarn.lock:/root/yarn.lock
       - ./.yarnrc.yml:/root/.yarnrc.yml
       - ./.yarn:/root/.yarn
-      - ${DOCKER_COMPOSE_YARN_CACHE:-yarn-cache}:/app/.yarn/cache
       - ./test-exports-esbuild:/package
       - ./langchain:/langchain
       - ./scripts:/scripts
@@ -19,7 +18,6 @@ services:
       - ./yarn.lock:/root/yarn.lock
       - ./.yarnrc.yml:/root/.yarnrc.yml
       - ./.yarn:/root/.yarn
-      - ${DOCKER_COMPOSE_YARN_CACHE:-yarn-cache}:/app/.yarn/cache
       - ./test-exports-esm:/package
       - ./langchain:/langchain
       - ./scripts:/scripts
@@ -31,7 +29,6 @@ services:
       - ./yarn.lock:/root/yarn.lock
       - ./.yarnrc.yml:/root/.yarnrc.yml
       - ./.yarn:/root/.yarn
-      - ${DOCKER_COMPOSE_YARN_CACHE:-yarn-cache}:/app/.yarn/cache
       - ./test-exports-cjs:/package
       - ./langchain:/langchain
       - ./scripts:/scripts
@@ -43,7 +40,6 @@ services:
       - ./yarn.lock:/root/yarn.lock
       - ./.yarnrc.yml:/root/.yarnrc.yml
       - ./.yarn:/root/.yarn
-      - ${DOCKER_COMPOSE_YARN_CACHE:-yarn-cache}:/app/.yarn/cache
       - ./test-exports-cra:/package
       - ./langchain:/langchain
       - ./scripts:/scripts
@@ -55,7 +51,6 @@ services:
       - ./yarn.lock:/root/yarn.lock
       - ./.yarnrc.yml:/root/.yarnrc.yml
       - ./.yarn:/root/.yarn
-      - ${DOCKER_COMPOSE_YARN_CACHE:-yarn-cache}:/app/.yarn/cache
       - ./test-exports-cf:/package
       - ./langchain:/langchain
       - ./scripts:/scripts
@@ -67,7 +62,6 @@ services:
       - ./yarn.lock:/root/yarn.lock
       - ./.yarnrc.yml:/root/.yarnrc.yml
       - ./.yarn:/root/.yarn
-      - ${DOCKER_COMPOSE_YARN_CACHE:-yarn-cache}:/app/.yarn/cache
       - ./test-exports-vercel:/package
       - ./langchain:/langchain
       - ./scripts:/scripts
@@ -79,7 +73,6 @@ services:
       - ./yarn.lock:/root/yarn.lock
       - ./.yarnrc.yml:/root/.yarnrc.yml
       - ./.yarn:/root/.yarn
-      - ${DOCKER_COMPOSE_YARN_CACHE:-yarn-cache}:/app/.yarn/cache
       - ./test-exports-vite:/package
       - ./langchain:/langchain
       - ./scripts:/scripts
@@ -102,6 +95,3 @@ services:
         condition: service_completed_successfully
       test-exports-vite:
         condition: service_completed_successfully
-
-volumes:
-  yarn-cache:
