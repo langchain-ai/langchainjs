@@ -52,11 +52,12 @@ test("Run chat agent locally with an abort signal", async () => {
 });
 
 test("Run agent with klarna and requests tools", async () => {
+  const model = new ChatOpenAI({ temperature: 0 });
   const tools = [
     new RequestsGetTool(),
     new RequestsPostTool(),
     await AIPluginTool.fromPluginUrl(
-      "https://www.klarna.com/.well-known/ai-plugin.json"
+      "https://www.klarna.com/.well-known/ai-plugin.json", model
     ),
   ];
   const agent = await initializeAgentExecutorWithOptions(
