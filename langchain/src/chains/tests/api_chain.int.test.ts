@@ -9,6 +9,7 @@ import {
 } from "../api/prompts.js";
 import { OPEN_METEO_DOCS } from "./example_data/open_meteo_docs.js";
 import { POST_API_DOCS } from "./example_data/post_api_docs.js";
+import { DELETE_API_DOCS } from "./example_data/delete_api_docs.js";
 
 const test_api_docs = `
 This API endpoint will search the notes for a user.
@@ -97,6 +98,27 @@ test("Test POST 2 APIChain fromLLMAndApiDocs", async () => {
   const chain = APIChain.fromLLMAndAPIDocs(model, POST_API_DOCS);
   const res = await chain.call({
     question: "send a message hi langchain to channel3 with token5",
+  });
+  console.log({ res });
+});
+
+test("Test DELETE APIChain fromLLMAndApiDocs if not in allowedMethods", async () => {
+  const model = new OpenAI({ modelName: "text-davinci-003" });
+  const chain = APIChain.fromLLMAndAPIDocs(model, DELETE_API_DOCS);
+  await expect(() =>
+    chain.call({
+      question: "delete a message with id 15",
+    })
+  ).rejects.toThrow();
+});
+
+test("Test DELETE APIChain fromLLMAndApiDocs if allowed in allowedMethods", async () => {
+  const model = new OpenAI({ modelName: "text-davinci-003" });
+  const chain = APIChain.fromLLMAndAPIDocs(model, DELETE_API_DOCS, {
+    allowedMethods: ["GET", "POST", "DELETE"],
+  });
+  const res = await chain.call({
+    question: "delete a message with id 15",
   });
   console.log({ res });
 });

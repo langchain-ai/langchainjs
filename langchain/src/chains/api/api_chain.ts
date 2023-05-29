@@ -20,6 +20,7 @@ export interface APIChainInput extends Omit<ChainInputs, "memory"> {
   apiDocs: string;
   inputKey?: string;
   headers?: Record<string, string>;
+  allowedMethods?: string[];
   /** Key to use for output, defaults to `output` */
   outputKey?: string;
 }
@@ -45,6 +46,8 @@ export class APIChain extends BaseChain implements APIChainInput {
 
   outputKey = "output";
 
+  allowedMethods = ["GET", "POST"];
+
   get inputKeys() {
     return [this.inputKey];
   }
@@ -61,6 +64,7 @@ export class APIChain extends BaseChain implements APIChainInput {
     this.inputKey = fields.inputKey ?? this.inputKey;
     this.outputKey = fields.outputKey ?? this.outputKey;
     this.headers = fields.headers ?? this.headers;
+    this.allowedMethods = fields.allowedMethods ?? this.allowedMethods;
   }
 
   /** @ignore */
@@ -75,15 +79,16 @@ export class APIChain extends BaseChain implements APIChainInput {
       runManager?.getChild()
     );
 
-    let api_options;
-    try {
-      api_options = await APIChain.getApiParser().parse(api_json);
-    } catch (e) {
-      const fixParser = OutputFixingParser.fromLLM(
-        this.llm,
-        APIChain.getApiParser()
+    const fixParser = OutputFixingParser.fromLLM(
+      this.llm,
+      APIChain.getApiParser()
+    );
+    const api_options = await fixParser.parse(api_json);
+
+    if (!this.allowedMethods.includes(api_options.api_method)) {
+      throw new Error(
+        `${api_options.api_method} is not part of allowedMethods`
       );
-      api_options = await fixParser.parse(api_json);
     }
 
     const request_options =

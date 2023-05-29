@@ -12,7 +12,7 @@ Return a JSON string with a JSON object formatted to look like:
     "api_method": string \\ API method from documentation 
   }}
 
-REMEMBER: "api_url" Must be a valid url and should be along with parameters incase of GET API call only
+REMEMBER: "api_url" Must be a valid url and should be along with parameters if "api_method" is GET
 REMEMBER: "api_body" Should be a valid JSON in case of POST or PUT api call
 
 You should build the json string in order to get a response that is as short as possible, while still getting the necessary information 
