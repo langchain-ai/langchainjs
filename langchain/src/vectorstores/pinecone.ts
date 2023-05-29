@@ -56,24 +56,11 @@ export class PineconeStore extends VectorStore {
   ): Promise<void> {
     const documentIds = ids == null ? documents.map(() => uuid.v4()) : ids;
     const pineconeVectors = vectors.map((values, idx) => {
-      // Pinecone doesn't support nested objects, so we flatten them
-      const metadata: {
-        [key: string]: string | number | boolean | null;
-      } = flatten({
+      const metadata = normalizeMetadata({
         ...documents[idx].metadata,
         [this.textKey]: documents[idx].pageContent,
       });
-      // Pinecone doesn't support null values, so we remove them
-      for (const key of Object.keys(metadata)) {
-        if (metadata[key] == null) {
-          delete metadata[key];
-        } else if (
-          typeof metadata[key] === "object" &&
-          Object.keys(metadata[key] as unknown as object).length === 0
-        ) {
-          delete metadata[key];
-        }
-      }
+
       return {
         id: documentIds[idx],
         metadata,
@@ -185,3 +172,49 @@ export class PineconeStore extends VectorStore {
     return instance;
   }
 }
+
+// https://docs.pinecone.io/docs/metadata-filtering#supported-metadata-types
+type StrictMetadata = Record<string, string | number | boolean | string[]>
+
+const normalizeMetadata = (metadata: PineconeMetadata): StrictMetadata => {
+  return flattenUnsupportedValuesInMetadata(removeNullValuesFromMetadata(metadata))
+}
+
+// Pinecone doesn't support null values, so we remove them
+const removeNullValuesFromMetadata = (input: PineconeMetadata): PineconeMetadata => {
+  const output: PineconeMetadata = {}
+
+  for (const key of Object.keys(input)) {
+    const inputValue = input[key]
+    if (inputValue != null && !isEmptyObject(inputValue)) {
+      output[key] = inputValue
+    }
+  }
+
+  return output
+}
+
+const isEmptyObject = (value: any): boolean => {
+  return typeof value === "object" && Object.keys(value as unknown as object).length === 0
+}
+
+// Pinecone doesn't support nested objects and non-string arrays, so we flatten them
+const flattenUnsupportedValuesInMetadata = (input: PineconeMetadata): StrictMetadata => {
+  const valuesExceptStringArray: PineconeMetadata = {}
+  const stringArrayValues: Record<string, string[]> = {}
+
+  for (const key of Object.keys(input)) {
+    const inputValue = input[key]
+    if (isStringArray(inputValue)) {
+      stringArrayValues[key] = inputValue
+    } else {
+      valuesExceptStringArray[key] = inputValue
+    }
+  }
+
+  return { ...flatten(valuesExceptStringArray), ...stringArrayValues }
+}
+
+const isStringArray = (value: any): value is string[] => {
+  return Array.isArray(value) && value.every((e) => typeof e === "string")
+} 

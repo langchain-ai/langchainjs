@@ -69,7 +69,7 @@ test("PineconeStore with generated ids", async () => {
   expect(results).toHaveLength(0);
 });
 
-test("PineconeStore flattens metadata values and removes null values when adding documents", async () => {
+test("PineconeStore flattens unsupported metadata values and removes null values when adding documents", async () => {
   const client = { upsert: jest.fn() };
   const embeddings = new FakeEmbeddings();
   const store = new PineconeStore(embeddings, { pineconeIndex: client as any });
@@ -77,10 +77,12 @@ test("PineconeStore flattens metadata values and removes null values when adding
   const document = {
     pageContent: "hello",
     metadata: {
+      // Supported
       string: "some_string",
       number: 3.14,
       boolean: true,
       string_array: ["string_0", "string_1"],
+      // Unsupported
       null: null,
       number_array: [0, 1],
       object: {
@@ -101,11 +103,12 @@ test("PineconeStore flattens metadata values and removes null values when adding
         {
           id: "some_id",
           metadata: {
+            // Supported
             string: "some_string",
             boolean: true,
             number: 3.14,
-            "string_array.0": "string_0",
-            "string_array.1": "string_1",
+            string_array: ["string_0", "string_1"],
+            // Unsupported
             "number_array.0": 0,
             "number_array.1": 1,
             "object.string_in_nested_object": "some_string",
