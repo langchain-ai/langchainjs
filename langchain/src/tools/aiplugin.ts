@@ -34,7 +34,26 @@ interface ApiSpec {
   paths: { [key: string]: { [key: string]: PathMethod } };
 }
 
+function isJson(str: string): boolean {
+  try {
+    JSON.parse(str);
+  } catch (e) {
+    return false;
+  }
+  return true;
+}
+
+function convertJsonToYamlIfApplicable(spec: string): string {
+  if (isJson(spec)) {
+    const jsonData = JSON.parse(spec);
+    return yaml.dump(jsonData);
+  }
+  return spec;
+}
+
+
 function extractShortVersion(openapiSpec: string): string {
+  openapiSpec = convertJsonToYamlIfApplicable(openapiSpec);
   try {
     const fullApiSpec: ApiSpec = yaml.load(openapiSpec) as ApiSpec;
     const shortApiSpec: ApiSpec = {
@@ -66,6 +85,7 @@ function extractShortVersion(openapiSpec: string): string {
   }
 }
 function printOperationDetails(operationId: string, openapiSpec: string) {
+  openapiSpec = convertJsonToYamlIfApplicable(openapiSpec);
   let returnText = "";
   try {
     let doc = yaml.load(openapiSpec) as any;
@@ -212,7 +232,7 @@ If you cannot find a suitable API path based on the OpenAPI specifications, plea
 
 Now, based on the question above and the condensed OpenAPI specifications given below, identify the operationId:
 
-\`\`\`YAML
+\`\`\`
 ${shortApiSpec}
 \`\`\`
 `,
