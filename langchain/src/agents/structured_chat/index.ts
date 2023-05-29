@@ -5,7 +5,7 @@ import { BaseLanguageModel } from "../../base_language/index.js";
 import { LLMChain } from "../../chains/llm_chain.js";
 import { PromptTemplate } from "../../prompts/prompt.js";
 import {
-  BaseMessageStringPromptTemplate,
+  BaseMessagePromptTemplate,
   ChatPromptTemplate,
   HumanMessagePromptTemplate,
   SystemMessagePromptTemplate,
@@ -26,7 +26,7 @@ export interface StructuredChatCreatePromptArgs {
   /** List of input variables the final prompt will expect. */
   inputVariables?: string[];
   /** List of historical prompts from memory.  */
-  memoryPrompts?: BaseMessageStringPromptTemplate[];
+  memoryPrompts?: BaseMessagePromptTemplate[];
 }
 
 export type StructuredChatAgentInput = Optional<AgentInput, "outputParser">;
