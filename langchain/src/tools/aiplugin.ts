@@ -1,5 +1,5 @@
-import { ChatOpenAI } from "../chat_models/openai.js";
-import { HumanChatMessage } from "../schema/index.js";
+import { BaseLanguageModel } from "../base_language/index.js";
+
 import { Tool } from "./base.js";
 import * as yaml from "js-yaml";
 
@@ -8,7 +8,7 @@ export interface AIPluginToolParams {
   description: string;
   apiSpec: string;
   openaiSpec: string;
-  model: ChatOpenAI;
+  model: BaseLanguageModel;
 }
 
 
@@ -135,7 +135,7 @@ export class AIPluginTool extends Tool implements AIPluginToolParams {
   private _description: string;
   apiSpec: string;
   openaiSpec: string;
-  model: ChatOpenAI;
+  model: BaseLanguageModel;
 
   get name() {
     return this._name;
@@ -160,8 +160,8 @@ export class AIPluginTool extends Tool implements AIPluginToolParams {
       }/${date.getFullYear()}, Time: ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
     const prompt = `${fullDate}\nQuestion: ${input} \n${this.apiSpec}.`;
     console.log(prompt);
-    const gptResponse = await this.model.call([new HumanChatMessage(prompt)]);
-    let operationId = gptResponse.text.match(/operationId: (.*)/)?.[1];
+    const gptResponse = await this.model.predict(prompt);
+    let operationId = gptResponse.match(/operationId: (.*)/)?.[1];
     if (!operationId) {
       return "No operationId found in the response";
     }
@@ -176,7 +176,7 @@ export class AIPluginTool extends Tool implements AIPluginToolParams {
 
   static async fromPluginUrl(
     url: string,
-    model: ChatOpenAI,
+    model: BaseLanguageModel,
   ) {
     const aiPluginRes = await fetch(url, {});
     if (!aiPluginRes.ok) {
