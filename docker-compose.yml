@@ -7,7 +7,7 @@ services:
       - ./yarn.lock:/root/yarn.lock
       - ./.yarnrc.yml:/root/.yarnrc.yml
       - ./.yarn:/root/.yarn
-      - yarn-cache:/root/.yarn/berry/cache
+      - ${DOCKER_COMPOSE_YARN_CACHE:-yarn-cache}:/app/.yarn/cache
       - ./test-exports-esbuild:/package
       - ./langchain:/langchain
       - ./scripts:/scripts
@@ -19,7 +19,7 @@ services:
       - ./yarn.lock:/root/yarn.lock
       - ./.yarnrc.yml:/root/.yarnrc.yml
       - ./.yarn:/root/.yarn
-      - yarn-cache:/root/.yarn/berry/cache
+      - ${DOCKER_COMPOSE_YARN_CACHE:-yarn-cache}:/app/.yarn/cache
       - ./test-exports-esm:/package
       - ./langchain:/langchain
       - ./scripts:/scripts
@@ -31,7 +31,7 @@ services:
       - ./yarn.lock:/root/yarn.lock
       - ./.yarnrc.yml:/root/.yarnrc.yml
       - ./.yarn:/root/.yarn
-      - yarn-cache:/root/.yarn/berry/cache
+      - ${DOCKER_COMPOSE_YARN_CACHE:-yarn-cache}:/app/.yarn/cache
       - ./test-exports-cjs:/package
       - ./langchain:/langchain
       - ./scripts:/scripts
@@ -43,7 +43,7 @@ services:
       - ./yarn.lock:/root/yarn.lock
       - ./.yarnrc.yml:/root/.yarnrc.yml
       - ./.yarn:/root/.yarn
-      - yarn-cache:/root/.yarn/berry/cache
+      - ${DOCKER_COMPOSE_YARN_CACHE:-yarn-cache}:/app/.yarn/cache
       - ./test-exports-cra:/package
       - ./langchain:/langchain
       - ./scripts:/scripts
@@ -55,7 +55,7 @@ services:
       - ./yarn.lock:/root/yarn.lock
       - ./.yarnrc.yml:/root/.yarnrc.yml
       - ./.yarn:/root/.yarn
-      - yarn-cache:/root/.yarn/berry/cache
+      - ${DOCKER_COMPOSE_YARN_CACHE:-yarn-cache}:/app/.yarn/cache
       - ./test-exports-cf:/package
       - ./langchain:/langchain
       - ./scripts:/scripts
@@ -67,7 +67,7 @@ services:
       - ./yarn.lock:/root/yarn.lock
       - ./.yarnrc.yml:/root/.yarnrc.yml
       - ./.yarn:/root/.yarn
-      - yarn-cache:/root/.yarn/berry/cache
+      - ${DOCKER_COMPOSE_YARN_CACHE:-yarn-cache}:/app/.yarn/cache
       - ./test-exports-vercel:/package
       - ./langchain:/langchain
       - ./scripts:/scripts
@@ -79,7 +79,7 @@ services:
       - ./yarn.lock:/root/yarn.lock
       - ./.yarnrc.yml:/root/.yarnrc.yml
       - ./.yarn:/root/.yarn
-      - yarn-cache:/root/.yarn/berry/cache
+      - ${DOCKER_COMPOSE_YARN_CACHE:-yarn-cache}:/app/.yarn/cache
       - ./test-exports-vite:/package
       - ./langchain:/langchain
       - ./scripts:/scripts
