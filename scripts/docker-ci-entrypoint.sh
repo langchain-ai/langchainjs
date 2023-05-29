@@ -16,7 +16,10 @@ cp -r ../root/.yarn/!(berry|cache) ./.yarn
 cp ../root/yarn.lock ../root/.yarnrc.yml .
 
 # Replace the workspace dependency with the local copy, and install all others
-yarn add ../langchain
+# Avoid calling "yarn add ../langchain" as yarn berry does seem to hang for ~30s
+# before installation actually occurs
+sed -i 's/"langchain": "workspace:\*"/"langchain": "..\/langchain"/g' package.json
+yarn install --no-immutable
 
 # Check the build command completes successfully
 yarn build
