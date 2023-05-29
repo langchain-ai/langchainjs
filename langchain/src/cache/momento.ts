@@ -68,7 +68,7 @@ export class MomentoCache extends BaseCache {
    * @throws {@link InvalidArgumentError} if {@link props.ttlSeconds} is not strictly positive.
    * @returns The Momento-backed cache.
    */
-  public static async CreateAsync(
+  public static async fromProps(
     props: MomentoCacheProps
   ): Promise<MomentoCache> {
     const instance = new MomentoCache(props);

@@ -14,7 +14,7 @@ const client = new CacheClient({
   }),
   defaultTtlSeconds: 60 * 60 * 24,
 });
-const cache = await MomentoCache.CreateAsync({
+const cache = await MomentoCache.fromProps({
   client,
   cacheName: "langchain",
 });

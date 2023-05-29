@@ -243,7 +243,7 @@ class MockClient implements ICacheClient {
 describe("MomentoCache", () => {
   it("should return null on a cache miss", async () => {
     const client = new MockClient();
-    const cache = await MomentoCache.CreateAsync({
+    const cache = await MomentoCache.fromProps({
       client,
       cacheName: "test-cache",
     });
@@ -252,7 +252,7 @@ describe("MomentoCache", () => {
 
   it("should get a stored value", async () => {
     const client = new MockClient();
-    const cache = await MomentoCache.CreateAsync({
+    const cache = await MomentoCache.fromProps({
       client,
       cacheName: "test-cache",
     });
@@ -263,7 +263,7 @@ describe("MomentoCache", () => {
 
   it("should work with multiple generations", async () => {
     const client = new MockClient();
-    const cache = await MomentoCache.CreateAsync({
+    const cache = await MomentoCache.fromProps({
       client,
       cacheName: "test-cache",
     });

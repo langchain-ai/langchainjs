@@ -83,7 +83,7 @@ export class MomentoChatMessageHistory extends BaseListChatMessageHistory {
    * @throws {InvalidArgumentError} If {@link props.sessionTtl} is not strictly positive.
    * @returns A new chat message history backed by Momento.
    */
-  public static async CreateAsync(
+  public static async fromProps(
     props: MomentoChatMessageHistoryProps
   ): Promise<MomentoChatMessageHistory> {
     const instance = new MomentoChatMessageHistory(props);

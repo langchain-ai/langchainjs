@@ -31,7 +31,7 @@ afterAll(async () => {
 describe("Test Momento message history store", () => {
   it("should show an empty history when no messages have been added", async () => {
     const sessionId = v4();
-    const messageHistory = await MomentoChatMessageHistory.CreateAsync({
+    const messageHistory = await MomentoChatMessageHistory.fromProps({
       sessionId,
       cacheName,
       client,
@@ -42,7 +42,7 @@ describe("Test Momento message history store", () => {
 
   it("should show a history with messages when messages have been added", async () => {
     const sessionId = v4();
-    const messageHistory = await MomentoChatMessageHistory.CreateAsync({
+    const messageHistory = await MomentoChatMessageHistory.fromProps({
       sessionId,
       cacheName,
       client,
@@ -62,7 +62,7 @@ describe("Test Momento message history store", () => {
 
   it("should clear the history", async () => {
     const sessionId = v4();
-    const messageHistory = await MomentoChatMessageHistory.CreateAsync({
+    const messageHistory = await MomentoChatMessageHistory.fromProps({
       sessionId,
       cacheName,
       client,
@@ -86,7 +86,7 @@ describe("Test Momento message history store", () => {
 
   it("should expire when we pass a custom TTL", async () => {
     const sessionId = v4();
-    const messageHistory = await MomentoChatMessageHistory.CreateAsync({
+    const messageHistory = await MomentoChatMessageHistory.fromProps({
       sessionId,
       cacheName,
       client,

@@ -22,7 +22,7 @@ const sessionId = new Date().toISOString();
 const cacheName = "langchain";
 
 const memory = new BufferMemory({
-  chatHistory: await MomentoChatMessageHistory.CreateAsync({
+  chatHistory: await MomentoChatMessageHistory.fromProps({
     client,
     cacheName,
     sessionId,
