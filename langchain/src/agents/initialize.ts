@@ -5,6 +5,7 @@ import { StructuredTool, Tool } from "../tools/base.js";
 import { ChatAgent } from "./chat/index.js";
 import { ChatConversationalAgent } from "./chat_convo/index.js";
 import { StructuredChatAgent } from "./structured_chat/index.js";
+import { StructuredChatConversationalAgent } from "./structured_chat_convo/index.js";
 import { AgentExecutor, AgentExecutorInput } from "./executor.js";
 import { ZeroShotAgent } from "./mrkl/index.js";
 
@@ -85,6 +86,17 @@ export type InitializeAgentExecutorOptionsStructured =
     } & Omit<AgentExecutorInput, "agent" | "tools">;
 
 /**
+ * @interface
+ */
+export type InitializeAgentExecutorOptionsStructuredConversational =
+  | {
+      agentType: "structured-chat-conversational-zero-shot-react-description";
+      agentArgs?: Parameters<
+        typeof StructuredChatConversationalAgent.fromLLMAndTools
+      >[2];
+    } & Omit<AgentExecutorInput, "agent" | "tools">;
+
+/**
  * Initialize an agent executor with options
  * @param tools Array of tools to use in the agent
  * @param llm LLM or ChatModel to use in the agent
@@ -94,19 +106,24 @@ export type InitializeAgentExecutorOptionsStructured =
 export async function initializeAgentExecutorWithOptions(
   tools: StructuredTool[],
   llm: BaseLanguageModel,
-  options: InitializeAgentExecutorOptionsStructured
+  options:
+    | InitializeAgentExecutorOptionsStructured
+    | InitializeAgentExecutorOptionsStructuredConversational
 ): Promise<AgentExecutor>;
 export async function initializeAgentExecutorWithOptions(
   tools: Tool[],
   llm: BaseLanguageModel,
-  options?: InitializeAgentExecutorOptions
+  options?:
+    | InitializeAgentExecutorOptions
+    | InitializeAgentExecutorOptionsStructuredConversational
 ): Promise<AgentExecutor>;
 export async function initializeAgentExecutorWithOptions(
   tools: StructuredTool[] | Tool[],
   llm: BaseLanguageModel,
   options:
     | InitializeAgentExecutorOptions
-    | InitializeAgentExecutorOptionsStructured = {
+    | InitializeAgentExecutorOptionsStructured
+    | InitializeAgentExecutorOptionsStructuredConversational = {
     agentType:
       llm._modelType() === "base_chat_model"
         ? "chat-zero-shot-react-description"
@@ -158,6 +175,26 @@ export async function initializeAgentExecutorWithOptions(
       const executor = AgentExecutor.fromAgentAndTools({
         agent: StructuredChatAgent.fromLLMAndTools(llm, tools, agentArgs),
         tools,
+        ...rest,
+      });
+      return executor;
+    }
+    case "structured-chat-conversational-zero-shot-react-description": {
+      const { agentArgs, memory, ...rest } = options;
+      const executor = AgentExecutor.fromAgentAndTools({
+        agent: StructuredChatConversationalAgent.fromLLMAndTools(
+          llm,
+          tools,
+          agentArgs
+        ),
+        tools,
+        memory:
+          memory ??
+          new BufferMemory({
+            returnMessages: true,
+            memoryKey: "chat_history",
+            inputKey: "input",
+          }),
         ...rest,
       });
       return executor;
