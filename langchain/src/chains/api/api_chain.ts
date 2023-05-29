@@ -1,3 +1,4 @@
+import { z, ZodTypeAny } from "zod";
 import { BaseChain, ChainInputs } from "../base.js";
 import { SerializedAPIChain } from "../serde.js";
 import { LLMChain } from "../llm_chain.js";
@@ -9,7 +10,6 @@ import {
   API_RESPONSE_PROMPT_TEMPLATE,
 } from "./prompts.js";
 import { BasePromptTemplate } from "../../index.js";
-import { z, ZodTypeAny } from "zod";
 import { StructuredOutputParser } from "../../output_parsers/structured.js";
 import { OutputFixingParser } from "../../output_parsers/fix.js";
 
@@ -74,7 +74,8 @@ export class APIChain extends BaseChain implements APIChainInput {
       { question, api_docs: this.apiDocs },
       runManager?.getChild()
     );
-    let api_options: Record<string, any>;
+
+    let api_options;
     try {
       api_options = await APIChain.getApiParser().parse(api_json);
     } catch (e) {
