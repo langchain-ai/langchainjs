@@ -6,7 +6,7 @@ import CodeBlock from "@theme/CodeBlock";
 
 # Momento-Backed Chat Memory
 
-For distributed, serverless persistence across chat sessions, you swap in a [Momento](https://gomomento.com/)-backed chat message history.
+For distributed, serverless persistence across chat sessions, you can swap in a [Momento](https://gomomento.com/)-backed chat message history.
 Because a Momento cache is instantly available and requires zero infrastructure maintenance, it's a great way to get started with chat history whether building locally or in production.
 
 ## Setup
@@ -21,7 +21,7 @@ You will also need an API key from [Momento](https://gomomento.com/). You can si
 
 ## Usage
 
-To distinguish one chat history session from another, we need a unique ID, the `sessionId`. You may also provide an optional `sessionTtl` to make sessions expire after a given number of seconds.
+To distinguish one chat history session from another, we need a unique `sessionId`. You may also provide an optional `sessionTtl` to make sessions expire after a given number of seconds.
 
 import MomentoExample from "@examples/memory/momento.ts";
 
