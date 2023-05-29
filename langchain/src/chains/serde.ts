@@ -34,6 +34,7 @@ export type SerializedVectorDBQAChain = {
 
 export type SerializedAPIChain = {
   _type: "api_chain";
+  llm: SerializedLLM;
   api_request_chain: SerializedLLMChain;
   api_answer_chain: SerializedLLMChain;
   api_docs: string;

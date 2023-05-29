@@ -9,8 +9,12 @@ import {
   API_RESPONSE_PROMPT_TEMPLATE,
 } from "./prompts.js";
 import { BasePromptTemplate } from "../../index.js";
+import { z, ZodTypeAny } from "zod";
+import { StructuredOutputParser } from "../../output_parsers/structured.js";
+import { OutputFixingParser } from "../../output_parsers/fix.js";
 
 export interface APIChainInput extends Omit<ChainInputs, "memory"> {
+  llm: BaseLanguageModel;
   apiAnswerChain: LLMChain;
   apiRequestChain: LLMChain;
   apiDocs: string;
@@ -27,6 +31,8 @@ export type APIChainOptions = {
 };
 
 export class APIChain extends BaseChain implements APIChainInput {
+  llm: BaseLanguageModel;
+
   apiAnswerChain: LLMChain;
 
   apiRequestChain: LLMChain;
@@ -68,26 +74,41 @@ export class APIChain extends BaseChain implements APIChainInput {
       { question, api_docs: this.apiDocs },
       runManager?.getChild()
     );
-
-    const { api_url, api_body, api_method } = JSON.parse(api_json);
+    let api_options: Record<string, any>;
+    try {
+      api_options = await APIChain.getApiParser().parse(api_json);
+    } catch (e) {
+      const fixParser = OutputFixingParser.fromLLM(
+        this.llm,
+        APIChain.getApiParser()
+      );
+      api_options = await fixParser.parse(api_json);
+    }
 
     const request_options =
-      api_method === "GET" || api_body === "HEAD"
+      api_options.api_method === "GET" ||
+      api_options.api_method === "HEAD" ||
+      api_options.api_method === "DELETE"
         ? {
-            method: api_method,
+            method: api_options.api_method,
             headers: this.headers,
           }
         : {
-            method: api_method,
+            method: api_options.api_method,
             headers: this.headers,
-            body: JSON.stringify(api_body),
+            body: JSON.stringify(api_options.api_body),
           };
 
-    const res = await fetch(api_url, request_options);
+    const res = await fetch(api_options.api_url, request_options);
     const api_response = await res.text();
 
     const answer = await this.apiAnswerChain.predict(
-      { question, api_docs: this.apiDocs, api_url, api_response },
+      {
+        question,
+        api_docs: this.apiDocs,
+        api_url: api_options.api_url,
+        api_response,
+      },
       runManager?.getChild()
     );
 
@@ -99,7 +120,7 @@ export class APIChain extends BaseChain implements APIChainInput {
   }
 
   static async deserialize(data: SerializedAPIChain) {
-    const { api_request_chain, api_answer_chain, api_docs } = data;
+    const { api_request_chain, api_answer_chain, api_docs, llm } = data;
 
     if (!api_request_chain) {
       throw new Error("LLMChain must have api_request_chain");
@@ -113,6 +134,7 @@ export class APIChain extends BaseChain implements APIChainInput {
     }
 
     return new APIChain({
+      llm: await BaseLanguageModel.deserialize(llm),
       apiAnswerChain: await LLMChain.deserialize(api_answer_chain),
       apiRequestChain: await LLMChain.deserialize(api_request_chain),
       apiDocs: api_docs,
@@ -122,17 +144,39 @@ export class APIChain extends BaseChain implements APIChainInput {
   serialize(): SerializedAPIChain {
     return {
       _type: this._chainType(),
+      llm: this.llm.serialize(),
       api_answer_chain: this.apiAnswerChain.serialize(),
       api_request_chain: this.apiRequestChain.serialize(),
       api_docs: this.apiDocs,
     };
   }
 
+  static getApiParserSchema(): ZodTypeAny {
+    return z.object({
+      api_url: z
+        .string()
+        .describe(
+          "the formatted url in case of GET API call otherwise just the url"
+        ),
+      api_body: z
+        .any()
+        .describe("formatted key value pair for making API call"),
+      api_method: z.string().describe("API method from documentation"),
+    });
+  }
+
+  static getApiParser(): StructuredOutputParser<ZodTypeAny> {
+    return StructuredOutputParser.fromZodSchema(this.getApiParserSchema());
+  }
+
   static fromLLMAndAPIDocs(
     llm: BaseLanguageModel,
     apiDocs: string,
     options: APIChainOptions &
-      Omit<APIChainInput, "apiAnswerChain" | "apiRequestChain" | "apiDocs"> = {}
+      Omit<
+        APIChainInput,
+        "apiAnswerChain" | "apiRequestChain" | "apiDocs" | "llm"
+      > = {}
   ): APIChain {
     const {
       apiUrlPrompt = API_URL_PROMPT_TEMPLATE,
@@ -141,6 +185,7 @@ export class APIChain extends BaseChain implements APIChainInput {
     const apiRequestChain = new LLMChain({ prompt: apiUrlPrompt, llm });
     const apiAnswerChain = new LLMChain({ prompt: apiResponsePrompt, llm });
     return new this({
+      llm,
       apiAnswerChain,
       apiRequestChain,
       apiDocs,

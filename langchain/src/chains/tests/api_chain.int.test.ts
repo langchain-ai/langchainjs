@@ -4,8 +4,8 @@ import { LLMChain } from "../llm_chain.js";
 import { loadChain } from "../load.js";
 import { APIChain, APIChainInput } from "../api/api_chain.js";
 import {
-  API_URL_PROMPT_TEMPLATE,
   API_RESPONSE_PROMPT_TEMPLATE,
+  API_URL_PROMPT_TEMPLATE,
 } from "../api/prompts.js";
 import { OPEN_METEO_DOCS } from "./example_data/open_meteo_docs.js";
 import { POST_API_DOCS } from "./example_data/post_api_docs.js";
@@ -59,6 +59,7 @@ test("Test APIChain", async () => {
   });
 
   const apiChainInput: APIChainInput = {
+    llm: model,
     apiAnswerChain,
     apiRequestChain,
     apiDocs: testApiData.api_docs,
