@@ -16,6 +16,7 @@ import { BaseLLM } from "../llms/base.js";
 import { BaseChatModel } from "../chat_models/base.js";
 import { mapStoredMessagesToChatMessages } from "../stores/message/utils.js";
 import { AsyncCaller, AsyncCallerParams } from "../util/async_caller.js";
+import { getEnvironmentVariable } from "../util/env.js";
 
 export interface RunResult extends BaseRun {
   name: string;
@@ -183,17 +184,10 @@ async function getModelOrFactoryType(
 }
 
 export class LangChainPlusClient {
-  private apiKey?: string =
-    typeof process !== "undefined"
-      ? // eslint-disable-next-line no-process-env
-        process.env?.LANGCHAIN_API_KEY
-      : undefined;
+  private apiKey?: string = getEnvironmentVariable("LANGCHAIN_API_KEY");
 
   private apiUrl =
-    (typeof process !== "undefined"
-      ? // eslint-disable-next-line no-process-env
-        process.env?.LANGCHAIN_ENDPOINT
-      : undefined) || "http://localhost:1984";
+    getEnvironmentVariable("LANGCHAIN_ENDPOINT") || "http://localhost:1984";
 
   private tenantId: string;
 
@@ -208,11 +202,7 @@ export class LangChainPlusClient {
     this.apiUrl = config.apiUrl ?? this.apiUrl;
     this.apiKey = config.apiKey;
     const tenantId =
-      config.tenantId ??
-      (typeof process !== "undefined"
-        ? // eslint-disable-next-line no-process-env
-          process.env?.LANGCHAIN_TENANT_ID
-        : undefined);
+      config.tenantId ?? getEnvironmentVariable("LANGCHAIN_TENANT_ID");
     if (tenantId === undefined) {
       throw new Error(
         "No tenant ID provided and no LANGCHAIN_TENANT_ID env var"
@@ -233,23 +223,12 @@ export class LangChainPlusClient {
   ): Promise<LangChainPlusClient> {
     const apiUrl_ =
       config.apiUrl ??
-      ((typeof process !== "undefined"
-        ? // eslint-disable-next-line no-process-env
-          process.env?.LANGCHAIN_ENDPOINT
-        : undefined) ||
-        "http://localhost:1984");
+      (getEnvironmentVariable("LANGCHAIN_ENDPOINT") || "http://localhost:1984");
     const apiKey_ =
-      config.apiKey ??
-      (typeof process !== "undefined"
-        ? // eslint-disable-next-line no-process-env
-          process.env?.LANGCHAIN_API_KEY
-        : undefined);
+      config.apiKey ?? getEnvironmentVariable("LANGCHAIN_API_KEY");
     const tenantId_ =
       config.tenantId ??
-      ((typeof process !== "undefined"
-        ? // eslint-disable-next-line no-process-env
-          process.env?.LANGCHAIN_TENANT_ID
-        : undefined) ||
+      (getEnvironmentVariable("LANGCHAIN_TENANT_ID") ||
         (await getSeededTenantId(apiUrl_, { apiKey: apiKey_ })));
     return new LangChainPlusClient({
       tenantId: tenantId_,

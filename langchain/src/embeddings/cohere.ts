@@ -1,4 +1,5 @@
 import { chunkArray } from "../util/chunk.js";
+import { getEnvironmentVariable } from "../util/env.js";
 import { Embeddings, EmbeddingsParams } from "./base.js";
 
 export interface CohereEmbeddingsParams extends EmbeddingsParams {
@@ -38,12 +39,7 @@ export class CohereEmbeddings
   ) {
     super(fields ?? {});
 
-    const apiKey =
-      fields?.apiKey ||
-      (typeof process !== "undefined"
-        ? // eslint-disable-next-line no-process-env
-          process.env?.COHERE_API_KEY
-        : undefined);
+    const apiKey = fields?.apiKey || getEnvironmentVariable("COHERE_API_KEY");
 
     if (!apiKey) {
       throw new Error("Cohere API key not found");

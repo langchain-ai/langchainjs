@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.83",
+  "version": "0.0.84",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -148,6 +148,9 @@
     "vectorstores/redis.cjs",
     "vectorstores/redis.js",
     "vectorstores/redis.d.ts",
+    "vectorstores/tigris.cjs",
+    "vectorstores/tigris.js",
+    "vectorstores/tigris.d.ts",
     "text_splitter.cjs",
     "text_splitter.js",
     "text_splitter.d.ts",
@@ -190,9 +193,15 @@
     "document_loaders/web/imsdb.cjs",
     "document_loaders/web/imsdb.js",
     "document_loaders/web/imsdb.d.ts",
+    "document_loaders/web/figma.cjs",
+    "document_loaders/web/figma.js",
+    "document_loaders/web/figma.d.ts",
     "document_loaders/web/github.cjs",
     "document_loaders/web/github.js",
     "document_loaders/web/github.d.ts",
+    "document_loaders/web/notiondb.cjs",
+    "document_loaders/web/notiondb.js",
+    "document_loaders/web/notiondb.d.ts",
     "document_loaders/web/s3.cjs",
     "document_loaders/web/s3.js",
     "document_loaders/web/s3.d.ts",
@@ -380,6 +389,7 @@
     "@tensorflow/tfjs-backend-cpu": "^4.4.0",
     "@tensorflow/tfjs-converter": "^4.4.0",
     "@tensorflow/tfjs-core": "^4.4.0",
+    "@tigrisdata/vector": "^1.1.0",
     "@tsconfig/recommended": "^1.0.2",
     "@types/d3-dsv": "^2",
     "@types/flat": "^5.0.2",
@@ -406,7 +416,7 @@
     "eslint-plugin-import": "^2.27.5",
     "eslint-plugin-no-instanceof": "^1.0.1",
     "eslint-plugin-prettier": "^4.2.1",
-    "faiss-node": "^0.1.1",
+    "faiss-node": "^0.2.0",
     "google-auth-library": "^8.8.0",
     "graphql": "^16.6.0",
     "hnswlib-node": "^1.4.2",
@@ -447,6 +457,7 @@
     "@tensorflow-models/universal-sentence-encoder": "*",
     "@tensorflow/tfjs-converter": "*",
     "@tensorflow/tfjs-core": "*",
+    "@tigrisdata/vector": "^1.1.0",
     "@upstash/redis": "^1.20.6",
     "@zilliz/milvus2-sdk-node": ">=2.2.7",
     "apify-client": "^2.7.1",
@@ -456,7 +467,7 @@
     "cohere-ai": "^5.0.2",
     "d3-dsv": "^2.0.0",
     "epub2": "^3.0.1",
-    "faiss-node": "^0.1.1",
+    "faiss-node": "^0.2.0",
     "google-auth-library": "^8.8.0",
     "hnswlib-node": "^1.4.2",
     "html-to-text": "^9.0.5",
@@ -515,6 +526,9 @@
       "optional": true
     },
     "@tensorflow/tfjs-core": {
+      "optional": true
+    },
+    "@tigrisdata/vector": {
       "optional": true
     },
     "@upstash/redis": {
@@ -873,6 +887,11 @@
       "import": "./vectorstores/redis.js",
       "require": "./vectorstores/redis.cjs"
     },
+    "./vectorstores/tigris": {
+      "types": "./vectorstores/tigris.d.ts",
+      "import": "./vectorstores/tigris.js",
+      "require": "./vectorstores/tigris.cjs"
+    },
     "./text_splitter": {
       "types": "./text_splitter.d.ts",
       "import": "./text_splitter.js",
@@ -945,10 +964,20 @@
       "import": "./document_loaders/web/imsdb.js",
       "require": "./document_loaders/web/imsdb.cjs"
     },
+    "./document_loaders/web/figma": {
+      "types": "./document_loaders/web/figma.d.ts",
+      "import": "./document_loaders/web/figma.js",
+      "require": "./document_loaders/web/figma.cjs"
+    },
     "./document_loaders/web/github": {
       "types": "./document_loaders/web/github.d.ts",
       "import": "./document_loaders/web/github.js",
       "require": "./document_loaders/web/github.cjs"
+    },
+    "./document_loaders/web/notiondb": {
+      "types": "./document_loaders/web/notiondb.d.ts",
+      "import": "./document_loaders/web/notiondb.js",
+      "require": "./document_loaders/web/notiondb.cjs"
     },
     "./document_loaders/web/s3": {
       "types": "./document_loaders/web/s3.d.ts",

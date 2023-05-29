@@ -339,3 +339,41 @@ export class MarkdownTextSplitter
     super(fields);
   }
 }
+
+export type LatexTextSplitterParams = TextSplitterParams;
+
+export class LatexTextSplitter
+  extends RecursiveCharacterTextSplitter
+  implements LatexTextSplitterParams
+{
+  separators: string[] = [
+    // First, try to split along Latex sections
+    "\n\\chapter{",
+    "\n\\section{",
+    "\n\\subsection{",
+    "\n\\subsubsection{",
+
+    // Now split by environments
+    "\n\\begin{enumerate}",
+    "\n\\begin{itemize}",
+    "\n\\begin{description}",
+    "\n\\begin{list}",
+    "\n\\begin{quote}",
+    "\n\\begin{quotation}",
+    "\n\\begin{verse}",
+    "\n\\begin{verbatim}",
+
+    // Now split by math environments
+    "\n\\begin{align}",
+    "$$",
+    "$",
+
+    // Now split by the normal type of lines
+    " ",
+    "",
+  ];
+
+  constructor(fields?: Partial<LatexTextSplitterParams>) {
+    super(fields);
+  }
+}
