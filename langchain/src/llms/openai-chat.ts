@@ -17,11 +17,8 @@ import type { StreamingAxiosConfiguration } from "../util/axios-types.js";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
 import { BaseLLMParams, LLM } from "./base.js";
 import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
-import {
-  Generation,
-  LLMResult,
-} from "../schema/index.js";
-import { getPromptLayerRequestID } from '../util/prompt-layer.js'
+import { Generation, LLMResult } from "../schema/index.js";
+import { getPromptLayerRequestID } from "../util/prompt-layer.js";
 
 export { OpenAICallOptions, OpenAIChatInput, AzureOpenAIInput };
 
@@ -442,7 +439,7 @@ export class PromptLayerOpenAIChat extends OpenAIChat {
     }
 
     const response = await super.completionWithRetry(request);
-    
+
     return response;
   }
 
@@ -458,31 +455,34 @@ export class PromptLayerOpenAIChat extends OpenAIChat {
         const requestStartTime = Date.now();
         const text = await this._call(prompt, options, runManager);
         const requestEndTime = Date.now();
-        
-        choice = [{ text }]
 
-        let promptLayerRequestID: string | undefined = undefined
-        if (this instanceof PromptLayerOpenAIChat && this.returnPromptLayerID === true) {
+        choice = [{ text }];
+
+        let promptLayerRequestID: string | undefined = undefined;
+        if (
+          this instanceof PromptLayerOpenAIChat &&
+          this.returnPromptLayerID === true
+        ) {
           const parsedResp = {
             text,
-          }          
+          };
           promptLayerRequestID = await getPromptLayerRequestID(
             this.caller,
             "langchain.PromptLayerOpenAIChat",
             [prompt],
-            this._identifyingParams(), 
+            this._identifyingParams(),
             this.plTags,
             parsedResp,
             requestStartTime,
             requestEndTime,
-            this.promptLayerApiKey,
-          )  
-          choice[0]["generationInfo"] = { promptLayerRequestID }
+            this.promptLayerApiKey
+          );
+          choice[0]["generationInfo"] = { promptLayerRequestID };
         }
 
-        return choice
-      }
-    ));
+        return choice;
+      })
+    );
 
     return { generations };
   }

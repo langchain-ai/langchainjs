@@ -202,5 +202,4 @@ test("Test PromptLayerOpenAI returns promptLayerID iff returnPromptLayerID=true"
 
   expect(typeof resB).toBe("string");
   expect(resB.generations[0][0].generationInfo).toBeUndefined();
-
 });

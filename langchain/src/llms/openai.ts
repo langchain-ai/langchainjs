@@ -21,7 +21,7 @@ import { calculateMaxTokens } from "../base_language/count_tokens.js";
 import { OpenAIChat } from "./openai-chat.js";
 import { LLMResult } from "../schema/index.js";
 import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
-import { getPromptLayerRequestID } from '../util/prompt-layer.js'
+import { getPromptLayerRequestID } from "../util/prompt-layer.js";
 export { OpenAICallOptions, AzureOpenAIInput, OpenAIInput };
 
 interface TokenUsage {
@@ -400,16 +400,18 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
       }
 
       let promptLayerRequestID: string | undefined = undefined;
-      if (this instanceof PromptLayerOpenAI && this.returnPromptLayerID === true) {
-
-        console.log("datadatadatadatadata")
-        console.log("datadatadatadatadata")
-        console.log("datadatadatadatadata, ", data)
+      if (
+        this instanceof PromptLayerOpenAI &&
+        this.returnPromptLayerID === true
+      ) {
+        console.log("datadatadatadatadata");
+        console.log("datadatadatadatadata");
+        console.log("datadatadatadatadata, ", data);
 
         const parsedResp = {
-          "text": data.choices[0].text,
-          "llm_output": { tokenUsage },
-        }
+          text: data.choices[0].text,
+          llm_output: { tokenUsage },
+        };
 
         promptLayerRequestID = await getPromptLayerRequestID(
           this.caller,
@@ -420,13 +422,11 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
           parsedResp,
           requestStartTime,
           requestEndTime,
-          this.promptLayerApiKey,
-        )  
+          this.promptLayerApiKey
+        );
       }
 
-      promptLayerRequestIDs.push(promptLayerRequestID)
-
-
+      promptLayerRequestIDs.push(promptLayerRequestID);
     }
 
     const generations = chunkArray(choices, this.n).map((promptChoices, idx) =>
@@ -435,7 +435,7 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
         generationInfo: {
           finishReason: choice.finish_reason,
           logprobs: choice.logprobs,
-          promptLayerRequestID: promptLayerRequestIDs[idx]
+          promptLayerRequestID: promptLayerRequestIDs[idx],
         },
       }))
     );
@@ -519,7 +519,7 @@ export class PromptLayerOpenAI extends OpenAI {
           process.env?.PROMPTLAYER_API_KEY
         : undefined);
 
-    this.returnPromptLayerID = fields?.returnPromptLayerID
+    this.returnPromptLayerID = fields?.returnPromptLayerID;
     if (!this.promptLayerApiKey) {
       throw new Error("Missing PromptLayer API key");
     }

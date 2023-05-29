@@ -119,6 +119,7 @@ const res = await model.call(
 ```
 
 You can also pass in the optional `returnPromptLayerID` string to get a promptLayerRequestID like below
+
 ```typescript
 import { PromptLayerOpenAI } from "langchain/llms/openai";
 
@@ -129,38 +130,40 @@ const model = new PromptLayerOpenAI({
   returnPromptLayerID: true,
 });
 const res = await model.generate([
-  "What would be a good company name a company that makes colorful socks?"
+  "What would be a good company name a company that makes colorful socks?",
 ]);
 
 console.log(JSON.stringify(res, null, 3));
 ```
 
 The above should return the following
+
 ```json
 {
   "generations": [
-     [
-        {
-           "text": " Socktastic!",
-           "generationInfo": {
-              "finishReason": "stop",
-              "logprobs": null,
-              "promptLayerRequestID": 2066417
-           }
+    [
+      {
+        "text": " Socktastic!",
+        "generationInfo": {
+          "finishReason": "stop",
+          "logprobs": null,
+          "promptLayerRequestID": 2066417
         }
-     ]
+      }
+    ]
   ],
   "llmOutput": {
-     "tokenUsage": {
-        "completionTokens": 5,
-        "promptTokens": 23,
-        "totalTokens": 28
-     }
+    "tokenUsage": {
+      "completionTokens": 5,
+      "promptTokens": 23,
+      "totalTokens": 28
+    }
   }
 }
 ```
 
 ### PromptLayerOpenAIChat
+
 PromptLayer is compatible with the OpenAIChat model as well. Here is an example of getting the PromptLayerOpenAIChat requestID:
 
 ```typescript
@@ -170,7 +173,7 @@ const model = new PromptLayerOpenAIChat({
   returnPromptLayerID: true,
 });
 const res = await model.generate([
-  "What would be a good company name a company that makes colorful socks?"
+  "What would be a good company name a company that makes colorful socks?",
 ]);
 console.log(JSON.stringify(res, null, 3));
 
@@ -186,7 +189,6 @@ console.log(JSON.stringify(res, null, 3));
 //       ]
 //    ]
 // }
-
 ```
 
 ### Azure `PromptLayerOpenAI`

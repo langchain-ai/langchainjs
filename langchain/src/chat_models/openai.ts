@@ -28,7 +28,7 @@ import {
 } from "../schema/index.js";
 import { getModelNameForTiktoken } from "../base_language/count_tokens.js";
 import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
-import { getPromptLayerRequestID } from '../util/prompt-layer.js'
+import { getPromptLayerRequestID } from "../util/prompt-layer.js";
 
 export { OpenAICallOptions, OpenAIChatInput, AzureOpenAIInput };
 
@@ -581,7 +581,11 @@ export class PromptLayerChatOpenAI extends ChatOpenAI {
       parsedOptions = options ?? {};
     }
 
-    const generatedResponses = await super._generate(messages, parsedOptions, runManager);
+    const generatedResponses = await super._generate(
+      messages,
+      parsedOptions,
+      runManager
+    );
     const requestEndTime = Date.now();
 
     const _convertMessageToDict = (message: BaseChatMessage) => {
@@ -590,59 +594,74 @@ export class PromptLayerChatOpenAI extends ChatOpenAI {
       if (message instanceof ChatMessage) {
         messageDict = { role: message.role, content: message.text };
       } else if (message instanceof HumanChatMessage) {
-        messageDict = { role: 'user', content: message.text };
+        messageDict = { role: "user", content: message.text };
       } else if (message instanceof AIChatMessage) {
-        messageDict = { role: 'assistant', content: message.text };
+        messageDict = { role: "assistant", content: message.text };
       } else if (message instanceof SystemChatMessage) {
-        messageDict = { role: 'system', content: message.text };
+        messageDict = { role: "system", content: message.text };
       } else {
         throw new Error(`Got unknown type ${message}`);
       }
 
       return messageDict;
-    }
+    };
 
-    const _createMessageDicts = (messages: BaseChatMessage[], CallOptions?: this["CallOptions"]) => {
+    const _createMessageDicts = (
+      messages: BaseChatMessage[],
+      CallOptions?: this["CallOptions"]
+    ) => {
       let params = {
         ...this.invocationParams(),
         model: this.modelName,
       };
 
       if (CallOptions?.stop) {
-        if (Object.keys(params).includes('stop')) {
+        if (Object.keys(params).includes("stop")) {
           throw new Error("`stop` found in both the input and default params.");
         }
-
       }
-      const messageDicts = messages.map((message) => _convertMessageToDict(message));
-      return messageDicts
-    }
+      const messageDicts = messages.map((message) =>
+        _convertMessageToDict(message)
+      );
+      return messageDicts;
+    };
 
     for (let i = 0; i < generatedResponses.generations.length; i++) {
       const generation = generatedResponses.generations[i];
       const messageDicts = _createMessageDicts(messages, parsedOptions);
 
-      let promptLayerRequestID: string | undefined = undefined
-      if (this instanceof PromptLayerChatOpenAI && this.returnPromptLayerID === true) {
-        const parsedResp = [{content: generation.text, role: messageTypeToOpenAIRole(generation.message._getType())}]
+      let promptLayerRequestID: string | undefined = undefined;
+      if (
+        this instanceof PromptLayerChatOpenAI &&
+        this.returnPromptLayerID === true
+      ) {
+        const parsedResp = [
+          {
+            content: generation.text,
+            role: messageTypeToOpenAIRole(generation.message._getType()),
+          },
+        ];
 
         promptLayerRequestID = await getPromptLayerRequestID(
           this.caller,
           "langchain.PromptLayerChatOpenAI",
           messageDicts,
-          this._identifyingParams(), 
+          this._identifyingParams(),
           this.plTags,
           parsedResp,
           requestStartTime,
           requestEndTime,
-          this.promptLayerApiKey,
-        )  
+          this.promptLayerApiKey
+        );
 
-        if (!generation.generationInfo || typeof generation.generationInfo !== 'object') {
+        if (
+          !generation.generationInfo ||
+          typeof generation.generationInfo !== "object"
+        ) {
           generation.generationInfo = {};
         }
 
-        generation.generationInfo['pl_request_id'] = promptLayerRequestID;
+        generation.generationInfo["pl_request_id"] = promptLayerRequestID;
       }
     }
 
