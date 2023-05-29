@@ -3,7 +3,6 @@ import {
   CacheDelete,
   CacheListFetch,
   CacheListPushBack,
-  CreateCache,
   ICacheClient,
   InvalidArgumentError,
   CollectionTtl,
@@ -17,6 +16,7 @@ import {
   mapChatMessagesToStoredMessages,
   mapStoredMessagesToChatMessages,
 } from "./utils.js";
+import { ensureCacheExists } from "../../util/momento.js";
 
 /**
  * The settings to instantiate the Momento chat message history.
@@ -156,25 +156,5 @@ export class MomentoChatMessageHistory extends BaseListChatMessageHistory {
     } else {
       throw new Error(`Unknown response type: ${deleteResponse.toString()}`);
     }
-  }
-}
-
-/**
- * Ensure that the cache exists.
- */
-async function ensureCacheExists(
-  client: ICacheClient,
-  cacheName: string
-): Promise<void> {
-  const createResponse = await client.createCache(cacheName);
-  if (
-    createResponse instanceof CreateCache.Success ||
-    createResponse instanceof CreateCache.AlreadyExists
-  ) {
-    // pass
-  } else if (createResponse instanceof CreateCache.Error) {
-    throw createResponse.innerException();
-  } else {
-    throw new Error(`Unknown response type: ${createResponse.toString()}`);
   }
 }

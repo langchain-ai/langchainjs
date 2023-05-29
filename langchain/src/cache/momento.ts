@@ -3,12 +3,12 @@ import {
   ICacheClient,
   CacheGet,
   CacheSet,
-  CreateCache,
   InvalidArgumentError,
 } from "@gomomento/sdk";
 
 import { BaseCache, Generation } from "../schema/index.js";
 import { getCacheKey } from "./base.js";
+import { ensureCacheExists } from "../util/momento.js";
 
 /**
  * The settings to instantiate the Momento standard cache.
@@ -142,25 +142,5 @@ export class MomentoCache extends BaseCache {
     } else {
       throw new Error(`Unknown response type: ${setResponse.toString()}`);
     }
-  }
-}
-
-/**
- * Ensure that the cache exists.
- */
-async function ensureCacheExists(
-  client: ICacheClient,
-  cacheName: string
-): Promise<void> {
-  const createResponse = await client.createCache(cacheName);
-  if (
-    createResponse instanceof CreateCache.Success ||
-    createResponse instanceof CreateCache.AlreadyExists
-  ) {
-    // pass
-  } else if (createResponse instanceof CreateCache.Error) {
-    throw createResponse.innerException();
-  } else {
-    throw new Error(`Unknown response type: ${createResponse.toString()}`);
   }
 }
