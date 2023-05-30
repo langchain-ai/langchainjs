@@ -1,7 +1,11 @@
 import { PromptTemplate } from "../prompts/prompt.js";
 import { BaseLanguageModel } from "../base_language/index.js";
 import { SerializedChatVectorDBQAChain } from "./serde.js";
-import { ChainValues, BaseRetriever } from "../schema/index.js";
+import {
+  ChainValues,
+  BaseRetriever,
+  BaseChatMessage,
+} from "../schema/index.js";
 import { BaseChain, ChainInputs } from "./base.js";
 import { LLMChain } from "./llm_chain.js";
 import { QAChainParams, loadQAChain } from "./question_answering/load.js";
@@ -17,8 +21,7 @@ Chat History:
 Follow Up Input: {question}
 Standalone question:`;
 
-export interface ConversationalRetrievalQAChainInput
-  extends Omit<ChainInputs, "memory"> {
+export interface ConversationalRetrievalQAChainInput extends ChainInputs {
   retriever: BaseRetriever;
   combineDocumentsChain: BaseChain;
   questionGeneratorChain: LLMChain;
@@ -62,6 +65,23 @@ export class ConversationalRetrievalQAChain
       fields.returnSourceDocuments ?? this.returnSourceDocuments;
   }
 
+  static getChatHistoryString(chatHistory: string | BaseChatMessage[]) {
+    if (Array.isArray(chatHistory)) {
+      return chatHistory
+        .map((chatMessage) => {
+          if (chatMessage._getType() === "human") {
+            return `Human: ${chatMessage.text}`;
+          } else if (chatMessage._getType() === "ai") {
+            return `Assistant: ${chatMessage.text}`;
+          } else {
+            return `${chatMessage.text}`;
+          }
+        })
+        .join("\n");
+    }
+    return chatHistory;
+  }
+
   /** @ignore */
   async _call(
     values: ChainValues,
@@ -71,10 +91,13 @@ export class ConversationalRetrievalQAChain
       throw new Error(`Question key ${this.inputKey} not found.`);
     }
     if (!(this.chatHistoryKey in values)) {
-      throw new Error(`chat history key ${this.inputKey} not found.`);
+      throw new Error(`Chat history key ${this.chatHistoryKey} not found.`);
     }
     const question: string = values[this.inputKey];
-    const chatHistory: string = values[this.chatHistoryKey];
+    const chatHistory: string =
+      ConversationalRetrievalQAChain.getChatHistoryString(
+        values[this.chatHistoryKey]
+      );
     let newQuestion = question;
     if (chatHistory.length > 0) {
       const result = await this.questionGeneratorChain.call(
