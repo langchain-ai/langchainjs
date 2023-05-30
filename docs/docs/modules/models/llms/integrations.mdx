@@ -162,34 +162,6 @@ The above should return the following
 }
 ```
 
-### PromptLayerOpenAIChat
-
-PromptLayer is compatible with the OpenAIChat model as well. Here is an example of getting the PromptLayerOpenAIChat requestID:
-
-```typescript
-import { PromptLayerOpenAIChat } from "langchain/llms/openai-chat";
-
-const model = new PromptLayerOpenAIChat({
-  returnPromptLayerId: true,
-});
-const res = await model.generate([
-  "What would be a good company name a company that makes colorful socks?",
-]);
-console.log(JSON.stringify(res, null, 3));
-
-// {
-//    "generations": [
-//       [
-//          {
-//             "text": "HappySocks Co.",
-//             "generationInfo": {
-//                "promptLayerRequestId": 2066449
-//             }
-//          }
-//       ]
-//    ]
-// }
-```
 
 ### Azure `PromptLayerOpenAI`
 
