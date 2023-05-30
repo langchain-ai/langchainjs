@@ -2,7 +2,7 @@ import { Document } from "../document.js";
 import {
   RemoteRetriever,
   RemoteRetrieverValues,
-  RemoteRetrieverParams
+  RemoteRetrieverParams,
 } from "./remote/base.js";
 
 export interface VespaRetrieverParams extends RemoteRetrieverParams {
@@ -17,35 +17,38 @@ export interface VespaRetrieverParams extends RemoteRetrieverParams {
 }
 
 export class VespaRetriever extends RemoteRetriever {
-
   query_body: object;
+
   content_field: string;
 
-  constructor({query_body, content_field, ...rest}: VespaRetrieverParams) {
+  constructor({ query_body, content_field, ...rest }: VespaRetrieverParams) {
     super(rest);
     this.query_body = query_body;
     this.content_field = content_field;
 
     const url = new URL(this.url);
-    this.url = url.protocol + "//" + url.hostname + "/search/?";
+    this.url = `${url.protocol}//${url.hostname}/search/?`;
   }
 
   createJsonBody(query: string): RemoteRetrieverValues {
     return {
       ...this.query_body,
-      query: query
+      query,
     };
   }
 
   processJsonResponse(json: RemoteRetrieverValues): Document[] {
     return json.root.children.map(
-        (doc: any) =>
-            new Document({
-              pageContent: doc.fields[this.content_field],
-              metadata: doc.id
-            })
+      (doc: {
+        id: string;
+        relevance: number;
+        source: string;
+        fields: Record<string, unknown>;
+      }) =>
+        new Document({
+          pageContent: doc.fields[this.content_field] as string,
+          metadata: { id: doc.id },
+        })
     );
   }
-
 }
-
