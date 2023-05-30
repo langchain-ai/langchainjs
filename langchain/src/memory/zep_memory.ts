@@ -7,6 +7,7 @@ import {
   getInputValue,
 } from "./base.js";
 import { BaseChatMemory, BaseChatMemoryInput } from "./chat_memory.js";
+import { BaseChatMessage, ChatMessage, AIChatMessage, HumanChatMessage } from "../schema/index.js";
 
 export interface ZepMemoryInput extends BaseChatMemoryInput {
   humanPrefix?: string;
@@ -18,6 +19,8 @@ export interface ZepMemoryInput extends BaseChatMemoryInput {
   baseURL: string; // Changed from optional to required
   
   sessionID: string; // Changed from optional to required
+
+  lastN?: number;
 }
 
 export class ZepMemory extends BaseChatMemory implements ZepMemoryInput {
@@ -53,13 +56,31 @@ export class ZepMemory extends BaseChatMemory implements ZepMemoryInput {
   }
 
   async loadMemoryVariables(_values: InputValues): Promise<MemoryVariables> {
-    const messages = await this.chatHistory.getMessages();
+    const lastN = _values.lastN ?? 5;
+    const memory = await this.zepClient.getMemory(this.sessionID, lastN);
+    let messages: BaseChatMessage[] = [];
+
+    if (memory) {
+      messages = memory.messages.map((message) => {
+        const { content, role } = message;
+        if (role === this.humanPrefix) {
+          return new HumanChatMessage(content);
+        } else if (role === this.aiPrefix) {
+          return new AIChatMessage(content);
+        } else {
+          // default to generic ChatMessage
+          return new ChatMessage(content, role);
+        }
+      });
+    }
+
     if (this.returnMessages) {
       const result = {
         [this.memoryKey]: messages,
       };
       return result;
     }
+
     const result = {
       [this.memoryKey]: getBufferString(
         messages,
