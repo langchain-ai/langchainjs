@@ -1,4 +1,5 @@
 import type { extname as ExtnameT, resolve as ResolveT } from "node:path";
+import { minimatch } from "minimatch";
 import type { readdir as ReaddirT } from "node:fs/promises";
 import { Document } from "../../document.js";
 import { getEnv } from "../../util/env.js";
@@ -59,11 +60,15 @@ export class DirectoryLoader extends BaseDocumentLoader {
           documents.push(...(await loader.load()));
         }
       } else {
-        // I'm aware some things won't be files,
-        // but they will be caught by the "unknown" handling below.
-        const loaderFactory = this.loaders[extname(file.name)];
-        if (loaderFactory) {
-          const loader = loaderFactory(fullPath);
+        let matchedLoader = null;
+        for (const pattern in this.loaders) {
+          if (minimatch(extname(file.name), pattern)) {
+            matchedLoader = this.loaders[pattern];
+            break;
+          }
+        }
+        if (matchedLoader) {
+          const loader = matchedLoader(fullPath);
           documents.push(...(await loader.load()));
         } else {
           switch (this.unknown) {

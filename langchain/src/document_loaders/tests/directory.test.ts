@@ -51,3 +51,29 @@ test("Test Directory loader", async () => {
     path.resolve(directoryPath, "example.txt"),
   ]);
 });
+
+test("Test Directory loader with glob", async () => {
+  const directoryPath = path.resolve(
+    path.dirname(url.fileURLToPath(import.meta.url)),
+    "./example_data"
+  );
+  const loader = new DirectoryLoader(
+    directoryPath,
+    {
+      ".{txt,jsonl}": (p) => new TextLoader(p),
+    },
+    true,
+    UnknownHandling.Ignore
+  );
+  const docs = await loader.load();
+  expect(docs.length).toBe(2);
+  expect(docs.map((d) => d.metadata.source).sort()).toEqual([
+    // jsonl
+    path.resolve(
+      directoryPath,
+      "Star_Wars_The_Clone_Wars_S06E07_Crisis_at_the_Heart.jsonl"
+    ),
+    // TXT
+    path.resolve(directoryPath, "example.txt"),
+  ]);
+});
