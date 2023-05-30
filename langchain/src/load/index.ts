@@ -63,9 +63,11 @@ async function reviver(
       // If no matching namespace is found, throw an error.
       if (importMapKey in importMap) {
         module = importMap[importMapKey as keyof typeof importMap];
-      } else {
-        throw new Error(`Invalid namespace: ${str}`);
       }
+    }
+
+    if (typeof module !== "object" || module === null) {
+      throw new Error(`Invalid namespace: ${str}`);
     }
 
     // Extract the builder from the import map.

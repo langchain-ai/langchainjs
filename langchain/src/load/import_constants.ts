@@ -31,6 +31,7 @@ export const optionalImportEntrypoints = [
   "langchain/vectorstores/milvus",
   "langchain/vectorstores/myscale",
   "langchain/vectorstores/redis",
+  "langchain/vectorstores/tigris",
   "langchain/document_loaders/web/apify_dataset",
   "langchain/document_loaders/web/cheerio",
   "langchain/document_loaders/web/puppeteer",
@@ -39,7 +40,9 @@ export const optionalImportEntrypoints = [
   "langchain/document_loaders/web/gitbook",
   "langchain/document_loaders/web/hn",
   "langchain/document_loaders/web/imsdb",
+  "langchain/document_loaders/web/figma",
   "langchain/document_loaders/web/github",
+  "langchain/document_loaders/web/notiondb",
   "langchain/document_loaders/web/s3",
   "langchain/document_loaders/web/confluence",
   "langchain/document_loaders/fs/directory",
@@ -64,4 +67,4 @@ export const optionalImportEntrypoints = [
   "langchain/stores/message/dynamodb",
   "langchain/stores/message/redis",
   "langchain/stores/message/upstash_redis"
-]
+];

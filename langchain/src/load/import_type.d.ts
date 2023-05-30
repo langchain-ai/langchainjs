@@ -17,8 +17,8 @@ export interface OptionalImportMap {
     | typeof import("../chains/load.js")
     | Promise<typeof import("../chains/load.js")>;
   "langchain/chains/query_constructor"?:
-    | typeof import("../chains/query_constructor.js")
-    | Promise<typeof import("../chains/query_constructor.js")>;
+    | typeof import("../chains/query_constructor/index.js")
+    | Promise<typeof import("../chains/query_constructor/index.js")>;
   "langchain/chains/query_constructor/ir"?:
     | typeof import("../chains/query_constructor/ir.js")
     | Promise<typeof import("../chains/query_constructor/ir.js")>;
@@ -91,6 +91,9 @@ export interface OptionalImportMap {
   "langchain/vectorstores/redis"?:
     | typeof import("../vectorstores/redis.js")
     | Promise<typeof import("../vectorstores/redis.js")>;
+  "langchain/vectorstores/tigris"?:
+    | typeof import("../vectorstores/tigris.js")
+    | Promise<typeof import("../vectorstores/tigris.js")>;
   "langchain/document_loaders/web/apify_dataset"?:
     | typeof import("../document_loaders/web/apify_dataset.js")
     | Promise<typeof import("../document_loaders/web/apify_dataset.js")>;
@@ -115,9 +118,15 @@ export interface OptionalImportMap {
   "langchain/document_loaders/web/imsdb"?:
     | typeof import("../document_loaders/web/imsdb.js")
     | Promise<typeof import("../document_loaders/web/imsdb.js")>;
+  "langchain/document_loaders/web/figma"?:
+    | typeof import("../document_loaders/web/figma.js")
+    | Promise<typeof import("../document_loaders/web/figma.js")>;
   "langchain/document_loaders/web/github"?:
     | typeof import("../document_loaders/web/github.js")
     | Promise<typeof import("../document_loaders/web/github.js")>;
+  "langchain/document_loaders/web/notiondb"?:
+    | typeof import("../document_loaders/web/notiondb.js")
+    | Promise<typeof import("../document_loaders/web/notiondb.js")>;
   "langchain/document_loaders/web/s3"?:
     | typeof import("../document_loaders/web/s3.js")
     | Promise<typeof import("../document_loaders/web/s3.js")>;
@@ -173,8 +182,8 @@ export interface OptionalImportMap {
     | typeof import("../retrievers/metal.js")
     | Promise<typeof import("../retrievers/metal.js")>;
   "langchain/retrievers/self_query"?:
-    | typeof import("../retrievers/self_query.js")
-    | Promise<typeof import("../retrievers/self_query.js")>;
+    | typeof import("../retrievers/self_query/index.js")
+    | Promise<typeof import("../retrievers/self_query/index.js")>;
   "langchain/cache/redis"?:
     | typeof import("../cache/redis.js")
     | Promise<typeof import("../cache/redis.js")>;
