@@ -1,4 +1,3 @@
-import { isNode } from "browser-or-node";
 import {
   Configuration,
   OpenAIApi,
@@ -8,6 +7,7 @@ import {
   ChatCompletionResponseMessageRoleEnum,
   CreateChatCompletionResponse,
 } from "openai";
+import { isNode, getEnvironmentVariable } from "../util/env.js";
 import {
   AzureOpenAIInput,
   OpenAICallOptions,
@@ -103,42 +103,27 @@ export class OpenAIChat
     super(fields ?? {});
 
     const apiKey =
-      fields?.openAIApiKey ??
-      (typeof process !== "undefined"
-        ? // eslint-disable-next-line no-process-env
-          process.env?.OPENAI_API_KEY
-        : undefined);
+      fields?.openAIApiKey ?? getEnvironmentVariable("OPENAI_API_KEY");
 
     const azureApiKey =
       fields?.azureOpenAIApiKey ??
-      (typeof process !== "undefined"
-        ? // eslint-disable-next-line no-process-env
-          process.env?.AZURE_OPENAI_API_KEY
-        : undefined);
+      getEnvironmentVariable("AZURE_OPENAI_API_KEY");
+
     if (!azureApiKey && !apiKey) {
       throw new Error("(Azure) OpenAI API key not found");
     }
 
     const azureApiInstanceName =
       fields?.azureOpenAIApiInstanceName ??
-      (typeof process !== "undefined"
-        ? // eslint-disable-next-line no-process-env
-          process.env?.AZURE_OPENAI_API_INSTANCE_NAME
-        : undefined);
+      getEnvironmentVariable("AZURE_OPENAI_API_INSTANCE_NAME");
 
     const azureApiDeploymentName =
       fields?.azureOpenAIApiDeploymentName ??
-      (typeof process !== "undefined"
-        ? // eslint-disable-next-line no-process-env
-          process.env?.AZURE_OPENAI_API_DEPLOYMENT_NAME
-        : undefined);
+      getEnvironmentVariable("AZURE_OPENAI_API_DEPLOYMENT_NAME");
 
     const azureApiVersion =
       fields?.azureOpenAIApiVersion ??
-      (typeof process !== "undefined"
-        ? // eslint-disable-next-line no-process-env
-          process.env?.AZURE_OPENAI_API_VERSION
-        : undefined);
+      getEnvironmentVariable("AZURE_OPENAI_API_VERSION");
 
     this.modelName = fields?.modelName ?? this.modelName;
     this.prefixMessages = fields?.prefixMessages ?? this.prefixMessages;
@@ -370,7 +355,7 @@ export class OpenAIChat
       this.client = new OpenAIApi(clientConfig);
     }
     const axiosOptions = {
-      adapter: isNode ? undefined : fetchAdapter,
+      adapter: isNode() ? undefined : fetchAdapter,
       ...this.clientConfig.baseOptions,
       ...options,
     } as StreamingAxiosConfiguration;
@@ -420,10 +405,7 @@ export class PromptLayerOpenAIChat extends OpenAIChat {
     this.returnPromptLayerId = fields?.returnPromptLayerId ?? false;
     this.promptLayerApiKey =
       fields?.promptLayerApiKey ??
-      (typeof process !== "undefined"
-        ? // eslint-disable-next-line no-process-env
-          process.env?.PROMPTLAYER_API_KEY
-        : undefined);
+      getEnvironmentVariable("PROMPTLAYER_API_KEY");
 
     if (!this.promptLayerApiKey) {
       throw new Error("Missing PromptLayer API key");

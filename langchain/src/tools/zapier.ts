@@ -1,6 +1,7 @@
 import { Tool } from "./base.js";
 import { renderTemplate } from "../prompts/template.js";
 import { AsyncCaller, AsyncCallerParams } from "../util/async_caller.js";
+import { getEnvironmentVariable } from "../util/env.js";
 
 const zapierNLABaseDescription: string =
   "A wrapper around Zapier NLA actions. " +
@@ -34,11 +35,7 @@ export class ZapierNLAWrapper {
     const zapierNlaApiKey =
       typeof params === "string" ? params : params?.apiKey;
     const apiKey =
-      zapierNlaApiKey ??
-      (typeof process !== "undefined"
-        ? // eslint-disable-next-line no-process-env
-          process.env?.ZAPIER_NLA_API_KEY
-        : undefined);
+      zapierNlaApiKey ?? getEnvironmentVariable("ZAPIER_NLA_API_KEY");
     if (!apiKey) {
       throw new Error("ZAPIER_NLA_API_KEY not set");
     }

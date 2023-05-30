@@ -26,6 +26,12 @@ const agents = [
     initializeAgentExecutorWithOptions(tools, new OpenAI({ temperature: 0 }), {
       agentType: "zero-shot-react-description",
     }),
+  (tools) =>
+    initializeAgentExecutorWithOptions(
+      tools,
+      new ChatOpenAI({ temperature: 0 }),
+      { agentType: "structured-chat-zero-shot-react-description" }
+    ),
 ] as ((
   tools: Tool[]
 ) => ReturnType<typeof initializeAgentExecutorWithOptions>)[];

@@ -83,21 +83,6 @@ LangChain can be used in Vercel / Next.js. We support using LangChain in fronten
 import { OpenAI } from "langchain/llms/openai";
 ```
 
-To use LangChain with Next.js (either with app/ or pages/), add the following to your `next.config.js` to enable support for WebAssembly modules (which is required by the tokenizer library `@dqbd/tiktoken`):
-
-```js title="next.config.js"
-const nextConfig = {
-  webpack(config) {
-    config.experiments = {
-      asyncWebAssembly: true,
-      layers: true,
-    };
-
-    return config;
-  },
-};
-```
-
 ### Deno / Supabase Edge Functions
 
 LangChain can be used in Deno / Supabase Edge Functions. You can import it using the following syntax:
@@ -114,28 +99,6 @@ LangChain can be used in the browser. In our CI we test bundling LangChain with 
 
 ```typescript
 import { OpenAI } from "langchain/llms/openai";
-```
-
-#### Create React App
-
-If you're using `create-react-app` by default it doesn't support WebAssembly modules, so the tokenizer library `@dqbd/tiktoken` will not work in the browser. You can follow the instructions [here](https://github.com/dqbd/tiktoken/tree/main/js#create-react-app) to enable support for WebAssembly modules.
-
-#### Vite
-
-If you're using Vite, you need to add the following to your `vite.config.js` to enable support for WebAssembly modules (which is required by the tokenizer library `@dqbd/tiktoken`):
-
-```bash npm2yarn
-npm install -D vite-plugin-wasm vite-plugin-top-level-await
-```
-
-```js title="vite.config.js"
-import wasm from "vite-plugin-wasm";
-import topLevelAwait from "vite-plugin-top-level-await";
-import { defineConfig } from "vite";
-
-export default defineConfig({
-  plugins: [wasm(), topLevelAwait()],
-});
 ```
 
 ## Updating from <0.0.52

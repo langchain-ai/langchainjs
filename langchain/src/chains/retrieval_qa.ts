@@ -92,7 +92,10 @@ export class RetrievalQAChain
     llm: BaseLanguageModel,
     retriever: BaseRetriever,
     options?: Partial<
-      Omit<RetrievalQAChainInput, "combineDocumentsChain" | "index">
+      Omit<
+        RetrievalQAChainInput,
+        "retriever" | "combineDocumentsChain" | "index"
+      >
     > &
       StuffQAChainParams
   ): RetrievalQAChain {
@@ -100,9 +103,9 @@ export class RetrievalQAChain
       prompt: options?.prompt,
     });
     return new this({
+      ...options,
       retriever,
       combineDocumentsChain: qaChain,
-      ...options,
     });
   }
 }
