@@ -66,6 +66,7 @@ const entrypoints = {
   text_splitter: "text_splitter",
   // memory
   memory: "memory/index",
+  "memory/zep": "memory/zep",
   // document
   document: "document",
   // docstore
@@ -119,6 +120,7 @@ const entrypoints = {
   retrievers: "retrievers/index",
   "retrievers/remote": "retrievers/remote/index",
   "retrievers/supabase": "retrievers/supabase",
+  "retrievers/zep": "retrievers/zep",
   "retrievers/metal": "retrievers/metal",
   "retrievers/databerry": "retrievers/databerry",
   "retrievers/contextual_compression": "retrievers/contextual_compression",
@@ -190,6 +192,7 @@ const requiresOptionalDependency = [
   "vectorstores/myscale",
   "vectorstores/redis",
   "vectorstores/tigris",
+  "memory/zep",
   "document_loaders/web/apify_dataset",
   "document_loaders/web/cheerio",
   "document_loaders/web/puppeteer",
@@ -217,6 +220,7 @@ const requiresOptionalDependency = [
   "chat_models/googlevertexai",
   "sql_db",
   "retrievers/supabase",
+  "retrievers/zep",
   "retrievers/metal",
   "retrievers/self_query",
   "output_parsers/expression",

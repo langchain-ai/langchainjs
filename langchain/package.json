@@ -157,6 +157,9 @@
     "memory.cjs",
     "memory.js",
     "memory.d.ts",
+    "memory/zep.cjs",
+    "memory/zep.js",
+    "memory/zep.d.ts",
     "document.cjs",
     "document.js",
     "document.d.ts",
@@ -286,6 +289,9 @@
     "retrievers/supabase.cjs",
     "retrievers/supabase.js",
     "retrievers/supabase.d.ts",
+    "retrievers/zep.cjs",
+    "retrievers/zep.js",
+    "retrievers/zep.d.ts",
     "retrievers/metal.cjs",
     "retrievers/metal.js",
     "retrievers/metal.d.ts",
@@ -385,6 +391,7 @@
     "@clickhouse/client": "^0.0.14",
     "@faker-js/faker": "^7.6.0",
     "@getmetal/metal-sdk": "^4.0.0",
+    "@getzep/zep-js": "^0.3.1",
     "@gomomento/sdk": "^1.23.0",
     "@huggingface/inference": "^1.5.1",
     "@jest/globals": "^29.5.0",
@@ -456,6 +463,7 @@
     "@aws-sdk/client-sagemaker-runtime": "^3.310.0",
     "@clickhouse/client": "^0.0.14",
     "@getmetal/metal-sdk": "*",
+    "@getzep/zep-js": "^0.3.1",
     "@gomomento/sdk": "^1.23.0",
     "@huggingface/inference": "^1.5.1",
     "@opensearch-project/opensearch": "*",
@@ -510,6 +518,9 @@
       "optional": true
     },
     "@getmetal/metal-sdk": {
+      "optional": true
+    },
+    "@getzep/zep-js": {
       "optional": true
     },
     "@gomomento/sdk": {
@@ -913,6 +924,11 @@
       "import": "./memory.js",
       "require": "./memory.cjs"
     },
+    "./memory/zep": {
+      "types": "./memory/zep.d.ts",
+      "import": "./memory/zep.js",
+      "require": "./memory/zep.cjs"
+    },
     "./document": {
       "types": "./document.d.ts",
       "import": "./document.js",
@@ -1133,6 +1149,11 @@
       "types": "./retrievers/supabase.d.ts",
       "import": "./retrievers/supabase.js",
       "require": "./retrievers/supabase.cjs"
+    },
+    "./retrievers/zep": {
+      "types": "./retrievers/zep.d.ts",
+      "import": "./retrievers/zep.js",
+      "require": "./retrievers/zep.cjs"
     },
     "./retrievers/metal": {
       "types": "./retrievers/metal.d.ts",
