@@ -27,7 +27,6 @@ import Anthropic from "@examples/models/chat/integration_anthropic.ts";
 
 <CodeBlock language="typescript">{Anthropic}</CodeBlock>
 
-
 ## `PromptLayerChatOpenAI`
 
 Here is an example of getting the PromptLayerChatOpenAI requestID:
@@ -36,46 +35,46 @@ Here is an example of getting the PromptLayerChatOpenAI requestID:
 import { PromptLayerChatOpenAI } from "langchain/chat_models/openai";
 
 const chat = new PromptLayerChatOpenAI({
-returnPromptLayerId: true,
+  returnPromptLayerId: true,
 });
 
 const respA = await chat.generate([
-    [
-        new SystemChatMessage(
-        "You are a helpful assistant that translates English to French."
-        ),
-    ],
+  [
+    new SystemChatMessage(
+      "You are a helpful assistant that translates English to French."
+    ),
+  ],
 ]);
 
 console.log(JSON.stringify(respA, null, 3));
 ```
 
 The return
+
 ```json
 {
-   "generations": [
-      [
-         {
-            "text": "Bonjour! Je suis un assistant utile qui peut vous aider à traduire de l'anglais vers le français. Que puis-je faire pour vous aujourd'hui?",
-            "message": {
-               "type": "ai",
-               "data": {
-                  "content": "Bonjour! Je suis un assistant utile qui peut vous aider à traduire de l'anglais vers le français. Que puis-je faire pour vous aujourd'hui?"
-               }
-            },
-            "generationInfo": {
-               "promptLayerRequestId": 2300682
-            }
-         }
-      ]
-   ],
-   "llmOutput": {
-      "tokenUsage": {
-         "completionTokens": 35,
-         "promptTokens": 19,
-         "totalTokens": 54
+  "generations": [
+    [
+      {
+        "text": "Bonjour! Je suis un assistant utile qui peut vous aider à traduire de l'anglais vers le français. Que puis-je faire pour vous aujourd'hui?",
+        "message": {
+          "type": "ai",
+          "data": {
+            "content": "Bonjour! Je suis un assistant utile qui peut vous aider à traduire de l'anglais vers le français. Que puis-je faire pour vous aujourd'hui?"
+          }
+        },
+        "generationInfo": {
+          "promptLayerRequestId": 2300682
+        }
       }
-   }
+    ]
+  ],
+  "llmOutput": {
+    "tokenUsage": {
+      "completionTokens": 35,
+      "promptTokens": 19,
+      "totalTokens": 54
+    }
+  }
 }
 ```
-
