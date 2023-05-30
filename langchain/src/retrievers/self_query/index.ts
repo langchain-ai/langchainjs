@@ -11,6 +11,8 @@ import { BaseTranslator, BasicTranslator } from "./translator.js";
 
 export { BaseTranslator, BasicTranslator };
 
+type PartialExcept<A, B extends keyof A> = Partial<Omit<A, B>> & Pick<A, B>;
+
 export type SelfQueryRetrieverArgs = {
   vectorStore: VectorStore;
   llmChain: LLMChain;
@@ -75,29 +77,44 @@ export class SelfQueryRetriever
   }
 
   static fromLLM(
-    opts: QueryConstructorChainOptions & {
-      vectorStore: VectorStore;
-      structuredQueryTranslator: BaseTranslator;
-    }
+    options: QueryConstructorChainOptions &
+      PartialExcept<
+        SelfQueryRetrieverArgs,
+        "vectorStore" | "structuredQueryTranslator"
+      >
   ): SelfQueryRetriever {
-    const { structuredQueryTranslator } = opts;
-    const allowedComparators =
-      opts.allowedComparators ?? structuredQueryTranslator.allowedComparators;
-    const allowedOperators =
-      opts.allowedOperators ?? structuredQueryTranslator.allowedOperators;
-
-    const llmChain = loadQueryContstructorChain({
-      llm: opts.llm,
-      documentContents: opts.documentContents,
-      attributeInfo: opts.attributeInfo,
-      examples: opts.examples,
+    const {
+      structuredQueryTranslator,
       allowedComparators,
       allowedOperators,
-    });
+      llm,
+      documentContents,
+      attributeInfo,
+      examples,
+      vectorStore,
+      llmChain,
+      ...rest
+    } = options;
+    const _allowedComparators =
+      allowedComparators ?? structuredQueryTranslator.allowedComparators;
+    const _allowedOperators =
+      allowedOperators ?? structuredQueryTranslator.allowedOperators;
+
+    const _llmChain =
+      llmChain ??
+      loadQueryContstructorChain({
+        llm,
+        documentContents,
+        attributeInfo,
+        examples,
+        allowedComparators: _allowedComparators,
+        allowedOperators: _allowedOperators,
+      });
 
     return new SelfQueryRetriever({
-      vectorStore: opts.vectorStore,
-      llmChain,
+      ...rest,
+      vectorStore,
+      llmChain: _llmChain,
       structuredQueryTranslator,
     });
   }
