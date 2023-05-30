@@ -1,3 +1,16 @@
+/**
+ * Here's the main parser for our expression parser. It's a pared down
+ * Javascript parser with a whole lot of rules removed, leaving only
+ * rules for parsing literals (i.e. string literal,numeric literal,
+ * boolean literal, array literal, object literal and null literal),
+ * identifiers, and expressions (i.e. call expression, member expression,
+ * array expression and object expression).
+ *
+ * For more information see:
+ * https://peggyjs.org/documentation.html
+ * https://github.com/peggyjs/peggy/blob/main/examples/javascript.pegjs
+ */
+
 export const GRAMMAR = `{{
     var TYPES_TO_PROPERTY_NAMES = {
       CallExpression:   "callee",

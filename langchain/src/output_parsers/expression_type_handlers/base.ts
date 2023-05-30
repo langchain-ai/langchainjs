@@ -23,7 +23,7 @@ export class ASTParser {
       return ASTParser.astParseInstance;
     } catch (e) {
       throw new Error(
-        `Failed to import peggy. Run 'npm install peggy' to install the package.`
+        `Failed to import peggy. Please install peggy (i.e. "npm install peggy" or "yarn add peggy").`
       );
     }
   }

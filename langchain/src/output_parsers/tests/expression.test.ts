@@ -304,7 +304,7 @@ const correctExps = [
 
 test("ExpressionParser multiple expressions test", async () => {
   const parser = new ExpressionParser();
-  await parser.loadParser();
+  await parser.ensureParser();
   const expressions = [
     `hello()`,
     `hello("world")`,

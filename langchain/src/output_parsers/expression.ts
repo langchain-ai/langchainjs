@@ -30,13 +30,13 @@ export class ExpressionParser extends BaseOutputParser<ParsedType> {
    * for building the parser once and then use it for all
    * subsequent calls. See expression.test.ts for an example.
    */
-  async loadParser() {
+  async ensureParser() {
     this.parser = await ASTParser.importASTParser();
   }
 
   async parse(text: string) {
     if (!this.parser) {
-      await this.loadParser();
+      await this.ensureParser();
     }
 
     try {
