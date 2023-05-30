@@ -12,15 +12,15 @@ import CodeBlock from "@theme/CodeBlock";
 Only available on Node.js.
 :::
 
-LangChain.js accepts [mysql Pool](https://medium.com/dscjssstu/pooling-connections-in-node-js-mysql-9685d5c03c30) as the connections pool for SingleStore vectorstore.
+LangChain.js accepts `mysql2/promise Pool` as the connections pool for SingleStore vectorstore.
 
 ## Setup
 
 1. Establish a SingleStoreDB environment. You have the flexibility to choose between [Cloud-based](https://docs.singlestore.com/managed-service/en/getting-started-with-singlestoredb-cloud.html) or [On-Premise](https://docs.singlestore.com/db/v8.1/en/developer-resources/get-started-using-singlestoredb-for-free.html) editions.
-2. Install the mysql JS client
+2. Install the mysql2 JS client
 
 ```bash npm2yarn
-npm install -S mysql
+npm install -S mysql2
 ```
 
 ## Usage
