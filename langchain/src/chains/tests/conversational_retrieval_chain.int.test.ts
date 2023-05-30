@@ -13,7 +13,10 @@ test("Test ConversationalRetrievalQAChain from LLM", async () => {
     [{ id: 2 }, { id: 1 }, { id: 3 }, { id: 4 }, { id: 5 }],
     new OpenAIEmbeddings()
   );
-  const chain = ConversationalRetrievalQAChain.fromLLM(model, vectorStore.asRetriever());
+  const chain = ConversationalRetrievalQAChain.fromLLM(
+    model,
+    vectorStore.asRetriever()
+  );
   const res = await chain.call({ question: "foo", chat_history: "bar" });
   console.log({ res });
 });
@@ -25,9 +28,13 @@ test("Test ConversationalRetrievalQAChain from LLM with flag option to return so
     [{ id: 2 }, { id: 1 }, { id: 3 }, { id: 4 }, { id: 5 }],
     new OpenAIEmbeddings()
   );
-  const chain = ConversationalRetrievalQAChain.fromLLM(model, vectorStore.asRetriever(), {
-    returnSourceDocuments: true,
-  });
+  const chain = ConversationalRetrievalQAChain.fromLLM(
+    model,
+    vectorStore.asRetriever(),
+    {
+      returnSourceDocuments: true,
+    }
+  );
   const res = await chain.call({ question: "foo", chat_history: "bar" });
 
   expect(res).toEqual(
@@ -59,9 +66,13 @@ test("Test ConversationalRetrievalQAChain from LLM with override default prompts
   Question: {question}
   Helpful Answer:`;
 
-  const chain = ConversationalRetrievalQAChain.fromLLM(model, vectorStore.asRetriever(), {
-    qaTemplate: qa_template,
-  });
+  const chain = ConversationalRetrievalQAChain.fromLLM(
+    model,
+    vectorStore.asRetriever(),
+    {
+      qaTemplate: qa_template,
+    }
+  );
   const res = await chain.call({
     question: "What is better programming Language Python or Javascript ",
     chat_history: "bar",
@@ -73,7 +84,7 @@ test("Test ConversationalRetrievalQAChain from LLM with override default prompts
 test("Test ConversationalRetrievalQAChain from LLM with a chat model", async () => {
   const model = new ChatOpenAI({
     modelName: "gpt-3.5-turbo",
-    temperature: 0
+    temperature: 0,
   });
   const vectorStore = await HNSWLib.fromTexts(
     ["Hello world", "Bye bye", "hello nice world", "bye", "hi"],
@@ -86,12 +97,16 @@ test("Test ConversationalRetrievalQAChain from LLM with a chat model", async () 
   Question: {question}
   Helpful Answer:`;
 
-  const chain = ConversationalRetrievalQAChain.fromLLM(model, vectorStore.asRetriever(), {
-    qaChainOptions: {
-      type: "stuff",
-      prompt: PromptTemplate.fromTemplate(qa_template)
+  const chain = ConversationalRetrievalQAChain.fromLLM(
+    model,
+    vectorStore.asRetriever(),
+    {
+      qaChainOptions: {
+        type: "stuff",
+        prompt: PromptTemplate.fromTemplate(qa_template),
+      },
     }
-  });
+  );
   const res = await chain.call({
     question: "What is better programming Language Python or Javascript ",
     chat_history: "bar",
@@ -103,7 +118,7 @@ test("Test ConversationalRetrievalQAChain from LLM with a chat model", async () 
 test("Test ConversationalRetrievalQAChain from LLM with a map reduce chain", async () => {
   const model = new ChatOpenAI({
     modelName: "gpt-3.5-turbo",
-    temperature: 0
+    temperature: 0,
   });
   const vectorStore = await HNSWLib.fromTexts(
     ["Hello world", "Bye bye", "hello nice world", "bye", "hi"],
@@ -111,11 +126,15 @@ test("Test ConversationalRetrievalQAChain from LLM with a map reduce chain", asy
     new OpenAIEmbeddings()
   );
 
-  const chain = ConversationalRetrievalQAChain.fromLLM(model, vectorStore.asRetriever(), {
-    qaChainOptions: {
-      type: "map_reduce"
+  const chain = ConversationalRetrievalQAChain.fromLLM(
+    model,
+    vectorStore.asRetriever(),
+    {
+      qaChainOptions: {
+        type: "map_reduce",
+      },
     }
-  });
+  );
   const res = await chain.call({
     question: "What is better programming Language Python or Javascript ",
     chat_history: "bar",
