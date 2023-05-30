@@ -263,7 +263,7 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
     const choices: CreateCompletionResponseChoicesInner[] = [];
     const tokenUsage: TokenUsage = {};
 
-    let promptLayerRequestIDs: any = [];
+    let promptLayerRequestIds: any = [];
 
     if (this.stop && stop) {
       throw new Error("Stop found in input and default params");
@@ -399,10 +399,10 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
         tokenUsage.totalTokens = (tokenUsage.totalTokens ?? 0) + totalTokens;
       }
 
-      let promptLayerRequestID;
+      let promptLayerRequestId;
       if (
         this instanceof PromptLayerOpenAI &&
-        this.returnPromptLayerID === true
+        this.returnPromptLayerId === true
       ) {
         const parsedResp = {
           text: data.choices[0].text,
@@ -422,11 +422,11 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
         );
 
         if (promptLayerRespBody && promptLayerRespBody.success === true) {
-          promptLayerRequestID = promptLayerRespBody.request_id;
+          promptLayerRequestId = promptLayerRespBody.request_id;
         }
       }
 
-      promptLayerRequestIDs.push(promptLayerRequestID);
+      promptLayerRequestIds.push(promptLayerRequestId);
     }
 
     const generations = chunkArray(choices, this.n).map((promptChoices, idx) =>
@@ -435,7 +435,7 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
         generationInfo: {
           finishReason: choice.finish_reason,
           logprobs: choice.logprobs,
-          promptLayerRequestID: promptLayerRequestIDs[idx],
+          promptLayerRequestId: promptLayerRequestIds[idx],
         },
       }))
     );
@@ -500,13 +500,13 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
 export class PromptLayerOpenAI extends OpenAI {
   promptLayerApiKey?: string;
   plTags?: string[];
-  returnPromptLayerID?: boolean;
+  returnPromptLayerId?: boolean;
 
   constructor(
     fields?: ConstructorParameters<typeof OpenAI>[0] & {
       promptLayerApiKey?: string;
       plTags?: string[];
-      returnPromptLayerID?: boolean;
+      returnPromptLayerId?: boolean;
     }
   ) {
     super(fields);
@@ -519,7 +519,7 @@ export class PromptLayerOpenAI extends OpenAI {
           process.env?.PROMPTLAYER_API_KEY
         : undefined);
 
-    this.returnPromptLayerID = fields?.returnPromptLayerID;
+    this.returnPromptLayerId = fields?.returnPromptLayerId;
     if (!this.promptLayerApiKey) {
       throw new Error("Missing PromptLayer API key");
     }

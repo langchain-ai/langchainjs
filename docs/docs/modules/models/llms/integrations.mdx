@@ -118,7 +118,7 @@ const res = await model.call(
 );
 ```
 
-You can also pass in the optional `returnPromptLayerID` string to get a promptLayerRequestID like below
+You can also pass in the optional `returnPromptLayerId` boolean to get a `promptLayerRequestId` like below
 
 ```typescript
 import { PromptLayerOpenAI } from "langchain/llms/openai";
@@ -127,7 +127,7 @@ const model = new PromptLayerOpenAI({
   temperature: 0.9,
   openAIApiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.OPENAI_API_KEY
   promptLayerApiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.PROMPTLAYER_API_KEY
-  returnPromptLayerID: true,
+  returnPromptLayerId: true,
 });
 const res = await model.generate([
   "What would be a good company name a company that makes colorful socks?",
@@ -147,7 +147,7 @@ The above should return the following
         "generationInfo": {
           "finishReason": "stop",
           "logprobs": null,
-          "promptLayerRequestID": 2066417
+          "promptLayerRequestId": 2066417
         }
       }
     ]
@@ -170,7 +170,7 @@ PromptLayer is compatible with the OpenAIChat model as well. Here is an example 
 import { PromptLayerOpenAIChat } from "langchain/llms/openai-chat";
 
 const model = new PromptLayerOpenAIChat({
-  returnPromptLayerID: true,
+  returnPromptLayerId: true,
 });
 const res = await model.generate([
   "What would be a good company name a company that makes colorful socks?",
@@ -183,7 +183,7 @@ console.log(JSON.stringify(res, null, 3));
 //          {
 //             "text": "HappySocks Co.",
 //             "generationInfo": {
-//                "promptLayerRequestID": 2066449
+//                "promptLayerRequestId": 2066449
 //             }
 //          }
 //       ]

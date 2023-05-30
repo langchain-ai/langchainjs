@@ -541,13 +541,13 @@ export class ChatOpenAI
 export class PromptLayerChatOpenAI extends ChatOpenAI {
   promptLayerApiKey?: string;
   plTags?: string[];
-  returnPromptLayerID?: boolean;
+  returnPromptLayerId?: boolean;
 
   constructor(
     fields?: ConstructorParameters<typeof ChatOpenAI>[0] & {
       promptLayerApiKey?: string;
       plTags?: string[];
-      returnPromptLayerID?: boolean;
+      returnPromptLayerId?: boolean;
     }
   ) {
     super(fields);
@@ -559,7 +559,7 @@ export class PromptLayerChatOpenAI extends ChatOpenAI {
           process.env?.PROMPTLAYER_API_KEY
         : undefined);
     this.plTags = fields?.plTags ?? [];
-    this.returnPromptLayerID = fields?.returnPromptLayerID ?? false;
+    this.returnPromptLayerId = fields?.returnPromptLayerId ?? false;
   }
 
   async _generate(
@@ -630,10 +630,10 @@ export class PromptLayerChatOpenAI extends ChatOpenAI {
       const generation = generatedResponses.generations[i];
       const messageDicts = _createMessageDicts(messages, parsedOptions);
 
-      let promptLayerRequestID: string | undefined = undefined;
+      let promptLayerRequestId: string | undefined = undefined;
       if (
         this instanceof PromptLayerChatOpenAI &&
-        this.returnPromptLayerID === true
+        this.returnPromptLayerId === true
       ) {
         const parsedResp = [
           {
@@ -655,7 +655,7 @@ export class PromptLayerChatOpenAI extends ChatOpenAI {
         );
 
         if (promptLayerRespBody && promptLayerRespBody.success === true) {
-          promptLayerRequestID = promptLayerRespBody.request_id;
+          promptLayerRequestId = promptLayerRespBody.request_id;
         }
 
         if (
@@ -665,7 +665,7 @@ export class PromptLayerChatOpenAI extends ChatOpenAI {
           generation.generationInfo = {};
         }
 
-        generation.generationInfo["pl_request_id"] = promptLayerRequestID;
+        generation.generationInfo["promptLayerRequestId"] = promptLayerRequestId;
       }
     }
 

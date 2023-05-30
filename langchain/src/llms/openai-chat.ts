@@ -405,19 +405,19 @@ export class PromptLayerOpenAIChat extends OpenAIChat {
   promptLayerApiKey?: string;
 
   plTags?: string[];
-  returnPromptLayerID?: boolean;
+  returnPromptLayerId?: boolean;
 
   constructor(
     fields?: ConstructorParameters<typeof OpenAIChat>[0] & {
       promptLayerApiKey?: string;
       plTags?: string[];
-      returnPromptLayerID?: boolean;
+      returnPromptLayerId?: boolean;
     }
   ) {
     super(fields);
 
     this.plTags = fields?.plTags ?? [];
-    this.returnPromptLayerID = fields?.returnPromptLayerID ?? false;
+    this.returnPromptLayerId = fields?.returnPromptLayerId ?? false;
     this.promptLayerApiKey =
       fields?.promptLayerApiKey ??
       (typeof process !== "undefined"
@@ -458,10 +458,10 @@ export class PromptLayerOpenAIChat extends OpenAIChat {
 
         choice = [{ text }];
 
-        let promptLayerRequestID: string | undefined = undefined;
+        let promptLayerRequestId: string | undefined = undefined;
         if (
           this instanceof PromptLayerOpenAIChat &&
-          this.returnPromptLayerID === true
+          this.returnPromptLayerId === true
         ) {
           const parsedResp = {
             text,
@@ -479,10 +479,10 @@ export class PromptLayerOpenAIChat extends OpenAIChat {
           );
 
           if (promptLayerRespBody && promptLayerRespBody.success === true) {
-            promptLayerRequestID = promptLayerRespBody.request_id;
+            promptLayerRequestId = promptLayerRespBody.request_id;
           }
 
-          choice[0]["generationInfo"] = { promptLayerRequestID };
+          choice[0]["generationInfo"] = { promptLayerRequestId };
         }
 
         return choice;
