@@ -148,9 +148,9 @@
     "memory.cjs",
     "memory.js",
     "memory.d.ts",
-    "memory/zep_memory.cjs",
-    "memory/zep_memory.js",
-    "memory/zep_memory.d.ts",
+    "memory/zep.cjs",
+    "memory/zep.js",
+    "memory/zep.d.ts",
     "document.cjs",
     "document.js",
     "document.d.ts",
@@ -862,10 +862,10 @@
       "import": "./memory.js",
       "require": "./memory.cjs"
     },
-    "./memory/zep_memory": {
-      "types": "./memory/zep_memory.d.ts",
-      "import": "./memory/zep_memory.js",
-      "require": "./memory/zep_memory.cjs"
+    "./memory/zep": {
+      "types": "./memory/zep.d.ts",
+      "import": "./memory/zep.js",
+      "require": "./memory/zep.cjs"
     },
     "./document": {
       "types": "./document.d.ts",

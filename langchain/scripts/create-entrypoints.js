@@ -63,7 +63,7 @@ const entrypoints = {
   text_splitter: "text_splitter",
   // memory
   memory: "memory/index",
-  "memory/zep_memory": "memory/zep_memory",
+  "memory/zep": "memory/zep_memory",
   // document
   document: "document",
   // docstore
@@ -180,6 +180,7 @@ const requiresOptionalDependency = [
   "vectorstores/milvus",
   "vectorstores/myscale",
   "vectorstores/redis",
+  "memory/zep",
   "document_loaders/web/apify_dataset",
   "document_loaders/web/cheerio",
   "document_loaders/web/puppeteer",

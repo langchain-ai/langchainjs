@@ -136,6 +136,9 @@ text_splitter.d.ts
 memory.cjs
 memory.js
 memory.d.ts
+memory/zep.cjs
+memory/zep.js
+memory/zep.d.ts
 document.cjs
 document.js
 document.d.ts
