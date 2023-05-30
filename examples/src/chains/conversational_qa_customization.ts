@@ -23,6 +23,7 @@ export const run = async () => {
     {
       memory: new BufferMemory({
         memoryKey: "chat_history",
+        returnMessages: true,
       }),
       questionGeneratorChainOptions: {
         llm: fasterModel,
