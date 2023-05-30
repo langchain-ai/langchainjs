@@ -7,6 +7,12 @@ import {
   getInputValue,
 } from "./base.js";
 import { BaseChatMemory, BaseChatMemoryInput } from "./chat_memory.js";
+import {
+  BaseChatMessage,
+  ChatMessage,
+  AIChatMessage,
+  HumanChatMessage,
+} from "../schema/index.js";
 
 export interface ZepMemoryInput extends BaseChatMemoryInput {
   humanPrefix?: string;
@@ -15,9 +21,9 @@ export interface ZepMemoryInput extends BaseChatMemoryInput {
 
   memoryKey?: string;
 
-  baseURL: string; // Changed from optional to required
+  baseURL: string;
 
-  sessionId: string; // Changed from optional to required
+  sessionId: string;
 }
 
 export class ZepMemory extends BaseChatMemory implements ZepMemoryInput {
@@ -27,11 +33,11 @@ export class ZepMemory extends BaseChatMemory implements ZepMemoryInput {
 
   memoryKey = "history";
 
-  baseURL: string; // Define the baseURL property
+  baseURL: string;
 
-  sessionId: string; // Define the sessionId property
+  sessionId: string;
 
-  zepClient: ZepClient; // Define the zepClient property
+  zepClient: ZepClient;
 
   constructor(fields: ZepMemoryInput) {
     super({
@@ -52,8 +58,25 @@ export class ZepMemory extends BaseChatMemory implements ZepMemoryInput {
     return [this.memoryKey];
   }
 
-  async loadMemoryVariables(_values: InputValues): Promise<MemoryVariables> {
-    const messages = await this.chatHistory.getMessages();
+  async loadMemoryVariables(values: InputValues): Promise<MemoryVariables> {
+    const lastN = values.lastN ?? 10;
+    const memory = await this.zepClient.getMemory(this.sessionId, lastN);
+    let messages: BaseChatMessage[] = [];
+
+    if (memory) {
+      messages = memory.messages.map((message) => {
+        const { content, role } = message;
+        if (role === this.humanPrefix) {
+          return new HumanChatMessage(content);
+        } else if (role === this.aiPrefix) {
+          return new AIChatMessage(content);
+        } else {
+          // default to generic ChatMessage
+          return new ChatMessage(content, role);
+        }
+      });
+    }
+
     if (this.returnMessages) {
       const result = {
         [this.memoryKey]: messages,

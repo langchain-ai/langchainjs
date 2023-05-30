@@ -39,6 +39,6 @@ test("getMessages from Zep memory", async () => {
   } else {
     console.log("failed to get messages: ", messages);
     // Fail the test because messages is neither string nor array
-    fail("Returned messages is neither string nor array");
+    throw new Error("Returned messages is neither string nor array");
   }
 });
