@@ -97,11 +97,11 @@ export class PrismaVectorStore<
   TSelectModel extends ModelColumns<TModel>,
   TFilterModel extends PrismaSqlFilter<TModel>
 > extends VectorStore {
-  tableSql: Sql;
+  protected tableName: string;
 
-  vectorColumnSql: Sql;
+  protected vectorColumnName: string;
 
-  selectSql: Sql;
+  protected selectColumns: string[];
 
   filter?: TFilterModel;
 
@@ -145,16 +145,12 @@ export class PrismaVectorStore<
     this.idColumn = idColumn;
     this.contentColumn = contentColumn;
 
-    this.tableSql = this.Prisma.raw(`"${config.tableName}"`);
-    this.vectorColumnSql = this.Prisma.raw(`"${config.vectorColumnName}"`);
+    this.tableName = config.tableName;
+    this.vectorColumnName = config.vectorColumnName;
 
-    this.selectSql = this.Prisma.raw(
-      entries
-        .map(([key, alias]) => (alias && key) || null)
-        .filter((x): x is string => !!x)
-        .map((key) => `"${key}"`)
-        .join(", ")
-    );
+    this.selectColumns = entries
+      .map(([key, alias]) => (alias && key) || null)
+      .filter((x): x is string => !!x);
 
     if (config.filter) {
       this.filter = config.filter;
@@ -261,14 +257,18 @@ export class PrismaVectorStore<
   }
 
   async addVectors(vectors: number[][], documents: Document<TModel>[]) {
-    const idSql = this.Prisma.raw(`"${this.idColumn}"`);
+    // table name, column name cannot be parametrised
+    // these fields are thus not escaped by Prisma and can be dangerous if user input is used
+    const idColumnRaw = this.Prisma.raw(`"${this.idColumn}"`);
+    const tableNameRaw = this.Prisma.raw(`"${this.tableName}"`);
+    const vectorColumnRaw = this.Prisma.raw(`"${this.vectorColumnName}"`);
 
     await this.db.$transaction(
       vectors.map(
         (vector, idx) => this.db.$executeRaw`
-          UPDATE ${this.tableSql}
-          SET ${this.vectorColumnSql} = ${`[${vector.join(",")}]`}::vector
-          WHERE ${idSql} = ${documents[idx].metadata[this.idColumn]}
+          UPDATE ${tableNameRaw}
+          SET ${vectorColumnRaw} = ${`[${vector.join(",")}]`}::vector
+          WHERE ${idColumnRaw} = ${documents[idx].metadata[this.idColumn]}
         `
       )
     );
@@ -299,15 +299,23 @@ export class PrismaVectorStore<
     k: number,
     filter?: TFilterModel
   ): Promise<[Document<SimilarityModel<TModel, TSelectModel>>, number][]> {
-    const vectorQuery = `[${query.join(",")}]`;
+    // table name, column names cannot be parametrised
+    // these fields are thus not escaped by Prisma and can be dangerous if user input is used
+    const vectorColumnRaw = this.Prisma.raw(`"${this.vectorColumnName}"`);
+    const tableNameRaw = this.Prisma.raw(`"${this.tableName}"`);
+    const selectRaw = this.Prisma.raw(
+      this.selectColumns.map((x) => `"${x}"`).join(", ")
+    );
+
+    const vector = `[${query.join(",")}]`;
     const articles = await this.db.$queryRaw<
       Array<SimilarityModel<TModel, TSelectModel>>
     >(
       this.Prisma.join(
         [
           this.Prisma.sql`
-            SELECT ${this.selectSql}, ${this.vectorColumnSql} <=> ${vectorQuery}::vector as "_distance"
-            FROM ${this.tableSql}
+            SELECT ${selectRaw}, ${vectorColumnRaw} <=> ${vector}::vector as "_distance"
+            FROM ${tableNameRaw}
           `,
           this.buildSqlFilterStr(filter ?? this.filter),
           this.Prisma.sql`
@@ -341,9 +349,11 @@ export class PrismaVectorStore<
     return this.Prisma.join(
       Object.entries(filter).flatMap(([key, ops]) =>
         Object.entries(ops).map(([opName, value]) => {
-          const col = this.Prisma.raw(`"${key}"`);
-          const op = this.Prisma.raw(OpMap[opName as keyof typeof OpMap]);
-          return this.Prisma.sql`${col} ${op} ${value}`;
+          // column name, operators cannot be parametrised
+          // these fields are thus not escaped by Prisma and can be dangerous if user input is used
+          const colRaw = this.Prisma.raw(`"${key}"`);
+          const opRaw = this.Prisma.raw(OpMap[opName as keyof typeof OpMap]);
+          return this.Prisma.sql`${colRaw} ${opRaw} ${value}`;
         })
       ),
       " AND ",

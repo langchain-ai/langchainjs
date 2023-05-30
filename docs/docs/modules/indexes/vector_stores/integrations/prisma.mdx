@@ -67,6 +67,11 @@ npx prisma migrate dev
 
 ## Usage
 
+:::warning
+Table names and column names (in fields such as `tableName`, `vectorColumnName`, `columns` and `filter`) are passed into SQL queries directly without parametrisation.
+These fields must be sanitized beforehand to avoid SQL injection.
+:::
+
 import CodeBlock from "@theme/CodeBlock";
 import Example from "@examples/indexes/vector_stores/prisma_vectorstore/prisma.ts";
 import Schema from "@examples/indexes/vector_stores/prisma_vectorstore/prisma/schema.prisma";
