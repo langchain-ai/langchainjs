@@ -665,7 +665,8 @@ export class PromptLayerChatOpenAI extends ChatOpenAI {
           generation.generationInfo = {};
         }
 
-        generation.generationInfo["promptLayerRequestId"] = promptLayerRequestId;
+        generation.generationInfo["promptLayerRequestId"] =
+          promptLayerRequestId;
       }
     }
 
