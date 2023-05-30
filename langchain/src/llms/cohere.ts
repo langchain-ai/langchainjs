@@ -1,3 +1,4 @@
+import { getEnvironmentVariable } from "../util/env.js";
 import { LLM, BaseLLMParams } from "./base.js";
 
 export interface CohereInput extends BaseLLMParams {
@@ -27,11 +28,7 @@ export class Cohere extends LLM implements CohereInput {
   constructor(fields?: CohereInput) {
     super(fields ?? {});
 
-    const apiKey =
-      fields?.apiKey ?? typeof process !== "undefined"
-        ? // eslint-disable-next-line no-process-env
-          process.env?.COHERE_API_KEY
-        : undefined;
+    const apiKey = fields?.apiKey ?? getEnvironmentVariable("COHERE_API_KEY");
 
     if (!apiKey) {
       throw new Error(

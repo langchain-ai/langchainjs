@@ -52,6 +52,9 @@ embeddings/tensorflow.d.ts
 embeddings/hf.cjs
 embeddings/hf.js
 embeddings/hf.d.ts
+embeddings/googlevertexai.cjs
+embeddings/googlevertexai.js
+embeddings/googlevertexai.d.ts
 llms.cjs
 llms.js
 llms.d.ts
@@ -112,6 +115,9 @@ vectorstores/mongo.d.ts
 vectorstores/pinecone.cjs
 vectorstores/pinecone.js
 vectorstores/pinecone.d.ts
+vectorstores/qdrant.cjs
+vectorstores/qdrant.js
+vectorstores/qdrant.d.ts
 vectorstores/supabase.cjs
 vectorstores/supabase.js
 vectorstores/supabase.d.ts
@@ -130,6 +136,9 @@ vectorstores/myscale.d.ts
 vectorstores/redis.cjs
 vectorstores/redis.js
 vectorstores/redis.d.ts
+vectorstores/tigris.cjs
+vectorstores/tigris.js
+vectorstores/tigris.d.ts
 text_splitter.cjs
 text_splitter.js
 text_splitter.d.ts
@@ -175,9 +184,15 @@ document_loaders/web/hn.d.ts
 document_loaders/web/imsdb.cjs
 document_loaders/web/imsdb.js
 document_loaders/web/imsdb.d.ts
+document_loaders/web/figma.cjs
+document_loaders/web/figma.js
+document_loaders/web/figma.d.ts
 document_loaders/web/github.cjs
 document_loaders/web/github.js
 document_loaders/web/github.d.ts
+document_loaders/web/notiondb.cjs
+document_loaders/web/notiondb.js
+document_loaders/web/notiondb.d.ts
 document_loaders/web/s3.cjs
 document_loaders/web/s3.js
 document_loaders/web/s3.d.ts
@@ -229,6 +244,9 @@ chat_models/openai.d.ts
 chat_models/anthropic.cjs
 chat_models/anthropic.js
 chat_models/anthropic.d.ts
+chat_models/googlevertexai.cjs
+chat_models/googlevertexai.js
+chat_models/googlevertexai.d.ts
 schema.cjs
 schema.js
 schema.d.ts
@@ -304,6 +322,9 @@ stores/message/dynamodb.d.ts
 stores/message/redis.cjs
 stores/message/redis.js
 stores/message/redis.d.ts
+stores/message/upstash_redis.cjs
+stores/message/upstash_redis.js
+stores/message/upstash_redis.d.ts
 experimental/autogpt.cjs
 experimental/autogpt.js
 experimental/autogpt.d.ts
