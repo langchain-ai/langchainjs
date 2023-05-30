@@ -4,7 +4,7 @@ import { SerializedChatVectorDBQAChain } from "./serde.js";
 import { ChainValues, BaseRetriever } from "../schema/index.js";
 import { BaseChain, ChainInputs } from "./base.js";
 import { LLMChain } from "./llm_chain.js";
-import { loadQAStuffChain } from "./question_answering/load.js";
+import { QAChainParams, loadQAChain } from "./question_answering/load.js";
 import { CallbackManagerForChainRun } from "../callbacks/manager.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -16,13 +16,6 @@ Chat History:
 {chat_history}
 Follow Up Input: {question}
 Standalone question:`;
-
-const qa_template = `Use the following pieces of context to answer the question at the end. If you don't know the answer, just say that you don't know, don't try to make up an answer.
-
-{context}
-
-Question: {question}
-Helpful Answer:`;
 
 export interface ConversationalRetrievalQAChainInput
   extends Omit<ChainInputs, "memory"> {
@@ -140,23 +133,44 @@ export class ConversationalRetrievalQAChain
     options: {
       outputKey?: string; // not used
       returnSourceDocuments?: boolean;
+      /** @deprecated Pass in questionGeneratorChainOptions.template instead */
       questionGeneratorTemplate?: string;
+      /** @deprecated Pass in qaChainOptions.prompt instead */
       qaTemplate?: string;
+      qaChainOptions?: QAChainParams;
+      questionGeneratorChainOptions?: {
+        llm?: BaseLanguageModel;
+        template?: string;
+      };
     } & Omit<
       ConversationalRetrievalQAChainInput,
       "retriever" | "combineDocumentsChain" | "questionGeneratorChain"
     > = {}
   ): ConversationalRetrievalQAChain {
-    const { questionGeneratorTemplate, qaTemplate, verbose, ...rest } = options;
-    const question_generator_prompt = PromptTemplate.fromTemplate(
-      questionGeneratorTemplate || question_generator_template
-    );
-    const qa_prompt = PromptTemplate.fromTemplate(qaTemplate || qa_template);
+    const {
+      questionGeneratorTemplate,
+      qaTemplate,
+      qaChainOptions = {
+        type: "stuff",
+        prompt: qaTemplate
+          ? PromptTemplate.fromTemplate(qaTemplate)
+          : undefined,
+      },
+      questionGeneratorChainOptions,
+      verbose,
+      ...rest
+    } = options;
 
-    const qaChain = loadQAStuffChain(llm, { prompt: qa_prompt, verbose });
+    const qaChain = loadQAChain(llm, qaChainOptions);
+
+    const questionGeneratorChainPrompt = PromptTemplate.fromTemplate(
+      questionGeneratorChainOptions?.template ??
+        questionGeneratorTemplate ??
+        question_generator_template
+    );
     const questionGeneratorChain = new LLMChain({
-      prompt: question_generator_prompt,
-      llm,
+      prompt: questionGeneratorChainPrompt,
+      llm: questionGeneratorChainOptions?.llm ?? llm,
       verbose,
     });
     const instance = new this({

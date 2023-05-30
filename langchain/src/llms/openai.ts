@@ -1,5 +1,4 @@
-import { TiktokenModel } from "@dqbd/tiktoken";
-import { isNode } from "browser-or-node";
+import type { TiktokenModel } from "js-tiktoken/lite";
 import {
   Configuration,
   ConfigurationParameters,
@@ -8,6 +7,7 @@ import {
   CreateCompletionResponseChoicesInner,
   OpenAIApi,
 } from "openai";
+import { isNode, getEnvironmentVariable } from "../util/env.js";
 import {
   AzureOpenAIInput,
   OpenAICallOptions,
@@ -114,45 +114,29 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
     super(fields ?? {});
 
     const apiKey =
-      fields?.openAIApiKey ??
-      (typeof process !== "undefined"
-        ? // eslint-disable-next-line no-process-env
-          process.env?.OPENAI_API_KEY
-        : undefined);
+      fields?.openAIApiKey ?? getEnvironmentVariable("OPENAI_API_KEY");
 
     const azureApiKey =
       fields?.azureOpenAIApiKey ??
-      (typeof process !== "undefined"
-        ? // eslint-disable-next-line no-process-env
-          process.env?.AZURE_OPENAI_API_KEY
-        : undefined);
+      getEnvironmentVariable("AZURE_OPENAI_API_KEY");
+
     if (!azureApiKey && !apiKey) {
       throw new Error("(Azure) OpenAI API key not found");
     }
 
     const azureApiInstanceName =
       fields?.azureOpenAIApiInstanceName ??
-      (typeof process !== "undefined"
-        ? // eslint-disable-next-line no-process-env
-          process.env?.AZURE_OPENAI_API_INSTANCE_NAME
-        : undefined);
+      getEnvironmentVariable("AZURE_OPENAI_API_INSTANCE_NAME");
 
     const azureApiDeploymentName =
       (fields?.azureOpenAIApiCompletionsDeploymentName ||
         fields?.azureOpenAIApiDeploymentName) ??
-      (typeof process !== "undefined"
-        ? // eslint-disable-next-line no-process-env
-          process.env?.AZURE_OPENAI_API_COMPLETIONS_DEPLOYMENT_NAME ||
-          // eslint-disable-next-line no-process-env
-          process.env?.AZURE_OPENAI_API_DEPLOYMENT_NAME
-        : undefined);
+      (getEnvironmentVariable("AZURE_OPENAI_API_COMPLETIONS_DEPLOYMENT_NAME") ||
+        getEnvironmentVariable("AZURE_OPENAI_API_DEPLOYMENT_NAME"));
 
     const azureApiVersion =
       fields?.azureOpenAIApiVersion ??
-      (typeof process !== "undefined"
-        ? // eslint-disable-next-line no-process-env
-          process.env?.AZURE_OPENAI_API_VERSION
-        : undefined);
+      getEnvironmentVariable("AZURE_OPENAI_API_VERSION");
 
     this.modelName = fields?.modelName ?? this.modelName;
     this.modelKwargs = fields?.modelKwargs ?? {};
@@ -430,7 +414,7 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
       this.client = new OpenAIApi(clientConfig);
     }
     const axiosOptions: StreamingAxiosConfiguration = {
-      adapter: isNode ? undefined : fetchAdapter,
+      adapter: isNode() ? undefined : fetchAdapter,
       ...this.clientConfig.baseOptions,
       ...options,
     };
@@ -479,10 +463,7 @@ export class PromptLayerOpenAI extends OpenAI {
     this.plTags = fields?.plTags ?? [];
     this.promptLayerApiKey =
       fields?.promptLayerApiKey ??
-      (typeof process !== "undefined"
-        ? // eslint-disable-next-line no-process-env
-          process.env?.PROMPTLAYER_API_KEY
-        : undefined);
+      getEnvironmentVariable("PROMPTLAYER_API_KEY");
 
     this.returnPromptLayerId = fields?.returnPromptLayerId;
     if (!this.promptLayerApiKey) {

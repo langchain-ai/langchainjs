@@ -77,6 +77,14 @@ export abstract class BaseLLM extends BaseLanguageModel {
     runManager?: CallbackManagerForLLMRun
   ): Promise<LLMResult>;
 
+  /**
+   * Get the parameters used to invoke the model
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  invocationParams(): any {
+    return {};
+  }
+
   /** @ignore */
   async _generateUncached(
     prompts: string[],
@@ -88,10 +96,15 @@ export abstract class BaseLLM extends BaseLanguageModel {
       this.callbacks,
       { verbose: this.verbose }
     );
+    const invocationParams = { invocation_params: this?.invocationParams() };
     const runManager = await callbackManager_?.handleLLMStart(
       { name: this._llmType() },
-      prompts
+      prompts,
+      undefined,
+      undefined,
+      invocationParams
     );
+
     let output;
     try {
       output = await this._generate(prompts, options, runManager);

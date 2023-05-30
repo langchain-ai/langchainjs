@@ -7,12 +7,20 @@ import { OpenAI } from "../../llms/openai.js";
 import { SerpAPI } from "../../tools/index.js";
 import { Calculator } from "../../tools/calculator.js";
 import { initializeAgentExecutorWithOptions } from "../../agents/index.js";
+import { HumanChatMessage } from "../../schema/index.js";
 
 test("Test LangChain tracer", async () => {
   const tracer = new LangChainTracerV1();
+  const chatRunId = uuid.v4();
   const chainRunId = uuid.v4();
   const toolRunId = uuid.v4();
   const llmRunId = uuid.v4();
+  await tracer.handleChatModelStart(
+    { name: "test" },
+    [[new HumanChatMessage("this is a message")]],
+    chatRunId
+  );
+  await tracer.handleLLMEnd({ generations: [[]] }, chatRunId);
   await tracer.handleChainStart({ name: "test" }, { foo: "bar" }, chainRunId);
   await tracer.handleToolStart({ name: "test" }, "test", toolRunId, chainRunId);
   await tracer.handleLLMStart({ name: "test" }, ["test"], llmRunId, toolRunId);
