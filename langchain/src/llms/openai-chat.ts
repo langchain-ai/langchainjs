@@ -440,31 +440,28 @@ export class PromptLayerOpenAIChat extends OpenAIChat {
 
         choice = [{ text }];
 
-        let promptLayerRequestId: string | undefined = undefined;
+        const parsedResp = {
+          text,
+        };
+        let promptLayerRespBody = await promptLayerTrackRequest(
+          this.caller,
+          "langchain.PromptLayerOpenAIChat",
+          [prompt],
+          this._identifyingParams(),
+          this.plTags,
+          parsedResp,
+          requestStartTime,
+          requestEndTime,
+          this.promptLayerApiKey
+        );
+
         if (
-          this instanceof PromptLayerOpenAIChat &&
-          this.returnPromptLayerId === true
+          this.returnPromptLayerId === true &&
+          promptLayerRespBody.success === true
         ) {
-          const parsedResp = {
-            text,
+          choice[0]["generationInfo"] = {
+            promptLayerRequestId: promptLayerRespBody.request_id,
           };
-          let promptLayerRespBody = await promptLayerTrackRequest(
-            this.caller,
-            "langchain.PromptLayerOpenAIChat",
-            [prompt],
-            this._identifyingParams(),
-            this.plTags,
-            parsedResp,
-            requestStartTime,
-            requestEndTime,
-            this.promptLayerApiKey
-          );
-
-          if (promptLayerRespBody && promptLayerRespBody.success === true) {
-            promptLayerRequestId = promptLayerRespBody.request_id;
-          }
-
-          choice[0]["generationInfo"] = { promptLayerRequestId };
         }
 
         return choice;

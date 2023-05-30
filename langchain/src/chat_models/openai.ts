@@ -615,30 +615,27 @@ export class PromptLayerChatOpenAI extends ChatOpenAI {
       const messageDicts = _createMessageDicts(messages, parsedOptions);
 
       let promptLayerRequestId: string | undefined = undefined;
-      if (
-        this instanceof PromptLayerChatOpenAI &&
-        this.returnPromptLayerId === true
-      ) {
-        const parsedResp = [
-          {
-            content: generation.text,
-            role: messageTypeToOpenAIRole(generation.message._getType()),
-          },
-        ];
+      const parsedResp = [
+        {
+          content: generation.text,
+          role: messageTypeToOpenAIRole(generation.message._getType()),
+        },
+      ];
 
-        let promptLayerRespBody = await promptLayerTrackRequest(
-          this.caller,
-          "langchain.PromptLayerChatOpenAI",
-          messageDicts,
-          this._identifyingParams(),
-          this.plTags,
-          parsedResp,
-          requestStartTime,
-          requestEndTime,
-          this.promptLayerApiKey
-        );
+      let promptLayerRespBody = await promptLayerTrackRequest(
+        this.caller,
+        "langchain.PromptLayerChatOpenAI",
+        messageDicts,
+        this._identifyingParams(),
+        this.plTags,
+        parsedResp,
+        requestStartTime,
+        requestEndTime,
+        this.promptLayerApiKey
+      );
 
-        if (promptLayerRespBody && promptLayerRespBody.success === true) {
+      if (this.returnPromptLayerId === true) {
+        if (promptLayerRespBody.success === true) {
           promptLayerRequestId = promptLayerRespBody.request_id;
         }
 
