@@ -40,7 +40,7 @@
     "langchain": "workspace:*",
     "ml-distance": "^4.0.0",
     "mongodb": "^5.2.0",
-    "mysql": "^2.18.1",
+    "mysql2": "^3.3.3",
     "pickleparser": "^0.1.0",
     "prisma": "^4.11.0",
     "redis": "^4.6.6",
@@ -52,7 +52,6 @@
   "devDependencies": {
     "@tsconfig/recommended": "^1.0.2",
     "@types/js-yaml": "^4",
-    "@types/mysql": "^2",
     "@typescript-eslint/eslint-plugin": "^5.51.0",
     "@typescript-eslint/parser": "^5.51.0",
     "dotenv": "^16.0.3",
