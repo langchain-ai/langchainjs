@@ -132,11 +132,13 @@ const entrypoints = {
   "retrievers/self_query": "retrievers/self_query/index",
   // cache
   cache: "cache/index",
+  "cache/momento": "cache/momento",
   "cache/redis": "cache/redis",
   // stores
   "stores/file/in_memory": "stores/file/in_memory",
   "stores/file/node": "stores/file/node",
   "stores/message/dynamodb": "stores/message/dynamodb",
+  "stores/message/momento": "stores/message/momento",
   "stores/message/redis": "stores/message/redis",
   "stores/message/upstash_redis": "stores/message/upstash_redis",
   // experimental
@@ -224,9 +226,11 @@ const requiresOptionalDependency = [
   "output_parsers/expression",
   "chains/query_constructor",
   "chains/query_constructor/ir",
+  "cache/momento",
   "cache/redis",
   "stores/file/node",
   "stores/message/dynamodb",
+  "stores/message/momento",
   "stores/message/redis",
   "stores/message/upstash_redis",
 ];

@@ -319,6 +319,9 @@
     "cache.cjs",
     "cache.js",
     "cache.d.ts",
+    "cache/momento.cjs",
+    "cache/momento.js",
+    "cache/momento.d.ts",
     "cache/redis.cjs",
     "cache/redis.js",
     "cache/redis.d.ts",
@@ -331,6 +334,9 @@
     "stores/message/dynamodb.cjs",
     "stores/message/dynamodb.js",
     "stores/message/dynamodb.d.ts",
+    "stores/message/momento.cjs",
+    "stores/message/momento.js",
+    "stores/message/momento.d.ts",
     "stores/message/redis.cjs",
     "stores/message/redis.js",
     "stores/message/redis.d.ts",
@@ -386,6 +392,7 @@
     "@faker-js/faker": "^7.6.0",
     "@getmetal/metal-sdk": "^4.0.0",
     "@getzep/zep-js": "^0.3.1",
+    "@gomomento/sdk": "^1.23.0",
     "@huggingface/inference": "^1.5.1",
     "@jest/globals": "^29.5.0",
     "@opensearch-project/opensearch": "^2.2.0",
@@ -457,6 +464,7 @@
     "@clickhouse/client": "^0.0.14",
     "@getmetal/metal-sdk": "*",
     "@getzep/zep-js": "^0.3.1",
+    "@gomomento/sdk": "^1.23.0",
     "@huggingface/inference": "^1.5.1",
     "@opensearch-project/opensearch": "*",
     "@pinecone-database/pinecone": "*",
@@ -513,6 +521,9 @@
       "optional": true
     },
     "@getzep/zep-js": {
+      "optional": true
+    },
+    "@gomomento/sdk": {
       "optional": true
     },
     "@huggingface/inference": {
@@ -1189,6 +1200,11 @@
       "import": "./cache.js",
       "require": "./cache.cjs"
     },
+    "./cache/momento": {
+      "types": "./cache/momento.d.ts",
+      "import": "./cache/momento.js",
+      "require": "./cache/momento.cjs"
+    },
     "./cache/redis": {
       "types": "./cache/redis.d.ts",
       "import": "./cache/redis.js",
@@ -1208,6 +1224,11 @@
       "types": "./stores/message/dynamodb.d.ts",
       "import": "./stores/message/dynamodb.js",
       "require": "./stores/message/dynamodb.cjs"
+    },
+    "./stores/message/momento": {
+      "types": "./stores/message/momento.d.ts",
+      "import": "./stores/message/momento.js",
+      "require": "./stores/message/momento.cjs"
     },
     "./stores/message/redis": {
       "types": "./stores/message/redis.d.ts",

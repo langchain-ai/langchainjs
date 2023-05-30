@@ -307,6 +307,9 @@ retrievers/self_query.d.ts
 cache.cjs
 cache.js
 cache.d.ts
+cache/momento.cjs
+cache/momento.js
+cache/momento.d.ts
 cache/redis.cjs
 cache/redis.js
 cache/redis.d.ts
@@ -319,6 +322,9 @@ stores/file/node.d.ts
 stores/message/dynamodb.cjs
 stores/message/dynamodb.js
 stores/message/dynamodb.d.ts
+stores/message/momento.cjs
+stores/message/momento.js
+stores/message/momento.d.ts
 stores/message/redis.cjs
 stores/message/redis.js
 stores/message/redis.d.ts
