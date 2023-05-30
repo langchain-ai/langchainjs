@@ -66,5 +66,5 @@ export const optionalImportEntrypoints = [
   "langchain/stores/file/node",
   "langchain/stores/message/dynamodb",
   "langchain/stores/message/redis",
-  "langchain/stores/message/upstash_redis"
+  "langchain/stores/message/upstash_redis",
 ];
