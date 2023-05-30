@@ -1,6 +1,6 @@
 import { expect, test } from "@jest/globals";
 import { v4 as uuid } from "uuid";
-import { ZepMemory } from "../zep_memory.js";
+import { ZepMemory } from "../zep.js";
 
 const sessionId = uuid();
 const baseURL = "http://localhost:8000";

@@ -66,7 +66,7 @@ const entrypoints = {
   text_splitter: "text_splitter",
   // memory
   memory: "memory/index",
-  "memory/zep": "memory/zep_memory",
+  "memory/zep": "memory/zep",
   // document
   document: "document",
   // docstore
