@@ -263,8 +263,6 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
     const choices: CreateCompletionResponseChoicesInner[] = [];
     const tokenUsage: TokenUsage = {};
 
-    let promptLayerRequestIds: any = [];
-
     if (this.stop && stop) {
       throw new Error("Stop found in input and default params");
     }
@@ -286,7 +284,6 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
     }
 
     for (let i = 0; i < subPrompts.length; i += 1) {
-      const requestStartTime = Date.now();
       const data = params.stream
         ? await new Promise<CreateCompletionResponse>((resolve, reject) => {
             const choices: CreateCompletionResponseChoicesInner[] = [];
@@ -376,8 +373,6 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
             }
           );
 
-      const requestEndTime = Date.now();
-
       choices.push(...data.choices);
 
       const {
@@ -398,44 +393,14 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
       if (totalTokens) {
         tokenUsage.totalTokens = (tokenUsage.totalTokens ?? 0) + totalTokens;
       }
-
-      let promptLayerRequestId;
-      if (
-        this instanceof PromptLayerOpenAI &&
-        this.returnPromptLayerId === true
-      ) {
-        const parsedResp = {
-          text: data.choices[0].text,
-          llm_output: { tokenUsage },
-        };
-
-        let promptLayerRespBody = await promptLayerTrackRequest(
-          this.caller,
-          "langchain.PromptLayerOpenAI",
-          [subPrompts[i][0]],
-          this._identifyingParams(),
-          this.plTags,
-          parsedResp,
-          requestStartTime,
-          requestEndTime,
-          this.promptLayerApiKey
-        );
-
-        if (promptLayerRespBody && promptLayerRespBody.success === true) {
-          promptLayerRequestId = promptLayerRespBody.request_id;
-        }
-      }
-
-      promptLayerRequestIds.push(promptLayerRequestId);
     }
 
-    const generations = chunkArray(choices, this.n).map((promptChoices, idx) =>
+    const generations = chunkArray(choices, this.n).map((promptChoices) =>
       promptChoices.map((choice) => ({
         text: choice.text ?? "",
         generationInfo: {
           finishReason: choice.finish_reason,
           logprobs: choice.logprobs,
-          promptLayerRequestId: promptLayerRequestIds[idx],
         },
       }))
     );
@@ -536,6 +501,49 @@ export class PromptLayerOpenAI extends OpenAI {
     const response = await super.completionWithRetry(request);
 
     return response;
+  }
+
+  async _generate(
+    prompts: string[],
+    options: this["ParsedCallOptions"],
+    runManager?: CallbackManagerForLLMRun
+  ): Promise<LLMResult> {
+    const requestStartTime = Date.now();
+    const generations = await super._generate(prompts, options, runManager);
+
+    for (let i = 0; i < generations.generations.length; i += 1) {
+      const requestEndTime = Date.now();
+      const parsedResp = {
+        text: generations.generations[i][0].text,
+        llm_output: generations.llmOutput,
+      };
+
+      let promptLayerRespBody = await promptLayerTrackRequest(
+        this.caller,
+        "langchain.PromptLayerOpenAI",
+        [prompts[i]],
+        this._identifyingParams(),
+        this.plTags,
+        parsedResp,
+        requestStartTime,
+        requestEndTime,
+        this.promptLayerApiKey
+      );
+
+      let promptLayerRequestId;
+      if (this.returnPromptLayerId === true) {
+        if (promptLayerRespBody && promptLayerRespBody.success === true) {
+          promptLayerRequestId = promptLayerRespBody.request_id;
+        }
+
+        generations.generations[i][0].generationInfo = {
+          ...generations.generations[i][0].generationInfo,
+          promptLayerRequestId,
+        };
+      }
+    }
+
+    return generations;
   }
 }
 
