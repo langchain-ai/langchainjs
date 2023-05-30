@@ -1,5 +1,5 @@
 import { ZepClient, Memory, Message } from "@getzep/zep-js";
-import { 
+import {
   InputValues,
   OutputValues,
   MemoryVariables,
@@ -12,12 +12,12 @@ export interface ZepMemoryInput extends BaseChatMemoryInput {
   humanPrefix?: string;
 
   aiPrefix?: string;
-  
+
   memoryKey?: string;
-  
+
   baseURL: string; // Changed from optional to required
-  
-  sessionID: string; // Changed from optional to required
+
+  sessionId: string; // Changed from optional to required
 }
 
 export class ZepMemory extends BaseChatMemory implements ZepMemoryInput {
@@ -29,7 +29,7 @@ export class ZepMemory extends BaseChatMemory implements ZepMemoryInput {
 
   baseURL: string; // Define the baseURL property
 
-  sessionID: string; // Define the sessionID property
+  sessionId: string; // Define the sessionId property
 
   zepClient: ZepClient; // Define the zepClient property
 
@@ -44,7 +44,7 @@ export class ZepMemory extends BaseChatMemory implements ZepMemoryInput {
     this.aiPrefix = fields.aiPrefix ?? this.aiPrefix;
     this.memoryKey = fields.memoryKey ?? this.memoryKey;
     this.baseURL = fields.baseURL;
-    this.sessionID = fields.sessionID;
+    this.sessionId = fields.sessionId;
     this.zepClient = new ZepClient(this.baseURL);
   }
 
@@ -92,9 +92,9 @@ export class ZepMemory extends BaseChatMemory implements ZepMemoryInput {
     });
 
     // Add the new memory to the session using the ZepClient
-    if (this.sessionID) {
+    if (this.sessionId) {
       try {
-        await this.zepClient.addMemory(this.sessionID, memory);
+        await this.zepClient.addMemory(this.sessionId, memory);
       } catch (error) {
         console.error("Error adding memory: ", error);
       }
@@ -106,7 +106,7 @@ export class ZepMemory extends BaseChatMemory implements ZepMemoryInput {
 
   async clear(): Promise<void> {
     try {
-      await this.zepClient.deleteMemory(this.sessionID);
+      await this.zepClient.deleteMemory(this.sessionId);
     } catch (error) {
       console.error("Error deleting session: ", error);
     }

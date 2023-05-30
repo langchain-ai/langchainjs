@@ -2,6 +2,12 @@ import { ZepClient, SearchResult, SearchPayload } from "@getzep/zep-js";
 import { BaseRetriever } from "../schema/index.js";
 import { Document } from "../document.js";
 
+export type ZepRetrieverConfig = {
+  sessionId: string;
+  url: string;
+  topK?: number;
+};
+
 export class ZepRetriever extends BaseRetriever {
   private zepClient: ZepClient;
 
@@ -9,11 +15,11 @@ export class ZepRetriever extends BaseRetriever {
 
   private topK?: number;
 
-  constructor(sessionId: string, url: string, topK?: number) {
+  constructor(config: ZepRetrieverConfig) {
     super();
-    this.zepClient = new ZepClient(url);
-    this.sessionId = sessionId;
-    this.topK = topK;
+    this.zepClient = new ZepClient(config.url);
+    this.sessionId = config.sessionId;
+    this.topK = config.topK;
   }
 
   /**

@@ -2,9 +2,9 @@ import { expect, test } from "@jest/globals";
 import { v4 as uuid } from "uuid";
 import { ZepMemory } from "../zep_memory.js";
 
-const sessionID = uuid();
+const sessionId = uuid();
 const baseURL = "http://localhost:8000";
-const zepMemory = new ZepMemory({ sessionID, baseURL });
+const zepMemory = new ZepMemory({ sessionId, baseURL });
 
 beforeEach((done) => {
   setTimeout(done, 1000); // 1-second delay before each test case
@@ -37,7 +37,7 @@ test("getMessages from Zep memory", async () => {
   } else if (Array.isArray(messages)) {
     expect(messages.length).toBeGreaterThanOrEqual(1);
   } else {
-    console.log("failed to get messages: ", messages);  
+    console.log("failed to get messages: ", messages);
     // Fail the test because messages is neither string nor array
     fail("Returned messages is neither string nor array");
   }
