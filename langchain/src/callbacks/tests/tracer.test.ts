@@ -1,14 +1,8 @@
 import { test, expect, jest } from "@jest/globals";
 import * as uuid from "uuid";
 import { BaseTracer, Run } from "../handlers/tracer.js";
-import {
-  TracerSession,
-  TracerSessionCreateV2,
-} from "../handlers/tracer_langchain.js";
 import { HumanChatMessage } from "../../schema/index.js";
 
-const TEST_SESSION_ID = `32f2a267-b052-4c45-8c9f-ae5558c94a6a`;
-const TENANT_ID = `531d2426-49c4-40f4-b2c7-775aef1db176`;
 const _DATE = 1620000000000;
 
 Date.now = jest.fn(() => _DATE);
@@ -25,33 +19,6 @@ class FakeTracer extends BaseTracer {
   protected persistRun(run: Run): Promise<void> {
     this.runs.push(run);
     return Promise.resolve();
-  }
-
-  protected persistSession(
-    session: TracerSessionCreateV2
-  ): Promise<TracerSession> {
-    return Promise.resolve({
-      id: TEST_SESSION_ID,
-      ...session,
-    });
-  }
-
-  async loadSession(sessionName: string): Promise<TracerSession> {
-    return Promise.resolve({
-      id: TEST_SESSION_ID,
-      name: sessionName,
-      start_time: _DATE,
-      tenant_id: TENANT_ID,
-    });
-  }
-
-  async loadDefaultSession(): Promise<TracerSession> {
-    return Promise.resolve({
-      id: TEST_SESSION_ID,
-      name: "default",
-      start_time: _DATE,
-      tenant_id: TENANT_ID,
-    });
   }
 }
 
