@@ -380,7 +380,10 @@ export class LatexTextSplitter
 
 export type HtmlTextSplitterParams = TextSplitterParams;
 
-export class HtmlTextSplitter extends RecursiveCharacterTextSplitter implements HtmlTextSplitterParams {
+export class HtmlTextSplitter
+  extends RecursiveCharacterTextSplitter
+  implements HtmlTextSplitterParams
+{
   separators: string[] = [
     // First, try to split along HTML tags
     "<body>",
@@ -412,7 +415,7 @@ export class HtmlTextSplitter extends RecursiveCharacterTextSplitter implements 
     "<title>",
     // Normal type of lines
     " ",
-    ""
+    "",
   ];
 
   constructor(fields?: Partial<HtmlTextSplitterParams>) {

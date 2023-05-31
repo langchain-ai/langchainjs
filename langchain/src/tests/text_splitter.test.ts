@@ -281,8 +281,8 @@ test("Test HTML text splitter", async () => {
   const output = await splitter.splitText(text);
 
   const expectedOutput = [
-    '<!DOCTYPE html>\n<html>',
-    '<title>🦜️🔗 LangChain</title>',
+    "<!DOCTYPE html>\n<html>",
+    "<title>🦜️🔗 LangChain</title>",
     `body {
         font-family: Arial, sans-serif;
       }
@@ -291,14 +291,14 @@ test("Test HTML text splitter", async () => {
       }
     </style>
   </head>`,
-  `<div>
+    `<div>
       <h1>🦜️🔗 LangChain</h1>
       <p>⚡ Building applications with LLMs through composability ⚡</p>
     </div>`,
-  `As an open source project in a rapidly developing field, we are extremely open to contributions.
+    `As an open source project in a rapidly developing field, we are extremely open to contributions.
     </div>
   </body>
-</html>`
+</html>`,
   ];
   expect(output).toEqual(expectedOutput);
 });
