@@ -32,8 +32,7 @@ export type MotorheadMemoryInput = BaseChatMemoryInput &
     clientId?: string;
   };
 
-
-const MANAGED_URL = "https://api.getmetal.io/v1/motorhead"
+const MANAGED_URL = "https://api.getmetal.io/v1/motorhead";
 // const LOCAL_URL = "localhost:8080"
 
 export class MotorheadMemory extends BaseChatMemory {
@@ -88,17 +87,19 @@ export class MotorheadMemory extends BaseChatMemory {
 
     const headers: MotorheadMemoryHeaders = {
       "Content-Type": "application/json",
-    }
+    };
 
     if (isManaged && !(this.apiKey && this.clientId)) {
-      throw new Error("apiKey and clientId are required for managed motorhead. Visit https://getmetal.io to get your keys.");
+      throw new Error(
+        "apiKey and clientId are required for managed motorhead. Visit https://getmetal.io to get your keys."
+      );
     }
 
     if (isManaged) {
       headers["x-metal-api-key"] = this.apiKey;
       headers["x-metal-client-id"] = this.clientId;
     }
-    return headers
+    return headers;
   }
 
   async init(): Promise<void> {
@@ -149,21 +150,17 @@ export class MotorheadMemory extends BaseChatMemory {
     const input = getInputValue(inputValues, this.inputKey);
     const output = getInputValue(outputValues, this.outputKey);
     await Promise.all([
-      this.caller.call(
-        fetch,
-        `${this.url}/sessions/${this.sessionId}/memory`,
-        {
-          signal: this.timeout ? AbortSignal.timeout(this.timeout) : undefined,
-          method: "POST",
-          body: JSON.stringify({
-            messages: [
-              { role: "Human", content: `${input}` },
-              { role: "AI", content: `${output}` },
-            ],
-          }),
-          headers: this._getHeaders(),
-        }
-      ),
+      this.caller.call(fetch, `${this.url}/sessions/${this.sessionId}/memory`, {
+        signal: this.timeout ? AbortSignal.timeout(this.timeout) : undefined,
+        method: "POST",
+        body: JSON.stringify({
+          messages: [
+            { role: "Human", content: `${input}` },
+            { role: "AI", content: `${output}` },
+          ],
+        }),
+        headers: this._getHeaders(),
+      }),
       super.saveContext(inputValues, outputValues),
     ]);
   }
