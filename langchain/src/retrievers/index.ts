@@ -10,4 +10,3 @@ export {
 } from "./supabase.js";
 export { RemoteLangChainRetriever } from "./remote/remote-retriever.js";
 export { MetalRetriever } from "./metal.js";
-export { VespaRetriever } from "./vespa.js";
