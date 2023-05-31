@@ -13,7 +13,6 @@ import { ChatOpenAI } from "../../chat_models/openai.js";
 test("Test LangChain V2 tracer", async () => {
   const tracer = new LangChainTracer({
     sessionName: `JS Int Test - ${uuid.v4()}`,
-    sessionExtra: { source: "langchain-js" },
   });
   const chainRunId = uuid.v4();
   const toolRunId = uuid.v4();

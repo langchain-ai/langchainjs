@@ -4,6 +4,7 @@ import { Document } from "../../document.js";
 import { BaseDocumentLoader } from "../base.js";
 import { UnknownHandling } from "../fs/directory.js";
 import { extname } from "../../util/extname.js";
+import { getEnvironmentVariable } from "../../util/env.js";
 
 const extensions = new Set(binaryExtensions);
 
@@ -64,10 +65,7 @@ export class GithubRepoLoader
   constructor(
     githubUrl: string,
     {
-      accessToken = typeof process !== "undefined"
-        ? // eslint-disable-next-line no-process-env
-          process.env?.GITHUB_ACCESS_TOKEN
-        : undefined,
+      accessToken = getEnvironmentVariable("GITHUB_ACCESS_TOKEN"),
       branch = "main",
       recursive = true,
       unknown = UnknownHandling.Warn,

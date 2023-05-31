@@ -9,6 +9,7 @@ import { BaseChain, ChainInputs } from "./base.js";
 import { ChainValues } from "../schema/index.js";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
 import { AsyncCaller, AsyncCallerParams } from "../util/async_caller.js";
+import { getEnvironmentVariable } from "../util/env.js";
 
 export interface OpenAIModerationChainInput
   extends ChainInputs,
@@ -43,9 +44,7 @@ export class OpenAIModerationChain
     super(fields);
     this.throwError = fields?.throwError ?? false;
     this.openAIApiKey =
-      fields?.openAIApiKey ??
-      // eslint-disable-next-line no-process-env
-      (typeof process !== "undefined" ? process.env.OPENAI_API_KEY : undefined);
+      fields?.openAIApiKey ?? getEnvironmentVariable("OPENAI_API_KEY");
 
     if (!this.openAIApiKey) {
       throw new Error("OpenAI API key not found");
