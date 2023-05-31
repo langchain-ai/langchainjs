@@ -41,12 +41,13 @@ func main() {
   expect(chunks).toStrictEqual([
     "package main",
     'import "fmt"',
+    "func",
     "helloWorld() {",
-    'fmt.Println("Hel',
-    "lo,",
+    'fmt.Println("He',
+    "llo,",
     'World!")',
     "}",
-    "main() {",
+    "func main() {",
     "helloWorld()",
     "}",
   ]);
@@ -100,12 +101,17 @@ message Person {
   expect(chunks).toStrictEqual([
     "syntax =",
     '"proto3";',
-    "package example;",
-    "Person {",
-    "string name = 1;",
-    "int32 age = 2;",
-    "repeated string",
-    "hobbies = 3;",
+    "package",
+    "example;",
+    "message Person",
+    "{",
+    "string name",
+    "= 1;",
+    "int32 age =",
+    "2;",
+    "repeated",
+    "string hobbies",
+    "= 3;",
     "}",
   ]);
 });
@@ -125,8 +131,8 @@ helloWorld();`;
   expect(chunks).toStrictEqual([
     "function",
     "helloWorld() {",
-    'console.log("Hel',
-    "lo,",
+    'console.log("He',
+    "llo,",
     'World!");',
     "}",
     "// Call the",
@@ -154,8 +160,8 @@ test("Java code splitter", async () => {
     "void",
     "main(String[]",
     "args) {",
-    "System.out.print",
-    'ln("Hello,',
+    "System.out.prin",
+    'tln("Hello,',
     'World!");',
     "}\n}",
   ]);
@@ -176,10 +182,11 @@ int main() {
   expect(chunks).toStrictEqual([
     "#include",
     "<iostream>",
-    "main() {",
-    "std::cout <<",
-    '"Hello, World!"',
-    "<< std::endl;",
+    "int main() {",
+    "std::cout",
+    '<< "Hello,',
+    "World!\" <<",
+    "std::endl;",
     "return 0;\n}",
   ]);
 });
@@ -199,7 +206,8 @@ test("Scala code splitter", async () => {
   expect(chunks).toStrictEqual([
     "object",
     "HelloWorld {",
-    "def main(args:",
+    "def",
+    "main(args:",
     "Array[String]):",
     "Unit = {",
     'println("Hello,',
@@ -242,10 +250,13 @@ hello_world();
   const chunks = await splitter.splitText(code);
   expect(chunks).toStrictEqual([
     "<?php",
+    "function",
     "hello_world() {",
-    'echo "Hello,',
+    "echo",
+    '"Hello,',
     'World!";',
-    "}\nhello_world();",
+    "}",
+    "hello_world();",
     "?>",
   ]);
 });
@@ -282,7 +293,8 @@ test("Rust code splitter", async () => {
   const chunks = await splitter.splitText(code);
   expect(chunks).toStrictEqual([
     "fn main() {",
-    'println!("Hello,',
+    'println!("Hello',
+    ",",
     'World!");',
     "}",
   ]);
