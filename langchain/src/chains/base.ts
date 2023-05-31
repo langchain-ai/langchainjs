@@ -125,10 +125,10 @@ export abstract class BaseChain extends BaseLangChain implements ChainInputs {
       await runManager?.handleChainError(e);
       throw e;
     }
-    await runManager?.handleChainEnd(outputValues);
     if (!(this.memory == null)) {
       await this.memory.saveContext(values, outputValues);
     }
+    await runManager?.handleChainEnd(outputValues);
     // add the runManager's currentRunId to the outputValues
     Object.defineProperty(outputValues, RUN_KEY, {
       value: runManager ? { runId: runManager?.runId } : undefined,
@@ -188,6 +188,10 @@ export abstract class BaseChain extends BaseLangChain implements ChainInputs {
       case "vector_db_qa": {
         const { VectorDBQAChain } = await import("./vector_db_qa.js");
         return VectorDBQAChain.deserialize(data, values);
+      }
+      case "api_chain": {
+        const { APIChain } = await import("./api/api_chain.js");
+        return APIChain.deserialize(data);
       }
       default:
         throw new Error(

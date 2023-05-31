@@ -1,3 +1,4 @@
+import { getEnvironmentVariable } from "../util/env.js";
 import { LLM, BaseLLMParams } from "./base.js";
 
 export interface ReplicateInput {
@@ -23,9 +24,7 @@ export class Replicate extends LLM implements ReplicateInput {
     super(fields);
 
     const apiKey =
-      fields?.apiKey ??
-      // eslint-disable-next-line no-process-env
-      (typeof process !== "undefined" && process.env?.REPLICATE_API_KEY);
+      fields?.apiKey ?? getEnvironmentVariable("REPLICATE_API_KEY");
 
     if (!apiKey) {
       throw new Error("Please set the REPLICATE_API_KEY environment variable");
@@ -41,7 +40,10 @@ export class Replicate extends LLM implements ReplicateInput {
   }
 
   /** @ignore */
-  async _call(prompt: string, _stop?: string[]): Promise<string> {
+  async _call(
+    prompt: string,
+    options: this["ParsedCallOptions"]
+  ): Promise<string> {
     const imports = await Replicate.imports();
 
     const replicate = new imports.Replicate({
@@ -49,14 +51,16 @@ export class Replicate extends LLM implements ReplicateInput {
       auth: this.apiKey,
     });
 
-    const output = await this.caller.call(() =>
-      replicate.run(this.model, {
-        wait: true,
-        input: {
-          ...this.input,
-          prompt,
-        },
-      })
+    const output = await this.caller.callWithOptions(
+      { signal: options.signal },
+      () =>
+        replicate.run(this.model, {
+          wait: true,
+          input: {
+            ...this.input,
+            prompt,
+          },
+        })
     );
 
     // Note this is a little odd, but the output format is not consistent

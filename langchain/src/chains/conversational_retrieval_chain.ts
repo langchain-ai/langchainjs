@@ -1,10 +1,14 @@
 import { PromptTemplate } from "../prompts/prompt.js";
-import { BaseLLM } from "../llms/base.js";
+import { BaseLanguageModel } from "../base_language/index.js";
 import { SerializedChatVectorDBQAChain } from "./serde.js";
-import { ChainValues, BaseRetriever } from "../schema/index.js";
+import {
+  ChainValues,
+  BaseRetriever,
+  BaseChatMessage,
+} from "../schema/index.js";
 import { BaseChain, ChainInputs } from "./base.js";
 import { LLMChain } from "./llm_chain.js";
-import { loadQAStuffChain } from "./question_answering/load.js";
+import { QAChainParams, loadQAChain } from "./question_answering/load.js";
 import { CallbackManagerForChainRun } from "../callbacks/manager.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -17,15 +21,7 @@ Chat History:
 Follow Up Input: {question}
 Standalone question:`;
 
-const qa_template = `Use the following pieces of context to answer the question at the end. If you don't know the answer, just say that you don't know, don't try to make up an answer.
-
-{context}
-
-Question: {question}
-Helpful Answer:`;
-
-export interface ConversationalRetrievalQAChainInput
-  extends Omit<ChainInputs, "memory"> {
+export interface ConversationalRetrievalQAChainInput extends ChainInputs {
   retriever: BaseRetriever;
   combineDocumentsChain: BaseChain;
   questionGeneratorChain: LLMChain;
@@ -69,6 +65,23 @@ export class ConversationalRetrievalQAChain
       fields.returnSourceDocuments ?? this.returnSourceDocuments;
   }
 
+  static getChatHistoryString(chatHistory: string | BaseChatMessage[]) {
+    if (Array.isArray(chatHistory)) {
+      return chatHistory
+        .map((chatMessage) => {
+          if (chatMessage._getType() === "human") {
+            return `Human: ${chatMessage.text}`;
+          } else if (chatMessage._getType() === "ai") {
+            return `Assistant: ${chatMessage.text}`;
+          } else {
+            return `${chatMessage.text}`;
+          }
+        })
+        .join("\n");
+    }
+    return chatHistory;
+  }
+
   /** @ignore */
   async _call(
     values: ChainValues,
@@ -78,10 +91,13 @@ export class ConversationalRetrievalQAChain
       throw new Error(`Question key ${this.inputKey} not found.`);
     }
     if (!(this.chatHistoryKey in values)) {
-      throw new Error(`chat history key ${this.inputKey} not found.`);
+      throw new Error(`Chat history key ${this.chatHistoryKey} not found.`);
     }
     const question: string = values[this.inputKey];
-    const chatHistory: string = values[this.chatHistoryKey];
+    const chatHistory: string =
+      ConversationalRetrievalQAChain.getChatHistoryString(
+        values[this.chatHistoryKey]
+      );
     let newQuestion = question;
     if (chatHistory.length > 0) {
       const result = await this.questionGeneratorChain.call(
@@ -135,31 +151,56 @@ export class ConversationalRetrievalQAChain
   }
 
   static fromLLM(
-    llm: BaseLLM,
+    llm: BaseLanguageModel,
     retriever: BaseRetriever,
     options: {
-      inputKey?: string;
-      outputKey?: string;
+      outputKey?: string; // not used
       returnSourceDocuments?: boolean;
+      /** @deprecated Pass in questionGeneratorChainOptions.template instead */
       questionGeneratorTemplate?: string;
+      /** @deprecated Pass in qaChainOptions.prompt instead */
       qaTemplate?: string;
-    } = {}
+      qaChainOptions?: QAChainParams;
+      questionGeneratorChainOptions?: {
+        llm?: BaseLanguageModel;
+        template?: string;
+      };
+    } & Omit<
+      ConversationalRetrievalQAChainInput,
+      "retriever" | "combineDocumentsChain" | "questionGeneratorChain"
+    > = {}
   ): ConversationalRetrievalQAChain {
-    const { questionGeneratorTemplate, qaTemplate, ...rest } = options;
-    const question_generator_prompt = PromptTemplate.fromTemplate(
-      questionGeneratorTemplate || question_generator_template
-    );
-    const qa_prompt = PromptTemplate.fromTemplate(qaTemplate || qa_template);
+    const {
+      questionGeneratorTemplate,
+      qaTemplate,
+      qaChainOptions = {
+        type: "stuff",
+        prompt: qaTemplate
+          ? PromptTemplate.fromTemplate(qaTemplate)
+          : undefined,
+      },
+      questionGeneratorChainOptions,
+      verbose,
+      ...rest
+    } = options;
 
-    const qaChain = loadQAStuffChain(llm, { prompt: qa_prompt });
+    const qaChain = loadQAChain(llm, qaChainOptions);
+
+    const questionGeneratorChainPrompt = PromptTemplate.fromTemplate(
+      questionGeneratorChainOptions?.template ??
+        questionGeneratorTemplate ??
+        question_generator_template
+    );
     const questionGeneratorChain = new LLMChain({
-      prompt: question_generator_prompt,
-      llm,
+      prompt: questionGeneratorChainPrompt,
+      llm: questionGeneratorChainOptions?.llm ?? llm,
+      verbose,
     });
     const instance = new this({
       retriever,
       combineDocumentsChain: qaChain,
       questionGeneratorChain,
+      verbose,
       ...rest,
     });
     return instance;

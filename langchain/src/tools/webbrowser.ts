@@ -1,10 +1,9 @@
 import axiosMod, { AxiosRequestConfig, AxiosStatic } from "axios";
-import { isNode } from "browser-or-node";
 import * as cheerio from "cheerio";
+import { isNode } from "../util/env.js";
 import { BaseLanguageModel } from "../base_language/index.js";
 import { RecursiveCharacterTextSplitter } from "../text_splitter.js";
 import { MemoryVectorStore } from "../vectorstores/memory.js";
-import { StringPromptValue } from "../prompts/base.js";
 import { Document } from "../document.js";
 import { Tool, ToolParams } from "./base.js";
 import {
@@ -180,7 +179,7 @@ export class WebBrowser extends Tool {
     this.headers = headers || DEFAULT_HEADERS;
     this.axiosConfig = {
       withCredentials: true,
-      adapter: isNode ? undefined : fetchAdapter,
+      adapter: isNode() ? undefined : fetchAdapter,
       ...axiosConfig,
     };
   }
@@ -234,16 +233,10 @@ export class WebBrowser extends Tool {
       doSummary ? "a summary" : task
     } from the above text, also provide up to 5 markdown links from within that would be of interest (always including URL and text). Links should be provided, if present, in markdown syntax as a list under the heading "Relevant Links:".`;
 
-    const res = await this.model.generatePrompt(
-      [new StringPromptValue(input)],
-      undefined,
-      runManager?.getChild()
-    );
-
-    return res.generations[0][0].text;
+    return this.model.predict(input, undefined, runManager?.getChild());
   }
 
   name = "web-browser";
 
-  description = `useful for when you need to find something on or summarize a webpage. input should be a comma seperated list of "ONE valid http URL including protocol","what you want to find on the page or empty string for a summary".`;
+  description = `useful for when you need to find something on or summarize a webpage. input should be a comma separated list of "ONE valid http URL including protocol","what you want to find on the page or empty string for a summary".`;
 }

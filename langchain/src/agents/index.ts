@@ -20,6 +20,7 @@ export {
   createSqlAgent,
   SqlCreatePromptArgs,
   createVectorStoreAgent,
+  createVectorStoreRouterAgent,
 } from "./agent_toolkits/index.js";
 export { Toolkit } from "./agent_toolkits/base.js";
 export {
@@ -54,3 +55,12 @@ export {
   SerializedZeroShotAgent,
   StoppingMethod,
 } from "./types.js";
+export {
+  StructuredChatAgent,
+  StructuredChatAgentInput,
+  StructuredChatCreatePromptArgs,
+} from "./structured_chat/index.js";
+export {
+  StructuredChatOutputParser,
+  StructuredChatOutputParserWithRetries,
+} from "./structured_chat/outputParser.js";

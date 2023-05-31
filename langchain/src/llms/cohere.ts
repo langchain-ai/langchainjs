@@ -1,3 +1,4 @@
+import { getEnvironmentVariable } from "../util/env.js";
 import { LLM, BaseLLMParams } from "./base.js";
 
 export interface CohereInput extends BaseLLMParams {
@@ -27,11 +28,7 @@ export class Cohere extends LLM implements CohereInput {
   constructor(fields?: CohereInput) {
     super(fields ?? {});
 
-    const apiKey =
-      fields?.apiKey ?? typeof process !== "undefined"
-        ? // eslint-disable-next-line no-process-env
-          process.env?.COHERE_API_KEY
-        : undefined;
+    const apiKey = fields?.apiKey ?? getEnvironmentVariable("COHERE_API_KEY");
 
     if (!apiKey) {
       throw new Error(
@@ -50,19 +47,24 @@ export class Cohere extends LLM implements CohereInput {
   }
 
   /** @ignore */
-  async _call(prompt: string, _stop?: string[]): Promise<string> {
+  async _call(
+    prompt: string,
+    options: this["ParsedCallOptions"]
+  ): Promise<string> {
     const { cohere } = await Cohere.imports();
 
     cohere.init(this.apiKey);
 
     // Hit the `generate` endpoint on the `large` model
-    const generateResponse = await this.caller.call(
+    const generateResponse = await this.caller.callWithOptions(
+      { signal: options.signal },
       cohere.generate.bind(cohere),
       {
         prompt,
         model: this.model,
         max_tokens: this.maxTokens,
         temperature: this.temperature,
+        end_sequences: options.stop,
       }
     );
     try {

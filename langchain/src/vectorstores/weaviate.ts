@@ -1,4 +1,4 @@
-import { v4 } from "uuid";
+import * as uuid from "uuid";
 import type {
   WeaviateObject,
   WeaviateClient,
@@ -7,7 +7,47 @@ import type {
 import { VectorStore } from "./base.js";
 import { Embeddings } from "../embeddings/base.js";
 import { Document } from "../document.js";
-import { flattenObject } from "../util/flatten.js";
+
+// Note this function is not generic, it is designed specifically for Weaviate
+// https://weaviate.io/developers/weaviate/config-refs/datatypes#introduction
+export const flattenObjectForWeaviate = (
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  obj: Record<string, any>
+) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const flattenedObject: Record<string, any> = {};
+
+  for (const key in obj) {
+    if (!Object.hasOwn(obj, key)) {
+      continue;
+    }
+    const value = obj[key];
+    if (typeof obj[key] === "object" && !Array.isArray(value)) {
+      const recursiveResult = flattenObjectForWeaviate(value);
+
+      for (const deepKey in recursiveResult) {
+        if (Object.hasOwn(obj, key)) {
+          flattenedObject[`${key}_${deepKey}`] = recursiveResult[deepKey];
+        }
+      }
+    } else if (Array.isArray(value)) {
+      if (
+        value.length > 0 &&
+        typeof value[0] !== "object" &&
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        value.every((el: any) => typeof el === typeof value[0])
+      ) {
+        // Weaviate only supports arrays of primitive types,
+        // where all elements are of the same type
+        flattenedObject[key] = value;
+      }
+    } else {
+      flattenedObject[key] = value;
+    }
+  }
+
+  return flattenedObject;
+};
 
 export interface WeaviateLibArgs {
   client: WeaviateClient;
@@ -60,10 +100,10 @@ export class WeaviateStore extends VectorStore {
           "Document inserted to Weaviate vectorstore should not have `id` in their metadata."
         );
 
-      const flattenedMetadata = flattenObject(document.metadata);
+      const flattenedMetadata = flattenObjectForWeaviate(document.metadata);
       return {
         class: this.indexName,
-        id: v4(),
+        id: uuid.v4(),
         vector: vectors[index],
         properties: {
           [this.textKey]: document.pageContent,
