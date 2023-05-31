@@ -39,11 +39,12 @@ console.log(output);
       metadata: { loc: [Object] }
     },
     Document {
-      pageContent: '<title>🦜️🔗 LangChain</title>',
+      pageContent: '<head>\n    <title>🦜️🔗 LangChain</title>',
       metadata: { loc: [Object] }
     },
     Document {
-      pageContent: 'body {\n' +
+      pageContent: '<style>\n' +
+        '      body {\n' +
         '        font-family: Arial, sans-serif;\n' +
         '      }\n' +
         '      h1 {\n' +
@@ -54,14 +55,16 @@ console.log(output);
       metadata: { loc: [Object] }
     },
     Document {
-      pageContent: '<div>\n' +
+      pageContent: '<body>\n' +
+        '    <div>\n' +
         '      <h1>🦜️🔗 LangChain</h1>\n' +
         '      <p>⚡ Building applications with LLMs through composability ⚡</p>\n' +
         '    </div>',
       metadata: { loc: [Object] }
     },
     Document {
-      pageContent: 'As an open source project in a rapidly developing field, we are extremely open to contributions.\n' +
+      pageContent: '<div>\n' +
+        '      As an open source project in a rapidly developing field, we are extremely open to contributions.\n' +
         '    </div>\n' +
         '  </body>\n' +
         '</html>',
