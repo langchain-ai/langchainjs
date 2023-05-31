@@ -206,6 +206,27 @@ export interface RecursiveCharacterTextSplitterParams
   separators: string[];
 }
 
+export const SupportedTextSplitterLanguages = [
+  "cpp",
+  "go",
+  "java",
+  "js",
+  "php",
+  "proto",
+  "python",
+  "rst",
+  "ruby",
+  "rust",
+  "scala",
+  "swift",
+  "markdown",
+  "latex",
+  "html",
+] as const;
+
+export type SupportedTextSplitterLanguage =
+  (typeof SupportedTextSplitterLanguages)[number];
+
 export class RecursiveCharacterTextSplitter
   extends TextSplitter
   implements RecursiveCharacterTextSplitterParams
@@ -269,6 +290,336 @@ export class RecursiveCharacterTextSplitter
 
   async splitText(text: string): Promise<string[]> {
     return this._splitText(text, this.separators);
+  }
+
+  static fromLanguage(
+    language: SupportedTextSplitterLanguage,
+    options: Partial<RecursiveCharacterTextSplitterParams>
+  ) {
+    return new RecursiveCharacterTextSplitter({
+      ...options,
+      separators:
+        RecursiveCharacterTextSplitter.getSeparatorsForLanguage(language),
+    });
+  }
+
+  static getSeparatorsForLanguage(language: SupportedTextSplitterLanguage) {
+    if (language === "cpp") {
+      return [
+        // Split along class definitions
+        "\nclass ",
+        // Split along function definitions
+        "\nvoid ",
+        "\nint ",
+        "\nfloat ",
+        "\ndouble ",
+        // Split along control flow statements
+        "\nif ",
+        "\nfor ",
+        "\nwhile ",
+        "\nswitch ",
+        "\ncase ",
+        // Split by the normal type of lines
+        "\n\n",
+        "\n",
+        " ",
+        "",
+      ];
+    } else if (language === "go") {
+      return [
+        // Split along function definitions
+        "\nfunc ",
+        "\nvar ",
+        "\nconst ",
+        "\ntype ",
+        // Split along control flow statements
+        "\nif ",
+        "\nfor ",
+        "\nswitch ",
+        "\ncase ",
+        // Split by the normal type of lines
+        "\n\n",
+        "\n",
+        " ",
+        "",
+      ];
+    } else if (language === "java") {
+      return [
+        // Split along class definitions
+        "\nclass ",
+        // Split along method definitions
+        "\npublic ",
+        "\nprotected ",
+        "\nprivate ",
+        "\nstatic ",
+        // Split along control flow statements
+        "\nif ",
+        "\nfor ",
+        "\nwhile ",
+        "\nswitch ",
+        "\ncase ",
+        // Split by the normal type of lines
+        "\n\n",
+        "\n",
+        " ",
+        "",
+      ];
+    } else if (language === "js") {
+      return [
+        // Split along function definitions
+        "\nfunction ",
+        "\nconst ",
+        "\nlet ",
+        "\nvar ",
+        "\nclass ",
+        // Split along control flow statements
+        "\nif ",
+        "\nfor ",
+        "\nwhile ",
+        "\nswitch ",
+        "\ncase ",
+        "\ndefault ",
+        // Split by the normal type of lines
+        "\n\n",
+        "\n",
+        " ",
+        "",
+      ];
+    } else if (language === "php") {
+      return [
+        // Split along function definitions
+        "\nfunction ",
+        // Split along class definitions
+        "\nclass ",
+        // Split along control flow statements
+        "\nif ",
+        "\nforeach ",
+        "\nwhile ",
+        "\ndo ",
+        "\nswitch ",
+        "\ncase ",
+        // Split by the normal type of lines
+        "\n\n",
+        "\n",
+        " ",
+        "",
+      ];
+    } else if (language === "proto") {
+      return [
+        // Split along message definitions
+        "\nmessage ",
+        // Split along service definitions
+        "\nservice ",
+        // Split along enum definitions
+        "\nenum ",
+        // Split along option definitions
+        "\noption ",
+        // Split along import statements
+        "\nimport ",
+        // Split along syntax declarations
+        "\nsyntax ",
+        // Split by the normal type of lines
+        "\n\n",
+        "\n",
+        " ",
+        "",
+      ];
+    } else if (language === "python") {
+      return [
+        // First, try to split along class definitions
+        "\nclass ",
+        "\ndef ",
+        "\n\tdef ",
+        // Now split by the normal type of lines
+        "\n\n",
+        "\n",
+        " ",
+        "",
+      ];
+    } else if (language === "rst") {
+      return [
+        // Split along section titles
+        "\n===\n",
+        "\n---\n",
+        "\n***\n",
+        // Split along directive markers
+        "\n.. ",
+        // Split by the normal type of lines
+        "\n\n",
+        "\n",
+        " ",
+        "",
+      ];
+    } else if (language === "ruby") {
+      return [
+        // Split along method definitions
+        "\ndef ",
+        "\nclass ",
+        // Split along control flow statements
+        "\nif ",
+        "\nunless ",
+        "\nwhile ",
+        "\nfor ",
+        "\ndo ",
+        "\nbegin ",
+        "\nrescue ",
+        // Split by the normal type of lines
+        "\n\n",
+        "\n",
+        " ",
+        "",
+      ];
+    } else if (language === "rust") {
+      return [
+        // Split along function definitions
+        "\nfn ",
+        "\nconst ",
+        "\nlet ",
+        // Split along control flow statements
+        "\nif ",
+        "\nwhile ",
+        "\nfor ",
+        "\nloop ",
+        "\nmatch ",
+        "\nconst ",
+        // Split by the normal type of lines
+        "\n\n",
+        "\n",
+        " ",
+        "",
+      ];
+    } else if (language === "scala") {
+      return [
+        // Split along class definitions
+        "\nclass ",
+        "\nobject ",
+        // Split along method definitions
+        "\ndef ",
+        "\nval ",
+        "\nvar ",
+        // Split along control flow statements
+        "\nif ",
+        "\nfor ",
+        "\nwhile ",
+        "\nmatch ",
+        "\ncase ",
+        // Split by the normal type of lines
+        "\n\n",
+        "\n",
+        " ",
+        "",
+      ];
+    } else if (language === "swift") {
+      return [
+        // Split along function definitions
+        "\nfunc ",
+        // Split along class definitions
+        "\nclass ",
+        "\nstruct ",
+        "\nenum ",
+        // Split along control flow statements
+        "\nif ",
+        "\nfor ",
+        "\nwhile ",
+        "\ndo ",
+        "\nswitch ",
+        "\ncase ",
+        // Split by the normal type of lines
+        "\n\n",
+        "\n",
+        " ",
+        "",
+      ];
+    } else if (language === "markdown") {
+      return [
+        // First, try to split along Markdown headings (starting with level 2)
+        "\n## ",
+        "\n### ",
+        "\n#### ",
+        "\n##### ",
+        "\n###### ",
+        // Note the alternative syntax for headings (below) is not handled here
+        // Heading level 2
+        // ---------------
+        // End of code block
+        "```\n\n",
+        // Horizontal lines
+        "\n\n***\n\n",
+        "\n\n---\n\n",
+        "\n\n___\n\n",
+        // Note that this splitter doesn't handle horizontal lines defined
+        // by *three or more* of ***, ---, or ___, but this is not handled
+        "\n\n",
+        "\n",
+        " ",
+        "",
+      ];
+    } else if (language === "latex") {
+      return [
+        // First, try to split along Latex sections
+        "\n\\chapter{",
+        "\n\\section{",
+        "\n\\subsection{",
+        "\n\\subsubsection{",
+
+        // Now split by environments
+        "\n\\begin{enumerate}",
+        "\n\\begin{itemize}",
+        "\n\\begin{description}",
+        "\n\\begin{list}",
+        "\n\\begin{quote}",
+        "\n\\begin{quotation}",
+        "\n\\begin{verse}",
+        "\n\\begin{verbatim}",
+
+        // Now split by math environments
+        "\n\\begin{align}",
+        "$$",
+        "$",
+
+        // Now split by the normal type of lines
+        "\n\n",
+        "\n",
+        " ",
+        "",
+      ];
+    } else if (language === "html") {
+      return [
+        // First, try to split along HTML tags
+        "<body>",
+        "<div>",
+        "<p>",
+        "<br>",
+        "<li>",
+        "<h1>",
+        "<h2>",
+        "<h3>",
+        "<h4>",
+        "<h5>",
+        "<h6>",
+        "<span>",
+        "<table>",
+        "<tr>",
+        "<td>",
+        "<th>",
+        "<ul>",
+        "<ol>",
+        "<header>",
+        "<footer>",
+        "<nav>",
+        // Head
+        "<head>",
+        "<style>",
+        "<script>",
+        "<meta>",
+        "<title>",
+        // Normal type of lines
+        " ",
+        "",
+      ];
+    } else {
+      throw new Error(`Language ${language} is not supported.`);
+    }
   }
 }
 
@@ -336,32 +687,12 @@ export class MarkdownTextSplitter
   extends RecursiveCharacterTextSplitter
   implements MarkdownTextSplitterParams
 {
-  separators: string[] = [
-    // First, try to split along Markdown headings (starting with level 2)
-    "\n## ",
-    "\n### ",
-    "\n#### ",
-    "\n##### ",
-    "\n###### ",
-    // Note the alternative syntax for headings (below) is not handled here
-    // Heading level 2
-    // ---------------
-    // End of code block
-    "```\n\n",
-    // Horizontal lines
-    "\n\n***\n\n",
-    "\n\n---\n\n",
-    "\n\n___\n\n",
-    // Note that this splitter doesn't handle horizontal lines defined
-    // by *three or more* of ***, ---, or ___, but this is not handled
-    "\n\n",
-    "\n",
-    " ",
-    "",
-  ];
-
   constructor(fields?: Partial<MarkdownTextSplitterParams>) {
-    super(fields);
+    super({
+      ...fields,
+      separators:
+        RecursiveCharacterTextSplitter.getSeparatorsForLanguage("markdown"),
+    });
   }
 }
 
@@ -371,36 +702,11 @@ export class LatexTextSplitter
   extends RecursiveCharacterTextSplitter
   implements LatexTextSplitterParams
 {
-  separators: string[] = [
-    // First, try to split along Latex sections
-    "\n\\chapter{",
-    "\n\\section{",
-    "\n\\subsection{",
-    "\n\\subsubsection{",
-
-    // Now split by environments
-    "\n\\begin{enumerate}",
-    "\n\\begin{itemize}",
-    "\n\\begin{description}",
-    "\n\\begin{list}",
-    "\n\\begin{quote}",
-    "\n\\begin{quotation}",
-    "\n\\begin{verse}",
-    "\n\\begin{verbatim}",
-
-    // Now split by math environments
-    "\n\\begin{align}",
-    "$$",
-    "$",
-
-    // Now split by the normal type of lines
-    "\n\n",
-    "\n",
-    " ",
-    "",
-  ];
-
   constructor(fields?: Partial<LatexTextSplitterParams>) {
-    super(fields);
+    super({
+      ...fields,
+      separators:
+        RecursiveCharacterTextSplitter.getSeparatorsForLanguage("latex"),
+    });
   }
 }

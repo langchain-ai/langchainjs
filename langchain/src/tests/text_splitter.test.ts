@@ -253,6 +253,61 @@ As an open source project in a rapidly developing field, we are extremely open t
   expect(output).toEqual(expectedOutput);
 });
 
+test("Test HTML text splitter", async () => {
+  const text = `<!DOCTYPE html>
+<html>
+  <head>
+    <title>🦜️🔗 LangChain</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+      }
+      h1 {
+        color: darkblue;
+      }
+    </style>
+  </head>
+  <body>
+    <div>
+      <h1>🦜️🔗 LangChain</h1>
+      <p>⚡ Building applications with LLMs through composability ⚡</p>
+    </div>
+    <div>
+      As an open source project in a rapidly developing field, we are extremely open to contributions.
+    </div>
+  </body>
+</html>`;
+  const splitter = RecursiveCharacterTextSplitter.fromLanguage("html", {
+    chunkSize: 175,
+    chunkOverlap: 20,
+  });
+  const output = await splitter.splitText(text);
+
+  const expectedOutput = [
+    "<!DOCTYPE html>\n<html>",
+    "<head>\n    <title>🦜️🔗 LangChain</title>",
+    `<style>\n      body {
+        font-family: Arial, sans-serif;
+      }
+      h1 {
+        color: darkblue;
+      }
+    </style>
+  </head>`,
+    `<body>
+    <div>
+      <h1>🦜️🔗 LangChain</h1>
+      <p>⚡ Building applications with LLMs through composability ⚡</p>
+    </div>`,
+    `<div>
+      As an open source project in a rapidly developing field, we are extremely open to contributions.
+    </div>
+  </body>
+</html>`,
+  ];
+  expect(output).toEqual(expectedOutput);
+});
+
 test("Test lines loc on iterative text splitter.", async () => {
   const text = `Hi.\nI'm Harrison.\n\nHow?\na\nb`;
   const splitter = new RecursiveCharacterTextSplitter({
