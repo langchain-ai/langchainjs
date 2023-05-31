@@ -33,7 +33,10 @@ test.skip("SupabaseVectorStore with external ids", async () => {
   expect(results).toHaveLength(1);
 
   expect(results).toEqual([
-    new Document({ metadata: { a: createdAt }, pageContent: createdAt.toString() }),
+    new Document({
+      metadata: { a: createdAt },
+      pageContent: createdAt.toString(),
+    }),
   ]);
 });
 
@@ -103,11 +106,26 @@ test.skip("Search a SupabaseVectorStore with a functional metadata filter", asyn
         "This is a long text, but it actually means something because vector database does not understand Lorem Ipsum. So I would need to proceed by discussing the echo of virtual tweets in the binary corridors of the digital universe. Each tweet, like a pixelated canary, hums in an unseen frequency, a fascinatingly perplexing phenomenon that, while conjuring vivid imagery, lacks any concrete implication or real-world relevance, portraying a paradox of multidimensional spaces in the age of cyber folklore.",
       metadata: { b: 2, c: 9, stuff: "right", created_at: createdAt },
     },
-    { pageContent: "hello", metadata: { b: 1, c: 9, stuff: "right", created_at: createdAt } },
-    { pageContent: "hello", metadata: { b: 1, c: 9, stuff: "wrong", created_at: createdAt } },
-    { pageContent: "hi", metadata: { b: 2, c: 8, stuff: "right", created_at: createdAt } },
-    { pageContent: "bye", metadata: { b: 3, c: 7, stuff: "right", created_at: createdAt } },
-    { pageContent: "what's this", metadata: { b: 4, c: 6, stuff: "right", created_at: createdAt } },
+    {
+      pageContent: "hello",
+      metadata: { b: 1, c: 9, stuff: "right", created_at: createdAt },
+    },
+    {
+      pageContent: "hello",
+      metadata: { b: 1, c: 9, stuff: "wrong", created_at: createdAt },
+    },
+    {
+      pageContent: "hi",
+      metadata: { b: 2, c: 8, stuff: "right", created_at: createdAt },
+    },
+    {
+      pageContent: "bye",
+      metadata: { b: 3, c: 7, stuff: "right", created_at: createdAt },
+    },
+    {
+      pageContent: "what's this",
+      metadata: { b: 4, c: 6, stuff: "right", created_at: createdAt },
+    },
   ];
 
   await store.addDocuments(docs);
