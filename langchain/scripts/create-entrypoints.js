@@ -67,6 +67,7 @@ const entrypoints = {
   text_splitter: "text_splitter",
   // memory
   memory: "memory/index",
+  "memory/zep": "memory/zep",
   // document
   document: "document",
   // docstore
@@ -120,6 +121,7 @@ const entrypoints = {
   retrievers: "retrievers/index",
   "retrievers/remote": "retrievers/remote/index",
   "retrievers/supabase": "retrievers/supabase",
+  "retrievers/zep": "retrievers/zep",
   "retrievers/metal": "retrievers/metal",
   "retrievers/databerry": "retrievers/databerry",
   "retrievers/contextual_compression": "retrievers/contextual_compression",
@@ -131,11 +133,13 @@ const entrypoints = {
   "retrievers/self_query": "retrievers/self_query/index",
   // cache
   cache: "cache/index",
+  "cache/momento": "cache/momento",
   "cache/redis": "cache/redis",
   // stores
   "stores/file/in_memory": "stores/file/in_memory",
   "stores/file/node": "stores/file/node",
   "stores/message/dynamodb": "stores/message/dynamodb",
+  "stores/message/momento": "stores/message/momento",
   "stores/message/redis": "stores/message/redis",
   "stores/message/upstash_redis": "stores/message/upstash_redis",
   // experimental
@@ -190,6 +194,7 @@ const requiresOptionalDependency = [
   "vectorstores/redis",
   "vectorstores/singlestore",
   "vectorstores/tigris",
+  "memory/zep",
   "document_loaders/web/apify_dataset",
   "document_loaders/web/cheerio",
   "document_loaders/web/puppeteer",
@@ -217,14 +222,17 @@ const requiresOptionalDependency = [
   "chat_models/googlevertexai",
   "sql_db",
   "retrievers/supabase",
+  "retrievers/zep",
   "retrievers/metal",
   "retrievers/self_query",
   "output_parsers/expression",
   "chains/query_constructor",
   "chains/query_constructor/ir",
+  "cache/momento",
   "cache/redis",
   "stores/file/node",
   "stores/message/dynamodb",
+  "stores/message/momento",
   "stores/message/redis",
   "stores/message/upstash_redis",
 ];

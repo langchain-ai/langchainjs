@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.84",
+  "version": "0.0.86",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -160,6 +160,9 @@
     "memory.cjs",
     "memory.js",
     "memory.d.ts",
+    "memory/zep.cjs",
+    "memory/zep.js",
+    "memory/zep.d.ts",
     "document.cjs",
     "document.js",
     "document.d.ts",
@@ -289,6 +292,9 @@
     "retrievers/supabase.cjs",
     "retrievers/supabase.js",
     "retrievers/supabase.d.ts",
+    "retrievers/zep.cjs",
+    "retrievers/zep.js",
+    "retrievers/zep.d.ts",
     "retrievers/metal.cjs",
     "retrievers/metal.js",
     "retrievers/metal.d.ts",
@@ -316,6 +322,9 @@
     "cache.cjs",
     "cache.js",
     "cache.d.ts",
+    "cache/momento.cjs",
+    "cache/momento.js",
+    "cache/momento.d.ts",
     "cache/redis.cjs",
     "cache/redis.js",
     "cache/redis.d.ts",
@@ -328,6 +337,9 @@
     "stores/message/dynamodb.cjs",
     "stores/message/dynamodb.js",
     "stores/message/dynamodb.d.ts",
+    "stores/message/momento.cjs",
+    "stores/message/momento.js",
+    "stores/message/momento.d.ts",
     "stores/message/redis.cjs",
     "stores/message/redis.js",
     "stores/message/redis.d.ts",
@@ -382,6 +394,8 @@
     "@clickhouse/client": "^0.0.14",
     "@faker-js/faker": "^7.6.0",
     "@getmetal/metal-sdk": "^4.0.0",
+    "@getzep/zep-js": "^0.3.1",
+    "@gomomento/sdk": "^1.23.0",
     "@huggingface/inference": "^1.5.1",
     "@jest/globals": "^29.5.0",
     "@opensearch-project/opensearch": "^2.2.0",
@@ -452,6 +466,8 @@
     "@aws-sdk/client-sagemaker-runtime": "^3.310.0",
     "@clickhouse/client": "^0.0.14",
     "@getmetal/metal-sdk": "*",
+    "@getzep/zep-js": "^0.3.1",
+    "@gomomento/sdk": "^1.23.0",
     "@huggingface/inference": "^1.5.1",
     "@opensearch-project/opensearch": "*",
     "@pinecone-database/pinecone": "*",
@@ -505,6 +521,12 @@
       "optional": true
     },
     "@getmetal/metal-sdk": {
+      "optional": true
+    },
+    "@getzep/zep-js": {
+      "optional": true
+    },
+    "@gomomento/sdk": {
       "optional": true
     },
     "@huggingface/inference": {
@@ -910,6 +932,11 @@
       "import": "./memory.js",
       "require": "./memory.cjs"
     },
+    "./memory/zep": {
+      "types": "./memory/zep.d.ts",
+      "import": "./memory/zep.js",
+      "require": "./memory/zep.cjs"
+    },
     "./document": {
       "types": "./document.d.ts",
       "import": "./document.js",
@@ -1131,6 +1158,11 @@
       "import": "./retrievers/supabase.js",
       "require": "./retrievers/supabase.cjs"
     },
+    "./retrievers/zep": {
+      "types": "./retrievers/zep.d.ts",
+      "import": "./retrievers/zep.js",
+      "require": "./retrievers/zep.cjs"
+    },
     "./retrievers/metal": {
       "types": "./retrievers/metal.d.ts",
       "import": "./retrievers/metal.js",
@@ -1176,6 +1208,11 @@
       "import": "./cache.js",
       "require": "./cache.cjs"
     },
+    "./cache/momento": {
+      "types": "./cache/momento.d.ts",
+      "import": "./cache/momento.js",
+      "require": "./cache/momento.cjs"
+    },
     "./cache/redis": {
       "types": "./cache/redis.d.ts",
       "import": "./cache/redis.js",
@@ -1195,6 +1232,11 @@
       "types": "./stores/message/dynamodb.d.ts",
       "import": "./stores/message/dynamodb.js",
       "require": "./stores/message/dynamodb.cjs"
+    },
+    "./stores/message/momento": {
+      "types": "./stores/message/momento.d.ts",
+      "import": "./stores/message/momento.js",
+      "require": "./stores/message/momento.cjs"
     },
     "./stores/message/redis": {
       "types": "./stores/message/redis.d.ts",

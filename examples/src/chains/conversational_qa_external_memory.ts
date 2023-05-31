@@ -3,7 +3,6 @@ import { ConversationalRetrievalQAChain } from "langchain/chains";
 import { HNSWLib } from "langchain/vectorstores/hnswlib";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
-import { BufferMemory } from "langchain/memory";
 import * as fs from "fs";
 
 export const run = async () => {
@@ -19,20 +18,17 @@ export const run = async () => {
   /* Create the chain */
   const chain = ConversationalRetrievalQAChain.fromLLM(
     model,
-    vectorStore.asRetriever(),
-    {
-      memory: new BufferMemory({
-        memoryKey: "chat_history", // Must be set to "chat_history"
-      }),
-    }
+    vectorStore.asRetriever()
   );
   /* Ask it a question */
   const question = "What did the president say about Justice Breyer?";
-  const res = await chain.call({ question });
+  const res = await chain.call({ question, chat_history: [] });
   console.log(res);
   /* Ask it a follow up question */
+  const chatHistory = question + res.text;
   const followUpRes = await chain.call({
     question: "Was that nice?",
+    chat_history: chatHistory,
   });
   console.log(followUpRes);
 };
