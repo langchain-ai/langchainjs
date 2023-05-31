@@ -1,9 +1,8 @@
 import { test, expect } from "@jest/globals";
-import { CodeTextSplitter } from "../text_splitter.js";
+import { RecursiveCharacterTextSplitter } from "../text_splitter.js";
 
 test("Python code splitter", async () => {
-  const splitter = new CodeTextSplitter({
-    language: "python",
+  const splitter = RecursiveCharacterTextSplitter.fromLanguage("python", {
     chunkSize: 16,
     chunkOverlap: 0,
   });
@@ -24,8 +23,7 @@ hello_world()`;
 });
 
 test("Golang code splitter", async () => {
-  const splitter = new CodeTextSplitter({
-    language: "go",
+  const splitter = RecursiveCharacterTextSplitter.fromLanguage("go", {
     chunkSize: 16,
     chunkOverlap: 0,
   });
@@ -54,8 +52,7 @@ func main() {
 });
 
 test("RST code splitter", async () => {
-  const splitter = new CodeTextSplitter({
-    language: "rst",
+  const splitter = RecursiveCharacterTextSplitter.fromLanguage("rst", {
     chunkSize: 16,
     chunkOverlap: 0,
   });
@@ -85,8 +82,7 @@ Lists
 });
 
 test("Proto code splitter", async () => {
-  const splitter = new CodeTextSplitter({
-    language: "proto",
+  const splitter = RecursiveCharacterTextSplitter.fromLanguage("proto", {
     chunkSize: 16,
     chunkOverlap: 0,
   });
@@ -117,8 +113,7 @@ message Person {
 });
 
 test("JS code splitter", async () => {
-  const splitter = new CodeTextSplitter({
-    language: "js",
+  const splitter = RecursiveCharacterTextSplitter.fromLanguage("js", {
     chunkSize: 16,
     chunkOverlap: 0,
   });
@@ -142,8 +137,7 @@ helloWorld();`;
 });
 
 test("Java code splitter", async () => {
-  const splitter = new CodeTextSplitter({
-    language: "java",
+  const splitter = RecursiveCharacterTextSplitter.fromLanguage("java", {
     chunkSize: 16,
     chunkOverlap: 0,
   });
@@ -168,8 +162,7 @@ test("Java code splitter", async () => {
 });
 
 test("CPP code splitter", async () => {
-  const splitter = new CodeTextSplitter({
-    language: "cpp",
+  const splitter = RecursiveCharacterTextSplitter.fromLanguage("cpp", {
     chunkSize: 16,
     chunkOverlap: 0,
   });
@@ -185,15 +178,14 @@ int main() {
     "int main() {",
     "std::cout",
     '<< "Hello,',
-    "World!\" <<",
+    'World!" <<',
     "std::endl;",
     "return 0;\n}",
   ]);
 });
 
 test("Scala code splitter", async () => {
-  const splitter = new CodeTextSplitter({
-    language: "scala",
+  const splitter = RecursiveCharacterTextSplitter.fromLanguage("scala", {
     chunkSize: 16,
     chunkOverlap: 0,
   });
@@ -217,8 +209,7 @@ test("Scala code splitter", async () => {
 });
 
 test("Ruby code splitter", async () => {
-  const splitter = new CodeTextSplitter({
-    language: "ruby",
+  const splitter = RecursiveCharacterTextSplitter.fromLanguage("ruby", {
     chunkSize: 16,
     chunkOverlap: 0,
   });
@@ -236,8 +227,7 @@ hello_world`;
 });
 
 test("PHP code splitter", async () => {
-  const splitter = new CodeTextSplitter({
-    language: "php",
+  const splitter = RecursiveCharacterTextSplitter.fromLanguage("php", {
     chunkSize: 16,
     chunkOverlap: 0,
   });
@@ -262,8 +252,7 @@ hello_world();
 });
 
 test("Swift code splitter", async () => {
-  const splitter = new CodeTextSplitter({
-    language: "swift",
+  const splitter = RecursiveCharacterTextSplitter.fromLanguage("swift", {
     chunkSize: 16,
     chunkOverlap: 0,
   });
@@ -282,8 +271,7 @@ helloWorld()`;
 });
 
 test("Rust code splitter", async () => {
-  const splitter = new CodeTextSplitter({
-    language: "swift",
+  const splitter = RecursiveCharacterTextSplitter.fromLanguage("rust", {
     chunkSize: 16,
     chunkOverlap: 0,
   });

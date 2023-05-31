@@ -4,7 +4,6 @@ import {
   CharacterTextSplitter,
   MarkdownTextSplitter,
   LatexTextSplitter,
-  HtmlTextSplitter,
   RecursiveCharacterTextSplitter,
   TokenTextSplitter,
 } from "../text_splitter.js";
@@ -278,7 +277,7 @@ test("Test HTML text splitter", async () => {
     </div>
   </body>
 </html>`;
-  const splitter = new HtmlTextSplitter({
+  const splitter = RecursiveCharacterTextSplitter.fromLanguage("html", {
     chunkSize: 175,
     chunkOverlap: 20,
   });

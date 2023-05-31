@@ -1,4 +1,4 @@
-import { HtmlTextSplitter } from "langchain/text_splitter";
+import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 
 const text = `<!DOCTYPE html>
 <html>
@@ -24,7 +24,7 @@ const text = `<!DOCTYPE html>
   </body>
 </html>`;
 
-const splitter = new HtmlTextSplitter({
+const splitter = RecursiveCharacterTextSplitter.fromLanguage("html", {
   chunkSize: 175,
   chunkOverlap: 20,
 });

@@ -206,6 +206,27 @@ export interface RecursiveCharacterTextSplitterParams
   separators: string[];
 }
 
+export const SupportedTextSplitterLanguages = [
+  "cpp",
+  "go",
+  "java",
+  "js",
+  "php",
+  "proto",
+  "python",
+  "rst",
+  "ruby",
+  "rust",
+  "scala",
+  "swift",
+  "markdown",
+  "latex",
+  "html",
+] as const;
+
+export type SupportedTextSplitterLanguage =
+  (typeof SupportedTextSplitterLanguages)[number];
+
 export class RecursiveCharacterTextSplitter
   extends TextSplitter
   implements RecursiveCharacterTextSplitterParams
@@ -270,227 +291,19 @@ export class RecursiveCharacterTextSplitter
   async splitText(text: string): Promise<string[]> {
     return this._splitText(text, this.separators);
   }
-}
 
-export interface TokenTextSplitterParams extends TextSplitterParams {
-  encodingName: tiktoken.TiktokenEncoding;
-  allowedSpecial: "all" | Array<string>;
-  disallowedSpecial: "all" | Array<string>;
-}
-
-/**
- * Implementation of splitter which looks at tokens.
- */
-export class TokenTextSplitter
-  extends TextSplitter
-  implements TokenTextSplitterParams
-{
-  encodingName: tiktoken.TiktokenEncoding;
-
-  allowedSpecial: "all" | Array<string>;
-
-  disallowedSpecial: "all" | Array<string>;
-
-  private tokenizer: tiktoken.Tiktoken;
-
-  constructor(fields?: Partial<TokenTextSplitterParams>) {
-    super(fields);
-
-    this.encodingName = fields?.encodingName ?? "gpt2";
-    this.allowedSpecial = fields?.allowedSpecial ?? [];
-    this.disallowedSpecial = fields?.disallowedSpecial ?? "all";
+  static fromLanguage(
+    language: SupportedTextSplitterLanguage,
+    options: Partial<RecursiveCharacterTextSplitterParams>
+  ) {
+    return new RecursiveCharacterTextSplitter({
+      ...options,
+      separators:
+        RecursiveCharacterTextSplitter.getSeparatorsForLanguage(language),
+    });
   }
 
-  async splitText(text: string): Promise<string[]> {
-    if (!this.tokenizer) {
-      this.tokenizer = await getEncoding(this.encodingName);
-    }
-
-    const splits: string[] = [];
-
-    const input_ids = this.tokenizer.encode(
-      text,
-      this.allowedSpecial,
-      this.disallowedSpecial
-    );
-
-    let start_idx = 0;
-    let cur_idx = Math.min(start_idx + this.chunkSize, input_ids.length);
-    let chunk_ids = input_ids.slice(start_idx, cur_idx);
-
-    while (start_idx < input_ids.length) {
-      splits.push(this.tokenizer.decode(chunk_ids));
-
-      start_idx += this.chunkSize - this.chunkOverlap;
-      cur_idx = Math.min(start_idx + this.chunkSize, input_ids.length);
-      chunk_ids = input_ids.slice(start_idx, cur_idx);
-    }
-
-    return splits;
-  }
-}
-
-const MarkdownTextSplitterSeparators = [
-  // First, try to split along Markdown headings (starting with level 2)
-  "\n## ",
-  "\n### ",
-  "\n#### ",
-  "\n##### ",
-  "\n###### ",
-  // Note the alternative syntax for headings (below) is not handled here
-  // Heading level 2
-  // ---------------
-  // End of code block
-  "```\n\n",
-  // Horizontal lines
-  "\n\n***\n\n",
-  "\n\n---\n\n",
-  "\n\n___\n\n",
-  // Note that this splitter doesn't handle horizontal lines defined
-  // by *three or more* of ***, ---, or ___, but this is not handled
-  "\n\n",
-  "\n",
-  " ",
-  "",
-];
-
-export type MarkdownTextSplitterParams = TextSplitterParams;
-
-export class MarkdownTextSplitter
-  extends RecursiveCharacterTextSplitter
-  implements MarkdownTextSplitterParams
-{
-  separators: string[] = MarkdownTextSplitterSeparators;
-
-  constructor(fields?: Partial<MarkdownTextSplitterParams>) {
-    super(fields);
-  }
-}
-
-const LatexTextSplitterSeparators = [
-  // First, try to split along Latex sections
-  "\n\\chapter{",
-  "\n\\section{",
-  "\n\\subsection{",
-  "\n\\subsubsection{",
-
-  // Now split by environments
-  "\n\\begin{enumerate}",
-  "\n\\begin{itemize}",
-  "\n\\begin{description}",
-  "\n\\begin{list}",
-  "\n\\begin{quote}",
-  "\n\\begin{quotation}",
-  "\n\\begin{verse}",
-  "\n\\begin{verbatim}",
-
-  // Now split by math environments
-  "\n\\begin{align}",
-  "$$",
-  "$",
-
-  // Now split by the normal type of lines
-  "\n\n",
-  "\n",
-  " ",
-  "",
-];
-
-export type LatexTextSplitterParams = TextSplitterParams;
-
-export class LatexTextSplitter
-  extends RecursiveCharacterTextSplitter
-  implements LatexTextSplitterParams
-{
-  separators: string[] = LatexTextSplitterSeparators;
-
-  constructor(fields?: Partial<LatexTextSplitterParams>) {
-    super(fields);
-  }
-}
-
-export type HtmlTextSplitterParams = TextSplitterParams;
-
-export class HtmlTextSplitter
-  extends RecursiveCharacterTextSplitter
-  implements HtmlTextSplitterParams
-{
-  separators: string[] = [
-    // First, try to split along HTML tags
-    "<body>",
-    "<div>",
-    "<p>",
-    "<br>",
-    "<li>",
-    "<h1>",
-    "<h2>",
-    "<h3>",
-    "<h4>",
-    "<h5>",
-    "<h6>",
-    "<span>",
-    "<table>",
-    "<tr>",
-    "<td>",
-    "<th>",
-    "<ul>",
-    "<ol>",
-    "<header>",
-    "<footer>",
-    "<nav>",
-    // Head
-    "<head>",
-    "<style>",
-    "<script>",
-    "<meta>",
-    "<title>",
-    // Normal type of lines
-    " ",
-    "",
-  ];
-
-  constructor(fields?: Partial<HtmlTextSplitterParams>) {
-    super(fields);
-  }
-}
-
-export const CodeTextSplitterLanguages = [
-  "cpp",
-  "go",
-  "java",
-  "js",
-  "php",
-  "proto",
-  "python",
-  "rst",
-  "ruby",
-  "rust",
-  "scala",
-  "swift",
-  "markdown",
-  "latex",
-] as const;
-
-export type CodeTextSplitterLanguage =
-  (typeof CodeTextSplitterLanguages)[number];
-
-export type CodeTextSplitterParams = Partial<TextSplitterParams> & {
-  language: CodeTextSplitterLanguage;
-};
-
-export class CodeTextSplitter
-  extends RecursiveCharacterTextSplitter
-  implements CodeTextSplitterParams
-{
-  language: CodeTextSplitterLanguage;
-
-  constructor(fields: CodeTextSplitterParams) {
-    super(fields);
-    this.language = fields.language;
-    this.separators = CodeTextSplitter.getSeparatorsForLanguage(this.language);
-  }
-
-  static getSeparatorsForLanguage(language: CodeTextSplitterLanguage) {
+  static getSeparatorsForLanguage(language: SupportedTextSplitterLanguage) {
     if (language === "cpp") {
       return [
         // Split along class definitions
@@ -532,14 +345,17 @@ export class CodeTextSplitter
       ];
     } else if (language === "java") {
       return [
-        // Split along function definitions
-        "\nfunc ",
-        "\nvar ",
-        "\nconst ",
-        "\ntype ",
+        // Split along class definitions
+        "\nclass ",
+        // Split along method definitions
+        "\npublic ",
+        "\nprotected ",
+        "\nprivate ",
+        "\nstatic ",
         // Split along control flow statements
         "\nif ",
         "\nfor ",
+        "\nwhile ",
         "\nswitch ",
         "\ncase ",
         // Split by the normal type of lines
@@ -715,11 +531,182 @@ export class CodeTextSplitter
         "",
       ];
     } else if (language === "markdown") {
-      return MarkdownTextSplitterSeparators;
+      return [
+        // First, try to split along Markdown headings (starting with level 2)
+        "\n## ",
+        "\n### ",
+        "\n#### ",
+        "\n##### ",
+        "\n###### ",
+        // Note the alternative syntax for headings (below) is not handled here
+        // Heading level 2
+        // ---------------
+        // End of code block
+        "```\n\n",
+        // Horizontal lines
+        "\n\n***\n\n",
+        "\n\n---\n\n",
+        "\n\n___\n\n",
+        // Note that this splitter doesn't handle horizontal lines defined
+        // by *three or more* of ***, ---, or ___, but this is not handled
+        "\n\n",
+        "\n",
+        " ",
+        "",
+      ];
     } else if (language === "latex") {
-      return LatexTextSplitterSeparators;
+      return [
+        // First, try to split along Latex sections
+        "\n\\chapter{",
+        "\n\\section{",
+        "\n\\subsection{",
+        "\n\\subsubsection{",
+
+        // Now split by environments
+        "\n\\begin{enumerate}",
+        "\n\\begin{itemize}",
+        "\n\\begin{description}",
+        "\n\\begin{list}",
+        "\n\\begin{quote}",
+        "\n\\begin{quotation}",
+        "\n\\begin{verse}",
+        "\n\\begin{verbatim}",
+
+        // Now split by math environments
+        "\n\\begin{align}",
+        "$$",
+        "$",
+
+        // Now split by the normal type of lines
+        "\n\n",
+        "\n",
+        " ",
+        "",
+      ];
+    } else if (language === "html") {
+      return [
+        // First, try to split along HTML tags
+        "<body>",
+        "<div>",
+        "<p>",
+        "<br>",
+        "<li>",
+        "<h1>",
+        "<h2>",
+        "<h3>",
+        "<h4>",
+        "<h5>",
+        "<h6>",
+        "<span>",
+        "<table>",
+        "<tr>",
+        "<td>",
+        "<th>",
+        "<ul>",
+        "<ol>",
+        "<header>",
+        "<footer>",
+        "<nav>",
+        // Head
+        "<head>",
+        "<style>",
+        "<script>",
+        "<meta>",
+        "<title>",
+        // Normal type of lines
+        " ",
+        "",
+      ];
     } else {
       throw new Error(`Language ${language} is not supported.`);
     }
+  }
+}
+
+export interface TokenTextSplitterParams extends TextSplitterParams {
+  encodingName: tiktoken.TiktokenEncoding;
+  allowedSpecial: "all" | Array<string>;
+  disallowedSpecial: "all" | Array<string>;
+}
+
+/**
+ * Implementation of splitter which looks at tokens.
+ */
+export class TokenTextSplitter
+  extends TextSplitter
+  implements TokenTextSplitterParams
+{
+  encodingName: tiktoken.TiktokenEncoding;
+
+  allowedSpecial: "all" | Array<string>;
+
+  disallowedSpecial: "all" | Array<string>;
+
+  private tokenizer: tiktoken.Tiktoken;
+
+  constructor(fields?: Partial<TokenTextSplitterParams>) {
+    super(fields);
+
+    this.encodingName = fields?.encodingName ?? "gpt2";
+    this.allowedSpecial = fields?.allowedSpecial ?? [];
+    this.disallowedSpecial = fields?.disallowedSpecial ?? "all";
+  }
+
+  async splitText(text: string): Promise<string[]> {
+    if (!this.tokenizer) {
+      this.tokenizer = await getEncoding(this.encodingName);
+    }
+
+    const splits: string[] = [];
+
+    const input_ids = this.tokenizer.encode(
+      text,
+      this.allowedSpecial,
+      this.disallowedSpecial
+    );
+
+    let start_idx = 0;
+    let cur_idx = Math.min(start_idx + this.chunkSize, input_ids.length);
+    let chunk_ids = input_ids.slice(start_idx, cur_idx);
+
+    while (start_idx < input_ids.length) {
+      splits.push(this.tokenizer.decode(chunk_ids));
+
+      start_idx += this.chunkSize - this.chunkOverlap;
+      cur_idx = Math.min(start_idx + this.chunkSize, input_ids.length);
+      chunk_ids = input_ids.slice(start_idx, cur_idx);
+    }
+
+    return splits;
+  }
+}
+
+export type MarkdownTextSplitterParams = TextSplitterParams;
+
+export class MarkdownTextSplitter
+  extends RecursiveCharacterTextSplitter
+  implements MarkdownTextSplitterParams
+{
+  constructor(fields?: Partial<MarkdownTextSplitterParams>) {
+    super({
+      ...fields,
+      separators:
+        RecursiveCharacterTextSplitter.getSeparatorsForLanguage("markdown"),
+    });
+  }
+}
+
+export type LatexTextSplitterParams = TextSplitterParams;
+
+export class LatexTextSplitter
+  extends RecursiveCharacterTextSplitter
+  implements LatexTextSplitterParams
+{
+  constructor(fields?: Partial<LatexTextSplitterParams>) {
+    super({
+      ...fields,
+      separators:
+        RecursiveCharacterTextSplitter.getSeparatorsForLanguage("latex"),
+    });
   }
 }
