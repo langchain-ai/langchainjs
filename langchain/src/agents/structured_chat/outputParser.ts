@@ -8,6 +8,7 @@ import { BaseLanguageModel } from "../../base_language/index.js";
 import { AgentAction, AgentFinish } from "../../schema/index.js";
 import { OutputParserException } from "../../schema/output_parser.js";
 import { renderTemplate } from "../../prompts/index.js";
+import { Callbacks } from "../../callbacks/manager.js";
 
 export class StructuredChatOutputParser extends AgentActionOutputParser {
   constructor(private toolNames: string[]) {
@@ -65,9 +66,12 @@ export class StructuredChatOutputParserWithRetries extends AgentActionOutputPars
     this.outputFixingParser = fields?.outputFixingParser;
   }
 
-  async parse(text: string): Promise<AgentAction | AgentFinish> {
+  async parse(
+    text: string,
+    callbacks?: Callbacks
+  ): Promise<AgentAction | AgentFinish> {
     if (this.outputFixingParser !== undefined) {
-      return this.outputFixingParser.parse(text);
+      return this.outputFixingParser.parse(text, callbacks);
     }
     return this.baseParser.parse(text);
   }
