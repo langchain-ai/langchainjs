@@ -31,13 +31,13 @@ export class ExpressionParser extends BaseOutputParser<ParsedType> {
    * subsequent calls. See expression.test.ts for an example.
    */
   async ensureParser() {
-    this.parser = await ASTParser.importASTParser();
+    if (!this.parser) {
+      this.parser = await ASTParser.importASTParser();
+    }
   }
 
   async parse(text: string) {
-    if (!this.parser) {
-      await this.ensureParser();
-    }
+    await this.ensureParser();
 
     try {
       const program = this.parser(text);
