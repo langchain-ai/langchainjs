@@ -1,4 +1,4 @@
-import { ZepClient, Memory, Message } from "@getzep/zep-js";
+import { ZepClient, Memory, Message, NotFoundError } from "@getzep/zep-js";
 import {
   InputValues,
   OutputValues,
@@ -60,7 +60,19 @@ export class ZepMemory extends BaseChatMemory implements ZepMemoryInput {
 
   async loadMemoryVariables(values: InputValues): Promise<MemoryVariables> {
     const lastN = values.lastN ?? 10;
-    const memory = await this.zepClient.getMemory(this.sessionId, lastN);
+
+    let memory: Memory | null = null;
+    try {
+      memory = await this.zepClient.getMemory(this.sessionId, lastN);
+    } catch (error) {
+      // eslint-disable-next-line no-instanceof/no-instanceof
+      if (error instanceof NotFoundError) {
+        return [];
+      } else {
+        throw error;
+      }
+    }
+
     let messages: BaseChatMessage[] = [];
 
     if (memory) {
