@@ -377,3 +377,45 @@ export class LatexTextSplitter
     super(fields);
   }
 }
+
+export type HtmlTextSplitterParams = TextSplitterParams;
+
+export class HtmlTextSplitter extends RecursiveCharacterTextSplitter implements HtmlTextSplitterParams {
+  separators: string[] = [
+    // First, try to split along HTML tags
+    "<body>",
+    "<div>",
+    "<p>",
+    "<br>",
+    "<li>",
+    "<h1>",
+    "<h2>",
+    "<h3>",
+    "<h4>",
+    "<h5>",
+    "<h6>",
+    "<span>",
+    "<table>",
+    "<tr>",
+    "<td>",
+    "<th>",
+    "<ul>",
+    "<ol>",
+    "<header>",
+    "<footer>",
+    "<nav>",
+    // Head
+    "<head>",
+    "<style>",
+    "<script>",
+    "<meta>",
+    "<title>",
+    // Normal type of lines
+    " ",
+    ""
+  ];
+
+  constructor(fields?: Partial<HtmlTextSplitterParams>) {
+    super(fields);
+  }
+}
