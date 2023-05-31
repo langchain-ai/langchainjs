@@ -1,10 +1,14 @@
 import PQueueMod from "p-queue";
 
-const PQueue =
-  "default" in PQueueMod ? /* #__PURE__ */ PQueueMod.default : PQueueMod;
-const queue = /* #__PURE__ */ new PQueue({
-  autoStart: true,
-});
+let queue: typeof import("p-queue")["default"]["prototype"];
+
+function createQueue() {
+  const PQueue = "default" in PQueueMod ? PQueueMod.default : PQueueMod;
+  return new PQueue({
+    autoStart: true,
+    concurrency: 1,
+  });
+}
 
 /**
  * Consume a promise, either adding it to the queue or waiting for it to resolve
@@ -18,10 +22,13 @@ export async function consumeCallback<T>(
   if (wait === true) {
     await promiseFn();
   } else {
+    if (typeof queue === "undefined") {
+      queue = createQueue();
+    }
     void queue.add(promiseFn);
   }
 }
 
 export function awaitAllCallbacks(): Promise<void> {
-  return queue.onIdle();
+  return typeof queue !== "undefined" ? queue.onIdle() : Promise.resolve();
 }

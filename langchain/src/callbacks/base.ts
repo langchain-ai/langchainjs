@@ -179,8 +179,8 @@ export abstract class BaseCallbackHandler
   awaitHandlers =
     typeof process !== "undefined"
       ? // eslint-disable-next-line no-process-env
-        process.env?.LANGCHAIN_AWAIT_CALLBACKS === "true"
-      : false;
+        process.env?.LANGCHAIN_CALLBACKS_BACKGROUND !== "true"
+      : true;
 
   constructor(input?: BaseCallbackHandlerInput) {
     super();
