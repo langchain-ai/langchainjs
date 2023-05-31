@@ -5,6 +5,7 @@ import { getEncoding } from "./util/tiktoken.js";
 export interface TextSplitterParams {
   chunkSize: number;
   chunkOverlap: number;
+  keepSeparator: boolean;
 }
 
 export type TextSplitterChunkHeaderOptions = {
@@ -18,15 +19,36 @@ export abstract class TextSplitter implements TextSplitterParams {
 
   chunkOverlap = 200;
 
+  keepSeparator = false;
+
   constructor(fields?: Partial<TextSplitterParams>) {
     this.chunkSize = fields?.chunkSize ?? this.chunkSize;
     this.chunkOverlap = fields?.chunkOverlap ?? this.chunkOverlap;
+    this.keepSeparator = fields?.keepSeparator ?? this.keepSeparator;
     if (this.chunkOverlap >= this.chunkSize) {
       throw new Error("Cannot have chunkOverlap >= chunkSize");
     }
   }
 
   abstract splitText(text: string): Promise<string[]>;
+
+  protected splitOnSeparator(text: string, separator: string): string[] {
+    let splits;
+    if (separator) {
+      if (this.keepSeparator) {
+        const regexEscapedSeparator = separator.replace(
+          /[/\-\\^$*+?.()|[\]{}]/g,
+          "\\$&"
+        );
+        splits = text.split(new RegExp(`(?=${regexEscapedSeparator})`));
+      } else {
+        splits = text.split(separator);
+      }
+    } else {
+      splits = text.split("");
+    }
+    return splits.filter((s) => s !== "");
+  }
 
   async createDocuments(
     texts: string[],
@@ -174,13 +196,8 @@ export class CharacterTextSplitter
 
   async splitText(text: string): Promise<string[]> {
     // First we naively split the large input into a bunch of smaller ones.
-    let splits: string[];
-    if (this.separator) {
-      splits = text.split(this.separator);
-    } else {
-      splits = text.split("");
-    }
-    return this.mergeSplits(splits, this.separator);
+    const splits = this.splitOnSeparator(text, this.separator);
+    return this.mergeSplits(splits, this.keepSeparator ? "" : this.separator);
   }
 }
 
@@ -198,52 +215,60 @@ export class RecursiveCharacterTextSplitter
   constructor(fields?: Partial<RecursiveCharacterTextSplitterParams>) {
     super(fields);
     this.separators = fields?.separators ?? this.separators;
+    this.keepSeparator = fields?.keepSeparator ?? true;
   }
 
-  async splitText(text: string): Promise<string[]> {
+  private async _splitText(text: string, separators: string[]) {
     const finalChunks: string[] = [];
 
     // Get appropriate separator to use
-    let separator: string = this.separators[this.separators.length - 1];
-    for (const s of this.separators) {
+    let separator: string = separators[separators.length - 1];
+    let newSeparators;
+    for (let i = 0; i < separators.length; i += 1) {
+      const s = separators[i];
       if (s === "") {
         separator = s;
         break;
       }
       if (text.includes(s)) {
         separator = s;
+        newSeparators = separators.slice(i + 1);
         break;
       }
     }
 
     // Now that we have the separator, split the text
-    let splits: string[];
-    if (separator) {
-      splits = text.split(separator);
-    } else {
-      splits = text.split("");
-    }
+    const splits = this.splitOnSeparator(text, separator);
 
     // Now go merging things, recursively splitting longer texts.
     let goodSplits: string[] = [];
+    const _separator = this.keepSeparator ? "" : separator;
     for (const s of splits) {
       if (s.length < this.chunkSize) {
         goodSplits.push(s);
       } else {
         if (goodSplits.length) {
-          const mergedText = this.mergeSplits(goodSplits, separator);
+          const mergedText = this.mergeSplits(goodSplits, _separator);
           finalChunks.push(...mergedText);
           goodSplits = [];
         }
-        const otherInfo = await this.splitText(s);
-        finalChunks.push(...otherInfo);
+        if (!newSeparators) {
+          finalChunks.push(s);
+        } else {
+          const otherInfo = await this._splitText(s, newSeparators);
+          finalChunks.push(...otherInfo);
+        }
       }
     }
     if (goodSplits.length) {
-      const mergedText = this.mergeSplits(goodSplits, separator);
+      const mergedText = this.mergeSplits(goodSplits, _separator);
       finalChunks.push(...mergedText);
     }
     return finalChunks;
+  }
+
+  async splitText(text: string): Promise<string[]> {
+    return this._splitText(text, this.separators);
   }
 }
 
@@ -369,6 +394,8 @@ export class LatexTextSplitter
     "$",
 
     // Now split by the normal type of lines
+    "\n\n",
+    "\n",
     " ",
     "",
   ];
