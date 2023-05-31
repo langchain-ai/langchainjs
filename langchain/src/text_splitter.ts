@@ -36,7 +36,10 @@ export abstract class TextSplitter implements TextSplitterParams {
     let splits;
     if (separator) {
       if (this.keepSeparator) {
-        const regexEscapedSeparator = separator.replace(/[/\-\\^$*+?.()|[\]{}]/g, '\\$&');
+        const regexEscapedSeparator = separator.replace(
+          /[/\-\\^$*+?.()|[\]{}]/g,
+          "\\$&"
+        );
         splits = text.split(new RegExp(`(?=${regexEscapedSeparator})`));
       } else {
         splits = text.split(separator);
@@ -221,7 +224,7 @@ export class RecursiveCharacterTextSplitter
     // Get appropriate separator to use
     let separator: string = separators[separators.length - 1];
     let newSeparators;
-    for (let i = 0; i < separators.length; i++) {
+    for (let i = 0; i < separators.length; i += 1) {
       const s = separators[i];
       if (s === "") {
         separator = s;

@@ -154,7 +154,7 @@ This is a weird text to write, but gotta test the splittingggg some how.\n\n
 Bye!\n\n-H.`;
   const splitter = new RecursiveCharacterTextSplitter({
     chunkSize: 10,
-    chunkOverlap: 1
+    chunkOverlap: 1,
   });
   const output = await splitter.splitText(text);
   const expectedOutput = [
