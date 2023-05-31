@@ -13,12 +13,6 @@ export interface MotorheadMemoryMessage {
   content: string;
 }
 
-export interface MotorheadMemoryHeaders {
-  "Content-Type": string;
-  "x-metal-api-key"?: string;
-  "x-metal-client-id"?: string;
-}
-
 /**
  * @interface
  */
@@ -82,10 +76,10 @@ export class MotorheadMemory extends BaseChatMemory {
     return [this.memoryKey];
   }
 
-  _getHeaders(): MotorheadMemoryHeaders {
+  _getHeaders(): HeadersInit {
     const isManaged = this.url === MANAGED_URL;
 
-    const headers: MotorheadMemoryHeaders = {
+    const headers: HeadersInit = {
       "Content-Type": "application/json",
     };
 
@@ -95,7 +89,7 @@ export class MotorheadMemory extends BaseChatMemory {
       );
     }
 
-    if (isManaged) {
+    if (isManaged && this.apiKey && this.clientId) {
       headers["x-metal-api-key"] = this.apiKey;
       headers["x-metal-client-id"] = this.clientId;
     }
