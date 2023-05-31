@@ -5,6 +5,7 @@ import { BaseLanguageModel } from "../../base_language/index.js";
 import { LLMChain } from "../../chains/llm_chain.js";
 import { PromptTemplate } from "../../prompts/prompt.js";
 import {
+  BaseMessagePromptTemplate,
   ChatPromptTemplate,
   HumanMessagePromptTemplate,
   SystemMessagePromptTemplate,
@@ -24,6 +25,8 @@ export interface StructuredChatCreatePromptArgs {
   prefix?: string;
   /** List of input variables the final prompt will expect. */
   inputVariables?: string[];
+  /** List of historical prompts from memory.  */
+  memoryPrompts?: BaseMessagePromptTemplate[];
 }
 
 export type StructuredChatAgentInput = Optional<AgentInput, "outputParser">;
@@ -106,25 +109,39 @@ export class StructuredChatAgent extends Agent {
    * @param args - Arguments to create the prompt with.
    * @param args.suffix - String to put after the list of tools.
    * @param args.prefix - String to put before the list of tools.
+   * @param args.inputVariables List of input variables the final prompt will expect.
+   * @param args.memoryPrompts List of historical prompts from memory.
    */
   static createPrompt(
     tools: StructuredTool[],
     args?: StructuredChatCreatePromptArgs
   ) {
-    const { prefix = PREFIX, suffix = SUFFIX } = args ?? {};
+    const {
+      prefix = PREFIX,
+      suffix = SUFFIX,
+      inputVariables = ["input", "agent_scratchpad"],
+      memoryPrompts = [],
+    } = args ?? {};
     const template = [prefix, FORMAT_INSTRUCTIONS, suffix].join("\n\n");
+    const humanMessageTemplate = "{input}\n\n{agent_scratchpad}";
     const messages = [
       new SystemMessagePromptTemplate(
         new PromptTemplate({
           template,
-          inputVariables: [],
+          inputVariables,
           partialVariables: {
             tool_schemas: StructuredChatAgent.createToolSchemasString(tools),
             tool_names: tools.map((tool) => tool.name).join(", "),
           },
         })
       ),
-      HumanMessagePromptTemplate.fromTemplate("{input}\n\n{agent_scratchpad}"),
+      ...memoryPrompts,
+      new HumanMessagePromptTemplate(
+        new PromptTemplate({
+          template: humanMessageTemplate,
+          inputVariables,
+        })
+      ),
     ];
     return ChatPromptTemplate.fromPromptMessages(messages);
   }
