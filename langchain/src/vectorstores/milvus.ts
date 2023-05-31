@@ -12,6 +12,7 @@ import {
 import { Embeddings } from "../embeddings/base.js";
 import { VectorStore } from "./base.js";
 import { Document } from "../document.js";
+import { getEnvironmentVariable } from "../util/env.js";
 
 export interface MilvusLibArgs {
   collectionName?: string;
@@ -96,10 +97,7 @@ export class Milvus extends VectorStore {
     this.vectorField = args.vectorField ?? MILVUS_VECTOR_FIELD_NAME;
     this.fields = [];
 
-    const url =
-      args.url ??
-      // eslint-disable-next-line no-process-env
-      (typeof process !== "undefined" ? process.env?.MILVUS_URL : undefined);
+    const url = args.url ?? getEnvironmentVariable("MILVUS_URL");
     if (!url) {
       throw new Error("Milvus URL address is not provided.");
     }
@@ -364,6 +362,7 @@ export class Milvus extends VectorStore {
     dbConfig?: {
       collectionName?: string;
       url?: string;
+      ssl?: boolean;
     }
   ): Promise<Milvus> {
     const docs: Document[] = [];
@@ -386,6 +385,7 @@ export class Milvus extends VectorStore {
     const args: MilvusLibArgs = {
       collectionName: dbConfig?.collectionName || genCollectionName(),
       url: dbConfig?.url,
+      ssl: dbConfig?.ssl,
     };
     const instance = new this(embeddings, args);
     await instance.addDocuments(docs);

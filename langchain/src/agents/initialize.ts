@@ -81,7 +81,6 @@ export type InitializeAgentExecutorOptionsStructured =
   | {
       agentType: "structured-chat-zero-shot-react-description";
       agentArgs?: Parameters<typeof StructuredChatAgent.fromLLMAndTools>[2];
-      memory?: never;
     } & Omit<AgentExecutorInput, "agent" | "tools">;
 
 /**
@@ -154,10 +153,11 @@ export async function initializeAgentExecutorWithOptions(
       return executor;
     }
     case "structured-chat-zero-shot-react-description": {
-      const { agentArgs, ...rest } = options;
+      const { agentArgs, memory, ...rest } = options;
       const executor = AgentExecutor.fromAgentAndTools({
         agent: StructuredChatAgent.fromLLMAndTools(llm, tools, agentArgs),
         tools,
+        memory,
         ...rest,
       });
       return executor;

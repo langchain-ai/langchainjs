@@ -87,12 +87,14 @@ test("Test MultiRetrievalQAChain No Defaults With Retriever Prompts", async () =
       })
   );
 
-  const multiRetrievalQAChain = MultiRetrievalQAChain.fromRetrievers(
+  const multiRetrievalQAChain = MultiRetrievalQAChain.fromLLMAndRetrievers(
     llm,
-    retrieverNames,
-    retrieverDescriptions,
-    retrievers,
-    retrieverPrompts
+    {
+      retrieverNames,
+      retrieverDescriptions,
+      retrievers,
+      retrieverPrompts,
+    }
   );
 
   const { text: result } = await multiRetrievalQAChain.call({
@@ -112,16 +114,30 @@ test("Test MultiRetrievalQAChain No Defaults No Retriever Prompts", async () => 
   ];
   const retrievers = retrieverNames.map((name) => new FakeRetrievers(name));
 
-  const multiRetrievalQAChain = MultiRetrievalQAChain.fromRetrievers(
+  const multiRetrievalQAChain = MultiRetrievalQAChain.fromLLMAndRetrievers(
     llm,
-    retrieverNames,
-    retrieverDescriptions,
-    retrievers
+    {
+      retrieverNames,
+      retrieverDescriptions,
+      retrievers,
+      retrievalQAChainOpts: {
+        returnSourceDocuments: true,
+      },
+    }
   );
 
-  const { text: result } = await multiRetrievalQAChain.call({
+  const { text: result, sourceDocuments } = await multiRetrievalQAChain.call({
     input: "test input",
   });
 
+  const testDocs = ["retriever1", "retriever2", "retriever3"].map(
+    (name) =>
+      new Document({
+        pageContent: `Test document <from ${name}> ${name}`,
+        metadata: {},
+      })
+  );
+
+  expect(testDocs).toContainEqual(sourceDocuments[0]);
   expect(result).toEqual(`Helpful Answer ${pickedRetriever}`);
 });
