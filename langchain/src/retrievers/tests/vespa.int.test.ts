@@ -5,14 +5,13 @@ import { test, expect } from "@jest/globals";
 import { VespaRetriever } from "../vespa.js";
 
 test("VespaRetriever", async () => {
-  const url = "https://doc-search.vespa.oath.cloud";
+  const url = process.env.VESPA_URL!;
   const query_body = {
-    yql: "select content from paragraph where userQuery()",
+    yql: "select * from music where album contains 'head';",
     hits: 5,
-    ranking: "documentation",
     locale: "en-us",
   };
-  const content_field = "content";
+  const content_field = "album";
 
   const retriever = new VespaRetriever({
     url,

@@ -27,7 +27,8 @@ export class VespaRetriever extends RemoteRetriever {
     this.content_field = content_field;
 
     const url = new URL(this.url);
-    this.url = `${url.protocol}//${url.hostname}/search/?`;
+    this.url = `${url.protocol}//${url.hostname}:${url.port}/search/?`;
+    console.log(this.url);
   }
 
   createJsonBody(query: string): RemoteRetrieverValues {
