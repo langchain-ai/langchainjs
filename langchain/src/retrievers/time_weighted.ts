@@ -70,6 +70,10 @@ export class TimeWeightedVectorStoreRetriever extends BaseRetriever {
     this.defaultSalience = fields.defaultSalience ?? null;
   }
 
+  get getMemoryStream(): Document[] {
+    return this.memoryStream;
+  }
+
   /**
    * Get relevant documents based on time-weighted relevance
    * @param query - The query to search for

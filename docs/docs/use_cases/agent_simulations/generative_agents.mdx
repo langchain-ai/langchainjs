@@ -1,0 +1,17 @@
+import CodeBlock from "@theme/CodeBlock";
+
+# Generative Agents in LangChain.js
+
+:::info
+ref: https://github.com/hwchase17/langchain/blob/master/docs/use_cases/agent_simulations/characters.ipynb
+:::
+
+## Node.js example (can be fetched in the browser with an api route)
+
+import GenerativeAgentsScript from "@examples/experimental/generative_agents/generative_agents.ts";
+
+This script implements a generative agent based on the paper [Generative Agents: Interactive Simulacra of Human Behavior](https://arxiv.org/abs/2304.03442) by Park, et. al.
+In it, we leverage a time-weighted Memory object backed by a LangChain retriever.
+This script exports a function that creates two instances of Generative Agents and runs a simulation of their interaction with their observations.
+
+<CodeBlock language="typescript">{GenerativeAgentsScript}</CodeBlock>
