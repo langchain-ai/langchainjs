@@ -6,7 +6,7 @@ import * as yaml from "js-yaml";
 export interface AIPluginToolParams {
   name: string;
   description: string;
-  apiSpec: string;
+  shortApiSpec: string;
   openaiSpec: string;
   model: BaseLanguageModel;
 }
@@ -153,7 +153,7 @@ function printOperationDetails(operationId: string, openapiSpec: string) {
 export class AIPluginTool extends Tool implements AIPluginToolParams {
   private _name: string;
   private _description: string;
-  apiSpec: string;
+  shortApiSpec: string;
   openaiSpec: string;
   model: BaseLanguageModel;
 
@@ -169,17 +169,32 @@ export class AIPluginTool extends Tool implements AIPluginToolParams {
     super();
     this._name = params.name;
     this._description = params.description;
-    this.apiSpec = params.apiSpec;
+    this.shortApiSpec = params.shortApiSpec;
     this.openaiSpec = params.openaiSpec;
     this.model = params.model;
   }
-
+  
   async _call(input: string) {
    let date = new Date();
     let fullDate = `Date: ${date.getDate()}/${date.getMonth() + 1
       }/${date.getFullYear()}, Time: ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
-    const prompt = `${fullDate}\nQuestion: ${input} \n${this.apiSpec}.`;
-    console.log(prompt);
+    const prompt = `${fullDate}
+Question: ${input}
+As an AI, your task is to identify the operationId of the relevant API path based on the condensed OpenAPI specifications provided.
+
+Please note:
+
+1. Do not imagine URLs. Only use the information provided in the condensed OpenAPI specifications.
+
+2. Do not guess the operationId. Identify it strictly based on the API paths and their descriptions.
+
+Your output should only include:
+- operationId: The operationId of the relevant API path
+
+If you cannot find a suitable API path based on the OpenAPI specifications, please answer only "operationId: No API path found to answer the question".
+
+Now, based on the question above and the condensed OpenAPI specifications given below, identify the operationId:
+${this.shortApiSpec}.`;
     const gptResponse = await this.model.predict(prompt);
     let operationId = gptResponse.match(/operationId: (.*)/)?.[1];
     if (!operationId) {
@@ -216,26 +231,7 @@ export class AIPluginTool extends Tool implements AIPluginToolParams {
     return new AIPluginTool({
       name: aiPluginJson.name_for_model,
       description: `A \`plugin\` that can construct API requests. (Short description: ${aiPluginJson.description_for_model})`,
-      apiSpec: `
-As an AI, your task is to identify the operationId of the relevant API path based on the condensed OpenAPI specifications provided.
-
-Please note:
-
-1. Do not imagine URLs. Only use the information provided in the condensed OpenAPI specifications.
-
-2. Do not guess the operationId. Identify it strictly based on the API paths and their descriptions.
-
-Your output should only include:
-- operationId: The operationId of the relevant API path
-
-If you cannot find a suitable API path based on the OpenAPI specifications, please answer only "operationId: No API path found to answer the question".
-
-Now, based on the question above and the condensed OpenAPI specifications given below, identify the operationId:
-
-\`\`\`
-${shortApiSpec}
-\`\`\`
-`,
+      shortApiSpec: shortApiSpec,
       openaiSpec: apiUrlJson,
       model: model,
     });
