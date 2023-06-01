@@ -171,7 +171,7 @@ export abstract class BaseRetriever {
   abstract getRelevantDocuments(query: string): Promise<Document[]>;
 }
 
-export abstract class BaseChatMessageHistory {
+export abstract class BaseChatMessageHistory extends Serializable {
   public abstract getMessages(): Promise<BaseChatMessage[]>;
 
   public abstract addUserMessage(message: string): Promise<void>;
@@ -181,7 +181,7 @@ export abstract class BaseChatMessageHistory {
   public abstract clear(): Promise<void>;
 }
 
-export abstract class BaseListChatMessageHistory {
+export abstract class BaseListChatMessageHistory extends Serializable {
   protected abstract addMessage(message: BaseChatMessage): Promise<void>;
 
   public addUserMessage(message: string): Promise<void> {
@@ -199,13 +199,13 @@ export abstract class BaseCache<T = Generation[]> {
   abstract update(prompt: string, llmKey: string, value: T): Promise<void>;
 }
 
-export abstract class BaseFileStore {
+export abstract class BaseFileStore extends Serializable {
   abstract readFile(path: string): Promise<string>;
 
   abstract writeFile(path: string, contents: string): Promise<void>;
 }
 
-export abstract class BaseEntityStore {
+export abstract class BaseEntityStore extends Serializable {
   abstract get(key: string, defaultValue?: string): Promise<string | undefined>;
 
   abstract set(key: string, value?: string): Promise<void>;

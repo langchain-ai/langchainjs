@@ -25,6 +25,16 @@ export type RedisChatMessageHistoryInput = {
 };
 
 export class RedisChatMessageHistory extends BaseListChatMessageHistory {
+  lc_namespace = ["langchain", "stores", "message", "redis"];
+
+  get lc_secrets() {
+    return {
+      "0.config.url": "REDIS_URL",
+      "0.config.username": "REDIS_USERNAME",
+      "0.config.password": "REDIS_PASSWORD",
+    };
+  }
+
   public client: RedisClientType<RedisModules, RedisFunctions, RedisScripts>;
 
   private sessionId: string;
@@ -32,8 +42,9 @@ export class RedisChatMessageHistory extends BaseListChatMessageHistory {
   private sessionTTL?: number;
 
   constructor(fields: RedisChatMessageHistoryInput) {
+    super(fields);
+
     const { sessionId, sessionTTL, config, client } = fields;
-    super();
     this.client = (client ?? createClient(config ?? {})) as RedisClientType<
       RedisModules,
       RedisFunctions,

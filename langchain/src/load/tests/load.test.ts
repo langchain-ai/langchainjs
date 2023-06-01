@@ -1,7 +1,7 @@
 import { test, expect } from "@jest/globals";
 
 import { load } from "../index.js";
-import { OpenAI } from "../../llms/openai.js";
+import { OpenAI, PromptLayerOpenAI } from "../../llms/openai.js";
 import { PromptTemplate } from "../../prompts/prompt.js";
 import { LLMChain } from "../../chains/llm_chain.js";
 import { Cohere } from "../../llms/cohere.js";
@@ -18,39 +18,63 @@ import {
 } from "../../prompts/index.js";
 
 test("serialize + deserialize llm", async () => {
-  const llm = new OpenAI({ temperature: 0.5, modelName: "davinci" });
+  const llm = new PromptLayerOpenAI({
+    temperature: 0.5,
+    modelName: "davinci",
+    openAIApiKey: "openai-key",
+    promptLayerApiKey: "promptlayer-key",
+  });
+  const lc_argumentsBefore = llm.lc_arguments;
   const str = JSON.stringify(llm, null, 2);
+  expect(llm.lc_arguments).toEqual(lc_argumentsBefore);
   expect(str).toMatchInlineSnapshot(`
     "{
-      "v": 1,
+      "lc": 1,
       "type": "constructor",
-      "identifier": [
+      "id": [
         "langchain",
         "llms",
         "openai",
-        "OpenAI"
+        "PromptLayerOpenAI"
       ],
       "arguments": [
         {
           "temperature": 0.5,
-          "modelName": "davinci"
+          "modelName": "davinci",
+          "openAIApiKey": {
+            "lc": 1,
+            "type": "secret",
+            "id": [
+              "OPENAI_API_KEY"
+            ]
+          },
+          "promptLayerApiKey": {
+            "lc": 1,
+            "type": "secret",
+            "id": [
+              "PROMPTLAYER_API_KEY"
+            ]
+          }
         }
       ]
     }"
   `);
-  const llm2 = await load<OpenAI>(str);
+  const llm2 = await load<OpenAI>(str, {
+    OPENAI_API_KEY: "openai-key",
+    PROMPTLAYER_API_KEY: "promptlayer-key",
+  });
   expect(llm2).toBeInstanceOf(OpenAI);
   expect(JSON.stringify(llm2, null, 2)).toBe(str);
 });
 
 test("serialize + deserialize llm with optional deps", async () => {
-  const llm = new Cohere({ temperature: 0.5 });
+  const llm = new Cohere({ temperature: 0.5, apiKey: "cohere-key" });
   const str = JSON.stringify(llm, null, 2);
   expect(str).toMatchInlineSnapshot(`
     "{
-      "v": 1,
+      "lc": 1,
       "type": "constructor",
-      "identifier": [
+      "id": [
         "langchain",
         "llms",
         "cohere",
@@ -58,19 +82,30 @@ test("serialize + deserialize llm with optional deps", async () => {
       ],
       "arguments": [
         {
-          "temperature": 0.5
+          "temperature": 0.5,
+          "apiKey": {
+            "lc": 1,
+            "type": "secret",
+            "id": [
+              "COHERE_API_KEY"
+            ]
+          }
         }
       ]
     }"
   `);
-  const llm2 = await load<Cohere>(str, {
-    "langchain/llms/cohere": { Cohere },
-  });
+  const llm2 = await load<Cohere>(
+    str,
+    { COHERE_API_KEY: "cohere-key" },
+    { "langchain/llms/cohere": { Cohere } }
+  );
   expect(llm2).toBeInstanceOf(Cohere);
   expect(JSON.stringify(llm2, null, 2)).toBe(str);
-  const llm3 = await load<Cohere>(str, {
-    "langchain/llms/cohere": import("../../llms/cohere.js"),
-  });
+  const llm3 = await load<Cohere>(
+    str,
+    { COHERE_API_KEY: "cohere-key" },
+    { "langchain/llms/cohere": import("../../llms/cohere.js") }
+  );
   expect(llm3).toBeInstanceOf(Cohere);
   expect(JSON.stringify(llm3, null, 2)).toBe(str);
 });
@@ -95,9 +130,9 @@ test("serialize + deserialize llm chain string prompt", async () => {
   const str = JSON.stringify(chain, null, 2);
   expect(str).toMatchInlineSnapshot(`
     "{
-      "v": 1,
+      "lc": 1,
       "type": "constructor",
-      "identifier": [
+      "id": [
         "langchain",
         "chains",
         "llm_chain",
@@ -106,9 +141,9 @@ test("serialize + deserialize llm chain string prompt", async () => {
       "arguments": [
         {
           "llm": {
-            "v": 1,
+            "lc": 1,
             "type": "constructor",
-            "identifier": [
+            "id": [
               "langchain",
               "llms",
               "openai",
@@ -118,9 +153,9 @@ test("serialize + deserialize llm chain string prompt", async () => {
               {
                 "callbacks": [
                   {
-                    "v": 1,
+                    "lc": 1,
                     "type": "constructor",
-                    "identifier": [
+                    "id": [
                       "langchain",
                       "callbacks",
                       "langchain_tracer",
@@ -139,9 +174,9 @@ test("serialize + deserialize llm chain string prompt", async () => {
             ]
           },
           "prompt": {
-            "v": 1,
+            "lc": 1,
             "type": "constructor",
-            "identifier": [
+            "id": [
               "langchain",
               "prompts",
               "prompt",
@@ -186,9 +221,9 @@ test("serialize + deserialize llm chain chat prompt", async () => {
   const str = JSON.stringify(chain, null, 2);
   expect(str).toMatchInlineSnapshot(`
     "{
-      "v": 1,
+      "lc": 1,
       "type": "constructor",
-      "identifier": [
+      "id": [
         "langchain",
         "chains",
         "llm_chain",
@@ -197,9 +232,9 @@ test("serialize + deserialize llm chain chat prompt", async () => {
       "arguments": [
         {
           "llm": {
-            "v": 1,
+            "lc": 1,
             "type": "constructor",
-            "identifier": [
+            "id": [
               "langchain",
               "chat_models",
               "openai",
@@ -220,9 +255,9 @@ test("serialize + deserialize llm chain chat prompt", async () => {
             ]
           },
           "prompt": {
-            "v": 1,
+            "lc": 1,
             "type": "constructor",
-            "identifier": [
+            "id": [
               "langchain",
               "prompts",
               "chat",
@@ -235,9 +270,9 @@ test("serialize + deserialize llm chain chat prompt", async () => {
                 ],
                 "promptMessages": [
                   {
-                    "v": 1,
+                    "lc": 1,
                     "type": "constructor",
-                    "identifier": [
+                    "id": [
                       "langchain",
                       "prompts",
                       "chat",
@@ -245,9 +280,9 @@ test("serialize + deserialize llm chain chat prompt", async () => {
                     ],
                     "arguments": [
                       {
-                        "v": 1,
+                        "lc": 1,
                         "type": "constructor",
-                        "identifier": [
+                        "id": [
                           "langchain",
                           "prompts",
                           "prompt",
@@ -266,9 +301,9 @@ test("serialize + deserialize llm chain chat prompt", async () => {
                     ]
                   },
                   {
-                    "v": 1,
+                    "lc": 1,
                     "type": "constructor",
-                    "identifier": [
+                    "id": [
                       "langchain",
                       "prompts",
                       "chat",
@@ -276,9 +311,9 @@ test("serialize + deserialize llm chain chat prompt", async () => {
                     ],
                     "arguments": [
                       {
-                        "v": 1,
+                        "lc": 1,
                         "type": "constructor",
-                        "identifier": [
+                        "id": [
                           "langchain",
                           "prompts",
                           "prompt",
@@ -325,9 +360,9 @@ test("serialize + deserialize llm chain few shot prompt w/ examples", async () =
   const str = JSON.stringify(chain, null, 2);
   expect(str).toMatchInlineSnapshot(`
     "{
-      "v": 1,
+      "lc": 1,
       "type": "constructor",
-      "identifier": [
+      "id": [
         "langchain",
         "chains",
         "llm_chain",
@@ -336,9 +371,9 @@ test("serialize + deserialize llm chain few shot prompt w/ examples", async () =
       "arguments": [
         {
           "llm": {
-            "v": 1,
+            "lc": 1,
             "type": "constructor",
-            "identifier": [
+            "id": [
               "langchain",
               "llms",
               "openai",
@@ -348,9 +383,9 @@ test("serialize + deserialize llm chain few shot prompt w/ examples", async () =
               {
                 "callbacks": [
                   {
-                    "v": 1,
+                    "lc": 1,
                     "type": "constructor",
-                    "identifier": [
+                    "id": [
                       "langchain",
                       "callbacks",
                       "langchain_tracer",
@@ -367,9 +402,9 @@ test("serialize + deserialize llm chain few shot prompt w/ examples", async () =
             ]
           },
           "prompt": {
-            "v": 1,
+            "lc": 1,
             "type": "constructor",
-            "identifier": [
+            "id": [
               "langchain",
               "prompts",
               "few_shot",
@@ -387,9 +422,9 @@ test("serialize + deserialize llm chain few shot prompt w/ examples", async () =
                 ],
                 "prefix": "You are a nice assistant",
                 "examplePrompt": {
-                  "v": 1,
+                  "lc": 1,
                   "type": "constructor",
-                  "identifier": [
+                  "id": [
                     "langchain",
                     "prompts",
                     "prompt",
@@ -443,9 +478,9 @@ test("serialize + deserialize llm chain few shot prompt w/ selector", async () =
   const str = JSON.stringify(chain, null, 2);
   expect(str).toMatchInlineSnapshot(`
     "{
-      "v": 1,
+      "lc": 1,
       "type": "constructor",
-      "identifier": [
+      "id": [
         "langchain",
         "chains",
         "llm_chain",
@@ -454,9 +489,9 @@ test("serialize + deserialize llm chain few shot prompt w/ selector", async () =
       "arguments": [
         {
           "llm": {
-            "v": 1,
+            "lc": 1,
             "type": "constructor",
-            "identifier": [
+            "id": [
               "langchain",
               "llms",
               "openai",
@@ -466,9 +501,9 @@ test("serialize + deserialize llm chain few shot prompt w/ selector", async () =
               {
                 "callbacks": [
                   {
-                    "v": 1,
+                    "lc": 1,
                     "type": "constructor",
-                    "identifier": [
+                    "id": [
                       "langchain",
                       "callbacks",
                       "langchain_tracer",
@@ -485,9 +520,9 @@ test("serialize + deserialize llm chain few shot prompt w/ selector", async () =
             ]
           },
           "prompt": {
-            "v": 1,
+            "lc": 1,
             "type": "constructor",
-            "identifier": [
+            "id": [
               "langchain",
               "prompts",
               "few_shot",
@@ -496,9 +531,9 @@ test("serialize + deserialize llm chain few shot prompt w/ selector", async () =
             "arguments": [
               {
                 "exampleSelector": {
-                  "v": 1,
+                  "lc": 1,
                   "type": "constructor",
-                  "identifier": [
+                  "id": [
                     "langchain",
                     "prompts",
                     "selectors",
@@ -507,9 +542,9 @@ test("serialize + deserialize llm chain few shot prompt w/ selector", async () =
                   "arguments": [
                     {
                       "examplePrompt": {
-                        "v": 1,
+                        "lc": 1,
                         "type": "constructor",
-                        "identifier": [
+                        "id": [
                           "langchain",
                           "prompts",
                           "prompt",
@@ -544,9 +579,9 @@ test("serialize + deserialize llm chain few shot prompt w/ selector", async () =
                 },
                 "prefix": "You are a nice assistant",
                 "examplePrompt": {
-                  "v": 1,
+                  "lc": 1,
                   "type": "constructor",
-                  "identifier": [
+                  "id": [
                     "langchain",
                     "prompts",
                     "prompt",

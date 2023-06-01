@@ -41,11 +41,7 @@ export abstract class BaseChatModel extends BaseLanguageModel {
 
   declare ParsedCallOptions: Omit<this["CallOptions"], "timeout">;
 
-  lc_namespace = ["langchain", "chat_models"];
-
-  get lc_name(): string {
-    return this._llmType();
-  }
+  lc_namespace = ["langchain", "chat_models", this._llmType()];
 
   constructor(fields: BaseChatModelParams) {
     super(fields);

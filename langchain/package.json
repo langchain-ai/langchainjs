@@ -364,6 +364,9 @@
     "stores/file/node.cjs",
     "stores/file/node.js",
     "stores/file/node.d.ts",
+    "stores/message/in_memory.cjs",
+    "stores/message/in_memory.js",
+    "stores/message/in_memory.d.ts",
     "stores/message/dynamodb.cjs",
     "stores/message/dynamodb.js",
     "stores/message/dynamodb.d.ts",
@@ -1332,6 +1335,11 @@
       "types": "./stores/file/node.d.ts",
       "import": "./stores/file/node.js",
       "require": "./stores/file/node.cjs"
+    },
+    "./stores/message/in_memory": {
+      "types": "./stores/message/in_memory.d.ts",
+      "import": "./stores/message/in_memory.js",
+      "require": "./stores/message/in_memory.cjs"
     },
     "./stores/message/dynamodb": {
       "types": "./stores/message/dynamodb.d.ts",

@@ -1,5 +1,6 @@
 import jsonpointer from "jsonpointer";
 import { Tool } from "./base.js";
+import { Serializable } from "../schema/load.js";
 
 export type Json =
   | string
@@ -11,12 +12,15 @@ export type Json =
 
 export type JsonObject = { [key: string]: Json };
 
-export class JsonSpec {
+export class JsonSpec extends Serializable {
+  lc_namespace = ["langchain", "tools", "json"];
+
   obj: JsonObject;
 
   maxValueLength = 4000;
 
   constructor(obj: JsonObject, max_value_length = 4000) {
+    super(...arguments);
     this.obj = obj;
     this.maxValueLength = max_value_length;
   }
@@ -63,7 +67,7 @@ export class JsonListKeysTool extends Tool {
   name = "json_list_keys";
 
   constructor(public jsonSpec: JsonSpec) {
-    super();
+    super(...arguments);
   }
 
   /** @ignore */

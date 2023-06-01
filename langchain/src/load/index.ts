@@ -1,25 +1,33 @@
-import { Serialized } from "../schema/load.js";
+import {
+  SerializedConstructor,
+  SerializedFunction,
+  SerializedSecret,
+} from "../schema/load.js";
 import { optionalImportEntrypoints } from "./import_constants.js";
 import * as importMap from "./import_map.js";
-import { OptionalImportMap } from "./import_type.js";
+import { OptionalImportMap, SecretMap } from "./import_type.js";
 
 async function reviver(
-  this: OptionalImportMap,
+  this: {
+    optionalImportsMap: OptionalImportMap;
+    secretsMap: SecretMap;
+  },
   value: unknown
 ): Promise<unknown> {
+  const { optionalImportsMap, secretsMap } = this;
   if (
     typeof value === "object" &&
     value !== null &&
     !Array.isArray(value) &&
-    "v" in value &&
+    "lc" in value &&
     "type" in value &&
-    "identifier" in value &&
+    "id" in value &&
     "arguments" in value &&
-    value.v === 1
+    value.lc === 1
   ) {
-    const serialized = value as Serialized;
+    const serialized = value as SerializedConstructor | SerializedFunction;
     const str = JSON.stringify(serialized);
-    const [name, ...namespaceReverse] = serialized.identifier.slice().reverse();
+    const [name, ...namespaceReverse] = serialized.id.slice().reverse();
     const namespace = namespaceReverse.reverse();
 
     let module:
@@ -27,13 +35,15 @@ async function reviver(
       | OptionalImportMap[keyof OptionalImportMap];
     if (
       optionalImportEntrypoints.includes(namespace.join("/")) ||
-      namespace.join("/") in this
+      namespace.join("/") in optionalImportsMap
     ) {
-      if (namespace.join("/") in this) {
-        module = await this[namespace.join("/") as keyof typeof this];
+      if (namespace.join("/") in optionalImportsMap) {
+        module = await optionalImportsMap[
+          namespace.join("/") as keyof typeof optionalImportsMap
+        ];
       } else {
         throw new Error(
-          `Missing key "${namespace.join("/")}" in 2nd argument to load()`
+          `Missing key "${namespace.join("/")}" in load(optionalImportsMap={})`
         );
       }
     } else {
@@ -94,6 +104,23 @@ async function reviver(
     } else {
       throw new Error(`Invalid type: ${str}`);
     }
+  } else if (
+    typeof value === "object" &&
+    value !== null &&
+    !Array.isArray(value) &&
+    "lc" in value &&
+    "type" in value &&
+    "id" in value &&
+    value.lc === 1 &&
+    value.type === "secret"
+  ) {
+    const serialized = value as SerializedSecret;
+    const [key] = serialized.id;
+    if (key in secretsMap) {
+      return secretsMap[key as keyof SecretMap];
+    } else {
+      throw new Error(`Missing key "${key}" in load(secretsMap={})`);
+    }
   } else if (typeof value === "object" && value !== null) {
     if (Array.isArray(value)) {
       return Promise.all(value.map(reviver, this));
@@ -113,8 +140,9 @@ async function reviver(
 
 export async function load<T>(
   text: string,
+  secretsMap: SecretMap = {},
   optionalImportsMap: OptionalImportMap = {}
 ): Promise<T> {
   const json = JSON.parse(text);
-  return reviver.call(optionalImportsMap, json) as Promise<T>;
+  return reviver.call({ secretsMap, optionalImportsMap }, json) as Promise<T>;
 }

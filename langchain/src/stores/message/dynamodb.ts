@@ -44,6 +44,16 @@ interface DynamoDBSerializedChatMessage {
 }
 
 export class DynamoDBChatMessageHistory extends BaseListChatMessageHistory {
+  lc_namespace = ["langchain", "stores", "message", "dynamodb"];
+
+  get lc_secrets(): { [key: string]: string } | undefined {
+    return {
+      "0.config.credentials.accessKeyId": "AWS_ACCESS_KEY_ID",
+      "0.config.credentials.secretAccessKey": "AWS_SECRETE_ACCESS_KEY",
+      "0.config.credentials.sessionToken": "AWS_SESSION_TOKEN",
+    };
+  }
+
   private tableName: string;
 
   private sessionId: string;

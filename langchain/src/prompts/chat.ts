@@ -21,9 +21,7 @@ import {
 } from "./serde.js";
 
 export abstract class BaseMessagePromptTemplate extends Serializable {
-  lc_namespace = ["langchain", "prompts"];
-
-  lc_name = "chat";
+  lc_namespace = ["langchain", "prompts", "chat"];
 
   abstract inputVariables: string[];
 
@@ -38,9 +36,7 @@ export abstract class BaseMessagePromptTemplate extends Serializable {
 }
 
 export class ChatPromptValue extends BasePromptValue {
-  lc_namespace = ["langchain", "prompts"];
-
-  lc_name = "chat";
+  lc_namespace = ["langchain", "prompts", "chat"];
 
   messages: BaseChatMessage[];
 

@@ -13,8 +13,6 @@ export interface LengthBasedExampleSelectorInput {
 }
 
 export class LengthBasedExampleSelector extends BaseExampleSelector {
-  lc_name = "selectors";
-
   lc_fields = ["examples", "exampleTextLengths"];
 
   protected examples: Example[] = [];

@@ -91,6 +91,14 @@ export interface SageMakerEndpointInput extends BaseLLMParams {
 }
 
 export class SageMakerEndpoint extends LLM {
+  get lc_secrets(): { [key: string]: string } | undefined {
+    return {
+      "0.clientOptions.credentials.accessKeyId": "AWS_ACCESS_KEY_ID",
+      "0.clientOptions.credentials.secretAccessKey": "AWS_SECRETE_ACCESS_KEY",
+      "0.clientOptions.credentials.sessionToken": "AWS_SESSION_TOKEN",
+    };
+  }
+
   endpointName: string;
 
   contentHandler: SageMakerLLMContentHandler;

@@ -7,6 +7,12 @@ export interface GoogleCustomSearchParams {
 }
 
 export class GoogleCustomSearch extends Tool {
+  get lc_secrets(): { [key: string]: string } | undefined {
+    return {
+      "0.apiKey": "GOOGLE_API_KEY",
+    };
+  }
+
   name = "google-custom-search";
 
   protected apiKey: string;
@@ -22,7 +28,7 @@ export class GoogleCustomSearch extends Tool {
       googleCSEId: getEnvironmentVariable("GOOGLE_CSE_ID"),
     }
   ) {
-    super();
+    super(...arguments);
     if (!fields.apiKey) {
       throw new Error(
         `Google API key not set. You can set it as "GOOGLE_API_KEY" in your environment variables.`

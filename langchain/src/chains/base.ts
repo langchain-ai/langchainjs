@@ -26,12 +26,8 @@ export interface ChainInputs extends BaseLangChainParams {
 export abstract class BaseChain extends BaseLangChain implements ChainInputs {
   declare memory?: BaseMemory;
 
-  get lc_namespace(): ["langchain", "chains"] {
-    return ["langchain", "chains"];
-  }
-
-  get lc_name(): string {
-    return this._chainType();
+  get lc_namespace(): ["langchain", "chains", string] {
+    return ["langchain", "chains", this._chainType()];
   }
 
   constructor(

@@ -2,6 +2,7 @@ import { Tool } from "./base.js";
 import { renderTemplate } from "../prompts/template.js";
 import { AsyncCaller, AsyncCallerParams } from "../util/async_caller.js";
 import { getEnvironmentVariable } from "../util/env.js";
+import { Serializable } from "../schema/load.js";
 
 const zapierNLABaseDescription: string =
   "A wrapper around Zapier NLA actions. " +
@@ -20,20 +21,29 @@ const zapierNLABaseDescription: string =
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ZapierValues = Record<string, any>;
 
-export interface ZapiterNLAWrapperParams extends AsyncCallerParams {
+export interface ZapierNLAWrapperParams extends AsyncCallerParams {
   apiKey?: string;
 }
 
-export class ZapierNLAWrapper {
+export class ZapierNLAWrapper extends Serializable {
+  lc_namespace = ["langchain", "tools", "zapier"];
+
+  get lc_secrets(): { [key: string]: string } | undefined {
+    return {
+      "0.apiKey": "ZAPIER_NLA_API_KEY",
+    };
+  }
+
   zapierNlaApiKey: string;
 
   zapierNlaApiBase = "https://nla.zapier.com/api/v1/";
 
   caller: AsyncCaller;
 
-  constructor(params?: string | ZapiterNLAWrapperParams) {
-    const zapierNlaApiKey =
-      typeof params === "string" ? params : params?.apiKey;
+  constructor(params?: ZapierNLAWrapperParams) {
+    super(params);
+
+    const zapierNlaApiKey = params?.apiKey;
     const apiKey =
       zapierNlaApiKey ?? getEnvironmentVariable("ZAPIER_NLA_API_KEY");
     if (!apiKey) {

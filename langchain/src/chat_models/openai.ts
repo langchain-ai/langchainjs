@@ -101,6 +101,13 @@ export class ChatOpenAI
     return ["stop", "signal", "timeout", "options"];
   }
 
+  get lc_secrets(): { [key: string]: string } | undefined {
+    return {
+      "0.openAIApiKey": "OPENAI_API_KEY",
+      "0.azureOpenAIApiKey": "AZURE_OPENAI_API_KEY",
+    };
+  }
+
   temperature = 1;
 
   topP = 1;

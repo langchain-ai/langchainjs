@@ -17,6 +17,15 @@ export type UpstashRedisChatMessageHistoryInput = {
 };
 
 export class UpstashRedisChatMessageHistory extends BaseListChatMessageHistory {
+  lc_namespace = ["langchain", "stores", "message", "upstash_redis"];
+
+  get lc_secrets() {
+    return {
+      "0.config.url": "UPSTASH_REDIS_REST_URL",
+      "0.config.token": "UPSTASH_REDIS_REST_TOKEN",
+    };
+  }
+
   public client: Redis;
 
   private sessionId: string;
@@ -24,8 +33,8 @@ export class UpstashRedisChatMessageHistory extends BaseListChatMessageHistory {
   private sessionTTL?: number;
 
   constructor(fields: UpstashRedisChatMessageHistoryInput) {
+    super(fields);
     const { sessionId, sessionTTL, config, client } = fields;
-    super();
     if (client) {
       this.client = client;
     } else if (config) {

@@ -36,6 +36,7 @@ import * as retrievers_vespa from "langchain/retrievers/vespa";
 import * as cache from "langchain/cache";
 import * as stores_doc_in_memory from "langchain/stores/doc/in_memory";
 import * as stores_file_in_memory from "langchain/stores/file/in_memory";
+import * as stores_message_in_memory from "langchain/stores/message/in_memory";
 import * as experimental_autogpt from "langchain/experimental/autogpt";
 import * as experimental_babyagi from "langchain/experimental/babyagi";
 import * as experimental_generative_agents from "langchain/experimental/generative_agents";

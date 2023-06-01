@@ -56,6 +56,13 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
     return ["stop", "signal", "timeout", "options"];
   }
 
+  get lc_secrets(): { [key: string]: string } | undefined {
+    return {
+      "0.openAIApiKey": "OPENAI_API_KEY",
+      "0.azureOpenAIApiKey": "AZURE_OPENAI_API_KEY",
+    };
+  }
+
   temperature = 0.7;
 
   maxTokens = 256;
@@ -448,6 +455,12 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
  * @augments OpenAI
  */
 export class PromptLayerOpenAI extends OpenAI {
+  get lc_secrets(): { [key: string]: string } | undefined {
+    return {
+      "0.promptLayerApiKey": "PROMPTLAYER_API_KEY",
+    };
+  }
+
   promptLayerApiKey?: string;
 
   plTags?: string[];

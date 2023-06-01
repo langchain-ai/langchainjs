@@ -200,3 +200,27 @@ export interface OptionalImportMap {
     | typeof import("../stores/message/upstash_redis.js")
     | Promise<typeof import("../stores/message/upstash_redis.js")>;
 }
+
+export interface SecretMap {
+  ANTHROPIC_API_KEY?: string;
+  AWS_ACCESS_KEY_ID?: string;
+  AWS_SECRETE_ACCESS_KEY?: string;
+  AWS_SECRET_ACCESS_KEY?: string;
+  AWS_SESSION_TOKEN?: string;
+  AZURE_OPENAI_API_KEY?: string;
+  BING_API_KEY?: string;
+  COHERE_API_KEY?: string;
+  GOOGLE_API_KEY?: string;
+  HUGGINGFACEHUB_API_KEY?: string;
+  OPENAI_API_KEY?: string;
+  PROMPTLAYER_API_KEY?: string;
+  REDIS_PASSWORD?: string;
+  REDIS_URL?: string;
+  REDIS_USERNAME?: string;
+  REPLICATE_API_KEY?: string;
+  SERPAPI_API_KEY?: string;
+  SERPER_API_KEY?: string;
+  UPSTASH_REDIS_REST_TOKEN?: string;
+  UPSTASH_REDIS_REST_URL?: string;
+  ZAPIER_NLA_API_KEY?: string;
+}

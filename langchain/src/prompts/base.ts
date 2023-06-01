@@ -10,9 +10,7 @@ import { Serializable } from "../schema/load.js";
 import { SerializedBasePromptTemplate } from "./serde.js";
 
 export class StringPromptValue extends BasePromptValue {
-  lc_namespace = ["langchain", "prompts"];
-
-  lc_name = "base";
+  lc_namespace = ["langchain", "prompts", "base"];
 
   value: string;
 
@@ -58,11 +56,7 @@ export abstract class BasePromptTemplate
 {
   declare PromptValueReturnType: BasePromptValue;
 
-  lc_namespace = ["langchain", "prompts"];
-
-  get lc_name(): string {
-    return this._getPromptType();
-  }
+  lc_namespace = ["langchain", "prompts", this._getPromptType()];
 
   inputVariables: string[];
 
@@ -176,7 +170,7 @@ export abstract class BaseStringPromptTemplate extends BasePromptTemplate {
  * Base class for example selectors.
  */
 export abstract class BaseExampleSelector extends Serializable {
-  lc_namespace = ["langchain", "prompts"];
+  lc_namespace = ["langchain", "prompts", "selectors"];
 
   abstract addExample(example: Example): Promise<void | string>;
 

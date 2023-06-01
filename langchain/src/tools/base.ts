@@ -17,14 +17,12 @@ export abstract class StructuredTool<
 > extends BaseLangChain {
   abstract schema: T | z.ZodEffects<T>;
 
-  lc_namespace = ["langchain", "tools"];
-
-  get lc_name(): string {
-    throw new Error("Not implemented");
+  get lc_namespace() {
+    return ["langchain", "tools"];
   }
 
-  constructor(fields?: ToolParams) {
-    super(fields ?? {});
+  constructor(fields?: ToolParams, ...args: unknown[]) {
+    super(fields ?? {}, ...args);
   }
 
   protected abstract _call(
@@ -72,8 +70,8 @@ export abstract class Tool extends StructuredTool {
     .object({ input: z.string().optional() })
     .transform((obj) => obj.input);
 
-  constructor(verbose?: boolean, callbacks?: Callbacks) {
-    super({ verbose, callbacks });
+  constructor(fields?: ToolParams, ...args: unknown[]) {
+    super(fields, ...args);
   }
 
   call(

@@ -36,6 +36,7 @@ export * from "langchain/retrievers/vespa";
 export * from "langchain/cache";
 export * from "langchain/stores/doc/in_memory";
 export * from "langchain/stores/file/in_memory";
+export * from "langchain/stores/message/in_memory";
 export * from "langchain/experimental/autogpt";
 export * from "langchain/experimental/babyagi";
 export * from "langchain/experimental/generative_agents";

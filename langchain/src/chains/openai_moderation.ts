@@ -24,6 +24,12 @@ export class OpenAIModerationChain
   extends BaseChain
   implements OpenAIModerationChainInput
 {
+  get lc_secrets(): { [key: string]: string } | undefined {
+    return {
+      "0.openAIApiKey": "OPENAI_API_KEY",
+    };
+  }
+
   inputKey = "input";
 
   outputKey = "output";

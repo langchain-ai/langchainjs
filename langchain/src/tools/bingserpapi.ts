@@ -2,6 +2,12 @@ import { getEnvironmentVariable } from "../util/env.js";
 import { Tool } from "./base.js";
 
 class BingSerpAPI extends Tool {
+  get lc_secrets(): { [key: string]: string } | undefined {
+    return {
+      "0": "BING_API_KEY",
+    };
+  }
+
   name = "bing-search";
 
   description =
@@ -15,7 +21,7 @@ class BingSerpAPI extends Tool {
     apiKey: string | undefined = getEnvironmentVariable("BingApiKey"),
     params: Record<string, string> = {}
   ) {
-    super();
+    super(...arguments);
 
     if (!apiKey) {
       throw new Error(

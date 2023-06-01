@@ -155,6 +155,10 @@ export interface WebBrowserArgs extends ToolParams {
 }
 
 export class WebBrowser extends Tool {
+  get lc_namespace() {
+    return [...super.lc_namespace, "webbrowser"];
+  }
+
   private model: BaseLanguageModel;
 
   private embeddings: Embeddings;
@@ -163,16 +167,8 @@ export class WebBrowser extends Tool {
 
   private axiosConfig: Omit<AxiosRequestConfig, "url">;
 
-  constructor({
-    model,
-    headers,
-    embeddings,
-    verbose,
-    callbacks,
-    callbackManager,
-    axiosConfig,
-  }: WebBrowserArgs) {
-    super(verbose, callbacks ?? callbackManager);
+  constructor({ model, headers, embeddings, axiosConfig }: WebBrowserArgs) {
+    super(...arguments);
 
     this.model = model;
     this.embeddings = embeddings;

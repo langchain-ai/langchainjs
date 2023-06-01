@@ -37,8 +37,8 @@ export abstract class BaseLangChain
 
   callbacks?: Callbacks;
 
-  constructor(params: BaseLangChainParams) {
-    super(params);
+  constructor(params: BaseLangChainParams, ...args: unknown[]) {
+    super(params, ...args);
     this.verbose = params.verbose ?? getVerbosity();
     this.callbacks = params.callbacks;
   }

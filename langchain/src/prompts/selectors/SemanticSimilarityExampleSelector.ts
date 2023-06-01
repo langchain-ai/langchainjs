@@ -18,8 +18,6 @@ export interface SemanticSimilarityExampleSelectorInput {
 }
 
 export class SemanticSimilarityExampleSelector extends BaseExampleSelector {
-  lc_name = "selectors";
-
   vectorStore: VectorStore;
 
   k = 4;
