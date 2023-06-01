@@ -31,6 +31,7 @@ const retrievers_document_compressors = require("langchain/retrievers/document_c
 const retrievers_time_weighted = require("langchain/retrievers/time_weighted");
 const retrievers_document_compressors_chain_extract = require("langchain/retrievers/document_compressors/chain_extract");
 const retrievers_hyde = require("langchain/retrievers/hyde");
+const retrievers_vespa = require("langchain/retrievers/vespa");
 const cache = require("langchain/cache");
 const stores_file_in_memory = require("langchain/stores/file/in_memory");
 const experimental_autogpt = require("langchain/experimental/autogpt");

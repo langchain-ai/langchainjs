@@ -316,6 +316,9 @@
     "retrievers/self_query.cjs",
     "retrievers/self_query.js",
     "retrievers/self_query.d.ts",
+    "retrievers/vespa.cjs",
+    "retrievers/vespa.js",
+    "retrievers/vespa.d.ts",
     "cache.cjs",
     "cache.js",
     "cache.d.ts",
@@ -1194,6 +1197,11 @@
       "types": "./retrievers/self_query.d.ts",
       "import": "./retrievers/self_query.js",
       "require": "./retrievers/self_query.cjs"
+    },
+    "./retrievers/vespa": {
+      "types": "./retrievers/vespa.d.ts",
+      "import": "./retrievers/vespa.js",
+      "require": "./retrievers/vespa.cjs"
     },
     "./cache": {
       "types": "./cache.d.ts",

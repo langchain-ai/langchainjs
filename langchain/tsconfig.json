@@ -128,6 +128,7 @@
       "src/retrievers/document_compressors/chain_extract.ts",
       "src/retrievers/hyde.ts",
       "src/retrievers/self_query/index.ts",
+      "src/retrievers/vespa.ts",
       "src/cache/index.ts",
       "src/cache/momento.ts",
       "src/cache/redis.ts",
