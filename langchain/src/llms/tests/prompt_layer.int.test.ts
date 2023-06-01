@@ -12,7 +12,7 @@ test("Test PromptLayerOpenAI returns promptLayerID if returnPromptLayerId=true",
     returnPromptLayerId: true,
   });
   const res = await model.generate(["Print hello world"]);
-  console.log({ res });
+  console.log(JSON.stringify({ res }, null, 2));
 
   expect(
     typeof res.generations[0][0].generationInfo?.promptLayerRequestId

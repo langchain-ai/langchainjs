@@ -173,32 +173,30 @@ const res = await model.generate([
 ]);
 
 console.log(JSON.stringify(res, null, 3));
-```
 
-The above should return the following
-
-```json
-{
-  "generations": [
-    [
-      {
-        "text": " Socktastic!",
-        "generationInfo": {
-          "finishReason": "stop",
-          "logprobs": null,
-          "promptLayerRequestId": 2066417
+/*
+  {
+    "generations": [
+      [
+        {
+          "text": " Socktastic!",
+          "generationInfo": {
+            "finishReason": "stop",
+            "logprobs": null,
+            "promptLayerRequestId": 2066417
+          }
         }
+      ]
+    ],
+    "llmOutput": {
+      "tokenUsage": {
+        "completionTokens": 5,
+        "promptTokens": 23,
+        "totalTokens": 28
       }
-    ]
-  ],
-  "llmOutput": {
-    "tokenUsage": {
-      "completionTokens": 5,
-      "promptTokens": 23,
-      "totalTokens": 28
     }
   }
-}
+*/
 ```
 
 ### Azure `PromptLayerOpenAI`

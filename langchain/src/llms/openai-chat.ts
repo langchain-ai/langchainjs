@@ -390,6 +390,7 @@ export class PromptLayerOpenAIChat extends OpenAIChat {
   promptLayerApiKey?: string;
 
   plTags?: string[];
+
   returnPromptLayerId?: boolean;
 
   constructor(
@@ -430,7 +431,7 @@ export class PromptLayerOpenAIChat extends OpenAIChat {
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<LLMResult> {
-    let choice: any;
+    let choice: Generation[];
 
     const generations: Generation[][] = await Promise.all(
       prompts.map(async (prompt) => {
@@ -443,7 +444,7 @@ export class PromptLayerOpenAIChat extends OpenAIChat {
         const parsedResp = {
           text,
         };
-        let promptLayerRespBody = await promptLayerTrackRequest(
+        const promptLayerRespBody = await promptLayerTrackRequest(
           this.caller,
           "langchain.PromptLayerOpenAIChat",
           [prompt],
@@ -459,7 +460,7 @@ export class PromptLayerOpenAIChat extends OpenAIChat {
           this.returnPromptLayerId === true &&
           promptLayerRespBody.success === true
         ) {
-          choice[0]["generationInfo"] = {
+          choice[0].generationInfo = {
             promptLayerRequestId: promptLayerRespBody.request_id,
           };
         }

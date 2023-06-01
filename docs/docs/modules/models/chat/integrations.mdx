@@ -47,36 +47,34 @@ const respA = await chat.generate([
 ]);
 
 console.log(JSON.stringify(respA, null, 3));
-```
 
-The return
-
-```json
-{
-  "generations": [
-    [
-      {
-        "text": "Bonjour! Je suis un assistant utile qui peut vous aider à traduire de l'anglais vers le français. Que puis-je faire pour vous aujourd'hui?",
-        "message": {
-          "type": "ai",
-          "data": {
-            "content": "Bonjour! Je suis un assistant utile qui peut vous aider à traduire de l'anglais vers le français. Que puis-je faire pour vous aujourd'hui?"
+/*
+  {
+    "generations": [
+      [
+        {
+          "text": "Bonjour! Je suis un assistant utile qui peut vous aider à traduire de l'anglais vers le français. Que puis-je faire pour vous aujourd'hui?",
+          "message": {
+            "type": "ai",
+            "data": {
+              "content": "Bonjour! Je suis un assistant utile qui peut vous aider à traduire de l'anglais vers le français. Que puis-je faire pour vous aujourd'hui?"
+            }
+          },
+          "generationInfo": {
+            "promptLayerRequestId": 2300682
           }
-        },
-        "generationInfo": {
-          "promptLayerRequestId": 2300682
         }
+      ]
+    ],
+    "llmOutput": {
+      "tokenUsage": {
+        "completionTokens": 35,
+        "promptTokens": 19,
+        "totalTokens": 54
       }
-    ]
-  ],
-  "llmOutput": {
-    "tokenUsage": {
-      "completionTokens": 35,
-      "promptTokens": 19,
-      "totalTokens": 54
     }
   }
-}
+*/
 ```
 
 ## `Google Vertex AI`

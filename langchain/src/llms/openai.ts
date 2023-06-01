@@ -22,6 +22,7 @@ import { OpenAIChat } from "./openai-chat.js";
 import { LLMResult } from "../schema/index.js";
 import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
 import { promptLayerTrackRequest } from "../util/prompt-layer.js";
+
 export { OpenAICallOptions, AzureOpenAIInput, OpenAIInput };
 
 interface TokenUsage {
@@ -448,7 +449,9 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
  */
 export class PromptLayerOpenAI extends OpenAI {
   promptLayerApiKey?: string;
+
   plTags?: string[];
+
   returnPromptLayerId?: boolean;
 
   constructor(
@@ -499,7 +502,7 @@ export class PromptLayerOpenAI extends OpenAI {
         llm_output: generations.llmOutput,
       };
 
-      let promptLayerRespBody = await promptLayerTrackRequest(
+      const promptLayerRespBody = await promptLayerTrackRequest(
         this.caller,
         "langchain.PromptLayerOpenAI",
         [prompts[i]],

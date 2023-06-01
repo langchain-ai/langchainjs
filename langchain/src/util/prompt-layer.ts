@@ -1,7 +1,5 @@
-import fetch from "cross-fetch";
+import { CreateCompletionRequestPrompt, CreateCompletionRequest } from "openai";
 import { AsyncCaller } from "../util/async_caller.js";
-import { CreateCompletionRequestPrompt } from "openai";
-import { CreateCompletionRequest } from "openai";
 
 export const promptLayerTrackRequest = async (
   callerFunc: AsyncCaller,
@@ -9,6 +7,7 @@ export const promptLayerTrackRequest = async (
   prompt: CreateCompletionRequestPrompt,
   kwargs: CreateCompletionRequest,
   plTags: string[] | undefined,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   requestResponse: any,
   startTime: number,
   endTime: number,

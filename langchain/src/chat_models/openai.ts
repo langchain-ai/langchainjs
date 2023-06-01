@@ -524,7 +524,9 @@ export class ChatOpenAI
 
 export class PromptLayerChatOpenAI extends ChatOpenAI {
   promptLayerApiKey?: string;
+
   plTags?: string[];
+
   returnPromptLayerId?: boolean;
 
   constructor(
@@ -573,16 +575,20 @@ export class PromptLayerChatOpenAI extends ChatOpenAI {
     const requestEndTime = Date.now();
 
     const _convertMessageToDict = (message: BaseChatMessage) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let messageDict: Record<string, any>;
 
-      if (message instanceof ChatMessage) {
-        messageDict = { role: message.role, content: message.text };
-      } else if (message instanceof HumanChatMessage) {
+      if (message._getType() === "human") {
         messageDict = { role: "user", content: message.text };
-      } else if (message instanceof AIChatMessage) {
+      } else if (message._getType() === "ai") {
         messageDict = { role: "assistant", content: message.text };
-      } else if (message instanceof SystemChatMessage) {
+      } else if (message._getType() === "system") {
         messageDict = { role: "system", content: message.text };
+      } else if (message._getType() === "generic") {
+        messageDict = {
+          role: (message as ChatMessage).role,
+          content: message.text,
+        };
       } else {
         throw new Error(`Got unknown type ${message}`);
       }
@@ -592,14 +598,14 @@ export class PromptLayerChatOpenAI extends ChatOpenAI {
 
     const _createMessageDicts = (
       messages: BaseChatMessage[],
-      CallOptions?: this["CallOptions"]
+      callOptions?: this["CallOptions"]
     ) => {
-      let params = {
+      const params = {
         ...this.invocationParams(),
         model: this.modelName,
       };
 
-      if (CallOptions?.stop) {
+      if (callOptions?.stop) {
         if (Object.keys(params).includes("stop")) {
           throw new Error("`stop` found in both the input and default params.");
         }
@@ -610,11 +616,11 @@ export class PromptLayerChatOpenAI extends ChatOpenAI {
       return messageDicts;
     };
 
-    for (let i = 0; i < generatedResponses.generations.length; i++) {
+    for (let i = 0; i < generatedResponses.generations.length; i += 1) {
       const generation = generatedResponses.generations[i];
       const messageDicts = _createMessageDicts(messages, parsedOptions);
 
-      let promptLayerRequestId: string | undefined = undefined;
+      let promptLayerRequestId: string | undefined;
       const parsedResp = [
         {
           content: generation.text,
@@ -622,7 +628,7 @@ export class PromptLayerChatOpenAI extends ChatOpenAI {
         },
       ];
 
-      let promptLayerRespBody = await promptLayerTrackRequest(
+      const promptLayerRespBody = await promptLayerTrackRequest(
         this.caller,
         "langchain.PromptLayerChatOpenAI",
         messageDicts,
@@ -646,8 +652,7 @@ export class PromptLayerChatOpenAI extends ChatOpenAI {
           generation.generationInfo = {};
         }
 
-        generation.generationInfo["promptLayerRequestId"] =
-          promptLayerRequestId;
+        generation.generationInfo.promptLayerRequestId = promptLayerRequestId;
       }
     }
 
