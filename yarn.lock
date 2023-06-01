@@ -18354,6 +18354,7 @@ __metadata:
     mammoth: ^1.5.1
     ml-distance: ^4.0.0
     mongodb: ^5.2.0
+    mysql2: ^3.3.3
     object-hash: ^3.0.0
     openai: ^3.2.0
     p-queue: ^6.6.2
@@ -18413,6 +18414,7 @@ __metadata:
     ignore: ^5.2.0
     mammoth: "*"
     mongodb: ^5.2.0
+    mysql2: ^3.3.3
     pdf-parse: 1.1.1
     peggy: ^3.0.2
     pickleparser: ^0.1.0
@@ -18492,6 +18494,8 @@ __metadata:
       optional: true
     mongodb:
       optional: true
+    mysql2:
+      optional: true
     pdf-parse:
       optional: true
     peggy:
@@ -18523,7 +18527,6 @@ __metadata:
     dotenv: ^16.0.3
     husky: ^8.0.3
     lint-staged: ^13.1.1
-    mysql2: ^3.3.3
     prettier: ^2.8.3
     turbo: latest
     typescript: ^5.0.0
