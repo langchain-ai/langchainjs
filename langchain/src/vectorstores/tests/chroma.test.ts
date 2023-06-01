@@ -3,6 +3,7 @@ import { jest, test, expect } from "@jest/globals";
 
 import { type Collection } from "chromadb";
 import { Chroma } from "../chroma.js";
+import { FakeEmbeddings } from "../../embeddings/fake.js";
 
 const mockCollection = {
   add: jest.fn<Collection["add"]>().mockResolvedValue(undefined as any),
@@ -21,14 +22,6 @@ const mockClient = {
   getOrCreateCollection: jest.fn<any>().mockResolvedValue(mockCollection),
 } as any;
 
-const createMockEmbeddings = (): any => ({
-  embedDocuments: jest.fn<any>().mockResolvedValue([
-    [1, 2],
-    [3, 4],
-  ]),
-  embedQuery: jest.fn<any>().mockResolvedValue([1, 2]),
-});
-
 describe("Chroma", () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -40,7 +33,7 @@ describe("Chroma", () => {
   });
 
   test("constructor works", async () => {
-    const chromaStore = new Chroma(createMockEmbeddings(), {
+    const chromaStore = new Chroma(new FakeEmbeddings(), {
       index: mockClient,
       collectionName: "test-collection",
     });
@@ -49,8 +42,8 @@ describe("Chroma", () => {
   });
   test("should add vectors to the collection", async () => {
     const expectedPageContents = ["Document 1", "Document 2"];
-    const embeddings = createMockEmbeddings();
-
+    const embeddings = new FakeEmbeddings();
+    jest.spyOn(embeddings, "embedDocuments");
     const args = { collectionName: "testCollection", index: mockClient };
     const documents = expectedPageContents.map((pc) => ({ pageContent: pc }));
 
@@ -75,7 +68,7 @@ describe("Chroma", () => {
       { metadata: { id: 2 }, pageContent: "Document 2" },
     ];
 
-    const chroma = new Chroma(createMockEmbeddings(), args);
+    const chroma = new Chroma(new FakeEmbeddings(), args);
     chroma.numDimensions = 3; // Mismatched numDimensions
 
     await expect(chroma.addVectors(vectors, documents)).rejects.toThrowError();
@@ -94,7 +87,7 @@ describe("Chroma", () => {
       metadatas: [[{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }, { id: 5 }]],
     } as any);
 
-    const chroma = new Chroma(createMockEmbeddings(), args);
+    const chroma = new Chroma(new FakeEmbeddings(), args);
     chroma.collection = mockCollection;
 
     const results = await chroma.similaritySearchVectorWithScore(
