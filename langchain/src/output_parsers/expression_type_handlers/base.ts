@@ -1,104 +1,78 @@
-import type meriyahT from "meriyah";
+import { GRAMMAR } from "./grammar/parser_grammar.js";
 
 export abstract class NodeHandler {
   constructor(protected parentHandler?: NodeHandler) {}
 
-  abstract accepts(
-    node: meriyahT.ESTree.Node
-  ): Promise<meriyahT.ESTree.Node | boolean>;
+  abstract accepts(node: ExpressionNode): Promise<ExpressionNode | boolean>;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  abstract handle(node: meriyahT.ESTree.Node): Promise<any>;
+  abstract handle(node: ExpressionNode): Promise<any>;
 }
 
 export class ASTParser {
-  static astParseInstance: typeof meriyahT.parseScript;
+  static astParseInstance: ParseFunction;
 
   static async importASTParser() {
     try {
       if (!ASTParser.astParseInstance) {
-        const meriyah = await import("meriyah");
-        ASTParser.astParseInstance =
-          meriyah.parseScript as typeof meriyahT.parseScript;
+        const { default: peggy } = await import("peggy");
+        const parser = peggy.generate(GRAMMAR);
+        const { parse } = parser;
+        ASTParser.astParseInstance = parse as ParseFunction;
       }
       return ASTParser.astParseInstance;
     } catch (e) {
-      console.log(e);
       throw new Error(
-        "Failed to import meriyah. Please install meriyah (i.e. npm install meriyah)."
+        `Failed to import peggy. Please install peggy (i.e. "npm install peggy" or "yarn add peggy").`
       );
     }
   }
 
-  static isProgram(
-    node: meriyahT.ESTree.Node
-  ): node is meriyahT.ESTree.Program {
+  static isProgram(node: ExpressionNode): node is Program {
     return node.type === "Program";
   }
 
   static isExpressionStatement(
-    node: meriyahT.ESTree.Node
-  ): node is meriyahT.ESTree.ExpressionStatement {
+    node: ExpressionNode
+  ): node is ExpressionStatement {
     return node.type === "ExpressionStatement";
   }
 
-  static isCallExpression(
-    node: meriyahT.ESTree.Node
-  ): node is meriyahT.ESTree.CallExpression {
+  static isCallExpression(node: ExpressionNode): node is CallExpression {
     return node.type === "CallExpression";
   }
 
-  static isLiteral(
-    node: meriyahT.ESTree.Node
-  ): node is meriyahT.ESTree.Literal {
-    return node.type === "Literal";
+  static isStringLiteral(node: ExpressionNode): node is StringLiteral {
+    return node.type === "StringLiteral" && typeof node.value === "string";
   }
 
-  static isStringLiteral(
-    node: meriyahT.ESTree.Node
-  ): node is meriyahT.ESTree.Literal {
-    return node.type === "Literal" && typeof node.value === "string";
+  static isNumericLiteral(node: ExpressionNode): node is NumericLiteral {
+    return node.type === "NumericLiteral" && typeof node.value === "number";
   }
 
-  static isNumericLiteral(
-    node: meriyahT.ESTree.Node
-  ): node is meriyahT.ESTree.Literal {
-    return node.type === "Literal" && typeof node.value === "number";
+  static isBooleanLiteral(node: ExpressionNode): node is BooleanLiteral {
+    return node.type === "BooleanLiteral" && typeof node.value === "boolean";
   }
 
-  static isBooleanLiteral(
-    node: meriyahT.ESTree.Node
-  ): node is meriyahT.ESTree.Literal {
-    return node.type === "Literal" && typeof node.value === "boolean";
-  }
-
-  static isIdentifier(
-    node: meriyahT.ESTree.Node
-  ): node is meriyahT.ESTree.Identifier {
+  static isIdentifier(node: ExpressionNode): node is Identifier {
     return node.type === "Identifier";
   }
 
-  static isObjectExpression(
-    node: meriyahT.ESTree.Node
-  ): node is meriyahT.ESTree.ObjectExpression {
+  static isObjectExpression(node: ExpressionNode): node is ObjectExpression {
     return node.type === "ObjectExpression";
   }
 
-  static isArrayExpression(
-    node: meriyahT.ESTree.Node
-  ): node is meriyahT.ESTree.ArrayExpression {
+  static isArrayExpression(node: ExpressionNode): node is ArrayExpression {
     return node.type === "ArrayExpression";
   }
 
-  static isProperty(
-    node: meriyahT.ESTree.Node
-  ): node is meriyahT.ESTree.Property {
-    return node.type === "Property";
+  static isPropertyAssignment(
+    node: ExpressionNode
+  ): node is PropertyAssignment {
+    return node.type === "PropertyAssignment";
   }
 
-  static isMemberExpression(
-    node: meriyahT.ESTree.Node
-  ): node is meriyahT.ESTree.MemberExpression {
+  static isMemberExpression(node: ExpressionNode): node is MemberExpression {
     return node.type === "MemberExpression";
   }
 }
