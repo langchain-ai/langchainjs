@@ -5,6 +5,7 @@ import type {
   ResultSetHeader,
   FieldPacket,
 } from "mysql2/promise";
+import { format } from "mysql2";
 import { VectorStore } from "./base.js";
 import { Embeddings } from "../embeddings/base.js";
 import { Document } from "../document.js";
@@ -59,11 +60,14 @@ export class SingleStoreVectorStore extends VectorStore {
       vectors.map(async (vector, idx) => {
         try {
           await this.connectionPool.execute(
-            `INSERT INTO ${tableName} VALUES ('${
-              documents[idx].pageContent
-            }', JSON_ARRAY_PACK('[${vector}]'), '${JSON.stringify(
-              documents[idx].metadata
-            )}');`
+            format(
+              `INSERT INTO ${tableName} VALUES (?, JSON_ARRAY_PACK('[?]'), ?);`,
+              [
+                documents[idx].pageContent,
+                vector,
+                JSON.stringify(documents[idx].metadata),
+              ]
+            )
           );
         } catch (error) {
           console.error(`Error adding vector at index ${idx}:`, error);
@@ -88,10 +92,13 @@ export class SingleStoreVectorStore extends VectorStore {
       ),
       FieldPacket[]
     ] = await this.connectionPool.query(
-      `SELECT ${this.contentColumnName},
-    ${this.metadataColumnName},
-    DOT_PRODUCT(${this.vectorColumnName}, JSON_ARRAY_PACK('[${query}]')) as __score
-    FROM ${this.tableName} ORDER BY __score DESC LIMIT ${k}`
+      format(
+        `SELECT ${this.contentColumnName},
+      ${this.metadataColumnName},
+      DOT_PRODUCT(${this.vectorColumnName}, JSON_ARRAY_PACK('[?]')) as __score FROM ${this.tableName}
+      ORDER BY __score DESC LIMIT ?;`,
+        [query, k]
+      )
     );
     const result: [Document, number][] = [];
     for (const row of rows as RowDataPacket[]) {

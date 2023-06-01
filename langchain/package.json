@@ -443,6 +443,7 @@
     "mammoth": "^1.5.1",
     "meriyah": "^4.3.7",
     "mongodb": "^5.2.0",
+    "mysql2": "^3.3.3",
     "pdf-parse": "1.1.1",
     "pickleparser": "^0.1.0",
     "playwright": "^1.32.1",
@@ -494,6 +495,7 @@
     "mammoth": "*",
     "meriyah": "*",
     "mongodb": "^5.2.0",
+    "mysql2": "^3.3.3",
     "pdf-parse": "1.1.1",
     "pickleparser": "^0.1.0",
     "playwright": "^1.32.1",
@@ -605,6 +607,9 @@
       "optional": true
     },
     "mongodb": {
+      "optional": true
+    },
+    "mysql2": {
       "optional": true
     },
     "pdf-parse": {
