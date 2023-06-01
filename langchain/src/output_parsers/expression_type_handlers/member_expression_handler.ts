@@ -1,9 +1,8 @@
-import type { ESTree } from "meriyah";
 import { NodeHandler, ASTParser } from "./base.js";
 import { MemberExpressionType } from "./types.js";
 
 export class MemberExpressionHandler extends NodeHandler {
-  async accepts(node: ESTree.Node): Promise<ESTree.MemberExpression | boolean> {
+  async accepts(node: ExpressionNode): Promise<MemberExpression | boolean> {
     if (ASTParser.isMemberExpression(node)) {
       return node;
     } else {
@@ -11,7 +10,7 @@ export class MemberExpressionHandler extends NodeHandler {
     }
   }
 
-  async handle(node: ESTree.MemberExpression): Promise<MemberExpressionType> {
+  async handle(node: MemberExpression): Promise<MemberExpressionType> {
     if (!this.parentHandler) {
       throw new Error(
         "ArrayLiteralExpressionHandler must have a parent handler"
@@ -32,7 +31,7 @@ export class MemberExpressionHandler extends NodeHandler {
     let identifier: string;
     if (ASTParser.isIdentifier(object)) {
       identifier = object.name.replace(/^["'](.+(?=["']$))["']$/, "$1");
-    } else if (ASTParser.isLiteral(object)) {
+    } else if (ASTParser.isStringLiteral(object)) {
       identifier = (`${object.value}` as string).replace(
         /^["'](.+(?=["']$))["']$/,
         "$1"
@@ -40,7 +39,7 @@ export class MemberExpressionHandler extends NodeHandler {
     } else {
       throw new Error("Invalid object type");
     }
-    if (object.type !== "Identifier" && object.type !== "Literal") {
+    if (object.type !== "Identifier" && object.type !== "StringLiteral") {
       throw new Error("ArrayExpression is not supported");
     }
 

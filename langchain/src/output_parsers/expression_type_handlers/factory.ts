@@ -1,4 +1,3 @@
-import type { ESTree } from "meriyah";
 import { NodeHandler } from "./base.js";
 import { ArrayLiteralExpressionHandler } from "./array_literal_expression_handler.js";
 import { BooleanLiteralHandler } from "./boolean_literal_handler.js";
@@ -26,11 +25,11 @@ const handlers = [
 export class MasterHandler extends NodeHandler {
   nodeHandlers: NodeHandler[] = [];
 
-  async accepts(node: ESTree.Node): Promise<ESTree.Node | boolean> {
+  async accepts(node: ExpressionNode): Promise<ExpressionNode | boolean> {
     throw new Error(`Master handler does not accept any nodes: ${node}`);
   }
 
-  async handle(node: ESTree.CallExpression): Promise<ParsedType> {
+  async handle(node: CallExpression): Promise<ParsedType> {
     for (const handler of this.nodeHandlers) {
       const accepts = await handler.accepts(node);
       if (accepts) {

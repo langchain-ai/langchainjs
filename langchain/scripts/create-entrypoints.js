@@ -130,6 +130,7 @@ const entrypoints = {
     "retrievers/document_compressors/chain_extract",
   "retrievers/hyde": "retrievers/hyde",
   "retrievers/self_query": "retrievers/self_query/index",
+  "retrievers/vespa": "retrievers/vespa",
   // cache
   cache: "cache/index",
   "cache/momento": "cache/momento",

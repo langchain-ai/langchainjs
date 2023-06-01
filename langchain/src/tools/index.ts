@@ -37,3 +37,4 @@ export {
 } from "./google_custom_search.js";
 export { AIPluginTool } from "./aiplugin.js";
 export { ReadFileTool, WriteFileTool } from "./fs.js";
+export { BraveSearch, BraveSearchParams } from "./brave_search.js";
