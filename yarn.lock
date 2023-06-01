@@ -18327,7 +18327,6 @@ __metadata:
     js-tiktoken: ^1.0.6
     jsonpointer: ^5.0.1
     mammoth: ^1.5.1
-    meriyah: ^4.3.7
     ml-distance: ^4.0.0
     mongodb: ^5.2.0
     object-hash: ^3.0.0
@@ -18335,6 +18334,7 @@ __metadata:
     p-queue: ^6.6.2
     p-retry: 4
     pdf-parse: 1.1.1
+    peggy: ^3.0.2
     pickleparser: ^0.1.0
     playwright: ^1.32.1
     prettier: ^2.8.3
@@ -18386,9 +18386,9 @@ __metadata:
     html-to-text: ^9.0.5
     ignore: ^5.2.0
     mammoth: "*"
-    meriyah: "*"
     mongodb: ^5.2.0
     pdf-parse: 1.1.1
+    peggy: ^3.0.2
     pickleparser: ^0.1.0
     playwright: ^1.32.1
     puppeteer: ^19.7.2
@@ -18462,11 +18462,11 @@ __metadata:
       optional: true
     mammoth:
       optional: true
-    meriyah:
-      optional: true
     mongodb:
       optional: true
     pdf-parse:
+      optional: true
+    peggy:
       optional: true
     pickleparser:
       optional: true
@@ -19187,13 +19187,6 @@ __metadata:
   version: 1.4.1
   resolution: "merge2@npm:1.4.1"
   checksum: 7268db63ed5169466540b6fb947aec313200bcf6d40c5ab722c22e242f651994619bcd85601602972d3c85bd2cc45a358a4c61937e9f11a061919a1da569b0c2
-  languageName: node
-  linkType: hard
-
-"meriyah@npm:^4.3.7":
-  version: 4.3.7
-  resolution: "meriyah@npm:4.3.7"
-  checksum: 537fed1981bb4c2dc5fffa0c2d159fc169bff252e7a31c8b15ce3ddb9e91d8b66cacf5c932d7fc31bd522dd70d9b007e19131ac40172cd3bd27feee79c447041
   languageName: node
   linkType: hard
 
@@ -20929,6 +20922,18 @@ __metadata:
   version: 0.9.0
   resolution: "peberminta@npm:0.9.0"
   checksum: b983b68077269ca8a3327520a0a3f027fa930faa9fb3cb53bed1cb3847ebc0ed55db936d70b1745a756149911f5f450e898e87e25ab207f1b8b892bed48fb540
+  languageName: node
+  linkType: hard
+
+"peggy@npm:^3.0.2":
+  version: 3.0.2
+  resolution: "peggy@npm:3.0.2"
+  dependencies:
+    commander: ^10.0.0
+    source-map-generator: 0.8.0
+  bin:
+    peggy: bin/peggy.js
+  checksum: bdca2291a2453e35fb9499bd414f25d44093aecaeb992ef90151ab126514c053c30d4bf5b54f68cbce22a4420eef75219a6deb1209b300630bff38e7640115d9
   languageName: node
   linkType: hard
 
@@ -24257,6 +24262,13 @@ __metadata:
   version: 2.0.1
   resolution: "source-list-map@npm:2.0.1"
   checksum: 806efc6f75e7cd31e4815e7a3aaf75a45c704871ea4075cb2eb49882c6fca28998f44fc5ac91adb6de03b2882ee6fb02f951fdc85e6a22b338c32bfe19557938
+  languageName: node
+  linkType: hard
+
+"source-map-generator@npm:0.8.0":
+  version: 0.8.0
+  resolution: "source-map-generator@npm:0.8.0"
+  checksum: 15e7854c04a4b1bc8a477664a65c58316d792fb24a7b427219ac597eed7f57a3905637c783126b123cf05f9d4fdc45a8fadb8bc2fbf010a82d92e35c193aba51
   languageName: node
   linkType: hard
 
