@@ -363,6 +363,8 @@ export class Milvus extends VectorStore {
       collectionName?: string;
       url?: string;
       ssl?: boolean;
+      username?: string;
+      password?: string;
     }
   ): Promise<Milvus> {
     const docs: Document[] = [];
@@ -386,6 +388,8 @@ export class Milvus extends VectorStore {
       collectionName: dbConfig?.collectionName || genCollectionName(),
       url: dbConfig?.url,
       ssl: dbConfig?.ssl,
+      username: dbConfig?.username,
+      password: dbConfig?.password,
     };
     const instance = new this(embeddings, args);
     await instance.addDocuments(docs);
