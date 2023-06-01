@@ -307,6 +307,9 @@ retrievers/hyde.d.ts
 retrievers/self_query.cjs
 retrievers/self_query.js
 retrievers/self_query.d.ts
+retrievers/vespa.cjs
+retrievers/vespa.js
+retrievers/vespa.d.ts
 cache.cjs
 cache.js
 cache.d.ts
