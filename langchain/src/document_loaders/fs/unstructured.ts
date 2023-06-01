@@ -29,7 +29,6 @@ const UNSTRUCTURED_API_FILETYPES = [
   ".xls",
   ".odt",
   ".epub",
-  ".json",
 ];
 
 type Element = {
@@ -107,8 +106,7 @@ export class UnstructuredLoader extends BaseDocumentLoader {
 
     if (!response.ok) {
       throw new Error(
-        `Failed to partition file ${this.filePath} with error ${
-          response.status
+        `Failed to partition file ${this.filePath} with error ${response.status
         } and message ${await response.text()}`
       );
     }
