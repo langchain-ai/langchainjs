@@ -1,17 +1,16 @@
-import type { ESTree } from "meriyah";
 import { NodeHandler, ASTParser } from "./base.js";
 import { PropertyAssignmentType } from "./types.js";
 
 export class PropertyAssignmentHandler extends NodeHandler {
-  async accepts(node: ESTree.Node): Promise<ESTree.Property | boolean> {
-    if (ASTParser.isProperty(node)) {
+  async accepts(node: ExpressionNode): Promise<PropertyAssignment | boolean> {
+    if (ASTParser.isPropertyAssignment(node)) {
       return node;
     } else {
       return false;
     }
   }
 
-  async handle(node: ESTree.Property): Promise<PropertyAssignmentType> {
+  async handle(node: PropertyAssignment): Promise<PropertyAssignmentType> {
     if (!this.parentHandler) {
       throw new Error(
         "ArrayLiteralExpressionHandler must have a parent handler"
