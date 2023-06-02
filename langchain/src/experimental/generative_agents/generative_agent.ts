@@ -1,8 +1,19 @@
-import { PromptTemplate , LLMChain } from "../../index.js";
+import { LLMChain } from "../../chains/llm_chain.js";
+import { PromptTemplate } from "../../prompts/index.js";
 import { BaseLLM } from "../../llms/base.js";
 import { GenerativeAgentMemory } from "./generative_agent_memory.js";
+import { ChainValues } from "../../schema/index.js";
 
-// might need to use the class-validator library
+export type GenerativeAgentConfig = {
+  name: string;
+  age?: number;
+  traits: string;
+  status: string;
+  verbose?: boolean;
+  summaryRefreshSeconds?: number;
+  // dailySummaries?: string[];
+};
+
 export class GenerativeAgent {
   // a character with memory and innate characterisitics
   name: string; // the character's name
@@ -21,41 +32,30 @@ export class GenerativeAgent {
 
   private summary: string; // stateful self-summary generated via reflection on the character's memory.
 
-  private summaryRefreshSeconds: number; // 3600
+  private summaryRefreshSeconds = 3600;
 
   private lastRefreshed: Date; // the last time the character's summary was regenerated
 
-  private dailySummaries: string[]; // summary of the events in the plan that the agent took.
-
-  // class Config went here in python docs
+  // TODO: Add support for daily summaries
+  // private dailySummaries: string[] = []; // summary of the events in the plan that the agent took.
 
   constructor(
-    name: string,
-    age: number,
-    traits: string,
-    status: string,
-    memory: GenerativeAgentMemory,
     llm: BaseLLM,
-    dailySummaries: string[] = [],
-    verbose = false,
-    summaryRefreshSeconds = 3600
+    memory: GenerativeAgentMemory,
+    config: GenerativeAgentConfig
   ) {
-    this.name = name;
-    this.age = age;
-    this.traits = traits;
-    this.status = status;
-    this.memory = memory;
     this.llm = llm;
-    this.verbose = verbose;
+    this.memory = memory;
+    this.name = config.name;
+    this.age = config.age;
+    this.traits = config.traits;
+    this.status = config.status;
+    this.verbose = config.verbose ?? this.verbose;
     this.summary = "";
-    this.summaryRefreshSeconds = summaryRefreshSeconds;
+    this.summaryRefreshSeconds =
+      config.summaryRefreshSeconds ?? this.summaryRefreshSeconds;
     this.lastRefreshed = new Date();
-    this.dailySummaries = dailySummaries;
-  }
-
-  // getter
-  get getMemory(): GenerativeAgentMemory {
-    return this.memory;
+    // this.dailySummaries = config.dailySummaries ?? this.dailySummaries;
   }
 
   // LLM methods
@@ -68,37 +68,31 @@ export class GenerativeAgent {
     return result;
   }
 
-  chain(this: GenerativeAgent, prompt: PromptTemplate): LLMChain {
+  chain(prompt: PromptTemplate): LLMChain {
     const chain = new LLMChain({
       llm: this.llm,
       prompt,
       verbose: this.verbose,
       outputKey: "output", // new
-      // memory:this.memory,
+      memory: this.memory,
     });
     return chain;
   }
 
-  async getEntityFromObservations(
-    this: GenerativeAgent,
-    observation: string
-  ): Promise<string> {
+  async getEntityFromObservations(observation: string): Promise<string> {
     const prompt = PromptTemplate.fromTemplate(
-      "What is the {entity} doing in the following observation? {observation}" +
-        "\nThe {entity} is"
+      "What is the observed entity in the following observation? {observation}" +
+        "\nEntity="
     );
 
     const result = await this.chain(prompt).call({
-      // might need to change to call()
       observation,
-      entity: "entity", // fix
     });
 
     return result.output;
   }
 
   async getEntityAction(
-    this: GenerativeAgent,
     observation: string,
     entityName: string
   ): Promise<string> {
@@ -111,38 +105,32 @@ export class GenerativeAgent {
       entity: entityName,
       observation,
     });
-    const trimmedResult = result.output.trim(); // added output
+    const trimmedResult = result.output.trim();
     return trimmedResult;
   }
 
-  async summarizeRelatedMemories(
-    this: GenerativeAgent,
-    observation: string
-  ): Promise<string> {
+  async summarizeRelatedMemories(observation: string): Promise<string> {
     // summarize memories that are most relevant to an observation
     const prompt = PromptTemplate.fromTemplate(
       `
-            {q1}?
-            Relevant context: 
-            `
+{q1}?
+Context from memory:
+{relevant_memories}
+Relevant context:`
     );
     const entityName = await this.getEntityFromObservations(observation);
-    const entiryAction = this.getEntityAction(observation, entityName);
+    const entityAction = await this.getEntityAction(observation, entityName);
     const q1 = `What is the relationship between ${this.name} and ${entityName}`;
-    const q2 = `${entityName} is ${entiryAction}`;
-    // const relevantMemoriesKey = this.memory.getRelevantMemoriesKey;
+    const q2 = `${entityName} is ${entityAction}`;
     const response = await this.chain(prompt).call({
       q1,
       queries: [q1, q2],
-      // relevantMemories: this.memory[relevantMemoriesKey],
     });
-    console.log(response);
 
     return response.output.trim(); // added output
   }
 
   private async _generateReaction(
-    this: GenerativeAgent,
     observation: string,
     suffix: string,
     now?: Date
@@ -153,18 +141,17 @@ export class GenerativeAgent {
         `\nIt is {current_time}.` +
         `\n{agent_name}'s status: {agent_status}` +
         `\nSummary of relevant context from {agent_name}'s memory:` +
-        // + "\n{relevantMemories}"
+        "\n{relevant_memories}" +
         `\nMost recent observations: {most_recent_memories}` +
         `\nObservation: {observation}` +
-        `\n\n${ 
-        suffix}`
+        `\n\n${suffix}`
     );
 
     const agentSummaryDescription = await this.getSummary(); // now = now in param
     const relevantMemoriesStr = await this.summarizeRelatedMemories(
       observation
     );
-    const current_time_str = (now || new Date()).toLocaleString("en-US", {
+    const currentTime = (now || new Date()).toLocaleString("en-US", {
       month: "long",
       day: "numeric",
       year: "numeric",
@@ -172,44 +159,38 @@ export class GenerativeAgent {
       minute: "numeric",
       hour12: true,
     });
-
-    // log the value of relevantMemoriesStr
-    console.log("the value of relevantMemoriesStr", relevantMemoriesStr);
-
-    const kwargs: Record<string, any> = {
+    const chainInputs: ChainValues = {
       agent_summary_description: agentSummaryDescription,
-      current_time: current_time_str,
-      relevantMemories: relevantMemoriesStr,
+      current_time: currentTime,
       agent_name: this.name,
       observation,
       agent_status: this.status,
       most_recent_memories: "",
     };
 
+    chainInputs[this.memory.getRelevantMemoriesKey()] = relevantMemoriesStr;
+
     const consumedTokens = await this.llm.getNumTokens(
-      await prompt.format({ ...kwargs }) // add most recent memories here
+      await prompt.format({ ...chainInputs })
     );
 
-    kwargs[this.memory.mostRecentMemoriesToken] = consumedTokens;
-    const response = await this.chain(prompt).call({ ...kwargs }); // might need to change to call()
+    chainInputs[this.memory.getMostRecentMemoriesTokenKey()] = consumedTokens;
+    const response = await this.chain(prompt).call(chainInputs);
     return response.output.trim();
   }
 
   private _cleanResponse(text: string | undefined): string {
     if (text === undefined) {
       return "";
-      console.log("text param passed to _cleanResponse is undefined");
     }
     const regex = new RegExp(`^${this.name} `);
     return text.replace(regex, "").trim();
   }
 
   async generateReaction(
-    this: GenerativeAgent,
     observation: string,
     now?: Date
   ): Promise<[boolean, string]> {
-    // react to a given observation
     const callToActionTemplate: string =
       `Should {agent_name} react to the observation, and if so,` +
       ` what would be an appropriate reaction? Respond in one line.` +
@@ -220,26 +201,22 @@ export class GenerativeAgent {
     const fullResult = await this._generateReaction(
       observation,
       callToActionTemplate,
-      (now)
+      now
     );
     const result = fullResult.trim().split("\n")[0];
-    // AAA
     await this.memory.saveContext(
       {},
       {
-        [this.memory
-          .addMemoryKey]: `${this.name} observed ${observation} and reacted by ${result}`,
-        [this.memory.NowKey]: now,
+        [this.memory.getAddMemoryKey()]: `${this.name} observed ${observation} and reacted by ${result}`,
+        [this.memory.getCurrentTimeKey()]: now,
       }
     );
 
     if (result.includes("REACT:")) {
-      console.log("result in generateReaction", result);
       const reaction = this._cleanResponse(result.split("SAY:").pop());
       return [false, `${this.name} ${reaction}`];
     }
     if (result.includes("SAY:")) {
-      console.log("result in generateReaction", result);
       const saidValue = this._cleanResponse(result.split("SAY:").pop());
       return [true, `${this.name} said ${saidValue}`];
     }
@@ -268,7 +245,7 @@ export class GenerativeAgent {
         {
           [this.memory
             .addMemoryKey]: `${this.name} observed ${observation} and said ${farewell}`,
-          [this.memory.NowKey]: now,
+          [this.memory.getCurrentTimeKey()]: now,
         }
       );
       return [false, `${this.name} said ${farewell}`];
@@ -283,7 +260,7 @@ export class GenerativeAgent {
         {
           [this.memory
             .addMemoryKey]: `${this.name} observed ${observation} and said ${responseText}`,
-          [this.memory.NowKey]: now,
+          [this.memory.getCurrentTimeKey()]: now,
         }
       );
       return [true, `${this.name} said ${responseText}`];
@@ -297,15 +274,15 @@ export class GenerativeAgent {
   // summarizing the agent's self-description. This is
   // updated periodically through probing it's memories
   async getSummary(
-    this: GenerativeAgent,
-    now?: Date,
-    forceRefresh = false,
+    config: {
+      now?: Date;
+      forceRefresh?: boolean;
+    } = {}
   ): Promise<string> {
-    // return a descriptive summary of the agent
-    const currentTime = new Date();
-    // const sinceRefresh = (currentTime.getTime() - this.lastRefreshed.getTime()) / 1000;
+    const { now = new Date(), forceRefresh = false } = config;
+
     const sinceRefresh = Math.floor(
-      (currentTime.getTime() - this.lastRefreshed.getTime()) / 1000
+      (now.getTime() - this.lastRefreshed.getTime()) / 1000
     );
 
     if (
@@ -313,8 +290,8 @@ export class GenerativeAgent {
       sinceRefresh >= this.summaryRefreshSeconds ||
       forceRefresh
     ) {
-      this.summary = await this.computeAgentSummary(); // TODO: write this function
-      this.lastRefreshed = currentTime;
+      this.summary = await this.computeAgentSummary();
+      this.lastRefreshed = now;
     }
 
     let age;
@@ -325,36 +302,37 @@ export class GenerativeAgent {
     }
 
     return `Name: ${this.name} (age: ${age})
-        Innate traits: ${this.traits}
-        ${this.summary}`;
+Innate traits: ${this.traits}
+${this.summary}`;
   }
 
-  async computeAgentSummary(this: GenerativeAgent): Promise<string> {
+  async computeAgentSummary(): Promise<string> {
     const prompt = PromptTemplate.fromTemplate(
-      "How would you summarize {name}'s core characteristics given the" +
-        " following statements:\n" +
-        "{relevantMemories}" +
+      "How would you summarize {name}'s core characteristics given the following statements:\n" +
+        "----------" +
+        "{relevant_memories}" +
+        "----------" +
         "Do not embellish." +
         "\n\nSummary: "
     );
     // the agent seeks to think about their core characterisitics
     const result = await this.chain(prompt).call({
       name: this.name,
-      relevantMemories: this.memory.relevantMemoriesKey,
       queries: [`${this.name}'s core characteristics`],
     });
     return result.output.trim();
   }
 
   getFullHeader(
-    this: GenerativeAgent,
-    now?: Date,
-    forceRefresh = false,
+    config: {
+      now?: Date;
+      forceRefresh?: boolean;
+    } = {}
   ): string {
+    const { now = new Date(), forceRefresh = false } = config;
     // return a full header of the agent's status, summary, and current time.
-    const currentTime = now || new Date();
-    const summary = this.getSummary(currentTime, true);
-    const currentTimeString = currentTime.toLocaleString("en-US", {
+    const summary = this.getSummary({ now, forceRefresh });
+    const currentTimeString = now.toLocaleString("en-US", {
       month: "long",
       day: "numeric",
       year: "numeric",

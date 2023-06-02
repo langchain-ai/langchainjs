@@ -7,16 +7,16 @@ import {
   GenerativeAgent,
 } from "langchain/experimental/generative_agents";
 
-export const Simulation = async () => {
+const Simulation = async () => {
   const userName = "USER";
-  const LLM = new OpenAI({
+  const llm = new OpenAI({
     temperature: 0.9,
-    openAIApiKey: process.env.OPENAI_API_KEY,
     maxTokens: 1500,
   });
 
   const createNewMemoryRetriever = async () => {
-    // create a new vector store retriever unique to the agent.
+    // Create a new, demo in-memory vector store retriever unique to the agent.
+    // Better results can be achieved with a more sophisticatd vector store.
     const vectorStore = new MemoryVectorStore(new OpenAIEmbeddings());
     const retriever = new TimeWeightedVectorStoreRetriever({
       vectorStore,
@@ -26,25 +26,30 @@ export const Simulation = async () => {
     return retriever;
   };
 
-  // tommie
+  // Initializing Tommie
   const tommiesMemory: GenerativeAgentMemory = new GenerativeAgentMemory(
-    LLM,
-    false,
+    llm,
     await createNewMemoryRetriever(),
-    8
+    { reflectionThreshold: 8 }
   );
 
-  const tommie: GenerativeAgent = new GenerativeAgent(
-    "Tommie",
-    25,
-    "anxious, likes design, talkative",
-    "looking for a job",
-    tommiesMemory,
-    LLM
-  );
+  const tommie: GenerativeAgent = new GenerativeAgent(llm, tommiesMemory, {
+    name: "Tommie",
+    age: 25,
+    traits: "anxious, likes design, talkative",
+    status: "looking for a job",
+  });
 
-  console.log("tommie first summary:", await tommie.getSummary());
+  console.log("Tommie's first summary:\n", await tommie.getSummary());
 
+  /*
+    Tommie's first summary:
+    Name: Tommie (age: 25)
+    Innate traits: anxious, likes design, talkative
+    Tommie is an individual with no specific core characteristics described.
+  */
+
+  // Let's give Tommie some memories!
   const tommieObservations = [
     "Tommie remembers his dog, Bruno, from when he was a kid",
     "Tommie feels tired from driving so far",
@@ -55,20 +60,33 @@ export const Simulation = async () => {
     "Tommie tries to get some rest.",
   ];
   for (const observation of tommieObservations) {
-    tommie.getMemory.addMemory(observation);
+    await tommie.memory.addMemory(observation, new Date());
   }
-  console.log("tommie second summary:", await tommie.getSummary(true));
+
+  // Checking Tommie's summary again after giving him some memories
+  console.log(
+    "Tommie's second summary:\n",
+    await tommie.getSummary({ forceRefresh: true })
+  );
+
+  /*
+    Tommie's second summary:
+    Name: Tommie (age: 25)
+    Innate traits: anxious, likes design, talkative
+    Tommie remembers his dog, is tired from driving, sees a new home with neighbors who have a cat, is aware of the noisy road at night, is hungry, and tries to get some rest.
+  */
 
   const interviewAgent = async (
     agent: GenerativeAgent,
     message: string
   ): Promise<string> => {
-    // help user interact with the agent
+    // Simple wrapper helping the user interact with the agent
     const newMessage = `${userName} says ${message}`;
     const response = await agent.generateDialogueResponse(newMessage);
     return response[1];
   };
 
+  // Let's have Tommie start going through a day in his life.
   const observations = [
     "Tommie wakes up to the sound of a noisy construction site outside his window.",
     "Tommie gets out of bed and heads to the kitchen to make himself some coffee.",
@@ -100,89 +118,175 @@ export const Simulation = async () => {
     "Tommie feels slightly better after talking to his friend.",
   ];
 
-  for (let i = 0; i < observations.length; i++) {
+  // Let's send Tommie on his way. We'll check in on his summary every few observations to watch him evolve
+  for (let i = 0; i < observations.length; i += 1) {
     const observation = observations[i];
-    const [_, reaction] = await tommie.generateReaction(observation);
+    const [, reaction] = await tommie.generateReaction(observation);
     console.log("\x1b[32m", observation, "\x1b[0m", reaction);
     if ((i + 1) % 20 === 0) {
       console.log("*".repeat(40));
       console.log(
         "\x1b[34m",
-        `After ${i + 1} observations, Tommie's summary is:\n${tommie.getSummary(
-          true
-        )}`,
+        `After ${
+          i + 1
+        } observations, Tommie's summary is:\n${await tommie.getSummary({
+          forceRefresh: true,
+        })}`,
         "\x1b[0m"
       );
       console.log("*".repeat(40));
     }
   }
 
-  // interview after the day
-  interviewAgent(tommie, "Tell me about how your day has been going");
-  interviewAgent(tommie, "How do you feel about coffee?");
-  interviewAgent(tommie, "Tell me about your childhood dog!");
+  /*
+    Tommie wakes up to the sound of a noisy construction site outside his window.  Tommie REACT: Tommie groans in frustration and covers his ears with his pillow.
+    Tommie gets out of bed and heads to the kitchen to make himself some coffee.  Tommie REACT: Tommie rubs his tired eyes before heading to the kitchen to make himself some coffee.
+    Tommie realizes he forgot to buy coffee filters and starts rummaging through his moving boxes to find some.  Tommie REACT: Tommie groans and looks through his moving boxes in search of coffee filters.
+    Tommie finally finds the filters and makes himself a cup of coffee.  Tommie REACT: Tommie sighs in relief and prepares himself a much-needed cup of coffee.
+    The coffee tastes bitter, and Tommie regrets not buying a better brand.  Tommie REACT: Tommie frowns in disappointment as he takes a sip of the bitter coffee.
+    Tommie checks his email and sees that he has no job offers yet.  Tommie REACT: Tommie sighs in disappointment before pushing himself away from the computer with a discouraged look on his face.
+    Tommie spends some time updating his resume and cover letter.  Tommie REACT: Tommie takes a deep breath and stares at the computer screen as he updates his resume and cover letter.
+    Tommie heads out to explore the city and look for job openings.  Tommie REACT: Tommie takes a deep breath and steps out into the city, ready to find the perfect job opportunity.
+    Tommie sees a sign for a job fair and decides to attend.  Tommie REACT: Tommie takes a deep breath and marches towards the job fair, determination in his eyes.
+    The line to get in is long, and Tommie has to wait for an hour.  Tommie REACT: Tommie groans in frustration as he notices the long line.
+    Tommie meets several potential employers at the job fair but doesn't receive any offers.  Tommie REACT: Tommie's face falls as he listens to each potential employer's explanation as to why they can't hire him.
+    Tommie leaves the job fair feeling disappointed.  Tommie REACT: Tommie's face falls as he walks away from the job fair, disappointment evident in his expression.
+    Tommie stops by a local diner to grab some lunch.  Tommie REACT: Tommie smiles as he remembers Bruno as he walks into the diner, feeling both a sense of nostalgia and excitement.
+    The service is slow, and Tommie has to wait for 30 minutes to get his food.  Tommie REACT: Tommie sighs in frustration and taps his fingers on the table, growing increasingly impatient.
+    Tommie overhears a conversation at the next table about a job opening.  Tommie REACT: Tommie leans in closer, eager to hear the conversation.
+    Tommie asks the diners about the job opening and gets some information about the company.  Tommie REACT: Tommie eagerly listens to the diner's description of the company, feeling hopeful about the job opportunity.
+    Tommie decides to apply for the job and sends his resume and cover letter.  Tommie REACT: Tommie confidently sends in his resume and cover letter, determined to get the job.
+    Tommie continues his search for job openings and drops off his resume at several local businesses.  Tommie REACT: Tommie confidently drops his resume off at the various businesses, determined to find a job.
+    Tommie takes a break from his job search to go for a walk in a nearby park.  Tommie REACT: Tommie takes a deep breath of the fresh air and smiles in appreciation as he strolls through the park.
+    A dog approaches and licks Tommie's feet, and he pets it for a few minutes.  Tommie REACT: Tommie smiles in surprise as he pets the dog, feeling a sense of comfort and nostalgia.
+    ****************************************
+    After 20 observations, Tommie's summary is:
+    Name: Tommie (age: 25)
+    Innate traits: anxious, likes design, talkative
+    Tommie is a determined and resilient individual who remembers his dog from when he was a kid. Despite feeling tired from driving, he has the courage to explore the city, looking for job openings. He persists in updating his resume and cover letter in the pursuit of finding the perfect job opportunity, even attending job fairs when necessary, and is disappointed when he's not offered a job.
+    ****************************************
+    Tommie sees a group of people playing frisbee and decides to join in.  Tommie REACT: Tommie smiles and approaches the group, eager to take part in the game.
+    Tommie has fun playing frisbee but gets hit in the face with the frisbee and hurts his nose.  Tommie REACT: Tommie grimaces in pain and raises his hand to his nose, checking to see if it's bleeding.
+    Tommie goes back to his apartment to rest for a bit.  Tommie REACT: Tommie yawns and trudges back to his apartment, feeling exhausted from his busy day.
+    A raccoon tore open the trash bag outside his apartment, and the garbage is all over the floor.  Tommie REACT: Tommie shakes his head in annoyance as he surveys the mess.
+    Tommie starts to feel frustrated with his job search.  Tommie REACT: Tommie sighs in frustration and shakes his head, feeling discouraged from his lack of progress.
+    Tommie calls his best friend to vent about his struggles.  Tommie REACT: Tommie runs his hands through his hair and sighs heavily, overwhelmed by his job search.
+    Tommie's friend offers some words of encouragement and tells him to keep trying.  Tommie REACT: Tommie gives his friend a grateful smile, feeling comforted by the words of encouragement.
+    Tommie feels slightly better after talking to his friend.  Tommie REACT: Tommie gives a small smile of appreciation to his friend, feeling grateful for the words of encouragement.
+  */
 
-  // eve
+  // Interview after the day
+  console.log(
+    await interviewAgent(tommie, "Tell me about how your day has been going")
+  );
+  /*
+    Tommie said "My day has been pretty hectic. I've been driving around looking for job openings, attending job fairs, and updating my resume and cover letter. It's been really exhausting, but I'm determined to find the perfect job for me."
+  */
+  console.log(await interviewAgent(tommie, "How do you feel about coffee?"));
+  /*
+    Tommie said "I actually love coffee - it's one of my favorite things. I try to drink it every day, especially when I'm stressed from job searching."
+  */
+  console.log(
+    await interviewAgent(tommie, "Tell me about your childhood dog!")
+  );
+  /*
+    Tommie said "My childhood dog was named Bruno. He was an adorable black Labrador Retriever who was always full of energy. Every time I came home he'd be so excited to see me, it was like he never stopped smiling. He was always ready for adventure and he was always my shadow. I miss him every day."
+  */
+
+  console.log(
+    "Tommie's second summary:\n",
+    await tommie.getSummary({ forceRefresh: true })
+  );
+  /*
+    Tommie's second summary:
+    Name: Tommie (age: 25)
+    Innate traits: anxious, likes design, talkative
+    Tommie is a hardworking individual who is looking for new opportunities. Despite feeling tired, he is determined to find the perfect job. He remembers his dog from when he was a kid, is hungry, and is frustrated at times. He shows resilience when searching for his coffee filters, disappointment when checking his email and finding no job offers, and determination when attending the job fair.
+  */
+
+  // Let’s add a second character to have a conversation with Tommie. Feel free to configure different traits.
   const evesMemory: GenerativeAgentMemory = new GenerativeAgentMemory(
-    LLM,
-    false,
+    llm,
     await createNewMemoryRetriever(),
-    5
+    {
+      verbose: false,
+      reflectionThreshold: 5,
+    }
   );
 
-  const eve: GenerativeAgent = new GenerativeAgent(
-    "Eve",
-    34,
-    "curious, helpful",
-    "N/A",
-    evesMemory,
-    LLM,
-    [
-      "Eve started her new job as a career counselor last week and received her first assignment, a client named Tommie.",
-    ]
-  );
-
-  const today = new Date();
-  const yesterday = new Date(today);
-  yesterday.setDate(today.getDate() - 1);
-  const yesterdayFormatted = yesterday.toLocaleDateString("en-US", {
-    weekday: "long",
-    month: "long",
-    day: "numeric",
+  const eve: GenerativeAgent = new GenerativeAgent(llm, evesMemory, {
+    name: "Eve",
+    age: 34,
+    traits: "curious, helpful",
+    status:
+      "just started her new job as a career counselor last week and received her first assignment, a client named Tommie.",
+    // dailySummaries: [
+    //   "Eve started her new job as a career counselor last week and received her first assignment, a client named Tommie."
+    // ]
   });
 
-  // pre-convo interviews (added the 'await' keyword)
-  await interviewAgent(eve, "How are you feeling about today?");
-  await interviewAgent(eve, "What do you know about Tommie?");
-  await interviewAgent(
-    eve,
-    "Tommie is looking to find a job. What are are some things you'd like to ask him?"
-  );
-  await interviewAgent(
-    eve,
-    "You'll have to ask him. He may be a bit anxious, so I'd appreciate it if you keep the conversation going and ask as many questions as possible."
-  );
+  const eveObservations = [
+    "Eve overhears her colleague say something about a new client being hard to work with",
+    "Eve wakes up and hears the alarm",
+    "Eve eats a boal of porridge",
+    "Eve helps a coworker on a task",
+    "Eve plays tennis with her friend Xu before going to work",
+    "Eve overhears her colleague say something about Tommie being hard to work with",
+  ];
 
-  // convo
+  for (const observation of eveObservations) {
+    await eve.memory.addMemory(observation, new Date());
+  }
+
+  const eveInitialSummary: string = await eve.getSummary({
+    forceRefresh: true,
+  });
+  console.log("Eve's initial summary\n", eveInitialSummary);
+  /*
+    Eve's initial summary
+    Name: Eve (age: 34)
+    Innate traits: curious, helpful
+    Eve is an attentive listener, helpful colleague, and sociable friend who enjoys playing tennis.
+  */
+
+  // Let’s “Interview” Eve before she speaks with Tommie.
+  console.log(await interviewAgent(eve, "How are you feeling about today?"));
+  /*
+    Eve said "I'm feeling a bit anxious about meeting my new client, but I'm sure it will be fine! How about you?".
+  */
+  console.log(await interviewAgent(eve, "What do you know about Tommie?"));
+  /*
+    Eve said "I know that Tommie is a recent college graduate who's been struggling to find a job. I'm looking forward to figuring out how I can help him move forward."
+  */
+  console.log(
+    await interviewAgent(
+      eve,
+      "Tommie is looking to find a job. What are are some things you'd like to ask him?"
+    )
+  );
+  /*
+    Eve said: "I'd really like to get to know more about Tommie's professional background and experience, and why he is looking for a job. And I'd also like to know more about his strengths and passions and what kind of work he would be best suited for. That way I can help him find the right job to fit his needs."
+  */
+
+  // Generative agents are much more complex when they interact with a virtual environment or with each other.
+  // Below, we run a simple conversation between Tommie and Eve.
   const runConversation = async (
     agents: GenerativeAgent[],
     initialObservation: string
   ): Promise<void> => {
-    // runs a convo bewt1een two agents
-    let observation: string;
-    [, observation] = await agents[1].generateReaction(initialObservation);
-    console.log(observation);
-    let turns = 0;
+    // Starts the conversation bewteen two agents
+    const [, observation] = await agents[1].generateReaction(
+      initialObservation
+    );
+    console.log("Initial reply:", observation);
 
+    // eslint-disable-next-line no-constant-condition
     while (true) {
       let breakDialogue = false;
       for (const agent of agents) {
-        let stayInDialogue: boolean;
-        let agentObservation: string;
-        [stayInDialogue, agentObservation] =
+        const [stayInDialogue, agentObservation] =
           await agent.generateDialogueResponse(observation);
-        console.log(agentObservation);
-        // observation = `${agent.name} said ${reaction}`;
+        console.log("Next reply:", agentObservation);
         if (!stayInDialogue) {
           breakDialogue = true;
         }
@@ -191,47 +295,79 @@ export const Simulation = async () => {
       if (breakDialogue) {
         break;
       }
-
-      turns++;
     }
   };
 
   const agents: GenerativeAgent[] = [tommie, eve];
-  runConversation(
+  await runConversation(
     agents,
     "Tommie said: Hi, Eve. Thanks for agreeing to meet with me today. I have a bunch of questions and am not sure where to start. Maybe you could first share about your experience?"
   );
 
-  // post-convo interviews
-  console.log("third final summary", tommie.getSummary(true));
-  const tommieSummary: string = await tommie.getSummary(true);
-  // setTommieFinalSummary(await tommie.getSummary(true));
+  /*
+    Initial reply: Eve said "Of course, Tommie. I'd be happy to share about my experience. What specific questions do you have?"
+    Next reply: Tommie said "Thank you, Eve. I'm curious about what strategies you used in your own job search. Did you have any specific tactics that helped you stand out to employers?"
+    Next reply: Eve said "Sure, Tommie. I found that networking and reaching out to professionals in my field was really helpful. I also made sure to tailor my resume and cover letter to each job I applied to. Do you have any specific questions about those strategies?"
+    Next reply: Tommie said "Thank you, Eve. That's really helpful advice. Did you have any specific ways of networking that worked well for you?"
+    Next reply: Eve said "Sure, Tommie. I found that attending industry events and connecting with professionals on LinkedIn were both great ways to network. Do you have any specific questions about those tactics?"
+    Next reply: Tommie said "That's really helpful, thank you for sharing. Did you find that you were able to make meaningful connections through LinkedIn?"
+    Next reply: Eve said "Yes, definitely. I was able to connect with several professionals in my field and even landed a job through a LinkedIn connection. Have you had any luck with networking on LinkedIn?"
+    Next reply: Tommie said "That's really impressive! I haven't had much luck yet, but I'll definitely keep trying. Thank you for the advice, Eve."
+    Next reply: Eve said "Glad I could help, Tommie. Is there anything else you want to know?"
+    Next reply: Tommie said "Thanks again, Eve. I really appreciate your advice and I'll definitely put it into practice. Have a great day!"
+    Next reply: Eve said "You're welcome, Tommie! Don't hesitate to reach out if you have any more questions. Have a great day too!"
+  */
 
-  console.log("eve final summary", eve.getSummary(true));
-  const eveSummary: string = await eve.getSummary(true);
-  // setEveFinalSummary(await eve.getSummary(true));
+  // Since the generative agents retain their memories from the day, we can ask them about their plans, conversations, and other memories.
+  const tommieSummary: string = await tommie.getSummary({
+    forceRefresh: true,
+  });
+  console.log("Tommie's third and final summary\n", tommieSummary);
+  /*
+    Tommie's third and final summary
+    Name: Tommie (age: 25)
+    Innate traits: anxious, likes design, talkative
+    Tommie is a determined individual, who demonstrates resilience in the face of disappointment. He is also a nostalgic person, remembering fondly his childhood pet, Bruno. He is resourceful, searching through his moving boxes to find what he needs, and takes initiative to attend job fairs to look for job openings.
+  */
+
+  const eveSummary: string = await eve.getSummary({ forceRefresh: true });
+  console.log("Eve's final summary\n", eveSummary);
+  /*
+    Eve's final summary
+    Name: Eve (age: 34)
+    Innate traits: curious, helpful
+    Eve is a helpful and encouraging colleague who actively listens to her colleagues and offers advice on how to move forward. She is willing to take time to understand her clients and their goals, and is committed to helping them succeed.
+  */
 
   const interviewOne: string = await interviewAgent(
     tommie,
     "How was your conversation with Eve?"
   );
-  console.log("interview one", interviewOne);
-
-  // setInterviewOne(await interviewAgent(tommie, "How was your conversation with Eve?"));
+  console.log("USER: How was your conversation with Eve?\n");
+  console.log(interviewOne);
+  /*
+    Tommie said "It was great. She was really helpful and knowledgeable. I'm thankful that she took the time to answer all my questions."
+  */
 
   const interviewTwo: string = await interviewAgent(
     eve,
     "How was your conversation with Tommie?"
   );
-  console.log("interview two", interviewTwo);
-  // setInterviewTwo(await interviewAgent(eve, "How was your conversation with Tommie?"));
+  console.log("USER: How was your conversation with Tommie?\n");
+  console.log(interviewTwo);
+  /*
+    Eve said "The conversation went very well. We discussed his goals and career aspirations, what kind of job he is looking for, and his experience and qualifications. I'm confident I can help him find the right job."
+  */
 
   const interviewThree: string = await interviewAgent(
     eve,
     "What do you wish you would have said to Tommie?"
   );
-  console.log("interview three", interviewThree);
-  // setInterviewThree(await interviewAgent(eve, "What do you wish you would have said to Tommie?"));
+  console.log("USER: What do you wish you would have said to Tommie?\n");
+  console.log(interviewThree);
+  /*
+    Eve said "It's ok if you don't have all the answers yet. Let's take some time to learn more about your experience and qualifications, so I can help you find a job that fits your goals."
+  */
 
   return {
     tommieFinalSummary: tommieSummary,
@@ -247,347 +383,8 @@ const runSimulation = async () => {
     await Simulation();
   } catch (error) {
     console.log("error running simulation:", error);
+    throw error;
   }
 };
 
-runSimulation();
-/** 
- * an excerpt of an example output:
- * tommie first summary: Name: Tommie (age: 25)
-        Innate traits: anxious, likes design, talkative
-        Tommie's core characteristics include being honest and direct in their communication, with a focus on accuracy and authenticity.
-tommie first summary: Name: Tommie (age: 25)
-        Innate traits: anxious, likes design, talkative
-        Tommie is honest, dependable, and values accuracy.
-tommie second summary: Name: Tommie (age: 25)
-        Innate traits: anxious, likes design, talkative
-        Tommie is an honest and straightforward individual who values sincerity and accuracy.
-tommie second summary: Name: Tommie (age: 25)
-        Innate traits: anxious, likes design, talkative
-        Tommie is a straightforward person who values honesty and accuracy, preferring not to embellish or exaggerate.
-{
-  output: '\n' +
-    'Tommie loves making noise.\n' +
-    '\n' +
-    'Tommie and making noise have a positive relationship. Tommie enjoys making noise and has a lot of fun doing so.'
-}
-the value of relevantMemoriesStr Tommie loves making noise.
-
-Tommie and making noise have a positive relationship. Tommie enjoys making noise and has a lot of fun doing so.
-result in generateReaction REACT: Tommie sighs in frustration.
- Tommie wakes up to the sound of a noisy construction site outside his window.  Tommie REACT: Tommie sighs in frustration.
-{
-  output: '\n' +
-    'Tommie and making noise are not related in any way. Tommie may make noise, but it does not have a significant or relevant connection to who Tommie is.'
-}
-the value of relevantMemoriesStr Tommie and making noise are not related in any way. Tommie may make noise, but it does not have a significant or relevant connection to who Tommie is.
-result in generateReaction REACT: Tommie groans in frustration at the noise outside.
- Tommie wakes up to the sound of a noisy construction site outside his window.  Tommie REACT: Tommie groans in frustration at the noise outside.
-{
-  output: '\n' +
-    'Tommie loves making coffee.\n' +
-    '\n' +
-    'Tommie has a strong positive relationship with making coffee.'
-}
-the value of relevantMemoriesStr Tommie loves making coffee.
-
-Tommie has a strong positive relationship with making coffee.
-{
-  output: '\n' +
-    'Tommie is an avid coffee enthusiast and a barista.\n' +
-    '\n' +
-    'Tommie has a strong relationship with making coffee. As a barista, he is knowledgeable in making a variety of coffee drinks, and is passionate about the art of crafting coffee beverages. He enjoys experimenting with different flavors and techniques to create unique coffee experiences for his customers.'
-}
-the value of relevantMemoriesStr Tommie is an avid coffee enthusiast and a barista.
-
-Tommie has a strong relationship with making coffee. As a barista, he is knowledgeable in making a variety of coffee drinks, and is passionate about the art of crafting coffee beverages. He enjoys experimenting with different flavors and techniques to create unique coffee experiences for his customers.
-result in generateReaction REACT: Tommie nervously fidgets with his hands, reflecting on the current job search.
- Tommie gets out of bed and heads to the kitchen to make himself some coffee.  Tommie REACT: Tommie nervously fidgets with his hands, reflecting on the current job search.
-result in generateReaction REACT: Anxious and uncertain about the job hunt, Tommie sighs as he pours coffee.
- Tommie gets out of bed and heads to the kitchen to make himself some coffee.  Tommie REACT: Anxious and uncertain about the job hunt, Tommie sighs as he pours coffee.
-{
-  output: '\n' +
-    'Tommie enjoyed rummaging through the cupboard and finding new items.\n' +
-    '\n' +
-    'Tommie and rummaging have a recreational relationship; Tommie enjoys rummaging through the cupboard.'
-}
-the value of relevantMemoriesStr Tommie enjoyed rummaging through the cupboard and finding new items.
-
-Tommie and rummaging have a recreational relationship; Tommie enjoys rummaging through the cupboard.
-{
-  output: '\n' +
-    'Tommie is searching for a new job.\n' +
-    '\n' +
-    'Tommie and searching have a cause-and-effect relationship: Tommie is searching for a new job because he wants to find a new job.'
-}
-the value of relevantMemoriesStr Tommie is searching for a new job.
-
-Tommie and searching have a cause-and-effect relationship: Tommie is searching for a new job because he wants to find a new job.
-result in generateReaction REACT: Tommie sighs as he looks around for coffee filters.
- Tommie realizes he forgot to buy coffee filters and starts rummaging through his moving boxes to find some.  Tommie REACT: Tommie sighs as he looks around for coffee filters.
-result in generateReaction REACT: Tommie curses his forgetfulness and continues searching for the coffee filters.
- Tommie realizes he forgot to buy coffee filters and starts rummaging through his moving boxes to find some.  Tommie REACT: Tommie curses his forgetfulness and continues searching for the coffee filters.
-{
-  output: '\n' +
-    'Tommie is standing in the kitchen watching the coffee maker.\n' +
-    '\n' +
-    'Tommie and making a cup of coffee have a dependent relationship, since the coffee maker needs Tommie to provide the coffee and other ingredients, press the buttons, and fill the machine so that it can make the coffee.'
-}
-the value of relevantMemoriesStr Tommie is standing in the kitchen watching the coffee maker.
-
-Tommie and making a cup of coffee have a dependent relationship, since the coffee maker needs Tommie to provide the coffee and other ingredients, press the buttons, and fill the machine so that it can make the coffee.
-{
-  output: '\n' +
-    'Tommie is a barista at a local cafe.\n' +
-    '\n' +
-    'Tommie has a close relationship with making coffee; she is an expert in crafting specialty coffee beverages and loves to share her knowledge and suggestions with customers.'
-}
-the value of relevantMemoriesStr Tommie is a barista at a local cafe.
-
-Tommie has a close relationship with making coffee; she is an expert in crafting specialty coffee beverages and loves to share her knowledge and suggestions with customers.
-result in generateReaction REACT: Tommie takes a sip of his coffee with a relieved sigh.
- Tommie finally finds the filters and makes himself a cup of coffee.  Tommie REACT: Tommie takes a sip of his coffee with a relieved sigh.
-result in generateReaction REACT: Tommie takes a sip of the coffee and sighs in contentment.
- Tommie finally finds the filters and makes himself a cup of coffee.  Tommie REACT: Tommie takes a sip of the coffee and sighs in contentment.
-{
-  output: '\n' +
-    'Tommie was in the store buying coffee.\n' +
-    '\n' +
-    'Tommie and buying coffee have a transactional relationship; Tommie is purchasing coffee in exchange for money.'
-}
-the value of relevantMemoriesStr Tommie was in the store buying coffee.
-
-Tommie and buying coffee have a transactional relationship; Tommie is purchasing coffee in exchange for money.
-result in generateReaction REACT: Tommie makes a sour face and sighs.
- The coffee tastes bitter, and Tommie regrets not buying a better brand.  Tommie REACT: Tommie makes a sour face and sighs.
-{
-  output: '\n' +
-    'Tommie is a barista at an artisanal cafe.\n' +
-    '\n' +
-    'Tommie has a passion for tasting coffee.\n' +
-    '\n' +
-    'The relationship between Tommie and tasting coffee is that Tommie has a passionate interest in it. As a barista, Tommie is able to explore his passion for coffee by trying different types of coffee, experimenting with flavors, and introducing customers to different coffee experiences.'
-}
-the value of relevantMemoriesStr Tommie is a barista at an artisanal cafe.
-
-Tommie has a passion for tasting coffee.
-
-The relationship between Tommie and tasting coffee is that Tommie has a passionate interest in it. As a barista, Tommie is able to explore his passion for coffee by trying different types of coffee, experimenting with flavors, and introducing customers to different coffee experiences.
-result in generateReaction REACT: Tommie frowned as he took a sip of his coffee.
- The coffee tastes bitter, and Tommie regrets not buying a better brand.  Tommie REACT: Tommie frowned as he took a sip of his coffee.
-{
-  output: '\n' +
-    'Tommie is checking his email.\n' +
-    '\n' +
-    'Tommie and checking email have a transactional relationship; Tommie is the one performing the action of checking the email.'
-}
-the value of relevantMemoriesStr Tommie is checking his email.
-
-Tommie and checking email have a transactional relationship; Tommie is the one performing the action of checking the email.
-result in generateReaction REACT: Tommie feels anxious, frustrated, and discouraged.
- Tommie checks his email and sees that he has no job offers yet.  Tommie REACT: Tommie feels anxious, frustrated, and discouraged.
-{
-  output: '\n' +
-    'Tommie is checking his email.\n' +
-    '\n' +
-    'Tommie and checking email have a direct relationship, as Tommie is actively engaging in the activity of checking his email.'
-}
-the value of relevantMemoriesStr Tommie is checking his email.
-
-Tommie and checking email have a direct relationship, as Tommie is actively engaging in the activity of checking his email.
-result in generateReaction REACT: Tommie feels discouraged and anxious.
- Tommie checks his email and sees that he has no job offers yet.  Tommie REACT: Tommie feels discouraged and anxious.
-{
-  output: '\n' +
-    'Tommie is a professional document editor and writer.\n' +
-    '\n' +
-    "Tommie's job is to write and update documents to ensure that they are accurate, up-to-date, and meet the needs of the intended audience. Tommie is responsible for researching topics, creating original content, and revising existing documents."
-}
-the value of relevantMemoriesStr Tommie is a professional document editor and writer.
-
-Tommie's job is to write and update documents to ensure that they are accurate, up-to-date, and meet the needs of the intended audience. Tommie is responsible for researching topics, creating original content, and revising existing documents.
-result in generateReaction REACT: Tommie takes a few deep breaths and reassures himself that preparing his resume and cover letter is a step in the right direction.
- Tommie spends some time updating his resume and cover letter.  Tommie REACT: Tommie takes a few deep breaths and reassures himself that preparing his resume and cover letter is a step in the right direction.
-{
-  output: '\n' +
-    'Tommie is currently trying to update his resume and cover letter to apply for jobs.\n' +
-    '\n' +
-    "Tommie's relationship with updating his resume and cover letter is that he is actively trying to improve them in order to increase his chances of landing a job. He is making sure that the documents are up-to-date, professional, and accurately reflect his qualifications and experience."
-}
-the value of relevantMemoriesStr Tommie is currently trying to update his resume and cover letter to apply for jobs.
-
-Tommie's relationship with updating his resume and cover letter is that he is actively trying to improve them in order to increase his chances of landing a job. He is making sure that the documents are up-to-date, professional, and accurately reflect his qualifications and experience.
-result in generateReaction REACT: Tommie takes a deep breath and continues working on his resume.
- Tommie spends some time updating his resume and cover letter.  Tommie REACT: Tommie takes a deep breath and continues working on his resume.
-{
-  output: '\n' +
-    'Tommie is a recent college graduate who is exploring the city and looking for job openings.\n' +
-    '\n' +
-    "Tommie's relationship to exploring the city and looking for job openings is that he is actively engaging in activities to improve his chances of finding a job. He is searching for potential employment opportunities and familiarizing himself with the area."
-}
-the value of relevantMemoriesStr Tommie is a recent college graduate who is exploring the city and looking for job openings.
-
-Tommie's relationship to exploring the city and looking for job openings is that he is actively engaging in activities to improve his chances of finding a job. He is searching for potential employment opportunities and familiarizing himself with the area.
-{
-  output: '\n' +
-    'Tommie is searching for job openings.\n' +
-    '\n' +
-    'The relationship between Tommie and looking for job openings is that Tommie is actively searching for available job opportunities.'
-}
-the value of relevantMemoriesStr Tommie is searching for job openings.
-
-The relationship between Tommie and looking for job openings is that Tommie is actively searching for available job opportunities.
-result in generateReaction REACT: Tommie takes a deep breath and carries on.
- Tommie heads out to explore the city and look for job openings.  Tommie REACT: Tommie takes a deep breath and carries on.
-result in generateReaction REACT: Tommie anxiously checks out the city, looking for any job opportunities.
- Tommie heads out to explore the city and look for job openings.  Tommie REACT: Tommie anxiously checks out the city, looking for any job opportunities.
-{
-  output: '\n' +
-    'Tommie is trying to decide what to do after college.\n' +
-    '\n' +
-    "Tommie and deciding have a causal relationship in this context. Tommie's decision is the result of the process of deciding."
-}
-the value of relevantMemoriesStr Tommie is trying to decide what to do after college.
-
-Tommie and deciding have a causal relationship in this context. Tommie's decision is the result of the process of deciding.
-{
-  output: '\n' +
-    'Tommie is deciding whether to go on vacation.\n' +
-    '\n' +
-    'Tommie and deciding are directly related. Tommie is the one making the decision about whether or not to go on vacation.'
-}
-the value of relevantMemoriesStr Tommie is deciding whether to go on vacation.
-
-Tommie and deciding are directly related. Tommie is the one making the decision about whether or not to go on vacation.
-result in generateReaction REACT: Tommie perked up with excitement and determination.
- Tommie sees a sign for a job fair and decides to attend.  Tommie REACT: Tommie perked up with excitement and determination.
-result in generateReaction REACT: Tommie takes a deep breath and prepares to attend the fair.
- Tommie sees a sign for a job fair and decides to attend.  Tommie REACT: Tommie takes a deep breath and prepares to attend the fair.
-{
-  output: '\n' +
-    'Tommie was waiting for something to happen.\n' +
-    '\n' +
-    'Tommie and waiting are related in that Tommie is in a state of waiting for something to happen.'
-}
-the value of relevantMemoriesStr Tommie was waiting for something to happen.
-
-Tommie and waiting are related in that Tommie is in a state of waiting for something to happen.
-{
-  output: '\n' +
-    'Tommie was waiting in line at the store.\n' +
-    '\n' +
-    'Tommie and waiting in line have a causal relationship: Tommie was waiting in line because there was something at the store he wanted or needed.'
-}
-the value of relevantMemoriesStr Tommie was waiting in line at the store.
-
-Tommie and waiting in line have a causal relationship: Tommie was waiting in line because there was something at the store he wanted or needed.
-result in generateReaction REACT: Tommie stands in line patiently, feeling anxious.
- The line to get in is long, and Tommie has to wait for an hour.  Tommie REACT: Tommie stands in line patiently, feeling anxious.
-result in generateReaction REACT: Tommie is anxious as they wait to get in.
- The line to get in is long, and Tommie has to wait for an hour.  Tommie REACT: Tommie is anxious as they wait to get in.
-{
-  output: '\n' +
-    'Tommie is looking for a job.\n' +
-    '\n' +
-    "Tommie's relationship to attending a job fair is that it is a potential avenue for him to find job opportunities. By attending a job fair, Tommie could meet employers and learn about potential roles he could be interested in applying for."
-}
-the value of relevantMemoriesStr Tommie is looking for a job.
-
-Tommie's relationship to attending a job fair is that it is a potential avenue for him to find job opportunities. By attending a job fair, Tommie could meet employers and learn about potential roles he could be interested in applying for.
-{
-  output: '\n' +
-    'Tommie is looking for a job and has heard about a job fair in the area.\n' +
-    '\n' +
-    "Tommie's relationship to attending a job fair is that it is an opportunity for him to find a job. He is attending the job fair in order to explore different job opportunities and meet potential employers."
-}
-the value of relevantMemoriesStr Tommie is looking for a job and has heard about a job fair in the area.
-
-Tommie's relationship to attending a job fair is that it is an opportunity for him to find a job. He is attending the job fair in order to explore different job opportunities and meet potential employers.
-result in generateReaction REACT: Tommie frowns in disappointment.
- Tommie meets several potential employers at the job fair but doesn't receive any offers.  Tommie REACT: Tommie frowns in disappointment.
-result in generateReaction REACT: Tommie is disappointed but remains hopeful for the future.
- Tommie meets several potential employers at the job fair but doesn't receive any offers.  Tommie REACT: Tommie is disappointed but remains hopeful for the future.
-{
-  output: '\n' +
-    'Tommie is considering leaving his job.\n' +
-    '\n' +
-    'Tommie and leaving are related in that he is considering it as an option.'
-}
-the value of relevantMemoriesStr Tommie is considering leaving his job.
-
-Tommie and leaving are related in that he is considering it as an option.
-result in generateReaction REACT: Tommie sighs, feeling disheartened.
- Tommie leaves the job fair feeling disappointed.  Tommie REACT: Tommie sighs, feeling disheartened.
-{
-  output: '\n' +
-    'Tommie was feeling discouraged after visiting the job fair. He was overwhelmed by the number of people there and felt like he had not made any progress in terms of getting a job.\n' +
-    '\n' +
-    'Tommie and leaving the job fair are related in that Tommie left the job fair feeling discouraged and overwhelmed.'
-}
-the value of relevantMemoriesStr Tommie was feeling discouraged after visiting the job fair. He was overwhelmed by the number of people there and felt like he had not made any progress in terms of getting a job.
-
-Tommie and leaving the job fair are related in that Tommie left the job fair feeling discouraged and overwhelmed.
-result in generateReaction REACT: Tommie lets out a sigh of defeat.
- Tommie leaves the job fair feeling disappointed.  Tommie REACT: Tommie lets out a sigh of defeat.
-{
-  output: '\n' +
-    'Tommie is buying lunch for a group of friends.\n' +
-    '\n' +
-    'Tommie and the group of friends have a close relationship; Tommie is buying lunch out of a sense of friendship and generosity.'
-}
-the value of relevantMemoriesStr Tommie is buying lunch for a group of friends.
-
-Tommie and the group of friends have a close relationship; Tommie is buying lunch out of a sense of friendship and generosity.
-{
-  output: '\nTommie loves eating.\n\nTommie and eating have a positive relationship.'
-}
-the value of relevantMemoriesStr Tommie loves eating.
-
-Tommie and eating have a positive relationship.
-result in generateReaction REACT: Tommie looks around the diner with apprehension, feeling anxious about the job hunt.
- Tommie stops by a local diner to grab some lunch.  Tommie REACT: Tommie looks around the diner with apprehension, feeling anxious about the job hunt.
-result in generateReaction REACT: Tommie looks around the diner, feeling anxious about the job search.
- Tommie stops by a local diner to grab some lunch.  Tommie REACT: Tommie looks around the diner, feeling anxious about the job search.
-{
-  output: '\n' +
-    'Tommie has been waiting for hours.\n' +
-    '\n' +
-    'Tommie and waiting have a relationship of Tommie waiting for hours.'
-}
-the value of relevantMemoriesStr Tommie has been waiting for hours.
-
-Tommie and waiting have a relationship of Tommie waiting for hours.
-result in generateReaction REACT: Tommie shakes his head in frustration.
- The service is slow, and Tommie has to wait for 30 minutes to get his food.  Tommie REACT: Tommie shakes his head in frustration.
-{
-  output: '\n' +
-    'Tommie is waiting for his friend at the bus stop.\n' +
-    '\n' +
-    'Tommie and waiting have a temporal relationship; Tommie is waiting for his friend at the bus stop.'
-}
-the value of relevantMemoriesStr Tommie is waiting for his friend at the bus stop.
-
-Tommie and waiting have a temporal relationship; Tommie is waiting for his friend at the bus stop.
-result in generateReaction REACT: Tommie shows frustration but maintains a polite and understanding demeanor.
- The service is slow, and Tommie has to wait for 30 minutes to get his food.  Tommie REACT: Tommie shows frustration but maintains a polite and understanding demeanor.
-{
-  output: '\n' +
-    'Tommie is always listening to music.\n' +
-    '\n' +
-    'Tommie and listening are related in that Tommie enjoys listening to music.'
-}
-the value of relevantMemoriesStr Tommie is always listening to music.
-
-Tommie and listening are related in that Tommie enjoys listening to music.
-{
-  output: '\n' +
-    'Tommie is a student in a government-sponsored program that teaches students the art of eavesdropping.\n' +
-    '\n' +
-    'Tommie and eavesdropping have a mentor-mentee relationship. Tommie is learning the art of eavesdropping from the government-sponsored program.'
-}
-the value of relevantMemoriesStr Tommie is a student in a government-sponsored program that teaches students the art of eavesdropping.
-
-Tommie and eavesdropping have a mentor-mentee relationship. Tommie is learning the art of eavesdropping from the government-sponsored program.
-result in generateReaction REACT: Tommie leans in to listen more closely.
- Tommie overhears a conversation at the next table about a job opening.  Tommie REACT: Tommie leans in to listen more closely.
- */
+await runSimulation();

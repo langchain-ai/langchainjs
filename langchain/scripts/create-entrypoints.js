@@ -145,6 +145,7 @@ const entrypoints = {
   // experimental
   "experimental/autogpt": "experimental/autogpt/index",
   "experimental/babyagi": "experimental/babyagi/index",
+  "experimental/generative_agents": "experimental/generative_agents/index",
   "experimental/plan_and_execute": "experimental/plan_and_execute/index",
   client: "client/index",
 };

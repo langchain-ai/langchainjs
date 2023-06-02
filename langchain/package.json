@@ -352,6 +352,9 @@
     "experimental/babyagi.cjs",
     "experimental/babyagi.js",
     "experimental/babyagi.d.ts",
+    "experimental/generative_agents.cjs",
+    "experimental/generative_agents.js",
+    "experimental/generative_agents.d.ts",
     "experimental/plan_and_execute.cjs",
     "experimental/plan_and_execute.js",
     "experimental/plan_and_execute.d.ts",
@@ -1262,6 +1265,11 @@
       "types": "./experimental/babyagi.d.ts",
       "import": "./experimental/babyagi.js",
       "require": "./experimental/babyagi.cjs"
+    },
+    "./experimental/generative_agents": {
+      "types": "./experimental/generative_agents.d.ts",
+      "import": "./experimental/generative_agents.js",
+      "require": "./experimental/generative_agents.cjs"
     },
     "./experimental/plan_and_execute": {
       "types": "./experimental/plan_and_execute.d.ts",

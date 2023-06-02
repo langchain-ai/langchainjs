@@ -1,119 +1,102 @@
-import { PromptTemplate , LLMChain } from "../../index.js";
+import { LLMChain } from "../../chains/llm_chain.js";
+import { PromptTemplate } from "../../prompts/index.js";
 import { BaseLLM } from "../../llms/base.js";
 import { Document } from "../../document.js";
 import { TimeWeightedVectorStoreRetriever } from "../../retrievers/time_weighted.js";
-import { BaseMemory } from "../../memory/base.js";
+import { BaseMemory, InputValues, OutputValues } from "../../memory/base.js";
+
+export type GenerativeAgentMemoryConfig = {
+  reflectionThreshold?: number;
+  importanceWeight?: number;
+  verbose?: boolean;
+  maxTokensLimit?: number;
+};
 
 export class GenerativeAgentMemory extends BaseMemory {
   llm: BaseLLM;
 
   memoryRetriever: TimeWeightedVectorStoreRetriever;
 
-  verbose: boolean; // false
+  verbose: boolean;
 
   reflectionThreshold?: number;
 
-  currentPlan: string[];
+  currentPlan: string[] = [];
 
-  importanceWeight: number; // 0.15
+  importanceWeight = 0.15;
 
-  private aggregateImportance: number; // 0.0
+  private aggregateImportance = 0.0;
 
-  private maxTokensLimit: number; // 1200
+  private maxTokensLimit = 1200;
 
-  queriesKey: string; // "queries"
+  queriesKey = "queries";
 
-  MostRecentMemoriesTokenKey: string; //  "recentMemoriesToken"
+  mostRecentMemoriesTokenKey = "recent_memories_token";
 
-  AddMemoryKey: string; // "addMemory"
+  addMemoryKey = "addMemory";
 
-  relevantMemoriesKey: string; // "relevantMemories"
+  relevantMemoriesKey = "relevant_memories";
 
-  relevantMemoriesSimpleKey: string; // "relevantMemoriesSimple"
+  relevantMemoriesSimpleKey = "relevant_memories_simple";
 
-  mostRecentMemoriesKey: string; // "mostRecentMemories"
+  mostRecentMemoriesKey = "most_recent_memories";
 
-  nowKey: string; // "now"
+  nowKey = "now";
 
-  reflecting: boolean; // false
+  reflecting = false;
 
   constructor(
     llm: BaseLLM,
     memoryRetriever: TimeWeightedVectorStoreRetriever,
-    reflectionThreshold?: number,
-    importanceWeight = 0.15,
-    verbose = false,
-    maxTokensLimit = 1200
+    config?: GenerativeAgentMemoryConfig
   ) {
     super();
     this.llm = llm;
     this.memoryRetriever = memoryRetriever;
-    this.verbose = verbose;
-    this.reflectionThreshold = reflectionThreshold;
-    this.importanceWeight = importanceWeight;
-    this.aggregateImportance = 0.0;
-    this.maxTokensLimit = maxTokensLimit;
-    this.queriesKey = "queries";
-    this.MostRecentMemoriesTokenKey = "recentMemoriesToken";
-    this.AddMemoryKey = "addMemory";
-    this.relevantMemoriesKey = "relevantMemories";
-    this.relevantMemoriesSimpleKey = "relevantMemoriesSimple";
-    this.mostRecentMemoriesKey = "mostRecentMemories";
-    this.nowKey = "now";
-    this.reflecting = false;
-    this.currentPlan = [];
+    this.verbose = config?.verbose ?? this.verbose;
+    this.reflectionThreshold =
+      config?.reflectionThreshold ?? this.reflectionThreshold;
+    this.importanceWeight = config?.importanceWeight ?? this.importanceWeight;
+    this.maxTokensLimit = config?.maxTokensLimit ?? this.maxTokensLimit;
   }
 
-  // new
-  get getRelevantMemoriesKey(): string {
+  getRelevantMemoriesKey(): string {
     return this.relevantMemoriesKey;
   }
 
-  // function to return the value of this.MostRecentMemoriesTokenKey
-  get mostRecentMemoriesToken(): string {
-    return this.MostRecentMemoriesTokenKey;
+  getMostRecentMemoriesTokenKey(): string {
+    return this.mostRecentMemoriesTokenKey;
   }
 
-  // function to return the value of this.AddMemoryKey
-  get addMemoryKey(): string {
-    return this.AddMemoryKey;
+  getAddMemoryKey(): string {
+    return this.addMemoryKey;
   }
 
-  // function to return the value of this.nowKey
-  get NowKey(): string {
+  getCurrentTimeKey(): string {
     return this.nowKey;
   }
 
   get memoryKeys(): string[] {
-    // Implement the memoryKeys method here
     // Return an array of memory keys
-    return [
-      "relevantMemories",
-      "mostRecentMemories",
-      // other memory keys
-    ];
+    return [this.relevantMemoriesKey, this.mostRecentMemoriesKey];
   }
 
-  chain(this: GenerativeAgentMemory, prompt: PromptTemplate): LLMChain {
+  chain(prompt: PromptTemplate): LLMChain {
     const chain = new LLMChain({
       llm: this.llm,
       prompt,
       verbose: this.verbose,
-      outputKey: "output", // new
+      outputKey: "output",
     });
     return chain;
   }
 
-  // maybe improve this method (static)
-  parseList(text: string): string[] {
+  static parseList(text: string): string[] {
     // parse a newine seperates string into a list of strings
     return text.split("\n").map((s) => s.trim());
   }
 
-  async getTopicsofReflection(
-    this: GenerativeAgentMemory,
-    lastK = 50
-  ): Promise<string[]> {
+  async getTopicsOfReflection(lastK = 50): Promise<string[]> {
     const prompt = PromptTemplate.fromTemplate(
       "{observations}\n\n" +
         "Given only the information above, what are the 3 most salient" +
@@ -121,19 +104,15 @@ export class GenerativeAgentMemory extends BaseMemory {
         " the statements? Provide each question on a new line.\n\n"
     );
 
-    const observations = this.memoryRetriever.getMemoryStream.slice(-lastK);
-    const observation_str = observations
-      .map((o: { pageContent: any }) => o.pageContent)
+    const observations = this.memoryRetriever.getMemoryStream().slice(-lastK);
+    const observationStr = observations
+      .map((o: { pageContent: string }) => o.pageContent)
       .join("\n");
-    const result = await this.chain(prompt).run(observation_str);
-    return this.parseList(result);
+    const result = await this.chain(prompt).run(observationStr);
+    return GenerativeAgentMemory.parseList(result);
   }
 
-  async getInsightsOnTopic(
-    this: GenerativeAgentMemory,
-    topic: string,
-    now?: Date
-  ): Promise<string[]> {
+  async getInsightsOnTopic(topic: string, now?: Date): Promise<string[]> {
     // generate insights on a topic of reflection, based on pertinent memories
     const prompt = PromptTemplate.fromTemplate(
       "Statements about {topic}\n" +
@@ -142,7 +121,7 @@ export class GenerativeAgentMemory extends BaseMemory {
         " (example format: insight (because of 1, 5, 3))"
     );
 
-    const relatedMemories = await this.fetchMemories(topic, (now));
+    const relatedMemories = await this.fetchMemories(topic, now);
     const relatedStatements: string = relatedMemories
       .map((memory, index) => `${index + 1}. ${memory.pageContent}`)
       .join("\n");
@@ -150,34 +129,27 @@ export class GenerativeAgentMemory extends BaseMemory {
       topic,
       relatedStatements,
     });
-    return this.parseList(result.output); // added output
+    return GenerativeAgentMemory.parseList(result.output); // added output
   }
 
-  async pauseToReflect(
-    this: GenerativeAgentMemory,
-    now?: Date
-  ): Promise<string[]> {
-    //  reflect on recent observations and generate insights
+  async pauseToReflect(now?: Date): Promise<string[]> {
     if (this.verbose) {
       console.log("Pausing to reflect...");
     }
     const newInsights: string[] = [];
-    const topics = await this.getTopicsofReflection();
+    const topics = await this.getTopicsOfReflection();
     for (const topic of topics) {
-      const insights = await this.getInsightsOnTopic(topic, (now));
+      const insights = await this.getInsightsOnTopic(topic, now);
       for (const insight of insights) {
         // add memory
-        await this.addMemory(insight, (now));
+        await this.addMemory(insight, now);
       }
       newInsights.push(...insights);
     }
     return newInsights;
   }
 
-  async scoreMemoryImportance(
-    this: GenerativeAgentMemory,
-    memoryContent: string
-  ): Promise<number> {
+  async scoreMemoryImportance(memoryContent: string): Promise<number> {
     // score the absolute importance of a given memory
     const prompt = PromptTemplate.fromTemplate(
       "On the scale of 1 to 10, where 1 is purely mundane" +
@@ -195,7 +167,7 @@ export class GenerativeAgentMemory extends BaseMemory {
     const strippedScore = score.trim();
 
     if (this.verbose) {
-      console.log("importance score: ", strippedScore);
+      console.log("Importance score:", strippedScore);
     }
     const match = strippedScore.match(/^\D*(\d+)/);
     if (match) {
@@ -207,11 +179,7 @@ export class GenerativeAgentMemory extends BaseMemory {
     }
   }
 
-  async addMemory(
-    this: GenerativeAgentMemory,
-    memoryContent: string,
-    now?: Date
-  ) {
+  async addMemory(memoryContent: string, now?: Date) {
     // add an observation or memory to the agent's memory
     const importanceScore = await this.scoreMemoryImportance(memoryContent);
     this.aggregateImportance += importanceScore;
@@ -221,7 +189,7 @@ export class GenerativeAgentMemory extends BaseMemory {
         importance: importanceScore,
       },
     });
-    await this.memoryRetriever.addDocuments([document]); // currentTime in python docs
+    await this.memoryRetriever.addDocuments([document]);
     // after an agent has processed a certain amoung of memories (as measured by aggregate importance),
     // it is time to pause and reflect on recent events to add more synthesized memories to the agent's
     // memory stream.
@@ -231,32 +199,21 @@ export class GenerativeAgentMemory extends BaseMemory {
       !this.reflecting
     ) {
       this.reflecting = true;
-      await this.pauseToReflect((now));
+      await this.pauseToReflect(now);
       this.aggregateImportance = 0.0;
       this.reflecting = false;
     }
   }
 
-  async fetchMemories(
-    this: GenerativeAgentMemory,
-    observation: string,
-    now?: Date
-  ): Promise<Document[]> {
-    // fetch related memories
-    if (now !== undefined || now !== null) {
-      // mock now
-      const docs = await this.memoryRetriever.getRelevantDocuments(observation);
-      return docs;
-    } else {
-      const docs = await this.memoryRetriever.getRelevantDocuments(observation);
-      return docs;
-    }
+  // TODO: Mock "now" to simulate different times
+  async fetchMemories(observation: string, _now?: Date): Promise<Document[]> {
+    return this.memoryRetriever.getRelevantDocuments(observation);
   }
 
-  formatMemoriesDetail(
-    this: GenerativeAgentMemory,
-    relevantMemories: Document[]
-  ): string {
+  formatMemoriesDetail(relevantMemories: Document[]): string {
+    if (!relevantMemories.length) {
+      return "No relevant information.";
+    }
     const contentStrings = new Set();
     const content = [];
     for (const memory of relevantMemories) {
@@ -264,46 +221,42 @@ export class GenerativeAgentMemory extends BaseMemory {
         continue;
       }
       contentStrings.add(memory.pageContent);
-      const createdTime = memory.metadata.created_at.toLocaleString(
-        "en-US",
-        {
-          month: "long",
-          day: "numeric",
-          year: "numeric",
-          hour: "numeric",
-          minute: "numeric",
-          hour12: true,
-        }
-      );
+      const createdTime = memory.metadata.created_at.toLocaleString("en-US", {
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+        hour: "numeric",
+        minute: "numeric",
+        hour12: true,
+      });
       content.push(`${createdTime}: ${memory.pageContent.trim()}`);
     }
     const joinedContent = content.map((mem) => `${mem}`).join("\n");
     return joinedContent;
   }
 
-  formatMemoriesSimple(
-    this: GenerativeAgentMemory,
-    relevantMemories: Document[]
-  ): string {
+  formatMemoriesSimple(relevantMemories: Document[]): string {
     const joinedContent = relevantMemories
       .map((mem) => `${mem.pageContent}`)
       .join("; ");
     return joinedContent;
   }
 
-  async getMemoriesUntilLimit(
-    this: GenerativeAgentMemory,
-    consumedTokens: number
-  ): Promise<string> {
+  async getMemoriesUntilLimit(consumedTokens: number): Promise<string> {
     // reduce the number of tokens in the documents
     const result = [];
-    for (const doc of this.memoryRetriever.getMemoryStream.slice().reverse()) {
+    for (const doc of this.memoryRetriever
+      .getMemoryStream()
+      .slice()
+      .reverse()) {
       if (consumedTokens >= this.maxTokensLimit) {
+        if (this.verbose) {
+          console.log("Exceeding max tokens for LLM, filtering memories");
+        }
         break;
       }
-      const numTokens = await this.llm.getNumTokens(doc.pageContent);
       // eslint-disable-next-line no-param-reassign
-      consumedTokens += numTokens;
+      consumedTokens += await this.llm.getNumTokens(doc.pageContent);
       if (consumedTokens < this.maxTokensLimit) {
         result.push(doc);
       }
@@ -317,24 +270,23 @@ export class GenerativeAgentMemory extends BaseMemory {
   }
 
   async loadMemoryVariables(
-    this: GenerativeAgentMemory,
-    inputs: Record<string, any>
+    inputs: InputValues
   ): Promise<Record<string, string>> {
-    // return key-calue pairs givent the text-input to the chain.
-    const queries = inputs.get(this.queriesKey);
-    const now = inputs.get(this.nowKey);
+    const queries = inputs[this.queriesKey];
+    const now = inputs[this.nowKey];
     if (queries !== undefined) {
-      const relevantMemories = queries.flatMap((query: any) =>
-        this.fetchMemories(query, now)
-      );
-      console.log("relevantMemories", relevantMemories);
+      const relevantMemories = (
+        await Promise.all(
+          queries.map((query: string) => this.fetchMemories(query, now))
+        )
+      ).flat();
       return {
         [this.relevantMemoriesKey]: this.formatMemoriesDetail(relevantMemories),
         [this.relevantMemoriesSimpleKey]:
           this.formatMemoriesSimple(relevantMemories),
       };
     }
-    const mostRecentMemoriesToken = inputs.get(this.MostRecentMemoriesTokenKey);
+    const mostRecentMemoriesToken = inputs[this.mostRecentMemoriesTokenKey];
     if (mostRecentMemoriesToken !== undefined) {
       return {
         [this.mostRecentMemoriesKey]: await this.getMemoriesUntilLimit(
@@ -346,23 +298,18 @@ export class GenerativeAgentMemory extends BaseMemory {
   }
 
   async saveContext(
-    this: GenerativeAgentMemory,
-    inputs: Record<string, any>,
-    outputs: Record<string, any>
+    _inputs: InputValues,
+    outputs: OutputValues
   ): Promise<void> {
-    // return new Promise<void>((resolve, reject) => {
-      // save the context of this model run to memory
-      // TODO: fix the save memory key
-      const mem = outputs[this.AddMemoryKey]; // Access property using square bracket notation
-      const now = outputs[this.nowKey]; // Access property using square bracket notation
-      if (mem) {
-        await this.addMemory(mem, now);
-      }
-      
-    // });
+    // save the context of this model run to memory
+    const mem = outputs[this.addMemoryKey];
+    const now = outputs[this.nowKey];
+    if (mem) {
+      await this.addMemory(mem, now);
+    }
   }
 
-  clear(this: GenerativeAgentMemory): void {
+  clear(): void {
     // TODO: clear memory contents
   }
 }
