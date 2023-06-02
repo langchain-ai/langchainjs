@@ -13,7 +13,7 @@ export interface RunCreate extends BaseRun {
 }
 
 export interface RunUpdate {
-  end_time: number;
+  end_time?: number;
   error?: string;
   outputs?: RunOutputs;
   parent_run_id?: string; // uuid
