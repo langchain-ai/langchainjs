@@ -1,5 +1,4 @@
 import type {
-  MongoClient,
   Collection,
   Document as MongoDBDocument,
 } from "mongodb";
@@ -8,8 +7,7 @@ import { Embeddings } from "../embeddings/base.js";
 import { Document } from "../document.js";
 
 export type MongoDBAtlasVectorSearchLibArgs = {
-  client: MongoClient;
-  namespace: string;
+  collection: Collection<MongoDBDocument>;
   indexName?: string;
   textKey?: string;
   embeddingKey?: string;
@@ -18,25 +16,17 @@ export type MongoDBAtlasVectorSearchLibArgs = {
 export class MongoDBAtlasVectorSearch extends VectorStore {
   declare FilterType: MongoDBDocument;
 
-  client: MongoClient;
-  namespace: string;
+  collection: Collection<MongoDBDocument>;
   indexName: string;
   textKey: string;
   embeddingKey: string;
 
   constructor(embeddings: Embeddings, args: MongoDBAtlasVectorSearchLibArgs) {
     super(embeddings, args);
-    this.client = args.client;
-    this.namespace = args.namespace;
+    this.collection = args.collection;
     this.indexName = args.indexName || "default";
     this.textKey = args.textKey || "text";
     this.embeddingKey = args.embeddingKey || "embedding";
-  }
-
-  get collection(): Collection<MongoDBDocument> {
-    const [dbName, collectionName] = this.namespace.split(".");
-    const collection: Collection<MongoDBDocument> = this.client.db(dbName).collection(collectionName);
-    return collection;
   }
 
   async addVectors(vectors: number[][], documents: Document[]): Promise<void> {

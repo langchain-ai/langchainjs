@@ -42,10 +42,7 @@ test.skip("MongoDBAtlasVectorSearch with external ids", async () => {
 
     const vectorStore = new MongoDBAtlasVectorSearch(
       new CohereEmbeddings(),
-      {
-        client,
-        namespace
-      }
+      { collection }
     );
 
     expect(vectorStore).toBeDefined();
