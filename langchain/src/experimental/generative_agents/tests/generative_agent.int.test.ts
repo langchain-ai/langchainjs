@@ -6,7 +6,8 @@ import { MemoryVectorStore } from "../../../vectorstores/memory.js";
 import { TimeWeightedVectorStoreRetriever } from "../../../retrievers/time_weighted.js";
 import { GenerativeAgentMemory, GenerativeAgent } from "../index.js";
 
-test(
+// This takes a very long time, mostly for illustrative purposes
+test.skip(
   "Test generative agent end-to-end",
   async () => {
     const Simulation = async () => {
