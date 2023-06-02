@@ -31,9 +31,11 @@ import * as retrievers_document_compressors from "langchain/retrievers/document_
 import * as retrievers_time_weighted from "langchain/retrievers/time_weighted";
 import * as retrievers_document_compressors_chain_extract from "langchain/retrievers/document_compressors/chain_extract";
 import * as retrievers_hyde from "langchain/retrievers/hyde";
+import * as retrievers_vespa from "langchain/retrievers/vespa";
 import * as cache from "langchain/cache";
 import * as stores_file_in_memory from "langchain/stores/file/in_memory";
 import * as experimental_autogpt from "langchain/experimental/autogpt";
 import * as experimental_babyagi from "langchain/experimental/babyagi";
+import * as experimental_generative_agents from "langchain/experimental/generative_agents";
 import * as experimental_plan_and_execute from "langchain/experimental/plan_and_execute";
 import * as client from "langchain/client";
