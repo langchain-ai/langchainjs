@@ -33,10 +33,12 @@ export * as retrievers__document_compressors from "../retrievers/document_compre
 export * as retrievers__time_weighted from "../retrievers/time_weighted.js";
 export * as retrievers__document_compressors__chain_extract from "../retrievers/document_compressors/chain_extract.js";
 export * as retrievers__hyde from "../retrievers/hyde.js";
+export * as retrievers__vespa from "../retrievers/vespa.js";
 export * as cache from "../cache/index.js";
 export * as stores__file__in_memory from "../stores/file/in_memory.js";
 export * as stores__message__in_memory from "../stores/message/in_memory.js";
 export * as experimental__autogpt from "../experimental/autogpt/index.js";
 export * as experimental__babyagi from "../experimental/babyagi/index.js";
+export * as experimental__generative_agents from "../experimental/generative_agents/index.js";
 export * as experimental__plan_and_execute from "../experimental/plan_and_execute/index.js";
 export * as client from "../client/index.js";

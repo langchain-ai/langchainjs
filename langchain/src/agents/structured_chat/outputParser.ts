@@ -11,8 +11,10 @@ import { renderTemplate } from "../../prompts/index.js";
 import { Callbacks } from "../../callbacks/manager.js";
 
 export class StructuredChatOutputParser extends AgentActionOutputParser {
+  lc_namespace = ["langchain", "agents", "structured_chat"];
+
   constructor(private toolNames: string[]) {
-    super();
+    super(...arguments);
   }
 
   async parse(text: string): Promise<AgentAction | AgentFinish> {
@@ -52,6 +54,8 @@ export interface StructuredChatOutputParserArgs {
 }
 
 export class StructuredChatOutputParserWithRetries extends AgentActionOutputParser {
+  lc_namespace = ["langchain", "agents", "structured_chat"];
+
   private baseParser: StructuredChatOutputParser;
 
   private outputFixingParser?: OutputFixingParser<AgentAction | AgentFinish>;
@@ -59,7 +63,7 @@ export class StructuredChatOutputParserWithRetries extends AgentActionOutputPars
   private toolNames: string[] = [];
 
   constructor(fields: StructuredChatOutputParserArgs) {
-    super();
+    super(fields);
     this.toolNames = fields.toolNames ?? this.toolNames;
     this.baseParser =
       fields?.baseParser ?? new StructuredChatOutputParser(this.toolNames);

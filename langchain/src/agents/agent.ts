@@ -9,6 +9,7 @@ import {
   BaseChatMessage,
   ChainValues,
 } from "../schema/index.js";
+import { Serializable } from "../schema/load.js";
 import { StructuredTool, Tool } from "../tools/base.js";
 import {
   AgentActionOutputParser,
@@ -29,7 +30,7 @@ class ParseError extends Error {
   }
 }
 
-export abstract class BaseAgent {
+export abstract class BaseAgent extends Serializable {
   declare ToolType: StructuredTool;
 
   abstract get inputKeys(): string[];
@@ -133,6 +134,8 @@ export interface LLMSingleActionAgentInput {
 }
 
 export class LLMSingleActionAgent extends BaseSingleActionAgent {
+  lc_namespace = ["langchain", "agents"];
+
   llmChain: LLMChain;
 
   outputParser: AgentActionOutputParser;
@@ -140,7 +143,7 @@ export class LLMSingleActionAgent extends BaseSingleActionAgent {
   stop?: string[];
 
   constructor(input: LLMSingleActionAgentInput) {
-    super();
+    super(input);
     this.stop = input.stop;
     this.llmChain = input.llmChain;
     this.outputParser = input.outputParser;
@@ -213,7 +216,7 @@ export abstract class Agent extends BaseSingleActionAgent {
   }
 
   constructor(input: AgentInput) {
-    super();
+    super(input);
     this.llmChain = input.llmChain;
     this._allowedTools = input.allowedTools;
     this.outputParser = input.outputParser;

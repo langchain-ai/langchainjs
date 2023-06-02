@@ -16,8 +16,10 @@ export type ChatConversationalAgentOutputParserFormatInstructionsOptions =
   };
 
 export class ChatConversationalAgentOutputParser extends AgentActionOutputParser {
+  lc_namespace = ["langchain", "agents", "chat_convo"];
+
   constructor(private toolNames: string[]) {
-    super();
+    super(...arguments);
   }
 
   async parse(text: string): Promise<AgentAction | AgentFinish> {
@@ -63,6 +65,8 @@ export type ChatConversationalAgentOutputParserArgs = {
 };
 
 export class ChatConversationalAgentOutputParserWithRetries extends AgentActionOutputParser {
+  lc_namespace = ["langchain", "agents", "chat_convo"];
+
   private baseParser: ChatConversationalAgentOutputParser;
 
   private outputFixingParser?: OutputFixingParser<AgentAction | AgentFinish>;
@@ -70,7 +74,7 @@ export class ChatConversationalAgentOutputParserWithRetries extends AgentActionO
   private toolNames: string[] = [];
 
   constructor(fields: ChatConversationalAgentOutputParserArgs) {
-    super();
+    super(fields);
     this.toolNames = fields.toolNames ?? this.toolNames;
     this.baseParser =
       fields?.baseParser ??

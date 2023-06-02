@@ -1,0 +1,717 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`serialize + deserialize agent 1`] = `
+"lc: 1
+type: constructor
+id:
+  - langchain
+  - agents
+  - executor
+  - AgentExecutor
+arguments:
+  - agent:
+      lc: 1
+      type: constructor
+      id:
+        - langchain
+        - agents
+        - chat_convo
+        - ChatConversationalAgent
+      arguments:
+        - llmChain:
+            lc: 1
+            type: constructor
+            id:
+              - langchain
+              - chains
+              - llm_chain
+              - LLMChain
+            arguments:
+              - prompt:
+                  lc: 1
+                  type: constructor
+                  id:
+                    - langchain
+                    - prompts
+                    - chat
+                    - ChatPromptTemplate
+                  arguments:
+                    - inputVariables:
+                        - chat_history
+                        - input
+                        - agent_scratchpad
+                      promptMessages:
+                        - lc: 1
+                          type: constructor
+                          id:
+                            - langchain
+                            - prompts
+                            - chat
+                            - SystemMessagePromptTemplate
+                          arguments:
+                            - lc: 1
+                              type: constructor
+                              id:
+                                - langchain
+                                - prompts
+                                - prompt
+                                - PromptTemplate
+                              arguments:
+                                - inputVariables: []
+                                  templateFormat: f-string
+                                  template: >-
+                                    Assistant is a large language model trained by OpenAI.
+
+
+                                    Assistant is designed to be able to assist with a wide range of tasks, from answering simple questions to providing in-depth explanations and discussions on a wide range of topics. As a language model, Assistant is able to generate human-like text based on the input it receives, allowing it to engage in natural-sounding conversations and provide responses that are coherent and relevant to the topic at hand.
+
+
+                                    Assistant is constantly learning and improving, and its capabilities are constantly evolving. It is able to process and understand large amounts of text, and can use this knowledge to provide accurate and informative responses to a wide range of questions. Additionally, Assistant is able to generate its own text based on the input it receives, allowing it to engage in discussions and provide explanations and descriptions on a wide range of topics.
+
+
+                                    Overall, Assistant is a powerful system that can help with a wide range of tasks and provide valuable insights and information on a wide range of topics. Whether you need help with a specific question or just want to have a conversation about a particular topic, Assistant is here to assist. However, above all else, all responses must adhere to the format of RESPONSE FORMAT INSTRUCTIONS.
+                        - lc: 1
+                          type: constructor
+                          id:
+                            - langchain
+                            - prompts
+                            - chat
+                            - MessagesPlaceholder
+                          arguments:
+                            - chat_history
+                        - lc: 1
+                          type: constructor
+                          id:
+                            - langchain
+                            - prompts
+                            - chat
+                            - HumanMessagePromptTemplate
+                          arguments:
+                            - lc: 1
+                              type: constructor
+                              id:
+                                - langchain
+                                - prompts
+                                - prompt
+                                - PromptTemplate
+                              arguments:
+                                - inputVariables:
+                                    - input
+                                  templateFormat: f-string
+                                  template: >-
+                                    TOOLS
+
+                                    ------
+
+                                    Assistant can ask the user to use tools to look up information that may be helpful in answering the users original question. The tools the human can use are:
+
+
+                                    calculator: Useful for getting the result of a math expression. The input to this tool should be a valid mathematical expression that could be executed by a simple calculator.
+
+                                    requests_get: A portal to the internet. Use this when you need to get specific content from a website. 
+                                      Input should be a url string (i.e. "https://www.google.com"). The output will be the text response of the GET request.
+                                    json_list_keys: Can be used to list all keys at a given path. 
+                                        Before calling this you should be SURE that the path to this exists.
+                                        The input is a text representation of the path to the json as json pointer syntax (e.g. /key1/0/key2).
+
+                                    RESPONSE FORMAT INSTRUCTIONS
+
+                                    ----------------------------
+
+
+                                    Output a JSON markdown code snippet containing a valid JSON object in one of two formats:
+
+
+                                    **Option 1:**
+
+                                    Use this if you want the human to use a tool.
+
+                                    Markdown code snippet formatted in the following schema:
+
+
+                                    \`\`\`json
+
+                                    {{
+                                        "action": string, // The action to take. Must be one of [calculator, requests_get, json_list_keys]
+                                        "action_input": string // The input to the action. May be a stringified object.
+                                    }}
+
+                                    \`\`\`
+
+
+                                    **Option #2:**
+
+                                    Use this if you want to respond directly and conversationally to the human. Markdown code snippet formatted in the following schema:
+
+
+                                    \`\`\`json
+
+                                    {{
+                                        "action": "Final Answer",
+                                        "action_input": string // You should put what you want to return to use here and make sure to use valid json newline characters.
+                                    }}
+
+                                    \`\`\`
+
+
+                                    For both options, remember to always include the surrounding markdown code snippet delimiters (begin with "\`\`\`json" and end with "\`\`\`")!
+
+
+
+                                    USER'S INPUT
+
+                                    --------------------
+
+                                    Here is the user's input (remember to respond with a markdown code snippet of a json blob with a single action, and NOTHING else):
+
+
+                                    {input}
+                        - lc: 1
+                          type: constructor
+                          id:
+                            - langchain
+                            - prompts
+                            - chat
+                            - MessagesPlaceholder
+                          arguments:
+                            - agent_scratchpad
+                      partialVariables: {}
+                llm:
+                  lc: 1
+                  type: constructor
+                  id:
+                    - langchain
+                    - chat_models
+                    - openai
+                    - ChatOpenAI
+                  arguments:
+                    - temperature: 0
+                      modelName: gpt-4
+          outputParser:
+            lc: 1
+            type: constructor
+            id:
+              - langchain
+              - agents
+              - chat_convo
+              - ChatConversationalAgentOutputParserWithRetries
+            arguments:
+              - baseParser:
+                  lc: 1
+                  type: constructor
+                  id:
+                    - langchain
+                    - agents
+                    - chat_convo
+                    - ChatConversationalAgentOutputParser
+                  arguments:
+                    - - calculator
+                      - requests_get
+                      - json_list_keys
+                outputFixingParser:
+                  lc: 1
+                  type: constructor
+                  id:
+                    - langchain
+                    - output_parsers
+                    - fix
+                    - OutputFixingParser
+                  arguments:
+                    - parser:
+                        lc: 1
+                        type: constructor
+                        id:
+                          - langchain
+                          - agents
+                          - chat_convo
+                          - ChatConversationalAgentOutputParser
+                        arguments:
+                          - - calculator
+                            - requests_get
+                            - json_list_keys
+                      retryChain:
+                        lc: 1
+                        type: constructor
+                        id:
+                          - langchain
+                          - chains
+                          - llm_chain
+                          - LLMChain
+                        arguments:
+                          - llm:
+                              lc: 1
+                              type: constructor
+                              id:
+                                - langchain
+                                - chat_models
+                                - openai
+                                - ChatOpenAI
+                              arguments:
+                                - temperature: 0
+                                  modelName: gpt-4
+                            prompt:
+                              lc: 1
+                              type: constructor
+                              id:
+                                - langchain
+                                - prompts
+                                - prompt
+                                - PromptTemplate
+                              arguments:
+                                - inputVariables:
+                                    - instructions
+                                    - completion
+                                    - error
+                                  templateFormat: f-string
+                                  template: >-
+                                    Instructions:
+
+                                    --------------
+
+                                    {instructions}
+
+                                    --------------
+
+                                    Completion:
+
+                                    --------------
+
+                                    {completion}
+
+                                    --------------
+
+
+                                    Above, the Completion did not satisfy the constraints given in the Instructions.
+
+                                    Error:
+
+                                    --------------
+
+                                    {error}
+
+                                    --------------
+
+
+                                    Please try again. Please only respond with an answer that satisfies the constraints laid out in the Instructions:
+                toolNames:
+                  - calculator
+                  - requests_get
+                  - json_list_keys
+          allowedTools:
+            - calculator
+            - requests_get
+            - json_list_keys
+    tools:
+      - lc: 1
+        type: constructor
+        id:
+          - langchain
+          - tools
+          - calculator
+          - Calculator
+        arguments:
+          - {}
+      - lc: 1
+        type: constructor
+        id:
+          - langchain
+          - tools
+          - RequestsGetTool
+        arguments:
+          - {}
+      - lc: 1
+        type: constructor
+        id:
+          - langchain
+          - tools
+          - JsonListKeysTool
+        arguments:
+          - lc: 1
+            type: constructor
+            id:
+              - langchain
+              - tools
+              - json
+              - JsonSpec
+            arguments:
+              - a: b
+    agentType: chat-conversational-react-description
+"
+`;
+
+exports[`serialize + deserialize llm 1`] = `
+"lc: 1
+type: constructor
+id:
+  - langchain
+  - llms
+  - openai
+  - PromptLayerOpenAI
+arguments:
+  - temperature: 0.5
+    modelName: davinci
+    openAIApiKey:
+      lc: 1
+      type: secret
+      id:
+        - OPENAI_API_KEY
+    promptLayerApiKey:
+      lc: 1
+      type: secret
+      id:
+        - PROMPTLAYER_API_KEY
+"
+`;
+
+exports[`serialize + deserialize llm chain chat prompt 1`] = `
+"lc: 1
+type: constructor
+id:
+  - langchain
+  - chains
+  - llm_chain
+  - LLMChain
+arguments:
+  - llm:
+      lc: 1
+      type: constructor
+      id:
+        - langchain
+        - chat_models
+        - openai
+        - ChatOpenAI
+      arguments:
+        - temperature: 0.5
+          modelName: gpt-4
+          streaming: true
+          prefixMessages:
+            - role: system
+              content: You're a nice assistant
+    prompt:
+      lc: 1
+      type: constructor
+      id:
+        - langchain
+        - prompts
+        - chat
+        - ChatPromptTemplate
+      arguments:
+        - inputVariables:
+            - name
+          promptMessages:
+            - lc: 1
+              type: constructor
+              id:
+                - langchain
+                - prompts
+                - chat
+                - SystemMessagePromptTemplate
+              arguments:
+                - lc: 1
+                  type: constructor
+                  id:
+                    - langchain
+                    - prompts
+                    - prompt
+                    - PromptTemplate
+                  arguments:
+                    - inputVariables:
+                        - name
+                      templateFormat: f-string
+                      template: You are talking to {name}.
+            - lc: 1
+              type: constructor
+              id:
+                - langchain
+                - prompts
+                - chat
+                - HumanMessagePromptTemplate
+              arguments:
+                - lc: 1
+                  type: constructor
+                  id:
+                    - langchain
+                    - prompts
+                    - prompt
+                    - PromptTemplate
+                  arguments:
+                    - inputVariables: []
+                      templateFormat: f-string
+                      template: Hello, nice model.
+          partialVariables: {}
+"
+`;
+
+exports[`serialize + deserialize llm chain few shot prompt w/ examples 1`] = `
+"lc: 1
+type: constructor
+id:
+  - langchain
+  - chains
+  - llm_chain
+  - LLMChain
+arguments:
+  - llm:
+      lc: 1
+      type: constructor
+      id:
+        - langchain
+        - llms
+        - openai
+        - OpenAI
+      arguments:
+        - callbacks:
+            - lc: 1
+              type: constructor
+              id:
+                - langchain
+                - callbacks
+                - langchain_tracer
+                - LangChainTracer
+              arguments:
+                - {}
+          temperature: 0.5
+          modelName: davinci
+    prompt:
+      lc: 1
+      type: constructor
+      id:
+        - langchain
+        - prompts
+        - few_shot
+        - FewShotPromptTemplate
+      arguments:
+        - examples:
+            - yo: "1"
+            - yo: "2"
+          prefix: You are a nice assistant
+          examplePrompt:
+            lc: 1
+            type: constructor
+            id:
+              - langchain
+              - prompts
+              - prompt
+              - PromptTemplate
+            arguments:
+              - inputVariables:
+                  - yo
+                templateFormat: f-string
+                template: An example about {yo}
+          suffix: My name is {name}
+          inputVariables:
+            - yo
+            - name
+"
+`;
+
+exports[`serialize + deserialize llm chain few shot prompt w/ selector 1`] = `
+"lc: 1
+type: constructor
+id:
+  - langchain
+  - chains
+  - llm_chain
+  - LLMChain
+arguments:
+  - llm:
+      lc: 1
+      type: constructor
+      id:
+        - langchain
+        - llms
+        - openai
+        - OpenAI
+      arguments:
+        - callbacks:
+            - lc: 1
+              type: constructor
+              id:
+                - langchain
+                - callbacks
+                - langchain_tracer
+                - LangChainTracer
+              arguments:
+                - {}
+          temperature: 0.5
+          modelName: davinci
+    prompt:
+      lc: 1
+      type: constructor
+      id:
+        - langchain
+        - prompts
+        - few_shot
+        - FewShotPromptTemplate
+      arguments:
+        - exampleSelector:
+            lc: 1
+            type: constructor
+            id:
+              - langchain
+              - prompts
+              - selectors
+              - LengthBasedExampleSelector
+            arguments:
+              - examplePrompt:
+                  lc: 1
+                  type: constructor
+                  id:
+                    - langchain
+                    - prompts
+                    - prompt
+                    - PromptTemplate
+                  arguments:
+                    - inputVariables:
+                        - yo
+                      templateFormat: f-string
+                      template: An example about {yo}
+            fields:
+              examples:
+                - yo: "1"
+                - yo: "2"
+              exampleTextLengths:
+                - 4
+                - 4
+          prefix: You are a nice assistant
+          examplePrompt:
+            lc: 1
+            type: constructor
+            id:
+              - langchain
+              - prompts
+              - prompt
+              - PromptTemplate
+            arguments:
+              - inputVariables:
+                  - yo
+                templateFormat: f-string
+                template: An example about {yo}
+          suffix: My name is {name}
+          inputVariables:
+            - yo
+            - name
+"
+`;
+
+exports[`serialize + deserialize llm chain string prompt 1`] = `
+"lc: 1
+type: constructor
+id:
+  - langchain
+  - chains
+  - llm_chain
+  - LLMChain
+arguments:
+  - llm:
+      lc: 1
+      type: constructor
+      id:
+        - langchain
+        - llms
+        - openai
+        - OpenAI
+      arguments:
+        - callbacks:
+            - lc: 1
+              type: constructor
+              id:
+                - langchain
+                - callbacks
+                - langchain_tracer
+                - LangChainTracer
+              arguments:
+                - {}
+            - {}
+          temperature: 0.5
+          modelName: davinci
+          verbose: true
+    prompt:
+      lc: 1
+      type: constructor
+      id:
+        - langchain
+        - prompts
+        - prompt
+        - PromptTemplate
+      arguments:
+        - inputVariables:
+            - name
+          templateFormat: f-string
+          template: Hello, {name}!
+"
+`;
+
+exports[`serialize + deserialize llm with optional deps 1`] = `
+"lc: 1
+type: constructor
+id:
+  - langchain
+  - llms
+  - cohere
+  - Cohere
+arguments:
+  - temperature: 0.5
+    apiKey:
+      lc: 1
+      type: secret
+      id:
+        - COHERE_API_KEY
+"
+`;
+
+exports[`serialize + deserialize llmchain with output parser 1`] = `
+"lc: 1
+type: constructor
+id:
+  - langchain
+  - chains
+  - llm_chain
+  - LLMChain
+arguments:
+  - llm:
+      lc: 1
+      type: constructor
+      id:
+        - langchain
+        - llms
+        - openai
+        - OpenAI
+      arguments:
+        - callbacks:
+            - lc: 1
+              type: constructor
+              id:
+                - langchain
+                - callbacks
+                - langchain_tracer
+                - LangChainTracer
+              arguments:
+                - {}
+          temperature: 0.5
+          modelName: davinci
+    prompt:
+      lc: 1
+      type: constructor
+      id:
+        - langchain
+        - prompts
+        - prompt
+        - PromptTemplate
+      arguments:
+        - inputVariables:
+            - yo
+            - format_instructions
+          templateFormat: f-string
+          template: An example about {yo} {format_instructions}
+    outputParser:
+      lc: 1
+      type: constructor
+      id:
+        - langchain
+        - output_parsers
+        - list
+        - CommaSeparatedListOutputParser
+      arguments: []
+"
+`;

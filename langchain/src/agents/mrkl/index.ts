@@ -30,6 +30,8 @@ export type ZeroShotAgentInput = Optional<AgentInput, "outputParser">;
  * @augments Agent
  */
 export class ZeroShotAgent extends Agent {
+  lc_namespace = ["langchain", "agents", "mrkl"];
+
   declare ToolType: Tool;
 
   constructor(input: ZeroShotAgentInput) {

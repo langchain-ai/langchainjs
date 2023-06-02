@@ -24,8 +24,12 @@ export interface JsonMarkdownFormatInstructionsOptions
 export class StructuredOutputParser<
   T extends z.ZodTypeAny
 > extends BaseOutputParser<z.infer<T>> {
+  get lc_namespace(): string[] {
+    throw new Error("Method not implemented.");
+  }
+
   constructor(public schema: T) {
-    super();
+    super(schema);
   }
 
   static fromZodSchema<T extends z.ZodTypeAny>(schema: T) {
@@ -185,14 +189,20 @@ export class JsonMarkdownStructuredOutputParser<
   }
 }
 
+export interface AsymmetricStructuredOutputParserFields<
+  T extends z.ZodTypeAny
+> {
+  inputSchema: T;
+}
+
 export abstract class AsymmetricStructuredOutputParser<
   T extends z.ZodTypeAny,
   Y = unknown
 > extends BaseOutputParser<Y> {
   private structuredInputParser: JsonMarkdownStructuredOutputParser<T>;
 
-  constructor(public inputSchema: T) {
-    super();
+  constructor({ inputSchema }: AsymmetricStructuredOutputParserFields<T>) {
+    super(...arguments);
     this.structuredInputParser = new JsonMarkdownStructuredOutputParser(
       inputSchema
     );

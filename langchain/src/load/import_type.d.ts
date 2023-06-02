@@ -94,6 +94,9 @@ export interface OptionalImportMap {
   "langchain/vectorstores/tigris"?:
     | typeof import("../vectorstores/tigris.js")
     | Promise<typeof import("../vectorstores/tigris.js")>;
+  "langchain/memory/zep"?:
+    | typeof import("../memory/zep.js")
+    | Promise<typeof import("../memory/zep.js")>;
   "langchain/document_loaders/web/apify_dataset"?:
     | typeof import("../document_loaders/web/apify_dataset.js")
     | Promise<typeof import("../document_loaders/web/apify_dataset.js")>;
@@ -178,12 +181,18 @@ export interface OptionalImportMap {
   "langchain/retrievers/supabase"?:
     | typeof import("../retrievers/supabase.js")
     | Promise<typeof import("../retrievers/supabase.js")>;
+  "langchain/retrievers/zep"?:
+    | typeof import("../retrievers/zep.js")
+    | Promise<typeof import("../retrievers/zep.js")>;
   "langchain/retrievers/metal"?:
     | typeof import("../retrievers/metal.js")
     | Promise<typeof import("../retrievers/metal.js")>;
   "langchain/retrievers/self_query"?:
     | typeof import("../retrievers/self_query/index.js")
     | Promise<typeof import("../retrievers/self_query/index.js")>;
+  "langchain/cache/momento"?:
+    | typeof import("../cache/momento.js")
+    | Promise<typeof import("../cache/momento.js")>;
   "langchain/cache/redis"?:
     | typeof import("../cache/redis.js")
     | Promise<typeof import("../cache/redis.js")>;
@@ -193,6 +202,9 @@ export interface OptionalImportMap {
   "langchain/stores/message/dynamodb"?:
     | typeof import("../stores/message/dynamodb.js")
     | Promise<typeof import("../stores/message/dynamodb.js")>;
+  "langchain/stores/message/momento"?:
+    | typeof import("../stores/message/momento.js")
+    | Promise<typeof import("../stores/message/momento.js")>;
   "langchain/stores/message/redis"?:
     | typeof import("../stores/message/redis.js")
     | Promise<typeof import("../stores/message/redis.js")>;

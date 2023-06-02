@@ -1,4 +1,5 @@
 import { test, expect } from "@jest/globals";
+import { stringify } from "yaml";
 
 import { load } from "../index.js";
 import { OpenAI, PromptLayerOpenAI } from "../../llms/openai.js";
@@ -16,6 +17,12 @@ import {
   FewShotPromptTemplate,
   LengthBasedExampleSelector,
 } from "../../prompts/index.js";
+import { initializeAgentExecutorWithOptions } from "../../agents/initialize.js";
+import { Calculator } from "../../tools/calculator.js";
+import { RequestsGetTool } from "../../tools/requests.js";
+import { JsonListKeysTool, JsonSpec } from "../../tools/json.js";
+import { AgentExecutor } from "../../agents/executor.js";
+import { CommaSeparatedListOutputParser } from "../../output_parsers/list.js";
 
 test("serialize + deserialize llm", async () => {
   const llm = new PromptLayerOpenAI({
@@ -27,38 +34,7 @@ test("serialize + deserialize llm", async () => {
   const lc_argumentsBefore = llm.lc_arguments;
   const str = JSON.stringify(llm, null, 2);
   expect(llm.lc_arguments).toEqual(lc_argumentsBefore);
-  expect(str).toMatchInlineSnapshot(`
-    "{
-      "lc": 1,
-      "type": "constructor",
-      "id": [
-        "langchain",
-        "llms",
-        "openai",
-        "PromptLayerOpenAI"
-      ],
-      "arguments": [
-        {
-          "temperature": 0.5,
-          "modelName": "davinci",
-          "openAIApiKey": {
-            "lc": 1,
-            "type": "secret",
-            "id": [
-              "OPENAI_API_KEY"
-            ]
-          },
-          "promptLayerApiKey": {
-            "lc": 1,
-            "type": "secret",
-            "id": [
-              "PROMPTLAYER_API_KEY"
-            ]
-          }
-        }
-      ]
-    }"
-  `);
+  expect(stringify(JSON.parse(str))).toMatchSnapshot();
   const llm2 = await load<OpenAI>(str, {
     OPENAI_API_KEY: "openai-key",
     PROMPTLAYER_API_KEY: "promptlayer-key",
@@ -70,30 +46,7 @@ test("serialize + deserialize llm", async () => {
 test("serialize + deserialize llm with optional deps", async () => {
   const llm = new Cohere({ temperature: 0.5, apiKey: "cohere-key" });
   const str = JSON.stringify(llm, null, 2);
-  expect(str).toMatchInlineSnapshot(`
-    "{
-      "lc": 1,
-      "type": "constructor",
-      "id": [
-        "langchain",
-        "llms",
-        "cohere",
-        "Cohere"
-      ],
-      "arguments": [
-        {
-          "temperature": 0.5,
-          "apiKey": {
-            "lc": 1,
-            "type": "secret",
-            "id": [
-              "COHERE_API_KEY"
-            ]
-          }
-        }
-      ]
-    }"
-  `);
+  expect(stringify(JSON.parse(str))).toMatchSnapshot();
   const llm2 = await load<Cohere>(
     str,
     { COHERE_API_KEY: "cohere-key" },
@@ -128,74 +81,7 @@ test("serialize + deserialize llm chain string prompt", async () => {
   const prompt = PromptTemplate.fromTemplate("Hello, {name}!");
   const chain = new LLMChain({ llm, prompt });
   const str = JSON.stringify(chain, null, 2);
-  expect(str).toMatchInlineSnapshot(`
-    "{
-      "lc": 1,
-      "type": "constructor",
-      "id": [
-        "langchain",
-        "chains",
-        "llm_chain",
-        "LLMChain"
-      ],
-      "arguments": [
-        {
-          "llm": {
-            "lc": 1,
-            "type": "constructor",
-            "id": [
-              "langchain",
-              "llms",
-              "openai",
-              "OpenAI"
-            ],
-            "arguments": [
-              {
-                "callbacks": [
-                  {
-                    "lc": 1,
-                    "type": "constructor",
-                    "id": [
-                      "langchain",
-                      "callbacks",
-                      "langchain_tracer",
-                      "LangChainTracer"
-                    ],
-                    "arguments": [
-                      {}
-                    ]
-                  },
-                  {}
-                ],
-                "temperature": 0.5,
-                "modelName": "davinci",
-                "verbose": true
-              }
-            ]
-          },
-          "prompt": {
-            "lc": 1,
-            "type": "constructor",
-            "id": [
-              "langchain",
-              "prompts",
-              "prompt",
-              "PromptTemplate"
-            ],
-            "arguments": [
-              {
-                "inputVariables": [
-                  "name"
-                ],
-                "templateFormat": "f-string",
-                "template": "Hello, {name}!"
-              }
-            ]
-          }
-        }
-      ]
-    }"
-  `);
+  expect(stringify(JSON.parse(str))).toMatchSnapshot();
   const chain2 = await load<LLMChain>(str);
   expect(chain2).toBeInstanceOf(LLMChain);
   expect(JSON.stringify(chain2, null, 2)).toBe(str);
@@ -219,125 +105,7 @@ test("serialize + deserialize llm chain chat prompt", async () => {
   ]);
   const chain = new LLMChain({ llm, prompt });
   const str = JSON.stringify(chain, null, 2);
-  expect(str).toMatchInlineSnapshot(`
-    "{
-      "lc": 1,
-      "type": "constructor",
-      "id": [
-        "langchain",
-        "chains",
-        "llm_chain",
-        "LLMChain"
-      ],
-      "arguments": [
-        {
-          "llm": {
-            "lc": 1,
-            "type": "constructor",
-            "id": [
-              "langchain",
-              "chat_models",
-              "openai",
-              "ChatOpenAI"
-            ],
-            "arguments": [
-              {
-                "temperature": 0.5,
-                "modelName": "gpt-4",
-                "streaming": true,
-                "prefixMessages": [
-                  {
-                    "role": "system",
-                    "content": "You're a nice assistant"
-                  }
-                ]
-              }
-            ]
-          },
-          "prompt": {
-            "lc": 1,
-            "type": "constructor",
-            "id": [
-              "langchain",
-              "prompts",
-              "chat",
-              "ChatPromptTemplate"
-            ],
-            "arguments": [
-              {
-                "inputVariables": [
-                  "name"
-                ],
-                "promptMessages": [
-                  {
-                    "lc": 1,
-                    "type": "constructor",
-                    "id": [
-                      "langchain",
-                      "prompts",
-                      "chat",
-                      "SystemMessagePromptTemplate"
-                    ],
-                    "arguments": [
-                      {
-                        "lc": 1,
-                        "type": "constructor",
-                        "id": [
-                          "langchain",
-                          "prompts",
-                          "prompt",
-                          "PromptTemplate"
-                        ],
-                        "arguments": [
-                          {
-                            "inputVariables": [
-                              "name"
-                            ],
-                            "templateFormat": "f-string",
-                            "template": "You are talking to {name}."
-                          }
-                        ]
-                      }
-                    ]
-                  },
-                  {
-                    "lc": 1,
-                    "type": "constructor",
-                    "id": [
-                      "langchain",
-                      "prompts",
-                      "chat",
-                      "HumanMessagePromptTemplate"
-                    ],
-                    "arguments": [
-                      {
-                        "lc": 1,
-                        "type": "constructor",
-                        "id": [
-                          "langchain",
-                          "prompts",
-                          "prompt",
-                          "PromptTemplate"
-                        ],
-                        "arguments": [
-                          {
-                            "inputVariables": [],
-                            "templateFormat": "f-string",
-                            "template": "Hello, nice model."
-                          }
-                        ]
-                      }
-                    ]
-                  }
-                ],
-                "partialVariables": {}
-              }
-            ]
-          }
-        }
-      ]
-    }"
-  `);
+  expect(stringify(JSON.parse(str))).toMatchSnapshot();
   const chain2 = await load<LLMChain>(str);
   expect(chain2).toBeInstanceOf(LLMChain);
   expect(JSON.stringify(chain2, null, 2)).toBe(str);
@@ -358,100 +126,7 @@ test("serialize + deserialize llm chain few shot prompt w/ examples", async () =
   });
   const chain = new LLMChain({ llm, prompt });
   const str = JSON.stringify(chain, null, 2);
-  expect(str).toMatchInlineSnapshot(`
-    "{
-      "lc": 1,
-      "type": "constructor",
-      "id": [
-        "langchain",
-        "chains",
-        "llm_chain",
-        "LLMChain"
-      ],
-      "arguments": [
-        {
-          "llm": {
-            "lc": 1,
-            "type": "constructor",
-            "id": [
-              "langchain",
-              "llms",
-              "openai",
-              "OpenAI"
-            ],
-            "arguments": [
-              {
-                "callbacks": [
-                  {
-                    "lc": 1,
-                    "type": "constructor",
-                    "id": [
-                      "langchain",
-                      "callbacks",
-                      "langchain_tracer",
-                      "LangChainTracer"
-                    ],
-                    "arguments": [
-                      {}
-                    ]
-                  }
-                ],
-                "temperature": 0.5,
-                "modelName": "davinci"
-              }
-            ]
-          },
-          "prompt": {
-            "lc": 1,
-            "type": "constructor",
-            "id": [
-              "langchain",
-              "prompts",
-              "few_shot",
-              "FewShotPromptTemplate"
-            ],
-            "arguments": [
-              {
-                "examples": [
-                  {
-                    "yo": "1"
-                  },
-                  {
-                    "yo": "2"
-                  }
-                ],
-                "prefix": "You are a nice assistant",
-                "examplePrompt": {
-                  "lc": 1,
-                  "type": "constructor",
-                  "id": [
-                    "langchain",
-                    "prompts",
-                    "prompt",
-                    "PromptTemplate"
-                  ],
-                  "arguments": [
-                    {
-                      "inputVariables": [
-                        "yo"
-                      ],
-                      "templateFormat": "f-string",
-                      "template": "An example about {yo}"
-                    }
-                  ]
-                },
-                "suffix": "My name is {name}",
-                "inputVariables": [
-                  "yo",
-                  "name"
-                ]
-              }
-            ]
-          }
-        }
-      ]
-    }"
-  `);
+  expect(stringify(JSON.parse(str))).toMatchSnapshot();
   const chain2 = await load<LLMChain>(str);
   expect(chain2).toBeInstanceOf(LLMChain);
   expect(JSON.stringify(chain2, null, 2)).toBe(str);
@@ -476,140 +151,56 @@ test("serialize + deserialize llm chain few shot prompt w/ selector", async () =
   });
   const chain = new LLMChain({ llm, prompt });
   const str = JSON.stringify(chain, null, 2);
-  expect(str).toMatchInlineSnapshot(`
-    "{
-      "lc": 1,
-      "type": "constructor",
-      "id": [
-        "langchain",
-        "chains",
-        "llm_chain",
-        "LLMChain"
-      ],
-      "arguments": [
-        {
-          "llm": {
-            "lc": 1,
-            "type": "constructor",
-            "id": [
-              "langchain",
-              "llms",
-              "openai",
-              "OpenAI"
-            ],
-            "arguments": [
-              {
-                "callbacks": [
-                  {
-                    "lc": 1,
-                    "type": "constructor",
-                    "id": [
-                      "langchain",
-                      "callbacks",
-                      "langchain_tracer",
-                      "LangChainTracer"
-                    ],
-                    "arguments": [
-                      {}
-                    ]
-                  }
-                ],
-                "temperature": 0.5,
-                "modelName": "davinci"
-              }
-            ]
-          },
-          "prompt": {
-            "lc": 1,
-            "type": "constructor",
-            "id": [
-              "langchain",
-              "prompts",
-              "few_shot",
-              "FewShotPromptTemplate"
-            ],
-            "arguments": [
-              {
-                "exampleSelector": {
-                  "lc": 1,
-                  "type": "constructor",
-                  "id": [
-                    "langchain",
-                    "prompts",
-                    "selectors",
-                    "LengthBasedExampleSelector"
-                  ],
-                  "arguments": [
-                    {
-                      "examplePrompt": {
-                        "lc": 1,
-                        "type": "constructor",
-                        "id": [
-                          "langchain",
-                          "prompts",
-                          "prompt",
-                          "PromptTemplate"
-                        ],
-                        "arguments": [
-                          {
-                            "inputVariables": [
-                              "yo"
-                            ],
-                            "templateFormat": "f-string",
-                            "template": "An example about {yo}"
-                          }
-                        ]
-                      }
-                    }
-                  ],
-                  "fields": {
-                    "examples": [
-                      {
-                        "yo": "1"
-                      },
-                      {
-                        "yo": "2"
-                      }
-                    ],
-                    "exampleTextLengths": [
-                      4,
-                      4
-                    ]
-                  }
-                },
-                "prefix": "You are a nice assistant",
-                "examplePrompt": {
-                  "lc": 1,
-                  "type": "constructor",
-                  "id": [
-                    "langchain",
-                    "prompts",
-                    "prompt",
-                    "PromptTemplate"
-                  ],
-                  "arguments": [
-                    {
-                      "inputVariables": [
-                        "yo"
-                      ],
-                      "templateFormat": "f-string",
-                      "template": "An example about {yo}"
-                    }
-                  ]
-                },
-                "suffix": "My name is {name}",
-                "inputVariables": [
-                  "yo",
-                  "name"
-                ]
-              }
-            ]
-          }
-        }
-      ]
-    }"
-  `);
+  expect(stringify(JSON.parse(str))).toMatchSnapshot();
   const chain2 = await load<LLMChain>(str);
   expect(chain2).toBeInstanceOf(LLMChain);
   expect(JSON.stringify(chain2, null, 2)).toBe(str);
+});
+
+test("serialize + deserialize llmchain with output parser", async () => {
+  const llm = new OpenAI({
+    temperature: 0.5,
+    modelName: "davinci",
+    callbacks: [new LangChainTracer()],
+  });
+  const prompt = PromptTemplate.fromTemplate(
+    "An example about {yo} {format_instructions}"
+  );
+  const outputParser = new CommaSeparatedListOutputParser();
+  const chain = new LLMChain({ llm, prompt, outputParser });
+  const str = JSON.stringify(chain, null, 2);
+  expect(stringify(JSON.parse(str))).toMatchSnapshot();
+  const chain2 = await load<LLMChain>(str);
+  expect(chain2).toBeInstanceOf(LLMChain);
+  expect(JSON.stringify(chain2, null, 2)).toBe(str);
+  expect(await chain2.outputParser?.parse("a, b, c")).toEqual(["a", "b", "c"]);
+});
+
+test("serialize + deserialize agent", async () => {
+  const llm = new ChatOpenAI({
+    temperature: 0,
+    modelName: "gpt-4",
+  });
+  const executor = await initializeAgentExecutorWithOptions(
+    [
+      new Calculator(),
+      new RequestsGetTool(),
+      new JsonListKeysTool(new JsonSpec({ a: "b" })),
+    ],
+    llm,
+    {
+      agentType: "chat-conversational-react-description",
+    }
+  );
+  const str = JSON.stringify(executor, null, 2);
+  expect(stringify(JSON.parse(str))).toMatchSnapshot();
+  const executor2 = await load<AgentExecutor>(
+    str,
+    {},
+    {
+      "langchain/tools/calculator": { Calculator },
+    }
+  );
+  expect(executor2).toBeInstanceOf(AgentExecutor);
+  expect(JSON.stringify(executor2, null, 2)).toBe(str);
 });
