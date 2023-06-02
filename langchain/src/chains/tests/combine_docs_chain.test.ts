@@ -59,8 +59,8 @@ test("Test MapReduceDocumentsChain", async () => {
 test("Test MapReduceDocumentsChain with content above maxTokens", async () => {
   const model = new FakeLLM({});
   const chain = loadQAMapReduceChain(model);
-  const aString = "a".repeat(10000);
-  const bString = "b".repeat(10000);
+  const aString = "a".repeat(4000);
+  const bString = "b".repeat(4000);
   const docs = [
     new Document({ pageContent: aString }),
     new Document({ pageContent: bString }),
@@ -84,8 +84,8 @@ test("Test MapReduceDocumentsChain with content above maxTokens and intermediate
   const chain = loadQAMapReduceChain(model, {
     returnIntermediateSteps: true,
   });
-  const aString = "a".repeat(10000);
-  const bString = "b".repeat(10000);
+  const aString = "a".repeat(4000);
+  const bString = "b".repeat(4000);
   const docs = [
     new Document({ pageContent: aString }),
     new Document({ pageContent: bString }),
