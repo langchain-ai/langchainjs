@@ -100,7 +100,7 @@ export abstract class BaseLLM extends BaseLanguageModel {
     );
     const invocationParams = { invocation_params: this?.invocationParams() };
     const runManager = await callbackManager_?.handleLLMStart(
-      { name: this._llmType() },
+      this.toJSON(),
       prompts,
       undefined,
       undefined,

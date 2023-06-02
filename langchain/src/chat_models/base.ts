@@ -76,7 +76,7 @@ export abstract class BaseChatModel extends BaseLanguageModel {
     );
     const invocationParams = { invocation_params: this?.invocationParams() };
     const runManager = await callbackManager_?.handleChatModelStart(
-      { name: this._llmType() },
+      this.toJSON(),
       messages,
       undefined,
       undefined,

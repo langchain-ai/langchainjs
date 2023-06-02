@@ -6,7 +6,11 @@ import {
   ChainValues,
   LLMResult,
 } from "../schema/index.js";
-import { Serializable, Serialized } from "../schema/load.js";
+import {
+  Serializable,
+  Serialized,
+  SerializedNotImplemented,
+} from "../schema/load.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Error = any;
@@ -23,7 +27,7 @@ abstract class BaseCallbackHandlerMethodsClass {
    * and the run ID.
    */
   handleLLMStart?(
-    llm: { name: string },
+    llm: Serialized,
     prompts: string[],
     runId: string,
     parentRunId?: string,
@@ -62,7 +66,7 @@ abstract class BaseCallbackHandlerMethodsClass {
    * and the run ID.
    */
   handleChatModelStart?(
-    llm: { name: string },
+    llm: Serialized,
     messages: BaseChatMessage[][],
     runId: string,
     parentRunId?: string,
@@ -74,7 +78,7 @@ abstract class BaseCallbackHandlerMethodsClass {
    * and the run ID.
    */
   handleChainStart?(
-    chain: { name: string },
+    chain: Serialized,
     inputs: ChainValues,
     runId: string,
     parentRunId?: string
@@ -103,7 +107,7 @@ abstract class BaseCallbackHandlerMethodsClass {
    * and the run ID.
    */
   handleToolStart?(
-    tool: { name: string },
+    tool: Serialized,
     input: string,
     runId: string,
     parentRunId?: string
@@ -211,6 +215,10 @@ export abstract class BaseCallbackHandler
 
   toJSON(): Serialized {
     return Serializable.prototype.toJSON.call(this);
+  }
+
+  toJSONNotImplemented(): SerializedNotImplemented {
+    return Serializable.prototype.toJSONNotImplemented.call(this);
   }
 
   static fromMethods(methods: CallbackHandlerMethods) {

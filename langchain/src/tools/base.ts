@@ -41,7 +41,7 @@ export abstract class StructuredTool<
       { verbose: this.verbose }
     );
     const runManager = await callbackManager_?.handleToolStart(
-      { name: this.name },
+      this.toJSON(),
       typeof parsed === "string" ? parsed : JSON.stringify(parsed)
     );
     let result;

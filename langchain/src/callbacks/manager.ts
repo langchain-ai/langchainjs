@@ -19,6 +19,7 @@ import {
   LangChainTracerFields,
 } from "./handlers/tracer_langchain.js";
 import { consumeCallback } from "./promises.js";
+import { Serialized } from "../schema/load.js";
 
 type BaseCallbackManagerMethods = {
   [K in keyof CallbackHandlerMethods]?: (
@@ -319,7 +320,7 @@ export class CallbackManager
   }
 
   async handleLLMStart(
-    llm: { name: string },
+    llm: Serialized,
     prompts: string[],
     runId: string = uuidv4(),
     _parentRunId: string | undefined = undefined,
@@ -355,7 +356,7 @@ export class CallbackManager
   }
 
   async handleChatModelStart(
-    llm: { name: string },
+    llm: Serialized,
     messages: BaseChatMessage[][],
     runId: string = uuidv4(),
     _parentRunId: string | undefined = undefined,
@@ -403,7 +404,7 @@ export class CallbackManager
   }
 
   async handleChainStart(
-    chain: { name: string },
+    chain: Serialized,
     inputs: ChainValues,
     runId = uuidv4()
   ): Promise<CallbackManagerForChainRun> {
@@ -436,7 +437,7 @@ export class CallbackManager
   }
 
   async handleToolStart(
-    tool: { name: string },
+    tool: Serialized,
     input: string,
     runId = uuidv4()
   ): Promise<CallbackManagerForToolRun> {
@@ -619,7 +620,14 @@ export class TraceGroup {
   ): Promise<CallbackManagerForChainRun> {
     const cb = new LangChainTracer(options);
     const cm = await CallbackManager.configure([cb]);
-    const runManager = await cm?.handleChainStart({ name: group_name }, {});
+    const runManager = await cm?.handleChainStart(
+      {
+        lc: 1,
+        type: "not_implemented",
+        id: ["langchain", "callbacks", "groups", group_name],
+      },
+      {}
+    );
     if (!runManager) {
       throw new Error("Failed to create run group callback manager.");
     }

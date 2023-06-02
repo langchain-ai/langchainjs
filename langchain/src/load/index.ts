@@ -1,6 +1,7 @@
 import {
   SerializedConstructor,
   SerializedFunction,
+  SerializedNotImplemented,
   SerializedSecret,
 } from "../schema/load.js";
 import { optionalImportEntrypoints } from "./import_constants.js";
@@ -16,6 +17,38 @@ async function reviver(
 ): Promise<unknown> {
   const { optionalImportsMap, secretsMap } = this;
   if (
+    typeof value === "object" &&
+    value !== null &&
+    !Array.isArray(value) &&
+    "lc" in value &&
+    "type" in value &&
+    "id" in value &&
+    value.lc === 1 &&
+    value.type === "secret"
+  ) {
+    const serialized = value as SerializedSecret;
+    const [key] = serialized.id;
+    if (key in secretsMap) {
+      return secretsMap[key as keyof SecretMap];
+    } else {
+      throw new Error(`Missing key "${key}" in load(secretsMap={})`);
+    }
+  } else if (
+    typeof value === "object" &&
+    value !== null &&
+    !Array.isArray(value) &&
+    "lc" in value &&
+    "type" in value &&
+    "id" in value &&
+    value.lc === 1 &&
+    value.type === "not_implemented"
+  ) {
+    const serialized = value as SerializedNotImplemented;
+    const str = JSON.stringify(serialized);
+    throw new Error(
+      `Trying to load an object that doesn't implement serialization: ${str}`
+    );
+  } else if (
     typeof value === "object" &&
     value !== null &&
     !Array.isArray(value) &&
@@ -103,23 +136,6 @@ async function reviver(
       return (builder as any)(...args);
     } else {
       throw new Error(`Invalid type: ${str}`);
-    }
-  } else if (
-    typeof value === "object" &&
-    value !== null &&
-    !Array.isArray(value) &&
-    "lc" in value &&
-    "type" in value &&
-    "id" in value &&
-    value.lc === 1 &&
-    value.type === "secret"
-  ) {
-    const serialized = value as SerializedSecret;
-    const [key] = serialized.id;
-    if (key in secretsMap) {
-      return secretsMap[key as keyof SecretMap];
-    } else {
-      throw new Error(`Missing key "${key}" in load(secretsMap={})`);
     }
   } else if (typeof value === "object" && value !== null) {
     if (Array.isArray(value)) {

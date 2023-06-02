@@ -24,8 +24,10 @@ export interface JsonMarkdownFormatInstructionsOptions
 export class StructuredOutputParser<
   T extends z.ZodTypeAny
 > extends BaseOutputParser<z.infer<T>> {
-  get lc_namespace(): string[] {
-    throw new Error("Method not implemented.");
+  lc_namespace = ["langchain", "output_parsers", "structured"];
+
+  toJSON() {
+    return this.toJSONNotImplemented();
   }
 
   constructor(public schema: T) {

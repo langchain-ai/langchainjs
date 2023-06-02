@@ -119,7 +119,7 @@ export abstract class BaseChain extends BaseLangChain implements ChainInputs {
       { verbose: this.verbose }
     );
     const runManager = await callbackManager_?.handleChainStart(
-      { name: this._chainType() },
+      this.toJSON(),
       fullValues
     );
     let outputValues;

@@ -1,5 +1,6 @@
 import { test, expect } from "@jest/globals";
 import { stringify } from "yaml";
+import { z } from "zod";
 
 import { load } from "../index.js";
 import { OpenAI, PromptLayerOpenAI } from "../../llms/openai.js";
@@ -23,6 +24,7 @@ import { RequestsGetTool } from "../../tools/requests.js";
 import { JsonListKeysTool, JsonSpec } from "../../tools/json.js";
 import { AgentExecutor } from "../../agents/executor.js";
 import { CommaSeparatedListOutputParser } from "../../output_parsers/list.js";
+import { StructuredOutputParser } from "../../output_parsers/structured.js";
 
 test("serialize + deserialize llm", async () => {
   const llm = new PromptLayerOpenAI({
@@ -174,6 +176,28 @@ test("serialize + deserialize llmchain with output parser", async () => {
   expect(chain2).toBeInstanceOf(LLMChain);
   expect(JSON.stringify(chain2, null, 2)).toBe(str);
   expect(await chain2.outputParser?.parse("a, b, c")).toEqual(["a", "b", "c"]);
+});
+
+test("serialize + deserialize llmchain with struct output parser throws", async () => {
+  const llm = new OpenAI({
+    temperature: 0.5,
+    modelName: "davinci",
+    callbacks: [new LangChainTracer()],
+  });
+  const prompt = PromptTemplate.fromTemplate(
+    "An example about {yo} {format_instructions}"
+  );
+  const outputParser = new StructuredOutputParser(
+    z.object({
+      a: z.string(),
+    })
+  );
+  const chain = new LLMChain({ llm, prompt, outputParser });
+  const str = JSON.stringify(chain, null, 2);
+  expect(stringify(JSON.parse(str))).toMatchSnapshot();
+  await expect(load<LLMChain>(str)).rejects.toThrow(
+    'Trying to load an object that doesn\'t implement serialization: {"lc":1,"type":"not_implemented","id":["langchain","output_parsers","structured","StructuredOutputParser"]}'
+  );
 });
 
 test("serialize + deserialize agent", async () => {

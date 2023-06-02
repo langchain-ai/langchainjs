@@ -715,3 +715,58 @@ arguments:
       arguments: []
 "
 `;
+
+exports[`serialize + deserialize llmchain with struct output parser throws 1`] = `
+"lc: 1
+type: constructor
+id:
+  - langchain
+  - chains
+  - llm_chain
+  - LLMChain
+arguments:
+  - llm:
+      lc: 1
+      type: constructor
+      id:
+        - langchain
+        - llms
+        - openai
+        - OpenAI
+      arguments:
+        - callbacks:
+            - lc: 1
+              type: constructor
+              id:
+                - langchain
+                - callbacks
+                - langchain_tracer
+                - LangChainTracer
+              arguments:
+                - {}
+          temperature: 0.5
+          modelName: davinci
+    prompt:
+      lc: 1
+      type: constructor
+      id:
+        - langchain
+        - prompts
+        - prompt
+        - PromptTemplate
+      arguments:
+        - inputVariables:
+            - yo
+            - format_instructions
+          templateFormat: f-string
+          template: An example about {yo} {format_instructions}
+    outputParser:
+      lc: 1
+      type: not_implemented
+      id:
+        - langchain
+        - output_parsers
+        - structured
+        - StructuredOutputParser
+"
+`;

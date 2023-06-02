@@ -19,10 +19,14 @@ export interface SerializedFunction extends BaseSerialized<"function"> {
 
 export interface SerializedSecret extends BaseSerialized<"secret"> {}
 
+export interface SerializedNotImplemented
+  extends BaseSerialized<"not_implemented"> {}
+
 export type Serialized =
   | SerializedConstructor
   | SerializedFunction
-  | SerializedSecret;
+  | SerializedSecret
+  | SerializedNotImplemented;
 
 function shallowCopy<T extends object>(obj: T): T {
   return Array.isArray(obj) ? ([...obj] as T) : ({ ...obj } as T);
@@ -88,6 +92,14 @@ export abstract class Serializable {
         acc[key] = this[key as keyof this];
         return acc;
       }, {} as SerializedFields),
+    };
+  }
+
+  toJSONNotImplemented(): SerializedNotImplemented {
+    return {
+      lc: 1,
+      type: "not_implemented",
+      id: [...this.lc_namespace, this.constructor.name],
     };
   }
 }

@@ -10,52 +10,132 @@ exports[`Test serialize 1`] = `
   "prompt_messages": [
     {
       "_type": "SystemMessagePromptTemplate",
-      "prompt": {
-        "inputVariables": [
-          "context",
-        ],
-        "template": "Here's some context: {context}",
-        "templateFormat": "f-string",
-        "validateTemplate": true,
-      },
+      "arguments": [
+        {
+          "arguments": [
+            {
+              "inputVariables": [
+                "context",
+              ],
+              "template": "Here's some context: {context}",
+            },
+          ],
+          "id": [
+            "langchain",
+            "prompts",
+            "prompt",
+            "PromptTemplate",
+          ],
+          "lc": 1,
+          "type": "constructor",
+        },
+      ],
+      "id": [
+        "langchain",
+        "prompts",
+        "chat",
+        "SystemMessagePromptTemplate",
+      ],
+      "lc": 1,
+      "type": "constructor",
     },
     {
       "_type": "HumanMessagePromptTemplate",
-      "prompt": {
-        "inputVariables": [
-          "foo",
-          "bar",
-          "context",
-        ],
-        "template": "Hello {foo}, I'm {bar}. Thanks for the {context}",
-        "templateFormat": "f-string",
-        "validateTemplate": true,
-      },
+      "arguments": [
+        {
+          "arguments": [
+            {
+              "inputVariables": [
+                "foo",
+                "bar",
+                "context",
+              ],
+              "template": "Hello {foo}, I'm {bar}. Thanks for the {context}",
+            },
+          ],
+          "id": [
+            "langchain",
+            "prompts",
+            "prompt",
+            "PromptTemplate",
+          ],
+          "lc": 1,
+          "type": "constructor",
+        },
+      ],
+      "id": [
+        "langchain",
+        "prompts",
+        "chat",
+        "HumanMessagePromptTemplate",
+      ],
+      "lc": 1,
+      "type": "constructor",
     },
     {
       "_type": "AIMessagePromptTemplate",
-      "prompt": {
-        "inputVariables": [
-          "foo",
-          "bar",
-        ],
-        "template": "I'm an AI. I'm {foo}. I'm {bar}.",
-        "templateFormat": "f-string",
-        "validateTemplate": true,
-      },
+      "arguments": [
+        {
+          "arguments": [
+            {
+              "inputVariables": [
+                "foo",
+                "bar",
+              ],
+              "template": "I'm an AI. I'm {foo}. I'm {bar}.",
+            },
+          ],
+          "id": [
+            "langchain",
+            "prompts",
+            "prompt",
+            "PromptTemplate",
+          ],
+          "lc": 1,
+          "type": "constructor",
+        },
+      ],
+      "id": [
+        "langchain",
+        "prompts",
+        "chat",
+        "AIMessagePromptTemplate",
+      ],
+      "lc": 1,
+      "type": "constructor",
     },
     {
       "_type": "ChatMessagePromptTemplate",
-      "prompt": {
-        "inputVariables": [
-          "foo",
-          "bar",
-        ],
-        "template": "I'm a generic message. I'm {foo}. I'm {bar}.",
-        "templateFormat": "f-string",
-        "validateTemplate": true,
-      },
-      "role": "test",
+      "arguments": [
+        {
+          "arguments": [
+            {
+              "inputVariables": [
+                "foo",
+                "bar",
+              ],
+              "template": "I'm a generic message. I'm {foo}. I'm {bar}.",
+            },
+          ],
+          "id": [
+            "langchain",
+            "prompts",
+            "prompt",
+            "PromptTemplate",
+          ],
+          "lc": 1,
+          "type": "constructor",
+        },
+        "test",
+      ],
+      "id": [
+        "langchain",
+        "prompts",
+        "chat",
+        "ChatMessagePromptTemplate",
+      ],
+      "lc": 1,
+      "type": "constructor",
     },
   ],
 }
