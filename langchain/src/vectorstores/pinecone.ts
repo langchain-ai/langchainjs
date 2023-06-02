@@ -57,13 +57,15 @@ export class PineconeStore extends VectorStore {
     const documentIds = ids == null ? documents.map(() => uuid.v4()) : ids;
     const pineconeVectors = vectors.map((values, idx) => {
       // Pinecone doesn't support nested objects, so we flatten them
-      const documentMetadata = {...documents[idx].metadata};
+      const documentMetadata = { ...documents[idx].metadata };
       // preserve string arrays which are allowed
       const stringArrays: Record<string, string[]> = {};
       for (const key of Object.keys(documentMetadata)) {
-        if (Array.isArray(documentMetadata[key]) &&
+        if (
+          Array.isArray(documentMetadata[key]) &&
           // eslint-disable-next-line @typescript-eslint/ban-types, @typescript-eslint/no-explicit-any
-          documentMetadata[key].every((el: any) => typeof el === "string")) {
+          documentMetadata[key].every((el: any) => typeof el === "string")
+        ) {
           stringArrays[key] = documentMetadata[key];
           delete documentMetadata[key];
         }

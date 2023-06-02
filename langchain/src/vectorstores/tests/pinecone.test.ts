@@ -91,7 +91,7 @@ test("PineconeSo with string arrays", async () => {
           a: 1,
           b: { nested: [1, { a: 4 }] },
           c: ["some", "string", "array"],
-          d: [ 1, { nested: 2 }, "string" ],
+          d: [1, { nested: 2 }, "string"],
         },
       },
     ],
@@ -104,13 +104,19 @@ test("PineconeSo with string arrays", async () => {
       vectors: [
         {
           id: "id1",
-          metadata: { a: 1, "b.nested.0": 1, "b.nested.1.a": 4,
-                      c: ["some", "string", "array"],
-                      "d.0": 1, "d.1.nested": 2, "d.2": "string",
-                      text: "hello" },
+          metadata: {
+            a: 1,
+            "b.nested.0": 1,
+            "b.nested.1.a": 4,
+            c: ["some", "string", "array"],
+            "d.0": 1,
+            "d.1.nested": 2,
+            "d.2": "string",
+            text: "hello",
+          },
           values: [0.1, 0.2, 0.3, 0.4],
         },
       ],
     },
   });
-})
+});
