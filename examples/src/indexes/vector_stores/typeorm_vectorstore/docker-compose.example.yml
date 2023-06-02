@@ -6,6 +6,6 @@ services:
     volumes:
       - ./data:/var/lib/postgresql/data
     environment:
-      - POSTGRES_PASSWORD="!ChangeMe!"
-      - POSTGRES_USER="myuser"
-      - POSTGRES_DB="api"
+      - POSTGRES_PASSWORD=ChangeMe
+      - POSTGRES_USER=myuser
+      - POSTGRES_DB=api

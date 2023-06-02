@@ -456,6 +456,7 @@
     "mysql2": "^3.3.3",
     "pdf-parse": "1.1.1",
     "peggy": "^3.0.2",
+    "pg": "^8.11.0",
     "pickleparser": "^0.1.0",
     "playwright": "^1.32.1",
     "prettier": "^2.8.3",
@@ -629,6 +630,9 @@
       "optional": true
     },
     "peggy": {
+      "optional": true
+    },
+    "pg": {
       "optional": true
     },
     "pickleparser": {

@@ -1,6 +1,6 @@
 import { expect, test } from "@jest/globals";
 import { DataSourceOptions } from "typeorm";
-import { OpenAIEmbeddings } from "../../embeddings/index.js";
+import { OpenAIEmbeddings } from "../../embeddings/openai.js";
 import { TypeORMVectorStore } from "../typeorm.js";
 
 test.skip("Test embeddings creation", async () => {
@@ -10,7 +10,7 @@ test.skip("Test embeddings creation", async () => {
       host: "localhost",
       port: 5432,
       username: "myuser",
-      password: "!ChangeMe!",
+      password: "ChangeMe",
       database: "api",
     } as DataSourceOptions,
     tableName: "testlangchain",
@@ -19,10 +19,6 @@ test.skip("Test embeddings creation", async () => {
   const typeormVectorStore = await TypeORMVectorStore.fromDataSource(
     new OpenAIEmbeddings(),
     args
-  );
-
-  await typeormVectorStore.appDataSource.query(
-    'TRUNCATE TABLE "testlangchain"'
   );
 
   expect(typeormVectorStore).toBeDefined();
@@ -46,6 +42,10 @@ test.skip("Test embeddings creation", async () => {
   expect(results).toHaveLength(1);
 
   expect(results[0].pageContent).toEqual(docCat.pageContent);
+
+  await typeormVectorStore.appDataSource.query(
+    'TRUNCATE TABLE "testlangchain"'
+  );
 
   await typeormVectorStore.appDataSource.destroy();
 });

@@ -12,7 +12,7 @@ export const run = async () => {
       host: "localhost",
       port: 5432,
       username: "myuser",
-      password: "!ChangeMe!",
+      password: "ChangeMe",
       database: "api",
     } as DataSourceOptions,
   };

@@ -3,6 +3,7 @@ import { DataSource, DataSourceOptions, EntitySchema } from "typeorm";
 import { VectorStore } from "./base.js";
 import { Embeddings } from "../embeddings/base.js";
 import { Document } from "../document.js";
+import { getEnvironmentVariable } from "../util/env.js";
 
 export interface TypeORMVectorStoreArgs {
   postgresConnectionOptions: DataSourceOptions;
@@ -64,10 +65,9 @@ export class TypeORMVectorStore extends VectorStore {
     this.documentEntity = TypeORMDocumentEntity;
 
     this._verbose =
-      typeof process !== "undefined"
-        ? // eslint-disable-next-line no-process-env
-          process.env?.LANGCHAIN_VERBOSE !== undefined
-        : fields?.verbose ?? false;
+      getEnvironmentVariable("LANGCHAIN_VERBOSE") === "true" ??
+      fields.verbose ??
+      false;
   }
 
   static async fromDataSource(
