@@ -157,6 +157,48 @@ const res = await model.call(
 );
 ```
 
+You can also pass in the optional `returnPromptLayerId` boolean to get a `promptLayerRequestId` like below
+
+```typescript
+import { PromptLayerOpenAI } from "langchain/llms/openai";
+
+const model = new PromptLayerOpenAI({
+  temperature: 0.9,
+  openAIApiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.OPENAI_API_KEY
+  promptLayerApiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.PROMPTLAYER_API_KEY
+  returnPromptLayerId: true,
+});
+const res = await model.generate([
+  "What would be a good company name a company that makes colorful socks?",
+]);
+
+console.log(JSON.stringify(res, null, 3));
+
+/*
+  {
+    "generations": [
+      [
+        {
+          "text": " Socktastic!",
+          "generationInfo": {
+            "finishReason": "stop",
+            "logprobs": null,
+            "promptLayerRequestId": 2066417
+          }
+        }
+      ]
+    ],
+    "llmOutput": {
+      "tokenUsage": {
+        "completionTokens": 5,
+        "promptTokens": 23,
+        "totalTokens": 28
+      }
+    }
+  }
+*/
+```
+
 ### Azure `PromptLayerOpenAI`
 
 LangChain integrates with PromptLayer for logging and debugging prompts and responses. To add support for PromptLayer:
