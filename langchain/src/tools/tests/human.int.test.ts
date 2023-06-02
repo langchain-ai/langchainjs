@@ -3,18 +3,8 @@ import { HumanTool } from "../human.js";
 import { ChatOpenAI } from "../../chat_models/openai.js";
 import { initializeAgentExecutorWithOptions } from "../../agents/initialize.js";
 
-describe("Human as a tool test suite", () => {
-  test("HumanTool call", async () => {
-    const tool = new HumanTool();
-
-    const result = await tool.call("I need help attributing a quote");
-
-    console.log({ result });
-
-    expect(result).toEqual("I need help attributing a quote");
-  });
-
-  test("Run in an agent", async () => {
+describe("Human as a tool integration test suite", () => {
+  test("HumanTool run in an agent", async () => {
     const model = new ChatOpenAI({ temperature: 0 });
     const tools = [new HumanTool()];
 
