@@ -19,10 +19,16 @@ const UNSTRUCTURED_API_FILETYPES = [
   ".jpeg",
   ".eml",
   ".html",
+  ".htm",
   ".md",
   ".pptx",
   ".ppt",
   ".msg",
+  ".rtf",
+  ".xlsx",
+  ".xls",
+  ".odt",
+  ".epub",
 ];
 
 type Element = {

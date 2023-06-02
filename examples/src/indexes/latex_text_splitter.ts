@@ -1,4 +1,4 @@
-import { LatexTextSplitter } from "langchain/text_splitter";
+import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 
 const text = `\\begin{document}
 \\title{🦜️🔗 LangChain}
@@ -15,7 +15,7 @@ As an open source project in a rapidly developing field, we are extremely open t
 
 \\end{document}`;
 
-const splitter = new LatexTextSplitter({
+const splitter = RecursiveCharacterTextSplitter.fromLanguage("latex", {
   chunkSize: 100,
   chunkOverlap: 0,
 });
@@ -24,30 +24,31 @@ const output = await splitter.createDocuments([text]);
 console.log(output);
 
 /*
-[
-  Document {
-    pageContent: '\\begin{document}\n' +
-      '\\title{🦜️🔗 LangChain}\n' +
-      '⚡ Building applications with LLMs through composability ⚡',
-    metadata: { loc: [Object] }
-  },
-  Document {
-    pageContent: 'Quick Install}',
-    metadata: { loc: [Object] }
-  },
-  Document {
-    pageContent: "Hopefully this code block isn't split\n" +
-      'yarn add langchain\n' +
-      '\\end{verbatim}\n' +
-      '\n' +
-      'As an open source project in a rapidly',
-    metadata: { loc: [Object] }
-  },
-  Document {
-    pageContent: 'developing field, we are extremely open to contributions.\n' +
-      '\n' +
-      '\\end{document}',
-    metadata: { loc: [Object] }
-  }
-]
+  [
+    Document {
+      pageContent: '\\begin{document}\n' +
+        '\\title{🦜️🔗 LangChain}\n' +
+        '⚡ Building applications with LLMs through composability ⚡',
+      metadata: { loc: [Object] }
+    },
+    Document {
+      pageContent: '\\section{Quick Install}',
+      metadata: { loc: [Object] }
+    },
+    Document {
+      pageContent: '\\begin{verbatim}\n' +
+        "Hopefully this code block isn't split\n" +
+        'yarn add langchain\n' +
+        '\\end{verbatim}',
+      metadata: { loc: [Object] }
+    },
+    Document {
+      pageContent: 'As an open source project in a rapidly developing field, we are extremely open to contributions.',
+      metadata: { loc: [Object] }
+    },
+    Document {
+      pageContent: '\\end{document}',
+      metadata: { loc: [Object] }
+    }
+  ]
 */

@@ -5293,6 +5293,50 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@getzep/zep-js@npm:0.3.1, @getzep/zep-js@npm:^0.3.1":
+  version: 0.3.1
+  resolution: "@getzep/zep-js@npm:0.3.1"
+  dependencies:
+    axios: ^1.4.0
+    typescript: ^5.0.4
+  checksum: 796df18baf3458d5e3887de9519b7d943e38d46f9f57b3515fa7fc5f8731271816b10d8868af6ef8e927345c409c5c865d8953781b88dd6889c159d6bfff9e48
+  languageName: node
+  linkType: hard
+
+"@gomomento/generated-types@npm:0.62.1":
+  version: 0.62.1
+  resolution: "@gomomento/generated-types@npm:0.62.1"
+  dependencies:
+    "@grpc/grpc-js": 1.8.14
+    "@types/google-protobuf": 3.15.6
+    google-protobuf: 3.21.2
+  checksum: 7ffb49da9e196be6127b835dbbf7376a50fa28efba5db2b8b10be14bc99a2faec3216d4cd3a75308ce14ee34d8b7fb322f595292c7f603ba5d00d2c45c98c319
+  languageName: node
+  linkType: hard
+
+"@gomomento/sdk-core@npm:1.23.0":
+  version: 1.23.0
+  resolution: "@gomomento/sdk-core@npm:1.23.0"
+  dependencies:
+    buffer: ^6.0.3
+    jwt-decode: 3.1.2
+  checksum: 2edc270fa61bc528fbba538836b53cc4fd4980bca3290ff7fbdd5c2832d42044189dc936ffa0b446cc8599fcad8ac880763c3ec37cd27667d80f2dd18e8abce8
+  languageName: node
+  linkType: hard
+
+"@gomomento/sdk@npm:^1.23.0":
+  version: 1.23.0
+  resolution: "@gomomento/sdk@npm:1.23.0"
+  dependencies:
+    "@gomomento/generated-types": 0.62.1
+    "@gomomento/sdk-core": 1.23.0
+    "@grpc/grpc-js": 1.8.14
+    google-protobuf: 3.21.2
+    jwt-decode: 3.1.2
+  checksum: 5704ffcfaec1ff0e82d853e01ac500be9f0ea78fb74cdd6af41ba91b50a32884310d7ac12eddb0eeabf5ef5b9c68d660f5393f3219a67214c4c728d5331607e7
+  languageName: node
+  linkType: hard
+
 "@graphql-typed-document-node/core@npm:^3.1.1":
   version: 3.2.0
   resolution: "@graphql-typed-document-node/core@npm:3.2.0"
@@ -5302,7 +5346,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@grpc/grpc-js@npm:^1.6.10, @grpc/grpc-js@npm:^1.8.14":
+"@grpc/grpc-js@npm:1.8.14, @grpc/grpc-js@npm:^1.8.14":
   version: 1.8.14
   resolution: "@grpc/grpc-js@npm:1.8.14"
   dependencies:
@@ -7518,17 +7562,17 @@ __metadata:
   linkType: hard
 
 "@tigrisdata/core@npm:latest":
-  version: 1.0.0
-  resolution: "@tigrisdata/core@npm:1.0.0"
+  version: 1.2.4
+  resolution: "@tigrisdata/core@npm:1.2.4"
   dependencies:
-    "@grpc/grpc-js": ^1.6.10
+    "@grpc/grpc-js": ^1.8.14
     app-root-path: ^3.1.0
     chalk: 4.1.2
     dotenv: ^16.0.3
     google-protobuf: ^3.21.0
     json-bigint: "github:sidorares/json-bigint"
     reflect-metadata: ^0.1.13
-  checksum: bfee9d3dc5f5fc786a9716315add31e7cca62faec1abd99bc82f132923d2eb4846c5c01218dc6ab3b8302fa336744791edc713780c90723514d60c088831a6bf
+  checksum: 0a6905418dd7d01b0d1db235bb92c924a845f76ccecdee2693d875b907d1c428d9e22cece009ad8ecc2c38ad63abf4f681c89c1c0dbb5a6ce75f669ea29a8de7
   languageName: node
   linkType: hard
 
@@ -7785,6 +7829,13 @@ __metadata:
     "@types/minimatch": ^5.1.2
     "@types/node": "*"
   checksum: 9101f3a9061e40137190f70626aa0e202369b5ec4012c3fabe6f5d229cce04772db9a94fa5a0eb39655e2e4ad105c38afbb4af56a56c0996a8c7d4fc72350e3d
+  languageName: node
+  linkType: hard
+
+"@types/google-protobuf@npm:3.15.6":
+  version: 3.15.6
+  resolution: "@types/google-protobuf@npm:3.15.6"
+  checksum: e8f7cd9d263093cd0a72eb10ff0bb8221e28aa8b9f601eddbe19b286932aae96fbc9ccb1f3a744525e7811fa87a6aeefd431858b6e2034f14a2dc68710a86d54
   languageName: node
   linkType: hard
 
@@ -9645,6 +9696,17 @@ __metadata:
     form-data: ^4.0.0
     proxy-from-env: ^1.1.0
   checksum: 7440edefcf8498bc3cdf39de00443e8101f249972c83b739c6e880d9d669fea9486372dbe8739e88b3bf8bb1ad15f6106693f206f078f4516fe8fd47b1c3093c
+  languageName: node
+  linkType: hard
+
+"axios@npm:^1.4.0":
+  version: 1.4.0
+  resolution: "axios@npm:1.4.0"
+  dependencies:
+    follow-redirects: ^1.15.0
+    form-data: ^4.0.0
+    proxy-from-env: ^1.1.0
+  checksum: 7fb6a4313bae7f45e89d62c70a800913c303df653f19eafec88e56cea2e3821066b8409bc68be1930ecca80e861c52aa787659df0ffec6ad4d451c7816b9386b
   languageName: node
   linkType: hard
 
@@ -12102,6 +12164,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"denque@npm:^2.1.0":
+  version: 2.1.0
+  resolution: "denque@npm:2.1.0"
+  checksum: 1d4ae1d05e59ac3a3481e7b478293f4b4c813819342273f3d5b826c7ffa9753c520919ba264f377e09108d24ec6cf0ec0ac729a5686cbb8f32d797126c5dae74
+  languageName: node
+  linkType: hard
+
 "depd@npm:2.0.0, depd@npm:^2.0.0":
   version: 2.0.0
   resolution: "depd@npm:2.0.0"
@@ -13911,6 +13980,8 @@ __metadata:
   dependencies:
     "@clickhouse/client": ^0.0.14
     "@getmetal/metal-sdk": ^4.0.0
+    "@getzep/zep-js": 0.3.1
+    "@gomomento/sdk": ^1.23.0
     "@opensearch-project/opensearch": ^2.2.0
     "@pinecone-database/pinecone": ^0.0.14
     "@prisma/client": ^4.11.0
@@ -13937,6 +14008,7 @@ __metadata:
     langchain: "workspace:*"
     ml-distance: ^4.0.0
     mongodb: ^5.2.0
+    mysql2: ^3.3.3
     pickleparser: ^0.1.0
     prettier: ^2.8.3
     prisma: ^4.11.0
@@ -14793,6 +14865,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"generate-function@npm:^2.3.1":
+  version: 2.3.1
+  resolution: "generate-function@npm:2.3.1"
+  dependencies:
+    is-property: ^1.0.2
+  checksum: 652f083de206ead2bae4caf9c7eeb465e8d98c0b8ed2a29c6afc538cef0785b5c6eea10548f1e13cc586d3afd796c13c830c2cb3dc612ec2457b2aadda5f57c9
+  languageName: node
+  linkType: hard
+
 "generic-pool@npm:3.9.0":
   version: 3.9.0
   resolution: "generic-pool@npm:3.9.0"
@@ -15145,7 +15226,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"google-protobuf@npm:^3.21.0":
+"google-protobuf@npm:3.21.2, google-protobuf@npm:^3.21.0":
   version: 3.21.2
   resolution: "google-protobuf@npm:3.21.2"
   checksum: 3caa2e1e2654714cc1a201ac5e5faabcaa48f5fba3d8ff9b64ca66fe19e4e0506b94053f32eddc77bf3a7a47ac1660315c6744185c1e2bb27654fd76fe91b988
@@ -16443,6 +16524,13 @@ __metadata:
   version: 1.0.1
   resolution: "is-potential-custom-element-name@npm:1.0.1"
   checksum: ced7bbbb6433a5b684af581872afe0e1767e2d1146b2207ca0068a648fb5cab9d898495d1ac0583524faaf24ca98176a7d9876363097c2d14fee6dd324f3a1ab
+  languageName: node
+  linkType: hard
+
+"is-property@npm:^1.0.2":
+  version: 1.0.2
+  resolution: "is-property@npm:1.0.2"
+  checksum: 33b661a3690bcc88f7e47bb0a21b9e3187e76a317541ea7ec5e8096d954f441b77a46d8930c785f7fbf4ef8dfd624c25495221e026e50f74c9048fe501773be5
   languageName: node
   linkType: hard
 
@@ -18145,6 +18233,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"jwt-decode@npm:3.1.2":
+  version: 3.1.2
+  resolution: "jwt-decode@npm:3.1.2"
+  checksum: 20a4b072d44ce3479f42d0d2c8d3dabeb353081ba4982e40b83a779f2459a70be26441be6c160bfc8c3c6eadf9f6380a036fbb06ac5406b5674e35d8c4205eeb
+  languageName: node
+  linkType: hard
+
 "keyv@npm:^3.0.0":
   version: 3.1.0
   resolution: "keyv@npm:3.1.0"
@@ -18203,11 +18298,14 @@ __metadata:
     "@clickhouse/client": ^0.0.14
     "@faker-js/faker": ^7.6.0
     "@getmetal/metal-sdk": ^4.0.0
+    "@getzep/zep-js": ^0.3.1
+    "@gomomento/sdk": ^1.23.0
     "@huggingface/inference": ^1.5.1
     "@jest/globals": ^29.5.0
     "@opensearch-project/opensearch": ^2.2.0
     "@pinecone-database/pinecone": ^0.0.14
     "@qdrant/js-client-rest": ^1.2.0
+    "@supabase/postgrest-js": ^1.1.1
     "@supabase/supabase-js": ^2.10.0
     "@tensorflow-models/universal-sentence-encoder": ^1.3.3
     "@tensorflow/tfjs-backend-cpu": ^4.4.0
@@ -18254,14 +18352,15 @@ __metadata:
     js-tiktoken: ^1.0.6
     jsonpointer: ^5.0.1
     mammoth: ^1.5.1
-    meriyah: ^4.3.7
     ml-distance: ^4.0.0
     mongodb: ^5.2.0
+    mysql2: ^3.3.3
     object-hash: ^3.0.0
     openai: ^3.2.0
     p-queue: ^6.6.2
     p-retry: 4
     pdf-parse: 1.1.1
+    peggy: ^3.0.2
     pickleparser: ^0.1.0
     playwright: ^1.32.1
     prettier: ^2.8.3
@@ -18287,10 +18386,13 @@ __metadata:
     "@aws-sdk/client-sagemaker-runtime": ^3.310.0
     "@clickhouse/client": ^0.0.14
     "@getmetal/metal-sdk": "*"
+    "@getzep/zep-js": ^0.3.1
+    "@gomomento/sdk": ^1.23.0
     "@huggingface/inference": ^1.5.1
     "@opensearch-project/opensearch": "*"
     "@pinecone-database/pinecone": "*"
     "@qdrant/js-client-rest": ^1.2.0
+    "@supabase/postgrest-js": ^1.1.1
     "@supabase/supabase-js": ^2.10.0
     "@tensorflow-models/universal-sentence-encoder": "*"
     "@tensorflow/tfjs-converter": "*"
@@ -18311,9 +18413,10 @@ __metadata:
     html-to-text: ^9.0.5
     ignore: ^5.2.0
     mammoth: "*"
-    meriyah: "*"
     mongodb: ^5.2.0
+    mysql2: ^3.3.3
     pdf-parse: 1.1.1
+    peggy: ^3.0.2
     pickleparser: ^0.1.0
     playwright: ^1.32.1
     puppeteer: ^19.7.2
@@ -18335,6 +18438,10 @@ __metadata:
       optional: true
     "@getmetal/metal-sdk":
       optional: true
+    "@getzep/zep-js":
+      optional: true
+    "@gomomento/sdk":
+      optional: true
     "@huggingface/inference":
       optional: true
     "@opensearch-project/opensearch":
@@ -18342,6 +18449,8 @@ __metadata:
     "@pinecone-database/pinecone":
       optional: true
     "@qdrant/js-client-rest":
+      optional: true
+    "@supabase/postgrest-js":
       optional: true
     "@supabase/supabase-js":
       optional: true
@@ -18383,11 +18492,13 @@ __metadata:
       optional: true
     mammoth:
       optional: true
-    meriyah:
-      optional: true
     mongodb:
       optional: true
+    mysql2:
+      optional: true
     pdf-parse:
+      optional: true
+    peggy:
       optional: true
     pickleparser:
       optional: true
@@ -18779,6 +18890,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"long@npm:^5.2.1":
+  version: 5.2.3
+  resolution: "long@npm:5.2.3"
+  checksum: 885ede7c3de4facccbd2cacc6168bae3a02c3e836159ea4252c87b6e34d40af819824b2d4edce330bfb5c4d6e8ce3ec5864bdcf9473fa1f53a4f8225860e5897
+  languageName: node
+  linkType: hard
+
 "loose-envify@npm:^1.0.0, loose-envify@npm:^1.1.0, loose-envify@npm:^1.2.0, loose-envify@npm:^1.3.1, loose-envify@npm:^1.4.0":
   version: 1.4.0
   resolution: "loose-envify@npm:1.4.0"
@@ -18858,10 +18976,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lru-cache@npm:^7.7.1":
+"lru-cache@npm:^7.14.1, lru-cache@npm:^7.7.1":
   version: 7.18.3
   resolution: "lru-cache@npm:7.18.3"
   checksum: e550d772384709deea3f141af34b6d4fa392e2e418c1498c078de0ee63670f1f46f5eee746e8ef7e69e1c895af0d4224e62ee33e66a543a14763b0f2e74c1356
+  languageName: node
+  linkType: hard
+
+"lru-cache@npm:^8.0.0":
+  version: 8.0.5
+  resolution: "lru-cache@npm:8.0.5"
+  checksum: 87d72196d8f46e8299c4ab576ed2ec8a07e3cbef517dc9874399c0b2470bd9bf62aacec3b67f84ed6d74aaa1ef31636d048edf996f76248fd17db72bfb631609
   languageName: node
   linkType: hard
 
@@ -19108,13 +19233,6 @@ __metadata:
   version: 1.4.1
   resolution: "merge2@npm:1.4.1"
   checksum: 7268db63ed5169466540b6fb947aec313200bcf6d40c5ab722c22e242f651994619bcd85601602972d3c85bd2cc45a358a4c61937e9f11a061919a1da569b0c2
-  languageName: node
-  linkType: hard
-
-"meriyah@npm:^4.3.7":
-  version: 4.3.7
-  resolution: "meriyah@npm:4.3.7"
-  checksum: 537fed1981bb4c2dc5fffa0c2d159fc169bff252e7a31c8b15ce3ddb9e91d8b66cacf5c932d7fc31bd522dd70d9b007e19131ac40172cd3bd27feee79c447041
   languageName: node
   linkType: hard
 
@@ -19626,6 +19744,22 @@ __metadata:
   languageName: node
   linkType: hard
 
+"mysql2@npm:^3.3.3":
+  version: 3.3.3
+  resolution: "mysql2@npm:3.3.3"
+  dependencies:
+    denque: ^2.1.0
+    generate-function: ^2.3.1
+    iconv-lite: ^0.6.3
+    long: ^5.2.1
+    lru-cache: ^8.0.0
+    named-placeholders: ^1.1.3
+    seq-queue: ^0.0.5
+    sqlstring: ^2.3.2
+  checksum: 99bf73dc685102a7ff543a6457c1717b235a6808488da940769a36dafc2d7068cfca737ffd6c158f157a836949db2852eb79471dd3d4985c043c43538ba57052
+  languageName: node
+  linkType: hard
+
 "mz@npm:^2.4.0, mz@npm:^2.7.0":
   version: 2.7.0
   resolution: "mz@npm:2.7.0"
@@ -19634,6 +19768,15 @@ __metadata:
     object-assign: ^4.0.1
     thenify-all: ^1.0.0
   checksum: 8427de0ece99a07e9faed3c0c6778820d7543e3776f9a84d22cf0ec0a8eb65f6e9aee9c9d353ff9a105ff62d33a9463c6ca638974cc652ee8140cd1e35951c87
+  languageName: node
+  linkType: hard
+
+"named-placeholders@npm:^1.1.3":
+  version: 1.1.3
+  resolution: "named-placeholders@npm:1.1.3"
+  dependencies:
+    lru-cache: ^7.14.1
+  checksum: 7834adc91e92ae1b9c4413384e3ccd297de5168bb44017ff0536705ddc4db421723bd964607849265feb3f6ded390f84cf138e5925f22f7c13324f87a803dc73
   languageName: node
   linkType: hard
 
@@ -20850,6 +20993,18 @@ __metadata:
   version: 0.9.0
   resolution: "peberminta@npm:0.9.0"
   checksum: b983b68077269ca8a3327520a0a3f027fa930faa9fb3cb53bed1cb3847ebc0ed55db936d70b1745a756149911f5f450e898e87e25ab207f1b8b892bed48fb540
+  languageName: node
+  linkType: hard
+
+"peggy@npm:^3.0.2":
+  version: 3.0.2
+  resolution: "peggy@npm:3.0.2"
+  dependencies:
+    commander: ^10.0.0
+    source-map-generator: 0.8.0
+  bin:
+    peggy: bin/peggy.js
+  checksum: bdca2291a2453e35fb9499bd414f25d44093aecaeb992ef90151ab126514c053c30d4bf5b54f68cbce22a4420eef75219a6deb1209b300630bff38e7640115d9
   languageName: node
   linkType: hard
 
@@ -23813,6 +23968,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"seq-queue@npm:^0.0.5":
+  version: 0.0.5
+  resolution: "seq-queue@npm:0.0.5"
+  checksum: f8695a6cb613e1b378b9686cde4ea626944091a412fc1c9d24c5039283d4351dd115f4505e4cf103d3a2e4a9a6a72fc7698fdce703839fb1fec9627aa4ce5563
+  languageName: node
+  linkType: hard
+
 "serialize-javascript@npm:^4.0.0":
   version: 4.0.0
   resolution: "serialize-javascript@npm:4.0.0"
@@ -24181,6 +24343,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"source-map-generator@npm:0.8.0":
+  version: 0.8.0
+  resolution: "source-map-generator@npm:0.8.0"
+  checksum: 15e7854c04a4b1bc8a477664a65c58316d792fb24a7b427219ac597eed7f57a3905637c783126b123cf05f9d4fdc45a8fadb8bc2fbf010a82d92e35c193aba51
+  languageName: node
+  linkType: hard
+
 "source-map-js@npm:^1.0.1, source-map-js@npm:^1.0.2":
   version: 1.0.2
   resolution: "source-map-js@npm:1.0.2"
@@ -24325,6 +24494,13 @@ __metadata:
     node-gyp:
       optional: true
   checksum: a265220515b0168cb166ece9b7fd3b230fe93fe9dabea8f426b0bfbb833bf39be1177fba4e161a7796e471caace6ca2c312fb3fc44c1f053a3b5617b250a5575
+  languageName: node
+  linkType: hard
+
+"sqlstring@npm:^2.3.2":
+  version: 2.3.3
+  resolution: "sqlstring@npm:2.3.3"
+  checksum: 1e7e2d51c38a0cf7372e875408ca100b6e0c9a941ab7773975ea41fb36e5528e404dc787689be855780cf6d0a829ff71027964ae3a05a7446e91dce26672fda7
   languageName: node
   linkType: hard
 
@@ -25828,7 +26004,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@npm:^5.0.0":
+"typescript@npm:^5.0.0, typescript@npm:^5.0.4":
   version: 5.0.4
   resolution: "typescript@npm:5.0.4"
   bin:
@@ -25858,7 +26034,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@patch:typescript@^5.0.0#~builtin<compat/typescript>":
+"typescript@patch:typescript@^5.0.0#~builtin<compat/typescript>, typescript@patch:typescript@^5.0.4#~builtin<compat/typescript>":
   version: 5.0.4
   resolution: "typescript@patch:typescript@npm%3A5.0.4#~builtin<compat/typescript>::version=5.0.4&hash=1f5320"
   bin:

@@ -1,0 +1,30 @@
+---
+sidebar_class_name: node-only
+---
+
+import CodeBlock from "@theme/CodeBlock";
+
+# SingleStore
+
+[SingleStoreDB](https://singlestore.com/) is a high-performing, distributed database system. For an extended period, it has offered support for vector functions such as [dot_product](https://docs.singlestore.com/managed-service/en/reference/sql-reference/vector-functions/dot_product.html), thus establishing itself as an optimal solution for AI applications necessitating text similarity matching.
+
+:::tip Compatibility
+Only available on Node.js.
+:::
+
+LangChain.js accepts `mysql2/promise Pool` as the connections pool for SingleStore vectorstore.
+
+## Setup
+
+1. Establish a SingleStoreDB environment. You have the flexibility to choose between [Cloud-based](https://docs.singlestore.com/managed-service/en/getting-started-with-singlestoredb-cloud.html) or [On-Premise](https://docs.singlestore.com/db/v8.1/en/developer-resources/get-started-using-singlestoredb-for-free.html) editions.
+2. Install the mysql2 JS client
+
+```bash npm2yarn
+npm install -S mysql2
+```
+
+## Usage
+
+import UsageExample from "@examples/indexes/vector_stores/singlestore.ts";
+
+<CodeBlock language="typescript">{UsageExample}</CodeBlock>
