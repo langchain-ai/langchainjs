@@ -1,6 +1,7 @@
 import type {
   GetPageResponse,
   ListBlockChildrenResponse,
+  PageObjectResponse,
   QueryDatabaseResponse,
   RichTextItemResponse,
 } from "@notionhq/client/build/src/api-endpoints.js";
@@ -126,6 +127,22 @@ export class NotionDBLoader
       );
     }
 
+    const pageContent = await this.loadBlocks(data.id);
+    const metadata = await this.createMetadata({ pageId, pageContent, data });
+    return new Document({ pageContent, metadata });
+  }
+
+  /**
+   * Create a metadata object from the response of `Retrieve page` API.
+   */
+  private async createMetadata({
+    pageId,
+    data,
+  }: {
+    pageId: string;
+    pageContent: string;
+    data: PageObjectResponse;
+  }) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const metadata: Record<string, any> = {};
 
@@ -155,11 +172,7 @@ export class NotionDBLoader
     }
 
     metadata.id = pageId;
-
-    return {
-      pageContent: await this.loadBlocks(pageId),
-      metadata,
-    };
+    return metadata;
   }
 
   private async loadBlocks(blockId: string, numberOfTabs = 0): Promise<string> {
