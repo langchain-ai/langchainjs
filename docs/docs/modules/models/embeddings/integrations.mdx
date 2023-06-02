@@ -115,3 +115,17 @@ const embeddings = new HuggingFaceInferenceEmbeddings({
   apiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.HUGGINGFACEHUB_API_KEY
 });
 ```
+
+## `XenovaTransformersEmbeddings`
+
+This Embeddings integration uses the Xenova Transformers.js lib to generate embeddings for a given text using by default the `Xenova/all-MiniLM-L6-v2` model. You can pass a different model name to the constructor to use a different model.
+
+```bash npm2yarn
+npm install @xenova/transformers
+```
+
+```typescript
+import { XenovaTransformersEmbeddings } from "langchain/embeddings/xenovatransformers";
+
+const embeddings = new XenovaTransformersEmbeddings();
+```
