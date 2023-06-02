@@ -31,6 +31,7 @@ const entrypoints = {
   "embeddings/tensorflow": "embeddings/tensorflow",
   "embeddings/hf": "embeddings/hf",
   "embeddings/googlevertexai": "embeddings/googlevertexai",
+  "embeddings/xenovatransformers": "embeddings/xenovatransformers",
   // llms
   llms: "llms/index",
   "llms/load": "llms/load",
@@ -174,6 +175,7 @@ const requiresOptionalDependency = [
   "embeddings/googlevertexai",
   "embeddings/tensorflow",
   "embeddings/hf",
+  "embeddings/xenovatransformers",
   "llms/load",
   "llms/cohere",
   "llms/googlevertexai",
