@@ -148,6 +148,9 @@
     "vectorstores/redis.cjs",
     "vectorstores/redis.js",
     "vectorstores/redis.d.ts",
+    "vectorstores/singlestore.cjs",
+    "vectorstores/singlestore.js",
+    "vectorstores/singlestore.d.ts",
     "vectorstores/tigris.cjs",
     "vectorstores/tigris.js",
     "vectorstores/tigris.d.ts",
@@ -446,6 +449,7 @@
     "jest": "^29.5.0",
     "mammoth": "^1.5.1",
     "mongodb": "^5.2.0",
+    "mysql2": "^3.3.3",
     "pdf-parse": "1.1.1",
     "peggy": "^3.0.2",
     "pickleparser": "^0.1.0",
@@ -498,6 +502,7 @@
     "ignore": "^5.2.0",
     "mammoth": "*",
     "mongodb": "^5.2.0",
+    "mysql2": "^3.3.3",
     "pdf-parse": "1.1.1",
     "peggy": "^3.0.2",
     "pickleparser": "^0.1.0",
@@ -610,6 +615,9 @@
       "optional": true
     },
     "mongodb": {
+      "optional": true
+    },
+    "mysql2": {
       "optional": true
     },
     "pdf-parse": {
@@ -919,6 +927,11 @@
       "types": "./vectorstores/redis.d.ts",
       "import": "./vectorstores/redis.js",
       "require": "./vectorstores/redis.cjs"
+    },
+    "./vectorstores/singlestore": {
+      "types": "./vectorstores/singlestore.d.ts",
+      "import": "./vectorstores/singlestore.js",
+      "require": "./vectorstores/singlestore.cjs"
     },
     "./vectorstores/tigris": {
       "types": "./vectorstores/tigris.d.ts",
