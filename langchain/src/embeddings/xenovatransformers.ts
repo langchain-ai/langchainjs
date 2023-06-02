@@ -1,4 +1,4 @@
-import { pipeline } from '@xenova/transformers';
+import { pipeline } from "@xenova/transformers";
 import { Embeddings, EmbeddingsParams } from "./base.js";
 
 export interface XenovaTransformersEmbeddingsParams extends EmbeddingsParams {
@@ -9,7 +9,6 @@ export class XenovaTransformersEmbeddings
   extends Embeddings
   implements XenovaTransformersEmbeddingsParams
 {
-
   model: string;
 
   client: any;
@@ -20,13 +19,14 @@ export class XenovaTransformersEmbeddings
   }
 
   async _embed(texts: string[]): Promise<number[][]> {
-
-    if(!this.client){
-      this.client = await pipeline('embeddings', this.model);
+    if (!this.client) {
+      this.client = await pipeline("embeddings", this.model);
     }
 
     return this.caller.call(async () => {
-      return await Promise.all(texts.map(async t => (await this.client(t)).data));
+      return await Promise.all(
+        texts.map(async (t) => (await this.client(t)).data)
+      );
     });
   }
 

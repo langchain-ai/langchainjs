@@ -1,5 +1,5 @@
 import { test, expect } from "@jest/globals";
-import { XenovaTransformersEmbeddings } from "../xenovatransformers";
+import { XenovaTransformersEmbeddings } from "../xenovatransformers.js";
 
 test("Test XenovaTransformersEmbeddings.embedQuery", async () => {
   const embeddings = new XenovaTransformersEmbeddings();
