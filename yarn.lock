@@ -10757,10 +10757,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"chromadb@npm:^1.5.1":
-  version: 1.5.1
-  resolution: "chromadb@npm:1.5.1"
-  checksum: e6391aaef158832fc6edb18fc33e3b5c80a9d4c4e1cb549957081ad6134d61061b015d6a04d3ec268aea9a9a2e8bac6ab57fb48a232d725288dbe545f787c19d
+"chromadb@npm:^1.5.2":
+  version: 1.5.2
+  resolution: "chromadb@npm:1.5.2"
+  checksum: 8eace35a0baed74db78695682984ba4263390eaac15e093241bc318ec377e341f12e11c282b76802633df95334203ae1f2173e5ba13cf32b1c5963f0b0a95153
   languageName: node
   linkType: hard
 
@@ -18328,7 +18328,7 @@ __metadata:
     axios: ^0.26.0
     binary-extensions: ^2.2.0
     cheerio: ^1.0.0-rc.12
-    chromadb: ^1.5.1
+    chromadb: ^1.5.2
     cohere-ai: ^5.0.2
     d3-dsv: ^2.0.0
     dotenv: ^16.0.3
