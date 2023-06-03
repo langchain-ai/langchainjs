@@ -28,11 +28,11 @@ export class StringPromptValue extends BasePromptValue {
 /**
  * Input common to all prompt templates.
  */
-export interface BasePromptTemplateInput {
+export interface BasePromptTemplateInput<InputVariableName extends string = string, PartialVariableName extends string = string> {
   /**
    * A list of variable names the prompt template expects
    */
-  inputVariables: string[];
+  inputVariables: InputVariableName[];
 
   /**
    * How to parse the output of calling an LLM on this formatted prompt
@@ -40,23 +40,23 @@ export interface BasePromptTemplateInput {
   outputParser?: BaseOutputParser;
 
   /** Partial variables */
-  partialVariables?: PartialValues;
+  partialVariables?: PartialValues<PartialVariableName>;
 }
 
 /**
  * Base class for prompt templates. Exposes a format method that returns a
  * string prompt given a set of input values.
  */
-export abstract class BasePromptTemplate implements BasePromptTemplateInput {
-  inputVariables: string[];
+export abstract class BasePromptTemplate<InputVariableName extends string = string, PartialVariableName extends string = string> implements BasePromptTemplateInput<InputVariableName, PartialVariableName> {
+  inputVariables: InputVariableName[];
 
   outputParser?: BaseOutputParser;
 
-  partialVariables?: InputValues;
+  partialVariables?: PartialValues<PartialVariableName>;
 
-  constructor(input: BasePromptTemplateInput) {
+  constructor(input: BasePromptTemplateInput<InputVariableName, PartialVariableName>) {
     const { inputVariables } = input;
-    if (inputVariables.includes("stop")) {
+    if ((inputVariables as string[]).includes("stop")) {
       throw new Error(
         "Cannot have an input variable named 'stop', as it is used internally, please rename."
       );
@@ -64,23 +64,23 @@ export abstract class BasePromptTemplate implements BasePromptTemplateInput {
     Object.assign(this, input);
   }
 
-  abstract partial(values: PartialValues): Promise<BasePromptTemplate>;
+  abstract partial(values: PartialValues): Promise<BasePromptTemplate<InputVariableName, PartialVariableName>>;
 
   async mergePartialAndUserVariables(
-    userVariables: InputValues
-  ): Promise<InputValues> {
+    userVariables: InputValues<InputVariableName>
+  ): Promise<InputValues<InputVariableName | PartialVariableName>> {
     const partialVariables = this.partialVariables ?? {};
-    const partialValues: InputValues = {};
+    const partialValues: Record<string, string> = {};
 
     for (const [key, value] of Object.entries(partialVariables)) {
       if (typeof value === "string") {
         partialValues[key] = value;
       } else {
-        partialValues[key] = await value();
+        partialValues[key] = await (value as Function)() as string;
       }
     }
 
-    const allKwargs = { ...partialValues, ...userVariables };
+    const allKwargs = { ...(partialValues as Record<PartialVariableName, string>), ...userVariables };
     return allKwargs;
   }
 
@@ -95,14 +95,14 @@ export abstract class BasePromptTemplate implements BasePromptTemplateInput {
    * prompt.format({ foo: "bar" });
    * ```
    */
-  abstract format(values: InputValues): Promise<string>;
+  abstract format(values: InputValues<InputVariableName>): Promise<string>;
 
   /**
    * Format the prompt given the input values and return a formatted prompt value.
    * @param values
    * @returns A formatted PromptValue.
    */
-  abstract formatPromptValue(values: InputValues): Promise<BasePromptValue>;
+  abstract formatPromptValue(values: InputValues<InputVariableName>): Promise<BasePromptValue>;
 
   /**
    * Return the string type key uniquely identifying this class of prompt template.
@@ -124,7 +124,7 @@ export abstract class BasePromptTemplate implements BasePromptTemplateInput {
    */
   static async deserialize(
     data: SerializedBasePromptTemplate
-  ): Promise<BasePromptTemplate> {
+  ): Promise<BasePromptTemplate<string, string>> {
     switch (data._type) {
       case "prompt": {
         const { PromptTemplate } = await import("./prompt.js");
@@ -148,8 +148,8 @@ export abstract class BasePromptTemplate implements BasePromptTemplateInput {
   }
 }
 
-export abstract class BaseStringPromptTemplate extends BasePromptTemplate {
-  async formatPromptValue(values: InputValues): Promise<BasePromptValue> {
+export abstract class BaseStringPromptTemplate<InputVariableName extends string = string, PartialVariableName extends string = string> extends BasePromptTemplate<InputVariableName, PartialVariableName> {
+  async formatPromptValue(values: InputValues<InputVariableName>): Promise<BasePromptValue> {
     const formattedPrompt = await this.format(values);
     return new StringPromptValue(formattedPrompt);
   }

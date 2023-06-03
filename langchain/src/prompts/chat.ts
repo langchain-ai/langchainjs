@@ -19,8 +19,8 @@ import {
   SerializedMessagePromptTemplate,
 } from "./serde.js";
 
-export abstract class BaseMessagePromptTemplate {
-  abstract inputVariables: string[];
+export abstract class BaseMessagePromptTemplate<InputVariableNames extends string = string> {
+  abstract inputVariables: InputVariableNames[];
 
   abstract formatMessages(values: InputValues): Promise<BaseChatMessage[]>;
 
@@ -49,10 +49,10 @@ export class ChatPromptValue extends BasePromptValue {
   }
 }
 
-export class MessagesPlaceholder extends BaseMessagePromptTemplate {
-  variableName: string;
+export class MessagesPlaceholder<InputVariableNames extends string = string> extends BaseMessagePromptTemplate<InputVariableNames> {
+  variableName: InputVariableNames;
 
-  constructor(variableName: string) {
+  constructor(variableName: InputVariableNames) {
     super();
     this.variableName = variableName;
   }
@@ -61,15 +61,15 @@ export class MessagesPlaceholder extends BaseMessagePromptTemplate {
     return [this.variableName];
   }
 
-  formatMessages(values: InputValues): Promise<BaseChatMessage[]> {
+  formatMessages(values: InputValues<InputVariableNames>): Promise<BaseChatMessage[]> {
     return Promise.resolve(values[this.variableName] as BaseChatMessage[]);
   }
 }
 
-export abstract class BaseMessageStringPromptTemplate extends BaseMessagePromptTemplate {
-  prompt: BaseStringPromptTemplate;
+export abstract class BaseMessageStringPromptTemplate<InputVariableNames extends string = string> extends BaseMessagePromptTemplate<InputVariableNames> {
+  prompt: BaseStringPromptTemplate<InputVariableNames, string>;
 
-  protected constructor(prompt: BaseStringPromptTemplate) {
+  protected constructor(prompt: BaseStringPromptTemplate<InputVariableNames, string>) {
     super();
     this.prompt = prompt;
   }
@@ -78,38 +78,38 @@ export abstract class BaseMessageStringPromptTemplate extends BaseMessagePromptT
     return this.prompt.inputVariables;
   }
 
-  abstract format(values: InputValues): Promise<BaseChatMessage>;
+  abstract format(values:InputValues<InputVariableNames>): Promise<BaseChatMessage>;
 
-  async formatMessages(values: InputValues): Promise<BaseChatMessage[]> {
+  async formatMessages(values:InputValues<InputVariableNames>): Promise<BaseChatMessage[]> {
     return [await this.format(values)];
   }
 }
 
-export abstract class BaseChatPromptTemplate extends BasePromptTemplate {
-  constructor(input: BasePromptTemplateInput) {
+export abstract class BaseChatPromptTemplate<InputVariableNames extends string = string, PartialVariableNames extends string = string> extends BasePromptTemplate<InputVariableNames, PartialVariableNames> {
+  constructor(input: BasePromptTemplateInput<InputVariableNames, PartialVariableNames>) {
     super(input);
   }
 
-  abstract formatMessages(values: InputValues): Promise<BaseChatMessage[]>;
+  abstract formatMessages(values: InputValues<InputVariableNames>): Promise<BaseChatMessage[]>;
 
-  async format(values: InputValues): Promise<string> {
+  async format(values: InputValues<InputVariableNames>): Promise<string> {
     return (await this.formatPromptValue(values)).toString();
   }
 
-  async formatPromptValue(values: InputValues): Promise<BasePromptValue> {
+  async formatPromptValue(values: InputValues<InputVariableNames>): Promise<BasePromptValue> {
     const resultMessages = await this.formatMessages(values);
     return new ChatPromptValue(resultMessages);
   }
 }
 
-export class ChatMessagePromptTemplate extends BaseMessageStringPromptTemplate {
+export class ChatMessagePromptTemplate<InputVariableNames extends string> extends BaseMessageStringPromptTemplate<InputVariableNames> {
   role: string;
 
-  async format(values: InputValues): Promise<BaseChatMessage> {
+  async format(values: InputValues<InputVariableNames>): Promise<BaseChatMessage> {
     return new ChatMessage(await this.prompt.format(values), this.role);
   }
 
-  constructor(prompt: BaseStringPromptTemplate, role: string) {
+  constructor(prompt: BaseStringPromptTemplate<InputVariableNames, string>, role: string) {
     super(prompt);
     this.role = role;
   }
@@ -119,12 +119,12 @@ export class ChatMessagePromptTemplate extends BaseMessageStringPromptTemplate {
   }
 }
 
-export class HumanMessagePromptTemplate extends BaseMessageStringPromptTemplate {
-  async format(values: InputValues): Promise<BaseChatMessage> {
+export class HumanMessagePromptTemplate<InputVariableNames extends string> extends BaseMessageStringPromptTemplate<InputVariableNames> {
+  async format(values: InputValues<InputVariableNames>): Promise<BaseChatMessage> {
     return new HumanChatMessage(await this.prompt.format(values));
   }
 
-  constructor(prompt: BaseStringPromptTemplate) {
+  constructor(prompt: BaseStringPromptTemplate<InputVariableNames, string>) {
     super(prompt);
   }
 
@@ -133,12 +133,12 @@ export class HumanMessagePromptTemplate extends BaseMessageStringPromptTemplate 
   }
 }
 
-export class AIMessagePromptTemplate extends BaseMessageStringPromptTemplate {
-  async format(values: InputValues): Promise<BaseChatMessage> {
+export class AIMessagePromptTemplate<InputVariableNames extends string> extends BaseMessageStringPromptTemplate<InputVariableNames> {
+  async format(values: InputValues<InputVariableNames>): Promise<BaseChatMessage> {
     return new AIChatMessage(await this.prompt.format(values));
   }
 
-  constructor(prompt: BaseStringPromptTemplate) {
+  constructor(prompt: BaseStringPromptTemplate<InputVariableNames, string>) {
     super(prompt);
   }
 
@@ -147,12 +147,12 @@ export class AIMessagePromptTemplate extends BaseMessageStringPromptTemplate {
   }
 }
 
-export class SystemMessagePromptTemplate extends BaseMessageStringPromptTemplate {
-  async format(values: InputValues): Promise<BaseChatMessage> {
+export class SystemMessagePromptTemplate<InputVariableNames extends string> extends BaseMessageStringPromptTemplate<InputVariableNames> {
+  async format(values: InputValues<InputVariableNames>): Promise<BaseChatMessage> {
     return new SystemChatMessage(await this.prompt.format(values));
   }
 
-  constructor(prompt: BaseStringPromptTemplate) {
+  constructor(prompt: BaseStringPromptTemplate<InputVariableNames, string>) {
     super(prompt);
   }
 
@@ -161,7 +161,7 @@ export class SystemMessagePromptTemplate extends BaseMessageStringPromptTemplate
   }
 }
 
-export interface ChatPromptTemplateInput extends BasePromptTemplateInput {
+export interface ChatPromptTemplateInput<InputVariableNames extends string = string, PartialVariableNames extends string = string> extends BasePromptTemplateInput<InputVariableNames, PartialVariableNames> {
   /**
    * The prompt messages
    */
@@ -175,15 +175,15 @@ export interface ChatPromptTemplateInput extends BasePromptTemplateInput {
   validateTemplate?: boolean;
 }
 
-export class ChatPromptTemplate
-  extends BaseChatPromptTemplate
-  implements ChatPromptTemplateInput
+export class ChatPromptTemplate<InputVariableNames extends string = string, PartialVariableNames extends string = string>
+  extends BaseChatPromptTemplate<InputVariableNames, PartialVariableNames>
+  implements ChatPromptTemplateInput<InputVariableNames, PartialVariableNames>
 {
   promptMessages: BaseMessagePromptTemplate[];
 
   validateTemplate = true;
 
-  constructor(input: ChatPromptTemplateInput) {
+  constructor(input: ChatPromptTemplateInput<InputVariableNames, PartialVariableNames>) {
     super(input);
     Object.assign(this, input);
 
@@ -194,14 +194,16 @@ export class ChatPromptTemplate
           inputVariablesMessages.add(inputVariable);
         }
       }
+
+      let totalInputVariables = this.inputVariables as string[];
       const inputVariablesInstance = new Set(
         this.partialVariables
-          ? this.inputVariables.concat(Object.keys(this.partialVariables))
-          : this.inputVariables
+          ? totalInputVariables.concat(Object.keys(this.partialVariables))
+          : totalInputVariables
       );
       const difference = new Set(
         [...inputVariablesInstance].filter(
-          (x) => !inputVariablesMessages.has(x)
+          (x) => !inputVariablesMessages.has(x as InputVariableNames)
         )
       );
       if (difference.size > 0) {
@@ -230,7 +232,7 @@ export class ChatPromptTemplate
     return "chat";
   }
 
-  async formatMessages(values: InputValues): Promise<BaseChatMessage[]> {
+  async formatMessages(values: InputValues<InputVariableNames>): Promise<BaseChatMessage[]> {
     const allValues = await this.mergePartialAndUserVariables(values);
 
     let resultMessages: BaseChatMessage[] = [];
@@ -243,7 +245,7 @@ export class ChatPromptTemplate
               `Missing value for input variable \`${inputVariable}\``
             );
           }
-          acc[inputVariable] = allValues[inputVariable];
+          acc[inputVariable] = allValues[inputVariable as InputVariableNames];
           return acc;
         },
         {} as InputValues
@@ -266,23 +268,23 @@ export class ChatPromptTemplate
     };
   }
 
-  async partial(values: PartialValues): Promise<ChatPromptTemplate> {
+  async partial<NewPartialNames extends string>(values: PartialValues<NewPartialNames>) {
     // This is implemented in a way it doesn't require making
     // BaseMessagePromptTemplate aware of .partial()
-    const promptDict: ChatPromptTemplateInput = { ...this };
-    promptDict.inputVariables = this.inputVariables.filter(
+    const newInputVariables = this.inputVariables.filter(
       (iv) => !(iv in values)
-    );
-    promptDict.partialVariables = {
+    ) as Exclude<InputVariableNames, NewPartialNames>[];
+    const newPartialVariables = {
       ...(this.partialVariables ?? {}),
       ...values,
-    };
+    } as PartialValues<PartialVariableNames | NewPartialNames>;
+    const promptDict = { ...this, inputVariables: newInputVariables, partialVariables: newPartialVariables };
     return new ChatPromptTemplate(promptDict);
   }
 
   static fromPromptMessages(
-    promptMessages: (BaseMessagePromptTemplate | ChatPromptTemplate)[]
-  ): ChatPromptTemplate {
+    promptMessages: (BaseMessagePromptTemplate<string> | ChatPromptTemplate<string, string>)[]
+  ): ChatPromptTemplate<string, string> {
     const flattenedMessages = promptMessages.reduce(
       (acc, promptMessage) =>
         acc.concat(

@@ -12,7 +12,7 @@ import { InputValues, PartialValues } from "../schema/index.js";
  * Inputs to create a {@link PromptTemplate}
  * @augments BasePromptTemplateInput
  */
-export interface PromptTemplateInput extends BasePromptTemplateInput {
+export interface PromptTemplateInput<InputVariableNames extends string = string, PartialVariableNames extends string = string> extends BasePromptTemplateInput<InputVariableNames, PartialVariableNames> {
   /**
    * The prompt template
    */
@@ -48,9 +48,9 @@ export interface PromptTemplateInput extends BasePromptTemplateInput {
  * });
  * ```
  */
-export class PromptTemplate
-  extends BaseStringPromptTemplate
-  implements PromptTemplateInput
+export class PromptTemplate<InputVariableNames extends string = string, PartialVariableNames extends string = string>
+  extends BaseStringPromptTemplate<InputVariableNames, PartialVariableNames>
+  implements PromptTemplateInput<InputVariableNames, PartialVariableNames>
 {
   template: string;
 
@@ -58,12 +58,12 @@ export class PromptTemplate
 
   validateTemplate = true;
 
-  constructor(input: PromptTemplateInput) {
+  constructor(input: PromptTemplateInput<InputVariableNames, PartialVariableNames>) {
     super(input);
     Object.assign(this, input);
 
     if (this.validateTemplate) {
-      let totalInputVariables = this.inputVariables;
+      let totalInputVariables = this.inputVariables as string[];
       if (this.partialVariables) {
         totalInputVariables = totalInputVariables.concat(
           Object.keys(this.partialVariables)
@@ -81,7 +81,7 @@ export class PromptTemplate
     return "prompt";
   }
 
-  async format(values: InputValues): Promise<string> {
+  async format(values: InputValues<InputVariableNames>): Promise<string> {
     const allValues = await this.mergePartialAndUserVariables(values);
     return renderTemplate(this.template, this.templateFormat, allValues);
   }
@@ -138,15 +138,15 @@ export class PromptTemplate
     });
   }
 
-  async partial(values: PartialValues): Promise<PromptTemplate> {
-    const promptDict: PromptTemplateInput = { ...this };
-    promptDict.inputVariables = this.inputVariables.filter(
+  async partial<NewPartialNames extends string>(values: PartialValues<NewPartialNames>) {
+    const newInputVariables = this.inputVariables.filter(
       (iv) => !(iv in values)
-    );
-    promptDict.partialVariables = {
+    ) as Exclude<InputVariableNames, NewPartialNames>[];
+    const newPartialVariables = {
       ...(this.partialVariables ?? {}),
       ...values,
-    };
+    } as PartialValues<PartialVariableNames | NewPartialNames>;
+    const promptDict = { ...this, inputVariables: newInputVariables, partialVariables: newPartialVariables };
     return new PromptTemplate(promptDict);
   }
 

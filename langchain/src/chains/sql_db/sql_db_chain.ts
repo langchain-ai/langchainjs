@@ -33,7 +33,7 @@ export class SqlDatabaseChain extends BaseChain {
   database: SqlDatabase;
 
   // Prompt to use to translate natural language to SQL.
-  prompt = DEFAULT_SQL_DATABASE_PROMPT;
+  prompt: PromptTemplate;
 
   // Number of results to return from the query
   topK = 5;
@@ -57,7 +57,8 @@ export class SqlDatabaseChain extends BaseChain {
     this.sqlOutputKey = fields.sqlOutputKey ?? this.sqlOutputKey;
     this.prompt =
       fields.prompt ??
-      getPromptTemplateFromDataSource(this.database.appDataSource);
+      getPromptTemplateFromDataSource(this.database.appDataSource) ??
+      DEFAULT_SQL_DATABASE_PROMPT;
   }
 
   /** @ignore */
