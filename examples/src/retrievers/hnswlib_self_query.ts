@@ -1,12 +1,13 @@
+import { createClient } from "@supabase/supabase-js";
 import { AttributeInfo } from "langchain/schema/query_constructor";
 import { Document } from "langchain/document";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import {
   SelfQueryRetriever,
-  ChromaTranslator,
+  FunctionalTranslator,
 } from "langchain/retrievers/self_query";
 import { OpenAI } from "langchain/llms/openai";
-import { Chroma } from "langchain/vectorstores/chroma";
+import { HNSWLib } from "langchain/vectorstores/hnswlib";
 
 /**
  * First, we create a bunch of documents. You can load your own documents here instead.
@@ -91,9 +92,7 @@ const attributeInfo: AttributeInfo[] = [
 const embeddings = new OpenAIEmbeddings();
 const llm = new OpenAI();
 const documentContents = "Brief summary of a movie";
-const vectorStore = await Chroma.fromDocuments(docs, embeddings, {
-  collectionName: "a-movie-collection",
-});
+const vectorStore = await HNSWLib.fromDocuments(docs, embeddings);
 const selfQueryRetriever = await SelfQueryRetriever.fromLLM({
   llm,
   vectorStore,
@@ -107,7 +106,7 @@ const selfQueryRetriever = await SelfQueryRetriever.fromLLM({
    * vector store needs to support filtering on the metadata attributes you want to
    * query on.
    */
-  structuredQueryTranslator: new ChromaTranslator(),
+  structuredQueryTranslator: new FunctionalTranslator(),
 });
 
 /**

@@ -1,12 +1,13 @@
+import { createClient } from "@supabase/supabase-js";
 import { AttributeInfo } from "langchain/schema/query_constructor";
 import { Document } from "langchain/document";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import {
   SelfQueryRetriever,
-  ChromaTranslator,
+  SupabaseTranslator,
 } from "langchain/retrievers/self_query";
 import { OpenAI } from "langchain/llms/openai";
-import { Chroma } from "langchain/vectorstores/chroma";
+import { SupabaseVectorStore } from "langchain/vectorstores/supabase";
 
 /**
  * First, we create a bunch of documents. You can load your own documents here instead.
@@ -88,11 +89,21 @@ const attributeInfo: AttributeInfo[] = [
  * At this point we only support Chroma and Pinecone, but we will add more in the future.
  * We also need to provide an embeddings object. This is used to embed the documents.
  */
+if (!process.env.SUPABASE_URL || !process.env.SUPABASE_PRIVATE_KEY) {
+  throw new Error(
+    "Supabase URL or private key not set. Please set it in the .env file"
+  );
+}
+
 const embeddings = new OpenAIEmbeddings();
 const llm = new OpenAI();
 const documentContents = "Brief summary of a movie";
-const vectorStore = await Chroma.fromDocuments(docs, embeddings, {
-  collectionName: "a-movie-collection",
+const client = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_PRIVATE_KEY
+);
+const vectorStore = await SupabaseVectorStore.fromDocuments(docs, embeddings, {
+  client,
 });
 const selfQueryRetriever = await SelfQueryRetriever.fromLLM({
   llm,
@@ -107,7 +118,7 @@ const selfQueryRetriever = await SelfQueryRetriever.fromLLM({
    * vector store needs to support filtering on the metadata attributes you want to
    * query on.
    */
-  structuredQueryTranslator: new ChromaTranslator(),
+  structuredQueryTranslator: new SupabaseTranslator(),
 });
 
 /**
