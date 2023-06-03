@@ -3,6 +3,7 @@ import { Document } from "../document.js";
 import {
   CharacterTextSplitter,
   MarkdownTextSplitter,
+  LatexTextSplitter,
   RecursiveCharacterTextSplitter,
   TokenTextSplitter,
 } from "../text_splitter.js";
@@ -162,18 +163,19 @@ Bye!\n\n-H.`;
     "Harrison.",
     "How? Are?",
     "You?",
-    "Okay then f",
+    "Okay then",
     "f f f f.",
     "This is a",
-    "a weird",
+    "weird",
     "text to",
-    "write, but",
-    "gotta test",
-    "the",
-    "splittingg",
-    "ggg",
+    "write,",
+    "but gotta",
+    "test the",
+    "splitting",
+    "gggg",
     "some how.",
-    "Bye!\n\n-H.",
+    "Bye!",
+    "-H.",
   ];
   expect(output).toEqual(expectedOutput);
 });
@@ -210,10 +212,98 @@ test("Test markdown text splitter.", async () => {
     chunkOverlap: 0,
   });
   const output = await splitter.splitText(text);
+
   const expectedOutput = [
     "# 🦜️🔗 LangChain\n\n⚡ Building applications with LLMs through composability ⚡",
-    "Quick Install\n\n```bash\n# Hopefully this code block isn't split\npip install langchain",
+    "## Quick Install\n\n```bash\n# Hopefully this code block isn't split\npip install langchain",
+    "```",
     "As an open source project in a rapidly developing field, we are extremely open to contributions.",
+  ];
+  expect(output).toEqual(expectedOutput);
+});
+
+test("Test latex text splitter.", async () => {
+  const text = `\\begin{document}
+\\title{🦜️🔗 LangChain}
+⚡ Building applications with LLMs through composability ⚡
+
+\\section{Quick Install}
+
+\\begin{verbatim}
+Hopefully this code block isn't split
+yarn add langchain
+\\end{verbatim}
+
+As an open source project in a rapidly developing field, we are extremely open to contributions.
+
+\\end{document}`;
+  const splitter = new LatexTextSplitter({
+    chunkSize: 100,
+    chunkOverlap: 0,
+  });
+  const output = await splitter.splitText(text);
+
+  const expectedOutput = [
+    "\\begin{document}\n\\title{🦜️🔗 LangChain}\n⚡ Building applications with LLMs through composability ⚡",
+    "\\section{Quick Install}",
+    "\\begin{verbatim}\nHopefully this code block isn't split\nyarn add langchain\n\\end{verbatim}",
+    "As an open source project in a rapidly developing field, we are extremely open to contributions.",
+    "\\end{document}",
+  ];
+  expect(output).toEqual(expectedOutput);
+});
+
+test("Test HTML text splitter", async () => {
+  const text = `<!DOCTYPE html>
+<html>
+  <head>
+    <title>🦜️🔗 LangChain</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+      }
+      h1 {
+        color: darkblue;
+      }
+    </style>
+  </head>
+  <body>
+    <div>
+      <h1>🦜️🔗 LangChain</h1>
+      <p>⚡ Building applications with LLMs through composability ⚡</p>
+    </div>
+    <div>
+      As an open source project in a rapidly developing field, we are extremely open to contributions.
+    </div>
+  </body>
+</html>`;
+  const splitter = RecursiveCharacterTextSplitter.fromLanguage("html", {
+    chunkSize: 175,
+    chunkOverlap: 20,
+  });
+  const output = await splitter.splitText(text);
+
+  const expectedOutput = [
+    "<!DOCTYPE html>\n<html>",
+    "<head>\n    <title>🦜️🔗 LangChain</title>",
+    `<style>\n      body {
+        font-family: Arial, sans-serif;
+      }
+      h1 {
+        color: darkblue;
+      }
+    </style>
+  </head>`,
+    `<body>
+    <div>
+      <h1>🦜️🔗 LangChain</h1>
+      <p>⚡ Building applications with LLMs through composability ⚡</p>
+    </div>`,
+    `<div>
+      As an open source project in a rapidly developing field, we are extremely open to contributions.
+    </div>
+  </body>
+</html>`,
   ];
   expect(output).toEqual(expectedOutput);
 });

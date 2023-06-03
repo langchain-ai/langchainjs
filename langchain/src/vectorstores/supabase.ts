@@ -96,13 +96,7 @@ export class SupabaseVectorStore extends VectorStore {
     let filterFunction: SupabaseFilterRPCCall;
 
     if (typeof _filter === "function") {
-      filterFunction = (rpcCall) => {
-        if (!_filter) {
-          return rpcCall.limit(k);
-        }
-
-        return _filter(rpcCall).limit(k);
-      };
+      filterFunction = (rpcCall) => _filter(rpcCall).limit(k);
     } else if (typeof _filter === "object") {
       matchDocumentsParams.filter = _filter;
       matchDocumentsParams.match_count = k;

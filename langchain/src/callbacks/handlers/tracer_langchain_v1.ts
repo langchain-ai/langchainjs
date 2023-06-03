@@ -1,5 +1,6 @@
 import { getBufferString } from "../../memory/base.js";
 import { BaseChatMessage, ChainValues, LLMResult } from "../../schema/index.js";
+import { getEnvironmentVariable } from "../../util/env.js";
 
 import { BaseTracer, RunType, Run } from "./tracer.js";
 
@@ -7,7 +8,7 @@ export interface BaseRunV1 {
   uuid: string;
   parent_uuid?: string;
   start_time: number;
-  end_time: number;
+  end_time?: number;
   execution_order: number;
   child_execution_order: number;
   serialized: { name: string };
@@ -53,10 +54,7 @@ export class LangChainTracerV1 extends BaseTracer {
   name = "langchain_tracer";
 
   protected endpoint =
-    (typeof process !== "undefined"
-      ? // eslint-disable-next-line no-process-env
-        process.env?.LANGCHAIN_ENDPOINT
-      : undefined) || "http://localhost:1984";
+    getEnvironmentVariable("LANGCHAIN_ENDPOINT") || "http://localhost:1984";
 
   protected headers: Record<string, string> = {
     "Content-Type": "application/json",
@@ -66,10 +64,9 @@ export class LangChainTracerV1 extends BaseTracer {
 
   constructor() {
     super();
-    // eslint-disable-next-line no-process-env
-    if (typeof process !== "undefined" && process.env?.LANGCHAIN_API_KEY) {
-      // eslint-disable-next-line no-process-env
-      this.headers["x-api-key"] = process.env?.LANGCHAIN_API_KEY;
+    const apiKey = getEnvironmentVariable("LANGCHAIN_API_KEY");
+    if (apiKey) {
+      this.headers["x-api-key"] = apiKey;
     }
   }
 

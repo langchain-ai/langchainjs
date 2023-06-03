@@ -28,7 +28,7 @@ const correctExps = [
           { type: "string_literal", value: "hello" },
           { type: "string_literal", value: "world" },
           { type: "numeric_literal", value: 1 },
-          { type: "numeric_literal", value: 2 },
+          { type: "numeric_literal", value: 2.1 },
           { type: "numeric_literal", value: 3 },
         ],
       },
@@ -46,7 +46,7 @@ const correctExps = [
           { type: "string_literal", value: "hello" },
           { type: "string_literal", value: "world" },
           { type: "numeric_literal", value: 1 },
-          { type: "numeric_literal", value: 2 },
+          { type: "numeric_literal", value: 2.1 },
           { type: "numeric_literal", value: 3 },
         ],
       },
@@ -74,7 +74,7 @@ const correctExps = [
           { type: "string_literal", value: "hello" },
           { type: "string_literal", value: "world" },
           { type: "numeric_literal", value: 1 },
-          { type: "numeric_literal", value: 2 },
+          { type: "numeric_literal", value: 2.1 },
           { type: "numeric_literal", value: 3 },
         ],
       },
@@ -89,7 +89,7 @@ const correctExps = [
         ],
       },
       { type: "numeric_literal", value: 1 },
-      { type: "numeric_literal", value: 2 },
+      { type: "numeric_literal", value: 2.1 },
       { type: "numeric_literal", value: 3 },
     ],
   },
@@ -105,7 +105,7 @@ const correctExps = [
           { type: "string_literal", value: "hello" },
           { type: "string_literal", value: "world" },
           { type: "numeric_literal", value: 1 },
-          { type: "numeric_literal", value: 2 },
+          { type: "numeric_literal", value: 2.1 },
           { type: "numeric_literal", value: 3 },
         ],
       },
@@ -120,7 +120,7 @@ const correctExps = [
         ],
       },
       { type: "numeric_literal", value: 1 },
-      { type: "numeric_literal", value: 2 },
+      { type: "numeric_literal", value: 2.1 },
       { type: "numeric_literal", value: 3 },
       {
         type: "call_expression",
@@ -241,21 +241,83 @@ const correctExps = [
       },
     ],
   },
+  {
+    type: "call_expression",
+    funcCall: "and",
+    args: [
+      {
+        type: "call_expression",
+        funcCall: "in",
+        args: [
+          { type: "string_literal", value: "a" },
+          {
+            type: "array_literal",
+            values: [
+              { type: "string_literal", value: "a" },
+              { type: "string_literal", value: "b" },
+              { type: "string_literal", value: "c" },
+            ],
+          },
+        ],
+      },
+      {
+        type: "call_expression",
+        funcCall: "eq",
+        args: [
+          { type: "string_literal", value: "a" },
+          { type: "string_literal", value: "b" },
+        ],
+      },
+    ],
+  },
+  {
+    type: "call_expression",
+    funcCall: "with",
+    args: [
+      {
+        type: "call_expression",
+        funcCall: "const",
+        args: [
+          { type: "string_literal", value: "a" },
+          {
+            type: "array_literal",
+            values: [
+              { type: "string_literal", value: "a" },
+              { type: "string_literal", value: "b" },
+              { type: "string_literal", value: "c" },
+            ],
+          },
+        ],
+      },
+      {
+        type: "call_expression",
+        funcCall: "eq",
+        args: [
+          { type: "string_literal", value: "a" },
+          { type: "string_literal", value: "b" },
+          { type: "boolean_literal", value: true },
+        ],
+      },
+    ],
+  },
 ];
 
 test("ExpressionParser multiple expressions test", async () => {
   const parser = new ExpressionParser();
+  await parser.ensureParser();
   const expressions = [
     `hello()`,
     `hello("world")`,
     `hello("world", "hello")`,
-    `hello("world", "hello", ["hello", "world", 1, 2, 3])`,
-    `hello("world", "hello", ["hello", "world", 1, 2, 3], { hello: "world" })`,
-    `hello("world", "hello", ["hello", "world", 1, 2, 3], { hello: "world" }, 1, 2, 3)`,
-    `hello("world", "hello", ["hello", "world", 1, 2, 3], { hello: "world" }, 1, 2, 3, world("hello", "world", [{hello: "world"}, {"hello": hello("world")}]))`,
+    `hello("world", "hello", ["hello", "world", 1, 2.1, 3])`,
+    `hello("world", "hello", ["hello", "world", 1, 2.1, 3], { hello: "world" })`,
+    `hello("world", "hello", ["hello", "world", 1, 2.1, 3], { hello: "world" }, 1, 2.1, 3)`,
+    `hello("world", "hello", ["hello", "world", 1, 2.1, 3], { hello: "world" }, 1, 2.1, 3, world("hello", "world", [{hello: "world"}, {"hello": hello("world")}]))`,
     `hello.world("hello", "world", ["hello", "world"], {"hello": "world"})`,
     `hello["world"]("hello", "world", ["hello", "world"])`,
     `a(b, c(d, e, [f, g], {h: i}))`,
+    `and(in("a", ["a", "b", "c"]), eq("a", "b"))`,
+    `with(const("a", ["a", "b", "c"]), eq("a", "b", true))`,
   ];
   const badExpressions = [
     `hello(`,
@@ -267,14 +329,16 @@ test("ExpressionParser multiple expressions test", async () => {
     parser.parse(expression)
   );
   const badExpressionsPromise = badExpressions.map((expression) =>
-    parser.parse(expression)
+    parser.parse(expression).catch(() => "bad")
   );
 
-  try {
-    await Promise.all(badExpressionsPromise).catch(() => "bad");
-  } catch (err) {
-    expect(err).toBe("bad");
-  }
+  await Promise.allSettled(badExpressionsPromise).then((errors) => {
+    errors.forEach((err) => {
+      if (err.status === "fulfilled") {
+        expect(err.value).toBe("bad");
+      }
+    });
+  });
 
   const parsed = await Promise.all(parsedPromise);
   parsed.forEach((expression, index) => {

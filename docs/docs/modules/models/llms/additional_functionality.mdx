@@ -45,6 +45,20 @@ import { OpenAI } from "langchain/llms/openai";
 const model = new OpenAI({ cache: true });
 ```
 
+### Caching with Momento
+
+LangChain also provides a Momento-based cache. [Momento](https://gomomento.com) is a distributed, serverless cache that requires zero setup or infrastructure maintenance. To use it, you'll need to install the `@gomomento/sdk` package:
+
+```bash npm2yarn
+npm install @gomomento/sdk
+```
+
+Next you'll need to sign up and create an API key. Once you've done that, pass a `cache` option when you instantiate the LLM like this:
+
+import MomentoCacheExample from "@examples/cache/momento.ts";
+
+<CodeBlock language="typescript">{MomentoCacheExample}</CodeBlock>
+
 ### Caching with Redis
 
 LangChain also provides a Redis-based cache. This is useful if you want to share the cache across multiple processes or servers. To use it, you'll need to install the `redis` package:

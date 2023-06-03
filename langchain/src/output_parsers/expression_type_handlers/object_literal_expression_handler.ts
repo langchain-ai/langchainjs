@@ -1,10 +1,9 @@
-import type { ESTree } from "meriyah";
 import { NodeHandler, ASTParser } from "./base.js";
 import { PropertyAssignmentHandler } from "./property_assignment_handler.js";
 import { ObjectLiteralType, PropertyAssignmentType } from "./types.js";
 
 export class ObjectLiteralExpressionHandler extends NodeHandler {
-  async accepts(node: ESTree.Node): Promise<ESTree.ObjectExpression | boolean> {
+  async accepts(node: ExpressionNode): Promise<ObjectExpression | boolean> {
     if (ASTParser.isObjectExpression(node)) {
       return node;
     } else {
@@ -12,7 +11,7 @@ export class ObjectLiteralExpressionHandler extends NodeHandler {
     }
   }
 
-  async handle(node: ESTree.ObjectExpression): Promise<ObjectLiteralType> {
+  async handle(node: ObjectExpression): Promise<ObjectLiteralType> {
     if (!this.parentHandler) {
       throw new Error(
         "ArrayLiteralExpressionHandler must have a parent handler"
@@ -21,7 +20,7 @@ export class ObjectLiteralExpressionHandler extends NodeHandler {
     const values: PropertyAssignmentType[] = [];
     const { properties } = node;
     for (const property of properties) {
-      if (ASTParser.isProperty(property)) {
+      if (ASTParser.isPropertyAssignment(property)) {
         values.push(
           await new PropertyAssignmentHandler(this.parentHandler).handle(
             property
