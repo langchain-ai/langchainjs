@@ -65,8 +65,8 @@ test("Test longer pipeline", async () => {
       },
       {
         name: "qux",
-        prompt: PromptTemplate.fromTemplate("hi {bar}")
-      }
+        prompt: PromptTemplate.fromTemplate("hi {bar}"),
+      },
     ],
     finalPrompt: PromptTemplate.fromTemplate("okay {qux} {baz}"),
   });
@@ -89,11 +89,11 @@ test("Test with .partial", async () => {
     finalPrompt: PromptTemplate.fromTemplate("okay {bar} {baz}"),
   });
   const partialPrompt = await prompt.partial({
-    baz: "schrute"
-  })
+    baz: "schrute",
+  });
   expect(
     await partialPrompt.format({
-      foo: "dwight"
+      foo: "dwight",
     })
   ).toEqual("okay dwight schrute");
 });
