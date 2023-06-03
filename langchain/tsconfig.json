@@ -74,6 +74,7 @@
       "src/vectorstores/opensearch.ts",
       "src/vectorstores/milvus.ts",
       "src/vectorstores/prisma.ts",
+      "src/vectorstores/typeorm.ts",
       "src/vectorstores/myscale.ts",
       "src/vectorstores/redis.ts",
       "src/vectorstores/singlestore.ts",

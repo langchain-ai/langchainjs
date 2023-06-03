@@ -145,6 +145,9 @@
     "vectorstores/prisma.cjs",
     "vectorstores/prisma.js",
     "vectorstores/prisma.d.ts",
+    "vectorstores/typeorm.cjs",
+    "vectorstores/typeorm.js",
+    "vectorstores/typeorm.d.ts",
     "vectorstores/myscale.cjs",
     "vectorstores/myscale.js",
     "vectorstores/myscale.d.ts",
@@ -423,6 +426,7 @@
     "@types/html-to-text": "^9",
     "@types/object-hash": "^3.0.2",
     "@types/pdf-parse": "^1.1.1",
+    "@types/pg": "^8",
     "@types/uuid": "^9",
     "@typescript-eslint/eslint-plugin": "^5.58.0",
     "@typescript-eslint/parser": "^5.58.0",
@@ -455,6 +459,7 @@
     "mysql2": "^3.3.3",
     "pdf-parse": "1.1.1",
     "peggy": "^3.0.2",
+    "pg": "^8.11.0",
     "pickleparser": "^0.1.0",
     "playwright": "^1.32.1",
     "prettier": "^2.8.3",
@@ -508,6 +513,7 @@
     "mysql2": "^3.3.3",
     "pdf-parse": "1.1.1",
     "peggy": "^3.0.2",
+    "pg": "^8.11.0",
     "pickleparser": "^0.1.0",
     "playwright": "^1.32.1",
     "puppeteer": "^19.7.2",
@@ -627,6 +633,9 @@
       "optional": true
     },
     "peggy": {
+      "optional": true
+    },
+    "pg": {
       "optional": true
     },
     "pickleparser": {
@@ -925,6 +934,11 @@
       "types": "./vectorstores/prisma.d.ts",
       "import": "./vectorstores/prisma.js",
       "require": "./vectorstores/prisma.cjs"
+    },
+    "./vectorstores/typeorm": {
+      "types": "./vectorstores/typeorm.d.ts",
+      "import": "./vectorstores/typeorm.js",
+      "require": "./vectorstores/typeorm.cjs"
     },
     "./vectorstores/myscale": {
       "types": "./vectorstores/myscale.d.ts",
