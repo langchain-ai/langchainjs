@@ -1,7 +1,7 @@
 import { LLMChain } from "../../chains/llm_chain.js";
 import {
   QueryConstructorChainOptions,
-  loadQueryContstructorChain,
+  loadQueryConstructorChain,
 } from "../../chains/query_constructor/index.js";
 import { StructuredQuery } from "../../chains/query_constructor/ir.js";
 import { Document } from "../../document.js";
@@ -102,7 +102,7 @@ export class SelfQueryRetriever
 
     const _llmChain =
       llmChain ??
-      loadQueryContstructorChain({
+      loadQueryConstructorChain({
         llm,
         documentContents,
         attributeInfo,

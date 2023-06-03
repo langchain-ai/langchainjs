@@ -1,9 +1,8 @@
-import type { ESTree } from "meriyah";
 import { NodeHandler, ASTParser } from "./base.js";
 import { CallExpressionType, MemberExpressionType } from "./types.js";
 
 export class CallExpressionHandler extends NodeHandler {
-  async accepts(node: ESTree.Node): Promise<ESTree.CallExpression | boolean> {
+  async accepts(node: ExpressionNode): Promise<CallExpression | boolean> {
     if (ASTParser.isCallExpression(node)) {
       return node;
     } else {
@@ -11,8 +10,8 @@ export class CallExpressionHandler extends NodeHandler {
     }
   }
 
-  async handle(node: ESTree.CallExpression): Promise<CallExpressionType> {
-    function checkCallExpressionArgumentType(arg: ESTree.Node): boolean {
+  async handle(node: CallExpression): Promise<CallExpressionType> {
+    function checkCallExpressionArgumentType(arg: ExpressionNode): boolean {
       return [
         ASTParser.isStringLiteral,
         ASTParser.isNumericLiteral,
@@ -34,7 +33,7 @@ export class CallExpressionHandler extends NodeHandler {
       funcCall = callee.name.replace(/^["'](.+(?=["']$))["']$/, "$1");
     } else if (ASTParser.isMemberExpression(callee)) {
       funcCall = (await this.parentHandler.handle(
-        callee as ESTree.MemberExpression
+        callee as MemberExpression
       )) as MemberExpressionType;
     } else {
       throw new Error("Unknown expression type");
@@ -48,7 +47,7 @@ export class CallExpressionHandler extends NodeHandler {
         if (!this.parentHandler) {
           throw new Error("CallExpressionHandler must have a parent handler");
         }
-        return this.parentHandler.handle(arg as ESTree.Node);
+        return this.parentHandler.handle(arg as ExpressionNode);
       })
     );
     return { type: "call_expression", funcCall, args };
