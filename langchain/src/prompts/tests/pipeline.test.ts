@@ -56,7 +56,49 @@ test("Test multi variable pipeline", async () => {
   ).toEqual("okay jim halpert");
 });
 
-test("Test partial with chat prompts", async () => {
+test("Test longer pipeline", async () => {
+  const prompt = new PipelinePromptTemplate({
+    pipelinePrompts: [
+      {
+        name: "bar",
+        prompt: PromptTemplate.fromTemplate("{foo}"),
+      },
+      {
+        name: "qux",
+        prompt: PromptTemplate.fromTemplate("hi {bar}")
+      }
+    ],
+    finalPrompt: PromptTemplate.fromTemplate("okay {qux} {baz}"),
+  });
+  expect(
+    await prompt.format({
+      foo: "pam",
+      baz: "beasley",
+    })
+  ).toEqual("okay hi pam beasley");
+});
+
+test("Test with .partial", async () => {
+  const prompt = new PipelinePromptTemplate({
+    pipelinePrompts: [
+      {
+        name: "bar",
+        prompt: PromptTemplate.fromTemplate("{foo}"),
+      },
+    ],
+    finalPrompt: PromptTemplate.fromTemplate("okay {bar} {baz}"),
+  });
+  const partialPrompt = await prompt.partial({
+    baz: "schrute"
+  })
+  expect(
+    await partialPrompt.format({
+      foo: "dwight"
+    })
+  ).toEqual("okay dwight schrute");
+});
+
+test("Test with chat prompts", async () => {
   const prompt = new PipelinePromptTemplate({
     pipelinePrompts: [
       {
