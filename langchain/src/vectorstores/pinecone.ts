@@ -57,12 +57,26 @@ export class PineconeStore extends VectorStore {
     const documentIds = ids == null ? documents.map(() => uuid.v4()) : ids;
     const pineconeVectors = vectors.map((values, idx) => {
       // Pinecone doesn't support nested objects, so we flatten them
+      const documentMetadata = { ...documents[idx].metadata };
+      // preserve string arrays which are allowed
+      const stringArrays: Record<string, string[]> = {};
+      for (const key of Object.keys(documentMetadata)) {
+        if (
+          Array.isArray(documentMetadata[key]) &&
+          // eslint-disable-next-line @typescript-eslint/ban-types, @typescript-eslint/no-explicit-any
+          documentMetadata[key].every((el: any) => typeof el === "string")
+        ) {
+          stringArrays[key] = documentMetadata[key];
+          delete documentMetadata[key];
+        }
+      }
       const metadata: {
-        [key: string]: string | number | boolean | null;
-      } = flatten({
-        ...documents[idx].metadata,
+        [key: string]: string | number | boolean | string[] | null;
+      } = {
+        ...flatten(documentMetadata),
+        ...stringArrays,
         [this.textKey]: documents[idx].pageContent,
-      });
+      };
       // Pinecone doesn't support null values, so we remove them
       for (const key of Object.keys(metadata)) {
         if (metadata[key] == null) {
@@ -74,6 +88,7 @@ export class PineconeStore extends VectorStore {
           delete metadata[key];
         }
       }
+
       return {
         id: documentIds[idx],
         metadata,
