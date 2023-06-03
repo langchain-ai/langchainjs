@@ -43,7 +43,7 @@ export type VisitorOperationResult = {
 
 export type VisitorComparisonResult = {
   [attr: string]: {
-    [comparator: string]: string | number;
+    [comparator: string]: string | number | string[] | number[];
   };
 };
 

@@ -135,7 +135,9 @@ export class FunctionalTranslator extends BaseTranslator {
       return (document: Document) => {
         const documentValue = document.metadata[attribute];
         if (documentValue === undefined) {
-          if (undefinedTrue.includes(comparator)) return true;
+          if (undefinedTrue.includes(comparator)) {
+            return true;
+          }
           return false;
         }
         return comparatorFunction(documentValue, value);
