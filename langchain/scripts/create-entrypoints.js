@@ -36,6 +36,7 @@ const entrypoints = {
   "llms/load": "llms/load",
   "llms/base": "llms/base",
   "llms/openai": "llms/openai",
+  "llms/ai21": "llms/ai21",
   "llms/cohere": "llms/cohere",
   "llms/hf": "llms/hf",
   "llms/replicate": "llms/replicate",

@@ -53,6 +53,7 @@
       "src/llms/load.ts",
       "src/llms/base.ts",
       "src/llms/openai.ts",
+      "src/llms/ai21.ts",
       "src/llms/cohere.ts",
       "src/llms/hf.ts",
       "src/llms/replicate.ts",

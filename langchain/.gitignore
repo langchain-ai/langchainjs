@@ -67,6 +67,9 @@ llms/base.d.ts
 llms/openai.cjs
 llms/openai.js
 llms/openai.d.ts
+llms/ai21.cjs
+llms/ai21.js
+llms/ai21.d.ts
 llms/cohere.cjs
 llms/cohere.js
 llms/cohere.d.ts
