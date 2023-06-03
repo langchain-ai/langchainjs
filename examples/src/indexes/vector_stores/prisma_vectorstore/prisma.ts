@@ -41,7 +41,7 @@ export const run = async () => {
         content: PrismaVectorStore.ContentColumn,
       },
       filter: {
-        namespace: {
+        content: {
           equals: "default",
         },
       },
@@ -54,7 +54,7 @@ export const run = async () => {
     )
   );
 
-  // Use the default filter a.k.a {namespace : 'default'}
+  // Use the default filter a.k.a {"content": "default"}
   const resultTwo = await vectorStore.similaritySearch("Hello world", 1);
   console.log(resultTwo);
 
@@ -62,7 +62,7 @@ export const run = async () => {
   const resultThree = await vectorStore.similaritySearchWithScore(
     "Hello world",
     1,
-    { namespace: { equals: "different_namespace" } }
+    { content: { equals: "different_content" } }
   );
   console.log(resultThree);
 };
