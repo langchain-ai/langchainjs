@@ -10757,10 +10757,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"chromadb@npm:^1.4.2":
-  version: 1.4.2
-  resolution: "chromadb@npm:1.4.2"
-  checksum: 6fe81e889ae3f6ac39c1a168bcabe12771b0a5271be503db47aa3f8e5c159e29e5eaa7387780fb08d8ef370a42ce58455de1f0622367cb62c4486dfb3b84c20f
+"chromadb@npm:^1.5.2":
+  version: 1.5.2
+  resolution: "chromadb@npm:1.5.2"
+  checksum: 8eace35a0baed74db78695682984ba4263390eaac15e093241bc318ec377e341f12e11c282b76802633df95334203ae1f2173e5ba13cf32b1c5963f0b0a95153
   languageName: node
   linkType: hard
 
@@ -18328,7 +18328,7 @@ __metadata:
     axios: ^0.26.0
     binary-extensions: ^2.2.0
     cheerio: ^1.0.0-rc.12
-    chromadb: ^1.4.2
+    chromadb: ^1.5.2
     cohere-ai: ^5.0.2
     d3-dsv: ^2.0.0
     dotenv: ^16.0.3
@@ -18403,7 +18403,7 @@ __metadata:
     apify-client: ^2.7.1
     axios: "*"
     cheerio: ^1.0.0-rc.12
-    chromadb: ^1.4.2
+    chromadb: ^1.5.2
     cohere-ai: ^5.0.2
     d3-dsv: ^2.0.0
     epub2: ^3.0.1
