@@ -121,6 +121,9 @@
     "vectorstores/weaviate.cjs",
     "vectorstores/weaviate.js",
     "vectorstores/weaviate.d.ts",
+    "vectorstores/mongo.cjs",
+    "vectorstores/mongo.js",
+    "vectorstores/mongo.d.ts",
     "vectorstores/mongodb_atlas.cjs",
     "vectorstores/mongodb_atlas.js",
     "vectorstores/mongodb_atlas.d.ts",
@@ -871,6 +874,11 @@
       "types": "./vectorstores/weaviate.d.ts",
       "import": "./vectorstores/weaviate.js",
       "require": "./vectorstores/weaviate.cjs"
+    },
+    "./vectorstores/mongodb": {
+      "types": "./vectorstores/mongodb.d.ts",
+      "import": "./vectorstores/mongodb.js",
+      "require": "./vectorstores/mongodb.cjs"
     },
     "./vectorstores/mongodb_atlas": {
       "types": "./vectorstores/mongodb_atlas.d.ts",
