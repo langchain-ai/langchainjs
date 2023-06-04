@@ -118,17 +118,17 @@ export const getTableAndColumnsName = async (
   let sql;
   if (appDataSource.options.type === "postgres") {
     const schema = appDataSource.options?.schema ?? "public";
-    sql = `SELECT
-            t.table_name,
-            c.*
-          FROM
-            information_schema.tables t
-              JOIN information_schema.columns c
-                ON t.table_name = c.table_name
-          WHERE
-            t.table_schema = '${schema}'
-              AND c.table_schema = '${schema}'
-          ORDER BY
+    sql = `SELECT 
+            t.table_name, 
+            c.* 
+          FROM 
+            information_schema.tables t 
+              JOIN information_schema.columns c 
+                ON t.table_name = c.table_name 
+          WHERE 
+            t.table_schema = '${schema}' 
+              AND c.table_schema = '${schema}' 
+          ORDER BY 
             t.table_name,
             c.ordinal_position;`;
     const rep = await appDataSource.query(sql);
