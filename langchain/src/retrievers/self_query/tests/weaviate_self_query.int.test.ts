@@ -1,13 +1,15 @@
+/* eslint-disable no-process-env */
 import { test } from "@jest/globals";
+import weaviate from "weaviate-ts-client";
 import { Document } from "../../../document.js";
 import { AttributeInfo } from "../../../schema/query_constructor.js";
 import { OpenAIEmbeddings } from "../../../embeddings/openai.js";
 import { SelfQueryRetriever } from "../index.js";
 import { OpenAI } from "../../../llms/openai.js";
-import { FunctionalTranslator } from "../functional_translator.js";
-import { HNSWLib } from "../../../vectorstores/hnswlib.js";
+import { WeaviateStore } from "../../../vectorstores/weaviate.js";
+import { WeaviateTranslator } from "../weaviate_translator.js";
 
-test("HNSWLib Store Self Query Retriever Test", async () => {
+test("Weaviate Self Query Retriever Test", async () => {
   const docs = [
     new Document({
       pageContent:
@@ -74,28 +76,39 @@ test("HNSWLib Store Self Query Retriever Test", async () => {
   ];
 
   const embeddings = new OpenAIEmbeddings();
-  const llm = new OpenAI();
+  const llm = new OpenAI({
+    modelName: "gpt-3.5-turbo",
+  });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const client = (weaviate as any).client({
+    scheme: process.env.WEAVIATE_SCHEME || "https",
+    host: process.env.WEAVIATE_HOST || "localhost",
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    apiKey: new (weaviate as any).ApiKey(
+      process.env.WEAVIATE_API_KEY || "default"
+    ),
+  });
+
   const documentContents = "Brief summary of a movie";
-  const vectorStore = await HNSWLib.fromDocuments(docs, embeddings);
+  const vectorStore = await WeaviateStore.fromDocuments(docs, embeddings, {
+    client,
+    indexName: "Test",
+    textKey: "text",
+    metadataKeys: ["year", "director", "rating", "genre"],
+  });
   const selfQueryRetriever = await SelfQueryRetriever.fromLLM({
     llm,
     vectorStore,
     documentContents,
     attributeInfo,
-    structuredQueryTranslator: new FunctionalTranslator(),
+    structuredQueryTranslator: new WeaviateTranslator(),
   });
 
-  const query1 = await selfQueryRetriever.getRelevantDocuments(
-    "Which movies are less than 90 minutes?"
-  );
   const query2 = await selfQueryRetriever.getRelevantDocuments(
     "Which movies are rated higher than 8.5?"
   );
   const query3 = await selfQueryRetriever.getRelevantDocuments(
     "Which movies are directed by Greta Gerwig?"
   );
-  const query4 = await selfQueryRetriever.getRelevantDocuments(
-    "Which movies are either comedy or drama and are less than 90 minutes?"
-  );
-  console.log(query1, query2, query3, query4);
+  console.log(query2, query3);
 });

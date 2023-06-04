@@ -2,12 +2,11 @@ import { test } from "@jest/globals";
 import { Document } from "../../../document.js";
 import { AttributeInfo } from "../../../schema/query_constructor.js";
 import { OpenAIEmbeddings } from "../../../embeddings/openai.js";
-import { SelfQueryRetriever } from "../index.js";
+import { ChromaTranslator, SelfQueryRetriever } from "../index.js";
 import { OpenAI } from "../../../llms/openai.js";
-import { FunctionalTranslator } from "../functional_translator.js";
-import { HNSWLib } from "../../../vectorstores/hnswlib.js";
+import { Chroma } from "../../../vectorstores/chroma.js";
 
-test("HNSWLib Store Self Query Retriever Test", async () => {
+test("Chroma Store Self Query Retriever Test", async () => {
   const docs = [
     new Document({
       pageContent:
@@ -76,13 +75,15 @@ test("HNSWLib Store Self Query Retriever Test", async () => {
   const embeddings = new OpenAIEmbeddings();
   const llm = new OpenAI();
   const documentContents = "Brief summary of a movie";
-  const vectorStore = await HNSWLib.fromDocuments(docs, embeddings);
+  const vectorStore = await Chroma.fromDocuments(docs, embeddings, {
+    collectionName: "a-movie-collection",
+  });
   const selfQueryRetriever = await SelfQueryRetriever.fromLLM({
     llm,
     vectorStore,
     documentContents,
     attributeInfo,
-    structuredQueryTranslator: new FunctionalTranslator(),
+    structuredQueryTranslator: new ChromaTranslator(),
   });
 
   const query1 = await selfQueryRetriever.getRelevantDocuments(

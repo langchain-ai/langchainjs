@@ -12,6 +12,7 @@ import { PineconeTranslator } from "./pinecone_translator.js";
 import { ChromaTranslator } from "./chroma_translator.js";
 import { FunctionalTranslator } from "./functional_translator.js";
 import { SupabaseTranslator } from "./supabase_translator.js";
+import { WeaviateTranslator } from "./weaviate_translator.js";
 
 export {
   BaseTranslator,
@@ -20,6 +21,7 @@ export {
   SupabaseTranslator,
   PineconeTranslator,
   ChromaTranslator,
+  WeaviateTranslator,
 };
 
 export type SelfQueryRetrieverArgs = {

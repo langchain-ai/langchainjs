@@ -1,13 +1,14 @@
+/* eslint-disable no-process-env */
 import { test } from "@jest/globals";
+import { PineconeClient } from "@pinecone-database/pinecone";
 import { Document } from "../../../document.js";
 import { AttributeInfo } from "../../../schema/query_constructor.js";
 import { OpenAIEmbeddings } from "../../../embeddings/openai.js";
-import { SelfQueryRetriever } from "../index.js";
+import { PineconeTranslator, SelfQueryRetriever } from "../index.js";
 import { OpenAI } from "../../../llms/openai.js";
-import { FunctionalTranslator } from "../functional_translator.js";
-import { HNSWLib } from "../../../vectorstores/hnswlib.js";
+import { PineconeStore } from "../../../vectorstores/pinecone.js";
 
-test("HNSWLib Store Self Query Retriever Test", async () => {
+test("Pinecone Store Self Query Retriever Test", async () => {
   const docs = [
     new Document({
       pageContent:
@@ -73,16 +74,35 @@ test("HNSWLib Store Self Query Retriever Test", async () => {
     },
   ];
 
+  if (
+    !process.env.PINECONE_API_KEY ||
+    !process.env.PINECONE_ENVIRONMENT ||
+    !process.env.PINECONE_INDEX
+  ) {
+    throw new Error(
+      "PINECONE_ENVIRONMENT and PINECONE_API_KEY and PINECONE_INDEX must be set"
+    );
+  }
+
+  const client = new PineconeClient();
+  await client.init({
+    apiKey: process.env.PINECONE_API_KEY,
+    environment: process.env.PINECONE_ENVIRONMENT,
+  });
+  const index = client.Index(process.env.PINECONE_INDEX);
+
   const embeddings = new OpenAIEmbeddings();
   const llm = new OpenAI();
   const documentContents = "Brief summary of a movie";
-  const vectorStore = await HNSWLib.fromDocuments(docs, embeddings);
+  const vectorStore = await PineconeStore.fromDocuments(docs, embeddings, {
+    pineconeIndex: index,
+  });
   const selfQueryRetriever = await SelfQueryRetriever.fromLLM({
     llm,
     vectorStore,
     documentContents,
     attributeInfo,
-    structuredQueryTranslator: new FunctionalTranslator(),
+    structuredQueryTranslator: new PineconeTranslator(),
   });
 
   const query1 = await selfQueryRetriever.getRelevantDocuments(

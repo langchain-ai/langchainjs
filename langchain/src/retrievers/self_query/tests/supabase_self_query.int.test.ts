@@ -9,7 +9,7 @@ import { OpenAI } from "../../../llms/openai.js";
 import { SupabaseTranslator } from "../supabase_translator.js";
 import { SupabaseVectorStore } from "../../../vectorstores/supabase.js";
 
-test("Memory Vector Store Self Query Retriever Test", async () => {
+test("Supabase Store Self Query Retriever Test", async () => {
   const docs = [
     new Document({
       pageContent:
