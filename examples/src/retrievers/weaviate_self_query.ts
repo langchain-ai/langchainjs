@@ -134,10 +134,10 @@ const selfQueryRetriever = await SelfQueryRetriever.fromLLM({
  * meaning that Weaviate will throw an error if the self query chain generate a query with a metadata key that does
  * not exist in your Weaviate database.
  */
-const query2 = await selfQueryRetriever.getRelevantDocuments(
+const query1 = await selfQueryRetriever.getRelevantDocuments(
   "Which movies are rated higher than 8.5?"
 );
-const query3 = await selfQueryRetriever.getRelevantDocuments(
+const query2 = await selfQueryRetriever.getRelevantDocuments(
   "Which movies are directed by Greta Gerwig?"
 );
-console.log(query2, query3);
+console.log(query1, query2);
