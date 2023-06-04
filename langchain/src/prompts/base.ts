@@ -1,3 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// Default generic "any" values are for backwards compatibility.
+// Replace with "string" when we are comfortable with a breaking change.
+
 import {
   BasePromptValue,
   Example,
@@ -28,7 +32,12 @@ export class StringPromptValue extends BasePromptValue {
 /**
  * Input common to all prompt templates.
  */
-export interface BasePromptTemplateInput<InputVariableName extends string = string, PartialVariableName extends string = string> {
+export interface BasePromptTemplateInput<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  InputVariableName extends string = any,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  PartialVariableName extends string = any
+> {
   /**
    * A list of variable names the prompt template expects
    */
@@ -47,14 +56,22 @@ export interface BasePromptTemplateInput<InputVariableName extends string = stri
  * Base class for prompt templates. Exposes a format method that returns a
  * string prompt given a set of input values.
  */
-export abstract class BasePromptTemplate<InputVariableName extends string = string, PartialVariableName extends string = string> implements BasePromptTemplateInput<InputVariableName, PartialVariableName> {
+export abstract class BasePromptTemplate<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  InputVariableName extends string = any,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  PartialVariableName extends string = any
+> implements BasePromptTemplateInput<InputVariableName, PartialVariableName>
+{
   inputVariables: InputVariableName[];
 
   outputParser?: BaseOutputParser;
 
   partialVariables?: PartialValues<PartialVariableName>;
 
-  constructor(input: BasePromptTemplateInput<InputVariableName, PartialVariableName>) {
+  constructor(
+    input: BasePromptTemplateInput<InputVariableName, PartialVariableName>
+  ) {
     const { inputVariables } = input;
     if ((inputVariables as string[]).includes("stop")) {
       throw new Error(
@@ -64,7 +81,9 @@ export abstract class BasePromptTemplate<InputVariableName extends string = stri
     Object.assign(this, input);
   }
 
-  abstract partial(values: PartialValues): Promise<BasePromptTemplate<InputVariableName, PartialVariableName>>;
+  abstract partial(
+    values: PartialValues
+  ): Promise<BasePromptTemplate<InputVariableName, PartialVariableName>>;
 
   async mergePartialAndUserVariables(
     userVariables: InputValues<InputVariableName>
@@ -76,11 +95,14 @@ export abstract class BasePromptTemplate<InputVariableName extends string = stri
       if (typeof value === "string") {
         partialValues[key] = value;
       } else {
-        partialValues[key] = await (value as Function)() as string;
+        partialValues[key] = await (value as () => Promise<string>)();
       }
     }
 
-    const allKwargs = { ...(partialValues as Record<PartialVariableName, string>), ...userVariables };
+    const allKwargs = {
+      ...(partialValues as Record<PartialVariableName, string>),
+      ...userVariables,
+    };
     return allKwargs;
   }
 
@@ -102,7 +124,9 @@ export abstract class BasePromptTemplate<InputVariableName extends string = stri
    * @param values
    * @returns A formatted PromptValue.
    */
-  abstract formatPromptValue(values: InputValues<InputVariableName>): Promise<BasePromptValue>;
+  abstract formatPromptValue(
+    values: InputValues<InputVariableName>
+  ): Promise<BasePromptValue>;
 
   /**
    * Return the string type key uniquely identifying this class of prompt template.
@@ -148,8 +172,15 @@ export abstract class BasePromptTemplate<InputVariableName extends string = stri
   }
 }
 
-export abstract class BaseStringPromptTemplate<InputVariableName extends string = string, PartialVariableName extends string = string> extends BasePromptTemplate<InputVariableName, PartialVariableName> {
-  async formatPromptValue(values: InputValues<InputVariableName>): Promise<BasePromptValue> {
+export abstract class BaseStringPromptTemplate<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  InputVariableName extends string = any,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  PartialVariableName extends string = any
+> extends BasePromptTemplate<InputVariableName, PartialVariableName> {
+  async formatPromptValue(
+    values: InputValues<InputVariableName>
+  ): Promise<BasePromptValue> {
     const formattedPrompt = await this.format(values);
     return new StringPromptValue(formattedPrompt);
   }

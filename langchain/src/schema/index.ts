@@ -5,7 +5,7 @@ export const RUN_KEY = "__run";
 export type Example = Record<string, string>;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type InputValues<K extends string = string> = Record<K, any>;
+export type InputValues<K extends string = string> = Record<K | string, any>;
 
 export type PartialValues<K extends string = string> = Record<
   K,

@@ -1,3 +1,6 @@
+// Default generic "any" values are for backwards compatibility.
+// Replace with "string" when we are comfortable with a breaking change.
+
 import { BaseStringPromptTemplate, BasePromptTemplateInput } from "./base.js";
 import {
   checkValidTemplate,
@@ -12,7 +15,12 @@ import { InputValues, PartialValues } from "../schema/index.js";
  * Inputs to create a {@link PromptTemplate}
  * @augments BasePromptTemplateInput
  */
-export interface PromptTemplateInput<InputVariableNames extends string = string, PartialVariableNames extends string = string> extends BasePromptTemplateInput<InputVariableNames, PartialVariableNames> {
+export interface PromptTemplateInput<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  InputVariableNames extends string = any,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  PartialVariableNames extends string = any
+> extends BasePromptTemplateInput<InputVariableNames, PartialVariableNames> {
   /**
    * The prompt template
    */
@@ -48,7 +56,12 @@ export interface PromptTemplateInput<InputVariableNames extends string = string,
  * });
  * ```
  */
-export class PromptTemplate<InputVariableNames extends string = string, PartialVariableNames extends string = string>
+export class PromptTemplate<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    InputVariableNames extends string = any,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    PartialVariableNames extends string = any
+  >
   extends BaseStringPromptTemplate<InputVariableNames, PartialVariableNames>
   implements PromptTemplateInput<InputVariableNames, PartialVariableNames>
 {
@@ -58,7 +71,9 @@ export class PromptTemplate<InputVariableNames extends string = string, PartialV
 
   validateTemplate = true;
 
-  constructor(input: PromptTemplateInput<InputVariableNames, PartialVariableNames>) {
+  constructor(
+    input: PromptTemplateInput<InputVariableNames, PartialVariableNames>
+  ) {
     super(input);
     Object.assign(this, input);
 
@@ -138,7 +153,9 @@ export class PromptTemplate<InputVariableNames extends string = string, PartialV
     });
   }
 
-  async partial<NewPartialNames extends string>(values: PartialValues<NewPartialNames>) {
+  async partial<NewPartialNames extends string>(
+    values: PartialValues<NewPartialNames>
+  ) {
     const newInputVariables = this.inputVariables.filter(
       (iv) => !(iv in values)
     ) as Exclude<InputVariableNames, NewPartialNames>[];
@@ -146,7 +163,11 @@ export class PromptTemplate<InputVariableNames extends string = string, PartialV
       ...(this.partialVariables ?? {}),
       ...values,
     } as PartialValues<PartialVariableNames | NewPartialNames>;
-    const promptDict = { ...this, inputVariables: newInputVariables, partialVariables: newPartialVariables };
+    const promptDict = {
+      ...this,
+      inputVariables: newInputVariables,
+      partialVariables: newPartialVariables,
+    };
     return new PromptTemplate(promptDict);
   }
 
