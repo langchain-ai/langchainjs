@@ -13,9 +13,9 @@ import { SerializedFewShotTemplate } from "./serde.js";
 import { Example, InputValues, PartialValues } from "../schema/index.js";
 
 export interface FewShotPromptTemplateInput<
-  InputVariableNames extends string,
-  PartialVariableNames extends string
-> extends BasePromptTemplateInput<InputVariableNames, PartialVariableNames> {
+  InputVariableName extends string,
+  PartialVariableName extends string
+> extends BasePromptTemplateInput<InputVariableName, PartialVariableName> {
   /**
    * Examples to format into the prompt. Exactly one of this or
    * {@link exampleSelector} must be
@@ -33,7 +33,7 @@ export interface FewShotPromptTemplateInput<
   /**
    * An {@link PromptTemplate} used to format a single example.
    */
-  examplePrompt: PromptTemplate<InputVariableNames, PartialVariableNames>;
+  examplePrompt: PromptTemplate<InputVariableName, PartialVariableName>;
 
   /**
    * String separator used to join the prefix, the examples, and suffix.
@@ -69,18 +69,17 @@ export interface FewShotPromptTemplateInput<
  * @augments FewShotPromptTemplateInput
  */
 export class FewShotPromptTemplate<
-    InputVariableNames extends string,
-    PartialVariableNames extends string
+    InputVariableName extends string,
+    PartialVariableName extends string
   >
-  extends BaseStringPromptTemplate<InputVariableNames, PartialVariableNames>
-  implements
-    FewShotPromptTemplateInput<InputVariableNames, PartialVariableNames>
+  extends BaseStringPromptTemplate<InputVariableName, PartialVariableName>
+  implements FewShotPromptTemplateInput<InputVariableName, PartialVariableName>
 {
   examples?: InputValues[];
 
   exampleSelector?: BaseExampleSelector | undefined;
 
-  examplePrompt: PromptTemplate<InputVariableNames, PartialVariableNames>;
+  examplePrompt: PromptTemplate<InputVariableName, PartialVariableName>;
 
   suffix = "";
 
@@ -93,7 +92,7 @@ export class FewShotPromptTemplate<
   validateTemplate = true;
 
   constructor(
-    input: FewShotPromptTemplateInput<InputVariableNames, PartialVariableNames>
+    input: FewShotPromptTemplateInput<InputVariableName, PartialVariableName>
   ) {
     super(input);
     Object.assign(this, input);
@@ -130,8 +129,8 @@ export class FewShotPromptTemplate<
   }
 
   private async getExamples(
-    inputVariables: InputValues<InputVariableNames> &
-      InputValues<PartialVariableNames>
+    inputVariables: InputValues<InputVariableName> &
+      InputValues<PartialVariableName>
   ): Promise<InputValues[]> {
     if (this.examples !== undefined) {
       return this.examples;
@@ -145,16 +144,16 @@ export class FewShotPromptTemplate<
     );
   }
 
-  async partial<NewPartialNames extends string>(
-    values: PartialValues<NewPartialNames>
+  async partial<NewPartialVariableName extends string>(
+    values: PartialValues<NewPartialVariableName>
   ) {
     const newInputVariables = this.inputVariables.filter(
       (iv) => !(iv in values)
-    ) as Exclude<InputVariableNames, NewPartialNames>[];
+    ) as Exclude<InputVariableName, NewPartialVariableName>[];
     const newPartialVariables = {
       ...(this.partialVariables ?? {}),
       ...values,
-    } as PartialValues<PartialVariableNames | NewPartialNames>;
+    } as PartialValues<PartialVariableName | NewPartialVariableName>;
     const promptDict = {
       ...this,
       inputVariables: newInputVariables,
@@ -169,7 +168,7 @@ export class FewShotPromptTemplate<
 
     const exampleStrings = await Promise.all(
       examples.map((example) =>
-        this.examplePrompt.format(example as InputValues<InputVariableNames>)
+        this.examplePrompt.format(example as InputValues<InputVariableName>)
       )
     );
     const template = [this.prefix, ...exampleStrings, this.suffix].join(

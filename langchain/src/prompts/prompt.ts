@@ -17,10 +17,10 @@ import { InputValues, PartialValues } from "../schema/index.js";
  */
 export interface PromptTemplateInput<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  InputVariableNames extends string = any,
+  InputVariableName extends string = any,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  PartialVariableNames extends string = any
-> extends BasePromptTemplateInput<InputVariableNames, PartialVariableNames> {
+  PartialVariableName extends string = any
+> extends BasePromptTemplateInput<InputVariableName, PartialVariableName> {
   /**
    * The prompt template
    */
@@ -58,12 +58,12 @@ export interface PromptTemplateInput<
  */
 export class PromptTemplate<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    InputVariableNames extends string = any,
+    InputVariableName extends string = any,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    PartialVariableNames extends string = any
+    PartialVariableName extends string = any
   >
-  extends BaseStringPromptTemplate<InputVariableNames, PartialVariableNames>
-  implements PromptTemplateInput<InputVariableNames, PartialVariableNames>
+  extends BaseStringPromptTemplate<InputVariableName, PartialVariableName>
+  implements PromptTemplateInput<InputVariableName, PartialVariableName>
 {
   template: string;
 
@@ -72,7 +72,7 @@ export class PromptTemplate<
   validateTemplate = true;
 
   constructor(
-    input: PromptTemplateInput<InputVariableNames, PartialVariableNames>
+    input: PromptTemplateInput<InputVariableName, PartialVariableName>
   ) {
     super(input);
     Object.assign(this, input);
@@ -96,7 +96,7 @@ export class PromptTemplate<
     return "prompt";
   }
 
-  async format(values: InputValues<InputVariableNames>): Promise<string> {
+  async format(values: InputValues<InputVariableName>): Promise<string> {
     const allValues = await this.mergePartialAndUserVariables(values);
     return renderTemplate(this.template, this.templateFormat, allValues);
   }
@@ -153,16 +153,16 @@ export class PromptTemplate<
     });
   }
 
-  async partial<NewPartialNames extends string>(
-    values: PartialValues<NewPartialNames>
+  async partial<NewPartialVariableName extends string>(
+    values: PartialValues<NewPartialVariableName>
   ) {
     const newInputVariables = this.inputVariables.filter(
       (iv) => !(iv in values)
-    ) as Exclude<InputVariableNames, NewPartialNames>[];
+    ) as Exclude<InputVariableName, NewPartialVariableName>[];
     const newPartialVariables = {
       ...(this.partialVariables ?? {}),
       ...values,
-    } as PartialValues<PartialVariableNames | NewPartialNames>;
+    } as PartialValues<PartialVariableName | NewPartialVariableName>;
     const promptDict = {
       ...this,
       inputVariables: newInputVariables,

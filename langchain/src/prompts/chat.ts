@@ -109,10 +109,10 @@ export abstract class BaseChatPromptTemplate<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   InputVariableName extends string = any,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  PartialVariableNames extends string = any
-> extends BasePromptTemplate<InputVariableName, PartialVariableNames> {
+  PartialVariableName extends string = any
+> extends BasePromptTemplate<InputVariableName, PartialVariableName> {
   constructor(
-    input: BasePromptTemplateInput<InputVariableName, PartialVariableNames>
+    input: BasePromptTemplateInput<InputVariableName, PartialVariableName>
   ) {
     super(input);
   }
@@ -215,8 +215,8 @@ export interface ChatPromptTemplateInput<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   InputVariableName extends string = any,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  PartialVariableNames extends string = any
-> extends BasePromptTemplateInput<InputVariableName, PartialVariableNames> {
+  PartialVariableName extends string = any
+> extends BasePromptTemplateInput<InputVariableName, PartialVariableName> {
   /**
    * The prompt messages
    */
@@ -234,17 +234,17 @@ export class ChatPromptTemplate<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     InputVariableName extends string = any,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    PartialVariableNames extends string = any
+    PartialVariableName extends string = any
   >
-  extends BaseChatPromptTemplate<InputVariableName, PartialVariableNames>
-  implements ChatPromptTemplateInput<InputVariableName, PartialVariableNames>
+  extends BaseChatPromptTemplate<InputVariableName, PartialVariableName>
+  implements ChatPromptTemplateInput<InputVariableName, PartialVariableName>
 {
   promptMessages: BaseMessagePromptTemplate[];
 
   validateTemplate = true;
 
   constructor(
-    input: ChatPromptTemplateInput<InputVariableName, PartialVariableNames>
+    input: ChatPromptTemplateInput<InputVariableName, PartialVariableName>
   ) {
     super(input);
     Object.assign(this, input);
@@ -332,18 +332,18 @@ export class ChatPromptTemplate<
     };
   }
 
-  async partial<NewPartialNames extends string>(
-    values: PartialValues<NewPartialNames>
+  async partial<NewPartialVariableName extends string>(
+    values: PartialValues<NewPartialVariableName>
   ) {
     // This is implemented in a way it doesn't require making
     // BaseMessagePromptTemplate aware of .partial()
     const newInputVariables = this.inputVariables.filter(
       (iv) => !(iv in values)
-    ) as Exclude<InputVariableName, NewPartialNames>[];
+    ) as Exclude<InputVariableName, NewPartialVariableName>[];
     const newPartialVariables = {
       ...(this.partialVariables ?? {}),
       ...values,
-    } as PartialValues<PartialVariableNames | NewPartialNames>;
+    } as PartialValues<PartialVariableName | NewPartialVariableName>;
     const promptDict = {
       ...this,
       inputVariables: newInputVariables,
