@@ -150,7 +150,7 @@ export type QueryConstructorChainOptions = {
   allowedOperators?: Operator[];
 };
 
-export function loadQueryContstructorChain(opts: QueryConstructorChainOptions) {
+export function loadQueryConstructorChain(opts: QueryConstructorChainOptions) {
   const prompt = _getPrompt(
     opts.documentContents,
     opts.attributeInfo,
