@@ -149,26 +149,23 @@ export class AI21 extends LLM implements AI21Input {
       "Content-Type": "application/json",
     };
     const data = { prompt, stopSequences: stop, ...this.defaultParams };
-    const responseData = await this.caller.callWithOptions(
-      {},
-      async () => {
-        const response = await fetch(url, {
-          method: "POST",
-          headers,
-          body: JSON.stringify(data),
-          signal: options.signal,
-        });
-        if (!response.ok) {
-          const error = new Error(
-            `AI21 call failed with status code ${response.status}`
-          );
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (error as any).response = response;
-          throw error;
-        }
-        return response.json();
+    const responseData = await this.caller.callWithOptions({}, async () => {
+      const response = await fetch(url, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(data),
+        signal: options.signal,
+      });
+      if (!response.ok) {
+        const error = new Error(
+          `AI21 call failed with status code ${response.status}`
+        );
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (error as any).response = response;
+        throw error;
       }
-    );
+      return response.json();
+    });
 
     if (
       !responseData.completions ||
