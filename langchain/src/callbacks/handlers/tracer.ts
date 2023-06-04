@@ -16,7 +16,7 @@ export interface BaseRun {
   id: string;
   name: string;
   start_time: number;
-  end_time: number;
+  end_time?: number;
   extra?: Extra;
   error?: string;
   execution_order: number;
@@ -101,7 +101,6 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       name: llm.name,
       parent_run_id: parentRunId,
       start_time: Date.now(),
-      end_time: 0,
       serialized: llm,
       inputs: { prompts },
       execution_order,
@@ -128,7 +127,6 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       name: llm.name,
       parent_run_id: parentRunId,
       start_time: Date.now(),
-      end_time: 0,
       serialized: llm,
       inputs: { messages },
       execution_order,
@@ -176,7 +174,6 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       name: chain.name,
       parent_run_id: parentRunId,
       start_time: Date.now(),
-      end_time: 0,
       serialized: chain,
       inputs,
       execution_order,
@@ -223,7 +220,6 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       name: tool.name,
       parent_run_id: parentRunId,
       start_time: Date.now(),
-      end_time: 0,
       serialized: tool,
       inputs: { input },
       execution_order,

@@ -7,6 +7,7 @@ export * from "langchain/embeddings/fake";
 export * from "langchain/embeddings/openai";
 export * from "langchain/llms/base";
 export * from "langchain/llms/openai";
+export * from "langchain/llms/ai21";
 export * from "langchain/prompts";
 export * from "langchain/vectorstores/base";
 export * from "langchain/vectorstores/memory";
