@@ -1,5 +1,4 @@
 import { PromptTemplate, PipelinePromptTemplate } from "langchain/prompts";
-import { LLMChain } from "langchain/chains/llm_chain";
 
 const fullPrompt = PromptTemplate.fromTemplate(`{introduction}
 
