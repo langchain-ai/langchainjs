@@ -150,7 +150,7 @@ export class AI21 extends LLM implements AI21Input {
     };
     const data = { prompt, stopSequences: stop, ...this.defaultParams };
     const responseData = await this.caller.callWithOptions(
-      { signal: options.signal },
+      {},
       async () => {
         const response = await fetch(url, {
           method: "POST",
