@@ -3,30 +3,31 @@ import { BasePromptTemplate, BasePromptTemplateInput } from "./base.js";
 import { ChatPromptTemplate } from "./chat.js";
 import { SerializedBasePromptTemplate } from "./serde.js";
 
-export type PipelinePromptParams<T extends BasePromptTemplate> = {
+export type PipelinePromptParams<
+  PromptTemplateType extends BasePromptTemplate
+> = {
   name: string;
-  prompt: T;
+  prompt: PromptTemplateType;
 };
 
-export type PipelinePromptTemplateInput<T extends BasePromptTemplate> = Omit<
-  BasePromptTemplateInput,
-  "inputVariables"
-> & {
-  pipelinePrompts: PipelinePromptParams<T>[];
-  finalPrompt: T;
+export type PipelinePromptTemplateInput<
+  PromptTemplateType extends BasePromptTemplate
+> = Omit<BasePromptTemplateInput, "inputVariables"> & {
+  pipelinePrompts: PipelinePromptParams<PromptTemplateType>[];
+  finalPrompt: PromptTemplateType;
 };
 
 export class PipelinePromptTemplate<
-  T extends BasePromptTemplate
+  PromptTemplateType extends BasePromptTemplate
 > extends BasePromptTemplate {
-  pipelinePrompts: PipelinePromptParams<T>[];
+  pipelinePrompts: PipelinePromptParams<PromptTemplateType>[];
 
-  finalPrompt: T;
+  finalPrompt: PromptTemplateType;
 
-  constructor(input: PipelinePromptTemplateInput<T>) {
+  constructor(input: PipelinePromptTemplateInput<PromptTemplateType>) {
     super({ ...input, inputVariables: [] });
     this.pipelinePrompts = input.pipelinePrompts;
-    this.finalPrompt = input.finalPrompt as T;
+    this.finalPrompt = input.finalPrompt;
     this.inputVariables = this.computeInputValues();
   }
 
@@ -85,7 +86,7 @@ export class PipelinePromptTemplate<
 
   async formatPromptValue(
     values: InputValues
-  ): Promise<T["PromptValueReturnType"]> {
+  ): Promise<PromptTemplateType["PromptValueReturnType"]> {
     return this.finalPrompt.formatPromptValue(
       await this.formatPipelinePrompts(values)
     );
@@ -95,7 +96,9 @@ export class PipelinePromptTemplate<
     return this.finalPrompt.format(await this.formatPipelinePrompts(values));
   }
 
-  async partial(values: PartialValues): Promise<PipelinePromptTemplate<T>> {
+  async partial(
+    values: PartialValues
+  ): Promise<PipelinePromptTemplate<PromptTemplateType>> {
     const promptDict = { ...this };
     promptDict.inputVariables = this.inputVariables.filter(
       (iv) => !(iv in values)
@@ -104,7 +107,7 @@ export class PipelinePromptTemplate<
       ...(this.partialVariables ?? {}),
       ...values,
     };
-    return new PipelinePromptTemplate<T>(promptDict);
+    return new PipelinePromptTemplate<PromptTemplateType>(promptDict);
   }
 
   serialize(): SerializedBasePromptTemplate {
