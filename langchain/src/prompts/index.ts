@@ -46,3 +46,8 @@ export {
   checkValidTemplate,
   TemplateFormat,
 } from "./template.js";
+export {
+  PipelinePromptParams,
+  PipelinePromptTemplate,
+  PipelinePromptTemplateInput,
+} from "./pipeline.js";
