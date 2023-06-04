@@ -28,7 +28,7 @@ test.skip("Test embeddings creation", async () => {
     metadata: { a: 1 },
     sourceName: "hello.txt",
   };
-  const docHi = { pageContent: "hi", metadata: { a: 1 }, sourceName: "hi.txt" };
+  const docHi = { pageContent: "hi", metadata: { a: 2 }, sourceName: "hi.txt" };
   const docCat = {
     pageContent: "Cat drinks milk",
     metadata: { a: 2, sourceName: "cat.txt" },
@@ -64,7 +64,7 @@ test.skip("Test embeddings creation", async () => {
   expect(results2[0].pageContent).toEqual("Cat is drinking milk");
 
   await typeormVectorStore.appDataSource.query(
-      'TRUNCATE TABLE "testlangchain"'
+    'TRUNCATE TABLE "testlangchain"'
   );
   await typeormVectorStore.appDataSource.destroy();
 });

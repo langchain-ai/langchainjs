@@ -42,43 +42,42 @@ export class TypeORMVectorStore extends VectorStore {
     this.tableName = fields.tableName || defaultDocumentTableName;
     this.filter = fields.filter;
     const TypeORMDocumentEntity = new EntitySchema<TypeORMVectorStoreDocument>({
-          name: fields.tableName ?? defaultDocumentTableName,
-          columns: {
-              id: {
-                  generated: "uuid",
-                  type: "uuid",
-                  primary: true,
-              },
-              pageContent: {
-                  type: String,
-              },
-              metadata: {
-                  type: "jsonb",
-              },
-              embedding: {
-                  type: String,
-              },
-              sourceType: {
-                  type: String,
-              },
-              sourceName: {
-                  type: String,
-              },
-              hash: {
-                  type: String,
-              },
-          },
-      });
-      this.appDataSource = new DataSource({
-          entities: [TypeORMDocumentEntity],
-          ...fields.postgresConnectionOptions,
-      });
-      this.documentEntity = TypeORMDocumentEntity;
+      name: fields.tableName ?? defaultDocumentTableName,
+      columns: {
+        id: {
+          type: String,
+          primary: true,
+        },
+        pageContent: {
+          type: String,
+        },
+        metadata: {
+          type: "jsonb",
+        },
+        embedding: {
+          type: String,
+        },
+        sourceType: {
+          type: String,
+        },
+        sourceName: {
+          type: String,
+        },
+        hash: {
+          type: String,
+        },
+      },
+    });
+    this.appDataSource = new DataSource({
+      entities: [TypeORMDocumentEntity],
+      ...fields.postgresConnectionOptions,
+    });
+    this.documentEntity = TypeORMDocumentEntity;
 
-      this._verbose =
-        getEnvironmentVariable("LANGCHAIN_VERBOSE") === "true" ??
-        fields.verbose ??
-        false;
+    this._verbose =
+      getEnvironmentVariable("LANGCHAIN_VERBOSE") === "true" ??
+      fields.verbose ??
+      false;
   }
 
   static async fromDataSource(
@@ -249,7 +248,7 @@ export class TypeORMVectorStore extends VectorStore {
     await this.appDataSource.query("CREATE EXTENSION IF NOT EXISTS vector;");
     await this.appDataSource.query(`
       CREATE TABLE IF NOT EXISTS ${this.tableName} (
-        id text PRIMARY KEY,
+        "id" text PRIMARY KEY,
         "pageContent" text,
         metadata jsonb,
         "sourceType" text,
