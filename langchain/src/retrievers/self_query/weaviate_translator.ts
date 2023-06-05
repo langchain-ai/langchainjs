@@ -4,6 +4,7 @@ import {
   Comparison,
   IN,
   NIN,
+  NOT,
   Operation,
   Operator,
   Operators,
@@ -12,7 +13,7 @@ import {
 } from "../../chains/query_constructor/ir.js";
 import { BaseTranslator } from "./translator.js";
 
-type AllowedOperator = Exclude<Operator, "not">;
+type AllowedOperator = Exclude<Operator, NOT>;
 
 type AllowedComparator = Exclude<Comparator, IN | NIN>;
 
