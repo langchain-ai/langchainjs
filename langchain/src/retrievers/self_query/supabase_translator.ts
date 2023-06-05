@@ -155,16 +155,27 @@ export class SupabaseTranslator extends BaseTranslator {
   }
 
   visitComparisonAsString(comparison: Comparison): string {
-    const { comparator: _comparator, attribute, value } = comparison;
+    let { value } = comparison;
+    const { comparator: _comparator, attribute } = comparison;
     let comparator = _comparator as string;
     if (comparator === Comparators.ne) {
       comparator = "neq";
+    }
+    if (Array.isArray(value)) {
+      value = `(${value
+        .map((v) => {
+          if (typeof v === "string") {
+            return `"${v}"`;
+          }
+          return v;
+        })
+        .join(",")})`;
     }
     return `${this.buildColumnName(
       attribute,
       value,
       false
-    )}.${comparator}.${value}`;
+    )}.${comparator}.${value}}`;
   }
 
   visitComparison(comparison: Comparison): this["VisitComparisonOutput"] {
