@@ -1,7 +1,7 @@
 import { Document } from "../document.js";
-import { Docstore } from "./base.js";
+import { Docstore, SynchronousDocstore } from "./base.js";
 
-export class InMemoryDocstore extends Docstore {
+export class InMemoryDocstore extends SynchronousDocstore {
   _docs: Map<string, Document>;
 
   constructor(docs?: Map<string, Document>) {
@@ -29,5 +29,27 @@ export class InMemoryDocstore extends Docstore {
     for (const [key, value] of Object.entries(texts)) {
       this._docs.set(key, value);
     }
+  }
+}
+
+export class MemoryDocstore extends Docstore {
+  syncDocstore: InMemoryDocstore;
+
+  constructor(docs?: Map<string, Document>) {
+    super();
+    this.syncDocstore = new InMemoryDocstore(docs);
+  }
+
+  search(search: string): Promise<Document> {
+    const result = this.syncDocstore.search(search);
+    if (typeof result === "string") {
+      throw new Error(result);
+    } else {
+      return Promise.resolve(result);
+    }
+  }
+
+  add(texts: Record<string, Document>): Promise<void> {
+    return Promise.resolve(this.syncDocstore.add(texts));
   }
 }
