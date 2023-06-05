@@ -58,8 +58,8 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
 
   get lc_secrets(): { [key: string]: string } | undefined {
     return {
-      "0.openAIApiKey": "OPENAI_API_KEY",
-      "0.azureOpenAIApiKey": "AZURE_OPENAI_API_KEY",
+      openAIApiKey: "OPENAI_API_KEY",
+      azureOpenAIApiKey: "AZURE_OPENAI_API_KEY",
     };
   }
 
@@ -108,7 +108,9 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
       Partial<AzureOpenAIInput> &
       BaseLLMParams & {
         openAIApiKey?: string;
+        configuration?: ConfigurationParameters;
       },
+    /** @deprecated */
     configuration?: ConfigurationParameters
   ) {
     if (
@@ -191,6 +193,7 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
     this.clientConfig = {
       apiKey,
       ...configuration,
+      ...fields?.configuration,
     };
   }
 
@@ -457,7 +460,7 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
 export class PromptLayerOpenAI extends OpenAI {
   get lc_secrets(): { [key: string]: string } | undefined {
     return {
-      "0.promptLayerApiKey": "PROMPTLAYER_API_KEY",
+      promptLayerApiKey: "PROMPTLAYER_API_KEY",
     };
   }
 

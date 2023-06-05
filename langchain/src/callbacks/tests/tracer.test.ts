@@ -25,9 +25,9 @@ class FakeTracer extends BaseTracer {
 
 const serialized: Serialized = {
   lc: 1,
-  type: "function",
+  type: "constructor",
   id: ["test"],
-  arguments: [],
+  kwargs: {},
 };
 
 test("Test LLMRun", async () => {
@@ -93,12 +93,12 @@ test("Test Chat Message Run", async () => {
       "parent_run_id": undefined,
       "run_type": "llm",
       "serialized": {
-        "arguments": [],
         "id": [
           "test",
         ],
+        "kwargs": {},
         "lc": 1,
-        "type": "function",
+        "type": "constructor",
       },
       "start_time": 1620000000000,
     }

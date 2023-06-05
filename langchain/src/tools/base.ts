@@ -21,8 +21,8 @@ export abstract class StructuredTool<
     return ["langchain", "tools"];
   }
 
-  constructor(fields?: ToolParams, ...args: unknown[]) {
-    super(fields ?? {}, ...args);
+  constructor(fields?: ToolParams) {
+    super(fields ?? {});
   }
 
   protected abstract _call(
@@ -70,8 +70,8 @@ export abstract class Tool extends StructuredTool {
     .object({ input: z.string().optional() })
     .transform((obj) => obj.input);
 
-  constructor(fields?: ToolParams, ...args: unknown[]) {
-    super(fields, ...args);
+  constructor(fields?: ToolParams) {
+    super(fields);
   }
 
   call(

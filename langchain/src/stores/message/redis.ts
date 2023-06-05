@@ -29,9 +29,9 @@ export class RedisChatMessageHistory extends BaseListChatMessageHistory {
 
   get lc_secrets() {
     return {
-      "0.config.url": "REDIS_URL",
-      "0.config.username": "REDIS_USERNAME",
-      "0.config.password": "REDIS_PASSWORD",
+      "config.url": "REDIS_URL",
+      "config.username": "REDIS_USERNAME",
+      "config.password": "REDIS_PASSWORD",
     };
   }
 

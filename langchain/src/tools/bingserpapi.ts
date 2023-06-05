@@ -2,10 +2,8 @@ import { getEnvironmentVariable } from "../util/env.js";
 import { Tool } from "./base.js";
 
 class BingSerpAPI extends Tool {
-  get lc_secrets(): { [key: string]: string } | undefined {
-    return {
-      "0": "BING_API_KEY",
-    };
+  toJSON() {
+    return this.toJSONNotImplemented();
   }
 
   name = "bing-search";

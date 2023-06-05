@@ -14,10 +14,8 @@ export type SerperParameters = {
  * To use, you should have the SERPER_API_KEY environment variable set.
  */
 export class Serper extends Tool {
-  get lc_secrets(): { [key: string]: string } | undefined {
-    return {
-      "0": "SERPER_API_KEY",
-    };
+  toJSON() {
+    return this.toJSONNotImplemented();
   }
 
   protected key: string;

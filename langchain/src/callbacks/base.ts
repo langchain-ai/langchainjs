@@ -9,6 +9,7 @@ import {
 import {
   Serializable,
   Serialized,
+  SerializedFields,
   SerializedNotImplemented,
 } from "../schema/load.js";
 
@@ -181,7 +182,7 @@ export abstract class BaseCallbackHandler
     return undefined;
   }
 
-  lc_arguments: unknown[];
+  lc_kwargs: SerializedFields;
 
   abstract name: string;
 
@@ -199,7 +200,7 @@ export abstract class BaseCallbackHandler
 
   constructor(input?: BaseCallbackHandlerInput) {
     super();
-    this.lc_arguments = [input];
+    this.lc_kwargs = input || {};
     if (input) {
       this.ignoreLLM = input.ignoreLLM ?? this.ignoreLLM;
       this.ignoreChain = input.ignoreChain ?? this.ignoreChain;

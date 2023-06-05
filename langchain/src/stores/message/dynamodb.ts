@@ -48,9 +48,9 @@ export class DynamoDBChatMessageHistory extends BaseListChatMessageHistory {
 
   get lc_secrets(): { [key: string]: string } | undefined {
     return {
-      "0.config.credentials.accessKeyId": "AWS_ACCESS_KEY_ID",
-      "0.config.credentials.secretAccessKey": "AWS_SECRETE_ACCESS_KEY",
-      "0.config.credentials.sessionToken": "AWS_SESSION_TOKEN",
+      "config.credentials.accessKeyId": "AWS_ACCESS_KEY_ID",
+      "config.credentials.secretAccessKey": "AWS_SECRETE_ACCESS_KEY",
+      "config.credentials.sessionToken": "AWS_SESSION_TOKEN",
     };
   }
 

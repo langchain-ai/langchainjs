@@ -1,6 +1,5 @@
 import {
   SerializedConstructor,
-  SerializedFunction,
   SerializedNotImplemented,
   SerializedSecret,
 } from "../schema/load.js";
@@ -55,10 +54,10 @@ async function reviver(
     "lc" in value &&
     "type" in value &&
     "id" in value &&
-    "arguments" in value &&
+    "kwargs" in value &&
     value.lc === 1
   ) {
-    const serialized = value as SerializedConstructor | SerializedFunction;
+    const serialized = value as SerializedConstructor;
     const str = JSON.stringify(serialized);
     const [name, ...namespaceReverse] = serialized.id.slice().reverse();
     const namespace = namespaceReverse.reverse();
@@ -120,20 +119,17 @@ async function reviver(
     }
 
     // Recurse on the arguments, which may be serialized objects themselves
-    const args = await Promise.all(serialized.arguments.map(reviver, this));
+    const kwargs = await reviver.call(this, serialized.kwargs);
 
     // Construct the object
     if (serialized.type === "constructor") {
       // eslint-disable-next-line new-cap, @typescript-eslint/no-explicit-any
-      const instance = new (builder as any)(...args);
+      const instance = new (builder as any)(kwargs);
       const fields = serialized.fields
         ? await reviver.call(this, serialized.fields)
         : undefined;
       Object.assign(instance, fields);
       return instance;
-    } else if (serialized.type === "function") {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return (builder as any)(...args);
     } else {
       throw new Error(`Invalid type: ${str}`);
     }

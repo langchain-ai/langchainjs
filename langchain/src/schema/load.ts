@@ -1,5 +1,6 @@
 export interface SerializedFields {
-  [key: string]: unknown;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [key: string]: any;
 }
 
 export interface BaseSerialized<T extends string> {
@@ -9,12 +10,8 @@ export interface BaseSerialized<T extends string> {
 }
 
 export interface SerializedConstructor extends BaseSerialized<"constructor"> {
-  arguments: unknown[];
+  kwargs: SerializedFields;
   fields?: SerializedFields;
-}
-
-export interface SerializedFunction extends BaseSerialized<"function"> {
-  arguments: unknown[];
 }
 
 export interface SerializedSecret extends BaseSerialized<"secret"> {}
@@ -24,7 +21,6 @@ export interface SerializedNotImplemented
 
 export type Serialized =
   | SerializedConstructor
-  | SerializedFunction
   | SerializedSecret
   | SerializedNotImplemented;
 
@@ -33,15 +29,18 @@ function shallowCopy<T extends object>(obj: T): T {
 }
 
 function replaceSecrets(
-  root: unknown[],
+  root: SerializedFields,
   secretsMap: { [key: string]: string }
-): unknown[] {
+): SerializedFields {
   const result = shallowCopy(root);
   for (const [path, secretId] of Object.entries(secretsMap)) {
     const [last, ...partsReverse] = path.split(".").reverse();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let current: any = result;
     for (const part of partsReverse.reverse()) {
+      if (current[part] === undefined) {
+        break;
+      }
       current[part] = shallowCopy(current[part]);
       current = current[part];
     }
@@ -59,7 +58,7 @@ function replaceSecrets(
 export abstract class Serializable {
   abstract lc_namespace: string[];
 
-  lc_arguments: unknown[];
+  lc_kwargs: SerializedFields;
 
   get lc_secrets(): { [key: string]: string } | undefined {
     return undefined;
@@ -67,8 +66,8 @@ export abstract class Serializable {
 
   lc_fields?: string[];
 
-  constructor(...args: unknown[]) {
-    this.lc_arguments = args;
+  constructor(kwargs?: SerializedFields, ..._args: never[]) {
+    this.lc_kwargs = kwargs || {};
   }
 
   toJSON(): Serialized {
@@ -85,9 +84,9 @@ export abstract class Serializable {
       lc: 1,
       type: "constructor",
       id: [...this.lc_namespace, this.constructor.name],
-      arguments: this.lc_secrets
-        ? replaceSecrets(this.lc_arguments, secrets)
-        : this.lc_arguments,
+      kwargs: this.lc_secrets
+        ? replaceSecrets(this.lc_kwargs, secrets)
+        : this.lc_kwargs,
       fields: this.lc_fields?.reduce((acc, key) => {
         acc[key] = this[key as keyof this];
         return acc;

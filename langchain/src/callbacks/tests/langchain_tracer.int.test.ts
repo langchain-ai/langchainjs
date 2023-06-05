@@ -13,9 +13,9 @@ import { Serialized } from "../../schema/load.js";
 
 const serialized: Serialized = {
   lc: 1,
-  type: "function",
+  type: "constructor",
   id: ["test"],
-  arguments: [],
+  kwargs: {},
 };
 
 test("Test LangChain V2 tracer", async () => {

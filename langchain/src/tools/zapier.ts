@@ -30,7 +30,7 @@ export class ZapierNLAWrapper extends Serializable {
 
   get lc_secrets(): { [key: string]: string } | undefined {
     return {
-      "0.apiKey": "ZAPIER_NLA_API_KEY",
+      apiKey: "ZAPIER_NLA_API_KEY",
     };
   }
 

@@ -22,8 +22,8 @@ class AWSLambda extends DynamicTool {
 
   get lc_secrets(): { [key: string]: string } | undefined {
     return {
-      "0.accessKeyId": "AWS_ACCESS_KEY_ID",
-      "0.secretAccessKey": "AWS_SECRET_ACCESS_KEY",
+      accessKeyId: "AWS_ACCESS_KEY_ID",
+      secretAccessKey: "AWS_SECRET_ACCESS_KEY",
     };
   }
 

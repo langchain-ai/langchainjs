@@ -29,7 +29,7 @@ export interface HFInput {
 export class HuggingFaceInference extends LLM implements HFInput {
   get lc_secrets(): { [key: string]: string } | undefined {
     return {
-      "0.apiKey": "HUGGINGFACEHUB_API_KEY",
+      apiKey: "HUGGINGFACEHUB_API_KEY",
     };
   }
 

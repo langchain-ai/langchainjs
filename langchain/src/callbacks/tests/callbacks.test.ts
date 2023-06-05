@@ -142,9 +142,9 @@ class FakeCallbackHandlerWithChatStart extends FakeCallbackHandler {
 
 const serialized: Serialized = {
   lc: 1,
-  type: "function",
+  type: "constructor",
   id: ["test"],
-  arguments: [],
+  kwargs: {},
 };
 
 test("CallbackManager", async () => {

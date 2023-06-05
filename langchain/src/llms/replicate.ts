@@ -16,7 +16,7 @@ export interface ReplicateInput {
 export class Replicate extends LLM implements ReplicateInput {
   get lc_secrets(): { [key: string]: string } | undefined {
     return {
-      "0.apiKey": "REPLICATE_API_KEY",
+      apiKey: "REPLICATE_API_KEY",
     };
   }
 

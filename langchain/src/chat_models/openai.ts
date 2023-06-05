@@ -103,8 +103,8 @@ export class ChatOpenAI
 
   get lc_secrets(): { [key: string]: string } | undefined {
     return {
-      "0.openAIApiKey": "OPENAI_API_KEY",
-      "0.azureOpenAIApiKey": "AZURE_OPENAI_API_KEY",
+      openAIApiKey: "OPENAI_API_KEY",
+      azureOpenAIApiKey: "AZURE_OPENAI_API_KEY",
     };
   }
 
@@ -151,7 +151,9 @@ export class ChatOpenAI
         concurrency?: number;
         cache?: boolean;
         openAIApiKey?: string;
+        configuration?: ConfigurationParameters;
       },
+    /** @deprecated */
     configuration?: ConfigurationParameters
   ) {
     super(fields ?? {});
@@ -217,6 +219,7 @@ export class ChatOpenAI
     this.clientConfig = {
       apiKey,
       ...configuration,
+      ...fields?.configuration,
     };
   }
 

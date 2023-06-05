@@ -26,7 +26,7 @@ export class OpenAIModerationChain
 {
   get lc_secrets(): { [key: string]: string } | undefined {
     return {
-      "0.openAIApiKey": "OPENAI_API_KEY",
+      openAIApiKey: "OPENAI_API_KEY",
     };
   }
 

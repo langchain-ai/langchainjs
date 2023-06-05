@@ -21,8 +21,8 @@ export class UpstashRedisChatMessageHistory extends BaseListChatMessageHistory {
 
   get lc_secrets() {
     return {
-      "0.config.url": "UPSTASH_REDIS_REST_URL",
-      "0.config.token": "UPSTASH_REDIS_REST_TOKEN",
+      "config.url": "UPSTASH_REDIS_REST_URL",
+      "config.token": "UPSTASH_REDIS_REST_TOKEN",
     };
   }
 
