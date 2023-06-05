@@ -4,7 +4,7 @@ import { Document } from "langchain/document";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import {
   SelfQueryRetriever,
-  BasicTranslator,
+  PineconeTranslator,
 } from "langchain/retrievers/self_query";
 import { PineconeStore } from "langchain/vectorstores/pinecone";
 import { OpenAI } from "langchain/llms/openai";
@@ -125,7 +125,7 @@ const selfQueryRetriever = await SelfQueryRetriever.fromLLM({
    * vector store needs to support filtering on the metadata attributes you want to
    * query on.
    */
-  structuredQueryTranslator: new BasicTranslator(),
+  structuredQueryTranslator: new PineconeTranslator(),
 });
 
 /**
