@@ -1,6 +1,1 @@
-export {
-  LangChainPlusClient,
-  Dataset,
-  Example,
-  DatasetRunResults,
-} from "./langchainplus.js";
+export { DatasetRunResults, runOnDataset } from "./langchainplus.js";
