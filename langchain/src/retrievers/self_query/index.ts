@@ -8,8 +8,9 @@ import { Document } from "../../document.js";
 import { BaseRetriever } from "../../schema/index.js";
 import { VectorStore } from "../../vectorstores/base.js";
 import { BaseTranslator, BasicTranslator } from "./translator.js";
+import { WeaviateTranslator } from "./weaviate_translator.js";
 
-export { BaseTranslator, BasicTranslator };
+export { BaseTranslator, BasicTranslator, WeaviateTranslator };
 
 export type SelfQueryRetrieverArgs = {
   vectorStore: VectorStore;
