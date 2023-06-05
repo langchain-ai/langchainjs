@@ -97,6 +97,7 @@ export class OpenAIChat
       Partial<AzureOpenAIInput> &
       BaseLLMParams & {
         openAIApiKey?: string;
+        openAIApiOrganization?: string;
       },
     configuration?: ConfigurationParameters
   ) {
@@ -104,6 +105,10 @@ export class OpenAIChat
 
     const apiKey =
       fields?.openAIApiKey ?? getEnvironmentVariable("OPENAI_API_KEY");
+
+    const organization =
+      fields?.openAIApiOrganization ??
+      getEnvironmentVariable("OPENAI_ORGANIZATION_ID");
 
     const azureApiKey =
       fields?.azureOpenAIApiKey ??
@@ -164,6 +169,7 @@ export class OpenAIChat
 
     this.clientConfig = {
       apiKey,
+      organization,
       ...configuration,
     };
   }

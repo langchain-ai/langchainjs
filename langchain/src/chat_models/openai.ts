@@ -144,6 +144,7 @@ export class ChatOpenAI
         concurrency?: number;
         cache?: boolean;
         openAIApiKey?: string;
+        openAIApiOrganization?: string;
       },
     configuration?: ConfigurationParameters
   ) {
@@ -151,6 +152,10 @@ export class ChatOpenAI
 
     const apiKey =
       fields?.openAIApiKey ?? getEnvironmentVariable("OPENAI_API_KEY");
+
+    const organization =
+      fields?.openAIApiOrganization ??
+      getEnvironmentVariable("OPENAI_ORGANIZATION_ID");
 
     const azureApiKey =
       fields?.azureOpenAIApiKey ??
@@ -209,6 +214,7 @@ export class ChatOpenAI
 
     this.clientConfig = {
       apiKey,
+      organization,
       ...configuration,
     };
   }

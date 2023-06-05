@@ -101,6 +101,7 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
       Partial<AzureOpenAIInput> &
       BaseLLMParams & {
         openAIApiKey?: string;
+        openAIApiOrganization?: string;
       },
     configuration?: ConfigurationParameters
   ) {
@@ -116,6 +117,10 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
 
     const apiKey =
       fields?.openAIApiKey ?? getEnvironmentVariable("OPENAI_API_KEY");
+
+    const organization =
+      fields?.openAIApiOrganization ??
+      getEnvironmentVariable("OPENAI_ORGANIZATION_ID");
 
     const azureApiKey =
       fields?.azureOpenAIApiKey ??
@@ -183,6 +188,7 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
 
     this.clientConfig = {
       apiKey,
+      organization,
       ...configuration,
     };
   }

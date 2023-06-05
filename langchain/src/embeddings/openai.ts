@@ -62,6 +62,7 @@ export class OpenAIEmbeddings
       Partial<AzureOpenAIInput> & {
         verbose?: boolean;
         openAIApiKey?: string;
+        openAIApiOrganization?: string;
       },
     configuration?: ConfigurationParameters
   ) {
@@ -69,6 +70,10 @@ export class OpenAIEmbeddings
 
     const apiKey =
       fields?.openAIApiKey ?? getEnvironmentVariable("OPENAI_API_KEY");
+
+    const organization =
+      fields?.openAIApiOrganization ??
+      getEnvironmentVariable("OPENAI_ORGANIZATION_ID");
 
     const azureApiKey =
       fields?.azureOpenAIApiKey ??
@@ -115,6 +120,7 @@ export class OpenAIEmbeddings
 
     this.clientConfig = {
       apiKey,
+      organization,
       ...configuration,
     };
   }
