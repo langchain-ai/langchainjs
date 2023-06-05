@@ -164,9 +164,7 @@ export class SupabaseTranslator extends BaseTranslator {
     if (Array.isArray(value)) {
       value = `(${value
         .map((v) => {
-          if (typeof v === "string") {
-            return `"${v}"`;
-          }
+          if (typeof v === "string" && /[,()]/.test(v)) return `"${v}"`;
           return v;
         })
         .join(",")})`;
