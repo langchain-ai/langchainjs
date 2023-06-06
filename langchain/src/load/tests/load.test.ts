@@ -171,11 +171,13 @@ test("serialize + deserialize llm chain few shot prompt w/ selector", async () =
   const chain = new LLMChain({ llm, prompt });
   const str = JSON.stringify(chain, null, 2);
   expect(stringify(JSON.parse(str))).toMatchSnapshot();
-  const chain2 = await load<LLMChain>(str, {
-    OPENAI_API_KEY: "openai-key",
-  });
-  expect(chain2).toBeInstanceOf(LLMChain);
-  expect(JSON.stringify(chain2, null, 2)).toBe(str);
+  await expect(
+    load<LLMChain>(str, {
+      OPENAI_API_KEY: "openai-key",
+    })
+  ).rejects.toThrow(
+    'Trying to load an object that doesn\'t implement serialization: {"lc":1,"type":"not_implemented","id":["langchain","prompts","selectors","LengthBasedExampleSelector"]}'
+  );
 });
 
 test("serialize + deserialize llmchain with output parser", async () => {

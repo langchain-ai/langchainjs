@@ -11,7 +11,6 @@ export interface BaseSerialized<T extends string> {
 
 export interface SerializedConstructor extends BaseSerialized<"constructor"> {
   kwargs: SerializedFields;
-  fields?: SerializedFields;
 }
 
 export interface SerializedSecret extends BaseSerialized<"secret"> {}
@@ -64,19 +63,30 @@ export abstract class Serializable {
     return undefined;
   }
 
-  lc_fields?: string[];
+  lc_attributes?: string[];
 
   constructor(kwargs?: SerializedFields, ..._args: never[]) {
     this.lc_kwargs = kwargs || {};
   }
 
   toJSON(): Serialized {
-    // get secrets from all superclasses
     const secrets: { [key: string]: string } = {};
+    const kwargs = this.lc_kwargs;
+
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     let current = this;
+    // get secrets and attributes from all superclasses
     while (current) {
       Object.assign(secrets, current.lc_secrets);
+      Object.assign(
+        kwargs,
+        // eslint-disable-next-line no-loop-func
+        current.lc_attributes?.reduce((attrs, key) => {
+          // eslint-disable-next-line no-param-reassign
+          attrs[key] = current[key as keyof Serializable];
+          return attrs;
+        }, {} as SerializedFields)
+      );
       current = Object.getPrototypeOf(current);
     }
 
@@ -87,10 +97,6 @@ export abstract class Serializable {
       kwargs: this.lc_secrets
         ? replaceSecrets(this.lc_kwargs, secrets)
         : this.lc_kwargs,
-      fields: this.lc_fields?.reduce((acc, key) => {
-        acc[key] = this[key as keyof this];
-        return acc;
-      }, {} as SerializedFields),
     };
   }
 

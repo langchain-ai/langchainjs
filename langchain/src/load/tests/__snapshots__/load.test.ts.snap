@@ -568,33 +568,12 @@ kwargs:
     kwargs:
       exampleSelector:
         lc: 1
-        type: constructor
+        type: not_implemented
         id:
           - langchain
           - prompts
           - selectors
           - LengthBasedExampleSelector
-        kwargs:
-          examplePrompt:
-            lc: 1
-            type: constructor
-            id:
-              - langchain
-              - prompts
-              - prompt
-              - PromptTemplate
-            kwargs:
-              inputVariables:
-                - yo
-              templateFormat: f-string
-              template: An example about {yo}
-        fields:
-          examples:
-            - yo: "1"
-            - yo: "2"
-          exampleTextLengths:
-            - 4
-            - 4
       prefix: You are a nice assistant
       examplePrompt:
         lc: 1

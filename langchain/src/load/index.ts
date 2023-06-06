@@ -124,12 +124,7 @@ async function reviver(
     // Construct the object
     if (serialized.type === "constructor") {
       // eslint-disable-next-line new-cap, @typescript-eslint/no-explicit-any
-      const instance = new (builder as any)(kwargs);
-      const fields = serialized.fields
-        ? await reviver.call(this, serialized.fields)
-        : undefined;
-      Object.assign(instance, fields);
-      return instance;
+      return new (builder as any)(kwargs);
     } else {
       throw new Error(`Invalid type: ${str}`);
     }
