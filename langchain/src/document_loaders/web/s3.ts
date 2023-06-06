@@ -15,10 +15,14 @@ export interface S3LoaderParams {
   UnstructuredLoader?: typeof UnstructuredLoaderDefault;
 }
 
+interface S3Credentials {
+  accessKeyId: string;
+  secretAccessKey: string;
+}
+
 interface S3Config {
   region?: string;
-  accessKeyId?: string;
-  secretAccessKey?: string;
+  credentials?: S3Credentials;
 }
 
 export class S3Loader extends BaseDocumentLoader {
