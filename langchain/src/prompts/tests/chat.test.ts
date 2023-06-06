@@ -120,6 +120,7 @@ test("Test fromPromptMessages", async () => {
     template: "Hello {foo}, I'm {bar}",
     inputVariables: ["foo", "bar"],
   });
+  // TODO: Fix autocomplete for the fromPromptMessages method
   const chatPrompt = ChatPromptTemplate.fromPromptMessages([
     new SystemMessagePromptTemplate(systemPrompt),
     new HumanMessagePromptTemplate(userPrompt),

@@ -24,9 +24,9 @@ import {
 
 export abstract class BaseMessagePromptTemplate<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  InputVariableName extends string = any
+  InputVariables extends InputValues = any
 > {
-  abstract inputVariables: InputVariableName[];
+  abstract inputVariables: Array<Extract<keyof InputVariables, string>>;
 
   abstract formatMessages(values: InputValues): Promise<BaseChatMessage[]>;
 
@@ -57,11 +57,11 @@ export class ChatPromptValue extends BasePromptValue {
 
 export class MessagesPlaceholder<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  InputVariableName extends string = any
-> extends BaseMessagePromptTemplate<InputVariableName> {
-  variableName: InputVariableName;
+  InputVariables extends InputValues = any
+> extends BaseMessagePromptTemplate<InputVariables> {
+  variableName: Extract<keyof InputVariables, string>;
 
-  constructor(variableName: InputVariableName) {
+  constructor(variableName: Extract<keyof InputVariables, string>) {
     super();
     this.variableName = variableName;
   }
@@ -71,7 +71,7 @@ export class MessagesPlaceholder<
   }
 
   formatMessages(
-    values: InputValues<InputVariableName>
+    values: InputValues<Extract<keyof InputVariables, string>>
   ): Promise<BaseChatMessage[]> {
     return Promise.resolve(values[this.variableName] as BaseChatMessage[]);
   }
@@ -79,12 +79,12 @@ export class MessagesPlaceholder<
 
 export abstract class BaseMessageStringPromptTemplate<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  InputVariableName extends string = any
-> extends BaseMessagePromptTemplate<InputVariableName> {
-  prompt: BaseStringPromptTemplate<InputVariableName, string>;
+  InputVariables extends InputValues = any
+> extends BaseMessagePromptTemplate<InputVariables> {
+  prompt: BaseStringPromptTemplate<InputVariables, string>;
 
   protected constructor(
-    prompt: BaseStringPromptTemplate<InputVariableName, string>
+    prompt: BaseStringPromptTemplate<InputVariables, string>
   ) {
     super();
     this.prompt = prompt;
@@ -95,11 +95,11 @@ export abstract class BaseMessageStringPromptTemplate<
   }
 
   abstract format(
-    values: InputValues<InputVariableName>
+    values: InputValues<Extract<keyof InputVariables, string>>
   ): Promise<BaseChatMessage>;
 
   async formatMessages(
-    values: InputValues<InputVariableName>
+    values: InputValues<Extract<keyof InputVariables, string>>
   ): Promise<BaseChatMessage[]> {
     return [await this.format(values)];
   }
@@ -107,26 +107,28 @@ export abstract class BaseMessageStringPromptTemplate<
 
 export abstract class BaseChatPromptTemplate<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  InputVariableName extends string = any,
+  InputVariables extends InputValues = any,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   PartialVariableName extends string = any
-> extends BasePromptTemplate<InputVariableName, PartialVariableName> {
+> extends BasePromptTemplate<InputVariables, PartialVariableName> {
   constructor(
-    input: BasePromptTemplateInput<InputVariableName, PartialVariableName>
+    input: BasePromptTemplateInput<InputVariables, PartialVariableName>
   ) {
     super(input);
   }
 
   abstract formatMessages(
-    values: InputValues<InputVariableName>
+    values: InputValues<Extract<keyof InputVariables, string>>
   ): Promise<BaseChatMessage[]>;
 
-  async format(values: InputValues<InputVariableName>): Promise<string> {
+  async format(
+    values: InputValues<Extract<keyof InputVariables, string>>
+  ): Promise<string> {
     return (await this.formatPromptValue(values)).toString();
   }
 
   async formatPromptValue(
-    values: InputValues<InputVariableName>
+    values: InputValues<Extract<keyof InputVariables, string>>
   ): Promise<BasePromptValue> {
     const resultMessages = await this.formatMessages(values);
     return new ChatPromptValue(resultMessages);
@@ -134,18 +136,19 @@ export abstract class BaseChatPromptTemplate<
 }
 
 export class ChatMessagePromptTemplate<
-  InputVariableName extends string
-> extends BaseMessageStringPromptTemplate<InputVariableName> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  InputVariables extends InputValues = any
+> extends BaseMessageStringPromptTemplate<InputVariables> {
   role: string;
 
   async format(
-    values: InputValues<InputVariableName>
+    values: InputValues<Extract<keyof InputVariables, string>>
   ): Promise<BaseChatMessage> {
     return new ChatMessage(await this.prompt.format(values), this.role);
   }
 
   constructor(
-    prompt: BaseStringPromptTemplate<InputVariableName, string>,
+    prompt: BaseStringPromptTemplate<InputVariables, string>,
     role: string
   ) {
     super(prompt);
@@ -158,15 +161,16 @@ export class ChatMessagePromptTemplate<
 }
 
 export class HumanMessagePromptTemplate<
-  InputVariableName extends string
-> extends BaseMessageStringPromptTemplate<InputVariableName> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  InputVariables extends InputValues = any
+> extends BaseMessageStringPromptTemplate<InputVariables> {
   async format(
-    values: InputValues<InputVariableName>
+    values: InputValues<Extract<keyof InputVariables, string>>
   ): Promise<BaseChatMessage> {
     return new HumanChatMessage(await this.prompt.format(values));
   }
 
-  constructor(prompt: BaseStringPromptTemplate<InputVariableName, string>) {
+  constructor(prompt: BaseStringPromptTemplate<InputVariables, string>) {
     super(prompt);
   }
 
@@ -176,15 +180,16 @@ export class HumanMessagePromptTemplate<
 }
 
 export class AIMessagePromptTemplate<
-  InputVariableName extends string
-> extends BaseMessageStringPromptTemplate<InputVariableName> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  InputVariables extends InputValues = any
+> extends BaseMessageStringPromptTemplate<InputVariables> {
   async format(
-    values: InputValues<InputVariableName>
+    values: InputValues<Extract<keyof InputVariables, string>>
   ): Promise<BaseChatMessage> {
     return new AIChatMessage(await this.prompt.format(values));
   }
 
-  constructor(prompt: BaseStringPromptTemplate<InputVariableName, string>) {
+  constructor(prompt: BaseStringPromptTemplate<InputVariables, string>) {
     super(prompt);
   }
 
@@ -194,15 +199,16 @@ export class AIMessagePromptTemplate<
 }
 
 export class SystemMessagePromptTemplate<
-  InputVariableName extends string
-> extends BaseMessageStringPromptTemplate<InputVariableName> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  InputVariables extends InputValues = any
+> extends BaseMessageStringPromptTemplate<InputVariables> {
   async format(
-    values: InputValues<InputVariableName>
+    values: InputValues<Extract<keyof InputVariables, string>>
   ): Promise<BaseChatMessage> {
     return new SystemChatMessage(await this.prompt.format(values));
   }
 
-  constructor(prompt: BaseStringPromptTemplate<InputVariableName, string>) {
+  constructor(prompt: BaseStringPromptTemplate<InputVariables, string>) {
     super(prompt);
   }
 
@@ -213,10 +219,10 @@ export class SystemMessagePromptTemplate<
 
 export interface ChatPromptTemplateInput<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  InputVariableName extends string = any,
+  InputVariables extends InputValues = any,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   PartialVariableName extends string = any
-> extends BasePromptTemplateInput<InputVariableName, PartialVariableName> {
+> extends BasePromptTemplateInput<InputVariables, PartialVariableName> {
   /**
    * The prompt messages
    */
@@ -232,19 +238,19 @@ export interface ChatPromptTemplateInput<
 
 export class ChatPromptTemplate<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    InputVariableName extends string = any,
+    InputVariables extends InputValues = any,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     PartialVariableName extends string = any
   >
-  extends BaseChatPromptTemplate<InputVariableName, PartialVariableName>
-  implements ChatPromptTemplateInput<InputVariableName, PartialVariableName>
+  extends BaseChatPromptTemplate<InputVariables, PartialVariableName>
+  implements ChatPromptTemplateInput<InputVariables, PartialVariableName>
 {
   promptMessages: BaseMessagePromptTemplate[];
 
   validateTemplate = true;
 
   constructor(
-    input: ChatPromptTemplateInput<InputVariableName, PartialVariableName>
+    input: ChatPromptTemplateInput<InputVariables, PartialVariableName>
   ) {
     super(input);
     Object.assign(this, input);
@@ -265,7 +271,7 @@ export class ChatPromptTemplate<
       );
       const difference = new Set(
         [...inputVariablesInstance].filter(
-          (x) => !inputVariablesMessages.has(x as InputVariableName)
+          (x) => !inputVariablesMessages.has(x)
         )
       );
       if (difference.size > 0) {
@@ -295,7 +301,7 @@ export class ChatPromptTemplate<
   }
 
   async formatMessages(
-    values: InputValues<InputVariableName>
+    values: InputValues<Extract<keyof InputVariables, string>>
   ): Promise<BaseChatMessage[]> {
     const allValues = await this.mergePartialAndUserVariables(values);
 
@@ -306,10 +312,10 @@ export class ChatPromptTemplate<
         (acc, inputVariable) => {
           if (!(inputVariable in allValues)) {
             throw new Error(
-              `Missing value for input variable \`${inputVariable}\``
+              `Missing value for input variable \`${inputVariable.toString()}\``
             );
           }
-          acc[inputVariable] = allValues[inputVariable as InputVariableName];
+          acc[inputVariable] = allValues[inputVariable];
           return acc;
         },
         {} as InputValues
@@ -339,7 +345,10 @@ export class ChatPromptTemplate<
     // BaseMessagePromptTemplate aware of .partial()
     const newInputVariables = this.inputVariables.filter(
       (iv) => !(iv in values)
-    ) as Exclude<InputVariableName, NewPartialVariableName>[];
+    ) as Exclude<
+      Extract<keyof InputVariables, string>,
+      NewPartialVariableName
+    >[];
     const newPartialVariables = {
       ...(this.partialVariables ?? {}),
       ...values,
@@ -349,15 +358,19 @@ export class ChatPromptTemplate<
       inputVariables: newInputVariables,
       partialVariables: newPartialVariables,
     };
-    return new ChatPromptTemplate(promptDict);
+    return new ChatPromptTemplate<
+      InputValues<
+        Exclude<Extract<keyof InputVariables, string>, NewPartialVariableName>
+      >
+    >(promptDict);
   }
 
   static fromPromptMessages(
     promptMessages: (
-      | BaseMessagePromptTemplate<string>
-      | ChatPromptTemplate<string, string>
+      | BaseMessagePromptTemplate<InputValues>
+      | ChatPromptTemplate<InputValues, string>
     )[]
-  ): ChatPromptTemplate<string, string> {
+  ): ChatPromptTemplate {
     const flattenedMessages = promptMessages.reduce(
       (acc, promptMessage) =>
         acc.concat(

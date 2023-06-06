@@ -33,14 +33,14 @@ export class StringPromptValue extends BasePromptValue {
  */
 export interface BasePromptTemplateInput<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  InputVariableName extends string = any,
+  InputVariables extends InputValues,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   PartialVariableName extends string = any
 > {
   /**
    * A list of variable names the prompt template expects
    */
-  inputVariables: InputVariableName[];
+  inputVariables: Array<Extract<keyof InputVariables, string>>;
 
   /**
    * How to parse the output of calling an LLM on this formatted prompt
@@ -57,19 +57,19 @@ export interface BasePromptTemplateInput<
  */
 export abstract class BasePromptTemplate<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  InputVariableName extends string = any,
+  InputVariables extends InputValues = any,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   PartialVariableName extends string = any
-> implements BasePromptTemplateInput<InputVariableName, PartialVariableName>
+> implements BasePromptTemplateInput<InputVariables, PartialVariableName>
 {
-  inputVariables: InputVariableName[];
+  inputVariables: Array<Extract<keyof InputVariables, string>>;
 
   outputParser?: BaseOutputParser;
 
   partialVariables?: PartialValues<PartialVariableName>;
 
   constructor(
-    input: BasePromptTemplateInput<InputVariableName, PartialVariableName>
+    input: BasePromptTemplateInput<InputVariables, PartialVariableName>
   ) {
     const { inputVariables } = input;
     if ((inputVariables as string[]).includes("stop")) {
@@ -82,11 +82,13 @@ export abstract class BasePromptTemplate<
 
   abstract partial(
     values: PartialValues
-  ): Promise<BasePromptTemplate<InputVariableName, PartialVariableName>>;
+  ): Promise<BasePromptTemplate<InputVariables, PartialVariableName>>;
 
   async mergePartialAndUserVariables(
-    userVariables: InputValues<InputVariableName>
-  ): Promise<InputValues<InputVariableName | PartialVariableName>> {
+    userVariables: InputValues<Extract<keyof InputVariables, string>>
+  ): Promise<
+    InputValues<Extract<keyof InputVariables, string> | PartialVariableName>
+  > {
     const partialVariables = this.partialVariables ?? {};
     const partialValues: Record<string, string> = {};
 
@@ -116,7 +118,9 @@ export abstract class BasePromptTemplate<
    * prompt.format({ foo: "bar" });
    * ```
    */
-  abstract format(values: InputValues<InputVariableName>): Promise<string>;
+  abstract format(
+    values: InputValues<Extract<keyof InputVariables, string>>
+  ): Promise<string>;
 
   /**
    * Format the prompt given the input values and return a formatted prompt value.
@@ -124,7 +128,7 @@ export abstract class BasePromptTemplate<
    * @returns A formatted PromptValue.
    */
   abstract formatPromptValue(
-    values: InputValues<InputVariableName>
+    values: InputValues<Extract<keyof InputVariables, string>>
   ): Promise<BasePromptValue>;
 
   /**
@@ -147,7 +151,7 @@ export abstract class BasePromptTemplate<
    */
   static async deserialize(
     data: SerializedBasePromptTemplate
-  ): Promise<BasePromptTemplate<string, string>> {
+  ): Promise<BasePromptTemplate<InputValues, string>> {
     switch (data._type) {
       case "prompt": {
         const { PromptTemplate } = await import("./prompt.js");
@@ -173,12 +177,12 @@ export abstract class BasePromptTemplate<
 
 export abstract class BaseStringPromptTemplate<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  InputVariableName extends string = any,
+  InputVariables extends InputValues = any,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   PartialVariableName extends string = any
-> extends BasePromptTemplate<InputVariableName, PartialVariableName> {
+> extends BasePromptTemplate<InputVariables, PartialVariableName> {
   async formatPromptValue(
-    values: InputValues<InputVariableName>
+    values: InputValues<Extract<keyof InputVariables, string>>
   ): Promise<BasePromptValue> {
     const formattedPrompt = await this.format(values);
     return new StringPromptValue(formattedPrompt);

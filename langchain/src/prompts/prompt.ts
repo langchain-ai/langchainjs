@@ -17,10 +17,10 @@ import { InputValues, PartialValues } from "../schema/index.js";
  */
 export interface PromptTemplateInput<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  InputVariableName extends string = any,
+  InputVariables extends InputValues = any,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   PartialVariableName extends string = any
-> extends BasePromptTemplateInput<InputVariableName, PartialVariableName> {
+> extends BasePromptTemplateInput<InputVariables, PartialVariableName> {
   /**
    * The prompt template
    */
@@ -58,12 +58,12 @@ export interface PromptTemplateInput<
  */
 export class PromptTemplate<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    InputVariableName extends string = any,
+    InputVariables extends InputValues = any,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     PartialVariableName extends string = any
   >
-  extends BaseStringPromptTemplate<InputVariableName, PartialVariableName>
-  implements PromptTemplateInput<InputVariableName, PartialVariableName>
+  extends BaseStringPromptTemplate<InputVariables, PartialVariableName>
+  implements PromptTemplateInput<InputVariables, PartialVariableName>
 {
   template: string;
 
@@ -71,9 +71,7 @@ export class PromptTemplate<
 
   validateTemplate = true;
 
-  constructor(
-    input: PromptTemplateInput<InputVariableName, PartialVariableName>
-  ) {
+  constructor(input: PromptTemplateInput<InputVariables, PartialVariableName>) {
     super(input);
     Object.assign(this, input);
 
@@ -96,7 +94,9 @@ export class PromptTemplate<
     return "prompt";
   }
 
-  async format(values: InputValues<InputVariableName>): Promise<string> {
+  async format(
+    values: InputValues<Extract<keyof InputVariables, string>>
+  ): Promise<string> {
     const allValues = await this.mergePartialAndUserVariables(values);
     return renderTemplate(this.template, this.templateFormat, allValues);
   }
@@ -104,7 +104,7 @@ export class PromptTemplate<
   /**
    * Take examples in list format with prefix and suffix to create a prompt.
    *
-   * Intendend to be used a a way to dynamically create a prompt from examples.
+   * Intended to be used a a way to dynamically create a prompt from examples.
    *
    * @param examples - List of examples to use in the prompt.
    * @param suffix - String to go after the list of examples. Should generally set up the user's input.
@@ -144,7 +144,6 @@ export class PromptTemplate<
         names.add(node.name);
       }
     });
-
     return new PromptTemplate({
       inputVariables: [...names],
       templateFormat,
@@ -158,7 +157,10 @@ export class PromptTemplate<
   ) {
     const newInputVariables = this.inputVariables.filter(
       (iv) => !(iv in values)
-    ) as Exclude<InputVariableName, NewPartialVariableName>[];
+    ) as Exclude<
+      Extract<keyof InputVariables, string>,
+      NewPartialVariableName
+    >[];
     const newPartialVariables = {
       ...(this.partialVariables ?? {}),
       ...values,
@@ -168,7 +170,11 @@ export class PromptTemplate<
       inputVariables: newInputVariables,
       partialVariables: newPartialVariables,
     };
-    return new PromptTemplate(promptDict);
+    return new PromptTemplate<
+      InputValues<
+        Exclude<Extract<keyof InputVariables, string>, NewPartialVariableName>
+      >
+    >(promptDict);
   }
 
   serialize(): SerializedPromptTemplate {
