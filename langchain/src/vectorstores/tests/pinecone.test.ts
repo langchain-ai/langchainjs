@@ -71,3 +71,52 @@ test("PineconeStore with generated ids", async () => {
 
   expect(results).toHaveLength(0);
 });
+
+test("PineconeSo with string arrays", async () => {
+  const client = {
+    upsert: jest.fn(),
+    query: jest.fn<any>().mockResolvedValue({
+      matches: [],
+    }),
+  };
+  const embeddings = new FakeEmbeddings();
+
+  const store = new PineconeStore(embeddings, { pineconeIndex: client as any });
+
+  await store.addDocuments(
+    [
+      {
+        pageContent: "hello",
+        metadata: {
+          a: 1,
+          b: { nested: [1, { a: 4 }] },
+          c: ["some", "string", "array"],
+          d: [1, { nested: 2 }, "string"],
+        },
+      },
+    ],
+    ["id1"]
+  );
+
+  expect(client.upsert).toHaveBeenCalledWith({
+    upsertRequest: {
+      namespace: undefined,
+      vectors: [
+        {
+          id: "id1",
+          metadata: {
+            a: 1,
+            "b.nested.0": 1,
+            "b.nested.1.a": 4,
+            c: ["some", "string", "array"],
+            "d.0": 1,
+            "d.1.nested": 2,
+            "d.2": "string",
+            text: "hello",
+          },
+          values: [0.1, 0.2, 0.3, 0.4],
+        },
+      ],
+    },
+  });
+});

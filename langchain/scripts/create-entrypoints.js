@@ -36,6 +36,7 @@ const entrypoints = {
   "llms/load": "llms/load",
   "llms/base": "llms/base",
   "llms/openai": "llms/openai",
+  "llms/ai21": "llms/ai21",
   "llms/cohere": "llms/cohere",
   "llms/hf": "llms/hf",
   "llms/replicate": "llms/replicate",
@@ -60,8 +61,10 @@ const entrypoints = {
   "vectorstores/opensearch": "vectorstores/opensearch",
   "vectorstores/milvus": "vectorstores/milvus",
   "vectorstores/prisma": "vectorstores/prisma",
+  "vectorstores/typeorm": "vectorstores/typeorm",
   "vectorstores/myscale": "vectorstores/myscale",
   "vectorstores/redis": "vectorstores/redis",
+  "vectorstores/singlestore": "vectorstores/singlestore",
   "vectorstores/tigris": "vectorstores/tigris",
   // text_splitter
   text_splitter: "text_splitter",
@@ -146,6 +149,7 @@ const entrypoints = {
   // experimental
   "experimental/autogpt": "experimental/autogpt/index",
   "experimental/babyagi": "experimental/babyagi/index",
+  "experimental/generative_agents": "experimental/generative_agents/index",
   "experimental/plan_and_execute": "experimental/plan_and_execute/index",
   client: "client/index",
 };
@@ -191,9 +195,11 @@ const requiresOptionalDependency = [
   "vectorstores/qdrant",
   "vectorstores/supabase",
   "vectorstores/opensearch",
+  "vectorstores/typeorm",
   "vectorstores/milvus",
   "vectorstores/myscale",
   "vectorstores/redis",
+  "vectorstores/singlestore",
   "vectorstores/tigris",
   "memory/zep",
   "document_loaders/web/apify_dataset",
