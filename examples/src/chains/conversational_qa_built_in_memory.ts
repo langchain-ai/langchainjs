@@ -4,6 +4,7 @@ import { HNSWLib } from "langchain/vectorstores/hnswlib";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import { BufferMemory } from "langchain/memory";
+
 import * as fs from "fs";
 
 export const run = async () => {
@@ -21,9 +22,12 @@ export const run = async () => {
     slowerModel,
     vectorStore.asRetriever(),
     {
+      returnSourceDocuments: true,
       memory: new BufferMemory({
         memoryKey: "chat_history",
-        returnMessages: true,
+        inputKey: "question", // The key for the input to the chain
+        outputKey: "text", // The key for the final conversational output of the chain
+        returnMessages: true, // If using with a chat model
       }),
       questionGeneratorChainOptions: {
         llm: fasterModel,

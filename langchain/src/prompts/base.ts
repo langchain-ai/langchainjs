@@ -33,7 +33,7 @@ export class StringPromptValue extends BasePromptValue {
  */
 export interface BasePromptTemplateInput<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  InputVariables extends InputValues,
+  InputVariables extends InputValues = any,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   PartialVariableName extends string = any
 > {
@@ -62,6 +62,8 @@ export abstract class BasePromptTemplate<
   PartialVariableName extends string = any
 > implements BasePromptTemplateInput<InputVariables, PartialVariableName>
 {
+  declare PromptValueReturnType: BasePromptValue;
+
   inputVariables: Array<Extract<keyof InputVariables, string>>;
 
   outputParser?: BaseOutputParser;

@@ -111,6 +111,8 @@ export abstract class BaseChatPromptTemplate<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   PartialVariableName extends string = any
 > extends BasePromptTemplate<InputVariables, PartialVariableName> {
+  declare PromptValueReturnType: ChatPromptValue;
+
   constructor(
     input: BasePromptTemplateInput<InputVariables, PartialVariableName>
   ) {
@@ -129,7 +131,7 @@ export abstract class BaseChatPromptTemplate<
 
   async formatPromptValue(
     values: InputValues<Extract<keyof InputVariables, string>>
-  ): Promise<BasePromptValue> {
+  ): Promise<ChatPromptValue> {
     const resultMessages = await this.formatMessages(values);
     return new ChatPromptValue(resultMessages);
   }
