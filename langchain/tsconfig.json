@@ -68,6 +68,7 @@
       "src/vectorstores/faiss.ts",
       "src/vectorstores/weaviate.ts",
       "src/vectorstores/mongo.ts",
+      "src/vectorstores/mongodb_atlas.ts",
       "src/vectorstores/pinecone.ts",
       "src/vectorstores/qdrant.ts",
       "src/vectorstores/supabase.ts",
