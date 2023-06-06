@@ -2,7 +2,7 @@ import {
   SerializedConstructor,
   SerializedNotImplemented,
   SerializedSecret,
-} from "../schema/load.js";
+} from "./serializable.js";
 import { optionalImportEntrypoints } from "./import_constants.js";
 import * as importMap from "./import_map.js";
 import { OptionalImportMap, SecretMap } from "./import_type.js";

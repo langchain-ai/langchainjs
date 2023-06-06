@@ -10,7 +10,7 @@ import {
   verifyIncludeTablesExistInDatabase,
   verifyListTablesExistInDatabase,
 } from "./util/sql_utils.js";
-import { Serializable } from "./schema/load.js";
+import { Serializable } from "./load/serializable.js";
 
 export { SqlDatabaseDataSourceParams, SqlDatabaseOptionsParams };
 

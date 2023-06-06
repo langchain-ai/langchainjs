@@ -10,7 +10,7 @@ import {
   HumanChatMessage,
   LLMResult,
 } from "../../schema/index.js";
-import { Serialized } from "../../schema/load.js";
+import { Serialized } from "../../load/serializable.js";
 
 class FakeCallbackHandler extends BaseCallbackHandler {
   name = `fake-${uuid.v4()}`;

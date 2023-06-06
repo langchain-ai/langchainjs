@@ -9,7 +9,7 @@ import { Calculator } from "../../tools/calculator.js";
 import { initializeAgentExecutorWithOptions } from "../../agents/initialize.js";
 import { HumanChatMessage } from "../../schema/index.js";
 import { ChatOpenAI } from "../../chat_models/openai.js";
-import { Serialized } from "../../schema/load.js";
+import { Serialized } from "../../load/serializable.js";
 
 const serialized: Serialized = {
   lc: 1,

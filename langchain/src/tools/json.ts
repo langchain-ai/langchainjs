@@ -1,6 +1,6 @@
 import jsonpointer from "jsonpointer";
 import { Tool } from "./base.js";
-import { Serializable } from "../schema/load.js";
+import { Serializable } from "../load/serializable.js";
 
 export type Json =
   | string

@@ -9,6 +9,7 @@ import { identifySecrets } from "./identify-secrets.js";
 // Order is not important.
 const entrypoints = {
   load: "load/index",
+  "load/serializable": "load/serializable",
   // agents
   agents: "agents/index",
   "agents/load": "agents/load",

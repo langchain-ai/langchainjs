@@ -1,5 +1,5 @@
 import { Document } from "../document.js";
-import { Serializable } from "./load.js";
+import { Serializable } from "../load/serializable.js";
 
 export const RUN_KEY = "__run";
 

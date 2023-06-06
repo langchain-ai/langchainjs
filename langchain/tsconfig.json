@@ -33,6 +33,7 @@
   "typedocOptions": {
     "entryPoints": [
       "src/load/index.ts",
+      "src/load/serializable.ts",
       "src/agents/index.ts",
       "src/agents/load.ts",
       "src/base_language/index.ts",

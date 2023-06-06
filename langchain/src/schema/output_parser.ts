@@ -1,6 +1,6 @@
 import { Callbacks } from "../callbacks/manager.js";
 import { BasePromptValue } from "./index.js";
-import { Serializable } from "./load.js";
+import { Serializable } from "../load/serializable.js";
 
 /**
  * Options for formatting instructions.

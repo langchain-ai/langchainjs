@@ -2,7 +2,7 @@ import { test, expect, jest } from "@jest/globals";
 import * as uuid from "uuid";
 import { BaseTracer, Run } from "../handlers/tracer.js";
 import { HumanChatMessage } from "../../schema/index.js";
-import { Serialized } from "../../schema/load.js";
+import { Serialized } from "../../load/serializable.js";
 
 const _DATE = 1620000000000;
 

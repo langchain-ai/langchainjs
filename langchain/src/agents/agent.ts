@@ -9,7 +9,7 @@ import {
   BaseChatMessage,
   ChainValues,
 } from "../schema/index.js";
-import { Serializable } from "../schema/load.js";
+import { Serializable } from "../load/serializable.js";
 import { StructuredTool, Tool } from "../tools/base.js";
 import {
   AgentActionOutputParser,

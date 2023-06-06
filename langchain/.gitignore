@@ -1,6 +1,9 @@
 load.cjs
 load.js
 load.d.ts
+load/serializable.cjs
+load/serializable.js
+load/serializable.d.ts
 agents.cjs
 agents.js
 agents.d.ts

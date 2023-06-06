@@ -6,7 +6,7 @@ import {
   RunInputs,
   RunOutputs,
 } from "../../schema/index.js";
-import { Serialized } from "../../schema/load.js";
+import { Serialized } from "../../load/serializable.js";
 import { BaseCallbackHandler, BaseCallbackHandlerInput } from "../base.js";
 
 export type RunType = "llm" | "chain" | "tool";

@@ -70,6 +70,9 @@ export interface OptionalImportMap {
   "langchain/vectorstores/mongo"?:
     | typeof import("../vectorstores/mongo.js")
     | Promise<typeof import("../vectorstores/mongo.js")>;
+  "langchain/vectorstores/mongodb_atlas"?:
+    | typeof import("../vectorstores/mongodb_atlas.js")
+    | Promise<typeof import("../vectorstores/mongodb_atlas.js")>;
   "langchain/vectorstores/pinecone"?:
     | typeof import("../vectorstores/pinecone.js")
     | Promise<typeof import("../vectorstores/pinecone.js")>;
@@ -85,12 +88,18 @@ export interface OptionalImportMap {
   "langchain/vectorstores/milvus"?:
     | typeof import("../vectorstores/milvus.js")
     | Promise<typeof import("../vectorstores/milvus.js")>;
+  "langchain/vectorstores/typeorm"?:
+    | typeof import("../vectorstores/typeorm.js")
+    | Promise<typeof import("../vectorstores/typeorm.js")>;
   "langchain/vectorstores/myscale"?:
     | typeof import("../vectorstores/myscale.js")
     | Promise<typeof import("../vectorstores/myscale.js")>;
   "langchain/vectorstores/redis"?:
     | typeof import("../vectorstores/redis.js")
     | Promise<typeof import("../vectorstores/redis.js")>;
+  "langchain/vectorstores/singlestore"?:
+    | typeof import("../vectorstores/singlestore.js")
+    | Promise<typeof import("../vectorstores/singlestore.js")>;
   "langchain/vectorstores/tigris"?:
     | typeof import("../vectorstores/tigris.js")
     | Promise<typeof import("../vectorstores/tigris.js")>;
@@ -220,7 +229,6 @@ export interface SecretMap {
   AWS_SECRET_ACCESS_KEY?: string;
   AWS_SESSION_TOKEN?: string;
   AZURE_OPENAI_API_KEY?: string;
-  BING_API_KEY?: string;
   COHERE_API_KEY?: string;
   GOOGLE_API_KEY?: string;
   HUGGINGFACEHUB_API_KEY?: string;
@@ -230,8 +238,6 @@ export interface SecretMap {
   REDIS_URL?: string;
   REDIS_USERNAME?: string;
   REPLICATE_API_KEY?: string;
-  SERPAPI_API_KEY?: string;
-  SERPER_API_KEY?: string;
   UPSTASH_REDIS_REST_TOKEN?: string;
   UPSTASH_REDIS_REST_URL?: string;
   ZAPIER_NLA_API_KEY?: string;

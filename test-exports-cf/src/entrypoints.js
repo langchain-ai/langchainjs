@@ -1,4 +1,5 @@
 export * from "langchain/load";
+export * from "langchain/load/serializable";
 export * from "langchain/agents";
 export * from "langchain/base_language";
 export * from "langchain/tools";

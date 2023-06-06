@@ -13,6 +13,9 @@
     "load.cjs",
     "load.js",
     "load.d.ts",
+    "load/serializable.cjs",
+    "load/serializable.js",
+    "load/serializable.d.ts",
     "agents.cjs",
     "agents.js",
     "agents.d.ts",
@@ -738,6 +741,11 @@
       "types": "./load.d.ts",
       "import": "./load.js",
       "require": "./load.cjs"
+    },
+    "./load/serializable": {
+      "types": "./load/serializable.d.ts",
+      "import": "./load/serializable.js",
+      "require": "./load/serializable.cjs"
     },
     "./agents": {
       "types": "./agents.d.ts",

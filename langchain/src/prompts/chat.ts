@@ -8,7 +8,7 @@ import {
   PartialValues,
   SystemChatMessage,
 } from "../schema/index.js";
-import { Serializable } from "../schema/load.js";
+import { Serializable } from "../load/serializable.js";
 import {
   BasePromptTemplate,
   BasePromptTemplateInput,

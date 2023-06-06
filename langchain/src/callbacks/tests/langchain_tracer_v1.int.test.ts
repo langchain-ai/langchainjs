@@ -8,7 +8,7 @@ import { SerpAPI } from "../../tools/index.js";
 import { Calculator } from "../../tools/calculator.js";
 import { initializeAgentExecutorWithOptions } from "../../agents/index.js";
 import { HumanChatMessage } from "../../schema/index.js";
-import { Serialized } from "../../schema/load.js";
+import { Serialized } from "../../load/serializable.js";
 
 const serialized: Serialized = {
   lc: 1,

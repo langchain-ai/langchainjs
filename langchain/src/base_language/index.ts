@@ -8,7 +8,7 @@ import { CallbackManager, Callbacks } from "../callbacks/manager.js";
 import { AsyncCaller, AsyncCallerParams } from "../util/async_caller.js";
 import { getModelNameForTiktoken } from "./count_tokens.js";
 import { encodingForModel } from "../util/tiktoken.js";
-import { Serializable } from "../schema/load.js";
+import { Serializable } from "../load/serializable.js";
 
 const getVerbosity = () => false;
 

@@ -11,7 +11,7 @@ import {
   Serialized,
   SerializedFields,
   SerializedNotImplemented,
-} from "../schema/load.js";
+} from "../load/serializable.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Error = any;

@@ -6,7 +6,7 @@ import {
   PartialValues,
 } from "../schema/index.js";
 import { BaseOutputParser } from "../schema/output_parser.js";
-import { Serializable } from "../schema/load.js";
+import { Serializable } from "../load/serializable.js";
 import { SerializedBasePromptTemplate } from "./serde.js";
 
 export class StringPromptValue extends BasePromptValue {
