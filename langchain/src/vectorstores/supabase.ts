@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import type { PostgrestFilterBuilder } from "@supabase/postgrest-js";
 import { VectorStore } from "./base.js";
 import { Embeddings } from "../embeddings/base.js";
 import { Document } from "../document.js";
@@ -6,11 +7,14 @@ import { Document } from "../document.js";
 interface SearchEmbeddingsParams {
   query_embedding: number[];
   match_count: number; // int
-  filter?: SupabaseMetadata;
+  filter?: SupabaseMetadata | SupabaseFilterRPCCall;
 }
 
 // eslint-disable-next-line @typescript-eslint/ban-types, @typescript-eslint/no-explicit-any
 type SupabaseMetadata = Record<string, any>;
+// eslint-disable-next-line @typescript-eslint/ban-types, @typescript-eslint/no-explicit-any
+export type SupabaseFilter = PostgrestFilterBuilder<any, any, any>;
+export type SupabaseFilterRPCCall = (rpcCall: SupabaseFilter) => SupabaseFilter;
 
 interface SearchEmbeddingsResponse {
   id: number;
@@ -23,11 +27,11 @@ export interface SupabaseLibArgs {
   client: SupabaseClient;
   tableName?: string;
   queryName?: string;
-  filter?: SupabaseMetadata;
+  filter?: SupabaseMetadata | SupabaseFilterRPCCall;
 }
 
 export class SupabaseVectorStore extends VectorStore {
-  declare FilterType: SupabaseMetadata;
+  declare FilterType: SupabaseMetadata | SupabaseFilterRPCCall;
 
   client: SupabaseClient;
 
@@ -35,7 +39,7 @@ export class SupabaseVectorStore extends VectorStore {
 
   queryName: string;
 
-  filter?: SupabaseMetadata;
+  filter?: SupabaseMetadata | SupabaseFilterRPCCall;
 
   constructor(embeddings: Embeddings, args: SupabaseLibArgs) {
     super(embeddings, args);
@@ -84,17 +88,26 @@ export class SupabaseVectorStore extends VectorStore {
     if (filter && this.filter) {
       throw new Error("cannot provide both `filter` and `this.filter`");
     }
-    const _filter = filter ?? this.filter;
-    const matchDocumentsParams: SearchEmbeddingsParams = {
-      filter: _filter,
+    const _filter = filter ?? this.filter ?? {};
+    const matchDocumentsParams: Partial<SearchEmbeddingsParams> = {
       query_embedding: query,
-      match_count: k,
     };
 
-    const { data: searches, error } = await this.client.rpc(
-      this.queryName,
-      matchDocumentsParams
-    );
+    let filterFunction: SupabaseFilterRPCCall;
+
+    if (typeof _filter === "function") {
+      filterFunction = (rpcCall) => _filter(rpcCall).limit(k);
+    } else if (typeof _filter === "object") {
+      matchDocumentsParams.filter = _filter;
+      matchDocumentsParams.match_count = k;
+      filterFunction = (rpcCall) => rpcCall;
+    } else {
+      throw new Error("invalid filter type");
+    }
+
+    const rpcCall = this.client.rpc(this.queryName, matchDocumentsParams);
+
+    const { data: searches, error } = await filterFunction(rpcCall);
 
     if (error) {
       throw new Error(

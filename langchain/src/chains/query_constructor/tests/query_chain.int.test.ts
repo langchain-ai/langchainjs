@@ -1,5 +1,5 @@
 import { test } from "@jest/globals";
-import { loadQueryContstructorChain } from "../index.js";
+import { loadQueryConstructorChain } from "../index.js";
 import {
   Comparators,
   Comparison,
@@ -77,7 +77,7 @@ test("Query Chain Test", async () => {
   const allowedComparators = Object.values(Comparators);
   const allowedOperators = Object.values(Operators);
   const llm = new OpenAI({ modelName: "gpt-3.5-turbo", temperature: 0 });
-  const queryChain = loadQueryContstructorChain({
+  const queryChain = loadQueryConstructorChain({
     llm,
     documentContents,
     attributeInfo,
