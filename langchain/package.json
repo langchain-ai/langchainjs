@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.90",
+  "version": "0.0.91",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -127,6 +127,9 @@
     "vectorstores/mongo.cjs",
     "vectorstores/mongo.js",
     "vectorstores/mongo.d.ts",
+    "vectorstores/mongodb_atlas.cjs",
+    "vectorstores/mongodb_atlas.js",
+    "vectorstores/mongodb_atlas.d.ts",
     "vectorstores/pinecone.cjs",
     "vectorstores/pinecone.js",
     "vectorstores/pinecone.d.ts",
@@ -448,7 +451,7 @@
     "eslint-plugin-import": "^2.27.5",
     "eslint-plugin-no-instanceof": "^1.0.1",
     "eslint-plugin-prettier": "^4.2.1",
-    "faiss-node": "^0.2.0",
+    "faiss-node": "^0.2.1",
     "google-auth-library": "^8.8.0",
     "graphql": "^16.6.0",
     "hnswlib-node": "^1.4.2",
@@ -505,7 +508,7 @@
     "cohere-ai": "^5.0.2",
     "d3-dsv": "^2.0.0",
     "epub2": "^3.0.1",
-    "faiss-node": "^0.2.0",
+    "faiss-node": "^0.2.1",
     "google-auth-library": "^8.8.0",
     "hnswlib-node": "^1.4.2",
     "html-to-text": "^9.0.5",
@@ -909,6 +912,11 @@
       "types": "./vectorstores/mongo.d.ts",
       "import": "./vectorstores/mongo.js",
       "require": "./vectorstores/mongo.cjs"
+    },
+    "./vectorstores/mongodb_atlas": {
+      "types": "./vectorstores/mongodb_atlas.d.ts",
+      "import": "./vectorstores/mongodb_atlas.js",
+      "require": "./vectorstores/mongodb_atlas.cjs"
     },
     "./vectorstores/pinecone": {
       "types": "./vectorstores/pinecone.d.ts",
