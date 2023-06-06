@@ -11,12 +11,10 @@ import { BaseTranslator, BasicTranslator } from "./translator.js";
 
 export { BaseTranslator, BasicTranslator };
 
-type PartialExcept<A, B extends keyof A> = Partial<Omit<A, B>> & Pick<A, B>;
-
 export type SelfQueryRetrieverArgs = {
   vectorStore: VectorStore;
-  llmChain: LLMChain;
   structuredQueryTranslator: BaseTranslator;
+  llmChain: LLMChain;
   verbose?: boolean;
   searchParams?: {
     k?: number;
@@ -78,10 +76,7 @@ export class SelfQueryRetriever
 
   static fromLLM(
     options: QueryConstructorChainOptions &
-      PartialExcept<
-        SelfQueryRetrieverArgs,
-        "vectorStore" | "structuredQueryTranslator"
-      >
+      Omit<SelfQueryRetrieverArgs, "llmChain">
   ): SelfQueryRetriever {
     const {
       structuredQueryTranslator,
@@ -92,29 +87,22 @@ export class SelfQueryRetriever
       attributeInfo,
       examples,
       vectorStore,
-      llmChain,
       ...rest
     } = options;
-    const _allowedComparators =
-      allowedComparators ?? structuredQueryTranslator.allowedComparators;
-    const _allowedOperators =
-      allowedOperators ?? structuredQueryTranslator.allowedOperators;
-
-    const _llmChain =
-      llmChain ??
-      loadQueryConstructorChain({
-        llm,
-        documentContents,
-        attributeInfo,
-        examples,
-        allowedComparators: _allowedComparators,
-        allowedOperators: _allowedOperators,
-      });
-
+    const llmChain = loadQueryConstructorChain({
+      llm,
+      documentContents,
+      attributeInfo,
+      examples,
+      allowedComparators:
+        allowedComparators ?? structuredQueryTranslator.allowedComparators,
+      allowedOperators:
+        allowedOperators ?? structuredQueryTranslator.allowedOperators,
+    });
     return new SelfQueryRetriever({
       ...rest,
+      llmChain,
       vectorStore,
-      llmChain: _llmChain,
       structuredQueryTranslator,
     });
   }
