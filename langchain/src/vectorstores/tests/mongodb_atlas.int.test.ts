@@ -30,6 +30,7 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 const client = new MongoClient(process.env.MONGODB_ATLAS_URI!);
 
 test.skip("MongoDBAtlasVectorSearch with external ids", async () => {
@@ -40,10 +41,9 @@ test.skip("MongoDBAtlasVectorSearch with external ids", async () => {
     const [dbName, collectionName] = namespace.split(".");
     const collection = client.db(dbName).collection(collectionName);
 
-    const vectorStore = new MongoDBAtlasVectorSearch(
-      new CohereEmbeddings(),
-      { collection }
-    );
+    const vectorStore = new MongoDBAtlasVectorSearch(new CohereEmbeddings(), {
+      collection,
+    });
 
     expect(vectorStore).toBeDefined();
 
@@ -59,7 +59,10 @@ test.skip("MongoDBAtlasVectorSearch with external ids", async () => {
 
     // we sleep 2 seconds to make sure the index in atlas has replicated the new documents
     await sleep(2000);
-    let results: Document[] = await vectorStore.similaritySearch("Sandwich", 1);
+    const results: Document[] = await vectorStore.similaritySearch(
+      "Sandwich",
+      1
+    );
 
     expect(results).toEqual([
       { pageContent: "What is a sandwich?", metadata: { c: 1 } },
@@ -67,7 +70,7 @@ test.skip("MongoDBAtlasVectorSearch with external ids", async () => {
 
     // we can pre filter the search
     const preFilter = {
-      range: { lte: 1, path: "e" }
+      range: { lte: 1, path: "e" },
     };
 
     const filteredResults = await vectorStore.similaritySearch(

@@ -903,10 +903,10 @@
       "import": "./vectorstores/weaviate.js",
       "require": "./vectorstores/weaviate.cjs"
     },
-    "./vectorstores/mongodb": {
-      "types": "./vectorstores/mongodb.d.ts",
-      "import": "./vectorstores/mongodb.js",
-      "require": "./vectorstores/mongodb.cjs"
+    "./vectorstores/mongo": {
+      "types": "./vectorstores/mongo.d.ts",
+      "import": "./vectorstores/mongo.js",
+      "require": "./vectorstores/mongo.cjs"
     },
     "./vectorstores/mongodb_atlas": {
       "types": "./vectorstores/mongodb_atlas.d.ts",

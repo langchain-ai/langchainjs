@@ -8,10 +8,9 @@ export const run = async () => {
   const [dbName, collectionName] = namespace.split(".");
   const collection = client.db(dbName).collection(collectionName);
 
-  const vectorStore = new MongoDBAtlasVectorSearch(
-    new CohereEmbeddings(),
-    { collection }
-  );
+  const vectorStore = new MongoDBAtlasVectorSearch(new CohereEmbeddings(), {
+    collection,
+  });
 
   const resultOne = await vectorStore.similaritySearch("Hello world", 1);
   console.log(resultOne);

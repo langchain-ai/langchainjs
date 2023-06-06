@@ -1,7 +1,4 @@
-import type {
-  Collection,
-  Document as MongoDBDocument,
-} from "mongodb";
+import type { Collection, Document as MongoDBDocument } from "mongodb";
 import { VectorStore } from "./base.js";
 import { Embeddings } from "../embeddings/base.js";
 import { Document } from "../document.js";
@@ -17,8 +14,11 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
   declare FilterType: MongoDBDocument;
 
   collection: Collection<MongoDBDocument>;
+
   indexName: string;
+
   textKey: string;
+
   embeddingKey: string;
 
   constructor(embeddings: Embeddings, args: MongoDBAtlasVectorSearchLibArgs) {
@@ -55,7 +55,7 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
     const knnBeta: MongoDBDocument = {
       vector: query,
       path: this.embeddingKey,
-      k
+      k,
     };
     if (preFilter) {
       knnBeta.filter = preFilter;
@@ -64,15 +64,15 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
       {
         $search: {
           index: this.indexName,
-          knnBeta: knnBeta
-        }
+          knnBeta,
+        },
       },
       {
         $project: {
           [this.embeddingKey]: 0,
-          score: { $meta: "searchScore" }
-        }
-      }
+          score: { $meta: "searchScore" },
+        },
+      },
     ];
     if (postFilterPipeline) {
       pipeline.push(...postFilterPipeline);
@@ -84,10 +84,7 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
       const text = result[this.textKey];
       delete result[this.textKey];
       const { score, ...metadata } = result;
-      ret.push([
-        new Document({ pageContent: text, metadata: metadata }),
-        score,
-      ]);
+      ret.push([new Document({ pageContent: text, metadata }), score]);
     }
 
     return ret;
