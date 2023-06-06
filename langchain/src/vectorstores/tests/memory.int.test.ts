@@ -26,3 +26,23 @@ test("MemoryVectorStore with external ids", async () => {
     new Document({ metadata: { a: 1 }, pageContent: "hello" }),
   ]);
 });
+
+test("MemoryVectorStore serialization", async () => {
+  const embeddings = new OpenAIEmbeddings();
+
+  const store = new MemoryVectorStore(embeddings);
+
+  expect(store).toBeDefined();
+
+  await store.addDocuments([
+    { pageContent: "hello", metadata: { a: 1 } },
+    { pageContent: "hi", metadata: { a: 1 } },
+    { pageContent: "bye", metadata: { a: 1 } },
+    { pageContent: "what's this", metadata: { a: 1 } },
+  ]);
+
+  const newStore = MemoryVectorStore.deserialize(store.serialize(), embeddings);
+
+  expect(newStore).toBeInstanceOf(MemoryVectorStore);
+  expect(newStore.memoryVectors).toEqual(store.memoryVectors);
+});

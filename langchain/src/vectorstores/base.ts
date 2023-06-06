@@ -143,3 +143,16 @@ export abstract class SaveableVectorStore extends VectorStore {
     throw new Error("Not implemented");
   }
 }
+
+export abstract class SerializableVectorStore extends VectorStore {
+  abstract serialize(): string;
+
+  static deserialize(
+    _snapshot: string,
+    _embeddings: Embeddings,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    _args?: any
+  ): SerializableVectorStore {
+    throw new Error("Not implemented");
+  }
+}

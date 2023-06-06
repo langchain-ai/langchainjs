@@ -1,5 +1,5 @@
 import { similarity as ml_distance_similarity } from "ml-distance";
-import { VectorStore } from "./base.js";
+import { SerializableVectorStore } from "./base.js";
 import { Embeddings } from "../embeddings/base.js";
 import { Document } from "../document.js";
 
@@ -10,11 +10,15 @@ interface MemoryVector {
   metadata: Record<string, any>;
 }
 
+interface MemoryVectorStoreSnapshot {
+  memoryVectors?: MemoryVector[];
+}
+
 export interface MemoryVectorStoreArgs {
   similarity?: typeof ml_distance_similarity.cosine;
 }
 
-export class MemoryVectorStore extends VectorStore {
+export class MemoryVectorStore extends SerializableVectorStore {
   declare FilterType: (doc: Document) => boolean;
 
   memoryVectors: MemoryVector[] = [];
@@ -118,5 +122,29 @@ export class MemoryVectorStore extends VectorStore {
   ): Promise<MemoryVectorStore> {
     const instance = new this(embeddings, dbConfig);
     return instance;
+  }
+
+  serialize(): string {
+    const dbConfig: MemoryVectorStoreSnapshot = {
+      memoryVectors: this.memoryVectors,
+    };
+    return JSON.stringify(dbConfig);
+  }
+
+  static deserialize(
+    snapshot: string,
+    embeddings: Embeddings,
+    args?: MemoryVectorStoreArgs
+  ): MemoryVectorStore {
+    try {
+      const parsedSnapshot: MemoryVectorStoreSnapshot = JSON.parse(snapshot);
+
+      const instance = new this(embeddings, args);
+      instance.memoryVectors = parsedSnapshot?.memoryVectors ?? [];
+
+      return instance;
+    } catch (e) {
+      throw new Error("Failed to deserialize MemoryVectorStore");
+    }
   }
 }
