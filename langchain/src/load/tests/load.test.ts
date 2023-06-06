@@ -74,6 +74,7 @@ test("serialize + deserialize llm chain string prompt", async () => {
     temperature: 0.5,
     modelName: "davinci",
     verbose: true,
+    openAIApiKey: "openai-key",
     callbacks: [
       new LangChainTracer(),
       // This custom handler is not serialized
@@ -88,7 +89,9 @@ test("serialize + deserialize llm chain string prompt", async () => {
   const chain = new LLMChain({ llm, prompt });
   const str = JSON.stringify(chain, null, 2);
   expect(stringify(JSON.parse(str))).toMatchSnapshot();
-  const chain2 = await load<LLMChain>(str);
+  const chain2 = await load<LLMChain>(str, {
+    OPENAI_API_KEY: "openai-key",
+  });
   expect(chain2).toBeInstanceOf(LLMChain);
   expect(JSON.stringify(chain2, null, 2)).toBe(str);
 });
@@ -98,6 +101,10 @@ test("serialize + deserialize llm chain chat prompt", async () => {
     temperature: 0.5,
     modelName: "gpt-4",
     streaming: true,
+    azureOpenAIApiKey: "openai-key",
+    azureOpenAIApiInstanceName: "openai-instance",
+    azureOpenAIApiDeploymentName: "openai-deployment",
+    azureOpenAIApiVersion: "openai-version",
     prefixMessages: [
       {
         role: "system",
@@ -112,7 +119,9 @@ test("serialize + deserialize llm chain chat prompt", async () => {
   const chain = new LLMChain({ llm, prompt });
   const str = JSON.stringify(chain, null, 2);
   expect(stringify(JSON.parse(str))).toMatchSnapshot();
-  const chain2 = await load<LLMChain>(str);
+  const chain2 = await load<LLMChain>(str, {
+    AZURE_OPENAI_API_KEY: "openai-key",
+  });
   expect(chain2).toBeInstanceOf(LLMChain);
   expect(JSON.stringify(chain2, null, 2)).toBe(str);
 });
@@ -121,6 +130,7 @@ test("serialize + deserialize llm chain few shot prompt w/ examples", async () =
   const llm = new OpenAI({
     temperature: 0.5,
     modelName: "davinci",
+    openAIApiKey: "openai-key",
     callbacks: [new LangChainTracer()],
   });
   const prompt = new FewShotPromptTemplate({
@@ -133,7 +143,9 @@ test("serialize + deserialize llm chain few shot prompt w/ examples", async () =
   const chain = new LLMChain({ llm, prompt });
   const str = JSON.stringify(chain, null, 2);
   expect(stringify(JSON.parse(str))).toMatchSnapshot();
-  const chain2 = await load<LLMChain>(str);
+  const chain2 = await load<LLMChain>(str, {
+    OPENAI_API_KEY: "openai-key",
+  });
   expect(chain2).toBeInstanceOf(LLMChain);
   expect(JSON.stringify(chain2, null, 2)).toBe(str);
 });
@@ -142,6 +154,7 @@ test("serialize + deserialize llm chain few shot prompt w/ selector", async () =
   const llm = new OpenAI({
     temperature: 0.5,
     modelName: "davinci",
+    openAIApiKey: "openai-key",
     callbacks: [new LangChainTracer()],
   });
   const examplePrompt = PromptTemplate.fromTemplate("An example about {yo}");
@@ -158,7 +171,9 @@ test("serialize + deserialize llm chain few shot prompt w/ selector", async () =
   const chain = new LLMChain({ llm, prompt });
   const str = JSON.stringify(chain, null, 2);
   expect(stringify(JSON.parse(str))).toMatchSnapshot();
-  const chain2 = await load<LLMChain>(str);
+  const chain2 = await load<LLMChain>(str, {
+    OPENAI_API_KEY: "openai-key",
+  });
   expect(chain2).toBeInstanceOf(LLMChain);
   expect(JSON.stringify(chain2, null, 2)).toBe(str);
 });
@@ -167,6 +182,7 @@ test("serialize + deserialize llmchain with output parser", async () => {
   const llm = new OpenAI({
     temperature: 0.5,
     modelName: "davinci",
+    openAIApiKey: "openai-key",
     callbacks: [new LangChainTracer()],
   });
   const prompt = PromptTemplate.fromTemplate(
@@ -176,7 +192,9 @@ test("serialize + deserialize llmchain with output parser", async () => {
   const chain = new LLMChain({ llm, prompt, outputParser });
   const str = JSON.stringify(chain, null, 2);
   expect(stringify(JSON.parse(str))).toMatchSnapshot();
-  const chain2 = await load<LLMChain>(str);
+  const chain2 = await load<LLMChain>(str, {
+    OPENAI_API_KEY: "openai-key",
+  });
   expect(chain2).toBeInstanceOf(LLMChain);
   expect(JSON.stringify(chain2, null, 2)).toBe(str);
   expect(await chain2.outputParser?.parse("a, b, c")).toEqual(["a", "b", "c"]);
@@ -186,6 +204,7 @@ test("serialize + deserialize llmchain with struct output parser throws", async 
   const llm = new OpenAI({
     temperature: 0.5,
     modelName: "davinci",
+    openAIApiKey: "openai-key",
     callbacks: [new LangChainTracer()],
   });
   const prompt = PromptTemplate.fromTemplate(
@@ -199,7 +218,11 @@ test("serialize + deserialize llmchain with struct output parser throws", async 
   const chain = new LLMChain({ llm, prompt, outputParser });
   const str = JSON.stringify(chain, null, 2);
   expect(stringify(JSON.parse(str))).toMatchSnapshot();
-  await expect(load<LLMChain>(str)).rejects.toThrow(
+  await expect(
+    load<LLMChain>(str, {
+      OPENAI_API_KEY: "openai-key",
+    })
+  ).rejects.toThrow(
     'Trying to load an object that doesn\'t implement serialization: {"lc":1,"type":"not_implemented","id":["langchain","output_parsers","structured","StructuredOutputParser"]}'
   );
 });
@@ -208,6 +231,7 @@ test("serialize + deserialize agent", async () => {
   const llm = new ChatOpenAI({
     temperature: 0,
     modelName: "gpt-4",
+    openAIApiKey: "openai-key",
   });
   const executor = await initializeAgentExecutorWithOptions(
     [
@@ -224,7 +248,7 @@ test("serialize + deserialize agent", async () => {
   expect(stringify(JSON.parse(str))).toMatchSnapshot();
   const executor2 = await load<AgentExecutor>(
     str,
-    {},
+    { OPENAI_API_KEY: "openai-key" },
     {
       "langchain/tools/calculator": { Calculator },
     }

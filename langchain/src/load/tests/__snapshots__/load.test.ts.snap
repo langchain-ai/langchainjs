@@ -185,6 +185,11 @@ kwargs:
             kwargs:
               temperature: 0
               modelName: gpt-4
+              openAIApiKey:
+                lc: 1
+                type: secret
+                id:
+                  - OPENAI_API_KEY
       outputParser:
         lc: 1
         type: constructor
@@ -247,6 +252,11 @@ kwargs:
                     kwargs:
                       temperature: 0
                       modelName: gpt-4
+                      openAIApiKey:
+                        lc: 1
+                        type: secret
+                        id:
+                          - OPENAI_API_KEY
                   prompt:
                     lc: 1
                     type: constructor
@@ -380,6 +390,14 @@ kwargs:
       temperature: 0.5
       modelName: gpt-4
       streaming: true
+      azureOpenAIApiKey:
+        lc: 1
+        type: secret
+        id:
+          - AZURE_OPENAI_API_KEY
+      azureOpenAIApiInstanceName: openai-instance
+      azureOpenAIApiDeploymentName: openai-deployment
+      azureOpenAIApiVersion: openai-version
       prefixMessages:
         - role: system
           content: You're a nice assistant
@@ -467,6 +485,11 @@ kwargs:
           kwargs: {}
       temperature: 0.5
       modelName: davinci
+      openAIApiKey:
+        lc: 1
+        type: secret
+        id:
+          - OPENAI_API_KEY
   prompt:
     lc: 1
     type: constructor
@@ -529,6 +552,11 @@ kwargs:
           kwargs: {}
       temperature: 0.5
       modelName: davinci
+      openAIApiKey:
+        lc: 1
+        type: secret
+        id:
+          - OPENAI_API_KEY
   prompt:
     lc: 1
     type: constructor
@@ -619,6 +647,11 @@ kwargs:
       temperature: 0.5
       modelName: davinci
       verbose: true
+      openAIApiKey:
+        lc: 1
+        type: secret
+        id:
+          - OPENAI_API_KEY
   prompt:
     lc: 1
     type: constructor
@@ -682,6 +715,11 @@ kwargs:
           kwargs: {}
       temperature: 0.5
       modelName: davinci
+      openAIApiKey:
+        lc: 1
+        type: secret
+        id:
+          - OPENAI_API_KEY
   prompt:
     lc: 1
     type: constructor
@@ -737,6 +775,11 @@ kwargs:
           kwargs: {}
       temperature: 0.5
       modelName: davinci
+      openAIApiKey:
+        lc: 1
+        type: secret
+        id:
+          - OPENAI_API_KEY
   prompt:
     lc: 1
     type: constructor
