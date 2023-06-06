@@ -8,6 +8,6 @@ export const run = async () => {
     chunkSize: 10,
     chunkOverlap: 1,
   });
-  const output = splitter.createDocuments([text]);
+  const output = await splitter.createDocuments([text]);
   console.log(output);
 };
