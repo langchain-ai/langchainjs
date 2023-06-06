@@ -56,7 +56,7 @@ export class GoogleCloudStorageDocstore extends Docstore {
   async addDocument(name: string, document: Document): Promise<void> {
     const file = this.getFile(name);
     await file.save(document.pageContent);
-    await file.setMetadata(document.metadata);
+    await file.setMetadata({ metadata: document.metadata });
   }
 
   private getFile(name: string): File {
