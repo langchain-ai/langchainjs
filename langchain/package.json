@@ -408,6 +408,7 @@
     "@getmetal/metal-sdk": "^4.0.0",
     "@getzep/zep-js": "^0.3.1",
     "@gomomento/sdk": "^1.23.0",
+    "@google-cloud/storage": "^6.10.1",
     "@huggingface/inference": "^1.5.1",
     "@jest/globals": "^29.5.0",
     "@opensearch-project/opensearch": "^2.2.0",
@@ -484,6 +485,7 @@
     "@getmetal/metal-sdk": "*",
     "@getzep/zep-js": "^0.3.1",
     "@gomomento/sdk": "^1.23.0",
+    "@google-cloud/storage": "^6.10.1",
     "@huggingface/inference": "^1.5.1",
     "@opensearch-project/opensearch": "*",
     "@pinecone-database/pinecone": "*",
@@ -546,6 +548,9 @@
       "optional": true
     },
     "@gomomento/sdk": {
+      "optional": true
+    },
+    "@google-cloud/storage": {
       "optional": true
     },
     "@huggingface/inference": {
