@@ -111,9 +111,10 @@ export class RedisVectorStore extends VectorStore {
     await this.createIndex(vectors[0].length);
 
     const multi = this.redisClient.multi();
+    const lastKeyCount = (await this.redisClient.sendCommand(['keys', `${this.keyPrefix}*`])).length;
 
     vectors.map(async (vector, idx) => {
-      const key = keys && keys.length ? keys[idx] : `${this.keyPrefix}${idx}`;
+      const key = keys && keys.length ? keys[idx] : `${this.keyPrefix}${idx + lastKeyCount}`;
       const metadata =
         documents[idx] && documents[idx].metadata
           ? documents[idx].metadata
