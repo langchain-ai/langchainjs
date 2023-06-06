@@ -48,6 +48,8 @@ export interface BasePromptTemplateInput {
  * string prompt given a set of input values.
  */
 export abstract class BasePromptTemplate implements BasePromptTemplateInput {
+  declare PromptValueReturnType: BasePromptValue;
+
   inputVariables: string[];
 
   outputParser?: BaseOutputParser;

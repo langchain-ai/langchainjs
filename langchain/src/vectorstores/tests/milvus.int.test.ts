@@ -1,7 +1,5 @@
 import { test, expect, afterAll, beforeAll } from "@jest/globals";
-import { ErrorCode } from "@zilliz/milvus2-sdk-node/dist/milvus/types.js";
-import { MilvusClient } from "@zilliz/milvus2-sdk-node/dist/milvus/index.js";
-
+import { ErrorCode, MilvusClient } from "@zilliz/milvus2-sdk-node";
 import { Milvus } from "../milvus.js";
 import { OpenAIEmbeddings } from "../../embeddings/openai.js";
 

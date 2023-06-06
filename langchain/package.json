@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.88",
+  "version": "0.0.91",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -79,6 +79,9 @@
     "llms/openai.cjs",
     "llms/openai.js",
     "llms/openai.d.ts",
+    "llms/ai21.cjs",
+    "llms/ai21.js",
+    "llms/ai21.d.ts",
     "llms/cohere.cjs",
     "llms/cohere.js",
     "llms/cohere.d.ts",
@@ -142,12 +145,18 @@
     "vectorstores/prisma.cjs",
     "vectorstores/prisma.js",
     "vectorstores/prisma.d.ts",
+    "vectorstores/typeorm.cjs",
+    "vectorstores/typeorm.js",
+    "vectorstores/typeorm.d.ts",
     "vectorstores/myscale.cjs",
     "vectorstores/myscale.js",
     "vectorstores/myscale.d.ts",
     "vectorstores/redis.cjs",
     "vectorstores/redis.js",
     "vectorstores/redis.d.ts",
+    "vectorstores/singlestore.cjs",
+    "vectorstores/singlestore.js",
+    "vectorstores/singlestore.d.ts",
     "vectorstores/tigris.cjs",
     "vectorstores/tigris.js",
     "vectorstores/tigris.d.ts",
@@ -352,6 +361,9 @@
     "experimental/babyagi.cjs",
     "experimental/babyagi.js",
     "experimental/babyagi.d.ts",
+    "experimental/generative_agents.cjs",
+    "experimental/generative_agents.js",
+    "experimental/generative_agents.d.ts",
     "experimental/plan_and_execute.cjs",
     "experimental/plan_and_execute.js",
     "experimental/plan_and_execute.d.ts",
@@ -414,6 +426,7 @@
     "@types/html-to-text": "^9",
     "@types/object-hash": "^3.0.2",
     "@types/pdf-parse": "^1.1.1",
+    "@types/pg": "^8",
     "@types/uuid": "^9",
     "@typescript-eslint/eslint-plugin": "^5.58.0",
     "@typescript-eslint/parser": "^5.58.0",
@@ -422,7 +435,7 @@
     "apify-client": "^2.7.1",
     "axios": "^0.26.0",
     "cheerio": "^1.0.0-rc.12",
-    "chromadb": "^1.4.2",
+    "chromadb": "^1.5.2",
     "cohere-ai": "^5.0.2",
     "d3-dsv": "^2.0.0",
     "dotenv": "^16.0.3",
@@ -434,7 +447,7 @@
     "eslint-plugin-import": "^2.27.5",
     "eslint-plugin-no-instanceof": "^1.0.1",
     "eslint-plugin-prettier": "^4.2.1",
-    "faiss-node": "^0.2.0",
+    "faiss-node": "^0.2.1",
     "google-auth-library": "^8.8.0",
     "graphql": "^16.6.0",
     "hnswlib-node": "^1.4.2",
@@ -443,8 +456,10 @@
     "jest": "^29.5.0",
     "mammoth": "^1.5.1",
     "mongodb": "^5.2.0",
+    "mysql2": "^3.3.3",
     "pdf-parse": "1.1.1",
     "peggy": "^3.0.2",
+    "pg": "^8.11.0",
     "pickleparser": "^0.1.0",
     "playwright": "^1.32.1",
     "prettier": "^2.8.3",
@@ -484,19 +499,21 @@
     "apify-client": "^2.7.1",
     "axios": "*",
     "cheerio": "^1.0.0-rc.12",
-    "chromadb": "^1.4.2",
+    "chromadb": "^1.5.2",
     "cohere-ai": "^5.0.2",
     "d3-dsv": "^2.0.0",
     "epub2": "^3.0.1",
-    "faiss-node": "^0.2.0",
+    "faiss-node": "^0.2.1",
     "google-auth-library": "^8.8.0",
     "hnswlib-node": "^1.4.2",
     "html-to-text": "^9.0.5",
     "ignore": "^5.2.0",
     "mammoth": "*",
     "mongodb": "^5.2.0",
+    "mysql2": "^3.3.3",
     "pdf-parse": "1.1.1",
     "peggy": "^3.0.2",
+    "pg": "^8.11.0",
     "pickleparser": "^0.1.0",
     "playwright": "^1.32.1",
     "puppeteer": "^19.7.2",
@@ -609,10 +626,16 @@
     "mongodb": {
       "optional": true
     },
+    "mysql2": {
+      "optional": true
+    },
     "pdf-parse": {
       "optional": true
     },
     "peggy": {
+      "optional": true
+    },
+    "pg": {
       "optional": true
     },
     "pickleparser": {
@@ -800,6 +823,11 @@
       "import": "./llms/openai.js",
       "require": "./llms/openai.cjs"
     },
+    "./llms/ai21": {
+      "types": "./llms/ai21.d.ts",
+      "import": "./llms/ai21.js",
+      "require": "./llms/ai21.cjs"
+    },
     "./llms/cohere": {
       "types": "./llms/cohere.d.ts",
       "import": "./llms/cohere.js",
@@ -907,6 +935,11 @@
       "import": "./vectorstores/prisma.js",
       "require": "./vectorstores/prisma.cjs"
     },
+    "./vectorstores/typeorm": {
+      "types": "./vectorstores/typeorm.d.ts",
+      "import": "./vectorstores/typeorm.js",
+      "require": "./vectorstores/typeorm.cjs"
+    },
     "./vectorstores/myscale": {
       "types": "./vectorstores/myscale.d.ts",
       "import": "./vectorstores/myscale.js",
@@ -916,6 +949,11 @@
       "types": "./vectorstores/redis.d.ts",
       "import": "./vectorstores/redis.js",
       "require": "./vectorstores/redis.cjs"
+    },
+    "./vectorstores/singlestore": {
+      "types": "./vectorstores/singlestore.d.ts",
+      "import": "./vectorstores/singlestore.js",
+      "require": "./vectorstores/singlestore.cjs"
     },
     "./vectorstores/tigris": {
       "types": "./vectorstores/tigris.d.ts",
@@ -1262,6 +1300,11 @@
       "types": "./experimental/babyagi.d.ts",
       "import": "./experimental/babyagi.js",
       "require": "./experimental/babyagi.cjs"
+    },
+    "./experimental/generative_agents": {
+      "types": "./experimental/generative_agents.d.ts",
+      "import": "./experimental/generative_agents.js",
+      "require": "./experimental/generative_agents.cjs"
     },
     "./experimental/plan_and_execute": {
       "types": "./experimental/plan_and_execute.d.ts",
