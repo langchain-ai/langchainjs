@@ -19,6 +19,8 @@ export interface MotorheadMemoryMessage {
 export type MotorheadMemoryInput = BaseChatMemoryInput &
   AsyncCallerParams & {
     sessionId: string;
+    /** @deprecated Use "url" instead. */
+    motorheadURL?: string;
     url?: string;
     memoryKey?: string;
     timeout?: number;
@@ -27,7 +29,6 @@ export type MotorheadMemoryInput = BaseChatMemoryInput &
   };
 
 const MANAGED_URL = "https://api.getmetal.io/v1/motorhead";
-// const LOCAL_URL = "localhost:8080"
 
 export class MotorheadMemory extends BaseChatMemory {
   url = MANAGED_URL;
@@ -51,6 +52,7 @@ export class MotorheadMemory extends BaseChatMemory {
     const {
       sessionId,
       url,
+      motorheadURL,
       memoryKey,
       timeout,
       returnMessages,
@@ -65,7 +67,7 @@ export class MotorheadMemory extends BaseChatMemory {
 
     this.caller = new AsyncCaller(rest);
     this.sessionId = sessionId;
-    this.url = url ?? this.url;
+    this.url = url ?? motorheadURL ?? this.url;
     this.memoryKey = memoryKey ?? this.memoryKey;
     this.timeout = timeout ?? this.timeout;
     this.apiKey = apiKey;
