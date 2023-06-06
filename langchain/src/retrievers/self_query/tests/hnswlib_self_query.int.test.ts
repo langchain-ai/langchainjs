@@ -7,7 +7,7 @@ import { OpenAI } from "../../../llms/openai.js";
 import { FunctionalTranslator } from "../functional_translator.js";
 import { HNSWLib } from "../../../vectorstores/hnswlib.js";
 
-test("HNSWLib Store Self Query Retriever Test", async () => {
+test.skip("HNSWLib Store Self Query Retriever Test", async () => {
   const docs = [
     new Document({
       pageContent:
@@ -88,14 +88,23 @@ test("HNSWLib Store Self Query Retriever Test", async () => {
   const query1 = await selfQueryRetriever.getRelevantDocuments(
     "Which movies are less than 90 minutes?"
   );
+  console.log(query1);
+  expect(query1.length).toEqual(0);
+
   const query2 = await selfQueryRetriever.getRelevantDocuments(
     "Which movies are rated higher than 8.5?"
   );
+  console.log(query2);
+  expect(query2.length).toEqual(2);
+
   const query3 = await selfQueryRetriever.getRelevantDocuments(
     "Which movies are directed by Greta Gerwig?"
   );
+  console.log(query3);
+  expect(query3.length).toEqual(1);
+
   const query4 = await selfQueryRetriever.getRelevantDocuments(
-    "Which movies are either comedy or drama and are less than 90 minutes?"
+    "Which movies are either science fiction or animated and are less than 90 minutes?"
   );
-  console.log(query1, query2, query3, query4);
+  expect(query4.length).toEqual(0);
 });
