@@ -18444,6 +18444,7 @@ __metadata:
     redis: ^4.6.4
     replicate: ^0.9.0
     srt-parser-2: ^1.2.2
+    twilio: "*"
     typeorm: ^0.3.12
     weaviate-ts-client: ^1.0.0
   peerDependenciesMeta:
@@ -18534,6 +18535,8 @@ __metadata:
     replicate:
       optional: true
     srt-parser-2:
+      optional: true
+    twilio:
       optional: true
     typeorm:
       optional: true
