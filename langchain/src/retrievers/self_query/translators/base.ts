@@ -11,7 +11,7 @@ import {
   VisitorOperationResult,
   VisitorResult,
   VisitorStructuredQueryResult,
-} from "../../chains/query_constructor/ir.js";
+} from "../../../chains/query_constructor/ir.js";
 
 export type TranslatorOpts = {
   allowedOperators: Operator[];

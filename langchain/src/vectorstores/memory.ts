@@ -15,7 +15,7 @@ export interface MemoryVectorStoreArgs {
 }
 
 export class MemoryVectorStore extends VectorStore {
-  declare FilterType: (dpc: Document) => boolean;
+  declare FilterType: (doc: Document) => boolean;
 
   memoryVectors: MemoryVector[] = [];
 

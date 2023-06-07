@@ -6,9 +6,9 @@ import {
   Operator,
   Operators,
   StructuredQuery,
-} from "../../chains/query_constructor/ir.js";
-import { Document } from "../../document.js";
-import { BaseTranslator } from "./translator.js";
+} from "../../../chains/query_constructor/ir.js";
+import { Document } from "../../../document.js";
+import { BaseTranslator } from "./base.js";
 
 type ValueType = {
   eq: string | number;

@@ -7,8 +7,8 @@ import { StructuredQuery } from "../../chains/query_constructor/ir.js";
 import { Document } from "../../document.js";
 import { BaseRetriever } from "../../schema/index.js";
 import { VectorStore } from "../../vectorstores/base.js";
-import { FunctionalTranslator } from "./functional_translator.js";
-import { BaseTranslator, BasicTranslator } from "./translator.js";
+import { FunctionalTranslator } from "./translators/functional.js";
+import { BaseTranslator, BasicTranslator } from "./translators/base.js";
 
 export { BaseTranslator, BasicTranslator, FunctionalTranslator };
 

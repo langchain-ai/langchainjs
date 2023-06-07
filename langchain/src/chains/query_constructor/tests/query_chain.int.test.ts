@@ -9,7 +9,7 @@ import {
 } from "../ir.js";
 import { OpenAI } from "../../../llms/openai.js";
 import { AttributeInfo } from "../../../schema/query_constructor.js";
-import { BasicTranslator } from "../../../retrievers/self_query/translator.js";
+import { BasicTranslator } from "../../../retrievers/self_query/translators/base.js";
 
 test("Query Chain Test", async () => {
   const sq1 = new StructuredQuery(
