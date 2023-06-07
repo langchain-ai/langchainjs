@@ -3,7 +3,7 @@ import { GoogleCloudStorageDocstore } from "../googlecloudstorage.js";
 import { Document } from "../../document.js";
 
 describe("GoogleCloudStorageDocstore", () => {
-  const bucket = "com-addventure-match-staging";
+  const bucket = "INSERT_BUCKET_HERE";
 
   test("save", async () => {
     const name = "test1";
