@@ -2,8 +2,6 @@ import {
   Comparator,
   Comparators,
   Comparison,
-  IN,
-  NIN,
   NOT,
   Operation,
   Operator,
@@ -14,8 +12,6 @@ import {
 import { BaseTranslator } from "./translator.js";
 
 type AllowedOperator = Exclude<Operator, NOT>;
-
-type AllowedComparator = Exclude<Comparator, IN | NIN>;
 
 type WeaviateOperatorValues = {
   valueText: string;
@@ -107,7 +103,7 @@ export class WeaviateTranslator extends BaseTranslator {
       gt: "GreaterThan",
       gte: "GreaterThanEqual",
     };
-    return dict[func as AllowedComparator | AllowedOperator];
+    return dict[func as Comparator | AllowedOperator];
   }
 
   visitOperation(operation: Operation): this["VisitOperationOutput"] {

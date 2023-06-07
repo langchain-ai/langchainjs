@@ -10,10 +10,8 @@ export type LT = "lt";
 export type GT = "gt";
 export type LTE = "lte";
 export type GTE = "gte";
-export type IN = "in";
-export type NIN = "nin";
 
-export type Comparator = EQ | NE | LT | GT | LTE | GTE | IN | NIN;
+export type Comparator = EQ | NE | LT | GT | LTE | GTE;
 
 export const Operators: { [key: string]: Operator } = {
   and: "and",
@@ -28,8 +26,6 @@ export const Comparators: { [key: string]: Comparator } = {
   gt: "gt",
   lte: "lte",
   gte: "gte",
-  in: "in",
-  nin: "nin",
 };
 
 export type VisitorResult =
@@ -43,7 +39,7 @@ export type VisitorOperationResult = {
 
 export type VisitorComparisonResult = {
   [attr: string]: {
-    [comparator: string]: string | number | string[] | number[];
+    [comparator: string]: string | number;
   };
 };
 
@@ -100,7 +96,7 @@ export class Comparison extends FilterDirective {
   constructor(
     public comparator: Comparator,
     public attribute: string,
-    public value: string | number | string[] | number[]
+    public value: string | number
   ) {
     super();
   }
