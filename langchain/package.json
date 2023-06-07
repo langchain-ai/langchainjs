@@ -127,6 +127,9 @@
     "vectorstores/mongo.cjs",
     "vectorstores/mongo.js",
     "vectorstores/mongo.d.ts",
+    "vectorstores/mongodb_atlas.cjs",
+    "vectorstores/mongodb_atlas.js",
+    "vectorstores/mongodb_atlas.d.ts",
     "vectorstores/pinecone.cjs",
     "vectorstores/pinecone.js",
     "vectorstores/pinecone.d.ts",
@@ -325,6 +328,12 @@
     "retrievers/self_query.cjs",
     "retrievers/self_query.js",
     "retrievers/self_query.d.ts",
+    "retrievers/self_query/functional.cjs",
+    "retrievers/self_query/functional.js",
+    "retrievers/self_query/functional.d.ts",
+    "retrievers/self_query/supabase.cjs",
+    "retrievers/self_query/supabase.js",
+    "retrievers/self_query/supabase.d.ts",
     "retrievers/vespa.cjs",
     "retrievers/vespa.js",
     "retrievers/vespa.d.ts",
@@ -447,7 +456,7 @@
     "eslint-plugin-import": "^2.27.5",
     "eslint-plugin-no-instanceof": "^1.0.1",
     "eslint-plugin-prettier": "^4.2.1",
-    "faiss-node": "^0.2.0",
+    "faiss-node": "^0.2.1",
     "google-auth-library": "^8.8.0",
     "graphql": "^16.6.0",
     "hnswlib-node": "^1.4.2",
@@ -503,7 +512,7 @@
     "cohere-ai": "^5.0.2",
     "d3-dsv": "^2.0.0",
     "epub2": "^3.0.1",
-    "faiss-node": "^0.2.0",
+    "faiss-node": "^0.2.1",
     "google-auth-library": "^8.8.0",
     "hnswlib-node": "^1.4.2",
     "html-to-text": "^9.0.5",
@@ -905,6 +914,11 @@
       "import": "./vectorstores/mongo.js",
       "require": "./vectorstores/mongo.cjs"
     },
+    "./vectorstores/mongodb_atlas": {
+      "types": "./vectorstores/mongodb_atlas.d.ts",
+      "import": "./vectorstores/mongodb_atlas.js",
+      "require": "./vectorstores/mongodb_atlas.cjs"
+    },
     "./vectorstores/pinecone": {
       "types": "./vectorstores/pinecone.d.ts",
       "import": "./vectorstores/pinecone.js",
@@ -1240,6 +1254,16 @@
       "types": "./retrievers/self_query.d.ts",
       "import": "./retrievers/self_query.js",
       "require": "./retrievers/self_query.cjs"
+    },
+    "./retrievers/self_query/functional": {
+      "types": "./retrievers/self_query/functional.d.ts",
+      "import": "./retrievers/self_query/functional.js",
+      "require": "./retrievers/self_query/functional.cjs"
+    },
+    "./retrievers/self_query/supabase": {
+      "types": "./retrievers/self_query/supabase.d.ts",
+      "import": "./retrievers/self_query/supabase.js",
+      "require": "./retrievers/self_query/supabase.cjs"
     },
     "./retrievers/vespa": {
       "types": "./retrievers/vespa.d.ts",

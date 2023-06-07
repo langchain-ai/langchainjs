@@ -53,6 +53,35 @@ class FakeLLM2 extends BaseLLM {
   }
 }
 
+class FakeLLM3 extends BaseLLM {
+  nrMapCalls = 0;
+
+  nrReduceCalls = 0;
+
+  _llmType(): string {
+    return "fake_2";
+  }
+
+  async _generate(prompts: string[]): Promise<LLMResult> {
+    const inputNumber = +prompts[0];
+    let response = "Not a number!!!";
+    if (prompts[0].startsWith("Final Answer: ")) {
+      [response] = prompts;
+    } else if (!Number.isNaN(inputNumber)) {
+      response = (inputNumber + 1).toString();
+    }
+    return {
+      generations: [
+        [
+          {
+            text: response,
+          },
+        ],
+      ],
+    };
+  }
+}
+
 test("Test SequentialChain", async () => {
   const model1 = new FakeLLM1({});
   const model2 = new FakeLLM2({});
@@ -160,4 +189,53 @@ test("Test SequentialChain chains' intermediate variables validation", () => {
   }).toThrowErrorMatchingInlineSnapshot(
     `"Missing variables for chain "llm_chain": "input3". Only got the following variables: "input1", "input2", "nonexistent"."`
   );
+});
+
+test("Test SequentialChain chains passes all outputs", async () => {
+  const model1 = new FakeLLM3({});
+  const template1 = "{input1}";
+  const prompt1 = new PromptTemplate({
+    template: template1,
+    inputVariables: ["input1"],
+  });
+  const chain1 = new LLMChain({
+    llm: model1,
+    prompt: prompt1,
+    outputKey: "input2",
+  });
+
+  const model2 = new FakeLLM3({});
+  const template2 = "{input2}";
+  const prompt2 = new PromptTemplate({
+    template: template2,
+    inputVariables: ["input2"],
+  });
+  const chain2 = new LLMChain({
+    llm: model2,
+    prompt: prompt2,
+    outputKey: "input3",
+  });
+
+  const model3 = new FakeLLM3({});
+  const template3 = "Final Answer: {input1} {input2} {input3}.";
+  const prompt3 = new PromptTemplate({
+    template: template3,
+    inputVariables: ["input1", "input2", "input3"],
+  });
+  const chain3 = new LLMChain({ llm: model3, prompt: prompt3 });
+
+  const combinedChain = new SequentialChain({
+    chains: [chain1, chain2, chain3],
+    inputVariables: ["input1"],
+    outputVariables: ["text"],
+  });
+  expect(
+    await combinedChain.call({
+      input1: "1",
+    })
+  ).toMatchInlineSnapshot(`
+  {
+    "text": "Final Answer: 1 2 3.",
+  }
+`);
 });
