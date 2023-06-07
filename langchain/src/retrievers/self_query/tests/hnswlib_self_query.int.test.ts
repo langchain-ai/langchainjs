@@ -7,7 +7,7 @@ import { OpenAI } from "../../../llms/openai.js";
 import { FunctionalTranslator } from "../functional_translator.js";
 import { HNSWLib } from "../../../vectorstores/hnswlib.js";
 
-test.skip("HNSWLib Store Self Query Retriever Test", async () => {
+test("HNSWLib Store Self Query Retriever Test", async () => {
   const docs = [
     new Document({
       pageContent:
@@ -74,7 +74,10 @@ test.skip("HNSWLib Store Self Query Retriever Test", async () => {
   ];
 
   const embeddings = new OpenAIEmbeddings();
-  const llm = new OpenAI();
+  const llm = new OpenAI({
+    modelName: "gpt-3.5-turbo",
+    temperature: 0.01,
+  });
   const documentContents = "Brief summary of a movie";
   const vectorStore = await HNSWLib.fromDocuments(docs, embeddings);
   const selfQueryRetriever = await SelfQueryRetriever.fromLLM({

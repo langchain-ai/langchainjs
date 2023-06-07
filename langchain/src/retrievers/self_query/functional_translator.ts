@@ -17,8 +17,6 @@ type ValueType = {
   lte: string | number;
   gt: string | number;
   gte: string | number;
-  in: (string | number)[];
-  nin: (string | number)[];
 };
 
 export type FunctionFilter = (document: Document) => boolean;
@@ -39,8 +37,6 @@ export class FunctionalTranslator extends BaseTranslator {
     Comparators.gte,
     Comparators.lt,
     Comparators.lte,
-    Comparators.in,
-    Comparators.nin,
   ];
 
   formatFunction(): string {
@@ -68,20 +64,6 @@ export class FunctionalTranslator extends BaseTranslator {
       }
       case Comparators.lte: {
         return (a: string | number, b: ValueType[C]) => a <= b;
-      }
-      case Comparators.in: {
-        return (a: string | number, b: ValueType[C]) => {
-          if (!Array.isArray(b))
-            throw new Error("Comparator value not an array");
-          return b.includes(a);
-        };
-      }
-      case Comparators.nin: {
-        return (a: string | number, b: ValueType[C]) => {
-          if (!Array.isArray(b))
-            throw new Error("Comparator value not an array");
-          return !b.includes(a);
-        };
       }
       default: {
         throw new Error("Unknown comparator");
