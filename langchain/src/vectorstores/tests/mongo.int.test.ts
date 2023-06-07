@@ -10,7 +10,6 @@ import { Document } from "../../document.js";
 
 /**
  * The following json can be used to create an index in atlas for cohere embeddings:
-
 {
   "mappings": {
     "fields": {
@@ -24,7 +23,6 @@ import { Document } from "../../document.js";
     }
   }
 }
-
  */
 
 test.skip("MongoVectorStore with external ids", async () => {

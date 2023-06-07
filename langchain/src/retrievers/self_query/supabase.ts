@@ -8,7 +8,7 @@ import {
   StructuredQuery,
 } from "../../chains/query_constructor/ir.js";
 import { SupabaseFilterRPCCall } from "../../vectorstores/supabase.js";
-import { BaseTranslator } from "./translator.js";
+import { BaseTranslator } from "./base.js";
 
 type ValueType = {
   eq: string | number;

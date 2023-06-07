@@ -7,15 +7,15 @@ import { StructuredQuery } from "../../chains/query_constructor/ir.js";
 import { Document } from "../../document.js";
 import { BaseRetriever } from "../../schema/index.js";
 import { VectorStore } from "../../vectorstores/base.js";
-import { SupabaseTranslator } from "./supabase_translator.js";
-import { BaseTranslator, BasicTranslator } from "./translator.js";
+import { FunctionalTranslator } from "./functional.js";
+import { BaseTranslator, BasicTranslator } from "./base.js";
 
-export { BaseTranslator, BasicTranslator, SupabaseTranslator };
+export { BaseTranslator, BasicTranslator, FunctionalTranslator };
 
 export type SelfQueryRetrieverArgs = {
   vectorStore: VectorStore;
-  llmChain: LLMChain;
   structuredQueryTranslator: BaseTranslator;
+  llmChain: LLMChain;
   verbose?: boolean;
   searchParams?: {
     k?: number;
@@ -76,29 +76,34 @@ export class SelfQueryRetriever
   }
 
   static fromLLM(
-    opts: QueryConstructorChainOptions & {
-      vectorStore: VectorStore;
-      structuredQueryTranslator: BaseTranslator;
-    }
+    options: QueryConstructorChainOptions &
+      Omit<SelfQueryRetrieverArgs, "llmChain">
   ): SelfQueryRetriever {
-    const { structuredQueryTranslator } = opts;
-    const allowedComparators =
-      opts.allowedComparators ?? structuredQueryTranslator.allowedComparators;
-    const allowedOperators =
-      opts.allowedOperators ?? structuredQueryTranslator.allowedOperators;
-
-    const llmChain = loadQueryConstructorChain({
-      llm: opts.llm,
-      documentContents: opts.documentContents,
-      attributeInfo: opts.attributeInfo,
-      examples: opts.examples,
+    const {
+      structuredQueryTranslator,
       allowedComparators,
       allowedOperators,
+      llm,
+      documentContents,
+      attributeInfo,
+      examples,
+      vectorStore,
+      ...rest
+    } = options;
+    const llmChain = loadQueryConstructorChain({
+      llm,
+      documentContents,
+      attributeInfo,
+      examples,
+      allowedComparators:
+        allowedComparators ?? structuredQueryTranslator.allowedComparators,
+      allowedOperators:
+        allowedOperators ?? structuredQueryTranslator.allowedOperators,
     });
-
     return new SelfQueryRetriever({
-      vectorStore: opts.vectorStore,
+      ...rest,
       llmChain,
+      vectorStore,
       structuredQueryTranslator,
     });
   }
