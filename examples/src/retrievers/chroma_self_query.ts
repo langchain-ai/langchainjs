@@ -1,10 +1,8 @@
 import { AttributeInfo } from "langchain/schema/query_constructor";
 import { Document } from "langchain/document";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
-import {
-  SelfQueryRetriever,
-  ChromaTranslator,
-} from "langchain/retrievers/self_query";
+import { SelfQueryRetriever } from "langchain/retrievers/self_query";
+import { ChromaTranslator } from "langchain/retrievers/self_query/chroma";
 import { OpenAI } from "langchain/llms/openai";
 import { Chroma } from "langchain/vectorstores/chroma";
 

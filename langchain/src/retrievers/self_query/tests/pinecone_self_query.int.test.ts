@@ -4,7 +4,8 @@ import { PineconeClient } from "@pinecone-database/pinecone";
 import { Document } from "../../../document.js";
 import { AttributeInfo } from "../../../schema/query_constructor.js";
 import { OpenAIEmbeddings } from "../../../embeddings/openai.js";
-import { PineconeTranslator, SelfQueryRetriever } from "../index.js";
+import { SelfQueryRetriever } from "../index.js";
+import { PineconeTranslator } from "../pinecone.js";
 import { OpenAI } from "../../../llms/openai.js";
 import { PineconeStore } from "../../../vectorstores/pinecone.js";
 

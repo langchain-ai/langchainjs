@@ -2,7 +2,8 @@ import { test } from "@jest/globals";
 import { Document } from "../../../document.js";
 import { AttributeInfo } from "../../../schema/query_constructor.js";
 import { OpenAIEmbeddings } from "../../../embeddings/openai.js";
-import { ChromaTranslator, SelfQueryRetriever } from "../index.js";
+import { SelfQueryRetriever } from "../index.js";
+import { ChromaTranslator } from "../chroma.js";
 import { OpenAI } from "../../../llms/openai.js";
 import { Chroma } from "../../../vectorstores/chroma.js";
 
