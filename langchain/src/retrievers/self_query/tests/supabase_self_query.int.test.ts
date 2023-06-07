@@ -9,6 +9,7 @@ import { OpenAI } from "../../../llms/openai.js";
 import { SupabaseTranslator } from "../supabase.js";
 import { SupabaseVectorStore } from "../../../vectorstores/supabase.js";
 
+// TODO: Make idempotent
 test.skip("Supabase Store Self Query Retriever Test", async () => {
   const docs = [
     new Document({
