@@ -135,6 +135,7 @@ const entrypoints = {
   "retrievers/hyde": "retrievers/hyde",
   "retrievers/self_query": "retrievers/self_query/index",
   "retrievers/self_query/functional": "retrievers/self_query/functional",
+  "retrievers/self_query/supabase": "retrievers/self_query/supabase",
   "retrievers/vespa": "retrievers/vespa",
   // cache
   cache: "cache/index",
@@ -234,6 +235,7 @@ const requiresOptionalDependency = [
   "retrievers/metal",
   "retrievers/self_query",
   "retrievers/self_query/functional",
+  "retrievers/self_query/supabase",
   "output_parsers/expression",
   "chains/query_constructor",
   "chains/query_constructor/ir",
