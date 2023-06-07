@@ -88,11 +88,11 @@ export class SequentialChain extends BaseChain implements SequentialChainInput {
         );
       }
       const outputKeysSet = new Set(chain.outputKeys);
-      const overlappinOutputKeys = intersection(availableKeys, outputKeysSet);
-      if (overlappinOutputKeys.size > 0) {
+      const overlappingOutputKeys = intersection(availableKeys, outputKeysSet);
+      if (overlappingOutputKeys.size > 0) {
         throw new Error(
           `The following output variables for chain "${chain._chainType()}" are overlapping: ${formatSet(
-            overlappinOutputKeys
+            overlappingOutputKeys
           )}. This can lead to unexpected behaviour.`
         );
       }
