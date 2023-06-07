@@ -35,8 +35,8 @@ export type CreateSchemaHNSWVectorField = CreateSchemaVectorField<
 
 export interface RedisVectorStoreConfig {
   redisClient:
-  | ReturnType<typeof createClient>
-  | ReturnType<typeof createCluster>;
+    | ReturnType<typeof createClient>
+    | ReturnType<typeof createCluster>;
   indexName: string;
   indexOptions?: CreateSchemaFlatVectorField | CreateSchemaHNSWVectorField;
   keyPrefix?: string;
