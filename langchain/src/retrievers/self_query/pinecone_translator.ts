@@ -8,7 +8,6 @@ export class PineconeTranslator extends BasicTranslator {
       allowedComparators: [
         Comparators.eq,
         Comparators.ne,
-        Comparators.neq,
         Comparators.gt,
         Comparators.gte,
         Comparators.lt,
