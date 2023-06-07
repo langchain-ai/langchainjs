@@ -170,6 +170,7 @@ export abstract class BaseLanguageModel
   }
 
   /**
+   * @deprecated
    * Return a json-like object representing this LLM.
    */
   serialize(): SerializedLLM {
@@ -181,6 +182,7 @@ export abstract class BaseLanguageModel
   }
 
   /**
+   * @deprecated
    * Load an LLM from a json-like object describing it.
    */
   static async deserialize(data: SerializedLLM): Promise<BaseLanguageModel> {

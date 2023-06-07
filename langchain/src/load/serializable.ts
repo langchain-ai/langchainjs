@@ -63,7 +63,9 @@ export abstract class Serializable {
     return undefined;
   }
 
-  lc_attributes?: string[];
+  get lc_attributes(): SerializedFields | undefined {
+    return undefined;
+  }
 
   constructor(kwargs?: SerializedFields, ..._args: never[]) {
     this.lc_kwargs = kwargs || {};
@@ -71,32 +73,35 @@ export abstract class Serializable {
 
   toJSON(): Serialized {
     const secrets: { [key: string]: string } = {};
-    const kwargs = this.lc_kwargs;
 
-    // eslint-disable-next-line @typescript-eslint/no-this-alias
-    let current = this;
+    if (
+      // eslint-disable-next-line no-instanceof/no-instanceof
+      this.lc_kwargs instanceof Serializable ||
+      typeof this.lc_kwargs !== "object" ||
+      Array.isArray(this.lc_kwargs)
+    ) {
+      // We do not support serialization of classes with arg not a POJO
+      // I'm aware the check above isn't as strict as it could be
+      return this.toJSONNotImplemented();
+    }
+
+    const kwargs = { ...this.lc_kwargs };
     // get secrets and attributes from all superclasses
-    while (current) {
-      Object.assign(secrets, current.lc_secrets);
-      Object.assign(
-        kwargs,
-        // eslint-disable-next-line no-loop-func
-        current.lc_attributes?.reduce((attrs, key) => {
-          // eslint-disable-next-line no-param-reassign
-          attrs[key] = current[key as keyof Serializable];
-          return attrs;
-        }, {} as SerializedFields)
-      );
-      current = Object.getPrototypeOf(current);
+    for (
+      // eslint-disable-next-line @typescript-eslint/no-this-alias
+      let current = Object.getPrototypeOf(this);
+      current;
+      current = Object.getPrototypeOf(current)
+    ) {
+      Object.assign(secrets, Reflect.get(current, "lc_secrets", this));
+      Object.assign(kwargs, Reflect.get(current, "lc_attributes", this));
     }
 
     return {
       lc: 1,
       type: "constructor",
       id: [...this.lc_namespace, this.constructor.name],
-      kwargs: this.lc_secrets
-        ? replaceSecrets(this.lc_kwargs, secrets)
-        : this.lc_kwargs,
+      kwargs: this.lc_secrets ? replaceSecrets(kwargs, secrets) : kwargs,
     };
   }
 

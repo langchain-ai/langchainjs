@@ -25,6 +25,90 @@ import { JsonListKeysTool, JsonSpec } from "../../tools/json.js";
 import { AgentExecutor } from "../../agents/executor.js";
 import { CommaSeparatedListOutputParser } from "../../output_parsers/list.js";
 import { StructuredOutputParser } from "../../output_parsers/structured.js";
+import { Serializable } from "../serializable.js";
+
+test("serialize + deserialize custom classes", async () => {
+  class Person extends Serializable {
+    lc_namespace = ["langchain", "tests"];
+
+    get lc_secrets(): { [key: string]: string } | undefined {
+      return { apiKey: "PERSON_API_KEY" };
+    }
+
+    get lc_attributes(): { [key: string]: unknown } | undefined {
+      return { hello: this.hello };
+    }
+
+    hello = 3;
+
+    constructor(fields: { aField: string; apiKey: string; hello?: number }) {
+      super(fields);
+    }
+  }
+
+  class SpecialPerson extends Person {
+    get lc_secrets(): { [key: string]: string } | undefined {
+      return { anotherApiKey: "SPECIAL_PERSON_API_KEY" };
+    }
+
+    get lc_attributes(): { [key: string]: unknown } | undefined {
+      return { by: this.bye };
+    }
+
+    bye = 4;
+
+    constructor(fields: {
+      aField: string;
+      apiKey: string;
+      anotherApiKey: string;
+      hello?: number;
+      bye?: number;
+    }) {
+      super(fields);
+    }
+  }
+
+  const person = new Person({ aField: "hello", apiKey: "a-key" });
+  const lc_argumentsBefore = person.lc_kwargs;
+  const str = JSON.stringify(person, null, 2);
+  expect(person.lc_kwargs).toEqual(lc_argumentsBefore);
+  expect(stringify(JSON.parse(str))).toMatchSnapshot();
+  const person2 = await load<Person>(
+    str,
+    {
+      PERSON_API_KEY: "a-key",
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any,
+    {
+      "langchain/tests": { Person },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any
+  );
+  expect(person2).toBeInstanceOf(Person);
+  expect(JSON.stringify(person2, null, 2)).toBe(str);
+
+  const sperson = new SpecialPerson({
+    aField: "hello",
+    apiKey: "a-key",
+    anotherApiKey: "b-key",
+  });
+  const sstr = JSON.stringify(sperson, null, 2);
+  expect(stringify(JSON.parse(sstr))).toMatchSnapshot();
+  const sperson2 = await load<Person>(
+    sstr,
+    {
+      PERSON_API_KEY: "a-key",
+      SPECIAL_PERSON_API_KEY: "b-key",
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any,
+    {
+      "langchain/tests": { SpecialPerson },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any
+  );
+  expect(sperson2).toBeInstanceOf(SpecialPerson);
+  expect(JSON.stringify(sperson2, null, 2)).toBe(sstr);
+});
 
 test("serialize + deserialize llm", async () => {
   const llm = new PromptLayerOpenAI({

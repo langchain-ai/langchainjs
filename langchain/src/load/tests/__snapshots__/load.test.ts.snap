@@ -49,27 +49,28 @@ kwargs:
                     - chat
                     - SystemMessagePromptTemplate
                   kwargs:
-                    lc: 1
-                    type: constructor
-                    id:
-                      - langchain
-                      - prompts
-                      - prompt
-                      - PromptTemplate
-                    kwargs:
-                      inputVariables: []
-                      templateFormat: f-string
-                      template: >-
-                        Assistant is a large language model trained by OpenAI.
+                    prompt:
+                      lc: 1
+                      type: constructor
+                      id:
+                        - langchain
+                        - prompts
+                        - prompt
+                        - PromptTemplate
+                      kwargs:
+                        inputVariables: []
+                        templateFormat: f-string
+                        template: >-
+                          Assistant is a large language model trained by OpenAI.
 
 
-                        Assistant is designed to be able to assist with a wide range of tasks, from answering simple questions to providing in-depth explanations and discussions on a wide range of topics. As a language model, Assistant is able to generate human-like text based on the input it receives, allowing it to engage in natural-sounding conversations and provide responses that are coherent and relevant to the topic at hand.
+                          Assistant is designed to be able to assist with a wide range of tasks, from answering simple questions to providing in-depth explanations and discussions on a wide range of topics. As a language model, Assistant is able to generate human-like text based on the input it receives, allowing it to engage in natural-sounding conversations and provide responses that are coherent and relevant to the topic at hand.
 
 
-                        Assistant is constantly learning and improving, and its capabilities are constantly evolving. It is able to process and understand large amounts of text, and can use this knowledge to provide accurate and informative responses to a wide range of questions. Additionally, Assistant is able to generate its own text based on the input it receives, allowing it to engage in discussions and provide explanations and descriptions on a wide range of topics.
+                          Assistant is constantly learning and improving, and its capabilities are constantly evolving. It is able to process and understand large amounts of text, and can use this knowledge to provide accurate and informative responses to a wide range of questions. Additionally, Assistant is able to generate its own text based on the input it receives, allowing it to engage in discussions and provide explanations and descriptions on a wide range of topics.
 
 
-                        Overall, Assistant is a powerful system that can help with a wide range of tasks and provide valuable insights and information on a wide range of topics. Whether you need help with a specific question or just want to have a conversation about a particular topic, Assistant is here to assist. However, above all else, all responses must adhere to the format of RESPONSE FORMAT INSTRUCTIONS.
+                          Overall, Assistant is a powerful system that can help with a wide range of tasks and provide valuable insights and information on a wide range of topics. Whether you need help with a specific question or just want to have a conversation about a particular topic, Assistant is here to assist. However, above all else, all responses must adhere to the format of RESPONSE FORMAT INSTRUCTIONS.
                 - lc: 1
                   type: constructor
                   id:
@@ -77,7 +78,8 @@ kwargs:
                     - prompts
                     - chat
                     - MessagesPlaceholder
-                  kwargs: chat_history
+                  kwargs:
+                    variableName: chat_history
                 - lc: 1
                   type: constructor
                   id:
@@ -86,85 +88,86 @@ kwargs:
                     - chat
                     - HumanMessagePromptTemplate
                   kwargs:
-                    lc: 1
-                    type: constructor
-                    id:
-                      - langchain
-                      - prompts
-                      - prompt
-                      - PromptTemplate
-                    kwargs:
-                      inputVariables:
-                        - input
-                      templateFormat: f-string
-                      template: >-
-                        TOOLS
+                    prompt:
+                      lc: 1
+                      type: constructor
+                      id:
+                        - langchain
+                        - prompts
+                        - prompt
+                        - PromptTemplate
+                      kwargs:
+                        inputVariables:
+                          - input
+                        templateFormat: f-string
+                        template: >-
+                          TOOLS
 
-                        ------
+                          ------
 
-                        Assistant can ask the user to use tools to look up information that may be helpful in answering the users original question. The tools the human can use are:
-
-
-                        calculator: Useful for getting the result of a math expression. The input to this tool should be a valid mathematical expression that could be executed by a simple calculator.
-
-                        requests_get: A portal to the internet. Use this when you need to get specific content from a website. 
-                          Input should be a url string (i.e. "https://www.google.com"). The output will be the text response of the GET request.
-                        json_list_keys: Can be used to list all keys at a given path. 
-                            Before calling this you should be SURE that the path to this exists.
-                            The input is a text representation of the path to the json as json pointer syntax (e.g. /key1/0/key2).
-
-                        RESPONSE FORMAT INSTRUCTIONS
-
-                        ----------------------------
+                          Assistant can ask the user to use tools to look up information that may be helpful in answering the users original question. The tools the human can use are:
 
 
-                        Output a JSON markdown code snippet containing a valid JSON object in one of two formats:
+                          calculator: Useful for getting the result of a math expression. The input to this tool should be a valid mathematical expression that could be executed by a simple calculator.
+
+                          requests_get: A portal to the internet. Use this when you need to get specific content from a website. 
+                            Input should be a url string (i.e. "https://www.google.com"). The output will be the text response of the GET request.
+                          json_list_keys: Can be used to list all keys at a given path. 
+                              Before calling this you should be SURE that the path to this exists.
+                              The input is a text representation of the path to the json as json pointer syntax (e.g. /key1/0/key2).
+
+                          RESPONSE FORMAT INSTRUCTIONS
+
+                          ----------------------------
 
 
-                        **Option 1:**
-
-                        Use this if you want the human to use a tool.
-
-                        Markdown code snippet formatted in the following schema:
+                          Output a JSON markdown code snippet containing a valid JSON object in one of two formats:
 
 
-                        \`\`\`json
+                          **Option 1:**
 
-                        {{
-                            "action": string, // The action to take. Must be one of [calculator, requests_get, json_list_keys]
-                            "action_input": string // The input to the action. May be a stringified object.
-                        }}
+                          Use this if you want the human to use a tool.
 
-                        \`\`\`
+                          Markdown code snippet formatted in the following schema:
 
 
-                        **Option #2:**
+                          \`\`\`json
 
-                        Use this if you want to respond directly and conversationally to the human. Markdown code snippet formatted in the following schema:
+                          {{
+                              "action": string, // The action to take. Must be one of [calculator, requests_get, json_list_keys]
+                              "action_input": string // The input to the action. May be a stringified object.
+                          }}
 
-
-                        \`\`\`json
-
-                        {{
-                            "action": "Final Answer",
-                            "action_input": string // You should put what you want to return to use here and make sure to use valid json newline characters.
-                        }}
-
-                        \`\`\`
+                          \`\`\`
 
 
-                        For both options, remember to always include the surrounding markdown code snippet delimiters (begin with "\`\`\`json" and end with "\`\`\`")!
+                          **Option #2:**
+
+                          Use this if you want to respond directly and conversationally to the human. Markdown code snippet formatted in the following schema:
+
+
+                          \`\`\`json
+
+                          {{
+                              "action": "Final Answer",
+                              "action_input": string // You should put what you want to return to use here and make sure to use valid json newline characters.
+                          }}
+
+                          \`\`\`
+
+
+                          For both options, remember to always include the surrounding markdown code snippet delimiters (begin with "\`\`\`json" and end with "\`\`\`")!
 
 
 
-                        USER'S INPUT
+                          USER'S INPUT
 
-                        --------------------
+                          --------------------
 
-                        Here is the user's input (remember to respond with a markdown code snippet of a json blob with a single action, and NOTHING else):
+                          Here is the user's input (remember to respond with a markdown code snippet of a json blob with a single action, and NOTHING else):
 
 
-                        {input}
+                          {input}
                 - lc: 1
                   type: constructor
                   id:
@@ -172,7 +175,8 @@ kwargs:
                     - prompts
                     - chat
                     - MessagesPlaceholder
-                  kwargs: agent_scratchpad
+                  kwargs:
+                    variableName: agent_scratchpad
               partialVariables: {}
           llm:
             lc: 1
@@ -208,9 +212,10 @@ kwargs:
               - chat_convo
               - ChatConversationalAgentOutputParser
             kwargs:
-              - calculator
-              - requests_get
-              - json_list_keys
+              toolNames:
+                - calculator
+                - requests_get
+                - json_list_keys
           outputFixingParser:
             lc: 1
             type: constructor
@@ -229,9 +234,10 @@ kwargs:
                   - chat_convo
                   - ChatConversationalAgentOutputParser
                 kwargs:
-                  - calculator
-                  - requests_get
-                  - json_list_keys
+                  toolNames:
+                    - calculator
+                    - requests_get
+                    - json_list_keys
               retryChain:
                 lc: 1
                 type: constructor
@@ -332,16 +338,59 @@ kwargs:
         - tools
         - JsonListKeysTool
       kwargs:
-        lc: 1
-        type: constructor
-        id:
-          - langchain
-          - tools
-          - json
-          - JsonSpec
-        kwargs:
-          a: b
+        jsonSpec:
+          lc: 1
+          type: constructor
+          id:
+            - langchain
+            - tools
+            - json
+            - JsonSpec
+          kwargs:
+            a: b
   agentType: chat-conversational-react-description
+"
+`;
+
+exports[`serialize + deserialize custom classes 1`] = `
+"lc: 1
+type: constructor
+id:
+  - langchain
+  - tests
+  - Person
+kwargs:
+  aField: hello
+  apiKey:
+    lc: 1
+    type: secret
+    id:
+      - PERSON_API_KEY
+  hello: 3
+"
+`;
+
+exports[`serialize + deserialize custom classes 2`] = `
+"lc: 1
+type: constructor
+id:
+  - langchain
+  - tests
+  - SpecialPerson
+kwargs:
+  aField: hello
+  apiKey:
+    lc: 1
+    type: secret
+    id:
+      - PERSON_API_KEY
+  anotherApiKey:
+    lc: 1
+    type: secret
+    id:
+      - SPECIAL_PERSON_API_KEY
+  by: 4
+  hello: 3
 "
 `;
 
@@ -421,18 +470,19 @@ kwargs:
             - chat
             - SystemMessagePromptTemplate
           kwargs:
-            lc: 1
-            type: constructor
-            id:
-              - langchain
-              - prompts
-              - prompt
-              - PromptTemplate
-            kwargs:
-              inputVariables:
-                - name
-              templateFormat: f-string
-              template: You are talking to {name}.
+            prompt:
+              lc: 1
+              type: constructor
+              id:
+                - langchain
+                - prompts
+                - prompt
+                - PromptTemplate
+              kwargs:
+                inputVariables:
+                  - name
+                templateFormat: f-string
+                template: You are talking to {name}.
         - lc: 1
           type: constructor
           id:
@@ -441,17 +491,18 @@ kwargs:
             - chat
             - HumanMessagePromptTemplate
           kwargs:
-            lc: 1
-            type: constructor
-            id:
-              - langchain
-              - prompts
-              - prompt
-              - PromptTemplate
-            kwargs:
-              inputVariables: []
-              templateFormat: f-string
-              template: Hello, nice model.
+            prompt:
+              lc: 1
+              type: constructor
+              id:
+                - langchain
+                - prompts
+                - prompt
+                - PromptTemplate
+              kwargs:
+                inputVariables: []
+                templateFormat: f-string
+                template: Hello, nice model.
       partialVariables: {}
 "
 `;

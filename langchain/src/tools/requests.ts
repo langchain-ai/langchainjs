@@ -45,7 +45,7 @@ export class RequestsPostTool extends Tool implements RequestTool {
     public headers: Headers = {},
     { maxOutputLength }: { maxOutputLength?: number } = {}
   ) {
-    super();
+    super(...arguments);
 
     this.maxOutputLength = maxOutputLength ?? this.maxOutputLength;
   }

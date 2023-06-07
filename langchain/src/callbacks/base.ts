@@ -182,6 +182,10 @@ export abstract class BaseCallbackHandler
     return undefined;
   }
 
+  get lc_attributes(): { [key: string]: string } | undefined {
+    return undefined;
+  }
+
   lc_kwargs: SerializedFields;
 
   abstract name: string;

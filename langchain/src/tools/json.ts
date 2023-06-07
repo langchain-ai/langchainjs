@@ -1,5 +1,5 @@
 import jsonpointer from "jsonpointer";
-import { Tool } from "./base.js";
+import { Tool, ToolParams } from "./base.js";
 import { Serializable } from "../load/serializable.js";
 
 export type Json =
@@ -63,11 +63,27 @@ export class JsonSpec extends Serializable {
   }
 }
 
+export interface JsonToolFields extends ToolParams {
+  jsonSpec: JsonSpec;
+}
+
 export class JsonListKeysTool extends Tool {
   name = "json_list_keys";
 
-  constructor(public jsonSpec: JsonSpec) {
-    super(...arguments);
+  jsonSpec: JsonSpec;
+
+  constructor(jsonSpec: JsonSpec);
+
+  constructor(fields: JsonToolFields);
+
+  constructor(fields: JsonSpec | JsonToolFields) {
+    if (!("jsonSpec" in fields)) {
+      // eslint-disable-next-line no-param-reassign
+      fields = { jsonSpec: fields };
+    }
+    super(fields);
+
+    this.jsonSpec = fields.jsonSpec;
   }
 
   /** @ignore */

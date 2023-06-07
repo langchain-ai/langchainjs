@@ -122,10 +122,14 @@ export abstract class BasePromptTemplate
 
   /**
    * Return a json-like object representing this prompt template.
+   * @deprecated
    */
-  abstract serialize(): SerializedBasePromptTemplate;
+  serialize(): SerializedBasePromptTemplate {
+    throw new Error("Use .toJSON() instead");
+  }
 
   /**
+   * @deprecated
    * Load a prompt template from a json-like object describing it.
    *
    * @remarks

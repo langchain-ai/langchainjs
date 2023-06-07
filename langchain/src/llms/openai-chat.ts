@@ -399,7 +399,7 @@ export class OpenAIChat
 export class PromptLayerOpenAIChat extends OpenAIChat {
   get lc_secrets(): { [key: string]: string } | undefined {
     return {
-      "0.promptLayerApiKey": "PROMPTLAYER_API_KEY",
+      promptLayerApiKey: "PROMPTLAYER_API_KEY",
     };
   }
 
