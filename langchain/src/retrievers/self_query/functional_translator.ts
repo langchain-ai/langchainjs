@@ -35,7 +35,6 @@ export class FunctionalTranslator extends BaseTranslator {
   allowedComparators: Comparator[] = [
     Comparators.eq,
     Comparators.ne,
-    Comparators.neq,
     Comparators.gt,
     Comparators.gte,
     Comparators.lt,
@@ -129,7 +128,7 @@ export class FunctionalTranslator extends BaseTranslator {
 
   visitComparison(comparison: Comparison): this["VisitComparisonOutput"] {
     const { comparator, attribute, value } = comparison;
-    const undefinedTrue = [Comparators.neq];
+    const undefinedTrue = [Comparators.ne];
     if (this.allowedComparators.includes(comparator)) {
       const comparatorFunction = this.getComparatorFunction(comparator);
       return (document: Document) => {
