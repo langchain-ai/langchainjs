@@ -2,7 +2,6 @@ import {
   Comparator,
   Comparators,
   Comparison,
-  NIN,
   Operation,
   Operator,
   Operators,
@@ -18,10 +17,7 @@ type ValueType = {
   lte: string | number;
   gt: string | number;
   gte: string | number;
-  in: string[] | number[];
 };
-
-type AllowedComparator = Exclude<Comparator, NIN>;
 
 export class SupabaseTranslator extends BaseTranslator {
   declare VisitOperationOutput: SupabaseFilterRPCCall;
@@ -39,15 +35,14 @@ export class SupabaseTranslator extends BaseTranslator {
     Comparators.gte,
     Comparators.lt,
     Comparators.lte,
-    Comparators.in,
   ];
 
   formatFunction(): string {
     throw new Error("Not implemented");
   }
 
-  getComparatorFunction<C extends AllowedComparator>(
-    comparator: AllowedComparator
+  getComparatorFunction<C extends Comparator>(
+    comparator: Comparator
   ): (attr: string, value: ValueType[C]) => SupabaseFilterRPCCall {
     switch (comparator) {
       case Comparators.eq: {
@@ -74,36 +69,18 @@ export class SupabaseTranslator extends BaseTranslator {
         return (attr: string, value: ValueType[C]) => (rpc) =>
           rpc.lte(this.buildColumnName(attr, value), value);
       }
-      case Comparators.in: {
-        return (attr: string, value: ValueType[C]) => (rpc) => {
-          if (!Array.isArray(value)) {
-            throw new Error("Value must be an array");
-          }
-          return rpc.in(this.buildColumnName(attr, value), value);
-        };
-      }
       default: {
         throw new Error("Unknown comparator");
       }
     }
   }
 
-  buildColumnName(
-    attr: string,
-    value: string | number | string[] | number[],
-    includeType = true
-  ) {
+  buildColumnName(attr: string, value: string | number, includeType = true) {
     let column = "";
     if (typeof value === "string") {
       column = `metadata->>${attr}`;
     } else if (typeof value === "number") {
       column = `metadata->${attr}${includeType ? "::int" : ""}`;
-    } else if (Array.isArray(value)) {
-      if (typeof value[0] === "string") {
-        column = `metadata->>${attr}`;
-      } else if (typeof value[0] === "number") {
-        column = `metadata->${attr}${includeType ? "::int" : ""}`;
-      }
     } else {
       throw new Error("Data type not supported");
     }
@@ -180,7 +157,7 @@ export class SupabaseTranslator extends BaseTranslator {
     const { comparator, attribute, value } = comparison;
     if (this.allowedComparators.includes(comparator)) {
       const comparatorFunction = this.getComparatorFunction(
-        comparator as AllowedComparator
+        comparator as Comparator
       );
       return comparatorFunction(attribute, value);
     } else {
