@@ -1,13 +1,12 @@
+import weaviate from "weaviate-ts-client";
+
 import { AttributeInfo } from "langchain/schema/query_constructor";
 import { Document } from "langchain/document";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
-import {
-  SelfQueryRetriever,
-  WeaviateTranslator,
-} from "langchain/retrievers/self_query";
+import { SelfQueryRetriever } from "langchain/retrievers/self_query";
 import { OpenAI } from "langchain/llms/openai";
 import { WeaviateStore } from "langchain/vectorstores/weaviate";
-import weaviate from "weaviate-ts-client";
+import { WeaviateTranslator } from "langchain/retrievers/self_query/weaviate";
 
 /**
  * First, we create a bunch of documents. You can load your own documents here instead.
@@ -85,9 +84,6 @@ const attributeInfo: AttributeInfo[] = [
 
 /**
  * Next, we instantiate a vector store. This is where we store the embeddings of the documents.
- * We use the Pinecone vector store here, but you can use any vector store you want.
- * At this point we only support Chroma and Pinecone, but we will add more in the future.
- * We also need to provide an embeddings object. This is used to embed the documents.
  */
 const embeddings = new OpenAIEmbeddings();
 const llm = new OpenAI();
@@ -114,12 +110,8 @@ const selfQueryRetriever = await SelfQueryRetriever.fromLLM({
   documentContents,
   attributeInfo,
   /**
-   * We need to create a basic translator that translates the queries into a
-   * filter format that the vector store can understand. We provide a basic translator
-   * translator here (which works for Chroma and Pinecone), but you can create
-   * your own translator by extending BaseTranslator abstract class. Note that the
-   * vector store needs to support filtering on the metadata attributes you want to
-   * query on.
+   * We need to use a translator that translates the queries into a
+   * filter format that the vector store can understand. LangChain provides one here.
    */
   structuredQueryTranslator: new WeaviateTranslator(),
 });

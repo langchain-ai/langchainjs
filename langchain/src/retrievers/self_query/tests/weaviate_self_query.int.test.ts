@@ -7,7 +7,7 @@ import { OpenAIEmbeddings } from "../../../embeddings/openai.js";
 import { SelfQueryRetriever } from "../index.js";
 import { OpenAI } from "../../../llms/openai.js";
 import { WeaviateStore } from "../../../vectorstores/weaviate.js";
-import { WeaviateTranslator } from "../weaviate_translator.js";
+import { WeaviateTranslator } from "../weaviate.js";
 
 test("Weaviate Self Query Retriever Test", async () => {
   const docs = [
