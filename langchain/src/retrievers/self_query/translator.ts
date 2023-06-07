@@ -42,7 +42,6 @@ export class BasicTranslator extends BaseTranslator {
     this.allowedComparators = opts?.allowedComparators ?? [
       Comparators.eq,
       Comparators.ne,
-      Comparators.neq,
       Comparators.gt,
       Comparators.gte,
       Comparators.lt,
