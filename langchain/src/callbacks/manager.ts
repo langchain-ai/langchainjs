@@ -603,7 +603,7 @@ export class TraceGroup {
   }
 }
 
-export async function traceAsChainGroup<T, A extends any[]>(
+export async function traceAsGroup<T, A extends any[]>(
   groupOptions: {
     name: string;
   } & LangChainTracerFields,
