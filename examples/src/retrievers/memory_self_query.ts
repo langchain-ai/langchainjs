@@ -96,7 +96,7 @@ const selfQueryRetriever = await SelfQueryRetriever.fromLLM({
   documentContents,
   attributeInfo,
   /**
-   * We need to create a basic translator that translates the queries into a
+   * We need to use a translator that translates the queries into a
    * filter format that the vector store can understand. We provide a basic translator
    * translator here, but you can create your own translator by extending BaseTranslator
    * abstract class. Note that the vector store needs to support filtering on the metadata
