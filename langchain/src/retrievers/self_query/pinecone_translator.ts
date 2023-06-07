@@ -12,8 +12,6 @@ export class PineconeTranslator extends BasicTranslator {
         Comparators.gte,
         Comparators.lt,
         Comparators.lte,
-        Comparators.in,
-        Comparators.nin,
       ],
     });
   }
