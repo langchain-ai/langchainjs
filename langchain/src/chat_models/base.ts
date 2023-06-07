@@ -74,13 +74,16 @@ export abstract class BaseChatModel extends BaseLanguageModel {
       this.callbacks,
       { verbose: this.verbose }
     );
-    const invocationParams = { invocation_params: this?.invocationParams() };
+    const extra = {
+      options: parsedOptions,
+      invocation_params: this?.invocationParams(),
+    };
     const runManager = await callbackManager_?.handleChatModelStart(
       this.toJSON(),
       messages,
       undefined,
       undefined,
-      invocationParams
+      extra
     );
     try {
       const results = await Promise.all(
