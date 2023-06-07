@@ -18,10 +18,10 @@ export const run = async () => {
     disallowedSpecial: [],
   });
 
-  const output = splitter.createDocuments([text]);
+  const output = await splitter.createDocuments([text]);
   console.log({ output });
 
-  const docOutput = splitter.splitDocuments([
+  const docOutput = await splitter.splitDocuments([
     new Document({ pageContent: text }),
   ]);
 

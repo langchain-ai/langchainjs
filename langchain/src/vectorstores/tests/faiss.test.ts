@@ -137,4 +137,7 @@ test("Test FaissStore Exceptions", async () => {
   }).rejects.toThrow(
     "Query vector must have the same length as the number of dimensions (2)"
   );
+  await expect(async () => {
+    await FaissStore.load("_fake_path", new FakeEmbeddings());
+  }).rejects.toThrow(/No such file or directory$/);
 });

@@ -9,7 +9,7 @@ import {
   StructuredQuery,
   Visitor,
 } from "../../chains/query_constructor/ir.js";
-import { BaseTranslator } from "./translator.js";
+import { BaseTranslator } from "./base.js";
 
 type AllowedOperator = Exclude<Operator, NOT>;
 
