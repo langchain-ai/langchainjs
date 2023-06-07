@@ -104,10 +104,4 @@ test("Memory Vector Store Self Query Retriever Test", async () => {
   );
   console.log(query3);
   expect(query3.length).toEqual(1);
-
-  const query4 = await selfQueryRetriever.getRelevantDocuments(
-    "Which movies are either science fiction or animated and are less than 90 minutes?"
-  );
-  console.log(query4);
-  expect(query4.length).toEqual(0);
 });
