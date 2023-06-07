@@ -1,0 +1,23 @@
+---
+hide_table_of_contents: true
+sidebar_position: 1
+---
+
+import CodeBlock from "@theme/CodeBlock";
+
+# Prompt Composition
+
+Pipeline prompt templates allow you to compose multiple individual prompt templates together.
+This can be useful when you want to reuse parts of individual prompts.
+
+Rather than taking `inputVariables` as an argument, pipeline prompt templates take two new arguments:
+
+- `pipelinePrompts`: An array of objects containing a string (`name`) and a `PromptTemplate` passed in as `promptTemplate`.
+  Each `PromptTemplate` will be formatted and then passed to the next prompt template in the pipeline as an input variable with the same name as `name`.
+- `finalPrompt`: The final prompt that will be returned.
+
+Here's an example of what this looks like in action:
+
+import Example from "@examples/prompts/pipeline_prompt.ts";
+
+<CodeBlock language="typescript">{Example}</CodeBlock>

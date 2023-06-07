@@ -1,13 +1,11 @@
 import * as uuid from "uuid";
-import { MilvusClient } from "@zilliz/milvus2-sdk-node";
 import {
+  MilvusClient,
   DataType,
   DataTypeMap,
-} from "@zilliz/milvus2-sdk-node/dist/milvus/const/Milvus.js";
-import {
   ErrorCode,
   FieldType,
-} from "@zilliz/milvus2-sdk-node/dist/milvus/types.js";
+} from "@zilliz/milvus2-sdk-node";
 
 import { Embeddings } from "../embeddings/base.js";
 import { VectorStore } from "./base.js";
