@@ -319,6 +319,9 @@ retrievers/self_query.d.ts
 retrievers/self_query/functional.cjs
 retrievers/self_query/functional.js
 retrievers/self_query/functional.d.ts
+retrievers/self_query/supabase.cjs
+retrievers/self_query/supabase.js
+retrievers/self_query/supabase.d.ts
 retrievers/vespa.cjs
 retrievers/vespa.js
 retrievers/vespa.d.ts

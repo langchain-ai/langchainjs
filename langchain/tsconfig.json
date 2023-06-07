@@ -133,6 +133,7 @@
       "src/retrievers/hyde.ts",
       "src/retrievers/self_query/index.ts",
       "src/retrievers/self_query/functional.ts",
+      "src/retrievers/self_query/supabase.ts",
       "src/retrievers/vespa.ts",
       "src/cache/index.ts",
       "src/cache/momento.ts",

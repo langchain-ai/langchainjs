@@ -2,10 +2,8 @@ import { createClient } from "@supabase/supabase-js";
 import { AttributeInfo } from "langchain/schema/query_constructor";
 import { Document } from "langchain/document";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
-import {
-  SelfQueryRetriever,
-  SupabaseTranslator,
-} from "langchain/retrievers/self_query";
+import { SelfQueryRetriever } from "langchain/retrievers/self_query";
+import { SupabaseTranslator } from "langchain/retrievers/self_query/supabase";
 import { OpenAI } from "langchain/llms/openai";
 import { SupabaseVectorStore } from "langchain/vectorstores/supabase";
 
@@ -111,12 +109,8 @@ const selfQueryRetriever = await SelfQueryRetriever.fromLLM({
   documentContents,
   attributeInfo,
   /**
-   * We need to create a basic translator that translates the queries into a
-   * filter format that the vector store can understand. We provide a basic translator
-   * translator here (which works for Chroma and Pinecone), but you can create
-   * your own translator by extending BaseTranslator abstract class. Note that the
-   * vector store needs to support filtering on the metadata attributes you want to
-   * query on.
+   * We need to use a translator that translates the queries into a
+   * filter format that the vector store can understand. LangChain provides one here.
    */
   structuredQueryTranslator: new SupabaseTranslator(),
 });
