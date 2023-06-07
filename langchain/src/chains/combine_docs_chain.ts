@@ -174,22 +174,24 @@ export class MapReduceDocumentsChain
         ...rest,
       }));
 
-      // Calculate the total tokens required in the input
-      const promises = inputs.map(async (i) => {
-        const prompt = await this.llmChain.prompt.format(i);
-        return this.llmChain.llm.getNumTokens(prompt);
-      });
-
-      const length = await Promise.all(promises).then((results) =>
-        results.reduce((a, b) => a + b, 0)
-      );
-
       const canSkipMapStep = i !== 0 || !this.ensureMapStep;
-      const withinTokenLimit = length < this.maxTokens;
-      // If we can skip the map step, and we're within the token limit, we don't
-      // need to run the map step, so just break out of the loop.
-      if (canSkipMapStep && withinTokenLimit) {
-        break;
+      if (canSkipMapStep) {
+        // Calculate the total tokens required in the input
+        const promises = inputs.map(async (i) => {
+          const prompt = await this.llmChain.prompt.format(i);
+          return this.llmChain.llm.getNumTokens(prompt);
+        });
+
+        const length = await Promise.all(promises).then((results) =>
+          results.reduce((a, b) => a + b, 0)
+        );
+
+        const withinTokenLimit = length < this.maxTokens;
+        // If we can skip the map step, and we're within the token limit, we don't
+        // need to run the map step, so just break out of the loop.
+        if (withinTokenLimit) {
+          break;
+        }
       }
 
       const results = await this.llmChain.apply(
