@@ -108,6 +108,17 @@ export class ChatOpenAI
     };
   }
 
+  get lc_aliases(): Record<string, string> {
+    return {
+      modelName: "model",
+      openAIApiKey: "openai_api_key",
+      azureOpenAIApiVersion: "azure_openai_api_version",
+      azureOpenAIApiKey: "azure_openai_api_key",
+      azureOpenAIApiInstanceName: "azure_openai_api_instance_name",
+      azureOpenAIApiDeploymentName: "azure_openai_api_deployment_name",
+    };
+  }
+
   temperature = 1;
 
   topP = 1;

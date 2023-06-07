@@ -18,7 +18,7 @@ kwargs:
       - chat_convo
       - ChatConversationalAgent
     kwargs:
-      llmChain:
+      llm_chain:
         lc: 1
         type: constructor
         id:
@@ -36,11 +36,11 @@ kwargs:
               - chat
               - ChatPromptTemplate
             kwargs:
-              inputVariables:
+              input_variables:
                 - chat_history
                 - input
                 - agent_scratchpad
-              promptMessages:
+              prompt_messages:
                 - lc: 1
                   type: constructor
                   id:
@@ -58,8 +58,8 @@ kwargs:
                         - prompt
                         - PromptTemplate
                       kwargs:
-                        inputVariables: []
-                        templateFormat: f-string
+                        input_variables: []
+                        template_format: f-string
                         template: >-
                           Assistant is a large language model trained by OpenAI.
 
@@ -79,7 +79,7 @@ kwargs:
                     - chat
                     - MessagesPlaceholder
                   kwargs:
-                    variableName: chat_history
+                    variable_name: chat_history
                 - lc: 1
                   type: constructor
                   id:
@@ -97,9 +97,9 @@ kwargs:
                         - prompt
                         - PromptTemplate
                       kwargs:
-                        inputVariables:
+                        input_variables:
                           - input
-                        templateFormat: f-string
+                        template_format: f-string
                         template: >-
                           TOOLS
 
@@ -176,8 +176,8 @@ kwargs:
                     - chat
                     - MessagesPlaceholder
                   kwargs:
-                    variableName: agent_scratchpad
-              partialVariables: {}
+                    variable_name: agent_scratchpad
+              partial_variables: {}
           llm:
             lc: 1
             type: constructor
@@ -188,13 +188,13 @@ kwargs:
               - ChatOpenAI
             kwargs:
               temperature: 0
-              modelName: gpt-4
-              openAIApiKey:
+              model: gpt-4
+              openai_api_key:
                 lc: 1
                 type: secret
                 id:
                   - OPENAI_API_KEY
-      outputParser:
+      output_parser:
         lc: 1
         type: constructor
         id:
@@ -203,7 +203,7 @@ kwargs:
           - chat_convo
           - ChatConversationalAgentOutputParserWithRetries
         kwargs:
-          baseParser:
+          base_parser:
             lc: 1
             type: constructor
             id:
@@ -212,11 +212,11 @@ kwargs:
               - chat_convo
               - ChatConversationalAgentOutputParser
             kwargs:
-              toolNames:
+              tool_names:
                 - calculator
                 - requests_get
                 - json_list_keys
-          outputFixingParser:
+          output_fixing_parser:
             lc: 1
             type: constructor
             id:
@@ -234,11 +234,11 @@ kwargs:
                   - chat_convo
                   - ChatConversationalAgentOutputParser
                 kwargs:
-                  toolNames:
+                  tool_names:
                     - calculator
                     - requests_get
                     - json_list_keys
-              retryChain:
+              retry_chain:
                 lc: 1
                 type: constructor
                 id:
@@ -257,8 +257,8 @@ kwargs:
                       - ChatOpenAI
                     kwargs:
                       temperature: 0
-                      modelName: gpt-4
-                      openAIApiKey:
+                      model: gpt-4
+                      openai_api_key:
                         lc: 1
                         type: secret
                         id:
@@ -272,11 +272,11 @@ kwargs:
                       - prompt
                       - PromptTemplate
                     kwargs:
-                      inputVariables:
+                      input_variables:
                         - instructions
                         - completion
                         - error
-                      templateFormat: f-string
+                      template_format: f-string
                       template: >-
                         Instructions:
 
@@ -307,11 +307,11 @@ kwargs:
 
 
                         Please try again. Please only respond with an answer that satisfies the constraints laid out in the Instructions:
-          toolNames:
+          tool_names:
             - calculator
             - requests_get
             - json_list_keys
-      allowedTools:
+      allowed_tools:
         - calculator
         - requests_get
         - json_list_keys
@@ -338,7 +338,7 @@ kwargs:
         - tools
         - JsonListKeysTool
       kwargs:
-        jsonSpec:
+        json_spec:
           lc: 1
           type: constructor
           id:
@@ -348,7 +348,7 @@ kwargs:
             - JsonSpec
           kwargs:
             a: b
-  agentType: chat-conversational-react-description
+  agent_type: chat-conversational-react-description
 "
 `;
 
@@ -360,8 +360,8 @@ id:
   - tests
   - Person
 kwargs:
-  aField: hello
-  apiKey:
+  a_field: hello
+  api_key:
     lc: 1
     type: secret
     id:
@@ -378,13 +378,13 @@ id:
   - tests
   - SpecialPerson
 kwargs:
-  aField: hello
-  apiKey:
+  a_field: hello
+  api_key:
     lc: 1
     type: secret
     id:
       - PERSON_API_KEY
-  anotherApiKey:
+  another_api_key:
     lc: 1
     type: secret
     id:
@@ -404,13 +404,13 @@ id:
   - PromptLayerOpenAI
 kwargs:
   temperature: 0.5
-  modelName: davinci
-  openAIApiKey:
+  model: davinci
+  openai_api_key:
     lc: 1
     type: secret
     id:
       - OPENAI_API_KEY
-  promptLayerApiKey:
+  prompt_layer_api_key:
     lc: 1
     type: secret
     id:
@@ -437,17 +437,17 @@ kwargs:
       - ChatOpenAI
     kwargs:
       temperature: 0.5
-      modelName: gpt-4
+      model: gpt-4
       streaming: true
-      azureOpenAIApiKey:
+      azure_openai_api_key:
         lc: 1
         type: secret
         id:
           - AZURE_OPENAI_API_KEY
-      azureOpenAIApiInstanceName: openai-instance
-      azureOpenAIApiDeploymentName: openai-deployment
-      azureOpenAIApiVersion: openai-version
-      prefixMessages:
+      azure_openai_api_instance_name: openai-instance
+      azure_openai_api_deployment_name: openai-deployment
+      azure_openai_api_version: openai-version
+      prefix_messages:
         - role: system
           content: You're a nice assistant
   prompt:
@@ -459,9 +459,9 @@ kwargs:
       - chat
       - ChatPromptTemplate
     kwargs:
-      inputVariables:
+      input_variables:
         - name
-      promptMessages:
+      prompt_messages:
         - lc: 1
           type: constructor
           id:
@@ -479,9 +479,9 @@ kwargs:
                 - prompt
                 - PromptTemplate
               kwargs:
-                inputVariables:
+                input_variables:
                   - name
-                templateFormat: f-string
+                template_format: f-string
                 template: You are talking to {name}.
         - lc: 1
           type: constructor
@@ -500,10 +500,10 @@ kwargs:
                 - prompt
                 - PromptTemplate
               kwargs:
-                inputVariables: []
-                templateFormat: f-string
+                input_variables: []
+                template_format: f-string
                 template: Hello, nice model.
-      partialVariables: {}
+      partial_variables: {}
 "
 `;
 
@@ -535,8 +535,8 @@ kwargs:
             - LangChainTracer
           kwargs: {}
       temperature: 0.5
-      modelName: davinci
-      openAIApiKey:
+      model: davinci
+      openai_api_key:
         lc: 1
         type: secret
         id:
@@ -554,7 +554,7 @@ kwargs:
         - yo: "1"
         - yo: "2"
       prefix: You are a nice assistant
-      examplePrompt:
+      example_prompt:
         lc: 1
         type: constructor
         id:
@@ -563,12 +563,12 @@ kwargs:
           - prompt
           - PromptTemplate
         kwargs:
-          inputVariables:
+          input_variables:
             - yo
-          templateFormat: f-string
+          template_format: f-string
           template: An example about {yo}
       suffix: My name is {name}
-      inputVariables:
+      input_variables:
         - yo
         - name
 "
@@ -602,8 +602,8 @@ kwargs:
             - LangChainTracer
           kwargs: {}
       temperature: 0.5
-      modelName: davinci
-      openAIApiKey:
+      model: davinci
+      openai_api_key:
         lc: 1
         type: secret
         id:
@@ -617,7 +617,7 @@ kwargs:
       - few_shot
       - FewShotPromptTemplate
     kwargs:
-      exampleSelector:
+      example_selector:
         lc: 1
         type: not_implemented
         id:
@@ -626,7 +626,7 @@ kwargs:
           - selectors
           - LengthBasedExampleSelector
       prefix: You are a nice assistant
-      examplePrompt:
+      example_prompt:
         lc: 1
         type: constructor
         id:
@@ -635,12 +635,12 @@ kwargs:
           - prompt
           - PromptTemplate
         kwargs:
-          inputVariables:
+          input_variables:
             - yo
-          templateFormat: f-string
+          template_format: f-string
           template: An example about {yo}
       suffix: My name is {name}
-      inputVariables:
+      input_variables:
         - yo
         - name
 "
@@ -675,9 +675,9 @@ kwargs:
           kwargs: {}
         - {}
       temperature: 0.5
-      modelName: davinci
+      model: davinci
       verbose: true
-      openAIApiKey:
+      openai_api_key:
         lc: 1
         type: secret
         id:
@@ -691,9 +691,9 @@ kwargs:
       - prompt
       - PromptTemplate
     kwargs:
-      inputVariables:
+      input_variables:
         - name
-      templateFormat: f-string
+      template_format: f-string
       template: Hello, {name}!
 "
 `;
@@ -708,7 +708,7 @@ id:
   - Cohere
 kwargs:
   temperature: 0.5
-  apiKey:
+  api_key:
     lc: 1
     type: secret
     id:
@@ -744,8 +744,8 @@ kwargs:
             - LangChainTracer
           kwargs: {}
       temperature: 0.5
-      modelName: davinci
-      openAIApiKey:
+      model: davinci
+      openai_api_key:
         lc: 1
         type: secret
         id:
@@ -759,12 +759,12 @@ kwargs:
       - prompt
       - PromptTemplate
     kwargs:
-      inputVariables:
+      input_variables:
         - yo
         - format_instructions
-      templateFormat: f-string
+      template_format: f-string
       template: An example about {yo} {format_instructions}
-  outputParser:
+  output_parser:
     lc: 1
     type: constructor
     id:
@@ -804,8 +804,8 @@ kwargs:
             - LangChainTracer
           kwargs: {}
       temperature: 0.5
-      modelName: davinci
-      openAIApiKey:
+      model: davinci
+      openai_api_key:
         lc: 1
         type: secret
         id:
@@ -819,12 +819,12 @@ kwargs:
       - prompt
       - PromptTemplate
     kwargs:
-      inputVariables:
+      input_variables:
         - yo
         - format_instructions
-      templateFormat: f-string
+      template_format: f-string
       template: An example about {yo} {format_instructions}
-  outputParser:
+  output_parser:
     lc: 1
     type: not_implemented
     id:

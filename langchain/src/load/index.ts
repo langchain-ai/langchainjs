@@ -1,4 +1,5 @@
 import {
+  Serializable,
   SerializedConstructor,
   SerializedNotImplemented,
   SerializedSecret,
@@ -6,6 +7,23 @@ import {
 import { optionalImportEntrypoints } from "./import_constants.js";
 import * as importMap from "./import_map.js";
 import { OptionalImportMap, SecretMap } from "./import_type.js";
+import { SerializedFields, keyFromJson, mapKeys } from "./map_keys.js";
+
+function combineAliasesAndInvert(constructor: typeof Serializable) {
+  const aliases: { [key: string]: string } = {};
+  for (
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    let current = constructor;
+    current && current.prototype;
+    current = Object.getPrototypeOf(current)
+  ) {
+    Object.assign(aliases, Reflect.get(current.prototype, "lc_aliases"));
+  }
+  return Object.entries(aliases).reduce((acc, [key, value]) => {
+    acc[value] = key;
+    return acc;
+  }, {} as Record<string, string>);
+}
 
 async function reviver(
   this: {
@@ -124,7 +142,13 @@ async function reviver(
     // Construct the object
     if (serialized.type === "constructor") {
       // eslint-disable-next-line new-cap, @typescript-eslint/no-explicit-any
-      return new (builder as any)(kwargs);
+      return new (builder as any)(
+        mapKeys(
+          kwargs as SerializedFields,
+          keyFromJson,
+          combineAliasesAndInvert(builder)
+        )
+      );
     } else {
       throw new Error(`Invalid type: ${str}`);
     }

@@ -699,6 +699,7 @@
     "@anthropic-ai/sdk": "^0.4.3",
     "ansi-styles": "^5.0.0",
     "binary-extensions": "^2.2.0",
+    "case-anything": "^2.1.13",
     "expr-eval": "^2.0.2",
     "flat": "^5.0.2",
     "js-tiktoken": "^1.0.6",

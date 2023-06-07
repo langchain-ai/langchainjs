@@ -9,9 +9,9 @@ import {
 import {
   Serializable,
   Serialized,
-  SerializedFields,
   SerializedNotImplemented,
 } from "../load/serializable.js";
+import { SerializedFields } from "../load/map_keys.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Error = any;
@@ -183,6 +183,10 @@ export abstract class BaseCallbackHandler
   }
 
   get lc_attributes(): { [key: string]: string } | undefined {
+    return undefined;
+  }
+
+  get lc_aliases(): { [key: string]: string } | undefined {
     return undefined;
   }
 

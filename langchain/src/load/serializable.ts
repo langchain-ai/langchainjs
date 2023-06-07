@@ -1,7 +1,4 @@
-export interface SerializedFields {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  [key: string]: any;
-}
+import { SerializedFields, keyToJson, mapKeys } from "./map_keys.js";
 
 export interface BaseSerialized<T extends string> {
   lc: number;
@@ -67,13 +64,15 @@ export abstract class Serializable {
     return undefined;
   }
 
+  get lc_aliases(): { [key: string]: string } | undefined {
+    return undefined;
+  }
+
   constructor(kwargs?: SerializedFields, ..._args: never[]) {
     this.lc_kwargs = kwargs || {};
   }
 
   toJSON(): Serialized {
-    const secrets: { [key: string]: string } = {};
-
     if (
       // eslint-disable-next-line no-instanceof/no-instanceof
       this.lc_kwargs instanceof Serializable ||
@@ -85,14 +84,17 @@ export abstract class Serializable {
       return this.toJSONNotImplemented();
     }
 
+    const aliases: { [key: string]: string } = {};
+    const secrets: { [key: string]: string } = {};
     const kwargs = { ...this.lc_kwargs };
-    // get secrets and attributes from all superclasses
+    // get secrets, attributes and aliases from all superclasses
     for (
       // eslint-disable-next-line @typescript-eslint/no-this-alias
       let current = Object.getPrototypeOf(this);
       current;
       current = Object.getPrototypeOf(current)
     ) {
+      Object.assign(aliases, Reflect.get(current, "lc_aliases", this));
       Object.assign(secrets, Reflect.get(current, "lc_secrets", this));
       Object.assign(kwargs, Reflect.get(current, "lc_attributes", this));
     }
@@ -101,7 +103,11 @@ export abstract class Serializable {
       lc: 1,
       type: "constructor",
       id: [...this.lc_namespace, this.constructor.name],
-      kwargs: this.lc_secrets ? replaceSecrets(kwargs, secrets) : kwargs,
+      kwargs: mapKeys(
+        this.lc_secrets ? replaceSecrets(kwargs, secrets) : kwargs,
+        keyToJson,
+        aliases
+      ),
     };
   }
 
