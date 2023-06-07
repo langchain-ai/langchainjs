@@ -1,12 +1,10 @@
+import { HNSWLib } from "langchain/vectorstores/hnswlib";
 import { AttributeInfo } from "langchain/schema/query_constructor";
 import { Document } from "langchain/document";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
-import {
-  SelfQueryRetriever,
-  BasicTranslator,
-} from "langchain/retrievers/self_query";
+import { SelfQueryRetriever } from "langchain/retrievers/self_query";
+import { FunctionalTranslator } from "langchain/retrievers/self_query/functional";
 import { OpenAI } from "langchain/llms/openai";
-import { Chroma } from "langchain/vectorstores/chroma";
 
 /**
  * First, we create a bunch of documents. You can load your own documents here instead.
@@ -89,22 +87,20 @@ const attributeInfo: AttributeInfo[] = [
 const embeddings = new OpenAIEmbeddings();
 const llm = new OpenAI();
 const documentContents = "Brief summary of a movie";
-const vectorStore = await Chroma.fromDocuments(docs, embeddings, {
-  collectionName: "a-movie-collection",
-});
+const vectorStore = await HNSWLib.fromDocuments(docs, embeddings);
 const selfQueryRetriever = await SelfQueryRetriever.fromLLM({
   llm,
   vectorStore,
   documentContents,
   attributeInfo,
   /**
-   * We need to create a basic translator that translates the queries into a
+   * We need to use a translator that translates the queries into a
    * filter format that the vector store can understand. We provide a basic translator
    * translator here, but you can create your own translator by extending BaseTranslator
    * abstract class. Note that the vector store needs to support filtering on the metadata
    * attributes you want to query on.
    */
-  structuredQueryTranslator: new BasicTranslator(),
+  structuredQueryTranslator: new FunctionalTranslator(),
 });
 
 /**
