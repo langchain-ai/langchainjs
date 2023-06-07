@@ -194,7 +194,11 @@ export class MapReduceDocumentsChain
 
       const results = await this.llmChain.apply(
         inputs,
-        runManager ? [runManager.getChild()] : undefined
+        // If we have a runManager, then we need to create a child for each input
+        // so that we can track the progress of each input.
+        runManager
+          ? Array.from({ length: inputs.length }, () => runManager.getChild())
+          : undefined
       );
       const { outputKey } = this.llmChain;
 
