@@ -88,11 +88,11 @@ export class SequentialChain extends BaseChain implements SequentialChainInput {
         );
       }
       const outputKeysSet = new Set(chain.outputKeys);
-      const overlappinOutputKeys = intersection(availableKeys, outputKeysSet);
-      if (overlappinOutputKeys.size > 0) {
+      const overlappingOutputKeys = intersection(availableKeys, outputKeysSet);
+      if (overlappingOutputKeys.size > 0) {
         throw new Error(
           `The following output variables for chain "${chain._chainType()}" are overlapping: ${formatSet(
-            overlappinOutputKeys
+            overlappingOutputKeys
           )}. This can lead to unexpected behaviour.`
         );
       }
@@ -129,10 +129,10 @@ export class SequentialChain extends BaseChain implements SequentialChainInput {
     values: ChainValues,
     runManager?: CallbackManagerForChainRun
   ): Promise<ChainValues> {
-    let input: ChainValues = values;
-    const allChainValues: ChainValues = {};
+    let input: ChainValues = {};
+    const allChainValues: ChainValues = values;
     for (const chain of this.chains) {
-      input = await chain.call(input, runManager?.getChild());
+      input = await chain.call(allChainValues, runManager?.getChild());
       for (const key of Object.keys(input)) {
         allChainValues[key] = input[key];
       }
