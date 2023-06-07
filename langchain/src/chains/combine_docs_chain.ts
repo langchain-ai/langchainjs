@@ -207,12 +207,13 @@ export class MapReduceDocumentsChain
       // If the flag is set, then concat that to the intermediate steps
       if (this.returnIntermediateSteps) {
         intermediateSteps = intermediateSteps.concat(
-          results.map((r: ChainValues) => r[outputKey])
+          results.map((r) => r[outputKey])
         );
       }
 
-      currentDocs = results.map((r: ChainValues) => ({
+      currentDocs = results.map((r) => ({
         pageContent: r[outputKey],
+        metadata: {},
       }));
     }
 
