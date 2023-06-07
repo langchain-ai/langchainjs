@@ -1,0 +1,22 @@
+---
+sidebar_label: Self Query Retrievers
+sidebar_position: 1
+---
+
+# Self Query Retrievers
+
+Self Query Retrievers have the ability to query themselves.
+
+Specifically, given an arbitrary natural language query, the retriever uses a query-constructing LLM chain to write a structured query and then applies that structured query to its underlying vector store.
+This allows the retriever to not only use the user-input query for semantic similarity comparison with the contents of stored documents, but to also extract filters from the user query on the metadata of stored documents and to execute those filters.
+
+They require a translator class that translates LLM-generated queries into a filter format that the vector store can understand.
+If you don't see an example for your vector store in the docs, you can create your own translator by extending the [BaseTranslator](/docs/api/retrievers_self_query/classes/BaseTranslator) abstract class.
+
+The vector store also needs to support filtering on the metadata attributes you want to query on.
+
+All Self Query retrievers require `peggy` as a peer dependency:
+
+```bash npm2yarn
+npm install -S peggy
+```

@@ -5,12 +5,13 @@ export type NOT = "not";
 export type Operator = AND | OR | NOT;
 
 export type EQ = "eq";
+export type NE = "ne";
 export type LT = "lt";
 export type GT = "gt";
 export type LTE = "lte";
 export type GTE = "gte";
 
-export type Comparator = EQ | LT | GT | LTE | GTE;
+export type Comparator = EQ | NE | LT | GT | LTE | GTE;
 
 export const Operators: { [key: string]: Operator } = {
   and: "and",
@@ -20,6 +21,7 @@ export const Operators: { [key: string]: Operator } = {
 
 export const Comparators: { [key: string]: Comparator } = {
   eq: "eq",
+  ne: "ne",
   lt: "lt",
   gt: "gt",
   lte: "lte",
@@ -30,14 +32,17 @@ export type VisitorResult =
   | VisitorOperationResult
   | VisitorComparisonResult
   | VisitorStructuredQueryResult;
+
 export type VisitorOperationResult = {
   [operator: string]: VisitorResult[];
 };
+
 export type VisitorComparisonResult = {
   [attr: string]: {
     [comparator: string]: string | number;
   };
 };
+
 export type VisitorStructuredQueryResult = {
   filter?:
     | VisitorStructuredQueryResult
@@ -46,17 +51,25 @@ export type VisitorStructuredQueryResult = {
 };
 
 export abstract class Visitor {
+  declare VisitOperationOutput: object;
+
+  declare VisitComparisonOutput: object;
+
+  declare VisitStructuredQueryOutput: { filter?: object };
+
   abstract allowedOperators: Operator[];
 
   abstract allowedComparators: Comparator[];
 
-  abstract visitOperation(operation: Operation): VisitorOperationResult;
+  abstract visitOperation(operation: Operation): this["VisitOperationOutput"];
 
-  abstract visitComparison(comparison: Comparison): VisitorComparisonResult;
+  abstract visitComparison(
+    comparison: Comparison
+  ): this["VisitComparisonOutput"];
 
   abstract visitStructuredQuery(
     structuredQuery: StructuredQuery
-  ): VisitorStructuredQueryResult;
+  ): this["VisitStructuredQueryOutput"];
 }
 
 export abstract class Expression {

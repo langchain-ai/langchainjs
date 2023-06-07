@@ -25,4 +25,6 @@ The example below shows a sample usecase. In the first step, given a title, a sy
 
 More advanced scenario useful when you have multiple chains that have more than one input or ouput keys.
 
+Unlike for `SimpleSequentialChain`, outputs from all previous chains will be available to the next chain.
+
 <CodeBlock language="typescript">{SequentialChainExample}</CodeBlock>
