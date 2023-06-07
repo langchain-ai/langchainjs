@@ -4,7 +4,7 @@ import { AttributeInfo } from "../../../schema/query_constructor.js";
 import { OpenAIEmbeddings } from "../../../embeddings/openai.js";
 import { SelfQueryRetriever } from "../index.js";
 import { OpenAI } from "../../../llms/openai.js";
-import { FunctionalTranslator } from "../translators/functional.js";
+import { FunctionalTranslator } from "../functional.js";
 import { MemoryVectorStore } from "../../../vectorstores/memory.js";
 
 test("Memory Vector Store Self Query Retriever Test", async () => {

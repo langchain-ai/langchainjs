@@ -1,4 +1,4 @@
-import { createClient } from "@supabase/supabase-js";
+import { MemoryVectorStore } from "langchain/vectorstores/memory";
 import { AttributeInfo } from "langchain/schema/query_constructor";
 import { Document } from "langchain/document";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
@@ -7,7 +7,6 @@ import {
   FunctionalTranslator,
 } from "langchain/retrievers/self_query";
 import { OpenAI } from "langchain/llms/openai";
-import { MemoryVectorStore } from "langchain/vectorstores/memory";
 
 /**
  * First, we create a bunch of documents. You can load your own documents here instead.
