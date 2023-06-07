@@ -1,11 +1,10 @@
 import { PineconeClient } from "@pinecone-database/pinecone";
+
 import { AttributeInfo } from "langchain/schema/query_constructor";
 import { Document } from "langchain/document";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
-import {
-  SelfQueryRetriever,
-  BasicTranslator,
-} from "langchain/retrievers/self_query";
+import { SelfQueryRetriever } from "langchain/retrievers/self_query";
+import { PineconeTranslator } from "langchain/retrievers/self_query/pinecone";
 import { PineconeStore } from "langchain/vectorstores/pinecone";
 import { OpenAI } from "langchain/llms/openai";
 
@@ -122,7 +121,7 @@ const selfQueryRetriever = await SelfQueryRetriever.fromLLM({
    * abstract class. Note that the vector store needs to support filtering on the metadata
    * attributes you want to query on.
    */
-  structuredQueryTranslator: new BasicTranslator(),
+  structuredQueryTranslator: new PineconeTranslator(),
 });
 
 /**

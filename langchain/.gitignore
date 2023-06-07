@@ -316,9 +316,15 @@ retrievers/hyde.d.ts
 retrievers/self_query.cjs
 retrievers/self_query.js
 retrievers/self_query.d.ts
+retrievers/self_query/chroma.cjs
+retrievers/self_query/chroma.js
+retrievers/self_query/chroma.d.ts
 retrievers/self_query/functional.cjs
 retrievers/self_query/functional.js
 retrievers/self_query/functional.d.ts
+retrievers/self_query/pinecone.cjs
+retrievers/self_query/pinecone.js
+retrievers/self_query/pinecone.d.ts
 retrievers/self_query/supabase.cjs
 retrievers/self_query/supabase.js
 retrievers/self_query/supabase.d.ts
