@@ -7,7 +7,7 @@ test("Test managed motörhead memory", async () => {
   const memory = new MotorheadMemory({
     sessionId: new Date().toISOString(),
     apiKey: process.env.METAL_API_KEY!,
-    clientId: process.env.METAL_CLIENT_ID!
+    clientId: process.env.METAL_CLIENT_ID!,
   });
   const result1 = await memory.loadMemoryVariables({});
   expect(result1).toStrictEqual({ history: "" });
