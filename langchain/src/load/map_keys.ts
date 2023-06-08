@@ -1,5 +1,4 @@
-import { snakeCase } from "case-anything";
-import { camelCase } from "cheerio/lib/utils";
+import { snakeCase, camelCase } from "case-anything";
 
 export interface SerializedFields {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
