@@ -67,7 +67,7 @@ type: constructor
 id:
   - langchain
   - chains
-  - llm_chain
+  - llm
   - LLMChain
 kwargs:
   llm:
@@ -104,7 +104,7 @@ kwargs:
     kwargs:
       input_variables:
         - name
-      prompt_messages:
+      messages:
         - lc: 1
           type: constructor
           id:
@@ -146,7 +146,6 @@ kwargs:
                 input_variables: []
                 template_format: f-string
                 template: Hello, nice model.
-      partial_variables: {}
 "
 `;
 
@@ -156,7 +155,7 @@ type: constructor
 id:
   - langchain
   - chains
-  - llm_chain
+  - llm
   - LLMChain
 kwargs:
   llm:
@@ -192,7 +191,7 @@ type: constructor
 id:
   - langchain
   - chains
-  - llm_chain
+  - llm
   - LLMChain
 kwargs:
   llm:
@@ -228,7 +227,7 @@ type: constructor
 id:
   - langchain
   - chains
-  - llm_chain
+  - llm
   - LLMChain
 kwargs:
   llm:
@@ -347,7 +346,7 @@ type: constructor
 id:
   - langchain
   - chains
-  - llm_chain
+  - llm
   - LLMChain
 kwargs:
   llm:
