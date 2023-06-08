@@ -18,7 +18,9 @@ interface GoogleVertexAILLMCodeInstance {
   prefix: string;
 }
 
-type GoogleVertexAILLMInstance = GoogleVertexAILLMTextInstance | GoogleVertexAILLMCodeInstance;
+type GoogleVertexAILLMInstance =
+  | GoogleVertexAILLMTextInstance
+  | GoogleVertexAILLMCodeInstance;
 
 /**
  * Models the data returned from the API call
@@ -124,18 +126,16 @@ export class GoogleVertexAI extends BaseLLM implements GoogleVertexAITextInput {
 }
 
 export class GoogleVertexAICode extends GoogleVertexAI {
-
   constructor(fields?: GoogleVertexAITextInput) {
     super({
       ...fields,
       model: fields?.model ?? "code-gecko",
       temperature: fields?.temperature ?? 0.2,
-      maxOutputTokens: fields?.maxOutputTokens ?? 256
+      maxOutputTokens: fields?.maxOutputTokens ?? 256,
     });
   }
 
   formatInstance(prompt: string): GoogleVertexAILLMInstance {
     return { prefix: prompt };
   }
-
 }

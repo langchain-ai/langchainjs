@@ -37,8 +37,8 @@ test("Test Google Vertex Codey gecko model", async () => {
 
 test("Test Google Vertex Codey bison model", async () => {
   const model = new GoogleVertexAICode({
-    model: 'code-bison',
-    maxOutputTokens: 2048
+    model: "code-bison",
+    maxOutputTokens: 2048,
   });
   expect(model.model).toEqual("code-bison");
 
