@@ -15,7 +15,7 @@ import { GoogleVertexAICode } from "langchain/llms/googlevertexai";
 export const run = async () => {
   const model = new GoogleVertexAICode({
     model: "code-bison",
-    maxOutputTokens: 2048
+    maxOutputTokens: 2048,
   });
   const res = await model.call(
     "A Javascript function that counts from 1 to 10."

@@ -140,7 +140,6 @@ export class GoogleVertexAI extends BaseLLM implements GoogleVertexAITextInput {
  *   Google Cloud project using Vertex AI.
  */
 export class GoogleVertexAICode extends GoogleVertexAI {
-
   model = "code-gecko";
 
   temperature = 0.2;

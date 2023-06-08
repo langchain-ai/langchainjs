@@ -14,8 +14,6 @@ import { GoogleVertexAICode } from "langchain/llms/googlevertexai";
  */
 export const run = async () => {
   const model = new GoogleVertexAICode();
-  const res = await model.call(
-    "for (let co=0;"
-  );
+  const res = await model.call("for (let co=0;");
   console.log({ res });
 };
