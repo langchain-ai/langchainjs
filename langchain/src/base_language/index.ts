@@ -37,10 +37,10 @@ export abstract class BaseLangChain
 
   callbacks?: Callbacks;
 
-  get lc_aliases(): { [key: string]: string | null } | undefined {
+  get lc_attributes(): { [key: string]: undefined } | undefined {
     return {
-      callbacks: null,
-      verbose: null,
+      callbacks: undefined,
+      verbose: undefined,
     };
   }
 

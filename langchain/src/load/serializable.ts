@@ -54,19 +54,40 @@ function replaceSecrets(
 export abstract class Serializable {
   lc_serializable = false;
 
-  abstract lc_namespace: string[];
-
   lc_kwargs: SerializedFields;
 
+  /**
+   * A path to the module that contains the class, eg. ["langchain", "llms"]
+   * Usually should be the same as the entrypoint the class is exported from.
+   */
+  abstract lc_namespace: string[];
+
+  /**
+   * A map of secrets, which will be omitted from serialization.
+   * Keys are paths to the secret in constructor args, e.g. "foo.bar.baz".
+   * Values are the secret ids, which will be used when deserializing.
+   */
   get lc_secrets(): { [key: string]: string } | undefined {
     return undefined;
   }
 
+  /**
+   * A map of additional attributes to merge with constructor args.
+   * Keys are the attribute names, e.g. "foo".
+   * Values are the attribute values, which will be serialized.
+   * These attributes need to be accepted by the constructor as arguments.
+   */
   get lc_attributes(): SerializedFields | undefined {
     return undefined;
   }
 
-  get lc_aliases(): { [key: string]: string | null } | undefined {
+  /**
+   * A map of aliases for constructor args.
+   * Keys are the attribute names, e.g. "foo".
+   * Values are the alias that will replace the key in serialization.
+   * This is used to eg. make argument names match Python.
+   */
+  get lc_aliases(): { [key: string]: string } | undefined {
     return undefined;
   }
 
@@ -102,12 +123,6 @@ export abstract class Serializable {
       Object.assign(aliases, Reflect.get(current, "lc_aliases", this));
       Object.assign(secrets, Reflect.get(current, "lc_secrets", this));
       Object.assign(kwargs, Reflect.get(current, "lc_attributes", this));
-    }
-
-    for (const [key, value] of Object.entries(aliases)) {
-      if (value === null) {
-        delete kwargs[key];
-      }
     }
 
     return {
