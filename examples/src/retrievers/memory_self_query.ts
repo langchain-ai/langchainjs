@@ -1,11 +1,9 @@
-import { PineconeClient } from "@pinecone-database/pinecone";
-
+import { MemoryVectorStore } from "langchain/vectorstores/memory";
 import { AttributeInfo } from "langchain/schema/query_constructor";
 import { Document } from "langchain/document";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { SelfQueryRetriever } from "langchain/retrievers/self_query";
-import { PineconeTranslator } from "langchain/retrievers/self_query/pinecone";
-import { PineconeStore } from "langchain/vectorstores/pinecone";
+import { FunctionalTranslator } from "langchain/retrievers/self_query/functional";
 import { OpenAI } from "langchain/llms/openai";
 
 /**
@@ -86,42 +84,23 @@ const attributeInfo: AttributeInfo[] = [
  * Next, we instantiate a vector store. This is where we store the embeddings of the documents.
  * We also need to provide an embeddings object. This is used to embed the documents.
  */
-if (
-  !process.env.PINECONE_API_KEY ||
-  !process.env.PINECONE_ENVIRONMENT ||
-  !process.env.PINECONE_INDEX
-) {
-  throw new Error(
-    "PINECONE_ENVIRONMENT and PINECONE_API_KEY and PINECONE_INDEX must be set"
-  );
-}
-
-const client = new PineconeClient();
-await client.init({
-  apiKey: process.env.PINECONE_API_KEY,
-  environment: process.env.PINECONE_ENVIRONMENT,
-});
-const index = client.Index(process.env.PINECONE_INDEX);
-
 const embeddings = new OpenAIEmbeddings();
 const llm = new OpenAI();
 const documentContents = "Brief summary of a movie";
-const vectorStore = await PineconeStore.fromDocuments(docs, embeddings, {
-  pineconeIndex: index,
-});
+const vectorStore = await MemoryVectorStore.fromDocuments(docs, embeddings);
 const selfQueryRetriever = await SelfQueryRetriever.fromLLM({
   llm,
   vectorStore,
   documentContents,
   attributeInfo,
   /**
-   * We need to create a basic translator that translates the queries into a
+   * We need to use a translator that translates the queries into a
    * filter format that the vector store can understand. We provide a basic translator
    * translator here, but you can create your own translator by extending BaseTranslator
    * abstract class. Note that the vector store needs to support filtering on the metadata
    * attributes you want to query on.
    */
-  structuredQueryTranslator: new PineconeTranslator(),
+  structuredQueryTranslator: new FunctionalTranslator(),
 });
 
 /**
