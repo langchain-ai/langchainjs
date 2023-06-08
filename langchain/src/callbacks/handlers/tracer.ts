@@ -26,6 +26,7 @@ export interface BaseRun {
   outputs?: RunOutputs;
   reference_example_id?: string; // uuid
   run_type: RunType;
+  tags: string[];
 }
 
 export interface Run extends BaseRun {
@@ -94,7 +95,8 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     prompts: string[],
     runId: string,
     parentRunId?: string,
-    extraParams?: Record<string, unknown>
+    extraParams?: Record<string, unknown>,
+    tags?: string[]
   ): Promise<void> {
     const execution_order = this._getExecutionOrder(parentRunId);
     const run: Run = {
@@ -109,6 +111,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       child_execution_order: execution_order,
       run_type: "llm",
       extra: extraParams,
+      tags: tags || [],
     };
 
     this._startTrace(run);
@@ -120,7 +123,8 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     messages: BaseChatMessage[][],
     runId: string,
     parentRunId?: string,
-    extraParams?: Record<string, unknown>
+    extraParams?: Record<string, unknown>,
+    tags?: string[]
   ): Promise<void> {
     const execution_order = this._getExecutionOrder(parentRunId);
     const run: Run = {
@@ -135,6 +139,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       child_execution_order: execution_order,
       run_type: "llm",
       extra: extraParams,
+      tags: tags || [],
     };
 
     this._startTrace(run);
@@ -167,7 +172,8 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     chain: Serialized,
     inputs: ChainValues,
     runId: string,
-    parentRunId?: string
+    parentRunId?: string,
+    tags?: string[]
   ): Promise<void> {
     const execution_order = this._getExecutionOrder(parentRunId);
     const run: Run = {
@@ -181,6 +187,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       child_execution_order: execution_order,
       run_type: "chain",
       child_runs: [],
+      tags: tags || [],
     };
 
     this._startTrace(run);
@@ -213,7 +220,8 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     tool: Serialized,
     input: string,
     runId: string,
-    parentRunId?: string
+    parentRunId?: string,
+    tags?: string[]
   ): Promise<void> {
     const execution_order = this._getExecutionOrder(parentRunId);
     const run: Run = {
@@ -227,6 +235,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       child_execution_order: execution_order,
       run_type: "tool",
       child_runs: [],
+      tags: tags || [],
     };
 
     this._startTrace(run);

@@ -105,7 +105,11 @@ export abstract class BaseChain extends BaseLangChain implements ChainInputs {
    *
    * Wraps _call and handles memory.
    */
-  async call(values: ChainValues, callbacks?: Callbacks): Promise<ChainValues> {
+  async call(
+    values: ChainValues,
+    callbacks?: Callbacks,
+    tags?: string[]
+  ): Promise<ChainValues> {
     const fullValues = { ...values } as typeof values;
     if (!(this.memory == null)) {
       const newValues = await this.memory.loadMemoryVariables(values);
@@ -116,6 +120,8 @@ export abstract class BaseChain extends BaseLangChain implements ChainInputs {
     const callbackManager_ = await CallbackManager.configure(
       callbacks,
       this.callbacks,
+      tags,
+      this.tags,
       { verbose: this.verbose }
     );
     const runManager = await callbackManager_?.handleChainStart(

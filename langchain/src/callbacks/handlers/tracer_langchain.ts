@@ -47,13 +47,13 @@ export class LangChainTracer
   ): Promise<RunCreate> {
     const runExtra = run.extra ?? {};
     runExtra.runtime = await getRuntimeEnvironment();
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { child_runs: _, ...restOfRun } = run;
-    restOfRun.extra = runExtra;
-    restOfRun.reference_example_id = restOfRun.parent_run_id
-      ? undefined
-      : example_id;
-    return { child_runs: [], session_name: this.sessionName, ...restOfRun };
+    return {
+      ...run,
+      child_runs: [],
+      extra: runExtra,
+      session_name: this.sessionName,
+      reference_example_id: run.parent_run_id ? undefined : example_id,
+    };
   }
 
   protected async persistRun(_run: Run): Promise<void> {}

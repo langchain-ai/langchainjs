@@ -378,8 +378,12 @@ test("CallbackManager.copy()", () => {
 
   callbackManager1.addHandler(handler1, true);
   callbackManager1.addHandler(handler2, false);
+  callbackManager1.addTags(["a"], true);
+  callbackManager1.addTags(["b"], false);
   expect(callbackManager1.handlers).toEqual([handler1, handler2]);
   expect(callbackManager1.inheritableHandlers).toEqual([handler1]);
+  expect(callbackManager1.tags).toEqual(["a", "b"]);
+  expect(callbackManager1.inheritableTags).toEqual(["a"]);
 
   const callbackManager2 = callbackManager1.copy([handler3]);
   expect(callbackManager2.handlers.map((h) => h.name)).toEqual([
@@ -391,6 +395,8 @@ test("CallbackManager.copy()", () => {
     handler1.name,
     handler3.name,
   ]);
+  expect(callbackManager2.tags).toEqual(["a", "b"]);
+  expect(callbackManager2.inheritableTags).toEqual(["a"]);
 
   const callbackManager3 = callbackManager2.copy([handler4], false);
   expect(callbackManager3.handlers.map((h) => h.name)).toEqual([
