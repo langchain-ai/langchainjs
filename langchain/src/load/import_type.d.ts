@@ -199,6 +199,18 @@ export interface OptionalImportMap {
   "langchain/retrievers/self_query"?:
     | typeof import("../retrievers/self_query/index.js")
     | Promise<typeof import("../retrievers/self_query/index.js")>;
+  "langchain/retrievers/self_query/chroma"?:
+    | typeof import("../retrievers/self_query/chroma.js")
+    | Promise<typeof import("../retrievers/self_query/chroma.js")>;
+  "langchain/retrievers/self_query/functional"?:
+    | typeof import("../retrievers/self_query/functional.js")
+    | Promise<typeof import("../retrievers/self_query/functional.js")>;
+  "langchain/retrievers/self_query/pinecone"?:
+    | typeof import("../retrievers/self_query/pinecone.js")
+    | Promise<typeof import("../retrievers/self_query/pinecone.js")>;
+  "langchain/retrievers/self_query/supabase"?:
+    | typeof import("../retrievers/self_query/supabase.js")
+    | Promise<typeof import("../retrievers/self_query/supabase.js")>;
   "langchain/cache/momento"?:
     | typeof import("../cache/momento.js")
     | Promise<typeof import("../cache/momento.js")>;

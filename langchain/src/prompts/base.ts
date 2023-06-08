@@ -8,6 +8,7 @@ import {
 import { BaseOutputParser } from "../schema/output_parser.js";
 import { Serializable } from "../load/serializable.js";
 import { SerializedBasePromptTemplate } from "./serde.js";
+import { SerializedFields } from "../load/map_keys.js";
 
 export class StringPromptValue extends BasePromptValue {
   lc_namespace = ["langchain", "prompts", "base"];
@@ -60,11 +61,17 @@ export abstract class BasePromptTemplate
 
   lc_namespace = ["langchain", "prompts", this._getPromptType()];
 
+  get lc_attributes(): SerializedFields | undefined {
+    return {
+      partialVariables: undefined, // python doesn't support this yet
+    };
+  }
+
   inputVariables: string[];
 
   outputParser?: BaseOutputParser;
 
-  partialVariables?: InputValues;
+  partialVariables: InputValues = {};
 
   constructor(input: BasePromptTemplateInput) {
     super(input);

@@ -402,7 +402,7 @@ export class OpenAIChat
   }
 
   _llmType() {
-    return "openai-chat";
+    return "openai";
   }
 }
 

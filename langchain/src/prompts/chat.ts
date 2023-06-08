@@ -222,6 +222,12 @@ export class ChatPromptTemplate
   extends BaseChatPromptTemplate
   implements ChatPromptTemplateInput
 {
+  get lc_aliases() {
+    return {
+      promptMessages: "messages",
+    };
+  }
+
   promptMessages: BaseMessagePromptTemplate[];
 
   validateTemplate = true;
