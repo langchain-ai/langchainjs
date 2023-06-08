@@ -178,6 +178,7 @@ const requiresOptionalDependency = [
   "tools/calculator",
   "tools/webbrowser",
   "chains/load",
+  "docstore/googlecloudstorage",
   "embeddings/cohere",
   "embeddings/googlevertexai",
   "embeddings/tensorflow",
