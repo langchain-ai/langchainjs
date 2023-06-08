@@ -118,11 +118,12 @@ test("serialize + deserialize llm", async () => {
     modelName: "davinci",
     openAIApiKey: "openai-key",
   });
+  llm.temperature = 0.7;
   const lc_argumentsBefore = llm.lc_kwargs;
   const str = JSON.stringify(llm, null, 2);
   expect(llm.lc_kwargs).toEqual(lc_argumentsBefore);
   expect(stringify(JSON.parse(str))).toMatchSnapshot();
-  expect(JSON.parse(str).kwargs.temperature).toBe(0.5);
+  expect(JSON.parse(str).kwargs.temperature).toBe(0.7);
   expect(JSON.parse(str).kwargs.model).toBe("davinci");
   expect(JSON.parse(str).kwargs.openai_api_key.type).toBe("secret");
   const llm2 = await load<OpenAI>(str, {
