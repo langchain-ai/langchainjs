@@ -13,25 +13,41 @@ import {
   VisitorStructuredQueryResult,
 } from "../../chains/query_constructor/ir.js";
 
+export type TranslatorOpts = {
+  allowedOperators: Operator[];
+  allowedComparators: Comparator[];
+};
+
 export abstract class BaseTranslator extends Visitor {
-  abstract allowedOperators: Operator[];
-
-  abstract allowedComparators: Comparator[];
-
   abstract formatFunction(func: Operator | Comparator): string;
 }
 
 export class BasicTranslator extends BaseTranslator {
-  allowedOperators: Operator[] = [Operators.and, Operators.or];
+  declare VisitOperationOutput: VisitorOperationResult;
 
-  allowedComparators: Comparator[] = [
-    Comparators.eq,
-    Comparators.neq,
-    Comparators.gt,
-    Comparators.gte,
-    Comparators.lt,
-    Comparators.lte,
-  ];
+  declare VisitComparisonOutput: VisitorComparisonResult;
+
+  declare VisitStructuredQueryOutput: VisitorStructuredQueryResult;
+
+  allowedOperators: Operator[];
+
+  allowedComparators: Comparator[];
+
+  constructor(opts?: TranslatorOpts) {
+    super();
+    this.allowedOperators = opts?.allowedOperators ?? [
+      Operators.and,
+      Operators.or,
+    ];
+    this.allowedComparators = opts?.allowedComparators ?? [
+      Comparators.eq,
+      Comparators.ne,
+      Comparators.gt,
+      Comparators.gte,
+      Comparators.lt,
+      Comparators.lte,
+    ];
+  }
 
   formatFunction(func: Operator | Comparator): string {
     if (func in Comparators) {
@@ -62,7 +78,7 @@ export class BasicTranslator extends BaseTranslator {
     return `$${func}`;
   }
 
-  visitOperation(operation: Operation): VisitorOperationResult {
+  visitOperation(operation: Operation): this["VisitOperationOutput"] {
     const args = operation.args?.map((arg) =>
       arg.accept(this)
     ) as VisitorResult[];
@@ -71,7 +87,7 @@ export class BasicTranslator extends BaseTranslator {
     };
   }
 
-  visitComparison(comparison: Comparison): VisitorComparisonResult {
+  visitComparison(comparison: Comparison): this["VisitComparisonOutput"] {
     return {
       [comparison.attribute]: {
         [this.formatFunction(comparison.comparator)]: comparison.value,
@@ -79,7 +95,9 @@ export class BasicTranslator extends BaseTranslator {
     };
   }
 
-  visitStructuredQuery(query: StructuredQuery): VisitorStructuredQueryResult {
+  visitStructuredQuery(
+    query: StructuredQuery
+  ): this["VisitStructuredQueryOutput"] {
     let nextArg = {};
     if (query.filter) {
       nextArg = {

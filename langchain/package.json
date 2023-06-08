@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.91",
+  "version": "0.0.92",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -328,6 +328,18 @@
     "retrievers/self_query.cjs",
     "retrievers/self_query.js",
     "retrievers/self_query.d.ts",
+    "retrievers/self_query/chroma.cjs",
+    "retrievers/self_query/chroma.js",
+    "retrievers/self_query/chroma.d.ts",
+    "retrievers/self_query/functional.cjs",
+    "retrievers/self_query/functional.js",
+    "retrievers/self_query/functional.d.ts",
+    "retrievers/self_query/pinecone.cjs",
+    "retrievers/self_query/pinecone.js",
+    "retrievers/self_query/pinecone.d.ts",
+    "retrievers/self_query/supabase.cjs",
+    "retrievers/self_query/supabase.js",
+    "retrievers/self_query/supabase.d.ts",
     "retrievers/vespa.cjs",
     "retrievers/vespa.js",
     "retrievers/vespa.d.ts",
@@ -679,6 +691,7 @@
     "flat": "^5.0.2",
     "js-tiktoken": "^1.0.6",
     "jsonpointer": "^5.0.1",
+    "langchainplus-sdk": "^0.0.7",
     "ml-distance": "^4.0.0",
     "object-hash": "^3.0.0",
     "openai": "^3.2.0",
@@ -1253,6 +1266,26 @@
       "types": "./retrievers/self_query.d.ts",
       "import": "./retrievers/self_query.js",
       "require": "./retrievers/self_query.cjs"
+    },
+    "./retrievers/self_query/chroma": {
+      "types": "./retrievers/self_query/chroma.d.ts",
+      "import": "./retrievers/self_query/chroma.js",
+      "require": "./retrievers/self_query/chroma.cjs"
+    },
+    "./retrievers/self_query/functional": {
+      "types": "./retrievers/self_query/functional.d.ts",
+      "import": "./retrievers/self_query/functional.js",
+      "require": "./retrievers/self_query/functional.cjs"
+    },
+    "./retrievers/self_query/pinecone": {
+      "types": "./retrievers/self_query/pinecone.d.ts",
+      "import": "./retrievers/self_query/pinecone.js",
+      "require": "./retrievers/self_query/pinecone.cjs"
+    },
+    "./retrievers/self_query/supabase": {
+      "types": "./retrievers/self_query/supabase.d.ts",
+      "import": "./retrievers/self_query/supabase.js",
+      "require": "./retrievers/self_query/supabase.cjs"
     },
     "./retrievers/vespa": {
       "types": "./retrievers/vespa.d.ts",
