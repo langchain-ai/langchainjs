@@ -603,6 +603,7 @@ export class TraceGroup {
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function traceAsGroup<T, A extends any[]>(
   groupOptions: {
     name: string;
