@@ -30,11 +30,11 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-const client = new MongoClient(process.env.MONGODB_ATLAS_URI!);
-
 test.skip("MongoDBAtlasVectorSearch with external ids", async () => {
   expect(process.env.MONGODB_ATLAS_URI).toBeDefined();
+
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const client = new MongoClient(process.env.MONGODB_ATLAS_URI!);
 
   try {
     const namespace = "langchain.test";
