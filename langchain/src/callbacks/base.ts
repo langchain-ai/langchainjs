@@ -174,6 +174,8 @@ export abstract class BaseCallbackHandler
   extends BaseCallbackHandlerMethodsClass
   implements BaseCallbackHandlerInput, Serializable
 {
+  lc_serializable = false;
+
   get lc_namespace(): ["langchain", "callbacks", string] {
     return ["langchain", "callbacks", this.name];
   }

@@ -37,6 +37,13 @@ export abstract class BaseLangChain
 
   callbacks?: Callbacks;
 
+  get lc_aliases(): { [key: string]: string | null } | undefined {
+    return {
+      callbacks: null,
+      verbose: null,
+    };
+  }
+
   constructor(params: BaseLangChainParams) {
     super(params);
     this.verbose = params.verbose ?? getVerbosity();

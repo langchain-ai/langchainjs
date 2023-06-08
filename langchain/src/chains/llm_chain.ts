@@ -36,6 +36,8 @@ export class LLMChain<T extends string | object = string>
   extends BaseChain
   implements LLMChainInput<T>
 {
+  lc_serializable = true;
+
   prompt: BasePromptTemplate;
 
   llm: BaseLanguageModel;

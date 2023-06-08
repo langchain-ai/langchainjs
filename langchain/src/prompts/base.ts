@@ -6,7 +6,7 @@ import {
   PartialValues,
 } from "../schema/index.js";
 import { BaseOutputParser } from "../schema/output_parser.js";
-import { Serializable, Serialized } from "../load/serializable.js";
+import { Serializable } from "../load/serializable.js";
 import { SerializedBasePromptTemplate } from "./serde.js";
 
 export class StringPromptValue extends BasePromptValue {
@@ -55,6 +55,8 @@ export abstract class BasePromptTemplate
   implements BasePromptTemplateInput
 {
   declare PromptValueReturnType: BasePromptValue;
+
+  lc_serializable = true;
 
   lc_namespace = ["langchain", "prompts", this._getPromptType()];
 
@@ -175,10 +177,6 @@ export abstract class BaseStringPromptTemplate extends BasePromptTemplate {
  */
 export abstract class BaseExampleSelector extends Serializable {
   lc_namespace = ["langchain", "prompts", "selectors"];
-
-  toJSON(): Serialized {
-    return this.toJSONNotImplemented();
-  }
 
   abstract addExample(example: Example): Promise<void | string>;
 

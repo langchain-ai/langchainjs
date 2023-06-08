@@ -29,10 +29,12 @@ async function reviver(
   this: {
     optionalImportsMap: OptionalImportMap;
     secretsMap: SecretMap;
+    path?: string[];
   },
   value: unknown
 ): Promise<unknown> {
-  const { optionalImportsMap, secretsMap } = this;
+  const { optionalImportsMap, secretsMap, path = ["$"] } = this;
+  const pathStr = path.join(".");
   if (
     typeof value === "object" &&
     value !== null &&
@@ -48,7 +50,9 @@ async function reviver(
     if (key in secretsMap) {
       return secretsMap[key as keyof SecretMap];
     } else {
-      throw new Error(`Missing key "${key}" in load(secretsMap={})`);
+      throw new Error(
+        `Missing key "${key}" for ${pathStr} in load(secretsMap={})`
+      );
     }
   } else if (
     typeof value === "object" &&
@@ -63,7 +67,7 @@ async function reviver(
     const serialized = value as SerializedNotImplemented;
     const str = JSON.stringify(serialized);
     throw new Error(
-      `Trying to load an object that doesn't implement serialization: ${str}`
+      `Trying to load an object that doesn't implement serialization: ${pathStr} -> ${str}`
     );
   } else if (
     typeof value === "object" &&
@@ -93,7 +97,9 @@ async function reviver(
         ];
       } else {
         throw new Error(
-          `Missing key "${namespace.join("/")}" in load(optionalImportsMap={})`
+          `Missing key "${namespace.join(
+            "/"
+          )}" for ${pathStr} in load(optionalImportsMap={})`
         );
       }
     } else {
@@ -101,12 +107,12 @@ async function reviver(
       if (namespace[0] === "langchain") {
         namespace.shift();
       } else {
-        throw new Error(`Invalid namespace: ${str}`);
+        throw new Error(`Invalid namespace: ${pathStr} -> ${str}`);
       }
 
       // The root namespace "langchain" is not a valid import.
       if (namespace.length === 0) {
-        throw new Error(`Invalid namespace: ${str}`);
+        throw new Error(`Invalid namespace: ${pathStr} -> ${str}`);
       }
 
       // Find the longest matching namespace.
@@ -127,17 +133,20 @@ async function reviver(
     }
 
     if (typeof module !== "object" || module === null) {
-      throw new Error(`Invalid namespace: ${str}`);
+      throw new Error(`Invalid namespace: ${pathStr} -> ${str}`);
     }
 
     // Extract the builder from the import map.
     const builder = module[name as keyof typeof module];
     if (typeof builder !== "function") {
-      throw new Error(`Invalid identifer: ${str}`);
+      throw new Error(`Invalid identifer: ${pathStr} -> ${str}`);
     }
 
     // Recurse on the arguments, which may be serialized objects themselves
-    const kwargs = await reviver.call(this, serialized.kwargs);
+    const kwargs = await reviver.call(
+      { ...this, path: [...path, "kwargs"] },
+      serialized.kwargs
+    );
 
     // Construct the object
     if (serialized.type === "constructor") {
@@ -150,17 +159,21 @@ async function reviver(
         )
       );
     } else {
-      throw new Error(`Invalid type: ${str}`);
+      throw new Error(`Invalid type: ${pathStr} -> ${str}`);
     }
   } else if (typeof value === "object" && value !== null) {
     if (Array.isArray(value)) {
-      return Promise.all(value.map(reviver, this));
+      return Promise.all(
+        value.map((v, i) =>
+          reviver.call({ ...this, path: [...path, `${i}`] }, v)
+        )
+      );
     } else {
       return Object.fromEntries(
         await Promise.all(
           Object.entries(value).map(async ([key, value]) => [
             key,
-            await reviver.call(this, value),
+            await reviver.call({ ...this, path: [...path, key] }, value),
           ])
         )
       );

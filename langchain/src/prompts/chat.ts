@@ -19,6 +19,8 @@ import { PromptTemplate } from "./prompt.js";
 export abstract class BaseMessagePromptTemplate extends Serializable {
   lc_namespace = ["langchain", "prompts", "chat"];
 
+  lc_serializable = true;
+
   abstract inputVariables: string[];
 
   abstract formatMessages(values: InputValues): Promise<BaseChatMessage[]>;
@@ -30,6 +32,8 @@ export interface ChatPromptValueFields {
 
 export class ChatPromptValue extends BasePromptValue {
   lc_namespace = ["langchain", "prompts", "chat"];
+
+  lc_serializable = true;
 
   messages: BaseChatMessage[];
 

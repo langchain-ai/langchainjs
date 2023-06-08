@@ -54,6 +54,8 @@ export class OpenAIChat
     return ["stop", "signal", "timeout", "options"];
   }
 
+  lc_serializable = true;
+
   get lc_secrets(): { [key: string]: string } | undefined {
     return {
       openAIApiKey: "OPENAI_API_KEY",
@@ -413,6 +415,8 @@ export class PromptLayerOpenAIChat extends OpenAIChat {
       promptLayerApiKey: "PROMPTLAYER_API_KEY",
     };
   }
+
+  lc_serializable = false;
 
   promptLayerApiKey?: string;
 

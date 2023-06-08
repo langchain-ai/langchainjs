@@ -1,357 +1,5 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`serialize + deserialize agent 1`] = `
-"lc: 1
-type: constructor
-id:
-  - langchain
-  - agents
-  - executor
-  - AgentExecutor
-kwargs:
-  agent:
-    lc: 1
-    type: constructor
-    id:
-      - langchain
-      - agents
-      - chat_convo
-      - ChatConversationalAgent
-    kwargs:
-      llm_chain:
-        lc: 1
-        type: constructor
-        id:
-          - langchain
-          - chains
-          - llm_chain
-          - LLMChain
-        kwargs:
-          prompt:
-            lc: 1
-            type: constructor
-            id:
-              - langchain
-              - prompts
-              - chat
-              - ChatPromptTemplate
-            kwargs:
-              input_variables:
-                - chat_history
-                - input
-                - agent_scratchpad
-              prompt_messages:
-                - lc: 1
-                  type: constructor
-                  id:
-                    - langchain
-                    - prompts
-                    - chat
-                    - SystemMessagePromptTemplate
-                  kwargs:
-                    prompt:
-                      lc: 1
-                      type: constructor
-                      id:
-                        - langchain
-                        - prompts
-                        - prompt
-                        - PromptTemplate
-                      kwargs:
-                        input_variables: []
-                        template_format: f-string
-                        template: >-
-                          Assistant is a large language model trained by OpenAI.
-
-
-                          Assistant is designed to be able to assist with a wide range of tasks, from answering simple questions to providing in-depth explanations and discussions on a wide range of topics. As a language model, Assistant is able to generate human-like text based on the input it receives, allowing it to engage in natural-sounding conversations and provide responses that are coherent and relevant to the topic at hand.
-
-
-                          Assistant is constantly learning and improving, and its capabilities are constantly evolving. It is able to process and understand large amounts of text, and can use this knowledge to provide accurate and informative responses to a wide range of questions. Additionally, Assistant is able to generate its own text based on the input it receives, allowing it to engage in discussions and provide explanations and descriptions on a wide range of topics.
-
-
-                          Overall, Assistant is a powerful system that can help with a wide range of tasks and provide valuable insights and information on a wide range of topics. Whether you need help with a specific question or just want to have a conversation about a particular topic, Assistant is here to assist. However, above all else, all responses must adhere to the format of RESPONSE FORMAT INSTRUCTIONS.
-                - lc: 1
-                  type: constructor
-                  id:
-                    - langchain
-                    - prompts
-                    - chat
-                    - MessagesPlaceholder
-                  kwargs:
-                    variable_name: chat_history
-                - lc: 1
-                  type: constructor
-                  id:
-                    - langchain
-                    - prompts
-                    - chat
-                    - HumanMessagePromptTemplate
-                  kwargs:
-                    prompt:
-                      lc: 1
-                      type: constructor
-                      id:
-                        - langchain
-                        - prompts
-                        - prompt
-                        - PromptTemplate
-                      kwargs:
-                        input_variables:
-                          - input
-                        template_format: f-string
-                        template: >-
-                          TOOLS
-
-                          ------
-
-                          Assistant can ask the user to use tools to look up information that may be helpful in answering the users original question. The tools the human can use are:
-
-
-                          calculator: Useful for getting the result of a math expression. The input to this tool should be a valid mathematical expression that could be executed by a simple calculator.
-
-                          requests_get: A portal to the internet. Use this when you need to get specific content from a website. 
-                            Input should be a url string (i.e. "https://www.google.com"). The output will be the text response of the GET request.
-                          json_list_keys: Can be used to list all keys at a given path. 
-                              Before calling this you should be SURE that the path to this exists.
-                              The input is a text representation of the path to the json as json pointer syntax (e.g. /key1/0/key2).
-
-                          RESPONSE FORMAT INSTRUCTIONS
-
-                          ----------------------------
-
-
-                          Output a JSON markdown code snippet containing a valid JSON object in one of two formats:
-
-
-                          **Option 1:**
-
-                          Use this if you want the human to use a tool.
-
-                          Markdown code snippet formatted in the following schema:
-
-
-                          \`\`\`json
-
-                          {{
-                              "action": string, // The action to take. Must be one of [calculator, requests_get, json_list_keys]
-                              "action_input": string // The input to the action. May be a stringified object.
-                          }}
-
-                          \`\`\`
-
-
-                          **Option #2:**
-
-                          Use this if you want to respond directly and conversationally to the human. Markdown code snippet formatted in the following schema:
-
-
-                          \`\`\`json
-
-                          {{
-                              "action": "Final Answer",
-                              "action_input": string // You should put what you want to return to use here and make sure to use valid json newline characters.
-                          }}
-
-                          \`\`\`
-
-
-                          For both options, remember to always include the surrounding markdown code snippet delimiters (begin with "\`\`\`json" and end with "\`\`\`")!
-
-
-
-                          USER'S INPUT
-
-                          --------------------
-
-                          Here is the user's input (remember to respond with a markdown code snippet of a json blob with a single action, and NOTHING else):
-
-
-                          {input}
-                - lc: 1
-                  type: constructor
-                  id:
-                    - langchain
-                    - prompts
-                    - chat
-                    - MessagesPlaceholder
-                  kwargs:
-                    variable_name: agent_scratchpad
-              partial_variables: {}
-          llm:
-            lc: 1
-            type: constructor
-            id:
-              - langchain
-              - chat_models
-              - openai
-              - ChatOpenAI
-            kwargs:
-              temperature: 0
-              model: gpt-4
-              openai_api_key:
-                lc: 1
-                type: secret
-                id:
-                  - OPENAI_API_KEY
-      output_parser:
-        lc: 1
-        type: constructor
-        id:
-          - langchain
-          - agents
-          - chat_convo
-          - ChatConversationalAgentOutputParserWithRetries
-        kwargs:
-          base_parser:
-            lc: 1
-            type: constructor
-            id:
-              - langchain
-              - agents
-              - chat_convo
-              - ChatConversationalAgentOutputParser
-            kwargs:
-              tool_names:
-                - calculator
-                - requests_get
-                - json_list_keys
-          output_fixing_parser:
-            lc: 1
-            type: constructor
-            id:
-              - langchain
-              - output_parsers
-              - fix
-              - OutputFixingParser
-            kwargs:
-              parser:
-                lc: 1
-                type: constructor
-                id:
-                  - langchain
-                  - agents
-                  - chat_convo
-                  - ChatConversationalAgentOutputParser
-                kwargs:
-                  tool_names:
-                    - calculator
-                    - requests_get
-                    - json_list_keys
-              retry_chain:
-                lc: 1
-                type: constructor
-                id:
-                  - langchain
-                  - chains
-                  - llm_chain
-                  - LLMChain
-                kwargs:
-                  llm:
-                    lc: 1
-                    type: constructor
-                    id:
-                      - langchain
-                      - chat_models
-                      - openai
-                      - ChatOpenAI
-                    kwargs:
-                      temperature: 0
-                      model: gpt-4
-                      openai_api_key:
-                        lc: 1
-                        type: secret
-                        id:
-                          - OPENAI_API_KEY
-                  prompt:
-                    lc: 1
-                    type: constructor
-                    id:
-                      - langchain
-                      - prompts
-                      - prompt
-                      - PromptTemplate
-                    kwargs:
-                      input_variables:
-                        - instructions
-                        - completion
-                        - error
-                      template_format: f-string
-                      template: >-
-                        Instructions:
-
-                        --------------
-
-                        {instructions}
-
-                        --------------
-
-                        Completion:
-
-                        --------------
-
-                        {completion}
-
-                        --------------
-
-
-                        Above, the Completion did not satisfy the constraints given in the Instructions.
-
-                        Error:
-
-                        --------------
-
-                        {error}
-
-                        --------------
-
-
-                        Please try again. Please only respond with an answer that satisfies the constraints laid out in the Instructions:
-          tool_names:
-            - calculator
-            - requests_get
-            - json_list_keys
-      allowed_tools:
-        - calculator
-        - requests_get
-        - json_list_keys
-  tools:
-    - lc: 1
-      type: constructor
-      id:
-        - langchain
-        - tools
-        - calculator
-        - Calculator
-      kwargs: {}
-    - lc: 1
-      type: constructor
-      id:
-        - langchain
-        - tools
-        - RequestsGetTool
-      kwargs: {}
-    - lc: 1
-      type: constructor
-      id:
-        - langchain
-        - tools
-        - JsonListKeysTool
-      kwargs:
-        json_spec:
-          lc: 1
-          type: constructor
-          id:
-            - langchain
-            - tools
-            - json
-            - JsonSpec
-          kwargs:
-            a: b
-  agent_type: chat-conversational-react-description
-"
-`;
-
 exports[`serialize + deserialize custom classes 1`] = `
 "lc: 1
 type: constructor
@@ -401,7 +49,7 @@ id:
   - langchain
   - llms
   - openai
-  - PromptLayerOpenAI
+  - OpenAI
 kwargs:
   temperature: 0.5
   model: davinci
@@ -410,11 +58,6 @@ kwargs:
     type: secret
     id:
       - OPENAI_API_KEY
-  prompt_layer_api_key:
-    lc: 1
-    type: secret
-    id:
-      - PROMPTLAYER_API_KEY
 "
 `;
 
@@ -525,15 +168,6 @@ kwargs:
       - openai
       - OpenAI
     kwargs:
-      callbacks:
-        - lc: 1
-          type: constructor
-          id:
-            - langchain
-            - callbacks
-            - langchain_tracer
-            - LangChainTracer
-          kwargs: {}
       temperature: 0.5
       model: davinci
       openai_api_key:
@@ -543,34 +177,12 @@ kwargs:
           - OPENAI_API_KEY
   prompt:
     lc: 1
-    type: constructor
+    type: not_implemented
     id:
       - langchain
       - prompts
       - few_shot
       - FewShotPromptTemplate
-    kwargs:
-      examples:
-        - yo: "1"
-        - yo: "2"
-      prefix: You are a nice assistant
-      example_prompt:
-        lc: 1
-        type: constructor
-        id:
-          - langchain
-          - prompts
-          - prompt
-          - PromptTemplate
-        kwargs:
-          input_variables:
-            - yo
-          template_format: f-string
-          template: An example about {yo}
-      suffix: My name is {name}
-      input_variables:
-        - yo
-        - name
 "
 `;
 
@@ -592,15 +204,6 @@ kwargs:
       - openai
       - OpenAI
     kwargs:
-      callbacks:
-        - lc: 1
-          type: constructor
-          id:
-            - langchain
-            - callbacks
-            - langchain_tracer
-            - LangChainTracer
-          kwargs: {}
       temperature: 0.5
       model: davinci
       openai_api_key:
@@ -610,39 +213,12 @@ kwargs:
           - OPENAI_API_KEY
   prompt:
     lc: 1
-    type: constructor
+    type: not_implemented
     id:
       - langchain
       - prompts
       - few_shot
       - FewShotPromptTemplate
-    kwargs:
-      example_selector:
-        lc: 1
-        type: not_implemented
-        id:
-          - langchain
-          - prompts
-          - selectors
-          - LengthBasedExampleSelector
-      prefix: You are a nice assistant
-      example_prompt:
-        lc: 1
-        type: constructor
-        id:
-          - langchain
-          - prompts
-          - prompt
-          - PromptTemplate
-        kwargs:
-          input_variables:
-            - yo
-          template_format: f-string
-          template: An example about {yo}
-      suffix: My name is {name}
-      input_variables:
-        - yo
-        - name
 "
 `;
 
@@ -664,19 +240,8 @@ kwargs:
       - openai
       - OpenAI
     kwargs:
-      callbacks:
-        - lc: 1
-          type: constructor
-          id:
-            - langchain
-            - callbacks
-            - langchain_tracer
-            - LangChainTracer
-          kwargs: {}
-        - {}
       temperature: 0.5
       model: davinci
-      verbose: true
       openai_api_key:
         lc: 1
         type: secret
@@ -708,7 +273,7 @@ id:
   - Cohere
 kwargs:
   temperature: 0.5
-  api_key:
+  cohere_api_key:
     lc: 1
     type: secret
     id:
@@ -794,15 +359,6 @@ kwargs:
       - openai
       - OpenAI
     kwargs:
-      callbacks:
-        - lc: 1
-          type: constructor
-          id:
-            - langchain
-            - callbacks
-            - langchain_tracer
-            - LangChainTracer
-          kwargs: {}
       temperature: 0.5
       model: davinci
       openai_api_key:

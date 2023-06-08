@@ -23,6 +23,14 @@ export class Cohere extends LLM implements CohereInput {
     };
   }
 
+  get lc_aliases(): { [key: string]: string } | undefined {
+    return {
+      apiKey: "cohere_api_key",
+    };
+  }
+
+  lc_serializable = true;
+
   temperature = 0;
 
   maxTokens = 250;

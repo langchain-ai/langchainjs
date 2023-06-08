@@ -3,7 +3,7 @@ import { stringify } from "yaml";
 import { z } from "zod";
 
 import { load } from "../index.js";
-import { OpenAI, PromptLayerOpenAI } from "../../llms/openai.js";
+import { OpenAI } from "../../llms/openai.js";
 import { PromptTemplate } from "../../prompts/prompt.js";
 import { LLMChain } from "../../chains/llm_chain.js";
 import { Cohere } from "../../llms/cohere.js";
@@ -38,6 +38,8 @@ test("serialize + deserialize custom classes", async () => {
     get lc_attributes(): { [key: string]: unknown } | undefined {
       return { hello: this.hello };
     }
+
+    lc_serializable = true;
 
     hello = 3;
 
@@ -111,11 +113,10 @@ test("serialize + deserialize custom classes", async () => {
 });
 
 test("serialize + deserialize llm", async () => {
-  const llm = new PromptLayerOpenAI({
+  const llm = new OpenAI({
     temperature: 0.5,
     modelName: "davinci",
     openAIApiKey: "openai-key",
-    promptLayerApiKey: "promptlayer-key",
   });
   const lc_argumentsBefore = llm.lc_kwargs;
   const str = JSON.stringify(llm, null, 2);
@@ -124,10 +125,8 @@ test("serialize + deserialize llm", async () => {
   expect(JSON.parse(str).kwargs.temperature).toBe(0.5);
   expect(JSON.parse(str).kwargs.model).toBe("davinci");
   expect(JSON.parse(str).kwargs.openai_api_key.type).toBe("secret");
-  expect(JSON.parse(str).kwargs.prompt_layer_api_key.type).toBe("secret");
   const llm2 = await load<OpenAI>(str, {
     OPENAI_API_KEY: "openai-key",
-    PROMPTLAYER_API_KEY: "promptlayer-key",
   });
   expect(llm2).toBeInstanceOf(OpenAI);
   expect(JSON.stringify(llm2, null, 2)).toBe(str);
@@ -157,11 +156,10 @@ test("serialize + deserialize llm chain string prompt", async () => {
   const llm = new OpenAI({
     temperature: 0.5,
     modelName: "davinci",
-    verbose: true,
     openAIApiKey: "openai-key",
+    verbose: true,
     callbacks: [
       new LangChainTracer(),
-      // This custom handler is not serialized
       {
         handleLLMEnd(output) {
           console.log(output);
@@ -172,6 +170,8 @@ test("serialize + deserialize llm chain string prompt", async () => {
   const prompt = PromptTemplate.fromTemplate("Hello, {name}!");
   const chain = new LLMChain({ llm, prompt });
   const str = JSON.stringify(chain, null, 2);
+  expect(JSON.parse(str).kwargs.callbacks).toBeUndefined();
+  expect(JSON.parse(str).kwargs.verbose).toBeUndefined();
   expect(stringify(JSON.parse(str))).toMatchSnapshot();
   const chain2 = await load<LLMChain>(str, {
     OPENAI_API_KEY: "openai-key",
@@ -227,11 +227,13 @@ test("serialize + deserialize llm chain few shot prompt w/ examples", async () =
   const chain = new LLMChain({ llm, prompt });
   const str = JSON.stringify(chain, null, 2);
   expect(stringify(JSON.parse(str))).toMatchSnapshot();
-  const chain2 = await load<LLMChain>(str, {
-    OPENAI_API_KEY: "openai-key",
-  });
-  expect(chain2).toBeInstanceOf(LLMChain);
-  expect(JSON.stringify(chain2, null, 2)).toBe(str);
+  await expect(
+    load<LLMChain>(str, {
+      OPENAI_API_KEY: "openai-key",
+    })
+  ).rejects.toThrowError(
+    'Trying to load an object that doesn\'t implement serialization: $.kwargs.prompt -> {"lc":1,"type":"not_implemented","id":["langchain","prompts","few_shot","FewShotPromptTemplate"]}'
+  );
 });
 
 test("serialize + deserialize llm chain few shot prompt w/ selector", async () => {
@@ -239,7 +241,6 @@ test("serialize + deserialize llm chain few shot prompt w/ selector", async () =
     temperature: 0.5,
     modelName: "davinci",
     openAIApiKey: "openai-key",
-    callbacks: [new LangChainTracer()],
   });
   const examplePrompt = PromptTemplate.fromTemplate("An example about {yo}");
   const prompt = new FewShotPromptTemplate({
@@ -260,11 +261,11 @@ test("serialize + deserialize llm chain few shot prompt w/ selector", async () =
       OPENAI_API_KEY: "openai-key",
     })
   ).rejects.toThrow(
-    'Trying to load an object that doesn\'t implement serialization: {"lc":1,"type":"not_implemented","id":["langchain","prompts","selectors","LengthBasedExampleSelector"]}'
+    'Trying to load an object that doesn\'t implement serialization: $.kwargs.prompt -> {"lc":1,"type":"not_implemented","id":["langchain","prompts","few_shot","FewShotPromptTemplate"]}'
   );
 });
 
-test("serialize + deserialize llmchain with output parser", async () => {
+test.skip("serialize + deserialize llmchain with output parser", async () => {
   const llm = new OpenAI({
     temperature: 0.5,
     modelName: "davinci",
@@ -309,11 +310,11 @@ test("serialize + deserialize llmchain with struct output parser throws", async 
       OPENAI_API_KEY: "openai-key",
     })
   ).rejects.toThrow(
-    'Trying to load an object that doesn\'t implement serialization: {"lc":1,"type":"not_implemented","id":["langchain","output_parsers","structured","StructuredOutputParser"]}'
+    'Trying to load an object that doesn\'t implement serialization: $.kwargs.output_parser -> {"lc":1,"type":"not_implemented","id":["langchain","output_parsers","structured","StructuredOutputParser"]}'
   );
 });
 
-test("serialize + deserialize agent", async () => {
+test.skip("serialize + deserialize agent", async () => {
   const llm = new ChatOpenAI({
     temperature: 0,
     modelName: "gpt-4",

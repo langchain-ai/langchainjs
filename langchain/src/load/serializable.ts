@@ -52,6 +52,8 @@ function replaceSecrets(
 }
 
 export abstract class Serializable {
+  lc_serializable = false;
+
   abstract lc_namespace: string[];
 
   lc_kwargs: SerializedFields;
@@ -64,7 +66,7 @@ export abstract class Serializable {
     return undefined;
   }
 
-  get lc_aliases(): { [key: string]: string } | undefined {
+  get lc_aliases(): { [key: string]: string | null } | undefined {
     return undefined;
   }
 
@@ -73,6 +75,9 @@ export abstract class Serializable {
   }
 
   toJSON(): Serialized {
+    if (!this.lc_serializable) {
+      return this.toJSONNotImplemented();
+    }
     if (
       // eslint-disable-next-line no-instanceof/no-instanceof
       this.lc_kwargs instanceof Serializable ||
@@ -97,6 +102,12 @@ export abstract class Serializable {
       Object.assign(aliases, Reflect.get(current, "lc_aliases", this));
       Object.assign(secrets, Reflect.get(current, "lc_secrets", this));
       Object.assign(kwargs, Reflect.get(current, "lc_attributes", this));
+    }
+
+    for (const [key, value] of Object.entries(aliases)) {
+      if (value === null) {
+        delete kwargs[key];
+      }
     }
 
     return {

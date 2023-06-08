@@ -101,6 +101,8 @@ export class ChatOpenAI
     return ["stop", "signal", "timeout", "options"];
   }
 
+  lc_serializable = true;
+
   get lc_secrets(): { [key: string]: string } | undefined {
     return {
       openAIApiKey: "OPENAI_API_KEY",
