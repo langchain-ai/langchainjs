@@ -1,6 +1,6 @@
 import { Example, Run } from "langchainplus-sdk";
 import { EvaluationResult } from "langchainplus-sdk/evaluation";
-import { CRITERIA_PROMPT } from "./prompt.js";
+import { CRITERIA_PROMPT } from "./criteria_prompt.js";
 import {
   RunEvaluatorInputMapper,
   RunEvaluatorChain,
@@ -238,7 +238,6 @@ export async function getCriteriaEvaluator(
   const predictionKey = options.predictionKey || "output";
   let criteria_ = criteria;
   if (typeof criteria === "string") {
-    // Lookup key in _SUPPORTED_CRITERIA
     criteria_ = { [criteria]: _SUPPORTED_CRITERIA[criteria] };
   } else if (Array.isArray(criteria)) {
     criteria_ = criteria.reduce(
@@ -254,11 +253,11 @@ export async function getCriteriaEvaluator(
     .join(" ");
   const prompt_ = await prompt.partial({ criteria: criteriaStr });
   const inputMapper = new StringRunEvaluatorInputMapper({
-    inputMap: { [inputKey]: "query" },
-    predictionMap: { [predictionKey]: "result" },
+    inputMap: { [inputKey]: "input" },
+    predictionMap: { [predictionKey]: "output" },
   });
   const evaluationName_ =
-    options.evaluationName || Object.keys(criteria).join(" ");
+    options.evaluationName || Object.keys(criteria_).join(" ");
   const outputParser = new ChoicesOutputParser({
     evaluationName: evaluationName_,
     choicesMap: { Y: 1, N: 0 },

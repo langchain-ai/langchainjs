@@ -110,20 +110,18 @@ test("Test getCriteriaEvaluator with correct input", async () => {
     model,
     ["correctness", "conciseness"],
     {
-      inputKey: "input",
-      predictionKey: "output",
+      inputKey: "query",
+      predictionKey: "myPrediction",
     }
   );
 
   expect(chain).toBeInstanceOf(RunEvaluatorChain);
   const result = await chain.evaluateRun(testRun, testExample);
-  expect(result).toEqual([
-    {
-      key: "correctness conciseness",
-      score: 1,
-      value: "Y",
-      comment:
-        "It's fairly concise and correct I'd reckon, but I'm still going to fail you.",
-    },
-  ]);
+  expect(result).toEqual({
+    key: "correctness conciseness",
+    score: 0,
+    value: "N",
+    comment:
+      "It's fairly concise and correct I'd reckon, but I'm still going to fail you.",
+  });
 });
