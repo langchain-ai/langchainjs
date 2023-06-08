@@ -14,6 +14,12 @@ interface GoogleVertexAILLMTextInstance {
   content: string;
 }
 
+interface GoogleVertexAILLMCodeInstance {
+  prefix: string;
+}
+
+type GoogleVertexAILLMInstance = GoogleVertexAILLMTextInstance | GoogleVertexAILLMCodeInstance;
+
 /**
  * Models the data returned from the API call
  */
@@ -48,7 +54,7 @@ export class GoogleVertexAI extends BaseLLM implements GoogleVertexAITextInput {
 
   private connection: GoogleVertexAIConnection<
     this["CallOptions"],
-    GoogleVertexAILLMTextInstance,
+    GoogleVertexAILLMInstance,
     TextPrediction
   >;
 
@@ -106,7 +112,7 @@ export class GoogleVertexAI extends BaseLLM implements GoogleVertexAITextInput {
     ];
   }
 
-  formatInstance(prompt: string): GoogleVertexAILLMTextInstance {
+  formatInstance(prompt: string): GoogleVertexAILLMInstance {
     return { content: prompt };
   }
 
@@ -115,4 +121,21 @@ export class GoogleVertexAI extends BaseLLM implements GoogleVertexAITextInput {
   ): TextPrediction {
     return result?.data?.predictions[0];
   }
+}
+
+export class GoogleVertexAICode extends GoogleVertexAI {
+
+  constructor(fields?: GoogleVertexAITextInput) {
+    super({
+      ...fields,
+      model: fields?.model ?? "code-gecko",
+      temperature: fields?.temperature ?? 0.2,
+      maxOutputTokens: fields?.maxOutputTokens ?? 256
+    });
+  }
+
+  formatInstance(prompt: string): GoogleVertexAILLMInstance {
+    return { prefix: prompt };
+  }
+
 }

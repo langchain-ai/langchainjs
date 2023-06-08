@@ -1,5 +1,5 @@
-import { test } from "@jest/globals";
-import { GoogleVertexAI } from "../googlevertexai.js";
+import { expect, test } from "@jest/globals";
+import { GoogleVertexAI, GoogleVertexAICode } from "../googlevertexai.js";
 
 test("Test Google Vertex", async () => {
   const model = new GoogleVertexAI({ maxOutputTokens: 50 });
@@ -25,4 +25,23 @@ test("Test Google Vertex generation", async () => {
     `Translate "I love programming" into Korean.`,
   ]);
   console.log(JSON.stringify(res, null, 2));
+});
+
+test("Test Google Vertex Codey gecko model", async () => {
+  const model = new GoogleVertexAICode();
+  expect(model.model).toEqual("code-gecko");
+
+  const res = await model.call("for( let co = 0");
+  console.log(res);
+});
+
+test("Test Google Vertex Codey bison model", async () => {
+  const model = new GoogleVertexAICode({
+    model: 'code-bison',
+    maxOutputTokens: 2048
+  });
+  expect(model.model).toEqual("code-bison");
+
+  const res = await model.call("Count to 10 in JavaScript.");
+  console.log(res);
 });
