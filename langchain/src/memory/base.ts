@@ -40,25 +40,25 @@ export const getInputValue = (inputValues: InputValues, inputKey?: string) => {
  * of the chat message history, based on the message content and role.
  */
 export function getBufferString(
-  messages: BaseChatMessage[],
+  baseChatMessagess: BaseChatMessage[],
   humanPrefix = "Human",
   aiPrefix = "AI"
 ): string {
   const string_messages: string[] = [];
-  for (const m of messages) {
+  for (const baseChatMessage of baseChatMessagess) {
     let role: string;
-    if (m._getType() === "human") {
+    if (baseChatMessage.isHumanChatMessage()) {
       role = humanPrefix;
-    } else if (m._getType() === "ai") {
+    } else if (baseChatMessage.isAIChatMessage()) {
       role = aiPrefix;
-    } else if (m._getType() === "system") {
+    } else if (baseChatMessage.isSystemChatMessage()) {
       role = "System";
-    } else if (m._getType() === "generic") {
-      role = (m as ChatMessage).role;
+    } else if (baseChatMessage.isGenericChatMessage()) {
+      role = (baseChatMessage as ChatMessage).role;
     } else {
-      throw new Error(`Got unsupported message type: ${m}`);
+      throw new Error(`Got unsupported message type: ${baseChatMessage}`);
     }
-    string_messages.push(`${role}: ${m.text}`);
+    string_messages.push(`${role}: ${baseChatMessage.text}`);
   }
   return string_messages.join("\n");
 }

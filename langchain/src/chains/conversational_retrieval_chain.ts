@@ -68,13 +68,13 @@ export class ConversationalRetrievalQAChain
   static getChatHistoryString(chatHistory: string | BaseChatMessage[]) {
     if (Array.isArray(chatHistory)) {
       return chatHistory
-        .map((chatMessage) => {
-          if (chatMessage._getType() === "human") {
-            return `Human: ${chatMessage.text}`;
-          } else if (chatMessage._getType() === "ai") {
-            return `Assistant: ${chatMessage.text}`;
+        .map((baseChatMessage) => {
+          if (baseChatMessage.isHumanChatMessage()) {
+            return `Human: ${baseChatMessage.text}`;
+          } else if (baseChatMessage.isAIChatMessage()) {
+            return `Assistant: ${baseChatMessage.text}`;
           } else {
-            return `${chatMessage.text}`;
+            return `${baseChatMessage.text}`;
           }
         })
         .join("\n");

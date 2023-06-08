@@ -60,7 +60,14 @@ export interface StoredMessage {
   data: StoredMessageData;
 }
 
-export type MessageType = "human" | "ai" | "generic" | "system";
+const MESSAGE_TYPE_HUMAN = "human" as const;
+const MESSAGE_TYPE_AI = "ai" as const;
+const MESSAGE_TYPE_SYSTEM = "system" as const;
+const MESSAGE_TYPE_GENERIC = "generic" as const;
+
+const messageTypes = [MESSAGE_TYPE_HUMAN, MESSAGE_TYPE_AI, MESSAGE_TYPE_SYSTEM, MESSAGE_TYPE_GENERIC];
+export type MessageType = typeof messageTypes[number];
+
 
 export abstract class BaseChatMessage {
   /** The text of the message. */
@@ -85,23 +92,39 @@ export abstract class BaseChatMessage {
       },
     };
   }
+
+  isHumanChatMessage(): boolean {
+    return this._getType() === MESSAGE_TYPE_HUMAN;
+  }
+
+  isAIChatMessage(): boolean {
+    return this._getType() === MESSAGE_TYPE_AI;
+  }
+
+  isSystemChatMessage(): boolean {
+    return this._getType() === MESSAGE_TYPE_SYSTEM;
+  }
+
+  isGenericChatMessage(): boolean {
+    return this._getType() === MESSAGE_TYPE_GENERIC;
+  }
 }
 
 export class HumanChatMessage extends BaseChatMessage {
   _getType(): MessageType {
-    return "human";
+    return MESSAGE_TYPE_HUMAN;
   }
 }
 
 export class AIChatMessage extends BaseChatMessage {
   _getType(): MessageType {
-    return "ai";
+    return MESSAGE_TYPE_AI;
   }
 }
 
 export class SystemChatMessage extends BaseChatMessage {
   _getType(): MessageType {
-    return "system";
+    return MESSAGE_TYPE_SYSTEM;
   }
 }
 
@@ -114,7 +137,7 @@ export class ChatMessage extends BaseChatMessage {
   }
 
   _getType(): MessageType {
-    return "generic";
+    return MESSAGE_TYPE_GENERIC;
   }
 }
 

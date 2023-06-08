@@ -574,23 +574,23 @@ export class PromptLayerChatOpenAI extends ChatOpenAI {
     );
     const requestEndTime = Date.now();
 
-    const _convertMessageToDict = (message: BaseChatMessage) => {
+    const _convertMessageToDict = (baseChatMessage: BaseChatMessage) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let messageDict: Record<string, any>;
 
-      if (message._getType() === "human") {
-        messageDict = { role: "user", content: message.text };
-      } else if (message._getType() === "ai") {
-        messageDict = { role: "assistant", content: message.text };
-      } else if (message._getType() === "system") {
-        messageDict = { role: "system", content: message.text };
-      } else if (message._getType() === "generic") {
+      if (baseChatMessage.isHumanChatMessage()) {
+        messageDict = { role: "user", content: baseChatMessage.text };
+      } else if (baseChatMessage.isAIChatMessage()) {
+        messageDict = { role: "assistant", content: baseChatMessage.text };
+      } else if (baseChatMessage.isSystemChatMessage()) {
+        messageDict = { role: "system", content: baseChatMessage.text };
+      } else if (baseChatMessage.isGenericChatMessage()) {
         messageDict = {
-          role: (message as ChatMessage).role,
-          content: message.text,
+          role: (baseChatMessage as ChatMessage).role,
+          content: baseChatMessage.text,
         };
       } else {
-        throw new Error(`Got unknown type ${message}`);
+        throw new Error(`Got unknown type ${baseChatMessage}`);
       }
 
       return messageDict;
