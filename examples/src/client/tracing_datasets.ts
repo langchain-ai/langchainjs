@@ -1,6 +1,7 @@
 /* eslint-disable no-process-env */
+import { LangChainPlusClient, Dataset } from "langchainplus-sdk";
 import { ChatOpenAI } from "langchain/chat_models/openai";
-import { LangChainPlusClient, Dataset } from "langchain/client";
+import { runOnDataset } from "langchain/client";
 import { SerpAPI } from "langchain/tools";
 import { Calculator } from "langchain/tools/calculator";
 import { initializeAgentExecutorWithOptions } from "langchain/agents";
@@ -55,8 +56,9 @@ export const run = async () => {
   // 4. Add the other examples to the dataset as well
 
   // So that you don't have to create the dataset manually, we will create it for you
-  const client: LangChainPlusClient = await LangChainPlusClient.create({
-    apiUrl: "http://localhost:1984",
+  const client: LangChainPlusClient = new LangChainPlusClient({
+    // apiUrl: "https://api.langchain.plus", // Default: LANGCHAIN_ENDPOINT environment variable of "http://localhost:1984"
+    // apiKey: "<Your API Key>", // Default: LANGCHAIN_API_KEY environment variable
   });
   const csvContent = `
 input,output
@@ -101,6 +103,6 @@ what is 1213 divided by 4345?,approximately 0.2791714614499425
 
   // If using the traced dataset, you can update the datasetName to be
   // "calculator-example-dataset" or the custom name you chose.
-  const results = await client.runOnDataset(datasetName, executorFactory);
+  const results = await runOnDataset(datasetName, executorFactory, { client });
   console.log(results);
 };
