@@ -14,6 +14,10 @@ import {
 } from "./handlers/initialize.js";
 import { getBufferString } from "../memory/base.js";
 import { getEnvironmentVariable } from "../util/env.js";
+import {
+  LangChainTracer,
+  LangChainTracerFields,
+} from "./handlers/tracer_langchain.js";
 
 type BaseCallbackManagerMethods = {
   [K in keyof CallbackHandlerMethods]?: (
@@ -555,4 +559,63 @@ function ensureHandler(
   }
 
   return BaseCallbackHandler.fromMethods(handler);
+}
+
+export class TraceGroup {
+  private runManager?: CallbackManagerForChainRun;
+
+  constructor(
+    private groupName: string,
+    private options?: {
+      sessionName?: string;
+      exampleId?: string;
+    }
+  ) {}
+
+  private async getTraceGroupCallbackManager(
+    group_name: string,
+    options?: LangChainTracerFields
+  ): Promise<CallbackManagerForChainRun> {
+    const cb = new LangChainTracer(options);
+    const cm = await CallbackManager.configure([cb]);
+    const runManager = await cm?.handleChainStart({ name: group_name }, {});
+    if (!runManager) {
+      throw new Error("Failed to create run group callback manager.");
+    }
+    return runManager;
+  }
+
+  async start(): Promise<CallbackManager> {
+    if (!this.runManager) {
+      this.runManager = await this.getTraceGroupCallbackManager(
+        this.groupName,
+        this.options
+      );
+    }
+    return this.runManager.getChild();
+  }
+
+  async end(): Promise<void> {
+    if (this.runManager) {
+      await this.runManager.handleChainEnd({});
+      this.runManager = undefined;
+    }
+  }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function traceAsGroup<T, A extends any[]>(
+  groupOptions: {
+    name: string;
+  } & LangChainTracerFields,
+  enclosedCode: (manager: CallbackManager, ...args: A) => Promise<T>,
+  ...args: A
+): Promise<T> {
+  const traceGroup = new TraceGroup(groupOptions.name, groupOptions);
+  const callbackManager = await traceGroup.start();
+  try {
+    return await enclosedCode(callbackManager, ...args);
+  } finally {
+    await traceGroup.end();
+  }
 }
