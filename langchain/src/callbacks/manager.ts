@@ -600,12 +600,7 @@ export class CallbackManager
         false
       );
     }
-    if (inheritableTags || localTags) {
-      if (callbackManager) {
-        callbackManager.addTags(inheritableTags ?? []);
-        callbackManager.addTags(localTags ?? [], false);
-      }
-    }
+
     const verboseEnabled =
       getEnvironmentVariable("LANGCHAIN_VERBOSE") || options?.verbose;
     const tracingV2Enabled =
@@ -641,6 +636,12 @@ export class CallbackManager
             true
           );
         }
+      }
+    }
+    if (inheritableTags || localTags) {
+      if (callbackManager) {
+        callbackManager.addTags(inheritableTags ?? []);
+        callbackManager.addTags(localTags ?? [], false);
       }
     }
     return callbackManager;
