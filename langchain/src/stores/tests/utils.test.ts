@@ -8,14 +8,14 @@ test("mapV1MessageToStoredMessage", () => {
     type: "human",
     role: "user",
     text: "Hello, world!",
-  };
+  } as const;
   const v2Message = {
     type: "human",
     data: {
       content: "Hello, world!",
       role: "user",
     },
-  };
+  } as const;
   expect(mapV1MessageToStoredMessage(v1Message)).toEqual(v2Message);
 
   const v2Message2 = {
@@ -27,6 +27,6 @@ test("mapV1MessageToStoredMessage", () => {
         foo: "bar",
       },
     },
-  };
+  } as const;
   expect(mapV1MessageToStoredMessage(v2Message2)).toEqual(v2Message2);
 });

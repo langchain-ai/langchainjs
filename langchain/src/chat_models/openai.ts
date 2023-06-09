@@ -20,7 +20,6 @@ import {
   AIChatMessage,
   BaseChatMessage,
   ChatGeneration,
-  ChatMessage,
   ChatResult,
   HumanChatMessage,
   MessageType,
@@ -61,6 +60,7 @@ function openAIResponseToChatMessage(
   role: ChatCompletionResponseMessageRoleEnum | undefined,
   text: string
 ): BaseChatMessage {
+  // See: https://platform.openai.com/docs/api-reference/chat/create#chat/create-role
   switch (role) {
     case "user":
       return new HumanChatMessage(text);
@@ -69,7 +69,7 @@ function openAIResponseToChatMessage(
     case "system":
       return new SystemChatMessage(text);
     default:
-      return new ChatMessage(text, role ?? "unknown");
+      throw new Error(`Unknown message role: ${role}`);
   }
 }
 
@@ -263,7 +263,7 @@ export class ChatOpenAI
     params.stop = options?.stop ?? params.stop;
     const messagesMapped: ChatCompletionRequestMessage[] = messages.map(
       (message) => ({
-        role: messageTypeToOpenAIRole(message._getType()),
+        role: messageTypeToOpenAIRole(message.type),
         content: message.text,
         name: message.name,
       })
@@ -432,7 +432,7 @@ export class ChatOpenAI
       messages.map(async (message) => {
         const textCount = await this.getNumTokens(message.text);
         const roleCount = await this.getNumTokens(
-          messageTypeToOpenAIRole(message._getType())
+          messageTypeToOpenAIRole(message.type)
         );
         const nameCount =
           message.name !== undefined

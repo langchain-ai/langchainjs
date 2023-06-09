@@ -1,14 +1,14 @@
 import {
   AIChatMessage,
   BaseChatMessage,
-  ChatMessage,
   HumanChatMessage,
+  MessageType,
   StoredMessage,
-  SystemChatMessage,
-} from "../../schema/index.js";
+  SystemChatMessage
+} from '../../schema/index.js'
 
 interface StoredMessageV1 {
-  type: string;
+  type: MessageType;
   role: string | undefined;
   text: string;
 }
@@ -43,14 +43,6 @@ export function mapStoredMessagesToChatMessages(
         return new AIChatMessage(storedMessage.data.content);
       case "system":
         return new SystemChatMessage(storedMessage.data.content);
-      case "chat":
-        if (storedMessage.data?.additional_kwargs?.role === undefined) {
-          throw new Error("Role must be defined for chat messages");
-        }
-        return new ChatMessage(
-          storedMessage.data.content,
-          storedMessage.data.additional_kwargs.role
-        );
       default:
         throw new Error(`Got unexpected type: ${storedMessage.type}`);
     }
