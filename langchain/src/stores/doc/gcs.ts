@@ -1,7 +1,7 @@
 import { Storage, File } from "@google-cloud/storage";
 
-import { Document } from "../document.js";
-import { Docstore } from "./base.js";
+import { Document } from "../../document.js";
+import { Docstore } from "../../schema/index.js";
 
 export interface GoogleCloudStorageDocstoreConfiguration {
   /** The identifier for the GCS bucket */

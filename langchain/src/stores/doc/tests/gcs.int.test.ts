@@ -1,6 +1,6 @@
 import { describe, test, expect } from "@jest/globals";
-import { GoogleCloudStorageDocstore } from "../googlecloudstorage.js";
-import { Document } from "../../document.js";
+import { GoogleCloudStorageDocstore } from "../gcs.js";
+import { Document } from "../../../document.js";
 
 describe("GoogleCloudStorageDocstore", () => {
   const bucket = "INSERT_BUCKET_HERE";
