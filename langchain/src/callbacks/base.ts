@@ -176,6 +176,12 @@ export abstract class BaseCallbackHandler
 
   ignoreAgent = false;
 
+  awaitHandlers =
+    typeof process !== "undefined"
+      ? // eslint-disable-next-line no-process-env
+        process.env?.LANGCHAIN_CALLBACKS_BACKGROUND !== "true"
+      : true;
+
   constructor(input?: BaseCallbackHandlerInput) {
     super();
     if (input) {
