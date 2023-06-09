@@ -53,6 +53,7 @@ const entrypoints = {
   "vectorstores/hnswlib": "vectorstores/hnswlib",
   "vectorstores/faiss": "vectorstores/faiss",
   "vectorstores/weaviate": "vectorstores/weaviate",
+  "vectorstores/lancedb": "vectorstores/lancedb",
   "vectorstores/mongo": "vectorstores/mongo",
   "vectorstores/mongodb_atlas": "vectorstores/mongodb_atlas",
   "vectorstores/pinecone": "vectorstores/pinecone",

@@ -112,6 +112,9 @@ vectorstores/faiss.d.ts
 vectorstores/weaviate.cjs
 vectorstores/weaviate.js
 vectorstores/weaviate.d.ts
+vectorstores/lancedb.cjs
+vectorstores/lancedb.js
+vectorstores/lancedb.d.ts
 vectorstores/mongo.cjs
 vectorstores/mongo.js
 vectorstores/mongo.d.ts
