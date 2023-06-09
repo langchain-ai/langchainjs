@@ -38,7 +38,7 @@ export class StuffDocumentsChain
 
   get inputKeys() {
     return [this.inputKey, ...this.llmChain.inputKeys].filter(
-      (key) => key != this.documentVariableName
+      (key) => key !== this.documentVariableName
     );
   }
 
@@ -304,7 +304,7 @@ export class RefineDocumentsChain
       ]),
     ].filter(
       (key) =>
-        key != this.documentVariableName && key != this.initialResponseName
+        key !== this.documentVariableName && key !== this.initialResponseName
     );
   }
 
