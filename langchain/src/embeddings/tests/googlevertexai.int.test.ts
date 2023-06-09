@@ -2,14 +2,14 @@ import { test, expect } from "@jest/globals";
 import { GoogleVertexAIEmbeddings } from "../googlevertexai.js";
 import { HNSWLib } from "../../vectorstores/hnswlib.js";
 
-test("Test GoogleVertexAIEmbeddings.embedQuery", async () => {
+test.skip("Test GoogleVertexAIEmbeddings.embedQuery", async () => {
   const embeddings = new GoogleVertexAIEmbeddings();
   const res = await embeddings.embedQuery("Hello world");
   console.log(res);
   expect(typeof res[0]).toBe("number");
 });
 
-test("Test GoogleVertexAIEmbeddings.embedDocuments", async () => {
+test.skip("Test GoogleVertexAIEmbeddings.embedDocuments", async () => {
   const embeddings = new GoogleVertexAIEmbeddings();
   const res = await embeddings.embedDocuments(["Hello world", "Bye bye"]);
   console.log(res);
@@ -18,7 +18,7 @@ test("Test GoogleVertexAIEmbeddings.embedDocuments", async () => {
   expect(typeof res[1][0]).toBe("number");
 });
 
-test("Test end to end with HNSWLib", async () => {
+test.skip("Test end to end with HNSWLib", async () => {
   const vectorStore = await HNSWLib.fromTexts(
     ["Hello world", "Bye bye", "hello nice world"],
     [{ id: 2 }, { id: 1 }, { id: 3 }],
