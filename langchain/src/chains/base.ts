@@ -143,7 +143,7 @@ export abstract class BaseChain extends BaseLangChain implements ChainInputs {
   async apply(
     inputs: ChainValues[],
     callbacks?: Callbacks[]
-  ): Promise<ChainValues> {
+  ): Promise<ChainValues[]> {
     return Promise.all(
       inputs.map(async (i, idx) => this.call(i, callbacks?.[idx]))
     );

@@ -174,39 +174,46 @@ export class MapReduceDocumentsChain
         ...rest,
       }));
 
-      // Calculate the total tokens required in the input
-      const promises = inputs.map(async (i) => {
-        const prompt = await this.llmChain.prompt.format(i);
-        return this.llmChain.llm.getNumTokens(prompt);
-      });
-
-      const length = await Promise.all(promises).then((results) =>
-        results.reduce((a, b) => a + b, 0)
-      );
-
       const canSkipMapStep = i !== 0 || !this.ensureMapStep;
-      const withinTokenLimit = length < this.maxTokens;
-      // If we can skip the map step, and we're within the token limit, we don't
-      // need to run the map step, so just break out of the loop.
-      if (canSkipMapStep && withinTokenLimit) {
-        break;
+      if (canSkipMapStep) {
+        // Calculate the total tokens required in the input
+        const promises = inputs.map(async (i) => {
+          const prompt = await this.llmChain.prompt.format(i);
+          return this.llmChain.llm.getNumTokens(prompt);
+        });
+
+        const length = await Promise.all(promises).then((results) =>
+          results.reduce((a, b) => a + b, 0)
+        );
+
+        const withinTokenLimit = length < this.maxTokens;
+        // If we can skip the map step, and we're within the token limit, we don't
+        // need to run the map step, so just break out of the loop.
+        if (withinTokenLimit) {
+          break;
+        }
       }
 
       const results = await this.llmChain.apply(
         inputs,
-        runManager ? [runManager.getChild()] : undefined
+        // If we have a runManager, then we need to create a child for each input
+        // so that we can track the progress of each input.
+        runManager
+          ? Array.from({ length: inputs.length }, () => runManager.getChild())
+          : undefined
       );
       const { outputKey } = this.llmChain;
 
       // If the flag is set, then concat that to the intermediate steps
       if (this.returnIntermediateSteps) {
         intermediateSteps = intermediateSteps.concat(
-          results.map((r: ChainValues) => r[outputKey])
+          results.map((r) => r[outputKey])
         );
       }
 
-      currentDocs = results.map((r: ChainValues) => ({
+      currentDocs = results.map((r) => ({
         pageContent: r[outputKey],
+        metadata: {},
       }));
     }
 
