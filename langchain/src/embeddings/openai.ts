@@ -39,7 +39,7 @@ export class OpenAIEmbeddings
 {
   modelName = "text-embedding-ada-002";
 
-  batchSize = 512;
+  batchSize = this.azureOpenAIApiKey ? 1 : 512;
 
   stripNewLines = true;
 
