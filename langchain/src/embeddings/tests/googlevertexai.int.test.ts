@@ -11,11 +11,19 @@ test.skip("Test GoogleVertexAIEmbeddings.embedQuery", async () => {
 
 test.skip("Test GoogleVertexAIEmbeddings.embedDocuments", async () => {
   const embeddings = new GoogleVertexAIEmbeddings();
-  const res = await embeddings.embedDocuments(["Hello world", "Bye bye"]);
+  const res = await embeddings.embedDocuments([
+    "Hello world",
+    "Bye bye",
+    "we need",
+    "at least",
+    "six documents",
+    "to test pagination",
+  ]);
   console.log(res);
-  expect(res).toHaveLength(2);
-  expect(typeof res[0][0]).toBe("number");
-  expect(typeof res[1][0]).toBe("number");
+  expect(res).toHaveLength(6);
+  res.forEach((r) => {
+    expect(typeof r[0]).toBe("number");
+  });
 });
 
 test.skip("Test end to end with HNSWLib", async () => {
