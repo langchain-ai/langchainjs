@@ -12,8 +12,7 @@ import { GoogleVertexAICode } from "langchain/llms/googlevertexai";
  * - The `GOOGLE_APPLICATION_CREDENTIALS` environment variable is set to the
  *   path of a credentials file for a service account permitted to the project.
  */
-export const run = async () => {
-  const model = new GoogleVertexAICode();
-  const res = await model.call("for (let co=0;");
-  console.log({ res });
-};
+
+const model = new GoogleVertexAICode();
+const res = await model.call("for (let co=0;");
+console.log({ res });
