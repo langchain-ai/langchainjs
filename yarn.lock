@@ -14147,7 +14147,7 @@ __metadata:
     graphql: ^16.6.0
     js-yaml: ^4.1.0
     langchain: "workspace:*"
-    langchainplus-sdk: ^0.0.7
+    langchainplus-sdk: ">=0.0.9"
     ml-distance: ^4.0.0
     mongodb: ^5.2.0
     mysql2: ^3.3.3
@@ -18494,7 +18494,7 @@ __metadata:
     jest: ^29.5.0
     js-tiktoken: ^1.0.6
     jsonpointer: ^5.0.1
-    langchainplus-sdk: ^0.0.7
+    langchainplus-sdk: ">=0.0.9"
     mammoth: ^1.5.1
     ml-distance: ^4.0.0
     mongodb: ^5.2.0
@@ -18681,9 +18681,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"langchainplus-sdk@npm:^0.0.7":
-  version: 0.0.7
-  resolution: "langchainplus-sdk@npm:0.0.7"
+"langchainplus-sdk@npm:>=0.0.9":
+  version: 0.0.9
+  resolution: "langchainplus-sdk@npm:0.0.9"
   dependencies:
     "@types/uuid": ^9.0.1
     commander: ^10.0.1
@@ -18692,7 +18692,7 @@ __metadata:
     uuid: ^9.0.0
   bin:
     langchain: dist/cli/main.cjs
-  checksum: 6779372b944fd91a8a0542bb661222e6d12e2d9ec825ba604fdde845b75af6813871ef963eaaba7062d8c2d3664c22cbe69d1b39126686270e5219a03aaf3ab7
+  checksum: b4294009309af2fdb2a0b4ec1a7c1efab67fb64ad0cf1059b37c83f6a2ef4ebdfd23403598a587a1e4ab7d1d0d40f2e2e1f8b6101dcf30fd0768ea6b92555739
   languageName: node
   linkType: hard
 
