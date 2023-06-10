@@ -49,6 +49,7 @@ test("Test LLMRun", async () => {
     run_type: "llm",
     outputs: { generations: [] },
     child_runs: [],
+    extra: {},
     tags: [],
   };
   expect(run).toEqual(compareRun);
@@ -131,6 +132,7 @@ test("Test Chain Run", async () => {
     outputs: { foo: "bar" },
     run_type: "chain",
     child_runs: [],
+    extra: {},
     tags: [],
   };
   await tracer.handleChainStart(serialized, { foo: "bar" }, runId);
@@ -155,6 +157,7 @@ test("Test Tool Run", async () => {
     outputs: { output: "output" },
     run_type: "tool",
     child_runs: [],
+    extra: {},
     tags: [],
   };
   await tracer.handleToolStart(serialized, "test", runId);
@@ -215,6 +218,7 @@ test("Test nested runs", async () => {
             start_time: 1620000000000,
             run_type: "llm",
             child_runs: [],
+            extra: {},
             tags: [],
           },
         ],
@@ -226,6 +230,7 @@ test("Test nested runs", async () => {
         start_time: 1620000000000,
         inputs: { input: "test" },
         run_type: "tool",
+        extra: {},
         tags: [],
       },
       {
@@ -243,6 +248,7 @@ test("Test nested runs", async () => {
         start_time: 1620000000000,
         run_type: "llm",
         child_runs: [],
+        extra: {},
         tags: [],
       },
     ],
@@ -260,6 +266,7 @@ test("Test nested runs", async () => {
     name: "test",
     start_time: 1620000000000,
     run_type: "chain",
+    extra: {},
     tags: [],
   };
   expect(tracer.runs.length).toBe(1);

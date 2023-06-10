@@ -45,12 +45,13 @@ export class LangChainTracer
     run: Run,
     example_id: string | undefined = undefined
   ): Promise<RunCreate> {
-    const runExtra = run.extra ?? {};
-    runExtra.runtime = await getRuntimeEnvironment();
     return {
       ...run,
+      extra: {
+        ...run.extra,
+        runtime: await getRuntimeEnvironment(),
+      },
       child_runs: [],
-      extra: runExtra,
       session_name: this.sessionName,
       reference_example_id: run.parent_run_id ? undefined : example_id,
     };
@@ -71,8 +72,6 @@ export class LangChainTracer
       end_time: run.end_time,
       error: run.error,
       outputs: run.outputs,
-      parent_run_id: run.parent_run_id,
-      reference_example_id: run.reference_example_id,
     };
     await this.client.updateRun(run.id, runUpdate);
   }
