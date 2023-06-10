@@ -204,6 +204,7 @@ const requiresOptionalDependency = [
   "vectorstores/milvus",
   "vectorstores/myscale",
   "vectorstores/redis",
+  "vectorstores/singlestore",
   "vectorstores/typesense",
   "vectorstores/tigris",
   "memory/zep",
