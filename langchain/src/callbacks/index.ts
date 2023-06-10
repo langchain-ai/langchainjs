@@ -24,4 +24,8 @@ export {
   CallbackManagerForToolRun,
   CallbackManagerOptions,
   Callbacks,
+  TraceGroup,
+  traceAsGroup,
 } from "./manager.js";
+
+export { awaitAllCallbacks, consumeCallback } from "./promises.js";

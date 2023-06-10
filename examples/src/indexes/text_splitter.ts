@@ -9,10 +9,10 @@ export const run = async () => {
     chunkSize: 7,
     chunkOverlap: 3,
   });
-  const output = splitter.createDocuments([text]);
+  const output = await splitter.createDocuments([text]);
   console.log({ output });
   /* Split documents */
-  const docOutput = splitter.splitDocuments([
+  const docOutput = await splitter.splitDocuments([
     new Document({ pageContent: text }),
   ]);
   console.log({ docOutput });

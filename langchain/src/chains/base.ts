@@ -143,7 +143,7 @@ export abstract class BaseChain extends BaseLangChain implements ChainInputs {
   async apply(
     inputs: ChainValues[],
     callbacks?: Callbacks[]
-  ): Promise<ChainValues> {
+  ): Promise<ChainValues[]> {
     return Promise.all(
       inputs.map(async (i, idx) => this.call(i, callbacks?.[idx]))
     );
@@ -188,6 +188,10 @@ export abstract class BaseChain extends BaseLangChain implements ChainInputs {
       case "vector_db_qa": {
         const { VectorDBQAChain } = await import("./vector_db_qa.js");
         return VectorDBQAChain.deserialize(data, values);
+      }
+      case "api_chain": {
+        const { APIChain } = await import("./api/api_chain.js");
+        return APIChain.deserialize(data);
       }
       default:
         throw new Error(

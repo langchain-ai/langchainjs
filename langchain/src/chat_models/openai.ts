@@ -7,7 +7,7 @@ import {
   ChatCompletionResponseMessageRoleEnum,
   ChatCompletionRequestMessage,
 } from "openai";
-import { isNode } from "../util/env.js";
+import { getEnvironmentVariable, isNode } from "../util/env.js";
 import {
   AzureOpenAIInput,
   OpenAICallOptions,
@@ -28,6 +28,7 @@ import {
 } from "../schema/index.js";
 import { getModelNameForTiktoken } from "../base_language/count_tokens.js";
 import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
+import { promptLayerTrackRequest } from "../util/prompt-layer.js";
 
 export { OpenAICallOptions, OpenAIChatInput, AzureOpenAIInput };
 
@@ -149,42 +150,26 @@ export class ChatOpenAI
     super(fields ?? {});
 
     const apiKey =
-      fields?.openAIApiKey ??
-      (typeof process !== "undefined"
-        ? // eslint-disable-next-line no-process-env
-          process.env?.OPENAI_API_KEY
-        : undefined);
+      fields?.openAIApiKey ?? getEnvironmentVariable("OPENAI_API_KEY");
 
     const azureApiKey =
       fields?.azureOpenAIApiKey ??
-      (typeof process !== "undefined"
-        ? // eslint-disable-next-line no-process-env
-          process.env?.AZURE_OPENAI_API_KEY
-        : undefined);
+      getEnvironmentVariable("AZURE_OPENAI_API_KEY");
     if (!azureApiKey && !apiKey) {
       throw new Error("(Azure) OpenAI API key not found");
     }
 
     const azureApiInstanceName =
       fields?.azureOpenAIApiInstanceName ??
-      (typeof process !== "undefined"
-        ? // eslint-disable-next-line no-process-env
-          process.env?.AZURE_OPENAI_API_INSTANCE_NAME
-        : undefined);
+      getEnvironmentVariable("AZURE_OPENAI_API_INSTANCE_NAME");
 
     const azureApiDeploymentName =
       fields?.azureOpenAIApiDeploymentName ??
-      (typeof process !== "undefined"
-        ? // eslint-disable-next-line no-process-env
-          process.env?.AZURE_OPENAI_API_DEPLOYMENT_NAME
-        : undefined);
+      getEnvironmentVariable("AZURE_OPENAI_API_DEPLOYMENT_NAME");
 
     const azureApiVersion =
       fields?.azureOpenAIApiVersion ??
-      (typeof process !== "undefined"
-        ? // eslint-disable-next-line no-process-env
-          process.env?.AZURE_OPENAI_API_VERSION
-        : undefined);
+      getEnvironmentVariable("AZURE_OPENAI_API_VERSION");
 
     this.modelName = fields?.modelName ?? this.modelName;
     this.modelKwargs = fields?.modelKwargs ?? {};
@@ -534,5 +519,143 @@ export class ChatOpenAI
         },
       }
     );
+  }
+}
+
+export class PromptLayerChatOpenAI extends ChatOpenAI {
+  promptLayerApiKey?: string;
+
+  plTags?: string[];
+
+  returnPromptLayerId?: boolean;
+
+  constructor(
+    fields?: ConstructorParameters<typeof ChatOpenAI>[0] & {
+      promptLayerApiKey?: string;
+      plTags?: string[];
+      returnPromptLayerId?: boolean;
+    }
+  ) {
+    super(fields);
+
+    this.promptLayerApiKey =
+      fields?.promptLayerApiKey ??
+      (typeof process !== "undefined"
+        ? // eslint-disable-next-line no-process-env
+          process.env?.PROMPTLAYER_API_KEY
+        : undefined);
+    this.plTags = fields?.plTags ?? [];
+    this.returnPromptLayerId = fields?.returnPromptLayerId ?? false;
+  }
+
+  async _generate(
+    messages: BaseChatMessage[],
+    options?: string[] | this["CallOptions"],
+    runManager?: CallbackManagerForLLMRun
+  ): Promise<ChatResult> {
+    const requestStartTime = Date.now();
+
+    let parsedOptions: this["CallOptions"];
+    if (Array.isArray(options)) {
+      parsedOptions = { stop: options } as this["CallOptions"];
+    } else if (options?.timeout && !options.signal) {
+      parsedOptions = {
+        ...options,
+        signal: AbortSignal.timeout(options.timeout),
+      };
+    } else {
+      parsedOptions = options ?? {};
+    }
+
+    const generatedResponses = await super._generate(
+      messages,
+      parsedOptions,
+      runManager
+    );
+    const requestEndTime = Date.now();
+
+    const _convertMessageToDict = (message: BaseChatMessage) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let messageDict: Record<string, any>;
+
+      if (message._getType() === "human") {
+        messageDict = { role: "user", content: message.text };
+      } else if (message._getType() === "ai") {
+        messageDict = { role: "assistant", content: message.text };
+      } else if (message._getType() === "system") {
+        messageDict = { role: "system", content: message.text };
+      } else if (message._getType() === "generic") {
+        messageDict = {
+          role: (message as ChatMessage).role,
+          content: message.text,
+        };
+      } else {
+        throw new Error(`Got unknown type ${message}`);
+      }
+
+      return messageDict;
+    };
+
+    const _createMessageDicts = (
+      messages: BaseChatMessage[],
+      callOptions?: this["CallOptions"]
+    ) => {
+      const params = {
+        ...this.invocationParams(),
+        model: this.modelName,
+      };
+
+      if (callOptions?.stop) {
+        if (Object.keys(params).includes("stop")) {
+          throw new Error("`stop` found in both the input and default params.");
+        }
+      }
+      const messageDicts = messages.map((message) =>
+        _convertMessageToDict(message)
+      );
+      return messageDicts;
+    };
+
+    for (let i = 0; i < generatedResponses.generations.length; i += 1) {
+      const generation = generatedResponses.generations[i];
+      const messageDicts = _createMessageDicts(messages, parsedOptions);
+
+      let promptLayerRequestId: string | undefined;
+      const parsedResp = [
+        {
+          content: generation.text,
+          role: messageTypeToOpenAIRole(generation.message._getType()),
+        },
+      ];
+
+      const promptLayerRespBody = await promptLayerTrackRequest(
+        this.caller,
+        "langchain.PromptLayerChatOpenAI",
+        messageDicts,
+        this._identifyingParams(),
+        this.plTags,
+        parsedResp,
+        requestStartTime,
+        requestEndTime,
+        this.promptLayerApiKey
+      );
+
+      if (this.returnPromptLayerId === true) {
+        if (promptLayerRespBody.success === true) {
+          promptLayerRequestId = promptLayerRespBody.request_id;
+        }
+
+        if (
+          !generation.generationInfo ||
+          typeof generation.generationInfo !== "object"
+        ) {
+          generation.generationInfo = {};
+        }
+
+        generation.generationInfo.promptLayerRequestId = promptLayerRequestId;
+      }
+    }
+
+    return generatedResponses;
   }
 }

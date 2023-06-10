@@ -22,14 +22,16 @@ export class ZeroShotAgentOutputParser extends AgentActionOutputParser {
       };
     }
 
-    const match = /Action: (.*)\nAction Input: (.*)/s.exec(text);
+    const match = /Action: ([\s\S]*?)(?:\nAction Input: ([\s\S]*?))?$/.exec(
+      text
+    );
     if (!match) {
       throw new Error(`Could not parse LLM output: ${text}`);
     }
 
     return {
       tool: match[1].trim(),
-      toolInput: match[2].trim().replace(/^"+|"+$/g, "") ?? "",
+      toolInput: match[2].trim().replace(/^("+)(.*?)(\1)$/, "$2") ?? "",
       log: text,
     };
   }

@@ -27,3 +27,4 @@ Chinook_Sqlite.sql
 *.swp
 *.swo
 
+.node-version

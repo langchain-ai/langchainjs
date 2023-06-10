@@ -1,3 +1,7 @@
+---
+sidebar_class_name: node-only
+---
+
 # Prisma
 
 For augmenting existing models in PostgreSQL database with vector search, Langchain supports using [Prisma](https://www.prisma.io/) together with PostgreSQL and [`pgvector`](https://github.com/pgvector/pgvector) Postgres extension.
@@ -67,14 +71,19 @@ npx prisma migrate dev
 
 ## Usage
 
+:::warning
+Table names and column names (in fields such as `tableName`, `vectorColumnName`, `columns` and `filter`) are passed into SQL queries directly without parametrisation.
+These fields must be sanitized beforehand to avoid SQL injection.
+:::
+
 import CodeBlock from "@theme/CodeBlock";
 import Example from "@examples/indexes/vector_stores/prisma_vectorstore/prisma.ts";
 import Schema from "@examples/indexes/vector_stores/prisma_vectorstore/prisma/schema.prisma";
 
-Use the `withModel` method to get proper type hints for `metadata` field:
-
 <CodeBlock language="typescript">{Example}</CodeBlock>
 
-The sample above uses the following schema:
+The samples above uses the following schema:
 
 <CodeBlock language="prisma">{Schema}</CodeBlock>
+
+You can remove `namespace` if you don't need it.

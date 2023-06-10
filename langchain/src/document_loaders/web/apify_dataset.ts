@@ -6,6 +6,7 @@ import {
 
 import { Document } from "../../document.js";
 import { BaseDocumentLoader, DocumentLoader } from "../base.js";
+import { getEnvironmentVariable } from "../../util/env.js";
 
 export type ApifyDatasetMappingFunction = (
   item: Record<string | number, unknown>
@@ -43,11 +44,7 @@ export class ApifyDatasetLoader
   }
 
   private static _getApifyApiToken(config?: { token?: string }) {
-    return (
-      config?.token ??
-      // eslint-disable-next-line no-process-env
-      (typeof process !== "undefined" ? process.env.APIFY_API_TOKEN : undefined)
-    );
+    return config?.token ?? getEnvironmentVariable("APIFY_API_TOKEN");
   }
 
   async load(): Promise<Document[]> {

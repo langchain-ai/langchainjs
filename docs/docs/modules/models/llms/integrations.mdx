@@ -3,6 +3,8 @@ sidebar_position: 3
 sidebar_label: Integrations
 ---
 
+import CodeBlock from "@theme/CodeBlock";
+
 # Integrations: LLMs
 
 LangChain offers a number of LLM implementations that integrate with various model providers. These are:
@@ -39,6 +41,47 @@ const res = await model.call(
 );
 console.log({ res });
 ```
+
+## Google Vertex AI
+
+The Vertex AI implementation is meant to be used in Node.js and not
+directly in a browser, since it requires a service account to use.
+
+Before running this code, you should make sure the Vertex AI API is
+enabled for the relevant project in your Google Cloud dashboard and that you've authenticated to
+Google Cloud using one of these methods:
+
+- You are logged into an account (using `gcloud auth application-default login`)
+  permitted to that project.
+- You are running on a machine using a service account that is permitted
+  to the project.
+- You have downloaded the credentials for a service account that is permitted
+  to the project and set the `GOOGLE_APPLICATION_CREDENTIALS` environment
+  variable to the path of this file.
+
+```bash npm2yarn
+npm install google-auth-library
+```
+
+import GoogleVertexAIExample from "@examples/llms/googlevertexai.ts";
+
+<CodeBlock language="typescript">{GoogleVertexAIExample}</CodeBlock>
+
+Google also has separate models for their "Codey" code generation models.
+For various reasons, these use a different class.
+
+The "code-gecko" model is the default and is useful for code completion:
+
+import GoogleVertexAICodeGeckoExample from "@examples/llms/googlevertexai-code-gecko.ts";
+
+<CodeBlock language="typescript">{GoogleVertexAICodeGeckoExample}</CodeBlock>
+
+While the "code-bison" model is better at larger code generation based on
+a text prompt:
+
+import GoogleVertexAICodeBisonExample from "@examples/llms/googlevertexai-code-bison.ts";
+
+<CodeBlock language="typescript">{GoogleVertexAICodeBisonExample}</CodeBlock>
 
 ## `HuggingFaceInference`
 
@@ -90,11 +133,31 @@ const model = new Replicate({
     "daanelson/flan-t5:04e422a9b85baed86a4f24981d7f9953e20c5fd82f6103b74ebc431588e1cec8",
   apiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.REPLICATE_API_KEY
 });
-const res = await modelA.call(
+const res = await model.call(
   "What would be a good company name a company that makes colorful socks?"
 );
 console.log({ res });
 ```
+
+## AWS `SageMakerEndpoint`
+
+Check [Amazon SageMaker JumpStart](https://aws.amazon.com/sagemaker/jumpstart/) for a list of available models, and how to deploy your own.
+
+```bash npm2yarn
+npm install @aws-sdk/client-sagemaker-runtime
+```
+
+import SageMakerEndpointExample from "@examples/models/llm/sagemaker_endpoint.ts";
+
+<CodeBlock language="typescript">{SageMakerEndpointExample}</CodeBlock>
+
+## `AI21`
+
+You can get started with AI21Labs' Jurassic family of models, as well as see a full list of available foundational models, by signing up for an API key [on their website](https://www.ai21.com/).
+
+import AI21Example from "@examples/models/llm/ai21.ts";
+
+<CodeBlock language="typescript">{AI21Example}</CodeBlock>
 
 ## Additional LLM Implementations
 
@@ -116,6 +179,48 @@ const model = new PromptLayerOpenAI({
 const res = await model.call(
   "What would be a good company name a company that makes colorful socks?"
 );
+```
+
+You can also pass in the optional `returnPromptLayerId` boolean to get a `promptLayerRequestId` like below
+
+```typescript
+import { PromptLayerOpenAI } from "langchain/llms/openai";
+
+const model = new PromptLayerOpenAI({
+  temperature: 0.9,
+  openAIApiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.OPENAI_API_KEY
+  promptLayerApiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.PROMPTLAYER_API_KEY
+  returnPromptLayerId: true,
+});
+const res = await model.generate([
+  "What would be a good company name a company that makes colorful socks?",
+]);
+
+console.log(JSON.stringify(res, null, 3));
+
+/*
+  {
+    "generations": [
+      [
+        {
+          "text": " Socktastic!",
+          "generationInfo": {
+            "finishReason": "stop",
+            "logprobs": null,
+            "promptLayerRequestId": 2066417
+          }
+        }
+      ]
+    ],
+    "llmOutput": {
+      "tokenUsage": {
+        "completionTokens": 5,
+        "promptTokens": 23,
+        "totalTokens": 28
+      }
+    }
+  }
+*/
 ```
 
 ### Azure `PromptLayerOpenAI`

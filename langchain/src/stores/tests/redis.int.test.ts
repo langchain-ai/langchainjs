@@ -15,7 +15,13 @@ afterAll(async () => {
   await client.disconnect();
 });
 
-test.skip("Test Redis history store", async () => {
+/**
+ * To run this integration test, you need to have a Redis server running locally.
+ *
+ * `docker run -p 6379:6379 -p 8001:8001 redis/redis-stack:latest`
+ */
+
+test("Test Redis history store", async () => {
   const chatHistory = new RedisChatMessageHistory({
     sessionId: new Date().toISOString(),
   });
@@ -35,7 +41,7 @@ test.skip("Test Redis history store", async () => {
   expect(resultWithHistory).toEqual(expectedMessages);
 });
 
-test.skip("Test clear Redis history store", async () => {
+test("Test clear Redis history store", async () => {
   const chatHistory = new RedisChatMessageHistory({
     sessionId: new Date().toISOString(),
   });
@@ -57,7 +63,7 @@ test.skip("Test clear Redis history store", async () => {
   expect(blankResult).toStrictEqual([]);
 });
 
-test.skip("Test Redis history with a TTL", async () => {
+test("Test Redis history with a TTL", async () => {
   const chatHistory = new RedisChatMessageHistory({
     sessionId: new Date().toISOString(),
     sessionTTL: 5,
@@ -77,13 +83,13 @@ test.skip("Test Redis history with a TTL", async () => {
   const resultWithHistory = await chatHistory.getMessages();
   expect(resultWithHistory).toEqual(expectedMessages);
 
-  await new Promise((resolve) => setTimeout(resolve, 5000));
+  await new Promise((resolve) => setTimeout(resolve, 6000));
 
   const expiredResult = await chatHistory.getMessages();
   expect(expiredResult).toStrictEqual([]);
 });
 
-test.skip("Test Redis memory with Buffer Memory", async () => {
+test("Test Redis memory with Buffer Memory", async () => {
   const memory = new BufferMemory({
     returnMessages: true,
     chatHistory: new RedisChatMessageHistory({
@@ -105,7 +111,7 @@ test.skip("Test Redis memory with Buffer Memory", async () => {
   expect(result2).toStrictEqual({ history: expectedHistory });
 });
 
-test.skip("Test Redis memory with LLM Chain", async () => {
+test("Test Redis memory with LLM Chain", async () => {
   const memory = new BufferMemory({
     chatHistory: new RedisChatMessageHistory({
       sessionId: new Date().toISOString(),
