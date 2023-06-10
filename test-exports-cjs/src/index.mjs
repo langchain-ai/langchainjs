@@ -5,7 +5,7 @@ import { ChatPromptTemplate } from "langchain/prompts";
 import { loadPrompt } from "langchain/prompts/load";
 import { HNSWLib } from "langchain/vectorstores/hnswlib";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
-import { InMemoryDocstore, Document } from "langchain/docstore";
+import { Document } from "langchain/document";
 import { CSVLoader } from "langchain/document_loaders/fs/csv";
 
 // Test exports
@@ -21,7 +21,6 @@ const { HierarchicalNSW } = await HNSWLib.imports();
 const vs = new HNSWLib(new OpenAIEmbeddings({ openAIApiKey: "sk-XXXX" }), {
   space: "ip",
   numDimensions: 3,
-  docstore: new InMemoryDocstore(),
   index: new HierarchicalNSW("ip", 3),
 });
 

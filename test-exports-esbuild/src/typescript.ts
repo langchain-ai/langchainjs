@@ -5,7 +5,7 @@ import { ChatPromptTemplate } from "langchain/prompts";
 import { loadPrompt } from "langchain/prompts/load";
 import { HNSWLib } from "langchain/vectorstores/hnswlib";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
-import { InMemoryDocstore, Document } from "langchain/docstore";
+import { Document } from "langchain/document";
 import { CSVLoader } from "langchain/document_loaders/fs/csv";
 
 async function test(useAzure: boolean = false) {
@@ -32,7 +32,6 @@ async function test(useAzure: boolean = false) {
   const vs = new HNSWLib(new OpenAIEmbeddings(openAIParameters), {
     space: "ip",
     numDimensions: 3,
-    docstore: new InMemoryDocstore(),
     index: new HierarchicalNSW("ip", 3),
   });
 

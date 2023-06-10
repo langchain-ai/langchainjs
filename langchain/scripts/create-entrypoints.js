@@ -73,8 +73,6 @@ const entrypoints = {
   "memory/zep": "memory/zep",
   // document
   document: "document",
-  // docstore
-  docstore: "docstore/index",
   // document_loaders
   document_loaders: "document_loaders/index",
   "document_loaders/base": "document_loaders/base",
@@ -144,6 +142,8 @@ const entrypoints = {
   "cache/momento": "cache/momento",
   "cache/redis": "cache/redis",
   // stores
+  "stores/doc/in_memory": "stores/doc/in_memory",
+  "stores/doc/gcs": "stores/doc/gcs",
   "stores/file/in_memory": "stores/file/in_memory",
   "stores/file/node": "stores/file/node",
   "stores/message/dynamodb": "stores/message/dynamodb",
@@ -245,6 +245,7 @@ const requiresOptionalDependency = [
   "chains/query_constructor/ir",
   "cache/momento",
   "cache/redis",
+  "stores/doc/gcs",
   "stores/file/node",
   "stores/message/dynamodb",
   "stores/message/momento",

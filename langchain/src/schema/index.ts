@@ -215,3 +215,9 @@ export abstract class BaseEntityStore {
 
   abstract clear(): Promise<void>;
 }
+
+export abstract class Docstore {
+  abstract search(search: string): Promise<Document>;
+
+  abstract add(texts: Record<string, Document>): Promise<void>;
+}
