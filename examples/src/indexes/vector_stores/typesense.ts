@@ -34,7 +34,9 @@ const typesenseVectorStoreConfig = {
   },
   // Optional search parameters to be passed to Typesense when searching
   searchParams: {
+    q: "*",
     filter_by: "foo:[fooo]",
+    query_by: "",
   },
   // You can override the default Typesense import function if you want to do something more complex
   // Default import function:
