@@ -4,11 +4,7 @@
     "outDir": "../dist",
     "rootDir": "./src",
     "target": "ES2021",
-    "lib": [
-      "ES2021",
-      "ES2022.Object",
-      "DOM"
-    ],
+    "lib": ["ES2021", "ES2022.Object", "DOM"],
     "module": "ES2020",
     "moduleResolution": "nodenext",
     "esModuleInterop": true,
@@ -22,14 +18,8 @@
     "allowJs": true,
     "strict": true
   },
-  "include": [
-    "src/**/*"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "docs"
-  ],
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "docs"],
   "typedocOptions": {
     "entryPoints": [
       "src/agents/index.ts",
@@ -54,6 +44,7 @@
       "src/llms/base.ts",
       "src/llms/openai.ts",
       "src/llms/ai21.ts",
+      "src/llms/aleph_alpha.ts",
       "src/llms/cohere.ts",
       "src/llms/hf.ts",
       "src/llms/replicate.ts",

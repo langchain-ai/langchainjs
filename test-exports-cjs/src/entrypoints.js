@@ -8,6 +8,7 @@ const embeddings_openai = require("langchain/embeddings/openai");
 const llms_base = require("langchain/llms/base");
 const llms_openai = require("langchain/llms/openai");
 const llms_ai21 = require("langchain/llms/ai21");
+const llms_aleph_alpha = require("langchain/llms/aleph_alpha");
 const prompts = require("langchain/prompts");
 const vectorstores_base = require("langchain/vectorstores/base");
 const vectorstores_memory = require("langchain/vectorstores/memory");
