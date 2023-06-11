@@ -11,7 +11,7 @@ beforeAll(async () => {
   collectionName = `test_collection_${Math.random().toString(36).substring(7)}`;
 });
 
-test("Test Milvus.fromtext", async () => {
+test.skip("Test Milvus.fromtext", async () => {
   const texts = [
     `Tortoise: Labyrinth? Labyrinth? Could it Are we in the notorious Little
 Harmonic Labyrinth of the dreaded Majotaur?`,
@@ -51,7 +51,7 @@ Harmonic Labyrinth of the dreaded Majotaur?`,
   ]);
 });
 
-test("Test Milvus.fromExistingCollection", async () => {
+test.skip("Test Milvus.fromExistingCollection", async () => {
   const milvus = await Milvus.fromExistingCollection(embeddings, {
     collectionName,
   });

@@ -18,6 +18,7 @@ import {
   LangChainTracer,
   LangChainTracerFields,
 } from "./handlers/tracer_langchain.js";
+import { consumeCallback } from "./promises.js";
 
 type BaseCallbackManagerMethods = {
   [K in keyof CallbackHandlerMethods]?: (
@@ -56,15 +57,17 @@ class BaseRunManager {
 
   async handleText(text: string): Promise<void> {
     await Promise.all(
-      this.handlers.map(async (handler) => {
-        try {
-          await handler.handleText?.(text, this.runId, this._parentRunId);
-        } catch (err) {
-          console.error(
-            `Error in handler ${handler.constructor.name}, handleText: ${err}`
-          );
-        }
-      })
+      this.handlers.map((handler) =>
+        consumeCallback(async () => {
+          try {
+            await handler.handleText?.(text, this.runId, this._parentRunId);
+          } catch (err) {
+            console.error(
+              `Error in handler ${handler.constructor.name}, handleText: ${err}`
+            );
+          }
+        }, handler.awaitHandlers)
+      )
     );
   }
 }
@@ -75,53 +78,67 @@ export class CallbackManagerForLLMRun
 {
   async handleLLMNewToken(token: string): Promise<void> {
     await Promise.all(
-      this.handlers.map(async (handler) => {
-        if (!handler.ignoreLLM) {
-          try {
-            await handler.handleLLMNewToken?.(
-              token,
-              this.runId,
-              this._parentRunId
-            );
-          } catch (err) {
-            console.error(
-              `Error in handler ${handler.constructor.name}, handleLLMNewToken: ${err}`
-            );
+      this.handlers.map((handler) =>
+        consumeCallback(async () => {
+          if (!handler.ignoreLLM) {
+            try {
+              await handler.handleLLMNewToken?.(
+                token,
+                this.runId,
+                this._parentRunId
+              );
+            } catch (err) {
+              console.error(
+                `Error in handler ${handler.constructor.name}, handleLLMNewToken: ${err}`
+              );
+            }
           }
-        }
-      })
+        }, handler.awaitHandlers)
+      )
     );
   }
 
   async handleLLMError(err: Error | unknown): Promise<void> {
     await Promise.all(
-      this.handlers.map(async (handler) => {
-        if (!handler.ignoreLLM) {
-          try {
-            await handler.handleLLMError?.(err, this.runId, this._parentRunId);
-          } catch (err) {
-            console.error(
-              `Error in handler ${handler.constructor.name}, handleLLMError: ${err}`
-            );
+      this.handlers.map((handler) =>
+        consumeCallback(async () => {
+          if (!handler.ignoreLLM) {
+            try {
+              await handler.handleLLMError?.(
+                err,
+                this.runId,
+                this._parentRunId
+              );
+            } catch (err) {
+              console.error(
+                `Error in handler ${handler.constructor.name}, handleLLMError: ${err}`
+              );
+            }
           }
-        }
-      })
+        }, handler.awaitHandlers)
+      )
     );
   }
 
   async handleLLMEnd(output: LLMResult): Promise<void> {
     await Promise.all(
-      this.handlers.map(async (handler) => {
-        if (!handler.ignoreLLM) {
-          try {
-            await handler.handleLLMEnd?.(output, this.runId, this._parentRunId);
-          } catch (err) {
-            console.error(
-              `Error in handler ${handler.constructor.name}, handleLLMEnd: ${err}`
-            );
+      this.handlers.map((handler) =>
+        consumeCallback(async () => {
+          if (!handler.ignoreLLM) {
+            try {
+              await handler.handleLLMEnd?.(
+                output,
+                this.runId,
+                this._parentRunId
+              );
+            } catch (err) {
+              console.error(
+                `Error in handler ${handler.constructor.name}, handleLLMEnd: ${err}`
+              );
+            }
           }
-        }
-      })
+        }, handler.awaitHandlers)
+      )
     );
   }
 }
@@ -139,81 +156,89 @@ export class CallbackManagerForChainRun
 
   async handleChainError(err: Error | unknown): Promise<void> {
     await Promise.all(
-      this.handlers.map(async (handler) => {
-        if (!handler.ignoreChain) {
-          try {
-            await handler.handleChainError?.(
-              err,
-              this.runId,
-              this._parentRunId
-            );
-          } catch (err) {
-            console.error(
-              `Error in handler ${handler.constructor.name}, handleChainError: ${err}`
-            );
+      this.handlers.map((handler) =>
+        consumeCallback(async () => {
+          if (!handler.ignoreChain) {
+            try {
+              await handler.handleChainError?.(
+                err,
+                this.runId,
+                this._parentRunId
+              );
+            } catch (err) {
+              console.error(
+                `Error in handler ${handler.constructor.name}, handleChainError: ${err}`
+              );
+            }
           }
-        }
-      })
+        }, handler.awaitHandlers)
+      )
     );
   }
 
   async handleChainEnd(output: ChainValues): Promise<void> {
     await Promise.all(
-      this.handlers.map(async (handler) => {
-        if (!handler.ignoreChain) {
-          try {
-            await handler.handleChainEnd?.(
-              output,
-              this.runId,
-              this._parentRunId
-            );
-          } catch (err) {
-            console.error(
-              `Error in handler ${handler.constructor.name}, handleChainEnd: ${err}`
-            );
+      this.handlers.map((handler) =>
+        consumeCallback(async () => {
+          if (!handler.ignoreChain) {
+            try {
+              await handler.handleChainEnd?.(
+                output,
+                this.runId,
+                this._parentRunId
+              );
+            } catch (err) {
+              console.error(
+                `Error in handler ${handler.constructor.name}, handleChainEnd: ${err}`
+              );
+            }
           }
-        }
-      })
+        }, handler.awaitHandlers)
+      )
     );
   }
 
   async handleAgentAction(action: AgentAction): Promise<void> {
     await Promise.all(
-      this.handlers.map(async (handler) => {
-        if (!handler.ignoreAgent) {
-          try {
-            await handler.handleAgentAction?.(
-              action,
-              this.runId,
-              this._parentRunId
-            );
-          } catch (err) {
-            console.error(
-              `Error in handler ${handler.constructor.name}, handleAgentAction: ${err}`
-            );
+      this.handlers.map((handler) =>
+        consumeCallback(async () => {
+          if (!handler.ignoreAgent) {
+            try {
+              await handler.handleAgentAction?.(
+                action,
+                this.runId,
+                this._parentRunId
+              );
+            } catch (err) {
+              console.error(
+                `Error in handler ${handler.constructor.name}, handleAgentAction: ${err}`
+              );
+            }
           }
-        }
-      })
+        }, handler.awaitHandlers)
+      )
     );
   }
 
   async handleAgentEnd(action: AgentFinish): Promise<void> {
     await Promise.all(
-      this.handlers.map(async (handler) => {
-        if (!handler.ignoreAgent) {
-          try {
-            await handler.handleAgentEnd?.(
-              action,
-              this.runId,
-              this._parentRunId
-            );
-          } catch (err) {
-            console.error(
-              `Error in handler ${handler.constructor.name}, handleAgentEnd: ${err}`
-            );
+      this.handlers.map((handler) =>
+        consumeCallback(async () => {
+          if (!handler.ignoreAgent) {
+            try {
+              await handler.handleAgentEnd?.(
+                action,
+                this.runId,
+                this._parentRunId
+              );
+            } catch (err) {
+              console.error(
+                `Error in handler ${handler.constructor.name}, handleAgentEnd: ${err}`
+              );
+            }
           }
-        }
-      })
+        }, handler.awaitHandlers)
+      )
     );
   }
 }
@@ -231,37 +256,45 @@ export class CallbackManagerForToolRun
 
   async handleToolError(err: Error | unknown): Promise<void> {
     await Promise.all(
-      this.handlers.map(async (handler) => {
-        if (!handler.ignoreAgent) {
-          try {
-            await handler.handleToolError?.(err, this.runId, this._parentRunId);
-          } catch (err) {
-            console.error(
-              `Error in handler ${handler.constructor.name}, handleToolError: ${err}`
-            );
+      this.handlers.map((handler) =>
+        consumeCallback(async () => {
+          if (!handler.ignoreAgent) {
+            try {
+              await handler.handleToolError?.(
+                err,
+                this.runId,
+                this._parentRunId
+              );
+            } catch (err) {
+              console.error(
+                `Error in handler ${handler.constructor.name}, handleToolError: ${err}`
+              );
+            }
           }
-        }
-      })
+        }, handler.awaitHandlers)
+      )
     );
   }
 
   async handleToolEnd(output: string): Promise<void> {
     await Promise.all(
-      this.handlers.map(async (handler) => {
-        if (!handler.ignoreAgent) {
-          try {
-            await handler.handleToolEnd?.(
-              output,
-              this.runId,
-              this._parentRunId
-            );
-          } catch (err) {
-            console.error(
-              `Error in handler ${handler.constructor.name}, handleToolEnd: ${err}`
-            );
+      this.handlers.map((handler) =>
+        consumeCallback(async () => {
+          if (!handler.ignoreAgent) {
+            try {
+              await handler.handleToolEnd?.(
+                output,
+                this.runId,
+                this._parentRunId
+              );
+            } catch (err) {
+              console.error(
+                `Error in handler ${handler.constructor.name}, handleToolEnd: ${err}`
+              );
+            }
           }
-        }
-      })
+        }, handler.awaitHandlers)
+      )
     );
   }
 }
@@ -293,23 +326,25 @@ export class CallbackManager
     extraParams: Record<string, unknown> | undefined = undefined
   ): Promise<CallbackManagerForLLMRun> {
     await Promise.all(
-      this.handlers.map(async (handler) => {
-        if (!handler.ignoreLLM) {
-          try {
-            await handler.handleLLMStart?.(
-              llm,
-              prompts,
-              runId,
-              this._parentRunId,
-              extraParams
-            );
-          } catch (err) {
-            console.error(
-              `Error in handler ${handler.constructor.name}, handleLLMStart: ${err}`
-            );
+      this.handlers.map((handler) =>
+        consumeCallback(async () => {
+          if (!handler.ignoreLLM) {
+            try {
+              await handler.handleLLMStart?.(
+                llm,
+                prompts,
+                runId,
+                this._parentRunId,
+                extraParams
+              );
+            } catch (err) {
+              console.error(
+                `Error in handler ${handler.constructor.name}, handleLLMStart: ${err}`
+              );
+            }
           }
-        }
-      })
+        }, handler.awaitHandlers)
+      )
     );
     return new CallbackManagerForLLMRun(
       runId,
@@ -328,34 +363,36 @@ export class CallbackManager
   ): Promise<CallbackManagerForLLMRun> {
     let messageStrings: string[];
     await Promise.all(
-      this.handlers.map(async (handler) => {
-        if (!handler.ignoreLLM) {
-          try {
-            if (handler.handleChatModelStart)
-              await handler.handleChatModelStart?.(
-                llm,
-                messages,
-                runId,
-                this._parentRunId,
-                extraParams
-              );
-            else if (handler.handleLLMStart) {
-              messageStrings = messages.map((x) => getBufferString(x));
-              await handler.handleLLMStart?.(
-                llm,
-                messageStrings,
-                runId,
-                this._parentRunId,
-                extraParams
+      this.handlers.map((handler) =>
+        consumeCallback(async () => {
+          if (!handler.ignoreLLM) {
+            try {
+              if (handler.handleChatModelStart)
+                await handler.handleChatModelStart?.(
+                  llm,
+                  messages,
+                  runId,
+                  this._parentRunId,
+                  extraParams
+                );
+              else if (handler.handleLLMStart) {
+                messageStrings = messages.map((x) => getBufferString(x));
+                await handler.handleLLMStart?.(
+                  llm,
+                  messageStrings,
+                  runId,
+                  this._parentRunId,
+                  extraParams
+                );
+              }
+            } catch (err) {
+              console.error(
+                `Error in handler ${handler.constructor.name}, handleLLMStart: ${err}`
               );
             }
-          } catch (err) {
-            console.error(
-              `Error in handler ${handler.constructor.name}, handleLLMStart: ${err}`
-            );
           }
-        }
-      })
+        }, handler.awaitHandlers)
+      )
     );
     return new CallbackManagerForLLMRun(
       runId,
@@ -371,22 +408,24 @@ export class CallbackManager
     runId = uuidv4()
   ): Promise<CallbackManagerForChainRun> {
     await Promise.all(
-      this.handlers.map(async (handler) => {
-        if (!handler.ignoreChain) {
-          try {
-            await handler.handleChainStart?.(
-              chain,
-              inputs,
-              runId,
-              this._parentRunId
-            );
-          } catch (err) {
-            console.error(
-              `Error in handler ${handler.constructor.name}, handleChainStart: ${err}`
-            );
+      this.handlers.map((handler) =>
+        consumeCallback(async () => {
+          if (!handler.ignoreChain) {
+            try {
+              await handler.handleChainStart?.(
+                chain,
+                inputs,
+                runId,
+                this._parentRunId
+              );
+            } catch (err) {
+              console.error(
+                `Error in handler ${handler.constructor.name}, handleChainStart: ${err}`
+              );
+            }
           }
-        }
-      })
+        }, handler.awaitHandlers)
+      )
     );
     return new CallbackManagerForChainRun(
       runId,
@@ -402,22 +441,24 @@ export class CallbackManager
     runId = uuidv4()
   ): Promise<CallbackManagerForToolRun> {
     await Promise.all(
-      this.handlers.map(async (handler) => {
-        if (!handler.ignoreAgent) {
-          try {
-            await handler.handleToolStart?.(
-              tool,
-              input,
-              runId,
-              this._parentRunId
-            );
-          } catch (err) {
-            console.error(
-              `Error in handler ${handler.constructor.name}, handleToolStart: ${err}`
-            );
+      this.handlers.map((handler) =>
+        consumeCallback(async () => {
+          if (!handler.ignoreAgent) {
+            try {
+              await handler.handleToolStart?.(
+                tool,
+                input,
+                runId,
+                this._parentRunId
+              );
+            } catch (err) {
+              console.error(
+                `Error in handler ${handler.constructor.name}, handleToolStart: ${err}`
+              );
+            }
           }
-        }
-      })
+        }, handler.awaitHandlers)
+      )
     );
     return new CallbackManagerForToolRun(
       runId,

@@ -14,6 +14,8 @@ import {
 class FakeCallbackHandler extends BaseCallbackHandler {
   name = `fake-${uuid.v4()}`;
 
+  awaitHandlers = true;
+
   starts = 0;
 
   ends = 0;
