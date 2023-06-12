@@ -178,9 +178,6 @@
     "document.cjs",
     "document.js",
     "document.d.ts",
-    "docstore.cjs",
-    "docstore.js",
-    "docstore.d.ts",
     "document_loaders.cjs",
     "document_loaders.js",
     "document_loaders.d.ts",
@@ -355,6 +352,12 @@
     "cache/redis.cjs",
     "cache/redis.js",
     "cache/redis.d.ts",
+    "stores/doc/in_memory.cjs",
+    "stores/doc/in_memory.js",
+    "stores/doc/in_memory.d.ts",
+    "stores/doc/gcs.cjs",
+    "stores/doc/gcs.js",
+    "stores/doc/gcs.d.ts",
     "stores/file/in_memory.cjs",
     "stores/file/in_memory.js",
     "stores/file/in_memory.d.ts",
@@ -426,6 +429,7 @@
     "@getmetal/metal-sdk": "^4.0.0",
     "@getzep/zep-js": "^0.3.1",
     "@gomomento/sdk": "^1.23.0",
+    "@google-cloud/storage": "^6.10.1",
     "@huggingface/inference": "^1.5.1",
     "@jest/globals": "^29.5.0",
     "@opensearch-project/opensearch": "^2.2.0",
@@ -503,6 +507,7 @@
     "@getmetal/metal-sdk": "*",
     "@getzep/zep-js": "^0.3.1",
     "@gomomento/sdk": "^1.23.0",
+    "@google-cloud/storage": "^6.10.1",
     "@huggingface/inference": "^1.5.1",
     "@opensearch-project/opensearch": "*",
     "@pinecone-database/pinecone": "*",
@@ -566,6 +571,9 @@
       "optional": true
     },
     "@gomomento/sdk": {
+      "optional": true
+    },
+    "@google-cloud/storage": {
       "optional": true
     },
     "@huggingface/inference": {
@@ -1014,11 +1022,6 @@
       "import": "./document.js",
       "require": "./document.cjs"
     },
-    "./docstore": {
-      "types": "./docstore.d.ts",
-      "import": "./docstore.js",
-      "require": "./docstore.cjs"
-    },
     "./document_loaders": {
       "node": {
         "types": "./document_loaders.d.ts",
@@ -1314,6 +1317,16 @@
       "types": "./cache/redis.d.ts",
       "import": "./cache/redis.js",
       "require": "./cache/redis.cjs"
+    },
+    "./stores/doc/in_memory": {
+      "types": "./stores/doc/in_memory.d.ts",
+      "import": "./stores/doc/in_memory.js",
+      "require": "./stores/doc/in_memory.cjs"
+    },
+    "./stores/doc/gcs": {
+      "types": "./stores/doc/gcs.d.ts",
+      "import": "./stores/doc/gcs.js",
+      "require": "./stores/doc/gcs.cjs"
     },
     "./stores/file/in_memory": {
       "types": "./stores/file/in_memory.d.ts",

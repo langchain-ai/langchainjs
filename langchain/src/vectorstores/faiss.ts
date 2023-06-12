@@ -4,10 +4,10 @@ import * as uuid from "uuid";
 import { Embeddings } from "../embeddings/base.js";
 import { SaveableVectorStore } from "./base.js";
 import { Document } from "../document.js";
-import { InMemoryDocstore } from "../docstore/index.js";
+import { SynchronousInMemoryDocstore } from "../stores/doc/in_memory.js";
 
 export interface FaissLibArgs {
-  docstore?: InMemoryDocstore;
+  docstore?: SynchronousInMemoryDocstore;
   index?: IndexFlatL2;
   mapping?: Record<number, string>;
 }
@@ -17,7 +17,7 @@ export class FaissStore extends SaveableVectorStore {
 
   _mapping: Record<number, string>;
 
-  docstore: InMemoryDocstore;
+  docstore: SynchronousInMemoryDocstore;
 
   args: FaissLibArgs;
 
@@ -27,7 +27,7 @@ export class FaissStore extends SaveableVectorStore {
     this._index = args.index;
     this._mapping = args.mapping ?? {};
     this.embeddings = embeddings;
-    this.docstore = args?.docstore ?? new InMemoryDocstore();
+    this.docstore = args?.docstore ?? new SynchronousInMemoryDocstore();
   }
 
   async addDocuments(documents: Document[]): Promise<void> {
@@ -70,7 +70,7 @@ export class FaissStore extends SaveableVectorStore {
       );
     }
 
-    const docstoreSize = this.docstore.count;
+    const docstoreSize = this.index.ntotal();
     for (let i = 0; i < vectors.length; i += 1) {
       const documentId = uuid.v4();
       const id = docstoreSize + i;
@@ -138,7 +138,7 @@ export class FaissStore extends SaveableVectorStore {
       readStore(directory),
       readIndex(directory),
     ]);
-    const docstore = new InMemoryDocstore(new Map(docstoreFiles));
+    const docstore = new SynchronousInMemoryDocstore(new Map(docstoreFiles));
     return new this(embeddings, { docstore, index, mapping });
   }
 
@@ -159,8 +159,8 @@ export class FaissStore extends SaveableVectorStore {
     class PyInMemoryDocstore {
       _dict: Map<string, PyDocument>;
 
-      toInMemoryDocstore(): InMemoryDocstore {
-        const s = new InMemoryDocstore();
+      toInMemoryDocstore(): SynchronousInMemoryDocstore {
+        const s = new SynchronousInMemoryDocstore();
         for (const [key, value] of Object.entries(this._dict)) {
           s._docs.set(key, value.toDocument());
         }
@@ -215,7 +215,7 @@ export class FaissStore extends SaveableVectorStore {
     metadatas: object[] | object,
     embeddings: Embeddings,
     dbConfig?: {
-      docstore?: InMemoryDocstore;
+      docstore?: SynchronousInMemoryDocstore;
     }
   ): Promise<FaissStore> {
     const docs: Document[] = [];
@@ -234,7 +234,7 @@ export class FaissStore extends SaveableVectorStore {
     docs: Document[],
     embeddings: Embeddings,
     dbConfig?: {
-      docstore?: InMemoryDocstore;
+      docstore?: SynchronousInMemoryDocstore;
     }
   ): Promise<FaissStore> {
     const args: FaissLibArgs = {

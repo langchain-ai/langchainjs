@@ -150,6 +150,6 @@ You will have to make `fetch` available globally, either:
 - run your application with `NODE_OPTIONS='--experimental-fetch' node ...`, or
 - install `node-fetch` and follow the instructions [here](https://github.com/node-fetch/node-fetch#providing-global-access)
 
-Additionally you'll have to polyfill `unstructuredClone`, eg. by installing `core-js` and following the instructions [here](https://github.com/zloirock/core-js).
+Additionally you'll have to polyfill `structuredClone`, eg. by installing `core-js` and following the instructions [here](https://github.com/zloirock/core-js).
 
 If you are running this on Node.js 18+, you do not need to do anything.
