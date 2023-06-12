@@ -111,7 +111,7 @@ export class NotionAPILoader extends BaseDocumentLoader {
       Object.entries(page).filter(([key, _]) => key !== "id")
     );
     return {
-      metadata,
+      ...metadata,
       notionId: page.id,
       properties: this.parsePageProperties(page),
     };
