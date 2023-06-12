@@ -1,14 +1,13 @@
 import { Client, isFullPage, iteratePaginatedAPI } from "@notionhq/client";
-import { BaseDocumentLoader } from "../base.js";
-import { Document } from "../../document.js";
-
-import { NotionToMarkdown } from "notion-to-md";
-import { getBlockChildren } from "notion-to-md/build/utils/notion.js";
-
 import {
   GetPageResponse,
   PageObjectResponse,
 } from "@notionhq/client/build/src/api-endpoints.js";
+import { NotionToMarkdown } from "notion-to-md";
+import { getBlockChildren } from "notion-to-md/build/utils/notion.js";
+
+import { BaseDocumentLoader } from "../base.js";
+import { Document } from "../../document.js";
 
 export type NotionAPIObject = "block" | "database" | "page";
 
@@ -64,7 +63,7 @@ export class NotionAPILoader extends BaseDocumentLoader {
             return [
               prop.type,
               `${prop[prop.type]?.start ?? ""}${
-                prop[prop.type]?.end ? " - " + prop[prop.type]?.end : ""
+                prop[prop.type]?.end ? `-  ${prop[prop.type]?.end}` : ""
               }`,
             ];
           case "email":

@@ -1,6 +1,8 @@
-import { test, expect } from "@jest/globals";
-import { NotionAPILoader } from "../web/notionapi.js";
+/* eslint-disable no-process-env */
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+import { test } from "@jest/globals";
 import { Client } from "@notionhq/client";
+import { NotionAPILoader } from "../web/notionapi.js";
 
 test("Test Notion MD Loader Page", async () => {
   const client = new Client({ auth: process.env.NOTION_INTEGRATION_TOKEN });
@@ -9,12 +11,9 @@ test("Test Notion MD Loader Page", async () => {
     id: process.env.NOTION_PAGE_ID ?? "",
     type: "page",
   });
-  await loader.load();
 
   const docs = await loader.load();
   console.dir({ Page: docs }, { depth: Infinity });
-
-  expect(true);
 });
 
 test("Test Notion Web Loader Database", async () => {
@@ -24,9 +23,7 @@ test("Test Notion Web Loader Database", async () => {
     id: process.env.NOTION_DATABASE_ID ?? "",
     type: "database",
   });
+
   const docs = await loader.load();
-
   console.dir({ docs }, { depth: Infinity });
-
-  expect(true);
 });
