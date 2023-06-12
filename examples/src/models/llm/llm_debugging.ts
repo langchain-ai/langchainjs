@@ -1,11 +1,12 @@
 import { LLMResult } from "langchain/schema";
 import { OpenAI } from "langchain/llms/openai";
+import { Serialized } from "langchain/load/serializable";
 
 // We can pass in a list of CallbackHandlers to the LLM constructor to get callbacks for various events.
 const model = new OpenAI({
   callbacks: [
     {
-      handleLLMStart: async (llm: { name: string }, prompts: string[]) => {
+      handleLLMStart: async (llm: Serialized, prompts: string[]) => {
         console.log(JSON.stringify(llm, null, 2));
         console.log(JSON.stringify(prompts, null, 2));
       },

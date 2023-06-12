@@ -10,6 +10,12 @@
   "types": "./index.d.ts",
   "files": [
     "dist/",
+    "load.cjs",
+    "load.js",
+    "load.d.ts",
+    "load/serializable.cjs",
+    "load/serializable.js",
+    "load/serializable.d.ts",
     "agents.cjs",
     "agents.js",
     "agents.d.ts",
@@ -175,9 +181,6 @@
     "document.cjs",
     "document.js",
     "document.d.ts",
-    "docstore.cjs",
-    "docstore.js",
-    "docstore.d.ts",
     "document_loaders.cjs",
     "document_loaders.js",
     "document_loaders.d.ts",
@@ -355,12 +358,21 @@
     "cache/redis.cjs",
     "cache/redis.js",
     "cache/redis.d.ts",
+    "stores/doc/in_memory.cjs",
+    "stores/doc/in_memory.js",
+    "stores/doc/in_memory.d.ts",
+    "stores/doc/gcs.cjs",
+    "stores/doc/gcs.js",
+    "stores/doc/gcs.d.ts",
     "stores/file/in_memory.cjs",
     "stores/file/in_memory.js",
     "stores/file/in_memory.d.ts",
     "stores/file/node.cjs",
     "stores/file/node.js",
     "stores/file/node.d.ts",
+    "stores/message/in_memory.cjs",
+    "stores/message/in_memory.js",
+    "stores/message/in_memory.d.ts",
     "stores/message/dynamodb.cjs",
     "stores/message/dynamodb.js",
     "stores/message/dynamodb.d.ts",
@@ -404,7 +416,7 @@
     "lint": "eslint src && dpdm --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint:fix": "yarn lint --fix",
     "precommit": "tsc --noEmit && lint-staged",
-    "clean": "rimraf dist/ && node scripts/create-entrypoints.js clean",
+    "clean": "rimraf dist/ && node scripts/create-entrypoints.js pre",
     "prepack": "yarn build",
     "release": "release-it --only-version --config .release-it.json",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest --testPathIgnorePatterns=\\.int\\.test.ts --testTimeout 30000",
@@ -426,6 +438,7 @@
     "@getmetal/metal-sdk": "^4.0.0",
     "@getzep/zep-js": "^0.3.1",
     "@gomomento/sdk": "^1.23.0",
+    "@google-cloud/storage": "^6.10.1",
     "@huggingface/inference": "^1.5.1",
     "@jest/globals": "^29.5.0",
     "@notionhq/client": "^2.2.5",
@@ -505,6 +518,7 @@
     "@getmetal/metal-sdk": "*",
     "@getzep/zep-js": "^0.3.1",
     "@gomomento/sdk": "^1.23.0",
+    "@google-cloud/storage": "^6.10.1",
     "@huggingface/inference": "^1.5.1",
     "@opensearch-project/opensearch": "*",
     "@pinecone-database/pinecone": "*",
@@ -568,6 +582,9 @@
       "optional": true
     },
     "@gomomento/sdk": {
+      "optional": true
+    },
+    "@google-cloud/storage": {
       "optional": true
     },
     "@huggingface/inference": {
@@ -689,6 +706,7 @@
     "@anthropic-ai/sdk": "^0.4.3",
     "ansi-styles": "^5.0.0",
     "binary-extensions": "^2.2.0",
+    "case-anything": "^2.1.13",
     "expr-eval": "^2.0.2",
     "flat": "^5.0.2",
     "js-tiktoken": "^1.0.6",
@@ -726,6 +744,16 @@
       "types": "./index.d.ts",
       "import": "./index.js",
       "require": "./index.cjs"
+    },
+    "./load": {
+      "types": "./load.d.ts",
+      "import": "./load.js",
+      "require": "./load.cjs"
+    },
+    "./load/serializable": {
+      "types": "./load/serializable.d.ts",
+      "import": "./load/serializable.js",
+      "require": "./load/serializable.cjs"
     },
     "./agents": {
       "types": "./agents.d.ts",
@@ -1007,11 +1035,6 @@
       "types": "./document.d.ts",
       "import": "./document.js",
       "require": "./document.cjs"
-    },
-    "./docstore": {
-      "types": "./docstore.d.ts",
-      "import": "./docstore.js",
-      "require": "./docstore.cjs"
     },
     "./document_loaders": {
       "node": {
@@ -1314,6 +1337,16 @@
       "import": "./cache/redis.js",
       "require": "./cache/redis.cjs"
     },
+    "./stores/doc/in_memory": {
+      "types": "./stores/doc/in_memory.d.ts",
+      "import": "./stores/doc/in_memory.js",
+      "require": "./stores/doc/in_memory.cjs"
+    },
+    "./stores/doc/gcs": {
+      "types": "./stores/doc/gcs.d.ts",
+      "import": "./stores/doc/gcs.js",
+      "require": "./stores/doc/gcs.cjs"
+    },
     "./stores/file/in_memory": {
       "types": "./stores/file/in_memory.d.ts",
       "import": "./stores/file/in_memory.js",
@@ -1323,6 +1356,11 @@
       "types": "./stores/file/node.d.ts",
       "import": "./stores/file/node.js",
       "require": "./stores/file/node.cjs"
+    },
+    "./stores/message/in_memory": {
+      "types": "./stores/message/in_memory.d.ts",
+      "import": "./stores/message/in_memory.js",
+      "require": "./stores/message/in_memory.cjs"
     },
     "./stores/message/dynamodb": {
       "types": "./stores/message/dynamodb.d.ts",

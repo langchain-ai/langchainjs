@@ -41,6 +41,8 @@ export abstract class BaseChatModel extends BaseLanguageModel {
 
   declare ParsedCallOptions: Omit<this["CallOptions"], "timeout">;
 
+  lc_namespace = ["langchain", "chat_models", this._llmType()];
+
   constructor(fields: BaseChatModelParams) {
     super(fields);
   }
@@ -72,13 +74,16 @@ export abstract class BaseChatModel extends BaseLanguageModel {
       this.callbacks,
       { verbose: this.verbose }
     );
-    const invocationParams = { invocation_params: this?.invocationParams() };
+    const extra = {
+      options: parsedOptions,
+      invocation_params: this?.invocationParams(),
+    };
     const runManager = await callbackManager_?.handleChatModelStart(
-      { name: this._llmType() },
+      this.toJSON(),
       messages,
       undefined,
       undefined,
-      invocationParams
+      extra
     );
     try {
       const results = await Promise.all(

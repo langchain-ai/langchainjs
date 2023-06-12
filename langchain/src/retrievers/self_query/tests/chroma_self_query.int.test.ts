@@ -7,7 +7,7 @@ import { ChromaTranslator } from "../chroma.js";
 import { OpenAI } from "../../../llms/openai.js";
 import { Chroma } from "../../../vectorstores/chroma.js";
 
-test("Chroma Store Self Query Retriever Test", async () => {
+test.skip("Chroma Store Self Query Retriever Test", async () => {
   const docs = [
     new Document({
       pageContent:

@@ -1,16 +1,10 @@
 import { Tool } from "./base.js";
 
 class DadJokeAPI extends Tool {
-  name: string;
+  name = "dadjoke";
 
-  description: string;
-
-  constructor() {
-    super();
-    this.name = "dadjoke";
-    this.description =
-      "a dad joke generator. get a dad joke about a specific topic. input should be a search term.";
-  }
+  description =
+    "a dad joke generator. get a dad joke about a specific topic. input should be a search term.";
 
   /** @ignore */
   async _call(input: string): Promise<string> {

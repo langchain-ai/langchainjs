@@ -32,6 +32,8 @@
   ],
   "typedocOptions": {
     "entryPoints": [
+      "src/load/index.ts",
+      "src/load/serializable.ts",
       "src/agents/index.ts",
       "src/agents/load.ts",
       "src/base_language/index.ts",
@@ -84,7 +86,6 @@
       "src/memory/index.ts",
       "src/memory/zep.ts",
       "src/document.ts",
-      "src/docstore/index.ts",
       "src/document_loaders/base.ts",
       "src/document_loaders/web/apify_dataset.ts",
       "src/document_loaders/web/cheerio.ts",
@@ -141,8 +142,11 @@
       "src/cache/index.ts",
       "src/cache/momento.ts",
       "src/cache/redis.ts",
+      "src/stores/doc/in_memory.ts",
+      "src/stores/doc/gcs.ts",
       "src/stores/file/in_memory.ts",
       "src/stores/file/node.ts",
+      "src/stores/message/in_memory.ts",
       "src/stores/message/dynamodb.ts",
       "src/stores/message/momento.ts",
       "src/stores/message/redis.ts",

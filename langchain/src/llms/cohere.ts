@@ -17,6 +17,20 @@ export interface CohereInput extends BaseLLMParams {
 }
 
 export class Cohere extends LLM implements CohereInput {
+  get lc_secrets(): { [key: string]: string } | undefined {
+    return {
+      apiKey: "COHERE_API_KEY",
+    };
+  }
+
+  get lc_aliases(): { [key: string]: string } | undefined {
+    return {
+      apiKey: "cohere_api_key",
+    };
+  }
+
+  lc_serializable = true;
+
   temperature = 0;
 
   maxTokens = 250;

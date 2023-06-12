@@ -45,11 +45,9 @@ test("Can parse JSON with text in front of it", async () => {
     },
   ];
 
-  const p = new ChatConversationalAgentOutputParser([
-    "blogpost",
-    "metabase",
-    "ToolWithJson",
-  ]);
+  const p = new ChatConversationalAgentOutputParser({
+    toolNames: ["blogpost", "metabase", "ToolWithJson"],
+  });
   for (const message of testCases) {
     const parsed = await p.parse(message.input);
     expect(parsed).toBeDefined();

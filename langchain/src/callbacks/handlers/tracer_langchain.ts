@@ -5,8 +5,9 @@ import {
   getRuntimeEnvironment,
 } from "../../util/env.js";
 import { BaseTracer } from "./tracer.js";
+import { BaseCallbackHandlerInput } from "../base.js";
 
-export interface LangChainTracerFields {
+export interface LangChainTracerFields extends BaseCallbackHandlerInput {
   exampleId?: string;
   sessionName?: string;
   client?: LangChainPlusClient;
@@ -24,8 +25,9 @@ export class LangChainTracer
 
   client: LangChainPlusClient;
 
-  constructor({ exampleId, sessionName, client }: LangChainTracerFields = {}) {
-    super();
+  constructor(fields: LangChainTracerFields = {}) {
+    super(fields);
+    const { exampleId, sessionName, client } = fields;
 
     this.sessionName =
       sessionName ?? getEnvironmentVariable("LANGCHAIN_SESSION");

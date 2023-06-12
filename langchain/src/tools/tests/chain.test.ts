@@ -46,6 +46,7 @@ test("chain tool with llm chain and local callback", async () => {
   const tool = new ChainTool({ chain, name: "fake", description: "fake" });
   const result = await tool.call("hi", [
     {
+      awaitHandlers: true,
       handleToolStart,
       handleToolEnd,
       handleLLMStart,
@@ -101,6 +102,7 @@ test("chain tool with vectordbqa chain", async () => {
   const tool = new ChainTool({ chain, name: "fake", description: "fake" });
   const result = await tool.call("hi", [
     {
+      awaitHandlers: true,
       handleToolStart,
       handleToolEnd,
       handleLLMStart,
