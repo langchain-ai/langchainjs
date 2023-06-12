@@ -1,3 +1,5 @@
+export * from "langchain/load";
+export * from "langchain/load/serializable";
 export * from "langchain/agents";
 export * from "langchain/base_language";
 export * from "langchain/tools";
@@ -35,6 +37,7 @@ export * from "langchain/retrievers/vespa";
 export * from "langchain/cache";
 export * from "langchain/stores/doc/in_memory";
 export * from "langchain/stores/file/in_memory";
+export * from "langchain/stores/message/in_memory";
 export * from "langchain/experimental/autogpt";
 export * from "langchain/experimental/babyagi";
 export * from "langchain/experimental/generative_agents";

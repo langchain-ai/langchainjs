@@ -26,6 +26,10 @@ export interface ChainInputs extends BaseLangChainParams {
 export abstract class BaseChain extends BaseLangChain implements ChainInputs {
   declare memory?: BaseMemory;
 
+  get lc_namespace(): string[] {
+    return ["langchain", "chains", this._chainType()];
+  }
+
   constructor(
     fields?: BaseMemory | ChainInputs,
     /** @deprecated */
@@ -115,7 +119,7 @@ export abstract class BaseChain extends BaseLangChain implements ChainInputs {
       { verbose: this.verbose }
     );
     const runManager = await callbackManager_?.handleChainStart(
-      { name: this._chainType() },
+      this.toJSON(),
       fullValues
     );
     let outputValues;

@@ -48,6 +48,8 @@ export interface MomentoChatMessageHistoryProps {
 }
 
 export class MomentoChatMessageHistory extends BaseListChatMessageHistory {
+  lc_namespace = ["langchain", "stores", "message", "momento"];
+
   private readonly sessionId: string;
 
   private readonly client: ICacheClient;

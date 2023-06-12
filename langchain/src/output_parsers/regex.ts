@@ -8,6 +8,8 @@ import {
  * @augments BaseOutputParser
  */
 export class RegexParser extends BaseOutputParser<Record<string, string>> {
+  lc_namespace = ["langchain", "output_parsers", "regex"];
+
   regex: string | RegExp;
 
   outputKeys: string[];
@@ -19,7 +21,7 @@ export class RegexParser extends BaseOutputParser<Record<string, string>> {
     outputKeys: string[],
     defaultOutputKey?: string
   ) {
-    super();
+    super(...arguments);
     this.regex = typeof regex === "string" ? new RegExp(regex) : regex;
     this.outputKeys = outputKeys;
     this.defaultOutputKey = defaultOutputKey;

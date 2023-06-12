@@ -14,6 +14,13 @@ function defaultGetInput(
 }
 
 class NoOutputParser extends BaseOutputParser<string> {
+  lc_namespace = [
+    "langchain",
+    "retrievers",
+    "document_compressors",
+    "chain_extract",
+  ];
+
   noOutputStr = "NO_OUTPUT";
 
   parse(text: string): Promise<string> {

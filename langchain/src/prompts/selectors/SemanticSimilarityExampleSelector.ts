@@ -2,7 +2,7 @@ import { Embeddings } from "../../embeddings/base.js";
 import { VectorStore } from "../../vectorstores/base.js";
 import { Document } from "../../document.js";
 import { Example } from "../../schema/index.js";
-import type { BaseExampleSelector } from "../base.js";
+import { BaseExampleSelector } from "../base.js";
 
 function sortedValues<T>(values: Record<string, T>): T[] {
   return Object.keys(values)
@@ -17,7 +17,7 @@ export interface SemanticSimilarityExampleSelectorInput {
   inputKeys?: string[];
 }
 
-export class SemanticSimilarityExampleSelector implements BaseExampleSelector {
+export class SemanticSimilarityExampleSelector extends BaseExampleSelector {
   vectorStore: VectorStore;
 
   k = 4;
@@ -27,6 +27,7 @@ export class SemanticSimilarityExampleSelector implements BaseExampleSelector {
   inputKeys?: string[];
 
   constructor(data: SemanticSimilarityExampleSelectorInput) {
+    super(data);
     this.vectorStore = data.vectorStore;
     this.k = data.k ?? 4;
     this.exampleKeys = data.exampleKeys;

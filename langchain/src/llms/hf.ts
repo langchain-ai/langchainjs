@@ -27,6 +27,12 @@ export interface HFInput {
 }
 
 export class HuggingFaceInference extends LLM implements HFInput {
+  get lc_secrets(): { [key: string]: string } | undefined {
+    return {
+      apiKey: "HUGGINGFACEHUB_API_KEY",
+    };
+  }
+
   model = "gpt2";
 
   temperature: number | undefined = undefined;
@@ -60,7 +66,7 @@ export class HuggingFaceInference extends LLM implements HFInput {
   }
 
   _llmType() {
-    return "huggingface_hub";
+    return "hf";
   }
 
   /** @ignore */

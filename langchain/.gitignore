@@ -1,3 +1,9 @@
+load.cjs
+load.js
+load.d.ts
+load/serializable.cjs
+load/serializable.js
+load/serializable.d.ts
 agents.cjs
 agents.js
 agents.d.ts
@@ -349,6 +355,9 @@ stores/file/in_memory.d.ts
 stores/file/node.cjs
 stores/file/node.js
 stores/file/node.d.ts
+stores/message/in_memory.cjs
+stores/message/in_memory.js
+stores/message/in_memory.d.ts
 stores/message/dynamodb.cjs
 stores/message/dynamodb.js
 stores/message/dynamodb.d.ts

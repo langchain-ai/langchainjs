@@ -21,6 +21,8 @@ import { ASTParser } from "./expression_type_handlers/base.js";
  */
 
 export class ExpressionParser extends BaseOutputParser<ParsedType> {
+  lc_namespace = ["langchain", "output_parsers", "expression"];
+
   parser: ParseFunction;
 
   /**
