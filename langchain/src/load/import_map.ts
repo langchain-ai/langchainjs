@@ -18,7 +18,6 @@ export * as vectorstores__prisma from "../vectorstores/prisma.js";
 export * as text_splitter from "../text_splitter.js";
 export * as memory from "../memory/index.js";
 export * as document from "../document.js";
-export * as docstore from "../docstore/index.js";
 export * as document_loaders__base from "../document_loaders/base.js";
 export * as chat_models__base from "../chat_models/base.js";
 export * as chat_models__openai from "../chat_models/openai.js";
@@ -37,6 +36,7 @@ export * as retrievers__document_compressors__chain_extract from "../retrievers/
 export * as retrievers__hyde from "../retrievers/hyde.js";
 export * as retrievers__vespa from "../retrievers/vespa.js";
 export * as cache from "../cache/index.js";
+export * as stores__doc__in_memory from "../stores/doc/in_memory.js";
 export * as stores__file__in_memory from "../stores/file/in_memory.js";
 export * as stores__message__in_memory from "../stores/message/in_memory.js";
 export * as experimental__autogpt from "../experimental/autogpt/index.js";

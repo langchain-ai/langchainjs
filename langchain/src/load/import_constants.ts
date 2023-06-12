@@ -73,6 +73,7 @@ export const optionalImportEntrypoints = [
   "langchain/retrievers/self_query/supabase",
   "langchain/cache/momento",
   "langchain/cache/redis",
+  "langchain/stores/doc/gcs",
   "langchain/stores/file/node",
   "langchain/stores/message/dynamodb",
   "langchain/stores/message/momento",
