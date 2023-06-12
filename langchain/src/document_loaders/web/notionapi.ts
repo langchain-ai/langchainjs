@@ -107,7 +107,14 @@ export class NotionAPILoader extends BaseDocumentLoader {
 
   private parsePageDetails(page: GetPageResponse) {
     if (!isFullPage(page)) return;
-    return { ...page, properties: this.parsePageProperties(page) };
+    const metadata = Object.fromEntries(
+      Object.entries(page).filter(([key, _]) => key !== "id")
+    );
+    return {
+      metadata,
+      notionId: page.id,
+      properties: this.parsePageProperties(page),
+    };
   }
 
   private async loadPage(

@@ -47,6 +47,7 @@ export const optionalImportEntrypoints = [
   "langchain/document_loaders/web/figma",
   "langchain/document_loaders/web/github",
   "langchain/document_loaders/web/notiondb",
+  "langchain/document_loaders/web/notionapi",
   "langchain/document_loaders/web/s3",
   "langchain/document_loaders/web/confluence",
   "langchain/document_loaders/fs/directory",
