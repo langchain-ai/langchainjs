@@ -41,41 +41,75 @@ export interface AlephAlphaInput extends BaseLLMParams {
 
 export class AlephAlpha extends LLM implements AlephAlphaInput {
   model = "luminous-base";
+
   maximum_tokens = 64;
+
   minimum_tokens = 0;
+
   echo: boolean;
+
   temperature = 0.0;
+
   top_k: number;
+
   top_p = 0.0;
+
   presence_penalty?: number;
+
   frequency_penalty?: number;
+
   sequence_penalty?: number;
+
   sequence_penalty_min_length?: number;
+
   repetition_penalties_include_prompt?: boolean;
+
   repetition_penalties_include_completion?: boolean;
+
   use_multiplicative_presence_penalty?: boolean;
+
   use_multiplicative_frequency_penalty?: boolean;
+
   use_multiplicative_sequence_penalty?: boolean;
+
   penalty_bias?: string;
+
   penalty_exceptions?: string[];
+
   penalty_exceptions_include_stop_sequences?: boolean;
+
   best_of?: number;
+
   n?: number;
+
   logit_bias?: object;
+
   log_probs?: number;
+
   tokens?: boolean;
+
   raw_completion: boolean;
+
   disable_optimizations?: boolean;
+
   completion_bias_inclusion?: string[];
+
   completion_bias_inclusion_first_token_only: boolean;
+
   completion_bias_exclusion?: string[];
+
   completion_bias_exclusion_first_token_only: boolean;
+
   contextual_control_threshold?: number;
+
   control_log_additive: boolean;
+
   aleph_alpha_api_key? =
     getEnvironmentVariable("ALEPH_ALPHA_API_KEY") ??
     getEnvironmentVariable("aleph_alpha_api_key");
+
   stop?: string[];
+
   base_url = "https://api.aleph-alpha.com/complete";
 
   constructor(fields: Partial<AlephAlpha>) {
