@@ -52,6 +52,7 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
+    "langchain": "workspace:^",
     "turbo": "latest"
   },
   "resolutions": {
