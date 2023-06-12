@@ -42,7 +42,7 @@ export class IFTTTWebhook extends Tool {
   description: string;
 
   constructor(url: string, name: string, description: string) {
-    super();
+    super(...arguments);
     this.url = url;
     this.name = name;
     this.description = description;

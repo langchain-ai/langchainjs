@@ -14,6 +14,10 @@ export type SerperParameters = {
  * To use, you should have the SERPER_API_KEY environment variable set.
  */
 export class Serper extends Tool {
+  toJSON() {
+    return this.toJSONNotImplemented();
+  }
+
   protected key: string;
 
   protected params: Partial<SerperParameters>;

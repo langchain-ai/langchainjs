@@ -34,7 +34,12 @@ export {
   ChatConversationalAgentInput,
   ChatConversationalCreatePromptArgs,
 } from "./chat_convo/index.js";
-export { ChatConversationalAgentOutputParser } from "./chat_convo/outputParser.js";
+export {
+  ChatConversationalAgentOutputParser,
+  ChatConversationalAgentOutputParserArgs,
+  ChatConversationalAgentOutputParserWithRetries,
+  ChatConversationalAgentOutputParserFormatInstructionsOptions,
+} from "./chat_convo/outputParser.js";
 export { AgentExecutor, AgentExecutorInput } from "./executor.js";
 export {
   initializeAgentExecutor,
@@ -62,5 +67,6 @@ export {
 } from "./structured_chat/index.js";
 export {
   StructuredChatOutputParser,
+  StructuredChatOutputParserArgs,
   StructuredChatOutputParserWithRetries,
 } from "./structured_chat/outputParser.js";

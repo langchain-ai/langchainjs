@@ -54,6 +54,26 @@ export class OpenAIChat
     return ["stop", "signal", "timeout", "options"];
   }
 
+  lc_serializable = true;
+
+  get lc_secrets(): { [key: string]: string } | undefined {
+    return {
+      openAIApiKey: "OPENAI_API_KEY",
+      azureOpenAIApiKey: "AZURE_OPENAI_API_KEY",
+    };
+  }
+
+  get lc_aliases(): Record<string, string> {
+    return {
+      modelName: "model",
+      openAIApiKey: "openai_api_key",
+      azureOpenAIApiVersion: "azure_openai_api_version",
+      azureOpenAIApiKey: "azure_openai_api_key",
+      azureOpenAIApiInstanceName: "azure_openai_api_instance_name",
+      azureOpenAIApiDeploymentName: "azure_openai_api_deployment_name",
+    };
+  }
+
   temperature = 1;
 
   topP = 1;
@@ -97,7 +117,9 @@ export class OpenAIChat
       Partial<AzureOpenAIInput> &
       BaseLLMParams & {
         openAIApiKey?: string;
+        configuration?: ConfigurationParameters;
       },
+    /** @deprecated */
     configuration?: ConfigurationParameters
   ) {
     super(fields ?? {});
@@ -165,6 +187,7 @@ export class OpenAIChat
     this.clientConfig = {
       apiKey,
       ...configuration,
+      ...fields?.configuration,
     };
   }
 
@@ -387,6 +410,14 @@ export class OpenAIChat
  * PromptLayer wrapper to OpenAIChat
  */
 export class PromptLayerOpenAIChat extends OpenAIChat {
+  get lc_secrets(): { [key: string]: string } | undefined {
+    return {
+      promptLayerApiKey: "PROMPTLAYER_API_KEY",
+    };
+  }
+
+  lc_serializable = false;
+
   promptLayerApiKey?: string;
 
   plTags?: string[];
