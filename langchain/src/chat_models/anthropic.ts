@@ -109,9 +109,17 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
 
   get lc_secrets(): { [key: string]: string } | undefined {
     return {
-      anthropicApiKey: "ANTHROPIC_API_KEY",
+      apiKey: "ANTHROPIC_API_KEY",
     };
   }
+
+  get lc_aliases(): Record<string, string> {
+    return {
+      modelName: "model",
+    };
+  }
+
+  lc_serializable = true;
 
   apiKey?: string;
 
