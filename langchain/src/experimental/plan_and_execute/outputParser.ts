@@ -4,9 +4,7 @@ import { Plan } from "./base.js";
 import { PLANNER_SYSTEM_PROMPT_MESSAGE_TEMPLATE } from "./prompt.js";
 
 export class PlanOutputParser extends BaseOutputParser<Plan> {
-  constructor() {
-    super();
-  }
+  lc_namespace = ["langchain", "experimental", "plan_and_execute"];
 
   async parse(text: string): Promise<Plan> {
     return {

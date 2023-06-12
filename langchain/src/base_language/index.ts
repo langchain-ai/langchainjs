@@ -8,6 +8,7 @@ import { CallbackManager, Callbacks } from "../callbacks/manager.js";
 import { AsyncCaller, AsyncCallerParams } from "../util/async_caller.js";
 import { getModelNameForTiktoken } from "./count_tokens.js";
 import { encodingForModel } from "../util/tiktoken.js";
+import { Serializable } from "../load/serializable.js";
 
 const getVerbosity = () => false;
 
@@ -25,7 +26,10 @@ export interface BaseLangChainParams {
 /**
  * Base class for language models, chains, tools.
  */
-export abstract class BaseLangChain implements BaseLangChainParams {
+export abstract class BaseLangChain
+  extends Serializable
+  implements BaseLangChainParams
+{
   /**
    * Whether to print out response text.
    */
@@ -33,7 +37,15 @@ export abstract class BaseLangChain implements BaseLangChainParams {
 
   callbacks?: Callbacks;
 
+  get lc_attributes(): { [key: string]: undefined } | undefined {
+    return {
+      callbacks: undefined,
+      verbose: undefined,
+    };
+  }
+
   constructor(params: BaseLangChainParams) {
+    super(params);
     this.verbose = params.verbose ?? getVerbosity();
     this.callbacks = params.callbacks;
   }
@@ -94,10 +106,14 @@ export abstract class BaseLanguageModel
    */
   caller: AsyncCaller;
 
-  constructor(params: BaseLanguageModelParams) {
+  constructor({
+    callbacks,
+    callbackManager,
+    ...params
+  }: BaseLanguageModelParams) {
     super({
-      verbose: params.verbose,
-      callbacks: params.callbacks ?? params.callbackManager,
+      callbacks: callbacks ?? callbackManager,
+      ...params,
     });
     this.caller = new AsyncCaller(params ?? {});
   }
@@ -161,6 +177,7 @@ export abstract class BaseLanguageModel
   }
 
   /**
+   * @deprecated
    * Return a json-like object representing this LLM.
    */
   serialize(): SerializedLLM {
@@ -172,6 +189,7 @@ export abstract class BaseLanguageModel
   }
 
   /**
+   * @deprecated
    * Load an LLM from a json-like object describing it.
    */
   static async deserialize(data: SerializedLLM): Promise<BaseLanguageModel> {

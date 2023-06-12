@@ -16,7 +16,7 @@ export class QuerySqlTool extends Tool implements SqlTool {
   db: SqlDatabase;
 
   constructor(db: SqlDatabase) {
-    super();
+    super(...arguments);
     this.db = db;
   }
 

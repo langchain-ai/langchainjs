@@ -36,6 +36,8 @@ export class LLMChain<T extends string | object = string>
   extends BaseChain
   implements LLMChainInput<T>
 {
+  lc_serializable = true;
+
   prompt: BasePromptTemplate;
 
   llm: BaseLanguageModel;
@@ -147,7 +149,7 @@ export class LLMChain<T extends string | object = string>
   }
 
   _chainType() {
-    return "llm_chain" as const;
+    return "llm" as const;
   }
 
   static async deserialize(data: SerializedLLMChain) {
@@ -165,9 +167,10 @@ export class LLMChain<T extends string | object = string>
     });
   }
 
+  /** @deprecated */
   serialize(): SerializedLLMChain {
     return {
-      _type: this._chainType(),
+      _type: `${this._chainType()}_chain`,
       llm: this.llm.serialize(),
       prompt: this.prompt.serialize(),
     };

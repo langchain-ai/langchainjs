@@ -10753,6 +10753,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"case-anything@npm:^2.1.13":
+  version: 2.1.13
+  resolution: "case-anything@npm:2.1.13"
+  checksum: c39c69d7e418337b6006a9692f13c2b257e907e867149a102e9beb7e9d2d52da14e754da1f4e4ce82a866d86d93047e522f64360bda54e7d7c308f4cdd736c3d
+  languageName: node
+  linkType: hard
+
 "case-sensitive-paths-webpack-plugin@npm:^2.4.0":
   version: 2.4.0
   resolution: "case-sensitive-paths-webpack-plugin@npm:2.4.0"
@@ -18555,6 +18562,7 @@ __metadata:
     apify-client: ^2.7.1
     axios: ^0.26.0
     binary-extensions: ^2.2.0
+    case-anything: ^2.1.13
     cheerio: ^1.0.0-rc.12
     chromadb: ^1.5.2
     cohere-ai: ^5.0.2
