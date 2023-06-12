@@ -97,6 +97,7 @@
       "src/document_loaders/web/figma.ts",
       "src/document_loaders/web/github.ts",
       "src/document_loaders/web/notiondb.ts",
+      "src/document_loaders/web/notionapi.ts",
       "src/document_loaders/web/s3.ts",
       "src/document_loaders/web/confluence.ts",
       "src/document_loaders/fs/directory.ts",
