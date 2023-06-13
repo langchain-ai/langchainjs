@@ -590,6 +590,9 @@
     "@huggingface/inference": {
       "optional": true
     },
+    "@notionhq/client": {
+      "optional": true
+    },
     "@opensearch-project/opensearch": {
       "optional": true
     },
@@ -666,6 +669,9 @@
       "optional": true
     },
     "mysql2": {
+      "optional": true
+    },
+    "notion-to-md": {
       "optional": true
     },
     "pdf-parse": {
