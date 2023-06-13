@@ -200,7 +200,6 @@ export class Typesense extends VectorStore {
     this.searchParams = {
       ...this.searchParams,
       ...searchParams,
-      collection: this.schemaName,
     };
   }
 
