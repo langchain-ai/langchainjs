@@ -1,24 +1,20 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import weaviate from "weaviate-ts-client";
-import { VectaraStore } from "langchain/vectorstores/vectara";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { VectaraStore, VectaraLibArgs } from "langchain/vectorstores/vectara";
+import { FakeEmbeddings } from "../../../../langchain/embeddings.js";
 
 export async function run() {
-    // Something wrong with the vectara-ts-client types, so we need to disable
-    const client = (weaviate as any).client({
-        scheme: process.env.WEAVIATE_SCHEME || "https",
-        host: process.env.WEAVIATE_HOST || "localhost",
-        apiKey: new (weaviate as any).ApiKey(
-            process.env.WEAVIATE_API_KEY || "default"
-        ),
-    });
-
-    // Create a store for an existing index
-    const store = await VectaraStore.fromExistingIndex(new OpenAIEmbeddings(), {
-        client,
-        indexName: "Test",
-        metadataKeys: ["foo"],
-    });
+    // Create a store and fill it with some texts + metadata
+    const args: VectaraLibArgs = {
+        customer_id: Number(process.env.VECTARA_CUSTOMER_ID) ?? 0,
+        corpus_id: Number(process.env.VECTARA_CORPUS_ID) ?? 0,
+        api_key: process.env.VECTARA_API_KEY ?? ""
+    };
+    const store = await VectaraStore.fromTexts(
+        ["hello world", "hi there", "how are you", "bye now"],
+        [{ foo: "bar" }, { foo: "baz" }, { foo: "qux" }, { foo: "bar" }],
+        new FakeEmbeddings(),       // Vectara has its own embeddings, so we don't need to get them separately
+        args
+    );
 
     // Search the index without any filters
     const results = await store.similaritySearch("hello world", 1);
@@ -30,13 +26,7 @@ export async function run() {
     // Search the index with a filter, in this case, only return results where
     // the "foo" metadata key is equal to "baz", see the Vectara docs for more
     // https://docs.vectara.com
-    const results2 = await store.similaritySearch("hello world", 1, {
-        where: {
-            operator: "Equal",
-            path: ["foo"],
-            valueText: "baz",
-        },
-    });
+    const results2 = await store.similaritySearch("hello world", 1, { "foo": "baz" });
     console.log(results2);
     /*
     [ Document { pageContent: 'hi there', metadata: { foo: 'baz' } } ]
