@@ -100,7 +100,9 @@ test("Test Chat Model Run", async () => {
           [
             {
               "data": {
+                "additional_kwargs": {},
                 "content": "Avast",
+                "name": undefined,
                 "role": undefined,
               },
               "type": "human",
