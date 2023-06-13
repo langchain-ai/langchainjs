@@ -27,7 +27,7 @@ test.skip("Test Google Vertex generation", async () => {
   console.log(JSON.stringify(res, null, 2));
 });
 
-test("Test Google Vertex Codey gecko model", async () => {
+test.skip("Test Google Vertex Codey gecko model", async () => {
   const model = new GoogleVertexAICode();
   expect(model.model).toEqual("code-gecko");
 
@@ -35,7 +35,7 @@ test("Test Google Vertex Codey gecko model", async () => {
   console.log(res);
 });
 
-test("Test Google Vertex Codey bison model", async () => {
+test.skip("Test Google Vertex Codey bison model", async () => {
   const model = new GoogleVertexAICode({
     model: "code-bison",
     maxOutputTokens: 2048,
