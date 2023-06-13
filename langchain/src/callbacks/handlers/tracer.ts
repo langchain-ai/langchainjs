@@ -1,5 +1,4 @@
-import { Run } from "langchainplus-sdk";
-import { KVMap } from "langchainplus-sdk/schemas";
+import { KVMap, BaseRun } from "langchainplus-sdk/schemas";
 
 import {
   AgentAction,
@@ -10,9 +9,13 @@ import {
 import { Serialized } from "../../load/serializable.js";
 import { BaseCallbackHandler, BaseCallbackHandlerInput } from "../base.js";
 
-export { Run };
-
 export type RunType = "llm" | "chain" | "tool";
+
+export interface Run extends BaseRun {
+  id: string;
+  child_runs: this[];
+  child_execution_order: number;
+}
 
 export interface AgentRun extends Run {
   actions: AgentAction[];
