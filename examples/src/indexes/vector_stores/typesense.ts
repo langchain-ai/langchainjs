@@ -89,10 +89,9 @@ const documents = await vectorStore.similaritySearch("hello world");
 
 // Add filters based on metadata with the search parameters of Typesense
 // will exclude documents with author:JK Rowling, so if Joe Rowling & JK Rowling exists, only Joe Rowling will be returned
-vectorStore.modifySearchParams({
+vectorStore.similaritySearch("Rowling", undefined, {
   filter_by: "author:!=JK Rowling",
 });
-vectorStore.similaritySearch("Rowling");
 
 // Delete a document
 vectorStore.deleteDocuments(["document_id_1", "document_id_2"]);
