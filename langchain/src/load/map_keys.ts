@@ -1,4 +1,5 @@
-import { snakeCase, camelCase } from "case-anything";
+import snakeCase from "decamelize";
+import camelCase from "camelcase";
 
 export interface SerializedFields {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
