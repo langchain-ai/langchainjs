@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+
 import { AttributeInfo } from "langchain/schema/query_constructor";
 import { Document } from "langchain/document";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
@@ -83,9 +84,6 @@ const attributeInfo: AttributeInfo[] = [
 
 /**
  * Next, we instantiate a vector store. This is where we store the embeddings of the documents.
- * We use the Pinecone vector store here, but you can use any vector store you want.
- * At this point we only support Chroma and Pinecone, but we will add more in the future.
- * We also need to provide an embeddings object. This is used to embed the documents.
  */
 if (!process.env.SUPABASE_URL || !process.env.SUPABASE_PRIVATE_KEY) {
   throw new Error(

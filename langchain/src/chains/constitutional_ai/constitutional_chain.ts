@@ -38,7 +38,7 @@ export class ConstitutionalChain
   }
 
   constructor(fields: ConstitutionalChainInput) {
-    super(fields.memory, fields.verbose, fields.callbackManager);
+    super(fields);
     this.chain = fields.chain;
     this.constitutionalPrinciples = fields.constitutionalPrinciples;
     this.critiqueChain = fields.critiqueChain;
@@ -51,7 +51,7 @@ export class ConstitutionalChain
   ): Promise<ChainValues> {
     let { [this.chain.outputKey]: response } = await this.chain.call(
       values,
-      runManager?.getChild()
+      runManager?.getChild("original")
     );
     const inputPrompt = await this.chain.prompt.format(values);
 
@@ -63,7 +63,7 @@ export class ConstitutionalChain
             output_from_model: response,
             critique_request: this.constitutionalPrinciples[i].critiqueRequest,
           },
-          runManager?.getChild()
+          runManager?.getChild("critique")
         );
 
       const critique = ConstitutionalChain._parseCritique(rawCritique);
@@ -77,7 +77,7 @@ export class ConstitutionalChain
             critique,
             revision_request: this.constitutionalPrinciples[i].revisionRequest,
           },
-          runManager?.getChild()
+          runManager?.getChild("revision")
         );
       response = revisionRaw;
     }

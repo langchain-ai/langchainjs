@@ -16,8 +16,13 @@ export type ChatConversationalAgentOutputParserFormatInstructionsOptions =
   };
 
 export class ChatConversationalAgentOutputParser extends AgentActionOutputParser {
-  constructor(private toolNames: string[]) {
-    super();
+  lc_namespace = ["langchain", "agents", "chat_convo"];
+
+  private toolNames: string[];
+
+  constructor(fields: { toolNames: string[] }) {
+    super(...arguments);
+    this.toolNames = fields.toolNames;
   }
 
   async parse(text: string): Promise<AgentAction | AgentFinish> {
@@ -63,6 +68,8 @@ export type ChatConversationalAgentOutputParserArgs = {
 };
 
 export class ChatConversationalAgentOutputParserWithRetries extends AgentActionOutputParser {
+  lc_namespace = ["langchain", "agents", "chat_convo"];
+
   private baseParser: ChatConversationalAgentOutputParser;
 
   private outputFixingParser?: OutputFixingParser<AgentAction | AgentFinish>;
@@ -70,11 +77,11 @@ export class ChatConversationalAgentOutputParserWithRetries extends AgentActionO
   private toolNames: string[] = [];
 
   constructor(fields: ChatConversationalAgentOutputParserArgs) {
-    super();
+    super(fields);
     this.toolNames = fields.toolNames ?? this.toolNames;
     this.baseParser =
       fields?.baseParser ??
-      new ChatConversationalAgentOutputParser(this.toolNames);
+      new ChatConversationalAgentOutputParser({ toolNames: this.toolNames });
     this.outputFixingParser = fields?.outputFixingParser;
   }
 
@@ -102,7 +109,9 @@ export class ChatConversationalAgentOutputParserWithRetries extends AgentActionO
   ): ChatConversationalAgentOutputParserWithRetries {
     const baseParser =
       options.baseParser ??
-      new ChatConversationalAgentOutputParser(options.toolNames ?? []);
+      new ChatConversationalAgentOutputParser({
+        toolNames: options.toolNames ?? [],
+      });
     const outputFixingParser = OutputFixingParser.fromLLM(llm, baseParser);
     return new ChatConversationalAgentOutputParserWithRetries({
       baseParser,

@@ -19,6 +19,7 @@ import {
   LangChainTracerFields,
 } from "./handlers/tracer_langchain.js";
 import { consumeCallback } from "./promises.js";
+import { Serialized } from "../load/serializable.js";
 
 type BaseCallbackManagerMethods = {
   [K in keyof CallbackHandlerMethods]?: (
@@ -52,6 +53,8 @@ class BaseRunManager {
     public readonly runId: string,
     protected readonly handlers: BaseCallbackHandler[],
     protected readonly inheritableHandlers: BaseCallbackHandler[],
+    protected readonly tags: string[],
+    protected readonly inheritableTags: string[],
     protected readonly _parentRunId?: string
   ) {}
 
@@ -147,10 +150,14 @@ export class CallbackManagerForChainRun
   extends BaseRunManager
   implements BaseCallbackManagerMethods
 {
-  getChild(): CallbackManager {
+  getChild(tag?: string): CallbackManager {
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
     const manager = new CallbackManager(this.runId);
     manager.setHandlers(this.inheritableHandlers);
+    manager.addTags(this.inheritableTags);
+    if (tag) {
+      manager.addTags([tag], false);
+    }
     return manager;
   }
 
@@ -247,10 +254,14 @@ export class CallbackManagerForToolRun
   extends BaseRunManager
   implements BaseCallbackManagerMethods
 {
-  getChild(): CallbackManager {
+  getChild(tag?: string): CallbackManager {
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
     const manager = new CallbackManager(this.runId);
     manager.setHandlers(this.inheritableHandlers);
+    manager.addTags(this.inheritableTags);
+    if (tag) {
+      manager.addTags([tag], false);
+    }
     return manager;
   }
 
@@ -307,6 +318,10 @@ export class CallbackManager
 
   inheritableHandlers: BaseCallbackHandler[];
 
+  tags: string[] = [];
+
+  inheritableTags: string[] = [];
+
   name = "callback_manager";
 
   private readonly _parentRunId?: string;
@@ -319,7 +334,7 @@ export class CallbackManager
   }
 
   async handleLLMStart(
-    llm: { name: string },
+    llm: Serialized,
     prompts: string[],
     runId: string = uuidv4(),
     _parentRunId: string | undefined = undefined,
@@ -335,7 +350,8 @@ export class CallbackManager
                 prompts,
                 runId,
                 this._parentRunId,
-                extraParams
+                extraParams,
+                this.tags
               );
             } catch (err) {
               console.error(
@@ -350,12 +366,14 @@ export class CallbackManager
       runId,
       this.handlers,
       this.inheritableHandlers,
+      this.tags,
+      this.inheritableTags,
       this._parentRunId
     );
   }
 
   async handleChatModelStart(
-    llm: { name: string },
+    llm: Serialized,
     messages: BaseChatMessage[][],
     runId: string = uuidv4(),
     _parentRunId: string | undefined = undefined,
@@ -373,7 +391,8 @@ export class CallbackManager
                   messages,
                   runId,
                   this._parentRunId,
-                  extraParams
+                  extraParams,
+                  this.tags
                 );
               else if (handler.handleLLMStart) {
                 messageStrings = messages.map((x) => getBufferString(x));
@@ -382,7 +401,8 @@ export class CallbackManager
                   messageStrings,
                   runId,
                   this._parentRunId,
-                  extraParams
+                  extraParams,
+                  this.tags
                 );
               }
             } catch (err) {
@@ -398,12 +418,14 @@ export class CallbackManager
       runId,
       this.handlers,
       this.inheritableHandlers,
+      this.tags,
+      this.inheritableTags,
       this._parentRunId
     );
   }
 
   async handleChainStart(
-    chain: { name: string },
+    chain: Serialized,
     inputs: ChainValues,
     runId = uuidv4()
   ): Promise<CallbackManagerForChainRun> {
@@ -416,7 +438,8 @@ export class CallbackManager
                 chain,
                 inputs,
                 runId,
-                this._parentRunId
+                this._parentRunId,
+                this.tags
               );
             } catch (err) {
               console.error(
@@ -431,12 +454,14 @@ export class CallbackManager
       runId,
       this.handlers,
       this.inheritableHandlers,
+      this.tags,
+      this.inheritableTags,
       this._parentRunId
     );
   }
 
   async handleToolStart(
-    tool: { name: string },
+    tool: Serialized,
     input: string,
     runId = uuidv4()
   ): Promise<CallbackManagerForToolRun> {
@@ -449,7 +474,8 @@ export class CallbackManager
                 tool,
                 input,
                 runId,
-                this._parentRunId
+                this._parentRunId,
+                this.tags
               );
             } catch (err) {
               console.error(
@@ -464,6 +490,8 @@ export class CallbackManager
       runId,
       this.handlers,
       this.inheritableHandlers,
+      this.tags,
+      this.inheritableTags,
       this._parentRunId
     );
   }
@@ -490,6 +518,21 @@ export class CallbackManager
     }
   }
 
+  addTags(tags: string[], inherit = true): void {
+    this.removeTags(tags); // Remove duplicates
+    this.tags.push(...tags);
+    if (inherit) {
+      this.inheritableTags.push(...tags);
+    }
+  }
+
+  removeTags(tags: string[]): void {
+    this.tags = this.tags.filter((tag) => !tags.includes(tag));
+    this.inheritableTags = this.inheritableTags.filter(
+      (tag) => !tags.includes(tag)
+    );
+  }
+
   copy(
     additionalHandlers: BaseCallbackHandler[] = [],
     inherit = true
@@ -498,6 +541,10 @@ export class CallbackManager
     for (const handler of this.handlers) {
       const inheritable = this.inheritableHandlers.includes(handler);
       manager.addHandler(handler, inheritable);
+    }
+    for (const tag of this.tags) {
+      const inheritable = this.inheritableTags.includes(tag);
+      manager.addTags([tag], inheritable);
     }
     for (const handler of additionalHandlers) {
       if (
@@ -531,6 +578,8 @@ export class CallbackManager
   static async configure(
     inheritableHandlers?: Callbacks,
     localHandlers?: Callbacks,
+    inheritableTags?: string[],
+    localTags?: string[],
     options?: CallbackManagerOptions
   ): Promise<CallbackManager | undefined> {
     let callbackManager: CallbackManager | undefined;
@@ -551,6 +600,7 @@ export class CallbackManager
         false
       );
     }
+
     const verboseEnabled =
       getEnvironmentVariable("LANGCHAIN_VERBOSE") || options?.verbose;
     const tracingV2Enabled =
@@ -588,6 +638,12 @@ export class CallbackManager
         }
       }
     }
+    if (inheritableTags || localTags) {
+      if (callbackManager) {
+        callbackManager.addTags(inheritableTags ?? []);
+        callbackManager.addTags(localTags ?? [], false);
+      }
+    }
     return callbackManager;
   }
 }
@@ -619,7 +675,14 @@ export class TraceGroup {
   ): Promise<CallbackManagerForChainRun> {
     const cb = new LangChainTracer(options);
     const cm = await CallbackManager.configure([cb]);
-    const runManager = await cm?.handleChainStart({ name: group_name }, {});
+    const runManager = await cm?.handleChainStart(
+      {
+        lc: 1,
+        type: "not_implemented",
+        id: ["langchain", "callbacks", "groups", group_name],
+      },
+      {}
+    );
     if (!runManager) {
       throw new Error("Failed to create run group callback manager.");
     }

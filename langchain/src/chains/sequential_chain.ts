@@ -131,8 +131,13 @@ export class SequentialChain extends BaseChain implements SequentialChainInput {
   ): Promise<ChainValues> {
     let input: ChainValues = {};
     const allChainValues: ChainValues = values;
+    let i = 0;
     for (const chain of this.chains) {
-      input = await chain.call(allChainValues, runManager?.getChild());
+      i += 1;
+      input = await chain.call(
+        allChainValues,
+        runManager?.getChild(`step_${i}`)
+      );
       for (const key of Object.keys(input)) {
         allChainValues[key] = input[key];
       }
@@ -239,11 +244,7 @@ export class SimpleSequentialChain
   }
 
   constructor(fields: SimpleSequentialChainInput) {
-    super(
-      fields.memory,
-      fields.verbose,
-      fields.callbacks ?? fields.callbackManager
-    );
+    super(fields);
     this.chains = fields.chains;
     this.trimOutputs = fields.trimOutputs ?? false;
     this._validateChains();
@@ -275,8 +276,10 @@ export class SimpleSequentialChain
     runManager?: CallbackManagerForChainRun
   ): Promise<ChainValues> {
     let input: string = values[this.inputKey];
+    let i = 0;
     for (const chain of this.chains) {
-      input = await chain.run(input, runManager?.getChild());
+      i += 1;
+      input = await chain.run(input, runManager?.getChild(`step_${i}`));
       if (this.trimOutputs) {
         input = input.trim();
       }

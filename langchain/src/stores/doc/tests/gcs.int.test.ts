@@ -2,7 +2,7 @@ import { describe, test, expect } from "@jest/globals";
 import { GoogleCloudStorageDocstore } from "../gcs.js";
 import { Document } from "../../../document.js";
 
-describe("GoogleCloudStorageDocstore", () => {
+describe.skip("GoogleCloudStorageDocstore", () => {
   const bucket = "INSERT_BUCKET_HERE";
 
   test("save", async () => {

@@ -5,16 +5,18 @@ import { WeaviateStore } from "../weaviate.js";
 import { OpenAIEmbeddings } from "../../embeddings/openai.js";
 import { Document } from "../../document.js";
 
-test.skip("WeaviateStore", async () => {
+test("WeaviateStore", async () => {
   // Something wrong with the weaviate-ts-client types, so we need to disable
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const client = (weaviate as any).client({
-    scheme: process.env.WEAVIATE_SCHEME || "https",
-    host: process.env.WEAVIATE_HOST || "localhost",
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    apiKey: new (weaviate as any).ApiKey(
-      process.env.WEAVIATE_API_KEY || "default"
-    ),
+    scheme:
+      process.env.WEAVIATE_SCHEME ||
+      (process.env.WEAVIATE_HOST ? "https" : "http"),
+    host: process.env.WEAVIATE_HOST || "localhost:8080",
+    apiKey: process.env.WEAVIATE_API_KEY
+      ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        new (weaviate as any).ApiKey(process.env.WEAVIATE_API_KEY)
+      : undefined,
   });
   const store = await WeaviateStore.fromTexts(
     ["hello world", "hi there", "how are you", "bye now"],
@@ -62,7 +64,7 @@ test.skip("WeaviateStore", async () => {
       client,
       indexName: "DocumentTest",
       textKey: "text",
-      metadataKeys: ["deep.string", "deep.deepdeep.string"],
+      metadataKeys: ["deep_string", "deep_deepdeep_string"],
     }
   );
 
@@ -72,7 +74,7 @@ test.skip("WeaviateStore", async () => {
     {
       where: {
         operator: "Equal",
-        path: ["deep.string"],
+        path: ["deep_string"],
         valueText: "deep string",
       },
     }
@@ -81,8 +83,8 @@ test.skip("WeaviateStore", async () => {
     new Document({
       pageContent: "this is the deep document world!",
       metadata: {
-        "deep.string": "deep string",
-        "deep.deepdeep.string": "even a deeper string",
+        deep_string: "deep string",
+        deep_deepdeep_string: "even a deeper string",
       },
     }),
   ]);
