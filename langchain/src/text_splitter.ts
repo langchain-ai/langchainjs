@@ -222,6 +222,7 @@ export const SupportedTextSplitterLanguages = [
   "markdown",
   "latex",
   "html",
+  "sol",
 ] as const;
 
 export type SupportedTextSplitterLanguage =
@@ -614,6 +615,36 @@ export class RecursiveCharacterTextSplitter
         "<meta>",
         "<title>",
         // Normal type of lines
+        " ",
+        "",
+      ];
+    } else if (language === "sol") {
+      return [
+        // Split along compiler informations definitions
+        "\npragma ",
+        "\nusing ",
+        // Split along contract definitions
+        "\ncontract ",
+        "\ninterface ",
+        "\nlibrary ",
+        // Split along method definitions
+        "\nconstructor ",
+        "\ntype ",
+        "\nfunction ",
+        "\nevent ",
+        "\nmodifier ",
+        "\nerror ",
+        "\nstruct ",
+        "\nenum ",
+        // Split along control flow statements
+        "\nif ",
+        "\nfor ",
+        "\nwhile ",
+        "\ndo while ",
+        "\nassembly ",
+        // Split by the normal type of lines
+        "\n\n",
+        "\n",
         " ",
         "",
       ];
