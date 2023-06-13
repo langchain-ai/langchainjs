@@ -88,6 +88,9 @@
     "llms/ai21.cjs",
     "llms/ai21.js",
     "llms/ai21.d.ts",
+    "llms/aleph_alpha.cjs",
+    "llms/aleph_alpha.js",
+    "llms/aleph_alpha.d.ts",
     "llms/cohere.cjs",
     "llms/cohere.js",
     "llms/cohere.d.ts",
@@ -872,6 +875,11 @@
       "types": "./llms/ai21.d.ts",
       "import": "./llms/ai21.js",
       "require": "./llms/ai21.cjs"
+    },
+    "./llms/aleph_alpha": {
+      "types": "./llms/aleph_alpha.d.ts",
+      "import": "./llms/aleph_alpha.js",
+      "require": "./llms/aleph_alpha.cjs"
     },
     "./llms/cohere": {
       "types": "./llms/cohere.d.ts",

@@ -76,6 +76,9 @@ llms/openai.d.ts
 llms/ai21.cjs
 llms/ai21.js
 llms/ai21.d.ts
+llms/aleph_alpha.cjs
+llms/aleph_alpha.js
+llms/aleph_alpha.d.ts
 llms/cohere.cjs
 llms/cohere.js
 llms/cohere.d.ts
