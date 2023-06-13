@@ -1,8 +1,8 @@
 import { Document } from "../document.js";
 import { Embeddings } from "../embeddings/base.js";
+import { OpenAIEmbeddings } from "../embeddings/openai.js";
 import { getEnvironmentVariable } from "../util/env.js";
 import { VectorStore } from "./base.js";
-import { v4 } from "uuid";
 
 export interface VectaraLibArgs {
   customer_id: number;
@@ -25,8 +25,8 @@ export class VectaraStore extends VectorStore {
   private corpus_id: number;
   private customer_id: number;
 
-  constructor(embeddings: Embeddings, args: VectaraLibArgs) {
-    super(embeddings, args);
+  constructor(args: VectaraLibArgs) {
+    super(new OpenAIEmbeddings(), args);
 
     const apiKey = args.api_key ?? getEnvironmentVariable("VECTARA_API_KEY");
     if (!apiKey) {
@@ -72,14 +72,13 @@ export class VectaraStore extends VectorStore {
     documents: Document<Record<string, any>>[]
   ): Promise<any> {
     const headers = await this.getHeader();
-
+    let countAdded: number = 0;
     for (const document of documents) {
-      const doc_id = document.metadata.id ?? v4();
       const data = {
         customer_id: this.customer_id,
         corpus_id: this.corpus_id,
         document: {
-          document_id: doc_id,
+          document_id: document.metadata.document_id,
           title: document.metadata.title ?? "",
           metadata_json: JSON.stringify(document.metadata),
           section: [
@@ -91,23 +90,31 @@ export class VectaraStore extends VectorStore {
       };
 
       try {
-        await fetch(`https://${this.api_endpoint}/v1/index`, {
+        const response = await fetch(`https://${this.api_endpoint}/v1/index`, {
           method: "POST",
           headers: headers?.headers,
           body: JSON.stringify(data),
         });
+        const result = await response.json();
+        if (result.status.code !== 'OK' && result.status.code !== 'ALREADY_EXISTS') {
+          return {
+            "code": 500,
+            "detail": `Vectara API returned status code ${response.status}`,
+          }
+        } else {
+          countAdded += 1;
+        }
       }
       catch (e) {
         return {
           "code": 500,
-          "error": "Error while adding document to Vectara + " + e,
-          "document": document,
+          "detail": `Error ${e} while adding document ${document}`,
         };
       }
     }
     return {
       "code": 200,
-      "detail": `Successfully added ${documents.length} documents to Vectara`,
+      "detail": `Added ${countAdded} documents to Vectara`,
     };
   }
 
@@ -173,7 +180,7 @@ export class VectaraStore extends VectorStore {
     _k: number,
     _filter?: this["FilterType"] | undefined
   ): Promise<[Document<Record<string, any>>, number][]> {
-    throw new Error("Method not implemented.");
+    throw new Error("Method not implemented. Please call similaritySearch or similaritySearchWithScore instead.");
   }
 
   static fromTexts(
@@ -196,10 +203,10 @@ export class VectaraStore extends VectorStore {
 
   static async fromDocuments(
     docs: Document[],
-    embeddings: Embeddings,
+    _embeddings: Embeddings,
     args: VectaraLibArgs
   ): Promise<VectaraStore> {
-    const instance = new this(embeddings, args);
+    const instance = new this(args);
     await instance.addDocuments(docs);
     return instance;
   }

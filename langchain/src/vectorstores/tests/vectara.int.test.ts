@@ -1,7 +1,6 @@
 /* eslint-disable no-process-env */
 import { test, expect } from "@jest/globals";
 import { VectaraStore } from "../vectara.js";
-import { OpenAIEmbeddings } from "../../embeddings/openai.js";
 import { Document } from "../../document.js";
 
 const hashCode = (s: string) => {
@@ -12,7 +11,7 @@ const hashCode = (s: string) => {
 };
 
 test.skip("Vectara Add Documents", async () => {
-  const store = new VectaraStore(new OpenAIEmbeddings(), {
+  const store = new VectaraStore({
     customer_id: Number(process.env.VECTARA_CUSTOMER_ID) || 0,
     corpus_id: Number(process.env.VECTARA_CORPUS_ID) || 0,
     api_key: process.env.VECTARA_API_KEY || ""
@@ -26,7 +25,7 @@ test.skip("Vectara Add Documents", async () => {
     new Document({
       pageContent: firstText,
       metadata: {
-        document_id: hashCode(firstText), // Generate a hashcode for document id based on the text
+        document_id: hashCode(firstText).toString(), // Generate a hashcode for document id based on the text
         title: "Lord of the Rings",
         author: "Tokien",
         genre: "fiction"
@@ -35,7 +34,7 @@ test.skip("Vectara Add Documents", async () => {
     new Document({
       pageContent: secondText,
       metadata: {
-        document_id: hashCode(secondText), // Generate a hashcode for document id based on the text
+        document_id: hashCode(secondText).toString(), // Generate a hashcode for document id based on the text
         title: "Lord of the Rings",
         author: "Tolkien",
         genre: "fiction"
@@ -44,9 +43,7 @@ test.skip("Vectara Add Documents", async () => {
   ];
 
   const indexResult = await store.addDocuments(documents);
-  const { code, detail } = indexResult;
-  expect(code).toEqual(200);
-  expect(detail).toEqual(`Successfully added ${documents.length} documents to Vectara`);
+  expect(indexResult.code).toEqual(200);
 
   const resultsWithScore = await store.similaritySearchWithScore("What did Sam do?", 1);
   expect(resultsWithScore.length).toBeGreaterThan(0);
