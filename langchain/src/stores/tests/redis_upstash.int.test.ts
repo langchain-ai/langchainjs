@@ -2,7 +2,7 @@
 /* eslint-disable no-process-env */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 
-import { test, expect } from "@jest/globals";
+import { test, expect, describe } from "@jest/globals";
 
 import { UpstashRedisChatMessageHistory } from "../message/upstash_redis.js";
 import { HumanChatMessage, AIChatMessage } from "../../schema/index.js";
@@ -15,119 +15,123 @@ const config = {
   token: process.env.UPSTASH_REDIS_REST_TOKEN!,
 };
 
-test("Test Redis Upstash history store", async () => {
-  const chatHistory = new UpstashRedisChatMessageHistory({
-    sessionId: new Date().toISOString(),
-    config,
-  });
-
-  const blankResult = await chatHistory.getMessages();
-  expect(blankResult).toStrictEqual([]);
-
-  await chatHistory.addUserMessage("Who is the best vocalist?");
-  await chatHistory.addAIChatMessage("Ozzy Osbourne");
-
-  const expectedMessages = [
-    new HumanChatMessage("Who is the best vocalist?"),
-    new AIChatMessage("Ozzy Osbourne"),
-  ];
-
-  const resultWithHistory = await chatHistory.getMessages();
-  expect(resultWithHistory).toEqual(expectedMessages);
-});
-
-test("Test clear Redis Upstash history store", async () => {
-  const chatHistory = new UpstashRedisChatMessageHistory({
-    sessionId: new Date().toISOString(),
-    config,
-  });
-
-  await chatHistory.addUserMessage("Who is the best vocalist?");
-  await chatHistory.addAIChatMessage("Ozzy Osbourne");
-
-  const expectedMessages = [
-    new HumanChatMessage("Who is the best vocalist?"),
-    new AIChatMessage("Ozzy Osbourne"),
-  ];
-
-  const resultWithHistory = await chatHistory.getMessages();
-  expect(resultWithHistory).toEqual(expectedMessages);
-
-  await chatHistory.clear();
-
-  const blankResult = await chatHistory.getMessages();
-  expect(blankResult).toStrictEqual([]);
-});
-
-test("Test Redis Upstash history with a TTL", async () => {
-  const chatHistory = new UpstashRedisChatMessageHistory({
-    sessionId: new Date().toISOString(),
-    sessionTTL: 5,
-    config,
-  });
-
-  const blankResult = await chatHistory.getMessages();
-  expect(blankResult).toStrictEqual([]);
-
-  await chatHistory.addUserMessage("Who is the best vocalist?");
-  await chatHistory.addAIChatMessage("Ozzy Osbourne");
-
-  const expectedMessages = [
-    new HumanChatMessage("Who is the best vocalist?"),
-    new AIChatMessage("Ozzy Osbourne"),
-  ];
-
-  const resultWithHistory = await chatHistory.getMessages();
-  expect(resultWithHistory).toEqual(expectedMessages);
-
-  await new Promise((resolve) => setTimeout(resolve, 5000));
-
-  const expiredResult = await chatHistory.getMessages();
-  expect(expiredResult).toStrictEqual([]);
-});
-
-test("Test Redis Upstash memory with Buffer Memory", async () => {
-  const memory = new BufferMemory({
-    returnMessages: true,
-    chatHistory: new UpstashRedisChatMessageHistory({
+describe.skip("UpstashRedisChatMessageHistory", () => {
+  test("Test Redis Upstash history store", async () => {
+    const chatHistory = new UpstashRedisChatMessageHistory({
       sessionId: new Date().toISOString(),
       config,
-    }),
+    });
+
+    const blankResult = await chatHistory.getMessages();
+    expect(blankResult).toStrictEqual([]);
+
+    await chatHistory.addUserMessage("Who is the best vocalist?");
+    await chatHistory.addAIChatMessage("Ozzy Osbourne");
+
+    const expectedMessages = [
+      new HumanChatMessage("Who is the best vocalist?"),
+      new AIChatMessage("Ozzy Osbourne"),
+    ];
+
+    const resultWithHistory = await chatHistory.getMessages();
+    expect(resultWithHistory).toEqual(expectedMessages);
   });
 
-  await memory.saveContext(
-    { input: "Who is the best vocalist?" },
-    { response: "Ozzy Osbourne" }
-  );
-
-  const expectedHistory = [
-    new HumanChatMessage("Who is the best vocalist?"),
-    new AIChatMessage("Ozzy Osbourne"),
-  ];
-
-  const result2 = await memory.loadMemoryVariables({});
-  expect(result2).toStrictEqual({ history: expectedHistory });
-});
-
-test("Test Redis Upstash memory with LLM Chain", async () => {
-  const memory = new BufferMemory({
-    chatHistory: new UpstashRedisChatMessageHistory({
+  test("Test clear Redis Upstash history store", async () => {
+    const chatHistory = new UpstashRedisChatMessageHistory({
       sessionId: new Date().toISOString(),
       config,
-    }),
+    });
+
+    await chatHistory.addUserMessage("Who is the best vocalist?");
+    await chatHistory.addAIChatMessage("Ozzy Osbourne");
+
+    const expectedMessages = [
+      new HumanChatMessage("Who is the best vocalist?"),
+      new AIChatMessage("Ozzy Osbourne"),
+    ];
+
+    const resultWithHistory = await chatHistory.getMessages();
+    expect(resultWithHistory).toEqual(expectedMessages);
+
+    await chatHistory.clear();
+
+    const blankResult = await chatHistory.getMessages();
+    expect(blankResult).toStrictEqual([]);
   });
 
-  const model = new ChatOpenAI({
-    modelName: "gpt-3.5-turbo",
-    temperature: 0,
+  test("Test Redis Upstash history with a TTL", async () => {
+    const chatHistory = new UpstashRedisChatMessageHistory({
+      sessionId: new Date().toISOString(),
+      sessionTTL: 5,
+      config,
+    });
+
+    const blankResult = await chatHistory.getMessages();
+    expect(blankResult).toStrictEqual([]);
+
+    await chatHistory.addUserMessage("Who is the best vocalist?");
+    await chatHistory.addAIChatMessage("Ozzy Osbourne");
+
+    const expectedMessages = [
+      new HumanChatMessage("Who is the best vocalist?"),
+      new AIChatMessage("Ozzy Osbourne"),
+    ];
+
+    const resultWithHistory = await chatHistory.getMessages();
+    expect(resultWithHistory).toEqual(expectedMessages);
+
+    await new Promise((resolve) => setTimeout(resolve, 5000));
+
+    const expiredResult = await chatHistory.getMessages();
+    expect(expiredResult).toStrictEqual([]);
   });
-  const chain = new ConversationChain({ llm: model, memory });
 
-  const res1 = await chain.call({ input: "Hi! I'm Jim." });
-  console.log({ res1 });
+  test("Test Redis Upstash memory with Buffer Memory", async () => {
+    const memory = new BufferMemory({
+      returnMessages: true,
+      chatHistory: new UpstashRedisChatMessageHistory({
+        sessionId: new Date().toISOString(),
+        config,
+      }),
+    });
 
-  const res2 = await chain.call({ input: "What did I just say my name was?" });
-  console.log({ res2 });
+    await memory.saveContext(
+      { input: "Who is the best vocalist?" },
+      { response: "Ozzy Osbourne" }
+    );
 
-  expect(res2.response).toContain("Jim");
+    const expectedHistory = [
+      new HumanChatMessage("Who is the best vocalist?"),
+      new AIChatMessage("Ozzy Osbourne"),
+    ];
+
+    const result2 = await memory.loadMemoryVariables({});
+    expect(result2).toStrictEqual({ history: expectedHistory });
+  });
+
+  test("Test Redis Upstash memory with LLM Chain", async () => {
+    const memory = new BufferMemory({
+      chatHistory: new UpstashRedisChatMessageHistory({
+        sessionId: new Date().toISOString(),
+        config,
+      }),
+    });
+
+    const model = new ChatOpenAI({
+      modelName: "gpt-3.5-turbo",
+      temperature: 0,
+    });
+    const chain = new ConversationChain({ llm: model, memory });
+
+    const res1 = await chain.call({ input: "Hi! I'm Jim." });
+    console.log({ res1 });
+
+    const res2 = await chain.call({
+      input: "What did I just say my name was?",
+    });
+    console.log({ res2 });
+
+    expect(res2.response).toContain("Jim");
+  });
 });

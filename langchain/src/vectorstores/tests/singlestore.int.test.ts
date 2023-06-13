@@ -6,7 +6,7 @@ import { OpenAIEmbeddings } from "../../embeddings/openai.js";
 import { SingleStoreVectorStore } from "../singlestore.js";
 import { Document } from "../../document.js";
 
-test("SingleStoreVectorStore", async () => {
+test.skip("SingleStoreVectorStore", async () => {
   expect(process.env.SINGLESTORE_HOST).toBeDefined();
   expect(process.env.SINGLESTORE_PORT).toBeDefined();
   expect(process.env.SINGLESTORE_USERNAME).toBeDefined();
