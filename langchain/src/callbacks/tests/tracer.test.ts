@@ -55,7 +55,7 @@ test("Test LLMRun", async () => {
   expect(run).toEqual(compareRun);
 });
 
-test("Test Chat Message Run", async () => {
+test("Test Chat Model Run", async () => {
   const tracer = new FakeTracer();
   const runId = uuid.v4();
   const messages = [[new HumanChatMessage("Avast")]];
@@ -73,7 +73,7 @@ test("Test Chat Message Run", async () => {
       "child_runs": [],
       "end_time": 1620000000000,
       "execution_order": 1,
-      "extra": undefined,
+      "extra": {},
       "id": Any<String>,
       "inputs": {
         "messages": [
