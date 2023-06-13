@@ -45,15 +45,27 @@ test("Test LLMRun", async () => {
     execution_order: 1,
     child_execution_order: 1,
     serialized,
+    events: [
+      {
+        name: "start",
+        time: 1620000000000,
+      },
+      {
+        name: "end",
+        time: 1620000000000,
+      },
+    ],
     inputs: { prompts: ["test"] },
     run_type: "llm",
     outputs: { generations: [] },
     child_runs: [],
+    extra: {},
+    tags: [],
   };
   expect(run).toEqual(compareRun);
 });
 
-test("Test Chat Message Run", async () => {
+test("Test Chat Model Run", async () => {
   const tracer = new FakeTracer();
   const runId = uuid.v4();
   const messages = [[new HumanChatMessage("Avast")]];
@@ -70,8 +82,18 @@ test("Test Chat Message Run", async () => {
       "child_execution_order": 1,
       "child_runs": [],
       "end_time": 1620000000000,
+      "events": [
+        {
+          "name": "start",
+          "time": 1620000000000,
+        },
+        {
+          "name": "end",
+          "time": 1620000000000,
+        },
+      ],
       "execution_order": 1,
-      "extra": undefined,
+      "extra": {},
       "id": Any<String>,
       "inputs": {
         "messages": [
@@ -101,6 +123,7 @@ test("Test Chat Message Run", async () => {
         "type": "constructor",
       },
       "start_time": 1620000000000,
+      "tags": [],
     }
   `
   );
@@ -125,10 +148,22 @@ test("Test Chain Run", async () => {
     execution_order: 1,
     child_execution_order: 1,
     serialized,
+    events: [
+      {
+        name: "start",
+        time: 1620000000000,
+      },
+      {
+        name: "end",
+        time: 1620000000000,
+      },
+    ],
     inputs: { foo: "bar" },
     outputs: { foo: "bar" },
     run_type: "chain",
     child_runs: [],
+    extra: {},
+    tags: [],
   };
   await tracer.handleChainStart(serialized, { foo: "bar" }, runId);
   await tracer.handleChainEnd({ foo: "bar" }, runId);
@@ -148,10 +183,22 @@ test("Test Tool Run", async () => {
     execution_order: 1,
     child_execution_order: 1,
     serialized,
+    events: [
+      {
+        name: "start",
+        time: 1620000000000,
+      },
+      {
+        name: "end",
+        time: 1620000000000,
+      },
+    ],
     inputs: { input: "test" },
     outputs: { output: "output" },
     run_type: "tool",
     child_runs: [],
+    extra: {},
+    tags: [],
   };
   await tracer.handleToolStart(serialized, "test", runId);
   await tracer.handleToolEnd("output", runId);
@@ -208,9 +255,21 @@ test("Test nested runs", async () => {
               generations: [[]],
             },
             serialized: { ...serialized, id: ["test_llm_child_run"] },
+            events: [
+              {
+                name: "start",
+                time: 1620000000000,
+              },
+              {
+                name: "end",
+                time: 1620000000000,
+              },
+            ],
             start_time: 1620000000000,
             run_type: "llm",
             child_runs: [],
+            extra: {},
+            tags: [],
           },
         ],
         end_time: 1620000000000,
@@ -218,9 +277,21 @@ test("Test nested runs", async () => {
         child_execution_order: 3,
         outputs: { output: "output" },
         serialized: { ...serialized, id: ["test_tool"] },
+        events: [
+          {
+            name: "start",
+            time: 1620000000000,
+          },
+          {
+            name: "end",
+            time: 1620000000000,
+          },
+        ],
         start_time: 1620000000000,
         inputs: { input: "test" },
         run_type: "tool",
+        extra: {},
+        tags: [],
       },
       {
         id: llmRunId2,
@@ -234,9 +305,21 @@ test("Test nested runs", async () => {
           generations: [[]],
         },
         serialized: { ...serialized, id: ["test_llm2"] },
+        events: [
+          {
+            name: "start",
+            time: 1620000000000,
+          },
+          {
+            name: "end",
+            time: 1620000000000,
+          },
+        ],
         start_time: 1620000000000,
         run_type: "llm",
         child_runs: [],
+        extra: {},
+        tags: [],
       },
     ],
     id: chainRunId,
@@ -249,10 +332,22 @@ test("Test nested runs", async () => {
     outputs: {
       foo: "bar",
     },
-    serialized: { ...serialized, id: ["test"] },
+    events: [
+      {
+        name: "start",
+        time: 1620000000000,
+      },
+      {
+        name: "end",
+        time: 1620000000000,
+      },
+    ],
     name: "test",
+    serialized,
     start_time: 1620000000000,
     run_type: "chain",
+    extra: {},
+    tags: [],
   };
   expect(tracer.runs.length).toBe(1);
   expect(tracer.runs[0]).toEqual(compareRun);

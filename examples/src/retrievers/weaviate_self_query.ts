@@ -1,12 +1,12 @@
-import { createClient } from "@supabase/supabase-js";
+import weaviate from "weaviate-ts-client";
 
 import { AttributeInfo } from "langchain/schema/query_constructor";
 import { Document } from "langchain/document";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { SelfQueryRetriever } from "langchain/retrievers/self_query";
-import { SupabaseTranslator } from "langchain/retrievers/self_query/supabase";
 import { OpenAI } from "langchain/llms/openai";
-import { SupabaseVectorStore } from "langchain/vectorstores/supabase";
+import { WeaviateStore } from "langchain/vectorstores/weaviate";
+import { WeaviateTranslator } from "langchain/retrievers/self_query/weaviate";
 
 /**
  * First, we create a bunch of documents. You can load your own documents here instead.
@@ -85,21 +85,24 @@ const attributeInfo: AttributeInfo[] = [
 /**
  * Next, we instantiate a vector store. This is where we store the embeddings of the documents.
  */
-if (!process.env.SUPABASE_URL || !process.env.SUPABASE_PRIVATE_KEY) {
-  throw new Error(
-    "Supabase URL or private key not set. Please set it in the .env file"
-  );
-}
-
 const embeddings = new OpenAIEmbeddings();
 const llm = new OpenAI();
 const documentContents = "Brief summary of a movie";
-const client = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_PRIVATE_KEY
-);
-const vectorStore = await SupabaseVectorStore.fromDocuments(docs, embeddings, {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const client = (weaviate as any).client({
+  scheme: process.env.WEAVIATE_SCHEME || "https",
+  host: process.env.WEAVIATE_HOST || "localhost",
+  apiKey: process.env.WEAVIATE_API_KEY
+    ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      new (weaviate as any).ApiKey(process.env.WEAVIATE_API_KEY)
+    : undefined,
+});
+
+const vectorStore = await WeaviateStore.fromDocuments(docs, embeddings, {
   client,
+  indexName: "Test",
+  textKey: "text",
+  metadataKeys: ["year", "director", "rating", "genre"],
 });
 const selfQueryRetriever = await SelfQueryRetriever.fromLLM({
   llm,
@@ -110,7 +113,7 @@ const selfQueryRetriever = await SelfQueryRetriever.fromLLM({
    * We need to use a translator that translates the queries into a
    * filter format that the vector store can understand. LangChain provides one here.
    */
-  structuredQueryTranslator: new SupabaseTranslator(),
+  structuredQueryTranslator: new WeaviateTranslator(),
 });
 
 /**
@@ -118,17 +121,15 @@ const selfQueryRetriever = await SelfQueryRetriever.fromLLM({
  * We can ask questions like "Which movies are less than 90 minutes?" or "Which movies are rated higher than 8.5?".
  * We can also ask questions like "Which movies are either comedy or drama and are less than 90 minutes?".
  * The retriever will automatically convert these questions into queries that can be used to retrieve documents.
+ *
+ * Note that unlike other vector stores, you have to make sure each metadata keys are actually presnt in the database,
+ * meaning that Weaviate will throw an error if the self query chain generate a query with a metadata key that does
+ * not exist in your Weaviate database.
  */
 const query1 = await selfQueryRetriever.getRelevantDocuments(
-  "Which movies are less than 90 minutes?"
-);
-const query2 = await selfQueryRetriever.getRelevantDocuments(
   "Which movies are rated higher than 8.5?"
 );
-const query3 = await selfQueryRetriever.getRelevantDocuments(
+const query2 = await selfQueryRetriever.getRelevantDocuments(
   "Which movies are directed by Greta Gerwig?"
 );
-const query4 = await selfQueryRetriever.getRelevantDocuments(
-  "Which movies are either comedy or drama and are less than 90 minutes?"
-);
-console.log(query1, query2, query3, query4);
+console.log(query1, query2);

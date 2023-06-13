@@ -21,6 +21,7 @@ export type SerializedLLM = {
 export interface BaseLangChainParams {
   verbose?: boolean;
   callbacks?: Callbacks;
+  tags?: string[];
 }
 
 /**
@@ -37,6 +38,8 @@ export abstract class BaseLangChain
 
   callbacks?: Callbacks;
 
+  tags?: string[];
+
   get lc_attributes(): { [key: string]: undefined } | undefined {
     return {
       callbacks: undefined,
@@ -48,6 +51,7 @@ export abstract class BaseLangChain
     super(params);
     this.verbose = params.verbose ?? getVerbosity();
     this.callbacks = params.callbacks;
+    this.tags = params.tags ?? [];
   }
 }
 
@@ -82,6 +86,11 @@ export interface BaseLanguageModelCallOptions {
    * If provided, the call will be aborted when the signal is aborted.
    */
   signal?: AbortSignal;
+
+  /**
+   * Tags to attach to this call.
+   */
+  tags?: string[];
 }
 
 /**

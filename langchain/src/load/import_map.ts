@@ -11,6 +11,7 @@ export * as embeddings__openai from "../embeddings/openai.js";
 export * as llms__base from "../llms/base.js";
 export * as llms__openai from "../llms/openai.js";
 export * as llms__ai21 from "../llms/ai21.js";
+export * as llms__aleph_alpha from "../llms/aleph_alpha.js";
 export * as prompts from "../prompts/index.js";
 export * as vectorstores__base from "../vectorstores/base.js";
 export * as vectorstores__memory from "../vectorstores/memory.js";

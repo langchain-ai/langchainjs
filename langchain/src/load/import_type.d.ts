@@ -211,6 +211,9 @@ export interface OptionalImportMap {
   "langchain/retrievers/self_query/supabase"?:
     | typeof import("../retrievers/self_query/supabase.js")
     | Promise<typeof import("../retrievers/self_query/supabase.js")>;
+  "langchain/retrievers/self_query/weaviate"?:
+    | typeof import("../retrievers/self_query/weaviate.js")
+    | Promise<typeof import("../retrievers/self_query/weaviate.js")>;
   "langchain/cache/momento"?:
     | typeof import("../cache/momento.js")
     | Promise<typeof import("../cache/momento.js")>;

@@ -76,6 +76,9 @@ llms/openai.d.ts
 llms/ai21.cjs
 llms/ai21.js
 llms/ai21.d.ts
+llms/aleph_alpha.cjs
+llms/aleph_alpha.js
+llms/aleph_alpha.d.ts
 llms/cohere.cjs
 llms/cohere.js
 llms/cohere.d.ts
@@ -331,6 +334,9 @@ retrievers/self_query/pinecone.d.ts
 retrievers/self_query/supabase.cjs
 retrievers/self_query/supabase.js
 retrievers/self_query/supabase.d.ts
+retrievers/self_query/weaviate.cjs
+retrievers/self_query/weaviate.js
+retrievers/self_query/weaviate.d.ts
 retrievers/vespa.cjs
 retrievers/vespa.js
 retrievers/vespa.d.ts
