@@ -127,11 +127,9 @@ export class Typesense extends VectorStore {
    * @returns Typesense records.
    */
   async documentsToTypesenseRecords(
-    documents: Document[]
+    documents: Document[],
+    vectors: number[][]
   ): Promise<Record<string, unknown>[]> {
-    const pageContents = documents.map((doc) => doc.pageContent);
-    const vectors = await this.embeddings.embedDocuments(pageContents);
-
     const metadatas = documents.map((doc) => doc.metadata);
 
     const typesenseDocuments = documents.map((doc, index) => {
@@ -160,7 +158,10 @@ export class Typesense extends VectorStore {
    */
   async addDocuments(documents: Document[]) {
     const typesenseDocuments = await this.documentsToTypesenseRecords(
-      documents
+      documents,
+      await this.embeddings.embedDocuments(
+        documents.map((doc) => doc.pageContent)
+      )
     );
     await this.import(typesenseDocuments, this.schemaName);
   }
@@ -235,9 +236,12 @@ export class Typesense extends VectorStore {
     return instance;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async addVectors(_vectors: number[][]) {
-    throw new Error("Method not implemented");
+  async addVectors(vectors: number[][], documents: Document[]) {
+    const typesenseDocuments = await this.documentsToTypesenseRecords(
+      documents,
+      vectors
+    );
+    await this.import(typesenseDocuments, this.schemaName);
   }
 
   /**
