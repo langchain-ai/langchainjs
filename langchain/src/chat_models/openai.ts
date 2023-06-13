@@ -8,6 +8,7 @@ import {
   ChatCompletionRequestMessage,
   ChatCompletionResponseMessage,
   ChatCompletionFunctions,
+  CreateChatCompletionRequestFunctionCall,
 } from "openai";
 import { getEnvironmentVariable, isNode } from "../util/env.js";
 import {
@@ -81,6 +82,7 @@ function openAIResponseToChatMessage(
 }
 
 export interface ChatOpenAICallOptions extends OpenAICallOptions {
+  function_call?: CreateChatCompletionRequestFunctionCall;
   functions?: ChatCompletionFunctions[];
   tools?: StructuredTool[];
 }
@@ -299,6 +301,7 @@ export class ChatOpenAI
     params.functions =
       options?.functions ??
       (options?.tools ? options?.tools.map(formatToOpenAIFunction) : undefined);
+    params.function_call = options?.function_call;
     const messagesMapped: ChatCompletionRequestMessage[] = messages.map(
       (message) => ({
         role: messageTypeToOpenAIRole(message._getType()),
