@@ -376,13 +376,24 @@ export class ChatOpenAI
                         choice.message = {
                           role: part.delta
                             ?.role as ChatCompletionResponseMessageRoleEnum,
-                          content: part.delta?.content ?? "",
-                          function_call: part.delta?.function_call,
+                          content: "",
+                        };
+                      }
+
+                      if (
+                        part.delta.function_call &&
+                        !choice.message.function_call
+                      ) {
+                        choice.message.function_call = {
+                          name: "",
+                          arguments: "",
                         };
                       }
 
                       choice.message.content += part.delta?.content ?? "";
                       if (choice.message.function_call) {
+                        choice.message.function_call.name +=
+                          part.delta?.function_call?.name ?? "";
                         choice.message.function_call.arguments +=
                           part.delta?.function_call?.arguments ?? "";
                       }
