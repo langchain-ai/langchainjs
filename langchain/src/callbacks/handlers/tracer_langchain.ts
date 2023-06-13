@@ -1,5 +1,9 @@
 import { LangChainPlusClient } from "langchainplus-sdk";
-import { BaseRun, RunCreate, RunUpdate } from "langchainplus-sdk/schemas";
+import {
+  BaseRun,
+  RunCreate,
+  RunUpdate as BaseRunUpdate,
+} from "langchainplus-sdk/schemas";
 import {
   getEnvironmentVariable,
   getRuntimeEnvironment,
@@ -11,6 +15,10 @@ export interface Run extends BaseRun {
   id: string;
   child_runs: this[];
   child_execution_order: number;
+}
+
+export interface RunUpdate extends BaseRunUpdate {
+  events: BaseRun["events"];
 }
 
 export interface LangChainTracerFields extends BaseCallbackHandlerInput {
@@ -72,6 +80,7 @@ export class LangChainTracer
       end_time: run.end_time,
       error: run.error,
       outputs: run.outputs,
+      events: run.events,
     };
     await this.client.updateRun(run.id, runUpdate);
   }

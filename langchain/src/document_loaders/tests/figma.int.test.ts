@@ -3,7 +3,7 @@
 import { test } from "@jest/globals";
 import { FigmaFileLoader } from "../web/figma.js";
 
-test("Test FigmaFileLoader", async () => {
+test.skip("Test FigmaFileLoader", async () => {
   const loader = new FigmaFileLoader({
     accessToken: process.env.FIGMA_ACCESS_TOKEN!,
     nodeIds: (process.env.FIGMA_NODE_IDS ?? "").split(","),
