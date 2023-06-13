@@ -58,6 +58,8 @@ export interface TypesenseConfig extends AsyncCallerParams {
  * Typesense vector store.
  */
 export class Typesense extends VectorStore {
+  declare FilterType: Record<string, unknown>;
+
   private client: Client;
 
   private schemaName: string;
@@ -78,7 +80,7 @@ export class Typesense extends VectorStore {
   ) => Promise<void>;
 
   constructor(embeddings: Embeddings, config: TypesenseConfig) {
-    super(embeddings, {});
+    super(embeddings, config);
 
     // Assign config values to class properties.
     this.client = config.typesenseClient;
@@ -93,7 +95,7 @@ export class Typesense extends VectorStore {
     this.metadataColumnNames = config.columnNames?.metadataColumnNames || [];
 
     // Assign import function.
-    this.import = config.import || this.importToTypesense;
+    this.import = config.import || this.importToTypesense.bind(this);
 
     this.caller = new AsyncCaller(config);
   }
@@ -292,19 +294,32 @@ export class Typesense extends VectorStore {
   }
 
   /**
-   * Search for similar documents.
-   * @param query query
-   * @param k amount of results to return
-   * @param filter filter to apply to the search, merged with default search params. As Langchain chains method does do the similarity search implicitly, you can use modifySearchParams to change the default search params.
-   * @returns similar documents
+   * Delete documents from the vector store.
+   * @param documentIds ids of the documents to delete
    */
-  async similaritySearch(
-    query: string,
+  async deleteDocuments(documentIds: string[]) {
+    await this.client
+      .collections(this.schemaName)
+      .documents()
+      .delete({
+        filter_by: `id:=${documentIds.join(",")}`,
+      });
+  }
+
+  /**
+   * Search for similar documents with their similarity score.
+   * All the documents have 0 as similarity score because Typesense API
+   * does not return the similarity score.
+   * @param vectorPrompt vector to search for
+   * @param k amount of results to return
+   * @returns similar documents with their similarity score
+   */
+  async similaritySearchVectorWithScore(
+    vectorPrompt: number[],
     k?: number,
-    filter: Record<string, unknown> = {}
-  ) {
+    filter?: this["FilterType"]
+  ): Promise<[Document<Record<string, unknown>>, number][]> {
     const amount = k || this.searchParams.per_page || 5;
-    const vectorPrompt = await this.embeddings.embedQuery(query);
     const vector_query = `${this.vectorColumnName}:([${vectorPrompt}], k:${amount})`;
     const typesenseResponse = await this.client.multiSearch.perform(
       {
@@ -320,76 +335,15 @@ export class Typesense extends VectorStore {
       },
       {}
     );
-
-    const results = typesenseResponse.results[0].hits;
-    const hits = results?.map((hit) => hit.document) as
-      | Record<string, unknown>[]
-      | undefined;
-
-    const documents = this.typesenseRecordsToDocuments(hits);
-
-    return documents;
-  }
-
-  /**
-   * Delete documents from the vector store.
-   * @param documentIds ids of the documents to delete
-   */
-  async deleteDocuments(documentIds: string[]) {
-    await this.client
-      .collections(this.schemaName)
-      .documents()
-      .delete({
-        filter_by: `id:=${documentIds.join(",")}`,
-      });
-  }
-
-  /**
-   * Search for similar documents with their similarity score. All the documents has 1 as similarity score because Typesense API does not return the similarity score.
-   * @param vectorPrompt vector to search for
-   * @param k amount of results to return
-   * @returns similar documents with their similarity score
-   */
-  async similaritySearchVectorWithScore(
-    vectorPrompt: number[],
-    k?: number
-  ): Promise<[Document<Record<string, unknown>>, number][]> {
-    const amount = k || this.searchParams.per_page || 5;
-    const vector_query = `${this.vectorColumnName}:([${vectorPrompt}], k:${amount})`;
-    const typesenseResponse = await this.client.multiSearch.perform(
-      {
-        searches: [
-          {
-            ...this.searchParams,
-            per_page: amount,
-            vector_query,
-            collection: this.schemaName,
-          },
-        ],
-      },
-      {}
-    );
     const results = typesenseResponse.results[0].hits;
     const hits = results?.map((hit) => hit.document) as
       | Record<string, unknown>[]
       | undefined;
 
     const documents = this.typesenseRecordsToDocuments(hits).map(
-      (doc) => [doc, 1] as [Document<Record<string, unknown>>, number]
+      (doc) => [doc, 0] as [Document<Record<string, unknown>>, number]
     );
 
     return documents;
-  }
-
-  /**
-   * Search for similar documents with their similarity score. All the documents has 1 as similarity score because Typesense API does not return the similarity score.
-   * @param query prompt to search for
-   * @returns similar documents with their similarity score
-   */
-  async similaritySearchWithScore(
-    query: string
-  ): Promise<[Document<Record<string, unknown>>, number][]> {
-    const documents = await this.similaritySearch(query);
-    return documents.map((doc) => [doc, 1] as [Document, number]);
   }
 }
