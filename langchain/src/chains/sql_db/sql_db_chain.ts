@@ -90,7 +90,7 @@ export class SqlDatabaseChain extends BaseChain {
 
     const sqlCommand = await llmChain.predict(
       llmInputs,
-      runManager?.getChild()
+      runManager?.getChild("sql_generation")
     );
     let queryResult = "";
     try {
@@ -110,7 +110,7 @@ export class SqlDatabaseChain extends BaseChain {
       finalResult = {
         [this.outputKey]: await llmChain.predict(
           llmInputs,
-          runManager?.getChild()
+          runManager?.getChild("result_generation")
         ),
       };
     }

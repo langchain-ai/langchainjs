@@ -9,6 +9,20 @@ import { Calculator } from "../../tools/calculator.js";
 import { initializeAgentExecutorWithOptions } from "../../agents/initialize.js";
 import { HumanChatMessage } from "../../schema/index.js";
 import { ChatOpenAI } from "../../chat_models/openai.js";
+import { Serialized } from "../../load/serializable.js";
+import {
+  ConstitutionalChain,
+  ConstitutionalPrinciple,
+  LLMChain,
+} from "../../chains/index.js";
+import { PromptTemplate } from "../../prompts/prompt.js";
+
+const serialized: Serialized = {
+  lc: 1,
+  type: "constructor",
+  id: ["test"],
+  kwargs: {},
+};
 
 test("Test LangChain V2 tracer", async () => {
   const tracer = new LangChainTracer({
@@ -18,30 +32,57 @@ test("Test LangChain V2 tracer", async () => {
   const toolRunId = uuid.v4();
   const llmRunId = uuid.v4();
   const chatRunId = uuid.v4();
-  await tracer.handleChainStart({ name: "test" }, { foo: "bar" }, chainRunId);
-  await tracer.handleToolStart({ name: "test" }, "test", toolRunId, chainRunId);
-  await tracer.handleLLMStart({ name: "test" }, ["test"], llmRunId, toolRunId);
+  await tracer.handleChainStart(serialized, { foo: "bar" }, chainRunId);
+  await tracer.handleToolStart(serialized, "test", toolRunId, chainRunId);
+  await tracer.handleLLMStart(serialized, ["test"], llmRunId, toolRunId);
   await tracer.handleLLMEnd({ generations: [[]] }, llmRunId);
   await tracer.handleChatModelStart(
-    { name: "testChatModel" },
+    serialized,
     [[new HumanChatMessage("I'm a human.")]],
     chatRunId
   );
   await tracer.handleLLMEnd({ generations: [[]] }, chatRunId);
   await tracer.handleToolEnd("output", toolRunId);
   const llmRunId2 = uuid.v4();
-  await tracer.handleLLMStart(
-    { name: "test2" },
-    ["test"],
-    llmRunId2,
-    chainRunId
-  );
+  await tracer.handleLLMStart(serialized, ["test"], llmRunId2, chainRunId);
   await tracer.handleLLMEnd({ generations: [[]] }, llmRunId2);
   await tracer.handleChainEnd({ foo: "bar" }, chainRunId);
 
   const llmRunId3 = uuid.v4();
-  await tracer.handleLLMStart({ name: "test" }, ["test"], llmRunId3);
+  await tracer.handleLLMStart(serialized, ["test"], llmRunId3);
   await tracer.handleLLMEnd({ generations: [[]] }, llmRunId3);
+});
+
+test("Test traced chain with tags", async () => {
+  const llm = new OpenAI();
+  const qaPrompt = new PromptTemplate({
+    template: "Q: {question} A:",
+    inputVariables: ["question"],
+  });
+
+  const qaChain = new LLMChain({
+    llm,
+    prompt: qaPrompt,
+  });
+
+  const constitutionalChain = ConstitutionalChain.fromLLM(llm, {
+    tags: ["only-in-root-chain"],
+    chain: qaChain,
+    constitutionalPrinciples: [
+      new ConstitutionalPrinciple({
+        critiqueRequest: "Tell me if this answer is good.",
+        revisionRequest: "Give a better answer.",
+      }),
+    ],
+  });
+
+  await constitutionalChain.call(
+    {
+      question: "What is the meaning of life?",
+    },
+    [new LangChainTracer()],
+    ["test-for-tags"]
+  );
 });
 
 test("Test Traced Agent with concurrency", async () => {

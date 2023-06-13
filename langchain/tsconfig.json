@@ -32,6 +32,8 @@
   ],
   "typedocOptions": {
     "entryPoints": [
+      "src/load/index.ts",
+      "src/load/serializable.ts",
       "src/agents/index.ts",
       "src/agents/load.ts",
       "src/base_language/index.ts",
@@ -54,6 +56,7 @@
       "src/llms/base.ts",
       "src/llms/openai.ts",
       "src/llms/ai21.ts",
+      "src/llms/aleph_alpha.ts",
       "src/llms/cohere.ts",
       "src/llms/hf.ts",
       "src/llms/replicate.ts",
@@ -144,6 +147,7 @@
       "src/stores/doc/gcs.ts",
       "src/stores/file/in_memory.ts",
       "src/stores/file/node.ts",
+      "src/stores/message/in_memory.ts",
       "src/stores/message/dynamodb.ts",
       "src/stores/message/momento.ts",
       "src/stores/message/redis.ts",

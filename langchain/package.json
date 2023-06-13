@@ -10,6 +10,12 @@
   "types": "./index.d.ts",
   "files": [
     "dist/",
+    "load.cjs",
+    "load.js",
+    "load.d.ts",
+    "load/serializable.cjs",
+    "load/serializable.js",
+    "load/serializable.d.ts",
     "agents.cjs",
     "agents.js",
     "agents.d.ts",
@@ -82,6 +88,9 @@
     "llms/ai21.cjs",
     "llms/ai21.js",
     "llms/ai21.d.ts",
+    "llms/aleph_alpha.cjs",
+    "llms/aleph_alpha.js",
+    "llms/aleph_alpha.d.ts",
     "llms/cohere.cjs",
     "llms/cohere.js",
     "llms/cohere.d.ts",
@@ -364,6 +373,9 @@
     "stores/file/node.cjs",
     "stores/file/node.js",
     "stores/file/node.d.ts",
+    "stores/message/in_memory.cjs",
+    "stores/message/in_memory.js",
+    "stores/message/in_memory.d.ts",
     "stores/message/dynamodb.cjs",
     "stores/message/dynamodb.js",
     "stores/message/dynamodb.d.ts",
@@ -401,13 +413,13 @@
   },
   "scripts": {
     "build": "yarn clean && yarn build:esm && yarn build:cjs && node scripts/create-entrypoints.js && node scripts/check-tree-shaking.js",
-    "build:esm": "tsc --outDir dist/ && rm -rf dist/tests dist/**/tests",
-    "build:cjs": "tsc --outDir dist-cjs/ -p tsconfig.cjs.json && node scripts/move-cjs-to-dist.js && rm -r dist-cjs",
+    "build:esm": "tsc --outDir dist/ && rimraf dist/tests dist/**/tests",
+    "build:cjs": "tsc --outDir dist-cjs/ -p tsconfig.cjs.json && node scripts/move-cjs-to-dist.js && rimraf dist-cjs",
     "build:watch": "node scripts/create-entrypoints.js && tsc --outDir dist/ --watch",
     "lint": "eslint src && dpdm --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint:fix": "yarn lint --fix",
     "precommit": "tsc --noEmit && lint-staged",
-    "clean": "rm -rf dist/ && node scripts/create-entrypoints.js clean",
+    "clean": "rimraf dist/ && node scripts/create-entrypoints.js pre",
     "prepack": "yarn build",
     "release": "release-it --only-version --config .release-it.json",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest --testPathIgnorePatterns=\\.int\\.test.ts --testTimeout 30000",
@@ -489,6 +501,7 @@
     "redis": "^4.6.6",
     "release-it": "^15.10.1",
     "replicate": "^0.9.0",
+    "rimraf": "^5.0.1",
     "rollup": "^3.19.1",
     "sqlite3": "^5.1.4",
     "srt-parser-2": "^1.2.2",
@@ -698,11 +711,12 @@
     "@anthropic-ai/sdk": "^0.4.3",
     "ansi-styles": "^5.0.0",
     "binary-extensions": "^2.2.0",
+    "case-anything": "^2.1.13",
     "expr-eval": "^2.0.2",
     "flat": "^5.0.2",
     "js-tiktoken": "^1.0.6",
     "jsonpointer": "^5.0.1",
-    "langchainplus-sdk": ">=0.0.9",
+    "langchainplus-sdk": "^0.0.11",
     "ml-distance": "^4.0.0",
     "object-hash": "^3.0.0",
     "openai": "^3.2.0",
@@ -735,6 +749,16 @@
       "types": "./index.d.ts",
       "import": "./index.js",
       "require": "./index.cjs"
+    },
+    "./load": {
+      "types": "./load.d.ts",
+      "import": "./load.js",
+      "require": "./load.cjs"
+    },
+    "./load/serializable": {
+      "types": "./load/serializable.d.ts",
+      "import": "./load/serializable.js",
+      "require": "./load/serializable.cjs"
     },
     "./agents": {
       "types": "./agents.d.ts",
@@ -859,6 +883,11 @@
       "types": "./llms/ai21.d.ts",
       "import": "./llms/ai21.js",
       "require": "./llms/ai21.cjs"
+    },
+    "./llms/aleph_alpha": {
+      "types": "./llms/aleph_alpha.d.ts",
+      "import": "./llms/aleph_alpha.js",
+      "require": "./llms/aleph_alpha.cjs"
     },
     "./llms/cohere": {
       "types": "./llms/cohere.d.ts",
@@ -1337,6 +1366,11 @@
       "types": "./stores/file/node.d.ts",
       "import": "./stores/file/node.js",
       "require": "./stores/file/node.cjs"
+    },
+    "./stores/message/in_memory": {
+      "types": "./stores/message/in_memory.d.ts",
+      "import": "./stores/message/in_memory.js",
+      "require": "./stores/message/in_memory.cjs"
     },
     "./stores/message/dynamodb": {
       "types": "./stores/message/dynamodb.d.ts",

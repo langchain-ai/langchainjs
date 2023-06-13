@@ -17,6 +17,10 @@ export abstract class StructuredTool<
 > extends BaseLangChain {
   abstract schema: T | z.ZodEffects<T>;
 
+  get lc_namespace() {
+    return ["langchain", "tools"];
+  }
+
   constructor(fields?: ToolParams) {
     super(fields ?? {});
   }
@@ -28,16 +32,19 @@ export abstract class StructuredTool<
 
   async call(
     arg: (z.output<T> extends string ? string : never) | z.input<T>,
-    callbacks?: Callbacks
+    callbacks?: Callbacks,
+    tags?: string[]
   ): Promise<string> {
     const parsed = await this.schema.parseAsync(arg);
     const callbackManager_ = await CallbackManager.configure(
       callbacks,
       this.callbacks,
+      tags,
+      this.tags,
       { verbose: this.verbose }
     );
     const runManager = await callbackManager_?.handleToolStart(
-      { name: this.name },
+      this.toJSON(),
       typeof parsed === "string" ? parsed : JSON.stringify(parsed)
     );
     let result;
@@ -66,8 +73,8 @@ export abstract class Tool extends StructuredTool {
     .object({ input: z.string().optional() })
     .transform((obj) => obj.input);
 
-  constructor(verbose?: boolean, callbacks?: Callbacks) {
-    super({ verbose, callbacks });
+  constructor(fields?: ToolParams) {
+    super(fields);
   }
 
   call(

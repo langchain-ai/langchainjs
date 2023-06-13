@@ -2,6 +2,10 @@ import { getEnvironmentVariable } from "../util/env.js";
 import { Tool } from "./base.js";
 
 class BingSerpAPI extends Tool {
+  toJSON() {
+    return this.toJSONNotImplemented();
+  }
+
   name = "bing-search";
 
   description =
@@ -15,7 +19,7 @@ class BingSerpAPI extends Tool {
     apiKey: string | undefined = getEnvironmentVariable("BingApiKey"),
     params: Record<string, string> = {}
   ) {
-    super();
+    super(...arguments);
 
     if (!apiKey) {
       throw new Error(

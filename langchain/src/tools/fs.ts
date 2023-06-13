@@ -17,8 +17,8 @@ export class ReadFileTool extends StructuredTool {
 
   store: BaseFileStore;
 
-  constructor({ store, ...rest }: ReadFileParams) {
-    super(rest);
+  constructor({ store }: ReadFileParams) {
+    super(...arguments);
 
     this.store = store;
   }

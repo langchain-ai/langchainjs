@@ -145,7 +145,7 @@ test("Test SequentialChain input/output chains' validation", () => {
       outputVariables: ["text"],
     });
   }).toThrowErrorMatchingInlineSnapshot(
-    `"Missing variables for chain "llm_chain": "input2". Only got the following variables: "input1"."`
+    `"Missing variables for chain "llm": "input2". Only got the following variables: "input1"."`
   );
   expect(() => {
     /* eslint-disable no-new */
@@ -187,7 +187,7 @@ test("Test SequentialChain chains' intermediate variables validation", () => {
       outputVariables: ["text"],
     });
   }).toThrowErrorMatchingInlineSnapshot(
-    `"Missing variables for chain "llm_chain": "input3". Only got the following variables: "input1", "input2", "nonexistent"."`
+    `"Missing variables for chain "llm": "input3". Only got the following variables: "input1", "input2", "nonexistent"."`
   );
 });
 

@@ -1,12 +1,19 @@
 import { LangChainPlusClient } from "langchainplus-sdk";
-import { Run, RunCreate, RunUpdate } from "langchainplus-sdk/schemas";
+import { BaseRun, RunCreate, RunUpdate } from "langchainplus-sdk/schemas";
 import {
   getEnvironmentVariable,
   getRuntimeEnvironment,
 } from "../../util/env.js";
 import { BaseTracer } from "./tracer.js";
+import { BaseCallbackHandlerInput } from "../base.js";
 
-export interface LangChainTracerFields {
+export interface Run extends BaseRun {
+  id: string;
+  child_runs: this[];
+  child_execution_order: number;
+}
+
+export interface LangChainTracerFields extends BaseCallbackHandlerInput {
   exampleId?: string;
   sessionName?: string;
   client?: LangChainPlusClient;
@@ -24,8 +31,9 @@ export class LangChainTracer
 
   client: LangChainPlusClient;
 
-  constructor({ exampleId, sessionName, client }: LangChainTracerFields = {}) {
-    super();
+  constructor(fields: LangChainTracerFields = {}) {
+    super(fields);
+    const { exampleId, sessionName, client } = fields;
 
     this.sessionName =
       sessionName ?? getEnvironmentVariable("LANGCHAIN_SESSION");
@@ -37,15 +45,16 @@ export class LangChainTracer
     run: Run,
     example_id: string | undefined = undefined
   ): Promise<RunCreate> {
-    const runExtra = run.extra ?? {};
-    runExtra.runtime = await getRuntimeEnvironment();
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { child_runs: _, ...restOfRun } = run;
-    restOfRun.extra = runExtra;
-    restOfRun.reference_example_id = restOfRun.parent_run_id
-      ? undefined
-      : example_id;
-    return { child_runs: [], session_name: this.sessionName, ...restOfRun };
+    return {
+      ...run,
+      extra: {
+        ...run.extra,
+        runtime: await getRuntimeEnvironment(),
+      },
+      child_runs: undefined,
+      session_name: this.sessionName,
+      reference_example_id: run.parent_run_id ? undefined : example_id,
+    };
   }
 
   protected async persistRun(_run: Run): Promise<void> {}
@@ -63,8 +72,6 @@ export class LangChainTracer
       end_time: run.end_time,
       error: run.error,
       outputs: run.outputs,
-      parent_run_id: run.parent_run_id,
-      reference_example_id: run.reference_example_id,
     };
     await this.client.updateRun(run.id, runUpdate);
   }

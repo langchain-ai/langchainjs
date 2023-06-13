@@ -5,10 +5,12 @@ import { FORMAT_INSTRUCTIONS } from "./prompt.js";
 
 export const FINAL_ANSWER_ACTION = "Final Answer:";
 export class ZeroShotAgentOutputParser extends AgentActionOutputParser {
+  lc_namespace = ["langchain", "agents", "mrkl"];
+
   finishToolName: string;
 
   constructor(fields?: OutputParserArgs) {
-    super();
+    super(fields);
     this.finishToolName = fields?.finishToolName || FINAL_ANSWER_ACTION;
   }
 
