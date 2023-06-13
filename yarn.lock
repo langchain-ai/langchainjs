@@ -10753,6 +10753,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"case-anything@npm:^2.1.13":
+  version: 2.1.13
+  resolution: "case-anything@npm:2.1.13"
+  checksum: c39c69d7e418337b6006a9692f13c2b257e907e867149a102e9beb7e9d2d52da14e754da1f4e4ce82a866d86d93047e522f64360bda54e7d7c308f4cdd736c3d
+  languageName: node
+  linkType: hard
+
 "case-sensitive-paths-webpack-plugin@npm:^2.4.0":
   version: 2.4.0
   resolution: "case-sensitive-paths-webpack-plugin@npm:2.4.0"
@@ -14231,7 +14238,7 @@ __metadata:
     graphql: ^16.6.0
     js-yaml: ^4.1.0
     langchain: "workspace:*"
-    langchainplus-sdk: ">=0.0.9"
+    langchainplus-sdk: ">=0.0.11"
     ml-distance: ^4.0.0
     mongodb: ^5.2.0
     mysql2: ^3.3.3
@@ -18555,6 +18562,7 @@ __metadata:
     apify-client: ^2.7.1
     axios: ^0.26.0
     binary-extensions: ^2.2.0
+    case-anything: ^2.1.13
     cheerio: ^1.0.0-rc.12
     chromadb: ^1.5.2
     cohere-ai: ^5.0.2
@@ -18579,7 +18587,7 @@ __metadata:
     jest: ^29.5.0
     js-tiktoken: ^1.0.6
     jsonpointer: ^5.0.1
-    langchainplus-sdk: ">=0.0.9"
+    langchainplus-sdk: ">=0.0.11"
     mammoth: ^1.5.1
     ml-distance: ^4.0.0
     mongodb: ^5.2.0
@@ -18769,9 +18777,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"langchainplus-sdk@npm:>=0.0.9":
-  version: 0.0.9
-  resolution: "langchainplus-sdk@npm:0.0.9"
+"langchainplus-sdk@npm:>=0.0.11":
+  version: 0.0.11
+  resolution: "langchainplus-sdk@npm:0.0.11"
   dependencies:
     "@types/uuid": ^9.0.1
     commander: ^10.0.1
@@ -18780,7 +18788,7 @@ __metadata:
     uuid: ^9.0.0
   bin:
     langchain: dist/cli/main.cjs
-  checksum: b4294009309af2fdb2a0b4ec1a7c1efab67fb64ad0cf1059b37c83f6a2ef4ebdfd23403598a587a1e4ab7d1d0d40f2e2e1f8b6101dcf30fd0768ea6b92555739
+  checksum: 721ecb73aa9d4b270bd14e9c49e6b51b6787394e0fc0e188e417b4091c69542f3984ec636eac7159ae838e25a6dd067b21ad7b8aaa4a732976113351117f60e9
   languageName: node
   linkType: hard
 

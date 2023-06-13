@@ -8,36 +8,47 @@ import {
   PartialValues,
   SystemChatMessage,
 } from "../schema/index.js";
+import { Serializable } from "../load/serializable.js";
 import {
   BasePromptTemplate,
   BasePromptTemplateInput,
   BaseStringPromptTemplate,
 } from "./base.js";
 import { PromptTemplate } from "./prompt.js";
-import {
-  SerializedChatPromptTemplate,
-  SerializedMessagePromptTemplate,
-} from "./serde.js";
 
-export abstract class BaseMessagePromptTemplate {
+export abstract class BaseMessagePromptTemplate extends Serializable {
+  lc_namespace = ["langchain", "prompts", "chat"];
+
+  lc_serializable = true;
+
   abstract inputVariables: string[];
 
   abstract formatMessages(values: InputValues): Promise<BaseChatMessage[]>;
+}
 
-  serialize(): SerializedMessagePromptTemplate {
-    return {
-      _type: this.constructor.name,
-      ...JSON.parse(JSON.stringify(this)),
-    };
-  }
+export interface ChatPromptValueFields {
+  messages: BaseChatMessage[];
 }
 
 export class ChatPromptValue extends BasePromptValue {
+  lc_namespace = ["langchain", "prompts", "chat"];
+
+  lc_serializable = true;
+
   messages: BaseChatMessage[];
 
-  constructor(messages: BaseChatMessage[]) {
-    super();
-    this.messages = messages;
+  constructor(messages: BaseChatMessage[]);
+
+  constructor(fields: ChatPromptValueFields);
+
+  constructor(fields: BaseChatMessage[] | ChatPromptValueFields) {
+    if (Array.isArray(fields)) {
+      // eslint-disable-next-line no-param-reassign
+      fields = { messages: fields };
+    }
+
+    super(...arguments);
+    this.messages = fields.messages;
   }
 
   toString() {
@@ -49,12 +60,24 @@ export class ChatPromptValue extends BasePromptValue {
   }
 }
 
+export interface MessagePlaceholderFields {
+  variableName: string;
+}
+
 export class MessagesPlaceholder extends BaseMessagePromptTemplate {
   variableName: string;
 
-  constructor(variableName: string) {
-    super();
-    this.variableName = variableName;
+  constructor(variableName: string);
+
+  constructor(fields: MessagePlaceholderFields);
+
+  constructor(fields: string | MessagePlaceholderFields) {
+    if (typeof fields === "string") {
+      // eslint-disable-next-line no-param-reassign
+      fields = { variableName: fields };
+    }
+    super(fields);
+    this.variableName = fields.variableName;
   }
 
   get inputVariables() {
@@ -66,12 +89,26 @@ export class MessagesPlaceholder extends BaseMessagePromptTemplate {
   }
 }
 
+export interface MessageStringPromptTemplateFields {
+  prompt: BaseStringPromptTemplate;
+}
+
 export abstract class BaseMessageStringPromptTemplate extends BaseMessagePromptTemplate {
   prompt: BaseStringPromptTemplate;
 
-  protected constructor(prompt: BaseStringPromptTemplate) {
-    super();
-    this.prompt = prompt;
+  constructor(prompt: BaseStringPromptTemplate);
+
+  constructor(fields: MessageStringPromptTemplateFields);
+
+  constructor(
+    fields: MessageStringPromptTemplateFields | BaseStringPromptTemplate
+  ) {
+    if (!("prompt" in fields)) {
+      // eslint-disable-next-line no-param-reassign
+      fields = { prompt: fields };
+    }
+    super(fields);
+    this.prompt = fields.prompt;
   }
 
   get inputVariables() {
@@ -104,6 +141,11 @@ export abstract class BaseChatPromptTemplate extends BasePromptTemplate {
   }
 }
 
+export interface ChatMessagePromptTemplateFields
+  extends MessageStringPromptTemplateFields {
+  role: string;
+}
+
 export class ChatMessagePromptTemplate extends BaseMessageStringPromptTemplate {
   role: string;
 
@@ -111,9 +153,20 @@ export class ChatMessagePromptTemplate extends BaseMessageStringPromptTemplate {
     return new ChatMessage(await this.prompt.format(values), this.role);
   }
 
-  constructor(prompt: BaseStringPromptTemplate, role: string) {
-    super(prompt);
-    this.role = role;
+  constructor(prompt: BaseStringPromptTemplate, role: string);
+
+  constructor(fields: ChatMessagePromptTemplateFields);
+
+  constructor(
+    fields: ChatMessagePromptTemplateFields | BaseStringPromptTemplate,
+    role?: string
+  ) {
+    if (!("prompt" in fields)) {
+      // eslint-disable-next-line no-param-reassign, @typescript-eslint/no-non-null-assertion
+      fields = { prompt: fields, role: role! };
+    }
+    super(fields);
+    this.role = fields.role;
   }
 
   static fromTemplate(template: string, role: string) {
@@ -126,10 +179,6 @@ export class HumanMessagePromptTemplate extends BaseMessageStringPromptTemplate 
     return new HumanChatMessage(await this.prompt.format(values));
   }
 
-  constructor(prompt: BaseStringPromptTemplate) {
-    super(prompt);
-  }
-
   static fromTemplate(template: string) {
     return new this(PromptTemplate.fromTemplate(template));
   }
@@ -140,10 +189,6 @@ export class AIMessagePromptTemplate extends BaseMessageStringPromptTemplate {
     return new AIChatMessage(await this.prompt.format(values));
   }
 
-  constructor(prompt: BaseStringPromptTemplate) {
-    super(prompt);
-  }
-
   static fromTemplate(template: string) {
     return new this(PromptTemplate.fromTemplate(template));
   }
@@ -152,10 +197,6 @@ export class AIMessagePromptTemplate extends BaseMessageStringPromptTemplate {
 export class SystemMessagePromptTemplate extends BaseMessageStringPromptTemplate {
   async format(values: InputValues): Promise<BaseChatMessage> {
     return new SystemChatMessage(await this.prompt.format(values));
-  }
-
-  constructor(prompt: BaseStringPromptTemplate) {
-    super(prompt);
   }
 
   static fromTemplate(template: string) {
@@ -181,6 +222,12 @@ export class ChatPromptTemplate
   extends BaseChatPromptTemplate
   implements ChatPromptTemplateInput
 {
+  get lc_aliases() {
+    return {
+      promptMessages: "messages",
+    };
+  }
+
   promptMessages: BaseMessagePromptTemplate[];
 
   validateTemplate = true;
@@ -254,18 +301,6 @@ export class ChatPromptTemplate
       resultMessages = resultMessages.concat(message);
     }
     return resultMessages;
-  }
-
-  serialize(): SerializedChatPromptTemplate {
-    if (this.outputParser !== undefined) {
-      throw new Error(
-        "ChatPromptTemplate cannot be serialized if outputParser is set"
-      );
-    }
-    return {
-      input_variables: this.inputVariables,
-      prompt_messages: this.promptMessages.map((m) => m.serialize()),
-    };
   }
 
   async partial(values: PartialValues): Promise<ChatPromptTemplate> {
