@@ -28,7 +28,7 @@ export { VectorStoreQATool } from "./vectorstore.js";
 export {
   ZapierNLARunAction,
   ZapierNLAWrapper,
-  ZapiterNLAWrapperParams,
+  ZapierNLAWrapperParams,
 } from "./zapier.js";
 export { Serper, SerperParameters } from "./serper.js";
 export {

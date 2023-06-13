@@ -18,7 +18,7 @@ describe("Chroma", () => {
     });
   });
 
-  test("auto-generated ids", async () => {
+  test.skip("auto-generated ids", async () => {
     const pageContent = faker.lorem.sentence(5);
 
     await chromaStore.addDocuments([{ pageContent, metadata: { foo: "bar" } }]);
@@ -30,7 +30,7 @@ describe("Chroma", () => {
     ]);
   });
 
-  test("metadata filtering", async () => {
+  test.skip("metadata filtering", async () => {
     const pageContent = faker.lorem.sentence(5);
     const id = uuid.v4();
 

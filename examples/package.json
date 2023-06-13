@@ -40,7 +40,6 @@
     "graphql": "^16.6.0",
     "js-yaml": "^4.1.0",
     "langchain": "workspace:*",
-    "langchainplus-sdk": ">=0.0.7",
     "ml-distance": "^4.0.0",
     "mongodb": "^5.2.0",
     "mysql2": "^3.3.3",

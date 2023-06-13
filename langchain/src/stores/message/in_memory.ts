@@ -4,10 +4,12 @@ import {
 } from "../../schema/index.js";
 
 export class ChatMessageHistory extends BaseListChatMessageHistory {
+  lc_namespace = ["langchain", "stores", "message", "in_memory"];
+
   private messages: BaseChatMessage[] = [];
 
   constructor(messages?: BaseChatMessage[]) {
-    super();
+    super(...arguments);
     this.messages = messages ?? [];
   }
 

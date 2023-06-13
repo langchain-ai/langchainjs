@@ -67,6 +67,22 @@ import GoogleVertexAIExample from "@examples/llms/googlevertexai.ts";
 
 <CodeBlock language="typescript">{GoogleVertexAIExample}</CodeBlock>
 
+Google also has separate models for their "Codey" code generation models.
+For various reasons, these use a different class.
+
+The "code-gecko" model is the default and is useful for code completion:
+
+import GoogleVertexAICodeGeckoExample from "@examples/llms/googlevertexai-code-gecko.ts";
+
+<CodeBlock language="typescript">{GoogleVertexAICodeGeckoExample}</CodeBlock>
+
+While the "code-bison" model is better at larger code generation based on
+a text prompt:
+
+import GoogleVertexAICodeBisonExample from "@examples/llms/googlevertexai-code-bison.ts";
+
+<CodeBlock language="typescript">{GoogleVertexAICodeBisonExample}</CodeBlock>
+
 ## `HuggingFaceInference`
 
 ```bash npm2yarn
@@ -117,7 +133,7 @@ const model = new Replicate({
     "daanelson/flan-t5:04e422a9b85baed86a4f24981d7f9953e20c5fd82f6103b74ebc431588e1cec8",
   apiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.REPLICATE_API_KEY
 });
-const res = await modelA.call(
+const res = await model.call(
   "What would be a good company name a company that makes colorful socks?"
 );
 console.log({ res });
@@ -142,6 +158,14 @@ You can get started with AI21Labs' Jurassic family of models, as well as see a f
 import AI21Example from "@examples/models/llm/ai21.ts";
 
 <CodeBlock language="typescript">{AI21Example}</CodeBlock>
+
+## `AlephAlpha`
+
+You can get started with AlephAlpha' Luminous family of models by signing up for an API key [on their website](https://www.aleph-alpha.com/).
+
+import AlephAlphaExample from "@examples/models/llm/aleph_alpha.ts";
+
+<CodeBlock language="typescript">{AlephAlphaExample}</CodeBlock>
 
 ## Additional LLM Implementations
 

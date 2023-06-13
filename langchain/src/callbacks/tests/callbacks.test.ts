@@ -10,9 +10,12 @@ import {
   HumanChatMessage,
   LLMResult,
 } from "../../schema/index.js";
+import { Serialized } from "../../load/serializable.js";
 
 class FakeCallbackHandler extends BaseCallbackHandler {
   name = `fake-${uuid.v4()}`;
+
+  awaitHandlers = true;
 
   starts = 0;
 
@@ -42,10 +45,7 @@ class FakeCallbackHandler extends BaseCallbackHandler {
     super(inputs);
   }
 
-  async handleLLMStart(
-    _llm: { name: string },
-    _prompts: string[]
-  ): Promise<void> {
+  async handleLLMStart(_llm: Serialized, _prompts: string[]): Promise<void> {
     this.starts += 1;
     this.llmStarts += 1;
   }
@@ -64,7 +64,7 @@ class FakeCallbackHandler extends BaseCallbackHandler {
   }
 
   async handleChainStart(
-    _chain: { name: string },
+    _chain: Serialized,
     _inputs: ChainValues
   ): Promise<void> {
     this.starts += 1;
@@ -80,10 +80,7 @@ class FakeCallbackHandler extends BaseCallbackHandler {
     this.errors += 1;
   }
 
-  async handleToolStart(
-    _tool: { name: string },
-    _input: string
-  ): Promise<void> {
+  async handleToolStart(_tool: Serialized, _input: string): Promise<void> {
     this.starts += 1;
     this.toolStarts += 1;
   }
@@ -135,13 +132,20 @@ class FakeCallbackHandlerWithChatStart extends FakeCallbackHandler {
   chatModelStarts = 0;
 
   async handleChatModelStart(
-    _llm: { name: string },
+    _llm: Serialized,
     _messages: BaseChatMessage[][]
   ): Promise<void> {
     this.starts += 1;
     this.chatModelStarts += 1;
   }
 }
+
+const serialized: Serialized = {
+  lc: 1,
+  type: "constructor",
+  id: ["test"],
+  kwargs: {},
+};
 
 test("CallbackManager", async () => {
   const manager = new CallbackManager();
@@ -150,17 +154,14 @@ test("CallbackManager", async () => {
   manager.addHandler(handler1);
   manager.addHandler(handler2);
 
-  const llmCb = await manager.handleLLMStart({ name: "test" }, ["test"]);
+  const llmCb = await manager.handleLLMStart(serialized, ["test"]);
   await llmCb.handleLLMEnd({ generations: [] });
   await llmCb.handleLLMNewToken("test");
   await llmCb.handleLLMError(new Error("test"));
-  const chainCb = await manager.handleChainStart(
-    { name: "test" },
-    { test: "test" }
-  );
+  const chainCb = await manager.handleChainStart(serialized, { test: "test" });
   await chainCb.handleChainEnd({ test: "test" });
   await chainCb.handleChainError(new Error("test"));
-  const toolCb = await manager.handleToolStart({ name: "test" }, "test");
+  const toolCb = await manager.handleToolStart(serialized, "test");
   await toolCb.handleToolEnd("test");
   await toolCb.handleToolError(new Error("test"));
   await chainCb.handleText("test");
@@ -194,7 +195,7 @@ test("CallbackManager Chat Message Handling", async () => {
   manager.addHandler(handler1);
   manager.addHandler(handler2);
 
-  const llmCb = await manager.handleChatModelStart({ name: "test" }, [
+  const llmCb = await manager.handleChatModelStart(serialized, [
     [new HumanChatMessage("test")],
   ]);
   await llmCb.handleLLMEnd({ generations: [] });
@@ -217,7 +218,7 @@ test("CallbackHandler with ignoreLLM", async () => {
   });
   const manager = new CallbackManager();
   manager.addHandler(handler);
-  const llmCb = await manager.handleLLMStart({ name: "test" }, ["test"]);
+  const llmCb = await manager.handleLLMStart(serialized, ["test"]);
   await llmCb.handleLLMEnd({ generations: [] });
   await llmCb.handleLLMNewToken("test");
   await llmCb.handleLLMError(new Error("test"));
@@ -236,10 +237,7 @@ test("CallbackHandler with ignoreChain", async () => {
   });
   const manager = new CallbackManager();
   manager.addHandler(handler);
-  const chainCb = await manager.handleChainStart(
-    { name: "test" },
-    { test: "test" }
-  );
+  const chainCb = await manager.handleChainStart(serialized, { test: "test" });
   await chainCb.handleChainEnd({ test: "test" });
   await chainCb.handleChainError(new Error("test"));
 
@@ -256,13 +254,10 @@ test("CallbackHandler with ignoreAgent", async () => {
   });
   const manager = new CallbackManager();
   manager.addHandler(handler);
-  const toolCb = await manager.handleToolStart({ name: "test" }, "test");
+  const toolCb = await manager.handleToolStart(serialized, "test");
   await toolCb.handleToolEnd("test");
   await toolCb.handleToolError(new Error("test"));
-  const chainCb = await manager.handleChainStart(
-    { name: "agent_executor" },
-    {}
-  );
+  const chainCb = await manager.handleChainStart(serialized, {});
   await chainCb.handleAgentAction({
     tool: "test",
     toolInput: "test",
@@ -285,7 +280,7 @@ test("CallbackManager with child manager", async () => {
   let chainWasCalled = false;
   const manager = CallbackManager.fromHandlers({
     async handleLLMStart(
-      _llm: { name: string },
+      _llm: Serialized,
       _prompts: string[],
       runId?: string,
       parentRunId?: string
@@ -295,7 +290,7 @@ test("CallbackManager with child manager", async () => {
       llmWasCalled = true;
     },
     async handleChainStart(
-      _chain: { name: string },
+      _chain: Serialized,
       _inputs: ChainValues,
       runId?: string,
       parentRunId?: string
@@ -306,11 +301,11 @@ test("CallbackManager with child manager", async () => {
     },
   });
   const chainCb = await manager.handleChainStart(
-    { name: "test" },
+    serialized,
     { test: "test" },
     chainRunId
   );
-  await chainCb.getChild().handleLLMStart({ name: "test" }, ["test"], llmRunId);
+  await chainCb.getChild().handleLLMStart(serialized, ["test"], llmRunId);
   expect(llmWasCalled).toBe(true);
   expect(chainWasCalled).toBe(true);
 });
@@ -349,10 +344,9 @@ test("CallbackManager with child manager inherited handlers", async () => {
   ]);
   expect(callbackManager3.inheritableHandlers).toEqual([handler1, handler2]);
 
-  const chainCb = await callbackManager3.handleChainStart(
-    { name: "test" },
-    { test: "test" }
-  );
+  const chainCb = await callbackManager3.handleChainStart(serialized, {
+    test: "test",
+  });
   const childManager = chainCb.getChild();
   expect(childManager.handlers.map((h) => h.name)).toEqual([
     handler1.name,
@@ -363,7 +357,7 @@ test("CallbackManager with child manager inherited handlers", async () => {
     handler2.name,
   ]);
 
-  const toolCb = await childManager.handleToolStart({ name: "test" }, "test");
+  const toolCb = await childManager.handleToolStart(serialized, "test");
   const childManager2 = toolCb.getChild();
   expect(childManager2.handlers.map((h) => h.name)).toEqual([
     handler1.name,
@@ -384,8 +378,12 @@ test("CallbackManager.copy()", () => {
 
   callbackManager1.addHandler(handler1, true);
   callbackManager1.addHandler(handler2, false);
+  callbackManager1.addTags(["a"], true);
+  callbackManager1.addTags(["b"], false);
   expect(callbackManager1.handlers).toEqual([handler1, handler2]);
   expect(callbackManager1.inheritableHandlers).toEqual([handler1]);
+  expect(callbackManager1.tags).toEqual(["a", "b"]);
+  expect(callbackManager1.inheritableTags).toEqual(["a"]);
 
   const callbackManager2 = callbackManager1.copy([handler3]);
   expect(callbackManager2.handlers.map((h) => h.name)).toEqual([
@@ -397,6 +395,8 @@ test("CallbackManager.copy()", () => {
     handler1.name,
     handler3.name,
   ]);
+  expect(callbackManager2.tags).toEqual(["a", "b"]);
+  expect(callbackManager2.inheritableTags).toEqual(["a"]);
 
   const callbackManager3 = callbackManager2.copy([handler4], false);
   expect(callbackManager3.handlers.map((h) => h.name)).toEqual([

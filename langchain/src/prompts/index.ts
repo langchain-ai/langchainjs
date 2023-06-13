@@ -37,8 +37,6 @@ export {
   SerializedPromptTemplate,
   SerializedBasePromptTemplate,
   SerializedFewShotTemplate,
-  SerializedMessagePromptTemplate,
-  SerializedChatPromptTemplate,
 } from "./serde.js";
 export {
   parseTemplate,

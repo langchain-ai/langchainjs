@@ -1,13 +1,11 @@
 import { z } from "zod";
-import { CallbackManagerForToolRun, Callbacks } from "../callbacks/manager.js";
-import { StructuredTool, Tool } from "./base.js";
+import { CallbackManagerForToolRun } from "../callbacks/manager.js";
+import { StructuredTool, Tool, ToolParams } from "./base.js";
 
-export interface BaseDynamicToolInput {
+export interface BaseDynamicToolInput extends ToolParams {
   name: string;
   description: string;
   returnDirect?: boolean;
-  verbose?: boolean;
-  callbacks?: Callbacks;
 }
 
 export interface DynamicToolInput extends BaseDynamicToolInput {
@@ -39,7 +37,7 @@ export class DynamicTool extends Tool {
   func: DynamicToolInput["func"];
 
   constructor(fields: DynamicToolInput) {
-    super(fields.verbose, fields.callbacks);
+    super(fields);
     this.name = fields.name;
     this.description = fields.description;
     this.func = fields.func;

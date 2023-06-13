@@ -14,6 +14,8 @@ export abstract class ListOutputParser extends BaseOutputParser<string[]> {}
  * @augments ListOutputParser
  */
 export class CommaSeparatedListOutputParser extends ListOutputParser {
+  lc_namespace = ["langchain", "output_parsers", "list"];
+
   async parse(text: string): Promise<string[]> {
     try {
       return text
@@ -35,12 +37,14 @@ export class CommaSeparatedListOutputParser extends ListOutputParser {
  * @augments ListOutputParser
  */
 export class CustomListOutputParser extends ListOutputParser {
+  lc_namespace = ["langchain", "output_parsers", "list"];
+
   private length: number | undefined;
 
   private separator: string;
 
   constructor({ length, separator }: { length?: number; separator?: string }) {
-    super();
+    super(...arguments);
     this.length = length;
     this.separator = separator || ",";
   }

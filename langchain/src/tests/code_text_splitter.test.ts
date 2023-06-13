@@ -287,3 +287,32 @@ test("Rust code splitter", async () => {
     "}",
   ]);
 });
+
+test("Solidity code splitter", async () => {
+  const splitter = RecursiveCharacterTextSplitter.fromLanguage("sol", {
+    chunkSize: 16,
+    chunkOverlap: 0,
+  });
+  const code = `pragma solidity ^0.8.20;
+  contract HelloWorld {
+    function add(uint a, uint b) pure public returns(uint) {
+      return  a + b;
+    }
+  }
+  `;
+  const chunks = await splitter.splitText(code);
+  expect(chunks).toStrictEqual([
+    "pragma solidity",
+    "^0.8.20;",
+    "contract",
+    "HelloWorld {",
+    "function",
+    "add(uint a,",
+    "uint b) pure",
+    "public",
+    "returns(uint) {",
+    "return  a",
+    "+ b;",
+    "}\n  }",
+  ]);
+});

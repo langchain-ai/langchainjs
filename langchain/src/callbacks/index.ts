@@ -4,7 +4,7 @@ export {
   BaseCallbackHandlerInput,
 } from "./base.js";
 
-export { Run, RunType, BaseRun, BaseTracer } from "./handlers/tracer.js";
+export { Run, RunType, BaseTracer } from "./handlers/tracer.js";
 
 export { ConsoleCallbackHandler } from "./handlers/console.js";
 
@@ -27,3 +27,5 @@ export {
   TraceGroup,
   traceAsGroup,
 } from "./manager.js";
+
+export { awaitAllCallbacks, consumeCallback } from "./promises.js";
