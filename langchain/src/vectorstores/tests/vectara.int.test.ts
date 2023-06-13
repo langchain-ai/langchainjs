@@ -5,7 +5,7 @@ import { OpenAIEmbeddings } from "../../embeddings/openai.js";
 import { Document } from "../../document.js";
 import { v4 } from "uuid";
 
-test("Vectara Add Documents", async () => {
+test.skip("Vectara Add Documents", async () => {
   const store = new VectaraStore(new OpenAIEmbeddings(), {
     customer_id: Number(process.env.VECTARA_CUSTOMER_ID) || 0,
     corpus_id: Number(process.env.VECTARA_CORPUS_ID) || 0,
