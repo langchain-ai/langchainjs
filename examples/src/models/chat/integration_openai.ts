@@ -7,7 +7,7 @@ const model = new ChatOpenAI({
   openAIApiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.OPENAI_API_KEY
 });
 
-// You can pass functions to the model, learn more here
+// You can also pass functions to the model, learn more here
 // https://platform.openai.com/docs/guides/gpt/function-calling
 
 const modelForFunctionCalling = new ChatOpenAI({
