@@ -193,17 +193,6 @@ export class Typesense extends VectorStore {
   }
 
   /**
-   * Add search parameters that will be used in the similarity search.
-   * @param searchParams MultiSearchRequestSchema
-   */
-  modifySearchParams(searchParams: Partial<MultiSearchRequestSchema>) {
-    this.searchParams = {
-      ...this.searchParams,
-      ...searchParams,
-    };
-  }
-
-  /**
    * Create a vector store from documents.
    * @param docs documents
    * @param embeddings embeddings
@@ -316,8 +305,8 @@ export class Typesense extends VectorStore {
   async similaritySearchVectorWithScore(
     vectorPrompt: number[],
     k?: number,
-    filter?: this["FilterType"]
-  ): Promise<[Document<Record<string, unknown>>, number][]> {
+    filter: Partial<MultiSearchRequestSchema> = {}
+  ) {
     const amount = k || this.searchParams.per_page || 5;
     const vector_query = `${this.vectorColumnName}:([${vectorPrompt}], k:${amount})`;
     const typesenseResponse = await this.client.multiSearch.perform(
@@ -344,5 +333,19 @@ export class Typesense extends VectorStore {
     );
 
     return documents;
+  }
+
+  /**
+   * Search for similar documents with their similarity score. All the documents has 1 as similarity score because Typesense API does not return the similarity score.
+   * @param query prompt to search for
+   * @returns similar documents with their similarity score
+   */
+  async similaritySearchWithScore(
+    query: string,
+    k = 5,
+    filter: Partial<MultiSearchRequestSchema> = {}
+  ): Promise<[Document<Record<string, unknown>>, number][]> {
+    const documents = await this.similaritySearch(query, k, filter);
+    return documents.map((doc) => [doc, 1] as [Document, number]);
   }
 }

@@ -96,10 +96,9 @@ const documents = await vectorStore.similaritySearch("hello world");
 
 // Add filters based on metadata with the search parameters of Typesense
 // will exclude documents with author:JK Rowling, so if Joe Rowling & JK Rowling exists, only Joe Rowling will be returned
-vectorStore.modifySearchParams({
+vectorStore.similaritySearch("Rowling", undefined, {
   filter_by: "author:!=JK Rowling",
 });
-vectorStore.similaritySearch("Rowling");
 
 // Delete a document
 vectorStore.deleteDocuments(["document_id_1", "document_id_2"]);
@@ -125,7 +124,6 @@ Before starting, create an schema in Typesense with an id, a field for the vecto
 
 - `async addDocuments(documents: Document[]): Promise<void>`: Adds documents to the vector store. The documents will be updated if there is a document with the same ID.
 - `async addDocumentsWithoutEmbedding(documents: (Document & { vector: number[] })[]): Promise<void>`: Adds documents to the vector store without embedding. Documents must contain a `vector` property representing the document vector.
-- `modifySearchParams(searchParams: Partial<MultiSearchRequestSchema>): void`: Modifies the search parameters used in similarity search. The provided `searchParams` will be merged with the default search parameters.
 - `static async fromDocuments(docs: Document[], embeddings: Embeddings, config: TypesenseConfig): Promise<Typesense>`: Creates a Typesense vector store from a list of documents. Documents are added to the vector store during construction.
 - `static async fromTexts(texts: string[], metadatas: object[], embeddings: Embeddings, config: TypesenseConfig): Promise<Typesense>`: Creates a Typesense vector store from a list of texts and associated metadata. Texts are converted to documents and added to the vector store during construction.
 - `async similaritySearch(query: string, k?: number, filter?: Record<string, unknown>): Promise<Document[]>`: Searches for similar documents based on a query. Returns an array of similar documents.
