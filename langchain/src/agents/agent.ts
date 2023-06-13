@@ -203,7 +203,7 @@ export interface AgentArgs {
 export abstract class Agent extends BaseSingleActionAgent {
   llmChain: LLMChain;
 
-  outputParser: AgentActionOutputParser;
+  outputParser: AgentActionOutputParser | undefined;
 
   private _allowedTools?: string[] = undefined;
 
@@ -323,6 +323,9 @@ export abstract class Agent extends BaseSingleActionAgent {
     }
 
     const output = await this.llmChain.predict(newInputs, callbackManager);
+    if (!this.outputParser) {
+      throw new Error("Output parser not set");
+    }
     return this.outputParser.parse(output, callbackManager);
   }
 

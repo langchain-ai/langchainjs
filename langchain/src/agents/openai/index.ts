@@ -1,90 +1,165 @@
+import { ChatCompletionRequestMessageFunctionCall } from "openai";
+import { CallbackManager } from "../../callbacks/manager.js";
 import { ChatOpenAI } from "../../chat_models/openai.js";
+import { BasePromptTemplate } from "../../prompts/base.js";
 import {
   AIChatMessage,
   AgentAction,
   AgentFinish,
   AgentStep,
   BaseChatMessage,
-  HumanChatMessage,
-  SystemChatMessage,
+  FunctionChatMessage,
+  ChainValues,
 } from "../../schema/index.js";
-import { BaseSingleActionAgent } from "../agent.js";
+import { StructuredTool } from "../../tools/base.js";
+import { Agent, AgentArgs } from "../agent.js";
+import { AgentInput } from "../types.js";
+import { PREFIX } from "./prompt.js";
+import {
+  ChatPromptTemplate,
+  HumanMessagePromptTemplate,
+  MessagesPlaceholder,
+  SystemMessagePromptTemplate,
+} from "../../prompts/chat.js";
+import { BaseLanguageModel } from "../../base_language/index.js";
+import { LLMChain } from "../../chains/llm_chain.js";
 
-function _parse_ai_message(message: AIChatMessage): AgentAction | AgentFinish {
-  const message_lines = message.split("\n");
-  const tool_name = message_lines[0].trim();
-  const tool_input = message_lines[1].trim();
-  const content = message_lines.slice(2).join("\n").trim();
-
-  if (tool_name === "respond") {
+function parseOutput(message: BaseChatMessage): AgentAction | AgentFinish {
+  if (message.additional_kwargs.function_call) {
+    // eslint-disable-next-line prefer-destructuring
+    const function_call: ChatCompletionRequestMessageFunctionCall =
+      message.additional_kwargs.function_call;
     return {
-      returnValues: { content },
-      log: message,
+      tool: function_call.name as string,
+      toolInput: function_call.arguments
+        ? JSON.parse(function_call.arguments)
+        : {},
+      log: message.text,
     };
   } else {
-    return {
-      tool: tool_name,
-      toolInput: tool_input,
-      log: message,
-    };
+    return { returnValues: { output: message.text }, log: message.text };
   }
 }
 
-function _format_intermediate_steps(
-  intermediate_steps: Array<AgentStep>
-): Array<HumanChatMessage> {
-  return intermediate_steps.flatMap(({ action, observation }) => {
-    const log = action.log || "";
-    const content = observation || "";
-    return [new SystemChatMessage(log), new HumanChatMessage(content)];
-  });
+export interface OpenAIAgentInput extends AgentInput {
+  tools: StructuredTool[];
 }
 
-function _generate_prompt(user_input: string): Array<BaseChatMessage> {
-  return [
-    new SystemChatMessage("You are a helpful AI assistant. "),
-    new HumanChatMessage(
-      "Answer the following question to the best of your ability using tools. " +
-        "---" +
-        "You live in an alternate universe where some of what you take " +
-        "for granted may not be true (such as mathematical or historical facts)" +
-        "So rely heavily on the content of tools." +
-        "---" +
-        "If you do not have enough information to answer the question, " +
-        "and do not believe you can gain relevant information using the tools, " +
-        "respond appropriately using the respond tool " +
-        "(saying question cannot be answered). "
-    ),
-    new HumanChatMessage(user_input),
-  ];
+export interface OpenAIAgentCreatePromptArgs {
+  prefix?: string;
 }
 
-export class OpenAIAgent extends BaseSingleActionAgent {
+export class OpenAIAgent extends Agent {
   lc_namespace = ["langchain", "agents", "openai"];
 
-  llm: ChatOpenAI;
-
-  allowed_tools?: Array<string>;
-
-  get allowedTools(): Array<string> {
-    return this.allowed_tools || [];
+  _agentType() {
+    return "openai" as const;
   }
 
-  get inputKeys(): Array<string> {
-    return ["input"];
+  observationPrefix() {
+    return "Observation: ";
+  }
+
+  llmPrefix() {
+    return "Thought:";
+  }
+
+  _stop(): string[] {
+    return ["Observation:"];
+  }
+
+  tools: StructuredTool[];
+
+  constructor(input: Omit<OpenAIAgentInput, "outputParser">) {
+    super({ ...input, outputParser: undefined });
+    this.tools = input.tools;
+  }
+
+  static createPrompt(
+    _tools: StructuredTool[],
+    fields?: OpenAIAgentCreatePromptArgs
+  ): BasePromptTemplate {
+    const { prefix = PREFIX } = fields || {};
+    return ChatPromptTemplate.fromPromptMessages([
+      SystemMessagePromptTemplate.fromTemplate(prefix),
+      HumanMessagePromptTemplate.fromTemplate("{input}"),
+      new MessagesPlaceholder("agent_scratchpad"),
+    ]);
+  }
+
+  static fromLLMAndTools(
+    llm: BaseLanguageModel,
+    tools: StructuredTool[],
+    args?: OpenAIAgentCreatePromptArgs & Pick<AgentArgs, "callbacks">
+  ) {
+    OpenAIAgent.validateTools(tools);
+    if (llm._modelType() !== "base_chat_model" || llm._llmType() !== "openai") {
+      throw new Error("OpenAIAgent requires an OpenAI chat model");
+    }
+    const prompt = OpenAIAgent.createPrompt(tools, args);
+    const chain = new LLMChain({
+      prompt,
+      llm,
+      callbacks: args?.callbacks,
+    });
+    return new OpenAIAgent({
+      llmChain: chain,
+      allowedTools: tools.map((t) => t.name),
+      tools,
+    });
+  }
+
+  async constructScratchPad(
+    steps: AgentStep[]
+  ): Promise<string | BaseChatMessage[]> {
+    return steps.flatMap(({ action, observation }) => [
+      new AIChatMessage("", {
+        function_call: {
+          name: action.tool,
+          arguments: JSON.stringify(action.toolInput),
+        },
+      }),
+      new FunctionChatMessage(observation, action.tool),
+    ]);
   }
 
   async plan(
-    intermediateSteps: Array<AgentStep>,
-    kwargs: any
+    steps: Array<AgentStep>,
+    inputs: ChainValues,
+    callbackManager?: CallbackManager
   ): Promise<AgentAction | AgentFinish> {
-    const { tools, input: user_input } = kwargs;
-    const messages = _generate_prompt(user_input);
-    messages.push(..._format_intermediate_steps(intermediateSteps));
-    const predicted_message = await this.llm.predictMessages(messages, {
-      tools,
-    });
-    const agent_decision = _parse_ai_message(predicted_message);
-    return agent_decision;
+    // Add scratchpad and stop to inputs
+    const thoughts = await this.constructScratchPad(steps);
+    const newInputs: ChainValues = {
+      ...inputs,
+      agent_scratchpad: thoughts,
+    };
+    if (this._stop().length !== 0) {
+      newInputs.stop = this._stop();
+    }
+
+    // Split inputs between prompt and llm
+    const llm = this.llmChain.llm as ChatOpenAI;
+    const valuesForPrompt = { ...newInputs };
+    const valuesForLLM: (typeof llm)["CallOptions"] = {
+      tools: this.tools,
+    };
+    for (const key of this.llmChain.llm.callKeys) {
+      if (key in inputs) {
+        valuesForLLM[key as keyof (typeof llm)["CallOptions"]] = inputs[key];
+        delete valuesForPrompt[key];
+      }
+    }
+
+    const promptValue = await this.llmChain.prompt.formatPromptValue(
+      valuesForPrompt
+    );
+    const message = await llm.predictMessages(
+      promptValue.toChatMessages(),
+      valuesForLLM,
+      callbackManager
+    );
+    console.log("message", message);
+    return parseOutput(message);
   }
 }
