@@ -49,11 +49,13 @@ test("Test LLMRun", async () => {
     run_type: "llm",
     outputs: { generations: [] },
     child_runs: [],
+    extra: {},
+    tags: [],
   };
   expect(run).toEqual(compareRun);
 });
 
-test("Test Chat Message Run", async () => {
+test("Test Chat Model Run", async () => {
   const tracer = new FakeTracer();
   const runId = uuid.v4();
   const messages = [[new HumanChatMessage("Avast")]];
@@ -71,7 +73,7 @@ test("Test Chat Message Run", async () => {
       "child_runs": [],
       "end_time": 1620000000000,
       "execution_order": 1,
-      "extra": undefined,
+      "extra": {},
       "id": Any<String>,
       "inputs": {
         "messages": [
@@ -101,6 +103,7 @@ test("Test Chat Message Run", async () => {
         "type": "constructor",
       },
       "start_time": 1620000000000,
+      "tags": [],
     }
   `
   );
@@ -129,6 +132,8 @@ test("Test Chain Run", async () => {
     outputs: { foo: "bar" },
     run_type: "chain",
     child_runs: [],
+    extra: {},
+    tags: [],
   };
   await tracer.handleChainStart(serialized, { foo: "bar" }, runId);
   await tracer.handleChainEnd({ foo: "bar" }, runId);
@@ -152,6 +157,8 @@ test("Test Tool Run", async () => {
     outputs: { output: "output" },
     run_type: "tool",
     child_runs: [],
+    extra: {},
+    tags: [],
   };
   await tracer.handleToolStart(serialized, "test", runId);
   await tracer.handleToolEnd("output", runId);
@@ -211,6 +218,8 @@ test("Test nested runs", async () => {
             start_time: 1620000000000,
             run_type: "llm",
             child_runs: [],
+            extra: {},
+            tags: [],
           },
         ],
         end_time: 1620000000000,
@@ -221,6 +230,8 @@ test("Test nested runs", async () => {
         start_time: 1620000000000,
         inputs: { input: "test" },
         run_type: "tool",
+        extra: {},
+        tags: [],
       },
       {
         id: llmRunId2,
@@ -237,6 +248,8 @@ test("Test nested runs", async () => {
         start_time: 1620000000000,
         run_type: "llm",
         child_runs: [],
+        extra: {},
+        tags: [],
       },
     ],
     id: chainRunId,
@@ -253,6 +266,8 @@ test("Test nested runs", async () => {
     name: "test",
     start_time: 1620000000000,
     run_type: "chain",
+    extra: {},
+    tags: [],
   };
   expect(tracer.runs.length).toBe(1);
   expect(tracer.runs[0]).toEqual(compareRun);

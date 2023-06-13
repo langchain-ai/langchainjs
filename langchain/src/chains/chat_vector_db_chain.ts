@@ -96,7 +96,7 @@ export class ChatVectorDBQAChain
           question,
           chat_history: chatHistory,
         },
-        runManager?.getChild()
+        runManager?.getChild("question_generator")
       );
       const keys = Object.keys(result);
       console.log("_call", values, keys);
@@ -116,7 +116,7 @@ export class ChatVectorDBQAChain
     };
     const result = await this.combineDocumentsChain.call(
       inputs,
-      runManager?.getChild()
+      runManager?.getChild("combine_documents")
     );
     if (this.returnSourceDocuments) {
       return {

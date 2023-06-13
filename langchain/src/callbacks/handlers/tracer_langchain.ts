@@ -45,15 +45,16 @@ export class LangChainTracer
     run: Run,
     example_id: string | undefined = undefined
   ): Promise<RunCreate> {
-    const runExtra = run.extra ?? {};
-    runExtra.runtime = await getRuntimeEnvironment();
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { child_runs: _, ...restOfRun } = run;
-    restOfRun.extra = runExtra;
-    restOfRun.reference_example_id = restOfRun.parent_run_id
-      ? undefined
-      : example_id;
-    return { child_runs: [], session_name: this.sessionName, ...restOfRun };
+    return {
+      ...run,
+      extra: {
+        ...run.extra,
+        runtime: await getRuntimeEnvironment(),
+      },
+      child_runs: undefined,
+      session_name: this.sessionName,
+      reference_example_id: run.parent_run_id ? undefined : example_id,
+    };
   }
 
   protected async persistRun(_run: Run): Promise<void> {}
@@ -71,8 +72,6 @@ export class LangChainTracer
       end_time: run.end_time,
       error: run.error,
       outputs: run.outputs,
-      parent_run_id: run.parent_run_id,
-      reference_example_id: run.reference_example_id,
     };
     await this.client.updateRun(run.id, runUpdate);
   }

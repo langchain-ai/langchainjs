@@ -8499,10 +8499,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/uuid@npm:^9, @types/uuid@npm:^9.0.1":
+"@types/uuid@npm:^9":
   version: 9.0.1
   resolution: "@types/uuid@npm:9.0.1"
   checksum: c472b8a77cbeded4bc529220b8611afa39bd64677f507838f8083d8aac8033b1f88cb9ddaa2f8589e0dcd2317291d0f6e1379f82d5ceebd6f74f3b4825288e00
+  languageName: node
+  linkType: hard
+
+"@types/uuid@npm:^9.0.1":
+  version: 9.0.2
+  resolution: "@types/uuid@npm:9.0.2"
+  checksum: 1754bcf3444e1e3aeadd6e774fc328eb53bc956665e2e8fb6ec127aa8e1f43d9a224c3d22a9a6233dca8dd81a12dc7fed4d84b8876dd5ec82d40f574f7ff8b68
   languageName: node
   linkType: hard
 
@@ -14260,7 +14267,6 @@ __metadata:
     graphql: ^16.6.0
     js-yaml: ^4.1.0
     langchain: "workspace:*"
-    langchainplus-sdk: ">=0.0.11"
     ml-distance: ^4.0.0
     mongodb: ^5.2.0
     mysql2: ^3.3.3
@@ -18647,7 +18653,7 @@ __metadata:
     jest: ^29.5.0
     js-tiktoken: ^1.0.6
     jsonpointer: ^5.0.1
-    langchainplus-sdk: ">=0.0.11"
+    langchainplus-sdk: ^0.0.11
     mammoth: ^1.5.1
     ml-distance: ^4.0.0
     mongodb: ^5.2.0
@@ -18838,7 +18844,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"langchainplus-sdk@npm:>=0.0.11":
+"langchainplus-sdk@npm:^0.0.11":
   version: 0.0.11
   resolution: "langchainplus-sdk@npm:0.0.11"
   dependencies:
