@@ -1,4 +1,4 @@
-import Metal from "@getmetal/metal-sdk";
+import { Metal } from "@getmetal/metal-sdk";
 
 import { BaseRetriever } from "../schema/index.js";
 import { Document } from "../document.js";
