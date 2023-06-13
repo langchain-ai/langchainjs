@@ -12,15 +12,14 @@ import { RunEvaluatorChain } from "../base.js";
 const testRun: Run = {
   inputs: new Map([["query", "How much wood could a woodchuck chuck?"]]),
   outputs: new Map([["myPrediction", "42. no more, no less."]]),
-  child_runs: [],
   execution_order: 1,
   name: "Test Run",
   id: "1",
-  child_execution_order: 1,
   end_time: 1,
   start_time: 0,
   run_type: "llm",
   serialized: {},
+  session_id: "1",
 };
 
 const testExample: Example = {

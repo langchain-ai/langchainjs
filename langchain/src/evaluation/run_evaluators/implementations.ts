@@ -65,6 +65,13 @@ export class ChoicesOutputParser extends RunEvaluatorOutputParser {
   // A map from multiple choice strings to scores
   choicesMap?: Record<string, number>;
 
+  lc_namespace: string[] = [
+    "langchain",
+    "evaluation",
+    "run_evaluators",
+    "implementations",
+  ];
+
   constructor({
     evaluationName,
     choicesMap,
