@@ -53,7 +53,7 @@ export class OpenAIAgent extends Agent {
   lc_namespace = ["langchain", "agents", "openai"];
 
   _agentType() {
-    return "openai" as const;
+    return "openai-functions" as const;
   }
 
   observationPrefix() {

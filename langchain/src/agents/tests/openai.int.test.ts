@@ -17,7 +17,7 @@ test("OpenAIAgent", async () => {
     ],
     new ChatOpenAI({ modelName: "gpt-4-0613", temperature: 0 }),
     {
-      agentType: "openai",
+      agentType: "openai-functions",
       verbose: true,
     }
   );
@@ -43,7 +43,7 @@ test("OpenAIAgent streaming", async () => {
       streaming: true,
     }),
     {
-      agentType: "openai",
+      agentType: "openai-functions",
       returnIntermediateSteps: true,
       maxIterations: 3,
     }

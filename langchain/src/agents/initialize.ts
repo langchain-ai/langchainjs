@@ -84,7 +84,7 @@ export type InitializeAgentExecutorOptionsStructured =
       agentArgs?: Parameters<typeof StructuredChatAgent.fromLLMAndTools>[2];
     } & Omit<AgentExecutorInput, "agent" | "tools">)
   | ({
-      agentType: "openai";
+      agentType: "openai-functions";
       agentArgs?: Parameters<typeof OpenAIAgent.fromLLMAndTools>[2];
       memory?: never;
     } & Omit<AgentExecutorInput, "agent" | "tools">);
@@ -168,7 +168,7 @@ export async function initializeAgentExecutorWithOptions(
       });
       return executor;
     }
-    case "openai": {
+    case "openai-functions": {
       const { agentArgs, ...rest } = options;
       const executor = AgentExecutor.fromAgentAndTools({
         agent: OpenAIAgent.fromLLMAndTools(llm, tools, agentArgs),

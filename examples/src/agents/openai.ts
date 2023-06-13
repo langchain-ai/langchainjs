@@ -7,7 +7,7 @@ const executor = await initializeAgentExecutorWithOptions(
   [new Calculator(), new SerpAPI()],
   new ChatOpenAI({ modelName: "gpt-4-0613", temperature: 0 }),
   {
-    agentType: "openai",
+    agentType: "openai-functions",
     verbose: true,
   }
 );
