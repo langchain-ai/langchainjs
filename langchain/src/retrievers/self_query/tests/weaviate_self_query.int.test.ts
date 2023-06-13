@@ -83,10 +83,10 @@ test("Weaviate Self Query Retriever Test", async () => {
   const client = (weaviate as any).client({
     scheme: process.env.WEAVIATE_SCHEME || "https",
     host: process.env.WEAVIATE_HOST || "localhost",
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    apiKey: new (weaviate as any).ApiKey(
-      process.env.WEAVIATE_API_KEY || "default"
-    ),
+    apiKey: process.env.WEAVIATE_API_KEY
+      ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        new (weaviate as any).ApiKey(process.env.WEAVIATE_API_KEY)
+      : undefined,
   });
 
   const documentContents = "Brief summary of a movie";
