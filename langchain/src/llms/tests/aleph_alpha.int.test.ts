@@ -48,7 +48,7 @@ describe("AI21", () => {
     });
 
     await expect(aleph_alpha.call("Test prompt")).rejects.toThrow(
-      "Aleph Alpha call failed with status code 401"
+      'Aleph Alpha call failed with status 401 and body {"error":"InvalidToken","code":"UNAUTHENTICATED"}'
     );
   });
 });

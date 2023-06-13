@@ -104,9 +104,7 @@ export class AlephAlpha extends LLM implements AlephAlphaInput {
 
   control_log_additive: boolean;
 
-  aleph_alpha_api_key? =
-    getEnvironmentVariable("ALEPH_ALPHA_API_KEY") ??
-    getEnvironmentVariable("aleph_alpha_api_key");
+  aleph_alpha_api_key? = getEnvironmentVariable("ALEPH_ALPHA_API_KEY");
 
   stop?: string[];
 
@@ -234,7 +232,7 @@ export class AlephAlpha extends LLM implements AlephAlphaInput {
 
   /** Get the type of LLM. */
   _llmType(): string {
-    return "alpeh_alph";
+    return "aleph_alpha";
   }
 
   async _call(
@@ -253,7 +251,7 @@ export class AlephAlpha extends LLM implements AlephAlphaInput {
       Accept: "application/json",
     };
     const data = { prompt, stop_sequences: stop, ...this.defaultParams };
-    const responseData = await this.caller.callWithOptions({}, async () => {
+    const responseData = await this.caller.call(async () => {
       const response = await fetch(this.base_url, {
         method: "POST",
         headers,
@@ -261,8 +259,11 @@ export class AlephAlpha extends LLM implements AlephAlphaInput {
         signal: options.signal,
       });
       if (!response.ok) {
+        // consume the response body to release the connection
+        // https://undici.nodejs.org/#/?id=garbage-collection
+        const text = await response.text();
         const error = new Error(
-          `Aleph Alpha call failed with status code ${response.status}`
+          `Aleph Alpha call failed with status ${response.status} and body ${text}`
         );
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (error as any).response = response;
