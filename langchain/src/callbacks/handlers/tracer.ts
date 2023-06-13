@@ -12,7 +12,11 @@ import { BaseCallbackHandler, BaseCallbackHandlerInput } from "../base.js";
 export type RunType = "llm" | "chain" | "tool";
 
 export interface Run extends BaseRun {
+  // some optional fields are always present here
   id: string;
+  start_time: number;
+  execution_order: number;
+  // some additional fields that don't exist in sdk runs
   child_runs: this[];
   child_execution_order: number;
 }
