@@ -1,4 +1,5 @@
-import { snakeCase, camelCase } from "case-anything";
+import snakeCase from "lodash.snakecase";
+import camelCase from "lodash.camelcase";
 
 export interface SerializedFields {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
