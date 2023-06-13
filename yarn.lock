@@ -6474,6 +6474,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@notionhq/client@npm:^2.2.5":
+  version: 2.2.5
+  resolution: "@notionhq/client@npm:2.2.5"
+  dependencies:
+    "@types/node-fetch": ^2.5.10
+    node-fetch: ^2.6.1
+  checksum: e663e9dec58548226ea463fba1409ee9c5af26bdae71b2c5885c11b3c39b9238578ae067e31d5bd33b67cef492f603b264dcdad52692e33e03e0c0a085cb89f0
+  languageName: node
+  linkType: hard
+
 "@npmcli/fs@npm:^1.0.0":
   version: 1.1.1
   resolution: "@npmcli/fs@npm:1.1.1"
@@ -8190,6 +8200,16 @@ __metadata:
   version: 5.1.2
   resolution: "@types/minimatch@npm:5.1.2"
   checksum: 0391a282860c7cb6fe262c12b99564732401bdaa5e395bee9ca323c312c1a0f45efbf34dce974682036e857db59a5c9b1da522f3d6055aeead7097264c8705a8
+  languageName: node
+  linkType: hard
+
+"@types/node-fetch@npm:^2.5.10":
+  version: 2.6.4
+  resolution: "@types/node-fetch@npm:2.6.4"
+  dependencies:
+    "@types/node": "*"
+    form-data: ^3.0.0
+  checksum: f3e1d881bb42269e676ecaf49f0e096ab345e22823a2b2d071d60619414817fe02df48a31a8d05adb23054028a2a65521bdb3906ceb763ab6d3339c8d8775058
   languageName: node
   linkType: hard
 
@@ -18596,6 +18616,7 @@ __metadata:
     "@google-cloud/storage": ^6.10.1
     "@huggingface/inference": ^1.5.1
     "@jest/globals": ^29.5.0
+    "@notionhq/client": ^2.2.5
     "@opensearch-project/opensearch": ^2.2.0
     "@pinecone-database/pinecone": ^0.0.14
     "@qdrant/js-client-rest": ^1.2.0
