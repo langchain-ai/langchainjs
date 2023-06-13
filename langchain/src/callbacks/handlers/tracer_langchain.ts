@@ -1,11 +1,17 @@
 import { LangChainPlusClient } from "langchainplus-sdk";
-import { Run, RunCreate, RunUpdate } from "langchainplus-sdk/schemas";
+import { BaseRun, RunCreate, RunUpdate } from "langchainplus-sdk/schemas";
 import {
   getEnvironmentVariable,
   getRuntimeEnvironment,
 } from "../../util/env.js";
 import { BaseTracer } from "./tracer.js";
 import { BaseCallbackHandlerInput } from "../base.js";
+
+export interface Run extends BaseRun {
+  id: string;
+  child_runs: this[];
+  child_execution_order: number;
+}
 
 export interface LangChainTracerFields extends BaseCallbackHandlerInput {
   exampleId?: string;
