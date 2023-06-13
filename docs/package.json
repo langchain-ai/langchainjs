@@ -5,7 +5,7 @@
   "scripts": {
     "docusaurus": "docusaurus",
     "start": "rimraf ./docs/api && docusaurus start",
-    "build": "rimraf ./build && docusaurus build",
+    "build": "rimraf ./build && NODE_OPTIONS=--max-old-space-size=6144 DOCUSAURUS_SSR_CONCURRENCY=4 docusaurus build",
     "swizzle": "docusaurus swizzle",
     "deploy": "docusaurus deploy",
     "clear": "docusaurus clear",
