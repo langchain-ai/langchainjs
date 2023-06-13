@@ -51,7 +51,7 @@ export class LangChainTracer
         ...run.extra,
         runtime: await getRuntimeEnvironment(),
       },
-      child_runs: [],
+      child_runs: undefined,
       session_name: this.sessionName,
       reference_example_id: run.parent_run_id ? undefined : example_id,
     };
