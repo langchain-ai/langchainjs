@@ -80,7 +80,7 @@ export class VectaraStore extends VectorStore {
         corpus_id: this.corpus_id,
         document: {
           document_id: doc_id,
-          title: document.metadata.title?? "",
+          title: document.metadata.title ?? "",
           metadata_json: JSON.stringify(document.metadata),
           section: [
             {
@@ -127,7 +127,7 @@ export class VectaraStore extends VectorStore {
               customerId: this.customer_id,
               corpusId: this.corpus_id,
               metadataFilter: filter,
-              lexical_interpolation_config: {lambda: 0.025},
+              lexical_interpolation_config: { lambda: 0.025 },
             }
           ]
         }

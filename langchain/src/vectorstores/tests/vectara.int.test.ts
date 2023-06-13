@@ -5,12 +5,12 @@ import { OpenAIEmbeddings } from "../../embeddings/openai.js";
 import { Document } from "../../document.js";
 import { v4 } from "uuid";
 
-test.skip("Vectara Add Documents", async () => {
+test("Vectara Add Documents", async () => {
   const store = new VectaraStore(new OpenAIEmbeddings(), {
-      customer_id: Number(process.env.VECTARA_CUSTOMER_ID) || 0,
-      corpus_id: Number(process.env.VECTARA_CORPUS_ID) || 0,
-      api_key: process.env.VECTARA_API_KEY || ""
-    }
+    customer_id: Number(process.env.VECTARA_CUSTOMER_ID) || 0,
+    corpus_id: Number(process.env.VECTARA_CORPUS_ID) || 0,
+    api_key: process.env.VECTARA_API_KEY || ""
+  }
   );
 
   const documents = [
@@ -35,7 +35,7 @@ test.skip("Vectara Add Documents", async () => {
   ];
 
   const indexResult = await store.addDocuments(documents);
-  const {code, detail} = indexResult;
+  const { code, detail } = indexResult;
   expect(code).toEqual(200);
   expect(detail).toEqual(`Successfully added ${documents.length} documents to Vectara`);
 
