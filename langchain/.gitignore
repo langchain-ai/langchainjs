@@ -337,6 +337,9 @@ retrievers/self_query/pinecone.d.ts
 retrievers/self_query/supabase.cjs
 retrievers/self_query/supabase.js
 retrievers/self_query/supabase.d.ts
+retrievers/self_query/weaviate.cjs
+retrievers/self_query/weaviate.js
+retrievers/self_query/weaviate.d.ts
 retrievers/vespa.cjs
 retrievers/vespa.js
 retrievers/vespa.d.ts
