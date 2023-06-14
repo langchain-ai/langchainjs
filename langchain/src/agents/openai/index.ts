@@ -160,7 +160,6 @@ export class OpenAIAgent extends Agent {
       valuesForLLM,
       callbackManager
     );
-    console.log("message", message);
     return parseOutput(message);
   }
 }
