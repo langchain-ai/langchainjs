@@ -5,7 +5,7 @@ import { BaseOutputParser } from "../schema/output_parser.js";
 
 export interface AgentInput {
   llmChain: LLMChain;
-  outputParser: AgentActionOutputParser;
+  outputParser: AgentActionOutputParser | undefined;
   allowedTools?: string[];
 }
 

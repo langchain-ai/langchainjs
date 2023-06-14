@@ -70,7 +70,7 @@ export class StuffDocumentsChain
         ...rest,
         [this.documentVariableName]: text,
       },
-      runManager?.getChild()
+      runManager?.getChild("combine_documents")
     );
     return result;
   }
@@ -201,7 +201,9 @@ export class MapReduceDocumentsChain
         // If we have a runManager, then we need to create a child for each input
         // so that we can track the progress of each input.
         runManager
-          ? Array.from({ length: inputs.length }, () => runManager.getChild())
+          ? Array.from({ length: inputs.length }, (_, i) =>
+              runManager.getChild(`map_${i + 1}`)
+            )
           : undefined
       );
       const { outputKey } = this.llmChain;
@@ -224,7 +226,7 @@ export class MapReduceDocumentsChain
     const newInputs = { input_documents: currentDocs, ...rest };
     const result = await this.combineDocumentChain.call(
       newInputs,
-      runManager?.getChild()
+      runManager?.getChild("combine_documents")
     );
 
     // Return the intermediate steps results if the flag is set
@@ -389,7 +391,7 @@ export class RefineDocumentsChain
     );
     let res = await this.llmChain.predict(
       { ...initialInputs },
-      runManager?.getChild()
+      runManager?.getChild("answer")
     );
 
     const refineSteps = [res];
@@ -402,7 +404,7 @@ export class RefineDocumentsChain
       const inputs = { ...refineInputs, ...rest };
       res = await this.refineLLMChain.predict(
         { ...inputs },
-        runManager?.getChild()
+        runManager?.getChild("refine")
       );
       refineSteps.push(res);
     }

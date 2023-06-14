@@ -218,6 +218,6 @@ test("Test using partial", async () => {
   expect(partialPrompt.inputVariables).toEqual(["bar"]);
 
   expect(await partialPrompt.format({ bar: "baz" })).toMatchInlineSnapshot(
-    `"[{"type":"human","data":{"content":"foobaz"}}]"`
+    `"[{"type":"human","data":{"content":"foobaz","additional_kwargs":{}}}]"`
   );
 });

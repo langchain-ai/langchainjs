@@ -8519,10 +8519,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/uuid@npm:^9, @types/uuid@npm:^9.0.1":
+"@types/uuid@npm:^9":
   version: 9.0.1
   resolution: "@types/uuid@npm:9.0.1"
   checksum: c472b8a77cbeded4bc529220b8611afa39bd64677f507838f8083d8aac8033b1f88cb9ddaa2f8589e0dcd2317291d0f6e1379f82d5ceebd6f74f3b4825288e00
+  languageName: node
+  linkType: hard
+
+"@types/uuid@npm:^9.0.1":
+  version: 9.0.2
+  resolution: "@types/uuid@npm:9.0.2"
+  checksum: 1754bcf3444e1e3aeadd6e774fc328eb53bc956665e2e8fb6ec127aa8e1f43d9a224c3d22a9a6233dca8dd81a12dc7fed4d84b8876dd5ec82d40f574f7ff8b68
   languageName: node
   linkType: hard
 
@@ -10747,17 +10754,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"camelcase@npm:6, camelcase@npm:^6.2.0, camelcase@npm:^6.2.1":
+  version: 6.3.0
+  resolution: "camelcase@npm:6.3.0"
+  checksum: 8c96818a9076434998511251dcb2761a94817ea17dbdc37f47ac080bd088fc62c7369429a19e2178b993497132c8cbcf5cc1f44ba963e76782ba469c0474938d
+  languageName: node
+  linkType: hard
+
 "camelcase@npm:^5.3.1":
   version: 5.3.1
   resolution: "camelcase@npm:5.3.1"
   checksum: e6effce26b9404e3c0f301498184f243811c30dfe6d0b9051863bd8e4034d09c8c2923794f280d6827e5aa055f6c434115ff97864a16a963366fb35fd673024b
-  languageName: node
-  linkType: hard
-
-"camelcase@npm:^6.2.0, camelcase@npm:^6.2.1":
-  version: 6.3.0
-  resolution: "camelcase@npm:6.3.0"
-  checksum: 8c96818a9076434998511251dcb2761a94817ea17dbdc37f47ac080bd088fc62c7369429a19e2178b993497132c8cbcf5cc1f44ba963e76782ba469c0474938d
   languageName: node
   linkType: hard
 
@@ -10791,13 +10798,6 @@ __metadata:
   version: 1.0.30001474
   resolution: "caniuse-lite@npm:1.0.30001474"
   checksum: c05faab958fae1bbf3c595203c96d3a2f6b4c7a0d122069addc6c386f208b4db66eed3f5e3d606b80e3b384603d353b27a306f6dcb6145642b5b97a330dba86a
-  languageName: node
-  linkType: hard
-
-"case-anything@npm:^2.1.13":
-  version: 2.1.13
-  resolution: "case-anything@npm:2.1.13"
-  checksum: c39c69d7e418337b6006a9692f13c2b257e907e867149a102e9beb7e9d2d52da14e754da1f4e4ce82a866d86d93047e522f64360bda54e7d7c308f4cdd736c3d
   languageName: node
   linkType: hard
 
@@ -12183,6 +12183,13 @@ __metadata:
   dependencies:
     ms: ^2.1.1
   checksum: b3d8c5940799914d30314b7c3304a43305fd0715581a919dacb8b3176d024a782062368405b47491516d2091d6462d4d11f2f4974a405048094f8bfebfa3071c
+  languageName: node
+  linkType: hard
+
+"decamelize@npm:5":
+  version: 5.0.1
+  resolution: "decamelize@npm:5.0.1"
+  checksum: 7c3b1ed4b3e60e7fbc00a35fb248298527c1cdfe603e41dfcf05e6c4a8cb9efbee60630deb677ed428908fb4e74e322966c687a094d1478ddc9c3a74e9dc7140
   languageName: node
   linkType: hard
 
@@ -14280,7 +14287,6 @@ __metadata:
     graphql: ^16.6.0
     js-yaml: ^4.1.0
     langchain: "workspace:*"
-    langchainplus-sdk: ">=0.0.9"
     ml-distance: ^4.0.0
     mongodb: ^5.2.0
     mysql2: ^3.3.3
@@ -18643,11 +18649,12 @@ __metadata:
     apify-client: ^2.7.1
     axios: ^0.26.0
     binary-extensions: ^2.2.0
-    case-anything: ^2.1.13
+    camelcase: 6
     cheerio: ^1.0.0-rc.12
     chromadb: ^1.5.2
     cohere-ai: ^5.0.2
     d3-dsv: ^2.0.0
+    decamelize: 5
     dotenv: ^16.0.3
     dpdm: ^3.12.0
     epub2: ^3.0.1
@@ -18668,14 +18675,14 @@ __metadata:
     jest: ^29.5.0
     js-tiktoken: ^1.0.6
     jsonpointer: ^5.0.1
-    langchainplus-sdk: ">=0.0.9"
+    langchainplus-sdk: ^0.0.11
     mammoth: ^1.5.1
     ml-distance: ^4.0.0
     mongodb: ^5.2.0
     mysql2: ^3.3.3
     notion-to-md: ^3.1.0
     object-hash: ^3.0.0
-    openai: ^3.2.0
+    openai: ^3.3.0
     p-queue: ^6.6.2
     p-retry: 4
     pdf-parse: 1.1.1
@@ -18866,9 +18873,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"langchainplus-sdk@npm:>=0.0.9":
-  version: 0.0.9
-  resolution: "langchainplus-sdk@npm:0.0.9"
+"langchainplus-sdk@npm:^0.0.11":
+  version: 0.0.11
+  resolution: "langchainplus-sdk@npm:0.0.11"
   dependencies:
     "@types/uuid": ^9.0.1
     commander: ^10.0.1
@@ -18877,7 +18884,7 @@ __metadata:
     uuid: ^9.0.0
   bin:
     langchain: dist/cli/main.cjs
-  checksum: b4294009309af2fdb2a0b4ec1a7c1efab67fb64ad0cf1059b37c83f6a2ef4ebdfd23403598a587a1e4ab7d1d0d40f2e2e1f8b6101dcf30fd0768ea6b92555739
+  checksum: 721ecb73aa9d4b270bd14e9c49e6b51b6787394e0fc0e188e417b4091c69542f3984ec636eac7159ae838e25a6dd067b21ad7b8aaa4a732976113351117f60e9
   languageName: node
   linkType: hard
 
@@ -20840,13 +20847,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"openai@npm:^3.2.0":
-  version: 3.2.1
-  resolution: "openai@npm:3.2.1"
+"openai@npm:^3.3.0":
+  version: 3.3.0
+  resolution: "openai@npm:3.3.0"
   dependencies:
     axios: ^0.26.0
     form-data: ^4.0.0
-  checksum: ef3942e9b527cf27273c4355bb8fb9ebd94ae3a88c12eec0ac51c4ef0ad8c18864683759471597390816bcd822bdc9f2f1cea7a3eb1e432c9101f568f7c6d19a
+  checksum: 28ccff8c09b6f47828c9583bb3bafc38a8459c76ea10eb9e08ca880f65523c5a9cc6c5f3c7669dded6f4c93e7cf49dd5c4dbfd12732a0f958c923117740d677b
   languageName: node
   linkType: hard
 

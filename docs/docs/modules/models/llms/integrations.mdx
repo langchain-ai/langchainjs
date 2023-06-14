@@ -15,6 +15,7 @@ LangChain offers a number of LLM implementations that integrate with various mod
 import { OpenAI } from "langchain/llms/openai";
 
 const model = new OpenAI({
+  modelName: "text-davinci-003", // Defaults to "text-davinci-003" if no model provided.
   temperature: 0.9,
   openAIApiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.OPENAI_API_KEY
 });
@@ -158,6 +159,14 @@ You can get started with AI21Labs' Jurassic family of models, as well as see a f
 import AI21Example from "@examples/models/llm/ai21.ts";
 
 <CodeBlock language="typescript">{AI21Example}</CodeBlock>
+
+## `AlephAlpha`
+
+You can get started with AlephAlpha' Luminous family of models by signing up for an API key [on their website](https://www.aleph-alpha.com/).
+
+import AlephAlphaExample from "@examples/models/llm/aleph_alpha.ts";
+
+<CodeBlock language="typescript">{AlephAlphaExample}</CodeBlock>
 
 ## Additional LLM Implementations
 

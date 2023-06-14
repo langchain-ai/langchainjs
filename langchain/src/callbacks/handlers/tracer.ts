@@ -1,37 +1,29 @@
+import { KVMap, BaseRun } from "langchainplus-sdk/schemas";
+
 import {
   AgentAction,
   BaseChatMessage,
   ChainValues,
   LLMResult,
-  RunInputs,
-  RunOutputs,
 } from "../../schema/index.js";
 import { Serialized } from "../../load/serializable.js";
 import { BaseCallbackHandler, BaseCallbackHandlerInput } from "../base.js";
 
 export type RunType = "llm" | "chain" | "tool";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type Extra = Record<string, any>;
-export interface BaseRun {
-  id: string;
-  name: string;
-  start_time: number;
-  end_time?: number;
-  extra?: Extra;
-  error?: string;
-  execution_order: number;
-  serialized: object;
-  inputs: RunInputs;
-  outputs?: RunOutputs;
-  reference_example_id?: string; // uuid
-  run_type: RunType;
-}
-
 export interface Run extends BaseRun {
+  // some optional fields are always present here
+  id: string;
+  start_time: number;
+  execution_order: number;
+  // some additional fields that don't exist in sdk runs
   child_runs: this[];
   child_execution_order: number;
-  parent_run_id?: string; // uuid
+  events: Array<{
+    name: string;
+    time: number;
+    kwargs?: Record<string, unknown>;
+  }>;
 }
 
 export interface AgentRun extends Run {
@@ -94,21 +86,30 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     prompts: string[],
     runId: string,
     parentRunId?: string,
-    extraParams?: Record<string, unknown>
+    extraParams?: KVMap,
+    tags?: string[]
   ): Promise<void> {
     const execution_order = this._getExecutionOrder(parentRunId);
+    const start_time = Date.now();
     const run: Run = {
       id: runId,
       name: llm.id[llm.id.length - 1],
       parent_run_id: parentRunId,
-      start_time: Date.now(),
+      start_time,
       serialized: llm,
+      events: [
+        {
+          name: "start",
+          time: start_time,
+        },
+      ],
       inputs: { prompts },
       execution_order,
       child_runs: [],
       child_execution_order: execution_order,
       run_type: "llm",
-      extra: extraParams,
+      extra: extraParams ?? {},
+      tags: tags || [],
     };
 
     this._startTrace(run);
@@ -120,21 +121,30 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     messages: BaseChatMessage[][],
     runId: string,
     parentRunId?: string,
-    extraParams?: Record<string, unknown>
+    extraParams?: KVMap,
+    tags?: string[]
   ): Promise<void> {
     const execution_order = this._getExecutionOrder(parentRunId);
+    const start_time = Date.now();
     const run: Run = {
       id: runId,
       name: llm.id[llm.id.length - 1],
       parent_run_id: parentRunId,
-      start_time: Date.now(),
+      start_time,
       serialized: llm,
+      events: [
+        {
+          name: "start",
+          time: start_time,
+        },
+      ],
       inputs: { messages },
       execution_order,
       child_runs: [],
       child_execution_order: execution_order,
       run_type: "llm",
-      extra: extraParams,
+      extra: extraParams ?? {},
+      tags: tags || [],
     };
 
     this._startTrace(run);
@@ -148,6 +158,10 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     }
     run.end_time = Date.now();
     run.outputs = output;
+    run.events.push({
+      name: "end",
+      time: run.end_time,
+    });
     await this.onLLMEnd?.(run);
     await this._endTrace(run);
   }
@@ -159,6 +173,10 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     }
     run.end_time = Date.now();
     run.error = error.message;
+    run.events.push({
+      name: "error",
+      time: run.end_time,
+    });
     await this.onLLMError?.(run);
     await this._endTrace(run);
   }
@@ -167,20 +185,30 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     chain: Serialized,
     inputs: ChainValues,
     runId: string,
-    parentRunId?: string
+    parentRunId?: string,
+    tags?: string[]
   ): Promise<void> {
     const execution_order = this._getExecutionOrder(parentRunId);
+    const start_time = Date.now();
     const run: Run = {
       id: runId,
       name: chain.id[chain.id.length - 1],
       parent_run_id: parentRunId,
-      start_time: Date.now(),
+      start_time,
       serialized: chain,
+      events: [
+        {
+          name: "start",
+          time: start_time,
+        },
+      ],
       inputs,
       execution_order,
       child_execution_order: execution_order,
       run_type: "chain",
       child_runs: [],
+      extra: {},
+      tags: tags || [],
     };
 
     this._startTrace(run);
@@ -194,6 +222,10 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     }
     run.end_time = Date.now();
     run.outputs = outputs;
+    run.events.push({
+      name: "end",
+      time: run.end_time,
+    });
     await this.onChainEnd?.(run);
     await this._endTrace(run);
   }
@@ -205,6 +237,10 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     }
     run.end_time = Date.now();
     run.error = error.message;
+    run.events.push({
+      name: "error",
+      time: run.end_time,
+    });
     await this.onChainError?.(run);
     await this._endTrace(run);
   }
@@ -213,20 +249,30 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     tool: Serialized,
     input: string,
     runId: string,
-    parentRunId?: string
+    parentRunId?: string,
+    tags?: string[]
   ): Promise<void> {
     const execution_order = this._getExecutionOrder(parentRunId);
+    const start_time = Date.now();
     const run: Run = {
       id: runId,
       name: tool.id[tool.id.length - 1],
       parent_run_id: parentRunId,
-      start_time: Date.now(),
+      start_time,
       serialized: tool,
+      events: [
+        {
+          name: "start",
+          time: start_time,
+        },
+      ],
       inputs: { input },
       execution_order,
       child_execution_order: execution_order,
       run_type: "tool",
       child_runs: [],
+      extra: {},
+      tags: tags || [],
     };
 
     this._startTrace(run);
@@ -240,6 +286,10 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     }
     run.end_time = Date.now();
     run.outputs = { output };
+    run.events.push({
+      name: "end",
+      time: run.end_time,
+    });
     await this.onToolEnd?.(run);
     await this._endTrace(run);
   }
@@ -251,6 +301,10 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     }
     run.end_time = Date.now();
     run.error = error.message;
+    run.events.push({
+      name: "error",
+      time: run.end_time,
+    });
     await this.onToolError?.(run);
     await this._endTrace(run);
   }
@@ -263,7 +317,25 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     const agentRun = run as AgentRun;
     agentRun.actions = agentRun.actions || [];
     agentRun.actions.push(action);
+    agentRun.events.push({
+      name: "agent_action",
+      time: Date.now(),
+      kwargs: { action },
+    });
     await this.onAgentAction?.(run as AgentRun);
+  }
+
+  async handleText(text: string, runId: string): Promise<void> {
+    const run = this.runMap.get(runId);
+    if (!run || run?.run_type !== "chain") {
+      return;
+    }
+    run.events.push({
+      name: "text",
+      time: Date.now(),
+      kwargs: { text },
+    });
+    await this.onText?.(run);
   }
 
   // custom event handlers
@@ -292,5 +364,5 @@ export abstract class BaseTracer extends BaseCallbackHandler {
 
   // onAgentEnd?(run: ChainRun): void | Promise<void>;
 
-  // onText?(run: Run): void | Promise<void>;
+  onText?(run: Run): void | Promise<void>;
 }

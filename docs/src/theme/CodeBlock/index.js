@@ -21,7 +21,7 @@ function Imports({ imports }) {
       </h4>
       <ul style={{ paddingBottom: "1rem" }}>
         {imports.map(({ imported, source, docs }) => (
-          <li>
+          <li key={imported}>
             <a href={docs}>
               <span>{imported}</span>
             </a>{" "}

@@ -40,6 +40,7 @@ const entrypoints = {
   "llms/base": "llms/base",
   "llms/openai": "llms/openai",
   "llms/ai21": "llms/ai21",
+  "llms/aleph_alpha": "llms/aleph_alpha",
   "llms/cohere": "llms/cohere",
   "llms/hf": "llms/hf",
   "llms/replicate": "llms/replicate",
@@ -140,6 +141,7 @@ const entrypoints = {
   "retrievers/self_query/functional": "retrievers/self_query/functional",
   "retrievers/self_query/pinecone": "retrievers/self_query/pinecone",
   "retrievers/self_query/supabase": "retrievers/self_query/supabase",
+  "retrievers/self_query/weaviate": "retrievers/self_query/weaviate",
   "retrievers/vespa": "retrievers/vespa",
   // cache
   cache: "cache/index",
@@ -246,6 +248,7 @@ const requiresOptionalDependency = [
   "retrievers/self_query/functional",
   "retrievers/self_query/pinecone",
   "retrievers/self_query/supabase",
+  "retrievers/self_query/weaviate",
   "output_parsers/expression",
   "chains/query_constructor",
   "chains/query_constructor/ir",

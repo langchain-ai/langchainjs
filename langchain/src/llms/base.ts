@@ -96,6 +96,8 @@ export abstract class BaseLLM extends BaseLanguageModel {
     const callbackManager_ = await CallbackManager.configure(
       callbacks,
       this.callbacks,
+      options.tags,
+      this.tags,
       { verbose: this.verbose }
     );
     const extra = { options, invocation_params: this?.invocationParams() };

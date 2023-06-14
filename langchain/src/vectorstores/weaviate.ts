@@ -89,7 +89,22 @@ export class WeaviateStore extends VectorStore {
     this.queryAttrs = [this.textKey];
 
     if (args.metadataKeys) {
-      this.queryAttrs = this.queryAttrs.concat(args.metadataKeys);
+      this.queryAttrs = [
+        ...new Set([
+          ...this.queryAttrs,
+          ...args.metadataKeys.filter((k) => {
+            // https://spec.graphql.org/June2018/#sec-Names
+            // queryAttrs need to be valid GraphQL Names
+            const keyIsValid = /^[_A-Za-z][_0-9A-Za-z]*$/.test(k);
+            if (!keyIsValid) {
+              console.warn(
+                `Skipping metadata key ${k} as it is not a valid GraphQL Name`
+              );
+            }
+            return keyIsValid;
+          }),
+        ]),
+      ];
     }
   }
 
