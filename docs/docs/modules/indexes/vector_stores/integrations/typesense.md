@@ -106,7 +106,7 @@ vectorStore.deleteDocuments(["document_id_1", "document_id_2"]);
 
 ### Constructor
 
-Before starting, create an schema in Typesense with an id, a field for the vector and a field for the text. Add many other fields as needed for the metadata.
+Before starting, create a schema in Typesense with an id, a field for the vector and a field for the text. Add as many other fields as needed for the metadata.
 
 - `constructor(embeddings: Embeddings, config: TypesenseConfig)`: Constructs a new instance of the `Typesense` class.
   - `embeddings`: An instance of the `Embeddings` class used for embedding documents.
@@ -123,7 +123,6 @@ Before starting, create an schema in Typesense with an id, a field for the vecto
 ### Methods
 
 - `async addDocuments(documents: Document[]): Promise<void>`: Adds documents to the vector store. The documents will be updated if there is a document with the same ID.
-- `async addDocumentsWithoutEmbedding(documents: (Document & { vector: number[] })[]): Promise<void>`: Adds documents to the vector store without embedding. Documents must contain a `vector` property representing the document vector.
 - `static async fromDocuments(docs: Document[], embeddings: Embeddings, config: TypesenseConfig): Promise<Typesense>`: Creates a Typesense vector store from a list of documents. Documents are added to the vector store during construction.
 - `static async fromTexts(texts: string[], metadatas: object[], embeddings: Embeddings, config: TypesenseConfig): Promise<Typesense>`: Creates a Typesense vector store from a list of texts and associated metadata. Texts are converted to documents and added to the vector store during construction.
 - `async similaritySearch(query: string, k?: number, filter?: Record<string, unknown>): Promise<Document[]>`: Searches for similar documents based on a query. Returns an array of similar documents.
