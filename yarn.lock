@@ -14278,6 +14278,7 @@ __metadata:
     tsx: ^3.12.3
     typeorm: ^0.3.12
     typescript: ^5.0.0
+    typesense: ^1.5.3
     weaviate-ts-client: ^1.0.0
     zod: ^3.21.4
   languageName: unknown
@@ -18680,6 +18681,7 @@ __metadata:
     ts-jest: ^29.1.0
     typeorm: ^0.3.12
     typescript: ^5.0.0
+    typesense: ^1.5.3
     uuid: ^9.0.0
     weaviate-ts-client: ^1.0.0
     yaml: ^2.2.1
@@ -18732,6 +18734,7 @@ __metadata:
     replicate: ^0.9.0
     srt-parser-2: ^1.2.2
     typeorm: ^0.3.12
+    typesense: ^1.5.3
     weaviate-ts-client: ^1.0.0
   peerDependenciesMeta:
     "@aws-sdk/client-dynamodb":
@@ -18825,6 +18828,8 @@ __metadata:
     srt-parser-2:
       optional: true
     typeorm:
+      optional: true
+    typesense:
       optional: true
     weaviate-ts-client:
       optional: true
@@ -19200,6 +19205,13 @@ __metadata:
     slice-ansi: ^4.0.0
     wrap-ansi: ^6.2.0
   checksum: ae2f85bbabc1906034154fb7d4c4477c79b3e703d22d78adee8b3862fa913942772e7fa11713e3d96fb46de4e3cabefbf5d0a544344f03b58d3c4bff52aa9eb2
+  languageName: node
+  linkType: hard
+
+"loglevel@npm:^1.8.0":
+  version: 1.8.1
+  resolution: "loglevel@npm:1.8.1"
+  checksum: a1a62db40291aaeaef2f612334c49e531bff71cc1d01a2acab689ab80d59e092f852ab164a5aedc1a752fdc46b7b162cb097d8a9eb2cf0b299511106c29af61d
   languageName: node
   linkType: hard
 
@@ -26671,6 +26683,18 @@ __metadata:
     tsc: bin/tsc
     tsserver: bin/tsserver
   checksum: 9ec0a8eed38d46cc2c8794555b7674e413604c56c159f71b8ff21ce7f17334a44127a68724cb2ef8221ff3b19369f8f05654e8a5266621d7d962aeed889bd630
+  languageName: node
+  linkType: hard
+
+"typesense@npm:^1.5.3":
+  version: 1.5.3
+  resolution: "typesense@npm:1.5.3"
+  dependencies:
+    axios: ^0.26.0
+    loglevel: ^1.8.0
+  peerDependencies:
+    "@babel/runtime": ^7.17.2
+  checksum: 6315139ca0be12f558a8ffb78e8055497941ba625fd61729ebe05d4af7d69524d89d1bd56a4a3f38df32fe41216ab6fde2e97bcddddce8af8328d5cddba85f82
   languageName: node
   linkType: hard
 

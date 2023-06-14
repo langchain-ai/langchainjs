@@ -166,6 +166,9 @@
     "vectorstores/redis.cjs",
     "vectorstores/redis.js",
     "vectorstores/redis.d.ts",
+    "vectorstores/typesense.cjs",
+    "vectorstores/typesense.js",
+    "vectorstores/typesense.d.ts",
     "vectorstores/singlestore.cjs",
     "vectorstores/singlestore.js",
     "vectorstores/singlestore.d.ts",
@@ -508,6 +511,7 @@
     "ts-jest": "^29.1.0",
     "typeorm": "^0.3.12",
     "typescript": "^5.0.0",
+    "typesense": "^1.5.3",
     "weaviate-ts-client": "^1.0.0"
   },
   "peerDependencies": {
@@ -557,6 +561,7 @@
     "replicate": "^0.9.0",
     "srt-parser-2": "^1.2.2",
     "typeorm": "^0.3.12",
+    "typesense": "^1.5.3",
     "weaviate-ts-client": "^1.0.0"
   },
   "peerDependenciesMeta": {
@@ -696,6 +701,9 @@
       "optional": true
     },
     "typeorm": {
+      "optional": true
+    },
+    "typesense": {
       "optional": true
     },
     "weaviate-ts-client": {
@@ -1011,6 +1019,11 @@
       "types": "./vectorstores/redis.d.ts",
       "import": "./vectorstores/redis.js",
       "require": "./vectorstores/redis.cjs"
+    },
+    "./vectorstores/typesense": {
+      "types": "./vectorstores/typesense.d.ts",
+      "import": "./vectorstores/typesense.js",
+      "require": "./vectorstores/typesense.cjs"
     },
     "./vectorstores/singlestore": {
       "types": "./vectorstores/singlestore.d.ts",

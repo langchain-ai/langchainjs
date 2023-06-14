@@ -81,6 +81,7 @@
       "src/vectorstores/typeorm.ts",
       "src/vectorstores/myscale.ts",
       "src/vectorstores/redis.ts",
+      "src/vectorstores/typesense.ts",
       "src/vectorstores/singlestore.ts",
       "src/vectorstores/tigris.ts",
       "src/text_splitter.ts",
