@@ -166,7 +166,7 @@ export class HNSWLib extends SaveableVectorStore {
     try {
       await fs.access(path.join(directory, "hnswlib.index"));
     } catch (err) {
-      throw new Error(`Directory ${directory} does appear to be a hnswlib index`);
+      throw new Error(`Directory ${directory} does not contain a hnswlib index. Skipping delete.`);
     }
 
     await fs.rm(directory, { recursive: true, force: true });
