@@ -82,13 +82,16 @@ export abstract class BaseChain extends BaseLangChain implements ChainInputs {
     input: any,
     callbacks?: Callbacks
   ): Promise<string> {
-    const isKeylessInput = this.inputKeys.length <= 1;
+    const inputKeys = this.inputKeys.filter(
+      (k) => !this.memory?.memoryKeys.includes(k) ?? true
+    );
+    const isKeylessInput = inputKeys.length <= 1;
     if (!isKeylessInput) {
       throw new Error(
         `Chain ${this._chainType()} expects multiple inputs, cannot use 'run' `
       );
     }
-    const values = this.inputKeys.length ? { [this.inputKeys[0]]: input } : {};
+    const values = inputKeys.length ? { [inputKeys[0]]: input } : {};
     const returnValues = await this.call(values, callbacks);
     const keys = Object.keys(returnValues);
 
