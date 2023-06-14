@@ -25,6 +25,12 @@ test("OpenAIAgent", async () => {
   const result = await executor.run("What is the weather in New York?");
 
   console.log(result);
+
+  const result2 = await executor.run(
+    "And what is the weather like in the capital of that state?"
+  );
+
+  console.log(result2);
 });
 
 test("OpenAIAgent streaming", async () => {

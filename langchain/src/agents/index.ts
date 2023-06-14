@@ -70,3 +70,8 @@ export {
   StructuredChatOutputParserArgs,
   StructuredChatOutputParserWithRetries,
 } from "./structured_chat/outputParser.js";
+export {
+  OpenAIAgent,
+  OpenAIAgentInput,
+  OpenAIAgentCreatePromptArgs,
+} from "./openai/index.js";
