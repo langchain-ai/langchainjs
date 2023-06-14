@@ -7,6 +7,7 @@ import { ChatConversationalAgent } from "./chat_convo/index.js";
 import { StructuredChatAgent } from "./structured_chat/index.js";
 import { AgentExecutor, AgentExecutorInput } from "./executor.js";
 import { ZeroShotAgent } from "./mrkl/index.js";
+import { OpenAIAgent } from "./openai/index.js";
 
 type AgentType =
   | "zero-shot-react-description"
@@ -78,10 +79,15 @@ export type InitializeAgentExecutorOptions =
  * @interface
  */
 export type InitializeAgentExecutorOptionsStructured =
-  | {
+  | ({
       agentType: "structured-chat-zero-shot-react-description";
       agentArgs?: Parameters<typeof StructuredChatAgent.fromLLMAndTools>[2];
-    } & Omit<AgentExecutorInput, "agent" | "tools">;
+    } & Omit<AgentExecutorInput, "agent" | "tools">)
+  | ({
+      agentType: "openai-functions";
+      agentArgs?: Parameters<typeof OpenAIAgent.fromLLMAndTools>[2];
+      memory?: never;
+    } & Omit<AgentExecutorInput, "agent" | "tools">);
 
 /**
  * Initialize an agent executor with options
@@ -158,6 +164,15 @@ export async function initializeAgentExecutorWithOptions(
         agent: StructuredChatAgent.fromLLMAndTools(llm, tools, agentArgs),
         tools,
         memory,
+        ...rest,
+      });
+      return executor;
+    }
+    case "openai-functions": {
+      const { agentArgs, ...rest } = options;
+      const executor = AgentExecutor.fromAgentAndTools({
+        agent: OpenAIAgent.fromLLMAndTools(llm, tools, agentArgs),
+        tools,
         ...rest,
       });
       return executor;

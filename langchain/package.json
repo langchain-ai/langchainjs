@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.93",
+  "version": "0.0.94",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -723,7 +723,7 @@
     "langchainplus-sdk": "^0.0.11",
     "ml-distance": "^4.0.0",
     "object-hash": "^3.0.0",
-    "openai": "^3.2.0",
+    "openai": "^3.3.0",
     "p-queue": "^6.6.2",
     "p-retry": "4",
     "uuid": "^9.0.0",
