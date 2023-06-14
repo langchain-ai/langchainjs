@@ -210,6 +210,13 @@ export class VectaraStore extends VectorStore {
     embeddings: Embeddings,
     args: VectaraLibArgs
   ): Promise<VectaraStore> {
+    const embeddingsName = embeddings.constructor.name;
+    if (embeddingsName !== "FakeEmbeddings") {
+      throw new Error(
+        `Vectara uses its own embeddings, so you don't have to provide any. Provide an instance of FakeEmbeddings to VectaraStore.fromTexts, instead of ${embeddingsName}.`
+      );
+    }
+
     const docs: Document[] = [];
     for (let i = 0; i < texts.length; i += 1) {
       const metadata = Array.isArray(metadatas) ? metadatas[i] : metadatas;
@@ -220,21 +227,21 @@ export class VectaraStore extends VectorStore {
       docs.push(newDoc);
     }
 
-    const embeddingsName = embeddings.constructor.name;
-    if (embeddingsName !== "FakeEmbeddings") {
-      throw new Error(
-        `Vectara uses its own embeddings, so you don't have to provide any. Provide an instance of FakeEmbeddings to VectaraStore.fromTexts, instead of ${embeddingsName}.`
-      );
-    }
-
     return VectaraStore.fromDocuments(docs, embeddings, args);
   }
 
   static async fromDocuments(
     docs: Document[],
-    _embeddings: Embeddings,
+    embeddings: Embeddings,
     args: VectaraLibArgs
   ): Promise<VectaraStore> {
+    const embeddingsName = embeddings.constructor.name;
+    if (embeddingsName !== "FakeEmbeddings") {
+      throw new Error(
+        `Vectara uses its own embeddings, so you don't have to provide any. Provide an instance of FakeEmbeddings to VectaraStore.fromDocuments, instead of ${embeddingsName}.`
+      );
+    }
+
     const instance = new this(args);
     await instance.addDocuments(docs);
     return instance;
