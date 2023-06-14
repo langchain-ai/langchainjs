@@ -22,8 +22,6 @@ export interface VectaraFilter {
   // Example of a vectara filter string can be: "doc.rating > 3.0 and part.lang = 'deu'"
   // See https://docs.vectara.com/docs/search-apis/sql/filter-overview for more details.
   filter?: string;
-  // Maximum number of results to return
-  numResults?: number;
   // Improve retrieval accuracy by adjusting the balance (from 0 to 1), known as lambda,
   // between neural search and keyword-based search factors. Values between 0.01 and 0.2 tend to work well.
   // see https://docs.vectara.com/docs/api-reference/search-apis/lexical-matching for more details.
@@ -136,7 +134,7 @@ export class VectaraStore extends VectorStore {
 
   async similaritySearchWithScore(
     query: string,
-    _k = 4,
+    k = 10,
     filter: VectaraFilter | undefined = undefined
   ): Promise<[Document, number][]> {
     const headers = await this.getJsonHeader();
@@ -144,7 +142,7 @@ export class VectaraStore extends VectorStore {
       query: [
         {
           query: query,
-          numResults: filter?.numResults ?? 10,
+          numResults: k,
           corpusKey: [
             {
               customerId: this.customer_id,
@@ -185,12 +183,12 @@ export class VectaraStore extends VectorStore {
 
   async similaritySearch(
     query: string,
-    _k = 4,
+    k = 10,
     filter: VectaraFilter | undefined = undefined
   ): Promise<Document[]> {
     const resultWithScore = await this.similaritySearchWithScore(
       query,
-      _k,
+      k,
       filter
     );
     return resultWithScore.map((result) => result[0]);

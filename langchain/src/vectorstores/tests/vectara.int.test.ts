@@ -48,35 +48,52 @@ describe.skip("VectaraStore", () => {
       };
 
       // Some text from Lord of the Rings
-      const firstText =
+      const englishOne =
         "It all depends on what you want. You can trust us to stick to you through thick and thin to the \
                         bitter end. And you can trust us to keep any secret of yours - closer than you keep it yourself. \
                         But you cannot trust us to let you face trouble alone, and go off without a word. We are your \
                         friends, Frodo. Anyway: there it is. We know most of what Gandalf has told you. We know a good \
                         deal about the Ring. We are horribly afraid - but we are coming with you; or following you \
                         like hounds.";
-      const secondText =
+      const englishTwo =
         "Sam lay back, and stared with open mouth, and for a moment, between bewilderment and great joy, \
                         he could not answer. At last he gasped: “Gandalf! I thought you were dead! But then I thought I \
                         was dead myself. Is everything sad going to come untrue? What's happened to the world?";
+      const frenchOne = 
+        "Par exemple, sur la planète Terre, l'homme a toujours supposé qu'il était plus intelligent que les dauphins \
+                        parce qu'il avait accompli tant de choses - la roue, New York, les guerres, etc. passer du\
+                        bon temps. Mais à l'inverse, les dauphins ont toujours cru qu'ils étaient bien plus \
+                        intelligents que l'homme, pour les mêmes raisons précisément."
 
       const documents = [
         new Document({
-          pageContent: firstText,
+          pageContent: englishOne,
           metadata: {
-            document_id: hashCode(firstText).toString(), // Generate a hashcode for document id based on the text
+            document_id: hashCode(englishOne).toString(), // Generate a hashcode for document id based on the text
             title: "Lord of the Rings",
             author: "Tolkien",
             genre: "fiction",
+            lang: "eng"
           },
         }),
         new Document({
-          pageContent: secondText,
+          pageContent: englishTwo,
           metadata: {
-            document_id: hashCode(secondText).toString(), // Generate a hashcode for document id based on the text
+            document_id: hashCode(englishTwo).toString(), // Generate a hashcode for document id based on the text
             title: "Lord of the Rings",
             author: "Tolkien",
             genre: "fiction",
+            lang: "eng"
+          },
+        }),
+        new Document({
+          pageContent: frenchOne,
+          metadata: {
+            document_id: hashCode(frenchOne).toString(), // Generate a hashcode for document id based on the text
+            title: "The hitchhiker's guide to the galaxy",
+            author: "Douglas Adams",
+            genre: "fiction",
+            lang: "fra",
           },
         }),
       ];
@@ -91,8 +108,8 @@ describe.skip("VectaraStore", () => {
     test("similaritySearchWithScore", async () => {
       const resultsWithScore = await store.similaritySearchWithScore(
         "What did Sam do?",
-        1,
-        { numResults: 10, lambda: 0.025 }
+        10, // Number of results needed
+        { lambda: 0.025 }
       );
       expect(resultsWithScore.length).toBeGreaterThan(0);
       expect(resultsWithScore[0][0].pageContent.length).toBeGreaterThan(0);
@@ -101,10 +118,10 @@ describe.skip("VectaraStore", () => {
     });
 
     test("similaritySearch", async () => {
-      const results = await store.similaritySearch("Was Gandalf dead?", 1, {
-        numResults: 10,
-        lambda: 0.025,
-      });
+      const results = await store.similaritySearch(
+        "Was Gandalf dead?", 
+        10, // Number of results needed 
+        { lambda: 0.025 });
       expect(results.length).toBeGreaterThan(0);
       expect(results[0].pageContent.length).toBeGreaterThan(0);
       expect(results[0].metadata.length).toBeGreaterThan(0);
@@ -113,12 +130,17 @@ describe.skip("VectaraStore", () => {
     test("similaritySearch with filter", async () => {
       const results = await store.similaritySearch(
         "Was Gandalf dead?",
-        1,
-        { filter: "part.lang = 'eng'", numResults: 10, lambda: 0.025 } // Filter on the language of the document
+        10, // Number of results needed
+        { filter: "part.lang = 'fra'", lambda: 0.025 } // Filter on the language of the document
       );
       expect(results.length).toBeGreaterThan(0);
       expect(results[0].pageContent.length).toBeGreaterThan(0);
       expect(results[0].metadata.length).toBeGreaterThan(0);
+      // Query filtered on French, so we expect only French results
+      const hasEnglish = results.some((result) => {
+        return result.metadata.find((m: any) => m.name === 'lang')?.value === 'eng';
+      });
+      expect(hasEnglish).toBe(false);
     });
   });
 });
