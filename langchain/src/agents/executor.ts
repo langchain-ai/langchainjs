@@ -38,7 +38,9 @@ export class AgentExecutor extends BaseChain {
   earlyStoppingMethod: StoppingMethod = "force";
 
   get inputKeys() {
-    return this.agent.inputKeys;
+    return this.agent.inputKeys.filter(
+      (k) => !this.memory?.memoryKeys.includes(k) ?? true
+    );
   }
 
   get outputKeys() {

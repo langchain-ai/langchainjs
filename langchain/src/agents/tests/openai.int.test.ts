@@ -5,7 +5,7 @@ import { Calculator } from "../../tools/calculator.js";
 import { SerpAPI } from "../../tools/serpapi.js";
 import { ChatOpenAI } from "../../chat_models/openai.js";
 
-test("OpenAIAgent", async () => {
+test.only("OpenAIAgent", async () => {
   const executor = await initializeAgentExecutorWithOptions(
     [
       new Calculator(),
@@ -25,6 +25,12 @@ test("OpenAIAgent", async () => {
   const result = await executor.run("What is the weather in New York?");
 
   console.log(result);
+
+  const result2 = await executor.run(
+    "And what is the weather like in the capital of that state?"
+  );
+
+  console.log(result2);
 });
 
 test("OpenAIAgent streaming", async () => {
