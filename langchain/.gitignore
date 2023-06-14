@@ -106,6 +106,9 @@ vectorstores.d.ts
 vectorstores/base.cjs
 vectorstores/base.js
 vectorstores/base.d.ts
+vectorstores/elasticsearch.cjs
+vectorstores/elasticsearch.js
+vectorstores/elasticsearch.d.ts
 vectorstores/memory.cjs
 vectorstores/memory.js
 vectorstores/memory.d.ts

@@ -52,6 +52,7 @@ const entrypoints = {
   // vectorstores
   vectorstores: "vectorstores/index",
   "vectorstores/base": "vectorstores/base",
+  "vectorstores/elasticsearch": "vectorstores/elasticsearch",
   "vectorstores/memory": "vectorstores/memory",
   "vectorstores/chroma": "vectorstores/chroma",
   "vectorstores/hnswlib": "vectorstores/hnswlib",
@@ -197,6 +198,7 @@ const requiresOptionalDependency = [
   "llms/sagemaker_endpoint",
   "prompts/load",
   "vectorstores/chroma",
+  "vectorstores/elasticsearch",
   "vectorstores/hnswlib",
   "vectorstores/faiss",
   "vectorstores/weaviate",
