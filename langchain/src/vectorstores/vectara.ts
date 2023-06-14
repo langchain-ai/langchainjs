@@ -24,10 +24,10 @@ export interface VectaraFilter {
   filter?: string;
   // Maximum number of results to return
   noOfResults?: number;
-  // Improve retrieval accuracy by adjusting the balance (from 0 to 1), known as lambda, 
-  // between neural search and keyword-based search factors. Ideal values are between 0.01 and 0.2.
+  // Improve retrieval accuracy by adjusting the balance (from 0 to 1), known as lambda,
+  // between neural search and keyword-based search factors. Values between 0.01 and 0.2 tend to work well.
   // see https://docs.vectara.com/docs/api-reference/search-apis/lexical-matching for more details.
-  lambda?: number;  
+  lambda?: number;
 }
 
 export class VectaraStore extends VectorStore {
@@ -84,9 +84,7 @@ export class VectaraStore extends VectorStore {
     );
   }
 
-  async addDocuments(
-    documents: Document<Record<string, any>>[]
-  ): Promise<any> {
+  async addDocuments(documents: Document<Record<string, any>>[]): Promise<any> {
     const headers = await this.getJsonHeader();
     let countAdded: number = 0;
     for (const document of documents) {
@@ -112,25 +110,27 @@ export class VectaraStore extends VectorStore {
           body: JSON.stringify(data),
         });
         const result = await response.json();
-        if (result.status.code !== 'OK' && result.status.code !== 'ALREADY_EXISTS') {
+        if (
+          result.status.code !== "OK" &&
+          result.status.code !== "ALREADY_EXISTS"
+        ) {
           return {
-            "code": 500,
-            "detail": `Vectara API returned status code ${response.status}`,
-          }
+            code: 500,
+            detail: `Vectara API returned status code ${response.status}`,
+          };
         } else {
           countAdded += 1;
         }
-      }
-      catch (e) {
+      } catch (e) {
         return {
-          "code": 500,
-          "detail": `Error ${e} while adding document ${document}`,
+          code: 500,
+          detail: `Error ${e} while adding document ${document}`,
         };
       }
     }
     return {
-      "code": 200,
-      "detail": `Added ${countAdded} documents to Vectara`,
+      code: 200,
+      detail: `Added ${countAdded} documents to Vectara`,
     };
   }
 
@@ -151,10 +151,10 @@ export class VectaraStore extends VectorStore {
               corpusId: this.corpus_id,
               metadataFilter: filter?.filter ?? "",
               lexicalInterpolationConfig: { lambda: filter?.lambda ?? 0.025 },
-            }
-          ]
-        }
-      ]
+            },
+          ],
+        },
+      ],
     };
 
     try {
@@ -169,15 +169,16 @@ export class VectaraStore extends VectorStore {
       const result = await response.json();
       const responses = result.responseSet[0].response;
       const documentsAndScores = responses.map((response: any) => {
-
-        return [new Document({
-          pageContent: response.text,
-          metadata: response.metadata,
-        }), response.score];
+        return [
+          new Document({
+            pageContent: response.text,
+            metadata: response.metadata,
+          }),
+          response.score,
+        ];
       });
       return documentsAndScores;
-    }
-    catch (e) {
+    } catch (e) {
       throw e;
     }
   }
@@ -187,7 +188,11 @@ export class VectaraStore extends VectorStore {
     _k = 4,
     filter: VectaraFilter | undefined = undefined
   ): Promise<Document[]> {
-    const resultWithScore = await this.similaritySearchWithScore(query, _k, filter);
+    const resultWithScore = await this.similaritySearchWithScore(
+      query,
+      _k,
+      filter
+    );
     return resultWithScore.map((result) => result[0]);
   }
 
@@ -196,7 +201,9 @@ export class VectaraStore extends VectorStore {
     _k: number,
     _filter?: VectaraFilter | undefined
   ): Promise<[Document<Record<string, any>>, number][]> {
-    throw new Error("Method not implemented. Please call similaritySearch or similaritySearchWithScore instead.");
+    throw new Error(
+      "Method not implemented. Please call similaritySearch or similaritySearchWithScore instead."
+    );
   }
 
   static fromTexts(
