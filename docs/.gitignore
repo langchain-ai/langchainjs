@@ -22,3 +22,5 @@ yarn-error.log*
 
 # ESLint
 .eslintcache
+
+/.quarto/
