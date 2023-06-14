@@ -6,7 +6,7 @@ hide_table_of_contents: true
 
 The recommended TextSplitter is the `RecursiveCharacterTextSplitter`. This will split documents recursively by different characters - starting with `"\n\n"`, then `"\n"`, then `" "`. This is nice because it will try to keep all the semantically relevant content in the same place for as long as possible.
 
-Important parameters to know here are `chunkSize` and `chunkOverlap`. `chunkSize` controls the max size (in terms of number of characters) of the final documents. `chunkOverlap` specifies how much overlap there should be between chunks. This is often helpful to make sure that the text isn't split weirdly. In the example below we set these values to be small (for illustration purposes), but in practice they default to `4000` and `200` respectively.
+Important parameters to know here are `chunkSize` and `chunkOverlap`. `chunkSize` controls the max size (in terms of number of characters) of the final documents. `chunkOverlap` specifies how much overlap there should be between chunks. This is often helpful to make sure that the text isn't split weirdly. In the example below we set these values to be small (for illustration purposes), but in practice they default to `1000` and `200` respectively.
 
 ```typescript
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
