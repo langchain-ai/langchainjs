@@ -67,6 +67,17 @@ const getDocs = (): Document<Record<string, any>>[] => {
 };
 
 describe.skip("VectaraStore", () => {
+  process.env.OPENAI_API_KEY =
+    process.env.OPENAI_API_KEY ?? "this is a fake key";
+
+  ["VECTARA_CUSTOMER_ID", "VECTARA_CORPUS_ID", "VECTARA_API_KEY"].forEach(
+    (envVar) => {
+      if (!process.env[envVar]) {
+        throw new Error(`${envVar} not set`);
+      }
+    }
+  );
+
   describe("fromTexts", () => {
     const args: VectaraLibArgs = {
       customer_id: Number(process.env.VECTARA_CUSTOMER_ID) || 0,

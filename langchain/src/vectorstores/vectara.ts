@@ -85,14 +85,15 @@ export class VectaraStore extends VectorStore {
   async addDocuments(documents: Document<Record<string, any>>[]): Promise<any> {
     const headers = await this.getJsonHeader();
     let countAdded: number = 0;
-    for (const document of documents) {
+    for (const [index, document] of documents.entries()) {
       const data = {
         customer_id: this.customer_id,
         corpus_id: this.corpus_id,
         document: {
-          document_id: document.metadata.document_id,
-          title: document.metadata.title ?? "",
-          metadata_json: JSON.stringify(document.metadata),
+          document_id:
+            document.metadata?.document_id ?? `${Date.now()}${index}`,
+          title: document.metadata?.title ?? "",
+          metadata_json: JSON.stringify(document.metadata ?? {}),
           section: [
             {
               text: document.pageContent,
@@ -109,12 +110,12 @@ export class VectaraStore extends VectorStore {
         });
         const result = await response.json();
         if (
-          result.status.code !== "OK" &&
-          result.status.code !== "ALREADY_EXISTS"
+          result.status?.code !== "OK" &&
+          result.status?.code !== "ALREADY_EXISTS"
         ) {
           return {
             code: 500,
-            detail: `Vectara API returned status code ${response.status}`,
+            detail: `Vectara API returned status code ${result.code}: ${result.message}`,
           };
         } else {
           countAdded += 1;
