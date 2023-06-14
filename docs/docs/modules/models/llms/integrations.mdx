@@ -15,6 +15,7 @@ LangChain offers a number of LLM implementations that integrate with various mod
 import { OpenAI } from "langchain/llms/openai";
 
 const model = new OpenAI({
+  modelName: "text-davinci-003", // Defaults to "text-davinci-003" if no model provided.
   temperature: 0.9,
   openAIApiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.OPENAI_API_KEY
 });

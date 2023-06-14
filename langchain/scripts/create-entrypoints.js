@@ -69,6 +69,7 @@ const entrypoints = {
   "vectorstores/typeorm": "vectorstores/typeorm",
   "vectorstores/myscale": "vectorstores/myscale",
   "vectorstores/redis": "vectorstores/redis",
+  "vectorstores/typesense": "vectorstores/typesense",
   "vectorstores/singlestore": "vectorstores/singlestore",
   "vectorstores/tigris": "vectorstores/tigris",
   // text_splitter
@@ -211,6 +212,7 @@ const requiresOptionalDependency = [
   "vectorstores/myscale",
   "vectorstores/redis",
   "vectorstores/singlestore",
+  "vectorstores/typesense",
   "vectorstores/tigris",
   "memory/zep",
   "document_loaders/web/apify_dataset",

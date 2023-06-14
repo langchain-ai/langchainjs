@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.93",
+  "version": "0.0.95",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -169,6 +169,9 @@
     "vectorstores/redis.cjs",
     "vectorstores/redis.js",
     "vectorstores/redis.d.ts",
+    "vectorstores/typesense.cjs",
+    "vectorstores/typesense.js",
+    "vectorstores/typesense.d.ts",
     "vectorstores/singlestore.cjs",
     "vectorstores/singlestore.js",
     "vectorstores/singlestore.d.ts",
@@ -514,6 +517,7 @@
     "typeorm": "^0.3.12",
     "typescript": "^5.0.0",
     "vectordb": "^0.1.4",
+    "typesense": "^1.5.3",
     "weaviate-ts-client": "^1.0.0"
   },
   "peerDependencies": {
@@ -564,6 +568,7 @@
     "srt-parser-2": "^1.2.2",
     "typeorm": "^0.3.12",
     "vectordb": "^0.1.4",
+    "typesense": "^1.5.3",
     "weaviate-ts-client": "^1.0.0"
   },
   "peerDependenciesMeta": {
@@ -708,6 +713,9 @@
     "vectordb": {
       "optional": true
     },
+    "typesense": {
+      "optional": true
+    },
     "weaviate-ts-client": {
       "optional": true
     }
@@ -725,7 +733,7 @@
     "langchainplus-sdk": "^0.0.11",
     "ml-distance": "^4.0.0",
     "object-hash": "^3.0.0",
-    "openai": "^3.2.0",
+    "openai": "^3.3.0",
     "p-queue": "^6.6.2",
     "p-retry": "4",
     "uuid": "^9.0.0",
@@ -1026,6 +1034,11 @@
       "types": "./vectorstores/redis.d.ts",
       "import": "./vectorstores/redis.js",
       "require": "./vectorstores/redis.cjs"
+    },
+    "./vectorstores/typesense": {
+      "types": "./vectorstores/typesense.d.ts",
+      "import": "./vectorstores/typesense.js",
+      "require": "./vectorstores/typesense.cjs"
     },
     "./vectorstores/singlestore": {
       "types": "./vectorstores/singlestore.d.ts",
