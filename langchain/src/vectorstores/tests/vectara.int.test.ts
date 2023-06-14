@@ -58,12 +58,12 @@ describe.skip("VectaraStore", () => {
     return documents;
   };
 
-  test("Vectara Add Documents", async () => {
+  test("addDocuments", async () => {
     const indexResult = await store.addDocuments(getDocs());
     expect(indexResult.code).toEqual(200);
   });
 
-  test("Vectara similaritySearchWithScore", async () => {
+  test("similaritySearchWithScore", async () => {
     const resultsWithScore = await store.similaritySearchWithScore(
       "What did Sam do?",
       1,
@@ -75,7 +75,7 @@ describe.skip("VectaraStore", () => {
     expect(resultsWithScore[0][1]).toBeGreaterThan(0);
   });
 
-  test("Vectara similaritySearch", async () => {
+  test("similaritySearch", async () => {
     const results = await store.similaritySearch("Was Gandalf dead?", 1, {
       noOfResults: 10,
       lambda: 0.025,
@@ -85,7 +85,7 @@ describe.skip("VectaraStore", () => {
     expect(results[0].metadata.length).toBeGreaterThan(0);
   });
 
-  test("Vectara similaritySearch with filter", async () => {
+  test("similaritySearch with filter", async () => {
     const results = await store.similaritySearch(
       "Was Gandalf dead?",
       1,
