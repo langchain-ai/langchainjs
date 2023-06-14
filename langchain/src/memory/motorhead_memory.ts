@@ -106,7 +106,7 @@ export class MotorheadMemory extends BaseChatMemory {
     );
 
     const json = await res.json();
-    const data = json?.data || json;  // Managed Motorhead returns { data: { messages: [], context: "NONE" } }
+    const data = json?.data || json; // Managed Motorhead returns { data: { messages: [], context: "NONE" } }
     const { messages = [], context = "NONE" } = data;
 
     await Promise.all(
