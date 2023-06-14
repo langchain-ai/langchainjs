@@ -9,7 +9,13 @@ import { getBlockChildren } from "notion-to-md/build/utils/notion.js";
 import { BaseDocumentLoader } from "../base.js";
 import { Document } from "../../document.js";
 
-export type NotionAPIObject = "block" | "database" | "page";
+export type NotionAPIType = "database" | "page";
+
+export type NotionAPILoaderOptions = {
+  client: Client;
+  id: string;
+  type: NotionAPIType;
+};
 
 export class NotionAPILoader extends BaseDocumentLoader {
   private notionClient: Client;
@@ -18,26 +24,18 @@ export class NotionAPILoader extends BaseDocumentLoader {
 
   private id: string;
 
-  private type: NotionAPIObject;
+  private type: NotionAPIType;
 
-  constructor({
-    client,
-    id,
-    type,
-  }: {
-    client: Client;
-    id: string;
-    type: NotionAPIObject;
-  }) {
+  constructor(options: NotionAPILoaderOptions) {
     super();
 
-    this.notionClient = client;
+    this.notionClient = options.client;
     this.n2mClient = new NotionToMarkdown({
       notionClient: this.notionClient,
       config: { parseChildPages: false, convertImagesToBase64: false },
     });
-    this.id = id;
-    this.type = type;
+    this.id = options.id;
+    this.type = options.type;
   }
 
   private parsePageProperties(page: PageObjectResponse): {
@@ -119,7 +117,7 @@ export class NotionAPILoader extends BaseDocumentLoader {
   private async loadPage(
     page: string | PageObjectResponse
   ): Promise<Document[]> {
-    // Check block is a block ID or a GetBlockResponse
+    // Check page is a page ID or a GetPageResponse
     const [pageData, pageId] =
       typeof page === "string"
         ? [this.notionClient.pages.retrieve({ page_id: page }), page]
