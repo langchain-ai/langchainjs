@@ -152,6 +152,7 @@ export async function initializeAgentExecutorWithOptions(
             returnMessages: true,
             memoryKey: "chat_history",
             inputKey: "input",
+            outputKey: "output",
           }),
         ...rest,
       });
@@ -178,6 +179,7 @@ export async function initializeAgentExecutorWithOptions(
             returnMessages: true,
             memoryKey: "chat_history",
             inputKey: "input",
+            outputKey: "output",
           }),
         ...rest,
       });
