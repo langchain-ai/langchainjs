@@ -1,6 +1,6 @@
 import { Document } from "../document.js";
 import { Embeddings } from "../embeddings/base.js";
-import { OpenAIEmbeddings } from "../embeddings/openai.js";
+import { FakeEmbeddings } from "../embeddings/fake.js";
 import { getEnvironmentVariable } from "../util/env.js";
 import { VectorStore } from "./base.js";
 
@@ -18,7 +18,21 @@ interface VectaraCallHeader {
   };
 }
 
+export interface VectaraFilter {
+  // Example of a vectara filter string can be: "doc.rating > 3.0 and part.lang = 'deu'"
+  // See https://docs.vectara.com/docs/search-apis/sql/filter-overview for more details.
+  filter?: string;
+  // Maximum number of results to return
+  noOfResults?: number;
+  // Improve retrieval accuracy by adjusting the balance (from 0 to 1), known as lambda, 
+  // between neural search and keyword-based search factors. Ideal values are between 0.01 and 0.2.
+  // see https://docs.vectara.com/docs/api-reference/search-apis/lexical-matching for more details.
+  lambda?: number;  
+}
+
 export class VectaraStore extends VectorStore {
+  declare FilterType: VectaraFilter;
+
   private api_endpoint = "api.vectara.io";
 
   private api_key: string;
@@ -26,7 +40,9 @@ export class VectaraStore extends VectorStore {
   private customer_id: number;
 
   constructor(args: VectaraLibArgs) {
-    super(new OpenAIEmbeddings(), args);
+    // Vectara doesn't need embeddings, but we need to pass something to the parent constructor
+    // The embeddings are abstracted out from the user in Vectara.
+    super(new FakeEmbeddings(), args);
 
     const apiKey = args.api_key ?? getEnvironmentVariable("VECTARA_API_KEY");
     if (!apiKey) {
@@ -49,7 +65,7 @@ export class VectaraStore extends VectorStore {
     this.customer_id = customerId;
   }
 
-  async getHeader(): Promise<VectaraCallHeader> {
+  async getJsonHeader(): Promise<VectaraCallHeader> {
     return {
       headers: {
         "x-api-key": this.api_key,
@@ -71,7 +87,7 @@ export class VectaraStore extends VectorStore {
   async addDocuments(
     documents: Document<Record<string, any>>[]
   ): Promise<any> {
-    const headers = await this.getHeader();
+    const headers = await this.getJsonHeader();
     let countAdded: number = 0;
     for (const document of documents) {
       const data = {
@@ -121,20 +137,20 @@ export class VectaraStore extends VectorStore {
   async similaritySearchWithScore(
     query: string,
     _k = 4,
-    filter: this["FilterType"] | undefined = undefined
+    filter: VectaraFilter | undefined = undefined
   ): Promise<[Document, number][]> {
-    const headers = await this.getHeader();
+    const headers = await this.getJsonHeader();
     const data = {
       query: [
         {
           query: query,
-          numResults: 10,
+          numResults: filter?.noOfResults ?? 10,
           corpusKey: [
             {
               customerId: this.customer_id,
               corpusId: this.corpus_id,
-              metadataFilter: filter,
-              lexical_interpolation_config: { lambda: 0.025 },
+              metadataFilter: filter?.filter ?? "",
+              lexicalInterpolationConfig: { lambda: filter?.lambda ?? 0.025 },
             }
           ]
         }
@@ -169,7 +185,7 @@ export class VectaraStore extends VectorStore {
   async similaritySearch(
     query: string,
     _k = 4,
-    filter: this["FilterType"] | undefined = undefined
+    filter: VectaraFilter | undefined = undefined
   ): Promise<Document[]> {
     const resultWithScore = await this.similaritySearchWithScore(query, _k, filter);
     return resultWithScore.map((result) => result[0]);
@@ -178,7 +194,7 @@ export class VectaraStore extends VectorStore {
   async similaritySearchVectorWithScore(
     _query: number[],
     _k: number,
-    _filter?: this["FilterType"] | undefined
+    _filter?: VectaraFilter | undefined
   ): Promise<[Document<Record<string, any>>, number][]> {
     throw new Error("Method not implemented. Please call similaritySearch or similaritySearchWithScore instead.");
   }
