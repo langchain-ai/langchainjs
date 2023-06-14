@@ -2,7 +2,7 @@ import type { Client } from "typesense";
 import type { MultiSearchRequestSchema } from "typesense/lib/Typesense/MultiSearch.js";
 import type { Document } from "../document.js";
 import { Embeddings } from "../embeddings/base.js";
-import { VectorStore, VectorStoreRetriever } from "./base.js";
+import { VectorStore } from "./base.js";
 import { AsyncCaller, AsyncCallerParams } from "../util/async_caller.js";
 
 /**
@@ -58,7 +58,7 @@ export interface TypesenseConfig extends AsyncCallerParams {
  * Typesense vector store.
  */
 export class Typesense extends VectorStore {
-  declare FilterType: Record<string, unknown>;
+  declare FilterType: Partial<MultiSearchRequestSchema>;
 
   private client: Client;
 
@@ -105,7 +105,7 @@ export class Typesense extends VectorStore {
    * @param data
    * @param collectionName
    */
-  async importToTypesense<
+  private async importToTypesense<
     T extends Record<string, unknown> = Record<string, unknown>
   >(data: T[], collectionName: string) {
     const chunkSize = 2000;
@@ -126,10 +126,10 @@ export class Typesense extends VectorStore {
    * @param documents
    * @returns Typesense records.
    */
-  async documentsToTypesenseRecords(
+  _documentsToTypesenseRecords(
     documents: Document[],
     vectors: number[][]
-  ): Promise<Record<string, unknown>[]> {
+  ): Record<string, unknown>[] {
     const metadatas = documents.map((doc) => doc.metadata);
 
     const typesenseDocuments = documents.map((doc, index) => {
@@ -151,13 +151,39 @@ export class Typesense extends VectorStore {
   }
 
   /**
+   * Transform the Typesense records to documents.
+   * @param typesenseRecords
+   * @returns documents
+   */
+  _typesenseRecordsToDocuments(
+    typesenseRecords: Record<string, unknown>[] | undefined
+  ): Document[] {
+    const documents =
+      typesenseRecords?.map((hit) => {
+        const objectWithMetadatas: Record<string, unknown> = {};
+
+        this.metadataColumnNames.forEach((metadataColumnName) => {
+          objectWithMetadatas[metadataColumnName] = hit[metadataColumnName];
+        });
+
+        const document: Document = {
+          pageContent: (hit[this.pageContentColumnName] as string) || "",
+          metadata: objectWithMetadatas,
+        };
+        return document;
+      }) || [];
+
+    return documents;
+  }
+
+  /**
    * Add documents to the vector store.
    * Will be updated if in the metadata there is a document with the same id if is using the default import function.
    * Metadata will be added in the columns of the schema based on metadataColumnNames.
    * @param documents Documents to add.
    */
   async addDocuments(documents: Document[]) {
-    const typesenseDocuments = await this.documentsToTypesenseRecords(
+    const typesenseDocuments = this._documentsToTypesenseRecords(
       documents,
       await this.embeddings.embedDocuments(
         documents.map((doc) => doc.pageContent)
@@ -166,31 +192,66 @@ export class Typesense extends VectorStore {
     await this.import(typesenseDocuments, this.schemaName);
   }
 
-  /**
-   * Add documents to the vector store.
-   * Will be updated if in the metadata there is a document with the same id.
-   * Metadata will be added in the columns of the schema based on metadataColumnNames.
-   * @param documents Documents to add.
-   */
-  async addDocumentsWithoutEmbedding(
-    documents: (Document & { vector: number[] })[]
-  ) {
-    const typesenseDocuments = documents.map((doc) => {
-      const objectWithMetadatas: Record<string, unknown> = {};
-
-      this.metadataColumnNames.forEach((metadataColumnName) => {
-        objectWithMetadatas[metadataColumnName] =
-          doc.metadata[metadataColumnName];
-      });
-
-      return {
-        [this.pageContentColumnName]: doc.pageContent,
-        [this.vectorColumnName]: doc.vector,
-        ...objectWithMetadatas,
-      };
-    });
-
+  async addVectors(vectors: number[][], documents: Document[]) {
+    const typesenseDocuments = this._documentsToTypesenseRecords(
+      documents,
+      vectors
+    );
     await this.import(typesenseDocuments, this.schemaName);
+  }
+
+  /**
+   * Search for similar documents with their similarity score.
+   * All the documents have 0 as similarity score because Typesense API
+   * does not return the similarity score.
+   * @param vectorPrompt vector to search for
+   * @param k amount of results to return
+   * @returns similar documents with their similarity score
+   */
+  async similaritySearchVectorWithScore(
+    vectorPrompt: number[],
+    k?: number,
+    filter: this["FilterType"] = {}
+  ) {
+    const amount = k || this.searchParams.per_page || 5;
+    const vector_query = `${this.vectorColumnName}:([${vectorPrompt}], k:${amount})`;
+    const typesenseResponse = await this.client.multiSearch.perform(
+      {
+        searches: [
+          {
+            ...this.searchParams,
+            ...filter,
+            per_page: amount,
+            vector_query,
+            collection: this.schemaName,
+          },
+        ],
+      },
+      {}
+    );
+    const results = typesenseResponse.results[0].hits;
+    const hits = results?.map((hit) => hit.document) as
+      | Record<string, unknown>[]
+      | undefined;
+
+    const documents = this._typesenseRecordsToDocuments(hits).map(
+      (doc) => [doc, 0] as [Document<Record<string, unknown>>, number]
+    );
+
+    return documents;
+  }
+
+  /**
+   * Delete documents from the vector store.
+   * @param documentIds ids of the documents to delete
+   */
+  async deleteDocuments(documentIds: string[]) {
+    await this.client
+      .collections(this.schemaName)
+      .documents()
+      .delete({
+        filter_by: `id:=${documentIds.join(",")}`,
+      });
   }
 
   /**
@@ -234,122 +295,5 @@ export class Typesense extends VectorStore {
     await instance.addDocuments(documents);
 
     return instance;
-  }
-
-  async addVectors(vectors: number[][], documents: Document[]) {
-    const typesenseDocuments = await this.documentsToTypesenseRecords(
-      documents,
-      vectors
-    );
-    await this.import(typesenseDocuments, this.schemaName);
-  }
-
-  /**
-   * Create a retriever from the vector store.
-   * @returns Typesense retriever
-   */
-  asRetriever(
-    k?: number,
-    filter?: this["FilterType"]
-  ): VectorStoreRetriever<this> {
-    return new VectorStoreRetriever<this>({
-      vectorStore: this,
-      filter,
-      k,
-    });
-  }
-
-  /**
-   * Transform the Typesense records to documents.
-   * @param typesenseRecords
-   * @returns documents
-   */
-  typesenseRecordsToDocuments(
-    typesenseRecords: Record<string, unknown>[] | undefined
-  ): Document[] {
-    const documents =
-      typesenseRecords?.map((hit) => {
-        const objectWithMetadatas: Record<string, unknown> = {};
-
-        this.metadataColumnNames.forEach((metadataColumnName) => {
-          objectWithMetadatas[metadataColumnName] = hit[metadataColumnName];
-        });
-
-        const document: Document = {
-          pageContent: (hit[this.pageContentColumnName] as string) || "",
-          metadata: objectWithMetadatas,
-        };
-        return document;
-      }) || [];
-
-    return documents;
-  }
-
-  /**
-   * Delete documents from the vector store.
-   * @param documentIds ids of the documents to delete
-   */
-  async deleteDocuments(documentIds: string[]) {
-    await this.client
-      .collections(this.schemaName)
-      .documents()
-      .delete({
-        filter_by: `id:=${documentIds.join(",")}`,
-      });
-  }
-
-  /**
-   * Search for similar documents with their similarity score.
-   * All the documents have 0 as similarity score because Typesense API
-   * does not return the similarity score.
-   * @param vectorPrompt vector to search for
-   * @param k amount of results to return
-   * @returns similar documents with their similarity score
-   */
-  async similaritySearchVectorWithScore(
-    vectorPrompt: number[],
-    k?: number,
-    filter: Partial<MultiSearchRequestSchema> = {}
-  ) {
-    const amount = k || this.searchParams.per_page || 5;
-    const vector_query = `${this.vectorColumnName}:([${vectorPrompt}], k:${amount})`;
-    const typesenseResponse = await this.client.multiSearch.perform(
-      {
-        searches: [
-          {
-            ...this.searchParams,
-            ...filter,
-            per_page: amount,
-            vector_query,
-            collection: this.schemaName,
-          },
-        ],
-      },
-      {}
-    );
-    const results = typesenseResponse.results[0].hits;
-    const hits = results?.map((hit) => hit.document) as
-      | Record<string, unknown>[]
-      | undefined;
-
-    const documents = this.typesenseRecordsToDocuments(hits).map(
-      (doc) => [doc, 0] as [Document<Record<string, unknown>>, number]
-    );
-
-    return documents;
-  }
-
-  /**
-   * Search for similar documents with their similarity score. All the documents has 1 as similarity score because Typesense API does not return the similarity score.
-   * @param query prompt to search for
-   * @returns similar documents with their similarity score
-   */
-  async similaritySearchWithScore(
-    query: string,
-    k = 5,
-    filter: Partial<MultiSearchRequestSchema> = {}
-  ): Promise<[Document<Record<string, unknown>>, number][]> {
-    const documents = await this.similaritySearch(query, k, filter);
-    return documents.map((doc) => [doc, 1] as [Document, number]);
   }
 }

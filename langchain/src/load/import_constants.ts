@@ -33,6 +33,7 @@ export const optionalImportEntrypoints = [
   "langchain/vectorstores/typeorm",
   "langchain/vectorstores/myscale",
   "langchain/vectorstores/redis",
+  "langchain/vectorstores/typesense",
   "langchain/vectorstores/singlestore",
   "langchain/vectorstores/tigris",
   "langchain/memory/zep",

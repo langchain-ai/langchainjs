@@ -54,7 +54,7 @@ test("documentsToTypesenseRecords should return the correct typesense records", 
   ];
 
   expect(
-    await vectorstore.documentsToTypesenseRecords(
+    await vectorstore._documentsToTypesenseRecords(
       documents,
       await embeddings.embedDocuments(["hello world", "hello world 2"])
     )
@@ -109,7 +109,7 @@ test("typesenseRecordsToDocuments should return the correct langchain documents"
     },
   ];
 
-  expect(vectorstore.typesenseRecordsToDocuments(typesenseRecords)).toEqual(
+  expect(vectorstore._typesenseRecordsToDocuments(typesenseRecords)).toEqual(
     expected
   );
 });
