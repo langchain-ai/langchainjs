@@ -221,6 +221,14 @@ export class VectaraStore extends VectorStore {
       });
       docs.push(newDoc);
     }
+
+    const embeddingsName = embeddings.constructor.name;
+    if (embeddingsName !== "FakeEmbeddings") {
+      throw new Error(
+        `Vectara uses its own embeddings, so you don't have to provide any. Provide an instance of FakeEmbeddings to VectaraStore.fromTexts, instead of ${embeddingsName}.`
+      );
+    }
+
     return VectaraStore.fromDocuments(docs, embeddings, args);
   }
 
