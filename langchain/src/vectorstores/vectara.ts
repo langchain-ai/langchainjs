@@ -23,7 +23,7 @@ export interface VectaraFilter {
   // See https://docs.vectara.com/docs/search-apis/sql/filter-overview for more details.
   filter?: string;
   // Maximum number of results to return
-  noOfResults?: number;
+  numResults?: number;
   // Improve retrieval accuracy by adjusting the balance (from 0 to 1), known as lambda,
   // between neural search and keyword-based search factors. Values between 0.01 and 0.2 tend to work well.
   // see https://docs.vectara.com/docs/api-reference/search-apis/lexical-matching for more details.
@@ -144,7 +144,7 @@ export class VectaraStore extends VectorStore {
       query: [
         {
           query: query,
-          numResults: filter?.noOfResults ?? 10,
+          numResults: filter?.numResults ?? 10,
           corpusKey: [
             {
               customerId: this.customer_id,

@@ -92,7 +92,7 @@ describe.skip("VectaraStore", () => {
       const resultsWithScore = await store.similaritySearchWithScore(
         "What did Sam do?",
         1,
-        { noOfResults: 10, lambda: 0.025 }
+        { numResults: 10, lambda: 0.025 }
       );
       expect(resultsWithScore.length).toBeGreaterThan(0);
       expect(resultsWithScore[0][0].pageContent.length).toBeGreaterThan(0);
@@ -102,7 +102,7 @@ describe.skip("VectaraStore", () => {
 
     test("similaritySearch", async () => {
       const results = await store.similaritySearch("Was Gandalf dead?", 1, {
-        noOfResults: 10,
+        numResults: 10,
         lambda: 0.025,
       });
       expect(results.length).toBeGreaterThan(0);
@@ -114,7 +114,7 @@ describe.skip("VectaraStore", () => {
       const results = await store.similaritySearch(
         "Was Gandalf dead?",
         1,
-        { filter: "part.lang = 'eng'", noOfResults: 10, lambda: 0.025 } // Filter on the language of the document
+        { filter: "part.lang = 'eng'", numResults: 10, lambda: 0.025 } // Filter on the language of the document
       );
       expect(results.length).toBeGreaterThan(0);
       expect(results[0].pageContent.length).toBeGreaterThan(0);

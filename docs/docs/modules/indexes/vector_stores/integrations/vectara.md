@@ -75,7 +75,7 @@ const indexResult = await store.addDocuments([
 const resultsWithScore = await store.similaritySearchWithScore(
   "What were the women talking about?",
   {
-    noOfResults: 1,
+    numResults: 1,
     lambda: 0.025,
   }
 );
