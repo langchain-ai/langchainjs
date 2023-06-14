@@ -86,7 +86,6 @@ export type InitializeAgentExecutorOptionsStructured =
   | ({
       agentType: "openai-functions";
       agentArgs?: Parameters<typeof OpenAIAgent.fromLLMAndTools>[2];
-      memory?: never;
     } & Omit<AgentExecutorInput, "agent" | "tools">);
 
 /**
