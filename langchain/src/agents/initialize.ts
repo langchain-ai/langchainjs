@@ -169,10 +169,17 @@ export async function initializeAgentExecutorWithOptions(
       return executor;
     }
     case "openai-functions": {
-      const { agentArgs, ...rest } = options;
+      const { agentArgs, memory, ...rest } = options;
       const executor = AgentExecutor.fromAgentAndTools({
         agent: OpenAIAgent.fromLLMAndTools(llm, tools, agentArgs),
         tools,
+        memory:
+          memory ??
+          new BufferMemory({
+            returnMessages: true,
+            memoryKey: "chat_history",
+            inputKey: "input",
+          }),
         ...rest,
       });
       return executor;
