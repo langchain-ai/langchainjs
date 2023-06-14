@@ -5,7 +5,7 @@ import { Calculator } from "../../tools/calculator.js";
 import { SerpAPI } from "../../tools/serpapi.js";
 import { ChatOpenAI } from "../../chat_models/openai.js";
 
-test.only("OpenAIAgent", async () => {
+test("OpenAIAgent", async () => {
   const executor = await initializeAgentExecutorWithOptions(
     [
       new Calculator(),
