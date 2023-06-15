@@ -223,6 +223,9 @@ export interface OptionalImportMap {
   "langchain/cache/redis"?:
     | typeof import("../cache/redis.js")
     | Promise<typeof import("../cache/redis.js")>;
+  "langchain/cache/upstash_redis"?:
+    | typeof import("../cache/upstash_redis.js")
+    | Promise<typeof import("../cache/upstash_redis.js")>;
   "langchain/stores/doc/gcs"?:
     | typeof import("../stores/doc/gcs.js")
     | Promise<typeof import("../stores/doc/gcs.js")>;

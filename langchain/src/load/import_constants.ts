@@ -75,6 +75,7 @@ export const optionalImportEntrypoints = [
   "langchain/retrievers/self_query/weaviate",
   "langchain/cache/momento",
   "langchain/cache/redis",
+  "langchain/cache/upstash_redis",
   "langchain/stores/doc/gcs",
   "langchain/stores/file/node",
   "langchain/stores/message/dynamodb",
