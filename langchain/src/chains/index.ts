@@ -83,3 +83,12 @@ export {
 } from "./router/llm_router.js";
 export { MultiPromptChain } from "./router/multi_prompt.js";
 export { MultiRetrievalQAChain } from "./router/multi_retrieval_qa.js";
+export { TransformChain, TransformChainFields } from "./transform.js";
+export {
+  OpenAIFunctionsChain,
+  OpenAIFunctionsChainFields,
+  createExtractionChain,
+  createExtractionChainFromZod,
+  createTaggingChain,
+  createTaggingChainFromZod,
+} from "./openai_functions.js";
