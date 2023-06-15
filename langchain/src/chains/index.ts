@@ -87,8 +87,14 @@ export { TransformChain, TransformChainFields } from "./transform.js";
 export {
   OpenAIFunctionsChain,
   OpenAIFunctionsChainFields,
+  parseToArguments,
+  parseToNamedArgument,
+} from "./openai_functions/index.js";
+export {
   createExtractionChain,
   createExtractionChainFromZod,
+} from "./openai_functions/extraction.js";
+export {
   createTaggingChain,
   createTaggingChainFromZod,
-} from "./openai_functions.js";
+} from "./openai_functions/tagging.js";
