@@ -6,6 +6,12 @@ import {
   ChainValues,
   LLMResult,
 } from "../schema/index.js";
+import {
+  Serializable,
+  Serialized,
+  SerializedNotImplemented,
+} from "../load/serializable.js";
+import { SerializedFields } from "../load/map_keys.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Error = any;
@@ -22,11 +28,12 @@ abstract class BaseCallbackHandlerMethodsClass {
    * and the run ID.
    */
   handleLLMStart?(
-    llm: { name: string },
+    llm: Serialized,
     prompts: string[],
     runId: string,
     parentRunId?: string,
-    extraParams?: Record<string, unknown>
+    extraParams?: Record<string, unknown>,
+    tags?: string[]
   ): Promise<void> | void;
 
   /**
@@ -61,11 +68,12 @@ abstract class BaseCallbackHandlerMethodsClass {
    * and the run ID.
    */
   handleChatModelStart?(
-    llm: { name: string },
+    llm: Serialized,
     messages: BaseChatMessage[][],
     runId: string,
     parentRunId?: string,
-    extraParams?: Record<string, unknown>
+    extraParams?: Record<string, unknown>,
+    tags?: string[]
   ): Promise<void> | void;
 
   /**
@@ -73,10 +81,11 @@ abstract class BaseCallbackHandlerMethodsClass {
    * and the run ID.
    */
   handleChainStart?(
-    chain: { name: string },
+    chain: Serialized,
     inputs: ChainValues,
     runId: string,
-    parentRunId?: string
+    parentRunId?: string,
+    tags?: string[]
   ): Promise<void> | void;
 
   /**
@@ -102,10 +111,11 @@ abstract class BaseCallbackHandlerMethodsClass {
    * and the run ID.
    */
   handleToolStart?(
-    tool: { name: string },
+    tool: Serialized,
     input: string,
     runId: string,
-    parentRunId?: string
+    parentRunId?: string,
+    tags?: string[]
   ): Promise<void> | void;
 
   /**
@@ -166,8 +176,28 @@ export type CallbackHandlerMethods = BaseCallbackHandlerMethodsClass;
 
 export abstract class BaseCallbackHandler
   extends BaseCallbackHandlerMethodsClass
-  implements BaseCallbackHandlerInput
+  implements BaseCallbackHandlerInput, Serializable
 {
+  lc_serializable = false;
+
+  get lc_namespace(): ["langchain", "callbacks", string] {
+    return ["langchain", "callbacks", this.name];
+  }
+
+  get lc_secrets(): { [key: string]: string } | undefined {
+    return undefined;
+  }
+
+  get lc_attributes(): { [key: string]: string } | undefined {
+    return undefined;
+  }
+
+  get lc_aliases(): { [key: string]: string } | undefined {
+    return undefined;
+  }
+
+  lc_kwargs: SerializedFields;
+
   abstract name: string;
 
   ignoreLLM = false;
@@ -176,8 +206,15 @@ export abstract class BaseCallbackHandler
 
   ignoreAgent = false;
 
+  awaitHandlers =
+    typeof process !== "undefined"
+      ? // eslint-disable-next-line no-process-env
+        process.env?.LANGCHAIN_CALLBACKS_BACKGROUND !== "true"
+      : true;
+
   constructor(input?: BaseCallbackHandlerInput) {
     super();
+    this.lc_kwargs = input || {};
     if (input) {
       this.ignoreLLM = input.ignoreLLM ?? this.ignoreLLM;
       this.ignoreChain = input.ignoreChain ?? this.ignoreChain;
@@ -189,6 +226,14 @@ export abstract class BaseCallbackHandler
     return new (this.constructor as new (
       input?: BaseCallbackHandlerInput
     ) => BaseCallbackHandler)(this);
+  }
+
+  toJSON(): Serialized {
+    return Serializable.prototype.toJSON.call(this);
+  }
+
+  toJSONNotImplemented(): SerializedNotImplemented {
+    return Serializable.prototype.toJSONNotImplemented.call(this);
   }
 
   static fromMethods(methods: CallbackHandlerMethods) {

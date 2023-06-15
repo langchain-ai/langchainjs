@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "docusaurus": "docusaurus",
-    "start": "rm -rf ./docs/api && docusaurus start",
-    "build": "rm -rf ./build && docusaurus build",
+    "start": "rimraf ./docs/api && docusaurus start",
+    "build": "rimraf ./build && NODE_OPTIONS=--max-old-space-size=6144 DOCUSAURUS_SSR_CONCURRENCY=4 docusaurus build",
     "swizzle": "docusaurus swizzle",
     "deploy": "docusaurus deploy",
     "clear": "docusaurus clear",
@@ -33,6 +33,7 @@
   },
   "devDependencies": {
     "@babel/eslint-parser": "^7.18.2",
+    "@swc/core": "^1.3.62",
     "docusaurus-plugin-typedoc": "next",
     "eslint": "^8.19.0",
     "eslint-config-airbnb": "^19.0.4",
@@ -43,6 +44,8 @@
     "eslint-plugin-react": "^7.30.1",
     "eslint-plugin-react-hooks": "^4.6.0",
     "prettier": "^2.7.1",
+    "rimraf": "^5.0.1",
+    "swc-loader": "^0.2.3",
     "typedoc": "^0.24.4",
     "typedoc-plugin-markdown": "next"
   },

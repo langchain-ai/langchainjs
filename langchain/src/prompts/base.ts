@@ -6,13 +6,17 @@ import {
   PartialValues,
 } from "../schema/index.js";
 import { BaseOutputParser } from "../schema/output_parser.js";
+import { Serializable } from "../load/serializable.js";
 import { SerializedBasePromptTemplate } from "./serde.js";
+import { SerializedFields } from "../load/map_keys.js";
 
 export class StringPromptValue extends BasePromptValue {
+  lc_namespace = ["langchain", "prompts", "base"];
+
   value: string;
 
   constructor(value: string) {
-    super();
+    super(...arguments);
     this.value = value;
   }
 
@@ -47,16 +51,30 @@ export interface BasePromptTemplateInput {
  * Base class for prompt templates. Exposes a format method that returns a
  * string prompt given a set of input values.
  */
-export abstract class BasePromptTemplate implements BasePromptTemplateInput {
+export abstract class BasePromptTemplate
+  extends Serializable
+  implements BasePromptTemplateInput
+{
   declare PromptValueReturnType: BasePromptValue;
+
+  lc_serializable = true;
+
+  lc_namespace = ["langchain", "prompts", this._getPromptType()];
+
+  get lc_attributes(): SerializedFields | undefined {
+    return {
+      partialVariables: undefined, // python doesn't support this yet
+    };
+  }
 
   inputVariables: string[];
 
   outputParser?: BaseOutputParser;
 
-  partialVariables?: InputValues;
+  partialVariables: InputValues = {};
 
   constructor(input: BasePromptTemplateInput) {
+    super(input);
     const { inputVariables } = input;
     if (inputVariables.includes("stop")) {
       throw new Error(
@@ -113,10 +131,14 @@ export abstract class BasePromptTemplate implements BasePromptTemplateInput {
 
   /**
    * Return a json-like object representing this prompt template.
+   * @deprecated
    */
-  abstract serialize(): SerializedBasePromptTemplate;
+  serialize(): SerializedBasePromptTemplate {
+    throw new Error("Use .toJSON() instead");
+  }
 
   /**
+   * @deprecated
    * Load a prompt template from a json-like object describing it.
    *
    * @remarks
@@ -151,7 +173,7 @@ export abstract class BasePromptTemplate implements BasePromptTemplateInput {
 }
 
 export abstract class BaseStringPromptTemplate extends BasePromptTemplate {
-  async formatPromptValue(values: InputValues): Promise<BasePromptValue> {
+  async formatPromptValue(values: InputValues): Promise<StringPromptValue> {
     const formattedPrompt = await this.format(values);
     return new StringPromptValue(formattedPrompt);
   }
@@ -160,7 +182,9 @@ export abstract class BaseStringPromptTemplate extends BasePromptTemplate {
 /**
  * Base class for example selectors.
  */
-export abstract class BaseExampleSelector {
+export abstract class BaseExampleSelector extends Serializable {
+  lc_namespace = ["langchain", "prompts", "selectors"];
+
   abstract addExample(example: Example): Promise<void | string>;
 
   abstract selectExamples(input_variables: Example): Promise<Example[]>;

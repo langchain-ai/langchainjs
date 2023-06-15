@@ -6,6 +6,9 @@ import {
   CreateChatCompletionResponse,
   ChatCompletionResponseMessageRoleEnum,
   ChatCompletionRequestMessage,
+  ChatCompletionResponseMessage,
+  ChatCompletionFunctions,
+  CreateChatCompletionRequestFunctionCall,
 } from "openai";
 import { getEnvironmentVariable, isNode } from "../util/env.js";
 import {
@@ -29,6 +32,8 @@ import {
 import { getModelNameForTiktoken } from "../base_language/count_tokens.js";
 import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
 import { promptLayerTrackRequest } from "../util/prompt-layer.js";
+import { StructuredTool } from "../tools/base.js";
+import { formatToOpenAIFunction } from "../tools/convert_to_openai.js";
 
 export { OpenAICallOptions, OpenAIChatInput, AzureOpenAIInput };
 
@@ -52,25 +57,34 @@ function messageTypeToOpenAIRole(
       return "assistant";
     case "human":
       return "user";
+    case "function":
+      return "function";
     default:
       throw new Error(`Unknown message type: ${type}`);
   }
 }
 
 function openAIResponseToChatMessage(
-  role: ChatCompletionResponseMessageRoleEnum | undefined,
-  text: string
+  message: ChatCompletionResponseMessage
 ): BaseChatMessage {
-  switch (role) {
+  switch (message.role) {
     case "user":
-      return new HumanChatMessage(text);
+      return new HumanChatMessage(message.content || "");
     case "assistant":
-      return new AIChatMessage(text);
+      return new AIChatMessage(message.content || "", {
+        function_call: message.function_call,
+      });
     case "system":
-      return new SystemChatMessage(text);
+      return new SystemChatMessage(message.content || "");
     default:
-      return new ChatMessage(text, role ?? "unknown");
+      return new ChatMessage(message.content || "", message.role ?? "unknown");
   }
+}
+
+export interface ChatOpenAICallOptions extends OpenAICallOptions {
+  function_call?: CreateChatCompletionRequestFunctionCall;
+  functions?: ChatCompletionFunctions[];
+  tools?: StructuredTool[];
 }
 
 /**
@@ -95,10 +109,30 @@ export class ChatOpenAI
   extends BaseChatModel
   implements OpenAIChatInput, AzureOpenAIInput
 {
-  declare CallOptions: OpenAICallOptions;
+  declare CallOptions: ChatOpenAICallOptions;
 
-  get callKeys(): (keyof OpenAICallOptions)[] {
-    return ["stop", "signal", "timeout", "options"];
+  get callKeys(): (keyof ChatOpenAICallOptions)[] {
+    return ["stop", "signal", "timeout", "options", "functions", "tools"];
+  }
+
+  lc_serializable = true;
+
+  get lc_secrets(): { [key: string]: string } | undefined {
+    return {
+      openAIApiKey: "OPENAI_API_KEY",
+      azureOpenAIApiKey: "AZURE_OPENAI_API_KEY",
+    };
+  }
+
+  get lc_aliases(): Record<string, string> {
+    return {
+      modelName: "model",
+      openAIApiKey: "openai_api_key",
+      azureOpenAIApiVersion: "azure_openai_api_version",
+      azureOpenAIApiKey: "azure_openai_api_key",
+      azureOpenAIApiInstanceName: "azure_openai_api_instance_name",
+      azureOpenAIApiDeploymentName: "azure_openai_api_deployment_name",
+    };
   }
 
   temperature = 1;
@@ -144,7 +178,9 @@ export class ChatOpenAI
         concurrency?: number;
         cache?: boolean;
         openAIApiKey?: string;
+        configuration?: ConfigurationParameters;
       },
+    /** @deprecated */
     configuration?: ConfigurationParameters
   ) {
     super(fields ?? {});
@@ -210,6 +246,7 @@ export class ChatOpenAI
     this.clientConfig = {
       apiKey,
       ...configuration,
+      ...fields?.configuration,
     };
   }
 
@@ -261,6 +298,10 @@ export class ChatOpenAI
 
     const params = this.invocationParams();
     params.stop = options?.stop ?? params.stop;
+    params.functions =
+      options?.functions ??
+      (options?.tools ? options?.tools.map(formatToOpenAIFunction) : undefined);
+    params.function_call = options?.function_call;
     const messagesMapped: ChatCompletionRequestMessage[] = messages.map(
       (message) => ({
         role: messageTypeToOpenAIRole(message._getType()),
@@ -300,7 +341,11 @@ export class ChatOpenAI
                     choices: Array<{
                       index: number;
                       finish_reason: string | null;
-                      delta: { content?: string; role?: string };
+                      delta: {
+                        role?: string;
+                        content?: string;
+                        function_call?: { name: string; arguments: string };
+                      };
                     }>;
                   };
 
@@ -334,17 +379,35 @@ export class ChatOpenAI
                         choice.message = {
                           role: part.delta
                             ?.role as ChatCompletionResponseMessageRoleEnum,
-                          content: part.delta?.content ?? "",
+                          content: "",
+                        };
+                      }
+
+                      if (
+                        part.delta.function_call &&
+                        !choice.message.function_call
+                      ) {
+                        choice.message.function_call = {
+                          name: "",
+                          arguments: "",
                         };
                       }
 
                       choice.message.content += part.delta?.content ?? "";
+                      if (choice.message.function_call) {
+                        choice.message.function_call.name +=
+                          part.delta?.function_call?.name ?? "";
+                        choice.message.function_call.arguments +=
+                          part.delta?.function_call?.arguments ?? "";
+                      }
                       // TODO this should pass part.index to the callback
                       // when that's supported there
                       // eslint-disable-next-line no-void
                       void runManager?.handleLLMNewToken(
                         part.delta?.content ?? ""
                       );
+                      // TODO we don't currently have a callback method for
+                      // sending the function call arguments
                     }
                   }
 
@@ -398,11 +461,12 @@ export class ChatOpenAI
 
     const generations: ChatGeneration[] = [];
     for (const part of data.choices) {
-      const role = part.message?.role ?? undefined;
       const text = part.message?.content ?? "";
       generations.push({
         text,
-        message: openAIResponseToChatMessage(role, text),
+        message: openAIResponseToChatMessage(
+          part.message ?? { role: "assistant" }
+        ),
       });
     }
     return {

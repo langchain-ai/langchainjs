@@ -105,7 +105,7 @@ export class ConversationalRetrievalQAChain
           question,
           chat_history: chatHistory,
         },
-        runManager?.getChild()
+        runManager?.getChild("question_generator")
       );
       const keys = Object.keys(result);
       if (keys.length === 1) {
@@ -124,7 +124,7 @@ export class ConversationalRetrievalQAChain
     };
     const result = await this.combineDocumentsChain.call(
       inputs,
-      runManager?.getChild()
+      runManager?.getChild("combine_documents")
     );
     if (this.returnSourceDocuments) {
       return {

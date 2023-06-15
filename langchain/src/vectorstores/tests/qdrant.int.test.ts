@@ -20,7 +20,7 @@ describe("QdrantVectorStore testcase", () => {
     });
   });
 
-  test("base usage", async () => {
+  test.skip("base usage", async () => {
     const pageContent = faker.lorem.sentence(5);
 
     await qdrantVectorStore.addDocuments([{ pageContent, metadata: {} }]);

@@ -43,6 +43,8 @@ export type ChatConversationalAgentInput = Optional<AgentInput, "outputParser">;
  * @augments Agent
  */
 export class ChatConversationalAgent extends Agent {
+  lc_namespace = ["langchain", "agents", "chat_convo"];
+
   declare ToolType: Tool;
 
   constructor(input: ChatConversationalAgentInput) {

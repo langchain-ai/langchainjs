@@ -23,6 +23,10 @@ export interface AgentExecutorInput extends ChainInputs {
  * @augments BaseChain
  */
 export class AgentExecutor extends BaseChain {
+  get lc_namespace() {
+    return ["langchain", "agents", "executor"];
+  }
+
   agent: BaseSingleActionAgent | BaseMultiActionAgent;
 
   tools: this["agent"]["ToolType"][];
@@ -42,11 +46,7 @@ export class AgentExecutor extends BaseChain {
   }
 
   constructor(input: AgentExecutorInput) {
-    super(
-      input.memory,
-      input.verbose,
-      input.callbacks ?? input.callbackManager
-    );
+    super(input);
     this.agent = input.agent;
     this.tools = input.tools;
     if (this.agent._agentActionType() === "multi") {

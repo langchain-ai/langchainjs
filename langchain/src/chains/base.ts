@@ -26,6 +26,10 @@ export interface ChainInputs extends BaseLangChainParams {
 export abstract class BaseChain extends BaseLangChain implements ChainInputs {
   declare memory?: BaseMemory;
 
+  get lc_namespace(): string[] {
+    return ["langchain", "chains", this._chainType()];
+  }
+
   constructor(
     fields?: BaseMemory | ChainInputs,
     /** @deprecated */
@@ -78,13 +82,16 @@ export abstract class BaseChain extends BaseLangChain implements ChainInputs {
     input: any,
     callbacks?: Callbacks
   ): Promise<string> {
-    const isKeylessInput = this.inputKeys.length <= 1;
+    const inputKeys = this.inputKeys.filter(
+      (k) => !this.memory?.memoryKeys.includes(k) ?? true
+    );
+    const isKeylessInput = inputKeys.length <= 1;
     if (!isKeylessInput) {
       throw new Error(
         `Chain ${this._chainType()} expects multiple inputs, cannot use 'run' `
       );
     }
-    const values = this.inputKeys.length ? { [this.inputKeys[0]]: input } : {};
+    const values = inputKeys.length ? { [inputKeys[0]]: input } : {};
     const returnValues = await this.call(values, callbacks);
     const keys = Object.keys(returnValues);
 
@@ -101,7 +108,11 @@ export abstract class BaseChain extends BaseLangChain implements ChainInputs {
    *
    * Wraps _call and handles memory.
    */
-  async call(values: ChainValues, callbacks?: Callbacks): Promise<ChainValues> {
+  async call(
+    values: ChainValues,
+    callbacks?: Callbacks,
+    tags?: string[]
+  ): Promise<ChainValues> {
     const fullValues = { ...values } as typeof values;
     if (!(this.memory == null)) {
       const newValues = await this.memory.loadMemoryVariables(values);
@@ -112,10 +123,12 @@ export abstract class BaseChain extends BaseLangChain implements ChainInputs {
     const callbackManager_ = await CallbackManager.configure(
       callbacks,
       this.callbacks,
+      tags,
+      this.tags,
       { verbose: this.verbose }
     );
     const runManager = await callbackManager_?.handleChainStart(
-      { name: this._chainType() },
+      this.toJSON(),
       fullValues
     );
     let outputValues;
@@ -143,7 +156,7 @@ export abstract class BaseChain extends BaseLangChain implements ChainInputs {
   async apply(
     inputs: ChainValues[],
     callbacks?: Callbacks[]
-  ): Promise<ChainValues> {
+  ): Promise<ChainValues[]> {
     return Promise.all(
       inputs.map(async (i, idx) => this.call(i, callbacks?.[idx]))
     );

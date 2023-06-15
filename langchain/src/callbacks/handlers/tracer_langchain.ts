@@ -1,30 +1,30 @@
-import { AsyncCaller, AsyncCallerParams } from "../../util/async_caller.js";
+import { LangChainPlusClient } from "langchainplus-sdk";
+import {
+  BaseRun,
+  RunCreate,
+  RunUpdate as BaseRunUpdate,
+} from "langchainplus-sdk/schemas";
 import {
   getEnvironmentVariable,
   getRuntimeEnvironment,
 } from "../../util/env.js";
-import { BaseTracer, Run, BaseRun } from "./tracer.js";
-import { RunOutputs } from "../../schema/index.js";
+import { BaseTracer } from "./tracer.js";
+import { BaseCallbackHandlerInput } from "../base.js";
 
-export interface RunCreate extends BaseRun {
-  parent_run_id?: string; // uuid
+export interface Run extends BaseRun {
+  id: string;
   child_runs: this[];
-  session_name?: string;
+  child_execution_order: number;
 }
 
-export interface RunUpdate {
-  end_time?: number;
-  error?: string;
-  outputs?: RunOutputs;
-  parent_run_id?: string; // uuid
-  reference_example_id?: string; // uuid
+export interface RunUpdate extends BaseRunUpdate {
+  events: BaseRun["events"];
 }
 
-export interface LangChainTracerFields {
+export interface LangChainTracerFields extends BaseCallbackHandlerInput {
   exampleId?: string;
   sessionName?: string;
-  callerParams?: AsyncCallerParams;
-  timeout?: number;
+  client?: LangChainPlusClient;
 }
 
 export class LangChainTracer
@@ -33,66 +33,36 @@ export class LangChainTracer
 {
   name = "langchain_tracer";
 
-  protected endpoint =
-    getEnvironmentVariable("LANGCHAIN_ENDPOINT") || "http://localhost:1984";
-
-  protected headers: Record<string, string> = {
-    "Content-Type": "application/json",
-  };
-
   sessionName?: string;
 
   exampleId?: string;
 
-  caller: AsyncCaller;
+  client: LangChainPlusClient;
 
-  timeout = 5000;
-
-  constructor({
-    exampleId,
-    sessionName,
-    callerParams,
-    timeout,
-  }: LangChainTracerFields = {}) {
-    super();
-
-    const apiKey = getEnvironmentVariable("LANGCHAIN_API_KEY");
-    if (apiKey) {
-      this.headers["x-api-key"] = apiKey;
-    }
+  constructor(fields: LangChainTracerFields = {}) {
+    super(fields);
+    const { exampleId, sessionName, client } = fields;
 
     this.sessionName =
       sessionName ?? getEnvironmentVariable("LANGCHAIN_SESSION");
     this.exampleId = exampleId;
-    this.timeout = timeout ?? this.timeout;
-    this.caller = new AsyncCaller(callerParams ?? { maxRetries: 2 });
+    this.client = client ?? new LangChainPlusClient({});
   }
 
   private async _convertToCreate(
     run: Run,
     example_id: string | undefined = undefined
   ): Promise<RunCreate> {
-    const runExtra = run.extra ?? {};
-    runExtra.runtime = await getRuntimeEnvironment();
-    const persistedRun: RunCreate = {
-      id: run.id,
-      name: run.name,
-      start_time: run.start_time,
-      end_time: run.end_time,
-      run_type: run.run_type,
-      // example_id is only set for the root run
-      reference_example_id: run.parent_run_id ? undefined : example_id,
-      extra: runExtra,
-      parent_run_id: run.parent_run_id,
-      execution_order: run.execution_order,
-      serialized: run.serialized,
-      error: run.error,
-      inputs: run.inputs,
-      outputs: run.outputs ?? {},
+    return {
+      ...run,
+      extra: {
+        ...run.extra,
+        runtime: await getRuntimeEnvironment(),
+      },
+      child_runs: undefined,
       session_name: this.sessionName,
-      child_runs: [],
+      reference_example_id: run.parent_run_id ? undefined : example_id,
     };
-    return persistedRun;
   }
 
   protected async persistRun(_run: Run): Promise<void> {}
@@ -102,21 +72,7 @@ export class LangChainTracer
       run,
       this.exampleId
     );
-    const endpoint = `${this.endpoint}/runs`;
-    const response = await this.caller.call(fetch, endpoint, {
-      method: "POST",
-      headers: this.headers,
-      body: JSON.stringify(persistedRun),
-      signal: AbortSignal.timeout(this.timeout),
-    });
-    // consume the response body to release the connection
-    // https://undici.nodejs.org/#/?id=garbage-collection
-    const body = await response.text();
-    if (!response.ok) {
-      throw new Error(
-        `Failed to persist run: ${response.status} ${response.statusText} ${body}`
-      );
-    }
+    await this.client.createRun(persistedRun);
   }
 
   protected async _updateRunSingle(run: Run): Promise<void> {
@@ -124,24 +80,9 @@ export class LangChainTracer
       end_time: run.end_time,
       error: run.error,
       outputs: run.outputs,
-      parent_run_id: run.parent_run_id,
-      reference_example_id: run.reference_example_id,
+      events: run.events,
     };
-    const endpoint = `${this.endpoint}/runs/${run.id}`;
-    const response = await this.caller.call(fetch, endpoint, {
-      method: "PATCH",
-      headers: this.headers,
-      body: JSON.stringify(runUpdate),
-      signal: AbortSignal.timeout(this.timeout),
-    });
-    // consume the response body to release the connection
-    // https://undici.nodejs.org/#/?id=garbage-collection
-    const body = await response.text();
-    if (!response.ok) {
-      throw new Error(
-        `Failed to update run: ${response.status} ${response.statusText} ${body}`
-      );
-    }
+    await this.client.updateRun(run.id, runUpdate);
   }
 
   async onLLMStart(run: Run): Promise<void> {
