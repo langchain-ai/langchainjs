@@ -154,6 +154,9 @@ vectorstores/myscale.d.ts
 vectorstores/redis.cjs
 vectorstores/redis.js
 vectorstores/redis.d.ts
+vectorstores/typesense.cjs
+vectorstores/typesense.js
+vectorstores/typesense.d.ts
 vectorstores/singlestore.cjs
 vectorstores/singlestore.js
 vectorstores/singlestore.d.ts

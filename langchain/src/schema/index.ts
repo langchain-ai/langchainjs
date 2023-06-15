@@ -52,6 +52,7 @@ export type LLMResult = {
 export interface StoredMessageData {
   content: string;
   role: string | undefined;
+  name: string | undefined;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   additional_kwargs?: Record<string, any>;
 }
@@ -61,7 +62,7 @@ export interface StoredMessage {
   data: StoredMessageData;
 }
 
-export type MessageType = "human" | "ai" | "generic" | "system";
+export type MessageType = "human" | "ai" | "generic" | "system" | "function";
 
 export abstract class BaseChatMessage {
   /** The text of the message. */
@@ -70,11 +71,15 @@ export abstract class BaseChatMessage {
   /** The name of the message sender in a multi-user chat. */
   name?: string;
 
+  /** Additional keyword arguments */
+  additional_kwargs: Record<string, unknown> = {};
+
   /** The type of the message. */
   abstract _getType(): MessageType;
 
-  constructor(text: string) {
+  constructor(text: string, kwargs?: Record<string, unknown>) {
     this.text = text;
+    this.additional_kwargs = kwargs || {};
   }
 
   toJSON(): StoredMessage {
@@ -83,6 +88,8 @@ export abstract class BaseChatMessage {
       data: {
         content: this.text,
         role: "role" in this ? (this.role as string) : undefined,
+        name: this.name,
+        additional_kwargs: this.additional_kwargs,
       },
     };
   }
@@ -103,6 +110,17 @@ export class AIChatMessage extends BaseChatMessage {
 export class SystemChatMessage extends BaseChatMessage {
   _getType(): MessageType {
     return "system";
+  }
+}
+
+export class FunctionChatMessage extends BaseChatMessage {
+  constructor(text: string, name: string) {
+    super(text);
+    this.name = name;
+  }
+
+  _getType(): MessageType {
+    return "function";
   }
 }
 
@@ -150,6 +168,7 @@ export type AgentFinish = {
   returnValues: Record<string, any>;
   log: string;
 };
+
 export type AgentStep = {
   action: AgentAction;
   observation: string;
