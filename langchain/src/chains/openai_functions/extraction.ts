@@ -6,9 +6,13 @@ import { ChatOpenAI } from "../../chat_models/openai.js";
 import { PromptTemplate } from "../../prompts/prompt.js";
 import { TransformChain } from "../transform.js";
 import { SimpleSequentialChain } from "../sequential_chain.js";
-import { OpenAIFunctionsChain, parseToNamedArgument } from "./index.js";
+import {
+  FunctionParameters,
+  OpenAIFunctionsChain,
+  parseToNamedArgument,
+} from "./index.js";
 
-function getExtractionFunctions(schema: JsonSchema7ObjectType) {
+function getExtractionFunctions(schema: FunctionParameters) {
   return [
     {
       name: "information_extraction",
@@ -16,7 +20,14 @@ function getExtractionFunctions(schema: JsonSchema7ObjectType) {
       parameters: {
         type: "object",
         properties: {
-          info: { type: "array", items: schema },
+          info: {
+            type: "array",
+            items: {
+              type: schema.type,
+              properties: schema.properties,
+              required: schema.required,
+            },
+          },
         },
         required: ["info"],
       },
@@ -31,7 +42,7 @@ Passage:
 `;
 
 export function createExtractionChain(
-  schema: JsonSchema7ObjectType,
+  schema: FunctionParameters,
   llm: ChatOpenAI
 ) {
   const functions = getExtractionFunctions(schema);

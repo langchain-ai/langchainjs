@@ -6,9 +6,13 @@ import { ChatOpenAI } from "../../chat_models/openai.js";
 import { PromptTemplate } from "../../prompts/prompt.js";
 import { TransformChain } from "../transform.js";
 import { SimpleSequentialChain } from "../sequential_chain.js";
-import { OpenAIFunctionsChain, parseToArguments } from "./index.js";
+import {
+  FunctionParameters,
+  OpenAIFunctionsChain,
+  parseToArguments,
+} from "./index.js";
 
-function getTaggingFunctions(schema: JsonSchema7ObjectType) {
+function getTaggingFunctions(schema: FunctionParameters) {
   return [
     {
       name: "information_extraction",
@@ -25,7 +29,7 @@ Passage:
 `;
 
 export function createTaggingChain(
-  schema: JsonSchema7ObjectType,
+  schema: FunctionParameters,
   llm: ChatOpenAI
 ) {
   const functions = getTaggingFunctions(schema);

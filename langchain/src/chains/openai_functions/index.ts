@@ -2,8 +2,6 @@ import {
   ChatCompletionFunctions,
   ChatCompletionRequestMessageFunctionCall,
 } from "openai";
-import { z } from "zod";
-import { zodToJsonSchema } from "zod-to-json-schema";
 import { JsonSchema7ObjectType } from "zod-to-json-schema/src/parsers/object.js";
 
 import { BaseChain, ChainInputs } from "../base.js";
@@ -11,9 +9,12 @@ import { BasePromptTemplate } from "../../prompts/base.js";
 import { ChatOpenAI } from "../../chat_models/openai.js";
 import { CallbackManagerForChainRun } from "../../callbacks/manager.js";
 import { AIChatMessage, ChainValues } from "../../schema/index.js";
-import { PromptTemplate } from "../../prompts/prompt.js";
-import { TransformChain } from "../transform.js";
-import { SimpleSequentialChain } from "../sequential_chain.js";
+import { Optional } from "../../types/type-utils.js";
+
+export type FunctionParameters = Optional<
+  JsonSchema7ObjectType,
+  "additionalProperties"
+>;
 
 export interface OpenAIFunctionsChainFields extends ChainInputs {
   llm: ChatOpenAI;
@@ -61,10 +62,6 @@ export class OpenAIFunctionsChain
     const valuesForPrompt = { ...values };
     const valuesForLLM: this["llm"]["CallOptions"] = {
       functions: this.functions,
-      function_call:
-        this.functions.length === 1
-          ? { name: this.functions[0].name }
-          : undefined,
     };
     for (const key of this.llm.callKeys) {
       if (key in values) {
