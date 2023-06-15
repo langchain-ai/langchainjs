@@ -39,7 +39,7 @@ export class OpenAIEmbeddings
 {
   modelName = "text-embedding-ada-002";
 
-  batchSize = this.azureOpenAIApiKey ? 1 : 512;
+  batchSize = 512;
 
   stripNewLines = true;
 
@@ -92,7 +92,7 @@ export class OpenAIEmbeddings
       getEnvironmentVariable("AZURE_OPENAI_API_VERSION");
 
     this.modelName = fields?.modelName ?? this.modelName;
-    this.batchSize = fields?.batchSize ?? this.batchSize;
+    this.batchSize = fields?.batchSize ?? azureApiKey ? 1 : this.batchSize;
     this.stripNewLines = fields?.stripNewLines ?? this.stripNewLines;
     this.timeout = fields?.timeout;
 
