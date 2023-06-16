@@ -1,6 +1,15 @@
 import { BlockchainPagesLoader } from 'langchain/document_loaders/web/blockchain';
 import { OpenAI } from 'langchain/llms/openai';
 
+/**
+ * See https://docs.sort.xyz/docs/api-keys to get your free Sort API key.
+ * See https://docs.sort.xyz for more information on the available queries.
+ * See https://docs.sort.xyz/reference for more information about Sort's REST API.
+ */
+
+/**
+ * Run the example.
+ */
 export const run = async () => {
   // Initialize the OpenAI model. Use OPENAI_API_KEY from .env in /examples
   const model = new OpenAI({ temperature: 0.9 });
