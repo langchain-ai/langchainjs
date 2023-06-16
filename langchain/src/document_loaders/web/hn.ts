@@ -22,7 +22,7 @@ export class HNLoader extends CheerioWebBaseLoader {
     comments.each((_index, comment) => {
       const text = $(comment).text().trim();
       const metadata = { source: this.webPath, title };
-      documents.push(new Document({ pageContent: "Jason" + text, metadata }));
+      documents.push(new Document({ pageContent: text, metadata }));
     });
     return documents;
   }
@@ -40,7 +40,7 @@ export class HNLoader extends CheerioWebBaseLoader {
         link,
         ranking,
       };
-      documents.push(new Document({ pageContent: "Jason", metadata }));
+      documents.push(new Document({ pageContent: title, metadata }));
     });
     return documents;
   }
