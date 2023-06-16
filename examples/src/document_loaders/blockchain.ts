@@ -51,7 +51,7 @@ export const run = async () => {
   /*
     Load metadata for a specific NFT by using raw SQL and the NFT index. See docs.sort.xyz for forumulating SQL.
   */
- 
+
   const sqlQueryLoader = new BlockchainPagesLoader({
     apiKey:"dd46a0ae-5a1a-4c6f-8328-46618c4a73d4",
     queryType:"sql",
@@ -62,7 +62,7 @@ export const run = async () => {
 
   let sql_prompt = "Describe the character with the attributes from the following json document in an ad for a new coffee shop. ";
   const sql_res = await model.call(
-    nft_prompt +
+    sql_prompt +
     JSON.stringify(sqlDocs[0], null, 2)
   );
   console.log("\n\nuser > " + sql_prompt);
