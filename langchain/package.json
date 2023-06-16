@@ -229,6 +229,9 @@
     "document_loaders/web/confluence.cjs",
     "document_loaders/web/confluence.js",
     "document_loaders/web/confluence.d.ts",
+    "document_loaders/web/blockchain.cjs",
+    "document_loaders/web/blockchain.js",
+    "document_loaders/web/blockchain.d.ts",
     "document_loaders/fs/directory.cjs",
     "document_loaders/fs/directory.js",
     "document_loaders/fs/directory.d.ts",
@@ -1117,6 +1120,11 @@
       "types": "./document_loaders/web/confluence.d.ts",
       "import": "./document_loaders/web/confluence.js",
       "require": "./document_loaders/web/confluence.cjs"
+    },
+    "./document_loaders/web/blockchain": {
+      "types": "./document_loaders/web/blockchain.d.ts",
+      "import": "./document_loaders/web/blockchain.js",
+      "require": "./document_loaders/web/blockchain.cjs"
     },
     "./document_loaders/fs/directory": {
       "types": "./document_loaders/fs/directory.d.ts",

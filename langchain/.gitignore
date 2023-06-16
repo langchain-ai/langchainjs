@@ -1,3 +1,11 @@
+.gitignore
+langchain/package.json
+langchain/scripts/create-entrypoints.js
+langchain/src/document_loaders/web/blockchain.ts
+langchain/src/document_loaders/web/hn.ts
+langchain/src/load/import_constants.ts
+langchain/src/load/import_type.d.ts
+langchain/tsconfig.json
 load.cjs
 load.js
 load.d.ts
@@ -217,6 +225,9 @@ document_loaders/web/s3.d.ts
 document_loaders/web/confluence.cjs
 document_loaders/web/confluence.js
 document_loaders/web/confluence.d.ts
+document_loaders/web/blockchain.cjs
+document_loaders/web/blockchain.js
+document_loaders/web/blockchain.d.ts
 document_loaders/fs/directory.cjs
 document_loaders/fs/directory.js
 document_loaders/fs/directory.d.ts

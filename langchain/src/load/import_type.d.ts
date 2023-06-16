@@ -145,6 +145,9 @@ export interface OptionalImportMap {
   "langchain/document_loaders/web/confluence"?:
     | typeof import("../document_loaders/web/confluence.js")
     | Promise<typeof import("../document_loaders/web/confluence.js")>;
+  "langchain/document_loaders/web/blockchain"?:
+    | typeof import("../document_loaders/web/blockchain.js")
+    | Promise<typeof import("../document_loaders/web/blockchain.js")>;
   "langchain/document_loaders/fs/directory"?:
     | typeof import("../document_loaders/fs/directory.js")
     | Promise<typeof import("../document_loaders/fs/directory.js")>;
@@ -211,6 +214,9 @@ export interface OptionalImportMap {
   "langchain/retrievers/self_query/supabase"?:
     | typeof import("../retrievers/self_query/supabase.js")
     | Promise<typeof import("../retrievers/self_query/supabase.js")>;
+  "langchain/retrievers/self_query/weaviate"?:
+    | typeof import("../retrievers/self_query/weaviate.js")
+    | Promise<typeof import("../retrievers/self_query/weaviate.js")>;
   "langchain/cache/momento"?:
     | typeof import("../cache/momento.js")
     | Promise<typeof import("../cache/momento.js")>;
