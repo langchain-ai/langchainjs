@@ -55,7 +55,11 @@ export abstract class BaseChain extends BaseLangChain implements ChainInputs {
 
   /** @ignore */
   _selectMemoryInputs(values: ChainValues): ChainValues {
-    return values;
+    const valuesForMemory = { ...values };
+    if ("signal" in valuesForMemory) {
+      delete valuesForMemory.signal;
+    }
+    return valuesForMemory;
   }
 
   /**
@@ -114,7 +118,7 @@ export abstract class BaseChain extends BaseLangChain implements ChainInputs {
    * Wraps _call and handles memory.
    */
   async call(
-    values: ChainValues,
+    values: ChainValues & { signal?: AbortSignal },
     callbacks?: Callbacks,
     tags?: string[]
   ): Promise<ChainValues> {
@@ -140,7 +144,14 @@ export abstract class BaseChain extends BaseLangChain implements ChainInputs {
     );
     let outputValues;
     try {
-      outputValues = await this._call(fullValues, runManager);
+      outputValues = (await Promise.race([
+        this._call(fullValues, runManager),
+        new Promise((_, reject) => {
+          values.signal?.addEventListener("abort", () => {
+            reject(new Error("AbortError"));
+          });
+        }),
+      ])) as ChainValues;
     } catch (e) {
       await runManager?.handleChainError(e);
       throw e;
