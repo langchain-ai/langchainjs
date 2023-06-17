@@ -53,6 +53,11 @@ export abstract class BaseChain extends BaseLangChain implements ChainInputs {
     }
   }
 
+  /** @ignore */
+  _selectMemoryInputs(values: ChainValues): ChainValues {
+    return values;
+  }
+
   /**
    * Run the core logic of this chain and return the output
    */
@@ -115,7 +120,9 @@ export abstract class BaseChain extends BaseLangChain implements ChainInputs {
   ): Promise<ChainValues> {
     const fullValues = { ...values } as typeof values;
     if (!(this.memory == null)) {
-      const newValues = await this.memory.loadMemoryVariables(values);
+      const newValues = await this.memory.loadMemoryVariables(
+        this._selectMemoryInputs(values)
+      );
       for (const [key, value] of Object.entries(newValues)) {
         fullValues[key] = value;
       }
@@ -139,7 +146,10 @@ export abstract class BaseChain extends BaseLangChain implements ChainInputs {
       throw e;
     }
     if (!(this.memory == null)) {
-      await this.memory.saveContext(values, outputValues);
+      await this.memory.saveContext(
+        this._selectMemoryInputs(values),
+        outputValues
+      );
     }
     await runManager?.handleChainEnd(outputValues);
     // add the runManager's currentRunId to the outputValues
