@@ -72,7 +72,10 @@ export interface AnthropicInput {
   streaming?: boolean;
 
   /** Anthropic API key */
-  apiKey?: string;
+  anthropicApiKey?: string;
+
+  /** Anthropic API URL */
+  anthropicApiUrl?: string;
 
   /** Model name to use */
   modelName: string;
@@ -109,7 +112,7 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
 
   get lc_secrets(): { [key: string]: string } | undefined {
     return {
-      apiKey: "ANTHROPIC_API_KEY",
+      anthropicApiKey: "ANTHROPIC_API_KEY",
     };
   }
 
@@ -147,13 +150,7 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
   // Used for streaming requests
   private streamingClient: AnthropicApi;
 
-  constructor(
-    fields?: Partial<AnthropicInput> &
-      BaseChatModelParams & {
-        anthropicApiKey?: string;
-        anthropicApiUrl?: string;
-      }
-  ) {
+  constructor(fields?: Partial<AnthropicInput> & BaseChatModelParams) {
     super(fields ?? {});
 
     this.apiKey =
