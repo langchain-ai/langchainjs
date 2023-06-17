@@ -69,6 +69,17 @@ export class LLMChain<T extends string | object = string>
   }
 
   /** @ignore */
+  _selectMemoryInputs(values: ChainValues): ChainValues {
+    const valuesForMemory = { ...values };
+    for (const key of this.llm.callKeys) {
+      if (key in values) {
+        delete valuesForMemory[key];
+      }
+    }
+    return valuesForMemory;
+  }
+
+  /** @ignore */
   async _getFinalOutput(
     generations: Generation[],
     promptValue: BasePromptValue,
