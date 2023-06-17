@@ -175,6 +175,9 @@
     "vectorstores/tigris.cjs",
     "vectorstores/tigris.js",
     "vectorstores/tigris.d.ts",
+    "vectorstores/elasticsearch.cjs",
+    "vectorstores/elasticsearch.js",
+    "vectorstores/elasticsearch.d.ts",
     "text_splitter.cjs",
     "text_splitter.js",
     "text_splitter.d.ts",
@@ -443,6 +446,7 @@
     "@aws-sdk/client-s3": "^3.310.0",
     "@aws-sdk/client-sagemaker-runtime": "^3.310.0",
     "@clickhouse/client": "^0.0.14",
+    "@elastic/elasticsearch": "^8.8.1",
     "@faker-js/faker": "^7.6.0",
     "@getmetal/metal-sdk": "^4.0.0",
     "@getzep/zep-js": "^0.3.1",
@@ -523,6 +527,7 @@
     "@aws-sdk/client-s3": "^3.310.0",
     "@aws-sdk/client-sagemaker-runtime": "^3.310.0",
     "@clickhouse/client": "^0.0.14",
+    "@elastic/elasticsearch": "*",
     "@getmetal/metal-sdk": "*",
     "@getzep/zep-js": "^0.3.1",
     "@gomomento/sdk": "^1.23.0",
@@ -581,6 +586,9 @@
       "optional": true
     },
     "@clickhouse/client": {
+      "optional": true
+    },
+    "@elastic/elasticsearch": {
       "optional": true
     },
     "@getmetal/metal-sdk": {
@@ -1037,6 +1045,11 @@
       "types": "./vectorstores/tigris.d.ts",
       "import": "./vectorstores/tigris.js",
       "require": "./vectorstores/tigris.cjs"
+    },
+    "./vectorstores/elasticsearch": {
+      "types": "./vectorstores/elasticsearch.d.ts",
+      "import": "./vectorstores/elasticsearch.js",
+      "require": "./vectorstores/elasticsearch.cjs"
     },
     "./text_splitter": {
       "types": "./text_splitter.d.ts",

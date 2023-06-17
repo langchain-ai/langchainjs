@@ -106,6 +106,9 @@ export interface OptionalImportMap {
   "langchain/vectorstores/tigris"?:
     | typeof import("../vectorstores/tigris.js")
     | Promise<typeof import("../vectorstores/tigris.js")>;
+  "langchain/vectorstores/elasticsearch"?:
+    | typeof import("../vectorstores/elasticsearch.js")
+    | Promise<typeof import("../vectorstores/elasticsearch.js")>;
   "langchain/memory/zep"?:
     | typeof import("../memory/zep.js")
     | Promise<typeof import("../memory/zep.js")>;

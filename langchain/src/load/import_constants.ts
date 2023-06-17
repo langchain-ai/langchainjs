@@ -36,6 +36,7 @@ export const optionalImportEntrypoints = [
   "langchain/vectorstores/typesense",
   "langchain/vectorstores/singlestore",
   "langchain/vectorstores/tigris",
+  "langchain/vectorstores/elasticsearch",
   "langchain/memory/zep",
   "langchain/document_loaders/web/apify_dataset",
   "langchain/document_loaders/web/cheerio",

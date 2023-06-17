@@ -71,6 +71,7 @@ const entrypoints = {
   "vectorstores/typesense": "vectorstores/typesense",
   "vectorstores/singlestore": "vectorstores/singlestore",
   "vectorstores/tigris": "vectorstores/tigris",
+  "vectorstores/elasticsearch": "vectorstores/elasticsearch",
   // text_splitter
   text_splitter: "text_splitter",
   // memory
@@ -215,6 +216,7 @@ const requiresOptionalDependency = [
   "vectorstores/singlestore",
   "vectorstores/typesense",
   "vectorstores/tigris",
+  "vectorstores/elasticsearch",
   "memory/zep",
   "document_loaders/web/apify_dataset",
   "document_loaders/web/cheerio",

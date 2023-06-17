@@ -1,0 +1,36 @@
+import CodeBlock from "@theme/CodeBlock";
+
+# Elasticsearch
+
+[Elasticsearch](https://www.elastic.co/elasticsearch/) is a distributed, RESTful search and analytics engine.
+It provides a distributed, multi-tenant-capable full-text search engine with an HTTP web interface and schema-free
+JSON documents.
+
+## Setup
+
+### 1. Install the Elasticsearch SDK
+
+Install the SDK as follows
+
+```bash npm2yarn
+npm install -S @elastic/elasticsearch
+```
+
+### 2. Fetch Elasticsearch API credentials or Run Elasticsearch locally with docker
+
+You can sign up for a free Elasticsearch account [here](https://cloud.elastic.co/registration).
+
+Once you have signed up for the Elasticsearch account, set up your deployment per the instructions [here](https://www.elastic.co/guide/en/cloud/current/ec-getting-started.html).
+
+Alternatively, you can run Elasticsearch locally with docker as follows
+
+```bash
+docker-compose -f examples/src/indexes/vector_stores/elasticsearch/docker-compose.yml up
+```
+
+## Index and query docs
+
+import FromDocs from "@examples/indexes/vector_stores/elasticsearch/fromDocuments.ts";
+
+<CodeBlock language="typescript">{FromDocs}</CodeBlock>
+```

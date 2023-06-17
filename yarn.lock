@@ -4530,6 +4530,30 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@elastic/elasticsearch@npm:^8.8.1":
+  version: 8.8.1
+  resolution: "@elastic/elasticsearch@npm:8.8.1"
+  dependencies:
+    "@elastic/transport": ^8.3.2
+    tslib: ^2.4.0
+  checksum: 38b0651d56f1b6b0f9bbed9fb874a337f466c4697dfb0ea37d3110bdc00fdb86b1cc58cdf03769aa2fd84076448877c33234069ed1cbd4a3906e66e18c47df5a
+  languageName: node
+  linkType: hard
+
+"@elastic/transport@npm:^8.3.2":
+  version: 8.3.2
+  resolution: "@elastic/transport@npm:8.3.2"
+  dependencies:
+    debug: ^4.3.4
+    hpagent: ^1.0.0
+    ms: ^2.1.3
+    secure-json-parse: ^2.4.0
+    tslib: ^2.4.0
+    undici: ^5.22.1
+  checksum: 51eb19723b95b9772b90031223d1af275f1aad0611161b84da57c5e374fa1bfce1c1828870ee9b7afe9bf81de64e4a2f8ed6878875f877b71bc53d2b435fa78d
+  languageName: node
+  linkType: hard
+
 "@esbuild-kit/cjs-loader@npm:^2.4.2":
   version: 2.4.2
   resolution: "@esbuild-kit/cjs-loader@npm:2.4.2"
@@ -14240,6 +14264,7 @@ __metadata:
   resolution: "examples@workspace:examples"
   dependencies:
     "@clickhouse/client": ^0.0.14
+    "@elastic/elasticsearch": ^8.8.1
     "@getmetal/metal-sdk": ^4.0.0
     "@getzep/zep-js": 0.3.1
     "@gomomento/sdk": ^1.23.0
@@ -15880,7 +15905,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"hpagent@npm:^1.2.0":
+"hpagent@npm:^1.0.0, hpagent@npm:^1.2.0":
   version: 1.2.0
   resolution: "hpagent@npm:1.2.0"
   checksum: b029da695edae438cee4da2a437386f9db4ac27b3ceb7306d02e1b586c9c194741ed2e943c8a222e0cfefaf27ee3f863aca7ba1721b0950a2a19bf25bc0d85e2
@@ -18596,6 +18621,7 @@ __metadata:
     "@aws-sdk/client-s3": ^3.310.0
     "@aws-sdk/client-sagemaker-runtime": ^3.310.0
     "@clickhouse/client": ^0.0.14
+    "@elastic/elasticsearch": ^8.8.1
     "@faker-js/faker": ^7.6.0
     "@getmetal/metal-sdk": ^4.0.0
     "@getzep/zep-js": ^0.3.1
@@ -18693,6 +18719,7 @@ __metadata:
     "@aws-sdk/client-s3": ^3.310.0
     "@aws-sdk/client-sagemaker-runtime": ^3.310.0
     "@clickhouse/client": ^0.0.14
+    "@elastic/elasticsearch": "*"
     "@getmetal/metal-sdk": "*"
     "@getzep/zep-js": ^0.3.1
     "@gomomento/sdk": ^1.23.0
@@ -18746,6 +18773,8 @@ __metadata:
     "@aws-sdk/client-sagemaker-runtime":
       optional: true
     "@clickhouse/client":
+      optional: true
+    "@elastic/elasticsearch":
       optional: true
     "@getmetal/metal-sdk":
       optional: true
@@ -26747,6 +26776,15 @@ __metadata:
   dependencies:
     busboy: ^1.6.0
   checksum: 25412a785b2bd0b12f0bb0ec47ef00aa7a611ca0e570cb7af97cffe6a42e0d78e4b15190363a43771e9002defc3c6647c1b2d52201b3f64e2196819db4d150d3
+  languageName: node
+  linkType: hard
+
+"undici@npm:^5.22.1":
+  version: 5.22.1
+  resolution: "undici@npm:5.22.1"
+  dependencies:
+    busboy: ^1.6.0
+  checksum: 048a3365f622be44fb319316cedfaa241c59cf7f3368ae7667a12323447e1822e8cc3d00f6956c852d1478a6fde1cbbe753f49e05f2fdaed229693e716ebaf35
   languageName: node
   linkType: hard
 
