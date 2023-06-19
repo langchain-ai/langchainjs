@@ -321,7 +321,6 @@ export class ChatOpenAI
               adapter: fetchAdapter, // default adapter doesn't do streaming
               responseType: "stream",
               onmessage: (event) => {
-                console.log(event);
                 if (event.data?.trim?.() === "[DONE]") {
                   if (resolved || rejected) {
                     return;
