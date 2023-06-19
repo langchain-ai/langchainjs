@@ -169,6 +169,7 @@ export const runOnDataset = async (
   } else {
     sessionName_ = sessionName;
   }
+  await client_.createSession({ sessionName: sessionName_, mode: "eval" });
   const results: DatasetRunResults = {};
   const modelOrFactoryType = await getModelOrFactoryType(llmOrChainFactory);
   await Promise.all(
