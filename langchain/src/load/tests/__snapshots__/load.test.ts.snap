@@ -93,6 +93,11 @@ kwargs:
       prefix_messages:
         - role: system
           content: You're a nice assistant
+      openai_api_key:
+        lc: 1
+        type: secret
+        id:
+          - OPENAI_API_KEY
   prompt:
     lc: 1
     type: constructor

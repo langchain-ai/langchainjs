@@ -124,7 +124,7 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
 
   lc_serializable = true;
 
-  apiKey?: string;
+  anthropicApiKey?: string;
 
   apiUrl?: string;
 
@@ -153,9 +153,9 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
   constructor(fields?: Partial<AnthropicInput> & BaseChatModelParams) {
     super(fields ?? {});
 
-    this.apiKey =
+    this.anthropicApiKey =
       fields?.anthropicApiKey ?? getEnvironmentVariable("ANTHROPIC_API_KEY");
-    if (!this.apiKey) {
+    if (!this.anthropicApiKey) {
       throw new Error("Anthropic API key not found");
     }
 
@@ -266,14 +266,14 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
     options: { signal?: AbortSignal },
     runManager?: CallbackManagerForLLMRun
   ): Promise<CompletionResponse> {
-    if (!this.apiKey) {
+    if (!this.anthropicApiKey) {
       throw new Error("Missing Anthropic API key.");
     }
     let makeCompletionRequest;
     if (request.stream) {
       if (!this.streamingClient) {
         const options = this.apiUrl ? { apiUrl: this.apiUrl } : undefined;
-        this.streamingClient = new AnthropicApi(this.apiKey, options);
+        this.streamingClient = new AnthropicApi(this.anthropicApiKey, options);
       }
       makeCompletionRequest = async () => {
         let currentCompletion = "";
@@ -308,7 +308,7 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
     } else {
       if (!this.batchClient) {
         const options = this.apiUrl ? { apiUrl: this.apiUrl } : undefined;
-        this.batchClient = new AnthropicApi(this.apiKey, options);
+        this.batchClient = new AnthropicApi(this.anthropicApiKey, options);
       }
       makeCompletionRequest = async () =>
         this.batchClient

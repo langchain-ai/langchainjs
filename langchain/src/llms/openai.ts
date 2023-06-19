@@ -104,6 +104,8 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
 
   streaming = false;
 
+  openAIApiKey?: string;
+
   azureOpenAIApiVersion?: string;
 
   azureOpenAIApiKey?: string;
@@ -120,7 +122,6 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
     fields?: Partial<OpenAIInput> &
       Partial<AzureOpenAIInput> &
       BaseLLMParams & {
-        openAIApiKey?: string;
         configuration?: ConfigurationParameters;
       },
     /** @deprecated */
@@ -136,28 +137,28 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
     }
     super(fields ?? {});
 
-    const apiKey =
+    this.openAIApiKey =
       fields?.openAIApiKey ?? getEnvironmentVariable("OPENAI_API_KEY");
 
-    const azureApiKey =
+    this.azureOpenAIApiKey =
       fields?.azureOpenAIApiKey ??
       getEnvironmentVariable("AZURE_OPENAI_API_KEY");
 
-    if (!azureApiKey && !apiKey) {
+    if (!this.azureOpenAIApiKey && !this.openAIApiKey) {
       throw new Error("(Azure) OpenAI API key not found");
     }
 
-    const azureApiInstanceName =
+    this.azureOpenAIApiInstanceName =
       fields?.azureOpenAIApiInstanceName ??
       getEnvironmentVariable("AZURE_OPENAI_API_INSTANCE_NAME");
 
-    const azureApiDeploymentName =
+    this.azureOpenAIApiDeploymentName =
       (fields?.azureOpenAIApiCompletionsDeploymentName ||
         fields?.azureOpenAIApiDeploymentName) ??
       (getEnvironmentVariable("AZURE_OPENAI_API_COMPLETIONS_DEPLOYMENT_NAME") ||
         getEnvironmentVariable("AZURE_OPENAI_API_DEPLOYMENT_NAME"));
 
-    const azureApiVersion =
+    this.azureOpenAIApiVersion =
       fields?.azureOpenAIApiVersion ??
       getEnvironmentVariable("AZURE_OPENAI_API_VERSION");
 
@@ -177,11 +178,6 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
     this.stop = fields?.stop;
 
     this.streaming = fields?.streaming ?? false;
-
-    this.azureOpenAIApiVersion = azureApiVersion;
-    this.azureOpenAIApiKey = azureApiKey;
-    this.azureOpenAIApiInstanceName = azureApiInstanceName;
-    this.azureOpenAIApiDeploymentName = azureApiDeploymentName;
 
     if (this.streaming && this.n > 1) {
       throw new Error("Cannot stream results when n > 1");
@@ -204,7 +200,7 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
     }
 
     this.clientConfig = {
-      apiKey,
+      apiKey: this.openAIApiKey,
       ...configuration,
       ...fields?.configuration,
     };
@@ -310,7 +306,7 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
                 responseType: "stream",
                 onmessage: (event) => {
                   if (event.data?.trim?.() === "[DONE]") {
-                    if (resolved) {
+                    if (resolved || rejected) {
                       return;
                     }
                     resolved = true;
@@ -319,7 +315,18 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
                       choices,
                     });
                   } else {
-                    const message = JSON.parse(event.data) as Omit<
+                    const data = JSON.parse(event.data);
+
+                    if (data?.error) {
+                      if (rejected) {
+                        return;
+                      }
+                      rejected = true;
+                      reject(data.error);
+                      return;
+                    }
+
+                    const message = data as Omit<
                       CreateCompletionResponse,
                       "usage"
                     >;
@@ -352,6 +359,7 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
                     // when all messages are finished, resolve
                     if (
                       !resolved &&
+                      !rejected &&
                       choices.every((c) => c.finish_reason != null)
                     ) {
                       resolved = true;
