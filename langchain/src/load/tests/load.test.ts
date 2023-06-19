@@ -113,6 +113,8 @@ test("serialize + deserialize custom classes", async () => {
 });
 
 test("serialize + deserialize llm", async () => {
+  // eslint-disable-next-line no-process-env
+  process.env.OPENAI_API_KEY = "openai-key";
   const llm = new OpenAI({
     temperature: 0.5,
     modelName: "davinci",
