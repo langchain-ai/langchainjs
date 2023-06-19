@@ -92,12 +92,6 @@ export { MultiPromptChain } from "./router/multi_prompt.js";
 export { MultiRetrievalQAChain } from "./router/multi_retrieval_qa.js";
 export { TransformChain, TransformChainFields } from "./transform.js";
 export {
-  OpenAIFunctionsChain,
-  OpenAIFunctionsChainFields,
-  parseToArguments,
-  parseToNamedArgument,
-} from "./openai_functions/index.js";
-export {
   createExtractionChain,
   createExtractionChainFromZod,
 } from "./openai_functions/extraction.js";

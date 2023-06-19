@@ -163,6 +163,8 @@ const entrypoints = {
   "experimental/generative_agents": "experimental/generative_agents/index",
   "experimental/plan_and_execute": "experimental/plan_and_execute/index",
   client: "client/index",
+  // evaluation
+  evaluation: "evaluation/index",
 };
 
 // Entrypoints in this list will
