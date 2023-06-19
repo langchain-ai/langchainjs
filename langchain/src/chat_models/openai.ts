@@ -159,6 +159,8 @@ export class ChatOpenAI
 
   maxTokens?: number;
 
+  openAIApiKey?: string;
+
   azureOpenAIApiVersion?: string;
 
   azureOpenAIApiKey?: string;
@@ -175,9 +177,6 @@ export class ChatOpenAI
     fields?: Partial<OpenAIChatInput> &
       Partial<AzureOpenAIInput> &
       BaseChatModelParams & {
-        concurrency?: number;
-        cache?: boolean;
-        openAIApiKey?: string;
         configuration?: ConfigurationParameters;
       },
     /** @deprecated */
@@ -185,25 +184,26 @@ export class ChatOpenAI
   ) {
     super(fields ?? {});
 
-    const apiKey =
+    this.openAIApiKey =
       fields?.openAIApiKey ?? getEnvironmentVariable("OPENAI_API_KEY");
 
-    const azureApiKey =
+    this.azureOpenAIApiKey =
       fields?.azureOpenAIApiKey ??
       getEnvironmentVariable("AZURE_OPENAI_API_KEY");
-    if (!azureApiKey && !apiKey) {
+
+    if (!this.azureOpenAIApiKey && !this.openAIApiKey) {
       throw new Error("(Azure) OpenAI API key not found");
     }
 
-    const azureApiInstanceName =
+    this.azureOpenAIApiInstanceName =
       fields?.azureOpenAIApiInstanceName ??
       getEnvironmentVariable("AZURE_OPENAI_API_INSTANCE_NAME");
 
-    const azureApiDeploymentName =
+    this.azureOpenAIApiDeploymentName =
       fields?.azureOpenAIApiDeploymentName ??
       getEnvironmentVariable("AZURE_OPENAI_API_DEPLOYMENT_NAME");
 
-    const azureApiVersion =
+    this.azureOpenAIApiVersion =
       fields?.azureOpenAIApiVersion ??
       getEnvironmentVariable("AZURE_OPENAI_API_VERSION");
 
@@ -222,11 +222,6 @@ export class ChatOpenAI
 
     this.streaming = fields?.streaming ?? false;
 
-    this.azureOpenAIApiVersion = azureApiVersion;
-    this.azureOpenAIApiKey = azureApiKey;
-    this.azureOpenAIApiInstanceName = azureApiInstanceName;
-    this.azureOpenAIApiDeploymentName = azureApiDeploymentName;
-
     if (this.streaming && this.n > 1) {
       throw new Error("Cannot stream results when n > 1");
     }
@@ -244,7 +239,7 @@ export class ChatOpenAI
     }
 
     this.clientConfig = {
-      apiKey,
+      apiKey: this.openAIApiKey,
       ...configuration,
       ...fields?.configuration,
     };

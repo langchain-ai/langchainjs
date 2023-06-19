@@ -116,7 +116,6 @@ test("serialize + deserialize llm", async () => {
   const llm = new OpenAI({
     temperature: 0.5,
     modelName: "davinci",
-    openAIApiKey: "openai-key",
   });
   llm.temperature = 0.7;
   const lc_argumentsBefore = llm.lc_kwargs;
@@ -126,11 +125,17 @@ test("serialize + deserialize llm", async () => {
   expect(JSON.parse(str).kwargs.temperature).toBe(0.7);
   expect(JSON.parse(str).kwargs.model).toBe("davinci");
   expect(JSON.parse(str).kwargs.openai_api_key.type).toBe("secret");
+  // Accept secret in secret map
   const llm2 = await load<OpenAI>(str, {
     OPENAI_API_KEY: "openai-key",
   });
   expect(llm2).toBeInstanceOf(OpenAI);
   expect(JSON.stringify(llm2, null, 2)).toBe(str);
+  // Accept secret as env var
+  const llm3 = await load<OpenAI>(str);
+  expect(llm3).toBeInstanceOf(OpenAI);
+  expect(llm.openAIApiKey).toBe(llm3.openAIApiKey);
+  expect(JSON.stringify(llm3, null, 2)).toBe(str);
 });
 
 test("serialize + deserialize llm with optional deps", async () => {
