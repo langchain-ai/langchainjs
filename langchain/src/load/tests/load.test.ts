@@ -189,6 +189,8 @@ test("serialize + deserialize llm chain string prompt", async () => {
 });
 
 test("serialize + deserialize llm chain chat prompt", async () => {
+  // eslint-disable-next-line no-process-env
+  process.env.OPENAI_API_KEY = undefined;
   const llm = new ChatOpenAI({
     temperature: 0.5,
     modelName: "gpt-4",
