@@ -1,6 +1,6 @@
 import { BaseOutputParser } from "../schema/output_parser.js";
 
-export class DefaultOutputParser extends BaseOutputParser<string> {
+export class NoOpOutputParser extends BaseOutputParser<string> {
   lc_namespace = ["langchain", "output_parsers", "default"];
 
   lc_serializable = true;

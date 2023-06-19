@@ -46,7 +46,13 @@ export function createExtractionChain(
   const functions = getExtractionFunctions(schema);
   const prompt = PromptTemplate.fromTemplate(_EXTRACTION_TEMPLATE);
   const outputParser = new JsonKeyOutputFunctionsParser({ attrName: "info" });
-  return new LLMChain({ llm, prompt, llmKwargs: { functions }, outputParser });
+  return new LLMChain({
+    llm,
+    prompt,
+    llmKwargs: { functions },
+    outputParser,
+    tags: ["openai_functions", "extraction"],
+  });
 }
 
 export function createExtractionChainFromZod(

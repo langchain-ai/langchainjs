@@ -9,7 +9,7 @@ import {
 import { SerializedLLMChain } from "./serde.js";
 import { CallbackManager } from "../callbacks/index.js";
 import { CallbackManagerForChainRun, Callbacks } from "../callbacks/manager.js";
-import { DefaultOutputParser } from "../output_parsers/default.js";
+import { NoOpOutputParser } from "../output_parsers/noop.js";
 
 export interface LLMChainInput<
   T extends string | object = string,
@@ -74,7 +74,7 @@ export class LLMChain<
     this.llmKwargs = fields.llmKwargs;
     this.outputKey = fields.outputKey ?? this.outputKey;
     this.outputParser =
-      fields.outputParser ?? (new DefaultOutputParser() as BaseOutputParser<T>);
+      fields.outputParser ?? (new NoOpOutputParser() as BaseOutputParser<T>);
     if (this.prompt.outputParser) {
       if (fields.outputParser) {
         throw new Error("Cannot set both outputParser and prompt.outputParser");

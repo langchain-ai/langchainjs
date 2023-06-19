@@ -33,7 +33,13 @@ export function createTaggingChain(
   const functions = getTaggingFunctions(schema);
   const prompt = PromptTemplate.fromTemplate(TAGGING_TEMPLATE);
   const outputParser = new JsonOutputFunctionsParser();
-  return new LLMChain({ llm, prompt, llmKwargs: { functions }, outputParser });
+  return new LLMChain({
+    llm,
+    prompt,
+    llmKwargs: { functions },
+    outputParser,
+    tags: ["openai_functions", "tagging"],
+  });
 }
 
 export function createTaggingChainFromZod(
