@@ -4,13 +4,11 @@ import { JsonSchema7ObjectType } from "zod-to-json-schema/src/parsers/object.js"
 
 import { ChatOpenAI } from "../../chat_models/openai.js";
 import { PromptTemplate } from "../../prompts/prompt.js";
-import { TransformChain } from "../transform.js";
-import { SimpleSequentialChain } from "../sequential_chain.js";
 import {
   FunctionParameters,
-  OpenAIFunctionsChain,
-  parseToNamedArgument,
-} from "./index.js";
+  JsonKeyOutputFunctionsParser,
+} from "../../output_parsers/openai_functions.js";
+import { LLMChain } from "../llm_chain.js";
 
 function getExtractionFunctions(schema: FunctionParameters) {
   return [
@@ -47,13 +45,8 @@ export function createExtractionChain(
 ) {
   const functions = getExtractionFunctions(schema);
   const prompt = PromptTemplate.fromTemplate(_EXTRACTION_TEMPLATE);
-  const chain = new OpenAIFunctionsChain({ llm, prompt, functions });
-  const parsing_chain = new TransformChain({
-    transform: parseToNamedArgument.bind(null, "info"),
-    inputVariables: ["input"],
-    outputVariables: ["output"],
-  });
-  return new SimpleSequentialChain({ chains: [chain, parsing_chain] });
+  const outputParser = new JsonKeyOutputFunctionsParser({ attrName: "info" });
+  return new LLMChain({ llm, prompt, llmKwargs: { functions }, outputParser });
 }
 
 export function createExtractionChainFromZod(
