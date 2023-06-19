@@ -264,13 +264,24 @@ export class OpenAIChat
               responseType: "stream",
               onmessage: (event) => {
                 if (event.data?.trim?.() === "[DONE]") {
-                  if (resolved) {
+                  if (resolved || rejected) {
                     return;
                   }
                   resolved = true;
                   resolve(response);
                 } else {
-                  const message = JSON.parse(event.data) as {
+                  const data = JSON.parse(event.data);
+
+                  if (data?.error) {
+                    if (rejected) {
+                      return;
+                    }
+                    rejected = true;
+                    reject(data.error);
+                    return;
+                  }
+
+                  const message = data as {
                     id: string;
                     object: string;
                     created: number;
@@ -327,6 +338,7 @@ export class OpenAIChat
                   // when all messages are finished, resolve
                   if (
                     !resolved &&
+                    !rejected &&
                     message.choices.every((c) => c.finish_reason != null)
                   ) {
                     resolved = true;

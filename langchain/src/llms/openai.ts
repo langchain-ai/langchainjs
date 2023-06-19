@@ -306,7 +306,7 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
                 responseType: "stream",
                 onmessage: (event) => {
                   if (event.data?.trim?.() === "[DONE]") {
-                    if (resolved) {
+                    if (resolved || rejected) {
                       return;
                     }
                     resolved = true;
@@ -315,7 +315,18 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
                       choices,
                     });
                   } else {
-                    const message = JSON.parse(event.data) as Omit<
+                    const data = JSON.parse(event.data);
+
+                    if (data?.error) {
+                      if (rejected) {
+                        return;
+                      }
+                      rejected = true;
+                      reject(data.error);
+                      return;
+                    }
+
+                    const message = data as Omit<
                       CreateCompletionResponse,
                       "usage"
                     >;
@@ -348,6 +359,7 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
                     // when all messages are finished, resolve
                     if (
                       !resolved &&
+                      !rejected &&
                       choices.every((c) => c.finish_reason != null)
                     ) {
                       resolved = true;
