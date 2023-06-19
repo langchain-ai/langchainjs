@@ -294,7 +294,9 @@ test.skip("serialize + deserialize llmchain with output parser", async () => {
   });
   expect(chain2).toBeInstanceOf(LLMChain);
   expect(JSON.stringify(chain2, null, 2)).toBe(str);
-  expect(await chain2.outputParser?.parse("a, b, c")).toEqual(["a", "b", "c"]);
+  expect(await chain2.outputParser?.parseResult([{ text: "a, b, c" }])).toEqual(
+    ["a", "b", "c"]
+  );
 });
 
 test("serialize + deserialize llmchain with struct output parser throws", async () => {

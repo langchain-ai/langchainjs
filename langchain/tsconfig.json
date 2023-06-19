@@ -157,7 +157,8 @@
       "src/experimental/babyagi/index.ts",
       "src/experimental/generative_agents/index.ts",
       "src/experimental/plan_and_execute/index.ts",
-      "src/client/index.ts"
+      "src/client/index.ts",
+      "src/evaluation/index.ts"
     ],
     "sort": [
       "kind",

@@ -406,6 +406,9 @@
     "client.cjs",
     "client.js",
     "client.d.ts",
+    "evaluation.cjs",
+    "evaluation.js",
+    "evaluation.d.ts",
     "index.cjs",
     "index.js",
     "index.d.ts"
@@ -1425,6 +1428,11 @@
       "types": "./client.d.ts",
       "import": "./client.js",
       "require": "./client.cjs"
+    },
+    "./evaluation": {
+      "types": "./evaluation.d.ts",
+      "import": "./evaluation.js",
+      "require": "./evaluation.cjs"
     },
     "./package.json": "./package.json"
   }
