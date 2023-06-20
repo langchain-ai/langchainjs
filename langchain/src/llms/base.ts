@@ -87,6 +87,32 @@ export abstract class BaseLLM extends BaseLanguageModel {
     return {};
   }
 
+  _flattenLLMResult(llmResult: LLMResult): LLMResult[] {
+    const llmResults: LLMResult[] = [];
+
+    for (let i = 0; i < llmResult.generations.length; i += 1) {
+      const genList = llmResult.generations[i];
+
+      if (i === 0) {
+        llmResults.push({
+          generations: [genList],
+          llmOutput: llmResult.llmOutput,
+        });
+      } else {
+        const llmOutput = llmResult.llmOutput
+          ? { ...llmResult.llmOutput, tokenUsage: {} }
+          : undefined;
+
+        llmResults.push({
+          generations: [genList],
+          llmOutput,
+        });
+      }
+    }
+
+    return llmResults;
+  }
+
   /** @ignore */
   async _generateUncached(
     prompts: string[],
@@ -101,7 +127,7 @@ export abstract class BaseLLM extends BaseLanguageModel {
       { verbose: this.verbose }
     );
     const extra = { options, invocation_params: this?.invocationParams() };
-    const runManager = await callbackManager_?.handleLLMStart(
+    const runManagers = await callbackManager_?.handleLLMStart(
       this.toJSON(),
       prompts,
       undefined,
@@ -111,18 +137,24 @@ export abstract class BaseLLM extends BaseLanguageModel {
 
     let output;
     try {
-      output = await this._generate(prompts, options, runManager);
+      output = await this._generate(prompts, options, runManagers?.[0]);
     } catch (err) {
-      await runManager?.handleLLMError(err);
+      await Promise.all(
+        (runManagers ?? []).map((runManager) => runManager?.handleLLMError(err))
+      );
       throw err;
     }
 
-    await runManager?.handleLLMEnd(output);
-    // This defines RUN_KEY as a non-enumerable property on the output object
-    // so that it is not serialized when the output is stringified, and so that
-    // it isnt included when listing the keys of the output object.
+    const flattenedOutputs: LLMResult[] = this._flattenLLMResult(output);
+    await Promise.all(
+      (runManagers ?? []).map((runManager, i) =>
+        runManager?.handleLLMEnd(flattenedOutputs[i])
+      )
+    );
+    const runIds = runManagers?.map((manager) => manager.runId) || undefined;
+
     Object.defineProperty(output, RUN_KEY, {
-      value: runManager ? { runId: runManager?.runId } : undefined,
+      value: runIds ? { runIds } : undefined,
       configurable: true,
     });
     return output;

@@ -57,6 +57,7 @@ export abstract class BaseChatModel extends BaseLanguageModel {
     callbacks?: Callbacks
   ): Promise<LLMResult> {
     const generations: ChatGeneration[][] = [];
+    const results: ChatResult[] = [];
     const llmOutputs: LLMResult["llmOutput"][] = [];
     let parsedOptions: this["CallOptions"];
     if (Array.isArray(options)) {
@@ -80,7 +81,7 @@ export abstract class BaseChatModel extends BaseLanguageModel {
       options: parsedOptions,
       invocation_params: this?.invocationParams(),
     };
-    const runManager = await callbackManager_?.handleChatModelStart(
+    const runManagers = await callbackManager_?.handleChatModelStart(
       this.toJSON(),
       messages,
       undefined,
@@ -90,7 +91,7 @@ export abstract class BaseChatModel extends BaseLanguageModel {
     try {
       const results = await Promise.all(
         messages.map((messageList) =>
-          this._generate(messageList, parsedOptions, runManager)
+          this._generate(messageList, parsedOptions, runManagers?.[0])
         )
       );
       for (const result of results) {
@@ -98,9 +99,12 @@ export abstract class BaseChatModel extends BaseLanguageModel {
           llmOutputs.push(result.llmOutput);
         }
         generations.push(result.generations);
+        results.push(result);
       }
     } catch (err) {
-      await runManager?.handleLLMError(err);
+      await Promise.all(
+        (runManagers ?? []).map((runManager) => runManager?.handleLLMError(err))
+      );
       throw err;
     }
 
@@ -110,9 +114,21 @@ export abstract class BaseChatModel extends BaseLanguageModel {
         ? this._combineLLMOutput?.(...llmOutputs)
         : undefined,
     };
-    await runManager?.handleLLMEnd(output);
+
+    const flattenedOutputs: LLMResult[] = results.map((result) => ({
+      generations: [result.generations],
+      llmOutput: result.llmOutput,
+    }));
+
+    await Promise.all(
+      (runManagers ?? []).map((runManager, i) =>
+        runManager?.handleLLMEnd(flattenedOutputs[i])
+      )
+    );
+    const runIds = runManagers?.map((manager) => manager.runId) || undefined;
+
     Object.defineProperty(output, RUN_KEY, {
-      value: runManager ? { runId: runManager?.runId } : undefined,
+      value: runIds ? { runIds } : undefined,
       configurable: true,
     });
     return output;
