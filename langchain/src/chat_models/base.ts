@@ -57,7 +57,7 @@ export abstract class BaseChatModel extends BaseLanguageModel {
     callbacks?: Callbacks
   ): Promise<LLMResult> {
     const generations: ChatGeneration[][] = [];
-    const results: ChatResult[] = [];
+    let results: ChatResult[] = [];
     const llmOutputs: LLMResult["llmOutput"][] = [];
     let parsedOptions: this["CallOptions"];
     if (Array.isArray(options)) {
@@ -89,7 +89,7 @@ export abstract class BaseChatModel extends BaseLanguageModel {
       extra
     );
     try {
-      const results = await Promise.all(
+      results = await Promise.all(
         messages.map((messageList) =>
           this._generate(messageList, parsedOptions, runManagers?.[0])
         )
@@ -99,7 +99,6 @@ export abstract class BaseChatModel extends BaseLanguageModel {
           llmOutputs.push(result.llmOutput);
         }
         generations.push(result.generations);
-        results.push(result);
       }
     } catch (err) {
       await Promise.all(
