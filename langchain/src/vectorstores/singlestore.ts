@@ -6,9 +6,17 @@ import type {
   FieldPacket,
 } from "mysql2/promise";
 import { format } from "mysql2";
+import { Metadata } from "@opensearch-project/opensearch/api/types.js";
 import { VectorStore } from "./base.js";
 import { Embeddings } from "../embeddings/base.js";
 import { Document } from "../document.js";
+
+export type DistanceMetrics = "DOT_PRODUCT" | "EUCLIDEAN_DISTANCE";
+
+const OrderingDirective: Record<DistanceMetrics, string> = {
+  DOT_PRODUCT: "DESC",
+  EUCLIDEAN_DISTANCE: "",
+};
 
 export interface SingleStoreVectorStoreConfig {
   connectionPool: Pool;
@@ -16,6 +24,7 @@ export interface SingleStoreVectorStoreConfig {
   contentColumnName?: string;
   vectorColumnName?: string;
   metadataColumnName?: string;
+  distanceMetrics?: DistanceMetrics;
 }
 
 export class SingleStoreVectorStore extends VectorStore {
@@ -29,6 +38,8 @@ export class SingleStoreVectorStore extends VectorStore {
 
   metadataColumnName: string;
 
+  distanceMetrics: DistanceMetrics;
+
   constructor(embeddings: Embeddings, config: SingleStoreVectorStoreConfig) {
     super(embeddings, config);
     this.connectionPool = config.connectionPool;
@@ -36,6 +47,7 @@ export class SingleStoreVectorStore extends VectorStore {
     this.contentColumnName = config.contentColumnName ?? "content";
     this.vectorColumnName = config.vectorColumnName ?? "vector";
     this.metadataColumnName = config.metadataColumnName ?? "metadata";
+    this.distanceMetrics = config.distanceMetrics ?? "DOT_PRODUCT";
   }
 
   async createTableIfNotExists(): Promise<void> {
@@ -79,9 +91,40 @@ export class SingleStoreVectorStore extends VectorStore {
   async similaritySearchVectorWithScore(
     query: number[],
     k: number,
-    _filter?: undefined
+    filter?: Metadata
   ): Promise<[Document, number][]> {
-    // use vector DOT_PRODUCT as a distance function
+    // build the where clause from filter
+    const whereArgs: string[] = [];
+    const buildWhereClause = (record: Metadata, argList: string[]): string => {
+      const whereTokens: string[] = [];
+      for (const key in record)
+        if (Object.prototype.hasOwnProperty.call(record, key)) {
+          if (
+            typeof record[key] === "object" &&
+            record[key] != null &&
+            !Array.isArray(record[key])
+          ) {
+            whereTokens.push(
+              buildWhereClause(record[key], argList.concat([key]))
+            );
+          } else {
+            whereTokens.push(
+              `JSON_EXTRACT_JSON(${this.metadataColumnName}, `.concat(
+                Array.from({ length: argList.length + 1 }, () => "?").join(
+                  ", "
+                ),
+                ") = ?"
+              )
+            );
+            whereArgs.push(...argList, key, JSON.stringify(record[key]));
+          }
+        }
+      return whereTokens.join(" AND ");
+    };
+    const whereClause = filter
+      ? "WHERE ".concat(buildWhereClause(filter, []))
+      : "";
+
     const [rows]: [
       (
         | RowDataPacket[]
@@ -95,9 +138,13 @@ export class SingleStoreVectorStore extends VectorStore {
       format(
         `SELECT ${this.contentColumnName},
       ${this.metadataColumnName},
-      DOT_PRODUCT(${this.vectorColumnName}, JSON_ARRAY_PACK('[?]')) as __score FROM ${this.tableName}
-      ORDER BY __score DESC LIMIT ?;`,
-        [query, k]
+      ${this.distanceMetrics}(${
+          this.vectorColumnName
+        }, JSON_ARRAY_PACK('[?]')) as __score FROM ${
+          this.tableName
+        } ${whereClause}
+      ORDER BY __score ${OrderingDirective[this.distanceMetrics]} LIMIT ?;`,
+        [query, ...whereArgs, k]
       )
     );
     const result: [Document, number][] = [];
