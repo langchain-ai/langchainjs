@@ -3,8 +3,13 @@ import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 
 export const run = async () => {
   const vectorStore = await SingleStoreVectorStore.fromTexts(
-    ["Hello world", "Bye bye", "hello nice world"],
-    [{ id: 2 }, { id: 1 }, { id: 3 }],
+    ["Good afternoon", "Bye bye", "Boa tarde!", "Até logo!"],
+    [
+      { id: 1, language: "English" },
+      { id: 2, language: "English" },
+      { id: 3, language: "Portugese" },
+      { id: 4, language: "Portugese" },
+    ],
     new OpenAIEmbeddings(),
     {
       connectionOptions: {
@@ -14,10 +19,13 @@ export const run = async () => {
         password: process.env.SINGLESTORE_PASSWORD,
         database: process.env.SINGLESTORE_DATABASE,
       },
+      distanceMetrics: "EUCLIDEAN_DISTANCE",
     }
   );
 
-  const resultOne = await vectorStore.similaritySearch("hello world", 1);
+  const resultOne = await vectorStore.similaritySearch("greetings", 1, {
+    language: "Portugese",
+  });
   console.log(resultOne);
   await vectorStore.end();
 };
