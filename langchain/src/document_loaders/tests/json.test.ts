@@ -21,7 +21,33 @@ test("Test JSON loader", async () => {
   );
 });
 
-test("Test JSON  loader for complex json without keys", async () => {
+test("Test JSON loader from inmemory JSON", async() => {
+    const json = [
+      "<i>Corruption discovered at the core of the Banking Clan!</i>",
+      "<i>Reunited, Rush Clovis and Senator Amidala</i>",
+      "<i>discover the full extent of the deception.</i>",
+      "<i>Anakin Skywalker is sent to the rescue!</i>",
+      "<i>He refuses to trust Clovis and asks Padm not to work with him.</i>",
+      "<i>Determined to save the banks, she refuses her husband's request,</i>",
+      "<i>throwing their relationship into turmoil.</i>",
+      "<i>Voted for by both the Separatists and the Republic,</i>",
+      "<i>Rush Clovis is elected new leader of the Galactic Banking Clan.</i>",
+      "<i>Now, all attention is focused on Scipio</i>",
+      "<i>as the important transfer of power begins.</i>"
+  ];
+  const loader = new JSONLoader("");
+  const docs = await loader.load(json);
+  expect(docs.length).toBe(11);
+  expect(docs[0]).toEqual(
+    new Document({
+      metadata: { source: "json", line: 1 },
+      pageContent:
+        "<i>Corruption discovered at the core of the Banking Clan!</i>",
+    })
+  );
+});
+
+test("Test JSON loader for complex json without keys", async () => {
   const filePath = path.resolve(
     path.dirname(url.fileURLToPath(import.meta.url)),
     "./example_data/complex.json"

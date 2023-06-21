@@ -1,4 +1,5 @@
 import jsonpointer from "jsonpointer";
+import { Document } from "../../document.js";
 import { TextLoader } from "./text.js";
 
 export class JSONLoader extends TextLoader {
@@ -7,6 +8,46 @@ export class JSONLoader extends TextLoader {
   constructor(filePathOrBlob: string | Blob, pointers: string | string[] = []) {
     super(filePathOrBlob);
     this.pointers = Array.isArray(pointers) ? pointers : [pointers];
+  }
+
+  /**
+   * If the JSONLoader.load method is given JSON to load directly it will load
+   * that JSON ignoring any provided file path. In this case it is recommended
+   * to instanciate the JSONLoader with an empty file name "".
+   */
+  public async load(json?: string | object ): Promise<Document[]> {
+    if (json) {
+        let text: string;
+        const metadata = { source: "json" };
+        if (typeof json === "string") {
+            text = json;
+        } else {
+            text = JSON.stringify(json);
+        }
+        const parsed = await this.parse(text);
+        parsed.forEach((pageContent, i) => {
+          if (typeof pageContent !== "string") {
+            throw new Error(
+              `Expected string, at position ${i} got ${typeof pageContent}`
+            );
+          }
+        });
+        return parsed.map(
+          (pageContent, i) =>
+            new Document({
+              pageContent,
+              metadata:
+                parsed.length === 1
+                  ? metadata
+                  : {
+                      ...metadata,
+                      line: i + 1,
+                    },
+            })
+        );
+    } else {
+        return await super.load();
+    }
   }
 
   protected async parse(raw: string): Promise<string[]> {
