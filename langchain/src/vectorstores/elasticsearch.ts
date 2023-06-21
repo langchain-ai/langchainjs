@@ -104,7 +104,7 @@ export class ElasticSearchStore extends VectorStore {
             bool: {
               must: Object.entries(filter || {}).map(([key, value]) => ({
                 match: {
-                  [`metadata.${key}.keyword`]: value,
+                  [`metadata.${key}`]: value,
                 },
               })),
             },
