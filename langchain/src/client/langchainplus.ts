@@ -85,7 +85,7 @@ const runLLM = async (
     Array.from({ length: numRepetitions }).map(async () => {
       try {
         const prompt = example.inputs.prompt as string;
-        return llm.generate([prompt], undefined, [tracer]);
+        return await llm.generate([prompt], undefined, [tracer]);
       } catch (e) {
         console.error(e);
         return stringifyError(e);
@@ -109,7 +109,7 @@ const runChain = async (
     Array.from({ length: numRepetitions }).map(async () => {
       try {
         const chain = await chainFactory();
-        return chain.call(example.inputs, [tracer]);
+        return await chain.call(example.inputs, [tracer]);
       } catch (e) {
         console.error(e);
         return stringifyError(e);
@@ -133,7 +133,7 @@ const runChatModel = async (
     Array.from({ length: numRepetitions }).map(async () => {
       try {
         const messages = example.inputs.messages as StoredMessage[];
-        return chatModel.generate(
+        return await chatModel.generate(
           [mapStoredMessagesToChatMessages(messages)],
           undefined,
           [tracer]
