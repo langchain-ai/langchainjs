@@ -1,7 +1,6 @@
 /* eslint-disable no-process-env */
 /* eslint-disable import/no-extraneous-dependencies */
 import { test, expect } from "@jest/globals";
-import { createPool } from "mysql2/promise";
 import { OpenAIEmbeddings } from "../../embeddings/openai.js";
 import { SingleStoreVectorStore } from "../singlestore.js";
 import { Document } from "../../document.js";
@@ -13,13 +12,6 @@ test.skip("SingleStoreVectorStore", async () => {
   expect(process.env.SINGLESTORE_PASSWORD).toBeDefined();
   expect(process.env.SINGLESTORE_DATABASE).toBeDefined();
 
-  const pool = createPool({
-    host: process.env.SINGLESTORE_HOST,
-    port: Number(process.env.SINGLESTORE_PORT),
-    user: process.env.SINGLESTORE_USERNAME,
-    password: process.env.SINGLESTORE_PASSWORD,
-    database: process.env.SINGLESTORE_DATABASE,
-  });
   const vectorStore = await SingleStoreVectorStore.fromTexts(
     ["Hello world", "Bye bye", "hello nice world"],
     [
@@ -29,7 +21,13 @@ test.skip("SingleStoreVectorStore", async () => {
     ],
     new OpenAIEmbeddings(),
     {
-      connectionPool: pool,
+      connectionOptions: {
+        host: process.env.SINGLESTORE_HOST,
+        port: Number(process.env.SINGLESTORE_PORT),
+        user: process.env.SINGLESTORE_USERNAME,
+        password: process.env.SINGLESTORE_PASSWORD,
+        database: process.env.SINGLESTORE_DATABASE,
+      },
       contentColumnName: "cont",
       metadataColumnName: "met",
       vectorColumnName: "vec",
@@ -66,7 +64,7 @@ test.skip("SingleStoreVectorStore", async () => {
     }),
   ]);
 
-  await pool.end();
+  await vectorStore.end();
 });
 
 test.skip("SingleStoreVectorStore euclidean_distance", async () => {
@@ -76,13 +74,6 @@ test.skip("SingleStoreVectorStore euclidean_distance", async () => {
   expect(process.env.SINGLESTORE_PASSWORD).toBeDefined();
   expect(process.env.SINGLESTORE_DATABASE).toBeDefined();
 
-  const pool = createPool({
-    host: process.env.SINGLESTORE_HOST,
-    port: Number(process.env.SINGLESTORE_PORT),
-    user: process.env.SINGLESTORE_USERNAME,
-    password: process.env.SINGLESTORE_PASSWORD,
-    database: process.env.SINGLESTORE_DATABASE,
-  });
   const vectorStore = await SingleStoreVectorStore.fromTexts(
     ["Hello world", "Bye bye", "hello nice world"],
     [
@@ -92,7 +83,7 @@ test.skip("SingleStoreVectorStore euclidean_distance", async () => {
     ],
     new OpenAIEmbeddings(),
     {
-      connectionPool: pool,
+      connectionURI: `http://${process.env.SINGLESTORE_USERNAME}:${process.env.SINGLESTORE_PASSWORD}@${process.env.SINGLESTORE_HOST}:${process.env.SINGLESTORE_PORT}/${process.env.SINGLESTORE_DATABASE}`,
       tableName: "euclidean_distance_test",
       distanceMetrics: "EUCLIDEAN_DISTANCE",
     }
@@ -108,7 +99,7 @@ test.skip("SingleStoreVectorStore euclidean_distance", async () => {
     }),
   ]);
 
-  await pool.end();
+  await vectorStore.end();
 });
 
 test.skip("SingleStoreVectorStore filtering", async () => {
@@ -118,13 +109,6 @@ test.skip("SingleStoreVectorStore filtering", async () => {
   expect(process.env.SINGLESTORE_PASSWORD).toBeDefined();
   expect(process.env.SINGLESTORE_DATABASE).toBeDefined();
 
-  const pool = createPool({
-    host: process.env.SINGLESTORE_HOST,
-    port: Number(process.env.SINGLESTORE_PORT),
-    user: process.env.SINGLESTORE_USERNAME,
-    password: process.env.SINGLESTORE_PASSWORD,
-    database: process.env.SINGLESTORE_DATABASE,
-  });
   const vectorStore = await SingleStoreVectorStore.fromTexts(
     ["Hello world", "Bye bye", "hello nice world"],
     [
@@ -134,7 +118,7 @@ test.skip("SingleStoreVectorStore filtering", async () => {
     ],
     new OpenAIEmbeddings(),
     {
-      connectionPool: pool,
+      connectionURI: `http://${process.env.SINGLESTORE_USERNAME}:${process.env.SINGLESTORE_PASSWORD}@${process.env.SINGLESTORE_HOST}:${process.env.SINGLESTORE_PORT}/${process.env.SINGLESTORE_DATABASE}`,
       tableName: "filtering_test",
     }
   );
@@ -187,5 +171,5 @@ test.skip("SingleStoreVectorStore filtering", async () => {
     sub: { sub2: { idx: 1 } },
   });
   expect(results5).toEqual([]);
-  await pool.end();
+  await vectorStore.end();
 });

@@ -4,8 +4,10 @@ import type {
   OkPacket,
   ResultSetHeader,
   FieldPacket,
+  PoolOptions,
 } from "mysql2/promise";
 import { format } from "mysql2";
+import { createPool } from "mysql2/promise";
 import { Metadata } from "@opensearch-project/opensearch/api/types.js";
 import { VectorStore } from "./base.js";
 import { Embeddings } from "../embeddings/base.js";
@@ -18,13 +20,65 @@ const OrderingDirective: Record<DistanceMetrics, string> = {
   EUCLIDEAN_DISTANCE: "",
 };
 
-export interface SingleStoreVectorStoreConfig {
-  connectionPool: Pool;
+export interface ConnectionOptions extends PoolOptions {}
+
+type ConnectionWithUri = {
+  connectionOptions?: never;
+  connectionURI: string;
+};
+
+type ConnectionWithOptions = {
+  connectionURI?: never;
+  connectionOptions: ConnectionOptions;
+};
+
+type ConnectionConfig = ConnectionWithUri | ConnectionWithOptions;
+
+export type SingleStoreVectorStoreConfig = ConnectionConfig & {
   tableName?: string;
   contentColumnName?: string;
   vectorColumnName?: string;
   metadataColumnName?: string;
   distanceMetrics?: DistanceMetrics;
+};
+
+function withConnectAttributes(
+  config: SingleStoreVectorStoreConfig
+): ConnectionOptions {
+  let newOptions: ConnectionOptions = {};
+  if (config.connectionURI) {
+    newOptions = {
+      uri: config.connectionURI,
+    };
+  } else if (config.connectionOptions) {
+    newOptions = {
+      ...config.connectionOptions,
+    };
+  }
+  const result: ConnectionOptions = {
+    ...newOptions,
+    connectAttributes: {
+      ...newOptions.connectAttributes,
+    },
+  };
+
+  if (!result.connectAttributes) {
+    result.connectAttributes = {};
+  }
+
+  if (
+    !Object.prototype.hasOwnProperty.call(
+      result.connectAttributes,
+      "program_name"
+    )
+  ) {
+    result.connectAttributes = {
+      ...result.connectAttributes,
+      program_name: "langchain js sdk",
+      program_version: "0.0.97",
+    };
+  }
+  return result;
 }
 
 export class SingleStoreVectorStore extends VectorStore {
@@ -42,7 +96,7 @@ export class SingleStoreVectorStore extends VectorStore {
 
   constructor(embeddings: Embeddings, config: SingleStoreVectorStoreConfig) {
     super(embeddings, config);
-    this.connectionPool = config.connectionPool;
+    this.connectionPool = createPool(withConnectAttributes(config));
     this.tableName = config.tableName ?? "embeddings";
     this.contentColumnName = config.contentColumnName ?? "content";
     this.vectorColumnName = config.vectorColumnName ?? "vector";
@@ -56,6 +110,10 @@ export class SingleStoreVectorStore extends VectorStore {
       ${this.contentColumnName} TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci,
       ${this.vectorColumnName} BLOB,
       ${this.metadataColumnName} JSON);`);
+  }
+
+  async end(): Promise<void> {
+    return this.connectionPool.end();
   }
 
   async addDocuments(documents: Document[]): Promise<void> {
