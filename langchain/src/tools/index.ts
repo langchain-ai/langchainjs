@@ -38,3 +38,4 @@ export {
 export { AIPluginTool } from "./aiplugin.js";
 export { ReadFileTool, WriteFileTool } from "./fs.js";
 export { BraveSearch, BraveSearchParams } from "./brave_search.js";
+export { DataForSeoAPISearch } from "./dataforseo_api_search.js";
