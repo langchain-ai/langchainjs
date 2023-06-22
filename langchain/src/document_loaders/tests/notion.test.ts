@@ -6,7 +6,7 @@ import { NotionLoader } from "../fs/notion.js";
 test("Test Notion Loader", async () => {
   const directoryPath = path.resolve(
     path.dirname(url.fileURLToPath(import.meta.url)),
-    "./example_data"
+    "./example_data/notion"
   );
   const loader = new NotionLoader(directoryPath);
   const docs = await loader.load();

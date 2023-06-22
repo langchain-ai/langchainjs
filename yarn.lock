@@ -8170,6 +8170,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/marked@npm:^4.3.0":
+  version: 4.3.0
+  resolution: "@types/marked@npm:4.3.0"
+  checksum: 953e19c20a917f40386ea835536ca722439fbd004dfacd8db768c8151dbadc125c464b0c221a990ffea43524475864fafe1568101c4a6d05c54fbfd81029f58f
+  languageName: node
+  linkType: hard
+
 "@types/mdast@npm:^3.0.0":
   version: 3.0.10
   resolution: "@types/mdast@npm:3.0.10"
@@ -18617,6 +18624,7 @@ __metadata:
     "@types/d3-dsv": ^2
     "@types/flat": ^5.0.2
     "@types/html-to-text": ^9
+    "@types/marked": ^4.3.0
     "@types/object-hash": ^3.0.2
     "@types/pdf-parse": ^1.1.1
     "@types/pg": ^8
@@ -18657,6 +18665,7 @@ __metadata:
     jsonpointer: ^5.0.1
     langchainplus-sdk: ^0.0.13
     mammoth: ^1.5.1
+    marked: ^5.0.1
     ml-distance: ^4.0.0
     mongodb: ^5.2.0
     mysql2: ^3.3.3
@@ -18722,6 +18731,7 @@ __metadata:
     html-to-text: ^9.0.5
     ignore: ^5.2.0
     mammoth: "*"
+    marked: ^5.0.1
     mongodb: ^5.2.0
     mysql2: ^3.3.3
     pdf-parse: 1.1.1
@@ -18804,6 +18814,8 @@ __metadata:
     ignore:
       optional: true
     mammoth:
+      optional: true
+    marked:
       optional: true
     mongodb:
       optional: true
@@ -19473,6 +19485,15 @@ __metadata:
   bin:
     marked: bin/marked.js
   checksum: 0db6817893952c3ec710eb9ceafb8468bf5ae38cb0f92b7b083baa13d70b19774674be04db5b817681fa7c5c6a088f61300815e4dd75a59696f4716ad69f6260
+  languageName: node
+  linkType: hard
+
+"marked@npm:^5.0.1":
+  version: 5.0.1
+  resolution: "marked@npm:5.0.1"
+  bin:
+    marked: bin/marked.js
+  checksum: 3f3f61f604f1a28b25c444dcb8f35464b9727809a6ddc0f56b74cf176426c31d12014905f15bd0f4aaf6cc593f053143bb467dadc41c0d9563162aa59dcdbe4e
   languageName: node
   linkType: hard
 
