@@ -152,31 +152,31 @@ export const runOnDataset = async (
   llmOrChainFactory: BaseLanguageModel | (() => Promise<BaseChain>),
   {
     numRepetitions = 1,
-    sessionName,
+    projectName,
     client,
   }: {
     numRepetitions?: number;
-    sessionName?: string;
+    projectName?: string;
     client?: LangChainPlusClient;
   } = {}
 ): Promise<DatasetRunResults> => {
   const client_ = client ?? new LangChainPlusClient({});
   const examples = await client_.listExamples({ datasetName });
-  let sessionName_: string;
-  if (sessionName === undefined) {
+  let projectName_: string;
+  if (projectName === undefined) {
     const currentTime = new Date().toISOString();
-    sessionName_ = `${datasetName}-${llmOrChainFactory.constructor.name}-${currentTime}`;
+    projectName_ = `${datasetName}-${llmOrChainFactory.constructor.name}-${currentTime}`;
   } else {
-    sessionName_ = sessionName;
+    projectName_ = projectName;
   }
-  await client_.createSession({ sessionName: sessionName_, mode: "eval" });
+  await client_.createProject({ projectName: projectName_, mode: "eval" });
   const results: DatasetRunResults = {};
   const modelOrFactoryType = await getModelOrFactoryType(llmOrChainFactory);
   await Promise.all(
     examples.map(async (example) => {
       const tracer = new LangChainTracer({
         exampleId: example.id,
-        sessionName: sessionName_,
+        projectName: projectName_,
       });
       if (modelOrFactoryType === "llm") {
         const llm = llmOrChainFactory as BaseLLM;
