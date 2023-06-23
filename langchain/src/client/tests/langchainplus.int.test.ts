@@ -38,7 +38,6 @@ test("Test LangChainPlus Client Run Chat Model Over Simple Dataset", async () =>
   const model = new ChatOpenAI({ temperature: 0 });
 
   const results = await runOnDataset(datasetName, model, { client });
-  console.log(results);
   expect(Object.keys(results).length).toEqual(1);
 });
 
