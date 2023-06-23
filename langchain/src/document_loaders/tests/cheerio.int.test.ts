@@ -21,12 +21,13 @@ test("Test cheerio web scraper loader with selector", async () => {
 });
 
 test("Test cheerio web scraper loader with textDecoder", async () => {
-  const loader = new CheerioWebBaseLoader("https://corp.163.com/gb/about/management.html", {
-    textDecoder: new TextDecoder("gbk"),
-  });
+  const loader = new CheerioWebBaseLoader(
+    "https://corp.163.com/gb/about/management.html",
+    {
+      textDecoder: new TextDecoder("gbk"),
+    }
+  );
 
   const doc = await loader.load();
-  expect(doc[0].pageContent.trim()).toEqual(
-    expect.stringContaining("网易")
-  );
+  expect(doc[0].pageContent.trim()).toEqual(expect.stringContaining("网易"));
 });
