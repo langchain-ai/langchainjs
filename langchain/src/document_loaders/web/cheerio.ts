@@ -47,7 +47,7 @@ export class CheerioWebBaseLoader
     url: string,
     caller: AsyncCaller,
     timeout: number | undefined,
-    textDecoder: TextDecoder | undefined
+    textDecoder?: TextDecoder
   ): Promise<CheerioAPI> {
     const { load } = await CheerioWebBaseLoader.imports();
     const response = await caller.call(fetch, url, {
