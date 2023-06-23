@@ -62,7 +62,7 @@ export class LangChainTracer
         runtime: await getRuntimeEnvironment(),
       },
       child_runs: undefined,
-      project_name: this.projectName,
+      session_name: this.projectName,
       reference_example_id: run.parent_run_id ? undefined : example_id,
     };
   }
