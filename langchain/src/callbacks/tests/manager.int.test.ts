@@ -32,7 +32,11 @@ test("Test grouping traces", async () => {
   const tool = new ChainTool({ chain, name: "fake", description: "fake" });
 
   const result = await traceAsGroup(
-    { name: "my_chain_group" },
+    {
+      name: "my_chain_group",
+      inheritableTags: ["my-group"],
+      localTags: ["virtual-tag"],
+    },
     async (manager: CallbackManager, arg1: string, { chain, nextChain }) => {
       const result = await chain.call({ input: arg1 }, manager);
       const nextResult = await nextChain.call(result, manager);

@@ -728,12 +728,19 @@ export class TraceGroup {
 export async function traceAsGroup<T, A extends any[]>(
   groupOptions: {
     name: string;
+    inheritableTags?: string[];
+    localTags?: string[];
   } & LangChainTracerFields,
   enclosedCode: (manager: CallbackManager, ...args: A) => Promise<T>,
   ...args: A
 ): Promise<T> {
-  const traceGroup = new TraceGroup(groupOptions.name, groupOptions);
-  const callbackManager = await traceGroup.start();
+  const traceGroup = new TraceGroup(groupOptions.name, {
+    tags: groupOptions.localTags,
+    ...groupOptions,
+  });
+  const callbackManager = await traceGroup.start({
+    tags: groupOptions.inheritableTags,
+  });
   let result: T;
   try {
     result = await enclosedCode(callbackManager, ...args);
@@ -741,6 +748,6 @@ export async function traceAsGroup<T, A extends any[]>(
     await traceGroup.error(err);
     throw err;
   }
-  await traceGroup.end(result ?? {});
+  await traceGroup.end(result !== undefined ? { output: result } : {});
   return result;
 }
