@@ -209,7 +209,9 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
   /**
    * Get the parameters used to invoke the model
    */
-  invocationParams(): CreateCompletionRequest {
+  invocationParams(
+    options?: this["ParsedCallOptions"]
+  ): CreateCompletionRequest {
     return {
       model: this.modelName,
       temperature: this.temperature,
@@ -220,7 +222,7 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
       n: this.n,
       best_of: this.bestOf,
       logit_bias: this.logitBias,
-      stop: this.stop,
+      stop: options?.stop ?? this.stop,
       stream: this.streaming,
       ...this.modelKwargs,
     };
@@ -262,17 +264,11 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<LLMResult> {
-    const { stop } = options;
     const subPrompts = chunkArray(prompts, this.batchSize);
     const choices: CreateCompletionResponseChoicesInner[] = [];
     const tokenUsage: TokenUsage = {};
 
-    if (this.stop && stop) {
-      throw new Error("Stop found in input and default params");
-    }
-
-    const params = this.invocationParams();
-    params.stop = stop ?? params.stop;
+    const params = this.invocationParams(options);
 
     if (params.max_tokens === -1) {
       if (prompts.length !== 1) {

@@ -78,7 +78,7 @@ export abstract class BaseChatModel extends BaseLanguageModel {
     );
     const extra = {
       options: parsedOptions,
-      invocation_params: this?.invocationParams(),
+      invocation_params: this?.invocationParams(parsedOptions),
     };
     const runManager = await callbackManager_?.handleChatModelStart(
       this.toJSON(),
@@ -122,7 +122,7 @@ export abstract class BaseChatModel extends BaseLanguageModel {
    * Get the parameters used to invoke the model
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  invocationParams(): any {
+  invocationParams(_options?: this["ParsedCallOptions"]): any {
     return {};
   }
 

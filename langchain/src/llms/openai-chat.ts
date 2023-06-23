@@ -192,7 +192,9 @@ export class OpenAIChat
   /**
    * Get the parameters used to invoke the model
    */
-  invocationParams(): Omit<CreateChatCompletionRequest, "messages"> {
+  invocationParams(
+    options?: this["ParsedCallOptions"]
+  ): Omit<CreateChatCompletionRequest, "messages"> {
     return {
       model: this.modelName,
       temperature: this.temperature,
@@ -202,7 +204,7 @@ export class OpenAIChat
       n: this.n,
       logit_bias: this.logitBias,
       max_tokens: this.maxTokens === -1 ? undefined : this.maxTokens,
-      stop: this.stop,
+      stop: options?.stop ?? this.stop,
       stream: this.streaming,
       ...this.modelKwargs,
     };
@@ -242,10 +244,7 @@ export class OpenAIChat
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<string> {
-    const { stop } = options;
-
-    const params = this.invocationParams();
-    params.stop = stop ?? params.stop;
+    const params = this.invocationParams(options);
 
     const data = params.stream
       ? await new Promise<CreateChatCompletionResponse>((resolve, reject) => {

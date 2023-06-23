@@ -178,13 +178,18 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
   /**
    * Get the parameters used to invoke the model
    */
-  invocationParams(): Omit<SamplingParameters, "prompt"> & Kwargs {
+  invocationParams(
+    options?: this["ParsedCallOptions"]
+  ): Omit<SamplingParameters, "prompt"> & Kwargs {
     return {
       model: this.modelName,
       temperature: this.temperature,
       top_k: this.topK,
       top_p: this.topP,
-      stop_sequences: this.stopSequences ?? DEFAULT_STOP_SEQUENCES,
+      stop_sequences:
+        options?.stop?.concat(DEFAULT_STOP_SEQUENCES) ??
+        this.stopSequences ??
+        DEFAULT_STOP_SEQUENCES,
       max_tokens_to_sample: this.maxTokensToSample,
       stream: this.streaming,
       ...this.invocationKwargs,
@@ -234,11 +239,7 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
       );
     }
 
-    const params = this.invocationParams();
-    params.stop_sequences = options.stop
-      ? options.stop.concat(DEFAULT_STOP_SEQUENCES)
-      : params.stop_sequences;
-
+    const params = this.invocationParams(options);
     const response = await this.completionWithRetry(
       {
         ...params,
