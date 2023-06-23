@@ -9,6 +9,7 @@ import {
   ChatCompletionResponseMessage,
   ChatCompletionFunctions,
   CreateChatCompletionRequestFunctionCall,
+  ChatCompletionRequestMessageFunctionCall,
 } from "openai";
 import { getEnvironmentVariable, isNode } from "../util/env.js";
 import {
@@ -302,6 +303,8 @@ export class ChatOpenAI
         role: messageTypeToOpenAIRole(message._getType()),
         content: message.text,
         name: message.name,
+        function_call: message.additional_kwargs
+          .function_call as ChatCompletionRequestMessageFunctionCall,
       })
     );
 
