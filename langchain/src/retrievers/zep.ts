@@ -10,6 +10,7 @@ export type ZepRetrieverConfig = {
   sessionId: string;
   url: string;
   topK?: number;
+  apiKey?: string;
 };
 
 export class ZepRetriever extends BaseRetriever {
@@ -21,7 +22,7 @@ export class ZepRetriever extends BaseRetriever {
 
   constructor(config: ZepRetrieverConfig) {
     super();
-    this.zepClient = new ZepClient(config.url);
+    this.zepClient = new ZepClient(config.url, config.apiKey);
     this.sessionId = config.sessionId;
     this.topK = config.topK;
   }

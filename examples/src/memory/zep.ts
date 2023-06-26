@@ -8,6 +8,9 @@ const zepURL = "http://localhost:8000";
 const memory = new ZepMemory({
   sessionId,
   baseURL: zepURL,
+  // This is optional. If you've enabled JWT authentication on your Zep server, you can
+  // pass it in here. See https://docs.getzep.com/deployment/auth
+  apiKey: "change_this_key",
 });
 
 const model = new ChatOpenAI({

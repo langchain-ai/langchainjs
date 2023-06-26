@@ -25,6 +25,9 @@ export interface ZepMemoryInput extends BaseChatMemoryInput {
   baseURL: string;
 
   sessionId: string;
+
+  // apiKey is optional.
+  apiKey?: string;
 }
 
 export class ZepMemory extends BaseChatMemory implements ZepMemoryInput {
@@ -52,7 +55,7 @@ export class ZepMemory extends BaseChatMemory implements ZepMemoryInput {
     this.memoryKey = fields.memoryKey ?? this.memoryKey;
     this.baseURL = fields.baseURL;
     this.sessionId = fields.sessionId;
-    this.zepClient = new ZepClient(this.baseURL);
+    this.zepClient = new ZepClient(this.baseURL, fields.apiKey);
   }
 
   get memoryKeys() {
@@ -60,7 +63,9 @@ export class ZepMemory extends BaseChatMemory implements ZepMemoryInput {
   }
 
   async loadMemoryVariables(values: InputValues): Promise<MemoryVariables> {
-    const lastN = values.lastN ?? 10;
+    // use either lastN provided by developer or undefined to use the
+    // server preset.
+    const lastN = values.lastN ?? undefined;
 
     let memory: Memory | null = null;
     try {
