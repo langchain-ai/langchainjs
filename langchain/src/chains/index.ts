@@ -44,6 +44,13 @@ export {
   SqlDatabaseChainInput,
 } from "./sql_db/sql_db_chain.js";
 export {
+  DEFAULT_SQL_DATABASE_PROMPT,
+  SQL_POSTGRES_PROMPT,
+  SQL_SQLITE_PROMPT,
+  SQL_MSSQL_PROMPT,
+  SQL_MYSQL_PROMPT,
+} from "./sql_db/sql_db_prompt.js";
+export {
   ConversationalRetrievalQAChain,
   ConversationalRetrievalQAChainInput,
 } from "./conversational_retrieval_chain.js";
@@ -83,3 +90,12 @@ export {
 } from "./router/llm_router.js";
 export { MultiPromptChain } from "./router/multi_prompt.js";
 export { MultiRetrievalQAChain } from "./router/multi_retrieval_qa.js";
+export { TransformChain, TransformChainFields } from "./transform.js";
+export {
+  createExtractionChain,
+  createExtractionChainFromZod,
+} from "./openai_functions/extraction.js";
+export {
+  createTaggingChain,
+  createTaggingChainFromZod,
+} from "./openai_functions/tagging.js";

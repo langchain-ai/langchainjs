@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.95",
+  "version": "0.0.96",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -406,6 +406,9 @@
     "client.cjs",
     "client.js",
     "client.d.ts",
+    "evaluation.cjs",
+    "evaluation.js",
+    "evaluation.d.ts",
     "index.cjs",
     "index.js",
     "index.d.ts"
@@ -718,9 +721,9 @@
     "decamelize": "5",
     "expr-eval": "^2.0.2",
     "flat": "^5.0.2",
-    "js-tiktoken": "^1.0.6",
+    "js-tiktoken": "^1.0.7",
     "jsonpointer": "^5.0.1",
-    "langchainplus-sdk": "^0.0.11",
+    "langchainplus-sdk": "^0.0.15",
     "ml-distance": "^4.0.0",
     "object-hash": "^3.0.0",
     "openai": "^3.3.0",
@@ -1425,6 +1428,11 @@
       "types": "./client.d.ts",
       "import": "./client.js",
       "require": "./client.cjs"
+    },
+    "./evaluation": {
+      "types": "./evaluation.d.ts",
+      "import": "./evaluation.js",
+      "require": "./evaluation.cjs"
     },
     "./package.json": "./package.json"
   }

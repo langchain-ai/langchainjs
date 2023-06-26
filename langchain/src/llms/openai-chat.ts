@@ -100,6 +100,8 @@ export class OpenAIChat
 
   streaming = false;
 
+  openAIApiKey?: string;
+
   azureOpenAIApiVersion?: string;
 
   azureOpenAIApiKey?: string;
@@ -116,7 +118,6 @@ export class OpenAIChat
     fields?: Partial<OpenAIChatInput> &
       Partial<AzureOpenAIInput> &
       BaseLLMParams & {
-        openAIApiKey?: string;
         configuration?: ConfigurationParameters;
       },
     /** @deprecated */
@@ -124,26 +125,28 @@ export class OpenAIChat
   ) {
     super(fields ?? {});
 
-    const apiKey =
+    this.openAIApiKey =
       fields?.openAIApiKey ?? getEnvironmentVariable("OPENAI_API_KEY");
 
-    const azureApiKey =
+    this.azureOpenAIApiKey =
       fields?.azureOpenAIApiKey ??
       getEnvironmentVariable("AZURE_OPENAI_API_KEY");
 
-    if (!azureApiKey && !apiKey) {
+    if (!this.azureOpenAIApiKey && !this.openAIApiKey) {
       throw new Error("(Azure) OpenAI API key not found");
     }
 
-    const azureApiInstanceName =
+    this.azureOpenAIApiInstanceName =
       fields?.azureOpenAIApiInstanceName ??
       getEnvironmentVariable("AZURE_OPENAI_API_INSTANCE_NAME");
 
-    const azureApiDeploymentName =
-      fields?.azureOpenAIApiDeploymentName ??
-      getEnvironmentVariable("AZURE_OPENAI_API_DEPLOYMENT_NAME");
+    this.azureOpenAIApiDeploymentName =
+      (fields?.azureOpenAIApiCompletionsDeploymentName ||
+        fields?.azureOpenAIApiDeploymentName) ??
+      (getEnvironmentVariable("AZURE_OPENAI_API_COMPLETIONS_DEPLOYMENT_NAME") ||
+        getEnvironmentVariable("AZURE_OPENAI_API_DEPLOYMENT_NAME"));
 
-    const azureApiVersion =
+    this.azureOpenAIApiVersion =
       fields?.azureOpenAIApiVersion ??
       getEnvironmentVariable("AZURE_OPENAI_API_VERSION");
 
@@ -163,11 +166,6 @@ export class OpenAIChat
 
     this.streaming = fields?.streaming ?? false;
 
-    this.azureOpenAIApiVersion = azureApiVersion;
-    this.azureOpenAIApiKey = azureApiKey;
-    this.azureOpenAIApiInstanceName = azureApiInstanceName;
-    this.azureOpenAIApiDeploymentName = azureApiDeploymentName;
-
     if (this.streaming && this.n > 1) {
       throw new Error("Cannot stream results when n > 1");
     }
@@ -185,7 +183,7 @@ export class OpenAIChat
     }
 
     this.clientConfig = {
-      apiKey,
+      apiKey: this.openAIApiKey,
       ...configuration,
       ...fields?.configuration,
     };
@@ -194,7 +192,9 @@ export class OpenAIChat
   /**
    * Get the parameters used to invoke the model
    */
-  invocationParams(): Omit<CreateChatCompletionRequest, "messages"> {
+  invocationParams(
+    options?: this["ParsedCallOptions"]
+  ): Omit<CreateChatCompletionRequest, "messages"> {
     return {
       model: this.modelName,
       temperature: this.temperature,
@@ -204,7 +204,7 @@ export class OpenAIChat
       n: this.n,
       logit_bias: this.logitBias,
       max_tokens: this.maxTokens === -1 ? undefined : this.maxTokens,
-      stop: this.stop,
+      stop: options?.stop ?? this.stop,
       stream: this.streaming,
       ...this.modelKwargs,
     };
@@ -244,10 +244,7 @@ export class OpenAIChat
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<string> {
-    const { stop } = options;
-
-    const params = this.invocationParams();
-    params.stop = stop ?? params.stop;
+    const params = this.invocationParams(options);
 
     const data = params.stream
       ? await new Promise<CreateChatCompletionResponse>((resolve, reject) => {
@@ -266,13 +263,24 @@ export class OpenAIChat
               responseType: "stream",
               onmessage: (event) => {
                 if (event.data?.trim?.() === "[DONE]") {
-                  if (resolved) {
+                  if (resolved || rejected) {
                     return;
                   }
                   resolved = true;
                   resolve(response);
                 } else {
-                  const message = JSON.parse(event.data) as {
+                  const data = JSON.parse(event.data);
+
+                  if (data?.error) {
+                    if (rejected) {
+                      return;
+                    }
+                    rejected = true;
+                    reject(data.error);
+                    return;
+                  }
+
+                  const message = data as {
                     id: string;
                     object: string;
                     created: number;
@@ -329,6 +337,7 @@ export class OpenAIChat
                   // when all messages are finished, resolve
                   if (
                     !resolved &&
+                    !rejected &&
                     message.choices.every((c) => c.finish_reason != null)
                   ) {
                     resolved = true;

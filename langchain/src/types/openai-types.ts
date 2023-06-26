@@ -48,6 +48,12 @@ export declare interface OpenAIBaseInput {
    * Timeout to use when making requests to OpenAI.
    */
   timeout?: number;
+
+  /**
+   * API key to use when making requests to OpenAI. Defaults to the value of
+   * `OPENAI_API_KEY` environment variable.
+   */
+  openAIApiKey?: string;
 }
 
 export interface OpenAICallOptions extends BaseLanguageModelCallOptions {
