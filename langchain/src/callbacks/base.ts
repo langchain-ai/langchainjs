@@ -47,9 +47,9 @@ abstract class BaseCallbackHandlerMethodsClass {
   handleLLMNewToken?(
     token: string,
     /**
-     * indices.prompt is the index of the prompt that produced the token
+     * idx.prompt is the index of the prompt that produced the token
      *   (if there are multiple prompts)
-     * indices.completion is the index of the completion that produced the token
+     * idx.completion is the index of the completion that produced the token
      *   (if multiple completions per prompt are requested)
      */
     idx: NewTokenIndices,
