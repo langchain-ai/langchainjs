@@ -7915,6 +7915,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/decamelize@npm:^1.2.0":
+  version: 1.2.0
+  resolution: "@types/decamelize@npm:1.2.0"
+  checksum: cff4e926bf771f8ad6423ab8c5119d6b8679c09aaf9f0b26a4a1dbcf324c0b1df183c2bfe688b90b6f880d8e864684a2806a22529b4ee404fd9160f9c123853d
+  languageName: node
+  linkType: hard
+
 "@types/eslint-scope@npm:^3.7.3":
   version: 3.7.4
   resolution: "@types/eslint-scope@npm:3.7.4"
@@ -18615,6 +18622,7 @@ __metadata:
     "@tigrisdata/vector": ^1.1.0
     "@tsconfig/recommended": ^1.0.2
     "@types/d3-dsv": ^2
+    "@types/decamelize": ^1.2.0
     "@types/flat": ^5.0.2
     "@types/html-to-text": ^9
     "@types/object-hash": ^3.0.2

@@ -462,6 +462,7 @@
     "@tigrisdata/vector": "^1.1.0",
     "@tsconfig/recommended": "^1.0.2",
     "@types/d3-dsv": "^2",
+    "@types/decamelize": "^1.2.0",
     "@types/flat": "^5.0.2",
     "@types/html-to-text": "^9",
     "@types/object-hash": "^3.0.2",
