@@ -319,6 +319,9 @@
     "retrievers/databerry.cjs",
     "retrievers/databerry.js",
     "retrievers/databerry.d.ts",
+    "retrievers/kendra.cjs",
+    "retrievers/kendra.js",
+    "retrievers/kendra.d.ts",
     "retrievers/contextual_compression.cjs",
     "retrievers/contextual_compression.js",
     "retrievers/contextual_compression.d.ts",
@@ -439,6 +442,7 @@
   "license": "MIT",
   "devDependencies": {
     "@aws-sdk/client-dynamodb": "^3.310.0",
+    "@aws-sdk/client-kendra": "^3.352.0",
     "@aws-sdk/client-lambda": "^3.310.0",
     "@aws-sdk/client-s3": "^3.310.0",
     "@aws-sdk/client-sagemaker-runtime": "^3.310.0",
@@ -519,6 +523,7 @@
   },
   "peerDependencies": {
     "@aws-sdk/client-dynamodb": "^3.310.0",
+    "@aws-sdk/client-kendra": "^3.352.0",
     "@aws-sdk/client-lambda": "^3.310.0",
     "@aws-sdk/client-s3": "^3.310.0",
     "@aws-sdk/client-sagemaker-runtime": "^3.310.0",
@@ -569,6 +574,9 @@
   },
   "peerDependenciesMeta": {
     "@aws-sdk/client-dynamodb": {
+      "optional": true
+    },
+    "@aws-sdk/client-kendra": {
       "optional": true
     },
     "@aws-sdk/client-lambda": {
@@ -723,7 +731,7 @@
     "flat": "^5.0.2",
     "js-tiktoken": "^1.0.7",
     "jsonpointer": "^5.0.1",
-    "langchainplus-sdk": "^0.0.13",
+    "langchainplus-sdk": "^0.0.15",
     "ml-distance": "^4.0.0",
     "object-hash": "^3.0.0",
     "openai": "^3.3.0",
@@ -1283,6 +1291,11 @@
       "types": "./retrievers/databerry.d.ts",
       "import": "./retrievers/databerry.js",
       "require": "./retrievers/databerry.cjs"
+    },
+    "./retrievers/kendra": {
+      "types": "./retrievers/kendra.d.ts",
+      "import": "./retrievers/kendra.js",
+      "require": "./retrievers/kendra.cjs"
     },
     "./retrievers/contextual_compression": {
       "types": "./retrievers/contextual_compression.d.ts",
