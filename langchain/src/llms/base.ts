@@ -155,7 +155,9 @@ export abstract class BaseLLM extends BaseLanguageModel {
       )
     );
     const runIds = runManagers?.map((manager) => manager.runId) || undefined;
-
+    // This defines RUN_KEY as a non-enumerable property on the output object
+    // so that it is not serialized when the output is stringified, and so that
+    // it isnt included when listing the keys of the output object.
     Object.defineProperty(output, RUN_KEY, {
       value: runIds ? { runIds } : undefined,
       configurable: true,

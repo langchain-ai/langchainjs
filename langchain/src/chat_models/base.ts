@@ -90,8 +90,8 @@ export abstract class BaseChatModel extends BaseLanguageModel {
     );
     try {
       results = await Promise.all(
-        messages.map((messageList) =>
-          this._generate(messageList, parsedOptions, runManagers?.[0])
+        messages.map((messageList, i) =>
+          this._generate(messageList, parsedOptions, runManagers?.[i])
         )
       );
       for (const result of results) {
