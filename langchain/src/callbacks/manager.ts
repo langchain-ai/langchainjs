@@ -85,7 +85,7 @@ export class CallbackManagerForLLMRun
 {
   async handleLLMNewToken(
     token: string,
-    indices: NewTokenIndices = { prompt: 0, completion: 0 }
+    idx: NewTokenIndices = { prompt: 0, completion: 0 }
   ): Promise<void> {
     await Promise.all(
       this.handlers.map((handler) =>
@@ -94,7 +94,7 @@ export class CallbackManagerForLLMRun
             try {
               await handler.handleLLMNewToken?.(
                 token,
-                indices,
+                idx,
                 this.runId,
                 this._parentRunId
               );
