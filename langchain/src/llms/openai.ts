@@ -297,7 +297,6 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
                 adapter: fetchAdapter, // default adapter doesn't do streaming
                 responseType: "stream",
                 onmessage: (event) => {
-                  console.log(event.data);
                   if (event.data?.trim?.() === "[DONE]") {
                     if (resolved || rejected) {
                       return;
