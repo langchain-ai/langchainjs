@@ -249,7 +249,9 @@ export class ChatOpenAI
   /**
    * Get the parameters used to invoke the model
    */
-  invocationParams(): Omit<CreateChatCompletionRequest, "messages"> {
+  invocationParams(
+    options?: this["ParsedCallOptions"]
+  ): Omit<CreateChatCompletionRequest, "messages"> {
     return {
       model: this.modelName,
       temperature: this.temperature,
@@ -259,8 +261,14 @@ export class ChatOpenAI
       max_tokens: this.maxTokens === -1 ? undefined : this.maxTokens,
       n: this.n,
       logit_bias: this.logitBias,
-      stop: this.stop,
+      stop: options?.stop ?? this.stop,
       stream: this.streaming,
+      functions:
+        options?.functions ??
+        (options?.tools
+          ? options?.tools.map(formatToOpenAIFunction)
+          : undefined),
+      function_call: options?.function_call,
       ...this.modelKwargs,
     };
   }
@@ -284,20 +292,11 @@ export class ChatOpenAI
   /** @ignore */
   async _generate(
     messages: BaseChatMessage[],
-    options?: this["ParsedCallOptions"],
+    options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
     const tokenUsage: TokenUsage = {};
-    if (this.stop && options?.stop) {
-      throw new Error("Stop found in input and default params");
-    }
-
-    const params = this.invocationParams();
-    params.stop = options?.stop ?? params.stop;
-    params.functions =
-      options?.functions ??
-      (options?.tools ? options?.tools.map(formatToOpenAIFunction) : undefined);
-    params.function_call = options?.function_call;
+    const params = this.invocationParams(options);
     const messagesMapped: ChatCompletionRequestMessage[] = messages.map(
       (message) => ({
         role: messageTypeToOpenAIRole(message._getType()),
