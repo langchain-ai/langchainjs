@@ -4,7 +4,7 @@ import { OpenAIChat } from "../openai-chat.js";
 import { OpenAI } from "../openai.js";
 import { StringPromptValue } from "../../prompts/index.js";
 import { CallbackManager } from "../../callbacks/index.js";
-import { LLMNewTokenIndices } from "../../callbacks/base.js";
+import { NewTokenIndices } from "../../callbacks/base.js";
 
 test("Test OpenAI", async () => {
   const model = new OpenAI({ maxTokens: 5, modelName: "text-ada-001" });
@@ -156,7 +156,7 @@ test("Test OpenAI in streaming mode with multiple prompts", async () => {
     streaming: true,
     n: 2,
     callbacks: CallbackManager.fromHandlers({
-      async handleLLMNewToken(token: string, idx: LLMNewTokenIndices) {
+      async handleLLMNewToken(token: string, idx: NewTokenIndices) {
         nrNewTokens += 1;
         completions[idx.prompt][idx.completion] += token;
       },
@@ -185,7 +185,7 @@ test("Test OpenAIChat in streaming mode with multiple prompts", async () => {
     streaming: true,
     n: 1,
     callbacks: CallbackManager.fromHandlers({
-      async handleLLMNewToken(token: string, idx: LLMNewTokenIndices) {
+      async handleLLMNewToken(token: string, idx: NewTokenIndices) {
         nrNewTokens += 1;
         completions[idx.prompt][idx.completion] += token;
       },

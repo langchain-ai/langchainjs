@@ -9,7 +9,7 @@ import {
 import {
   BaseCallbackHandler,
   CallbackHandlerMethods,
-  LLMNewTokenIndices,
+  NewTokenIndices,
 } from "./base.js";
 import { ConsoleCallbackHandler } from "./handlers/console.js";
 import {
@@ -85,7 +85,7 @@ export class CallbackManagerForLLMRun
 {
   async handleLLMNewToken(
     token: string,
-    indices: LLMNewTokenIndices = { prompt: 0, completion: 0 }
+    indices: NewTokenIndices = { prompt: 0, completion: 0 }
   ): Promise<void> {
     await Promise.all(
       this.handlers.map((handler) =>

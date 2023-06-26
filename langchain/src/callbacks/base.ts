@@ -22,7 +22,7 @@ export interface BaseCallbackHandlerInput {
   ignoreAgent?: boolean;
 }
 
-export interface LLMNewTokenIndices {
+export interface NewTokenIndices {
   prompt: number;
   completion: number;
 }
@@ -52,7 +52,7 @@ abstract class BaseCallbackHandlerMethodsClass {
      * indices.completion is the index of the completion that produced the token
      *   (if multiple completions per prompt are requested)
      */
-    indices: LLMNewTokenIndices,
+    idx: NewTokenIndices,
     runId: string,
     parentRunId?: string
   ): Promise<void> | void;

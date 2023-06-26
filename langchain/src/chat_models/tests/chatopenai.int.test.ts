@@ -14,7 +14,7 @@ import {
   SystemMessagePromptTemplate,
 } from "../../prompts/index.js";
 import { CallbackManager } from "../../callbacks/index.js";
-import { LLMNewTokenIndices } from "../../callbacks/base.js";
+import { NewTokenIndices } from "../../callbacks/base.js";
 
 test("Test ChatOpenAI", async () => {
   const chat = new ChatOpenAI({ modelName: "gpt-3.5-turbo", maxTokens: 10 });
@@ -151,7 +151,7 @@ test("Test ChatOpenAI in streaming mode with n > 1 and multiple prompts", async 
     n: 2,
     callbacks: [
       {
-        async handleLLMNewToken(token: string, idx: LLMNewTokenIndices) {
+        async handleLLMNewToken(token: string, idx: NewTokenIndices) {
           nrNewTokens += 1;
           streamedCompletions[idx.prompt][idx.completion] += token;
         },
