@@ -2,7 +2,10 @@ import axiosMod, { AxiosRequestConfig, AxiosStatic } from "axios";
 import * as cheerio from "cheerio";
 import { isNode } from "../util/env.js";
 import { BaseLanguageModel } from "../base_language/index.js";
-import { RecursiveCharacterTextSplitter, TextSplitter } from "../text_splitter.js";
+import {
+  RecursiveCharacterTextSplitter,
+  TextSplitter,
+} from "../text_splitter.js";
 import { MemoryVectorStore } from "../vectorstores/memory.js";
 import { Document } from "../document.js";
 import { Tool, ToolParams } from "./base.js";
@@ -138,11 +141,6 @@ const DEFAULT_HEADERS = {
     "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/111.0",
 };
 
-const DEFAULT_TEXT_SPLITTER = new RecursiveCharacterTextSplitter({
-  chunkSize: 2000,
-  chunkOverlap: 200,
-});
-
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Headers = Record<string, any>;
 
@@ -176,7 +174,13 @@ export class WebBrowser extends Tool {
 
   private textSplitter: TextSplitter;
 
-  constructor({ model, headers, embeddings, axiosConfig, textSplitter }: WebBrowserArgs) {
+  constructor({
+    model,
+    headers,
+    embeddings,
+    axiosConfig,
+    textSplitter,
+  }: WebBrowserArgs) {
     super(...arguments);
 
     this.model = model;
@@ -187,7 +191,12 @@ export class WebBrowser extends Tool {
       adapter: isNode() ? undefined : fetchAdapter,
       ...axiosConfig,
     };
-    this.textSplitter = textSplitter ?? DEFAULT_TEXT_SPLITTER;
+    this.textSplitter =
+      textSplitter ??
+      new RecursiveCharacterTextSplitter({
+        chunkSize: 2000,
+        chunkOverlap: 200,
+      });
   }
 
   /** @ignore */
