@@ -630,7 +630,9 @@ export class CallbackManager
         if (tracingV2Enabled) {
           callbackManager.addHandler(await getTracingV2CallbackHandler(), true);
         } else {
-          const session = getEnvironmentVariable("LANGCHAIN_SESSION");
+          const session =
+            getEnvironmentVariable("LANGCHAIN_PROJECT") &&
+            getEnvironmentVariable("LANGCHAIN_SESSION");
           callbackManager.addHandler(
             await getTracingCallbackHandler(session),
             true
@@ -664,7 +666,7 @@ export class TraceGroup {
   constructor(
     private groupName: string,
     private options?: {
-      sessionName?: string;
+      projectName?: string;
       exampleId?: string;
     }
   ) {}
