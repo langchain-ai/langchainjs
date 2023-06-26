@@ -948,6 +948,11 @@
       "import": "./vectorstores/base.js",
       "require": "./vectorstores/base.cjs"
     },
+    "./vectorstores/elasticsearch": {
+      "types": "./vectorstores/elasticsearch.d.ts",
+      "import": "./vectorstores/elasticsearch.js",
+      "require": "./vectorstores/elasticsearch.cjs"
+    },
     "./vectorstores/memory": {
       "types": "./vectorstores/memory.d.ts",
       "import": "./vectorstores/memory.js",
@@ -957,11 +962,6 @@
       "types": "./vectorstores/chroma.d.ts",
       "import": "./vectorstores/chroma.js",
       "require": "./vectorstores/chroma.cjs"
-    },
-    "./vectorstores/elasticsearch": {
-      "types": "./vectorstores/elasticsearch.d.ts",
-      "import": "./vectorstores/elasticsearch.js",
-      "require": "./vectorstores/elasticsearch.cjs"
     },
     "./vectorstores/hnswlib": {
       "types": "./vectorstores/hnswlib.d.ts",

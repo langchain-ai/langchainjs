@@ -1,4 +1,5 @@
 import { Client } from "@elastic/elasticsearch";
+import { estypes } from "@elastic/elasticsearch";
 import { Embeddings } from "../embeddings/base.js";
 import { Document } from "../document.js";
 import { VectorStore } from "./base.js";
@@ -153,8 +154,9 @@ export class ElasticsearchVectorStore extends VectorStore {
     efConstruction = 100,
     m = 16
   ): Promise<void> {
-    const body = {
-      mappings: {
+    const request : estypes.IndicesCreateRequest = {
+      index: this.indexName,
+      mappings : {
         dynamic_templates: [
           {
             // map all metadata properties to be keyword
@@ -170,21 +172,22 @@ export class ElasticsearchVectorStore extends VectorStore {
           embedding: {
             type: "dense_vector",
             dims: dimension,
+            index: true,
             similarity,
             index_options : {
               type: engine,
               m,
               ef_construction: efConstruction
             }
-          },
-        },
-      },
+          }
+        }
+      }
     };
-
+    
     const indexExists = await this.doesIndexExist();
     if (indexExists) return;
 
-    await this.client.indices.create({ index: this.indexName, operations: body });
+    await this.client.indices.create(request);
   }
 
   private buildMetadataTerms(
@@ -199,7 +202,7 @@ export class ElasticsearchVectorStore extends VectorStore {
   }
 
   async doesIndexExist(): Promise<boolean> {
-    return await this.client.exists({ index: this.indexName });
+    return await this.client.indices.exists({ index: this.indexName });
   }
 
   async deleteIfExists(): Promise<void> {
