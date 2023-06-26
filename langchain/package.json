@@ -445,7 +445,7 @@
     "@clickhouse/client": "^0.0.14",
     "@faker-js/faker": "^7.6.0",
     "@getmetal/metal-sdk": "^4.0.0",
-    "@getzep/zep-js": "^0.3.1",
+    "@getzep/zep-js": "^0.4.1",
     "@gomomento/sdk": "^1.23.0",
     "@google-cloud/storage": "^6.10.1",
     "@huggingface/inference": "^1.5.1",
