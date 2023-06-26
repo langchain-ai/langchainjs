@@ -14,11 +14,18 @@ test("tagging chain", async () => {
       },
       required: ["tone"],
     },
-    new ChatOpenAI({ modelName: "gpt-4-0613", temperature: 0 })
+    new ChatOpenAI({ modelName: "gpt-4-0613", temperature: 0, streaming: true })
   );
 
   const result = await chain.run(
-    `Estoy increiblemente contento de haberte conocido! Creo que seremos muy buenos amigos!`
+    `Estoy increiblemente contento de haberte conocido! Creo que seremos muy buenos amigos!`,
+    [
+      {
+        handleLLMNewToken(token, indices, runId, parentRunId) {
+          console.log({ token, indices, runId, parentRunId });
+        },
+      },
+    ]
   );
   expect(result).toMatchInlineSnapshot(`
     {
