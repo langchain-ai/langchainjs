@@ -56,9 +56,7 @@ export abstract class BaseChatModel extends BaseLanguageModel {
     options?: string[] | this["CallOptions"],
     callbacks?: Callbacks
   ): Promise<LLMResult> {
-    const generations: ChatGeneration[][] = [];
-    let results: ChatResult[] = [];
-    const llmOutputs: LLMResult["llmOutput"][] = [];
+    // parse call options
     let parsedOptions: this["CallOptions"];
     if (Array.isArray(options)) {
       parsedOptions = { stop: options } as this["CallOptions"];
@@ -70,6 +68,7 @@ export abstract class BaseChatModel extends BaseLanguageModel {
     } else {
       parsedOptions = options ?? {};
     }
+    // create callback manager and start run
     const callbackManager_ = await CallbackManager.configure(
       callbacks,
       this.callbacks,
@@ -88,46 +87,43 @@ export abstract class BaseChatModel extends BaseLanguageModel {
       undefined,
       extra
     );
-    try {
-      results = await Promise.all(
-        messages.map((messageList, i) =>
-          this._generate(messageList, parsedOptions, runManagers?.[i])
-        )
-      );
-      for (const result of results) {
-        if (result.llmOutput) {
-          llmOutputs.push(result.llmOutput);
+    // generate results
+    const results = await Promise.allSettled(
+      messages.map((messageList, i) =>
+        this._generate(messageList, parsedOptions, runManagers?.[i])
+      )
+    );
+    // handle results
+    const generations: ChatGeneration[][] = [];
+    const llmOutputs: LLMResult["llmOutput"][] = [];
+    await Promise.all(
+      results.map(async (pResult, i) => {
+        if (pResult.status === "fulfilled") {
+          const result = pResult.value;
+          generations[i] = result.generations;
+          llmOutputs[i] = result.llmOutput;
+          return runManagers?.[i]?.handleLLMEnd({
+            generations: [result.generations],
+            llmOutput: result.llmOutput,
+          });
+        } else {
+          // status === "rejected"
+          await runManagers?.[i]?.handleLLMError(pResult.reason);
+          return Promise.reject(pResult.reason);
         }
-        generations.push(result.generations);
-      }
-    } catch (err) {
-      await Promise.all(
-        (runManagers ?? []).map((runManager) => runManager?.handleLLMError(err))
-      );
-      throw err;
-    }
-
+      })
+    );
+    // create combined output
     const output: LLMResult = {
       generations,
       llmOutput: llmOutputs.length
         ? this._combineLLMOutput?.(...llmOutputs)
         : undefined,
     };
-
-    const flattenedOutputs: LLMResult[] = results.map((result) => ({
-      generations: [result.generations],
-      llmOutput: result.llmOutput,
-    }));
-
-    await Promise.all(
-      (runManagers ?? []).map((runManager, i) =>
-        runManager?.handleLLMEnd(flattenedOutputs[i])
-      )
-    );
-    const runIds = runManagers?.map((manager) => manager.runId) || undefined;
-
     Object.defineProperty(output, RUN_KEY, {
-      value: runIds ? { runIds } : undefined,
+      value: runManagers
+        ? { runIds: runManagers?.map((manager) => manager.runId) }
+        : undefined,
       configurable: true,
     });
     return output;

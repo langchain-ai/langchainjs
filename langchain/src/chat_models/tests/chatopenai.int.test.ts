@@ -43,9 +43,24 @@ test("Test ChatOpenAI Generate", async () => {
     expect(generation.length).toBe(2);
     for (const message of generation) {
       console.log(message.text);
+      expect(typeof message.text).toBe("string");
     }
   }
   console.log({ res });
+});
+
+test("Test ChatOpenAI Generate throws when one of the calls fails", async () => {
+  const chat = new ChatOpenAI({
+    modelName: "gpt-3.5-turbo",
+    maxTokens: 10,
+    n: 2,
+  });
+  const message = new HumanChatMessage("Hello!");
+  await expect(() =>
+    chat.generate([[message], [message]], {
+      signal: AbortSignal.timeout(10),
+    })
+  ).rejects.toThrow("Cancel: canceled");
 });
 
 test("Test ChatOpenAI tokenUsage", async () => {
