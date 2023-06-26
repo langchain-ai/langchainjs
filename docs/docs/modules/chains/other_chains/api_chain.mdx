@@ -1,14 +1,10 @@
 import CodeBlock from "@theme/CodeBlock";
 import APIExample from "@examples/chains/api_chain.ts";
-import APIHeadersExample from "@examples/chains/api_chain_headers.ts";
 
 # `APIChain`
 
 APIChain enables using LLMs to interact with APIs to retrieve relevant information. Construct the chain by providing a question relevant to the provided API documentation.
 
+If your API requires authentication or other headers, you can pass the chain a `headers` property in the config object.
+
 <CodeBlock language="typescript">{APIExample}</CodeBlock>
-
-
-If your requests need to be authenticated, you can provide the necessary headers to the chain. These headers will be used for all requests made by the chain.
-
-<CodeBlock language="typescript">{APIHeadersExample}</CodeBlock>
