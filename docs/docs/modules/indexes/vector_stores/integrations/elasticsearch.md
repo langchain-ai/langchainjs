@@ -31,8 +31,8 @@ import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { ElasticsearchVectorStore } from "langchain/vectorstores/elasticsearch";
 
 const config: any = {
-    node: process.env.ELASTICSEARCH_URL,
-  };
+  node: process.env.ELASTICSEARCH_URL,
+};
 if (process.env.ELASTICSEARCH_API_KEY) {
   config.auth = {
     apiKey: process.env.ELASTICSEARCH_API_KEY,
@@ -61,11 +61,11 @@ const docs = [
 ];
 
 const embeddings = new OpenAIEmbeddings(undefined, {
-    baseOptions: { temperature: 0 },
+  baseOptions: { temperature: 0 },
 });
 await ElasticsearchVectorStore.fromDocuments(docs, embeddings, {
   client,
-  indexName: process.env.ELASTICSEARCH_INDEX ?? "test_vectorstore"
+  indexName: process.env.ELASTICSEARCH_INDEX ?? "test_vectorstore",
 });
 ```
 
@@ -79,8 +79,8 @@ import { OpenAI } from "langchain/llms/openai";
 import { ElasticsearchVectorStore } from "langchain/vectorstores/elasticsearch";
 
 const config: any = {
-    node: process.env.ELASTICSEARCH_URL,
-  };
+  node: process.env.ELASTICSEARCH_URL,
+};
 if (process.env.ELASTICSEARCH_API_KEY) {
   config.auth = {
     apiKey: process.env.ELASTICSEARCH_API_KEY,
@@ -89,7 +89,7 @@ if (process.env.ELASTICSEARCH_API_KEY) {
 const client = new Client(config);
 
 const embeddings = new OpenAIEmbeddings(undefined, {
-    baseOptions: { temperature: 0 },
+  baseOptions: { temperature: 0 },
 });
 
 const vectorStore = new ElasticsearchVectorStore(embedding, client);

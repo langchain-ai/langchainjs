@@ -12,11 +12,11 @@ test.skip("ElasticsearchVectorStore integration", async () => {
 
   /* eslint-disable @typescript-eslint/no-explicit-any */
   const config: any = {
-    node: process.env.ELASTICSEARCH_URL
+    node: process.env.ELASTICSEARCH_URL,
   };
   if (process.env.ELASTICSEARCH_API_KEY) {
     config.auth = {
-      apiKey: process.env.ELASTICSEARCH_API_KEY
+      apiKey: process.env.ELASTICSEARCH_API_KEY,
     };
   }
   const client = new Client(config);

@@ -44,7 +44,7 @@ export class ElasticsearchVectorStore extends VectorStore {
     super(embeddings, args);
 
     this.engine = args.vectorSearchOptions?.engine ?? "hnsw";
-    this.similarity = args.vectorSearchOptions?.similarity ?? "l2_norm";  
+    this.similarity = args.vectorSearchOptions?.similarity ?? "l2_norm";
     this.m = args.vectorSearchOptions?.m ?? 16;
     this.efConstruction = args.vectorSearchOptions?.efConstruction ?? 100;
     this.candidates = args.vectorSearchOptions?.candidates ?? 200;
@@ -72,7 +72,7 @@ export class ElasticsearchVectorStore extends VectorStore {
     const operations = vectors.flatMap((embedding, idx) => [
       {
         index: {
-          _index: this.indexName
+          _index: this.indexName,
         },
       },
       {
@@ -89,7 +89,6 @@ export class ElasticsearchVectorStore extends VectorStore {
     k: number,
     filter?: ElasticsearchFilter | undefined
   ): Promise<[Document, number][]> {
-   
     const result = await this.client.search({
       index: this.indexName,
       knn: {
@@ -97,8 +96,8 @@ export class ElasticsearchVectorStore extends VectorStore {
         query_vector: query,
         filter: this.buildMetadataTerms(filter),
         k,
-        num_candidates: this.candidates
-      }
+        num_candidates: this.candidates,
+      },
     });
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -154,9 +153,9 @@ export class ElasticsearchVectorStore extends VectorStore {
     efConstruction = 100,
     m = 16
   ): Promise<void> {
-    const request : estypes.IndicesCreateRequest = {
+    const request: estypes.IndicesCreateRequest = {
       index: this.indexName,
-      mappings : {
+      mappings: {
         dynamic_templates: [
           {
             // map all metadata properties to be keyword
@@ -174,16 +173,16 @@ export class ElasticsearchVectorStore extends VectorStore {
             dims: dimension,
             index: true,
             similarity,
-            index_options : {
+            index_options: {
               type: engine,
               m,
-              ef_construction: efConstruction
-            }
-          }
-        }
-      }
+              ef_construction: efConstruction,
+            },
+          },
+        },
+      },
     };
-    
+
     const indexExists = await this.doesIndexExist();
     if (indexExists) return;
 
