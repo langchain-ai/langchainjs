@@ -1,4 +1,8 @@
-import { ZepClient, SearchResult, SearchPayload } from "@getzep/zep-js";
+import {
+  ZepClient,
+  MemorySearchResult,
+  MemorySearchPayload,
+} from "@getzep/zep-js";
 import { BaseRetriever } from "../schema/index.js";
 import { Document } from "../document.js";
 
@@ -24,10 +28,10 @@ export class ZepRetriever extends BaseRetriever {
 
   /**
    *  Converts an array of search results to an array of Document objects.
-   *  @param {SearchResult[]} results - The array of search results.
+   *  @param {MemorySearchResult[]} results - The array of search results.
    *  @returns {Document[]} An array of Document objects representing the search results.
    */
-  private searchResultToDoc(results: SearchResult[]): Document[] {
+  private searchResultToDoc(results: MemorySearchResult[]): Document[] {
     return results
       .filter((r) => r.message)
       .map(
@@ -45,8 +49,8 @@ export class ZepRetriever extends BaseRetriever {
    *  @returns {Promise<Document[]>} A promise that resolves to an array of relevant Document objects.
    */
   async getRelevantDocuments(query: string): Promise<Document[]> {
-    const payload: SearchPayload = { text: query, meta: {} };
-    const results: SearchResult[] = await this.zepClient.searchMemory(
+    const payload: MemorySearchPayload = { text: query, metadata: {} };
+    const results: MemorySearchResult[] = await this.zepClient.searchMemory(
       this.sessionId,
       payload,
       this.topK
