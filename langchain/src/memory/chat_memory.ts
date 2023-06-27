@@ -4,6 +4,7 @@ import {
   InputValues,
   OutputValues,
   getInputValue,
+  getOutputValue,
 } from "./base.js";
 import { ChatMessageHistory } from "../stores/message/in_memory.js";
 
@@ -40,7 +41,7 @@ export abstract class BaseChatMemory extends BaseMemory {
       getInputValue(inputValues, this.inputKey)
     );
     await this.chatHistory.addAIChatMessage(
-      getInputValue(outputValues, this.outputKey)
+      getOutputValue(outputValues, this.outputKey)
     );
   }
 

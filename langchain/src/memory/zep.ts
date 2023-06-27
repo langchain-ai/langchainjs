@@ -5,6 +5,7 @@ import {
   MemoryVariables,
   getBufferString,
   getInputValue,
+  getOutputValue,
 } from "./base.js";
 import { BaseChatMemory, BaseChatMemoryInput } from "./chat_memory.js";
 import {
@@ -113,7 +114,7 @@ export class ZepMemory extends BaseChatMemory implements ZepMemoryInput {
     outputValues: OutputValues
   ): Promise<void> {
     const input = getInputValue(inputValues, this.inputKey);
-    const output = getInputValue(outputValues, this.outputKey);
+    const output = getOutputValue(outputValues, this.outputKey);
 
     // Create new Memory and Message instances
     const memory = new Memory({

@@ -17,22 +17,50 @@ export abstract class BaseMemory {
   ): Promise<void>;
 }
 
+const getValue = (values: InputValues | OutputValues, key?: string) => {
+  if (key !== undefined) {
+    return values[key];
+  }
+  const keys = Object.keys(values);
+  if (keys.length === 1) {
+    return values[keys[0]];
+  }
+}
+
 /**
  * This function is used by memory classes to select the input value
  * to use for the memory. If there is only one input value, it is used.
  * If there are multiple input values, the inputKey must be specified.
  */
 export const getInputValue = (inputValues: InputValues, inputKey?: string) => {
-  if (inputKey !== undefined) {
-    return inputValues[inputKey];
+  const value = getValue(inputValues, inputKey);
+  if (!value) {
+    const keys = Object.keys(inputValues);
+    throw new Error(
+      `input values have ${keys.length} keys, you must specify an input key or pass only 1 key as input`
+    );
   }
-  const keys = Object.keys(inputValues);
-  if (keys.length === 1) {
-    return inputValues[keys[0]];
+  return value;
+};
+
+/**
+ * This function is used by memory classes to select the output value
+ * to use for the memory. If there is only one output value, it is used.
+ * If there are multiple output values, the outputKey must be specified.
+ * If no outputKey is specified, an error is thrown.
+*/
+export const getOutputValue = (
+  outputValues: OutputValues,
+  outputKey?: string
+) => {
+  const value = getValue(outputValues, outputKey);
+  if (!value) {
+    const keys = Object.keys(outputValues);
+    throw new Error(
+      `output values have ${keys.length} keys, you must specify an output key or pass only 1 key as output`
+    );
   }
-  throw new Error(
-    `input values have ${keys.length} keys, you must specify an input key or pass only 1 key as input`
-  );
+  return value;
 };
 
 /**
