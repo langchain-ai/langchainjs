@@ -1,19 +1,15 @@
 import { Client } from "@elastic/elasticsearch";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { ElasticsearchVectorStore } from "langchain/vectorstores/elasticsearch";
-import * as fs from "fs";
 
+// to run this first run chroma's docker-container with `docker-compose up -d --build`
 export async function run() {
   const client = new Client({
-    nodes: [process.env.ELASTICSEARCH_URL ?? "https://127.0.0.1:9200"],
+    nodes: [process.env.ELASTICSEARCH_URL ?? "http://127.0.0.1:9200"],
     auth: {
       username: "elastic",
       password: process.env.ELASTIC_PASSWORD,
-    },
-    tls: {
-      ca: fs.readFileSync("config/certs/ca/ca.crt"),
-      rejectUnauthorized: false,
-    },
+    }
   });
 
   const vectorStore = await ElasticsearchVectorStore.fromTexts(
@@ -28,4 +24,5 @@ export async function run() {
 
   const resultOne = await vectorStore.similaritySearch("Hello world", 1);
   console.log(resultOne);
+  // [ Document { pageContent: 'Hello world', metadata: { id: 2 } } ]
 }
