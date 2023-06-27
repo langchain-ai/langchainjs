@@ -88,7 +88,7 @@ export abstract class BaseMessage
 
   /**
    * @deprecated
-   * Use {@link BaseMessage.text} instead.
+   * Use {@link BaseMessage.content} instead.
    */
   get text(): string {
     return this.content;
