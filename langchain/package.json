@@ -31,6 +31,9 @@
     "tools/aws_lambda.cjs",
     "tools/aws_lambda.js",
     "tools/aws_lambda.d.ts",
+    "tools/aws_sfn.cjs",
+    "tools/aws_sfn.js",
+    "tools/aws_sfn.d.ts",
     "tools/calculator.cjs",
     "tools/calculator.js",
     "tools/calculator.d.ts",
@@ -442,6 +445,7 @@
     "@aws-sdk/client-lambda": "^3.310.0",
     "@aws-sdk/client-s3": "^3.310.0",
     "@aws-sdk/client-sagemaker-runtime": "^3.310.0",
+    "@aws-sdk/client-sfn": "^3.310.0",
     "@clickhouse/client": "^0.0.14",
     "@faker-js/faker": "^7.6.0",
     "@getmetal/metal-sdk": "^4.0.0",
@@ -522,6 +526,7 @@
     "@aws-sdk/client-lambda": "^3.310.0",
     "@aws-sdk/client-s3": "^3.310.0",
     "@aws-sdk/client-sagemaker-runtime": "^3.310.0",
+    "@aws-sdk/client-sfn": "^3.310.0",
     "@clickhouse/client": "^0.0.14",
     "@getmetal/metal-sdk": "*",
     "@getzep/zep-js": "^0.3.1",
@@ -578,6 +583,9 @@
       "optional": true
     },
     "@aws-sdk/client-sagemaker-runtime": {
+      "optional": true
+    },
+    "@aws-sdk/client-sfn": {
       "optional": true
     },
     "@clickhouse/client": {
@@ -791,6 +799,11 @@
       "types": "./tools/aws_lambda.d.ts",
       "import": "./tools/aws_lambda.js",
       "require": "./tools/aws_lambda.cjs"
+    },
+    "./tools/aws_sfn": {
+      "types": "./tools/aws_sfn.d.ts",
+      "import": "./tools/aws_sfn.js",
+      "require": "./tools/aws_sfn.cjs"
     },
     "./tools/calculator": {
       "types": "./tools/calculator.d.ts",

@@ -39,6 +39,7 @@
       "src/base_language/index.ts",
       "src/tools/index.ts",
       "src/tools/aws_lambda.ts",
+      "src/tools/aws_sfn.ts",
       "src/tools/calculator.ts",
       "src/tools/webbrowser.ts",
       "src/chains/index.ts",
