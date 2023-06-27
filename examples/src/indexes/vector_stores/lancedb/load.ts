@@ -6,8 +6,8 @@ import * as path from "node:path";
 import os from "node:os";
 
 //
-//  You can open a LanceDB dataset created elsewhere, such as langchain python, by opening
-//     and existing table
+//  You can open a LanceDB dataset created elsewhere, such as LangChain Python, by opening
+//     an existing table
 //
 export const run = async () => {
   const uri = await createdTestDb();

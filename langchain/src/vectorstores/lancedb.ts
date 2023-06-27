@@ -5,20 +5,19 @@ import { Document } from "../document.js";
 
 export type LanceDBArgs = {
   table: Table;
-  id_key?: string;
-  text_key?: string;
+  textKey?: string;
 };
 
 export class LanceDB extends VectorStore {
-  private _table: Table;
+  private table: Table;
 
-  private _text_key: string;
+  private textKey: string;
 
   constructor(embeddings: Embeddings, args: LanceDBArgs) {
     super(embeddings, args);
-    this._table = args.table;
+    this.table = args.table;
     this.embeddings = embeddings;
-    this._text_key = args.text_key || "text";
+    this.textKey = args.textKey || "text";
   }
 
   async addDocuments(documents: Document[]): Promise<void> {
@@ -39,37 +38,36 @@ export class LanceDB extends VectorStore {
 
     const data: Array<Record<string, unknown>> = [];
     for (let i = 0; i < documents.length; i += 1) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const record: Record<string, any> = {};
-      record.vector = vectors[i];
-      record[this._text_key] = documents[i].pageContent;
+      const record = {
+        vector: vectors[i],
+        [this.textKey]: documents[i].pageContent,
+      };
       Object.keys(documents[i].metadata).forEach((metaKey) => {
         record[metaKey] = documents[i].metadata[metaKey];
       });
       data.push(record);
     }
-    await this._table.add(data);
+    await this.table.add(data);
   }
 
   async similaritySearchVectorWithScore(
     query: number[],
     k: number
   ): Promise<[Document, number][]> {
-    const results = await this._table.search(query).limit(k).execute();
+    const results = await this.table.search(query).limit(k).execute();
 
     const docsAndScore: [Document, number][] = [];
     results.forEach((item) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const metadata: Record<string, any> = {};
+      const metadata: Record<string, unknown> = {};
       Object.keys(item).forEach((key) => {
-        if (key !== "vector" && key !== "score" && key !== this._text_key) {
+        if (key !== "vector" && key !== "score" && key !== this.textKey) {
           metadata[key] = item[key];
         }
       });
 
       docsAndScore.push([
         new Document({
-          pageContent: item[this._text_key] as string,
+          pageContent: item[this.textKey] as string,
           metadata,
         }),
         item.score as number,

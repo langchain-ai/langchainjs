@@ -471,7 +471,6 @@
     "@types/object-hash": "^3.0.2",
     "@types/pdf-parse": "^1.1.1",
     "@types/pg": "^8",
-    "@types/temp": "^0.9.1",
     "@types/uuid": "^9",
     "@typescript-eslint/eslint-plugin": "^5.58.0",
     "@typescript-eslint/parser": "^5.58.0",
@@ -516,12 +515,11 @@
     "rollup": "^3.19.1",
     "sqlite3": "^5.1.4",
     "srt-parser-2": "^1.2.2",
-    "temp": "^0.9.4",
     "ts-jest": "^29.1.0",
     "typeorm": "^0.3.12",
     "typescript": "^5.0.0",
-    "vectordb": "^0.1.4",
     "typesense": "^1.5.3",
+    "vectordb": "^0.1.4",
     "weaviate-ts-client": "^1.0.0"
   },
   "peerDependencies": {
@@ -571,8 +569,8 @@
     "replicate": "^0.9.0",
     "srt-parser-2": "^1.2.2",
     "typeorm": "^0.3.12",
-    "vectordb": "^0.1.4",
     "typesense": "^1.5.3",
+    "vectordb": "^0.1.4",
     "weaviate-ts-client": "^1.0.0"
   },
   "peerDependenciesMeta": {
@@ -714,10 +712,10 @@
     "typeorm": {
       "optional": true
     },
-    "vectordb": {
+    "typesense": {
       "optional": true
     },
-    "typesense": {
+    "vectordb": {
       "optional": true
     },
     "weaviate-ts-client": {

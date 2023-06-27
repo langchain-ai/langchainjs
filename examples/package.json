@@ -48,8 +48,8 @@
     "redis": "^4.6.6",
     "sqlite3": "^5.1.4",
     "typeorm": "^0.3.12",
-    "vectordb": "^0.1.4",
     "typesense": "^1.5.3",
+    "vectordb": "^0.1.4",
     "weaviate-ts-client": "^1.0.0",
     "zod": "^3.21.4"
   },

@@ -8522,15 +8522,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/temp@npm:^0.9.1":
-  version: 0.9.1
-  resolution: "@types/temp@npm:0.9.1"
-  dependencies:
-    "@types/node": "*"
-  checksum: b376c1022ba60689eebc2d1ed7f6ad8a598539f347e073356886b0bd987793d062c7e84ea5778f13b1c8e92b667f5e1ef774ca2d4d41a98fea8313fe848e9da9
-  languageName: node
-  linkType: hard
-
 "@types/testing-library__jest-dom@npm:^5.9.1":
   version: 5.14.5
   resolution: "@types/testing-library__jest-dom@npm:5.14.5"
@@ -14399,6 +14390,7 @@ __metadata:
     typeorm: ^0.3.12
     typescript: ^5.0.0
     typesense: ^1.5.3
+    vectordb: ^0.1.4
     weaviate-ts-client: ^1.0.0
     zod: ^3.21.4
   languageName: unknown
@@ -18729,7 +18721,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"langchain@^0.0.91, langchain@workspace:*, langchain@workspace:langchain":
+"langchain@workspace:*, langchain@workspace:langchain":
   version: 0.0.0-use.local
   resolution: "langchain@workspace:langchain"
   dependencies:
@@ -18764,7 +18756,6 @@ __metadata:
     "@types/object-hash": ^3.0.2
     "@types/pdf-parse": ^1.1.1
     "@types/pg": ^8
-    "@types/temp": ^0.9.1
     "@types/uuid": ^9
     "@typescript-eslint/eslint-plugin": ^5.58.0
     "@typescript-eslint/parser": ^5.58.0
@@ -18823,7 +18814,6 @@ __metadata:
     rollup: ^3.19.1
     sqlite3: ^5.1.4
     srt-parser-2: ^1.2.2
-    temp: ^0.9.4
     ts-jest: ^29.1.0
     typeorm: ^0.3.12
     typescript: ^5.0.0
@@ -18881,8 +18871,8 @@ __metadata:
     replicate: ^0.9.0
     srt-parser-2: ^1.2.2
     typeorm: ^0.3.12
-    vectordb: ^0.1.4
     typesense: ^1.5.3
+    vectordb: ^0.1.4
     weaviate-ts-client: ^1.0.0
   peerDependenciesMeta:
     "@aws-sdk/client-dynamodb":
@@ -18977,9 +18967,9 @@ __metadata:
       optional: true
     typeorm:
       optional: true
-    vectordb:
-      optional: true
     typesense:
+      optional: true
+    vectordb:
       optional: true
     weaviate-ts-client:
       optional: true
@@ -20068,17 +20058,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"mkdirp@npm:^0.5.1, mkdirp@npm:~0.5.1":
-  version: 0.5.6
-  resolution: "mkdirp@npm:0.5.6"
-  dependencies:
-    minimist: ^1.2.6
-  bin:
-    mkdirp: bin/cmd.js
-  checksum: 0c91b721bb12c3f9af4b77ebf73604baf350e64d80df91754dc509491ae93bf238581e59c7188360cec7cb62fc4100959245a42cfe01834efedc5e9d068376c2
-  languageName: node
-  linkType: hard
-
 "mkdirp@npm:^1.0.3, mkdirp@npm:^1.0.4":
   version: 1.0.4
   resolution: "mkdirp@npm:1.0.4"
@@ -20094,6 +20073,17 @@ __metadata:
   bin:
     mkdirp: dist/cjs/src/bin.js
   checksum: 039998e3a55f056f48dbd025ad1f5095c78464ed62bd666fcaf78d07fd15b73218aabe3237e7a500b3f6cacdce684f6bbbc9a773792dce7cceab0dc266e95238
+  languageName: node
+  linkType: hard
+
+"mkdirp@npm:~0.5.1":
+  version: 0.5.6
+  resolution: "mkdirp@npm:0.5.6"
+  dependencies:
+    minimist: ^1.2.6
+  bin:
+    mkdirp: bin/cmd.js
+  checksum: 0c91b721bb12c3f9af4b77ebf73604baf350e64d80df91754dc509491ae93bf238581e59c7188360cec7cb62fc4100959245a42cfe01834efedc5e9d068376c2
   languageName: node
   linkType: hard
 
@@ -24256,6 +24246,7 @@ __metadata:
   checksum: 87f4164e396f0171b0a3386cc1877a817f572148ee13a7e113b238e48e8a9f2f31d009a92ec38a591ff1567d9662c6b67fd8818a2dbbaed74bc26a87a2a4a9a0
   languageName: node
   linkType: hard
+
 "rimraf@npm:^5.0.1":
   version: 5.0.1
   resolution: "rimraf@npm:5.0.1"
@@ -25945,16 +25936,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"temp@npm:^0.9.4":
-  version: 0.9.4
-  resolution: "temp@npm:0.9.4"
-  dependencies:
-    mkdirp: ^0.5.1
-    rimraf: ~2.6.2
-  checksum: 8709d4d63278bd309ca0e49e80a268308dea543a949e71acd427b3314cd9417da9a2cc73425dd9c21c6780334dbffd67e05e7be5aaa73e9affe8479afc6f20e3
-  languageName: node
-  linkType: hard
-
 "tempy@npm:^0.6.0":
   version: 0.6.0
   resolution: "tempy@npm:0.6.0"
@@ -26873,6 +26854,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"typesense@npm:^1.5.3":
+  version: 1.5.3
+  resolution: "typesense@npm:1.5.3"
+  dependencies:
+    axios: ^0.26.0
+    loglevel: ^1.8.0
+  peerDependencies:
+    "@babel/runtime": ^7.17.2
+  checksum: 6315139ca0be12f558a8ffb78e8055497941ba625fd61729ebe05d4af7d69524d89d1bd56a4a3f38df32fe41216ab6fde2e97bcddddce8af8328d5cddba85f82
+  languageName: node
+  linkType: hard
+
 "typical@npm:^4.0.0":
   version: 4.0.0
   resolution: "typical@npm:4.0.0"
@@ -26884,18 +26877,6 @@ __metadata:
   version: 5.2.0
   resolution: "typical@npm:5.2.0"
   checksum: ccaeb151a9a556291b495571ca44c4660f736fb49c29314bbf773c90fad92e9485d3cc2b074c933866c1595abbbc962f2b8bfc6e0f52a8c6b0cdd205442036ac
-  languageName: node
-  linkType: hard
-
-"typesense@npm:^1.5.3":
-  version: 1.5.3
-  resolution: "typesense@npm:1.5.3"
-  dependencies:
-    axios: ^0.26.0
-    loglevel: ^1.8.0
-  peerDependencies:
-    "@babel/runtime": ^7.17.2
-  checksum: 6315139ca0be12f558a8ffb78e8055497941ba625fd61729ebe05d4af7d69524d89d1bd56a4a3f38df32fe41216ab6fde2e97bcddddce8af8328d5cddba85f82
   languageName: node
   linkType: hard
 

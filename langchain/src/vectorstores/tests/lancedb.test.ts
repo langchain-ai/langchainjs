@@ -1,6 +1,8 @@
 import { test, expect } from "@jest/globals";
-import { track } from "temp";
 import { connect, Table } from "vectordb";
+import * as fs from "node:fs/promises";
+import * as path from "node:path";
+import * as os from "node:os";
 import { LanceDB } from "../lancedb.js";
 import { FakeEmbeddings } from "../../embeddings/fake.js";
 import { Document } from "../../document.js";
@@ -8,15 +10,14 @@ import { Document } from "../../document.js";
 describe("LanceDB", () => {
   test("constructor works", async () => {
     const lancedb = new LanceDB(new FakeEmbeddings(), {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      table: new Table(null as any, "vectors"),
+      table: new Table(null, "vectors"),
     });
     expect(lancedb).toBeDefined();
   });
 
   test("should add vectors to the table", async () => {
     const embeddings = new FakeEmbeddings();
-    const dir = await track().mkdir("lancedb");
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), "lcjs-lancedb-"));
     const db = await connect(dir);
     const table = await db.createTable("vectors", [
       { vector: [0, 1], text: "sample", id: 1 },

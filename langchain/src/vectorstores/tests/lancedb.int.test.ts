@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, test } from "@jest/globals";
-import { track } from "temp";
+import * as fs from "node:fs/promises";
+import * as path from "node:path";
+import * as os from "node:os";
 import { connect, Table } from "vectordb";
 import { LanceDB } from "../lancedb.js";
 import { OpenAIEmbeddings } from "../../embeddings/openai.js";
@@ -9,7 +11,7 @@ describe("LanceDB", () => {
   let lanceDBTable: Table;
 
   beforeEach(async () => {
-    const dir = await track().mkdir("lancedb");
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), "lcjs-lancedb-"));
     const db = await connect(dir);
     lanceDBTable = await db.createTable("vectors", [
       { vector: Array(1536), text: "sample", id: 1 },

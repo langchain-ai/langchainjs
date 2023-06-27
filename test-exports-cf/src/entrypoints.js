@@ -14,6 +14,7 @@ export * from "langchain/llms/aleph_alpha";
 export * from "langchain/prompts";
 export * from "langchain/vectorstores/base";
 export * from "langchain/vectorstores/memory";
+export * from "langchain/vectorstores/lancedb";
 export * from "langchain/vectorstores/prisma";
 export * from "langchain/text_splitter";
 export * from "langchain/memory";

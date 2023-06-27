@@ -14,6 +14,7 @@ const llms_aleph_alpha = require("langchain/llms/aleph_alpha");
 const prompts = require("langchain/prompts");
 const vectorstores_base = require("langchain/vectorstores/base");
 const vectorstores_memory = require("langchain/vectorstores/memory");
+const vectorstores_lancedb = require("langchain/vectorstores/lancedb");
 const vectorstores_prisma = require("langchain/vectorstores/prisma");
 const text_splitter = require("langchain/text_splitter");
 const memory = require("langchain/memory");

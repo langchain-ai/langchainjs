@@ -14,6 +14,7 @@ import * as llms_aleph_alpha from "langchain/llms/aleph_alpha";
 import * as prompts from "langchain/prompts";
 import * as vectorstores_base from "langchain/vectorstores/base";
 import * as vectorstores_memory from "langchain/vectorstores/memory";
+import * as vectorstores_lancedb from "langchain/vectorstores/lancedb";
 import * as vectorstores_prisma from "langchain/vectorstores/prisma";
 import * as text_splitter from "langchain/text_splitter";
 import * as memory from "langchain/memory";
