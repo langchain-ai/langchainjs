@@ -18585,7 +18585,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"langchain@workspace:*, langchain@workspace:^, langchain@workspace:langchain":
+"langchain@workspace:*, langchain@workspace:langchain":
   version: 0.0.0-use.local
   resolution: "langchain@workspace:langchain"
   dependencies:
@@ -18837,7 +18837,6 @@ __metadata:
     "@tsconfig/recommended": ^1.0.2
     dotenv: ^16.0.3
     husky: ^8.0.3
-    langchain: "workspace:^"
     lint-staged: ^13.1.1
     prettier: ^2.8.3
     turbo: latest

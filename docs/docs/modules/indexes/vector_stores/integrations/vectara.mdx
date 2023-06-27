@@ -6,9 +6,9 @@ sidebar_class_name: node-only
 
 Vectara is a developer-first API platform for easily building conversational search experiences.
 
-You can use Vectara as a vectorstore with Langchain.js.
+You can use Vectara as a vector store with LangChain.js.
 
-## 👉 Embeddings included
+## 👉 Embeddings Included
 
 Vectara uses its own embeddings under the hood, so you don't have to provide any yourself or call another service to obtain embeddings.
 
@@ -18,13 +18,13 @@ This also means that if you provide your own embeddings, they'll be a no-op.
 const store = await VectaraStore.fromTexts(
   ["hello world", "hi there"],
   [{ foo: "bar" }, { foo: "baz" }],
-  // This won't have an effect. Provide a FakeEmbeddings instance instead.
+  // This won't have an effect. Provide a FakeEmbeddings instance instead for clarity.
   new OpenAIEmbeddings(),
   args
 );
 ```
 
-## Getting started
+## Setup
 
 You'll need to:
 
@@ -40,7 +40,9 @@ VECTARA_CORPUS_ID=your_corpus_id
 VECTARA_API_KEY=your-vectara-api-key
 ```
 
-### Store data
+## Usage
+
+### Store Data
 
 ```typescript
 import { VectaraStore } from "langchain/vectorstores/vectara";
@@ -72,7 +74,7 @@ console.log(indexResult);
 // { code: 200, detail: 'Added 2 documents to Vectara' }
 ```
 
-### Query data
+### Query Data
 
 ```typescript
 const resultsWithScore = await store.similaritySearchWithScore(
