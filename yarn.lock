@@ -18670,6 +18670,7 @@ __metadata:
     mysql2: ^3.3.3
     object-hash: ^3.0.0
     openai: ^3.3.0
+    openapi-types: ^12.1.3
     p-queue: ^6.6.2
     p-retry: 4
     pdf-parse: 1.1.1
@@ -20813,6 +20814,13 @@ __metadata:
     axios: ^0.26.0
     form-data: ^4.0.0
   checksum: 28ccff8c09b6f47828c9583bb3bafc38a8459c76ea10eb9e08ca880f65523c5a9cc6c5f3c7669dded6f4c93e7cf49dd5c4dbfd12732a0f958c923117740d677b
+  languageName: node
+  linkType: hard
+
+"openapi-types@npm:^12.1.3":
+  version: 12.1.3
+  resolution: "openapi-types@npm:12.1.3"
+  checksum: 7fa5547f87a58d2aa0eba6e91d396f42d7d31bc3ae140e61b5d60b47d2fd068b48776f42407d5a8da7280cf31195aa128c2fc285e8bb871d1105edee5647a0bb
   languageName: node
   linkType: hard
 
