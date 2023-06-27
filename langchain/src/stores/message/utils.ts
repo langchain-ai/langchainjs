@@ -2,7 +2,7 @@ import {
   AIMessage,
   BaseMessage,
   ChatMessage,
-  GenericChatMessageFields,
+  ChatMessageFieldsWithRole,
   HumanMessage,
   StoredMessage,
   SystemMessage,
@@ -49,7 +49,7 @@ export function mapStoredMessagesToChatMessages(
         if (storedMessage.data.role === undefined) {
           throw new Error("Role must be defined for chat messages");
         }
-        return new ChatMessage(storedMessage.data as GenericChatMessageFields);
+        return new ChatMessage(storedMessage.data as ChatMessageFieldsWithRole);
       }
       default:
         throw new Error(`Got unexpected type: ${storedMessage.type}`);

@@ -74,6 +74,10 @@ export interface BaseMessageFields {
   };
 }
 
+export interface ChatMessageFieldsWithRole extends BaseMessageFields {
+  role: string;
+}
+
 export abstract class BaseMessage
   extends Serializable
   implements BaseMessageFields
@@ -132,29 +136,29 @@ export class HumanMessage extends BaseMessage {
   }
 }
 
-/**
- * @deprecated
- * Use {@link HumanMessage} instead.
- */
-export const HumanChatMessage = HumanMessage;
-
 export class AIMessage extends BaseMessage {
   _getType(): MessageType {
     return "ai";
   }
 }
 
-/**
- * @deprecated
- * Use {@link AIMessage} instead.
- */
-export const AIChatMessage = AIMessage;
-
 export class SystemMessage extends BaseMessage {
   _getType(): MessageType {
     return "system";
   }
 }
+
+/**
+ * @deprecated
+ * Use {@link HumanMessage} instead.
+ */
+export const HumanChatMessage = HumanMessage;
+
+/**
+ * @deprecated
+ * Use {@link AIMessage} instead.
+ */
+export const AIChatMessage = AIMessage;
 
 /**
  * @deprecated
@@ -180,21 +184,17 @@ export class FunctionMessage extends BaseMessage {
   }
 }
 
-export interface GenericChatMessageFields extends BaseMessageFields {
-  role: string;
-}
-
 export class ChatMessage
   extends BaseMessage
-  implements GenericChatMessageFields
+  implements ChatMessageFieldsWithRole
 {
   role: string;
 
   constructor(content: string, role: string);
 
-  constructor(fields: GenericChatMessageFields);
+  constructor(fields: ChatMessageFieldsWithRole);
 
-  constructor(fields: string | GenericChatMessageFields, role?: string) {
+  constructor(fields: string | ChatMessageFieldsWithRole, role?: string) {
     if (typeof fields === "string") {
       // eslint-disable-next-line no-param-reassign, @typescript-eslint/no-non-null-assertion
       fields = { content: fields, role: role! };
