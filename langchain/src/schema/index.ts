@@ -150,6 +150,12 @@ export class SystemMessage extends BaseMessage {
 
 /**
  * @deprecated
+ * Use {@link BaseMessage} instead.
+ */
+export const BaseChatMessage = BaseMessage;
+
+/**
+ * @deprecated
  * Use {@link HumanMessage} instead.
  */
 export const HumanChatMessage = HumanMessage;
