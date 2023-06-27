@@ -4,6 +4,7 @@ import { OpenAIChat } from "../openai-chat.js";
 import { OpenAI } from "../openai.js";
 import { StringPromptValue } from "../../prompts/index.js";
 import { CallbackManager } from "../../callbacks/index.js";
+import { NewTokenIndices } from "../../callbacks/base.js";
 
 test("Test OpenAI", async () => {
   const model = new OpenAI({ maxTokens: 5, modelName: "text-ada-001" });
@@ -144,26 +145,63 @@ test("Test OpenAI in streaming mode", async () => {
 
 test("Test OpenAI in streaming mode with multiple prompts", async () => {
   let nrNewTokens = 0;
+  const completions = [
+    ["", ""],
+    ["", ""],
+  ];
 
   const model = new OpenAI({
     maxTokens: 5,
     modelName: "text-ada-001",
     streaming: true,
+    n: 2,
     callbacks: CallbackManager.fromHandlers({
-      async handleLLMNewToken(_token: string) {
+      async handleLLMNewToken(token: string, idx: NewTokenIndices) {
         nrNewTokens += 1;
+        completions[idx.prompt][idx.completion] += token;
       },
     }),
   });
   const res = await model.generate(["Print hello world", "print hello sea"]);
-  console.log({ res });
+  console.log(
+    res.generations,
+    res.generations.map((g) => g[0].generationInfo)
+  );
 
   expect(nrNewTokens > 0).toBe(true);
   expect(res.generations.length).toBe(2);
-  expect(res.generations.map((g) => typeof g[0].text === "string")).toEqual([
-    true,
-    true,
-  ]);
+  expect(res.generations.map((g) => g.map((gg) => gg.text))).toEqual(
+    completions
+  );
+});
+
+test("Test OpenAIChat in streaming mode with multiple prompts", async () => {
+  let nrNewTokens = 0;
+  const completions = [[""], [""]];
+
+  const model = new OpenAI({
+    maxTokens: 5,
+    modelName: "gpt-3.5-turbo",
+    streaming: true,
+    n: 1,
+    callbacks: CallbackManager.fromHandlers({
+      async handleLLMNewToken(token: string, idx: NewTokenIndices) {
+        nrNewTokens += 1;
+        completions[idx.prompt][idx.completion] += token;
+      },
+    }),
+  });
+  const res = await model.generate(["Print hello world", "print hello sea"]);
+  console.log(
+    res.generations,
+    res.generations.map((g) => g[0].generationInfo)
+  );
+
+  expect(nrNewTokens > 0).toBe(true);
+  expect(res.generations.length).toBe(2);
+  expect(res.generations.map((g) => g.map((gg) => gg.text))).toEqual(
+    completions
+  );
 });
 
 test("Test OpenAI prompt value", async () => {

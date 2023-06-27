@@ -332,8 +332,10 @@ export abstract class LLM extends BaseLLM {
     runManager?: CallbackManagerForLLMRun
   ): Promise<LLMResult> {
     const generations: Generation[][] = await Promise.all(
-      prompts.map((prompt) =>
-        this._call(prompt, options, runManager).then((text) => [{ text }])
+      prompts.map((prompt, promptIndex) =>
+        this._call(prompt, { ...options, promptIndex }, runManager).then(
+          (text) => [{ text }]
+        )
       )
     );
     return { generations };

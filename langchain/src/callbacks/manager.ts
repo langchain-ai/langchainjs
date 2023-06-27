@@ -6,7 +6,11 @@ import {
   ChainValues,
   LLMResult,
 } from "../schema/index.js";
-import { BaseCallbackHandler, CallbackHandlerMethods } from "./base.js";
+import {
+  BaseCallbackHandler,
+  CallbackHandlerMethods,
+  NewTokenIndices,
+} from "./base.js";
 import { ConsoleCallbackHandler } from "./handlers/console.js";
 import {
   getTracingCallbackHandler,
@@ -79,7 +83,10 @@ export class CallbackManagerForLLMRun
   extends BaseRunManager
   implements BaseCallbackManagerMethods
 {
-  async handleLLMNewToken(token: string): Promise<void> {
+  async handleLLMNewToken(
+    token: string,
+    idx: NewTokenIndices = { prompt: 0, completion: 0 }
+  ): Promise<void> {
     await Promise.all(
       this.handlers.map((handler) =>
         consumeCallback(async () => {
@@ -87,6 +94,7 @@ export class CallbackManagerForLLMRun
             try {
               await handler.handleLLMNewToken?.(
                 token,
+                idx,
                 this.runId,
                 this._parentRunId
               );

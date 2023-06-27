@@ -86,6 +86,7 @@ export interface ChatOpenAICallOptions extends OpenAICallOptions {
   function_call?: CreateChatCompletionRequestFunctionCall;
   functions?: ChatCompletionFunctions[];
   tools?: StructuredTool[];
+  promptIndex?: number;
 }
 
 /**
@@ -113,7 +114,15 @@ export class ChatOpenAI
   declare CallOptions: ChatOpenAICallOptions;
 
   get callKeys(): (keyof ChatOpenAICallOptions)[] {
-    return ["stop", "signal", "timeout", "options", "functions", "tools"];
+    return [
+      "stop",
+      "signal",
+      "timeout",
+      "options",
+      "functions",
+      "tools",
+      "promptIndex",
+    ];
   }
 
   lc_serializable = true;
@@ -222,10 +231,6 @@ export class ChatOpenAI
     this.stop = fields?.stop;
 
     this.streaming = fields?.streaming ?? false;
-
-    if (this.streaming && this.n > 1) {
-      throw new Error("Cannot stream results when n > 1");
-    }
 
     if (this.azureOpenAIApiKey) {
       if (!this.azureOpenAIApiInstanceName) {
@@ -408,11 +413,13 @@ export class ChatOpenAI
                         choice.message.function_call.arguments +=
                           part.delta?.function_call?.arguments ?? "";
                       }
-                      // TODO this should pass part.index to the callback
-                      // when that's supported there
                       // eslint-disable-next-line no-void
                       void runManager?.handleLLMNewToken(
-                        part.delta?.content ?? ""
+                        part.delta?.content ?? "",
+                        {
+                          prompt: options.promptIndex ?? 0,
+                          completion: part.index,
+                        }
                       );
                       // TODO we don't currently have a callback method for
                       // sending the function call arguments
