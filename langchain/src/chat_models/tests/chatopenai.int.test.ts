@@ -14,6 +14,7 @@ import {
   SystemMessagePromptTemplate,
 } from "../../prompts/index.js";
 import { CallbackManager } from "../../callbacks/index.js";
+import { NewTokenIndices } from "../../callbacks/base.js";
 
 test("Test ChatOpenAI", async () => {
   const chat = new ChatOpenAI({ modelName: "gpt-3.5-turbo", maxTokens: 10 });
@@ -129,11 +130,43 @@ test("Test ChatOpenAI in streaming mode", async () => {
     ],
   });
   const message = new HumanChatMessage("Hello!");
-  const res = await model.call([message]);
-  console.log({ res });
+  const result = await model.call([message]);
+  console.log(result);
 
   expect(nrNewTokens > 0).toBe(true);
-  expect(res.text).toBe(streamedCompletion);
+  expect(result.text).toBe(streamedCompletion);
+});
+
+test("Test ChatOpenAI in streaming mode with n > 1 and multiple prompts", async () => {
+  let nrNewTokens = 0;
+  const streamedCompletions = [
+    ["", ""],
+    ["", ""],
+  ];
+
+  const model = new ChatOpenAI({
+    modelName: "gpt-3.5-turbo",
+    streaming: true,
+    maxTokens: 10,
+    n: 2,
+    callbacks: [
+      {
+        async handleLLMNewToken(token: string, idx: NewTokenIndices) {
+          nrNewTokens += 1;
+          streamedCompletions[idx.prompt][idx.completion] += token;
+        },
+      },
+    ],
+  });
+  const message1 = new HumanChatMessage("Hello!");
+  const message2 = new HumanChatMessage("Bye!");
+  const result = await model.generate([[message1], [message2]]);
+  console.log(result.generations);
+
+  expect(nrNewTokens > 0).toBe(true);
+  expect(result.generations.map((g) => g.map((gg) => gg.text))).toEqual(
+    streamedCompletions
+  );
 });
 
 test("Test ChatOpenAI prompt value", async () => {

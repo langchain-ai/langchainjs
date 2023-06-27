@@ -20,7 +20,11 @@ import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
 import { Generation, LLMResult } from "../schema/index.js";
 import { promptLayerTrackRequest } from "../util/prompt-layer.js";
 
-export { OpenAICallOptions, OpenAIChatInput, AzureOpenAIInput };
+export { OpenAIChatInput, AzureOpenAIInput };
+
+export interface OpenAIChatCallOptions extends OpenAICallOptions {
+  promptIndex?: number;
+}
 
 /**
  * Wrapper around OpenAI large language models that use the Chat endpoint.
@@ -48,10 +52,10 @@ export class OpenAIChat
   extends LLM
   implements OpenAIChatInput, AzureOpenAIInput
 {
-  declare CallOptions: OpenAICallOptions;
+  declare CallOptions: OpenAIChatCallOptions;
 
-  get callKeys(): (keyof OpenAICallOptions)[] {
-    return ["stop", "signal", "timeout", "options"];
+  get callKeys(): (keyof OpenAIChatCallOptions)[] {
+    return ["stop", "signal", "timeout", "options", "promptIndex"];
   }
 
   lc_serializable = true;
@@ -166,8 +170,10 @@ export class OpenAIChat
 
     this.streaming = fields?.streaming ?? false;
 
-    if (this.streaming && this.n > 1) {
-      throw new Error("Cannot stream results when n > 1");
+    if (this.n > 1) {
+      throw new Error(
+        "Cannot use n > 1 in OpenAIChat LLM. Use ChatOpenAI Chat Model instead."
+      );
     }
 
     if (this.azureOpenAIApiKey) {
@@ -329,7 +335,11 @@ export class OpenAIChat
                       choice.message.content += part.delta?.content ?? "";
                       // eslint-disable-next-line no-void
                       void runManager?.handleLLMNewToken(
-                        part.delta?.content ?? ""
+                        part.delta?.content ?? "",
+                        {
+                          prompt: options.promptIndex ?? 0,
+                          completion: part.index,
+                        }
                       );
                     }
                   }

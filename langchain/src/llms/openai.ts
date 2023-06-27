@@ -88,7 +88,7 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
 
   n = 1;
 
-  bestOf = 1;
+  bestOf?: number;
 
   logitBias?: Record<string, number>;
 
@@ -179,11 +179,7 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
 
     this.streaming = fields?.streaming ?? false;
 
-    if (this.streaming && this.n > 1) {
-      throw new Error("Cannot stream results when n > 1");
-    }
-
-    if (this.streaming && this.bestOf > 1) {
+    if (this.streaming && this.bestOf && this.bestOf > 1) {
       throw new Error("Cannot stream results when bestOf > 1");
     }
 
@@ -345,10 +341,11 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
                         choice.text = (choice.text ?? "") + (part.text ?? "");
                         choice.finish_reason = part.finish_reason;
                         choice.logprobs = part.logprobs;
-                        // TODO this should pass part.index to the callback
-                        // when that's supported there
                         // eslint-disable-next-line no-void
-                        void runManager?.handleLLMNewToken(part.text ?? "");
+                        void runManager?.handleLLMNewToken(part.text ?? "", {
+                          prompt: Math.floor(part.index / this.n),
+                          completion: part.index % this.n,
+                        });
                       }
                     }
 
