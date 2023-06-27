@@ -122,24 +122,27 @@ export async function initializeAgentExecutorWithOptions(
   // the agentType is not in InitializeAgentExecutorOptionsStructured
   switch (options.agentType) {
     case "zero-shot-react-description": {
-      const { agentArgs, ...rest } = options;
+      const { agentArgs, tags, ...rest } = options;
       return AgentExecutor.fromAgentAndTools({
+        tags: [...(tags ?? []), "zero-shot-react-description"],
         agent: ZeroShotAgent.fromLLMAndTools(llm, tools as Tool[], agentArgs),
         tools,
         ...rest,
       });
     }
     case "chat-zero-shot-react-description": {
-      const { agentArgs, ...rest } = options;
+      const { agentArgs, tags, ...rest } = options;
       return AgentExecutor.fromAgentAndTools({
+        tags: [...(tags ?? []), "chat-zero-shot-react-description"],
         agent: ChatAgent.fromLLMAndTools(llm, tools as Tool[], agentArgs),
         tools,
         ...rest,
       });
     }
     case "chat-conversational-react-description": {
-      const { agentArgs, memory, ...rest } = options;
+      const { agentArgs, memory, tags, ...rest } = options;
       const executor = AgentExecutor.fromAgentAndTools({
+        tags: [...(tags ?? []), "chat-conversational-react-description"],
         agent: ChatConversationalAgent.fromLLMAndTools(
           llm,
           tools as Tool[],
@@ -159,8 +162,9 @@ export async function initializeAgentExecutorWithOptions(
       return executor;
     }
     case "structured-chat-zero-shot-react-description": {
-      const { agentArgs, memory, ...rest } = options;
+      const { agentArgs, memory, tags, ...rest } = options;
       const executor = AgentExecutor.fromAgentAndTools({
+        tags: [...(tags ?? []), "structured-chat-zero-shot-react-description"],
         agent: StructuredChatAgent.fromLLMAndTools(llm, tools, agentArgs),
         tools,
         memory,
@@ -169,8 +173,9 @@ export async function initializeAgentExecutorWithOptions(
       return executor;
     }
     case "openai-functions": {
-      const { agentArgs, memory, ...rest } = options;
+      const { agentArgs, memory, tags, ...rest } = options;
       const executor = AgentExecutor.fromAgentAndTools({
+        tags: [...(tags ?? []), "openai-functions"],
         agent: OpenAIAgent.fromLLMAndTools(llm, tools, agentArgs),
         tools,
         memory:

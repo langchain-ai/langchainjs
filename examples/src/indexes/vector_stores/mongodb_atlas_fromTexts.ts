@@ -12,7 +12,12 @@ export const run = async () => {
     ["Hello world", "Bye bye", "What's this?"],
     [{ id: 2 }, { id: 1 }, { id: 3 }],
     new CohereEmbeddings(),
-    { collection }
+    {
+      collection,
+      indexName: "default", // The name of the Atlas search index. Defaults to "default"
+      textKey: "text", // The name of the collection field containing the raw content. Defaults to "text"
+      embeddingKey: "embedding", // The name of the collection field containing the embedded text. Defaults to "embedding"
+    }
   );
 
   await client.close();

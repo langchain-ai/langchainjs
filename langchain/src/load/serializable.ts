@@ -128,12 +128,20 @@ export abstract class Serializable {
       Object.assign(kwargs, Reflect.get(current, "lc_attributes", this));
     }
 
+    // include all secrets used, even if not in kwargs,
+    // will be replaced with sentinel value in replaceSecrets
+    for (const key in secrets) {
+      if (key in this && this[key as keyof this] !== undefined) {
+        kwargs[key] = this[key as keyof this] || kwargs[key];
+      }
+    }
+
     return {
       lc: 1,
       type: "constructor",
       id: [...this.lc_namespace, this.constructor.name],
       kwargs: mapKeys(
-        this.lc_secrets ? replaceSecrets(kwargs, secrets) : kwargs,
+        Object.keys(secrets).length ? replaceSecrets(kwargs, secrets) : kwargs,
         keyToJson,
         aliases
       ),
