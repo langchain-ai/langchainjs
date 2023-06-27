@@ -3,7 +3,7 @@
 import { test, expect } from "@jest/globals";
 import { createClient } from "redis";
 import { RedisChatMessageHistory } from "../message/redis.js";
-import { HumanChatMessage, AIChatMessage } from "../../schema/index.js";
+import { HumanMessage, AIChatMessage } from "../../schema/index.js";
 import { ChatOpenAI } from "../../chat_models/openai.js";
 import { ConversationChain } from "../../chains/conversation.js";
 import { BufferMemory } from "../../memory/buffer_memory.js";
@@ -33,7 +33,7 @@ test("Test Redis history store", async () => {
   await chatHistory.addAIChatMessage("Ozzy Osbourne");
 
   const expectedMessages = [
-    new HumanChatMessage("Who is the best vocalist?"),
+    new HumanMessage("Who is the best vocalist?"),
     new AIChatMessage("Ozzy Osbourne"),
   ];
 
@@ -50,7 +50,7 @@ test("Test clear Redis history store", async () => {
   await chatHistory.addAIChatMessage("Ozzy Osbourne");
 
   const expectedMessages = [
-    new HumanChatMessage("Who is the best vocalist?"),
+    new HumanMessage("Who is the best vocalist?"),
     new AIChatMessage("Ozzy Osbourne"),
   ];
 
@@ -76,7 +76,7 @@ test("Test Redis history with a TTL", async () => {
   await chatHistory.addAIChatMessage("Ozzy Osbourne");
 
   const expectedMessages = [
-    new HumanChatMessage("Who is the best vocalist?"),
+    new HumanMessage("Who is the best vocalist?"),
     new AIChatMessage("Ozzy Osbourne"),
   ];
 
@@ -103,7 +103,7 @@ test("Test Redis memory with Buffer Memory", async () => {
   );
 
   const expectedHistory = [
-    new HumanChatMessage("Who is the best vocalist?"),
+    new HumanMessage("Who is the best vocalist?"),
     new AIChatMessage("Ozzy Osbourne"),
   ];
 

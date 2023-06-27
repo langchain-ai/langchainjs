@@ -1,6 +1,6 @@
 import { test, expect, jest } from "@jest/globals";
 import { MotorheadMemory } from "../motorhead_memory.js";
-import { HumanChatMessage, AIChatMessage } from "../../schema/index.js";
+import { HumanMessage, AIChatMessage } from "../../schema/index.js";
 
 test("Test motörhead memory", async () => {
   global.fetch = jest.fn(() =>
@@ -30,7 +30,7 @@ test("Test motörhead memory", async () => {
 
 test("Test motörhead memory with pre-loaded history", async () => {
   const pastMessages = [
-    new HumanChatMessage("My name is Ozzy"),
+    new HumanMessage("My name is Ozzy"),
     new AIChatMessage("Nice to meet you, Ozzy!"),
   ];
 

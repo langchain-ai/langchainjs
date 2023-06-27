@@ -7,7 +7,7 @@ import { OpenAI } from "../../llms/openai.js";
 import { SerpAPI } from "../../tools/serpapi.js";
 import { Calculator } from "../../tools/calculator.js";
 import { initializeAgentExecutorWithOptions } from "../../agents/initialize.js";
-import { HumanChatMessage } from "../../schema/index.js";
+import { HumanMessage } from "../../schema/index.js";
 import { ChatOpenAI } from "../../chat_models/openai.js";
 import { Serialized } from "../../load/serializable.js";
 import {
@@ -38,7 +38,7 @@ test("Test LangChain V2 tracer", async () => {
   await tracer.handleLLMEnd({ generations: [[]] }, llmRunId);
   await tracer.handleChatModelStart(
     serialized,
-    [[new HumanChatMessage("I'm a human.")]],
+    [[new HumanMessage("I'm a human.")]],
     chatRunId
   );
   await tracer.handleLLMEnd({ generations: [[]] }, chatRunId);

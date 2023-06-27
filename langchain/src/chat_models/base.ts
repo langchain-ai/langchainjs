@@ -1,10 +1,10 @@
 import {
   AIChatMessage,
-  BaseChatMessage,
+  BaseMessage,
   BasePromptValue,
   ChatGeneration,
   ChatResult,
-  HumanChatMessage,
+  HumanMessage,
   LLMResult,
   RUN_KEY,
 } from "../schema/index.js";
@@ -52,7 +52,7 @@ export abstract class BaseChatModel extends BaseLanguageModel {
   ): LLMResult["llmOutput"];
 
   async generate(
-    messages: BaseChatMessage[][],
+    messages: BaseMessage[][],
     options?: string[] | this["CallOptions"],
     callbacks?: Callbacks
   ): Promise<LLMResult> {
@@ -152,23 +152,23 @@ export abstract class BaseChatModel extends BaseLanguageModel {
     options?: string[] | this["CallOptions"],
     callbacks?: Callbacks
   ): Promise<LLMResult> {
-    const promptMessages: BaseChatMessage[][] = promptValues.map(
-      (promptValue) => promptValue.toChatMessages()
+    const promptMessages: BaseMessage[][] = promptValues.map((promptValue) =>
+      promptValue.toChatMessages()
     );
     return this.generate(promptMessages, options, callbacks);
   }
 
   abstract _generate(
-    messages: BaseChatMessage[],
+    messages: BaseMessage[],
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult>;
 
   async call(
-    messages: BaseChatMessage[],
+    messages: BaseMessage[],
     options?: string[] | this["CallOptions"],
     callbacks?: Callbacks
-  ): Promise<BaseChatMessage> {
+  ): Promise<BaseMessage> {
     const result = await this.generate([messages], options, callbacks);
     const generations = result.generations as ChatGeneration[][];
     return generations[0][0].message;
@@ -178,16 +178,16 @@ export abstract class BaseChatModel extends BaseLanguageModel {
     promptValue: BasePromptValue,
     options?: string[] | this["CallOptions"],
     callbacks?: Callbacks
-  ): Promise<BaseChatMessage> {
-    const promptMessages: BaseChatMessage[] = promptValue.toChatMessages();
+  ): Promise<BaseMessage> {
+    const promptMessages: BaseMessage[] = promptValue.toChatMessages();
     return this.call(promptMessages, options, callbacks);
   }
 
   async predictMessages(
-    messages: BaseChatMessage[],
+    messages: BaseMessage[],
     options?: string[] | this["CallOptions"],
     callbacks?: Callbacks
-  ): Promise<BaseChatMessage> {
+  ): Promise<BaseMessage> {
     return this.call(messages, options, callbacks);
   }
 
@@ -196,21 +196,21 @@ export abstract class BaseChatModel extends BaseLanguageModel {
     options?: string[] | this["CallOptions"],
     callbacks?: Callbacks
   ): Promise<string> {
-    const message = new HumanChatMessage(text);
+    const message = new HumanMessage(text);
     const result = await this.call([message], options, callbacks);
-    return result.text;
+    return result.content;
   }
 }
 
 export abstract class SimpleChatModel extends BaseChatModel {
   abstract _call(
-    messages: BaseChatMessage[],
+    messages: BaseMessage[],
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<string>;
 
   async _generate(
-    messages: BaseChatMessage[],
+    messages: BaseMessage[],
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
@@ -219,7 +219,7 @@ export abstract class SimpleChatModel extends BaseChatModel {
     return {
       generations: [
         {
-          text: message.text,
+          text: message.content,
           message,
         },
       ],

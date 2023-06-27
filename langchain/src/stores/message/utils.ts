@@ -1,8 +1,9 @@
 import {
   AIChatMessage,
-  BaseChatMessage,
+  BaseMessage,
   ChatMessage,
-  HumanChatMessage,
+  GenericChatMessageFields,
+  HumanMessage,
   StoredMessage,
   SystemChatMessage,
 } from "../../schema/index.js";
@@ -34,27 +35,22 @@ export function mapV1MessageToStoredMessage(
 
 export function mapStoredMessagesToChatMessages(
   messages: StoredMessage[]
-): BaseChatMessage[] {
+): BaseMessage[] {
   return messages.map((message) => {
     const storedMessage = mapV1MessageToStoredMessage(message);
     switch (storedMessage.type) {
       case "human":
-        return new HumanChatMessage(storedMessage.data.content);
+        return new HumanMessage(storedMessage.data);
       case "ai":
-        return new AIChatMessage(
-          storedMessage.data.content,
-          storedMessage.data.additional_kwargs
-        );
+        return new AIChatMessage(storedMessage.data);
       case "system":
-        return new SystemChatMessage(storedMessage.data.content);
-      case "chat":
-        if (storedMessage.data?.additional_kwargs?.role === undefined) {
+        return new SystemChatMessage(storedMessage.data);
+      case "chat": {
+        if (storedMessage.data.role === undefined) {
           throw new Error("Role must be defined for chat messages");
         }
-        return new ChatMessage(
-          storedMessage.data.content,
-          storedMessage.data.additional_kwargs.role
-        );
+        return new ChatMessage(storedMessage.data as GenericChatMessageFields);
+      }
       default:
         throw new Error(`Got unexpected type: ${storedMessage.type}`);
     }
@@ -62,7 +58,7 @@ export function mapStoredMessagesToChatMessages(
 }
 
 export function mapChatMessagesToStoredMessages(
-  messages: BaseChatMessage[]
+  messages: BaseMessage[]
 ): StoredMessage[] {
-  return messages.map((message) => message.toJSON());
+  return messages.map((message) => message.toDict());
 }

@@ -22,11 +22,11 @@ import type { StreamingAxiosConfiguration } from "../util/axios-types.js";
 import { BaseChatModel, BaseChatModelParams } from "./base.js";
 import {
   AIChatMessage,
-  BaseChatMessage,
+  BaseMessage,
   ChatGeneration,
   ChatMessage,
   ChatResult,
-  HumanChatMessage,
+  HumanMessage,
   MessageType,
   SystemChatMessage,
 } from "../schema/index.js";
@@ -67,10 +67,10 @@ function messageTypeToOpenAIRole(
 
 function openAIResponseToChatMessage(
   message: ChatCompletionResponseMessage
-): BaseChatMessage {
+): BaseMessage {
   switch (message.role) {
     case "user":
-      return new HumanChatMessage(message.content || "");
+      return new HumanMessage(message.content || "");
     case "assistant":
       return new AIChatMessage(message.content || "", {
         function_call: message.function_call,
@@ -296,7 +296,7 @@ export class ChatOpenAI
 
   /** @ignore */
   async _generate(
-    messages: BaseChatMessage[],
+    messages: BaseMessage[],
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
@@ -305,7 +305,7 @@ export class ChatOpenAI
     const messagesMapped: ChatCompletionRequestMessage[] = messages.map(
       (message) => ({
         role: messageTypeToOpenAIRole(message._getType()),
-        content: message.text,
+        content: message.content,
         name: message.name,
         function_call: message.additional_kwargs
           .function_call as ChatCompletionRequestMessageFunctionCall,
@@ -491,7 +491,7 @@ export class ChatOpenAI
     };
   }
 
-  async getNumTokensFromMessages(messages: BaseChatMessage[]): Promise<{
+  async getNumTokensFromMessages(messages: BaseMessage[]): Promise<{
     totalCount: number;
     countPerMessage: number[];
   }> {
@@ -510,7 +510,7 @@ export class ChatOpenAI
 
     const countPerMessage = await Promise.all(
       messages.map(async (message) => {
-        const textCount = await this.getNumTokens(message.text);
+        const textCount = await this.getNumTokens(message.content);
         const roleCount = await this.getNumTokens(
           messageTypeToOpenAIRole(message._getType())
         );
@@ -629,7 +629,7 @@ export class PromptLayerChatOpenAI extends ChatOpenAI {
   }
 
   async _generate(
-    messages: BaseChatMessage[],
+    messages: BaseMessage[],
     options?: string[] | this["CallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
@@ -654,20 +654,20 @@ export class PromptLayerChatOpenAI extends ChatOpenAI {
     );
     const requestEndTime = Date.now();
 
-    const _convertMessageToDict = (message: BaseChatMessage) => {
+    const _convertMessageToDict = (message: BaseMessage) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let messageDict: Record<string, any>;
 
       if (message._getType() === "human") {
-        messageDict = { role: "user", content: message.text };
+        messageDict = { role: "user", content: message.content };
       } else if (message._getType() === "ai") {
-        messageDict = { role: "assistant", content: message.text };
+        messageDict = { role: "assistant", content: message.content };
       } else if (message._getType() === "system") {
-        messageDict = { role: "system", content: message.text };
+        messageDict = { role: "system", content: message.content };
       } else if (message._getType() === "generic") {
         messageDict = {
           role: (message as ChatMessage).role,
-          content: message.text,
+          content: message.content,
         };
       } else {
         throw new Error(`Got unknown type ${message}`);
@@ -677,7 +677,7 @@ export class PromptLayerChatOpenAI extends ChatOpenAI {
     };
 
     const _createMessageDicts = (
-      messages: BaseChatMessage[],
+      messages: BaseMessage[],
       callOptions?: this["CallOptions"]
     ) => {
       const params = {

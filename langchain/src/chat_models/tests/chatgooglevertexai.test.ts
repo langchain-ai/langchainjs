@@ -1,17 +1,17 @@
 import { test, expect } from "@jest/globals";
 import {
-  BaseChatMessage,
+  BaseMessage,
   SystemChatMessage,
-  HumanChatMessage,
+  HumanMessage,
   AIChatMessage,
 } from "../../schema/index.js";
 import { ChatExample, ChatGoogleVertexAI } from "../googlevertexai.js";
 
 test("Google messages", async () => {
-  const messages: BaseChatMessage[] = [
-    new HumanChatMessage("Human1"),
+  const messages: BaseMessage[] = [
+    new HumanMessage("Human1"),
     new AIChatMessage("AI1"),
-    new HumanChatMessage("Human2"),
+    new HumanMessage("Human2"),
   ];
   const model = new ChatGoogleVertexAI();
   const instance = model.createInstance(messages);
@@ -21,11 +21,11 @@ test("Google messages", async () => {
 });
 
 test("Google messages with a system message", async () => {
-  const messages: BaseChatMessage[] = [
+  const messages: BaseMessage[] = [
     new SystemChatMessage("System1"),
-    new HumanChatMessage("Human1"),
+    new HumanMessage("Human1"),
     new AIChatMessage("AI1"),
-    new HumanChatMessage("Human2"),
+    new HumanMessage("Human2"),
   ];
   const model = new ChatGoogleVertexAI();
   const instance = model.createInstance(messages);
@@ -35,15 +35,15 @@ test("Google messages with a system message", async () => {
 });
 
 test("Google examples", async () => {
-  const messages: BaseChatMessage[] = [
+  const messages: BaseMessage[] = [
     new SystemChatMessage("System1"),
-    new HumanChatMessage("Human1"),
+    new HumanMessage("Human1"),
     new AIChatMessage("AI1"),
-    new HumanChatMessage("Human2"),
+    new HumanMessage("Human2"),
   ];
   const examples: ChatExample[] = [
     {
-      input: new HumanChatMessage("Example Human1"),
+      input: new HumanMessage("Example Human1"),
       output: new AIChatMessage("Example AI1"),
     },
   ];
@@ -57,21 +57,21 @@ test("Google examples", async () => {
 });
 
 test("Google Throw an error for input messages where SystemMessage is not first", async () => {
-  const messages: BaseChatMessage[] = [
-    new HumanChatMessage("Human1"),
+  const messages: BaseMessage[] = [
+    new HumanMessage("Human1"),
     new SystemChatMessage("System1"),
     new AIChatMessage("AI1"),
-    new HumanChatMessage("Human2"),
+    new HumanMessage("Human2"),
   ];
   const model = new ChatGoogleVertexAI();
   expect(() => model.createInstance(messages)).toThrow();
 });
 
 test("Google Throw an error for input messages where messages the same type of message occurs twice in a row", async () => {
-  const messages: BaseChatMessage[] = [
+  const messages: BaseMessage[] = [
     new SystemChatMessage("System1"),
-    new HumanChatMessage("Human1"),
-    new HumanChatMessage("Human2"),
+    new HumanMessage("Human1"),
+    new HumanMessage("Human2"),
     new AIChatMessage("AI1"),
   ];
   const model = new ChatGoogleVertexAI();
@@ -79,9 +79,9 @@ test("Google Throw an error for input messages where messages the same type of m
 });
 
 test("Google Throw an error for an even number of non-system input messages", async () => {
-  const messages: BaseChatMessage[] = [
+  const messages: BaseMessage[] = [
     new SystemChatMessage("System1"),
-    new HumanChatMessage("Human2"),
+    new HumanMessage("Human2"),
     new AIChatMessage("AI1"),
   ];
   const model = new ChatGoogleVertexAI();
@@ -89,10 +89,10 @@ test("Google Throw an error for an even number of non-system input messages", as
 });
 
 test("Google code messages", async () => {
-  const messages: BaseChatMessage[] = [
-    new HumanChatMessage("Human1"),
+  const messages: BaseMessage[] = [
+    new HumanMessage("Human1"),
     new AIChatMessage("AI1"),
-    new HumanChatMessage("Human2"),
+    new HumanMessage("Human2"),
   ];
   const model = new ChatGoogleVertexAI({ model: "codechat-bison" });
   const instance = model.createInstance(messages);
@@ -102,11 +102,11 @@ test("Google code messages", async () => {
 });
 
 test("Google code messages with a system message", async () => {
-  const messages: BaseChatMessage[] = [
+  const messages: BaseMessage[] = [
     new SystemChatMessage("System1"),
-    new HumanChatMessage("Human1"),
+    new HumanMessage("Human1"),
     new AIChatMessage("AI1"),
-    new HumanChatMessage("Human2"),
+    new HumanMessage("Human2"),
   ];
   const model = new ChatGoogleVertexAI({ model: "codechat-bison" });
   const instance = model.createInstance(messages);

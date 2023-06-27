@@ -6,10 +6,7 @@ import {
   RedisFunctions,
   RedisScripts,
 } from "redis";
-import {
-  BaseChatMessage,
-  BaseListChatMessageHistory,
-} from "../../schema/index.js";
+import { BaseMessage, BaseListChatMessageHistory } from "../../schema/index.js";
 import {
   mapChatMessagesToStoredMessages,
   mapStoredMessagesToChatMessages,
@@ -61,7 +58,7 @@ export class RedisChatMessageHistory extends BaseListChatMessageHistory {
     return true;
   }
 
-  async getMessages(): Promise<BaseChatMessage[]> {
+  async getMessages(): Promise<BaseMessage[]> {
     await this.ensureReadiness();
     const rawStoredMessages = await this.client.lRange(this.sessionId, 0, -1);
     const orderedMessages = rawStoredMessages
@@ -70,7 +67,7 @@ export class RedisChatMessageHistory extends BaseListChatMessageHistory {
     return mapStoredMessagesToChatMessages(orderedMessages);
   }
 
-  async addMessage(message: BaseChatMessage): Promise<void> {
+  async addMessage(message: BaseMessage): Promise<void> {
     await this.ensureReadiness();
     const messageToAdd = mapChatMessagesToStoredMessages([message]);
     await this.client.lPush(this.sessionId, JSON.stringify(messageToAdd[0]));

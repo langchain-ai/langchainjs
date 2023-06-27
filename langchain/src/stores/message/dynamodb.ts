@@ -12,7 +12,7 @@ import {
 
 import {
   StoredMessage,
-  BaseChatMessage,
+  BaseMessage,
   BaseListChatMessageHistory,
 } from "../../schema/index.js";
 import {
@@ -92,7 +92,7 @@ export class DynamoDBChatMessageHistory extends BaseListChatMessageHistory {
     }
   }
 
-  async getMessages(): Promise<BaseChatMessage[]> {
+  async getMessages(): Promise<BaseMessage[]> {
     const params: GetItemCommandInput = {
       TableName: this.tableName,
       Key: this.dynamoKey,
@@ -125,7 +125,7 @@ export class DynamoDBChatMessageHistory extends BaseListChatMessageHistory {
     await this.client.send(new DeleteItemCommand(params));
   }
 
-  protected async addMessage(message: BaseChatMessage) {
+  protected async addMessage(message: BaseMessage) {
     const messages = mapChatMessagesToStoredMessages([message]);
 
     const params: UpdateItemCommandInput = {

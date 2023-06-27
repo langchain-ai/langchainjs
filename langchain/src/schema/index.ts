@@ -1,6 +1,6 @@
 import { ChatCompletionRequestMessageFunctionCall } from "openai";
 import { Document } from "../document.js";
-import { Serializable } from "../load/serializable.js";
+import { Serializable, SerializedConstructor } from "../load/serializable.js";
 
 export const RUN_KEY = "__run";
 
@@ -65,62 +65,98 @@ export interface StoredMessage {
 
 export type MessageType = "human" | "ai" | "generic" | "system" | "function";
 
-export abstract class BaseChatMessage {
+export interface BaseMessageFields {
+  content: string;
+  name?: string;
+  additional_kwargs?: {
+    function_call?: ChatCompletionRequestMessageFunctionCall;
+    [key: string]: unknown;
+  };
+}
+
+export abstract class BaseMessage
+  extends Serializable
+  implements BaseMessageFields
+{
+  lc_namespace = ["langchain", "schema"];
+
+  lc_serializable = true;
+
+  /**
+   * @deprecated
+   * Use {@link BaseMessage.text} instead.
+   * */
+  get text(): string {
+    return this.content;
+  }
+
   /** The text of the message. */
-  text: string;
+  content: string;
 
   /** The name of the message sender in a multi-user chat. */
   name?: string;
 
   /** Additional keyword arguments */
-  additional_kwargs: {
-    function_call?: ChatCompletionRequestMessageFunctionCall;
-    [key: string]: unknown;
-  } = {};
+  additional_kwargs: NonNullable<BaseMessageFields["additional_kwargs"]>;
 
   /** The type of the message. */
   abstract _getType(): MessageType;
 
-  constructor(text: string, kwargs?: Record<string, unknown>) {
-    this.text = text;
-    this.additional_kwargs = kwargs || {};
+  constructor(
+    fields: string | BaseMessageFields,
+    /** @deprecated */
+    kwargs?: Record<string, unknown>
+  ) {
+    if (typeof fields === "string") {
+      // eslint-disable-next-line no-param-reassign
+      fields = { content: fields, additional_kwargs: kwargs };
+    }
+    super(fields);
+    this.name = fields.name;
+    this.content = fields.content;
+    this.additional_kwargs = fields.additional_kwargs || {};
   }
 
-  toJSON(): StoredMessage {
+  toDict(): StoredMessage {
     return {
       type: this._getType(),
-      data: {
-        content: this.text,
-        role: "role" in this ? (this.role as string) : undefined,
-        name: this.name,
-        additional_kwargs: this.additional_kwargs,
-      },
+      data: (this.toJSON() as SerializedConstructor)
+        .kwargs as StoredMessageData,
     };
   }
 }
 
-export class HumanChatMessage extends BaseChatMessage {
+export class HumanMessage extends BaseMessage {
   _getType(): MessageType {
     return "human";
   }
 }
 
-export class AIChatMessage extends BaseChatMessage {
+export const HumanChatMessage = HumanMessage;
+
+export class AIChatMessage extends BaseMessage {
   _getType(): MessageType {
     return "ai";
   }
 }
 
-export class SystemChatMessage extends BaseChatMessage {
+export class SystemChatMessage extends BaseMessage {
   _getType(): MessageType {
     return "system";
   }
 }
 
-export class FunctionChatMessage extends BaseChatMessage {
-  constructor(text: string, name: string) {
-    super(text);
-    this.name = name;
+export class FunctionChatMessage extends BaseMessage {
+  constructor(
+    fields: string | BaseMessageFields,
+    /** @deprecated */
+    name: string
+  ) {
+    if (typeof fields === "string") {
+      // eslint-disable-next-line no-param-reassign
+      fields = { content: fields, name };
+    }
+    super(fields);
   }
 
   _getType(): MessageType {
@@ -128,12 +164,27 @@ export class FunctionChatMessage extends BaseChatMessage {
   }
 }
 
-export class ChatMessage extends BaseChatMessage {
+export interface GenericChatMessageFields extends BaseMessageFields {
+  role: string;
+}
+
+export class ChatMessage
+  extends BaseMessage
+  implements GenericChatMessageFields
+{
   role: string;
 
-  constructor(text: string, role: string) {
-    super(text);
-    this.role = role;
+  constructor(content: string, role: string);
+
+  constructor(fields: GenericChatMessageFields);
+
+  constructor(fields: string | GenericChatMessageFields, role?: string) {
+    if (typeof fields === "string") {
+      // eslint-disable-next-line no-param-reassign, @typescript-eslint/no-non-null-assertion
+      fields = { content: fields, role: role! };
+    }
+    super(fields);
+    this.role = fields.role;
   }
 
   _getType(): MessageType {
@@ -142,7 +193,7 @@ export class ChatMessage extends BaseChatMessage {
 }
 
 export interface ChatGeneration extends Generation {
-  message: BaseChatMessage;
+  message: BaseMessage;
 }
 
 export interface ChatResult {
@@ -158,7 +209,7 @@ export interface ChatResult {
 export abstract class BasePromptValue extends Serializable {
   abstract toString(): string;
 
-  abstract toChatMessages(): BaseChatMessage[];
+  abstract toChatMessages(): BaseMessage[];
 }
 
 export type AgentAction = {
@@ -189,7 +240,7 @@ export abstract class BaseRetriever {
 }
 
 export abstract class BaseChatMessageHistory extends Serializable {
-  public abstract getMessages(): Promise<BaseChatMessage[]>;
+  public abstract getMessages(): Promise<BaseMessage[]>;
 
   public abstract addUserMessage(message: string): Promise<void>;
 
@@ -199,10 +250,10 @@ export abstract class BaseChatMessageHistory extends Serializable {
 }
 
 export abstract class BaseListChatMessageHistory extends Serializable {
-  protected abstract addMessage(message: BaseChatMessage): Promise<void>;
+  protected abstract addMessage(message: BaseMessage): Promise<void>;
 
   public addUserMessage(message: string): Promise<void> {
-    return this.addMessage(new HumanChatMessage(message));
+    return this.addMessage(new HumanMessage(message));
   }
 
   public addAIChatMessage(message: string): Promise<void> {

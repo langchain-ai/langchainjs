@@ -7,8 +7,8 @@ import { AutoGPTOutputParser } from "./output_parser.js";
 import { AutoGPTPrompt } from "./prompt.js";
 import {
   AIChatMessage,
-  BaseChatMessage,
-  HumanChatMessage,
+  BaseMessage,
+  HumanMessage,
   SystemChatMessage,
 } from "../../schema/index.js";
 // import { HumanInputRun } from "./tools/human/tool"; // TODO
@@ -33,7 +33,7 @@ export class AutoGPT {
 
   memory: VectorStoreRetriever;
 
-  fullMessageHistory: BaseChatMessage[];
+  fullMessageHistory: BaseMessage[];
 
   nextActionCount: number;
 
@@ -133,7 +133,7 @@ export class AutoGPT {
 
       // Print the assistant reply
       console.log(assistantReply);
-      this.fullMessageHistory.push(new HumanChatMessage(user_input));
+      this.fullMessageHistory.push(new HumanMessage(user_input));
       this.fullMessageHistory.push(new AIChatMessage(assistantReply));
 
       const action = await this.outputParser.parse(assistantReply);
