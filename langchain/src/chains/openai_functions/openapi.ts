@@ -44,6 +44,7 @@ function convertOpenAPIParamsToJSONSchema(params: ParameterObject[], spec: OpenA
     let schema;
     if (param.schema) {
       schema = spec.getSchema(param.schema);
+      jsonSchema.properties[param.name] = schema;
     } else if (param.content) {
       const mediaTypeSchema = Object.values(param.content)[0].schema;
       if (mediaTypeSchema) {
@@ -147,9 +148,12 @@ function convertOpenAPISpecToOpenAIFunctions(spec: OpenAPISpec): {
       const { headers, params, ...rest } = options ?? {};
       const { method, url } = nameToCallMap[name];
       const queryString = new URLSearchParams({
+        ...requestArgs.params,
         ...params
       }).toString();
-      const urlWithQuerystring = url + queryString.length ? ("?" + queryString) : "";
+      console.log(params, queryString);
+      const urlWithQuerystring = url + (queryString.length ? ("?" + queryString) : "");
+      console.log(urlWithQuerystring)
       let body = requestArgs.data;
       if (requestArgs.data !== undefined && typeof requestArgs.data !== "string") {
         body = JSON.stringify(requestArgs.data);
@@ -204,7 +208,7 @@ class SimpleRequestChain extends BaseChain {
     const response = await this.requestMethod(name, args, {});
     let output;
     if (response.status < 200 || response.status > 299) {
-      output = `${response.status}: ${response.statusText} for ${name} called with ${args.params}`;
+      output = `${response.status}: ${response.statusText} for ${name} called with ${JSON.stringify(args.params)}`;
     } else {
       output = await response.text();
     }
@@ -246,6 +250,7 @@ export async function createOpenAPIChain (
     convertedSpec = OpenAPISpec.fromObject(spec);
   }
   const { openAIFunctions, defaultExecutionMethod } = convertOpenAPISpecToOpenAIFunctions(convertedSpec);
+  console.log(JSON.stringify(openAIFunctions, null, 2))
   if (defaultExecutionMethod === undefined) {
     throw new Error(`Could not parse any valid operations from the provided spec.`);
   }
@@ -263,7 +268,7 @@ export async function createOpenAPIChain (
   const formatChain = new LLMChain({
     llm,
     prompt,
-    outputParser: new JsonOutputFunctionsParser(),
+    outputParser: new JsonOutputFunctionsParser({argsOnly: false}),
     outputKey: "function",
     llmKwargs: { functions: openAIFunctions },
     verbose
