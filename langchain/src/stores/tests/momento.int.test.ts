@@ -13,7 +13,7 @@ import {
 } from "@gomomento/sdk";
 import { v4 } from "uuid";
 import { MomentoChatMessageHistory } from "../message/momento.js";
-import { AIChatMessage, HumanMessage } from "../../schema/index.js";
+import { AIMessage, HumanMessage } from "../../schema/index.js";
 
 const client = new CacheClient({
   configuration: Configurations.Laptop.v1(),
@@ -53,7 +53,7 @@ describe("Test Momento message history store", () => {
 
     const expectedMessages = [
       new HumanMessage("My name's Jonas"),
-      new AIChatMessage("Nice to meet you, Jonas!"),
+      new AIMessage("Nice to meet you, Jonas!"),
       new HumanMessage("Nice to meet you too!"),
     ];
 
@@ -73,7 +73,7 @@ describe("Test Momento message history store", () => {
 
     const expectedMessages = [
       new HumanMessage("My name's Jonas"),
-      new AIChatMessage("Nice to meet you, Jonas!"),
+      new AIMessage("Nice to meet you, Jonas!"),
       new HumanMessage("Nice to meet you too!"),
     ];
 
@@ -98,7 +98,7 @@ describe("Test Momento message history store", () => {
 
     const expectedMessages = [
       new HumanMessage("My name's Jonas"),
-      new AIChatMessage("Nice to meet you, Jonas!"),
+      new AIMessage("Nice to meet you, Jonas!"),
       new HumanMessage("Nice to meet you too!"),
     ];
 

@@ -1,6 +1,6 @@
 import { InMemoryCache } from "../cache/index.js";
 import {
-  AIChatMessage,
+  AIMessage,
   BaseCache,
   BaseMessage,
   BasePromptValue,
@@ -260,7 +260,7 @@ export abstract class BaseLLM extends BaseLanguageModel {
   ): Promise<BaseMessage> {
     const text = getBufferString(messages);
     const prediction = await this.call(text, options, callbacks);
-    return new AIChatMessage(prediction);
+    return new AIMessage(prediction);
   }
 
   /**

@@ -1,12 +1,12 @@
 import {
-  AIChatMessage,
+  AIMessage,
   BaseMessage,
   BasePromptValue,
   ChatMessage,
   HumanMessage,
   InputValues,
   PartialValues,
-  SystemChatMessage,
+  SystemMessage,
 } from "../schema/index.js";
 import { Serializable } from "../load/serializable.js";
 import {
@@ -186,7 +186,7 @@ export class HumanMessagePromptTemplate extends BaseMessageStringPromptTemplate 
 
 export class AIMessagePromptTemplate extends BaseMessageStringPromptTemplate {
   async format(values: InputValues): Promise<BaseMessage> {
-    return new AIChatMessage(await this.prompt.format(values));
+    return new AIMessage(await this.prompt.format(values));
   }
 
   static fromTemplate(template: string) {
@@ -196,7 +196,7 @@ export class AIMessagePromptTemplate extends BaseMessageStringPromptTemplate {
 
 export class SystemMessagePromptTemplate extends BaseMessageStringPromptTemplate {
   async format(values: InputValues): Promise<BaseMessage> {
-    return new SystemChatMessage(await this.prompt.format(values));
+    return new SystemMessage(await this.prompt.format(values));
   }
 
   static fromTemplate(template: string) {

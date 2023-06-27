@@ -1,6 +1,6 @@
 import { BaseChatModel } from "./base.js";
 import {
-  AIChatMessage,
+  AIMessage,
   BaseMessage,
   ChatGeneration,
   ChatResult,
@@ -248,7 +248,7 @@ export class ChatGoogleVertexAI
     const message = prediction?.candidates[0];
     return {
       text: message?.content,
-      message: new AIChatMessage(message.content),
+      message: new AIMessage(message.content),
       generationInfo: prediction,
     };
   }

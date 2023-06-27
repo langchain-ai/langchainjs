@@ -8,7 +8,7 @@ import {
 } from "../../prompts/chat.js";
 import { renderTemplate } from "../../prompts/template.js";
 import {
-  AIChatMessage,
+  AIMessage,
   AgentStep,
   BaseMessage,
   HumanMessage,
@@ -82,7 +82,7 @@ export class ChatConversationalAgent extends Agent {
   async constructScratchPad(steps: AgentStep[]): Promise<BaseMessage[]> {
     const thoughts: BaseMessage[] = [];
     for (const step of steps) {
-      thoughts.push(new AIChatMessage(step.action.log));
+      thoughts.push(new AIMessage(step.action.log));
       thoughts.push(
         new HumanMessage(
           renderTemplate(TEMPLATE_TOOL_RESPONSE, "f-string", {

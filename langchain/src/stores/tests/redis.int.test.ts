@@ -3,7 +3,7 @@
 import { test, expect } from "@jest/globals";
 import { createClient } from "redis";
 import { RedisChatMessageHistory } from "../message/redis.js";
-import { HumanMessage, AIChatMessage } from "../../schema/index.js";
+import { HumanMessage, AIMessage } from "../../schema/index.js";
 import { ChatOpenAI } from "../../chat_models/openai.js";
 import { ConversationChain } from "../../chains/conversation.js";
 import { BufferMemory } from "../../memory/buffer_memory.js";
@@ -34,7 +34,7 @@ test("Test Redis history store", async () => {
 
   const expectedMessages = [
     new HumanMessage("Who is the best vocalist?"),
-    new AIChatMessage("Ozzy Osbourne"),
+    new AIMessage("Ozzy Osbourne"),
   ];
 
   const resultWithHistory = await chatHistory.getMessages();
@@ -51,7 +51,7 @@ test("Test clear Redis history store", async () => {
 
   const expectedMessages = [
     new HumanMessage("Who is the best vocalist?"),
-    new AIChatMessage("Ozzy Osbourne"),
+    new AIMessage("Ozzy Osbourne"),
   ];
 
   const resultWithHistory = await chatHistory.getMessages();
@@ -77,7 +77,7 @@ test("Test Redis history with a TTL", async () => {
 
   const expectedMessages = [
     new HumanMessage("Who is the best vocalist?"),
-    new AIChatMessage("Ozzy Osbourne"),
+    new AIMessage("Ozzy Osbourne"),
   ];
 
   const resultWithHistory = await chatHistory.getMessages();
@@ -104,7 +104,7 @@ test("Test Redis memory with Buffer Memory", async () => {
 
   const expectedHistory = [
     new HumanMessage("Who is the best vocalist?"),
-    new AIChatMessage("Ozzy Osbourne"),
+    new AIMessage("Ozzy Osbourne"),
   ];
 
   const result2 = await memory.loadMemoryVariables({});

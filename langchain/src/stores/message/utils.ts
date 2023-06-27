@@ -1,11 +1,11 @@
 import {
-  AIChatMessage,
+  AIMessage,
   BaseMessage,
   ChatMessage,
   GenericChatMessageFields,
   HumanMessage,
   StoredMessage,
-  SystemChatMessage,
+  SystemMessage,
 } from "../../schema/index.js";
 
 interface StoredMessageV1 {
@@ -42,9 +42,9 @@ export function mapStoredMessagesToChatMessages(
       case "human":
         return new HumanMessage(storedMessage.data);
       case "ai":
-        return new AIChatMessage(storedMessage.data);
+        return new AIMessage(storedMessage.data);
       case "system":
-        return new SystemChatMessage(storedMessage.data);
+        return new SystemMessage(storedMessage.data);
       case "chat": {
         if (storedMessage.data.role === undefined) {
           throw new Error("Role must be defined for chat messages");

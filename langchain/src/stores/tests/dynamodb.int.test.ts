@@ -6,7 +6,7 @@ import { DynamoDBChatMessageHistory } from "../message/dynamodb.js";
 import { ChatOpenAI } from "../../chat_models/openai.js";
 import { ConversationChain } from "../../chains/conversation.js";
 import { BufferMemory } from "../../memory/buffer_memory.js";
-import { HumanMessage, AIChatMessage } from "../../schema/index.js";
+import { HumanMessage, AIMessage } from "../../schema/index.js";
 
 test("Test DynamoDB message history store", async () => {
   const sessionId = new Date().toISOString();
@@ -28,7 +28,7 @@ test("Test DynamoDB message history store", async () => {
 
   const expectedMessages = [
     new HumanMessage("My name's Jonas"),
-    new AIChatMessage("Nice to meet you, Jonas!"),
+    new AIMessage("Nice to meet you, Jonas!"),
     new HumanMessage("Nice to meet you too!"),
   ];
 
@@ -76,7 +76,7 @@ test("Test DynamoDB message history store in a BufferMemory", async () => {
   expect(result).toStrictEqual({
     history: [
       new HumanMessage("My name's Jonas"),
-      new AIChatMessage("Nice to meet you, Jonas!"),
+      new AIMessage("Nice to meet you, Jonas!"),
     ],
   });
 });

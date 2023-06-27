@@ -4,7 +4,7 @@ import {
   BaseMessage,
   HumanMessage,
   LLMResult,
-  SystemChatMessage,
+  SystemMessage,
 } from "../../schema/index.js";
 import { ChatPromptValue } from "../../prompts/chat.js";
 import {
@@ -25,7 +25,7 @@ test("Test ChatOpenAI", async () => {
 
 test("Test ChatOpenAI with SystemChatMessage", async () => {
   const chat = new ChatOpenAI({ modelName: "gpt-3.5-turbo", maxTokens: 10 });
-  const system_message = new SystemChatMessage("You are to chat with a user.");
+  const system_message = new SystemMessage("You are to chat with a user.");
   const message = new HumanMessage("Hello!");
   const res = await chat.call([system_message, message]);
   console.log({ res });
@@ -274,7 +274,7 @@ test("Test OpenAI with signal in call options and node adapter", async () => {
 }, 5000);
 
 function createSystemChatMessage(text: string, name?: string) {
-  const msg = new SystemChatMessage(text);
+  const msg = new SystemMessage(text);
   msg.name = name;
   return msg;
 }

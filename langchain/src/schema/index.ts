@@ -85,7 +85,7 @@ export abstract class BaseMessage
   /**
    * @deprecated
    * Use {@link BaseMessage.text} instead.
-   * */
+   */
   get text(): string {
     return this.content;
   }
@@ -132,21 +132,37 @@ export class HumanMessage extends BaseMessage {
   }
 }
 
+/**
+ * @deprecated
+ * Use {@link HumanMessage} instead.
+ */
 export const HumanChatMessage = HumanMessage;
 
-export class AIChatMessage extends BaseMessage {
+export class AIMessage extends BaseMessage {
   _getType(): MessageType {
     return "ai";
   }
 }
 
-export class SystemChatMessage extends BaseMessage {
+/**
+ * @deprecated
+ * Use {@link AIMessage} instead.
+ */
+export const AIChatMessage = AIMessage;
+
+export class SystemMessage extends BaseMessage {
   _getType(): MessageType {
     return "system";
   }
 }
 
-export class FunctionChatMessage extends BaseMessage {
+/**
+ * @deprecated
+ * Use {@link SystemMessage} instead.
+ */
+export const SystemChatMessage = SystemMessage;
+
+export class FunctionMessage extends BaseMessage {
   constructor(
     fields: string | BaseMessageFields,
     /** @deprecated */
@@ -257,7 +273,7 @@ export abstract class BaseListChatMessageHistory extends Serializable {
   }
 
   public addAIChatMessage(message: string): Promise<void> {
-    return this.addMessage(new AIChatMessage(message));
+    return this.addMessage(new AIMessage(message));
   }
 }
 

@@ -6,10 +6,10 @@ import { Tool } from "../../tools/base.js";
 import { AutoGPTOutputParser } from "./output_parser.js";
 import { AutoGPTPrompt } from "./prompt.js";
 import {
-  AIChatMessage,
+  AIMessage,
   BaseMessage,
   HumanMessage,
-  SystemChatMessage,
+  SystemMessage,
 } from "../../schema/index.js";
 // import { HumanInputRun } from "./tools/human/tool"; // TODO
 import { ObjectTool, FINISH_NAME } from "./schema.js";
@@ -134,7 +134,7 @@ export class AutoGPT {
       // Print the assistant reply
       console.log(assistantReply);
       this.fullMessageHistory.push(new HumanMessage(user_input));
-      this.fullMessageHistory.push(new AIChatMessage(assistantReply));
+      this.fullMessageHistory.push(new AIMessage(assistantReply));
 
       const action = await this.outputParser.parse(assistantReply);
       const tools = this.tools.reduce(
@@ -172,7 +172,7 @@ export class AutoGPT {
 
       const documents = await this.textSplitter.createDocuments([memoryToAdd]);
       await this.memory.addDocuments(documents);
-      this.fullMessageHistory.push(new SystemChatMessage(result));
+      this.fullMessageHistory.push(new SystemMessage(result));
     }
 
     return undefined;

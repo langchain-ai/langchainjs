@@ -3,12 +3,12 @@ import { CallbackManager } from "../../callbacks/manager.js";
 import { ChatOpenAI } from "../../chat_models/openai.js";
 import { BasePromptTemplate } from "../../prompts/base.js";
 import {
-  AIChatMessage,
+  AIMessage,
   AgentAction,
   AgentFinish,
   AgentStep,
   BaseMessage,
-  FunctionChatMessage,
+  FunctionMessage,
   ChainValues,
 } from "../../schema/index.js";
 import { StructuredTool } from "../../tools/base.js";
@@ -114,13 +114,13 @@ export class OpenAIAgent extends Agent {
     steps: AgentStep[]
   ): Promise<string | BaseMessage[]> {
     return steps.flatMap(({ action, observation }) => [
-      new AIChatMessage("", {
+      new AIMessage("", {
         function_call: {
           name: action.tool,
           arguments: JSON.stringify(action.toolInput),
         },
       }),
-      new FunctionChatMessage(observation, action.tool),
+      new FunctionMessage(observation, action.tool),
     ]);
   }
 

@@ -1,7 +1,7 @@
 import { BaseLanguageModel } from "../base_language/index.js";
 import { LLMChain } from "../chains/llm_chain.js";
 import { BasePromptTemplate } from "../prompts/base.js";
-import { BaseMessage, SystemChatMessage } from "../schema/index.js";
+import { BaseMessage, SystemMessage } from "../schema/index.js";
 import {
   getBufferString,
   InputValues,
@@ -33,8 +33,7 @@ export class ConversationSummaryMemory extends BaseChatMemory {
 
   prompt: BasePromptTemplate = SUMMARY_PROMPT;
 
-  summaryChatMessageClass: new (content: string) => BaseMessage =
-    SystemChatMessage;
+  summaryChatMessageClass: new (content: string) => BaseMessage = SystemMessage;
 
   constructor(fields: ConversationSummaryMemoryInput) {
     const {

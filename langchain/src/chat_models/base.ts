@@ -1,5 +1,5 @@
 import {
-  AIChatMessage,
+  AIMessage,
   BaseMessage,
   BasePromptValue,
   ChatGeneration,
@@ -215,7 +215,7 @@ export abstract class SimpleChatModel extends BaseChatModel {
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
     const text = await this._call(messages, options, runManager);
-    const message = new AIChatMessage(text);
+    const message = new AIMessage(text);
     return {
       generations: [
         {

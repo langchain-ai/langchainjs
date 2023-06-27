@@ -3,7 +3,7 @@ import {
   BaseMessage,
   HumanMessage,
   PartialValues,
-  SystemChatMessage,
+  SystemMessage,
 } from "../../schema/index.js";
 import { VectorStoreRetriever } from "../../vectorstores/base.js";
 import { ObjectTool } from "./schema.js";
@@ -73,8 +73,8 @@ export class AutoGPTPrompt
     messages: BaseMessage[];
     user_input: string;
   }) {
-    const basePrompt = new SystemChatMessage(this.constructFullPrompt(goals));
-    const timePrompt = new SystemChatMessage(
+    const basePrompt = new SystemMessage(this.constructFullPrompt(goals));
+    const timePrompt = new SystemMessage(
       `The current time and date is ${new Date().toLocaleString()}`
     );
     const usedTokens =
@@ -100,7 +100,7 @@ export class AutoGPTPrompt
     const contentFormat = `This reminds you of these events from your past:\n${relevantMemory.join(
       "\n"
     )}\n\n`;
-    const memoryMessage = new SystemChatMessage(contentFormat);
+    const memoryMessage = new SystemMessage(contentFormat);
     const usedTokensWithMemory =
       (await usedTokens) + (await this.tokenCounter(memoryMessage.content));
     const historicalMessages: BaseMessage[] = [];

@@ -7,7 +7,7 @@ import {
 } from "@anthropic-ai/sdk";
 import { BaseChatModel, BaseChatModelParams } from "./base.js";
 import {
-  AIChatMessage,
+  AIMessage,
   BaseMessage,
   ChatGeneration,
   ChatResult,
@@ -253,7 +253,7 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
       .split(AI_PROMPT)
       .map((message) => ({
         text: message,
-        message: new AIChatMessage(message),
+        message: new AIMessage(message),
       }));
 
     return {

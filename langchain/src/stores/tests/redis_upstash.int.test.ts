@@ -5,7 +5,7 @@
 import { test, expect, describe } from "@jest/globals";
 
 import { UpstashRedisChatMessageHistory } from "../message/upstash_redis.js";
-import { HumanMessage, AIChatMessage } from "../../schema/index.js";
+import { HumanMessage, AIMessage } from "../../schema/index.js";
 import { ChatOpenAI } from "../../chat_models/openai.js";
 import { ConversationChain } from "../../chains/conversation.js";
 import { BufferMemory } from "../../memory/buffer_memory.js";
@@ -30,7 +30,7 @@ describe.skip("UpstashRedisChatMessageHistory", () => {
 
     const expectedMessages = [
       new HumanMessage("Who is the best vocalist?"),
-      new AIChatMessage("Ozzy Osbourne"),
+      new AIMessage("Ozzy Osbourne"),
     ];
 
     const resultWithHistory = await chatHistory.getMessages();
@@ -48,7 +48,7 @@ describe.skip("UpstashRedisChatMessageHistory", () => {
 
     const expectedMessages = [
       new HumanMessage("Who is the best vocalist?"),
-      new AIChatMessage("Ozzy Osbourne"),
+      new AIMessage("Ozzy Osbourne"),
     ];
 
     const resultWithHistory = await chatHistory.getMessages();
@@ -75,7 +75,7 @@ describe.skip("UpstashRedisChatMessageHistory", () => {
 
     const expectedMessages = [
       new HumanMessage("Who is the best vocalist?"),
-      new AIChatMessage("Ozzy Osbourne"),
+      new AIMessage("Ozzy Osbourne"),
     ];
 
     const resultWithHistory = await chatHistory.getMessages();
@@ -103,7 +103,7 @@ describe.skip("UpstashRedisChatMessageHistory", () => {
 
     const expectedHistory = [
       new HumanMessage("Who is the best vocalist?"),
-      new AIChatMessage("Ozzy Osbourne"),
+      new AIMessage("Ozzy Osbourne"),
     ];
 
     const result2 = await memory.loadMemoryVariables({});

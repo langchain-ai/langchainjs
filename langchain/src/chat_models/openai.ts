@@ -21,14 +21,14 @@ import fetchAdapter from "../util/axios-fetch-adapter.js";
 import type { StreamingAxiosConfiguration } from "../util/axios-types.js";
 import { BaseChatModel, BaseChatModelParams } from "./base.js";
 import {
-  AIChatMessage,
+  AIMessage,
   BaseMessage,
   ChatGeneration,
   ChatMessage,
   ChatResult,
   HumanMessage,
   MessageType,
-  SystemChatMessage,
+  SystemMessage,
 } from "../schema/index.js";
 import { getModelNameForTiktoken } from "../base_language/count_tokens.js";
 import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
@@ -72,11 +72,11 @@ function openAIResponseToChatMessage(
     case "user":
       return new HumanMessage(message.content || "");
     case "assistant":
-      return new AIChatMessage(message.content || "", {
+      return new AIMessage(message.content || "", {
         function_call: message.function_call,
       });
     case "system":
-      return new SystemChatMessage(message.content || "");
+      return new SystemMessage(message.content || "");
     default:
       return new ChatMessage(message.content || "", message.role ?? "unknown");
   }

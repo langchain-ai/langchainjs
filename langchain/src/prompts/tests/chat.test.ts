@@ -9,10 +9,10 @@ import {
 } from "../chat.js";
 import { PromptTemplate } from "../prompt.js";
 import {
-  AIChatMessage,
+  AIMessage,
   ChatMessage,
   HumanMessage,
-  SystemChatMessage,
+  SystemMessage,
 } from "../../schema/index.js";
 
 function createChatPromptTemplate(): ChatPromptTemplate {
@@ -51,9 +51,9 @@ test("Test format", async () => {
     bar: "Bar",
   });
   expect(messages.toChatMessages()).toEqual([
-    new SystemChatMessage("Here's some context: This is a context"),
+    new SystemMessage("Here's some context: This is a context"),
     new HumanMessage("Hello Foo, I'm Bar. Thanks for the This is a context"),
-    new AIChatMessage("I'm an AI. I'm Foo. I'm Bar."),
+    new AIMessage("I'm an AI. I'm Foo. I'm Bar."),
     new ChatMessage("I'm a generic message. I'm Foo. I'm Bar.", "test"),
   ]);
 });
@@ -124,7 +124,7 @@ test("Test fromPromptMessages", async () => {
     bar: "Bar",
   });
   expect(messages.toChatMessages()).toEqual([
-    new SystemChatMessage("Here's some context: This is a context"),
+    new SystemMessage("Here's some context: This is a context"),
     new HumanMessage("Hello Foo, I'm Bar"),
   ]);
 });
@@ -153,9 +153,9 @@ test("Test fromPromptMessages is composable", async () => {
     bar: "Bar",
   });
   expect(messages.toChatMessages()).toEqual([
-    new SystemChatMessage("Here's some context: This is a context"),
+    new SystemMessage("Here's some context: This is a context"),
     new HumanMessage("Hello Foo, I'm Bar"),
-    new AIChatMessage("I'm an AI. I'm Foo. I'm Bar."),
+    new AIMessage("I'm an AI. I'm Foo. I'm Bar."),
   ]);
 });
 
@@ -184,9 +184,9 @@ test("Test fromPromptMessages is composable with partial vars", async () => {
     bar: "Bar",
   });
   expect(messages.toChatMessages()).toEqual([
-    new SystemChatMessage("Here's some context: This is a context"),
+    new SystemMessage("Here's some context: This is a context"),
     new HumanMessage("Hello Foo, I'm Bar"),
-    new AIChatMessage("I'm an AI. I'm Foo. I'm Bar."),
+    new AIMessage("I'm an AI. I'm Foo. I'm Bar."),
   ]);
 });
 
