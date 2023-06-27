@@ -1,7 +1,6 @@
 /* eslint-disable no-process-env */
 import { test, expect, beforeAll } from "@jest/globals";
 import { FakeEmbeddings } from "../../embeddings/fake.js";
-import { OpenAIEmbeddings } from "../../embeddings/openai.js";
 import { Document } from "../../document.js";
 import { VectaraLibArgs, VectaraStore } from "../vectara.js";
 
@@ -63,10 +62,7 @@ const getDocs = (): Document[] => {
   return documents;
 };
 
-describe.skip("VectaraStore", () => {
-  process.env.OPENAI_API_KEY =
-    process.env.OPENAI_API_KEY ?? "this is a fake key";
-
+describe("VectaraStore", () => {
   ["VECTARA_CUSTOMER_ID", "VECTARA_CORPUS_ID", "VECTARA_API_KEY"].forEach(
     (envVar) => {
       if (!process.env[envVar]) {
@@ -81,14 +77,6 @@ describe.skip("VectaraStore", () => {
       corpusId: Number(process.env.VECTARA_CORPUS_ID) || 0,
       apiKey: process.env.VECTARA_API_KEY || "",
     };
-
-    test("with embeddings throws error", () => {
-      expect(() =>
-        VectaraStore.fromTexts([], [], new OpenAIEmbeddings(), args)
-      ).toThrow(
-        "Vectara uses its own embeddings, so you don't have to provide any. Provide an instance of FakeEmbeddings to VectaraStore.fromTexts, instead of OpenAIEmbeddings."
-      );
-    });
 
     test("with fakeEmbeddings doesn't throw error", () => {
       expect(() =>
