@@ -6,7 +6,11 @@ import {
   ChainValues,
   LLMResult,
 } from "../schema/index.js";
-import { BaseCallbackHandler, CallbackHandlerMethods } from "./base.js";
+import {
+  BaseCallbackHandler,
+  CallbackHandlerMethods,
+  NewTokenIndices,
+} from "./base.js";
 import { ConsoleCallbackHandler } from "./handlers/console.js";
 import {
   getTracingCallbackHandler,
@@ -79,7 +83,10 @@ export class CallbackManagerForLLMRun
   extends BaseRunManager
   implements BaseCallbackManagerMethods
 {
-  async handleLLMNewToken(token: string): Promise<void> {
+  async handleLLMNewToken(
+    token: string,
+    idx: NewTokenIndices = { prompt: 0, completion: 0 }
+  ): Promise<void> {
     await Promise.all(
       this.handlers.map((handler) =>
         consumeCallback(async () => {
@@ -87,6 +94,7 @@ export class CallbackManagerForLLMRun
             try {
               await handler.handleLLMNewToken?.(
                 token,
+                idx,
                 this.runId,
                 this._parentRunId
               );
@@ -340,9 +348,7 @@ export class CallbackManager
     _parentRunId: string | undefined = undefined,
     extraParams: Record<string, unknown> | undefined = undefined
   ): Promise<CallbackManagerForLLMRun[]> {
-    const managers: CallbackManagerForLLMRun[] = [];
-
-    await Promise.all(
+    return Promise.all(
       prompts.map(async (prompt) => {
         const runId = uuidv4();
 
@@ -369,20 +375,16 @@ export class CallbackManager
           )
         );
 
-        managers.push(
-          new CallbackManagerForLLMRun(
-            runId,
-            this.handlers,
-            this.inheritableHandlers,
-            this.tags,
-            this.inheritableTags,
-            this._parentRunId
-          )
+        return new CallbackManagerForLLMRun(
+          runId,
+          this.handlers,
+          this.inheritableHandlers,
+          this.tags,
+          this.inheritableTags,
+          this._parentRunId
         );
       })
     );
-
-    return managers;
   }
 
   async handleChatModelStart(
@@ -392,9 +394,7 @@ export class CallbackManager
     _parentRunId: string | undefined = undefined,
     extraParams: Record<string, unknown> | undefined = undefined
   ): Promise<CallbackManagerForLLMRun[]> {
-    const managers: CallbackManagerForLLMRun[] = [];
-
-    await Promise.all(
+    return Promise.all(
       messages.map(async (messageGroup) => {
         const runId = uuidv4();
 
@@ -433,20 +433,16 @@ export class CallbackManager
           )
         );
 
-        managers.push(
-          new CallbackManagerForLLMRun(
-            runId,
-            this.handlers,
-            this.inheritableHandlers,
-            this.tags,
-            this.inheritableTags,
-            this._parentRunId
-          )
+        return new CallbackManagerForLLMRun(
+          runId,
+          this.handlers,
+          this.inheritableHandlers,
+          this.tags,
+          this.inheritableTags,
+          this._parentRunId
         );
       })
     );
-
-    return managers;
   }
 
   async handleChainStart(
