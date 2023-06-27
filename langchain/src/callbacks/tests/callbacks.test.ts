@@ -154,10 +154,14 @@ test("CallbackManager", async () => {
   manager.addHandler(handler1);
   manager.addHandler(handler2);
 
-  const llmCb = await manager.handleLLMStart(serialized, ["test"]);
-  await llmCb.handleLLMEnd({ generations: [] });
-  await llmCb.handleLLMNewToken("test");
-  await llmCb.handleLLMError(new Error("test"));
+  const llmCbs = await manager.handleLLMStart(serialized, ["test"]);
+  await Promise.all(
+    llmCbs.map(async (llmCb) => {
+      await llmCb.handleLLMEnd({ generations: [] });
+      await llmCb.handleLLMNewToken("test");
+      await llmCb.handleLLMError(new Error("test"));
+    })
+  );
   const chainCb = await manager.handleChainStart(serialized, { test: "test" });
   await chainCb.handleChainEnd({ test: "test" });
   await chainCb.handleChainError(new Error("test"));
@@ -195,10 +199,14 @@ test("CallbackManager Chat Message Handling", async () => {
   manager.addHandler(handler1);
   manager.addHandler(handler2);
 
-  const llmCb = await manager.handleChatModelStart(serialized, [
+  const llmCbs = await manager.handleChatModelStart(serialized, [
     [new HumanChatMessage("test")],
   ]);
-  await llmCb.handleLLMEnd({ generations: [] });
+  await Promise.all(
+    llmCbs.map(async (llmCb) => {
+      await llmCb.handleLLMEnd({ generations: [] });
+    })
+  );
   // Everything treated as llm in handler 1
   expect(handler1.llmStarts).toBe(1);
   expect(handler2.llmStarts).toBe(0);
@@ -218,10 +226,14 @@ test("CallbackHandler with ignoreLLM", async () => {
   });
   const manager = new CallbackManager();
   manager.addHandler(handler);
-  const llmCb = await manager.handleLLMStart(serialized, ["test"]);
-  await llmCb.handleLLMEnd({ generations: [] });
-  await llmCb.handleLLMNewToken("test");
-  await llmCb.handleLLMError(new Error("test"));
+  const llmCbs = await manager.handleLLMStart(serialized, ["test"]);
+  await Promise.all(
+    llmCbs.map(async (llmCb) => {
+      await llmCb.handleLLMEnd({ generations: [] });
+      await llmCb.handleLLMNewToken("test");
+      await llmCb.handleLLMError(new Error("test"));
+    })
+  );
 
   expect(handler.starts).toBe(0);
   expect(handler.ends).toBe(0);
@@ -274,7 +286,6 @@ test("CallbackHandler with ignoreAgent", async () => {
 });
 
 test("CallbackManager with child manager", async () => {
-  const llmRunId = "llmRunId";
   const chainRunId = "chainRunId";
   let llmWasCalled = false;
   let chainWasCalled = false;
@@ -282,10 +293,9 @@ test("CallbackManager with child manager", async () => {
     async handleLLMStart(
       _llm: Serialized,
       _prompts: string[],
-      runId?: string,
+      _runId?: string,
       parentRunId?: string
     ) {
-      expect(runId).toBe(llmRunId);
       expect(parentRunId).toBe(chainRunId);
       llmWasCalled = true;
     },
@@ -305,7 +315,7 @@ test("CallbackManager with child manager", async () => {
     { test: "test" },
     chainRunId
   );
-  await chainCb.getChild().handleLLMStart(serialized, ["test"], llmRunId);
+  await chainCb.getChild().handleLLMStart(serialized, ["test"]);
   expect(llmWasCalled).toBe(true);
   expect(chainWasCalled).toBe(true);
 });

@@ -113,10 +113,11 @@ test("serialize + deserialize custom classes", async () => {
 });
 
 test("serialize + deserialize llm", async () => {
+  // eslint-disable-next-line no-process-env
+  process.env.OPENAI_API_KEY = "openai-key";
   const llm = new OpenAI({
     temperature: 0.5,
     modelName: "davinci",
-    openAIApiKey: "openai-key",
   });
   llm.temperature = 0.7;
   const lc_argumentsBefore = llm.lc_kwargs;
@@ -126,11 +127,17 @@ test("serialize + deserialize llm", async () => {
   expect(JSON.parse(str).kwargs.temperature).toBe(0.7);
   expect(JSON.parse(str).kwargs.model).toBe("davinci");
   expect(JSON.parse(str).kwargs.openai_api_key.type).toBe("secret");
+  // Accept secret in secret map
   const llm2 = await load<OpenAI>(str, {
     OPENAI_API_KEY: "openai-key",
   });
   expect(llm2).toBeInstanceOf(OpenAI);
   expect(JSON.stringify(llm2, null, 2)).toBe(str);
+  // Accept secret as env var
+  const llm3 = await load<OpenAI>(str);
+  expect(llm3).toBeInstanceOf(OpenAI);
+  expect(llm.openAIApiKey).toBe(llm3.openAIApiKey);
+  expect(JSON.stringify(llm3, null, 2)).toBe(str);
 });
 
 test("serialize + deserialize llm with optional deps", async () => {
@@ -182,6 +189,8 @@ test("serialize + deserialize llm chain string prompt", async () => {
 });
 
 test("serialize + deserialize llm chain chat prompt", async () => {
+  // eslint-disable-next-line no-process-env
+  process.env.OPENAI_API_KEY = undefined;
   const llm = new ChatOpenAI({
     temperature: 0.5,
     modelName: "gpt-4",
@@ -285,7 +294,9 @@ test.skip("serialize + deserialize llmchain with output parser", async () => {
   });
   expect(chain2).toBeInstanceOf(LLMChain);
   expect(JSON.stringify(chain2, null, 2)).toBe(str);
-  expect(await chain2.outputParser?.parse("a, b, c")).toEqual(["a", "b", "c"]);
+  expect(await chain2.outputParser?.parseResult([{ text: "a, b, c" }])).toEqual(
+    ["a", "b", "c"]
+  );
 });
 
 test("serialize + deserialize llmchain with struct output parser throws", async () => {

@@ -6146,15 +6146,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@mendable/search@npm:^0.0.102":
-  version: 0.0.102
-  resolution: "@mendable/search@npm:0.0.102"
+"@mendable/search@npm:^0.0.112-beta.7":
+  version: 0.0.112-beta.7
+  resolution: "@mendable/search@npm:0.0.112-beta.7"
   dependencies:
     posthog-js: ^1.45.1
   peerDependencies:
     react: ^17.x || ^18.x
     react-dom: ^17.x || ^18.x
-  checksum: 5bcbc2a10d69532e0ec29d437c94f87a1531fe975fdd0da23d82fa9767903e1d4519bdf061edd7b8ab04d3ccfdcb60a08464ca68dc288e35a9da6c09d043d1d5
+  checksum: bf5df069add754e62726b56d666069226925c8ec17bfd3326c4535112b9becf08b9be134cb0d9f5fdd627a6ffef37f0a311e73c30c2f7bae075ffa91be9bf96c
   languageName: node
   linkType: hard
 
@@ -7922,6 +7922,13 @@ __metadata:
   version: 2.0.3
   resolution: "@types/d3-dsv@npm:2.0.3"
   checksum: 82b8aa6409643dbc624e0798a18e16f94aa4676f8e3949e0dc7992d898855e1d6230416c3fbf6d3d3314252e4027176525487dc030abb15031ef8db5b2c30f7a
+  languageName: node
+  linkType: hard
+
+"@types/decamelize@npm:^1.2.0":
+  version: 1.2.0
+  resolution: "@types/decamelize@npm:1.2.0"
+  checksum: cff4e926bf771f8ad6423ab8c5119d6b8679c09aaf9f0b26a4a1dbcf324c0b1df183c2bfe688b90b6f880d8e864684a2806a22529b4ee404fd9160f9c123853d
   languageName: node
   linkType: hard
 
@@ -12186,10 +12193,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"decamelize@npm:5":
-  version: 5.0.1
-  resolution: "decamelize@npm:5.0.1"
-  checksum: 7c3b1ed4b3e60e7fbc00a35fb248298527c1cdfe603e41dfcf05e6c4a8cb9efbee60630deb677ed428908fb4e74e322966c687a094d1478ddc9c3a74e9dc7140
+"decamelize@npm:^1.2.0":
+  version: 1.2.0
+  resolution: "decamelize@npm:1.2.0"
+  checksum: ad8c51a7e7e0720c70ec2eeb1163b66da03e7616d7b98c9ef43cce2416395e84c1e9548dd94f5f6ffecfee9f8b94251fc57121a8b021f2ff2469b2bae247b8aa
   languageName: node
   linkType: hard
 
@@ -12590,7 +12597,7 @@ __metadata:
     "@docusaurus/preset-classic": 2.4.0
     "@docusaurus/remark-plugin-npm2yarn": ^2.4.0
     "@mdx-js/react": ^1.6.22
-    "@mendable/search": ^0.0.102
+    "@mendable/search": ^0.0.112-beta.7
     "@swc/core": ^1.3.62
     clsx: ^1.2.1
     docusaurus-plugin-typedoc: next
@@ -14299,6 +14306,7 @@ __metadata:
     tsx: ^3.12.3
     typeorm: ^0.3.12
     typescript: ^5.0.0
+    typesense: ^1.5.3
     weaviate-ts-client: ^1.0.0
     zod: ^3.21.4
   languageName: unknown
@@ -18240,12 +18248,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"js-tiktoken@npm:^1.0.6":
-  version: 1.0.6
-  resolution: "js-tiktoken@npm:1.0.6"
+"js-tiktoken@npm:^1.0.7":
+  version: 1.0.7
+  resolution: "js-tiktoken@npm:1.0.7"
   dependencies:
     base64-js: ^1.5.1
-  checksum: 05a1b3f895447194a0ac17a56229e47eae3816cd851f12ee947b5cdc2f4439773ed52938f4f6459f5c45dc0f4a15ac1a882cde61e47e31b6a84b7129fe1f63c2
+  checksum: 4856641fed816e618c8a693db0a5478995c598914dec2ba9ccd69719a88a14756d5aec2eed0fba7a4999e603b277ba9a58fd7b2af98e8b638b39b436bbfb7060
   languageName: node
   linkType: hard
 
@@ -18636,6 +18644,7 @@ __metadata:
     "@tigrisdata/vector": ^1.1.0
     "@tsconfig/recommended": ^1.0.2
     "@types/d3-dsv": ^2
+    "@types/decamelize": ^1.2.0
     "@types/flat": ^5.0.2
     "@types/html-to-text": ^9
     "@types/object-hash": ^3.0.2
@@ -18655,7 +18664,7 @@ __metadata:
     chromadb: ^1.5.2
     cohere-ai: ^5.0.2
     d3-dsv: ^2.0.0
-    decamelize: 5
+    decamelize: ^1.2.0
     dotenv: ^16.0.3
     dpdm: ^3.12.0
     epub2: ^3.0.1
@@ -18674,9 +18683,9 @@ __metadata:
     html-to-text: ^9.0.5
     ignore: ^5.2.0
     jest: ^29.5.0
-    js-tiktoken: ^1.0.6
+    js-tiktoken: ^1.0.7
     jsonpointer: ^5.0.1
-    langchainplus-sdk: ^0.0.11
+    langchainplus-sdk: ^0.0.15
     mammoth: ^1.5.1
     ml-distance: ^4.0.0
     mongodb: ^5.2.0
@@ -18703,6 +18712,7 @@ __metadata:
     ts-jest: ^29.1.0
     typeorm: ^0.3.12
     typescript: ^5.0.0
+    typesense: ^1.5.3
     uuid: ^9.0.0
     weaviate-ts-client: ^1.0.0
     yaml: ^2.2.1
@@ -18757,6 +18767,7 @@ __metadata:
     replicate: ^0.9.0
     srt-parser-2: ^1.2.2
     typeorm: ^0.3.12
+    typesense: ^1.5.3
     weaviate-ts-client: ^1.0.0
   peerDependenciesMeta:
     "@aws-sdk/client-dynamodb":
@@ -18855,6 +18866,8 @@ __metadata:
       optional: true
     typeorm:
       optional: true
+    typesense:
+      optional: true
     weaviate-ts-client:
       optional: true
   languageName: unknown
@@ -18874,9 +18887,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"langchainplus-sdk@npm:^0.0.11":
-  version: 0.0.11
-  resolution: "langchainplus-sdk@npm:0.0.11"
+"langchainplus-sdk@npm:^0.0.15":
+  version: 0.0.15
+  resolution: "langchainplus-sdk@npm:0.0.15"
   dependencies:
     "@types/uuid": ^9.0.1
     commander: ^10.0.1
@@ -18885,7 +18898,7 @@ __metadata:
     uuid: ^9.0.0
   bin:
     langchain: dist/cli/main.cjs
-  checksum: 721ecb73aa9d4b270bd14e9c49e6b51b6787394e0fc0e188e417b4091c69542f3984ec636eac7159ae838e25a6dd067b21ad7b8aaa4a732976113351117f60e9
+  checksum: 7467364922753a44e2e15f6c54fe20c191105e10b42774cb7ebc4bfbeb2c2fa4ee159eaea52637083673f821beb0bfd155918abf8c2f14cf8151dd74b4bac32f
   languageName: node
   linkType: hard
 
@@ -19229,6 +19242,13 @@ __metadata:
     slice-ansi: ^4.0.0
     wrap-ansi: ^6.2.0
   checksum: ae2f85bbabc1906034154fb7d4c4477c79b3e703d22d78adee8b3862fa913942772e7fa11713e3d96fb46de4e3cabefbf5d0a544344f03b58d3c4bff52aa9eb2
+  languageName: node
+  linkType: hard
+
+"loglevel@npm:^1.8.0":
+  version: 1.8.1
+  resolution: "loglevel@npm:1.8.1"
+  checksum: a1a62db40291aaeaef2f612334c49e531bff71cc1d01a2acab689ab80d59e092f852ab164a5aedc1a752fdc46b7b162cb097d8a9eb2cf0b299511106c29af61d
   languageName: node
   linkType: hard
 
@@ -26733,6 +26753,18 @@ __metadata:
     tsc: bin/tsc
     tsserver: bin/tsserver
   checksum: 9ec0a8eed38d46cc2c8794555b7674e413604c56c159f71b8ff21ce7f17334a44127a68724cb2ef8221ff3b19369f8f05654e8a5266621d7d962aeed889bd630
+  languageName: node
+  linkType: hard
+
+"typesense@npm:^1.5.3":
+  version: 1.5.3
+  resolution: "typesense@npm:1.5.3"
+  dependencies:
+    axios: ^0.26.0
+    loglevel: ^1.8.0
+  peerDependencies:
+    "@babel/runtime": ^7.17.2
+  checksum: 6315139ca0be12f558a8ffb78e8055497941ba625fd61729ebe05d4af7d69524d89d1bd56a4a3f38df32fe41216ab6fde2e97bcddddce8af8328d5cddba85f82
   languageName: node
   linkType: hard
 

@@ -64,6 +64,13 @@ export class GoogleVertexAI extends BaseLLM implements GoogleVertexAITextInput {
     super(fields ?? {});
 
     this.model = fields?.model ?? this.model;
+
+    // Change the defaults for code models
+    if (this.model.startsWith("code-")) {
+      this.temperature = 0.2;
+      this.maxOutputTokens = 256;
+    }
+
     this.temperature = fields?.temperature ?? this.temperature;
     this.maxOutputTokens = fields?.maxOutputTokens ?? this.maxOutputTokens;
     this.topP = fields?.topP ?? this.topP;
@@ -114,48 +121,23 @@ export class GoogleVertexAI extends BaseLLM implements GoogleVertexAITextInput {
     ];
   }
 
-  formatInstance(prompt: string): GoogleVertexAILLMInstance {
+  formatInstanceText(prompt: string): GoogleVertexAILLMInstance {
     return { content: prompt };
+  }
+
+  formatInstanceCode(prompt: string): GoogleVertexAILLMInstance {
+    return { prefix: prompt };
+  }
+
+  formatInstance(prompt: string): GoogleVertexAILLMInstance {
+    return this.model.startsWith("code-")
+      ? this.formatInstanceCode(prompt)
+      : this.formatInstanceText(prompt);
   }
 
   extractPredictionFromResponse(
     result: GoogleVertexAILLMResponse<TextPrediction>
   ): TextPrediction {
     return result?.data?.predictions[0];
-  }
-}
-
-/**
- * Enables calls to the Google Cloud's Vertex AI API to access
- * the "Codey" Large Language Models.
- *
- * To use, you will need to have one of the following authentication
- * methods in place:
- * - You are logged into an account permitted to the Google Cloud project
- *   using Vertex AI.
- * - You are running this on a machine using a service account permitted to
- *   the Google Cloud project using Vertex AI.
- * - The `GOOGLE_APPLICATION_CREDENTIALS` environment variable is set to the
- *   path of a credentials file for a service account permitted to the
- *   Google Cloud project using Vertex AI.
- */
-export class GoogleVertexAICode extends GoogleVertexAI {
-  model = "code-gecko";
-
-  temperature = 0.2;
-
-  maxOutputTokens = 256;
-
-  constructor(fields?: GoogleVertexAITextInput) {
-    super({
-      ...fields,
-      model: fields?.model ?? "code-gecko",
-      temperature: fields?.temperature ?? 0.2,
-      maxOutputTokens: fields?.maxOutputTokens ?? 256,
-    });
-  }
-
-  formatInstance(prompt: string): GoogleVertexAILLMInstance {
-    return { prefix: prompt };
   }
 }

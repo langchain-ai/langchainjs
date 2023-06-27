@@ -2,7 +2,7 @@ import { ChatOpenAI } from "langchain/chat_models/openai";
 import { ConversationChain } from "langchain/chains";
 import { ZepMemory } from "langchain/memory/zep";
 
-const sessionId = "TestSession1234";
+const sessionId = "TestSession";
 const zepURL = "http://localhost:8000";
 
 const memory = new ZepMemory({
@@ -16,6 +16,7 @@ const model = new ChatOpenAI({
 });
 
 const chain = new ConversationChain({ llm: model, memory });
+console.log("Memory Keys:", memory.memoryKeys);
 
 const res1 = await chain.call({ input: "Hi! I'm Jim." });
 console.log({ res1 });
@@ -37,3 +38,5 @@ console.log({ res2 });
   }
 }
 */
+console.log("Session ID: ", sessionId);
+console.log("Memory: ", await memory.loadMemoryVariables({}));

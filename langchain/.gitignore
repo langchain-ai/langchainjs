@@ -154,6 +154,9 @@ vectorstores/myscale.d.ts
 vectorstores/redis.cjs
 vectorstores/redis.js
 vectorstores/redis.d.ts
+vectorstores/typesense.cjs
+vectorstores/typesense.js
+vectorstores/typesense.d.ts
 vectorstores/singlestore.cjs
 vectorstores/singlestore.js
 vectorstores/singlestore.d.ts
@@ -394,6 +397,9 @@ experimental/plan_and_execute.d.ts
 client.cjs
 client.js
 client.d.ts
+evaluation.cjs
+evaluation.js
+evaluation.d.ts
 index.cjs
 index.js
 index.d.ts

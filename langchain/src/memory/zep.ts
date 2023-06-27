@@ -67,8 +67,10 @@ export class ZepMemory extends BaseChatMemory implements ZepMemoryInput {
     } catch (error) {
       // eslint-disable-next-line no-instanceof/no-instanceof
       if (error instanceof NotFoundError) {
-        if (this.returnMessages) return { [this.memoryKey]: [] };
-        return [];
+        const result = this.returnMessages
+          ? { [this.memoryKey]: [] }
+          : { [this.memoryKey]: "" };
+        return result;
       } else {
         throw error;
       }
