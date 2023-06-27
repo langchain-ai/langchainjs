@@ -68,6 +68,7 @@ const entrypoints = {
   "vectorstores/typeorm": "vectorstores/typeorm",
   "vectorstores/myscale": "vectorstores/myscale",
   "vectorstores/redis": "vectorstores/redis",
+  "vectorstores/typesense": "vectorstores/typesense",
   "vectorstores/singlestore": "vectorstores/singlestore",
   "vectorstores/tigris": "vectorstores/tigris",
   "vectorstores/vectara": "vectorstores/vectara",
@@ -163,6 +164,8 @@ const entrypoints = {
   "experimental/generative_agents": "experimental/generative_agents/index",
   "experimental/plan_and_execute": "experimental/plan_and_execute/index",
   client: "client/index",
+  // evaluation
+  evaluation: "evaluation/index",
 };
 
 // Entrypoints in this list will
@@ -211,6 +214,7 @@ const requiresOptionalDependency = [
   "vectorstores/myscale",
   "vectorstores/redis",
   "vectorstores/singlestore",
+  "vectorstores/typesense",
   "vectorstores/tigris",
   "memory/zep",
   "document_loaders/web/apify_dataset",

@@ -87,3 +87,30 @@ test("Google Throw an error for an even number of non-system input messages", as
   const model = new ChatGoogleVertexAI();
   expect(() => model.createInstance(messages)).toThrow();
 });
+
+test("Google code messages", async () => {
+  const messages: BaseChatMessage[] = [
+    new HumanChatMessage("Human1"),
+    new AIChatMessage("AI1"),
+    new HumanChatMessage("Human2"),
+  ];
+  const model = new ChatGoogleVertexAI({ model: "codechat-bison" });
+  const instance = model.createInstance(messages);
+  expect(instance.context).toBe("");
+  expect(instance.messages[0].author).toBe("user");
+  expect(instance.messages[1].author).toBe("system");
+});
+
+test("Google code messages with a system message", async () => {
+  const messages: BaseChatMessage[] = [
+    new SystemChatMessage("System1"),
+    new HumanChatMessage("Human1"),
+    new AIChatMessage("AI1"),
+    new HumanChatMessage("Human2"),
+  ];
+  const model = new ChatGoogleVertexAI({ model: "codechat-bison" });
+  const instance = model.createInstance(messages);
+  expect(instance.context).toBe("System1");
+  expect(instance.messages[0].author).toBe("user");
+  expect(instance.messages[1].author).toBe("system");
+});

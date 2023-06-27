@@ -26,6 +26,7 @@ export function mapV1MessageToStoredMessage(
       data: {
         content: v1Message.text,
         role: v1Message.role,
+        name: undefined,
       },
     };
   }
@@ -40,7 +41,10 @@ export function mapStoredMessagesToChatMessages(
       case "human":
         return new HumanChatMessage(storedMessage.data.content);
       case "ai":
-        return new AIChatMessage(storedMessage.data.content);
+        return new AIChatMessage(
+          storedMessage.data.content,
+          storedMessage.data.additional_kwargs
+        );
       case "system":
         return new SystemChatMessage(storedMessage.data.content);
       case "chat":

@@ -15,6 +15,7 @@ LangChain offers a number of LLM implementations that integrate with various mod
 import { OpenAI } from "langchain/llms/openai";
 
 const model = new OpenAI({
+  modelName: "text-davinci-003", // Defaults to "text-davinci-003" if no model provided.
   temperature: 0.9,
   openAIApiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.OPENAI_API_KEY
 });
@@ -68,9 +69,8 @@ import GoogleVertexAIExample from "@examples/llms/googlevertexai.ts";
 <CodeBlock language="typescript">{GoogleVertexAIExample}</CodeBlock>
 
 Google also has separate models for their "Codey" code generation models.
-For various reasons, these use a different class.
 
-The "code-gecko" model is the default and is useful for code completion:
+The "code-gecko" model is useful for code completion:
 
 import GoogleVertexAICodeGeckoExample from "@examples/llms/googlevertexai-code-gecko.ts";
 

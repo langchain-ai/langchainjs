@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.92",
+  "version": "0.0.97",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -166,6 +166,9 @@
     "vectorstores/redis.cjs",
     "vectorstores/redis.js",
     "vectorstores/redis.d.ts",
+    "vectorstores/typesense.cjs",
+    "vectorstores/typesense.js",
+    "vectorstores/typesense.d.ts",
     "vectorstores/singlestore.cjs",
     "vectorstores/singlestore.js",
     "vectorstores/singlestore.d.ts",
@@ -406,6 +409,9 @@
     "client.cjs",
     "client.js",
     "client.d.ts",
+    "evaluation.cjs",
+    "evaluation.js",
+    "evaluation.d.ts",
     "index.cjs",
     "index.js",
     "index.d.ts"
@@ -459,6 +465,7 @@
     "@tigrisdata/vector": "^1.1.0",
     "@tsconfig/recommended": "^1.0.2",
     "@types/d3-dsv": "^2",
+    "@types/decamelize": "^1.2.0",
     "@types/flat": "^5.0.2",
     "@types/html-to-text": "^9",
     "@types/object-hash": "^3.0.2",
@@ -511,6 +518,7 @@
     "ts-jest": "^29.1.0",
     "typeorm": "^0.3.12",
     "typescript": "^5.0.0",
+    "typesense": "^1.5.3",
     "weaviate-ts-client": "^1.0.0"
   },
   "peerDependencies": {
@@ -560,6 +568,7 @@
     "replicate": "^0.9.0",
     "srt-parser-2": "^1.2.2",
     "typeorm": "^0.3.12",
+    "typesense": "^1.5.3",
     "weaviate-ts-client": "^1.0.0"
   },
   "peerDependenciesMeta": {
@@ -701,6 +710,9 @@
     "typeorm": {
       "optional": true
     },
+    "typesense": {
+      "optional": true
+    },
     "weaviate-ts-client": {
       "optional": true
     }
@@ -709,15 +721,16 @@
     "@anthropic-ai/sdk": "^0.4.3",
     "ansi-styles": "^5.0.0",
     "binary-extensions": "^2.2.0",
-    "case-anything": "^2.1.13",
+    "camelcase": "6",
+    "decamelize": "^1.2.0",
     "expr-eval": "^2.0.2",
     "flat": "^5.0.2",
-    "js-tiktoken": "^1.0.6",
+    "js-tiktoken": "^1.0.7",
     "jsonpointer": "^5.0.1",
-    "langchainplus-sdk": "^0.0.11",
+    "langchainplus-sdk": "^0.0.15",
     "ml-distance": "^4.0.0",
     "object-hash": "^3.0.0",
-    "openai": "^3.2.0",
+    "openai": "^3.3.0",
     "p-queue": "^6.6.2",
     "p-retry": "4",
     "uuid": "^9.0.0",
@@ -1013,6 +1026,11 @@
       "types": "./vectorstores/redis.d.ts",
       "import": "./vectorstores/redis.js",
       "require": "./vectorstores/redis.cjs"
+    },
+    "./vectorstores/typesense": {
+      "types": "./vectorstores/typesense.d.ts",
+      "import": "./vectorstores/typesense.js",
+      "require": "./vectorstores/typesense.cjs"
     },
     "./vectorstores/singlestore": {
       "types": "./vectorstores/singlestore.d.ts",
@@ -1419,6 +1437,11 @@
       "types": "./client.d.ts",
       "import": "./client.js",
       "require": "./client.cjs"
+    },
+    "./evaluation": {
+      "types": "./evaluation.d.ts",
+      "import": "./evaluation.js",
+      "require": "./evaluation.cjs"
     },
     "./package.json": "./package.json"
   }
