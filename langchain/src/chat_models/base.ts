@@ -90,7 +90,11 @@ export abstract class BaseChatModel extends BaseLanguageModel {
     // generate results
     const results = await Promise.allSettled(
       messages.map((messageList, i) =>
-        this._generate(messageList, parsedOptions, runManagers?.[i])
+        this._generate(
+          messageList,
+          { ...parsedOptions, promptIndex: i },
+          runManagers?.[i]
+        )
       )
     );
     // handle results
