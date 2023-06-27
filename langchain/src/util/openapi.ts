@@ -151,12 +151,12 @@ export class OpenAPISpec {
     });
   }
 
-  getRequestBodyForOperation(operation: OperationObject) {
+  getRequestBodyForOperation(operation: OperationObject): RequestBodyObject {
     const requestBody = operation.requestBody;
     if ((requestBody as ReferenceObject)?.$ref !== undefined) {
       return this.getRootReferencedRequestBody(requestBody as ReferenceObject);
     }
-    return requestBody;
+    return requestBody as RequestBodyObject;
   }
 
   static getCleanedOperationId(operation: OperationObject, path: string, method: OpenAPIV3_1.HttpMethods) {

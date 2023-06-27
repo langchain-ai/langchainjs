@@ -53,6 +53,7 @@ export class JsonOutputFunctionsParser extends BaseLLMOutputParser<object> {
         `No result from "OutputFunctionsParser" ${JSON.stringify(generations)}`
       );
     }
+    console.log(result);
     return JSON.parse(result);
   }
 }
