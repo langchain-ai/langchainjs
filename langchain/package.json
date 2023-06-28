@@ -229,6 +229,9 @@
     "document_loaders/web/notiondb.cjs",
     "document_loaders/web/notiondb.js",
     "document_loaders/web/notiondb.d.ts",
+    "document_loaders/web/notionapi.cjs",
+    "document_loaders/web/notionapi.js",
+    "document_loaders/web/notionapi.d.ts",
     "document_loaders/web/s3.cjs",
     "document_loaders/web/s3.js",
     "document_loaders/web/s3.d.ts",
@@ -456,6 +459,7 @@
     "@google-cloud/storage": "^6.10.1",
     "@huggingface/inference": "^1.5.1",
     "@jest/globals": "^29.5.0",
+    "@notionhq/client": "^2.2.5",
     "@opensearch-project/opensearch": "^2.2.0",
     "@pinecone-database/pinecone": "^0.0.14",
     "@qdrant/js-client-rest": "^1.2.0",
@@ -504,6 +508,7 @@
     "mammoth": "^1.5.1",
     "mongodb": "^5.2.0",
     "mysql2": "^3.3.3",
+    "notion-to-md": "^3.1.0",
     "pdf-parse": "1.1.1",
     "peggy": "^3.0.2",
     "pg": "^8.11.0",
@@ -535,6 +540,7 @@
     "@gomomento/sdk": "^1.23.0",
     "@google-cloud/storage": "^6.10.1",
     "@huggingface/inference": "^1.5.1",
+    "@notionhq/client": "^2.2.5",
     "@opensearch-project/opensearch": "*",
     "@pinecone-database/pinecone": "*",
     "@qdrant/js-client-rest": "^1.2.0",
@@ -561,6 +567,7 @@
     "mammoth": "*",
     "mongodb": "^5.2.0",
     "mysql2": "^3.3.3",
+    "notion-to-md": "^3.1.0",
     "pdf-parse": "1.1.1",
     "peggy": "^3.0.2",
     "pg": "^8.11.0",
@@ -603,6 +610,9 @@
       "optional": true
     },
     "@huggingface/inference": {
+      "optional": true
+    },
+    "@notionhq/client": {
       "optional": true
     },
     "@opensearch-project/opensearch": {
@@ -681,6 +691,9 @@
       "optional": true
     },
     "mysql2": {
+      "optional": true
+    },
+    "notion-to-md": {
       "optional": true
     },
     "pdf-parse": {
@@ -1136,6 +1149,11 @@
       "types": "./document_loaders/web/notiondb.d.ts",
       "import": "./document_loaders/web/notiondb.js",
       "require": "./document_loaders/web/notiondb.cjs"
+    },
+    "./document_loaders/web/notionapi": {
+      "types": "./document_loaders/web/notionapi.d.ts",
+      "import": "./document_loaders/web/notionapi.js",
+      "require": "./document_loaders/web/notionapi.cjs"
     },
     "./document_loaders/web/s3": {
       "types": "./document_loaders/web/s3.d.ts",

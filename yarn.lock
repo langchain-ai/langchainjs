@@ -6474,6 +6474,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@notionhq/client@npm:^2.2.5":
+  version: 2.2.5
+  resolution: "@notionhq/client@npm:2.2.5"
+  dependencies:
+    "@types/node-fetch": ^2.5.10
+    node-fetch: ^2.6.1
+  checksum: e663e9dec58548226ea463fba1409ee9c5af26bdae71b2c5885c11b3c39b9238578ae067e31d5bd33b67cef492f603b264dcdad52692e33e03e0c0a085cb89f0
+  languageName: node
+  linkType: hard
+
 "@npmcli/fs@npm:^1.0.0":
   version: 1.1.1
   resolution: "@npmcli/fs@npm:1.1.1"
@@ -8197,6 +8207,16 @@ __metadata:
   version: 5.1.2
   resolution: "@types/minimatch@npm:5.1.2"
   checksum: 0391a282860c7cb6fe262c12b99564732401bdaa5e395bee9ca323c312c1a0f45efbf34dce974682036e857db59a5c9b1da522f3d6055aeead7097264c8705a8
+  languageName: node
+  linkType: hard
+
+"@types/node-fetch@npm:^2.5.10":
+  version: 2.6.4
+  resolution: "@types/node-fetch@npm:2.6.4"
+  dependencies:
+    "@types/node": "*"
+    form-data: ^3.0.0
+  checksum: f3e1d881bb42269e676ecaf49f0e096ab345e22823a2b2d071d60619414817fe02df48a31a8d05adb23054028a2a65521bdb3906ceb763ab6d3339c8d8775058
   languageName: node
   linkType: hard
 
@@ -18610,6 +18630,7 @@ __metadata:
     "@google-cloud/storage": ^6.10.1
     "@huggingface/inference": ^1.5.1
     "@jest/globals": ^29.5.0
+    "@notionhq/client": ^2.2.5
     "@opensearch-project/opensearch": ^2.2.0
     "@pinecone-database/pinecone": ^0.0.14
     "@qdrant/js-client-rest": ^1.2.0
@@ -18668,6 +18689,7 @@ __metadata:
     ml-distance: ^4.0.0
     mongodb: ^5.2.0
     mysql2: ^3.3.3
+    notion-to-md: ^3.1.0
     object-hash: ^3.0.0
     openai: ^3.3.0
     p-queue: ^6.6.2
@@ -18706,6 +18728,7 @@ __metadata:
     "@gomomento/sdk": ^1.23.0
     "@google-cloud/storage": ^6.10.1
     "@huggingface/inference": ^1.5.1
+    "@notionhq/client": ^2.2.5
     "@opensearch-project/opensearch": "*"
     "@pinecone-database/pinecone": "*"
     "@qdrant/js-client-rest": ^1.2.0
@@ -18732,6 +18755,7 @@ __metadata:
     mammoth: "*"
     mongodb: ^5.2.0
     mysql2: ^3.3.3
+    notion-to-md: ^3.1.0
     pdf-parse: 1.1.1
     peggy: ^3.0.2
     pg: ^8.11.0
@@ -18764,6 +18788,8 @@ __metadata:
     "@google-cloud/storage":
       optional: true
     "@huggingface/inference":
+      optional: true
+    "@notionhq/client":
       optional: true
     "@opensearch-project/opensearch":
       optional: true
@@ -18816,6 +18842,8 @@ __metadata:
     mongodb:
       optional: true
     mysql2:
+      optional: true
+    notion-to-md:
       optional: true
     pdf-parse:
       optional: true
@@ -19472,6 +19500,15 @@ __metadata:
   version: 1.0.4
   resolution: "markdown-escapes@npm:1.0.4"
   checksum: 6833a93d72d3f70a500658872312c6fa8015c20cc835a85ae6901fa232683fbc6ed7118ebe920fea7c80039a560f339c026597d96eee0e9de602a36921804997
+  languageName: node
+  linkType: hard
+
+"markdown-table@npm:^2.0.0":
+  version: 2.0.0
+  resolution: "markdown-table@npm:2.0.0"
+  dependencies:
+    repeat-string: ^1.0.0
+  checksum: 9bb634a9300016cbb41216c1eab44c74b6b7083ac07872e296f900a29449cf0e260ece03fa10c3e9784ab94c61664d1d147da0315f95e1336e2bdcc025615c90
   languageName: node
   linkType: hard
 
@@ -20353,6 +20390,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"node-fetch@npm:2":
+  version: 2.6.11
+  resolution: "node-fetch@npm:2.6.11"
+  dependencies:
+    whatwg-url: ^5.0.0
+  peerDependencies:
+    encoding: ^0.1.0
+  peerDependenciesMeta:
+    encoding:
+      optional: true
+  checksum: 249d0666a9497553384d46b5ab296ba223521ac88fed4d8a17d6ee6c2efb0fc890f3e8091cafe7f9fba8151a5b8d925db2671543b3409a56c3cd522b468b47b3
+  languageName: node
+  linkType: hard
+
 "node-fetch@npm:2.6.7":
   version: 2.6.7
   resolution: "node-fetch@npm:2.6.7"
@@ -20518,6 +20569,16 @@ __metadata:
   version: 8.0.0
   resolution: "normalize-url@npm:8.0.0"
   checksum: 24c20b75ebfd526d8453084692720b49d111c63c0911f1b7447427829597841eef5a8ba3f6bb93d6654007b991c1f5cd85da2c907800e439e2e2ec6c2abd0fc0
+  languageName: node
+  linkType: hard
+
+"notion-to-md@npm:^3.1.0":
+  version: 3.1.0
+  resolution: "notion-to-md@npm:3.1.0"
+  dependencies:
+    markdown-table: ^2.0.0
+    node-fetch: 2
+  checksum: 0123641187abba07c2cf4d603d9603994020f7f44f52217a1818654985f96b2cda44c1b79c252b9a75e664f56de05c985e1fafc3d90d987f60e66fdc80f024a1
   languageName: node
   linkType: hard
 
@@ -23820,7 +23881,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"repeat-string@npm:^1.5.4":
+"repeat-string@npm:^1.0.0, repeat-string@npm:^1.5.4":
   version: 1.6.1
   resolution: "repeat-string@npm:1.6.1"
   checksum: 1b809fc6db97decdc68f5b12c4d1a671c8e3f65ec4a40c238bc5200e44e85bcc52a54f78268ab9c29fcf5fe4f1343e805420056d1f30fa9a9ee4c2d93e3cc6c0

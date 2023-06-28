@@ -142,6 +142,9 @@ export interface OptionalImportMap {
   "langchain/document_loaders/web/notiondb"?:
     | typeof import("../document_loaders/web/notiondb.js")
     | Promise<typeof import("../document_loaders/web/notiondb.js")>;
+  "langchain/document_loaders/web/notionapi"?:
+    | typeof import("../document_loaders/web/notionapi.js")
+    | Promise<typeof import("../document_loaders/web/notionapi.js")>;
   "langchain/document_loaders/web/s3"?:
     | typeof import("../document_loaders/web/s3.js")
     | Promise<typeof import("../document_loaders/web/s3.js")>;
