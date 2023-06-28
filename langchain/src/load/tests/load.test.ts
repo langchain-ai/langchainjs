@@ -357,7 +357,7 @@ test.skip("serialize + deserialize agent", async () => {
   expect(JSON.stringify(executor2, null, 2)).toBe(str);
 });
 
-test.only("override name of objects when serialising", async () => {
+test("override name of objects when serialising", async () => {
   class MangledName extends Cohere {}
 
   const llm = new MangledName({ temperature: 0.5, apiKey: "cohere-key" });
