@@ -6146,15 +6146,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@mendable/search@npm:^0.0.102":
-  version: 0.0.102
-  resolution: "@mendable/search@npm:0.0.102"
+"@mendable/search@npm:^0.0.112-beta.7":
+  version: 0.0.112-beta.7
+  resolution: "@mendable/search@npm:0.0.112-beta.7"
   dependencies:
     posthog-js: ^1.45.1
   peerDependencies:
     react: ^17.x || ^18.x
     react-dom: ^17.x || ^18.x
-  checksum: 5bcbc2a10d69532e0ec29d437c94f87a1531fe975fdd0da23d82fa9767903e1d4519bdf061edd7b8ab04d3ccfdcb60a08464ca68dc288e35a9da6c09d043d1d5
+  checksum: bf5df069add754e62726b56d666069226925c8ec17bfd3326c4535112b9becf08b9be134cb0d9f5fdd627a6ffef37f0a311e73c30c2f7bae075ffa91be9bf96c
   languageName: node
   linkType: hard
 
@@ -7912,6 +7912,13 @@ __metadata:
   version: 2.0.3
   resolution: "@types/d3-dsv@npm:2.0.3"
   checksum: 82b8aa6409643dbc624e0798a18e16f94aa4676f8e3949e0dc7992d898855e1d6230416c3fbf6d3d3314252e4027176525487dc030abb15031ef8db5b2c30f7a
+  languageName: node
+  linkType: hard
+
+"@types/decamelize@npm:^1.2.0":
+  version: 1.2.0
+  resolution: "@types/decamelize@npm:1.2.0"
+  checksum: cff4e926bf771f8ad6423ab8c5119d6b8679c09aaf9f0b26a4a1dbcf324c0b1df183c2bfe688b90b6f880d8e864684a2806a22529b4ee404fd9160f9c123853d
   languageName: node
   linkType: hard
 
@@ -12166,10 +12173,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"decamelize@npm:5":
-  version: 5.0.1
-  resolution: "decamelize@npm:5.0.1"
-  checksum: 7c3b1ed4b3e60e7fbc00a35fb248298527c1cdfe603e41dfcf05e6c4a8cb9efbee60630deb677ed428908fb4e74e322966c687a094d1478ddc9c3a74e9dc7140
+"decamelize@npm:^1.2.0":
+  version: 1.2.0
+  resolution: "decamelize@npm:1.2.0"
+  checksum: ad8c51a7e7e0720c70ec2eeb1163b66da03e7616d7b98c9ef43cce2416395e84c1e9548dd94f5f6ffecfee9f8b94251fc57121a8b021f2ff2469b2bae247b8aa
   languageName: node
   linkType: hard
 
@@ -12570,7 +12577,7 @@ __metadata:
     "@docusaurus/preset-classic": 2.4.0
     "@docusaurus/remark-plugin-npm2yarn": ^2.4.0
     "@mdx-js/react": ^1.6.22
-    "@mendable/search": ^0.0.102
+    "@mendable/search": ^0.0.112-beta.7
     "@swc/core": ^1.3.62
     clsx: ^1.2.1
     docusaurus-plugin-typedoc: next
@@ -18220,12 +18227,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"js-tiktoken@npm:^1.0.6":
-  version: 1.0.6
-  resolution: "js-tiktoken@npm:1.0.6"
+"js-tiktoken@npm:^1.0.7":
+  version: 1.0.7
+  resolution: "js-tiktoken@npm:1.0.7"
   dependencies:
     base64-js: ^1.5.1
-  checksum: 05a1b3f895447194a0ac17a56229e47eae3816cd851f12ee947b5cdc2f4439773ed52938f4f6459f5c45dc0f4a15ac1a882cde61e47e31b6a84b7129fe1f63c2
+  checksum: 4856641fed816e618c8a693db0a5478995c598914dec2ba9ccd69719a88a14756d5aec2eed0fba7a4999e603b277ba9a58fd7b2af98e8b638b39b436bbfb7060
   languageName: node
   linkType: hard
 
@@ -18615,6 +18622,7 @@ __metadata:
     "@tigrisdata/vector": ^1.1.0
     "@tsconfig/recommended": ^1.0.2
     "@types/d3-dsv": ^2
+    "@types/decamelize": ^1.2.0
     "@types/flat": ^5.0.2
     "@types/html-to-text": ^9
     "@types/object-hash": ^3.0.2
@@ -18634,7 +18642,7 @@ __metadata:
     chromadb: ^1.5.2
     cohere-ai: ^5.0.2
     d3-dsv: ^2.0.0
-    decamelize: 5
+    decamelize: ^1.2.0
     dotenv: ^16.0.3
     dpdm: ^3.12.0
     epub2: ^3.0.1
@@ -18653,9 +18661,9 @@ __metadata:
     html-to-text: ^9.0.5
     ignore: ^5.2.0
     jest: ^29.5.0
-    js-tiktoken: ^1.0.6
+    js-tiktoken: ^1.0.7
     jsonpointer: ^5.0.1
-    langchainplus-sdk: ^0.0.11
+    langchainplus-sdk: ^0.0.15
     mammoth: ^1.5.1
     ml-distance: ^4.0.0
     mongodb: ^5.2.0
@@ -18850,9 +18858,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"langchainplus-sdk@npm:^0.0.11":
-  version: 0.0.11
-  resolution: "langchainplus-sdk@npm:0.0.11"
+"langchainplus-sdk@npm:^0.0.15":
+  version: 0.0.15
+  resolution: "langchainplus-sdk@npm:0.0.15"
   dependencies:
     "@types/uuid": ^9.0.1
     commander: ^10.0.1
@@ -18861,7 +18869,7 @@ __metadata:
     uuid: ^9.0.0
   bin:
     langchain: dist/cli/main.cjs
-  checksum: 721ecb73aa9d4b270bd14e9c49e6b51b6787394e0fc0e188e417b4091c69542f3984ec636eac7159ae838e25a6dd067b21ad7b8aaa4a732976113351117f60e9
+  checksum: 7467364922753a44e2e15f6c54fe20c191105e10b42774cb7ebc4bfbeb2c2fa4ee159eaea52637083673f821beb0bfd155918abf8c2f14cf8151dd74b4bac32f
   languageName: node
   linkType: hard
 
