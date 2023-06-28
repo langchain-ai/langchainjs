@@ -1,3 +1,4 @@
+import { Tool } from "./base.js";
 import { DynamicTool, DynamicToolInput } from "./dynamic.js";
 
 interface SfnConfig {
@@ -17,7 +18,7 @@ interface SfnClientConstructorArgs {
 
 // Abstract away lc_namespace and lc_secrets into a base class
 // that can be extended by all tools that need it.
-abstract class AWSSfnTool extends DynamicTool {
+abstract class AWSSfnToolConfig extends DynamicTool {
   get lc_namespace(): string[] {
     return [...super.lc_namespace, "aws_sfn"];
   }
@@ -30,7 +31,7 @@ abstract class AWSSfnTool extends DynamicTool {
   }
 }
 
-export class StartExecutionAWSSfnTool extends AWSSfnTool {
+export class StartExecutionAWSSfnTool extends AWSSfnToolConfig {
   private sfnConfig: SfnConfig;
 
   constructor({
@@ -83,63 +84,53 @@ export class StartExecutionAWSSfnTool extends AWSSfnTool {
   }
 }
 
-export class DescribeExecutionAWSSfnTool extends AWSSfnTool {
-  private sfnConfig: SfnConfig;
+export class DescribeExecutionAWSSfnTool extends Tool {
+  name = "describe-execution-aws-sfn";
 
-  constructor({
-    name,
-    description,
-    ...rest
-  }: SfnConfig & Omit<DynamicToolInput, "func">) {
-    super({
-      name,
-      description,
-      func: async (input: string) => this._func(input),
-    });
+  sfnConfig: SfnConfig;
 
-    this.sfnConfig = rest;
+  constructor(config: SfnConfig) {
+    super(...arguments);
+    this.sfnConfig = config;
   }
 
   /** @ignore */
-  async _func(input: string): Promise<string> {
+  async _call(input: string) {
     const { Client, Describer } = await SfnImports();
     const clientConstructorArgs: SfnClientConstructorArgs =
       getClientConstructorArgs(this.sfnConfig);
     const sfnClient = new Client(clientConstructorArgs);
 
-    return new Promise((resolve) => {
-      const command = new Describer({
-        executionArn: input,
-      });
-
-      sfnClient
-        .send(command)
-        .then((response) =>
-          resolve(
-            response.executionArn
-              ? JSON.stringify({
-                  executionArn: response.executionArn,
-                  name: response.name,
-                  status: response.status,
-                  startDate: response.startDate,
-                  stopDate: response.stopDate,
-                  input: response.input,
-                  output: response.output,
-                  error: response.error,
-                  cause: response.cause,
-                })
-              : "{}"
-          )
-        )
-        .catch((error: Error) => {
-          console.error("Error describing state machine execution:", error);
-          resolve("failed to complete request");
-        });
+    const command = new Describer({
+      executionArn: input,
     });
+    return await sfnClient
+      .send(command)
+      .then((response) =>
+        response.executionArn
+          ? JSON.stringify({
+              executionArn: response.executionArn,
+              name: response.name,
+              status: response.status,
+              startDate: response.startDate,
+              stopDate: response.stopDate,
+              input: response.input,
+              output: response.output,
+              error: response.error,
+              cause: response.cause,
+            })
+          : "{}"
+      )
+      .catch((error: Error) => {
+        console.error("Error describing state machine execution:", error);
+        return "failed to complete request";
+      });
   }
+
+  description = "This tool is useful for checking the status of a AWS Step Function execution (aka. statemachine exeuction). Input to this tool is a properly formatted AWS Step Function Execution ARN (executionArn). The output is a JSON object containing the executionArn, name, status, startDate, stopDate, input, output, error, and cause of the execution.";
 }
 
-export class SendTaskSuccessAWSSfnTool extends AWSSfnTool {
+export class SendTaskSuccessAWSSfnTool extends AWSSfnToolConfig {
   private sfnConfig: SfnConfig;
 
   constructor({
