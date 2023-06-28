@@ -15,7 +15,6 @@ export * as llms__aleph_alpha from "../llms/aleph_alpha.js";
 export * as prompts from "../prompts/index.js";
 export * as vectorstores__base from "../vectorstores/base.js";
 export * as vectorstores__memory from "../vectorstores/memory.js";
-export * as vectorstores__lancedb from "../vectorstores/lancedb.js";
 export * as vectorstores__prisma from "../vectorstores/prisma.js";
 export * as text_splitter from "../text_splitter.js";
 export * as memory from "../memory/index.js";

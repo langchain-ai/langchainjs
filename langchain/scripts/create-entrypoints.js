@@ -203,6 +203,7 @@ const requiresOptionalDependency = [
   "vectorstores/hnswlib",
   "vectorstores/faiss",
   "vectorstores/weaviate",
+  "vectorstores/lancedb",
   "vectorstores/mongo",
   "vectorstores/mongodb_atlas",
   "vectorstores/pinecone",

@@ -67,6 +67,9 @@ export interface OptionalImportMap {
   "langchain/vectorstores/weaviate"?:
     | typeof import("../vectorstores/weaviate.js")
     | Promise<typeof import("../vectorstores/weaviate.js")>;
+  "langchain/vectorstores/lancedb"?:
+    | typeof import("../vectorstores/lancedb.js")
+    | Promise<typeof import("../vectorstores/lancedb.js")>;
   "langchain/vectorstores/mongo"?:
     | typeof import("../vectorstores/mongo.js")
     | Promise<typeof import("../vectorstores/mongo.js")>;
