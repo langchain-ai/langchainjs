@@ -434,14 +434,14 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
     if (!this.client) {
       const openAIEndpointConfig: OpenAIEndpointConfig = {
         azureOpenAIApiDeploymentName: this.azureOpenAIApiDeploymentName,
-        azureOpenAIApiInstanceName:this.azureOpenAIApiInstanceName,
+        azureOpenAIApiInstanceName: this.azureOpenAIApiInstanceName,
         azureOpenAIApiKey: this.azureOpenAIApiKey,
         azureOpenAiBasePath: this.azureOpenAiBasePath,
-        basePath:this.clientConfig.basePath,
-      }
+        basePath: this.clientConfig.basePath,
+      };
 
       const endpoint = getEndpoint(openAIEndpointConfig);
-      
+
       const clientConfig = new Configuration({
         ...this.clientConfig,
         basePath: endpoint,
