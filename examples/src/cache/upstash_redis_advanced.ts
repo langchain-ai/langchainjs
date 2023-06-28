@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { Redis } from "@upstash/redis";
 import https from "https";
 
