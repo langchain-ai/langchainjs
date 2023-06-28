@@ -175,6 +175,9 @@
     "vectorstores/tigris.cjs",
     "vectorstores/tigris.js",
     "vectorstores/tigris.d.ts",
+    "vectorstores/vectara.cjs",
+    "vectorstores/vectara.js",
+    "vectorstores/vectara.d.ts",
     "text_splitter.cjs",
     "text_splitter.js",
     "text_splitter.d.ts",
@@ -1038,6 +1041,11 @@
       "types": "./vectorstores/tigris.d.ts",
       "import": "./vectorstores/tigris.js",
       "require": "./vectorstores/tigris.cjs"
+    },
+    "./vectorstores/vectara": {
+      "types": "./vectorstores/vectara.d.ts",
+      "import": "./vectorstores/vectara.js",
+      "require": "./vectorstores/vectara.cjs"
     },
     "./text_splitter": {
       "types": "./text_splitter.d.ts",
