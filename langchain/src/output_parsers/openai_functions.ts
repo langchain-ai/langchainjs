@@ -59,7 +59,7 @@ export class JsonOutputFunctionsParser extends BaseLLMOutputParser<object> {
 
   constructor(config?: { argsOnly: boolean }) {
     super();
-    this.argsOnly = config?.argsOnly ?? true;
+    this.argsOnly = config?.argsOnly ?? this.argsOnly;
     this.outputParser = new OutputFunctionsParser(config);
   }
 
