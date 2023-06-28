@@ -133,6 +133,9 @@
     "vectorstores/weaviate.cjs",
     "vectorstores/weaviate.js",
     "vectorstores/weaviate.d.ts",
+    "vectorstores/lancedb.cjs",
+    "vectorstores/lancedb.js",
+    "vectorstores/lancedb.d.ts",
     "vectorstores/mongo.cjs",
     "vectorstores/mongo.js",
     "vectorstores/mongo.d.ts",
@@ -527,6 +530,7 @@
     "typeorm": "^0.3.12",
     "typescript": "^5.0.0",
     "typesense": "^1.5.3",
+    "vectordb": "^0.1.4",
     "weaviate-ts-client": "^1.0.0"
   },
   "peerDependencies": {
@@ -579,6 +583,7 @@
     "srt-parser-2": "^1.2.2",
     "typeorm": "^0.3.12",
     "typesense": "^1.5.3",
+    "vectordb": "^0.1.4",
     "weaviate-ts-client": "^1.0.0"
   },
   "peerDependenciesMeta": {
@@ -727,6 +732,9 @@
       "optional": true
     },
     "typesense": {
+      "optional": true
+    },
+    "vectordb": {
       "optional": true
     },
     "weaviate-ts-client": {
@@ -987,6 +995,11 @@
       "types": "./vectorstores/weaviate.d.ts",
       "import": "./vectorstores/weaviate.js",
       "require": "./vectorstores/weaviate.cjs"
+    },
+    "./vectorstores/lancedb": {
+      "types": "./vectorstores/lancedb.d.ts",
+      "import": "./vectorstores/lancedb.js",
+      "require": "./vectorstores/lancedb.cjs"
     },
     "./vectorstores/mongo": {
       "types": "./vectorstores/mongo.d.ts",
