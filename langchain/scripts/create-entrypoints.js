@@ -148,6 +148,7 @@ const entrypoints = {
   cache: "cache/index",
   "cache/momento": "cache/momento",
   "cache/redis": "cache/redis",
+  "cache/upstash_redis": "cache/upstash_redis",
   // stores
   "stores/doc/in_memory": "stores/doc/in_memory",
   "stores/doc/gcs": "stores/doc/gcs",
@@ -257,6 +258,7 @@ const requiresOptionalDependency = [
   "chains/query_constructor/ir",
   "cache/momento",
   "cache/redis",
+  "cache/upstash_redis",
   "stores/doc/gcs",
   "stores/file/node",
   "stores/message/dynamodb",

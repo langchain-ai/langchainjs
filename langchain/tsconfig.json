@@ -145,6 +145,7 @@
       "src/cache/index.ts",
       "src/cache/momento.ts",
       "src/cache/redis.ts",
+      "src/cache/upstash_redis.ts",
       "src/stores/doc/in_memory.ts",
       "src/stores/doc/gcs.ts",
       "src/stores/file/in_memory.ts",
