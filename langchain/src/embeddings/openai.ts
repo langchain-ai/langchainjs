@@ -10,6 +10,7 @@ import { AzureOpenAIInput } from "../types/openai-types.js";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
 import { chunkArray } from "../util/chunk.js";
 import { Embeddings, EmbeddingsParams } from "./base.js";
+import { getEndpoint, OpenAIEndpointConfig } from "../util/azure.js";
 
 export interface OpenAIEmbeddingsParams extends EmbeddingsParams {
   /** Model name to use */
@@ -53,6 +54,8 @@ export class OpenAIEmbeddings
 
   azureOpenAIApiDeploymentName?: string;
 
+  azureOpenAiBasePath?: string;
+
   private client: OpenAIApi;
 
   private clientConfig: ConfigurationParameters;
@@ -90,6 +93,10 @@ export class OpenAIEmbeddings
     const azureApiVersion =
       fields?.azureOpenAIApiVersion ??
       getEnvironmentVariable("AZURE_OPENAI_API_VERSION");
+
+    this.azureOpenAiBasePath =
+      fields?.azureOpenAiBasePath ??
+      getEnvironmentVariable("AZURE_OPENAI_BASE_PATH");
 
     this.modelName = fields?.modelName ?? this.modelName;
     this.batchSize = fields?.batchSize ?? azureApiKey ? 1 : this.batchSize;
@@ -151,9 +158,16 @@ export class OpenAIEmbeddings
 
   private async embeddingWithRetry(request: CreateEmbeddingRequest) {
     if (!this.client) {
-      const endpoint = this.azureOpenAIApiKey
-        ? `https://${this.azureOpenAIApiInstanceName}.openai.azure.com/openai/deployments/${this.azureOpenAIApiDeploymentName}`
-        : this.clientConfig.basePath;
+      const openAIEndpointConfig: OpenAIEndpointConfig = {
+        azureOpenAIApiDeploymentName: this.azureOpenAIApiDeploymentName,
+        azureOpenAIApiInstanceName:this.azureOpenAIApiInstanceName,
+        azureOpenAIApiKey: this.azureOpenAIApiKey,
+        azureOpenAiBasePath: this.azureOpenAiBasePath,
+        basePath:this.clientConfig.basePath,
+      }
+
+      const endpoint = getEndpoint(openAIEndpointConfig);
+
       const clientConfig = new Configuration({
         ...this.clientConfig,
         basePath: endpoint,

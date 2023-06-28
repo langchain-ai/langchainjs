@@ -22,6 +22,7 @@ import { OpenAIChat } from "./openai-chat.js";
 import { LLMResult } from "../schema/index.js";
 import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
 import { promptLayerTrackRequest } from "../util/prompt-layer.js";
+import { getEndpoint, OpenAIEndpointConfig } from "../util/azure.js";
 
 export { OpenAICallOptions, AzureOpenAIInput, OpenAIInput };
 
@@ -114,6 +115,8 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
 
   azureOpenAIApiDeploymentName?: string;
 
+  azureOpenAiBasePath?: string;
+
   private client: OpenAIApi;
 
   private clientConfig: ConfigurationParameters;
@@ -161,6 +164,10 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
     this.azureOpenAIApiVersion =
       fields?.azureOpenAIApiVersion ??
       getEnvironmentVariable("AZURE_OPENAI_API_VERSION");
+
+    this.azureOpenAiBasePath =
+      fields?.azureOpenAiBasePath ??
+      getEnvironmentVariable("AZURE_OPENAI_BASE_PATH");
 
     this.modelName = fields?.modelName ?? this.modelName;
     this.modelKwargs = fields?.modelKwargs ?? {};
@@ -425,9 +432,16 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
     options?: StreamingAxiosConfiguration
   ) {
     if (!this.client) {
-      const endpoint = this.azureOpenAIApiKey
-        ? `https://${this.azureOpenAIApiInstanceName}.openai.azure.com/openai/deployments/${this.azureOpenAIApiDeploymentName}`
-        : this.clientConfig.basePath;
+      const openAIEndpointConfig: OpenAIEndpointConfig = {
+        azureOpenAIApiDeploymentName: this.azureOpenAIApiDeploymentName,
+        azureOpenAIApiInstanceName:this.azureOpenAIApiInstanceName,
+        azureOpenAIApiKey: this.azureOpenAIApiKey,
+        azureOpenAiBasePath: this.azureOpenAiBasePath,
+        basePath:this.clientConfig.basePath,
+      }
+
+      const endpoint = getEndpoint(openAIEndpointConfig);
+      
       const clientConfig = new Configuration({
         ...this.clientConfig,
         basePath: endpoint,
