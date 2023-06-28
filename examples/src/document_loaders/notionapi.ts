@@ -1,9 +1,10 @@
-import { Client } from "@notionhq/client";
 import { NotionAPILoader } from "langchain/document_loaders/web/notionapi";
 
 // Loading a page (including child pages all as separate documents)
 const pageLoader = new NotionAPILoader({
-  client: new Client({ auth: "<NOTION_INTEGRATION_TOKEN>" }),
+  clientOptions: {
+    auth: "<NOTION_INTEGRATION_TOKEN>",
+  },
   id: "<PAGE_ID>",
   type: "page",
 });
@@ -15,7 +16,9 @@ console.log({ pageDocs });
 
 // Loading a database (each row is a separate document with all properties as metadata)
 const dbLoader = new NotionAPILoader({
-  client: new Client({ auth: "<NOTION_INTEGRATION_TOKEN>" }),
+  clientOptions: {
+    auth: "<NOTION_INTEGRATION_TOKEN>",
+  },
   id: "<DATABASE_ID>",
   type: "database",
 });

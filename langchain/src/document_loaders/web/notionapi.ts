@@ -12,7 +12,7 @@ import { Document } from "../../document.js";
 export type NotionAPIType = "database" | "page";
 
 export type NotionAPILoaderOptions = {
-  client: Client;
+  clientOptions: ConstructorParameters<typeof Client>[0];
   id: string;
   type: NotionAPIType;
 };
@@ -29,7 +29,7 @@ export class NotionAPILoader extends BaseDocumentLoader {
   constructor(options: NotionAPILoaderOptions) {
     super();
 
-    this.notionClient = options.client;
+    this.notionClient = new Client(options.clientOptions);
     this.n2mClient = new NotionToMarkdown({
       notionClient: this.notionClient,
       config: { parseChildPages: false, convertImagesToBase64: false },

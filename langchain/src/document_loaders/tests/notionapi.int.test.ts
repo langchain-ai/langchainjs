@@ -1,12 +1,13 @@
 /* eslint-disable no-process-env */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { test } from "@jest/globals";
-import { Client } from "@notionhq/client";
 import { NotionAPILoader } from "../web/notionapi.js";
 
 test("Test Notion MD Loader Page", async () => {
   const loader = new NotionAPILoader({
-    client: new Client({ auth: process.env.NOTION_INTEGRATION_TOKEN }),
+    clientOptions: {
+      auth: process.env.NOTION_INTEGRATION_TOKEN,
+    },
     id: process.env.NOTION_PAGE_ID ?? "",
     type: "page",
   });
@@ -17,7 +18,9 @@ test("Test Notion MD Loader Page", async () => {
 
 test("Test Notion Web Loader Database", async () => {
   const loader = new NotionAPILoader({
-    client: new Client({ auth: process.env.NOTION_INTEGRATION_TOKEN }),
+    clientOptions: {
+      auth: process.env.NOTION_INTEGRATION_TOKEN,
+    },
     id: process.env.NOTION_DATABASE_ID ?? "",
     type: "database",
   });
