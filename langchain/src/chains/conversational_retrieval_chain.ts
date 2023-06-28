@@ -14,12 +14,12 @@ import { CallbackManagerForChainRun } from "../callbacks/manager.js";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type LoadValues = Record<string, any>;
 
-const question_generator_template = `Given the following conversation and a follow up question, rephrase the follow up question to be a standalone question.
+const question_generator_template = `Given the following conversation and a follow up question, return the conversation history excerpt that includes any relevant context to the question if it exists and rephrase the follow up question to be a standalone question.
 
 Chat History:
 {chat_history}
 Follow Up Input: {question}
-Standalone question:`;
+Standalone question and optional chat history excerpt:`;
 
 export interface ConversationalRetrievalQAChainInput extends ChainInputs {
   retriever: BaseRetriever;
