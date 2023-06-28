@@ -1,5 +1,4 @@
-import { Client } from "@elastic/elasticsearch";
-import { estypes } from "@elastic/elasticsearch";
+import { Client, estypes } from "@elastic/elasticsearch";
 import { Embeddings } from "../embeddings/base.js";
 import { Document } from "../document.js";
 import { VectorStore } from "./base.js";
