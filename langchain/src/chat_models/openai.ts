@@ -101,6 +101,7 @@ export interface ChatOpenAICallOptions extends OpenAICallOptions {
  * `AZURE_OPENAI_API_INSTANCE_NAME`,
  * `AZURE_OPENAI_API_DEPLOYMENT_NAME`
  * and `AZURE_OPENAI_API_VERSION` environment variable set.
+ * `AZURE_OPENAI_BASE_PATH` is optional ( in case you want to use a custom endpoint.)
  *
  * @remarks
  * Any parameters that are valid to be passed to {@link

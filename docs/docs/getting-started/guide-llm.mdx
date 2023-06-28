@@ -54,6 +54,7 @@ We will then need to set the environment variable for the OpenAI key. Three opti
    AZURE_OPENAI_API_COMPLETIONS_DEPLOYMENT_NAME="..."
    AZURE_OPENAI_API_EMBEDDINGS_DEPLOYMENT_NAME="..."
    AZURE_OPENAI_API_VERSION="..."
+   AZURE_OPENAI_BASE_PATH="..."
    ```
 
 2. Or we can export the environment variable with the following command in your shell:
@@ -73,6 +74,7 @@ We will then need to set the environment variable for the OpenAI key. Three opti
    export AZURE_OPENAI_API_COMPLETIONS_DEPLOYMENT_NAME="..."
    export AZURE_OPENAI_API_EMBEDDINGS_DEPLOYMENT_NAME="..."
    export AZURE_OPENAI_API_VERSION="..."
+   export AZURE_OPENAI_BASE_PATH="..."
    ```
 
 3. Or we can do it when initializing the wrapper along with other arguments. In this example, we probably want the outputs to be MORE random, so we'll initialize it with a HIGH temperature.
