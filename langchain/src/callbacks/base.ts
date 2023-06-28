@@ -192,6 +192,8 @@ export abstract class BaseCallbackHandler
 {
   lc_serializable = false;
 
+  lc_name_override: string | undefined;
+
   get lc_namespace(): ["langchain", "callbacks", string] {
     return ["langchain", "callbacks", this.name];
   }

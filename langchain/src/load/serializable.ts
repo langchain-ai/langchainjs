@@ -56,6 +56,8 @@ export abstract class Serializable {
 
   lc_kwargs: SerializedFields;
 
+  lc_name_override: string | undefined;
+
   /**
    * A path to the module that contains the class, eg. ["langchain", "llms"]
    * Usually should be the same as the entrypoint the class is exported from.
@@ -139,7 +141,10 @@ export abstract class Serializable {
     return {
       lc: 1,
       type: "constructor",
-      id: [...this.lc_namespace, this.constructor.name],
+      id: [
+        ...this.lc_namespace,
+        this.lc_name_override ?? this.constructor.name,
+      ],
       kwargs: mapKeys(
         Object.keys(secrets).length ? replaceSecrets(kwargs, secrets) : kwargs,
         keyToJson,
@@ -152,7 +157,10 @@ export abstract class Serializable {
     return {
       lc: 1,
       type: "not_implemented",
-      id: [...this.lc_namespace, this.constructor.name],
+      id: [
+        ...this.lc_namespace,
+        this.lc_name_override ?? this.constructor.name,
+      ],
     };
   }
 }
