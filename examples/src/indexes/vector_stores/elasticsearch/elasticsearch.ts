@@ -7,7 +7,7 @@ export async function run() {
   const client = new Client({
     nodes: [process.env.ELASTICSEARCH_URL ?? "http://127.0.0.1:9200"],
     auth: {
-      username: "elastic",
+      username: process.env.ELASTIC_USERNAME ?? 'elastic',
       password: process.env.ELASTIC_PASSWORD,
     }
   });
