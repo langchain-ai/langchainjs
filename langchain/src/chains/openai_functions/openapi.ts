@@ -1,9 +1,6 @@
 import { ChatCompletionFunctions } from "openai";
 import { JsonSchema7ObjectType } from "zod-to-json-schema/src/parsers/object.js";
-import { OpenAPIV3_1 } from "openapi-types";
-import Document = OpenAPIV3_1.Document;
-import ParameterObject = OpenAPIV3_1.ParameterObject;
-import SchemaObject = OpenAPIV3_1.SchemaObject;
+import type { OpenAPIV3_1 } from "openapi-types";
 
 import { OpenAPISpec } from "../../util/openapi.js";
 import { ChainValues } from "../../schema/index.js";
@@ -84,7 +81,7 @@ function formatURL(url: string, pathParams: Record<string, string>): string {
 }
 
 function convertOpenAPIParamsToJSONSchema(
-  params: ParameterObject[],
+  params: OpenAPIV3_1.ParameterObject[],
   spec: OpenAPISpec
 ) {
   return params.reduce(
@@ -132,7 +129,7 @@ function convertOpenAPIParamsToJSONSchema(
 
 // OpenAI throws errors on extraneous schema properties, e.g. if "required" is set on individual ones
 function convertOpenAPISchemaToJSONSchema(
-  schema: SchemaObject,
+  schema: OpenAPIV3_1.SchemaObject,
   spec: OpenAPISpec
 ) {
   return Object.keys(schema.properties ?? {}).reduce(
@@ -182,14 +179,20 @@ function convertOpenAPISpecToOpenAIFunctions(spec: OpenAPISpec): {
       }
       const operationParametersByLocation = pathParameters
         .concat(spec.getParametersForOperation(operation))
-        .reduce((operationParams: Record<string, ParameterObject[]>, param) => {
-          if (!operationParams[param.in]) {
-            // eslint-disable-next-line no-param-reassign
-            operationParams[param.in] = [];
-          }
-          operationParams[param.in].push(param);
-          return operationParams;
-        }, {});
+        .reduce(
+          (
+            operationParams: Record<string, OpenAPIV3_1.ParameterObject[]>,
+            param
+          ) => {
+            if (!operationParams[param.in]) {
+              // eslint-disable-next-line no-param-reassign
+              operationParams[param.in] = [];
+            }
+            operationParams[param.in].push(param);
+            return operationParams;
+          },
+          {}
+        );
       const paramLocationToRequestArgNameMap: Record<string, string> = {
         query: "params",
         header: "headers",
@@ -381,7 +384,7 @@ export type OpenAPIChainOptions = {
  * @returns OpenAPIChain
  */
 export async function createOpenAPIChain(
-  spec: Document | string,
+  spec: OpenAPIV3_1.Document | string,
   options: OpenAPIChainOptions = {}
 ) {
   let convertedSpec;

@@ -1,14 +1,8 @@
 import * as yaml from "js-yaml";
 import { OpenAPIV3, OpenAPIV3_1 } from "openapi-types";
-import Document = OpenAPIV3_1.Document;
-import ReferenceObject = OpenAPIV3_1.ReferenceObject;
-import ParameterObject = OpenAPIV3_1.ParameterObject;
-import SchemaObject = OpenAPIV3_1.SchemaObject;
-import RequestBodyObject = OpenAPIV3_1.RequestBodyObject;
-import OperationObject = OpenAPIV3_1.OperationObject;
 
 export class OpenAPISpec {
-  constructor(public document: Document) {}
+  constructor(public document: OpenAPIV3_1.Document) {}
 
   get baseUrl() {
     return this.document.servers ? this.document.servers[0].url : undefined;
@@ -50,7 +44,7 @@ export class OpenAPISpec {
     return pathItem;
   }
 
-  getReferencedParameter(ref: ReferenceObject) {
+  getReferencedParameter(ref: OpenAPIV3_1.ReferenceObject) {
     const refComponents = ref.$ref.split("/");
     const refName = refComponents[refComponents.length - 1];
     if (this.getParametersStrict()[refName] === undefined) {
@@ -59,15 +53,21 @@ export class OpenAPISpec {
     return this.getParametersStrict()[refName];
   }
 
-  getRootReferencedParameter(ref: ReferenceObject): ParameterObject {
+  getRootReferencedParameter(
+    ref: OpenAPIV3_1.ReferenceObject
+  ): OpenAPIV3_1.ParameterObject {
     let parameter = this.getReferencedParameter(ref);
-    while ((parameter as ReferenceObject).$ref !== undefined) {
-      parameter = this.getReferencedParameter(parameter as ReferenceObject);
+    while ((parameter as OpenAPIV3_1.ReferenceObject).$ref !== undefined) {
+      parameter = this.getReferencedParameter(
+        parameter as OpenAPIV3_1.ReferenceObject
+      );
     }
-    return parameter as ParameterObject;
+    return parameter as OpenAPIV3_1.ParameterObject;
   }
 
-  getReferencedSchema(ref: ReferenceObject): SchemaObject {
+  getReferencedSchema(
+    ref: OpenAPIV3_1.ReferenceObject
+  ): OpenAPIV3_1.SchemaObject {
     const refComponents = ref.$ref.split("/");
     const refName = refComponents[refComponents.length - 1];
     const schema = this.getSchemasStrict()[refName];
@@ -77,22 +77,24 @@ export class OpenAPISpec {
     return schema;
   }
 
-  getSchema(schema: ReferenceObject | SchemaObject): SchemaObject {
-    if ((schema as ReferenceObject).$ref !== undefined) {
-      return this.getReferencedSchema(schema as ReferenceObject);
+  getSchema(
+    schema: OpenAPIV3_1.ReferenceObject | OpenAPIV3_1.SchemaObject
+  ): OpenAPIV3_1.SchemaObject {
+    if ((schema as OpenAPIV3_1.ReferenceObject).$ref !== undefined) {
+      return this.getReferencedSchema(schema as OpenAPIV3_1.ReferenceObject);
     }
     return schema;
   }
 
-  getRootReferencedSchema(ref: ReferenceObject) {
+  getRootReferencedSchema(ref: OpenAPIV3_1.ReferenceObject) {
     let schema = this.getReferencedSchema(ref);
-    while ((schema as ReferenceObject).$ref !== undefined) {
-      schema = this.getReferencedSchema(schema as ReferenceObject);
+    while ((schema as OpenAPIV3_1.ReferenceObject).$ref !== undefined) {
+      schema = this.getReferencedSchema(schema as OpenAPIV3_1.ReferenceObject);
     }
-    return schema as ParameterObject;
+    return schema as OpenAPIV3_1.ParameterObject;
   }
 
-  getReferencedRequestBody(ref: ReferenceObject) {
+  getReferencedRequestBody(ref: OpenAPIV3_1.ReferenceObject) {
     const refComponents = ref.$ref.split("/");
     const refName = refComponents[refComponents.length - 1];
     const requestBodies = this.getRequestBodiesStrict();
@@ -102,22 +104,34 @@ export class OpenAPISpec {
     return requestBodies[refName];
   }
 
-  getRootReferencedRequestBody(ref: ReferenceObject) {
+  getRootReferencedRequestBody(ref: OpenAPIV3_1.ReferenceObject) {
     let requestBody = this.getReferencedRequestBody(ref);
-    while ((requestBody as ReferenceObject).$ref !== undefined) {
+    while ((requestBody as OpenAPIV3_1.ReferenceObject).$ref !== undefined) {
       requestBody = this.getReferencedRequestBody(
-        requestBody as ReferenceObject
+        requestBody as OpenAPIV3_1.ReferenceObject
       );
     }
-    return requestBody as RequestBodyObject;
+    return requestBody as OpenAPIV3_1.RequestBodyObject;
   }
 
-  getMethodsForPath(path: string) {
+  getMethodsForPath(path: string): OpenAPIV3.HttpMethods[] {
     const pathItem = this.getPathStrict(path);
-    const possibleMethods = Object.values(OpenAPIV3.HttpMethods);
+    // This is an enum in the underlying package.
+    // Werestate here to allow "import type" above and not cause warnings in certain envs.
+    const possibleMethods = [
+      "get",
+      "put",
+      "post",
+      "delete",
+      "options",
+      "head",
+      "patch",
+      "trace",
+    ];
     return possibleMethods.filter(
-      (possibleMethod) => pathItem[possibleMethod] !== undefined
-    );
+      (possibleMethod) =>
+        pathItem[possibleMethod as OpenAPIV3.HttpMethods] !== undefined
+    ) as OpenAPIV3.HttpMethods[];
   }
 
   getParametersForPath(path: string) {
@@ -126,10 +140,12 @@ export class OpenAPISpec {
       return [];
     }
     return pathItem.parameters.map((parameter) => {
-      if ((parameter as ReferenceObject).$ref !== undefined) {
-        return this.getRootReferencedParameter(parameter as ReferenceObject);
+      if ((parameter as OpenAPIV3_1.ReferenceObject).$ref !== undefined) {
+        return this.getRootReferencedParameter(
+          parameter as OpenAPIV3_1.ReferenceObject
+        );
       }
-      return parameter as ParameterObject;
+      return parameter as OpenAPIV3_1.ParameterObject;
     });
   }
 
@@ -141,28 +157,34 @@ export class OpenAPISpec {
     return pathItem[method];
   }
 
-  getParametersForOperation(operation: OperationObject) {
+  getParametersForOperation(operation: OpenAPIV3_1.OperationObject) {
     if (operation.parameters === undefined) {
       return [];
     }
     return operation.parameters.map((parameter) => {
-      if ((parameter as ReferenceObject).$ref !== undefined) {
-        return this.getRootReferencedParameter(parameter as ReferenceObject);
+      if ((parameter as OpenAPIV3_1.ReferenceObject).$ref !== undefined) {
+        return this.getRootReferencedParameter(
+          parameter as OpenAPIV3_1.ReferenceObject
+        );
       }
-      return parameter as ParameterObject;
+      return parameter as OpenAPIV3_1.ParameterObject;
     });
   }
 
-  getRequestBodyForOperation(operation: OperationObject): RequestBodyObject {
+  getRequestBodyForOperation(
+    operation: OpenAPIV3_1.OperationObject
+  ): OpenAPIV3_1.RequestBodyObject {
     const { requestBody } = operation;
-    if ((requestBody as ReferenceObject)?.$ref !== undefined) {
-      return this.getRootReferencedRequestBody(requestBody as ReferenceObject);
+    if ((requestBody as OpenAPIV3_1.ReferenceObject)?.$ref !== undefined) {
+      return this.getRootReferencedRequestBody(
+        requestBody as OpenAPIV3_1.ReferenceObject
+      );
     }
-    return requestBody as RequestBodyObject;
+    return requestBody as OpenAPIV3_1.RequestBodyObject;
   }
 
   static getCleanedOperationId(
-    operation: OperationObject,
+    operation: OpenAPIV3_1.OperationObject,
     path: string,
     method: OpenAPIV3_1.HttpMethods
   ) {
@@ -204,7 +226,7 @@ export class OpenAPISpec {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static fromObject(document: Record<string, any>) {
     OpenAPISpec.alertUnsupportedSpec(document);
-    return new OpenAPISpec(document as Document);
+    return new OpenAPISpec(document as OpenAPIV3_1.Document);
   }
 
   static fromString(rawString: string) {
