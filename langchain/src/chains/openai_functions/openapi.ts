@@ -30,7 +30,7 @@ type OpenAPIExecutionMethod = (
 ) => Promise<Response>;
 
 function formatURL(url: string, pathParams: Record<string, string>): string {
-  const expectedPathParamNames = url.match(/{(.*?)}/g) ?? [];
+  const expectedPathParamNames = [...url.matchAll(/{(.*?)}/g)].map((match) => match[1]);
   const newParams: Record<string, string> = {};
   for (const paramName of expectedPathParamNames) {
     const cleanParamName = paramName.replace(/^\.;/, "").replace(/\*$/, "");
@@ -245,10 +245,12 @@ function convertOpenAPISpecToOpenAIFunctions(spec: OpenAPISpec): {
           required: Object.keys(requestArgsSchema),
         },
       };
+
       openAIFunctions.push(openAIFunction);
+      const baseUrl = (spec.baseUrl ?? "").endsWith('/') ? (spec.baseUrl ?? "").slice(0, -1) : spec.baseUrl ?? "";
       nameToCallMap[openAIFunction.name] = {
         method,
-        url: spec.baseUrl + path,
+        url: baseUrl + path,
       };
     }
   }
@@ -411,7 +413,6 @@ export async function createOpenAPIChain(
     outputParser: new JsonOutputFunctionsParser({ argsOnly: false }),
     outputKey: "function",
     llmKwargs: { functions: openAIFunctions },
-    verbose,
     ...llmChainInputs,
   });
   return new SequentialChain({
