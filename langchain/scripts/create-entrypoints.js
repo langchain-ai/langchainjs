@@ -58,6 +58,7 @@ const entrypoints = {
   "vectorstores/hnswlib": "vectorstores/hnswlib",
   "vectorstores/faiss": "vectorstores/faiss",
   "vectorstores/weaviate": "vectorstores/weaviate",
+  "vectorstores/lancedb": "vectorstores/lancedb",
   "vectorstores/mongo": "vectorstores/mongo",
   "vectorstores/mongodb_atlas": "vectorstores/mongodb_atlas",
   "vectorstores/pinecone": "vectorstores/pinecone",
@@ -72,6 +73,7 @@ const entrypoints = {
   "vectorstores/typesense": "vectorstores/typesense",
   "vectorstores/singlestore": "vectorstores/singlestore",
   "vectorstores/tigris": "vectorstores/tigris",
+  "vectorstores/vectara": "vectorstores/vectara",
   // text_splitter
   text_splitter: "text_splitter",
   // memory
@@ -94,6 +96,7 @@ const entrypoints = {
   "document_loaders/web/figma": "document_loaders/web/figma",
   "document_loaders/web/github": "document_loaders/web/github",
   "document_loaders/web/notiondb": "document_loaders/web/notiondb",
+  "document_loaders/web/notionapi": "document_loaders/web/notionapi",
   "document_loaders/web/s3": "document_loaders/web/s3",
   "document_loaders/web/confluence": "document_loaders/web/confluence",
   "document_loaders/fs/directory": "document_loaders/fs/directory",
@@ -148,6 +151,7 @@ const entrypoints = {
   cache: "cache/index",
   "cache/momento": "cache/momento",
   "cache/redis": "cache/redis",
+  "cache/upstash_redis": "cache/upstash_redis",
   // stores
   "stores/doc/in_memory": "stores/doc/in_memory",
   "stores/doc/gcs": "stores/doc/gcs",
@@ -164,6 +168,8 @@ const entrypoints = {
   "experimental/generative_agents": "experimental/generative_agents/index",
   "experimental/plan_and_execute": "experimental/plan_and_execute/index",
   client: "client/index",
+  // evaluation
+  evaluation: "evaluation/index",
 };
 
 // Entrypoints in this list will
@@ -202,6 +208,7 @@ const requiresOptionalDependency = [
   "vectorstores/hnswlib",
   "vectorstores/faiss",
   "vectorstores/weaviate",
+  "vectorstores/lancedb",
   "vectorstores/mongo",
   "vectorstores/mongodb_atlas",
   "vectorstores/pinecone",
@@ -227,6 +234,7 @@ const requiresOptionalDependency = [
   "document_loaders/web/figma",
   "document_loaders/web/github",
   "document_loaders/web/notiondb",
+  "document_loaders/web/notionapi",
   "document_loaders/web/s3",
   "document_loaders/web/confluence",
   "document_loaders/fs/directory",
@@ -256,6 +264,7 @@ const requiresOptionalDependency = [
   "chains/query_constructor/ir",
   "cache/momento",
   "cache/redis",
+  "cache/upstash_redis",
   "stores/doc/gcs",
   "stores/file/node",
   "stores/message/dynamodb",

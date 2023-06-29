@@ -9,6 +9,7 @@ import {
   ChatCompletionResponseMessage,
   ChatCompletionFunctions,
   CreateChatCompletionRequestFunctionCall,
+  ChatCompletionRequestMessageFunctionCall,
 } from "openai";
 import { getEnvironmentVariable, isNode } from "../util/env.js";
 import {
@@ -85,6 +86,7 @@ export interface ChatOpenAICallOptions extends OpenAICallOptions {
   function_call?: CreateChatCompletionRequestFunctionCall;
   functions?: ChatCompletionFunctions[];
   tools?: StructuredTool[];
+  promptIndex?: number;
 }
 
 /**
@@ -112,7 +114,15 @@ export class ChatOpenAI
   declare CallOptions: ChatOpenAICallOptions;
 
   get callKeys(): (keyof ChatOpenAICallOptions)[] {
-    return ["stop", "signal", "timeout", "options", "functions", "tools"];
+    return [
+      "stop",
+      "signal",
+      "timeout",
+      "options",
+      "functions",
+      "tools",
+      "promptIndex",
+    ];
   }
 
   lc_serializable = true;
@@ -159,6 +169,8 @@ export class ChatOpenAI
 
   maxTokens?: number;
 
+  openAIApiKey?: string;
+
   azureOpenAIApiVersion?: string;
 
   azureOpenAIApiKey?: string;
@@ -175,9 +187,6 @@ export class ChatOpenAI
     fields?: Partial<OpenAIChatInput> &
       Partial<AzureOpenAIInput> &
       BaseChatModelParams & {
-        concurrency?: number;
-        cache?: boolean;
-        openAIApiKey?: string;
         configuration?: ConfigurationParameters;
       },
     /** @deprecated */
@@ -185,25 +194,26 @@ export class ChatOpenAI
   ) {
     super(fields ?? {});
 
-    const apiKey =
+    this.openAIApiKey =
       fields?.openAIApiKey ?? getEnvironmentVariable("OPENAI_API_KEY");
 
-    const azureApiKey =
+    this.azureOpenAIApiKey =
       fields?.azureOpenAIApiKey ??
       getEnvironmentVariable("AZURE_OPENAI_API_KEY");
-    if (!azureApiKey && !apiKey) {
+
+    if (!this.azureOpenAIApiKey && !this.openAIApiKey) {
       throw new Error("(Azure) OpenAI API key not found");
     }
 
-    const azureApiInstanceName =
+    this.azureOpenAIApiInstanceName =
       fields?.azureOpenAIApiInstanceName ??
       getEnvironmentVariable("AZURE_OPENAI_API_INSTANCE_NAME");
 
-    const azureApiDeploymentName =
+    this.azureOpenAIApiDeploymentName =
       fields?.azureOpenAIApiDeploymentName ??
       getEnvironmentVariable("AZURE_OPENAI_API_DEPLOYMENT_NAME");
 
-    const azureApiVersion =
+    this.azureOpenAIApiVersion =
       fields?.azureOpenAIApiVersion ??
       getEnvironmentVariable("AZURE_OPENAI_API_VERSION");
 
@@ -222,15 +232,6 @@ export class ChatOpenAI
 
     this.streaming = fields?.streaming ?? false;
 
-    this.azureOpenAIApiVersion = azureApiVersion;
-    this.azureOpenAIApiKey = azureApiKey;
-    this.azureOpenAIApiInstanceName = azureApiInstanceName;
-    this.azureOpenAIApiDeploymentName = azureApiDeploymentName;
-
-    if (this.streaming && this.n > 1) {
-      throw new Error("Cannot stream results when n > 1");
-    }
-
     if (this.azureOpenAIApiKey) {
       if (!this.azureOpenAIApiInstanceName) {
         throw new Error("Azure OpenAI API instance name not found");
@@ -244,7 +245,7 @@ export class ChatOpenAI
     }
 
     this.clientConfig = {
-      apiKey,
+      apiKey: this.openAIApiKey,
       ...configuration,
       ...fields?.configuration,
     };
@@ -253,7 +254,9 @@ export class ChatOpenAI
   /**
    * Get the parameters used to invoke the model
    */
-  invocationParams(): Omit<CreateChatCompletionRequest, "messages"> {
+  invocationParams(
+    options?: this["ParsedCallOptions"]
+  ): Omit<CreateChatCompletionRequest, "messages"> {
     return {
       model: this.modelName,
       temperature: this.temperature,
@@ -263,8 +266,14 @@ export class ChatOpenAI
       max_tokens: this.maxTokens === -1 ? undefined : this.maxTokens,
       n: this.n,
       logit_bias: this.logitBias,
-      stop: this.stop,
+      stop: options?.stop ?? this.stop,
       stream: this.streaming,
+      functions:
+        options?.functions ??
+        (options?.tools
+          ? options?.tools.map(formatToOpenAIFunction)
+          : undefined),
+      function_call: options?.function_call,
       ...this.modelKwargs,
     };
   }
@@ -288,25 +297,18 @@ export class ChatOpenAI
   /** @ignore */
   async _generate(
     messages: BaseChatMessage[],
-    options?: this["ParsedCallOptions"],
+    options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
     const tokenUsage: TokenUsage = {};
-    if (this.stop && options?.stop) {
-      throw new Error("Stop found in input and default params");
-    }
-
-    const params = this.invocationParams();
-    params.stop = options?.stop ?? params.stop;
-    params.functions =
-      options?.functions ??
-      (options?.tools ? options?.tools.map(formatToOpenAIFunction) : undefined);
-    params.function_call = options?.function_call;
+    const params = this.invocationParams(options);
     const messagesMapped: ChatCompletionRequestMessage[] = messages.map(
       (message) => ({
         role: messageTypeToOpenAIRole(message._getType()),
         content: message.text,
         name: message.name,
+        function_call: message.additional_kwargs
+          .function_call as ChatCompletionRequestMessageFunctionCall,
       })
     );
 
@@ -327,18 +329,29 @@ export class ChatOpenAI
               responseType: "stream",
               onmessage: (event) => {
                 if (event.data?.trim?.() === "[DONE]") {
-                  if (resolved) {
+                  if (resolved || rejected) {
                     return;
                   }
                   resolved = true;
                   resolve(response);
                 } else {
-                  const message = JSON.parse(event.data) as {
+                  const data = JSON.parse(event.data);
+
+                  if (data?.error) {
+                    if (rejected) {
+                      return;
+                    }
+                    rejected = true;
+                    reject(data.error);
+                    return;
+                  }
+
+                  const message = data as {
                     id: string;
                     object: string;
                     created: number;
                     model: string;
-                    choices: Array<{
+                    choices?: Array<{
                       index: number;
                       finish_reason: string | null;
                       delta: {
@@ -361,7 +374,7 @@ export class ChatOpenAI
                   }
 
                   // on all messages, update choice
-                  for (const part of message.choices) {
+                  for (const part of message.choices ?? []) {
                     if (part != null) {
                       let choice = response.choices.find(
                         (c) => c.index === part.index
@@ -400,11 +413,13 @@ export class ChatOpenAI
                         choice.message.function_call.arguments +=
                           part.delta?.function_call?.arguments ?? "";
                       }
-                      // TODO this should pass part.index to the callback
-                      // when that's supported there
                       // eslint-disable-next-line no-void
                       void runManager?.handleLLMNewToken(
-                        part.delta?.content ?? ""
+                        part.delta?.content ?? "",
+                        {
+                          prompt: options.promptIndex ?? 0,
+                          completion: part.index,
+                        }
                       );
                       // TODO we don't currently have a callback method for
                       // sending the function call arguments
@@ -414,7 +429,8 @@ export class ChatOpenAI
                   // when all messages are finished, resolve
                   if (
                     !resolved &&
-                    message.choices.every((c) => c.finish_reason != null)
+                    !rejected &&
+                    message.choices?.every((c) => c.finish_reason != null)
                   ) {
                     resolved = true;
                     resolve(response);

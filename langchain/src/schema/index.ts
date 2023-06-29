@@ -1,3 +1,4 @@
+import { ChatCompletionRequestMessageFunctionCall } from "openai";
 import { Document } from "../document.js";
 import { Serializable } from "../load/serializable.js";
 
@@ -72,7 +73,10 @@ export abstract class BaseChatMessage {
   name?: string;
 
   /** Additional keyword arguments */
-  additional_kwargs: Record<string, unknown> = {};
+  additional_kwargs: {
+    function_call?: ChatCompletionRequestMessageFunctionCall;
+    [key: string]: unknown;
+  } = {};
 
   /** The type of the message. */
   abstract _getType(): MessageType;

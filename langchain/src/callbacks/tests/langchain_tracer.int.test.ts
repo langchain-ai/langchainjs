@@ -26,7 +26,7 @@ const serialized: Serialized = {
 
 test("Test LangChain V2 tracer", async () => {
   const tracer = new LangChainTracer({
-    sessionName: `JS Int Test - ${uuid.v4()}`,
+    projectName: `JS Int Test - ${uuid.v4()}`,
   });
   const chainRunId = uuid.v4();
   const toolRunId = uuid.v4();

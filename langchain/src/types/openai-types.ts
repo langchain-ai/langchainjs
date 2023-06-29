@@ -48,6 +48,12 @@ export declare interface OpenAIBaseInput {
    * Timeout to use when making requests to OpenAI.
    */
   timeout?: number;
+
+  /**
+   * API key to use when making requests to OpenAI. Defaults to the value of
+   * `OPENAI_API_KEY` environment variable.
+   */
+  openAIApiKey?: string;
 }
 
 export interface OpenAICallOptions extends BaseLanguageModelCallOptions {
@@ -68,7 +74,7 @@ export interface OpenAICallOptions extends BaseLanguageModelCallOptions {
  */
 export declare interface OpenAIInput extends OpenAIBaseInput {
   /** Generates `bestOf` completions server side and returns the "best" */
-  bestOf: number;
+  bestOf?: number;
 
   /** Batch size to use when passing multiple documents to generate */
   batchSize: number;

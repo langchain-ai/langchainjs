@@ -33,7 +33,11 @@ visibility	Instant	meters	Viewing distance in meters. Influenced by low clouds, 
 
 export async function run() {
   const model = new OpenAI({ modelName: "text-davinci-003" });
-  const chain = APIChain.fromLLMAndAPIDocs(model, OPEN_METEO_DOCS);
+  const chain = APIChain.fromLLMAndAPIDocs(model, OPEN_METEO_DOCS, {
+    headers: {
+      // These headers will be used for API requests made by the chain.
+    },
+  });
 
   const res = await chain.call({
     question:

@@ -4,7 +4,7 @@ This page covers how to use the [Databerry](https://databerry.ai) within LangCha
 
 ## What is Databerry?
 
-Databerry is an [open source](https://github.com/gmpetrov/databerry) document retrievial platform that helps to connect your personal data with Large Language Models.
+Databerry is an [open source](https://github.com/gmpetrov/databerry) document retrieval platform that helps to connect your personal data with Large Language Models.
 
 ![Databerry](/img/DataberryDashboard.png)
 
