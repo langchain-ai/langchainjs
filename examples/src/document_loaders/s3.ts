@@ -11,6 +11,7 @@ const loader = new S3Loader({
     },
   },
   unstructuredAPIURL: "http://localhost:8000/general/v0/general",
+  unstructuredAPIKey: "", // this will be soon required
 });
 
 const docs = await loader.load();
