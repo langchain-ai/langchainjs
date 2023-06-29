@@ -1,7 +1,7 @@
 import { Tool } from "./base.js";
 import { DynamicTool, DynamicToolInput } from "./dynamic.js";
 
-interface SfnConfig {
+export interface SfnConfig {
   stateMachineArn: string;
   region?: string;
   accessKeyId?: string;
@@ -48,6 +48,10 @@ export class StartExecutionAWSSfnTool extends AWSSfnToolConfig {
     this.sfnConfig = rest;
   }
 
+  static getDescription(name: string, description: string): string {
+    return `Use to start executing the ${name} state machine. Use to run ${name} workflows. Whenever you need to start (or execute) an asynchronous workflow (or state machine) about ${description} you should ALWAYS use this. Input should be a valid JSON string.`;
+  }
+
   /** @ignore */
   async _func(input: string): Promise<string> {
     const { Client, Invoker } = await SfnImports();
@@ -87,9 +91,9 @@ export class StartExecutionAWSSfnTool extends AWSSfnToolConfig {
 export class DescribeExecutionAWSSfnTool extends Tool {
   name = "describe-execution-aws-sfn";
 
-  sfnConfig: SfnConfig;
+  sfnConfig: Omit<SfnConfig, "stateMachineArn">;
 
-  constructor(config: SfnConfig) {
+  constructor(config: Omit<SfnConfig, "stateMachineArn">) {
     super(...arguments);
     this.sfnConfig = config;
   }
@@ -127,59 +131,53 @@ export class DescribeExecutionAWSSfnTool extends Tool {
       });
   }
 
-  description = "This tool is useful for checking the status of a AWS Step Function execution (aka. statemachine exeuction). Input to this tool is a properly formatted AWS Step Function Execution ARN (executionArn). The output is a JSON object containing the executionArn, name, status, startDate, stopDate, input, output, error, and cause of the execution.";
+  description =
+    "This tool should ALWAYS be used for checking the status of any AWS Step Function execution (aka. statemachine exeuction). Input to this tool is a properly formatted AWS Step Function Execution ARN (executionArn). The output is a stringify JSON object containing the executionArn, name, status, startDate, stopDate, input, output, error, and cause of the execution.";
 }
 
-export class SendTaskSuccessAWSSfnTool extends AWSSfnToolConfig {
-  private sfnConfig: SfnConfig;
+export class SendTaskSuccessAWSSfnTool extends Tool {
+  name = "send-task-success-aws-sfn";
 
-  constructor({
-    name,
-    description,
-    ...rest
-  }: SfnConfig & Omit<DynamicToolInput, "func">) {
-    super({
-      name,
-      description,
-      func: async (input: string) => this._func(input),
-    });
+  sfnConfig: Omit<SfnConfig, "stateMachineArn">;
 
-    this.sfnConfig = rest;
+  constructor(config: Omit<SfnConfig, "stateMachineArn">) {
+    super(...arguments);
+    this.sfnConfig = config;
   }
 
   /** @ignore */
-  async _func(input: string): Promise<string> {
+  async _call(input: string) {
     const { Client, TaskSuccessSender } = await SfnImports();
     const clientConstructorArgs: SfnClientConstructorArgs =
       getClientConstructorArgs(this.sfnConfig);
     const sfnClient = new Client(clientConstructorArgs);
 
-    return new Promise((resolve) => {
-      let payload;
-      try {
-        payload = JSON.parse(input);
-      } catch (e) {
-        console.error("Error starting state machine execution:", e);
-        resolve("failed to complete request");
-      }
+    let payload;
+    try {
+      payload = JSON.parse(input);
+    } catch (e) {
+      console.error("Error starting state machine execution:", e);
+      return "failed to complete request";
+    }
 
-      const command = new TaskSuccessSender({
-        taskToken: payload.taskToken,
-        output: JSON.stringify(payload.output),
-      });
-
-      sfnClient
-        .send(command)
-        .then(() => resolve("request completed."))
-        .catch((error: Error) => {
-          console.error(
-            "Error sending task success to state machine execution:",
-            error
-          );
-          resolve("failed to complete request");
-        });
+    const command = new TaskSuccessSender({
+      taskToken: payload.taskToken,
+      output: JSON.stringify(payload.output),
     });
+
+    return await sfnClient
+      .send(command)
+      .then(() => "request completed.")
+      .catch((error: Error) => {
+        console.error(
+          "Error sending task success to state machine execution:",
+          error
+        );
+        return "failed to complete request";
+      });
   }
+
+  description = "This tool should ALWAYS be used for sending task success to an AWS Step Function execution (aka. statemachine exeuction). Input to this tool is a stringify JSON object containing the taskToken and output.";
 }
 
 async function SfnImports() {
@@ -206,7 +204,7 @@ async function SfnImports() {
   }
 }
 
-function getClientConstructorArgs(config: SfnConfig) {
+function getClientConstructorArgs(config: Partial<SfnConfig>) {
   const clientConstructorArgs: SfnClientConstructorArgs = {};
 
   if (config.region) {
