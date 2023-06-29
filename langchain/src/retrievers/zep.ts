@@ -1,7 +1,8 @@
 import {
-  ZepClient,
-  MemorySearchResult,
   MemorySearchPayload,
+  MemorySearchResult,
+  NotFoundError,
+  ZepClient,
 } from "@getzep/zep-js";
 import { BaseRetriever } from "../schema/index.js";
 import { Document } from "../document.js";
@@ -51,12 +52,21 @@ export class ZepRetriever extends BaseRetriever {
    */
   async getRelevantDocuments(query: string): Promise<Document[]> {
     const payload: MemorySearchPayload = { text: query, metadata: {} };
-    const results: MemorySearchResult[] = await this.zepClient.searchMemory(
-      this.sessionId,
-      payload,
-      this.topK
-    );
+    try {
+      const results: MemorySearchResult[] = await this.zepClient.searchMemory(
+        this.sessionId,
+        payload,
+        this.topK
+      );
 
-    return this.searchResultToDoc(results);
+      return this.searchResultToDoc(results);
+    } catch (error) {
+      // eslint-disable-next-line no-instanceof/no-instanceof
+      if (error instanceof NotFoundError) {
+        return Promise.resolve([]); // Return an empty Document array
+      }
+      // If it's not a NotFoundError, throw the error again
+      throw error;
+    }
   }
 }
