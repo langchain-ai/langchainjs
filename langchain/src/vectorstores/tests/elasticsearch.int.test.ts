@@ -2,21 +2,26 @@
 import { test, expect } from "@jest/globals";
 import { Client } from "@elastic/elasticsearch";
 import { OpenAIEmbeddings } from "../../embeddings/openai.js";
-import { ElasticsearchVectorStore } from "../elasticsearch.js";
+import { ElasticVectorSearch } from "../elasticsearch.js";
 import { Document } from "../../document.js";
 
-test.skip("ElasticsearchVectorStore integration", async () => {
-  if (!process.env.ELASTICSEARCH_URL) {
-    throw new Error("ELASTICSEARCH_URL not set");
+test.skip("ElasticVectorSearch integration", async () => {
+  if (!process.env.ELASTIC_URL) {
+    throw new Error("ELASTIC_URL not set");
   }
 
   /* eslint-disable @typescript-eslint/no-explicit-any */
   const config: any = {
-    node: process.env.ELASTICSEARCH_URL,
+    node: process.env.ELASTIC_URL,
   };
-  if (process.env.ELASTICSEARCH_API_KEY) {
+  if (process.env.ELASTIC_API_KEY) {
     config.auth = {
-      apiKey: process.env.ELASTICSEARCH_API_KEY,
+      apiKey: process.env.ELASTIC_API_KEY,
+    };
+  } else if (process.env.ELASTIC_USERNAME && process.env.ELASTIC_PASSWORD) {
+    config.auth = {
+      username: process.env.ELASTIC_USERNAME,
+      password: process.env.ELASTIC_PASSWORD,
     };
   }
   const client = new Client(config);
@@ -26,7 +31,7 @@ test.skip("ElasticsearchVectorStore integration", async () => {
   const embeddings = new OpenAIEmbeddings(undefined, {
     baseOptions: { temperature: 0 },
   });
-  const store = new ElasticsearchVectorStore(embeddings, { client, indexName });
+  const store = new ElasticVectorSearch(embeddings, { client, indexName });
   await store.deleteIfExists();
 
   expect(store).toBeDefined();

@@ -3,35 +3,35 @@ import { Embeddings } from "../embeddings/base.js";
 import { Document } from "../document.js";
 import { VectorStore } from "./base.js";
 
-type ElasticsearchKnnEngine = "hnsw";
-type ElasticsearchSimilarity = "l2_norm" | "dot_product" | "cosine";
+type ElasticKnnEngine = "hnsw";
+type ElasticSimilarity = "l2_norm" | "dot_product" | "cosine";
 
 interface VectorSearchOptions {
-  readonly engine?: ElasticsearchKnnEngine;
-  readonly similarity?: ElasticsearchSimilarity;
+  readonly engine?: ElasticKnnEngine;
+  readonly similarity?: ElasticSimilarity;
   readonly m?: number;
   readonly efConstruction?: number;
   readonly candidates?: number;
 }
 
-export interface ElasticsearchClientArgs {
+export interface ElasticClientArgs {
   readonly client: Client;
   readonly indexName?: string;
   readonly vectorSearchOptions?: VectorSearchOptions;
 }
 
-type ElasticsearchFilter = object;
+type ElasticFilter = object;
 
-export class ElasticsearchVectorStore extends VectorStore {
-  declare FilterType: ElasticsearchFilter;
+export class ElasticVectorSearch extends VectorStore {
+  declare FilterType: ElasticFilter;
 
   private readonly client: Client;
 
   private readonly indexName: string;
 
-  private readonly engine: ElasticsearchKnnEngine;
+  private readonly engine: ElasticKnnEngine;
 
-  private readonly similarity: ElasticsearchSimilarity;
+  private readonly similarity: ElasticSimilarity;
 
   private readonly efConstruction: number;
 
@@ -39,7 +39,7 @@ export class ElasticsearchVectorStore extends VectorStore {
 
   private readonly candidates: number;
 
-  constructor(embeddings: Embeddings, args: ElasticsearchClientArgs) {
+  constructor(embeddings: Embeddings, args: ElasticClientArgs) {
     super(embeddings, args);
 
     this.engine = args.vectorSearchOptions?.engine ?? "hnsw";
@@ -86,7 +86,7 @@ export class ElasticsearchVectorStore extends VectorStore {
   async similaritySearchVectorWithScore(
     query: number[],
     k: number,
-    filter?: ElasticsearchFilter | undefined
+    filter?: ElasticFilter | undefined
   ): Promise<[Document, number][]> {
     const result = await this.client.search({
       index: this.indexName,
@@ -113,31 +113,31 @@ export class ElasticsearchVectorStore extends VectorStore {
     texts: string[],
     metadatas: object[] | object,
     embeddings: Embeddings,
-    args: ElasticsearchClientArgs
-  ): Promise<ElasticsearchVectorStore> {
+    args: ElasticClientArgs
+  ): Promise<ElasticVectorSearch> {
     const documents = texts.map((text, idx) => {
       const metadata = Array.isArray(metadatas) ? metadatas[idx] : metadatas;
       return new Document({ pageContent: text, metadata });
     });
 
-    return ElasticsearchVectorStore.fromDocuments(documents, embeddings, args);
+    return ElasticVectorSearch.fromDocuments(documents, embeddings, args);
   }
 
   static async fromDocuments(
     docs: Document[],
     embeddings: Embeddings,
-    dbConfig: ElasticsearchClientArgs
-  ): Promise<ElasticsearchVectorStore> {
-    const store = new ElasticsearchVectorStore(embeddings, dbConfig);
+    dbConfig: ElasticClientArgs
+  ): Promise<ElasticVectorSearch> {
+    const store = new ElasticVectorSearch(embeddings, dbConfig);
     await store.addDocuments(docs).then(() => store);
     return store;
   }
 
   static async fromExistingIndex(
     embeddings: Embeddings,
-    dbConfig: ElasticsearchClientArgs
-  ): Promise<ElasticsearchVectorStore> {
-    const store = new ElasticsearchVectorStore(embeddings, dbConfig);
+    dbConfig: ElasticClientArgs
+  ): Promise<ElasticVectorSearch> {
+    const store = new ElasticVectorSearch(embeddings, dbConfig);
     const exists = await store.doesIndexExist();
     if (exists) {
       return store;
@@ -189,7 +189,7 @@ export class ElasticsearchVectorStore extends VectorStore {
   }
 
   private buildMetadataTerms(
-    filter?: ElasticsearchFilter
+    filter?: ElasticFilter
   ): { term: Record<string, unknown> }[] {
     if (filter == null) return [];
     const result = [];

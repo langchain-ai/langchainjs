@@ -3,28 +3,29 @@ import { Document } from "langchain/document";
 import { OpenAI } from "langchain/llms/openai";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import {
-  ElasticsearchClientArgs,
-  ElasticsearchVectorStore,
+  ElasticClientArgs,
+  ElasticVectorSearch,
 } from "langchain/vectorstores/elasticsearch";
 import { VectorDBQAChain } from "langchain/chains";
 
 // to run this first run chroma's docker-container with `docker-compose up -d --build`
 export async function run() {
-  const config: ElasticsearchClientArgs = {
-    client: new Client({
-      nodes: [process.env.ELASTICSEARCH_URL ?? "http://127.0.0.1:9200"],
-      auth: {
-        username: process.env.ELASTIC_USERNAME ?? "elastic",
-        password: process.env.ELASTIC_PASSWORD ?? "changeme",
-      },
-      /*
-      // Using API key instead of username and password
-      auth: {
-        apiKey: process.env.ELASTIC_API_KEY
-      }
-      */
-    }),
-    indexName: process.env.ELASTICSEARCH_INDEX ?? "test_vectorstore",
+  const config: any = {
+    node: process.env.ELASTIC_URL ?? "http://127.0.0.1:9200",
+  };
+  if (process.env.ELASTIC_API_KEY) {
+    config.auth = {
+      apiKey: process.env.ELASTIC_API_KEY,
+    };
+  } else if (process.env.ELASTIC_USERNAME && process.env.ELASTIC_PASSWORD) {
+    config.auth = {
+      username: process.env.ELASTIC_USERNAME,
+      password: process.env.ELASTIC_PASSWORD,
+    };
+  }
+  const clientArgs: ElasticClientArgs = {
+    client: new Client(config),
+    indexName: process.env.ELASTIC_INDEX ?? "test_vectorstore",
   };
 
   // Index documents
@@ -53,9 +54,9 @@ export async function run() {
     baseOptions: { temperature: 0 },
   });
 
-  await ElasticsearchVectorStore.fromDocuments(docs, embeddings, config);
+  await ElasticVectorSearch.fromDocuments(docs, embeddings, clientArgs);
 
-  const vectorStore = new ElasticsearchVectorStore(embeddings, config);
+  const vectorStore = new ElasticVectorSearch(embeddings, clientArgs);
 
   /* Search the vector DB independently with meta filters */
   const results = await vectorStore.similaritySearch("fox jump", 1);
