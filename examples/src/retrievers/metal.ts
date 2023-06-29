@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import Metal from "@getmetal/metal-sdk";
+import { Metal } from "@getmetal/metal-sdk";
 import { MetalRetriever } from "langchain/retrievers/metal";
 
 export const run = async () => {
