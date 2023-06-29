@@ -17,6 +17,12 @@ To run this index you'll need to have Unstructured already set up and ready to u
 
 See the docs [here](https://js.langchain.com/docs/modules/indexes/document_loaders/examples/file_loaders/unstructured) for information on how to do that.
 
+You'll also need to install the official AWS SDK:
+
+```bash npm2yarn
+npm install @aws-sdk/client-s3
+```
+
 ## Usage
 
 Once Unstructured is configured, you can use the S3 loader to load files and then convert them into a Document.

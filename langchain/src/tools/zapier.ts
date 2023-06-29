@@ -22,7 +22,15 @@ const zapierNLABaseDescription: string =
 export type ZapierValues = Record<string, any>;
 
 export interface ZapierNLAWrapperParams extends AsyncCallerParams {
+  /**
+   * NLA API Key. Found in the NLA documentation https://nla.zapier.com/docs/authentication/#api-key
+   * Can also be set via the environment variable `ZAPIER_NLA_API_KEY`
+   */
   apiKey?: string;
+  /**
+   * NLA OAuth Access Token. Found in the NLA documentation https://nla.zapier.com/docs/authentication/#oauth-credentials
+   * Can also be set via the environment variable `ZAPIER_NLA_OAUTH_ACCESS_TOKEN`
+   */
   oauthAccessToken?: string;
 }
 
