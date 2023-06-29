@@ -29,7 +29,7 @@ test("Test S3 loader", async () => {
     bucket: process.env.AWS_S3_BUCKET_NAME!,
     key: process.env.AWS_S3_KEY!,
     unstructuredAPIURL: "http://localhost:8000/general/v0/general",
-    unstructuredAPIKey: '',
+    unstructuredAPIKey: "",
     fs: fsMock as typeof fs,
     UnstructuredLoader: UnstructuredLoaderMock as typeof UnstructuredLoader,
     s3Config: {
@@ -44,7 +44,7 @@ test("Test S3 loader", async () => {
   const result = await loader.load();
   const unstructuredOptions = {
     apiUrl: "http://localhost:8000/general/v0/general",
-    apiKey: ""
+    apiKey: "",
   };
 
   expect(fsMock.mkdtempSync).toHaveBeenCalled();
