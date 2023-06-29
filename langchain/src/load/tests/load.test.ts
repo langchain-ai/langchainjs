@@ -358,16 +358,14 @@ test.skip("serialize + deserialize agent", async () => {
 });
 
 test("override name of objects when serialising", async () => {
-  class MangledName extends Cohere {}
-
-  const llm = new MangledName({ temperature: 0.5, apiKey: "cohere-key" });
-  llm.lc_name_override = "Cohere";
-
+  const llm = new Cohere({ temperature: 0.5, apiKey: "cohere-key" });
   const str = JSON.stringify(llm, null, 2);
+
+  class MangledName extends Cohere {}
   const llm2 = await load<Cohere>(
     str,
     { COHERE_API_KEY: "cohere-key" },
-    { "langchain/llms/cohere": { Cohere } }
+    { "langchain/llms/cohere": { Cohere: MangledName } }
   );
   expect(JSON.stringify(llm2, null, 2)).toBe(str);
 });

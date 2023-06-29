@@ -157,7 +157,7 @@ async function reviver(
     // Construct the object
     if (serialized.type === "constructor") {
       // eslint-disable-next-line new-cap, @typescript-eslint/no-explicit-any
-      const instance: Serializable = new (builder as any)(
+      const instance = new (builder as any)(
         mapKeys(
           kwargs as SerializedFields,
           keyFromJson,
@@ -168,7 +168,8 @@ async function reviver(
       // Minification in severless/edge runtimes will mange the
       // name of classes presented in traces. As the names in import map
       // are present as-is even with minification, use these names instead
-      instance.lc_name_override = name;
+      Object.defineProperty(instance.constructor, "name", { value: name });
+
       return instance;
     } else {
       throw new Error(`Invalid type: ${pathStr} -> ${str}`);
