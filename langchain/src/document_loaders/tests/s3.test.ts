@@ -42,6 +42,7 @@ test("Test S3 loader", async () => {
     bucket: "test-bucket-123",
     key: "AccountingOverview.pdf",
     unstructuredAPIURL: "http://localhost:8000/general/v0/general",
+    unstructuredAPIKey: '',
     fs: fsMock as typeof fs,
     UnstructuredLoader: UnstructuredLoaderMock as typeof UnstructuredLoader,
   });

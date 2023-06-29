@@ -9,7 +9,7 @@ const loader = new S3Loader({
     secretAccessKey: "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
   },
   unstructuredAPIURL: "http://localhost:8000/general/v0/general",
-  unstructuredAPIKey: null, // this will be soon required
+  unstructuredAPIKey: '', // this will be soon required
 });
 
 const docs = await loader.load();
