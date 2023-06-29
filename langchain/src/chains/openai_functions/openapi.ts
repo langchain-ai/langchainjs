@@ -283,19 +283,25 @@ function convertOpenAPISpecToOpenAIFunctions(spec: OpenAPISpec): {
       const formattedUrl =
         formatURL(url, pathParams) +
         (queryString.length ? `?${queryString}` : "");
-      let contentType = "text/plain";
-      let body = requestArgs.data;
-      if (body !== undefined && typeof body !== "string") {
-        if (typeof body === "object") {
-          contentType = "application/json";
+      const headers: Record<string, string> = {};
+      let body;
+      if (requestArgs.data !== undefined) {
+        let contentType = "text/plain";
+        if (typeof requestArgs.data !== "string") {
+          if (typeof requestArgs.data === "object") {
+            contentType = "application/json";
+          }
+          body = JSON.stringify(requestArgs.data);
+        } else {
+          body = requestArgs.data;
         }
-        body = JSON.stringify(requestArgs.data);
+        headers["content-type"] = contentType;
       }
       return fetch(formattedUrl, {
         ...requestArgs,
         method,
         headers: {
-          "content-type": contentType,
+          ...headers,
           ...requestArgs.headers,
           ...customHeaders,
         },
