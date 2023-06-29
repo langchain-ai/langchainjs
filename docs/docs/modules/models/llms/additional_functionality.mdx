@@ -81,6 +81,28 @@ const cache = new RedisCache(client);
 const model = new OpenAI({ cache });
 ```
 
+### Caching with Upstash Redis
+
+LangChain also provides an Upstash Redis-based cache. Like the Redis-based cache, this cache is useful if you want to share the cache across multiple processes or servers. The Upstash Redis client uses HTTP and supports edge environments. To use it, you'll need to install the `@upstash/redis` package:
+
+```bash npm2yarn
+npm install @upstash/redis
+```
+
+You'll also need an [Upstash account](https://docs.upstash.com/redis#create-account) and a [Redis database](https://docs.upstash.com/redis#create-a-database) to connect to. Once you've done that, retrieve your REST URL and REST token.
+
+Then, you can pass a `cache` option when you instantiate the LLM. For example:
+
+import UpstashRedisCacheExample from "@examples/cache/upstash_redis.ts";
+
+<CodeBlock language="typescript">{UpstashRedisCacheExample}</CodeBlock>
+
+You can also directly pass in a previously created [@upstash/redis](https://docs.upstash.com/redis/sdks/javascriptsdk/overview) client instance:
+
+import AdvancedUpstashRedisCacheExample from "@examples/cache/upstash_redis_advanced.ts";
+
+<CodeBlock language="typescript">{AdvancedUpstashRedisCacheExample}</CodeBlock>
+
 ## Adding a timeout
 
 By default, LangChain will wait indefinitely for a response from the model provider. If you want to add a timeout, you can pass a `timeout` option, in milliseconds, when you call the model. For example, for OpenAI:

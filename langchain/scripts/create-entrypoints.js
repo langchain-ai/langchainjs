@@ -1,5 +1,6 @@
 import * as fs from "fs";
 import * as path from "path";
+import { identifySecrets } from "./identify-secrets.js";
 
 // This lists all the entrypoints for the library. Each key corresponds to an
 // importable path, eg. `import { AgentExecutor } from "langchain/agents"`.
@@ -7,6 +8,8 @@ import * as path from "path";
 // This is used to generate the `exports` field in package.json.
 // Order is not important.
 const entrypoints = {
+  load: "load/index",
+  "load/serializable": "load/serializable",
   // agents
   agents: "agents/index",
   "agents/load": "agents/load",
@@ -37,6 +40,7 @@ const entrypoints = {
   "llms/base": "llms/base",
   "llms/openai": "llms/openai",
   "llms/ai21": "llms/ai21",
+  "llms/aleph_alpha": "llms/aleph_alpha",
   "llms/cohere": "llms/cohere",
   "llms/hf": "llms/hf",
   "llms/replicate": "llms/replicate",
@@ -53,6 +57,7 @@ const entrypoints = {
   "vectorstores/hnswlib": "vectorstores/hnswlib",
   "vectorstores/faiss": "vectorstores/faiss",
   "vectorstores/weaviate": "vectorstores/weaviate",
+  "vectorstores/lancedb": "vectorstores/lancedb",
   "vectorstores/mongo": "vectorstores/mongo",
   "vectorstores/mongodb_atlas": "vectorstores/mongodb_atlas",
   "vectorstores/pinecone": "vectorstores/pinecone",
@@ -64,8 +69,10 @@ const entrypoints = {
   "vectorstores/typeorm": "vectorstores/typeorm",
   "vectorstores/myscale": "vectorstores/myscale",
   "vectorstores/redis": "vectorstores/redis",
+  "vectorstores/typesense": "vectorstores/typesense",
   "vectorstores/singlestore": "vectorstores/singlestore",
   "vectorstores/tigris": "vectorstores/tigris",
+  "vectorstores/vectara": "vectorstores/vectara",
   // text_splitter
   text_splitter: "text_splitter",
   // memory
@@ -73,8 +80,6 @@ const entrypoints = {
   "memory/zep": "memory/zep",
   // document
   document: "document",
-  // docstore
-  docstore: "docstore/index",
   // document_loaders
   document_loaders: "document_loaders/index",
   "document_loaders/base": "document_loaders/base",
@@ -90,6 +95,7 @@ const entrypoints = {
   "document_loaders/web/figma": "document_loaders/web/figma",
   "document_loaders/web/github": "document_loaders/web/github",
   "document_loaders/web/notiondb": "document_loaders/web/notiondb",
+  "document_loaders/web/notionapi": "document_loaders/web/notionapi",
   "document_loaders/web/s3": "document_loaders/web/s3",
   "document_loaders/web/confluence": "document_loaders/web/confluence",
   "document_loaders/fs/directory": "document_loaders/fs/directory",
@@ -134,14 +140,23 @@ const entrypoints = {
     "retrievers/document_compressors/chain_extract",
   "retrievers/hyde": "retrievers/hyde",
   "retrievers/self_query": "retrievers/self_query/index",
+  "retrievers/self_query/chroma": "retrievers/self_query/chroma",
+  "retrievers/self_query/functional": "retrievers/self_query/functional",
+  "retrievers/self_query/pinecone": "retrievers/self_query/pinecone",
+  "retrievers/self_query/supabase": "retrievers/self_query/supabase",
+  "retrievers/self_query/weaviate": "retrievers/self_query/weaviate",
   "retrievers/vespa": "retrievers/vespa",
   // cache
   cache: "cache/index",
   "cache/momento": "cache/momento",
   "cache/redis": "cache/redis",
+  "cache/upstash_redis": "cache/upstash_redis",
   // stores
+  "stores/doc/in_memory": "stores/doc/in_memory",
+  "stores/doc/gcs": "stores/doc/gcs",
   "stores/file/in_memory": "stores/file/in_memory",
   "stores/file/node": "stores/file/node",
+  "stores/message/in_memory": "stores/message/in_memory",
   "stores/message/dynamodb": "stores/message/dynamodb",
   "stores/message/momento": "stores/message/momento",
   "stores/message/redis": "stores/message/redis",
@@ -152,6 +167,8 @@ const entrypoints = {
   "experimental/generative_agents": "experimental/generative_agents/index",
   "experimental/plan_and_execute": "experimental/plan_and_execute/index",
   client: "client/index",
+  // evaluation
+  evaluation: "evaluation/index",
 };
 
 // Entrypoints in this list will
@@ -189,6 +206,7 @@ const requiresOptionalDependency = [
   "vectorstores/hnswlib",
   "vectorstores/faiss",
   "vectorstores/weaviate",
+  "vectorstores/lancedb",
   "vectorstores/mongo",
   "vectorstores/mongodb_atlas",
   "vectorstores/pinecone",
@@ -200,6 +218,7 @@ const requiresOptionalDependency = [
   "vectorstores/myscale",
   "vectorstores/redis",
   "vectorstores/singlestore",
+  "vectorstores/typesense",
   "vectorstores/tigris",
   "memory/zep",
   "document_loaders/web/apify_dataset",
@@ -213,6 +232,7 @@ const requiresOptionalDependency = [
   "document_loaders/web/figma",
   "document_loaders/web/github",
   "document_loaders/web/notiondb",
+  "document_loaders/web/notionapi",
   "document_loaders/web/s3",
   "document_loaders/web/confluence",
   "document_loaders/fs/directory",
@@ -232,11 +252,18 @@ const requiresOptionalDependency = [
   "retrievers/zep",
   "retrievers/metal",
   "retrievers/self_query",
+  "retrievers/self_query/chroma",
+  "retrievers/self_query/functional",
+  "retrievers/self_query/pinecone",
+  "retrievers/self_query/supabase",
+  "retrievers/self_query/weaviate",
   "output_parsers/expression",
   "chains/query_constructor",
   "chains/query_constructor/ir",
   "cache/momento",
   "cache/redis",
+  "cache/upstash_redis",
+  "stores/doc/gcs",
   "stores/file/node",
   "stores/message/dynamodb",
   "stores/message/momento",
@@ -364,10 +391,97 @@ const cleanGenerated = () => {
   });
 };
 
+// Tuple describing the auto-generated import map (used by langchain/load)
+// [package name, import statement, import map path]
+// This will not include entrypoints deprecated or requiring optional deps.
+const importMap = [
+  "langchain",
+  (k, p) => `export * as ${k.replace(/\//g, "__")} from "../${p}.js";`,
+  "src/load/import_map.ts",
+];
+
+const generateImportMap = () => {
+  // Generate import map
+  const entrypointsToInclude = Object.keys(entrypoints)
+    .filter((key) => key !== "load")
+    .filter((key) => !deprecatedNodeOnly.includes(key))
+    .filter((key) => !requiresOptionalDependency.includes(key));
+  const [pkg, importStatement, importMapPath] = importMap;
+  const contents =
+    entrypointsToInclude
+      .map((key) => importStatement(key, entrypoints[key]))
+      .join("\n") + "\n";
+  fs.writeFileSync(
+    `../${pkg}/${importMapPath}`,
+    "// Auto-generated by `scripts/create-entrypoints.js`. Do not edit manually.\n\n" +
+      contents
+  );
+};
+
+const importTypes = [
+  "langchain",
+  (k, p) =>
+    `  "langchain/${k}"?:
+    | typeof import("../${p}.js")
+    | Promise<typeof import("../${p}.js")>;`,
+  "src/load/import_type.d.ts",
+];
+
+const generateImportTypes = () => {
+  // Generate import types
+  const [pkg, importStatement, importTypesPath] = importTypes;
+  fs.writeFileSync(
+    `../${pkg}/${importTypesPath}`,
+    `// Auto-generated by \`scripts/create-entrypoints.js\`. Do not edit manually.
+
+export interface OptionalImportMap {
+${Object.keys(entrypoints)
+  .filter((key) => !deprecatedNodeOnly.includes(key))
+  .filter((key) => requiresOptionalDependency.includes(key))
+  .map((key) => importStatement(key, entrypoints[key]))
+  .join("\n")}
+}
+
+export interface SecretMap {
+${[...identifySecrets()]
+  .sort()
+  .map((secret) => `  ${secret}?: string;`)
+  .join("\n")}
+}
+`
+  );
+};
+
+const importConstants = [
+  "langchain",
+  (k) => `  "langchain/${k}"`,
+  "src/load/import_constants.ts",
+];
+
+const generateImportConstants = () => {
+  // Generate import constants
+  const entrypointsToInclude = Object.keys(entrypoints)
+    .filter((key) => !deprecatedNodeOnly.includes(key))
+    .filter((key) => requiresOptionalDependency.includes(key));
+  const [pkg, importStatement, importConstantsPath] = importConstants;
+  const contents =
+    entrypointsToInclude
+      .map((key) => importStatement(key, entrypoints[key]))
+      .join(",\n") + ",\n];\n";
+  fs.writeFileSync(
+    `../${pkg}/${importConstantsPath}`,
+    "// Auto-generated by `scripts/create-entrypoints.js`. Do not edit manually.\n\nexport const optionalImportEntrypoints = [\n" +
+      contents
+  );
+};
+
 const command = process.argv[2];
 
-if (command === "clean") {
+if (command === "pre") {
   cleanGenerated();
+  generateImportMap();
+  generateImportTypes();
+  generateImportConstants();
 } else {
   updateConfig();
 }

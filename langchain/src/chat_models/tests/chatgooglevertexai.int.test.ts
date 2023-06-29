@@ -94,3 +94,22 @@ test("ChatGoogleVertexAI, with a memory in a chain", async () => {
 
   console.log(response2);
 });
+
+test("CodechatGoogleVertexAI, chain of messages", async () => {
+  const chat = new ChatGoogleVertexAI({ model: "codechat-bison" });
+
+  const chatPrompt = ChatPromptTemplate.fromPromptMessages([
+    SystemMessagePromptTemplate.fromTemplate(
+      `Answer all questions using Python and just show the code without an explanation.`
+    ),
+    HumanMessagePromptTemplate.fromTemplate("{text}"),
+  ]);
+
+  const responseA = await chat.generatePrompt([
+    await chatPrompt.formatPromptValue({
+      text: "How can I write a for loop counting to 10?",
+    }),
+  ]);
+
+  console.log(JSON.stringify(responseA.generations, null, 1));
+});

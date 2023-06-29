@@ -9,12 +9,14 @@ export type CombinedOutput = Record<string, any>;
  * @augments BaseOutputParser
  */
 export class CombiningOutputParser extends BaseOutputParser {
+  lc_namespace = ["langchain", "output_parsers", "combining"];
+
   parsers: BaseOutputParser[];
 
   outputDelimiter = "-----";
 
   constructor(...parsers: BaseOutputParser[]) {
-    super();
+    super(...arguments);
     this.parsers = parsers;
   }
 

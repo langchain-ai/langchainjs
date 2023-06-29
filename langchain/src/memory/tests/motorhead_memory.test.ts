@@ -15,7 +15,7 @@ test("Test motörhead memory", async () => {
     } as Response)
   );
 
-  const memory = new MotorheadMemory({ sessionId: "1" });
+  const memory = new MotorheadMemory({ url: "localhost:8080", sessionId: "1" });
   const result1 = await memory.loadMemoryVariables({});
   expect(result1).toStrictEqual({ history: "" });
 
@@ -46,6 +46,7 @@ test("Test motörhead memory with pre-loaded history", async () => {
     } as Response)
   );
   const memory = new MotorheadMemory({
+    url: "localhost:8080",
     returnMessages: true,
     sessionId: "2",
   });

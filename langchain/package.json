@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.91",
+  "version": "0.0.100",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -10,6 +10,12 @@
   "types": "./index.d.ts",
   "files": [
     "dist/",
+    "load.cjs",
+    "load.js",
+    "load.d.ts",
+    "load/serializable.cjs",
+    "load/serializable.js",
+    "load/serializable.d.ts",
     "agents.cjs",
     "agents.js",
     "agents.d.ts",
@@ -82,6 +88,9 @@
     "llms/ai21.cjs",
     "llms/ai21.js",
     "llms/ai21.d.ts",
+    "llms/aleph_alpha.cjs",
+    "llms/aleph_alpha.js",
+    "llms/aleph_alpha.d.ts",
     "llms/cohere.cjs",
     "llms/cohere.js",
     "llms/cohere.d.ts",
@@ -124,6 +133,9 @@
     "vectorstores/weaviate.cjs",
     "vectorstores/weaviate.js",
     "vectorstores/weaviate.d.ts",
+    "vectorstores/lancedb.cjs",
+    "vectorstores/lancedb.js",
+    "vectorstores/lancedb.d.ts",
     "vectorstores/mongo.cjs",
     "vectorstores/mongo.js",
     "vectorstores/mongo.d.ts",
@@ -157,12 +169,18 @@
     "vectorstores/redis.cjs",
     "vectorstores/redis.js",
     "vectorstores/redis.d.ts",
+    "vectorstores/typesense.cjs",
+    "vectorstores/typesense.js",
+    "vectorstores/typesense.d.ts",
     "vectorstores/singlestore.cjs",
     "vectorstores/singlestore.js",
     "vectorstores/singlestore.d.ts",
     "vectorstores/tigris.cjs",
     "vectorstores/tigris.js",
     "vectorstores/tigris.d.ts",
+    "vectorstores/vectara.cjs",
+    "vectorstores/vectara.js",
+    "vectorstores/vectara.d.ts",
     "text_splitter.cjs",
     "text_splitter.js",
     "text_splitter.d.ts",
@@ -175,9 +193,6 @@
     "document.cjs",
     "document.js",
     "document.d.ts",
-    "docstore.cjs",
-    "docstore.js",
-    "docstore.d.ts",
     "document_loaders.cjs",
     "document_loaders.js",
     "document_loaders.d.ts",
@@ -217,6 +232,9 @@
     "document_loaders/web/notiondb.cjs",
     "document_loaders/web/notiondb.js",
     "document_loaders/web/notiondb.d.ts",
+    "document_loaders/web/notionapi.cjs",
+    "document_loaders/web/notionapi.js",
+    "document_loaders/web/notionapi.d.ts",
     "document_loaders/web/s3.cjs",
     "document_loaders/web/s3.js",
     "document_loaders/web/s3.d.ts",
@@ -328,6 +346,21 @@
     "retrievers/self_query.cjs",
     "retrievers/self_query.js",
     "retrievers/self_query.d.ts",
+    "retrievers/self_query/chroma.cjs",
+    "retrievers/self_query/chroma.js",
+    "retrievers/self_query/chroma.d.ts",
+    "retrievers/self_query/functional.cjs",
+    "retrievers/self_query/functional.js",
+    "retrievers/self_query/functional.d.ts",
+    "retrievers/self_query/pinecone.cjs",
+    "retrievers/self_query/pinecone.js",
+    "retrievers/self_query/pinecone.d.ts",
+    "retrievers/self_query/supabase.cjs",
+    "retrievers/self_query/supabase.js",
+    "retrievers/self_query/supabase.d.ts",
+    "retrievers/self_query/weaviate.cjs",
+    "retrievers/self_query/weaviate.js",
+    "retrievers/self_query/weaviate.d.ts",
     "retrievers/vespa.cjs",
     "retrievers/vespa.js",
     "retrievers/vespa.d.ts",
@@ -340,12 +373,24 @@
     "cache/redis.cjs",
     "cache/redis.js",
     "cache/redis.d.ts",
+    "cache/upstash_redis.cjs",
+    "cache/upstash_redis.js",
+    "cache/upstash_redis.d.ts",
+    "stores/doc/in_memory.cjs",
+    "stores/doc/in_memory.js",
+    "stores/doc/in_memory.d.ts",
+    "stores/doc/gcs.cjs",
+    "stores/doc/gcs.js",
+    "stores/doc/gcs.d.ts",
     "stores/file/in_memory.cjs",
     "stores/file/in_memory.js",
     "stores/file/in_memory.d.ts",
     "stores/file/node.cjs",
     "stores/file/node.js",
     "stores/file/node.d.ts",
+    "stores/message/in_memory.cjs",
+    "stores/message/in_memory.js",
+    "stores/message/in_memory.d.ts",
     "stores/message/dynamodb.cjs",
     "stores/message/dynamodb.js",
     "stores/message/dynamodb.d.ts",
@@ -373,6 +418,9 @@
     "client.cjs",
     "client.js",
     "client.d.ts",
+    "evaluation.cjs",
+    "evaluation.js",
+    "evaluation.d.ts",
     "index.cjs",
     "index.js",
     "index.d.ts"
@@ -383,13 +431,13 @@
   },
   "scripts": {
     "build": "yarn clean && yarn build:esm && yarn build:cjs && node scripts/create-entrypoints.js && node scripts/check-tree-shaking.js",
-    "build:esm": "tsc --outDir dist/ && rm -rf dist/tests dist/**/tests",
-    "build:cjs": "tsc --outDir dist-cjs/ -p tsconfig.cjs.json && node scripts/move-cjs-to-dist.js && rm -r dist-cjs",
+    "build:esm": "tsc --outDir dist/ && rimraf dist/tests dist/**/tests",
+    "build:cjs": "tsc --outDir dist-cjs/ -p tsconfig.cjs.json && node scripts/move-cjs-to-dist.js && rimraf dist-cjs",
     "build:watch": "node scripts/create-entrypoints.js && tsc --outDir dist/ --watch",
     "lint": "eslint src && dpdm --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint:fix": "yarn lint --fix",
     "precommit": "tsc --noEmit && lint-staged",
-    "clean": "rm -rf dist/ && node scripts/create-entrypoints.js clean",
+    "clean": "rimraf dist/ && node scripts/create-entrypoints.js pre",
     "prepack": "yarn build",
     "release": "release-it --only-version --config .release-it.json",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest --testPathIgnorePatterns=\\.int\\.test.ts --testTimeout 30000",
@@ -411,8 +459,10 @@
     "@getmetal/metal-sdk": "^4.0.0",
     "@getzep/zep-js": "^0.3.1",
     "@gomomento/sdk": "^1.23.0",
+    "@google-cloud/storage": "^6.10.1",
     "@huggingface/inference": "^1.5.1",
     "@jest/globals": "^29.5.0",
+    "@notionhq/client": "^2.2.5",
     "@opensearch-project/opensearch": "^2.2.0",
     "@pinecone-database/pinecone": "^0.0.14",
     "@qdrant/js-client-rest": "^1.2.0",
@@ -425,8 +475,10 @@
     "@tigrisdata/vector": "^1.1.0",
     "@tsconfig/recommended": "^1.0.2",
     "@types/d3-dsv": "^2",
+    "@types/decamelize": "^1.2.0",
     "@types/flat": "^5.0.2",
     "@types/html-to-text": "^9",
+    "@types/js-yaml": "^4",
     "@types/object-hash": "^3.0.2",
     "@types/pdf-parse": "^1.1.1",
     "@types/pg": "^8",
@@ -460,6 +512,7 @@
     "mammoth": "^1.5.1",
     "mongodb": "^5.2.0",
     "mysql2": "^3.3.3",
+    "notion-to-md": "^3.1.0",
     "pdf-parse": "1.1.1",
     "peggy": "^3.0.2",
     "pg": "^8.11.0",
@@ -470,12 +523,15 @@
     "redis": "^4.6.6",
     "release-it": "^15.10.1",
     "replicate": "^0.9.0",
+    "rimraf": "^5.0.1",
     "rollup": "^3.19.1",
     "sqlite3": "^5.1.4",
     "srt-parser-2": "^1.2.2",
     "ts-jest": "^29.1.0",
     "typeorm": "^0.3.12",
     "typescript": "^5.0.0",
+    "typesense": "^1.5.3",
+    "vectordb": "^0.1.4",
     "weaviate-ts-client": "^1.0.0"
   },
   "peerDependencies": {
@@ -487,7 +543,9 @@
     "@getmetal/metal-sdk": "*",
     "@getzep/zep-js": "^0.3.1",
     "@gomomento/sdk": "^1.23.0",
+    "@google-cloud/storage": "^6.10.1",
     "@huggingface/inference": "^1.5.1",
+    "@notionhq/client": "^2.2.5",
     "@opensearch-project/opensearch": "*",
     "@pinecone-database/pinecone": "*",
     "@qdrant/js-client-rest": "^1.2.0",
@@ -514,6 +572,7 @@
     "mammoth": "*",
     "mongodb": "^5.2.0",
     "mysql2": "^3.3.3",
+    "notion-to-md": "^3.1.0",
     "pdf-parse": "1.1.1",
     "peggy": "^3.0.2",
     "pg": "^8.11.0",
@@ -524,6 +583,8 @@
     "replicate": "^0.9.0",
     "srt-parser-2": "^1.2.2",
     "typeorm": "^0.3.12",
+    "typesense": "^1.5.3",
+    "vectordb": "^0.1.4",
     "weaviate-ts-client": "^1.0.0"
   },
   "peerDependenciesMeta": {
@@ -551,7 +612,13 @@
     "@gomomento/sdk": {
       "optional": true
     },
+    "@google-cloud/storage": {
+      "optional": true
+    },
     "@huggingface/inference": {
+      "optional": true
+    },
+    "@notionhq/client": {
       "optional": true
     },
     "@opensearch-project/opensearch": {
@@ -632,6 +699,9 @@
     "mysql2": {
       "optional": true
     },
+    "notion-to-md": {
+      "optional": true
+    },
     "pdf-parse": {
       "optional": true
     },
@@ -662,6 +732,12 @@
     "typeorm": {
       "optional": true
     },
+    "typesense": {
+      "optional": true
+    },
+    "vectordb": {
+      "optional": true
+    },
     "weaviate-ts-client": {
       "optional": true
     }
@@ -670,13 +746,18 @@
     "@anthropic-ai/sdk": "^0.4.3",
     "ansi-styles": "^5.0.0",
     "binary-extensions": "^2.2.0",
+    "camelcase": "6",
+    "decamelize": "^1.2.0",
     "expr-eval": "^2.0.2",
     "flat": "^5.0.2",
-    "js-tiktoken": "^1.0.6",
+    "js-tiktoken": "^1.0.7",
+    "js-yaml": "^4.1.0",
     "jsonpointer": "^5.0.1",
+    "langchainplus-sdk": "^0.0.15",
     "ml-distance": "^4.0.0",
     "object-hash": "^3.0.0",
-    "openai": "^3.2.0",
+    "openai": "^3.3.0",
+    "openapi-types": "^12.1.3",
     "p-queue": "^6.6.2",
     "p-retry": "4",
     "uuid": "^9.0.0",
@@ -706,6 +787,16 @@
       "types": "./index.d.ts",
       "import": "./index.js",
       "require": "./index.cjs"
+    },
+    "./load": {
+      "types": "./load.d.ts",
+      "import": "./load.js",
+      "require": "./load.cjs"
+    },
+    "./load/serializable": {
+      "types": "./load/serializable.d.ts",
+      "import": "./load/serializable.js",
+      "require": "./load/serializable.cjs"
     },
     "./agents": {
       "types": "./agents.d.ts",
@@ -831,6 +922,11 @@
       "import": "./llms/ai21.js",
       "require": "./llms/ai21.cjs"
     },
+    "./llms/aleph_alpha": {
+      "types": "./llms/aleph_alpha.d.ts",
+      "import": "./llms/aleph_alpha.js",
+      "require": "./llms/aleph_alpha.cjs"
+    },
     "./llms/cohere": {
       "types": "./llms/cohere.d.ts",
       "import": "./llms/cohere.js",
@@ -903,6 +999,11 @@
       "import": "./vectorstores/weaviate.js",
       "require": "./vectorstores/weaviate.cjs"
     },
+    "./vectorstores/lancedb": {
+      "types": "./vectorstores/lancedb.d.ts",
+      "import": "./vectorstores/lancedb.js",
+      "require": "./vectorstores/lancedb.cjs"
+    },
     "./vectorstores/mongo": {
       "types": "./vectorstores/mongo.d.ts",
       "import": "./vectorstores/mongo.js",
@@ -958,6 +1059,11 @@
       "import": "./vectorstores/redis.js",
       "require": "./vectorstores/redis.cjs"
     },
+    "./vectorstores/typesense": {
+      "types": "./vectorstores/typesense.d.ts",
+      "import": "./vectorstores/typesense.js",
+      "require": "./vectorstores/typesense.cjs"
+    },
     "./vectorstores/singlestore": {
       "types": "./vectorstores/singlestore.d.ts",
       "import": "./vectorstores/singlestore.js",
@@ -967,6 +1073,11 @@
       "types": "./vectorstores/tigris.d.ts",
       "import": "./vectorstores/tigris.js",
       "require": "./vectorstores/tigris.cjs"
+    },
+    "./vectorstores/vectara": {
+      "types": "./vectorstores/vectara.d.ts",
+      "import": "./vectorstores/vectara.js",
+      "require": "./vectorstores/vectara.cjs"
     },
     "./text_splitter": {
       "types": "./text_splitter.d.ts",
@@ -987,11 +1098,6 @@
       "types": "./document.d.ts",
       "import": "./document.js",
       "require": "./document.cjs"
-    },
-    "./docstore": {
-      "types": "./docstore.d.ts",
-      "import": "./docstore.js",
-      "require": "./docstore.cjs"
     },
     "./document_loaders": {
       "node": {
@@ -1059,6 +1165,11 @@
       "types": "./document_loaders/web/notiondb.d.ts",
       "import": "./document_loaders/web/notiondb.js",
       "require": "./document_loaders/web/notiondb.cjs"
+    },
+    "./document_loaders/web/notionapi": {
+      "types": "./document_loaders/web/notionapi.d.ts",
+      "import": "./document_loaders/web/notionapi.js",
+      "require": "./document_loaders/web/notionapi.cjs"
     },
     "./document_loaders/web/s3": {
       "types": "./document_loaders/web/s3.d.ts",
@@ -1249,6 +1360,31 @@
       "import": "./retrievers/self_query.js",
       "require": "./retrievers/self_query.cjs"
     },
+    "./retrievers/self_query/chroma": {
+      "types": "./retrievers/self_query/chroma.d.ts",
+      "import": "./retrievers/self_query/chroma.js",
+      "require": "./retrievers/self_query/chroma.cjs"
+    },
+    "./retrievers/self_query/functional": {
+      "types": "./retrievers/self_query/functional.d.ts",
+      "import": "./retrievers/self_query/functional.js",
+      "require": "./retrievers/self_query/functional.cjs"
+    },
+    "./retrievers/self_query/pinecone": {
+      "types": "./retrievers/self_query/pinecone.d.ts",
+      "import": "./retrievers/self_query/pinecone.js",
+      "require": "./retrievers/self_query/pinecone.cjs"
+    },
+    "./retrievers/self_query/supabase": {
+      "types": "./retrievers/self_query/supabase.d.ts",
+      "import": "./retrievers/self_query/supabase.js",
+      "require": "./retrievers/self_query/supabase.cjs"
+    },
+    "./retrievers/self_query/weaviate": {
+      "types": "./retrievers/self_query/weaviate.d.ts",
+      "import": "./retrievers/self_query/weaviate.js",
+      "require": "./retrievers/self_query/weaviate.cjs"
+    },
     "./retrievers/vespa": {
       "types": "./retrievers/vespa.d.ts",
       "import": "./retrievers/vespa.js",
@@ -1269,6 +1405,21 @@
       "import": "./cache/redis.js",
       "require": "./cache/redis.cjs"
     },
+    "./cache/upstash_redis": {
+      "types": "./cache/upstash_redis.d.ts",
+      "import": "./cache/upstash_redis.js",
+      "require": "./cache/upstash_redis.cjs"
+    },
+    "./stores/doc/in_memory": {
+      "types": "./stores/doc/in_memory.d.ts",
+      "import": "./stores/doc/in_memory.js",
+      "require": "./stores/doc/in_memory.cjs"
+    },
+    "./stores/doc/gcs": {
+      "types": "./stores/doc/gcs.d.ts",
+      "import": "./stores/doc/gcs.js",
+      "require": "./stores/doc/gcs.cjs"
+    },
     "./stores/file/in_memory": {
       "types": "./stores/file/in_memory.d.ts",
       "import": "./stores/file/in_memory.js",
@@ -1278,6 +1429,11 @@
       "types": "./stores/file/node.d.ts",
       "import": "./stores/file/node.js",
       "require": "./stores/file/node.cjs"
+    },
+    "./stores/message/in_memory": {
+      "types": "./stores/message/in_memory.d.ts",
+      "import": "./stores/message/in_memory.js",
+      "require": "./stores/message/in_memory.cjs"
     },
     "./stores/message/dynamodb": {
       "types": "./stores/message/dynamodb.d.ts",
@@ -1323,6 +1479,11 @@
       "types": "./client.d.ts",
       "import": "./client.js",
       "require": "./client.cjs"
+    },
+    "./evaluation": {
+      "types": "./evaluation.d.ts",
+      "import": "./evaluation.js",
+      "require": "./evaluation.cjs"
     },
     "./package.json": "./package.json"
   }

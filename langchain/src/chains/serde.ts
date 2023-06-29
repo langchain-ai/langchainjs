@@ -54,7 +54,7 @@ export type SerializedChatVectorDBQAChain = {
 export type SerializedMapReduceDocumentsChain = {
   _type: "map_reduce_documents_chain";
   llm_chain?: SerializedLLMChain;
-  combine_document_chain?: SerializedBaseChain;
+  combine_document_chain?: SerializedStuffDocumentsChain;
 };
 
 export type SerializedRefineDocumentsChain = {

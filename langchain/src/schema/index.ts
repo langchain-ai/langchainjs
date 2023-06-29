@@ -1,4 +1,6 @@
+import { ChatCompletionRequestMessageFunctionCall } from "openai";
 import { Document } from "../document.js";
+import { Serializable } from "../load/serializable.js";
 
 export const RUN_KEY = "__run";
 
@@ -51,6 +53,7 @@ export type LLMResult = {
 export interface StoredMessageData {
   content: string;
   role: string | undefined;
+  name: string | undefined;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   additional_kwargs?: Record<string, any>;
 }
@@ -60,7 +63,7 @@ export interface StoredMessage {
   data: StoredMessageData;
 }
 
-export type MessageType = "human" | "ai" | "generic" | "system";
+export type MessageType = "human" | "ai" | "generic" | "system" | "function";
 
 export abstract class BaseChatMessage {
   /** The text of the message. */
@@ -69,11 +72,18 @@ export abstract class BaseChatMessage {
   /** The name of the message sender in a multi-user chat. */
   name?: string;
 
+  /** Additional keyword arguments */
+  additional_kwargs: {
+    function_call?: ChatCompletionRequestMessageFunctionCall;
+    [key: string]: unknown;
+  } = {};
+
   /** The type of the message. */
   abstract _getType(): MessageType;
 
-  constructor(text: string) {
+  constructor(text: string, kwargs?: Record<string, unknown>) {
     this.text = text;
+    this.additional_kwargs = kwargs || {};
   }
 
   toJSON(): StoredMessage {
@@ -82,6 +92,8 @@ export abstract class BaseChatMessage {
       data: {
         content: this.text,
         role: "role" in this ? (this.role as string) : undefined,
+        name: this.name,
+        additional_kwargs: this.additional_kwargs,
       },
     };
   }
@@ -102,6 +114,17 @@ export class AIChatMessage extends BaseChatMessage {
 export class SystemChatMessage extends BaseChatMessage {
   _getType(): MessageType {
     return "system";
+  }
+}
+
+export class FunctionChatMessage extends BaseChatMessage {
+  constructor(text: string, name: string) {
+    super(text);
+    this.name = name;
+  }
+
+  _getType(): MessageType {
+    return "function";
   }
 }
 
@@ -132,7 +155,7 @@ export interface ChatResult {
 /**
  * Base PromptValue class. All prompt values should extend this class.
  */
-export abstract class BasePromptValue {
+export abstract class BasePromptValue extends Serializable {
   abstract toString(): string;
 
   abstract toChatMessages(): BaseChatMessage[];
@@ -149,6 +172,7 @@ export type AgentFinish = {
   returnValues: Record<string, any>;
   log: string;
 };
+
 export type AgentStep = {
   action: AgentAction;
   observation: string;
@@ -157,12 +181,6 @@ export type AgentStep = {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ChainValues = Record<string, any>;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type RunInputs = Record<string, any>;
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type RunOutputs = Record<string, any>;
-
 /**
  * Base Index class. All indexes should extend this class.
  */
@@ -170,7 +188,7 @@ export abstract class BaseRetriever {
   abstract getRelevantDocuments(query: string): Promise<Document[]>;
 }
 
-export abstract class BaseChatMessageHistory {
+export abstract class BaseChatMessageHistory extends Serializable {
   public abstract getMessages(): Promise<BaseChatMessage[]>;
 
   public abstract addUserMessage(message: string): Promise<void>;
@@ -180,7 +198,7 @@ export abstract class BaseChatMessageHistory {
   public abstract clear(): Promise<void>;
 }
 
-export abstract class BaseListChatMessageHistory {
+export abstract class BaseListChatMessageHistory extends Serializable {
   protected abstract addMessage(message: BaseChatMessage): Promise<void>;
 
   public addUserMessage(message: string): Promise<void> {
@@ -198,13 +216,13 @@ export abstract class BaseCache<T = Generation[]> {
   abstract update(prompt: string, llmKey: string, value: T): Promise<void>;
 }
 
-export abstract class BaseFileStore {
+export abstract class BaseFileStore extends Serializable {
   abstract readFile(path: string): Promise<string>;
 
   abstract writeFile(path: string, contents: string): Promise<void>;
 }
 
-export abstract class BaseEntityStore {
+export abstract class BaseEntityStore extends Serializable {
   abstract get(key: string, defaultValue?: string): Promise<string | undefined>;
 
   abstract set(key: string, value?: string): Promise<void>;
@@ -214,4 +232,10 @@ export abstract class BaseEntityStore {
   abstract exists(key: string): Promise<boolean>;
 
   abstract clear(): Promise<void>;
+}
+
+export abstract class Docstore {
+  abstract search(search: string): Promise<Document>;
+
+  abstract add(texts: Record<string, Document>): Promise<void>;
 }

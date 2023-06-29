@@ -83,7 +83,7 @@ test("Test Redis history with a TTL", async () => {
   const resultWithHistory = await chatHistory.getMessages();
   expect(resultWithHistory).toEqual(expectedMessages);
 
-  await new Promise((resolve) => setTimeout(resolve, 5000));
+  await new Promise((resolve) => setTimeout(resolve, 6000));
 
   const expiredResult = await chatHistory.getMessages();
   expect(expiredResult).toStrictEqual([]);

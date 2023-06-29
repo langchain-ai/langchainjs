@@ -2,6 +2,7 @@ import { Tool } from "./base.js";
 import { renderTemplate } from "../prompts/template.js";
 import { AsyncCaller, AsyncCallerParams } from "../util/async_caller.js";
 import { getEnvironmentVariable } from "../util/env.js";
+import { Serializable } from "../load/serializable.js";
 
 const zapierNLABaseDescription: string =
   "A wrapper around Zapier NLA actions. " +
@@ -20,37 +21,74 @@ const zapierNLABaseDescription: string =
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ZapierValues = Record<string, any>;
 
-export interface ZapiterNLAWrapperParams extends AsyncCallerParams {
+export interface ZapierNLAWrapperParams extends AsyncCallerParams {
   apiKey?: string;
+  oauthAccessToken?: string;
 }
 
-export class ZapierNLAWrapper {
-  zapierNlaApiKey: string;
+export class ZapierNLAWrapper extends Serializable {
+  lc_namespace = ["langchain", "tools", "zapier"];
+
+  get lc_secrets(): { [key: string]: string } | undefined {
+    return {
+      apiKey: "ZAPIER_NLA_API_KEY",
+    };
+  }
+
+  zapierNlaApiKey?: string;
+
+  zapierNlaOAuthAccessToken?: string;
 
   zapierNlaApiBase = "https://nla.zapier.com/api/v1/";
 
   caller: AsyncCaller;
 
-  constructor(params?: string | ZapiterNLAWrapperParams) {
-    const zapierNlaApiKey =
-      typeof params === "string" ? params : params?.apiKey;
+  constructor(params?: ZapierNLAWrapperParams) {
+    super(params);
+
+    const zapierNlaOAuthAccessToken = params?.oauthAccessToken;
+    const zapierNlaApiKey = params?.apiKey;
+
+    const oauthAccessToken =
+      zapierNlaOAuthAccessToken ??
+      getEnvironmentVariable("ZAPIER_NLA_OAUTH_ACCESS_TOKEN");
     const apiKey =
       zapierNlaApiKey ?? getEnvironmentVariable("ZAPIER_NLA_API_KEY");
-    if (!apiKey) {
-      throw new Error("ZAPIER_NLA_API_KEY not set");
+    if (!apiKey && !oauthAccessToken) {
+      throw new Error(
+        "Neither ZAPIER_NLA_OAUTH_ACCESS_TOKEN or ZAPIER_NLA_API_KEY are set"
+      );
     }
-    this.zapierNlaApiKey = apiKey;
+
+    if (oauthAccessToken) {
+      this.zapierNlaOAuthAccessToken = oauthAccessToken;
+    } else {
+      this.zapierNlaApiKey = apiKey;
+    }
+
     this.caller = new AsyncCaller(
       typeof params === "string" ? {} : params ?? {}
     );
   }
 
   protected _getHeaders(): Record<string, string> {
-    return {
+    const headers: {
+      "Content-Type": string;
+      Accept: string;
+      Authorization?: string;
+      "x-api-key"?: string;
+    } = {
       "Content-Type": "application/json",
       Accept: "application/json",
-      "x-api-key": this.zapierNlaApiKey,
     };
+
+    if (this.zapierNlaOAuthAccessToken) {
+      headers.Authorization = `Bearer ${this.zapierNlaOAuthAccessToken}`;
+    } else {
+      headers["x-api-key"] = this.zapierNlaApiKey;
+    }
+
+    return headers;
   }
 
   protected async _getActionRequest(

@@ -56,6 +56,26 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
     return ["stop", "signal", "timeout", "options"];
   }
 
+  lc_serializable = true;
+
+  get lc_secrets(): { [key: string]: string } | undefined {
+    return {
+      openAIApiKey: "OPENAI_API_KEY",
+      azureOpenAIApiKey: "AZURE_OPENAI_API_KEY",
+    };
+  }
+
+  get lc_aliases(): Record<string, string> {
+    return {
+      modelName: "model",
+      openAIApiKey: "openai_api_key",
+      azureOpenAIApiVersion: "azure_openai_api_version",
+      azureOpenAIApiKey: "azure_openai_api_key",
+      azureOpenAIApiInstanceName: "azure_openai_api_instance_name",
+      azureOpenAIApiDeploymentName: "azure_openai_api_deployment_name",
+    };
+  }
+
   temperature = 0.7;
 
   maxTokens = 256;
@@ -68,7 +88,7 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
 
   n = 1;
 
-  bestOf = 1;
+  bestOf?: number;
 
   logitBias?: Record<string, number>;
 
@@ -83,6 +103,8 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
   stop?: string[];
 
   streaming = false;
+
+  openAIApiKey?: string;
 
   azureOpenAIApiVersion?: string;
 
@@ -100,8 +122,9 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
     fields?: Partial<OpenAIInput> &
       Partial<AzureOpenAIInput> &
       BaseLLMParams & {
-        openAIApiKey?: string;
+        configuration?: ConfigurationParameters;
       },
+    /** @deprecated */
     configuration?: ConfigurationParameters
   ) {
     if (
@@ -114,28 +137,28 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
     }
     super(fields ?? {});
 
-    const apiKey =
+    this.openAIApiKey =
       fields?.openAIApiKey ?? getEnvironmentVariable("OPENAI_API_KEY");
 
-    const azureApiKey =
+    this.azureOpenAIApiKey =
       fields?.azureOpenAIApiKey ??
       getEnvironmentVariable("AZURE_OPENAI_API_KEY");
 
-    if (!azureApiKey && !apiKey) {
+    if (!this.azureOpenAIApiKey && !this.openAIApiKey) {
       throw new Error("(Azure) OpenAI API key not found");
     }
 
-    const azureApiInstanceName =
+    this.azureOpenAIApiInstanceName =
       fields?.azureOpenAIApiInstanceName ??
       getEnvironmentVariable("AZURE_OPENAI_API_INSTANCE_NAME");
 
-    const azureApiDeploymentName =
+    this.azureOpenAIApiDeploymentName =
       (fields?.azureOpenAIApiCompletionsDeploymentName ||
         fields?.azureOpenAIApiDeploymentName) ??
       (getEnvironmentVariable("AZURE_OPENAI_API_COMPLETIONS_DEPLOYMENT_NAME") ||
         getEnvironmentVariable("AZURE_OPENAI_API_DEPLOYMENT_NAME"));
 
-    const azureApiVersion =
+    this.azureOpenAIApiVersion =
       fields?.azureOpenAIApiVersion ??
       getEnvironmentVariable("AZURE_OPENAI_API_VERSION");
 
@@ -156,16 +179,7 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
 
     this.streaming = fields?.streaming ?? false;
 
-    this.azureOpenAIApiVersion = azureApiVersion;
-    this.azureOpenAIApiKey = azureApiKey;
-    this.azureOpenAIApiInstanceName = azureApiInstanceName;
-    this.azureOpenAIApiDeploymentName = azureApiDeploymentName;
-
-    if (this.streaming && this.n > 1) {
-      throw new Error("Cannot stream results when n > 1");
-    }
-
-    if (this.streaming && this.bestOf > 1) {
+    if (this.streaming && this.bestOf && this.bestOf > 1) {
       throw new Error("Cannot stream results when bestOf > 1");
     }
 
@@ -182,15 +196,18 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
     }
 
     this.clientConfig = {
-      apiKey,
+      apiKey: this.openAIApiKey,
       ...configuration,
+      ...fields?.configuration,
     };
   }
 
   /**
    * Get the parameters used to invoke the model
    */
-  invocationParams(): CreateCompletionRequest {
+  invocationParams(
+    options?: this["ParsedCallOptions"]
+  ): CreateCompletionRequest {
     return {
       model: this.modelName,
       temperature: this.temperature,
@@ -201,7 +218,7 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
       n: this.n,
       best_of: this.bestOf,
       logit_bias: this.logitBias,
-      stop: this.stop,
+      stop: options?.stop ?? this.stop,
       stream: this.streaming,
       ...this.modelKwargs,
     };
@@ -243,17 +260,11 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<LLMResult> {
-    const { stop } = options;
     const subPrompts = chunkArray(prompts, this.batchSize);
     const choices: CreateCompletionResponseChoicesInner[] = [];
     const tokenUsage: TokenUsage = {};
 
-    if (this.stop && stop) {
-      throw new Error("Stop found in input and default params");
-    }
-
-    const params = this.invocationParams();
-    params.stop = stop ?? params.stop;
+    const params = this.invocationParams(options);
 
     if (params.max_tokens === -1) {
       if (prompts.length !== 1) {
@@ -287,7 +298,7 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
                 responseType: "stream",
                 onmessage: (event) => {
                   if (event.data?.trim?.() === "[DONE]") {
-                    if (resolved) {
+                    if (resolved || rejected) {
                       return;
                     }
                     resolved = true;
@@ -296,7 +307,18 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
                       choices,
                     });
                   } else {
-                    const message = JSON.parse(event.data) as Omit<
+                    const data = JSON.parse(event.data);
+
+                    if (data?.error) {
+                      if (rejected) {
+                        return;
+                      }
+                      rejected = true;
+                      reject(data.error);
+                      return;
+                    }
+
+                    const message = data as Omit<
                       CreateCompletionResponse,
                       "usage"
                     >;
@@ -319,16 +341,18 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
                         choice.text = (choice.text ?? "") + (part.text ?? "");
                         choice.finish_reason = part.finish_reason;
                         choice.logprobs = part.logprobs;
-                        // TODO this should pass part.index to the callback
-                        // when that's supported there
                         // eslint-disable-next-line no-void
-                        void runManager?.handleLLMNewToken(part.text ?? "");
+                        void runManager?.handleLLMNewToken(part.text ?? "", {
+                          prompt: Math.floor(part.index / this.n),
+                          completion: part.index % this.n,
+                        });
                       }
                     }
 
                     // when all messages are finished, resolve
                     if (
                       !resolved &&
+                      !rejected &&
                       choices.every((c) => c.finish_reason != null)
                     ) {
                       resolved = true;
@@ -448,6 +472,14 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
  * @augments OpenAI
  */
 export class PromptLayerOpenAI extends OpenAI {
+  get lc_secrets(): { [key: string]: string } | undefined {
+    return {
+      promptLayerApiKey: "PROMPTLAYER_API_KEY",
+    };
+  }
+
+  lc_serializable = false;
+
   promptLayerApiKey?: string;
 
   plTags?: string[];

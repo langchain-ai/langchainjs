@@ -88,11 +88,11 @@ export class SequentialChain extends BaseChain implements SequentialChainInput {
         );
       }
       const outputKeysSet = new Set(chain.outputKeys);
-      const overlappinOutputKeys = intersection(availableKeys, outputKeysSet);
-      if (overlappinOutputKeys.size > 0) {
+      const overlappingOutputKeys = intersection(availableKeys, outputKeysSet);
+      if (overlappingOutputKeys.size > 0) {
         throw new Error(
           `The following output variables for chain "${chain._chainType()}" are overlapping: ${formatSet(
-            overlappinOutputKeys
+            overlappingOutputKeys
           )}. This can lead to unexpected behaviour.`
         );
       }
@@ -129,10 +129,15 @@ export class SequentialChain extends BaseChain implements SequentialChainInput {
     values: ChainValues,
     runManager?: CallbackManagerForChainRun
   ): Promise<ChainValues> {
-    let input: ChainValues = values;
-    const allChainValues: ChainValues = {};
+    let input: ChainValues = {};
+    const allChainValues: ChainValues = values;
+    let i = 0;
     for (const chain of this.chains) {
-      input = await chain.call(input, runManager?.getChild());
+      i += 1;
+      input = await chain.call(
+        allChainValues,
+        runManager?.getChild(`step_${i}`)
+      );
       for (const key of Object.keys(input)) {
         allChainValues[key] = input[key];
       }
@@ -239,11 +244,7 @@ export class SimpleSequentialChain
   }
 
   constructor(fields: SimpleSequentialChainInput) {
-    super(
-      fields.memory,
-      fields.verbose,
-      fields.callbacks ?? fields.callbackManager
-    );
+    super(fields);
     this.chains = fields.chains;
     this.trimOutputs = fields.trimOutputs ?? false;
     this._validateChains();
@@ -252,7 +253,11 @@ export class SimpleSequentialChain
   /** @ignore */
   _validateChains() {
     for (const chain of this.chains) {
-      if (chain.inputKeys.length !== 1) {
+      if (
+        chain.inputKeys.filter(
+          (k) => !chain.memory?.memoryKeys.includes(k) ?? true
+        ).length !== 1
+      ) {
         throw new Error(
           `Chains used in SimpleSequentialChain should all have one input, got ${
             chain.inputKeys.length
@@ -275,8 +280,15 @@ export class SimpleSequentialChain
     runManager?: CallbackManagerForChainRun
   ): Promise<ChainValues> {
     let input: string = values[this.inputKey];
+    let i = 0;
     for (const chain of this.chains) {
-      input = await chain.run(input, runManager?.getChild());
+      i += 1;
+      input = (
+        await chain.call(
+          { [chain.inputKeys[0]]: input, signal: values.signal },
+          runManager?.getChild(`step_${i}`)
+        )
+      )[chain.outputKeys[0]];
       if (this.trimOutputs) {
         input = input.trim();
       }

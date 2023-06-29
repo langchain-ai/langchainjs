@@ -72,7 +72,10 @@ export interface AnthropicInput {
   streaming?: boolean;
 
   /** Anthropic API key */
-  apiKey?: string;
+  anthropicApiKey?: string;
+
+  /** Anthropic API URL */
+  anthropicApiUrl?: string;
 
   /** Model name to use */
   modelName: string;
@@ -107,7 +110,21 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
     return ["stop", "signal", "options"];
   }
 
-  apiKey?: string;
+  get lc_secrets(): { [key: string]: string } | undefined {
+    return {
+      anthropicApiKey: "ANTHROPIC_API_KEY",
+    };
+  }
+
+  get lc_aliases(): Record<string, string> {
+    return {
+      modelName: "model",
+    };
+  }
+
+  lc_serializable = true;
+
+  anthropicApiKey?: string;
 
   apiUrl?: string;
 
@@ -133,18 +150,12 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
   // Used for streaming requests
   private streamingClient: AnthropicApi;
 
-  constructor(
-    fields?: Partial<AnthropicInput> &
-      BaseChatModelParams & {
-        anthropicApiKey?: string;
-        anthropicApiUrl?: string;
-      }
-  ) {
+  constructor(fields?: Partial<AnthropicInput> & BaseChatModelParams) {
     super(fields ?? {});
 
-    this.apiKey =
+    this.anthropicApiKey =
       fields?.anthropicApiKey ?? getEnvironmentVariable("ANTHROPIC_API_KEY");
-    if (!this.apiKey) {
+    if (!this.anthropicApiKey) {
       throw new Error("Anthropic API key not found");
     }
 
@@ -167,13 +178,18 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
   /**
    * Get the parameters used to invoke the model
    */
-  invocationParams(): Omit<SamplingParameters, "prompt"> & Kwargs {
+  invocationParams(
+    options?: this["ParsedCallOptions"]
+  ): Omit<SamplingParameters, "prompt"> & Kwargs {
     return {
       model: this.modelName,
       temperature: this.temperature,
       top_k: this.topK,
       top_p: this.topP,
-      stop_sequences: this.stopSequences ?? DEFAULT_STOP_SEQUENCES,
+      stop_sequences:
+        options?.stop?.concat(DEFAULT_STOP_SEQUENCES) ??
+        this.stopSequences ??
+        DEFAULT_STOP_SEQUENCES,
       max_tokens_to_sample: this.maxTokensToSample,
       stream: this.streaming,
       ...this.invocationKwargs,
@@ -223,11 +239,7 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
       );
     }
 
-    const params = this.invocationParams();
-    params.stop_sequences = options.stop
-      ? options.stop.concat(DEFAULT_STOP_SEQUENCES)
-      : params.stop_sequences;
-
+    const params = this.invocationParams(options);
     const response = await this.completionWithRetry(
       {
         ...params,
@@ -255,14 +267,14 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
     options: { signal?: AbortSignal },
     runManager?: CallbackManagerForLLMRun
   ): Promise<CompletionResponse> {
-    if (!this.apiKey) {
+    if (!this.anthropicApiKey) {
       throw new Error("Missing Anthropic API key.");
     }
     let makeCompletionRequest;
     if (request.stream) {
       if (!this.streamingClient) {
         const options = this.apiUrl ? { apiUrl: this.apiUrl } : undefined;
-        this.streamingClient = new AnthropicApi(this.apiKey, options);
+        this.streamingClient = new AnthropicApi(this.anthropicApiKey, options);
       }
       makeCompletionRequest = async () => {
         let currentCompletion = "";
@@ -297,7 +309,7 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
     } else {
       if (!this.batchClient) {
         const options = this.apiUrl ? { apiUrl: this.apiUrl } : undefined;
-        this.batchClient = new AnthropicApi(this.apiKey, options);
+        this.batchClient = new AnthropicApi(this.anthropicApiKey, options);
       }
       makeCompletionRequest = async () =>
         this.batchClient

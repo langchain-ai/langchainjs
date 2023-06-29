@@ -6,7 +6,7 @@ async function test() {
   const { loadPrompt } = await import("langchain/prompts/load");
   const { HNSWLib } = await import("langchain/vectorstores/hnswlib");
   const { OpenAIEmbeddings } = await import("langchain/embeddings/openai");
-  const { InMemoryDocstore, Document } = await import("langchain/docstore");
+  const { Document } = await import("langchain/document");
   const { CSVLoader } = await import("langchain/document_loaders/fs/csv");
 
   // Test exports
@@ -22,7 +22,6 @@ async function test() {
   const vs = new HNSWLib(new OpenAIEmbeddings({ openAIApiKey: "sk-XXXX" }), {
     space: "ip",
     numDimensions: 3,
-    docstore: new InMemoryDocstore(),
     index: new HierarchicalNSW("ip", 3),
   });
 

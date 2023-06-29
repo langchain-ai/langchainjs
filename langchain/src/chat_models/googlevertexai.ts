@@ -28,7 +28,11 @@ interface GoogleVertexAIChatExample {
   output: GoogleVertexAIChatMessage;
 }
 
-export type GoogleVertexAIChatAuthor = "user" | "bot" | "context";
+export type GoogleVertexAIChatAuthor =
+  | "user" // Represents the human for Code and CodeChat models
+  | "bot" // Represents the AI for Code models
+  | "system" // Represents the AI for CodeChat models
+  | "context"; // Represents contextual instructions
 
 export type GoogleVertexAIChatMessageFields = {
   author?: GoogleVertexAIChatAuthor;
@@ -50,30 +54,30 @@ export class GoogleVertexAIChatMessage {
   }
 
   static mapMessageTypeToVertexChatAuthor(
-    baseMessageType: MessageType
+    baseMessageType: MessageType,
+    model: string
   ): GoogleVertexAIChatAuthor {
     switch (baseMessageType) {
       case "ai":
-        return "bot";
+        return model.startsWith("codechat-") ? "system" : "bot";
       case "human":
         return "user";
       case "system":
         throw new Error(
           `System messages are only supported as the first passed message for Google Vertex AI.`
         );
-      case "generic":
-        throw new Error(
-          `Generic messages are not supported by Google Vertex AI.`
-        );
       default:
-        throw new Error(`Unknown message type: ${baseMessageType}`);
+        throw new Error(
+          `Unknown / unsupported message type: ${baseMessageType}`
+        );
     }
   }
 
-  static fromChatMessage(message: BaseChatMessage) {
+  static fromChatMessage(message: BaseChatMessage, model: string) {
     return new GoogleVertexAIChatMessage({
       author: GoogleVertexAIChatMessage.mapMessageTypeToVertexChatAuthor(
-        message._getType()
+        message._getType(),
+        model
       ),
       content: message.text,
     });
@@ -215,12 +219,18 @@ export class ChatGoogleVertexAI
           `Google Vertex AI requires AI and human messages to alternate.`
         );
       }
-      return GoogleVertexAIChatMessage.fromChatMessage(baseMessage);
+      return GoogleVertexAIChatMessage.fromChatMessage(baseMessage, this.model);
     });
 
     const examples = this.examples.map((example) => ({
-      input: GoogleVertexAIChatMessage.fromChatMessage(example.input),
-      output: GoogleVertexAIChatMessage.fromChatMessage(example.output),
+      input: GoogleVertexAIChatMessage.fromChatMessage(
+        example.input,
+        this.model
+      ),
+      output: GoogleVertexAIChatMessage.fromChatMessage(
+        example.output,
+        this.model
+      ),
     }));
 
     const instance: GoogleVertexAIChatInstance = {

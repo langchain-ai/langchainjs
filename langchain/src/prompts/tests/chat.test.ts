@@ -60,11 +60,6 @@ test("Test format", async () => {
   ]);
 });
 
-test("Test serialize", async () => {
-  const chatPrompt = createChatPromptTemplate();
-  expect(chatPrompt.serialize()).toMatchSnapshot();
-});
-
 test("Test format with invalid input values", async () => {
   const chatPrompt = createChatPromptTemplate();
   await expect(
@@ -223,6 +218,6 @@ test("Test using partial", async () => {
   expect(partialPrompt.inputVariables).toEqual(["bar"]);
 
   expect(await partialPrompt.format({ bar: "baz" })).toMatchInlineSnapshot(
-    `"[{"type":"human","data":{"content":"foobaz"}}]"`
+    `"[{"type":"human","data":{"content":"foobaz","additional_kwargs":{}}}]"`
   );
 });

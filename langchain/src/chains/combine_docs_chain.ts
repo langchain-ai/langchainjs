@@ -37,7 +37,9 @@ export class StuffDocumentsChain
   documentVariableName = "context";
 
   get inputKeys() {
-    return [this.inputKey, ...this.llmChain.inputKeys];
+    return [this.inputKey, ...this.llmChain.inputKeys].filter(
+      (key) => key !== this.documentVariableName
+    );
   }
 
   get outputKeys() {
@@ -53,22 +55,27 @@ export class StuffDocumentsChain
   }
 
   /** @ignore */
-  async _call(
-    values: ChainValues,
-    runManager?: CallbackManagerForChainRun
-  ): Promise<ChainValues> {
+  _prepInputs(values: ChainValues): ChainValues {
     if (!(this.inputKey in values)) {
       throw new Error(`Document key ${this.inputKey} not found.`);
     }
     const { [this.inputKey]: docs, ...rest } = values;
     const texts = (docs as Document[]).map(({ pageContent }) => pageContent);
     const text = texts.join("\n\n");
+    return {
+      ...rest,
+      [this.documentVariableName]: text,
+    };
+  }
+
+  /** @ignore */
+  async _call(
+    values: ChainValues,
+    runManager?: CallbackManagerForChainRun
+  ): Promise<ChainValues> {
     const result = await this.llmChain.call(
-      {
-        ...rest,
-        [this.documentVariableName]: text,
-      },
-      runManager?.getChild()
+      this._prepInputs(values),
+      runManager?.getChild("combine_documents")
     );
     return result;
   }
@@ -103,7 +110,7 @@ export interface MapReduceDocumentsChainInput extends StuffDocumentsChainInput {
   /** Ensures that the map step is taken regardless of max tokens */
   ensureMapStep?: boolean;
   /** Chain to use to combine results of applying llm_chain to documents. */
-  combineDocumentChain: BaseChain;
+  combineDocumentChain: StuffDocumentsChain;
   /** Return the results of the map steps in the output. */
   returnIntermediateSteps?: boolean;
 }
@@ -139,7 +146,7 @@ export class MapReduceDocumentsChain
 
   ensureMapStep = false;
 
-  combineDocumentChain: BaseChain;
+  combineDocumentChain: StuffDocumentsChain;
 
   constructor(fields: MapReduceDocumentsChainInput) {
     super(fields);
@@ -174,48 +181,61 @@ export class MapReduceDocumentsChain
         ...rest,
       }));
 
-      // Calculate the total tokens required in the input
-      const promises = inputs.map(async (i) => {
-        const prompt = await this.llmChain.prompt.format(i);
-        return this.llmChain.llm.getNumTokens(prompt);
-      });
-
-      const length = await Promise.all(promises).then((results) =>
-        results.reduce((a, b) => a + b, 0)
-      );
-
       const canSkipMapStep = i !== 0 || !this.ensureMapStep;
-      const withinTokenLimit = length < this.maxTokens;
-      // If we can skip the map step, and we're within the token limit, we don't
-      // need to run the map step, so just break out of the loop.
-      if (canSkipMapStep && withinTokenLimit) {
-        break;
+      if (canSkipMapStep) {
+        // Calculate the total tokens required in the input
+        const formatted =
+          await this.combineDocumentChain.llmChain.prompt.format(
+            this.combineDocumentChain._prepInputs({
+              [this.combineDocumentChain.inputKey]: currentDocs,
+              ...rest,
+            })
+          );
+        const length =
+          await this.combineDocumentChain.llmChain.llm.getNumTokens(formatted);
+
+        const withinTokenLimit = length < this.maxTokens;
+        // If we can skip the map step, and we're within the token limit, we don't
+        // need to run the map step, so just break out of the loop.
+        if (withinTokenLimit) {
+          break;
+        }
       }
 
       const results = await this.llmChain.apply(
         inputs,
-        runManager ? [runManager.getChild()] : undefined
+        // If we have a runManager, then we need to create a child for each input
+        // so that we can track the progress of each input.
+        runManager
+          ? Array.from({ length: inputs.length }, (_, i) =>
+              runManager.getChild(`map_${i + 1}`)
+            )
+          : undefined
       );
       const { outputKey } = this.llmChain;
 
       // If the flag is set, then concat that to the intermediate steps
       if (this.returnIntermediateSteps) {
         intermediateSteps = intermediateSteps.concat(
-          results.map((r: ChainValues) => r[outputKey])
+          results.map((r) => r[outputKey])
         );
       }
 
-      currentDocs = results.map((r: ChainValues) => ({
+      currentDocs = results.map((r) => ({
         pageContent: r[outputKey],
+        metadata: {},
       }));
     }
 
     // Now, with the final result of all the inputs from the `llmChain`, we can
     // run the `combineDocumentChain` over them.
-    const newInputs = { input_documents: currentDocs, ...rest };
+    const newInputs = {
+      [this.combineDocumentChain.inputKey]: currentDocs,
+      ...rest,
+    };
     const result = await this.combineDocumentChain.call(
       newInputs,
-      runManager?.getChild()
+      runManager?.getChild("combine_documents")
     );
 
     // Return the intermediate steps results if the flag is set
@@ -240,7 +260,7 @@ export class MapReduceDocumentsChain
 
     return new MapReduceDocumentsChain({
       llmChain: await LLMChain.deserialize(data.llm_chain),
-      combineDocumentChain: await BaseChain.deserialize(
+      combineDocumentChain: await StuffDocumentsChain.deserialize(
         data.combine_document_chain
       ),
     });
@@ -294,7 +314,16 @@ export class RefineDocumentsChain
   documentPrompt = this.defaultDocumentPrompt;
 
   get inputKeys() {
-    return [this.inputKey, ...this.refineLLMChain.inputKeys];
+    return [
+      ...new Set([
+        this.inputKey,
+        ...this.llmChain.inputKeys,
+        ...this.refineLLMChain.inputKeys,
+      ]),
+    ].filter(
+      (key) =>
+        key !== this.documentVariableName && key !== this.initialResponseName
+    );
   }
 
   get outputKeys() {
@@ -371,7 +400,7 @@ export class RefineDocumentsChain
     );
     let res = await this.llmChain.predict(
       { ...initialInputs },
-      runManager?.getChild()
+      runManager?.getChild("answer")
     );
 
     const refineSteps = [res];
@@ -384,7 +413,7 @@ export class RefineDocumentsChain
       const inputs = { ...refineInputs, ...rest };
       res = await this.refineLLMChain.predict(
         { ...inputs },
-        runManager?.getChild()
+        runManager?.getChild("refine")
       );
       refineSteps.push(res);
     }
