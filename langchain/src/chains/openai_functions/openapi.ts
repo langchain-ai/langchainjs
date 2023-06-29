@@ -306,14 +306,20 @@ function convertOpenAPISpecToOpenAIFunctions(spec: OpenAPISpec): {
   };
 }
 
+type SimpleRequestChainExecutionMethod = (
+  name: string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  requestArgs: Record<string, any>
+) => Promise<Response>;
+
 class SimpleRequestChain extends BaseChain {
-  private requestMethod: OpenAPIExecutionMethod;
+  private requestMethod: SimpleRequestChainExecutionMethod;
 
   inputKey = "function";
 
   outputKey = "response";
 
-  constructor(config: { requestMethod: OpenAPIExecutionMethod }) {
+  constructor(config: { requestMethod: SimpleRequestChainExecutionMethod }) {
     super();
     this.requestMethod = config.requestMethod;
   }

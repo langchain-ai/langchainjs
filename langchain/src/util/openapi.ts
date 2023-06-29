@@ -1,4 +1,4 @@
-import * as yaml from "yaml";
+import * as yaml from "js-yaml";
 import { OpenAPIV3, OpenAPIV3_1 } from "openapi-types";
 import Document = OpenAPIV3_1.Document;
 import ReferenceObject = OpenAPIV3_1.ReferenceObject;
@@ -212,7 +212,7 @@ export class OpenAPISpec {
     try {
       document = JSON.parse(rawString);
     } catch (e) {
-      document = yaml.parse(rawString);
+      document = yaml.load(rawString);
     }
     return OpenAPISpec.fromObject(document);
   }
