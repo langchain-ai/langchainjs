@@ -45,7 +45,7 @@ export class OpenAPISpec {
   getPathStrict(path: string) {
     const pathItem = this.getPathsStrict()[path];
     if (pathItem === undefined) {
-      throw new Error(`No path found for "${path}".`) ;
+      throw new Error(`No path found for "${path}".`);
     }
     return pathItem;
   }
@@ -105,7 +105,9 @@ export class OpenAPISpec {
   getRootReferencedRequestBody(ref: ReferenceObject) {
     let requestBody = this.getReferencedRequestBody(ref);
     while ((requestBody as ReferenceObject).$ref !== undefined) {
-      requestBody = this.getReferencedRequestBody(requestBody as ReferenceObject);
+      requestBody = this.getReferencedRequestBody(
+        requestBody as ReferenceObject
+      );
     }
     return requestBody as RequestBodyObject;
   }
@@ -113,9 +115,9 @@ export class OpenAPISpec {
   getMethodsForPath(path: string) {
     const pathItem = this.getPathStrict(path);
     const possibleMethods = Object.values(OpenAPIV3.HttpMethods);
-    return possibleMethods.filter((possibleMethod) => {
-      return pathItem[possibleMethod] !== undefined;
-    });
+    return possibleMethods.filter(
+      (possibleMethod) => pathItem[possibleMethod] !== undefined
+    );
   }
 
   getParametersForPath(path: string) {
@@ -152,35 +154,54 @@ export class OpenAPISpec {
   }
 
   getRequestBodyForOperation(operation: OperationObject): RequestBodyObject {
-    const requestBody = operation.requestBody;
+    const { requestBody } = operation;
     if ((requestBody as ReferenceObject)?.$ref !== undefined) {
       return this.getRootReferencedRequestBody(requestBody as ReferenceObject);
     }
     return requestBody as RequestBodyObject;
   }
 
-  static getCleanedOperationId(operation: OperationObject, path: string, method: OpenAPIV3_1.HttpMethods) {
-    let operationId = operation.operationId;
+  static getCleanedOperationId(
+    operation: OperationObject,
+    path: string,
+    method: OpenAPIV3_1.HttpMethods
+  ) {
+    let { operationId } = operation;
     if (operationId === undefined) {
       const updatedPath = path.replace(/[^a-zA-Z0-9]/, "_");
-      operationId = `${updatedPath.startsWith("/") ? updatedPath.slice(1) : updatedPath}_${method}`;
+      operationId = `${
+        updatedPath.startsWith("/") ? updatedPath.slice(1) : updatedPath
+      }_${method}`;
     }
     return operationId.replace("-", "_").replace(".", "_").replace("/", "_");
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static alertUnsupportedSpec(document: Record<string, any>) {
-    const warningMessage = "This may result in degraded performance. Convert your OpenAPI spec to 3.1.0 for better support.";
+    const warningMessage =
+      "This may result in degraded performance. Convert your OpenAPI spec to 3.1.0 for better support.";
     const swaggerVersion = document.swagger;
     const openAPIVersion = document.openapi;
     if (openAPIVersion !== undefined && openAPIVersion !== "3.1.0") {
-      console.warn(`Attempting to load an OpenAPI ${openAPIVersion} spec. ${warningMessage}`)
+      console.warn(
+        `Attempting to load an OpenAPI ${openAPIVersion} spec. ${warningMessage}`
+      );
     } else if (swaggerVersion !== undefined) {
-      console.warn(`Attempting to load a Swagger ${swaggerVersion} spec. ${warningMessage}`);
+      console.warn(
+        `Attempting to load a Swagger ${swaggerVersion} spec. ${warningMessage}`
+      );
     } else {
-      throw new Error(`Attempting to load an unsupported spec:\n\n${JSON.stringify(document, null, 2)}.`);
+      throw new Error(
+        `Attempting to load an unsupported spec:\n\n${JSON.stringify(
+          document,
+          null,
+          2
+        )}.`
+      );
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static fromObject(document: Record<string, any>) {
     OpenAPISpec.alertUnsupportedSpec(document);
     return new OpenAPISpec(document as Document);
