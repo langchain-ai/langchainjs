@@ -18,6 +18,7 @@ const entrypoints = {
   // tools
   tools: "tools/index",
   "tools/aws_lambda": "tools/aws_lambda",
+  "tools/aws_sfn": "tools/aws_sfn",
   "tools/calculator": "tools/calculator",
   "tools/webbrowser": "tools/webbrowser",
   // chains
@@ -184,6 +185,7 @@ const deprecatedNodeOnly = [
 const requiresOptionalDependency = [
   "agents/load",
   "tools/aws_lambda",
+  "tools/aws_sfn",
   "tools/calculator",
   "tools/webbrowser",
   "chains/load",
