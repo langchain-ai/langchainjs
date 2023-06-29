@@ -137,15 +137,15 @@ const config = {
           ...baseLightCodeBlockTheme,
           plain: {
             ...baseLightCodeBlockTheme.plain,
-            backgroundColor: "#F5F5F5"
-          }
+            backgroundColor: "#F5F5F5",
+          },
         },
         darkTheme: {
           ...baseDarkCodeBlockTheme,
           plain: {
             ...baseDarkCodeBlockTheme.plain,
             backgroundColor: "#222222",
-          }
+          },
         },
       },
       image: "img/parrot-chainlink-icon.png",
