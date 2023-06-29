@@ -14,7 +14,7 @@ export const run = async () => {
   const db = await connect(uri);
   const table = await db.openTable("vectors");
 
-  const vectorStore = await new LanceDB(new OpenAIEmbeddings(), { table });
+  const vectorStore = new LanceDB(new OpenAIEmbeddings(), { table });
 
   const resultOne = await vectorStore.similaritySearch("hello world", 1);
   console.log(resultOne);
