@@ -1,28 +1,31 @@
 import { test, jest, expect } from "@jest/globals";
-import SfnClient from "@aws-sdk/client-sfn";
+import SFNClient from "@aws-sdk/client-sfn";
 
-import { StartExecutionAWSSfnTool } from "../../tools/aws_lambda.js";
+import { StartExecutionAWSSfnTool } from "../../tools/aws_sfn.js";
 
 jest.mock("@aws-sdk/client-sfn", () => ({
-  SfnClient: jest.fn().mockImplementation(() => ({
+  SFNClient: jest.fn().mockImplementation(() => ({
     send: jest.fn().mockImplementation(() =>
       Promise.resolve({
-        Payload: JSON.stringify({ email: "john@example.com" }),
+        executionArn: "<executionArn>",
       })
     ),
   })),
-  InvokeCommand: jest.fn().mockImplementation(() => ({})),
+  StartExecutionCommand: jest.fn().mockImplementation(() => ({})),
 }));
 
-test("StartExecutionAWSSfnTool invokes the correct state machine function and returns the response.body contents", async () => {
-  if (!SfnClient) {
+test("StartExecutionAWSSfnTool invokes the correct state machine and returns the executionArn", async () => {
+  if (!SFNClient) {
     // this is to avoid a linting error. SfnClient is mocked above.
   }
 
   const sfn = new StartExecutionAWSSfnTool({
     name: "client-intake-workflow",
-    description:
-      "Handles onboarding a new client by starting the intake process after collecting their email address.",
+    description: `Handles onboarding a new client by starting the intake process after collecting client's basic information like name and email address.
+      Make sure that the stateMachineArn is valid and correpsonds to the state machine you want to invoke.
+      
+      Example input: '{"name": "John Doe", "email":"jonh@example.com"}'
+      The "name" key is optional.`,
     region: "us-east-1",
     accessKeyId: "abc123",
     secretAccessKey: "xyz456/1T+PzUZ2fd",
@@ -31,5 +34,5 @@ test("StartExecutionAWSSfnTool invokes the correct state machine function and re
 
   const result = await sfn.call('{"email":"jonh@example.com"}');
 
-  expect(result).toBeInstanceOf(String);
+  expect(result).toBe("<executionArn>");
 });
