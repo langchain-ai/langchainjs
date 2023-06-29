@@ -112,17 +112,23 @@ test("OpenAPI chain with a provided full spec", async () => {
 });
 
 test("OpenAPI chain with yml spec from a URL", async () => {
-  const chain = await createOpenAPIChain("https://gist.githubusercontent.com/roaldnefs/053e505b2b7a807290908fe9aa3e1f00/raw/0a212622ebfef501163f91e23803552411ed00e4/openapi.yaml", {
-    llm: new ChatOpenAI({ modelName: "gpt-4-0613", temperature: 0 })
-  });
+  const chain = await createOpenAPIChain(
+    "https://gist.githubusercontent.com/roaldnefs/053e505b2b7a807290908fe9aa3e1f00/raw/0a212622ebfef501163f91e23803552411ed00e4/openapi.yaml",
+    {
+      llm: new ChatOpenAI({ modelName: "gpt-4-0613", temperature: 0 }),
+    }
+  );
   const result = await chain.run(`What's today's comic?`);
   console.log(result);
 });
 
 test("OpenAPI chain with yml spec from a URL with a path parameter", async () => {
-  const chain = await createOpenAPIChain("https://gist.githubusercontent.com/roaldnefs/053e505b2b7a807290908fe9aa3e1f00/raw/0a212622ebfef501163f91e23803552411ed00e4/openapi.yaml", {
-    llm: new ChatOpenAI({ modelName: "gpt-4-0613", temperature: 0 })
-  });
+  const chain = await createOpenAPIChain(
+    "https://gist.githubusercontent.com/roaldnefs/053e505b2b7a807290908fe9aa3e1f00/raw/0a212622ebfef501163f91e23803552411ed00e4/openapi.yaml",
+    {
+      llm: new ChatOpenAI({ modelName: "gpt-4-0613", temperature: 0 }),
+    }
+  );
   const result = await chain.run(`What comic has id 2184?`);
   console.log(result);
 });
