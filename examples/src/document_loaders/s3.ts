@@ -5,8 +5,10 @@ const loader = new S3Loader({
   key: "AccountingOverview.pdf",
   s3Config: {
     region: "us-east-1",
-    accessKeyId: "AKIAIOSFODNN7EXAMPLE",
-    secretAccessKey: "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
+    credentials: {
+      accessKeyId: "AKIAIOSFODNN7EXAMPLE",
+      secretAccessKey: "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
+    },
   },
   unstructuredAPIURL: "http://localhost:8000/general/v0/general",
 });
