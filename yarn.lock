@@ -5311,13 +5311,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@getzep/zep-js@npm:0.3.1, @getzep/zep-js@npm:^0.3.1":
-  version: 0.3.1
-  resolution: "@getzep/zep-js@npm:0.3.1"
+"@getzep/zep-js@npm:0.4.1, @getzep/zep-js@npm:^0.4.1":
+  version: 0.4.1
+  resolution: "@getzep/zep-js@npm:0.4.1"
   dependencies:
     axios: ^1.4.0
     typescript: ^5.0.4
-  checksum: 796df18baf3458d5e3887de9519b7d943e38d46f9f57b3515fa7fc5f8731271816b10d8868af6ef8e927345c409c5c865d8953781b88dd6889c159d6bfff9e48
+  checksum: 17296ddcff196ff2b8d9386775d14cdb104cebef07eabf0d6efc26d1d4824350eb902918a453fcfb6f4527f31d7312a157e9a09d1a8c151434701c2f5182d772
   languageName: node
   linkType: hard
 
@@ -14372,7 +14372,7 @@ __metadata:
   dependencies:
     "@clickhouse/client": ^0.0.14
     "@getmetal/metal-sdk": ^4.0.0
-    "@getzep/zep-js": 0.3.1
+    "@getzep/zep-js": 0.4.1
     "@gomomento/sdk": ^1.23.0
     "@opensearch-project/opensearch": ^2.2.0
     "@pinecone-database/pinecone": ^0.0.14
@@ -18753,7 +18753,7 @@ __metadata:
     "@clickhouse/client": ^0.0.14
     "@faker-js/faker": ^7.6.0
     "@getmetal/metal-sdk": ^4.0.0
-    "@getzep/zep-js": ^0.3.1
+    "@getzep/zep-js": ^0.4.1
     "@gomomento/sdk": ^1.23.0
     "@google-cloud/storage": ^6.10.1
     "@huggingface/inference": ^1.5.1
@@ -18856,7 +18856,7 @@ __metadata:
     "@aws-sdk/client-sagemaker-runtime": ^3.310.0
     "@clickhouse/client": ^0.0.14
     "@getmetal/metal-sdk": "*"
-    "@getzep/zep-js": ^0.3.1
+    "@getzep/zep-js": ^0.4.1
     "@gomomento/sdk": ^1.23.0
     "@google-cloud/storage": ^6.10.1
     "@huggingface/inference": ^1.5.1
