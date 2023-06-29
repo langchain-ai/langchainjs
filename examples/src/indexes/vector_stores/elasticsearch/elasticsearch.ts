@@ -1,4 +1,4 @@
-import { Client } from "@elastic/elasticsearch";
+import { Client, ClientOptions } from "@elastic/elasticsearch";
 import { Document } from "langchain/document";
 import { OpenAI } from "langchain/llms/openai";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
@@ -8,9 +8,9 @@ import {
 } from "langchain/vectorstores/elasticsearch";
 import { VectorDBQAChain } from "langchain/chains";
 
-// to run this first run chroma's docker-container with `docker-compose up -d --build`
+// to run this first run Elastic's docker-container with `docker-compose up -d --build`
 export async function run() {
-  const config: any = {
+  const config: ClientOptions = {
     node: process.env.ELASTIC_URL ?? "http://127.0.0.1:9200",
   };
   if (process.env.ELASTIC_API_KEY) {
@@ -80,7 +80,7 @@ export async function run() {
   const response = await chain.call({ query: "What is Elasticsearch?" });
 
   console.log(JSON.stringify(response, null, 2));
-  /* 
+  /*
     {
       "text": " Elasticsearch is a distributed, RESTful search engine optimized for speed and relevance on production-scale workloads.",
       "sourceDocuments": [

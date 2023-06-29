@@ -19,7 +19,7 @@ Langchain.js accepts [@elastic/elasticsearch](https://github.com/elastic/elastic
 npm install -S @elastic/elasticsearch
 ```
 
-You'll also need to have an Elasticsearch instance running. You can use the [official Docker image](https://www.elastic.co/guide/en/elasticsearch/reference/current/docker.html) to get started. You can also use [Elastic Cloud](https://www.elastic.co/cloud/) the official cloud service provided by Elastic.
+You'll also need to have an Elasticsearch instance running. You can use the [official Docker image](https://www.elastic.co/guide/en/elasticsearch/reference/current/docker.html) to get started, or you can use [Elastic Cloud](https://www.elastic.co/cloud/) the official cloud service provided by Elastic.
 
 For connecting to Elastic Cloud you can read the documentation reported [here](https://www.elastic.co/guide/en/kibana/current/api-keys.html) for obtaining an API key.
 
@@ -29,6 +29,7 @@ Here we reported an example that index 4 documents in Elasticsearch as vector st
 runs a vector search query and use an LLM to answer a question in natural language
 using the vector store as knowledge.
 
+import CodeBlock from "@theme/CodeBlock";
 import FromDocs from "@examples/indexes/vector_stores/elasticsearch/elasticsearch.ts";
 
 <CodeBlock language="typescript">{FromDocs}</CodeBlock>

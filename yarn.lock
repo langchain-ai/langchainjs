@@ -14395,6 +14395,7 @@ __metadata:
   resolution: "examples@workspace:examples"
   dependencies:
     "@clickhouse/client": ^0.0.14
+    "@elastic/elasticsearch": ^8.4.0
     "@getmetal/metal-sdk": ^4.0.0
     "@getzep/zep-js": 0.3.1
     "@gomomento/sdk": ^1.23.0
