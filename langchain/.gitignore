@@ -121,6 +121,9 @@ vectorstores/faiss.d.ts
 vectorstores/weaviate.cjs
 vectorstores/weaviate.js
 vectorstores/weaviate.d.ts
+vectorstores/lancedb.cjs
+vectorstores/lancedb.js
+vectorstores/lancedb.d.ts
 vectorstores/mongo.cjs
 vectorstores/mongo.js
 vectorstores/mongo.d.ts
@@ -163,6 +166,9 @@ vectorstores/singlestore.d.ts
 vectorstores/tigris.cjs
 vectorstores/tigris.js
 vectorstores/tigris.d.ts
+vectorstores/vectara.cjs
+vectorstores/vectara.js
+vectorstores/vectara.d.ts
 text_splitter.cjs
 text_splitter.js
 text_splitter.d.ts
@@ -214,6 +220,9 @@ document_loaders/web/github.d.ts
 document_loaders/web/notiondb.cjs
 document_loaders/web/notiondb.js
 document_loaders/web/notiondb.d.ts
+document_loaders/web/notionapi.cjs
+document_loaders/web/notionapi.js
+document_loaders/web/notionapi.d.ts
 document_loaders/web/s3.cjs
 document_loaders/web/s3.js
 document_loaders/web/s3.d.ts
@@ -352,6 +361,9 @@ cache/momento.d.ts
 cache/redis.cjs
 cache/redis.js
 cache/redis.d.ts
+cache/upstash_redis.cjs
+cache/upstash_redis.js
+cache/upstash_redis.d.ts
 stores/doc/in_memory.cjs
 stores/doc/in_memory.js
 stores/doc/in_memory.d.ts
