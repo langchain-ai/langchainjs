@@ -95,9 +95,10 @@ export class S3Loader extends BaseDocumentLoader {
       this._fs.mkdirSync(path.dirname(filePath), { recursive: true });
 
       this._fs.writeFileSync(filePath, objectData);
-    } catch {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (e: any) {
       throw new Error(
-        `Failed to download file ${this.key} from S3 bucket ${this.bucket}.`
+        `Failed to download file ${this.key} from S3 bucket ${this.bucket}: ${e.message}`
       );
     }
 
