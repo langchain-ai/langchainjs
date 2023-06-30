@@ -1,5 +1,8 @@
 import { OpenAI } from "langchain/llms/openai";
-import { createAWSSfnAgent, AWSSfnToolkit } from "langchain/agents";
+import {
+  createAWSSfnAgent,
+  AWSSfnToolkit,
+} from "langchain/agents/agent_toolkits/aws_sfn";
 
 const EXAMPLE_STATE_MACHINE_ASL = `
 {
@@ -15,7 +18,9 @@ const EXAMPLE_STATE_MACHINE_ASL = `
 }
 `;
 
-/** This example uses a deployed AWS Step Function state machine with the above Amazon State Language (ASL) definition. You can test by provisioning a state machine using the above ASL within your AWS environment, or you can use a tool like LocalStack
+/**
+ * This example uses a deployed AWS Step Function state machine with the above Amazon State Language (ASL) definition.
+ * You can test by provisioning a state machine using the above ASL within your AWS environment, or you can use a tool like LocalStack
  * to mock AWS services locally. See https://localstack.cloud/ for more information.
  */
 export const run = async () => {
@@ -23,8 +28,10 @@ export const run = async () => {
   const toolkit = new AWSSfnToolkit({
     region: "us-east-1",
     name: "onboard-new-client-workflow",
-    description: "Onboard new client workflow. Can also be used to get status of any excuting workflow or state machine.",
-    stateMachineArn: "arn:aws:states:us-east-1:1234567890:stateMachine:my-state-machine", // Update with your state machine ARN accordingly
+    description:
+      "Onboard new client workflow. Can also be used to get status of any excuting workflow or state machine.",
+    stateMachineArn:
+      "arn:aws:states:us-east-1:1234567890:stateMachine:my-state-machine", // Update with your state machine ARN accordingly
     asl: EXAMPLE_STATE_MACHINE_ASL,
   });
   const executor = createAWSSfnAgent(model, toolkit);

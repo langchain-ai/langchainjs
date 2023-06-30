@@ -22,6 +22,9 @@
     "agents/load.cjs",
     "agents/load.js",
     "agents/load.d.ts",
+    "agents/agent_toolkits/aws_sfn.cjs",
+    "agents/agent_toolkits/aws_sfn.js",
+    "agents/agent_toolkits/aws_sfn.d.ts",
     "base_language.cjs",
     "base_language.js",
     "base_language.d.ts",
@@ -784,6 +787,11 @@
       "types": "./agents/load.d.ts",
       "import": "./agents/load.js",
       "require": "./agents/load.cjs"
+    },
+    "./agents/agent_toolkits/aws_sfn": {
+      "types": "./agents/agent_toolkits/aws_sfn.d.ts",
+      "import": "./agents/agent_toolkits/aws_sfn.js",
+      "require": "./agents/agent_toolkits/aws_sfn.cjs"
     },
     "./base_language": {
       "types": "./base_language.d.ts",

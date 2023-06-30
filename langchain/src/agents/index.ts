@@ -7,7 +7,6 @@ export {
   OutputParserArgs,
 } from "./agent.js";
 export {
-  AWSSfnToolkit,
   JsonToolkit,
   OpenApiToolkit,
   RequestsToolkit,
@@ -16,7 +15,6 @@ export {
   VectorStoreRouterToolkit,
   VectorStoreToolkit,
   ZapierToolKit,
-  createAWSSfnAgent,
   createJsonAgent,
   createOpenApiAgent,
   createSqlAgent,

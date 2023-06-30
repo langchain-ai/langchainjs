@@ -36,6 +36,7 @@
       "src/load/serializable.ts",
       "src/agents/index.ts",
       "src/agents/load.ts",
+      "src/agents/agent_toolkits/aws_sfn.ts",
       "src/base_language/index.ts",
       "src/tools/index.ts",
       "src/tools/aws_lambda.ts",

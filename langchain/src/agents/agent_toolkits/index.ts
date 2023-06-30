@@ -13,4 +13,3 @@ export {
   createVectorStoreRouterAgent,
 } from "./vectorstore/vectorstore.js";
 export { ZapierToolKit } from "./zapier/zapier.js";
-export { AWSSfnToolkit, createAWSSfnAgent } from "./aws_sfn/aws_sfn.js";

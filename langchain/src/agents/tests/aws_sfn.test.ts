@@ -29,7 +29,8 @@ test("StartExecutionAWSSfnTool invokes the correct state machine and returns the
     region: "us-east-1",
     accessKeyId: "abc123",
     secretAccessKey: "xyz456/1T+PzUZ2fd",
-    stateMachineArn: "arn:aws:states:us-east-1:123456789012:stateMachine:client-intake-workflow",
+    stateMachineArn:
+      "arn:aws:states:us-east-1:123456789012:stateMachine:client-intake-workflow",
   });
 
   const result = await sfn.call('{"email":"jonh@example.com"}');

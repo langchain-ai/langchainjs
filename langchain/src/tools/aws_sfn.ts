@@ -1,5 +1,11 @@
-import { Tool } from "./base.js";
-import { DynamicTool, DynamicToolInput } from "./dynamic.js";
+import {
+  SFNClient as Client,
+  StartExecutionCommand as Invoker,
+  DescribeExecutionCommand as Describer,
+  SendTaskSuccessCommand as TaskSuccessSender,
+} from "@aws-sdk/client-sfn";
+
+import { Tool, ToolParams } from "./base.js";
 
 export interface SfnConfig {
   stateMachineArn: string;
@@ -16,9 +22,28 @@ interface SfnClientConstructorArgs {
   };
 }
 
-// Abstract away lc_namespace and lc_secrets into a base class
-// that can be extended by all tools that need it.
-abstract class AWSSfnToolConfig extends DynamicTool {
+export class StartExecutionAWSSfnTool extends Tool {
+  private sfnConfig: SfnConfig;
+
+  public name: string;
+
+  public description: string;
+
+  constructor({
+    name,
+    description,
+    ...rest
+  }: SfnConfig & { name: string; description: string }) {
+    super();
+    this.name = name;
+    this.description = description;
+    this.sfnConfig = rest;
+  }
+
+  static formatDescription(name: string, description: string): string {
+    return `Use to start executing the ${name} state machine. Use to run ${name} workflows. Whenever you need to start (or execute) an asynchronous workflow (or state machine) about ${description} you should ALWAYS use this. Input should be a valid JSON string.`;
+  }
+
   get lc_namespace(): string[] {
     return [...super.lc_namespace, "aws_sfn"];
   }
@@ -29,32 +54,9 @@ abstract class AWSSfnToolConfig extends DynamicTool {
       secretAccessKey: "AWS_SECRET_ACCESS_KEY",
     };
   }
-}
-
-export class StartExecutionAWSSfnTool extends AWSSfnToolConfig {
-  private sfnConfig: SfnConfig;
-
-  constructor({
-    name,
-    description,
-    ...rest
-  }: SfnConfig & Omit<DynamicToolInput, "func">) {
-    super({
-      name,
-      description,
-      func: async (input: string) => this._func(input),
-    });
-
-    this.sfnConfig = rest;
-  }
-
-  static getDescription(name: string, description: string): string {
-    return `Use to start executing the ${name} state machine. Use to run ${name} workflows. Whenever you need to start (or execute) an asynchronous workflow (or state machine) about ${description} you should ALWAYS use this. Input should be a valid JSON string.`;
-  }
 
   /** @ignore */
-  async _func(input: string): Promise<string> {
-    const { Client, Invoker } = await SfnImports();
+  async _call(input: string): Promise<string> {
     const clientConstructorArgs: SfnClientConstructorArgs =
       getClientConstructorArgs(this.sfnConfig);
     const sfnClient = new Client(clientConstructorArgs);
@@ -91,16 +93,18 @@ export class StartExecutionAWSSfnTool extends AWSSfnToolConfig {
 export class DescribeExecutionAWSSfnTool extends Tool {
   name = "describe-execution-aws-sfn";
 
+  description =
+    "This tool should ALWAYS be used for checking the status of any AWS Step Function execution (aka. state machine execution). Input to this tool is a properly formatted AWS Step Function Execution ARN (executionArn). The output is a stringified JSON object containing the executionArn, name, status, startDate, stopDate, input, output, error, and cause of the execution.";
+
   sfnConfig: Omit<SfnConfig, "stateMachineArn">;
 
-  constructor(config: Omit<SfnConfig, "stateMachineArn">) {
-    super(...arguments);
+  constructor(config: Omit<SfnConfig, "stateMachineArn"> & ToolParams) {
+    super(config);
     this.sfnConfig = config;
   }
 
   /** @ignore */
   async _call(input: string) {
-    const { Client, Describer } = await SfnImports();
     const clientConstructorArgs: SfnClientConstructorArgs =
       getClientConstructorArgs(this.sfnConfig);
     const sfnClient = new Client(clientConstructorArgs);
@@ -130,24 +134,23 @@ export class DescribeExecutionAWSSfnTool extends Tool {
         return "failed to complete request";
       });
   }
-
-  description =
-    "This tool should ALWAYS be used for checking the status of any AWS Step Function execution (aka. statemachine exeuction). Input to this tool is a properly formatted AWS Step Function Execution ARN (executionArn). The output is a stringify JSON object containing the executionArn, name, status, startDate, stopDate, input, output, error, and cause of the execution.";
 }
 
 export class SendTaskSuccessAWSSfnTool extends Tool {
   name = "send-task-success-aws-sfn";
 
+  description =
+    "This tool should ALWAYS be used for sending task success to an AWS Step Function execution (aka. statemachine exeuction). Input to this tool is a stringify JSON object containing the taskToken and output.";
+
   sfnConfig: Omit<SfnConfig, "stateMachineArn">;
 
-  constructor(config: Omit<SfnConfig, "stateMachineArn">) {
-    super(...arguments);
+  constructor(config: Omit<SfnConfig, "stateMachineArn"> & ToolParams) {
+    super(config);
     this.sfnConfig = config;
   }
 
   /** @ignore */
   async _call(input: string) {
-    const { Client, TaskSuccessSender } = await SfnImports();
     const clientConstructorArgs: SfnClientConstructorArgs =
       getClientConstructorArgs(this.sfnConfig);
     const sfnClient = new Client(clientConstructorArgs);
@@ -175,32 +178,6 @@ export class SendTaskSuccessAWSSfnTool extends Tool {
         );
         return "failed to complete request";
       });
-  }
-
-  description = "This tool should ALWAYS be used for sending task success to an AWS Step Function execution (aka. statemachine exeuction). Input to this tool is a stringify JSON object containing the taskToken and output.";
-}
-
-async function SfnImports() {
-  try {
-    const {
-      SFNClient,
-      StartExecutionCommand,
-      DescribeExecutionCommand,
-      SendTaskSuccessCommand,
-    } = await import("@aws-sdk/client-sfn");
-
-    return {
-      Client: SFNClient as typeof SFNClient,
-      Invoker: StartExecutionCommand as typeof StartExecutionCommand,
-      Describer: DescribeExecutionCommand as typeof DescribeExecutionCommand,
-      TaskSuccessSender:
-        SendTaskSuccessCommand as typeof SendTaskSuccessCommand,
-    };
-  } catch (e) {
-    console.error(e);
-    throw new Error(
-      "Failed to 'load @aws-sdk/client-sfn'. Please install it eg. `yarn add @aws-sdk/client-sfn`."
-    );
   }
 }
 

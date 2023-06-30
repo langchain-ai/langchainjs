@@ -13,6 +13,7 @@ const entrypoints = {
   // agents
   agents: "agents/index",
   "agents/load": "agents/load",
+  "agents/agent_toolkits/aws_sfn": "agents/agent_toolkits/aws_sfn",
   // base language
   base_language: "base_language/index",
   // tools
@@ -184,6 +185,7 @@ const deprecatedNodeOnly = [
 // Therefore they are not tested in the generated test-exports-* packages.
 const requiresOptionalDependency = [
   "agents/load",
+  "agents/agent_toolkits/aws_sfn",
   "tools/aws_lambda",
   "tools/aws_sfn",
   "tools/calculator",
