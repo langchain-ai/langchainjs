@@ -2,7 +2,9 @@
 
 export const optionalImportEntrypoints = [
   "langchain/agents/load",
+  "langchain/agents/agent_toolkits/aws_sfn",
   "langchain/tools/aws_lambda",
+  "langchain/tools/aws_sfn",
   "langchain/tools/calculator",
   "langchain/tools/webbrowser",
   "langchain/chains/load",
@@ -19,6 +21,7 @@ export const optionalImportEntrypoints = [
   "langchain/llms/googlevertexai",
   "langchain/llms/sagemaker_endpoint",
   "langchain/prompts/load",
+  "langchain/vectorstores/elasticsearch",
   "langchain/vectorstores/chroma",
   "langchain/vectorstores/hnswlib",
   "langchain/vectorstores/faiss",

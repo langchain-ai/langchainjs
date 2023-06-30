@@ -4,9 +4,15 @@ export interface OptionalImportMap {
   "langchain/agents/load"?:
     | typeof import("../agents/load.js")
     | Promise<typeof import("../agents/load.js")>;
+  "langchain/agents/agent_toolkits/aws_sfn"?:
+    | typeof import("../agents/agent_toolkits/aws_sfn.js")
+    | Promise<typeof import("../agents/agent_toolkits/aws_sfn.js")>;
   "langchain/tools/aws_lambda"?:
     | typeof import("../tools/aws_lambda.js")
     | Promise<typeof import("../tools/aws_lambda.js")>;
+  "langchain/tools/aws_sfn"?:
+    | typeof import("../tools/aws_sfn.js")
+    | Promise<typeof import("../tools/aws_sfn.js")>;
   "langchain/tools/calculator"?:
     | typeof import("../tools/calculator.js")
     | Promise<typeof import("../tools/calculator.js")>;
@@ -55,6 +61,9 @@ export interface OptionalImportMap {
   "langchain/prompts/load"?:
     | typeof import("../prompts/load.js")
     | Promise<typeof import("../prompts/load.js")>;
+  "langchain/vectorstores/elasticsearch"?:
+    | typeof import("../vectorstores/elasticsearch.js")
+    | Promise<typeof import("../vectorstores/elasticsearch.js")>;
   "langchain/vectorstores/chroma"?:
     | typeof import("../vectorstores/chroma.js")
     | Promise<typeof import("../vectorstores/chroma.js")>;

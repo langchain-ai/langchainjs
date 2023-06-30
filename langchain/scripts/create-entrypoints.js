@@ -13,11 +13,13 @@ const entrypoints = {
   // agents
   agents: "agents/index",
   "agents/load": "agents/load",
+  "agents/agent_toolkits/aws_sfn": "agents/agent_toolkits/aws_sfn",
   // base language
   base_language: "base_language/index",
   // tools
   tools: "tools/index",
   "tools/aws_lambda": "tools/aws_lambda",
+  "tools/aws_sfn": "tools/aws_sfn",
   "tools/calculator": "tools/calculator",
   "tools/webbrowser": "tools/webbrowser",
   // chains
@@ -52,6 +54,7 @@ const entrypoints = {
   // vectorstores
   vectorstores: "vectorstores/index",
   "vectorstores/base": "vectorstores/base",
+  "vectorstores/elasticsearch": "vectorstores/elasticsearch",
   "vectorstores/memory": "vectorstores/memory",
   "vectorstores/chroma": "vectorstores/chroma",
   "vectorstores/hnswlib": "vectorstores/hnswlib",
@@ -187,7 +190,9 @@ const deprecatedNodeOnly = [
 // Therefore they are not tested in the generated test-exports-* packages.
 const requiresOptionalDependency = [
   "agents/load",
+  "agents/agent_toolkits/aws_sfn",
   "tools/aws_lambda",
+  "tools/aws_sfn",
   "tools/calculator",
   "tools/webbrowser",
   "chains/load",
@@ -203,6 +208,7 @@ const requiresOptionalDependency = [
   "llms/sagemaker_endpoint",
   "prompts/load",
   "vectorstores/chroma",
+  "vectorstores/elasticsearch",
   "vectorstores/hnswlib",
   "vectorstores/faiss",
   "vectorstores/weaviate",

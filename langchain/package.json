@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.100",
+  "version": "0.0.101",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -22,6 +22,9 @@
     "agents/load.cjs",
     "agents/load.js",
     "agents/load.d.ts",
+    "agents/agent_toolkits/aws_sfn.cjs",
+    "agents/agent_toolkits/aws_sfn.js",
+    "agents/agent_toolkits/aws_sfn.d.ts",
     "base_language.cjs",
     "base_language.js",
     "base_language.d.ts",
@@ -31,6 +34,9 @@
     "tools/aws_lambda.cjs",
     "tools/aws_lambda.js",
     "tools/aws_lambda.d.ts",
+    "tools/aws_sfn.cjs",
+    "tools/aws_sfn.js",
+    "tools/aws_sfn.d.ts",
     "tools/calculator.cjs",
     "tools/calculator.js",
     "tools/calculator.d.ts",
@@ -118,6 +124,9 @@
     "vectorstores/base.cjs",
     "vectorstores/base.js",
     "vectorstores/base.d.ts",
+    "vectorstores/elasticsearch.cjs",
+    "vectorstores/elasticsearch.js",
+    "vectorstores/elasticsearch.d.ts",
     "vectorstores/memory.cjs",
     "vectorstores/memory.js",
     "vectorstores/memory.d.ts",
@@ -454,7 +463,9 @@
     "@aws-sdk/client-lambda": "^3.310.0",
     "@aws-sdk/client-s3": "^3.310.0",
     "@aws-sdk/client-sagemaker-runtime": "^3.310.0",
+    "@aws-sdk/client-sfn": "^3.362.0",
     "@clickhouse/client": "^0.0.14",
+    "@elastic/elasticsearch": "^8.4.0",
     "@faker-js/faker": "^7.6.0",
     "@getmetal/metal-sdk": "^4.0.0",
     "@getzep/zep-js": "^0.4.1",
@@ -539,7 +550,9 @@
     "@aws-sdk/client-lambda": "^3.310.0",
     "@aws-sdk/client-s3": "^3.310.0",
     "@aws-sdk/client-sagemaker-runtime": "^3.310.0",
+    "@aws-sdk/client-sfn": "^3.310.0",
     "@clickhouse/client": "^0.0.14",
+    "@elastic/elasticsearch": "^8.4.0",
     "@getmetal/metal-sdk": "*",
     "@getzep/zep-js": "^0.4.1",
     "@gomomento/sdk": "^1.23.0",
@@ -600,7 +613,13 @@
     "@aws-sdk/client-sagemaker-runtime": {
       "optional": true
     },
+    "@aws-sdk/client-sfn": {
+      "optional": true
+    },
     "@clickhouse/client": {
+      "optional": true
+    },
+    "@elastic/elasticsearch": {
       "optional": true
     },
     "@getmetal/metal-sdk": {
@@ -808,6 +827,11 @@
       "import": "./agents/load.js",
       "require": "./agents/load.cjs"
     },
+    "./agents/agent_toolkits/aws_sfn": {
+      "types": "./agents/agent_toolkits/aws_sfn.d.ts",
+      "import": "./agents/agent_toolkits/aws_sfn.js",
+      "require": "./agents/agent_toolkits/aws_sfn.cjs"
+    },
     "./base_language": {
       "types": "./base_language.d.ts",
       "import": "./base_language.js",
@@ -822,6 +846,11 @@
       "types": "./tools/aws_lambda.d.ts",
       "import": "./tools/aws_lambda.js",
       "require": "./tools/aws_lambda.cjs"
+    },
+    "./tools/aws_sfn": {
+      "types": "./tools/aws_sfn.d.ts",
+      "import": "./tools/aws_sfn.js",
+      "require": "./tools/aws_sfn.cjs"
     },
     "./tools/calculator": {
       "types": "./tools/calculator.d.ts",
@@ -973,6 +1002,11 @@
       "types": "./vectorstores/base.d.ts",
       "import": "./vectorstores/base.js",
       "require": "./vectorstores/base.cjs"
+    },
+    "./vectorstores/elasticsearch": {
+      "types": "./vectorstores/elasticsearch.d.ts",
+      "import": "./vectorstores/elasticsearch.js",
+      "require": "./vectorstores/elasticsearch.cjs"
     },
     "./vectorstores/memory": {
       "types": "./vectorstores/memory.d.ts",

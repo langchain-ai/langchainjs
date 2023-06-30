@@ -169,9 +169,6 @@ export class SupabaseTranslator extends BaseTranslator {
     query: StructuredQuery
   ): this["VisitStructuredQueryOutput"] {
     const filterFunction = query.filter?.accept(this);
-    if (typeof filterFunction !== "function") {
-      throw new Error("Structured query filter is not a function");
-    }
-    return { filter: filterFunction as SupabaseFilterRPCCall };
+    return { filter: (filterFunction as SupabaseFilterRPCCall) ?? {} };
   }
 }
