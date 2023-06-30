@@ -136,5 +136,5 @@ export declare interface AzureOpenAIInput {
    * e.g. "https://westeurope.api.cognitive.microsoft.com"
    * this will be used in the endpoint URL: https://westeurope.api.cognitive.microsoft.com/openai/deployments/{DeploymentName}/
    */
-  azureOpenAiBasePath?: string;
+  azureOpenAIBasePath?: string;
 }

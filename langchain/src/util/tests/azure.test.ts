@@ -1,10 +1,10 @@
 import { getEndpoint, OpenAIEndpointConfig } from "../azure.js";
 
 describe("getEndpoint", () => {
-  it("should return the correct endpoint with azureOpenAiBasePath and azureOpenAIApiDeploymentName", () => {
+  it("should return the correct endpoint with azureOpenAIBasePath and azureOpenAIApiDeploymentName", () => {
     const config: OpenAIEndpointConfig = {
       azureOpenAIApiDeploymentName: "deploymentName",
-      azureOpenAiBasePath: "https://example.azure.com",
+      azureOpenAIBasePath: "https://example.azure.com",
     };
     const result = getEndpoint(config);
     expect(result).toBe(
@@ -44,7 +44,7 @@ describe("getEndpoint", () => {
     );
   });
 
-  it("should return the basePath when neither azureOpenAiBasePath nor azureOpenAIApiKey is provided", () => {
+  it("should return the basePath when neither azureOpenAIBasePath nor azureOpenAIApiKey is provided", () => {
     const config: OpenAIEndpointConfig = {
       basePath: "https://basepath.com",
     };
@@ -55,7 +55,7 @@ describe("getEndpoint", () => {
   it("should throw error when none of the required fields are provided", () => {
     const config: OpenAIEndpointConfig = {};
     expect(() => getEndpoint(config)).toThrowError(
-      "You must provide either an azureOpenAiBasePath or an azureOpenAIApiKey or a basePath"
+      "You must provide either an azureOpenAIBasePath or an azureOpenAIApiKey or a basePath"
     );
   });
 });

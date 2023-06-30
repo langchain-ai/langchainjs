@@ -115,7 +115,7 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
 
   azureOpenAIApiDeploymentName?: string;
 
-  azureOpenAiBasePath?: string;
+  azureOpenAIBasePath?: string;
 
   private client: OpenAIApi;
 
@@ -165,8 +165,8 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
       fields?.azureOpenAIApiVersion ??
       getEnvironmentVariable("AZURE_OPENAI_API_VERSION");
 
-    this.azureOpenAiBasePath =
-      fields?.azureOpenAiBasePath ??
+    this.azureOpenAIBasePath =
+      fields?.azureOpenAIBasePath ??
       getEnvironmentVariable("AZURE_OPENAI_BASE_PATH");
 
     this.modelName = fields?.modelName ?? this.modelName;
@@ -436,7 +436,7 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
         azureOpenAIApiDeploymentName: this.azureOpenAIApiDeploymentName,
         azureOpenAIApiInstanceName: this.azureOpenAIApiInstanceName,
         azureOpenAIApiKey: this.azureOpenAIApiKey,
-        azureOpenAiBasePath: this.azureOpenAiBasePath,
+        azureOpenAIBasePath: this.azureOpenAIBasePath,
         basePath: this.clientConfig.basePath,
       };
 
