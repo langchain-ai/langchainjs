@@ -90,7 +90,7 @@ export class SingleStoreVectorStore extends VectorStore {
 
   metadataColumnName: string;
 
-  distanceMetrics: DistanceMetrics;
+  distanceMetric: DistanceMetrics;
 
   constructor(embeddings: Embeddings, config: SingleStoreVectorStoreConfig) {
     super(embeddings, config);
@@ -99,8 +99,7 @@ export class SingleStoreVectorStore extends VectorStore {
     this.contentColumnName = config.contentColumnName ?? "content";
     this.vectorColumnName = config.vectorColumnName ?? "vector";
     this.metadataColumnName = config.metadataColumnName ?? "metadata";
-    this.distanceMetrics =
-      config.distanceMetric ?? DistanceMetrics.DOT_PRODUCT;
+    this.distanceMetric = config.distanceMetric ?? DistanceMetrics.DOT_PRODUCT;
   }
 
   async createTableIfNotExists(): Promise<void> {
@@ -195,12 +194,12 @@ export class SingleStoreVectorStore extends VectorStore {
       format(
         `SELECT ${this.contentColumnName},
       ${this.metadataColumnName},
-      ${this.distanceMetrics}(${
+      ${this.distanceMetric}(${
           this.vectorColumnName
         }, JSON_ARRAY_PACK('[?]')) as __score FROM ${
           this.tableName
         } ${whereClause}
-      ORDER BY __score ${OrderingDirective[this.distanceMetrics]} LIMIT ?;`,
+      ORDER BY __score ${OrderingDirective[this.distanceMetric]} LIMIT ?;`,
         [query, ...whereArgs, k]
       )
     );

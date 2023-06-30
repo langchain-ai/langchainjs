@@ -22,7 +22,7 @@ export const run = async () => {
         password: process.env.SINGLESTORE_PASSWORD,
         database: process.env.SINGLESTORE_DATABASE,
       },
-      distanceMetrics: DistanceMetrics.EUCLIDEAN_DISTANCE,
+      distanceMetric: DistanceMetrics.EUCLIDEAN_DISTANCE,
     }
   );
 
