@@ -4,9 +4,15 @@ export interface OptionalImportMap {
   "langchain/agents/load"?:
     | typeof import("../agents/load.js")
     | Promise<typeof import("../agents/load.js")>;
+  "langchain/agents/agent_toolkits/aws_sfn"?:
+    | typeof import("../agents/agent_toolkits/aws_sfn.js")
+    | Promise<typeof import("../agents/agent_toolkits/aws_sfn.js")>;
   "langchain/tools/aws_lambda"?:
     | typeof import("../tools/aws_lambda.js")
     | Promise<typeof import("../tools/aws_lambda.js")>;
+  "langchain/tools/aws_sfn"?:
+    | typeof import("../tools/aws_sfn.js")
+    | Promise<typeof import("../tools/aws_sfn.js")>;
   "langchain/tools/calculator"?:
     | typeof import("../tools/calculator.js")
     | Promise<typeof import("../tools/calculator.js")>;
@@ -55,6 +61,9 @@ export interface OptionalImportMap {
   "langchain/prompts/load"?:
     | typeof import("../prompts/load.js")
     | Promise<typeof import("../prompts/load.js")>;
+  "langchain/vectorstores/elasticsearch"?:
+    | typeof import("../vectorstores/elasticsearch.js")
+    | Promise<typeof import("../vectorstores/elasticsearch.js")>;
   "langchain/vectorstores/chroma"?:
     | typeof import("../vectorstores/chroma.js")
     | Promise<typeof import("../vectorstores/chroma.js")>;
@@ -67,6 +76,9 @@ export interface OptionalImportMap {
   "langchain/vectorstores/weaviate"?:
     | typeof import("../vectorstores/weaviate.js")
     | Promise<typeof import("../vectorstores/weaviate.js")>;
+  "langchain/vectorstores/lancedb"?:
+    | typeof import("../vectorstores/lancedb.js")
+    | Promise<typeof import("../vectorstores/lancedb.js")>;
   "langchain/vectorstores/mongo"?:
     | typeof import("../vectorstores/mongo.js")
     | Promise<typeof import("../vectorstores/mongo.js")>;
@@ -142,6 +154,9 @@ export interface OptionalImportMap {
   "langchain/document_loaders/web/notiondb"?:
     | typeof import("../document_loaders/web/notiondb.js")
     | Promise<typeof import("../document_loaders/web/notiondb.js")>;
+  "langchain/document_loaders/web/notionapi"?:
+    | typeof import("../document_loaders/web/notionapi.js")
+    | Promise<typeof import("../document_loaders/web/notionapi.js")>;
   "langchain/document_loaders/web/s3"?:
     | typeof import("../document_loaders/web/s3.js")
     | Promise<typeof import("../document_loaders/web/s3.js")>;
@@ -223,6 +238,9 @@ export interface OptionalImportMap {
   "langchain/cache/redis"?:
     | typeof import("../cache/redis.js")
     | Promise<typeof import("../cache/redis.js")>;
+  "langchain/cache/upstash_redis"?:
+    | typeof import("../cache/upstash_redis.js")
+    | Promise<typeof import("../cache/upstash_redis.js")>;
   "langchain/stores/doc/gcs"?:
     | typeof import("../stores/doc/gcs.js")
     | Promise<typeof import("../stores/doc/gcs.js")>;

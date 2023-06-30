@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.97",
+  "version": "0.0.101",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -22,6 +22,9 @@
     "agents/load.cjs",
     "agents/load.js",
     "agents/load.d.ts",
+    "agents/agent_toolkits/aws_sfn.cjs",
+    "agents/agent_toolkits/aws_sfn.js",
+    "agents/agent_toolkits/aws_sfn.d.ts",
     "base_language.cjs",
     "base_language.js",
     "base_language.d.ts",
@@ -31,6 +34,9 @@
     "tools/aws_lambda.cjs",
     "tools/aws_lambda.js",
     "tools/aws_lambda.d.ts",
+    "tools/aws_sfn.cjs",
+    "tools/aws_sfn.js",
+    "tools/aws_sfn.d.ts",
     "tools/calculator.cjs",
     "tools/calculator.js",
     "tools/calculator.d.ts",
@@ -118,6 +124,9 @@
     "vectorstores/base.cjs",
     "vectorstores/base.js",
     "vectorstores/base.d.ts",
+    "vectorstores/elasticsearch.cjs",
+    "vectorstores/elasticsearch.js",
+    "vectorstores/elasticsearch.d.ts",
     "vectorstores/memory.cjs",
     "vectorstores/memory.js",
     "vectorstores/memory.d.ts",
@@ -133,6 +142,9 @@
     "vectorstores/weaviate.cjs",
     "vectorstores/weaviate.js",
     "vectorstores/weaviate.d.ts",
+    "vectorstores/lancedb.cjs",
+    "vectorstores/lancedb.js",
+    "vectorstores/lancedb.d.ts",
     "vectorstores/mongo.cjs",
     "vectorstores/mongo.js",
     "vectorstores/mongo.d.ts",
@@ -175,6 +187,9 @@
     "vectorstores/tigris.cjs",
     "vectorstores/tigris.js",
     "vectorstores/tigris.d.ts",
+    "vectorstores/vectara.cjs",
+    "vectorstores/vectara.js",
+    "vectorstores/vectara.d.ts",
     "text_splitter.cjs",
     "text_splitter.js",
     "text_splitter.d.ts",
@@ -226,6 +241,9 @@
     "document_loaders/web/notiondb.cjs",
     "document_loaders/web/notiondb.js",
     "document_loaders/web/notiondb.d.ts",
+    "document_loaders/web/notionapi.cjs",
+    "document_loaders/web/notionapi.js",
+    "document_loaders/web/notionapi.d.ts",
     "document_loaders/web/s3.cjs",
     "document_loaders/web/s3.js",
     "document_loaders/web/s3.d.ts",
@@ -364,6 +382,9 @@
     "cache/redis.cjs",
     "cache/redis.js",
     "cache/redis.d.ts",
+    "cache/upstash_redis.cjs",
+    "cache/upstash_redis.js",
+    "cache/upstash_redis.d.ts",
     "stores/doc/in_memory.cjs",
     "stores/doc/in_memory.js",
     "stores/doc/in_memory.d.ts",
@@ -442,14 +463,17 @@
     "@aws-sdk/client-lambda": "^3.310.0",
     "@aws-sdk/client-s3": "^3.310.0",
     "@aws-sdk/client-sagemaker-runtime": "^3.310.0",
+    "@aws-sdk/client-sfn": "^3.362.0",
     "@clickhouse/client": "^0.0.14",
+    "@elastic/elasticsearch": "^8.4.0",
     "@faker-js/faker": "^7.6.0",
     "@getmetal/metal-sdk": "^4.0.0",
-    "@getzep/zep-js": "^0.3.1",
+    "@getzep/zep-js": "^0.4.1",
     "@gomomento/sdk": "^1.23.0",
     "@google-cloud/storage": "^6.10.1",
     "@huggingface/inference": "^1.5.1",
     "@jest/globals": "^29.5.0",
+    "@notionhq/client": "^2.2.5",
     "@opensearch-project/opensearch": "^2.2.0",
     "@pinecone-database/pinecone": "^0.0.14",
     "@qdrant/js-client-rest": "^1.2.0",
@@ -465,6 +489,7 @@
     "@types/decamelize": "^1.2.0",
     "@types/flat": "^5.0.2",
     "@types/html-to-text": "^9",
+    "@types/js-yaml": "^4",
     "@types/object-hash": "^3.0.2",
     "@types/pdf-parse": "^1.1.1",
     "@types/pg": "^8",
@@ -498,6 +523,7 @@
     "mammoth": "^1.5.1",
     "mongodb": "^5.2.0",
     "mysql2": "^3.3.3",
+    "notion-to-md": "^3.1.0",
     "pdf-parse": "1.1.1",
     "peggy": "^3.0.2",
     "pg": "^8.11.0",
@@ -516,6 +542,7 @@
     "typeorm": "^0.3.12",
     "typescript": "^5.0.0",
     "typesense": "^1.5.3",
+    "vectordb": "^0.1.4",
     "weaviate-ts-client": "^1.0.0"
   },
   "peerDependencies": {
@@ -523,12 +550,15 @@
     "@aws-sdk/client-lambda": "^3.310.0",
     "@aws-sdk/client-s3": "^3.310.0",
     "@aws-sdk/client-sagemaker-runtime": "^3.310.0",
+    "@aws-sdk/client-sfn": "^3.310.0",
     "@clickhouse/client": "^0.0.14",
+    "@elastic/elasticsearch": "^8.4.0",
     "@getmetal/metal-sdk": "*",
-    "@getzep/zep-js": "^0.3.1",
+    "@getzep/zep-js": "^0.4.1",
     "@gomomento/sdk": "^1.23.0",
     "@google-cloud/storage": "^6.10.1",
     "@huggingface/inference": "^1.5.1",
+    "@notionhq/client": "^2.2.5",
     "@opensearch-project/opensearch": "*",
     "@pinecone-database/pinecone": "*",
     "@qdrant/js-client-rest": "^1.2.0",
@@ -555,6 +585,7 @@
     "mammoth": "*",
     "mongodb": "^5.2.0",
     "mysql2": "^3.3.3",
+    "notion-to-md": "^3.1.0",
     "pdf-parse": "1.1.1",
     "peggy": "^3.0.2",
     "pg": "^8.11.0",
@@ -566,6 +597,7 @@
     "srt-parser-2": "^1.2.2",
     "typeorm": "^0.3.12",
     "typesense": "^1.5.3",
+    "vectordb": "^0.1.4",
     "weaviate-ts-client": "^1.0.0"
   },
   "peerDependenciesMeta": {
@@ -581,7 +613,13 @@
     "@aws-sdk/client-sagemaker-runtime": {
       "optional": true
     },
+    "@aws-sdk/client-sfn": {
+      "optional": true
+    },
     "@clickhouse/client": {
+      "optional": true
+    },
+    "@elastic/elasticsearch": {
       "optional": true
     },
     "@getmetal/metal-sdk": {
@@ -597,6 +635,9 @@
       "optional": true
     },
     "@huggingface/inference": {
+      "optional": true
+    },
+    "@notionhq/client": {
       "optional": true
     },
     "@opensearch-project/opensearch": {
@@ -677,6 +718,9 @@
     "mysql2": {
       "optional": true
     },
+    "notion-to-md": {
+      "optional": true
+    },
     "pdf-parse": {
       "optional": true
     },
@@ -710,6 +754,9 @@
     "typesense": {
       "optional": true
     },
+    "vectordb": {
+      "optional": true
+    },
     "weaviate-ts-client": {
       "optional": true
     }
@@ -723,11 +770,13 @@
     "expr-eval": "^2.0.2",
     "flat": "^5.0.2",
     "js-tiktoken": "^1.0.7",
+    "js-yaml": "^4.1.0",
     "jsonpointer": "^5.0.1",
     "langchainplus-sdk": "^0.0.15",
     "ml-distance": "^4.0.0",
     "object-hash": "^3.0.0",
     "openai": "^3.3.0",
+    "openapi-types": "^12.1.3",
     "p-queue": "^6.6.2",
     "p-retry": "4",
     "uuid": "^9.0.0",
@@ -778,6 +827,11 @@
       "import": "./agents/load.js",
       "require": "./agents/load.cjs"
     },
+    "./agents/agent_toolkits/aws_sfn": {
+      "types": "./agents/agent_toolkits/aws_sfn.d.ts",
+      "import": "./agents/agent_toolkits/aws_sfn.js",
+      "require": "./agents/agent_toolkits/aws_sfn.cjs"
+    },
     "./base_language": {
       "types": "./base_language.d.ts",
       "import": "./base_language.js",
@@ -792,6 +846,11 @@
       "types": "./tools/aws_lambda.d.ts",
       "import": "./tools/aws_lambda.js",
       "require": "./tools/aws_lambda.cjs"
+    },
+    "./tools/aws_sfn": {
+      "types": "./tools/aws_sfn.d.ts",
+      "import": "./tools/aws_sfn.js",
+      "require": "./tools/aws_sfn.cjs"
     },
     "./tools/calculator": {
       "types": "./tools/calculator.d.ts",
@@ -944,6 +1003,11 @@
       "import": "./vectorstores/base.js",
       "require": "./vectorstores/base.cjs"
     },
+    "./vectorstores/elasticsearch": {
+      "types": "./vectorstores/elasticsearch.d.ts",
+      "import": "./vectorstores/elasticsearch.js",
+      "require": "./vectorstores/elasticsearch.cjs"
+    },
     "./vectorstores/memory": {
       "types": "./vectorstores/memory.d.ts",
       "import": "./vectorstores/memory.js",
@@ -968,6 +1032,11 @@
       "types": "./vectorstores/weaviate.d.ts",
       "import": "./vectorstores/weaviate.js",
       "require": "./vectorstores/weaviate.cjs"
+    },
+    "./vectorstores/lancedb": {
+      "types": "./vectorstores/lancedb.d.ts",
+      "import": "./vectorstores/lancedb.js",
+      "require": "./vectorstores/lancedb.cjs"
     },
     "./vectorstores/mongo": {
       "types": "./vectorstores/mongo.d.ts",
@@ -1038,6 +1107,11 @@
       "types": "./vectorstores/tigris.d.ts",
       "import": "./vectorstores/tigris.js",
       "require": "./vectorstores/tigris.cjs"
+    },
+    "./vectorstores/vectara": {
+      "types": "./vectorstores/vectara.d.ts",
+      "import": "./vectorstores/vectara.js",
+      "require": "./vectorstores/vectara.cjs"
     },
     "./text_splitter": {
       "types": "./text_splitter.d.ts",
@@ -1125,6 +1199,11 @@
       "types": "./document_loaders/web/notiondb.d.ts",
       "import": "./document_loaders/web/notiondb.js",
       "require": "./document_loaders/web/notiondb.cjs"
+    },
+    "./document_loaders/web/notionapi": {
+      "types": "./document_loaders/web/notionapi.d.ts",
+      "import": "./document_loaders/web/notionapi.js",
+      "require": "./document_loaders/web/notionapi.cjs"
     },
     "./document_loaders/web/s3": {
       "types": "./document_loaders/web/s3.d.ts",
@@ -1359,6 +1438,11 @@
       "types": "./cache/redis.d.ts",
       "import": "./cache/redis.js",
       "require": "./cache/redis.cjs"
+    },
+    "./cache/upstash_redis": {
+      "types": "./cache/upstash_redis.d.ts",
+      "import": "./cache/upstash_redis.js",
+      "require": "./cache/upstash_redis.cjs"
     },
     "./stores/doc/in_memory": {
       "types": "./stores/doc/in_memory.d.ts",

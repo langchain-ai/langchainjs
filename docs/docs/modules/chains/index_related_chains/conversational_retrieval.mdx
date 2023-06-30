@@ -39,8 +39,7 @@ Here's an explanation of each of the attributes of the options object:
 
 - `questionGeneratorChainOptions`: An object that allows you to pass a custom template and LLM to the underlying question generation chain.
   - If the template is provided, the `ConversationalRetrievalQAChain` will use this template to generate a question from the conversation context instead of using the question provided in the question parameter.
-    This can be useful if the original question does not contain enough information to retrieve a suitable answer.
-  - Passing in a separate LLM here allows you to use a cheaper/faster model to create the condensed question while using a more powerful model for the final response, and can reduce unnecessary latency.
+  - Passing in a separate LLM (`llm`) here allows you to use a cheaper/faster model to create the condensed question while using a more powerful model for the final response, and can reduce unnecessary latency.
 - `qaChainOptions`: Options that allow you to customize the specific QA chain used in the final step. The default is the [`StuffDocumentsChain`](/docs/modules/chains/index_related_chains/document_qa), but you can customize which chain is used by passing in a `type` parameter.
   **Passing specific options here is completely optional**, but can be useful if you want to customize the way the response is presented to the end user, or if you have too many documents for the default `StuffDocumentsChain`.
   You can see [documentation about the usable fields here](/docs/api/chains/types/QAChainParams).
@@ -71,3 +70,23 @@ a `chat_history` string directly into the `chain.call` method:
 import ConvoQAExternalMemoryExample from "@examples/chains/conversational_qa_external_memory.ts";
 
 <CodeBlock language="typescript">{ConvoQAExternalMemoryExample}</CodeBlock>
+
+## Prompt Customization
+
+If you want to further change the chain's behavior, you can change the prompts for both the underlying question generation chain and the QA chain.
+
+One case where you might want to do this is to improve the chain's ability to answer meta questions about the chat history.
+By default, the only input to the QA chain is the standalone question generated from the question generation chain.
+This poses a challenge when asking meta questions about information in previous interactions from the chat history.
+
+For example, if you introduce a friend Bob and mention his age as 28, the chain is unable to provide his age upon asking a question like "How old is Bob?".
+This limitation occurs because the bot searches for Bob in the vector store, rather than considering the message history.
+
+You can pass an alternative prompt for the question generation chain that also returns parts of the chat history relevant to the answer,
+allowing the QA chain to answer meta questions with the additional context:
+
+import ConvoRetrievalQAWithCustomPrompt from "@examples/chains/conversation_qa_custom_prompt.ts";
+
+<CodeBlock language="typescript">{ConvoRetrievalQAWithCustomPrompt}</CodeBlock>
+
+Keep in mind that adding more context to the prompt in this way may distract the LLM from other relevant retrieved information.

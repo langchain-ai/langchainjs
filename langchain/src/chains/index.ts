@@ -99,3 +99,7 @@ export {
   createTaggingChain,
   createTaggingChainFromZod,
 } from "./openai_functions/tagging.js";
+export {
+  OpenAPIChainOptions,
+  createOpenAPIChain,
+} from "./openai_functions/openapi.js";

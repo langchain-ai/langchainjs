@@ -348,9 +348,7 @@ export class CallbackManager
     _parentRunId: string | undefined = undefined,
     extraParams: Record<string, unknown> | undefined = undefined
   ): Promise<CallbackManagerForLLMRun[]> {
-    const managers: CallbackManagerForLLMRun[] = [];
-
-    await Promise.all(
+    return Promise.all(
       prompts.map(async (prompt) => {
         const runId = uuidv4();
 
@@ -377,20 +375,16 @@ export class CallbackManager
           )
         );
 
-        managers.push(
-          new CallbackManagerForLLMRun(
-            runId,
-            this.handlers,
-            this.inheritableHandlers,
-            this.tags,
-            this.inheritableTags,
-            this._parentRunId
-          )
+        return new CallbackManagerForLLMRun(
+          runId,
+          this.handlers,
+          this.inheritableHandlers,
+          this.tags,
+          this.inheritableTags,
+          this._parentRunId
         );
       })
     );
-
-    return managers;
   }
 
   async handleChatModelStart(
@@ -400,9 +394,7 @@ export class CallbackManager
     _parentRunId: string | undefined = undefined,
     extraParams: Record<string, unknown> | undefined = undefined
   ): Promise<CallbackManagerForLLMRun[]> {
-    const managers: CallbackManagerForLLMRun[] = [];
-
-    await Promise.all(
+    return Promise.all(
       messages.map(async (messageGroup) => {
         const runId = uuidv4();
 
@@ -441,20 +433,16 @@ export class CallbackManager
           )
         );
 
-        managers.push(
-          new CallbackManagerForLLMRun(
-            runId,
-            this.handlers,
-            this.inheritableHandlers,
-            this.tags,
-            this.inheritableTags,
-            this._parentRunId
-          )
+        return new CallbackManagerForLLMRun(
+          runId,
+          this.handlers,
+          this.inheritableHandlers,
+          this.tags,
+          this.inheritableTags,
+          this._parentRunId
         );
       })
     );
-
-    return managers;
   }
 
   async handleChainStart(

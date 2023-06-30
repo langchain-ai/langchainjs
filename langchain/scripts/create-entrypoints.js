@@ -13,11 +13,13 @@ const entrypoints = {
   // agents
   agents: "agents/index",
   "agents/load": "agents/load",
+  "agents/agent_toolkits/aws_sfn": "agents/agent_toolkits/aws_sfn",
   // base language
   base_language: "base_language/index",
   // tools
   tools: "tools/index",
   "tools/aws_lambda": "tools/aws_lambda",
+  "tools/aws_sfn": "tools/aws_sfn",
   "tools/calculator": "tools/calculator",
   "tools/webbrowser": "tools/webbrowser",
   // chains
@@ -52,11 +54,13 @@ const entrypoints = {
   // vectorstores
   vectorstores: "vectorstores/index",
   "vectorstores/base": "vectorstores/base",
+  "vectorstores/elasticsearch": "vectorstores/elasticsearch",
   "vectorstores/memory": "vectorstores/memory",
   "vectorstores/chroma": "vectorstores/chroma",
   "vectorstores/hnswlib": "vectorstores/hnswlib",
   "vectorstores/faiss": "vectorstores/faiss",
   "vectorstores/weaviate": "vectorstores/weaviate",
+  "vectorstores/lancedb": "vectorstores/lancedb",
   "vectorstores/mongo": "vectorstores/mongo",
   "vectorstores/mongodb_atlas": "vectorstores/mongodb_atlas",
   "vectorstores/pinecone": "vectorstores/pinecone",
@@ -71,6 +75,7 @@ const entrypoints = {
   "vectorstores/typesense": "vectorstores/typesense",
   "vectorstores/singlestore": "vectorstores/singlestore",
   "vectorstores/tigris": "vectorstores/tigris",
+  "vectorstores/vectara": "vectorstores/vectara",
   // text_splitter
   text_splitter: "text_splitter",
   // memory
@@ -93,6 +98,7 @@ const entrypoints = {
   "document_loaders/web/figma": "document_loaders/web/figma",
   "document_loaders/web/github": "document_loaders/web/github",
   "document_loaders/web/notiondb": "document_loaders/web/notiondb",
+  "document_loaders/web/notionapi": "document_loaders/web/notionapi",
   "document_loaders/web/s3": "document_loaders/web/s3",
   "document_loaders/web/confluence": "document_loaders/web/confluence",
   "document_loaders/fs/directory": "document_loaders/fs/directory",
@@ -147,6 +153,7 @@ const entrypoints = {
   cache: "cache/index",
   "cache/momento": "cache/momento",
   "cache/redis": "cache/redis",
+  "cache/upstash_redis": "cache/upstash_redis",
   // stores
   "stores/doc/in_memory": "stores/doc/in_memory",
   "stores/doc/gcs": "stores/doc/gcs",
@@ -183,7 +190,9 @@ const deprecatedNodeOnly = [
 // Therefore they are not tested in the generated test-exports-* packages.
 const requiresOptionalDependency = [
   "agents/load",
+  "agents/agent_toolkits/aws_sfn",
   "tools/aws_lambda",
+  "tools/aws_sfn",
   "tools/calculator",
   "tools/webbrowser",
   "chains/load",
@@ -199,9 +208,11 @@ const requiresOptionalDependency = [
   "llms/sagemaker_endpoint",
   "prompts/load",
   "vectorstores/chroma",
+  "vectorstores/elasticsearch",
   "vectorstores/hnswlib",
   "vectorstores/faiss",
   "vectorstores/weaviate",
+  "vectorstores/lancedb",
   "vectorstores/mongo",
   "vectorstores/mongodb_atlas",
   "vectorstores/pinecone",
@@ -227,6 +238,7 @@ const requiresOptionalDependency = [
   "document_loaders/web/figma",
   "document_loaders/web/github",
   "document_loaders/web/notiondb",
+  "document_loaders/web/notionapi",
   "document_loaders/web/s3",
   "document_loaders/web/confluence",
   "document_loaders/fs/directory",
@@ -256,6 +268,7 @@ const requiresOptionalDependency = [
   "chains/query_constructor/ir",
   "cache/momento",
   "cache/redis",
+  "cache/upstash_redis",
   "stores/doc/gcs",
   "stores/file/node",
   "stores/message/dynamodb",

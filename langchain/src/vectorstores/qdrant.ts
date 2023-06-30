@@ -10,6 +10,7 @@ import { getEnvironmentVariable } from "../util/env.js";
 export interface QdrantLibArgs {
   client?: QdrantClient;
   url?: string;
+  apiKey?: string;
   collectionName?: string;
   collectionConfig?: QdrantSchemas["CreateCollection"];
 }
@@ -32,6 +33,7 @@ export class QdrantVectorStore extends VectorStore {
     super(embeddings, args);
 
     const url = args.url ?? getEnvironmentVariable("QDRANT_URL");
+    const apiKey = args.apiKey ?? getEnvironmentVariable("QDRANT_API_KEY");
 
     if (!args.client && !url) {
       throw new Error("Qdrant client or url address must be set.");
@@ -41,6 +43,7 @@ export class QdrantVectorStore extends VectorStore {
       args.client ||
       new QdrantClient({
         url,
+        apiKey,
       });
 
     this.collectionName = args.collectionName ?? "documents";

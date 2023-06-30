@@ -23,8 +23,9 @@
   "license": "MIT",
   "dependencies": {
     "@clickhouse/client": "^0.0.14",
+    "@elastic/elasticsearch": "^8.4.0",
     "@getmetal/metal-sdk": "^4.0.0",
-    "@getzep/zep-js": "0.3.1",
+    "@getzep/zep-js": "0.4.1",
     "@gomomento/sdk": "^1.23.0",
     "@opensearch-project/opensearch": "^2.2.0",
     "@pinecone-database/pinecone": "^0.0.14",
@@ -49,6 +50,7 @@
     "sqlite3": "^5.1.4",
     "typeorm": "^0.3.12",
     "typesense": "^1.5.3",
+    "vectordb": "^0.1.4",
     "weaviate-ts-client": "^1.0.0",
     "zod": "^3.21.4"
   },

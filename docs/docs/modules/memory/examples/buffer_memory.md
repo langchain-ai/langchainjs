@@ -31,7 +31,7 @@ You can also load messages into a `BufferMemory` instance by creating and passin
 This lets you easily pick up state from past conversations:
 
 ```typescript
-import { ChatMessageHistory } from "langchain/memory";
+import { BufferMemory, ChatMessageHistory } from "langchain/memory";
 import { HumanChatMessage, AIChatMessage } from "langchain/schema";
 
 const pastMessages = [
