@@ -83,13 +83,13 @@ abstract class BaseVectorStore implements VectorStore {
 
 ## Recursive Similarity Search
 
-Um problema que algumas pessoas podem enfrentar é que, ao fazer uma pesquisa de similaridade, você tem que fornecer um valor `k`. Esse valor é responsável por trazer N resultados similares para você. Mas e se você não souber o valor de `k`? E se você quiser que o sistema retorne todos os resultados possíveis?
+A problem some people may face is that when doing a similarity search, you have to supply a `k` value. This value is responsible for bringing N similar results back to you. But what if you don't know the `k` value? What if you want the system to return all the possible results?
 
-Num cenário real, vamos imaginar um documento criado por um product manager super extenso que descreve um produto. Neste documento, podemos ter 10, 15, 20, 100 ou mais funcionalidades descritas. Como saber o valor certo de `k` para que o sistema retorne todos os resultados possíveis para a pergunta "Quais são todas as funcionalidades que o produto X tem?".
+In a real-world scenario, let's imagine a super long document created by a product manager which describes a product. In this document, we could have 10, 15, 20, 100 or more features described. How to know the correct `k` value so the system returns all the possible results to the question "What are all the features that product X has?".
 
-Para resolver esse problema, o Langchain oferece uma funcionalidade chamada de Recursive Similarity Search. Com ela, você pode fazer uma pesquisa de similaridade sem precisar depender apenas do valor de `k`. O sistema irá retornar todos os resultados possíveis para a sua pergunta, baseado na porcentagem de similaridade mínima que voc6e quer.
+To solve this problem, Langchain offers a feature called Recursive Similarity Search. With it, you can do a similarity search without having to rely solely on the `k` value. The system will return all the possible results to your question, based on the minimum similarity percentage you want.
 
-É possível utilizar a Recursive Similarity Search utilizando uma vector store como retriever. Veja este exemplo:
+It is possible to use the Recursive Similarity Search by using a vector store as retriever. Take a look at this example:
 
 import RecursiveSimilaritySearchExample from "@examples/retrievers/recursive-similarity-search.ts";
 
