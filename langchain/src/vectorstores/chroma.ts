@@ -99,9 +99,16 @@ export class Chroma extends VectorStore {
     });
   }
 
-  async delete(documentIds: string[]): Promise<void> {
+  protected async deleteByIds(ids: string[]) {
     const collection = await this.ensureCollection();
-    await collection.delete({ ids: documentIds });
+    await collection.delete({ ids });
+  }
+
+  protected async deleteByFilter(filter: object) {
+    const collection = await this.ensureCollection();
+    await collection.delete({
+      where: { ...filter },
+    });
   }
 
   async similaritySearchVectorWithScore(

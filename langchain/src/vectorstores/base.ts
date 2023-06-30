@@ -55,8 +55,23 @@ export abstract class VectorStore {
 
   abstract addDocuments(documents: Document[]): Promise<void>;
 
-  async delete(_ids: string[]): Promise<void> {
-    throw new Error(`Not implemented.`);
+  async delete(idsOrFilterType: string[] | this["FilterType"]): Promise<void> {
+    if (
+      Array.isArray(idsOrFilterType) &&
+      idsOrFilterType.find((item) => typeof item !== "string") === undefined
+    ) {
+      await this.deleteByIds(idsOrFilterType as string[]);
+    } else {
+      await this.deleteByFilter(idsOrFilterType as this["FilterType"]);
+    }
+  }
+
+  protected async deleteByIds(_ids: string[]) {
+    throw new Error("Not implemented.");
+  }
+
+  protected async deleteByFilter(_filter: this["FilterType"]) {
+    throw new Error("Not implemented.");
   }
 
   abstract similaritySearchVectorWithScore(
