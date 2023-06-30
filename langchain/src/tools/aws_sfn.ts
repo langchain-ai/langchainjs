@@ -18,7 +18,7 @@ interface SfnClientConstructorArgs {
 
 // Abstract away lc_namespace and lc_secrets into a base class
 // that can be extended by all tools that need it.
-abstract class AWSSfnToolConfig extends DynamicTool {
+abstract class BaseAWSSfnBaseTool extends DynamicTool {
   get lc_namespace(): string[] {
     return [...super.lc_namespace, "aws_sfn"];
   }
@@ -31,7 +31,7 @@ abstract class AWSSfnToolConfig extends DynamicTool {
   }
 }
 
-export class StartExecutionAWSSfnTool extends AWSSfnToolConfig {
+export class StartExecutionAWSSfnTool extends BaseAWSSfnBaseTool {
   private sfnConfig: SfnConfig;
 
   constructor({
