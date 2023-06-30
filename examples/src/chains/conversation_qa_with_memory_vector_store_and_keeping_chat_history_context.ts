@@ -31,21 +31,21 @@ export const run = async () => {
         returnMessages: true,
       }),
       questionGeneratorChainOptions: {
-        extractConversationContext: true, // Remember that you cannot provide `template` alongside `extractConversationContext`, since it will throw a prompt template conflict error
+        extractConversationContext: true, // If set, `template` may not be set
       },
     }
   );
 
   const res = await chain.call({
     question:
-      "I have a friend called Bob. He's 28 years old. He'd like to know what is the powerhouse of the cell?",
+      "I have a friend called Bob. He's 28 years old. He'd like to know what the powerhouse of the cell is?",
   });
 
-  console.log(res); // AI answers: The powerhouse of the cell is the mitochondria.
+  console.log(res); // The powerhouse of the cell is the mitochondria.
 
   const res2 = await chain.call({
     question: "How old is Bob?",
   });
 
-  console.log(res2); // AI answers: Bob is 28 years old.
+  console.log(res2); // Bob is 28 years old.
 };

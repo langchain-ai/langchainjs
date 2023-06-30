@@ -56,34 +56,6 @@ import ConvoQABuiltInExample from "@examples/chains/conversational_qa_built_in_m
 
 <CodeBlock language="typescript">{ConvoQABuiltInExample}</CodeBlock>
 
-## With Memory, Vector Store, and keeping the chat history context
-
-By default, the chatbot can only reason based on the results of the vector store similarity search. However, this poses a challenge when trying to retrieve information mentioned in previous messages.
-
-For example, if you introduce a friend Bob and mention his age as 28, the chatbot is unable to provide his age upon asking a question like "How old is Bob?". This limitation occurs because the bot searches for Bob in the vector store, rather than considering the message history.
-
-To resolve this, you can overwrite the standard prompt template of a Langchain chain step. This improved implementation not only clarifies the user's final question but also includes relevant messages from the history that are similar to the question.
-
-Introducing the property `questionGeneratorChainOptions.extractConversationContext` in the Langchain documentation. By setting this property, users can retain the chat history context and overcome the issue mentioned above.
-
-Take a look how the underlying chain behaves with `questionGeneratorChainOptions.extractConversationContext = true`:
-
-![Underlying chain behavior](/img/keep-chat-history-context-behavior.png)
-
-It finds the relevant information based on the question in the chat history and includes it in the final prompt.
-
-Now look how, in the final stage of the chain, AI has access to both the context of the vector store and the relevant information from the message history according to the question asked in a friendly way:
-
-![Final chain behavior](/img/keep-chat-history-context-final-answer.png)
-
-Heres an example of how to use this property combined with a memory object and a vector store:
-
-import ConvoRetrievalQAWithVectorStoreMemoryAndChatHistoryContextExample from "@examples/chains/conversation_qa_with_memory_vector_store_and_keeping_chat_history_context.ts";
-
-<CodeBlock language="typescript">
-  {ConvoRetrievalQAWithVectorStoreMemoryAndChatHistoryContextExample}
-</CodeBlock>
-
 ## Streaming
 
 You can also use the above concept of using two different LLMs to stream only the final response from the chain, and not output from the intermediate standalone question generation step. Here's an example:
@@ -100,3 +72,20 @@ a `chat_history` string directly into the `chain.call` method:
 import ConvoQAExternalMemoryExample from "@examples/chains/conversational_qa_external_memory.ts";
 
 <CodeBlock language="typescript">{ConvoQAExternalMemoryExample}</CodeBlock>
+
+## Answering Meta Questions About the Conversation
+
+By default, the only input to the QA chain is the standalone question generated from the question generation chain.
+This poses a challenge when asking meta questions about information in previous interactions from the chat history.
+
+For example, if you introduce a friend Bob and mention his age as 28, the chain is unable to provide his age upon asking a question like "How old is Bob?".
+This limitation occurs because the bot searches for Bob in the vector store, rather than considering the message history.
+
+By setting `extractConversationContext` to true within in the `questionGeneratorChainOptions` object, you can use an alternative preset prompt for the
+question generation chain that also returns parts of the chat history relevant to the answer, allowing the QA chain to answer meta questions with the additional context.
+
+Here's an example:
+
+import ConvoRetrievalQAWithContext from "@examples/chains/conversation_qa_with_memory_vector_store_and_keeping_chat_history_context.ts";
+
+<CodeBlock language="typescript">{ConvoRetrievalQAWithContext}</CodeBlock>
