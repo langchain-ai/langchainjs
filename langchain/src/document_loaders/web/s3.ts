@@ -2,23 +2,30 @@ import * as fsDefault from "node:fs";
 import * as path from "node:path";
 import * as os from "node:os";
 import { Readable } from "node:stream";
+import { S3Client, GetObjectCommand, S3ClientConfig } from "@aws-sdk/client-s3";
 import { BaseDocumentLoader } from "../base.js";
 import { UnstructuredLoader as UnstructuredLoaderDefault } from "../fs/unstructured.js";
+
+export type S3Config = S3ClientConfig & {
+  /** @deprecated Use the credentials object instead */
+  accessKeyId?: string;
+  /** @deprecated Use the credentials object instead */
+  secretAccessKey?: string;
+};
 
 export interface S3LoaderParams {
   bucket: string;
   key: string;
   unstructuredAPIURL: string;
-  s3Config?: S3Config;
-
+  unstructuredAPIKey: string;
+  s3Config?: S3Config & {
+    /** @deprecated Use the credentials object instead */
+    accessKeyId?: string;
+    /** @deprecated Use the credentials object instead */
+    secretAccessKey?: string;
+  };
   fs?: typeof fsDefault;
   UnstructuredLoader?: typeof UnstructuredLoaderDefault;
-}
-
-interface S3Config {
-  region?: string;
-  accessKeyId?: string;
-  secretAccessKey?: string;
 }
 
 export class S3Loader extends BaseDocumentLoader {
@@ -28,7 +35,14 @@ export class S3Loader extends BaseDocumentLoader {
 
   private unstructuredAPIURL: string;
 
-  private s3Config: S3Config;
+  private unstructuredAPIKey: string;
+
+  private s3Config: S3Config & {
+    /** @deprecated Use the credentials object instead */
+    accessKeyId?: string;
+    /** @deprecated Use the credentials object instead */
+    secretAccessKey?: string;
+  };
 
   private _fs: typeof fsDefault;
 
@@ -38,6 +52,7 @@ export class S3Loader extends BaseDocumentLoader {
     bucket,
     key,
     unstructuredAPIURL,
+    unstructuredAPIKey,
     s3Config = {},
     fs = fsDefault,
     UnstructuredLoader = UnstructuredLoaderDefault,
@@ -46,14 +61,13 @@ export class S3Loader extends BaseDocumentLoader {
     this.bucket = bucket;
     this.key = key;
     this.unstructuredAPIURL = unstructuredAPIURL;
+    this.unstructuredAPIKey = unstructuredAPIKey;
     this.s3Config = s3Config;
     this._fs = fs;
     this._UnstructuredLoader = UnstructuredLoader;
   }
 
   public async load() {
-    const { S3Client, GetObjectCommand } = await S3LoaderImports();
-
     const tempDir = this._fs.mkdtempSync(
       path.join(os.tmpdir(), "s3fileloader-")
     );
@@ -86,14 +100,19 @@ export class S3Loader extends BaseDocumentLoader {
       this._fs.mkdirSync(path.dirname(filePath), { recursive: true });
 
       this._fs.writeFileSync(filePath, objectData);
-    } catch {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (e: any) {
       throw new Error(
-        `Failed to download file ${this.key} from S3 bucket ${this.bucket}.`
+        `Failed to download file ${this.key} from S3 bucket ${this.bucket}: ${e.message}`
       );
     }
 
     try {
-      const options = { apiUrl: this.unstructuredAPIURL };
+      const options = {
+        apiUrl: this.unstructuredAPIURL,
+        apiKey: this.unstructuredAPIKey,
+      };
+
       const unstructuredLoader = new this._UnstructuredLoader(
         filePath,
         options
@@ -107,18 +126,5 @@ export class S3Loader extends BaseDocumentLoader {
         `Failed to load file ${filePath} using unstructured loader.`
       );
     }
-  }
-}
-
-async function S3LoaderImports() {
-  try {
-    const s3Module = await import("@aws-sdk/client-s3");
-
-    return s3Module as typeof s3Module;
-  } catch (e) {
-    console.error(e);
-    throw new Error(
-      "Failed to load @aws-sdk/client-s3'. Please install it eg. `yarn add @aws-sdk/client-s3`."
-    );
   }
 }

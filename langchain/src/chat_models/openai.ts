@@ -86,6 +86,7 @@ export interface ChatOpenAICallOptions extends OpenAICallOptions {
   function_call?: CreateChatCompletionRequestFunctionCall;
   functions?: ChatCompletionFunctions[];
   tools?: StructuredTool[];
+  promptIndex?: number;
 }
 
 /**
@@ -113,7 +114,15 @@ export class ChatOpenAI
   declare CallOptions: ChatOpenAICallOptions;
 
   get callKeys(): (keyof ChatOpenAICallOptions)[] {
-    return ["stop", "signal", "timeout", "options", "functions", "tools"];
+    return [
+      "stop",
+      "signal",
+      "timeout",
+      "options",
+      "functions",
+      "tools",
+      "promptIndex",
+    ];
   }
 
   lc_serializable = true;
@@ -223,10 +232,6 @@ export class ChatOpenAI
 
     this.streaming = fields?.streaming ?? false;
 
-    if (this.streaming && this.n > 1) {
-      throw new Error("Cannot stream results when n > 1");
-    }
-
     if (this.azureOpenAIApiKey) {
       if (!this.azureOpenAIApiInstanceName) {
         throw new Error("Azure OpenAI API instance name not found");
@@ -249,7 +254,9 @@ export class ChatOpenAI
   /**
    * Get the parameters used to invoke the model
    */
-  invocationParams(): Omit<CreateChatCompletionRequest, "messages"> {
+  invocationParams(
+    options?: this["ParsedCallOptions"]
+  ): Omit<CreateChatCompletionRequest, "messages"> {
     return {
       model: this.modelName,
       temperature: this.temperature,
@@ -259,8 +266,14 @@ export class ChatOpenAI
       max_tokens: this.maxTokens === -1 ? undefined : this.maxTokens,
       n: this.n,
       logit_bias: this.logitBias,
-      stop: this.stop,
+      stop: options?.stop ?? this.stop,
       stream: this.streaming,
+      functions:
+        options?.functions ??
+        (options?.tools
+          ? options?.tools.map(formatToOpenAIFunction)
+          : undefined),
+      function_call: options?.function_call,
       ...this.modelKwargs,
     };
   }
@@ -284,20 +297,11 @@ export class ChatOpenAI
   /** @ignore */
   async _generate(
     messages: BaseChatMessage[],
-    options?: this["ParsedCallOptions"],
+    options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
     const tokenUsage: TokenUsage = {};
-    if (this.stop && options?.stop) {
-      throw new Error("Stop found in input and default params");
-    }
-
-    const params = this.invocationParams();
-    params.stop = options?.stop ?? params.stop;
-    params.functions =
-      options?.functions ??
-      (options?.tools ? options?.tools.map(formatToOpenAIFunction) : undefined);
-    params.function_call = options?.function_call;
+    const params = this.invocationParams(options);
     const messagesMapped: ChatCompletionRequestMessage[] = messages.map(
       (message) => ({
         role: messageTypeToOpenAIRole(message._getType()),
@@ -409,11 +413,13 @@ export class ChatOpenAI
                         choice.message.function_call.arguments +=
                           part.delta?.function_call?.arguments ?? "";
                       }
-                      // TODO this should pass part.index to the callback
-                      // when that's supported there
                       // eslint-disable-next-line no-void
                       void runManager?.handleLLMNewToken(
-                        part.delta?.content ?? ""
+                        part.delta?.content ?? "",
+                        {
+                          prompt: options.promptIndex ?? 0,
+                          completion: part.index,
+                        }
                       );
                       // TODO we don't currently have a callback method for
                       // sending the function call arguments

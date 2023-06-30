@@ -13,22 +13,33 @@ export class OutputFunctionsParser extends BaseLLMOutputParser<string> {
 
   lc_serializable = true;
 
+  argsOnly = true;
+
+  constructor(config?: { argsOnly: boolean }) {
+    super();
+    this.argsOnly = config?.argsOnly ?? this.argsOnly;
+  }
+
   async parseResult(
     generations: Generation[] | ChatGeneration[]
   ): Promise<string> {
     if ("message" in generations[0]) {
       const gen = generations[0] as ChatGeneration;
-      if (!gen.message.additional_kwargs.function_call) {
+      const functionCall = gen.message.additional_kwargs.function_call;
+      if (!functionCall) {
         throw new Error(
           `No function_call in message ${JSON.stringify(generations)}`
         );
       }
-      if (!gen.message.additional_kwargs.function_call.arguments) {
+      if (!functionCall.arguments) {
         throw new Error(
           `No arguments in function_call ${JSON.stringify(generations)}`
         );
       }
-      return gen.message.additional_kwargs.function_call.arguments;
+      if (this.argsOnly) {
+        return functionCall.arguments;
+      }
+      return JSON.stringify(functionCall);
     } else {
       throw new Error(
         `No message in generations ${JSON.stringify(generations)}`
@@ -42,7 +53,15 @@ export class JsonOutputFunctionsParser extends BaseLLMOutputParser<object> {
 
   lc_serializable = true;
 
-  outputParser = new OutputFunctionsParser();
+  outputParser: OutputFunctionsParser;
+
+  argsOnly = true;
+
+  constructor(config?: { argsOnly: boolean }) {
+    super();
+    this.argsOnly = config?.argsOnly ?? this.argsOnly;
+    this.outputParser = new OutputFunctionsParser(config);
+  }
 
   async parseResult(
     generations: Generation[] | ChatGeneration[]
@@ -53,7 +72,12 @@ export class JsonOutputFunctionsParser extends BaseLLMOutputParser<object> {
         `No result from "OutputFunctionsParser" ${JSON.stringify(generations)}`
       );
     }
-    return JSON.parse(result);
+    const parsedResult = JSON.parse(result);
+    if (this.argsOnly) {
+      return parsedResult;
+    }
+    parsedResult.arguments = JSON.parse(parsedResult.arguments);
+    return parsedResult;
   }
 }
 

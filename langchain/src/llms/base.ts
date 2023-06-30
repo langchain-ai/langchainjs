@@ -83,14 +83,40 @@ export abstract class BaseLLM extends BaseLanguageModel {
    * Get the parameters used to invoke the model
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  invocationParams(): any {
+  invocationParams(_options?: this["ParsedCallOptions"]): any {
     return {};
+  }
+
+  _flattenLLMResult(llmResult: LLMResult): LLMResult[] {
+    const llmResults: LLMResult[] = [];
+
+    for (let i = 0; i < llmResult.generations.length; i += 1) {
+      const genList = llmResult.generations[i];
+
+      if (i === 0) {
+        llmResults.push({
+          generations: [genList],
+          llmOutput: llmResult.llmOutput,
+        });
+      } else {
+        const llmOutput = llmResult.llmOutput
+          ? { ...llmResult.llmOutput, tokenUsage: {} }
+          : undefined;
+
+        llmResults.push({
+          generations: [genList],
+          llmOutput,
+        });
+      }
+    }
+
+    return llmResults;
   }
 
   /** @ignore */
   async _generateUncached(
     prompts: string[],
-    options: this["CallOptions"],
+    options: this["ParsedCallOptions"],
     callbacks?: Callbacks
   ): Promise<LLMResult> {
     const callbackManager_ = await CallbackManager.configure(
@@ -100,8 +126,11 @@ export abstract class BaseLLM extends BaseLanguageModel {
       this.tags,
       { verbose: this.verbose }
     );
-    const extra = { options, invocation_params: this?.invocationParams() };
-    const runManager = await callbackManager_?.handleLLMStart(
+    const extra = {
+      options,
+      invocation_params: this?.invocationParams(options),
+    };
+    const runManagers = await callbackManager_?.handleLLMStart(
       this.toJSON(),
       prompts,
       undefined,
@@ -111,18 +140,26 @@ export abstract class BaseLLM extends BaseLanguageModel {
 
     let output;
     try {
-      output = await this._generate(prompts, options, runManager);
+      output = await this._generate(prompts, options, runManagers?.[0]);
     } catch (err) {
-      await runManager?.handleLLMError(err);
+      await Promise.all(
+        (runManagers ?? []).map((runManager) => runManager?.handleLLMError(err))
+      );
       throw err;
     }
 
-    await runManager?.handleLLMEnd(output);
+    const flattenedOutputs: LLMResult[] = this._flattenLLMResult(output);
+    await Promise.all(
+      (runManagers ?? []).map((runManager, i) =>
+        runManager?.handleLLMEnd(flattenedOutputs[i])
+      )
+    );
+    const runIds = runManagers?.map((manager) => manager.runId) || undefined;
     // This defines RUN_KEY as a non-enumerable property on the output object
     // so that it is not serialized when the output is stringified, and so that
     // it isnt included when listing the keys of the output object.
     Object.defineProperty(output, RUN_KEY, {
-      value: runManager ? { runId: runManager?.runId } : undefined,
+      value: runIds ? { runIds } : undefined,
       configurable: true,
     });
     return output;
@@ -295,8 +332,10 @@ export abstract class LLM extends BaseLLM {
     runManager?: CallbackManagerForLLMRun
   ): Promise<LLMResult> {
     const generations: Generation[][] = await Promise.all(
-      prompts.map((prompt) =>
-        this._call(prompt, options, runManager).then((text) => [{ text }])
+      prompts.map((prompt, promptIndex) =>
+        this._call(prompt, { ...options, promptIndex }, runManager).then(
+          (text) => [{ text }]
+        )
       )
     );
     return { generations };

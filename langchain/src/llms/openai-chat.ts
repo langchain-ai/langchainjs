@@ -20,7 +20,11 @@ import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
 import { Generation, LLMResult } from "../schema/index.js";
 import { promptLayerTrackRequest } from "../util/prompt-layer.js";
 
-export { OpenAICallOptions, OpenAIChatInput, AzureOpenAIInput };
+export { OpenAIChatInput, AzureOpenAIInput };
+
+export interface OpenAIChatCallOptions extends OpenAICallOptions {
+  promptIndex?: number;
+}
 
 /**
  * Wrapper around OpenAI large language models that use the Chat endpoint.
@@ -48,10 +52,10 @@ export class OpenAIChat
   extends LLM
   implements OpenAIChatInput, AzureOpenAIInput
 {
-  declare CallOptions: OpenAICallOptions;
+  declare CallOptions: OpenAIChatCallOptions;
 
-  get callKeys(): (keyof OpenAICallOptions)[] {
-    return ["stop", "signal", "timeout", "options"];
+  get callKeys(): (keyof OpenAIChatCallOptions)[] {
+    return ["stop", "signal", "timeout", "options", "promptIndex"];
   }
 
   lc_serializable = true;
@@ -166,8 +170,10 @@ export class OpenAIChat
 
     this.streaming = fields?.streaming ?? false;
 
-    if (this.streaming && this.n > 1) {
-      throw new Error("Cannot stream results when n > 1");
+    if (this.n > 1) {
+      throw new Error(
+        "Cannot use n > 1 in OpenAIChat LLM. Use ChatOpenAI Chat Model instead."
+      );
     }
 
     if (this.azureOpenAIApiKey) {
@@ -192,7 +198,9 @@ export class OpenAIChat
   /**
    * Get the parameters used to invoke the model
    */
-  invocationParams(): Omit<CreateChatCompletionRequest, "messages"> {
+  invocationParams(
+    options?: this["ParsedCallOptions"]
+  ): Omit<CreateChatCompletionRequest, "messages"> {
     return {
       model: this.modelName,
       temperature: this.temperature,
@@ -202,7 +210,7 @@ export class OpenAIChat
       n: this.n,
       logit_bias: this.logitBias,
       max_tokens: this.maxTokens === -1 ? undefined : this.maxTokens,
-      stop: this.stop,
+      stop: options?.stop ?? this.stop,
       stream: this.streaming,
       ...this.modelKwargs,
     };
@@ -242,10 +250,7 @@ export class OpenAIChat
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<string> {
-    const { stop } = options;
-
-    const params = this.invocationParams();
-    params.stop = stop ?? params.stop;
+    const params = this.invocationParams(options);
 
     const data = params.stream
       ? await new Promise<CreateChatCompletionResponse>((resolve, reject) => {
@@ -330,7 +335,11 @@ export class OpenAIChat
                       choice.message.content += part.delta?.content ?? "";
                       // eslint-disable-next-line no-void
                       void runManager?.handleLLMNewToken(
-                        part.delta?.content ?? ""
+                        part.delta?.content ?? "",
+                        {
+                          prompt: options.promptIndex ?? 0,
+                          completion: part.index,
+                        }
                       );
                     }
                   }
