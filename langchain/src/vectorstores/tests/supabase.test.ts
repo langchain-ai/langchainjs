@@ -44,3 +44,23 @@ test("similaritySearchVectorWithScore should call RPC with the passed filters", 
     match_count: 5,
   });
 });
+
+test("similaritySearchVectorWithScore should call RPC with the empty filters if LLM not able to find filter in user query", async () => {
+  const supabaseClientMock = {
+    rpc: jest.fn().mockReturnValue(Promise.resolve({ data: [] })),
+  } as Partial<SupabaseClient>;
+
+  const embeddings = new FakeEmbeddings();
+  const vectorStore = new SupabaseVectorStore(embeddings, {
+    client: supabaseClientMock as SupabaseClient,
+    tableName: "documents",
+    queryName: "match_documents",
+  });
+
+  await vectorStore.similaritySearchVectorWithScore([1, 2, 3], 5);
+  expect(supabaseClientMock.rpc).toHaveBeenCalledWith("match_documents", {
+    filter: {},
+    query_embedding: [1, 2, 3],
+    match_count: 5,
+  });
+});
