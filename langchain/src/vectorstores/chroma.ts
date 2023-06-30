@@ -138,6 +138,7 @@ export class Chroma extends VectorStore {
     for (let i = 0; i < firstIds.length; i += 1) {
       results.push([
         new Document({
+          id: firstIds[i],
           pageContent: firstDocuments?.[i] ?? "",
           metadata: firstMetadatas?.[i] ?? {},
         }),
