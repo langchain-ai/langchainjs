@@ -55,6 +55,10 @@ export abstract class VectorStore {
 
   abstract addDocuments(documents: Document[]): Promise<void>;
 
+  async delete(_ids: string[]): Promise<void> {
+    throw new Error(`Not implemented.`);
+  }
+
   abstract similaritySearchVectorWithScore(
     query: number[],
     k: number,

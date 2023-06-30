@@ -91,15 +91,17 @@ export class Chroma extends VectorStore {
     }
 
     const collection = await this.ensureCollection();
-    const docstoreSize = await collection.count();
-    await collection.add({
-      ids: Array.from({ length: vectors.length }, (_, i) =>
-        (docstoreSize + i).toString()
-      ),
+    await collection.upsert({
+      ids: documents.map(({ id }) => id ?? uuid.v1()),
       embeddings: vectors,
       metadatas: documents.map(({ metadata }) => metadata),
       documents: documents.map(({ pageContent }) => pageContent),
     });
+  }
+
+  async delete(documentIds: string[]): Promise<void> {
+    const collection = await this.ensureCollection();
+    await collection.delete({ ids: documentIds });
   }
 
   async similaritySearchVectorWithScore(
