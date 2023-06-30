@@ -136,8 +136,7 @@ export class ZapierNLAWrapper extends Serializable {
 
   /**
    * Executes an action that is identified by action_id, must be exposed
-   * (enabled) by the current user (associated with the set api_key). Change
-   * your exposed actions here: https://nla.zapier.com/demo/start/
+   * (enabled) by the current user (associated with the set api_key or access token).
    * @param actionId
    * @param instructions
    * @param params
@@ -172,8 +171,7 @@ export class ZapierNLAWrapper extends Serializable {
 
   /**
    * Returns a list of all exposed (enabled) actions associated with
-   * current user (associated with the set api_key). Change your exposed
-   * actions here: https://nla.zapier.com/demo/start/
+   * current user (associated with the set api_key or access token).
    */
   async listActions(): Promise<ZapierValues[]> {
     const headers = this._getHeaders();
@@ -186,6 +184,16 @@ export class ZapierNLAWrapper extends Serializable {
       }
     );
     if (!resp.ok) {
+      if (resp.status === 401) {
+        if (this.zapierNlaOAuthAccessToken) {
+          throw new Error(
+            "A 401 Unauthorized error was returned. Check that your access token is correct and doesn't need to be refreshed."
+          );
+        }
+        throw new Error(
+          "A 401 Unauthorized error was returned. Check that your API Key is correct."
+        );
+      }
       throw new Error("Failed to list actions");
     }
     return (await resp.json()).results;
