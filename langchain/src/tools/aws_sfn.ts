@@ -44,17 +44,6 @@ export class StartExecutionAWSSfnTool extends Tool {
     return `Use to start executing the ${name} state machine. Use to run ${name} workflows. Whenever you need to start (or execute) an asynchronous workflow (or state machine) about ${description} you should ALWAYS use this. Input should be a valid JSON string.`;
   }
 
-  get lc_namespace(): string[] {
-    return [...super.lc_namespace, "aws_sfn"];
-  }
-
-  get lc_secrets(): { [key: string]: string } | undefined {
-    return {
-      accessKeyId: "AWS_ACCESS_KEY_ID",
-      secretAccessKey: "AWS_SECRET_ACCESS_KEY",
-    };
-  }
-
   /** @ignore */
   async _call(input: string): Promise<string> {
     const clientConstructorArgs: SfnClientConstructorArgs =

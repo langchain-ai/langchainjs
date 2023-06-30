@@ -4,7 +4,7 @@ import {
   AWSSfnToolkit,
 } from "langchain/agents/agent_toolkits/aws_sfn";
 
-const EXAMPLE_STATE_MACHINE_ASL = `
+const _EXAMPLE_STATE_MACHINE_ASL = `
 {
   "Comment": "A simple example of the Amazon States Language to define a state machine for new client onboarding.",
   "StartAt": "OnboardNewClient",
@@ -15,8 +15,7 @@ const EXAMPLE_STATE_MACHINE_ASL = `
       "End": true
     }
   }
-}
-`;
+}`;
 
 /**
  * This example uses a deployed AWS Step Function state machine with the above Amazon State Language (ASL) definition.
@@ -26,13 +25,14 @@ const EXAMPLE_STATE_MACHINE_ASL = `
 export const run = async () => {
   const model = new OpenAI({ temperature: 0 });
   const toolkit = new AWSSfnToolkit({
-    region: "us-east-1",
     name: "onboard-new-client-workflow",
     description:
       "Onboard new client workflow. Can also be used to get status of any excuting workflow or state machine.",
     stateMachineArn:
       "arn:aws:states:us-east-1:1234567890:stateMachine:my-state-machine", // Update with your state machine ARN accordingly
-    asl: EXAMPLE_STATE_MACHINE_ASL,
+    region: "<your Sfn's region>",
+    accessKeyId: "<your access key id>",
+    secretAccessKey: "<your secret access key>",
   });
   const executor = createAWSSfnAgent(model, toolkit);
 
