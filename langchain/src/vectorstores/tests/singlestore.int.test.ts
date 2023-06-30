@@ -2,7 +2,7 @@
 /* eslint-disable import/no-extraneous-dependencies */
 import { test, expect } from "@jest/globals";
 import { OpenAIEmbeddings } from "../../embeddings/openai.js";
-import { SingleStoreVectorStore } from "../singlestore.js";
+import { SingleStoreVectorStore, DistanceMetrics } from "../singlestore.js";
 import { Document } from "../../document.js";
 
 test.skip("SingleStoreVectorStore", async () => {
@@ -85,7 +85,7 @@ test.skip("SingleStoreVectorStore euclidean_distance", async () => {
     {
       connectionURI: `http://${process.env.SINGLESTORE_USERNAME}:${process.env.SINGLESTORE_PASSWORD}@${process.env.SINGLESTORE_HOST}:${process.env.SINGLESTORE_PORT}/${process.env.SINGLESTORE_DATABASE}`,
       tableName: "euclidean_distance_test",
-      distanceMetrics: "EUCLIDEAN_DISTANCE",
+      distanceMetrics: DistanceMetrics.EUCLIDEAN_DISTANCE,
     }
   );
   expect(vectorStore).toBeDefined();

@@ -13,11 +13,14 @@ import { VectorStore } from "./base.js";
 import { Embeddings } from "../embeddings/base.js";
 import { Document } from "../document.js";
 
-export type DistanceMetrics = "DOT_PRODUCT" | "EUCLIDEAN_DISTANCE";
+export enum DistanceMetrics {
+  DOT_PRODUCT = "DOT_PRODUCT",
+  EUCLIDEAN_DISTANCE = "EUCLIDEAN_DISTANCE",
+}
 
 const OrderingDirective: Record<DistanceMetrics, string> = {
-  DOT_PRODUCT: "DESC",
-  EUCLIDEAN_DISTANCE: "",
+  [DistanceMetrics.DOT_PRODUCT]: "DESC",
+  [DistanceMetrics.EUCLIDEAN_DISTANCE]: "",
 };
 
 export interface ConnectionOptions extends PoolOptions {}
@@ -66,12 +69,7 @@ function withConnectAttributes(
     result.connectAttributes = {};
   }
 
-  if (
-    !Object.prototype.hasOwnProperty.call(
-      result.connectAttributes,
-      "program_name"
-    )
-  ) {
+  if (result.connectAttributes.program_name === undefined) {
     result.connectAttributes = {
       ...result.connectAttributes,
       program_name: "langchain js sdk",
@@ -101,7 +99,8 @@ export class SingleStoreVectorStore extends VectorStore {
     this.contentColumnName = config.contentColumnName ?? "content";
     this.vectorColumnName = config.vectorColumnName ?? "vector";
     this.metadataColumnName = config.metadataColumnName ?? "metadata";
-    this.distanceMetrics = config.distanceMetrics ?? "DOT_PRODUCT";
+    this.distanceMetrics =
+      config.distanceMetrics ?? DistanceMetrics.DOT_PRODUCT;
   }
 
   async createTableIfNotExists(): Promise<void> {
@@ -156,7 +155,7 @@ export class SingleStoreVectorStore extends VectorStore {
     const buildWhereClause = (record: Metadata, argList: string[]): string => {
       const whereTokens: string[] = [];
       for (const key in record)
-        if (Object.prototype.hasOwnProperty.call(record, key)) {
+        if (record[key] !== undefined) {
           if (
             typeof record[key] === "object" &&
             record[key] != null &&
