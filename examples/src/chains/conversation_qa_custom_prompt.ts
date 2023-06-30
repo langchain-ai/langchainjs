@@ -44,7 +44,7 @@ const chain = ConversationalRetrievalQAChain.fromLLM(
       returnMessages: true,
     }),
     questionGeneratorChainOptions: {
-      template: CUSTOM_QUESTION_GENERATOR_CHAIN_PROMPT
+      template: CUSTOM_QUESTION_GENERATOR_CHAIN_PROMPT,
     },
   }
 );
@@ -54,10 +54,21 @@ const res = await chain.call({
     "I have a friend called Bob. He's 28 years old. He'd like to know what the powerhouse of the cell is?",
 });
 
-console.log(res); // The powerhouse of the cell is the mitochondria.
+console.log(res);
+/*
+  {
+    text: "The powerhouse of the cell is the mitochondria."
+  }
+*/
 
 const res2 = await chain.call({
   question: "How old is Bob?",
 });
 
 console.log(res2); // Bob is 28 years old.
+
+/*
+  {
+    text: "Bob is 28 years old."
+  }
+*/
