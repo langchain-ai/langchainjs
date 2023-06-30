@@ -22,6 +22,9 @@
     "agents/load.cjs",
     "agents/load.js",
     "agents/load.d.ts",
+    "agents/agent_toolkits/aws_sfn.cjs",
+    "agents/agent_toolkits/aws_sfn.js",
+    "agents/agent_toolkits/aws_sfn.d.ts",
     "base_language.cjs",
     "base_language.js",
     "base_language.d.ts",
@@ -31,6 +34,9 @@
     "tools/aws_lambda.cjs",
     "tools/aws_lambda.js",
     "tools/aws_lambda.d.ts",
+    "tools/aws_sfn.cjs",
+    "tools/aws_sfn.js",
+    "tools/aws_sfn.d.ts",
     "tools/calculator.cjs",
     "tools/calculator.js",
     "tools/calculator.d.ts",
@@ -457,6 +463,7 @@
     "@aws-sdk/client-lambda": "^3.310.0",
     "@aws-sdk/client-s3": "^3.310.0",
     "@aws-sdk/client-sagemaker-runtime": "^3.310.0",
+    "@aws-sdk/client-sfn": "^3.362.0",
     "@clickhouse/client": "^0.0.14",
     "@elastic/elasticsearch": "^8.4.0",
     "@faker-js/faker": "^7.6.0",
@@ -543,6 +550,7 @@
     "@aws-sdk/client-lambda": "^3.310.0",
     "@aws-sdk/client-s3": "^3.310.0",
     "@aws-sdk/client-sagemaker-runtime": "^3.310.0",
+    "@aws-sdk/client-sfn": "^3.310.0",
     "@clickhouse/client": "^0.0.14",
     "@elastic/elasticsearch": "^8.4.0",
     "@getmetal/metal-sdk": "*",
@@ -603,6 +611,9 @@
       "optional": true
     },
     "@aws-sdk/client-sagemaker-runtime": {
+      "optional": true
+    },
+    "@aws-sdk/client-sfn": {
       "optional": true
     },
     "@clickhouse/client": {
@@ -816,6 +827,11 @@
       "import": "./agents/load.js",
       "require": "./agents/load.cjs"
     },
+    "./agents/agent_toolkits/aws_sfn": {
+      "types": "./agents/agent_toolkits/aws_sfn.d.ts",
+      "import": "./agents/agent_toolkits/aws_sfn.js",
+      "require": "./agents/agent_toolkits/aws_sfn.cjs"
+    },
     "./base_language": {
       "types": "./base_language.d.ts",
       "import": "./base_language.js",
@@ -830,6 +846,11 @@
       "types": "./tools/aws_lambda.d.ts",
       "import": "./tools/aws_lambda.js",
       "require": "./tools/aws_lambda.cjs"
+    },
+    "./tools/aws_sfn": {
+      "types": "./tools/aws_sfn.d.ts",
+      "import": "./tools/aws_sfn.js",
+      "require": "./tools/aws_sfn.cjs"
     },
     "./tools/calculator": {
       "types": "./tools/calculator.d.ts",

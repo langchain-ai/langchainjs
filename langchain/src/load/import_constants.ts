@@ -2,7 +2,9 @@
 
 export const optionalImportEntrypoints = [
   "langchain/agents/load",
+  "langchain/agents/agent_toolkits/aws_sfn",
   "langchain/tools/aws_lambda",
+  "langchain/tools/aws_sfn",
   "langchain/tools/calculator",
   "langchain/tools/webbrowser",
   "langchain/chains/load",

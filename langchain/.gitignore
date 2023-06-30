@@ -10,6 +10,9 @@ agents.d.ts
 agents/load.cjs
 agents/load.js
 agents/load.d.ts
+agents/agent_toolkits/aws_sfn.cjs
+agents/agent_toolkits/aws_sfn.js
+agents/agent_toolkits/aws_sfn.d.ts
 base_language.cjs
 base_language.js
 base_language.d.ts
@@ -19,6 +22,9 @@ tools.d.ts
 tools/aws_lambda.cjs
 tools/aws_lambda.js
 tools/aws_lambda.d.ts
+tools/aws_sfn.cjs
+tools/aws_sfn.js
+tools/aws_sfn.d.ts
 tools/calculator.cjs
 tools/calculator.js
 tools/calculator.d.ts
