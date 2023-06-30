@@ -121,7 +121,7 @@ export class OpenAIEmbeddings
 
   async embedDocuments(texts: string[]): Promise<number[][]> {
     const subPrompts = chunkArray(
-      this.stripNewLines ? texts.map((t) => t.replaceAll("\n", " ")) : texts,
+      this.stripNewLines ? texts.map((t) => t.replace(/\n/g, " ")) : texts,
       this.batchSize
     );
 
@@ -144,7 +144,7 @@ export class OpenAIEmbeddings
   async embedQuery(text: string): Promise<number[]> {
     const { data } = await this.embeddingWithRetry({
       model: this.modelName,
-      input: this.stripNewLines ? text.replaceAll("\n", " ") : text,
+      input: this.stripNewLines ? text.replace(/\n/g, " ") : text,
     });
     return data.data[0].embedding;
   }
