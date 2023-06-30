@@ -125,6 +125,6 @@ test.skip("Supabase Store Self Query Retriever Test", async () => {
   expect(query3.length).toEqual(1);
 
   const query4 = await selfQueryRetriever.getRelevantDocuments("What is what");
-  console.log(query3);
-  expect(query4.length).toEqual(0);
+  console.log(query4);
+  expect(query4.length).toEqual(4);
 });

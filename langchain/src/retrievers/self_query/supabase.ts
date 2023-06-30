@@ -169,6 +169,6 @@ export class SupabaseTranslator extends BaseTranslator {
     query: StructuredQuery
   ): this["VisitStructuredQueryOutput"] {
     const filterFunction = query.filter?.accept(this);
-    return { filter: (filterFunction as SupabaseFilterRPCCall) || {} };
+    return { filter: (filterFunction as SupabaseFilterRPCCall) ?? {} };
   }
 }
