@@ -109,7 +109,7 @@ export const checkValidTemplate = (
       return acc;
     }, {} as Record<string, string>);
     renderTemplate(template, templateFormat, dummyInputs);
-  } catch {
-    throw new Error("Invalid prompt schema.");
+  } catch(e: any) {
+      throw new Error(`Invalid prompt schema: ${e.message}`);
   }
 };
