@@ -121,7 +121,7 @@ const entrypoints = {
   "chat_models/openai": "chat_models/openai",
   "chat_models/anthropic": "chat_models/anthropic",
   "chat_models/googlevertexai": "chat_models/googlevertexai",
-  "chat_models/baiduernie": "chat_models/baiduernie",
+  "chat_models/baiduwenxin": "chat_models/baiduwenxin",
   // schema
   schema: "schema/index",
   "schema/output_parser": "schema/output_parser",

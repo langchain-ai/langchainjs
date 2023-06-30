@@ -23,6 +23,7 @@ const document_loaders_base = require("langchain/document_loaders/base");
 const chat_models_base = require("langchain/chat_models/base");
 const chat_models_openai = require("langchain/chat_models/openai");
 const chat_models_anthropic = require("langchain/chat_models/anthropic");
+const chat_models_baiduwenxin = require("langchain/chat_models/baiduwenxin");
 const schema = require("langchain/schema");
 const schema_output_parser = require("langchain/schema/output_parser");
 const schema_query_constructor = require("langchain/schema/query_constructor");

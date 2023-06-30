@@ -17,15 +17,7 @@ const axios = (
   "default" in axiosMod ? axiosMod.default : axiosMod
 ) as AxiosStatic;
 
-enum WenxinMessageRole {
-  AI = "assistant",
-  HUMAN = "user",
-}
-
-export enum WenxinModelName {
-  ERNIE_BOT = "ERNIE-Bot",
-  ERNIE_BOT_TURBO = "ERNIE-Bot-turbo",
-}
+export type WenxinMessageRole = "assistant" | "user";
 
 interface WenxinMessage {
   role: WenxinMessageRole;
@@ -58,9 +50,9 @@ interface ChatCompletionResponse {
 
 declare interface BaiduWenxinChatInput {
   /** Model name to use
-   * @default WenxinModelName.ERNIE_BOT_TURBO
+   * @default "ERNIE-Bot-turbo"
    */
-  modelName: WenxinModelName;
+  modelName: string;
 
   /** Whether to stream the results or not. Defaults to false. */
   streaming?: boolean;
@@ -109,9 +101,9 @@ declare interface BaiduWenxinChatInput {
 function messageTypeToWenxinRole(type: MessageType): WenxinMessageRole {
   switch (type) {
     case "ai":
-      return WenxinMessageRole.AI;
+      return "assistant";
     case "human":
-      return WenxinMessageRole.HUMAN;
+      return "user";
     case "system":
       throw new Error("System messages not supported");
     default:
@@ -163,7 +155,7 @@ export class ChatBaiduWenxin
 
   userId?: string;
 
-  modelName: WenxinModelName = WenxinModelName.ERNIE_BOT_TURBO;
+  modelName = "ERNIE-Bot-turbo";
 
   apiUrl: string;
 
@@ -196,11 +188,11 @@ export class ChatBaiduWenxin
     this.modelName = fields?.modelName ?? this.modelName;
 
     switch (this.modelName) {
-      case WenxinModelName.ERNIE_BOT:
+      case "ERNIE-Bot":
         this.apiUrl =
           "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/completions";
         break;
-      case WenxinModelName.ERNIE_BOT_TURBO:
+      case "ERNIE-Bot-turbo":
         this.apiUrl =
           "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/eb-instant";
         break;
@@ -213,7 +205,7 @@ export class ChatBaiduWenxin
     this.penaltyScore = fields?.penaltyScore ?? this.penaltyScore;
 
     // Validate the input
-    if (this.modelName === WenxinModelName.ERNIE_BOT_TURBO) {
+    if (this.modelName === "ERNIE-Bot-turbo") {
       if (this.temperature) {
         throw new Error(
           "Temperature is not supported for ERNIE_BOT_TURBO model"
@@ -423,7 +415,7 @@ export class ChatBaiduWenxin
   }
 
   _llmType() {
-    return "ernie";
+    return "baiduwenxin";
   }
 
   /** @ignore */
