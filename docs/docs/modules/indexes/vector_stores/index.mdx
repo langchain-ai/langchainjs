@@ -3,6 +3,8 @@ sidebar_label: "Vector Stores"
 sidebar_position: 3
 ---
 
+import CodeBlock from "@theme/CodeBlock";
+
 # Getting Started: Vector Stores
 
 :::info
@@ -40,7 +42,7 @@ interface VectorStore {
   /**
    * Turn a VectorStore into a Retriever
    */
-  asRetriever(k?: number): BaseRetriever;
+  asRetriever(k?: number, similarityFilter?: SimilarityFilters): BaseRetriever;
 
   /**
    * Advanced: Add more documents to an existing VectorStore,
@@ -78,6 +80,21 @@ abstract class BaseVectorStore implements VectorStore {
   ): Promise<VectorStore>;
 }
 ```
+
+## Recursive Similarity Search
+
+Um problema que algumas pessoas podem enfrentar é que, ao fazer uma pesquisa de similaridade, você tem que fornecer um valor `k`. Esse valor é responsável por trazer N resultados similares para você. Mas e se você não souber o valor de `k`? E se você quiser que o sistema retorne todos os resultados possíveis?
+
+Num cenário real, vamos imaginar um documento criado por um product manager super extenso que descreve um produto. Neste documento, podemos ter 10, 15, 20, 100 ou mais funcionalidades descritas. Como saber o valor certo de `k` para que o sistema retorne todos os resultados possíveis para a pergunta "Quais são todas as funcionalidades que o produto X tem?".
+
+Para resolver esse problema, o Langchain oferece uma funcionalidade chamada de Recursive Similarity Search. Com ela, você pode fazer uma pesquisa de similaridade sem precisar depender apenas do valor de `k`. O sistema irá retornar todos os resultados possíveis para a sua pergunta, baseado na porcentagem de similaridade mínima que voc6e quer.
+
+É possível utilizar a Recursive Similarity Search utilizando uma vector store como retriever. Veja este exemplo:
+
+import RecursiveSimilaritySearchExample from "@examples/retrievers/recursive-similarity-search.ts";
+
+<CodeBlock language="typescript">{Example}</CodeBlock>
+
 
 ## Which one to pick?
 

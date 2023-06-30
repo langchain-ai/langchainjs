@@ -1,3 +1,4 @@
+/* eslint-disable no-process-env */
 import { expect, test } from "@jest/globals";
 import { OpenAI } from "../../llms/openai.js";
 import { ConversationalRetrievalQAChain } from "../conversational_retrieval_chain.js";
@@ -6,6 +7,7 @@ import { OpenAIEmbeddings } from "../../embeddings/openai.js";
 import { ChatOpenAI } from "../../chat_models/openai.js";
 import { PromptTemplate } from "../../prompts/index.js";
 import { BufferMemory } from "../../memory/buffer_memory.js";
+import { MemoryVectorStore } from "../../vectorstores/memory.js";
 
 test("Test ConversationalRetrievalQAChain from LLM", async () => {
   const model = new OpenAI({ modelName: "text-ada-001" });
@@ -329,4 +331,207 @@ test("Test ConversationalRetrievalQAChain from LLM with a chat model and memory"
   });
 
   console.log({ res2 });
+});
+
+test("ConversationalRetrievalQAChain.fromLLM should use its vector store recursively until it gets all the similar results with the minimum similarity score provided", async () => {
+  const vectorStore = await MemoryVectorStore.fromTexts(
+    [
+      "Buildings are made out of brick",
+      "Buildings are made out of wood",
+      "Buildings are made out of stone",
+      "Cars are made out of metal",
+      "Cars are made out of plastic",
+    ],
+    [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }, { id: 5 }],
+    new OpenAIEmbeddings()
+  );
+
+  const model = new ChatOpenAI({
+    modelName: "gpt-3.5-turbo",
+    temperature: 0,
+  });
+
+  const chain = ConversationalRetrievalQAChain.fromLLM(
+    model,
+    vectorStore.asRetriever(1, undefined, {
+      minSimilarityScore: 0.9,
+      dynamicK: true,
+    }),
+    {
+      returnSourceDocuments: true,
+      memory: new BufferMemory({
+        memoryKey: "chat_history",
+        inputKey: "question",
+        outputKey: "text",
+      }),
+    }
+  );
+  const res = await chain.call({
+    question: "Buildings are made out of what?",
+  });
+
+  console.log("response:", res);
+
+  expect(res).toEqual(
+    expect.objectContaining({
+      text: expect.any(String),
+      sourceDocuments: expect.arrayContaining([
+        expect.objectContaining({
+          metadata: expect.objectContaining({
+            id: 1,
+          }),
+        }),
+        expect.objectContaining({
+          metadata: expect.objectContaining({
+            id: 2,
+          }),
+        }),
+        expect.objectContaining({
+          metadata: expect.objectContaining({
+            id: 3,
+          }),
+        }),
+      ]),
+    })
+  );
+});
+
+test("ConversationalRetrievalQAChain.fromLLM should use its vector store to get X results that matches the provided similarity score", async () => {
+  const vectorStore = await MemoryVectorStore.fromTexts(
+    [
+      "Buildings are made out of brick",
+      "Buildings are made out of wood",
+      "Buildings are made out of stone",
+      "Cars are made out of metal",
+      "Cars are made out of plastic",
+    ],
+    [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }, { id: 5 }],
+    new OpenAIEmbeddings()
+  );
+
+  const model = new ChatOpenAI({
+    modelName: "gpt-3.5-turbo",
+    temperature: 0,
+  });
+
+  const chain = ConversationalRetrievalQAChain.fromLLM(
+    model,
+    vectorStore.asRetriever(1, undefined, {
+      minSimilarityScore: 0.9,
+      dynamicK: false,
+    }),
+    {
+      returnSourceDocuments: true,
+      memory: new BufferMemory({
+        memoryKey: "chat_history",
+        inputKey: "question",
+        outputKey: "text",
+      }),
+    }
+  );
+  const res = await chain.call({
+    question: "Buildings are made out of what?",
+  });
+
+  expect(res.sourceDocuments).toHaveLength(1);
+
+  const chain2 = ConversationalRetrievalQAChain.fromLLM(
+    model,
+    vectorStore.asRetriever(1, undefined, {
+      minSimilarityScore: 1,
+      dynamicK: false,
+    }),
+    {
+      returnSourceDocuments: true,
+      memory: new BufferMemory({
+        memoryKey: "chat_history",
+        inputKey: "question",
+        outputKey: "text",
+      }),
+    }
+  );
+  const res2 = await chain2.call({
+    question: "Buildings are made out of what?",
+  });
+
+  expect(res2.sourceDocuments).toHaveLength(0);
+});
+
+test("ConversationalRetrievalQAChain.fromLLM should use its vector store to get up to X results that matches the provided similarity score", async () => {
+  const vectorStore = await MemoryVectorStore.fromTexts(
+    [
+      "Buildings are made out of brick",
+      "Buildings are made out of wood",
+      "Buildings are made out of stone",
+      "Cars are made out of metal",
+      "Cars are made out of plastic",
+    ],
+    [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }, { id: 5 }],
+    new OpenAIEmbeddings()
+  );
+
+  const model = new ChatOpenAI({
+    modelName: "gpt-3.5-turbo",
+    temperature: 0,
+  });
+
+  const chain = ConversationalRetrievalQAChain.fromLLM(
+    model,
+    vectorStore.asRetriever(1, undefined, {
+      minSimilarityScore: 0.9,
+      dynamicK: true,
+      maxK: 2,
+    }),
+    {
+      returnSourceDocuments: true,
+      memory: new BufferMemory({
+        memoryKey: "chat_history",
+        inputKey: "question",
+        outputKey: "text",
+      }),
+    }
+  );
+  const res = await chain.call({
+    question: "Buildings are made out of what?",
+  });
+
+  expect(res.sourceDocuments).toHaveLength(2);
+});
+
+test("ConversationalRetrievalQAChain.fromLLM should throw an error if trying to use similarityFilters without providing a minimum similarity score", async () => {
+  const vectorStore = await MemoryVectorStore.fromTexts(
+    [
+      "Buildings are made out of brick",
+      "Buildings are made out of wood",
+      "Buildings are made out of stone",
+      "Cars are made out of metal",
+      "Cars are made out of plastic",
+    ],
+    [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }, { id: 5 }],
+    new OpenAIEmbeddings()
+  );
+
+  const model = new ChatOpenAI({
+    modelName: "gpt-3.5-turbo",
+    temperature: 0,
+  });
+
+  expect(() =>
+    ConversationalRetrievalQAChain.fromLLM(
+      model,
+      vectorStore.asRetriever(1, undefined, {
+        dynamicK: true,
+      }),
+      {
+        returnSourceDocuments: true,
+        memory: new BufferMemory({
+          memoryKey: "chat_history",
+          inputKey: "question",
+          outputKey: "text",
+        }),
+      }
+    )
+  ).toThrowError(
+    "You must provide a `minSimilarityScore` if you want to use the `similarityFilter`."
+  );
 });

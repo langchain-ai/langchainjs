@@ -1,11 +1,12 @@
 import { Embeddings } from "../embeddings/base.js";
 import { Document } from "../document.js";
-import { BaseRetriever } from "../schema/index.js";
+import { BaseRetriever, SimilarityFilters } from "../schema/index.js";
 
 export interface VectorStoreRetrieverInput<V extends VectorStore> {
   vectorStore: V;
   k?: number;
   filter?: V["FilterType"];
+  similarityFilter?: SimilarityFilters;
 }
 
 export class VectorStoreRetriever<
@@ -17,20 +18,79 @@ export class VectorStoreRetriever<
 
   filter?: V["FilterType"];
 
+  minSimilarityScore?: number;
+
+  dynamicK = false;
+
+  kIncrement = 1;
+
+  maxK = 100;
+
   constructor(fields: VectorStoreRetrieverInput<V>) {
     super();
     this.vectorStore = fields.vectorStore;
     this.k = fields.k ?? this.k;
     this.filter = fields.filter;
+    this.minSimilarityScore = fields.similarityFilter?.minSimilarityScore;
+    this.dynamicK = fields.similarityFilter?.dynamicK ?? this.dynamicK;
+    this.kIncrement = fields.similarityFilter?.kIncrement ?? this.kIncrement;
+    this.maxK = fields.similarityFilter?.maxK ?? this.maxK;
+
+    if (
+      fields.similarityFilter &&
+      fields.similarityFilter.minSimilarityScore == null
+    ) {
+      throw new Error(
+        "You must provide a `minSimilarityScore` if you want to use the `similarityFilter`."
+      );
+    }
   }
 
   async getRelevantDocuments(query: string): Promise<Document[]> {
-    const results = await this.vectorStore.similaritySearch(
-      query,
-      this.k,
-      this.filter
-    );
-    return results;
+    if (this.minSimilarityScore == null) {
+      const results = await this.vectorStore.similaritySearch(
+        query,
+        this.k,
+        this.filter
+      );
+
+      return results;
+    }
+
+    let updatedK = this.k;
+    let filteredResults: [Document, number][] = [];
+
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      const results = await this.vectorStore.similaritySearchWithScore(
+        query,
+        updatedK,
+        this.filter
+      );
+
+      filteredResults = results.filter(
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        ([, score]) => score >= this.minSimilarityScore!
+      );
+
+      // If we don't have enough results, we can't increase K
+      if (filteredResults.length < updatedK) {
+        break;
+      }
+
+      // If we've reached maxK, we can't increase K
+      if (updatedK === this.maxK) {
+        break;
+      }
+
+      if (this.dynamicK) {
+        updatedK += this.kIncrement;
+      } else {
+        break;
+      }
+    }
+
+    return filteredResults.map(([document]) => document);
   }
 
   async addDocuments(documents: Document[]): Promise<void> {
@@ -112,9 +172,15 @@ export abstract class VectorStore {
 
   asRetriever(
     k?: number,
-    filter?: this["FilterType"]
+    filter?: this["FilterType"],
+    similarityFilter?: SimilarityFilters
   ): VectorStoreRetriever<this> {
-    return new VectorStoreRetriever({ vectorStore: this, k, filter });
+    return new VectorStoreRetriever({
+      vectorStore: this,
+      k,
+      filter,
+      similarityFilter,
+    });
   }
 }
 
