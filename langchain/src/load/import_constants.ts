@@ -19,6 +19,7 @@ export const optionalImportEntrypoints = [
   "langchain/llms/googlevertexai",
   "langchain/llms/sagemaker_endpoint",
   "langchain/prompts/load",
+  "langchain/vectorstores/elasticsearch",
   "langchain/vectorstores/chroma",
   "langchain/vectorstores/hnswlib",
   "langchain/vectorstores/faiss",

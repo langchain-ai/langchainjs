@@ -118,6 +118,9 @@
     "vectorstores/base.cjs",
     "vectorstores/base.js",
     "vectorstores/base.d.ts",
+    "vectorstores/elasticsearch.cjs",
+    "vectorstores/elasticsearch.js",
+    "vectorstores/elasticsearch.d.ts",
     "vectorstores/memory.cjs",
     "vectorstores/memory.js",
     "vectorstores/memory.d.ts",
@@ -455,6 +458,7 @@
     "@aws-sdk/client-s3": "^3.310.0",
     "@aws-sdk/client-sagemaker-runtime": "^3.310.0",
     "@clickhouse/client": "^0.0.14",
+    "@elastic/elasticsearch": "^8.4.0",
     "@faker-js/faker": "^7.6.0",
     "@getmetal/metal-sdk": "^4.0.0",
     "@getzep/zep-js": "^0.4.1",
@@ -540,6 +544,7 @@
     "@aws-sdk/client-s3": "^3.310.0",
     "@aws-sdk/client-sagemaker-runtime": "^3.310.0",
     "@clickhouse/client": "^0.0.14",
+    "@elastic/elasticsearch": "^8.4.0",
     "@getmetal/metal-sdk": "*",
     "@getzep/zep-js": "^0.4.1",
     "@gomomento/sdk": "^1.23.0",
@@ -601,6 +606,9 @@
       "optional": true
     },
     "@clickhouse/client": {
+      "optional": true
+    },
+    "@elastic/elasticsearch": {
       "optional": true
     },
     "@getmetal/metal-sdk": {
@@ -973,6 +981,11 @@
       "types": "./vectorstores/base.d.ts",
       "import": "./vectorstores/base.js",
       "require": "./vectorstores/base.cjs"
+    },
+    "./vectorstores/elasticsearch": {
+      "types": "./vectorstores/elasticsearch.d.ts",
+      "import": "./vectorstores/elasticsearch.js",
+      "require": "./vectorstores/elasticsearch.cjs"
     },
     "./vectorstores/memory": {
       "types": "./vectorstores/memory.d.ts",
