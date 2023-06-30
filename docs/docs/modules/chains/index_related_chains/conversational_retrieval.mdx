@@ -38,9 +38,10 @@ static fromLLM(
 Here's an explanation of each of the attributes of the options object:
 
 - `questionGeneratorChainOptions`: An object that allows you to pass a custom template and LLM to the underlying question generation chain.
-  - If the template is provided, the `ConversationalRetrievalQAChain` will use this template to generate a question from the conversation context instead of using the question provided in the question parameter.
+  - If the `template` key is provided, the `ConversationalRetrievalQAChain` will use this template to generate a question from the conversation context instead of using the question provided in the question parameter.
     This can be useful if the original question does not contain enough information to retrieve a suitable answer.
-  - Passing in a separate LLM here allows you to use a cheaper/faster model to create the condensed question while using a more powerful model for the final response, and can reduce unnecessary latency.
+  - Passing in a separate LLM (`llm`) here allows you to use a cheaper/faster model to create the condensed question while using a more powerful model for the final response, and can reduce unnecessary latency.
+  - If the `extractConversationContext` key is provided, you cannot provide the `template` key, since it will force the underlying chain to use a different prompt template, ensuring that the AI will keep the relevant chat history excerpt as a context.
 - `qaChainOptions`: Options that allow you to customize the specific QA chain used in the final step. The default is the [`StuffDocumentsChain`](/docs/modules/chains/index_related_chains/document_qa), but you can customize which chain is used by passing in a `type` parameter.
   **Passing specific options here is completely optional**, but can be useful if you want to customize the way the response is presented to the end user, or if you have too many documents for the default `StuffDocumentsChain`.
   You can see [documentation about the usable fields here](/docs/api/chains/types/QAChainParams).
@@ -54,6 +55,34 @@ Here's a customization example using a faster LLM to generate questions and a sl
 import ConvoQABuiltInExample from "@examples/chains/conversational_qa_built_in_memory.ts";
 
 <CodeBlock language="typescript">{ConvoQABuiltInExample}</CodeBlock>
+
+## With Memory, Vector Store, and keeping the chat history context
+
+By default, the chatbot can only reason based on the results of the vector store similarity search. However, this poses a challenge when trying to retrieve information mentioned in previous messages.
+
+For example, if you introduce a friend Bob and mention his age as 28, the chatbot is unable to provide his age upon asking a question like "How old is Bob?". This limitation occurs because the bot searches for Bob in the vector store, rather than considering the message history.
+
+To resolve this, you can overwrite the standard prompt template of a Langchain chain step. This improved implementation not only clarifies the user's final question but also includes relevant messages from the history that are similar to the question.
+
+Introducing the property `questionGeneratorChainOptions.extractConversationContext` in the Langchain documentation. By setting this property, users can retain the chat history context and overcome the issue mentioned above.
+
+Take a look how the underlying chain behaves with `questionGeneratorChainOptions.extractConversationContext = true`:
+
+![Underlying chain behavior](/img/keep-chat-history-context-behavior.png)
+
+It finds the relevant information based on the question in the chat history and includes it in the final prompt.
+
+Now look how, in the final stage of the chain, AI has access to both the context of the vector store and the relevant information from the message history according to the question asked in a friendly way:
+
+![Final chain behavior](/img/keep-chat-history-context-final-answer.png)
+
+Heres an example of how to use this property combined with a memory object and a vector store:
+
+import ConvoRetrievalQAWithVectorStoreMemoryAndChatHistoryContextExample from "@examples/chains/conversation_qa_with_memory_vector_store_and_keeping_chat_history_context.ts";
+
+<CodeBlock language="typescript">
+  {ConvoRetrievalQAWithVectorStoreMemoryAndChatHistoryContextExample}
+</CodeBlock>
 
 ## Streaming
 
