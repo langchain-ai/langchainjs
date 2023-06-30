@@ -97,6 +97,8 @@ const entrypoints = {
   "document_loaders/web/notiondb": "document_loaders/web/notiondb",
   "document_loaders/web/notionapi": "document_loaders/web/notionapi",
   "document_loaders/web/s3": "document_loaders/web/s3",
+  "document_loaders/web/spotify_audio_features":
+    "document_loaders/web/spotify_audio_features",
   "document_loaders/web/confluence": "document_loaders/web/confluence",
   "document_loaders/fs/directory": "document_loaders/fs/directory",
   "document_loaders/fs/buffer": "document_loaders/fs/buffer",
@@ -234,6 +236,7 @@ const requiresOptionalDependency = [
   "document_loaders/web/notiondb",
   "document_loaders/web/notionapi",
   "document_loaders/web/s3",
+  "document_loaders/web/spotify_audio_features",
   "document_loaders/web/confluence",
   "document_loaders/fs/directory",
   "document_loaders/fs/buffer",

@@ -226,6 +226,9 @@ document_loaders/web/notionapi.d.ts
 document_loaders/web/s3.cjs
 document_loaders/web/s3.js
 document_loaders/web/s3.d.ts
+document_loaders/web/spotify_audio_features.cjs
+document_loaders/web/spotify_audio_features.js
+document_loaders/web/spotify_audio_features.d.ts
 document_loaders/web/confluence.cjs
 document_loaders/web/confluence.js
 document_loaders/web/confluence.d.ts
