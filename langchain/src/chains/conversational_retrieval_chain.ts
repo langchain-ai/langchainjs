@@ -14,25 +14,6 @@ import { CallbackManagerForChainRun } from "../callbacks/manager.js";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type LoadValues = Record<string, any>;
 
-const question_generator_with_history_context_template = `Given the following conversation and a follow up question, return the conversation history excerpt that includes any relevant context to the question if it exists and rephrase the follow up question to be a standalone question.
-
-Chat History:
-{chat_history}
-Follow Up Input: {question}
-
-Your answer should follow the following format:
-\`\`\`
-Use the following pieces of context to answer the users question.
-If you don't know the answer, just say that you don't know, don't try to make up an answer.
-----------------
-<Relevant chat history excerpt as context here>
-
-Standalone question: <Rephrased question here>
-\`\`\`
-
-Your answer:
-`;
-
 const question_generator_template = `Given the following conversation and a follow up question, rephrase the follow up question to be a standalone question.
 
 Chat History:
@@ -183,7 +164,6 @@ export class ConversationalRetrievalQAChain
       questionGeneratorChainOptions?: {
         llm?: BaseLanguageModel;
         template?: string;
-        extractConversationContext?: boolean;
       };
     } & Omit<
       ConversationalRetrievalQAChainInput,
@@ -206,21 +186,10 @@ export class ConversationalRetrievalQAChain
 
     const qaChain = loadQAChain(llm, qaChainOptions);
 
-    if (
-      questionGeneratorChainOptions?.extractConversationContext &&
-      questionGeneratorChainOptions.template
-    ) {
-      throw new Error(
-        "Cannot specify both extractConversationContext and template in questionGeneratorChainOptions."
-      );
-    }
-
     const questionGeneratorChainPrompt = PromptTemplate.fromTemplate(
       questionGeneratorChainOptions?.template ??
         questionGeneratorTemplate ??
-        (questionGeneratorChainOptions?.extractConversationContext
-          ? question_generator_with_history_context_template
-          : question_generator_template)
+        question_generator_template
     );
     const questionGeneratorChain = new LLMChain({
       prompt: questionGeneratorChainPrompt,
