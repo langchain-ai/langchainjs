@@ -74,7 +74,7 @@ export interface OpenAICallOptions extends BaseLanguageModelCallOptions {
  */
 export declare interface OpenAIInput extends OpenAIBaseInput {
   /** Generates `bestOf` completions server side and returns the "best" */
-  bestOf: number;
+  bestOf?: number;
 
   /** Batch size to use when passing multiple documents to generate */
   batchSize: number;

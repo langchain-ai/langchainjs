@@ -1,17 +1,18 @@
-import { ZepClient, Memory, Message, NotFoundError } from "@getzep/zep-js";
+import { Memory, Message, NotFoundError, ZepClient } from "@getzep/zep-js";
 import {
-  InputValues,
-  OutputValues,
-  MemoryVariables,
   getBufferString,
   getInputValue,
+  InputValues,
+  MemoryVariables,
+  OutputValues,
 } from "./base.js";
 import { BaseChatMemory, BaseChatMemoryInput } from "./chat_memory.js";
 import {
+  AIChatMessage,
   BaseChatMessage,
   ChatMessage,
-  AIChatMessage,
   HumanChatMessage,
+  SystemChatMessage,
 } from "../schema/index.js";
 
 export interface ZepMemoryInput extends BaseChatMemoryInput {
@@ -24,6 +25,9 @@ export interface ZepMemoryInput extends BaseChatMemoryInput {
   baseURL: string;
 
   sessionId: string;
+
+  // apiKey is optional.
+  apiKey?: string;
 }
 
 export class ZepMemory extends BaseChatMemory implements ZepMemoryInput {
@@ -51,7 +55,7 @@ export class ZepMemory extends BaseChatMemory implements ZepMemoryInput {
     this.memoryKey = fields.memoryKey ?? this.memoryKey;
     this.baseURL = fields.baseURL;
     this.sessionId = fields.sessionId;
-    this.zepClient = new ZepClient(this.baseURL);
+    this.zepClient = new ZepClient(this.baseURL, fields.apiKey);
   }
 
   get memoryKeys() {
@@ -59,7 +63,9 @@ export class ZepMemory extends BaseChatMemory implements ZepMemoryInput {
   }
 
   async loadMemoryVariables(values: InputValues): Promise<MemoryVariables> {
-    const lastN = values.lastN ?? 10;
+    // use either lastN provided by developer or undefined to use the
+    // server preset.
+    const lastN = values.lastN ?? undefined;
 
     let memory: Memory | null = null;
     try {
@@ -67,43 +73,48 @@ export class ZepMemory extends BaseChatMemory implements ZepMemoryInput {
     } catch (error) {
       // eslint-disable-next-line no-instanceof/no-instanceof
       if (error instanceof NotFoundError) {
-        if (this.returnMessages) return { [this.memoryKey]: [] };
-        return [];
+        const result = this.returnMessages
+          ? { [this.memoryKey]: [] }
+          : { [this.memoryKey]: "" };
+        return result;
       } else {
         throw error;
       }
     }
 
-    let messages: BaseChatMessage[] = [];
+    let messages: BaseChatMessage[] =
+      memory && memory.summary?.content
+        ? [new SystemChatMessage(memory.summary.content)]
+        : [];
 
     if (memory) {
-      messages = memory.messages.map((message) => {
-        const { content, role } = message;
-        if (role === this.humanPrefix) {
-          return new HumanChatMessage(content);
-        } else if (role === this.aiPrefix) {
-          return new AIChatMessage(content);
-        } else {
-          // default to generic ChatMessage
-          return new ChatMessage(content, role);
-        }
-      });
+      messages = messages.concat(
+        memory.messages.map((message) => {
+          const { content, role } = message;
+          if (role === this.humanPrefix) {
+            return new HumanChatMessage(content);
+          } else if (role === this.aiPrefix) {
+            return new AIChatMessage(content);
+          } else {
+            // default to generic ChatMessage
+            return new ChatMessage(content, role);
+          }
+        })
+      );
     }
 
     if (this.returnMessages) {
-      const result = {
+      return {
         [this.memoryKey]: messages,
       };
-      return result;
     }
-    const result = {
+    return {
       [this.memoryKey]: getBufferString(
         messages,
         this.humanPrefix,
         this.aiPrefix
       ),
     };
-    return result;
   }
 
   async saveContext(

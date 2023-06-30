@@ -22,6 +22,11 @@ export interface BaseCallbackHandlerInput {
   ignoreAgent?: boolean;
 }
 
+export interface NewTokenIndices {
+  prompt: number;
+  completion: number;
+}
+
 abstract class BaseCallbackHandlerMethodsClass {
   /**
    * Called at the start of an LLM or Chat Model run, with the prompt(s)
@@ -41,6 +46,13 @@ abstract class BaseCallbackHandlerMethodsClass {
    */
   handleLLMNewToken?(
     token: string,
+    /**
+     * idx.prompt is the index of the prompt that produced the token
+     *   (if there are multiple prompts)
+     * idx.completion is the index of the completion that produced the token
+     *   (if multiple completions per prompt are requested)
+     */
+    idx: NewTokenIndices,
     runId: string,
     parentRunId?: string
   ): Promise<void> | void;

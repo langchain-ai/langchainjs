@@ -6,7 +6,11 @@ import {
   ChainValues,
   LLMResult,
 } from "../schema/index.js";
-import { BaseCallbackHandler, CallbackHandlerMethods } from "./base.js";
+import {
+  BaseCallbackHandler,
+  CallbackHandlerMethods,
+  NewTokenIndices,
+} from "./base.js";
 import { ConsoleCallbackHandler } from "./handlers/console.js";
 import {
   getTracingCallbackHandler,
@@ -79,7 +83,10 @@ export class CallbackManagerForLLMRun
   extends BaseRunManager
   implements BaseCallbackManagerMethods
 {
-  async handleLLMNewToken(token: string): Promise<void> {
+  async handleLLMNewToken(
+    token: string,
+    idx: NewTokenIndices = { prompt: 0, completion: 0 }
+  ): Promise<void> {
     await Promise.all(
       this.handlers.map((handler) =>
         consumeCallback(async () => {
@@ -87,6 +94,7 @@ export class CallbackManagerForLLMRun
             try {
               await handler.handleLLMNewToken?.(
                 token,
+                idx,
                 this.runId,
                 this._parentRunId
               );
@@ -336,91 +344,104 @@ export class CallbackManager
   async handleLLMStart(
     llm: Serialized,
     prompts: string[],
-    runId: string = uuidv4(),
+    _runId: string | undefined = undefined,
     _parentRunId: string | undefined = undefined,
     extraParams: Record<string, unknown> | undefined = undefined
-  ): Promise<CallbackManagerForLLMRun> {
-    await Promise.all(
-      this.handlers.map((handler) =>
-        consumeCallback(async () => {
-          if (!handler.ignoreLLM) {
-            try {
-              await handler.handleLLMStart?.(
-                llm,
-                prompts,
-                runId,
-                this._parentRunId,
-                extraParams,
-                this.tags
-              );
-            } catch (err) {
-              console.error(
-                `Error in handler ${handler.constructor.name}, handleLLMStart: ${err}`
-              );
-            }
-          }
-        }, handler.awaitHandlers)
-      )
-    );
-    return new CallbackManagerForLLMRun(
-      runId,
-      this.handlers,
-      this.inheritableHandlers,
-      this.tags,
-      this.inheritableTags,
-      this._parentRunId
+  ): Promise<CallbackManagerForLLMRun[]> {
+    return Promise.all(
+      prompts.map(async (prompt) => {
+        const runId = uuidv4();
+
+        await Promise.all(
+          this.handlers.map((handler) =>
+            consumeCallback(async () => {
+              if (!handler.ignoreLLM) {
+                try {
+                  await handler.handleLLMStart?.(
+                    llm,
+                    [prompt],
+                    runId,
+                    this._parentRunId,
+                    extraParams,
+                    this.tags
+                  );
+                } catch (err) {
+                  console.error(
+                    `Error in handler ${handler.constructor.name}, handleLLMStart: ${err}`
+                  );
+                }
+              }
+            }, handler.awaitHandlers)
+          )
+        );
+
+        return new CallbackManagerForLLMRun(
+          runId,
+          this.handlers,
+          this.inheritableHandlers,
+          this.tags,
+          this.inheritableTags,
+          this._parentRunId
+        );
+      })
     );
   }
 
   async handleChatModelStart(
     llm: Serialized,
     messages: BaseChatMessage[][],
-    runId: string = uuidv4(),
+    _runId: string | undefined = undefined,
     _parentRunId: string | undefined = undefined,
     extraParams: Record<string, unknown> | undefined = undefined
-  ): Promise<CallbackManagerForLLMRun> {
-    let messageStrings: string[];
-    await Promise.all(
-      this.handlers.map((handler) =>
-        consumeCallback(async () => {
-          if (!handler.ignoreLLM) {
-            try {
-              if (handler.handleChatModelStart)
-                await handler.handleChatModelStart?.(
-                  llm,
-                  messages,
-                  runId,
-                  this._parentRunId,
-                  extraParams,
-                  this.tags
-                );
-              else if (handler.handleLLMStart) {
-                messageStrings = messages.map((x) => getBufferString(x));
-                await handler.handleLLMStart?.(
-                  llm,
-                  messageStrings,
-                  runId,
-                  this._parentRunId,
-                  extraParams,
-                  this.tags
-                );
+  ): Promise<CallbackManagerForLLMRun[]> {
+    return Promise.all(
+      messages.map(async (messageGroup) => {
+        const runId = uuidv4();
+
+        await Promise.all(
+          this.handlers.map((handler) =>
+            consumeCallback(async () => {
+              if (!handler.ignoreLLM) {
+                try {
+                  if (handler.handleChatModelStart)
+                    await handler.handleChatModelStart?.(
+                      llm,
+                      [messageGroup],
+                      runId,
+                      this._parentRunId,
+                      extraParams,
+                      this.tags
+                    );
+                  else if (handler.handleLLMStart) {
+                    const messageString = getBufferString(messageGroup);
+                    await handler.handleLLMStart?.(
+                      llm,
+                      [messageString],
+                      runId,
+                      this._parentRunId,
+                      extraParams,
+                      this.tags
+                    );
+                  }
+                } catch (err) {
+                  console.error(
+                    `Error in handler ${handler.constructor.name}, handleLLMStart: ${err}`
+                  );
+                }
               }
-            } catch (err) {
-              console.error(
-                `Error in handler ${handler.constructor.name}, handleLLMStart: ${err}`
-              );
-            }
-          }
-        }, handler.awaitHandlers)
-      )
-    );
-    return new CallbackManagerForLLMRun(
-      runId,
-      this.handlers,
-      this.inheritableHandlers,
-      this.tags,
-      this.inheritableTags,
-      this._parentRunId
+            }, handler.awaitHandlers)
+          )
+        );
+
+        return new CallbackManagerForLLMRun(
+          runId,
+          this.handlers,
+          this.inheritableHandlers,
+          this.tags,
+          this.inheritableTags,
+          this._parentRunId
+        );
+      })
     );
   }
 
