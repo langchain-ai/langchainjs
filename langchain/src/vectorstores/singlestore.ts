@@ -42,7 +42,7 @@ export type SingleStoreVectorStoreConfig = ConnectionConfig & {
   contentColumnName?: string;
   vectorColumnName?: string;
   metadataColumnName?: string;
-  distanceMetrics?: DistanceMetrics;
+  distanceMetric?: DistanceMetrics;
 };
 
 function withConnectAttributes(
@@ -100,7 +100,7 @@ export class SingleStoreVectorStore extends VectorStore {
     this.vectorColumnName = config.vectorColumnName ?? "vector";
     this.metadataColumnName = config.metadataColumnName ?? "metadata";
     this.distanceMetrics =
-      config.distanceMetrics ?? DistanceMetrics.DOT_PRODUCT;
+      config.distanceMetric ?? DistanceMetrics.DOT_PRODUCT;
   }
 
   async createTableIfNotExists(): Promise<void> {
