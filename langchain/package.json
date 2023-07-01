@@ -22,9 +22,12 @@
     "agents/load.cjs",
     "agents/load.js",
     "agents/load.d.ts",
-    "agents/agent_toolkits/aws_sfn.cjs",
-    "agents/agent_toolkits/aws_sfn.js",
-    "agents/agent_toolkits/aws_sfn.d.ts",
+    "agents/toolkits/aws_sfn.cjs",
+    "agents/toolkits/aws_sfn.js",
+    "agents/toolkits/aws_sfn.d.ts",
+    "agents/toolkits/sql.cjs",
+    "agents/toolkits/sql.js",
+    "agents/toolkits/sql.d.ts",
     "base_language.cjs",
     "base_language.js",
     "base_language.d.ts",
@@ -40,6 +43,9 @@
     "tools/calculator.cjs",
     "tools/calculator.js",
     "tools/calculator.d.ts",
+    "tools/sql.cjs",
+    "tools/sql.js",
+    "tools/sql.d.ts",
     "tools/webbrowser.cjs",
     "tools/webbrowser.js",
     "tools/webbrowser.d.ts",
@@ -55,6 +61,9 @@
     "chains/query_constructor/ir.cjs",
     "chains/query_constructor/ir.js",
     "chains/query_constructor/ir.d.ts",
+    "chains/sql_db.cjs",
+    "chains/sql_db.js",
+    "chains/sql_db.d.ts",
     "embeddings.cjs",
     "embeddings.js",
     "embeddings.d.ts",
@@ -827,10 +836,15 @@
       "import": "./agents/load.js",
       "require": "./agents/load.cjs"
     },
-    "./agents/agent_toolkits/aws_sfn": {
-      "types": "./agents/agent_toolkits/aws_sfn.d.ts",
-      "import": "./agents/agent_toolkits/aws_sfn.js",
-      "require": "./agents/agent_toolkits/aws_sfn.cjs"
+    "./agents/toolkits/aws_sfn": {
+      "types": "./agents/toolkits/aws_sfn.d.ts",
+      "import": "./agents/toolkits/aws_sfn.js",
+      "require": "./agents/toolkits/aws_sfn.cjs"
+    },
+    "./agents/toolkits/sql": {
+      "types": "./agents/toolkits/sql.d.ts",
+      "import": "./agents/toolkits/sql.js",
+      "require": "./agents/toolkits/sql.cjs"
     },
     "./base_language": {
       "types": "./base_language.d.ts",
@@ -857,6 +871,11 @@
       "import": "./tools/calculator.js",
       "require": "./tools/calculator.cjs"
     },
+    "./tools/sql": {
+      "types": "./tools/sql.d.ts",
+      "import": "./tools/sql.js",
+      "require": "./tools/sql.cjs"
+    },
     "./tools/webbrowser": {
       "types": "./tools/webbrowser.d.ts",
       "import": "./tools/webbrowser.js",
@@ -881,6 +900,11 @@
       "types": "./chains/query_constructor/ir.d.ts",
       "import": "./chains/query_constructor/ir.js",
       "require": "./chains/query_constructor/ir.cjs"
+    },
+    "./chains/sql_db": {
+      "types": "./chains/sql_db.d.ts",
+      "import": "./chains/sql_db.js",
+      "require": "./chains/sql_db.cjs"
     },
     "./embeddings": {
       "node": {
