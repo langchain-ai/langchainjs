@@ -1,4 +1,3 @@
-import axiosMod, { AxiosResponse, AxiosStatic } from "axios";
 import { BaseChatModel, BaseChatModelParams } from "./base.js";
 import {
   AIChatMessage,
@@ -7,15 +6,9 @@ import {
   ChatResult,
   MessageType,
 } from "../schema/index.js";
-import fetchAdapter from "../util/axios-fetch-adapter.js";
-import type { StreamingAxiosConfiguration } from "../util/axios-types.js";
 import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
 import { BaseLanguageModelCallOptions } from "../base_language/index.js";
-import { getEnvironmentVariable, isNode } from "../util/env.js";
-
-const axios = (
-  "default" in axiosMod ? axiosMod.default : axiosMod
-) as AxiosStatic;
+import { getEnvironmentVariable } from "../util/env.js";
 
 export type WenxinMessageRole = "assistant" | "user";
 
@@ -221,19 +214,27 @@ export class ChatBaiduWenxin
     }
   }
 
-  async getAccessToken() {
+  async getAccessToken(options?: this["ParsedCallOptions"]) {
     const url = `https://aip.baidubce.com/oauth/2.0/token?grant_type=client_credentials&client_id=${this.baiduApiKey}&client_secret=${this.baiduSecretKey}`;
-    const response: AxiosResponse = await axios.post(
-      url,
-      {},
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-      }
-    );
-    return response.data?.access_token ?? "";
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      signal: options?.signal,
+    });
+    if (!response.ok) {
+      const text = await response.text();
+      const error = new Error(
+        `Baidu get access token failed with status code ${response.status}, response: ${text}`
+      );
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (error as any).response = response;
+      throw error;
+    }
+    const json = await response.json();
+    return json.access_token;
   }
 
   /**
@@ -283,63 +284,60 @@ export class ChatBaiduWenxin
               ...params,
               messages: messagesMapped,
             },
-            {
-              signal: options?.signal,
-              adapter: fetchAdapter, // default adapter doesn't do streaming
-              responseType: "stream",
-              onmessage: (event) => {
-                const data = JSON.parse(event.data);
+            true,
+            options?.signal,
+            (event) => {
+              const data = JSON.parse(event.data);
 
-                if (data?.error_code) {
-                  if (rejected) {
-                    return;
-                  }
-                  rejected = true;
-                  reject(data);
+              if (data?.error_code) {
+                if (rejected) {
                   return;
                 }
+                rejected = true;
+                reject(data);
+                return;
+              }
 
-                const message = data as {
-                  id: string;
-                  object: string;
-                  created: number;
-                  sentence_id?: number;
-                  is_end: boolean;
-                  result: string;
-                  need_clear_history: boolean;
-                  usage: TokenUsage;
+              const message = data as {
+                id: string;
+                object: string;
+                created: number;
+                sentence_id?: number;
+                is_end: boolean;
+                result: string;
+                need_clear_history: boolean;
+                usage: TokenUsage;
+              };
+
+              // on the first message set the response properties
+              if (!response) {
+                response = {
+                  id: message.id,
+                  object: message.object,
+                  created: message.created,
+                  result: message.result,
+                  need_clear_history: message.need_clear_history,
+                  usage: message.usage,
                 };
+              } else {
+                response.result += message.result;
+                response.created = message.created;
+                response.need_clear_history = message.need_clear_history;
+                response.usage = message.usage;
+              }
 
-                // on the first message set the response properties
-                if (!response) {
-                  response = {
-                    id: message.id,
-                    object: message.object,
-                    created: message.created,
-                    result: message.result,
-                    need_clear_history: message.need_clear_history,
-                    usage: message.usage,
-                  };
-                } else {
-                  response.result += message.result;
-                  response.created = message.created;
-                  response.need_clear_history = message.need_clear_history;
-                  response.usage = message.usage;
+              // TODO this should pass part.index to the callback
+              // when that's supported there
+              // eslint-disable-next-line no-void
+              void runManager?.handleLLMNewToken(message.result ?? "");
+
+              if (message.is_end) {
+                if (resolved || rejected) {
+                  return;
                 }
-
-                // TODO this should pass part.index to the callback
-                // when that's supported there
-                // eslint-disable-next-line no-void
-                void runManager?.handleLLMNewToken(message.result ?? "");
-
-                if (message.is_end) {
-                  if (resolved || rejected) {
-                    return;
-                  }
-                  resolved = true;
-                  resolve(response);
-                }
-              },
+                resolved = true;
+                resolve(response);
+              }
             }
           ).catch((error) => {
             if (!rejected) {
@@ -353,9 +351,8 @@ export class ChatBaiduWenxin
             ...params,
             messages: messagesMapped,
           },
-          {
-            signal: options?.signal,
-          }
+          false,
+          options?.signal
         );
 
     const {
@@ -392,23 +389,61 @@ export class ChatBaiduWenxin
   /** @ignore */
   async completionWithRetry(
     request: ChatCompletionRequest,
-    options?: StreamingAxiosConfiguration
+    stream: boolean,
+    signal?: AbortSignal,
+    onmessage?: (event: MessageEvent) => void
   ) {
     // The first run will get the accessToken
     if (!this.accessToken) {
       this.accessToken = await this.getAccessToken();
     }
 
-    const axiosOptions = {
-      params: { access_token: this.accessToken },
-      headers: { "Content-Type": "application/json" },
-      adapter: isNode() ? undefined : fetchAdapter,
-      ...options,
-    } as StreamingAxiosConfiguration;
-
     const makeCompletionRequest = async () => {
-      const res = await axios.post(this.apiUrl, request, axiosOptions);
-      return res.data;
+      const url = `${this.apiUrl}?access_token=${this.accessToken}`;
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(request),
+        signal: signal,
+      });
+
+      if (!stream) {
+        return response.json();
+      } else {
+        if (response.body) {
+          const reader = response.body.getReader();
+
+          const decoder = new TextDecoder("utf-8");
+          let data = "";
+
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) {
+              break;
+            }
+            data += decoder.decode(value);
+
+            while (true) {
+              const newlineIndex = data.indexOf("\n");
+              if (newlineIndex === -1) {
+                break;
+              }
+              const line = data.slice(0, newlineIndex);
+              data = data.slice(newlineIndex + 1);
+
+              if (line.startsWith("data:")) {
+                console.log(line);
+                const event = new MessageEvent("message", {
+                  data: line.slice("data:".length).trim(),
+                });
+                onmessage?.(event);
+              }
+            }
+          }
+        }
+      }
     };
     return this.caller.call(makeCompletionRequest);
   }
