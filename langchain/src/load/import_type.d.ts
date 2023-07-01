@@ -8,8 +8,8 @@ export interface OptionalImportMap {
     | typeof import("../agents/toolkits/aws_sfn.js")
     | Promise<typeof import("../agents/toolkits/aws_sfn.js")>;
   "langchain/agents/toolkits/sql"?:
-    | typeof import("../agents/toolkits/sql.js")
-    | Promise<typeof import("../agents/toolkits/sql.js")>;
+    | typeof import("../agents/toolkits/sql/index.js")
+    | Promise<typeof import("../agents/toolkits/sql/index.js")>;
   "langchain/tools/aws_lambda"?:
     | typeof import("../tools/aws_lambda.js")
     | Promise<typeof import("../tools/aws_lambda.js")>;

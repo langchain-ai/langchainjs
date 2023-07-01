@@ -37,7 +37,7 @@
       "src/agents/index.ts",
       "src/agents/load.ts",
       "src/agents/toolkits/aws_sfn.ts",
-      "src/agents/toolkits/sql.ts",
+      "src/agents/toolkits/sql/index.ts",
       "src/base_language/index.ts",
       "src/tools/index.ts",
       "src/tools/aws_lambda.ts",
