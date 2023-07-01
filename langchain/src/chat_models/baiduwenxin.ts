@@ -67,15 +67,15 @@ declare interface BaiduWenxinChatInput {
 
   /**
    * API key to use when making requests. Defaults to the value of
-   * `BAIDU_ERNIE_API_KEY` environment variable.
+   * `BAIDU_API_KEY` environment variable.
    */
-  baiduErnieApiKey?: string;
+  baiduApiKey?: string;
 
   /**
    * Secret key to use when making requests. Defaults to the value of
-   * `BAIDU_ERNIE_SECRET_KEY` environment variable.
+   * `BAIDU_SECRET_KEY` environment variable.
    */
-  baiduErnieSecretKey?: string;
+  baiduSecretKey?: string;
 
   /** Amount of randomness injected into the response. Ranges
    * from 0 to 1 (0 is not included). Use temp closer to 0 for analytical /
@@ -114,7 +114,7 @@ function messageTypeToWenxinRole(type: MessageType): WenxinMessageRole {
 /**
  * Wrapper around Baidu ERNIE large language models that use the Chat endpoint.
  *
- * To use you should have the `BAIDU_ERNIE_API_KEY` and `BAIDU_ERNIE_SECRET_KEY`
+ * To use you should have the `BAIDU_API_KEY` and `BAIDU_SECRET_KEY`
  * environment variable set.
  *
  * @augments BaseLLM
@@ -132,8 +132,8 @@ export class ChatBaiduWenxin
 
   get lc_secrets(): { [key: string]: string } | undefined {
     return {
-      baiduErnieApiKey: "BAIDU_ERNIE_API_KEY",
-      baiduErnieSecretKey: "BAIDU_ERNIE_SECRET_KEY",
+      baiduApiKey: "BAIDU_API_KEY",
+      baiduSecretKey: "BAIDU_SECRET_KEY",
     };
   }
 
@@ -143,9 +143,9 @@ export class ChatBaiduWenxin
 
   lc_serializable = true;
 
-  baiduErnieApiKey?: string;
+  baiduApiKey?: string;
 
-  baiduErnieSecretKey?: string;
+  baiduSecretKey?: string;
 
   accessToken: string;
 
@@ -168,17 +168,16 @@ export class ChatBaiduWenxin
   constructor(fields?: Partial<BaiduWenxinChatInput> & BaseChatModelParams) {
     super(fields ?? {});
 
-    this.baiduErnieApiKey =
-      fields?.baiduErnieApiKey ?? getEnvironmentVariable("BAIDU_ERNIE_API_KEY");
-    if (!this.baiduErnieApiKey) {
-      throw new Error("Baidu ERNIE API key not found");
+    this.baiduApiKey =
+      fields?.baiduApiKey ?? getEnvironmentVariable("BAIDU_API_KEY");
+    if (!this.baiduApiKey) {
+      throw new Error("Baidu API key not found");
     }
 
-    this.baiduErnieSecretKey =
-      fields?.baiduErnieSecretKey ??
-      getEnvironmentVariable("BAIDU_ERNIE_SECRET_KEY");
-    if (!this.baiduErnieSecretKey) {
-      throw new Error("Baidu ERNIE Secret key not found");
+    this.baiduSecretKey =
+      fields?.baiduSecretKey ?? getEnvironmentVariable("BAIDU_SECRET_KEY");
+    if (!this.baiduSecretKey) {
+      throw new Error("Baidu Secret key not found");
     }
 
     this.streaming = fields?.streaming ?? this.streaming;
@@ -223,7 +222,7 @@ export class ChatBaiduWenxin
   }
 
   async getAccessToken() {
-    const url = `https://aip.baidubce.com/oauth/2.0/token?grant_type=client_credentials&client_id=${this.baiduErnieApiKey}&client_secret=${this.baiduErnieSecretKey}`;
+    const url = `https://aip.baidubce.com/oauth/2.0/token?grant_type=client_credentials&client_id=${this.baiduApiKey}&client_secret=${this.baiduSecretKey}`;
     const response: AxiosResponse = await axios.post(
       url,
       {},
