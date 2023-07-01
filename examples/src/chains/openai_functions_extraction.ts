@@ -14,8 +14,8 @@ const chain = createExtractionChainFromZod(
 );
 
 console.log(
-  await chain.run(`Alex is 5 feet tall. Claudia is 4 feet taller Alex and jumps higher than him. Claudia is a brunette and Alex is blonde.
-Alex's dog Frosty is a labrador and likes to play hide and seek.`)
+  await chain.run({input: `Alex is 5 feet tall. Claudia is 4 feet taller Alex and jumps higher than him. Claudia is a brunette and Alex is blonde.
+Alex's dog Frosty is a labrador and likes to play hide and seek.`})
 );
 /*
 [
