@@ -19,7 +19,7 @@ LangChain provides the following tools you can use out of the box:
 - [`JsonListKeysTool`][JsonListKeysTool] and [`JsonGetValueTool`][JsonGetValueTool] - Useful for extracting data from JSON objects. These tools can be used collectively in a [`JsonToolkit`][JsonToolkit].
 - [`RequestsGetTool`][RequestsGetTool] and [`RequestsPostTool`][RequestsPostTool] - Useful for making HTTP requests.
 - [`SerpAPI`][SerpAPI] - A wrapper around the SerpAPI API. Useful for when you need to answer questions about current events. Input should be a search query.
-- [`QuerySqlTool`][QuerySqlTool], [`InfoSqlTool`][InfoSqlTool], [`ListTablesSqlTool`][ListTablesSqlTool], and [`QueryCheckerTool`][QueryCheckerTool] - Useful for interacting with SQL databases. Can be used together in a [`SqlToolkit`][SqlToolkit].
+- [`QuerySqlTool`][QuerySqlTool], [`InfoSqlTool`][InfoSqlTool], [`ListTablesSqlTool`][ListTablesSqlTool], and [`QueryCheckerTool`][QueryCheckerTool] - Useful for interacting with SQL databases. Can be used together in a [`SqlToolkit`][SqlToolkit]. Requires `typeorm` as a peer dependency.
 - [`VectorStoreQATool`][VectorStoreQATool] - Useful for retrieving relevant text data from a vector store.
 - [`ZapierNLARunAction`][ZapierNLARunAction] - A wrapper around the Zapier NLP API. Useful for triggering Zapier actions with a natural language input. Best when used in a [`ZapierToolkit`][ZapierToolkit].
 
