@@ -37,7 +37,7 @@ export function getEndpoint(config: OpenAIEndpointConfig): string {
     basePath,
   } = config;
 
-  if (azureOpenAIBasePath && azureOpenAIApiDeploymentName) {
+  if (azureOpenAIApiKey && azureOpenAIBasePath && azureOpenAIApiDeploymentName) {
     return `${azureOpenAIBasePath}/openai/deployments/${azureOpenAIApiDeploymentName}`;
   }
 

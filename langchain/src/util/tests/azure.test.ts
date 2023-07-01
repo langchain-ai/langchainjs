@@ -3,6 +3,7 @@ import { getEndpoint, OpenAIEndpointConfig } from "../azure.js";
 describe("getEndpoint", () => {
   it("should return the correct endpoint with azureOpenAIBasePath and azureOpenAIApiDeploymentName", () => {
     const config: OpenAIEndpointConfig = {
+      azureOpenAIApiKey: "API-KEY",
       azureOpenAIApiDeploymentName: "deploymentName",
       azureOpenAIBasePath: "https://example.azure.com",
     };
