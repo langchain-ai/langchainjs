@@ -63,7 +63,7 @@ test.skip("Test ChatBaiduWenxin ERNIE-Bot in streaming mode", async () => {
       },
     ],
   });
-  const message = new HumanChatMessage("Hello!");
+  const message = new HumanChatMessage("您好，请讲个长笑话");
   const res = await model.call([message]);
   console.log({ res });
 
@@ -96,7 +96,7 @@ test.skip("Test ChatBaiduWenxin ERNIE-Bot-turbo in streaming mode", async () => 
       },
     ],
   });
-  const message = new HumanChatMessage("Hello!");
+  const message = new HumanChatMessage("您好，请讲个长笑话");
   const res = await model.call([message]);
   console.log({ res });
 
