@@ -8,6 +8,9 @@ const path = require("path");
 
 const examplesPath = path.resolve(__dirname, "..", "examples", "src");
 
+const baseLightCodeBlockTheme = require("prism-react-renderer/themes/vsLight");
+const baseDarkCodeBlockTheme = require("prism-react-renderer/themes/vsDark");
+
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   title: "🦜️🔗 Langchain",
@@ -130,8 +133,20 @@ const config = {
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
       prism: {
-        theme: require("prism-react-renderer/themes/vsLight"),
-        darkTheme: require("prism-react-renderer/themes/vsDark"),
+        theme: {
+          ...baseLightCodeBlockTheme,
+          plain: {
+            ...baseLightCodeBlockTheme.plain,
+            backgroundColor: "#F5F5F5",
+          },
+        },
+        darkTheme: {
+          ...baseDarkCodeBlockTheme,
+          plain: {
+            ...baseDarkCodeBlockTheme.plain,
+            backgroundColor: "#222222",
+          },
+        },
       },
       image: "img/parrot-chainlink-icon.png",
       navbar: {
