@@ -152,6 +152,7 @@ export class Chroma extends VectorStore {
     dbConfig: {
       collectionName?: string;
       url?: string;
+      filter?: object;
     }
   ): Promise<Chroma> {
     const docs: Document[] = [];
@@ -172,6 +173,7 @@ export class Chroma extends VectorStore {
     dbConfig: {
       collectionName?: string;
       url?: string;
+      filter?: object;
     }
   ): Promise<Chroma> {
     const instance = new this(embeddings, dbConfig);
@@ -184,6 +186,7 @@ export class Chroma extends VectorStore {
     dbConfig: {
       collectionName: string;
       url?: string;
+      filter?: object;
     }
   ): Promise<Chroma> {
     const instance = new this(embeddings, dbConfig);
