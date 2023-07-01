@@ -56,7 +56,6 @@ export {
   SerializedLLMChain,
   SerializedSequentialChain,
   SerializedSimpleSequentialChain,
-  SerializedSqlDatabaseChain,
   SerializedAnalyzeDocumentChain,
   SerializedAPIChain,
   SerializedBaseChain,
