@@ -5,11 +5,11 @@ describe("getEndpoint", () => {
     const config: OpenAIEndpointConfig = {
       azureOpenAIApiKey: "API-KEY",
       azureOpenAIApiDeploymentName: "deploymentName",
-      azureOpenAIBasePath: "https://example.azure.com",
+      azureOpenAIBasePath: "https://westeurope.api.cognitive.microsoft.com/openai/deployments",
     };
     const result = getEndpoint(config);
     expect(result).toBe(
-      "https://example.azure.com/openai/deployments/deploymentName"
+      "https://westeurope.api.cognitive.microsoft.com/openai/deployments/deploymentName"
     );
   });
 
