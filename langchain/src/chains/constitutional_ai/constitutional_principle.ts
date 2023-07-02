@@ -1,4 +1,4 @@
-import { SerializedConstitutionalPrinciple } from "../../chains/serde.js";
+import { SerializedConstitutionalPrinciple } from "../serde.js";
 
 export class ConstitutionalPrinciple {
   critiqueRequest: string;

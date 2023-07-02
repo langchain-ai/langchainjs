@@ -1,6 +1,5 @@
 import type { SerializedLLM } from "../llms/base.js";
 import type { SerializedBasePromptTemplate } from "../prompts/serde.js";
-import type { SerializedSqlDatabase } from "../util/sql_utils.js";
 
 export type SerializedLLMChain = {
   _type: "llm_chain";
@@ -18,12 +17,6 @@ export type SerializedSequentialChain = {
 export type SerializedSimpleSequentialChain = {
   _type: "simple_sequential_chain";
   chains: Array<SerializedBaseChain>;
-};
-
-export type SerializedSqlDatabaseChain = {
-  _type: "sql_database_chain";
-  sql_database: SerializedSqlDatabase;
-  llm: SerializedLLM;
 };
 
 export type SerializedVectorDBQAChain = {
@@ -90,7 +83,6 @@ export type SerializedBaseChain =
   | SerializedVectorDBQAChain
   | SerializedAPIChain
   | SerializedStuffDocumentsChain
-  | SerializedSqlDatabaseChain
   | SerializedChatVectorDBQAChain
   | SerializedMapReduceDocumentsChain
   | SerializedAnalyzeDocumentChain
