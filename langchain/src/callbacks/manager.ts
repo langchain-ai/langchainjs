@@ -79,6 +79,57 @@ class BaseRunManager {
   }
 }
 
+export class CallbackManagerForEmbeddingRun
+  extends BaseRunManager
+  implements BaseCallbackManagerMethods
+{
+  async handleEmbeddingError(err: Error | unknown) {
+    await Promise.all(
+      this.handlers.map((handler) =>
+        consumeCallback(async () => {
+          if (!handler.ignoreEmbeddings) {
+            try {
+              await handler.handleEmbeddingError?.(
+                err,
+                this.runId,
+                this._parentRunId
+              );
+            } catch (err) {
+              console.error(
+                `Error in handler ${handler.constructor.name}, handleEmbeddingError: ${err}`
+              );
+            }
+          }
+        }, handler.awaitHandlers)
+      )
+    );
+  }
+
+  async handleEmbeddingEnd(
+    vectors: number[][]
+  ): Promise<void> {
+    await Promise.all(
+      this.handlers.map((handler) =>
+        consumeCallback(async () => {
+          if (!handler.ignoreEmbeddings) {
+            try {
+              await handler.handleEmbeddingEnd?.(
+                vectors,
+                this.runId,
+                this._parentRunId
+              );
+            } catch (err) {
+              console.error(
+                `Error in handler ${handler.constructor.name}, handleEmbeddingEnd: ${err}`
+              );
+            }
+          }
+        }, handler.awaitHandlers)
+      )
+    );
+  }
+}
+
 export class CallbackManagerForLLMRun
   extends BaseRunManager
   implements BaseCallbackManagerMethods
@@ -339,6 +390,46 @@ export class CallbackManager
     this.handlers = [];
     this.inheritableHandlers = [];
     this._parentRunId = parentRunId;
+  }
+
+  async handleEmbeddingStart(
+    embeddings: Serialized,
+    texts: string[],
+    _runId?: string,
+    _parentRunId?: string,
+    extraParams: Record<string, unknown> | undefined = undefined
+  ): Promise<CallbackManagerForEmbeddingRun> {
+    const runId = uuidv4();
+    await Promise.all(
+      this.handlers.map((handler) =>
+        consumeCallback(async () => {
+          if (!handler.ignoreEmbeddings) {
+            try {
+              await handler.handleEmbeddingStart?.(
+                embeddings,
+                texts,
+                runId,
+                this._parentRunId,
+                extraParams,
+                this.tags
+              );
+            } catch (err) {
+              console.error(
+                `Error in handler ${handler.constructor.name}, handleEmbeddingStart: ${err}`
+              );
+            }
+          }
+        }, handler.awaitHandlers)
+      )
+    );
+    return new CallbackManagerForEmbeddingRun(
+      runId,
+      this.handlers,
+      this.inheritableHandlers,
+      this.tags,
+      this.inheritableTags,
+      this._parentRunId
+    );
   }
 
   async handleLLMStart(

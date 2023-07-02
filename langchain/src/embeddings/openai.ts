@@ -37,6 +37,26 @@ export class OpenAIEmbeddings
   extends Embeddings
   implements OpenAIEmbeddingsParams, AzureOpenAIInput
 {
+  lc_serializable: boolean = true;
+
+  get lc_secrets(): { [key: string]: string } | undefined {
+    return {
+      openAIApiKey: "OPENAI_API_KEY",
+      azureOpenAIApiKey: "AZURE_OPENAI_API_KEY",
+    };
+  }
+
+  get lc_aliases(): Record<string, string> {
+    return {
+      modelName: "model",
+      openAIApiKey: "openai_api_key",
+      azureOpenAIApiVersion: "azure_openai_api_version",
+      azureOpenAIApiKey: "azure_openai_api_key",
+      azureOpenAIApiInstanceName: "azure_openai_api_instance_name",
+      azureOpenAIApiDeploymentName: "azure_openai_api_deployment_name",
+    };
+  }
+
   modelName = "text-embedding-ada-002";
 
   batchSize = 512;
@@ -56,6 +76,10 @@ export class OpenAIEmbeddings
   private client: OpenAIApi;
 
   private clientConfig: ConfigurationParameters;
+
+  _embeddingsType() {
+    return "openai";
+  }
 
   constructor(
     fields?: Partial<OpenAIEmbeddingsParams> &
@@ -119,7 +143,7 @@ export class OpenAIEmbeddings
     };
   }
 
-  async embedDocuments(texts: string[]): Promise<number[][]> {
+  async _embedDocuments(texts: string[]): Promise<number[][]> {
     const subPrompts = chunkArray(
       this.stripNewLines ? texts.map((t) => t.replaceAll("\n", " ")) : texts,
       this.batchSize
@@ -141,7 +165,7 @@ export class OpenAIEmbeddings
     return embeddings;
   }
 
-  async embedQuery(text: string): Promise<number[]> {
+  async _embedQuery(text: string): Promise<number[]> {
     const { data } = await this.embeddingWithRetry({
       model: this.modelName,
       input: this.stripNewLines ? text.replaceAll("\n", " ") : text,

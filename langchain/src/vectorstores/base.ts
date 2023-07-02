@@ -1,6 +1,7 @@
 import { Embeddings } from "../embeddings/base.js";
 import { Document } from "../document.js";
 import { BaseRetriever } from "../schema/index.js";
+import { Callbacks } from "../callbacks/manager.js";
 
 export interface VectorStoreRetrieverInput<V extends VectorStore> {
   vectorStore: V;
@@ -24,11 +25,15 @@ export class VectorStoreRetriever<
     this.filter = fields.filter;
   }
 
-  async getRelevantDocuments(query: string): Promise<Document[]> {
+  async getRelevantDocuments(
+    query: string,
+    callbacks?: Callbacks
+  ): Promise<Document[]> {
     const results = await this.vectorStore.similaritySearch(
       query,
       this.k,
-      this.filter
+      this.filter,
+      callbacks
     );
     return results;
   }
@@ -64,10 +69,11 @@ export abstract class VectorStore {
   async similaritySearch(
     query: string,
     k = 4,
-    filter: this["FilterType"] | undefined = undefined
+    filter: this["FilterType"] | undefined = undefined,
+    callbacks?: Callbacks
   ): Promise<Document[]> {
     const results = await this.similaritySearchVectorWithScore(
-      await this.embeddings.embedQuery(query),
+      await this.embeddings.embedQuery(query, callbacks),
       k,
       filter
     );
@@ -78,10 +84,11 @@ export abstract class VectorStore {
   async similaritySearchWithScore(
     query: string,
     k = 4,
-    filter: this["FilterType"] | undefined = undefined
+    filter: this["FilterType"] | undefined = undefined,
+    callbacks?: Callbacks
   ): Promise<[Document, number][]> {
     return this.similaritySearchVectorWithScore(
-      await this.embeddings.embedQuery(query),
+      await this.embeddings.embedQuery(query, callbacks),
       k,
       filter
     );

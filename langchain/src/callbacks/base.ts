@@ -20,6 +20,7 @@ export interface BaseCallbackHandlerInput {
   ignoreLLM?: boolean;
   ignoreChain?: boolean;
   ignoreAgent?: boolean;
+  ignoreEmbeddings?: boolean;
 }
 
 export interface NewTokenIndices {
@@ -173,6 +174,43 @@ abstract class BaseCallbackHandlerMethodsClass {
     runId: string,
     parentRunId?: string
   ): Promise<void> | void;
+
+  /**
+   * Called when embedding throws an error, after call to embedding.
+   * with the error and the run ID
+   */
+  handleEmbeddingError?(
+    err: Error,
+    runId: string,
+    parentRunId?: string
+  ): Promise<void> | void;
+
+  /**
+   * Called when embedding is started, before call to embedding.
+   * with the input text and the run ID
+   */
+  handleEmbeddingStart?(
+    embeddings: Serialized,
+    texts: string[],
+    runId: string,
+    parentRunId?: string,
+    extraParams?: Record<string, unknown>,
+    tags?: string[]
+  ): Promise<void> | void;
+
+  /**
+   * Called after embedding is completed, before it exits.
+   * Called on both query and documents embedding, as such
+   * the vectors parameter is always an array of string.
+   * So in the case of query embedding, the vector
+   * output is always at index 0.
+   * with embeddings vectors and the run ID
+   */
+  handleEmbeddingEnd?(
+    vectors: number[][],
+    runId: string,
+    parentRunId?: string
+  ): Promise<void> | void;
 }
 
 /**
@@ -218,6 +256,8 @@ export abstract class BaseCallbackHandler
 
   ignoreAgent = false;
 
+  ignoreEmbeddings = false;
+
   awaitHandlers =
     typeof process !== "undefined"
       ? // eslint-disable-next-line no-process-env
@@ -231,6 +271,7 @@ export abstract class BaseCallbackHandler
       this.ignoreLLM = input.ignoreLLM ?? this.ignoreLLM;
       this.ignoreChain = input.ignoreChain ?? this.ignoreChain;
       this.ignoreAgent = input.ignoreAgent ?? this.ignoreAgent;
+      this.ignoreEmbeddings = input.ignoreEmbeddings ?? this.ignoreEmbeddings;
     }
   }
 

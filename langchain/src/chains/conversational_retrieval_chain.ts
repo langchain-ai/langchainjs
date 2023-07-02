@@ -116,7 +116,10 @@ export class ConversationalRetrievalQAChain
         );
       }
     }
-    const docs = await this.retriever.getRelevantDocuments(newQuestion);
+    const docs = await this.retriever.getRelevantDocuments(
+      newQuestion,
+      runManager?.getChild("retrieve_documents")
+    );
     const inputs = {
       question: newQuestion,
       input_documents: docs,

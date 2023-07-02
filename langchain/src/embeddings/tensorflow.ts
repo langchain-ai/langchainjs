@@ -6,6 +6,10 @@ import { Embeddings, EmbeddingsParams } from "./base.js";
 export interface TensorFlowEmbeddingsParams extends EmbeddingsParams {}
 
 export class TensorFlowEmbeddings extends Embeddings {
+  _embeddingsType(): string {
+    return "tensorflow";
+  }
+
   constructor(fields?: TensorFlowEmbeddingsParams) {
     super(fields ?? {});
 
@@ -32,13 +36,13 @@ export class TensorFlowEmbeddings extends Embeddings {
     });
   }
 
-  embedQuery(document: string): Promise<number[]> {
+  _embedQuery(document: string): Promise<number[]> {
     return this._embed([document])
       .then((embeddings) => embeddings.array())
       .then((embeddings) => embeddings[0]);
   }
 
-  embedDocuments(documents: string[]): Promise<number[][]> {
+  _embedDocuments(documents: string[]): Promise<number[][]> {
     return this._embed(documents).then((embeddings) => embeddings.array());
   }
 }

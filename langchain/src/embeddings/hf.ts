@@ -17,6 +17,10 @@ export class HuggingFaceInferenceEmbeddings
 
   client: HfInference;
 
+  _embeddingsType(): string {
+    return "hf";
+  }
+
   constructor(fields?: HuggingFaceInferenceEmbeddingsParams) {
     super(fields ?? {});
 
@@ -38,11 +42,11 @@ export class HuggingFaceInferenceEmbeddings
     ) as Promise<number[][]>;
   }
 
-  embedQuery(document: string): Promise<number[]> {
+  _embedQuery(document: string): Promise<number[]> {
     return this._embed([document]).then((embeddings) => embeddings[0]);
   }
 
-  embedDocuments(documents: string[]): Promise<number[][]> {
+  _embedDocuments(documents: string[]): Promise<number[][]> {
     return this._embed(documents);
   }
 }

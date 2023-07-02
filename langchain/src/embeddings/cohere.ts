@@ -19,6 +19,21 @@ export class CohereEmbeddings
   extends Embeddings
   implements CohereEmbeddingsParams
 {
+  lc_serializable: boolean = true;
+
+  get lc_secrets(): { [key: string]: string } | undefined {
+    return {
+      apiKey: "COHERE_API_KEY",
+    };
+  }
+
+  get lc_aliases(): Record<string, string> {
+    return {
+      modelName: "model",
+      apiKey: "api_key",
+    };
+  }
+
   modelName = "small";
 
   batchSize = 48;
@@ -26,6 +41,10 @@ export class CohereEmbeddings
   private apiKey: string;
 
   private client: typeof import("cohere-ai");
+
+  _embeddingsType() {
+    return "cohere";
+  }
 
   /**
    * Constructor for the CohereEmbeddings class.
@@ -55,7 +74,7 @@ export class CohereEmbeddings
    * @param texts - An array of strings to generate embeddings for.
    * @returns A Promise that resolves to an array of embeddings.
    */
-  async embedDocuments(texts: string[]): Promise<number[][]> {
+  async _embedDocuments(texts: string[]): Promise<number[][]> {
     await this.maybeInitClient();
 
     const subPrompts = chunkArray(texts, this.batchSize);
@@ -81,7 +100,7 @@ export class CohereEmbeddings
    * @param text - A string to generate an embedding for.
    * @returns A Promise that resolves to an array of numbers representing the embedding.
    */
-  async embedQuery(text: string): Promise<number[]> {
+  async _embedQuery(text: string): Promise<number[]> {
     await this.maybeInitClient();
 
     const { body } = await this.embeddingWithRetry({

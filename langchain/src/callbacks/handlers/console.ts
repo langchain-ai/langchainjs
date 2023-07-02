@@ -181,4 +181,41 @@ export class ConsoleCallbackHandler extends BaseTracer {
       )}`
     );
   }
+
+  onEmbeddingStart(run: Run): void | Promise<void> {
+    const crumbs = this.getBreadcrumbs(run);
+    console.log(
+      `${wrap(
+        color.green,
+        "[embeddings/start]"
+      )} [${crumbs}] Entering Embedding run with input: ${tryJsonStringify(
+        run.inputs,
+        "[inputs]"
+      )}`
+    );
+  }
+
+  onEmbeddingEnd(run: Run): void | Promise<void> {
+    const crumbs = this.getBreadcrumbs(run);
+    console.log(
+      `${wrap(color.cyan, "[embeddings/end]")} [${crumbs}] [${elapsed(
+        run
+      )}] Exiting Embedding run with output: ${tryJsonStringify(
+        run.outputs,
+        "[outputs]"
+      )}`
+    );
+  }
+
+  onEmbeddingError(run: Run): void | Promise<void> {
+    const crumbs = this.getBreadcrumbs(run);
+    console.log(
+      `${wrap(color.red, "[embeddings/error]")} [${crumbs}] [${elapsed(
+        run
+      )}] Embedding run errored with error: ${tryJsonStringify(
+        run.error,
+        "[error]"
+      )}`
+    );
+  }
 }

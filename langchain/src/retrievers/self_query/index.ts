@@ -9,6 +9,7 @@ import { BaseRetriever } from "../../schema/index.js";
 import { VectorStore } from "../../vectorstores/base.js";
 import { FunctionalTranslator } from "./functional.js";
 import { BaseTranslator, BasicTranslator } from "./base.js";
+import { Callbacks } from "../../callbacks/manager.js";
 
 export { BaseTranslator, BasicTranslator, FunctionalTranslator };
 
@@ -50,7 +51,8 @@ export class SelfQueryRetriever
   }
 
   async getRelevantDocuments(
-    query: string
+    query: string,
+    callbacks?: Callbacks
   ): Promise<Document<Record<string, unknown>>[]> {
     const { [this.llmChain.outputKey]: output } = await this.llmChain.call({
       [this.llmChain.inputKeys[0]]: query,
@@ -64,13 +66,15 @@ export class SelfQueryRetriever
       return this.vectorStore.similaritySearch(
         query,
         this.searchParams?.k,
-        nextArg.filter
+        nextArg.filter,
+        callbacks
       );
     } else {
       return this.vectorStore.similaritySearch(
         query,
         this.searchParams?.k,
-        this.searchParams?.filter
+        this.searchParams?.filter,
+        callbacks
       );
     }
   }

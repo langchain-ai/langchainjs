@@ -9,7 +9,7 @@ import {
 import { Serialized } from "../../load/serializable.js";
 import { BaseCallbackHandler, BaseCallbackHandlerInput } from "../base.js";
 
-export type RunType = "llm" | "chain" | "tool";
+export type RunType = "llm" | "chain" | "tool" | "embeddings";
 
 export interface Run extends BaseRun {
   // some optional fields are always present here
@@ -325,6 +325,74 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     await this.onAgentAction?.(run as AgentRun);
   }
 
+  async handleEmbeddingStart(
+    embeddings: Serialized,
+    texts: string[],
+    runId: string,
+    parentRunId?: string,
+    extraParams?: Record<string, unknown>,
+    tags?: string[]
+  ) {
+    const execution_order = this._getExecutionOrder(parentRunId);
+    const start_time = Date.now();
+    const run: Run = {
+      id: runId,
+      name: embeddings.id[embeddings.id.length - 1],
+      parent_run_id: parentRunId,
+      start_time,
+      serialized: embeddings,
+      events: [
+        {
+          name: "start",
+          time: start_time,
+        },
+      ],
+      inputs: { texts },
+      execution_order,
+      child_execution_order: execution_order,
+      run_type: "embeddings",
+      child_runs: [],
+      extra: extraParams,
+      tags: tags || [],
+    };
+
+    this._startTrace(run);
+    await this.onEmbeddingStart?.(run);
+  }
+
+  async handleEmbeddingEnd(
+    vectors: number[][],
+    runId: string
+  ) {
+    const run = this.runMap.get(runId);
+    if (!run || run?.run_type !== "embeddings") {
+      throw new Error("No Embedding run to end.");
+    }
+    run.end_time = Date.now();
+    run.outputs = vectors;
+    run.events.push({
+      name: "end",
+      time: run.end_time,
+    });
+    await this.onEmbeddingEnd?.(run);
+    await this._endTrace(run);
+  }
+
+  async handleEmbeddingError(error: Error, runId: string) {
+    const run = this.runMap.get(runId);
+    if (!run || run?.run_type !== "embeddings") {
+      throw new Error("No Embedding run to end.");
+    }
+    run.end_time = Date.now();
+    run.error = error.message;
+    run.events.push({
+      name: "error",
+      time: run.end_time,
+    });
+    await this.onEmbeddingError?.(run);
+    await this._endTrace(run);
+  }
+
   async handleText(text: string, runId: string): Promise<void> {
     const run = this.runMap.get(runId);
     if (!run || run?.run_type !== "chain") {
@@ -359,6 +427,12 @@ export abstract class BaseTracer extends BaseCallbackHandler {
   onToolError?(run: Run): void | Promise<void>;
 
   onAgentAction?(run: Run): void | Promise<void>;
+
+  onEmbeddingStart?(run: Run): void | Promise<void>;
+
+  onEmbeddingEnd?(run: Run): void | Promise<void>;
+
+  onEmbeddingError?(run: Run): void | Promise<void>;
 
   // TODO Implement handleAgentEnd, handleText
 
