@@ -74,7 +74,7 @@ export class OpenAIEmbeddings
       fields?.azureOpenAIApiKey ??
       getEnvironmentVariable("AZURE_OPENAI_API_KEY");
     if (!azureApiKey && !apiKey) {
-      throw new Error("(Azure) OpenAI API key not found");
+      throw new Error("OpenAI or Azure OpenAI API key not found");
     }
 
     const azureApiInstanceName =

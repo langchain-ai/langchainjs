@@ -13,18 +13,23 @@ const entrypoints = {
   // agents
   agents: "agents/index",
   "agents/load": "agents/load",
+  "agents/toolkits/aws_sfn": "agents/toolkits/aws_sfn",
+  "agents/toolkits/sql": "agents/toolkits/sql/index",
   // base language
   base_language: "base_language/index",
   // tools
   tools: "tools/index",
   "tools/aws_lambda": "tools/aws_lambda",
+  "tools/aws_sfn": "tools/aws_sfn",
   "tools/calculator": "tools/calculator",
+  "tools/sql": "tools/sql",
   "tools/webbrowser": "tools/webbrowser",
   // chains
   chains: "chains/index",
   "chains/load": "chains/load",
   "chains/query_constructor": "chains/query_constructor/index",
   "chains/query_constructor/ir": "chains/query_constructor/ir",
+  "chains/sql_db": "chains/sql_db/index",
   // embeddings
   embeddings: "embeddings/index",
   "embeddings/base": "embeddings/base",
@@ -52,6 +57,7 @@ const entrypoints = {
   // vectorstores
   vectorstores: "vectorstores/index",
   "vectorstores/base": "vectorstores/base",
+  "vectorstores/elasticsearch": "vectorstores/elasticsearch",
   "vectorstores/memory": "vectorstores/memory",
   "vectorstores/chroma": "vectorstores/chroma",
   "vectorstores/hnswlib": "vectorstores/hnswlib",
@@ -187,10 +193,15 @@ const deprecatedNodeOnly = [
 // Therefore they are not tested in the generated test-exports-* packages.
 const requiresOptionalDependency = [
   "agents/load",
+  "agents/toolkits/aws_sfn",
+  "agents/toolkits/sql",
   "tools/aws_lambda",
+  "tools/aws_sfn",
   "tools/calculator",
+  "tools/sql",
   "tools/webbrowser",
   "chains/load",
+  "chains/sql_db",
   "embeddings/cohere",
   "embeddings/googlevertexai",
   "embeddings/tensorflow",
@@ -203,6 +214,7 @@ const requiresOptionalDependency = [
   "llms/sagemaker_endpoint",
   "prompts/load",
   "vectorstores/chroma",
+  "vectorstores/elasticsearch",
   "vectorstores/hnswlib",
   "vectorstores/faiss",
   "vectorstores/weaviate",
