@@ -4,12 +4,24 @@ export interface OptionalImportMap {
   "langchain/agents/load"?:
     | typeof import("../agents/load.js")
     | Promise<typeof import("../agents/load.js")>;
+  "langchain/agents/toolkits/aws_sfn"?:
+    | typeof import("../agents/toolkits/aws_sfn.js")
+    | Promise<typeof import("../agents/toolkits/aws_sfn.js")>;
+  "langchain/agents/toolkits/sql"?:
+    | typeof import("../agents/toolkits/sql/index.js")
+    | Promise<typeof import("../agents/toolkits/sql/index.js")>;
   "langchain/tools/aws_lambda"?:
     | typeof import("../tools/aws_lambda.js")
     | Promise<typeof import("../tools/aws_lambda.js")>;
+  "langchain/tools/aws_sfn"?:
+    | typeof import("../tools/aws_sfn.js")
+    | Promise<typeof import("../tools/aws_sfn.js")>;
   "langchain/tools/calculator"?:
     | typeof import("../tools/calculator.js")
     | Promise<typeof import("../tools/calculator.js")>;
+  "langchain/tools/sql"?:
+    | typeof import("../tools/sql.js")
+    | Promise<typeof import("../tools/sql.js")>;
   "langchain/tools/webbrowser"?:
     | typeof import("../tools/webbrowser.js")
     | Promise<typeof import("../tools/webbrowser.js")>;
@@ -22,6 +34,9 @@ export interface OptionalImportMap {
   "langchain/chains/query_constructor/ir"?:
     | typeof import("../chains/query_constructor/ir.js")
     | Promise<typeof import("../chains/query_constructor/ir.js")>;
+  "langchain/chains/sql_db"?:
+    | typeof import("../chains/sql_db/index.js")
+    | Promise<typeof import("../chains/sql_db/index.js")>;
   "langchain/embeddings/cohere"?:
     | typeof import("../embeddings/cohere.js")
     | Promise<typeof import("../embeddings/cohere.js")>;
@@ -55,6 +70,9 @@ export interface OptionalImportMap {
   "langchain/prompts/load"?:
     | typeof import("../prompts/load.js")
     | Promise<typeof import("../prompts/load.js")>;
+  "langchain/vectorstores/elasticsearch"?:
+    | typeof import("../vectorstores/elasticsearch.js")
+    | Promise<typeof import("../vectorstores/elasticsearch.js")>;
   "langchain/vectorstores/chroma"?:
     | typeof import("../vectorstores/chroma.js")
     | Promise<typeof import("../vectorstores/chroma.js")>;
