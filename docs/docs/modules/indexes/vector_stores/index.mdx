@@ -3,8 +3,6 @@ sidebar_label: "Vector Stores"
 sidebar_position: 3
 ---
 
-import CodeBlock from "@theme/CodeBlock";
-
 # Getting Started: Vector Stores
 
 :::info
@@ -42,7 +40,7 @@ interface VectorStore {
   /**
    * Turn a VectorStore into a Retriever
    */
-  asRetriever(k?: number, similarityFilter?: SimilarityFilters): BaseRetriever;
+  asRetriever(k?: number): BaseRetriever;
 
   /**
    * Advanced: Add more documents to an existing VectorStore,
