@@ -1,4 +1,3 @@
-/* eslint-disable no-process-env */
 import { expect, test } from "@jest/globals";
 import { OpenAI } from "../../llms/openai.js";
 import { ConversationalRetrievalQAChain } from "../conversational_retrieval_chain.js";
