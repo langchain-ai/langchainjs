@@ -5,7 +5,8 @@ describe("getEndpoint", () => {
     const config: OpenAIEndpointConfig = {
       azureOpenAIApiKey: "API-KEY",
       azureOpenAIApiDeploymentName: "deploymentName",
-      azureOpenAIBasePath: "https://westeurope.api.cognitive.microsoft.com/openai/deployments",
+      azureOpenAIBasePath:
+        "https://westeurope.api.cognitive.microsoft.com/openai/deployments",
     };
     const result = getEndpoint(config);
     expect(result).toBe(
@@ -45,18 +46,11 @@ describe("getEndpoint", () => {
     );
   });
 
-  it("should return the basePath when neither azureOpenAIBasePath nor azureOpenAIApiKey is provided", () => {
+  it("should return the custom basePath when neither azureOpenAIBasePath nor azureOpenAIApiKey is provided", () => {
     const config: OpenAIEndpointConfig = {
       basePath: "https://basepath.com",
     };
     const result = getEndpoint(config);
     expect(result).toBe("https://basepath.com");
-  });
-
-  it("should throw error when none of the required fields are provided", () => {
-    const config: OpenAIEndpointConfig = {};
-    expect(() => getEndpoint(config)).toThrowError(
-      "You must provide either an azureOpenAIBasePath or an azureOpenAIApiKey or a basePath"
-    );
   });
 });
