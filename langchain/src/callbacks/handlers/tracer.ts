@@ -352,7 +352,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       child_execution_order: execution_order,
       run_type: "embeddings",
       child_runs: [],
-      extra: extraParams,
+      extra: extraParams ?? {},
       tags: tags || [],
     };
 

@@ -30,6 +30,41 @@ const serialized: Serialized = {
   kwargs: {},
 };
 
+test("test EmbeddingRun", async () => {
+  const tracer = new FakeTracer();
+  const runId = uuid.v4();
+  await tracer.handleEmbeddingStart(serialized, ["test1", "test2"], runId);
+  await tracer.handleEmbeddingEnd([[1,2,3], [2,3,4]], runId);
+  expect(tracer.runs.length).toBe(1);
+  const run = tracer.runs[0]
+  const compareRun: Run = {
+    id: runId,
+    name: "test",
+    start_time: _DATE,
+    end_time: _DATE,
+    execution_order: 1,
+    child_execution_order: 1,
+    serialized,
+    events: [
+      {
+        name: "start",
+        time: 1620000000000,
+      },
+      {
+        name: "end",
+        time: 1620000000000,
+      },
+    ],
+    inputs: { texts: ["test1", "test2"] },
+    run_type: "embeddings",
+    outputs: [[1,2,3], [2,3,4]],
+    child_runs: [],
+    extra: {},
+    tags: [],
+  }
+  expect(run).toEqual(compareRun);
+});
+
 test("Test LLMRun", async () => {
   const tracer = new FakeTracer();
   const runId = uuid.v4();
