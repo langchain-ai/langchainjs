@@ -48,8 +48,6 @@ export class SimilarityScoreThresholdVectorStoreRetriever {
 
       let updatedK = vectorStoreRetriever.k;
 
-      console.log("debug", vectorStoreRetriever.k);
-
       // eslint-disable-next-line no-constant-condition
       while (true) {
         const results =
