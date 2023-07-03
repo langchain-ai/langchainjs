@@ -5,7 +5,6 @@ import type { OpenAI } from "../../llms/openai.js";
 import { LLMChain } from "../llm_chain.js";
 import type { SqlDatabase } from "../../sql_db.js";
 import { ChainValues } from "../../schema/index.js";
-import { SerializedSqlDatabaseChain } from "../serde.js";
 import { BaseLanguageModel } from "../../base_language/index.js";
 import {
   calculateMaxTokens,
@@ -135,27 +134,6 @@ export class SqlDatabaseChain extends BaseChain {
       return [this.outputKey, this.sqlOutputKey];
     }
     return [this.outputKey];
-  }
-
-  static async deserialize(
-    data: SerializedSqlDatabaseChain,
-    SqlDatabaseFromOptionsParams: (typeof SqlDatabase)["fromOptionsParams"]
-  ) {
-    const llm = await BaseLanguageModel.deserialize(data.llm);
-    const sqlDataBase = await SqlDatabaseFromOptionsParams(data.sql_database);
-
-    return new SqlDatabaseChain({
-      llm,
-      database: sqlDataBase,
-    });
-  }
-
-  serialize(): SerializedSqlDatabaseChain {
-    return {
-      _type: this._chainType(),
-      llm: this.llm.serialize(),
-      sql_database: this.database.serialize(),
-    };
   }
 
   private async verifyNumberOfTokens(
