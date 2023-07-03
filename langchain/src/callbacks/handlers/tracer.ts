@@ -2,12 +2,17 @@ import { KVMap, BaseRun } from "langchainplus-sdk/schemas";
 
 import {
   AgentAction,
+  AgentFinish,
   BaseChatMessage,
   ChainValues,
   LLMResult,
 } from "../../schema/index.js";
 import { Serialized } from "../../load/serializable.js";
-import { BaseCallbackHandler, BaseCallbackHandlerInput } from "../base.js";
+import {
+  BaseCallbackHandler,
+  BaseCallbackHandlerInput,
+  NewTokenIndices,
+} from "../base.js";
 
 export type RunType = "llm" | "chain" | "tool";
 
@@ -325,6 +330,19 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     await this.onAgentAction?.(run as AgentRun);
   }
 
+  async handleAgentEnd(action: AgentFinish, runId: string): Promise<void> {
+    const run = this.runMap.get(runId);
+    if (!run || run?.run_type !== "chain") {
+      return;
+    }
+    run.events.push({
+      name: "agent_end",
+      time: Date.now(),
+      kwargs: { action },
+    });
+    await this.onAgentEnd?.(run);
+  }
+
   async handleText(text: string, runId: string): Promise<void> {
     const run = this.runMap.get(runId);
     if (!run || run?.run_type !== "chain") {
@@ -336,6 +354,23 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       kwargs: { text },
     });
     await this.onText?.(run);
+  }
+
+  async handleLLMNewToken(
+    token: string,
+    idx: NewTokenIndices,
+    runId: string
+  ): Promise<void> {
+    const run = this.runMap.get(runId);
+    if (!run || run?.run_type !== "llm") {
+      return;
+    }
+    run.events.push({
+      name: "new_token",
+      time: Date.now(),
+      kwargs: { token, idx },
+    });
+    await this.onLLMNewToken?.(run);
   }
 
   // custom event handlers
@@ -360,9 +395,9 @@ export abstract class BaseTracer extends BaseCallbackHandler {
 
   onAgentAction?(run: Run): void | Promise<void>;
 
-  // TODO Implement handleAgentEnd, handleText
-
-  // onAgentEnd?(run: ChainRun): void | Promise<void>;
+  onAgentEnd?(run: Run): void | Promise<void>;
 
   onText?(run: Run): void | Promise<void>;
+
+  onLLMNewToken?(run: Run): void | Promise<void>;
 }
