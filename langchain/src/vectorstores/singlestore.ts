@@ -13,14 +13,11 @@ import { VectorStore } from "./base.js";
 import { Embeddings } from "../embeddings/base.js";
 import { Document } from "../document.js";
 
-export enum DistanceMetrics {
-  DOT_PRODUCT = "DOT_PRODUCT",
-  EUCLIDEAN_DISTANCE = "EUCLIDEAN_DISTANCE",
-}
+export type DistanceMetrics = "DOT_PRODUCT" | "EUCLIDEAN_DISTANCE";
 
 const OrderingDirective: Record<DistanceMetrics, string> = {
-  [DistanceMetrics.DOT_PRODUCT]: "DESC",
-  [DistanceMetrics.EUCLIDEAN_DISTANCE]: "",
+  DOT_PRODUCT: "DESC",
+  EUCLIDEAN_DISTANCE: "",
 };
 
 export interface ConnectionOptions extends PoolOptions {}
@@ -99,7 +96,7 @@ export class SingleStoreVectorStore extends VectorStore {
     this.contentColumnName = config.contentColumnName ?? "content";
     this.vectorColumnName = config.vectorColumnName ?? "vector";
     this.metadataColumnName = config.metadataColumnName ?? "metadata";
-    this.distanceMetric = config.distanceMetric ?? DistanceMetrics.DOT_PRODUCT;
+    this.distanceMetric = config.distanceMetric ?? "DOT_PRODUCT";
   }
 
   async createTableIfNotExists(): Promise<void> {

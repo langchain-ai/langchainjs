@@ -1,7 +1,4 @@
-import {
-  SingleStoreVectorStore,
-  DistanceMetrics,
-} from "langchain/vectorstores/singlestore";
+import { SingleStoreVectorStore } from "langchain/vectorstores/singlestore";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 
 export const run = async () => {
@@ -22,7 +19,7 @@ export const run = async () => {
         password: process.env.SINGLESTORE_PASSWORD,
         database: process.env.SINGLESTORE_DATABASE,
       },
-      distanceMetric: DistanceMetrics.EUCLIDEAN_DISTANCE,
+      distanceMetric: "EUCLIDEAN_DISTANCE",
     }
   );
 
