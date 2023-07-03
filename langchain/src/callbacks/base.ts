@@ -54,7 +54,8 @@ abstract class BaseCallbackHandlerMethodsClass {
      */
     idx: NewTokenIndices,
     runId: string,
-    parentRunId?: string
+    parentRunId?: string,
+    tags?: string[]
   ): Promise<void> | void;
 
   /**
@@ -63,7 +64,8 @@ abstract class BaseCallbackHandlerMethodsClass {
   handleLLMError?(
     err: Error,
     runId: string,
-    parentRunId?: string
+    parentRunId?: string,
+    tags?: string[]
   ): Promise<void> | void;
 
   /**
@@ -72,7 +74,8 @@ abstract class BaseCallbackHandlerMethodsClass {
   handleLLMEnd?(
     output: LLMResult,
     runId: string,
-    parentRunId?: string
+    parentRunId?: string,
+    tags?: string[]
   ): Promise<void> | void;
 
   /**
@@ -106,7 +109,8 @@ abstract class BaseCallbackHandlerMethodsClass {
   handleChainError?(
     err: Error,
     runId: string,
-    parentRunId?: string
+    parentRunId?: string,
+    tags?: string[]
   ): Promise<void> | void;
 
   /**
@@ -115,7 +119,8 @@ abstract class BaseCallbackHandlerMethodsClass {
   handleChainEnd?(
     outputs: ChainValues,
     runId: string,
-    parentRunId?: string
+    parentRunId?: string,
+    tags?: string[]
   ): Promise<void> | void;
 
   /**
@@ -136,7 +141,8 @@ abstract class BaseCallbackHandlerMethodsClass {
   handleToolError?(
     err: Error,
     runId: string,
-    parentRunId?: string
+    parentRunId?: string,
+    tags?: string[]
   ): Promise<void> | void;
 
   /**
@@ -145,13 +151,15 @@ abstract class BaseCallbackHandlerMethodsClass {
   handleToolEnd?(
     output: string,
     runId: string,
-    parentRunId?: string
+    parentRunId?: string,
+    tags?: string[]
   ): Promise<void> | void;
 
   handleText?(
     text: string,
     runId: string,
-    parentRunId?: string
+    parentRunId?: string,
+    tags?: string[]
   ): Promise<void> | void;
 
   /**
@@ -161,7 +169,8 @@ abstract class BaseCallbackHandlerMethodsClass {
   handleAgentAction?(
     action: AgentAction,
     runId: string,
-    parentRunId?: string
+    parentRunId?: string,
+    tags?: string[]
   ): Promise<void> | void;
 
   /**
@@ -171,7 +180,8 @@ abstract class BaseCallbackHandlerMethodsClass {
   handleAgentEnd?(
     action: AgentFinish,
     runId: string,
-    parentRunId?: string
+    parentRunId?: string,
+    tags?: string[]
   ): Promise<void> | void;
 }
 
