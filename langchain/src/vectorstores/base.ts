@@ -1,13 +1,11 @@
 import { Embeddings } from "../embeddings/base.js";
 import { Document } from "../document.js";
 import { BaseRetriever } from "../schema/index.js";
-import { SimilarityScoreFilters } from "./similarity-score-threshold.js";
 
 export interface VectorStoreRetrieverInput<V extends VectorStore> {
   vectorStore: V;
   k?: number;
   filter?: V["FilterType"];
-  similarityFilter?: SimilarityScoreFilters;
 }
 
 export class VectorStoreRetriever<
@@ -116,11 +114,7 @@ export abstract class VectorStore {
     k?: number,
     filter?: this["FilterType"]
   ): VectorStoreRetriever<this> {
-    return new VectorStoreRetriever({
-      vectorStore: this,
-      k,
-      filter,
-    });
+    return new VectorStoreRetriever({ vectorStore: this, k, filter });
   }
 }
 
