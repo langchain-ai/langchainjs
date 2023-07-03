@@ -158,14 +158,14 @@ test("StructuredOutputParser.fromZodSchema", async () => {
 
   expect(
     await parser.parse(
-      '```\n{"url": "value", "title": "value", "year": 2011, "createdAt": "2023-03-29T16:07:09.600Z", "createdAtDate": "2023-03-29", "authors": [{"name": "value", "email": "value", "stateProvince": "AZ"}]}```'
+      '```\n{"url": "value", "title": "value", "year": 2011, "createdAt": "2023-03-29T16:07:09.600Z", "createdAtDate": "2023-03-29T00:00:00.000Z", "authors": [{"name": "value", "email": "value", "stateProvince": "AZ"}]}```'
     )
   ).toEqual({
     url: "value",
     title: "value",
     year: 2011,
     createdAt: "2023-03-29T16:07:09.600Z",
-    createdAtDate: new Date("2023-03-29T00:00:00.000Z"),
+    createdAtDate: "2023-03-29T00:00:00.000Z",
     authors: [{ name: "value", email: "value", stateProvince: "AZ" }],
   });
 
@@ -186,4 +186,17 @@ Here is the JSON Schema instance your output must adhere to. Include the enclosi
 \`\`\`
 "
 `);
+});
+
+test("StructuredOutputParser with an invalid intialized JSON schema should throw an error", async () => {
+  expect(() => {
+    // eslint-disable-next-line no-new
+    new StructuredOutputParser({
+      jsonSchema: {
+        type: "object",
+        properties: [{ url: { type: "string" } }],
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any,
+    });
+  }).toThrow();
 });

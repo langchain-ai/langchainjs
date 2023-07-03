@@ -1,3 +1,4 @@
+import { Validator } from "@cfworker/json-schema";
 import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { JsonSchema7Type } from "zod-to-json-schema/src/parseDef.js";
@@ -11,6 +12,13 @@ import {
   FormatInstructionsOptions,
   OutputParserException,
 } from "../schema/output_parser.js";
+import { JSON_SCHEMA_7_META_JSON_SCHEMA } from "../util/json_schema.js";
+
+export type StructuredOutputParserInput<T extends z.ZodTypeAny = z.ZodTypeAny> =
+  {
+    jsonSchema?: JsonSchema7Type;
+    zodSchema?: T;
+  };
 
 export type JsonMarkdownStructuredOutputParserInput = {
   interpolationDepth?: number;
@@ -22,20 +30,44 @@ export interface JsonMarkdownFormatInstructionsOptions
 }
 
 export class StructuredOutputParser<
-  T extends z.ZodTypeAny
+  T extends z.ZodTypeAny = z.ZodTypeAny
 > extends BaseOutputParser<z.infer<T>> {
+  public jsonSchema: JsonSchema7Type;
+
+  protected jsonSchemaValidator: Validator;
+
   lc_namespace = ["langchain", "output_parsers", "structured"];
+
+  lc_serializable = true;
 
   toJSON() {
     return this.toJSONNotImplemented();
   }
 
-  constructor(public schema: T) {
-    super(schema);
+  constructor({ jsonSchema, zodSchema }: StructuredOutputParserInput<T>) {
+    super();
+    if (zodSchema !== undefined) {
+      this.jsonSchema = zodToJsonSchema(zodSchema);
+    } else if (jsonSchema !== undefined) {
+      this.jsonSchema = jsonSchema;
+    } else {
+      throw new Error(`You must provide either a Zod schema or a JSON Schema.`);
+    }
+    // Will throw if input JSON Schema is not valid
+    const result = new Validator(
+      JSON_SCHEMA_7_META_JSON_SCHEMA as JsonSchema7Type,
+      "7"
+    ).validate(this.jsonSchema);
+    if (!result.valid) {
+      throw new Error(
+        `Invalid JSON Schema input: ${JSON.stringify(result.errors)}`
+      );
+    }
+    this.jsonSchemaValidator = new Validator(this.jsonSchema, "7");
   }
 
   static fromZodSchema<T extends z.ZodTypeAny>(schema: T) {
-    return new this(schema);
+    return new this({ zodSchema: schema });
   }
 
   static fromNamesAndDescriptions<S extends { [key: string]: string }>(
@@ -50,7 +82,7 @@ export class StructuredOutputParser<
       )
     );
 
-    return new this(zodSchema);
+    return new this({ zodSchema });
   }
 
   getFormatInstructions(): string {
@@ -66,7 +98,7 @@ Your output will be parsed and type-checked according to the provided schema ins
 
 Here is the JSON Schema instance your output must adhere to. Include the enclosing markdown codeblock:
 \`\`\`json
-${JSON.stringify(zodToJsonSchema(this.schema))}
+${JSON.stringify(this.jsonSchema)}
 \`\`\`
 `;
   }
@@ -76,7 +108,13 @@ ${JSON.stringify(zodToJsonSchema(this.schema))}
       const json = text.includes("```")
         ? text.trim().split(/```(?:json)?/)[1]
         : text.trim();
-      return this.schema.parseAsync(JSON.parse(json));
+      const parsedJson = JSON.parse(json);
+      const result = this.jsonSchemaValidator.validate(parsedJson);
+      if (result.valid) {
+        return parsedJson;
+      } else {
+        throw new Error(JSON.stringify(result.errors));
+      }
     } catch (e) {
       throw new OutputParserException(
         `Failed to parse. Text: "${text}". Error: ${e}`,
@@ -98,7 +136,7 @@ export class JsonMarkdownStructuredOutputParser<
     }
 
     return `Return a markdown code snippet with a JSON object formatted to look like:\n\`\`\`json\n${this._schemaToInstruction(
-      zodToJsonSchema(this.schema)
+      this.jsonSchema
     )
       .replaceAll("{", "{".repeat(interpolationDepth))
       .replaceAll("}", "}".repeat(interpolationDepth))}\n\`\`\``;
@@ -172,7 +210,7 @@ export class JsonMarkdownStructuredOutputParser<
   }
 
   static fromZodSchema<T extends z.ZodTypeAny>(schema: T) {
-    return new this<T>(schema);
+    return new this<T>({ zodSchema: schema });
   }
 
   static fromNamesAndDescriptions<S extends { [key: string]: string }>(
@@ -187,14 +225,16 @@ export class JsonMarkdownStructuredOutputParser<
       )
     );
 
-    return new this<typeof zodSchema>(zodSchema);
+    return new this<typeof zodSchema>({ zodSchema });
   }
 }
 
 export interface AsymmetricStructuredOutputParserFields<
   T extends z.ZodTypeAny
 > {
-  inputSchema: T;
+  jsonSchema?: JsonSchema7Type;
+  inputSchema?: T;
+  zodSchema?: T;
 }
 
 export abstract class AsymmetricStructuredOutputParser<
@@ -203,11 +243,16 @@ export abstract class AsymmetricStructuredOutputParser<
 > extends BaseOutputParser<Y> {
   private structuredInputParser: JsonMarkdownStructuredOutputParser<T>;
 
-  constructor({ inputSchema }: AsymmetricStructuredOutputParserFields<T>) {
+  constructor({
+    jsonSchema,
+    zodSchema,
+    inputSchema,
+  }: AsymmetricStructuredOutputParserFields<T>) {
     super(...arguments);
-    this.structuredInputParser = new JsonMarkdownStructuredOutputParser(
-      inputSchema
-    );
+    this.structuredInputParser = new JsonMarkdownStructuredOutputParser({
+      jsonSchema,
+      zodSchema: zodSchema ?? inputSchema,
+    });
   }
 
   abstract outputProcessor(input: z.infer<T>): Promise<Y>;
