@@ -16,7 +16,7 @@ export async function run() {
         format: "json", // Do not change this, format other than "json" is will throw error
         engines: "google",
       },
-      // Custom Headers to support https://rapidapi.com/iamrony777/api/searxng Or any instance that requires custom headers
+      // Custom Headers to support rapidAPI authentication Or any instance that requires custom headers
       headers: {},
     }),
   ];

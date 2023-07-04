@@ -80,9 +80,11 @@ interface SearxngSearchParams {
 }
 
 /**
- * WORKS BEST WITH
- * **agentType**: `structured-chat-zero-shot-react-description`
+ * SearxngSearch class represents a meta search engine tool.
+ * Use this class when you need to answer questions about current events.
+ * The input should be a search query, and the output is a JSON array of the query results.
  *
+ * note: works best with *agentType*: `structured-chat-zero-shot-react-description`
  * https://github.com/searxng/searxng */
 export class SearxngSearch extends Tool {
   name = "searxng-search";
@@ -108,6 +110,12 @@ export class SearxngSearch extends Tool {
     };
   }
 
+  /**
+   * Constructor for the SearxngSearch class
+   * @param apiBase Base URL of the Searxng instance
+   * @param params SearxNG parameters
+   * @param headers Custom headers
+   */
   constructor({
     apiBase,
     params,
@@ -122,12 +130,10 @@ export class SearxngSearch extends Tool {
      */
     params?: SearxngSearchParams;
 
-    /** Custom headers
-     *
-     * If you're using https://rapidapi.com/iamrony777/api/searxng or similar
-     * then set Custom headers here
-     *
-     * No headers needed for locally self hosted instance
+    /**
+     * Custom headers
+     * Set custom headers if you're using a api from RapidAPI (https://rapidapi.com/iamrony777/api/searxng)
+     * No headers needed for a locally self-hosted instance
      */
     headers?: SearxngCustomHeaders;
   }) {
