@@ -310,11 +310,11 @@ test("serialize + deserialize llmchain with struct output parser", async () => {
   const prompt = PromptTemplate.fromTemplate(
     "An example about {yo} {format_instructions}"
   );
-  const outputParser = new StructuredOutputParser({
-    zodSchema: z.object({
+  const outputParser = new StructuredOutputParser(
+    z.object({
       a: z.string(),
-    }),
-  });
+    })
+  );
   const chain = new LLMChain({ llm, prompt, outputParser });
   const str = JSON.stringify(chain, null, 2);
   expect(stringify(JSON.parse(str))).toMatchSnapshot();

@@ -12,8 +12,6 @@ import {
   FormatInstructionsOptions,
   OutputParserException,
 } from "../schema/output_parser.js";
-import { SerializedFields } from "../load/map_keys.js";
-import { JSON_SCHEMA_7_META_JSON_SCHEMA } from "../util/json_schema.js";
 
 export type StructuredOutputParserInput<T extends z.ZodTypeAny = z.ZodTypeAny> =
   {
@@ -41,31 +39,20 @@ export class StructuredOutputParser<
 
   lc_serializable = true;
 
-  get lc_attributes(): SerializedFields | undefined {
-    return {
-      jsonSchema: this.jsonSchema,
-    };
-  }
-
-  constructor({ jsonSchema, zodSchema }: StructuredOutputParserInput<T>) {
-    super();
-    if (zodSchema !== undefined) {
-      this.jsonSchema = zodToJsonSchema(zodSchema);
-    } else if (jsonSchema !== undefined) {
-      this.jsonSchema = jsonSchema;
+  constructor(paramsOrZodSchema: StructuredOutputParserInput<T> | T) {
+    let jsonSchema;
+    const params = paramsOrZodSchema as StructuredOutputParserInput<T>;
+    if (params.zodSchema !== undefined) {
+      jsonSchema = zodToJsonSchema(params.zodSchema);
+    } else if (params.jsonSchema) {
+      jsonSchema = params.jsonSchema;
     } else {
-      throw new Error(`You must provide either a Zod schema or a JSON Schema.`);
+      jsonSchema = zodToJsonSchema(paramsOrZodSchema as T);
     }
-    // Will throw if input JSON Schema is not valid
-    const result = new Validator(
-      JSON_SCHEMA_7_META_JSON_SCHEMA as JsonSchema7Type,
-      "7"
-    ).validate(this.jsonSchema);
-    if (!result.valid) {
-      throw new Error(
-        `Invalid JSON Schema input: ${JSON.stringify(result.errors)}`
-      );
-    }
+    super({
+      jsonSchema,
+    });
+    this.jsonSchema = jsonSchema;
     this.jsonSchemaValidator = new Validator(this.jsonSchema, "7");
   }
 

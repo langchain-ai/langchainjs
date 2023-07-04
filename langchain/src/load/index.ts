@@ -85,7 +85,6 @@ async function reviver(
     "kwargs" in value &&
     value.lc === 1
   ) {
-    console.log("testing", value);
     const serialized = value as SerializedConstructor;
     const str = JSON.stringify(serialized);
     const [name, ...namespaceReverse] = serialized.id.slice().reverse();
