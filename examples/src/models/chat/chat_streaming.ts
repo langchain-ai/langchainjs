@@ -1,5 +1,5 @@
 import { ChatOpenAI } from "langchain/chat_models/openai";
-import { HumanChatMessage } from "langchain/schema";
+import { HumanMessage } from "langchain/schema";
 
 const chat = new ChatOpenAI({
   maxTokens: 25,
@@ -7,7 +7,7 @@ const chat = new ChatOpenAI({
 });
 
 const response = await chat.call(
-  [new HumanChatMessage("Tell me a joke.")],
+  [new HumanMessage("Tell me a joke.")],
   undefined,
   [
     {
@@ -35,6 +35,6 @@ console.log(response);
 // { token: ' everything' }
 // { token: '.' }
 // { token: '' }
-// AIChatMessage {
+// AIMessage {
 //   text: "\n\nWhy don't scientists trust atoms?\n\nBecause they make up everything."
 // }

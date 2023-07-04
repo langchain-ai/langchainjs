@@ -1,11 +1,7 @@
 import { PromptTemplate } from "../prompts/prompt.js";
 import { BaseLanguageModel } from "../base_language/index.js";
 import { SerializedChatVectorDBQAChain } from "./serde.js";
-import {
-  ChainValues,
-  BaseRetriever,
-  BaseChatMessage,
-} from "../schema/index.js";
+import { ChainValues, BaseRetriever, BaseMessage } from "../schema/index.js";
 import { BaseChain, ChainInputs } from "./base.js";
 import { LLMChain } from "./llm_chain.js";
 import { QAChainParams, loadQAChain } from "./question_answering/load.js";
@@ -65,16 +61,16 @@ export class ConversationalRetrievalQAChain
       fields.returnSourceDocuments ?? this.returnSourceDocuments;
   }
 
-  static getChatHistoryString(chatHistory: string | BaseChatMessage[]) {
+  static getChatHistoryString(chatHistory: string | BaseMessage[]) {
     if (Array.isArray(chatHistory)) {
       return chatHistory
         .map((chatMessage) => {
           if (chatMessage._getType() === "human") {
-            return `Human: ${chatMessage.text}`;
+            return `Human: ${chatMessage.content}`;
           } else if (chatMessage._getType() === "ai") {
-            return `Assistant: ${chatMessage.text}`;
+            return `Assistant: ${chatMessage.content}`;
           } else {
-            return `${chatMessage.text}`;
+            return `${chatMessage.content}`;
           }
         })
         .join("\n");

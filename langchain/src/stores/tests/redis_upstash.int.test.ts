@@ -5,7 +5,7 @@
 import { test, expect, describe } from "@jest/globals";
 
 import { UpstashRedisChatMessageHistory } from "../message/upstash_redis.js";
-import { HumanChatMessage, AIChatMessage } from "../../schema/index.js";
+import { HumanMessage, AIMessage } from "../../schema/index.js";
 import { ChatOpenAI } from "../../chat_models/openai.js";
 import { ConversationChain } from "../../chains/conversation.js";
 import { BufferMemory } from "../../memory/buffer_memory.js";
@@ -29,8 +29,8 @@ describe.skip("UpstashRedisChatMessageHistory", () => {
     await chatHistory.addAIChatMessage("Ozzy Osbourne");
 
     const expectedMessages = [
-      new HumanChatMessage("Who is the best vocalist?"),
-      new AIChatMessage("Ozzy Osbourne"),
+      new HumanMessage("Who is the best vocalist?"),
+      new AIMessage("Ozzy Osbourne"),
     ];
 
     const resultWithHistory = await chatHistory.getMessages();
@@ -47,8 +47,8 @@ describe.skip("UpstashRedisChatMessageHistory", () => {
     await chatHistory.addAIChatMessage("Ozzy Osbourne");
 
     const expectedMessages = [
-      new HumanChatMessage("Who is the best vocalist?"),
-      new AIChatMessage("Ozzy Osbourne"),
+      new HumanMessage("Who is the best vocalist?"),
+      new AIMessage("Ozzy Osbourne"),
     ];
 
     const resultWithHistory = await chatHistory.getMessages();
@@ -74,8 +74,8 @@ describe.skip("UpstashRedisChatMessageHistory", () => {
     await chatHistory.addAIChatMessage("Ozzy Osbourne");
 
     const expectedMessages = [
-      new HumanChatMessage("Who is the best vocalist?"),
-      new AIChatMessage("Ozzy Osbourne"),
+      new HumanMessage("Who is the best vocalist?"),
+      new AIMessage("Ozzy Osbourne"),
     ];
 
     const resultWithHistory = await chatHistory.getMessages();
@@ -102,8 +102,8 @@ describe.skip("UpstashRedisChatMessageHistory", () => {
     );
 
     const expectedHistory = [
-      new HumanChatMessage("Who is the best vocalist?"),
-      new AIChatMessage("Ozzy Osbourne"),
+      new HumanMessage("Who is the best vocalist?"),
+      new AIMessage("Ozzy Osbourne"),
     ];
 
     const result2 = await memory.loadMemoryVariables({});

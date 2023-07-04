@@ -1,10 +1,6 @@
 import { test, expect } from "@jest/globals";
 
-import {
-  AIChatMessage,
-  HumanChatMessage,
-  LLMResult,
-} from "../../schema/index.js";
+import { AIMessage, HumanMessage, LLMResult } from "../../schema/index.js";
 import { EntityMemory } from "../entity_memory.js";
 import { BaseLLM } from "../../llms/base.js";
 import { ChatMessageHistory } from "../../stores/message/in_memory.js";
@@ -43,8 +39,8 @@ test("Test entity memory with pre-loaded history", async () => {
   const model = new FakeLLM({});
 
   const pastMessages = [
-    new HumanChatMessage("My name's foo"),
-    new AIChatMessage("Nice to meet you, foo!"),
+    new HumanMessage("My name's foo"),
+    new AIMessage("Nice to meet you, foo!"),
   ];
   const memory = new EntityMemory({
     returnMessages: true,

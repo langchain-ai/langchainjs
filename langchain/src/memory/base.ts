@@ -1,4 +1,4 @@
-import { BaseChatMessage, ChatMessage } from "../schema/index.js";
+import { BaseMessage, ChatMessage } from "../schema/index.js";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type InputValues = Record<string, any>;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -68,7 +68,7 @@ export const getOutputValue = (
  * of the chat message history, based on the message content and role.
  */
 export function getBufferString(
-  messages: BaseChatMessage[],
+  messages: BaseMessage[],
   humanPrefix = "Human",
   aiPrefix = "AI"
 ): string {
@@ -86,7 +86,7 @@ export function getBufferString(
     } else {
       throw new Error(`Got unsupported message type: ${m}`);
     }
-    string_messages.push(`${role}: ${m.text}`);
+    string_messages.push(`${role}: ${m.content}`);
   }
   return string_messages.join("\n");
 }
