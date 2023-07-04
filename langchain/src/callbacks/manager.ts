@@ -391,7 +391,7 @@ export class CallbackManager
   }
 
   async handleEmbeddingStart(
-    embeddings: Serialized,
+    embedding: Serialized,
     texts: string[],
     _runId?: string,
     _parentRunId?: string,
@@ -404,7 +404,7 @@ export class CallbackManager
           if (!handler.ignoreEmbeddings) {
             try {
               await handler.handleEmbeddingStart?.(
-                embeddings,
+                embedding,
                 texts,
                 runId,
                 this._parentRunId,

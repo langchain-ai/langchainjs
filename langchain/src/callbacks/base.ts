@@ -190,7 +190,7 @@ abstract class BaseCallbackHandlerMethodsClass {
    * with the input text and the run ID
    */
   handleEmbeddingStart?(
-    embeddings: Serialized,
+    embedding: Serialized,
     texts: string[],
     runId: string,
     parentRunId?: string,

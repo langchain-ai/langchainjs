@@ -9,7 +9,7 @@ import {
 import { Serialized } from "../../load/serializable.js";
 import { BaseCallbackHandler, BaseCallbackHandlerInput } from "../base.js";
 
-export type RunType = "llm" | "chain" | "tool" | "embeddings";
+export type RunType = "llm" | "chain" | "tool" | "embedding";
 
 export interface Run extends BaseRun {
   // some optional fields are always present here
@@ -326,7 +326,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
   }
 
   async handleEmbeddingStart(
-    embeddings: Serialized,
+    embedding: Serialized,
     texts: string[],
     runId: string,
     parentRunId?: string,
@@ -337,10 +337,10 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     const start_time = Date.now();
     const run: Run = {
       id: runId,
-      name: embeddings.id[embeddings.id.length - 1],
+      name: embedding.id[embedding.id.length - 1],
       parent_run_id: parentRunId,
       start_time,
-      serialized: embeddings,
+      serialized: embedding,
       events: [
         {
           name: "start",
@@ -350,7 +350,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       inputs: { texts },
       execution_order,
       child_execution_order: execution_order,
-      run_type: "embeddings",
+      run_type: "embedding",
       child_runs: [],
       extra: extraParams ?? {},
       tags: tags || [],
@@ -362,7 +362,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
 
   async handleEmbeddingEnd(vectors: number[][], runId: string) {
     const run = this.runMap.get(runId);
-    if (!run || run?.run_type !== "embeddings") {
+    if (!run || run?.run_type !== "embedding") {
       throw new Error("No Embedding run to end.");
     }
     run.end_time = Date.now();
@@ -377,7 +377,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
 
   async handleEmbeddingError(error: Error, runId: string) {
     const run = this.runMap.get(runId);
-    if (!run || run?.run_type !== "embeddings") {
+    if (!run || run?.run_type !== "embedding") {
       throw new Error("No Embedding run to end.");
     }
     run.end_time = Date.now();

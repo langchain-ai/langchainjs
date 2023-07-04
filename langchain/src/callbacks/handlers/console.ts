@@ -190,7 +190,7 @@ export class ConsoleCallbackHandler extends BaseTracer {
         "[embeddings/start]"
       )} [${crumbs}] Entering Embedding run with input: ${tryJsonStringify(
         run.inputs,
-        "[inputs]"
+        "[texts]"
       )}`
     );
   }
@@ -202,7 +202,7 @@ export class ConsoleCallbackHandler extends BaseTracer {
         run
       )}] Exiting Embedding run with output: ${tryJsonStringify(
         run.outputs,
-        "[outputs]"
+        "[vectors]"
       )}`
     );
   }
