@@ -64,10 +64,10 @@ export const run = async () => {
   /*
   {
     messages: [
-        SystemChatMessage {
+        SystemMessage {
           text: 'You are a helpful assistant that translates English to French.'
         },
-        HumanChatMessage { text: 'I love programming.' }
+        HumanMessage { text: 'I love programming.' }
       ]
   }
   */

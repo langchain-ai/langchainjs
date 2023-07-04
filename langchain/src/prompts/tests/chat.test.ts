@@ -9,10 +9,10 @@ import {
 } from "../chat.js";
 import { PromptTemplate } from "../prompt.js";
 import {
-  AIChatMessage,
+  AIMessage,
   ChatMessage,
-  HumanChatMessage,
-  SystemChatMessage,
+  HumanMessage,
+  SystemMessage,
 } from "../../schema/index.js";
 
 function createChatPromptTemplate(): ChatPromptTemplate {
@@ -51,11 +51,9 @@ test("Test format", async () => {
     bar: "Bar",
   });
   expect(messages.toChatMessages()).toEqual([
-    new SystemChatMessage("Here's some context: This is a context"),
-    new HumanChatMessage(
-      "Hello Foo, I'm Bar. Thanks for the This is a context"
-    ),
-    new AIChatMessage("I'm an AI. I'm Foo. I'm Bar."),
+    new SystemMessage("Here's some context: This is a context"),
+    new HumanMessage("Hello Foo, I'm Bar. Thanks for the This is a context"),
+    new AIMessage("I'm an AI. I'm Foo. I'm Bar."),
     new ChatMessage("I'm a generic message. I'm Foo. I'm Bar.", "test"),
   ]);
 });
@@ -126,8 +124,8 @@ test("Test fromPromptMessages", async () => {
     bar: "Bar",
   });
   expect(messages.toChatMessages()).toEqual([
-    new SystemChatMessage("Here's some context: This is a context"),
-    new HumanChatMessage("Hello Foo, I'm Bar"),
+    new SystemMessage("Here's some context: This is a context"),
+    new HumanMessage("Hello Foo, I'm Bar"),
   ]);
 });
 
@@ -155,9 +153,9 @@ test("Test fromPromptMessages is composable", async () => {
     bar: "Bar",
   });
   expect(messages.toChatMessages()).toEqual([
-    new SystemChatMessage("Here's some context: This is a context"),
-    new HumanChatMessage("Hello Foo, I'm Bar"),
-    new AIChatMessage("I'm an AI. I'm Foo. I'm Bar."),
+    new SystemMessage("Here's some context: This is a context"),
+    new HumanMessage("Hello Foo, I'm Bar"),
+    new AIMessage("I'm an AI. I'm Foo. I'm Bar."),
   ]);
 });
 
@@ -186,17 +184,17 @@ test("Test fromPromptMessages is composable with partial vars", async () => {
     bar: "Bar",
   });
   expect(messages.toChatMessages()).toEqual([
-    new SystemChatMessage("Here's some context: This is a context"),
-    new HumanChatMessage("Hello Foo, I'm Bar"),
-    new AIChatMessage("I'm an AI. I'm Foo. I'm Bar."),
+    new SystemMessage("Here's some context: This is a context"),
+    new HumanMessage("Hello Foo, I'm Bar"),
+    new AIMessage("I'm an AI. I'm Foo. I'm Bar."),
   ]);
 });
 
 test("Test SimpleMessagePromptTemplate", async () => {
   const prompt = new MessagesPlaceholder("foo");
-  const values = { foo: [new HumanChatMessage("Hello Foo, I'm Bar")] };
+  const values = { foo: [new HumanMessage("Hello Foo, I'm Bar")] };
   const messages = await prompt.formatMessages(values);
-  expect(messages).toEqual([new HumanChatMessage("Hello Foo, I'm Bar")]);
+  expect(messages).toEqual([new HumanMessage("Hello Foo, I'm Bar")]);
 });
 
 test("Test using partial", async () => {
@@ -218,6 +216,6 @@ test("Test using partial", async () => {
   expect(partialPrompt.inputVariables).toEqual(["bar"]);
 
   expect(await partialPrompt.format({ bar: "baz" })).toMatchInlineSnapshot(
-    `"[{"type":"human","data":{"content":"foobaz","additional_kwargs":{}}}]"`
+    `"[{"lc":1,"type":"constructor","id":["langchain","schema","HumanMessage"],"kwargs":{"content":"foobaz","additional_kwargs":{}}}]"`
   );
 });
