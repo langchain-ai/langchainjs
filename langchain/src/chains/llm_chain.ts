@@ -71,7 +71,6 @@ export class LLMChain<
     super(fields);
     this.prompt = fields.prompt;
     this.llm = fields.llm;
-    this.llmKwargs = fields.llmKwargs;
     this.outputKey = fields.outputKey ?? this.outputKey;
     this.outputParser =
       fields.outputParser ?? (new NoOpOutputParser() as BaseOutputParser<T>);
@@ -81,6 +80,7 @@ export class LLMChain<
       }
       this.outputParser = this.prompt.outputParser as BaseOutputParser<T>;
     }
+    this.llmKwargs = { ...this.outputParser.llmKwargs, ...fields.llmKwargs };
   }
 
   /** @ignore */

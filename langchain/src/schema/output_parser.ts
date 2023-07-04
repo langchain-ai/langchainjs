@@ -8,6 +8,14 @@ import { Serializable } from "../load/serializable.js";
 export interface FormatInstructionsOptions {}
 
 export abstract class BaseLLMOutputParser<T = unknown> extends Serializable {
+  /**
+   * Input kwargs required for the LLM to produce an output parseable by the parser.
+   * For example, "functions" and "function_call" for OpenAI functions models.
+   */
+  get llmKwargs() {
+    return {};
+  }
+
   abstract parseResult(
     generations: Generation[] | ChatGeneration[],
     callbacks?: Callbacks
