@@ -68,8 +68,8 @@ function withConnectAttributes(
 
   result.connectAttributes = {
     ...result.connectAttributes,
-    _client_name: "langchain js sdk",
-    _client_version: "0.0.102",
+    _connector_name: "langchain js sdk",
+    _connector_version: "1.0.0",
     _driver_name: "Node-MySQL-2",
   };
 
