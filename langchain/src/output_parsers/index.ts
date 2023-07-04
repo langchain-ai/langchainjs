@@ -16,3 +16,4 @@ export {
   JsonOutputFunctionsParser,
   JsonKeyOutputFunctionsParser,
 } from "../output_parsers/openai_functions.js";
+export { FunctionCallStructuredOutputParser } from "../output_parsers/openai_function_call_structured.js";

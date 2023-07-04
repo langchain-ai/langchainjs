@@ -5,7 +5,7 @@ import { JsonSchema7Type } from "zod-to-json-schema/src/parseDef.js";
 
 import { StructuredOutputParser } from "./structured.js";
 import { OutputParserException } from "../schema/output_parser.js";
-import { JsonOutputFunctionsParser } from "./openai_functions.js";
+import { OutputFunctionsParser } from "./openai_functions.js";
 import { Generation, ChatGeneration } from "../schema/index.js";
 
 export class FunctionCallStructuredOutputParser<
@@ -17,7 +17,7 @@ export class FunctionCallStructuredOutputParser<
 
   public jsonSchema: JsonSchema7Type;
 
-  protected functionOutputParser = new JsonOutputFunctionsParser();
+  protected functionOutputParser = new OutputFunctionsParser();
 
   constructor(schema: T) {
     super(schema);
@@ -42,12 +42,15 @@ export class FunctionCallStructuredOutputParser<
   }
 
   async parseResult(generations: Generation[] | ChatGeneration[]) {
-    return this.functionOutputParser.parseResult(generations);
+    const initialParseResult = await this.functionOutputParser.parseResult(
+      generations
+    );
+    return this.parse(initialParseResult);
   }
 
   async parse(text: string): Promise<z.infer<T>> {
     try {
-      return this.schema.parseAsync(JSON.parse(text).arguments);
+      return this.schema.parseAsync(JSON.parse(text));
     } catch (e) {
       throw new OutputParserException(
         `Failed to parse. Text: "${text}". Error: ${e}`,
