@@ -66,13 +66,13 @@ function withConnectAttributes(
     result.connectAttributes = {};
   }
 
-  if (result.connectAttributes.program_name === undefined) {
-    result.connectAttributes = {
-      ...result.connectAttributes,
-      program_name: "langchain js sdk",
-      program_version: "0.0.97",
-    };
-  }
+  result.connectAttributes = {
+    ...result.connectAttributes,
+    _client_name: "langchain js sdk",
+    _client_version: "0.0.102",
+    _driver_name: "Node-MySQL-2",
+  };
+
   return result;
 }
 
