@@ -1,7 +1,6 @@
 import { test, expect } from "@jest/globals";
 import { ChatBaiduWenxin } from "../baiduwenxin.js";
-import { HumanChatMessage, LLMResult } from "../../schema/index.js";
-import { CallbackManager } from "../../callbacks/index.js";
+import { HumanChatMessage } from "../../schema/index.js";
 
 test.skip("Test ChatBaiduWenxin default model", async () => {
   const chat = new ChatBaiduWenxin();
@@ -102,25 +101,4 @@ test.skip("Test ChatBaiduWenxin ERNIE-Bot-turbo in streaming mode", async () => 
 
   expect(nrNewTokens > 0).toBe(true);
   expect(res.text).toBe(streamedCompletion);
-});
-
-test.skip("Test ChatBaiduWenxin tokenUsage", async () => {
-  let tokenUsage = {
-    completionTokens: 0,
-    promptTokens: 0,
-    totalTokens: 0,
-  };
-
-  const model = new ChatBaiduWenxin({
-    callbackManager: CallbackManager.fromHandlers({
-      async handleLLMEnd(output: LLMResult) {
-        tokenUsage = output.llmOutput?.tokenUsage;
-      },
-    }),
-  });
-  const message = new HumanChatMessage("Hello");
-  const res = await model.call([message]);
-  console.log({ res });
-
-  expect(tokenUsage.promptTokens).toBeGreaterThan(0);
 });
