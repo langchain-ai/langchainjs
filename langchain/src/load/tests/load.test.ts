@@ -306,6 +306,7 @@ test("serialize + deserialize llmchain with struct output parser throws", async 
     openAIApiKey: "openai-key",
     callbacks: [new LangChainTracer()],
   });
+
   const prompt = PromptTemplate.fromTemplate(
     "An example about {yo} {format_instructions}"
   );
@@ -354,4 +355,17 @@ test.skip("serialize + deserialize agent", async () => {
   );
   expect(executor2).toBeInstanceOf(AgentExecutor);
   expect(JSON.stringify(executor2, null, 2)).toBe(str);
+});
+
+test("override name of objects when serialising", async () => {
+  const llm = new Cohere({ temperature: 0.5, apiKey: "cohere-key" });
+  const str = JSON.stringify(llm, null, 2);
+
+  class MangledName extends Cohere {}
+  const llm2 = await load<Cohere>(
+    str,
+    { COHERE_API_KEY: "cohere-key" },
+    { "langchain/llms/cohere": { Cohere: MangledName } }
+  );
+  expect(JSON.stringify(llm2, null, 2)).toBe(str);
 });

@@ -7,7 +7,7 @@ import { OpenAI } from "../../llms/openai.js";
 import { SerpAPI } from "../../tools/index.js";
 import { Calculator } from "../../tools/calculator.js";
 import { initializeAgentExecutorWithOptions } from "../../agents/index.js";
-import { HumanChatMessage } from "../../schema/index.js";
+import { HumanMessage } from "../../schema/index.js";
 import { Serialized } from "../../load/serializable.js";
 
 const serialized: Serialized = {
@@ -25,7 +25,7 @@ test("Test LangChain tracer", async () => {
   const llmRunId = uuid.v4();
   await tracer.handleChatModelStart(
     serialized,
-    [[new HumanChatMessage("this is a message")]],
+    [[new HumanMessage("this is a message")]],
     chatRunId
   );
   await tracer.handleLLMEnd({ generations: [[]] }, chatRunId);

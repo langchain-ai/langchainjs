@@ -26,7 +26,7 @@ export const run = async () => {
   /*
     {
         responseAMessages: [
-            HumanChatMessage {
+            HumanMessage {
                 text: 'What is a good name for a company that makes colorful socks?'
             }
         ]
@@ -59,10 +59,10 @@ export const run = async () => {
   /*
     {
         responseBMessages: [
-            SystemChatMessage {
+            SystemMessage {
                 text: 'You are a helpful assistant that translates English to French.'
             },
-            HumanChatMessage { text: 'I love programming.' }
+            HumanMessage { text: 'I love programming.' }
         ]
     }
     */

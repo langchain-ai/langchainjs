@@ -11,12 +11,6 @@ export {
 export { IFTTTWebhook } from "./IFTTTWebhook.js";
 export { ChainTool, ChainToolInput } from "./chain.js";
 export {
-  QuerySqlTool,
-  InfoSqlTool,
-  ListTablesSqlTool,
-  QueryCheckerTool,
-} from "./sql.js";
-export {
   JsonSpec,
   JsonListKeysTool,
   JsonGetValueTool,
