@@ -406,7 +406,7 @@ export class ChatBaiduWenxin
           "Content-Type": "application/json",
         },
         body: JSON.stringify(request),
-        signal: signal,
+        signal,
       });
 
       if (!stream) {
@@ -418,16 +418,20 @@ export class ChatBaiduWenxin
           const decoder = new TextDecoder("utf-8");
           let data = "";
 
-          while (true) {
+          let continueReading = true;
+          while (continueReading) {
             const { done, value } = await reader.read();
             if (done) {
+              continueReading = false;
               break;
             }
             data += decoder.decode(value);
 
-            while (true) {
+            let continueProcessing = true;
+            while (continueProcessing) {
               const newlineIndex = data.indexOf("\n");
               if (newlineIndex === -1) {
+                continueProcessing = false;
                 break;
               }
               const line = data.slice(0, newlineIndex);
