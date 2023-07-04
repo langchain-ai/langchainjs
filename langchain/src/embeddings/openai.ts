@@ -37,7 +37,7 @@ export class OpenAIEmbeddings
   extends Embeddings
   implements OpenAIEmbeddingsParams, AzureOpenAIInput
 {
-  lc_serializable: boolean = true;
+  lc_serializable = true;
 
   get lc_secrets(): { [key: string]: string } | undefined {
     return {

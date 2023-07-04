@@ -45,7 +45,13 @@ export class GoogleVertexAIEmbeddings
   extends Embeddings
   implements GoogleVertexAIEmbeddingsParams
 {
-  lc_serializable: boolean = false;
+  lc_serializable = false;
+
+  get lc_aliases(): Record<string, string> {
+    return {
+      model: "model_name",
+    };
+  }
 
   model = "textembedding-gecko";
 
@@ -56,7 +62,7 @@ export class GoogleVertexAIEmbeddings
   >;
 
   _embeddingsType(): string {
-    return "vertex-ai";
+    return "googlevertexai";
   }
 
   constructor(fields?: GoogleVertexAIEmbeddingsParams) {

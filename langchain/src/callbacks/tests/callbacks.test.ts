@@ -112,7 +112,10 @@ class FakeCallbackHandler extends BaseCallbackHandler {
     this.agentEnds += 1;
   }
 
-  async handleEmbeddingStart(_embeddings: Serialized, _texts: string[]): Promise<void> {
+  async handleEmbeddingStart(
+    _embeddings: Serialized,
+    _texts: string[]
+  ): Promise<void> {
     this.starts += 1;
     this.embeddingStarts += 1;
   }
@@ -122,7 +125,7 @@ class FakeCallbackHandler extends BaseCallbackHandler {
     this.embeddingEnds += 1;
   }
 
-  async handleEmbeddingError(_err: any): Promise<void> {
+  async handleEmbeddingError(_err: Error): Promise<void> {
     this.errors += 1;
   }
 
@@ -195,8 +198,14 @@ test("CallbackManager", async () => {
     log: "test",
   });
   await chainCb.handleAgentEnd({ returnValues: { test: "test" }, log: "test" });
-  const embeddingCb = await manager.handleEmbeddingStart(serialized, ["test1", "test2"]);
-  await embeddingCb.handleEmbeddingEnd([[1, 2, 3], [2, 3, 4]]);
+  const embeddingCb = await manager.handleEmbeddingStart(serialized, [
+    "test1",
+    "test2",
+  ]);
+  await embeddingCb.handleEmbeddingEnd([
+    [1, 2, 3],
+    [2, 3, 4],
+  ]);
   await embeddingCb.handleEmbeddingError(new Error("test"));
 
   for (const handler of [handler1, handler2]) {
@@ -313,19 +322,19 @@ test("CallbackHandler with ignoreAgent", async () => {
 test("CallbackHandler with ignoreEmbeddings", async () => {
   const handler = new FakeCallbackHandler({
     ignoreEmbeddings: true,
-  })
+  });
   const manager = new CallbackManager();
   manager.addHandler(handler);
   const embeddingCb = await manager.handleEmbeddingStart(serialized, ["asdf"]);
-  await embeddingCb.handleEmbeddingEnd([[1,2,3]])
-  await embeddingCb.handleEmbeddingError(new Error("test"))
+  await embeddingCb.handleEmbeddingEnd([[1, 2, 3]]);
+  await embeddingCb.handleEmbeddingError(new Error("test"));
 
   expect(handler.embeddingStarts).toBe(0);
   expect(handler.embeddingEnds).toBe(0);
   expect(handler.starts).toBe(0);
   expect(handler.ends).toBe(0);
   expect(handler.errors).toBe(0);
-})
+});
 
 test("CallbackManager with child manager", async () => {
   const chainRunId = "chainRunId";
@@ -357,10 +366,10 @@ test("CallbackManager with child manager", async () => {
       _texts: string[],
       _runId?: string,
       parentRunId?: string
-    ){
+    ) {
       expect(parentRunId).toBe(chainRunId);
       embeddingWasCalled = true;
-    }
+    },
   });
   const chainCb = await manager.handleChainStart(
     serialized,

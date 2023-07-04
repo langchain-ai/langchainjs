@@ -360,10 +360,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     await this.onEmbeddingStart?.(run);
   }
 
-  async handleEmbeddingEnd(
-    vectors: number[][],
-    runId: string
-  ) {
+  async handleEmbeddingEnd(vectors: number[][], runId: string) {
     const run = this.runMap.get(runId);
     if (!run || run?.run_type !== "embeddings") {
       throw new Error("No Embedding run to end.");

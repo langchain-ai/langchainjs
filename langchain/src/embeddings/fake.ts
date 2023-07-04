@@ -1,10 +1,12 @@
 import { Embeddings, EmbeddingsParams } from "./base.js";
 
 export class FakeEmbeddings extends Embeddings {
-  lc_serializable: boolean = true;
+  lc_serializable = true;
+
   _embeddingsType(): string {
     return "fake";
   }
+
   constructor(params?: EmbeddingsParams) {
     super(params ?? {});
   }

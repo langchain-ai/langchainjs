@@ -19,7 +19,7 @@ export class CohereEmbeddings
   extends Embeddings
   implements CohereEmbeddingsParams
 {
-  lc_serializable: boolean = true;
+  lc_serializable = true;
 
   get lc_secrets(): { [key: string]: string } | undefined {
     return {
@@ -30,7 +30,7 @@ export class CohereEmbeddings
   get lc_aliases(): Record<string, string> {
     return {
       modelName: "model",
-      apiKey: "api_key",
+      apiKey: "cohere_api_key",
     };
   }
 

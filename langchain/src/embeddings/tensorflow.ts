@@ -6,6 +6,8 @@ import { Embeddings, EmbeddingsParams } from "./base.js";
 export interface TensorFlowEmbeddingsParams extends EmbeddingsParams {}
 
 export class TensorFlowEmbeddings extends Embeddings {
+  lc_serializable = true;
+
   _embeddingsType(): string {
     return "tensorflow";
   }

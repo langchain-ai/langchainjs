@@ -11,6 +11,21 @@ export class HuggingFaceInferenceEmbeddings
   extends Embeddings
   implements HuggingFaceInferenceEmbeddingsParams
 {
+  lc_serializable = true;
+
+  get lc_secrets(): { [key: string]: string } | undefined {
+    return {
+      apiKey: "HUGGINGFACEHUB_API_KEY",
+    };
+  }
+
+  get lc_aliases(): Record<string, string> {
+    return {
+      model: "model_name",
+      apiKey: "huggingfacehub_api_token",
+    };
+  }
+
   apiKey?: string;
 
   model: string;

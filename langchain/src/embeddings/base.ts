@@ -10,6 +10,7 @@ export type EmbeddingsParams = AsyncCallerParams & {
 
 export abstract class Embeddings extends Serializable {
   lc_namespace = ["langchain", "embeddings", this._embeddingsType()];
+
   /**
    * The async caller should be used by subclasses to make any async calls,
    * which will thus benefit from the concurrency and retry logic.

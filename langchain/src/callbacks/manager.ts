@@ -105,9 +105,7 @@ export class CallbackManagerForEmbeddingRun
     );
   }
 
-  async handleEmbeddingEnd(
-    vectors: number[][]
-  ): Promise<void> {
+  async handleEmbeddingEnd(vectors: number[][]): Promise<void> {
     await Promise.all(
       this.handlers.map((handler) =>
         consumeCallback(async () => {
