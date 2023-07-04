@@ -1,7 +1,7 @@
 import { BaseChatModel } from "./base.js";
 import {
-  AIChatMessage,
-  BaseChatMessage,
+  AIMessage,
+  BaseMessage,
   ChatGeneration,
   ChatResult,
   LLMResult,
@@ -19,8 +19,8 @@ import {
  * help illustrate what a model response should look like.
  */
 export interface ChatExample {
-  input: BaseChatMessage;
-  output: BaseChatMessage;
+  input: BaseMessage;
+  output: BaseMessage;
 }
 
 interface GoogleVertexAIChatExample {
@@ -73,13 +73,13 @@ export class GoogleVertexAIChatMessage {
     }
   }
 
-  static fromChatMessage(message: BaseChatMessage, model: string) {
+  static fromChatMessage(message: BaseMessage, model: string) {
     return new GoogleVertexAIChatMessage({
       author: GoogleVertexAIChatMessage.mapMessageTypeToVertexChatAuthor(
         message._getType(),
         model
       ),
-      content: message.text,
+      content: message.content,
     });
   }
 }
@@ -165,7 +165,7 @@ export class ChatGoogleVertexAI
 
   // TODO: Add streaming support
   async _generate(
-    messages: BaseChatMessage[],
+    messages: BaseMessage[],
     options: this["ParsedCallOptions"]
   ): Promise<ChatResult> {
     const instance: GoogleVertexAIChatInstance = this.createInstance(messages);
@@ -196,11 +196,11 @@ export class ChatGoogleVertexAI
     return "googlevertexai";
   }
 
-  createInstance(messages: BaseChatMessage[]): GoogleVertexAIChatInstance {
+  createInstance(messages: BaseMessage[]): GoogleVertexAIChatInstance {
     let context = "";
     let conversationMessages = messages;
     if (messages[0]?._getType() === "system") {
-      context = messages[0].text;
+      context = messages[0].content;
       conversationMessages = messages.slice(1);
     }
     // https://cloud.google.com/vertex-ai/docs/generative-ai/chat/test-chat-prompts
@@ -248,7 +248,7 @@ export class ChatGoogleVertexAI
     const message = prediction?.candidates[0];
     return {
       text: message?.content,
-      message: new AIChatMessage(message.content),
+      message: new AIMessage(message.content),
       generationInfo: prediction,
     };
   }

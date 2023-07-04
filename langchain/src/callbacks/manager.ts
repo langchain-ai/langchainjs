@@ -2,7 +2,7 @@ import { v4 as uuidv4 } from "uuid";
 import {
   AgentAction,
   AgentFinish,
-  BaseChatMessage,
+  BaseMessage,
   ChainValues,
   LLMResult,
 } from "../schema/index.js";
@@ -67,7 +67,12 @@ class BaseRunManager {
       this.handlers.map((handler) =>
         consumeCallback(async () => {
           try {
-            await handler.handleText?.(text, this.runId, this._parentRunId);
+            await handler.handleText?.(
+              text,
+              this.runId,
+              this._parentRunId,
+              this.tags
+            );
           } catch (err) {
             console.error(
               `Error in handler ${handler.constructor.name}, handleText: ${err}`
@@ -145,7 +150,8 @@ export class CallbackManagerForLLMRun
                 token,
                 idx,
                 this.runId,
-                this._parentRunId
+                this._parentRunId,
+                this.tags
               );
             } catch (err) {
               console.error(
@@ -167,7 +173,8 @@ export class CallbackManagerForLLMRun
               await handler.handleLLMError?.(
                 err,
                 this.runId,
-                this._parentRunId
+                this._parentRunId,
+                this.tags
               );
             } catch (err) {
               console.error(
@@ -189,7 +196,8 @@ export class CallbackManagerForLLMRun
               await handler.handleLLMEnd?.(
                 output,
                 this.runId,
-                this._parentRunId
+                this._parentRunId,
+                this.tags
               );
             } catch (err) {
               console.error(
@@ -227,7 +235,8 @@ export class CallbackManagerForChainRun
               await handler.handleChainError?.(
                 err,
                 this.runId,
-                this._parentRunId
+                this._parentRunId,
+                this.tags
               );
             } catch (err) {
               console.error(
@@ -249,7 +258,8 @@ export class CallbackManagerForChainRun
               await handler.handleChainEnd?.(
                 output,
                 this.runId,
-                this._parentRunId
+                this._parentRunId,
+                this.tags
               );
             } catch (err) {
               console.error(
@@ -271,7 +281,8 @@ export class CallbackManagerForChainRun
               await handler.handleAgentAction?.(
                 action,
                 this.runId,
-                this._parentRunId
+                this._parentRunId,
+                this.tags
               );
             } catch (err) {
               console.error(
@@ -293,7 +304,8 @@ export class CallbackManagerForChainRun
               await handler.handleAgentEnd?.(
                 action,
                 this.runId,
-                this._parentRunId
+                this._parentRunId,
+                this.tags
               );
             } catch (err) {
               console.error(
@@ -331,7 +343,8 @@ export class CallbackManagerForToolRun
               await handler.handleToolError?.(
                 err,
                 this.runId,
-                this._parentRunId
+                this._parentRunId,
+                this.tags
               );
             } catch (err) {
               console.error(
@@ -353,7 +366,8 @@ export class CallbackManagerForToolRun
               await handler.handleToolEnd?.(
                 output,
                 this.runId,
-                this._parentRunId
+                this._parentRunId,
+                this.tags
               );
             } catch (err) {
               console.error(
@@ -478,7 +492,7 @@ export class CallbackManager
 
   async handleChatModelStart(
     llm: Serialized,
-    messages: BaseChatMessage[][],
+    messages: BaseMessage[][],
     _runId: string | undefined = undefined,
     _parentRunId: string | undefined = undefined,
     extraParams: Record<string, unknown> | undefined = undefined

@@ -5,9 +5,9 @@ import { BaseCallbackHandler, BaseCallbackHandlerInput } from "../base.js";
 import {
   AgentAction,
   AgentFinish,
-  BaseChatMessage,
+  BaseMessage,
   ChainValues,
-  HumanChatMessage,
+  HumanMessage,
   LLMResult,
 } from "../../schema/index.js";
 import { Serialized } from "../../load/serializable.js";
@@ -156,7 +156,7 @@ class FakeCallbackHandlerWithChatStart extends FakeCallbackHandler {
 
   async handleChatModelStart(
     _llm: Serialized,
-    _messages: BaseChatMessage[][]
+    _messages: BaseMessage[][]
   ): Promise<void> {
     this.starts += 1;
     this.chatModelStarts += 1;
@@ -234,7 +234,7 @@ test("CallbackManager Chat Message Handling", async () => {
   manager.addHandler(handler2);
 
   const llmCbs = await manager.handleChatModelStart(serialized, [
-    [new HumanChatMessage("test")],
+    [new HumanMessage("test")],
   ]);
   await Promise.all(
     llmCbs.map(async (llmCb) => {
