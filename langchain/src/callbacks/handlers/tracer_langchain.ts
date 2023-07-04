@@ -1,4 +1,4 @@
-import { LangChainPlusClient } from "langchainplus-sdk";
+import { Client } from "langchainplus-sdk";
 import {
   BaseRun,
   RunCreate,
@@ -24,7 +24,7 @@ export interface RunUpdate extends BaseRunUpdate {
 export interface LangChainTracerFields extends BaseCallbackHandlerInput {
   exampleId?: string;
   projectName?: string;
-  client?: LangChainPlusClient;
+  client?: Client;
 }
 
 export class LangChainTracer
@@ -37,7 +37,7 @@ export class LangChainTracer
 
   exampleId?: string;
 
-  client: LangChainPlusClient;
+  client: Client;
 
   constructor(fields: LangChainTracerFields = {}) {
     super(fields);
@@ -48,7 +48,7 @@ export class LangChainTracer
       getEnvironmentVariable("LANGCHAIN_PROJECT") ??
       getEnvironmentVariable("LANGCHAIN_SESSION");
     this.exampleId = exampleId;
-    this.client = client ?? new LangChainPlusClient({});
+    this.client = client ?? new Client({});
   }
 
   private async _convertToCreate(
