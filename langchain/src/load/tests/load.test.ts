@@ -299,7 +299,7 @@ test.skip("serialize + deserialize llmchain with output parser", async () => {
   );
 });
 
-test("serialize + deserialize llmchain with struct output parser throws", async () => {
+test("serialize + deserialize llmchain with struct output parser", async () => {
   const llm = new OpenAI({
     temperature: 0.5,
     modelName: "davinci",
@@ -310,21 +310,22 @@ test("serialize + deserialize llmchain with struct output parser throws", async 
   const prompt = PromptTemplate.fromTemplate(
     "An example about {yo} {format_instructions}"
   );
-  const outputParser = new StructuredOutputParser(
-    z.object({
+  const outputParser = new StructuredOutputParser({
+    zodSchema: z.object({
       a: z.string(),
-    })
-  );
+    }),
+  });
   const chain = new LLMChain({ llm, prompt, outputParser });
   const str = JSON.stringify(chain, null, 2);
   expect(stringify(JSON.parse(str))).toMatchSnapshot();
-  await expect(
-    load<LLMChain>(str, {
-      OPENAI_API_KEY: "openai-key",
-    })
-  ).rejects.toThrow(
-    'Trying to load an object that doesn\'t implement serialization: $.kwargs.output_parser -> {"lc":1,"type":"not_implemented","id":["langchain","output_parsers","structured","StructuredOutputParser"]}'
-  );
+  const chain2 = await load<LLMChain>(str, {
+    OPENAI_API_KEY: "openai-key",
+  });
+  expect(
+    await chain2.outputParser?.parseResult([
+      { text: JSON.stringify({ a: "test" }) },
+    ])
+  ).toEqual({ a: "test" });
 });
 
 test.skip("serialize + deserialize agent", async () => {

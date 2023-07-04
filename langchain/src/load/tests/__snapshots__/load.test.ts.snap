@@ -345,7 +345,7 @@ kwargs:
 "
 `;
 
-exports[`serialize + deserialize llmchain with struct output parser throws 1`] = `
+exports[`serialize + deserialize llmchain with struct output parser 1`] = `
 "lc: 1
 type: constructor
 id:
@@ -386,11 +386,21 @@ kwargs:
       template: An example about {yo} {format_instructions}
   output_parser:
     lc: 1
-    type: not_implemented
+    type: constructor
     id:
       - langchain
       - output_parsers
       - structured
       - StructuredOutputParser
+    kwargs:
+      json_schema:
+        type: object
+        properties:
+          a:
+            type: string
+        required:
+          - a
+        additionalProperties: false
+        $schema: http://json-schema.org/draft-07/schema#
 "
 `;

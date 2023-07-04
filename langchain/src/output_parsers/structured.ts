@@ -12,6 +12,7 @@ import {
   FormatInstructionsOptions,
   OutputParserException,
 } from "../schema/output_parser.js";
+import { SerializedFields } from "../load/map_keys.js";
 import { JSON_SCHEMA_7_META_JSON_SCHEMA } from "../util/json_schema.js";
 
 export type StructuredOutputParserInput<T extends z.ZodTypeAny = z.ZodTypeAny> =
@@ -40,8 +41,10 @@ export class StructuredOutputParser<
 
   lc_serializable = true;
 
-  toJSON() {
-    return this.toJSONNotImplemented();
+  get lc_attributes(): SerializedFields | undefined {
+    return {
+      jsonSchema: this.jsonSchema,
+    };
   }
 
   constructor({ jsonSchema, zodSchema }: StructuredOutputParserInput<T>) {
