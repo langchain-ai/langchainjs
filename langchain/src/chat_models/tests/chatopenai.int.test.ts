@@ -1,10 +1,10 @@
 import { test, expect } from "@jest/globals";
 import { ChatOpenAI } from "../openai.js";
 import {
-  BaseChatMessage,
-  HumanChatMessage,
+  BaseMessage,
+  HumanMessage,
   LLMResult,
-  SystemChatMessage,
+  SystemMessage,
 } from "../../schema/index.js";
 import { ChatPromptValue } from "../../prompts/chat.js";
 import {
@@ -18,15 +18,15 @@ import { NewTokenIndices } from "../../callbacks/base.js";
 
 test("Test ChatOpenAI", async () => {
   const chat = new ChatOpenAI({ modelName: "gpt-3.5-turbo", maxTokens: 10 });
-  const message = new HumanChatMessage("Hello!");
+  const message = new HumanMessage("Hello!");
   const res = await chat.call([message]);
   console.log({ res });
 });
 
 test("Test ChatOpenAI with SystemChatMessage", async () => {
   const chat = new ChatOpenAI({ modelName: "gpt-3.5-turbo", maxTokens: 10 });
-  const system_message = new SystemChatMessage("You are to chat with a user.");
-  const message = new HumanChatMessage("Hello!");
+  const system_message = new SystemMessage("You are to chat with a user.");
+  const message = new HumanMessage("Hello!");
   const res = await chat.call([system_message, message]);
   console.log({ res });
 });
@@ -37,7 +37,7 @@ test("Test ChatOpenAI Generate", async () => {
     maxTokens: 10,
     n: 2,
   });
-  const message = new HumanChatMessage("Hello!");
+  const message = new HumanMessage("Hello!");
   const res = await chat.generate([[message], [message]]);
   expect(res.generations.length).toBe(2);
   for (const generation of res.generations) {
@@ -56,7 +56,7 @@ test("Test ChatOpenAI Generate throws when one of the calls fails", async () => 
     maxTokens: 10,
     n: 2,
   });
-  const message = new HumanChatMessage("Hello!");
+  const message = new HumanMessage("Hello!");
   await expect(() =>
     chat.generate([[message], [message]], {
       signal: AbortSignal.timeout(10),
@@ -80,7 +80,7 @@ test("Test ChatOpenAI tokenUsage", async () => {
       },
     }),
   });
-  const message = new HumanChatMessage("Hello");
+  const message = new HumanMessage("Hello");
   const res = await model.call([message]);
   console.log({ res });
 
@@ -104,8 +104,8 @@ test("Test ChatOpenAI tokenUsage with a batch", async () => {
     }),
   });
   const res = await model.generate([
-    [new HumanChatMessage("Hello")],
-    [new HumanChatMessage("Hi")],
+    [new HumanMessage("Hello")],
+    [new HumanMessage("Hi")],
   ]);
   console.log(res);
 
@@ -129,12 +129,12 @@ test("Test ChatOpenAI in streaming mode", async () => {
       },
     ],
   });
-  const message = new HumanChatMessage("Hello!");
+  const message = new HumanMessage("Hello!");
   const result = await model.call([message]);
   console.log(result);
 
   expect(nrNewTokens > 0).toBe(true);
-  expect(result.text).toBe(streamedCompletion);
+  expect(result.content).toBe(streamedCompletion);
 });
 
 test("Test ChatOpenAI in streaming mode with n > 1 and multiple prompts", async () => {
@@ -158,8 +158,8 @@ test("Test ChatOpenAI in streaming mode with n > 1 and multiple prompts", async 
       },
     ],
   });
-  const message1 = new HumanChatMessage("Hello!");
-  const message2 = new HumanChatMessage("Bye!");
+  const message1 = new HumanMessage("Hello!");
+  const message2 = new HumanMessage("Bye!");
   const result = await model.generate([[message1], [message2]]);
   console.log(result.generations);
 
@@ -175,7 +175,7 @@ test("Test ChatOpenAI prompt value", async () => {
     maxTokens: 10,
     n: 2,
   });
-  const message = new HumanChatMessage("Hello!");
+  const message = new HumanMessage("Hello!");
   const res = await chat.generatePrompt([new ChatPromptValue([message])]);
   expect(res.generations.length).toBe(1);
   for (const generation of res.generations) {
@@ -213,7 +213,7 @@ test("OpenAI Chat, docs, prompt templates", async () => {
 test("Test OpenAI with stop", async () => {
   const model = new ChatOpenAI({ maxTokens: 5 });
   const res = await model.call(
-    [new HumanChatMessage("Print hello world")],
+    [new HumanMessage("Print hello world")],
     ["world"]
   );
   console.log({ res });
@@ -221,7 +221,7 @@ test("Test OpenAI with stop", async () => {
 
 test("Test OpenAI with stop in object", async () => {
   const model = new ChatOpenAI({ maxTokens: 5 });
-  const res = await model.call([new HumanChatMessage("Print hello world")], {
+  const res = await model.call([new HumanMessage("Print hello world")], {
     stop: ["world"],
   });
   console.log({ res });
@@ -230,7 +230,7 @@ test("Test OpenAI with stop in object", async () => {
 test("Test OpenAI with timeout in call options", async () => {
   const model = new ChatOpenAI({ maxTokens: 5 });
   await expect(() =>
-    model.call([new HumanChatMessage("Print hello world")], {
+    model.call([new HumanMessage("Print hello world")], {
       options: { timeout: 10 },
     })
   ).rejects.toThrow();
@@ -239,7 +239,7 @@ test("Test OpenAI with timeout in call options", async () => {
 test("Test OpenAI with timeout in call options and node adapter", async () => {
   const model = new ChatOpenAI({ maxTokens: 5 });
   await expect(() =>
-    model.call([new HumanChatMessage("Print hello world")], {
+    model.call([new HumanMessage("Print hello world")], {
       options: { timeout: 10, adapter: undefined },
     })
   ).rejects.toThrow();
@@ -249,7 +249,7 @@ test("Test OpenAI with signal in call options", async () => {
   const model = new ChatOpenAI({ maxTokens: 5 });
   const controller = new AbortController();
   await expect(() => {
-    const ret = model.call([new HumanChatMessage("Print hello world")], {
+    const ret = model.call([new HumanMessage("Print hello world")], {
       options: { signal: controller.signal },
     });
 
@@ -263,7 +263,7 @@ test("Test OpenAI with signal in call options and node adapter", async () => {
   const model = new ChatOpenAI({ maxTokens: 5, modelName: "text-ada-001" });
   const controller = new AbortController();
   await expect(() => {
-    const ret = model.call([new HumanChatMessage("Print hello world")], {
+    const ret = model.call([new HumanMessage("Print hello world")], {
       options: { signal: controller.signal, adapter: undefined },
     });
 
@@ -274,12 +274,12 @@ test("Test OpenAI with signal in call options and node adapter", async () => {
 }, 5000);
 
 function createSystemChatMessage(text: string, name?: string) {
-  const msg = new SystemChatMessage(text);
+  const msg = new SystemMessage(text);
   msg.name = name;
   return msg;
 }
 
-function createSampleMessages(): BaseChatMessage[] {
+function createSampleMessages(): BaseMessage[] {
   // same example as in https://github.com/openai/openai-cookbook/blob/main/examples/How_to_format_inputs_to_ChatGPT_models.ipynb
   return [
     createSystemChatMessage(
@@ -301,14 +301,14 @@ function createSampleMessages(): BaseChatMessage[] {
       "Let's talk later when we're less busy about how to do better.",
       "example_assistant"
     ),
-    new HumanChatMessage(
+    new HumanMessage(
       "This late pivot means we don't have time to boil the ocean for the client deliverable."
     ),
   ];
 }
 
 test("getNumTokensFromMessages gpt-3.5-turbo-0301 model for sample input", async () => {
-  const messages: BaseChatMessage[] = createSampleMessages();
+  const messages: BaseMessage[] = createSampleMessages();
 
   const chat = new ChatOpenAI({
     openAIApiKey: "dummy",
@@ -321,7 +321,7 @@ test("getNumTokensFromMessages gpt-3.5-turbo-0301 model for sample input", async
 });
 
 test("getNumTokensFromMessages gpt-4-0314 model for sample input", async () => {
-  const messages: BaseChatMessage[] = createSampleMessages();
+  const messages: BaseMessage[] = createSampleMessages();
 
   const chat = new ChatOpenAI({
     openAIApiKey: "dummy",

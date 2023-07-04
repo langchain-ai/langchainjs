@@ -8,7 +8,7 @@ import {
   MessagesPlaceholder,
   SystemMessagePromptTemplate,
 } from "langchain/prompts";
-import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
+import { HumanMessage, SystemMessage } from "langchain/schema";
 import { SerpAPI } from "langchain/tools";
 
 export const run = async () => {
@@ -17,7 +17,7 @@ export const run = async () => {
   // Sending one message to the chat model, receiving one message back
 
   let response = await chat.call([
-    new HumanChatMessage(
+    new HumanMessage(
       "Translate this sentence from English to French. I love programming."
     ),
   ]);
@@ -27,10 +27,10 @@ export const run = async () => {
   // Sending an input made up of two messages to the chat model
 
   response = await chat.call([
-    new SystemChatMessage(
+    new SystemMessage(
       "You are a helpful assistant that translates English to French."
     ),
-    new HumanChatMessage("Translate: I love programming."),
+    new HumanMessage("Translate: I love programming."),
   ]);
 
   console.log(response);
@@ -39,18 +39,18 @@ export const run = async () => {
 
   const responseA = await chat.generate([
     [
-      new SystemChatMessage(
+      new SystemMessage(
         "You are a helpful assistant that translates English to French."
       ),
-      new HumanChatMessage(
+      new HumanMessage(
         "Translate this sentence from English to French. I love programming."
       ),
     ],
     [
-      new SystemChatMessage(
+      new SystemMessage(
         "You are a helpful assistant that translates English to French."
       ),
-      new HumanChatMessage(
+      new HumanMessage(
         "Translate this sentence from English to French. I love artificial intelligence."
       ),
     ],

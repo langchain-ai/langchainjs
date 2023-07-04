@@ -3,12 +3,12 @@ import { CallbackManager } from "../../callbacks/manager.js";
 import { ChatOpenAI } from "../../chat_models/openai.js";
 import { BasePromptTemplate } from "../../prompts/base.js";
 import {
-  AIChatMessage,
+  AIMessage,
   AgentAction,
   AgentFinish,
   AgentStep,
-  BaseChatMessage,
-  FunctionChatMessage,
+  BaseMessage,
+  FunctionMessage,
   ChainValues,
 } from "../../schema/index.js";
 import { StructuredTool } from "../../tools/base.js";
@@ -24,7 +24,7 @@ import {
 import { BaseLanguageModel } from "../../base_language/index.js";
 import { LLMChain } from "../../chains/llm_chain.js";
 
-function parseOutput(message: BaseChatMessage): AgentAction | AgentFinish {
+function parseOutput(message: BaseMessage): AgentAction | AgentFinish {
   if (message.additional_kwargs.function_call) {
     // eslint-disable-next-line prefer-destructuring
     const function_call: ChatCompletionRequestMessageFunctionCall =
@@ -34,10 +34,10 @@ function parseOutput(message: BaseChatMessage): AgentAction | AgentFinish {
       toolInput: function_call.arguments
         ? JSON.parse(function_call.arguments)
         : {},
-      log: message.text,
+      log: message.content,
     };
   } else {
-    return { returnValues: { output: message.text }, log: message.text };
+    return { returnValues: { output: message.content }, log: message.content };
   }
 }
 
@@ -112,15 +112,15 @@ export class OpenAIAgent extends Agent {
 
   async constructScratchPad(
     steps: AgentStep[]
-  ): Promise<string | BaseChatMessage[]> {
+  ): Promise<string | BaseMessage[]> {
     return steps.flatMap(({ action, observation }) => [
-      new AIChatMessage("", {
+      new AIMessage("", {
         function_call: {
           name: action.tool,
           arguments: JSON.stringify(action.toolInput),
         },
       }),
-      new FunctionChatMessage(observation, action.tool),
+      new FunctionMessage(observation, action.tool),
     ]);
   }
 

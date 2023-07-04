@@ -1,7 +1,7 @@
 import { BaseLanguageModel } from "../base_language/index.js";
 import { LLMChain } from "../chains/llm_chain.js";
 import { BasePromptTemplate } from "../prompts/base.js";
-import { BaseChatMessage, SystemChatMessage } from "../schema/index.js";
+import { BaseMessage, SystemMessage } from "../schema/index.js";
 import {
   getBufferString,
   InputValues,
@@ -17,7 +17,7 @@ export interface ConversationSummaryMemoryInput extends BaseChatMemoryInput {
   humanPrefix?: string;
   aiPrefix?: string;
   prompt?: BasePromptTemplate;
-  summaryChatMessageClass?: new (content: string) => BaseChatMessage;
+  summaryChatMessageClass?: new (content: string) => BaseMessage;
 }
 
 export class ConversationSummaryMemory extends BaseChatMemory {
@@ -33,8 +33,7 @@ export class ConversationSummaryMemory extends BaseChatMemory {
 
   prompt: BasePromptTemplate = SUMMARY_PROMPT;
 
-  summaryChatMessageClass: new (content: string) => BaseChatMessage =
-    SystemChatMessage;
+  summaryChatMessageClass: new (content: string) => BaseMessage = SystemMessage;
 
   constructor(fields: ConversationSummaryMemoryInput) {
     const {
@@ -65,7 +64,7 @@ export class ConversationSummaryMemory extends BaseChatMemory {
   }
 
   async predictNewSummary(
-    messages: BaseChatMessage[],
+    messages: BaseMessage[],
     existingSummary: string
   ): Promise<string> {
     const newLines = getBufferString(messages, this.humanPrefix, this.aiPrefix);

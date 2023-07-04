@@ -2,7 +2,7 @@ import { v4 as uuidv4 } from "uuid";
 import {
   AgentAction,
   AgentFinish,
-  BaseChatMessage,
+  BaseMessage,
   ChainValues,
   LLMResult,
 } from "../schema/index.js";
@@ -403,7 +403,7 @@ export class CallbackManager
 
   async handleChatModelStart(
     llm: Serialized,
-    messages: BaseChatMessage[][],
+    messages: BaseMessage[][],
     _runId: string | undefined = undefined,
     _parentRunId: string | undefined = undefined,
     extraParams: Record<string, unknown> | undefined = undefined

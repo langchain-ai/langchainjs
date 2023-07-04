@@ -3,7 +3,7 @@ import { PromptLayerOpenAI } from "../openai.js";
 import { PromptLayerOpenAIChat } from "../openai-chat.js";
 
 import { PromptLayerChatOpenAI } from "../../chat_models/openai.js";
-import { SystemChatMessage } from "../../schema/index.js";
+import { SystemMessage } from "../../schema/index.js";
 
 test("Test PromptLayerOpenAI returns promptLayerID if returnPromptLayerId=true", async () => {
   const model = new PromptLayerOpenAI({
@@ -69,7 +69,7 @@ test("Test PromptLayerChatOpenAI returns promptLayerID if returnPromptLayerId=tr
 
   const respA = await chat.generate([
     [
-      new SystemChatMessage(
+      new SystemMessage(
         "You are a helpful assistant that translates English to French."
       ),
     ],
@@ -83,7 +83,7 @@ test("Test PromptLayerChatOpenAI returns promptLayerID if returnPromptLayerId=tr
 
   const respB = await chatB.generate([
     [
-      new SystemChatMessage(
+      new SystemMessage(
         "You are a helpful assistant that translates English to French."
       ),
     ],

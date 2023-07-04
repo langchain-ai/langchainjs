@@ -2,7 +2,7 @@ import * as uuid from "uuid";
 import {
   AgentAction,
   AgentFinish,
-  BaseChatMessage,
+  BaseMessage,
   ChainValues,
   LLMResult,
 } from "../schema/index.js";
@@ -84,7 +84,7 @@ abstract class BaseCallbackHandlerMethodsClass {
    */
   handleChatModelStart?(
     llm: Serialized,
-    messages: BaseChatMessage[][],
+    messages: BaseMessage[][],
     runId: string,
     parentRunId?: string,
     extraParams?: Record<string, unknown>,
