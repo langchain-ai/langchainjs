@@ -1,6 +1,6 @@
 import { Embeddings } from "../embeddings/base.js";
 import { Document } from "../document.js";
-import { BaseRetriever } from "../schema/index.js";
+import { BaseRetriever } from "../retrievers/base.js";
 import { Callbacks } from "../callbacks/manager.js";
 
 export interface VectorStoreRetrieverInput<V extends VectorStore> {
@@ -70,7 +70,7 @@ export abstract class VectorStore {
     query: string,
     k = 4,
     filter: this["FilterType"] | undefined = undefined,
-    callbacks?: Callbacks
+    callbacks: Callbacks | undefined = undefined
   ): Promise<Document[]> {
     const results = await this.similaritySearchVectorWithScore(
       await this.embeddings.embedQuery(query, callbacks),
@@ -85,7 +85,7 @@ export abstract class VectorStore {
     query: string,
     k = 4,
     filter: this["FilterType"] | undefined = undefined,
-    callbacks?: Callbacks
+    callbacks: Callbacks | undefined = undefined
   ): Promise<[Document, number][]> {
     return this.similaritySearchVectorWithScore(
       await this.embeddings.embedQuery(query, callbacks),

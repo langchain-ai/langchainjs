@@ -1,4 +1,4 @@
-import { BaseRetriever } from "../../schema/index.js";
+import { BaseRetriever } from "../base.js";
 import { AsyncCaller, AsyncCallerParams } from "../../util/async_caller.js";
 import { Document } from "../../document.js";
 

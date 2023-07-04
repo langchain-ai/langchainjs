@@ -1,6 +1,6 @@
 import { VectorStore } from "../vectorstores/base.js";
 import { Document } from "../document.js";
-import { BaseRetriever } from "../schema/index.js";
+import { BaseRetriever } from "./base.js";
 
 export interface TimeWeightedVectorStoreRetrieverFields {
   vectorStore: VectorStore;

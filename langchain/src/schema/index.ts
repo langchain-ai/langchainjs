@@ -1,6 +1,5 @@
 import { ChatCompletionRequestMessageFunctionCall } from "openai";
 import { Document } from "../document.js";
-import { Callbacks } from "../callbacks/manager.js";
 import { Serializable, SerializedConstructor } from "../load/serializable.js";
 
 export const RUN_KEY = "__run";
@@ -254,16 +253,6 @@ export type AgentStep = {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ChainValues = Record<string, any>;
-
-/**
- * Base Index class. All indexes should extend this class.
- */
-export abstract class BaseRetriever {
-  abstract getRelevantDocuments(
-    query: string,
-    callbacks?: Callbacks
-  ): Promise<Document[]>;
-}
 
 export abstract class BaseChatMessageHistory extends Serializable {
   public abstract getMessages(): Promise<BaseMessage[]>;

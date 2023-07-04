@@ -355,7 +355,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       inputs: { texts },
       execution_order,
       child_execution_order: execution_order,
-      run_type: "embedding",
+      run_type: "llm", // this should be "embedding", but RunType in langchainplus-sdk doesn't have embedding. So this should be changed later when embedding is added.
       child_runs: [],
       extra: extraParams ?? {},
       tags: tags || [],

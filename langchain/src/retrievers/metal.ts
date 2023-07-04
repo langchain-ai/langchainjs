@@ -1,6 +1,6 @@
 import Metal from "@getmetal/metal-sdk";
 
-import { BaseRetriever } from "../schema/index.js";
+import { BaseRetriever } from "./base.js";
 import { Document } from "../document.js";
 
 export interface MetalRetrieverFields {

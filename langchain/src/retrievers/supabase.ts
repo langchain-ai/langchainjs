@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { Embeddings } from "../embeddings/base.js";
 import { Document } from "../document.js";
-import { BaseRetriever } from "../schema/index.js";
+import { BaseRetriever } from "./base.js";
 
 interface SearchEmbeddingsParams {
   query_embedding: number[];
