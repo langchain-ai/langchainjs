@@ -19,6 +19,7 @@ import { BaseLLMParams, LLM } from "./base.js";
 import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
 import { Generation, LLMResult } from "../schema/index.js";
 import { promptLayerTrackRequest } from "../util/prompt-layer.js";
+import { getEndpoint, OpenAIEndpointConfig } from "../util/azure.js";
 
 export { OpenAIChatInput, AzureOpenAIInput };
 
@@ -118,6 +119,8 @@ export class OpenAIChat
 
   azureOpenAIApiDeploymentName?: string;
 
+  azureOpenAIBasePath?: string;
+
   private client: OpenAIApi;
 
   private clientConfig: ConfigurationParameters;
@@ -157,6 +160,10 @@ export class OpenAIChat
     this.azureOpenAIApiVersion =
       fields?.azureOpenAIApiVersion ??
       getEnvironmentVariable("AZURE_OPENAI_API_VERSION");
+
+    this.azureOpenAIBasePath =
+      fields?.azureOpenAIBasePath ??
+      getEnvironmentVariable("AZURE_OPENAI_BASE_PATH");
 
     this.modelName = fields?.modelName ?? this.modelName;
     this.prefixMessages = fields?.prefixMessages ?? this.prefixMessages;
@@ -387,9 +394,16 @@ export class OpenAIChat
     options?: StreamingAxiosConfiguration
   ) {
     if (!this.client) {
-      const endpoint = this.azureOpenAIApiKey
-        ? `https://${this.azureOpenAIApiInstanceName}.openai.azure.com/openai/deployments/${this.azureOpenAIApiDeploymentName}`
-        : this.clientConfig.basePath;
+      const openAIEndpointConfig: OpenAIEndpointConfig = {
+        azureOpenAIApiDeploymentName: this.azureOpenAIApiDeploymentName,
+        azureOpenAIApiInstanceName: this.azureOpenAIApiInstanceName,
+        azureOpenAIApiKey: this.azureOpenAIApiKey,
+        azureOpenAIBasePath: this.azureOpenAIBasePath,
+        basePath: this.clientConfig.basePath,
+      };
+
+      const endpoint = getEndpoint(openAIEndpointConfig);
+
       const clientConfig = new Configuration({
         ...this.clientConfig,
         basePath: endpoint,

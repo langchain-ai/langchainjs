@@ -124,4 +124,11 @@ export declare interface AzureOpenAIInput {
    * this will be used in the endpoint URL: https://{InstanceName}.openai.azure.com/openai/deployments/my-openai-deployment/
    */
   azureOpenAIApiCompletionsDeploymentName?: string;
+
+  /**
+   * Custom endpoint for Azure OpenAI API. This is useful in case you have a deployment in Europe.
+   * e.g. "https://westeurope.api.cognitive.microsoft.com/openai/deployments"
+   * this will be used in the endpoint URL: https://westeurope.api.cognitive.microsoft.com/openai/deployments/{DeploymentName}/
+   */
+  azureOpenAIBasePath?: string;
 }
