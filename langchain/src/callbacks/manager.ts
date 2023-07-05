@@ -40,6 +40,38 @@ export type Callbacks =
   | CallbackManager
   | (BaseCallbackHandler | CallbackHandlerMethods)[];
 
+export interface BaseCallbackConfig {
+  /**
+   * Tags for this call and any sub-calls (eg. a Chain calling an LLM).
+   * You can use these to filter calls.
+   */
+  tags?: string[];
+
+  /**
+   * Metadata for this call and any sub-calls (eg. a Chain calling an LLM).
+   * Keys should be strings, values should be JSON-serializable.
+   */
+  metadata?: Record<string, unknown>;
+
+  /**
+   * Callbacks for this call and any sub-calls (eg. a Chain calling an LLM).
+   * Tags are passed to all callbacks, metadata is passed to handle*Start callbacks.
+   */
+  callbacks?: Callbacks;
+}
+
+export function parseCallbackConfigArg(
+  arg: Callbacks | BaseCallbackConfig | undefined
+): BaseCallbackConfig {
+  if (!arg) {
+    return {};
+  } else if (Array.isArray(arg) || "name" in arg) {
+    return { callbacks: arg };
+  } else {
+    return arg;
+  }
+}
+
 export abstract class BaseCallbackManager {
   abstract addHandler(handler: BaseCallbackHandler): void;
 

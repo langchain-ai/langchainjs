@@ -14,6 +14,7 @@ import {
   BaseLanguageModelParams,
 } from "../base_language/index.js";
 import {
+  BaseCallbackConfig,
   CallbackManager,
   CallbackManagerForLLMRun,
   Callbacks,
@@ -39,7 +40,10 @@ export type BaseChatModelCallOptions = BaseLanguageModelCallOptions;
 export abstract class BaseChatModel extends BaseLanguageModel {
   declare CallOptions: BaseChatModelCallOptions;
 
-  declare ParsedCallOptions: Omit<this["CallOptions"], "timeout">;
+  declare ParsedCallOptions: Omit<
+    this["CallOptions"],
+    "timeout" | "tags" | "metadata" | "callbacks"
+  >;
 
   lc_namespace = ["langchain", "chat_models", this._llmType()];
 
@@ -68,13 +72,21 @@ export abstract class BaseChatModel extends BaseLanguageModel {
     } else {
       parsedOptions = options ?? {};
     }
+    const handledOptions: BaseCallbackConfig = {
+      tags: parsedOptions.tags,
+      metadata: parsedOptions.metadata,
+      callbacks: parsedOptions.callbacks ?? callbacks,
+    };
+    delete parsedOptions.tags;
+    delete parsedOptions.metadata;
+    delete parsedOptions.callbacks;
     // create callback manager and start run
     const callbackManager_ = await CallbackManager.configure(
-      callbacks,
+      handledOptions.callbacks,
       this.callbacks,
-      parsedOptions.tags,
+      handledOptions.tags,
       this.tags,
-      parsedOptions.metadata,
+      handledOptions.metadata,
       this.metadata,
       { verbose: this.verbose }
     );

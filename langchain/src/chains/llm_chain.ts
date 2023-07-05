@@ -85,7 +85,7 @@ export class LLMChain<
 
   /** @ignore */
   _selectMemoryInputs(values: ChainValues): ChainValues {
-    const valuesForMemory = { ...values };
+    const valuesForMemory = super._selectMemoryInputs(values);
     for (const key of this.llm.callKeys) {
       if (key in values) {
         delete valuesForMemory[key];
