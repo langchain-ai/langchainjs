@@ -115,10 +115,9 @@ export class ChatOpenAI
 
   get callKeys(): (keyof ChatOpenAICallOptions)[] {
     return [
-      "stop",
-      "signal",
-      "timeout",
+      ...(super.callKeys as (keyof ChatOpenAICallOptions)[]),
       "options",
+      "function_call",
       "functions",
       "tools",
       "promptIndex",
