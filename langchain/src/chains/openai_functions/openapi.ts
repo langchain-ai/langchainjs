@@ -352,7 +352,14 @@ class SimpleRequestChain extends BaseChain {
   ): Promise<ChainValues> {
     const inputKeyValue = values[this.inputKey];
     const methodName = inputKeyValue.name;
-    const args = inputKeyValue.arguments;
+    let { params } = inputKeyValue.arguments;
+    params = Object.keys(params).reduce((acc, key) => {
+      if (Object.keys(params[key]).length !== 0) {
+        acc[key] = params[key];
+      }
+      return acc;
+    }, {} as Record<string, string>);
+    const args = { ...inputKeyValue.arguments, params };
     const response = await this.requestMethod(methodName, args);
     let output;
     if (response.status < 200 || response.status > 299) {
