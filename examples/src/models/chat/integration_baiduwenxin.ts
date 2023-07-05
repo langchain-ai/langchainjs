@@ -1,6 +1,4 @@
-import {
-  ChatBaiduWenxin,
-} from "langchain/chat_models/baiduwenxin";
+import { ChatBaiduWenxin } from "langchain/chat_models/baiduwenxin";
 import { HumanChatMessage } from "langchain/schema";
 
 // Default model is ERNIE-Bot-turbo
