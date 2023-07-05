@@ -1,7 +1,7 @@
 import { BaseChain, ChainInputs } from "./base.js";
 import { BaseLanguageModel } from "../base_language/index.js";
 import { SerializedVectorDBQAChain } from "./serde.js";
-import { BaseRetriever } from "../retrievers/base.js";
+import { BaseRetriever } from "../schema/retriever.js";
 import { ChainValues } from "../schema/index.js";
 import {
   StuffQAChainParams,

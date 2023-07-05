@@ -4,7 +4,7 @@ import {
   NotFoundError,
   ZepClient,
 } from "@getzep/zep-js";
-import { BaseRetriever } from "./base.js";
+import { BaseRetriever } from "../schema/retriever.js";
 import { Document } from "../document.js";
 
 export type ZepRetrieverConfig = {

@@ -210,14 +210,10 @@ abstract class BaseCallbackHandlerMethodsClass {
 
   /**
    * Called after embedding is completed, before it exits.
-   * Called on both query and documents embedding, as such
-   * the vectors parameter is always an array of string.
-   * So in the case of query embedding, the vector
-   * output is always at index 0.
-   * with embeddings vectors and the run ID
+   * with embeddings vector and the run ID
    */
   handleEmbeddingEnd?(
-    vectors: number[],
+    vector: number[],
     runId: string,
     parentRunId?: string
   ): Promise<void> | void;

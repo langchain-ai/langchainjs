@@ -5,7 +5,7 @@ import {
 } from "../../chains/query_constructor/index.js";
 import { StructuredQuery } from "../../chains/query_constructor/ir.js";
 import { Document } from "../../document.js";
-import { BaseRetriever } from "../../retrievers/base.js";
+import { BaseRetriever } from "../../schema/retriever.js";
 import { VectorStore } from "../../vectorstores/base.js";
 import { FunctionalTranslator } from "./functional.js";
 import { BaseTranslator, BasicTranslator } from "./base.js";

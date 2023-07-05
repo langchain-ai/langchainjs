@@ -6,7 +6,7 @@ import { BaseChain, ChainInputs } from "./base.js";
 import { LLMChain } from "./llm_chain.js";
 import { QAChainParams, loadQAChain } from "./question_answering/load.js";
 import { CallbackManagerForChainRun } from "../callbacks/manager.js";
-import { BaseRetriever } from "../retrievers/base.js";
+import { BaseRetriever } from "../schema/retriever.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type LoadValues = Record<string, any>;

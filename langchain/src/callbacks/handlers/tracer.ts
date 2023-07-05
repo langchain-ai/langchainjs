@@ -466,9 +466,6 @@ export abstract class BaseTracer extends BaseCallbackHandler {
 
   onEmbeddingError?(run: Run): void | Promise<void>;
 
-  // TODO Implement handleAgentEnd, handleText
-
-  // onAgentEnd?(run: ChainRun): void | Promise<void>;
   onAgentEnd?(run: Run): void | Promise<void>;
 
   onText?(run: Run): void | Promise<void>;

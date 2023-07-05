@@ -1,6 +1,6 @@
 import { Embeddings } from "../embeddings/base.js";
 import { Document } from "../document.js";
-import { BaseRetriever } from "../retrievers/base.js";
+import { BaseRetriever } from "../schema/retriever.js";
 import { Callbacks } from "../callbacks/manager.js";
 
 export interface VectorStoreRetrieverInput<V extends VectorStore> {
