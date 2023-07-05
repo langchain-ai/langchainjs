@@ -47,9 +47,9 @@ export class SimilarityScoreThresholdVectorStoreRetriever {
       }
 
       let updatedK = vectorStoreRetriever.k;
+      let conditionMet = false;
 
-      // eslint-disable-next-line no-constant-condition
-      while (true) {
+      while (!conditionMet) {
         const results =
           await vectorStoreRetriever.vectorStore.similaritySearchWithScore(
             query,
@@ -60,11 +60,14 @@ export class SimilarityScoreThresholdVectorStoreRetriever {
         const filteredResults = results.filter(isAboveMinScore);
 
         if (filteredResults.length < updatedK || updatedK === this.maxK) {
+          conditionMet = true;
           return filteredResults.map(([document]) => document);
         }
 
         updatedK += this.kIncrement;
       }
+
+      return [];
     };
 
     return vectorStoreRetriever;
