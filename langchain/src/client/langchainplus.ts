@@ -1,5 +1,5 @@
 import PQueueMod from "p-queue";
-import { Example, LangChainPlusClient } from "langchainplus-sdk";
+import { Example, Client } from "langchainplus-sdk";
 
 import { LangChainTracer } from "../callbacks/handlers/tracer_langchain.js";
 import { ChainValues, LLMResult, StoredMessage } from "../schema/index.js";
@@ -134,12 +134,12 @@ export const runOnDataset = async (
     maxConcurrency?: number;
     numRepetitions?: number;
     projectName?: string;
-    client?: LangChainPlusClient;
+    client?: Client;
   } = {}
 ): Promise<DatasetRunResults> => {
   const PQueue = "default" in PQueueMod ? PQueueMod.default : PQueueMod;
   const queue = new PQueue({ concurrency: maxConcurrency });
-  const client_ = client ?? new LangChainPlusClient({});
+  const client_ = client ?? new Client({});
   const examples = await client_.listExamples({ datasetName });
   let projectName_: string;
   if (projectName === undefined) {

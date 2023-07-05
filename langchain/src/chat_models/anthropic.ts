@@ -7,8 +7,8 @@ import {
 } from "@anthropic-ai/sdk";
 import { BaseChatModel, BaseChatModelParams } from "./base.js";
 import {
-  AIChatMessage,
-  BaseChatMessage,
+  AIMessage,
+  BaseMessage,
   ChatGeneration,
   ChatResult,
   MessageType,
@@ -105,10 +105,6 @@ type Kwargs = Record<string, any>;
  */
 export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
   declare CallOptions: BaseLanguageModelCallOptions;
-
-  get callKeys(): string[] {
-    return ["stop", "signal", "options"];
-  }
 
   get lc_secrets(): { [key: string]: string } | undefined {
     return {
@@ -214,14 +210,14 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
     };
   }
 
-  private formatMessagesAsPrompt(messages: BaseChatMessage[]): string {
+  private formatMessagesAsPrompt(messages: BaseMessage[]): string {
     return (
       messages
         .map((message) => {
           const messagePrompt = getAnthropicPromptFromMessage(
             message._getType()
           );
-          return `${messagePrompt} ${message.text}`;
+          return `${messagePrompt} ${message.content}`;
         })
         .join("") + AI_PROMPT
     );
@@ -229,7 +225,7 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
 
   /** @ignore */
   async _generate(
-    messages: BaseChatMessage[],
+    messages: BaseMessage[],
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
@@ -253,7 +249,7 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
       .split(AI_PROMPT)
       .map((message) => ({
         text: message,
-        message: new AIChatMessage(message),
+        message: new AIMessage(message),
       }));
 
     return {

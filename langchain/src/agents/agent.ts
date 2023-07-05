@@ -6,7 +6,7 @@ import {
   AgentAction,
   AgentFinish,
   AgentStep,
-  BaseChatMessage,
+  BaseMessage,
   ChainValues,
 } from "../schema/index.js";
 import { Serializable } from "../load/serializable.js";
@@ -293,7 +293,7 @@ export abstract class Agent extends BaseSingleActionAgent {
    */
   async constructScratchPad(
     steps: AgentStep[]
-  ): Promise<string | BaseChatMessage[]> {
+  ): Promise<string | BaseMessage[]> {
     return steps.reduce(
       (thoughts, { action, observation }) =>
         thoughts +

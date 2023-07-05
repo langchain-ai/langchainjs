@@ -2,7 +2,7 @@ import { v4 as uuidv4 } from "uuid";
 import {
   AgentAction,
   AgentFinish,
-  BaseChatMessage,
+  BaseMessage,
   ChainValues,
   LLMResult,
 } from "../schema/index.js";
@@ -40,6 +40,38 @@ export type Callbacks =
   | CallbackManager
   | (BaseCallbackHandler | CallbackHandlerMethods)[];
 
+export interface BaseCallbackConfig {
+  /**
+   * Tags for this call and any sub-calls (eg. a Chain calling an LLM).
+   * You can use these to filter calls.
+   */
+  tags?: string[];
+
+  /**
+   * Metadata for this call and any sub-calls (eg. a Chain calling an LLM).
+   * Keys should be strings, values should be JSON-serializable.
+   */
+  metadata?: Record<string, unknown>;
+
+  /**
+   * Callbacks for this call and any sub-calls (eg. a Chain calling an LLM).
+   * Tags are passed to all callbacks, metadata is passed to handle*Start callbacks.
+   */
+  callbacks?: Callbacks;
+}
+
+export function parseCallbackConfigArg(
+  arg: Callbacks | BaseCallbackConfig | undefined
+): BaseCallbackConfig {
+  if (!arg) {
+    return {};
+  } else if (Array.isArray(arg) || "name" in arg) {
+    return { callbacks: arg };
+  } else {
+    return arg;
+  }
+}
+
 export abstract class BaseCallbackManager {
   abstract addHandler(handler: BaseCallbackHandler): void;
 
@@ -59,6 +91,8 @@ class BaseRunManager {
     protected readonly inheritableHandlers: BaseCallbackHandler[],
     protected readonly tags: string[],
     protected readonly inheritableTags: string[],
+    protected readonly metadata: Record<string, unknown>,
+    protected readonly inheritableMetadata: Record<string, unknown>,
     protected readonly _parentRunId?: string
   ) {}
 
@@ -171,6 +205,7 @@ export class CallbackManagerForChainRun
     const manager = new CallbackManager(this.runId);
     manager.setHandlers(this.inheritableHandlers);
     manager.addTags(this.inheritableTags);
+    manager.addMetadata(this.inheritableMetadata);
     if (tag) {
       manager.addTags([tag], false);
     }
@@ -279,6 +314,7 @@ export class CallbackManagerForToolRun
     const manager = new CallbackManager(this.runId);
     manager.setHandlers(this.inheritableHandlers);
     manager.addTags(this.inheritableTags);
+    manager.addMetadata(this.inheritableMetadata);
     if (tag) {
       manager.addTags([tag], false);
     }
@@ -344,6 +380,10 @@ export class CallbackManager
 
   inheritableTags: string[] = [];
 
+  metadata: Record<string, unknown> = {};
+
+  inheritableMetadata: Record<string, unknown> = {};
+
   name = "callback_manager";
 
   private readonly _parentRunId?: string;
@@ -377,7 +417,8 @@ export class CallbackManager
                     runId,
                     this._parentRunId,
                     extraParams,
-                    this.tags
+                    this.tags,
+                    this.metadata
                   );
                 } catch (err) {
                   console.error(
@@ -395,6 +436,8 @@ export class CallbackManager
           this.inheritableHandlers,
           this.tags,
           this.inheritableTags,
+          this.metadata,
+          this.inheritableMetadata,
           this._parentRunId
         );
       })
@@ -403,7 +446,7 @@ export class CallbackManager
 
   async handleChatModelStart(
     llm: Serialized,
-    messages: BaseChatMessage[][],
+    messages: BaseMessage[][],
     _runId: string | undefined = undefined,
     _parentRunId: string | undefined = undefined,
     extraParams: Record<string, unknown> | undefined = undefined
@@ -424,7 +467,8 @@ export class CallbackManager
                       runId,
                       this._parentRunId,
                       extraParams,
-                      this.tags
+                      this.tags,
+                      this.metadata
                     );
                   else if (handler.handleLLMStart) {
                     const messageString = getBufferString(messageGroup);
@@ -434,7 +478,8 @@ export class CallbackManager
                       runId,
                       this._parentRunId,
                       extraParams,
-                      this.tags
+                      this.tags,
+                      this.metadata
                     );
                   }
                 } catch (err) {
@@ -453,6 +498,8 @@ export class CallbackManager
           this.inheritableHandlers,
           this.tags,
           this.inheritableTags,
+          this.metadata,
+          this.inheritableMetadata,
           this._parentRunId
         );
       })
@@ -474,7 +521,8 @@ export class CallbackManager
                 inputs,
                 runId,
                 this._parentRunId,
-                this.tags
+                this.tags,
+                this.metadata
               );
             } catch (err) {
               console.error(
@@ -491,6 +539,8 @@ export class CallbackManager
       this.inheritableHandlers,
       this.tags,
       this.inheritableTags,
+      this.metadata,
+      this.inheritableMetadata,
       this._parentRunId
     );
   }
@@ -510,7 +560,8 @@ export class CallbackManager
                 input,
                 runId,
                 this._parentRunId,
-                this.tags
+                this.tags,
+                this.metadata
               );
             } catch (err) {
               console.error(
@@ -527,6 +578,8 @@ export class CallbackManager
       this.inheritableHandlers,
       this.tags,
       this.inheritableTags,
+      this.metadata,
+      this.inheritableMetadata,
       this._parentRunId
     );
   }
@@ -568,6 +621,20 @@ export class CallbackManager
     );
   }
 
+  addMetadata(metadata: Record<string, unknown>, inherit = true): void {
+    this.metadata = { ...this.metadata, ...metadata };
+    if (inherit) {
+      this.inheritableMetadata = { ...this.inheritableMetadata, ...metadata };
+    }
+  }
+
+  removeMetadata(metadata: Record<string, unknown>): void {
+    for (const key of Object.keys(metadata)) {
+      delete this.metadata[key];
+      delete this.inheritableMetadata[key];
+    }
+  }
+
   copy(
     additionalHandlers: BaseCallbackHandler[] = [],
     inherit = true
@@ -580,6 +647,10 @@ export class CallbackManager
     for (const tag of this.tags) {
       const inheritable = this.inheritableTags.includes(tag);
       manager.addTags([tag], inheritable);
+    }
+    for (const key of Object.keys(this.metadata)) {
+      const inheritable = Object.keys(this.inheritableMetadata).includes(key);
+      manager.addMetadata({ [key]: this.metadata[key] }, inheritable);
     }
     for (const handler of additionalHandlers) {
       if (
@@ -615,6 +686,8 @@ export class CallbackManager
     localHandlers?: Callbacks,
     inheritableTags?: string[],
     localTags?: string[],
+    inheritableMetadata?: Record<string, unknown>,
+    localMetadata?: Record<string, unknown>,
     options?: CallbackManagerOptions
   ): Promise<CallbackManager | undefined> {
     let callbackManager: CallbackManager | undefined;
@@ -679,6 +752,12 @@ export class CallbackManager
       if (callbackManager) {
         callbackManager.addTags(inheritableTags ?? []);
         callbackManager.addTags(localTags ?? [], false);
+      }
+    }
+    if (inheritableMetadata || localMetadata) {
+      if (callbackManager) {
+        callbackManager.addMetadata(inheritableMetadata ?? {});
+        callbackManager.addMetadata(localMetadata ?? {}, false);
       }
     }
     return callbackManager;

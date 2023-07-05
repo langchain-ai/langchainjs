@@ -1,5 +1,5 @@
 import { ChatOpenAI } from "langchain/chat_models/openai";
-import { HumanChatMessage } from "langchain/schema";
+import { HumanMessage } from "langchain/schema";
 
 const chat = new ChatOpenAI({
   streaming: true,
@@ -12,9 +12,7 @@ const chat = new ChatOpenAI({
   ],
 });
 
-await chat.call([
-  new HumanChatMessage("Write me a song about sparkling water."),
-]);
+await chat.call([new HumanMessage("Write me a song about sparkling water.")]);
 /*
 Verse 1:
 Bubbles rise, crisp and clear

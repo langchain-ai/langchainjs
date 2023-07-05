@@ -55,7 +55,11 @@ export class OpenAIChat
   declare CallOptions: OpenAIChatCallOptions;
 
   get callKeys(): (keyof OpenAIChatCallOptions)[] {
-    return ["stop", "signal", "timeout", "options", "promptIndex"];
+    return [
+      ...(super.callKeys as (keyof OpenAIChatCallOptions)[]),
+      "options",
+      "promptIndex",
+    ];
   }
 
   lc_serializable = true;

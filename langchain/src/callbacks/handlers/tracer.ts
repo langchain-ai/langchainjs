@@ -3,7 +3,7 @@ import { KVMap, BaseRun } from "langchainplus-sdk/schemas";
 import {
   AgentAction,
   AgentFinish,
-  BaseChatMessage,
+  BaseMessage,
   ChainValues,
   LLMResult,
 } from "../../schema/index.js";
@@ -92,10 +92,14 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     runId: string,
     parentRunId?: string,
     extraParams?: KVMap,
-    tags?: string[]
+    tags?: string[],
+    metadata?: KVMap
   ): Promise<void> {
     const execution_order = this._getExecutionOrder(parentRunId);
     const start_time = Date.now();
+    const finalExtraParams = metadata
+      ? { ...extraParams, metadata }
+      : extraParams;
     const run: Run = {
       id: runId,
       name: llm.id[llm.id.length - 1],
@@ -113,7 +117,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       child_runs: [],
       child_execution_order: execution_order,
       run_type: "llm",
-      extra: extraParams ?? {},
+      extra: finalExtraParams ?? {},
       tags: tags || [],
     };
 
@@ -123,14 +127,18 @@ export abstract class BaseTracer extends BaseCallbackHandler {
 
   async handleChatModelStart(
     llm: Serialized,
-    messages: BaseChatMessage[][],
+    messages: BaseMessage[][],
     runId: string,
     parentRunId?: string,
     extraParams?: KVMap,
-    tags?: string[]
+    tags?: string[],
+    metadata?: KVMap
   ): Promise<void> {
     const execution_order = this._getExecutionOrder(parentRunId);
     const start_time = Date.now();
+    const finalExtraParams = metadata
+      ? { ...extraParams, metadata }
+      : extraParams;
     const run: Run = {
       id: runId,
       name: llm.id[llm.id.length - 1],
@@ -148,7 +156,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       child_runs: [],
       child_execution_order: execution_order,
       run_type: "llm",
-      extra: extraParams ?? {},
+      extra: finalExtraParams ?? {},
       tags: tags || [],
     };
 
@@ -191,7 +199,8 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     inputs: ChainValues,
     runId: string,
     parentRunId?: string,
-    tags?: string[]
+    tags?: string[],
+    metadata?: KVMap
   ): Promise<void> {
     const execution_order = this._getExecutionOrder(parentRunId);
     const start_time = Date.now();
@@ -212,7 +221,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       child_execution_order: execution_order,
       run_type: "chain",
       child_runs: [],
-      extra: {},
+      extra: metadata ? { metadata } : {},
       tags: tags || [],
     };
 
@@ -255,7 +264,8 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     input: string,
     runId: string,
     parentRunId?: string,
-    tags?: string[]
+    tags?: string[],
+    metadata?: KVMap
   ): Promise<void> {
     const execution_order = this._getExecutionOrder(parentRunId);
     const start_time = Date.now();
@@ -276,7 +286,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       child_execution_order: execution_order,
       run_type: "tool",
       child_runs: [],
-      extra: {},
+      extra: metadata ? { metadata } : {},
       tags: tags || [],
     };
 

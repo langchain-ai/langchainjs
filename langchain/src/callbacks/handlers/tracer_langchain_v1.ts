@@ -1,5 +1,5 @@
 import { getBufferString } from "../../memory/base.js";
-import { BaseChatMessage, ChainValues, LLMResult } from "../../schema/index.js";
+import { BaseMessage, ChainValues, LLMResult } from "../../schema/index.js";
 import { getEnvironmentVariable } from "../../util/env.js";
 
 import { BaseTracer, RunType, Run } from "./tracer.js";
@@ -99,7 +99,7 @@ export class LangChainTracerV1 extends BaseTracer {
     if (run.run_type === "llm") {
       const prompts: string[] = run.inputs.prompts
         ? run.inputs.prompts
-        : (run.inputs.messages as BaseChatMessage[][]).map((x) =>
+        : (run.inputs.messages as BaseMessage[][]).map((x) =>
             getBufferString(x)
           );
 
