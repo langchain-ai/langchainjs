@@ -8,10 +8,11 @@ import type {
 } from "mysql2/promise";
 import { format } from "mysql2";
 import { createPool } from "mysql2/promise";
-import { Metadata } from "@opensearch-project/opensearch/api/types.js";
 import { VectorStore } from "./base.js";
 import { Embeddings } from "../embeddings/base.js";
 import { Document } from "../document.js";
+
+export type Metadata = Record<string, any>;
 
 export type DistanceMetrics = "DOT_PRODUCT" | "EUCLIDEAN_DISTANCE";
 
