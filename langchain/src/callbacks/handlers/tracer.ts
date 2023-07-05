@@ -367,7 +367,8 @@ export abstract class BaseTracer extends BaseCallbackHandler {
 
   async handleEmbeddingEnd(vectors: number[][], runId: string) {
     const run = this.runMap.get(runId);
-    if (!run || run?.run_type !== "embedding") {
+    // this should be "embedding", but RunType in langchainplus-sdk doesn't have embedding. So this should be changed later when embedding is added.
+    if (!run || run?.run_type !== "llm") {
       throw new Error("No Embedding run to end.");
     }
     run.end_time = Date.now();
@@ -382,7 +383,8 @@ export abstract class BaseTracer extends BaseCallbackHandler {
 
   async handleEmbeddingError(error: Error, runId: string) {
     const run = this.runMap.get(runId);
-    if (!run || run?.run_type !== "embedding") {
+    // this should be "embedding", but RunType in langchainplus-sdk doesn't have embedding. So this should be changed later when embedding is added.
+    if (!run || run?.run_type !== "llm") {
       throw new Error("No Embedding run to end.");
     }
     run.end_time = Date.now();
