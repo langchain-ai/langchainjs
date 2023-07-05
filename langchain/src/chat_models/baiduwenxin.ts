@@ -1,7 +1,7 @@
 import { BaseChatModel, BaseChatModelParams } from "./base.js";
 import {
-  AIChatMessage,
-  BaseChatMessage,
+  AIMessage,
+  BaseMessage,
   ChatGeneration,
   ChatResult,
   MessageType,
@@ -258,7 +258,7 @@ export class ChatBaiduWenxin
 
   /** @ignore */
   async _generate(
-    messages: BaseChatMessage[],
+    messages: BaseMessage[],
     options?: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
@@ -374,7 +374,7 @@ export class ChatBaiduWenxin
     const text = data.result ?? "";
     generations.push({
       text,
-      message: new AIChatMessage(text),
+      message: new AIMessage(text),
     });
     return {
       generations,
