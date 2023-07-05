@@ -74,6 +74,8 @@ export abstract class BaseChatModel extends BaseLanguageModel {
       this.callbacks,
       parsedOptions.tags,
       this.tags,
+      parsedOptions.metadata,
+      this.metadata,
       { verbose: this.verbose }
     );
     const extra = {

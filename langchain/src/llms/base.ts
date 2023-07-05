@@ -124,6 +124,8 @@ export abstract class BaseLLM extends BaseLanguageModel {
       this.callbacks,
       options.tags,
       this.tags,
+      options.metadata,
+      this.metadata,
       { verbose: this.verbose }
     );
     const extra = {

@@ -120,7 +120,8 @@ export abstract class BaseChain extends BaseLangChain implements ChainInputs {
   async call(
     values: ChainValues & { signal?: AbortSignal },
     callbacks?: Callbacks,
-    tags?: string[]
+    tags?: string[],
+    metadata?: Record<string, unknown>
   ): Promise<ChainValues> {
     const fullValues = { ...values } as typeof values;
     if (!(this.memory == null)) {
@@ -136,6 +137,8 @@ export abstract class BaseChain extends BaseLangChain implements ChainInputs {
       this.callbacks,
       tags,
       this.tags,
+      metadata,
+      this.metadata,
       { verbose: this.verbose }
     );
     const runManager = await callbackManager_?.handleChainStart(

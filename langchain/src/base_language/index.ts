@@ -18,6 +18,7 @@ export interface BaseLangChainParams {
   verbose?: boolean;
   callbacks?: Callbacks;
   tags?: string[];
+  metadata?: Record<string, unknown>;
 }
 
 /**
@@ -36,6 +37,8 @@ export abstract class BaseLangChain
 
   tags?: string[];
 
+  metadata?: Record<string, unknown>;
+
   get lc_attributes(): { [key: string]: undefined } | undefined {
     return {
       callbacks: undefined,
@@ -48,6 +51,7 @@ export abstract class BaseLangChain
     this.verbose = params.verbose ?? getVerbosity();
     this.callbacks = params.callbacks;
     this.tags = params.tags ?? [];
+    this.metadata = params.metadata ?? {};
   }
 }
 
@@ -87,6 +91,11 @@ export interface BaseLanguageModelCallOptions {
    * Tags to attach to this call.
    */
   tags?: string[];
+
+  /**
+   * Metadata to attach to this call.
+   */
+  metadata?: Record<string, unknown>;
 }
 
 /**

@@ -33,7 +33,8 @@ export abstract class StructuredTool<
   async call(
     arg: (z.output<T> extends string ? string : never) | z.input<T>,
     callbacks?: Callbacks,
-    tags?: string[]
+    tags?: string[],
+    metadata?: Record<string, unknown>
   ): Promise<string> {
     const parsed = await this.schema.parseAsync(arg);
     const callbackManager_ = await CallbackManager.configure(
@@ -41,6 +42,8 @@ export abstract class StructuredTool<
       this.callbacks,
       tags,
       this.tags,
+      metadata,
+      this.metadata,
       { verbose: this.verbose }
     );
     const runManager = await callbackManager_?.handleToolStart(
