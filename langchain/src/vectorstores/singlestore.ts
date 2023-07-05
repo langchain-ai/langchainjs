@@ -12,6 +12,7 @@ import { VectorStore } from "./base.js";
 import { Embeddings } from "../embeddings/base.js";
 import { Document } from "../document.js";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type Metadata = Record<string, any>;
 
 export type DistanceMetrics = "DOT_PRODUCT" | "EUCLIDEAN_DISTANCE";
