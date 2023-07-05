@@ -17077,7 +17077,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"husky@npm:^8.0.3":
+"husky@npm:^8.0.0":
   version: 8.0.3
   resolution: "husky@npm:8.0.3"
   bin:
@@ -19782,7 +19782,7 @@ __metadata:
   dependencies:
     "@tsconfig/recommended": ^1.0.2
     dotenv: ^16.0.3
-    husky: ^8.0.3
+    husky: ^8.0.0
     lint-staged: ^13.1.1
     prettier: ^2.8.3
     turbo: latest
