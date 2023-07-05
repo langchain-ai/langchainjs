@@ -9,7 +9,7 @@ import {
   HumanMessagePromptTemplate,
 } from "../../../prompts/chat.js";
 
-test("extraction chain", async () => {
+test("structured output chain", async () => {
   const chain = createStructuredOutputChain({
     prompt: new ChatPromptTemplate({
       promptMessages: [
