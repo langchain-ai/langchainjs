@@ -62,7 +62,7 @@ test("test EmbeddingRun", async () => {
       },
     ],
     inputs: { texts: ["test1", "test2"] },
-    run_type: "embeddings",
+    run_type: "embedding",
     outputs: [
       [1, 2, 3],
       [2, 3, 4],
