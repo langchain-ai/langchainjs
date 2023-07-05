@@ -109,7 +109,7 @@ export const checkValidTemplate = (
       return acc;
     }, {} as Record<string, string>);
     renderTemplate(template, templateFormat, dummyInputs);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (e: any) {
     throw new Error(`Invalid prompt schema: ${e.message}`);
   }
