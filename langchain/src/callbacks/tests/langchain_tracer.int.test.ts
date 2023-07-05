@@ -107,9 +107,9 @@ test("Test Traced Agent with concurrency", async () => {
   console.log(`Executing with input "${input}"...`);
 
   const [resultA, resultB, resultC] = await Promise.all([
-    executor.call({ input }, [], ["test"], { a: "b" }),
-    executor.call({ input }, [], ["test"], { a: "b" }),
-    executor.call({ input }, [], ["test"], { a: "b" }),
+    executor.call({ input }, { tags: ["test"], metadata: { a: "b" } }),
+    executor.call({ input }, { tags: ["test"], metadata: { a: "b" } }),
+    executor.call({ input }, { tags: ["test"], metadata: { a: "b" } }),
   ]);
 
   console.log(`Got output ${resultA.output}`);
@@ -140,9 +140,9 @@ test("Test Traced Agent with chat model", async () => {
   console.log(`Executing with input "${input}"...`);
 
   const [resultA, resultB, resultC] = await Promise.all([
-    executor.call({ input }, [], ["test"], { a: "b" }),
-    executor.call({ input }, [], ["test"], { a: "b" }),
-    executor.call({ input }, [], ["test"], { a: "b" }),
+    executor.call({ input }, { tags: ["test"], metadata: { a: "b" } }),
+    executor.call({ input }, { tags: ["test"], metadata: { a: "b" } }),
+    executor.call({ input }, { tags: ["test"], metadata: { a: "b" } }),
   ]);
 
   console.log(`Got output ${resultA.output}`);

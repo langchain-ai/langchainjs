@@ -58,12 +58,6 @@ export declare interface OpenAIBaseInput {
 
 export interface OpenAICallOptions extends BaseLanguageModelCallOptions {
   /**
-   * Abort signal to use for cancelling in-flight requests.
-   * @see https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal
-   */
-  signal?: AbortSignal;
-
-  /**
    * Additional options to pass to the underlying axios request.
    */
   options?: AxiosRequestConfig;
