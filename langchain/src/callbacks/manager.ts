@@ -110,14 +110,14 @@ export class CallbackManagerForEmbeddingRun
     );
   }
 
-  async handleEmbeddingEnd(vectors: number[][]): Promise<void> {
+  async handleEmbeddingEnd(vector: number[]): Promise<void> {
     await Promise.all(
       this.handlers.map((handler) =>
         consumeCallback(async () => {
           if (!handler.ignoreEmbeddings) {
             try {
               await handler.handleEmbeddingEnd?.(
-                vectors,
+                vector,
                 this.runId,
                 this._parentRunId
               );
@@ -410,37 +410,43 @@ export class CallbackManager
     _runId?: string,
     _parentRunId?: string,
     extraParams: Record<string, unknown> | undefined = undefined
-  ): Promise<CallbackManagerForEmbeddingRun> {
-    const runId = uuidv4();
-    await Promise.all(
-      this.handlers.map((handler) =>
-        consumeCallback(async () => {
-          if (!handler.ignoreEmbeddings) {
-            try {
-              await handler.handleEmbeddingStart?.(
-                embedding,
-                texts,
-                runId,
-                this._parentRunId,
-                extraParams,
-                this.tags
-              );
-            } catch (err) {
-              console.error(
-                `Error in handler ${handler.constructor.name}, handleEmbeddingStart: ${err}`
-              );
-            }
-          }
-        }, handler.awaitHandlers)
-      )
-    );
-    return new CallbackManagerForEmbeddingRun(
-      runId,
-      this.handlers,
-      this.inheritableHandlers,
-      this.tags,
-      this.inheritableTags,
-      this._parentRunId
+  ): Promise<CallbackManagerForEmbeddingRun[]> {
+    return Promise.all(
+      texts.map(async (text) => {
+        const runId = uuidv4();
+
+        await Promise.all(
+          this.handlers.map((handler) =>
+            consumeCallback(async () => {
+              if (!handler.ignoreEmbeddings) {
+                try {
+                  await handler.handleEmbeddingStart?.(
+                    embedding,
+                    [text],
+                    runId,
+                    this._parentRunId,
+                    extraParams,
+                    this.tags
+                  );
+                } catch (err) {
+                  console.error(
+                    `Error in handler ${handler.constructor.name}, handleEmbeddingStart: ${err}`
+                  );
+                }
+              }
+            }, handler.awaitHandlers)
+          )
+        );
+
+        return new CallbackManagerForEmbeddingRun(
+          runId,
+          this.handlers,
+          this.inheritableHandlers,
+          this.tags,
+          this.inheritableTags,
+          this._parentRunId
+        );
+      })
     );
   }
 

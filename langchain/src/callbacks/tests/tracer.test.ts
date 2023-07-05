@@ -33,14 +33,8 @@ const serialized: Serialized = {
 test("test EmbeddingRun", async () => {
   const tracer = new FakeTracer();
   const runId = uuid.v4();
-  await tracer.handleEmbeddingStart(serialized, ["test1", "test2"], runId);
-  await tracer.handleEmbeddingEnd(
-    [
-      [1, 2, 3],
-      [2, 3, 4],
-    ],
-    runId
-  );
+  await tracer.handleEmbeddingStart(serialized, ["test1"], runId);
+  await tracer.handleEmbeddingEnd([1, 2, 3], runId);
   expect(tracer.runs.length).toBe(1);
   const run = tracer.runs[0];
   const compareRun: Run = {
@@ -61,12 +55,11 @@ test("test EmbeddingRun", async () => {
         time: 1620000000000,
       },
     ],
-    inputs: { texts: ["test1", "test2"] },
+    inputs: { texts: ["test1"] },
     run_type: "embedding",
-    outputs: [
-      [1, 2, 3],
-      [2, 3, 4],
-    ],
+    outputs: {
+      vector: [1, 2, 3],
+    },
     child_runs: [],
     extra: {},
     tags: [],

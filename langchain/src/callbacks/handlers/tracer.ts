@@ -365,13 +365,13 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     await this.onEmbeddingStart?.(run);
   }
 
-  async handleEmbeddingEnd(vectors: number[][], runId: string) {
+  async handleEmbeddingEnd(vector: number[], runId: string) {
     const run = this.runMap.get(runId);
     if (!run || run?.run_type !== "embedding") {
       throw new Error("No Embedding run to end.");
     }
     run.end_time = Date.now();
-    run.outputs = vectors;
+    run.outputs = { vector };
     run.events.push({
       name: "end",
       time: run.end_time,

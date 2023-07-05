@@ -217,7 +217,7 @@ abstract class BaseCallbackHandlerMethodsClass {
    * with embeddings vectors and the run ID
    */
   handleEmbeddingEnd?(
-    vectors: number[][],
+    vectors: number[],
     runId: string,
     parentRunId?: string
   ): Promise<void> | void;

@@ -54,17 +54,25 @@ export abstract class Embeddings extends Serializable {
       this.tags,
       { verbose: this.verbose }
     );
-    const runManager = await callbackManager_?.handleEmbeddingStart(
+    const runManagers = await callbackManager_?.handleEmbeddingStart(
       this.toJSON(),
       documents
     );
 
     try {
       const embeddings = await this._embedDocuments(documents);
-      await runManager?.handleEmbeddingEnd(embeddings);
+      await Promise.all(
+        (runManagers ?? []).map((runManager, idx) =>
+          runManager?.handleEmbeddingEnd(embeddings?.[idx])
+        )
+      );
       return embeddings;
     } catch (error) {
-      await runManager?.handleEmbeddingError(error);
+      await Promise.all(
+        (runManagers ?? []).map((runManager) =>
+          runManager?.handleEmbeddingError(error)
+        )
+      );
       throw error;
     }
   }
@@ -77,17 +85,17 @@ export abstract class Embeddings extends Serializable {
       this.tags,
       { verbose: this.verbose }
     );
-    const runManager = await callbackManager_?.handleEmbeddingStart(
+    const runManagers = await callbackManager_?.handleEmbeddingStart(
       this.toJSON(),
       [document]
     );
 
     try {
       const embedding = await this._embedQuery(document);
-      await runManager?.handleEmbeddingEnd([embedding]);
+      await runManagers?.[0].handleEmbeddingEnd(embedding);
       return embedding;
     } catch (error) {
-      await runManager?.handleEmbeddingError(error);
+      await runManagers?.[0].handleEmbeddingError(error);
       throw error;
     }
   }
