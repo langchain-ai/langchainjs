@@ -4472,13 +4472,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@cfworker/json-schema@npm:^1.12.5":
-  version: 1.12.5
-  resolution: "@cfworker/json-schema@npm:1.12.5"
-  checksum: 1f8870cb3bb6e88b846c19f53b7746b9ab165f7e559a0ece2be74adf6b57e92bccb98b00d587216373eb9287840863087519af9d3c87e7c243f655bc27fc6371
-  languageName: node
-  linkType: hard
-
 "@clickhouse/client@npm:^0.0.14":
   version: 0.0.14
   resolution: "@clickhouse/client@npm:0.0.14"
@@ -19519,7 +19512,6 @@ __metadata:
     "@aws-sdk/client-s3": ^3.310.0
     "@aws-sdk/client-sagemaker-runtime": ^3.310.0
     "@aws-sdk/client-sfn": ^3.362.0
-    "@cfworker/json-schema": ^1.12.5
     "@clickhouse/client": ^0.0.14
     "@elastic/elasticsearch": ^8.4.0
     "@faker-js/faker": ^7.6.0

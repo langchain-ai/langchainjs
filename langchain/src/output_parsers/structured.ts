@@ -1,4 +1,3 @@
-import { Validator } from "@cfworker/json-schema";
 import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { JsonSchema7Type } from "zod-to-json-schema/src/parseDef.js";
@@ -7,6 +6,8 @@ import { JsonSchema7ObjectType } from "zod-to-json-schema/src/parsers/object.js"
 import { JsonSchema7StringType } from "zod-to-json-schema/src/parsers/string.js";
 import { JsonSchema7NumberType } from "zod-to-json-schema/src/parsers/number.js";
 import { JsonSchema7NullableType } from "zod-to-json-schema/src/parsers/nullable.js";
+
+import { Validator } from "../util/@cfworker/json-schema/index.js";
 import {
   BaseOutputParser,
   FormatInstructionsOptions,

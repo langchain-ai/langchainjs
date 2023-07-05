@@ -13,6 +13,7 @@ module.exports = {
   },
   plugins: ["@typescript-eslint", "no-instanceof"],
   ignorePatterns: [
+    "src/util/@cfworker",
     ".eslintrc.cjs",
     "scripts",
     "node_modules",
