@@ -142,7 +142,7 @@ export class ChatBaiduWenxin
 
   accessToken: string;
 
-  streaming?: boolean;
+  streaming = false;
 
   prefixMessages?: WenxinMessage[];
 
@@ -176,41 +176,37 @@ export class ChatBaiduWenxin
     this.streaming = fields?.streaming ?? this.streaming;
     this.prefixMessages = fields?.prefixMessages ?? this.prefixMessages;
     this.userId = fields?.userId ?? this.userId;
-
-    this.modelName = fields?.modelName ?? this.modelName;
-
-    switch (this.modelName) {
-      case "ERNIE-Bot":
-        this.apiUrl =
-          "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/completions";
-        break;
-      case "ERNIE-Bot-turbo":
-        this.apiUrl =
-          "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/eb-instant";
-        break;
-      default:
-        throw new Error(`Invalid model name: ${this.modelName}`);
-    }
-
     this.temperature = fields?.temperature ?? this.temperature;
     this.topP = fields?.topP ?? this.topP;
     this.penaltyScore = fields?.penaltyScore ?? this.penaltyScore;
 
-    // Validate the input
-    if (this.modelName === "ERNIE-Bot-turbo") {
+    this.modelName = fields?.modelName ?? this.modelName;
+
+    if (this.modelName === "ERNIE-Bot") {
+      this.apiUrl =
+        "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/completions";
+      this.temperature = this.temperature ?? 0.95;
+      this.topP = this.topP ?? 0.8;
+      this.penaltyScore = this.penaltyScore ?? 1.0;
+    } else if (this.modelName === "ERNIE-Bot-turbo") {
+      this.apiUrl =
+        "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/eb-instant";
+      // Validate the input
       if (this.temperature) {
         throw new Error(
-          "Temperature is not supported for ERNIE_BOT_TURBO model"
+          "Temperature is not supported forERNIE-Bot-turbo model"
         );
       }
       if (this.topP) {
-        throw new Error("TopP is not supported for ERNIE_BOT_TURBO model");
+        throw new Error("TopP is not supported for ERNIE-Bot-turbo model");
       }
       if (this.penaltyScore) {
         throw new Error(
-          "PenaltyScore is not supported for ERNIE_BOT_TURBO model"
+          "PenaltyScore is not supported for ERNIE-Bot-turbo model"
         );
       }
+    } else {
+      throw new Error(`Invalid model name: ${this.modelName}`);
     }
   }
 
@@ -438,7 +434,6 @@ export class ChatBaiduWenxin
               data = data.slice(newlineIndex + 1);
 
               if (line.startsWith("data:")) {
-                console.log(line);
                 const event = new MessageEvent("message", {
                   data: line.slice("data:".length).trim(),
                 });
