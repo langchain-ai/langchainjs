@@ -53,7 +53,7 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
   declare CallOptions: OpenAICallOptions;
 
   get callKeys(): (keyof OpenAICallOptions)[] {
-    return ["stop", "signal", "timeout", "options"];
+    return [...(super.callKeys as (keyof OpenAICallOptions)[]), "options"];
   }
 
   lc_serializable = true;
@@ -145,7 +145,7 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
       getEnvironmentVariable("AZURE_OPENAI_API_KEY");
 
     if (!this.azureOpenAIApiKey && !this.openAIApiKey) {
-      throw new Error("(Azure) OpenAI API key not found");
+      throw new Error("OpenAI or Azure OpenAI API key not found");
     }
 
     this.azureOpenAIApiInstanceName =

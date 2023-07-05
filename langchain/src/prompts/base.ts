@@ -1,7 +1,7 @@
 import {
   BasePromptValue,
   Example,
-  HumanChatMessage,
+  HumanMessage,
   InputValues,
   PartialValues,
 } from "../schema/index.js";
@@ -25,7 +25,7 @@ export class StringPromptValue extends BasePromptValue {
   }
 
   toChatMessages() {
-    return [new HumanChatMessage(this.value)];
+    return [new HumanMessage(this.value)];
   }
 }
 

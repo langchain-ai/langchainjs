@@ -8,7 +8,7 @@ import {
   CollectionTtl,
 } from "@gomomento/sdk";
 import {
-  BaseChatMessage,
+  BaseMessage,
   BaseListChatMessageHistory,
   StoredMessage,
 } from "../../schema/index.js";
@@ -105,7 +105,7 @@ export class MomentoChatMessageHistory extends BaseListChatMessageHistory {
     }
   }
 
-  public async getMessages(): Promise<BaseChatMessage[]> {
+  public async getMessages(): Promise<BaseMessage[]> {
     const fetchResponse = await this.client.listFetch(
       this.cacheName,
       this.sessionId
@@ -126,7 +126,7 @@ export class MomentoChatMessageHistory extends BaseListChatMessageHistory {
     return mapStoredMessagesToChatMessages(messages);
   }
 
-  public async addMessage(message: BaseChatMessage): Promise<void> {
+  public async addMessage(message: BaseMessage): Promise<void> {
     const messageToAdd = JSON.stringify(
       mapChatMessagesToStoredMessages([message])[0]
     );

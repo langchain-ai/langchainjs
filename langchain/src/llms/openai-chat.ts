@@ -55,7 +55,11 @@ export class OpenAIChat
   declare CallOptions: OpenAIChatCallOptions;
 
   get callKeys(): (keyof OpenAIChatCallOptions)[] {
-    return ["stop", "signal", "timeout", "options", "promptIndex"];
+    return [
+      ...(super.callKeys as (keyof OpenAIChatCallOptions)[]),
+      "options",
+      "promptIndex",
+    ];
   }
 
   lc_serializable = true;
@@ -137,7 +141,7 @@ export class OpenAIChat
       getEnvironmentVariable("AZURE_OPENAI_API_KEY");
 
     if (!this.azureOpenAIApiKey && !this.openAIApiKey) {
-      throw new Error("(Azure) OpenAI API key not found");
+      throw new Error("OpenAI or Azure OpenAI API key not found");
     }
 
     this.azureOpenAIApiInstanceName =

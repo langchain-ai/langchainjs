@@ -5,9 +5,9 @@ import { BaseCallbackHandler, BaseCallbackHandlerInput } from "../base.js";
 import {
   AgentAction,
   AgentFinish,
-  BaseChatMessage,
+  BaseMessage,
   ChainValues,
-  HumanChatMessage,
+  HumanMessage,
   LLMResult,
 } from "../../schema/index.js";
 import { Serialized } from "../../load/serializable.js";
@@ -133,7 +133,7 @@ class FakeCallbackHandlerWithChatStart extends FakeCallbackHandler {
 
   async handleChatModelStart(
     _llm: Serialized,
-    _messages: BaseChatMessage[][]
+    _messages: BaseMessage[][]
   ): Promise<void> {
     this.starts += 1;
     this.chatModelStarts += 1;
@@ -200,7 +200,7 @@ test("CallbackManager Chat Message Handling", async () => {
   manager.addHandler(handler2);
 
   const llmCbs = await manager.handleChatModelStart(serialized, [
-    [new HumanChatMessage("test")],
+    [new HumanMessage("test")],
   ]);
   await Promise.all(
     llmCbs.map(async (llmCb) => {
@@ -390,10 +390,14 @@ test("CallbackManager.copy()", () => {
   callbackManager1.addHandler(handler2, false);
   callbackManager1.addTags(["a"], true);
   callbackManager1.addTags(["b"], false);
+  callbackManager1.addMetadata({ a: "a" }, true);
+  callbackManager1.addMetadata({ b: "b" }, false);
   expect(callbackManager1.handlers).toEqual([handler1, handler2]);
   expect(callbackManager1.inheritableHandlers).toEqual([handler1]);
   expect(callbackManager1.tags).toEqual(["a", "b"]);
   expect(callbackManager1.inheritableTags).toEqual(["a"]);
+  expect(callbackManager1.metadata).toEqual({ a: "a", b: "b" });
+  expect(callbackManager1.inheritableMetadata).toEqual({ a: "a" });
 
   const callbackManager2 = callbackManager1.copy([handler3]);
   expect(callbackManager2.handlers.map((h) => h.name)).toEqual([

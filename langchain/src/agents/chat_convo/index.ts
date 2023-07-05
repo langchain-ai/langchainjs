@@ -8,10 +8,10 @@ import {
 } from "../../prompts/chat.js";
 import { renderTemplate } from "../../prompts/template.js";
 import {
-  AIChatMessage,
+  AIMessage,
   AgentStep,
-  BaseChatMessage,
-  HumanChatMessage,
+  BaseMessage,
+  HumanMessage,
 } from "../../schema/index.js";
 import { Tool } from "../../tools/base.js";
 import { Optional } from "../../types/type-utils.js";
@@ -79,12 +79,12 @@ export class ChatConversationalAgent extends Agent {
     }
   }
 
-  async constructScratchPad(steps: AgentStep[]): Promise<BaseChatMessage[]> {
-    const thoughts: BaseChatMessage[] = [];
+  async constructScratchPad(steps: AgentStep[]): Promise<BaseMessage[]> {
+    const thoughts: BaseMessage[] = [];
     for (const step of steps) {
-      thoughts.push(new AIChatMessage(step.action.log));
+      thoughts.push(new AIMessage(step.action.log));
       thoughts.push(
-        new HumanChatMessage(
+        new HumanMessage(
           renderTemplate(TEMPLATE_TOOL_RESPONSE, "f-string", {
             observation: step.observation,
           })
