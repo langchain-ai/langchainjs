@@ -116,5 +116,5 @@ test("Test with chat prompts", async () => {
   const formattedPromptValue = await prompt.formatPromptValue({
     name: "pam",
   });
-  expect(formattedPromptValue.messages[1].text).toEqual("pam halpert");
+  expect(formattedPromptValue.messages[1].content).toEqual("pam halpert");
 });

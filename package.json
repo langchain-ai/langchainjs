@@ -37,16 +37,16 @@
     "test:exports:docker": "docker compose up",
     "publish": "bash scripts/release-branch.sh && turbo run --filter langchain build lint test test:integration && yarn run test:exports:docker && yarn workspace langchain run release && echo '🔗 Open https://github.com/hwchase17/langchainjs/compare/release?expand=1 and merge the release PR'",
     "example": "yarn workspace examples start",
-    "prepare": "husky install",
     "precommit": "turbo run precommit",
-    "docs": "yarn workspace docs start"
+    "docs": "yarn workspace docs start",
+    "postinstall": "husky install"
   },
   "author": "LangChain",
   "license": "MIT",
   "devDependencies": {
     "@tsconfig/recommended": "^1.0.2",
     "dotenv": "^16.0.3",
-    "husky": "^8.0.3",
+    "husky": "^8.0.0",
     "lint-staged": "^13.1.1",
     "prettier": "^2.8.3",
     "typescript": "^5.0.0"

@@ -1,7 +1,7 @@
 import { test, expect, jest } from "@jest/globals";
 import * as uuid from "uuid";
 import { BaseTracer, Run } from "../handlers/tracer.js";
-import { HumanChatMessage } from "../../schema/index.js";
+import { HumanMessage } from "../../schema/index.js";
 import { Serialized } from "../../load/serializable.js";
 
 const _DATE = 1620000000000;
@@ -68,7 +68,7 @@ test("Test LLMRun", async () => {
 test("Test Chat Model Run", async () => {
   const tracer = new FakeTracer();
   const runId = uuid.v4();
-  const messages = [[new HumanChatMessage("Avast")]];
+  const messages = [[new HumanMessage("Avast")]];
   await tracer.handleChatModelStart(serialized, messages, runId);
   await tracer.handleLLMEnd({ generations: [] }, runId);
   expect(tracer.runs.length).toBe(1);
@@ -99,13 +99,17 @@ test("Test Chat Model Run", async () => {
         "messages": [
           [
             {
-              "data": {
+              "id": [
+                "langchain",
+                "schema",
+                "HumanMessage",
+              ],
+              "kwargs": {
                 "additional_kwargs": {},
                 "content": "Avast",
-                "name": undefined,
-                "role": undefined,
               },
-              "type": "human",
+              "lc": 1,
+              "type": "constructor",
             },
           ],
         ],

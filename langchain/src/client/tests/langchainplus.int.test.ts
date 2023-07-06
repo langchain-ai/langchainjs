@@ -1,6 +1,6 @@
 /* eslint-disable no-process-env */
 import { test } from "@jest/globals";
-import { LangChainPlusClient } from "langchainplus-sdk";
+import { Client } from "langchainplus-sdk";
 import { ChatOpenAI } from "../../chat_models/openai.js";
 import { SerpAPI } from "../../tools/serpapi.js";
 import { Calculator } from "../../tools/calculator.js";
@@ -9,7 +9,7 @@ import { OpenAI } from "../../llms/openai.js";
 import { runOnDataset } from "../langchainplus.js";
 
 test("Test LangChainPlus Client Run Chat Model Over Simple Dataset", async () => {
-  const client: LangChainPlusClient = new LangChainPlusClient({});
+  const client = new Client({});
   const datasetName = "chat-test";
   const description = "Asking a chat model test things";
   // Check if dataset name exists in listDatasets
@@ -42,7 +42,7 @@ test("Test LangChainPlus Client Run Chat Model Over Simple Dataset", async () =>
 });
 
 test("Test LangChainPlus Client Run LLM Over Simple Dataset", async () => {
-  const client: LangChainPlusClient = new LangChainPlusClient({});
+  const client = new Client({});
   const datasetName = "llm-test";
   const description = "Asking a chat model test things";
   // Check if dataset name exists in listDatasets
@@ -84,7 +84,7 @@ test("Test LangChainPlus Client Run LLM Over Simple Dataset", async () => {
 });
 
 test("Test LangChainPlus Client Run Chain Over Simple Dataset", async () => {
-  const client: LangChainPlusClient = new LangChainPlusClient({});
+  const client = new Client({});
   const csvContent = `
 input,output
 what is 8 to the third power?,8 to the third power is 512
@@ -123,7 +123,7 @@ what is 1213 divided by 4345?,approximately 0.2791714614499425
 });
 
 test("Test LangChainPlus Client Run Chain Over Dataset", async () => {
-  const client: LangChainPlusClient = new LangChainPlusClient({});
+  const client = new Client({});
   const csvContent = `
 input,output
 How many people live in canada as of 2023?,"approximately 38,625,801"

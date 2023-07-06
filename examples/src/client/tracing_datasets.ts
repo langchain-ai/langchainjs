@@ -1,6 +1,6 @@
 /* eslint-disable no-process-env */
 // eslint-disable-next-line import/no-extraneous-dependencies
-import { LangChainPlusClient, Dataset } from "langchainplus-sdk";
+import { Client, Dataset } from "langchainplus-sdk";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { runOnDataset } from "langchain/client";
 import { SerpAPI } from "langchain/tools";
@@ -56,7 +56,7 @@ for (const input of inputs) {
 // 4. Add the other examples to the dataset as well
 
 // So that you don't have to create the dataset manually, we will create it for you
-const client: LangChainPlusClient = new LangChainPlusClient({
+const client = new Client({
   // apiUrl: "https://api.langchain.plus", // Default: LANGCHAIN_ENDPOINT environment variable of "http://localhost:1984"
   // apiKey: "<Your API Key>", // Default: LANGCHAIN_API_KEY environment variable
 });

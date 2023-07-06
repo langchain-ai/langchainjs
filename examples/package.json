@@ -43,7 +43,6 @@
     "langchain": "workspace:*",
     "ml-distance": "^4.0.0",
     "mongodb": "^5.2.0",
-    "mysql2": "^3.3.3",
     "pickleparser": "^0.1.0",
     "prisma": "^4.11.0",
     "redis": "^4.6.6",

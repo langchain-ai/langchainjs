@@ -1,10 +1,10 @@
 import { type Tiktoken } from "js-tiktoken/lite";
+import { BaseMessage, BasePromptValue, LLMResult } from "../schema/index.js";
 import {
-  BaseChatMessage,
-  BasePromptValue,
-  LLMResult,
-} from "../schema/index.js";
-import { CallbackManager, Callbacks } from "../callbacks/manager.js";
+  BaseCallbackConfig,
+  CallbackManager,
+  Callbacks,
+} from "../callbacks/manager.js";
 import { AsyncCaller, AsyncCallerParams } from "../util/async_caller.js";
 import { getModelNameForTiktoken } from "./count_tokens.js";
 import { encodingForModel } from "../util/tiktoken.js";
@@ -22,6 +22,7 @@ export interface BaseLangChainParams {
   verbose?: boolean;
   callbacks?: Callbacks;
   tags?: string[];
+  metadata?: Record<string, unknown>;
 }
 
 /**
@@ -40,6 +41,8 @@ export abstract class BaseLangChain
 
   tags?: string[];
 
+  metadata?: Record<string, unknown>;
+
   get lc_attributes(): { [key: string]: undefined } | undefined {
     return {
       callbacks: undefined,
@@ -52,6 +55,7 @@ export abstract class BaseLangChain
     this.verbose = params.verbose ?? getVerbosity();
     this.callbacks = params.callbacks;
     this.tags = params.tags ?? [];
+    this.metadata = params.metadata ?? {};
   }
 }
 
@@ -69,7 +73,7 @@ export interface BaseLanguageModelParams
   callbackManager?: CallbackManager;
 }
 
-export interface BaseLanguageModelCallOptions {
+export interface BaseLanguageModelCallOptions extends BaseCallbackConfig {
   /**
    * Stop tokens to use for this call.
    * If not provided, the default stop tokens for the model will be used.
@@ -84,13 +88,9 @@ export interface BaseLanguageModelCallOptions {
   /**
    * Abort signal for this call.
    * If provided, the call will be aborted when the signal is aborted.
+   * @see https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal
    */
   signal?: AbortSignal;
-
-  /**
-   * Tags to attach to this call.
-   */
-  tags?: string[];
 }
 
 /**
@@ -106,7 +106,7 @@ export abstract class BaseLanguageModel
    * Keys that the language model accepts as call options.
    */
   get callKeys(): string[] {
-    return ["stop", "timeout", "signal"];
+    return ["stop", "timeout", "signal", "tags", "metadata", "callbacks"];
   }
 
   /**
@@ -140,10 +140,10 @@ export abstract class BaseLanguageModel
   ): Promise<string>;
 
   abstract predictMessages(
-    messages: BaseChatMessage[],
+    messages: BaseMessage[],
     options?: string[] | this["CallOptions"],
     callbacks?: Callbacks
-  ): Promise<BaseChatMessage>;
+  ): Promise<BaseMessage>;
 
   abstract _modelType(): string;
 

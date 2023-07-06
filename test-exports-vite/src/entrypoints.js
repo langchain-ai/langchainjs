@@ -23,6 +23,7 @@ export * from "langchain/document_loaders/base";
 export * from "langchain/chat_models/base";
 export * from "langchain/chat_models/openai";
 export * from "langchain/chat_models/anthropic";
+export * from "langchain/chat_models/baiduwenxin";
 export * from "langchain/schema";
 export * from "langchain/schema/output_parser";
 export * from "langchain/schema/query_constructor";
