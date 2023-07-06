@@ -285,13 +285,13 @@ kwargs:
 "
 `;
 
-exports[`serialize + deserialize llmchain with output parser 1`] = `
+exports[`serialize + deserialize llmchain with fix + combining output parser 1`] = `
 "lc: 1
 type: constructor
 id:
   - langchain
   - chains
-  - llm_chain
+  - llm
   - LLMChain
 kwargs:
   llm:
@@ -303,15 +303,164 @@ kwargs:
       - openai
       - OpenAI
     kwargs:
-      callbacks:
-        - lc: 1
-          type: constructor
-          id:
-            - langchain
-            - callbacks
-            - langchain_tracer
-            - LangChainTracer
-          kwargs: {}
+      temperature: 0.5
+      model: davinci
+      openai_api_key:
+        lc: 1
+        type: secret
+        id:
+          - OPENAI_API_KEY
+  prompt:
+    lc: 1
+    type: constructor
+    id:
+      - langchain
+      - prompts
+      - prompt
+      - PromptTemplate
+    kwargs:
+      input_variables:
+        - yo
+        - format_instructions
+      template_format: f-string
+      template: An example about {yo} {format_instructions}
+  output_parser:
+    lc: 1
+    type: constructor
+    id:
+      - langchain
+      - output_parsers
+      - fix
+      - OutputFixingParser
+    kwargs:
+      parser:
+        lc: 1
+        type: constructor
+        id:
+          - langchain
+          - output_parsers
+          - combining
+          - CombiningOutputParser
+        kwargs:
+          parsers:
+            - lc: 1
+              type: constructor
+              id:
+                - langchain
+                - output_parsers
+                - regex
+                - RegexParser
+              kwargs:
+                regex:
+                  pattern: "Number: (\\\\d+), Word: (.*)"
+                  flags: ""
+                output_keys:
+                  - confidence
+                  - explanation
+            - lc: 1
+              type: constructor
+              id:
+                - langchain
+                - output_parsers
+                - regex
+                - RegexParser
+              kwargs:
+                regex:
+                  pattern: "Confidence: (A|B|C), Explanation: (.*)"
+                  flags: ""
+                output_keys:
+                  - confidence
+                  - explanation
+      retry_chain:
+        lc: 1
+        type: constructor
+        id:
+          - langchain
+          - chains
+          - llm
+          - LLMChain
+        kwargs:
+          llm:
+            lc: 1
+            type: constructor
+            id:
+              - langchain
+              - llms
+              - openai
+              - OpenAI
+            kwargs:
+              temperature: 0.5
+              model: davinci
+              openai_api_key:
+                lc: 1
+                type: secret
+                id:
+                  - OPENAI_API_KEY
+          prompt:
+            lc: 1
+            type: constructor
+            id:
+              - langchain
+              - prompts
+              - prompt
+              - PromptTemplate
+            kwargs:
+              input_variables:
+                - instructions
+                - completion
+                - error
+              template_format: f-string
+              template: >-
+                Instructions:
+
+                --------------
+
+                {instructions}
+
+                --------------
+
+                Completion:
+
+                --------------
+
+                {completion}
+
+                --------------
+
+
+                Above, the Completion did not satisfy the constraints given in the Instructions.
+
+                Error:
+
+                --------------
+
+                {error}
+
+                --------------
+
+
+                Please try again. Please only respond with an answer that satisfies the constraints laid out in the Instructions:
+"
+`;
+
+exports[`serialize + deserialize llmchain with list output parser 1`] = `
+"lc: 1
+type: constructor
+id:
+  - langchain
+  - chains
+  - llm
+  - LLMChain
+kwargs:
+  llm:
+    lc: 1
+    type: constructor
+    id:
+      - langchain
+      - llms
+      - openai
+      - OpenAI
+    kwargs:
       temperature: 0.5
       model: davinci
       openai_api_key:
@@ -342,6 +491,63 @@ kwargs:
       - list
       - CommaSeparatedListOutputParser
     kwargs: {}
+"
+`;
+
+exports[`serialize + deserialize llmchain with regex output parser 1`] = `
+"lc: 1
+type: constructor
+id:
+  - langchain
+  - chains
+  - llm
+  - LLMChain
+kwargs:
+  llm:
+    lc: 1
+    type: constructor
+    id:
+      - langchain
+      - llms
+      - openai
+      - OpenAI
+    kwargs:
+      temperature: 0.5
+      model: davinci
+      openai_api_key:
+        lc: 1
+        type: secret
+        id:
+          - OPENAI_API_KEY
+  prompt:
+    lc: 1
+    type: constructor
+    id:
+      - langchain
+      - prompts
+      - prompt
+      - PromptTemplate
+    kwargs:
+      input_variables:
+        - yo
+        - format_instructions
+      template_format: f-string
+      template: An example about {yo} {format_instructions}
+  output_parser:
+    lc: 1
+    type: constructor
+    id:
+      - langchain
+      - output_parsers
+      - regex
+      - RegexParser
+    kwargs:
+      regex:
+        pattern: "Confidence: (A|B|C), Explanation: (.*)"
+        flags: ""
+      output_keys:
+        - confidence
+        - explanation
 "
 `;
 

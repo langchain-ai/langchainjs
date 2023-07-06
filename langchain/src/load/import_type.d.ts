@@ -277,6 +277,8 @@ export interface SecretMap {
   AWS_SECRET_ACCESS_KEY?: string;
   AWS_SESSION_TOKEN?: string;
   AZURE_OPENAI_API_KEY?: string;
+  BAIDU_API_KEY?: string;
+  BAIDU_SECRET_KEY?: string;
   COHERE_API_KEY?: string;
   GOOGLE_API_KEY?: string;
   HUGGINGFACEHUB_API_KEY?: string;

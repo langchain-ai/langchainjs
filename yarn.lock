@@ -15150,7 +15150,6 @@ __metadata:
     langchain: "workspace:*"
     ml-distance: ^4.0.0
     mongodb: ^5.2.0
-    mysql2: ^3.3.3
     pickleparser: ^0.1.0
     prettier: ^2.8.3
     prisma: ^4.11.0
@@ -17077,7 +17076,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"husky@npm:^8.0.3":
+"husky@npm:^8.0.0":
   version: 8.0.3
   resolution: "husky@npm:8.0.3"
   bin:
@@ -19577,7 +19576,7 @@ __metadata:
     js-tiktoken: ^1.0.7
     js-yaml: ^4.1.0
     jsonpointer: ^5.0.1
-    langchainplus-sdk: ^0.0.18
+    langchainplus-sdk: ^0.0.19
     mammoth: ^1.5.1
     ml-distance: ^4.0.0
     mongodb: ^5.2.0
@@ -19782,7 +19781,7 @@ __metadata:
   dependencies:
     "@tsconfig/recommended": ^1.0.2
     dotenv: ^16.0.3
-    husky: ^8.0.3
+    husky: ^8.0.0
     lint-staged: ^13.1.1
     prettier: ^2.8.3
     turbo: latest
@@ -19790,9 +19789,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"langchainplus-sdk@npm:^0.0.18":
-  version: 0.0.18
-  resolution: "langchainplus-sdk@npm:0.0.18"
+"langchainplus-sdk@npm:^0.0.19":
+  version: 0.0.19
+  resolution: "langchainplus-sdk@npm:0.0.19"
   dependencies:
     "@types/uuid": ^9.0.1
     commander: ^10.0.1
@@ -19801,7 +19800,7 @@ __metadata:
     uuid: ^9.0.0
   bin:
     langchain: dist/cli/main.cjs
-  checksum: 4f39d3bac4715442b4eec4a3ad6d8206eb39489ffd2a376e6309a503635d517e3a812e724e89675798c98a04db764abcdca6fdcd80a3754033d6ba1abdeac272
+  checksum: f0174c1e248e4bc5034a7dd182f703b895a485b6408aa518c91ff12b3f015febd5546eeb7f821c82b63a9d2b67a7ea903a1a57ad196049743f0934ff1c524ae8
   languageName: node
   linkType: hard
 
