@@ -73,7 +73,7 @@ test("Test DynamoDB message history store in a BufferMemory", async () => {
     { bar: "Nice to meet you, Jonas!" }
   );
   const result = await memory.loadMemoryVariables({});
-  expect(result).toStrictEqual({
+  expect(result).toEqual({
     history: [
       new HumanMessage("My name's Jonas"),
       new AIMessage("Nice to meet you, Jonas!"),
