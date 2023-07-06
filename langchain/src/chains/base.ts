@@ -4,6 +4,8 @@ import {
   CallbackManagerForChainRun,
   CallbackManager,
   Callbacks,
+  BaseCallbackConfig,
+  parseCallbackConfigArg,
 } from "../callbacks/manager.js";
 import { SerializedBaseChain } from "./serde.js";
 import { BaseLangChain, BaseLangChainParams } from "../base_language/index.js";
@@ -59,6 +61,9 @@ export abstract class BaseChain extends BaseLangChain implements ChainInputs {
     if ("signal" in valuesForMemory) {
       delete valuesForMemory.signal;
     }
+    if ("timeout" in valuesForMemory) {
+      delete valuesForMemory.timeout;
+    }
     return valuesForMemory;
   }
 
@@ -89,7 +94,7 @@ export abstract class BaseChain extends BaseLangChain implements ChainInputs {
   async run(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     input: any,
-    callbacks?: Callbacks
+    config?: Callbacks | BaseCallbackConfig
   ): Promise<string> {
     const inputKeys = this.inputKeys.filter(
       (k) => !this.memory?.memoryKeys.includes(k) ?? true
@@ -101,7 +106,7 @@ export abstract class BaseChain extends BaseLangChain implements ChainInputs {
       );
     }
     const values = inputKeys.length ? { [inputKeys[0]]: input } : {};
-    const returnValues = await this.call(values, callbacks);
+    const returnValues = await this.call(values, config);
     const keys = Object.keys(returnValues);
 
     if (keys.length === 1) {
@@ -118,11 +123,16 @@ export abstract class BaseChain extends BaseLangChain implements ChainInputs {
    * Wraps _call and handles memory.
    */
   async call(
-    values: ChainValues & { signal?: AbortSignal },
-    callbacks?: Callbacks,
+    values: ChainValues & { signal?: AbortSignal; timeout?: number },
+    config?: Callbacks | BaseCallbackConfig,
+    /** @deprecated */
     tags?: string[]
   ): Promise<ChainValues> {
     const fullValues = { ...values } as typeof values;
+    if (fullValues.timeout && !fullValues.signal) {
+      fullValues.signal = AbortSignal.timeout(fullValues.timeout);
+      delete fullValues.timeout;
+    }
     if (!(this.memory == null)) {
       const newValues = await this.memory.loadMemoryVariables(
         this._selectMemoryInputs(values)
@@ -131,27 +141,32 @@ export abstract class BaseChain extends BaseLangChain implements ChainInputs {
         fullValues[key] = value;
       }
     }
+    const parsedConfig = parseCallbackConfigArg(config);
     const callbackManager_ = await CallbackManager.configure(
-      callbacks,
+      parsedConfig.callbacks,
       this.callbacks,
-      tags,
+      parsedConfig.tags || tags,
       this.tags,
+      parsedConfig.metadata,
+      this.metadata,
       { verbose: this.verbose }
     );
     const runManager = await callbackManager_?.handleChainStart(
       this.toJSON(),
       fullValues
     );
-    let outputValues;
+    let outputValues: ChainValues;
     try {
-      outputValues = (await Promise.race([
-        this._call(fullValues, runManager),
-        new Promise((_, reject) => {
-          values.signal?.addEventListener("abort", () => {
-            reject(new Error("AbortError"));
-          });
-        }),
-      ])) as ChainValues;
+      outputValues = await (values.signal
+        ? (Promise.race([
+            this._call(fullValues, runManager),
+            new Promise((_, reject) => {
+              values.signal?.addEventListener("abort", () => {
+                reject(new Error("AbortError"));
+              });
+            }),
+          ]) as Promise<ChainValues>)
+        : this._call(fullValues, runManager));
     } catch (e) {
       await runManager?.handleChainError(e);
       throw e;
@@ -176,10 +191,10 @@ export abstract class BaseChain extends BaseLangChain implements ChainInputs {
    */
   async apply(
     inputs: ChainValues[],
-    callbacks?: Callbacks[]
+    config?: (Callbacks | BaseCallbackConfig)[]
   ): Promise<ChainValues[]> {
     return Promise.all(
-      inputs.map(async (i, idx) => this.call(i, callbacks?.[idx]))
+      inputs.map(async (i, idx) => this.call(i, config?.[idx]))
     );
   }
 

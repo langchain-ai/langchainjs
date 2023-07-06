@@ -81,12 +81,15 @@ export function getBufferString(
       role = aiPrefix;
     } else if (m._getType() === "system") {
       role = "System";
+    } else if (m._getType() === "function") {
+      role = "Function";
     } else if (m._getType() === "generic") {
       role = (m as ChatMessage).role;
     } else {
       throw new Error(`Got unsupported message type: ${m}`);
     }
-    string_messages.push(`${role}: ${m.content}`);
+    const nameStr = m.name ? `${m.name}, ` : "";
+    string_messages.push(`${role}: ${nameStr}${m.content}`);
   }
   return string_messages.join("\n");
 }

@@ -1,8 +1,10 @@
 import { z } from "zod";
 import {
+  BaseCallbackConfig,
   CallbackManager,
   CallbackManagerForToolRun,
   Callbacks,
+  parseCallbackConfigArg,
 } from "../callbacks/manager.js";
 import { BaseLangChain, BaseLangChainParams } from "../base_language/index.js";
 
@@ -32,15 +34,19 @@ export abstract class StructuredTool<
 
   async call(
     arg: (z.output<T> extends string ? string : never) | z.input<T>,
-    callbacks?: Callbacks,
+    configArg?: Callbacks | BaseCallbackConfig,
+    /** @deprecated */
     tags?: string[]
   ): Promise<string> {
     const parsed = await this.schema.parseAsync(arg);
+    const config = parseCallbackConfigArg(configArg);
     const callbackManager_ = await CallbackManager.configure(
-      callbacks,
+      config.callbacks,
       this.callbacks,
-      tags,
+      config.tags || tags,
       this.tags,
+      config.metadata,
+      this.metadata,
       { verbose: this.verbose }
     );
     const runManager = await callbackManager_?.handleToolStart(
