@@ -117,6 +117,7 @@ export abstract class BaseMessage
     }
     // Make sure the default value for additional_kwargs is passed into super() for serialization
     if (!fields.additional_kwargs) {
+      // eslint-disable-next-line no-param-reassign
       fields.additional_kwargs = {};
     }
     super(fields);
