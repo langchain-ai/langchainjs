@@ -25,7 +25,7 @@ const getValue = (values: InputValues | OutputValues, key?: string) => {
   if (keys.length === 1) {
     return values[keys[0]];
   }
-}
+};
 
 /**
  * This function is used by memory classes to select the input value
@@ -48,7 +48,7 @@ export const getInputValue = (inputValues: InputValues, inputKey?: string) => {
  * to use for the memory. If there is only one output value, it is used.
  * If there are multiple output values, the outputKey must be specified.
  * If no outputKey is specified, an error is thrown.
-*/
+ */
 export const getOutputValue = (
   outputValues: OutputValues,
   outputKey?: string
