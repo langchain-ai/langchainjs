@@ -145,9 +145,6 @@ export interface OptionalImportMap {
   "langchain/document_loaders/web/confluence"?:
     | typeof import("../document_loaders/web/confluence.js")
     | Promise<typeof import("../document_loaders/web/confluence.js")>;
-  "langchain/document_loaders/web/blockchain"?:
-    | typeof import("../document_loaders/web/blockchain.js")
-    | Promise<typeof import("../document_loaders/web/blockchain.js")>;
   "langchain/document_loaders/fs/directory"?:
     | typeof import("../document_loaders/fs/directory.js")
     | Promise<typeof import("../document_loaders/fs/directory.js")>;

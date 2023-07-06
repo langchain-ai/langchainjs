@@ -94,7 +94,7 @@ const entrypoints = {
   "document_loaders/web/notiondb": "document_loaders/web/notiondb",
   "document_loaders/web/s3": "document_loaders/web/s3",
   "document_loaders/web/confluence": "document_loaders/web/confluence",
-  "document_loaders/web/blockchain": "document_loaders/web/blockchain",
+  "document_loaders/web/sort_xyz_blockchain": "document_loaders/web/sort_xyz_blockchain",
   "document_loaders/fs/directory": "document_loaders/fs/directory",
   "document_loaders/fs/buffer": "document_loaders/fs/buffer",
   "document_loaders/fs/text": "document_loaders/fs/text",
