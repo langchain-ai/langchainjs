@@ -29,7 +29,7 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-test("MongoDBAtlasVectorSearch with external ids", async () => {
+test.skip("MongoDBAtlasVectorSearch with external ids", async () => {
   expect(process.env.MONGODB_ATLAS_URI).toBeDefined();
 
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion

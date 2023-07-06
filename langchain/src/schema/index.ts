@@ -115,10 +115,15 @@ export abstract class BaseMessage
       // eslint-disable-next-line no-param-reassign
       fields = { content: fields, additional_kwargs: kwargs };
     }
+    // Make sure the default value for additional_kwargs is passed into super() for serialization
+    if (!fields.additional_kwargs) {
+      // eslint-disable-next-line no-param-reassign
+      fields.additional_kwargs = {};
+    }
     super(fields);
     this.name = fields.name;
     this.content = fields.content;
-    this.additional_kwargs = fields.additional_kwargs || {};
+    this.additional_kwargs = fields.additional_kwargs;
   }
 
   toDict(): StoredMessage {
