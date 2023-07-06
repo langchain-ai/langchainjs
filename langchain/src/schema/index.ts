@@ -115,10 +115,13 @@ export abstract class BaseMessage
       // eslint-disable-next-line no-param-reassign
       fields = { content: fields, additional_kwargs: kwargs };
     }
+    if (!fields.additional_kwargs) {
+      fields.additional_kwargs = {};
+    }
     super(fields);
     this.name = fields.name;
     this.content = fields.content;
-    this.additional_kwargs = fields.additional_kwargs || {};
+    this.additional_kwargs = fields.additional_kwargs;
   }
 
   toDict(): StoredMessage {
