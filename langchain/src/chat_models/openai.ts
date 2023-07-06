@@ -35,6 +35,7 @@ import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
 import { promptLayerTrackRequest } from "../util/prompt-layer.js";
 import { StructuredTool } from "../tools/base.js";
 import { formatToOpenAIFunction } from "../tools/convert_to_openai.js";
+import { getEndpoint, OpenAIEndpointConfig } from "../util/azure.js";
 
 export { OpenAICallOptions, OpenAIChatInput, AzureOpenAIInput };
 
@@ -100,6 +101,7 @@ export interface ChatOpenAICallOptions extends OpenAICallOptions {
  * `AZURE_OPENAI_API_INSTANCE_NAME`,
  * `AZURE_OPENAI_API_DEPLOYMENT_NAME`
  * and `AZURE_OPENAI_API_VERSION` environment variable set.
+ * `AZURE_OPENAI_BASE_PATH` is optional and will override `AZURE_OPENAI_API_INSTANCE_NAME` if you need to use a custom endpoint.
  *
  * @remarks
  * Any parameters that are valid to be passed to {@link
@@ -115,10 +117,9 @@ export class ChatOpenAI
 
   get callKeys(): (keyof ChatOpenAICallOptions)[] {
     return [
-      "stop",
-      "signal",
-      "timeout",
+      ...(super.callKeys as (keyof ChatOpenAICallOptions)[]),
       "options",
+      "function_call",
       "functions",
       "tools",
       "promptIndex",
@@ -179,6 +180,8 @@ export class ChatOpenAI
 
   azureOpenAIApiDeploymentName?: string;
 
+  azureOpenAIBasePath?: string;
+
   private client: OpenAIApi;
 
   private clientConfig: ConfigurationParameters;
@@ -216,6 +219,10 @@ export class ChatOpenAI
     this.azureOpenAIApiVersion =
       fields?.azureOpenAIApiVersion ??
       getEnvironmentVariable("AZURE_OPENAI_API_VERSION");
+
+    this.azureOpenAIBasePath =
+      fields?.azureOpenAIBasePath ??
+      getEnvironmentVariable("AZURE_OPENAI_BASE_PATH");
 
     this.modelName = fields?.modelName ?? this.modelName;
     this.modelKwargs = fields?.modelKwargs ?? {};
@@ -536,9 +543,16 @@ export class ChatOpenAI
     options?: StreamingAxiosConfiguration
   ) {
     if (!this.client) {
-      const endpoint = this.azureOpenAIApiKey
-        ? `https://${this.azureOpenAIApiInstanceName}.openai.azure.com/openai/deployments/${this.azureOpenAIApiDeploymentName}`
-        : this.clientConfig.basePath;
+      const openAIEndpointConfig: OpenAIEndpointConfig = {
+        azureOpenAIApiDeploymentName: this.azureOpenAIApiDeploymentName,
+        azureOpenAIApiInstanceName: this.azureOpenAIApiInstanceName,
+        azureOpenAIApiKey: this.azureOpenAIApiKey,
+        azureOpenAIBasePath: this.azureOpenAIBasePath,
+        basePath: this.clientConfig.basePath,
+      };
+
+      const endpoint = getEndpoint(openAIEndpointConfig);
+
       const clientConfig = new Configuration({
         ...this.clientConfig,
         basePath: endpoint,
@@ -547,8 +561,10 @@ export class ChatOpenAI
           ...this.clientConfig.baseOptions,
         },
       });
+
       this.client = new OpenAIApi(clientConfig);
     }
+
     const axiosOptions = {
       adapter: isNode() ? undefined : fetchAdapter,
       ...this.clientConfig.baseOptions,

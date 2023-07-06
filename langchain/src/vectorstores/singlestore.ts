@@ -4,18 +4,78 @@ import type {
   OkPacket,
   ResultSetHeader,
   FieldPacket,
+  PoolOptions,
 } from "mysql2/promise";
 import { format } from "mysql2";
+import { createPool } from "mysql2/promise";
 import { VectorStore } from "./base.js";
 import { Embeddings } from "../embeddings/base.js";
 import { Document } from "../document.js";
 
-export interface SingleStoreVectorStoreConfig {
-  connectionPool: Pool;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type Metadata = Record<string, any>;
+
+export type DistanceMetrics = "DOT_PRODUCT" | "EUCLIDEAN_DISTANCE";
+
+const OrderingDirective: Record<DistanceMetrics, string> = {
+  DOT_PRODUCT: "DESC",
+  EUCLIDEAN_DISTANCE: "",
+};
+
+export interface ConnectionOptions extends PoolOptions {}
+
+type ConnectionWithUri = {
+  connectionOptions?: never;
+  connectionURI: string;
+};
+
+type ConnectionWithOptions = {
+  connectionURI?: never;
+  connectionOptions: ConnectionOptions;
+};
+
+type ConnectionConfig = ConnectionWithUri | ConnectionWithOptions;
+
+export type SingleStoreVectorStoreConfig = ConnectionConfig & {
   tableName?: string;
   contentColumnName?: string;
   vectorColumnName?: string;
   metadataColumnName?: string;
+  distanceMetric?: DistanceMetrics;
+};
+
+function withConnectAttributes(
+  config: SingleStoreVectorStoreConfig
+): ConnectionOptions {
+  let newOptions: ConnectionOptions = {};
+  if (config.connectionURI) {
+    newOptions = {
+      uri: config.connectionURI,
+    };
+  } else if (config.connectionOptions) {
+    newOptions = {
+      ...config.connectionOptions,
+    };
+  }
+  const result: ConnectionOptions = {
+    ...newOptions,
+    connectAttributes: {
+      ...newOptions.connectAttributes,
+    },
+  };
+
+  if (!result.connectAttributes) {
+    result.connectAttributes = {};
+  }
+
+  result.connectAttributes = {
+    ...result.connectAttributes,
+    _connector_name: "langchain js sdk",
+    _connector_version: "1.0.0",
+    _driver_name: "Node-MySQL-2",
+  };
+
+  return result;
 }
 
 export class SingleStoreVectorStore extends VectorStore {
@@ -29,13 +89,16 @@ export class SingleStoreVectorStore extends VectorStore {
 
   metadataColumnName: string;
 
+  distanceMetric: DistanceMetrics;
+
   constructor(embeddings: Embeddings, config: SingleStoreVectorStoreConfig) {
     super(embeddings, config);
-    this.connectionPool = config.connectionPool;
+    this.connectionPool = createPool(withConnectAttributes(config));
     this.tableName = config.tableName ?? "embeddings";
     this.contentColumnName = config.contentColumnName ?? "content";
     this.vectorColumnName = config.vectorColumnName ?? "vector";
     this.metadataColumnName = config.metadataColumnName ?? "metadata";
+    this.distanceMetric = config.distanceMetric ?? "DOT_PRODUCT";
   }
 
   async createTableIfNotExists(): Promise<void> {
@@ -44,6 +107,10 @@ export class SingleStoreVectorStore extends VectorStore {
       ${this.contentColumnName} TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci,
       ${this.vectorColumnName} BLOB,
       ${this.metadataColumnName} JSON);`);
+  }
+
+  async end(): Promise<void> {
+    return this.connectionPool.end();
   }
 
   async addDocuments(documents: Document[]): Promise<void> {
@@ -79,9 +146,40 @@ export class SingleStoreVectorStore extends VectorStore {
   async similaritySearchVectorWithScore(
     query: number[],
     k: number,
-    _filter?: undefined
+    filter?: Metadata
   ): Promise<[Document, number][]> {
-    // use vector DOT_PRODUCT as a distance function
+    // build the where clause from filter
+    const whereArgs: string[] = [];
+    const buildWhereClause = (record: Metadata, argList: string[]): string => {
+      const whereTokens: string[] = [];
+      for (const key in record)
+        if (record[key] !== undefined) {
+          if (
+            typeof record[key] === "object" &&
+            record[key] != null &&
+            !Array.isArray(record[key])
+          ) {
+            whereTokens.push(
+              buildWhereClause(record[key], argList.concat([key]))
+            );
+          } else {
+            whereTokens.push(
+              `JSON_EXTRACT_JSON(${this.metadataColumnName}, `.concat(
+                Array.from({ length: argList.length + 1 }, () => "?").join(
+                  ", "
+                ),
+                ") = ?"
+              )
+            );
+            whereArgs.push(...argList, key, JSON.stringify(record[key]));
+          }
+        }
+      return whereTokens.join(" AND ");
+    };
+    const whereClause = filter
+      ? "WHERE ".concat(buildWhereClause(filter, []))
+      : "";
+
     const [rows]: [
       (
         | RowDataPacket[]
@@ -95,9 +193,13 @@ export class SingleStoreVectorStore extends VectorStore {
       format(
         `SELECT ${this.contentColumnName},
       ${this.metadataColumnName},
-      DOT_PRODUCT(${this.vectorColumnName}, JSON_ARRAY_PACK('[?]')) as __score FROM ${this.tableName}
-      ORDER BY __score DESC LIMIT ?;`,
-        [query, k]
+      ${this.distanceMetric}(${
+          this.vectorColumnName
+        }, JSON_ARRAY_PACK('[?]')) as __score FROM ${
+          this.tableName
+        } ${whereClause}
+      ORDER BY __score ${OrderingDirective[this.distanceMetric]} LIMIT ?;`,
+        [query, ...whereArgs, k]
       )
     );
     const result: [Document, number][] = [];
