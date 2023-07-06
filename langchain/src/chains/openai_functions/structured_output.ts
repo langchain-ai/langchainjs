@@ -1,6 +1,8 @@
 import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
+import { JsonSchema7Type } from "zod-to-json-schema/src/parseDef.js";
 
+import { Validator } from "../../util/@cfworker/json-schema/index.js";
 import { LLMChain, LLMChainInput } from "../llm_chain.js";
 import { ChatOpenAI } from "../../chat_models/openai.js";
 import { BasePromptTemplate } from "../../prompts/index.js";
@@ -11,12 +13,14 @@ import {
 import { OutputFunctionsParser } from "../../output_parsers/openai_functions.js";
 import { ChatGeneration } from "../../schema/index.js";
 
-export type FunctionCallStructuredOutputChainInput<T extends z.ZodTypeAny> =
-  Omit<LLMChainInput, "outputParser" | "llm"> & {
-    outputSchema: T;
-    prompt: BasePromptTemplate;
-    llm?: ChatOpenAI;
-  };
+export type StructuredOutputChainInput = Omit<
+  LLMChainInput,
+  "outputParser" | "llm"
+> & {
+  outputSchema: JsonSchema7Type;
+  prompt: BasePromptTemplate;
+  llm?: ChatOpenAI;
+};
 
 class FunctionCallStructuredOutputParser<
   T extends z.ZodTypeAny
@@ -25,34 +29,41 @@ class FunctionCallStructuredOutputParser<
 
   protected functionOutputParser = new OutputFunctionsParser();
 
-  constructor(public schema: T) {
+  protected jsonSchemaValidator: Validator;
+
+  constructor(public schema: JsonSchema7Type) {
     super();
+    this.jsonSchemaValidator = new Validator(schema, "7");
   }
 
   async parseResult(generations: ChatGeneration[]) {
-    const initialParseResult = await this.functionOutputParser.parseResult(
+    const initialResult = await this.functionOutputParser.parseResult(
       generations
     );
-    try {
-      return this.schema.parseAsync(JSON.parse(initialParseResult));
-    } catch (e) {
+    const parsedResult = JSON.parse(initialResult);
+    const result = this.jsonSchemaValidator.validate(parsedResult);
+    if (result.valid) {
+      return parsedResult;
+    } else {
       throw new OutputParserException(
-        `Failed to parse. Text: "${initialParseResult}". Error: ${e}`,
-        initialParseResult
+        `Failed to parse. Text: "${initialResult}". Error: ${JSON.stringify(
+          result.errors
+        )}`,
+        initialResult
       );
     }
   }
 }
 
 /**
- * Create a chain for querying an API from a OpenAPI spec.
- * @param spec OpenAPISpec or url/file/text string corresponding to one.
- * @param options Custom options passed into the chain
+ * Create a chain that returns output matching a JSON Schema.
+ * @param input Object that includes all LLMChainInput fields except "outputParser"
+ * as well as an additional required "outputSchema" JSON Schema object.
  * @returns OpenAPIChain
  */
-export function createStructuredOutputChain<T extends z.ZodTypeAny>(
-  input: FunctionCallStructuredOutputChainInput<T>
-) {
+export function createStructuredOutputChain<
+  T extends z.ZodTypeAny = z.ZodTypeAny
+>(input: StructuredOutputChainInput) {
   const {
     outputSchema,
     llm = new ChatOpenAI({ modelName: "gpt-3.5-turbo-0613", temperature: 0 }),
@@ -60,7 +71,7 @@ export function createStructuredOutputChain<T extends z.ZodTypeAny>(
     llmKwargs = {},
     ...rest
   } = input;
-  const functionName = "__lc_output__";
+  const functionName = "output_formatter";
   return new LLMChain({
     llm,
     llmKwargs: {
@@ -69,7 +80,7 @@ export function createStructuredOutputChain<T extends z.ZodTypeAny>(
         {
           name: functionName,
           description: `Output formatter. Should always be used to format your response to the user.`,
-          parameters: zodToJsonSchema(outputSchema),
+          parameters: outputSchema,
         },
       ],
       function_call: {
@@ -77,7 +88,17 @@ export function createStructuredOutputChain<T extends z.ZodTypeAny>(
       },
     },
     outputKey,
-    outputParser: new FunctionCallStructuredOutputParser(outputSchema),
+    outputParser: new FunctionCallStructuredOutputParser<T>(outputSchema),
     ...rest,
+  });
+}
+
+export function createStructuredOutputChainFromZod<T extends z.ZodTypeAny>(
+  zodSchema: T,
+  input: Omit<StructuredOutputChainInput, "outputSchema">
+) {
+  return createStructuredOutputChain<T>({
+    ...input,
+    outputSchema: zodToJsonSchema(zodSchema),
   });
 }

@@ -91,3 +91,8 @@ export {
   OpenAPIChainOptions,
   createOpenAPIChain,
 } from "./openai_functions/openapi.js";
+export {
+  StructuredOutputChainInput,
+  createStructuredOutputChain,
+  createStructuredOutputChainFromZod,
+} from "./openai_functions/structured_output.js";

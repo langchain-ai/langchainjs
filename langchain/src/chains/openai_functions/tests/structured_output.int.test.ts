@@ -1,7 +1,7 @@
 import { test, expect } from "@jest/globals";
 import { z } from "zod";
 
-import { createStructuredOutputChain } from "../structured_output.js";
+import { createStructuredOutputChainFromZod } from "../structured_output.js";
 import { ChatOpenAI } from "../../../chat_models/openai.js";
 import {
   ChatPromptTemplate,
@@ -10,21 +10,8 @@ import {
 } from "../../../prompts/chat.js";
 
 test("structured output chain", async () => {
-  const chain = createStructuredOutputChain({
-    prompt: new ChatPromptTemplate({
-      promptMessages: [
-        SystemMessagePromptTemplate.fromTemplate(
-          "Generate details of a hypothetical person."
-        ),
-        HumanMessagePromptTemplate.fromTemplate(
-          "Person description: {inputText}"
-        ),
-      ],
-      inputVariables: ["inputText"],
-    }),
-    llm: new ChatOpenAI({ modelName: "gpt-3.5-turbo-0613", temperature: 0 }),
-    outputKey: "person",
-    outputSchema: z.object({
+  const chain = createStructuredOutputChainFromZod(
+    z.object({
       name: z.string().describe("Human name"),
       surname: z.string().describe("Human surname"),
       age: z.number().describe("Human age"),
@@ -36,7 +23,22 @@ test("structured output chain", async () => {
         .array(z.string())
         .describe("json array of strings human interests"),
     }),
-  });
+    {
+      prompt: new ChatPromptTemplate({
+        promptMessages: [
+          SystemMessagePromptTemplate.fromTemplate(
+            "Generate details of a hypothetical person."
+          ),
+          HumanMessagePromptTemplate.fromTemplate(
+            "Person description: {inputText}"
+          ),
+        ],
+        inputVariables: ["inputText"],
+      }),
+      llm: new ChatOpenAI({ modelName: "gpt-3.5-turbo-0613", temperature: 0 }),
+      outputKey: "person",
+    }
+  );
 
   const response = await chain.call({ inputText: "A man, living in Poland." });
   console.log("response", response);
