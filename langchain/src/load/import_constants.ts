@@ -2,14 +2,17 @@
 
 export const optionalImportEntrypoints = [
   "langchain/agents/load",
-  "langchain/agents/agent_toolkits/aws_sfn",
+  "langchain/agents/toolkits/aws_sfn",
+  "langchain/agents/toolkits/sql",
   "langchain/tools/aws_lambda",
   "langchain/tools/aws_sfn",
   "langchain/tools/calculator",
+  "langchain/tools/sql",
   "langchain/tools/webbrowser",
   "langchain/chains/load",
   "langchain/chains/query_constructor",
   "langchain/chains/query_constructor/ir",
+  "langchain/chains/sql_db",
   "langchain/embeddings/cohere",
   "langchain/embeddings/tensorflow",
   "langchain/embeddings/hf",

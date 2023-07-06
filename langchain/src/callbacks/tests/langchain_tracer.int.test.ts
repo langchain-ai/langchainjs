@@ -7,7 +7,7 @@ import { OpenAI } from "../../llms/openai.js";
 import { SerpAPI } from "../../tools/serpapi.js";
 import { Calculator } from "../../tools/calculator.js";
 import { initializeAgentExecutorWithOptions } from "../../agents/initialize.js";
-import { HumanChatMessage } from "../../schema/index.js";
+import { HumanMessage } from "../../schema/index.js";
 import { ChatOpenAI } from "../../chat_models/openai.js";
 import { Serialized } from "../../load/serializable.js";
 import {
@@ -38,7 +38,7 @@ test("Test LangChain V2 tracer", async () => {
   await tracer.handleLLMEnd({ generations: [[]] }, llmRunId);
   await tracer.handleChatModelStart(
     serialized,
-    [[new HumanChatMessage("I'm a human.")]],
+    [[new HumanMessage("I'm a human.")]],
     chatRunId
   );
   await tracer.handleLLMEnd({ generations: [[]] }, chatRunId);
@@ -107,9 +107,9 @@ test("Test Traced Agent with concurrency", async () => {
   console.log(`Executing with input "${input}"...`);
 
   const [resultA, resultB, resultC] = await Promise.all([
-    executor.call({ input }),
-    executor.call({ input }),
-    executor.call({ input }),
+    executor.call({ input }, { tags: ["test"], metadata: { a: "b" } }),
+    executor.call({ input }, { tags: ["test"], metadata: { a: "b" } }),
+    executor.call({ input }, { tags: ["test"], metadata: { a: "b" } }),
   ]);
 
   console.log(`Got output ${resultA.output}`);
@@ -119,7 +119,7 @@ test("Test Traced Agent with concurrency", async () => {
 
 test("Test Traced Agent with chat model", async () => {
   process.env.LANGCHAIN_TRACING_V2 = "true";
-  const model = new ChatOpenAI({ temperature: 0 });
+  const model = new ChatOpenAI({ temperature: 0, metadata: { e: "f" } });
   const tools = [
     new SerpAPI(process.env.SERPAPI_API_KEY, {
       location: "Austin,Texas,United States",
@@ -132,6 +132,7 @@ test("Test Traced Agent with chat model", async () => {
   const executor = await initializeAgentExecutorWithOptions(tools, model, {
     agentType: "chat-zero-shot-react-description",
     verbose: true,
+    metadata: { c: "d" },
   });
 
   const input = `What is 24,678,987 raised to the 0.23 power?`;
@@ -139,9 +140,9 @@ test("Test Traced Agent with chat model", async () => {
   console.log(`Executing with input "${input}"...`);
 
   const [resultA, resultB, resultC] = await Promise.all([
-    executor.call({ input }),
-    executor.call({ input }),
-    executor.call({ input }),
+    executor.call({ input }, { tags: ["test"], metadata: { a: "b" } }),
+    executor.call({ input }, { tags: ["test"], metadata: { a: "b" } }),
+    executor.call({ input }, { tags: ["test"], metadata: { a: "b" } }),
   ]);
 
   console.log(`Got output ${resultA.output}`);
