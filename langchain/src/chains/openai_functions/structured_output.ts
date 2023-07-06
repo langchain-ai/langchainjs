@@ -22,8 +22,8 @@ export type StructuredOutputChainInput = Omit<
   llm?: ChatOpenAI;
 };
 
-class FunctionCallStructuredOutputParser<
-  T extends z.ZodTypeAny
+export class FunctionCallStructuredOutputParser<
+  T extends z.AnyZodObject
 > extends BaseLLMOutputParser<z.infer<T>> {
   lc_namespace = ["langchain", "chains", "openai_functions"];
 
@@ -40,7 +40,12 @@ class FunctionCallStructuredOutputParser<
     const initialResult = await this.functionOutputParser.parseResult(
       generations
     );
-    const parsedResult = JSON.parse(initialResult);
+    const parsedResult = JSON.parse(initialResult, (_, value) => {
+      if (value === null) {
+        return undefined;
+      }
+      return value;
+    });
     const result = this.jsonSchemaValidator.validate(parsedResult);
     if (result.valid) {
       return parsedResult;
@@ -62,7 +67,7 @@ class FunctionCallStructuredOutputParser<
  * @returns OpenAPIChain
  */
 export function createStructuredOutputChain<
-  T extends z.ZodTypeAny = z.ZodTypeAny
+  T extends z.AnyZodObject = z.AnyZodObject
 >(input: StructuredOutputChainInput) {
   const {
     outputSchema,
@@ -93,7 +98,7 @@ export function createStructuredOutputChain<
   });
 }
 
-export function createStructuredOutputChainFromZod<T extends z.ZodTypeAny>(
+export function createStructuredOutputChainFromZod<T extends z.AnyZodObject>(
   zodSchema: T,
   input: Omit<StructuredOutputChainInput, "outputSchema">
 ) {

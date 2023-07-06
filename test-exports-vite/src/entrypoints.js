@@ -4,6 +4,7 @@ export * from "langchain/agents";
 export * from "langchain/base_language";
 export * from "langchain/tools";
 export * from "langchain/chains";
+export * from "langchain/chains/openai_functions";
 export * from "langchain/embeddings/base";
 export * from "langchain/embeddings/fake";
 export * from "langchain/embeddings/openai";

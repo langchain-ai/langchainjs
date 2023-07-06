@@ -4,6 +4,7 @@ const agents = require("langchain/agents");
 const base_language = require("langchain/base_language");
 const tools = require("langchain/tools");
 const chains = require("langchain/chains");
+const chains_openai_functions = require("langchain/chains/openai_functions");
 const embeddings_base = require("langchain/embeddings/base");
 const embeddings_fake = require("langchain/embeddings/fake");
 const embeddings_openai = require("langchain/embeddings/openai");
