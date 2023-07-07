@@ -4,6 +4,7 @@ import * as agents from "langchain/agents";
 import * as base_language from "langchain/base_language";
 import * as tools from "langchain/tools";
 import * as chains from "langchain/chains";
+import * as chains_openai_functions from "langchain/chains/openai_functions";
 import * as embeddings_base from "langchain/embeddings/base";
 import * as embeddings_fake from "langchain/embeddings/fake";
 import * as embeddings_openai from "langchain/embeddings/openai";

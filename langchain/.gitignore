@@ -43,6 +43,9 @@ chains.d.ts
 chains/load.cjs
 chains/load.js
 chains/load.d.ts
+chains/openai_functions.cjs
+chains/openai_functions.js
+chains/openai_functions.d.ts
 chains/query_constructor.cjs
 chains/query_constructor.js
 chains/query_constructor.d.ts

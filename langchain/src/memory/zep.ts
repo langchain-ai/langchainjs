@@ -2,6 +2,7 @@ import { Memory, Message, NotFoundError, ZepClient } from "@getzep/zep-js";
 import {
   getBufferString,
   getInputValue,
+  getOutputValue,
   InputValues,
   MemoryVariables,
   OutputValues,
@@ -122,7 +123,7 @@ export class ZepMemory extends BaseChatMemory implements ZepMemoryInput {
     outputValues: OutputValues
   ): Promise<void> {
     const input = getInputValue(inputValues, this.inputKey);
-    const output = getInputValue(outputValues, this.outputKey);
+    const output = getOutputValue(outputValues, this.outputKey);
 
     // Create new Memory and Message instances
     const memory = new Memory({
