@@ -1,5 +1,5 @@
 import { ChatBaiduWenxin } from "langchain/chat_models/baiduwenxin";
-import { HumanChatMessage } from "langchain/schema";
+import { HumanMessage } from "langchain/schema";
 
 // Default model is ERNIE-Bot-turbo
 const ernieTurbo = new ChatBaiduWenxin({
@@ -15,7 +15,7 @@ const ernie = new ChatBaiduWenxin({
   baiduSecretKey: "YOUR-SECRET-KEY", // In Node.js defaults to process.env.BAIDU_SECRET_KEY
 });
 
-const messages = [new HumanChatMessage("Hello")];
+const messages = [new HumanMessage("Hello")];
 
 let res = await ernieTurbo.call(messages);
 /*
