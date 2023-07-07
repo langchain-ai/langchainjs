@@ -140,3 +140,18 @@ test("OpenAPI chain with yml spec from a URL requiring a POST request", async ()
   const result = await chain.run(`How would you say no thanks in Russian?`);
   console.log(result);
 });
+
+test("OpenAPI chain with a longer spec and tricky query required params", async () => {
+  const chain = await createOpenAPIChain(
+    "https://scholar-ai.net/openapi.yaml",
+    {
+      params: {
+        sort: "cited_by_count",
+      },
+    }
+  );
+  const result = await chain.run(
+    "Can you find and explain some articles about the intersection of AI and VR?"
+  );
+  console.log(result);
+});

@@ -27,6 +27,7 @@ const entrypoints = {
   // chains
   chains: "chains/index",
   "chains/load": "chains/load",
+  "chains/openai_functions": "chains/openai_functions/index",
   "chains/query_constructor": "chains/query_constructor/index",
   "chains/query_constructor/ir": "chains/query_constructor/ir",
   "chains/sql_db": "chains/sql_db/index",
