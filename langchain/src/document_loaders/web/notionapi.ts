@@ -4,19 +4,22 @@ import {
   isFullPage,
   iteratePaginatedAPI,
 } from "@notionhq/client";
-import {
-  BlockObjectResponse,
-  PageObjectResponse,
-} from "@notionhq/client/build/src/api-endpoints.js";
 import { NotionToMarkdown } from "notion-to-md";
 import { getBlockChildren } from "notion-to-md/build/utils/notion.js";
-
-import {
+import type {
   ListBlockChildrenResponseResults,
   MdBlock,
-} from "notion-to-md/build/types/index.js";
+} from "notion-to-md/build/types";
+
 import { BaseDocumentLoader } from "../base.js";
 import { Document } from "../../document.js";
+
+type GuardType<T> = T extends (x: any, ...rest: any) => x is infer U
+  ? U
+  : never;
+
+type BlockObjectResponse = GuardType<typeof isFullBlock>;
+type PageObjectResponse = GuardType<typeof isFullPage>;
 
 export type NotionAPIType = "database" | "page";
 
