@@ -134,7 +134,7 @@ export class NotionAPILoader extends BaseDocumentLoader {
     };
   }
 
-  private async loadBlocks(
+  private async loadBlocksAndDocs(
     blocksResponse: ListBlockChildrenResponseResults
   ): Promise<{ mdBlocks: MdBlock[]; childDocuments: Document[] }> {
     const blocks = blocksResponse.filter(isFullBlock);
@@ -214,7 +214,9 @@ export class NotionAPILoader extends BaseDocumentLoader {
 
     if (!isFullPage(pageDetails)) return [];
 
-    const { mdBlocks, childDocuments } = await this.loadBlocks(pageBlocks);
+    const { mdBlocks, childDocuments } = await this.loadBlocksAndDocs(
+      pageBlocks
+    );
 
     const mdStringObject = this.n2mClient.toMarkdownString(mdBlocks);
 
