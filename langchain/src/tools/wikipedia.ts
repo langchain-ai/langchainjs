@@ -13,6 +13,12 @@ interface WikiResponse {
   };
 }
 
+export interface WikipediaSearchParams {
+  lang?: string;
+  top_k_results?: number;
+  doc_content_chars_max?: number;
+}
+
 export class WikipediaAPIWrapper extends Tool {
   name = "wikipedia-api-wrapper";
 
@@ -26,12 +32,12 @@ export class WikipediaAPIWrapper extends Tool {
 
   apiUrl: string;
 
-  constructor(lang = "en", top_k_results = 3, doc_content_chars_max = 4000) {
+  constructor(lang = "en", params: WikipediaSearchParams = {}) {
     super();
-    this.lang = lang;
-    this.top_k_results = top_k_results;
-    this.doc_content_chars_max = doc_content_chars_max;
-    this.apiUrl = `https://${lang}.wikipedia.org/w/api.php`;
+    this.lang = params.lang || lang;
+    this.top_k_results = params.top_k_results || 3;
+    this.doc_content_chars_max = params.doc_content_chars_max || 4000;
+    this.apiUrl = `https://${this.lang}.wikipedia.org/w/api.php`;
   }
 
   async _call(query: string): Promise<string> {
