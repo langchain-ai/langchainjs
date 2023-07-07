@@ -23,7 +23,7 @@ This section covers how to get started with chat models. The interface is based 
 
 ```typescript
 import { ChatOpenAI } from "langchain/chat_models/openai";
-import { HumanMessage, SystemMessage } from "langchain/schema";
+import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
 
 const chat = new ChatOpenAI({ temperature: 0 });
 ```
@@ -34,11 +34,11 @@ Here we create a chat model using the API key stored in the environment variable
 
 ### Chat Models: Message in, Message out
 
-You can get chat completions by passing one or more messages to the chat model. The response will also be a message. The types of messages currently supported in LangChain are `AIMessage`, `HumanMessage`, `SystemMessage`, and a generic `ChatMessage` -- ChatMessage takes in an arbitrary role parameter, which we won't be using here. Most of the time, you'll just be dealing with `HumanMessage`, `AIMessage`, and `SystemMessage`.
+You can get chat completions by passing one or more messages to the chat model. The response will also be a message. The types of messages currently supported in LangChain are `AIMessage`, `HumanChatMessage`, `SystemChatMessage`, and a generic `ChatMessage` -- ChatMessage takes in an arbitrary role parameter, which we won't be using here. Most of the time, you'll just be dealing with `HumanChatMessage`, `AIMessage`, and `SystemChatMessage`.
 
 ```typescript
 const response = await chat.call([
-  new HumanMessage(
+  new HumanChatMessage(
     "Translate this sentence from English to French. I love programming."
   ),
 ]);
@@ -58,10 +58,10 @@ OpenAI's chat-based models (currently `gpt-3.5-turbo` and `gpt-4` and in case of
 
 ```typescript
 const responseB = await chat.call([
-  new SystemMessage(
+  new SystemChatMessage(
     "You are a helpful assistant that translates English to French."
   ),
-  new HumanMessage("Translate: I love programming."),
+  new HumanChatMessage("Translate: I love programming."),
 ]);
 
 console.log(responseB);
@@ -78,18 +78,18 @@ You can go one step further and generate completions for multiple sets of messag
 ```typescript
 const responseC = await chat.generate([
   [
-    new SystemMessage(
+    new SystemChatMessage(
       "You are a helpful assistant that translates English to French."
     ),
-    new HumanMessage(
+    new HumanChatMessage(
       "Translate this sentence from English to French. I love programming."
     ),
   ],
   [
-    new SystemMessage(
+    new SystemChatMessage(
       "You are a helpful assistant that translates English to French."
     ),
-    new HumanMessage(
+    new HumanChatMessage(
       "Translate this sentence from English to French. I love artificial intelligence."
     ),
   ],
@@ -125,8 +125,8 @@ Continuing with the previous example:
 
 ```typescript
 import {
-  SystemMessagePromptTemplate,
-  HumanMessagePromptTemplate,
+  SystemChatMessagePromptTemplate,
+  HumanChatMessagePromptTemplate,
   ChatPromptTemplate,
 } from "langchain/prompts";
 ```
@@ -135,10 +135,10 @@ First we create a reusable template:
 
 ```typescript
 const translationPrompt = ChatPromptTemplate.fromPromptMessages([
-  SystemMessagePromptTemplate.fromTemplate(
+  SystemChatMessagePromptTemplate.fromTemplate(
     "You are a helpful assistant that translates {input_language} to {output_language}."
   ),
-  HumanMessagePromptTemplate.fromTemplate("{text}"),
+  HumanChatMessagePromptTemplate.fromTemplate("{text}"),
 ]);
 ```
 
@@ -283,11 +283,11 @@ You can also use the chain to store state. This is useful for eg. chatbots, wher
 
 ```typescript
 const chatPrompt = ChatPromptTemplate.fromPromptMessages([
-  SystemMessagePromptTemplate.fromTemplate(
+  SystemChatMessagePromptTemplate.fromTemplate(
     "The following is a friendly conversation between a human and an AI. The AI is talkative and provides lots of specific details from its context. If the AI does not know the answer to a question, it truthfully says it does not know."
   ),
   new MessagesPlaceholder("history"),
-  HumanMessagePromptTemplate.fromTemplate("{input}"),
+  HumanChatMessagePromptTemplate.fromTemplate("{input}"),
 ]);
 
 const chain = new ConversationChain({
