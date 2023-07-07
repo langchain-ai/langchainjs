@@ -5,6 +5,7 @@ export * as agents from "../agents/index.js";
 export * as base_language from "../base_language/index.js";
 export * as tools from "../tools/index.js";
 export * as chains from "../chains/index.js";
+export * as chains__openai_functions from "../chains/openai_functions/index.js";
 export * as embeddings__base from "../embeddings/base.js";
 export * as embeddings__fake from "../embeddings/fake.js";
 export * as embeddings__openai from "../embeddings/openai.js";

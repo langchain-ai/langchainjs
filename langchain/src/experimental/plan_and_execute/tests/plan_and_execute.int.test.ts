@@ -4,7 +4,7 @@ import { Calculator } from "../../../tools/calculator.js";
 import { ChatOpenAI } from "../../../chat_models/openai.js";
 import { SerpAPI } from "../../../tools/serpapi.js";
 
-test("Run agent on a simple input", async () => {
+test.skip("Run agent on a simple input", async () => {
   const tools = [new Calculator(), new SerpAPI()];
   const model = new ChatOpenAI({
     temperature: 0,

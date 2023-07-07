@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.103",
+  "version": "0.0.104",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -55,6 +55,9 @@
     "chains/load.cjs",
     "chains/load.js",
     "chains/load.d.ts",
+    "chains/openai_functions.cjs",
+    "chains/openai_functions.js",
+    "chains/openai_functions.d.ts",
     "chains/query_constructor.cjs",
     "chains/query_constructor.js",
     "chains/query_constructor.d.ts",
@@ -893,6 +896,11 @@
       "types": "./chains/load.d.ts",
       "import": "./chains/load.js",
       "require": "./chains/load.cjs"
+    },
+    "./chains/openai_functions": {
+      "types": "./chains/openai_functions.d.ts",
+      "import": "./chains/openai_functions.js",
+      "require": "./chains/openai_functions.cjs"
     },
     "./chains/query_constructor": {
       "types": "./chains/query_constructor.d.ts",

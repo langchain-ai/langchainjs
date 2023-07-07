@@ -1,5 +1,6 @@
 import { ChatCompletionFunctions } from "openai";
 import { JsonSchema7ObjectType } from "zod-to-json-schema/src/parsers/object.js";
+import { JsonSchema7Type } from "zod-to-json-schema/src/parseDef.js";
 import type { OpenAPIV3_1 } from "openapi-types";
 
 import { OpenAPISpec } from "../../util/openapi.js";
@@ -24,7 +25,7 @@ type OpenAPIExecutionMethod = (
     headers?: Record<string, string>;
     params?: Record<string, string>;
   }
-) => Promise<Response>;
+) => Promise<string>;
 
 function formatURL(url: string, pathParams: Record<string, string>): string {
   const expectedPathParamNames = [...url.matchAll(/{(.*?)}/g)].map(
@@ -132,6 +133,11 @@ function convertOpenAPISchemaToJSONSchema(
   schema: OpenAPIV3_1.SchemaObject,
   spec: OpenAPISpec
 ) {
+  if (schema.type !== "object" && schema.type !== "array") {
+    return {
+      type: schema.type ?? "string",
+    } as JsonSchema7Type;
+  }
   return Object.keys(schema.properties ?? {}).reduce(
     (jsonSchema: JsonSchema7ObjectType, propertyName) => {
       if (!schema.properties) {
@@ -228,7 +234,7 @@ function convertOpenAPISpecToOpenAIFunctions(spec: OpenAPISpec): {
             requestBodySchemas[mediaType] = convertOpenAPISchemaToJSONSchema(
               schema,
               spec
-            );
+            ) as JsonSchema7ObjectType;
           }
         }
         const mediaTypes = Object.keys(requestBodySchemas);
@@ -278,8 +284,24 @@ function convertOpenAPISpecToOpenAIFunctions(spec: OpenAPISpec): {
         ...rest
       } = options ?? {};
       const { method, url } = nameToCallMap[name];
+      const requestParams = requestArgs.params ?? {};
+      const nonEmptyParams = Object.keys(requestParams).reduce(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (filteredArgs: Record<string, any>, argName) => {
+          if (
+            requestParams[argName] !== "" &&
+            requestParams[argName] !== null &&
+            requestParams[argName] !== undefined
+          ) {
+            // eslint-disable-next-line no-param-reassign
+            filteredArgs[argName] = requestParams[argName];
+          }
+          return filteredArgs;
+        },
+        {}
+      );
       const queryString = new URLSearchParams({
-        ...requestArgs.params,
+        ...nonEmptyParams,
         ...customParams,
       }).toString();
       const pathParams = requestArgs.path_params;
@@ -300,7 +322,7 @@ function convertOpenAPISpecToOpenAIFunctions(spec: OpenAPISpec): {
         }
         headers["content-type"] = contentType;
       }
-      return fetch(formattedUrl, {
+      const response = await fetch(formattedUrl, {
         ...requestArgs,
         method,
         headers: {
@@ -311,6 +333,15 @@ function convertOpenAPISpecToOpenAIFunctions(spec: OpenAPISpec): {
         body,
         ...rest,
       });
+      let output;
+      if (response.status < 200 || response.status > 299) {
+        output = `${response.status}: ${
+          response.statusText
+        } for ${name} called with ${JSON.stringify(queryString)}`;
+      } else {
+        output = await response.text();
+      }
+      return output;
     },
   };
 }
@@ -319,7 +350,7 @@ type SimpleRequestChainExecutionMethod = (
   name: string,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   requestArgs: Record<string, any>
-) => Promise<Response>;
+) => Promise<string>;
 
 class SimpleRequestChain extends BaseChain {
   private requestMethod: SimpleRequestChainExecutionMethod;
@@ -354,16 +385,7 @@ class SimpleRequestChain extends BaseChain {
     const methodName = inputKeyValue.name;
     const args = inputKeyValue.arguments;
     const response = await this.requestMethod(methodName, args);
-    let output;
-    if (response.status < 200 || response.status > 299) {
-      output = `${response.status}: ${
-        response.statusText
-      } for ${methodName} called with ${JSON.stringify(args.params)}`;
-    } else {
-      output = await response.text();
-    }
-
-    return { [this.outputKey]: output };
+    return { [this.outputKey]: response };
   }
 }
 
