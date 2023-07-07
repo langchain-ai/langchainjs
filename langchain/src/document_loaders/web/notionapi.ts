@@ -156,32 +156,30 @@ export class NotionAPILoader extends BaseDocumentLoader {
             .filter(
               (block) => !["child_page", "child_database"].includes(block.type)
             )
-            .map((block) =>
-              (async () => {
-                const mdBlock = await this.loadBlock(block);
-                let childDocuments: Document[] = [];
+            .map(async (block) => {
+              const mdBlock = await this.loadBlock(block);
+              let childDocuments: Document[] = [];
 
-                if (block.has_children) {
-                  const block_id =
-                    block.type === "synced_block" &&
-                    block.synced_block?.synced_from?.block_id
-                      ? block.synced_block.synced_from.block_id
-                      : block.id;
+              if (block.has_children) {
+                const block_id =
+                  block.type === "synced_block" &&
+                  block.synced_block?.synced_from?.block_id
+                    ? block.synced_block.synced_from.block_id
+                    : block.id;
 
-                  const childBlocksDocs = await this.loadBlocks(
-                    await getBlockChildren(this.notionClient, block_id, null)
-                  );
+                const childBlocksDocs = await this.loadBlocksAndDocs(
+                  await getBlockChildren(this.notionClient, block_id, null)
+                );
 
-                  mdBlock.children = childBlocksDocs.mdBlocks;
-                  childDocuments = childBlocksDocs.childDocuments;
-                }
+                mdBlock.children = childBlocksDocs.mdBlocks;
+                childDocuments = childBlocksDocs.childDocuments;
+              }
 
-                return {
-                  mdBlocks: [mdBlock],
-                  childDocuments,
-                };
-              })()
-            )
+              return {
+                mdBlocks: [mdBlock],
+                childDocuments,
+              };
+            })
         ),
       ]);
 
