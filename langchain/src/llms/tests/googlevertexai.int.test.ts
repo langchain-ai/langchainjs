@@ -31,7 +31,7 @@ test("Test Google Vertex Codey gecko model", async () => {
   const model = new GoogleVertexAI({ model: "code-gecko" });
   expect(model.model).toEqual("code-gecko");
   expect(model.temperature).toEqual(0.2);
-  expect(model.maxOutputTokens).toEqual(256);
+  expect(model.maxOutputTokens).toEqual(64);
 
   const res = await model.call("for( let co = 0");
   console.log(res);

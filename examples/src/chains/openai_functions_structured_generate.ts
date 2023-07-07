@@ -39,7 +39,8 @@ const chain = createStructuredOutputChainFromZod(
 );
 
 const response = await chain.call({
-  inputText: "Please don't generate anyone who likes video games.",
+  inputText:
+    "Please generate a diverse group of people, but don't generate anyone who likes video games.",
 });
 
 console.log(JSON.stringify(response, null, 2));
