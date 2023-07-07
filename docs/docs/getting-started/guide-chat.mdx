@@ -23,22 +23,22 @@ This section covers how to get started with chat models. The interface is based 
 
 ```typescript
 import { ChatOpenAI } from "langchain/chat_models/openai";
-import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
+import { HumanMessage, SystemMessage } from "langchain/schema";
 
 const chat = new ChatOpenAI({ temperature: 0 });
 ```
 
 Here we create a chat model using the API key stored in the environment variable `OPENAI_API_KEY` or `AZURE_OPENAI_API_KEY` in case you are using Azure OpenAI. We'll be calling this chat model throughout this section.
 
-> **&#9432;** Note, if you are using Azure OpenAI make sure to also set the environment variables `AZURE_OPENAI_API_INSTANCE_NAME`, `AZURE_OPENAI_API_DEPLOYMENT_NAME` and `AZURE_OPENAI_API_VERSION`.
+> **&#9432;** Note, if you are using Azure OpenAI make sure to also set the environment variables `AZURE_OPENAI_API_INSTANCE_NAME` (or `AZURE_OPENAI_BASE_PATH` if you need to override the full base URL for a custom endpoint), `AZURE_OPENAI_API_DEPLOYMENT_NAME`, and `AZURE_OPENAI_API_VERSION`.
 
 ### Chat Models: Message in, Message out
 
-You can get chat completions by passing one or more messages to the chat model. The response will also be a message. The types of messages currently supported in LangChain are `AIChatMessage`, `HumanChatMessage`, `SystemChatMessage`, and a generic `ChatMessage` -- ChatMessage takes in an arbitrary role parameter, which we won't be using here. Most of the time, you'll just be dealing with `HumanChatMessage`, `AIChatMessage`, and `SystemChatMessage`.
+You can get chat completions by passing one or more messages to the chat model. The response will also be a message. The types of messages currently supported in LangChain are `AIMessage`, `HumanMessage`, `SystemMessage`, and a generic `ChatMessage` -- ChatMessage takes in an arbitrary role parameter, which we won't be using here. Most of the time, you'll just be dealing with `HumanMessage`, `AIMessage`, and `SystemMessage`.
 
 ```typescript
 const response = await chat.call([
-  new HumanChatMessage(
+  new HumanMessage(
     "Translate this sentence from English to French. I love programming."
   ),
 ]);
@@ -47,7 +47,7 @@ console.log(response);
 ```
 
 ```
-AIChatMessage { text: "J'aime programmer." }
+AIMessage { text: "J'aime programmer." }
 ```
 
 #### Multiple Messages
@@ -58,17 +58,17 @@ OpenAI's chat-based models (currently `gpt-3.5-turbo` and `gpt-4` and in case of
 
 ```typescript
 const responseB = await chat.call([
-  new SystemChatMessage(
+  new SystemMessage(
     "You are a helpful assistant that translates English to French."
   ),
-  new HumanChatMessage("Translate: I love programming."),
+  new HumanMessage("Translate: I love programming."),
 ]);
 
 console.log(responseB);
 ```
 
 ```
-AIChatMessage { text: "J'aime programmer." }
+AIMessage { text: "J'aime programmer." }
 ```
 
 #### Multiple Completions
@@ -78,18 +78,18 @@ You can go one step further and generate completions for multiple sets of messag
 ```typescript
 const responseC = await chat.generate([
   [
-    new SystemChatMessage(
+    new SystemMessage(
       "You are a helpful assistant that translates English to French."
     ),
-    new HumanChatMessage(
+    new HumanMessage(
       "Translate this sentence from English to French. I love programming."
     ),
   ],
   [
-    new SystemChatMessage(
+    new SystemMessage(
       "You are a helpful assistant that translates English to French."
     ),
-    new HumanChatMessage(
+    new HumanMessage(
       "Translate this sentence from English to French. I love artificial intelligence."
     ),
   ],
@@ -104,13 +104,13 @@ console.log(responseC);
     [
       {
         text: "J'aime programmer.",
-        message: AIChatMessage { text: "J'aime programmer." },
+        message: AIMessage { text: "J'aime programmer." },
       }
     ],
     [
       {
         text: "J'aime l'intelligence artificielle.",
-        message: AIChatMessage { text: "J'aime l'intelligence artificielle." }
+        message: AIMessage { text: "J'aime l'intelligence artificielle." }
       }
     ]
   ]
@@ -162,7 +162,7 @@ console.log(responseA);
     [
       {
         text: "J'aime programmer.",
-        message: AIChatMessage { text: "J'aime programmer." }
+        message: AIMessage { text: "J'aime programmer." }
       }
     ]
   ]

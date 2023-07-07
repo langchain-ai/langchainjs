@@ -1,12 +1,12 @@
 import {
-  AIChatMessage,
-  BaseChatMessage,
+  AIMessage,
+  BaseMessage,
   BasePromptValue,
   ChatMessage,
-  HumanChatMessage,
+  HumanMessage,
   InputValues,
   PartialValues,
-  SystemChatMessage,
+  SystemMessage,
 } from "../schema/index.js";
 import { Serializable } from "../load/serializable.js";
 import {
@@ -23,11 +23,11 @@ export abstract class BaseMessagePromptTemplate extends Serializable {
 
   abstract inputVariables: string[];
 
-  abstract formatMessages(values: InputValues): Promise<BaseChatMessage[]>;
+  abstract formatMessages(values: InputValues): Promise<BaseMessage[]>;
 }
 
 export interface ChatPromptValueFields {
-  messages: BaseChatMessage[];
+  messages: BaseMessage[];
 }
 
 export class ChatPromptValue extends BasePromptValue {
@@ -35,13 +35,13 @@ export class ChatPromptValue extends BasePromptValue {
 
   lc_serializable = true;
 
-  messages: BaseChatMessage[];
+  messages: BaseMessage[];
 
-  constructor(messages: BaseChatMessage[]);
+  constructor(messages: BaseMessage[]);
 
   constructor(fields: ChatPromptValueFields);
 
-  constructor(fields: BaseChatMessage[] | ChatPromptValueFields) {
+  constructor(fields: BaseMessage[] | ChatPromptValueFields) {
     if (Array.isArray(fields)) {
       // eslint-disable-next-line no-param-reassign
       fields = { messages: fields };
@@ -84,8 +84,8 @@ export class MessagesPlaceholder extends BaseMessagePromptTemplate {
     return [this.variableName];
   }
 
-  formatMessages(values: InputValues): Promise<BaseChatMessage[]> {
-    return Promise.resolve(values[this.variableName] as BaseChatMessage[]);
+  formatMessages(values: InputValues): Promise<BaseMessage[]> {
+    return Promise.resolve(values[this.variableName] as BaseMessage[]);
   }
 }
 
@@ -115,9 +115,9 @@ export abstract class BaseMessageStringPromptTemplate extends BaseMessagePromptT
     return this.prompt.inputVariables;
   }
 
-  abstract format(values: InputValues): Promise<BaseChatMessage>;
+  abstract format(values: InputValues): Promise<BaseMessage>;
 
-  async formatMessages(values: InputValues): Promise<BaseChatMessage[]> {
+  async formatMessages(values: InputValues): Promise<BaseMessage[]> {
     return [await this.format(values)];
   }
 }
@@ -129,7 +129,7 @@ export abstract class BaseChatPromptTemplate extends BasePromptTemplate {
     super(input);
   }
 
-  abstract formatMessages(values: InputValues): Promise<BaseChatMessage[]>;
+  abstract formatMessages(values: InputValues): Promise<BaseMessage[]>;
 
   async format(values: InputValues): Promise<string> {
     return (await this.formatPromptValue(values)).toString();
@@ -149,7 +149,7 @@ export interface ChatMessagePromptTemplateFields
 export class ChatMessagePromptTemplate extends BaseMessageStringPromptTemplate {
   role: string;
 
-  async format(values: InputValues): Promise<BaseChatMessage> {
+  async format(values: InputValues): Promise<BaseMessage> {
     return new ChatMessage(await this.prompt.format(values), this.role);
   }
 
@@ -175,8 +175,8 @@ export class ChatMessagePromptTemplate extends BaseMessageStringPromptTemplate {
 }
 
 export class HumanMessagePromptTemplate extends BaseMessageStringPromptTemplate {
-  async format(values: InputValues): Promise<BaseChatMessage> {
-    return new HumanChatMessage(await this.prompt.format(values));
+  async format(values: InputValues): Promise<BaseMessage> {
+    return new HumanMessage(await this.prompt.format(values));
   }
 
   static fromTemplate(template: string) {
@@ -185,8 +185,8 @@ export class HumanMessagePromptTemplate extends BaseMessageStringPromptTemplate 
 }
 
 export class AIMessagePromptTemplate extends BaseMessageStringPromptTemplate {
-  async format(values: InputValues): Promise<BaseChatMessage> {
-    return new AIChatMessage(await this.prompt.format(values));
+  async format(values: InputValues): Promise<BaseMessage> {
+    return new AIMessage(await this.prompt.format(values));
   }
 
   static fromTemplate(template: string) {
@@ -195,8 +195,8 @@ export class AIMessagePromptTemplate extends BaseMessageStringPromptTemplate {
 }
 
 export class SystemMessagePromptTemplate extends BaseMessageStringPromptTemplate {
-  async format(values: InputValues): Promise<BaseChatMessage> {
-    return new SystemChatMessage(await this.prompt.format(values));
+  async format(values: InputValues): Promise<BaseMessage> {
+    return new SystemMessage(await this.prompt.format(values));
   }
 
   static fromTemplate(template: string) {
@@ -279,10 +279,10 @@ export class ChatPromptTemplate
     return "chat";
   }
 
-  async formatMessages(values: InputValues): Promise<BaseChatMessage[]> {
+  async formatMessages(values: InputValues): Promise<BaseMessage[]> {
     const allValues = await this.mergePartialAndUserVariables(values);
 
-    let resultMessages: BaseChatMessage[] = [];
+    let resultMessages: BaseMessage[] = [];
 
     for (const promptMessage of this.promptMessages) {
       const inputValues = promptMessage.inputVariables.reduce(

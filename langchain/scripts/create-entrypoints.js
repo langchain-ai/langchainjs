@@ -13,7 +13,8 @@ const entrypoints = {
   // agents
   agents: "agents/index",
   "agents/load": "agents/load",
-  "agents/agent_toolkits/aws_sfn": "agents/agent_toolkits/aws_sfn",
+  "agents/toolkits/aws_sfn": "agents/toolkits/aws_sfn",
+  "agents/toolkits/sql": "agents/toolkits/sql/index",
   // base language
   base_language: "base_language/index",
   // tools
@@ -21,12 +22,15 @@ const entrypoints = {
   "tools/aws_lambda": "tools/aws_lambda",
   "tools/aws_sfn": "tools/aws_sfn",
   "tools/calculator": "tools/calculator",
+  "tools/sql": "tools/sql",
   "tools/webbrowser": "tools/webbrowser",
   // chains
   chains: "chains/index",
   "chains/load": "chains/load",
+  "chains/openai_functions": "chains/openai_functions/index",
   "chains/query_constructor": "chains/query_constructor/index",
   "chains/query_constructor/ir": "chains/query_constructor/ir",
+  "chains/sql_db": "chains/sql_db/index",
   // embeddings
   embeddings: "embeddings/index",
   "embeddings/base": "embeddings/base",
@@ -118,6 +122,7 @@ const entrypoints = {
   "chat_models/openai": "chat_models/openai",
   "chat_models/anthropic": "chat_models/anthropic",
   "chat_models/googlevertexai": "chat_models/googlevertexai",
+  "chat_models/baiduwenxin": "chat_models/baiduwenxin",
   // schema
   schema: "schema/index",
   "schema/output_parser": "schema/output_parser",
@@ -190,12 +195,15 @@ const deprecatedNodeOnly = [
 // Therefore they are not tested in the generated test-exports-* packages.
 const requiresOptionalDependency = [
   "agents/load",
-  "agents/agent_toolkits/aws_sfn",
+  "agents/toolkits/aws_sfn",
+  "agents/toolkits/sql",
   "tools/aws_lambda",
   "tools/aws_sfn",
   "tools/calculator",
+  "tools/sql",
   "tools/webbrowser",
   "chains/load",
+  "chains/sql_db",
   "embeddings/cohere",
   "embeddings/googlevertexai",
   "embeddings/tensorflow",

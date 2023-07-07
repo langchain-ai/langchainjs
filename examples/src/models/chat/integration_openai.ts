@@ -1,5 +1,5 @@
 import { ChatOpenAI } from "langchain/chat_models/openai";
-import { HumanChatMessage } from "langchain/schema";
+import { HumanMessage } from "langchain/schema";
 import { SerpAPI } from "langchain/tools";
 
 const model = new ChatOpenAI({
@@ -16,12 +16,12 @@ const modelForFunctionCalling = new ChatOpenAI({
 });
 
 await modelForFunctionCalling.predictMessages(
-  [new HumanChatMessage("What is the weather in New York?")],
+  [new HumanMessage("What is the weather in New York?")],
   { tools: [new SerpAPI()] }
   // Tools will be automatically formatted as functions in the OpenAI format
 );
 /*
-AIChatMessage {
+AIMessage {
   text: '',
   name: undefined,
   additional_kwargs: {
@@ -34,7 +34,7 @@ AIChatMessage {
 */
 
 await modelForFunctionCalling.predictMessages(
-  [new HumanChatMessage("What is the weather in New York?")],
+  [new HumanMessage("What is the weather in New York?")],
   {
     functions: [
       {
@@ -60,7 +60,7 @@ await modelForFunctionCalling.predictMessages(
   }
 );
 /*
-AIChatMessage {
+AIMessage {
   text: '',
   name: undefined,
   additional_kwargs: {

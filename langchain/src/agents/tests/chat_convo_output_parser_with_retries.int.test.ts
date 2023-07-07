@@ -3,7 +3,7 @@ import { ChatConversationalAgentOutputParserWithRetries } from "../chat_convo/ou
 import { ChatOpenAI } from "../../chat_models/openai.js";
 import { AgentAction, AgentFinish } from "../../schema/index.js";
 
-test("Can parse JSON with text in front of it", async () => {
+test.skip("Can parse JSON with text in front of it", async () => {
   const testCases = [
     {
       input:

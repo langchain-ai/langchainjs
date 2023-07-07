@@ -16,6 +16,8 @@ export abstract class ListOutputParser extends BaseOutputParser<string[]> {}
 export class CommaSeparatedListOutputParser extends ListOutputParser {
   lc_namespace = ["langchain", "output_parsers", "list"];
 
+  lc_serializable = true;
+
   async parse(text: string): Promise<string[]> {
     try {
       return text

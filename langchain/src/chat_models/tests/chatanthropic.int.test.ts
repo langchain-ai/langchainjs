@@ -1,5 +1,5 @@
 import { expect, test } from "@jest/globals";
-import { HumanChatMessage } from "../../schema/index.js";
+import { HumanMessage } from "../../schema/index.js";
 import { ChatPromptValue } from "../../prompts/chat.js";
 import {
   PromptTemplate,
@@ -13,7 +13,7 @@ import { CallbackManager } from "../../callbacks/index.js";
 
 test("Test ChatAnthropic", async () => {
   const chat = new ChatAnthropic({ modelName: "claude-instant-v1" });
-  const message = new HumanChatMessage("Hello!");
+  const message = new HumanMessage("Hello!");
   const res = await chat.call([message]);
   console.log({ res });
 });
@@ -22,7 +22,7 @@ test("Test ChatAnthropic Generate", async () => {
   const chat = new ChatAnthropic({
     modelName: "claude-instant-v1",
   });
-  const message = new HumanChatMessage("Hello!");
+  const message = new HumanMessage("Hello!");
   const res = await chat.generate([[message], [message]]);
   expect(res.generations.length).toBe(2);
   for (const generation of res.generations) {
@@ -39,7 +39,7 @@ test("Test ChatAnthropic Generate with a signal in call options", async () => {
     modelName: "claude-instant-v1",
   });
   const controller = new AbortController();
-  const message = new HumanChatMessage("Hello!");
+  const message = new HumanMessage("Hello!");
   await expect(() => {
     const res = chat.generate([[message], [message]], {
       signal: controller.signal,
@@ -55,8 +55,8 @@ test("Test ChatAnthropic tokenUsage with a batch", async () => {
     modelName: "claude-instant-v1",
   });
   const res = await model.generate([
-    [new HumanChatMessage(`Hello!`)],
-    [new HumanChatMessage(`Hi!`)],
+    [new HumanMessage(`Hello!`)],
+    [new HumanMessage(`Hi!`)],
   ]);
   console.log({ res });
 });
@@ -75,12 +75,12 @@ test("Test ChatAnthropic in streaming mode", async () => {
       },
     }),
   });
-  const message = new HumanChatMessage("Hello!");
+  const message = new HumanMessage("Hello!");
   const res = await model.call([message]);
   console.log({ res });
 
   expect(nrNewTokens > 0).toBe(true);
-  expect(res.text).toBe(streamedCompletion);
+  expect(res.content).toBe(streamedCompletion);
 });
 
 test("Test ChatAnthropic in streaming mode with a signal", async () => {
@@ -98,7 +98,7 @@ test("Test ChatAnthropic in streaming mode with a signal", async () => {
     }),
   });
   const controller = new AbortController();
-  const message = new HumanChatMessage(
+  const message = new HumanMessage(
     "Hello! Give me an extremely verbose response"
   );
   await expect(() => {
@@ -118,7 +118,7 @@ test("Test ChatAnthropic prompt value", async () => {
   const chat = new ChatAnthropic({
     modelName: "claude-instant-v1",
   });
-  const message = new HumanChatMessage("Hello!");
+  const message = new HumanMessage("Hello!");
   const res = await chat.generatePrompt([new ChatPromptValue([message])]);
   expect(res.generations.length).toBe(1);
   for (const generation of res.generations) {
@@ -183,7 +183,7 @@ test("ChatAnthropic, Anthropic apiUrl set manually via constructor", async () =>
     modelName: "claude-instant-v1",
     anthropicApiUrl,
   });
-  const message = new HumanChatMessage("Hello!");
+  const message = new HumanMessage("Hello!");
   const res = await chat.call([message]);
   console.log({ res });
 });

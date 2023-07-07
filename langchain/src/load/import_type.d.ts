@@ -4,9 +4,12 @@ export interface OptionalImportMap {
   "langchain/agents/load"?:
     | typeof import("../agents/load.js")
     | Promise<typeof import("../agents/load.js")>;
-  "langchain/agents/agent_toolkits/aws_sfn"?:
-    | typeof import("../agents/agent_toolkits/aws_sfn.js")
-    | Promise<typeof import("../agents/agent_toolkits/aws_sfn.js")>;
+  "langchain/agents/toolkits/aws_sfn"?:
+    | typeof import("../agents/toolkits/aws_sfn.js")
+    | Promise<typeof import("../agents/toolkits/aws_sfn.js")>;
+  "langchain/agents/toolkits/sql"?:
+    | typeof import("../agents/toolkits/sql/index.js")
+    | Promise<typeof import("../agents/toolkits/sql/index.js")>;
   "langchain/tools/aws_lambda"?:
     | typeof import("../tools/aws_lambda.js")
     | Promise<typeof import("../tools/aws_lambda.js")>;
@@ -16,6 +19,9 @@ export interface OptionalImportMap {
   "langchain/tools/calculator"?:
     | typeof import("../tools/calculator.js")
     | Promise<typeof import("../tools/calculator.js")>;
+  "langchain/tools/sql"?:
+    | typeof import("../tools/sql.js")
+    | Promise<typeof import("../tools/sql.js")>;
   "langchain/tools/webbrowser"?:
     | typeof import("../tools/webbrowser.js")
     | Promise<typeof import("../tools/webbrowser.js")>;
@@ -28,6 +34,9 @@ export interface OptionalImportMap {
   "langchain/chains/query_constructor/ir"?:
     | typeof import("../chains/query_constructor/ir.js")
     | Promise<typeof import("../chains/query_constructor/ir.js")>;
+  "langchain/chains/sql_db"?:
+    | typeof import("../chains/sql_db/index.js")
+    | Promise<typeof import("../chains/sql_db/index.js")>;
   "langchain/embeddings/cohere"?:
     | typeof import("../embeddings/cohere.js")
     | Promise<typeof import("../embeddings/cohere.js")>;
@@ -268,6 +277,8 @@ export interface SecretMap {
   AWS_SECRET_ACCESS_KEY?: string;
   AWS_SESSION_TOKEN?: string;
   AZURE_OPENAI_API_KEY?: string;
+  BAIDU_API_KEY?: string;
+  BAIDU_SECRET_KEY?: string;
   COHERE_API_KEY?: string;
   GOOGLE_API_KEY?: string;
   HUGGINGFACEHUB_API_KEY?: string;

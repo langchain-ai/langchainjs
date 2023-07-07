@@ -1,8 +1,8 @@
 import { InMemoryCache } from "../cache/index.js";
 import {
-  AIChatMessage,
+  AIMessage,
   BaseCache,
-  BaseChatMessage,
+  BaseMessage,
   BasePromptValue,
   Generation,
   LLMResult,
@@ -14,6 +14,7 @@ import {
   BaseLanguageModelParams,
 } from "../base_language/index.js";
 import {
+  BaseCallbackConfig,
   CallbackManager,
   CallbackManagerForLLMRun,
   Callbacks,
@@ -42,7 +43,10 @@ export interface BaseLLMCallOptions extends BaseLanguageModelCallOptions {}
 export abstract class BaseLLM extends BaseLanguageModel {
   declare CallOptions: BaseLLMCallOptions;
 
-  declare ParsedCallOptions: Omit<this["CallOptions"], "timeout">;
+  declare ParsedCallOptions: Omit<
+    this["CallOptions"],
+    "timeout" | "tags" | "metadata" | "callbacks"
+  >;
 
   lc_namespace = ["langchain", "llms", this._llmType()];
 
@@ -116,19 +120,21 @@ export abstract class BaseLLM extends BaseLanguageModel {
   /** @ignore */
   async _generateUncached(
     prompts: string[],
-    options: this["ParsedCallOptions"],
-    callbacks?: Callbacks
+    parsedOptions: this["ParsedCallOptions"],
+    handledOptions: BaseCallbackConfig
   ): Promise<LLMResult> {
     const callbackManager_ = await CallbackManager.configure(
-      callbacks,
+      handledOptions.callbacks,
       this.callbacks,
-      options.tags,
+      handledOptions.tags,
       this.tags,
+      handledOptions.metadata,
+      this.metadata,
       { verbose: this.verbose }
     );
     const extra = {
-      options,
-      invocation_params: this?.invocationParams(options),
+      options: parsedOptions,
+      invocation_params: this?.invocationParams(parsedOptions),
     };
     const runManagers = await callbackManager_?.handleLLMStart(
       this.toJSON(),
@@ -140,7 +146,7 @@ export abstract class BaseLLM extends BaseLanguageModel {
 
     let output;
     try {
-      output = await this._generate(prompts, options, runManagers?.[0]);
+      output = await this._generate(prompts, parsedOptions, runManagers?.[0]);
     } catch (err) {
       await Promise.all(
         (runManagers ?? []).map((runManager) => runManager?.handleLLMError(err))
@@ -188,9 +194,17 @@ export abstract class BaseLLM extends BaseLanguageModel {
     } else {
       parsedOptions = options ?? {};
     }
+    const handledOptions: BaseCallbackConfig = {
+      tags: parsedOptions.tags,
+      metadata: parsedOptions.metadata,
+      callbacks: parsedOptions.callbacks ?? callbacks,
+    };
+    delete parsedOptions.tags;
+    delete parsedOptions.metadata;
+    delete parsedOptions.callbacks;
 
     if (!this.cache) {
-      return this._generateUncached(prompts, parsedOptions, callbacks);
+      return this._generateUncached(prompts, parsedOptions, handledOptions);
     }
 
     const { cache } = this;
@@ -214,7 +228,7 @@ export abstract class BaseLLM extends BaseLanguageModel {
       const results = await this._generateUncached(
         missingPromptIndices.map((i) => prompts[i]),
         parsedOptions,
-        callbacks
+        handledOptions
       );
       await Promise.all(
         results.generations.map(async (generation, index) => {
@@ -254,13 +268,13 @@ export abstract class BaseLLM extends BaseLanguageModel {
   }
 
   async predictMessages(
-    messages: BaseChatMessage[],
+    messages: BaseMessage[],
     options?: string[] | this["CallOptions"],
     callbacks?: Callbacks
-  ): Promise<BaseChatMessage> {
+  ): Promise<BaseMessage> {
     const text = getBufferString(messages);
     const prediction = await this.call(text, options, callbacks);
-    return new AIChatMessage(prediction);
+    return new AIMessage(prediction);
   }
 
   /**

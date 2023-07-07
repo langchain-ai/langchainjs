@@ -2,17 +2,18 @@ import { Memory, Message, NotFoundError, ZepClient } from "@getzep/zep-js";
 import {
   getBufferString,
   getInputValue,
+  getOutputValue,
   InputValues,
   MemoryVariables,
   OutputValues,
 } from "./base.js";
 import { BaseChatMemory, BaseChatMemoryInput } from "./chat_memory.js";
 import {
-  AIChatMessage,
-  BaseChatMessage,
+  BaseMessage,
   ChatMessage,
-  HumanChatMessage,
-  SystemChatMessage,
+  AIMessage,
+  HumanMessage,
+  SystemMessage,
 } from "../schema/index.js";
 
 export interface ZepMemoryInput extends BaseChatMemoryInput {
@@ -82,9 +83,9 @@ export class ZepMemory extends BaseChatMemory implements ZepMemoryInput {
       }
     }
 
-    let messages: BaseChatMessage[] =
+    let messages: BaseMessage[] =
       memory && memory.summary?.content
-        ? [new SystemChatMessage(memory.summary.content)]
+        ? [new SystemMessage(memory.summary.content)]
         : [];
 
     if (memory) {
@@ -92,9 +93,9 @@ export class ZepMemory extends BaseChatMemory implements ZepMemoryInput {
         memory.messages.map((message) => {
           const { content, role } = message;
           if (role === this.humanPrefix) {
-            return new HumanChatMessage(content);
+            return new HumanMessage(content);
           } else if (role === this.aiPrefix) {
-            return new AIChatMessage(content);
+            return new AIMessage(content);
           } else {
             // default to generic ChatMessage
             return new ChatMessage(content, role);
@@ -122,7 +123,7 @@ export class ZepMemory extends BaseChatMemory implements ZepMemoryInput {
     outputValues: OutputValues
   ): Promise<void> {
     const input = getInputValue(inputValues, this.inputKey);
-    const output = getInputValue(outputValues, this.outputKey);
+    const output = getOutputValue(outputValues, this.outputKey);
 
     // Create new Memory and Message instances
     const memory = new Memory({
