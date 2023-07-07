@@ -7,36 +7,37 @@ import {
 } from "langchain/prompts";
 import { createStructuredOutputChainFromZod } from "langchain/chains/openai_functions";
 
-const chain = createStructuredOutputChainFromZod(
-  z.object({
-    name: z.string().describe("Human name"),
-    surname: z.string().describe("Human surname"),
-    age: z.number().describe("Human age"),
-    birthplace: z.string().describe("Where the human was born"),
-    appearance: z.string().describe("Human appearance description"),
-    shortBio: z.string().describe("Short bio secription"),
-    university: z.string().optional().describe("University name if attended"),
-    gender: z.string().describe("Gender of the human"),
-    interests: z
-      .array(z.string())
-      .describe("json array of strings human interests"),
-  }),
-  {
-    prompt: new ChatPromptTemplate({
-      promptMessages: [
-        SystemMessagePromptTemplate.fromTemplate(
-          "Generate details of a hypothetical person."
-        ),
-        HumanMessagePromptTemplate.fromTemplate(
-          "Additional context: {inputText}"
-        ),
-      ],
-      inputVariables: ["inputText"],
-    }),
-    llm: new ChatOpenAI({ modelName: "gpt-3.5-turbo-0613", temperature: 1 }),
-    outputKey: "person",
-  }
-);
+const zodSchema = z.object({
+  name: z.string().describe("Human name"),
+  surname: z.string().describe("Human surname"),
+  age: z.number().describe("Human age"),
+  birthplace: z.string().describe("Where the human was born"),
+  appearance: z.string().describe("Human appearance description"),
+  shortBio: z.string().describe("Short bio secription"),
+  university: z.string().optional().describe("University name if attended"),
+  gender: z.string().describe("Gender of the human"),
+  interests: z
+    .array(z.string())
+    .describe("json array of strings human interests"),
+});
+
+const prompt = new ChatPromptTemplate({
+  promptMessages: [
+    SystemMessagePromptTemplate.fromTemplate(
+      "Generate details of a hypothetical person."
+    ),
+    HumanMessagePromptTemplate.fromTemplate("Additional context: {inputText}"),
+  ],
+  inputVariables: ["inputText"],
+});
+
+const llm = new ChatOpenAI({ modelName: "gpt-3.5-turbo-0613", temperature: 1 });
+
+const chain = createStructuredOutputChainFromZod(zodSchema, {
+  prompt,
+  llm,
+  outputKey: "person",
+});
 
 const response = await chain.call({
   inputText:
