@@ -68,8 +68,7 @@ export const calculateMaxTokens = async ({
   prompt,
   modelName,
 }: CalculateMaxTokenProps) => {
-  // fallback to approximate calculation if tiktoken is not available
-  let numTokens = Math.ceil(prompt.length / 4);
+  let numTokens;
 
   try {
     numTokens = (await encodingForModel(modelName)).encode(prompt).length;
@@ -77,6 +76,9 @@ export const calculateMaxTokens = async ({
     console.warn(
       "Failed to calculate number of tokens, falling back to approximate count"
     );
+
+    // fallback to approximate calculation if tiktoken is not available
+    numTokens = Math.ceil(prompt.length / 4);
   }
 
   const maxTokens = getModelContextSize(modelName);
