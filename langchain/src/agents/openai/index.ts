@@ -29,13 +29,25 @@ function parseOutput(message: BaseMessage): AgentAction | AgentFinish {
     // eslint-disable-next-line prefer-destructuring
     const function_call: ChatCompletionRequestMessageFunctionCall =
       message.additional_kwargs.function_call;
-    return {
-      tool: function_call.name as string,
-      toolInput: function_call.arguments
+    try {
+      const toolInput = function_call.arguments
         ? JSON.parse(function_call.arguments)
-        : {},
-      log: message.content,
-    };
+        : {};
+      return {
+        tool: function_call.name as string,
+        toolInput,
+        log: message.content,
+      };
+    } catch (error) {
+      // eslint-disable-next-line no-instanceof/no-instanceof
+      if (error instanceof SyntaxError) {
+        throw new Error(
+          `Unabled to parse function arguments.\n\nText: ${function_call.arguments}\n\nError: ${error}`
+        );
+      } else {
+        throw error;
+      }
+    }
   } else {
     return { returnValues: { output: message.content }, log: message.content };
   }
