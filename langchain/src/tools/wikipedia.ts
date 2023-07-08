@@ -119,7 +119,6 @@ export class WikipediaAPIWrapper extends Tool {
     const params = new URLSearchParams({
       action: "query",
       prop: "extracts",
-      exintro: "true",
       explaintext: "true",
       redirects: redirect ? "1" : "0",
       format: "json",
