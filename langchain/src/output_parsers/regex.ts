@@ -1,7 +1,19 @@
+import { SerializedFields } from "../load/map_keys.js";
 import {
   BaseOutputParser,
   OutputParserException,
 } from "../schema/output_parser.js";
+
+export interface RegExpFields {
+  pattern: string;
+  flags?: string;
+}
+
+export interface RegexParserFields {
+  regex: string | RegExp | RegExpFields;
+  outputKeys: string[];
+  defaultOutputKey?: string;
+}
 
 /**
  * Class to parse the output of an LLM call into a dictionary.
@@ -10,21 +22,56 @@ import {
 export class RegexParser extends BaseOutputParser<Record<string, string>> {
   lc_namespace = ["langchain", "output_parsers", "regex"];
 
+  lc_serializable = true;
+
+  get lc_attributes(): SerializedFields | undefined {
+    return {
+      regex: this.lc_kwargs.regex,
+    };
+  }
+
   regex: string | RegExp;
 
   outputKeys: string[];
 
   defaultOutputKey?: string;
 
+  constructor(fields: RegexParserFields);
+
   constructor(
     regex: string | RegExp,
     outputKeys: string[],
     defaultOutputKey?: string
+  );
+
+  constructor(
+    fields: string | RegExp | RegexParserFields,
+    outputKeys?: string[],
+    defaultOutputKey?: string
   ) {
-    super(...arguments);
-    this.regex = typeof regex === "string" ? new RegExp(regex) : regex;
-    this.outputKeys = outputKeys;
-    this.defaultOutputKey = defaultOutputKey;
+    // eslint-disable-next-line no-instanceof/no-instanceof
+    if (typeof fields === "string" || fields instanceof RegExp) {
+      // eslint-disable-next-line no-param-reassign, @typescript-eslint/no-non-null-assertion
+      fields = { regex: fields, outputKeys: outputKeys!, defaultOutputKey };
+    }
+    // eslint-disable-next-line no-instanceof/no-instanceof
+    if (fields.regex instanceof RegExp) {
+      // eslint-disable-next-line no-param-reassign
+      fields.regex = {
+        pattern: fields.regex.source,
+        flags: fields.regex.flags,
+      };
+    }
+    super(fields);
+    this.regex =
+      // eslint-disable-next-line no-nested-ternary
+      typeof fields.regex === "string"
+        ? new RegExp(fields.regex)
+        : "pattern" in fields.regex
+        ? new RegExp(fields.regex.pattern, fields.regex.flags)
+        : fields.regex;
+    this.outputKeys = fields.outputKeys;
+    this.defaultOutputKey = fields.defaultOutputKey;
   }
 
   _type() {

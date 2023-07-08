@@ -106,10 +106,6 @@ type Kwargs = Record<string, any>;
 export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
   declare CallOptions: BaseLanguageModelCallOptions;
 
-  get callKeys(): string[] {
-    return ["stop", "signal", "options"];
-  }
-
   get lc_secrets(): { [key: string]: string } | undefined {
     return {
       anthropicApiKey: "ANTHROPIC_API_KEY",

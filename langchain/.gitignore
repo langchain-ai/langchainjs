@@ -43,6 +43,9 @@ chains.d.ts
 chains/load.cjs
 chains/load.js
 chains/load.d.ts
+chains/openai_functions.cjs
+chains/openai_functions.js
+chains/openai_functions.d.ts
 chains/query_constructor.cjs
 chains/query_constructor.js
 chains/query_constructor.d.ts
@@ -295,6 +298,9 @@ chat_models/anthropic.d.ts
 chat_models/googlevertexai.cjs
 chat_models/googlevertexai.js
 chat_models/googlevertexai.d.ts
+chat_models/baiduwenxin.cjs
+chat_models/baiduwenxin.js
+chat_models/baiduwenxin.d.ts
 schema.cjs
 schema.js
 schema.d.ts

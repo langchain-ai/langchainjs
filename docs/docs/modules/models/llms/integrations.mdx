@@ -251,6 +251,7 @@ const model = new PromptLayerOpenAI({
   azureOpenAIApiEmbeddingsDeploymentName:
     "YOUR-AOAI-EMBEDDINGS-DEPLOYMENT-NAME", // In Node.js defaults to process.env.AZURE_OPENAI_API_EMBEDDINGS_DEPLOYMENT_NAME
   azureOpenAIApiVersion: "YOUR-AOAI-API-VERSION", // In Node.js defaults to process.env.AZURE_OPENAI_API_VERSION
+  azureOpenAIBasePath: "YOUR-AZURE-OPENAI-BASE-PATH", // In Node.js defaults to process.env.AZURE_OPENAI_BASE_PATH
   promptLayerApiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.PROMPTLAYER_API_KEY
 });
 const res = await model.call(

@@ -58,12 +58,6 @@ export declare interface OpenAIBaseInput {
 
 export interface OpenAICallOptions extends BaseLanguageModelCallOptions {
   /**
-   * Abort signal to use for cancelling in-flight requests.
-   * @see https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal
-   */
-  signal?: AbortSignal;
-
-  /**
    * Additional options to pass to the underlying axios request.
    */
   options?: AxiosRequestConfig;
@@ -130,4 +124,11 @@ export declare interface AzureOpenAIInput {
    * this will be used in the endpoint URL: https://{InstanceName}.openai.azure.com/openai/deployments/my-openai-deployment/
    */
   azureOpenAIApiCompletionsDeploymentName?: string;
+
+  /**
+   * Custom endpoint for Azure OpenAI API. This is useful in case you have a deployment in another region.
+   * e.g. setting this value to "https://westeurope.api.cognitive.microsoft.com/openai/deployments"
+   * will be result in the endpoint URL: https://westeurope.api.cognitive.microsoft.com/openai/deployments/{DeploymentName}/
+   */
+  azureOpenAIBasePath?: string;
 }

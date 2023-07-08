@@ -27,6 +27,7 @@ const entrypoints = {
   // chains
   chains: "chains/index",
   "chains/load": "chains/load",
+  "chains/openai_functions": "chains/openai_functions/index",
   "chains/query_constructor": "chains/query_constructor/index",
   "chains/query_constructor/ir": "chains/query_constructor/ir",
   "chains/sql_db": "chains/sql_db/index",
@@ -121,6 +122,7 @@ const entrypoints = {
   "chat_models/openai": "chat_models/openai",
   "chat_models/anthropic": "chat_models/anthropic",
   "chat_models/googlevertexai": "chat_models/googlevertexai",
+  "chat_models/baiduwenxin": "chat_models/baiduwenxin",
   // schema
   schema: "schema/index",
   "schema/output_parser": "schema/output_parser",

@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.102",
+  "version": "0.0.104",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -55,6 +55,9 @@
     "chains/load.cjs",
     "chains/load.js",
     "chains/load.d.ts",
+    "chains/openai_functions.cjs",
+    "chains/openai_functions.js",
+    "chains/openai_functions.d.ts",
     "chains/query_constructor.cjs",
     "chains/query_constructor.js",
     "chains/query_constructor.d.ts",
@@ -307,6 +310,9 @@
     "chat_models/googlevertexai.cjs",
     "chat_models/googlevertexai.js",
     "chat_models/googlevertexai.d.ts",
+    "chat_models/baiduwenxin.cjs",
+    "chat_models/baiduwenxin.js",
+    "chat_models/baiduwenxin.d.ts",
     "schema.cjs",
     "schema.js",
     "schema.d.ts",
@@ -891,6 +897,11 @@
       "import": "./chains/load.js",
       "require": "./chains/load.cjs"
     },
+    "./chains/openai_functions": {
+      "types": "./chains/openai_functions.d.ts",
+      "import": "./chains/openai_functions.js",
+      "require": "./chains/openai_functions.cjs"
+    },
     "./chains/query_constructor": {
       "types": "./chains/query_constructor.d.ts",
       "import": "./chains/query_constructor.js",
@@ -1320,6 +1331,11 @@
       "types": "./chat_models/googlevertexai.d.ts",
       "import": "./chat_models/googlevertexai.js",
       "require": "./chat_models/googlevertexai.cjs"
+    },
+    "./chat_models/baiduwenxin": {
+      "types": "./chat_models/baiduwenxin.d.ts",
+      "import": "./chat_models/baiduwenxin.js",
+      "require": "./chat_models/baiduwenxin.cjs"
     },
     "./schema": {
       "types": "./schema.d.ts",
