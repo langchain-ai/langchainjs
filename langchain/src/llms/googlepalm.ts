@@ -92,21 +92,20 @@ export class GooglePalm extends LLM implements GooglePalmTextInput {
 
   model = "models/text-bison-001";
 
-  temperature: number | undefined = undefined; // default value chosen based on model
+  temperature?: number = undefined; // default value chosen based on model
 
-  maxOutputTokens: number | undefined = undefined; // defaults to 64
+  maxOutputTokens?: number = undefined; // defaults to 64
 
-  topP: number | undefined = undefined; // default value chosen based on model
+  topP?: number = undefined; // default value chosen based on model
 
-  topK: number | undefined = undefined; // default value chosen based on model
+  topK?: number = undefined; // default value chosen based on model
 
   stopSequences: string[] = [];
 
-  safetySettings:
-    | protos.google.ai.generativelanguage.v1beta2.ISafetySetting[]
-    | undefined = undefined; // default safety setting for that category
+  safetySettings?:
+    | protos.google.ai.generativelanguage.v1beta2.ISafetySetting[] = undefined; // default safety setting for that category
 
-  apiKey: string | undefined = undefined;
+  apiKey?: string = undefined;
 
   private client: TextServiceClient;
 
