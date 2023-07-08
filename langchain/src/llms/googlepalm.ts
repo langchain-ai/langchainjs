@@ -114,15 +114,48 @@ export class GooglePalm extends LLM implements GooglePalmTextInput {
     super(fields ?? {});
 
     this.model = fields?.model ?? this.model;
+    if (this.model && !this.model.startsWith("models/")) {
+      throw new Error(
+        "`model` value must follow the pattern - `models/{model}`"
+      );
+    }
+
     this.temperature = fields?.temperature ?? this.temperature;
+    if (this.temperature && (this.temperature < 0 || this.temperature > 1)) {
+      throw new Error("`temperature` must be in the range of [0.0,1.0]");
+    }
+
     this.maxOutputTokens = fields?.maxOutputTokens ?? this.maxOutputTokens;
+    if (this.maxOutputTokens && this.maxOutputTokens < 0) {
+      throw new Error("`maxOutputTokens` must be a positive integer");
+    }
+
     this.topP = fields?.topP ?? this.topP;
+    if (this.topP && this.topP < 0) {
+      throw new Error("`topP` must be a positive integer");
+    }
+
     this.topK = fields?.topK ?? this.topK;
+    if (this.topK && this.topK < 0) {
+      throw new Error("`topK` must be a positive integer");
+    }
+
     this.stopSequences = fields?.stopSequences ?? this.stopSequences;
+
     this.safetySettings = fields?.safetySettings ?? this.safetySettings;
+    if (this.safetySettings && this.safetySettings.length > 0) {
+      const safetySettingsSet = new Set(
+        this.safetySettings.map((s) => s.category)
+      );
+      if (safetySettingsSet.size !== this.safetySettings.length) {
+        throw new Error(
+          "The categories in `safetySettings` array must be unique"
+        );
+      }
+    }
+
     this.apiKey =
       fields?.apiKey ?? getEnvironmentVariable("GOOGLEPALM_API_KEY");
-
     if (!this.apiKey) {
       throw new Error(
         "Please set an API key for Google Palm 2 in the environment variable GOOGLEPALM_API_KEY or in the `apiKey` field of the GooglePalm constructor"
