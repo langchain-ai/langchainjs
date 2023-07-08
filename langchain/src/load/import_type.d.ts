@@ -280,6 +280,7 @@ export interface SecretMap {
   BAIDU_API_KEY?: string;
   BAIDU_SECRET_KEY?: string;
   COHERE_API_KEY?: string;
+  GOOGLEPALM_API_KEY?: string;
   GOOGLE_API_KEY?: string;
   HUGGINGFACEHUB_API_KEY?: string;
   OPENAI_API_KEY?: string;

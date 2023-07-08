@@ -76,6 +76,9 @@ embeddings/tensorflow.d.ts
 embeddings/hf.cjs
 embeddings/hf.js
 embeddings/hf.d.ts
+embeddings/googlepalm.cjs
+embeddings/googlepalm.js
+embeddings/googlepalm.d.ts
 embeddings/googlevertexai.cjs
 embeddings/googlevertexai.js
 embeddings/googlevertexai.d.ts
@@ -106,6 +109,9 @@ llms/hf.d.ts
 llms/replicate.cjs
 llms/replicate.js
 llms/replicate.d.ts
+llms/googlepalm.cjs
+llms/googlepalm.js
+llms/googlepalm.d.ts
 llms/googlevertexai.cjs
 llms/googlevertexai.js
 llms/googlevertexai.d.ts
@@ -295,6 +301,9 @@ chat_models/openai.d.ts
 chat_models/anthropic.cjs
 chat_models/anthropic.js
 chat_models/anthropic.d.ts
+chat_models/googlepalm.cjs
+chat_models/googlepalm.js
+chat_models/googlepalm.d.ts
 chat_models/googlevertexai.cjs
 chat_models/googlevertexai.js
 chat_models/googlevertexai.d.ts
