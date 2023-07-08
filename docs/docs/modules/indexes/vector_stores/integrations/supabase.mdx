@@ -61,6 +61,7 @@ import CodeBlock from "@theme/CodeBlock";
 import Example from "@examples/indexes/vector_stores/supabase.ts";
 import MetadataFilterExample from "@examples/indexes/vector_stores/supabase_with_metadata_filter.ts";
 import MetadataQueryBuilderFilterExample from "@examples/indexes/vector_stores/supabase_with_query_builder_metadata_filter.ts";
+import DeletionExample from "@examples/indexes/vector_stores/supabase_deletion.ts";
 
 ### Standard Usage
 
@@ -81,3 +82,7 @@ Given the above `match_documents` Postgres function, you can also pass a filter 
 You can also use query builder-style filtering similar to how [the Supabase JavaScript library works](https://supabase.com/docs/reference/javascript/using-filters) instead of passing an object. Note that since most of the filter properties are in the metadata column, you need to use arrow operators (`->` for integer or `->>` for text) as defined in [Postgrest API documentation](https://postgrest.org/en/stable/references/api/tables_views.html?highlight=operators#json-columns) and specify the data type of the property (e.g. the column should look something like `metadata->some_int_value::int`).
 
 <CodeBlock language="typescript">{MetadataQueryBuilderFilterExample}</CodeBlock>
+
+### Document deletion
+
+<CodeBlock language="typescript">{DeletionExample}</CodeBlock>

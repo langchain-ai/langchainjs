@@ -108,8 +108,12 @@ export class WeaviateStore extends VectorStore {
     }
   }
 
-  async addVectors(vectors: number[][], documents: Document[], ids?: string[]) {
-    const documentIds = ids ?? documents.map((_) => uuid.v4());
+  async addVectors(
+    vectors: number[][],
+    documents: Document[],
+    options?: { ids?: string[] }
+  ) {
+    const documentIds = options?.ids ?? documents.map((_) => uuid.v4());
     const batch: WeaviateObject[] = documents.map((document, index) => {
       if (Object.hasOwn(document.metadata, "id"))
         throw new Error(
@@ -139,11 +143,11 @@ export class WeaviateStore extends VectorStore {
     return documentIds;
   }
 
-  async addDocuments(documents: Document[], ids?: string[]) {
+  async addDocuments(documents: Document[], options?: { ids?: string[] }) {
     return this.addVectors(
       await this.embeddings.embedDocuments(documents.map((d) => d.pageContent)),
       documents,
-      ids
+      options
     );
   }
 

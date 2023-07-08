@@ -13,9 +13,9 @@ export interface TypeORMVectorStoreArgs {
 }
 
 export class TypeORMVectorStoreDocument extends Document {
-  id?: string;
-
   embedding: string;
+
+  id?: string;
 }
 
 const defaultDocumentTableName = "documents";

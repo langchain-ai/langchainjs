@@ -54,12 +54,12 @@ export class Chroma extends VectorStore {
     this.filter = args.filter;
   }
 
-  async addDocuments(documents: Document[], ids?: string[]) {
+  async addDocuments(documents: Document[], options?: { ids?: string[] }) {
     const texts = documents.map(({ pageContent }) => pageContent);
     return this.addVectors(
       await this.embeddings.embedDocuments(texts),
       documents,
-      ids
+      options
     );
   }
 
@@ -81,7 +81,11 @@ export class Chroma extends VectorStore {
     return this.collection;
   }
 
-  async addVectors(vectors: number[][], documents: Document[], ids?: string[]) {
+  async addVectors(
+    vectors: number[][],
+    documents: Document[],
+    options?: { ids?: string[] }
+  ) {
     if (vectors.length === 0) {
       return [];
     }
@@ -98,7 +102,7 @@ export class Chroma extends VectorStore {
     }
 
     const documentIds =
-      ids ?? Array.from({ length: vectors.length }, () => uuid.v1());
+      options?.ids ?? Array.from({ length: vectors.length }, () => uuid.v1());
     const collection = await this.ensureCollection();
     await collection.upsert({
       ids: documentIds,

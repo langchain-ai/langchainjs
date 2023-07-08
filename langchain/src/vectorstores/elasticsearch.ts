@@ -53,16 +53,20 @@ export class ElasticVectorSearch extends VectorStore {
     this.indexName = args.indexName ?? "documents";
   }
 
-  async addDocuments(documents: Document[], ids?: string[]) {
+  async addDocuments(documents: Document[], options?: { ids?: string[] }) {
     const texts = documents.map(({ pageContent }) => pageContent);
     return this.addVectors(
       await this.embeddings.embedDocuments(texts),
       documents,
-      ids
+      options
     );
   }
 
-  async addVectors(vectors: number[][], documents: Document[], ids?: string[]) {
+  async addVectors(
+    vectors: number[][],
+    documents: Document[],
+    options?: { ids?: string[] }
+  ) {
     await this.ensureIndexExists(
       vectors[0].length,
       this.engine,
@@ -71,7 +75,7 @@ export class ElasticVectorSearch extends VectorStore {
       this.m
     );
     const documentIds =
-      ids ?? Array.from({ length: vectors.length }, () => uuid.v4());
+      options?.ids ?? Array.from({ length: vectors.length }, () => uuid.v4());
     const operations = vectors.flatMap((embedding, idx) => [
       {
         index: {

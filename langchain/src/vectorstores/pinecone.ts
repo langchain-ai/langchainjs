@@ -46,16 +46,24 @@ export class PineconeStore extends VectorStore {
     this.filter = args.filter;
   }
 
-  async addDocuments(documents: Document[], ids?: string[]) {
+  async addDocuments(
+    documents: Document[],
+    options?: { ids?: string[] } | string[]
+  ) {
     const texts = documents.map(({ pageContent }) => pageContent);
     return this.addVectors(
       await this.embeddings.embedDocuments(texts),
       documents,
-      ids
+      options
     );
   }
 
-  async addVectors(vectors: number[][], documents: Document[], ids?: string[]) {
+  async addVectors(
+    vectors: number[][],
+    documents: Document[],
+    options?: { ids?: string[] } | string[]
+  ) {
+    const ids = Array.isArray(options) ? options : options?.ids;
     const documentIds = ids == null ? documents.map(() => uuid.v4()) : ids;
     const pineconeVectors = vectors.map((values, idx) => {
       // Pinecone doesn't support nested objects, so we flatten them
