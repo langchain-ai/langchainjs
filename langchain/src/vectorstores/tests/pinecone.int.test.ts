@@ -71,4 +71,33 @@ describe("PineconeStore", () => {
       new Document({ metadata: { foo: id }, pageContent }),
     ]);
   });
+
+  test("deletion", async () => {
+    const pageContent = faker.lorem.sentence(5);
+    const id = uuid.v4();
+
+    const ids = await pineconeStore.addDocuments([
+      { pageContent, metadata: { foo: "bar" } },
+      { pageContent, metadata: { foo: id } },
+      { pageContent, metadata: { foo: "qux" } },
+    ]);
+
+    const results = await pineconeStore.similaritySearch(pageContent, 1, {
+      foo: id,
+    });
+
+    expect(results).toEqual([
+      new Document({ metadata: { foo: id }, pageContent }),
+    ]);
+
+    await pineconeStore.delete({
+      ids,
+    });
+
+    const results2 = await pineconeStore.similaritySearch(pageContent, 1, {
+      foo: id,
+    });
+
+    expect(results2).toEqual([]);
+  });
 });

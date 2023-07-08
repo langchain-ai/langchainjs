@@ -22,7 +22,7 @@ export type ChromaLibArgs =
 
 export interface ChromaDeleteParams<T> {
   ids?: string[];
-  filter: T;
+  filter?: T;
 }
 
 export class Chroma extends VectorStore {
@@ -111,12 +111,14 @@ export class Chroma extends VectorStore {
 
   async delete(params: ChromaDeleteParams<this["FilterType"]>): Promise<void> {
     const collection = await this.ensureCollection();
-    if (Array.isArray(params?.ids)) {
+    if (Array.isArray(params.ids)) {
       await collection.delete({ ids: params.ids });
-    } else {
+    } else if (params.filter) {
       await collection.delete({
         where: { ...params.filter },
       });
+    } else {
+      throw new Error(`You must provide one of "ids or "filter".`);
     }
   }
 
@@ -167,10 +169,7 @@ export class Chroma extends VectorStore {
     texts: string[],
     metadatas: object[] | object,
     embeddings: Embeddings,
-    dbConfig: {
-      collectionName?: string;
-      url?: string;
-    }
+    dbConfig: ChromaLibArgs
   ): Promise<Chroma> {
     const docs: Document[] = [];
     for (let i = 0; i < texts.length; i += 1) {
@@ -187,10 +186,7 @@ export class Chroma extends VectorStore {
   static async fromDocuments(
     docs: Document[],
     embeddings: Embeddings,
-    dbConfig: {
-      collectionName?: string;
-      url?: string;
-    }
+    dbConfig: ChromaLibArgs
   ): Promise<Chroma> {
     const instance = new this(embeddings, dbConfig);
     await instance.addDocuments(docs);
@@ -199,10 +195,7 @@ export class Chroma extends VectorStore {
 
   static async fromExistingCollection(
     embeddings: Embeddings,
-    dbConfig: {
-      collectionName: string;
-      url?: string;
-    }
+    dbConfig: ChromaLibArgs
   ): Promise<Chroma> {
     const instance = new this(embeddings, dbConfig);
     await instance.ensureCollection();

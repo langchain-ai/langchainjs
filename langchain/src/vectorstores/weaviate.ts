@@ -150,7 +150,11 @@ export class WeaviateStore extends VectorStore {
   async delete(params: { ids: string[] }): Promise<void> {
     const { ids } = params;
     for (const id of ids) {
-      await this.client.data.deleter().withClassName(this.indexName).withId(id);
+      await this.client.data
+        .deleter()
+        .withClassName(this.indexName)
+        .withId(id)
+        .do();
     }
   }
 
