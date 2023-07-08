@@ -108,7 +108,8 @@ export class WeaviateStore extends VectorStore {
     }
   }
 
-  async addVectors(vectors: number[][], documents: Document[]): Promise<void> {
+  async addVectors(vectors: number[][], documents: Document[], ids?: string[]) {
+    const documentIds = ids ?? documents.map((_) => uuid.v4());
     const batch: WeaviateObject[] = documents.map((document, index) => {
       if (Object.hasOwn(document.metadata, "id"))
         throw new Error(
@@ -118,7 +119,7 @@ export class WeaviateStore extends VectorStore {
       const flattenedMetadata = flattenObjectForWeaviate(document.metadata);
       return {
         class: this.indexName,
-        id: uuid.v4(),
+        id: documentIds[index],
         vector: vectors[index],
         properties: {
           [this.textKey]: document.pageContent,
@@ -133,15 +134,24 @@ export class WeaviateStore extends VectorStore {
         .withObjects(...batch)
         .do();
     } catch (e) {
-      throw Error(`'Error in addDocuments' ${e}`);
+      throw Error(`'Error adding vectors' ${e}`);
     }
+    return documentIds;
   }
 
-  async addDocuments(documents: Document[]): Promise<void> {
+  async addDocuments(documents: Document[], ids?: string[]) {
     return this.addVectors(
       await this.embeddings.embedDocuments(documents.map((d) => d.pageContent)),
-      documents
+      documents,
+      ids
     );
+  }
+
+  async delete(params: { ids: string[] }): Promise<void> {
+    const { ids } = params;
+    for (const id of ids) {
+      await this.client.data.deleter().withClassName(this.indexName).withId(id);
+    }
   }
 
   async similaritySearchVectorWithScore(

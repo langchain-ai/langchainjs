@@ -51,26 +51,13 @@ export abstract class VectorStore {
   abstract addVectors(
     vectors: number[][],
     documents: Document[]
-  ): Promise<void>;
+  ): Promise<string[] | void>;
 
-  abstract addDocuments(documents: Document[]): Promise<void>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  abstract addDocuments(documents: Document[]): Promise<string[] | void>;
 
-  async delete(idsOrFilterType: string[] | this["FilterType"]): Promise<void> {
-    if (
-      Array.isArray(idsOrFilterType) &&
-      idsOrFilterType.find((item) => typeof item !== "string") === undefined
-    ) {
-      await this.deleteByIds(idsOrFilterType as string[]);
-    } else {
-      await this.deleteByFilter(idsOrFilterType as this["FilterType"]);
-    }
-  }
-
-  protected async deleteByIds(_ids: string[]) {
-    throw new Error("Not implemented.");
-  }
-
-  protected async deleteByFilter(_filter: this["FilterType"]) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async delete(_params?: Record<string, any>): Promise<void> {
     throw new Error("Not implemented.");
   }
 

@@ -1,5 +1,6 @@
 import * as uuid from "uuid";
 import type { ChromaClient as ChromaClientT, Collection } from "chromadb";
+import type { Where } from "chromadb/dist/main/types.js";
 
 import { Embeddings } from "../embeddings/base.js";
 import { VectorStore } from "./base.js";
@@ -19,8 +20,13 @@ export type ChromaLibArgs =
       filter?: object;
     };
 
+export interface ChromaDeleteParams<T> {
+  ids?: string[];
+  filter: T;
+}
+
 export class Chroma extends VectorStore {
-  declare FilterType: object;
+  declare FilterType: Where;
 
   index?: ChromaClientT;
 
@@ -48,11 +54,12 @@ export class Chroma extends VectorStore {
     this.filter = args.filter;
   }
 
-  async addDocuments(documents: Document[]): Promise<void> {
+  async addDocuments(documents: Document[], ids?: string[]) {
     const texts = documents.map(({ pageContent }) => pageContent);
-    await this.addVectors(
+    return this.addVectors(
       await this.embeddings.embedDocuments(texts),
-      documents
+      documents,
+      ids
     );
   }
 
@@ -74,9 +81,9 @@ export class Chroma extends VectorStore {
     return this.collection;
   }
 
-  async addVectors(vectors: number[][], documents: Document[]) {
+  async addVectors(vectors: number[][], documents: Document[], ids?: string[]) {
     if (vectors.length === 0) {
-      return;
+      return [];
     }
     if (this.numDimensions === undefined) {
       this.numDimensions = vectors[0].length;
@@ -90,25 +97,27 @@ export class Chroma extends VectorStore {
       );
     }
 
+    const documentIds =
+      ids ?? Array.from({ length: vectors.length }, () => uuid.v1());
     const collection = await this.ensureCollection();
     await collection.upsert({
-      ids: documents.map(({ id }) => id ?? uuid.v1()),
+      ids: documentIds,
       embeddings: vectors,
       metadatas: documents.map(({ metadata }) => metadata),
       documents: documents.map(({ pageContent }) => pageContent),
     });
+    return documentIds;
   }
 
-  protected async deleteByIds(ids: string[]) {
+  async delete(params: ChromaDeleteParams<this["FilterType"]>): Promise<void> {
     const collection = await this.ensureCollection();
-    await collection.delete({ ids });
-  }
-
-  protected async deleteByFilter(filter: object) {
-    const collection = await this.ensureCollection();
-    await collection.delete({
-      where: { ...filter },
-    });
+    if (Array.isArray(params?.ids)) {
+      await collection.delete({ ids: params.ids });
+    } else {
+      await collection.delete({
+        where: { ...params.filter },
+      });
+    }
   }
 
   async similaritySearchVectorWithScore(
@@ -145,7 +154,6 @@ export class Chroma extends VectorStore {
     for (let i = 0; i < firstIds.length; i += 1) {
       results.push([
         new Document({
-          id: firstIds[i],
           pageContent: firstDocuments?.[i] ?? "",
           metadata: firstMetadatas?.[i] ?? {},
         }),
@@ -173,7 +181,7 @@ export class Chroma extends VectorStore {
       });
       docs.push(newDoc);
     }
-    return Chroma.fromDocuments(docs, embeddings, dbConfig);
+    return this.fromDocuments(docs, embeddings, dbConfig);
   }
 
   static async fromDocuments(
