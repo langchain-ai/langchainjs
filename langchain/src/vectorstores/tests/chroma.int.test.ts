@@ -17,7 +17,6 @@ describe("Chroma", () => {
       url: "http://localhost:8000",
       collectionName: "test-collection",
     });
-    await chromaStore.delete({ filter: {} });
   });
 
   test.skip("auto-generated ids", async () => {
@@ -57,20 +56,23 @@ describe("Chroma", () => {
     const id = uuid.v4();
 
     const ids = await chromaStore.addDocuments([
-      { pageContent, metadata: { foo: "bar" } },
       { pageContent, metadata: { foo: id } },
-      { pageContent, metadata: { foo: "qux" } },
+      { pageContent, metadata: { foo: id } },
     ]);
 
-    const results = await chromaStore.similaritySearch(pageContent, 3);
+    const results = await chromaStore.similaritySearch(pageContent, 2, {
+      foo: id,
+    });
 
-    expect(results.length).toEqual(3);
+    expect(results.length).toEqual(2);
 
-    await chromaStore.delete({ ids });
+    await chromaStore.delete({ ids: ids.slice(0, 1) });
 
-    const newResults = await chromaStore.similaritySearch(pageContent, 3);
+    const newResults = await chromaStore.similaritySearch(pageContent, 2, {
+      foo: id,
+    });
 
-    expect(newResults.length).toEqual(0);
+    expect(newResults.length).toEqual(1);
   });
 
   test.skip("load from client instance", async () => {

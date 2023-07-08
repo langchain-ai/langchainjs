@@ -77,27 +77,24 @@ describe("PineconeStore", () => {
     const id = uuid.v4();
 
     const ids = await pineconeStore.addDocuments([
-      { pageContent, metadata: { foo: "bar" } },
       { pageContent, metadata: { foo: id } },
-      { pageContent, metadata: { foo: "qux" } },
+      { pageContent, metadata: { foo: id } },
     ]);
 
-    const results = await pineconeStore.similaritySearch(pageContent, 1, {
+    const results = await pineconeStore.similaritySearch(pageContent, 2, {
       foo: id,
     });
 
-    expect(results).toEqual([
-      new Document({ metadata: { foo: id }, pageContent }),
-    ]);
+    expect(results.length).toEqual(2);
 
     await pineconeStore.delete({
-      ids,
+      ids: ids.slice(0, 1),
     });
 
-    const results2 = await pineconeStore.similaritySearch(pageContent, 1, {
+    const results2 = await pineconeStore.similaritySearch(pageContent, 2, {
       foo: id,
     });
 
-    expect(results2).toEqual([]);
+    expect(results2.length).toEqual(1);
   });
 });

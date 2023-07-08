@@ -125,9 +125,13 @@ test.skip("WeaviateStore delete", async () => {
       pageContent: "hello world",
       metadata: { deletionTest: (createdAt + 1).toString() },
     },
+    {
+      pageContent: "hello world",
+      metadata: { deletionTest: (createdAt + 1).toString() },
+    },
   ]);
 
-  const results = await store.similaritySearch("hello world", 1, {
+  const results = await store.similaritySearch("hello world", 2, {
     where: {
       operator: "Equal",
       path: ["deletionTest"],
@@ -139,9 +143,13 @@ test.skip("WeaviateStore delete", async () => {
       pageContent: "hello world",
       metadata: { deletionTest: (createdAt + 1).toString() },
     }),
+    new Document({
+      pageContent: "hello world",
+      metadata: { deletionTest: (createdAt + 1).toString() },
+    }),
   ]);
 
-  await store.delete({ ids });
+  await store.delete({ ids: ids.slice(0, 1) });
 
   const results2 = await store.similaritySearch("hello world", 1, {
     where: {
@@ -150,5 +158,10 @@ test.skip("WeaviateStore delete", async () => {
       valueText: (createdAt + 1).toString(),
     },
   });
-  expect(results2).toEqual([]);
+  expect(results2).toEqual([
+    new Document({
+      pageContent: "hello world",
+      metadata: { deletionTest: (createdAt + 1).toString() },
+    }),
+  ]);
 });

@@ -186,27 +186,36 @@ test("Delete on a SupabaseVectorStore", async () => {
     { pageContent: "hello 0", metadata: { created_at: createdAt } },
     { pageContent: "hello 1", metadata: { created_at: createdAt + 1 } },
     { pageContent: "hello 2", metadata: { created_at: createdAt + 2 } },
-    { pageContent: "hello 3", metadata: { created_at: createdAt + 3 } },
+    { pageContent: "hello 3", metadata: { created_at: createdAt + 2 } },
   ]);
 
-  const results = await store.similaritySearch("hello", 1, {
+  const results = await store.similaritySearch("hello", 2, {
     created_at: createdAt + 2,
   });
 
-  expect(results).toHaveLength(1);
+  expect(results).toHaveLength(2);
 
   expect(results).toEqual([
     new Document({
       metadata: { created_at: createdAt + 2 },
       pageContent: "hello 2",
     }),
+    new Document({
+      metadata: { created_at: createdAt + 2 },
+      pageContent: "hello 3",
+    }),
   ]);
 
-  await store.delete({ ids });
+  await store.delete({ ids: ids.slice(-1) });
 
   const results2 = await store.similaritySearch("hello", 1, {
     created_at: createdAt + 2,
   });
 
-  expect(results2).toHaveLength(0);
+  expect(results2).toEqual([
+    new Document({
+      metadata: { created_at: createdAt + 2 },
+      pageContent: "hello 2",
+    }),
+  ]);
 });

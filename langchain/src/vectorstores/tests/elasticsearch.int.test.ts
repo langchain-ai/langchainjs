@@ -50,17 +50,17 @@ test("ElasticVectorSearch integration", async () => {
     new Document({ metadata: { a: 2 }, pageContent: "hello" }),
   ]);
 
-  const results2 = await store.similaritySearchWithScore("hello!", 1, {
+  const results2 = await store.similaritySearchWithScore("testing!", 3, {
     a: 1,
   });
 
-  expect(results2).toHaveLength(1);
+  expect(results2).toHaveLength(3);
 
-  await store.delete({ ids });
+  await store.delete({ ids: ids.slice(2) });
 
   const results3 = await store.similaritySearchWithScore("hello!", 1, {
     a: 1,
   });
 
-  expect(results3).toHaveLength(0);
+  expect(results3).toHaveLength(1);
 });
