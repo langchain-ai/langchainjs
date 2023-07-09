@@ -1,6 +1,7 @@
 /* eslint-disable no-process-env */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { beforeEach, describe, expect, test } from "@jest/globals";
+import { ChromaClient } from "chromadb";
 import { faker } from "@faker-js/faker";
 import * as uuid from "uuid";
 import { Document } from "../../document.js";
@@ -48,5 +49,83 @@ describe("Chroma", () => {
     expect(results).toEqual([
       new Document({ metadata: { foo: id }, pageContent }),
     ]);
+  });
+
+  test.skip("delete by ids", async () => {
+    const pageContent = faker.lorem.sentence(5);
+    const id = uuid.v4();
+
+    const ids = await chromaStore.addDocuments([
+      { pageContent, metadata: { foo: id } },
+      { pageContent, metadata: { foo: id } },
+    ]);
+
+    const results = await chromaStore.similaritySearch(pageContent, 2, {
+      foo: id,
+    });
+
+    expect(results.length).toEqual(2);
+
+    await chromaStore.delete({ ids: ids.slice(0, 1) });
+
+    const newResults = await chromaStore.similaritySearch(pageContent, 2, {
+      foo: id,
+    });
+
+    expect(newResults.length).toEqual(1);
+  });
+
+  test.skip("delete by filter", async () => {
+    const pageContent = faker.lorem.sentence(5);
+    const id = uuid.v4();
+    const id2 = uuid.v4();
+
+    await chromaStore.addDocuments([
+      { pageContent, metadata: { foo: id } },
+      { pageContent, metadata: { foo: id, bar: id2 } },
+    ]);
+
+    const results = await chromaStore.similaritySearch(pageContent, 2, {
+      foo: id,
+    });
+
+    expect(results.length).toEqual(2);
+
+    await chromaStore.delete({
+      filter: {
+        bar: id2,
+      },
+    });
+
+    const newResults = await chromaStore.similaritySearch(pageContent, 2, {
+      foo: id,
+    });
+
+    expect(newResults.length).toEqual(1);
+  });
+
+  test.skip("load from client instance", async () => {
+    const pageContent = faker.lorem.sentence(5);
+    const id = uuid.v4();
+
+    const chromaStoreFromClient = new Chroma(new OpenAIEmbeddings(), {
+      index: new ChromaClient({
+        path: "http://localhost:8000",
+      }),
+      collectionName: "test-collection",
+    });
+
+    await chromaStoreFromClient.addDocuments([
+      { pageContent, metadata: { foo: "bar" } },
+      { pageContent, metadata: { foo: id } },
+      { pageContent, metadata: { foo: "qux" } },
+    ]);
+
+    const results = await chromaStoreFromClient.similaritySearch(
+      pageContent,
+      3
+    );
+
+    expect(results.length).toEqual(3);
   });
 });

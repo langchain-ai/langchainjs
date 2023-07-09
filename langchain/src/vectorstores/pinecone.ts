@@ -19,6 +19,12 @@ export interface PineconeLibArgs {
   filter?: PineconeMetadata;
 }
 
+export type PineconeDeleteParams = {
+  ids?: string[];
+  deleteAll?: boolean;
+  namespace?: string;
+};
+
 export class PineconeStore extends VectorStore {
   declare FilterType: PineconeMetadata;
 
@@ -40,20 +46,24 @@ export class PineconeStore extends VectorStore {
     this.filter = args.filter;
   }
 
-  async addDocuments(documents: Document[], ids?: string[]): Promise<void> {
+  async addDocuments(
+    documents: Document[],
+    options?: { ids?: string[] } | string[]
+  ) {
     const texts = documents.map(({ pageContent }) => pageContent);
     return this.addVectors(
       await this.embeddings.embedDocuments(texts),
       documents,
-      ids
+      options
     );
   }
 
   async addVectors(
     vectors: number[][],
     documents: Document[],
-    ids?: string[]
-  ): Promise<void> {
+    options?: { ids?: string[] } | string[]
+  ) {
+    const ids = Array.isArray(options) ? options : options?.ids;
     const documentIds = ids == null ? documents.map(() => uuid.v4()) : ids;
     const pineconeVectors = vectors.map((values, idx) => {
       // Pinecone doesn't support nested objects, so we flatten them
@@ -106,6 +116,30 @@ export class PineconeStore extends VectorStore {
           namespace: this.namespace,
         },
       });
+    }
+    return documentIds;
+  }
+
+  async delete(params: PineconeDeleteParams): Promise<void> {
+    const { namespace = this.namespace, deleteAll, ids, ...rest } = params;
+    if (deleteAll) {
+      await this.pineconeIndex.delete1({
+        deleteAll: true,
+        namespace,
+        ...rest,
+      });
+    } else if (ids) {
+      const batchSize = 1000;
+      for (let i = 0; i < ids.length; i += batchSize) {
+        const batchIds = ids.slice(i, i + batchSize);
+        await this.pineconeIndex.delete1({
+          ids: batchIds,
+          namespace,
+          ...rest,
+        });
+      }
+    } else {
+      throw new Error("Either ids or delete_all must be provided.");
     }
   }
 

@@ -54,9 +54,10 @@ export async function run() {
     baseOptions: { temperature: 0 },
   });
 
-  await ElasticVectorSearch.fromDocuments(docs, embeddings, clientArgs);
-
+  // await ElasticVectorSearch.fromDocuments(docs, embeddings, clientArgs);
   const vectorStore = new ElasticVectorSearch(embeddings, clientArgs);
+
+  const ids = await vectorStore.addDocuments(docs);
 
   /* Search the vector DB independently with meta filters */
   const results = await vectorStore.similaritySearch("fox jump", 1);
@@ -93,4 +94,14 @@ export async function run() {
       ]
     }
     */
+
+  await vectorStore.delete({ ids });
+
+  const response2 = await chain.call({ query: "What is Elasticsearch?" });
+
+  console.log(JSON.stringify(response2, null, 2));
+
+  /*
+    []
+  */
 }

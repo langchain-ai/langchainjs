@@ -1,3 +1,4 @@
+import * as uuid from "uuid";
 import { Client, estypes } from "@elastic/elasticsearch";
 import { Embeddings } from "../embeddings/base.js";
 import { Document } from "../document.js";
@@ -52,15 +53,20 @@ export class ElasticVectorSearch extends VectorStore {
     this.indexName = args.indexName ?? "documents";
   }
 
-  async addDocuments(documents: Document[]): Promise<void> {
+  async addDocuments(documents: Document[], options?: { ids?: string[] }) {
     const texts = documents.map(({ pageContent }) => pageContent);
     return this.addVectors(
       await this.embeddings.embedDocuments(texts),
-      documents
+      documents,
+      options
     );
   }
 
-  async addVectors(vectors: number[][], documents: Document[]): Promise<void> {
+  async addVectors(
+    vectors: number[][],
+    documents: Document[],
+    options?: { ids?: string[] }
+  ) {
     await this.ensureIndexExists(
       vectors[0].length,
       this.engine,
@@ -68,9 +74,12 @@ export class ElasticVectorSearch extends VectorStore {
       this.efConstruction,
       this.m
     );
+    const documentIds =
+      options?.ids ?? Array.from({ length: vectors.length }, () => uuid.v4());
     const operations = vectors.flatMap((embedding, idx) => [
       {
         index: {
+          _id: documentIds[idx],
           _index: this.indexName,
         },
       },
@@ -81,6 +90,7 @@ export class ElasticVectorSearch extends VectorStore {
       },
     ]);
     await this.client.bulk({ refresh: true, operations });
+    return documentIds;
   }
 
   async similaritySearchVectorWithScore(
@@ -107,6 +117,16 @@ export class ElasticVectorSearch extends VectorStore {
       }),
       hit._score,
     ]);
+  }
+
+  async delete(params: { ids: string[] }): Promise<void> {
+    const operations = params.ids.map((id) => ({
+      delete: {
+        _id: id,
+        _index: this.indexName,
+      },
+    }));
+    await this.client.bulk({ refresh: true, operations });
   }
 
   static fromTexts(

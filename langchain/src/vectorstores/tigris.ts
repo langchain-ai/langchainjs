@@ -19,16 +19,23 @@ export class TigrisVectorStore extends VectorStore {
     this.index = args.index;
   }
 
-  async addDocuments(documents: Document[], ids?: string[]): Promise<void> {
+  async addDocuments(
+    documents: Document[],
+    options?: { ids?: string[] } | string[]
+  ): Promise<void> {
     const texts = documents.map(({ pageContent }) => pageContent);
     await this.addVectors(
       await this.embeddings.embedDocuments(texts),
       documents,
-      ids
+      options
     );
   }
 
-  async addVectors(vectors: number[][], documents: Document[], ids?: string[]) {
+  async addVectors(
+    vectors: number[][],
+    documents: Document[],
+    options?: { ids?: string[] } | string[]
+  ) {
     if (vectors.length === 0) {
       return;
     }
@@ -37,6 +44,7 @@ export class TigrisVectorStore extends VectorStore {
       throw new Error(`Vectors and metadatas must have the same length`);
     }
 
+    const ids = Array.isArray(options) ? options : options?.ids;
     const documentIds = ids == null ? documents.map(() => uuid.v4()) : ids;
     await this.index?.addDocumentsWithVectors({
       ids: documentIds,
