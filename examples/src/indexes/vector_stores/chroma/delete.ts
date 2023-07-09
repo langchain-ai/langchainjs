@@ -3,7 +3,7 @@ import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 
 const embeddings = new OpenAIEmbeddings();
 const vectorStore = new Chroma(embeddings, {
-  collectionName: "godel-escher-bach",
+  collectionName: "test-deletion",
 });
 
 const documents = [
