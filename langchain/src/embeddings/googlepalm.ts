@@ -49,7 +49,7 @@ export class GooglePalmEmbeddings
     });
   }
 
-  async _embed(text: string): Promise<number[]> {
+  async _palmEmbedText(text: string): Promise<number[]> {
     // replace newlines, which can negatively affect performance.
     const cleanedText = text.replace(/\n/g, " ");
     const res = await this.client.embedText({
@@ -60,10 +60,16 @@ export class GooglePalmEmbeddings
   }
 
   async embedQuery(document: string): Promise<number[]> {
-    return this.caller.callWithOptions({}, this._embed.bind(this), document);
+    return this.caller.callWithOptions(
+      {},
+      this._palmEmbedText.bind(this),
+      document
+    );
   }
 
   embedDocuments(documents: string[]): Promise<number[][]> {
-    return Promise.all(documents.map((document) => this._embed(document)));
+    return Promise.all(
+      documents.map((document) => this._palmEmbedText(document))
+    );
   }
 }

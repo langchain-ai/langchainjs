@@ -6,7 +6,7 @@ import { getEnvironmentVariable } from "../util/env.js";
 /**
  * Input for Text generation for Google Palm
  */
-export interface GooglePalmTextInput {
+export interface GooglePalmTextInput extends BaseLLMParams {
   /**
    * Model Name to use
    *
@@ -109,7 +109,7 @@ export class GooglePalm extends LLM implements GooglePalmTextInput {
 
   private client: TextServiceClient;
 
-  constructor(fields?: Partial<GooglePalmTextInput> & BaseLLMParams) {
+  constructor(fields?: GooglePalmTextInput) {
     super(fields ?? {});
 
     this.model = fields?.model ?? this.model;
@@ -176,13 +176,13 @@ export class GooglePalm extends LLM implements GooglePalmTextInput {
   ): Promise<string> {
     const res = await this.caller.callWithOptions(
       { signal: options.signal },
-      this._generateText.bind(this),
+      this._palmGenerateText.bind(this),
       prompt
     );
     return res || "";
   }
 
-  async _generateText(prompt: string): Promise<string | null | undefined> {
+  async _palmGenerateText(prompt: string): Promise<string | null | undefined> {
     const res = await this.client.generateText({
       model: this.model,
       temperature: this.temperature,
