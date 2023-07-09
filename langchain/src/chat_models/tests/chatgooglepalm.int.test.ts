@@ -17,14 +17,14 @@ test("Test ChatGooglePalm", async () => {
   const message = new HumanMessage("Hello!");
   const res = await chat.call([message]);
   console.log({ res });
-});
+}, 50000);
 
 test("Test ChatGooglePalm generate", async () => {
   const chat = new ChatGooglePalm();
   const message = new HumanMessage("Hello!");
   const res = await chat.generate([[message]]);
   console.log(JSON.stringify(res, null, 2));
-});
+}, 50000);
 
 test("ChatGooglePalm, prompt templates", async () => {
   const chat = new ChatGooglePalm();
@@ -47,7 +47,7 @@ test("ChatGooglePalm, prompt templates", async () => {
   ]);
 
   console.log(responseA.generations);
-});
+}, 50000);
 
 test("ChatGooglePalm, longer chain of messages", async () => {
   const chat = new ChatGooglePalm();
@@ -65,7 +65,7 @@ test("ChatGooglePalm, longer chain of messages", async () => {
   ]);
 
   console.log(responseA.generations);
-});
+}, 50000);
 
 test("ChatGooglePalm, with a memory in a chain", async () => {
   const chatPrompt = ChatPromptTemplate.fromPromptMessages([
@@ -93,7 +93,7 @@ test("ChatGooglePalm, with a memory in a chain", async () => {
   });
 
   console.log(response2);
-});
+}, 50000);
 
 test("ChatGooglePalm, chain of messages on code", async () => {
   const chat = new ChatGooglePalm();
@@ -112,4 +112,4 @@ test("ChatGooglePalm, chain of messages on code", async () => {
   ]);
 
   console.log(JSON.stringify(responseA.generations, null, 1));
-});
+}, 50000);

@@ -2,14 +2,14 @@ import { test, expect } from "@jest/globals";
 import { GooglePalmEmbeddings } from "../googlepalm.js";
 import { HNSWLib } from "../../vectorstores/hnswlib.js";
 
-test.skip("Test GooglePalmEmbeddings.embedQuery", async () => {
+test("Test GooglePalmEmbeddings.embedQuery", async () => {
   const embeddings = new GooglePalmEmbeddings();
   const res = await embeddings.embedQuery("Hello world");
   console.log(res);
   expect(typeof res[0]).toBe("number");
-});
+}, 10000);
 
-test.skip("Test GooglePalmEmbeddings.embedDocuments", async () => {
+test("Test GooglePalmEmbeddings.embedDocuments", async () => {
   const embeddings = new GooglePalmEmbeddings();
   const res = await embeddings.embedDocuments([
     "Hello world",
@@ -24,9 +24,9 @@ test.skip("Test GooglePalmEmbeddings.embedDocuments", async () => {
   res.forEach((r) => {
     expect(typeof r[0]).toBe("number");
   });
-});
+}, 10000);
 
-test.skip("Test end to end with HNSWLib", async () => {
+test("Test end to end with HNSWLib", async () => {
   const vectorStore = await HNSWLib.fromTexts(
     ["Hello world", "Bye bye", "hello nice world"],
     [{ id: 2 }, { id: 1 }, { id: 3 }],
@@ -45,4 +45,4 @@ test.skip("Test end to end with HNSWLib", async () => {
   const resultThree = await vectorStore.similaritySearch("hello world", 3);
   const resultThreeMetadatas = resultThree.map(({ metadata }) => metadata);
   expect(resultThreeMetadatas).toEqual([{ id: 2 }, { id: 3 }, { id: 1 }]);
-});
+}, 10000);

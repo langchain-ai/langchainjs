@@ -56,7 +56,7 @@ export class GooglePalmEmbeddings
       model: this.model,
       text: cleanedText,
     });
-    return res[0].embedding?.value || [];
+    return res[0].embedding?.value ?? [];
   }
 
   async embedQuery(document: string): Promise<number[]> {

@@ -167,11 +167,13 @@ export class ChatGooglePalm
     return this._mapPalmMessagesToChatResult(res[0]);
   }
 
-  _getPalmContextInstruction(messages: BaseMessage[]): string {
+  _getPalmContextInstruction(messages: BaseMessage[]): string | undefined {
     // filters out all 'system' messages, but select the first message
     // as Palm chat prompt context
     const systemMessages = messages.filter((m) => m._getType() === "system");
-    return systemMessages && systemMessages[0].content;
+    return systemMessages && systemMessages.length > 0
+      ? systemMessages[0].content
+      : undefined;
   }
 
   _mapBaseMessagesToPalmMessages(
