@@ -1,7 +1,7 @@
 import { OpenAI } from "langchain/llms/openai";
 
 export const run = async () => {
-  const model = new OpenAI(
+  const model = new OpenAI({
     // customize openai model that's used, `text-davinci-003` is the default
     modelName: "gpt-3.5-turbo",
 
@@ -12,12 +12,12 @@ export const run = async () => {
     // use `modelKwargs` to pass params directly to the openai call
     // note that they use snake_case instead of camelCase
     modelKwargs: {
-      user: "me"
+      user: "me",
     },
 
     // for additional logging for debugging purposes
     verbose: true,
-  );
+  });
 
   const resA = await model.call(
     "What would be a good company name a company that makes colorful socks?"
