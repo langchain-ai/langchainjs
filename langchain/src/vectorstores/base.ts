@@ -39,8 +39,8 @@ export class VectorStoreRetriever<
   async addDocuments(
     documents: Document[],
     options?: AddDocumentOptions
-  ): Promise<void> {
-    await this.vectorStore.addDocuments(documents, options);
+  ): Promise<string[] | void> {
+    return this.vectorStore.addDocuments(documents, options);
   }
 }
 
