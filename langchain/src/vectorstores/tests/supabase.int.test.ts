@@ -7,10 +7,10 @@ import { OpenAIEmbeddings } from "../../embeddings/openai.js";
 import { Document } from "../../document.js";
 import { SupabaseVectorStore, SupabaseFilterRPCCall } from "../supabase.js";
 
-test.skip("SupabaseVectorStore with external ids", async () => {
+test("SupabaseVectorStore with external ids", async () => {
   const client = createClient(
-    process.env.SUPABASE_URL!,
-    process.env.SUPABASE_PRIVATE_KEY!
+    process.env.SUPABASE_VECTOR_STORE_URL!,
+    process.env.SUPABASE_VECTOR_STORE_PRIVATE_KEY!
   );
 
   const embeddings = new OpenAIEmbeddings();
@@ -40,10 +40,10 @@ test.skip("SupabaseVectorStore with external ids", async () => {
   ]);
 });
 
-test.skip("Search a SupabaseVectorStore using a metadata filter", async () => {
+test("Search a SupabaseVectorStore using a metadata filter", async () => {
   const client = createClient(
-    process.env.SUPABASE_URL!,
-    process.env.SUPABASE_PRIVATE_KEY!
+    process.env.SUPABASE_VECTOR_STORE_URL!,
+    process.env.SUPABASE_VECTOR_STORE_PRIVATE_KEY!
   );
 
   const embeddings = new OpenAIEmbeddings();
@@ -78,10 +78,10 @@ test.skip("Search a SupabaseVectorStore using a metadata filter", async () => {
   ]);
 });
 
-test.skip("Search a SupabaseVectorStore with a functional metadata filter", async () => {
+test("Search a SupabaseVectorStore with a functional metadata filter", async () => {
   const client = createClient(
-    process.env.SUPABASE_URL!,
-    process.env.SUPABASE_PRIVATE_KEY!
+    process.env.SUPABASE_VECTOR_STORE_URL!,
+    process.env.SUPABASE_VECTOR_STORE_PRIVATE_KEY!
   );
 
   const embeddings = new OpenAIEmbeddings();
@@ -161,6 +161,61 @@ test.skip("Search a SupabaseVectorStore with a functional metadata filter", asyn
     new Document({
       pageContent: "hi",
       metadata: { b: 2, c: 8, stuff: "right", created_at: createdAt },
+    }),
+  ]);
+});
+
+test("Delete on a SupabaseVectorStore", async () => {
+  const client = createClient(
+    process.env.SUPABASE_VECTOR_STORE_URL!,
+    process.env.SUPABASE_VECTOR_STORE_PRIVATE_KEY!
+  );
+
+  const embeddings = new OpenAIEmbeddings();
+
+  const store = new SupabaseVectorStore(embeddings, {
+    client,
+    tableName: "documents",
+  });
+
+  expect(store).toBeDefined();
+
+  const createdAt = new Date().getTime();
+
+  const ids = await store.addDocuments([
+    { pageContent: "hello 0", metadata: { created_at: createdAt } },
+    { pageContent: "hello 1", metadata: { created_at: createdAt + 1 } },
+    { pageContent: "hello 2", metadata: { created_at: createdAt + 2 } },
+    { pageContent: "hello 3", metadata: { created_at: createdAt + 2 } },
+  ]);
+
+  const results = await store.similaritySearch("hello", 2, {
+    created_at: createdAt + 2,
+  });
+
+  expect(results).toHaveLength(2);
+
+  expect(results).toEqual([
+    new Document({
+      metadata: { created_at: createdAt + 2 },
+      pageContent: "hello 2",
+    }),
+    new Document({
+      metadata: { created_at: createdAt + 2 },
+      pageContent: "hello 3",
+    }),
+  ]);
+
+  await store.delete({ ids: ids.slice(-1) });
+
+  const results2 = await store.similaritySearch("hello", 1, {
+    created_at: createdAt + 2,
+  });
+
+  expect(results2).toEqual([
+    new Document({
+      metadata: { created_at: createdAt + 2 },
+      pageContent: "hello 2",
     }),
   ]);
 });
