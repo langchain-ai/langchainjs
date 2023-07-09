@@ -43,6 +43,23 @@ const res = await model.call(
 console.log({ res });
 ```
 
+## `GooglePalm`
+
+The [Google PaLM API](https://developers.generativeai.google/products/palm) integration requires you to install the following packages:
+
+```bash npm2yarn
+npm install google-auth-library @google-ai/generativelanguage
+```
+
+Create an **API key** from [Google MakerSuite](https://makersuite.google.com/app/apikey), you may either
+
+- set the key as `GOOGLEPALM_API_KEY` environment variable or
+- pass it as `apiKey` parameter while instantiating the model
+
+import GooglePalmExample from "@examples/models/llm/googlepalm.ts";
+
+<CodeBlock language="typescript">{GooglePalmExample}</CodeBlock>
+
 ## Google Vertex AI
 
 The Vertex AI implementation is meant to be used in Node.js and not

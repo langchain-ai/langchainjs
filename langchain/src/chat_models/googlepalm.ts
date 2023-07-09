@@ -216,9 +216,9 @@ export class ChatGooglePalm
       return {
         generations: [
           {
-            text: message.content || "",
+            text: message.content ?? "",
             message: new AIMessage({
-              content: message.content || "",
+              content: message.content ?? "",
               name: message.author === null ? undefined : message.author,
               additional_kwargs: {
                 citationSources: message.citationMetadata?.citationSources,
