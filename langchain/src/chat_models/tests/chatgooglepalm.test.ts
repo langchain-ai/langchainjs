@@ -59,7 +59,9 @@ test("Google Palm Chat - gets the Palm prompt context from 'system' messages", a
     new HumanMessage("human-1"),
     new SystemMessage("system-2"),
   ];
-  const model = new ChatGooglePalm();
+  const model = new ChatGooglePalm({
+    apiKey: "GOOGLEPALM_API_KEY",
+  });
 
   const context = model._getPalmContextInstruction(messages);
   expect(context).toBe("system-1");
@@ -89,7 +91,9 @@ test("Google Palm Chat - maps `BaseMessage` to Palm message", async () => {
       name: "skywalker",
     }),
   ];
-  const model = new ChatGooglePalm();
+  const model = new ChatGooglePalm({
+    apiKey: "GOOGLEPALM_API_KEY",
+  });
 
   const palmMessages = model._mapBaseMessagesToPalmMessages(messages);
   expect(palmMessages.length).toEqual(4);
@@ -131,7 +135,9 @@ test("Google Palm Chat - removes 'system' messages while mapping `BaseMessage` t
     new HumanMessage("human-1"),
     new SystemMessage("system-2"),
   ];
-  const model = new ChatGooglePalm();
+  const model = new ChatGooglePalm({
+    apiKey: "GOOGLEPALM_API_KEY",
+  });
 
   const palmMessages = model._mapBaseMessagesToPalmMessages(messages);
   expect(palmMessages.length).toEqual(2);
@@ -147,7 +153,9 @@ test("Google Palm Chat - merges consecutive 'ai'/'human' messages while mapping 
     new HumanMessage("human-2"),
     new AIMessage("ai-3"),
   ];
-  const model = new ChatGooglePalm();
+  const model = new ChatGooglePalm({
+    apiKey: "GOOGLEPALM_API_KEY",
+  });
 
   const palmMessages = model._mapBaseMessagesToPalmMessages(messages);
   expect(palmMessages.length).toEqual(3);
@@ -182,7 +190,9 @@ test("Google Palm Chat - maps Palm generated message to `AIMessage` chat result"
         },
       ],
     };
-  const model = new ChatGooglePalm();
+  const model = new ChatGooglePalm({
+    apiKey: "GOOGLEPALM_API_KEY",
+  });
 
   const chatResult = model._mapPalmMessagesToChatResult(generations);
   expect(chatResult.generations.length).toEqual(1);
@@ -219,7 +229,9 @@ test("Google Palm Chat - gets empty chat result & reason if generation failed", 
         },
       ],
     };
-  const model = new ChatGooglePalm();
+  const model = new ChatGooglePalm({
+    apiKey: "GOOGLEPALM_API_KEY",
+  });
 
   const chatResult = model._mapPalmMessagesToChatResult(generations);
   expect(chatResult.generations.length).toEqual(0);
