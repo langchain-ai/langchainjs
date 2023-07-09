@@ -46,7 +46,7 @@ test("Google Palm Chat - `topK` must be positive", async () => {
   }).toThrow();
 });
 
-test("Google Palm Chat - `apiKey` must be available if no `ChatGooglePalm_API_KEY` env available", async () => {
+test("Google Palm Chat - `apiKey` must be available if no `GOOGLEPALM_API_KEY` env available", async () => {
   expect(() => {
     new ChatGooglePalm({});
   }).toThrow();
@@ -97,24 +97,23 @@ test("Google Palm Chat - maps `BaseMessage` to Palm message", async () => {
 
   const palmMessages = model._mapBaseMessagesToPalmMessages(messages);
   expect(palmMessages.length).toEqual(4);
-  expect(palmMessages[0]).toBe({
+  expect(palmMessages[0]).toEqual({
     author: undefined,
     content: "ai-1",
-    citationMetadata: undefined,
+    citationMetadata: {
+      citationSources: undefined,
+    },
   });
-  expect(palmMessages[1]).toBe({
+  expect(palmMessages[1]).toEqual({
     author: undefined,
     content: "human-1",
-    citationMetadata: undefined,
+    citationMetadata: {
+      citationSources: undefined,
+    },
   });
-  expect(palmMessages[2]).toBe({
+  expect(palmMessages[2]).toEqual({
     author: "droid",
     content: "ai-2",
-    citationMetadata: undefined,
-  });
-  expect(palmMessages[3]).toBe({
-    author: "skywalker",
-    content: "human-2",
     citationMetadata: {
       citationSources: [
         {
@@ -124,6 +123,13 @@ test("Google Palm Chat - maps `BaseMessage` to Palm message", async () => {
           license: "MIT",
         },
       ],
+    },
+  });
+  expect(palmMessages[3]).toEqual({
+    author: "skywalker",
+    content: "human-2",
+    citationMetadata: {
+      citationSources: undefined,
     },
   });
 });
@@ -202,7 +208,7 @@ test("Google Palm Chat - maps Palm generated message to `AIMessage` chat result"
   expect(chatResult.generations[0].message.content).toBe("ai-1");
   expect(
     chatResult.generations[0].message.additional_kwargs.citationSources
-  ).toBe([
+  ).toEqual([
     {
       startIndex: 0,
       endIndex: 5,
@@ -210,7 +216,7 @@ test("Google Palm Chat - maps Palm generated message to `AIMessage` chat result"
       license: "MIT",
     },
   ]);
-  expect(chatResult.generations[0].message.additional_kwargs.filters).toBe([
+  expect(chatResult.generations[0].message.additional_kwargs.filters).toEqual([
     {
       message: "potential problem",
       reason: "SAFETY",
@@ -235,7 +241,7 @@ test("Google Palm Chat - gets empty chat result & reason if generation failed", 
 
   const chatResult = model._mapPalmMessagesToChatResult(generations);
   expect(chatResult.generations.length).toEqual(0);
-  expect(chatResult.llmOutput?.filters).toBe([
+  expect(chatResult.llmOutput?.filters).toEqual([
     {
       message: "potential problem",
       reason: "SAFETY",
