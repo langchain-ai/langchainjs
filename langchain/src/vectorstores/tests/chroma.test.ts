@@ -6,16 +6,15 @@ import { Chroma } from "../chroma.js";
 import { FakeEmbeddings } from "../../embeddings/fake.js";
 
 const mockCollection = {
-  add: jest.fn<Collection["add"]>().mockResolvedValue(undefined as any),
   count: jest.fn<Collection["count"]>().mockResolvedValue(5),
-  // not used, so leave out for now.
-  // upsert: jest.fn<Collection["upsert"]>().mockResolvedValue(undefined as any),
+  upsert: jest.fn<Collection["upsert"]>().mockResolvedValue(undefined as any),
+  delete: jest.fn<Collection["delete"]>().mockResolvedValue(undefined as any),
+  // add: jest.fn<Collection["add"]>().mockResolvedValue(undefined as any),
   // modify: jest.fn<Collection["modify"]>().mockResolvedValue(undefined as any),
   // get: jest.fn<Collection["get"]>().mockResolvedValue(undefined as any),
   // update: jest.fn<Collection["update"]>().mockResolvedValue({ success: true }),
   // query: jest.fn<Collection["query"]>().mockResolvedValue(undefined as any),
   // peek: jest.fn<Collection["peek"]>().mockResolvedValue(undefined as any),
-  // delete: jest.fn<Collection["delete"]>().mockResolvedValue(undefined as any),
 } as any;
 
 const mockClient = {
@@ -54,7 +53,7 @@ describe("Chroma", () => {
     expect(embeddings.embedDocuments).toHaveBeenCalledWith(
       expectedPageContents
     );
-    expect(mockCollection.add).toHaveBeenCalled();
+    expect(mockCollection.upsert).toHaveBeenCalled();
   });
 
   test("should throw an error for mismatched vector lengths", async () => {
