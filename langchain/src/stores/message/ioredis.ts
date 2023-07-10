@@ -35,7 +35,7 @@ export class RedisChatMessageHistory extends BaseListChatMessageHistory {
 
     const { sessionId, sessionTTL, url, config, client } = fields;
     this.client = (client ??
-      (url ? new Redis() : new Redis(config ?? {}))) as Redis;
+      (url ? new Redis(url) : new Redis(config ?? {}))) as Redis;
     this.sessionId = sessionId;
     this.sessionTTL = sessionTTL;
   }
