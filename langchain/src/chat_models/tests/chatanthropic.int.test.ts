@@ -34,21 +34,6 @@ test("Test ChatAnthropic Generate", async () => {
   console.log({ res });
 });
 
-test("Test ChatAnthropic Generate with a signal in call options", async () => {
-  const chat = new ChatAnthropic({
-    modelName: "claude-instant-v1",
-  });
-  const controller = new AbortController();
-  const message = new HumanMessage("Hello!");
-  await expect(() => {
-    const res = chat.generate([[message], [message]], {
-      signal: controller.signal,
-    });
-    controller.abort();
-    return res;
-  }).rejects.toThrow();
-}, 5000);
-
 test("Test ChatAnthropic tokenUsage with a batch", async () => {
   const model = new ChatAnthropic({
     temperature: 0,
@@ -82,37 +67,6 @@ test("Test ChatAnthropic in streaming mode", async () => {
   expect(nrNewTokens > 0).toBe(true);
   expect(res.content).toBe(streamedCompletion);
 });
-
-test("Test ChatAnthropic in streaming mode with a signal", async () => {
-  let nrNewTokens = 0;
-  let streamedCompletion = "";
-
-  const model = new ChatAnthropic({
-    modelName: "claude-instant-v1",
-    streaming: true,
-    callbacks: CallbackManager.fromHandlers({
-      async handleLLMNewToken(token: string) {
-        nrNewTokens += 1;
-        streamedCompletion += token;
-      },
-    }),
-  });
-  const controller = new AbortController();
-  const message = new HumanMessage(
-    "Hello! Give me an extremely verbose response"
-  );
-  await expect(() => {
-    const res = model.call([message], {
-      signal: controller.signal,
-    });
-    setTimeout(() => {
-      controller.abort();
-    }, 500);
-    return res;
-  }).rejects.toThrow();
-
-  console.log({ nrNewTokens, streamedCompletion });
-}, 5000);
 
 test("Test ChatAnthropic prompt value", async () => {
   const chat = new ChatAnthropic({

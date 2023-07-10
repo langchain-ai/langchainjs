@@ -1,10 +1,4 @@
-import {
-  AI_PROMPT,
-  HUMAN_PROMPT,
-  Client as AnthropicApi,
-  CompletionResponse,
-  SamplingParameters,
-} from "@anthropic-ai/sdk";
+import { AI_PROMPT, HUMAN_PROMPT, Anthropic } from "@anthropic-ai/sdk";
 import { BaseChatModel, BaseChatModelParams } from "./base.js";
 import {
   AIMessage,
@@ -141,10 +135,10 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
   streaming = false;
 
   // Used for non-streaming requests
-  private batchClient: AnthropicApi;
+  private batchClient: Anthropic;
 
   // Used for streaming requests
-  private streamingClient: AnthropicApi;
+  private streamingClient: Anthropic;
 
   constructor(fields?: Partial<AnthropicInput> & BaseChatModelParams) {
     super(fields ?? {});
@@ -176,7 +170,7 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
    */
   invocationParams(
     options?: this["ParsedCallOptions"]
-  ): Omit<SamplingParameters, "prompt"> & Kwargs {
+  ): Omit<Anthropic.Completions.CompletionCreateParams, "prompt"> & Kwargs {
     return {
       model: this.modelName,
       temperature: this.temperature,
@@ -241,7 +235,6 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
         ...params,
         prompt: this.formatMessagesAsPrompt(messages),
       },
-      { signal: options.signal },
       runManager
     );
 
@@ -259,69 +252,57 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
 
   /** @ignore */
   private async completionWithRetry(
-    request: SamplingParameters & Kwargs,
-    options: { signal?: AbortSignal },
+    request: Anthropic.Completions.CompletionCreateParams & Kwargs,
     runManager?: CallbackManagerForLLMRun
-  ): Promise<CompletionResponse> {
+  ): Promise<Anthropic.Completion> {
     if (!this.anthropicApiKey) {
       throw new Error("Missing Anthropic API key.");
     }
     let makeCompletionRequest;
     if (request.stream) {
       if (!this.streamingClient) {
-        const options = this.apiUrl ? { apiUrl: this.apiUrl } : undefined;
-        this.streamingClient = new AnthropicApi(this.anthropicApiKey, options);
+        const options = this.apiUrl ? { baseURL: this.apiUrl } : {};
+        this.streamingClient = new Anthropic({
+          apiKey: this.anthropicApiKey,
+          ...options,
+        });
       }
+
       makeCompletionRequest = async () => {
-        let currentCompletion = "";
-        return (
-          this.streamingClient
-            .completeStream(request, {
-              onUpdate: (data: CompletionResponse) => {
-                if (data.stop_reason) {
-                  return;
-                }
-                const part = data.completion;
-                if (part) {
-                  const delta = part.slice(currentCompletion.length);
-                  currentCompletion += delta ?? "";
-                  // eslint-disable-next-line no-void
-                  void runManager?.handleLLMNewToken(delta ?? "");
-                }
-              },
-              signal: options.signal,
-            })
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            .catch((e: any) => {
-              // Anthropic doesn't actually throw JavaScript error objects at the moment.
-              // We convert the error so the async caller can recognize it correctly.
-              if (e?.name === "AbortError") {
-                throw new Error(`${e.name}: ${e.message}`);
-              }
-              throw e;
-            })
-        );
+        const stream = await this.streamingClient.completions.create(request, {
+          stream: true,
+        });
+
+        const completion: Anthropic.Completion = {
+          completion: "",
+          model: "",
+          stop_reason: "",
+        };
+
+        for await (const partial of stream) {
+          completion.stop_reason = partial.stop_reason;
+          completion.model = partial.model;
+
+          if (partial.stop_reason) {
+            break;
+          }
+
+          completion.completion += partial.completion;
+          void runManager?.handleLLMNewToken(partial.completion);
+        }
+
+        return completion;
       };
     } else {
       if (!this.batchClient) {
-        const options = this.apiUrl ? { apiUrl: this.apiUrl } : undefined;
-        this.batchClient = new AnthropicApi(this.anthropicApiKey, options);
+        const options = this.apiUrl ? { baseURL: this.apiUrl } : {};
+        this.batchClient = new Anthropic({
+          apiKey: this.anthropicApiKey,
+          ...options,
+        });
       }
       makeCompletionRequest = async () =>
-        this.batchClient
-          .complete(request, {
-            signal: options.signal,
-          })
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          .catch((e: any) => {
-            console.log(e);
-            // Anthropic doesn't actually throw JavaScript error objects at the moment.
-            // We convert the error so the async caller can recognize it correctly.
-            if (e?.type === "aborted") {
-              throw new Error(`${e.name}: ${e.message}`);
-            }
-            throw e;
-          });
+        await this.batchClient.completions.create(request);
     }
     return this.caller.call(makeCompletionRequest);
   }
