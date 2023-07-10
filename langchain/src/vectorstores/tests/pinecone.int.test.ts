@@ -33,7 +33,7 @@ describe("PineconeStore", () => {
       [documentId]
     );
 
-    const results = await pineconeStore.similaritySearch(pageContent, 2);
+    const results = await pineconeStore.similaritySearch(pageContent, 1);
 
     expect(results).toEqual([new Document({ metadata: {}, pageContent })]);
 
@@ -42,7 +42,7 @@ describe("PineconeStore", () => {
       [documentId]
     );
 
-    const results2 = await pineconeStore.similaritySearch(pageContent, 2);
+    const results2 = await pineconeStore.similaritySearch(pageContent, 1);
 
     expect(results2).toEqual([
       new Document({ metadata: {}, pageContent: `${pageContent} upserted` }),
