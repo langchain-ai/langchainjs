@@ -75,11 +75,11 @@ export class SupabaseVectorStore extends VectorStore {
     const chunkSize = 500;
     let returnedIds: string[] = [];
     for (let i = 0; i < rows.length; i += chunkSize) {
-      const chunk = rows.slice(i, i + chunkSize).map((chunk) => {
+      const chunk = rows.slice(i, i + chunkSize).map((row) => {
         if (options?.ids) {
-          return { id: options.ids[i], ...chunk };
+          return { id: options.ids[i], ...row };
         }
-        return chunk;
+        return row;
       });
 
       const res = await this.client.from(this.tableName).upsert(chunk).select();
