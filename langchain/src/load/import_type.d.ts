@@ -265,6 +265,9 @@ export interface OptionalImportMap {
   "langchain/stores/message/redis"?:
     | typeof import("../stores/message/redis.js")
     | Promise<typeof import("../stores/message/redis.js")>;
+  "langchain/stores/message/ioredis"?:
+    | typeof import("../stores/message/ioredis.js")
+    | Promise<typeof import("../stores/message/ioredis.js")>;
   "langchain/stores/message/upstash_redis"?:
     | typeof import("../stores/message/upstash_redis.js")
     | Promise<typeof import("../stores/message/upstash_redis.js")>;
