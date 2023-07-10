@@ -19661,6 +19661,7 @@ __metadata:
     redis: ^4.6.4
     replicate: ^0.9.0
     srt-parser-2: ^1.2.2
+    twilio: "*"
     typeorm: ^0.3.12
     typesense: ^1.5.3
     vectordb: ^0.1.4
@@ -19763,6 +19764,8 @@ __metadata:
     replicate:
       optional: true
     srt-parser-2:
+      optional: true
+    twilio:
       optional: true
     typeorm:
       optional: true
