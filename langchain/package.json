@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.104",
+  "version": "0.0.106",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -519,7 +519,7 @@
     "apify-client": "^2.7.1",
     "axios": "^0.26.0",
     "cheerio": "^1.0.0-rc.12",
-    "chromadb": "^1.5.2",
+    "chromadb": "^1.5.3",
     "cohere-ai": "^5.0.2",
     "d3-dsv": "^2.0.0",
     "dotenv": "^16.0.3",
@@ -592,7 +592,7 @@
     "apify-client": "^2.7.1",
     "axios": "*",
     "cheerio": "^1.0.0-rc.12",
-    "chromadb": "^1.5.2",
+    "chromadb": "^1.5.3",
     "cohere-ai": "^5.0.2",
     "d3-dsv": "^2.0.0",
     "epub2": "^3.0.1",

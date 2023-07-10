@@ -2,6 +2,9 @@ import { Embeddings } from "../embeddings/base.js";
 import { Document } from "../document.js";
 import { BaseRetriever } from "../schema/index.js";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AddDocumentOptions = Record<string, any>;
+
 export interface VectorStoreRetrieverInput<V extends VectorStore> {
   vectorStore: V;
   k?: number;
@@ -33,8 +36,11 @@ export class VectorStoreRetriever<
     return results;
   }
 
-  async addDocuments(documents: Document[]): Promise<void> {
-    await this.vectorStore.addDocuments(documents);
+  async addDocuments(
+    documents: Document[],
+    options?: AddDocumentOptions
+  ): Promise<string[] | void> {
+    return this.vectorStore.addDocuments(documents, options);
   }
 }
 
@@ -50,10 +56,19 @@ export abstract class VectorStore {
 
   abstract addVectors(
     vectors: number[][],
-    documents: Document[]
-  ): Promise<void>;
+    documents: Document[],
+    options?: AddDocumentOptions
+  ): Promise<string[] | void>;
 
-  abstract addDocuments(documents: Document[]): Promise<void>;
+  abstract addDocuments(
+    documents: Document[],
+    options?: AddDocumentOptions
+  ): Promise<string[] | void>;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async delete(_params?: Record<string, any>): Promise<void> {
+    throw new Error("Not implemented.");
+  }
 
   abstract similaritySearchVectorWithScore(
     query: number[],
