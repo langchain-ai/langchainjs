@@ -44,6 +44,7 @@ const documents = [
   },
 ];
 
+// Also supports an additional {ids: []} parameter for upsertion
 const ids = await vectorStore.addDocuments(documents);
 
 const response = await vectorStore.similaritySearch("scared", 2);

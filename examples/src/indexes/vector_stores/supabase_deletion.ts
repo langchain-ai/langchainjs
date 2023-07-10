@@ -26,6 +26,7 @@ export const run = async () => {
     { pageContent: "hello", metadata: { b: 1, c: 9, stuff: "wrong" } },
   ];
 
+  // Also takes an additional {ids: []} parameter for upsertion
   const ids = await store.addDocuments(docs);
 
   const resultA = await store.similaritySearch("hello", 2);

@@ -90,7 +90,7 @@ test.skip("WeaviateStore", async () => {
   ]);
 });
 
-test.skip("WeaviateStore delete", async () => {
+test.skip("WeaviateStore upsert + delete", async () => {
   // Something wrong with the weaviate-ts-client types, so we need to disable
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const client = (weaviate as any).client({
@@ -131,7 +131,7 @@ test.skip("WeaviateStore delete", async () => {
     },
   ]);
 
-  const results = await store.similaritySearch("hello world", 2, {
+  const results = await store.similaritySearch("hello world", 4, {
     where: {
       operator: "Equal",
       path: ["deletionTest"],
@@ -149,9 +149,23 @@ test.skip("WeaviateStore delete", async () => {
     }),
   ]);
 
-  await store.delete({ ids: ids.slice(0, 1) });
+  const ids2 = await store.addDocuments(
+    [
+      {
+        pageContent: "hello world upserted",
+        metadata: { deletionTest: (createdAt + 1).toString() },
+      },
+      {
+        pageContent: "hello world upserted",
+        metadata: { deletionTest: (createdAt + 1).toString() },
+      },
+    ],
+    { ids }
+  );
 
-  const results2 = await store.similaritySearch("hello world", 1, {
+  expect(ids2).toEqual(ids);
+
+  const results2 = await store.similaritySearch("hello world", 4, {
     where: {
       operator: "Equal",
       path: ["deletionTest"],
@@ -160,7 +174,27 @@ test.skip("WeaviateStore delete", async () => {
   });
   expect(results2).toEqual([
     new Document({
-      pageContent: "hello world",
+      pageContent: "hello world upserted",
+      metadata: { deletionTest: (createdAt + 1).toString() },
+    }),
+    new Document({
+      pageContent: "hello world upserted",
+      metadata: { deletionTest: (createdAt + 1).toString() },
+    }),
+  ]);
+
+  await store.delete({ ids: ids.slice(0, 1) });
+
+  const results3 = await store.similaritySearch("hello world", 1, {
+    where: {
+      operator: "Equal",
+      path: ["deletionTest"],
+      valueText: (createdAt + 1).toString(),
+    },
+  });
+  expect(results3).toEqual([
+    new Document({
+      pageContent: "hello world upserted",
       metadata: { deletionTest: (createdAt + 1).toString() },
     }),
   ]);
