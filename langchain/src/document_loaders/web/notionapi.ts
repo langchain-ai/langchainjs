@@ -14,6 +14,7 @@ import type {
 import { BaseDocumentLoader } from "../base.js";
 import { Document } from "../../document.js";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type GuardType<T> = T extends (x: any, ...rest: any) => x is infer U
   ? U
   : never;
