@@ -253,7 +253,11 @@ export class SimpleSequentialChain
   /** @ignore */
   _validateChains() {
     for (const chain of this.chains) {
-      if (chain.inputKeys.length !== 1) {
+      if (
+        chain.inputKeys.filter(
+          (k) => !chain.memory?.memoryKeys.includes(k) ?? true
+        ).length !== 1
+      ) {
         throw new Error(
           `Chains used in SimpleSequentialChain should all have one input, got ${
             chain.inputKeys.length
@@ -279,7 +283,12 @@ export class SimpleSequentialChain
     let i = 0;
     for (const chain of this.chains) {
       i += 1;
-      input = await chain.run(input, runManager?.getChild(`step_${i}`));
+      input = (
+        await chain.call(
+          { [chain.inputKeys[0]]: input, signal: values.signal },
+          runManager?.getChild(`step_${i}`)
+        )
+      )[chain.outputKeys[0]];
       if (this.trimOutputs) {
         input = input.trim();
       }

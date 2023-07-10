@@ -2,7 +2,7 @@ import CodeBlock from "@theme/CodeBlock";
 
 # Agent with Zapier NLA Integration
 
-Full docs here: https://nla.zapier.com/api/v1/dynamic/docs
+Full docs here: https://nla.zapier.com/start/
 
 **Zapier Natural Language Actions** gives you access to the 5k+ apps and 20k+ actions on Zapier's platform through a natural language API interface.
 
@@ -16,7 +16,9 @@ Server-side (API Key): for quickly getting started, testing, and production scen
 
 User-facing (Oauth): for production scenarios where you are deploying an end-user facing application and LangChain needs access to end-user's exposed actions and connected accounts on Zapier.com
 
-This quick start will focus on the server-side use case for brevity. Review full docs or reach out to nla@zapier.com for user-facing oauth developer support.
+Attach NLA credentials via either an environment variable (`ZAPIER_NLA_OAUTH_ACCESS_TOKEN` or `ZAPIER_NLA_API_KEY`) or refer to the params argument in the API reference for `ZapierNLAWrapper`.
+
+Review [auth docs](https://nla.zapier.com/docs/authentication/) for more details.
 
 The example below demonstrates how to use the Zapier integration as an Agent:
 

@@ -5,6 +5,7 @@ import {
   MemoryVariables,
   getBufferString,
   getInputValue,
+  getOutputValue,
 } from "./base.js";
 import { AsyncCaller, AsyncCallerParams } from "../util/async_caller.js";
 
@@ -19,8 +20,6 @@ export interface MotorheadMemoryMessage {
 export type MotorheadMemoryInput = BaseChatMemoryInput &
   AsyncCallerParams & {
     sessionId: string;
-    /** @deprecated Use "url" instead. */
-    motorheadURL?: string;
     url?: string;
     memoryKey?: string;
     timeout?: number;
@@ -52,7 +51,6 @@ export class MotorheadMemory extends BaseChatMemory {
     const {
       sessionId,
       url,
-      motorheadURL,
       memoryKey,
       timeout,
       returnMessages,
@@ -67,7 +65,7 @@ export class MotorheadMemory extends BaseChatMemory {
 
     this.caller = new AsyncCaller(rest);
     this.sessionId = sessionId;
-    this.url = url ?? motorheadURL ?? this.url;
+    this.url = url ?? this.url;
     this.memoryKey = memoryKey ?? this.memoryKey;
     this.timeout = timeout ?? this.timeout;
     this.apiKey = apiKey;
@@ -108,7 +106,9 @@ export class MotorheadMemory extends BaseChatMemory {
       }
     );
 
-    const { messages = [], context = "NONE" } = await res.json();
+    const json = await res.json();
+    const data = json?.data || json; // Managed Motorhead returns { data: { messages: [], context: "NONE" } }
+    const { messages = [], context = "NONE" } = data;
 
     await Promise.all(
       messages.reverse().map(async (message: MotorheadMemoryMessage) => {
@@ -144,7 +144,7 @@ export class MotorheadMemory extends BaseChatMemory {
     outputValues: OutputValues
   ): Promise<void> {
     const input = getInputValue(inputValues, this.inputKey);
-    const output = getInputValue(outputValues, this.outputKey);
+    const output = getOutputValue(outputValues, this.outputKey);
     await Promise.all([
       this.caller.call(fetch, `${this.url}/sessions/${this.sessionId}/memory`, {
         signal: this.timeout ? AbortSignal.timeout(this.timeout) : undefined,

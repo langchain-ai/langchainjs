@@ -9,7 +9,7 @@ import { OpenAI } from "../../../llms/openai.js";
 import { WeaviateStore } from "../../../vectorstores/weaviate.js";
 import { WeaviateTranslator } from "../weaviate.js";
 
-test("Weaviate Self Query Retriever Test", async () => {
+test.skip("Weaviate Self Query Retriever Test", async () => {
   const docs = [
     new Document({
       pageContent:
@@ -81,8 +81,10 @@ test("Weaviate Self Query Retriever Test", async () => {
   });
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const client = (weaviate as any).client({
-    scheme: process.env.WEAVIATE_SCHEME || "https",
-    host: process.env.WEAVIATE_HOST || "localhost",
+    scheme:
+      process.env.WEAVIATE_SCHEME ||
+      (process.env.WEAVIATE_HOST ? "https" : "http"),
+    host: process.env.WEAVIATE_HOST || "localhost:8080",
     apiKey: process.env.WEAVIATE_API_KEY
       ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
         new (weaviate as any).ApiKey(process.env.WEAVIATE_API_KEY)

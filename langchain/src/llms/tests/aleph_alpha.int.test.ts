@@ -1,7 +1,7 @@
 import { test, describe, expect } from "@jest/globals";
 import { AlephAlpha } from "../aleph_alpha.js";
 
-describe("AI21", () => {
+describe("Aleph Alpha", () => {
   test("test call", async () => {
     const aleph_alpha = new AlephAlpha({});
     const result = await aleph_alpha.call(

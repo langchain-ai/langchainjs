@@ -1,10 +1,10 @@
 import {
-  AIChatMessage,
-  BaseChatMessage,
+  AIMessage,
+  BaseMessage,
   BasePromptValue,
   ChatGeneration,
   ChatResult,
-  HumanChatMessage,
+  HumanMessage,
   LLMResult,
   RUN_KEY,
 } from "../schema/index.js";
@@ -14,6 +14,7 @@ import {
   BaseLanguageModelParams,
 } from "../base_language/index.js";
 import {
+  BaseCallbackConfig,
   CallbackManager,
   CallbackManagerForLLMRun,
   Callbacks,
@@ -39,7 +40,10 @@ export type BaseChatModelCallOptions = BaseLanguageModelCallOptions;
 export abstract class BaseChatModel extends BaseLanguageModel {
   declare CallOptions: BaseChatModelCallOptions;
 
-  declare ParsedCallOptions: Omit<this["CallOptions"], "timeout">;
+  declare ParsedCallOptions: Omit<
+    this["CallOptions"],
+    "timeout" | "tags" | "metadata" | "callbacks"
+  >;
 
   lc_namespace = ["langchain", "chat_models", this._llmType()];
 
@@ -52,12 +56,11 @@ export abstract class BaseChatModel extends BaseLanguageModel {
   ): LLMResult["llmOutput"];
 
   async generate(
-    messages: BaseChatMessage[][],
+    messages: BaseMessage[][],
     options?: string[] | this["CallOptions"],
     callbacks?: Callbacks
   ): Promise<LLMResult> {
-    const generations: ChatGeneration[][] = [];
-    const llmOutputs: LLMResult["llmOutput"][] = [];
+    // parse call options
     let parsedOptions: this["CallOptions"];
     if (Array.isArray(options)) {
       parsedOptions = { stop: options } as this["CallOptions"];
@@ -69,50 +72,76 @@ export abstract class BaseChatModel extends BaseLanguageModel {
     } else {
       parsedOptions = options ?? {};
     }
+    const handledOptions: BaseCallbackConfig = {
+      tags: parsedOptions.tags,
+      metadata: parsedOptions.metadata,
+      callbacks: parsedOptions.callbacks ?? callbacks,
+    };
+    delete parsedOptions.tags;
+    delete parsedOptions.metadata;
+    delete parsedOptions.callbacks;
+    // create callback manager and start run
     const callbackManager_ = await CallbackManager.configure(
-      callbacks,
+      handledOptions.callbacks,
       this.callbacks,
-      parsedOptions.tags,
+      handledOptions.tags,
       this.tags,
+      handledOptions.metadata,
+      this.metadata,
       { verbose: this.verbose }
     );
     const extra = {
       options: parsedOptions,
-      invocation_params: this?.invocationParams(),
+      invocation_params: this?.invocationParams(parsedOptions),
     };
-    const runManager = await callbackManager_?.handleChatModelStart(
+    const runManagers = await callbackManager_?.handleChatModelStart(
       this.toJSON(),
       messages,
       undefined,
       undefined,
       extra
     );
-    try {
-      const results = await Promise.all(
-        messages.map((messageList) =>
-          this._generate(messageList, parsedOptions, runManager)
+    // generate results
+    const results = await Promise.allSettled(
+      messages.map((messageList, i) =>
+        this._generate(
+          messageList,
+          { ...parsedOptions, promptIndex: i },
+          runManagers?.[i]
         )
-      );
-      for (const result of results) {
-        if (result.llmOutput) {
-          llmOutputs.push(result.llmOutput);
+      )
+    );
+    // handle results
+    const generations: ChatGeneration[][] = [];
+    const llmOutputs: LLMResult["llmOutput"][] = [];
+    await Promise.all(
+      results.map(async (pResult, i) => {
+        if (pResult.status === "fulfilled") {
+          const result = pResult.value;
+          generations[i] = result.generations;
+          llmOutputs[i] = result.llmOutput;
+          return runManagers?.[i]?.handleLLMEnd({
+            generations: [result.generations],
+            llmOutput: result.llmOutput,
+          });
+        } else {
+          // status === "rejected"
+          await runManagers?.[i]?.handleLLMError(pResult.reason);
+          return Promise.reject(pResult.reason);
         }
-        generations.push(result.generations);
-      }
-    } catch (err) {
-      await runManager?.handleLLMError(err);
-      throw err;
-    }
-
+      })
+    );
+    // create combined output
     const output: LLMResult = {
       generations,
       llmOutput: llmOutputs.length
         ? this._combineLLMOutput?.(...llmOutputs)
         : undefined,
     };
-    await runManager?.handleLLMEnd(output);
     Object.defineProperty(output, RUN_KEY, {
-      value: runManager ? { runId: runManager?.runId } : undefined,
+      value: runManagers
+        ? { runIds: runManagers?.map((manager) => manager.runId) }
+        : undefined,
       configurable: true,
     });
     return output;
@@ -122,7 +151,7 @@ export abstract class BaseChatModel extends BaseLanguageModel {
    * Get the parameters used to invoke the model
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  invocationParams(): any {
+  invocationParams(_options?: this["ParsedCallOptions"]): any {
     return {};
   }
 
@@ -137,23 +166,23 @@ export abstract class BaseChatModel extends BaseLanguageModel {
     options?: string[] | this["CallOptions"],
     callbacks?: Callbacks
   ): Promise<LLMResult> {
-    const promptMessages: BaseChatMessage[][] = promptValues.map(
-      (promptValue) => promptValue.toChatMessages()
+    const promptMessages: BaseMessage[][] = promptValues.map((promptValue) =>
+      promptValue.toChatMessages()
     );
     return this.generate(promptMessages, options, callbacks);
   }
 
   abstract _generate(
-    messages: BaseChatMessage[],
+    messages: BaseMessage[],
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult>;
 
   async call(
-    messages: BaseChatMessage[],
+    messages: BaseMessage[],
     options?: string[] | this["CallOptions"],
     callbacks?: Callbacks
-  ): Promise<BaseChatMessage> {
+  ): Promise<BaseMessage> {
     const result = await this.generate([messages], options, callbacks);
     const generations = result.generations as ChatGeneration[][];
     return generations[0][0].message;
@@ -163,16 +192,16 @@ export abstract class BaseChatModel extends BaseLanguageModel {
     promptValue: BasePromptValue,
     options?: string[] | this["CallOptions"],
     callbacks?: Callbacks
-  ): Promise<BaseChatMessage> {
-    const promptMessages: BaseChatMessage[] = promptValue.toChatMessages();
+  ): Promise<BaseMessage> {
+    const promptMessages: BaseMessage[] = promptValue.toChatMessages();
     return this.call(promptMessages, options, callbacks);
   }
 
   async predictMessages(
-    messages: BaseChatMessage[],
+    messages: BaseMessage[],
     options?: string[] | this["CallOptions"],
     callbacks?: Callbacks
-  ): Promise<BaseChatMessage> {
+  ): Promise<BaseMessage> {
     return this.call(messages, options, callbacks);
   }
 
@@ -181,30 +210,30 @@ export abstract class BaseChatModel extends BaseLanguageModel {
     options?: string[] | this["CallOptions"],
     callbacks?: Callbacks
   ): Promise<string> {
-    const message = new HumanChatMessage(text);
+    const message = new HumanMessage(text);
     const result = await this.call([message], options, callbacks);
-    return result.text;
+    return result.content;
   }
 }
 
 export abstract class SimpleChatModel extends BaseChatModel {
   abstract _call(
-    messages: BaseChatMessage[],
+    messages: BaseMessage[],
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<string>;
 
   async _generate(
-    messages: BaseChatMessage[],
+    messages: BaseMessage[],
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
     const text = await this._call(messages, options, runManager);
-    const message = new AIChatMessage(text);
+    const message = new AIMessage(text);
     return {
       generations: [
         {
-          text: message.text,
+          text: message.content,
           message,
         },
       ],

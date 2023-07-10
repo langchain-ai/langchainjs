@@ -13,18 +13,24 @@ const entrypoints = {
   // agents
   agents: "agents/index",
   "agents/load": "agents/load",
+  "agents/toolkits/aws_sfn": "agents/toolkits/aws_sfn",
+  "agents/toolkits/sql": "agents/toolkits/sql/index",
   // base language
   base_language: "base_language/index",
   // tools
   tools: "tools/index",
   "tools/aws_lambda": "tools/aws_lambda",
+  "tools/aws_sfn": "tools/aws_sfn",
   "tools/calculator": "tools/calculator",
+  "tools/sql": "tools/sql",
   "tools/webbrowser": "tools/webbrowser",
   // chains
   chains: "chains/index",
   "chains/load": "chains/load",
+  "chains/openai_functions": "chains/openai_functions/index",
   "chains/query_constructor": "chains/query_constructor/index",
   "chains/query_constructor/ir": "chains/query_constructor/ir",
+  "chains/sql_db": "chains/sql_db/index",
   // embeddings
   embeddings: "embeddings/index",
   "embeddings/base": "embeddings/base",
@@ -52,11 +58,13 @@ const entrypoints = {
   // vectorstores
   vectorstores: "vectorstores/index",
   "vectorstores/base": "vectorstores/base",
+  "vectorstores/elasticsearch": "vectorstores/elasticsearch",
   "vectorstores/memory": "vectorstores/memory",
   "vectorstores/chroma": "vectorstores/chroma",
   "vectorstores/hnswlib": "vectorstores/hnswlib",
   "vectorstores/faiss": "vectorstores/faiss",
   "vectorstores/weaviate": "vectorstores/weaviate",
+  "vectorstores/lancedb": "vectorstores/lancedb",
   "vectorstores/mongo": "vectorstores/mongo",
   "vectorstores/mongodb_atlas": "vectorstores/mongodb_atlas",
   "vectorstores/pinecone": "vectorstores/pinecone",
@@ -68,8 +76,10 @@ const entrypoints = {
   "vectorstores/typeorm": "vectorstores/typeorm",
   "vectorstores/myscale": "vectorstores/myscale",
   "vectorstores/redis": "vectorstores/redis",
+  "vectorstores/typesense": "vectorstores/typesense",
   "vectorstores/singlestore": "vectorstores/singlestore",
   "vectorstores/tigris": "vectorstores/tigris",
+  "vectorstores/vectara": "vectorstores/vectara",
   // text_splitter
   text_splitter: "text_splitter",
   // memory
@@ -92,6 +102,7 @@ const entrypoints = {
   "document_loaders/web/figma": "document_loaders/web/figma",
   "document_loaders/web/github": "document_loaders/web/github",
   "document_loaders/web/notiondb": "document_loaders/web/notiondb",
+  "document_loaders/web/notionapi": "document_loaders/web/notionapi",
   "document_loaders/web/s3": "document_loaders/web/s3",
   "document_loaders/web/confluence": "document_loaders/web/confluence",
   "document_loaders/web/sort_xyz_blockchain": "document_loaders/web/sort_xyz_blockchain",
@@ -112,6 +123,7 @@ const entrypoints = {
   "chat_models/openai": "chat_models/openai",
   "chat_models/anthropic": "chat_models/anthropic",
   "chat_models/googlevertexai": "chat_models/googlevertexai",
+  "chat_models/baiduwenxin": "chat_models/baiduwenxin",
   // schema
   schema: "schema/index",
   "schema/output_parser": "schema/output_parser",
@@ -147,6 +159,7 @@ const entrypoints = {
   cache: "cache/index",
   "cache/momento": "cache/momento",
   "cache/redis": "cache/redis",
+  "cache/upstash_redis": "cache/upstash_redis",
   // stores
   "stores/doc/in_memory": "stores/doc/in_memory",
   "stores/doc/gcs": "stores/doc/gcs",
@@ -163,6 +176,8 @@ const entrypoints = {
   "experimental/generative_agents": "experimental/generative_agents/index",
   "experimental/plan_and_execute": "experimental/plan_and_execute/index",
   client: "client/index",
+  // evaluation
+  evaluation: "evaluation/index",
 };
 
 // Entrypoints in this list will
@@ -181,10 +196,15 @@ const deprecatedNodeOnly = [
 // Therefore they are not tested in the generated test-exports-* packages.
 const requiresOptionalDependency = [
   "agents/load",
+  "agents/toolkits/aws_sfn",
+  "agents/toolkits/sql",
   "tools/aws_lambda",
+  "tools/aws_sfn",
   "tools/calculator",
+  "tools/sql",
   "tools/webbrowser",
   "chains/load",
+  "chains/sql_db",
   "embeddings/cohere",
   "embeddings/googlevertexai",
   "embeddings/tensorflow",
@@ -197,9 +217,11 @@ const requiresOptionalDependency = [
   "llms/sagemaker_endpoint",
   "prompts/load",
   "vectorstores/chroma",
+  "vectorstores/elasticsearch",
   "vectorstores/hnswlib",
   "vectorstores/faiss",
   "vectorstores/weaviate",
+  "vectorstores/lancedb",
   "vectorstores/mongo",
   "vectorstores/mongodb_atlas",
   "vectorstores/pinecone",
@@ -211,6 +233,7 @@ const requiresOptionalDependency = [
   "vectorstores/myscale",
   "vectorstores/redis",
   "vectorstores/singlestore",
+  "vectorstores/typesense",
   "vectorstores/tigris",
   "memory/zep",
   "document_loaders/web/apify_dataset",
@@ -224,7 +247,7 @@ const requiresOptionalDependency = [
   "document_loaders/web/figma",
   "document_loaders/web/github",
   "document_loaders/web/notiondb",
-  "document_loaders/web/blockchain",
+  "document_loaders/web/notionapi",
   "document_loaders/web/s3",
   "document_loaders/web/confluence",
   "document_loaders/fs/directory",
@@ -254,6 +277,7 @@ const requiresOptionalDependency = [
   "chains/query_constructor/ir",
   "cache/momento",
   "cache/redis",
+  "cache/upstash_redis",
   "stores/doc/gcs",
   "stores/file/node",
   "stores/message/dynamodb",

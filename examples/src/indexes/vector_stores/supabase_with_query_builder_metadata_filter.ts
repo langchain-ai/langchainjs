@@ -42,6 +42,7 @@ export const run = async () => {
     { pageContent: "what's this", metadata: { b: 4, c: 6, stuff: "right" } },
   ];
 
+  // Also supports an additional {ids: []} parameter for upsertion
   await store.addDocuments(docs);
 
   const funcFilterA: SupabaseFilterRPCCall = (rpc) =>

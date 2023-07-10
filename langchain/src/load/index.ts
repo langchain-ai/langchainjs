@@ -8,6 +8,7 @@ import { optionalImportEntrypoints } from "./import_constants.js";
 import * as importMap from "./import_map.js";
 import { OptionalImportMap, SecretMap } from "./import_type.js";
 import { SerializedFields, keyFromJson, mapKeys } from "./map_keys.js";
+import { getEnvironmentVariable } from "../util/env.js";
 
 function combineAliasesAndInvert(constructor: typeof Serializable) {
   const aliases: { [key: string]: string } = {};
@@ -50,9 +51,14 @@ async function reviver(
     if (key in secretsMap) {
       return secretsMap[key as keyof SecretMap];
     } else {
-      throw new Error(
-        `Missing key "${key}" for ${pathStr} in load(secretsMap={})`
-      );
+      const secretValueInEnv = getEnvironmentVariable(key);
+      if (secretValueInEnv) {
+        return secretValueInEnv;
+      } else {
+        throw new Error(
+          `Missing key "${key}" for ${pathStr} in load(secretsMap={})`
+        );
+      }
     }
   } else if (
     typeof value === "object" &&
@@ -151,13 +157,20 @@ async function reviver(
     // Construct the object
     if (serialized.type === "constructor") {
       // eslint-disable-next-line new-cap, @typescript-eslint/no-explicit-any
-      return new (builder as any)(
+      const instance = new (builder as any)(
         mapKeys(
           kwargs as SerializedFields,
           keyFromJson,
           combineAliasesAndInvert(builder)
         )
       );
+
+      // Minification in severless/edge runtimes will mange the
+      // name of classes presented in traces. As the names in import map
+      // are present as-is even with minification, use these names instead
+      Object.defineProperty(instance.constructor, "name", { value: name });
+
+      return instance;
     } else {
       throw new Error(`Invalid type: ${pathStr} -> ${str}`);
     }

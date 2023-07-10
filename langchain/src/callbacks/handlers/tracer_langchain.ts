@@ -1,5 +1,9 @@
-import { LangChainPlusClient } from "langchainplus-sdk";
-import { BaseRun, RunCreate, RunUpdate } from "langchainplus-sdk/schemas";
+import { Client } from "langchainplus-sdk";
+import {
+  BaseRun,
+  RunCreate,
+  RunUpdate as BaseRunUpdate,
+} from "langchainplus-sdk/schemas";
 import {
   getEnvironmentVariable,
   getRuntimeEnvironment,
@@ -13,10 +17,14 @@ export interface Run extends BaseRun {
   child_execution_order: number;
 }
 
+export interface RunUpdate extends BaseRunUpdate {
+  events: BaseRun["events"];
+}
+
 export interface LangChainTracerFields extends BaseCallbackHandlerInput {
   exampleId?: string;
-  sessionName?: string;
-  client?: LangChainPlusClient;
+  projectName?: string;
+  client?: Client;
 }
 
 export class LangChainTracer
@@ -25,20 +33,22 @@ export class LangChainTracer
 {
   name = "langchain_tracer";
 
-  sessionName?: string;
+  projectName?: string;
 
   exampleId?: string;
 
-  client: LangChainPlusClient;
+  client: Client;
 
   constructor(fields: LangChainTracerFields = {}) {
     super(fields);
-    const { exampleId, sessionName, client } = fields;
+    const { exampleId, projectName, client } = fields;
 
-    this.sessionName =
-      sessionName ?? getEnvironmentVariable("LANGCHAIN_SESSION");
+    this.projectName =
+      projectName ??
+      getEnvironmentVariable("LANGCHAIN_PROJECT") ??
+      getEnvironmentVariable("LANGCHAIN_SESSION");
     this.exampleId = exampleId;
-    this.client = client ?? new LangChainPlusClient({});
+    this.client = client ?? new Client({});
   }
 
   private async _convertToCreate(
@@ -52,7 +62,7 @@ export class LangChainTracer
         runtime: await getRuntimeEnvironment(),
       },
       child_runs: undefined,
-      session_name: this.sessionName,
+      session_name: this.projectName,
       reference_example_id: run.parent_run_id ? undefined : example_id,
     };
   }
@@ -72,6 +82,7 @@ export class LangChainTracer
       end_time: run.end_time,
       error: run.error,
       outputs: run.outputs,
+      events: run.events,
     };
     await this.client.updateRun(run.id, runUpdate);
   }

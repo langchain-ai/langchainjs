@@ -1,7 +1,7 @@
 import { Redis, type RedisConfigNodejs } from "@upstash/redis";
 import {
   StoredMessage,
-  BaseChatMessage,
+  BaseMessage,
   BaseListChatMessageHistory,
 } from "../../schema/index.js";
 import {
@@ -48,27 +48,19 @@ export class UpstashRedisChatMessageHistory extends BaseListChatMessageHistory {
     this.sessionTTL = sessionTTL;
   }
 
-  async getMessages(): Promise<BaseChatMessage[]> {
+  async getMessages(): Promise<BaseMessage[]> {
     const rawStoredMessages: StoredMessage[] =
       await this.client.lrange<StoredMessage>(this.sessionId, 0, -1);
 
     const orderedMessages = rawStoredMessages.reverse();
-    const previousMessages = orderedMessages
-      .map((item) => ({
-        type: item.type,
-        data: {
-          role: item.data.role,
-          content: item.data.content,
-        },
-      }))
-      .filter(
-        (x): x is StoredMessage =>
-          x.type !== undefined && x.data.content !== undefined
-      );
+    const previousMessages = orderedMessages.filter(
+      (x): x is StoredMessage =>
+        x.type !== undefined && x.data.content !== undefined
+    );
     return mapStoredMessagesToChatMessages(previousMessages);
   }
 
-  async addMessage(message: BaseChatMessage): Promise<void> {
+  async addMessage(message: BaseMessage): Promise<void> {
     const messageToAdd = mapChatMessagesToStoredMessages([message]);
     await this.client.lpush(this.sessionId, JSON.stringify(messageToAdd[0]));
     if (this.sessionTTL) {

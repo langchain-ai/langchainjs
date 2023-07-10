@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.92",
+  "version": "0.0.106",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -22,6 +22,12 @@
     "agents/load.cjs",
     "agents/load.js",
     "agents/load.d.ts",
+    "agents/toolkits/aws_sfn.cjs",
+    "agents/toolkits/aws_sfn.js",
+    "agents/toolkits/aws_sfn.d.ts",
+    "agents/toolkits/sql.cjs",
+    "agents/toolkits/sql.js",
+    "agents/toolkits/sql.d.ts",
     "base_language.cjs",
     "base_language.js",
     "base_language.d.ts",
@@ -31,9 +37,15 @@
     "tools/aws_lambda.cjs",
     "tools/aws_lambda.js",
     "tools/aws_lambda.d.ts",
+    "tools/aws_sfn.cjs",
+    "tools/aws_sfn.js",
+    "tools/aws_sfn.d.ts",
     "tools/calculator.cjs",
     "tools/calculator.js",
     "tools/calculator.d.ts",
+    "tools/sql.cjs",
+    "tools/sql.js",
+    "tools/sql.d.ts",
     "tools/webbrowser.cjs",
     "tools/webbrowser.js",
     "tools/webbrowser.d.ts",
@@ -43,12 +55,18 @@
     "chains/load.cjs",
     "chains/load.js",
     "chains/load.d.ts",
+    "chains/openai_functions.cjs",
+    "chains/openai_functions.js",
+    "chains/openai_functions.d.ts",
     "chains/query_constructor.cjs",
     "chains/query_constructor.js",
     "chains/query_constructor.d.ts",
     "chains/query_constructor/ir.cjs",
     "chains/query_constructor/ir.js",
     "chains/query_constructor/ir.d.ts",
+    "chains/sql_db.cjs",
+    "chains/sql_db.js",
+    "chains/sql_db.d.ts",
     "embeddings.cjs",
     "embeddings.js",
     "embeddings.d.ts",
@@ -118,6 +136,9 @@
     "vectorstores/base.cjs",
     "vectorstores/base.js",
     "vectorstores/base.d.ts",
+    "vectorstores/elasticsearch.cjs",
+    "vectorstores/elasticsearch.js",
+    "vectorstores/elasticsearch.d.ts",
     "vectorstores/memory.cjs",
     "vectorstores/memory.js",
     "vectorstores/memory.d.ts",
@@ -133,6 +154,9 @@
     "vectorstores/weaviate.cjs",
     "vectorstores/weaviate.js",
     "vectorstores/weaviate.d.ts",
+    "vectorstores/lancedb.cjs",
+    "vectorstores/lancedb.js",
+    "vectorstores/lancedb.d.ts",
     "vectorstores/mongo.cjs",
     "vectorstores/mongo.js",
     "vectorstores/mongo.d.ts",
@@ -166,12 +190,18 @@
     "vectorstores/redis.cjs",
     "vectorstores/redis.js",
     "vectorstores/redis.d.ts",
+    "vectorstores/typesense.cjs",
+    "vectorstores/typesense.js",
+    "vectorstores/typesense.d.ts",
     "vectorstores/singlestore.cjs",
     "vectorstores/singlestore.js",
     "vectorstores/singlestore.d.ts",
     "vectorstores/tigris.cjs",
     "vectorstores/tigris.js",
     "vectorstores/tigris.d.ts",
+    "vectorstores/vectara.cjs",
+    "vectorstores/vectara.js",
+    "vectorstores/vectara.d.ts",
     "text_splitter.cjs",
     "text_splitter.js",
     "text_splitter.d.ts",
@@ -223,6 +253,9 @@
     "document_loaders/web/notiondb.cjs",
     "document_loaders/web/notiondb.js",
     "document_loaders/web/notiondb.d.ts",
+    "document_loaders/web/notionapi.cjs",
+    "document_loaders/web/notionapi.js",
+    "document_loaders/web/notionapi.d.ts",
     "document_loaders/web/s3.cjs",
     "document_loaders/web/s3.js",
     "document_loaders/web/s3.d.ts",
@@ -280,6 +313,9 @@
     "chat_models/googlevertexai.cjs",
     "chat_models/googlevertexai.js",
     "chat_models/googlevertexai.d.ts",
+    "chat_models/baiduwenxin.cjs",
+    "chat_models/baiduwenxin.js",
+    "chat_models/baiduwenxin.d.ts",
     "schema.cjs",
     "schema.js",
     "schema.d.ts",
@@ -364,6 +400,9 @@
     "cache/redis.cjs",
     "cache/redis.js",
     "cache/redis.d.ts",
+    "cache/upstash_redis.cjs",
+    "cache/upstash_redis.js",
+    "cache/upstash_redis.d.ts",
     "stores/doc/in_memory.cjs",
     "stores/doc/in_memory.js",
     "stores/doc/in_memory.d.ts",
@@ -406,6 +445,9 @@
     "client.cjs",
     "client.js",
     "client.d.ts",
+    "evaluation.cjs",
+    "evaluation.js",
+    "evaluation.d.ts",
     "index.cjs",
     "index.js",
     "index.d.ts"
@@ -439,14 +481,17 @@
     "@aws-sdk/client-lambda": "^3.310.0",
     "@aws-sdk/client-s3": "^3.310.0",
     "@aws-sdk/client-sagemaker-runtime": "^3.310.0",
+    "@aws-sdk/client-sfn": "^3.362.0",
     "@clickhouse/client": "^0.0.14",
+    "@elastic/elasticsearch": "^8.4.0",
     "@faker-js/faker": "^7.6.0",
     "@getmetal/metal-sdk": "^4.0.0",
-    "@getzep/zep-js": "^0.3.1",
+    "@getzep/zep-js": "^0.4.1",
     "@gomomento/sdk": "^1.23.0",
     "@google-cloud/storage": "^6.10.1",
     "@huggingface/inference": "^1.5.1",
     "@jest/globals": "^29.5.0",
+    "@notionhq/client": "^2.2.5",
     "@opensearch-project/opensearch": "^2.2.0",
     "@pinecone-database/pinecone": "^0.0.14",
     "@qdrant/js-client-rest": "^1.2.0",
@@ -459,8 +504,10 @@
     "@tigrisdata/vector": "^1.1.0",
     "@tsconfig/recommended": "^1.0.2",
     "@types/d3-dsv": "^2",
+    "@types/decamelize": "^1.2.0",
     "@types/flat": "^5.0.2",
     "@types/html-to-text": "^9",
+    "@types/js-yaml": "^4",
     "@types/object-hash": "^3.0.2",
     "@types/pdf-parse": "^1.1.1",
     "@types/pg": "^8",
@@ -472,7 +519,7 @@
     "apify-client": "^2.7.1",
     "axios": "^0.26.0",
     "cheerio": "^1.0.0-rc.12",
-    "chromadb": "^1.5.2",
+    "chromadb": "^1.5.3",
     "cohere-ai": "^5.0.2",
     "d3-dsv": "^2.0.0",
     "dotenv": "^16.0.3",
@@ -494,6 +541,7 @@
     "mammoth": "^1.5.1",
     "mongodb": "^5.2.0",
     "mysql2": "^3.3.3",
+    "notion-to-md": "^3.1.0",
     "pdf-parse": "1.1.1",
     "peggy": "^3.0.2",
     "pg": "^8.11.0",
@@ -511,6 +559,8 @@
     "ts-jest": "^29.1.0",
     "typeorm": "^0.3.12",
     "typescript": "^5.0.0",
+    "typesense": "^1.5.3",
+    "vectordb": "^0.1.4",
     "weaviate-ts-client": "^1.0.0"
   },
   "peerDependencies": {
@@ -518,12 +568,15 @@
     "@aws-sdk/client-lambda": "^3.310.0",
     "@aws-sdk/client-s3": "^3.310.0",
     "@aws-sdk/client-sagemaker-runtime": "^3.310.0",
+    "@aws-sdk/client-sfn": "^3.310.0",
     "@clickhouse/client": "^0.0.14",
+    "@elastic/elasticsearch": "^8.4.0",
     "@getmetal/metal-sdk": "*",
-    "@getzep/zep-js": "^0.3.1",
+    "@getzep/zep-js": "^0.4.1",
     "@gomomento/sdk": "^1.23.0",
     "@google-cloud/storage": "^6.10.1",
     "@huggingface/inference": "^1.5.1",
+    "@notionhq/client": "^2.2.5",
     "@opensearch-project/opensearch": "*",
     "@pinecone-database/pinecone": "*",
     "@qdrant/js-client-rest": "^1.2.0",
@@ -538,7 +591,7 @@
     "apify-client": "^2.7.1",
     "axios": "*",
     "cheerio": "^1.0.0-rc.12",
-    "chromadb": "^1.5.2",
+    "chromadb": "^1.5.3",
     "cohere-ai": "^5.0.2",
     "d3-dsv": "^2.0.0",
     "epub2": "^3.0.1",
@@ -550,6 +603,7 @@
     "mammoth": "*",
     "mongodb": "^5.2.0",
     "mysql2": "^3.3.3",
+    "notion-to-md": "^3.1.0",
     "pdf-parse": "1.1.1",
     "peggy": "^3.0.2",
     "pg": "^8.11.0",
@@ -560,6 +614,8 @@
     "replicate": "^0.9.0",
     "srt-parser-2": "^1.2.2",
     "typeorm": "^0.3.12",
+    "typesense": "^1.5.3",
+    "vectordb": "^0.1.4",
     "weaviate-ts-client": "^1.0.0"
   },
   "peerDependenciesMeta": {
@@ -575,7 +631,13 @@
     "@aws-sdk/client-sagemaker-runtime": {
       "optional": true
     },
+    "@aws-sdk/client-sfn": {
+      "optional": true
+    },
     "@clickhouse/client": {
+      "optional": true
+    },
+    "@elastic/elasticsearch": {
       "optional": true
     },
     "@getmetal/metal-sdk": {
@@ -591,6 +653,9 @@
       "optional": true
     },
     "@huggingface/inference": {
+      "optional": true
+    },
+    "@notionhq/client": {
       "optional": true
     },
     "@opensearch-project/opensearch": {
@@ -671,6 +736,9 @@
     "mysql2": {
       "optional": true
     },
+    "notion-to-md": {
+      "optional": true
+    },
     "pdf-parse": {
       "optional": true
     },
@@ -701,6 +769,12 @@
     "typeorm": {
       "optional": true
     },
+    "typesense": {
+      "optional": true
+    },
+    "vectordb": {
+      "optional": true
+    },
     "weaviate-ts-client": {
       "optional": true
     }
@@ -709,15 +783,18 @@
     "@anthropic-ai/sdk": "^0.4.3",
     "ansi-styles": "^5.0.0",
     "binary-extensions": "^2.2.0",
-    "case-anything": "^2.1.13",
+    "camelcase": "6",
+    "decamelize": "^1.2.0",
     "expr-eval": "^2.0.2",
     "flat": "^5.0.2",
-    "js-tiktoken": "^1.0.6",
+    "js-tiktoken": "^1.0.7",
+    "js-yaml": "^4.1.0",
     "jsonpointer": "^5.0.1",
-    "langchainplus-sdk": "^0.0.11",
+    "langchainplus-sdk": "^0.0.19",
     "ml-distance": "^4.0.0",
     "object-hash": "^3.0.0",
-    "openai": "^3.2.0",
+    "openai": "^3.3.0",
+    "openapi-types": "^12.1.3",
     "p-queue": "^6.6.2",
     "p-retry": "4",
     "uuid": "^9.0.0",
@@ -768,6 +845,16 @@
       "import": "./agents/load.js",
       "require": "./agents/load.cjs"
     },
+    "./agents/toolkits/aws_sfn": {
+      "types": "./agents/toolkits/aws_sfn.d.ts",
+      "import": "./agents/toolkits/aws_sfn.js",
+      "require": "./agents/toolkits/aws_sfn.cjs"
+    },
+    "./agents/toolkits/sql": {
+      "types": "./agents/toolkits/sql.d.ts",
+      "import": "./agents/toolkits/sql.js",
+      "require": "./agents/toolkits/sql.cjs"
+    },
     "./base_language": {
       "types": "./base_language.d.ts",
       "import": "./base_language.js",
@@ -783,10 +870,20 @@
       "import": "./tools/aws_lambda.js",
       "require": "./tools/aws_lambda.cjs"
     },
+    "./tools/aws_sfn": {
+      "types": "./tools/aws_sfn.d.ts",
+      "import": "./tools/aws_sfn.js",
+      "require": "./tools/aws_sfn.cjs"
+    },
     "./tools/calculator": {
       "types": "./tools/calculator.d.ts",
       "import": "./tools/calculator.js",
       "require": "./tools/calculator.cjs"
+    },
+    "./tools/sql": {
+      "types": "./tools/sql.d.ts",
+      "import": "./tools/sql.js",
+      "require": "./tools/sql.cjs"
     },
     "./tools/webbrowser": {
       "types": "./tools/webbrowser.d.ts",
@@ -803,6 +900,11 @@
       "import": "./chains/load.js",
       "require": "./chains/load.cjs"
     },
+    "./chains/openai_functions": {
+      "types": "./chains/openai_functions.d.ts",
+      "import": "./chains/openai_functions.js",
+      "require": "./chains/openai_functions.cjs"
+    },
     "./chains/query_constructor": {
       "types": "./chains/query_constructor.d.ts",
       "import": "./chains/query_constructor.js",
@@ -812,6 +914,11 @@
       "types": "./chains/query_constructor/ir.d.ts",
       "import": "./chains/query_constructor/ir.js",
       "require": "./chains/query_constructor/ir.cjs"
+    },
+    "./chains/sql_db": {
+      "types": "./chains/sql_db.d.ts",
+      "import": "./chains/sql_db.js",
+      "require": "./chains/sql_db.cjs"
     },
     "./embeddings": {
       "node": {
@@ -934,6 +1041,11 @@
       "import": "./vectorstores/base.js",
       "require": "./vectorstores/base.cjs"
     },
+    "./vectorstores/elasticsearch": {
+      "types": "./vectorstores/elasticsearch.d.ts",
+      "import": "./vectorstores/elasticsearch.js",
+      "require": "./vectorstores/elasticsearch.cjs"
+    },
     "./vectorstores/memory": {
       "types": "./vectorstores/memory.d.ts",
       "import": "./vectorstores/memory.js",
@@ -958,6 +1070,11 @@
       "types": "./vectorstores/weaviate.d.ts",
       "import": "./vectorstores/weaviate.js",
       "require": "./vectorstores/weaviate.cjs"
+    },
+    "./vectorstores/lancedb": {
+      "types": "./vectorstores/lancedb.d.ts",
+      "import": "./vectorstores/lancedb.js",
+      "require": "./vectorstores/lancedb.cjs"
     },
     "./vectorstores/mongo": {
       "types": "./vectorstores/mongo.d.ts",
@@ -1014,6 +1131,11 @@
       "import": "./vectorstores/redis.js",
       "require": "./vectorstores/redis.cjs"
     },
+    "./vectorstores/typesense": {
+      "types": "./vectorstores/typesense.d.ts",
+      "import": "./vectorstores/typesense.js",
+      "require": "./vectorstores/typesense.cjs"
+    },
     "./vectorstores/singlestore": {
       "types": "./vectorstores/singlestore.d.ts",
       "import": "./vectorstores/singlestore.js",
@@ -1023,6 +1145,11 @@
       "types": "./vectorstores/tigris.d.ts",
       "import": "./vectorstores/tigris.js",
       "require": "./vectorstores/tigris.cjs"
+    },
+    "./vectorstores/vectara": {
+      "types": "./vectorstores/vectara.d.ts",
+      "import": "./vectorstores/vectara.js",
+      "require": "./vectorstores/vectara.cjs"
     },
     "./text_splitter": {
       "types": "./text_splitter.d.ts",
@@ -1110,6 +1237,11 @@
       "types": "./document_loaders/web/notiondb.d.ts",
       "import": "./document_loaders/web/notiondb.js",
       "require": "./document_loaders/web/notiondb.cjs"
+    },
+    "./document_loaders/web/notionapi": {
+      "types": "./document_loaders/web/notionapi.d.ts",
+      "import": "./document_loaders/web/notionapi.js",
+      "require": "./document_loaders/web/notionapi.cjs"
     },
     "./document_loaders/web/s3": {
       "types": "./document_loaders/web/s3.d.ts",
@@ -1207,6 +1339,11 @@
       "types": "./chat_models/googlevertexai.d.ts",
       "import": "./chat_models/googlevertexai.js",
       "require": "./chat_models/googlevertexai.cjs"
+    },
+    "./chat_models/baiduwenxin": {
+      "types": "./chat_models/baiduwenxin.d.ts",
+      "import": "./chat_models/baiduwenxin.js",
+      "require": "./chat_models/baiduwenxin.cjs"
     },
     "./schema": {
       "types": "./schema.d.ts",
@@ -1350,6 +1487,11 @@
       "import": "./cache/redis.js",
       "require": "./cache/redis.cjs"
     },
+    "./cache/upstash_redis": {
+      "types": "./cache/upstash_redis.d.ts",
+      "import": "./cache/upstash_redis.js",
+      "require": "./cache/upstash_redis.cjs"
+    },
     "./stores/doc/in_memory": {
       "types": "./stores/doc/in_memory.d.ts",
       "import": "./stores/doc/in_memory.js",
@@ -1419,6 +1561,11 @@
       "types": "./client.d.ts",
       "import": "./client.js",
       "require": "./client.cjs"
+    },
+    "./evaluation": {
+      "types": "./evaluation.d.ts",
+      "import": "./evaluation.js",
+      "require": "./evaluation.cjs"
     },
     "./package.json": "./package.json"
   }

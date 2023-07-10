@@ -10,19 +10,16 @@ export {
   JsonToolkit,
   OpenApiToolkit,
   RequestsToolkit,
-  SqlToolkit,
   VectorStoreInfo,
   VectorStoreRouterToolkit,
   VectorStoreToolkit,
   ZapierToolKit,
   createJsonAgent,
   createOpenApiAgent,
-  createSqlAgent,
-  SqlCreatePromptArgs,
   createVectorStoreAgent,
   createVectorStoreRouterAgent,
-} from "./agent_toolkits/index.js";
-export { Toolkit } from "./agent_toolkits/base.js";
+} from "./toolkits/index.js";
+export { Toolkit } from "./toolkits/base.js";
 export {
   ChatAgent,
   ChatAgentInput,
@@ -70,3 +67,8 @@ export {
   StructuredChatOutputParserArgs,
   StructuredChatOutputParserWithRetries,
 } from "./structured_chat/outputParser.js";
+export {
+  OpenAIAgent,
+  OpenAIAgentInput,
+  OpenAIAgentCreatePromptArgs,
+} from "./openai/index.js";

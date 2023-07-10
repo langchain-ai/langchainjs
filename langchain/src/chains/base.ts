@@ -4,6 +4,8 @@ import {
   CallbackManagerForChainRun,
   CallbackManager,
   Callbacks,
+  BaseCallbackConfig,
+  parseCallbackConfigArg,
 } from "../callbacks/manager.js";
 import { SerializedBaseChain } from "./serde.js";
 import { BaseLangChain, BaseLangChainParams } from "../base_language/index.js";
@@ -53,6 +55,18 @@ export abstract class BaseChain extends BaseLangChain implements ChainInputs {
     }
   }
 
+  /** @ignore */
+  _selectMemoryInputs(values: ChainValues): ChainValues {
+    const valuesForMemory = { ...values };
+    if ("signal" in valuesForMemory) {
+      delete valuesForMemory.signal;
+    }
+    if ("timeout" in valuesForMemory) {
+      delete valuesForMemory.timeout;
+    }
+    return valuesForMemory;
+  }
+
   /**
    * Run the core logic of this chain and return the output
    */
@@ -80,16 +94,19 @@ export abstract class BaseChain extends BaseLangChain implements ChainInputs {
   async run(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     input: any,
-    callbacks?: Callbacks
+    config?: Callbacks | BaseCallbackConfig
   ): Promise<string> {
-    const isKeylessInput = this.inputKeys.length <= 1;
+    const inputKeys = this.inputKeys.filter(
+      (k) => !this.memory?.memoryKeys.includes(k) ?? true
+    );
+    const isKeylessInput = inputKeys.length <= 1;
     if (!isKeylessInput) {
       throw new Error(
         `Chain ${this._chainType()} expects multiple inputs, cannot use 'run' `
       );
     }
-    const values = this.inputKeys.length ? { [this.inputKeys[0]]: input } : {};
-    const returnValues = await this.call(values, callbacks);
+    const values = inputKeys.length ? { [inputKeys[0]]: input } : {};
+    const returnValues = await this.call(values, config);
     const keys = Object.keys(returnValues);
 
     if (keys.length === 1) {
@@ -106,37 +123,59 @@ export abstract class BaseChain extends BaseLangChain implements ChainInputs {
    * Wraps _call and handles memory.
    */
   async call(
-    values: ChainValues,
-    callbacks?: Callbacks,
+    values: ChainValues & { signal?: AbortSignal; timeout?: number },
+    config?: Callbacks | BaseCallbackConfig,
+    /** @deprecated */
     tags?: string[]
   ): Promise<ChainValues> {
     const fullValues = { ...values } as typeof values;
+    if (fullValues.timeout && !fullValues.signal) {
+      fullValues.signal = AbortSignal.timeout(fullValues.timeout);
+      delete fullValues.timeout;
+    }
     if (!(this.memory == null)) {
-      const newValues = await this.memory.loadMemoryVariables(values);
+      const newValues = await this.memory.loadMemoryVariables(
+        this._selectMemoryInputs(values)
+      );
       for (const [key, value] of Object.entries(newValues)) {
         fullValues[key] = value;
       }
     }
+    const parsedConfig = parseCallbackConfigArg(config);
     const callbackManager_ = await CallbackManager.configure(
-      callbacks,
+      parsedConfig.callbacks,
       this.callbacks,
-      tags,
+      parsedConfig.tags || tags,
       this.tags,
+      parsedConfig.metadata,
+      this.metadata,
       { verbose: this.verbose }
     );
     const runManager = await callbackManager_?.handleChainStart(
       this.toJSON(),
       fullValues
     );
-    let outputValues;
+    let outputValues: ChainValues;
     try {
-      outputValues = await this._call(fullValues, runManager);
+      outputValues = await (values.signal
+        ? (Promise.race([
+            this._call(fullValues, runManager),
+            new Promise((_, reject) => {
+              values.signal?.addEventListener("abort", () => {
+                reject(new Error("AbortError"));
+              });
+            }),
+          ]) as Promise<ChainValues>)
+        : this._call(fullValues, runManager));
     } catch (e) {
       await runManager?.handleChainError(e);
       throw e;
     }
     if (!(this.memory == null)) {
-      await this.memory.saveContext(values, outputValues);
+      await this.memory.saveContext(
+        this._selectMemoryInputs(values),
+        outputValues
+      );
     }
     await runManager?.handleChainEnd(outputValues);
     // add the runManager's currentRunId to the outputValues
@@ -152,10 +191,10 @@ export abstract class BaseChain extends BaseLangChain implements ChainInputs {
    */
   async apply(
     inputs: ChainValues[],
-    callbacks?: Callbacks[]
+    config?: (Callbacks | BaseCallbackConfig)[]
   ): Promise<ChainValues[]> {
     return Promise.all(
-      inputs.map(async (i, idx) => this.call(i, callbacks?.[idx]))
+      inputs.map(async (i, idx) => this.call(i, config?.[idx]))
     );
   }
 

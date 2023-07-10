@@ -55,21 +55,26 @@ export class StuffDocumentsChain
   }
 
   /** @ignore */
-  async _call(
-    values: ChainValues,
-    runManager?: CallbackManagerForChainRun
-  ): Promise<ChainValues> {
+  _prepInputs(values: ChainValues): ChainValues {
     if (!(this.inputKey in values)) {
       throw new Error(`Document key ${this.inputKey} not found.`);
     }
     const { [this.inputKey]: docs, ...rest } = values;
     const texts = (docs as Document[]).map(({ pageContent }) => pageContent);
     const text = texts.join("\n\n");
+    return {
+      ...rest,
+      [this.documentVariableName]: text,
+    };
+  }
+
+  /** @ignore */
+  async _call(
+    values: ChainValues,
+    runManager?: CallbackManagerForChainRun
+  ): Promise<ChainValues> {
     const result = await this.llmChain.call(
-      {
-        ...rest,
-        [this.documentVariableName]: text,
-      },
+      this._prepInputs(values),
       runManager?.getChild("combine_documents")
     );
     return result;
@@ -105,7 +110,7 @@ export interface MapReduceDocumentsChainInput extends StuffDocumentsChainInput {
   /** Ensures that the map step is taken regardless of max tokens */
   ensureMapStep?: boolean;
   /** Chain to use to combine results of applying llm_chain to documents. */
-  combineDocumentChain: BaseChain;
+  combineDocumentChain: StuffDocumentsChain;
   /** Return the results of the map steps in the output. */
   returnIntermediateSteps?: boolean;
 }
@@ -141,7 +146,7 @@ export class MapReduceDocumentsChain
 
   ensureMapStep = false;
 
-  combineDocumentChain: BaseChain;
+  combineDocumentChain: StuffDocumentsChain;
 
   constructor(fields: MapReduceDocumentsChainInput) {
     super(fields);
@@ -179,14 +184,15 @@ export class MapReduceDocumentsChain
       const canSkipMapStep = i !== 0 || !this.ensureMapStep;
       if (canSkipMapStep) {
         // Calculate the total tokens required in the input
-        const promises = inputs.map(async (i) => {
-          const prompt = await this.llmChain.prompt.format(i);
-          return this.llmChain.llm.getNumTokens(prompt);
-        });
-
-        const length = await Promise.all(promises).then((results) =>
-          results.reduce((a, b) => a + b, 0)
-        );
+        const formatted =
+          await this.combineDocumentChain.llmChain.prompt.format(
+            this.combineDocumentChain._prepInputs({
+              [this.combineDocumentChain.inputKey]: currentDocs,
+              ...rest,
+            })
+          );
+        const length =
+          await this.combineDocumentChain.llmChain.llm.getNumTokens(formatted);
 
         const withinTokenLimit = length < this.maxTokens;
         // If we can skip the map step, and we're within the token limit, we don't
@@ -223,7 +229,10 @@ export class MapReduceDocumentsChain
 
     // Now, with the final result of all the inputs from the `llmChain`, we can
     // run the `combineDocumentChain` over them.
-    const newInputs = { input_documents: currentDocs, ...rest };
+    const newInputs = {
+      [this.combineDocumentChain.inputKey]: currentDocs,
+      ...rest,
+    };
     const result = await this.combineDocumentChain.call(
       newInputs,
       runManager?.getChild("combine_documents")
@@ -251,7 +260,7 @@ export class MapReduceDocumentsChain
 
     return new MapReduceDocumentsChain({
       llmChain: await LLMChain.deserialize(data.llm_chain),
-      combineDocumentChain: await BaseChain.deserialize(
+      combineDocumentChain: await StuffDocumentsChain.deserialize(
         data.combine_document_chain
       ),
     });

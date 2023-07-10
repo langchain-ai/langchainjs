@@ -4,6 +4,10 @@ import { encodingForModel } from "../util/tiktoken.js";
 // https://www.npmjs.com/package/js-tiktoken
 
 export const getModelNameForTiktoken = (modelName: string): TiktokenModel => {
+  if (modelName.startsWith("gpt-3.5-turbo-16k-")) {
+    return "gpt-3.5-turbo-16k";
+  }
+
   if (modelName.startsWith("gpt-3.5-turbo-")) {
     return "gpt-3.5-turbo";
   }
@@ -30,6 +34,8 @@ export const getEmbeddingContextSize = (modelName?: string): number => {
 
 export const getModelContextSize = (modelName: string): number => {
   switch (getModelNameForTiktoken(modelName)) {
+    case "gpt-3.5-turbo-16k":
+      return 16384;
     case "gpt-3.5-turbo":
       return 4096;
     case "gpt-4-32k":
@@ -62,8 +68,7 @@ export const calculateMaxTokens = async ({
   prompt,
   modelName,
 }: CalculateMaxTokenProps) => {
-  // fallback to approximate calculation if tiktoken is not available
-  let numTokens = Math.ceil(prompt.length / 4);
+  let numTokens;
 
   try {
     numTokens = (await encodingForModel(modelName)).encode(prompt).length;
@@ -71,6 +76,9 @@ export const calculateMaxTokens = async ({
     console.warn(
       "Failed to calculate number of tokens, falling back to approximate count"
     );
+
+    // fallback to approximate calculation if tiktoken is not available
+    numTokens = Math.ceil(prompt.length / 4);
   }
 
   const maxTokens = getModelContextSize(modelName);

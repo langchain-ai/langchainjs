@@ -40,10 +40,6 @@ export {
   SummarizationChainParams,
 } from "./summarization/load.js";
 export {
-  SqlDatabaseChain,
-  SqlDatabaseChainInput,
-} from "./sql_db/sql_db_chain.js";
-export {
   ConversationalRetrievalQAChain,
   ConversationalRetrievalQAChainInput,
 } from "./conversational_retrieval_chain.js";
@@ -60,7 +56,6 @@ export {
   SerializedLLMChain,
   SerializedSequentialChain,
   SerializedSimpleSequentialChain,
-  SerializedSqlDatabaseChain,
   SerializedAnalyzeDocumentChain,
   SerializedAPIChain,
   SerializedBaseChain,
@@ -83,3 +78,16 @@ export {
 } from "./router/llm_router.js";
 export { MultiPromptChain } from "./router/multi_prompt.js";
 export { MultiRetrievalQAChain } from "./router/multi_retrieval_qa.js";
+export { TransformChain, TransformChainFields } from "./transform.js";
+export {
+  createExtractionChain,
+  createExtractionChainFromZod,
+} from "./openai_functions/extraction.js";
+export {
+  createTaggingChain,
+  createTaggingChainFromZod,
+} from "./openai_functions/tagging.js";
+export {
+  OpenAPIChainOptions,
+  createOpenAPIChain,
+} from "./openai_functions/openapi.js";

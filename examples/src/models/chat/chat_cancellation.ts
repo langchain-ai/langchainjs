@@ -1,5 +1,5 @@
 import { ChatOpenAI } from "langchain/chat_models/openai";
-import { HumanChatMessage } from "langchain/schema";
+import { HumanMessage } from "langchain/schema";
 
 const model = new ChatOpenAI({ temperature: 1 });
 const controller = new AbortController();
@@ -8,7 +8,7 @@ const controller = new AbortController();
 
 const res = await model.call(
   [
-    new HumanChatMessage(
+    new HumanMessage(
       "What is a good name for a company that makes colorful socks?"
     ),
   ],

@@ -4,12 +4,24 @@ export interface OptionalImportMap {
   "langchain/agents/load"?:
     | typeof import("../agents/load.js")
     | Promise<typeof import("../agents/load.js")>;
+  "langchain/agents/toolkits/aws_sfn"?:
+    | typeof import("../agents/toolkits/aws_sfn.js")
+    | Promise<typeof import("../agents/toolkits/aws_sfn.js")>;
+  "langchain/agents/toolkits/sql"?:
+    | typeof import("../agents/toolkits/sql/index.js")
+    | Promise<typeof import("../agents/toolkits/sql/index.js")>;
   "langchain/tools/aws_lambda"?:
     | typeof import("../tools/aws_lambda.js")
     | Promise<typeof import("../tools/aws_lambda.js")>;
+  "langchain/tools/aws_sfn"?:
+    | typeof import("../tools/aws_sfn.js")
+    | Promise<typeof import("../tools/aws_sfn.js")>;
   "langchain/tools/calculator"?:
     | typeof import("../tools/calculator.js")
     | Promise<typeof import("../tools/calculator.js")>;
+  "langchain/tools/sql"?:
+    | typeof import("../tools/sql.js")
+    | Promise<typeof import("../tools/sql.js")>;
   "langchain/tools/webbrowser"?:
     | typeof import("../tools/webbrowser.js")
     | Promise<typeof import("../tools/webbrowser.js")>;
@@ -22,6 +34,9 @@ export interface OptionalImportMap {
   "langchain/chains/query_constructor/ir"?:
     | typeof import("../chains/query_constructor/ir.js")
     | Promise<typeof import("../chains/query_constructor/ir.js")>;
+  "langchain/chains/sql_db"?:
+    | typeof import("../chains/sql_db/index.js")
+    | Promise<typeof import("../chains/sql_db/index.js")>;
   "langchain/embeddings/cohere"?:
     | typeof import("../embeddings/cohere.js")
     | Promise<typeof import("../embeddings/cohere.js")>;
@@ -55,6 +70,9 @@ export interface OptionalImportMap {
   "langchain/prompts/load"?:
     | typeof import("../prompts/load.js")
     | Promise<typeof import("../prompts/load.js")>;
+  "langchain/vectorstores/elasticsearch"?:
+    | typeof import("../vectorstores/elasticsearch.js")
+    | Promise<typeof import("../vectorstores/elasticsearch.js")>;
   "langchain/vectorstores/chroma"?:
     | typeof import("../vectorstores/chroma.js")
     | Promise<typeof import("../vectorstores/chroma.js")>;
@@ -67,6 +85,9 @@ export interface OptionalImportMap {
   "langchain/vectorstores/weaviate"?:
     | typeof import("../vectorstores/weaviate.js")
     | Promise<typeof import("../vectorstores/weaviate.js")>;
+  "langchain/vectorstores/lancedb"?:
+    | typeof import("../vectorstores/lancedb.js")
+    | Promise<typeof import("../vectorstores/lancedb.js")>;
   "langchain/vectorstores/mongo"?:
     | typeof import("../vectorstores/mongo.js")
     | Promise<typeof import("../vectorstores/mongo.js")>;
@@ -97,6 +118,9 @@ export interface OptionalImportMap {
   "langchain/vectorstores/redis"?:
     | typeof import("../vectorstores/redis.js")
     | Promise<typeof import("../vectorstores/redis.js")>;
+  "langchain/vectorstores/typesense"?:
+    | typeof import("../vectorstores/typesense.js")
+    | Promise<typeof import("../vectorstores/typesense.js")>;
   "langchain/vectorstores/singlestore"?:
     | typeof import("../vectorstores/singlestore.js")
     | Promise<typeof import("../vectorstores/singlestore.js")>;
@@ -139,6 +163,9 @@ export interface OptionalImportMap {
   "langchain/document_loaders/web/notiondb"?:
     | typeof import("../document_loaders/web/notiondb.js")
     | Promise<typeof import("../document_loaders/web/notiondb.js")>;
+  "langchain/document_loaders/web/notionapi"?:
+    | typeof import("../document_loaders/web/notionapi.js")
+    | Promise<typeof import("../document_loaders/web/notionapi.js")>;
   "langchain/document_loaders/web/s3"?:
     | typeof import("../document_loaders/web/s3.js")
     | Promise<typeof import("../document_loaders/web/s3.js")>;
@@ -220,6 +247,9 @@ export interface OptionalImportMap {
   "langchain/cache/redis"?:
     | typeof import("../cache/redis.js")
     | Promise<typeof import("../cache/redis.js")>;
+  "langchain/cache/upstash_redis"?:
+    | typeof import("../cache/upstash_redis.js")
+    | Promise<typeof import("../cache/upstash_redis.js")>;
   "langchain/stores/doc/gcs"?:
     | typeof import("../stores/doc/gcs.js")
     | Promise<typeof import("../stores/doc/gcs.js")>;
@@ -247,6 +277,8 @@ export interface SecretMap {
   AWS_SECRET_ACCESS_KEY?: string;
   AWS_SESSION_TOKEN?: string;
   AZURE_OPENAI_API_KEY?: string;
+  BAIDU_API_KEY?: string;
+  BAIDU_SECRET_KEY?: string;
   COHERE_API_KEY?: string;
   GOOGLE_API_KEY?: string;
   HUGGINGFACEHUB_API_KEY?: string;

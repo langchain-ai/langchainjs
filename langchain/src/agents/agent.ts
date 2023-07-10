@@ -6,7 +6,7 @@ import {
   AgentAction,
   AgentFinish,
   AgentStep,
-  BaseChatMessage,
+  BaseMessage,
   ChainValues,
 } from "../schema/index.js";
 import { Serializable } from "../load/serializable.js";
@@ -203,7 +203,7 @@ export interface AgentArgs {
 export abstract class Agent extends BaseSingleActionAgent {
   llmChain: LLMChain;
 
-  outputParser: AgentActionOutputParser;
+  outputParser: AgentActionOutputParser | undefined;
 
   private _allowedTools?: string[] = undefined;
 
@@ -293,7 +293,7 @@ export abstract class Agent extends BaseSingleActionAgent {
    */
   async constructScratchPad(
     steps: AgentStep[]
-  ): Promise<string | BaseChatMessage[]> {
+  ): Promise<string | BaseMessage[]> {
     return steps.reduce(
       (thoughts, { action, observation }) =>
         thoughts +
@@ -323,6 +323,9 @@ export abstract class Agent extends BaseSingleActionAgent {
     }
 
     const output = await this.llmChain.predict(newInputs, callbackManager);
+    if (!this.outputParser) {
+      throw new Error("Output parser not set");
+    }
     return this.outputParser.parse(output, callbackManager);
   }
 
