@@ -190,6 +190,9 @@ vectorstores/tigris.d.ts
 vectorstores/vectara.cjs
 vectorstores/vectara.js
 vectorstores/vectara.d.ts
+vectorstores/analyticdb.cjs
+vectorstores/analyticdb.js
+vectorstores/analyticdb.d.ts
 text_splitter.cjs
 text_splitter.js
 text_splitter.d.ts

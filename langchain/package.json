@@ -202,6 +202,9 @@
     "vectorstores/vectara.cjs",
     "vectorstores/vectara.js",
     "vectorstores/vectara.d.ts",
+    "vectorstores/analyticdb.cjs",
+    "vectorstores/analyticdb.js",
+    "vectorstores/analyticdb.d.ts",
     "text_splitter.cjs",
     "text_splitter.js",
     "text_splitter.d.ts",
@@ -508,6 +511,7 @@
     "@types/object-hash": "^3.0.2",
     "@types/pdf-parse": "^1.1.1",
     "@types/pg": "^8",
+    "@types/pg-copy-streams": "^1.2.2",
     "@types/uuid": "^9",
     "@typescript-eslint/eslint-plugin": "^5.58.0",
     "@typescript-eslint/parser": "^5.58.0",
@@ -542,6 +546,7 @@
     "pdf-parse": "1.1.1",
     "peggy": "^3.0.2",
     "pg": "^8.11.0",
+    "pg-copy-streams": "^6.0.5",
     "pickleparser": "^0.1.0",
     "playwright": "^1.32.1",
     "prettier": "^2.8.3",
@@ -604,6 +609,7 @@
     "pdf-parse": "1.1.1",
     "peggy": "^3.0.2",
     "pg": "^8.11.0",
+    "pg-copy-streams": "^6.0.5",
     "pickleparser": "^0.1.0",
     "playwright": "^1.32.1",
     "puppeteer": "^19.7.2",
@@ -1147,6 +1153,11 @@
       "types": "./vectorstores/vectara.d.ts",
       "import": "./vectorstores/vectara.js",
       "require": "./vectorstores/vectara.cjs"
+    },
+    "./vectorstores/analyticdb": {
+      "types": "./vectorstores/analyticdb.d.ts",
+      "import": "./vectorstores/analyticdb.js",
+      "require": "./vectorstores/analyticdb.cjs"
     },
     "./text_splitter": {
       "types": "./text_splitter.d.ts",

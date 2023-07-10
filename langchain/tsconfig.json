@@ -93,6 +93,7 @@
       "src/vectorstores/singlestore.ts",
       "src/vectorstores/tigris.ts",
       "src/vectorstores/vectara.ts",
+      "src/vectorstores/analyticdb.ts",
       "src/text_splitter.ts",
       "src/memory/index.ts",
       "src/memory/zep.ts",
