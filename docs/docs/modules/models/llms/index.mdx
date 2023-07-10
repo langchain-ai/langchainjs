@@ -5,7 +5,7 @@ sidebar_label: LLMs
 
 import CodeBlock from "@theme/CodeBlock";
 import QuickStartExample from "@examples/models/llm/llm_quick_start.ts";
-import AdvancedExample from "@examples/models/llm/llm_quick_start.ts";
+import AdvancedExample from "@examples/models/llm/llm_advanced.ts";
 import DocCardList from "@theme/DocCardList";
 
 # Getting Started: LLMs
@@ -20,7 +20,7 @@ To get started, simply use the `call` method of an `LLM` implementation, passing
 
 <CodeBlock language="typescript">{QuickStartExample}</CodeBlock>
 
-Here's a more advanced example with additional parameters, including the magical `-1` value for `max_tokens`:
+Here's a more advanced example with additional parameters, which sets `-1` for `max_tokens` to turn on token size calculations:
 
 <CodeBlock language="typescript">{AdvancedExample}</CodeBlock>
 
