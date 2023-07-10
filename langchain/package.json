@@ -259,6 +259,9 @@
     "document_loaders/web/s3.cjs",
     "document_loaders/web/s3.js",
     "document_loaders/web/s3.d.ts",
+    "document_loaders/web/sonix-audio-transcription.cjs",
+    "document_loaders/web/sonix-audio-transcription.js",
+    "document_loaders/web/sonix-audio-transcription.d.ts",
     "document_loaders/web/confluence.cjs",
     "document_loaders/web/confluence.js",
     "document_loaders/web/confluence.d.ts",
@@ -551,6 +554,7 @@
     "replicate": "^0.9.0",
     "rimraf": "^5.0.1",
     "rollup": "^3.19.1",
+    "sonix-speech-recognition": "^2.1.1",
     "sqlite3": "^5.1.4",
     "srt-parser-2": "^1.2.2",
     "ts-jest": "^29.1.0",
@@ -609,6 +613,7 @@
     "puppeteer": "^19.7.2",
     "redis": "^4.6.4",
     "replicate": "^0.9.0",
+    "sonix-speech-recognition": "^2.1.1",
     "srt-parser-2": "^1.2.2",
     "typeorm": "^0.3.12",
     "typesense": "^1.5.3",
@@ -758,6 +763,9 @@
       "optional": true
     },
     "replicate": {
+      "optional": true
+    },
+    "sonix-speech-recognition": {
       "optional": true
     },
     "srt-parser-2": {
@@ -1244,6 +1252,11 @@
       "types": "./document_loaders/web/s3.d.ts",
       "import": "./document_loaders/web/s3.js",
       "require": "./document_loaders/web/s3.cjs"
+    },
+    "./document_loaders/web/sonix-audio-transcription": {
+      "types": "./document_loaders/web/sonix-audio-transcription.d.ts",
+      "import": "./document_loaders/web/sonix-audio-transcription.js",
+      "require": "./document_loaders/web/sonix-audio-transcription.cjs"
     },
     "./document_loaders/web/confluence": {
       "types": "./document_loaders/web/confluence.d.ts",

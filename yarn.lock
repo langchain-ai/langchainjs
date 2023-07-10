@@ -19599,6 +19599,7 @@ __metadata:
     replicate: ^0.9.0
     rimraf: ^5.0.1
     rollup: ^3.19.1
+    sonix-speech-recognition: ^2.1.1
     sqlite3: ^5.1.4
     srt-parser-2: ^1.2.2
     ts-jest: ^29.1.0
@@ -19660,6 +19661,7 @@ __metadata:
     puppeteer: ^19.7.2
     redis: ^4.6.4
     replicate: ^0.9.0
+    sonix-speech-recognition: ^2.1.1
     srt-parser-2: ^1.2.2
     typeorm: ^0.3.12
     typesense: ^1.5.3
@@ -19761,6 +19763,8 @@ __metadata:
     redis:
       optional: true
     replicate:
+      optional: true
+    sonix-speech-recognition:
       optional: true
     srt-parser-2:
       optional: true
@@ -25900,6 +25904,16 @@ __metadata:
     ip: ^2.0.0
     smart-buffer: ^4.2.0
   checksum: 259d9e3e8e1c9809a7f5c32238c3d4d2a36b39b83851d0f573bfde5f21c4b1288417ce1af06af1452569cd1eb0841169afd4998f0e04ba04656f6b7f0e46d748
+  languageName: node
+  linkType: hard
+
+"sonix-speech-recognition@npm:^2.1.1":
+  version: 2.1.1
+  resolution: "sonix-speech-recognition@npm:2.1.1"
+  dependencies:
+    axios: ^1.4.0
+    form-data: ^4.0.0
+  checksum: 67ffdf64fc90bab3556fb2a1c327e2d2ee0b3b9492d1f9fe13dd94125f9e1171dce5cc527fa9a08aba3c28d35d5595b16c3e5fca11317321e60720ec233b0d6b
   languageName: node
   linkType: hard
 
