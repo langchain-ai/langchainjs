@@ -19648,6 +19648,7 @@ __metadata:
     hnswlib-node: ^1.4.2
     html-to-text: ^9.0.5
     ignore: ^5.2.0
+    ioredis: "*"
     mammoth: "*"
     mongodb: ^5.2.0
     mysql2: ^3.3.3
@@ -19737,6 +19738,8 @@ __metadata:
     html-to-text:
       optional: true
     ignore:
+      optional: true
+    ioredis:
       optional: true
     mammoth:
       optional: true
