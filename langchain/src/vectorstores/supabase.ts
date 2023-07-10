@@ -50,7 +50,7 @@ export class SupabaseVectorStore extends VectorStore {
     this.filter = args.filter;
   }
 
-  async addDocuments(documents: Document[]): Promise<void> {
+  async addDocuments(documents: Document[]) {
     const texts = documents.map(({ pageContent }) => pageContent);
     return this.addVectors(
       await this.embeddings.embedDocuments(texts),
@@ -58,7 +58,7 @@ export class SupabaseVectorStore extends VectorStore {
     );
   }
 
-  async addVectors(vectors: number[][], documents: Document[]): Promise<void> {
+  async addVectors(vectors: number[][], documents: Document[]) {
     const rows = vectors.map((embedding, idx) => ({
       content: documents[idx].pageContent,
       embedding,
@@ -68,15 +68,27 @@ export class SupabaseVectorStore extends VectorStore {
     // upsert returns 500/502/504 (yes really any of them) if given too many rows/characters
     // ~2000 trips it, but my data is probably smaller than average pageContent and metadata
     const chunkSize = 500;
+    let ids: string[] = [];
     for (let i = 0; i < rows.length; i += chunkSize) {
       const chunk = rows.slice(i, i + chunkSize);
 
-      const res = await this.client.from(this.tableName).insert(chunk);
+      const res = await this.client.from(this.tableName).upsert(chunk).select();
       if (res.error) {
         throw new Error(
           `Error inserting: ${res.error.message} ${res.status} ${res.statusText}`
         );
       }
+      if (res.data) {
+        ids = ids.concat(res.data.map((row) => row.id));
+      }
+    }
+    return ids;
+  }
+
+  async delete(params: { ids: string[] }): Promise<void> {
+    const { ids } = params;
+    for (const id of ids) {
+      await this.client.from(this.tableName).delete().eq("id", id);
     }
   }
 

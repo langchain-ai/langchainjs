@@ -1,18 +1,20 @@
 import { createTaggingChain } from "langchain/chains";
 import { ChatOpenAI } from "langchain/chat_models/openai";
+import type { FunctionParameters } from "langchain/output_parsers";
 
-const chain = createTaggingChain(
-  {
-    type: "object",
-    properties: {
-      sentiment: { type: "string" },
-      tone: { type: "string" },
-      language: { type: "string" },
-    },
-    required: ["tone"],
+const schema: FunctionParameters = {
+  type: "object",
+  properties: {
+    sentiment: { type: "string" },
+    tone: { type: "string" },
+    language: { type: "string" },
   },
-  new ChatOpenAI({ modelName: "gpt-4-0613", temperature: 0 })
-);
+  required: ["tone"],
+};
+
+const chatModel = new ChatOpenAI({ modelName: "gpt-4-0613", temperature: 0 });
+
+const chain = createTaggingChain(schema, chatModel);
 
 console.log(
   await chain.run(

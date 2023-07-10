@@ -8,10 +8,10 @@ sidebar_class_name: node-only
 Only available on Node.js.
 :::
 
-Langchain.js accepts [@pinecone-database/pinecone](https://docs.pinecone.io/docs/node-client) as the client for Pinecone vectorstore. Install the library with
+LangChain.js accepts [@pinecone-database/pinecone](https://docs.pinecone.io/docs/node-client) as the client for Pinecone vectorstore. Install the library with:
 
 ```bash npm2yarn
-npm install -S dotenv langchain @pinecone-database/pinecone
+npm install -S dotenv @pinecone-database/pinecone
 ```
 
 ## Index docs
@@ -112,5 +112,78 @@ console.log(response);
     }
   ]
 }
+*/
+```
+
+## Delete docs
+
+```typescript
+import { PineconeClient } from "@pinecone-database/pinecone";
+import * as dotenv from "dotenv";
+import { Document } from "langchain/document";
+import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { PineconeStore } from "langchain/vectorstores/pinecone";
+
+dotenv.config();
+
+const client = new PineconeClient();
+await client.init({
+  apiKey: process.env.PINECONE_API_KEY,
+  environment: process.env.PINECONE_ENVIRONMENT,
+});
+const pineconeIndex = client.Index(process.env.PINECONE_INDEX);
+const embeddings = new OpenAIEmbeddings();
+const pineconeStore = new PineconeStore(embeddings, { pineconeIndex });
+
+const docs = [
+  new Document({
+    metadata: { foo: "bar" },
+    pageContent: "pinecone is a vector db",
+  }),
+  new Document({
+    metadata: { foo: "bar" },
+    pageContent: "the quick brown fox jumped over the lazy dog",
+  }),
+  new Document({
+    metadata: { baz: "qux" },
+    pageContent: "lorem ipsum dolor sit amet",
+  }),
+  new Document({
+    metadata: { baz: "qux" },
+    pageContent: "pinecones are the woody fruiting body and of a pine tree",
+  }),
+];
+
+const ids = await pineconeStore.addDocuments(docs);
+
+const results = await pineconeStore.similaritySearch(pageContent, 2, {
+  foo: "bar",
+});
+
+console.log(results);
+/*
+[
+  Document {
+    pageContent: 'pinecone is a vector db',
+    metadata: { foo: 'bar' },
+  },
+  Document {
+    pageContent: "the quick brown fox jumped over the lazy dog",
+    metadata: { foo: "bar" },
+  }
+]
+*/
+
+await pineconeStore.delete({
+  ids: [ids[0], ids[1]],
+});
+
+const results2 = await pineconeStore.similaritySearch(pageContent, 2, {
+  foo: "bar",
+});
+
+console.log(results2);
+/*
+  []
 */
 ```
