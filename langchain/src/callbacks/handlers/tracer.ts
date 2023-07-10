@@ -346,10 +346,14 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     runId: string,
     parentRunId?: string,
     extraParams?: Record<string, unknown>,
-    tags?: string[]
+    tags?: string[],
+    metadata?: KVMap
   ) {
     const execution_order = this._getExecutionOrder(parentRunId);
     const start_time = Date.now();
+    const finalExtraParams = metadata
+      ? { ...extraParams, metadata }
+      : extraParams;
     const run: Run = {
       id: runId,
       name: embedding.id[embedding.id.length - 1],
@@ -367,7 +371,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       child_execution_order: execution_order,
       run_type: "embedding",
       child_runs: [],
-      extra: extraParams ?? {},
+      extra: finalExtraParams ?? {},
       tags: tags || [],
     };
 

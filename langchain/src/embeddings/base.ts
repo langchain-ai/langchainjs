@@ -1,4 +1,9 @@
-import { CallbackManager, Callbacks } from "../callbacks/manager.js";
+import {
+  CallbackManager,
+  Callbacks,
+  BaseCallbackConfig,
+  parseCallbackConfigArg,
+} from "../callbacks/manager.js";
 import { Serializable } from "../load/serializable.js";
 import { AsyncCaller, AsyncCallerParams } from "../util/async_caller.js";
 
@@ -6,6 +11,7 @@ export type EmbeddingsParams = AsyncCallerParams & {
   callbacks?: Callbacks;
   verbose?: boolean;
   tags?: string[];
+  metadata?: Record<string, unknown>;
 };
 
 export abstract class Embeddings extends Serializable {
@@ -23,35 +29,41 @@ export abstract class Embeddings extends Serializable {
 
   tags?: string[];
 
+  metadata?: Record<string, unknown>;
+
   constructor(params: EmbeddingsParams) {
     super(params);
     this.caller = new AsyncCaller(params ?? {});
     this.callbacks = params.callbacks;
     this.verbose = params.verbose ?? true;
     this.tags = params.tags ?? [];
+    this.metadata = params.metadata ?? {};
   }
 
   abstract _embeddingsType(): string;
 
   abstract _embedDocuments(
     documents: string[],
-    callbacks?: Callbacks
+    config?: Callbacks | BaseCallbackConfig
   ): Promise<number[][]>;
 
   abstract _embedQuery(
     document: string,
-    callbacks?: Callbacks
+    config?: Callbacks | BaseCallbackConfig
   ): Promise<number[]>;
 
   async embedDocuments(
     documents: string[],
-    callbacks?: Callbacks
+    config?: Callbacks | BaseCallbackConfig
   ): Promise<number[][]> {
+    const parsedConfig = parseCallbackConfigArg(config);
     const callbackManager_ = await CallbackManager.configure(
-      callbacks,
+      parsedConfig.callbacks,
       this.callbacks,
-      undefined,
+      parsedConfig.tags,
       this.tags,
+      parsedConfig.metadata,
+      this.metadata,
       { verbose: this.verbose }
     );
     const runManagers = await callbackManager_?.handleEmbeddingStart(
@@ -77,12 +89,18 @@ export abstract class Embeddings extends Serializable {
     }
   }
 
-  async embedQuery(document: string, callbacks?: Callbacks): Promise<number[]> {
+  async embedQuery(
+    document: string,
+    config?: Callbacks | BaseCallbackConfig
+  ): Promise<number[]> {
+    const parsedConfig = parseCallbackConfigArg(config);
     const callbackManager_ = await CallbackManager.configure(
-      callbacks,
+      parsedConfig.callbacks,
       this.callbacks,
-      undefined,
+      parsedConfig.tags,
       this.tags,
+      parsedConfig.metadata,
+      this.metadata,
       { verbose: this.verbose }
     );
     const runManagers = await callbackManager_?.handleEmbeddingStart(

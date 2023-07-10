@@ -466,7 +466,8 @@ export class CallbackManager
                     runId,
                     this._parentRunId,
                     extraParams,
-                    this.tags
+                    this.tags,
+                    this.metadata
                   );
                 } catch (err) {
                   console.error(
@@ -484,6 +485,8 @@ export class CallbackManager
           this.inheritableHandlers,
           this.tags,
           this.inheritableTags,
+          this.metadata,
+          this.inheritableMetadata,
           this._parentRunId
         );
       })
