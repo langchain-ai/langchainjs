@@ -33,9 +33,20 @@ describe("PineconeStore", () => {
       [documentId]
     );
 
-    const results = await pineconeStore.similaritySearch(pageContent, 1);
+    const results = await pineconeStore.similaritySearch(pageContent, 2);
 
     expect(results).toEqual([new Document({ metadata: {}, pageContent })]);
+
+    await pineconeStore.addDocuments(
+      [{ pageContent: `${pageContent} upserted`, metadata: {} }],
+      [documentId]
+    );
+
+    const results2 = await pineconeStore.similaritySearch(pageContent, 2);
+
+    expect(results2).toEqual([
+      new Document({ metadata: {}, pageContent: `${pageContent} upserted` }),
+    ]);
   });
 
   test("auto-generated ids", async () => {
