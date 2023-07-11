@@ -22,6 +22,7 @@ export async function run() {
 
   const docs = [{ pageContent: "see ya!", metadata: { foo: "bar" } }];
 
+  // Also supports an additional {ids: []} parameter for upsertion
   const ids = await store.addDocuments(docs);
 
   // Search the index without any filters

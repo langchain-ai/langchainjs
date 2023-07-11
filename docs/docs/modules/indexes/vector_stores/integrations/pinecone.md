@@ -154,6 +154,7 @@ const docs = [
   }),
 ];
 
+// Also takes an additional {ids: []} parameter for upsertion
 const ids = await pineconeStore.addDocuments(docs);
 
 const results = await pineconeStore.similaritySearch(pageContent, 2, {
