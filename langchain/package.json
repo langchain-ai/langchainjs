@@ -259,9 +259,9 @@
     "document_loaders/web/s3.cjs",
     "document_loaders/web/s3.js",
     "document_loaders/web/s3.d.ts",
-    "document_loaders/web/sonix-audio-transcription.cjs",
-    "document_loaders/web/sonix-audio-transcription.js",
-    "document_loaders/web/sonix-audio-transcription.d.ts",
+    "document_loaders/web/sonix_audio_transcription.cjs",
+    "document_loaders/web/sonix_audio_transcription.js",
+    "document_loaders/web/sonix_audio_transcription.d.ts",
     "document_loaders/web/confluence.cjs",
     "document_loaders/web/confluence.js",
     "document_loaders/web/confluence.d.ts",
@@ -1253,10 +1253,10 @@
       "import": "./document_loaders/web/s3.js",
       "require": "./document_loaders/web/s3.cjs"
     },
-    "./document_loaders/web/sonix-audio-transcription": {
-      "types": "./document_loaders/web/sonix-audio-transcription.d.ts",
-      "import": "./document_loaders/web/sonix-audio-transcription.js",
-      "require": "./document_loaders/web/sonix-audio-transcription.cjs"
+    "./document_loaders/web/sonix_audio_transcription": {
+      "types": "./document_loaders/web/sonix_audio_transcription.d.ts",
+      "import": "./document_loaders/web/sonix_audio_transcription.js",
+      "require": "./document_loaders/web/sonix_audio_transcription.cjs"
     },
     "./document_loaders/web/confluence": {
       "types": "./document_loaders/web/confluence.d.ts",
