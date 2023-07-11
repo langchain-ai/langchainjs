@@ -1,8 +1,8 @@
-import { WikipediaAPIWrapper } from "langchain/tools";
+import { WikipediaAPI } from "langchain/tools";
 
-const tool = new WikipediaAPIWrapper({
-  top_k_results: 3,
-  doc_content_chars_max: 4000,
+const tool = new WikipediaAPI({
+  topKResults: 3,
+  maxDocContentLength: 4000,
 });
 
 const res = await tool.call("Langchain");

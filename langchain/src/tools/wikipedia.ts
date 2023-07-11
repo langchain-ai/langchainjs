@@ -1,8 +1,9 @@
 import { Tool } from "./base.js";
 
 export interface WikipediaAPIParams {
-  top_k_results: number;
-  doc_content_chars_max: number;
+  topKResults?: number;
+  maxDocContentLength?: number;
+  baseUrl?: string;
 }
 
 type UrlParameters = Record<
@@ -32,28 +33,25 @@ interface PageResult {
   };
 }
 
-export class WikipediaAPIWrapper extends Tool {
-  name = "wikipedia-api-wrapper";
+export class WikipediaAPI extends Tool {
+  name = "wikipedia-api";
 
-  description = "A tool for interacting with the Wikipedia API.";
+  description =
+    "A tool for interacting with and fetching data from the Wikipedia API.";
 
-  protected params: WikipediaAPIParams;
+  protected topKResults = 3;
 
-  protected baseUrl: string;
+  protected maxDocContentLength = 4000;
 
-  constructor(
-    params: Partial<WikipediaAPIParams> = {},
-    baseUrl = "https://en.wikipedia.org/w/api.php"
-  ) {
+  protected baseUrl = "https://en.wikipedia.org/w/api.php";
+
+  constructor(params: WikipediaAPIParams = {}) {
     super();
 
-    const defaultParams: WikipediaAPIParams = {
-      top_k_results: 3,
-      doc_content_chars_max: 4000,
-    };
-
-    this.params = { ...defaultParams, ...params };
-    this.baseUrl = baseUrl;
+    this.topKResults = params.topKResults ?? this.topKResults;
+    this.maxDocContentLength =
+      params.maxDocContentLength ?? this.maxDocContentLength;
+    this.baseUrl = params.baseUrl ?? this.baseUrl;
   }
 
   async _call(query: string): Promise<string> {
@@ -62,8 +60,7 @@ export class WikipediaAPIWrapper extends Tool {
 
     for (
       let i = 0;
-      i <
-      Math.min(this.params.top_k_results, searchResults.query.search.length);
+      i < Math.min(this.topKResults, searchResults.query.search.length);
       i += 1
     ) {
       const page = searchResults.query.search[i].title;
@@ -78,7 +75,7 @@ export class WikipediaAPIWrapper extends Tool {
     if (summaries.length === 0) {
       return "No good Wikipedia Search Result was found";
     } else {
-      return summaries.join("\n\n").slice(0, this.params.doc_content_chars_max);
+      return summaries.join("\n\n").slice(0, this.maxDocContentLength);
     }
   }
 
