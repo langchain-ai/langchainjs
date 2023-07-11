@@ -1,6 +1,6 @@
-import { WikipediaAPI } from "langchain/tools";
+import { WikipediaQueryRun } from "langchain/tools";
 
-const tool = new WikipediaAPI({
+const tool = new WikipediaQueryRun({
   topKResults: 3,
   maxDocContentLength: 4000,
 });

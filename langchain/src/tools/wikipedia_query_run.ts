@@ -1,6 +1,6 @@
 import { Tool } from "./base.js";
 
-export interface WikipediaAPIParams {
+export interface WikipediaQueryRunParams {
   topKResults?: number;
   maxDocContentLength?: number;
   baseUrl?: string;
@@ -33,7 +33,7 @@ interface PageResult {
   };
 }
 
-export class WikipediaAPI extends Tool {
+export class WikipediaQueryRun extends Tool {
   name = "wikipedia-api";
 
   description =
@@ -45,7 +45,7 @@ export class WikipediaAPI extends Tool {
 
   protected baseUrl = "https://en.wikipedia.org/w/api.php";
 
-  constructor(params: WikipediaAPIParams = {}) {
+  constructor(params: WikipediaQueryRunParams = {}) {
     super();
 
     this.topKResults = params.topKResults ?? this.topKResults;
