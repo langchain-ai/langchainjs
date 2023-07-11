@@ -22,10 +22,11 @@ export const run = async () => {
   );
   /* Ask it a question */
   const question = "What did the president say about Justice Breyer?";
-  const res = await chain.call({ question, chat_history: [] });
+  /* Can be a string or an array of chat messages */
+  const res = await chain.call({ question, chat_history: "" });
   console.log(res);
   /* Ask it a follow up question */
-  const chatHistory = question + res.text;
+  const chatHistory = `${question}\n${res.text}`;
   const followUpRes = await chain.call({
     question: "Was that nice?",
     chat_history: chatHistory,
