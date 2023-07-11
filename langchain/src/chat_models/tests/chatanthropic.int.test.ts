@@ -39,12 +39,16 @@ test("Test ChatAnthropic Generate with a signal in call options", async () => {
     modelName: "claude-instant-v1",
   });
   const controller = new AbortController();
-  const message = new HumanMessage("Hello!");
+  const message = new HumanMessage(
+    "How is your day going? Be extremely verbose!"
+  );
   await expect(() => {
     const res = chat.generate([[message], [message]], {
       signal: controller.signal,
     });
-    controller.abort();
+    setTimeout(() => {
+      controller.abort();
+    }, 500);
     return res;
   }).rejects.toThrow();
 }, 5000);
@@ -186,4 +190,25 @@ test("ChatAnthropic, Anthropic apiUrl set manually via constructor", async () =>
   const message = new HumanMessage("Hello!");
   const res = await chat.call([message]);
   console.log({ res });
+});
+
+test("ChatAnthropic, Claude V2", async () => {
+  const chat = new ChatAnthropic({
+    modelName: "claude-2",
+    temperature: 0,
+  });
+
+  const chatPrompt = ChatPromptTemplate.fromPromptMessages([
+    HumanMessagePromptTemplate.fromTemplate(`Hi, my name is Joe!`),
+    AIMessagePromptTemplate.fromTemplate(`Nice to meet you, Joe!`),
+    HumanMessagePromptTemplate.fromTemplate("{text}"),
+  ]);
+
+  const responseA = await chat.generatePrompt([
+    await chatPrompt.formatPromptValue({
+      text: "What did I just say my name was?",
+    }),
+  ]);
+
+  console.log(responseA.generations);
 });
