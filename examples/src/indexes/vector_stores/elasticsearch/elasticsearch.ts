@@ -57,6 +57,7 @@ export async function run() {
   // await ElasticVectorSearch.fromDocuments(docs, embeddings, clientArgs);
   const vectorStore = new ElasticVectorSearch(embeddings, clientArgs);
 
+  // Also supports an additional {ids: []} parameter for upsertion
   const ids = await vectorStore.addDocuments(docs);
 
   /* Search the vector DB independently with meta filters */
