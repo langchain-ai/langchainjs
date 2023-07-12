@@ -20,6 +20,7 @@ LangChain provides the following tools you can use out of the box:
 - [`RequestsGetTool`][RequestsGetTool] and [`RequestsPostTool`][RequestsPostTool] - Useful for making HTTP requests.
 - [`SerpAPI`][SerpAPI] - A wrapper around the SerpAPI API. Useful for when you need to answer questions about current events. Input should be a search query.
 - [`QuerySqlTool`][QuerySqlTool], [`InfoSqlTool`][InfoSqlTool], [`ListTablesSqlTool`][ListTablesSqlTool], and [`QueryCheckerTool`][QueryCheckerTool] - Useful for interacting with SQL databases. Can be used together in a [`SqlToolkit`][SqlToolkit]. Requires `typeorm` as a peer dependency.
+- [`WikipediaQueryRun`][WikipediaQueryRun] - A wrapper around the Wikipedia API.
 - [`VectorStoreQATool`][VectorStoreQATool] - Useful for retrieving relevant text data from a vector store.
 - [`ZapierNLARunAction`][ZapierNLARunAction] - A wrapper around the Zapier NLP API. Useful for triggering Zapier actions with a natural language input. Best when used in a [`ZapierToolkit`][ZapierToolkit].
 
@@ -40,6 +41,7 @@ LangChain provides the following tools you can use out of the box:
 [ListTablesSqlTool]: /docs/api/tools_sql/classes/ListTablesSqlTool
 [QueryCheckerTool]: /docs/api/tools_sql/classes/QueryCheckerTool
 [SqlToolkit]: ../../toolkits/sql
+[WikipediaQueryRun]: /docs/api/tools/classes/WikipediaQueryRun
 [VectorStoreQATool]: /docs/api/tools/classes/VectorStoreQATool
 [ZapierNLARunAction]: /docs/api/tools/classes/ZapierNLARunAction
 [ZapierToolkit]: ../zapier_agent
