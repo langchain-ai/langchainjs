@@ -167,6 +167,18 @@ abstract class BaseCallbackHandlerMethodsClass {
   ): Promise<void> | void;
 
   /**
+   * Called for runs that have multiple calls, e.g. embedDocuments.
+   * Generic enough such that other runs can use it as well.
+   */
+  handleProgress?(
+    current: number,
+    total: number,
+    runId: string,
+    parentRunId?: string,
+    tags?: string[]
+  ): Promise<void> | void;
+
+  /**
    * Called when an agent is about to execute an action,
    * with the action and the run ID.
    */

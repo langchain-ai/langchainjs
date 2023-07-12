@@ -96,6 +96,28 @@ class BaseRunManager {
     protected readonly _parentRunId?: string
   ) {}
 
+  async handleProgress(current: number, total: number): Promise<void> {
+    await Promise.all(
+      this.handlers.map((handler) =>
+        consumeCallback(async () => {
+          try {
+            await handler.handleProgress?.(
+              current,
+              total,
+              this.runId,
+              this._parentRunId,
+              this.tags
+            );
+          } catch (err) {
+            console.error(
+              `Error in handler ${handler.constructor.name}, handleProgress: ${err}`
+            );
+          }
+        }, handler.awaitHandlers)
+      )
+    );
+  }
+
   async handleText(text: string): Promise<void> {
     await Promise.all(
       this.handlers.map((handler) =>

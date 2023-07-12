@@ -1,4 +1,8 @@
-import { KVMap, BaseRun } from "langchainplus-sdk/schemas";
+import {
+  KVMap,
+  BaseRun,
+  RunType as LCPRunType,
+} from "langchainplus-sdk/schemas";
 
 import {
   AgentAction,
@@ -15,6 +19,7 @@ import {
 } from "../base.js";
 
 export type RunType = "llm" | "chain" | "tool";
+const progressRunTypes: LCPRunType[] = ["embedding"];
 
 export interface Run extends BaseRun {
   // some optional fields are always present here
@@ -366,6 +371,24 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     await this.onText?.(run);
   }
 
+  async handleProgress(
+    current: number,
+    total: number,
+    runId: string
+  ): Promise<void> {
+    const run = this.runMap.get(runId);
+    // if there are other run types that use progress, add them to progressRunTypes above.
+    if (!run || !progressRunTypes.includes(run?.run_type)) {
+      return;
+    }
+    run.events.push({
+      name: "progress",
+      time: Date.now(),
+      kwargs: { current, total },
+    });
+    await this.onProgress?.(run);
+  }
+
   async handleLLMNewToken(
     token: string,
     idx: NewTokenIndices,
@@ -408,6 +431,8 @@ export abstract class BaseTracer extends BaseCallbackHandler {
   onAgentEnd?(run: Run): void | Promise<void>;
 
   onText?(run: Run): void | Promise<void>;
+
+  onProgress?(run: Run): void | Promise<void>;
 
   onLLMNewToken?(run: Run): void | Promise<void>;
 }
