@@ -751,6 +751,9 @@
     "pg": {
       "optional": true
     },
+    "pg-copy-streams": {
+      "optional": true
+    },
     "pickleparser": {
       "optional": true
     },

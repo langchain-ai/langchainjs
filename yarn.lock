@@ -19741,6 +19741,7 @@ __metadata:
     pdf-parse: 1.1.1
     peggy: ^3.0.2
     pg: ^8.11.0
+    pg-copy-streams: ^6.0.5
     pickleparser: ^0.1.0
     playwright: ^1.32.1
     puppeteer: ^19.7.2
@@ -19837,6 +19838,8 @@ __metadata:
     peggy:
       optional: true
     pg:
+      optional: true
+    pg-copy-streams:
       optional: true
     pickleparser:
       optional: true
