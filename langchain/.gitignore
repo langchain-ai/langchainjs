@@ -250,6 +250,9 @@ document_loaders/web/s3.d.ts
 document_loaders/web/confluence.cjs
 document_loaders/web/confluence.js
 document_loaders/web/confluence.d.ts
+document_loaders/web/sort_xyz_blockchain.cjs
+document_loaders/web/sort_xyz_blockchain.js
+document_loaders/web/sort_xyz_blockchain.d.ts
 document_loaders/fs/directory.cjs
 document_loaders/fs/directory.js
 document_loaders/fs/directory.d.ts
