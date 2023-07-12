@@ -29,7 +29,6 @@ export class SonixAudioTranscriptionLoader extends BaseDocumentLoader {
       );
 
     if (status === "failed") {
-      console.error("Error:", error);
       throw new Error(`Failed to transcribe audio file. Error: ${error}`);
     }
 
