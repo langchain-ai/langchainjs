@@ -1,4 +1,4 @@
-import { SonixAudioTranscriptionLoader } from "langchain/document_loaders/web/sonix_audio_transcription";
+import { SonixAudioTranscriptionLoader } from "langchain/document_loaders/web/sonix_audio";
 
 const loader = new SonixAudioTranscriptionLoader({
   sonixAuthKey: "SONIX_AUTH_KEY",

@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.106",
+  "version": "0.0.107",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -259,9 +259,9 @@
     "document_loaders/web/s3.cjs",
     "document_loaders/web/s3.js",
     "document_loaders/web/s3.d.ts",
-    "document_loaders/web/sonix_audio_transcription.cjs",
-    "document_loaders/web/sonix_audio_transcription.js",
-    "document_loaders/web/sonix_audio_transcription.d.ts",
+    "document_loaders/web/sonix_audio.cjs",
+    "document_loaders/web/sonix_audio.js",
+    "document_loaders/web/sonix_audio.d.ts",
     "document_loaders/web/confluence.cjs",
     "document_loaders/web/confluence.js",
     "document_loaders/web/confluence.d.ts",
@@ -1256,10 +1256,10 @@
       "import": "./document_loaders/web/s3.js",
       "require": "./document_loaders/web/s3.cjs"
     },
-    "./document_loaders/web/sonix_audio_transcription": {
-      "types": "./document_loaders/web/sonix_audio_transcription.d.ts",
-      "import": "./document_loaders/web/sonix_audio_transcription.js",
-      "require": "./document_loaders/web/sonix_audio_transcription.cjs"
+    "./document_loaders/web/sonix_audio": {
+      "types": "./document_loaders/web/sonix_audio.d.ts",
+      "import": "./document_loaders/web/sonix_audio.js",
+      "require": "./document_loaders/web/sonix_audio.cjs"
     },
     "./document_loaders/web/confluence": {
       "types": "./document_loaders/web/confluence.d.ts",
