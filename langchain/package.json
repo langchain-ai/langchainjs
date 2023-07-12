@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.105",
+  "version": "0.0.106",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -783,7 +783,7 @@
     }
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.4.3",
+    "@anthropic-ai/sdk": "^0.5.3",
     "ansi-styles": "^5.0.0",
     "binary-extensions": "^2.2.0",
     "camelcase": "6",

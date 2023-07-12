@@ -1,4 +1,4 @@
-import { OpenAI } from "langchain/llms/openai";
+import { ChatOpenAI } from "langchain/chat_models/openai";
 import { ConversationalRetrievalQAChain } from "langchain/chains";
 import { HNSWLib } from "langchain/vectorstores/hnswlib";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
@@ -8,7 +8,7 @@ import * as fs from "fs";
 
 export const run = async () => {
   /* Initialize the LLM to use to answer the question */
-  const model = new OpenAI({});
+  const model = new ChatOpenAI({});
   /* Load in the file we want to do question answering over */
   const text = fs.readFileSync("state_of_the_union.txt", "utf8");
   /* Split the text into chunks */
