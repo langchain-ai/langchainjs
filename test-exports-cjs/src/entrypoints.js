@@ -21,6 +21,7 @@ const text_splitter = require("langchain/text_splitter");
 const memory = require("langchain/memory");
 const document = require("langchain/document");
 const document_loaders_base = require("langchain/document_loaders/base");
+const document_loaders_web_sort_xyz_blockchain = require("langchain/document_loaders/web/sort_xyz_blockchain");
 const chat_models_base = require("langchain/chat_models/base");
 const chat_models_openai = require("langchain/chat_models/openai");
 const chat_models_anthropic = require("langchain/chat_models/anthropic");

@@ -22,6 +22,7 @@ export * as text_splitter from "../text_splitter.js";
 export * as memory from "../memory/index.js";
 export * as document from "../document.js";
 export * as document_loaders__base from "../document_loaders/base.js";
+export * as document_loaders__web__sort_xyz_blockchain from "../document_loaders/web/sort_xyz_blockchain.js";
 export * as chat_models__base from "../chat_models/base.js";
 export * as chat_models__openai from "../chat_models/openai.js";
 export * as chat_models__anthropic from "../chat_models/anthropic.js";

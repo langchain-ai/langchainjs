@@ -60,7 +60,28 @@ By passing these options to the `PlaywrightWebBaseLoader` constructor, you can c
 Here is a basic example to do it:
 
 ```typescript
-import { PlaywrightWebBaseLoader } from "langchain/document_loaders/web/playwright";
+import {
+  PlaywrightWebBaseLoader,
+  Page,
+  Browser,
+} from "langchain/document_loaders/web/playwright";
+
+const url = "https://www.tabnews.com.br/";
+const loader = new PlaywrightWebBaseLoader(url);
+const docs = await loader.load();
+
+// raw HTML page content
+const extractedContents = docs[0].pageContent;
+```
+
+And a more advanced example:
+
+```typescript
+import {
+  PlaywrightWebBaseLoader,
+  Page,
+  Browser,
+} from "langchain/document_loaders/web/playwright";
 
 const loader = new PlaywrightWebBaseLoader("https://www.tabnews.com.br/", {
   launchOptions: {
