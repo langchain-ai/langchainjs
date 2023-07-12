@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.106",
+  "version": "0.0.107",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -259,9 +259,15 @@
     "document_loaders/web/s3.cjs",
     "document_loaders/web/s3.js",
     "document_loaders/web/s3.d.ts",
+    "document_loaders/web/sonix_audio.cjs",
+    "document_loaders/web/sonix_audio.js",
+    "document_loaders/web/sonix_audio.d.ts",
     "document_loaders/web/confluence.cjs",
     "document_loaders/web/confluence.js",
     "document_loaders/web/confluence.d.ts",
+    "document_loaders/web/sort_xyz_blockchain.cjs",
+    "document_loaders/web/sort_xyz_blockchain.js",
+    "document_loaders/web/sort_xyz_blockchain.d.ts",
     "document_loaders/fs/directory.cjs",
     "document_loaders/fs/directory.js",
     "document_loaders/fs/directory.d.ts",
@@ -554,6 +560,7 @@
     "replicate": "^0.9.0",
     "rimraf": "^5.0.1",
     "rollup": "^3.19.1",
+    "sonix-speech-recognition": "^2.1.1",
     "sqlite3": "^5.1.4",
     "srt-parser-2": "^1.2.2",
     "ts-jest": "^29.1.0",
@@ -612,6 +619,7 @@
     "puppeteer": "^19.7.2",
     "redis": "^4.6.4",
     "replicate": "^0.9.0",
+    "sonix-speech-recognition": "^2.1.1",
     "srt-parser-2": "^1.2.2",
     "typeorm": "^0.3.12",
     "typesense": "^1.5.3",
@@ -761,6 +769,9 @@
       "optional": true
     },
     "replicate": {
+      "optional": true
+    },
+    "sonix-speech-recognition": {
       "optional": true
     },
     "srt-parser-2": {
@@ -1248,10 +1259,20 @@
       "import": "./document_loaders/web/s3.js",
       "require": "./document_loaders/web/s3.cjs"
     },
+    "./document_loaders/web/sonix_audio": {
+      "types": "./document_loaders/web/sonix_audio.d.ts",
+      "import": "./document_loaders/web/sonix_audio.js",
+      "require": "./document_loaders/web/sonix_audio.cjs"
+    },
     "./document_loaders/web/confluence": {
       "types": "./document_loaders/web/confluence.d.ts",
       "import": "./document_loaders/web/confluence.js",
       "require": "./document_loaders/web/confluence.cjs"
+    },
+    "./document_loaders/web/sort_xyz_blockchain": {
+      "types": "./document_loaders/web/sort_xyz_blockchain.d.ts",
+      "import": "./document_loaders/web/sort_xyz_blockchain.js",
+      "require": "./document_loaders/web/sort_xyz_blockchain.cjs"
     },
     "./document_loaders/fs/directory": {
       "types": "./document_loaders/fs/directory.d.ts",
