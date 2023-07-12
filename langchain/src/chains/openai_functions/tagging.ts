@@ -8,11 +8,11 @@ import {
   FunctionParameters,
   JsonOutputFunctionsParser,
 } from "../../output_parsers/openai_functions.js";
-import { LLMChain } from "../llm_chain.js";
+import { LLMChain, LLMChainInput } from "../llm_chain.js";
 
 export type TaggingChainOptions = {
   prompt?: PromptTemplate;
-};
+} & Omit<LLMChainInput<object>, "prompt" | "llm">;
 
 function getTaggingFunctions(schema: FunctionParameters) {
   return [
