@@ -4,7 +4,7 @@ import { encodingForModel } from "../util/tiktoken.js";
 // https://www.npmjs.com/package/js-tiktoken
 
 export const getModelNameForTiktoken = (modelName: string): TiktokenModel => {
-  if (modelName.startsWith("gpt-3.5-turbo-16k-")) {
+  if (modelName.startsWith("gpt-3.5-turbo-16k")) {
     return "gpt-3.5-turbo-16k";
   }
 
@@ -12,7 +12,7 @@ export const getModelNameForTiktoken = (modelName: string): TiktokenModel => {
     return "gpt-3.5-turbo";
   }
 
-  if (modelName.startsWith("gpt-4-32k-")) {
+  if (modelName.startsWith("gpt-4-32k")) {
     return "gpt-4-32k";
   }
 
