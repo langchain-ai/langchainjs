@@ -123,6 +123,7 @@
       "src/document_loaders/fs/csv.ts",
       "src/document_loaders/fs/notion.ts",
       "src/document_loaders/fs/unstructured.ts",
+      "src/document_transformers/openai_functions.ts",
       "src/chat_models/base.ts",
       "src/chat_models/openai.ts",
       "src/chat_models/anthropic.ts",
