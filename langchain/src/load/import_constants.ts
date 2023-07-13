@@ -58,6 +58,7 @@ export const optionalImportEntrypoints = [
   "langchain/document_loaders/web/notiondb",
   "langchain/document_loaders/web/notionapi",
   "langchain/document_loaders/web/s3",
+  "langchain/document_loaders/web/sonix_audio",
   "langchain/document_loaders/web/confluence",
   "langchain/document_loaders/fs/directory",
   "langchain/document_loaders/fs/buffer",
@@ -90,5 +91,6 @@ export const optionalImportEntrypoints = [
   "langchain/stores/message/dynamodb",
   "langchain/stores/message/momento",
   "langchain/stores/message/redis",
+  "langchain/stores/message/ioredis",
   "langchain/stores/message/upstash_redis",
 ];
