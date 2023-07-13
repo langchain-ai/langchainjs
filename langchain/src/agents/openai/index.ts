@@ -41,8 +41,7 @@ function parseOutput(message: BaseMessage): AgentAction | AgentFinish {
       };
     } catch (error) {
       throw new OutputParserException(
-        `Failed to parse function arguments. Text: "${function_call.arguments}". Error: ${error}`,
-        function_call.arguments
+        `Failed to parse function arguments from chat model response. Text: "${function_call.arguments}". ${error}`
       );
     }
   } else {
