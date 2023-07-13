@@ -6,7 +6,7 @@ import { SerpAPI } from "../../tools/serpapi.js";
 import { Calculator } from "../../tools/calculator.js";
 import { initializeAgentExecutorWithOptions } from "../../agents/initialize.js";
 import { OpenAI } from "../../llms/openai.js";
-import { runOnDataset } from "../langchainplus.js";
+import { runOnDataset } from "../langsmith.js";
 
 test("Test LangChainPlus Client Run Chat Model Over Simple Dataset", async () => {
   const client = new Client({});
