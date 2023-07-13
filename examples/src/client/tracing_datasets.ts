@@ -1,6 +1,6 @@
 /* eslint-disable no-process-env */
 // eslint-disable-next-line import/no-extraneous-dependencies
-import { Client, Dataset } from "langchainplus-sdk";
+import { Client, Dataset } from "langsmith";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { runOnDataset } from "langchain/client";
 import { SerpAPI } from "langchain/tools";

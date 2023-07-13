@@ -1,6 +1,6 @@
 /* eslint-disable no-process-env */
 import { test } from "@jest/globals";
-import { Client } from "langchainplus-sdk";
+import { Client } from "langsmith";
 import { ChatOpenAI } from "../../chat_models/openai.js";
 import { SerpAPI } from "../../tools/serpapi.js";
 import { Calculator } from "../../tools/calculator.js";

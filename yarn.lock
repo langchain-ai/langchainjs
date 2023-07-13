@@ -19665,7 +19665,7 @@ __metadata:
     js-tiktoken: ^1.0.7
     js-yaml: ^4.1.0
     jsonpointer: ^5.0.1
-    langchainplus-sdk: ^0.0.19
+    langsmith: ^0.0.5
     mammoth: ^1.5.1
     ml-distance: ^4.0.0
     mongodb: ^5.2.0
@@ -19885,9 +19885,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"langchainplus-sdk@npm:^0.0.19":
-  version: 0.0.19
-  resolution: "langchainplus-sdk@npm:0.0.19"
+"langsmith@npm:^0.0.5":
+  version: 0.0.5
+  resolution: "langsmith@npm:0.0.5"
   dependencies:
     "@types/uuid": ^9.0.1
     commander: ^10.0.1
@@ -19895,8 +19895,8 @@ __metadata:
     p-retry: 4
     uuid: ^9.0.0
   bin:
-    langchain: dist/cli/main.cjs
-  checksum: f0174c1e248e4bc5034a7dd182f703b895a485b6408aa518c91ff12b3f015febd5546eeb7f821c82b63a9d2b67a7ea903a1a57ad196049743f0934ff1c524ae8
+    langsmith: dist/cli/main.cjs
+  checksum: f23960e81198996c154c38236eda9d6db841b60428f075fb5a7cbd54f03312f635d0edb26f2309b449225c2603e9915dd4aa10f77a6d5526bdf2f432e1be17cb
   languageName: node
   linkType: hard
 
