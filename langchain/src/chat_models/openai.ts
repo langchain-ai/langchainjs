@@ -678,6 +678,8 @@ export class PromptLayerChatOpenAI extends ChatOpenAI {
         messageDict = { role: "user", content: message.content };
       } else if (message._getType() === "ai") {
         messageDict = { role: "assistant", content: message.content };
+      } else if (message._getType() === "function") {
+        messageDict = { role: "assistant", content: message.content };
       } else if (message._getType() === "system") {
         messageDict = { role: "system", content: message.content };
       } else if (message._getType() === "generic") {

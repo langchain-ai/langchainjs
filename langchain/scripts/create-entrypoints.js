@@ -118,6 +118,8 @@ const entrypoints = {
   "document_loaders/fs/csv": "document_loaders/fs/csv",
   "document_loaders/fs/notion": "document_loaders/fs/notion",
   "document_loaders/fs/unstructured": "document_loaders/fs/unstructured",
+  // document_transformers
+  "document_transformers/openai_functions": "document_transformers/openai_functions",
   // chat_models
   chat_models: "chat_models/index",
   "chat_models/base": "chat_models/base",
@@ -170,6 +172,7 @@ const entrypoints = {
   "stores/message/dynamodb": "stores/message/dynamodb",
   "stores/message/momento": "stores/message/momento",
   "stores/message/redis": "stores/message/redis",
+  "stores/message/ioredis": "stores/message/ioredis",
   "stores/message/upstash_redis": "stores/message/upstash_redis",
   // experimental
   "experimental/autogpt": "experimental/autogpt/index",
@@ -285,6 +288,7 @@ const requiresOptionalDependency = [
   "stores/message/dynamodb",
   "stores/message/momento",
   "stores/message/redis",
+  "stores/message/ioredis",
   "stores/message/upstash_redis",
 ];
 
@@ -305,7 +309,6 @@ const testExports = [
     (p) => `const ${p.replace(/\//g, "_")} = require("langchain/${p}");`,
   ],
   ["test-exports-cf", (p) => `export * from "langchain/${p}";`],
-  ["test-exports-cra", (p) => `export * from "langchain/${p}";`],
   ["test-exports-vercel", (p) => `export * from "langchain/${p}";`],
   ["test-exports-vite", (p) => `export * from "langchain/${p}";`],
 ];

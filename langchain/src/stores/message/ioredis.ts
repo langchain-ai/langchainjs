@@ -1,12 +1,4 @@
-// TODO: Deprecate in favor of stores/message/ioredis.ts when LLMCache and other implementations are ported
-import {
-  createClient,
-  RedisClientOptions,
-  RedisClientType,
-  RedisModules,
-  RedisFunctions,
-  RedisScripts,
-} from "redis";
+import { Redis, RedisOptions } from "ioredis";
 import { BaseMessage, BaseListChatMessageHistory } from "../../schema/index.js";
 import {
   mapChatMessagesToStoredMessages,
@@ -16,24 +8,23 @@ import {
 export type RedisChatMessageHistoryInput = {
   sessionId: string;
   sessionTTL?: number;
-  config?: RedisClientOptions;
-  // Typing issues with createClient output: https://github.com/redis/node-redis/issues/1865
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  client?: any;
+  url?: string;
+  config?: RedisOptions;
+  client?: Redis;
 };
 
 export class RedisChatMessageHistory extends BaseListChatMessageHistory {
-  lc_namespace = ["langchain", "stores", "message", "redis"];
+  lc_namespace = ["langchain", "stores", "message", "ioredis"];
 
   get lc_secrets() {
     return {
-      "config.url": "REDIS_URL",
+      url: "REDIS_URL",
       "config.username": "REDIS_USERNAME",
       "config.password": "REDIS_PASSWORD",
     };
   }
 
-  public client: RedisClientType<RedisModules, RedisFunctions, RedisScripts>;
+  public client: Redis;
 
   private sessionId: string;
 
@@ -42,26 +33,15 @@ export class RedisChatMessageHistory extends BaseListChatMessageHistory {
   constructor(fields: RedisChatMessageHistoryInput) {
     super(fields);
 
-    const { sessionId, sessionTTL, config, client } = fields;
-    this.client = (client ?? createClient(config ?? {})) as RedisClientType<
-      RedisModules,
-      RedisFunctions,
-      RedisScripts
-    >;
+    const { sessionId, sessionTTL, url, config, client } = fields;
+    this.client = (client ??
+      (url ? new Redis(url) : new Redis(config ?? {}))) as Redis;
     this.sessionId = sessionId;
     this.sessionTTL = sessionTTL;
   }
 
-  async ensureReadiness() {
-    if (!this.client.isReady) {
-      await this.client.connect();
-    }
-    return true;
-  }
-
   async getMessages(): Promise<BaseMessage[]> {
-    await this.ensureReadiness();
-    const rawStoredMessages = await this.client.lRange(this.sessionId, 0, -1);
+    const rawStoredMessages = await this.client.lrange(this.sessionId, 0, -1);
     const orderedMessages = rawStoredMessages
       .reverse()
       .map((message) => JSON.parse(message));
@@ -69,16 +49,14 @@ export class RedisChatMessageHistory extends BaseListChatMessageHistory {
   }
 
   async addMessage(message: BaseMessage): Promise<void> {
-    await this.ensureReadiness();
     const messageToAdd = mapChatMessagesToStoredMessages([message]);
-    await this.client.lPush(this.sessionId, JSON.stringify(messageToAdd[0]));
+    await this.client.lpush(this.sessionId, JSON.stringify(messageToAdd[0]));
     if (this.sessionTTL) {
       await this.client.expire(this.sessionId, this.sessionTTL);
     }
   }
 
   async clear(): Promise<void> {
-    await this.ensureReadiness();
     await this.client.del(this.sessionId);
   }
 }

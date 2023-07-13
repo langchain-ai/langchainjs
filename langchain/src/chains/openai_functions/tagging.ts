@@ -8,7 +8,11 @@ import {
   FunctionParameters,
   JsonOutputFunctionsParser,
 } from "../../output_parsers/openai_functions.js";
-import { LLMChain } from "../llm_chain.js";
+import { LLMChain, LLMChainInput } from "../llm_chain.js";
+
+export type TaggingChainOptions = {
+  prompt?: PromptTemplate;
+} & Omit<LLMChainInput<object>, "prompt" | "llm">;
 
 function getTaggingFunctions(schema: FunctionParameters) {
   return [
@@ -28,10 +32,12 @@ Passage:
 
 export function createTaggingChain(
   schema: FunctionParameters,
-  llm: ChatOpenAI
+  llm: ChatOpenAI,
+  options: TaggingChainOptions = {}
 ) {
+  const { prompt = PromptTemplate.fromTemplate(TAGGING_TEMPLATE), ...rest } =
+    options;
   const functions = getTaggingFunctions(schema);
-  const prompt = PromptTemplate.fromTemplate(TAGGING_TEMPLATE);
   const outputParser = new JsonOutputFunctionsParser();
   return new LLMChain({
     llm,
@@ -39,16 +45,19 @@ export function createTaggingChain(
     llmKwargs: { functions },
     outputParser,
     tags: ["openai_functions", "tagging"],
+    ...rest,
   });
 }
 
 export function createTaggingChainFromZod(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   schema: z.ZodObject<any, any, any, any>,
-  llm: ChatOpenAI
+  llm: ChatOpenAI,
+  options?: TaggingChainOptions
 ) {
   return createTaggingChain(
     zodToJsonSchema(schema) as JsonSchema7ObjectType,
-    llm
+    llm,
+    options
   );
 }
