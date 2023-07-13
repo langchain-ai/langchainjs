@@ -48,7 +48,9 @@ Here's an explanation of each of the attributes of the options object:
 
 ## Built-in Memory
 
-Here's a customization example using a faster LLM to generate questions and a slower, more comprehensive LLM for the final answer. It uses a built-in memory object and returns the referenced source documents:
+Here's a customization example using a faster LLM to generate questions and a slower, more comprehensive LLM for the final answer. It uses a built-in memory object and returns the referenced source documents.
+Because we have `returnSourceDocuments` set and are thus returning multiple values from the chain, we must set `inputKey` and `outputKey` on the memory instance
+to let it know which values to store.
 
 import ConvoQABuiltInExample from "@examples/chains/conversational_qa_built_in_memory.ts";
 
@@ -64,8 +66,8 @@ import ConvoQAStreamingExample from "@examples/chains/conversational_qa_streamin
 
 ## Externally-Managed Memory
 
-If you'd like to format the chat history in a specific way, you can also pass the chat history in explicitly by omitting the `memory` option and passing in
-a `chat_history` string directly into the `chain.call` method:
+For this chain, if you'd like to format the chat history in a custom way (or pass in chat messages directly for convenience), you can also pass the chat history in explicitly by omitting the `memory` option and supplying
+a `chat_history` string or array of [HumanMessages](../../schema/chat-messages) and [AIMessages](../../schema/chat-messages) directly into the `chain.call` method:
 
 import ConvoQAExternalMemoryExample from "@examples/chains/conversational_qa_external_memory.ts";
 

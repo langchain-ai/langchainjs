@@ -12,7 +12,7 @@ import {
 const model = new OpenAI({ temperature: 0 });
 /* Load in the file we want to do question answering over */
 const text = fs.readFileSync("state_of_the_union.txt", "utf8");
-/* Split the text into chunks */
+/* Split the text into chunks using character, not token, size */
 const textSplitter = new RecursiveCharacterTextSplitter({ chunkSize: 1000 });
 const docs = await textSplitter.createDocuments([text]);
 /* Create the vectorstore */

@@ -247,9 +247,15 @@ document_loaders/web/notionapi.d.ts
 document_loaders/web/s3.cjs
 document_loaders/web/s3.js
 document_loaders/web/s3.d.ts
+document_loaders/web/sonix_audio.cjs
+document_loaders/web/sonix_audio.js
+document_loaders/web/sonix_audio.d.ts
 document_loaders/web/confluence.cjs
 document_loaders/web/confluence.js
 document_loaders/web/confluence.d.ts
+document_loaders/web/sort_xyz_blockchain.cjs
+document_loaders/web/sort_xyz_blockchain.js
+document_loaders/web/sort_xyz_blockchain.d.ts
 document_loaders/fs/directory.cjs
 document_loaders/fs/directory.js
 document_loaders/fs/directory.d.ts
@@ -283,6 +289,9 @@ document_loaders/fs/notion.d.ts
 document_loaders/fs/unstructured.cjs
 document_loaders/fs/unstructured.js
 document_loaders/fs/unstructured.d.ts
+document_transformers/openai_functions.cjs
+document_transformers/openai_functions.js
+document_transformers/openai_functions.d.ts
 chat_models.cjs
 chat_models.js
 chat_models.d.ts
@@ -412,6 +421,9 @@ stores/message/momento.d.ts
 stores/message/redis.cjs
 stores/message/redis.js
 stores/message/redis.d.ts
+stores/message/ioredis.cjs
+stores/message/ioredis.js
+stores/message/ioredis.d.ts
 stores/message/upstash_redis.cjs
 stores/message/upstash_redis.js
 stores/message/upstash_redis.d.ts

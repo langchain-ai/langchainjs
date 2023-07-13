@@ -169,6 +169,9 @@ export interface OptionalImportMap {
   "langchain/document_loaders/web/s3"?:
     | typeof import("../document_loaders/web/s3.js")
     | Promise<typeof import("../document_loaders/web/s3.js")>;
+  "langchain/document_loaders/web/sonix_audio"?:
+    | typeof import("../document_loaders/web/sonix_audio.js")
+    | Promise<typeof import("../document_loaders/web/sonix_audio.js")>;
   "langchain/document_loaders/web/confluence"?:
     | typeof import("../document_loaders/web/confluence.js")
     | Promise<typeof import("../document_loaders/web/confluence.js")>;
@@ -265,6 +268,9 @@ export interface OptionalImportMap {
   "langchain/stores/message/redis"?:
     | typeof import("../stores/message/redis.js")
     | Promise<typeof import("../stores/message/redis.js")>;
+  "langchain/stores/message/ioredis"?:
+    | typeof import("../stores/message/ioredis.js")
+    | Promise<typeof import("../stores/message/ioredis.js")>;
   "langchain/stores/message/upstash_redis"?:
     | typeof import("../stores/message/upstash_redis.js")
     | Promise<typeof import("../stores/message/upstash_redis.js")>;
