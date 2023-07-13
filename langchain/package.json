@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.107",
+  "version": "0.0.108",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -307,6 +307,9 @@
     "document_loaders/fs/unstructured.cjs",
     "document_loaders/fs/unstructured.js",
     "document_loaders/fs/unstructured.d.ts",
+    "document_transformers/openai_functions.cjs",
+    "document_transformers/openai_functions.js",
+    "document_transformers/openai_functions.d.ts",
     "chat_models.cjs",
     "chat_models.js",
     "chat_models.d.ts",
@@ -439,6 +442,9 @@
     "stores/message/redis.cjs",
     "stores/message/redis.js",
     "stores/message/redis.d.ts",
+    "stores/message/ioredis.cjs",
+    "stores/message/ioredis.js",
+    "stores/message/ioredis.d.ts",
     "stores/message/upstash_redis.cjs",
     "stores/message/upstash_redis.js",
     "stores/message/upstash_redis.d.ts",
@@ -550,6 +556,7 @@
     "hnswlib-node": "^1.4.2",
     "html-to-text": "^9.0.5",
     "ignore": "^5.2.0",
+    "ioredis": "^5.3.2",
     "jest": "^29.5.0",
     "mammoth": "^1.5.1",
     "mongodb": "^5.2.0",
@@ -615,6 +622,7 @@
     "hnswlib-node": "^1.4.2",
     "html-to-text": "^9.0.5",
     "ignore": "^5.2.0",
+    "ioredis": "^5.3.2",
     "mammoth": "*",
     "mongodb": "^5.2.0",
     "mysql2": "^3.3.3",
@@ -744,6 +752,9 @@
       "optional": true
     },
     "ignore": {
+      "optional": true
+    },
+    "ioredis": {
       "optional": true
     },
     "mammoth": {
@@ -1350,6 +1361,11 @@
       "import": "./document_loaders/fs/unstructured.js",
       "require": "./document_loaders/fs/unstructured.cjs"
     },
+    "./document_transformers/openai_functions": {
+      "types": "./document_transformers/openai_functions.d.ts",
+      "import": "./document_transformers/openai_functions.js",
+      "require": "./document_transformers/openai_functions.cjs"
+    },
     "./chat_models": {
       "node": {
         "types": "./chat_models.d.ts",
@@ -1573,6 +1589,11 @@
       "types": "./stores/message/redis.d.ts",
       "import": "./stores/message/redis.js",
       "require": "./stores/message/redis.cjs"
+    },
+    "./stores/message/ioredis": {
+      "types": "./stores/message/ioredis.d.ts",
+      "import": "./stores/message/ioredis.js",
+      "require": "./stores/message/ioredis.cjs"
     },
     "./stores/message/upstash_redis": {
       "types": "./stores/message/upstash_redis.d.ts",
