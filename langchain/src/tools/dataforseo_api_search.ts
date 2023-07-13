@@ -68,7 +68,7 @@ type Result = {
   keyword: string;
   check_url: string;
   datetime: string;
-  spell: string | undefined;
+  spell?: string;
   item_types: string[];
   se_results_count: number;
   items_count: number;
@@ -88,6 +88,11 @@ type ApiResponse = {
  * @description Represents a wrapper class to work with DataForSEO SERP API.
  */
 export class DataForSeoAPISearch extends Tool {
+  name = "dataforseo-api-wrapper";
+
+  description =
+    "A robust Google Search API provided by DataForSeo. This tool is handy when you need information about trending topics or current events.";
+
   protected apiLogin: string;
 
   protected apiPassword: string;
@@ -107,11 +112,11 @@ export class DataForSeoAPISearch extends Tool {
 
   protected params: Record<string, string | number | boolean> = {};
 
-  protected jsonResultTypes: Array<string> | undefined = undefined;
+  protected jsonResultTypes: Array<string> | undefined;
 
-  protected jsonResultFields: Array<string> | undefined = undefined;
+  protected jsonResultFields: Array<string> | undefined;
 
-  protected topCount: number | undefined = undefined;
+  protected topCount: number | undefined;
 
   protected useJsonOutput = false;
 
@@ -140,11 +145,6 @@ export class DataForSeoAPISearch extends Tool {
     this.useJsonOutput = config.useJsonOutput ?? false;
     this.topCount = config.topCount;
   }
-
-  name = "dataforseo-api-wrapper";
-
-  description =
-    "A robust Google Search API provided by DataForSeo. This tool is handy when you need information about trending topics or current events.";
 
   /**
    * @method _call
