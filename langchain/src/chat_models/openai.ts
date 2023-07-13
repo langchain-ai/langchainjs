@@ -419,6 +419,14 @@ export class ChatOpenAI
                           part.delta?.function_call?.name ?? "";
                         choice.message.function_call.arguments +=
                           part.delta?.function_call?.arguments ?? "";
+
+                        void runManager?.handleLLMNewFunctionCall(
+                          choice.message.function_call,
+                          {
+                            prompt: options.promptIndex ?? 0,
+                            completion: part.index,
+                          }
+                        );
                       }
                       // eslint-disable-next-line no-void
                       void runManager?.handleLLMNewToken(
@@ -428,8 +436,6 @@ export class ChatOpenAI
                           completion: part.index,
                         }
                       );
-                      // TODO we don't currently have a callback method for
-                      // sending the function call arguments
                     }
                   }
 

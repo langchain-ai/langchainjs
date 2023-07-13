@@ -33,6 +33,8 @@ class FakeCallbackHandler extends BaseCallbackHandler {
 
   llmStreams = 0;
 
+  llmFunctionCalls = 0;
+
   toolStarts = 0;
 
   toolEnds = 0;
@@ -57,6 +59,10 @@ class FakeCallbackHandler extends BaseCallbackHandler {
 
   async handleLLMNewToken(_token: string): Promise<void> {
     this.llmStreams += 1;
+  }
+
+  async handleLLMNewFunctionCall(_function_call: object): Promise<void> {
+    this.llmFunctionCalls += 1;
   }
 
   async handleLLMError(_err: Error): Promise<void> {
@@ -159,6 +165,7 @@ test("CallbackManager", async () => {
     llmCbs.map(async (llmCb) => {
       await llmCb.handleLLMEnd({ generations: [] });
       await llmCb.handleLLMNewToken("test");
+      await llmCb.handleLLMNewFunctionCall({});
       await llmCb.handleLLMError(new Error("test"));
     })
   );
@@ -183,6 +190,7 @@ test("CallbackManager", async () => {
     expect(handler.llmStarts).toBe(1);
     expect(handler.llmEnds).toBe(1);
     expect(handler.llmStreams).toBe(1);
+    expect(handler.llmFunctionCalls).toBe(1);
     expect(handler.chainStarts).toBe(1);
     expect(handler.chainEnds).toBe(1);
     expect(handler.toolStarts).toBe(2);

@@ -149,6 +149,33 @@ export class CallbackManagerForLLMRun
     );
   }
 
+  async handleLLMNewFunctionCall(
+    function_call: { name?: string; arguments?: string },
+    idx: NewTokenIndices = { prompt: 0, completion: 0 }
+  ) {
+    await Promise.all(
+      this.handlers.map((handler) =>
+        consumeCallback(async () => {
+          if (!handler.ignoreLLM) {
+            try {
+              await handler.handleLLMNewFunctionCall?.(
+                function_call,
+                idx,
+                this.runId,
+                this._parentRunId,
+                this.tags
+              );
+            } catch (err) {
+              console.error(
+                `Error in handler ${handler.constructor.name}, handleLLMNewFunctionCall: ${err}`
+              );
+            }
+          }
+        }, handler.awaitHandlers)
+      )
+    );
+  }
+
   async handleLLMError(err: Error | unknown): Promise<void> {
     await Promise.all(
       this.handlers.map((handler) =>
