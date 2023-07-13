@@ -94,7 +94,8 @@ export abstract class TextSplitter
         let numberOfIntermediateNewLines = 0;
         if (prevChunk) {
           const indexChunk = text.indexOf(chunk);
-          const indexEndPrevChunk = text.indexOf(prevChunk) + this.lengthFunction(prevChunk);
+          const indexEndPrevChunk =
+            text.indexOf(prevChunk) + this.lengthFunction(prevChunk);
           const removedNewlinesFromSplittingText = text.slice(
             indexEndPrevChunk,
             indexChunk
@@ -181,7 +182,7 @@ which is longer than the specified ${this.chunkSize}`
             total > this.chunkOverlap ||
             (total + _len > this.chunkSize && total > 0)
           ) {
-            total -= this.lengthFunction( currentDoc[0]);
+            total -= this.lengthFunction(currentDoc[0]);
             currentDoc.shift();
           }
         }
