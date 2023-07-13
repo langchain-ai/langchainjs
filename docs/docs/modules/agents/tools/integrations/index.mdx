@@ -19,6 +19,7 @@ LangChain provides the following tools you can use out of the box:
 - [`JsonListKeysTool`][JsonListKeysTool] and [`JsonGetValueTool`][JsonGetValueTool] - Useful for extracting data from JSON objects. These tools can be used collectively in a [`JsonToolkit`][JsonToolkit].
 - [`RequestsGetTool`][RequestsGetTool] and [`RequestsPostTool`][RequestsPostTool] - Useful for making HTTP requests.
 - [`SerpAPI`][SerpAPI] - A wrapper around the SerpAPI API. Useful for when you need to answer questions about current events. Input should be a search query.
+- [`SearxngSearch`][SearxngSearch] - A wrapper around the SearxNG API, this tool is useful for performing meta-search engine queries using the SearxNG API. It is particularly helpful in answering questions about current events.
 - [`QuerySqlTool`][QuerySqlTool], [`InfoSqlTool`][InfoSqlTool], [`ListTablesSqlTool`][ListTablesSqlTool], and [`QueryCheckerTool`][QueryCheckerTool] - Useful for interacting with SQL databases. Can be used together in a [`SqlToolkit`][SqlToolkit]. Requires `typeorm` as a peer dependency.
 - [`WikipediaQueryRun`][WikipediaQueryRun] - A wrapper around the Wikipedia API.
 - [`VectorStoreQATool`][VectorStoreQATool] - Useful for retrieving relevant text data from a vector store.
@@ -36,6 +37,7 @@ LangChain provides the following tools you can use out of the box:
 [RequestsGetTool]: /docs/api/tools/classes/RequestsGetTool
 [RequestsPostTool]: /docs/api/tools/classes/RequestsPostTool
 [SerpAPI]: /docs/api/tools/classes/SerpAPI
+[SearxngSearch]: /docs/api/tools/classes/SearxngSearch
 [QuerySqlTool]: /docs/api/tools_sql/classes/QuerySqlTool
 [InfoSqlTool]: /docs/api/tools_sql/classes/InfoSqlTool
 [ListTablesSqlTool]: /docs/api/tools_sql/classes/ListTablesSqlTool

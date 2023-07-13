@@ -41,7 +41,7 @@ interface SearxngSearchParams {
    * @default 10
    * Number of results included in results
    */
-  num_results?: number;
+  numResults?: number;
   /** Comma separated list, specifies the active search categories
    * https://docs.searxng.org/user/configured_engines.html#configured-engines
    */
@@ -55,23 +55,23 @@ interface SearxngSearchParams {
   /** Code of the language. */
   language?: string;
   /** Search page number. */
-  pageno?: number;
+  pageNumber?: number;
   /**
    * day / month / year
    *
    * Time range of search for engines which support it. See if an engine supports time range search in the preferences page of an instance.
    */
-  time_range?: number;
+  timeRange?: number;
 
   /**
    * Throws Error if format is set anything other than "json"
    * Output format of results. Format needs to be activated in search:
    */
-  format?: "json" | "csv" | "rss";
+  format?: "json";
   /** Open search results on new tab. */
-  results_on_new_tab?: 0 | 1;
+  resultsOnNewTab?: 0 | 1;
   /** Proxy image results through SearXNG. */
-  image_proxy?: boolean;
+  imageProxy?: boolean;
   autocomplete?: string;
   /**
    * Filter search results of engines which support safe search. See if an engine supports safe search in the preferences page of an instance.
@@ -95,10 +95,10 @@ export class SearxngSearch extends Tool {
   protected apiBase?: string;
 
   protected params?: SearxngSearchParams = {
-    num_results: 10,
-    pageno: 1,
+    numResults: 10,
+    pageNumber: 1,
     format: "json",
-    image_proxy: true,
+    imageProxy: true,
     safesearch: 0,
   };
 
@@ -204,7 +204,7 @@ export class SearxngSearch extends Tool {
         );
       });
 
-      return response.slice(0, this.params?.num_results).toString();
+      return response.slice(0, this.params?.numResults).toString();
     } else if (res.answers.length) {
       return res.answers[0];
     } else if (res.infoboxes.length) {

@@ -3,7 +3,6 @@ import { ChatOpenAI } from "langchain/chat_models/openai";
 import { initializeAgentExecutorWithOptions } from "langchain/agents";
 
 export async function run() {
-  // Works best with  `agentType: "structured-chat-zero-shot-react-description"`
   const model = new ChatOpenAI({
     maxTokens: 1000,
     modelName: "gpt-4",
