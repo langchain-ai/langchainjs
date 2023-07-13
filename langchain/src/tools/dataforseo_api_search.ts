@@ -272,9 +272,9 @@ export class DataForSeoAPISearch extends Tool {
             types.length === 0 ||
             types.includes(item.type)
           ) {
-            this.cleanupUnnecessaryItems(item);
-            if (Object.keys(item).length !== 0) {
-              output.push(item);
+            const newItem = this.cleanupUnnecessaryItems(item);
+            if (Object.keys(newItem).length !== 0) {
+              output.push(newItem);
             }
           }
           if (this.topCount !== undefined && output.length >= this.topCount) {
@@ -286,33 +286,37 @@ export class DataForSeoAPISearch extends Tool {
     return output;
   }
 
+  /* eslint-disable @typescript-eslint/no-explicit-any */
   /* eslint-disable no-param-reassign */
   /**
    * @method cleanupUnnecessaryItems
    * @param {any} d
    * @description Removes unnecessary items from the response.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private cleanupUnnecessaryItems(d: any) {
-    if (this.jsonResultFields !== undefined) {
-      for (const key in d) {
-        if (typeof d[key] === "object" && d[key] !== null) {
-          this.cleanupUnnecessaryItems(d[key]);
-          if (Object.keys(d[key]).length === 0) {
-            delete d[key];
-          }
-        } else if (!this.jsonResultFields.includes(key)) {
-          delete d[key];
-        }
-      }
+  private cleanupUnnecessaryItems(d: any): any {
+    if (Array.isArray(d)) {
+      return d.map((item) => this.cleanupUnnecessaryItems(item));
     }
 
-    ["xpath", "position", "rectangle"].forEach((key) => delete d[key]);
-    for (const key in d) {
-      if (typeof d[key] === "object" && d[key] !== null) {
-        this.cleanupUnnecessaryItems(d[key]);
-      }
+    const toRemove = ["xpath", "position", "rectangle"];
+    if (typeof d === "object" && d !== null) {
+      return Object.keys(d).reduce((newObj: any, key: string) => {
+        if (
+          (this.jsonResultFields === undefined ||
+            this.jsonResultFields.includes(key)) &&
+          !toRemove.includes(key)
+        ) {
+          if (typeof d[key] === "object" && d[key] !== null) {
+            newObj[key] = this.cleanupUnnecessaryItems(d[key]);
+          } else {
+            newObj[key] = d[key];
+          }
+        }
+        return newObj;
+      }, {});
     }
+
+    return d;
   }
 
   /**
