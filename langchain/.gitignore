@@ -418,6 +418,9 @@ stores/message/momento.d.ts
 stores/message/redis.cjs
 stores/message/redis.js
 stores/message/redis.d.ts
+stores/message/ioredis.cjs
+stores/message/ioredis.js
+stores/message/ioredis.d.ts
 stores/message/upstash_redis.cjs
 stores/message/upstash_redis.js
 stores/message/upstash_redis.d.ts

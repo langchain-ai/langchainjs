@@ -170,6 +170,7 @@ const entrypoints = {
   "stores/message/dynamodb": "stores/message/dynamodb",
   "stores/message/momento": "stores/message/momento",
   "stores/message/redis": "stores/message/redis",
+  "stores/message/ioredis": "stores/message/ioredis",
   "stores/message/upstash_redis": "stores/message/upstash_redis",
   // experimental
   "experimental/autogpt": "experimental/autogpt/index",
@@ -285,6 +286,7 @@ const requiresOptionalDependency = [
   "stores/message/dynamodb",
   "stores/message/momento",
   "stores/message/redis",
+  "stores/message/ioredis",
   "stores/message/upstash_redis",
 ];
 
