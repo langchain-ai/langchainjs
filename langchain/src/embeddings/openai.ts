@@ -99,7 +99,7 @@ export class OpenAIEmbeddings
       getEnvironmentVariable("AZURE_OPENAI_BASE_PATH");
 
     this.modelName = fields?.modelName ?? this.modelName;
-    this.batchSize = fields?.batchSize ?? azureApiKey ? 1 : this.batchSize;
+    this.batchSize = fields?.batchSize ?? (azureApiKey ? 1 : this.batchSize);
     this.stripNewLines = fields?.stripNewLines ?? this.stripNewLines;
     this.timeout = fields?.timeout;
 
@@ -128,7 +128,7 @@ export class OpenAIEmbeddings
 
   async embedDocuments(texts: string[]): Promise<number[][]> {
     const subPrompts = chunkArray(
-      this.stripNewLines ? texts.map((t) => t.replaceAll("\n", " ")) : texts,
+      this.stripNewLines ? texts.map((t) => t.replace(/\n/g, " ")) : texts,
       this.batchSize
     );
 
@@ -151,7 +151,7 @@ export class OpenAIEmbeddings
   async embedQuery(text: string): Promise<number[]> {
     const { data } = await this.embeddingWithRetry({
       model: this.modelName,
-      input: this.stripNewLines ? text.replaceAll("\n", " ") : text,
+      input: this.stripNewLines ? text.replace(/\n/g, " ") : text,
     });
     return data.data[0].embedding;
   }
