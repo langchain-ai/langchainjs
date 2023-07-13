@@ -118,6 +118,8 @@ const entrypoints = {
   "document_loaders/fs/csv": "document_loaders/fs/csv",
   "document_loaders/fs/notion": "document_loaders/fs/notion",
   "document_loaders/fs/unstructured": "document_loaders/fs/unstructured",
+  // document_transformers
+  "document_transformers/openai_functions": "document_transformers/openai_functions",
   // chat_models
   chat_models: "chat_models/index",
   "chat_models/base": "chat_models/base",

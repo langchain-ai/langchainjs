@@ -301,6 +301,9 @@
     "document_loaders/fs/unstructured.cjs",
     "document_loaders/fs/unstructured.js",
     "document_loaders/fs/unstructured.d.ts",
+    "document_transformers/openai_functions.cjs",
+    "document_transformers/openai_functions.js",
+    "document_transformers/openai_functions.d.ts",
     "chat_models.cjs",
     "chat_models.js",
     "chat_models.d.ts",
@@ -1333,6 +1336,11 @@
       "types": "./document_loaders/fs/unstructured.d.ts",
       "import": "./document_loaders/fs/unstructured.js",
       "require": "./document_loaders/fs/unstructured.cjs"
+    },
+    "./document_transformers/openai_functions": {
+      "types": "./document_transformers/openai_functions.d.ts",
+      "import": "./document_transformers/openai_functions.js",
+      "require": "./document_transformers/openai_functions.cjs"
     },
     "./chat_models": {
       "node": {

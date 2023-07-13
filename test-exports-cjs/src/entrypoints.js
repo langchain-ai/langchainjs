@@ -22,6 +22,7 @@ const memory = require("langchain/memory");
 const document = require("langchain/document");
 const document_loaders_base = require("langchain/document_loaders/base");
 const document_loaders_web_sort_xyz_blockchain = require("langchain/document_loaders/web/sort_xyz_blockchain");
+const document_transformers_openai_functions = require("langchain/document_transformers/openai_functions");
 const chat_models_base = require("langchain/chat_models/base");
 const chat_models_openai = require("langchain/chat_models/openai");
 const chat_models_anthropic = require("langchain/chat_models/anthropic");
