@@ -1,13 +1,103 @@
-import { Buffer } from "buffer";
 import { getEnvironmentVariable } from "../util/env.js";
 import { Tool } from "./base.js";
 
+/**
+ * @interface DataForSeoApiConfig
+ * @description Represents the configuration object used to set up a DataForSeoAPISearch instance.
+ */
+export interface DataForSeoApiConfig {
+  /**
+   * @property apiLogin
+   * @type {string}
+   * @description The API login credential for DataForSEO. If not provided, it will be fetched from environment variables.
+   */
+  apiLogin?: string;
+
+  /**
+   * @property apiPassword
+   * @type {string}
+   * @description The API password credential for DataForSEO. If not provided, it will be fetched from environment variables.
+   */
+  apiPassword?: string;
+
+  /**
+   * @property params
+   * @type {Record<string, string | number | boolean>}
+   * @description Additional parameters to customize the API request.
+   */
+  params?: Record<string, string | number | boolean>;
+
+  /**
+   * @property useJsonOutput
+   * @type {boolean}
+   * @description Determines if the output should be in JSON format.
+   */
+  useJsonOutput?: boolean;
+
+  /**
+   * @property jsonResultTypes
+   * @type {Array<string>}
+   * @description Specifies the types of results to include in the output.
+   */
+  jsonResultTypes?: Array<string>;
+
+  /**
+   * @property jsonResultFields
+   * @type {Array<string>}
+   * @description Specifies the fields to include in each result object.
+   */
+  jsonResultFields?: Array<string>;
+
+  /**
+   * @property topCount
+   * @type {number}
+   * @description Specifies the maximum number of results to return.
+   */
+  topCount?: number;
+}
+
+type Task = {
+  id: string;
+  status_code: number;
+  status_message: string;
+  time: string;
+  result: Result[];
+};
+
+type Result = {
+  keyword: string;
+  check_url: string;
+  datetime: string;
+  spell: string | undefined;
+  item_types: string[];
+  se_results_count: number;
+  items_count: number;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  items: any[];
+};
+
+type ApiResponse = {
+  status_code: number;
+  status_message: string;
+  tasks: Task[];
+};
+
+/**
+ * @class DataForSeoAPISearch
+ * @extends {Tool}
+ * @description Represents a wrapper class to work with DataForSEO SERP API.
+ */
 export class DataForSeoAPISearch extends Tool {
   protected apiLogin: string;
 
   protected apiPassword: string;
 
-  protected defaultParams: Record<string, any> = {
+  /**
+   * @property defaultParams
+   * @type {Record<string, string | number | boolean>}
+   * @description These are the default parameters to be used when making an API request.
+   */
+  protected defaultParams: Record<string, string | number | boolean> = {
     location_name: "United States",
     language_code: "en",
     depth: 10,
@@ -15,17 +105,22 @@ export class DataForSeoAPISearch extends Tool {
     se_type: "organic",
   };
 
-  protected params: Record<string, any> = {};
+  protected params: Record<string, string | number | boolean> = {};
 
-  protected json_result_types: Array<string> | undefined = undefined;
+  protected jsonResultTypes: Array<string> | undefined = undefined;
 
-  protected json_result_fields: Array<string> | undefined = undefined;
+  protected jsonResultFields: Array<string> | undefined = undefined;
 
-  protected top_count: number | undefined = undefined;
+  protected topCount: number | undefined = undefined;
 
-  protected use_json_output = false;
+  protected useJsonOutput = false;
 
-  constructor(config: Partial<DataForSeoApiConfig> = {}) {
+  /**
+   * @constructor
+   * @param {DataForSeoApiConfig} config
+   * @description Sets up the class, throws an error if the API login/password isn't provided.
+   */
+  constructor(config: DataForSeoApiConfig = {}) {
     super();
     const apiLogin =
       config.apiLogin ?? getEnvironmentVariable("DATAFORSEO_LOGIN");
@@ -34,16 +129,16 @@ export class DataForSeoAPISearch extends Tool {
     const params = config.params ?? {};
     if (!apiLogin || !apiPassword) {
       throw new Error(
-        "DataForSEO login or password not set. You can set it as DATAFORSEO_LOGIN and DATAFORSEO_PASSWORD in your .env file, or pass it to DataForSeoAPIWrapper."
+        "DataForSEO login or password not set. You can set it as DATAFORSEO_LOGIN and DATAFORSEO_PASSWORD in your .env file, or pass it to DataForSeoAPISearch."
       );
     }
     this.params = { ...this.defaultParams, ...params };
     this.apiLogin = apiLogin;
     this.apiPassword = apiPassword;
-    this.json_result_types = config.json_result_types;
-    this.json_result_fields = config.json_result_fields;
-    this.use_json_output = config.use_json_output ?? false;
-    this.top_count = config.top_count;
+    this.jsonResultTypes = config.jsonResultTypes;
+    this.jsonResultFields = config.jsonResultFields;
+    this.useJsonOutput = config.useJsonOutput ?? false;
+    this.topCount = config.topCount;
   }
 
   name = "dataforseo-api-wrapper";
@@ -51,51 +146,77 @@ export class DataForSeoAPISearch extends Tool {
   description =
     "A robust Google Search API provided by DataForSeo. This tool is handy when you need information about trending topics or current events.";
 
+  /**
+   * @method _call
+   * @param {string} keyword
+   * @returns {Promise<string>}
+   * @description Initiates a call to the API and processes the response.
+   */
   async _call(keyword: string): Promise<string> {
-    return this.use_json_output
+    return this.useJsonOutput
       ? JSON.stringify(await this.results(keyword))
       : this.processResponse(await this.getResponseJson(keyword));
   }
 
+  /**
+   * @method results
+   * @param {string} keyword
+   * @returns {Promise<Array<any>>}
+   * @description Fetches the results from the API for the given keyword.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async results(keyword: string): Promise<Array<any>> {
     const res = await this.getResponseJson(keyword);
-    return this.filterResults(res, this.json_result_types);
+    return this.filterResults(res, this.jsonResultTypes);
   }
 
-  private prepareRequest(keyword: string): {
+  /**
+   * @method prepareRequest
+   * @param {string} keyword
+   * @returns {{url: string; headers: HeadersInit; data: BodyInit}}
+   * @description Prepares the request details for the API call.
+   */
+  protected prepareRequest(keyword: string): {
     url: string;
-    headers: any;
-    data: any;
+    headers: HeadersInit;
+    data: BodyInit;
   } {
     if (this.apiLogin === undefined || this.apiPassword === undefined) {
       throw new Error("api_login or api_password is not provided");
     }
 
     const credentials = Buffer.from(
-      `${this.apiLogin  }:${  this.apiPassword}`,
+      `${this.apiLogin}:${this.apiPassword}`,
       "utf-8"
     ).toString("base64");
     const headers = {
       Authorization: `Basic ${credentials}`,
       "Content-Type": "application/json",
     };
-    const obj: any = { keyword: encodeURIComponent(keyword) };
-    const mergedParams = { ...obj, ...this.params };
-    const data = [mergedParams];
+
+    const params = { ...this.params };
+    params.keyword ??= keyword;
+    const data = [params];
 
     return {
-      url: `https://api.dataforseo.com/v3/serp/${mergedParams.se_name}/${mergedParams.se_type}/live/advanced`,
+      url: `https://api.dataforseo.com/v3/serp/${params.se_name}/${params.se_type}/live/advanced`,
       headers,
-      data,
+      data: JSON.stringify(data),
     };
   }
 
-  private async getResponseJson(url: string): Promise<any> {
-    const requestDetails = this.prepareRequest(url);
+  /**
+   * @method getResponseJson
+   * @param {string} keyword
+   * @returns {Promise<ApiResponse>}
+   * @description Executes a POST request to the provided URL and returns a parsed JSON response.
+   */
+  protected async getResponseJson(keyword: string): Promise<ApiResponse> {
+    const requestDetails = this.prepareRequest(keyword);
     const response = await fetch(requestDetails.url, {
       method: "POST",
       headers: requestDetails.headers,
-      body: JSON.stringify(requestDetails.data),
+      body: requestDetails.data,
     });
 
     if (!response.ok) {
@@ -104,21 +225,42 @@ export class DataForSeoAPISearch extends Tool {
       );
     }
 
-    const result = await response.json();
+    const result: ApiResponse = await response.json();
     return this.checkResponse(result);
   }
 
-  private checkResponse(response: any): any {
+  /**
+   * @method checkResponse
+   * @param {ApiResponse} response
+   * @returns {ApiResponse}
+   * @description Checks the response status code.
+   */
+  private checkResponse(response: ApiResponse): ApiResponse {
     if (response.status_code !== 20000) {
       throw new Error(
         `Got error from DataForSEO SERP API: ${response.status_message}`
       );
     }
+    for (const task of response.tasks) {
+      if (task.status_code !== 20000) {
+        throw new Error(
+          `Got error from DataForSEO SERP API: ${task.status_message}`
+        );
+      }
+    }
     return response;
   }
 
+  /* eslint-disable @typescript-eslint/no-explicit-any */
+  /**
+   * @method filterResults
+   * @param {ApiResponse} res
+   * @param {Array<string> | undefined} types
+   * @returns {Array<any>}
+   * @description Filters the results based on the specified result types.
+   */
   private filterResults(
-    res: any,
+    res: ApiResponse,
     types: Array<string> | undefined
   ): Array<any> {
     const output: Array<any> = [];
@@ -135,7 +277,7 @@ export class DataForSeoAPISearch extends Tool {
               output.push(item);
             }
           }
-          if (this.top_count !== undefined && output.length >= this.top_count) {
+          if (this.topCount !== undefined && output.length >= this.topCount) {
             break;
           }
         }
@@ -145,15 +287,21 @@ export class DataForSeoAPISearch extends Tool {
   }
 
   /* eslint-disable no-param-reassign */
+  /**
+   * @method cleanupUnnecessaryItems
+   * @param {any} d
+   * @description Removes unnecessary items from the response.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private cleanupUnnecessaryItems(d: any) {
-    if (this.json_result_fields !== undefined) {
+    if (this.jsonResultFields !== undefined) {
       for (const key in d) {
         if (typeof d[key] === "object" && d[key] !== null) {
           this.cleanupUnnecessaryItems(d[key]);
           if (Object.keys(d[key]).length === 0) {
             delete d[key];
           }
-        } else if (!this.json_result_fields.includes(key)) {
+        } else if (!this.jsonResultFields.includes(key)) {
           delete d[key];
         }
       }
@@ -167,51 +315,47 @@ export class DataForSeoAPISearch extends Tool {
     }
   }
 
-  private processResponse(res: any): string {
-    let toret = "No good search result found";
+  /**
+   * @method processResponse
+   * @param {ApiResponse} res
+   * @returns {string}
+   * @description Processes the response to extract meaningful data.
+   */
+  protected processResponse(res: ApiResponse): string {
+    let returnValue = "No good search result found";
     for (const task of res.tasks || []) {
       for (const result of task.result || []) {
-        const {item_types} = result;
+        const { item_types } = result;
         const items = result.items || [];
         if (item_types.includes("answer_box")) {
-          toret = items.find(
+          returnValue = items.find(
             (item: { type: string; text: string }) => item.type === "answer_box"
           ).text;
         } else if (item_types.includes("knowledge_graph")) {
-          toret = items.find(
+          returnValue = items.find(
             (item: { type: string; description: string }) =>
               item.type === "knowledge_graph"
           ).description;
         } else if (item_types.includes("featured_snippet")) {
-          toret = items.find(
+          returnValue = items.find(
             (item: { type: string; description: string }) =>
               item.type === "featured_snippet"
           ).description;
         } else if (item_types.includes("shopping")) {
-          toret = items.find(
+          returnValue = items.find(
             (item: { type: string; price: string }) => item.type === "shopping"
           ).price;
         } else if (item_types.includes("organic")) {
-          toret = items.find(
+          returnValue = items.find(
             (item: { type: string; description: string }) =>
               item.type === "organic"
           ).description;
         }
-        if (toret) {
+        if (returnValue) {
           break;
         }
       }
     }
-    return toret;
+    return returnValue;
   }
 }
-
-export type DataForSeoApiConfig = {
-  apiLogin: string | undefined;
-  apiPassword: string | undefined;
-  params: Record<string, any>;
-  use_json_output: boolean;
-  json_result_types: Array<string> | undefined;
-  json_result_fields: Array<string> | undefined;
-  top_count: number | undefined;
-};
