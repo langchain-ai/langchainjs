@@ -111,7 +111,8 @@ export interface ChatOpenAICallOptions extends OpenAICallOptions {
  */
 export class ChatOpenAI
   extends BaseChatModel
-  implements OpenAIChatInput, AzureOpenAIInput {
+  implements OpenAIChatInput, AzureOpenAIInput
+{
   declare CallOptions: ChatOpenAICallOptions;
 
   get callKeys(): (keyof ChatOpenAICallOptions)[] {
@@ -320,10 +321,138 @@ export class ChatOpenAI
 
     const data = params.stream
       ? await new Promise<CreateChatCompletionResponse>((resolve, reject) => {
-        let response: CreateChatCompletionResponse;
-        let rejected = false;
-        let resolved = false;
-        this.completionWithRetry(
+          let response: CreateChatCompletionResponse;
+          let rejected = false;
+          let resolved = false;
+          this.completionWithRetry(
+            {
+              ...params,
+              messages: messagesMapped,
+            },
+            {
+              signal: options?.signal,
+              ...options?.options,
+              adapter: fetchAdapter, // default adapter doesn't do streaming
+              responseType: "stream",
+              onmessage: (event) => {
+                if (event.data?.trim?.() === "[DONE]") {
+                  if (resolved || rejected) {
+                    return;
+                  }
+                  resolved = true;
+                  resolve(response);
+                } else {
+                  const data = JSON.parse(event.data);
+
+                  if (data?.error) {
+                    if (rejected) {
+                      return;
+                    }
+                    rejected = true;
+                    reject(data.error);
+                    return;
+                  }
+
+                  const message = data as {
+                    id: string;
+                    object: string;
+                    created: number;
+                    model: string;
+                    choices?: Array<{
+                      index: number;
+                      finish_reason: string | null;
+                      delta: {
+                        role?: string;
+                        content?: string;
+                        function_call?: { name: string; arguments: string };
+                      };
+                    }>;
+                  };
+
+                  // on the first message set the response properties
+                  if (!response) {
+                    response = {
+                      id: message.id,
+                      object: message.object,
+                      created: message.created,
+                      model: message.model,
+                      choices: [],
+                    };
+                  }
+
+                  // on all messages, update choice
+                  for (const part of message.choices ?? []) {
+                    if (part != null) {
+                      let choice = response.choices.find(
+                        (c) => c.index === part.index
+                      );
+
+                      if (!choice) {
+                        choice = {
+                          index: part.index,
+                          finish_reason: part.finish_reason ?? undefined,
+                        };
+                        response.choices[part.index] = choice;
+                      }
+
+                      if (!choice.message) {
+                        choice.message = {
+                          role: part.delta
+                            ?.role as ChatCompletionResponseMessageRoleEnum,
+                          content: "",
+                        };
+                      }
+
+                      if (
+                        part.delta.function_call &&
+                        !choice.message.function_call
+                      ) {
+                        choice.message.function_call = {
+                          name: "",
+                          arguments: "",
+                        };
+                      }
+
+                      choice.message.content += part.delta?.content ?? "";
+                      if (choice.message.function_call) {
+                        choice.message.function_call.name +=
+                          part.delta?.function_call?.name ?? "";
+                        choice.message.function_call.arguments +=
+                          part.delta?.function_call?.arguments ?? "";
+                      }
+                      // eslint-disable-next-line no-void
+                      void runManager?.handleLLMNewToken(
+                        part.delta?.content ?? "",
+                        {
+                          prompt: options.promptIndex ?? 0,
+                          completion: part.index,
+                        }
+                      );
+                      // TODO we don't currently have a callback method for
+                      // sending the function call arguments
+                    }
+                  }
+
+                  // when all messages are finished, resolve
+                  if (
+                    !resolved &&
+                    !rejected &&
+                    message.choices?.every((c) => c.finish_reason != null)
+                  ) {
+                    resolved = true;
+                    resolve(response);
+                  }
+                }
+              },
+            }
+          ).catch((error) => {
+            if (!rejected) {
+              rejected = true;
+              reject(error);
+            }
+          });
+        })
+      : await this.completionWithRetry(
           {
             ...params,
             messages: messagesMapped,
@@ -331,136 +460,8 @@ export class ChatOpenAI
           {
             signal: options?.signal,
             ...options?.options,
-            adapter: fetchAdapter, // default adapter doesn't do streaming
-            responseType: "stream",
-            onmessage: (event) => {
-              if (event.data?.trim?.() === "[DONE]") {
-                if (resolved || rejected) {
-                  return;
-                }
-                resolved = true;
-                resolve(response);
-              } else {
-                const data = JSON.parse(event.data);
-
-                if (data?.error) {
-                  if (rejected) {
-                    return;
-                  }
-                  rejected = true;
-                  reject(data.error);
-                  return;
-                }
-
-                const message = data as {
-                  id: string;
-                  object: string;
-                  created: number;
-                  model: string;
-                  choices?: Array<{
-                    index: number;
-                    finish_reason: string | null;
-                    delta: {
-                      role?: string;
-                      content?: string;
-                      function_call?: { name: string; arguments: string };
-                    };
-                  }>;
-                };
-
-                // on the first message set the response properties
-                if (!response) {
-                  response = {
-                    id: message.id,
-                    object: message.object,
-                    created: message.created,
-                    model: message.model,
-                    choices: [],
-                  };
-                }
-
-                // on all messages, update choice
-                for (const part of message.choices ?? []) {
-                  if (part != null) {
-                    let choice = response.choices.find(
-                      (c) => c.index === part.index
-                    );
-
-                    if (!choice) {
-                      choice = {
-                        index: part.index,
-                        finish_reason: part.finish_reason ?? undefined,
-                      };
-                      response.choices[part.index] = choice;
-                    }
-
-                    if (!choice.message) {
-                      choice.message = {
-                        role: part.delta
-                          ?.role as ChatCompletionResponseMessageRoleEnum,
-                        content: "",
-                      };
-                    }
-
-                    if (
-                      part.delta.function_call &&
-                      !choice.message.function_call
-                    ) {
-                      choice.message.function_call = {
-                        name: "",
-                        arguments: "",
-                      };
-                    }
-
-                    choice.message.content += part.delta?.content ?? "";
-                    if (choice.message.function_call) {
-                      choice.message.function_call.name +=
-                        part.delta?.function_call?.name ?? "";
-                      choice.message.function_call.arguments +=
-                        part.delta?.function_call?.arguments ?? "";
-                    }
-                    // eslint-disable-next-line no-void
-                    void runManager?.handleLLMNewToken(
-                      part.delta?.content ?? "",
-                      {
-                        prompt: options.promptIndex ?? 0,
-                        completion: part.index,
-                      }
-                    );
-                    // TODO we don't currently have a callback method for
-                    // sending the function call arguments
-                  }
-                }
-
-                // when all messages are finished, resolve
-                if (
-                  !resolved &&
-                  !rejected &&
-                  message.choices?.every((c) => c.finish_reason != null)
-                ) {
-                  resolved = true;
-                  resolve(response);
-                }
-              }
-            },
           }
-        ).catch((error) => {
-          if (!rejected) {
-            rejected = true;
-            reject(error);
-          }
-        });
-      })
-      : await this.completionWithRetry(
-        {
-          ...params,
-          messages: messagesMapped,
-        },
-        {
-          signal: options?.signal,
-          ...options?.options,
-        }
-      );
+        );
 
     const {
       completion_tokens: completionTokens,
@@ -637,7 +638,7 @@ export class PromptLayerChatOpenAI extends ChatOpenAI {
       fields?.promptLayerApiKey ??
       (typeof process !== "undefined"
         ? // eslint-disable-next-line no-process-env
-        process.env?.PROMPTLAYER_API_KEY
+          process.env?.PROMPTLAYER_API_KEY
         : undefined);
     this.plTags = fields?.plTags ?? [];
     this.returnPromptLayerId = fields?.returnPromptLayerId ?? false;
