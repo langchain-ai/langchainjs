@@ -41,6 +41,10 @@ export class SupabaseVectorStore extends VectorStore {
 
   filter?: SupabaseMetadata | SupabaseFilterRPCCall;
 
+  vectorstoreType(): string {
+    return "supabase";
+  }
+
   constructor(embeddings: Embeddings, args: SupabaseLibArgs) {
     super(embeddings, args);
 

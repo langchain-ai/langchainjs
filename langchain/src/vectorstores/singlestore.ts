@@ -91,6 +91,10 @@ export class SingleStoreVectorStore extends VectorStore {
 
   distanceMetric: DistanceMetrics;
 
+  vectorstoreType(): string {
+    return "single_store";
+  }
+
   constructor(embeddings: Embeddings, config: SingleStoreVectorStoreConfig) {
     super(embeddings, config);
     this.connectionPool = createPool(withConnectAttributes(config));

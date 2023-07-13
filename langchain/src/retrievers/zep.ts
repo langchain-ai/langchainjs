@@ -4,17 +4,19 @@ import {
   NotFoundError,
   ZepClient,
 } from "@getzep/zep-js";
-import { BaseRetriever } from "../schema/index.js";
+import { BaseRetriever, BaseRetrieverInput } from "../schema/retriever.js";
 import { Document } from "../document.js";
 
-export type ZepRetrieverConfig = {
+export interface ZepRetrieverConfig extends BaseRetrieverInput {
   sessionId: string;
   url: string;
   topK?: number;
   apiKey?: string;
-};
+}
 
 export class ZepRetriever extends BaseRetriever {
+  lc_namespace = ["langchain", "retriever", "zep"];
+
   private zepClient: ZepClient;
 
   private sessionId: string;
@@ -22,7 +24,7 @@ export class ZepRetriever extends BaseRetriever {
   private topK?: number;
 
   constructor(config: ZepRetrieverConfig) {
-    super();
+    super(config);
     this.zepClient = new ZepClient(config.url, config.apiKey);
     this.sessionId = config.sessionId;
     this.topK = config.topK;
@@ -50,7 +52,7 @@ export class ZepRetriever extends BaseRetriever {
    *  @param {string} query - The query string.
    *  @returns {Promise<Document[]>} A promise that resolves to an array of relevant Document objects.
    */
-  async getRelevantDocuments(query: string): Promise<Document[]> {
+  async _getRelevantDocuments(query: string): Promise<Document[]> {
     const payload: MemorySearchPayload = { text: query, metadata: {} };
     try {
       const results: MemorySearchResult[] = await this.zepClient.searchMemory(

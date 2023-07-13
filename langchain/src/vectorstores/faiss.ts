@@ -21,6 +21,10 @@ export class FaissStore extends SaveableVectorStore {
 
   args: FaissLibArgs;
 
+  vectorstoreType(): string {
+    return "faiss";
+  }
+
   constructor(embeddings: Embeddings, args: FaissLibArgs) {
     super(embeddings, args);
     this.args = args;

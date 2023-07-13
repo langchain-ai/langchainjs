@@ -84,6 +84,10 @@ export class Milvus extends VectorStore {
 
   indexSearchParams = JSON.stringify({ ef: 64 });
 
+  vectorstoreType(): string {
+    return "milvus";
+  }
+
   constructor(embeddings: Embeddings, args: MilvusLibArgs) {
     super(embeddings, args);
     this.embeddings = embeddings;

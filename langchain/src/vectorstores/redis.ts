@@ -74,6 +74,10 @@ export class RedisVectorStore extends VectorStore {
 
   filter?: RedisVectorStoreFilterType;
 
+  vectorstoreType(): string {
+    return "redis";
+  }
+
   constructor(embeddings: Embeddings, _dbConfig: RedisVectorStoreConfig) {
     super(embeddings, _dbConfig);
 

@@ -42,6 +42,10 @@ export class VectaraStore extends VectorStore {
 
   private verbose: boolean;
 
+  vectorstoreType(): string {
+    return "vectara";
+  }
+
   constructor(args: VectaraLibArgs) {
     // Vectara doesn't need embeddings, but we need to pass something to the parent constructor
     // The embeddings are abstracted out from the user in Vectara.

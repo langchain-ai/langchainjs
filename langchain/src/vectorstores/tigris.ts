@@ -12,6 +12,10 @@ export type TigrisLibArgs = {
 export class TigrisVectorStore extends VectorStore {
   index?: VectorDocumentStoreT;
 
+  vectorstoreType(): string {
+    return "tigris";
+  }
+
   constructor(embeddings: Embeddings, args: TigrisLibArgs) {
     super(embeddings, args);
 

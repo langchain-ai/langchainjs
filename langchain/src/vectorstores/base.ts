@@ -1,8 +1,14 @@
 import { Embeddings } from "../embeddings/base.js";
 import { Document } from "../document.js";
-import { BaseRetriever } from "../schema/index.js";
+import { BaseRetriever, BaseRetrieverInput } from "../schema/retriever.js";
+import { Serializable } from "../load/serializable.js";
+import {
+  CallbackManagerForRetrieverRun,
+  Callbacks,
+} from "../callbacks/manager.js";
 
-export interface VectorStoreRetrieverInput<V extends VectorStore> {
+export interface VectorStoreRetrieverInput<V extends VectorStore>
+  extends BaseRetrieverInput {
   vectorStore: V;
   k?: number;
   filter?: V["FilterType"];
@@ -11,26 +17,35 @@ export interface VectorStoreRetrieverInput<V extends VectorStore> {
 export class VectorStoreRetriever<
   V extends VectorStore = VectorStore
 > extends BaseRetriever {
+  lc_namespace = ["langchain", "llms", this._vectorstoreType()];
+
   vectorStore: V;
 
   k = 4;
 
   filter?: V["FilterType"];
 
+  _vectorstoreType(): string {
+    return this.vectorStore.vectorstoreType();
+  }
+
   constructor(fields: VectorStoreRetrieverInput<V>) {
-    super();
+    super(fields);
     this.vectorStore = fields.vectorStore;
     this.k = fields.k ?? this.k;
     this.filter = fields.filter;
   }
 
-  async getRelevantDocuments(query: string): Promise<Document[]> {
-    const results = await this.vectorStore.similaritySearch(
+  async _getRelevantDocuments(
+    query: string,
+    runManager?: CallbackManagerForRetrieverRun
+  ): Promise<Document[]> {
+    return this.vectorStore.similaritySearch(
       query,
       this.k,
-      this.filter
+      this.filter,
+      runManager?.getChild("vectorstore")
     );
-    return results;
   }
 
   async addDocuments(documents: Document[]): Promise<void> {
@@ -38,15 +53,20 @@ export class VectorStoreRetriever<
   }
 }
 
-export abstract class VectorStore {
+export abstract class VectorStore extends Serializable {
   declare FilterType: object;
+
+  lc_namespace = ["langchain", "vector_store", this.vectorstoreType()];
 
   embeddings: Embeddings;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   constructor(embeddings: Embeddings, _dbConfig: Record<string, any>) {
+    super();
     this.embeddings = embeddings;
   }
+
+  abstract vectorstoreType(): string;
 
   abstract addVectors(
     vectors: number[][],
@@ -64,7 +84,8 @@ export abstract class VectorStore {
   async similaritySearch(
     query: string,
     k = 4,
-    filter: this["FilterType"] | undefined = undefined
+    filter: this["FilterType"] | undefined = undefined,
+    _callbacks: Callbacks | undefined = undefined // implement passing to embedQuery later
   ): Promise<Document[]> {
     const results = await this.similaritySearchVectorWithScore(
       await this.embeddings.embedQuery(query),
@@ -78,7 +99,8 @@ export abstract class VectorStore {
   async similaritySearchWithScore(
     query: string,
     k = 4,
-    filter: this["FilterType"] | undefined = undefined
+    filter: this["FilterType"] | undefined = undefined,
+    _callbacks: Callbacks | undefined = undefined // implement passing to embedQuery later
   ): Promise<[Document, number][]> {
     return this.similaritySearchVectorWithScore(
       await this.embeddings.embedQuery(query),

@@ -5,10 +5,11 @@ import {
 } from "../../chains/query_constructor/index.js";
 import { StructuredQuery } from "../../chains/query_constructor/ir.js";
 import { Document } from "../../document.js";
-import { BaseRetriever } from "../../schema/index.js";
+import { BaseRetriever } from "../../schema/retriever.js";
 import { VectorStore } from "../../vectorstores/base.js";
 import { FunctionalTranslator } from "./functional.js";
 import { BaseTranslator, BasicTranslator } from "./base.js";
+import { CallbackManagerForRetrieverRun } from "../../callbacks/manager.js";
 
 export { BaseTranslator, BasicTranslator, FunctionalTranslator };
 
@@ -26,6 +27,15 @@ export class SelfQueryRetriever
   extends BaseRetriever
   implements SelfQueryRetrieverArgs
 {
+  get lc_namespace() {
+    return [
+      "langchain",
+      "retriever",
+      "self_query",
+      this.vectorStore.vectorstoreType(),
+    ];
+  }
+
   vectorStore: VectorStore;
 
   llmChain: LLMChain;
@@ -49,12 +59,16 @@ export class SelfQueryRetriever
     this.structuredQueryTranslator = options.structuredQueryTranslator;
   }
 
-  async getRelevantDocuments(
-    query: string
+  async _getRelevantDocuments(
+    query: string,
+    runManager?: CallbackManagerForRetrieverRun
   ): Promise<Document<Record<string, unknown>>[]> {
-    const { [this.llmChain.outputKey]: output } = await this.llmChain.call({
-      [this.llmChain.inputKeys[0]]: query,
-    });
+    const { [this.llmChain.outputKey]: output } = await this.llmChain.call(
+      {
+        [this.llmChain.inputKeys[0]]: query,
+      },
+      runManager?.getChild("llm_chain")
+    );
 
     const nextArg = this.structuredQueryTranslator.visitStructuredQuery(
       output as StructuredQuery
@@ -64,13 +78,15 @@ export class SelfQueryRetriever
       return this.vectorStore.similaritySearch(
         query,
         this.searchParams?.k,
-        nextArg.filter
+        nextArg.filter,
+        runManager?.getChild("vectorstore")
       );
     } else {
       return this.vectorStore.similaritySearch(
         query,
         this.searchParams?.k,
-        this.searchParams?.filter
+        this.searchParams?.filter,
+        runManager?.getChild("vectorstore")
       );
     }
   }

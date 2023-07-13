@@ -28,6 +28,10 @@ export class LanceDB extends VectorStore {
     );
   }
 
+  vectorstoreType(): string {
+    return "lancedb";
+  }
+
   async addVectors(vectors: number[][], documents: Document[]): Promise<void> {
     if (vectors.length === 0) {
       return;

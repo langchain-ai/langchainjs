@@ -117,6 +117,10 @@ export class PrismaVectorStore<
 
   protected Prisma: PrismaNamespace;
 
+  vectorstoreType(): string {
+    return "prisma";
+  }
+
   constructor(
     embeddings: Embeddings,
     config: {

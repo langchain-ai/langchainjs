@@ -39,6 +39,10 @@ export class ElasticVectorSearch extends VectorStore {
 
   private readonly candidates: number;
 
+  vectorstoreType(): string {
+    return "elastic_search";
+  }
+
   constructor(embeddings: Embeddings, args: ElasticClientArgs) {
     super(embeddings, args);
 

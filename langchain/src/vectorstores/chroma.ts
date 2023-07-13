@@ -34,6 +34,10 @@ export class Chroma extends VectorStore {
 
   filter?: object;
 
+  vectorstoreType(): string {
+    return "chroma";
+  }
+
   constructor(embeddings: Embeddings, args: ChromaLibArgs) {
     super(embeddings, args);
     this.numDimensions = args.numDimensions;

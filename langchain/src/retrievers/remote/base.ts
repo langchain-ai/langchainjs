@@ -1,4 +1,4 @@
-import { BaseRetriever } from "../../schema/index.js";
+import { BaseRetriever } from "../../schema/retriever.js";
 import { AsyncCaller, AsyncCallerParams } from "../../util/async_caller.js";
 import { Document } from "../../document.js";
 
@@ -50,7 +50,7 @@ export abstract class RemoteRetriever
 
   abstract processJsonResponse(json: RemoteRetrieverValues): Document[];
 
-  async getRelevantDocuments(query: string): Promise<Document[]> {
+  async _getRelevantDocuments(query: string): Promise<Document[]> {
     const body = this.createJsonBody(query);
     const response = await this.asyncCaller.call(() =>
       fetch(this.url, {

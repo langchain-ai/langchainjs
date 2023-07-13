@@ -8,6 +8,7 @@ import {
 } from "../vectorstores/base.js";
 import { BaseLanguageModel } from "../base_language/index.js";
 import { BasePromptValue } from "../schema/index.js";
+import { CallbackManagerForRetrieverRun } from "../callbacks/manager.js";
 
 export type PromptKey =
   | "websearch"
@@ -49,7 +50,10 @@ export class HydeRetriever<
     }
   }
 
-  async getRelevantDocuments(query: string): Promise<Document[]> {
+  async _getRelevantDocuments(
+    query: string,
+    runManager?: CallbackManagerForRetrieverRun
+  ): Promise<Document[]> {
     let value: BasePromptValue = new StringPromptValue(query);
 
     // Use a custom template if provided
@@ -65,7 +69,8 @@ export class HydeRetriever<
     const results = await this.vectorStore.similaritySearch(
       answer,
       this.k,
-      this.filter
+      this.filter,
+      runManager?.getChild("vectorstore")
     );
 
     return results;
