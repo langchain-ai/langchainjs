@@ -127,75 +127,6 @@ export class AnalyticDBVectorStore extends VectorStore {
   }
 
   async addVectors(vectors: number[][], documents: Document[]): Promise<void> {
-    // return this.addVectorsJson(vectors, documents);
-    // return this.addVectorsEachRow(vectors, documents);
-    return this.addVectorsCopy(vectors, documents);
-  }
-
-  async addVectorsJson(
-    vectors: number[][],
-    documents: Document[]
-  ): Promise<void> {
-    if (vectors.length === 0) {
-      return;
-    }
-    if (vectors.length !== documents.length) {
-      throw new Error(`Vectors and documents must have the same length`);
-    }
-    if (vectors[0].length !== this.embeddingDimension) {
-      throw new Error(
-        `Vectors must have the same length as the number of dimensions (${this.embeddingDimension})`
-      );
-    }
-
-    if (!this.isCreateCollection) {
-      await this.createCollection();
-    }
-
-    const client = await this.pool.connect();
-    try {
-      const chunkSize = 500;
-      const chunksTableData = [];
-      await client.query("BEGIN");
-
-      const insertSQL = `
-        INSERT INTO ${this.collectionName} (id, embedding, document, metadata) 
-        SELECT m.* FROM json_populate_recordset(null::${this.collectionName}, $1) AS m
-      `;
-      for (let i = 0; i < documents.length; i += 1) {
-        chunksTableData.push({
-          id: uuid.v4(),
-          embedding: `{${vectors[i].join(",")}}`,
-          document: documents[i].pageContent,
-          metadata: documents[i].metadata,
-        });
-
-        // Execute the batch insert when the batch size is reached
-        if (chunksTableData.length === chunkSize) {
-          await client.query(insertSQL, [JSON.stringify(chunksTableData)]);
-          // Clear the chunksTableData list for the next batch
-          chunksTableData.length = 0;
-        }
-      }
-
-      // Insert any remaining records that didn't make up a full batch
-      if (chunksTableData.length > 0) {
-        await client.query(insertSQL, [JSON.stringify(chunksTableData)]);
-      }
-
-      await client.query("COMMIT");
-    } catch (err) {
-      await client.query("ROLLBACK");
-      throw err;
-    } finally {
-      client.release();
-    }
-  }
-
-  async addVectorsCopy(
-    vectors: number[][],
-    documents: Document[]
-  ): Promise<void> {
     if (vectors.length === 0) {
       return;
     }
@@ -278,50 +209,6 @@ export class AnalyticDBVectorStore extends VectorStore {
         );
         await pipeline(rs, ws);
       }
-    } finally {
-      client.release();
-    }
-  }
-
-  async addVectorsEachRow(
-    vectors: number[][],
-    documents: Document[]
-  ): Promise<void> {
-    if (vectors.length === 0) {
-      return;
-    }
-    if (vectors.length !== documents.length) {
-      throw new Error(`Vectors and documents must have the same length`);
-    }
-    if (vectors[0].length !== this.embeddingDimension) {
-      throw new Error(
-        `Vectors must have the same length as the number of dimensions (${this.embeddingDimension})`
-      );
-    }
-
-    if (!this.isCreateCollection) {
-      await this.createCollection();
-    }
-
-    const client = await this.pool.connect();
-    try {
-      await client.query("BEGIN");
-
-      const insertSQL = `INSERT INTO ${this.collectionName} (id, embedding, document, metadata) VALUES ($1, $2, $3, $4)`;
-      for (let i = 0; i < documents.length; i += 1) {
-        const insertValues = [
-          uuid.v4(),
-          vectors[i],
-          documents[i].pageContent,
-          documents[i].metadata,
-        ];
-        await client.query(insertSQL, insertValues);
-      }
-
-      await client.query("COMMIT");
-    } catch (err) {
-      await client.query("ROLLBACK");
-      throw err;
     } finally {
       client.release();
     }

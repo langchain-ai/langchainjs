@@ -3,11 +3,11 @@ import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 
 export const run = async () => {
   const connectionOptions = {
-    host: process.env.ANALYTICDB_HOST || "localhost",
-    port: Number(process.env.ANALYTICDB_PORT) || 5432,
-    database: process.env.ANALYTICDB_DATABASE || "your_database",
-    user: process.env.ANALYTICDB_USERNAME || "username",
-    password: process.env.ANALYTICDB_PASSWORD || "password",
+    host: process.env.PG_HOST || "localhost",
+    port: Number(process.env.PG_PORT) || 5432,
+    database: process.env.PG_DATABASE || "your_database",
+    user: process.env.PG_USERNAME || "username",
+    password: process.env.PG_PASSWORD || "password",
   };
 
   const vectorStore = await AnalyticDBVectorStore.fromTexts(
