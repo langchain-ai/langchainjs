@@ -1,17 +1,18 @@
-import { DiscussServiceClient, protos } from "@google-ai/generativelanguage";
+import { DiscussServiceClient } from "@google-ai/generativelanguage";
+import type { protos } from "@google-ai/generativelanguage";
 import { GoogleAuth } from "google-auth-library";
 import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
 import { AIMessage, BaseMessage, ChatResult } from "../schema/index.js";
 import { getEnvironmentVariable } from "../util/env.js";
 import { BaseChatModel, BaseChatModelParams } from "./base.js";
 
-export interface GooglePalmChatInput extends BaseChatModelParams {
+export interface GooglePaLMChatInput extends BaseChatModelParams {
   /**
    * Model Name to use
    *
    * Note: The format must follow the pattern - `models/{model}`
    */
-  model?: string;
+  modelName?: string;
 
   /**
    * Controls the randomness of the output.
@@ -59,9 +60,9 @@ export interface GooglePalmChatInput extends BaseChatModelParams {
   apiKey?: string;
 }
 
-export class ChatGooglePalm
+export class ChatGooglePaLM
   extends BaseChatModel
-  implements GooglePalmChatInput
+  implements GooglePaLMChatInput
 {
   get lc_secrets(): { [key: string]: string } | undefined {
     return {
@@ -69,7 +70,7 @@ export class ChatGooglePalm
     };
   }
 
-  model = "models/chat-bison-001";
+  modelName = "models/chat-bison-001";
 
   temperature?: number = undefined; // default value chosen based on model
 
@@ -83,15 +84,10 @@ export class ChatGooglePalm
 
   private client: DiscussServiceClient;
 
-  constructor(fields?: GooglePalmChatInput) {
+  constructor(fields?: GooglePaLMChatInput) {
     super(fields ?? {});
 
-    this.model = fields?.model ?? this.model;
-    if (this.model && !this.model.startsWith("models/")) {
-      throw new Error(
-        "`model` value must follow the pattern - `models/{model}`"
-      );
-    }
+    this.modelName = fields?.modelName ?? this.modelName;
 
     this.temperature = fields?.temperature ?? this.temperature;
     if (this.temperature && (this.temperature < 0 || this.temperature > 1)) {
@@ -154,7 +150,7 @@ export class ChatGooglePalm
   async _palmGenerateMessage(messages: BaseMessage[]): Promise<ChatResult> {
     const res = await this.client.generateMessage({
       candidateCount: 1,
-      model: this.model,
+      model: this.modelName,
       temperature: this.temperature,
       topK: this.topK,
       topP: this.topP,
@@ -168,35 +164,22 @@ export class ChatGooglePalm
   }
 
   _getPalmContextInstruction(messages: BaseMessage[]): string | undefined {
-    // filters out all 'system' messages, but select the first message
-    // as Palm chat prompt context
-    const systemMessages = messages.filter((m) => m._getType() === "system");
-    return systemMessages && systemMessages.length > 0
-      ? systemMessages[0].content
-      : undefined;
+    // get the first message and checks if it's a system 'system' messages
+    const systemMessage =
+      messages.length > 0 && messages[0]._getType() === "system"
+        ? messages[0]
+        : undefined;
+    return systemMessage?.content;
   }
 
   _mapBaseMessagesToPalmMessages(
     messages: BaseMessage[]
   ): protos.google.ai.generativelanguage.v1beta2.IMessage[] {
     // remove all 'system' messages
-    const filteredMessages = messages.filter((m) => m._getType() !== "system");
+    const nonSystemMessages = messages.filter((m) => m._getType() !== "system");
 
-    // merges successive messages of same type (say if consecutive human messages) into a single message
-    // Google Palm requires messages of alternative types
-    // i.e. 'human, bot, human, bot, human', but not - 'human, human, bot, bot'
-    const mergedMessages: BaseMessage[] = [];
-    filteredMessages.forEach((m) => {
-      const lastMergedMessage = mergedMessages.at(-1);
-      if (lastMergedMessage && m._getType() === lastMergedMessage._getType()) {
-        lastMergedMessage.content = `${lastMergedMessage.content}\n${m.content}`;
-      } else {
-        mergedMessages.push(m);
-      }
-    });
-
-    return mergedMessages.map((m) => ({
-      author: m.name,
+    return nonSystemMessages.map((m) => ({
+      author: m.name ?? m._getType(),
       content: m.content,
       citationMetadata: {
         citationSources: m.additional_kwargs.citationSources as

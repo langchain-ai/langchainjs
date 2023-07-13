@@ -6,13 +6,13 @@ import { getEnvironmentVariable } from "../util/env.js";
 /**
  * Input for Text generation for Google Palm
  */
-export interface GooglePalmTextInput extends BaseLLMParams {
+export interface GooglePaLMTextInput extends BaseLLMParams {
   /**
    * Model Name to use
    *
    * Note: The format must follow the pattern - `models/{model}`
    */
-  model?: string;
+  modelName?: string;
 
   /**
    * Controls the randomness of the output.
@@ -83,14 +83,14 @@ export interface GooglePalmTextInput extends BaseLLMParams {
 /**
  * Google Palm 2 Language Model Wrapper to generate texts
  */
-export class GooglePalm extends LLM implements GooglePalmTextInput {
+export class GooglePaLM extends LLM implements GooglePaLMTextInput {
   get lc_secrets(): { [key: string]: string } | undefined {
     return {
       apiKey: "GOOGLEPALM_API_KEY",
     };
   }
 
-  model = "models/text-bison-001";
+  modelName = "models/text-bison-001";
 
   temperature?: number = undefined; // default value chosen based on model
 
@@ -109,15 +109,10 @@ export class GooglePalm extends LLM implements GooglePalmTextInput {
 
   private client: TextServiceClient;
 
-  constructor(fields?: GooglePalmTextInput) {
+  constructor(fields?: GooglePaLMTextInput) {
     super(fields ?? {});
 
-    this.model = fields?.model ?? this.model;
-    if (this.model && !this.model.startsWith("models/")) {
-      throw new Error(
-        "`model` value must follow the pattern - `models/{model}`"
-      );
-    }
+    this.modelName = fields?.modelName ?? this.modelName;
 
     this.temperature = fields?.temperature ?? this.temperature;
     if (this.temperature && (this.temperature < 0 || this.temperature > 1)) {
@@ -185,7 +180,7 @@ export class GooglePalm extends LLM implements GooglePalmTextInput {
   async _palmGenerateText(prompt: string): Promise<string | null | undefined> {
     try {
       const res = await this.client.generateText({
-        model: this.model,
+        model: this.modelName,
         temperature: this.temperature,
         candidateCount: 1,
         topK: this.topK,

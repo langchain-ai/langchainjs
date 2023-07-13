@@ -1,11 +1,11 @@
-import { ChatGooglePalm } from "langchain/chat_models/googlepalm";
+import { ChatGooglePaLM } from "langchain/chat_models/googlepalm";
 import { AIMessage, HumanMessage, SystemMessage } from "langchain/schema";
 
 export const run = async () => {
-  const model = new ChatGooglePalm({
+  const model = new ChatGooglePaLM({
     apiKey: "<YOUR API KEY>", // or set it in environment variable as `GOOGLEPALM_API_KEY`
     temperature: 0.7, // OPTIONAL
-    model: "models/chat-bison-001", // OPTIONAL
+    modelName: "models/chat-bison-001", // OPTIONAL
     topK: 40, // OPTIONAL
     topP: 3, // OPTIONAL
     examples: [

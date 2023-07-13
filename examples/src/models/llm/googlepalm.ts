@@ -1,11 +1,11 @@
-import { GooglePalm } from "langchain/llms/googlepalm";
+import { GooglePaLM } from "langchain/llms/googlepalm";
 
 export const run = async () => {
-  const model = new GooglePalm({
+  const model = new GooglePaLM({
     apiKey: "<YOUR API KEY>", // or set it in environment variable as `GOOGLEPALM_API_KEY`
     // other params
     temperature: 1, // OPTIONAL
-    model: "models/text-bison-001", // OPTIONAL
+    modelName: "models/text-bison-001", // OPTIONAL
     maxOutputTokens: 1024, // OPTIONAL
     topK: 40, // OPTIONAL
     topP: 3, // OPTIONAL

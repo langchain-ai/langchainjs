@@ -3,38 +3,33 @@ import { GoogleAuth } from "google-auth-library";
 import { Embeddings, EmbeddingsParams } from "./base.js";
 import { getEnvironmentVariable } from "../util/env.js";
 
-export interface GooglePalmEmbeddingsParams extends EmbeddingsParams {
+export interface GooglePaLMEmbeddingsParams extends EmbeddingsParams {
   /**
    * Model Name to use
    *
    * Note: The format must follow the pattern - `models/{model}`
    */
-  model?: string;
+  modelName?: string;
   /**
    * Google Palm API key to use
    */
   apiKey?: string;
 }
 
-export class GooglePalmEmbeddings
+export class GooglePaLMEmbeddings
   extends Embeddings
-  implements GooglePalmEmbeddingsParams
+  implements GooglePaLMEmbeddingsParams
 {
   apiKey?: string;
 
-  model = "models/embedding-gecko-001";
+  modelName = "models/embedding-gecko-001";
 
   private client: TextServiceClient;
 
-  constructor(fields?: GooglePalmEmbeddingsParams) {
+  constructor(fields?: GooglePaLMEmbeddingsParams) {
     super(fields ?? {});
 
-    this.model = fields?.model ?? this.model;
-    if (this.model && !this.model.startsWith("models/")) {
-      throw new Error(
-        "`model` value must follow the pattern - `models/{model}`"
-      );
-    }
+    this.modelName = fields?.modelName ?? this.modelName;
 
     this.apiKey =
       fields?.apiKey ?? getEnvironmentVariable("GOOGLEPALM_API_KEY");
@@ -53,7 +48,7 @@ export class GooglePalmEmbeddings
     // replace newlines, which can negatively affect performance.
     const cleanedText = text.replace(/\n/g, " ");
     const res = await this.client.embedText({
-      model: this.model,
+      model: this.modelName,
       text: cleanedText,
     });
     return res[0].embedding?.value ?? [];

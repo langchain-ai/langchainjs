@@ -1,75 +1,70 @@
-/* eslint-disable no-new */
 import { test } from "@jest/globals";
-import { GooglePalm } from "../googlepalm.js";
-
-test("Google Palm - `model` name starts with `models/`", async () => {
-  expect(() => {
-    new GooglePalm({
-      model: `text-bison-001`,
-    });
-  }).toThrow();
-});
+import { GooglePaLM } from "../googlepalm.js";
 
 test("Google Palm - `temperature` must be in range [0.0,1.0]", async () => {
-  expect(() => {
-    new GooglePalm({
-      temperature: -1.0,
-    });
-  }).toThrow();
-  expect(() => {
-    new GooglePalm({
-      temperature: 1.1,
-    });
-  }).toThrow();
+  expect(
+    () =>
+      new GooglePaLM({
+        temperature: -1.0,
+      })
+  ).toThrow();
+  expect(
+    () =>
+      new GooglePaLM({
+        temperature: 1.1,
+      })
+  ).toThrow();
 });
 
 test("Google Palm - `maxOutputTokens` must be positive", async () => {
-  expect(() => {
-    new GooglePalm({
-      maxOutputTokens: -1,
-    });
-  }).toThrow();
+  expect(
+    () =>
+      new GooglePaLM({
+        maxOutputTokens: -1,
+      })
+  ).toThrow();
 });
 
 test("Google Palm - `topP` must be positive", async () => {
-  expect(() => {
-    new GooglePalm({
-      topP: -1,
-    });
-  }).toThrow();
+  expect(
+    () =>
+      new GooglePaLM({
+        topP: -1,
+      })
+  ).toThrow();
 });
 
 test("Google Palm - `topK` must be positive", async () => {
-  expect(() => {
-    new GooglePalm({
-      topK: -1,
-    });
-  }).toThrow();
+  expect(
+    () =>
+      new GooglePaLM({
+        topK: -1,
+      })
+  ).toThrow();
 });
 
 test("Google Palm - `safetySettings` category array must be unique", async () => {
-  expect(() => {
-    new GooglePalm({
-      safetySettings: [
-        {
-          category: "HARM_CATEGORY_DANGEROUS",
-          threshold: 1,
-        },
-        {
-          category: "HARM_CATEGORY_DANGEROUS",
-          threshold: 2,
-        },
-        {
-          category: "HARM_CATEGORY_DEROGATORY",
-          threshold: 1,
-        },
-      ],
-    });
-  }).toThrow();
+  expect(
+    () =>
+      new GooglePaLM({
+        safetySettings: [
+          {
+            category: "HARM_CATEGORY_DANGEROUS",
+            threshold: 1,
+          },
+          {
+            category: "HARM_CATEGORY_DANGEROUS",
+            threshold: 2,
+          },
+          {
+            category: "HARM_CATEGORY_DEROGATORY",
+            threshold: 1,
+          },
+        ],
+      })
+  ).toThrow();
 });
 
 test("Google Palm - `apiKey` must be available if no `GOOGLEPALM_API_KEY` env available", async () => {
-  expect(() => {
-    new GooglePalm({});
-  }).toThrow();
+  expect(() => new GooglePaLM({})).toThrow();
 });

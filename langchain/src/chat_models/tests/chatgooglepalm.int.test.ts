@@ -10,24 +10,24 @@ import {
 } from "../../prompts/index.js";
 import { ConversationChain } from "../../chains/conversation.js";
 import { BufferMemory } from "../../memory/buffer_memory.js";
-import { ChatGooglePalm } from "../googlepalm.js";
+import { ChatGooglePaLM } from "../googlepalm.js";
 
 test("Test ChatGooglePalm", async () => {
-  const chat = new ChatGooglePalm();
+  const chat = new ChatGooglePaLM();
   const message = new HumanMessage("Hello!");
   const res = await chat.call([message]);
   console.log({ res });
 }, 50000);
 
 test("Test ChatGooglePalm generate", async () => {
-  const chat = new ChatGooglePalm();
+  const chat = new ChatGooglePaLM();
   const message = new HumanMessage("Hello!");
   const res = await chat.generate([[message]]);
   console.log(JSON.stringify(res, null, 2));
 }, 50000);
 
 test("ChatGooglePalm, prompt templates", async () => {
-  const chat = new ChatGooglePalm();
+  const chat = new ChatGooglePaLM();
 
   // PaLM doesn't support translation yet
   const systemPrompt = PromptTemplate.fromTemplate(
@@ -50,7 +50,7 @@ test("ChatGooglePalm, prompt templates", async () => {
 }, 50000);
 
 test("ChatGooglePalm, longer chain of messages", async () => {
-  const chat = new ChatGooglePalm();
+  const chat = new ChatGooglePaLM();
 
   const chatPrompt = ChatPromptTemplate.fromPromptMessages([
     HumanMessagePromptTemplate.fromTemplate(`Hi, my name is Joe!`),
@@ -79,7 +79,7 @@ test("ChatGooglePalm, with a memory in a chain", async () => {
   const chain = new ConversationChain({
     memory: new BufferMemory({ returnMessages: true, memoryKey: "history" }),
     prompt: chatPrompt,
-    llm: new ChatGooglePalm(),
+    llm: new ChatGooglePaLM(),
   });
 
   const response = await chain.call({
@@ -96,7 +96,7 @@ test("ChatGooglePalm, with a memory in a chain", async () => {
 }, 50000);
 
 test("ChatGooglePalm, chain of messages on code", async () => {
-  const chat = new ChatGooglePalm();
+  const chat = new ChatGooglePaLM();
 
   const chatPrompt = ChatPromptTemplate.fromPromptMessages([
     SystemMessagePromptTemplate.fromTemplate(

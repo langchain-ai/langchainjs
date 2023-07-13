@@ -1,9 +1,9 @@
-import { GooglePalmEmbeddings } from "langchain/embeddings/googlepalm";
+import { GooglePaLMEmbeddings } from "langchain/embeddings/googlepalm";
 
 export const run = async () => {
-  const model = new GooglePalmEmbeddings({
+  const model = new GooglePaLMEmbeddings({
     apiKey: "<YOUR API KEY>", // or set it in environment variable as `GOOGLEPALM_API_KEY`
-    model: "models/embedding-gecko-001", // OPTIONAL
+    modelName: "models/embedding-gecko-001", // OPTIONAL
   });
   /* Embed queries */
   const res = await model.embedQuery(
