@@ -1,13 +1,26 @@
-import { Client, isFullPage, iteratePaginatedAPI } from "@notionhq/client";
 import {
-  GetPageResponse,
-  PageObjectResponse,
-} from "@notionhq/client/build/src/api-endpoints.js";
+  Client,
+  isFullBlock,
+  isFullPage,
+  iteratePaginatedAPI,
+} from "@notionhq/client";
 import { NotionToMarkdown } from "notion-to-md";
 import { getBlockChildren } from "notion-to-md/build/utils/notion.js";
+import type {
+  ListBlockChildrenResponseResults,
+  MdBlock,
+} from "notion-to-md/build/types";
 
 import { BaseDocumentLoader } from "../base.js";
 import { Document } from "../../document.js";
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type GuardType<T> = T extends (x: any, ...rest: any) => x is infer U
+  ? U
+  : never;
+
+type BlockObjectResponse = GuardType<typeof isFullBlock>;
+type PageObjectResponse = GuardType<typeof isFullPage>;
 
 export type NotionAPIType = "database" | "page";
 
@@ -102,8 +115,7 @@ export class NotionAPILoader extends BaseDocumentLoader {
     );
   }
 
-  private parsePageDetails(page: GetPageResponse) {
-    if (!isFullPage(page)) return;
+  private parsePageDetails(page: PageObjectResponse) {
     const metadata = Object.fromEntries(
       Object.entries(page).filter(([key, _]) => key !== "id")
     );
@@ -114,9 +126,82 @@ export class NotionAPILoader extends BaseDocumentLoader {
     };
   }
 
-  private async loadPage(
-    page: string | PageObjectResponse
-  ): Promise<Document[]> {
+  private async loadBlock(block: BlockObjectResponse): Promise<MdBlock> {
+    return {
+      type: block.type,
+      blockId: block.id,
+      parent: await this.n2mClient.blockToMarkdown(block),
+      children: [],
+    };
+  }
+
+  private async loadBlocksAndDocs(
+    blocksResponse: ListBlockChildrenResponseResults
+  ): Promise<{ mdBlocks: MdBlock[]; childDocuments: Document[] }> {
+    const blocks = blocksResponse.filter(isFullBlock);
+
+    const [childPageDocuments, childDatabaseDocuments, blocksDocsArray] =
+      await Promise.all([
+        Promise.all(
+          blocks
+            .filter((block) => block.type.includes("child_page"))
+            .map((block) => this.loadPage(block.id))
+        ),
+        Promise.all(
+          blocks
+            .filter((block) => block.type.includes("child_database"))
+            .map((block) => this.loadDatabase(block.id))
+        ),
+        Promise.all(
+          blocks
+            .filter(
+              (block) => !["child_page", "child_database"].includes(block.type)
+            )
+            .map(async (block) => {
+              const mdBlock = await this.loadBlock(block);
+              let childDocuments: Document[] = [];
+
+              if (block.has_children) {
+                const block_id =
+                  block.type === "synced_block" &&
+                  block.synced_block?.synced_from?.block_id
+                    ? block.synced_block.synced_from.block_id
+                    : block.id;
+
+                const childBlocksDocs = await this.loadBlocksAndDocs(
+                  await getBlockChildren(this.notionClient, block_id, null)
+                );
+
+                mdBlock.children = childBlocksDocs.mdBlocks;
+                childDocuments = childBlocksDocs.childDocuments;
+              }
+
+              return {
+                mdBlocks: [mdBlock],
+                childDocuments,
+              };
+            })
+        ),
+      ]);
+
+    const allMdBlocks = blocksDocsArray
+      .flat()
+      .map((blockDoc) => blockDoc.mdBlocks);
+    const childDocuments = blocksDocsArray
+      .flat()
+      .map((blockDoc) => blockDoc.childDocuments);
+
+    return {
+      mdBlocks: [...allMdBlocks.flat()],
+      childDocuments: [
+        ...childPageDocuments.flat(),
+        ...childDatabaseDocuments.flat(),
+        ...childDocuments.flat(),
+      ],
+    };
+  }
+
+  private async loadPage(page: string | PageObjectResponse) {
     // Check page is a page ID or a GetPageResponse
     const [pageData, pageId] =
       typeof page === "string"
@@ -128,41 +213,20 @@ export class NotionAPILoader extends BaseDocumentLoader {
       getBlockChildren(this.notionClient, pageId, null),
     ]);
 
-    const [childPageDocuments, childDatabaseDocuments, mdBlocks] =
-      await Promise.all([
-        Promise.all(
-          pageBlocks
-            .filter(
-              (block) => "type" in block && block.type.includes("child_page")
-            )
-            .map((block) => this.loadPage(block.id))
-        ),
-        Promise.all(
-          pageBlocks
-            .filter(
-              (block) =>
-                "type" in block && block.type.includes("child_database")
-            )
-            .map((block) => this.loadDatabase(block.id))
-        ),
-        this.n2mClient.blocksToMarkdown(pageBlocks),
-      ]);
+    if (!isFullPage(pageDetails)) return [];
+
+    const { mdBlocks, childDocuments } = await this.loadBlocksAndDocs(
+      pageBlocks
+    );
 
     const mdStringObject = this.n2mClient.toMarkdownString(mdBlocks);
 
-    const pageDocuments = Object.entries(mdStringObject).map(
-      ([_, pageContent]) =>
-        new Document({
-          pageContent,
-          metadata: this.parsePageDetails(pageDetails),
-        })
-    );
+    const pageDocument = new Document({
+      pageContent: mdStringObject.parent,
+      metadata: this.parsePageDetails(pageDetails),
+    });
 
-    return [
-      ...pageDocuments,
-      ...childPageDocuments.flat(),
-      ...childDatabaseDocuments.flat(),
-    ];
+    return [pageDocument, ...childDocuments];
   }
 
   private async loadDatabase(id: string): Promise<Document[]> {

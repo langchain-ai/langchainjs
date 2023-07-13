@@ -99,7 +99,7 @@ export class OpenAIEmbeddings
       getEnvironmentVariable("AZURE_OPENAI_BASE_PATH");
 
     this.modelName = fields?.modelName ?? this.modelName;
-    this.batchSize = fields?.batchSize ?? azureApiKey ? 1 : this.batchSize;
+    this.batchSize = fields?.batchSize ?? (azureApiKey ? 1 : this.batchSize);
     this.stripNewLines = fields?.stripNewLines ?? this.stripNewLines;
     this.timeout = fields?.timeout;
 

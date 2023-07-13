@@ -51,6 +51,38 @@ describe("Chroma", () => {
     ]);
   });
 
+  test.skip("upsert", async () => {
+    const pageContent = faker.lorem.sentence(5);
+    const id = uuid.v4();
+
+    const ids = await chromaStore.addDocuments([
+      { pageContent, metadata: { foo: id } },
+      { pageContent, metadata: { foo: id } },
+    ]);
+
+    const results = await chromaStore.similaritySearch(pageContent, 4, {
+      foo: id,
+    });
+
+    expect(results.length).toEqual(2);
+
+    const ids2 = await chromaStore.addDocuments(
+      [
+        { pageContent, metadata: { foo: id } },
+        { pageContent, metadata: { foo: id } },
+      ],
+      { ids }
+    );
+
+    expect(ids).toEqual(ids2);
+
+    const newResults = await chromaStore.similaritySearch(pageContent, 4, {
+      foo: id,
+    });
+
+    expect(newResults.length).toEqual(2);
+  });
+
   test.skip("delete by ids", async () => {
     const pageContent = faker.lorem.sentence(5);
     const id = uuid.v4();

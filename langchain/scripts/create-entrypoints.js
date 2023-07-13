@@ -104,7 +104,9 @@ const entrypoints = {
   "document_loaders/web/notiondb": "document_loaders/web/notiondb",
   "document_loaders/web/notionapi": "document_loaders/web/notionapi",
   "document_loaders/web/s3": "document_loaders/web/s3",
+  "document_loaders/web/sonix_audio": "document_loaders/web/sonix_audio",
   "document_loaders/web/confluence": "document_loaders/web/confluence",
+  "document_loaders/web/sort_xyz_blockchain": "document_loaders/web/sort_xyz_blockchain",
   "document_loaders/fs/directory": "document_loaders/fs/directory",
   "document_loaders/fs/buffer": "document_loaders/fs/buffer",
   "document_loaders/fs/text": "document_loaders/fs/text",
@@ -116,6 +118,8 @@ const entrypoints = {
   "document_loaders/fs/csv": "document_loaders/fs/csv",
   "document_loaders/fs/notion": "document_loaders/fs/notion",
   "document_loaders/fs/unstructured": "document_loaders/fs/unstructured",
+  // document_transformers
+  "document_transformers/openai_functions": "document_transformers/openai_functions",
   // chat_models
   chat_models: "chat_models/index",
   "chat_models/base": "chat_models/base",
@@ -168,6 +172,7 @@ const entrypoints = {
   "stores/message/dynamodb": "stores/message/dynamodb",
   "stores/message/momento": "stores/message/momento",
   "stores/message/redis": "stores/message/redis",
+  "stores/message/ioredis": "stores/message/ioredis",
   "stores/message/upstash_redis": "stores/message/upstash_redis",
   // experimental
   "experimental/autogpt": "experimental/autogpt/index",
@@ -248,6 +253,7 @@ const requiresOptionalDependency = [
   "document_loaders/web/notiondb",
   "document_loaders/web/notionapi",
   "document_loaders/web/s3",
+  "document_loaders/web/sonix_audio",
   "document_loaders/web/confluence",
   "document_loaders/fs/directory",
   "document_loaders/fs/buffer",
@@ -282,6 +288,7 @@ const requiresOptionalDependency = [
   "stores/message/dynamodb",
   "stores/message/momento",
   "stores/message/redis",
+  "stores/message/ioredis",
   "stores/message/upstash_redis",
 ];
 
