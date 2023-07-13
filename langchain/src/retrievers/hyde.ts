@@ -29,6 +29,13 @@ export interface HydeRetrieverOptions<V extends VectorStore>
 export class HydeRetriever<
   V extends VectorStore = VectorStore
 > extends VectorStoreRetriever<V> {
+  lc_namespace = [
+    "langchain",
+    "retriever",
+    "hyde",
+    this.vectorStore.vectorstoreType(),
+  ];
+
   llm: BaseLanguageModel;
 
   promptTemplate?: BasePromptTemplate;

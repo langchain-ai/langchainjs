@@ -20,7 +20,7 @@ export interface VectorStoreRetrieverInput<V extends VectorStore>
 export class VectorStoreRetriever<
   V extends VectorStore = VectorStore
 > extends BaseRetriever {
-  lc_namespace = ["langchain", "llms", this._vectorstoreType()];
+  lc_namespace = ["langchain", "retriever", this._vectorstoreType()];
 
   vectorStore: V;
 
