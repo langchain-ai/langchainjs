@@ -1,6 +1,7 @@
 import type * as tiktoken from "js-tiktoken";
 import { Document } from "./document.js";
 import { getEncoding } from "./util/tiktoken.js";
+import { BaseDocumentTransformer } from "./schema/document.js";
 
 export interface TextSplitterParams {
   chunkSize: number;
@@ -14,7 +15,12 @@ export type TextSplitterChunkHeaderOptions = {
   appendChunkOverlapHeader?: boolean;
 };
 
-export abstract class TextSplitter implements TextSplitterParams {
+export abstract class TextSplitter
+  extends BaseDocumentTransformer
+  implements TextSplitterParams
+{
+  lc_namespace = ["langchain", "document_transformers", "text_splitters"];
+
   chunkSize = 1000;
 
   chunkOverlap = 200;
@@ -22,12 +28,20 @@ export abstract class TextSplitter implements TextSplitterParams {
   keepSeparator = false;
 
   constructor(fields?: Partial<TextSplitterParams>) {
+    super(fields);
     this.chunkSize = fields?.chunkSize ?? this.chunkSize;
     this.chunkOverlap = fields?.chunkOverlap ?? this.chunkOverlap;
     this.keepSeparator = fields?.keepSeparator ?? this.keepSeparator;
     if (this.chunkOverlap >= this.chunkSize) {
       throw new Error("Cannot have chunkOverlap >= chunkSize");
     }
+  }
+
+  async transformDocuments(
+    documents: Document[],
+    chunkHeaderOptions: TextSplitterChunkHeaderOptions = {}
+  ): Promise<Document[]> {
+    return this.splitDocuments(documents, chunkHeaderOptions);
   }
 
   abstract splitText(text: string): Promise<string[]>;

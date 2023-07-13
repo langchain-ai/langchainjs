@@ -84,6 +84,7 @@ export {
   createExtractionChainFromZod,
 } from "./openai_functions/extraction.js";
 export {
+  TaggingChainOptions,
   createTaggingChain,
   createTaggingChainFromZod,
 } from "./openai_functions/tagging.js";
