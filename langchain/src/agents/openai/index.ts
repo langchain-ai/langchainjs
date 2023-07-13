@@ -23,6 +23,7 @@ import {
 } from "../../prompts/chat.js";
 import { BaseLanguageModel } from "../../base_language/index.js";
 import { LLMChain } from "../../chains/llm_chain.js";
+import { OutputParserException } from "../../schema/output_parser.js";
 
 function parseOutput(message: BaseMessage): AgentAction | AgentFinish {
   if (message.additional_kwargs.function_call) {
@@ -39,14 +40,10 @@ function parseOutput(message: BaseMessage): AgentAction | AgentFinish {
         log: message.content,
       };
     } catch (error) {
-      // eslint-disable-next-line no-instanceof/no-instanceof
-      if (error instanceof SyntaxError) {
-        throw new Error(
-          `Unabled to parse function arguments.\n\nText: ${function_call.arguments}\n\nError: ${error}`
-        );
-      } else {
-        throw error;
-      }
+      throw new OutputParserException(
+        `Failed to parse function arguments. Text: "${function_call.arguments}". Error: ${error}`,
+        function_call.arguments
+      );
     }
   } else {
     return { returnValues: { output: message.content }, log: message.content };
