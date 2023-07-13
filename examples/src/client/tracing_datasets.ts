@@ -57,7 +57,7 @@ for (const input of inputs) {
 
 // So that you don't have to create the dataset manually, we will create it for you
 const client = new Client({
-  // apiUrl: "https://api.langchain.plus", // Default: LANGCHAIN_ENDPOINT environment variable of "http://localhost:1984"
+  // apiUrl: "https://api.smith.langchain.com", // Default: LANGCHAIN_ENDPOINT environment variable of "http://localhost:1984"
   // apiKey: "<Your API Key>", // Default: LANGCHAIN_API_KEY environment variable
 });
 const csvContent = `
