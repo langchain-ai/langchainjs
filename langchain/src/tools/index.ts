@@ -36,3 +36,4 @@ export {
   WikipediaQueryRun,
   WikipediaQueryRunParams,
 } from "./wikipedia_query_run.js";
+export { SearxngSearch } from "./searxng_search.js";
