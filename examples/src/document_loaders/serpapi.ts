@@ -2,7 +2,7 @@ import { OpenAI } from "langchain/llms/openai";
 import { RetrievalQAChain } from "langchain/chains";
 import { MemoryVectorStore } from "langchain/vectorstores/memory";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
-import { SerpAPILoader } from "langchain/document_loaders/web/SerpAPILoader";
+import { SerpAPILoader } from "langchain/document_loaders/web/serpapi";
 
 // Initialize the necessary components
 const llm = new OpenAI("Your OpenAI API key");
