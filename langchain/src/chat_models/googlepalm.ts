@@ -132,11 +132,14 @@ export class ChatGooglePaLM
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
-    const chatResult = await this.caller.callWithOptions(
+    const palmMessages = await this.caller.callWithOptions(
       { signal: options.signal },
       this._generateMessage.bind(this),
-      messages
+      this._mapBaseMessagesToPalmMessages(messages),
+      this._getPalmContextInstruction(messages),
+      this.examples
     );
+    const chatResult = this._mapPalmMessagesToChatResult(palmMessages);
 
     // Google Palm doesn't provide streaming as of now. But to support streaming handlers
     // we call the handler with entire response text
@@ -148,21 +151,23 @@ export class ChatGooglePaLM
   }
 
   protected async _generateMessage(
-    messages: BaseMessage[]
-  ): Promise<ChatResult> {
-    const res = await this.client.generateMessage({
+    messages: protos.google.ai.generativelanguage.v1beta2.IMessage[],
+    context?: string,
+    examples?: protos.google.ai.generativelanguage.v1beta2.IExample[]
+  ): Promise<protos.google.ai.generativelanguage.v1beta2.IGenerateMessageResponse> {
+    const [palmMessages] = await this.client.generateMessage({
       candidateCount: 1,
       model: this.modelName,
       temperature: this.temperature,
       topK: this.topK,
       topP: this.topP,
       prompt: {
-        context: this._getPalmContextInstruction(messages),
-        examples: this.examples,
-        messages: this._mapBaseMessagesToPalmMessages(messages),
+        context,
+        examples,
+        messages,
       },
     });
-    return this._mapPalmMessagesToChatResult(res[0]);
+    return palmMessages;
   }
 
   protected _getPalmContextInstruction(
@@ -181,6 +186,16 @@ export class ChatGooglePaLM
   ): protos.google.ai.generativelanguage.v1beta2.IMessage[] {
     // remove all 'system' messages
     const nonSystemMessages = messages.filter((m) => m._getType() !== "system");
+
+    // requires alternate human & ai messages. Throw error if two messages are consecutive
+    nonSystemMessages.forEach((msg, index) => {
+      if (index < 1) return;
+      if (msg._getType() === nonSystemMessages[index - 1]._getType()) {
+        throw new Error(
+          `Google PaLM requires alternate messages between authors`
+        );
+      }
+    });
 
     return nonSystemMessages.map((m) => ({
       author: m.name ?? m._getType(),

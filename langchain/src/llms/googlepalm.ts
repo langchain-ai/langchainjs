@@ -179,26 +179,21 @@ export class GooglePaLM extends LLM implements GooglePaLMTextInput {
   protected async _generateText(
     prompt: string
   ): Promise<string | null | undefined> {
-    try {
-      const res = await this.client.generateText({
-        model: this.modelName,
-        temperature: this.temperature,
-        candidateCount: 1,
-        topK: this.topK,
-        topP: this.topP,
-        maxOutputTokens: this.maxOutputTokens,
-        stopSequences: this.stopSequences,
-        safetySettings: this.safetySettings,
-        prompt: {
-          text: prompt,
-        },
-      });
-      return res[0].candidates && res[0].candidates.length > 0
-        ? res[0].candidates[0].output
-        : undefined;
-    } catch (_err) {
-      const err = _err as Error;
-      return err.message;
-    }
+    const res = await this.client.generateText({
+      model: this.modelName,
+      temperature: this.temperature,
+      candidateCount: 1,
+      topK: this.topK,
+      topP: this.topP,
+      maxOutputTokens: this.maxOutputTokens,
+      stopSequences: this.stopSequences,
+      safetySettings: this.safetySettings,
+      prompt: {
+        text: prompt,
+      },
+    });
+    return res[0].candidates && res[0].candidates.length > 0
+      ? res[0].candidates[0].output
+      : undefined;
   }
 }

@@ -13,21 +13,27 @@ import { BufferMemory } from "../../memory/buffer_memory.js";
 import { ChatGooglePaLM } from "../googlepalm.js";
 
 test("Test ChatGooglePalm", async () => {
-  const chat = new ChatGooglePaLM();
+  const chat = new ChatGooglePaLM({
+    maxRetries: 1,
+  });
   const message = new HumanMessage("Hello!");
   const res = await chat.call([message]);
   console.log({ res });
-}, 50000);
+});
 
 test("Test ChatGooglePalm generate", async () => {
-  const chat = new ChatGooglePaLM();
+  const chat = new ChatGooglePaLM({
+    maxRetries: 1,
+  });
   const message = new HumanMessage("Hello!");
   const res = await chat.generate([[message]]);
   console.log(JSON.stringify(res, null, 2));
-}, 50000);
+});
 
 test("ChatGooglePalm, prompt templates", async () => {
-  const chat = new ChatGooglePaLM();
+  const chat = new ChatGooglePaLM({
+    maxRetries: 1,
+  });
 
   // PaLM doesn't support translation yet
   const systemPrompt = PromptTemplate.fromTemplate(
@@ -47,14 +53,21 @@ test("ChatGooglePalm, prompt templates", async () => {
   ]);
 
   console.log(responseA.generations);
-}, 50000);
+});
 
 test("ChatGooglePalm, longer chain of messages", async () => {
-  const chat = new ChatGooglePaLM();
+  const chat = new ChatGooglePaLM({
+    maxRetries: 1,
+  });
 
   const chatPrompt = ChatPromptTemplate.fromPromptMessages([
+    AIMessagePromptTemplate.fromTemplate(
+      `Hello there! I'm Droid, your personal assistant.`
+    ),
     HumanMessagePromptTemplate.fromTemplate(`Hi, my name is Joe!`),
-    AIMessagePromptTemplate.fromTemplate(`Nice to meet you, Joe!`),
+    AIMessagePromptTemplate.fromTemplate(
+      `Nice to meet you, Joe! How can I help you today?`
+    ),
     HumanMessagePromptTemplate.fromTemplate("{text}"),
   ]);
 
@@ -65,7 +78,7 @@ test("ChatGooglePalm, longer chain of messages", async () => {
   ]);
 
   console.log(responseA.generations);
-}, 50000);
+});
 
 test("ChatGooglePalm, with a memory in a chain", async () => {
   const chatPrompt = ChatPromptTemplate.fromPromptMessages([
@@ -79,7 +92,9 @@ test("ChatGooglePalm, with a memory in a chain", async () => {
   const chain = new ConversationChain({
     memory: new BufferMemory({ returnMessages: true, memoryKey: "history" }),
     prompt: chatPrompt,
-    llm: new ChatGooglePaLM(),
+    llm: new ChatGooglePaLM({
+      maxRetries: 1,
+    }),
   });
 
   const response = await chain.call({
@@ -93,10 +108,12 @@ test("ChatGooglePalm, with a memory in a chain", async () => {
   });
 
   console.log(response2);
-}, 50000);
+});
 
 test("ChatGooglePalm, chain of messages on code", async () => {
-  const chat = new ChatGooglePaLM();
+  const chat = new ChatGooglePaLM({
+    maxRetries: 1,
+  });
 
   const chatPrompt = ChatPromptTemplate.fromPromptMessages([
     SystemMessagePromptTemplate.fromTemplate(
@@ -112,4 +129,4 @@ test("ChatGooglePalm, chain of messages on code", async () => {
   ]);
 
   console.log(JSON.stringify(responseA.generations, null, 1));
-}, 50000);
+});

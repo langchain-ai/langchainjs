@@ -161,6 +161,21 @@ test("Google Palm Chat - removes 'system' messages while mapping `BaseMessage` t
   expect(palmMessages[1].content).toEqual("human-1");
 });
 
+test("Google Palm Chat - throws error for consecutive 'ai'/'human' messages while mapping `BaseMessage` to Palm message", async () => {
+  const messages: BaseMessage[] = [
+    new AIMessage("ai-1"),
+    new HumanMessage("human-1"),
+    new AIMessage("ai-2"),
+    new HumanMessage("human-2"),
+    new HumanMessage("human-3"),
+  ];
+  const model = new ChatGooglePaLMTest({
+    apiKey: "GOOGLEPALM_API_KEY",
+  });
+
+  expect(() => model._mapBaseMessagesToPalmMessages(messages)).toThrow();
+});
+
 test("Google Palm Chat - maps Palm generated message to `AIMessage` chat result", async () => {
   const generations: protos.google.ai.generativelanguage.v1beta2.IGenerateMessageResponse =
     {

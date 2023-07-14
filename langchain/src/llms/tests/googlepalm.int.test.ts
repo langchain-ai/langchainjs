@@ -6,21 +6,21 @@ test("Test Google Palm", async () => {
   const res = await model.call("what is 1 + 1?");
   console.log({ res });
   expect(res).toBeTruthy();
-}, 50000);
+});
 
 test("Test Google Palm generation", async () => {
   const model = new GooglePaLM();
   const res = await model.generate(["what is 1 + 1?"]);
   console.log(JSON.stringify(res, null, 2));
   expect(res).toBeTruthy();
-}, 50000);
+});
 
 test("Test Google Palm generation", async () => {
   const model = new GooglePaLM();
   const res = await model.generate(["Print hello world."]);
   console.log(JSON.stringify(res, null, 2));
   expect(res).toBeTruthy();
-}, 50000);
+});
 
 test("Test Google Palm generation", async () => {
   const model = new GooglePaLM();
@@ -29,4 +29,4 @@ test("Test Google Palm generation", async () => {
   ]);
   console.log(JSON.stringify(res, null, 2));
   expect(res).toBeTruthy();
-}, 50000);
+});
