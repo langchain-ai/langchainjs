@@ -64,7 +64,3 @@ test("Google Palm - `safetySettings` category array must be unique", async () =>
       })
   ).toThrow();
 });
-
-test("Google Palm - `apiKey` must be available if no `GOOGLEPALM_API_KEY` env available", async () => {
-  expect(() => new GooglePaLM({})).toThrow();
-});

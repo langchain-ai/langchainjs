@@ -2,7 +2,7 @@ import { GooglePaLM } from "langchain/llms/googlepalm";
 
 export const run = async () => {
   const model = new GooglePaLM({
-    apiKey: "<YOUR API KEY>", // or set it in environment variable as `GOOGLEPALM_API_KEY`
+    apiKey: "<YOUR API KEY>", // or set it in environment variable as `GOOGLE_PALM_API_KEY`
     // other params
     temperature: 1, // OPTIONAL
     modelName: "models/text-bison-001", // OPTIONAL

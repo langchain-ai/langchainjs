@@ -32,10 +32,10 @@ export class GooglePaLMEmbeddings
     this.modelName = fields?.modelName ?? this.modelName;
 
     this.apiKey =
-      fields?.apiKey ?? getEnvironmentVariable("GOOGLEPALM_API_KEY");
+      fields?.apiKey ?? getEnvironmentVariable("GOOGLE_PALM_API_KEY");
     if (!this.apiKey) {
       throw new Error(
-        "Please set an API key for Google Palm 2 in the environment variable GOOGLEPALM_API_KEY or in the `apiKey` field of the GooglePalm constructor"
+        "Please set an API key for Google Palm 2 in the environment variable GOOGLE_PALM_API_KEY or in the `apiKey` field of the GooglePalm constructor"
       );
     }
 

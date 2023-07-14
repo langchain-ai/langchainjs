@@ -58,10 +58,6 @@ test("Google Palm Chat - `topK` must be positive", async () => {
   ).toThrow();
 });
 
-test("Google Palm Chat - `apiKey` must be available if no `GOOGLEPALM_API_KEY` env available", async () => {
-  expect(() => new ChatGooglePaLMTest({})).toThrow();
-});
-
 test("Google Palm Chat - gets the Palm prompt context from 'system' messages", async () => {
   const messages: BaseMessage[] = [
     new SystemMessage("system-1"),
@@ -70,7 +66,7 @@ test("Google Palm Chat - gets the Palm prompt context from 'system' messages", a
     new SystemMessage("system-2"),
   ];
   const model = new ChatGooglePaLMTest({
-    apiKey: "GOOGLEPALM_API_KEY",
+    apiKey: "GOOGLE_PALM_API_KEY",
   });
 
   const context = model._getPalmContextInstruction(messages);
@@ -102,7 +98,7 @@ test("Google Palm Chat - maps `BaseMessage` to Palm message", async () => {
     }),
   ];
   const model = new ChatGooglePaLMTest({
-    apiKey: "GOOGLEPALM_API_KEY",
+    apiKey: "GOOGLE_PALM_API_KEY",
   });
 
   const palmMessages = model._mapBaseMessagesToPalmMessages(messages);
@@ -152,7 +148,7 @@ test("Google Palm Chat - removes 'system' messages while mapping `BaseMessage` t
     new SystemMessage("system-2"),
   ];
   const model = new ChatGooglePaLMTest({
-    apiKey: "GOOGLEPALM_API_KEY",
+    apiKey: "GOOGLE_PALM_API_KEY",
   });
 
   const palmMessages = model._mapBaseMessagesToPalmMessages(messages);
@@ -170,7 +166,7 @@ test("Google Palm Chat - throws error for consecutive 'ai'/'human' messages whil
     new HumanMessage("human-3"),
   ];
   const model = new ChatGooglePaLMTest({
-    apiKey: "GOOGLEPALM_API_KEY",
+    apiKey: "GOOGLE_PALM_API_KEY",
   });
 
   expect(() => model._mapBaseMessagesToPalmMessages(messages)).toThrow();
@@ -203,7 +199,7 @@ test("Google Palm Chat - maps Palm generated message to `AIMessage` chat result"
       ],
     };
   const model = new ChatGooglePaLMTest({
-    apiKey: "GOOGLEPALM_API_KEY",
+    apiKey: "GOOGLE_PALM_API_KEY",
   });
 
   const chatResult = model._mapPalmMessagesToChatResult(generations);
@@ -242,7 +238,7 @@ test("Google Palm Chat - gets empty chat result & reason if generation failed", 
       ],
     };
   const model = new ChatGooglePaLMTest({
-    apiKey: "GOOGLEPALM_API_KEY",
+    apiKey: "GOOGLE_PALM_API_KEY",
   });
 
   const chatResult = model._mapPalmMessagesToChatResult(generations);

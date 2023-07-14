@@ -86,7 +86,7 @@ export interface GooglePaLMTextInput extends BaseLLMParams {
 export class GooglePaLM extends LLM implements GooglePaLMTextInput {
   get lc_secrets(): { [key: string]: string } | undefined {
     return {
-      apiKey: "GOOGLEPALM_API_KEY",
+      apiKey: "GOOGLE_PALM_API_KEY",
     };
   }
 
@@ -148,10 +148,10 @@ export class GooglePaLM extends LLM implements GooglePaLMTextInput {
     }
 
     this.apiKey =
-      fields?.apiKey ?? getEnvironmentVariable("GOOGLEPALM_API_KEY");
+      fields?.apiKey ?? getEnvironmentVariable("GOOGLE_PALM_API_KEY");
     if (!this.apiKey) {
       throw new Error(
-        "Please set an API key for Google Palm 2 in the environment variable GOOGLEPALM_API_KEY or in the `apiKey` field of the GooglePalm constructor"
+        "Please set an API key for Google Palm 2 in the environment variable GOOGLE_PALM_API_KEY or in the `apiKey` field of the GooglePalm constructor"
       );
     }
 
