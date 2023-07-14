@@ -268,6 +268,9 @@
     "document_loaders/web/sort_xyz_blockchain.cjs",
     "document_loaders/web/sort_xyz_blockchain.js",
     "document_loaders/web/sort_xyz_blockchain.d.ts",
+    "document_loaders/web/serpapi.cjs",
+    "document_loaders/web/serpapi.js",
+    "document_loaders/web/serpapi.d.ts",
     "document_loaders/fs/directory.cjs",
     "document_loaders/fs/directory.js",
     "document_loaders/fs/directory.d.ts",
@@ -1281,6 +1284,11 @@
       "types": "./document_loaders/web/sort_xyz_blockchain.d.ts",
       "import": "./document_loaders/web/sort_xyz_blockchain.js",
       "require": "./document_loaders/web/sort_xyz_blockchain.cjs"
+    },
+    "./document_loaders/web/serpapi": {
+      "types": "./document_loaders/web/serpapi.d.ts",
+      "import": "./document_loaders/web/serpapi.js",
+      "require": "./document_loaders/web/serpapi.cjs"
     },
     "./document_loaders/fs/directory": {
       "types": "./document_loaders/fs/directory.d.ts",

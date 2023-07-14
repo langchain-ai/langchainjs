@@ -175,6 +175,9 @@ export interface OptionalImportMap {
   "langchain/document_loaders/web/confluence"?:
     | typeof import("../document_loaders/web/confluence.js")
     | Promise<typeof import("../document_loaders/web/confluence.js")>;
+  "langchain/document_loaders/web/serpapi"?:
+    | typeof import("../document_loaders/web/serpapi.js")
+    | Promise<typeof import("../document_loaders/web/serpapi.js")>;
   "langchain/document_loaders/fs/directory"?:
     | typeof import("../document_loaders/fs/directory.js")
     | Promise<typeof import("../document_loaders/fs/directory.js")>;
