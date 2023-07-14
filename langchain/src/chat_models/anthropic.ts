@@ -1,7 +1,4 @@
-import AnthropicApi, {
-  AI_PROMPT,
-  HUMAN_PROMPT,
-} from "@anthropic-ai/sdk";
+import AnthropicApi, { AI_PROMPT, HUMAN_PROMPT } from "@anthropic-ai/sdk";
 import type { CompletionCreateParams } from "@anthropic-ai/sdk/resources/completions";
 
 import { BaseLanguageModelCallOptions } from "../base_language/index.js";
