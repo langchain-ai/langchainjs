@@ -1,5 +1,5 @@
-import { Example, Run } from "langchainplus-sdk";
-import { EvaluationResult } from "langchainplus-sdk/evaluation";
+import { Example, Run } from "langsmith";
+import { EvaluationResult } from "langsmith/evaluation";
 import { CRITERIA_PROMPT } from "./criteria_prompt.js";
 import {
   RunEvaluatorInputMapper,

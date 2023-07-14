@@ -85,12 +85,7 @@ jobs:
       - name: Build
         run: yarn run build --filter="!docs"
       - name: Test
-        run: yarn run test:unit --filter="!test-exports-cra"
-        # test-exports-cra is still run in test-exports task, currently not
-        # compatible with Node.js 20.x, so disabling here
-        # Note it is useful to run the others here in addition to test-exports
-        # because it would catch any issues that only manifest
-        # when optional peer deps are installed
+        run: yarn run test:unit
 
   test-exports:
     name: Environment Tests
