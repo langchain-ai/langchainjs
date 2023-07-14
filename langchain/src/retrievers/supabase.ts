@@ -75,10 +75,10 @@ export class SupabaseHybridSearch extends BaseRetriever {
 
   embeddings: Embeddings;
 
-  constructor(embeddings: Embeddings, args: SupabaseLibArgs) {
+  constructor(embeddings: Embeddings, { client, ...args }: SupabaseLibArgs) {
     super(args);
     this.embeddings = embeddings;
-    this.client = args.client;
+    this.client = client;
     this.tableName = args.tableName || "documents";
     this.similarityQueryName = args.similarityQueryName || "match_documents";
     this.keywordQueryName = args.keywordQueryName || "kw_match_documents";

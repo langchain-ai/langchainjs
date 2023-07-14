@@ -286,6 +286,7 @@ export interface SecretMap {
   BAIDU_API_KEY?: string;
   BAIDU_SECRET_KEY?: string;
   COHERE_API_KEY?: string;
+  DATABERRY_API_KEY?: string;
   GOOGLE_API_KEY?: string;
   HUGGINGFACEHUB_API_KEY?: string;
   OPENAI_API_KEY?: string;
@@ -298,4 +299,5 @@ export interface SecretMap {
   UPSTASH_REDIS_REST_TOKEN?: string;
   UPSTASH_REDIS_REST_URL?: string;
   ZAPIER_NLA_API_KEY?: string;
+  ZEP_API_KEY?: string;
 }

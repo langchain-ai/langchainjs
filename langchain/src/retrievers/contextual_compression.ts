@@ -15,15 +15,11 @@ export class ContextualCompressionRetriever extends BaseRetriever {
 
   baseRetriever: BaseRetriever;
 
-  constructor({
-    baseCompressor,
-    baseRetriever,
-    ...rest
-  }: ContextualCompressionRetrieverArgs) {
-    super(rest);
+  constructor(fields: ContextualCompressionRetrieverArgs) {
+    super(fields);
 
-    this.baseCompressor = baseCompressor;
-    this.baseRetriever = baseRetriever;
+    this.baseCompressor = fields.baseCompressor;
+    this.baseRetriever = fields.baseRetriever;
   }
 
   async _getRelevantDocuments(

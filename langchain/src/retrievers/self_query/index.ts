@@ -5,7 +5,7 @@ import {
 } from "../../chains/query_constructor/index.js";
 import { StructuredQuery } from "../../chains/query_constructor/ir.js";
 import { Document } from "../../document.js";
-import { BaseRetriever } from "../../schema/retriever.js";
+import { BaseRetriever, BaseRetrieverInput } from "../../schema/retriever.js";
 import { VectorStore } from "../../vectorstores/base.js";
 import { FunctionalTranslator } from "./functional.js";
 import { BaseTranslator, BasicTranslator } from "./base.js";
@@ -13,7 +13,7 @@ import { CallbackManagerForRetrieverRun } from "../../callbacks/manager.js";
 
 export { BaseTranslator, BasicTranslator, FunctionalTranslator };
 
-export type SelfQueryRetrieverArgs = {
+export interface SelfQueryRetrieverArgs extends BaseRetrieverInput {
   vectorStore: VectorStore;
   structuredQueryTranslator: BaseTranslator;
   llmChain: LLMChain;
@@ -22,7 +22,7 @@ export type SelfQueryRetrieverArgs = {
     k?: number;
     filter?: VectorStore["FilterType"];
   };
-};
+}
 export class SelfQueryRetriever
   extends BaseRetriever
   implements SelfQueryRetrieverArgs
@@ -50,7 +50,7 @@ export class SelfQueryRetriever
   } = { k: 4 };
 
   constructor(options: SelfQueryRetrieverArgs) {
-    super();
+    super(options);
     this.vectorStore = options.vectorStore;
     this.llmChain = options.llmChain;
     this.verbose = options.verbose ?? false;
