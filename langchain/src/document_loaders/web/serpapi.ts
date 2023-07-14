@@ -5,8 +5,6 @@ interface ILoaderOptions {
   apiKey: string;
 
   searchQuery: string;
-
-  responseTypes?: string[];
 }
 
 export class SerpAPILoader extends BaseDocumentLoader {
@@ -14,32 +12,30 @@ export class SerpAPILoader extends BaseDocumentLoader {
 
   private searchQuery: string;
 
-  private responseTypes: string[];
-
-  constructor({ apiKey, searchQuery, responseTypes }: ILoaderOptions) {
+  constructor({ apiKey, searchQuery }: ILoaderOptions) {
     super();
-
     this.apiKey = apiKey;
     this.searchQuery = searchQuery;
-    this.responseTypes = responseTypes || [
+  }
+
+  public buildUrl(): string {
+    const encodedApiKey = encodeURIComponent(this.apiKey);
+    const encodedSearchQuery = encodeURIComponent(this.searchQuery);
+    return `https://serpapi.com/search?api_key=${encodedApiKey}&q=${encodedSearchQuery}`;
+  }
+
+  public processResponseData(data: Record<string, unknown>): Document[] {
+    const documents: Document[] = [];
+
+    const responseTypes = [
       "answer_box",
       "sports_results",
       "shopping_results",
       "knowledge_graph",
       "organic_results",
     ];
-  }
 
-  public buildUrl(): string {
-    return `https://serpapi.com/search?api_key=${
-      this.apiKey
-    }&q=${encodeURIComponent(this.searchQuery)}`;
-  }
-
-  public processResponseData(data: Record<string, unknown>): Document[] {
-    const documents: Document[] = [];
-
-    for (const responseType of this.responseTypes) {
+    for (const responseType of responseTypes) {
       if (responseType in data) {
         const output = data[responseType];
         const results = Array.isArray(output) ? output : [output];
