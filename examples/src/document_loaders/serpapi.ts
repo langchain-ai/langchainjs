@@ -5,8 +5,8 @@ import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { SerpAPILoader } from "langchain/document_loaders/web/serpapi";
 
 // Initialize the necessary components
-const llm = new OpenAI("Your OpenAI API key");
-const embeddings = new OpenAIEmbeddings(llm);
+const llm = new OpenAI();
+const embeddings = new OpenAIEmbeddings();
 const apiKey = "Your SerpAPI API key";
 
 // Define your question and query
