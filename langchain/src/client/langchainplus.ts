@@ -1,5 +1,5 @@
 import PQueueMod from "p-queue";
-import { Example, Client } from "langsmith";
+import { Example, Client } from "langchainplus-sdk";
 
 import { LangChainTracer } from "../callbacks/handlers/tracer_langchain.js";
 import { ChainValues, LLMResult, StoredMessage } from "../schema/index.js";
@@ -152,7 +152,7 @@ export const runOnDataset = async (
   } else {
     projectName_ = projectName;
   }
-  await client_.createProject({ projectName: projectName_ });
+  await client_.createProject({ projectName: projectName_, mode: "eval" });
   const results: DatasetRunResults = examples.reduce(
     (acc, example) => ({ ...acc, [example.id]: [] }),
     {}

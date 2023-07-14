@@ -1,5 +1,5 @@
 import { test } from "@jest/globals";
-import { Example, Run } from "langsmith";
+import { Example, Run } from "langchainplus-sdk";
 import {
   ChoicesOutputParser,
   StringRunEvaluatorInputMapper,

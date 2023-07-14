@@ -304,7 +304,6 @@ export interface SecretMap {
   REDIS_URL?: string;
   REDIS_USERNAME?: string;
   REPLICATE_API_KEY?: string;
-  SEARXNG_API_BASE?: string;
   UPSTASH_REDIS_REST_TOKEN?: string;
   UPSTASH_REDIS_REST_URL?: string;
   ZAPIER_NLA_API_KEY?: string;
