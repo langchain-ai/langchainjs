@@ -35,21 +35,39 @@ import { TextLoader } from "./text.js";
  * // docs[0].pageContent:
  * // <i>Corruption discovered at the core of the Banking Clan!</i>
  */
+
+type CSVLoaderOptions = {
+  column?: string;
+  separator?: string;
+};
+
 export class CSVLoader extends TextLoader {
-  constructor(filePathOrBlob: string | Blob, public column?: string) {
+  constructor(
+    filePathOrBlob: string | Blob,
+    public column?: string | CSVLoaderOptions
+  ) {
     super(filePathOrBlob);
   }
 
   protected async parse(raw: string): Promise<string[]> {
-    const { csvParse } = await CSVLoaderImports();
-    const parsed = csvParse(raw.trim());
-    const { column } = this;
+    let options;
+
+    if (typeof this.column === "string" || this.column === undefined) {
+      options = { column: this.column };
+    } else {
+      options = this.column;
+    }
+
+    const { column, separator = "," } = options;
+
+    const { dsvFormat } = await CSVLoaderImports();
+    const psv = dsvFormat(separator);
+    const parsed = psv.parse(raw.trim());
 
     if (column !== undefined) {
       if (!parsed.columns.includes(column)) {
         throw new Error(`Column ${column} not found in CSV file.`);
       }
-
       // Note TextLoader will raise an exception if the value is null.
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       return parsed.map((row) => row[column]!);
@@ -65,8 +83,8 @@ export class CSVLoader extends TextLoader {
 
 async function CSVLoaderImports() {
   try {
-    const { csvParse } = await import("d3-dsv");
-    return { csvParse };
+    const { dsvFormat } = await import("d3-dsv");
+    return { dsvFormat };
   } catch (e) {
     console.error(e);
     throw new Error(
