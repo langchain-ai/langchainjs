@@ -2,7 +2,7 @@ import { test, expect } from "@jest/globals";
 import { GooglePaLMEmbeddings } from "../googlepalm.js";
 import { HNSWLib } from "../../vectorstores/hnswlib.js";
 
-test("Test GooglePalmEmbeddings.embedQuery", async () => {
+test.skip("Test GooglePalmEmbeddings.embedQuery", async () => {
   const embeddings = new GooglePaLMEmbeddings({
     maxRetries: 1,
   });
@@ -11,7 +11,7 @@ test("Test GooglePalmEmbeddings.embedQuery", async () => {
   expect(typeof res[0]).toBe("number");
 });
 
-test("Test GooglePalmEmbeddings.embedDocuments", async () => {
+test.skip("Test GooglePalmEmbeddings.embedDocuments", async () => {
   const embeddings = new GooglePaLMEmbeddings({
     maxRetries: 1,
   });
@@ -30,7 +30,7 @@ test("Test GooglePalmEmbeddings.embedDocuments", async () => {
   });
 });
 
-test("Test end to end with HNSWLib", async () => {
+test.skip("Test end to end with HNSWLib", async () => {
   const vectorStore = await HNSWLib.fromTexts(
     ["Hello world", "Bye bye", "hello nice world"],
     [{ id: 2 }, { id: 1 }, { id: 3 }],

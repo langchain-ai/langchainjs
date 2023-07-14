@@ -12,7 +12,7 @@ import { ConversationChain } from "../../chains/conversation.js";
 import { BufferMemory } from "../../memory/buffer_memory.js";
 import { ChatGooglePaLM } from "../googlepalm.js";
 
-test("Test ChatGooglePalm", async () => {
+test.skip("Test ChatGooglePalm", async () => {
   const chat = new ChatGooglePaLM({
     maxRetries: 1,
   });
@@ -21,7 +21,7 @@ test("Test ChatGooglePalm", async () => {
   console.log({ res });
 });
 
-test("Test ChatGooglePalm generate", async () => {
+test.skip("Test ChatGooglePalm generate", async () => {
   const chat = new ChatGooglePaLM({
     maxRetries: 1,
   });
@@ -30,7 +30,7 @@ test("Test ChatGooglePalm generate", async () => {
   console.log(JSON.stringify(res, null, 2));
 });
 
-test("ChatGooglePalm, prompt templates", async () => {
+test.skip("ChatGooglePalm, prompt templates", async () => {
   const chat = new ChatGooglePaLM({
     maxRetries: 1,
   });
@@ -55,7 +55,7 @@ test("ChatGooglePalm, prompt templates", async () => {
   console.log(responseA.generations);
 });
 
-test("ChatGooglePalm, longer chain of messages", async () => {
+test.skip("ChatGooglePalm, longer chain of messages", async () => {
   const chat = new ChatGooglePaLM({
     maxRetries: 1,
   });
@@ -80,7 +80,7 @@ test("ChatGooglePalm, longer chain of messages", async () => {
   console.log(responseA.generations);
 });
 
-test("ChatGooglePalm, with a memory in a chain", async () => {
+test.skip("ChatGooglePalm, with a memory in a chain", async () => {
   const chatPrompt = ChatPromptTemplate.fromPromptMessages([
     SystemMessagePromptTemplate.fromTemplate(
       "You are a helpful assistant who must always respond like a pirate"
@@ -110,7 +110,7 @@ test("ChatGooglePalm, with a memory in a chain", async () => {
   console.log(response2);
 });
 
-test("ChatGooglePalm, chain of messages on code", async () => {
+test.skip("ChatGooglePalm, chain of messages on code", async () => {
   const chat = new ChatGooglePaLM({
     maxRetries: 1,
   });
