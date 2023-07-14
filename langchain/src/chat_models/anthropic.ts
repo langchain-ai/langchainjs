@@ -1,4 +1,8 @@
-import * as AnthropicApi from "@anthropic-ai/sdk";
+import AnthropicApi, {
+  AI_PROMPT,
+  HUMAN_PROMPT,
+  Anthropic,
+} from "@anthropic-ai/sdk";
 import type { CompletionCreateParams } from "@anthropic-ai/sdk/resources/completions";
 
 import { BaseLanguageModelCallOptions } from "../base_language/index.js";
@@ -16,9 +20,9 @@ import { BaseChatModel, BaseChatModelParams } from "./base.js";
 function getAnthropicPromptFromMessage(type: MessageType): string {
   switch (type) {
     case "ai":
-      return AnthropicApi.AI_PROMPT;
+      return AI_PROMPT;
     case "human":
-      return AnthropicApi.HUMAN_PROMPT;
+      return HUMAN_PROMPT;
     case "system":
       return "";
     default:
@@ -26,7 +30,7 @@ function getAnthropicPromptFromMessage(type: MessageType): string {
   }
 }
 
-const DEFAULT_STOP_SEQUENCES = [AnthropicApi.HUMAN_PROMPT];
+const DEFAULT_STOP_SEQUENCES = [HUMAN_PROMPT];
 
 /**
  * Input to AnthropicChat class.
@@ -137,10 +141,10 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
   streaming = false;
 
   // Used for non-streaming requests
-  private batchClient: AnthropicApi.Anthropic;
+  private batchClient: AnthropicApi;
 
   // Used for streaming requests
-  private streamingClient: AnthropicApi.Anthropic;
+  private streamingClient: AnthropicApi;
 
   constructor(fields?: Partial<AnthropicInput> & BaseChatModelParams) {
     super(fields ?? {});
@@ -215,7 +219,7 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
           );
           return `${messagePrompt} ${message.content}`;
         })
-        .join("") + AnthropicApi.AI_PROMPT
+        .join("") + AI_PROMPT
     );
   }
 
@@ -242,7 +246,7 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
     );
 
     const generations: ChatGeneration[] = response.completion
-      .split(AnthropicApi.AI_PROMPT)
+      .split(AI_PROMPT)
       .map((message) => ({
         text: message,
         message: new AIMessage(message),
@@ -258,17 +262,17 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
     request: CompletionCreateParams & Kwargs,
     options: { signal?: AbortSignal },
     runManager?: CallbackManagerForLLMRun
-  ): Promise<AnthropicApi.Anthropic.Completions.Completion> {
+  ): Promise<Anthropic.Completions.Completion> {
     if (!this.anthropicApiKey) {
       throw new Error("Missing Anthropic API key.");
     }
-    let makeCompletionRequest: () => Promise<AnthropicApi.Anthropic.Completions.Completion>;
+    let makeCompletionRequest: () => Promise<Anthropic.Completions.Completion>;
 
     let asyncCallerOptions = {};
     if (request.stream) {
       if (!this.streamingClient) {
         const options = this.apiUrl ? { apiUrl: this.apiUrl } : undefined;
-        this.streamingClient = new AnthropicApi.Anthropic({
+        this.streamingClient = new AnthropicApi({
           ...options,
           apiKey: this.anthropicApiKey,
         });
@@ -278,7 +282,7 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
           ...request,
         });
 
-        const completion: AnthropicApi.Anthropic.Completion = {
+        const completion: Anthropic.Completion = {
           completion: "",
           model: "",
           stop_reason: "",
@@ -309,7 +313,7 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
     } else {
       if (!this.batchClient) {
         const options = this.apiUrl ? { apiUrl: this.apiUrl } : undefined;
-        this.batchClient = new AnthropicApi.Anthropic({
+        this.batchClient = new AnthropicApi({
           ...options,
           apiKey: this.anthropicApiKey,
         });
