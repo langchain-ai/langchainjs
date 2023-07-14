@@ -2,7 +2,10 @@ import axiosMod, { AxiosRequestConfig, AxiosStatic } from "axios";
 import * as cheerio from "cheerio";
 import { isNode } from "../util/env.js";
 import { BaseLanguageModel } from "../base_language/index.js";
-import { RecursiveCharacterTextSplitter } from "../text_splitter.js";
+import {
+  RecursiveCharacterTextSplitter,
+  TextSplitter,
+} from "../text_splitter.js";
 import { MemoryVectorStore } from "../vectorstores/memory.js";
 import { Document } from "../document.js";
 import { Tool, ToolParams } from "./base.js";
@@ -152,6 +155,8 @@ export interface WebBrowserArgs extends ToolParams {
 
   /** @deprecated */
   callbackManager?: CallbackManager;
+
+  textSplitter?: TextSplitter;
 }
 
 export class WebBrowser extends Tool {
@@ -167,17 +172,31 @@ export class WebBrowser extends Tool {
 
   private axiosConfig: Omit<AxiosRequestConfig, "url">;
 
-  constructor({ model, headers, embeddings, axiosConfig }: WebBrowserArgs) {
+  private textSplitter: TextSplitter;
+
+  constructor({
+    model,
+    headers,
+    embeddings,
+    axiosConfig,
+    textSplitter,
+  }: WebBrowserArgs) {
     super(...arguments);
 
     this.model = model;
     this.embeddings = embeddings;
-    this.headers = headers || DEFAULT_HEADERS;
+    this.headers = headers ?? DEFAULT_HEADERS;
     this.axiosConfig = {
       withCredentials: true,
       adapter: isNode() ? undefined : fetchAdapter,
       ...axiosConfig,
     };
+    this.textSplitter =
+      textSplitter ??
+      new RecursiveCharacterTextSplitter({
+        chunkSize: 2000,
+        chunkOverlap: 200,
+      });
   }
 
   /** @ignore */
@@ -196,11 +215,7 @@ export class WebBrowser extends Tool {
       return "There was a problem connecting to the site";
     }
 
-    const textSplitter = new RecursiveCharacterTextSplitter({
-      chunkSize: 2000,
-      chunkOverlap: 200,
-    });
-    const texts = await textSplitter.splitText(text);
+    const texts = await this.textSplitter.splitText(text);
 
     let context;
     // if we want a summary grab first 4

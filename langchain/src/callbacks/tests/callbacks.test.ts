@@ -5,9 +5,9 @@ import { BaseCallbackHandler, BaseCallbackHandlerInput } from "../base.js";
 import {
   AgentAction,
   AgentFinish,
-  BaseChatMessage,
+  BaseMessage,
   ChainValues,
-  HumanChatMessage,
+  HumanMessage,
   LLMResult,
 } from "../../schema/index.js";
 import { Serialized } from "../../load/serializable.js";
@@ -133,7 +133,7 @@ class FakeCallbackHandlerWithChatStart extends FakeCallbackHandler {
 
   async handleChatModelStart(
     _llm: Serialized,
-    _messages: BaseChatMessage[][]
+    _messages: BaseMessage[][]
   ): Promise<void> {
     this.starts += 1;
     this.chatModelStarts += 1;
@@ -154,10 +154,14 @@ test("CallbackManager", async () => {
   manager.addHandler(handler1);
   manager.addHandler(handler2);
 
-  const llmCb = await manager.handleLLMStart(serialized, ["test"]);
-  await llmCb.handleLLMEnd({ generations: [] });
-  await llmCb.handleLLMNewToken("test");
-  await llmCb.handleLLMError(new Error("test"));
+  const llmCbs = await manager.handleLLMStart(serialized, ["test"]);
+  await Promise.all(
+    llmCbs.map(async (llmCb) => {
+      await llmCb.handleLLMEnd({ generations: [] });
+      await llmCb.handleLLMNewToken("test");
+      await llmCb.handleLLMError(new Error("test"));
+    })
+  );
   const chainCb = await manager.handleChainStart(serialized, { test: "test" });
   await chainCb.handleChainEnd({ test: "test" });
   await chainCb.handleChainError(new Error("test"));
@@ -195,10 +199,14 @@ test("CallbackManager Chat Message Handling", async () => {
   manager.addHandler(handler1);
   manager.addHandler(handler2);
 
-  const llmCb = await manager.handleChatModelStart(serialized, [
-    [new HumanChatMessage("test")],
+  const llmCbs = await manager.handleChatModelStart(serialized, [
+    [new HumanMessage("test")],
   ]);
-  await llmCb.handleLLMEnd({ generations: [] });
+  await Promise.all(
+    llmCbs.map(async (llmCb) => {
+      await llmCb.handleLLMEnd({ generations: [] });
+    })
+  );
   // Everything treated as llm in handler 1
   expect(handler1.llmStarts).toBe(1);
   expect(handler2.llmStarts).toBe(0);
@@ -218,10 +226,14 @@ test("CallbackHandler with ignoreLLM", async () => {
   });
   const manager = new CallbackManager();
   manager.addHandler(handler);
-  const llmCb = await manager.handleLLMStart(serialized, ["test"]);
-  await llmCb.handleLLMEnd({ generations: [] });
-  await llmCb.handleLLMNewToken("test");
-  await llmCb.handleLLMError(new Error("test"));
+  const llmCbs = await manager.handleLLMStart(serialized, ["test"]);
+  await Promise.all(
+    llmCbs.map(async (llmCb) => {
+      await llmCb.handleLLMEnd({ generations: [] });
+      await llmCb.handleLLMNewToken("test");
+      await llmCb.handleLLMError(new Error("test"));
+    })
+  );
 
   expect(handler.starts).toBe(0);
   expect(handler.ends).toBe(0);
@@ -274,7 +286,6 @@ test("CallbackHandler with ignoreAgent", async () => {
 });
 
 test("CallbackManager with child manager", async () => {
-  const llmRunId = "llmRunId";
   const chainRunId = "chainRunId";
   let llmWasCalled = false;
   let chainWasCalled = false;
@@ -282,10 +293,9 @@ test("CallbackManager with child manager", async () => {
     async handleLLMStart(
       _llm: Serialized,
       _prompts: string[],
-      runId?: string,
+      _runId?: string,
       parentRunId?: string
     ) {
-      expect(runId).toBe(llmRunId);
       expect(parentRunId).toBe(chainRunId);
       llmWasCalled = true;
     },
@@ -305,7 +315,7 @@ test("CallbackManager with child manager", async () => {
     { test: "test" },
     chainRunId
   );
-  await chainCb.getChild().handleLLMStart(serialized, ["test"], llmRunId);
+  await chainCb.getChild().handleLLMStart(serialized, ["test"]);
   expect(llmWasCalled).toBe(true);
   expect(chainWasCalled).toBe(true);
 });
@@ -380,10 +390,14 @@ test("CallbackManager.copy()", () => {
   callbackManager1.addHandler(handler2, false);
   callbackManager1.addTags(["a"], true);
   callbackManager1.addTags(["b"], false);
+  callbackManager1.addMetadata({ a: "a" }, true);
+  callbackManager1.addMetadata({ b: "b" }, false);
   expect(callbackManager1.handlers).toEqual([handler1, handler2]);
   expect(callbackManager1.inheritableHandlers).toEqual([handler1]);
   expect(callbackManager1.tags).toEqual(["a", "b"]);
   expect(callbackManager1.inheritableTags).toEqual(["a"]);
+  expect(callbackManager1.metadata).toEqual({ a: "a", b: "b" });
+  expect(callbackManager1.inheritableMetadata).toEqual({ a: "a" });
 
   const callbackManager2 = callbackManager1.copy([handler3]);
   expect(callbackManager2.handlers.map((h) => h.name)).toEqual([

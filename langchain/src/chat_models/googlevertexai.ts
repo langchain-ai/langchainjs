@@ -1,7 +1,7 @@
 import { BaseChatModel } from "./base.js";
 import {
-  AIChatMessage,
-  BaseChatMessage,
+  AIMessage,
+  BaseMessage,
   ChatGeneration,
   ChatResult,
   LLMResult,
@@ -19,8 +19,8 @@ import {
  * help illustrate what a model response should look like.
  */
 export interface ChatExample {
-  input: BaseChatMessage;
-  output: BaseChatMessage;
+  input: BaseMessage;
+  output: BaseMessage;
 }
 
 interface GoogleVertexAIChatExample {
@@ -28,7 +28,11 @@ interface GoogleVertexAIChatExample {
   output: GoogleVertexAIChatMessage;
 }
 
-export type GoogleVertexAIChatAuthor = "user" | "bot" | "context";
+export type GoogleVertexAIChatAuthor =
+  | "user" // Represents the human for Code and CodeChat models
+  | "bot" // Represents the AI for Code models
+  | "system" // Represents the AI for CodeChat models
+  | "context"; // Represents contextual instructions
 
 export type GoogleVertexAIChatMessageFields = {
   author?: GoogleVertexAIChatAuthor;
@@ -50,32 +54,32 @@ export class GoogleVertexAIChatMessage {
   }
 
   static mapMessageTypeToVertexChatAuthor(
-    baseMessageType: MessageType
+    baseMessageType: MessageType,
+    model: string
   ): GoogleVertexAIChatAuthor {
     switch (baseMessageType) {
       case "ai":
-        return "bot";
+        return model.startsWith("codechat-") ? "system" : "bot";
       case "human":
         return "user";
       case "system":
         throw new Error(
           `System messages are only supported as the first passed message for Google Vertex AI.`
         );
-      case "generic":
-        throw new Error(
-          `Generic messages are not supported by Google Vertex AI.`
-        );
       default:
-        throw new Error(`Unknown message type: ${baseMessageType}`);
+        throw new Error(
+          `Unknown / unsupported message type: ${baseMessageType}`
+        );
     }
   }
 
-  static fromChatMessage(message: BaseChatMessage) {
+  static fromChatMessage(message: BaseMessage, model: string) {
     return new GoogleVertexAIChatMessage({
       author: GoogleVertexAIChatMessage.mapMessageTypeToVertexChatAuthor(
-        message._getType()
+        message._getType(),
+        model
       ),
-      content: message.text,
+      content: message.content,
     });
   }
 }
@@ -161,7 +165,7 @@ export class ChatGoogleVertexAI
 
   // TODO: Add streaming support
   async _generate(
-    messages: BaseChatMessage[],
+    messages: BaseMessage[],
     options: this["ParsedCallOptions"]
   ): Promise<ChatResult> {
     const instance: GoogleVertexAIChatInstance = this.createInstance(messages);
@@ -192,11 +196,11 @@ export class ChatGoogleVertexAI
     return "googlevertexai";
   }
 
-  createInstance(messages: BaseChatMessage[]): GoogleVertexAIChatInstance {
+  createInstance(messages: BaseMessage[]): GoogleVertexAIChatInstance {
     let context = "";
     let conversationMessages = messages;
     if (messages[0]?._getType() === "system") {
-      context = messages[0].text;
+      context = messages[0].content;
       conversationMessages = messages.slice(1);
     }
     // https://cloud.google.com/vertex-ai/docs/generative-ai/chat/test-chat-prompts
@@ -215,12 +219,18 @@ export class ChatGoogleVertexAI
           `Google Vertex AI requires AI and human messages to alternate.`
         );
       }
-      return GoogleVertexAIChatMessage.fromChatMessage(baseMessage);
+      return GoogleVertexAIChatMessage.fromChatMessage(baseMessage, this.model);
     });
 
     const examples = this.examples.map((example) => ({
-      input: GoogleVertexAIChatMessage.fromChatMessage(example.input),
-      output: GoogleVertexAIChatMessage.fromChatMessage(example.output),
+      input: GoogleVertexAIChatMessage.fromChatMessage(
+        example.input,
+        this.model
+      ),
+      output: GoogleVertexAIChatMessage.fromChatMessage(
+        example.output,
+        this.model
+      ),
     }));
 
     const instance: GoogleVertexAIChatInstance = {
@@ -238,7 +248,7 @@ export class ChatGoogleVertexAI
     const message = prediction?.candidates[0];
     return {
       text: message?.content,
-      message: new AIChatMessage(message.content),
+      message: new AIMessage(message.content),
       generationInfo: prediction,
     };
   }

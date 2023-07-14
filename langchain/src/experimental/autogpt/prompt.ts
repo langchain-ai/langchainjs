@@ -1,9 +1,9 @@
 import { BaseChatPromptTemplate } from "../../prompts/chat.js";
 import {
-  BaseChatMessage,
-  HumanChatMessage,
+  BaseMessage,
+  HumanMessage,
   PartialValues,
-  SystemChatMessage,
+  SystemMessage,
 } from "../../schema/index.js";
 import { VectorStoreRetriever } from "../../vectorstores/base.js";
 import { ObjectTool } from "./schema.js";
@@ -70,16 +70,16 @@ export class AutoGPTPrompt
   }: {
     goals: string[];
     memory: VectorStoreRetriever;
-    messages: BaseChatMessage[];
+    messages: BaseMessage[];
     user_input: string;
   }) {
-    const basePrompt = new SystemChatMessage(this.constructFullPrompt(goals));
-    const timePrompt = new SystemChatMessage(
+    const basePrompt = new SystemMessage(this.constructFullPrompt(goals));
+    const timePrompt = new SystemMessage(
       `The current time and date is ${new Date().toLocaleString()}`
     );
     const usedTokens =
-      (await this.tokenCounter(basePrompt.text)) +
-      (await this.tokenCounter(timePrompt.text));
+      (await this.tokenCounter(basePrompt.content)) +
+      (await this.tokenCounter(timePrompt.content));
     const relevantDocs = await memory.getRelevantDocuments(
       JSON.stringify(previousMessages.slice(-10))
     );
@@ -100,21 +100,21 @@ export class AutoGPTPrompt
     const contentFormat = `This reminds you of these events from your past:\n${relevantMemory.join(
       "\n"
     )}\n\n`;
-    const memoryMessage = new SystemChatMessage(contentFormat);
+    const memoryMessage = new SystemMessage(contentFormat);
     const usedTokensWithMemory =
-      (await usedTokens) + (await this.tokenCounter(memoryMessage.text));
-    const historicalMessages: BaseChatMessage[] = [];
+      (await usedTokens) + (await this.tokenCounter(memoryMessage.content));
+    const historicalMessages: BaseMessage[] = [];
 
     for (const message of previousMessages.slice(-10).reverse()) {
-      const messageTokens = await this.tokenCounter(message.text);
+      const messageTokens = await this.tokenCounter(message.content);
       if (usedTokensWithMemory + messageTokens > this.sendTokenLimit - 1000) {
         break;
       }
       historicalMessages.unshift(message);
     }
 
-    const inputMessage = new HumanChatMessage(user_input);
-    const messages: BaseChatMessage[] = [
+    const inputMessage = new HumanMessage(user_input);
+    const messages: BaseMessage[] = [
       basePrompt,
       timePrompt,
       memoryMessage,

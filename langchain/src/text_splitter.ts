@@ -1,11 +1,13 @@
 import type * as tiktoken from "js-tiktoken";
 import { Document } from "./document.js";
 import { getEncoding } from "./util/tiktoken.js";
+import { BaseDocumentTransformer } from "./schema/document.js";
 
 export interface TextSplitterParams {
   chunkSize: number;
   chunkOverlap: number;
   keepSeparator: boolean;
+  lengthFunction?: (text: string) => number;
 }
 
 export type TextSplitterChunkHeaderOptions = {
@@ -14,20 +16,36 @@ export type TextSplitterChunkHeaderOptions = {
   appendChunkOverlapHeader?: boolean;
 };
 
-export abstract class TextSplitter implements TextSplitterParams {
+export abstract class TextSplitter
+  extends BaseDocumentTransformer
+  implements TextSplitterParams
+{
+  lc_namespace = ["langchain", "document_transformers", "text_splitters"];
+
   chunkSize = 1000;
 
   chunkOverlap = 200;
 
   keepSeparator = false;
 
+  lengthFunction: (text: string) => number = (text: string) => text.length;
+
   constructor(fields?: Partial<TextSplitterParams>) {
+    super(fields);
     this.chunkSize = fields?.chunkSize ?? this.chunkSize;
     this.chunkOverlap = fields?.chunkOverlap ?? this.chunkOverlap;
     this.keepSeparator = fields?.keepSeparator ?? this.keepSeparator;
+    this.lengthFunction = fields?.lengthFunction ?? ((text) => text.length);
     if (this.chunkOverlap >= this.chunkSize) {
       throw new Error("Cannot have chunkOverlap >= chunkSize");
     }
+  }
+
+  async transformDocuments(
+    documents: Document[],
+    chunkHeaderOptions: TextSplitterChunkHeaderOptions = {}
+  ): Promise<Document[]> {
+    return this.splitDocuments(documents, chunkHeaderOptions);
   }
 
   abstract splitText(text: string): Promise<string[]>;
@@ -76,7 +94,8 @@ export abstract class TextSplitter implements TextSplitterParams {
         let numberOfIntermediateNewLines = 0;
         if (prevChunk) {
           const indexChunk = text.indexOf(chunk);
-          const indexEndPrevChunk = text.indexOf(prevChunk) + prevChunk.length;
+          const indexEndPrevChunk =
+            text.indexOf(prevChunk) + this.lengthFunction(prevChunk);
           const removedNewlinesFromSplittingText = text.slice(
             indexEndPrevChunk,
             indexChunk
@@ -140,7 +159,7 @@ export abstract class TextSplitter implements TextSplitterParams {
     const currentDoc: string[] = [];
     let total = 0;
     for (const d of splits) {
-      const _len = d.length;
+      const _len = this.lengthFunction(d);
       if (
         total + _len + (currentDoc.length > 0 ? separator.length : 0) >
         this.chunkSize
@@ -163,7 +182,7 @@ which is longer than the specified ${this.chunkSize}`
             total > this.chunkOverlap ||
             (total + _len > this.chunkSize && total > 0)
           ) {
-            total -= currentDoc[0].length;
+            total -= this.lengthFunction(currentDoc[0]);
             currentDoc.shift();
           }
         }
@@ -266,7 +285,7 @@ export class RecursiveCharacterTextSplitter
     let goodSplits: string[] = [];
     const _separator = this.keepSeparator ? "" : separator;
     for (const s of splits) {
-      if (s.length < this.chunkSize) {
+      if (this.lengthFunction(s) < this.chunkSize) {
         goodSplits.push(s);
       } else {
         if (goodSplits.length) {

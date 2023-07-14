@@ -92,10 +92,10 @@ export class UnstructuredLoader extends BaseDocumentLoader {
     // worried about this for now.
     const formData = new FormData();
     formData.append("files", new Blob([buffer]), fileName);
+    formData.append("strategy", this.strategy);
 
     const headers = {
       "UNSTRUCTURED-API-KEY": this.apiKey ?? "",
-      strategy: this.strategy,
     };
 
     const response = await fetch(this.apiUrl, {

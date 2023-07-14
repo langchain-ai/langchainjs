@@ -2,6 +2,7 @@ export {
   BaseCallbackHandler,
   CallbackHandlerMethods,
   BaseCallbackHandlerInput,
+  NewTokenIndices,
 } from "./base.js";
 
 export { Run, RunType, BaseTracer } from "./handlers/tracer.js";

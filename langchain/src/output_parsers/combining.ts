@@ -4,20 +4,39 @@ import { BaseOutputParser } from "../schema/output_parser.js";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type CombinedOutput = Record<string, any>;
 
+export interface CombiningOutputParserFields {
+  parsers: BaseOutputParser[];
+}
+
 /**
  * Class to combine multiple output parsers
  * @augments BaseOutputParser
  */
-export class CombiningOutputParser extends BaseOutputParser {
+export class CombiningOutputParser extends BaseOutputParser<object> {
   lc_namespace = ["langchain", "output_parsers", "combining"];
+
+  lc_serializable = true;
 
   parsers: BaseOutputParser[];
 
   outputDelimiter = "-----";
 
-  constructor(...parsers: BaseOutputParser[]) {
-    super(...arguments);
-    this.parsers = parsers;
+  constructor(fields: CombiningOutputParserFields);
+
+  constructor(...parsers: BaseOutputParser[]);
+
+  constructor(
+    fields: BaseOutputParser | CombiningOutputParserFields,
+    ...parsers: BaseOutputParser[]
+  ) {
+    if (parsers.length > 0 || !("parsers" in fields)) {
+      // eslint-disable-next-line no-param-reassign
+      fields = {
+        parsers: [fields as BaseOutputParser, ...parsers],
+      };
+    }
+    super(fields);
+    this.parsers = fields.parsers;
   }
 
   async parse(input: string, callbacks?: Callbacks): Promise<CombinedOutput> {
