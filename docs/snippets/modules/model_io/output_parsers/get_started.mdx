@@ -1,76 +1,22 @@
 ---
 sidebar_position: 2
 ---
-Below we go over the main type of output parser, the `PydanticOutputParser`.
+import CodeBlock from "@theme/CodeBlock";
 
-```python
-from langchain.prompts import PromptTemplate, ChatPromptTemplate, HumanMessagePromptTemplate
-from langchain.llms import OpenAI
-from langchain.chat_models import ChatOpenAI
+Below we go over one useful type of output parser, the `StructuredOutputParser`.
 
-from langchain.output_parsers import PydanticOutputParser
-from pydantic import BaseModel, Field, validator
-from typing import List
-```
+## Structured Output Parser
 
+This output parser can be used when you want to return multiple fields. If you want complex schema returned (i.e. a JSON object with arrays of strings), use the Zod Schema detailed below.
 
-```python
-model_name = 'text-davinci-003'
-temperature = 0.0
-model = OpenAI(model_name=model_name, temperature=temperature)
-```
+import Structured from "@examples/prompts/structured_parser.ts";
 
+<CodeBlock language="typescript">{Structured}</CodeBlock>
 
-```python
-# Define your desired data structure.
-class Joke(BaseModel):
-    setup: str = Field(description="question to set up a joke")
-    punchline: str = Field(description="answer to resolve the joke")
-    
-    # You can add custom validation logic easily with Pydantic.
-    @validator('setup')
-    def question_ends_with_question_mark(cls, field):
-        if field[-1] != '?':
-            raise ValueError("Badly formed question!")
-        return field
-```
+## Structured Output Parser with Zod Schema
 
+This output parser can be also be used when you want to define the output schema using Zod, a TypeScript validation library. The Zod schema passed in needs be parseable from a JSON string, so eg. `z.date()` is not allowed.
 
-```python
-# Set up a parser + inject instructions into the prompt template.
-parser = PydanticOutputParser(pydantic_object=Joke)
-```
+import StructuredZod from "@examples/prompts/structured_parser_zod.ts";
 
-
-```python
-prompt = PromptTemplate(
-    template="Answer the user query.\n{format_instructions}\n{query}\n",
-    input_variables=["query"],
-    partial_variables={"format_instructions": parser.get_format_instructions()}
-)
-```
-
-
-```python
-# And a query intended to prompt a language model to populate the data structure.
-joke_query = "Tell me a joke."
-_input = prompt.format_prompt(query=joke_query)
-```
-
-
-```python
-output = model(_input.to_string())
-```
-
-
-```python
-parser.parse(output)
-```
-
-<CodeOutputBlock lang="python">
-
-```
-    Joke(setup='Why did the chicken cross the road?', punchline='To get to the other side!')
-```
-
-</CodeOutputBlock>
+<CodeBlock language="typescript">{StructuredZod}</CodeBlock>
