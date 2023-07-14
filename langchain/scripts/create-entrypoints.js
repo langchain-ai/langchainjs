@@ -315,7 +315,6 @@ const testExports = [
     (p) => `const ${p.replace(/\//g, "_")} = require("langchain/${p}");`,
   ],
   ["test-exports-cf", (p) => `export * from "langchain/${p}";`],
-  ["test-exports-cra", (p) => `export * from "langchain/${p}";`],
   ["test-exports-vercel", (p) => `export * from "langchain/${p}";`],
   ["test-exports-vite", (p) => `export * from "langchain/${p}";`],
 ];
