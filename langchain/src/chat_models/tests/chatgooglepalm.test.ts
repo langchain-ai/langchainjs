@@ -1,23 +1,40 @@
-import { test, expect } from "@jest/globals";
 import { protos } from "@google-ai/generativelanguage";
+import { expect, test } from "@jest/globals";
 import {
-  BaseMessage,
-  SystemMessage,
-  HumanMessage,
   AIMessage,
+  BaseMessage,
+  HumanMessage,
+  SystemMessage,
 } from "../../schema/index.js";
 import { ChatGooglePaLM } from "../googlepalm.js";
+
+// Test class extending actual class to test private & protected methods
+class ChatGooglePaLMTest extends ChatGooglePaLM {
+  public _getPalmContextInstruction(messages: BaseMessage[]) {
+    return super._getPalmContextInstruction(messages);
+  }
+
+  public _mapBaseMessagesToPalmMessages(messages: BaseMessage[]) {
+    return super._mapBaseMessagesToPalmMessages(messages);
+  }
+
+  public _mapPalmMessagesToChatResult(
+    msgRes: protos.google.ai.generativelanguage.v1beta2.IGenerateMessageResponse
+  ) {
+    return super._mapPalmMessagesToChatResult(msgRes);
+  }
+}
 
 test("Google Palm Chat - `temperature` must be in range [0.0,1.0]", async () => {
   expect(
     () =>
-      new ChatGooglePaLM({
+      new ChatGooglePaLMTest({
         temperature: -1.0,
       })
   ).toThrow();
   expect(
     () =>
-      new ChatGooglePaLM({
+      new ChatGooglePaLMTest({
         temperature: 1.1,
       })
   ).toThrow();
@@ -26,7 +43,7 @@ test("Google Palm Chat - `temperature` must be in range [0.0,1.0]", async () => 
 test("Google Palm Chat - `topP` must be positive", async () => {
   expect(
     () =>
-      new ChatGooglePaLM({
+      new ChatGooglePaLMTest({
         topP: -1,
       })
   ).toThrow();
@@ -35,14 +52,14 @@ test("Google Palm Chat - `topP` must be positive", async () => {
 test("Google Palm Chat - `topK` must be positive", async () => {
   expect(
     () =>
-      new ChatGooglePaLM({
+      new ChatGooglePaLMTest({
         topK: -1,
       })
   ).toThrow();
 });
 
 test("Google Palm Chat - `apiKey` must be available if no `GOOGLEPALM_API_KEY` env available", async () => {
-  expect(() => new ChatGooglePaLM({})).toThrow();
+  expect(() => new ChatGooglePaLMTest({})).toThrow();
 });
 
 test("Google Palm Chat - gets the Palm prompt context from 'system' messages", async () => {
@@ -52,7 +69,7 @@ test("Google Palm Chat - gets the Palm prompt context from 'system' messages", a
     new HumanMessage("human-1"),
     new SystemMessage("system-2"),
   ];
-  const model = new ChatGooglePaLM({
+  const model = new ChatGooglePaLMTest({
     apiKey: "GOOGLEPALM_API_KEY",
   });
 
@@ -84,7 +101,7 @@ test("Google Palm Chat - maps `BaseMessage` to Palm message", async () => {
       name: "skywalker",
     }),
   ];
-  const model = new ChatGooglePaLM({
+  const model = new ChatGooglePaLMTest({
     apiKey: "GOOGLEPALM_API_KEY",
   });
 
@@ -134,7 +151,7 @@ test("Google Palm Chat - removes 'system' messages while mapping `BaseMessage` t
     new HumanMessage("human-1"),
     new SystemMessage("system-2"),
   ];
-  const model = new ChatGooglePaLM({
+  const model = new ChatGooglePaLMTest({
     apiKey: "GOOGLEPALM_API_KEY",
   });
 
@@ -170,7 +187,7 @@ test("Google Palm Chat - maps Palm generated message to `AIMessage` chat result"
         },
       ],
     };
-  const model = new ChatGooglePaLM({
+  const model = new ChatGooglePaLMTest({
     apiKey: "GOOGLEPALM_API_KEY",
   });
 
@@ -209,7 +226,7 @@ test("Google Palm Chat - gets empty chat result & reason if generation failed", 
         },
       ],
     };
-  const model = new ChatGooglePaLM({
+  const model = new ChatGooglePaLMTest({
     apiKey: "GOOGLEPALM_API_KEY",
   });
 

@@ -72,11 +72,11 @@ export class ChatGooglePaLM
 
   modelName = "models/chat-bison-001";
 
-  temperature?: number = undefined; // default value chosen based on model
+  temperature?: number; // default value chosen based on model
 
-  topP?: number = undefined; // default value chosen based on model
+  topP?: number; // default value chosen based on model
 
-  topK?: number = undefined; // default value chosen based on model
+  topK?: number; // default value chosen based on model
 
   examples: protos.google.ai.generativelanguage.v1beta2.IExample[] = [];
 
@@ -134,7 +134,7 @@ export class ChatGooglePaLM
   ): Promise<ChatResult> {
     const chatResult = await this.caller.callWithOptions(
       { signal: options.signal },
-      this._palmGenerateMessage.bind(this),
+      this._generateMessage.bind(this),
       messages
     );
 
@@ -147,7 +147,9 @@ export class ChatGooglePaLM
     return chatResult;
   }
 
-  async _palmGenerateMessage(messages: BaseMessage[]): Promise<ChatResult> {
+  protected async _generateMessage(
+    messages: BaseMessage[]
+  ): Promise<ChatResult> {
     const res = await this.client.generateMessage({
       candidateCount: 1,
       model: this.modelName,
@@ -163,7 +165,9 @@ export class ChatGooglePaLM
     return this._mapPalmMessagesToChatResult(res[0]);
   }
 
-  _getPalmContextInstruction(messages: BaseMessage[]): string | undefined {
+  protected _getPalmContextInstruction(
+    messages: BaseMessage[]
+  ): string | undefined {
     // get the first message and checks if it's a system 'system' messages
     const systemMessage =
       messages.length > 0 && messages[0]._getType() === "system"
@@ -172,7 +176,7 @@ export class ChatGooglePaLM
     return systemMessage?.content;
   }
 
-  _mapBaseMessagesToPalmMessages(
+  protected _mapBaseMessagesToPalmMessages(
     messages: BaseMessage[]
   ): protos.google.ai.generativelanguage.v1beta2.IMessage[] {
     // remove all 'system' messages
@@ -189,7 +193,7 @@ export class ChatGooglePaLM
     }));
   }
 
-  _mapPalmMessagesToChatResult(
+  protected _mapPalmMessagesToChatResult(
     msgRes: protos.google.ai.generativelanguage.v1beta2.IGenerateMessageResponse
   ): ChatResult {
     if (

@@ -92,20 +92,19 @@ export class GooglePaLM extends LLM implements GooglePaLMTextInput {
 
   modelName = "models/text-bison-001";
 
-  temperature?: number = undefined; // default value chosen based on model
+  temperature?: number; // default value chosen based on model
 
-  maxOutputTokens?: number = undefined; // defaults to 64
+  maxOutputTokens?: number; // defaults to 64
 
-  topP?: number = undefined; // default value chosen based on model
+  topP?: number; // default value chosen based on model
 
-  topK?: number = undefined; // default value chosen based on model
+  topK?: number; // default value chosen based on model
 
   stopSequences: string[] = [];
 
-  safetySettings?:
-    | protos.google.ai.generativelanguage.v1beta2.ISafetySetting[] = undefined; // default safety setting for that category
+  safetySettings?: protos.google.ai.generativelanguage.v1beta2.ISafetySetting[]; // default safety setting for that category
 
-  apiKey?: string = undefined;
+  apiKey?: string;
 
   private client: TextServiceClient;
 
@@ -171,13 +170,15 @@ export class GooglePaLM extends LLM implements GooglePaLMTextInput {
   ): Promise<string> {
     const res = await this.caller.callWithOptions(
       { signal: options.signal },
-      this._palmGenerateText.bind(this),
+      this._generateText.bind(this),
       prompt
     );
     return res ?? "";
   }
 
-  async _palmGenerateText(prompt: string): Promise<string | null | undefined> {
+  protected async _generateText(
+    prompt: string
+  ): Promise<string | null | undefined> {
     try {
       const res = await this.client.generateText({
         model: this.modelName,
