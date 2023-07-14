@@ -13,6 +13,11 @@ import {
 import { getEnvironmentVariable } from "../util/env.js";
 import { BaseChatModel, BaseChatModelParams } from "./base.js";
 
+// Anthropic's 0.5.3 SDK currently has a collision with the default exported class
+// and an exported namespace that causes issues when transpiling to CommonJS
+const AnthropicClientConstructor =
+  AnthropicApi.Anthropic ?? AnthropicApi.default;
+
 function getAnthropicPromptFromMessage(type: MessageType): string {
   switch (type) {
     case "ai":
@@ -268,7 +273,7 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
     if (request.stream) {
       if (!this.streamingClient) {
         const options = this.apiUrl ? { apiUrl: this.apiUrl } : undefined;
-        this.streamingClient = new AnthropicApi.Anthropic({
+        this.streamingClient = new AnthropicClientConstructor({
           ...options,
           apiKey: this.anthropicApiKey,
         });
@@ -309,7 +314,7 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
     } else {
       if (!this.batchClient) {
         const options = this.apiUrl ? { apiUrl: this.apiUrl } : undefined;
-        this.batchClient = new AnthropicApi.Anthropic({
+        this.batchClient = new AnthropicClientConstructor({
           ...options,
           apiKey: this.anthropicApiKey,
         });
