@@ -1,6 +1,5 @@
-import {
+import AnthropicApi, {
   AI_PROMPT,
-  Anthropic as AnthropicApi,
   HUMAN_PROMPT,
 } from "@anthropic-ai/sdk";
 import type { CompletionCreateParams } from "@anthropic-ai/sdk/resources/completions";
