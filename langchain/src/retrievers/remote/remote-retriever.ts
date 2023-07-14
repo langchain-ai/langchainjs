@@ -28,7 +28,7 @@ export class RemoteLangChainRetriever
   extends RemoteRetriever
   implements RemoteLangChainRetrieverParams
 {
-  lc_namespace = ["langchain", "retriever", "remote", "langchain_retriever"];
+  lc_namespace = ["langchain", "retrievers", "remote", "langchain_retriever"];
 
   inputKey: string;
 

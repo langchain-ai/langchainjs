@@ -17,7 +17,7 @@ export interface VespaRetrieverParams extends RemoteRetrieverParams {
 }
 
 export class VespaRetriever extends RemoteRetriever {
-  lc_namespace = ["langchain", "retriever", "remote", "vespa"];
+  lc_namespace = ["langchain", "retrievers", "remote", "vespa"];
 
   query_body: object;
 

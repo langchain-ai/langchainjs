@@ -9,7 +9,7 @@ export interface ContextualCompressionRetrieverArgs extends BaseRetrieverInput {
 }
 
 export class ContextualCompressionRetriever extends BaseRetriever {
-  lc_namespace = ["langchain", "retriever", "contextual_compression"];
+  lc_namespace = ["langchain", "retrievers", "contextual_compression"];
 
   baseCompressor: BaseDocumentCompressor;
 

@@ -16,8 +16,8 @@ function defaultGetInput(
 class NoOutputParser extends BaseOutputParser<string> {
   lc_namespace = [
     "langchain",
-    "retriever",
-    "document_compressor",
+    "retrievers",
+    "document_compressors",
     "chain_extract",
   ];
 

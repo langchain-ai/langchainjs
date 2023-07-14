@@ -30,7 +30,7 @@ export class SelfQueryRetriever
   get lc_namespace() {
     return [
       "langchain",
-      "retriever",
+      "retrievers",
       "self_query",
       this.vectorStore.vectorstoreType(),
     ];

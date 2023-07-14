@@ -13,7 +13,7 @@ interface ResponseItem {
 }
 
 export class MetalRetriever extends BaseRetriever {
-  lc_namespace = ["langchain", "retriever", "metal"];
+  lc_namespace = ["langchain", "retrievers", "metal"];
 
   private client: Metal;
 

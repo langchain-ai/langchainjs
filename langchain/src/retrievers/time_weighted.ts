@@ -28,7 +28,7 @@ export class TimeWeightedVectorStoreRetriever extends BaseRetriever {
   get lc_namespace() {
     return [
       "langchain",
-      "retriever",
+      "retrievers",
       "time_weighted",
       this.vectorStore.vectorstoreType(),
     ];

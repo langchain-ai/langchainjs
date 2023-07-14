@@ -20,7 +20,7 @@ export interface VectorStoreRetrieverInput<V extends VectorStore>
 export class VectorStoreRetriever<
   V extends VectorStore = VectorStore
 > extends BaseRetriever {
-  lc_namespace = ["langchain", "retriever", this._vectorstoreType()];
+  lc_namespace = ["langchain", "retrievers", this._vectorstoreType()];
 
   vectorStore: V;
 
@@ -62,7 +62,7 @@ export class VectorStoreRetriever<
 export abstract class VectorStore extends Serializable {
   declare FilterType: object;
 
-  lc_namespace = ["langchain", "vector_store", this.vectorstoreType()];
+  lc_namespace = ["langchain", "vector_stores", this.vectorstoreType()];
 
   embeddings: Embeddings;
 

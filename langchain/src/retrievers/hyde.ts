@@ -31,7 +31,7 @@ export class HydeRetriever<
 > extends VectorStoreRetriever<V> {
   lc_namespace = [
     "langchain",
-    "retriever",
+    "retrievers",
     "hyde",
     this.vectorStore.vectorstoreType(),
   ];

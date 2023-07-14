@@ -18,7 +18,7 @@ interface Berry {
 }
 
 export class DataberryRetriever extends BaseRetriever {
-  lc_namespace = ["langchain", "retriever", "databerry"];
+  lc_namespace = ["langchain", "retrievers", "databerry"];
 
   caller: AsyncCaller;
 
