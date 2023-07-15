@@ -18,7 +18,14 @@ export class ZepRetriever extends BaseRetriever {
   lc_namespace = ["langchain", "retrievers", "zep"];
 
   get lc_secrets(): { [key: string]: string } | undefined {
-    return { apiKey: "ZEP_API_KEY" };
+    return {
+      apiKey: "ZEP_API_KEY",
+      url: "ZEP_API_URL",
+    };
+  }
+
+  get lc_aliases(): { [key: string]: string } | undefined {
+    return { apiKey: "api_key" };
   }
 
   private zepClient: ZepClient;

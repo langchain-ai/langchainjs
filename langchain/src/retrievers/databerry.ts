@@ -20,8 +20,12 @@ interface Berry {
 export class DataberryRetriever extends BaseRetriever {
   lc_namespace = ["langchain", "retrievers", "databerry"];
 
-  get lc_secrets(): { [key: string]: string } | undefined {
+  get lc_secrets() {
     return { apiKey: "DATABERRY_API_KEY" };
+  }
+
+  get lc_aliases() {
+    return { apiKey: "api_key" };
   }
 
   caller: AsyncCaller;

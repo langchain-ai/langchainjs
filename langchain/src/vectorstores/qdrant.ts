@@ -23,6 +23,13 @@ type QdrantSearchResponse = QdrantSchemas["ScoredPoint"] & {
 };
 
 export class QdrantVectorStore extends VectorStore {
+  get lc_secrets(): { [key: string]: string } {
+    return {
+      apiKey: "QDRANT_API_KEY",
+      url: "QDRANT_URL",
+    };
+  }
+
   client: QdrantClient;
 
   collectionName: string;

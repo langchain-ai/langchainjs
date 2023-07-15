@@ -67,8 +67,8 @@ export abstract class VectorStore extends Serializable {
   embeddings: Embeddings;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  constructor(embeddings: Embeddings, _dbConfig: Record<string, any>) {
-    super();
+  constructor(embeddings: Embeddings, dbConfig: Record<string, any>) {
+    super(dbConfig);
     this.embeddings = embeddings;
   }
 
