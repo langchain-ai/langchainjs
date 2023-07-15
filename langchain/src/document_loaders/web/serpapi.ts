@@ -1,10 +1,12 @@
+import { getEnvironmentVariable } from "../../util/env.js";
 import { Document } from "../../document.js";
 import { BaseDocumentLoader } from "../base.js";
 
-interface ILoaderOptions {
-  apiKey: string;
-
-  searchQuery: string;
+interface SerpAPIParameters {
+  /**
+   * Search Query
+   */
+  q: string;
 }
 
 export class SerpAPILoader extends BaseDocumentLoader {
@@ -12,10 +14,20 @@ export class SerpAPILoader extends BaseDocumentLoader {
 
   private searchQuery: string;
 
-  constructor({ apiKey, searchQuery }: ILoaderOptions) {
+  constructor(
+    params: SerpAPIParameters,
+    apiKey: string | undefined = getEnvironmentVariable("SERPAPI_API_KEY")
+  ) {
     super();
+
+    if (!apiKey) {
+      throw new Error(
+        "SerpAPI API key not set. You can set it as SERPAPI_API_KEY in your .env file, or pass it to SerpAPI."
+      );
+    }
+
     this.apiKey = apiKey;
-    this.searchQuery = searchQuery;
+    this.searchQuery = params.q;
   }
 
   /**
