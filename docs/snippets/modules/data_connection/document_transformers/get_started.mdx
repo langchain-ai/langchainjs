@@ -1,47 +1,36 @@
-The default recommended text splitter is the RecursiveCharacterTextSplitter. This text splitter takes a list of characters. It tries to create chunks based on splitting on the first character, but if any chunks are too large it then moves onto the next character, and so forth. By default the characters it tries to split on are `["\n\n", "\n", " ", ""]`
+The recommended TextSplitter is the `RecursiveCharacterTextSplitter`. This will split documents recursively by different characters - starting with `"\n\n"`, then `"\n"`, then `" "`. This is nice because it will try to keep all the semantically relevant content in the same place for as long as possible.
 
-In addition to controlling which characters you can split on, you can also control a few other things:
+Important parameters to know here are `chunkSize` and `chunkOverlap`. `chunkSize` controls the max size (in terms of number of characters) of the final documents. `chunkOverlap` specifies how much overlap there should be between chunks. This is often helpful to make sure that the text isn't split weirdly. In the example below we set these values to be small (for illustration purposes), but in practice they default to `1000` and `200` respectively.
 
-- `length_function`: how the length of chunks is calculated. Defaults to just counting number of characters, but it's pretty common to pass a token counter here.
-- `chunk_size`: the maximum size of your chunks (as measured by the length function).
-- `chunk_overlap`: the maximum overlap between chunks. It can be nice to have some overlap to maintain some continuity between chunks (eg do a sliding window).
-- `add_start_index`: whether to include the starting position of each chunk within the original document in the metadata.
+```typescript
+import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 
+const text = `Hi.\n\nI'm Harrison.\n\nHow? Are? You?\nOkay then f f f f.
+This is a weird text to write, but gotta test the splittingggg some how.\n\n
+Bye!\n\n-H.`;
+const splitter = new RecursiveCharacterTextSplitter({
+  chunkSize: 10,
+  chunkOverlap: 1,
+});
 
-```python
-# This is a long document we can split up.
-with open('../../state_of_the_union.txt') as f:
-    state_of_the_union = f.read()
+const output = await splitter.createDocuments([text]);
 ```
 
+You'll note that in the above example we are splitting a raw text string and getting back a list of documents. We can also split documents directly.
 
-```python
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+```typescript
+import { Document } from "langchain/document";
+import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
+
+const text = `Hi.\n\nI'm Harrison.\n\nHow? Are? You?\nOkay then f f f f.
+This is a weird text to write, but gotta test the splittingggg some how.\n\n
+Bye!\n\n-H.`;
+const splitter = new RecursiveCharacterTextSplitter({
+  chunkSize: 10,
+  chunkOverlap: 1,
+});
+
+const docOutput = await splitter.splitDocuments([
+  new Document({ pageContent: text }),
+]);
 ```
-
-
-```python
-text_splitter = RecursiveCharacterTextSplitter(
-    # Set a really small chunk size, just to show.
-    chunk_size = 100,
-    chunk_overlap  = 20,
-    length_function = len,
-    add_start_index = True,
-)
-```
-
-
-```python
-texts = text_splitter.create_documents([state_of_the_union])
-print(texts[0])
-print(texts[1])
-```
-
-<CodeOutputBlock lang="python">
-
-```
-    page_content='Madam Speaker, Madam Vice President, our First Lady and Second Gentleman. Members of Congress and' metadata={'start_index': 0}
-    page_content='of Congress and the Cabinet. Justices of the Supreme Court. My fellow Americans.' metadata={'start_index': 82}
-```
-
-</CodeOutputBlock>
