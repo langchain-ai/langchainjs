@@ -29,12 +29,14 @@ export interface HydeRetrieverOptions<V extends VectorStore>
 export class HydeRetriever<
   V extends VectorStore = VectorStore
 > extends VectorStoreRetriever<V> {
-  lc_namespace = [
-    "langchain",
-    "retrievers",
-    "hyde",
-    this.vectorStore.vectorstoreType(),
-  ];
+  get lc_namespace(): string[] {
+    return [
+      "langchain",
+      "retrievers",
+      "hyde",
+      this.vectorStore.vectorstoreType(),
+    ];
+  }
 
   llm: BaseLanguageModel;
 
