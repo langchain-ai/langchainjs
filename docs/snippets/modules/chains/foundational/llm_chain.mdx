@@ -1,161 +1,29 @@
-```python
-from langchain import PromptTemplate, OpenAI, LLMChain
+import CodeBlock from "@theme/CodeBlock";
+import ExampleLLM from "@examples/chains/llm_chain.ts";
+import ExampleChat from "@examples/chains/llm_chain_chat.ts";
+import ExampleStream from "@examples/chains/llm_chain_stream.ts";
+import ExampleCancellation from "@examples/chains/llm_chain_cancellation.ts";
 
-prompt_template = "What is a good name for a company that makes {product}?"
+We can construct an LLMChain which takes user input, formats it with a PromptTemplate, and then passes the formatted response to an LLM:
 
-llm = OpenAI(temperature=0)
-llm_chain = LLMChain(
-    llm=llm,
-    prompt=PromptTemplate.from_template(prompt_template)
-)
-llm_chain("colorful socks")
-```
+<CodeBlock language="typescript">{ExampleLLM}</CodeBlock>
 
-<CodeOutputBlock lang="python">
+## Usage with Chat Models
 
-```
-    {'product': 'colorful socks', 'text': '\n\nSocktastic!'}
-```
+We can also construct an LLMChain which takes user input, formats it with a PromptTemplate, and then passes the formatted response to a ChatModel:
 
-</CodeOutputBlock>
+<CodeBlock language="typescript">{ExampleChat}</CodeBlock>
 
-## Additional ways of running LLM Chain
+## Usage in Streaming Mode
 
-Aside from `__call__` and `run` methods shared by all `Chain` object, `LLMChain` offers a few more ways of calling the chain logic:
+We can also construct an LLMChain which takes user input, formats it with a PromptTemplate, and then passes the formatted response to an LLM in streaming mode, which will stream back tokens as they are generated:
 
-- `apply` allows you run the chain against a list of inputs:
+<CodeBlock language="typescript">{ExampleStream}</CodeBlock>
 
+## Cancelling a running LLMChain
 
-```python
-input_list = [
-    {"product": "socks"},
-    {"product": "computer"},
-    {"product": "shoes"}
-]
+We can also cancel a running LLMChain by passing an AbortSignal to the `call` method:
 
-llm_chain.apply(input_list)
-```
+<CodeBlock language="typescript">{ExampleCancellation}</CodeBlock>
 
-<CodeOutputBlock lang="python">
-
-```
-    [{'text': '\n\nSocktastic!'},
-     {'text': '\n\nTechCore Solutions.'},
-     {'text': '\n\nFootwear Factory.'}]
-```
-
-</CodeOutputBlock>
-
-- `generate` is similar to `apply`, except it return an `LLMResult` instead of string. `LLMResult` often contains useful generation such as token usages and finish reason.
-
-
-```python
-llm_chain.generate(input_list)
-```
-
-<CodeOutputBlock lang="python">
-
-```
-    LLMResult(generations=[[Generation(text='\n\nSocktastic!', generation_info={'finish_reason': 'stop', 'logprobs': None})], [Generation(text='\n\nTechCore Solutions.', generation_info={'finish_reason': 'stop', 'logprobs': None})], [Generation(text='\n\nFootwear Factory.', generation_info={'finish_reason': 'stop', 'logprobs': None})]], llm_output={'token_usage': {'prompt_tokens': 36, 'total_tokens': 55, 'completion_tokens': 19}, 'model_name': 'text-davinci-003'})
-```
-
-</CodeOutputBlock>
-
-- `predict` is similar to `run` method except that the input keys are specified as keyword arguments instead of a Python dict.
-
-
-```python
-# Single input example
-llm_chain.predict(product="colorful socks")
-```
-
-<CodeOutputBlock lang="python">
-
-```
-    '\n\nSocktastic!'
-```
-
-</CodeOutputBlock>
-
-
-```python
-# Multiple inputs example
-
-template = """Tell me a {adjective} joke about {subject}."""
-prompt = PromptTemplate(template=template, input_variables=["adjective", "subject"])
-llm_chain = LLMChain(prompt=prompt, llm=OpenAI(temperature=0))
-
-llm_chain.predict(adjective="sad", subject="ducks")
-```
-
-<CodeOutputBlock lang="python">
-
-```
-    '\n\nQ: What did the duck say when his friend died?\nA: Quack, quack, goodbye.'
-```
-
-</CodeOutputBlock>
-
-## Parsing the outputs
-
-By default, `LLMChain` does not parse the output even if the underlying `prompt` object has an output parser. If you would like to apply that output parser on the LLM output, use `predict_and_parse` instead of `predict` and `apply_and_parse` instead of `apply`. 
-
-With `predict`:
-
-
-```python
-from langchain.output_parsers import CommaSeparatedListOutputParser
-
-output_parser = CommaSeparatedListOutputParser()
-template = """List all the colors in a rainbow"""
-prompt = PromptTemplate(template=template, input_variables=[], output_parser=output_parser)
-llm_chain = LLMChain(prompt=prompt, llm=llm)
-
-llm_chain.predict()
-```
-
-<CodeOutputBlock lang="python">
-
-```
-    '\n\nRed, orange, yellow, green, blue, indigo, violet'
-```
-
-</CodeOutputBlock>
-
-With `predict_and_parser`:
-
-
-```python
-llm_chain.predict_and_parse()
-```
-
-<CodeOutputBlock lang="python">
-
-```
-    ['Red', 'orange', 'yellow', 'green', 'blue', 'indigo', 'violet']
-```
-
-</CodeOutputBlock>
-
-## Initialize from string
-
-You can also construct an LLMChain from a string template directly.
-
-
-```python
-template = """Tell me a {adjective} joke about {subject}."""
-llm_chain = LLMChain.from_string(llm=llm, template=template)
-```
-
-
-```python
-llm_chain.predict(adjective="sad", subject="ducks")
-```
-
-<CodeOutputBlock lang="python">
-
-```
-    '\n\nQ: What did the duck say when his friend died?\nA: Quack, quack, goodbye.'
-```
-
-</CodeOutputBlock>
+In this example we show cancellation in streaming mode, but it works the same way in non-streaming mode.

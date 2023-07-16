@@ -1,398 +1,80 @@
-```python
-from langchain.embeddings.openai import OpenAIEmbeddings
-from langchain.vectorstores import Chroma
-from langchain.text_splitter import CharacterTextSplitter
-from langchain.llms import OpenAI
-from langchain.chains import ConversationalRetrievalChain
+import CodeBlock from "@theme/CodeBlock";
+import ConvoRetrievalQAExample from "@examples/chains/conversational_qa.ts";
+import Example from "@examples/chains/conversational_qa.ts";
+
+<CodeBlock language="typescript">{ConvoRetrievalQAExample}</CodeBlock>
+
+In the above code snippet, the fromLLM method of the `ConversationalRetrievalQAChain` class has the following signature:
+
+```typescript
+static fromLLM(
+  llm: BaseLanguageModel,
+  retriever: BaseRetriever,
+  options?: {
+    questionGeneratorChainOptions?: {
+      llm?: BaseLanguageModel;
+      template?: string;
+    };
+    qaChainOptions?: QAChainParams;
+    returnSourceDocuments?: boolean;
+  }
+): ConversationalRetrievalQAChain
 ```
 
-Load in documents. You can replace this with a loader for whatever type of data you want
+Here's an explanation of each of the attributes of the options object:
 
+- `questionGeneratorChainOptions`: An object that allows you to pass a custom template and LLM to the underlying question generation chain.
+  - If the template is provided, the `ConversationalRetrievalQAChain` will use this template to generate a question from the conversation context instead of using the question provided in the question parameter.
+  - Passing in a separate LLM (`llm`) here allows you to use a cheaper/faster model to create the condensed question while using a more powerful model for the final response, and can reduce unnecessary latency.
+- `qaChainOptions`: Options that allow you to customize the specific QA chain used in the final step. The default is the [`StuffDocumentsChain`](/docs/modules/chains/document/stuff), but you can customize which chain is used by passing in a `type` parameter.
+  **Passing specific options here is completely optional**, but can be useful if you want to customize the way the response is presented to the end user, or if you have too many documents for the default `StuffDocumentsChain`.
+  You can see [the API reference of the usable fields here](/docs/api/chains/types/QAChainParams).
+- `returnSourceDocuments`: A boolean value that indicates whether the `ConversationalRetrievalQAChain` should return the source documents that were used to retrieve the answer. If set to true, the documents will be included in the result returned by the call() method. This can be useful if you want to allow the user to see the sources used to generate the answer. If not set, the default value will be false.
+  - If you are using this option and passing in a memory instance, set `inputKey` and `outputKey` on the memory instance to the same values as the chain input and final conversational chain output. These default to `"question"` and `"text"` respectively, and specify the values that the memory should store.
 
-```python
-from langchain.document_loaders import TextLoader
-loader = TextLoader("../../state_of_the_union.txt")
-documents = loader.load()
-```
+## Built-in Memory
 
-If you had multiple loaders that you wanted to combine, you do something like:
+Here's a customization example using a faster LLM to generate questions and a slower, more comprehensive LLM for the final answer. It uses a built-in memory object and returns the referenced source documents.
+Because we have `returnSourceDocuments` set and are thus returning multiple values from the chain, we must set `inputKey` and `outputKey` on the memory instance
+to let it know which values to store.
 
+import ConvoQABuiltInExample from "@examples/chains/conversational_qa_built_in_memory.ts";
 
-```python
-# loaders = [....]
-# docs = []
-# for loader in loaders:
-#     docs.extend(loader.load())
-```
+<CodeBlock language="typescript">{ConvoQABuiltInExample}</CodeBlock>
 
-We now split the documents, create embeddings for them, and put them in a vectorstore. This allows us to do semantic search over them.
+## Streaming
 
+You can also use the above concept of using two different LLMs to stream only the final response from the chain, and not output from the intermediate standalone question generation step. Here's an example:
 
-```python
-text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
-documents = text_splitter.split_documents(documents)
+import ConvoQAStreamingExample from "@examples/chains/conversational_qa_streaming.ts";
 
-embeddings = OpenAIEmbeddings()
-vectorstore = Chroma.from_documents(documents, embeddings)
-```
+<CodeBlock language="typescript">{ConvoQAStreamingExample}</CodeBlock>
 
-<CodeOutputBlock lang="python">
+## Externally-Managed Memory
 
-```
-    Using embedded DuckDB without persistence: data will be transient
-```
+For this chain, if you'd like to format the chat history in a custom way (or pass in chat messages directly for convenience), you can also pass the chat history in explicitly by omitting the `memory` option and supplying
+a `chat_history` string or array of [HumanMessages](../../schema/chat-messages) and [AIMessages](../../schema/chat-messages) directly into the `chain.call` method:
 
-</CodeOutputBlock>
+import ConvoQAExternalMemoryExample from "@examples/chains/conversational_qa_external_memory.ts";
 
-We can now create a memory object, which is necessary to track the inputs/outputs and hold a conversation.
+<CodeBlock language="typescript">{ConvoQAExternalMemoryExample}</CodeBlock>
 
+## Prompt Customization
 
-```python
-from langchain.memory import ConversationBufferMemory
-memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
-```
+If you want to further change the chain's behavior, you can change the prompts for both the underlying question generation chain and the QA chain.
 
-We now initialize the `ConversationalRetrievalChain`
+One case where you might want to do this is to improve the chain's ability to answer meta questions about the chat history.
+By default, the only input to the QA chain is the standalone question generated from the question generation chain.
+This poses a challenge when asking meta questions about information in previous interactions from the chat history.
 
+For example, if you introduce a friend Bob and mention his age as 28, the chain is unable to provide his age upon asking a question like "How old is Bob?".
+This limitation occurs because the bot searches for Bob in the vector store, rather than considering the message history.
 
-```python
-qa = ConversationalRetrievalChain.from_llm(OpenAI(temperature=0), vectorstore.as_retriever(), memory=memory)
-```
+You can pass an alternative prompt for the question generation chain that also returns parts of the chat history relevant to the answer,
+allowing the QA chain to answer meta questions with the additional context:
 
+import ConvoRetrievalQAWithCustomPrompt from "@examples/chains/conversation_qa_custom_prompt.ts";
 
-```python
-query = "What did the president say about Ketanji Brown Jackson"
-result = qa({"question": query})
-```
+<CodeBlock language="typescript">{ConvoRetrievalQAWithCustomPrompt}</CodeBlock>
 
-
-```python
-result["answer"]
-```
-
-<CodeOutputBlock lang="python">
-
-```
-    " The president said that Ketanji Brown Jackson is one of the nation's top legal minds, a former top litigator in private practice, a former federal public defender, and from a family of public school educators and police officers. He also said that she is a consensus builder and has received a broad range of support from the Fraternal Order of Police to former judges appointed by Democrats and Republicans."
-```
-
-</CodeOutputBlock>
-
-
-```python
-query = "Did he mention who she succeeded"
-result = qa({"question": query})
-```
-
-
-```python
-result['answer']
-```
-
-<CodeOutputBlock lang="python">
-
-```
-    ' Ketanji Brown Jackson succeeded Justice Stephen Breyer on the United States Supreme Court.'
-```
-
-</CodeOutputBlock>
-
-## Pass in chat history
-
-In the above example, we used a Memory object to track chat history. We can also just pass it in explicitly. In order to do this, we need to initialize a chain without any memory object.
-
-
-```python
-qa = ConversationalRetrievalChain.from_llm(OpenAI(temperature=0), vectorstore.as_retriever())
-```
-
-Here's an example of asking a question with no chat history
-
-
-```python
-chat_history = []
-query = "What did the president say about Ketanji Brown Jackson"
-result = qa({"question": query, "chat_history": chat_history})
-```
-
-
-```python
-result["answer"]
-```
-
-<CodeOutputBlock lang="python">
-
-```
-    " The president said that Ketanji Brown Jackson is one of the nation's top legal minds, a former top litigator in private practice, a former federal public defender, and from a family of public school educators and police officers. He also said that she is a consensus builder and has received a broad range of support from the Fraternal Order of Police to former judges appointed by Democrats and Republicans."
-```
-
-</CodeOutputBlock>
-
-Here's an example of asking a question with some chat history
-
-
-```python
-chat_history = [(query, result["answer"])]
-query = "Did he mention who she succeeded"
-result = qa({"question": query, "chat_history": chat_history})
-```
-
-
-```python
-result['answer']
-```
-
-<CodeOutputBlock lang="python">
-
-```
-    ' Ketanji Brown Jackson succeeded Justice Stephen Breyer on the United States Supreme Court.'
-```
-
-</CodeOutputBlock>
-
-## Using a different model for condensing the question
-
-This chain has two steps. First, it condenses the current question and the chat history into a standalone question. This is necessary to create a standanlone vector to use for retrieval. After that, it does retrieval and then answers the question using retrieval augmented generation with a separate model. Part of the power of the declarative nature of LangChain is that you can easily use a separate language model for each call. This can be useful to use a cheaper and faster model for the simpler task of condensing the question, and then a more expensive model for answering the question. Here is an example of doing so.
-
-
-```python
-from langchain.chat_models import ChatOpenAI
-```
-
-
-```python
-qa = ConversationalRetrievalChain.from_llm(
-    ChatOpenAI(temperature=0, model="gpt-4"),
-    vectorstore.as_retriever(),
-    condense_question_llm = ChatOpenAI(temperature=0, model='gpt-3.5-turbo'),
-)
-```
-
-
-```python
-chat_history = []
-query = "What did the president say about Ketanji Brown Jackson"
-result = qa({"question": query, "chat_history": chat_history})
-```
-
-
-```python
-chat_history = [(query, result["answer"])]
-query = "Did he mention who she succeeded"
-result = qa({"question": query, "chat_history": chat_history})
-```
-
-## Return Source Documents
-You can also easily return source documents from the ConversationalRetrievalChain. This is useful for when you want to inspect what documents were returned.
-
-
-```python
-qa = ConversationalRetrievalChain.from_llm(OpenAI(temperature=0), vectorstore.as_retriever(), return_source_documents=True)
-```
-
-
-```python
-chat_history = []
-query = "What did the president say about Ketanji Brown Jackson"
-result = qa({"question": query, "chat_history": chat_history})
-```
-
-
-```python
-result['source_documents'][0]
-```
-
-<CodeOutputBlock lang="python">
-
-```
-    Document(page_content='Tonight. I call on the Senate to: Pass the Freedom to Vote Act. Pass the John Lewis Voting Rights Act. And while you’re at it, pass the Disclose Act so Americans can know who is funding our elections. \n\nTonight, I’d like to honor someone who has dedicated his life to serve this country: Justice Stephen Breyer—an Army veteran, Constitutional scholar, and retiring Justice of the United States Supreme Court. Justice Breyer, thank you for your service. \n\nOne of the most serious constitutional responsibilities a President has is nominating someone to serve on the United States Supreme Court. \n\nAnd I did that 4 days ago, when I nominated Circuit Court of Appeals Judge Ketanji Brown Jackson. One of our nation’s top legal minds, who will continue Justice Breyer’s legacy of excellence.', metadata={'source': '../../state_of_the_union.txt'})
-```
-
-</CodeOutputBlock>
-
-## ConversationalRetrievalChain with `search_distance`
-If you are using a vector store that supports filtering by search distance, you can add a threshold value parameter.
-
-
-```python
-vectordbkwargs = {"search_distance": 0.9}
-```
-
-
-```python
-qa = ConversationalRetrievalChain.from_llm(OpenAI(temperature=0), vectorstore.as_retriever(), return_source_documents=True)
-chat_history = []
-query = "What did the president say about Ketanji Brown Jackson"
-result = qa({"question": query, "chat_history": chat_history, "vectordbkwargs": vectordbkwargs})
-```
-
-## ConversationalRetrievalChain with `map_reduce`
-We can also use different types of combine document chains with the ConversationalRetrievalChain chain.
-
-
-```python
-from langchain.chains import LLMChain
-from langchain.chains.question_answering import load_qa_chain
-from langchain.chains.conversational_retrieval.prompts import CONDENSE_QUESTION_PROMPT
-```
-
-
-```python
-llm = OpenAI(temperature=0)
-question_generator = LLMChain(llm=llm, prompt=CONDENSE_QUESTION_PROMPT)
-doc_chain = load_qa_chain(llm, chain_type="map_reduce")
-
-chain = ConversationalRetrievalChain(
-    retriever=vectorstore.as_retriever(),
-    question_generator=question_generator,
-    combine_docs_chain=doc_chain,
-)
-```
-
-
-```python
-chat_history = []
-query = "What did the president say about Ketanji Brown Jackson"
-result = chain({"question": query, "chat_history": chat_history})
-```
-
-
-```python
-result['answer']
-```
-
-<CodeOutputBlock lang="python">
-
-```
-    " The president said that Ketanji Brown Jackson is one of the nation's top legal minds, a former top litigator in private practice, a former federal public defender, from a family of public school educators and police officers, a consensus builder, and has received a broad range of support from the Fraternal Order of Police to former judges appointed by Democrats and Republicans."
-```
-
-</CodeOutputBlock>
-
-## ConversationalRetrievalChain with Question Answering with sources
-
-You can also use this chain with the question answering with sources chain.
-
-
-```python
-from langchain.chains.qa_with_sources import load_qa_with_sources_chain
-```
-
-
-```python
-llm = OpenAI(temperature=0)
-question_generator = LLMChain(llm=llm, prompt=CONDENSE_QUESTION_PROMPT)
-doc_chain = load_qa_with_sources_chain(llm, chain_type="map_reduce")
-
-chain = ConversationalRetrievalChain(
-    retriever=vectorstore.as_retriever(),
-    question_generator=question_generator,
-    combine_docs_chain=doc_chain,
-)
-```
-
-
-```python
-chat_history = []
-query = "What did the president say about Ketanji Brown Jackson"
-result = chain({"question": query, "chat_history": chat_history})
-```
-
-
-```python
-result['answer']
-```
-
-<CodeOutputBlock lang="python">
-
-```
-    " The president said that Ketanji Brown Jackson is one of the nation's top legal minds, a former top litigator in private practice, a former federal public defender, from a family of public school educators and police officers, a consensus builder, and has received a broad range of support from the Fraternal Order of Police to former judges appointed by Democrats and Republicans. \nSOURCES: ../../state_of_the_union.txt"
-```
-
-</CodeOutputBlock>
-
-## ConversationalRetrievalChain with streaming to `stdout`
-
-Output from the chain will be streamed to `stdout` token by token in this example.
-
-
-```python
-from langchain.chains.llm import LLMChain
-from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
-from langchain.chains.conversational_retrieval.prompts import CONDENSE_QUESTION_PROMPT, QA_PROMPT
-from langchain.chains.question_answering import load_qa_chain
-
-# Construct a ConversationalRetrievalChain with a streaming llm for combine docs
-# and a separate, non-streaming llm for question generation
-llm = OpenAI(temperature=0)
-streaming_llm = OpenAI(streaming=True, callbacks=[StreamingStdOutCallbackHandler()], temperature=0)
-
-question_generator = LLMChain(llm=llm, prompt=CONDENSE_QUESTION_PROMPT)
-doc_chain = load_qa_chain(streaming_llm, chain_type="stuff", prompt=QA_PROMPT)
-
-qa = ConversationalRetrievalChain(
-    retriever=vectorstore.as_retriever(), combine_docs_chain=doc_chain, question_generator=question_generator)
-```
-
-
-```python
-chat_history = []
-query = "What did the president say about Ketanji Brown Jackson"
-result = qa({"question": query, "chat_history": chat_history})
-```
-
-<CodeOutputBlock lang="python">
-
-```
-     The president said that Ketanji Brown Jackson is one of the nation's top legal minds, a former top litigator in private practice, a former federal public defender, and from a family of public school educators and police officers. He also said that she is a consensus builder and has received a broad range of support from the Fraternal Order of Police to former judges appointed by Democrats and Republicans.
-```
-
-</CodeOutputBlock>
-
-
-```python
-chat_history = [(query, result["answer"])]
-query = "Did he mention who she succeeded"
-result = qa({"question": query, "chat_history": chat_history})
-```
-
-<CodeOutputBlock lang="python">
-
-```
-     Ketanji Brown Jackson succeeded Justice Stephen Breyer on the United States Supreme Court.
-```
-
-</CodeOutputBlock>
-
-## get_chat_history Function
-You can also specify a `get_chat_history` function, which can be used to format the chat_history string.
-
-
-```python
-def get_chat_history(inputs) -> str:
-    res = []
-    for human, ai in inputs:
-        res.append(f"Human:{human}\nAI:{ai}")
-    return "\n".join(res)
-qa = ConversationalRetrievalChain.from_llm(OpenAI(temperature=0), vectorstore.as_retriever(), get_chat_history=get_chat_history)
-```
-
-
-```python
-chat_history = []
-query = "What did the president say about Ketanji Brown Jackson"
-result = qa({"question": query, "chat_history": chat_history})
-```
-
-
-```python
-result['answer']
-```
-
-<CodeOutputBlock lang="python">
-
-```
-    " The president said that Ketanji Brown Jackson is one of the nation's top legal minds, a former top litigator in private practice, a former federal public defender, and from a family of public school educators and police officers. He also said that she is a consensus builder and has received a broad range of support from the Fraternal Order of Police to former judges appointed by Democrats and Republicans."
-```
-
-</CodeOutputBlock>
+Keep in mind that adding more context to the prompt in this way may distract the LLM from other relevant retrieved information.

@@ -1,142 +1,76 @@
----
-sidebar_position: 5
----
-You can subscribe to these events by using the `callbacks` argument available throughout the API. This argument is list of handler objects, which are expected to implement one or more of the methods described below in more detail.
+import CodeBlock from "@theme/CodeBlock";
 
-## Callback handlers
+You can subscribe to these events by using the `callbacks` argument available throughout the API. This method accepts a list of handler objects, which are expected to implement [one or more of the methods described in the API docs](../../api/callbacks/interfaces/CallbackHandlerMethods).
 
-`CallbackHandlers` are objects that implement the `CallbackHandler` interface, which has a method for each event that can be subscribed to. The `CallbackManager` will call the appropriate method on each handler when the event is triggered.
+## How to use callbacks
 
-```python
-class BaseCallbackHandler:
-    """Base callback handler that can be used to handle callbacks from langchain."""
+The `callbacks` argument is available on most objects throughout the API ([Chains](../../modules/chains/), [Language Models](../../modules/model_io/models/), [Tools](../../modules/agents/tools/), [Agents](../../modules/agents/), etc.) in two different places.
 
-    def on_llm_start(
-        self, serialized: Dict[str, Any], prompts: List[str], **kwargs: Any
-    ) -> Any:
-        """Run when LLM starts running."""
+### Constructor callbacks
 
-    def on_chat_model_start(
-        self, serialized: Dict[str, Any], messages: List[List[BaseMessage]], **kwargs: Any
-    ) -> Any:
-        """Run when Chat Model starts running."""
+Defined in the constructor, eg. `new LLMChain({ callbacks: [handler] })`, which will be used for all calls made on that object, and will be scoped to that object only, eg. if you pass a handler to the `LLMChain` constructor, it will not be used by the Model attached to that chain.
 
-    def on_llm_new_token(self, token: str, **kwargs: Any) -> Any:
-        """Run on new LLM token. Only available when streaming is enabled."""
+import ConstructorExample from "@examples/callbacks/docs_constructor_callbacks.ts";
 
-    def on_llm_end(self, response: LLMResult, **kwargs: Any) -> Any:
-        """Run when LLM ends running."""
+<CodeBlock language="typescript">{ConstructorExample}</CodeBlock>
 
-    def on_llm_error(
-        self, error: Union[Exception, KeyboardInterrupt], **kwargs: Any
-    ) -> Any:
-        """Run when LLM errors."""
+### Request callbacks
 
-    def on_chain_start(
-        self, serialized: Dict[str, Any], inputs: Dict[str, Any], **kwargs: Any
-    ) -> Any:
-        """Run when chain starts running."""
+Defined in the `call()`/`run()`/`apply()` methods used for issuing a request, eg. `chain.call({ input: '...' }, [handler])`, which will be used for that specific request only, and all sub-requests that it contains (eg. a call to an LLMChain triggers a call to a Model, which uses the same handler passed in the `call()` method).
 
-    def on_chain_end(self, outputs: Dict[str, Any], **kwargs: Any) -> Any:
-        """Run when chain ends running."""
+import RequestExample from "@examples/callbacks/docs_request_callbacks.ts";
 
-    def on_chain_error(
-        self, error: Union[Exception, KeyboardInterrupt], **kwargs: Any
-    ) -> Any:
-        """Run when chain errors."""
+<CodeBlock language="typescript">{RequestExample}</CodeBlock>
 
-    def on_tool_start(
-        self, serialized: Dict[str, Any], input_str: str, **kwargs: Any
-    ) -> Any:
-        """Run when tool starts running."""
+### Verbose mode
 
-    def on_tool_end(self, output: str, **kwargs: Any) -> Any:
-        """Run when tool ends running."""
+The `verbose` argument is available on most objects throughout the API (Chains, Models, Tools, Agents, etc.) as a constructor argument, eg. `new LLMChain({ verbose: true })`, and it is equivalent to passing a `ConsoleCallbackHandler` to the `callbacks` argument of that object and all child objects. This is useful for debugging, as it will log all events to the console. You can also enable verbose mode for the entire application by setting the environment variable `LANGCHAIN_VERBOSE=true`.
 
-    def on_tool_error(
-        self, error: Union[Exception, KeyboardInterrupt], **kwargs: Any
-    ) -> Any:
-        """Run when tool errors."""
+import VerboseExample from "@examples/callbacks/docs_verbose.ts";
 
-    def on_text(self, text: str, **kwargs: Any) -> Any:
-        """Run on arbitrary text."""
-
-    def on_agent_action(self, action: AgentAction, **kwargs: Any) -> Any:
-        """Run on agent action."""
-
-    def on_agent_finish(self, finish: AgentFinish, **kwargs: Any) -> Any:
-        """Run on agent end."""
-```
-
-## Get started
-
-LangChain provides a few built-in handlers that you can use to get started. These are available in the `langchain/callbacks` module. The most basic handler is the `StdOutCallbackHandler`, which simply logs all events to `stdout`.
-
-**Note** when the `verbose` flag on the object is set to true, the `StdOutCallbackHandler` will be invoked even without being explicitly passed in.
-
-```python
-from langchain.callbacks import StdOutCallbackHandler
-from langchain.chains import LLMChain
-from langchain.llms import OpenAI
-from langchain.prompts import PromptTemplate
-
-handler = StdOutCallbackHandler()
-llm = OpenAI()
-prompt = PromptTemplate.from_template("1 + {number} = ")
-
-# Constructor callback: First, let's explicitly set the StdOutCallbackHandler when initializing our chain
-chain = LLMChain(llm=llm, prompt=prompt, callbacks=[handler])
-chain.run(number=2)
-
-# Use verbose flag: Then, let's use the `verbose` flag to achieve the same result
-chain = LLMChain(llm=llm, prompt=prompt, verbose=True)
-chain.run(number=2)
-
-# Request callbacks: Finally, let's use the request `callbacks` to achieve the same result
-chain = LLMChain(llm=llm, prompt=prompt)
-chain.run(number=2, callbacks=[handler])
-```
-
-<CodeOutputBlock lang="python">
-
-```
-    > Entering new LLMChain chain...
-    Prompt after formatting:
-    1 + 2 = 
-    
-    > Finished chain.
-    
-    
-    > Entering new LLMChain chain...
-    Prompt after formatting:
-    1 + 2 = 
-    
-    > Finished chain.
-    
-    
-    > Entering new LLMChain chain...
-    Prompt after formatting:
-    1 + 2 = 
-    
-    > Finished chain.
-
-
-    '\n\n3'
-```
-
-</CodeOutputBlock>
-
-## Where to pass in callbacks
-
-The `callbacks` argument is available on most objects throughout the API (Chains, Models, Tools, Agents, etc.) in two different places:
-
-- **Constructor callbacks**: defined in the constructor, eg. `LLMChain(callbacks=[handler], tags=['a-tag'])`, which will be used for all calls made on that object, and will be scoped to that object only, eg. if you pass a handler to the `LLMChain` constructor, it will not be used by the Model attached to that chain.
-- **Request callbacks**: defined in the `call()`/`run()`/`apply()` methods used for issuing a request, eg. `chain.call(inputs, callbacks=[handler])`, which will be used for that specific request only, and all sub-requests that it contains (eg. a call to an LLMChain triggers a call to a Model, which uses the same handler passed in the `call()` method).
-
-The `verbose` argument is available on most objects throughout the API (Chains, Models, Tools, Agents, etc.) as a constructor argument, eg. `LLMChain(verbose=True)`, and it is equivalent to passing a `ConsoleCallbackHandler` to the `callbacks` argument of that object and all child objects. This is useful for debugging, as it will log all events to the console.
+<CodeBlock language="typescript">{VerboseExample}</CodeBlock>
 
 ### When do you want to use each of these?
 
 - Constructor callbacks are most useful for use cases such as logging, monitoring, etc., which are _not specific to a single request_, but rather to the entire chain. For example, if you want to log all the requests made to an LLMChain, you would pass a handler to the constructor.
 - Request callbacks are most useful for use cases such as streaming, where you want to stream the output of a single request to a specific websocket connection, or other similar use cases. For example, if you want to stream the output of a single request to a websocket, you would pass a handler to the `call()` method
 
+## Tags
+
+You can add tags to your callbacks by passing a `tags` argument to the `call()`/`run()`/`apply()` methods. This is useful for filtering your logs, eg. if you want to log all requests made to a specific LLMChain, you can add a tag, and then filter your logs by that tag. You can pass tags to both constructor and request callbacks, see the examples above for details. These tags are then passed to the `tags` argument of the "start" callback methods, ie. [`handleLLMStart`](../../api/callbacks/interfaces/CallbackHandlerMethods#handlellmstart), [`handleChatModelStart`](../../api/callbacks/interfaces/CallbackHandlerMethods#handlechatmodelstart), [`handleChainStart`](../../api/callbacks/interfaces/CallbackHandlerMethods#handlechainstart), [`handleToolStart`](../../api/callbacks/interfaces/CallbackHandlerMethods#handletoolstart).
+
+## Backgrounding callbacks
+
+By default callbacks run in-line with the your chain/LLM run. This means that if you have a slow callback you can see an impact on the overall latency of your runs. You can make callbacks not be awaited by setting the environment variable `LANGCHAIN_CALLBACKS_BACKGROUND=true`. This will cause the callbacks to be run in the background, and will not impact the overall latency of your runs. When you do this you might need to await all pending callbacks before exiting your application. You can do this with the following method:
+
+import AwaitExample from "@examples/callbacks/background_await.ts";
+
+<CodeBlock language="typescript">{AwaitExample}</CodeBlock>
+
+## Usage examples
+
+### Built-in handlers
+
+LangChain provides a few built-in handlers that you can use to get started. These are available in the `langchain/callbacks` module. The most basic handler is the `ConsoleCallbackHandler`, which simply logs all events to the console. In the future we will add more default handlers to the library. Note that when the `verbose` flag on the object is set to `true`, the `ConsoleCallbackHandler` will be invoked even without being explicitly passed in.
+
+import ConsoleExample from "@examples/callbacks/console_handler.ts";
+
+<CodeBlock language="typescript">{ConsoleExample}</CodeBlock>
+
+### One-off handlers
+
+You can create a one-off handler inline by passing a plain object to the `callbacks` argument. This object should implement the [`CallbackHandlerMethods`](../../api/callbacks/interfaces/CallbackHandlerMethods) interface. This is useful if eg. you need to create a handler that you will use only for a single request, eg to stream the output of an LLM/Agent/etc to a websocket.
+
+import StreamingExample from "@examples/models/llm/llm_streaming.ts";
+
+<CodeBlock language="typescript">{StreamingExample}</CodeBlock>
+
+### Multiple handlers
+
+We offer a method on the `CallbackManager` class that allows you to create a one-off handler. This is useful if eg. you need to create a handler that you will use only for a single request, eg to stream the output of an LLM/Agent/etc to a websocket.
+
+This is a more complete example that passes a `CallbackManager` to a ChatModel, and LLMChain, a Tool, and an Agent.
+
+import AgentExample from "@examples/agents/streaming.ts";
+
+<CodeBlock language="typescript">{AgentExample}</CodeBlock>

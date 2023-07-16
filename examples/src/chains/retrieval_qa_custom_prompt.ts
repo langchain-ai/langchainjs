@@ -1,9 +1,18 @@
 import { OpenAI } from "langchain/llms/openai";
-import { RetrievalQAChain, loadQAMapReduceChain } from "langchain/chains";
+import { RetrievalQAChain, loadQAStuffChain } from "langchain/chains";
 import { HNSWLib } from "langchain/vectorstores/hnswlib";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
+import { PromptTemplate } from "langchain/prompts";
 import * as fs from "fs";
+
+const promptTemplate = `Use the following pieces of context to answer the question at the end. If you don't know the answer, just say that you don't know, don't try to make up an answer.
+
+{context}
+
+Question: {question}
+Answer in Italian:`;
+const prompt = PromptTemplate.fromTemplate(promptTemplate);
 
 // Initialize the LLM to use to answer the question.
 const model = new OpenAI({});
@@ -14,9 +23,9 @@ const docs = await textSplitter.createDocuments([text]);
 // Create a vector store from the documents.
 const vectorStore = await HNSWLib.fromDocuments(docs, new OpenAIEmbeddings());
 
-// Create a chain that uses a map reduce chain and HNSWLib vector store.
+// Create a chain that uses a Refine chain and HNSWLib vector store.
 const chain = new RetrievalQAChain({
-  combineDocumentsChain: loadQAMapReduceChain(model),
+  combineDocumentsChain: loadQAStuffChain(model, { prompt }),
   retriever: vectorStore.asRetriever(),
 });
 const res = await chain.call({
@@ -26,7 +35,7 @@ console.log({ res });
 /*
 {
   res: {
-    text: " The president said that Justice Breyer has dedicated his life to serve his country, and thanked him for his service. He also said that Judge Ketanji Brown Jackson will continue Justice Breyer's legacy of excellence, emphasizing the importance of protecting the rights of citizens, especially women, LGBTQ+ Americans, and access to healthcare. He also expressed his commitment to supporting the younger transgender Americans in America and ensuring they are able to reach their full potential, offering a Unity Agenda for the Nation to beat the opioid epidemic and increase funding for prevention, treatment, harm reduction, and recovery."
+    text: ' Il presidente ha elogiato Justice Breyer per il suo servizio e lo ha ringraziato.'
   }
 }
 */

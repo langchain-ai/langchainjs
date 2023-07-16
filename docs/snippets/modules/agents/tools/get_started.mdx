@@ -1,15 +1,25 @@
-```python
-from langchain.agents import load_tools
-tool_names = [...]
-tools = load_tools(tool_names)
+Specifically, the interface of a tool has a single text input and a single text output. It includes a name and description that communicate to the [Model](../../models/) what the tool does and when to use it.
+
+```typescript
+interface Tool {
+  call(arg: string): Promise<string>;
+
+  name: string;
+
+  description: string;
+}
 ```
 
-Some tools (e.g. chains, agents) may require a base LLM to use to initialize them.
-In that case, you can pass in an LLM as well:
+## Advanced
 
-```python
-from langchain.agents import load_tools
-tool_names = [...]
-llm = ...
-tools = load_tools(tool_names, llm=llm)
+To implement your own tool you can subclass the `Tool` class and implement the `_call` method. The `_call` method is called with the input text and should return the output text. The Tool superclass implements the `call` method, which takes care of calling the right CallbackManager methods before and after calling your `_call` method. When an error occurs, the `_call` method should when possible return a string representing an error, rather than throwing an error. This allows the error to be passed to the LLM and the LLM can decide how to handle it. If an error is thrown then execution of the agent will stop.
+
+```typescript
+abstract class Tool {
+  abstract _call(arg: string): Promise<string>;
+
+  abstract name: string;
+
+  abstract description: string;
+}
 ```

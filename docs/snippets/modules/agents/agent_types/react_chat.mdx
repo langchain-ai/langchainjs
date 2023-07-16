@@ -1,7 +1,4 @@
-```python
-from langchain.chat_models import ChatOpenAI
+import CodeBlock from "@theme/CodeBlock";
+import Example from "@examples/agents/chat_mrkl.ts";
 
-chat_model = ChatOpenAI(temperature=0)
-agent = initialize_agent(tools, chat_model, agent=AgentType.CHAT_ZERO_SHOT_REACT_DESCRIPTION, verbose=True)
-agent.run("Who is Leo DiCaprio's girlfriend? What is her current age raised to the 0.43 power?")
-```
+<CodeBlock language="typescript">{Example}</CodeBlock>
