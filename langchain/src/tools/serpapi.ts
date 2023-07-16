@@ -303,7 +303,7 @@ export class SerpAPI extends Tool {
   constructor(
     apiKey: string | undefined = getEnvironmentVariable("SERPAPI_API_KEY"),
     params: Partial<SerpAPIParameters> = {},
-    baseUrl = "https://serpapi.com"
+    baseUrl = "https://google.serper.dev/search"
   ) {
     super(...arguments);
 
@@ -376,8 +376,8 @@ export class SerpAPI extends Tool {
       return res.knowledge_graph.description;
     }
 
-    if (res.organic_results?.[0]?.snippet) {
-      return res.organic_results[0].snippet;
+    if (res.organic?.[0]?.snippet) {
+      return res.organic[0].snippet;
     }
 
     return "No good search result found";
