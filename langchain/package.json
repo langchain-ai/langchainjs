@@ -436,6 +436,9 @@
     "stores/message/dynamodb.cjs",
     "stores/message/dynamodb.js",
     "stores/message/dynamodb.d.ts",
+    "stores/message/firestore.cjs",
+    "stores/message/firestore.js",
+    "stores/message/firestore.d.ts",
     "stores/message/momento.cjs",
     "stores/message/momento.js",
     "stores/message/momento.d.ts",
@@ -1584,6 +1587,11 @@
       "types": "./stores/message/dynamodb.d.ts",
       "import": "./stores/message/dynamodb.js",
       "require": "./stores/message/dynamodb.cjs"
+    },
+    "./stores/message/firestore": {
+      "types": "./stores/message/firestore.d.ts",
+      "import": "./stores/message/firestore.js",
+      "require": "./stores/message/firestore.cjs"
     },
     "./stores/message/momento": {
       "types": "./stores/message/momento.d.ts",

@@ -168,6 +168,7 @@
       "src/stores/file/node.ts",
       "src/stores/message/in_memory.ts",
       "src/stores/message/dynamodb.ts",
+      "src/stores/message/firestore.ts",
       "src/stores/message/momento.ts",
       "src/stores/message/redis.ts",
       "src/stores/message/ioredis.ts",

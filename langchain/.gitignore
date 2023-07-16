@@ -424,6 +424,9 @@ stores/message/in_memory.d.ts
 stores/message/dynamodb.cjs
 stores/message/dynamodb.js
 stores/message/dynamodb.d.ts
+stores/message/firestore.cjs
+stores/message/firestore.js
+stores/message/firestore.d.ts
 stores/message/momento.cjs
 stores/message/momento.js
 stores/message/momento.d.ts
