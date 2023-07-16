@@ -165,6 +165,43 @@ test("Search a SupabaseVectorStore with a functional metadata filter", async () 
   ]);
 });
 
+test("Upsert on a SupabaseVectorStore", async () => {
+  const client = createClient(
+    process.env.SUPABASE_VECTOR_STORE_URL!,
+    process.env.SUPABASE_VECTOR_STORE_PRIVATE_KEY!
+  );
+
+  const embeddings = new OpenAIEmbeddings();
+
+  const store = new SupabaseVectorStore(embeddings, {
+    client,
+    tableName: "documents",
+  });
+
+  expect(store).toBeDefined();
+
+  const createdAt = new Date().getTime();
+
+  const ids = await store.addDocuments([
+    { pageContent: "hello 0", metadata: { created_at: createdAt } },
+  ]);
+
+  const results = await store.similaritySearch("hello", 2, {
+    created_at: createdAt,
+  });
+  expect(results).toHaveLength(1);
+  const ids2 = await store.addDocuments(
+    [{ pageContent: "hello 1", metadata: { created_at: createdAt } }],
+    { ids }
+  );
+  expect(ids).toEqual(ids2);
+  const results2 = await store.similaritySearch("hello", 2, {
+    created_at: createdAt,
+  });
+  expect(results2).toHaveLength(1);
+  expect(results2[0].pageContent).toEqual("hello 1");
+});
+
 test("Delete on a SupabaseVectorStore", async () => {
   const client = createClient(
     process.env.SUPABASE_VECTOR_STORE_URL!,

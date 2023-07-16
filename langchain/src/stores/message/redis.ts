@@ -1,3 +1,4 @@
+// TODO: Deprecate in favor of stores/message/ioredis.ts when LLMCache and other implementations are ported
 import {
   createClient,
   RedisClientOptions,

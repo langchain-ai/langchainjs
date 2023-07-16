@@ -1,4 +1,4 @@
-import { KVMap, BaseRun } from "langchainplus-sdk/schemas";
+import { KVMap, BaseRun } from "langsmith/schemas";
 
 import {
   AgentAction,

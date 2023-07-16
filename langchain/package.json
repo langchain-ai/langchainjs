@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.105",
+  "version": "0.0.110",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -91,6 +91,9 @@
     "embeddings/googlevertexai.cjs",
     "embeddings/googlevertexai.js",
     "embeddings/googlevertexai.d.ts",
+    "embeddings/googlepalm.cjs",
+    "embeddings/googlepalm.js",
+    "embeddings/googlepalm.d.ts",
     "llms.cjs",
     "llms.js",
     "llms.d.ts",
@@ -121,6 +124,9 @@
     "llms/googlevertexai.cjs",
     "llms/googlevertexai.js",
     "llms/googlevertexai.d.ts",
+    "llms/googlepalm.cjs",
+    "llms/googlepalm.js",
+    "llms/googlepalm.d.ts",
     "llms/sagemaker_endpoint.cjs",
     "llms/sagemaker_endpoint.js",
     "llms/sagemaker_endpoint.d.ts",
@@ -259,9 +265,15 @@
     "document_loaders/web/s3.cjs",
     "document_loaders/web/s3.js",
     "document_loaders/web/s3.d.ts",
+    "document_loaders/web/sonix_audio.cjs",
+    "document_loaders/web/sonix_audio.js",
+    "document_loaders/web/sonix_audio.d.ts",
     "document_loaders/web/confluence.cjs",
     "document_loaders/web/confluence.js",
     "document_loaders/web/confluence.d.ts",
+    "document_loaders/web/sort_xyz_blockchain.cjs",
+    "document_loaders/web/sort_xyz_blockchain.js",
+    "document_loaders/web/sort_xyz_blockchain.d.ts",
     "document_loaders/fs/directory.cjs",
     "document_loaders/fs/directory.js",
     "document_loaders/fs/directory.d.ts",
@@ -295,6 +307,9 @@
     "document_loaders/fs/unstructured.cjs",
     "document_loaders/fs/unstructured.js",
     "document_loaders/fs/unstructured.d.ts",
+    "document_transformers/openai_functions.cjs",
+    "document_transformers/openai_functions.js",
+    "document_transformers/openai_functions.d.ts",
     "chat_models.cjs",
     "chat_models.js",
     "chat_models.d.ts",
@@ -310,6 +325,9 @@
     "chat_models/googlevertexai.cjs",
     "chat_models/googlevertexai.js",
     "chat_models/googlevertexai.d.ts",
+    "chat_models/googlepalm.cjs",
+    "chat_models/googlepalm.js",
+    "chat_models/googlepalm.d.ts",
     "chat_models/baiduwenxin.cjs",
     "chat_models/baiduwenxin.js",
     "chat_models/baiduwenxin.d.ts",
@@ -424,6 +442,9 @@
     "stores/message/redis.cjs",
     "stores/message/redis.js",
     "stores/message/redis.d.ts",
+    "stores/message/ioredis.cjs",
+    "stores/message/ioredis.js",
+    "stores/message/ioredis.d.ts",
     "stores/message/upstash_redis.cjs",
     "stores/message/upstash_redis.js",
     "stores/message/upstash_redis.d.ts",
@@ -485,6 +506,7 @@
     "@getmetal/metal-sdk": "^4.0.0",
     "@getzep/zep-js": "^0.4.1",
     "@gomomento/sdk": "^1.23.0",
+    "@google-ai/generativelanguage": "^0.2.1",
     "@google-cloud/storage": "^6.10.1",
     "@huggingface/inference": "^1.5.1",
     "@jest/globals": "^29.5.0",
@@ -529,11 +551,12 @@
     "eslint-plugin-no-instanceof": "^1.0.1",
     "eslint-plugin-prettier": "^4.2.1",
     "faiss-node": "^0.2.1",
-    "google-auth-library": "^8.8.0",
+    "google-auth-library": "^8.9.0",
     "graphql": "^16.6.0",
     "hnswlib-node": "^1.4.2",
     "html-to-text": "^9.0.5",
     "ignore": "^5.2.0",
+    "ioredis": "^5.3.2",
     "jest": "^29.5.0",
     "mammoth": "^1.5.1",
     "mongodb": "^5.2.0",
@@ -551,6 +574,7 @@
     "replicate": "^0.9.0",
     "rimraf": "^5.0.1",
     "rollup": "^3.19.1",
+    "sonix-speech-recognition": "^2.1.1",
     "sqlite3": "^5.1.4",
     "srt-parser-2": "^1.2.2",
     "ts-jest": "^29.1.0",
@@ -571,6 +595,7 @@
     "@getmetal/metal-sdk": "*",
     "@getzep/zep-js": "^0.4.1",
     "@gomomento/sdk": "^1.23.0",
+    "@google-ai/generativelanguage": "^0.2.1",
     "@google-cloud/storage": "^6.10.1",
     "@huggingface/inference": "^1.5.1",
     "@notionhq/client": "^2.2.5",
@@ -593,10 +618,11 @@
     "d3-dsv": "^2.0.0",
     "epub2": "^3.0.1",
     "faiss-node": "^0.2.1",
-    "google-auth-library": "^8.8.0",
+    "google-auth-library": "^8.9.0",
     "hnswlib-node": "^1.4.2",
     "html-to-text": "^9.0.5",
     "ignore": "^5.2.0",
+    "ioredis": "^5.3.2",
     "mammoth": "*",
     "mongodb": "^5.2.0",
     "mysql2": "^3.3.3",
@@ -609,6 +635,7 @@
     "puppeteer": "^19.7.2",
     "redis": "^4.6.4",
     "replicate": "^0.9.0",
+    "sonix-speech-recognition": "^2.1.1",
     "srt-parser-2": "^1.2.2",
     "typeorm": "^0.3.12",
     "typesense": "^1.5.3",
@@ -644,6 +671,9 @@
       "optional": true
     },
     "@gomomento/sdk": {
+      "optional": true
+    },
+    "@google-ai/generativelanguage": {
       "optional": true
     },
     "@google-cloud/storage": {
@@ -724,6 +754,9 @@
     "ignore": {
       "optional": true
     },
+    "ioredis": {
+      "optional": true
+    },
     "mammoth": {
       "optional": true
     },
@@ -760,6 +793,9 @@
     "replicate": {
       "optional": true
     },
+    "sonix-speech-recognition": {
+      "optional": true
+    },
     "srt-parser-2": {
       "optional": true
     },
@@ -777,7 +813,7 @@
     }
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.4.3",
+    "@anthropic-ai/sdk": "^0.5.3",
     "ansi-styles": "^5.0.0",
     "binary-extensions": "^2.2.0",
     "camelcase": "6",
@@ -787,7 +823,7 @@
     "js-tiktoken": "^1.0.7",
     "js-yaml": "^4.1.0",
     "jsonpointer": "^5.0.1",
-    "langchainplus-sdk": "^0.0.19",
+    "langsmith": "^0.0.5",
     "ml-distance": "^4.0.0",
     "object-hash": "^3.0.0",
     "openai": "^3.3.0",
@@ -959,6 +995,11 @@
       "import": "./embeddings/googlevertexai.js",
       "require": "./embeddings/googlevertexai.cjs"
     },
+    "./embeddings/googlepalm": {
+      "types": "./embeddings/googlepalm.d.ts",
+      "import": "./embeddings/googlepalm.js",
+      "require": "./embeddings/googlepalm.cjs"
+    },
     "./llms": {
       "node": {
         "types": "./llms.d.ts",
@@ -1010,6 +1051,11 @@
       "types": "./llms/googlevertexai.d.ts",
       "import": "./llms/googlevertexai.js",
       "require": "./llms/googlevertexai.cjs"
+    },
+    "./llms/googlepalm": {
+      "types": "./llms/googlepalm.d.ts",
+      "import": "./llms/googlepalm.js",
+      "require": "./llms/googlepalm.cjs"
     },
     "./llms/sagemaker_endpoint": {
       "types": "./llms/sagemaker_endpoint.d.ts",
@@ -1245,10 +1291,20 @@
       "import": "./document_loaders/web/s3.js",
       "require": "./document_loaders/web/s3.cjs"
     },
+    "./document_loaders/web/sonix_audio": {
+      "types": "./document_loaders/web/sonix_audio.d.ts",
+      "import": "./document_loaders/web/sonix_audio.js",
+      "require": "./document_loaders/web/sonix_audio.cjs"
+    },
     "./document_loaders/web/confluence": {
       "types": "./document_loaders/web/confluence.d.ts",
       "import": "./document_loaders/web/confluence.js",
       "require": "./document_loaders/web/confluence.cjs"
+    },
+    "./document_loaders/web/sort_xyz_blockchain": {
+      "types": "./document_loaders/web/sort_xyz_blockchain.d.ts",
+      "import": "./document_loaders/web/sort_xyz_blockchain.js",
+      "require": "./document_loaders/web/sort_xyz_blockchain.cjs"
     },
     "./document_loaders/fs/directory": {
       "types": "./document_loaders/fs/directory.d.ts",
@@ -1305,6 +1361,11 @@
       "import": "./document_loaders/fs/unstructured.js",
       "require": "./document_loaders/fs/unstructured.cjs"
     },
+    "./document_transformers/openai_functions": {
+      "types": "./document_transformers/openai_functions.d.ts",
+      "import": "./document_transformers/openai_functions.js",
+      "require": "./document_transformers/openai_functions.cjs"
+    },
     "./chat_models": {
       "node": {
         "types": "./chat_models.d.ts",
@@ -1331,6 +1392,11 @@
       "types": "./chat_models/googlevertexai.d.ts",
       "import": "./chat_models/googlevertexai.js",
       "require": "./chat_models/googlevertexai.cjs"
+    },
+    "./chat_models/googlepalm": {
+      "types": "./chat_models/googlepalm.d.ts",
+      "import": "./chat_models/googlepalm.js",
+      "require": "./chat_models/googlepalm.cjs"
     },
     "./chat_models/baiduwenxin": {
       "types": "./chat_models/baiduwenxin.d.ts",
@@ -1523,6 +1589,11 @@
       "types": "./stores/message/redis.d.ts",
       "import": "./stores/message/redis.js",
       "require": "./stores/message/redis.cjs"
+    },
+    "./stores/message/ioredis": {
+      "types": "./stores/message/ioredis.d.ts",
+      "import": "./stores/message/ioredis.js",
+      "require": "./stores/message/ioredis.cjs"
     },
     "./stores/message/upstash_redis": {
       "types": "./stores/message/upstash_redis.d.ts",

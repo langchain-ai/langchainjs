@@ -19,8 +19,8 @@ Using a Text Splitter can also help improve the results from vector store search
 
 ## Parameters
 
-- `chunkSize?: number = 1000`: The maximum number of characters in each chunk. The default value is 1000 tokens.
-- `chunkOverlap?: number = 200`: The number of overlapping characters between adjacent chunks. The default value is 200 tokens.
+- `chunkSize?: number = 1000`: The maximum number of characters (not tokens) in each chunk. The default value is 1000 characters.
+- `chunkOverlap?: number = 200`: The number of overlapping characters between adjacent chunks. The default value is 200 characters.
 
 ```typescript
 type TextSplitterChunkHeaderOptions = {

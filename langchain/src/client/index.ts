@@ -1,1 +1,1 @@
-export { DatasetRunResults, runOnDataset } from "./langchainplus.js";
+export { DatasetRunResults, runOnDataset } from "./langsmith.js";

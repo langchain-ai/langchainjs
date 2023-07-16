@@ -1,14 +1,14 @@
 /* eslint-disable no-process-env */
 import { test } from "@jest/globals";
-import { Client } from "langchainplus-sdk";
+import { Client } from "langsmith";
 import { ChatOpenAI } from "../../chat_models/openai.js";
 import { SerpAPI } from "../../tools/serpapi.js";
 import { Calculator } from "../../tools/calculator.js";
 import { initializeAgentExecutorWithOptions } from "../../agents/initialize.js";
 import { OpenAI } from "../../llms/openai.js";
-import { runOnDataset } from "../langchainplus.js";
+import { runOnDataset } from "../langsmith.js";
 
-test("Test LangChainPlus Client Run Chat Model Over Simple Dataset", async () => {
+test("Test LangSmith Client Run Chat Model Over Simple Dataset", async () => {
   const client = new Client({});
   const datasetName = "chat-test";
   const description = "Asking a chat model test things";
@@ -41,7 +41,7 @@ test("Test LangChainPlus Client Run Chat Model Over Simple Dataset", async () =>
   expect(Object.keys(results).length).toEqual(1);
 });
 
-test("Test LangChainPlus Client Run LLM Over Simple Dataset", async () => {
+test("Test LangSmith Client Run LLM Over Simple Dataset", async () => {
   const client = new Client({});
   const datasetName = "llm-test";
   const description = "Asking a chat model test things";
@@ -65,7 +65,7 @@ test("Test LangChainPlus Client Run LLM Over Simple Dataset", async () => {
   }
   const model = new OpenAI({ temperature: 0 });
   const randomId = Math.random().toString(36).substring(7);
-  const projectName = `LangChainPlus Client Test ${randomId}`;
+  const projectName = `LangSmith Client Test ${randomId}`;
   const results = await runOnDataset(datasetName, model, {
     projectName,
     client,
@@ -83,7 +83,7 @@ test("Test LangChainPlus Client Run LLM Over Simple Dataset", async () => {
   expect(run.id).toBe(firstRun.id);
 });
 
-test("Test LangChainPlus Client Run Chain Over Simple Dataset", async () => {
+test("Test LangSmith Client Run Chain Over Simple Dataset", async () => {
   const client = new Client({});
   const csvContent = `
 input,output
@@ -122,7 +122,7 @@ what is 1213 divided by 4345?,approximately 0.2791714614499425
   expect(Object.keys(results).length).toEqual(2);
 });
 
-test("Test LangChainPlus Client Run Chain Over Dataset", async () => {
+test("Test LangSmith Client Run Chain Over Dataset", async () => {
   const client = new Client({});
   const csvContent = `
 input,output
