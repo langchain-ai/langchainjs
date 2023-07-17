@@ -26,6 +26,10 @@ export class GooglePaLMEmbeddings
 
   private client: TextServiceClient;
 
+  _embeddingsType(): string {
+    return "googlepalm";
+  }
+
   constructor(fields?: GooglePaLMEmbeddingsParams) {
     super(fields ?? {});
 
@@ -54,7 +58,7 @@ export class GooglePaLMEmbeddings
     return res[0].embedding?.value ?? [];
   }
 
-  embedQuery(document: string): Promise<number[]> {
+  _embedQuery(document: string): Promise<number[]> {
     return this.caller.callWithOptions(
       {},
       this._embedText.bind(this),
@@ -62,7 +66,7 @@ export class GooglePaLMEmbeddings
     );
   }
 
-  embedDocuments(documents: string[]): Promise<number[][]> {
+  _embedDocuments(documents: string[]): Promise<number[][]> {
     return Promise.all(documents.map((document) => this._embedText(document)));
   }
 }
