@@ -163,11 +163,6 @@ export interface OptionalImportMap {
   "langchain/document_loaders/web/notiondb"?:
     | typeof import("../document_loaders/web/notiondb.js")
     | Promise<typeof import("../document_loaders/web/notiondb.js")>;
-  "langchain/document_loaders/web/open_ai_whisper_audio"?:
-    | typeof import("../document_loaders/web/open_ai_whisper_audio.js")
-    | Promise<
-        typeof import("../document_loaders/web/open_ai_whisper_audio.js")
-      >;
   "langchain/document_loaders/web/notionapi"?:
     | typeof import("../document_loaders/web/notionapi.js")
     | Promise<typeof import("../document_loaders/web/notionapi.js")>;

@@ -15,17 +15,11 @@ This covers how to load document objects from an audio file using the [Open AI W
 
 To run this loader you will need to create an account on the Open AI and obtain an auth key from the https://platform.openai.com/account page.
 
-You'll also need to install the `openai` library:
-
-```bash npm2yarn
-npm install openai
-```
-
 ## Usage
 
 Once auth key is configured, you can use the loader to create transcriptions and then convert them into a Document.
 
 import CodeBlock from "@theme/CodeBlock";
-import Example from "@examples/document_loaders/open_ai_whisper_audio.ts";
+import Example from "@examples/document_loaders/openai_whisper_audio.ts";
 
 <CodeBlock language="typescript">{Example}</CodeBlock>

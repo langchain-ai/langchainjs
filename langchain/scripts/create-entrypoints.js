@@ -102,7 +102,6 @@ const entrypoints = {
   "document_loaders/web/figma": "document_loaders/web/figma",
   "document_loaders/web/github": "document_loaders/web/github",
   "document_loaders/web/notiondb": "document_loaders/web/notiondb",
-  "document_loaders/web/open_ai_whisper_audio": "document_loaders/web/open_ai_whisper_audio",
   "document_loaders/web/notionapi": "document_loaders/web/notionapi",
   "document_loaders/web/s3": "document_loaders/web/s3",
   "document_loaders/web/sonix_audio": "document_loaders/web/sonix_audio",
@@ -119,6 +118,7 @@ const entrypoints = {
   "document_loaders/fs/csv": "document_loaders/fs/csv",
   "document_loaders/fs/notion": "document_loaders/fs/notion",
   "document_loaders/fs/unstructured": "document_loaders/fs/unstructured",
+  "document_loaders/fs/openai_whisper_audio": "document_loaders/fs/openai_whisper_audio",
   // document_transformers
   "document_transformers/openai_functions": "document_transformers/openai_functions",
   // chat_models
@@ -252,7 +252,6 @@ const requiresOptionalDependency = [
   "document_loaders/web/figma",
   "document_loaders/web/github",
   "document_loaders/web/notiondb",
-  "document_loaders/web/open_ai_whisper_audio",
   "document_loaders/web/notionapi",
   "document_loaders/web/s3",
   "document_loaders/web/sonix_audio",

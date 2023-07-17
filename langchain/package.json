@@ -253,9 +253,6 @@
     "document_loaders/web/notiondb.cjs",
     "document_loaders/web/notiondb.js",
     "document_loaders/web/notiondb.d.ts",
-    "document_loaders/web/open_ai_whisper_audio.cjs",
-    "document_loaders/web/open_ai_whisper_audio.js",
-    "document_loaders/web/open_ai_whisper_audio.d.ts",
     "document_loaders/web/notionapi.cjs",
     "document_loaders/web/notionapi.js",
     "document_loaders/web/notionapi.d.ts",
@@ -304,6 +301,9 @@
     "document_loaders/fs/unstructured.cjs",
     "document_loaders/fs/unstructured.js",
     "document_loaders/fs/unstructured.d.ts",
+    "document_loaders/fs/openai_whisper_audio.cjs",
+    "document_loaders/fs/openai_whisper_audio.js",
+    "document_loaders/fs/openai_whisper_audio.d.ts",
     "document_transformers/openai_functions.cjs",
     "document_transformers/openai_functions.js",
     "document_transformers/openai_functions.d.ts",
@@ -1260,11 +1260,6 @@
       "import": "./document_loaders/web/notiondb.js",
       "require": "./document_loaders/web/notiondb.cjs"
     },
-    "./document_loaders/web/open_ai_whisper_audio": {
-      "types": "./document_loaders/web/open_ai_whisper_audio.d.ts",
-      "import": "./document_loaders/web/open_ai_whisper_audio.js",
-      "require": "./document_loaders/web/open_ai_whisper_audio.cjs"
-    },
     "./document_loaders/web/notionapi": {
       "types": "./document_loaders/web/notionapi.d.ts",
       "import": "./document_loaders/web/notionapi.js",
@@ -1344,6 +1339,11 @@
       "types": "./document_loaders/fs/unstructured.d.ts",
       "import": "./document_loaders/fs/unstructured.js",
       "require": "./document_loaders/fs/unstructured.cjs"
+    },
+    "./document_loaders/fs/openai_whisper_audio": {
+      "types": "./document_loaders/fs/openai_whisper_audio.d.ts",
+      "import": "./document_loaders/fs/openai_whisper_audio.js",
+      "require": "./document_loaders/fs/openai_whisper_audio.cjs"
     },
     "./document_transformers/openai_functions": {
       "types": "./document_transformers/openai_functions.d.ts",

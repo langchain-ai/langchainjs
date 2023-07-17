@@ -241,9 +241,6 @@ document_loaders/web/github.d.ts
 document_loaders/web/notiondb.cjs
 document_loaders/web/notiondb.js
 document_loaders/web/notiondb.d.ts
-document_loaders/web/open_ai_whisper_audio.cjs
-document_loaders/web/open_ai_whisper_audio.js
-document_loaders/web/open_ai_whisper_audio.d.ts
 document_loaders/web/notionapi.cjs
 document_loaders/web/notionapi.js
 document_loaders/web/notionapi.d.ts
@@ -292,6 +289,9 @@ document_loaders/fs/notion.d.ts
 document_loaders/fs/unstructured.cjs
 document_loaders/fs/unstructured.js
 document_loaders/fs/unstructured.d.ts
+document_loaders/fs/openai_whisper_audio.cjs
+document_loaders/fs/openai_whisper_audio.js
+document_loaders/fs/openai_whisper_audio.d.ts
 document_transformers/openai_functions.cjs
 document_transformers/openai_functions.js
 document_transformers/openai_functions.d.ts
