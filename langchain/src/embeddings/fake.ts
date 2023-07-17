@@ -38,14 +38,12 @@ export class SyntheticEmbeddings
 
     // Only use the letters (and space) from the document, and make them lower case
     doc = doc.toLowerCase().replaceAll(/[^a-z ]/g, "");
-    // console.log(doc.length);
 
     // Pad the document to make sure it has a divisible number of chunks
     const padMod = doc.length % this.vectorSize;
     const padGapSize = padMod === 0 ? 0 : this.vectorSize - padMod;
     const padSize = doc.length + padGapSize;
     doc = doc.padEnd(padSize, " ");
-    // console.log(padGapSize, padSize, doc);
 
     // Break it into chunks
     const chunkSize = doc.length / this.vectorSize;
@@ -53,7 +51,6 @@ export class SyntheticEmbeddings
     for (let co = 0; co < doc.length; co += chunkSize) {
       docChunk.push(doc.slice(co, co + chunkSize));
     }
-    // console.log(chunkSize, docChunk);
 
     // Turn each chunk into a number
     const ret: number[] = docChunk.map((s) => {
@@ -65,7 +62,6 @@ export class SyntheticEmbeddings
       // Reduce this to a number between 0 and 25 inclusive
       // Then get the fractional number by dividing it by 26
       const ret = (sum % 26) / 26;
-      // console.log(s, sum, sum % 26, ret);
       return ret;
     });
 
