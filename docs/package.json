@@ -3,8 +3,8 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "build": "bash ./local_build.sh",
-    "dev": "yarn build & nodemon -e mdx,md --exec \"bash\" ./compile_docs.sh & wait"
+    "build": "bash ./build.sh",
+    "dev": "yarn build & nodemon -e mdx,md --exec \"bash\" ./nodemon.sh & wait"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
