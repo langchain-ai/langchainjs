@@ -16,6 +16,7 @@ import {
   AzureOpenAIInput,
   OpenAICallOptions,
   OpenAIChatInput,
+  TiktokenModel,
 } from "../types/openai-types.js";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
 import type { StreamingAxiosConfiguration } from "../util/axios-types.js";
@@ -158,7 +159,7 @@ export class ChatOpenAI
 
   logitBias?: Record<string, number>;
 
-  modelName = "gpt-3.5-turbo";
+  modelName: TiktokenModel = "gpt-3.5-turbo";
 
   modelKwargs?: OpenAIChatInput["modelKwargs"];
 

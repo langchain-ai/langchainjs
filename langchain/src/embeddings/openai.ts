@@ -6,7 +6,7 @@ import {
 } from "openai";
 import type { AxiosRequestConfig } from "axios";
 import { getEnvironmentVariable, isNode } from "../util/env.js";
-import { AzureOpenAIInput } from "../types/openai-types.js";
+import { AzureOpenAIInput, TiktokenModel } from "../types/openai-types.js";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
 import { chunkArray } from "../util/chunk.js";
 import { Embeddings, EmbeddingsParams } from "./base.js";
@@ -14,7 +14,7 @@ import { getEndpoint, OpenAIEndpointConfig } from "../util/azure.js";
 
 export interface OpenAIEmbeddingsParams extends EmbeddingsParams {
   /** Model name to use */
-  modelName: string;
+  modelName: TiktokenModel;
 
   /**
    * Timeout to use when making requests to OpenAI.
@@ -38,7 +38,7 @@ export class OpenAIEmbeddings
   extends Embeddings
   implements OpenAIEmbeddingsParams, AzureOpenAIInput
 {
-  modelName = "text-embedding-ada-002";
+  modelName: TiktokenModel = "text-embedding-ada-002";
 
   batchSize = 512;
 

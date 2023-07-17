@@ -12,6 +12,7 @@ import {
   AzureOpenAIInput,
   OpenAICallOptions,
   OpenAIChatInput,
+  TiktokenModel,
 } from "../types/openai-types.js";
 import type { StreamingAxiosConfiguration } from "../util/axios-types.js";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
@@ -97,7 +98,7 @@ export class OpenAIChat
 
   maxTokens?: number;
 
-  modelName = "gpt-3.5-turbo";
+  modelName: TiktokenModel = "gpt-3.5-turbo";
 
   prefixMessages?: ChatCompletionRequestMessage[];
 

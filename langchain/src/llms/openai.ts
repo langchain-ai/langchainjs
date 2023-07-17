@@ -1,4 +1,3 @@
-import type { TiktokenModel } from "js-tiktoken/lite";
 import {
   Configuration,
   ConfigurationParameters,
@@ -12,6 +11,7 @@ import {
   AzureOpenAIInput,
   OpenAICallOptions,
   OpenAIInput,
+  TiktokenModel,
 } from "../types/openai-types.js";
 import type { StreamingAxiosConfiguration } from "../util/axios-types.js";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
@@ -93,7 +93,7 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
 
   logitBias?: Record<string, number>;
 
-  modelName = "text-davinci-003";
+  modelName: TiktokenModel = "text-davinci-003";
 
   modelKwargs?: OpenAIInput["modelKwargs"];
 

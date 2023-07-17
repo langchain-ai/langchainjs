@@ -1,7 +1,12 @@
 import { AxiosRequestConfig } from "axios";
 import { ChatCompletionRequestMessage } from "openai";
 
+import { TiktokenModel } from "js-tiktoken/lite";
 import { BaseLanguageModelCallOptions } from "../base_language/index.js";
+
+// reexport this type from the included package so we can easily override and extend it if needed in the future
+// also makes it easier for folks to import this type without digging around into the dependent packages
+export type {TiktokenModel}
 
 export declare interface OpenAIBaseInput {
   /** Sampling temperature to use */
@@ -32,7 +37,7 @@ export declare interface OpenAIBaseInput {
   streaming: boolean;
 
   /** Model name to use */
-  modelName: string;
+  modelName: TiktokenModel;
 
   /** Holds any additional parameters that are valid to pass to {@link
    * https://platform.openai.com/docs/api-reference/completions/create |
