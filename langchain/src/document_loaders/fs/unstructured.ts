@@ -40,12 +40,18 @@ type Element = {
   };
 };
 
-type UnstructuredLoaderStrategy = "hi_res" | "fast" | "ocr_only" | "auto";
+export type UnstructuredLoaderStrategy =
+  | "hi_res"
+  | "fast"
+  | "ocr_only"
+  | "auto";
+
+type StringWithAutocomplete<T> = T | (string & Record<never, never>);
 
 type UnstructuredLoaderOptions = {
   apiKey?: string;
   apiUrl?: string;
-  strategy?: UnstructuredLoaderStrategy;
+  strategy?: StringWithAutocomplete<UnstructuredLoaderStrategy>;
   encoding?: string;
   ocrLanguages?: Array<string>;
   coordinates?: boolean;
@@ -65,7 +71,8 @@ export class UnstructuredLoader extends BaseDocumentLoader {
 
   private apiKey?: string;
 
-  private strategy: UnstructuredLoaderStrategy = "hi_res";
+  private strategy: StringWithAutocomplete<UnstructuredLoaderStrategy> =
+    "hi_res";
 
   private encoding?: string;
 

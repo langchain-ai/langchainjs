@@ -38,7 +38,7 @@ test("Test Unstructured base loader with fast strategy", async () => {
   const options = {
     apiKey: process.env.UNSTRUCTURED_API_KEY!,
     strategy: "fast",
-  } as const;
+  };
 
   const loader = new UnstructuredLoader(filePath, options);
   const docs = await loader.load();
@@ -56,7 +56,7 @@ test("Test Unstructured directory loader", async () => {
   const options = {
     apiKey: process.env.UNSTRUCTURED_API_KEY!,
     strategy: "fast",
-  } as const;
+  };
 
   const loader = new UnstructuredDirectoryLoader(
     directoryPath,
