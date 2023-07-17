@@ -78,6 +78,7 @@ export const calculateMaxTokens = async ({
     );
 
     // fallback to approximate calculation if tiktoken is not available
+    // each token is ~4 characters: https://help.openai.com/en/articles/4936856-what-are-tokens-and-how-to-count-them#
     numTokens = Math.ceil(prompt.length / 4);
   }
 
