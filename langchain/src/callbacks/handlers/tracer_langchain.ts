@@ -1,9 +1,9 @@
-import { Client } from "langchainplus-sdk";
+import { Client } from "langsmith";
 import {
   BaseRun,
   RunCreate,
   RunUpdate as BaseRunUpdate,
-} from "langchainplus-sdk/schemas";
+} from "langsmith/schemas";
 import {
   getEnvironmentVariable,
   getRuntimeEnvironment,
