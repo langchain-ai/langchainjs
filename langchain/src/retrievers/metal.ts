@@ -17,10 +17,10 @@ export class MetalRetriever extends BaseRetriever {
 
   private client: Metal;
 
-  constructor({ client, ...rest }: MetalRetrieverFields) {
-    super(rest);
+  constructor(fields: MetalRetrieverFields) {
+    super(fields);
 
-    this.client = client;
+    this.client = fields.client;
   }
 
   async _getRelevantDocuments(query: string): Promise<Document[]> {
