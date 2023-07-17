@@ -24,11 +24,11 @@ test("Test HNSWLib Retriever with Callback", async () => {
       {
         handleRetrieverStart: async (_, query) => {
           expect(query).toBe(queryStr);
-          startRun++;
+          startRun += 1;
         },
         handleRetrieverEnd: async (documents) => {
           expect(documents[0].pageContent).toBe(pageContent);
-          endRun++;
+          endRun += 1;
         },
       },
     ],
@@ -67,11 +67,11 @@ test("Test Memory Retriever with Callback", async () => {
       {
         handleRetrieverStart: async (_, query) => {
           expect(query).toBe(queryStr);
-          startRun++;
+          startRun += 1;
         },
         handleRetrieverEnd: async (documents) => {
           expect(documents[0].pageContent).toBe(pageContent);
-          endRun++;
+          endRun += 1;
         },
       },
     ],
@@ -114,11 +114,11 @@ test("Test Faiss Retriever with Callback", async () => {
       {
         handleRetrieverStart: async (_, query) => {
           expect(query).toBe(queryStr);
-          startRun++;
+          startRun += 1;
         },
         handleRetrieverEnd: async (documents) => {
           expect(documents[0].pageContent).toBe(pageContent);
-          endRun++;
+          endRun += 1;
         },
       },
     ],
