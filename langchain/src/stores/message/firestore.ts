@@ -1,6 +1,5 @@
-import * as firebaseAdmin from "firebase-admin";
+import type { AppOptions } from "firebase-admin";
 import { getApps, initializeApp } from "firebase-admin/app";
-
 import {
   getFirestore,
   DocumentData,
@@ -8,6 +7,7 @@ import {
   DocumentReference,
   FieldValue,
 } from "firebase-admin/firestore";
+
 import {
   StoredMessage,
   BaseMessage,
@@ -23,7 +23,7 @@ export interface FirestoreDBChatMessageHistory {
   sessionId: string;
   userId: string;
   appIdx?: number;
-  config?: firebaseAdmin.AppOptions;
+  config?: AppOptions;
 }
 export class FirestoreChatMessageHistory extends BaseListChatMessageHistory {
   lc_namespace = ["langchain", "stores", "message", "firestore"];
@@ -36,7 +36,7 @@ export class FirestoreChatMessageHistory extends BaseListChatMessageHistory {
 
   private appIdx: number;
 
-  private config: firebaseAdmin.AppOptions;
+  private config: AppOptions;
 
   private firestoreClient: Firestore;
 
