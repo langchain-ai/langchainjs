@@ -79,6 +79,9 @@ embeddings/hf.d.ts
 embeddings/googlevertexai.cjs
 embeddings/googlevertexai.js
 embeddings/googlevertexai.d.ts
+embeddings/googlepalm.cjs
+embeddings/googlepalm.js
+embeddings/googlepalm.d.ts
 llms.cjs
 llms.js
 llms.d.ts
@@ -109,6 +112,9 @@ llms/replicate.d.ts
 llms/googlevertexai.cjs
 llms/googlevertexai.js
 llms/googlevertexai.d.ts
+llms/googlepalm.cjs
+llms/googlepalm.js
+llms/googlepalm.d.ts
 llms/sagemaker_endpoint.cjs
 llms/sagemaker_endpoint.js
 llms/sagemaker_endpoint.d.ts
@@ -307,6 +313,9 @@ chat_models/anthropic.d.ts
 chat_models/googlevertexai.cjs
 chat_models/googlevertexai.js
 chat_models/googlevertexai.d.ts
+chat_models/googlepalm.cjs
+chat_models/googlepalm.js
+chat_models/googlepalm.d.ts
 chat_models/baiduwenxin.cjs
 chat_models/baiduwenxin.js
 chat_models/baiduwenxin.d.ts

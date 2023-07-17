@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.109",
+  "version": "0.0.110",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -91,6 +91,9 @@
     "embeddings/googlevertexai.cjs",
     "embeddings/googlevertexai.js",
     "embeddings/googlevertexai.d.ts",
+    "embeddings/googlepalm.cjs",
+    "embeddings/googlepalm.js",
+    "embeddings/googlepalm.d.ts",
     "llms.cjs",
     "llms.js",
     "llms.d.ts",
@@ -121,6 +124,9 @@
     "llms/googlevertexai.cjs",
     "llms/googlevertexai.js",
     "llms/googlevertexai.d.ts",
+    "llms/googlepalm.cjs",
+    "llms/googlepalm.js",
+    "llms/googlepalm.d.ts",
     "llms/sagemaker_endpoint.cjs",
     "llms/sagemaker_endpoint.js",
     "llms/sagemaker_endpoint.d.ts",
@@ -319,6 +325,9 @@
     "chat_models/googlevertexai.cjs",
     "chat_models/googlevertexai.js",
     "chat_models/googlevertexai.d.ts",
+    "chat_models/googlepalm.cjs",
+    "chat_models/googlepalm.js",
+    "chat_models/googlepalm.d.ts",
     "chat_models/baiduwenxin.cjs",
     "chat_models/baiduwenxin.js",
     "chat_models/baiduwenxin.d.ts",
@@ -497,6 +506,7 @@
     "@getmetal/metal-sdk": "^4.0.0",
     "@getzep/zep-js": "^0.4.1",
     "@gomomento/sdk": "^1.23.0",
+    "@google-ai/generativelanguage": "^0.2.1",
     "@google-cloud/storage": "^6.10.1",
     "@huggingface/inference": "^1.5.1",
     "@jest/globals": "^29.5.0",
@@ -541,7 +551,7 @@
     "eslint-plugin-no-instanceof": "^1.0.1",
     "eslint-plugin-prettier": "^4.2.1",
     "faiss-node": "^0.2.1",
-    "google-auth-library": "^8.8.0",
+    "google-auth-library": "^8.9.0",
     "graphql": "^16.6.0",
     "hnswlib-node": "^1.4.2",
     "html-to-text": "^9.0.5",
@@ -585,6 +595,7 @@
     "@getmetal/metal-sdk": "*",
     "@getzep/zep-js": "^0.4.1",
     "@gomomento/sdk": "^1.23.0",
+    "@google-ai/generativelanguage": "^0.2.1",
     "@google-cloud/storage": "^6.10.1",
     "@huggingface/inference": "^1.5.1",
     "@notionhq/client": "^2.2.5",
@@ -607,7 +618,7 @@
     "d3-dsv": "^2.0.0",
     "epub2": "^3.0.1",
     "faiss-node": "^0.2.1",
-    "google-auth-library": "^8.8.0",
+    "google-auth-library": "^8.9.0",
     "hnswlib-node": "^1.4.2",
     "html-to-text": "^9.0.5",
     "ignore": "^5.2.0",
@@ -660,6 +671,9 @@
       "optional": true
     },
     "@gomomento/sdk": {
+      "optional": true
+    },
+    "@google-ai/generativelanguage": {
       "optional": true
     },
     "@google-cloud/storage": {
@@ -981,6 +995,11 @@
       "import": "./embeddings/googlevertexai.js",
       "require": "./embeddings/googlevertexai.cjs"
     },
+    "./embeddings/googlepalm": {
+      "types": "./embeddings/googlepalm.d.ts",
+      "import": "./embeddings/googlepalm.js",
+      "require": "./embeddings/googlepalm.cjs"
+    },
     "./llms": {
       "node": {
         "types": "./llms.d.ts",
@@ -1032,6 +1051,11 @@
       "types": "./llms/googlevertexai.d.ts",
       "import": "./llms/googlevertexai.js",
       "require": "./llms/googlevertexai.cjs"
+    },
+    "./llms/googlepalm": {
+      "types": "./llms/googlepalm.d.ts",
+      "import": "./llms/googlepalm.js",
+      "require": "./llms/googlepalm.cjs"
     },
     "./llms/sagemaker_endpoint": {
       "types": "./llms/sagemaker_endpoint.d.ts",
@@ -1368,6 +1392,11 @@
       "types": "./chat_models/googlevertexai.d.ts",
       "import": "./chat_models/googlevertexai.js",
       "require": "./chat_models/googlevertexai.cjs"
+    },
+    "./chat_models/googlepalm": {
+      "types": "./chat_models/googlepalm.d.ts",
+      "import": "./chat_models/googlepalm.js",
+      "require": "./chat_models/googlepalm.cjs"
     },
     "./chat_models/baiduwenxin": {
       "types": "./chat_models/baiduwenxin.d.ts",
