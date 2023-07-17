@@ -1,5 +1,5 @@
-import { Example, Run } from "langchainplus-sdk";
-import { EvaluationResult, RunEvaluator } from "langchainplus-sdk/evaluation";
+import { Example, Run } from "langsmith";
+import { EvaluationResult, RunEvaluator } from "langsmith/evaluation";
 import { BaseOutputParser } from "../../schema/output_parser.js";
 import { LLMChain } from "../../chains/llm_chain.js";
 import { BaseChain } from "../../chains/base.js";
