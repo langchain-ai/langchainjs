@@ -7,7 +7,9 @@ export interface TextSplitterParams {
   chunkSize: number;
   chunkOverlap: number;
   keepSeparator: boolean;
-  lengthFunction?: (text: string) => number;
+  lengthFunction?:
+    | ((text: string) => number)
+    | ((text: string) => Promise<number>);
 }
 
 export type TextSplitterChunkHeaderOptions = {
@@ -28,14 +30,17 @@ export abstract class TextSplitter
 
   keepSeparator = false;
 
-  lengthFunction: (text: string) => number = (text: string) => text.length;
+  lengthFunction:
+    | ((text: string) => number)
+    | ((text: string) => Promise<number>);
 
   constructor(fields?: Partial<TextSplitterParams>) {
     super(fields);
     this.chunkSize = fields?.chunkSize ?? this.chunkSize;
     this.chunkOverlap = fields?.chunkOverlap ?? this.chunkOverlap;
     this.keepSeparator = fields?.keepSeparator ?? this.keepSeparator;
-    this.lengthFunction = fields?.lengthFunction ?? ((text) => text.length);
+    this.lengthFunction =
+      fields?.lengthFunction ?? ((text: string) => text.length);
     if (this.chunkOverlap >= this.chunkSize) {
       throw new Error("Cannot have chunkOverlap >= chunkSize");
     }
@@ -95,7 +100,7 @@ export abstract class TextSplitter
         if (prevChunk) {
           const indexChunk = text.indexOf(chunk);
           const indexEndPrevChunk =
-            text.indexOf(prevChunk) + this.lengthFunction(prevChunk);
+            text.indexOf(prevChunk) + (await this.lengthFunction(prevChunk));
           const removedNewlinesFromSplittingText = text.slice(
             indexEndPrevChunk,
             indexChunk
@@ -154,12 +159,12 @@ export abstract class TextSplitter
     return text === "" ? null : text;
   }
 
-  mergeSplits(splits: string[], separator: string): string[] {
+  async mergeSplits(splits: string[], separator: string): Promise<string[]> {
     const docs: string[] = [];
     const currentDoc: string[] = [];
     let total = 0;
     for (const d of splits) {
-      const _len = this.lengthFunction(d);
+      const _len = await this.lengthFunction(d);
       if (
         total + _len + (currentDoc.length > 0 ? separator.length : 0) >
         this.chunkSize
@@ -182,7 +187,7 @@ which is longer than the specified ${this.chunkSize}`
             total > this.chunkOverlap ||
             (total + _len > this.chunkSize && total > 0)
           ) {
-            total -= this.lengthFunction(currentDoc[0]);
+            total -= await this.lengthFunction(currentDoc[0]);
             currentDoc.shift();
           }
         }
@@ -285,11 +290,11 @@ export class RecursiveCharacterTextSplitter
     let goodSplits: string[] = [];
     const _separator = this.keepSeparator ? "" : separator;
     for (const s of splits) {
-      if (this.lengthFunction(s) < this.chunkSize) {
+      if ((await this.lengthFunction(s)) < this.chunkSize) {
         goodSplits.push(s);
       } else {
         if (goodSplits.length) {
-          const mergedText = this.mergeSplits(goodSplits, _separator);
+          const mergedText = await this.mergeSplits(goodSplits, _separator);
           finalChunks.push(...mergedText);
           goodSplits = [];
         }
@@ -302,7 +307,7 @@ export class RecursiveCharacterTextSplitter
       }
     }
     if (goodSplits.length) {
-      const mergedText = this.mergeSplits(goodSplits, _separator);
+      const mergedText = await this.mergeSplits(goodSplits, _separator);
       finalChunks.push(...mergedText);
     }
     return finalChunks;
