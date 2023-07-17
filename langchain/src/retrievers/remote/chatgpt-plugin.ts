@@ -30,7 +30,7 @@ export class ChatGPTPluginRetriever
   extends RemoteRetriever
   implements ChatGPTPluginRetrieverParams
 {
-  lc_namespace = ["langchain", "retrievers", "remote", "chatgpt_plugin"];
+  lc_namespace = ["langchain", "retrievers", "remote", "chatgpt-plugin"];
 
   topK: number;
 

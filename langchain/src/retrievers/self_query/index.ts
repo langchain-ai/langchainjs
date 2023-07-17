@@ -28,12 +28,7 @@ export class SelfQueryRetriever
   implements SelfQueryRetrieverArgs
 {
   get lc_namespace() {
-    return [
-      "langchain",
-      "retrievers",
-      "self_query",
-      this.vectorStore.vectorstoreType(),
-    ];
+    return ["langchain", "retrievers", "self_query"];
   }
 
   vectorStore: VectorStore;

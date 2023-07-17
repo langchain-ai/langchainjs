@@ -21,7 +21,7 @@ export class VectorStoreRetriever<
   V extends VectorStore = VectorStore
 > extends BaseRetriever {
   get lc_namespace() {
-    return ["langchain", "retrievers", this._vectorstoreType()];
+    return ["langchain", "retrievers", "base"];
   }
 
   vectorStore: V;
@@ -64,7 +64,7 @@ export class VectorStoreRetriever<
 export abstract class VectorStore extends Serializable {
   declare FilterType: object;
 
-  lc_namespace = ["langchain", "vector_stores", this.vectorstoreType()];
+  lc_namespace = ["langchain", "vectorstores", this.vectorstoreType()];
 
   embeddings: Embeddings;
 

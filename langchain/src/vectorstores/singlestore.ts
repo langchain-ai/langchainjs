@@ -92,7 +92,7 @@ export class SingleStoreVectorStore extends VectorStore {
   distanceMetric: DistanceMetrics;
 
   vectorstoreType(): string {
-    return "single_store";
+    return "singlestore";
   }
 
   constructor(embeddings: Embeddings, config: SingleStoreVectorStoreConfig) {

@@ -26,12 +26,7 @@ export const BUFFER_IDX = "buffer_idx";
  */
 export class TimeWeightedVectorStoreRetriever extends BaseRetriever {
   get lc_namespace() {
-    return [
-      "langchain",
-      "retrievers",
-      "time_weighted",
-      this.vectorStore.vectorstoreType(),
-    ];
+    return ["langchain", "retrievers", "time_weighted"];
   }
 
   /**
