@@ -42,23 +42,22 @@ type CSVLoaderOptions = {
 };
 
 export class CSVLoader extends TextLoader {
+  protected options: CSVLoaderOptions = {};
+
   constructor(
     filePathOrBlob: string | Blob,
-    public column?: string | CSVLoaderOptions
+    options?: CSVLoaderOptions | string
   ) {
     super(filePathOrBlob);
+    if (typeof options === "string") {
+      this.options = { column: options };
+    } else {
+      this.options = options ?? this.options;
+    }
   }
 
   protected async parse(raw: string): Promise<string[]> {
-    let options;
-
-    if (typeof this.column === "string" || this.column === undefined) {
-      options = { column: this.column };
-    } else {
-      options = this.column;
-    }
-
-    const { column, separator = "," } = options;
+    const { column, separator = "," } = this.options;
 
     const { dsvFormat } = await CSVLoaderImports();
     const psv = dsvFormat(separator);
