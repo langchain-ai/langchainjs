@@ -136,3 +136,7 @@
   margin-bottom: 0.2rem;
   font-weight: 600;
 }
+
+.hidden {
+  display: none;
+}
