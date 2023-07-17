@@ -6,7 +6,7 @@ import { ConversationChain } from "langchain/chains";
 const memory = new BufferMemory({
   chatHistory: new FirestoreChatMessageHistory({
     collectionName: "langchain",
-    sessionId: "LLMChain",
+    sessionId: "lc-example",
     userId: "a@example.com",
     config: { projectId: "your-project-id" },
   }),

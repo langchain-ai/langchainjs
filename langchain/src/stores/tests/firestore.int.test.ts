@@ -13,7 +13,7 @@ const sessionId = Date.now().toString();
 // firebase emulators:start --only firestore --project your-project-id
 // FIRESTORE_EMULATOR_HOST="localhost:8080" yarn test:single -- firestore.int.test.ts
 
-test("Test firestore message history store", async () => {
+test.skip("Test firestore message history store", async () => {
   const messageHistory = new FirestoreChatMessageHistory({
     collectionName: "langchain",
     sessionId,
@@ -47,7 +47,7 @@ test("Test firestore message history store", async () => {
   expect(await messageHistory.getMessages()).toEqual([]);
 });
 
-test("Test firestore message history store in a BufferMemory", async () => {
+test.skip("Test firestore message history store in a BufferMemory", async () => {
   const memory = new BufferMemory({
     returnMessages: true,
     chatHistory: new FirestoreChatMessageHistory({
@@ -72,7 +72,7 @@ test("Test firestore message history store in a BufferMemory", async () => {
   expect(await memory.loadMemoryVariables({})).toEqual({ history: [] });
 });
 
-test("Test firestore message history store in an LLM chain", async () => {
+test.skip("Test firestore message history store in an LLM chain", async () => {
   const memory = new BufferMemory({
     chatHistory: new FirestoreChatMessageHistory({
       collectionName: "langchain",
