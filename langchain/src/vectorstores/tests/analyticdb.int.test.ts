@@ -7,22 +7,22 @@ import { Document } from "../../document.js";
 import { OpenAIEmbeddings } from "../../embeddings/openai.js";
 
 const connectionOptions = {
-  host: process.env.PG_HOST || "localhost",
-  port: Number(process.env.PG_PORT) || 5432,
-  database: process.env.PG_DATABASE || "your_database",
-  user: process.env.PG_USERNAME || "username",
-  password: process.env.PG_PASSWORD || "password",
+  host: process.env.ANALYTICDB_HOST || "localhost",
+  port: Number(process.env.ANALYTICDB_PORT) || 5432,
+  database: process.env.ANALYTICDB_DATABASE || "your_database",
+  user: process.env.ANALYTICDB_USERNAME || "username",
+  password: process.env.ANALYTICDB_PASSWORD || "password",
 };
 
 const embeddings = new OpenAIEmbeddings();
 const _LANGCHAIN_DEFAULT_EMBEDDING_DIM = 1536;
 
 beforeAll(async () => {
-  expect(process.env.PG_HOST).toBeDefined();
-  expect(process.env.PG_PORT).toBeDefined();
-  expect(process.env.PG_DATABASE).toBeDefined();
-  expect(process.env.PG_USERNAME).toBeDefined();
-  expect(process.env.PG_USERNAME).toBeDefined();
+  expect(process.env.ANALYTICDB_HOST).toBeDefined();
+  expect(process.env.ANALYTICDB_PORT).toBeDefined();
+  expect(process.env.ANALYTICDB_DATABASE).toBeDefined();
+  expect(process.env.ANALYTICDB_USERNAME).toBeDefined();
+  expect(process.env.ANALYTICDB_USERNAME).toBeDefined();
 });
 
 test.skip("test analyticdb", async () => {
