@@ -23,6 +23,7 @@ export default function SearchBarWrapper() {
         dialogPlaceholder="How do I use a LLM Chain?"
         messageSettings={{ openSourcesInNewTab: false, prettySources: true }}
         showSimpleSearch
+        isPinnable
       />
     </div>
   );

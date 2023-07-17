@@ -49,6 +49,9 @@ export interface OptionalImportMap {
   "langchain/embeddings/googlevertexai"?:
     | typeof import("../embeddings/googlevertexai.js")
     | Promise<typeof import("../embeddings/googlevertexai.js")>;
+  "langchain/embeddings/googlepalm"?:
+    | typeof import("../embeddings/googlepalm.js")
+    | Promise<typeof import("../embeddings/googlepalm.js")>;
   "langchain/llms/load"?:
     | typeof import("../llms/load.js")
     | Promise<typeof import("../llms/load.js")>;
@@ -64,6 +67,9 @@ export interface OptionalImportMap {
   "langchain/llms/googlevertexai"?:
     | typeof import("../llms/googlevertexai.js")
     | Promise<typeof import("../llms/googlevertexai.js")>;
+  "langchain/llms/googlepalm"?:
+    | typeof import("../llms/googlepalm.js")
+    | Promise<typeof import("../llms/googlepalm.js")>;
   "langchain/llms/sagemaker_endpoint"?:
     | typeof import("../llms/sagemaker_endpoint.js")
     | Promise<typeof import("../llms/sagemaker_endpoint.js")>;
@@ -211,6 +217,9 @@ export interface OptionalImportMap {
   "langchain/chat_models/googlevertexai"?:
     | typeof import("../chat_models/googlevertexai.js")
     | Promise<typeof import("../chat_models/googlevertexai.js")>;
+  "langchain/chat_models/googlepalm"?:
+    | typeof import("../chat_models/googlepalm.js")
+    | Promise<typeof import("../chat_models/googlepalm.js")>;
   "langchain/sql_db"?:
     | typeof import("../sql_db.js")
     | Promise<typeof import("../sql_db.js")>;
@@ -288,6 +297,7 @@ export interface SecretMap {
   COHERE_API_KEY?: string;
   DATABERRY_API_KEY?: string;
   GOOGLE_API_KEY?: string;
+  GOOGLE_PALM_API_KEY?: string;
   HUGGINGFACEHUB_API_KEY?: string;
   MILVUS_PASSWORD?: string;
   MILVUS_SSL?: string;
