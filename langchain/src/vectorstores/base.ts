@@ -150,10 +150,47 @@ export abstract class VectorStore extends Serializable {
   }
 
   asRetriever(
+    retrieverFields: VectorStoreRetrieverInput<this>
+  ): VectorStoreRetriever<this>;
+
+  asRetriever(
     k?: number,
-    filter?: this["FilterType"]
+    filter?: this["FilterType"],
+    callbacks?: Callbacks,
+    tags?: string[],
+    metadata?: Record<string, unknown>,
+    verbose?: boolean
+  ): VectorStoreRetriever<this>;
+
+  asRetriever(
+    kOrFields?: number | VectorStoreRetrieverInput<this>,
+    filter?: this["FilterType"],
+    callbacks?: Callbacks,
+    tags?: string[],
+    metadata?: Record<string, unknown>,
+    verbose?: boolean
   ): VectorStoreRetriever<this> {
-    return new VectorStoreRetriever({ vectorStore: this, k, filter });
+    if (typeof kOrFields === "number") {
+      return new VectorStoreRetriever({
+        vectorStore: this,
+        k: kOrFields,
+        filter,
+        tags,
+        metadata,
+        verbose,
+        callbacks,
+      });
+    } else {
+      return new VectorStoreRetriever({
+        vectorStore: this,
+        k: kOrFields?.k,
+        filter: kOrFields?.filter,
+        tags: kOrFields?.tags,
+        metadata: kOrFields?.metadata,
+        verbose: kOrFields?.verbose,
+        callbacks: kOrFields?.callbacks,
+      });
+    }
   }
 }
 

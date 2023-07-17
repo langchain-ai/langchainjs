@@ -13,10 +13,10 @@ import { Serializable } from "../load/serializable.js";
  */
 
 export interface BaseRetrieverInput {
+  callbacks?: Callbacks;
   tags?: string[];
   metadata?: Record<string, unknown>;
   verbose?: boolean;
-  callbacks?: Callbacks;
 }
 
 export abstract class BaseRetriever extends Serializable {
