@@ -80,7 +80,10 @@ const description = "Silly Math Dataset";
 const inputKeys = ["input"];
 const outputKeys = ["output"];
 // Check if dataset name exists in listDatasets
-const datasets = await client.listDatasets();
+const datasets: Dataset[] = [];
+for await (const dataset of client.listDatasets()) {
+  datasets.push(dataset);
+}
 if (!datasets.map((d: Dataset) => d.name).includes(datasetName)) {
   await client.uploadCsv({
     csvFile: blobData,
