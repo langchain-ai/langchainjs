@@ -4,19 +4,19 @@
   "private": true,
   "scripts": {
     "build": "bash ./local_build.sh",
-    "dev": "yarn build & nodemon --watch ./snippets/ -e mdx,md --exec \"bash\" ./compile_docs.sh & wait"
+    "dev": "yarn build & nodemon -e mdx,md --exec \"bash\" ./compile_docs.sh & wait"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
   },
   "nodemonConfig": {
     "watch": [
-      "./src/schema",
-      "./build"
+      "./snippets/",
+      "./extras/"
     ],
     "ext": "mdx,md",
     "events": {
-      "restart": "rsync -av --checksum ./snippets/ ./_dist/snippets/"
+      "restart": "rsync -av --checksum ./snippets/ ./_dist/snippets/ && rsync -av --checksum ./extras/ ./_dist/docs_skeleton/docs/"
     }
   },
   "engines": {

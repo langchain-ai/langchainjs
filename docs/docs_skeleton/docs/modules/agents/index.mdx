@@ -26,7 +26,7 @@ At a high-level an action agent:
 4. Decides the next step using the history of tools, tool inputs, and observations
 5. Repeats 3-4 until it determines it can respond directly to the user
 
-Action agents are wrapped in **agent executors**, which are responsible for calling the agent, getting back an action and action input, calling the tool that the action references with the generated input, getting the output of the tool, and then passing all that information back into the agent to get the next action it should take.
+Action agents are wrapped in **agent executors**, chains which are responsible for calling the agent, getting back an action and action input, calling the tool that the action references with the generated input, getting the output of the tool, and then passing all that information back into the agent to get the next action it should take.
 
 Although an agent can be constructed in many ways, it typically involves these components:
 

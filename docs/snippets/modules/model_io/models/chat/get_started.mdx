@@ -47,7 +47,7 @@ const chat = new ChatOpenAI({});
 The chat model interface is based around messages rather than raw text.
 The types of messages currently supported in LangChain are `AIMessage`, `HumanMessage`, `SystemMessage`, `FunctionMessage`, and `ChatMessage` -- `ChatMessage` takes in an arbitrary role parameter. Most of the time, you'll just be dealing with `HumanMessage`, `AIMessage`, and `SystemMessage`
 
-### `__call__`
+### `call`
 #### Messages in -> message out
 
 You can get chat completions by passing one or more messages to the chat model. The response will be a message.
