@@ -460,9 +460,6 @@
     "experimental/plan_and_execute.cjs",
     "experimental/plan_and_execute.js",
     "experimental/plan_and_execute.d.ts",
-    "client.cjs",
-    "client.js",
-    "client.d.ts",
     "evaluation.cjs",
     "evaluation.js",
     "evaluation.d.ts",
@@ -1619,11 +1616,6 @@
       "types": "./experimental/plan_and_execute.d.ts",
       "import": "./experimental/plan_and_execute.js",
       "require": "./experimental/plan_and_execute.cjs"
-    },
-    "./client": {
-      "types": "./client.d.ts",
-      "import": "./client.js",
-      "require": "./client.cjs"
     },
     "./evaluation": {
       "types": "./evaluation.d.ts",
