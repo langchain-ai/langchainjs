@@ -42,8 +42,6 @@ export class FirestoreChatMessageHistory extends BaseListChatMessageHistory {
 
   private document: DocumentReference<DocumentData> | null;
 
-  private messages: BaseMessage[];
-
   constructor({
     collectionName,
     sessionId,
@@ -57,17 +55,16 @@ export class FirestoreChatMessageHistory extends BaseListChatMessageHistory {
     this.userId = userId;
     this.document = null;
     this.appIdx = appIdx;
-    this.messages = [];
     if (config) this.config = config;
 
     try {
-      this.prepareFirestore();
+      this.ensureFirestore();
     } catch (error) {
       throw new Error(`Unknown response type`);
     }
   }
 
-  private prepareFirestore(): void {
+  private ensureFirestore(): void {
     let app;
     // Check if the app is already initialized else get appIdx
     if (!getApps().length) app = initializeApp(this.config);
@@ -99,14 +96,10 @@ export class FirestoreChatMessageHistory extends BaseListChatMessageHistory {
       response.push({ type, data });
     });
 
-    if (response.length > 0) {
-      this.messages = mapStoredMessagesToChatMessages(response);
-    }
-
-    return this.messages;
+    return mapStoredMessagesToChatMessages(response);
   }
 
-  protected async addMessage(message: BaseMessage) {
+  public async addMessage(message: BaseMessage) {
     const messages = mapChatMessagesToStoredMessages([message]);
     await this.upsertMessage(messages[0]);
   }
@@ -122,7 +115,7 @@ export class FirestoreChatMessageHistory extends BaseListChatMessageHistory {
       },
       { merge: true }
     );
-    this.document
+    await this.document
       .collection("messages")
       .add({
         type: message.type,
@@ -136,7 +129,6 @@ export class FirestoreChatMessageHistory extends BaseListChatMessageHistory {
   }
 
   public async clear(): Promise<void> {
-    this.messages = [];
     if (!this.document) {
       throw new Error("Document not initialized");
     }
