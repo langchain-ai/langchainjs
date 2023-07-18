@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.110",
+  "version": "0.0.111",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -436,6 +436,9 @@
     "stores/message/dynamodb.cjs",
     "stores/message/dynamodb.js",
     "stores/message/dynamodb.d.ts",
+    "stores/message/firestore.cjs",
+    "stores/message/firestore.js",
+    "stores/message/firestore.d.ts",
     "stores/message/momento.cjs",
     "stores/message/momento.js",
     "stores/message/momento.d.ts",
@@ -460,9 +463,6 @@
     "experimental/plan_and_execute.cjs",
     "experimental/plan_and_execute.js",
     "experimental/plan_and_execute.d.ts",
-    "client.cjs",
-    "client.js",
-    "client.d.ts",
     "evaluation.cjs",
     "evaluation.js",
     "evaluation.d.ts",
@@ -551,6 +551,7 @@
     "eslint-plugin-no-instanceof": "^1.0.1",
     "eslint-plugin-prettier": "^4.2.1",
     "faiss-node": "^0.2.1",
+    "firebase-admin": "^11.9.0",
     "google-auth-library": "^8.9.0",
     "graphql": "^16.6.0",
     "hnswlib-node": "^1.4.2",
@@ -618,6 +619,7 @@
     "d3-dsv": "^2.0.0",
     "epub2": "^3.0.1",
     "faiss-node": "^0.2.1",
+    "firebase-admin": "^11.9.0",
     "google-auth-library": "^8.9.0",
     "hnswlib-node": "^1.4.2",
     "html-to-text": "^9.0.5",
@@ -742,6 +744,9 @@
     "faiss-node": {
       "optional": true
     },
+    "firebase-admin": {
+      "optional": true
+    },
     "google-auth-library": {
       "optional": true
     },
@@ -823,7 +828,7 @@
     "js-tiktoken": "^1.0.7",
     "js-yaml": "^4.1.0",
     "jsonpointer": "^5.0.1",
-    "langsmith": "^0.0.5",
+    "langsmith": "^0.0.9",
     "ml-distance": "^4.0.0",
     "object-hash": "^3.0.0",
     "openai": "^3.3.0",
@@ -1580,6 +1585,11 @@
       "import": "./stores/message/dynamodb.js",
       "require": "./stores/message/dynamodb.cjs"
     },
+    "./stores/message/firestore": {
+      "types": "./stores/message/firestore.d.ts",
+      "import": "./stores/message/firestore.js",
+      "require": "./stores/message/firestore.cjs"
+    },
     "./stores/message/momento": {
       "types": "./stores/message/momento.d.ts",
       "import": "./stores/message/momento.js",
@@ -1619,11 +1629,6 @@
       "types": "./experimental/plan_and_execute.d.ts",
       "import": "./experimental/plan_and_execute.js",
       "require": "./experimental/plan_and_execute.cjs"
-    },
-    "./client": {
-      "types": "./client.d.ts",
-      "import": "./client.js",
-      "require": "./client.cjs"
     },
     "./evaluation": {
       "types": "./evaluation.d.ts",
