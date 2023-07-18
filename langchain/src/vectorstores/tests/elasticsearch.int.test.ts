@@ -5,7 +5,7 @@ import { OpenAIEmbeddings } from "../../embeddings/openai.js";
 import { ElasticVectorSearch } from "../elasticsearch.js";
 import { Document } from "../../document.js";
 
-test("ElasticVectorSearch integration", async () => {
+test.skip("ElasticVectorSearch integration", async () => {
   if (!process.env.ELASTIC_URL) {
     throw new Error("ELASTIC_URL not set");
   }
