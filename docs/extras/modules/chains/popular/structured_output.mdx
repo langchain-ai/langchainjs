@@ -13,7 +13,7 @@ Must be used with an [OpenAI functions](https://platform.openai.com/docs/guides/
 This chain leverages OpenAI functions to output objects that match a given format for any given prompt.
 It converts input schema into an OpenAI function, then forces OpenAI to call that function to return a response in the correct format.
 
-You can use it where you would use a chain with a [`StructuredOutputParser`](../../prompts/output_parsers) without any special
+You can use it where you would use a chain with a [`StructuredOutputParser`](/docs/modules/model_io/output_parsers) without any special
 instructions stuffed into the prompt. It will also more reliably output structured results with higher `temperature` values, making it better suited
 for more creative applications.
 
@@ -35,5 +35,5 @@ import GenerateExample from "@examples/chains/openai_functions_structured_genera
 
 ### Customization
 
-This chain takes all the same arguments as a standard [`LLMChain`](../llm_chain) minus an `outputParser`. It will also be created with a default model set to `gpt-3.5-turbo-0613`,
+This chain takes all the same arguments as a standard [`LLMChain`](/docs/modules/chains/foundational/llm_chain) minus an `outputParser`. It will also be created with a default model set to `gpt-3.5-turbo-0613`,
 but you can pass an options parameter into the input parameters with a pre-created `ChatOpenAI` instance as `llm`.

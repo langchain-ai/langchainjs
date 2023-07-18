@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "build": "bash ./build.sh",
-    "dev": "yarn build & nodemon -e mdx,md --exec \"bash\" ./nodemon.sh & wait"
+    "start": "bash ./start.sh",
+    "dev": "yarn build && yarn start & nodemon -e mdx,md --exec \"bash\" ./nodemon.sh & wait"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"

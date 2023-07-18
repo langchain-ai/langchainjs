@@ -6,20 +6,3 @@ import StreamingExample from "@examples/models/llm/llm_streaming.ts";
 <CodeBlock language="typescript">{StreamingExample}</CodeBlock>
 
 We still have access to the end `LLMResult` if using `generate`. However, `token_usage` is not currently supported for streaming.
-
-
-```python
-llm.generate(["Tell me a joke."])
-```
-
-<CodeOutputBlock lang="python">
-
-```
-    Q: What did the fish say when it hit the wall?
-    A: Dam!
-
-
-    LLMResult(generations=[[Generation(text='\n\nQ: What did the fish say when it hit the wall?\nA: Dam!', generation_info={'finish_reason': 'stop', 'logprobs': None})]], llm_output={'token_usage': {}, 'model_name': 'text-davinci-003'})
-```
-
-</CodeOutputBlock>
