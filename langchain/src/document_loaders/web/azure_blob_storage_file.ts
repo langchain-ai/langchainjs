@@ -1,6 +1,6 @@
-import * as fs from "node:fs";
-import * as path from "node:path";
-import * as os from "node:os";
+import * as fs from "fs";
+import * as path from "path";
+import * as os from "os";
 import { BlobServiceClient } from "@azure/storage-blob";
 import { BaseDocumentLoader } from "../base.js";
 import { UnstructuredLoader } from "../fs/unstructured.js";
@@ -37,9 +37,9 @@ export class AzureBlobStorageFileLoader extends BaseDocumentLoader {
     const filePath = path.join(tempDir, this.blobName);
 
     fs.mkdirSync(path.dirname(filePath), { recursive: true });
-    
+
     await blobClient.downloadToFile(filePath);
-    
+
     try {
       const unstructuredLoader = new UnstructuredLoader(filePath);
 
