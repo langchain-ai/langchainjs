@@ -26,3 +26,18 @@ Copy the config object snippet, then add it to your firebase functions Firestore
 import Example from "@examples/memory/firestore.ts";
 
 <CodeBlock language="typescript">{Example}</CodeBlock>
+
+
+## Firestore Rules
+
+If your collection name is "chathistory," you can configure Firestore rules as follows.
+```
+      match /chathistory/{sessionId} {
+       allow read: if request.auth.uid == resource.data.createdBy;
+       allow write: if request.auth.uid == request.resource.data.createdBy;
+			 } 
+			 match /chathistory/{sessionId}/messages/{messageId} {
+       allow read: if request.auth.uid == resource.data.createdBy;
+       allow write: if request.auth.uid == request.resource.data.createdBy;
+		    }
+```
