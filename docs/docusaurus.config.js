@@ -153,7 +153,7 @@ const config = {
         title: "🦜️🔗 LangChain",
         items: [
           {
-            href: "https://docs.langsmith.com/",
+            href: "https://smith.langchain.com/",
             label: "LangSmith",
             position: "right",
           },
