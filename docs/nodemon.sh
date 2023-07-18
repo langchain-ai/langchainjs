@@ -1,1 +1,1 @@
-echo "Copying changes..."
+echo "Watching for changes..."
