@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.110",
+  "version": "0.0.111",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -439,6 +439,9 @@
     "stores/message/dynamodb.cjs",
     "stores/message/dynamodb.js",
     "stores/message/dynamodb.d.ts",
+    "stores/message/firestore.cjs",
+    "stores/message/firestore.js",
+    "stores/message/firestore.d.ts",
     "stores/message/momento.cjs",
     "stores/message/momento.js",
     "stores/message/momento.d.ts",
@@ -552,6 +555,7 @@
     "eslint-plugin-no-instanceof": "^1.0.1",
     "eslint-plugin-prettier": "^4.2.1",
     "faiss-node": "^0.2.1",
+    "firebase-admin": "^11.9.0",
     "google-auth-library": "^8.9.0",
     "graphql": "^16.6.0",
     "hnswlib-node": "^1.4.2",
@@ -620,6 +624,7 @@
     "d3-dsv": "^2.0.0",
     "epub2": "^3.0.1",
     "faiss-node": "^0.2.1",
+    "firebase-admin": "^11.9.0",
     "google-auth-library": "^8.9.0",
     "hnswlib-node": "^1.4.2",
     "html-to-text": "^9.0.5",
@@ -743,6 +748,9 @@
       "optional": true
     },
     "faiss-node": {
+      "optional": true
+    },
+    "firebase-admin": {
       "optional": true
     },
     "google-auth-library": {
@@ -1590,6 +1598,11 @@
       "types": "./stores/message/dynamodb.d.ts",
       "import": "./stores/message/dynamodb.js",
       "require": "./stores/message/dynamodb.cjs"
+    },
+    "./stores/message/firestore": {
+      "types": "./stores/message/firestore.d.ts",
+      "import": "./stores/message/firestore.js",
+      "require": "./stores/message/firestore.cjs"
     },
     "./stores/message/momento": {
       "types": "./stores/message/momento.d.ts",

@@ -274,6 +274,9 @@ export interface OptionalImportMap {
   "langchain/stores/message/dynamodb"?:
     | typeof import("../stores/message/dynamodb.js")
     | Promise<typeof import("../stores/message/dynamodb.js")>;
+  "langchain/stores/message/firestore"?:
+    | typeof import("../stores/message/firestore.js")
+    | Promise<typeof import("../stores/message/firestore.js")>;
   "langchain/stores/message/momento"?:
     | typeof import("../stores/message/momento.js")
     | Promise<typeof import("../stores/message/momento.js")>;
