@@ -63,7 +63,7 @@ abstract class BaseCallbackHandlerMethodsClass {
    * Called when an LLM/ChatModel in `streaming` mode produces a new function call
    */
   handleLLMNewFunctionCall?(
-    function_call: { name?: string; arguments?: string },
+    functionCall: { name?: string; arguments?: string },
     idx: NewTokenIndices,
     runId: string,
     parentRunId?: string,

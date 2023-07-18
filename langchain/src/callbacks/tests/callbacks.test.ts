@@ -61,7 +61,7 @@ class FakeCallbackHandler extends BaseCallbackHandler {
     this.llmStreams += 1;
   }
 
-  async handleLLMNewFunctionCall(_function_call: object): Promise<void> {
+  async handleLLMNewFunctionCall(_functionCall: object): Promise<void> {
     this.llmFunctionCalls += 1;
   }
 

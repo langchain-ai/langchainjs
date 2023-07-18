@@ -150,7 +150,7 @@ export class CallbackManagerForLLMRun
   }
 
   async handleLLMNewFunctionCall(
-    function_call: { name?: string; arguments?: string },
+    functionCall: { name?: string; arguments?: string },
     idx: NewTokenIndices = { prompt: 0, completion: 0 }
   ) {
     await Promise.all(
@@ -159,7 +159,7 @@ export class CallbackManagerForLLMRun
           if (!handler.ignoreLLM) {
             try {
               await handler.handleLLMNewFunctionCall?.(
-                function_call,
+                functionCall,
                 idx,
                 this.runId,
                 this._parentRunId,
