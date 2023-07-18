@@ -227,7 +227,7 @@ export class AnalyticDBVectorStore extends VectorStore {
     const filterEntries = filter ? Object.entries(filter) : [];
     if (filterEntries.length > 0) {
       const conditions = filterEntries.map(
-        ([key, value]) => `metadata->>'${key}' = '${value}'`
+        (_, index) => `metadata->>$${2 * index + 3} = $${2 * index + 4}`
       );
       filterCondition = `WHERE ${conditions.join(" AND ")}`;
     }
@@ -241,7 +241,11 @@ export class AnalyticDBVectorStore extends VectorStore {
     `;
 
     // Execute the query and fetch the results
-    const { rows } = await this.pool.query(sqlQuery, [query, k]);
+    const { rows } = await this.pool.query(sqlQuery, [
+      query,
+      k,
+      ...filterEntries.flatMap(([key, value]) => [key, value]),
+    ]);
 
     const result: [Document, number][] = rows.map((row) => [
       new Document({ pageContent: row.document, metadata: row.metadata }),
