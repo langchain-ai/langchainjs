@@ -454,6 +454,9 @@ experimental/plan_and_execute.d.ts
 evaluation.cjs
 evaluation.js
 evaluation.d.ts
+evaluation/qa.cjs
+evaluation/qa.js
+evaluation/qa.d.ts
 index.cjs
 index.js
 index.d.ts

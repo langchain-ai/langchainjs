@@ -49,3 +49,4 @@ export * from "langchain/experimental/babyagi";
 export * from "langchain/experimental/generative_agents";
 export * from "langchain/experimental/plan_and_execute";
 export * from "langchain/evaluation";
+export * from "langchain/evaluation/qa";

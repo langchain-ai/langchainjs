@@ -466,6 +466,9 @@
     "evaluation.cjs",
     "evaluation.js",
     "evaluation.d.ts",
+    "evaluation/qa.cjs",
+    "evaluation/qa.js",
+    "evaluation/qa.d.ts",
     "index.cjs",
     "index.js",
     "index.d.ts"
@@ -1634,6 +1637,11 @@
       "types": "./evaluation.d.ts",
       "import": "./evaluation.js",
       "require": "./evaluation.cjs"
+    },
+    "./evaluation/qa": {
+      "types": "./evaluation/qa.d.ts",
+      "import": "./evaluation/qa.js",
+      "require": "./evaluation/qa.cjs"
     },
     "./package.json": "./package.json"
   }

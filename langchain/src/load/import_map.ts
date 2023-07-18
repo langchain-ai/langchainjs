@@ -50,3 +50,4 @@ export * as experimental__babyagi from "../experimental/babyagi/index.js";
 export * as experimental__generative_agents from "../experimental/generative_agents/index.js";
 export * as experimental__plan_and_execute from "../experimental/plan_and_execute/index.js";
 export * as evaluation from "../evaluation/index.js";
+export * as evaluation__qa from "../evaluation/qa/index.js";
