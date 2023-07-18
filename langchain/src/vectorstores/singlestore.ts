@@ -91,7 +91,7 @@ export class SingleStoreVectorStore extends VectorStore {
 
   distanceMetric: DistanceMetrics;
 
-  vectorstoreType(): string {
+  _vectorstoreType(): string {
     return "singlestore";
   }
 

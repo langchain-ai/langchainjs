@@ -28,7 +28,7 @@ export class MongoVectorStore extends VectorStore {
 
   indexName: string;
 
-  vectorstoreType(): string {
+  _vectorstoreType(): string {
     return "mongodb";
   }
 

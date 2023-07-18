@@ -80,7 +80,7 @@ export class WeaviateStore extends VectorStore {
 
   private queryAttrs: string[];
 
-  vectorstoreType(): string {
+  _vectorstoreType(): string {
     return "weaviate";
   }
 

@@ -88,7 +88,7 @@ export class Typesense extends VectorStore {
     collectionName: string
   ) => Promise<void>;
 
-  vectorstoreType(): string {
+  _vectorstoreType(): string {
     return "typesense";
   }
 

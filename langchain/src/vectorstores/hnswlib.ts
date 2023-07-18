@@ -26,7 +26,7 @@ export class HNSWLib extends SaveableVectorStore {
 
   args: HNSWLibBase;
 
-  vectorstoreType(): string {
+  _vectorstoreType(): string {
     return "hnswlib";
   }
 

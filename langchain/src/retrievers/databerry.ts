@@ -36,7 +36,6 @@ export class DataberryRetriever extends BaseRetriever {
 
   apiKey?: string;
 
-  // constructor({ datastoreUrl, apiKey, topK, ...rest }: DataberryRetrieverArgs) {
   constructor(fields: DataberryRetrieverArgs) {
     super(fields);
     const { datastoreUrl, apiKey, topK, ...rest } = fields;

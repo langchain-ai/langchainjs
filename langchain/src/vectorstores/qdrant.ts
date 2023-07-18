@@ -36,7 +36,7 @@ export class QdrantVectorStore extends VectorStore {
 
   collectionConfig: QdrantSchemas["CreateCollection"];
 
-  vectorstoreType(): string {
+  _vectorstoreType(): string {
     return "qdrant";
   }
 

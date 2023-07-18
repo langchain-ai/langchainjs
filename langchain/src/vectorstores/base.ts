@@ -31,7 +31,7 @@ export class VectorStoreRetriever<
   filter?: V["FilterType"];
 
   _vectorstoreType(): string {
-    return this.vectorStore.vectorstoreType();
+    return this.vectorStore._vectorstoreType();
   }
 
   constructor(fields: VectorStoreRetrieverInput<V>) {
@@ -64,7 +64,7 @@ export class VectorStoreRetriever<
 export abstract class VectorStore extends Serializable {
   declare FilterType: object;
 
-  lc_namespace = ["langchain", "vectorstores", this.vectorstoreType()];
+  lc_namespace = ["langchain", "vectorstores", this._vectorstoreType()];
 
   embeddings: Embeddings;
 
@@ -74,7 +74,7 @@ export abstract class VectorStore extends Serializable {
     this.embeddings = embeddings;
   }
 
-  abstract vectorstoreType(): string;
+  abstract _vectorstoreType(): string;
 
   abstract addVectors(
     vectors: number[][],

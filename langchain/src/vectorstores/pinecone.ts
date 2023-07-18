@@ -36,7 +36,7 @@ export class PineconeStore extends VectorStore {
 
   filter?: PineconeMetadata;
 
-  vectorstoreType(): string {
+  _vectorstoreType(): string {
     return "pinecone";
   }
 

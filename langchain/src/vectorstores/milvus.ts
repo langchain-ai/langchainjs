@@ -92,7 +92,7 @@ export class Milvus extends VectorStore {
 
   indexSearchParams = JSON.stringify({ ef: 64 });
 
-  vectorstoreType(): string {
+  _vectorstoreType(): string {
     return "milvus";
   }
 

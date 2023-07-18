@@ -33,7 +33,7 @@ export class TypeORMVectorStore extends VectorStore {
 
   _verbose?: boolean;
 
-  vectorstoreType(): string {
+  _vectorstoreType(): string {
     return "typeorm";
   }
 

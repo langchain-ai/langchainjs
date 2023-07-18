@@ -21,7 +21,7 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
 
   embeddingKey: string;
 
-  vectorstoreType(): string {
+  _vectorstoreType(): string {
     return "mongodb_atlas";
   }
 

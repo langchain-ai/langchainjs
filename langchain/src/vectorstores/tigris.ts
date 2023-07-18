@@ -12,7 +12,7 @@ export type TigrisLibArgs = {
 export class TigrisVectorStore extends VectorStore {
   index?: VectorDocumentStoreT;
 
-  vectorstoreType(): string {
+  _vectorstoreType(): string {
     return "tigris";
   }
 

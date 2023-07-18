@@ -21,7 +21,7 @@ export class FaissStore extends SaveableVectorStore {
 
   args: FaissLibArgs;
 
-  vectorstoreType(): string {
+  _vectorstoreType(): string {
     return "faiss";
   }
 

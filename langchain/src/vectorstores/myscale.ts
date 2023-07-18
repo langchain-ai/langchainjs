@@ -51,7 +51,7 @@ export class MyScaleStore extends VectorStore {
 
   private isInitialized = false;
 
-  vectorstoreType(): string {
+  _vectorstoreType(): string {
     return "myscale";
   }
 

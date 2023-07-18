@@ -74,7 +74,7 @@ export class RedisVectorStore extends VectorStore {
 
   filter?: RedisVectorStoreFilterType;
 
-  vectorstoreType(): string {
+  _vectorstoreType(): string {
     return "redis";
   }
 

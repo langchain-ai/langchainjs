@@ -40,7 +40,7 @@ export class Chroma extends VectorStore {
 
   filter?: object;
 
-  vectorstoreType(): string {
+  _vectorstoreType(): string {
     return "chroma";
   }
 

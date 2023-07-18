@@ -41,7 +41,7 @@ export class SupabaseVectorStore extends VectorStore {
 
   filter?: SupabaseMetadata | SupabaseFilterRPCCall;
 
-  vectorstoreType(): string {
+  _vectorstoreType(): string {
     return "supabase";
   }
 

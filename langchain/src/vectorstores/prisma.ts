@@ -118,7 +118,7 @@ export class PrismaVectorStore<
 
   protected Prisma: PrismaNamespace;
 
-  vectorstoreType(): string {
+  _vectorstoreType(): string {
     return "prisma";
   }
 

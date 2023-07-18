@@ -41,7 +41,7 @@ export class OpenSearchVectorStore extends VectorStore {
 
   private readonly m: number;
 
-  vectorstoreType(): string {
+  _vectorstoreType(): string {
     return "opensearch";
   }
 

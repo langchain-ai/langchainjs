@@ -58,7 +58,7 @@ export class VectaraStore extends VectorStore {
 
   private verbose: boolean;
 
-  vectorstoreType(): string {
+  _vectorstoreType(): string {
     return "vectara";
   }
 

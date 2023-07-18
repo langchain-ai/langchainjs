@@ -28,7 +28,7 @@ export class LanceDB extends VectorStore {
     );
   }
 
-  vectorstoreType(): string {
+  _vectorstoreType(): string {
     return "lancedb";
   }
 
