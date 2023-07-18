@@ -451,9 +451,6 @@ experimental/generative_agents.d.ts
 experimental/plan_and_execute.cjs
 experimental/plan_and_execute.js
 experimental/plan_and_execute.d.ts
-client.cjs
-client.js
-client.d.ts
 evaluation.cjs
 evaluation.js
 evaluation.d.ts

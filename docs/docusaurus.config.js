@@ -153,19 +153,14 @@ const config = {
         title: "🦜️🔗 LangChain",
         items: [
           {
-            href: "https://docs.langchain.com/docs/",
-            label: "Concepts",
-            position: "left",
+            href: "https://smith.langchain.com/",
+            label: "LangSmith",
+            position: "right",
           },
           {
             href: "https://python.langchain.com/en/latest/",
             label: "Python Docs",
-            position: "left",
-          },
-          {
-            to: "/docs/",
-            label: "JS/TS Docs",
-            position: "left",
+            position: "right",
           },
           // Please keep GitHub link to the right for consistency.
           {
