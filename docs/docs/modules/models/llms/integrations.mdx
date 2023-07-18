@@ -156,6 +156,14 @@ const res = await model.call(
 console.log({ res });
 ```
 
+You can run other models, such as Llama 2, through Replicate by changing the `model` parameter like this:
+
+import ReplicateLlama2 from "@examples/models/llm/replicate_llama2.ts";
+
+<CodeBlock language="typescript">{ReplicateLlama2}</CodeBlock>
+
+You can find the full model name on [Replicate's website](https://replicate.com/explore).
+
 ## AWS `SageMakerEndpoint`
 
 Check [Amazon SageMaker JumpStart](https://aws.amazon.com/sagemaker/jumpstart/) for a list of available models, and how to deploy your own.
