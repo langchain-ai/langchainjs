@@ -56,8 +56,14 @@ import GooglePaLMExample from "@examples/models/embeddings/googlepalm.ts";
 
 ## `Google Vertex AI`
 
-The `GoogleVertexAIEmbeddings` class uses Google's Vertex AI PaLM models
-to generate embeddings for a given text.
+There are two embedding classes available through Google Clouds's Vertex AI platform:
+
+- The `GoogleVertexAIEmbeddings` class uses the PaLM models to generate embeddings
+  for a given text.
+- The `GoogleVertexAIImageEmbeddings` class uses a different model that can
+  create embeddings for both text and images where the embeddings occupy the
+  same vector space. So you can compare images to images or compare text to
+  images.
 
 The Vertex AI implementation is meant to be used in Node.js and not
 directly in a browser, since it requires a service account to use.
@@ -82,8 +88,24 @@ import GoogleVertexAIExample from "@examples/models/embeddings/googlevertexai.ts
 
 <CodeBlock language="typescript">{GoogleVertexAIExample}</CodeBlock>
 
-**Note:** The default Google Vertex AI embeddings model, `textembedding-gecko`, has a different number of dimensions than OpenAI's `text-embedding-ada-002` model
-and may not be supported by all vector store providers.
+The `GoogleVertexAIImageEmbeddings` class provides additional methods that are
+parallels to the `embedDocuments()` and `embedQuery()` methods:
+
+- `embedImage()` and `embedImageQuery()` take node `Buffer` objects that are expected to
+  contain an image.
+- `embedMedia()` and `embedMediaQuery()` take an object that contain a `text` string
+  field, an `image` Buffer field, or both and returns a similarly constructed object
+  containing the respective vectors.
+
+import GoogleVertexAIImageExample from "@examples/models/embeddings/googlevertexai_image.ts";
+
+<CodeBlock language="typescript">{GoogleVertexAIImageExample}</CodeBlock>
+
+**Note:** The Google Vertex AI embeddings models have different vector sizes
+than OpenAI's standard model, so some vector stores may not handle them correctly.
+
+- The `textembedding-gecko` model in `GoogleVertexAIEmbeddings` provides 768 dimensions.
+- The `multimodalembedding@001` model in `GoogleVertexAIImageEmbeddings` provides 1408 dimensions.
 
 ## `CohereEmbeddings`
 
