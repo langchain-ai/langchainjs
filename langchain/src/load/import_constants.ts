@@ -91,6 +91,7 @@ export const optionalImportEntrypoints = [
   "langchain/stores/doc/gcs",
   "langchain/stores/file/node",
   "langchain/stores/message/dynamodb",
+  "langchain/stores/message/firestore",
   "langchain/stores/message/momento",
   "langchain/stores/message/redis",
   "langchain/stores/message/ioredis",
