@@ -185,6 +185,7 @@ const entrypoints = {
   client: "client/index",
   // evaluation
   evaluation: "evaluation/index",
+  "evaluation/qa": "evaluation/qa/index",
 };
 
 // Entrypoints in this list will
