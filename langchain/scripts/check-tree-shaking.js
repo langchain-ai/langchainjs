@@ -33,6 +33,8 @@ export function listExternals() {
     "@zilliz/milvus2-sdk-node/dist/milvus/const/Milvus.js",
     "@zilliz/milvus2-sdk-node/dist/milvus/types.js",
     "notion-to-md/build/utils/notion.js",
+    "firebase-admin/app",
+    "firebase-admin/firestore",
   ];
 }
 
