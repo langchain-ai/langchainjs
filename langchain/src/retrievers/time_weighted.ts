@@ -1,10 +1,7 @@
 import { VectorStore } from "../vectorstores/base.js";
 import { Document } from "../document.js";
 import { BaseRetriever, BaseRetrieverInput } from "../schema/retriever.js";
-import {
-  CallbackManagerForRetrieverRun,
-  Callbacks,
-} from "../callbacks/manager.js";
+import { CallbackManagerForRetrieverRun } from "../callbacks/manager.js";
 
 export interface TimeWeightedVectorStoreRetrieverFields
   extends BaseRetrieverInput {
@@ -97,7 +94,7 @@ export class TimeWeightedVectorStoreRetriever extends BaseRetriever {
 
     const salientDocsAndScores = await this.getSalientDocuments(
       query,
-      runManager?.getChild()
+      runManager
     );
     const docsAndScores = { ...memoryDocsAndScores, ...salientDocsAndScores };
 
@@ -154,14 +151,14 @@ export class TimeWeightedVectorStoreRetriever extends BaseRetriever {
    */
   private async getSalientDocuments(
     query: string,
-    callbacks?: Callbacks
+    runManager?: CallbackManagerForRetrieverRun
   ): Promise<Record<number, { doc: Document; score: number }>> {
     const docAndScores: [Document, number][] =
       await this.vectorStore.similaritySearchWithScore(
         query,
         this.searchKwargs,
         undefined,
-        callbacks
+        runManager?.getChild()
       );
     const results: Record<number, { doc: Document; score: number }> = {};
     for (const [fetchedDoc, score] of docAndScores) {

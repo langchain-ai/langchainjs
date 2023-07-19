@@ -36,10 +36,16 @@ export abstract class BaseRetriever extends Serializable {
     this.verbose = fields?.verbose ?? false;
   }
 
-  abstract _getRelevantDocuments(
-    query: string,
-    callbacks?: CallbackManagerForRetrieverRun
-  ): Promise<Document[]>;
+  /**
+   * This should probably be an abstract class.
+   * Should prolly change it on next major release.
+   */
+  _getRelevantDocuments(
+    _query: string,
+    _callbacks?: CallbackManagerForRetrieverRun
+  ): Promise<Document[]> {
+    throw new Error("Not implemented!");
+  }
 
   async getRelevantDocuments(
     query: string,
