@@ -175,6 +175,8 @@
     "vectorstores/qdrant.cjs",
     "vectorstores/qdrant.js",
     "vectorstores/qdrant.d.ts",
+    "vectorstores/indexeddb.d.ts",
+    "vectorstores/indexeddb.js",
     "vectorstores/supabase.cjs",
     "vectorstores/supabase.js",
     "vectorstores/supabase.d.ts",
@@ -1143,6 +1145,10 @@
       "types": "./vectorstores/qdrant.d.ts",
       "import": "./vectorstores/qdrant.js",
       "require": "./vectorstores/qdrant.cjs"
+    },
+    "./vectorstores/indexeddb": {
+      "types": "./vectorstores/indexeddb.d.ts",
+      "import": "./vectorstores/indexeddb.js"
     },
     "./vectorstores/supabase": {
       "types": "./vectorstores/supabase.d.ts",
