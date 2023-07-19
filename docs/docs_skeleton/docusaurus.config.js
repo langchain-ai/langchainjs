@@ -52,6 +52,7 @@ const config = {
           alias: {
             "@examples": examplesPath,
             "@snippets": snippetsPath,
+            react: path.resolve('./node_modules/react'),
           },
         },
         module: {

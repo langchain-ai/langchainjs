@@ -9,7 +9,6 @@
     "langchain",
     "examples",
     "docs",
-    "docs/_dist/docs_skeleton",
     "test-exports-esbuild",
     "test-exports-esm",
     "test-exports-cjs",
