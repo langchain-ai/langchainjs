@@ -150,19 +150,6 @@ export abstract class VectorStore extends Serializable {
   }
 
   asRetriever(
-    retrieverFields: VectorStoreRetrieverInput<this>
-  ): VectorStoreRetriever<this>;
-
-  asRetriever(
-    k?: number,
-    filter?: this["FilterType"],
-    callbacks?: Callbacks,
-    tags?: string[],
-    metadata?: Record<string, unknown>,
-    verbose?: boolean
-  ): VectorStoreRetriever<this>;
-
-  asRetriever(
     kOrFields?: number | VectorStoreRetrieverInput<this>,
     filter?: this["FilterType"],
     callbacks?: Callbacks,

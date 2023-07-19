@@ -37,8 +37,9 @@ export abstract class BaseRetriever extends Serializable {
   }
 
   /**
-   * This should probably be an abstract class.
-   * Should prolly change it on next major release.
+   * TODO: This should be an abstract method, but we'd like to avoid breaking
+   * changes to people currently using subclassed custom retrievers.
+   * Change it on next major release.
    */
   _getRelevantDocuments(
     _query: string,
