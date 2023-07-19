@@ -59,6 +59,7 @@ const entrypoints = {
   "prompts/load": "prompts/load",
   // vectorstores
   vectorstores: "vectorstores/index",
+  "vectorstores/analyticdb": "vectorstores/analyticdb",
   "vectorstores/base": "vectorstores/base",
   "vectorstores/elasticsearch": "vectorstores/elasticsearch",
   "vectorstores/memory": "vectorstores/memory",
@@ -82,7 +83,6 @@ const entrypoints = {
   "vectorstores/singlestore": "vectorstores/singlestore",
   "vectorstores/tigris": "vectorstores/tigris",
   "vectorstores/vectara": "vectorstores/vectara",
-  "vectorstores/analyticdb": "vectorstores/analyticdb",
   // text_splitter
   text_splitter: "text_splitter",
   // memory
@@ -135,6 +135,7 @@ const entrypoints = {
   schema: "schema/index",
   "schema/output_parser": "schema/output_parser",
   "schema/query_constructor": "schema/query_constructor",
+  "schema/retriever": "schema/retriever",
   // sql_db
   sql_db: "sql_db",
   // callbacks
@@ -226,6 +227,7 @@ const requiresOptionalDependency = [
   "llms/replicate",
   "llms/sagemaker_endpoint",
   "prompts/load",
+  "vectorstores/analyticdb",
   "vectorstores/chroma",
   "vectorstores/elasticsearch",
   "vectorstores/hnswlib",
@@ -245,7 +247,6 @@ const requiresOptionalDependency = [
   "vectorstores/singlestore",
   "vectorstores/typesense",
   "vectorstores/tigris",
-  "vectorstores/analyticdb",
   "memory/zep",
   "document_loaders/web/apify_dataset",
   "document_loaders/web/cheerio",

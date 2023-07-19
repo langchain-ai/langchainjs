@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.111",
+  "version": "0.0.112",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -139,6 +139,9 @@
     "vectorstores.cjs",
     "vectorstores.js",
     "vectorstores.d.ts",
+    "vectorstores/analyticdb.cjs",
+    "vectorstores/analyticdb.js",
+    "vectorstores/analyticdb.d.ts",
     "vectorstores/base.cjs",
     "vectorstores/base.js",
     "vectorstores/base.d.ts",
@@ -208,9 +211,6 @@
     "vectorstores/vectara.cjs",
     "vectorstores/vectara.js",
     "vectorstores/vectara.d.ts",
-    "vectorstores/analyticdb.cjs",
-    "vectorstores/analyticdb.js",
-    "vectorstores/analyticdb.d.ts",
     "text_splitter.cjs",
     "text_splitter.js",
     "text_splitter.d.ts",
@@ -343,6 +343,9 @@
     "schema/query_constructor.cjs",
     "schema/query_constructor.js",
     "schema/query_constructor.d.ts",
+    "schema/retriever.cjs",
+    "schema/retriever.js",
+    "schema/retriever.d.ts",
     "sql_db.cjs",
     "sql_db.js",
     "sql_db.d.ts",
@@ -577,7 +580,7 @@
     "puppeteer": "^19.7.2",
     "redis": "^4.6.6",
     "release-it": "^15.10.1",
-    "replicate": "^0.9.0",
+    "replicate": "^0.12.3",
     "rimraf": "^5.0.1",
     "rollup": "^3.19.1",
     "sonix-speech-recognition": "^2.1.1",
@@ -642,7 +645,7 @@
     "playwright": "^1.32.1",
     "puppeteer": "^19.7.2",
     "redis": "^4.6.4",
-    "replicate": "^0.9.0",
+    "replicate": "^0.12.3",
     "sonix-speech-recognition": "^2.1.1",
     "srt-parser-2": "^1.2.2",
     "typeorm": "^0.3.12",
@@ -1093,6 +1096,11 @@
         "require": "./vectorstores.cjs"
       }
     },
+    "./vectorstores/analyticdb": {
+      "types": "./vectorstores/analyticdb.d.ts",
+      "import": "./vectorstores/analyticdb.js",
+      "require": "./vectorstores/analyticdb.cjs"
+    },
     "./vectorstores/base": {
       "types": "./vectorstores/base.d.ts",
       "import": "./vectorstores/base.js",
@@ -1207,11 +1215,6 @@
       "types": "./vectorstores/vectara.d.ts",
       "import": "./vectorstores/vectara.js",
       "require": "./vectorstores/vectara.cjs"
-    },
-    "./vectorstores/analyticdb": {
-      "types": "./vectorstores/analyticdb.d.ts",
-      "import": "./vectorstores/analyticdb.js",
-      "require": "./vectorstores/analyticdb.cjs"
     },
     "./text_splitter": {
       "types": "./text_splitter.d.ts",
@@ -1436,6 +1439,11 @@
       "types": "./schema/query_constructor.d.ts",
       "import": "./schema/query_constructor.js",
       "require": "./schema/query_constructor.cjs"
+    },
+    "./schema/retriever": {
+      "types": "./schema/retriever.d.ts",
+      "import": "./schema/retriever.js",
+      "require": "./schema/retriever.cjs"
     },
     "./sql_db": {
       "types": "./sql_db.d.ts",

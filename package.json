@@ -23,10 +23,10 @@
   "packageManager": "yarn@3.4.1",
   "scripts": {
     "ci": "turbo run ci",
-    "build": "turbo run build",
+    "build": "turbo run build --filter=\"!docs_skeleton\"",
     "format": "turbo run format",
     "format:check": "turbo run format:check",
-    "lint": "turbo run lint",
+    "lint": "turbo run lint --filter=\"!docs_skeleton\"",
     "lint:fix": "yarn lint -- --fix",
     "test": "turbo run test && yarn test:exports:docker",
     "test:unit": "turbo run test",
@@ -37,7 +37,7 @@
     "publish": "bash scripts/release-branch.sh && turbo run --filter langchain build lint test && yarn run test:exports:docker && yarn workspace langchain run release && echo '🔗 Open https://github.com/hwchase17/langchainjs/compare/release?expand=1 and merge the release PR'",
     "example": "yarn workspace examples start",
     "precommit": "turbo run precommit",
-    "docs": "yarn workspace docs start",
+    "docs": "yarn workspace docs dev",
     "postinstall": "husky install"
   },
   "author": "LangChain",

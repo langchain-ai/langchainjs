@@ -30,6 +30,22 @@ export interface VectaraFilter {
 }
 
 export class VectaraStore extends VectorStore {
+  get lc_secrets(): { [key: string]: string } {
+    return {
+      apiKey: "VECTARA_API_KEY",
+      corpusId: "VECTARA_CORPUS_ID",
+      customerId: "VECTARA_CUSTOMER_ID",
+    };
+  }
+
+  get lc_aliases(): { [key: string]: string } {
+    return {
+      apiKey: "vectara_api_key",
+      corpusId: "vectara_corpus_id",
+      customerId: "vectara_customer_id",
+    };
+  }
+
   declare FilterType: VectaraFilter;
 
   private apiEndpoint = "api.vectara.io";
@@ -41,6 +57,10 @@ export class VectaraStore extends VectorStore {
   private customerId: number;
 
   private verbose: boolean;
+
+  _vectorstoreType(): string {
+    return "vectara";
+  }
 
   constructor(args: VectaraLibArgs) {
     // Vectara doesn't need embeddings, but we need to pass something to the parent constructor

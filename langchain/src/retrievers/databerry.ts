@@ -1,8 +1,10 @@
-import { BaseRetriever } from "../schema/index.js";
+import { BaseRetriever, BaseRetrieverInput } from "../schema/retriever.js";
 import { Document } from "../document.js";
 import { AsyncCaller, AsyncCallerParams } from "../util/async_caller.js";
 
-export interface DataberryRetrieverArgs extends AsyncCallerParams {
+export interface DataberryRetrieverArgs
+  extends AsyncCallerParams,
+    BaseRetrieverInput {
   datastoreUrl: string;
   topK?: number;
   apiKey?: string;
@@ -16,6 +18,16 @@ interface Berry {
 }
 
 export class DataberryRetriever extends BaseRetriever {
+  lc_namespace = ["langchain", "retrievers", "databerry"];
+
+  get lc_secrets() {
+    return { apiKey: "DATABERRY_API_KEY" };
+  }
+
+  get lc_aliases() {
+    return { apiKey: "api_key" };
+  }
+
   caller: AsyncCaller;
 
   datastoreUrl: string;
@@ -24,8 +36,9 @@ export class DataberryRetriever extends BaseRetriever {
 
   apiKey?: string;
 
-  constructor({ datastoreUrl, apiKey, topK, ...rest }: DataberryRetrieverArgs) {
-    super();
+  constructor(fields: DataberryRetrieverArgs) {
+    super(fields);
+    const { datastoreUrl, apiKey, topK, ...rest } = fields;
 
     this.caller = new AsyncCaller(rest);
     this.datastoreUrl = datastoreUrl;
@@ -33,7 +46,7 @@ export class DataberryRetriever extends BaseRetriever {
     this.topK = topK;
   }
 
-  async getRelevantDocuments(query: string): Promise<Document[]> {
+  async _getRelevantDocuments(query: string): Promise<Document[]> {
     const r = await this.caller.call(fetch, this.datastoreUrl, {
       method: "POST",
       body: JSON.stringify({

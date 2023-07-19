@@ -40,6 +40,10 @@ export class AnalyticDBVectorStore extends VectorStore {
 
   private isCreateCollection = false;
 
+  _vectorstoreType(): string {
+    return "analyticdb";
+  }
+
   constructor(embeddings: Embeddings, args: AnalyticDBArgs) {
     super(embeddings, args);
 

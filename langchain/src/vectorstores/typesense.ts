@@ -88,6 +88,10 @@ export class Typesense extends VectorStore {
     collectionName: string
   ) => Promise<void>;
 
+  _vectorstoreType(): string {
+    return "typesense";
+  }
+
   constructor(embeddings: Embeddings, config: TypesenseConfig) {
     super(embeddings, config);
 

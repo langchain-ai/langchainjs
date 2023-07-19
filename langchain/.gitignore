@@ -127,6 +127,9 @@ prompts/load.d.ts
 vectorstores.cjs
 vectorstores.js
 vectorstores.d.ts
+vectorstores/analyticdb.cjs
+vectorstores/analyticdb.js
+vectorstores/analyticdb.d.ts
 vectorstores/base.cjs
 vectorstores/base.js
 vectorstores/base.d.ts
@@ -196,9 +199,6 @@ vectorstores/tigris.d.ts
 vectorstores/vectara.cjs
 vectorstores/vectara.js
 vectorstores/vectara.d.ts
-vectorstores/analyticdb.cjs
-vectorstores/analyticdb.js
-vectorstores/analyticdb.d.ts
 text_splitter.cjs
 text_splitter.js
 text_splitter.d.ts
@@ -331,6 +331,9 @@ schema/output_parser.d.ts
 schema/query_constructor.cjs
 schema/query_constructor.js
 schema/query_constructor.d.ts
+schema/retriever.cjs
+schema/retriever.js
+schema/retriever.d.ts
 sql_db.cjs
 sql_db.js
 sql_db.d.ts

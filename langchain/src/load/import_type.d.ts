@@ -76,6 +76,9 @@ export interface OptionalImportMap {
   "langchain/prompts/load"?:
     | typeof import("../prompts/load.js")
     | Promise<typeof import("../prompts/load.js")>;
+  "langchain/vectorstores/analyticdb"?:
+    | typeof import("../vectorstores/analyticdb.js")
+    | Promise<typeof import("../vectorstores/analyticdb.js")>;
   "langchain/vectorstores/elasticsearch"?:
     | typeof import("../vectorstores/elasticsearch.js")
     | Promise<typeof import("../vectorstores/elasticsearch.js")>;
@@ -133,9 +136,6 @@ export interface OptionalImportMap {
   "langchain/vectorstores/tigris"?:
     | typeof import("../vectorstores/tigris.js")
     | Promise<typeof import("../vectorstores/tigris.js")>;
-  "langchain/vectorstores/analyticdb"?:
-    | typeof import("../vectorstores/analyticdb.js")
-    | Promise<typeof import("../vectorstores/analyticdb.js")>;
   "langchain/memory/zep"?:
     | typeof import("../memory/zep.js")
     | Promise<typeof import("../memory/zep.js")>;
@@ -301,17 +301,29 @@ export interface SecretMap {
   BAIDU_API_KEY?: string;
   BAIDU_SECRET_KEY?: string;
   COHERE_API_KEY?: string;
+  DATABERRY_API_KEY?: string;
   GOOGLE_API_KEY?: string;
   GOOGLE_PALM_API_KEY?: string;
   HUGGINGFACEHUB_API_KEY?: string;
+  MILVUS_PASSWORD?: string;
+  MILVUS_SSL?: string;
+  MILVUS_USERNAME?: string;
   OPENAI_API_KEY?: string;
   PROMPTLAYER_API_KEY?: string;
+  QDRANT_API_KEY?: string;
+  QDRANT_URL?: string;
   REDIS_PASSWORD?: string;
   REDIS_URL?: string;
   REDIS_USERNAME?: string;
+  REMOTE_RETRIEVER_AUTH_BEARER?: string;
   REPLICATE_API_KEY?: string;
   SEARXNG_API_BASE?: string;
   UPSTASH_REDIS_REST_TOKEN?: string;
   UPSTASH_REDIS_REST_URL?: string;
+  VECTARA_API_KEY?: string;
+  VECTARA_CORPUS_ID?: string;
+  VECTARA_CUSTOMER_ID?: string;
   ZAPIER_NLA_API_KEY?: string;
+  ZEP_API_KEY?: string;
+  ZEP_API_URL?: string;
 }
