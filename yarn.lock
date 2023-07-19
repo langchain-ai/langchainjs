@@ -12694,7 +12694,7 @@ __metadata:
     js-tiktoken: ^1.0.7
     js-yaml: ^4.1.0
     jsonpointer: ^5.0.1
-    langsmith: ">=0.0.11"
+    langsmith: ~0.0.11
     mammoth: ^1.5.1
     ml-distance: ^4.0.0
     mongodb: ^5.2.0
@@ -12921,7 +12921,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"langsmith@npm:>=0.0.11":
+"langsmith@npm:~0.0.11":
   version: 0.0.11
   resolution: "langsmith@npm:0.0.11"
   dependencies:
