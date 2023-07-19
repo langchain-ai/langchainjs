@@ -3,7 +3,10 @@ import * as path from "path";
 import * as os from "os";
 import { BlobServiceClient } from "@azure/storage-blob";
 import { BaseDocumentLoader } from "../base.js";
-import { UnstructuredLoader } from "../fs/unstructured.js";
+import {
+  UnstructuredLoader,
+  UnstructuredLoaderOptions,
+} from "../fs/unstructured.js";
 
 export class AzureBlobStorageFileLoader extends BaseDocumentLoader {
   private readonly connStr: string;
@@ -12,11 +15,19 @@ export class AzureBlobStorageFileLoader extends BaseDocumentLoader {
 
   private readonly blobName: string;
 
-  constructor(connStr: string, container: string, blobName: string) {
+  private readonly unstructuredLoaderOptions: UnstructuredLoaderOptions;
+
+  constructor(
+    connStr: string,
+    container: string,
+    blobName: string,
+    unstructuredLoaderOptions: UnstructuredLoaderOptions
+  ) {
     super();
     this.connStr = connStr;
     this.container = container;
     this.blobName = blobName;
+    this.unstructuredLoaderOptions = unstructuredLoaderOptions;
   }
 
   public async load() {
@@ -41,7 +52,10 @@ export class AzureBlobStorageFileLoader extends BaseDocumentLoader {
     await blobClient.downloadToFile(filePath);
 
     try {
-      const unstructuredLoader = new UnstructuredLoader(filePath);
+      const unstructuredLoader = new UnstructuredLoader(
+        filePath,
+        this.unstructuredLoaderOptions
+      );
 
       const docs = await unstructuredLoader.load();
 

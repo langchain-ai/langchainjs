@@ -48,7 +48,7 @@ export type UnstructuredLoaderStrategy =
 
 type StringWithAutocomplete<T> = T | (string & Record<never, never>);
 
-type UnstructuredLoaderOptions = {
+export type UnstructuredLoaderOptions = {
   apiKey?: string;
   apiUrl?: string;
   strategy?: StringWithAutocomplete<UnstructuredLoaderStrategy>;
