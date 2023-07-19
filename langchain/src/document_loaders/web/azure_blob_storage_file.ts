@@ -59,6 +59,8 @@ export class AzureBlobStorageFileLoader extends BaseDocumentLoader {
 
       const docs = await unstructuredLoader.load();
 
+      fs.rmSync(path.dirname(filePath), { recursive: true, force: true });
+
       return docs;
     } catch {
       throw new Error(
