@@ -3,6 +3,7 @@ import {
   DocumentAttribute,
   DocumentAttributeValue,
   KendraClient,
+  KendraClientConfig,
   QueryCommand,
   QueryCommandOutput,
   QueryResultItem,
@@ -17,8 +18,9 @@ import { Document } from "../document.js";
 export interface KendraRetrieverArgs {
   indexId: string;
   topK: number;
-  region?: string;
+  region: string;
   attributeFilter?: AttributeFilter;
+  clientOptions?: KendraClientConfig;
 }
 
 export class KendraRetriever extends BaseRetriever {
@@ -30,12 +32,27 @@ export class KendraRetriever extends BaseRetriever {
 
   attributeFilter?: AttributeFilter;
 
-  constructor({ indexId, topK, region, attributeFilter }: KendraRetrieverArgs) {
+  constructor({
+    indexId,
+    topK = 10,
+    clientOptions,
+    attributeFilter,
+    region,
+  }: KendraRetrieverArgs) {
     super();
+
+    if (!region) {
+      throw new Error("Please pass regionName field to the constructor!");
+    }
+
+    if (!indexId) {
+      throw new Error("Please pass Kendra Index Id to the constructor");
+    }
 
     this.topK = topK;
     this.kendraClient = new KendraClient({
       region,
+      ...clientOptions,
     });
     this.attributeFilter = attributeFilter;
     this.indexId = indexId;
