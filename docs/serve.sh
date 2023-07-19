@@ -9,4 +9,4 @@ SCRIPT_DIR="$(cd "$(dirname "$0")"; pwd)"
 cd "${SCRIPT_DIR}"
 
 cd _dist/docs_skeleton
-yarn start
+yarn run serve
