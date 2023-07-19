@@ -7,7 +7,7 @@ import { ChatOpenAI } from "../../chat_models/openai.js";
 import { PromptTemplate } from "../../prompts/index.js";
 import { BufferMemory } from "../../memory/buffer_memory.js";
 
-test("Test ConversationalRetrievalQAChain from LLM", async () => {
+test.only("Test ConversationalRetrievalQAChain from LLM", async () => {
   const model = new OpenAI({ modelName: "text-ada-001" });
   const vectorStore = await HNSWLib.fromTexts(
     ["Hello world", "Bye bye", "hello nice world", "bye", "hi"],
