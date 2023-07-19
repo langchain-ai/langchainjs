@@ -13022,7 +13022,7 @@ __metadata:
     js-tiktoken: ^1.0.7
     js-yaml: ^4.1.0
     jsonpointer: ^5.0.1
-    langsmith: ^0.0.9
+    langsmith: ~0.0.11
     mammoth: ^1.5.1
     ml-distance: ^4.0.0
     mongodb: ^5.2.0
@@ -13252,9 +13252,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"langsmith@npm:^0.0.9":
-  version: 0.0.9
-  resolution: "langsmith@npm:0.0.9"
+"langsmith@npm:~0.0.11":
+  version: 0.0.11
+  resolution: "langsmith@npm:0.0.11"
   dependencies:
     "@types/uuid": ^9.0.1
     commander: ^10.0.1
@@ -13263,7 +13263,7 @@ __metadata:
     uuid: ^9.0.0
   bin:
     langsmith: dist/cli/main.cjs
-  checksum: 377ee149ec9f9cb01c2e421d04f48e9e850590382e0edfc1e4d7cda2629a8aceb100d37737ae709810a481ac8d7efb10d324af6d680912b3e622f7c908769fb3
+  checksum: 003e0ed0eb975512fc11cbc9d6880fa9bac1cf24cb963b89127d1d601e849faa2f5eff6216a6abb359f4b7c7cae96f056529e74b063af5c593fdee36e56c2249
   languageName: node
   linkType: hard
 
