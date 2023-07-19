@@ -1,114 +1,208 @@
 import {
-    KendraClient,
-    QueryCommand,
-    QueryCommandOutput,
-  } from "@aws-sdk/client-kendra";
-  
-  import { BaseRetriever } from "../schema/index.js";
-  import { Document } from "../document.js";
-  
-  export interface KendraRetrieverArgs {
-    indexId: string;
-    topK: number;
-    region?: string;
+  AttributeFilter,
+  DocumentAttribute,
+  DocumentAttributeValue,
+  KendraClient,
+  QueryCommand,
+  QueryCommandOutput,
+  QueryResultItem,
+  RetrieveCommand,
+  RetrieveCommandOutput,
+  RetrieveResultItem,
+} from "@aws-sdk/client-kendra";
+
+import { BaseRetriever } from "../schema/index.js";
+import { Document } from "../document.js";
+
+export interface KendraRetrieverArgs {
+  indexId: string;
+  topK: number;
+  region?: string;
+  attributeFilter?: AttributeFilter;
+}
+
+export class KendraRetriever extends BaseRetriever {
+  indexId: string;
+  topK: number;
+  kendraClient: KendraClient;
+  attributeFilter?: AttributeFilter;
+
+  constructor({ indexId, topK, region, attributeFilter }: KendraRetrieverArgs) {
+    super();
+
+    this.topK = topK;
+    this.kendraClient = new KendraClient({
+      region,
+    });
+    this.attributeFilter = attributeFilter;
+    this.indexId = indexId;
   }
-  
-  export class KendraRetriever extends BaseRetriever {
-    indexId: string;
-  
-    topK: number;
-  
-    kendraClient: KendraClient;
-  
-    constructor({ indexId, topK, region }: KendraRetrieverArgs) {
-      super();
-  
-      this.topK = topK;
-      this.kendraClient = new KendraClient({
-        region,
-      });
-      this.indexId = indexId;
+
+  // A method to combine title and excerpt into a single string.
+  combineText(title?: string, excerpt?: string): string {
+    let text = "";
+    if (title) {
+      text += `Document Title: ${title}\n`;
     }
-  
-    cleanResult = (resText: string) => {
-      const res = resText.replace(/\s+/g, " ").replace(/\.\.\./g, "");
-      return res;
-    };
-  
-    getTopNResults = (res: QueryCommandOutput, count: number) => {
-      // Check if Kendra returned items.
-      if (!res.ResultItems) {
-        return {
-          page_content: "No result items found.",
-          metadata: {},
-        };
+    if (excerpt) {
+      text += `Document Excerpt: \n${excerpt}\n`;
+    }
+    return text;
+  }
+
+  // A method to clean the result text by replacing sequences of whitespace with a single space and removing ellipses.
+  cleanResult(resText: string) {
+    const res = resText.replace(/\s+/g, " ").replace(/\.\.\./g, "");
+    return res;
+  }
+
+  // A method to extract the attribute value from a DocumentAttributeValue object.
+  getDocAttributeValue(value: DocumentAttributeValue) {
+    if (value.DateValue) {
+      return value.DateValue;
+    }
+    if (value.LongValue) {
+      return value.LongValue;
+    }
+    if (value.StringListValue) {
+      return value.StringListValue;
+    }
+    if (value.StringValue) {
+      return value.StringValue;
+    }
+  }
+
+  // A method to extract the attribute key-value pairs from an array of DocumentAttribute objects.
+  getDocAttributes(documentAttributes?: DocumentAttribute[]): {
+    [key: string]: any;
+  } {
+    let attributes: { [key: string]: any } = {};
+    if (documentAttributes) {
+      for (let attr of documentAttributes) {
+        if (attr.Key && attr.Value) {
+          attributes[attr.Key] = this.getDocAttributeValue(attr.Value);
+        }
       }
-  
-      const r = res.ResultItems[count];
-  
-      // Check if Kendra has properties on returned items.
-      if (
-        !r.DocumentTitle ||
-        !r.DocumentURI ||
-        !r.Type ||
-        !r.AdditionalAttributes ||
-        !r.DocumentExcerpt
-      ) {
-        return {
-          page_content: "Incomplete result item data",
-          metadata: {},
-        };
-      }
-  
-      const docTitle = r.DocumentTitle.Text;
-      const docUri = r.DocumentURI;
-      const rType = r.Type;
-  
-      const resText =
-        r?.AdditionalAttributes?.[0]?.Value?.TextWithHighlightsValue?.Text ||
-        r?.DocumentExcerpt?.Text;
-  
-      const docExcerpt = this.cleanResult(resText || "");
-      const combineText = `Document Title: ${docTitle}\nDocument Excerpt: \n${docExcerpt}\n`;
-  
-      return {
-        page_content: combineText,
-        metadata: {
-          source: docUri,
-          title: docTitle,
-          excerpt: docExcerpt,
-          type: rType,
-        },
-      };
+    }
+    return attributes;
+  }
+
+  // A method to convert a RetrieveResultItem object into a Document object.
+  convertRetrieverItem(item: RetrieveResultItem) {
+    const title = item.DocumentTitle || "";
+    const excerpt = item.Content ? this.cleanResult(item.Content) : "";
+    const pageContent = this.combineText(title, excerpt);
+    const source = item.DocumentURI;
+    const attributes = this.getDocAttributes(item.DocumentAttributes);
+    const metadata = {
+      source,
+      title,
+      excerpt,
+      document_attributes: attributes,
     };
-  
-    async getRelevantDocuments(query: string): Promise<Document[]> {
-      const command = new QueryCommand({
+
+    return new Document({ pageContent, metadata });
+  }
+
+  // A method to extract the top-k documents from a RetrieveCommandOutput object.
+  getRetrieverDocs(
+    response: RetrieveCommandOutput,
+    pageSize: number
+  ): Document[] {
+    if (!response.ResultItems) return [];
+    const length = response.ResultItems.length;
+    const count = length < pageSize ? length : pageSize;
+
+    return response.ResultItems.slice(0, count).map((item) =>
+      this.convertRetrieverItem(item)
+    );
+  }
+
+  // A method to extract the excerpt text from a QueryResultItem object.
+  getQueryItemExcerpt(item: QueryResultItem) {
+    if (
+      item.AdditionalAttributes &&
+      item.AdditionalAttributes[0].Key == "AnswerText"
+    ) {
+      if (!item.AdditionalAttributes) {
+        return "";
+      }
+      if (!item.AdditionalAttributes[0]) {
+        return "";
+      }
+
+      return this.cleanResult(
+        item.AdditionalAttributes[0].Value?.TextWithHighlightsValue?.Text || ""
+      );
+    } else if (item.DocumentExcerpt) {
+      return this.cleanResult(item.DocumentExcerpt.Text || "");
+    } else {
+      return "";
+    }
+  }
+
+  // A method to convert a QueryResultItem object into a Document object.
+  convertQueryItem(item: QueryResultItem) {
+    const title = item.DocumentTitle?.Text || "";
+    const excerpt = this.getQueryItemExcerpt(item);
+    const pageContent = this.combineText(title, excerpt);
+    const source = item.DocumentURI;
+    const attributes = this.getDocAttributes(item.DocumentAttributes);
+    const metadata = {
+      source,
+      title,
+      excerpt,
+      document_attributes: attributes,
+    };
+
+    return new Document({ pageContent, metadata });
+  }
+
+  // A method to extract the top-k documents from a QueryCommandOutput object.
+  getQueryDocs(response: QueryCommandOutput, pageSize: number) {
+    if (!response.ResultItems) return [];
+    const length = response.ResultItems.length;
+    const count = length < pageSize ? length : pageSize;
+    return response.ResultItems.slice(0, count).map((item) =>
+      this.convertQueryItem(item)
+    );
+  }
+
+  // A method to send a retrieve or query request to Kendra and return the top-k documents.
+  async queryKendra(
+    query: string,
+    topK: number,
+    attributeFilter?: AttributeFilter
+  ) {
+    const retrieveCommand = new RetrieveCommand({
+      IndexId: this.indexId,
+      QueryText: query,
+      PageSize: topK,
+      AttributeFilter: attributeFilter,
+    });
+
+    const retrieveResponse = await this.kendraClient.send(retrieveCommand);
+    const retriveLength = retrieveResponse.ResultItems?.length;
+
+    if (retriveLength === 0) {
+      // Retrieve API returned 0 results, call query API
+      const queryCommand = new QueryCommand({
         IndexId: this.indexId,
         QueryText: query,
+        PageSize: topK,
+        AttributeFilter: attributeFilter,
       });
-  
-      const response = await this.kendraClient.send(command);
-  
-      if (response.ResultItems) {
-        let rCount = 0;
-        if (response.ResultItems.length > this.topK) {
-          rCount = this.topK;
-        } else {
-          rCount = response.ResultItems.length;
-        }
-  
-        const docs = Array.from({ length: rCount }, (_, i) =>
-          this.getTopNResults(response, i)
-        );
-  
-        return docs.map(
-          (d) =>
-            new Document({ pageContent: d.page_content, metadata: d.metadata })
-        );
-      } else {
-        return [];
-      }
+
+      const queryResponse = await this.kendraClient.send(queryCommand);
+      return this.getQueryDocs(queryResponse, this.topK);
+    } else {
+      return this.getRetrieverDocs(retrieveResponse, this.topK);
     }
   }
-  
+
+  // A method to retrieve the relevant documents for a given query.
+  async getRelevantDocuments(query: string): Promise<Document[]> {
+    const docs = await this.queryKendra(query, this.topK, this.attributeFilter);
+    return docs;
+  }
+}
