@@ -424,6 +424,9 @@ stores/message/in_memory.d.ts
 stores/message/dynamodb.cjs
 stores/message/dynamodb.js
 stores/message/dynamodb.d.ts
+stores/message/firestore.cjs
+stores/message/firestore.js
+stores/message/firestore.d.ts
 stores/message/momento.cjs
 stores/message/momento.js
 stores/message/momento.d.ts
@@ -448,9 +451,6 @@ experimental/generative_agents.d.ts
 experimental/plan_and_execute.cjs
 experimental/plan_and_execute.js
 experimental/plan_and_execute.d.ts
-client.cjs
-client.js
-client.d.ts
 evaluation.cjs
 evaluation.js
 evaluation.d.ts

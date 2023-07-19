@@ -48,5 +48,4 @@ import * as experimental_autogpt from "langchain/experimental/autogpt";
 import * as experimental_babyagi from "langchain/experimental/babyagi";
 import * as experimental_generative_agents from "langchain/experimental/generative_agents";
 import * as experimental_plan_and_execute from "langchain/experimental/plan_and_execute";
-import * as client from "langchain/client";
 import * as evaluation from "langchain/evaluation";

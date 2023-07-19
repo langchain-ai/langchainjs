@@ -43,3 +43,21 @@ html: <i>Corruption discovered at the core of the Banking Clan!</i>`,
     })
   );
 });
+
+test("Test CSV loader from file with separator arg", async () => {
+  const filePath = path.resolve(
+    path.dirname(url.fileURLToPath(import.meta.url)),
+    "./example_data/example_separator.csv"
+  );
+  const loader = new CSVLoader(filePath, { separator: "｜" });
+  const docs = await loader.load();
+
+  expect(docs.length).toBe(32);
+  expect(docs[0]).toEqual(
+    new Document({
+      metadata: { source: filePath, line: 1 },
+      pageContent: `id: 1
+html: <i>Corruption discovered at the core of the Banking Clan!</i>`,
+    })
+  );
+});

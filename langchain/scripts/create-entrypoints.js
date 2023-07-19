@@ -173,6 +173,7 @@ const entrypoints = {
   "stores/file/node": "stores/file/node",
   "stores/message/in_memory": "stores/message/in_memory",
   "stores/message/dynamodb": "stores/message/dynamodb",
+  "stores/message/firestore": "stores/message/firestore",
   "stores/message/momento": "stores/message/momento",
   "stores/message/redis": "stores/message/redis",
   "stores/message/ioredis": "stores/message/ioredis",
@@ -182,7 +183,6 @@ const entrypoints = {
   "experimental/babyagi": "experimental/babyagi/index",
   "experimental/generative_agents": "experimental/generative_agents/index",
   "experimental/plan_and_execute": "experimental/plan_and_execute/index",
-  client: "client/index",
   // evaluation
   evaluation: "evaluation/index",
 };
@@ -292,6 +292,7 @@ const requiresOptionalDependency = [
   "stores/doc/gcs",
   "stores/file/node",
   "stores/message/dynamodb",
+  "stores/message/firestore",
   "stores/message/momento",
   "stores/message/redis",
   "stores/message/ioredis",
