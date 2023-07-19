@@ -235,6 +235,9 @@ export interface OptionalImportMap {
   "langchain/retrievers/metal"?:
     | typeof import("../retrievers/metal.js")
     | Promise<typeof import("../retrievers/metal.js")>;
+  "langchain/retrievers/kendra"?:
+    | typeof import("../retrievers/kendra.js")
+    | Promise<typeof import("../retrievers/kendra.js")>;
   "langchain/retrievers/self_query"?:
     | typeof import("../retrievers/self_query/index.js")
     | Promise<typeof import("../retrievers/self_query/index.js")>;

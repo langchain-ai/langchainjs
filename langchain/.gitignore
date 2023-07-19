@@ -355,6 +355,9 @@ retrievers/zep.d.ts
 retrievers/metal.cjs
 retrievers/metal.js
 retrievers/metal.d.ts
+retrievers/kendra.cjs
+retrievers/kendra.js
+retrievers/kendra.d.ts
 retrievers/databerry.cjs
 retrievers/databerry.js
 retrievers/databerry.d.ts

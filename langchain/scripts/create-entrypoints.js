@@ -108,7 +108,8 @@ const entrypoints = {
   "document_loaders/web/s3": "document_loaders/web/s3",
   "document_loaders/web/sonix_audio": "document_loaders/web/sonix_audio",
   "document_loaders/web/confluence": "document_loaders/web/confluence",
-  "document_loaders/web/sort_xyz_blockchain": "document_loaders/web/sort_xyz_blockchain",
+  "document_loaders/web/sort_xyz_blockchain":
+    "document_loaders/web/sort_xyz_blockchain",
   "document_loaders/fs/directory": "document_loaders/fs/directory",
   "document_loaders/fs/buffer": "document_loaders/fs/buffer",
   "document_loaders/fs/text": "document_loaders/fs/text",
@@ -121,7 +122,8 @@ const entrypoints = {
   "document_loaders/fs/notion": "document_loaders/fs/notion",
   "document_loaders/fs/unstructured": "document_loaders/fs/unstructured",
   // document_transformers
-  "document_transformers/openai_functions": "document_transformers/openai_functions",
+  "document_transformers/openai_functions":
+    "document_transformers/openai_functions",
   // chat_models
   chat_models: "chat_models/index",
   "chat_models/base": "chat_models/base",
@@ -147,6 +149,7 @@ const entrypoints = {
   "retrievers/supabase": "retrievers/supabase",
   "retrievers/zep": "retrievers/zep",
   "retrievers/metal": "retrievers/metal",
+  "retrievers/kendra": "retrievers/kendra",
   "retrievers/databerry": "retrievers/databerry",
   "retrievers/contextual_compression": "retrievers/contextual_compression",
   "retrievers/document_compressors": "retrievers/document_compressors/index",
@@ -277,6 +280,7 @@ const requiresOptionalDependency = [
   "retrievers/supabase",
   "retrievers/zep",
   "retrievers/metal",
+  "retrievers/kendra",
   "retrievers/self_query",
   "retrievers/self_query/chroma",
   "retrievers/self_query/functional",

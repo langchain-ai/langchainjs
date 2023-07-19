@@ -79,6 +79,7 @@ export const optionalImportEntrypoints = [
   "langchain/retrievers/supabase",
   "langchain/retrievers/zep",
   "langchain/retrievers/metal",
+  "langchain/retrievers/kendra",
   "langchain/retrievers/self_query",
   "langchain/retrievers/self_query/chroma",
   "langchain/retrievers/self_query/functional",
