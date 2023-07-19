@@ -358,6 +358,9 @@
     "retrievers.cjs",
     "retrievers.js",
     "retrievers.d.ts",
+    "retrievers/amazon_kendra.cjs",
+    "retrievers/amazon_kendra.js",
+    "retrievers/amazon_kendra.d.ts",
     "retrievers/remote.cjs",
     "retrievers/remote.js",
     "retrievers/remote.d.ts",
@@ -373,9 +376,6 @@
     "retrievers/databerry.cjs",
     "retrievers/databerry.js",
     "retrievers/databerry.d.ts",
-    "retrievers/kendra.cjs",
-    "retrievers/kendra.js",
-    "retrievers/kendra.d.ts",
     "retrievers/contextual_compression.cjs",
     "retrievers/contextual_compression.js",
     "retrievers/contextual_compression.d.ts",
@@ -1466,6 +1466,11 @@
         "require": "./retrievers.cjs"
       }
     },
+    "./retrievers/amazon_kendra": {
+      "types": "./retrievers/amazon_kendra.d.ts",
+      "import": "./retrievers/amazon_kendra.js",
+      "require": "./retrievers/amazon_kendra.cjs"
+    },
     "./retrievers/remote": {
       "types": "./retrievers/remote.d.ts",
       "import": "./retrievers/remote.js",
@@ -1490,11 +1495,6 @@
       "types": "./retrievers/databerry.d.ts",
       "import": "./retrievers/databerry.js",
       "require": "./retrievers/databerry.cjs"
-    },
-    "./retrievers/kendra": {
-      "types": "./retrievers/kendra.d.ts",
-      "import": "./retrievers/kendra.js",
-      "require": "./retrievers/kendra.cjs"
     },
     "./retrievers/contextual_compression": {
       "types": "./retrievers/contextual_compression.d.ts",

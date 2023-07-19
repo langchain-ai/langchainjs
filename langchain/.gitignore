@@ -346,6 +346,9 @@ output_parsers/expression.d.ts
 retrievers.cjs
 retrievers.js
 retrievers.d.ts
+retrievers/amazon_kendra.cjs
+retrievers/amazon_kendra.js
+retrievers/amazon_kendra.d.ts
 retrievers/remote.cjs
 retrievers/remote.js
 retrievers/remote.d.ts
@@ -358,9 +361,6 @@ retrievers/zep.d.ts
 retrievers/metal.cjs
 retrievers/metal.js
 retrievers/metal.d.ts
-retrievers/kendra.cjs
-retrievers/kendra.js
-retrievers/kendra.d.ts
 retrievers/databerry.cjs
 retrievers/databerry.js
 retrievers/databerry.d.ts

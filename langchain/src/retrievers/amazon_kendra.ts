@@ -12,10 +12,10 @@ import {
   RetrieveResultItem,
 } from "@aws-sdk/client-kendra";
 
-import { BaseRetriever } from "../schema/index.js";
+import { BaseRetriever } from "../schema/retriever.js";
 import { Document } from "../document.js";
 
-export interface KendraRetrieverArgs {
+export interface AmazonKendraRetrieverArgs {
   indexId: string;
   topK: number;
   region: string;
@@ -23,7 +23,9 @@ export interface KendraRetrieverArgs {
   clientOptions?: KendraClientConfig;
 }
 
-export class KendraRetriever extends BaseRetriever {
+export class AmazonKendraRetriever extends BaseRetriever {
+  lc_namespace = ["langchain", "retrievers", "amazon_kendra"];
+
   indexId: string;
 
   topK: number;
@@ -38,7 +40,7 @@ export class KendraRetriever extends BaseRetriever {
     clientOptions,
     attributeFilter,
     region,
-  }: KendraRetrieverArgs) {
+  }: AmazonKendraRetrieverArgs) {
     super();
 
     if (!region) {
@@ -221,8 +223,7 @@ export class KendraRetriever extends BaseRetriever {
     }
   }
 
-  // A method to retrieve the relevant documents for a given query.
-  async getRelevantDocuments(query: string): Promise<Document[]> {
+  async _getRelevantDocuments(query: string): Promise<Document[]> {
     const docs = await this.queryKendra(query, this.topK, this.attributeFilter);
     return docs;
   }

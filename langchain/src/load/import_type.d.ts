@@ -226,6 +226,9 @@ export interface OptionalImportMap {
   "langchain/output_parsers/expression"?:
     | typeof import("../output_parsers/expression.js")
     | Promise<typeof import("../output_parsers/expression.js")>;
+  "langchain/retrievers/amazon_kendra"?:
+    | typeof import("../retrievers/amazon_kendra.js")
+    | Promise<typeof import("../retrievers/amazon_kendra.js")>;
   "langchain/retrievers/supabase"?:
     | typeof import("../retrievers/supabase.js")
     | Promise<typeof import("../retrievers/supabase.js")>;
@@ -235,9 +238,6 @@ export interface OptionalImportMap {
   "langchain/retrievers/metal"?:
     | typeof import("../retrievers/metal.js")
     | Promise<typeof import("../retrievers/metal.js")>;
-  "langchain/retrievers/kendra"?:
-    | typeof import("../retrievers/kendra.js")
-    | Promise<typeof import("../retrievers/kendra.js")>;
   "langchain/retrievers/self_query"?:
     | typeof import("../retrievers/self_query/index.js")
     | Promise<typeof import("../retrievers/self_query/index.js")>;
