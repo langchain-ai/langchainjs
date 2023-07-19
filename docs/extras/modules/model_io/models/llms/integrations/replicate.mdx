@@ -1,3 +1,5 @@
+import CodeBlock from "@theme/CodeBlock";
+
 # Replicate
 
 Here's an example of calling a Replicate model as an LLM:
@@ -6,16 +8,10 @@ Here's an example of calling a Replicate model as an LLM:
 npm install replicate
 ```
 
-```typescript
-import { Replicate } from "langchain/llms/replicate";
+import ReplicateLlama2 from "@examples/models/llm/replicate_llama2.ts";
 
-const model = new Replicate({
-  model:
-    "daanelson/flan-t5:04e422a9b85baed86a4f24981d7f9953e20c5fd82f6103b74ebc431588e1cec8",
-  apiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.REPLICATE_API_KEY
-});
-const res = await model.call(
-  "What would be a good company name a company that makes colorful socks?"
-);
-console.log({ res });
-```
+<CodeBlock language="typescript">{ReplicateLlama2}</CodeBlock>
+
+You can run other models through Replicate by changing the `model` parameter.
+
+You can find a full list of models on [Replicate's website](https://replicate.com/explore).

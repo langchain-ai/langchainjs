@@ -1,10 +1,10 @@
 import CodeBlock from "@theme/CodeBlock";
 
-You can subscribe to these events by using the `callbacks` argument available throughout the API. This method accepts a list of handler objects, which are expected to implement [one or more of the methods described in the API docs](../../api/callbacks/interfaces/CallbackHandlerMethods).
+You can subscribe to these events by using the `callbacks` argument available throughout the API. This method accepts a list of handler objects, which are expected to implement [one or more of the methods described in the API docs](/docs/api/callbacks/interfaces/CallbackHandlerMethods).
 
 ## How to use callbacks
 
-The `callbacks` argument is available on most objects throughout the API ([Chains](../../modules/chains/), [Language Models](../../modules/model_io/models/), [Tools](../../modules/agents/tools/), [Agents](../../modules/agents/), etc.) in two different places.
+The `callbacks` argument is available on most objects throughout the API ([Chains](/docs/modules/chains/), [Language Models](/docs/modules/model_io/models/), [Tools](/docs/modules/agents/tools/), [Agents](/docs/modules/agents/), etc.) in two different places.
 
 ### Constructor callbacks
 
@@ -47,7 +47,7 @@ import ConsoleExample from "@examples/callbacks/console_handler.ts";
 
 ### One-off handlers
 
-You can create a one-off handler inline by passing a plain object to the `callbacks` argument. This object should implement the [`CallbackHandlerMethods`](../../api/callbacks/interfaces/CallbackHandlerMethods) interface. This is useful if eg. you need to create a handler that you will use only for a single request, eg to stream the output of an LLM/Agent/etc to a websocket.
+You can create a one-off handler inline by passing a plain object to the `callbacks` argument. This object should implement the [`CallbackHandlerMethods`](/docs/api/callbacks/interfaces/CallbackHandlerMethods) interface. This is useful if eg. you need to create a handler that you will use only for a single request, eg to stream the output of an LLM/Agent/etc to a websocket.
 
 import StreamingExample from "@examples/models/llm/llm_streaming.ts";
 
