@@ -1,1 +1,0 @@
-module.exports = require('../dist/retrievers/amazon_kendra.cjs');
