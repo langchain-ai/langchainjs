@@ -23,8 +23,11 @@ export interface KendraRetrieverArgs {
 
 export class KendraRetriever extends BaseRetriever {
   indexId: string;
+
   topK: number;
+
   kendraClient: KendraClient;
+
   attributeFilter?: AttributeFilter;
 
   constructor({ indexId, topK, region, attributeFilter }: KendraRetrieverArgs) {
@@ -70,15 +73,16 @@ export class KendraRetriever extends BaseRetriever {
     if (value.StringValue) {
       return value.StringValue;
     }
+    return "";
   }
 
   // A method to extract the attribute key-value pairs from an array of DocumentAttribute objects.
   getDocAttributes(documentAttributes?: DocumentAttribute[]): {
-    [key: string]: any;
+    [key: string]: unknown;
   } {
-    let attributes: { [key: string]: any } = {};
+    const attributes: { [key: string]: unknown } = {};
     if (documentAttributes) {
-      for (let attr of documentAttributes) {
+      for (const attr of documentAttributes) {
         if (attr.Key && attr.Value) {
           attributes[attr.Key] = this.getDocAttributeValue(attr.Value);
         }
@@ -110,7 +114,7 @@ export class KendraRetriever extends BaseRetriever {
     pageSize: number
   ): Document[] {
     if (!response.ResultItems) return [];
-    const length = response.ResultItems.length;
+    const { length } = response.ResultItems;
     const count = length < pageSize ? length : pageSize;
 
     return response.ResultItems.slice(0, count).map((item) =>
@@ -122,7 +126,7 @@ export class KendraRetriever extends BaseRetriever {
   getQueryItemExcerpt(item: QueryResultItem) {
     if (
       item.AdditionalAttributes &&
-      item.AdditionalAttributes[0].Key == "AnswerText"
+      item.AdditionalAttributes[0].Key === "AnswerText"
     ) {
       if (!item.AdditionalAttributes) {
         return "";
@@ -161,7 +165,7 @@ export class KendraRetriever extends BaseRetriever {
   // A method to extract the top-k documents from a QueryCommandOutput object.
   getQueryDocs(response: QueryCommandOutput, pageSize: number) {
     if (!response.ResultItems) return [];
-    const length = response.ResultItems.length;
+    const { length } = response.ResultItems;
     const count = length < pageSize ? length : pageSize;
     return response.ResultItems.slice(0, count).map((item) =>
       this.convertQueryItem(item)
