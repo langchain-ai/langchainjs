@@ -156,6 +156,11 @@ const config = {
         title: "🦜️🔗 LangChain",
         items: [
           {
+            href: "https://smith.langchain.com/",
+            label: "LangSmith",
+            position: "right",
+          },
+          {
             href: "https://python.langchain.com/en/latest/",
             label: "Python Docs",
             position: "right",
