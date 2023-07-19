@@ -6,6 +6,7 @@ lib/
 .eslintcache
 .env
 yarn-error.log
+docs/_dist/
 
 .yarn/*
 !.yarn/patches
