@@ -1,4 +1,4 @@
-import { BaseRetriever } from "../../schema/index.js";
+import { BaseRetriever, BaseRetrieverInput } from "../../schema/retriever.js";
 import { AsyncCaller, AsyncCallerParams } from "../../util/async_caller.js";
 import { Document } from "../../document.js";
 
@@ -6,7 +6,9 @@ export type RemoteRetrieverAuth = false | { bearer: string };
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type RemoteRetrieverValues = Record<string, any>;
 
-export interface RemoteRetrieverParams extends AsyncCallerParams {
+export interface RemoteRetrieverParams
+  extends AsyncCallerParams,
+    BaseRetrieverInput {
   /**
    * The URL of the remote retriever server
    */
@@ -24,6 +26,12 @@ export abstract class RemoteRetriever
   extends BaseRetriever
   implements RemoteRetrieverParams
 {
+  get lc_secrets(): { [key: string]: string } | undefined {
+    return {
+      "auth.bearer": "REMOTE_RETRIEVER_AUTH_BEARER",
+    };
+  }
+
   url: string;
 
   auth: RemoteRetrieverAuth;
@@ -32,8 +40,9 @@ export abstract class RemoteRetriever
 
   asyncCaller: AsyncCaller;
 
-  constructor({ url, auth, ...rest }: RemoteRetrieverParams) {
-    super();
+  constructor(fields: RemoteRetrieverParams) {
+    super(fields);
+    const { url, auth, ...rest } = fields;
     this.url = url;
     this.auth = auth;
     this.headers = {
@@ -50,7 +59,7 @@ export abstract class RemoteRetriever
 
   abstract processJsonResponse(json: RemoteRetrieverValues): Document[];
 
-  async getRelevantDocuments(query: string): Promise<Document[]> {
+  async _getRelevantDocuments(query: string): Promise<Document[]> {
     const body = this.createJsonBody(query);
     const response = await this.asyncCaller.call(() =>
       fetch(this.url, {

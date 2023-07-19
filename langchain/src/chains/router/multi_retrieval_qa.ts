@@ -9,7 +9,7 @@ import {
   ConversationChain,
   DEFAULT_TEMPLATE,
 } from "../../chains/conversation.js";
-import { BaseRetriever } from "../../schema/index.js";
+import { BaseRetriever } from "../../schema/retriever.js";
 import { STRUCTURED_MULTI_RETRIEVAL_ROUTER_TEMPLATE } from "./multi_retrieval_prompt.js";
 import { zipEntries } from "./utils.js";
 import {

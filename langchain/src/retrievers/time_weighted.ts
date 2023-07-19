@@ -1,8 +1,10 @@
 import { VectorStore } from "../vectorstores/base.js";
 import { Document } from "../document.js";
-import { BaseRetriever } from "../schema/index.js";
+import { BaseRetriever, BaseRetrieverInput } from "../schema/retriever.js";
+import { CallbackManagerForRetrieverRun } from "../callbacks/manager.js";
 
-export interface TimeWeightedVectorStoreRetrieverFields {
+export interface TimeWeightedVectorStoreRetrieverFields
+  extends BaseRetrieverInput {
   vectorStore: VectorStore;
   searchKwargs?: number;
   memoryStream?: Document[];
@@ -20,6 +22,10 @@ export const BUFFER_IDX = "buffer_idx";
  * ref: https://github.com/hwchase17/langchain/blob/master/langchain/retrievers/time_weighted_retriever.py
  */
 export class TimeWeightedVectorStoreRetriever extends BaseRetriever {
+  get lc_namespace() {
+    return ["langchain", "retrievers", "time_weighted"];
+  }
+
   /**
    * The vectorstore to store documents and determine salience.
    */
@@ -60,7 +66,7 @@ export class TimeWeightedVectorStoreRetriever extends BaseRetriever {
    * @param fields - The fields required for initializing the TimeWeightedVectorStoreRetriever
    */
   constructor(fields: TimeWeightedVectorStoreRetrieverFields) {
-    super();
+    super(fields);
     this.vectorStore = fields.vectorStore;
     this.searchKwargs = fields.searchKwargs ?? 100;
     this.memoryStream = fields.memoryStream ?? [];
@@ -79,11 +85,17 @@ export class TimeWeightedVectorStoreRetriever extends BaseRetriever {
    * @param query - The query to search for
    * @returns The relevant documents
    */
-  async getRelevantDocuments(query: string): Promise<Document[]> {
+  async _getRelevantDocuments(
+    query: string,
+    runManager?: CallbackManagerForRetrieverRun
+  ): Promise<Document[]> {
     const now = Math.floor(Date.now() / 1000);
     const memoryDocsAndScores = this.getMemoryDocsAndScores();
 
-    const salientDocsAndScores = await this.getSalientDocuments(query);
+    const salientDocsAndScores = await this.getSalientDocuments(
+      query,
+      runManager
+    );
     const docsAndScores = { ...memoryDocsAndScores, ...salientDocsAndScores };
 
     return this.computeResults(docsAndScores, now);
@@ -138,12 +150,15 @@ export class TimeWeightedVectorStoreRetriever extends BaseRetriever {
    * @returns An object containing salient documents and their scores
    */
   private async getSalientDocuments(
-    query: string
+    query: string,
+    runManager?: CallbackManagerForRetrieverRun
   ): Promise<Record<number, { doc: Document; score: number }>> {
     const docAndScores: [Document, number][] =
       await this.vectorStore.similaritySearchWithScore(
         query,
-        this.searchKwargs
+        this.searchKwargs,
+        undefined,
+        runManager?.getChild()
       );
     const results: Record<number, { doc: Document; score: number }> = {};
     for (const [fetchedDoc, score] of docAndScores) {

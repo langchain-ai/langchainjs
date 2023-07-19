@@ -1,7 +1,8 @@
 import { BaseChain, ChainInputs } from "./base.js";
 import { BaseLanguageModel } from "../base_language/index.js";
 import { SerializedVectorDBQAChain } from "./serde.js";
-import { ChainValues, BaseRetriever } from "../schema/index.js";
+import { ChainValues } from "../schema/index.js";
+import { BaseRetriever } from "../schema/retriever.js";
 import {
   StuffQAChainParams,
   loadQAStuffChain,
@@ -58,7 +59,10 @@ export class RetrievalQAChain
       throw new Error(`Question key ${this.inputKey} not found.`);
     }
     const question: string = values[this.inputKey];
-    const docs = await this.retriever.getRelevantDocuments(question);
+    const docs = await this.retriever.getRelevantDocuments(
+      question,
+      runManager?.getChild("retriever")
+    );
     const inputs = { question, input_documents: docs };
     const result = await this.combineDocumentsChain.call(
       inputs,

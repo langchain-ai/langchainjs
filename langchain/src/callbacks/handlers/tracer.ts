@@ -13,6 +13,7 @@ import {
   BaseCallbackHandlerInput,
   NewTokenIndices,
 } from "../base.js";
+import { Document } from "../../document.js";
 
 export type RunType = "llm" | "chain" | "tool";
 
@@ -353,6 +354,74 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     await this.onAgentEnd?.(run);
   }
 
+  async handleRetrieverStart(
+    retriever: Serialized,
+    query: string,
+    runId: string,
+    parentRunId?: string,
+    tags?: string[],
+    metadata?: KVMap
+  ): Promise<void> {
+    const execution_order = this._getExecutionOrder(parentRunId);
+    const start_time = Date.now();
+    const run: Run = {
+      id: runId,
+      name: retriever.id[retriever.id.length - 1],
+      parent_run_id: parentRunId,
+      start_time,
+      serialized: retriever,
+      events: [
+        {
+          name: "start",
+          time: start_time,
+        },
+      ],
+      inputs: { query },
+      execution_order,
+      child_execution_order: execution_order,
+      run_type: "retriever",
+      child_runs: [],
+      extra: metadata ? { metadata } : {},
+      tags: tags || [],
+    };
+
+    this._startTrace(run);
+    await this.onRetrieverStart?.(run);
+  }
+
+  async handleRetrieverEnd(
+    documents: Document<Record<string, unknown>>[],
+    runId: string
+  ): Promise<void> {
+    const run = this.runMap.get(runId);
+    if (!run || run?.run_type !== "retriever") {
+      throw new Error("No retriever run to end");
+    }
+    run.end_time = Date.now();
+    run.outputs = { documents };
+    run.events.push({
+      name: "end",
+      time: run.end_time,
+    });
+    await this.onRetrieverEnd?.(run);
+    await this._endTrace(run);
+  }
+
+  async handleRetrieverError(error: Error, runId: string): Promise<void> {
+    const run = this.runMap.get(runId);
+    if (!run || run?.run_type !== "retriever") {
+      throw new Error("No retriever run to end");
+    }
+    run.end_time = Date.now();
+    run.error = error.message;
+    run.events.push({
+      name: "error",
+      time: run.end_time,
+    });
+    await this.onRetrieverError?.(run);
+    await this._endTrace(run);
+  }
+
   async handleText(text: string, runId: string): Promise<void> {
     const run = this.runMap.get(runId);
     if (!run || run?.run_type !== "chain") {
@@ -406,6 +475,12 @@ export abstract class BaseTracer extends BaseCallbackHandler {
   onAgentAction?(run: Run): void | Promise<void>;
 
   onAgentEnd?(run: Run): void | Promise<void>;
+
+  onRetrieverStart?(run: Run): void | Promise<void>;
+
+  onRetrieverEnd?(run: Run): void | Promise<void>;
+
+  onRetrieverError?(run: Run): void | Promise<void>;
 
   onText?(run: Run): void | Promise<void>;
 
