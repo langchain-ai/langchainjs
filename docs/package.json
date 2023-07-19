@@ -7,6 +7,7 @@
     "start": "bash ./start.sh",
     "dev": "yarn build && yarn start & nodemon -e mdx,md --exec \"bash\" ./nodemon.sh & wait"
   },
+  "packageManager": "yarn@3.4.1",
   "devDependencies": {
     "nodemon": "^3.0.1"
   },

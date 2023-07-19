@@ -49,6 +49,7 @@
     "typedoc": "^0.24.4",
     "typedoc-plugin-markdown": "next"
   },
+  "packageManager": "yarn@3.4.1",
   "browserslist": {
     "production": [
       ">0.5%",
