@@ -1,7 +1,11 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { Embeddings } from "../embeddings/base.js";
 import { Document } from "../document.js";
-import { BaseRetriever } from "../schema/index.js";
+import { BaseRetriever, BaseRetrieverInput } from "../schema/retriever.js";
+import {
+  CallbackManagerForRetrieverRun,
+  Callbacks,
+} from "../callbacks/manager.js";
 
 interface SearchEmbeddingsParams {
   query_embedding: number[];
@@ -22,7 +26,7 @@ interface SearchResponseRow {
 
 type SearchResult = [Document, number, number];
 
-export interface SupabaseLibArgs {
+export interface SupabaseLibArgs extends BaseRetrieverInput {
   client: SupabaseClient;
   /**
    * The table name on Supabase. Defaults to "documents".
@@ -53,6 +57,8 @@ export interface SupabaseHybridSearchParams {
 }
 
 export class SupabaseHybridSearch extends BaseRetriever {
+  lc_namespace = ["langchain", "retrievers", "supabase"];
+
   similarityK: number;
 
   query: string;
@@ -70,7 +76,7 @@ export class SupabaseHybridSearch extends BaseRetriever {
   embeddings: Embeddings;
 
   constructor(embeddings: Embeddings, args: SupabaseLibArgs) {
-    super();
+    super(args);
     this.embeddings = embeddings;
     this.client = args.client;
     this.tableName = args.tableName || "documents";
@@ -82,7 +88,8 @@ export class SupabaseHybridSearch extends BaseRetriever {
 
   protected async similaritySearch(
     query: string,
-    k: number
+    k: number,
+    _callbacks?: Callbacks // implement passing to embedQuery later
   ): Promise<SearchResult[]> {
     const embeddedQuery = await this.embeddings.embedQuery(query);
 
@@ -145,9 +152,14 @@ export class SupabaseHybridSearch extends BaseRetriever {
   protected async hybridSearch(
     query: string,
     similarityK: number,
-    keywordK: number
+    keywordK: number,
+    callbacks?: Callbacks
   ): Promise<SearchResult[]> {
-    const similarity_search = this.similaritySearch(query, similarityK);
+    const similarity_search = this.similaritySearch(
+      query,
+      similarityK,
+      callbacks
+    );
 
     const keyword_search = this.keywordSearch(query, keywordK);
 
@@ -171,11 +183,15 @@ export class SupabaseHybridSearch extends BaseRetriever {
       .then((results) => results.sort((a, b) => b[1] - a[1]));
   }
 
-  async getRelevantDocuments(query: string): Promise<Document[]> {
+  async _getRelevantDocuments(
+    query: string,
+    runManager?: CallbackManagerForRetrieverRun
+  ): Promise<Document[]> {
     const searchResults = await this.hybridSearch(
       query,
       this.similarityK,
-      this.keywordK
+      this.keywordK,
+      runManager?.getChild("hybrid_search")
     );
 
     return searchResults.map(([doc]) => doc);

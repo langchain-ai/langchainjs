@@ -28,6 +28,10 @@ export class MongoVectorStore extends VectorStore {
 
   indexName: string;
 
+  _vectorstoreType(): string {
+    return "mongodb";
+  }
+
   constructor(embeddings: Embeddings, args: MongoLibArgs) {
     super(embeddings, args);
     this.collection = args.collection;

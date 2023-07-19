@@ -33,6 +33,10 @@ export class TypeORMVectorStore extends VectorStore {
 
   _verbose?: boolean;
 
+  _vectorstoreType(): string {
+    return "typeorm";
+  }
+
   private constructor(embeddings: Embeddings, fields: TypeORMVectorStoreArgs) {
     super(embeddings, fields);
     this.tableName = fields.tableName || defaultDocumentTableName;

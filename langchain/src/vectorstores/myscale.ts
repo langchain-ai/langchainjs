@@ -51,6 +51,10 @@ export class MyScaleStore extends VectorStore {
 
   private isInitialized = false;
 
+  _vectorstoreType(): string {
+    return "myscale";
+  }
+
   constructor(embeddings: Embeddings, args: MyScaleLibArgs) {
     super(embeddings, args);
 

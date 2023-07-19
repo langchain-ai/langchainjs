@@ -1,11 +1,14 @@
 import { test, expect } from "@jest/globals";
 import { MultiRetrievalQAChain } from "../multi_retrieval_qa.js";
 import { BaseLLM } from "../../../llms/base.js";
-import { BaseRetriever, LLMResult } from "../../../schema/index.js";
+import { LLMResult } from "../../../schema/index.js";
+import { BaseRetriever } from "../../../schema/retriever.js";
 import { Document } from "../../../document.js";
 import { PromptTemplate } from "../../../prompts/prompt.js";
 
 class FakeRetrievers extends BaseRetriever {
+  lc_namespace: string[] = [];
+
   name: string;
 
   constructor(name: string) {
@@ -13,7 +16,7 @@ class FakeRetrievers extends BaseRetriever {
     this.name = name;
   }
 
-  async getRelevantDocuments(query: string): Promise<Document[]> {
+  async _getRelevantDocuments(query: string): Promise<Document[]> {
     return [
       new Document({
         pageContent: `Test document ${query} ${this.name}`,
