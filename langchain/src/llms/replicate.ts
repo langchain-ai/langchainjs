@@ -69,9 +69,15 @@ export class Replicate extends LLM implements ReplicateInput {
         })
     );
 
-    // Note this is a little odd, but the output format is not consistent
-    // across models, so it makes some amount of sense.
-    return String(output);
+    if (typeof output === "string") {
+      return output;
+    } else if (Array.isArray(output)) {
+      return output.join("");
+    } else {
+      // Note this is a little odd, but the output format is not consistent
+      // across models, so it makes some amount of sense.
+      return String(output);
+    }
   }
 
   /** @ignore */

@@ -1,0 +1,23 @@
+All Self Query retrievers require `peggy` as a peer dependency:
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import CodeBlock from "@theme/CodeBlock";
+
+<Tabs>
+  <TabItem value="npm" label="npm" default>
+    <CodeBlock language="bash">npm install -S peggy</CodeBlock>
+  </TabItem>
+  <TabItem value="yarn" label="Yarn">
+    <CodeBlock language="bash">yarn add peggy</CodeBlock>
+  </TabItem>
+  <TabItem value="pnpm" label="pnpm">
+    <CodeBlock language="bash">pnpm add peggy</CodeBlock>
+  </TabItem>
+</Tabs>
+
+Here's a basic example with an in-memory, unoptimized vector store:
+
+import Example from "@examples/retrievers/memory_self_query.ts";
+
+<CodeBlock language="typescript">{Example}</CodeBlock>

@@ -185,6 +185,7 @@ export class FaissStore extends SaveableVectorStore {
           PyInMemoryDocstore
         )
         .register("langchain.schema", "Document", PyDocument)
+        .register("langchain.docstore.document", "Document", PyDocument)
         .register("pathlib", "WindowsPath", (...args) => args.join("\\"))
         .register("pathlib", "PosixPath", (...args) => args.join("/"));
 
