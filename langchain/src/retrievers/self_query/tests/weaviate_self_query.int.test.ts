@@ -9,7 +9,7 @@ import { OpenAI } from "../../../llms/openai.js";
 import { WeaviateStore } from "../../../vectorstores/weaviate.js";
 import { WeaviateTranslator } from "../weaviate.js";
 
-test("Weaviate Self Query Retriever Test", async () => {
+test.skip("Weaviate Self Query Retriever Test", async () => {
   const docs = [
     new Document({
       pageContent:

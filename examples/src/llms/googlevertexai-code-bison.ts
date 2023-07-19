@@ -1,4 +1,4 @@
-import { GoogleVertexAICode } from "langchain/llms/googlevertexai";
+import { GoogleVertexAI } from "langchain/llms/googlevertexai";
 
 /*
  * Before running this, you should make sure you have created a
@@ -13,7 +13,7 @@ import { GoogleVertexAICode } from "langchain/llms/googlevertexai";
  *   path of a credentials file for a service account permitted to the project.
  */
 
-const model = new GoogleVertexAICode({
+const model = new GoogleVertexAI({
   model: "code-bison",
   maxOutputTokens: 2048,
 });

@@ -21,20 +21,21 @@ import fetchAdapter from "../util/axios-fetch-adapter.js";
 import type { StreamingAxiosConfiguration } from "../util/axios-types.js";
 import { BaseChatModel, BaseChatModelParams } from "./base.js";
 import {
-  AIChatMessage,
-  BaseChatMessage,
+  AIMessage,
+  BaseMessage,
   ChatGeneration,
   ChatMessage,
   ChatResult,
-  HumanChatMessage,
+  HumanMessage,
   MessageType,
-  SystemChatMessage,
+  SystemMessage,
 } from "../schema/index.js";
 import { getModelNameForTiktoken } from "../base_language/count_tokens.js";
 import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
 import { promptLayerTrackRequest } from "../util/prompt-layer.js";
 import { StructuredTool } from "../tools/base.js";
 import { formatToOpenAIFunction } from "../tools/convert_to_openai.js";
+import { getEndpoint, OpenAIEndpointConfig } from "../util/azure.js";
 
 export { OpenAICallOptions, OpenAIChatInput, AzureOpenAIInput };
 
@@ -67,16 +68,16 @@ function messageTypeToOpenAIRole(
 
 function openAIResponseToChatMessage(
   message: ChatCompletionResponseMessage
-): BaseChatMessage {
+): BaseMessage {
   switch (message.role) {
     case "user":
-      return new HumanChatMessage(message.content || "");
+      return new HumanMessage(message.content || "");
     case "assistant":
-      return new AIChatMessage(message.content || "", {
+      return new AIMessage(message.content || "", {
         function_call: message.function_call,
       });
     case "system":
-      return new SystemChatMessage(message.content || "");
+      return new SystemMessage(message.content || "");
     default:
       return new ChatMessage(message.content || "", message.role ?? "unknown");
   }
@@ -86,6 +87,7 @@ export interface ChatOpenAICallOptions extends OpenAICallOptions {
   function_call?: CreateChatCompletionRequestFunctionCall;
   functions?: ChatCompletionFunctions[];
   tools?: StructuredTool[];
+  promptIndex?: number;
 }
 
 /**
@@ -99,6 +101,7 @@ export interface ChatOpenAICallOptions extends OpenAICallOptions {
  * `AZURE_OPENAI_API_INSTANCE_NAME`,
  * `AZURE_OPENAI_API_DEPLOYMENT_NAME`
  * and `AZURE_OPENAI_API_VERSION` environment variable set.
+ * `AZURE_OPENAI_BASE_PATH` is optional and will override `AZURE_OPENAI_API_INSTANCE_NAME` if you need to use a custom endpoint.
  *
  * @remarks
  * Any parameters that are valid to be passed to {@link
@@ -113,7 +116,14 @@ export class ChatOpenAI
   declare CallOptions: ChatOpenAICallOptions;
 
   get callKeys(): (keyof ChatOpenAICallOptions)[] {
-    return ["stop", "signal", "timeout", "options", "functions", "tools"];
+    return [
+      ...(super.callKeys as (keyof ChatOpenAICallOptions)[]),
+      "options",
+      "function_call",
+      "functions",
+      "tools",
+      "promptIndex",
+    ];
   }
 
   lc_serializable = true;
@@ -170,6 +180,8 @@ export class ChatOpenAI
 
   azureOpenAIApiDeploymentName?: string;
 
+  azureOpenAIBasePath?: string;
+
   private client: OpenAIApi;
 
   private clientConfig: ConfigurationParameters;
@@ -193,7 +205,7 @@ export class ChatOpenAI
       getEnvironmentVariable("AZURE_OPENAI_API_KEY");
 
     if (!this.azureOpenAIApiKey && !this.openAIApiKey) {
-      throw new Error("(Azure) OpenAI API key not found");
+      throw new Error("OpenAI or Azure OpenAI API key not found");
     }
 
     this.azureOpenAIApiInstanceName =
@@ -207,6 +219,10 @@ export class ChatOpenAI
     this.azureOpenAIApiVersion =
       fields?.azureOpenAIApiVersion ??
       getEnvironmentVariable("AZURE_OPENAI_API_VERSION");
+
+    this.azureOpenAIBasePath =
+      fields?.azureOpenAIBasePath ??
+      getEnvironmentVariable("AZURE_OPENAI_BASE_PATH");
 
     this.modelName = fields?.modelName ?? this.modelName;
     this.modelKwargs = fields?.modelKwargs ?? {};
@@ -222,10 +238,6 @@ export class ChatOpenAI
     this.stop = fields?.stop;
 
     this.streaming = fields?.streaming ?? false;
-
-    if (this.streaming && this.n > 1) {
-      throw new Error("Cannot stream results when n > 1");
-    }
 
     if (this.azureOpenAIApiKey) {
       if (!this.azureOpenAIApiInstanceName) {
@@ -249,7 +261,9 @@ export class ChatOpenAI
   /**
    * Get the parameters used to invoke the model
    */
-  invocationParams(): Omit<CreateChatCompletionRequest, "messages"> {
+  invocationParams(
+    options?: this["ParsedCallOptions"]
+  ): Omit<CreateChatCompletionRequest, "messages"> {
     return {
       model: this.modelName,
       temperature: this.temperature,
@@ -259,8 +273,14 @@ export class ChatOpenAI
       max_tokens: this.maxTokens === -1 ? undefined : this.maxTokens,
       n: this.n,
       logit_bias: this.logitBias,
-      stop: this.stop,
+      stop: options?.stop ?? this.stop,
       stream: this.streaming,
+      functions:
+        options?.functions ??
+        (options?.tools
+          ? options?.tools.map(formatToOpenAIFunction)
+          : undefined),
+      function_call: options?.function_call,
       ...this.modelKwargs,
     };
   }
@@ -283,25 +303,16 @@ export class ChatOpenAI
 
   /** @ignore */
   async _generate(
-    messages: BaseChatMessage[],
-    options?: this["ParsedCallOptions"],
+    messages: BaseMessage[],
+    options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
     const tokenUsage: TokenUsage = {};
-    if (this.stop && options?.stop) {
-      throw new Error("Stop found in input and default params");
-    }
-
-    const params = this.invocationParams();
-    params.stop = options?.stop ?? params.stop;
-    params.functions =
-      options?.functions ??
-      (options?.tools ? options?.tools.map(formatToOpenAIFunction) : undefined);
-    params.function_call = options?.function_call;
+    const params = this.invocationParams(options);
     const messagesMapped: ChatCompletionRequestMessage[] = messages.map(
       (message) => ({
         role: messageTypeToOpenAIRole(message._getType()),
-        content: message.text,
+        content: message.content,
         name: message.name,
         function_call: message.additional_kwargs
           .function_call as ChatCompletionRequestMessageFunctionCall,
@@ -409,11 +420,13 @@ export class ChatOpenAI
                         choice.message.function_call.arguments +=
                           part.delta?.function_call?.arguments ?? "";
                       }
-                      // TODO this should pass part.index to the callback
-                      // when that's supported there
                       // eslint-disable-next-line no-void
                       void runManager?.handleLLMNewToken(
-                        part.delta?.content ?? ""
+                        part.delta?.content ?? "",
+                        {
+                          prompt: options.promptIndex ?? 0,
+                          completion: part.index,
+                        }
                       );
                       // TODO we don't currently have a callback method for
                       // sending the function call arguments
@@ -485,7 +498,7 @@ export class ChatOpenAI
     };
   }
 
-  async getNumTokensFromMessages(messages: BaseChatMessage[]): Promise<{
+  async getNumTokensFromMessages(messages: BaseMessage[]): Promise<{
     totalCount: number;
     countPerMessage: number[];
   }> {
@@ -504,7 +517,7 @@ export class ChatOpenAI
 
     const countPerMessage = await Promise.all(
       messages.map(async (message) => {
-        const textCount = await this.getNumTokens(message.text);
+        const textCount = await this.getNumTokens(message.content);
         const roleCount = await this.getNumTokens(
           messageTypeToOpenAIRole(message._getType())
         );
@@ -530,9 +543,16 @@ export class ChatOpenAI
     options?: StreamingAxiosConfiguration
   ) {
     if (!this.client) {
-      const endpoint = this.azureOpenAIApiKey
-        ? `https://${this.azureOpenAIApiInstanceName}.openai.azure.com/openai/deployments/${this.azureOpenAIApiDeploymentName}`
-        : this.clientConfig.basePath;
+      const openAIEndpointConfig: OpenAIEndpointConfig = {
+        azureOpenAIApiDeploymentName: this.azureOpenAIApiDeploymentName,
+        azureOpenAIApiInstanceName: this.azureOpenAIApiInstanceName,
+        azureOpenAIApiKey: this.azureOpenAIApiKey,
+        azureOpenAIBasePath: this.azureOpenAIBasePath,
+        basePath: this.clientConfig.basePath,
+      };
+
+      const endpoint = getEndpoint(openAIEndpointConfig);
+
       const clientConfig = new Configuration({
         ...this.clientConfig,
         basePath: endpoint,
@@ -541,8 +561,10 @@ export class ChatOpenAI
           ...this.clientConfig.baseOptions,
         },
       });
+
       this.client = new OpenAIApi(clientConfig);
     }
+
     const axiosOptions = {
       adapter: isNode() ? undefined : fetchAdapter,
       ...this.clientConfig.baseOptions,
@@ -623,7 +645,7 @@ export class PromptLayerChatOpenAI extends ChatOpenAI {
   }
 
   async _generate(
-    messages: BaseChatMessage[],
+    messages: BaseMessage[],
     options?: string[] | this["CallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
@@ -648,20 +670,22 @@ export class PromptLayerChatOpenAI extends ChatOpenAI {
     );
     const requestEndTime = Date.now();
 
-    const _convertMessageToDict = (message: BaseChatMessage) => {
+    const _convertMessageToDict = (message: BaseMessage) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let messageDict: Record<string, any>;
 
       if (message._getType() === "human") {
-        messageDict = { role: "user", content: message.text };
+        messageDict = { role: "user", content: message.content };
       } else if (message._getType() === "ai") {
-        messageDict = { role: "assistant", content: message.text };
+        messageDict = { role: "assistant", content: message.content };
+      } else if (message._getType() === "function") {
+        messageDict = { role: "assistant", content: message.content };
       } else if (message._getType() === "system") {
-        messageDict = { role: "system", content: message.text };
+        messageDict = { role: "system", content: message.content };
       } else if (message._getType() === "generic") {
         messageDict = {
           role: (message as ChatMessage).role,
-          content: message.text,
+          content: message.content,
         };
       } else {
         throw new Error(`Got unknown type ${message}`);
@@ -671,7 +695,7 @@ export class PromptLayerChatOpenAI extends ChatOpenAI {
     };
 
     const _createMessageDicts = (
-      messages: BaseChatMessage[],
+      messages: BaseMessage[],
       callOptions?: this["CallOptions"]
     ) => {
       const params = {

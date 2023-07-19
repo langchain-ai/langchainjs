@@ -5,6 +5,7 @@ import {
   MemoryVariables,
   getBufferString,
   getInputValue,
+  getOutputValue,
 } from "./base.js";
 import { AsyncCaller, AsyncCallerParams } from "../util/async_caller.js";
 
@@ -143,7 +144,7 @@ export class MotorheadMemory extends BaseChatMemory {
     outputValues: OutputValues
   ): Promise<void> {
     const input = getInputValue(inputValues, this.inputKey);
-    const output = getInputValue(outputValues, this.outputKey);
+    const output = getOutputValue(outputValues, this.outputKey);
     await Promise.all([
       this.caller.call(fetch, `${this.url}/sessions/${this.sessionId}/memory`, {
         signal: this.timeout ? AbortSignal.timeout(this.timeout) : undefined,

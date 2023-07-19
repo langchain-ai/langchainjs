@@ -33,8 +33,26 @@ const embeddings = new OpenAIEmbeddings({
   azureOpenAIApiInstanceName: "YOUR-INSTANCE-NAME", // In Node.js defaults to process.env.AZURE_OPENAI_API_INSTANCE_NAME
   azureOpenAIApiDeploymentName: "YOUR-DEPLOYMENT-NAME", // In Node.js defaults to process.env.AZURE_OPENAI_API_DEPLOYMENT_NAME
   azureOpenAIApiVersion: "YOUR-API-VERSION", // In Node.js defaults to process.env.AZURE_OPENAI_API_VERSION
+  azureOpenAIBasePath: "YOUR-AZURE-OPENAI-BASE-PATH", // In Node.js defaults to process.env.AZURE_OPENAI_BASE_PATH
 });
 ```
+
+## `GooglePaLMEmbeddings`
+
+The [Google PaLM API](https://developers.generativeai.google/products/palm) can be integrated by first
+installing the required packages:
+
+```bash npm2yarn
+npm install google-auth-library @google-ai/generativelanguage
+```
+
+Create an **API key** from [Google MakerSuite](https://makersuite.google.com/app/apikey). You can then set
+the key as `GOOGLE_PALM_API_KEY` environment variable or pass it as `apiKey` parameter while instantiating
+the model.
+
+import GooglePaLMExample from "@examples/models/embeddings/googlepalm.ts";
+
+<CodeBlock language="typescript">{GooglePaLMExample}</CodeBlock>
 
 ## `Google Vertex AI`
 

@@ -40,7 +40,7 @@ const chat = new PromptLayerChatOpenAI({
 
 const respA = await chat.generate([
   [
-    new SystemChatMessage(
+    new SystemMessage(
       "You are a helpful assistant that translates English to French."
     ),
   ],
@@ -77,6 +77,23 @@ console.log(JSON.stringify(respA, null, 3));
 */
 ```
 
+## `ChatGooglePaLM`
+
+The [Google PaLM API](https://developers.generativeai.google/products/palm) can be integrated by first
+installing the required packages:
+
+```bash npm2yarn
+npm install google-auth-library @google-ai/generativelanguage
+```
+
+Create an **API key** from [Google MakerSuite](https://makersuite.google.com/app/apikey). You can then set
+the key as `GOOGLE_PALM_API_KEY` environment variable or pass it as `apiKey` parameter while instantiating
+the model.
+
+import GooglePaLMExample from "@examples/models/chat/integration_googlepalm.ts";
+
+<CodeBlock language="typescript">{GooglePaLMExample}</CodeBlock>
+
 ## `Google Vertex AI`
 
 The Vertex AI implementation is meant to be used in Node.js and not
@@ -101,9 +118,9 @@ npm install google-auth-library
 The ChatGoogleVertexAI class works just like other chat-based LLMs,
 with a few exceptions:
 
-1. The first `SystemChatMessage` passed in is mapped to the "context" parameter that the PaLM model expects.
-   No other `SystemChatMessages` are allowed.
-2. After the first `SystemChatMessage`, there must be an odd number of messages, representing a conversation between a human and the model.
+1. The first `SystemMessage` passed in is mapped to the "context" parameter that the PaLM model expects.
+   No other `SystemMessages` are allowed.
+2. After the first `SystemMessage`, there must be an odd number of messages, representing a conversation between a human and the model.
 3. Human messages must alternate with AI messages.
 
 import ChatGoogleVertexAI from "@examples/models/chat/integration_googlevertexai.ts";
@@ -116,3 +133,9 @@ looks like.
 import ChatGoogleVertexAIExamples from "@examples/models/chat/integration_googlevertexai-examples.ts";
 
 <CodeBlock language="typescript">{ChatGoogleVertexAIExamples}</CodeBlock>
+
+## `ChatBaiduWenxin`
+
+import Wenxin from "@examples/models/chat/integration_baiduwenxin.ts";
+
+<CodeBlock language="typescript">{Wenxin}</CodeBlock>

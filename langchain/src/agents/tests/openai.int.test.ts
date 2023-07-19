@@ -22,7 +22,11 @@ test("OpenAIAgent", async () => {
     }
   );
 
-  const result = await executor.run("What is the weather in New York?");
+  const result = await executor.run("What is the weather in New York?", {
+    metadata: {
+      more: "metadata",
+    },
+  });
 
   console.log(result);
 

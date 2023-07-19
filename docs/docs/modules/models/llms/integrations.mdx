@@ -43,6 +43,23 @@ const res = await model.call(
 console.log({ res });
 ```
 
+## `GooglePaLM`
+
+The [Google PaLM API](https://developers.generativeai.google/products/palm) can be integrated by first
+installing the required packages:
+
+```bash npm2yarn
+npm install google-auth-library @google-ai/generativelanguage
+```
+
+Create an **API key** from [Google MakerSuite](https://makersuite.google.com/app/apikey). You can then set
+the key as `GOOGLE_PALM_API_KEY` environment variable or pass it as `apiKey` parameter while instantiating
+the model.
+
+import GooglePaLMExample from "@examples/models/llm/googlepalm.ts";
+
+<CodeBlock language="typescript">{GooglePaLMExample}</CodeBlock>
+
 ## Google Vertex AI
 
 The Vertex AI implementation is meant to be used in Node.js and not
@@ -69,9 +86,8 @@ import GoogleVertexAIExample from "@examples/llms/googlevertexai.ts";
 <CodeBlock language="typescript">{GoogleVertexAIExample}</CodeBlock>
 
 Google also has separate models for their "Codey" code generation models.
-For various reasons, these use a different class.
 
-The "code-gecko" model is the default and is useful for code completion:
+The "code-gecko" model is useful for code completion:
 
 import GoogleVertexAICodeGeckoExample from "@examples/llms/googlevertexai-code-gecko.ts";
 
@@ -139,6 +155,16 @@ const res = await model.call(
 );
 console.log({ res });
 ```
+
+You can run other models, such as Llama 2, through Replicate by changing the `model` parameter.
+
+Note for Llama 2 it's best to prefix queries with `User: ` and `Assistant: `:
+
+import ReplicateLlama2 from "@examples/models/llm/replicate_llama2.ts";
+
+<CodeBlock language="typescript">{ReplicateLlama2}</CodeBlock>
+
+You can find the full model name on [Replicate's website](https://replicate.com/explore).
 
 ## AWS `SageMakerEndpoint`
 
@@ -252,6 +278,7 @@ const model = new PromptLayerOpenAI({
   azureOpenAIApiEmbeddingsDeploymentName:
     "YOUR-AOAI-EMBEDDINGS-DEPLOYMENT-NAME", // In Node.js defaults to process.env.AZURE_OPENAI_API_EMBEDDINGS_DEPLOYMENT_NAME
   azureOpenAIApiVersion: "YOUR-AOAI-API-VERSION", // In Node.js defaults to process.env.AZURE_OPENAI_API_VERSION
+  azureOpenAIBasePath: "YOUR-AZURE-OPENAI-BASE-PATH", // In Node.js defaults to process.env.AZURE_OPENAI_BASE_PATH
   promptLayerApiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.PROMPTLAYER_API_KEY
 });
 const res = await model.call(

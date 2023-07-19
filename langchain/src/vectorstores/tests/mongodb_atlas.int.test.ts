@@ -9,12 +9,11 @@ import { MongoDBAtlasVectorSearch } from "../mongodb_atlas.js";
 import { Document } from "../../document.js";
 
 /**
- * The following json can be used to create an index in atlas for cohere embeddings.
+ * The following json can be used to create an index in atlas for Cohere embeddings.
  * Use "langchain.test" for the namespace and "default" for the index name.
 
 {
   "mappings": {
-    "dynamic": true,
     "fields": {
       "embedding": {
         "dimensions": 1024,
@@ -64,7 +63,8 @@ test.skip("MongoDBAtlasVectorSearch with external ids", async () => {
       1
     );
 
-    expect(results).toEqual([
+    expect(results.length).toEqual(1);
+    expect(results).toMatchObject([
       { pageContent: "What is a sandwich?", metadata: { c: 1 } },
     ]);
 

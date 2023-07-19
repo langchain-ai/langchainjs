@@ -11,6 +11,8 @@ import { NAIVE_FIX_PROMPT } from "./prompts.js";
 export class OutputFixingParser<T> extends BaseOutputParser<T> {
   lc_namespace = ["langchain", "output_parsers", "fix"];
 
+  lc_serializable = true;
+
   parser: BaseOutputParser<T>;
 
   retryChain: LLMChain;
