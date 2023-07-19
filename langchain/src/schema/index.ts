@@ -310,7 +310,3 @@ export abstract class Docstore {
 
   abstract add(texts: Record<string, Document>): Promise<void>;
 }
-
-export { BaseDocumentTransformer } from "./document.js";
-
-export { BaseRetriever } from "./retriever.js";
