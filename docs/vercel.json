@@ -130,7 +130,7 @@
     },
     {
       "source": "/docs/modules/indexes/retrievers/self_query(/?)",
-      "destination": "/docs/modules/data_connection/retrievers/how_to/self_query//"
+      "destination": "/docs/modules/data_connection/retrievers/how_to/self_query/"
     },
     {
       "source": "/docs/modules/indexes/retrievers/self_query/examples/:path*(/?)",
@@ -334,11 +334,7 @@
     },
     {
       "source": "/docs/production/tracing(/?)",
-      "destination": "TODO: LangSmith/"
-    },
-    {
-      "source": "/docs/ecosystem/:path*(/?)",
-      "destination": "/docs/ecosystem/integrations/:path*/"
+      "destination": "https://docs.smith.langchain.com/"
     }
   ]
 }
