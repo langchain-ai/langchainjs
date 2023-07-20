@@ -1,6 +1,7 @@
 import { VectorStore } from "./base.js";
 import { Document } from "../document.js";
 import { type Embeddings } from "../embeddings/base.js";
+import { Callbacks } from "../callbacks/manager.js";
 
 const IdColumnSymbol = Symbol("id");
 const ContentColumnSymbol = Symbol("content");
@@ -116,6 +117,10 @@ export class PrismaVectorStore<
   protected db: PrismaClient;
 
   protected Prisma: PrismaNamespace;
+
+  _vectorstoreType(): string {
+    return "prisma";
+  }
 
   constructor(
     embeddings: Embeddings,
@@ -276,10 +281,12 @@ export class PrismaVectorStore<
 
   async similaritySearch(
     query: string,
-    k = 4
+    k = 4,
+    _filter: this["FilterType"] | undefined = undefined, // not used. here to make the interface compatible with the other stores
+    callbacks: Callbacks | undefined = undefined
   ): Promise<Document<SimilarityModel<TModel, TSelectModel>>[]> {
     const results = await this.similaritySearchVectorWithScore(
-      await this.embeddings.embedQuery(query),
+      await this.embeddings.embedQuery(query, callbacks),
       k
     );
 
@@ -289,9 +296,10 @@ export class PrismaVectorStore<
   async similaritySearchWithScore(
     query: string,
     k?: number,
-    filter?: TFilterModel
+    filter?: TFilterModel,
+    callbacks: Callbacks | undefined = undefined
   ) {
-    return super.similaritySearchWithScore(query, k, filter);
+    return super.similaritySearchWithScore(query, k, filter, callbacks);
   }
 
   async similaritySearchVectorWithScore(

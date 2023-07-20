@@ -115,7 +115,7 @@ export class ConversationalRetrievalQAChain
     }
     const docs = await this.retriever.getRelevantDocuments(
       newQuestion,
-      runManager?.getChild("retrieve_documents")
+      runManager?.getChild("retriever")
     );
     const inputs = {
       question: newQuestion,

@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.112",
+  "version": "0.0.113",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -340,6 +340,9 @@
     "schema/query_constructor.cjs",
     "schema/query_constructor.js",
     "schema/query_constructor.d.ts",
+    "schema/retriever.cjs",
+    "schema/retriever.js",
+    "schema/retriever.d.ts",
     "sql_db.cjs",
     "sql_db.js",
     "sql_db.d.ts",
@@ -355,6 +358,9 @@
     "retrievers.cjs",
     "retrievers.js",
     "retrievers.d.ts",
+    "retrievers/amazon_kendra.cjs",
+    "retrievers/amazon_kendra.js",
+    "retrievers/amazon_kendra.d.ts",
     "retrievers/remote.cjs",
     "retrievers/remote.js",
     "retrievers/remote.d.ts",
@@ -496,6 +502,7 @@
   "license": "MIT",
   "devDependencies": {
     "@aws-sdk/client-dynamodb": "^3.310.0",
+    "@aws-sdk/client-kendra": "^3.352.0",
     "@aws-sdk/client-lambda": "^3.310.0",
     "@aws-sdk/client-s3": "^3.310.0",
     "@aws-sdk/client-sagemaker-runtime": "^3.310.0",
@@ -587,6 +594,7 @@
   },
   "peerDependencies": {
     "@aws-sdk/client-dynamodb": "^3.310.0",
+    "@aws-sdk/client-kendra": "^3.352.0",
     "@aws-sdk/client-lambda": "^3.310.0",
     "@aws-sdk/client-s3": "^3.310.0",
     "@aws-sdk/client-sagemaker-runtime": "^3.310.0",
@@ -646,6 +654,9 @@
   },
   "peerDependenciesMeta": {
     "@aws-sdk/client-dynamodb": {
+      "optional": true
+    },
+    "@aws-sdk/client-kendra": {
       "optional": true
     },
     "@aws-sdk/client-lambda": {
@@ -828,7 +839,7 @@
     "js-tiktoken": "^1.0.7",
     "js-yaml": "^4.1.0",
     "jsonpointer": "^5.0.1",
-    "langsmith": "^0.0.9",
+    "langsmith": "~0.0.11",
     "ml-distance": "^4.0.0",
     "object-hash": "^3.0.0",
     "openai": "^3.3.0",
@@ -1423,6 +1434,11 @@
       "import": "./schema/query_constructor.js",
       "require": "./schema/query_constructor.cjs"
     },
+    "./schema/retriever": {
+      "types": "./schema/retriever.d.ts",
+      "import": "./schema/retriever.js",
+      "require": "./schema/retriever.cjs"
+    },
     "./sql_db": {
       "types": "./sql_db.d.ts",
       "import": "./sql_db.js",
@@ -1449,6 +1465,11 @@
         "import": "./retrievers.js",
         "require": "./retrievers.cjs"
       }
+    },
+    "./retrievers/amazon_kendra": {
+      "types": "./retrievers/amazon_kendra.d.ts",
+      "import": "./retrievers/amazon_kendra.js",
+      "require": "./retrievers/amazon_kendra.cjs"
     },
     "./retrievers/remote": {
       "types": "./retrievers/remote.d.ts",

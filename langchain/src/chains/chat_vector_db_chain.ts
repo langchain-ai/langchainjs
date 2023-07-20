@@ -112,7 +112,7 @@ export class ChatVectorDBQAChain
       newQuestion,
       this.k,
       undefined,
-      runManager?.getChild("retrieve_documents")
+      runManager?.getChild("vectorstore")
     );
     const inputs = {
       question: newQuestion,

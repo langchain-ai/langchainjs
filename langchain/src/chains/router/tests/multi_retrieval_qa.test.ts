@@ -7,6 +7,8 @@ import { Document } from "../../../document.js";
 import { PromptTemplate } from "../../../prompts/prompt.js";
 
 class FakeRetrievers extends BaseRetriever {
+  lc_namespace: string[] = [];
+
   name: string;
 
   constructor(name: string) {
@@ -14,7 +16,7 @@ class FakeRetrievers extends BaseRetriever {
     this.name = name;
   }
 
-  async getRelevantDocuments(query: string): Promise<Document[]> {
+  async _getRelevantDocuments(query: string): Promise<Document[]> {
     return [
       new Document({
         pageContent: `Test document ${query} ${this.name}`,

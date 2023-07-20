@@ -168,6 +168,43 @@ export class ConsoleCallbackHandler extends BaseTracer {
     );
   }
 
+  onRetrieverStart(run: Run) {
+    const crumbs = this.getBreadcrumbs(run);
+    console.log(
+      `${wrap(
+        color.green,
+        "[retriever/start]"
+      )} [${crumbs}] Entering Retriever run with input: ${tryJsonStringify(
+        run.inputs,
+        "[inputs]"
+      )}`
+    );
+  }
+
+  onRetrieverEnd(run: Run) {
+    const crumbs = this.getBreadcrumbs(run);
+    console.log(
+      `${wrap(color.cyan, "[retriever/end]")} [${crumbs}] [${elapsed(
+        run
+      )}] Exiting Retriever run with output: ${tryJsonStringify(
+        run.outputs,
+        "[outputs]"
+      )}`
+    );
+  }
+
+  onRetrieverError(run: Run) {
+    const crumbs = this.getBreadcrumbs(run);
+    console.log(
+      `${wrap(color.red, "[retriever/error]")} [${crumbs}] [${elapsed(
+        run
+      )}] Retriever run errored with error: ${tryJsonStringify(
+        run.error,
+        "[error]"
+      )}`
+    );
+  }
+
   onAgentAction(run: Run) {
     const agentRun = run as AgentRun;
     const crumbs = this.getBreadcrumbs(run);
