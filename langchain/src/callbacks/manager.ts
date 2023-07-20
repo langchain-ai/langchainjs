@@ -149,8 +149,11 @@ export class CallbackManagerForLLMRun
     );
   }
 
-  async handleLLMNewFunctionCall(
-    functionCall: { name?: string; arguments?: string },
+  async handleEvent(
+    event: {
+      token: string;
+      functionCall?: { name?: string; arguments?: string };
+    },
     idx: NewTokenIndices = { prompt: 0, completion: 0 }
   ) {
     await Promise.all(
@@ -158,8 +161,8 @@ export class CallbackManagerForLLMRun
         consumeCallback(async () => {
           if (!handler.ignoreLLM) {
             try {
-              await handler.handleLLMNewFunctionCall?.(
-                functionCall,
+              await handler.handleEvent?.(
+                event,
                 idx,
                 this.runId,
                 this._parentRunId,
@@ -167,7 +170,7 @@ export class CallbackManagerForLLMRun
               );
             } catch (err) {
               console.error(
-                `Error in handler ${handler.constructor.name}, handleLLMNewFunctionCall: ${err}`
+                `Error in handler ${handler.constructor.name}, handleEvent: ${err}`
               );
             }
           }

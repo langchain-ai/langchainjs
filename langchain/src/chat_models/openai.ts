@@ -419,22 +419,19 @@ export class ChatOpenAI
                           part.delta?.function_call?.name ?? "";
                         choice.message.function_call.arguments +=
                           part.delta?.function_call?.arguments ?? "";
-
-                        void runManager?.handleLLMNewFunctionCall(
-                          choice.message.function_call,
-                          {
-                            prompt: options.promptIndex ?? 0,
-                            completion: part.index,
-                          }
-                        );
                       }
-                      // eslint-disable-next-line no-void
-                      void runManager?.handleLLMNewToken(
-                        part.delta?.content ?? "",
-                        {
-                          prompt: options.promptIndex ?? 0,
-                          completion: part.index,
-                        }
+
+                      const idx = {
+                        prompt: options.promptIndex ?? 0,
+                        completion: part.index,
+                      };
+
+                      const token = part.delta?.content ?? "";
+
+                      void runManager?.handleLLMNewToken(token, idx);
+                      void runManager?.handleEvent(
+                        { token, functionCall: choice.message.function_call },
+                        idx
                       );
                     }
                   }

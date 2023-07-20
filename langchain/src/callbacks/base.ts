@@ -60,10 +60,13 @@ abstract class BaseCallbackHandlerMethodsClass {
   ): Promise<void> | void;
 
   /**
-   * Called when an LLM/ChatModel in `streaming` mode produces a new function call
+   * Called when an LLM/ChatModel in `streaming` mode produces a new event
    */
-  handleLLMNewFunctionCall?(
-    functionCall: { name?: string; arguments?: string },
+  handleEvent?(
+    event: {
+      token: string;
+      functionCall?: { name?: string; arguments?: string };
+    },
     idx: NewTokenIndices,
     runId: string,
     parentRunId?: string,
