@@ -73,27 +73,22 @@ export class PlanetscaleChatMessageHistory extends BaseListChatMessageHistory {
   }
 
   private async createTableIfNotExists(): Promise<void> {
-    const query =
-      "CREATE TABLE IF NOT EXISTS `:table_name` (id BINARY(16) PRIMARY KEY, session_id VARCHAR(255), type VARCHAR(255), content VARCHAR(255), role VARCHAR(255), name VARCHAR(255), additional_kwargs VARCHAR(255));";
+    const query = `CREATE TABLE IF NOT EXISTS ${this.tableName} (id BINARY(16) PRIMARY KEY, session_id VARCHAR(255), type VARCHAR(255), content VARCHAR(255), role VARCHAR(255), name VARCHAR(255), additional_kwargs VARCHAR(255));`;
 
-    const params = {
-      table_name: this.tableName,
-    };
+    const creation = await this.connection.execute(query);
 
-    await this.connection.execute(query, params);
+    console.log(creation);
 
-    const indexQuery =
-      "ALTER TABLE `:table_name` MODIFY id BINARY(16) DEFAULT (UUID_TO_BIN(UUID()));";
+    const indexQuery = `ALTER TABLE ${this.tableName} MODIFY id BINARY(16) DEFAULT (UUID_TO_BIN(UUID()));`;
 
-    await this.connection.execute(indexQuery, params);
+    await this.connection.execute(indexQuery);
   }
 
   async getMessages(): Promise<BaseMessage[]> {
     await this.createTableIfNotExists();
 
-    const query = "SELECT * FROM `:table_name` WHERE session_id = :session_id";
+    const query = `SELECT * FROM ${this.tableName} WHERE session_id = :session_id`;
     const params = {
-      table_name: this.tableName,
       session_id: this.sessionId,
     };
 
@@ -130,11 +125,9 @@ export class PlanetscaleChatMessageHistory extends BaseListChatMessageHistory {
 
     const messageToAdd = mapChatMessagesToStoredMessages([message]);
 
-    const query =
-      "INSERT INTO `:table_name` (session_id, type, content, role, name, additional_kwargs) VALUES (:session_id, :type, :content, :role, :name, :additional_kwargs)";
+    const query = `INSERT INTO ${this.tableName} (session_id, type, content, role, name, additional_kwargs) VALUES (:session_id, :type, :content, :role, :name, :additional_kwargs)`;
 
     const params = {
-      table_name: this.tableName,
       session_id: this.sessionId,
       type: messageToAdd[0].type,
       content: messageToAdd[0].data.content,
@@ -149,9 +142,8 @@ export class PlanetscaleChatMessageHistory extends BaseListChatMessageHistory {
   async clear(): Promise<void> {
     await this.createTableIfNotExists();
 
-    const query = "DELETE FROM `:table_name` WHERE session_id = :session_id";
+    const query = `DELETE FROM ${this.tableName} WHERE session_id = :session_id`;
     const params = {
-      table_name: this.tableName,
       session_id: this.sessionId,
     };
     await this.connection.execute(query, params);
