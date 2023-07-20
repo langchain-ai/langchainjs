@@ -4,7 +4,7 @@ import { BaseRetriever } from "../schema/index.js";
 
 export class VectaraRetriever extends BaseRetriever {
   store: VectaraStore;
-  
+
   constructor(store: VectaraStore) {
     super();
     this.store = store;
