@@ -349,6 +349,9 @@ output_parsers/expression.d.ts
 retrievers.cjs
 retrievers.js
 retrievers.d.ts
+retrievers/amazon_kendra.cjs
+retrievers/amazon_kendra.js
+retrievers/amazon_kendra.d.ts
 retrievers/remote.cjs
 retrievers/remote.js
 retrievers/remote.d.ts

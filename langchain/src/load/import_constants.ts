@@ -77,6 +77,7 @@ export const optionalImportEntrypoints = [
   "langchain/chat_models/googlepalm",
   "langchain/sql_db",
   "langchain/output_parsers/expression",
+  "langchain/retrievers/amazon_kendra",
   "langchain/retrievers/supabase",
   "langchain/retrievers/zep",
   "langchain/retrievers/metal",
