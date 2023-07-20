@@ -13,7 +13,7 @@ try {
 
   // Send the user's input to the moderation chain and wait for the result
   const { output: badResult } = await moderation.call({
-    input: badString
+    input: badString,
   });
 
   // If the moderation chain does not detect violating content, it will return the original input and you can proceed to use the result in another chain.
