@@ -116,7 +116,7 @@ test("Test maximal marginal relevance query dim", async () => {
   const randomVector = Matrix.rand(5, 1);
 
   const queryEmbedding = randomVector.to1DArray();
-  const queryEmbedding2D = randomVector.transpose().to1DArray();
+  const queryEmbedding2D = randomVector.transpose().to2DArray();
   const embeddingList = Matrix.rand(4, 5).to2DArray();
 
   const first = maximalMarginalRelevance(queryEmbedding, embeddingList, 1, 2);

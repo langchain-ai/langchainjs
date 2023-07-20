@@ -40,7 +40,7 @@ export function cosineSimilarity(X: number[][], Y: number[][]): number[][] {
  * This function implements the Maximal Marginal Relevance algorithm
  * to select a set of embeddings that maximizes the diversity and relevance to a query embedding.
  *
- * @param {number[]} queryEmbedding - The query embedding.
+ * @param {number[]|number[][]} queryEmbedding - The query embedding.
  * @param {number[][]} embeddingList - The list of embeddings to select from.
  * @param {number} [lambda=0.5] - The trade-off parameter between relevance and diversity.
  * @param {number} [k=4] - The maximum number of embeddings to select.
@@ -48,7 +48,7 @@ export function cosineSimilarity(X: number[][], Y: number[][]): number[][] {
  * @returns {number[]} The indexes of the selected embeddings in the embeddingList.
  */
 export function maximalMarginalRelevance(
-  queryEmbedding: number[],
+  queryEmbedding: number[] | number[][],
   embeddingList: number[][],
   lambda = 0.5,
   k = 4
