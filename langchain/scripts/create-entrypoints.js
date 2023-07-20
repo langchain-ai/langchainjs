@@ -136,6 +136,7 @@ const entrypoints = {
   schema: "schema/index",
   "schema/output_parser": "schema/output_parser",
   "schema/query_constructor": "schema/query_constructor",
+  "schema/retriever": "schema/retriever",
   // sql_db
   sql_db: "sql_db",
   // callbacks
@@ -145,6 +146,7 @@ const entrypoints = {
   "output_parsers/expression": "output_parsers/expression",
   // retrievers
   retrievers: "retrievers/index",
+  "retrievers/amazon_kendra": "retrievers/amazon_kendra",
   "retrievers/remote": "retrievers/remote/index",
   "retrievers/supabase": "retrievers/supabase",
   "retrievers/zep": "retrievers/zep",
@@ -277,6 +279,7 @@ const requiresOptionalDependency = [
   "chat_models/googlevertexai",
   "chat_models/googlepalm",
   "sql_db",
+  "retrievers/amazon_kendra",
   "retrievers/supabase",
   "retrievers/zep",
   "retrievers/metal",

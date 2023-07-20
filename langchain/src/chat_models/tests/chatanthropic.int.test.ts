@@ -51,7 +51,7 @@ test("Test ChatAnthropic Generate with a signal in call options", async () => {
     }, 500);
     return res;
   }).rejects.toThrow();
-}, 5000);
+}, 10000);
 
 test("Test ChatAnthropic tokenUsage with a batch", async () => {
   const model = new ChatAnthropic({

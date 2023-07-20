@@ -328,6 +328,9 @@ schema/output_parser.d.ts
 schema/query_constructor.cjs
 schema/query_constructor.js
 schema/query_constructor.d.ts
+schema/retriever.cjs
+schema/retriever.js
+schema/retriever.d.ts
 sql_db.cjs
 sql_db.js
 sql_db.d.ts
@@ -343,6 +346,9 @@ output_parsers/expression.d.ts
 retrievers.cjs
 retrievers.js
 retrievers.d.ts
+retrievers/amazon_kendra.cjs
+retrievers/amazon_kendra.js
+retrievers/amazon_kendra.d.ts
 retrievers/remote.cjs
 retrievers/remote.js
 retrievers/remote.d.ts

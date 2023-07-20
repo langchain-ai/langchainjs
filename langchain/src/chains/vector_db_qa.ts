@@ -60,7 +60,8 @@ export class VectorDBQAChain extends BaseChain implements VectorDBQAChainInput {
     const docs = await this.vectorstore.similaritySearch(
       question,
       this.k,
-      values.filter
+      values.filter,
+      runManager?.getChild("vectorstore")
     );
     const inputs = { question, input_documents: docs };
     const result = await this.combineDocumentsChain.call(

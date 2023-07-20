@@ -48,6 +48,14 @@ const MILVUS_TEXT_FIELD_NAME = "langchain_text";
 const MILVUS_COLLECTION_NAME_PREFIX = "langchain_col";
 
 export class Milvus extends VectorStore {
+  get lc_secrets(): { [key: string]: string } {
+    return {
+      ssl: "MILVUS_SSL",
+      username: "MILVUS_USERNAME",
+      password: "MILVUS_PASSWORD",
+    };
+  }
+
   collectionName: string;
 
   numDimensions?: number;
@@ -83,6 +91,10 @@ export class Milvus extends VectorStore {
   };
 
   indexSearchParams = JSON.stringify({ ef: 64 });
+
+  _vectorstoreType(): string {
+    return "milvus";
+  }
 
   constructor(embeddings: Embeddings, args: MilvusLibArgs) {
     super(embeddings, args);
