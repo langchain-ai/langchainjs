@@ -33,17 +33,6 @@ services:
       - ./langchain:/langchain
       - ./scripts:/scripts
     command: bash /scripts/docker-ci-entrypoint.sh
-  test-exports-cra:
-    image: node:18
-    working_dir: /app
-    volumes:
-      - ./yarn.lock:/root/yarn.lock
-      - ./.yarnrc.yml:/root/.yarnrc.yml
-      - ./.yarn:/root/.yarn
-      - ./test-exports-cra:/package
-      - ./langchain:/langchain
-      - ./scripts:/scripts
-    command: bash /scripts/docker-ci-entrypoint.sh
   test-exports-cf:
     image: node:18
     working_dir: /app
@@ -86,8 +75,6 @@ services:
       test-exports-esm:
         condition: service_completed_successfully
       test-exports-cjs:
-        condition: service_completed_successfully
-      test-exports-cra:
         condition: service_completed_successfully
       test-exports-cf:
         condition: service_completed_successfully

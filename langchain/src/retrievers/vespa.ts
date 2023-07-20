@@ -17,14 +17,16 @@ export interface VespaRetrieverParams extends RemoteRetrieverParams {
 }
 
 export class VespaRetriever extends RemoteRetriever {
+  lc_namespace = ["langchain", "retrievers", "vespa"];
+
   query_body: object;
 
   content_field: string;
 
-  constructor({ query_body, content_field, ...rest }: VespaRetrieverParams) {
-    super(rest);
-    this.query_body = query_body;
-    this.content_field = content_field;
+  constructor(fields: VespaRetrieverParams) {
+    super(fields);
+    this.query_body = fields.query_body;
+    this.content_field = fields.content_field;
 
     this.url = `${this.url}/search/?`;
   }

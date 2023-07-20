@@ -1,9 +1,9 @@
-import { Client } from "langchainplus-sdk";
+import { Client } from "langsmith";
 import {
   BaseRun,
   RunCreate,
   RunUpdate as BaseRunUpdate,
-} from "langchainplus-sdk/schemas";
+} from "langsmith/schemas";
 import {
   getEnvironmentVariable,
   getRuntimeEnvironment,
@@ -85,6 +85,18 @@ export class LangChainTracer
       events: run.events,
     };
     await this.client.updateRun(run.id, runUpdate);
+  }
+
+  async onRetrieverStart(run: Run): Promise<void> {
+    await this._persistRunSingle(run);
+  }
+
+  async onRetrieverEnd(run: Run): Promise<void> {
+    await this._updateRunSingle(run);
+  }
+
+  async onRetrieverError(run: Run): Promise<void> {
+    await this._updateRunSingle(run);
   }
 
   async onLLMStart(run: Run): Promise<void> {
