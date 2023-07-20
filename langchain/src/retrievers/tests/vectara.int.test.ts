@@ -16,9 +16,13 @@ import { VectaraStore } from "../../vectorstores/vectara.js";
 
 test("VectaraRetriever (with filter)", async () => {
   const store = new VectaraStore({
-    customer_id: process.env.VECTARA_CUSTOMER_ID ? parseInt(process.env.VECTARA_CUSTOMER_ID) : 0,
-    corpus_id: process.env.VECTARA_CORPUS_ID ? parseInt(process.env.VECTARA_CORPUS_ID) : 0,
-    api_key: process.env.VECTARA_API_KEY || "",
+    customerId: process.env.VECTARA_CUSTOMER_ID
+      ? parseInt(process.env.VECTARA_CUSTOMER_ID, 10)
+      : 0,
+    corpusId: process.env.VECTARA_CORPUS_ID
+      ? parseInt(process.env.VECTARA_CORPUS_ID, 10)
+      : 0,
+    apiKey: process.env.VECTARA_API_KEY || "",
   });
   const retriever = new VectaraRetriever(store);
 
@@ -27,16 +31,22 @@ test("VectaraRetriever (with filter)", async () => {
 
   expect(docs.length).toBeGreaterThan(0);
   // This checks that the document contains the relevant section
-  expect(docs[0].pageContent).toContain('All Bills for raising Revenue shall originate in the House of Representatives');
+  expect(docs[0].pageContent).toContain(
+    "All Bills for raising Revenue shall originate in the House of Representatives"
+  );
 
   console.log(docs);
 });
 
 test("VectaraRetriever (without filter)", async () => {
   const store = new VectaraStore({
-    customer_id: process.env.VECTARA_CUSTOMER_ID ? parseInt(process.env.VECTARA_CUSTOMER_ID) : 0,
-    corpus_id: process.env.VECTARA_CORPUS_ID ? parseInt(process.env.VECTARA_CORPUS_ID) : 0,
-    api_key: process.env.VECTARA_API_KEY || "",
+    customerId: process.env.VECTARA_CUSTOMER_ID
+      ? parseInt(process.env.VECTARA_CUSTOMER_ID, 10)
+      : 0,
+    corpusId: process.env.VECTARA_CORPUS_ID
+      ? parseInt(process.env.VECTARA_CORPUS_ID, 10)
+      : 0,
+    apiKey: process.env.VECTARA_API_KEY || "",
   });
   const retriever = new VectaraRetriever(store);
 
