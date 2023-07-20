@@ -7,6 +7,7 @@ interface SerpAPIParameters {
    * Search Query
    */
   q: string;
+  apiKey?: string;
 }
 
 export class SerpAPILoader extends BaseDocumentLoader {
@@ -14,12 +15,9 @@ export class SerpAPILoader extends BaseDocumentLoader {
 
   private searchQuery: string;
 
-  constructor(
-    params: SerpAPIParameters,
-    apiKey: string | undefined = getEnvironmentVariable("SERPAPI_API_KEY")
-  ) {
+  constructor(params: SerpAPIParameters) {
     super();
-
+    const { apiKey = getEnvironmentVariable("SERPAPI_API_KEY"), q } = params;
     if (!apiKey) {
       throw new Error(
         "SerpAPI API key not set. You can set it as SERPAPI_API_KEY in your .env file, or pass it to SerpAPI."
@@ -27,7 +25,7 @@ export class SerpAPILoader extends BaseDocumentLoader {
     }
 
     this.apiKey = apiKey;
-    this.searchQuery = params.q;
+    this.searchQuery = q;
   }
 
   /**

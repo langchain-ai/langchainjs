@@ -2,7 +2,7 @@ import { SerpAPILoader } from "../web/serpapi.js";
 import { Document } from "../../document.js";
 
 test("Test buildUrl method", () => {
-  const loader = new SerpAPILoader({ q: "testQuery" }, "testApiKey");
+  const loader = new SerpAPILoader({ q: "testQuery", apiKey: "testApiKey" });
 
   expect(loader.buildUrl()).toBe(
     "https://serpapi.com/search?api_key=testApiKey&q=testQuery"
@@ -10,7 +10,7 @@ test("Test buildUrl method", () => {
 });
 
 test("Test processResponseData method", () => {
-  const loader = new SerpAPILoader({ q: "testQuery" }, "testApiKey");
+  const loader = new SerpAPILoader({ q: "testQuery", apiKey: "testApiKey" });
 
   const data = {
     answer_box: { type: "calculator_result", result: "3.141592653589793" },

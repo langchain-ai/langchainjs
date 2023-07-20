@@ -14,7 +14,7 @@ const question = "Your question here";
 const query = "Your query here";
 
 // Use SerpAPILoader to load web search results
-const loader = new SerpAPILoader({ q: query }, apiKey);
+const loader = new SerpAPILoader({ q: query, apiKey });
 const docs = await loader.load();
 
 // Use MemoryVectorStore to store the loaded documents in memory
