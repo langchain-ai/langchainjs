@@ -6831,6 +6831,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@planetscale/database@npm:^1.8.0":
+  version: 1.8.0
+  resolution: "@planetscale/database@npm:1.8.0"
+  checksum: f1ad8068da139208b428a5245aca6fe21c987dc922589483d7cc21453273a7462dab391e15794c0ba012d185ad59459160f14cf4ca2fd42bd3053e7474952a0b
+  languageName: node
+  linkType: hard
+
 "@pnpm/config.env-replace@npm:^1.0.0":
   version: 1.0.0
   resolution: "@pnpm/config.env-replace@npm:1.0.0"
@@ -13428,6 +13435,7 @@ __metadata:
     "@gomomento/sdk": ^1.23.0
     "@opensearch-project/opensearch": ^2.2.0
     "@pinecone-database/pinecone": ^0.0.14
+    "@planetscale/database": ^1.8.0
     "@prisma/client": ^4.11.0
     "@supabase/supabase-js": ^2.10.0
     "@tensorflow/tfjs-backend-cpu": ^4.4.0
@@ -17473,6 +17481,7 @@ __metadata:
     "@notionhq/client": ^2.2.5
     "@opensearch-project/opensearch": "*"
     "@pinecone-database/pinecone": "*"
+    "@planetscale/database": ^1.8.0
     "@qdrant/js-client-rest": ^1.2.0
     "@supabase/postgrest-js": ^1.1.1
     "@supabase/supabase-js": ^2.10.0
@@ -17546,6 +17555,8 @@ __metadata:
     "@opensearch-project/opensearch":
       optional: true
     "@pinecone-database/pinecone":
+      optional: true
+    "@planetscale/database":
       optional: true
     "@qdrant/js-client-rest":
       optional: true

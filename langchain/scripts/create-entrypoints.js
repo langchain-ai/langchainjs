@@ -108,7 +108,8 @@ const entrypoints = {
   "document_loaders/web/s3": "document_loaders/web/s3",
   "document_loaders/web/sonix_audio": "document_loaders/web/sonix_audio",
   "document_loaders/web/confluence": "document_loaders/web/confluence",
-  "document_loaders/web/sort_xyz_blockchain": "document_loaders/web/sort_xyz_blockchain",
+  "document_loaders/web/sort_xyz_blockchain":
+    "document_loaders/web/sort_xyz_blockchain",
   "document_loaders/fs/directory": "document_loaders/fs/directory",
   "document_loaders/fs/buffer": "document_loaders/fs/buffer",
   "document_loaders/fs/text": "document_loaders/fs/text",
@@ -121,7 +122,8 @@ const entrypoints = {
   "document_loaders/fs/notion": "document_loaders/fs/notion",
   "document_loaders/fs/unstructured": "document_loaders/fs/unstructured",
   // document_transformers
-  "document_transformers/openai_functions": "document_transformers/openai_functions",
+  "document_transformers/openai_functions":
+    "document_transformers/openai_functions",
   // chat_models
   chat_models: "chat_models/index",
   "chat_models/base": "chat_models/base",
@@ -178,6 +180,7 @@ const entrypoints = {
   "stores/message/redis": "stores/message/redis",
   "stores/message/ioredis": "stores/message/ioredis",
   "stores/message/upstash_redis": "stores/message/upstash_redis",
+  "stores/message/planetscale": "stores/message/planetscale",
   // experimental
   "experimental/autogpt": "experimental/autogpt/index",
   "experimental/babyagi": "experimental/babyagi/index",
@@ -297,6 +300,7 @@ const requiresOptionalDependency = [
   "stores/message/redis",
   "stores/message/ioredis",
   "stores/message/upstash_redis",
+  "stores/message/planetscale",
 ];
 
 // List of test-exports-* packages which we use to test that the exports field
