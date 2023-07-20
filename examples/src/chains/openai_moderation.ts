@@ -7,12 +7,13 @@ const badString = "Bad naughty words from user";
 
 try {
   // Create a new instance of the OpenAIModerationChain
-  const moderation = new OpenAIModerationChain();
+  const moderation = new OpenAIModerationChain({
+    throwError: true, // If set to true, the call will throw an error when the moderation chain detects violating content. If set to false, violating content will return "Text was found that violates OpenAI's content policy.".
+  });
 
   // Send the user's input to the moderation chain and wait for the result
   const { output: badResult } = await moderation.call({
-    input: badString,
-    throwError: true, // If set to true, the call will throw an error when the moderation chain detects violating content. If set to false, violating content will return "Text was found that violates OpenAI's content policy.".
+    input: badString
   });
 
   // If the moderation chain does not detect violating content, it will return the original input and you can proceed to use the result in another chain.
