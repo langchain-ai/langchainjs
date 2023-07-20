@@ -567,6 +567,7 @@
     "ioredis": "^5.3.2",
     "jest": "^29.5.0",
     "mammoth": "^1.5.1",
+    "ml-matrix": "^6.10.4",
     "mongodb": "^5.2.0",
     "mysql2": "^3.3.3",
     "notion-to-md": "^3.1.0",

@@ -1,5 +1,4 @@
-import * as tf from "@tensorflow/tfjs-core";
-import { Tensor1D } from "@tensorflow/tfjs-core";
+import { similarity as ml_distance_similarity } from "ml-distance";
 
 /**
  * This function calculates the row-wise cosine similarity between two matrices with the same number of columns.
@@ -12,37 +11,29 @@ import { Tensor1D } from "@tensorflow/tfjs-core";
  * @returns {number[][] | [[]]} A matrix where each row represents the cosine similarity values between the corresponding rows of X and Y.
  */
 export function cosineSimilarity(X: number[][], Y: number[][]): number[][] {
-  const xTensor = tf.tensor(X);
-  const yTensor = tf.tensor(Y);
-
-  if (xTensor.size === 0 || yTensor.size === 0) {
-    xTensor.dispose();
-    yTensor.dispose();
+  if (
+    X.length === 0 ||
+    X[0].length === 0 ||
+    Y.length === 0 ||
+    Y[0].length === 0
+  ) {
     return [[]];
   }
 
-  if (xTensor.shape[1] !== yTensor.shape[1]) {
-    xTensor.dispose();
-    yTensor.dispose();
+  if (X[0].length !== Y[0].length) {
     throw new Error(
-      `Number of columns in X and Y must be the same. X has shape ${xTensor.shape} and Y has shape ${yTensor.shape}.`
+      `Number of columns in X and Y must be the same. X has shape ${[
+        X.length,
+        X[0].length,
+      ]} and Y has shape ${[Y.length, Y[0].length]}.`
     );
   }
-  const similarityTensor = tf.tidy(() => {
-    const xNorm = tf.norm(xTensor, undefined, 1) as Tensor1D;
-    const yNorm = tf.norm(yTensor, undefined, 1) as Tensor1D;
-    return tf.divNoNan(
-      tf.dot(xTensor, tf.transpose(yTensor)),
-      tf.outerProduct(xNorm, yNorm)
-    );
-  });
 
-  const cosineSimilarity = similarityTensor.arraySync() as number[][];
-  xTensor.dispose();
-  yTensor.dispose();
-  similarityTensor.dispose();
-
-  return cosineSimilarity;
+  return X.map((xVector) =>
+    Y.map((yVector) => ml_distance_similarity.cosine(xVector, yVector)).map(
+      (similarity) => (Number.isNaN(similarity) ? 0 : similarity)
+    )
+  );
 }
 
 /**

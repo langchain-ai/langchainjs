@@ -1,22 +1,17 @@
 import { test, expect } from "@jest/globals";
-import * as tf from "@tensorflow/tfjs-core";
-import "@tensorflow/tfjs-backend-cpu";
+import { Matrix } from "ml-matrix";
 import { cosineSimilarity, maximalMarginalRelevance } from "../math_utils.js";
 
-// tensor memory cleanup
-beforeEach(() => tf.engine().startScope(expect.getState().currentTestName));
-afterEach(() => tf.engine().endScope(expect.getState().currentTestName));
-
 test("Test cosine similarity zero", async () => {
-  const X = tf.randomUniform([3, 3]).arraySync() as number[][];
-  const Y = tf.zeros([3, 3]).arraySync() as number[][];
-  const expected = tf.zeros([3, 3]).arraySync() as number[][];
+  const X = Matrix.rand(3, 3).to2DArray();
+  const Y = Matrix.zeros(3, 3).to2DArray();
+  const expected = Matrix.zeros(3, 3).to2DArray();
   const actual = cosineSimilarity(X, Y);
   expect(actual).toEqual(expected);
 });
 
 test("Test cosine similarity identity", async () => {
-  const X = tf.randomUniform([4, 4]).arraySync() as number[][];
+  const X = Matrix.rand(4, 4).to2DArray();
   const actual = cosineSimilarity(X, X);
 
   // Diagonal is expected to be [1, 1, 1, 1]
@@ -26,30 +21,24 @@ test("Test cosine similarity identity", async () => {
 });
 
 test("Test cosine similarity", async () => {
-  const X = tf
-    .tensor2d([
-      [1.0, 2.0, 3.0],
-      [0.0, 1.0, 0.0],
-      [1.0, 2.0, 0.0],
-    ])
-    .arraySync() as number[][];
+  const X = [
+    [1.0, 2.0, 3.0],
+    [0.0, 1.0, 0.0],
+    [1.0, 2.0, 0.0],
+  ];
 
-  const Y = tf
-    .tensor2d([
-      [0.5, 1.0, 1.5],
-      [1.0, 0.0, 0.0],
-      [2.0, 5.0, 2.0],
-      [0.0, 0.0, 0.0],
-    ])
-    .arraySync() as number[][];
+  const Y = [
+    [0.5, 1.0, 1.5],
+    [1.0, 0.0, 0.0],
+    [2.0, 5.0, 2.0],
+    [0.0, 0.0, 0.0],
+  ];
 
-  const expected = tf
-    .tensor2d([
-      [0.9999999403953552, 0.26726123690605164, 0.8374357223510742, 0],
-      [0.5345224738121033, 0, 0.8703882694244385, 0],
-      [0.5976142287254333, 0.4472135901451111, 0.9341986775398254, 0],
-    ])
-    .arraySync() as number[][];
+  const expected = [
+    [1, 0.2672612419124244, 0.8374357893586237, 0],
+    [0.5345224838248488, 0, 0.8703882797784892, 0],
+    [0.5976143046671968, 0.4472135954999579, 0.9341987329938275, 0],
+  ];
 
   const actual = cosineSimilarity(X, Y);
   expect(actual).toEqual(expected);
@@ -57,36 +46,26 @@ test("Test cosine similarity", async () => {
 
 test("Test cosine similarity empty", async () => {
   const X = [[]];
-  const Y = tf.randomUniform([3, 3]).arraySync() as number[][];
+  const Y = Matrix.rand(3, 3).to2DArray();
   expect(cosineSimilarity(X, X)).toEqual([[]]);
   expect(cosineSimilarity(X, Y)).toEqual([[]]);
 });
 
 test("Test cosine similarity wrong shape", async () => {
-  const X = tf.randomUniform([2, 2]).arraySync() as number[][];
-  const Y = tf.randomUniform([2, 4]).arraySync() as number[][];
+  const X = Matrix.rand(2, 2).to2DArray();
+  const Y = Matrix.rand(2, 4).to2DArray();
   expect(() => cosineSimilarity(X, Y)).toThrowError();
 });
 
 test("Test cosine similarity different shape", async () => {
-  const X = tf.randomUniform([2, 2]).arraySync() as number[][];
-  const Y = tf.randomUniform([4, 2]).arraySync() as number[][];
+  const X = Matrix.rand(2, 2).to2DArray();
+  const Y = Matrix.rand(4, 2).to2DArray();
   expect(() => cosineSimilarity(X, Y)).not.toThrowError();
 });
 
-test("Test cosine similarity memory leaks", async () => {
-  const X = tf.randomUniform([3, 3]).arraySync() as number[][];
-  const Y = tf.randomUniform([3, 3]).arraySync() as number[][];
-
-  const expected = tf.memory().numTensors;
-  cosineSimilarity(X, Y);
-  const actual = tf.memory().numTensors;
-  expect(actual).toEqual(expected);
-});
-
 test("Test maximal marginal relevance lambda zero", async () => {
-  const queryEmbedding = tf.randomUniform([5]).arraySync() as number[];
-  const zeros = tf.zeros([5]).arraySync() as number[];
+  const queryEmbedding = Matrix.rand(5, 1).to1DArray();
+  const zeros = Matrix.zeros(5, 1).to1DArray();
   const embeddingList = [queryEmbedding, queryEmbedding, zeros];
 
   const expected = [0, 2];
@@ -96,8 +75,8 @@ test("Test maximal marginal relevance lambda zero", async () => {
 });
 
 test("Test maximal marginal relevance lambda one", async () => {
-  const queryEmbedding = tf.randomUniform([5]).arraySync() as number[];
-  const zeros = tf.zeros([5]).arraySync() as number[];
+  const queryEmbedding = Matrix.rand(5, 1).to1DArray();
+  const zeros = Matrix.zeros(5, 1).to1DArray();
   const embeddingList = [queryEmbedding, queryEmbedding, zeros];
 
   const expected = [0, 1];
@@ -134,13 +113,11 @@ test("Test maximal marginal relevance", async () => {
 });
 
 test("Test maximal marginal relevance query dim", async () => {
-  const randomTensor = tf.randomUniform([5]);
+  const randomVector = Matrix.rand(5, 1);
 
-  const queryEmbedding = randomTensor.arraySync() as number[];
-  const queryEmbedding2D = tf
-    .reshape(randomTensor, [1, 5])
-    .arraySync() as number[];
-  const embeddingList = tf.randomUniform([4, 5]).arraySync() as number[][];
+  const queryEmbedding = randomVector.to1DArray();
+  const queryEmbedding2D = randomVector.transpose().to1DArray();
+  const embeddingList = Matrix.rand(4, 5).to2DArray();
 
   const first = maximalMarginalRelevance(queryEmbedding, embeddingList, 1, 2);
   const second = maximalMarginalRelevance(
@@ -151,14 +128,4 @@ test("Test maximal marginal relevance query dim", async () => {
   );
 
   expect(first).toEqual(second);
-});
-
-test("Test maximal marginal relevance memory leaks", async () => {
-  const queryEmbedding = tf.randomUniform([5]).arraySync() as number[];
-  const embeddingList = tf.randomUniform([4, 5]).arraySync() as number[][];
-
-  const expected = tf.memory().numTensors;
-  maximalMarginalRelevance(queryEmbedding, embeddingList, 25 / 71, 2);
-  const actual = tf.memory().numTensors;
-  expect(actual).toEqual(expected);
 });

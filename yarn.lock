@@ -13025,6 +13025,7 @@ __metadata:
     langsmith: ~0.0.11
     mammoth: ^1.5.1
     ml-distance: ^4.0.0
+    ml-matrix: ^6.10.4
     mongodb: ^5.2.0
     mysql2: ^3.3.3
     notion-to-md: ^3.1.0
@@ -14143,12 +14144,41 @@ __metadata:
   languageName: node
   linkType: hard
 
+"ml-array-max@npm:^1.2.4":
+  version: 1.2.4
+  resolution: "ml-array-max@npm:1.2.4"
+  dependencies:
+    is-any-array: ^2.0.0
+  checksum: af59075eb6bf0076e179a075748f8f1a10f1d60f7ae55103035d5aca637ceb6a109e47bce28bfb82756c977652cbcad4d985e859cacd517edc8807f2e61f7abf
+  languageName: node
+  linkType: hard
+
 "ml-array-mean@npm:^1.1.6":
   version: 1.1.6
   resolution: "ml-array-mean@npm:1.1.6"
   dependencies:
     ml-array-sum: ^1.1.6
   checksum: 81999dac8bad3bf2dafb23a9bc71883879b9d55889e48d00b91dd4a2568957a6f5373632ae57324760d1e1d7d29ad45ab4ea7ae32de67ce144d57a21e36dd9c2
+  languageName: node
+  linkType: hard
+
+"ml-array-min@npm:^1.2.3":
+  version: 1.2.3
+  resolution: "ml-array-min@npm:1.2.3"
+  dependencies:
+    is-any-array: ^2.0.0
+  checksum: 7a09d5b4cf563a4743b69e5a395f6a617d6fd74ae5f35d0b77ca8ac9568d98b61249bd7d1f962a6e744726ebb94a6ece6e386a6e024ad0e9d329bce7e7e9f2c3
+  languageName: node
+  linkType: hard
+
+"ml-array-rescale@npm:^1.3.7":
+  version: 1.3.7
+  resolution: "ml-array-rescale@npm:1.3.7"
+  dependencies:
+    is-any-array: ^2.0.0
+    ml-array-max: ^1.2.4
+    ml-array-min: ^1.2.3
+  checksum: 7852a09cbc1f39ed625a93ba803ecc13438ddcae20961d7435fb0a89512b66e282b5ea0f425458813028f4004252ed40c6407b893d4b1910591c5aabc8e93810
   languageName: node
   linkType: hard
 
@@ -14176,6 +14206,16 @@ __metadata:
     ml-distance-euclidean: ^2.0.0
     ml-tree-similarity: ^1.0.0
   checksum: 37d07d52c5f1d185833336d73764e97dcdf8abe37e276fd6a3f7d536cf373e7cbfd6497f433192bd7d100b0b95518a616a8ae6df53b74c5b0d5fbfa7a971ae4d
+  languageName: node
+  linkType: hard
+
+"ml-matrix@npm:^6.10.4":
+  version: 6.10.4
+  resolution: "ml-matrix@npm:6.10.4"
+  dependencies:
+    is-any-array: ^2.0.0
+    ml-array-rescale: ^1.3.7
+  checksum: fe9895af746eec3db316451b6db40dcb14fe91f9939640a26202618ae8af826007e1db821e2c914a1555427cdf69a0c70b14965e4464efed0e180db42749b6c0
   languageName: node
   linkType: hard
 
