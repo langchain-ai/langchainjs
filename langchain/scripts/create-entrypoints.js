@@ -265,7 +265,6 @@ const requiresOptionalDependency = [
   "document_loaders/web/s3",
   "document_loaders/web/sonix_audio",
   "document_loaders/web/confluence",
-  "document_loaders/web/serpapi",
   "document_loaders/fs/directory",
   "document_loaders/fs/buffer",
   "document_loaders/fs/text",
