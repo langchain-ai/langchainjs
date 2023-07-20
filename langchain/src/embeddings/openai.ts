@@ -1,16 +1,16 @@
+import type { AxiosRequestConfig } from "axios";
 import {
   Configuration,
-  OpenAIApi,
-  CreateEmbeddingRequest,
   ConfigurationParameters,
+  CreateEmbeddingRequest,
+  OpenAIApi,
 } from "openai";
-import type { AxiosRequestConfig } from "axios";
-import { getEnvironmentVariable, isNode } from "../util/env.js";
 import { AzureOpenAIInput } from "../types/openai-types.js";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
+import { OpenAIEndpointConfig, getEndpoint } from "../util/azure.js";
 import { chunkArray } from "../util/chunk.js";
+import { getEnvironmentVariable, isNode } from "../util/env.js";
 import { Embeddings, EmbeddingsParams } from "./base.js";
-import { getEndpoint, OpenAIEndpointConfig } from "../util/azure.js";
 
 export interface OpenAIEmbeddingsParams extends EmbeddingsParams {
   /** Model name to use */
@@ -106,7 +106,12 @@ export class OpenAIEmbeddings
     this.azureOpenAIApiVersion = azureApiVersion;
     this.azureOpenAIApiKey = azureApiKey;
     this.azureOpenAIApiInstanceName = azureApiInstanceName;
-    this.azureOpenAIApiDeploymentName = azureApiDeploymentName;
+    // if openai/deployments is not in the deployment name, add it (for backwards compatibility)
+    if (azureApiDeploymentName?.indexOf("openai/deployments") === -1) {
+      this.azureOpenAIApiDeploymentName = `openai/deployments/${azureApiDeploymentName}`;
+    } else {
+      this.azureOpenAIApiDeploymentName = azureApiDeploymentName;
+    }
 
     if (this.azureOpenAIApiKey) {
       if (!this.azureOpenAIApiInstanceName) {
