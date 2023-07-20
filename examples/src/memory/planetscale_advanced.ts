@@ -11,7 +11,7 @@ const client = new Client({
 
 const memory = new BufferMemory({
   chatHistory: new PlanetscaleChatMessageHistory({
-    collectionName: "stored_message",
+    tableName: "stored_message",
     sessionId: "lc-example",
     client, // You can reuse your existing database client
   }),

@@ -5,7 +5,7 @@ import { ConversationChain } from "langchain/chains";
 
 const memory = new BufferMemory({
   chatHistory: new PlanetscaleChatMessageHistory({
-    collectionName: "stored_message",
+    tableName: "stored_message",
     sessionId: "lc-example",
     config: {
       url: "ADD_YOURS_HERE", // Override with your own database instance's URL
