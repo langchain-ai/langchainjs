@@ -427,6 +427,9 @@
     "cache/redis.cjs",
     "cache/redis.js",
     "cache/redis.d.ts",
+    "cache/ioredis.cjs",
+    "cache/ioredis.js",
+    "cache/ioredis.d.ts",
     "cache/upstash_redis.cjs",
     "cache/upstash_redis.js",
     "cache/upstash_redis.d.ts",
@@ -1601,6 +1604,11 @@
       "types": "./cache/redis.d.ts",
       "import": "./cache/redis.js",
       "require": "./cache/redis.cjs"
+    },
+    "./cache/ioredis": {
+      "types": "./cache/ioredis.d.ts",
+      "import": "./cache/ioredis.js",
+      "require": "./cache/ioredis.cjs"
     },
     "./cache/upstash_redis": {
       "types": "./cache/upstash_redis.d.ts",
