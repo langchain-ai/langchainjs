@@ -259,6 +259,9 @@ document_loaders/web/sonix_audio.d.ts
 document_loaders/web/confluence.cjs
 document_loaders/web/confluence.js
 document_loaders/web/confluence.d.ts
+document_loaders/web/serpapi.cjs
+document_loaders/web/serpapi.js
+document_loaders/web/serpapi.d.ts
 document_loaders/web/sort_xyz_blockchain.cjs
 document_loaders/web/sort_xyz_blockchain.js
 document_loaders/web/sort_xyz_blockchain.d.ts
