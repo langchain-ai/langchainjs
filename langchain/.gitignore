@@ -448,6 +448,9 @@ stores/message/ioredis.d.ts
 stores/message/upstash_redis.cjs
 stores/message/upstash_redis.js
 stores/message/upstash_redis.d.ts
+stores/message/planetscale.cjs
+stores/message/planetscale.js
+stores/message/planetscale.d.ts
 experimental/autogpt.cjs
 experimental/autogpt.js
 experimental/autogpt.d.ts

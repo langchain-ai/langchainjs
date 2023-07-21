@@ -183,6 +183,7 @@ const entrypoints = {
   "stores/message/redis": "stores/message/redis",
   "stores/message/ioredis": "stores/message/ioredis",
   "stores/message/upstash_redis": "stores/message/upstash_redis",
+  "stores/message/planetscale": "stores/message/planetscale",
   // experimental
   "experimental/autogpt": "experimental/autogpt/index",
   "experimental/babyagi": "experimental/babyagi/index",
@@ -303,6 +304,7 @@ const requiresOptionalDependency = [
   "stores/message/redis",
   "stores/message/ioredis",
   "stores/message/upstash_redis",
+  "stores/message/planetscale",
 ];
 
 // List of test-exports-* packages which we use to test that the exports field
