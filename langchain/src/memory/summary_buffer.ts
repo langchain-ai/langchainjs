@@ -4,25 +4,28 @@ import {
   MemoryVariables,
   OutputValues,
 } from "./base.js";
-import { SummarizerMixin, SummarizerMixinInput } from "./summary.js";
+import {
+  BaseConversationSummaryMemory,
+  BaseConversationSummaryMemoryInput,
+} from "./summary.js";
 
 export interface ConversationSummaryBufferMemoryInput
-  extends SummarizerMixinInput {
-  max_token_limit?: number;
+  extends BaseConversationSummaryMemoryInput {
+  maxTokenLimit?: number;
 }
 
 export class ConversationSummaryBufferMemory
-  extends SummarizerMixin
+  extends BaseConversationSummaryMemory
   implements ConversationSummaryBufferMemoryInput
 {
-  moving_summary_buffer = "";
+  movingSummaryBuffer = "";
 
-  max_token_limit = 2000;
+  maxTokenLimit = 2000;
 
   constructor(fields: ConversationSummaryBufferMemoryInput) {
     super(fields);
 
-    this.max_token_limit = fields?.max_token_limit ?? this.max_token_limit;
+    this.maxTokenLimit = fields?.maxTokenLimit ?? this.maxTokenLimit;
   }
 
   get memoryKeys() {
@@ -31,9 +34,9 @@ export class ConversationSummaryBufferMemory
 
   async loadMemoryVariables(_: InputValues): Promise<MemoryVariables> {
     let buffer = await this.chatHistory.getMessages();
-    if (this.moving_summary_buffer) {
+    if (this.movingSummaryBuffer) {
       buffer = [
-        new this.summaryChatMessageClass(this.moving_summary_buffer),
+        new this.summaryChatMessageClass(this.movingSummaryBuffer),
         ...buffer,
       ];
     }
@@ -59,49 +62,37 @@ export class ConversationSummaryBufferMemory
   async prune() {
     // Prune buffer if it exceeds max token limit
     let buffer = await this.chatHistory.getMessages();
-    if (this.moving_summary_buffer) {
+    if (this.movingSummaryBuffer) {
       buffer = [
-        new this.summaryChatMessageClass(this.moving_summary_buffer),
+        new this.summaryChatMessageClass(this.movingSummaryBuffer),
         ...buffer,
       ];
     }
 
-    // 判断 this.llm 是否有getNumTokensFromMessages方法
-    let currBufferLength;
-    if (this.returnMessages) {
-      currBufferLength = (await this.llm.getNumTokensFromMessages(buffer))
-        .totalCount;
-    } else {
-      currBufferLength = await this.llm.getNumTokens(
-        getBufferString(buffer, this.humanPrefix, this.aiPrefix)
-      );
-    }
+    let currBufferLength = await this.llm.getNumTokens(
+      getBufferString(buffer, this.humanPrefix, this.aiPrefix)
+    );
 
-    if (currBufferLength > this.max_token_limit) {
+    if (currBufferLength > this.maxTokenLimit) {
       const prunedMemory = [];
-      while (currBufferLength > this.max_token_limit) {
+      while (currBufferLength > this.maxTokenLimit) {
         const poppedMessage = buffer.shift();
         if (poppedMessage) {
-          prunedMemory.push(poppedMessage); // replace YourMessageType with the actual type of message
-          if (this.returnMessages) {
-            currBufferLength = (await this.llm.getNumTokensFromMessages(buffer))
-              .totalCount;
-          } else {
-            currBufferLength = await this.llm.getNumTokens(
-              getBufferString(buffer, this.humanPrefix, this.aiPrefix)
-            );
-          }
+          prunedMemory.push(poppedMessage);
+          currBufferLength = await this.llm.getNumTokens(
+            getBufferString(buffer, this.humanPrefix, this.aiPrefix)
+          );
         }
       }
-      this.moving_summary_buffer = await this.predictNewSummary(
+      this.movingSummaryBuffer = await this.predictNewSummary(
         prunedMemory,
-        this.moving_summary_buffer
+        this.movingSummaryBuffer
       );
     }
   }
 
   async clear() {
     await super.clear();
-    this.moving_summary_buffer = "";
+    this.movingSummaryBuffer = "";
   }
 }

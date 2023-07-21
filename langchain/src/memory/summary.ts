@@ -11,9 +11,11 @@ import {
 import { BaseChatMemory, BaseChatMemoryInput } from "./chat_memory.js";
 import { SUMMARY_PROMPT } from "./prompt.js";
 
-export interface ConversationSummaryMemoryInput extends SummarizerMixinInput {}
+export interface ConversationSummaryMemoryInput
+  extends BaseConversationSummaryMemoryInput {}
 
-export interface SummarizerMixinInput extends BaseChatMemoryInput {
+export interface BaseConversationSummaryMemoryInput
+  extends BaseChatMemoryInput {
   llm: BaseLanguageModel;
   memoryKey?: string;
   humanPrefix?: string;
@@ -22,7 +24,7 @@ export interface SummarizerMixinInput extends BaseChatMemoryInput {
   summaryChatMessageClass?: new (content: string) => BaseMessage;
 }
 
-export abstract class SummarizerMixin extends BaseChatMemory {
+export abstract class BaseConversationSummaryMemory extends BaseChatMemory {
   memoryKey = "history";
 
   humanPrefix = "Human";
@@ -35,7 +37,7 @@ export abstract class SummarizerMixin extends BaseChatMemory {
 
   summaryChatMessageClass: new (content: string) => BaseMessage = SystemMessage;
 
-  constructor(fields: SummarizerMixinInput) {
+  constructor(fields: BaseConversationSummaryMemoryInput) {
     const {
       returnMessages,
       inputKey,
@@ -72,7 +74,7 @@ export abstract class SummarizerMixin extends BaseChatMemory {
   }
 }
 
-export class ConversationSummaryMemory extends SummarizerMixin {
+export class ConversationSummaryMemory extends BaseConversationSummaryMemory {
   buffer = "";
 
   constructor(fields: ConversationSummaryMemoryInput) {

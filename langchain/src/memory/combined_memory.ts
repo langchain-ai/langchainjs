@@ -58,13 +58,13 @@ export class CombinedMemory
 
   checkInputKey() {
     for (const memory of this.memories) {
-      // eslint-disable-next-line no-instanceof/no-instanceof
-      if (memory instanceof BaseChatMemory) {
-        if (memory.inputKey === undefined) {
-          console.warn(
-            `When using CombinedMemory, input keys should be set so the input is known. Was not set on ${memory}`
-          );
-        }
+      if (
+        (memory as BaseChatMemory).chatHistory !== undefined &&
+        (memory as BaseChatMemory).inputKey === undefined
+      ) {
+        console.warn(
+          `When using CombinedMemory, input keys should be set so the input is known. Was not set on ${memory}.`
+        );
       }
     }
   }
@@ -72,7 +72,7 @@ export class CombinedMemory
   async loadMemoryVariables(
     inputValues: InputValues
   ): Promise<MemoryVariables> {
-    let memoryData: Record<string, any> = {};
+    let memoryData: Record<string, unknown> = {};
 
     for (const memory of this.memories) {
       const data = await memory.loadMemoryVariables(inputValues);
@@ -92,9 +92,8 @@ export class CombinedMemory
 
   async clear() {
     for (const memory of this.memories) {
-      // eslint-disable-next-line no-instanceof/no-instanceof
-      if (memory instanceof BaseChatMemory) {
-        await memory.clear();
+      if (typeof (memory as BaseChatMemory).clear === "function") {
+        await (memory as BaseChatMemory).clear();
       }
     }
   }
