@@ -1,20 +1,11 @@
-import type { createCluster, createClient } from "redis";
-
+import { Redis } from "ioredis";
 import { BaseCache, Generation } from "../schema/index.js";
 import { getCacheKey } from "./base.js";
 
-type RedisClientType =
-  | ReturnType<typeof createClient>
-  | ReturnType<typeof createCluster>;
-
-/**
- * @deprecated
- * Use {@link ./ioredis/RedisCache} instead.
- */
 export class RedisCache extends BaseCache {
-  private redisClient: RedisClientType;
+  private redisClient: Redis;
 
-  constructor(redisClient: RedisClientType) {
+  constructor(redisClient: Redis) {
     super();
     this.redisClient = redisClient;
   }
