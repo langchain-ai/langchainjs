@@ -6087,14 +6087,24 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/pg@npm:^8":
-  version: 8.10.1
-  resolution: "@types/pg@npm:8.10.1"
+"@types/pg-copy-streams@npm:^1.2.2":
+  version: 1.2.2
+  resolution: "@types/pg-copy-streams@npm:1.2.2"
+  dependencies:
+    "@types/node": "*"
+    "@types/pg": "*"
+  checksum: 601a9295d122a1a7307b4730c5811e71003653d58aa7d1423a0311c09f763f8f2183a5fc82e5fb53375b2d1679c43805f5fe316e88dcae2eaf9ec7c1e0676e5f
+  languageName: node
+  linkType: hard
+
+"@types/pg@npm:*, @types/pg@npm:^8":
+  version: 8.10.2
+  resolution: "@types/pg@npm:8.10.2"
   dependencies:
     "@types/node": "*"
     pg-protocol: "*"
     pg-types: ^4.0.1
-  checksum: fcc8a4454cc98225ba474a8e18b70e044053775d88f2590ef8f1ffca3edc215b1aecf9e233dc0c820f92c674726b4b9942518b8db9944c30ce8f472340f49a44
+  checksum: 49da89f64cec1bd12a3fbc0c72b17d685c2fee579726a529f62fcab395dbc5696d80455073409947a577164b3c53a90181a331e4a5d9357679f724d4ce37f4b9
   languageName: node
   linkType: hard
 
@@ -12991,6 +13001,7 @@ __metadata:
     "@types/object-hash": ^3.0.2
     "@types/pdf-parse": ^1.1.1
     "@types/pg": ^8
+    "@types/pg-copy-streams": ^1.2.2
     "@types/uuid": ^9
     "@typescript-eslint/eslint-plugin": ^5.58.0
     "@typescript-eslint/parser": ^5.58.0
@@ -13044,6 +13055,7 @@ __metadata:
     pdf-parse: 1.1.1
     peggy: ^3.0.2
     pg: ^8.11.0
+    pg-copy-streams: ^6.0.5
     pickleparser: ^0.1.0
     playwright: ^1.32.1
     prettier: ^2.8.3
@@ -13115,6 +13127,7 @@ __metadata:
     pdf-parse: 1.1.1
     peggy: ^3.0.2
     pg: ^8.11.0
+    pg-copy-streams: ^6.0.5
     pickleparser: ^0.1.0
     playwright: ^1.32.1
     puppeteer: ^19.7.2
@@ -13222,6 +13235,8 @@ __metadata:
     peggy:
       optional: true
     pg:
+      optional: true
+    pg-copy-streams:
       optional: true
     pickleparser:
       optional: true
@@ -14917,7 +14932,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"obuf@npm:~1.1.2":
+"obuf@npm:^1.1.2, obuf@npm:~1.1.2":
   version: 1.1.2
   resolution: "obuf@npm:1.1.2"
   checksum: 41a2ba310e7b6f6c3b905af82c275bf8854896e2e4c5752966d64cbcd2f599cfffd5932006bcf3b8b419dfdacebb3a3912d5d94e10f1d0acab59876c8757f27f
@@ -15475,6 +15490,15 @@ __metadata:
   version: 2.6.0
   resolution: "pg-connection-string@npm:2.6.0"
   checksum: 0262452638163c0b875495cfb82e363061cc8d560d3162143b1dfb63f70a666c7c52ba37e78054a3476de9a627faeec75f65445ba6fe065db068317ec84d3df8
+  languageName: node
+  linkType: hard
+
+"pg-copy-streams@npm:^6.0.5":
+  version: 6.0.5
+  resolution: "pg-copy-streams@npm:6.0.5"
+  dependencies:
+    obuf: ^1.1.2
+  checksum: 45074d8b366a0f572af628cbf5831b834653856f7945b1e11541bc1b81609b464d636d344b6f60b2c6b836328e9b2faa48e1add5f9adc3c6ca4591ebbea96e5d
   languageName: node
   linkType: hard
 

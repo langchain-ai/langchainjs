@@ -127,6 +127,9 @@ prompts/load.d.ts
 vectorstores.cjs
 vectorstores.js
 vectorstores.d.ts
+vectorstores/analyticdb.cjs
+vectorstores/analyticdb.js
+vectorstores/analyticdb.d.ts
 vectorstores/base.cjs
 vectorstores/base.js
 vectorstores/base.d.ts
