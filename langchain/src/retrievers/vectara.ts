@@ -12,10 +12,10 @@ export class VectaraRetriever extends BaseRetriever {
 
   async getRelevantDocuments(
     query: string,
-    k = 10,
+    numResults = 10,
     filter: VectaraFilter | undefined = undefined
   ): Promise<Document[]> {
-    const res = await this.store.similaritySearch(query, k, filter);
+    const res = await this.store.similaritySearch(query, numResults, filter);
     return res;
   }
 }
