@@ -1,7 +1,12 @@
 import { PromptTemplate } from "../prompts/prompt.js";
 import { BaseLanguageModel } from "../base_language/index.js";
 import { SerializedChatVectorDBQAChain } from "./serde.js";
-import { ChainValues, BaseMessage } from "../schema/index.js";
+import {
+  ChainValues,
+  BaseMessage,
+  HumanMessage,
+  AIMessage,
+} from "../schema/index.js";
 import { BaseRetriever } from "../schema/retriever.js";
 import { BaseChain, ChainInputs } from "./base.js";
 import { LLMChain } from "./llm_chain.js";
@@ -62,9 +67,30 @@ export class ConversationalRetrievalQAChain
       fields.returnSourceDocuments ?? this.returnSourceDocuments;
   }
 
-  static getChatHistoryString(chatHistory: string | BaseMessage[]) {
+  static getChatHistoryString(
+    chatHistory: string | BaseMessage[] | string[][]
+  ) {
+    let historyMessages: BaseMessage[];
     if (Array.isArray(chatHistory)) {
-      return chatHistory
+      // TODO: Deprecate on a breaking release
+      if (
+        Array.isArray(chatHistory[0]) &&
+        typeof chatHistory[0][0] === "string"
+      ) {
+        console.warn(
+          "Passing chat history as an array of strings is deprecated.\nPlease see https://js.langchain.com/docs/modules/chains/popular/chat_vector_db#externally-managed-memory for more information."
+        );
+        historyMessages = chatHistory.flat().map((stringMessage, i) => {
+          if (i % 2 === 0) {
+            return new HumanMessage(stringMessage);
+          } else {
+            return new AIMessage(stringMessage);
+          }
+        });
+      } else {
+        historyMessages = chatHistory as BaseMessage[];
+      }
+      return historyMessages
         .map((chatMessage) => {
           if (chatMessage._getType() === "human") {
             return `Human: ${chatMessage.content}`;
