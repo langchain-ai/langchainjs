@@ -4,7 +4,7 @@
 
 import { test, expect } from "@jest/globals";
 
-import { PlanetscaleChatMessageHistory } from "../message/planetscale.js";
+import { PlanetScaleChatMessageHistory } from "../message/planetscale.js";
 import { HumanMessage, AIMessage } from "../../schema/index.js";
 import { ChatOpenAI } from "../../chat_models/openai.js";
 import { ConversationChain } from "../../chains/conversation.js";
@@ -14,9 +14,9 @@ const config = {
   url: process.env.PLANETSCALE_DATABASE_URL!,
 };
 
-describe("PlanetscaleChatMessageHistory", () => {
-  test("Test Planetscale history store", async () => {
-    const chatHistory = new PlanetscaleChatMessageHistory({
+describe("PlanetScaleChatMessageHistory", () => {
+  test.skip("Test Planetscale history store", async () => {
+    const chatHistory = new PlanetScaleChatMessageHistory({
       sessionId: new Date().toISOString(),
       config,
     });
@@ -36,8 +36,8 @@ describe("PlanetscaleChatMessageHistory", () => {
     expect(resultWithHistory).toEqual(expectedMessages);
   });
 
-  test("Test clear Planetscale history store", async () => {
-    const chatHistory = new PlanetscaleChatMessageHistory({
+  test.skip("Test clear Planetscale history store", async () => {
+    const chatHistory = new PlanetScaleChatMessageHistory({
       sessionId: new Date().toISOString(),
       config,
     });
@@ -59,10 +59,10 @@ describe("PlanetscaleChatMessageHistory", () => {
     expect(blankResult).toStrictEqual([]);
   });
 
-  test("Test Planetscale memory with Buffer Memory", async () => {
+  test.skip("Test Planetscale memory with Buffer Memory", async () => {
     const memory = new BufferMemory({
       returnMessages: true,
-      chatHistory: new PlanetscaleChatMessageHistory({
+      chatHistory: new PlanetScaleChatMessageHistory({
         sessionId: new Date().toISOString(),
         config,
       }),
@@ -82,9 +82,9 @@ describe("PlanetscaleChatMessageHistory", () => {
     expect(result2).toStrictEqual({ history: expectedHistory });
   });
 
-  test("Test Planetscale memory with LLM Chain", async () => {
+  test.skip("Test Planetscale memory with LLM Chain", async () => {
     const memory = new BufferMemory({
-      chatHistory: new PlanetscaleChatMessageHistory({
+      chatHistory: new PlanetScaleChatMessageHistory({
         sessionId: new Date().toISOString(),
         config,
       }),

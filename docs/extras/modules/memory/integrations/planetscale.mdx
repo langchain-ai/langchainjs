@@ -4,11 +4,11 @@ hide_table_of_contents: true
 
 import CodeBlock from "@theme/CodeBlock";
 
-# Planetscale Chat Memory
+# PlanetScale Chat Memory
 
-Because Planetscale works via a REST API, you can use this with [Vercel Edge](https://vercel.com/docs/concepts/functions/edge-functions/edge-runtime), [Cloudflare Workers](https://developers.cloudflare.com/workers/) and other Serverless environments.
+Because PlanetScale works via a REST API, you can use this with [Vercel Edge](https://vercel.com/docs/concepts/functions/edge-functions/edge-runtime), [Cloudflare Workers](https://developers.cloudflare.com/workers/) and other Serverless environments.
 
-For longer-term persistence across chat sessions, you can swap out the default in-memory `chatHistory` that backs chat memory classes like `BufferMemory` for an Planetscale [Database](https://planetscale.com/) instance.
+For longer-term persistence across chat sessions, you can swap out the default in-memory `chatHistory` that backs chat memory classes like `BufferMemory` for an PlanetScale [Database](https://planetscale.com/) instance.
 
 ## Setup
 
@@ -18,11 +18,11 @@ You will need to install [@planetscale/database](https://github.com/planetscale/
 npm install @planetscale/database
 ```
 
-You will also need an Planeetscale Account and a database to connect to. See instructions on [Planetscale Docs](https://planetscale.com/docs) on how to create a HTTP client.
+You will also need an PlanetScale Account and a database to connect to. See instructions on [PlanetScale Docs](https://planetscale.com/docs) on how to create a HTTP client.
 
 ## Usage
 
-Each chat history session stored in Planetscale database must have a unique id.
+Each chat history session stored in PlanetScale database must have a unique id.
 The `config` parameter is passed directly into the `new Client()` constructor of [@planetscale/database](https://planetscale.com/docs/tutorials/planetscale-serverless-driver), and takes all the same arguments.
 
 import Example from "@examples/memory/planetscale.ts";

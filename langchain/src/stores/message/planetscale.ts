@@ -1,7 +1,7 @@
 import {
-  Client as PlanetscaleClient,
-  Config as PlanetscaleConfig,
-  Connection as PlanetscaleConnection,
+  Client as PlanetScaleClient,
+  Config as PlanetScaleConfig,
+  Connection as PlanetScaleConnection,
 } from "@planetscale/database";
 import {
   BaseMessage,
@@ -14,11 +14,11 @@ import {
   mapStoredMessagesToChatMessages,
 } from "./utils.js";
 
-export type PlanetscaleChatMessageHistoryInput = {
+export type PlanetScaleChatMessageHistoryInput = {
   tableName?: string;
   sessionId: string;
-  config?: PlanetscaleConfig;
-  client?: PlanetscaleClient;
+  config?: PlanetScaleConfig;
+  client?: PlanetScaleClient;
 };
 
 interface selectStoredMessagesDTO {
@@ -31,7 +31,7 @@ interface selectStoredMessagesDTO {
   additional_kwargs: string;
 }
 
-export class PlanetscaleChatMessageHistory extends BaseListChatMessageHistory {
+export class PlanetScaleChatMessageHistory extends BaseListChatMessageHistory {
   lc_namespace = ["langchain", "stores", "message", "planetscale"];
 
   get lc_secrets() {
@@ -43,15 +43,17 @@ export class PlanetscaleChatMessageHistory extends BaseListChatMessageHistory {
     };
   }
 
-  public client: PlanetscaleClient;
+  public client: PlanetScaleClient;
 
-  private connection: PlanetscaleConnection;
+  private connection: PlanetScaleConnection;
 
   private tableName: string;
 
   private sessionId: string;
 
-  constructor(fields: PlanetscaleChatMessageHistoryInput) {
+  private tableInitialized: boolean;
+
+  constructor(fields: PlanetScaleChatMessageHistoryInput) {
     super(fields);
 
     const { sessionId, config, client, tableName } = fields;
@@ -59,33 +61,38 @@ export class PlanetscaleChatMessageHistory extends BaseListChatMessageHistory {
     if (client) {
       this.client = client;
     } else if (config) {
-      this.client = new PlanetscaleClient(config);
+      this.client = new PlanetScaleClient(config);
     } else {
       throw new Error(
-        "Either a client or config must be provided to PlanetscaleChatMessageHistory"
+        "Either a client or config must be provided to PlanetScaleChatMessageHistory"
       );
     }
 
     this.connection = this.client.connection();
 
-    this.tableName = tableName || "stored_message";
+    this.tableName = tableName || "langchain_chat_histories";
+    this.tableInitialized = false;
     this.sessionId = sessionId;
   }
 
-  private async createTableIfNotExists(): Promise<void> {
+  private async ensureTable(): Promise<void> {
+    if (this.tableInitialized) {
+      return;
+    }
+
     const query = `CREATE TABLE IF NOT EXISTS ${this.tableName} (id BINARY(16) PRIMARY KEY, session_id VARCHAR(255), type VARCHAR(255), content VARCHAR(255), role VARCHAR(255), name VARCHAR(255), additional_kwargs VARCHAR(255));`;
 
-    const creation = await this.connection.execute(query);
-
-    console.log(creation);
+    await this.connection.execute(query);
 
     const indexQuery = `ALTER TABLE ${this.tableName} MODIFY id BINARY(16) DEFAULT (UUID_TO_BIN(UUID()));`;
 
     await this.connection.execute(indexQuery);
+
+    this.tableInitialized = true;
   }
 
   async getMessages(): Promise<BaseMessage[]> {
-    await this.createTableIfNotExists();
+    await this.ensureTable();
 
     const query = `SELECT * FROM ${this.tableName} WHERE session_id = :session_id`;
     const params = {
@@ -121,7 +128,7 @@ export class PlanetscaleChatMessageHistory extends BaseListChatMessageHistory {
   }
 
   async addMessage(message: BaseMessage): Promise<void> {
-    await this.createTableIfNotExists();
+    await this.ensureTable();
 
     const messageToAdd = mapChatMessagesToStoredMessages([message]);
 
@@ -140,7 +147,7 @@ export class PlanetscaleChatMessageHistory extends BaseListChatMessageHistory {
   }
 
   async clear(): Promise<void> {
-    await this.createTableIfNotExists();
+    await this.ensureTable();
 
     const query = `DELETE FROM ${this.tableName} WHERE session_id = :session_id`;
     const params = {

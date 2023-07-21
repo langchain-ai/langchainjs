@@ -1,5 +1,5 @@
 import { BufferMemory } from "langchain/memory";
-import { PlanetscaleChatMessageHistory } from "langchain/stores/message/planetscale";
+import { PlanetScaleChatMessageHistory } from "langchain/stores/message/planetscale";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { ConversationChain } from "langchain/chains";
 import { Client } from "@planetscale/database";
@@ -10,7 +10,7 @@ const client = new Client({
 });
 
 const memory = new BufferMemory({
-  chatHistory: new PlanetscaleChatMessageHistory({
+  chatHistory: new PlanetScaleChatMessageHistory({
     tableName: "stored_message",
     sessionId: "lc-example",
     client, // You can reuse your existing database client

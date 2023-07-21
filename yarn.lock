@@ -12975,6 +12975,7 @@ __metadata:
     "@notionhq/client": ^2.2.5
     "@opensearch-project/opensearch": ^2.2.0
     "@pinecone-database/pinecone": ^0.0.14
+    "@planetscale/database": ^1.8.0
     "@qdrant/js-client-rest": ^1.2.0
     "@supabase/postgrest-js": ^1.1.1
     "@supabase/supabase-js": ^2.10.0
