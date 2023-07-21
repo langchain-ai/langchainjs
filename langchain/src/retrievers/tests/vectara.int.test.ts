@@ -7,8 +7,13 @@ import { VectaraStore } from "../../vectorstores/vectara.js";
 
 /**
  * Steps to run this test:
- * 1. Create a Vectara account at https://vectara.com/
- * 2. Create a corpus with the following filter attributes: can_fly (level: document, data type: boolean), category (level: document, data type: integer)
+ * 1. Create a Vectara account at https://console.vectara.com/signup
+ * 2. Create a corpus with the following filter attributes:
+ *      lang (level: part, data type: text)
+ *      is_title (level: part, data type:  boolean)
+ *      can_fly (level: document, data type: boolean)
+ *      category (level: document, data type: integer)
+ *    Note: make sure to create an empty corpus (without any documents or text)
  * 3. Set the appropriate environment variables in your .env file (VECTARA_CUSTOMER_ID, VECTARA_CORPUS_ID, VECTARA_API_KEY)
  * 4. Run the test
  */
@@ -108,7 +113,7 @@ test("Vectara Retriever (with filters)", async () => {
   // expect all mammals results to contain either Lion or Flying Squirrel
   expect(
     mammals[0].pageContent.includes("Lion") ||
-      mammals[0].pageContent.includes("FLying Squirrel")
+      mammals[0].pageContent.includes("Flying Squirrel")
   ).toBeTruthy();
 
   const flyingAnimals = await retriever.getRelevantDocuments("animal", 5, {
