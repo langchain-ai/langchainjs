@@ -3,6 +3,8 @@ export { BaseMemory, getInputValue, getBufferString } from "./base.js";
 export {
   ConversationSummaryMemory,
   ConversationSummaryMemoryInput,
+  SummarizerMixin,
+  SummarizerMixinInput,
 } from "./summary.js";
 export {
   BufferWindowMemory,
@@ -17,3 +19,8 @@ export {
 } from "./vector_store.js";
 export { EntityMemory } from "./entity_memory.js";
 export { ENTITY_MEMORY_CONVERSATION_TEMPLATE } from "./prompt.js";
+export { CombinedMemoryInput, CombinedMemory } from "./combine_memory.js";
+export {
+  ConversationSummaryBufferMemory,
+  ConversationSummaryBufferMemoryInput,
+} from "./summary_buffer.js";
