@@ -156,6 +156,22 @@ const config = {
         title: "🦜️🔗 LangChain",
         items: [
           {
+            to: "/docs/get_started/introduction",
+            label: "Docs",
+            position: "left",
+          },
+          {
+            type: 'docSidebar',
+            position: 'left',
+            sidebarId: 'use_cases',
+            label: 'Use cases',
+          },
+          {
+            href: "/docs/api/",
+            label: "API",
+            position: "left",
+          },
+          {
             href: "https://smith.langchain.com/",
             label: "LangSmith",
             position: "right",
@@ -170,6 +186,7 @@ const config = {
             href: "https://github.com/hwchase17/langchainjs",
             label: "GitHub",
             position: "right",
+            "aria-label": "GitHub repository",
           },
         ],
       },
