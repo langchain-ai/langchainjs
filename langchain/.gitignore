@@ -127,6 +127,9 @@ prompts/load.d.ts
 vectorstores.cjs
 vectorstores.js
 vectorstores.d.ts
+vectorstores/analyticdb.cjs
+vectorstores/analyticdb.js
+vectorstores/analyticdb.d.ts
 vectorstores/base.cjs
 vectorstores/base.js
 vectorstores/base.d.ts
@@ -259,6 +262,9 @@ document_loaders/web/sonix_audio.d.ts
 document_loaders/web/confluence.cjs
 document_loaders/web/confluence.js
 document_loaders/web/confluence.d.ts
+document_loaders/web/serpapi.cjs
+document_loaders/web/serpapi.js
+document_loaders/web/serpapi.d.ts
 document_loaders/web/sort_xyz_blockchain.cjs
 document_loaders/web/sort_xyz_blockchain.js
 document_loaders/web/sort_xyz_blockchain.d.ts
@@ -445,6 +451,9 @@ stores/message/ioredis.d.ts
 stores/message/upstash_redis.cjs
 stores/message/upstash_redis.js
 stores/message/upstash_redis.d.ts
+stores/message/planetscale.cjs
+stores/message/planetscale.js
+stores/message/planetscale.d.ts
 experimental/autogpt.cjs
 experimental/autogpt.js
 experimental/autogpt.d.ts

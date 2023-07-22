@@ -15,21 +15,19 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@anthropic-ai/sdk@npm:^0.5.3":
-  version: 0.5.4
-  resolution: "@anthropic-ai/sdk@npm:0.5.4"
+"@anthropic-ai/sdk@npm:^0.5.7":
+  version: 0.5.7
+  resolution: "@anthropic-ai/sdk@npm:0.5.7"
   dependencies:
     "@types/node": ^18.11.18
     "@types/node-fetch": ^2.6.4
-    "@types/qs": ^6.9.7
     abort-controller: ^3.0.0
     agentkeepalive: ^4.2.1
     digest-fetch: ^1.3.0
     form-data-encoder: 1.7.2
     formdata-node: ^4.3.2
     node-fetch: ^2.6.7
-    qs: ^6.10.3
-  checksum: 2baee795eebd852d13368c67f857d039901f362ac740cd97dc748c8170e0aa19ccccefd57356c2c7b134ace2fb22ff7d95a2d43b6957524056f0803a6610fac8
+  checksum: b4c55d8c962438516a035e8d08c4e6bc1f34f93df6254dc0e12db3d21cf265df3416cbfe976e9fad9ecc22f15aa1f58048465f9a298f80b71efcb6c872a35583
   languageName: node
   linkType: hard
 
@@ -5228,6 +5226,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@planetscale/database@npm:^1.8.0":
+  version: 1.8.0
+  resolution: "@planetscale/database@npm:1.8.0"
+  checksum: f1ad8068da139208b428a5245aca6fe21c987dc922589483d7cc21453273a7462dab391e15794c0ba012d185ad59459160f14cf4ca2fd42bd3053e7474952a0b
+  languageName: node
+  linkType: hard
+
 "@pnpm/config.env-replace@npm:^1.0.0":
   version: 1.0.0
   resolution: "@pnpm/config.env-replace@npm:1.0.0"
@@ -6082,14 +6087,24 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/pg@npm:^8":
-  version: 8.10.1
-  resolution: "@types/pg@npm:8.10.1"
+"@types/pg-copy-streams@npm:^1.2.2":
+  version: 1.2.2
+  resolution: "@types/pg-copy-streams@npm:1.2.2"
+  dependencies:
+    "@types/node": "*"
+    "@types/pg": "*"
+  checksum: 601a9295d122a1a7307b4730c5811e71003653d58aa7d1423a0311c09f763f8f2183a5fc82e5fb53375b2d1679c43805f5fe316e88dcae2eaf9ec7c1e0676e5f
+  languageName: node
+  linkType: hard
+
+"@types/pg@npm:*, @types/pg@npm:^8":
+  version: 8.10.2
+  resolution: "@types/pg@npm:8.10.2"
   dependencies:
     "@types/node": "*"
     pg-protocol: "*"
     pg-types: ^4.0.1
-  checksum: fcc8a4454cc98225ba474a8e18b70e044053775d88f2590ef8f1ffca3edc215b1aecf9e233dc0c820f92c674726b4b9942518b8db9944c30ce8f472340f49a44
+  checksum: 49da89f64cec1bd12a3fbc0c72b17d685c2fee579726a529f62fcab395dbc5696d80455073409947a577164b3c53a90181a331e4a5d9357679f724d4ce37f4b9
   languageName: node
   linkType: hard
 
@@ -6114,7 +6129,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/qs@npm:*, @types/qs@npm:^6.9.7":
+"@types/qs@npm:*":
   version: 6.9.7
   resolution: "@types/qs@npm:6.9.7"
   checksum: 7fd6f9c25053e9b5bb6bc9f9f76c1d89e6c04f7707a7ba0e44cc01f17ef5284adb82f230f542c2d5557d69407c9a40f0f3515e8319afd14e1e16b5543ac6cdba
@@ -9905,6 +9920,7 @@ __metadata:
     "@gomomento/sdk": ^1.23.0
     "@opensearch-project/opensearch": ^2.2.0
     "@pinecone-database/pinecone": ^0.0.14
+    "@planetscale/database": ^1.8.0
     "@prisma/client": ^4.11.0
     "@supabase/supabase-js": ^2.10.0
     "@tensorflow/tfjs-backend-cpu": ^4.4.0
@@ -12947,7 +12963,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "langchain@workspace:langchain"
   dependencies:
-    "@anthropic-ai/sdk": ^0.5.3
+    "@anthropic-ai/sdk": ^0.5.7
     "@aws-sdk/client-dynamodb": ^3.310.0
     "@aws-sdk/client-kendra": ^3.352.0
     "@aws-sdk/client-lambda": ^3.310.0
@@ -12967,6 +12983,7 @@ __metadata:
     "@notionhq/client": ^2.2.5
     "@opensearch-project/opensearch": ^2.2.0
     "@pinecone-database/pinecone": ^0.0.14
+    "@planetscale/database": ^1.8.0
     "@qdrant/js-client-rest": ^1.2.0
     "@supabase/postgrest-js": ^1.1.1
     "@supabase/supabase-js": ^2.10.0
@@ -12984,6 +13001,7 @@ __metadata:
     "@types/object-hash": ^3.0.2
     "@types/pdf-parse": ^1.1.1
     "@types/pg": ^8
+    "@types/pg-copy-streams": ^1.2.2
     "@types/uuid": ^9
     "@typescript-eslint/eslint-plugin": ^5.58.0
     "@typescript-eslint/parser": ^5.58.0
@@ -13025,6 +13043,7 @@ __metadata:
     langsmith: ~0.0.11
     mammoth: ^1.5.1
     ml-distance: ^4.0.0
+    ml-matrix: ^6.10.4
     mongodb: ^5.2.0
     mysql2: ^3.3.3
     notion-to-md: ^3.1.0
@@ -13036,6 +13055,7 @@ __metadata:
     pdf-parse: 1.1.1
     peggy: ^3.0.2
     pg: ^8.11.0
+    pg-copy-streams: ^6.0.5
     pickleparser: ^0.1.0
     playwright: ^1.32.1
     prettier: ^2.8.3
@@ -13076,6 +13096,7 @@ __metadata:
     "@notionhq/client": ^2.2.5
     "@opensearch-project/opensearch": "*"
     "@pinecone-database/pinecone": "*"
+    "@planetscale/database": ^1.8.0
     "@qdrant/js-client-rest": ^1.2.0
     "@supabase/postgrest-js": ^1.1.1
     "@supabase/supabase-js": ^2.10.0
@@ -13106,6 +13127,7 @@ __metadata:
     pdf-parse: 1.1.1
     peggy: ^3.0.2
     pg: ^8.11.0
+    pg-copy-streams: ^6.0.5
     pickleparser: ^0.1.0
     playwright: ^1.32.1
     puppeteer: ^19.7.2
@@ -13151,6 +13173,8 @@ __metadata:
     "@opensearch-project/opensearch":
       optional: true
     "@pinecone-database/pinecone":
+      optional: true
+    "@planetscale/database":
       optional: true
     "@qdrant/js-client-rest":
       optional: true
@@ -13211,6 +13235,8 @@ __metadata:
     peggy:
       optional: true
     pg:
+      optional: true
+    pg-copy-streams:
       optional: true
     pickleparser:
       optional: true
@@ -14143,12 +14169,41 @@ __metadata:
   languageName: node
   linkType: hard
 
+"ml-array-max@npm:^1.2.4":
+  version: 1.2.4
+  resolution: "ml-array-max@npm:1.2.4"
+  dependencies:
+    is-any-array: ^2.0.0
+  checksum: af59075eb6bf0076e179a075748f8f1a10f1d60f7ae55103035d5aca637ceb6a109e47bce28bfb82756c977652cbcad4d985e859cacd517edc8807f2e61f7abf
+  languageName: node
+  linkType: hard
+
 "ml-array-mean@npm:^1.1.6":
   version: 1.1.6
   resolution: "ml-array-mean@npm:1.1.6"
   dependencies:
     ml-array-sum: ^1.1.6
   checksum: 81999dac8bad3bf2dafb23a9bc71883879b9d55889e48d00b91dd4a2568957a6f5373632ae57324760d1e1d7d29ad45ab4ea7ae32de67ce144d57a21e36dd9c2
+  languageName: node
+  linkType: hard
+
+"ml-array-min@npm:^1.2.3":
+  version: 1.2.3
+  resolution: "ml-array-min@npm:1.2.3"
+  dependencies:
+    is-any-array: ^2.0.0
+  checksum: 7a09d5b4cf563a4743b69e5a395f6a617d6fd74ae5f35d0b77ca8ac9568d98b61249bd7d1f962a6e744726ebb94a6ece6e386a6e024ad0e9d329bce7e7e9f2c3
+  languageName: node
+  linkType: hard
+
+"ml-array-rescale@npm:^1.3.7":
+  version: 1.3.7
+  resolution: "ml-array-rescale@npm:1.3.7"
+  dependencies:
+    is-any-array: ^2.0.0
+    ml-array-max: ^1.2.4
+    ml-array-min: ^1.2.3
+  checksum: 7852a09cbc1f39ed625a93ba803ecc13438ddcae20961d7435fb0a89512b66e282b5ea0f425458813028f4004252ed40c6407b893d4b1910591c5aabc8e93810
   languageName: node
   linkType: hard
 
@@ -14176,6 +14231,16 @@ __metadata:
     ml-distance-euclidean: ^2.0.0
     ml-tree-similarity: ^1.0.0
   checksum: 37d07d52c5f1d185833336d73764e97dcdf8abe37e276fd6a3f7d536cf373e7cbfd6497f433192bd7d100b0b95518a616a8ae6df53b74c5b0d5fbfa7a971ae4d
+  languageName: node
+  linkType: hard
+
+"ml-matrix@npm:^6.10.4":
+  version: 6.10.4
+  resolution: "ml-matrix@npm:6.10.4"
+  dependencies:
+    is-any-array: ^2.0.0
+    ml-array-rescale: ^1.3.7
+  checksum: fe9895af746eec3db316451b6db40dcb14fe91f9939640a26202618ae8af826007e1db821e2c914a1555427cdf69a0c70b14965e4464efed0e180db42749b6c0
   languageName: node
   linkType: hard
 
@@ -14867,7 +14932,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"obuf@npm:~1.1.2":
+"obuf@npm:^1.1.2, obuf@npm:~1.1.2":
   version: 1.1.2
   resolution: "obuf@npm:1.1.2"
   checksum: 41a2ba310e7b6f6c3b905af82c275bf8854896e2e4c5752966d64cbcd2f599cfffd5932006bcf3b8b419dfdacebb3a3912d5d94e10f1d0acab59876c8757f27f
@@ -15425,6 +15490,15 @@ __metadata:
   version: 2.6.0
   resolution: "pg-connection-string@npm:2.6.0"
   checksum: 0262452638163c0b875495cfb82e363061cc8d560d3162143b1dfb63f70a666c7c52ba37e78054a3476de9a627faeec75f65445ba6fe065db068317ec84d3df8
+  languageName: node
+  linkType: hard
+
+"pg-copy-streams@npm:^6.0.5":
+  version: 6.0.5
+  resolution: "pg-copy-streams@npm:6.0.5"
+  dependencies:
+    obuf: ^1.1.2
+  checksum: 45074d8b366a0f572af628cbf5831b834653856f7945b1e11541bc1b81609b464d636d344b6f60b2c6b836328e9b2faa48e1add5f9adc3c6ca4591ebbea96e5d
   languageName: node
   linkType: hard
 
@@ -16043,15 +16117,6 @@ __metadata:
   version: 6.0.0
   resolution: "pure-rand@npm:6.0.0"
   checksum: ad1378d0a4859482d053a5264b2b485b445ece4bbc56f8959c233ea678b81ac2d613737925d496ded134eff5f29cc5546bf7492b6bce319ee27bebbad8a0c612
-  languageName: node
-  linkType: hard
-
-"qs@npm:^6.10.3":
-  version: 6.11.2
-  resolution: "qs@npm:6.11.2"
-  dependencies:
-    side-channel: ^1.0.4
-  checksum: e812f3c590b2262548647d62f1637b6989cc56656dc960b893fe2098d96e1bd633f36576f4cd7564dfbff9db42e17775884db96d846bebe4f37420d073ecdc0b
   languageName: node
   linkType: hard
 

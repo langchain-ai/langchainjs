@@ -76,6 +76,9 @@ export interface OptionalImportMap {
   "langchain/prompts/load"?:
     | typeof import("../prompts/load.js")
     | Promise<typeof import("../prompts/load.js")>;
+  "langchain/vectorstores/analyticdb"?:
+    | typeof import("../vectorstores/analyticdb.js")
+    | Promise<typeof import("../vectorstores/analyticdb.js")>;
   "langchain/vectorstores/elasticsearch"?:
     | typeof import("../vectorstores/elasticsearch.js")
     | Promise<typeof import("../vectorstores/elasticsearch.js")>;
@@ -289,6 +292,9 @@ export interface OptionalImportMap {
   "langchain/stores/message/upstash_redis"?:
     | typeof import("../stores/message/upstash_redis.js")
     | Promise<typeof import("../stores/message/upstash_redis.js")>;
+  "langchain/stores/message/planetscale"?:
+    | typeof import("../stores/message/planetscale.js")
+    | Promise<typeof import("../stores/message/planetscale.js")>;
 }
 
 export interface SecretMap {
@@ -309,6 +315,10 @@ export interface SecretMap {
   MILVUS_SSL?: string;
   MILVUS_USERNAME?: string;
   OPENAI_API_KEY?: string;
+  PLANETSCALE_DATABASE_URL?: string;
+  PLANETSCALE_HOST?: string;
+  PLANETSCALE_PASSWORD?: string;
+  PLANETSCALE_USERNAME?: string;
   PROMPTLAYER_API_KEY?: string;
   QDRANT_API_KEY?: string;
   QDRANT_URL?: string;
