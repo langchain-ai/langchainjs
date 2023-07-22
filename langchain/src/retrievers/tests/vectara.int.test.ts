@@ -132,7 +132,7 @@ test("Vectara Retriever (with filters)", async () => {
   const reptile = await retriever.getRelevantDocuments("animal", 1, {
     filter: "doc.category = 'Reptile' AND doc.can_fly = false",
   });
-  // expect all reptileLion results to be same as reptile results 
+  // expect all reptileLion results to be same as reptile results (since lion is not a reptile)
   expect(reptileLion).toEqual(reptile);
 });
 
