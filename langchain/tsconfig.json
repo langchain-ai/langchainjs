@@ -66,6 +66,7 @@
       "src/llms/aleph_alpha.ts",
       "src/llms/cohere.ts",
       "src/llms/hf.ts",
+      "src/llms/raycast.ts",
       "src/llms/replicate.ts",
       "src/llms/googlevertexai.ts",
       "src/llms/googlepalm.ts",

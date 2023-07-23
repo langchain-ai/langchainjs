@@ -21,6 +21,7 @@ export const optionalImportEntrypoints = [
   "langchain/llms/load",
   "langchain/llms/cohere",
   "langchain/llms/hf",
+  "langchain/llms/raycast",
   "langchain/llms/replicate",
   "langchain/llms/googlevertexai",
   "langchain/llms/googlepalm",

@@ -106,6 +106,9 @@ llms/cohere.d.ts
 llms/hf.cjs
 llms/hf.js
 llms/hf.d.ts
+llms/raycast.cjs
+llms/raycast.js
+llms/raycast.d.ts
 llms/replicate.cjs
 llms/replicate.js
 llms/replicate.d.ts

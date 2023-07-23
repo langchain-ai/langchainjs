@@ -61,6 +61,9 @@ export interface OptionalImportMap {
   "langchain/llms/hf"?:
     | typeof import("../llms/hf.js")
     | Promise<typeof import("../llms/hf.js")>;
+  "langchain/llms/raycast"?:
+    | typeof import("../llms/raycast.js")
+    | Promise<typeof import("../llms/raycast.js")>;
   "langchain/llms/replicate"?:
     | typeof import("../llms/replicate.js")
     | Promise<typeof import("../llms/replicate.js")>;
