@@ -142,6 +142,52 @@ export class QdrantVectorStore extends VectorStore {
     }
   }
 
+  async createAlias(aliasName: string, timeout?: number) {
+    return await this.client.updateCollectionAliases({
+      timeout,
+      actions: [
+        {
+          create_alias: {
+            collection_name: this.collectionName,
+            alias_name: aliasName,
+          },
+        },
+      ],
+    });
+  }
+
+  async removeAlias(aliasName: string, timeout?: number) {
+    return await this.client.updateCollectionAliases({
+      timeout,
+      actions: [
+        {
+          delete_alias: {
+            alias_name: aliasName,
+          },
+        },
+      ],
+    });
+  }
+
+  async switchAlias(aliasName: string, timeout?: number) {
+    return await this.client.updateCollectionAliases({
+      timeout,
+      actions: [
+        {
+          delete_alias: {
+            alias_name: aliasName,
+          },
+        },
+        {
+          create_alias: {
+            alias_name: aliasName,
+            collection_name: this.collectionName,
+          },
+        },
+      ],
+    });
+  }
+
   static async fromTexts(
     texts: string[],
     metadatas: object[] | object,
