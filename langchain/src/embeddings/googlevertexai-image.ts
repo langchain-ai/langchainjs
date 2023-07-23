@@ -6,7 +6,6 @@ import {
 } from "../types/googlevertexai-types.js";
 import { GoogleVertexAIConnection } from "../util/googlevertexai-connection.js";
 import { AsyncCallerCallOptions } from "../util/async_caller.js";
-// import { chunkArray } from "../util/chunk.js";
 
 export interface GoogleVertexAIImageEmbeddingsParams
   extends EmbeddingsParams,
