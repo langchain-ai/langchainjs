@@ -2,7 +2,7 @@ import { test, expect } from "@jest/globals";
 import {
   GoogleVertexAIImageEmbeddings,
   GoogleVertexAIMedia,
-} from "../googlevertexai-image.js";
+} from "../googlevertexai_multimodal.js";
 
 test("mediaToInstance text", async () => {
   const e = new GoogleVertexAIImageEmbeddings();

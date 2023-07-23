@@ -1,5 +1,5 @@
 import fs from "fs";
-import { GoogleVertexAIImageEmbeddings } from "langchain/embeddings/googlevertexai-image";
+import { GoogleVertexAIImageEmbeddings } from "langchain/embeddings/googlevertexai_multimodal";
 
 export const run = async () => {
   const model = new GoogleVertexAIImageEmbeddings();

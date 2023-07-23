@@ -40,7 +40,7 @@ const entrypoints = {
   "embeddings/tensorflow": "embeddings/tensorflow",
   "embeddings/hf": "embeddings/hf",
   "embeddings/googlevertexai": "embeddings/googlevertexai",
-  "embeddings/googlevertexai-image": "embeddings/googlevertexai-image",
+  "embeddings/googlevertexai_multimodal": "embeddings/googlevertexai_multimodal",
   "embeddings/googlepalm": "embeddings/googlepalm",
   // llms
   llms: "llms/index",
@@ -215,7 +215,7 @@ const requiresOptionalDependency = [
   "chains/sql_db",
   "embeddings/cohere",
   "embeddings/googlevertexai",
-  "embeddings/googlevertexai-image",
+  "embeddings/googlevertexai_multimodal",
   "embeddings/googlepalm",
   "embeddings/tensorflow",
   "embeddings/hf",

@@ -1,6 +1,6 @@
 import fs from "fs";
 import { test, xtest, expect } from "@jest/globals";
-import { GoogleVertexAIImageEmbeddings } from "../googlevertexai-image.js";
+import { GoogleVertexAIImageEmbeddings } from "../googlevertexai_multimodal.js";
 
 // eslint-disable-next-line no-process-env
 const ifImgDefined = process.env.IMG_PATH ? test : xtest;
