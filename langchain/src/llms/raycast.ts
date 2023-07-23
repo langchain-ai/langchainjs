@@ -6,12 +6,22 @@ export type RaycastAIModel = "text-davinci-003" | "gpt-3.5-turbo";
 export interface RaycastAIInput extends BaseLLMParams {
   model?: RaycastAIModel;
   creativity?: number;
+  rateLimitPerMinute?: number;
 }
+
+const wait = (ms: number) =>
+  new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
 
 export class RaycastAI extends LLM implements RaycastAIInput {
   model: RaycastAIModel;
 
   creativity: number;
+
+  rateLimitPerMinute: number;
+
+  private lastCallTimestamp = 0;
 
   constructor(fields: RaycastAIInput) {
     super(fields ?? {});
@@ -22,6 +32,7 @@ export class RaycastAI extends LLM implements RaycastAIInput {
 
     this.model = fields.model ?? "text-davinci-003";
     this.creativity = fields.creativity ?? 0.5;
+    this.rateLimitPerMinute = fields.rateLimitPerMinute ?? 10;
   }
 
   _llmType() {
@@ -33,13 +44,23 @@ export class RaycastAI extends LLM implements RaycastAIInput {
     prompt: string,
     options: this["ParsedCallOptions"]
   ): Promise<string> {
-    const response = await this.caller.call(() =>
-      AI.ask(prompt, {
+    const response = await this.caller.call(async () => {
+      // Rate limit calls to Raycast AI
+      const now = Date.now();
+      const timeSinceLastCall = now - this.lastCallTimestamp;
+      const timeToWait =
+        (60 / this.rateLimitPerMinute) * 1000 - timeSinceLastCall;
+
+      if (timeToWait > 0) {
+        await wait(timeToWait);
+      }
+
+      return await AI.ask(prompt, {
         model: this.model,
         creativity: this.creativity,
         signal: options.signal,
-      })
-    );
+      });
+    });
 
     // Since Raycast AI returns the response directly, no need for output transformation
     return response;
