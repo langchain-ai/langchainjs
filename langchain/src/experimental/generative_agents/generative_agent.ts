@@ -236,7 +236,7 @@ Relevant context:`
         {},
         runManager?.getChild("memory")
       );
-      output = `${this.name} ${reaction}`;
+      output = `${reaction}`;
       continue_dialogue = false;
     } else if (rawOutput.includes("SAY:")) {
       const saidValue = this._cleanResponse(rawOutput.split("SAY:").pop());
