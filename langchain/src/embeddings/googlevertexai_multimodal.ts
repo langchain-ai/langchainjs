@@ -7,20 +7,21 @@ import {
 import { GoogleVertexAIConnection } from "../util/googlevertexai-connection.js";
 import { AsyncCallerCallOptions } from "../util/async_caller.js";
 
-export interface GoogleVertexAIImageEmbeddingsParams
+export interface GoogleVertexAIMultimodalEmbeddingsParams
   extends EmbeddingsParams,
     GoogleVertexAIConnectionParams {}
 
-interface GoogleVertexAIImageEmbeddingsOptions extends AsyncCallerCallOptions {}
+interface GoogleVertexAIMultimodalEmbeddingsOptions
+  extends AsyncCallerCallOptions {}
 
-interface GoogleVertexAIImageEmbeddingsInstance {
+interface GoogleVertexAIMultimodalEmbeddingsInstance {
   text?: string;
   image?: {
     bytesBase64Encoded: string;
   };
 }
 
-interface GoogleVertexImageEmbeddingsResults
+interface GoogleVertexAIMultimodalEmbeddingsResults
   extends GoogleVertexAIBasePrediction {
   textEmbedding?: number[];
   imageEmbedding?: number[];
@@ -44,19 +45,19 @@ export type MediaEmbeddings = {
   image?: number[];
 };
 
-export class GoogleVertexAIImageEmbeddings
+export class GoogleVertexAIMultimodalEmbeddings
   extends Embeddings
-  implements GoogleVertexAIImageEmbeddingsParams
+  implements GoogleVertexAIMultimodalEmbeddingsParams
 {
   model = "multimodalembedding@001";
 
   private connection: GoogleVertexAIConnection<
-    GoogleVertexAIImageEmbeddingsOptions,
-    GoogleVertexAIImageEmbeddingsInstance,
-    GoogleVertexImageEmbeddingsResults
+    GoogleVertexAIMultimodalEmbeddingsOptions,
+    GoogleVertexAIMultimodalEmbeddingsInstance,
+    GoogleVertexAIMultimodalEmbeddingsResults
   >;
 
-  constructor(fields?: GoogleVertexAIImageEmbeddingsParams) {
+  constructor(fields?: GoogleVertexAIMultimodalEmbeddingsParams) {
     super(fields ?? {});
 
     this.model = fields?.model ?? this.model;
@@ -69,8 +70,8 @@ export class GoogleVertexAIImageEmbeddings
 
   mediaToInstance(
     media: GoogleVertexAIMedia
-  ): GoogleVertexAIImageEmbeddingsInstance {
-    const ret: GoogleVertexAIImageEmbeddingsInstance = {};
+  ): GoogleVertexAIMultimodalEmbeddingsInstance {
+    const ret: GoogleVertexAIMultimodalEmbeddingsInstance = {};
 
     if (media?.text) {
       ret.text = media.text;
@@ -86,7 +87,7 @@ export class GoogleVertexAIImageEmbeddings
   }
 
   responseToEmbeddings(
-    response: GoogleVertexAILLMResponse<GoogleVertexImageEmbeddingsResults>
+    response: GoogleVertexAILLMResponse<GoogleVertexAIMultimodalEmbeddingsResults>
   ): MediaEmbeddings[] {
     return response.data.predictions.map((r) => ({
       text: r.textEmbedding,
@@ -100,7 +101,7 @@ export class GoogleVertexAIImageEmbeddings
   }
 
   async embedMediaQuery(media: GoogleVertexAIMedia): Promise<MediaEmbeddings> {
-    const instance: GoogleVertexAIImageEmbeddingsInstance =
+    const instance: GoogleVertexAIMultimodalEmbeddingsInstance =
       this.mediaToInstance(media);
     const instances = [instance];
 

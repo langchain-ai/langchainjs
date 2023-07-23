@@ -1,8 +1,8 @@
 import fs from "fs";
-import { GoogleVertexAIImageEmbeddings } from "langchain/embeddings/googlevertexai_multimodal";
+import { GoogleVertexAIMultimodalEmbeddings } from "langchain/embeddings/googlevertexai_multimodal";
 
 export const run = async () => {
-  const model = new GoogleVertexAIImageEmbeddings();
+  const model = new GoogleVertexAIMultimodalEmbeddings();
 
   // Load the image into a buffer to get the embedding of it
   const img = fs.readFileSync("/path/to/file.jpg");

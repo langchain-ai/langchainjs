@@ -1,11 +1,11 @@
 import { test, expect } from "@jest/globals";
 import {
-  GoogleVertexAIImageEmbeddings,
+  GoogleVertexAIMultimodalEmbeddings,
   GoogleVertexAIMedia,
 } from "../googlevertexai_multimodal.js";
 
 test("mediaToInstance text", async () => {
-  const e = new GoogleVertexAIImageEmbeddings();
+  const e = new GoogleVertexAIMultimodalEmbeddings();
 
   const media: GoogleVertexAIMedia = {
     text: "just text",
@@ -16,7 +16,7 @@ test("mediaToInstance text", async () => {
 });
 
 test("mediaToInstance image", async () => {
-  const e = new GoogleVertexAIImageEmbeddings();
+  const e = new GoogleVertexAIMultimodalEmbeddings();
 
   const media: GoogleVertexAIMedia = {
     image: Buffer.from("abcd"),
