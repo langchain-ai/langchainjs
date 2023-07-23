@@ -128,13 +128,18 @@ export class QdrantVectorStore extends VectorStore {
   }
 
   async ensureCollection() {
-    const response = await this.client.getCollections();
+    const collectionsResponse = await this.client.getCollections();
+    const aliasesResponse = await this.client.getAliases();
 
-    const collectionNames = response.collections.map(
+    const collectionNames = collectionsResponse.collections.map(
       (collection) => collection.name
     );
 
-    if (!collectionNames.includes(this.collectionName)) {
+    const aliasesNames = aliasesResponse.aliases.map(
+      (alias) => alias.alias_name
+    );
+
+    if (!collectionNames.includes(this.collectionName) && !aliasesNames.includes(this.collectionName)) {
       await this.client.createCollection(
         this.collectionName,
         this.collectionConfig
