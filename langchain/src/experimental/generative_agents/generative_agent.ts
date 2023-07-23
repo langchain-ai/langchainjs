@@ -4,7 +4,10 @@ import { BaseLanguageModel } from "../../base_language/index.js";
 import { GenerativeAgentMemory } from "./generative_agent_memory.js";
 import { ChainValues } from "../../schema/index.js";
 import { BaseChain } from "../../chains/base.js";
-import { CallbackManagerForChainRun } from "../../callbacks/manager.js";
+import {
+  CallbackManagerForChainRun,
+  Callbacks,
+} from "../../callbacks/manager.js";
 
 export type GenerativeAgentConfig = {
   name: string;
@@ -26,7 +29,7 @@ export class GenerativeAgent extends BaseChain {
 
   status: string; // the traits of the character you wish not to change
 
-  memory: GenerativeAgentMemory;
+  longTermMemory: GenerativeAgentMemory;
 
   llm: BaseLanguageModel; // the underlying language model
 
@@ -50,17 +53,17 @@ export class GenerativeAgent extends BaseChain {
   }
 
   get outputKeys(): string[] {
-    return ["output"];
+    return ["output", "continue_dialogue"];
   }
 
   constructor(
     llm: BaseLanguageModel,
-    memory: GenerativeAgentMemory,
+    longTermMemory: GenerativeAgentMemory,
     config: GenerativeAgentConfig
   ) {
     super();
     this.llm = llm;
-    this.memory = memory;
+    this.longTermMemory = longTermMemory;
     this.name = config.name;
     this.age = config.age;
     this.traits = config.traits;
@@ -89,7 +92,7 @@ export class GenerativeAgent extends BaseChain {
       prompt,
       verbose: this.verbose,
       outputKey: "output", // new
-      memory: this.memory,
+      memory: this.longTermMemory,
     });
     return chain;
   }
@@ -207,18 +210,59 @@ Relevant context:`
       most_recent_memories: "",
     };
 
-    chainInputs[this.memory.getRelevantMemoriesKey()] = relevantMemoriesStr;
+    chainInputs[this.longTermMemory.getRelevantMemoriesKey()] =
+      relevantMemoriesStr;
 
     const consumedTokens = await this.llm.getNumTokens(
       await prompt.format({ ...chainInputs })
     );
 
-    chainInputs[this.memory.getMostRecentMemoriesTokenKey()] = consumedTokens;
+    chainInputs[this.longTermMemory.getMostRecentMemoriesTokenKey()] =
+      consumedTokens;
     const response = await this.chain(prompt).call(
       chainInputs,
       runManager?.getChild("reaction_from_summary")
     );
-    return { output: response.output.trim() };
+
+    const rawOutput = response.output;
+    let output = rawOutput;
+    let continue_dialogue = false;
+
+    if (rawOutput.includes("REACT:")) {
+      const reaction = this._cleanResponse(rawOutput.split("REACT:").pop());
+      await this.addMemory(
+        `${this.name} observed ${observation} and reacted by ${reaction}`,
+        now,
+        {},
+        runManager?.getChild("memory")
+      );
+      output = `${this.name} ${reaction}`;
+      continue_dialogue = false;
+    } else if (rawOutput.includes("SAY:")) {
+      const saidValue = this._cleanResponse(rawOutput.split("SAY:").pop());
+      await this.addMemory(
+        `${this.name} observed ${observation} and said ${saidValue}`,
+        now,
+        {},
+        runManager?.getChild("memory")
+      );
+      output = `${this.name} said ${saidValue}`;
+      continue_dialogue = true;
+    } else if (rawOutput.includes("GOODBYE:")) {
+      const farewell = this._cleanResponse(
+        rawOutput.split("GOODBYE:").pop() ?? ""
+      );
+      await this.addMemory(
+        `${this.name} observed ${observation} and said ${farewell}`,
+        now,
+        {},
+        runManager?.getChild("memory")
+      );
+      output = `${this.name} said ${farewell}`;
+      continue_dialogue = false;
+    }
+
+    return { output, continue_dialogue };
   }
 
   private _cleanResponse(text: string | undefined): string {
@@ -240,30 +284,12 @@ Relevant context:`
       ` \notherwise, write:\nREACT: {agent_name}'s reaction (if anything).` +
       ` \nEither do nothing, react, or say something but not both.\n\n`;
 
-    const { output: fullResult } = await this.call({
+    const { output, continue_dialogue } = await this.call({
       observation,
       suffix: callToActionTemplate,
       now,
     });
-    const result = fullResult.trim().split("\n")[0];
-    await this.memory.saveContext(
-      {},
-      {
-        [this.memory.getAddMemoryKey()]: `${this.name} observed ${observation} and reacted by ${result}`,
-        [this.memory.getCurrentTimeKey()]: now,
-      }
-    );
-
-    if (result.includes("REACT:")) {
-      const reaction = this._cleanResponse(result.split("SAY:").pop());
-      return [false, `${this.name} ${reaction}`];
-    }
-    if (result.includes("SAY:")) {
-      const saidValue = this._cleanResponse(result.split("SAY:").pop());
-      return [true, `${this.name} said ${saidValue}`];
-    }
-
-    return [false, result];
+    return [continue_dialogue, output];
   }
 
   async generateDialogueResponse(
@@ -271,44 +297,12 @@ Relevant context:`
     now?: Date
   ): Promise<[boolean, string]> {
     const callToActionTemplate = `What would ${this.name} say? To end the conversation, write: GOODBYE: "what to say". Otherwise to continue the conversation, write: SAY: "what to say next"\n\n`;
-    const { output: fullResult } = await this.call({
+    const { output, continue_dialogue } = await this.call({
       observation,
       suffix: callToActionTemplate,
       now,
     });
-    const result = fullResult.trim().split("\n")[0] ?? "";
-
-    if (result.includes("GOODBYE:")) {
-      const farewell = this._cleanResponse(
-        result.split("GOODBYE:").pop() ?? ""
-      );
-      await this.memory.saveContext(
-        {},
-        {
-          [this.memory
-            .addMemoryKey]: `${this.name} observed ${observation} and said ${farewell}`,
-          [this.memory.getCurrentTimeKey()]: now,
-        }
-      );
-      return [false, `${this.name} said ${farewell}`];
-    }
-
-    if (result.includes("SAY:")) {
-      const responseText = this._cleanResponse(
-        result.split("SAY:").pop() ?? ""
-      );
-      await this.memory.saveContext(
-        {},
-        {
-          [this.memory
-            .addMemoryKey]: `${this.name} observed ${observation} and said ${responseText}`,
-          [this.memory.getCurrentTimeKey()]: now,
-        }
-      );
-      return [true, `${this.name} said ${responseText}`];
-    }
-
-    return [false, result];
+    return [continue_dialogue, output];
   }
 
   // Agent stateful' summary methods
@@ -391,7 +385,17 @@ ${this.summary}`;
     return `${summary}\nIt is ${currentTimeString}.\n${this.name}'s status: ${this.status}`;
   }
 
-  async addMemory(memoryContent: string, now?: Date) {
-    return this.memory.addMemory(memoryContent, now);
+  async addMemory(
+    memoryContent: string,
+    now?: Date,
+    metadata?: Record<string, unknown>,
+    callbacks?: Callbacks
+  ) {
+    return this.longTermMemory.addMemory(
+      memoryContent,
+      now,
+      metadata,
+      callbacks
+    );
   }
 }

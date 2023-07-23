@@ -51,7 +51,7 @@ class GenerativeAgentMemoryChain extends BaseChain {
   }
 
   get inputKeys(): string[] {
-    return ["memory_content", "now"];
+    return ["memory_content", "now", "memory_metadata"];
   }
 
   get outputKeys(): string[] {
@@ -80,6 +80,7 @@ class GenerativeAgentMemoryChain extends BaseChain {
       pageContent: memoryContent,
       metadata: {
         importance: importanceScore,
+        ...values.memory_metadata,
       },
     });
     await this.memoryRetriever.addDocuments([document]);
@@ -135,7 +136,7 @@ class GenerativeAgentMemoryChain extends BaseChain {
     );
     const score = await this.chain(prompt).run(
       memoryContent,
-      runManager?.getChild("score_importance")
+      runManager?.getChild("determine_importance")
     );
 
     const strippedScore = score.trim();
@@ -286,9 +287,14 @@ export class GenerativeAgentMemory extends BaseMemory {
     return [this.relevantMemoriesKey, this.mostRecentMemoriesKey];
   }
 
-  async addMemory(memoryContent: string, now?: Date, callbacks?: Callbacks) {
+  async addMemory(
+    memoryContent: string,
+    now?: Date,
+    metadata?: Record<string, unknown>,
+    callbacks?: Callbacks
+  ) {
     return this.memoryChain.call(
-      { memory_content: memoryContent, now },
+      { memory_content: memoryContent, now, memory_metadata: metadata },
       callbacks
     );
   }
@@ -384,14 +390,13 @@ export class GenerativeAgentMemory extends BaseMemory {
 
   async saveContext(
     _inputs: InputValues,
-    outputs: OutputValues,
-    callbacks?: Callbacks
+    outputs: OutputValues
   ): Promise<void> {
     // save the context of this model run to memory
     const mem = outputs[this.addMemoryKey];
     const now = outputs[this.nowKey];
     if (mem) {
-      await this.addMemory(mem, now, callbacks);
+      await this.addMemory(mem, now, {});
     }
   }
 

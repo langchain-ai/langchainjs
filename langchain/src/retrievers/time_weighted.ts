@@ -80,6 +80,10 @@ export class TimeWeightedVectorStoreRetriever extends BaseRetriever {
     return this.memoryStream;
   }
 
+  setMemoryStream(memoryStream: Document[]) {
+    this.memoryStream = memoryStream;
+  }
+
   /**
    * Get relevant documents based on time-weighted relevance
    * @param query - The query to search for
@@ -213,6 +217,7 @@ export class TimeWeightedVectorStoreRetriever extends BaseRetriever {
     return docs.map((doc, i) => ({
       ...doc,
       metadata: {
+        ...doc.metadata,
         [LAST_ACCESSED_AT_KEY]: doc.metadata[LAST_ACCESSED_AT_KEY] ?? now,
         created_at: doc.metadata.created_at ?? now,
         [BUFFER_IDX]: this.memoryStream.length + i,
