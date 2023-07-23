@@ -1,6 +1,6 @@
 import { LLMChain } from "../../chains/llm_chain.js";
 import { PromptTemplate } from "../../prompts/index.js";
-import { BaseLLM } from "../../llms/base.js";
+import { BaseLanguageModel } from "../../base_language/index.js";
 import { GenerativeAgentMemory } from "./generative_agent_memory.js";
 import { ChainValues } from "../../schema/index.js";
 
@@ -26,7 +26,7 @@ export class GenerativeAgent {
 
   memory: GenerativeAgentMemory;
 
-  llm: BaseLLM; // the underlying language model
+  llm: BaseLanguageModel; // the underlying language model
 
   verbose: boolean; // false
 
@@ -40,7 +40,7 @@ export class GenerativeAgent {
   // private dailySummaries: string[] = []; // summary of the events in the plan that the agent took.
 
   constructor(
-    llm: BaseLLM,
+    llm: BaseLanguageModel,
     memory: GenerativeAgentMemory,
     config: GenerativeAgentConfig
   ) {
@@ -341,5 +341,9 @@ ${this.summary}`;
       hour12: true,
     });
     return `${summary}\nIt is ${currentTimeString}.\n${this.name}'s status: ${this.status}`;
+  }
+
+  async addMemory(memoryContent: string, now?: Date) {
+    return this.memory.addMemory(memoryContent, now);
   }
 }
