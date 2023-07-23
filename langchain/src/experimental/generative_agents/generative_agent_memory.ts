@@ -4,7 +4,10 @@ import { BaseChain } from "../../chains/base.js";
 import { Document } from "../../document.js";
 import { TimeWeightedVectorStoreRetriever } from "../../retrievers/time_weighted.js";
 import { BaseMemory, InputValues, OutputValues } from "../../memory/base.js";
-import { CallbackManagerForChainRun } from "../../callbacks/manager.js";
+import {
+  CallbackManagerForChainRun,
+  Callbacks,
+} from "../../callbacks/manager.js";
 import { BaseLanguageModel } from "../../base_language/index.js";
 import { ChainValues } from "../../schema/index.js";
 
@@ -30,7 +33,11 @@ class GenerativeAgentMemoryChain extends BaseChain {
 
   private aggregateImportance = 0.0;
 
-  constructor(llm: BaseLanguageModel, memoryRetriever: TimeWeightedVectorStoreRetriever, config: Omit<GenerativeAgentMemoryConfig, "maxTokensLimit">) {
+  constructor(
+    llm: BaseLanguageModel,
+    memoryRetriever: TimeWeightedVectorStoreRetriever,
+    config: Omit<GenerativeAgentMemoryConfig, "maxTokensLimit">
+  ) {
     super();
     this.llm = llm;
     this.memoryRetriever = memoryRetriever;
@@ -62,10 +69,12 @@ class GenerativeAgentMemoryChain extends BaseChain {
   }
 
   async _call(values: ChainValues, runManager?: CallbackManagerForChainRun) {
-    const memoryContent = values.memory_content;
-    const now = values.now;
+    const { memory_content: memoryContent, now } = values;
     // add an observation or memory to the agent's memory
-    const importanceScore = await this.scoreMemoryImportance(memoryContent, runManager);
+    const importanceScore = await this.scoreMemoryImportance(
+      memoryContent,
+      runManager
+    );
     this.aggregateImportance += importanceScore;
     const document = new Document({
       pageContent: memoryContent,
@@ -87,10 +96,13 @@ class GenerativeAgentMemoryChain extends BaseChain {
       this.aggregateImportance = 0.0;
       this.reflecting = false;
     }
-    return {output: importanceScore};
+    return { output: importanceScore };
   }
 
-  async pauseToReflect(now?: Date, runManager?: CallbackManagerForChainRun): Promise<string[]> {
+  async pauseToReflect(
+    now?: Date,
+    runManager?: CallbackManagerForChainRun
+  ): Promise<string[]> {
     if (this.verbose) {
       console.log("Pausing to reflect...");
     }
@@ -100,14 +112,17 @@ class GenerativeAgentMemoryChain extends BaseChain {
       const insights = await this.getInsightsOnTopic(topic, now);
       for (const insight of insights) {
         // add memory
-        await this.call({memory_content: insight, now});
+        await this.call({ memory_content: insight, now });
       }
       newInsights.push(...insights);
     }
     return newInsights;
   }
 
-  async scoreMemoryImportance(memoryContent: string, runManager?: CallbackManagerForChainRun): Promise<number> {
+  async scoreMemoryImportance(
+    memoryContent: string,
+    runManager?: CallbackManagerForChainRun
+  ): Promise<number> {
     // score the absolute importance of a given memory
     const prompt = PromptTemplate.fromTemplate(
       "On the scale of 1 to 10, where 1 is purely mundane" +
@@ -118,7 +133,10 @@ class GenerativeAgentMemoryChain extends BaseChain {
         "\nMemory: {memory_content}" +
         "\nRating: "
     );
-    const score = await this.chain(prompt).run(memoryContent, runManager?.getChild("score_importance"));
+    const score = await this.chain(prompt).run(
+      memoryContent,
+      runManager?.getChild("score_importance")
+    );
 
     const strippedScore = score.trim();
 
@@ -135,7 +153,10 @@ class GenerativeAgentMemoryChain extends BaseChain {
     }
   }
 
-  async getTopicsOfReflection(lastK = 50, runManager?: CallbackManagerForChainRun): Promise<string[]> {
+  async getTopicsOfReflection(
+    lastK: number,
+    runManager?: CallbackManagerForChainRun
+  ): Promise<string[]> {
     const prompt = PromptTemplate.fromTemplate(
       "{observations}\n\n" +
         "Given only the information above, what are the 3 most salient" +
@@ -147,11 +168,18 @@ class GenerativeAgentMemoryChain extends BaseChain {
     const observationStr = observations
       .map((o: { pageContent: string }) => o.pageContent)
       .join("\n");
-    const result = await this.chain(prompt).run(observationStr, runManager?.getChild("reflection_topics"));
-    return GenerativeAgentMemory.parseList(result);
+    const result = await this.chain(prompt).run(
+      observationStr,
+      runManager?.getChild("reflection_topics")
+    );
+    return GenerativeAgentMemoryChain.parseList(result);
   }
 
-  async getInsightsOnTopic(topic: string, now?: Date, runManager?: CallbackManagerForChainRun): Promise<string[]> {
+  async getInsightsOnTopic(
+    topic: string,
+    now?: Date,
+    runManager?: CallbackManagerForChainRun
+  ): Promise<string[]> {
     // generate insights on a topic of reflection, based on pertinent memories
     const prompt = PromptTemplate.fromTemplate(
       "Statements about {topic}\n" +
@@ -164,16 +192,31 @@ class GenerativeAgentMemoryChain extends BaseChain {
     const relatedStatements: string = relatedMemories
       .map((memory, index) => `${index + 1}. ${memory.pageContent}`)
       .join("\n");
-    const result = await this.chain(prompt).call({
-      topic,
-      relatedStatements,
-    }, runManager?.getChild("reflection_insights"));
-    return GenerativeAgentMemory.parseList(result.output); // added output
+    const result = await this.chain(prompt).call(
+      {
+        topic,
+        relatedStatements,
+      },
+      runManager?.getChild("reflection_insights")
+    );
+    return GenerativeAgentMemoryChain.parseList(result.output); // added output
+  }
+
+  static parseList(text: string): string[] {
+    // parse a newine seperates string into a list of strings
+    return text.split("\n").map((s) => s.trim());
   }
 
   // TODO: Mock "now" to simulate different times
-  async fetchMemories(observation: string, _now?: Date, runManager?: CallbackManagerForChainRun): Promise<Document[]> {
-    return this.memoryRetriever.getRelevantDocuments(observation, runManager?.getChild("memory_retriever"));
+  async fetchMemories(
+    observation: string,
+    _now?: Date,
+    runManager?: CallbackManagerForChainRun
+  ): Promise<Document[]> {
+    return this.memoryRetriever.getRelevantDocuments(
+      observation,
+      runManager?.getChild("memory_retriever")
+    );
   }
 }
 
@@ -219,7 +262,7 @@ export class GenerativeAgentMemory extends BaseMemory {
     this.memoryChain = new GenerativeAgentMemoryChain(llm, memoryRetriever, {
       reflectionThreshold: config?.reflectionThreshold,
       importanceWeight: config?.importanceWeight,
-    })
+    });
   }
 
   getRelevantMemoriesKey(): string {
@@ -243,13 +286,11 @@ export class GenerativeAgentMemory extends BaseMemory {
     return [this.relevantMemoriesKey, this.mostRecentMemoriesKey];
   }
 
-  static parseList(text: string): string[] {
-    // parse a newine seperates string into a list of strings
-    return text.split("\n").map((s) => s.trim());
-  }
-
-  async addMemory(memoryContent: string, now?: Date) {
-    return this.memoryChain.call({ memory_content: memoryContent, now });
+  async addMemory(memoryContent: string, now?: Date, callbacks?: Callbacks) {
+    return this.memoryChain.call(
+      { memory_content: memoryContent, now },
+      callbacks
+    );
   }
 
   formatMemoriesDetail(relevantMemories: Document[]): string {
@@ -319,7 +360,9 @@ export class GenerativeAgentMemory extends BaseMemory {
     if (queries !== undefined) {
       const relevantMemories = (
         await Promise.all(
-          queries.map((query: string) => this.memoryChain.fetchMemories(query, now))
+          queries.map((query: string) =>
+            this.memoryChain.fetchMemories(query, now)
+          )
         )
       ).flat();
       return {
@@ -341,13 +384,14 @@ export class GenerativeAgentMemory extends BaseMemory {
 
   async saveContext(
     _inputs: InputValues,
-    outputs: OutputValues
+    outputs: OutputValues,
+    callbacks?: Callbacks
   ): Promise<void> {
     // save the context of this model run to memory
     const mem = outputs[this.addMemoryKey];
     const now = outputs[this.nowKey];
     if (mem) {
-      await this.addMemory(mem, now);
+      await this.addMemory(mem, now, callbacks);
     }
   }
 
