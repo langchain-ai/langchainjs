@@ -142,6 +142,10 @@ export class QdrantVectorStore extends VectorStore {
     }
   }
 
+  async deleteCollection(timeout?: number) {
+    return await this.client.deleteCollection(this.collectionName, { timeout });
+  }
+
   static async fromTexts(
     texts: string[],
     metadatas: object[] | object,
