@@ -99,7 +99,7 @@ beforeAll(async () => {
   await store.addDocuments(getdoc());
 });
 
-test("Vectara Retriever (with filters)", async () => {
+test("VectaraRetriever (with filters)", async () => {
   const store = new VectaraStore({
     customerId: VECTARA_CUSTOMER_ID,
     corpusId: VECTARA_CORPUS_ID,
