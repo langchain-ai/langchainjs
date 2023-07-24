@@ -5,7 +5,7 @@
   "scripts": {
     "build": "bash ./build.sh",
     "start": "bash ./serve.sh",
-    "dev": "yarn build && yarn start & nodemon -e mdx,md --exec \"bash\" ./nodemon.sh & wait"
+    "dev": "bash ./dev.sh & nodemon -e mdx,md --exec \"bash\" ./nodemon.sh & wait"
   },
   "packageManager": "yarn@3.4.1",
   "devDependencies": {
