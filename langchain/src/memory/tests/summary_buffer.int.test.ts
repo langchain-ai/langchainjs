@@ -1,12 +1,12 @@
 import { test, expect } from "@jest/globals";
 import { ConversationSummaryBufferMemory } from "../summary_buffer.js";
-import { OpenAIChat } from "../../llms/openai-chat.js";
+import { OpenAI } from "../../llms/openai.js";
 import { ChatOpenAI } from "../../chat_models/openai.js";
 import { SystemMessage } from "../../schema/index.js";
 
 test("Test summary buffer memory", async () => {
   const memory = new ConversationSummaryBufferMemory({
-    llm: new OpenAIChat({ modelName: "gpt-3.5-turbo", temperature: 0 }),
+    llm: new OpenAI({ modelName: "text-davinci-003", temperature: 0 }),
     maxTokenLimit: 10,
   });
   expect(await memory.loadMemoryVariables({})).toEqual({
@@ -18,8 +18,8 @@ test("Test summary buffer memory", async () => {
     { response: "Hello! I'm doing fine. and you?" }
   );
 
-  const result2 = await memory.loadMemoryVariables({});
-  console.log("result2", result2);
+  const result = await memory.loadMemoryVariables({});
+  console.log("result", result);
 
   await memory.clear();
   expect(await memory.loadMemoryVariables({})).toEqual({
@@ -40,8 +40,8 @@ test("Test summary buffer memory with chat model", async () => {
     { input: "How's it going?" },
     { response: "Hello! I'm doing fine. and you?" }
   );
-  const result2 = await memory.loadMemoryVariables({});
-  console.log("result2", result2);
+  const result = await memory.loadMemoryVariables({});
+  console.log("result", result);
 
   await memory.clear();
   expect(await memory.loadMemoryVariables({})).toEqual({
@@ -51,7 +51,7 @@ test("Test summary buffer memory with chat model", async () => {
 
 test("Test summary buffer memory return messages", async () => {
   const memory = new ConversationSummaryBufferMemory({
-    llm: new OpenAIChat({ modelName: "gpt-3.5-turbo", temperature: 0 }),
+    llm: new OpenAI({ modelName: "text-davinci-003", temperature: 0 }),
     returnMessages: true,
     maxTokenLimit: 10,
   });
@@ -66,8 +66,8 @@ test("Test summary buffer memory return messages", async () => {
     { response: "Hello! I'm doing fine. and you?" }
   );
 
-  const result2 = await memory.loadMemoryVariables({});
-  console.log("result2", result2);
+  const result = await memory.loadMemoryVariables({});
+  console.log("result", result);
 
   await memory.clear();
   expect(await memory.loadMemoryVariables({})).toEqual({

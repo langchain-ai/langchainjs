@@ -41,14 +41,14 @@ export class ConversationSummaryBufferMemory
       ];
     }
 
-    let final_buffer;
+    let finalBuffer;
     if (this.returnMessages) {
-      final_buffer = buffer;
+      finalBuffer = buffer;
     } else {
-      final_buffer = getBufferString(buffer, this.humanPrefix, this.aiPrefix);
+      finalBuffer = getBufferString(buffer, this.humanPrefix, this.aiPrefix);
     }
 
-    return { [this.memoryKey]: final_buffer };
+    return { [this.memoryKey]: finalBuffer };
   }
 
   async saveContext(

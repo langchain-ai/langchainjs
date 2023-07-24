@@ -5,7 +5,7 @@ import { ConversationSummaryMemory } from "../summary.js";
 import { OpenAI } from "../../llms/openai.js";
 import { AIMessage, HumanMessage, SystemMessage } from "../../schema/index.js";
 
-test("Test combine memory", async () => {
+test("Test combined memory", async () => {
   // buffer memory
   const bufferMemory = new BufferMemory({
     memoryKey: "chat_history_lines",
