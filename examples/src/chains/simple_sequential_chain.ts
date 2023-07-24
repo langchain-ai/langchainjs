@@ -11,6 +11,7 @@ const template = `You are a playwright. Given the title of play, it is your job 
 const promptTemplate = new PromptTemplate({
   template,
   inputVariables: ["title"],
+ outputKey: "synopsis",
 });
 const synopsisChain = new LLMChain({ llm, prompt: promptTemplate });
 
