@@ -400,6 +400,9 @@ export class Milvus extends VectorStore {
       ssl: dbConfig?.ssl,
       username: dbConfig?.username,
       password: dbConfig?.password,
+      textField: dbConfig?.textField,
+      primaryField: dbConfig?.primaryField,
+      vectorField: dbConfig?.vectorField,
     };
     const instance = new this(embeddings, args);
     await instance.addDocuments(docs);

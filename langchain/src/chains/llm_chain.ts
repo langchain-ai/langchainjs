@@ -8,7 +8,11 @@ import {
 } from "../schema/output_parser.js";
 import { SerializedLLMChain } from "./serde.js";
 import { CallbackManager } from "../callbacks/index.js";
-import { CallbackManagerForChainRun, Callbacks } from "../callbacks/manager.js";
+import {
+  BaseCallbackConfig,
+  CallbackManagerForChainRun,
+  Callbacks,
+} from "../callbacks/manager.js";
 import { NoOpOutputParser } from "../output_parsers/noop.js";
 
 export interface LLMChainInput<
@@ -120,9 +124,9 @@ export class LLMChain<
    */
   call(
     values: ChainValues & this["llm"]["CallOptions"],
-    callbacks?: Callbacks | undefined
+    config?: Callbacks | BaseCallbackConfig
   ): Promise<ChainValues> {
-    return super.call(values, callbacks);
+    return super.call(values, config);
   }
 
   /** @ignore */
