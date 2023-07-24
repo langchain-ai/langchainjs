@@ -41,6 +41,10 @@ export class OpenSearchVectorStore extends VectorStore {
 
   private readonly m: number;
 
+  _vectorstoreType(): string {
+    return "opensearch";
+  }
+
   constructor(embeddings: Embeddings, args: OpenSearchClientArgs) {
     super(embeddings, args);
 

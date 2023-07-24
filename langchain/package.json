@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.112",
+  "version": "0.0.116",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -91,6 +91,9 @@
     "embeddings/googlevertexai.cjs",
     "embeddings/googlevertexai.js",
     "embeddings/googlevertexai.d.ts",
+    "embeddings/googlevertexai_multimodal.cjs",
+    "embeddings/googlevertexai_multimodal.js",
+    "embeddings/googlevertexai_multimodal.d.ts",
     "embeddings/googlepalm.cjs",
     "embeddings/googlepalm.js",
     "embeddings/googlepalm.d.ts",
@@ -139,6 +142,9 @@
     "vectorstores.cjs",
     "vectorstores.js",
     "vectorstores.d.ts",
+    "vectorstores/analyticdb.cjs",
+    "vectorstores/analyticdb.js",
+    "vectorstores/analyticdb.d.ts",
     "vectorstores/base.cjs",
     "vectorstores/base.js",
     "vectorstores/base.d.ts",
@@ -271,6 +277,9 @@
     "document_loaders/web/confluence.cjs",
     "document_loaders/web/confluence.js",
     "document_loaders/web/confluence.d.ts",
+    "document_loaders/web/serpapi.cjs",
+    "document_loaders/web/serpapi.js",
+    "document_loaders/web/serpapi.d.ts",
     "document_loaders/web/sort_xyz_blockchain.cjs",
     "document_loaders/web/sort_xyz_blockchain.js",
     "document_loaders/web/sort_xyz_blockchain.d.ts",
@@ -340,6 +349,9 @@
     "schema/query_constructor.cjs",
     "schema/query_constructor.js",
     "schema/query_constructor.d.ts",
+    "schema/retriever.cjs",
+    "schema/retriever.js",
+    "schema/retriever.d.ts",
     "sql_db.cjs",
     "sql_db.js",
     "sql_db.d.ts",
@@ -355,6 +367,9 @@
     "retrievers.cjs",
     "retrievers.js",
     "retrievers.d.ts",
+    "retrievers/amazon_kendra.cjs",
+    "retrievers/amazon_kendra.js",
+    "retrievers/amazon_kendra.d.ts",
     "retrievers/remote.cjs",
     "retrievers/remote.js",
     "retrievers/remote.d.ts",
@@ -451,6 +466,9 @@
     "stores/message/upstash_redis.cjs",
     "stores/message/upstash_redis.js",
     "stores/message/upstash_redis.d.ts",
+    "stores/message/planetscale.cjs",
+    "stores/message/planetscale.js",
+    "stores/message/planetscale.d.ts",
     "experimental/autogpt.cjs",
     "experimental/autogpt.js",
     "experimental/autogpt.d.ts",
@@ -496,6 +514,7 @@
   "license": "MIT",
   "devDependencies": {
     "@aws-sdk/client-dynamodb": "^3.310.0",
+    "@aws-sdk/client-kendra": "^3.352.0",
     "@aws-sdk/client-lambda": "^3.310.0",
     "@aws-sdk/client-s3": "^3.310.0",
     "@aws-sdk/client-sagemaker-runtime": "^3.310.0",
@@ -513,6 +532,7 @@
     "@notionhq/client": "^2.2.5",
     "@opensearch-project/opensearch": "^2.2.0",
     "@pinecone-database/pinecone": "^0.0.14",
+    "@planetscale/database": "^1.8.0",
     "@qdrant/js-client-rest": "^1.2.0",
     "@supabase/postgrest-js": "^1.1.1",
     "@supabase/supabase-js": "^2.10.0",
@@ -530,6 +550,7 @@
     "@types/object-hash": "^3.0.2",
     "@types/pdf-parse": "^1.1.1",
     "@types/pg": "^8",
+    "@types/pg-copy-streams": "^1.2.2",
     "@types/uuid": "^9",
     "@typescript-eslint/eslint-plugin": "^5.58.0",
     "@typescript-eslint/parser": "^5.58.0",
@@ -560,12 +581,14 @@
     "ioredis": "^5.3.2",
     "jest": "^29.5.0",
     "mammoth": "^1.5.1",
+    "ml-matrix": "^6.10.4",
     "mongodb": "^5.2.0",
     "mysql2": "^3.3.3",
     "notion-to-md": "^3.1.0",
     "pdf-parse": "1.1.1",
     "peggy": "^3.0.2",
     "pg": "^8.11.0",
+    "pg-copy-streams": "^6.0.5",
     "pickleparser": "^0.1.0",
     "playwright": "^1.32.1",
     "prettier": "^2.8.3",
@@ -587,6 +610,7 @@
   },
   "peerDependencies": {
     "@aws-sdk/client-dynamodb": "^3.310.0",
+    "@aws-sdk/client-kendra": "^3.352.0",
     "@aws-sdk/client-lambda": "^3.310.0",
     "@aws-sdk/client-s3": "^3.310.0",
     "@aws-sdk/client-sagemaker-runtime": "^3.310.0",
@@ -602,6 +626,7 @@
     "@notionhq/client": "^2.2.5",
     "@opensearch-project/opensearch": "*",
     "@pinecone-database/pinecone": "*",
+    "@planetscale/database": "^1.8.0",
     "@qdrant/js-client-rest": "^1.2.0",
     "@supabase/postgrest-js": "^1.1.1",
     "@supabase/supabase-js": "^2.10.0",
@@ -632,6 +657,7 @@
     "pdf-parse": "1.1.1",
     "peggy": "^3.0.2",
     "pg": "^8.11.0",
+    "pg-copy-streams": "^6.0.5",
     "pickleparser": "^0.1.0",
     "playwright": "^1.32.1",
     "puppeteer": "^19.7.2",
@@ -646,6 +672,9 @@
   },
   "peerDependenciesMeta": {
     "@aws-sdk/client-dynamodb": {
+      "optional": true
+    },
+    "@aws-sdk/client-kendra": {
       "optional": true
     },
     "@aws-sdk/client-lambda": {
@@ -691,6 +720,9 @@
       "optional": true
     },
     "@pinecone-database/pinecone": {
+      "optional": true
+    },
+    "@planetscale/database": {
       "optional": true
     },
     "@qdrant/js-client-rest": {
@@ -783,6 +815,9 @@
     "pg": {
       "optional": true
     },
+    "pg-copy-streams": {
+      "optional": true
+    },
     "pickleparser": {
       "optional": true
     },
@@ -818,7 +853,7 @@
     }
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.5.3",
+    "@anthropic-ai/sdk": "^0.5.7",
     "ansi-styles": "^5.0.0",
     "binary-extensions": "^2.2.0",
     "camelcase": "6",
@@ -828,7 +863,7 @@
     "js-tiktoken": "^1.0.7",
     "js-yaml": "^4.1.0",
     "jsonpointer": "^5.0.1",
-    "langsmith": "^0.0.9",
+    "langsmith": "~0.0.11",
     "ml-distance": "^4.0.0",
     "object-hash": "^3.0.0",
     "openai": "^3.3.0",
@@ -1000,6 +1035,11 @@
       "import": "./embeddings/googlevertexai.js",
       "require": "./embeddings/googlevertexai.cjs"
     },
+    "./embeddings/googlevertexai_multimodal": {
+      "types": "./embeddings/googlevertexai_multimodal.d.ts",
+      "import": "./embeddings/googlevertexai_multimodal.js",
+      "require": "./embeddings/googlevertexai_multimodal.cjs"
+    },
     "./embeddings/googlepalm": {
       "types": "./embeddings/googlepalm.d.ts",
       "import": "./embeddings/googlepalm.js",
@@ -1083,6 +1123,11 @@
         "import": "./vectorstores.js",
         "require": "./vectorstores.cjs"
       }
+    },
+    "./vectorstores/analyticdb": {
+      "types": "./vectorstores/analyticdb.d.ts",
+      "import": "./vectorstores/analyticdb.js",
+      "require": "./vectorstores/analyticdb.cjs"
     },
     "./vectorstores/base": {
       "types": "./vectorstores/base.d.ts",
@@ -1306,6 +1351,11 @@
       "import": "./document_loaders/web/confluence.js",
       "require": "./document_loaders/web/confluence.cjs"
     },
+    "./document_loaders/web/serpapi": {
+      "types": "./document_loaders/web/serpapi.d.ts",
+      "import": "./document_loaders/web/serpapi.js",
+      "require": "./document_loaders/web/serpapi.cjs"
+    },
     "./document_loaders/web/sort_xyz_blockchain": {
       "types": "./document_loaders/web/sort_xyz_blockchain.d.ts",
       "import": "./document_loaders/web/sort_xyz_blockchain.js",
@@ -1423,6 +1473,11 @@
       "import": "./schema/query_constructor.js",
       "require": "./schema/query_constructor.cjs"
     },
+    "./schema/retriever": {
+      "types": "./schema/retriever.d.ts",
+      "import": "./schema/retriever.js",
+      "require": "./schema/retriever.cjs"
+    },
     "./sql_db": {
       "types": "./sql_db.d.ts",
       "import": "./sql_db.js",
@@ -1449,6 +1504,11 @@
         "import": "./retrievers.js",
         "require": "./retrievers.cjs"
       }
+    },
+    "./retrievers/amazon_kendra": {
+      "types": "./retrievers/amazon_kendra.d.ts",
+      "import": "./retrievers/amazon_kendra.js",
+      "require": "./retrievers/amazon_kendra.cjs"
     },
     "./retrievers/remote": {
       "types": "./retrievers/remote.d.ts",
@@ -1609,6 +1669,11 @@
       "types": "./stores/message/upstash_redis.d.ts",
       "import": "./stores/message/upstash_redis.js",
       "require": "./stores/message/upstash_redis.cjs"
+    },
+    "./stores/message/planetscale": {
+      "types": "./stores/message/planetscale.d.ts",
+      "import": "./stores/message/planetscale.js",
+      "require": "./stores/message/planetscale.cjs"
     },
     "./experimental/autogpt": {
       "types": "./experimental/autogpt.d.ts",

@@ -87,6 +87,18 @@ export class LangChainTracer
     await this.client.updateRun(run.id, runUpdate);
   }
 
+  async onRetrieverStart(run: Run): Promise<void> {
+    await this._persistRunSingle(run);
+  }
+
+  async onRetrieverEnd(run: Run): Promise<void> {
+    await this._updateRunSingle(run);
+  }
+
+  async onRetrieverError(run: Run): Promise<void> {
+    await this._updateRunSingle(run);
+  }
+
   async onLLMStart(run: Run): Promise<void> {
     await this._persistRunSingle(run);
   }

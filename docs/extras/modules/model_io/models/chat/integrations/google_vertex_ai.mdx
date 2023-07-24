@@ -1,0 +1,45 @@
+---
+sidebar_label: Google Vertex AI
+---
+
+import CodeBlock from "@theme/CodeBlock";
+
+# ChatGoogleVertexAI
+
+The Vertex AI implementation is meant to be used in Node.js and not
+directly from a browser, since it requires a service account to use.
+
+Before running this code, you should make sure the Vertex AI API is
+enabled for the relevant project and that you've authenticated to
+Google Cloud using one of these methods:
+
+- You are logged into an account (using `gcloud auth application-default login`)
+  permitted to that project.
+- You are running on a machine using a service account that is permitted
+  to the project.
+- You have downloaded the credentials for a service account that is permitted
+  to the project and set the `GOOGLE_APPLICATION_CREDENTIALS` environment
+  variable to the path of this file.
+
+```bash npm2yarn
+npm install google-auth-library
+```
+
+The ChatGoogleVertexAI class works just like other chat-based LLMs,
+with a few exceptions:
+
+1. The first `SystemMessage` passed in is mapped to the "context" parameter that the PaLM model expects.
+   No other `SystemMessages` are allowed.
+2. After the first `SystemMessage`, there must be an odd number of messages, representing a conversation between a human and the model.
+3. Human messages must alternate with AI messages.
+
+import ChatGoogleVertexAI from "@examples/models/chat/integration_googlevertexai.ts";
+
+<CodeBlock language="typescript">{ChatGoogleVertexAI}</CodeBlock>
+
+There is also an optional `examples` constructor parameter that can help the model understand what an appropriate response
+looks like.
+
+import ChatGoogleVertexAIExamples from "@examples/models/chat/integration_googlevertexai-examples.ts";
+
+<CodeBlock language="typescript">{ChatGoogleVertexAIExamples}</CodeBlock>

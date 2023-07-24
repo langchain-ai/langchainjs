@@ -60,7 +60,7 @@ const Simulation = async () => {
     "Tommie tries to get some rest.",
   ];
   for (const observation of tommieObservations) {
-    await tommie.memory.addMemory(observation, new Date());
+    await tommie.addMemory(observation, new Date());
   }
 
   // Checking Tommie's summary again after giving him some memories
@@ -235,7 +235,7 @@ const Simulation = async () => {
   ];
 
   for (const observation of eveObservations) {
-    await eve.memory.addMemory(observation, new Date());
+    await eve.addMemory(observation, new Date());
   }
 
   const eveInitialSummary: string = await eve.getSummary({

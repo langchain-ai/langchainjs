@@ -1,8 +1,10 @@
 import { VectorStore } from "../vectorstores/base.js";
 import { Document } from "../document.js";
-import { BaseRetriever } from "../schema/index.js";
+import { BaseRetriever, BaseRetrieverInput } from "../schema/retriever.js";
+import { CallbackManagerForRetrieverRun } from "../callbacks/manager.js";
 
-export interface TimeWeightedVectorStoreRetrieverFields {
+export interface TimeWeightedVectorStoreRetrieverFields
+  extends BaseRetrieverInput {
   vectorStore: VectorStore;
   searchKwargs?: number;
   memoryStream?: Document[];
@@ -20,6 +22,10 @@ export const BUFFER_IDX = "buffer_idx";
  * ref: https://github.com/hwchase17/langchain/blob/master/langchain/retrievers/time_weighted_retriever.py
  */
 export class TimeWeightedVectorStoreRetriever extends BaseRetriever {
+  get lc_namespace() {
+    return ["langchain", "retrievers", "time_weighted"];
+  }
+
   /**
    * The vectorstore to store documents and determine salience.
    */
@@ -60,7 +66,7 @@ export class TimeWeightedVectorStoreRetriever extends BaseRetriever {
    * @param fields - The fields required for initializing the TimeWeightedVectorStoreRetriever
    */
   constructor(fields: TimeWeightedVectorStoreRetrieverFields) {
-    super();
+    super(fields);
     this.vectorStore = fields.vectorStore;
     this.searchKwargs = fields.searchKwargs ?? 100;
     this.memoryStream = fields.memoryStream ?? [];
@@ -74,16 +80,26 @@ export class TimeWeightedVectorStoreRetriever extends BaseRetriever {
     return this.memoryStream;
   }
 
+  setMemoryStream(memoryStream: Document[]) {
+    this.memoryStream = memoryStream;
+  }
+
   /**
    * Get relevant documents based on time-weighted relevance
    * @param query - The query to search for
    * @returns The relevant documents
    */
-  async getRelevantDocuments(query: string): Promise<Document[]> {
+  async _getRelevantDocuments(
+    query: string,
+    runManager?: CallbackManagerForRetrieverRun
+  ): Promise<Document[]> {
     const now = Math.floor(Date.now() / 1000);
     const memoryDocsAndScores = this.getMemoryDocsAndScores();
 
-    const salientDocsAndScores = await this.getSalientDocuments(query);
+    const salientDocsAndScores = await this.getSalientDocuments(
+      query,
+      runManager
+    );
     const docsAndScores = { ...memoryDocsAndScores, ...salientDocsAndScores };
 
     return this.computeResults(docsAndScores, now);
@@ -138,12 +154,15 @@ export class TimeWeightedVectorStoreRetriever extends BaseRetriever {
    * @returns An object containing salient documents and their scores
    */
   private async getSalientDocuments(
-    query: string
+    query: string,
+    runManager?: CallbackManagerForRetrieverRun
   ): Promise<Record<number, { doc: Document; score: number }>> {
     const docAndScores: [Document, number][] =
       await this.vectorStore.similaritySearchWithScore(
         query,
-        this.searchKwargs
+        this.searchKwargs,
+        undefined,
+        runManager?.getChild()
       );
     const results: Record<number, { doc: Document; score: number }> = {};
     for (const [fetchedDoc, score] of docAndScores) {
@@ -198,6 +217,7 @@ export class TimeWeightedVectorStoreRetriever extends BaseRetriever {
     return docs.map((doc, i) => ({
       ...doc,
       metadata: {
+        ...doc.metadata,
         [LAST_ACCESSED_AT_KEY]: doc.metadata[LAST_ACCESSED_AT_KEY] ?? now,
         created_at: doc.metadata.created_at ?? now,
         [BUFFER_IDX]: this.memoryStream.length + i,
@@ -208,11 +228,10 @@ export class TimeWeightedVectorStoreRetriever extends BaseRetriever {
   /**
    * Calculate the combined score based on vector relevance and other factors
    * @param doc - The document to calculate the score for
-   * @param vectorRelevance - The relevance score
-   * from the vector store
-@param nowMsec - The current timestamp in milliseconds
-@returns The combined score for the document
-*/
+   * @param vectorRelevance - The relevance score from the vector store
+   * @param nowMsec - The current timestamp in milliseconds
+   * @returns The combined score for the document
+   */
   private getCombinedScore(
     doc: Document,
     vectorRelevance: number | null,
@@ -233,12 +252,11 @@ export class TimeWeightedVectorStoreRetriever extends BaseRetriever {
   }
 
   /**
-
-  Calculate the hours passed between two time points
-  @param time - The current time in seconds
-  @param refTime - The reference time in seconds
-  @returns The number of hours passed between the two time points
-  */
+   * Calculate the hours passed between two time points
+   * @param time - The current time in seconds
+   * @param refTime - The reference time in seconds
+   * @returns The number of hours passed between the two time points
+   */
   private getHoursPassed(time: number, refTime: number): number {
     return (time - refTime) / 3600;
   }

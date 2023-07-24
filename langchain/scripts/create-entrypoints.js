@@ -60,6 +60,7 @@ const entrypoints = {
   "prompts/load": "prompts/load",
   // vectorstores
   vectorstores: "vectorstores/index",
+  "vectorstores/analyticdb": "vectorstores/analyticdb",
   "vectorstores/base": "vectorstores/base",
   "vectorstores/elasticsearch": "vectorstores/elasticsearch",
   "vectorstores/memory": "vectorstores/memory",
@@ -109,7 +110,9 @@ const entrypoints = {
   "document_loaders/web/s3": "document_loaders/web/s3",
   "document_loaders/web/sonix_audio": "document_loaders/web/sonix_audio",
   "document_loaders/web/confluence": "document_loaders/web/confluence",
-  "document_loaders/web/sort_xyz_blockchain": "document_loaders/web/sort_xyz_blockchain",
+  "document_loaders/web/serpapi": "document_loaders/web/serpapi",
+  "document_loaders/web/sort_xyz_blockchain":
+    "document_loaders/web/sort_xyz_blockchain",
   "document_loaders/fs/directory": "document_loaders/fs/directory",
   "document_loaders/fs/buffer": "document_loaders/fs/buffer",
   "document_loaders/fs/text": "document_loaders/fs/text",
@@ -122,7 +125,8 @@ const entrypoints = {
   "document_loaders/fs/notion": "document_loaders/fs/notion",
   "document_loaders/fs/unstructured": "document_loaders/fs/unstructured",
   // document_transformers
-  "document_transformers/openai_functions": "document_transformers/openai_functions",
+  "document_transformers/openai_functions":
+    "document_transformers/openai_functions",
   // chat_models
   chat_models: "chat_models/index",
   "chat_models/base": "chat_models/base",
@@ -135,6 +139,7 @@ const entrypoints = {
   schema: "schema/index",
   "schema/output_parser": "schema/output_parser",
   "schema/query_constructor": "schema/query_constructor",
+  "schema/retriever": "schema/retriever",
   // sql_db
   sql_db: "sql_db",
   // callbacks
@@ -144,6 +149,7 @@ const entrypoints = {
   "output_parsers/expression": "output_parsers/expression",
   // retrievers
   retrievers: "retrievers/index",
+  "retrievers/amazon_kendra": "retrievers/amazon_kendra",
   "retrievers/remote": "retrievers/remote/index",
   "retrievers/supabase": "retrievers/supabase",
   "retrievers/zep": "retrievers/zep",
@@ -179,6 +185,7 @@ const entrypoints = {
   "stores/message/redis": "stores/message/redis",
   "stores/message/ioredis": "stores/message/ioredis",
   "stores/message/upstash_redis": "stores/message/upstash_redis",
+  "stores/message/planetscale": "stores/message/planetscale",
   // experimental
   "experimental/autogpt": "experimental/autogpt/index",
   "experimental/babyagi": "experimental/babyagi/index",
@@ -227,6 +234,7 @@ const requiresOptionalDependency = [
   "llms/replicate",
   "llms/sagemaker_endpoint",
   "prompts/load",
+  "vectorstores/analyticdb",
   "vectorstores/chroma",
   "vectorstores/elasticsearch",
   "vectorstores/hnswlib",
@@ -276,6 +284,7 @@ const requiresOptionalDependency = [
   "chat_models/googlevertexai",
   "chat_models/googlepalm",
   "sql_db",
+  "retrievers/amazon_kendra",
   "retrievers/supabase",
   "retrievers/zep",
   "retrievers/metal",
@@ -299,6 +308,7 @@ const requiresOptionalDependency = [
   "stores/message/redis",
   "stores/message/ioredis",
   "stores/message/upstash_redis",
+  "stores/message/planetscale",
 ];
 
 // List of test-exports-* packages which we use to test that the exports field
