@@ -64,18 +64,19 @@ import MomentoCacheExample from "@examples/cache/momento.ts";
 LangChain also provides a Redis-based cache. This is useful if you want to share the cache across multiple processes or servers. To use it, you'll need to install the `redis` package:
 
 ```bash npm2yarn
-npm install redis
+npm install ioredis
 ```
 
 Then, you can pass a `cache` option when you instantiate the LLM. For example:
 
 ```typescript
 import { OpenAI } from "langchain/llms/openai";
-import { RedisCache } from "langchain/cache/redis";
-import { createClient } from "redis";
+import { RedisCache } from "langchain/cache/ioredis";
+import { Redis } from "ioredis";
 
-// See https://github.com/redis/node-redis for connection options
-const client = createClient();
+// See https://github.com/redis/ioredis for connection options
+const client = new Redis({});
+
 const cache = new RedisCache(client);
 
 const model = new OpenAI({ cache });
