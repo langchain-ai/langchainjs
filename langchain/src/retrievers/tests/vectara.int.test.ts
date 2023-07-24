@@ -12,7 +12,7 @@ import { VectaraStore } from "../../vectorstores/vectara.js";
  *      lang (level: part, data type: text)
  *      is_title (level: part, data type:  boolean)
  *      can_fly (level: document, data type: boolean)
- *      category (level: document, data type: integer)
+ *      category (level: document, data type: string)
  *    Note: make sure to create an empty corpus (without any documents or text)
  * 3. Set the appropriate environment variables in your .env file (VECTARA_CUSTOMER_ID, VECTARA_CORPUS_ID, VECTARA_API_KEY)
  * 4. Run the test
@@ -124,7 +124,8 @@ test("Vectara Retriever (with filters)", async () => {
     filter: "doc.category = 'Mammal' AND doc.can_fly = true",
   });
   // expect all flyingMammals results to be same as flyingAnimals results
-  expect(flyingMammals).toEqual(flyingAnimals);
+  expect(flyingMammals[0].pageContent).toEqual("Flying Squirrel");
+  expect(flyingAnimals[0].pageContent).toEqual("Flying Squirrel");
 
   const reptileLion = await retriever.getRelevantDocuments("lion", 1, {
     filter: "doc.category = 'Reptile' AND doc.can_fly = false",
@@ -132,8 +133,10 @@ test("Vectara Retriever (with filters)", async () => {
   const reptile = await retriever.getRelevantDocuments("animal", 1, {
     filter: "doc.category = 'Reptile' AND doc.can_fly = false",
   });
+
   // expect all reptileLion results to be same as reptile results (since lion is not a reptile)
-  expect(reptileLion).toEqual(reptile);
+  expect(reptileLion[0].pageContent).toEqual("Turtle");
+  expect(reptile[0].pageContent).toEqual("Turtle");
 });
 
 test("VectaraRetriever (without filters)", async () => {
@@ -147,7 +150,6 @@ test("VectaraRetriever (without filters)", async () => {
 
   const doc = await retriever.getRelevantDocuments("cold-blooded animal");
 
-  console.log(doc);
   expect(doc.length).toBeGreaterThan(0);
   expect(doc[0].pageContent).toContain("Turtles are cold-blooded reptiles");
 });
