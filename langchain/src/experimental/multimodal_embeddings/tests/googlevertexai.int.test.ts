@@ -1,9 +1,10 @@
 import fs from "fs";
-import { test, xtest, expect } from "@jest/globals";
+import * as path from "node:path";
+import { fileURLToPath } from "node:url";
+import { test, expect } from "@jest/globals";
 import { GoogleVertexAIMultimodalEmbeddings } from "../googlevertexai.js";
-
-// eslint-disable-next-line no-process-env
-const ifImgDefined = process.env.IMG_PATH ? test : xtest;
+import { Document } from "../../../document.js";
+import { FaissStore } from "../../../vectorstores/faiss.js";
 
 test("embedding text", async () => {
   const e = new GoogleVertexAIMultimodalEmbeddings();
@@ -24,12 +25,60 @@ test("embedding multiple texts", async () => {
   console.log(vector);
 });
 
-ifImgDefined("embedding image", async () => {
+test("embedding image", async () => {
   const e = new GoogleVertexAIMultimodalEmbeddings();
 
-  // eslint-disable-next-line no-process-env
-  const img = fs.readFileSync(process.env.IMG_PATH as string);
+  const pathname = path.join(
+    path.dirname(fileURLToPath(import.meta.url)),
+    "files",
+    "parrot.jpeg"
+  );
+  const img = fs.readFileSync(pathname);
   const vector: number[] = await e.embedImageQuery(img);
   expect(vector).toHaveLength(1408);
   console.log(vector);
+});
+
+test("embedding image with text in a vector store", async () => {
+  const e = new GoogleVertexAIMultimodalEmbeddings();
+
+  const vectorStore = await FaissStore.fromTexts(
+    ["dog", "cat", "horse", "seagull"],
+    [{ id: 2 }, { id: 1 }, { id: 3 }, { id: 4 }],
+    e
+  );
+
+  const resultOne = await vectorStore.similaritySearch("bird", 2);
+  console.log(resultOne);
+
+  const pathname = path.join(
+    path.dirname(fileURLToPath(import.meta.url)),
+    "files",
+    "parrot.jpeg"
+  );
+  const img = fs.readFileSync(pathname);
+  const vector: number[] = await e.embedImageQuery(img);
+  const document = new Document({
+    pageContent: img.toString("base64"),
+    metadata: {
+      id: 5,
+      mediaType: "image",
+    },
+  });
+
+  await vectorStore.addVectors([vector], [document]);
+
+  const pathname2 = path.join(
+    path.dirname(fileURLToPath(import.meta.url)),
+    "files",
+    "parrot-icon.png"
+  );
+  const img2 = fs.readFileSync(pathname2);
+  const vector2: number[] = await e.embedImageQuery(img2);
+
+  const resultTwo = await vectorStore.similaritySearchVectorWithScore(
+    vector2,
+    2
+  );
+  console.log(resultTwo);
 });
