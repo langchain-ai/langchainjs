@@ -1,4 +1,4 @@
-import { OpenAI } from "langchain/llms/openai";
+import { ChatOpenAI } from "langchain/chat_models/openai";
 import {
   BufferMemory,
   CombinedMemory,
@@ -15,7 +15,7 @@ const bufferMemory = new BufferMemory({
 
 // summary memory
 const summaryMemory = new ConversationSummaryMemory({
-  llm: new OpenAI({ modelName: "gpt-3.5-turbo", temperature: 0 }),
+  llm: new ChatOpenAI({ modelName: "gpt-3.5-turbo", temperature: 0 }),
   inputKey: "input",
   memoryKey: "conversation_summary",
 });
@@ -38,11 +38,40 @@ const PROMPT = new PromptTemplate({
   inputVariables: ["input", "conversation_summary", "chat_history_lines"],
   template: _DEFAULT_TEMPLATE,
 });
-const model = new OpenAI({ temperature: 0.9, verbose: true });
+const model = new ChatOpenAI({ temperature: 0.9, verbose: true });
 const chain = new ConversationChain({ llm: model, memory, prompt: PROMPT });
 
 const res1 = await chain.call({ input: "Hi! I'm Jim." });
 console.log({ res1 });
 
+/*
+  {
+    res1: {
+      response: "Hello Jim! It's nice to meet you. How can I assist you today?"
+    }
+  }
+*/
+
 const res2 = await chain.call({ input: "Can you tell me a joke?" });
 console.log({ res2 });
+
+/*
+  {
+    res2: {
+      response: 'Why did the scarecrow win an award? Because he was outstanding in his field!'
+    }
+  }
+*/
+
+const res3 = await chain.call({
+  input: "What's my name and what joke did you just tell?",
+});
+console.log({ res3 });
+
+/*
+  {
+    res3: {
+      response: 'Your name is Jim. The joke I just told was about a scarecrow winning an award because he was outstanding in his field.'
+    }
+  }
+*/
