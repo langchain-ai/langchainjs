@@ -17,7 +17,6 @@ export const optionalImportEntrypoints = [
   "langchain/embeddings/tensorflow",
   "langchain/embeddings/hf",
   "langchain/embeddings/googlevertexai",
-  "langchain/embeddings/googlevertexai_multimodal",
   "langchain/embeddings/googlepalm",
   "langchain/llms/load",
   "langchain/llms/cohere",
@@ -100,4 +99,5 @@ export const optionalImportEntrypoints = [
   "langchain/stores/message/ioredis",
   "langchain/stores/message/upstash_redis",
   "langchain/stores/message/planetscale",
+  "langchain/experimental/multimodal_embeddings/googlevertexai",
 ];

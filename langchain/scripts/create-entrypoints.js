@@ -40,7 +40,6 @@ const entrypoints = {
   "embeddings/tensorflow": "embeddings/tensorflow",
   "embeddings/hf": "embeddings/hf",
   "embeddings/googlevertexai": "embeddings/googlevertexai",
-  "embeddings/googlevertexai_multimodal": "embeddings/googlevertexai_multimodal",
   "embeddings/googlepalm": "embeddings/googlepalm",
   // llms
   llms: "llms/index",
@@ -191,6 +190,7 @@ const entrypoints = {
   "experimental/babyagi": "experimental/babyagi/index",
   "experimental/generative_agents": "experimental/generative_agents/index",
   "experimental/plan_and_execute": "experimental/plan_and_execute/index",
+  "experimental/multimodal_embeddings/googlevertexai": "experimental/multimodal_embeddings/googlevertexai",
   // evaluation
   evaluation: "evaluation/index",
 };
@@ -222,7 +222,6 @@ const requiresOptionalDependency = [
   "chains/sql_db",
   "embeddings/cohere",
   "embeddings/googlevertexai",
-  "embeddings/googlevertexai_multimodal",
   "embeddings/googlepalm",
   "embeddings/tensorflow",
   "embeddings/hf",
@@ -309,6 +308,7 @@ const requiresOptionalDependency = [
   "stores/message/ioredis",
   "stores/message/upstash_redis",
   "stores/message/planetscale",
+  "experimental/multimodal_embeddings/googlevertexai",
 ];
 
 // List of test-exports-* packages which we use to test that the exports field

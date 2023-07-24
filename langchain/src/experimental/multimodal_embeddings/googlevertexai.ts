@@ -1,11 +1,11 @@
-import { Embeddings, EmbeddingsParams } from "./base.js";
+import { Embeddings, EmbeddingsParams } from "../../embeddings/base.js";
 import {
   GoogleVertexAIBasePrediction,
   GoogleVertexAIConnectionParams,
   GoogleVertexAILLMResponse,
-} from "../types/googlevertexai-types.js";
-import { GoogleVertexAIConnection } from "../util/googlevertexai-connection.js";
-import { AsyncCallerCallOptions } from "../util/async_caller.js";
+} from "../../types/googlevertexai-types.js";
+import { GoogleVertexAIConnection } from "../../util/googlevertexai-connection.js";
+import { AsyncCallerCallOptions } from "../../util/async_caller.js";
 
 export interface GoogleVertexAIMultimodalEmbeddingsParams
   extends EmbeddingsParams,

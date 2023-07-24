@@ -79,9 +79,6 @@ embeddings/hf.d.ts
 embeddings/googlevertexai.cjs
 embeddings/googlevertexai.js
 embeddings/googlevertexai.d.ts
-embeddings/googlevertexai_multimodal.cjs
-embeddings/googlevertexai_multimodal.js
-embeddings/googlevertexai_multimodal.d.ts
 embeddings/googlepalm.cjs
 embeddings/googlepalm.js
 embeddings/googlepalm.d.ts
@@ -469,6 +466,9 @@ experimental/generative_agents.d.ts
 experimental/plan_and_execute.cjs
 experimental/plan_and_execute.js
 experimental/plan_and_execute.d.ts
+experimental/multimodal_embeddings/googlevertexai.cjs
+experimental/multimodal_embeddings/googlevertexai.js
+experimental/multimodal_embeddings/googlevertexai.d.ts
 evaluation.cjs
 evaluation.js
 evaluation.d.ts

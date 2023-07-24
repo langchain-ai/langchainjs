@@ -58,7 +58,6 @@
       "src/embeddings/tensorflow.ts",
       "src/embeddings/hf.ts",
       "src/embeddings/googlevertexai.ts",
-      "src/embeddings/googlevertexai_multimodal.ts",
       "src/embeddings/googlepalm.ts",
       "src/llms/load.ts",
       "src/llms/base.ts",
@@ -183,6 +182,7 @@
       "src/experimental/babyagi/index.ts",
       "src/experimental/generative_agents/index.ts",
       "src/experimental/plan_and_execute/index.ts",
+      "src/experimental/multimodal_embeddings/googlevertexai.ts",
       "src/evaluation/index.ts"
     ],
     "sort": [

@@ -49,9 +49,6 @@ export interface OptionalImportMap {
   "langchain/embeddings/googlevertexai"?:
     | typeof import("../embeddings/googlevertexai.js")
     | Promise<typeof import("../embeddings/googlevertexai.js")>;
-  "langchain/embeddings/googlevertexai_multimodal"?:
-    | typeof import("../embeddings/googlevertexai_multimodal.js")
-    | Promise<typeof import("../embeddings/googlevertexai_multimodal.js")>;
   "langchain/embeddings/googlepalm"?:
     | typeof import("../embeddings/googlepalm.js")
     | Promise<typeof import("../embeddings/googlepalm.js")>;
@@ -298,6 +295,11 @@ export interface OptionalImportMap {
   "langchain/stores/message/planetscale"?:
     | typeof import("../stores/message/planetscale.js")
     | Promise<typeof import("../stores/message/planetscale.js")>;
+  "langchain/experimental/multimodal_embeddings/googlevertexai"?:
+    | typeof import("../experimental/multimodal_embeddings/googlevertexai.js")
+    | Promise<
+        typeof import("../experimental/multimodal_embeddings/googlevertexai.js")
+      >;
 }
 
 export interface SecretMap {
