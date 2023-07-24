@@ -62,7 +62,7 @@ test.skip(
         "Tommie tries to get some rest.",
       ];
       for (const observation of tommieObservations) {
-        await tommie.memory.addMemory(observation, new Date());
+        await tommie.addMemory(observation, new Date());
       }
       console.log(
         "Tommie's second summary:\n",
@@ -240,7 +240,7 @@ test.skip(
       ];
 
       for (const observation of eveObservations) {
-        await eve.memory.addMemory(observation, new Date());
+        await eve.addMemory(observation, new Date());
       }
 
       const eveInitialSummary: string = await eve.getSummary({
