@@ -7,10 +7,6 @@ type RedisClientType =
   | ReturnType<typeof createClient>
   | ReturnType<typeof createCluster>;
 
-/**
- * @deprecated
- * Use {@link ./ioredis/RedisCache} instead.
- */
 export class RedisCache extends BaseCache {
   private redisClient: RedisClientType;
 
