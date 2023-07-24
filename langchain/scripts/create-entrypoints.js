@@ -171,6 +171,7 @@ const entrypoints = {
   cache: "cache/index",
   "cache/momento": "cache/momento",
   "cache/redis": "cache/redis",
+  "cache/ioredis": "cache/ioredis",
   "cache/upstash_redis": "cache/upstash_redis",
   // stores
   "stores/doc/in_memory": "stores/doc/in_memory",
@@ -297,6 +298,7 @@ const requiresOptionalDependency = [
   "chains/query_constructor/ir",
   "cache/momento",
   "cache/redis",
+  "cache/ioredis",
   "cache/upstash_redis",
   "stores/doc/gcs",
   "stores/file/node",
