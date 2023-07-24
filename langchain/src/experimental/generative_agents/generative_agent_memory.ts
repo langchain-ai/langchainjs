@@ -92,6 +92,7 @@ class GenerativeAgentMemoryChain extends BaseChain {
       this.aggregateImportance > this.reflectionThreshold &&
       !this.reflecting
     ) {
+      console.log("Reflecting on current memories...");
       this.reflecting = true;
       await this.pauseToReflect(now, runManager);
       this.aggregateImportance = 0.0;
@@ -110,10 +111,19 @@ class GenerativeAgentMemoryChain extends BaseChain {
     const newInsights: string[] = [];
     const topics = await this.getTopicsOfReflection(50, runManager);
     for (const topic of topics) {
-      const insights = await this.getInsightsOnTopic(topic, now);
+      const insights = await this.getInsightsOnTopic(topic, now, runManager);
       for (const insight of insights) {
         // add memory
-        await this.call({ memory_content: insight, now });
+        await this.call(
+          {
+            memory_content: insight,
+            now,
+            memory_metadata: {
+              source: "reflection_insight",
+            },
+          },
+          runManager?.getChild("reflection_insight_memory")
+        );
       }
       newInsights.push(...insights);
     }
@@ -196,7 +206,7 @@ class GenerativeAgentMemoryChain extends BaseChain {
     const result = await this.chain(prompt).call(
       {
         topic,
-        relatedStatements,
+        related_statements: relatedStatements,
       },
       runManager?.getChild("reflection_insights")
     );
