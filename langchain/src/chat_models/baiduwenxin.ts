@@ -4,7 +4,6 @@ import {
   BaseMessage,
   ChatGeneration,
   ChatResult,
-  MessageType,
 } from "../schema/index.js";
 import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
 import { BaseLanguageModelCallOptions } from "../base_language/index.js";
@@ -91,14 +90,27 @@ declare interface BaiduWenxinChatInput {
   penaltyScore?: number;
 }
 
-function messageTypeToWenxinRole(type: MessageType): WenxinMessageRole {
+function extractCustomRole(message: BaseMessage) {
+  if (!("role" in message && typeof message.role === "string")) {
+    throw new Error("Missing role in generic message");
+  }
+
+  if (message.role === "assistant" || message.role === "user") {
+    return message.role;
+  }
+
+  throw new Error(`Unknown message role: ${message.role}`);
+}
+
+function messageToWenxinRole(message: BaseMessage): WenxinMessageRole {
+  const type = message._getType();
   switch (type) {
     case "ai":
       return "assistant";
     case "human":
       return "user";
     case "system":
-      throw new Error("System messages not supported");
+      return extractCustomRole(message);
     default:
       throw new Error(`Unknown message type: ${type}`);
   }
@@ -266,7 +278,7 @@ export class ChatBaiduWenxin
 
     const params = this.invocationParams();
     const messagesMapped: WenxinMessage[] = messages.map((message) => ({
-      role: messageTypeToWenxinRole(message._getType()),
+      role: messageToWenxinRole(message),
       content: message.text,
     }));
 

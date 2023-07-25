@@ -27,7 +27,6 @@ import {
   ChatMessage,
   ChatResult,
   HumanMessage,
-  MessageType,
   SystemMessage,
 } from "../schema/index.js";
 import { getModelNameForTiktoken } from "../base_language/count_tokens.js";
@@ -49,9 +48,27 @@ interface OpenAILLMOutput {
   tokenUsage: TokenUsage;
 }
 
-function messageTypeToOpenAIRole(
-  type: MessageType
+function extractCustomRole(message: BaseMessage) {
+  if (!("role" in message && typeof message.role === "string")) {
+    throw new Error("Missing role in generic message");
+  }
+
+  if (
+    message.role === "system" ||
+    message.role === "assistant" ||
+    message.role === "user" ||
+    message.role === "function"
+  ) {
+    return message.role;
+  }
+
+  throw new Error(`Unknown message role: ${message.role}`);
+}
+
+function messageToOpenAIRole(
+  message: BaseMessage
 ): ChatCompletionResponseMessageRoleEnum {
+  const type = message._getType();
   switch (type) {
     case "system":
       return "system";
@@ -61,6 +78,9 @@ function messageTypeToOpenAIRole(
       return "user";
     case "function":
       return "function";
+    case "generic": {
+      return extractCustomRole(message);
+    }
     default:
       throw new Error(`Unknown message type: ${type}`);
   }
@@ -311,7 +331,7 @@ export class ChatOpenAI
     const params = this.invocationParams(options);
     const messagesMapped: ChatCompletionRequestMessage[] = messages.map(
       (message) => ({
-        role: messageTypeToOpenAIRole(message._getType()),
+        role: messageToOpenAIRole(message),
         content: message.content,
         name: message.name,
         function_call: message.additional_kwargs
@@ -518,9 +538,7 @@ export class ChatOpenAI
     const countPerMessage = await Promise.all(
       messages.map(async (message) => {
         const textCount = await this.getNumTokens(message.content);
-        const roleCount = await this.getNumTokens(
-          messageTypeToOpenAIRole(message._getType())
-        );
+        const roleCount = await this.getNumTokens(messageToOpenAIRole(message));
         const nameCount =
           message.name !== undefined
             ? tokensPerName + (await this.getNumTokens(message.name))
@@ -722,7 +740,7 @@ export class PromptLayerChatOpenAI extends ChatOpenAI {
       const parsedResp = [
         {
           content: generation.text,
-          role: messageTypeToOpenAIRole(generation.message._getType()),
+          role: messageToOpenAIRole(generation.message),
         },
       ];
 

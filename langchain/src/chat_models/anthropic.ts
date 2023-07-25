@@ -8,12 +8,24 @@ import {
   BaseMessage,
   ChatGeneration,
   ChatResult,
-  MessageType,
 } from "../schema/index.js";
 import { getEnvironmentVariable } from "../util/env.js";
 import { BaseChatModel, BaseChatModelParams } from "./base.js";
 
-function getAnthropicPromptFromMessage(type: MessageType): string {
+function extractCustomRole(message: BaseMessage) {
+  if (!("role" in message && typeof message.role === "string")) {
+    throw new Error("Missing role in generic message");
+  }
+
+  if (message.role === AI_PROMPT || message.role === HUMAN_PROMPT) {
+    return message.role;
+  }
+
+  throw new Error(`Unknown message role: ${message.role}`);
+}
+
+function getAnthropicPromptFromMessage(message: BaseMessage): string {
+  const type = message._getType();
   switch (type) {
     case "ai":
       return AI_PROMPT;
@@ -21,6 +33,8 @@ function getAnthropicPromptFromMessage(type: MessageType): string {
       return HUMAN_PROMPT;
     case "system":
       return "";
+    case "generic":
+      return extractCustomRole(message);
     default:
       throw new Error(`Unknown message type: ${type}`);
   }
@@ -210,9 +224,7 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
     return (
       messages
         .map((message) => {
-          const messagePrompt = getAnthropicPromptFromMessage(
-            message._getType()
-          );
+          const messagePrompt = getAnthropicPromptFromMessage(message);
           return `${messagePrompt} ${message.content}`;
         })
         .join("") + AI_PROMPT
