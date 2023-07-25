@@ -108,7 +108,12 @@ export class ChatVectorDBQAChain
         );
       }
     }
-    const docs = await this.vectorstore.similaritySearch(newQuestion, this.k);
+    const docs = await this.vectorstore.similaritySearch(
+      newQuestion,
+      this.k,
+      undefined,
+      runManager?.getChild("vectorstore")
+    );
     const inputs = {
       question: newQuestion,
       input_documents: docs,

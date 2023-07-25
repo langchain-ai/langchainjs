@@ -80,6 +80,10 @@ export class WeaviateStore extends VectorStore {
 
   private queryAttrs: string[];
 
+  _vectorstoreType(): string {
+    return "weaviate";
+  }
+
   constructor(public embeddings: Embeddings, args: WeaviateLibArgs) {
     super(embeddings, args);
 

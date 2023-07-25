@@ -106,7 +106,7 @@ export interface ChatOpenAICallOptions extends OpenAICallOptions {
  * @remarks
  * Any parameters that are valid to be passed to {@link
  * https://platform.openai.com/docs/api-reference/chat/create |
- * `openai.createCompletion`} can be passed through {@link modelKwargs}, even
+ * `openai.createChatCompletion`} can be passed through {@link modelKwargs}, even
  * if not explicitly available on this class.
  */
 export class ChatOpenAI

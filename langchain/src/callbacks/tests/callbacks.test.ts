@@ -11,6 +11,7 @@ import {
   LLMResult,
 } from "../../schema/index.js";
 import { Serialized } from "../../load/serializable.js";
+import { Document } from "../../document.js";
 
 class FakeCallbackHandler extends BaseCallbackHandler {
   name = `fake-${uuid.v4()}`;
@@ -38,6 +39,10 @@ class FakeCallbackHandler extends BaseCallbackHandler {
   toolEnds = 0;
 
   agentEnds = 0;
+
+  retrieverStarts = 0;
+
+  retrieverEnds = 0;
 
   texts = 0;
 
@@ -108,6 +113,25 @@ class FakeCallbackHandler extends BaseCallbackHandler {
     this.agentEnds += 1;
   }
 
+  async handleRetrieverStart(
+    _retriever: Serialized,
+    _query: string
+  ): Promise<void> {
+    this.starts += 1;
+    this.retrieverStarts += 1;
+  }
+
+  async handleRetrieverEnd(
+    _documents: Document<Record<string, unknown>>[]
+  ): Promise<void> {
+    this.ends += 1;
+    this.retrieverEnds += 1;
+  }
+
+  async handleRetrieverError(_err: Error): Promise<void> {
+    this.errors += 1;
+  }
+
   copy(): FakeCallbackHandler {
     const newInstance = new FakeCallbackHandler();
     newInstance.name = this.name;
@@ -122,6 +146,8 @@ class FakeCallbackHandler extends BaseCallbackHandler {
     newInstance.toolStarts = this.toolStarts;
     newInstance.toolEnds = this.toolEnds;
     newInstance.agentEnds = this.agentEnds;
+    newInstance.retrieverStarts = this.retrieverStarts;
+    newInstance.retrieverEnds = this.retrieverEnds;
     newInstance.texts = this.texts;
 
     return newInstance;
@@ -176,10 +202,18 @@ test("CallbackManager", async () => {
   });
   await chainCb.handleAgentEnd({ returnValues: { test: "test" }, log: "test" });
 
+  const retrieverCb = await manager.handleRetrieverStart(serialized, "test");
+  await retrieverCb.handleRetrieverEnd([
+    new Document({ pageContent: "test", metadata: { test: "test" } }),
+  ]);
+  await retrieverCb.handleRetrieverError(new Error("test"));
+
   for (const handler of [handler1, handler2]) {
-    expect(handler.starts).toBe(4);
-    expect(handler.ends).toBe(4);
-    expect(handler.errors).toBe(3);
+    expect(handler.starts).toBe(5);
+    expect(handler.ends).toBe(5);
+    expect(handler.errors).toBe(4);
+    expect(handler.retrieverStarts).toBe(1);
+    expect(handler.retrieverEnds).toBe(1);
     expect(handler.llmStarts).toBe(1);
     expect(handler.llmEnds).toBe(1);
     expect(handler.llmStreams).toBe(1);
@@ -241,6 +275,25 @@ test("CallbackHandler with ignoreLLM", async () => {
   expect(handler.llmStarts).toBe(0);
   expect(handler.llmEnds).toBe(0);
   expect(handler.llmStreams).toBe(0);
+});
+
+test("CallbackHandler with ignoreRetriever", async () => {
+  const handler = new FakeCallbackHandler({
+    ignoreRetriever: true,
+  });
+  const manager = new CallbackManager();
+  manager.addHandler(handler);
+  const retrieverCb = await manager.handleRetrieverStart(serialized, "test");
+  await retrieverCb.handleRetrieverEnd([
+    new Document({ pageContent: "test", metadata: { test: "test" } }),
+  ]);
+  await retrieverCb.handleRetrieverError(new Error("test"));
+
+  expect(handler.starts).toBe(0);
+  expect(handler.ends).toBe(0);
+  expect(handler.errors).toBe(0);
+  expect(handler.retrieverStarts).toBe(0);
+  expect(handler.retrieverEnds).toBe(0);
 });
 
 test("CallbackHandler with ignoreChain", async () => {
