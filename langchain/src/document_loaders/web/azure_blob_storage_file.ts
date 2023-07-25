@@ -50,11 +50,13 @@ export class AzureBlobStorageFileLoader extends BaseDocumentLoader {
 
       fs.mkdirSync(path.dirname(filePath), { recursive: true });
       await blobClient.downloadToFile(filePath);
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (e: any) {
+    } catch (e: unknown) {
       throw new Error(
-        `Failed to download file ${this.blobName} from Azure Blob Storage container ${this.container}: ${e.message}`
+        `Failed to download file ${
+          this.blobName
+        } from Azure Blob Storage container ${this.container}: ${
+          (e as Error).message
+        }`
       );
     }
 
