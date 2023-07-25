@@ -141,14 +141,10 @@ export interface OptionalImportMap {
     | Promise<typeof import("../document_loaders/web/apify_dataset.js")>;
   "langchain/document_loaders/web/azure_blob_storage_container"?:
     | typeof import("../document_loaders/web/azure_blob_storage_container.js")
-    | Promise<
-        typeof import("../document_loaders/web/azure_blob_storage_container.js")
-      >;
+    | Promise<typeof import("../document_loaders/web/azure_blob_storage_container.js")>;
   "langchain/document_loaders/web/azure_blob_storage_file"?:
     | typeof import("../document_loaders/web/azure_blob_storage_file.js")
-    | Promise<
-        typeof import("../document_loaders/web/azure_blob_storage_file.js")
-      >;
+    | Promise<typeof import("../document_loaders/web/azure_blob_storage_file.js")>;
   "langchain/document_loaders/web/cheerio"?:
     | typeof import("../document_loaders/web/cheerio.js")
     | Promise<typeof import("../document_loaders/web/cheerio.js")>;
