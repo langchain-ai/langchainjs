@@ -136,7 +136,7 @@ export class AmazonKendraRetriever extends BaseRetriever {
     const { length } = response.ResultItems;
     const count = length < pageSize ? length : pageSize;
 
-    return response.ResultItems.slice(0, count).map((item: any) =>
+    return response.ResultItems.slice(0, count).map((item) =>
       this.convertRetrieverItem(item)
     );
   }
@@ -187,7 +187,7 @@ export class AmazonKendraRetriever extends BaseRetriever {
     if (!response.ResultItems) return [];
     const { length } = response.ResultItems;
     const count = length < pageSize ? length : pageSize;
-    return response.ResultItems.slice(0, count).map((item: any) =>
+    return response.ResultItems.slice(0, count).map((item) =>
       this.convertQueryItem(item)
     );
   }
