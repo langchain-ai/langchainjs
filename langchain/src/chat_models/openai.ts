@@ -240,7 +240,7 @@ export class ChatOpenAI
     this.streaming = fields?.streaming ?? false;
 
     if (this.azureOpenAIApiKey) {
-      if (!this.azureOpenAIApiInstanceName) {
+      if (!this.azureOpenAIApiInstanceName && !this.azureOpenAIBasePath) {
         throw new Error("Azure OpenAI API instance name not found");
       }
       if (!this.azureOpenAIApiDeploymentName) {
@@ -343,7 +343,7 @@ export class ChatOpenAI
                   resolve(response);
                 } else {
                   const data = JSON.parse(event.data);
-
+                  if (!data.id) return;
                   if (data?.error) {
                     if (rejected) {
                       return;
@@ -432,7 +432,6 @@ export class ChatOpenAI
                       // sending the function call arguments
                     }
                   }
-
                   // when all messages are finished, resolve
                   if (
                     !resolved &&
