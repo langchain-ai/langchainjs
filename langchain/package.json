@@ -481,6 +481,9 @@
     "experimental/plan_and_execute.cjs",
     "experimental/plan_and_execute.js",
     "experimental/plan_and_execute.d.ts",
+    "experimental/multimodal_embeddings/googlevertexai.cjs",
+    "experimental/multimodal_embeddings/googlevertexai.js",
+    "experimental/multimodal_embeddings/googlevertexai.d.ts",
     "evaluation.cjs",
     "evaluation.js",
     "evaluation.d.ts",
@@ -1694,6 +1697,11 @@
       "types": "./experimental/plan_and_execute.d.ts",
       "import": "./experimental/plan_and_execute.js",
       "require": "./experimental/plan_and_execute.cjs"
+    },
+    "./experimental/multimodal_embeddings/googlevertexai": {
+      "types": "./experimental/multimodal_embeddings/googlevertexai.d.ts",
+      "import": "./experimental/multimodal_embeddings/googlevertexai.js",
+      "require": "./experimental/multimodal_embeddings/googlevertexai.cjs"
     },
     "./evaluation": {
       "types": "./evaluation.d.ts",

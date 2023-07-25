@@ -191,6 +191,7 @@ const entrypoints = {
   "experimental/babyagi": "experimental/babyagi/index",
   "experimental/generative_agents": "experimental/generative_agents/index",
   "experimental/plan_and_execute": "experimental/plan_and_execute/index",
+  "experimental/multimodal_embeddings/googlevertexai": "experimental/multimodal_embeddings/googlevertexai",
   // evaluation
   evaluation: "evaluation/index",
 };
@@ -309,6 +310,7 @@ const requiresOptionalDependency = [
   "stores/message/ioredis",
   "stores/message/upstash_redis",
   "stores/message/planetscale",
+  "experimental/multimodal_embeddings/googlevertexai",
 ];
 
 // List of test-exports-* packages which we use to test that the exports field

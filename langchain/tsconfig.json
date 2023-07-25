@@ -183,6 +183,7 @@
       "src/experimental/babyagi/index.ts",
       "src/experimental/generative_agents/index.ts",
       "src/experimental/plan_and_execute/index.ts",
+      "src/experimental/multimodal_embeddings/googlevertexai.ts",
       "src/evaluation/index.ts"
     ],
     "sort": [
