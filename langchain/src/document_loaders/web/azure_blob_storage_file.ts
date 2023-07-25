@@ -31,25 +31,32 @@ export class AzureBlobStorageFileLoader extends BaseDocumentLoader {
   }
 
   public async load() {
-    const blobServiceClient = BlobServiceClient.fromConnectionString(
-      this.connectionString
-    );
-
-    const containerClient = blobServiceClient.getContainerClient(
-      this.container
-    );
-
-    const blobClient = await containerClient.getBlobClient(this.blobName);
-
     const tempDir = fs.mkdtempSync(
       path.join(os.tmpdir(), "azureblobfileloader-")
     );
 
     const filePath = path.join(tempDir, this.blobName);
 
-    fs.mkdirSync(path.dirname(filePath), { recursive: true });
+    try {
+      const blobServiceClient = BlobServiceClient.fromConnectionString(
+        this.connectionString
+      );
 
-    await blobClient.downloadToFile(filePath);
+      const containerClient = blobServiceClient.getContainerClient(
+        this.container
+      );
+
+      const blobClient = containerClient.getBlobClient(this.blobName);
+
+      fs.mkdirSync(path.dirname(filePath), { recursive: true });
+      await blobClient.downloadToFile(filePath);
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (e: any) {
+      throw new Error(
+        `Failed to download file ${this.blobName} from Azure Blob Storage container ${this.container}: ${e.message}`
+      );
+    }
 
     try {
       const unstructuredLoader = new UnstructuredLoader(
@@ -58,14 +65,13 @@ export class AzureBlobStorageFileLoader extends BaseDocumentLoader {
       );
 
       const docs = await unstructuredLoader.load();
-
-      fs.rmSync(path.dirname(filePath), { recursive: true, force: true });
-
       return docs;
     } catch {
       throw new Error(
         `Failed to load file ${filePath} using unstructured loader.`
       );
+    } finally {
+      fs.rmSync(path.dirname(filePath), { recursive: true, force: true });
     }
   }
 }
