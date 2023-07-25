@@ -5,26 +5,26 @@ import { Document } from "../../document.js";
 import { UnstructuredLoaderOptions } from "../fs/unstructured.js";
 
 export class AzureBlobStorageContainerLoader extends BaseDocumentLoader {
-  private readonly connStr: string;
+  private readonly connectionString: string;
 
   private readonly container: string;
 
   private readonly unstructuredLoaderOptions: UnstructuredLoaderOptions;
 
   constructor(
-    connStr: string,
+    connectionString: string,
     container: string,
     unstructuredLoaderOptions: UnstructuredLoaderOptions
   ) {
     super();
-    this.connStr = connStr;
+    this.connectionString = connectionString;
     this.container = container;
     this.unstructuredLoaderOptions = unstructuredLoaderOptions;
   }
 
   public async load() {
     const blobServiceClient = BlobServiceClient.fromConnectionString(
-      this.connStr
+      this.connectionString
     );
 
     const containerClient = blobServiceClient.getContainerClient(
@@ -34,7 +34,7 @@ export class AzureBlobStorageContainerLoader extends BaseDocumentLoader {
     let docs: Document[] = [];
     for await (const blob of containerClient.listBlobsFlat()) {
       const loader = new AzureBlobStorageFileLoader(
-        this.connStr,
+        this.connectionString,
         this.container,
         blob.name,
         this.unstructuredLoaderOptions

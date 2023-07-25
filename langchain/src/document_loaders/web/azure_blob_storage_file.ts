@@ -9,7 +9,7 @@ import {
 } from "../fs/unstructured.js";
 
 export class AzureBlobStorageFileLoader extends BaseDocumentLoader {
-  private readonly connStr: string;
+  private readonly connectionString: string;
 
   private readonly container: string;
 
@@ -18,13 +18,13 @@ export class AzureBlobStorageFileLoader extends BaseDocumentLoader {
   private readonly unstructuredLoaderOptions: UnstructuredLoaderOptions;
 
   constructor(
-    connStr: string,
+    connectionString: string,
     container: string,
     blobName: string,
     unstructuredLoaderOptions: UnstructuredLoaderOptions
   ) {
     super();
-    this.connStr = connStr;
+    this.connectionString = connectionString;
     this.container = container;
     this.blobName = blobName;
     this.unstructuredLoaderOptions = unstructuredLoaderOptions;
@@ -32,7 +32,7 @@ export class AzureBlobStorageFileLoader extends BaseDocumentLoader {
 
   public async load() {
     const blobServiceClient = BlobServiceClient.fromConnectionString(
-      this.connStr
+      this.connectionString
     );
 
     const containerClient = blobServiceClient.getContainerClient(
