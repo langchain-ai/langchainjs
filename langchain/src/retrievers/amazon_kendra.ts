@@ -144,7 +144,7 @@ export class AmazonKendraRetriever extends BaseRetriever {
   // A method to extract the excerpt text from a QueryResultItem object.
   getQueryItemExcerpt(item: QueryResultItem) {
     if (
-      item.hasOwnProperty("AdditionalAttributes") &&
+      item.AdditionalAttributes &&
       item.AdditionalAttributes.length &&
       item.AdditionalAttributes[0].Key === "AnswerText"
     ) {
