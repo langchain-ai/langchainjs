@@ -300,9 +300,7 @@ export interface OptionalImportMap {
     | Promise<typeof import("../stores/message/planetscale.js")>;
   "langchain/experimental/multimodal_embeddings/googlevertexai"?:
     | typeof import("../experimental/multimodal_embeddings/googlevertexai.js")
-    | Promise<
-        typeof import("../experimental/multimodal_embeddings/googlevertexai.js")
-      >;
+    | Promise<typeof import("../experimental/multimodal_embeddings/googlevertexai.js")>;
 }
 
 export interface SecretMap {
