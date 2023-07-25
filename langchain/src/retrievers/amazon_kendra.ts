@@ -136,7 +136,7 @@ export class AmazonKendraRetriever extends BaseRetriever {
     const { length } = response.ResultItems;
     const count = length < pageSize ? length : pageSize;
 
-    return response.ResultItems.slice(0, count).map((item) =>
+    return response.ResultItems.slice(0, count).map((item: any) =>
       this.convertRetrieverItem(item)
     );
   }
@@ -144,7 +144,8 @@ export class AmazonKendraRetriever extends BaseRetriever {
   // A method to extract the excerpt text from a QueryResultItem object.
   getQueryItemExcerpt(item: QueryResultItem) {
     if (
-      item.AdditionalAttributes &&
+      item.hasOwnProperty("AdditionalAttributes") &&
+      item.AdditionalAttributes.length &&
       item.AdditionalAttributes[0].Key === "AnswerText"
     ) {
       if (!item.AdditionalAttributes) {
@@ -186,7 +187,7 @@ export class AmazonKendraRetriever extends BaseRetriever {
     if (!response.ResultItems) return [];
     const { length } = response.ResultItems;
     const count = length < pageSize ? length : pageSize;
-    return response.ResultItems.slice(0, count).map((item) =>
+    return response.ResultItems.slice(0, count).map((item: any) =>
       this.convertQueryItem(item)
     );
   }
