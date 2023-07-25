@@ -20,6 +20,8 @@ export class Replicate extends LLM implements ReplicateInput {
     };
   }
 
+  lc_serializable = true;
+
   model: ReplicateInput["model"];
 
   input: ReplicateInput["input"];
