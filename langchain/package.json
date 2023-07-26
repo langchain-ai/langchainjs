@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.114",
+  "version": "0.0.117",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -427,6 +427,9 @@
     "cache/redis.cjs",
     "cache/redis.js",
     "cache/redis.d.ts",
+    "cache/ioredis.cjs",
+    "cache/ioredis.js",
+    "cache/ioredis.d.ts",
     "cache/upstash_redis.cjs",
     "cache/upstash_redis.js",
     "cache/upstash_redis.d.ts",
@@ -478,6 +481,9 @@
     "experimental/plan_and_execute.cjs",
     "experimental/plan_and_execute.js",
     "experimental/plan_and_execute.d.ts",
+    "experimental/multimodal_embeddings/googlevertexai.cjs",
+    "experimental/multimodal_embeddings/googlevertexai.js",
+    "experimental/multimodal_embeddings/googlevertexai.d.ts",
     "evaluation.cjs",
     "evaluation.js",
     "evaluation.d.ts",
@@ -1602,6 +1608,11 @@
       "import": "./cache/redis.js",
       "require": "./cache/redis.cjs"
     },
+    "./cache/ioredis": {
+      "types": "./cache/ioredis.d.ts",
+      "import": "./cache/ioredis.js",
+      "require": "./cache/ioredis.cjs"
+    },
     "./cache/upstash_redis": {
       "types": "./cache/upstash_redis.d.ts",
       "import": "./cache/upstash_redis.js",
@@ -1686,6 +1697,11 @@
       "types": "./experimental/plan_and_execute.d.ts",
       "import": "./experimental/plan_and_execute.js",
       "require": "./experimental/plan_and_execute.cjs"
+    },
+    "./experimental/multimodal_embeddings/googlevertexai": {
+      "types": "./experimental/multimodal_embeddings/googlevertexai.d.ts",
+      "import": "./experimental/multimodal_embeddings/googlevertexai.js",
+      "require": "./experimental/multimodal_embeddings/googlevertexai.cjs"
     },
     "./evaluation": {
       "types": "./evaluation.d.ts",

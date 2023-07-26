@@ -415,6 +415,9 @@ cache/momento.d.ts
 cache/redis.cjs
 cache/redis.js
 cache/redis.d.ts
+cache/ioredis.cjs
+cache/ioredis.js
+cache/ioredis.d.ts
 cache/upstash_redis.cjs
 cache/upstash_redis.js
 cache/upstash_redis.d.ts
@@ -466,6 +469,9 @@ experimental/generative_agents.d.ts
 experimental/plan_and_execute.cjs
 experimental/plan_and_execute.js
 experimental/plan_and_execute.d.ts
+experimental/multimodal_embeddings/googlevertexai.cjs
+experimental/multimodal_embeddings/googlevertexai.js
+experimental/multimodal_embeddings/googlevertexai.d.ts
 evaluation.cjs
 evaluation.js
 evaluation.d.ts

@@ -165,6 +165,7 @@
       "src/cache/index.ts",
       "src/cache/momento.ts",
       "src/cache/redis.ts",
+      "src/cache/ioredis.ts",
       "src/cache/upstash_redis.ts",
       "src/stores/doc/in_memory.ts",
       "src/stores/doc/gcs.ts",
@@ -182,6 +183,7 @@
       "src/experimental/babyagi/index.ts",
       "src/experimental/generative_agents/index.ts",
       "src/experimental/plan_and_execute/index.ts",
+      "src/experimental/multimodal_embeddings/googlevertexai.ts",
       "src/evaluation/index.ts"
     ],
     "sort": [

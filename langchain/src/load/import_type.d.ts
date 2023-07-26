@@ -265,6 +265,9 @@ export interface OptionalImportMap {
   "langchain/cache/redis"?:
     | typeof import("../cache/redis.js")
     | Promise<typeof import("../cache/redis.js")>;
+  "langchain/cache/ioredis"?:
+    | typeof import("../cache/ioredis.js")
+    | Promise<typeof import("../cache/ioredis.js")>;
   "langchain/cache/upstash_redis"?:
     | typeof import("../cache/upstash_redis.js")
     | Promise<typeof import("../cache/upstash_redis.js")>;
@@ -295,6 +298,9 @@ export interface OptionalImportMap {
   "langchain/stores/message/planetscale"?:
     | typeof import("../stores/message/planetscale.js")
     | Promise<typeof import("../stores/message/planetscale.js")>;
+  "langchain/experimental/multimodal_embeddings/googlevertexai"?:
+    | typeof import("../experimental/multimodal_embeddings/googlevertexai.js")
+    | Promise<typeof import("../experimental/multimodal_embeddings/googlevertexai.js")>;
 }
 
 export interface SecretMap {

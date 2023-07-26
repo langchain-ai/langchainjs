@@ -135,7 +135,7 @@ test("Test ChatOpenAI in streaming mode", async () => {
 
   expect(nrNewTokens > 0).toBe(true);
   expect(result.content).toBe(streamedCompletion);
-});
+}, 10000);
 
 test("Test ChatOpenAI in streaming mode with n > 1 and multiple prompts", async () => {
   let nrNewTokens = 0;
@@ -167,7 +167,7 @@ test("Test ChatOpenAI in streaming mode with n > 1 and multiple prompts", async 
   expect(result.generations.map((g) => g.map((gg) => gg.text))).toEqual(
     streamedCompletions
   );
-});
+}, 10000);
 
 test("Test ChatOpenAI prompt value", async () => {
   const chat = new ChatOpenAI({
@@ -208,7 +208,7 @@ test("OpenAI Chat, docs, prompt templates", async () => {
   ]);
 
   console.log(responseA.generations);
-}, 50000);
+}, 5000);
 
 test("Test OpenAI with stop", async () => {
   const model = new ChatOpenAI({ maxTokens: 5 });

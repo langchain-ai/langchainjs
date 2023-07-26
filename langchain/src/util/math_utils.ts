@@ -80,7 +80,7 @@ export function maximalMarginalRelevance(
     );
 
     similarityToQuery.forEach((queryScore, queryScoreIndex) => {
-      if (queryScoreIndex in selectedEmbeddingsIndexes) {
+      if (selectedEmbeddingsIndexes.includes(queryScoreIndex)) {
         return;
       }
       const maxSimilarityToSelected = Math.max(

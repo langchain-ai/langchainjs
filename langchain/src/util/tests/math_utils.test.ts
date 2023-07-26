@@ -129,3 +129,17 @@ test("Test maximal marginal relevance query dim", async () => {
 
   expect(first).toEqual(second);
 });
+
+test("Test maximal marginal relevance has no duplicates", async () => {
+  const queryEmbedding = Matrix.rand(1, 1536).to1DArray();
+  const embeddingList = Matrix.rand(200, 1536).to2DArray();
+
+  const actual = maximalMarginalRelevance(
+    queryEmbedding,
+    embeddingList,
+    0.5,
+    200
+  );
+  const expected = new Set(actual).size;
+  expect(actual).toHaveLength(expected);
+});
