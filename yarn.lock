@@ -6663,6 +6663,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@xata.io/client@npm:latest":
+  version: 0.24.3
+  resolution: "@xata.io/client@npm:0.24.3"
+  peerDependencies:
+    typescript: ">=4.5"
+  checksum: 5750dc6f0d81891878212238280d6d037d12a1f56e18ae5ba108524ab833f6fd19dbb76a7f57d473e130e95776063d0fa529b7cbbd3fc13e175a36f0c512320c
+  languageName: node
+  linkType: hard
+
 "@zilliz/milvus2-sdk-node@npm:>=2.2.7, @zilliz/milvus2-sdk-node@npm:^2.2.7":
   version: 2.2.10
   resolution: "@zilliz/milvus2-sdk-node@npm:2.2.10"
@@ -13006,6 +13015,7 @@ __metadata:
     "@typescript-eslint/eslint-plugin": ^5.58.0
     "@typescript-eslint/parser": ^5.58.0
     "@upstash/redis": ^1.20.6
+    "@xata.io/client": latest
     "@zilliz/milvus2-sdk-node": ">=2.2.7"
     ansi-styles: ^5.0.0
     apify-client: ^2.7.1
@@ -13269,6 +13279,7 @@ __metadata:
   dependencies:
     "@tsconfig/recommended": ^1.0.2
     "@types/jest": ^29.5.3
+    "@xata.io/client": latest
     dotenv: ^16.0.3
     husky: ^8.0.0
     lint-staged: ^13.1.1
