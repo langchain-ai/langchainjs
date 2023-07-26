@@ -31,6 +31,11 @@ export interface Generation {
 }
 
 /**
+ * Chunk of a single generation. Used for streaming.
+ */
+export interface GenerationChunk extends Generation {}
+
+/**
  * Contains all relevant information returned by an LLM.
  */
 export type LLMResult = {
@@ -222,6 +227,8 @@ export class ChatMessage
 export interface ChatGeneration extends Generation {
   message: BaseMessage;
 }
+
+export interface ChatGenerationChunk extends ChatGeneration {}
 
 export interface ChatResult {
   generations: ChatGeneration[];
