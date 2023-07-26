@@ -19,7 +19,7 @@ We have the opportunity to refine the existing answer
 {context}
 ------------
 Given the new context, refine the original answer to better answer the question. 
-If the context isn't useful, return the original answer.`;
+You must provide a response, either original answer or refined answer.`;
 export const DEFAULT_REFINE_PROMPT = /*#__PURE__*/ new PromptTemplate({
   inputVariables: ["question", "existing_answer", "context"],
   template: DEFAULT_REFINE_PROMPT_TMPL,
@@ -33,7 +33,7 @@ We have the opportunity to refine the existing answer
 {context}
 ------------
 Given the new context, refine the original answer to better answer the question. 
-If the context isn't useful, return the original answer.`;
+You must provide a response, either original answer or refined answer.`;
 
 const messages = [
   /*#__PURE__*/ HumanMessagePromptTemplate.fromTemplate("{question}"),
