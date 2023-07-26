@@ -155,13 +155,29 @@ export class WeaviateStore extends VectorStore {
     );
   }
 
-  async delete(params: { ids: string[] }): Promise<void> {
-    const { ids } = params;
-    for (const id of ids) {
-      await this.client.data
-        .deleter()
+  async delete(params: { ids: string[] }): Promise<void>;
+
+  async delete(param: { filter: WeaviateFilter }): Promise<void>;
+
+  async delete(params: {
+    ids?: string[];
+    filter?: WeaviateFilter;
+  }): Promise<void> {
+    const { ids, filter } = params || {};
+
+    if (ids && ids.length > 0) {
+      for (const id of ids) {
+        await this.client.data
+          .deleter()
+          .withClassName(this.indexName)
+          .withId(id)
+          .do();
+      }
+    } else if (filter) {
+      await this.client.batch
+        .objectsBatchDeleter()
         .withClassName(this.indexName)
-        .withId(id)
+        .withWhere(filter.where)
         .do();
     }
   }
