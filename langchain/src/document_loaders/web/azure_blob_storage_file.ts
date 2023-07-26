@@ -8,6 +8,12 @@ import {
   UnstructuredLoaderOptions,
 } from "../fs/unstructured.js";
 
+interface AzureBlobStorageFileConfig {
+  connectionString: string;
+  container: string;
+  blobName: string;
+}
+
 export class AzureBlobStorageFileLoader extends BaseDocumentLoader {
   private readonly connectionString: string;
 
@@ -15,13 +21,11 @@ export class AzureBlobStorageFileLoader extends BaseDocumentLoader {
 
   private readonly blobName: string;
 
-  private readonly unstructuredLoaderOptions: UnstructuredLoaderOptions;
+  private readonly unstructuredLoaderOptions?: UnstructuredLoaderOptions;
 
   constructor(
-    connectionString: string,
-    container: string,
-    blobName: string,
-    unstructuredLoaderOptions: UnstructuredLoaderOptions
+    { connectionString, container, blobName }: AzureBlobStorageFileConfig,
+    unstructuredLoaderOptions?: UnstructuredLoaderOptions
   ) {
     super();
     this.connectionString = connectionString;
