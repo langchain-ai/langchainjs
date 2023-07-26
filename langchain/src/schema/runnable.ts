@@ -1,4 +1,5 @@
 import { Callbacks } from "../callbacks";
+import { Serializable } from "../load/serializable";
 
 export type RunnableConfig = {
   tags?: string[];
@@ -6,7 +7,7 @@ export type RunnableConfig = {
   callbacks?: Callbacks;
 };
 
-export abstract class Runnable<Input, Output> {
+export abstract class Runnable<Input, Output> extends Serializable {
 
   abstract invoke(input: Input, config?: RunnableConfig): Promise<Output>;
 
