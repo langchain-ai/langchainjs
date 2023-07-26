@@ -3,11 +3,41 @@ import { OpenAI } from "langchain/llms/openai";
 import { TextLoader } from "langchain/document_loaders/fs/text";
 import { MemoryVectorStore } from "langchain/vectorstores/memory";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { PromptTemplate } from "langchain/prompts";
+
+export const questionPromptTemplateString = `Context information is below.
+---------------------
+{context}
+---------------------
+Given the context information and not prior knowledge, answer the question: {question}`;
+
+const questionPrompt = new PromptTemplate({
+  inputVariables: ["context", "question"],
+  template: questionPromptTemplateString,
+});
+
+const refinePromptTemplateString = `The original question is as follows: {question}
+We have provided an existing answer: {existing_answer}
+We have the opportunity to refine the existing answer
+(only if needed) with some more context below.
+------------
+{context}
+------------
+Given the new context, refine the original answer to better answer the question.
+You must provide a response, either original answer or refined answer.`;
+
+const refinePrompt = new PromptTemplate({
+  inputVariables: ["question", "existing_answer", "context"],
+  template: refinePromptTemplateString,
+});
 
 // Create the models and chain
 const embeddings = new OpenAIEmbeddings();
 const model = new OpenAI({ temperature: 0 });
-const chain = loadQARefineChain(model);
+const chain = loadQARefineChain(model, {
+  questionPrompt,
+  refinePrompt,
+});
 
 // Load the documents and create the vector store
 const loader = new TextLoader("./state_of_the_union.txt");
