@@ -1,5 +1,6 @@
 import { BaseCallbackConfig } from "../callbacks/manager.js";
 import { Serializable } from "../load/serializable.js";
+import { IterableReadableStream } from "../util/stream.js";
 
 export type RunnableConfig = BaseCallbackConfig;
 
@@ -44,11 +45,29 @@ export abstract class Runnable<
     return Promise.all(promises);
   }
 
-  async *stream(
+  async *_createAsyncGenerator(
     input: RunInput,
     options?: CallOptions,
     config?: RunnableConfig
   ): AsyncGenerator<RunOutput> {
     yield this.invoke(input, options, config);
+  }
+
+  async stream(
+    input: RunInput,
+    options?: CallOptions,
+    config?: RunnableConfig
+  ): Promise<IterableReadableStream<RunOutput>> {
+    const generator = await this._createAsyncGenerator(input, options, config);
+    const outputStream = new IterableReadableStream<RunOutput>({
+      async pull(controller) {
+        const yieldedValue = await generator.next();
+        controller.enqueue(yieldedValue.value);
+        if (yieldedValue.done) {
+          controller.close();
+        }
+      },
+    });
+    return outputStream;
   }
 }

@@ -82,7 +82,7 @@ export abstract class BaseChatModel<
     yield result.generations[0];
   }
 
-  async *stream(
+  async *_createAsyncGenerator(
     input: BaseLanguageModelInput,
     options?: CallOptions,
     config?: BaseCallbackConfig

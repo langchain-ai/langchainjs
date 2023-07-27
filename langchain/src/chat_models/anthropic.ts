@@ -232,7 +232,6 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
         }),
         text: delta,
       };
-      console.log("HANDLING NEW TOKEN", delta);
       void runManager?.handleLLMNewToken(delta);
       if (data.stop_reason) {
         break;

@@ -253,7 +253,7 @@ test("Test OpenAI stream method with early break", async () => {
   for await (const chunk of stream) {
     console.log(chunk);
     i += 1;
-    if (i > 10) {
+    if (i > 5) {
       break;
     }
   }
