@@ -8,4 +8,4 @@ export { PineconeStore } from "./pinecone.js";
 export { VectorStore, SaveableVectorStore } from "./base.js";
 export { SupabaseVectorStore } from "./supabase.js";
 export { PrismaVectorStore } from "./prisma.js";
-export { SimilarityScoreThresholdVectorStoreRetriever } from "./similarity_score_threshold.js";
+export { ScoreThresholdVectorStoreRetriever } from "./score_threshold.js";
