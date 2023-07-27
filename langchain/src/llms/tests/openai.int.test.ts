@@ -220,21 +220,41 @@ test("Test OpenAI prompt value", async () => {
 });
 
 test("Test OpenAI stream method", async () => {
-  const model = new OpenAI({ maxTokens: 5, modelName: "text-davinci-003" });
-  const stream = await model.stream("How is your day going?");
+  const model = new OpenAI({ maxTokens: 50, modelName: "text-davinci-003" });
+  const stream = await model.stream("Print hello world.");
+  const chunks = [];
   for await (const chunk of stream) {
-    console.log(chunk);
+    chunks.push(chunk);
   }
+  expect(chunks.length).toBeGreaterThan(1);
 });
 
 test("Test OpenAI stream method with abort", async () => {
   await expect(async () => {
-    const model = new OpenAI({ maxTokens: 5, modelName: "text-davinci-003" });
-    const stream = await model.stream("Print hello world", {
-      signal: AbortSignal.timeout(10),
-    });
+    const model = new OpenAI({ maxTokens: 50, modelName: "text-davinci-003" });
+    const stream = await model.stream(
+      "How is your day going? Be extremely verbose.",
+      {
+        signal: AbortSignal.timeout(1000),
+      }
+    );
     for await (const chunk of stream) {
       console.log(chunk);
     }
   }).rejects.toThrow();
+});
+
+test("Test OpenAI stream method with early break", async () => {
+  const model = new OpenAI({ maxTokens: 50, modelName: "text-davinci-003" });
+  const stream = await model.stream(
+    "How is your day going? Be extremely verbose.",
+  );
+  let i = 0;
+  for await (const chunk of stream) {
+    console.log(chunk);
+    i += 1;
+    if (i > 10) {
+      break;
+    }
+  }
 });

@@ -427,6 +427,8 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
     };
   }
 
+  // TODO(jacoblee): Refactor with _generate(..., {stream: true}) implementation
+  // when we integrate OpenAI's new SDK.
   async *_stream(
     input: string,
     options: this["ParsedCallOptions"],
@@ -437,12 +439,10 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
       prompt: input,
       stream: true,
     };
-    const stream = await this.completionWithRetryStreaming(params, {
-      signal: options.signal,
-      ...options.options,
-    });
-    for await (const streamedResponse of stream) {
-      const choice = streamedResponse?.choices?.[0];
+    const iterable = this.getIterable(params, options);
+    for await (const streamedResponse of iterable) {
+      const data = JSON.parse(streamedResponse);
+      const choice = data.choices?.[0];
       if (!choice) {
         continue;
       }
@@ -459,15 +459,17 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
     }
   }
 
-  protected async completionWithRetryStreaming(
-    params: CreateCompletionRequest,
-    options: StreamingAxiosConfiguration
+  getIterable(
+    request: CreateCompletionRequest,
+    options?: StreamingAxiosConfiguration
   ) {
+    let done = false;
     const stream = new TransformStream();
     const writer = stream.writable.getWriter();
     const iterable = readableStreamToAsyncIterable(stream.readable);
-    let done = false;
-    await this.completionWithRetry(params, {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let err: any;
+    this.completionWithRetry(request, {
       ...options,
       adapter: fetchAdapter, // default adapter doesn't do streaming
       responseType: "stream",
@@ -489,13 +491,24 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
       },
     }).catch((error) => {
       if (!done) {
+        err = error;
         done = true;
         // eslint-disable-next-line no-void
         void writer.close();
-        throw error;
       }
     });
-    return iterable;
+    return {
+      async next() {
+        const chunk = await iterable.next();
+        if (err) {
+          throw err;
+        }
+        return chunk;
+      },
+      [Symbol.asyncIterator]() {
+        return this;
+      },
+    };
   }
 
   /** @ignore */
