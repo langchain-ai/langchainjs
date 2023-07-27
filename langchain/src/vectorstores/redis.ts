@@ -74,6 +74,10 @@ export class RedisVectorStore extends VectorStore {
 
   filter?: RedisVectorStoreFilterType;
 
+  _vectorstoreType(): string {
+    return "redis";
+  }
+
   constructor(embeddings: Embeddings, _dbConfig: RedisVectorStoreConfig) {
     super(embeddings, _dbConfig);
 
@@ -90,12 +94,9 @@ export class RedisVectorStore extends VectorStore {
     this.filter = _dbConfig.filter;
   }
 
-  async addDocuments(
-    documents: Document[],
-    options?: RedisAddOptions
-  ): Promise<void> {
+  async addDocuments(documents: Document[], options?: RedisAddOptions) {
     const texts = documents.map(({ pageContent }) => pageContent);
-    await this.addVectors(
+    return this.addVectors(
       await this.embeddings.embedDocuments(texts),
       documents,
       options
@@ -106,7 +107,7 @@ export class RedisVectorStore extends VectorStore {
     vectors: number[][],
     documents: Document[],
     { keys, batchSize = 1000 }: RedisAddOptions = {}
-  ): Promise<void> {
+  ) {
     // check if the index exists and create it if it doesn't
     await this.createIndex(vectors[0].length);
 

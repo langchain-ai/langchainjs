@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.103",
+  "version": "0.0.118",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -91,6 +91,9 @@
     "embeddings/googlevertexai.cjs",
     "embeddings/googlevertexai.js",
     "embeddings/googlevertexai.d.ts",
+    "embeddings/googlepalm.cjs",
+    "embeddings/googlepalm.js",
+    "embeddings/googlepalm.d.ts",
     "llms.cjs",
     "llms.js",
     "llms.d.ts",
@@ -121,6 +124,9 @@
     "llms/googlevertexai.cjs",
     "llms/googlevertexai.js",
     "llms/googlevertexai.d.ts",
+    "llms/googlepalm.cjs",
+    "llms/googlepalm.js",
+    "llms/googlepalm.d.ts",
     "llms/sagemaker_endpoint.cjs",
     "llms/sagemaker_endpoint.js",
     "llms/sagemaker_endpoint.d.ts",
@@ -133,6 +139,9 @@
     "vectorstores.cjs",
     "vectorstores.js",
     "vectorstores.d.ts",
+    "vectorstores/analyticdb.cjs",
+    "vectorstores/analyticdb.js",
+    "vectorstores/analyticdb.d.ts",
     "vectorstores/base.cjs",
     "vectorstores/base.js",
     "vectorstores/base.d.ts",
@@ -259,9 +268,18 @@
     "document_loaders/web/s3.cjs",
     "document_loaders/web/s3.js",
     "document_loaders/web/s3.d.ts",
+    "document_loaders/web/sonix_audio.cjs",
+    "document_loaders/web/sonix_audio.js",
+    "document_loaders/web/sonix_audio.d.ts",
     "document_loaders/web/confluence.cjs",
     "document_loaders/web/confluence.js",
     "document_loaders/web/confluence.d.ts",
+    "document_loaders/web/serpapi.cjs",
+    "document_loaders/web/serpapi.js",
+    "document_loaders/web/serpapi.d.ts",
+    "document_loaders/web/sort_xyz_blockchain.cjs",
+    "document_loaders/web/sort_xyz_blockchain.js",
+    "document_loaders/web/sort_xyz_blockchain.d.ts",
     "document_loaders/fs/directory.cjs",
     "document_loaders/fs/directory.js",
     "document_loaders/fs/directory.d.ts",
@@ -295,6 +313,9 @@
     "document_loaders/fs/unstructured.cjs",
     "document_loaders/fs/unstructured.js",
     "document_loaders/fs/unstructured.d.ts",
+    "document_transformers/openai_functions.cjs",
+    "document_transformers/openai_functions.js",
+    "document_transformers/openai_functions.d.ts",
     "chat_models.cjs",
     "chat_models.js",
     "chat_models.d.ts",
@@ -310,6 +331,9 @@
     "chat_models/googlevertexai.cjs",
     "chat_models/googlevertexai.js",
     "chat_models/googlevertexai.d.ts",
+    "chat_models/googlepalm.cjs",
+    "chat_models/googlepalm.js",
+    "chat_models/googlepalm.d.ts",
     "chat_models/baiduwenxin.cjs",
     "chat_models/baiduwenxin.js",
     "chat_models/baiduwenxin.d.ts",
@@ -322,6 +346,9 @@
     "schema/query_constructor.cjs",
     "schema/query_constructor.js",
     "schema/query_constructor.d.ts",
+    "schema/retriever.cjs",
+    "schema/retriever.js",
+    "schema/retriever.d.ts",
     "sql_db.cjs",
     "sql_db.js",
     "sql_db.d.ts",
@@ -337,6 +364,9 @@
     "retrievers.cjs",
     "retrievers.js",
     "retrievers.d.ts",
+    "retrievers/amazon_kendra.cjs",
+    "retrievers/amazon_kendra.js",
+    "retrievers/amazon_kendra.d.ts",
     "retrievers/remote.cjs",
     "retrievers/remote.js",
     "retrievers/remote.d.ts",
@@ -397,6 +427,9 @@
     "cache/redis.cjs",
     "cache/redis.js",
     "cache/redis.d.ts",
+    "cache/ioredis.cjs",
+    "cache/ioredis.js",
+    "cache/ioredis.d.ts",
     "cache/upstash_redis.cjs",
     "cache/upstash_redis.js",
     "cache/upstash_redis.d.ts",
@@ -418,15 +451,24 @@
     "stores/message/dynamodb.cjs",
     "stores/message/dynamodb.js",
     "stores/message/dynamodb.d.ts",
+    "stores/message/firestore.cjs",
+    "stores/message/firestore.js",
+    "stores/message/firestore.d.ts",
     "stores/message/momento.cjs",
     "stores/message/momento.js",
     "stores/message/momento.d.ts",
     "stores/message/redis.cjs",
     "stores/message/redis.js",
     "stores/message/redis.d.ts",
+    "stores/message/ioredis.cjs",
+    "stores/message/ioredis.js",
+    "stores/message/ioredis.d.ts",
     "stores/message/upstash_redis.cjs",
     "stores/message/upstash_redis.js",
     "stores/message/upstash_redis.d.ts",
+    "stores/message/planetscale.cjs",
+    "stores/message/planetscale.js",
+    "stores/message/planetscale.d.ts",
     "experimental/autogpt.cjs",
     "experimental/autogpt.js",
     "experimental/autogpt.d.ts",
@@ -439,9 +481,9 @@
     "experimental/plan_and_execute.cjs",
     "experimental/plan_and_execute.js",
     "experimental/plan_and_execute.d.ts",
-    "client.cjs",
-    "client.js",
-    "client.d.ts",
+    "experimental/multimodal_embeddings/googlevertexai.cjs",
+    "experimental/multimodal_embeddings/googlevertexai.js",
+    "experimental/multimodal_embeddings/googlevertexai.d.ts",
     "evaluation.cjs",
     "evaluation.js",
     "evaluation.d.ts",
@@ -475,6 +517,7 @@
   "license": "MIT",
   "devDependencies": {
     "@aws-sdk/client-dynamodb": "^3.310.0",
+    "@aws-sdk/client-kendra": "^3.352.0",
     "@aws-sdk/client-lambda": "^3.310.0",
     "@aws-sdk/client-s3": "^3.310.0",
     "@aws-sdk/client-sagemaker-runtime": "^3.310.0",
@@ -485,12 +528,14 @@
     "@getmetal/metal-sdk": "^4.0.0",
     "@getzep/zep-js": "^0.4.1",
     "@gomomento/sdk": "^1.23.0",
+    "@google-ai/generativelanguage": "^0.2.1",
     "@google-cloud/storage": "^6.10.1",
     "@huggingface/inference": "^1.5.1",
     "@jest/globals": "^29.5.0",
     "@notionhq/client": "^2.2.5",
     "@opensearch-project/opensearch": "^2.2.0",
     "@pinecone-database/pinecone": "^0.0.14",
+    "@planetscale/database": "^1.8.0",
     "@qdrant/js-client-rest": "^1.2.0",
     "@supabase/postgrest-js": "^1.1.1",
     "@supabase/supabase-js": "^2.10.0",
@@ -508,6 +553,7 @@
     "@types/object-hash": "^3.0.2",
     "@types/pdf-parse": "^1.1.1",
     "@types/pg": "^8",
+    "@types/pg-copy-streams": "^1.2.2",
     "@types/uuid": "^9",
     "@typescript-eslint/eslint-plugin": "^5.58.0",
     "@typescript-eslint/parser": "^5.58.0",
@@ -516,7 +562,7 @@
     "apify-client": "^2.7.1",
     "axios": "^0.26.0",
     "cheerio": "^1.0.0-rc.12",
-    "chromadb": "^1.5.2",
+    "chromadb": "^1.5.3",
     "cohere-ai": "^5.0.2",
     "d3-dsv": "^2.0.0",
     "dotenv": "^16.0.3",
@@ -529,28 +575,33 @@
     "eslint-plugin-no-instanceof": "^1.0.1",
     "eslint-plugin-prettier": "^4.2.1",
     "faiss-node": "^0.2.1",
-    "google-auth-library": "^8.8.0",
+    "firebase-admin": "^11.9.0",
+    "google-auth-library": "^8.9.0",
     "graphql": "^16.6.0",
     "hnswlib-node": "^1.4.2",
     "html-to-text": "^9.0.5",
     "ignore": "^5.2.0",
+    "ioredis": "^5.3.2",
     "jest": "^29.5.0",
     "mammoth": "^1.5.1",
+    "ml-matrix": "^6.10.4",
     "mongodb": "^5.2.0",
     "mysql2": "^3.3.3",
     "notion-to-md": "^3.1.0",
     "pdf-parse": "1.1.1",
     "peggy": "^3.0.2",
     "pg": "^8.11.0",
+    "pg-copy-streams": "^6.0.5",
     "pickleparser": "^0.1.0",
     "playwright": "^1.32.1",
     "prettier": "^2.8.3",
     "puppeteer": "^19.7.2",
     "redis": "^4.6.6",
     "release-it": "^15.10.1",
-    "replicate": "^0.9.0",
+    "replicate": "^0.12.3",
     "rimraf": "^5.0.1",
     "rollup": "^3.19.1",
+    "sonix-speech-recognition": "^2.1.1",
     "sqlite3": "^5.1.4",
     "srt-parser-2": "^1.2.2",
     "ts-jest": "^29.1.0",
@@ -562,6 +613,7 @@
   },
   "peerDependencies": {
     "@aws-sdk/client-dynamodb": "^3.310.0",
+    "@aws-sdk/client-kendra": "^3.352.0",
     "@aws-sdk/client-lambda": "^3.310.0",
     "@aws-sdk/client-s3": "^3.310.0",
     "@aws-sdk/client-sagemaker-runtime": "^3.310.0",
@@ -571,11 +623,13 @@
     "@getmetal/metal-sdk": "*",
     "@getzep/zep-js": "^0.4.1",
     "@gomomento/sdk": "^1.23.0",
+    "@google-ai/generativelanguage": "^0.2.1",
     "@google-cloud/storage": "^6.10.1",
     "@huggingface/inference": "^1.5.1",
     "@notionhq/client": "^2.2.5",
     "@opensearch-project/opensearch": "*",
     "@pinecone-database/pinecone": "*",
+    "@planetscale/database": "^1.8.0",
     "@qdrant/js-client-rest": "^1.2.0",
     "@supabase/postgrest-js": "^1.1.1",
     "@supabase/supabase-js": "^2.10.0",
@@ -588,15 +642,17 @@
     "apify-client": "^2.7.1",
     "axios": "*",
     "cheerio": "^1.0.0-rc.12",
-    "chromadb": "^1.5.2",
+    "chromadb": "^1.5.3",
     "cohere-ai": "^5.0.2",
     "d3-dsv": "^2.0.0",
     "epub2": "^3.0.1",
     "faiss-node": "^0.2.1",
-    "google-auth-library": "^8.8.0",
+    "firebase-admin": "^11.9.0",
+    "google-auth-library": "^8.9.0",
     "hnswlib-node": "^1.4.2",
     "html-to-text": "^9.0.5",
     "ignore": "^5.2.0",
+    "ioredis": "^5.3.2",
     "mammoth": "*",
     "mongodb": "^5.2.0",
     "mysql2": "^3.3.3",
@@ -604,11 +660,13 @@
     "pdf-parse": "1.1.1",
     "peggy": "^3.0.2",
     "pg": "^8.11.0",
+    "pg-copy-streams": "^6.0.5",
     "pickleparser": "^0.1.0",
     "playwright": "^1.32.1",
     "puppeteer": "^19.7.2",
     "redis": "^4.6.4",
-    "replicate": "^0.9.0",
+    "replicate": "^0.12.3",
+    "sonix-speech-recognition": "^2.1.1",
     "srt-parser-2": "^1.2.2",
     "typeorm": "^0.3.12",
     "typesense": "^1.5.3",
@@ -617,6 +675,9 @@
   },
   "peerDependenciesMeta": {
     "@aws-sdk/client-dynamodb": {
+      "optional": true
+    },
+    "@aws-sdk/client-kendra": {
       "optional": true
     },
     "@aws-sdk/client-lambda": {
@@ -646,6 +707,9 @@
     "@gomomento/sdk": {
       "optional": true
     },
+    "@google-ai/generativelanguage": {
+      "optional": true
+    },
     "@google-cloud/storage": {
       "optional": true
     },
@@ -659,6 +723,9 @@
       "optional": true
     },
     "@pinecone-database/pinecone": {
+      "optional": true
+    },
+    "@planetscale/database": {
       "optional": true
     },
     "@qdrant/js-client-rest": {
@@ -712,6 +779,9 @@
     "faiss-node": {
       "optional": true
     },
+    "firebase-admin": {
+      "optional": true
+    },
     "google-auth-library": {
       "optional": true
     },
@@ -722,6 +792,9 @@
       "optional": true
     },
     "ignore": {
+      "optional": true
+    },
+    "ioredis": {
       "optional": true
     },
     "mammoth": {
@@ -745,6 +818,9 @@
     "pg": {
       "optional": true
     },
+    "pg-copy-streams": {
+      "optional": true
+    },
     "pickleparser": {
       "optional": true
     },
@@ -758,6 +834,9 @@
       "optional": true
     },
     "replicate": {
+      "optional": true
+    },
+    "sonix-speech-recognition": {
       "optional": true
     },
     "srt-parser-2": {
@@ -777,7 +856,7 @@
     }
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.4.3",
+    "@anthropic-ai/sdk": "^0.5.7",
     "ansi-styles": "^5.0.0",
     "binary-extensions": "^2.2.0",
     "camelcase": "6",
@@ -787,7 +866,7 @@
     "js-tiktoken": "^1.0.7",
     "js-yaml": "^4.1.0",
     "jsonpointer": "^5.0.1",
-    "langchainplus-sdk": "^0.0.19",
+    "langsmith": "~0.0.11",
     "ml-distance": "^4.0.0",
     "object-hash": "^3.0.0",
     "openai": "^3.3.0",
@@ -959,6 +1038,11 @@
       "import": "./embeddings/googlevertexai.js",
       "require": "./embeddings/googlevertexai.cjs"
     },
+    "./embeddings/googlepalm": {
+      "types": "./embeddings/googlepalm.d.ts",
+      "import": "./embeddings/googlepalm.js",
+      "require": "./embeddings/googlepalm.cjs"
+    },
     "./llms": {
       "node": {
         "types": "./llms.d.ts",
@@ -1011,6 +1095,11 @@
       "import": "./llms/googlevertexai.js",
       "require": "./llms/googlevertexai.cjs"
     },
+    "./llms/googlepalm": {
+      "types": "./llms/googlepalm.d.ts",
+      "import": "./llms/googlepalm.js",
+      "require": "./llms/googlepalm.cjs"
+    },
     "./llms/sagemaker_endpoint": {
       "types": "./llms/sagemaker_endpoint.d.ts",
       "import": "./llms/sagemaker_endpoint.js",
@@ -1032,6 +1121,11 @@
         "import": "./vectorstores.js",
         "require": "./vectorstores.cjs"
       }
+    },
+    "./vectorstores/analyticdb": {
+      "types": "./vectorstores/analyticdb.d.ts",
+      "import": "./vectorstores/analyticdb.js",
+      "require": "./vectorstores/analyticdb.cjs"
     },
     "./vectorstores/base": {
       "types": "./vectorstores/base.d.ts",
@@ -1245,10 +1339,25 @@
       "import": "./document_loaders/web/s3.js",
       "require": "./document_loaders/web/s3.cjs"
     },
+    "./document_loaders/web/sonix_audio": {
+      "types": "./document_loaders/web/sonix_audio.d.ts",
+      "import": "./document_loaders/web/sonix_audio.js",
+      "require": "./document_loaders/web/sonix_audio.cjs"
+    },
     "./document_loaders/web/confluence": {
       "types": "./document_loaders/web/confluence.d.ts",
       "import": "./document_loaders/web/confluence.js",
       "require": "./document_loaders/web/confluence.cjs"
+    },
+    "./document_loaders/web/serpapi": {
+      "types": "./document_loaders/web/serpapi.d.ts",
+      "import": "./document_loaders/web/serpapi.js",
+      "require": "./document_loaders/web/serpapi.cjs"
+    },
+    "./document_loaders/web/sort_xyz_blockchain": {
+      "types": "./document_loaders/web/sort_xyz_blockchain.d.ts",
+      "import": "./document_loaders/web/sort_xyz_blockchain.js",
+      "require": "./document_loaders/web/sort_xyz_blockchain.cjs"
     },
     "./document_loaders/fs/directory": {
       "types": "./document_loaders/fs/directory.d.ts",
@@ -1305,6 +1414,11 @@
       "import": "./document_loaders/fs/unstructured.js",
       "require": "./document_loaders/fs/unstructured.cjs"
     },
+    "./document_transformers/openai_functions": {
+      "types": "./document_transformers/openai_functions.d.ts",
+      "import": "./document_transformers/openai_functions.js",
+      "require": "./document_transformers/openai_functions.cjs"
+    },
     "./chat_models": {
       "node": {
         "types": "./chat_models.d.ts",
@@ -1332,6 +1446,11 @@
       "import": "./chat_models/googlevertexai.js",
       "require": "./chat_models/googlevertexai.cjs"
     },
+    "./chat_models/googlepalm": {
+      "types": "./chat_models/googlepalm.d.ts",
+      "import": "./chat_models/googlepalm.js",
+      "require": "./chat_models/googlepalm.cjs"
+    },
     "./chat_models/baiduwenxin": {
       "types": "./chat_models/baiduwenxin.d.ts",
       "import": "./chat_models/baiduwenxin.js",
@@ -1351,6 +1470,11 @@
       "types": "./schema/query_constructor.d.ts",
       "import": "./schema/query_constructor.js",
       "require": "./schema/query_constructor.cjs"
+    },
+    "./schema/retriever": {
+      "types": "./schema/retriever.d.ts",
+      "import": "./schema/retriever.js",
+      "require": "./schema/retriever.cjs"
     },
     "./sql_db": {
       "types": "./sql_db.d.ts",
@@ -1378,6 +1502,11 @@
         "import": "./retrievers.js",
         "require": "./retrievers.cjs"
       }
+    },
+    "./retrievers/amazon_kendra": {
+      "types": "./retrievers/amazon_kendra.d.ts",
+      "import": "./retrievers/amazon_kendra.js",
+      "require": "./retrievers/amazon_kendra.cjs"
     },
     "./retrievers/remote": {
       "types": "./retrievers/remote.d.ts",
@@ -1479,6 +1608,11 @@
       "import": "./cache/redis.js",
       "require": "./cache/redis.cjs"
     },
+    "./cache/ioredis": {
+      "types": "./cache/ioredis.d.ts",
+      "import": "./cache/ioredis.js",
+      "require": "./cache/ioredis.cjs"
+    },
     "./cache/upstash_redis": {
       "types": "./cache/upstash_redis.d.ts",
       "import": "./cache/upstash_redis.js",
@@ -1514,6 +1648,11 @@
       "import": "./stores/message/dynamodb.js",
       "require": "./stores/message/dynamodb.cjs"
     },
+    "./stores/message/firestore": {
+      "types": "./stores/message/firestore.d.ts",
+      "import": "./stores/message/firestore.js",
+      "require": "./stores/message/firestore.cjs"
+    },
     "./stores/message/momento": {
       "types": "./stores/message/momento.d.ts",
       "import": "./stores/message/momento.js",
@@ -1524,10 +1663,20 @@
       "import": "./stores/message/redis.js",
       "require": "./stores/message/redis.cjs"
     },
+    "./stores/message/ioredis": {
+      "types": "./stores/message/ioredis.d.ts",
+      "import": "./stores/message/ioredis.js",
+      "require": "./stores/message/ioredis.cjs"
+    },
     "./stores/message/upstash_redis": {
       "types": "./stores/message/upstash_redis.d.ts",
       "import": "./stores/message/upstash_redis.js",
       "require": "./stores/message/upstash_redis.cjs"
+    },
+    "./stores/message/planetscale": {
+      "types": "./stores/message/planetscale.d.ts",
+      "import": "./stores/message/planetscale.js",
+      "require": "./stores/message/planetscale.cjs"
     },
     "./experimental/autogpt": {
       "types": "./experimental/autogpt.d.ts",
@@ -1549,10 +1698,10 @@
       "import": "./experimental/plan_and_execute.js",
       "require": "./experimental/plan_and_execute.cjs"
     },
-    "./client": {
-      "types": "./client.d.ts",
-      "import": "./client.js",
-      "require": "./client.cjs"
+    "./experimental/multimodal_embeddings/googlevertexai": {
+      "types": "./experimental/multimodal_embeddings/googlevertexai.d.ts",
+      "import": "./experimental/multimodal_embeddings/googlevertexai.js",
+      "require": "./experimental/multimodal_embeddings/googlevertexai.cjs"
     },
     "./evaluation": {
       "types": "./evaluation.d.ts",

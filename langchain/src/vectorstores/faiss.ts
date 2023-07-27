@@ -21,6 +21,10 @@ export class FaissStore extends SaveableVectorStore {
 
   args: FaissLibArgs;
 
+  _vectorstoreType(): string {
+    return "faiss";
+  }
+
   constructor(embeddings: Embeddings, args: FaissLibArgs) {
     super(embeddings, args);
     this.args = args;
@@ -30,7 +34,7 @@ export class FaissStore extends SaveableVectorStore {
     this.docstore = args?.docstore ?? new SynchronousInMemoryDocstore();
   }
 
-  async addDocuments(documents: Document[]): Promise<void> {
+  async addDocuments(documents: Document[]) {
     const texts = documents.map(({ pageContent }) => pageContent);
     return this.addVectors(
       await this.embeddings.embedDocuments(texts),
@@ -53,7 +57,7 @@ export class FaissStore extends SaveableVectorStore {
 
   async addVectors(vectors: number[][], documents: Document[]) {
     if (vectors.length === 0) {
-      return;
+      return [];
     }
     if (vectors.length !== documents.length) {
       throw new Error(`Vectors and documents must have the same length`);
@@ -71,13 +75,16 @@ export class FaissStore extends SaveableVectorStore {
     }
 
     const docstoreSize = this.index.ntotal();
+    const documentIds = [];
     for (let i = 0; i < vectors.length; i += 1) {
       const documentId = uuid.v4();
+      documentIds.push(documentId);
       const id = docstoreSize + i;
       this.index.add(vectors[i]);
       this._mapping[id] = documentId;
       this.docstore.add({ [documentId]: documents[i] });
     }
+    return documentIds;
   }
 
   async similaritySearchVectorWithScore(query: number[], k: number) {
@@ -182,6 +189,7 @@ export class FaissStore extends SaveableVectorStore {
           PyInMemoryDocstore
         )
         .register("langchain.schema", "Document", PyDocument)
+        .register("langchain.docstore.document", "Document", PyDocument)
         .register("pathlib", "WindowsPath", (...args) => args.join("\\"))
         .register("pathlib", "PosixPath", (...args) => args.join("/"));
 
@@ -255,7 +263,7 @@ export class FaissStore extends SaveableVectorStore {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       throw new Error(
-        `Could not import faiss-node. Please install faiss-node as a dependency with, e.g. \`npm install -S faiss-node\` and make sure you have \`libomp\` installed in your path.\n\nError: ${err?.message}`
+        `Could not import faiss-node. Please install faiss-node as a dependency with, e.g. \`npm install -S faiss-node\`.\n\nError: ${err?.message}`
       );
     }
   }
@@ -270,9 +278,10 @@ export class FaissStore extends SaveableVectorStore {
       } = await import("pickleparser");
 
       return { Parser, NameRegistry };
-    } catch (err) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
       throw new Error(
-        "Please install pickleparser as a dependency with, e.g. `npm install -S pickleparser`"
+        `Could not import pickleparser. Please install pickleparser as a dependency with, e.g. \`npm install -S pickleparser\`.\n\nError: ${err?.message}`
       );
     }
   }

@@ -330,3 +330,39 @@ test("Test ConversationalRetrievalQAChain from LLM with a chat model and memory"
 
   console.log({ res2 });
 });
+
+test("Test ConversationalRetrievalQAChain from LLM with deprecated history syntax", async () => {
+  const model = new OpenAI({
+    temperature: 0,
+  });
+  const vectorStore = await HNSWLib.fromTexts(
+    [
+      "Mitochondria are the powerhouse of the cell",
+      "Foo is red",
+      "Bar is red",
+      "Buildings are made out of brick",
+      "Mitochondria are made of lipids",
+    ],
+    [{ id: 2 }, { id: 1 }, { id: 3 }, { id: 4 }, { id: 5 }],
+    new OpenAIEmbeddings()
+  );
+
+  const chain = ConversationalRetrievalQAChain.fromLLM(
+    model,
+    vectorStore.asRetriever()
+  );
+  const question = "What is the powerhouse of the cell?";
+  const res = await chain.call({
+    question,
+    chat_history: [],
+  });
+
+  console.log({ res });
+
+  const res2 = await chain.call({
+    question: "What are they made out of?",
+    chat_history: [[question, res.text]],
+  });
+
+  console.log({ res2 });
+});

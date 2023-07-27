@@ -259,13 +259,6 @@ export type AgentStep = {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ChainValues = Record<string, any>;
 
-/**
- * Base Index class. All indexes should extend this class.
- */
-export abstract class BaseRetriever {
-  abstract getRelevantDocuments(query: string): Promise<Document[]>;
-}
-
 export abstract class BaseChatMessageHistory extends Serializable {
   public abstract getMessages(): Promise<BaseMessage[]>;
 

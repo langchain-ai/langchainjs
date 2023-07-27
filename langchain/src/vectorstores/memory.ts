@@ -21,6 +21,10 @@ export class MemoryVectorStore extends VectorStore {
 
   similarity: typeof ml_distance_similarity.cosine;
 
+  _vectorstoreType(): string {
+    return "memory";
+  }
+
   constructor(
     embeddings: Embeddings,
     { similarity, ...rest }: MemoryVectorStoreArgs = {}

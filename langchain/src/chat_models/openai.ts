@@ -106,7 +106,7 @@ export interface ChatOpenAICallOptions extends OpenAICallOptions {
  * @remarks
  * Any parameters that are valid to be passed to {@link
  * https://platform.openai.com/docs/api-reference/chat/create |
- * `openai.createCompletion`} can be passed through {@link modelKwargs}, even
+ * `openai.createChatCompletion`} can be passed through {@link modelKwargs}, even
  * if not explicitly available on this class.
  */
 export class ChatOpenAI
@@ -240,7 +240,7 @@ export class ChatOpenAI
     this.streaming = fields?.streaming ?? false;
 
     if (this.azureOpenAIApiKey) {
-      if (!this.azureOpenAIApiInstanceName) {
+      if (!this.azureOpenAIApiInstanceName && !this.azureOpenAIBasePath) {
         throw new Error("Azure OpenAI API instance name not found");
       }
       if (!this.azureOpenAIApiDeploymentName) {
@@ -343,7 +343,7 @@ export class ChatOpenAI
                   resolve(response);
                 } else {
                   const data = JSON.parse(event.data);
-
+                  if (!data.id) return;
                   if (data?.error) {
                     if (rejected) {
                       return;
@@ -432,7 +432,6 @@ export class ChatOpenAI
                       // sending the function call arguments
                     }
                   }
-
                   // when all messages are finished, resolve
                   if (
                     !resolved &&
@@ -677,6 +676,8 @@ export class PromptLayerChatOpenAI extends ChatOpenAI {
       if (message._getType() === "human") {
         messageDict = { role: "user", content: message.content };
       } else if (message._getType() === "ai") {
+        messageDict = { role: "assistant", content: message.content };
+      } else if (message._getType() === "function") {
         messageDict = { role: "assistant", content: message.content };
       } else if (message._getType() === "system") {
         messageDict = { role: "system", content: message.content };

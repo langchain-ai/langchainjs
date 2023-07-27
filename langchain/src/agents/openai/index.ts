@@ -23,19 +23,27 @@ import {
 } from "../../prompts/chat.js";
 import { BaseLanguageModel } from "../../base_language/index.js";
 import { LLMChain } from "../../chains/llm_chain.js";
+import { OutputParserException } from "../../schema/output_parser.js";
 
 function parseOutput(message: BaseMessage): AgentAction | AgentFinish {
   if (message.additional_kwargs.function_call) {
     // eslint-disable-next-line prefer-destructuring
     const function_call: ChatCompletionRequestMessageFunctionCall =
       message.additional_kwargs.function_call;
-    return {
-      tool: function_call.name as string,
-      toolInput: function_call.arguments
+    try {
+      const toolInput = function_call.arguments
         ? JSON.parse(function_call.arguments)
-        : {},
-      log: message.content,
-    };
+        : {};
+      return {
+        tool: function_call.name as string,
+        toolInput,
+        log: message.content,
+      };
+    } catch (error) {
+      throw new OutputParserException(
+        `Failed to parse function arguments from chat model response. Text: "${function_call.arguments}". ${error}`
+      );
+    }
   } else {
     return { returnValues: { output: message.content }, log: message.content };
   }

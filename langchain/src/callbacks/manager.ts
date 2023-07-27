@@ -24,6 +24,7 @@ import {
 } from "./handlers/tracer_langchain.js";
 import { consumeCallback } from "./promises.js";
 import { Serialized } from "../load/serializable.js";
+import { Document } from "../document.js";
 
 type BaseCallbackManagerMethods = {
   [K in keyof CallbackHandlerMethods]?: (
@@ -111,6 +112,69 @@ class BaseRunManager {
             console.error(
               `Error in handler ${handler.constructor.name}, handleText: ${err}`
             );
+          }
+        }, handler.awaitHandlers)
+      )
+    );
+  }
+}
+
+export class CallbackManagerForRetrieverRun
+  extends BaseRunManager
+  implements BaseCallbackManagerMethods
+{
+  getChild(tag?: string): CallbackManager {
+    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    const manager = new CallbackManager(this.runId);
+    manager.setHandlers(this.inheritableHandlers);
+    manager.addTags(this.inheritableTags);
+    manager.addMetadata(this.inheritableMetadata);
+    if (tag) {
+      manager.addTags([tag], false);
+    }
+    return manager;
+  }
+
+  async handleRetrieverEnd(documents: Document[]): Promise<void> {
+    await Promise.all(
+      this.handlers.map((handler) =>
+        consumeCallback(async () => {
+          if (!handler.ignoreRetriever) {
+            try {
+              await handler.handleRetrieverEnd?.(
+                documents,
+                this.runId,
+                this._parentRunId,
+                this.tags
+              );
+            } catch (err) {
+              console.error(
+                `Error in handler ${handler.constructor.name}, handleRetriever`
+              );
+            }
+          }
+        }, handler.awaitHandlers)
+      )
+    );
+  }
+
+  async handleRetrieverError(err: Error | unknown): Promise<void> {
+    await Promise.all(
+      this.handlers.map((handler) =>
+        consumeCallback(async () => {
+          if (!handler.ignoreRetriever) {
+            try {
+              await handler.handleRetrieverError?.(
+                err,
+                this.runId,
+                this._parentRunId,
+                this.tags
+              );
+            } catch (error) {
+              console.error(
+                `Error in handler ${handler.constructor.name}, handleRetrieverError: ${error}`
+              );
+            }
           }
         }, handler.awaitHandlers)
       )
@@ -573,6 +637,46 @@ export class CallbackManager
       )
     );
     return new CallbackManagerForToolRun(
+      runId,
+      this.handlers,
+      this.inheritableHandlers,
+      this.tags,
+      this.inheritableTags,
+      this.metadata,
+      this.inheritableMetadata,
+      this._parentRunId
+    );
+  }
+
+  async handleRetrieverStart(
+    retriever: Serialized,
+    query: string,
+    runId: string = uuidv4(),
+    _parentRunId: string | undefined = undefined
+  ): Promise<CallbackManagerForRetrieverRun> {
+    await Promise.all(
+      this.handlers.map((handler) =>
+        consumeCallback(async () => {
+          if (!handler.ignoreRetriever) {
+            try {
+              await handler.handleRetrieverStart?.(
+                retriever,
+                query,
+                runId,
+                this._parentRunId,
+                this.tags,
+                this.metadata
+              );
+            } catch (err) {
+              console.error(
+                `Error in handler ${handler.constructor.name}, handleRetrieverStart: ${err}`
+              );
+            }
+          }
+        }, handler.awaitHandlers)
+      )
+    );
+    return new CallbackManagerForRetrieverRun(
       runId,
       this.handlers,
       this.inheritableHandlers,

@@ -26,6 +26,10 @@ export class HNSWLib extends SaveableVectorStore {
 
   args: HNSWLibBase;
 
+  _vectorstoreType(): string {
+    return "hnswlib";
+  }
+
   constructor(embeddings: Embeddings, args: HNSWLibArgs) {
     super(embeddings, args);
     this._index = args.index;
@@ -238,9 +242,10 @@ export class HNSWLib extends SaveableVectorStore {
       } = await import("hnswlib-node");
 
       return { HierarchicalNSW };
-    } catch (err) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
       throw new Error(
-        "Please install hnswlib-node as a dependency with, e.g. `npm install -S hnswlib-node`"
+        `Could not import hnswlib-node. Please install hnswlib-node as a dependency with, e.g. \`npm install -S hnswlib-node\`.\n\nError: ${err?.message}`
       );
     }
   }
