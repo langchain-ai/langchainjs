@@ -36,7 +36,7 @@ export class GoogleVertexAIConnection<
 
     this.auth = new GoogleAuth({
       scopes: "https://www.googleapis.com/auth/cloud-platform",
-      projectId: fields?.projectId,
+      projectId: fields?.projectId ?? null,
     });
   }
 
