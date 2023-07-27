@@ -14,6 +14,11 @@ interface AzureBlobStorageFileConfig {
   blobName: string;
 }
 
+interface AzureBlobStorageFileLoaderConfig {
+  azureConfig: AzureBlobStorageFileConfig;
+  unstructuredConfig?: UnstructuredLoaderOptions;
+}
+
 export class AzureBlobStorageFileLoader extends BaseDocumentLoader {
   private readonly connectionString: string;
 
@@ -21,17 +26,17 @@ export class AzureBlobStorageFileLoader extends BaseDocumentLoader {
 
   private readonly blobName: string;
 
-  private readonly unstructuredLoaderOptions?: UnstructuredLoaderOptions;
+  private readonly unstructuredConfig?: UnstructuredLoaderOptions;
 
-  constructor(
-    { connectionString, container, blobName }: AzureBlobStorageFileConfig,
-    unstructuredLoaderOptions?: UnstructuredLoaderOptions
-  ) {
+  constructor({
+    azureConfig,
+    unstructuredConfig,
+  }: AzureBlobStorageFileLoaderConfig) {
     super();
-    this.connectionString = connectionString;
-    this.container = container;
-    this.blobName = blobName;
-    this.unstructuredLoaderOptions = unstructuredLoaderOptions;
+    this.connectionString = azureConfig.connectionString;
+    this.container = azureConfig.container;
+    this.blobName = azureConfig.blobName;
+    this.unstructuredConfig = unstructuredConfig;
   }
 
   public async load() {
@@ -67,7 +72,7 @@ export class AzureBlobStorageFileLoader extends BaseDocumentLoader {
     try {
       const unstructuredLoader = new UnstructuredLoader(
         filePath,
-        this.unstructuredLoaderOptions
+        this.unstructuredConfig
       );
 
       const docs = await unstructuredLoader.load();

@@ -9,21 +9,26 @@ interface AzureBlobStorageContainerConfig {
   container: string;
 }
 
+interface AzureBlobStorageContainerLoaderConfig {
+  azureConfig: AzureBlobStorageContainerConfig;
+  unstructuredConfig?: UnstructuredLoaderOptions;
+}
+
 export class AzureBlobStorageContainerLoader extends BaseDocumentLoader {
   private readonly connectionString: string;
 
   private readonly container: string;
 
-  private readonly unstructuredLoaderOptions?: UnstructuredLoaderOptions;
+  private readonly unstructuredConfig?: UnstructuredLoaderOptions;
 
-  constructor(
-    { connectionString, container }: AzureBlobStorageContainerConfig,
-    unstructuredLoaderOptions?: UnstructuredLoaderOptions
-  ) {
+  constructor({
+    azureConfig,
+    unstructuredConfig,
+  }: AzureBlobStorageContainerLoaderConfig) {
     super();
-    this.connectionString = connectionString;
-    this.container = container;
-    this.unstructuredLoaderOptions = unstructuredLoaderOptions;
+    this.connectionString = azureConfig.connectionString;
+    this.container = azureConfig.container;
+    this.unstructuredConfig = unstructuredConfig;
   }
 
   public async load() {
@@ -37,14 +42,14 @@ export class AzureBlobStorageContainerLoader extends BaseDocumentLoader {
 
     let docs: Document[] = [];
     for await (const blob of containerClient.listBlobsFlat()) {
-      const loader = new AzureBlobStorageFileLoader(
-        {
+      const loader = new AzureBlobStorageFileLoader({
+        azureConfig: {
           connectionString: this.connectionString,
           container: this.container,
           blobName: blob.name,
         },
-        this.unstructuredLoaderOptions
-      );
+        unstructuredConfig: this.unstructuredConfig,
+      });
       docs = docs.concat(await loader.load());
     }
 
