@@ -4,6 +4,9 @@ export interface GoogleVertexAIConnectionParams {
   /** Hostname for the API call */
   endpoint?: string;
 
+  /** Project where Vertex AI is enabled */
+  projectId?: string;
+
   /** Region where the LLM is stored */
   location?: string;
 
