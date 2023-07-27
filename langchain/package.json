@@ -576,6 +576,8 @@
     "eslint-plugin-prettier": "^4.2.1",
     "faiss-node": "^0.2.1",
     "firebase-admin": "^11.9.0",
+    "form-data": "^4.0.0",
+    "fs": "^0.0.1-security",
     "google-auth-library": "^8.9.0",
     "graphql": "^16.6.0",
     "hnswlib-node": "^1.4.2",
@@ -588,6 +590,7 @@
     "mongodb": "^5.2.0",
     "mysql2": "^3.3.3",
     "notion-to-md": "^3.1.0",
+    "path": "^0.12.7",
     "pdf-parse": "1.1.1",
     "peggy": "^3.0.2",
     "pg": "^8.11.0",
@@ -648,6 +651,8 @@
     "epub2": "^3.0.1",
     "faiss-node": "^0.2.1",
     "firebase-admin": "^11.9.0",
+    "form-data": "^4.0.0",
+    "fs": "^0.0.1-security",
     "google-auth-library": "^8.9.0",
     "hnswlib-node": "^1.4.2",
     "html-to-text": "^9.0.5",
@@ -657,6 +662,7 @@
     "mongodb": "^5.2.0",
     "mysql2": "^3.3.3",
     "notion-to-md": "^3.1.0",
+    "path": "^0.12.7",
     "pdf-parse": "1.1.1",
     "peggy": "^3.0.2",
     "pg": "^8.11.0",
@@ -782,6 +788,12 @@
     "firebase-admin": {
       "optional": true
     },
+    "form-data": {
+      "optional": true
+    },
+    "fs": {
+      "optional": true
+    },
     "google-auth-library": {
       "optional": true
     },
@@ -807,6 +819,9 @@
       "optional": true
     },
     "notion-to-md": {
+      "optional": true
+    },
+    "path": {
       "optional": true
     },
     "pdf-parse": {

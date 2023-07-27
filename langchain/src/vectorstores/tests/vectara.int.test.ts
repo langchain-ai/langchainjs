@@ -1,4 +1,6 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable no-process-env */
+import fs from "fs";
 import { test, expect, beforeAll } from "@jest/globals";
 import { FakeEmbeddings } from "../../embeddings/fake.js";
 import { Document } from "../../document.js";
@@ -153,6 +155,43 @@ describe("VectaraStore", () => {
           result.metadata.find((m: any) => m.name === "lang")?.value === "eng"
       );
       expect(hasEnglish).toBe(false);
+    });
+
+    test("addFiles", async () => {
+      const docs = getDocs();
+      const englishOneContent = docs[0].pageContent;
+      const englishTwoContent = docs[1].pageContent;
+      const frenchOneContent = docs[2].pageContent;
+
+      // Create temporary files for test
+      const files = [
+        { filename: "englishOne.txt", content: englishOneContent },
+        { filename: "englishTwo.txt", content: englishTwoContent },
+        { filename: "frenchOne.txt", content: frenchOneContent },
+      ];
+
+      // Using async/await and the helper function to create files
+      for (const file of files) {
+        fs.writeFile(file.filename, file.content, (err) => {
+          if (err) throw err;
+        });
+      }
+
+      const results = await store.addFiles([
+        "./englishOne.txt",
+        "./englishTwo.txt",
+        "./frenchOne.txt",
+      ]);
+      console.log(results);
+
+      // Delete temporary files
+      // for (const file of files) {
+      //   fs.unlink(file.filename, (err) => {
+      //     if (err) throw err;
+      //   });
+      // }
+
+      expect(results.length).toBeGreaterThan(0);
     });
   });
 });

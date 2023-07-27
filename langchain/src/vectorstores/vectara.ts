@@ -1,3 +1,6 @@
+import fs from "fs";
+import path from "path";
+import FormData from "form-data";
 import { Document } from "../document.js";
 import { Embeddings } from "../embeddings/base.js";
 import { FakeEmbeddings } from "../embeddings/fake.js";
@@ -161,6 +164,73 @@ export class VectaraStore extends VectorStore {
     if (this.verbose) {
       console.log(`Added ${countAdded} documents to Vectara`);
     }
+  }
+
+  async addFiles(
+    file_paths: string[],
+    metadata: Record<string, unknown> | undefined = undefined
+  ) {
+    const docIds: string[] = [];
+
+    for (const [index, file] of file_paths.entries()) {
+      if (!fs.existsSync(path.resolve(file))) {
+        console.error(`File ${file} does not exist, skipping`);
+        continue;
+      }
+
+      const md = metadata ? metadata[index] : {};
+      console.log(path.join(process.cwd(), file));
+
+      const fileBuffer = fs.createReadStream(path.join(process.cwd(), file));
+
+      const formData = new FormData();
+      formData.append("file", fileBuffer, file);
+      formData.append("doc_metadata", JSON.stringify(md));
+      formData.append("customer-id", this.customerId.toString());
+      formData.append("x-api-key", this.apiKey);
+
+      console.log(JSON.stringify(formData));
+
+      try {
+        const response = await fetch(
+          `https://${this.apiEndpoint}/v1/upload?c=${this.customerId}&o=${this.corpusId}&d=true`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+            body: JSON.stringify(formData),
+          }
+        );
+        const result = await response.json();
+        if (response.status === 409) {
+          const docId = result.document.documentId;
+          console.info(
+            `File ${file} already exists on Vectara (doc_id=${docId}), skipping`
+          );
+        } else if (response.status === 200) {
+          const docId = result.document.documentId;
+          docIds.push(docId);
+        } else {
+          console.info(
+            `Error indexing file ${file}: ${JSON.stringify(result)}`
+          );
+        }
+      } catch (e) {
+        const error = new Error(
+          `Error ${(e as Error).message} while uploading ${file}`
+        );
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (error as any).code = 500;
+        throw error;
+      }
+    }
+
+    if (this.verbose) {
+      console.log(`Uploaded ${file_paths.length} files to Vectara`);
+    }
+
+    return docIds;
   }
 
   async similaritySearchWithScore(
