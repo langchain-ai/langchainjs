@@ -1,37 +1,53 @@
-import { Callbacks } from "../callbacks";
-import { Serializable } from "../load/serializable";
+import { BaseCallbackConfig } from "../callbacks/manager.js";
+import { Serializable } from "../load/serializable.js";
 
-export type RunnableConfig = {
-  tags?: string[];
-  metadata?: Record<string, any>;
-  callbacks?: Callbacks;
-};
+export type RunnableConfig = BaseCallbackConfig;
 
-export abstract class Runnable<Input, Output> extends Serializable {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type RunnableOptions = Record<string, any>;
 
-  abstract invoke(input: Input, config?: RunnableConfig): Promise<Output>;
+export abstract class Runnable<RunInput, RunOutput> extends Serializable {
+  abstract invoke(
+    input: RunInput,
+    options?: RunnableOptions,
+    config?: RunnableConfig
+  ): Promise<RunOutput>;
 
-  protected static getConfigList(config: RunnableConfig | RunnableConfig[] = {}, length = 0): RunnableConfig[] {
+  protected static getConfigList(
+    config: RunnableConfig | RunnableConfig[] = {},
+    length = 0
+  ): RunnableConfig[] {
     if (Array.isArray(config)) {
       if (config.length !== length) {
-        throw new Error(`Passed "config" must be an array with the same length as the inputs, but got ${config.length} configs for ${length} inputs`);
+        throw new Error(
+          `Passed "config" must be an array with the same length as the inputs, but got ${config.length} configs for ${length} inputs`
+        );
       }
-      return config
+      return config;
     }
-    return Array.from({length}, () => config);
+    return Array.from({ length }, () => config);
   }
 
-  async batch(inputs: Input[], config?: RunnableConfig | RunnableConfig[], _options?: {
-    maxConcurrency?: number;
-  }): Promise<Output[]> {
-    const configList = Runnable.getConfigList(config, inputs.length);
-    const promises = inputs.map((input, i) => {
-      return this.invoke.bind(this, input, configList[i]);
-    });
+  async batch(
+    inputs: RunInput[],
+    options: RunnableOptions[],
+    configs?: RunnableConfig | RunnableConfig[],
+    _options?: {
+      maxConcurrency?: number;
+    }
+  ): Promise<RunOutput[]> {
+    const configList = Runnable.getConfigList(configs, inputs.length);
+    const promises = inputs.map((input, i) =>
+      this.invoke(input, options[i], configList[i])
+    );
     return Promise.all(promises);
   }
 
-  async *stream(input: Input, config?: RunnableConfig) {
-    yield this.invoke(input, config);
+  async *stream(
+    input: RunInput,
+    options?: RunnableOptions,
+    config?: RunnableConfig
+  ): AsyncGenerator<RunOutput> {
+    yield this.invoke(input, options, config);
   }
 }

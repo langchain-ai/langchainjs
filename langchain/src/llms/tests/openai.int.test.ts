@@ -218,3 +218,23 @@ test("Test OpenAI prompt value", async () => {
   }
   console.log({ res });
 });
+
+test("Test OpenAI stream method", async () => {
+  const model = new OpenAI({ maxTokens: 5, modelName: "text-davinci-003" });
+  const stream = await model.stream("How is your day going?");
+  for await (const chunk of stream) {
+    console.log(chunk);
+  }
+});
+
+test("Test OpenAI stream method with abort", async () => {
+  await expect(async () => {
+    const model = new OpenAI({ maxTokens: 5, modelName: "text-davinci-003" });
+    const stream = await model.stream("Print hello world", {
+      signal: AbortSignal.timeout(10),
+    });
+    for await (const chunk of stream) {
+      console.log(chunk);
+    }
+  }).rejects.toThrow();
+});

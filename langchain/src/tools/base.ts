@@ -16,7 +16,10 @@ export interface ToolParams extends BaseLangChainParams {}
 export abstract class StructuredTool<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   T extends z.ZodObject<any, any, any, any> = z.ZodObject<any, any, any, any>
-> extends BaseLangChain {
+> extends BaseLangChain<
+  (z.output<T> extends string ? string : never) | z.input<T>,
+  string
+> {
   abstract schema: T | z.ZodEffects<T>;
 
   get lc_namespace() {

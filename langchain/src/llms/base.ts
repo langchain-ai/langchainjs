@@ -5,12 +5,14 @@ import {
   BaseMessage,
   BasePromptValue,
   Generation,
+  GenerationChunk,
   LLMResult,
   RUN_KEY,
 } from "../schema/index.js";
 import {
   BaseLanguageModel,
   BaseLanguageModelCallOptions,
+  BaseLanguageModelInput,
   BaseLanguageModelParams,
 } from "../base_language/index.js";
 import {
@@ -19,7 +21,10 @@ import {
   CallbackManagerForLLMRun,
   Callbacks,
 } from "../callbacks/manager.js";
+import { RunnableConfig } from "../schema/runnable.js";
 import { getBufferString } from "../memory/base.js";
+import { StringPromptValue } from "../prompts/base.js";
+import { ChatPromptValue } from "../prompts/chat.js";
 
 export type SerializedLLM = {
   _model: string;
@@ -37,10 +42,22 @@ export interface BaseLLMParams extends BaseLanguageModelParams {
 
 export interface BaseLLMCallOptions extends BaseLanguageModelCallOptions {}
 
+function _convertInputToPromptValue(
+  input: BaseLanguageModelInput
+): BasePromptValue {
+  if (typeof input === "string") {
+    return new StringPromptValue(input);
+  } else if (Array.isArray(input)) {
+    return new ChatPromptValue(input);
+  } else {
+    return input;
+  }
+}
+
 /**
  * LLM Wrapper. Provides an {@link call} (an {@link generate}) function that takes in a prompt (or prompts) and returns a string.
  */
-export abstract class BaseLLM extends BaseLanguageModel {
+export abstract class BaseLLM extends BaseLanguageModel<string> {
   declare CallOptions: BaseLLMCallOptions;
 
   declare ParsedCallOptions: Omit<
@@ -61,6 +78,100 @@ export abstract class BaseLLM extends BaseLanguageModel {
     } else {
       this.cache = undefined;
     }
+  }
+
+  async invoke(
+    input: BaseLanguageModelInput,
+    options?: this["CallOptions"],
+    config?: RunnableConfig
+  ): Promise<string> {
+    const promptValue = _convertInputToPromptValue(input);
+    const result = await this.generatePrompt(
+      [promptValue],
+      options,
+      config?.callbacks
+    );
+    return result.generations[0][0].text;
+  }
+
+  async *_stream(
+    input: string,
+    options: this["ParsedCallOptions"],
+    runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<GenerationChunk> {
+    const result = await this._generate([input], options, runManager);
+    yield result.generations[0][0];
+  }
+
+  async *stream(
+    input: BaseLanguageModelInput,
+    options?: this["CallOptions"],
+    config?: RunnableConfig
+  ): AsyncGenerator<string> {
+    const prompt = _convertInputToPromptValue(input);
+    const callbackManager_ = await CallbackManager.configure(
+      config?.callbacks,
+      this.callbacks,
+      config?.tags,
+      this.tags,
+      config?.metadata,
+      this.metadata,
+      { verbose: this.verbose }
+    );
+    let parsedOptions: this["CallOptions"];
+    if (options?.timeout && !options.signal) {
+      parsedOptions = {
+        ...options,
+        signal: AbortSignal.timeout(options.timeout),
+      };
+    } else {
+      parsedOptions = options ?? {};
+    }
+    delete parsedOptions.tags;
+    delete parsedOptions.metadata;
+    delete parsedOptions.callbacks;
+    const extra = {
+      options: parsedOptions,
+      invocation_params: this?.invocationParams(parsedOptions),
+    };
+    const runManagers = await callbackManager_?.handleLLMStart(
+      this.toJSON(),
+      [prompt.toString()],
+      undefined,
+      undefined,
+      extra
+    );
+    let generation: GenerationChunk = {
+      text: "",
+    };
+    try {
+      for await (const chunk of this._stream(
+        input.toString(),
+        parsedOptions,
+        runManagers?.[0]
+      )) {
+        if (!generation) {
+          generation = chunk;
+        } else {
+          generation.text += chunk.text;
+          generation.generationInfo =
+            chunk.generationInfo ?? generation.generationInfo;
+        }
+        yield chunk.text;
+      }
+    } catch (err) {
+      await Promise.all(
+        (runManagers ?? []).map((runManager) => runManager?.handleLLMError(err))
+      );
+      throw err;
+    }
+    await Promise.all(
+      (runManagers ?? []).map((runManager) =>
+        runManager?.handleLLMEnd({
+          generations: [[generation]],
+        })
+      )
+    );
   }
 
   async generatePrompt(
@@ -172,7 +283,7 @@ export abstract class BaseLLM extends BaseLanguageModel {
   }
 
   /**
-   * Run the LLM on the given propmts an input, handling caching.
+   * Run the LLM on the given prompts and input, handling caching.
    */
   async generate(
     prompts: string[],

@@ -19,10 +19,11 @@ import { chunkArray } from "../util/chunk.js";
 import { BaseLLM, BaseLLMParams } from "./base.js";
 import { calculateMaxTokens } from "../base_language/count_tokens.js";
 import { OpenAIChat } from "./openai-chat.js";
-import { LLMResult } from "../schema/index.js";
+import { LLMResult, GenerationChunk } from "../schema/index.js";
 import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
 import { promptLayerTrackRequest } from "../util/prompt-layer.js";
 import { getEndpoint, OpenAIEndpointConfig } from "../util/azure.js";
+import { readableStreamToAsyncIterable } from "../util/stream.js";
 
 export { OpenAICallOptions, AzureOpenAIInput, OpenAIInput };
 
@@ -424,6 +425,77 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
       generations,
       llmOutput: { tokenUsage },
     };
+  }
+
+  async *_stream(
+    input: string,
+    options: this["ParsedCallOptions"],
+    runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<GenerationChunk> {
+    const params = {
+      ...this.invocationParams(options),
+      prompt: input,
+      stream: true,
+    };
+    const stream = await this.completionWithRetryStreaming(params, {
+      signal: options.signal,
+      ...options.options,
+    });
+    for await (const streamedResponse of stream) {
+      const choice = streamedResponse?.choices?.[0];
+      if (!choice) {
+        continue;
+      }
+      const chunk = {
+        text: choice.text,
+        generationInfo: {
+          finishReason: choice.finish_reason,
+          logprobs: choice.logprobs,
+        },
+      };
+      yield chunk;
+      // eslint-disable-next-line no-void
+      void runManager?.handleLLMNewToken(chunk.text ?? "");
+    }
+  }
+
+  protected async completionWithRetryStreaming(
+    params: CreateCompletionRequest,
+    options: StreamingAxiosConfiguration
+  ) {
+    const stream = new TransformStream();
+    const writer = stream.writable.getWriter();
+    const iterable = readableStreamToAsyncIterable(stream.readable);
+    let done = false;
+    await this.completionWithRetry(params, {
+      ...options,
+      adapter: fetchAdapter, // default adapter doesn't do streaming
+      responseType: "stream",
+      onmessage: (event) => {
+        if (done) return;
+        if (event.data?.trim?.() === "[DONE]") {
+          done = true;
+          // eslint-disable-next-line no-void
+          void writer.close();
+        } else {
+          const data = JSON.parse(event.data);
+          if (data.error) {
+            done = true;
+            throw data.error;
+          }
+          // eslint-disable-next-line no-void
+          void writer.write(event.data);
+        }
+      },
+    }).catch((error) => {
+      if (!done) {
+        done = true;
+        // eslint-disable-next-line no-void
+        void writer.close();
+        throw error;
+      }
+    });
+    return iterable;
   }
 
   /** @ignore */

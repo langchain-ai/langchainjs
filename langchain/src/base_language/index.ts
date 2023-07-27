@@ -8,7 +8,6 @@ import {
 import { AsyncCaller, AsyncCallerParams } from "../util/async_caller.js";
 import { getModelNameForTiktoken } from "./count_tokens.js";
 import { encodingForModel } from "../util/tiktoken.js";
-import { Serializable } from "../load/serializable.js";
 import { Runnable } from "../schema/runnable.js";
 
 const getVerbosity = () => false;
@@ -29,8 +28,8 @@ export interface BaseLangChainParams {
 /**
  * Base class for language models, chains, tools.
  */
-export abstract class BaseLangChain
-  extends Serializable
+export abstract class BaseLangChain<RunInput, RunOutput>
+  extends Runnable<RunInput, RunOutput>
   implements BaseLangChainParams
 {
   /**
@@ -94,11 +93,14 @@ export interface BaseLanguageModelCallOptions extends BaseCallbackConfig {
   signal?: AbortSignal;
 }
 
+export type BaseLanguageModelInput = BasePromptValue | string | BaseMessage[];
+
 /**
  * Base class for language models.
  */
-export abstract class BaseLanguageModel
-  extends BaseLangChain
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export abstract class BaseLanguageModel<RunOutput = any>
+  extends BaseLangChain<BaseLanguageModelInput, RunOutput>
   implements BaseLanguageModelParams
 {
   declare CallOptions: BaseLanguageModelCallOptions;
@@ -211,7 +213,7 @@ export abstract class BaseLanguageModel
       openai: (await import("../chat_models/openai.js")).ChatOpenAI,
     }[_type];
     if (Cls === undefined) {
-      throw new Error(`Cannot load  LLM with type ${_type}`);
+      throw new Error(`Cannot load LLM with type ${_type}`);
     }
     return new Cls(rest);
   }
