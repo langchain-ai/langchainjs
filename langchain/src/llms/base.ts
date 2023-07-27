@@ -23,8 +23,6 @@ import {
 } from "../callbacks/manager.js";
 import { RunnableConfig } from "../schema/runnable.js";
 import { getBufferString } from "../memory/base.js";
-import { StringPromptValue } from "../prompts/base.js";
-import { ChatPromptValue } from "../prompts/chat.js";
 
 export type SerializedLLM = {
   _model: string;
@@ -41,18 +39,6 @@ export interface BaseLLMParams extends BaseLanguageModelParams {
 }
 
 export interface BaseLLMCallOptions extends BaseLanguageModelCallOptions {}
-
-function _convertInputToPromptValue(
-  input: BaseLanguageModelInput
-): BasePromptValue {
-  if (typeof input === "string") {
-    return new StringPromptValue(input);
-  } else if (Array.isArray(input)) {
-    return new ChatPromptValue(input);
-  } else {
-    return input;
-  }
-}
 
 /**
  * LLM Wrapper. Provides an {@link call} (an {@link generate}) function that takes in a prompt (or prompts) and returns a string.
@@ -85,7 +71,7 @@ export abstract class BaseLLM extends BaseLanguageModel<string> {
     options?: this["CallOptions"],
     config?: RunnableConfig
   ): Promise<string> {
-    const promptValue = _convertInputToPromptValue(input);
+    const promptValue = BaseLLM._convertInputToPromptValue(input);
     const result = await this.generatePrompt(
       [promptValue],
       options,
@@ -108,7 +94,7 @@ export abstract class BaseLLM extends BaseLanguageModel<string> {
     options?: this["CallOptions"],
     config?: RunnableConfig
   ): AsyncGenerator<string> {
-    const prompt = _convertInputToPromptValue(input);
+    const prompt = BaseLLM._convertInputToPromptValue(input);
     const callbackManager_ = await CallbackManager.configure(
       config?.callbacks,
       this.callbacks,

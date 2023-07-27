@@ -439,8 +439,8 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
       prompt: input,
       stream: true,
     };
-    const iterable = this.getIterable(params, options);
-    for await (const streamedResponse of iterable) {
+    const streamIterable = this.startStream(params, options);
+    for await (const streamedResponse of streamIterable) {
       const data = JSON.parse(streamedResponse);
       const choice = data.choices?.[0];
       if (!choice) {
@@ -459,7 +459,7 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
     }
   }
 
-  getIterable(
+  startStream(
     request: CreateCompletionRequest,
     options?: StreamingAxiosConfiguration
   ) {

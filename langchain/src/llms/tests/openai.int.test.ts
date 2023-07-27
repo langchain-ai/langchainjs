@@ -247,7 +247,7 @@ test("Test OpenAI stream method with abort", async () => {
 test("Test OpenAI stream method with early break", async () => {
   const model = new OpenAI({ maxTokens: 50, modelName: "text-davinci-003" });
   const stream = await model.stream(
-    "How is your day going? Be extremely verbose.",
+    "How is your day going? Be extremely verbose."
   );
   let i = 0;
   for await (const chunk of stream) {

@@ -7,6 +7,7 @@ import {
   parseCallbackConfigArg,
 } from "../callbacks/manager.js";
 import { BaseLangChain, BaseLangChainParams } from "../base_language/index.js";
+import { RunnableOptions } from "../schema/runnable.js";
 
 export interface ToolParams extends BaseLangChainParams {}
 
@@ -34,6 +35,14 @@ export abstract class StructuredTool<
     arg: z.output<T>,
     runManager?: CallbackManagerForToolRun
   ): Promise<string>;
+
+  async invoke(
+    input: (z.output<T> extends string ? string : never) | z.input<T>,
+    _options?: RunnableOptions,
+    config?: BaseCallbackConfig
+  ): Promise<string> {
+    return this.call(input, config);
+  }
 
   async call(
     arg: (z.output<T> extends string ? string : never) | z.input<T>,

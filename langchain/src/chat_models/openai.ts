@@ -22,13 +22,19 @@ import type { StreamingAxiosConfiguration } from "../util/axios-types.js";
 import { BaseChatModel, BaseChatModelParams } from "./base.js";
 import {
   AIMessage,
+  AIMessageChunk,
   BaseMessage,
   ChatGeneration,
+  ChatGenerationChunk,
   ChatMessage,
+  ChatMessageChunk,
   ChatResult,
+  FunctionMessageChunk,
   HumanMessage,
+  HumanMessageChunk,
   MessageType,
   SystemMessage,
+  SystemMessageChunk,
 } from "../schema/index.js";
 import { getModelNameForTiktoken } from "../base_language/count_tokens.js";
 import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
@@ -36,6 +42,7 @@ import { promptLayerTrackRequest } from "../util/prompt-layer.js";
 import { StructuredTool } from "../tools/base.js";
 import { formatToOpenAIFunction } from "../tools/convert_to_openai.js";
 import { getEndpoint, OpenAIEndpointConfig } from "../util/azure.js";
+import { readableStreamToAsyncIterable } from "../util/stream.js";
 
 export { OpenAICallOptions, OpenAIChatInput, AzureOpenAIInput };
 
@@ -80,6 +87,34 @@ function openAIResponseToChatMessage(
       return new SystemMessage(message.content || "");
     default:
       return new ChatMessage(message.content || "", message.role ?? "unknown");
+  }
+}
+
+function _convertDeltaToMessageChunk(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  delta: Record<string, any>,
+  defaultRole?: ChatCompletionResponseMessageRoleEnum
+) {
+  const role = delta.role ?? defaultRole;
+  const content = delta.content ?? "";
+  let additional_kwargs;
+  if (delta.function_call) {
+    additional_kwargs = {
+      function_call: delta.function_call,
+    };
+  } else {
+    additional_kwargs = {};
+  }
+  if (role === "user") {
+    return new HumanMessageChunk({ content });
+  } else if (role === "assistant") {
+    return new AIMessageChunk({ content, additional_kwargs });
+  } else if (role === "system") {
+    return new SystemMessageChunk({ content });
+  } else if (role === "function") {
+    return new FunctionMessageChunk({ content, additional_kwargs }, delta.name);
+  } else {
+    return new ChatMessageChunk({ content, role });
   }
 }
 
@@ -291,6 +326,113 @@ export class ChatOpenAI
       model_name: this.modelName,
       ...this.invocationParams(),
       ...this.clientConfig,
+    };
+  }
+
+  // TODO(jacoblee): Refactor with _generate(..., {stream: true}) implementation
+  // when we integrate OpenAI's new SDK.
+  async *_stream(
+    messages: BaseMessage[],
+    options: this["ParsedCallOptions"],
+    runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatGenerationChunk> {
+    const messagesMapped: ChatCompletionRequestMessage[] = messages.map(
+      (message) => ({
+        role: messageTypeToOpenAIRole(message._getType()),
+        content: message.content,
+        name: message.name,
+        function_call: message.additional_kwargs
+          .function_call as ChatCompletionRequestMessageFunctionCall,
+      })
+    );
+    const params = {
+      ...this.invocationParams(options),
+      messages: messagesMapped,
+      stream: true,
+    };
+    let defaultRole: ChatCompletionResponseMessageRoleEnum = "assistant";
+    const streamIterable = this.startStream(params, options);
+    for await (const streamedResponse of streamIterable) {
+      const data = JSON.parse(streamedResponse) as {
+        choices?: Array<{
+          index: number;
+          finish_reason: string | null;
+          delta: {
+            role?: string;
+            content?: string;
+            function_call?: { name: string; arguments: string };
+          };
+        }>;
+      };
+
+      const choice = data.choices?.[0];
+      if (!choice) {
+        continue;
+      }
+
+      const { delta } = choice;
+      const chunk = _convertDeltaToMessageChunk(delta, defaultRole);
+      defaultRole = (delta.role ??
+        defaultRole) as ChatCompletionResponseMessageRoleEnum;
+      const generationChunk = {
+        message: chunk,
+        text: chunk.content,
+      };
+      yield generationChunk;
+      // eslint-disable-next-line no-void
+      void runManager?.handleLLMNewToken(generationChunk.text ?? "");
+    }
+  }
+
+  startStream(
+    request: CreateChatCompletionRequest,
+    options?: StreamingAxiosConfiguration
+  ) {
+    let done = false;
+    const stream = new TransformStream();
+    const writer = stream.writable.getWriter();
+    const iterable = readableStreamToAsyncIterable(stream.readable);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let err: any;
+    this.completionWithRetry(request, {
+      ...options,
+      adapter: fetchAdapter, // default adapter doesn't do streaming
+      responseType: "stream",
+      onmessage: (event) => {
+        if (done) return;
+        if (event.data?.trim?.() === "[DONE]") {
+          done = true;
+          // eslint-disable-next-line no-void
+          void writer.close();
+        } else {
+          const data = JSON.parse(event.data);
+          if (data.error) {
+            done = true;
+            throw data.error;
+          }
+          // eslint-disable-next-line no-void
+          void writer.write(event.data);
+        }
+      },
+    }).catch((error) => {
+      if (!done) {
+        err = error;
+        done = true;
+        // eslint-disable-next-line no-void
+        void writer.close();
+      }
+    });
+    return {
+      async next() {
+        const chunk = await iterable.next();
+        if (err) {
+          throw err;
+        }
+        return chunk;
+      },
+      [Symbol.asyncIterator]() {
+        return this;
+      },
     };
   }
 

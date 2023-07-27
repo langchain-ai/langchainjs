@@ -9,6 +9,8 @@ import { AsyncCaller, AsyncCallerParams } from "../util/async_caller.js";
 import { getModelNameForTiktoken } from "./count_tokens.js";
 import { encodingForModel } from "../util/tiktoken.js";
 import { Runnable } from "../schema/runnable.js";
+import { StringPromptValue } from "../prompts/base.js";
+import { ChatPromptValue } from "../prompts/chat.js";
 
 const getVerbosity = () => false;
 
@@ -178,6 +180,18 @@ export abstract class BaseLanguageModel<RunOutput = any>
     }
 
     return numTokens;
+  }
+
+  protected static _convertInputToPromptValue(
+    input: BaseLanguageModelInput
+  ): BasePromptValue {
+    if (typeof input === "string") {
+      return new StringPromptValue(input);
+    } else if (Array.isArray(input)) {
+      return new ChatPromptValue(input);
+    } else {
+      return input;
+    }
   }
 
   /**

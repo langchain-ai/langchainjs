@@ -140,11 +140,15 @@ export abstract class BaseMessage
   }
 }
 
+export abstract class BaseMessageChunk extends BaseMessage {}
+
 export class HumanMessage extends BaseMessage {
   _getType(): MessageType {
     return "human";
   }
 }
+
+export class HumanMessageChunk extends HumanMessage {}
 
 export class AIMessage extends BaseMessage {
   _getType(): MessageType {
@@ -152,11 +156,15 @@ export class AIMessage extends BaseMessage {
   }
 }
 
+export class AIMessageChunk extends AIMessage {}
+
 export class SystemMessage extends BaseMessage {
   _getType(): MessageType {
     return "system";
   }
 }
+
+export class SystemMessageChunk extends SystemMessage {}
 
 /**
  * @deprecated
@@ -200,6 +208,8 @@ export class FunctionMessage extends BaseMessage {
   }
 }
 
+export class FunctionMessageChunk extends FunctionMessage {}
+
 export class ChatMessage
   extends BaseMessage
   implements ChatMessageFieldsWithRole
@@ -223,6 +233,8 @@ export class ChatMessage
     return "generic";
   }
 }
+
+export class ChatMessageChunk extends ChatMessage {}
 
 export interface ChatGeneration extends Generation {
   message: BaseMessage;
