@@ -22,7 +22,6 @@ import {
   CallbackManagerForLLMRun,
   Callbacks,
 } from "../callbacks/manager.js";
-import { RunnableOptions } from "../schema/runnable.js";
 
 export type SerializedChatModel = {
   _model: string;
@@ -41,11 +40,11 @@ export type BaseChatModelParams = BaseLanguageModelParams;
 
 export type BaseChatModelCallOptions = BaseLanguageModelCallOptions;
 
-export abstract class BaseChatModel extends BaseLanguageModel<BaseMessageChunk> {
-  declare CallOptions: BaseChatModelCallOptions;
-
+export abstract class BaseChatModel<
+  CallOptions extends BaseChatModelCallOptions = BaseChatModelCallOptions
+> extends BaseLanguageModel<CallOptions, BaseMessageChunk> {
   declare ParsedCallOptions: Omit<
-    this["CallOptions"],
+    CallOptions,
     "timeout" | "tags" | "metadata" | "callbacks"
   >;
 
@@ -61,7 +60,7 @@ export abstract class BaseChatModel extends BaseLanguageModel<BaseMessageChunk> 
 
   async invoke(
     input: BaseLanguageModelInput,
-    options?: RunnableOptions,
+    options?: CallOptions,
     config?: BaseCallbackConfig
   ): Promise<BaseMessageChunk> {
     const promptValue = BaseChatModel._convertInputToPromptValue(input);
@@ -85,7 +84,7 @@ export abstract class BaseChatModel extends BaseLanguageModel<BaseMessageChunk> 
 
   async *stream(
     input: BaseLanguageModelInput,
-    options?: RunnableOptions,
+    options?: CallOptions,
     config?: BaseCallbackConfig
   ): AsyncGenerator<BaseMessageChunk> {
     const prompt = BaseChatModel._convertInputToPromptValue(input);
@@ -99,14 +98,14 @@ export abstract class BaseChatModel extends BaseLanguageModel<BaseMessageChunk> 
       this.metadata,
       { verbose: this.verbose }
     );
-    let parsedOptions: this["CallOptions"];
+    let parsedOptions: CallOptions;
     if (options?.timeout && !options.signal) {
       parsedOptions = {
         ...options,
         signal: AbortSignal.timeout(options.timeout),
       };
     } else {
-      parsedOptions = options ?? {};
+      parsedOptions = (options ?? {}) as CallOptions;
     }
     delete parsedOptions.tags;
     delete parsedOptions.metadata;
@@ -157,20 +156,20 @@ export abstract class BaseChatModel extends BaseLanguageModel<BaseMessageChunk> 
 
   async generate(
     messages: BaseMessage[][],
-    options?: string[] | this["CallOptions"],
+    options?: string[] | CallOptions,
     callbacks?: Callbacks
   ): Promise<LLMResult> {
     // parse call options
-    let parsedOptions: this["CallOptions"];
+    let parsedOptions: CallOptions;
     if (Array.isArray(options)) {
-      parsedOptions = { stop: options } as this["CallOptions"];
+      parsedOptions = { stop: options } as CallOptions;
     } else if (options?.timeout && !options.signal) {
       parsedOptions = {
         ...options,
         signal: AbortSignal.timeout(options.timeout),
       };
     } else {
-      parsedOptions = options ?? {};
+      parsedOptions = (options ?? {}) as CallOptions;
     }
     const handledOptions: BaseCallbackConfig = {
       tags: parsedOptions.tags,
@@ -263,7 +262,7 @@ export abstract class BaseChatModel extends BaseLanguageModel<BaseMessageChunk> 
 
   async generatePrompt(
     promptValues: BasePromptValue[],
-    options?: string[] | this["CallOptions"],
+    options?: string[] | CallOptions,
     callbacks?: Callbacks
   ): Promise<LLMResult> {
     const promptMessages: BaseMessage[][] = promptValues.map((promptValue) =>
@@ -280,7 +279,7 @@ export abstract class BaseChatModel extends BaseLanguageModel<BaseMessageChunk> 
 
   async call(
     messages: BaseMessage[],
-    options?: string[] | this["CallOptions"],
+    options?: string[] | CallOptions,
     callbacks?: Callbacks
   ): Promise<BaseMessage> {
     const result = await this.generate([messages], options, callbacks);
@@ -290,7 +289,7 @@ export abstract class BaseChatModel extends BaseLanguageModel<BaseMessageChunk> 
 
   async callPrompt(
     promptValue: BasePromptValue,
-    options?: string[] | this["CallOptions"],
+    options?: string[] | CallOptions,
     callbacks?: Callbacks
   ): Promise<BaseMessage> {
     const promptMessages: BaseMessage[] = promptValue.toChatMessages();
@@ -299,7 +298,7 @@ export abstract class BaseChatModel extends BaseLanguageModel<BaseMessageChunk> 
 
   async predictMessages(
     messages: BaseMessage[],
-    options?: string[] | this["CallOptions"],
+    options?: string[] | CallOptions,
     callbacks?: Callbacks
   ): Promise<BaseMessage> {
     return this.call(messages, options, callbacks);
@@ -307,7 +306,7 @@ export abstract class BaseChatModel extends BaseLanguageModel<BaseMessageChunk> 
 
   async predict(
     text: string,
-    options?: string[] | this["CallOptions"],
+    options?: string[] | CallOptions,
     callbacks?: Callbacks
   ): Promise<string> {
     const message = new HumanMessage(text);

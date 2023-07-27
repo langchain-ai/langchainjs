@@ -7,7 +7,6 @@ import {
   parseCallbackConfigArg,
 } from "../callbacks/manager.js";
 import { BaseLangChain, BaseLangChainParams } from "../base_language/index.js";
-import { RunnableOptions } from "../schema/runnable.js";
 
 export interface ToolParams extends BaseLangChainParams {}
 
@@ -19,6 +18,7 @@ export abstract class StructuredTool<
   T extends z.ZodObject<any, any, any, any> = z.ZodObject<any, any, any, any>
 > extends BaseLangChain<
   (z.output<T> extends string ? string : never) | z.input<T>,
+  never,
   string
 > {
   abstract schema: T | z.ZodEffects<T>;
@@ -38,7 +38,7 @@ export abstract class StructuredTool<
 
   async invoke(
     input: (z.output<T> extends string ? string : never) | z.input<T>,
-    _options?: RunnableOptions,
+    _options?: never,
     config?: BaseCallbackConfig
   ): Promise<string> {
     return this.call(input, config);

@@ -50,11 +50,9 @@ export interface OpenAIChatCallOptions extends OpenAICallOptions {
  * @augments AzureOpenAIChatInput
  */
 export class OpenAIChat
-  extends LLM
+  extends LLM<OpenAIChatCallOptions>
   implements OpenAIChatInput, AzureOpenAIInput
 {
-  declare CallOptions: OpenAIChatCallOptions;
-
   get callKeys(): (keyof OpenAIChatCallOptions)[] {
     return [
       ...(super.callKeys as (keyof OpenAIChatCallOptions)[]),

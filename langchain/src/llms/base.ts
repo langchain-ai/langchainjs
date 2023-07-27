@@ -43,11 +43,11 @@ export interface BaseLLMCallOptions extends BaseLanguageModelCallOptions {}
 /**
  * LLM Wrapper. Provides an {@link call} (an {@link generate}) function that takes in a prompt (or prompts) and returns a string.
  */
-export abstract class BaseLLM extends BaseLanguageModel<string> {
-  declare CallOptions: BaseLLMCallOptions;
-
+export abstract class BaseLLM<
+  CallOptions extends BaseLLMCallOptions = BaseLLMCallOptions
+> extends BaseLanguageModel<CallOptions, string> {
   declare ParsedCallOptions: Omit<
-    this["CallOptions"],
+    CallOptions,
     "timeout" | "tags" | "metadata" | "callbacks"
   >;
 
@@ -68,7 +68,7 @@ export abstract class BaseLLM extends BaseLanguageModel<string> {
 
   async invoke(
     input: BaseLanguageModelInput,
-    options?: this["CallOptions"],
+    options?: CallOptions,
     config?: RunnableConfig
   ): Promise<string> {
     const promptValue = BaseLLM._convertInputToPromptValue(input);
@@ -91,7 +91,7 @@ export abstract class BaseLLM extends BaseLanguageModel<string> {
 
   async *stream(
     input: BaseLanguageModelInput,
-    options?: this["CallOptions"],
+    options?: CallOptions,
     config?: RunnableConfig
   ): AsyncGenerator<string> {
     const prompt = BaseLLM._convertInputToPromptValue(input);
@@ -104,14 +104,14 @@ export abstract class BaseLLM extends BaseLanguageModel<string> {
       this.metadata,
       { verbose: this.verbose }
     );
-    let parsedOptions: this["CallOptions"];
+    let parsedOptions: CallOptions;
     if (options?.timeout && !options.signal) {
       parsedOptions = {
         ...options,
         signal: AbortSignal.timeout(options.timeout),
       };
     } else {
-      parsedOptions = options ?? {};
+      parsedOptions = (options ?? {}) as CallOptions;
     }
     delete parsedOptions.tags;
     delete parsedOptions.metadata;
@@ -162,7 +162,7 @@ export abstract class BaseLLM extends BaseLanguageModel<string> {
 
   async generatePrompt(
     promptValues: BasePromptValue[],
-    options?: string[] | this["CallOptions"],
+    options?: string[] | CallOptions,
     callbacks?: Callbacks
   ): Promise<LLMResult> {
     const prompts: string[] = promptValues.map((promptValue) =>
@@ -273,23 +273,23 @@ export abstract class BaseLLM extends BaseLanguageModel<string> {
    */
   async generate(
     prompts: string[],
-    options?: string[] | this["CallOptions"],
+    options?: string[] | CallOptions,
     callbacks?: Callbacks
   ): Promise<LLMResult> {
     if (!Array.isArray(prompts)) {
       throw new Error("Argument 'prompts' is expected to be a string[]");
     }
 
-    let parsedOptions: this["CallOptions"];
+    let parsedOptions: CallOptions;
     if (Array.isArray(options)) {
-      parsedOptions = { stop: options } as this["ParsedCallOptions"];
+      parsedOptions = { stop: options } as CallOptions;
     } else if (options?.timeout && !options.signal) {
       parsedOptions = {
         ...options,
         signal: AbortSignal.timeout(options.timeout),
       };
     } else {
-      parsedOptions = options ?? {};
+      parsedOptions = (options ?? {}) as CallOptions;
     }
     const handledOptions: BaseCallbackConfig = {
       tags: parsedOptions.tags,
@@ -345,20 +345,16 @@ export abstract class BaseLLM extends BaseLanguageModel<string> {
    */
   async call(
     prompt: string,
-    options?: string[] | this["CallOptions"],
+    options?: string[] | CallOptions,
     callbacks?: Callbacks
   ): Promise<string> {
-    const { generations } = await this.generate(
-      [prompt],
-      options ?? {},
-      callbacks
-    );
+    const { generations } = await this.generate([prompt], options, callbacks);
     return generations[0][0].text;
   }
 
   async predict(
     text: string,
-    options?: string[] | this["CallOptions"],
+    options?: string[] | CallOptions,
     callbacks?: Callbacks
   ): Promise<string> {
     return this.call(text, options, callbacks);
@@ -366,7 +362,7 @@ export abstract class BaseLLM extends BaseLanguageModel<string> {
 
   async predictMessages(
     messages: BaseMessage[],
-    options?: string[] | this["CallOptions"],
+    options?: string[] | CallOptions,
     callbacks?: Callbacks
   ): Promise<BaseMessage> {
     const text = getBufferString(messages);
@@ -427,7 +423,9 @@ export abstract class BaseLLM extends BaseLanguageModel<string> {
  *
  * @augments BaseLLM
  */
-export abstract class LLM extends BaseLLM {
+export abstract class LLM<
+  CallOptions extends BaseLLMCallOptions = BaseLLMCallOptions
+> extends BaseLLM<CallOptions> {
   /**
    * Run the LLM on the given prompt and input.
    */

@@ -3,13 +3,14 @@ import { Serializable } from "../load/serializable.js";
 
 export type RunnableConfig = BaseCallbackConfig;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type RunnableOptions = Record<string, any>;
-
-export abstract class Runnable<RunInput, RunOutput> extends Serializable {
+export abstract class Runnable<
+  RunInput,
+  CallOptions,
+  RunOutput
+> extends Serializable {
   abstract invoke(
     input: RunInput,
-    options?: RunnableOptions,
+    options?: CallOptions,
     config?: RunnableConfig
   ): Promise<RunOutput>;
 
@@ -30,7 +31,7 @@ export abstract class Runnable<RunInput, RunOutput> extends Serializable {
 
   async batch(
     inputs: RunInput[],
-    options: RunnableOptions[],
+    options: CallOptions[],
     configs?: RunnableConfig | RunnableConfig[],
     _options?: {
       maxConcurrency?: number;
@@ -45,7 +46,7 @@ export abstract class Runnable<RunInput, RunOutput> extends Serializable {
 
   async *stream(
     input: RunInput,
-    options?: RunnableOptions,
+    options?: CallOptions,
     config?: RunnableConfig
   ): AsyncGenerator<RunOutput> {
     yield this.invoke(input, options, config);

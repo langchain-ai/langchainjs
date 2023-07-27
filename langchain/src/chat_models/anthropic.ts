@@ -1,7 +1,6 @@
 import { Anthropic, AI_PROMPT, HUMAN_PROMPT } from "@anthropic-ai/sdk";
 import type { CompletionCreateParams } from "@anthropic-ai/sdk/resources/completions";
 
-import { BaseLanguageModelCallOptions } from "../base_language/index.js";
 import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
 import {
   AIMessage,
@@ -102,8 +101,6 @@ type Kwargs = Record<string, any>;
  *
  */
 export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
-  declare CallOptions: BaseLanguageModelCallOptions;
-
   get lc_secrets(): { [key: string]: string } | undefined {
     return {
       anthropicApiKey: "ANTHROPIC_API_KEY",

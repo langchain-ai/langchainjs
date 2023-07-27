@@ -51,9 +51,10 @@ interface TokenUsage {
  * `openai.createCompletion`} can be passed through {@link modelKwargs}, even
  * if not explicitly available on this class.
  */
-export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
-  declare CallOptions: OpenAICallOptions;
-
+export class OpenAI
+  extends BaseLLM<OpenAICallOptions>
+  implements OpenAIInput, AzureOpenAIInput
+{
   get callKeys(): (keyof OpenAICallOptions)[] {
     return [...(super.callKeys as (keyof OpenAICallOptions)[]), "options"];
   }

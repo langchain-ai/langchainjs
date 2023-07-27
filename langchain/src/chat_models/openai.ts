@@ -145,11 +145,9 @@ export interface ChatOpenAICallOptions extends OpenAICallOptions {
  * if not explicitly available on this class.
  */
 export class ChatOpenAI
-  extends BaseChatModel
+  extends BaseChatModel<ChatOpenAICallOptions>
   implements OpenAIChatInput, AzureOpenAIInput
 {
-  declare CallOptions: ChatOpenAICallOptions;
-
   get callKeys(): (keyof ChatOpenAICallOptions)[] {
     return [
       ...(super.callKeys as (keyof ChatOpenAICallOptions)[]),
@@ -787,14 +785,14 @@ export class PromptLayerChatOpenAI extends ChatOpenAI {
 
   async _generate(
     messages: BaseMessage[],
-    options?: string[] | this["CallOptions"],
+    options?: string[] | ChatOpenAICallOptions,
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
     const requestStartTime = Date.now();
 
-    let parsedOptions: this["CallOptions"];
+    let parsedOptions: ChatOpenAICallOptions;
     if (Array.isArray(options)) {
-      parsedOptions = { stop: options } as this["CallOptions"];
+      parsedOptions = { stop: options } as ChatOpenAICallOptions;
     } else if (options?.timeout && !options.signal) {
       parsedOptions = {
         ...options,
@@ -837,7 +835,7 @@ export class PromptLayerChatOpenAI extends ChatOpenAI {
 
     const _createMessageDicts = (
       messages: BaseMessage[],
-      callOptions?: this["CallOptions"]
+      callOptions?: ChatOpenAICallOptions
     ) => {
       const params = {
         ...this.invocationParams(),

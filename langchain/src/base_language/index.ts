@@ -30,8 +30,8 @@ export interface BaseLangChainParams {
 /**
  * Base class for language models, chains, tools.
  */
-export abstract class BaseLangChain<RunInput, RunOutput>
-  extends Runnable<RunInput, RunOutput>
+export abstract class BaseLangChain<RunInput, CallOptions, RunOutput>
+  extends Runnable<RunInput, CallOptions, RunOutput>
   implements BaseLangChainParams
 {
   /**
@@ -100,12 +100,15 @@ export type BaseLanguageModelInput = BasePromptValue | string | BaseMessage[];
 /**
  * Base class for language models.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export abstract class BaseLanguageModel<RunOutput = any>
-  extends BaseLangChain<BaseLanguageModelInput, RunOutput>
+export abstract class BaseLanguageModel<
+    CallOptions extends BaseLanguageModelCallOptions = BaseLanguageModelCallOptions,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput = any
+  >
+  extends BaseLangChain<BaseLanguageModelInput, CallOptions, RunOutput>
   implements BaseLanguageModelParams
 {
-  declare CallOptions: BaseLanguageModelCallOptions;
+  declare CallOptions: CallOptions;
 
   /**
    * Keys that the language model accepts as call options.
@@ -134,19 +137,19 @@ export abstract class BaseLanguageModel<RunOutput = any>
 
   abstract generatePrompt(
     promptValues: BasePromptValue[],
-    options?: string[] | this["CallOptions"],
+    options?: string[] | CallOptions,
     callbacks?: Callbacks
   ): Promise<LLMResult>;
 
   abstract predict(
     text: string,
-    options?: string[] | this["CallOptions"],
+    options?: string[] | CallOptions,
     callbacks?: Callbacks
   ): Promise<string>;
 
   abstract predictMessages(
     messages: BaseMessage[],
-    options?: string[] | this["CallOptions"],
+    options?: string[] | CallOptions,
     callbacks?: Callbacks
   ): Promise<BaseMessage>;
 
