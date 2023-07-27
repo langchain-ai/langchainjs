@@ -35,8 +35,8 @@ export class GoogleVertexAIConnection<
     this.model = fields?.model ?? this.model;
 
     this.auth = new GoogleAuth({
-      ...fields?.authOptions,
       scopes: "https://www.googleapis.com/auth/cloud-platform",
+      ...fields?.authOptions,
     });
   }
 
