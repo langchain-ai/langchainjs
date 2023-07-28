@@ -232,6 +232,12 @@
     "document_loaders/web/apify_dataset.cjs",
     "document_loaders/web/apify_dataset.js",
     "document_loaders/web/apify_dataset.d.ts",
+    "document_loaders/web/azure_blob_storage_container.cjs",
+    "document_loaders/web/azure_blob_storage_container.js",
+    "document_loaders/web/azure_blob_storage_container.d.ts",
+    "document_loaders/web/azure_blob_storage_file.cjs",
+    "document_loaders/web/azure_blob_storage_file.js",
+    "document_loaders/web/azure_blob_storage_file.d.ts",
     "document_loaders/web/cheerio.cjs",
     "document_loaders/web/cheerio.js",
     "document_loaders/web/cheerio.d.ts",
@@ -522,6 +528,7 @@
     "@aws-sdk/client-s3": "^3.310.0",
     "@aws-sdk/client-sagemaker-runtime": "^3.310.0",
     "@aws-sdk/client-sfn": "^3.362.0",
+    "@azure/storage-blob": "^12.15.0",
     "@clickhouse/client": "^0.0.14",
     "@elastic/elasticsearch": "^8.4.0",
     "@faker-js/faker": "^7.6.0",
@@ -618,6 +625,7 @@
     "@aws-sdk/client-s3": "^3.310.0",
     "@aws-sdk/client-sagemaker-runtime": "^3.310.0",
     "@aws-sdk/client-sfn": "^3.310.0",
+    "@azure/storage-blob": "^12.15.0",
     "@clickhouse/client": "^0.0.14",
     "@elastic/elasticsearch": "^8.4.0",
     "@getmetal/metal-sdk": "*",
@@ -690,6 +698,9 @@
       "optional": true
     },
     "@aws-sdk/client-sfn": {
+      "optional": true
+    },
+    "@azure/storage-blob": {
       "optional": true
     },
     "@clickhouse/client": {
@@ -1278,6 +1289,16 @@
       "types": "./document_loaders/web/apify_dataset.d.ts",
       "import": "./document_loaders/web/apify_dataset.js",
       "require": "./document_loaders/web/apify_dataset.cjs"
+    },
+    "./document_loaders/web/azure_blob_storage_container": {
+      "types": "./document_loaders/web/azure_blob_storage_container.d.ts",
+      "import": "./document_loaders/web/azure_blob_storage_container.js",
+      "require": "./document_loaders/web/azure_blob_storage_container.cjs"
+    },
+    "./document_loaders/web/azure_blob_storage_file": {
+      "types": "./document_loaders/web/azure_blob_storage_file.d.ts",
+      "import": "./document_loaders/web/azure_blob_storage_file.js",
+      "require": "./document_loaders/web/azure_blob_storage_file.cjs"
     },
     "./document_loaders/web/cheerio": {
       "types": "./document_loaders/web/cheerio.d.ts",

@@ -102,6 +102,8 @@
       "src/document.ts",
       "src/document_loaders/base.ts",
       "src/document_loaders/web/apify_dataset.ts",
+      "src/document_loaders/web/azure_blob_storage_container.ts",
+      "src/document_loaders/web/azure_blob_storage_file.ts",
       "src/document_loaders/web/cheerio.ts",
       "src/document_loaders/web/puppeteer.ts",
       "src/document_loaders/web/playwright.ts",
