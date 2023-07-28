@@ -430,7 +430,7 @@ export class OpenAI
 
   // TODO(jacoblee): Refactor with _generate(..., {stream: true}) implementation
   // when we integrate OpenAI's new SDK.
-  async *_stream(
+  async *_streamResponseChunks(
     input: string,
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun

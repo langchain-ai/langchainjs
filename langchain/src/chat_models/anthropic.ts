@@ -205,7 +205,7 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
     };
   }
 
-  async *_stream(
+  async *_streamResponseChunks(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
@@ -272,7 +272,11 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
         model: "",
         stop_reason: "",
       };
-      const stream = await this._stream(messages, options, runManager);
+      const stream = await this._streamResponseChunks(
+        messages,
+        options,
+        runManager
+      );
       for await (const chunk of stream) {
         response.completion += chunk.message.content;
         response.model =

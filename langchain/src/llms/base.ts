@@ -78,90 +78,99 @@ export abstract class BaseLLM<
     return result.generations[0][0].text;
   }
 
-  async *_stream(
-    input: string,
-    options: this["ParsedCallOptions"],
-    runManager?: CallbackManagerForLLMRun
+  // eslint-disable-next-line require-yield
+  async *_streamResponseChunks(
+    _input: string,
+    _options: this["ParsedCallOptions"],
+    _runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<GenerationChunk> {
-    const result = await this._generate([input], options, runManager);
-    yield result.generations[0][0];
+    throw new Error("Not implemented.");
   }
 
-  async *_createByteStreamAsyncGenerator(
+  async *_streamBytes(
     input: BaseLanguageModelInput,
     options?: CallOptions
   ): AsyncGenerator<string> {
-    yield* this._createStreamAsyncGenerator(input, options);
+    yield* this._stream(input, options);
   }
 
-  async *_createStreamAsyncGenerator(
+  async *_stream(
     input: BaseLanguageModelInput,
     options?: CallOptions
   ): AsyncGenerator<string> {
-    const prompt = BaseLLM._convertInputToPromptValue(input);
-    const callbackManager_ = await CallbackManager.configure(
-      options?.callbacks,
-      this.callbacks,
-      options?.tags,
-      this.tags,
-      options?.metadata,
-      this.metadata,
-      { verbose: this.verbose }
-    );
-    let parsedOptions: CallOptions;
-    if (options?.timeout && !options.signal) {
-      parsedOptions = {
-        ...options,
-        signal: AbortSignal.timeout(options.timeout),
-      };
+    // Subclass check required to avoid double callbacks with default implementation
+    if (
+      this._streamResponseChunks === BaseLLM.prototype._streamResponseChunks
+    ) {
+      yield this.invoke(input, options);
     } else {
-      parsedOptions = (options ?? {}) as CallOptions;
-    }
-    delete parsedOptions.tags;
-    delete parsedOptions.metadata;
-    delete parsedOptions.callbacks;
-    const extra = {
-      options: parsedOptions,
-      invocation_params: this?.invocationParams(parsedOptions),
-    };
-    const runManagers = await callbackManager_?.handleLLMStart(
-      this.toJSON(),
-      [prompt.toString()],
-      undefined,
-      undefined,
-      extra
-    );
-    let generation: GenerationChunk = {
-      text: "",
-    };
-    try {
-      for await (const chunk of this._stream(
-        input.toString(),
-        parsedOptions,
-        runManagers?.[0]
-      )) {
-        if (!generation) {
-          generation = chunk;
-        } else {
-          generation.text += chunk.text;
-          generation.generationInfo =
-            chunk.generationInfo ?? generation.generationInfo;
-        }
-        yield chunk.text;
-      }
-    } catch (err) {
-      await Promise.all(
-        (runManagers ?? []).map((runManager) => runManager?.handleLLMError(err))
+      const prompt = BaseLLM._convertInputToPromptValue(input);
+      const callbackManager_ = await CallbackManager.configure(
+        options?.callbacks,
+        this.callbacks,
+        options?.tags,
+        this.tags,
+        options?.metadata,
+        this.metadata,
+        { verbose: this.verbose }
       );
-      throw err;
+      let parsedOptions: CallOptions;
+      if (options?.timeout && !options.signal) {
+        parsedOptions = {
+          ...options,
+          signal: AbortSignal.timeout(options.timeout),
+        };
+      } else {
+        parsedOptions = (options ?? {}) as CallOptions;
+      }
+      delete parsedOptions.tags;
+      delete parsedOptions.metadata;
+      delete parsedOptions.callbacks;
+      const extra = {
+        options: parsedOptions,
+        invocation_params: this?.invocationParams(parsedOptions),
+      };
+      const runManagers = await callbackManager_?.handleLLMStart(
+        this.toJSON(),
+        [prompt.toString()],
+        undefined,
+        undefined,
+        extra
+      );
+      let generation: GenerationChunk = {
+        text: "",
+      };
+      try {
+        for await (const chunk of this._streamResponseChunks(
+          input.toString(),
+          parsedOptions,
+          runManagers?.[0]
+        )) {
+          if (!generation) {
+            generation = chunk;
+          } else {
+            generation.text += chunk.text;
+            generation.generationInfo =
+              chunk.generationInfo ?? generation.generationInfo;
+          }
+          yield chunk.text;
+        }
+      } catch (err) {
+        await Promise.all(
+          (runManagers ?? []).map((runManager) =>
+            runManager?.handleLLMError(err)
+          )
+        );
+        throw err;
+      }
+      await Promise.all(
+        (runManagers ?? []).map((runManager) =>
+          runManager?.handleLLMEnd({
+            generations: [[generation]],
+          })
+        )
+      );
     }
-    await Promise.all(
-      (runManagers ?? []).map((runManager) =>
-        runManager?.handleLLMEnd({
-          generations: [[generation]],
-        })
-      )
-    );
   }
 
   async generatePrompt(

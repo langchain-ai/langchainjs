@@ -61,7 +61,7 @@ test("Test stream", async () => {
 
 test("Test chat model stream", async () => {
   const llm = new FakeChatModel({});
-  const stream = await llm.byteStream("Hi there!");
+  const stream = await llm.streamBytes("Hi there!");
   const reader = stream.pipeThrough(new TextDecoderStream()).getReader();
   let done = false;
   while (!done) {

@@ -72,96 +72,103 @@ export abstract class BaseChatModel<
     return chatGeneration.message;
   }
 
-  async *_stream(
-    messages: BaseMessage[],
-    options: this["ParsedCallOptions"],
-    runManager?: CallbackManagerForLLMRun
+  // eslint-disable-next-line require-yield
+  async *_streamResponseChunks(
+    _messages: BaseMessage[],
+    _options: this["ParsedCallOptions"],
+    _runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
-    const result = await this._generate(messages, options, runManager);
-    yield result.generations[0];
+    throw new Error("Not implemented.");
   }
 
-  async *_createByteStreamAsyncGenerator(
+  async *_streamBytes(
     input: BaseLanguageModelInput,
     options?: CallOptions
   ): AsyncGenerator<string> {
-    for await (const chunk of this._createStreamAsyncGenerator(
-      input,
-      options
-    )) {
+    for await (const chunk of this._stream(input, options)) {
       yield chunk.content;
     }
   }
 
-  async *_createStreamAsyncGenerator(
+  async *_stream(
     input: BaseLanguageModelInput,
     options?: CallOptions
   ): AsyncGenerator<BaseMessageChunk> {
-    const prompt = BaseChatModel._convertInputToPromptValue(input);
-    const messages = prompt.toChatMessages();
-    const callbackManager_ = await CallbackManager.configure(
-      options?.callbacks,
-      this.callbacks,
-      options?.tags,
-      this.tags,
-      options?.metadata,
-      this.metadata,
-      { verbose: this.verbose }
-    );
-    let parsedOptions: CallOptions;
-    if (options?.timeout && !options.signal) {
-      parsedOptions = {
-        ...options,
-        signal: AbortSignal.timeout(options.timeout),
-      };
+    // Subclass check required to avoid double callbacks with default implementation
+    if (
+      this._streamResponseChunks ===
+      BaseChatModel.prototype._streamResponseChunks
+    ) {
+      yield this.invoke(input, options);
     } else {
-      parsedOptions = (options ?? {}) as CallOptions;
-    }
-    delete parsedOptions.tags;
-    delete parsedOptions.metadata;
-    delete parsedOptions.callbacks;
-    const extra = {
-      options: parsedOptions,
-      invocation_params: this?.invocationParams(parsedOptions),
-    };
-    const runManagers = await callbackManager_?.handleChatModelStart(
-      this.toJSON(),
-      [messages],
-      undefined,
-      undefined,
-      extra
-    );
-    let message: BaseMessageChunk | undefined;
-    try {
-      for await (const chunk of this._stream(
-        messages,
-        parsedOptions,
-        runManagers?.[0]
-      )) {
-        yield chunk.message;
-        if (!message) {
-          message = chunk.message;
-        } else {
-          message.content += chunk.message.content;
-          message.additional_kwargs = {
-            ...message.additional_kwargs,
-            ...chunk.message.additional_kwargs,
-          };
-        }
-      }
-    } catch (err) {
-      await Promise.all(
-        (runManagers ?? []).map((runManager) => runManager?.handleLLMError(err))
+      const prompt = BaseChatModel._convertInputToPromptValue(input);
+      const messages = prompt.toChatMessages();
+      const callbackManager_ = await CallbackManager.configure(
+        options?.callbacks,
+        this.callbacks,
+        options?.tags,
+        this.tags,
+        options?.metadata,
+        this.metadata,
+        { verbose: this.verbose }
       );
-      throw err;
+      let parsedOptions: CallOptions;
+      if (options?.timeout && !options.signal) {
+        parsedOptions = {
+          ...options,
+          signal: AbortSignal.timeout(options.timeout),
+        };
+      } else {
+        parsedOptions = (options ?? {}) as CallOptions;
+      }
+      delete parsedOptions.tags;
+      delete parsedOptions.metadata;
+      delete parsedOptions.callbacks;
+      const extra = {
+        options: parsedOptions,
+        invocation_params: this?.invocationParams(parsedOptions),
+      };
+      const runManagers = await callbackManager_?.handleChatModelStart(
+        this.toJSON(),
+        [messages],
+        undefined,
+        undefined,
+        extra
+      );
+      let message: BaseMessageChunk | undefined;
+      try {
+        for await (const chunk of this._streamResponseChunks(
+          messages,
+          parsedOptions,
+          runManagers?.[0]
+        )) {
+          yield chunk.message;
+          if (!message) {
+            message = chunk.message;
+          } else {
+            message.content += chunk.message.content;
+            message.additional_kwargs = {
+              ...message.additional_kwargs,
+              ...chunk.message.additional_kwargs,
+            };
+          }
+        }
+      } catch (err) {
+        await Promise.all(
+          (runManagers ?? []).map((runManager) =>
+            runManager?.handleLLMError(err)
+          )
+        );
+        throw err;
+      }
+      await Promise.all(
+        (runManagers ?? []).map((runManager) =>
+          runManager?.handleLLMEnd({
+            generations: [[{ message } as ChatGeneration]],
+          })
+        )
+      );
     }
-    await Promise.all(
-      (runManagers ?? []).map((runManager) =>
-        runManager?.handleLLMEnd({
-          generations: [[{ message } as ChatGeneration]],
-        })
-      )
-    );
   }
 
   async generate(

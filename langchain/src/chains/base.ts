@@ -128,17 +128,9 @@ export abstract class BaseChain<
     );
   }
 
-  /**
-   * Run the core logic of this chain and add to output if desired.
-   *
-   * Wraps _call and handles memory.
-   */
-  async call(
-    values: ChainValues & { signal?: AbortSignal; timeout?: number },
-    config?: Callbacks | RunnableConfig,
-    /** @deprecated */
-    tags?: string[]
-  ): Promise<RunOutput> {
+  protected async _formatValues(
+    values: ChainValues & { signal?: AbortSignal; timeout?: number }
+  ) {
     const fullValues = { ...values } as typeof values;
     if (fullValues.timeout && !fullValues.signal) {
       fullValues.signal = AbortSignal.timeout(fullValues.timeout);
@@ -152,6 +144,21 @@ export abstract class BaseChain<
         fullValues[key] = value;
       }
     }
+    return fullValues;
+  }
+
+  /**
+   * Run the core logic of this chain and add to output if desired.
+   *
+   * Wraps _call and handles memory.
+   */
+  async call(
+    values: ChainValues & { signal?: AbortSignal; timeout?: number },
+    config?: Callbacks | RunnableConfig,
+    /** @deprecated */
+    tags?: string[]
+  ): Promise<RunOutput> {
+    const fullValues = await this._formatValues(values);
     const parsedConfig = parseCallbackConfigArg(config);
     const callbackManager_ = await CallbackManager.configure(
       parsedConfig.callbacks,

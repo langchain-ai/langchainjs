@@ -329,7 +329,7 @@ export class ChatOpenAI
 
   // TODO(jacoblee): Refactor with _generate(..., {stream: true}) implementation
   // when we integrate OpenAI's new SDK.
-  async *_stream(
+  async *_streamResponseChunks(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
