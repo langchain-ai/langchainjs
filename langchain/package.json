@@ -577,7 +577,6 @@
     "faiss-node": "^0.2.1",
     "firebase-admin": "^11.9.0",
     "form-data": "^4.0.0",
-    "fs": "^0.0.1-security",
     "google-auth-library": "^8.9.0",
     "graphql": "^16.6.0",
     "hnswlib-node": "^1.4.2",
@@ -652,7 +651,6 @@
     "faiss-node": "^0.2.1",
     "firebase-admin": "^11.9.0",
     "form-data": "^4.0.0",
-    "fs": "^0.0.1-security",
     "google-auth-library": "^8.9.0",
     "hnswlib-node": "^1.4.2",
     "html-to-text": "^9.0.5",
@@ -789,9 +787,6 @@
       "optional": true
     },
     "form-data": {
-      "optional": true
-    },
-    "fs": {
       "optional": true
     },
     "google-auth-library": {

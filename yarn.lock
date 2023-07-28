@@ -10512,13 +10512,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"fs@npm:^0.0.1-security":
-  version: 0.0.1-security
-  resolution: "fs@npm:0.0.1-security"
-  checksum: 53c6230e1faae9fa32c1df82c16a84b51b1243d20f3da2b64bd110bb472b73b9185169b703e008356e3cdc92d155088b617d9d39a63b5227a30b3621baad7f5d
-  languageName: node
-  linkType: hard
-
 "fsevents@npm:^2.3.2, fsevents@npm:~2.3.2":
   version: 2.3.2
   resolution: "fsevents@npm:2.3.2"
@@ -13045,7 +13038,6 @@ __metadata:
     firebase-admin: ^11.9.0
     flat: ^5.0.2
     form-data: ^4.0.0
-    fs: ^0.0.1-security
     google-auth-library: ^8.9.0
     graphql: ^16.6.0
     hnswlib-node: ^1.4.2
@@ -13133,7 +13125,6 @@ __metadata:
     faiss-node: ^0.2.1
     firebase-admin: ^11.9.0
     form-data: ^4.0.0
-    fs: ^0.0.1-security
     google-auth-library: ^8.9.0
     hnswlib-node: ^1.4.2
     html-to-text: ^9.0.5
@@ -13233,8 +13224,6 @@ __metadata:
     firebase-admin:
       optional: true
     form-data:
-      optional: true
-    fs:
       optional: true
     google-auth-library:
       optional: true

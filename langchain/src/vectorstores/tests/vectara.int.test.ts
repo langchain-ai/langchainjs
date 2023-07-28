@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable no-process-env */
 import fs from "fs";
-import { test, expect, beforeAll } from "@jest/globals";
+import { expect, beforeAll } from "@jest/globals";
 import { FakeEmbeddings } from "../../embeddings/fake.js";
 import { Document } from "../../document.js";
 import { VectaraLibArgs, VectaraStore } from "../vectara.js";
@@ -157,7 +157,7 @@ describe("VectaraStore", () => {
       expect(hasEnglish).toBe(false);
     });
 
-    test("addFiles", async () => {
+    it("addFiles", async () => {
       const docs = getDocs();
       const englishOneContent = docs[0].pageContent;
       const englishTwoContent = docs[1].pageContent;

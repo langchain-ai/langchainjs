@@ -177,52 +177,47 @@ export class VectaraStore extends VectorStore {
         console.error(`File ${file} does not exist, skipping`);
         continue;
       }
-
       const md = metadata ? metadata[index] : {};
-      console.log(path.join(process.cwd(), file));
-
-      const fileBuffer = fs.createReadStream(path.join(process.cwd(), file));
-
-      const formData = new FormData();
-      formData.append("file", fileBuffer, file);
-      formData.append("doc_metadata", JSON.stringify(md));
-      formData.append("customer-id", this.customerId.toString());
-      formData.append("x-api-key", this.apiKey);
-
-      console.log(JSON.stringify(formData));
+      console.log(md);
 
       try {
+        const f = fs.createReadStream(path.join(process.cwd(), file));
+        const data = new FormData();
+        data.append("file", f, file);
+        data.append("doc-metadata", JSON.stringify(md));
+
         const response = await fetch(
-          `https://${this.apiEndpoint}/v1/upload?c=${this.customerId}&o=${this.corpusId}&d=true`,
+          `https://api.vectara.io/v1/upload?c=${this.customerId}&o=${this.corpusId}`,
           {
             method: "POST",
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            body: data,
             headers: {
-              "Content-Type": "multipart/form-data",
+              "x-api-key": this.apiKey,
+              ...data.getHeaders(),
             },
-            body: JSON.stringify(formData),
           }
         );
+
+        console.log("headers", data.getHeaders());
+
         const result = await response.json();
-        if (response.status === 409) {
-          const docId = result.document.documentId;
-          console.info(
-            `File ${file} already exists on Vectara (doc_id=${docId}), skipping`
+        if (
+          result.status?.code !== "OK" &&
+          result.status?.code !== "ALREADY_EXISTS"
+        ) {
+          console.log("result", result);
+          const error = new Error(
+            `Vectara API returned status code ${result.code}: ${result.message}`
           );
-        } else if (response.status === 200) {
-          const docId = result.document.documentId;
-          docIds.push(docId);
-        } else {
-          console.info(
-            `Error indexing file ${file}: ${JSON.stringify(result)}`
-          );
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (error as any).code = 500;
+          throw error;
         }
-      } catch (e) {
-        const error = new Error(
-          `Error ${(e as Error).message} while uploading ${file}`
-        );
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (error as any).code = 500;
-        throw error;
+      } catch (error) {
+        console.log(error);
       }
     }
 
