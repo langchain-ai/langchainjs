@@ -8,7 +8,7 @@ import {
 import { AsyncCaller, AsyncCallerParams } from "../util/async_caller.js";
 import { getModelNameForTiktoken } from "./count_tokens.js";
 import { encodingForModel } from "../util/tiktoken.js";
-import { Runnable } from "../schema/runnable.js";
+import { Runnable, RunnableConfig } from "../schema/runnable.js";
 import { StringPromptValue } from "../prompts/base.js";
 import { ChatPromptValue } from "../prompts/chat.js";
 
@@ -30,7 +30,11 @@ export interface BaseLangChainParams {
 /**
  * Base class for language models, chains, tools.
  */
-export abstract class BaseLangChain<RunInput, CallOptions, RunOutput>
+export abstract class BaseLangChain<
+    RunInput,
+    CallOptions extends RunnableConfig,
+    RunOutput
+  >
   extends Runnable<RunInput, CallOptions, RunOutput>
   implements BaseLangChainParams
 {

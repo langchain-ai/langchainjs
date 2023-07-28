@@ -60,14 +60,13 @@ export abstract class BaseChatModel<
 
   async invoke(
     input: BaseLanguageModelInput,
-    options?: CallOptions,
-    config?: BaseCallbackConfig
+    options?: CallOptions
   ): Promise<BaseMessageChunk> {
     const promptValue = BaseChatModel._convertInputToPromptValue(input);
     const result = await this.generatePrompt(
       [promptValue],
       options,
-      config?.callbacks
+      options?.callbacks
     );
     const chatGeneration = result.generations[0][0] as ChatGeneration;
     return chatGeneration.message;
@@ -84,17 +83,16 @@ export abstract class BaseChatModel<
 
   async *_createAsyncGenerator(
     input: BaseLanguageModelInput,
-    options?: CallOptions,
-    config?: BaseCallbackConfig
+    options?: CallOptions
   ): AsyncGenerator<BaseMessageChunk> {
     const prompt = BaseChatModel._convertInputToPromptValue(input);
     const messages = prompt.toChatMessages();
     const callbackManager_ = await CallbackManager.configure(
-      config?.callbacks,
+      options?.callbacks,
       this.callbacks,
-      config?.tags,
+      options?.tags,
       this.tags,
-      config?.metadata,
+      options?.metadata,
       this.metadata,
       { verbose: this.verbose }
     );

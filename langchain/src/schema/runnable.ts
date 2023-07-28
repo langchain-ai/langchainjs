@@ -6,59 +6,64 @@ export type RunnableConfig = BaseCallbackConfig;
 
 export abstract class Runnable<
   RunInput,
-  CallOptions,
+  CallOptions extends RunnableConfig,
   RunOutput
 > extends Serializable {
-  abstract invoke(
-    input: RunInput,
-    options?: CallOptions,
-    config?: RunnableConfig
-  ): Promise<RunOutput>;
+  abstract invoke(input: RunInput, options?: CallOptions): Promise<RunOutput>;
 
-  protected static getConfigList(
-    config: RunnableConfig | RunnableConfig[] = {},
+  protected _getOptionsList(
+    options: CallOptions | CallOptions[],
     length = 0
-  ): RunnableConfig[] {
-    if (Array.isArray(config)) {
-      if (config.length !== length) {
+  ): CallOptions[] {
+    if (Array.isArray(options)) {
+      if (options.length !== length) {
         throw new Error(
-          `Passed "config" must be an array with the same length as the inputs, but got ${config.length} configs for ${length} inputs`
+          `Passed "options" must be an array with the same length as the inputs, but got ${options.length} options for ${length} inputs`
         );
       }
-      return config;
+      return options;
     }
-    return Array.from({ length }, () => config);
+    return Array.from({ length }, () => options);
   }
 
   async batch(
     inputs: RunInput[],
-    options: CallOptions[],
-    configs?: RunnableConfig | RunnableConfig[],
-    _options?: {
+    configs?: CallOptions | CallOptions[],
+    options?: {
       maxConcurrency?: number;
     }
   ): Promise<RunOutput[]> {
-    const configList = Runnable.getConfigList(configs, inputs.length);
-    const promises = inputs.map((input, i) =>
-      this.invoke(input, options[i], configList[i])
+    const configList = this._getOptionsList(
+      (configs ?? {}) as CallOptions,
+      inputs.length
     );
-    return Promise.all(promises);
+    const batchSize =
+      options?.maxConcurrency && options.maxConcurrency > 0
+        ? options?.maxConcurrency
+        : inputs.length;
+    const batchResults = [];
+    for (let i = 0; i < inputs.length; i += batchSize) {
+      const batchPromises = inputs
+        .slice(i, i + batchSize)
+        .map((input, i) => this.invoke(input, configList[i]));
+      const batchResult = await Promise.all(batchPromises);
+      batchResults.push(batchResult);
+    }
+    return batchResults.flat();
   }
 
   async *_createAsyncGenerator(
     input: RunInput,
-    options?: CallOptions,
-    config?: RunnableConfig
+    options?: CallOptions
   ): AsyncGenerator<RunOutput> {
-    yield this.invoke(input, options, config);
+    yield this.invoke(input, options);
   }
 
   async stream(
     input: RunInput,
-    options?: CallOptions,
-    config?: RunnableConfig
+    options?: CallOptions
   ): Promise<IterableReadableStream<RunOutput>> {
-    const generator = await this._createAsyncGenerator(input, options, config);
+    const generator = await this._createAsyncGenerator(input, options);
     const outputStream = new IterableReadableStream<RunOutput>({
       async pull(controller) {
         const yieldedValue = await generator.next();

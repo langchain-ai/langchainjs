@@ -21,7 +21,6 @@ import {
   CallbackManagerForLLMRun,
   Callbacks,
 } from "../callbacks/manager.js";
-import { RunnableConfig } from "../schema/runnable.js";
 import { getBufferString } from "../memory/base.js";
 
 export type SerializedLLM = {
@@ -68,14 +67,13 @@ export abstract class BaseLLM<
 
   async invoke(
     input: BaseLanguageModelInput,
-    options?: CallOptions,
-    config?: RunnableConfig
+    options?: CallOptions
   ): Promise<string> {
     const promptValue = BaseLLM._convertInputToPromptValue(input);
     const result = await this.generatePrompt(
       [promptValue],
       options,
-      config?.callbacks
+      options?.callbacks
     );
     return result.generations[0][0].text;
   }
@@ -91,16 +89,15 @@ export abstract class BaseLLM<
 
   async *_createAsyncGenerator(
     input: BaseLanguageModelInput,
-    options?: CallOptions,
-    config?: RunnableConfig
+    options?: CallOptions
   ): AsyncGenerator<string> {
     const prompt = BaseLLM._convertInputToPromptValue(input);
     const callbackManager_ = await CallbackManager.configure(
-      config?.callbacks,
+      options?.callbacks,
       this.callbacks,
-      config?.tags,
+      options?.tags,
       this.tags,
-      config?.metadata,
+      options?.metadata,
       this.metadata,
       { verbose: this.verbose }
     );

@@ -27,10 +27,9 @@ export interface ChainInputs extends BaseLangChainParams {
  */
 export abstract class BaseChain<
     RunInput extends ChainValues = ChainValues,
-    CallOptions extends ChainValues = ChainValues,
     RunOutput extends ChainValues = ChainValues
   >
-  extends BaseLangChain<RunInput, CallOptions, RunOutput>
+  extends BaseLangChain<RunInput, RunnableConfig, RunOutput>
   implements ChainInputs
 {
   declare memory?: BaseMemory;
@@ -74,10 +73,7 @@ export abstract class BaseChain<
     return valuesForMemory;
   }
 
-  async invoke(
-    input: RunInput,
-    config?: RunnableConfig | undefined
-  ): Promise<RunOutput> {
+  async invoke(input: RunInput, config?: RunnableConfig): Promise<RunOutput> {
     return this.call(input, config);
   }
 
