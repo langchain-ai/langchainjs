@@ -8,15 +8,3 @@ test("Test ConversationChain", async () => {
   const res = await chain.call({ input: "my favorite color" });
   console.log({ res });
 });
-
-test("Test ConversationChain stream", async () => {
-  const model = new OpenAI({ modelName: "text-ada-001" });
-  const chain = new ConversationChain({ llm: model });
-  const stream = await chain.stream({ input: "How are you today?" });
-  const chunks = [];
-  for await (const chunk of stream) {
-    chunks.push(chunk);
-    console.log(chunk);
-  }
-  expect(chunks.length).toBeGreaterThan(1);
-});

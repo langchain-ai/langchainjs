@@ -2,8 +2,6 @@ import { LLMChain, LLMChainInput } from "./llm_chain.js";
 import { PromptTemplate } from "../prompts/prompt.js";
 import { BufferMemory } from "../memory/buffer_memory.js";
 import { Optional } from "../types/type-utils.js";
-import { ChainValues } from "../schema/index.js";
-import { RunnableConfig } from "../schema/runnable.js";
 
 export const DEFAULT_TEMPLATE = `The following is a friendly conversation between a human and an AI. The AI is talkative and provides lots of specific details from its context. If the AI does not know the answer to a question, it truthfully says it does not know.
 
@@ -29,19 +27,6 @@ export class ConversationChain extends LLMChain {
       outputKey: outputKey ?? "response",
       memory: memory ?? new BufferMemory(),
       ...rest,
-    });
-  }
-
-  async *_streamIterator(
-    values: ChainValues,
-    options?: RunnableConfig
-  ): AsyncGenerator<ChainValues> {
-    const fullValues = await this._formatValues(values);
-    const formattedPrompt = await this.prompt.format(fullValues);
-    yield* this.llm._streamIterator(formattedPrompt, {
-      ...options,
-      signal: fullValues.signal,
-      timeout: fullValues.timeout,
     });
   }
 }
