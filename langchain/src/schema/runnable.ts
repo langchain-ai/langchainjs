@@ -28,18 +28,18 @@ export abstract class Runnable<
 
   async batch(
     inputs: RunInput[],
-    configs?: CallOptions | CallOptions[],
-    options?: {
+    options?: CallOptions | CallOptions[],
+    batchOptions?: {
       maxConcurrency?: number;
     }
   ): Promise<RunOutput[]> {
     const configList = this._getOptionsList(
-      (configs ?? {}) as CallOptions,
+      (options ?? {}) as CallOptions,
       inputs.length
     );
     const batchSize =
-      options?.maxConcurrency && options.maxConcurrency > 0
-        ? options?.maxConcurrency
+      batchOptions?.maxConcurrency && batchOptions.maxConcurrency > 0
+        ? batchOptions?.maxConcurrency
         : inputs.length;
     const batchResults = [];
     for (let i = 0; i < inputs.length; i += batchSize) {
