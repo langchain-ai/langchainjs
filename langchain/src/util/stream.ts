@@ -76,10 +76,25 @@ export class IterableReadableStream<T> extends ReadableStream<T> {
   static fromAsyncGenerator<T>(generator: AsyncGenerator<T>) {
     return new IterableReadableStream<T>({
       async pull(controller) {
-        const yieldedValue = await generator.next();
-        controller.enqueue(yieldedValue.value);
-        if (yieldedValue.done) {
+        const { value, done } = await generator.next();
+        if (done) {
           controller.close();
+        } else if (value) {
+          controller.enqueue(value);
+        }
+      },
+    });
+  }
+
+  static byteStreamFromAsyncGenerator(generator: AsyncGenerator<string>) {
+    const textEncoder = new TextEncoder();
+    return new IterableReadableStream<Uint8Array>({
+      async pull(controller) {
+        const { value, done } = await generator.next();
+        if (done) {
+          controller.close();
+        } else if (value) {
+          controller.enqueue(textEncoder.encode(value));
         }
       },
     });

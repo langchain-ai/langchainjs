@@ -67,4 +67,21 @@ export abstract class Runnable<
       this._createStreamAsyncGenerator(input, options)
     );
   }
+
+  // eslint-disable-next-line require-yield
+  async *_createByteStreamAsyncGenerator(
+    _input: RunInput,
+    _options?: CallOptions
+  ): AsyncGenerator<string> {
+    throw new Error("Not implemented for this class.");
+  }
+
+  async byteStream(
+    input: RunInput,
+    options?: CallOptions
+  ): Promise<IterableReadableStream<Uint8Array>> {
+    return IterableReadableStream.byteStreamFromAsyncGenerator(
+      this._createByteStreamAsyncGenerator(input, options)
+    );
+  }
 }

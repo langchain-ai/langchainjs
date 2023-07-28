@@ -81,6 +81,18 @@ export abstract class BaseChatModel<
     yield result.generations[0];
   }
 
+  async *_createByteStreamAsyncGenerator(
+    input: BaseLanguageModelInput,
+    options?: CallOptions
+  ): AsyncGenerator<string> {
+    for await (const chunk of this._createStreamAsyncGenerator(
+      input,
+      options
+    )) {
+      yield chunk.content;
+    }
+  }
+
   async *_createStreamAsyncGenerator(
     input: BaseLanguageModelInput,
     options?: CallOptions
