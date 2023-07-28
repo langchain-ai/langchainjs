@@ -168,6 +168,37 @@ export abstract class BaseMessage
 
 export abstract class BaseMessageChunk extends BaseMessage {
   abstract concat(chunk: BaseMessageChunk): BaseMessageChunk;
+
+  static _mergeAdditionalKwargs(
+    left: NonNullable<BaseMessageFields["additional_kwargs"]>,
+    right: NonNullable<BaseMessageFields["additional_kwargs"]>
+  ): NonNullable<BaseMessageFields["additional_kwargs"]> {
+    const merged = { ...left };
+    for (const [key, value] of Object.entries(right)) {
+      if (merged[key] === undefined) {
+        merged[key] = value;
+      } else if (typeof merged[key] !== typeof value) {
+        throw new Error(
+          `additional_kwargs[${key}] already exists in the message chunk, but with a different type.`
+        );
+      } else if (typeof merged[key] === "string") {
+        merged[key] = (merged[key] as string) + value;
+      } else if (
+        !Array.isArray(merged[key]) &&
+        typeof merged[key] === "object"
+      ) {
+        merged[key] = this._mergeAdditionalKwargs(
+          merged[key] as NonNullable<BaseMessageFields["additional_kwargs"]>,
+          value as NonNullable<BaseMessageFields["additional_kwargs"]>
+        );
+      } else {
+        throw new Error(
+          `additional_kwargs[${key}] already exists in this message chunk.`
+        );
+      }
+    }
+    return merged;
+  }
 }
 
 export class HumanMessage extends BaseMessage {
@@ -184,10 +215,10 @@ export class HumanMessageChunk extends BaseMessageChunk {
   concat(chunk: HumanMessageChunk) {
     return new HumanMessageChunk({
       content: this.content + chunk.content,
-      additional_kwargs: {
-        ...this.additional_kwargs,
-        ...chunk.additional_kwargs,
-      },
+      additional_kwargs: HumanMessageChunk._mergeAdditionalKwargs(
+        this.additional_kwargs,
+        chunk.additional_kwargs
+      ),
     });
   }
 }
@@ -206,10 +237,10 @@ export class AIMessageChunk extends BaseMessageChunk {
   concat(chunk: AIMessageChunk) {
     return new AIMessageChunk({
       content: this.content + chunk.content,
-      additional_kwargs: {
-        ...this.additional_kwargs,
-        ...chunk.additional_kwargs,
-      },
+      additional_kwargs: AIMessageChunk._mergeAdditionalKwargs(
+        this.additional_kwargs,
+        chunk.additional_kwargs
+      ),
     });
   }
 }
@@ -228,10 +259,10 @@ export class SystemMessageChunk extends BaseMessageChunk {
   concat(chunk: SystemMessageChunk) {
     return new SystemMessageChunk({
       content: this.content + chunk.content,
-      additional_kwargs: {
-        ...this.additional_kwargs,
-        ...chunk.additional_kwargs,
-      },
+      additional_kwargs: SystemMessageChunk._mergeAdditionalKwargs(
+        this.additional_kwargs,
+        chunk.additional_kwargs
+      ),
     });
   }
 }
@@ -286,10 +317,10 @@ export class FunctionMessageChunk extends BaseMessageChunk {
   concat(chunk: FunctionMessageChunk) {
     return new FunctionMessageChunk({
       content: this.content + chunk.content,
-      additional_kwargs: {
-        ...this.additional_kwargs,
-        ...chunk.additional_kwargs,
-      },
+      additional_kwargs: FunctionMessageChunk._mergeAdditionalKwargs(
+        this.additional_kwargs,
+        chunk.additional_kwargs
+      ),
       name: this.name ?? "",
     });
   }
@@ -342,10 +373,10 @@ export class ChatMessageChunk extends BaseMessageChunk {
   concat(chunk: ChatMessageChunk) {
     return new ChatMessageChunk({
       content: this.content + chunk.content,
-      additional_kwargs: {
-        ...this.additional_kwargs,
-        ...chunk.additional_kwargs,
-      },
+      additional_kwargs: ChatMessageChunk._mergeAdditionalKwargs(
+        this.additional_kwargs,
+        chunk.additional_kwargs
+      ),
       role: this.role,
     });
   }

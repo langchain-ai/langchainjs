@@ -2,6 +2,7 @@ import { test, expect } from "@jest/globals";
 import { ChatOpenAI } from "../openai.js";
 import {
   BaseMessage,
+  ChatGeneration,
   HumanMessage,
   LLMResult,
   SystemMessage,
@@ -372,4 +373,66 @@ test("Test ChatOpenAI stream method with early break", async () => {
       break;
     }
   }
+});
+
+test.only("Function calling with streaming", async () => {
+  let finalResult: BaseMessage | undefined;
+  const modelForFunctionCalling = new ChatOpenAI({
+    modelName: "gpt-4-0613",
+    temperature: 0,
+    callbacks: [
+      {
+        handleLLMEnd(output: LLMResult) {
+          finalResult = (output.generations[0][0] as ChatGeneration).message;
+        },
+      },
+    ],
+  });
+
+  const stream = await modelForFunctionCalling.stream(
+    "What is the weather in New York?",
+    {
+      functions: [
+        {
+          name: "get_current_weather",
+          description: "Get the current weather in a given location",
+          parameters: {
+            type: "object",
+            properties: {
+              location: {
+                type: "string",
+                description: "The city and state, e.g. San Francisco, CA",
+              },
+              unit: { type: "string", enum: ["celsius", "fahrenheit"] },
+            },
+            required: ["location"],
+          },
+        },
+      ],
+      function_call: {
+        name: "get_current_weather",
+      },
+    }
+  );
+
+  const chunks = [];
+  let streamedOutput;
+  for await (const chunk of stream) {
+    chunks.push(chunk);
+    if (!streamedOutput) {
+      streamedOutput = chunk;
+    } else {
+      streamedOutput = streamedOutput.concat(chunk);
+    }
+  }
+
+  expect(finalResult).toEqual(streamedOutput);
+  expect(chunks.length).toBeGreaterThan(1);
+  expect(finalResult?.additional_kwargs?.function_call?.name).toBe(
+    "get_current_weather"
+  );
+  expect(
+    JSON.parse(finalResult?.additional_kwargs?.function_call?.arguments ?? "")
+      .location
+  ).toBe("New York");
 });
