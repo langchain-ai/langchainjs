@@ -67,4 +67,19 @@ export abstract class Runnable<
       this._streamIterator(input, options)
     );
   }
+
+  protected _separateRunnableConfigFromCallOptions(
+    options: CallOptions
+  ): [RunnableConfig, Omit<CallOptions, keyof RunnableConfig>] {
+    const runnableConfig: RunnableConfig = {
+      callbacks: options.callbacks,
+      tags: options.tags,
+      metadata: options.metadata,
+    };
+    const callOptions = { ...options };
+    delete callOptions.callbacks;
+    delete callOptions.tags;
+    delete callOptions.metadata;
+    return [runnableConfig, callOptions];
+  }
 }

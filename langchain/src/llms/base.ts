@@ -22,6 +22,7 @@ import {
   Callbacks,
 } from "../callbacks/manager.js";
 import { getBufferString } from "../memory/base.js";
+import { RunnableConfig } from "../schema/runnable.js";
 
 export type SerializedLLM = {
   _model: string;
@@ -47,7 +48,7 @@ export abstract class BaseLLM<
 > extends BaseLanguageModel<CallOptions, string> {
   declare ParsedCallOptions: Omit<
     CallOptions,
-    "timeout" | "tags" | "metadata" | "callbacks"
+    keyof RunnableConfig & "timeout"
   >;
 
   lc_namespace = ["langchain", "llms", this._llmType()];
@@ -87,6 +88,17 @@ export abstract class BaseLLM<
     throw new Error("Not implemented.");
   }
 
+  protected _separateRunnableConfigFromCallOptions(
+    options: CallOptions
+  ): [RunnableConfig, this["ParsedCallOptions"]] {
+    const [runnableConfig, callOptions] =
+      super._separateRunnableConfigFromCallOptions(options);
+    if (callOptions?.timeout && !callOptions.signal) {
+      callOptions.signal = AbortSignal.timeout(callOptions.timeout);
+    }
+    return [runnableConfig, callOptions as this["ParsedCallOptions"]];
+  }
+
   async *_streamIterator(
     input: BaseLanguageModelInput,
     options?: CallOptions
@@ -98,30 +110,22 @@ export abstract class BaseLLM<
       yield this.invoke(input, options);
     } else {
       const prompt = BaseLLM._convertInputToPromptValue(input);
+      const [runnableConfig, callOptions] =
+        this._separateRunnableConfigFromCallOptions(
+          (options ?? {}) as CallOptions
+        );
       const callbackManager_ = await CallbackManager.configure(
-        options?.callbacks,
+        runnableConfig.callbacks,
         this.callbacks,
-        options?.tags,
+        runnableConfig.tags,
         this.tags,
-        options?.metadata,
+        runnableConfig.metadata,
         this.metadata,
         { verbose: this.verbose }
       );
-      let parsedOptions: CallOptions;
-      if (options?.timeout && !options.signal) {
-        parsedOptions = {
-          ...options,
-          signal: AbortSignal.timeout(options.timeout),
-        };
-      } else {
-        parsedOptions = (options ?? {}) as CallOptions;
-      }
-      delete parsedOptions.tags;
-      delete parsedOptions.metadata;
-      delete parsedOptions.callbacks;
       const extra = {
-        options: parsedOptions,
-        invocation_params: this?.invocationParams(parsedOptions),
+        options: callOptions,
+        invocation_params: this?.invocationParams(callOptions),
       };
       const runManagers = await callbackManager_?.handleLLMStart(
         this.toJSON(),
@@ -136,7 +140,7 @@ export abstract class BaseLLM<
       try {
         for await (const chunk of this._streamResponseChunks(
           input.toString(),
-          parsedOptions,
+          callOptions,
           runManagers?.[0]
         )) {
           if (!generation) {
@@ -287,30 +291,21 @@ export abstract class BaseLLM<
     let parsedOptions: CallOptions;
     if (Array.isArray(options)) {
       parsedOptions = { stop: options } as CallOptions;
-    } else if (options?.timeout && !options.signal) {
-      parsedOptions = {
-        ...options,
-        signal: AbortSignal.timeout(options.timeout),
-      };
     } else {
-      parsedOptions = (options ?? {}) as CallOptions;
+      parsedOptions = options ?? ({} as CallOptions);
     }
-    const handledOptions: BaseCallbackConfig = {
-      tags: parsedOptions.tags,
-      metadata: parsedOptions.metadata,
-      callbacks: parsedOptions.callbacks ?? callbacks,
-    };
-    delete parsedOptions.tags;
-    delete parsedOptions.metadata;
-    delete parsedOptions.callbacks;
+
+    const [runnableConfig, callOptions] =
+      this._separateRunnableConfigFromCallOptions(parsedOptions);
+    runnableConfig.callbacks = runnableConfig.callbacks ?? callbacks;
 
     if (!this.cache) {
-      return this._generateUncached(prompts, parsedOptions, handledOptions);
+      return this._generateUncached(prompts, callOptions, runnableConfig);
     }
 
     const { cache } = this;
     const params = this.serialize();
-    params.stop = parsedOptions.stop ?? params.stop;
+    params.stop = callOptions.stop ?? params.stop;
 
     const llmStringKey = `${Object.entries(params).sort()}`;
     const missingPromptIndices: number[] = [];
@@ -328,8 +323,8 @@ export abstract class BaseLLM<
     if (missingPromptIndices.length > 0) {
       const results = await this._generateUncached(
         missingPromptIndices.map((i) => prompts[i]),
-        parsedOptions,
-        handledOptions
+        callOptions,
+        runnableConfig
       );
       await Promise.all(
         results.generations.map(async (generation, index) => {

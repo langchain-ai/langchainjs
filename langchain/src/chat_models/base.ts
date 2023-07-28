@@ -17,11 +17,11 @@ import {
   BaseLanguageModelParams,
 } from "../base_language/index.js";
 import {
-  BaseCallbackConfig,
   CallbackManager,
   CallbackManagerForLLMRun,
   Callbacks,
 } from "../callbacks/manager.js";
+import { RunnableConfig } from "../schema/runnable.js";
 
 export type SerializedChatModel = {
   _model: string;
@@ -45,7 +45,7 @@ export abstract class BaseChatModel<
 > extends BaseLanguageModel<CallOptions, BaseMessageChunk> {
   declare ParsedCallOptions: Omit<
     CallOptions,
-    "timeout" | "tags" | "metadata" | "callbacks"
+    keyof RunnableConfig & "timeout"
   >;
 
   lc_namespace = ["langchain", "chat_models", this._llmType()];
@@ -57,6 +57,17 @@ export abstract class BaseChatModel<
   abstract _combineLLMOutput?(
     ...llmOutputs: LLMResult["llmOutput"][]
   ): LLMResult["llmOutput"];
+
+  protected _separateRunnableConfigFromCallOptions(
+    options: CallOptions
+  ): [RunnableConfig, this["ParsedCallOptions"]] {
+    const [runnableConfig, callOptions] =
+      super._separateRunnableConfigFromCallOptions(options);
+    if (callOptions?.timeout && !callOptions.signal) {
+      callOptions.signal = AbortSignal.timeout(callOptions.timeout)
+    }
+    return [runnableConfig, callOptions as this["ParsedCallOptions"]];
+  }
 
   async invoke(
     input: BaseLanguageModelInput,
@@ -95,30 +106,22 @@ export abstract class BaseChatModel<
     } else {
       const prompt = BaseChatModel._convertInputToPromptValue(input);
       const messages = prompt.toChatMessages();
+      const [runnableConfig, callOptions] =
+        this._separateRunnableConfigFromCallOptions(
+          (options ?? {}) as CallOptions
+        );
       const callbackManager_ = await CallbackManager.configure(
-        options?.callbacks,
+        runnableConfig.callbacks,
         this.callbacks,
-        options?.tags,
+        runnableConfig.tags,
         this.tags,
-        options?.metadata,
+        runnableConfig.metadata,
         this.metadata,
         { verbose: this.verbose }
       );
-      let parsedOptions: CallOptions;
-      if (options?.timeout && !options.signal) {
-        parsedOptions = {
-          ...options,
-          signal: AbortSignal.timeout(options.timeout),
-        };
-      } else {
-        parsedOptions = (options ?? {}) as CallOptions;
-      }
-      delete parsedOptions.tags;
-      delete parsedOptions.metadata;
-      delete parsedOptions.callbacks;
       const extra = {
-        options: parsedOptions,
-        invocation_params: this?.invocationParams(parsedOptions),
+        options: callOptions,
+        invocation_params: this?.invocationParams(callOptions),
       };
       const runManagers = await callbackManager_?.handleChatModelStart(
         this.toJSON(),
@@ -131,7 +134,7 @@ export abstract class BaseChatModel<
       try {
         for await (const chunk of this._streamResponseChunks(
           messages,
-          parsedOptions,
+          callOptions,
           runManagers?.[0]
         )) {
           yield chunk.message;
@@ -169,34 +172,24 @@ export abstract class BaseChatModel<
     let parsedOptions: CallOptions;
     if (Array.isArray(options)) {
       parsedOptions = { stop: options } as CallOptions;
-    } else if (options?.timeout && !options.signal) {
-      parsedOptions = {
-        ...options,
-        signal: AbortSignal.timeout(options.timeout),
-      };
     } else {
-      parsedOptions = (options ?? {}) as CallOptions;
+      parsedOptions = options ?? ({} as CallOptions);
     }
-    const handledOptions: BaseCallbackConfig = {
-      tags: parsedOptions.tags,
-      metadata: parsedOptions.metadata,
-      callbacks: parsedOptions.callbacks ?? callbacks,
-    };
-    delete parsedOptions.tags;
-    delete parsedOptions.metadata;
-    delete parsedOptions.callbacks;
+
+    const [runnableConfig, callOptions] =
+      this._separateRunnableConfigFromCallOptions(parsedOptions);
     // create callback manager and start run
     const callbackManager_ = await CallbackManager.configure(
-      handledOptions.callbacks,
+      runnableConfig.callbacks ?? callbacks,
       this.callbacks,
-      handledOptions.tags,
+      runnableConfig.tags,
       this.tags,
-      handledOptions.metadata,
+      runnableConfig.metadata,
       this.metadata,
       { verbose: this.verbose }
     );
     const extra = {
-      options: parsedOptions,
+      options: callOptions,
       invocation_params: this?.invocationParams(parsedOptions),
     };
     const runManagers = await callbackManager_?.handleChatModelStart(
