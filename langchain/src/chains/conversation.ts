@@ -32,26 +32,13 @@ export class ConversationChain extends LLMChain {
     });
   }
 
-  async *_stream(
+  async *_streamIterator(
     values: ChainValues,
     options?: RunnableConfig
   ): AsyncGenerator<ChainValues> {
     const fullValues = await this._formatValues(values);
     const formattedPrompt = await this.prompt.format(fullValues);
-    yield* this.llm._stream(formattedPrompt, {
-      ...options,
-      signal: fullValues.signal,
-      timeout: fullValues.timeout,
-    });
-  }
-
-  async *_streamBytes(
-    values: ChainValues,
-    options?: RunnableConfig
-  ): AsyncGenerator<string> {
-    const fullValues = await this._formatValues(values);
-    const formattedPrompt = await this.prompt.format(fullValues);
-    yield* this.llm._streamBytes(formattedPrompt, {
+    yield* this.llm._streamIterator(formattedPrompt, {
       ...options,
       signal: fullValues.signal,
       timeout: fullValues.timeout,

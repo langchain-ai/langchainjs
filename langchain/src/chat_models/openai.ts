@@ -112,7 +112,11 @@ function _convertDeltaToMessageChunk(
   } else if (role === "system") {
     return new SystemMessageChunk({ content });
   } else if (role === "function") {
-    return new FunctionMessageChunk({ content, additional_kwargs }, delta.name);
+    return new FunctionMessageChunk({
+      content,
+      additional_kwargs,
+      name: delta.name,
+    });
   } else {
     return new ChatMessageChunk({ content, role });
   }
@@ -372,10 +376,10 @@ export class ChatOpenAI
       const chunk = _convertDeltaToMessageChunk(delta, defaultRole);
       defaultRole = (delta.role ??
         defaultRole) as ChatCompletionResponseMessageRoleEnum;
-      const generationChunk = {
+      const generationChunk = new ChatGenerationChunk({
         message: chunk,
         text: chunk.content,
-      };
+      });
       yield generationChunk;
       // eslint-disable-next-line no-void
       void runManager?.handleLLMNewToken(generationChunk.text ?? "");

@@ -87,14 +87,7 @@ export abstract class BaseLLM<
     throw new Error("Not implemented.");
   }
 
-  async *_streamBytes(
-    input: BaseLanguageModelInput,
-    options?: CallOptions
-  ): AsyncGenerator<string> {
-    yield* this._stream(input, options);
-  }
-
-  async *_stream(
+  async *_streamIterator(
     input: BaseLanguageModelInput,
     options?: CallOptions
   ): AsyncGenerator<string> {
@@ -137,9 +130,9 @@ export abstract class BaseLLM<
         undefined,
         extra
       );
-      let generation: GenerationChunk = {
+      let generation = new GenerationChunk({
         text: "",
-      };
+      });
       try {
         for await (const chunk of this._streamResponseChunks(
           input.toString(),
@@ -149,9 +142,7 @@ export abstract class BaseLLM<
           if (!generation) {
             generation = chunk;
           } else {
-            generation.text += chunk.text;
-            generation.generationInfo =
-              chunk.generationInfo ?? generation.generationInfo;
+            generation = generation.concat(chunk);
           }
           yield chunk.text;
         }

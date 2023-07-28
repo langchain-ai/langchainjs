@@ -223,7 +223,7 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
       }
       const delta = data.completion ?? "";
       // eslint-disable-next-line no-void
-      yield {
+      yield new ChatGenerationChunk({
         message: new AIMessageChunk({
           content: delta,
           additional_kwargs: {
@@ -231,7 +231,7 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
           },
         }),
         text: delta,
-      };
+      });
       void runManager?.handleLLMNewToken(delta);
       if (data.stop_reason) {
         break;

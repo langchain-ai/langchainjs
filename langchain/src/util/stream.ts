@@ -85,18 +85,4 @@ export class IterableReadableStream<T> extends ReadableStream<T> {
       },
     });
   }
-
-  static byteStreamFromAsyncGenerator(generator: AsyncGenerator<string>) {
-    const textEncoder = new TextEncoder();
-    return new IterableReadableStream<Uint8Array>({
-      async pull(controller) {
-        const { value, done } = await generator.next();
-        if (done) {
-          controller.close();
-        } else if (value) {
-          controller.enqueue(textEncoder.encode(value));
-        }
-      },
-    });
-  }
 }

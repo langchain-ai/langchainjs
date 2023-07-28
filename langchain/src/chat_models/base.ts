@@ -69,7 +69,8 @@ export abstract class BaseChatModel<
       options?.callbacks
     );
     const chatGeneration = result.generations[0][0] as ChatGeneration;
-    return chatGeneration.message;
+    // TODO: Remove cast after figuring out inheritance
+    return chatGeneration.message as BaseMessageChunk;
   }
 
   // eslint-disable-next-line require-yield
@@ -81,16 +82,7 @@ export abstract class BaseChatModel<
     throw new Error("Not implemented.");
   }
 
-  async *_streamBytes(
-    input: BaseLanguageModelInput,
-    options?: CallOptions
-  ): AsyncGenerator<string> {
-    for await (const chunk of this._stream(input, options)) {
-      yield chunk.content;
-    }
-  }
-
-  async *_stream(
+  async *_streamIterator(
     input: BaseLanguageModelInput,
     options?: CallOptions
   ): AsyncGenerator<BaseMessageChunk> {
@@ -135,7 +127,7 @@ export abstract class BaseChatModel<
         undefined,
         extra
       );
-      let message: BaseMessageChunk | undefined;
+      let generationChunk: ChatGenerationChunk | undefined;
       try {
         for await (const chunk of this._streamResponseChunks(
           messages,
@@ -143,14 +135,10 @@ export abstract class BaseChatModel<
           runManagers?.[0]
         )) {
           yield chunk.message;
-          if (!message) {
-            message = chunk.message;
+          if (!generationChunk) {
+            generationChunk = chunk;
           } else {
-            message.content += chunk.message.content;
-            message.additional_kwargs = {
-              ...message.additional_kwargs,
-              ...chunk.message.additional_kwargs,
-            };
+            generationChunk = generationChunk.concat(chunk);
           }
         }
       } catch (err) {
@@ -164,7 +152,8 @@ export abstract class BaseChatModel<
       await Promise.all(
         (runManagers ?? []).map((runManager) =>
           runManager?.handleLLMEnd({
-            generations: [[{ message } as ChatGeneration]],
+            // TODO: Remove cast after figuring out inheritance
+            generations: [[generationChunk as ChatGeneration]],
           })
         )
       );

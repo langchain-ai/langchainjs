@@ -1,7 +1,12 @@
 import { test } from "@jest/globals";
 import { LLM } from "../../llms/base.js";
 import { BaseChatModel } from "../../chat_models/base.js";
-import { AIMessage, BaseMessage, ChatResult } from "../index.js";
+import {
+  AIMessage,
+  BaseMessage,
+  ChatResult,
+  createChatMessageChunkEncoderStream,
+} from "../index.js";
 
 class FakeLLM extends LLM {
   _llmType() {
@@ -59,10 +64,13 @@ test("Test stream", async () => {
   }
 });
 
-test("Test chat model stream", async () => {
+test.only("Test chat model stream", async () => {
   const llm = new FakeChatModel({});
-  const stream = await llm.streamBytes("Hi there!");
-  const reader = stream.pipeThrough(new TextDecoderStream()).getReader();
+  const stream = await llm.stream("Hi there!");
+  const reader = stream
+    .pipeThrough(createChatMessageChunkEncoderStream())
+    .pipeThrough(new TextDecoderStream())
+    .getReader();
   let done = false;
   while (!done) {
     const chunk = await reader.read();

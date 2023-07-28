@@ -52,7 +52,7 @@ export abstract class Runnable<
     return batchResults.flat();
   }
 
-  async *_stream(
+  async *_streamIterator(
     input: RunInput,
     options?: CallOptions
   ): AsyncGenerator<RunOutput> {
@@ -64,24 +64,7 @@ export abstract class Runnable<
     options?: CallOptions
   ): Promise<IterableReadableStream<RunOutput>> {
     return IterableReadableStream.fromAsyncGenerator(
-      this._stream(input, options)
-    );
-  }
-
-  // eslint-disable-next-line require-yield
-  async *_streamBytes(
-    _input: RunInput,
-    _options?: CallOptions
-  ): AsyncGenerator<string> {
-    throw new Error("Not implemented for this class.");
-  }
-
-  async streamBytes(
-    input: RunInput,
-    options?: CallOptions
-  ): Promise<IterableReadableStream<Uint8Array>> {
-    return IterableReadableStream.byteStreamFromAsyncGenerator(
-      this._streamBytes(input, options)
+      this._streamIterator(input, options)
     );
   }
 }

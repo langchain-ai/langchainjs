@@ -447,13 +447,13 @@ export class OpenAI
       if (!choice) {
         continue;
       }
-      const chunk = {
+      const chunk = new GenerationChunk({
         text: choice.text,
         generationInfo: {
           finishReason: choice.finish_reason,
           logprobs: choice.logprobs,
         },
-      };
+      });
       yield chunk;
       // eslint-disable-next-line no-void
       void runManager?.handleLLMNewToken(chunk.text ?? "");
