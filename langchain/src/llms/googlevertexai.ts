@@ -7,6 +7,7 @@ import {
   GoogleVertexAILLMResponse,
   GoogleVertexAIModelParams,
 } from "../types/googlevertexai-types.js";
+import { BaseLanguageModelCallOptions } from "../base_language/index.js";
 
 export interface GoogleVertexAITextInput extends GoogleVertexAIBaseLLMInput {}
 
@@ -55,7 +56,7 @@ export class GoogleVertexAI extends BaseLLM implements GoogleVertexAITextInput {
   topK = 40;
 
   private connection: GoogleVertexAIConnection<
-    this["CallOptions"],
+    BaseLanguageModelCallOptions,
     GoogleVertexAILLMInstance,
     TextPrediction
   >;
