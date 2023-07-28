@@ -12,6 +12,7 @@ import {
   SerializedNotImplemented,
 } from "../load/serializable.js";
 import { SerializedFields } from "../load/map_keys.js";
+import { Document } from "../document.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Error = any;
@@ -20,6 +21,7 @@ export interface BaseCallbackHandlerInput {
   ignoreLLM?: boolean;
   ignoreChain?: boolean;
   ignoreAgent?: boolean;
+  ignoreRetriever?: boolean;
 }
 
 export interface NewTokenIndices {
@@ -201,6 +203,29 @@ abstract class BaseCallbackHandlerMethodsClass {
     parentRunId?: string,
     tags?: string[]
   ): Promise<void> | void;
+
+  handleRetrieverStart?(
+    retriever: Serialized,
+    query: string,
+    runId: string,
+    parentRunId?: string,
+    tags?: string[],
+    metadata?: Record<string, unknown>
+  ): Promise<void> | void;
+
+  handleRetrieverEnd?(
+    documents: Document[],
+    runId: string,
+    parentRunId?: string,
+    tags?: string[]
+  ): Promise<void> | void;
+
+  handleRetrieverError?(
+    err: Error,
+    runId: string,
+    parentRunId?: string,
+    tags?: string[]
+  ): Promise<void> | void;
 }
 
 /**
@@ -246,6 +271,8 @@ export abstract class BaseCallbackHandler
 
   ignoreAgent = false;
 
+  ignoreRetriever = false;
+
   awaitHandlers =
     typeof process !== "undefined"
       ? // eslint-disable-next-line no-process-env
@@ -259,6 +286,7 @@ export abstract class BaseCallbackHandler
       this.ignoreLLM = input.ignoreLLM ?? this.ignoreLLM;
       this.ignoreChain = input.ignoreChain ?? this.ignoreChain;
       this.ignoreAgent = input.ignoreAgent ?? this.ignoreAgent;
+      this.ignoreRetriever = input.ignoreRetriever ?? this.ignoreRetriever;
     }
   }
 

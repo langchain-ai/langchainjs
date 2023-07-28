@@ -49,6 +49,9 @@ export interface OptionalImportMap {
   "langchain/embeddings/googlevertexai"?:
     | typeof import("../embeddings/googlevertexai.js")
     | Promise<typeof import("../embeddings/googlevertexai.js")>;
+  "langchain/embeddings/googlepalm"?:
+    | typeof import("../embeddings/googlepalm.js")
+    | Promise<typeof import("../embeddings/googlepalm.js")>;
   "langchain/llms/load"?:
     | typeof import("../llms/load.js")
     | Promise<typeof import("../llms/load.js")>;
@@ -64,12 +67,18 @@ export interface OptionalImportMap {
   "langchain/llms/googlevertexai"?:
     | typeof import("../llms/googlevertexai.js")
     | Promise<typeof import("../llms/googlevertexai.js")>;
+  "langchain/llms/googlepalm"?:
+    | typeof import("../llms/googlepalm.js")
+    | Promise<typeof import("../llms/googlepalm.js")>;
   "langchain/llms/sagemaker_endpoint"?:
     | typeof import("../llms/sagemaker_endpoint.js")
     | Promise<typeof import("../llms/sagemaker_endpoint.js")>;
   "langchain/prompts/load"?:
     | typeof import("../prompts/load.js")
     | Promise<typeof import("../prompts/load.js")>;
+  "langchain/vectorstores/analyticdb"?:
+    | typeof import("../vectorstores/analyticdb.js")
+    | Promise<typeof import("../vectorstores/analyticdb.js")>;
   "langchain/vectorstores/elasticsearch"?:
     | typeof import("../vectorstores/elasticsearch.js")
     | Promise<typeof import("../vectorstores/elasticsearch.js")>;
@@ -211,12 +220,18 @@ export interface OptionalImportMap {
   "langchain/chat_models/googlevertexai"?:
     | typeof import("../chat_models/googlevertexai.js")
     | Promise<typeof import("../chat_models/googlevertexai.js")>;
+  "langchain/chat_models/googlepalm"?:
+    | typeof import("../chat_models/googlepalm.js")
+    | Promise<typeof import("../chat_models/googlepalm.js")>;
   "langchain/sql_db"?:
     | typeof import("../sql_db.js")
     | Promise<typeof import("../sql_db.js")>;
   "langchain/output_parsers/expression"?:
     | typeof import("../output_parsers/expression.js")
     | Promise<typeof import("../output_parsers/expression.js")>;
+  "langchain/retrievers/amazon_kendra"?:
+    | typeof import("../retrievers/amazon_kendra.js")
+    | Promise<typeof import("../retrievers/amazon_kendra.js")>;
   "langchain/retrievers/supabase"?:
     | typeof import("../retrievers/supabase.js")
     | Promise<typeof import("../retrievers/supabase.js")>;
@@ -250,6 +265,9 @@ export interface OptionalImportMap {
   "langchain/cache/redis"?:
     | typeof import("../cache/redis.js")
     | Promise<typeof import("../cache/redis.js")>;
+  "langchain/cache/ioredis"?:
+    | typeof import("../cache/ioredis.js")
+    | Promise<typeof import("../cache/ioredis.js")>;
   "langchain/cache/upstash_redis"?:
     | typeof import("../cache/upstash_redis.js")
     | Promise<typeof import("../cache/upstash_redis.js")>;
@@ -262,6 +280,9 @@ export interface OptionalImportMap {
   "langchain/stores/message/dynamodb"?:
     | typeof import("../stores/message/dynamodb.js")
     | Promise<typeof import("../stores/message/dynamodb.js")>;
+  "langchain/stores/message/firestore"?:
+    | typeof import("../stores/message/firestore.js")
+    | Promise<typeof import("../stores/message/firestore.js")>;
   "langchain/stores/message/momento"?:
     | typeof import("../stores/message/momento.js")
     | Promise<typeof import("../stores/message/momento.js")>;
@@ -274,6 +295,12 @@ export interface OptionalImportMap {
   "langchain/stores/message/upstash_redis"?:
     | typeof import("../stores/message/upstash_redis.js")
     | Promise<typeof import("../stores/message/upstash_redis.js")>;
+  "langchain/stores/message/planetscale"?:
+    | typeof import("../stores/message/planetscale.js")
+    | Promise<typeof import("../stores/message/planetscale.js")>;
+  "langchain/experimental/multimodal_embeddings/googlevertexai"?:
+    | typeof import("../experimental/multimodal_embeddings/googlevertexai.js")
+    | Promise<typeof import("../experimental/multimodal_embeddings/googlevertexai.js")>;
 }
 
 export interface SecretMap {
@@ -286,15 +313,33 @@ export interface SecretMap {
   BAIDU_API_KEY?: string;
   BAIDU_SECRET_KEY?: string;
   COHERE_API_KEY?: string;
+  DATABERRY_API_KEY?: string;
   GOOGLE_API_KEY?: string;
+  GOOGLE_PALM_API_KEY?: string;
   HUGGINGFACEHUB_API_KEY?: string;
+  MILVUS_PASSWORD?: string;
+  MILVUS_SSL?: string;
+  MILVUS_USERNAME?: string;
   OPENAI_API_KEY?: string;
+  PLANETSCALE_DATABASE_URL?: string;
+  PLANETSCALE_HOST?: string;
+  PLANETSCALE_PASSWORD?: string;
+  PLANETSCALE_USERNAME?: string;
   PROMPTLAYER_API_KEY?: string;
+  QDRANT_API_KEY?: string;
+  QDRANT_URL?: string;
   REDIS_PASSWORD?: string;
   REDIS_URL?: string;
   REDIS_USERNAME?: string;
+  REMOTE_RETRIEVER_AUTH_BEARER?: string;
   REPLICATE_API_KEY?: string;
+  SEARXNG_API_BASE?: string;
   UPSTASH_REDIS_REST_TOKEN?: string;
   UPSTASH_REDIS_REST_URL?: string;
+  VECTARA_API_KEY?: string;
+  VECTARA_CORPUS_ID?: string;
+  VECTARA_CUSTOMER_ID?: string;
   ZAPIER_NLA_API_KEY?: string;
+  ZEP_API_KEY?: string;
+  ZEP_API_URL?: string;
 }

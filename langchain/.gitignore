@@ -79,6 +79,9 @@ embeddings/hf.d.ts
 embeddings/googlevertexai.cjs
 embeddings/googlevertexai.js
 embeddings/googlevertexai.d.ts
+embeddings/googlepalm.cjs
+embeddings/googlepalm.js
+embeddings/googlepalm.d.ts
 llms.cjs
 llms.js
 llms.d.ts
@@ -109,6 +112,9 @@ llms/replicate.d.ts
 llms/googlevertexai.cjs
 llms/googlevertexai.js
 llms/googlevertexai.d.ts
+llms/googlepalm.cjs
+llms/googlepalm.js
+llms/googlepalm.d.ts
 llms/sagemaker_endpoint.cjs
 llms/sagemaker_endpoint.js
 llms/sagemaker_endpoint.d.ts
@@ -121,6 +127,9 @@ prompts/load.d.ts
 vectorstores.cjs
 vectorstores.js
 vectorstores.d.ts
+vectorstores/analyticdb.cjs
+vectorstores/analyticdb.js
+vectorstores/analyticdb.d.ts
 vectorstores/base.cjs
 vectorstores/base.js
 vectorstores/base.d.ts
@@ -253,6 +262,9 @@ document_loaders/web/sonix_audio.d.ts
 document_loaders/web/confluence.cjs
 document_loaders/web/confluence.js
 document_loaders/web/confluence.d.ts
+document_loaders/web/serpapi.cjs
+document_loaders/web/serpapi.js
+document_loaders/web/serpapi.d.ts
 document_loaders/web/sort_xyz_blockchain.cjs
 document_loaders/web/sort_xyz_blockchain.js
 document_loaders/web/sort_xyz_blockchain.d.ts
@@ -307,6 +319,9 @@ chat_models/anthropic.d.ts
 chat_models/googlevertexai.cjs
 chat_models/googlevertexai.js
 chat_models/googlevertexai.d.ts
+chat_models/googlepalm.cjs
+chat_models/googlepalm.js
+chat_models/googlepalm.d.ts
 chat_models/baiduwenxin.cjs
 chat_models/baiduwenxin.js
 chat_models/baiduwenxin.d.ts
@@ -319,6 +334,9 @@ schema/output_parser.d.ts
 schema/query_constructor.cjs
 schema/query_constructor.js
 schema/query_constructor.d.ts
+schema/retriever.cjs
+schema/retriever.js
+schema/retriever.d.ts
 sql_db.cjs
 sql_db.js
 sql_db.d.ts
@@ -334,6 +352,9 @@ output_parsers/expression.d.ts
 retrievers.cjs
 retrievers.js
 retrievers.d.ts
+retrievers/amazon_kendra.cjs
+retrievers/amazon_kendra.js
+retrievers/amazon_kendra.d.ts
 retrievers/remote.cjs
 retrievers/remote.js
 retrievers/remote.d.ts
@@ -394,6 +415,9 @@ cache/momento.d.ts
 cache/redis.cjs
 cache/redis.js
 cache/redis.d.ts
+cache/ioredis.cjs
+cache/ioredis.js
+cache/ioredis.d.ts
 cache/upstash_redis.cjs
 cache/upstash_redis.js
 cache/upstash_redis.d.ts
@@ -415,6 +439,9 @@ stores/message/in_memory.d.ts
 stores/message/dynamodb.cjs
 stores/message/dynamodb.js
 stores/message/dynamodb.d.ts
+stores/message/firestore.cjs
+stores/message/firestore.js
+stores/message/firestore.d.ts
 stores/message/momento.cjs
 stores/message/momento.js
 stores/message/momento.d.ts
@@ -427,6 +454,9 @@ stores/message/ioredis.d.ts
 stores/message/upstash_redis.cjs
 stores/message/upstash_redis.js
 stores/message/upstash_redis.d.ts
+stores/message/planetscale.cjs
+stores/message/planetscale.js
+stores/message/planetscale.d.ts
 experimental/autogpt.cjs
 experimental/autogpt.js
 experimental/autogpt.d.ts
@@ -439,9 +469,9 @@ experimental/generative_agents.d.ts
 experimental/plan_and_execute.cjs
 experimental/plan_and_execute.js
 experimental/plan_and_execute.d.ts
-client.cjs
-client.js
-client.d.ts
+experimental/multimodal_embeddings/googlevertexai.cjs
+experimental/multimodal_embeddings/googlevertexai.js
+experimental/multimodal_embeddings/googlevertexai.d.ts
 evaluation.cjs
 evaluation.js
 evaluation.d.ts

@@ -76,7 +76,7 @@ ${JSON.stringify(zodToJsonSchema(this.schema))}
       const json = text.includes("```")
         ? text.trim().split(/```(?:json)?/)[1]
         : text.trim();
-      return this.schema.parseAsync(JSON.parse(json));
+      return await this.schema.parseAsync(JSON.parse(json));
     } catch (e) {
       throw new OutputParserException(
         `Failed to parse. Text: "${text}". Error: ${e}`,

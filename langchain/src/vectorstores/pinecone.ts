@@ -36,6 +36,10 @@ export class PineconeStore extends VectorStore {
 
   filter?: PineconeMetadata;
 
+  _vectorstoreType(): string {
+    return "pinecone";
+  }
+
   constructor(embeddings: Embeddings, args: PineconeLibArgs) {
     super(embeddings, args);
 

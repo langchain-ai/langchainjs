@@ -21,6 +21,10 @@ export class FaissStore extends SaveableVectorStore {
 
   args: FaissLibArgs;
 
+  _vectorstoreType(): string {
+    return "faiss";
+  }
+
   constructor(embeddings: Embeddings, args: FaissLibArgs) {
     super(embeddings, args);
     this.args = args;
@@ -185,6 +189,7 @@ export class FaissStore extends SaveableVectorStore {
           PyInMemoryDocstore
         )
         .register("langchain.schema", "Document", PyDocument)
+        .register("langchain.docstore.document", "Document", PyDocument)
         .register("pathlib", "WindowsPath", (...args) => args.join("\\"))
         .register("pathlib", "PosixPath", (...args) => args.join("/"));
 

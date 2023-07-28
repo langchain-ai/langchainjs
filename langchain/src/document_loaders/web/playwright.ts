@@ -1,10 +1,10 @@
-import type { LaunchOptions, Page, Browser } from "playwright";
+import type { LaunchOptions, Page, Browser, Response } from "playwright";
 
 import { Document } from "../../document.js";
 import { BaseDocumentLoader } from "../base.js";
 import type { DocumentLoader } from "../base.js";
 
-export { Page, Browser };
+export { Page, Browser, Response };
 
 export type PlaywrightGotoOptions = {
   referer?: string;
@@ -14,7 +14,8 @@ export type PlaywrightGotoOptions = {
 
 export type PlaywrightEvaluate = (
   page: Page,
-  browser: Browser
+  browser: Browser,
+  response: Response | null
 ) => Promise<string>;
 
 export type PlaywrightWebBaseLoaderOptions = {
@@ -49,13 +50,13 @@ export class PlaywrightWebBaseLoader
     });
     const page = await browser.newPage();
 
-    await page.goto(url, {
+    const response = await page.goto(url, {
       timeout: 180000,
       waitUntil: "domcontentloaded",
       ...options?.gotoOptions,
     });
     const bodyHTML = options?.evaluate
-      ? await options?.evaluate(page, browser)
+      ? await options?.evaluate(page, browser, response)
       : await page.content();
 
     await browser.close();
