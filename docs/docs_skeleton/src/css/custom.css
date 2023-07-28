@@ -76,7 +76,7 @@
   position: absolute;
   right: 0.35rem;
   top: 5px;
-  content: "Node.js";
+  content: "Node-only";
   background: #026e00;
   color: #fff;
   border-radius: 0.25rem;
@@ -93,7 +93,7 @@
   position: absolute;
   right: 3rem;
   top: 5px;
-  content: "Node.js";
+  content: "Node-only";
   background: #026e00;
   color: #fff;
   border-radius: 0.25rem;
