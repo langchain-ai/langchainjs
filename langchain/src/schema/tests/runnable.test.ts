@@ -62,7 +62,7 @@ test("Test stream", async () => {
   }
 });
 
-test.only("Test chat model stream", async () => {
+test("Test chat model stream", async () => {
   const llm = new FakeChatModel({});
   const stream = await llm.stream("Hi there!");
   const reader = stream
