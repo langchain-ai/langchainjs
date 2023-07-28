@@ -52,7 +52,7 @@ export abstract class Runnable<
     return batchResults.flat();
   }
 
-  async *_createAsyncGenerator(
+  async *_createStreamAsyncGenerator(
     input: RunInput,
     options?: CallOptions
   ): AsyncGenerator<RunOutput> {
@@ -63,16 +63,8 @@ export abstract class Runnable<
     input: RunInput,
     options?: CallOptions
   ): Promise<IterableReadableStream<RunOutput>> {
-    const generator = await this._createAsyncGenerator(input, options);
-    const outputStream = new IterableReadableStream<RunOutput>({
-      async pull(controller) {
-        const yieldedValue = await generator.next();
-        controller.enqueue(yieldedValue.value);
-        if (yieldedValue.done) {
-          controller.close();
-        }
-      },
-    });
-    return outputStream;
+    return IterableReadableStream.fromAsyncGenerator(
+      this._createStreamAsyncGenerator(input, options)
+    );
   }
 }

@@ -333,7 +333,7 @@ test("getNumTokensFromMessages gpt-4-0314 model for sample input", async () => {
   expect(totalCount).toBe(129);
 });
 
-test("Test OpenAI stream method", async () => {
+test("Test ChatOpenAI stream method", async () => {
   const model = new ChatOpenAI({ maxTokens: 50, modelName: "gpt-3.5-turbo" });
   const stream = await model.stream("Print hello world.");
   const chunks = [];
@@ -344,7 +344,7 @@ test("Test OpenAI stream method", async () => {
   expect(chunks.length).toBeGreaterThan(1);
 });
 
-test("Test OpenAI stream method with abort", async () => {
+test("Test ChatOpenAI stream method with abort", async () => {
   await expect(async () => {
     const model = new ChatOpenAI({ maxTokens: 50, modelName: "gpt-3.5-turbo" });
     const stream = await model.stream(
@@ -359,7 +359,7 @@ test("Test OpenAI stream method with abort", async () => {
   }).rejects.toThrow();
 });
 
-test("Test OpenAI stream method with early break", async () => {
+test("Test ChatOpenAI stream method with early break", async () => {
   const model = new ChatOpenAI({ maxTokens: 50, modelName: "gpt-3.5-turbo" });
   const stream = await model.stream(
     "How is your day going? Be extremely verbose."

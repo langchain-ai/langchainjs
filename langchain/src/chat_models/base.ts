@@ -81,7 +81,7 @@ export abstract class BaseChatModel<
     yield result.generations[0];
   }
 
-  async *_createAsyncGenerator(
+  async *_createStreamAsyncGenerator(
     input: BaseLanguageModelInput,
     options?: CallOptions
   ): AsyncGenerator<BaseMessageChunk> {

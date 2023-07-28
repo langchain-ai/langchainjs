@@ -87,7 +87,7 @@ export abstract class BaseLLM<
     yield result.generations[0][0];
   }
 
-  async *_createAsyncGenerator(
+  async *_createStreamAsyncGenerator(
     input: BaseLanguageModelInput,
     options?: CallOptions
   ): AsyncGenerator<string> {

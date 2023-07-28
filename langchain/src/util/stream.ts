@@ -72,4 +72,16 @@ export class IterableReadableStream<T> extends ReadableStream<T> {
   [Symbol.asyncIterator]() {
     return this;
   }
+
+  static fromAsyncGenerator<T>(generator: AsyncGenerator<T>) {
+    return new IterableReadableStream<T>({
+      async pull(controller) {
+        const yieldedValue = await generator.next();
+        controller.enqueue(yieldedValue.value);
+        if (yieldedValue.done) {
+          controller.close();
+        }
+      },
+    });
+  }
 }
