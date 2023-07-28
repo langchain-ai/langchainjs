@@ -275,7 +275,7 @@ const Simulation = async () => {
     initialObservation: string
   ): Promise<void> => {
     // Starts the conversation bewteen two agents
-    const [, observation] = await agents[1].generateReaction(
+    let [, observation] = await agents[1].generateReaction(
       initialObservation
     );
     console.log("Initial reply:", observation);
@@ -287,6 +287,7 @@ const Simulation = async () => {
         const [stayInDialogue, agentObservation] =
           await agent.generateDialogueResponse(observation);
         console.log("Next reply:", agentObservation);
+        observation = agentObservation
         if (!stayInDialogue) {
           breakDialogue = true;
         }
