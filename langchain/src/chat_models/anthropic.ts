@@ -215,20 +215,27 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
       ...params,
       prompt: this.formatMessagesAsPrompt(messages),
     });
-
+    let modelSent = false;
+    let stopReasonSent = false;
     for await (const data of stream) {
       if (options.signal?.aborted) {
         stream.controller.abort();
         throw new Error("AbortError: User aborted the request.");
+      }
+      const additional_kwargs: Record<string, unknown> = {};
+      if (data.model && !modelSent) {
+        additional_kwargs.model = data.model;
+        modelSent = true;
+      } else if (data.stop_reason && !stopReasonSent) {
+        additional_kwargs.stop_reason = data.stop_reason;
+        stopReasonSent = true;
       }
       const delta = data.completion ?? "";
       // eslint-disable-next-line no-void
       yield new ChatGenerationChunk({
         message: new AIMessageChunk({
           content: delta,
-          additional_kwargs: {
-            model: data.model,
-          },
+          additional_kwargs,
         }),
         text: delta,
       });

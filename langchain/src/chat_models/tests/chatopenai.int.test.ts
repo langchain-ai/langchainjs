@@ -375,7 +375,7 @@ test("Test ChatOpenAI stream method with early break", async () => {
   }
 });
 
-test.only("Function calling with streaming", async () => {
+test("Function calling with streaming", async () => {
   let finalResult: BaseMessage | undefined;
   const modelForFunctionCalling = new ChatOpenAI({
     modelName: "gpt-4-0613",
