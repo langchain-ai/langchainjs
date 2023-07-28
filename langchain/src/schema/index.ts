@@ -109,15 +109,6 @@ export interface ChatMessageFieldsWithRole extends BaseMessageFields {
   role: string;
 }
 
-export function createChatMessageChunkEncoderStream() {
-  const textEncoder = new TextEncoder();
-  return new TransformStream<BaseMessageChunk>({
-    transform(chunk: BaseMessageChunk, controller) {
-      controller.enqueue(textEncoder.encode(chunk.content));
-    },
-  });
-}
-
 export abstract class BaseMessage
   extends Serializable
   implements BaseMessageFields

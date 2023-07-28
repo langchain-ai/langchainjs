@@ -1,12 +1,10 @@
 import { test } from "@jest/globals";
 import { LLM } from "../../llms/base.js";
-import { BaseChatModel } from "../../chat_models/base.js";
 import {
-  AIMessage,
-  BaseMessage,
-  ChatResult,
+  BaseChatModel,
   createChatMessageChunkEncoderStream,
-} from "../index.js";
+} from "../../chat_models/base.js";
+import { AIMessage, BaseMessage, ChatResult } from "../index.js";
 
 class FakeLLM extends LLM {
   _llmType() {

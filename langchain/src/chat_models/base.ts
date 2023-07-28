@@ -40,6 +40,15 @@ export type BaseChatModelParams = BaseLanguageModelParams;
 
 export type BaseChatModelCallOptions = BaseLanguageModelCallOptions;
 
+export function createChatMessageChunkEncoderStream() {
+  const textEncoder = new TextEncoder();
+  return new TransformStream<BaseMessageChunk>({
+    transform(chunk: BaseMessageChunk, controller) {
+      controller.enqueue(textEncoder.encode(chunk.content));
+    },
+  });
+}
+
 export abstract class BaseChatModel<
   CallOptions extends BaseChatModelCallOptions = BaseChatModelCallOptions
 > extends BaseLanguageModel<CallOptions, BaseMessageChunk> {
@@ -64,7 +73,7 @@ export abstract class BaseChatModel<
     const [runnableConfig, callOptions] =
       super._separateRunnableConfigFromCallOptions(options);
     if (callOptions?.timeout && !callOptions.signal) {
-      callOptions.signal = AbortSignal.timeout(callOptions.timeout)
+      callOptions.signal = AbortSignal.timeout(callOptions.timeout);
     }
     return [runnableConfig, callOptions as this["ParsedCallOptions"]];
   }
