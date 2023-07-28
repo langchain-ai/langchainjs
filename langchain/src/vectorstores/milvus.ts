@@ -369,13 +369,7 @@ export class Milvus extends VectorStore {
     texts: string[],
     metadatas: object[] | object,
     embeddings: Embeddings,
-    dbConfig?: {
-      collectionName?: string;
-      url?: string;
-      ssl?: boolean;
-      username?: string;
-      password?: string;
-    }
+    dbConfig?: MilvusLibArgs
   ): Promise<Milvus> {
     const docs: Document[] = [];
     for (let i = 0; i < texts.length; i += 1) {
