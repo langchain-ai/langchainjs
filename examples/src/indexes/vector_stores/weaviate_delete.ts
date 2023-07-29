@@ -79,4 +79,7 @@ export async function run() {
   /*
   []
   */
+
+  // You can also delete an entire index. This will the index and all its objects
+  await WeaviateStore.deleteIndex(client, "Test");
 }

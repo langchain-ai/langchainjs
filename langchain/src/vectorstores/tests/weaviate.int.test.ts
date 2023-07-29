@@ -90,7 +90,7 @@ test.skip("WeaviateStore", async () => {
   ]);
 });
 
-test.skip("WeaviateStore upsert + delete", async () => {
+test("WeaviateStore upsert + delete", async () => {
   // Something wrong with the weaviate-ts-client types, so we need to disable
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const client = (weaviate as any).client({
@@ -244,4 +244,15 @@ test.skip("WeaviateStore delete with filter", async () => {
     },
   });
   expect(results2).toEqual([]);
+  const schema = await client.schema.getter().do();
+  const exists = schema.classes.some(
+    (item: { class: string }) => item.class === "FilterDeletionTest"
+  );
+  expect(exists).toEqual(true);
+  await WeaviateStore.deleteIndex(client, "FilterDeletionTest");
+  const schema2 = await client.schema.getter().do();
+  const exists2 = schema2.classes.some(
+    (item: { class: string }) => item.class === "FilterDeletionTest"
+  );
+  expect(exists2).toEqual(false);
 });

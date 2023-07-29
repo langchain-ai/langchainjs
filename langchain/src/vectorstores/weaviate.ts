@@ -182,6 +182,13 @@ export class WeaviateStore extends VectorStore {
     }
   }
 
+  static async deleteIndex(
+    client: WeaviateClient,
+    indexName: string
+  ): Promise<void> {
+    await client.schema.classDeleter().withClassName(indexName).do();
+  }
+
   async similaritySearchVectorWithScore(
     query: number[],
     k: number,
