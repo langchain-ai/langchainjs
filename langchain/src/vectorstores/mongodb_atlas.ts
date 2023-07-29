@@ -13,7 +13,8 @@ export type MongoDBAtlasVectorSearchLibArgs = {
 type MongoDBAtlasFilter = {
   preFilter?: MongoDBDocument;
   postFilterPipeline?: MongoDBDocument[];
-};
+} & MongoDBDocument;
+
 export class MongoDBAtlasVectorSearch extends VectorStore {
   declare FilterType: MongoDBAtlasFilter;
 
@@ -57,14 +58,23 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
   async similaritySearchVectorWithScore(
     query: number[],
     k: number,
-    filter?: MongoDBAtlasFilter | undefined
+    filter?: MongoDBAtlasFilter
   ): Promise<[Document, number][]> {
     const knnBeta: MongoDBDocument = {
       vector: query,
       path: this.embeddingKey,
       k,
     };
-    const { preFilter, postFilterPipeline } = filter ?? {};
+    let preFilter: MongoDBDocument | undefined;
+    let postFilterPipeline: MongoDBDocument[] | undefined;
+    if (filter !== undefined) {
+      if (filter.preFilter) {
+        preFilter = filter.preFilter;
+        postFilterPipeline = filter.postFilterPipeline;
+      } else {
+        preFilter = filter;
+      }
+    }
 
     if (preFilter) {
       knnBeta.filter = preFilter;

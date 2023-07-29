@@ -150,7 +150,7 @@ export abstract class VectorStore extends Serializable {
   }
 
   asRetriever(
-    kOrFields?: number | VectorStoreRetrieverInput<this>,
+    kOrFields?: number | Partial<VectorStoreRetrieverInput<this>>,
     filter?: this["FilterType"],
     callbacks?: Callbacks,
     tags?: string[],

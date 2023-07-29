@@ -76,10 +76,19 @@ test.skip("MongoDBAtlasVectorSearch with external ids", async () => {
     const filteredResults = await vectorStore.similaritySearch(
       "That fence is purple",
       1,
-      { preFilter }
+      preFilter
     );
 
     expect(filteredResults).toEqual([]);
+
+    const retriever = vectorStore.asRetriever({
+      filter: {
+        preFilter,
+      },
+    });
+
+    const docs = await retriever.getRelevantDocuments("That fence is purple");
+    console.log(docs);
   } finally {
     await client.close();
   }
