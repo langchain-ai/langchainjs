@@ -111,13 +111,11 @@ export class Chroma extends VectorStore {
     await collection.upsert({
       ids: documentIds,
       embeddings: vectors,
-      metadatas: documents.map(({ metadata }) => {
-        return {
-          ...metadata,
-          locFrom:metadata.loc.lines.from,
-          locTo: metadata.loc.lines.to,
-        }
-      }),
+      metadatas: documents.map(({ metadata }) => ({
+        ...metadata,
+        locFrom: metadata.loc.lines.from,
+        locTo: metadata.loc.lines.to,
+      })),
       documents: documents.map(({ pageContent }) => pageContent),
     });
     return documentIds;
@@ -168,28 +166,28 @@ export class Chroma extends VectorStore {
 
     const results: [Document, number][] = [];
     for (let i = 0; i < firstIds.length; i += 1) {
-      let metadata = {} as any
-      let storedMetadata = firstMetadatas?.[i]
+      let metadata: Document["metadata"] = {};
+      const storedMetadata = firstMetadatas?.[i];
 
-      if (storedMetadata && storedMetadata.locFrom && storedMetadata.locTo ) {
+      if (storedMetadata && storedMetadata.locFrom && storedMetadata.locTo) {
         metadata = {
           ...firstMetadatas[i],
           loc: {
             lines: {
               from: storedMetadata.locFrom,
-              to: storedMetadata.locTo
-            }
-          }
-        }
-        
-        delete metadata.locFrom
-        delete metadata.locTo
+              to: storedMetadata.locTo,
+            },
+          },
+        };
+
+        delete metadata.locFrom;
+        delete metadata.locTo;
       }
 
       results.push([
         new Document({
           pageContent: firstDocuments?.[i] ?? "",
-          metadata: metadata,
+          metadata,
         }),
         firstDistances[i],
       ]);
