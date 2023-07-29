@@ -4,22 +4,26 @@ import { Embeddings } from "../embeddings/base.js";
 import { Document } from "../document.js";
 
 export type MongoDBAtlasVectorSearchLibArgs = {
-  collection: Collection<MongoDBDocument>;
-  indexName?: string;
-  textKey?: string;
-  embeddingKey?: string;
+  readonly collection: Collection<MongoDBDocument>;
+  readonly indexName?: string;
+  readonly textKey?: string;
+  readonly embeddingKey?: string;
 };
 
+type MongoDBAtlasFilter = {
+  preFilter?: MongoDBDocument;
+  postFilterPipeline?: MongoDBDocument[];
+};
 export class MongoDBAtlasVectorSearch extends VectorStore {
-  declare FilterType: MongoDBDocument;
+  declare FilterType: MongoDBAtlasFilter;
 
-  collection: Collection<MongoDBDocument>;
+  private readonly collection: Collection<MongoDBDocument>;
 
-  indexName: string;
+  private readonly indexName: string;
 
-  textKey: string;
+  private readonly textKey: string;
 
-  embeddingKey: string;
+  private readonly embeddingKey: string;
 
   _vectorstoreType(): string {
     return "mongodb_atlas";
@@ -28,9 +32,9 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
   constructor(embeddings: Embeddings, args: MongoDBAtlasVectorSearchLibArgs) {
     super(embeddings, args);
     this.collection = args.collection;
-    this.indexName = args.indexName || "default";
-    this.textKey = args.textKey || "text";
-    this.embeddingKey = args.embeddingKey || "embedding";
+    this.indexName = args.indexName ?? "default";
+    this.textKey = args.textKey ?? "text";
+    this.embeddingKey = args.embeddingKey ?? "embedding";
   }
 
   async addVectors(vectors: number[][], documents: Document[]): Promise<void> {
@@ -53,14 +57,15 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
   async similaritySearchVectorWithScore(
     query: number[],
     k: number,
-    preFilter?: MongoDBDocument,
-    postFilterPipeline?: MongoDBDocument[]
+    filter?: MongoDBAtlasFilter | undefined
   ): Promise<[Document, number][]> {
     const knnBeta: MongoDBDocument = {
       vector: query,
       path: this.embeddingKey,
       k,
     };
+    const { preFilter, postFilterPipeline } = filter ?? {};
+
     if (preFilter) {
       knnBeta.filter = preFilter;
     }
@@ -92,21 +97,6 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
     }
 
     return ret;
-  }
-
-  async similaritySearch(
-    query: string,
-    k: number,
-    preFilter?: MongoDBDocument,
-    postFilterPipeline?: MongoDBDocument[]
-  ): Promise<Document[]> {
-    const results = await this.similaritySearchVectorWithScore(
-      await this.embeddings.embedQuery(query),
-      k,
-      preFilter,
-      postFilterPipeline
-    );
-    return results.map((result) => result[0]);
   }
 
   static async fromTexts(
