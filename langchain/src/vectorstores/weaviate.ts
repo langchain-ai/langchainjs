@@ -163,7 +163,7 @@ export class WeaviateStore extends VectorStore {
     ids?: string[];
     filter?: WeaviateFilter;
   }): Promise<void> {
-    const { ids, filter } = params || {};
+    const { ids, filter } = params;
 
     if (ids && ids.length > 0) {
       for (const id of ids) {
