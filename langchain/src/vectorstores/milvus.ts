@@ -23,10 +23,6 @@ export interface MilvusLibArgs {
   password?: string;
 }
 
-export interface MilvusFilterType {
-  filterStr: string;
-}
-
 type IndexType =
   | "IVF_FLAT"
   | "IVF_SQ8"
@@ -60,7 +56,7 @@ export class Milvus extends VectorStore {
     };
   }
 
-  declare FilterType: MilvusFilterType;
+  declare FilterType: string;
 
   collectionName: string;
 
@@ -191,7 +187,7 @@ export class Milvus extends VectorStore {
   async similaritySearchVectorWithScore(
     query: number[],
     k: number,
-    filter?: MilvusFilterType
+    filter?: string
   ): Promise<[Document, number][]> {
     const hasColResp = await this.client.hasCollection({
       collection_name: this.collectionName,
@@ -205,7 +201,7 @@ export class Milvus extends VectorStore {
       );
     }
 
-    const filterStr = filter ? filter.filterStr : "";
+    const filterStr = filter ?? "";
 
     await this.grabCollectionFields();
 
