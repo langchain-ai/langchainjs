@@ -65,16 +65,13 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
       path: this.embeddingKey,
       k,
     };
+
     let preFilter: MongoDBDocument | undefined;
     let postFilterPipeline: MongoDBDocument[] | undefined;
-    if (filter !== undefined) {
-      if (filter.preFilter) {
-        preFilter = filter.preFilter;
-        postFilterPipeline = filter.postFilterPipeline;
-      } else {
-        preFilter = filter;
-      }
-    }
+    if (filter?.preFilter || filter?.postFilterPipeline) {
+      preFilter = filter.preFilter;
+      postFilterPipeline = filter.postFilterPipeline;
+    } else preFilter = filter;
 
     if (preFilter) {
       knnBeta.filter = preFilter;
