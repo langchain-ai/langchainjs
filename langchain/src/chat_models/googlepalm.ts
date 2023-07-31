@@ -60,6 +60,18 @@ export interface GooglePaLMChatInput extends BaseChatModelParams {
   apiKey?: string;
 }
 
+function getMessageAuthor(message: BaseMessage) {
+  const type = message._getType();
+  if (type === "generic") {
+    if (!("role" in message) || typeof message.role !== "string") {
+      throw new Error("Missing role in generic message");
+    }
+
+    return message.role;
+  }
+  return message.name ?? type;
+}
+
 export class ChatGooglePaLM
   extends BaseChatModel
   implements GooglePaLMChatInput
@@ -175,7 +187,7 @@ export class ChatGooglePaLM
   ): string | undefined {
     // get the first message and checks if it's a system 'system' messages
     const systemMessage =
-      messages.length > 0 && messages[0]._getType() === "system"
+      messages.length > 0 && getMessageAuthor(messages[0]) === "system"
         ? messages[0]
         : undefined;
     return systemMessage?.content;
@@ -185,12 +197,16 @@ export class ChatGooglePaLM
     messages: BaseMessage[]
   ): protos.google.ai.generativelanguage.v1beta2.IMessage[] {
     // remove all 'system' messages
-    const nonSystemMessages = messages.filter((m) => m._getType() !== "system");
+    const nonSystemMessages = messages.filter(
+      (m) => getMessageAuthor(m) !== "system"
+    );
 
     // requires alternate human & ai messages. Throw error if two messages are consecutive
     nonSystemMessages.forEach((msg, index) => {
       if (index < 1) return;
-      if (msg._getType() === nonSystemMessages[index - 1]._getType()) {
+      if (
+        getMessageAuthor(msg) === getMessageAuthor(nonSystemMessages[index - 1])
+      ) {
         throw new Error(
           `Google PaLM requires alternate messages between authors`
         );
@@ -198,7 +214,7 @@ export class ChatGooglePaLM
     });
 
     return nonSystemMessages.map((m) => ({
-      author: m.name ?? m._getType(),
+      author: getMessageAuthor(m),
       content: m.content,
       citationMetadata: {
         citationSources: m.additional_kwargs.citationSources as
