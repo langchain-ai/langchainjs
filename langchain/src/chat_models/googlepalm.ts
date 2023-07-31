@@ -67,7 +67,7 @@ export interface GooglePaLMChatInput extends BaseChatModelParams {
 
 function getMessageAuthor(message: BaseMessage) {
   const type = message._getType();
-  if (type === "generic" && ChatMessage.isChatMessage(message)) {
+  if (ChatMessage.isInstance(message)) {
     return message.role;
   }
   return message.name ?? type;

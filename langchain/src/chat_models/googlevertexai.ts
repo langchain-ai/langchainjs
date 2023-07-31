@@ -82,7 +82,7 @@ export class GoogleVertexAIChatMessage {
           `System messages are only supported as the first passed message for Google Vertex AI.`
         );
       case "generic": {
-        if (!ChatMessage.isChatMessage(message))
+        if (!ChatMessage.isInstance(message))
           throw new Error("Invalid generic chat message");
         return GoogleVertexAIChatMessage.extractGenericMessageCustomRole(
           message

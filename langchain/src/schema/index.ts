@@ -349,7 +349,7 @@ export class ChatMessage
     return "generic";
   }
 
-  static isChatMessage(message: BaseMessage): message is ChatMessage {
+  static isInstance(message: BaseMessage): message is ChatMessage {
     return message._getType() === "generic";
   }
 }

@@ -36,7 +36,7 @@ function getAnthropicPromptFromMessage(message: BaseMessage): string {
     case "system":
       return "";
     case "generic": {
-      if (!ChatMessage.isChatMessage(message))
+      if (!ChatMessage.isInstance(message))
         throw new Error("Invalid generic chat message");
       return extractGenericMessageCustomRole(message);
     }

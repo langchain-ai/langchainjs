@@ -110,7 +110,7 @@ function messageToWenxinRole(message: BaseMessage): WenxinMessageRole {
     case "function":
       throw new Error("Function messages not supported");
     case "generic": {
-      if (!ChatMessage.isChatMessage(message))
+      if (!ChatMessage.isInstance(message))
         throw new Error("Invalid generic chat message");
       return extractGenericMessageCustomRole(message);
     }
