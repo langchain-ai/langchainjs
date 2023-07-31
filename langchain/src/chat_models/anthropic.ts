@@ -13,15 +13,19 @@ import { getEnvironmentVariable } from "../util/env.js";
 import { BaseChatModel, BaseChatModelParams } from "./base.js";
 
 function extractCustomRole(message: BaseMessage) {
-  if (!("role" in message && typeof message.role === "string")) {
+  if (!("role" in message) || typeof message.role !== "string") {
     throw new Error("Missing role in generic message");
   }
 
-  if (message.role === AI_PROMPT || message.role === HUMAN_PROMPT) {
-    return message.role;
+  if (
+    message.role !== AI_PROMPT &&
+    message.role !== HUMAN_PROMPT &&
+    message.role !== ""
+  ) {
+    console.warn(`Unknown message role: ${message.role}`);
   }
 
-  throw new Error(`Unknown message role: ${message.role}`);
+  return message.role;
 }
 
 function getAnthropicPromptFromMessage(message: BaseMessage): string {

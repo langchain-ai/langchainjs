@@ -49,20 +49,20 @@ interface OpenAILLMOutput {
 }
 
 function extractCustomRole(message: BaseMessage) {
-  if (!("role" in message && typeof message.role === "string")) {
+  if (!("role" in message) || typeof message.role !== "string") {
     throw new Error("Missing role in generic message");
   }
 
   if (
-    message.role === "system" ||
-    message.role === "assistant" ||
-    message.role === "user" ||
-    message.role === "function"
+    message.role !== "system" &&
+    message.role !== "assistant" &&
+    message.role !== "user" &&
+    message.role !== "function"
   ) {
-    return message.role;
+    console.warn(`Unknown message role: ${message.role}`);
   }
 
-  throw new Error(`Unknown message role: ${message.role}`);
+  return message.role as ChatCompletionResponseMessageRoleEnum;
 }
 
 function messageToOpenAIRole(
@@ -78,9 +78,8 @@ function messageToOpenAIRole(
       return "user";
     case "function":
       return "function";
-    case "generic": {
+    case "generic":
       return extractCustomRole(message);
-    }
     default:
       throw new Error(`Unknown message type: ${type}`);
   }

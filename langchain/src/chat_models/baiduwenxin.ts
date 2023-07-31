@@ -91,15 +91,15 @@ declare interface BaiduWenxinChatInput {
 }
 
 function extractCustomRole(message: BaseMessage) {
-  if (!("role" in message && typeof message.role === "string")) {
+  if (!("role" in message) || typeof message.role !== "string") {
     throw new Error("Missing role in generic message");
   }
 
-  if (message.role === "assistant" || message.role === "user") {
-    return message.role;
+  if (message.role !== "assistant" && message.role !== "user") {
+    console.warn(`Unknown message role: ${message.role}`);
   }
 
-  throw new Error(`Unknown message role: ${message.role}`);
+  return message.role as WenxinMessageRole;
 }
 
 function messageToWenxinRole(message: BaseMessage): WenxinMessageRole {
@@ -110,6 +110,10 @@ function messageToWenxinRole(message: BaseMessage): WenxinMessageRole {
     case "human":
       return "user";
     case "system":
+      throw new Error("System messages not supported");
+    case "function":
+      throw new Error("Function messages not supported");
+    case "generic":
       return extractCustomRole(message);
     default:
       throw new Error(`Unknown message type: ${type}`);

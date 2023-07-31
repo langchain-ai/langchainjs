@@ -1,5 +1,5 @@
 import { test } from "@jest/globals";
-import { HumanMessage } from "../../schema/index.js";
+import { ChatMessage, HumanMessage } from "../../schema/index.js";
 import {
   PromptTemplate,
   ChatPromptTemplate,
@@ -23,6 +23,12 @@ test("Test ChatGoogleVertexAI generate", async () => {
   const chat = new ChatGoogleVertexAI();
   const message = new HumanMessage("Hello!");
   const res = await chat.generate([[message]]);
+  console.log(JSON.stringify(res, null, 2));
+});
+
+test("Google code messages with custom messages", async () => {
+  const chat = new ChatGoogleVertexAI();
+  const res = await chat.call([new ChatMessage("Hello!", "user")]);
   console.log(JSON.stringify(res, null, 2));
 });
 

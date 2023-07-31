@@ -341,9 +341,6 @@ test("Test OpenAI with specific roles in ChatMessage", async () => {
     "system"
   );
   const user_message = new ChatMessage("Hello!", "user");
-  const invalid_message = new ChatMessage("Hello!", "invalid");
   const res = await chat.call([system_message, user_message]);
   console.log({ res });
-
-  await expect(() => chat.call([invalid_message])).rejects.toThrow();
 });

@@ -220,9 +220,6 @@ test("ChatAnthropic with specific roles in ChatMessage", async () => {
     maxTokensToSample: 10,
   });
   const user_message = new ChatMessage("Hello!", HUMAN_PROMPT);
-  const invalid_message = new ChatMessage("Hello!", "invalid");
   const res = await chat.call([user_message]);
   console.log({ res });
-
-  await expect(() => chat.call([invalid_message])).rejects.toThrow();
 });
