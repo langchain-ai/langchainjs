@@ -83,6 +83,7 @@ const entrypoints = {
   "vectorstores/singlestore": "vectorstores/singlestore",
   "vectorstores/tigris": "vectorstores/tigris",
   "vectorstores/vectara": "vectorstores/vectara",
+  "vectorstores/xata": "vectorstores/xata",
   // text_splitter
   text_splitter: "text_splitter",
   // memory
@@ -191,7 +192,8 @@ const entrypoints = {
   "experimental/babyagi": "experimental/babyagi/index",
   "experimental/generative_agents": "experimental/generative_agents/index",
   "experimental/plan_and_execute": "experimental/plan_and_execute/index",
-  "experimental/multimodal_embeddings/googlevertexai": "experimental/multimodal_embeddings/googlevertexai",
+  "experimental/multimodal_embeddings/googlevertexai":
+    "experimental/multimodal_embeddings/googlevertexai",
   // evaluation
   evaluation: "evaluation/index",
 };

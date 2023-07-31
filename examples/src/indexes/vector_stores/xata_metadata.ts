@@ -2,11 +2,10 @@ import { XataVectorSearch } from "langchain/vectorstores/xata";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { BaseClient } from "@xata.io/client";
 import { Document } from "langchain/document";
-import { VectorDBQAChain } from "langchain/chains";
-import { OpenAI } from "langchain/llms/openai";
 
 // First, follow set-up instructions at
 // https://js.langchain.com/docs/modules/data_connection/vectorstores/integrations/xata
+// Also, add a column named "author" to the "vectors" table.
 
 // if you use the generated client, you don't need this function.
 // Just import getXataClient from the generated xata.ts instead.
@@ -28,38 +27,35 @@ const getXataClient = () => {
 
 export async function run() {
   const client = getXataClient();
-
   const table = "vectors";
   const embeddings = new OpenAIEmbeddings();
   const store = new XataVectorSearch(embeddings, { client, table });
-
   // Add documents
   const docs = [
     new Document({
-      pageContent: "Xata is a Serverless Data platform based on PostgreSQL",
+      pageContent: "Xata works great with Langchain.js",
+      metadata: { author: "Xata" },
     }),
     new Document({
-      pageContent:
-        "Xata offers a built-in vector type that can be used to store and query vectors",
+      pageContent: "Xata works great with Langchain",
+      metadata: { author: "Langchain" },
     }),
     new Document({
       pageContent: "Xata includes similarity search",
+      metadata: { author: "Xata" },
     }),
   ];
-
   const ids = await store.addDocuments(docs);
 
   // eslint-disable-next-line no-promise-executor-return
   await new Promise((r) => setTimeout(r, 2000));
 
-  const model = new OpenAI();
-  const chain = VectorDBQAChain.fromLLM(model, store, {
-    k: 1,
-    returnSourceDocuments: true,
+  // author is applied as pre-filter to the similarity search
+  const results = await store.similaritySearchWithScore("xata works great", 6, {
+    author: "Langchain",
   });
-  const response = await chain.call({ query: "What is Xata?" });
 
-  console.log(JSON.stringify(response, null, 2));
+  console.log(JSON.stringify(results, null, 2));
 
   await store.delete({ ids });
 }

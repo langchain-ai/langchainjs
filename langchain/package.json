@@ -211,6 +211,9 @@
     "vectorstores/vectara.cjs",
     "vectorstores/vectara.js",
     "vectorstores/vectara.d.ts",
+    "vectorstores/xata.cjs",
+    "vectorstores/xata.js",
+    "vectorstores/xata.d.ts",
     "text_splitter.cjs",
     "text_splitter.js",
     "text_splitter.d.ts",
@@ -1242,6 +1245,11 @@
       "types": "./vectorstores/vectara.d.ts",
       "import": "./vectorstores/vectara.js",
       "require": "./vectorstores/vectara.cjs"
+    },
+    "./vectorstores/xata": {
+      "types": "./vectorstores/xata.d.ts",
+      "import": "./vectorstores/xata.js",
+      "require": "./vectorstores/xata.cjs"
     },
     "./text_splitter": {
       "types": "./text_splitter.d.ts",

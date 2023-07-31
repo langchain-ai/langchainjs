@@ -1,17 +1,18 @@
-import type { BaseClient } from "@xata.io/client";
 import { VectorStore } from "./base.js";
 import { Embeddings } from "../embeddings/base.js";
 import { Document } from "../document.js";
 
 export interface XataClientArgs {
-  readonly client: BaseClient;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  readonly client: any;
   readonly table: string;
 }
 
 type XataFilter = object;
 
 export class XataVectorSearch extends VectorStore {
-  private readonly client: BaseClient;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private readonly client: any;
 
   private readonly table: string;
 
