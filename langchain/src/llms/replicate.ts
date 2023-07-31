@@ -33,7 +33,7 @@ export class Replicate extends LLM implements ReplicateInput {
 
     const apiKey =
       fields?.apiKey ??
-      getEnvironmentVariable("REPLICATE_API_KEY") ?? // previous environment variable for backgwards compatibility
+      getEnvironmentVariable("REPLICATE_API_KEY") ?? // previous environment variable for backwards compatibility
       getEnvironmentVariable("REPLICATE_API_TOKEN"); // current environment variable, matching the Python library
 
     if (!apiKey) {
