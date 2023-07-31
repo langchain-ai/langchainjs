@@ -6672,15 +6672,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@xata.io/client@npm:latest":
-  version: 0.24.3
-  resolution: "@xata.io/client@npm:0.24.3"
-  peerDependencies:
-    typescript: ">=4.5"
-  checksum: 5750dc6f0d81891878212238280d6d037d12a1f56e18ae5ba108524ab833f6fd19dbb76a7f57d473e130e95776063d0fa529b7cbbd3fc13e175a36f0c512320c
-  languageName: node
-  linkType: hard
-
 "@zilliz/milvus2-sdk-node@npm:>=2.2.7, @zilliz/milvus2-sdk-node@npm:^2.2.7":
   version: 2.2.10
   resolution: "@zilliz/milvus2-sdk-node@npm:2.2.10"
@@ -13025,7 +13016,7 @@ __metadata:
     "@typescript-eslint/eslint-plugin": ^5.58.0
     "@typescript-eslint/parser": ^5.58.0
     "@upstash/redis": ^1.20.6
-    "@xata.io/client": latest
+    "@xata.io/client": ^0.25.1
     "@zilliz/milvus2-sdk-node": ">=2.2.7"
     ansi-styles: ^5.0.0
     apify-client: ^2.7.1
@@ -13125,6 +13116,7 @@ __metadata:
     "@tensorflow/tfjs-core": "*"
     "@tigrisdata/vector": ^1.1.0
     "@upstash/redis": ^1.20.6
+    "@xata.io/client": ^0.25.1
     "@zilliz/milvus2-sdk-node": ">=2.2.7"
     apify-client: ^2.7.1
     axios: "*"
@@ -13211,6 +13203,8 @@ __metadata:
     "@tigrisdata/vector":
       optional: true
     "@upstash/redis":
+      optional: true
+    "@xata.io/client":
       optional: true
     "@zilliz/milvus2-sdk-node":
       optional: true
