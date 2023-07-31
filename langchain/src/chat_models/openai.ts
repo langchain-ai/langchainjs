@@ -359,7 +359,7 @@ export class ChatOpenAI
   ): AsyncGenerator<ChatGenerationChunk> {
     const messagesMapped: ChatCompletionRequestMessage[] = messages.map(
       (message) => ({
-        role: messageTypeToOpenAIRole(message._getType()),
+        role: messageToOpenAIRole(message),
         content: message.content,
         name: message.name,
         function_call: message.additional_kwargs
