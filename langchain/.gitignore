@@ -220,6 +220,12 @@ document_loaders/base.d.ts
 document_loaders/web/apify_dataset.cjs
 document_loaders/web/apify_dataset.js
 document_loaders/web/apify_dataset.d.ts
+document_loaders/web/azure_blob_storage_container.cjs
+document_loaders/web/azure_blob_storage_container.js
+document_loaders/web/azure_blob_storage_container.d.ts
+document_loaders/web/azure_blob_storage_file.cjs
+document_loaders/web/azure_blob_storage_file.js
+document_loaders/web/azure_blob_storage_file.d.ts
 document_loaders/web/cheerio.cjs
 document_loaders/web/cheerio.js
 document_loaders/web/cheerio.d.ts

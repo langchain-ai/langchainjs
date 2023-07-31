@@ -6,7 +6,6 @@ import {
   ChatResult,
 } from "../schema/index.js";
 import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
-import { BaseLanguageModelCallOptions } from "../base_language/index.js";
 import { getEnvironmentVariable } from "../util/env.js";
 
 export type WenxinMessageRole = "assistant" | "user";
@@ -133,8 +132,6 @@ export class ChatBaiduWenxin
   extends BaseChatModel
   implements BaiduWenxinChatInput
 {
-  declare CallOptions: BaseLanguageModelCallOptions;
-
   get callKeys(): string[] {
     return ["stop", "signal", "options"];
   }

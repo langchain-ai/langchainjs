@@ -19,10 +19,11 @@ import { chunkArray } from "../util/chunk.js";
 import { BaseLLM, BaseLLMParams } from "./base.js";
 import { calculateMaxTokens } from "../base_language/count_tokens.js";
 import { OpenAIChat } from "./openai-chat.js";
-import { LLMResult } from "../schema/index.js";
+import { LLMResult, GenerationChunk } from "../schema/index.js";
 import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
 import { promptLayerTrackRequest } from "../util/prompt-layer.js";
 import { getEndpoint, OpenAIEndpointConfig } from "../util/azure.js";
+import { readableStreamToAsyncIterable } from "../util/stream.js";
 
 export { OpenAICallOptions, AzureOpenAIInput, OpenAIInput };
 
@@ -50,9 +51,10 @@ interface TokenUsage {
  * `openai.createCompletion`} can be passed through {@link modelKwargs}, even
  * if not explicitly available on this class.
  */
-export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
-  declare CallOptions: OpenAICallOptions;
-
+export class OpenAI
+  extends BaseLLM<OpenAICallOptions>
+  implements OpenAIInput, AzureOpenAIInput
+{
   get callKeys(): (keyof OpenAICallOptions)[] {
     return [...(super.callKeys as (keyof OpenAICallOptions)[]), "options"];
   }
@@ -191,7 +193,7 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
     }
 
     if (this.azureOpenAIApiKey) {
-      if (!this.azureOpenAIApiInstanceName) {
+      if (!this.azureOpenAIApiInstanceName && !this.azureOpenAIBasePath) {
         throw new Error("Azure OpenAI API instance name not found");
       }
       if (!this.azureOpenAIApiDeploymentName) {
@@ -423,6 +425,90 @@ export class OpenAI extends BaseLLM implements OpenAIInput, AzureOpenAIInput {
     return {
       generations,
       llmOutput: { tokenUsage },
+    };
+  }
+
+  // TODO(jacoblee): Refactor with _generate(..., {stream: true}) implementation
+  // when we integrate OpenAI's new SDK.
+  async *_streamResponseChunks(
+    input: string,
+    options: this["ParsedCallOptions"],
+    runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<GenerationChunk> {
+    const params = {
+      ...this.invocationParams(options),
+      prompt: input,
+      stream: true,
+    };
+    const streamIterable = this.startStream(params, options);
+    for await (const streamedResponse of streamIterable) {
+      const data = JSON.parse(streamedResponse);
+      const choice = data.choices?.[0];
+      if (!choice) {
+        continue;
+      }
+      const chunk = new GenerationChunk({
+        text: choice.text,
+        generationInfo: {
+          finishReason: choice.finish_reason,
+          logprobs: choice.logprobs,
+        },
+      });
+      yield chunk;
+      // eslint-disable-next-line no-void
+      void runManager?.handleLLMNewToken(chunk.text ?? "");
+    }
+  }
+
+  startStream(
+    request: CreateCompletionRequest,
+    options?: StreamingAxiosConfiguration
+  ) {
+    let done = false;
+    const stream = new TransformStream();
+    const writer = stream.writable.getWriter();
+    const iterable = readableStreamToAsyncIterable(stream.readable);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let err: any;
+    this.completionWithRetry(request, {
+      ...options,
+      adapter: fetchAdapter, // default adapter doesn't do streaming
+      responseType: "stream",
+      onmessage: (event) => {
+        if (done) return;
+        if (event.data?.trim?.() === "[DONE]") {
+          done = true;
+          // eslint-disable-next-line no-void
+          void writer.close();
+        } else {
+          const data = JSON.parse(event.data);
+          if (data.error) {
+            done = true;
+            throw data.error;
+          }
+          // eslint-disable-next-line no-void
+          void writer.write(event.data);
+        }
+      },
+    }).catch((error) => {
+      if (!done) {
+        err = error;
+        done = true;
+        // eslint-disable-next-line no-void
+        void writer.close();
+      }
+    });
+    return {
+      async next() {
+        const chunk = await iterable.next();
+        if (err) {
+          throw err;
+        }
+        return chunk;
+      },
+      [Symbol.asyncIterator]() {
+        return this;
+      },
     };
   }
 

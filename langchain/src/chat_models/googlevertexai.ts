@@ -12,6 +12,7 @@ import {
   GoogleVertexAIBasePrediction,
   GoogleVertexAIModelParams,
 } from "../types/googlevertexai-types.js";
+import { BaseLanguageModelCallOptions } from "../base_language/index.js";
 
 /**
  * Represents a single "example" exchange that can be provided to
@@ -151,7 +152,7 @@ export class ChatGoogleVertexAI
   examples: ChatExample[] = [];
 
   connection: GoogleVertexAIConnection<
-    this["CallOptions"],
+    BaseLanguageModelCallOptions,
     GoogleVertexAIChatInstance,
     GoogleVertexAIChatPrediction
   >;
