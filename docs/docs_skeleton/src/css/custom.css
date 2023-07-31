@@ -73,7 +73,7 @@
 }
 
 .menu__list-item.node-only .menu__link {
-  max-width: calc(100% - 64px);
+  padding-right: 72px;
 }
 
 .node-only::after {
