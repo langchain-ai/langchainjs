@@ -1,3 +1,4 @@
+// import { z } from "zod";
 import { test } from "@jest/globals";
 import { LLM } from "../../llms/base.js";
 import {
@@ -5,6 +6,8 @@ import {
   createChatMessageChunkEncoderStream,
 } from "../../chat_models/base.js";
 import { AIMessage, BaseMessage, ChatResult } from "../index.js";
+import { PromptTemplate } from "../../prompts/index.js";
+// import { StructuredOutputParser } from "../../output_parsers/structured.js";
 
 class FakeLLM extends LLM {
   _llmType() {
@@ -29,7 +32,9 @@ class FakeChatModel extends BaseChatModel {
     _messages: BaseMessage[],
     _options: this["ParsedCallOptions"]
   ): Promise<ChatResult> {
-    const text = "response";
+    const text = `\`\`\`
+{"outputValue": "testing"}
+\`\`\``;
     return {
       generations: [
         {
@@ -75,4 +80,25 @@ test("Test chat model stream", async () => {
     console.log(chunk);
     done = chunk.done;
   }
+});
+
+test("Pipe from one runnable to the next", async () => {
+  const promptTemplate = PromptTemplate.fromTemplate("{input}");
+  const llm = new FakeLLM({});
+  const runnable = promptTemplate.pipe(llm);
+  const result = await runnable.invoke({ input: "Hello world!" });
+  console.log(result);
+  expect(result).toBe("Hello world!");
+});
+
+test("Create a runnable sequence and run it", async () => {
+  const promptTemplate = PromptTemplate.fromTemplate("{input}");
+  const llm = new FakeChatModel({});
+  // const parser = StructuredOutputParser.fromZodSchema(
+  //   z.object({ outputValue: z.string().describe("A test value") })
+  // );
+  const runnable = promptTemplate.pipe(llm);
+  const result = await runnable.invoke({ input: "Hello sequence!" });
+  console.log(result);
+  expect(result).toBe({ outputValue: "testing" });
 });

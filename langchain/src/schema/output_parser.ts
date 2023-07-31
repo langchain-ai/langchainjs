@@ -1,13 +1,16 @@
 import { Callbacks } from "../callbacks/manager.js";
 import { BasePromptValue, Generation, ChatGeneration } from "./index.js";
-import { Serializable } from "../load/serializable.js";
+import { Runnable, RunnableConfig } from "./runnable.js";
 
 /**
  * Options for formatting instructions.
  */
 export interface FormatInstructionsOptions {}
 
-export abstract class BaseLLMOutputParser<T = unknown> extends Serializable {
+export abstract class BaseLLMOutputParser<T = unknown> extends Runnable<
+  Generation[] | ChatGeneration[],
+  T
+> {
   abstract parseResult(
     generations: Generation[] | ChatGeneration[],
     callbacks?: Callbacks
@@ -20,9 +23,17 @@ export abstract class BaseLLMOutputParser<T = unknown> extends Serializable {
   ): Promise<T> {
     return this.parseResult(generations, callbacks);
   }
+
+  invoke(
+    input: Generation[] | ChatGeneration[],
+    options?: RunnableConfig
+  ): Promise<T> {
+    return this.parseResult(input, options?.callbacks);
+  }
 }
 
-/** Class to parse the output of an LLM call.
+/**
+ * Class to parse the output of an LLM call.
  */
 export abstract class BaseOutputParser<
   T = unknown
