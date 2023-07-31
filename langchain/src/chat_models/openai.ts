@@ -32,7 +32,6 @@ import {
   FunctionMessageChunk,
   HumanMessage,
   HumanMessageChunk,
-  MessageType,
   SystemMessage,
   SystemMessageChunk,
 } from "../schema/index.js";
@@ -56,9 +55,23 @@ interface OpenAILLMOutput {
   tokenUsage: TokenUsage;
 }
 
-function messageTypeToOpenAIRole(
-  type: MessageType
+function extractGenericMessageCustomRole(message: ChatMessage) {
+  if (
+    message.role !== "system" &&
+    message.role !== "assistant" &&
+    message.role !== "user" &&
+    message.role !== "function"
+  ) {
+    console.warn(`Unknown message role: ${message.role}`);
+  }
+
+  return message.role as ChatCompletionResponseMessageRoleEnum;
+}
+
+function messageToOpenAIRole(
+  message: BaseMessage
 ): ChatCompletionResponseMessageRoleEnum {
+  const type = message._getType();
   switch (type) {
     case "system":
       return "system";
@@ -68,6 +81,11 @@ function messageTypeToOpenAIRole(
       return "user";
     case "function":
       return "function";
+    case "generic": {
+      if (!ChatMessage.isInstance(message))
+        throw new Error("Invalid generic chat message");
+      return extractGenericMessageCustomRole(message);
+    }
     default:
       throw new Error(`Unknown message type: ${type}`);
   }
@@ -340,7 +358,7 @@ export class ChatOpenAI
   ): AsyncGenerator<ChatGenerationChunk> {
     const messagesMapped: ChatCompletionRequestMessage[] = messages.map(
       (message) => ({
-        role: messageTypeToOpenAIRole(message._getType()),
+        role: messageToOpenAIRole(message),
         content: message.content,
         name: message.name,
         function_call: message.additional_kwargs
@@ -455,7 +473,7 @@ export class ChatOpenAI
     const params = this.invocationParams(options);
     const messagesMapped: ChatCompletionRequestMessage[] = messages.map(
       (message) => ({
-        role: messageTypeToOpenAIRole(message._getType()),
+        role: messageToOpenAIRole(message),
         content: message.content,
         name: message.name,
         function_call: message.additional_kwargs
@@ -661,9 +679,7 @@ export class ChatOpenAI
     const countPerMessage = await Promise.all(
       messages.map(async (message) => {
         const textCount = await this.getNumTokens(message.content);
-        const roleCount = await this.getNumTokens(
-          messageTypeToOpenAIRole(message._getType())
-        );
+        const roleCount = await this.getNumTokens(messageToOpenAIRole(message));
         const nameCount =
           message.name !== undefined
             ? tokensPerName + (await this.getNumTokens(message.name))
@@ -865,7 +881,7 @@ export class PromptLayerChatOpenAI extends ChatOpenAI {
       const parsedResp = [
         {
           content: generation.text,
-          role: messageTypeToOpenAIRole(generation.message._getType()),
+          role: messageToOpenAIRole(generation.message),
         },
       ];
 
