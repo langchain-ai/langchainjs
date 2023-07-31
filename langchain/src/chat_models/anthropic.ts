@@ -8,16 +8,13 @@ import {
   BaseMessage,
   ChatGeneration,
   ChatGenerationChunk,
+  ChatMessage,
   ChatResult,
 } from "../schema/index.js";
 import { getEnvironmentVariable } from "../util/env.js";
 import { BaseChatModel, BaseChatModelParams } from "./base.js";
 
-function extractCustomRole(message: BaseMessage) {
-  if (!("role" in message) || typeof message.role !== "string") {
-    throw new Error("Missing role in generic message");
-  }
-
+function extractGenericMessageCustomRole(message: ChatMessage) {
   if (
     message.role !== AI_PROMPT &&
     message.role !== HUMAN_PROMPT &&
@@ -38,8 +35,11 @@ function getAnthropicPromptFromMessage(message: BaseMessage): string {
       return HUMAN_PROMPT;
     case "system":
       return "";
-    case "generic":
-      return extractCustomRole(message);
+    case "generic": {
+      if (!ChatMessage.isChatMessage(message))
+        throw new Error("Invalid generic chat message");
+      return extractGenericMessageCustomRole(message);
+    }
     default:
       throw new Error(`Unknown message type: ${type}`);
   }

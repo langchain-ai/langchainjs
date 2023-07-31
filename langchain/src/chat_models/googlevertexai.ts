@@ -3,6 +3,7 @@ import {
   AIMessage,
   BaseMessage,
   ChatGeneration,
+  ChatMessage,
   ChatResult,
   LLMResult,
 } from "../schema/index.js";
@@ -53,11 +54,7 @@ export class GoogleVertexAIChatMessage {
     this.name = fields.name;
   }
 
-  static extractCustomRole(message: BaseMessage) {
-    if (!("role" in message && typeof message.role === "string")) {
-      throw new Error("Missing role in generic message");
-    }
-
+  static extractGenericMessageCustomRole(message: ChatMessage) {
     if (
       message.role !== "system" &&
       message.role !== "bot" &&
@@ -84,8 +81,13 @@ export class GoogleVertexAIChatMessage {
         throw new Error(
           `System messages are only supported as the first passed message for Google Vertex AI.`
         );
-      case "generic":
-        return GoogleVertexAIChatMessage.extractCustomRole(message);
+      case "generic": {
+        if (!ChatMessage.isChatMessage(message))
+          throw new Error("Invalid generic chat message");
+        return GoogleVertexAIChatMessage.extractGenericMessageCustomRole(
+          message
+        );
+      }
       default:
         throw new Error(`Unknown / unsupported message type: ${message}`);
     }

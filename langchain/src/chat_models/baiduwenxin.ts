@@ -3,6 +3,7 @@ import {
   AIMessage,
   BaseMessage,
   ChatGeneration,
+  ChatMessage,
   ChatResult,
 } from "../schema/index.js";
 import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
@@ -89,11 +90,7 @@ declare interface BaiduWenxinChatInput {
   penaltyScore?: number;
 }
 
-function extractCustomRole(message: BaseMessage) {
-  if (!("role" in message) || typeof message.role !== "string") {
-    throw new Error("Missing role in generic message");
-  }
-
+function extractGenericMessageCustomRole(message: ChatMessage) {
   if (message.role !== "assistant" && message.role !== "user") {
     console.warn(`Unknown message role: ${message.role}`);
   }
@@ -112,8 +109,11 @@ function messageToWenxinRole(message: BaseMessage): WenxinMessageRole {
       throw new Error("System messages not supported");
     case "function":
       throw new Error("Function messages not supported");
-    case "generic":
-      return extractCustomRole(message);
+    case "generic": {
+      if (!ChatMessage.isChatMessage(message))
+        throw new Error("Invalid generic chat message");
+      return extractGenericMessageCustomRole(message);
+    }
     default:
       throw new Error(`Unknown message type: ${type}`);
   }

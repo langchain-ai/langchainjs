@@ -2,7 +2,12 @@ import { DiscussServiceClient } from "@google-ai/generativelanguage";
 import type { protos } from "@google-ai/generativelanguage";
 import { GoogleAuth } from "google-auth-library";
 import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
-import { AIMessage, BaseMessage, ChatResult } from "../schema/index.js";
+import {
+  AIMessage,
+  BaseMessage,
+  ChatMessage,
+  ChatResult,
+} from "../schema/index.js";
 import { getEnvironmentVariable } from "../util/env.js";
 import { BaseChatModel, BaseChatModelParams } from "./base.js";
 
@@ -62,11 +67,7 @@ export interface GooglePaLMChatInput extends BaseChatModelParams {
 
 function getMessageAuthor(message: BaseMessage) {
   const type = message._getType();
-  if (type === "generic") {
-    if (!("role" in message) || typeof message.role !== "string") {
-      throw new Error("Missing role in generic message");
-    }
-
+  if (type === "generic" && ChatMessage.isChatMessage(message)) {
     return message.role;
   }
   return message.name ?? type;

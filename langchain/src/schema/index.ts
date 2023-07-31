@@ -348,6 +348,10 @@ export class ChatMessage
   _getType(): MessageType {
     return "generic";
   }
+
+  static isChatMessage(message: BaseMessage): message is ChatMessage {
+    return message._getType() === "generic";
+  }
 }
 
 export class ChatMessageChunk extends BaseMessageChunk {

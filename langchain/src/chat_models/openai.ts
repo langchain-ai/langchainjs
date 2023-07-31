@@ -55,11 +55,7 @@ interface OpenAILLMOutput {
   tokenUsage: TokenUsage;
 }
 
-function extractCustomRole(message: BaseMessage) {
-  if (!("role" in message) || typeof message.role !== "string") {
-    throw new Error("Missing role in generic message");
-  }
-
+function extractGenericMessageCustomRole(message: ChatMessage) {
   if (
     message.role !== "system" &&
     message.role !== "assistant" &&
@@ -85,8 +81,11 @@ function messageToOpenAIRole(
       return "user";
     case "function":
       return "function";
-    case "generic":
-      return extractCustomRole(message);
+    case "generic": {
+      if (!ChatMessage.isChatMessage(message))
+        throw new Error("Invalid generic chat message");
+      return extractGenericMessageCustomRole(message);
+    }
     default:
       throw new Error(`Unknown message type: ${type}`);
   }
