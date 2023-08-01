@@ -212,7 +212,6 @@ export class VectaraStore extends VectorStore {
         } else {
           docIds.push(file);
         }
-        console.log(result);
       } catch (error) {
         console.log(error);
       }

@@ -182,7 +182,6 @@ describe("VectaraStore", () => {
         "./englishTwo.txt",
         "./frenchOne.txt",
       ]);
-      console.log(results);
 
       // Delete temporary files
       for (const file of files) {
