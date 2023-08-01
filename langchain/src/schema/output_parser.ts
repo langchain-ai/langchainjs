@@ -1,5 +1,10 @@
 import { Callbacks } from "../callbacks/manager.js";
-import { BasePromptValue, Generation, ChatGeneration } from "./index.js";
+import {
+  BasePromptValue,
+  Generation,
+  ChatGeneration,
+  BaseMessage,
+} from "./index.js";
 import { Runnable, RunnableConfig } from "./runnable.js";
 
 /**
@@ -8,7 +13,7 @@ import { Runnable, RunnableConfig } from "./runnable.js";
 export interface FormatInstructionsOptions {}
 
 export abstract class BaseLLMOutputParser<T = unknown> extends Runnable<
-  Generation[] | ChatGeneration[],
+  string | BaseMessage,
   T
 > {
   abstract parseResult(
@@ -24,11 +29,25 @@ export abstract class BaseLLMOutputParser<T = unknown> extends Runnable<
     return this.parseResult(generations, callbacks);
   }
 
-  invoke(
-    input: Generation[] | ChatGeneration[],
+  async invoke(
+    input: string | BaseMessage,
     options?: RunnableConfig
   ): Promise<T> {
-    return this.parseResult(input, options?.callbacks);
+    if (typeof input === "string") {
+      return this._callWithConfig(
+        async (input: string): Promise<T> =>
+          this.parseResult([{ text: input }]),
+        input,
+        options
+      );
+    } else {
+      return this._callWithConfig(
+        async (input: BaseMessage): Promise<T> =>
+          this.parseResult([{ message: input, text: input.content }]),
+        input,
+        options
+      );
+    }
   }
 }
 

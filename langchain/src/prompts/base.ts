@@ -108,7 +108,7 @@ export abstract class BasePromptTemplate<
     return allKwargs;
   }
 
-  invoke(
+  async invoke(
     input: InputValues,
     options?: BaseCallbackConfig
   ): Promise<FormattedOutput> {
