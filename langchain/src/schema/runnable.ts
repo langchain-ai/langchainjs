@@ -154,7 +154,7 @@ export abstract class Runnable<
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  static isInstance(thing: any): thing is Runnable {
+  static isRunnable(thing: any): thing is Runnable {
     return thing.lc_runnable;
   }
 }
@@ -351,7 +351,7 @@ export class RunnableSequence<
   pipe<NewRunOutput>(
     coerceable: RunnableLike<RunOutput, NewRunOutput>
   ): RunnableSequence<RunInput, NewRunOutput> {
-    if (RunnableSequence.isInstance(coerceable)) {
+    if (RunnableSequence.isRunnableSequence(coerceable)) {
       return new RunnableSequence({
         first: this.first,
         middle: this.middle.concat([
@@ -371,8 +371,8 @@ export class RunnableSequence<
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  static isInstance(thing: any): thing is RunnableSequence {
-    return Array.isArray(thing.middle) && Runnable.isInstance(thing);
+  static isRunnableSequence(thing: any): thing is RunnableSequence {
+    return Array.isArray(thing.middle) && Runnable.isRunnable(thing);
   }
 
   static from<RunInput, RunOutput>([first, ...runnables]: [
@@ -492,7 +492,7 @@ function _coerceToRunnable<RunInput, RunOutput>(
 ): Runnable<RunInput, RunOutput> {
   if (typeof coerceable === "function") {
     return new RunnableLambda({ func: coerceable });
-  } else if (Runnable.isInstance(coerceable)) {
+  } else if (Runnable.isRunnable(coerceable)) {
     return coerceable;
   } else if (!Array.isArray(coerceable) && typeof coerceable === "object") {
     const runnables: Record<string, Runnable<RunInput>> = {};

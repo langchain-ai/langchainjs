@@ -101,6 +101,23 @@ export abstract class BaseOutputParser<
   }
 }
 
+/**
+ * OutputParser that parses LLMResult into the top likely string.
+ */
+export class StringOutputParser extends BaseOutputParser<string> {
+  lc_namespace = ["schema", "output_parser"];
+
+  lc_serializable = true;
+
+  parse(text: string): Promise<string> {
+    return Promise.resolve(text);
+  }
+
+  getFormatInstructions(): string {
+    return "";
+  }
+}
+
 export class OutputParserException extends Error {
   output?: string;
 
