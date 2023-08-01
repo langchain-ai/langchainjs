@@ -62,7 +62,7 @@ export class VectorStoreRetriever<
 }
 
 export abstract class VectorStore extends Serializable {
-  declare FilterType: object;
+  declare FilterType: object | string;
 
   lc_namespace = ["langchain", "vectorstores", this._vectorstoreType()];
 
