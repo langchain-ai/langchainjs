@@ -40,7 +40,7 @@ test("Serialise Replicate", () => {
       "kwargs": {
         "api_key": {
           "id": [
-            "REPLICATE_API_KEY",
+            "REPLICATE_API_TOKEN",
           ],
           "lc": 1,
           "type": "secret",

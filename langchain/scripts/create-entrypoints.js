@@ -94,6 +94,8 @@ const entrypoints = {
   document_loaders: "document_loaders/index",
   "document_loaders/base": "document_loaders/base",
   "document_loaders/web/apify_dataset": "document_loaders/web/apify_dataset",
+  "document_loaders/web/azure_blob_storage_container": "document_loaders/web/azure_blob_storage_container",
+  "document_loaders/web/azure_blob_storage_file": "document_loaders/web/azure_blob_storage_file",
   "document_loaders/web/cheerio": "document_loaders/web/cheerio",
   "document_loaders/web/puppeteer": "document_loaders/web/puppeteer",
   "document_loaders/web/playwright": "document_loaders/web/playwright",
@@ -139,6 +141,7 @@ const entrypoints = {
   "schema/output_parser": "schema/output_parser",
   "schema/query_constructor": "schema/query_constructor",
   "schema/retriever": "schema/retriever",
+  "schema/runnable": "schema/runnable",
   // sql_db
   sql_db: "sql_db",
   // callbacks
@@ -256,6 +259,8 @@ const requiresOptionalDependency = [
   "vectorstores/tigris",
   "memory/zep",
   "document_loaders/web/apify_dataset",
+  "document_loaders/web/azure_blob_storage_container",
+  "document_loaders/web/azure_blob_storage_file",
   "document_loaders/web/cheerio",
   "document_loaders/web/puppeteer",
   "document_loaders/web/playwright",

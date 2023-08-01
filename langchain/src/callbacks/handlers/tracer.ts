@@ -15,7 +15,7 @@ import {
 } from "../base.js";
 import { Document } from "../../document.js";
 
-export type RunType = "llm" | "chain" | "tool";
+export type RunType = string;
 
 export interface Run extends BaseRun {
   // some optional fields are always present here
@@ -201,7 +201,8 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     runId: string,
     parentRunId?: string,
     tags?: string[],
-    metadata?: KVMap
+    metadata?: KVMap,
+    runType?: string
   ): Promise<void> {
     const execution_order = this._getExecutionOrder(parentRunId);
     const start_time = Date.now();
@@ -220,7 +221,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       inputs,
       execution_order,
       child_execution_order: execution_order,
-      run_type: "chain",
+      run_type: runType ?? "chain",
       child_runs: [],
       extra: metadata ? { metadata } : {},
       tags: tags || [],
@@ -232,7 +233,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
 
   async handleChainEnd(outputs: ChainValues, runId: string): Promise<void> {
     const run = this.runMap.get(runId);
-    if (!run || run?.run_type !== "chain") {
+    if (!run) {
       throw new Error("No chain run to end.");
     }
     run.end_time = Date.now();
@@ -247,7 +248,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
 
   async handleChainError(error: Error, runId: string): Promise<void> {
     const run = this.runMap.get(runId);
-    if (!run || run?.run_type !== "chain") {
+    if (!run) {
       throw new Error("No chain run to end.");
     }
     run.end_time = Date.now();

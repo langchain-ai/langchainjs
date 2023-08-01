@@ -142,6 +142,12 @@ export interface OptionalImportMap {
   "langchain/document_loaders/web/apify_dataset"?:
     | typeof import("../document_loaders/web/apify_dataset.js")
     | Promise<typeof import("../document_loaders/web/apify_dataset.js")>;
+  "langchain/document_loaders/web/azure_blob_storage_container"?:
+    | typeof import("../document_loaders/web/azure_blob_storage_container.js")
+    | Promise<typeof import("../document_loaders/web/azure_blob_storage_container.js")>;
+  "langchain/document_loaders/web/azure_blob_storage_file"?:
+    | typeof import("../document_loaders/web/azure_blob_storage_file.js")
+    | Promise<typeof import("../document_loaders/web/azure_blob_storage_file.js")>;
   "langchain/document_loaders/web/cheerio"?:
     | typeof import("../document_loaders/web/cheerio.js")
     | Promise<typeof import("../document_loaders/web/cheerio.js")>;
@@ -332,7 +338,7 @@ export interface SecretMap {
   REDIS_URL?: string;
   REDIS_USERNAME?: string;
   REMOTE_RETRIEVER_AUTH_BEARER?: string;
-  REPLICATE_API_KEY?: string;
+  REPLICATE_API_TOKEN?: string;
   SEARXNG_API_BASE?: string;
   UPSTASH_REDIS_REST_TOKEN?: string;
   UPSTASH_REDIS_REST_URL?: string;

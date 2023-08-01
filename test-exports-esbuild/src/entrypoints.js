@@ -32,6 +32,7 @@ import * as schema from "langchain/schema";
 import * as schema_output_parser from "langchain/schema/output_parser";
 import * as schema_query_constructor from "langchain/schema/query_constructor";
 import * as schema_retriever from "langchain/schema/retriever";
+import * as schema_runnable from "langchain/schema/runnable";
 import * as callbacks from "langchain/callbacks";
 import * as output_parsers from "langchain/output_parsers";
 import * as retrievers_remote from "langchain/retrievers/remote";
