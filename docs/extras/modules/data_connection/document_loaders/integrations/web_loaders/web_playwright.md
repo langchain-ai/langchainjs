@@ -53,7 +53,7 @@ type PlaywrightWebBaseLoaderOptions = {
 
 2. `gotoOptions`: an optional object that specifies additional options to pass to the page.goto() method. This can include options such as the timeout option to specify the maximum navigation time in milliseconds, or the waitUntil option to specify when to consider the navigation as successful.
 
-3. `evaluate`: an optional function that can be used to evaluate JavaScript code on the page using a custom evaluation function. This can be useful for extracting data from the page or interacting with page elements. The function should return a Promise that resolves to a string containing the result of the evaluation.
+3. `evaluate`: an optional function that can be used to evaluate JavaScript code on the page using a custom evaluation function. This can be useful for extracting data from the page, interacting with page elements, or handling specific HTTP responses. The function should return a Promise that resolves to a string containing the result of the evaluation.
 
 By passing these options to the `PlaywrightWebBaseLoader` constructor, you can customize the behavior of the loader and use Playwright's powerful features to scrape and interact with web pages.
 
@@ -91,7 +91,7 @@ const loader = new PlaywrightWebBaseLoader("https://www.tabnews.com.br/", {
     waitUntil: "domcontentloaded",
   },
   /** Pass custom evaluate, in this case you get page and browser instances */
-  async evaluate(page: Page, browser: Browser) {
+  async evaluate(page: Page, browser: Browser, response: Response | null) {
     await page.waitForResponse("https://www.tabnews.com.br/va/view");
 
     const result = await page.evaluate(() => document.body.innerHTML);
