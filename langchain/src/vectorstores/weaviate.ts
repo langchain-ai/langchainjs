@@ -155,10 +155,6 @@ export class WeaviateStore extends VectorStore {
     );
   }
 
-  async delete(params: { ids: string[] }): Promise<void>;
-
-  async delete(param: { filter: WeaviateFilter }): Promise<void>;
-
   async delete(params: {
     ids?: string[];
     filter?: WeaviateFilter;
@@ -179,6 +175,10 @@ export class WeaviateStore extends VectorStore {
         .withClassName(this.indexName)
         .withWhere(filter.where)
         .do();
+    } else {
+      throw new Error(
+        `This method requires either "ids" or "filter" to be set in the input object`
+      );
     }
   }
 
