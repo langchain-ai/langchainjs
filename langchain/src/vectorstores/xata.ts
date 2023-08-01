@@ -1,18 +1,19 @@
+import { BaseClient } from "@xata.io/client";
 import { VectorStore } from "./base.js";
 import { Embeddings } from "../embeddings/base.js";
 import { Document } from "../document.js";
 
-export interface XataClientArgs {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  readonly client: any;
+export interface XataClientArgs<XataClient> {
+  readonly client: XataClient;
   readonly table: string;
 }
 
 type XataFilter = object;
 
-export class XataVectorSearch extends VectorStore {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private readonly client: any;
+export class XataVectorSearch<
+  XataClient extends BaseClient
+> extends VectorStore {
+  private readonly client: XataClient;
 
   private readonly table: string;
 
@@ -20,7 +21,7 @@ export class XataVectorSearch extends VectorStore {
     return "xata";
   }
 
-  constructor(embeddings: Embeddings, args: XataClientArgs) {
+  constructor(embeddings: Embeddings, args: XataClientArgs<XataClient>) {
     super(embeddings, args);
 
     this.client = args.client;
@@ -55,7 +56,8 @@ export class XataVectorSearch extends VectorStore {
       });
 
     const res = await this.client.db[this.table].createOrReplace(rows);
-    // XXX: clean this up
+    // Since we have an untyped BaseClient, it doesn't know the
+    // actual return type of the overload.
     const results = res as unknown as { id: string }[];
     const returnedIds = results.map((row) => row.id);
     return returnedIds;
