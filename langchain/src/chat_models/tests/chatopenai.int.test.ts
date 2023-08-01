@@ -433,7 +433,7 @@ test("Function calling with streaming", async () => {
     chunks.push(chunk);
     if (!streamedOutput) {
       streamedOutput = chunk;
-    } else {
+    } else if (chunk) {
       streamedOutput = streamedOutput.concat(chunk);
     }
   }

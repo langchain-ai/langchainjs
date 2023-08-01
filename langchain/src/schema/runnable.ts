@@ -216,7 +216,6 @@ export class RunnableSequence<
         nextStepInput,
         this._patchConfig(options, runManager?.getChild())
       );
-      console.log(finalOutput);
     } catch (e) {
       await runManager?.handleChainError(e);
       throw e;
