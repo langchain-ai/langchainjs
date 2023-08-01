@@ -115,7 +115,7 @@ export abstract class BasePromptTemplate<
     return this._callWithConfig(
       (input: InputValues) => this.formatPromptValue(input),
       input,
-      options
+      { ...options, runType: "prompt" }
     );
   }
 

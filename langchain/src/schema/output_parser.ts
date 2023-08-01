@@ -38,14 +38,14 @@ export abstract class BaseLLMOutputParser<T = unknown> extends Runnable<
         async (input: string): Promise<T> =>
           this.parseResult([{ text: input }]),
         input,
-        options
+        { ...options, runType: "parser" }
       );
     } else {
       return this._callWithConfig(
         async (input: BaseMessage): Promise<T> =>
           this.parseResult([{ message: input, text: input.content }]),
         input,
-        options
+        { ...options, runType: "parser" }
       );
     }
   }

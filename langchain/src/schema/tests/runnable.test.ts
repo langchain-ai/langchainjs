@@ -133,11 +133,7 @@ test("Create a runnable sequence with a static method with invalid output and ca
   const parser = StructuredOutputParser.fromZodSchema(
     z.object({ outputValue: z.string().describe("A test value") })
   );
-  const runnable = RunnableSequence.fromRunnables([
-    promptTemplate,
-    llm,
-    parser,
-  ]);
+  const runnable = RunnableSequence.from([promptTemplate, llm, parser]);
   await expect(async () => {
     const result = await runnable.invoke({ input: "Hello sequence!" });
     console.log(result);
@@ -154,13 +150,15 @@ test("Create a runnable sequence with a runnable map", async () => {
   const llm = new FakeChatModel({});
   const inputs = {
     question: (input: string) => input,
-    documents: RunnableSequence.fromRunnables([
+    documents: RunnableSequence.from([
       new FakeRetriever(),
       (docs: Document[]) => JSON.stringify(docs),
     ]),
     extraField: new FakeLLM({}),
   };
-  const runnable = new RunnableMap(inputs).pipe(promptTemplate).pipe(llm);
+  const runnable = new RunnableMap({ steps: inputs })
+    .pipe(promptTemplate)
+    .pipe(llm);
   const result = await runnable.invoke("Do you know the Muffin Man?");
   console.log(result);
   expect(result.content).toEqual(

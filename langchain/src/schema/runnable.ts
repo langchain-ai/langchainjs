@@ -110,7 +110,7 @@ export abstract class Runnable<
   protected async _callWithConfig<T extends RunInput>(
     func: (input: T) => Promise<RunOutput>,
     input: T,
-    options?: RunnableConfig
+    options?: RunnableConfig & { runType?: string }
   ) {
     const callbackManager_ = await CallbackManager.configure(
       options?.callbacks,
@@ -121,7 +121,9 @@ export abstract class Runnable<
     );
     const runManager = await callbackManager_?.handleChainStart(
       this.toJSON(),
-      _coerceToDict(input, "input")
+      _coerceToDict(input, "input"),
+      undefined,
+      options?.runType
     );
     let output;
     try {
@@ -373,7 +375,7 @@ export class RunnableSequence<
     return Array.isArray(thing.middle) && Runnable.isInstance(thing);
   }
 
-  static fromRunnables<RunInput, RunOutput>([first, ...runnables]: [
+  static from<RunInput, RunOutput>([first, ...runnables]: [
     RunnableLike<RunInput>,
     ...RunnableLike[],
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -398,10 +400,10 @@ export class RunnableMap<RunInput> extends Runnable<
 
   protected steps: Record<string, Runnable<RunInput>>;
 
-  constructor(steps: Record<string, RunnableLike<RunInput>>) {
-    super(steps);
+  constructor(fields: { steps: Record<string, RunnableLike<RunInput>> }) {
+    super(fields);
     this.steps = {};
-    for (const [key, value] of Object.entries(steps)) {
+    for (const [key, value] of Object.entries(fields.steps)) {
       this.steps[key] = _coerceToRunnable(value);
     }
   }
@@ -446,8 +448,11 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
 > {
   lc_namespace = ["schema", "runnable"];
 
-  constructor(protected func: RunnableFunc<RunInput, RunOutput>) {
-    super(func);
+  protected func: RunnableFunc<RunInput, RunOutput>;
+
+  constructor(fields: { func: RunnableFunc<RunInput, RunOutput> }) {
+    super(fields);
+    this.func = fields.func;
   }
 
   async invoke(
@@ -486,7 +491,7 @@ function _coerceToRunnable<RunInput, RunOutput>(
   coerceable: RunnableLike<RunInput, RunOutput>
 ): Runnable<RunInput, RunOutput> {
   if (typeof coerceable === "function") {
-    return new RunnableLambda(coerceable);
+    return new RunnableLambda({ func: coerceable });
   } else if (Runnable.isInstance(coerceable)) {
     return coerceable;
   } else if (!Array.isArray(coerceable) && typeof coerceable === "object") {
@@ -494,7 +499,7 @@ function _coerceToRunnable<RunInput, RunOutput>(
     for (const [key, value] of Object.entries(coerceable)) {
       runnables[key] = _coerceToRunnable(value);
     }
-    return new RunnableMap<RunInput>(runnables) as Runnable<
+    return new RunnableMap<RunInput>({ steps: runnables }) as Runnable<
       RunInput,
       RunOutput
     >;
