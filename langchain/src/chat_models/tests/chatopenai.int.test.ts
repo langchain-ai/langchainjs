@@ -2,6 +2,7 @@ import { test, expect } from "@jest/globals";
 import { ChatOpenAI } from "../openai.js";
 import {
   BaseMessage,
+  ChatMessage,
   ChatGeneration,
   HumanMessage,
   LLMResult,
@@ -332,6 +333,17 @@ test("getNumTokensFromMessages gpt-4-0314 model for sample input", async () => {
   const { totalCount } = await chat.getNumTokensFromMessages(messages);
 
   expect(totalCount).toBe(129);
+});
+
+test("Test OpenAI with specific roles in ChatMessage", async () => {
+  const chat = new ChatOpenAI({ modelName: "gpt-3.5-turbo", maxTokens: 10 });
+  const system_message = new ChatMessage(
+    "You are to chat with a user.",
+    "system"
+  );
+  const user_message = new ChatMessage("Hello!", "user");
+  const res = await chat.call([system_message, user_message]);
+  console.log({ res });
 });
 
 test("Test ChatOpenAI stream method", async () => {
