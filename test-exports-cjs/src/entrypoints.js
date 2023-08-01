@@ -32,6 +32,7 @@ const schema = require("langchain/schema");
 const schema_output_parser = require("langchain/schema/output_parser");
 const schema_query_constructor = require("langchain/schema/query_constructor");
 const schema_retriever = require("langchain/schema/retriever");
+const schema_runnable = require("langchain/schema/runnable");
 const callbacks = require("langchain/callbacks");
 const output_parsers = require("langchain/output_parsers");
 const retrievers_remote = require("langchain/retrievers/remote");

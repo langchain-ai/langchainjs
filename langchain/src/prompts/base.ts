@@ -9,6 +9,8 @@ import { BaseOutputParser } from "../schema/output_parser.js";
 import { Serializable } from "../load/serializable.js";
 import { SerializedBasePromptTemplate } from "./serde.js";
 import { SerializedFields } from "../load/map_keys.js";
+import { Runnable } from "../schema/runnable.js";
+import { BaseCallbackConfig } from "../callbacks/manager.js";
 
 export class StringPromptValue extends BasePromptValue {
   lc_namespace = ["langchain", "prompts", "base"];
@@ -51,11 +53,13 @@ export interface BasePromptTemplateInput {
  * Base class for prompt templates. Exposes a format method that returns a
  * string prompt given a set of input values.
  */
-export abstract class BasePromptTemplate
-  extends Serializable
+export abstract class BasePromptTemplate<
+    FormattedOutput extends BasePromptValue = BasePromptValue
+  >
+  extends Runnable<InputValues, FormattedOutput>
   implements BasePromptTemplateInput
 {
-  declare PromptValueReturnType: BasePromptValue;
+  declare PromptValueReturnType: FormattedOutput;
 
   lc_serializable = true;
 
@@ -104,6 +108,17 @@ export abstract class BasePromptTemplate
     return allKwargs;
   }
 
+  async invoke(
+    input: InputValues,
+    options?: BaseCallbackConfig
+  ): Promise<FormattedOutput> {
+    return this._callWithConfig(
+      (input: InputValues) => this.formatPromptValue(input),
+      input,
+      { ...options, runType: "prompt" }
+    );
+  }
+
   /**
    * Format the prompt given the input values.
    *
@@ -122,7 +137,7 @@ export abstract class BasePromptTemplate
    * @param values
    * @returns A formatted PromptValue.
    */
-  abstract formatPromptValue(values: InputValues): Promise<BasePromptValue>;
+  abstract formatPromptValue(values: InputValues): Promise<FormattedOutput>;
 
   /**
    * Return the string type key uniquely identifying this class of prompt template.

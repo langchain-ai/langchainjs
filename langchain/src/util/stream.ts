@@ -41,7 +41,7 @@ export function readableStreamToAsyncIterable(
 }
 
 export class IterableReadableStream<T> extends ReadableStream<T> {
-  public reader: ReadableStreamDefaultReader;
+  public reader: ReadableStreamDefaultReader<T>;
 
   ensureReader() {
     if (!this.reader) {

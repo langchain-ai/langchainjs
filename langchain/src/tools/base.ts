@@ -18,7 +18,6 @@ export abstract class StructuredTool<
   T extends z.ZodObject<any, any, any, any> = z.ZodObject<any, any, any, any>
 > extends BaseLangChain<
   (z.output<T> extends string ? string : never) | z.input<T>,
-  RunnableConfig,
   string
 > {
   abstract schema: T | z.ZodEffects<T>;

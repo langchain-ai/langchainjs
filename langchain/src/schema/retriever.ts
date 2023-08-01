@@ -6,7 +6,7 @@ import {
   parseCallbackConfigArg,
 } from "../callbacks/manager.js";
 import { Document } from "../document.js";
-import { Serializable } from "../load/serializable.js";
+import { Runnable, RunnableConfig } from "./runnable.js";
 
 /**
  * Base Index class. All indexes should extend this class.
@@ -19,7 +19,7 @@ export interface BaseRetrieverInput {
   verbose?: boolean;
 }
 
-export abstract class BaseRetriever extends Serializable {
+export abstract class BaseRetriever extends Runnable<string, Document[]> {
   callbacks?: Callbacks;
 
   tags?: string[];
@@ -46,6 +46,10 @@ export abstract class BaseRetriever extends Serializable {
     _callbacks?: CallbackManagerForRetrieverRun
   ): Promise<Document[]> {
     throw new Error("Not implemented!");
+  }
+
+  async invoke(input: string, options?: RunnableConfig): Promise<Document[]> {
+    return this.getRelevantDocuments(input, options);
   }
 
   async getRelevantDocuments(

@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { test } from "@jest/globals";
 import { LLM } from "../../llms/base.js";
 import {
@@ -5,6 +6,17 @@ import {
   createChatMessageChunkEncoderStream,
 } from "../../chat_models/base.js";
 import { AIMessage, BaseMessage, ChatResult } from "../index.js";
+import {
+  ChatPromptTemplate,
+  HumanMessagePromptTemplate,
+  PromptTemplate,
+  SystemMessagePromptTemplate,
+} from "../../prompts/index.js";
+import { StructuredOutputParser } from "../../output_parsers/structured.js";
+import { RunnableMap, RunnableSequence } from "../runnable.js";
+import { BaseRetriever } from "../retriever.js";
+import { Document } from "../../document.js";
+import { OutputParserException } from "../output_parser.js";
 
 class FakeLLM extends LLM {
   _llmType() {
@@ -26,10 +38,10 @@ class FakeChatModel extends BaseChatModel {
   }
 
   async _generate(
-    _messages: BaseMessage[],
+    messages: BaseMessage[],
     _options: this["ParsedCallOptions"]
   ): Promise<ChatResult> {
-    const text = "response";
+    const text = messages.map((m) => m.content).join("\n");
     return {
       generations: [
         {
@@ -39,6 +51,20 @@ class FakeChatModel extends BaseChatModel {
       ],
       llmOutput: {},
     };
+  }
+}
+
+class FakeRetriever extends BaseRetriever {
+  lc_namespace = ["test", "fake"];
+
+  async _getRelevantDocuments(
+    _query: string
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ): Promise<Document<Record<string, any>>[]> {
+    return [
+      new Document({ pageContent: "foo" }),
+      new Document({ pageContent: "bar" }),
+    ];
   }
 }
 
@@ -75,4 +101,67 @@ test("Test chat model stream", async () => {
     console.log(chunk);
     done = chunk.done;
   }
+});
+
+test("Pipe from one runnable to the next", async () => {
+  const promptTemplate = PromptTemplate.fromTemplate("{input}");
+  const llm = new FakeLLM({});
+  const runnable = promptTemplate.pipe(llm);
+  const result = await runnable.invoke({ input: "Hello world!" });
+  console.log(result);
+  expect(result).toBe("Hello world!");
+});
+
+test("Create a runnable sequence and run it", async () => {
+  const promptTemplate = PromptTemplate.fromTemplate("{input}");
+  const llm = new FakeChatModel({});
+  const parser = StructuredOutputParser.fromZodSchema(
+    z.object({ outputValue: z.string().describe("A test value") })
+  );
+  const text = `\`\`\`
+{"outputValue": "testing"}
+\`\`\``;
+  const runnable = promptTemplate.pipe(llm).pipe(parser);
+  const result = await runnable.invoke({ input: text });
+  console.log(result);
+  expect(result).toEqual({ outputValue: "testing" });
+});
+
+test("Create a runnable sequence with a static method with invalid output and catch the error", async () => {
+  const promptTemplate = PromptTemplate.fromTemplate("{input}");
+  const llm = new FakeChatModel({});
+  const parser = StructuredOutputParser.fromZodSchema(
+    z.object({ outputValue: z.string().describe("A test value") })
+  );
+  const runnable = RunnableSequence.from([promptTemplate, llm, parser]);
+  await expect(async () => {
+    const result = await runnable.invoke({ input: "Hello sequence!" });
+    console.log(result);
+  }).rejects.toThrow(OutputParserException);
+});
+
+test("Create a runnable sequence with a runnable map", async () => {
+  const promptTemplate = ChatPromptTemplate.fromPromptMessages([
+    SystemMessagePromptTemplate.fromTemplate(`You are a nice assistant.`),
+    HumanMessagePromptTemplate.fromTemplate(
+      `Context:\n{documents}\n\nQuestion:\n{question}`
+    ),
+  ]);
+  const llm = new FakeChatModel({});
+  const inputs = {
+    question: (input: string) => input,
+    documents: RunnableSequence.from([
+      new FakeRetriever(),
+      (docs: Document[]) => JSON.stringify(docs),
+    ]),
+    extraField: new FakeLLM({}),
+  };
+  const runnable = new RunnableMap({ steps: inputs })
+    .pipe(promptTemplate)
+    .pipe(llm);
+  const result = await runnable.invoke("Do you know the Muffin Man?");
+  console.log(result);
+  expect(result.content).toEqual(
+    `You are a nice assistant.\nContext:\n[{"pageContent":"foo","metadata":{}},{"pageContent":"bar","metadata":{}}]\n\nQuestion:\nDo you know the Muffin Man?`
+  );
 });
