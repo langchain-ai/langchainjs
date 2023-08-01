@@ -68,6 +68,10 @@ export class GoogleVertexAIMultimodalEmbeddings
     );
   }
 
+  _embeddingsType(): string {
+    return "vertexai-multimodal";
+  }
+
   mediaToInstance(
     media: GoogleVertexAIMedia
   ): GoogleVertexAIMultimodalEmbeddingsInstance {
@@ -129,13 +133,13 @@ export class GoogleVertexAIMultimodalEmbeddings
     }).then((embeddings) => embeddings.image ?? []);
   }
 
-  async embedDocuments(documents: string[]): Promise<number[][]> {
+  async _embedDocuments(documents: string[]): Promise<number[][]> {
     return this.embedMedia(documents.map((text) => ({ text }))).then(
       (embeddings) => embeddings.map((e) => e.text ?? [])
     );
   }
 
-  async embedQuery(document: string): Promise<number[]> {
+  async _embedQuery(document: string): Promise<number[]> {
     return this.embedMediaQuery({
       text: document,
     }).then((embeddings) => embeddings.text ?? []);
