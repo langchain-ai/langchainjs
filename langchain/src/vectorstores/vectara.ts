@@ -1,6 +1,8 @@
 import fs from "fs";
 import path from "path";
 import FormData from "form-data";
+// eslint-disable-next-line import/no-extraneous-dependencies
+import nodeFetch from "node-fetch";
 import { Document } from "../document.js";
 import { Embeddings } from "../embeddings/base.js";
 import { FakeEmbeddings } from "../embeddings/fake.js";
@@ -171,14 +173,13 @@ export class VectaraStore extends VectorStore {
     metadata: Record<string, unknown> | undefined = undefined
   ) {
     const docIds: string[] = [];
-
+    // TODO: What do I set doc ids to?
     for (const [index, file] of file_paths.entries()) {
       if (!fs.existsSync(path.resolve(file))) {
         console.error(`File ${file} does not exist, skipping`);
         continue;
       }
       const md = metadata ? metadata[index] : {};
-      console.log(md);
 
       try {
         const f = fs.createReadStream(path.join(process.cwd(), file));
@@ -186,13 +187,10 @@ export class VectaraStore extends VectorStore {
         data.append("file", f, file);
         data.append("doc-metadata", JSON.stringify(md));
 
-        const response = await fetch(
+        const response = await nodeFetch(
           `https://api.vectara.io/v1/upload?c=${this.customerId}&o=${this.corpusId}`,
           {
             method: "POST",
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             body: data,
             headers: {
               "x-api-key": this.apiKey,
@@ -201,21 +199,20 @@ export class VectaraStore extends VectorStore {
           }
         );
 
-        console.log("headers", data.getHeaders());
-
         const result = await response.json();
-        if (
-          result.status?.code !== "OK" &&
-          result.status?.code !== "ALREADY_EXISTS"
-        ) {
-          console.log("result", result);
+        const statusCode = response.status;
+
+        if (statusCode !== 200 && statusCode !== 409) {
           const error = new Error(
-            `Vectara API returned status code ${result.code}: ${result.message}`
+            `Vectara API returned status code ${statusCode}: ${result}`
           );
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           (error as any).code = 500;
           throw error;
+        } else {
+          docIds.push(file);
         }
+        console.log(result);
       } catch (error) {
         console.log(error);
       }

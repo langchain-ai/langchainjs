@@ -185,11 +185,11 @@ describe("VectaraStore", () => {
       console.log(results);
 
       // Delete temporary files
-      // for (const file of files) {
-      //   fs.unlink(file.filename, (err) => {
-      //     if (err) throw err;
-      //   });
-      // }
+      for (const file of files) {
+        fs.unlink(file.filename, (err) => {
+          if (err) throw err;
+        });
+      }
 
       expect(results.length).toBeGreaterThan(0);
     });

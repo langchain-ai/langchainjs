@@ -13054,6 +13054,7 @@ __metadata:
     ml-matrix: ^6.10.4
     mongodb: ^5.2.0
     mysql2: ^3.3.3
+    node-fetch: ^3.3.2
     notion-to-md: ^3.1.0
     object-hash: ^3.0.0
     openai: ^3.3.0
@@ -13133,6 +13134,7 @@ __metadata:
     mammoth: "*"
     mongodb: ^5.2.0
     mysql2: ^3.3.3
+    node-fetch: "*"
     notion-to-md: ^3.1.0
     path: ^0.12.7
     pdf-parse: 1.1.1
@@ -13240,6 +13242,8 @@ __metadata:
     mongodb:
       optional: true
     mysql2:
+      optional: true
+    node-fetch:
       optional: true
     notion-to-md:
       optional: true
@@ -14625,6 +14629,17 @@ __metadata:
     encoding:
       optional: true
   checksum: acb04f9ce7224965b2b59e71b33c639794d8991efd73855b0b250921382b38331ffc9d61bce502571f6cc6e11a8905ca9b1b6d4aeb586ab093e2756a1fd190d0
+  languageName: node
+  linkType: hard
+
+"node-fetch@npm:^3.3.2":
+  version: 3.3.2
+  resolution: "node-fetch@npm:3.3.2"
+  dependencies:
+    data-uri-to-buffer: ^4.0.0
+    fetch-blob: ^3.1.4
+    formdata-polyfill: ^4.0.10
+  checksum: 06a04095a2ddf05b0830a0d5302699704d59bda3102894ea64c7b9d4c865ecdff2d90fd042df7f5bc40337266961cb6183dcc808ea4f3000d024f422b462da92
   languageName: node
   linkType: hard
 
