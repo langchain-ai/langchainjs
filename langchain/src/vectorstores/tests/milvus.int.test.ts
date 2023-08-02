@@ -49,6 +49,10 @@ Harmonic Labyrinth of the dreaded Majotaur?`,
     { id: 4, other: objB },
     { id: 5, other: objA },
   ]);
+
+  const resultThree = await milvus.similaritySearch(query, 1, "id == 1");
+  const resultThreeMetadatas = resultThree.map(({ metadata }) => metadata);
+  expect(resultThreeMetadatas).toEqual([{ id: 1, other: objB }]);
 });
 
 test.skip("Test Milvus.fromExistingCollection", async () => {
@@ -68,6 +72,11 @@ test.skip("Test Milvus.fromExistingCollection", async () => {
   expect(resultTwoMetadatas[0].id).toEqual(1);
   expect(resultTwoMetadatas[1].id).toEqual(4);
   expect(resultTwoMetadatas[2].id).toEqual(5);
+
+  const resultThree = await milvus.similaritySearch(query, 1, "id == 1");
+  const resultThreeMetadatas = resultThree.map(({ metadata }) => metadata);
+  expect(resultThreeMetadatas.length).toBe(1);
+  expect(resultThreeMetadatas[0].id).toEqual(1);
 });
 
 afterAll(async () => {

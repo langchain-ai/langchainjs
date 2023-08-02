@@ -108,14 +108,14 @@ test.skip("WeaviateStore upsert + delete", async () => {
     [
       new Document({
         pageContent: "testing",
-        metadata: { deletionTest: createdAt },
+        metadata: { deletionTest: createdAt.toString() },
       }),
     ],
     new OpenAIEmbeddings(),
     {
       client,
       indexName: "DocumentTest",
-      textKey: "text",
+      textKey: "pageContent",
       metadataKeys: ["deletionTest"],
     }
   );
@@ -198,4 +198,50 @@ test.skip("WeaviateStore upsert + delete", async () => {
       metadata: { deletionTest: (createdAt + 1).toString() },
     }),
   ]);
+});
+
+test.skip("WeaviateStore delete with filter", async () => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const client = (weaviate as any).client({
+    scheme:
+      process.env.WEAVIATE_SCHEME ||
+      (process.env.WEAVIATE_HOST ? "https" : "http"),
+    host: process.env.WEAVIATE_HOST || "localhost:8080",
+    apiKey: process.env.WEAVIATE_API_KEY
+      ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        new (weaviate as any).ApiKey(process.env.WEAVIATE_API_KEY)
+      : undefined,
+  });
+  const store = await WeaviateStore.fromTexts(
+    ["hello world", "hi there", "how are you", "bye now"],
+    [{ foo: "bar" }, { foo: "baz" }, { foo: "qux" }, { foo: "bar" }],
+    new OpenAIEmbeddings(),
+    {
+      client,
+      indexName: "FilterDeletionTest",
+      textKey: "text",
+      metadataKeys: ["foo"],
+    }
+  );
+  const results = await store.similaritySearch("hello world", 1);
+  expect(results).toEqual([
+    new Document({ pageContent: "hello world", metadata: { foo: "bar" } }),
+  ]);
+  await store.delete({
+    filter: {
+      where: {
+        operator: "Equal",
+        path: ["foo"],
+        valueText: "bar",
+      },
+    },
+  });
+  const results2 = await store.similaritySearch("hello world", 1, {
+    where: {
+      operator: "Equal",
+      path: ["foo"],
+      valueText: "bar",
+    },
+  });
+  expect(results2).toEqual([]);
 });
