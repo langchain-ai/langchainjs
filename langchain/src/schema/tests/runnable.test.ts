@@ -16,11 +16,7 @@ import { StructuredOutputParser } from "../../output_parsers/structured.js";
 import { RunnableMap, RunnableSequence } from "../runnable.js";
 import { BaseRetriever } from "../retriever.js";
 import { Document } from "../../document.js";
-<<<<<<< HEAD
 import { OutputParserException, StringOutputParser } from "../output_parser.js";
-=======
-import { OutputParserException } from "../output_parser.js";
->>>>>>> 010b699f6585bc2c153af3d02065d7cfaab88544
 
 class FakeLLM extends LLM {
   _llmType() {
@@ -43,7 +39,6 @@ class FakeChatModel extends BaseChatModel {
 
   async _generate(
     messages: BaseMessage[],
-<<<<<<< HEAD
     options?: this["ParsedCallOptions"]
   ): Promise<ChatResult> {
     if (options?.stop?.length) {
@@ -56,10 +51,6 @@ class FakeChatModel extends BaseChatModel {
         ],
       };
     }
-=======
-    _options: this["ParsedCallOptions"]
-  ): Promise<ChatResult> {
->>>>>>> 010b699f6585bc2c153af3d02065d7cfaab88544
     const text = messages.map((m) => m.content).join("\n");
     return {
       generations: [
