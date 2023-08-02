@@ -1,16 +1,24 @@
 import { similarity as ml_distance_similarity } from "ml-distance";
 
+type VectorFunction = (xVector: number[], yVector: number[]) => number;
+
 /**
- * This function calculates the row-wise cosine similarity between two matrices with the same number of columns.
+ * Apply a row-wise function between two matrices with the same number of columns.
  *
  * @param {number[][]} X - The first matrix.
  * @param {number[][]} Y - The second matrix.
+ * @param {VectorFunction} func - The function to apply.
  *
  * @throws {Error} If the number of columns in X and Y are not the same.
  *
- * @returns {number[][] | [[]]} A matrix where each row represents the cosine similarity values between the corresponding rows of X and Y.
+ * @returns {number[][] | [[]]} A matrix where each row represents the result of applying the function between the corresponding rows of X and Y.
  */
-export function cosineSimilarity(X: number[][], Y: number[][]): number[][] {
+
+export function matrixFunc(
+  X: number[][],
+  Y: number[][],
+  func: VectorFunction
+): number[][] {
   if (
     X.length === 0 ||
     X[0].length === 0 ||
@@ -30,10 +38,24 @@ export function cosineSimilarity(X: number[][], Y: number[][]): number[][] {
   }
 
   return X.map((xVector) =>
-    Y.map((yVector) => ml_distance_similarity.cosine(xVector, yVector)).map(
-      (similarity) => (Number.isNaN(similarity) ? 0 : similarity)
+    Y.map((yVector) => func(xVector, yVector)).map((similarity) =>
+      Number.isNaN(similarity) ? 0 : similarity
     )
   );
+}
+
+/**
+ * This function calculates the row-wise cosine similarity between two matrices with the same number of columns.
+ *
+ * @param {number[][]} X - The first matrix.
+ * @param {number[][]} Y - The second matrix.
+ *
+ * @throws {Error} If the number of columns in X and Y are not the same.
+ *
+ * @returns {number[][] | [[]]} A matrix where each row represents the cosine similarity values between the corresponding rows of X and Y.
+ */
+export function cosineSimilarity(X: number[][], Y: number[][]): number[][] {
+  return matrixFunc(X, Y, ml_distance_similarity.cosine);
 }
 
 /**
@@ -65,7 +87,7 @@ export function maximalMarginalRelevance(
     queryEmbeddingExpanded,
     embeddingList
   )[0];
-  const mostSimilarEmbeddingIndex = argMax(similarityToQuery);
+  const mostSimilarEmbeddingIndex = argMax(similarityToQuery).maxIndex;
 
   const selectedEmbeddings = [embeddingList[mostSimilarEmbeddingIndex]];
   const selectedEmbeddingsIndexes = [mostSimilarEmbeddingIndex];
@@ -101,15 +123,23 @@ export function maximalMarginalRelevance(
   return selectedEmbeddingsIndexes;
 }
 
+type MaxInfo = {
+  maxIndex: number;
+  maxValue: number;
+};
+
 /**
  * Finds the index of the maximum value in the given array.
  * @param {number[]} array - The input array.
  *
  * @returns {number} The index of the maximum value in the array. If the array is empty, returns -1.
  */
-function argMax(array: number[]): number {
+function argMax(array: number[]): MaxInfo {
   if (array.length === 0) {
-    return -1;
+    return {
+      maxIndex: -1,
+      maxValue: NaN,
+    };
   }
 
   let maxValue = array[0];
@@ -121,5 +151,5 @@ function argMax(array: number[]): number {
       maxValue = array[i];
     }
   }
-  return maxIndex;
+  return { maxIndex, maxValue };
 }
