@@ -511,7 +511,7 @@
     "build:watch": "node scripts/create-entrypoints.js && tsc --outDir dist/ --watch",
     "lint": "eslint src && dpdm --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint:fix": "yarn lint --fix",
-    "precommit": "tsc --noEmit && lint-staged",
+    "precommit": "lint-staged",
     "clean": "rimraf dist/ && node scripts/create-entrypoints.js pre",
     "prepack": "yarn build",
     "release": "release-it --only-version --config .release-it.json",
