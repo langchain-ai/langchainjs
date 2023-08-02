@@ -1,13 +1,21 @@
 import { Callbacks } from "../callbacks/manager.js";
-import { BasePromptValue, Generation, ChatGeneration } from "./index.js";
-import { Serializable } from "../load/serializable.js";
+import {
+  BasePromptValue,
+  Generation,
+  ChatGeneration,
+  BaseMessage,
+} from "./index.js";
+import { Runnable, RunnableConfig } from "./runnable.js";
 
 /**
  * Options for formatting instructions.
  */
 export interface FormatInstructionsOptions {}
 
-export abstract class BaseLLMOutputParser<T = unknown> extends Serializable {
+export abstract class BaseLLMOutputParser<T = unknown> extends Runnable<
+  string | BaseMessage,
+  T
+> {
   abstract parseResult(
     generations: Generation[] | ChatGeneration[],
     callbacks?: Callbacks
@@ -20,9 +28,31 @@ export abstract class BaseLLMOutputParser<T = unknown> extends Serializable {
   ): Promise<T> {
     return this.parseResult(generations, callbacks);
   }
+
+  async invoke(
+    input: string | BaseMessage,
+    options?: RunnableConfig
+  ): Promise<T> {
+    if (typeof input === "string") {
+      return this._callWithConfig(
+        async (input: string): Promise<T> =>
+          this.parseResult([{ text: input }]),
+        input,
+        { ...options, runType: "parser" }
+      );
+    } else {
+      return this._callWithConfig(
+        async (input: BaseMessage): Promise<T> =>
+          this.parseResult([{ message: input, text: input.content }]),
+        input,
+        { ...options, runType: "parser" }
+      );
+    }
+  }
 }
 
-/** Class to parse the output of an LLM call.
+/**
+ * Class to parse the output of an LLM call.
  */
 export abstract class BaseOutputParser<
   T = unknown
@@ -68,6 +98,23 @@ export abstract class BaseOutputParser<
    */
   _type(): string {
     throw new Error("_type not implemented");
+  }
+}
+
+/**
+ * OutputParser that parses LLMResult into the top likely string.
+ */
+export class StringOutputParser extends BaseOutputParser<string> {
+  lc_namespace = ["schema", "output_parser"];
+
+  lc_serializable = true;
+
+  parse(text: string): Promise<string> {
+    return Promise.resolve(text);
+  }
+
+  getFormatInstructions(): string {
+    return "";
   }
 }
 

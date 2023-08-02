@@ -45,7 +45,7 @@ export interface BaseLLMCallOptions extends BaseLanguageModelCallOptions {}
  */
 export abstract class BaseLLM<
   CallOptions extends BaseLLMCallOptions = BaseLLMCallOptions
-> extends BaseLanguageModel<CallOptions, string> {
+> extends BaseLanguageModel<string, CallOptions> {
   declare ParsedCallOptions: Omit<
     CallOptions,
     keyof RunnableConfig & "timeout"
@@ -89,7 +89,7 @@ export abstract class BaseLLM<
   }
 
   protected _separateRunnableConfigFromCallOptions(
-    options: CallOptions
+    options?: Partial<CallOptions>
   ): [RunnableConfig, this["ParsedCallOptions"]] {
     const [runnableConfig, callOptions] =
       super._separateRunnableConfigFromCallOptions(options);
@@ -111,9 +111,7 @@ export abstract class BaseLLM<
     } else {
       const prompt = BaseLLM._convertInputToPromptValue(input);
       const [runnableConfig, callOptions] =
-        this._separateRunnableConfigFromCallOptions(
-          (options ?? {}) as CallOptions
-        );
+        this._separateRunnableConfigFromCallOptions(options);
       const callbackManager_ = await CallbackManager.configure(
         runnableConfig.callbacks,
         this.callbacks,
@@ -288,11 +286,11 @@ export abstract class BaseLLM<
       throw new Error("Argument 'prompts' is expected to be a string[]");
     }
 
-    let parsedOptions: CallOptions;
+    let parsedOptions: CallOptions | undefined;
     if (Array.isArray(options)) {
       parsedOptions = { stop: options } as CallOptions;
     } else {
-      parsedOptions = options ?? ({} as CallOptions);
+      parsedOptions = options;
     }
 
     const [runnableConfig, callOptions] =

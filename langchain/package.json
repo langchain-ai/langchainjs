@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.120",
+  "version": "0.0.121",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -355,6 +355,9 @@
     "schema/retriever.cjs",
     "schema/retriever.js",
     "schema/retriever.d.ts",
+    "schema/runnable.cjs",
+    "schema/runnable.js",
+    "schema/runnable.d.ts",
     "sql_db.cjs",
     "sql_db.js",
     "sql_db.d.ts",
@@ -877,7 +880,7 @@
     "js-tiktoken": "^1.0.7",
     "js-yaml": "^4.1.0",
     "jsonpointer": "^5.0.1",
-    "langsmith": "~0.0.11",
+    "langsmith": "~0.0.16",
     "ml-distance": "^4.0.0",
     "object-hash": "^3.0.0",
     "openai": "^3.3.0",
@@ -1496,6 +1499,11 @@
       "types": "./schema/retriever.d.ts",
       "import": "./schema/retriever.js",
       "require": "./schema/retriever.cjs"
+    },
+    "./schema/runnable": {
+      "types": "./schema/runnable.d.ts",
+      "import": "./schema/runnable.js",
+      "require": "./schema/runnable.cjs"
     },
     "./sql_db": {
       "types": "./sql_db.d.ts",

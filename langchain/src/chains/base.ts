@@ -29,7 +29,7 @@ export abstract class BaseChain<
     RunInput extends ChainValues = ChainValues,
     RunOutput extends ChainValues = ChainValues
   >
-  extends BaseLangChain<RunInput, RunnableConfig, RunOutput>
+  extends BaseLangChain<RunInput, RunOutput>
   implements ChainInputs
 {
   declare memory?: BaseMemory;

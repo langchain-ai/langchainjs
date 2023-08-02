@@ -343,6 +343,9 @@ schema/query_constructor.d.ts
 schema/retriever.cjs
 schema/retriever.js
 schema/retriever.d.ts
+schema/runnable.cjs
+schema/runnable.js
+schema/runnable.d.ts
 sql_db.cjs
 sql_db.js
 sql_db.d.ts

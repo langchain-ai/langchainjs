@@ -32,6 +32,7 @@ export * from "langchain/schema";
 export * from "langchain/schema/output_parser";
 export * from "langchain/schema/query_constructor";
 export * from "langchain/schema/retriever";
+export * from "langchain/schema/runnable";
 export * from "langchain/callbacks";
 export * from "langchain/output_parsers";
 export * from "langchain/retrievers/remote";
