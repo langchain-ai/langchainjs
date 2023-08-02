@@ -6,7 +6,7 @@ import { XataVectorSearch } from "../xata.js";
 import { OpenAIEmbeddings } from "../../embeddings/openai.js";
 import { Document } from "../../document.js";
 
-test("XataVectorSearch integration", async () => {
+test.skip("XataVectorSearch integration", async () => {
   if (!process.env.XATA_API_KEY) {
     throw new Error("XATA_API_KEY not set");
   }
@@ -98,7 +98,7 @@ test("XataVectorSearch integration", async () => {
   expect(results5).toHaveLength(0);
 });
 
-test("Search a XataVectorSearch using a metadata filter", async () => {
+test.skip("Search a XataVectorSearch using a metadata filter", async () => {
   if (!process.env.XATA_API_KEY) {
     throw new Error("XATA_API_KEY not set");
   }

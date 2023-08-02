@@ -13,6 +13,8 @@ type XataFilter = object;
 export class XataVectorSearch<
   XataClient extends BaseClient
 > extends VectorStore {
+  declare FilterType: XataFilter;
+
   private readonly client: XataClient;
 
   private readonly table: string;
