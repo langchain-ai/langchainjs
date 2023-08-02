@@ -2,6 +2,7 @@ import { ChatOpenAI } from "../../../chat_models/openai.js";
 import { ConversationSummaryBufferMemory } from "../../../memory/summary_buffer.js";
 import { StructuredTool } from "../../../tools/base.js";
 import { initializeAgentExecutorWithOptions } from "../../index.js";
+
 import { AgentTokenBufferMemory } from "../../openai/token_buffer_memory.js";
 
 export type ConversationalRetrievalAgentOptions = {
@@ -18,10 +19,11 @@ export async function createConversationalRetrievalAgent(
   options?: ConversationalRetrievalAgentOptions
 ) {
   const {
-    rememberIntermediateSteps,
+    rememberIntermediateSteps = true,
     memoryKey = "chat_history",
     outputKey = "output",
     prefix,
+    verbose,
   } = options ?? {};
   let memory;
   if (rememberIntermediateSteps) {
@@ -42,10 +44,12 @@ export async function createConversationalRetrievalAgent(
   const executor = await initializeAgentExecutorWithOptions(tools, llm, {
     agentType: "openai-functions",
     memory,
+    verbose,
+    returnIntermediateSteps: rememberIntermediateSteps,
     agentArgs: {
       prefix:
         prefix ??
-        `Do your best to answer the questions. Feel free to use any tools available to look up relevant information, only if necessary`,
+        `Do your best to answer the questions. Feel free to use any tools available to look up relevant information, only if necessary.`,
     },
   });
   return executor;

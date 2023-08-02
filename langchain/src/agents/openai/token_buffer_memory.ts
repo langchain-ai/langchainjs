@@ -42,7 +42,7 @@ export class AgentTokenBufferMemory extends BaseChatMemory {
 
   outputKey = "output";
 
-  intermediateStepsKey = "intermediate_steps";
+  intermediateStepsKey = "intermediateSteps";
 
   constructor(fields: AgentTokenBufferMemoryFields) {
     super(fields);
