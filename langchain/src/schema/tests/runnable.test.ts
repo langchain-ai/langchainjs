@@ -16,7 +16,7 @@ import { StructuredOutputParser } from "../../output_parsers/structured.js";
 import { RunnableMap, RunnableSequence } from "../runnable.js";
 import { BaseRetriever } from "../retriever.js";
 import { Document } from "../../document.js";
-import { OutputParserException } from "../output_parser.js";
+import { OutputParserException, StringOutputParser } from "../output_parser.js";
 
 class FakeLLM extends LLM {
   _llmType() {
@@ -39,8 +39,18 @@ class FakeChatModel extends BaseChatModel {
 
   async _generate(
     messages: BaseMessage[],
-    _options: this["ParsedCallOptions"]
+    options?: this["ParsedCallOptions"]
   ): Promise<ChatResult> {
+    if (options?.stop?.length) {
+      return {
+        generations: [
+          {
+            message: new AIMessage(options.stop[0]),
+            text: options.stop[0],
+          },
+        ],
+      };
+    }
     const text = messages.map((m) => m.content).join("\n");
     return {
       generations: [
@@ -164,4 +174,24 @@ test("Create a runnable sequence with a runnable map", async () => {
   expect(result.content).toEqual(
     `You are a nice assistant.\nContext:\n[{"pageContent":"foo","metadata":{}},{"pageContent":"bar","metadata":{}}]\n\nQuestion:\nDo you know the Muffin Man?`
   );
+});
+
+test("Bind kwargs to a runnable", async () => {
+  const llm = new FakeChatModel({});
+  const result = await llm
+    .bind({ stop: ["testing"] })
+    .pipe(new StringOutputParser())
+    .invoke("Hi there!");
+  console.log(result);
+  expect(result).toEqual("testing");
+});
+
+test("Bind kwargs to a runnable with a batch call", async () => {
+  const llm = new FakeChatModel({});
+  const result = await llm
+    .bind({ stop: ["testing"] })
+    .pipe(new StringOutputParser())
+    .batch(["Hi there!", "hey hey", "Hi there!", "hey hey"]);
+  console.log(result);
+  expect(result).toEqual(["testing", "testing", "testing", "testing"]);
 });
