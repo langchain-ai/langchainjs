@@ -8,7 +8,7 @@ import { ChatOpenAI } from "../../../chat_models/openai.js";
 test("Test ConversationalRetrievalAgent", async () => {
   const vectorStore = await HNSWLib.fromTexts(
     [
-      "Mitochondria are the powerhouse of the cell",
+      "Mitochondria is the powerhouse of the cell",
       "Foo is red",
       "Bar is red",
       "Buildings are made out of brick",
