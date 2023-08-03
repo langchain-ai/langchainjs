@@ -6,7 +6,7 @@ import {
   innerProduct,
   maximalMarginalRelevance,
   normalize,
-} from "../math_utils.js";
+} from "../math.js";
 
 test("Test cosine similarity zero", async () => {
   const X = Matrix.rand(3, 3).to2DArray();

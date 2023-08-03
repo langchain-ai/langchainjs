@@ -194,7 +194,7 @@ const entrypoints = {
   "stores/message/upstash_redis": "stores/message/upstash_redis",
   "stores/message/planetscale": "stores/message/planetscale",
   // utilities
-  "util/math_utils": "util/math_utils",
+  "util/math": "util/math",
   // experimental
   "experimental/autogpt": "experimental/autogpt/index",
   "experimental/babyagi": "experimental/babyagi/index",
