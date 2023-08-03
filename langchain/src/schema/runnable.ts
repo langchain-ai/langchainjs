@@ -154,6 +154,7 @@ export abstract class Runnable<
       undefined,
       options?.metadata
     );
+    // TODO: Find a way to pass the entire streamed value into the callback.
     const runManager = await callbackManager_?.handleChainStart(
       this.toJSON(),
       _coerceToDict("<streamed value>", "input"),
