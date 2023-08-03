@@ -171,15 +171,15 @@ export class UnstructuredLoader extends BaseDocumentLoader {
     const documents: Document[] = [];
     for (const element of elements) {
       const { metadata, text } = element;
-      if(typeof text !== "undefined" && text){
+      if (typeof text === "string") {
         documents.push(
-            new Document({
-              pageContent: text,
-              metadata: {
-                ...metadata,
-                category: element.type,
-              },
-            })
+          new Document({
+            pageContent: text,
+            metadata: {
+              ...metadata,
+              category: element.type,
+            },
+          })
         );
       }
     }
