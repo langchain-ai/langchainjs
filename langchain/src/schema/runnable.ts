@@ -38,6 +38,13 @@ export abstract class Runnable<
     options?: Partial<CallOptions>
   ): Promise<RunOutput>;
 
+  bind(
+    kwargs: Partial<CallOptions>
+  ): RunnableBinding<RunInput, RunOutput, CallOptions> {
+    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    return new RunnableBinding({ bound: this, kwargs });
+  }
+
   protected _getOptionsList(
     options: Partial<CallOptions> | Partial<CallOptions>[],
     length = 0
@@ -507,5 +514,65 @@ function _coerceToRunnable<RunInput, RunOutput>(
     throw new Error(
       `Expected a Runnable, function or object.\nInstead got an unsupported type.`
     );
+  }
+}
+
+export class RunnableBinding<
+  RunInput,
+  RunOutput,
+  CallOptions extends BaseCallbackConfig
+> extends Runnable<RunInput, RunOutput, CallOptions> {
+  lc_namespace = ["schema", "runnable"];
+
+  lc_serializable = true;
+
+  protected bound: Runnable<RunInput, RunOutput, CallOptions>;
+
+  protected kwargs: Partial<CallOptions>;
+
+  constructor(fields: {
+    bound: Runnable<RunInput, RunOutput, CallOptions>;
+    kwargs: Partial<CallOptions>;
+  }) {
+    super(fields);
+    this.bound = fields.bound;
+    this.kwargs = fields.kwargs;
+  }
+
+  bind(
+    kwargs: Partial<CallOptions>
+  ): RunnableBinding<RunInput, RunOutput, CallOptions> {
+    return new RunnableBinding({
+      bound: this.bound,
+      kwargs: { ...this.kwargs, ...kwargs },
+    });
+  }
+
+  async invoke(
+    input: RunInput,
+    options?: Partial<CallOptions>
+  ): Promise<RunOutput> {
+    return this.bound.invoke(input, { ...options, ...this.kwargs });
+  }
+
+  async batch(
+    inputs: RunInput[],
+    options?: Partial<CallOptions> | Partial<CallOptions>[],
+    batchOptions?: { maxConcurrency?: number }
+  ): Promise<RunOutput[]> {
+    const mergedOptions = Array.isArray(options)
+      ? options.map((individualOption) => ({
+          ...individualOption,
+          ...this.kwargs,
+        }))
+      : { ...options, ...this.kwargs };
+    return this.bound.batch(inputs, mergedOptions, batchOptions);
+  }
+
+  async stream(
+    input: RunInput,
+    options?: Partial<CallOptions> | undefined
+  ): Promise<IterableReadableStream<RunOutput>> {
+    return this.bound.stream(input, { ...options, ...this.kwargs });
   }
 }
