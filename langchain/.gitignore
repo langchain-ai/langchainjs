@@ -310,6 +310,9 @@ document_loaders/fs/notion.d.ts
 document_loaders/fs/unstructured.cjs
 document_loaders/fs/unstructured.js
 document_loaders/fs/unstructured.d.ts
+document_transformers/html_to_text.cjs
+document_transformers/html_to_text.js
+document_transformers/html_to_text.d.ts
 document_transformers/openai_functions.cjs
 document_transformers/openai_functions.js
 document_transformers/openai_functions.d.ts

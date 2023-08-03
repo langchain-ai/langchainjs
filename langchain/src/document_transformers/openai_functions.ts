@@ -4,14 +4,14 @@ import type { JsonSchema7ObjectType } from "zod-to-json-schema/src/parsers/objec
 
 import { Document } from "../document.js";
 import { BaseChain } from "../chains/base.js";
-import { BaseDocumentTransformer } from "../schema/document.js";
+import { MappingDocumentTransformer } from "../schema/document.js";
 import {
   TaggingChainOptions,
   createTaggingChain,
 } from "../chains/openai_functions/index.js";
 import { ChatOpenAI } from "../chat_models/openai.js";
 
-export class MetadataTagger extends BaseDocumentTransformer {
+export class MetadataTagger extends MappingDocumentTransformer {
   protected taggingChain: BaseChain;
 
   constructor(fields: { taggingChain: BaseChain }) {
@@ -29,21 +29,16 @@ export class MetadataTagger extends BaseDocumentTransformer {
     }
   }
 
-  async transformDocuments(documents: Document[]): Promise<Document[]> {
-    const newDocuments = [];
-    for (const document of documents) {
-      const taggingChainResponse = await this.taggingChain.call({
-        [this.taggingChain.inputKeys[0]]: document.pageContent,
-      });
-      const extractedMetadata =
-        taggingChainResponse[this.taggingChain.outputKeys[0]];
-      const newDocument = new Document({
-        pageContent: document.pageContent,
-        metadata: { ...extractedMetadata, ...document.metadata },
-      });
-      newDocuments.push(newDocument);
-    }
-    return newDocuments;
+  async _transformDocument(document: Document): Promise<Document> {
+    const taggingChainResponse = await this.taggingChain.call({
+      [this.taggingChain.inputKeys[0]]: document.pageContent,
+    });
+    const extractedMetadata =
+      taggingChainResponse[this.taggingChain.outputKeys[0]];
+    return new Document({
+      pageContent: document.pageContent,
+      metadata: { ...extractedMetadata, ...document.metadata },
+    });
   }
 }
 

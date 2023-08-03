@@ -127,6 +127,8 @@ const entrypoints = {
   "document_loaders/fs/notion": "document_loaders/fs/notion",
   "document_loaders/fs/unstructured": "document_loaders/fs/unstructured",
   // document_transformers
+  "document_transformers/html_to_text":
+    "document_transformers/html_to_text",
   "document_transformers/openai_functions":
     "document_transformers/openai_functions",
   // chat_models
@@ -287,6 +289,7 @@ const requiresOptionalDependency = [
   "document_loaders/fs/csv",
   "document_loaders/fs/notion",
   "document_loaders/fs/unstructured",
+  "document_transformers/html_to_text",
   "chat_models/googlevertexai",
   "chat_models/googlepalm",
   "sql_db",
