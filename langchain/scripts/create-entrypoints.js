@@ -189,6 +189,8 @@ const entrypoints = {
   "stores/message/ioredis": "stores/message/ioredis",
   "stores/message/upstash_redis": "stores/message/upstash_redis",
   "stores/message/planetscale": "stores/message/planetscale",
+  // utilities
+  "util/math_utils": "util/math_utils",
   // experimental
   "experimental/autogpt": "experimental/autogpt/index",
   "experimental/babyagi": "experimental/babyagi/index",
