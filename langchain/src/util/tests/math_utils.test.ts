@@ -1,6 +1,12 @@
 import { test, expect } from "@jest/globals";
 import { Matrix } from "ml-matrix";
-import { cosineSimilarity, maximalMarginalRelevance } from "../math_utils.js";
+import {
+  cosineSimilarity,
+  euclideanDistance,
+  innerProduct,
+  maximalMarginalRelevance,
+  normalize,
+} from "../math_utils.js";
 
 test("Test cosine similarity zero", async () => {
   const X = Matrix.rand(3, 3).to2DArray();
@@ -142,4 +148,44 @@ test("Test maximal marginal relevance has no duplicates", async () => {
   );
   const expected = new Set(actual).size;
   expect(actual).toHaveLength(expected);
+});
+
+test("Test normalize", async () => {
+  const input = [
+    [1, 2],
+    [3, 4],
+  ];
+
+  const expected = [
+    [0.25, 0.5],
+    [0.75, 1],
+  ];
+
+  const actual = normalize(input);
+  expect(actual).toEqual(expected);
+});
+
+test("Test innerProduct", async () => {
+  const x = [
+    [1, 2],
+    [5, 6],
+  ];
+  const y = [
+    [3, 4],
+    [7, 8],
+  ];
+  const expected = [
+    [11, 23],
+    [39, 83],
+  ];
+  const actual = innerProduct(x, y);
+  expect(actual).toEqual(expected);
+});
+
+test("Test distance", async () => {
+  const x = [[1, 2]];
+  const y = [[2, 4]];
+  const expected = [[2.23606797749979]];
+  const actual = euclideanDistance(x, y);
+  expect(actual[0][0]).toBeCloseTo(expected[0][0]);
 });

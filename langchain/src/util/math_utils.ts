@@ -1,4 +1,7 @@
-import { similarity as ml_distance_similarity } from "ml-distance";
+import {
+  similarity as ml_distance_similarity,
+  distance as ml_distance,
+} from "ml-distance";
 
 type VectorFunction = (xVector: number[], yVector: number[]) => number;
 
@@ -44,6 +47,13 @@ export function matrixFunc(
   );
 }
 
+export function normalize(M: number[][], similarity = false): number[][] {
+  const max = matrixMaxVal(M);
+  return M.map((row) =>
+    row.map((val) => (similarity ? 1 - val / max : val / max))
+  );
+}
+
 /**
  * This function calculates the row-wise cosine similarity between two matrices with the same number of columns.
  *
@@ -56,6 +66,14 @@ export function matrixFunc(
  */
 export function cosineSimilarity(X: number[][], Y: number[][]): number[][] {
   return matrixFunc(X, Y, ml_distance_similarity.cosine);
+}
+
+export function innerProduct(X: number[][], Y: number[][]): number[][] {
+  return matrixFunc(X, Y, ml_distance.innerProduct);
+}
+
+export function euclideanDistance(X: number[][], Y: number[][]): number[][] {
+  return matrixFunc(X, Y, ml_distance.euclidean);
 }
 
 /**
@@ -152,4 +170,11 @@ function argMax(array: number[]): MaxInfo {
     }
   }
   return { maxIndex, maxValue };
+}
+
+function matrixMaxVal(arrays: number[][]): number {
+  return arrays.reduce(
+    (acc, array) => Math.max(acc, argMax(array).maxValue),
+    0
+  );
 }
