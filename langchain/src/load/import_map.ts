@@ -50,6 +50,7 @@ export * as cache from "../cache/index.js";
 export * as stores__doc__in_memory from "../stores/doc/in_memory.js";
 export * as stores__file__in_memory from "../stores/file/in_memory.js";
 export * as stores__message__in_memory from "../stores/message/in_memory.js";
+export * as util__math from "../util/math.js";
 export * as experimental__autogpt from "../experimental/autogpt/index.js";
 export * as experimental__babyagi from "../experimental/babyagi/index.js";
 export * as experimental__generative_agents from "../experimental/generative_agents/index.js";
