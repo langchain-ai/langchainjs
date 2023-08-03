@@ -139,10 +139,38 @@ how the long the retained buffer is, or anything like that you should change thi
 ```typescript
 import { OpenAIAgentTokenBufferMemory } from "langchain/agents/toolkits";
 
-const memory = new OpenAIAgentTokenBufferMemory({ llm: model, memoryKey: "chat_history" });
+const memory = new OpenAIAgentTokenBufferMemory({
+  llm: model,
+  memoryKey: "chat_history",
+  outputKey: "output"
+});
 ```
 
-You should make sure `memoryKey` is set to `chat_history` for the OpenAI functions agent. This memory also has `returnMessages` set to `true` by default.
+You should make sure `memoryKey` is set to `"chat_history"` and `outputKey` is set to `"output"` for the OpenAI functions agent.
+This memory also has `returnMessages` set to `true` by default.
+
+You can also load messages from prior conversations into this memory by initializing it with a pre-loaded chat history:
+
+```typescript
+import { ChatOpenAI } from "langchain/chat_models/openai";
+import { OpenAIAgentTokenBufferMemory } from "langchain/agents/toolkits";
+import { HumanMessage, AIMessage } from "langchain/schema";
+import { ChatMessageHistory } from "langchain/memory";
+
+const previousMessages = [
+  new HumanMessage("My name is Bob"),
+  new AIMessage("Nice to meet you, Bob!"),
+];
+
+const chatHistory = new ChatMessageHistory(previousMessages);
+
+const memory = new OpenAIAgentTokenBufferMemory({
+  llm: new ChatOpenAI({}),
+  memoryKey: "chat_history",
+  outputKey: "output",
+  chatHistory,
+});
+```
 
 ### Agent executor
 
