@@ -10,11 +10,11 @@ const prompt = new PromptTemplate({
   inputVariables: ["foo", "bar"]
 });
 
-const paritalPrompt = await prompt.partial({
+const partialPrompt = await prompt.partial({
   foo: "foo",
 });
 
-const formattedPrompt = await paritalPrompt.format({
+const formattedPrompt = await partialPrompt.format({
   bar: "baz",
 });
 

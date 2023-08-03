@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.121",
+  "version": "0.0.122",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -22,6 +22,9 @@
     "agents/load.cjs",
     "agents/load.js",
     "agents/load.d.ts",
+    "agents/toolkits.cjs",
+    "agents/toolkits.js",
+    "agents/toolkits.d.ts",
     "agents/toolkits/aws_sfn.cjs",
     "agents/toolkits/aws_sfn.js",
     "agents/toolkits/aws_sfn.d.ts",
@@ -211,6 +214,9 @@
     "vectorstores/vectara.cjs",
     "vectorstores/vectara.js",
     "vectorstores/vectara.d.ts",
+    "vectorstores/xata.cjs",
+    "vectorstores/xata.js",
+    "vectorstores/xata.d.ts",
     "text_splitter.cjs",
     "text_splitter.js",
     "text_splitter.d.ts",
@@ -319,6 +325,9 @@
     "document_loaders/fs/unstructured.cjs",
     "document_loaders/fs/unstructured.js",
     "document_loaders/fs/unstructured.d.ts",
+    "document_transformers/html_to_text.cjs",
+    "document_transformers/html_to_text.js",
+    "document_transformers/html_to_text.d.ts",
     "document_transformers/openai_functions.cjs",
     "document_transformers/openai_functions.js",
     "document_transformers/openai_functions.d.ts",
@@ -511,7 +520,7 @@
     "build:watch": "node scripts/create-entrypoints.js && tsc --outDir dist/ --watch",
     "lint": "eslint src && dpdm --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint:fix": "yarn lint --fix",
-    "precommit": "tsc --noEmit && lint-staged",
+    "precommit": "lint-staged",
     "clean": "rimraf dist/ && node scripts/create-entrypoints.js pre",
     "prepack": "yarn build",
     "release": "release-it --only-version --config .release-it.json",
@@ -568,6 +577,7 @@
     "@typescript-eslint/eslint-plugin": "^5.58.0",
     "@typescript-eslint/parser": "^5.58.0",
     "@upstash/redis": "^1.20.6",
+    "@xata.io/client": "^0.25.1",
     "@zilliz/milvus2-sdk-node": ">=2.2.7",
     "apify-client": "^2.7.1",
     "axios": "^0.26.0",
@@ -649,6 +659,7 @@
     "@tensorflow/tfjs-core": "*",
     "@tigrisdata/vector": "^1.1.0",
     "@upstash/redis": "^1.20.6",
+    "@xata.io/client": "^0.25.1",
     "@zilliz/milvus2-sdk-node": ">=2.2.7",
     "apify-client": "^2.7.1",
     "axios": "*",
@@ -764,6 +775,9 @@
       "optional": true
     },
     "@upstash/redis": {
+      "optional": true
+    },
+    "@xata.io/client": {
       "optional": true
     },
     "@zilliz/milvus2-sdk-node": {
@@ -934,6 +948,11 @@
       "types": "./agents/load.d.ts",
       "import": "./agents/load.js",
       "require": "./agents/load.cjs"
+    },
+    "./agents/toolkits": {
+      "types": "./agents/toolkits.d.ts",
+      "import": "./agents/toolkits.js",
+      "require": "./agents/toolkits.cjs"
     },
     "./agents/toolkits/aws_sfn": {
       "types": "./agents/toolkits/aws_sfn.d.ts",
@@ -1256,6 +1275,11 @@
       "import": "./vectorstores/vectara.js",
       "require": "./vectorstores/vectara.cjs"
     },
+    "./vectorstores/xata": {
+      "types": "./vectorstores/xata.d.ts",
+      "import": "./vectorstores/xata.js",
+      "require": "./vectorstores/xata.cjs"
+    },
     "./text_splitter": {
       "types": "./text_splitter.d.ts",
       "import": "./text_splitter.js",
@@ -1437,6 +1461,11 @@
       "types": "./document_loaders/fs/unstructured.d.ts",
       "import": "./document_loaders/fs/unstructured.js",
       "require": "./document_loaders/fs/unstructured.cjs"
+    },
+    "./document_transformers/html_to_text": {
+      "types": "./document_transformers/html_to_text.d.ts",
+      "import": "./document_transformers/html_to_text.js",
+      "require": "./document_transformers/html_to_text.cjs"
     },
     "./document_transformers/openai_functions": {
       "types": "./document_transformers/openai_functions.d.ts",

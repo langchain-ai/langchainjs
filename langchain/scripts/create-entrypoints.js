@@ -13,6 +13,7 @@ const entrypoints = {
   // agents
   agents: "agents/index",
   "agents/load": "agents/load",
+  "agents/toolkits": "agents/toolkits/index",
   "agents/toolkits/aws_sfn": "agents/toolkits/aws_sfn",
   "agents/toolkits/sql": "agents/toolkits/sql/index",
   // base language
@@ -83,6 +84,7 @@ const entrypoints = {
   "vectorstores/singlestore": "vectorstores/singlestore",
   "vectorstores/tigris": "vectorstores/tigris",
   "vectorstores/vectara": "vectorstores/vectara",
+  "vectorstores/xata": "vectorstores/xata",
   // text_splitter
   text_splitter: "text_splitter",
   // memory
@@ -126,6 +128,8 @@ const entrypoints = {
   "document_loaders/fs/notion": "document_loaders/fs/notion",
   "document_loaders/fs/unstructured": "document_loaders/fs/unstructured",
   // document_transformers
+  "document_transformers/html_to_text":
+    "document_transformers/html_to_text",
   "document_transformers/openai_functions":
     "document_transformers/openai_functions",
   // chat_models
@@ -196,7 +200,8 @@ const entrypoints = {
   "experimental/babyagi": "experimental/babyagi/index",
   "experimental/generative_agents": "experimental/generative_agents/index",
   "experimental/plan_and_execute": "experimental/plan_and_execute/index",
-  "experimental/multimodal_embeddings/googlevertexai": "experimental/multimodal_embeddings/googlevertexai",
+  "experimental/multimodal_embeddings/googlevertexai":
+    "experimental/multimodal_embeddings/googlevertexai",
   // evaluation
   evaluation: "evaluation/index",
 };
@@ -288,6 +293,7 @@ const requiresOptionalDependency = [
   "document_loaders/fs/csv",
   "document_loaders/fs/notion",
   "document_loaders/fs/unstructured",
+  "document_transformers/html_to_text",
   "chat_models/googlevertexai",
   "chat_models/googlepalm",
   "sql_db",

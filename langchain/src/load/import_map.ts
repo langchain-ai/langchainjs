@@ -2,6 +2,7 @@
 
 export * as load__serializable from "../load/serializable.js";
 export * as agents from "../agents/index.js";
+export * as agents__toolkits from "../agents/toolkits/index.js";
 export * as base_language from "../base_language/index.js";
 export * as tools from "../tools/index.js";
 export * as chains from "../chains/index.js";
@@ -18,6 +19,7 @@ export * as vectorstores__base from "../vectorstores/base.js";
 export * as vectorstores__memory from "../vectorstores/memory.js";
 export * as vectorstores__prisma from "../vectorstores/prisma.js";
 export * as vectorstores__vectara from "../vectorstores/vectara.js";
+export * as vectorstores__xata from "../vectorstores/xata.js";
 export * as text_splitter from "../text_splitter.js";
 export * as memory from "../memory/index.js";
 export * as document from "../document.js";
