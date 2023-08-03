@@ -1,9 +1,8 @@
 import { ChatOpenAI } from "../../../chat_models/openai.js";
 import { ConversationSummaryBufferMemory } from "../../../memory/summary_buffer.js";
 import { StructuredTool } from "../../../tools/base.js";
-import { initializeAgentExecutorWithOptions } from "../../index.js";
-
-import { AgentTokenBufferMemory } from "../../openai/token_buffer_memory.js";
+import { initializeAgentExecutorWithOptions } from "../../initialize.js";
+import { OpenAIAgentTokenBufferMemory } from "./token_buffer_memory.js";
 
 export type ConversationalRetrievalAgentOptions = {
   rememberIntermediateSteps?: boolean;
@@ -14,8 +13,8 @@ export type ConversationalRetrievalAgentOptions = {
 };
 
 export async function createConversationalRetrievalAgent(
-  tools: StructuredTool[],
   llm: ChatOpenAI,
+  tools: StructuredTool[],
   options?: ConversationalRetrievalAgentOptions
 ) {
   const {
@@ -27,7 +26,7 @@ export async function createConversationalRetrievalAgent(
   } = options ?? {};
   let memory;
   if (rememberIntermediateSteps) {
-    memory = new AgentTokenBufferMemory({
+    memory = new OpenAIAgentTokenBufferMemory({
       memoryKey,
       llm,
       outputKey,

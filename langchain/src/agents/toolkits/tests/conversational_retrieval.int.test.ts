@@ -25,7 +25,7 @@ test("Test ConversationalRetrievalAgent", async () => {
       description: "Searches and returns documents regarding LangCo",
     }),
   ];
-  const executor = await createConversationalRetrievalAgent(tools, llm, {
+  const executor = await createConversationalRetrievalAgent(llm, tools, {
     verbose: true,
   });
   const result = await executor.invoke({

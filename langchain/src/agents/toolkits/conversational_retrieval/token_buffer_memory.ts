@@ -1,4 +1,4 @@
-import { ChatOpenAI } from "../../chat_models/openai.js";
+import { ChatOpenAI } from "../../../chat_models/openai.js";
 import {
   InputValues,
   MemoryVariables,
@@ -6,14 +6,14 @@ import {
   getBufferString,
   getInputValue,
   getOutputValue,
-} from "../../memory/base.js";
+} from "../../../memory/base.js";
 import {
   BaseChatMemory,
   BaseChatMemoryInput,
-} from "../../memory/chat_memory.js";
-import { _formatIntermediateSteps } from "./index.js";
+} from "../../../memory/chat_memory.js";
+import { _formatIntermediateSteps } from "../../openai/index.js";
 
-export type AgentTokenBufferMemoryFields = BaseChatMemoryInput & {
+export type OpenAIAgentTokenBufferMemoryFields = BaseChatMemoryInput & {
   llm: ChatOpenAI;
   humanPrefix?: string;
   aiPrefix?: string;
@@ -27,7 +27,7 @@ export type AgentTokenBufferMemoryFields = BaseChatMemoryInput & {
 /**
  * Memory used to save agent output and intermediate steps.
  */
-export class AgentTokenBufferMemory extends BaseChatMemory {
+export class OpenAIAgentTokenBufferMemory extends BaseChatMemory {
   humanPrefix = "Human";
 
   aiPrefix = "AI";
@@ -44,7 +44,7 @@ export class AgentTokenBufferMemory extends BaseChatMemory {
 
   intermediateStepsKey = "intermediateSteps";
 
-  constructor(fields: AgentTokenBufferMemoryFields) {
+  constructor(fields: OpenAIAgentTokenBufferMemoryFields) {
     super(fields);
     this.humanPrefix = fields.humanPrefix ?? this.humanPrefix;
     this.aiPrefix = fields.aiPrefix ?? this.aiPrefix;
