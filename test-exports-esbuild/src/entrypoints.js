@@ -1,6 +1,7 @@
 import * as load from "langchain/load";
 import * as load_serializable from "langchain/load/serializable";
 import * as agents from "langchain/agents";
+import * as agents_toolkits from "langchain/agents/toolkits";
 import * as base_language from "langchain/base_language";
 import * as tools from "langchain/tools";
 import * as chains from "langchain/chains";

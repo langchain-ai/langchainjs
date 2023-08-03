@@ -22,6 +22,9 @@
     "agents/load.cjs",
     "agents/load.js",
     "agents/load.d.ts",
+    "agents/toolkits.cjs",
+    "agents/toolkits.js",
+    "agents/toolkits.d.ts",
     "agents/toolkits/aws_sfn.cjs",
     "agents/toolkits/aws_sfn.js",
     "agents/toolkits/aws_sfn.d.ts",
@@ -934,6 +937,11 @@
       "types": "./agents/load.d.ts",
       "import": "./agents/load.js",
       "require": "./agents/load.cjs"
+    },
+    "./agents/toolkits": {
+      "types": "./agents/toolkits.d.ts",
+      "import": "./agents/toolkits.js",
+      "require": "./agents/toolkits.cjs"
     },
     "./agents/toolkits/aws_sfn": {
       "types": "./agents/toolkits/aws_sfn.d.ts",

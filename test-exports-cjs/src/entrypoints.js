@@ -1,6 +1,7 @@
 const load = require("langchain/load");
 const load_serializable = require("langchain/load/serializable");
 const agents = require("langchain/agents");
+const agents_toolkits = require("langchain/agents/toolkits");
 const base_language = require("langchain/base_language");
 const tools = require("langchain/tools");
 const chains = require("langchain/chains");
