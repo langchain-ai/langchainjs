@@ -223,6 +223,9 @@ export interface OptionalImportMap {
   "langchain/document_loaders/fs/unstructured"?:
     | typeof import("../document_loaders/fs/unstructured.js")
     | Promise<typeof import("../document_loaders/fs/unstructured.js")>;
+  "langchain/document_transformers/html_to_text"?:
+    | typeof import("../document_transformers/html_to_text.js")
+    | Promise<typeof import("../document_transformers/html_to_text.js")>;
   "langchain/chat_models/googlevertexai"?:
     | typeof import("../chat_models/googlevertexai.js")
     | Promise<typeof import("../chat_models/googlevertexai.js")>;
