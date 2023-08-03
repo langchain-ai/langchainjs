@@ -125,7 +125,7 @@ export class DynamoDBChatMessageHistory extends BaseListChatMessageHistory {
     await this.client.send(new DeleteItemCommand(params));
   }
 
-  protected async addMessage(message: BaseMessage) {
+  async addMessage(message: BaseMessage) {
     const messages = mapChatMessagesToStoredMessages([message]);
 
     const params: UpdateItemCommandInput = {

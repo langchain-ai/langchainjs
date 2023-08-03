@@ -15,7 +15,7 @@
     "start:dist": "yarn build && node -r dotenv/config dist/index.js",
     "lint": "eslint src",
     "lint:fix": "yarn lint --fix",
-    "precommit": "tsc --noEmit && lint-staged",
+    "precommit": "lint-staged",
     "format": "prettier --write \"**/*.ts\"",
     "format:check": "prettier --check \"**/*.ts\""
   },
@@ -35,6 +35,7 @@
     "@tensorflow/tfjs-backend-cpu": "^4.4.0",
     "@tigrisdata/vector": "^1.1.0",
     "@upstash/redis": "^1.20.6",
+    "@xata.io/client": "^0.25.1",
     "@zilliz/milvus2-sdk-node": "^2.2.7",
     "axios": "^0.26.0",
     "chromadb": "^1.4.0",

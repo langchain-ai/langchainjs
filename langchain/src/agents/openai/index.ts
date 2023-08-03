@@ -10,6 +10,7 @@ import {
   BaseMessage,
   FunctionMessage,
   ChainValues,
+  SystemMessage,
 } from "../../schema/index.js";
 import { StructuredTool } from "../../tools/base.js";
 import { Agent, AgentArgs } from "../agent.js";
@@ -25,7 +26,11 @@ import { BaseLanguageModel } from "../../base_language/index.js";
 import { LLMChain } from "../../chains/llm_chain.js";
 import { OutputParserException } from "../../schema/output_parser.js";
 
-function parseOutput(message: BaseMessage): AgentAction | AgentFinish {
+type FunctionsAgentAction = AgentAction & {
+  messageLog?: BaseMessage[];
+};
+
+function parseOutput(message: BaseMessage): FunctionsAgentAction | AgentFinish {
   if (message.additional_kwargs.function_call) {
     // eslint-disable-next-line prefer-destructuring
     const function_call: ChatCompletionRequestMessageFunctionCall =
@@ -37,7 +42,10 @@ function parseOutput(message: BaseMessage): AgentAction | AgentFinish {
       return {
         tool: function_call.name as string,
         toolInput,
-        log: message.content,
+        log: `Invoking "${function_call.name}" with ${
+          function_call.arguments ?? "{}"
+        }\n${message.content}`,
+        messageLog: [message],
       };
     } catch (error) {
       throw new OutputParserException(
@@ -49,12 +57,40 @@ function parseOutput(message: BaseMessage): AgentAction | AgentFinish {
   }
 }
 
+function isFunctionsAgentAction(
+  action: AgentAction | FunctionsAgentAction
+): action is FunctionsAgentAction {
+  return (action as FunctionsAgentAction).messageLog !== undefined;
+}
+
+function _convertAgentStepToMessages(
+  action: AgentAction | FunctionsAgentAction,
+  observation: string
+) {
+  if (isFunctionsAgentAction(action) && action.messageLog !== undefined) {
+    return action.messageLog?.concat(
+      new FunctionMessage(observation, action.tool)
+    );
+  } else {
+    return [new AIMessage(action.log)];
+  }
+}
+
+export function _formatIntermediateSteps(
+  intermediateSteps: AgentStep[]
+): BaseMessage[] {
+  return intermediateSteps.flatMap(({ action, observation }) =>
+    _convertAgentStepToMessages(action, observation)
+  );
+}
+
 export interface OpenAIAgentInput extends AgentInput {
   tools: StructuredTool[];
 }
 
 export interface OpenAIAgentCreatePromptArgs {
   prefix?: string;
+  systemMessage?: SystemMessage;
 }
 
 export class OpenAIAgent extends Agent {
@@ -121,15 +157,7 @@ export class OpenAIAgent extends Agent {
   async constructScratchPad(
     steps: AgentStep[]
   ): Promise<string | BaseMessage[]> {
-    return steps.flatMap(({ action, observation }) => [
-      new AIMessage("", {
-        function_call: {
-          name: action.tool,
-          arguments: JSON.stringify(action.toolInput),
-        },
-      }),
-      new FunctionMessage(observation, action.tool),
-    ]);
+    return _formatIntermediateSteps(steps);
   }
 
   async plan(
