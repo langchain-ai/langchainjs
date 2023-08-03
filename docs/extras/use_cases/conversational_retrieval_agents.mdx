@@ -15,8 +15,8 @@ To start, we need a retriever to use! The code here is mostly just example code.
 ```typescript
 import { FaissStore } from "langchain/vectorstores/faiss";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
-import { TextLoader } from "langchain/document_loaders";
-import { RecursiveCharacterTextSplitter } from "langchain/text_splitter/fs/text";
+import { TextLoader } from "langchain/document_loaders/fs/text";
+import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 
 const loader = new TextLoader("state_of_the_union.txt");
 const docs = await loader.load();
@@ -120,6 +120,8 @@ console.log(result4);
 */
 ```
 
+Note that for the final call, the agent used previously retrieved information to answer the query and did not need to call the tool again!
+
 Here's a trace showing how the agent fetches documents to answer the question with the retrieval tool:
 
 https://smith.langchain.com/public/1e2b1887-ca44-4210-913b-a69c1b8a8e7e/r
@@ -149,6 +151,8 @@ This allows us to customize the agent's system message by passing in a `prefix` 
 Importantly, we must pass in `return_intermediate_steps: true` since we are recording that with our memory object.
 
 ```typescript
+import { initializeAgentExecutorWithOptions } from "langchain/agents";
+
 const executor = await initializeAgentExecutorWithOptions(tools, llm, {
   agentType: "openai-functions",
   memory,
@@ -159,5 +163,4 @@ const executor = await initializeAgentExecutorWithOptions(tools, llm, {
       `Do your best to answer the questions. Feel free to use any tools available to look up relevant information, only if necessary.`,
   },
 });
-return executor;
 ```
