@@ -18,6 +18,7 @@ import * as vectorstores_base from "langchain/vectorstores/base";
 import * as vectorstores_memory from "langchain/vectorstores/memory";
 import * as vectorstores_prisma from "langchain/vectorstores/prisma";
 import * as vectorstores_vectara from "langchain/vectorstores/vectara";
+import * as vectorstores_xata from "langchain/vectorstores/xata";
 import * as text_splitter from "langchain/text_splitter";
 import * as memory from "langchain/memory";
 import * as document from "langchain/document";

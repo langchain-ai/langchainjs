@@ -214,6 +214,9 @@
     "vectorstores/vectara.cjs",
     "vectorstores/vectara.js",
     "vectorstores/vectara.d.ts",
+    "vectorstores/xata.cjs",
+    "vectorstores/xata.js",
+    "vectorstores/xata.d.ts",
     "text_splitter.cjs",
     "text_splitter.js",
     "text_splitter.d.ts",
@@ -574,6 +577,7 @@
     "@typescript-eslint/eslint-plugin": "^5.58.0",
     "@typescript-eslint/parser": "^5.58.0",
     "@upstash/redis": "^1.20.6",
+    "@xata.io/client": "^0.25.1",
     "@zilliz/milvus2-sdk-node": ">=2.2.7",
     "apify-client": "^2.7.1",
     "axios": "^0.26.0",
@@ -655,6 +659,7 @@
     "@tensorflow/tfjs-core": "*",
     "@tigrisdata/vector": "^1.1.0",
     "@upstash/redis": "^1.20.6",
+    "@xata.io/client": "^0.25.1",
     "@zilliz/milvus2-sdk-node": ">=2.2.7",
     "apify-client": "^2.7.1",
     "axios": "*",
@@ -770,6 +775,9 @@
       "optional": true
     },
     "@upstash/redis": {
+      "optional": true
+    },
+    "@xata.io/client": {
       "optional": true
     },
     "@zilliz/milvus2-sdk-node": {
@@ -1266,6 +1274,11 @@
       "types": "./vectorstores/vectara.d.ts",
       "import": "./vectorstores/vectara.js",
       "require": "./vectorstores/vectara.cjs"
+    },
+    "./vectorstores/xata": {
+      "types": "./vectorstores/xata.d.ts",
+      "import": "./vectorstores/xata.js",
+      "require": "./vectorstores/xata.cjs"
     },
     "./text_splitter": {
       "types": "./text_splitter.d.ts",
