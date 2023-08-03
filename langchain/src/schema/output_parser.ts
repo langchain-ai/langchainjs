@@ -1,4 +1,4 @@
-import { Callbacks } from "../callbacks/manager.js";
+import { BaseCallbackConfig, Callbacks } from "../callbacks/manager.js";
 import {
   BasePromptValue,
   Generation,
@@ -115,6 +115,28 @@ export class StringOutputParser extends BaseOutputParser<string> {
 
   getFormatInstructions(): string {
     return "";
+  }
+
+  async *_transform(
+    inputGenerator: AsyncGenerator<string | BaseMessage>
+  ): AsyncGenerator<string> {
+    for await (const chunk of inputGenerator) {
+      if (typeof chunk === "string") {
+        yield this.parseResult([{ text: chunk }]);
+      } else {
+        yield this.parseResult([{ message: chunk, text: chunk.content }]);
+      }
+    }
+  }
+
+  async *transform(
+    inputGenerator: AsyncGenerator<string | BaseMessage>,
+    options: BaseCallbackConfig
+  ): AsyncGenerator<string> {
+    yield* this._streamWithConfig(this._transform(inputGenerator), {
+      ...options,
+      runType: "parser",
+    });
   }
 }
 
