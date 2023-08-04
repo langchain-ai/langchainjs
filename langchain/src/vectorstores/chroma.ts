@@ -113,8 +113,12 @@ export class Chroma extends VectorStore {
       embeddings: vectors,
       metadatas: documents.map(({ metadata }) => ({
         ...metadata,
-        locFrom: metadata.loc.lines.from,
-        locTo: metadata.loc.lines.to,
+        ...(metadata?.loc?.lines?.from && {
+          locFrom: metadata.loc.lines.from,
+        }),
+        ...(metadata?.loc?.lines?.to && {
+          locTo: metadata.loc.lines.to,
+        }),
       })),
       documents: documents.map(({ pageContent }) => pageContent),
     });
