@@ -140,6 +140,48 @@ export class StringOutputParser extends BaseOutputParser<string> {
   }
 }
 
+/**
+ * OutputParser that parses LLMResult into the top likely string and
+ * encodes it into bytes.
+ */
+export class EncodingOutputParser extends BaseOutputParser<Uint8Array> {
+  lc_namespace = ["schema", "output_parser"];
+
+  lc_serializable = true;
+
+  protected textEncoder = new TextEncoder();
+
+  parse(text: string): Promise<Uint8Array> {
+    return Promise.resolve(this.textEncoder.encode(text));
+  }
+
+  getFormatInstructions(): string {
+    return "";
+  }
+
+  async *_transform(
+    inputGenerator: AsyncGenerator<string | BaseMessage>
+  ): AsyncGenerator<Uint8Array> {
+    for await (const chunk of inputGenerator) {
+      if (typeof chunk === "string") {
+        yield this.parseResult([{ text: chunk }]);
+      } else {
+        yield this.parseResult([{ message: chunk, text: chunk.content }]);
+      }
+    }
+  }
+
+  async *transform(
+    inputGenerator: AsyncGenerator<string | BaseMessage>,
+    options: BaseCallbackConfig
+  ): AsyncGenerator<Uint8Array> {
+    yield* this._streamWithConfig(this._transform(inputGenerator), {
+      ...options,
+      runType: "parser",
+    });
+  }
+}
+
 export class OutputParserException extends Error {
   output?: string;
 

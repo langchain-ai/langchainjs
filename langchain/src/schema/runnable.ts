@@ -143,7 +143,7 @@ export abstract class Runnable<
     return output;
   }
 
-  protected async *_streamWithConfig<T extends RunInput>(
+  protected async *_streamWithConfig<T extends RunOutput>(
     generator: AsyncGenerator<T>,
     options?: RunnableConfig & { runType?: string }
   ) {
