@@ -13291,9 +13291,6 @@ __metadata:
     typesense: ^1.5.3
     vectordb: ^0.1.4
     weaviate-ts-client: ^1.0.0
-  dependenciesMeta:
-    sber-salute-speech-recognition:
-      optional: true
   peerDependenciesMeta:
     "@aws-sdk/client-dynamodb":
       optional: true
