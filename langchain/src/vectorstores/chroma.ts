@@ -108,18 +108,29 @@ export class Chroma extends VectorStore {
     const documentIds =
       options?.ids ?? Array.from({ length: vectors.length }, () => uuid.v1());
     const collection = await this.ensureCollection();
+
+    let mappedMetadatas = documents.map(({ metadata }) => {
+      let locFrom = undefined;
+      let locTo = undefined;
+
+      if (metadata?.loc) {
+        if (metadata.loc.lines?.from !== undefined)
+          locFrom = metadata.loc.lines.from;
+        if (metadata.loc.lines?.to !== undefined) locTo = metadata.loc.lines.to;
+        delete metadata.loc;
+      }
+
+      return {
+        ...metadata,
+        ...(locFrom !== undefined && { locFrom }),
+        ...(locTo !== undefined && { locTo }),
+      };
+    });
+
     await collection.upsert({
       ids: documentIds,
       embeddings: vectors,
-      metadatas: documents.map(({ metadata }) => ({
-        ...metadata,
-        ...(metadata?.loc?.lines?.from && {
-          locFrom: metadata.loc.lines.from,
-        }),
-        ...(metadata?.loc?.lines?.to && {
-          locTo: metadata.loc.lines.to,
-        }),
-      })),
+      metadatas: mappedMetadatas,
       documents: documents.map(({ pageContent }) => pageContent),
     });
     return documentIds;
