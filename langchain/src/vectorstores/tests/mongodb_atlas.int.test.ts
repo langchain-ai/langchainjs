@@ -97,7 +97,9 @@ test.skip("MongoDBAtlasVectorSearch with external ids", async () => {
 
 test("MongoDBAtlasVectorSearch with Maximal Marginal Relevance", async () => {
   expect(process.env.MONGODB_ATLAS_URI).toBeDefined();
-  expect(process.env.OPENAI_API_KEY || process.env.AZURE_OPENAI_API_KEY).toBeDefined();
+  expect(
+    process.env.OPENAI_API_KEY || process.env.AZURE_OPENAI_API_KEY
+  ).toBeDefined();
 
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const client = new MongoClient(process.env.MONGODB_ATLAS_URI!);
@@ -123,7 +125,7 @@ test("MongoDBAtlasVectorSearch with Maximal Marginal Relevance", async () => {
       "foo",
       10,
       20,
-      0.1,
+      0.1
     );
 
     expect(output).toHaveLength(texts.length);

@@ -71,7 +71,11 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
     let preFilter: MongoDBDocument | undefined;
     let postFilterPipeline: MongoDBDocument[] | undefined;
     let includeEmbeddings: boolean | undefined;
-    if (filter?.preFilter || filter?.postFilterPipeline || filter?.includeEmbeddings) {
+    if (
+      filter?.preFilter ||
+      filter?.postFilterPipeline ||
+      filter?.includeEmbeddings
+    ) {
       preFilter = filter.preFilter;
       postFilterPipeline = filter.postFilterPipeline;
       includeEmbeddings = filter.includeEmbeddings || false;
@@ -95,12 +99,11 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
     ];
 
     if (!includeEmbeddings) {
-      const removeEmbeddingsStage =
-        {
-          $project: {
-            [this.embeddingKey]: 0,
-          },
-        };
+      const removeEmbeddingsStage = {
+        $project: {
+          [this.embeddingKey]: 0,
+        },
+      };
       pipeline.push(removeEmbeddingsStage);
     }
 
@@ -111,11 +114,7 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
 
     const ret: [Document, number][] = [];
     for await (const result of results) {
-      const {
-        score,
-        [this.textKey]: text,
-        ...metadata
-      } = result;
+      const { score, [this.textKey]: text, ...metadata } = result;
       ret.push([new Document({ pageContent: text, metadata }), score]);
     }
 
@@ -150,7 +149,7 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
     const includeEmbeddingsFlag = filter?.includeEmbeddings || false;
 
     // update filter to include embeddings, as they will be used in MMR
-    const includeEmbeddingsFilter = { ...filter, includeEmbeddings: true }
+    const includeEmbeddingsFilter = { ...filter, includeEmbeddings: true };
 
     const resultDocs = await this.similaritySearchVectorWithScore(
       queryEmbedding,
@@ -158,8 +157,8 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
       includeEmbeddingsFilter
     );
 
-    const embeddingList = resultDocs.map((doc) =>
-      doc[0].metadata[this.embeddingKey]
+    const embeddingList = resultDocs.map(
+      (doc) => doc[0].metadata[this.embeddingKey]
     );
 
     const mmrIndexes = maximalMarginalRelevance(
@@ -170,15 +169,14 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
     );
 
     return mmrIndexes.map((idx) => {
-        const doc = resultDocs[idx][0];
+      const doc = resultDocs[idx][0];
 
-        // remove embeddings if they were not requested originally
-        if (!includeEmbeddingsFlag) {
-          delete doc.metadata[this.embeddingKey];
-        }
-        return doc;
+      // remove embeddings if they were not requested originally
+      if (!includeEmbeddingsFlag) {
+        delete doc.metadata[this.embeddingKey];
       }
-    );
+      return doc;
+    });
   }
 
   static async fromTexts(
