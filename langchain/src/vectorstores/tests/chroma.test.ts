@@ -56,7 +56,7 @@ describe("Chroma", () => {
     );
     expect(mockCollection.upsert).toHaveBeenCalled();
 
-    const metadatas = mockCollection.upsert.mock.calls[0][0].metadatas;
+    const { metadatas } = mockCollection.upsert.mock.calls[0][0];
     expect(metadatas).toEqual([{}, {}]);
   });
 
@@ -74,7 +74,7 @@ describe("Chroma", () => {
     const chroma = new Chroma(embeddings, args);
     await chroma.addDocuments(documents as any);
 
-    const metadatas = mockCollection.upsert.mock.calls[0][0].metadatas;
+    const { metadatas } = mockCollection.upsert.mock.calls[0][0];
 
     expect(metadatas[0]).toEqual({
       source: "source.html",
