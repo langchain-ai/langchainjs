@@ -126,6 +126,30 @@ export abstract class VectorStore extends Serializable {
     );
   }
 
+  /**
+   * Return documents selected using the maximal marginal relevance.
+   * Maximal marginal relevance optimizes for similarity to the query AND diversity
+   * among selected documents.
+   *
+   * @param {string} query - Text to look up documents similar to.
+   * @param {number} k - Number of documents to return.
+   * @param {number} fetchK - Number of documents to fetch before passing to the MMR algorithm.
+   * @param {number} lambda - Number between 0 and 1 that determines the degree of diversity among the results,
+   *                 where 0 corresponds to maximum diversity and 1 to minimum diversity.
+   * @param {this["FilterType"]} filter - Optional filter
+   * @param _callbacks
+   *
+   * @returns {Promise<Document[]>} - List of documents selected by maximal marginal relevance.
+   */
+  async maxMarginalRelevanceSearch?(
+    query: string,
+    k: number,
+    fetchK: number,
+    lambda: number,
+    filter: this["FilterType"] | undefined,
+    _callbacks: Callbacks | undefined // implement passing to embedQuery later
+  ): Promise<Document[]>;
+
   static fromTexts(
     _texts: string[],
     _metadatas: object[] | object,
