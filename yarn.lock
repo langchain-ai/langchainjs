@@ -7507,6 +7507,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"bottleneck@npm:^2.19.5":
+  version: 2.19.5
+  resolution: "bottleneck@npm:2.19.5"
+  checksum: c5eef1bbea12cef1f1405e7306e7d24860568b0f7ac5eeab706a86762b3fc65ef6d1c641c8a166e4db90f412fc5c948fc5ce8008a8cd3d28c7212ef9c3482bda
+  languageName: node
+  linkType: hard
+
 "bowser@npm:^2.11.0":
   version: 2.11.0
   resolution: "bowser@npm:2.11.0"
@@ -13153,6 +13160,7 @@ __metadata:
     apify-client: ^2.7.1
     axios: ^0.26.0
     binary-extensions: ^2.2.0
+    bottleneck: ^2.19.5
     camelcase: 6
     cheerio: ^1.0.0-rc.12
     chromadb: ^1.5.3
@@ -13217,7 +13225,7 @@ __metadata:
     uuid: ^9.0.0
     vectordb: ^0.1.4
     weaviate-ts-client: ^1.0.0
-    yaml: ^2.2.1
+    yaml: ^2.3.1
     zod: ^3.21.4
     zod-to-json-schema: ^3.20.4
   peerDependencies:
@@ -19383,6 +19391,13 @@ __metadata:
   version: 2.2.1
   resolution: "yaml@npm:2.2.1"
   checksum: 84f68cbe462d5da4e7ded4a8bded949ffa912bc264472e5a684c3d45b22d8f73a3019963a32164023bdf3d83cfb6f5b58ff7b2b10ef5b717c630f40bd6369a23
+  languageName: node
+  linkType: hard
+
+"yaml@npm:^2.3.1":
+  version: 2.3.1
+  resolution: "yaml@npm:2.3.1"
+  checksum: 2c7bc9a7cd4c9f40d3b0b0a98e370781b68b8b7c4515720869aced2b00d92f5da1762b4ffa947f9e795d6cd6b19f410bd4d15fdd38aca7bd96df59bd9486fb54
   languageName: node
   linkType: hard
 

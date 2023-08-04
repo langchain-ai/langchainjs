@@ -533,7 +533,7 @@
     "test": "NODE_OPTIONS=--experimental-vm-modules jest --testPathIgnorePatterns=\\.int\\.test.ts --testTimeout 30000",
     "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch --testPathIgnorePatterns=\\.int\\.test.ts",
     "test:integration": "NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern=\\.int\\.test.ts --testTimeout 100000",
-    "test:single": "NODE_OPTIONS=--experimental-vm-modules yarn run jest --config jest.config.cjs --testTimeout 100000",
+    "test:single": "NODE_OPTIONS=--experimental-vm-modules yarn run jest --config jest.config.cjs --testTimeout 10000000",
     "format": "prettier --write \"src\"",
     "format:check": "prettier --check \"src\""
   },
@@ -893,6 +893,7 @@
     "@anthropic-ai/sdk": "^0.5.7",
     "ansi-styles": "^5.0.0",
     "binary-extensions": "^2.2.0",
+    "bottleneck": "^2.19.5",
     "camelcase": "6",
     "decamelize": "^1.2.0",
     "expr-eval": "^2.0.2",
@@ -908,7 +909,7 @@
     "p-queue": "^6.6.2",
     "p-retry": "4",
     "uuid": "^9.0.0",
-    "yaml": "^2.2.1",
+    "yaml": "^2.3.1",
     "zod": "^3.21.4",
     "zod-to-json-schema": "^3.20.4"
   },

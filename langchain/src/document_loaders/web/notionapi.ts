@@ -11,8 +11,9 @@ import type {
   MdBlock,
 } from "notion-to-md/build/types";
 
-import { BaseDocumentLoader } from "../base.js";
+import Bottleneck from "bottleneck";
 import { Document } from "../../document.js";
+import { BaseDocumentLoaderWithEventEmitter } from "../base_with_event_emitter.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type GuardType<T> = T extends (x: any, ...rest: any) => x is infer U
@@ -28,9 +29,12 @@ export type NotionAPILoaderOptions = {
   clientOptions: ConstructorParameters<typeof Client>[0];
   id: string;
   type: NotionAPIType;
+  limiterOptions: ConstructorParameters<typeof Bottleneck>[0];
 };
 
-export class NotionAPILoader extends BaseDocumentLoader {
+export class NotionAPILoader extends BaseDocumentLoaderWithEventEmitter {
+  private limiter: Bottleneck;
+
   private notionClient: Client;
 
   private n2mClient: NotionToMarkdown;
@@ -39,9 +43,16 @@ export class NotionAPILoader extends BaseDocumentLoader {
 
   private type: NotionAPIType;
 
+  private pageQueue: (string | PageObjectResponse)[];
+
+  public pageQueueTotal: number;
+
+  private documents: Document[];
+
   constructor(options: NotionAPILoaderOptions) {
     super();
 
+    this.limiter = new Bottleneck(options.limiterOptions);
     this.notionClient = new Client(options.clientOptions);
     this.n2mClient = new NotionToMarkdown({
       notionClient: this.notionClient,
@@ -49,6 +60,16 @@ export class NotionAPILoader extends BaseDocumentLoader {
     });
     this.id = options.id;
     this.type = options.type;
+    this.pageQueue = [];
+    this.pageQueueTotal = 0;
+    if (this.type === "page") this.pageQueue.push(this.id);
+    this.documents = [];
+  }
+
+  private addToQueue(...items: string[]) {
+    this.pageQueue.push(...items);
+    this.pageQueueTotal += items.length;
+    this.emit("total_change", this.pageQueueTotal);
   }
 
   private parsePageProperties(page: PageObjectResponse): {
@@ -127,143 +148,127 @@ export class NotionAPILoader extends BaseDocumentLoader {
   }
 
   private async loadBlock(block: BlockObjectResponse): Promise<MdBlock> {
-    return {
+    const mdBlock: MdBlock = {
       type: block.type,
       blockId: block.id,
-      parent: await this.n2mClient.blockToMarkdown(block),
+      parent: await this.limiter.schedule(() =>
+        this.n2mClient.blockToMarkdown(block)
+      ),
       children: [],
     };
+
+    if (block.has_children) {
+      const block_id =
+        block.type === "synced_block" &&
+        block.synced_block?.synced_from?.block_id
+          ? block.synced_block.synced_from.block_id
+          : block.id;
+
+      const childBlocks = await this.loadBlocks(
+        await this.limiter.schedule(() =>
+          getBlockChildren(this.notionClient, block_id, null)
+        )
+      );
+
+      mdBlock.children = childBlocks;
+    }
+
+    return mdBlock;
   }
 
-  private async loadBlocksAndDocs(
+  private async loadBlocks(
     blocksResponse: ListBlockChildrenResponseResults
-  ): Promise<{ mdBlocks: MdBlock[]; childDocuments: Document[] }> {
+  ): Promise<MdBlock[]> {
     const blocks = blocksResponse.filter(isFullBlock);
 
-    const [childPageDocuments, childDatabaseDocuments, blocksDocsArray] =
-      await Promise.all([
-        Promise.all(
-          blocks
-            .filter((block) => block.type.includes("child_page"))
-            .map((block) => this.loadPage(block.id))
-        ),
-        Promise.all(
-          blocks
-            .filter((block) => block.type.includes("child_database"))
-            .map((block) => this.loadDatabase(block.id))
-        ),
-        Promise.all(
-          blocks
-            .filter(
-              (block) => !["child_page", "child_database"].includes(block.type)
-            )
-            .map(async (block) => {
-              const mdBlock = await this.loadBlock(block);
-              let childDocuments: Document[] = [];
+    // Add child pages to queue
+    const childPages = blocks
+      .filter((block) => block.type.includes("child_page"))
+      .map((block) => block.id);
+    if (childPages.length > 0) this.addToQueue(...childPages);
 
-              if (block.has_children) {
-                const block_id =
-                  block.type === "synced_block" &&
-                  block.synced_block?.synced_from?.block_id
-                    ? block.synced_block.synced_from.block_id
-                    : block.id;
+    // Add child database pages to queue
+    const childDatabases = blocks
+      .filter((block) => block.type.includes("child_database"))
+      .map((block) => this.limiter.schedule(() => this.loadDatabase(block.id)));
 
-                const childBlocksDocs = await this.loadBlocksAndDocs(
-                  await getBlockChildren(this.notionClient, block_id, null)
-                );
+    // Load this block and child blocks
+    const loadingMdBlocks = blocks
+      .filter((block) => !["child_page", "child_database"].includes(block.type))
+      .map((block) => this.loadBlock(block));
 
-                mdBlock.children = childBlocksDocs.mdBlocks;
-                childDocuments = childBlocksDocs.childDocuments;
-              }
+    const [mdBlocks] = await Promise.all([
+      Promise.all(loadingMdBlocks),
+      Promise.all(childDatabases),
+    ]);
 
-              return {
-                mdBlocks: [mdBlock],
-                childDocuments,
-              };
-            })
-        ),
-      ]);
-
-    const allMdBlocks = blocksDocsArray
-      .flat()
-      .map((blockDoc) => blockDoc.mdBlocks);
-    const childDocuments = blocksDocsArray
-      .flat()
-      .map((blockDoc) => blockDoc.childDocuments);
-
-    return {
-      mdBlocks: [...allMdBlocks.flat()],
-      childDocuments: [
-        ...childPageDocuments.flat(),
-        ...childDatabaseDocuments.flat(),
-        ...childDocuments.flat(),
-      ],
-    };
+    return mdBlocks;
   }
 
   private async loadPage(page: string | PageObjectResponse) {
-    // Check page is a page ID or a GetPageResponse
+    // Check page is a page ID or a PageObjectResponse
     const [pageData, pageId] =
       typeof page === "string"
-        ? [this.notionClient.pages.retrieve({ page_id: page }), page]
+        ? [
+            this.limiter.schedule(() =>
+              this.notionClient.pages.retrieve({ page_id: page })
+            ),
+            page,
+          ]
         : [page, page.id];
 
     const [pageDetails, pageBlocks] = await Promise.all([
       pageData,
-      getBlockChildren(this.notionClient, pageId, null),
+      this.limiter.schedule(() =>
+        getBlockChildren(this.notionClient, pageId, null)
+      ),
     ]);
 
-    if (!isFullPage(pageDetails)) return [];
+    if (!isFullPage(pageDetails)) return;
+    this.emit("update", pageId, 0, pageBlocks.length);
 
-    const { mdBlocks, childDocuments } = await this.loadBlocksAndDocs(
-      pageBlocks
-    );
-
+    const mdBlocks = await this.loadBlocks(pageBlocks);
     const mdStringObject = this.n2mClient.toMarkdownString(mdBlocks);
-
     const pageDocument = new Document({
       pageContent: mdStringObject.parent,
       metadata: this.parsePageDetails(pageDetails),
     });
 
-    return [pageDocument, ...childDocuments];
+    this.documents.push(pageDocument);
+    this.emit("load", this.documents.length);
   }
 
-  private async loadDatabase(id: string): Promise<Document[]> {
-    const documents: Document[] = [];
-
+  private async loadDatabase(id: string) {
     try {
       for await (const page of iteratePaginatedAPI(
         this.notionClient.databases.query,
         {
           database_id: id,
+          page_size: 50,
         }
       )) {
-        if (!isFullPage(page)) continue;
-
-        documents.push(...(await this.loadPage(page)));
+        this.addToQueue(page.id);
       }
     } catch (e) {
       console.log(e);
       // TODO: Catch and report api request errors
     }
-
-    return documents;
   }
 
   async load(): Promise<Document[]> {
-    const documents: Document[] = [];
-
-    switch (this.type) {
-      case "page":
-        documents.push(...(await this.loadPage(this.id)));
-        break;
-      case "database":
-        documents.push(...(await this.loadDatabase(this.id)));
-        break;
-      default:
+    if (this.type === "database") {
+      await this.limiter.schedule(() => this.loadDatabase(this.id));
     }
 
-    return documents;
+    this.emit("begin", this.pageQueueTotal);
+
+    let pageId = this.pageQueue.shift();
+    while (pageId) {
+      await this.loadPage(pageId);
+      pageId = this.pageQueue.shift();
+    }
+
+    this.emit("end", this.documents.length);
+    return this.documents;
   }
 }
