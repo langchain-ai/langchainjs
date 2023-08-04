@@ -68,6 +68,7 @@ export const optionalImportEntrypoints = [
   "langchain/document_loaders/fs/buffer",
   "langchain/document_loaders/fs/text",
   "langchain/document_loaders/fs/json",
+  "langchain/document_loaders/fs/sber_salute",
   "langchain/document_loaders/fs/srt",
   "langchain/document_loaders/fs/pdf",
   "langchain/document_loaders/fs/docx",

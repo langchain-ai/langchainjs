@@ -286,6 +286,9 @@ document_loaders/fs/text.d.ts
 document_loaders/fs/json.cjs
 document_loaders/fs/json.js
 document_loaders/fs/json.d.ts
+document_loaders/fs/sber_salute.cjs
+document_loaders/fs/sber_salute.js
+document_loaders/fs/sber_salute.d.ts
 document_loaders/fs/srt.cjs
 document_loaders/fs/srt.js
 document_loaders/fs/srt.d.ts

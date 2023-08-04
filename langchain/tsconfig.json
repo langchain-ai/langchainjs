@@ -124,6 +124,7 @@
       "src/document_loaders/fs/buffer.ts",
       "src/document_loaders/fs/text.ts",
       "src/document_loaders/fs/json.ts",
+      "src/document_loaders/fs/sber_salute.ts",
       "src/document_loaders/fs/srt.ts",
       "src/document_loaders/fs/pdf.ts",
       "src/document_loaders/fs/docx.ts",

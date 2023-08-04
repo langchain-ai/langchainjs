@@ -202,6 +202,9 @@ export interface OptionalImportMap {
   "langchain/document_loaders/fs/json"?:
     | typeof import("../document_loaders/fs/json.js")
     | Promise<typeof import("../document_loaders/fs/json.js")>;
+  "langchain/document_loaders/fs/sber_salute"?:
+    | typeof import("../document_loaders/fs/sber_salute.js")
+    | Promise<typeof import("../document_loaders/fs/sber_salute.js")>;
   "langchain/document_loaders/fs/srt"?:
     | typeof import("../document_loaders/fs/srt.js")
     | Promise<typeof import("../document_loaders/fs/srt.js")>;
@@ -338,7 +341,7 @@ export interface SecretMap {
   REDIS_URL?: string;
   REDIS_USERNAME?: string;
   REMOTE_RETRIEVER_AUTH_BEARER?: string;
-  REPLICATE_API_KEY?: string;
+  REPLICATE_API_TOKEN?: string;
   SEARXNG_API_BASE?: string;
   UPSTASH_REDIS_REST_TOKEN?: string;
   UPSTASH_REDIS_REST_URL?: string;

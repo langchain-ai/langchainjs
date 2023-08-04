@@ -298,6 +298,9 @@
     "document_loaders/fs/json.cjs",
     "document_loaders/fs/json.js",
     "document_loaders/fs/json.d.ts",
+    "document_loaders/fs/sber_salute.cjs",
+    "document_loaders/fs/sber_salute.js",
+    "document_loaders/fs/sber_salute.d.ts",
     "document_loaders/fs/srt.cjs",
     "document_loaders/fs/srt.js",
     "document_loaders/fs/srt.d.ts",
@@ -608,6 +611,7 @@
     "replicate": "^0.12.3",
     "rimraf": "^5.0.1",
     "rollup": "^3.19.1",
+    "sber-salute-speech-recognition": "^2.0.0",
     "sonix-speech-recognition": "^2.1.1",
     "sqlite3": "^5.1.4",
     "srt-parser-2": "^1.2.2",
@@ -674,6 +678,7 @@
     "puppeteer": "^19.7.2",
     "redis": "^4.6.4",
     "replicate": "^0.12.3",
+    "sber-salute-speech-recognition": "^2.0.0",
     "sonix-speech-recognition": "^2.1.1",
     "srt-parser-2": "^1.2.2",
     "typeorm": "^0.3.12",
@@ -845,6 +850,9 @@
       "optional": true
     },
     "replicate": {
+      "optional": true
+    },
+    "sber-salute-speech-recognition": {
       "optional": true
     },
     "sonix-speech-recognition": {
@@ -1399,6 +1407,11 @@
       "types": "./document_loaders/fs/json.d.ts",
       "import": "./document_loaders/fs/json.js",
       "require": "./document_loaders/fs/json.cjs"
+    },
+    "./document_loaders/fs/sber_salute": {
+      "types": "./document_loaders/fs/sber_salute.d.ts",
+      "import": "./document_loaders/fs/sber_salute.js",
+      "require": "./document_loaders/fs/sber_salute.cjs"
     },
     "./document_loaders/fs/srt": {
       "types": "./document_loaders/fs/srt.d.ts",
