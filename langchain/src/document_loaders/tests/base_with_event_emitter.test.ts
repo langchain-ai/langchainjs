@@ -1,9 +1,9 @@
 import { test, expect } from "@jest/globals";
-import { BaseDocumentLoaderWithEventEmitter } from "langchain/document_loaders/base_with_event_emitter";
-import { Document } from "langchain/document";
+import { BaseDocumentLoaderWithEventEmitter } from "../base_with_event_emitter.js";
+import { Document } from "../../document.js";
 
 class ExampleTextLoaderWithEvents extends BaseDocumentLoaderWithEventEmitter {
-  private documentsTotal: number = 0;
+  private documentsTotal = 0;
 
   private documents: Document[] = [];
 
