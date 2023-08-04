@@ -103,6 +103,7 @@
       "src/memory/zep.ts",
       "src/document.ts",
       "src/document_loaders/base.ts",
+      "src/document_loaders/base_with_event_emitter.ts",
       "src/document_loaders/web/apify_dataset.ts",
       "src/document_loaders/web/azure_blob_storage_container.ts",
       "src/document_loaders/web/azure_blob_storage_file.ts",

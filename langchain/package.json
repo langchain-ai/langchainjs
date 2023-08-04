@@ -235,6 +235,9 @@
     "document_loaders/base.cjs",
     "document_loaders/base.js",
     "document_loaders/base.d.ts",
+    "document_loaders/base_with_event_emitter.cjs",
+    "document_loaders/base_with_event_emitter.js",
+    "document_loaders/base_with_event_emitter.d.ts",
     "document_loaders/web/apify_dataset.cjs",
     "document_loaders/web/apify_dataset.js",
     "document_loaders/web/apify_dataset.d.ts",
@@ -1314,6 +1317,11 @@
       "types": "./document_loaders/base.d.ts",
       "import": "./document_loaders/base.js",
       "require": "./document_loaders/base.cjs"
+    },
+    "./document_loaders/base_with_event_emitter": {
+      "types": "./document_loaders/base_with_event_emitter.d.ts",
+      "import": "./document_loaders/base_with_event_emitter.js",
+      "require": "./document_loaders/base_with_event_emitter.cjs"
     },
     "./document_loaders/web/apify_dataset": {
       "types": "./document_loaders/web/apify_dataset.d.ts",
