@@ -131,6 +131,33 @@ test.skip("MongoDBAtlasVectorSearch with Maximal Marginal Relevance", async () =
     const actual = output.map((doc) => doc.pageContent);
     const expected = ["foo", "foy", "foo"];
     expect(actual).toEqual(expected);
+
+    const standardRetriever = await vectorStore.asRetriever();
+
+    const standardRetrieverOutput =
+      await standardRetriever.getRelevantDocuments("foo");
+    expect(output).toHaveLength(texts.length);
+
+    const standardRetrieverActual = standardRetrieverOutput.map(
+      (doc) => doc.pageContent
+    );
+    const standardRetrieverExpected = ["foo", "foo", "foy"];
+    expect(standardRetrieverActual).toEqual(standardRetrieverExpected);
+
+    const retriever = await vectorStore.asRetriever({
+      searchType: "mmr",
+      searchKwargs: {
+        fetchK: 20,
+        lambda: 0.1,
+      },
+    });
+
+    const retrieverOutput = await retriever.getRelevantDocuments("foo");
+    expect(output).toHaveLength(texts.length);
+
+    const retrieverActual = retrieverOutput.map((doc) => doc.pageContent);
+    const retrieverExpected = ["foo", "foy", "foo"];
+    expect(retrieverActual).toEqual(retrieverExpected);
   } finally {
     await client.close();
   }

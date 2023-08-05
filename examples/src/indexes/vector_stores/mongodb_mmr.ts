@@ -14,7 +14,24 @@ const vectorStore = new MongoDBAtlasVectorSearch(new CohereEmbeddings(), {
   embeddingKey: "embedding", // The name of the collection field containing the embedded text. Defaults to "embedding"
 });
 
-const resultOne = await vectorStore.similaritySearch("Hello world", 1);
+const resultOne = await vectorStore.maxMarginalRelevanceSearch("Hello world", {
+  k: 4,
+  fetchK: 20, // The number of documents to return on initial fetch
+});
 console.log(resultOne);
+
+// Using MMR in a vector store retriever
+
+const retriever = await vectorStore.asRetriever({
+  searchType: "mmr",
+  searchKwargs: {
+    fetchK: 20,
+    lambda: 0.1,
+  },
+});
+
+const retrieverOutput = await retriever.getRelevantDocuments("Hello world");
+
+console.log(retrieverOutput);
 
 await client.close();

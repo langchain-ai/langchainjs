@@ -140,6 +140,8 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
     query: string,
     options: MaxMarginalRelevanceSearchOptions<this["FilterType"]>
   ): Promise<Document[]> {
+    const { k, fetchK = 20, lambda = 0.5, filter } = options;
+
     const queryEmbedding = await this.embeddings.embedQuery(query);
 
     // preserve the original value of includeEmbeddings
@@ -147,13 +149,13 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
 
     // update filter to include embeddings, as they will be used in MMR
     const includeEmbeddingsFilter = {
-      ...options.filter,
+      ...filter,
       includeEmbeddings: true,
     };
 
     const resultDocs = await this.similaritySearchVectorWithScore(
       queryEmbedding,
-      options.fetchK,
+      fetchK,
       includeEmbeddingsFilter
     );
 
@@ -164,8 +166,8 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
     const mmrIndexes = maximalMarginalRelevance(
       queryEmbedding,
       embeddingList,
-      options.lambda,
-      options.k
+      lambda,
+      k
     );
 
     return mmrIndexes.map((idx) => {

@@ -12,17 +12,33 @@ type AddDocumentOptions = Record<string, any>;
 
 export type MaxMarginalRelevanceSearchOptions<FilterType> = {
   k: number;
-  fetchK: number;
-  lambda: number;
+  fetchK?: number;
+  lambda?: number;
   filter?: FilterType;
 };
 
-export interface VectorStoreRetrieverInput<V extends VectorStore>
-  extends BaseRetrieverInput {
-  vectorStore: V;
-  k?: number;
-  filter?: V["FilterType"];
-}
+export type VectorStoreRetrieverMMRSearchKwargs = {
+  fetchK?: number;
+  lambda?: number;
+};
+
+export type VectorStoreRetrieverInput<V extends VectorStore> =
+  BaseRetrieverInput &
+    (
+      | {
+          vectorStore: V;
+          k?: number;
+          filter?: V["FilterType"];
+          searchType?: "similarity";
+        }
+      | {
+          vectorStore: V;
+          k?: number;
+          filter?: V["FilterType"];
+          searchType: "mmr";
+          searchKwargs?: VectorStoreRetrieverMMRSearchKwargs;
+        }
+    );
 
 export class VectorStoreRetriever<
   V extends VectorStore = VectorStore
@@ -35,6 +51,10 @@ export class VectorStoreRetriever<
 
   k = 4;
 
+  searchType = "similarity";
+
+  searchKwargs?: VectorStoreRetrieverMMRSearchKwargs;
+
   filter?: V["FilterType"];
 
   _vectorstoreType(): string {
@@ -45,13 +65,33 @@ export class VectorStoreRetriever<
     super(fields);
     this.vectorStore = fields.vectorStore;
     this.k = fields.k ?? this.k;
+    this.searchType = fields.searchType ?? this.searchType;
     this.filter = fields.filter;
+    if (fields.searchType === "mmr") {
+      this.searchKwargs = fields.searchKwargs;
+    }
   }
 
   async _getRelevantDocuments(
     query: string,
     runManager?: CallbackManagerForRetrieverRun
   ): Promise<Document[]> {
+    if (this.searchType === "mmr") {
+      if (typeof this.vectorStore.maxMarginalRelevanceSearch !== "function") {
+        throw new Error(
+          `The vector store backing this retriever, ${this._vectorstoreType()} does not support max marginal relevance search.`
+        );
+      }
+      return this.vectorStore.maxMarginalRelevanceSearch(
+        query,
+        {
+          k: this.k,
+          filter: this.filter,
+          ...this.searchKwargs,
+        },
+        runManager?.getChild("vectorstore")
+      );
+    }
     return this.vectorStore.similaritySearch(
       query,
       this.k,
@@ -196,7 +236,7 @@ export abstract class VectorStore extends Serializable {
         callbacks,
       });
     } else {
-      return new VectorStoreRetriever({
+      const params = {
         vectorStore: this,
         k: kOrFields?.k,
         filter: kOrFields?.filter,
@@ -204,7 +244,15 @@ export abstract class VectorStore extends Serializable {
         metadata: kOrFields?.metadata,
         verbose: kOrFields?.verbose,
         callbacks: kOrFields?.callbacks,
-      });
+        searchType: kOrFields?.searchType,
+      };
+      if (kOrFields?.searchType === "mmr") {
+        return new VectorStoreRetriever({
+          ...params,
+          searchKwargs: kOrFields.searchKwargs,
+        });
+      }
+      return new VectorStoreRetriever({ ...params });
     }
   }
 }
