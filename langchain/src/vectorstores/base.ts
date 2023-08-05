@@ -139,11 +139,11 @@ export abstract class VectorStore extends Serializable {
    * among selected documents.
    *
    * @param {string} query - Text to look up documents similar to.
-   * @param {number} k - Number of documents to return.
-   * @param {number} fetchK - Number of documents to fetch before passing to the MMR algorithm.
-   * @param {number} lambda - Number between 0 and 1 that determines the degree of diversity among the results,
+   * @param {number} options.k - Number of documents to return.
+   * @param {number} options.fetchK - Number of documents to fetch before passing to the MMR algorithm.
+   * @param {number} options.lambda - Number between 0 and 1 that determines the degree of diversity among the results,
    *                 where 0 corresponds to maximum diversity and 1 to minimum diversity.
-   * @param {this["FilterType"]} filter - Optional filter
+   * @param {this["FilterType"]} options.filter - Optional filter
    * @param _callbacks
    *
    * @returns {Promise<Document[]>} - List of documents selected by maximal marginal relevance.
