@@ -67,6 +67,9 @@ export class VectorStoreRetriever<
     this.k = fields.k ?? this.k;
     this.searchType = fields.searchType ?? this.searchType;
     this.filter = fields.filter;
+    if (fields.searchType === "mmr") {
+      this.searchKwargs = fields.searchKwargs;
+    }
   }
 
   async _getRelevantDocuments(
