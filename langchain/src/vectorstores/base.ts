@@ -10,6 +10,13 @@ import {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AddDocumentOptions = Record<string, any>;
 
+export type MaxMarginalRelevanceSearchOptions<FilterType> = {
+  k: number;
+  fetchK: number;
+  lambda: number;
+  filter?: FilterType;
+};
+
 export interface VectorStoreRetrieverInput<V extends VectorStore>
   extends BaseRetrieverInput {
   vectorStore: V;
@@ -125,6 +132,27 @@ export abstract class VectorStore extends Serializable {
       filter
     );
   }
+
+  /**
+   * Return documents selected using the maximal marginal relevance.
+   * Maximal marginal relevance optimizes for similarity to the query AND diversity
+   * among selected documents.
+   *
+   * @param {string} query - Text to look up documents similar to.
+   * @param {number} options.k - Number of documents to return.
+   * @param {number} options.fetchK - Number of documents to fetch before passing to the MMR algorithm.
+   * @param {number} options.lambda - Number between 0 and 1 that determines the degree of diversity among the results,
+   *                 where 0 corresponds to maximum diversity and 1 to minimum diversity.
+   * @param {this["FilterType"]} options.filter - Optional filter
+   * @param _callbacks
+   *
+   * @returns {Promise<Document[]>} - List of documents selected by maximal marginal relevance.
+   */
+  async maxMarginalRelevanceSearch?(
+    query: string,
+    options: MaxMarginalRelevanceSearchOptions<this["FilterType"]>,
+    _callbacks: Callbacks | undefined // implement passing to embedQuery later
+  ): Promise<Document[]>;
 
   static fromTexts(
     _texts: string[],
