@@ -20,4 +20,18 @@ const resultOne = await vectorStore.maxMarginalRelevanceSearch("Hello world", {
 });
 console.log(resultOne);
 
+// Using MMR in a vector store retriever
+
+const retriever = await vectorStore.asRetriever({
+  searchType: "mmr",
+  searchKwargs: {
+    fetchK: 20,
+    lambda: 0.1,
+  },
+});
+
+const retrieverOutput = await retriever.getRelevantDocuments("Hello world");
+
+console.log(retrieverOutput);
+
 await client.close();
