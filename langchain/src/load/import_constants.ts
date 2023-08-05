@@ -33,7 +33,6 @@ export const optionalImportEntrypoints = [
   "langchain/vectorstores/faiss",
   "langchain/vectorstores/weaviate",
   "langchain/vectorstores/lancedb",
-  "langchain/vectorstores/mongo",
   "langchain/vectorstores/mongodb_atlas",
   "langchain/vectorstores/pinecone",
   "langchain/vectorstores/qdrant",

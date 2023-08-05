@@ -157,9 +157,6 @@ vectorstores/weaviate.d.ts
 vectorstores/lancedb.cjs
 vectorstores/lancedb.js
 vectorstores/lancedb.d.ts
-vectorstores/mongo.cjs
-vectorstores/mongo.js
-vectorstores/mongo.d.ts
 vectorstores/mongodb_atlas.cjs
 vectorstores/mongodb_atlas.js
 vectorstores/mongodb_atlas.d.ts

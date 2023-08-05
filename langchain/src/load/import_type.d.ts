@@ -97,9 +97,6 @@ export interface OptionalImportMap {
   "langchain/vectorstores/lancedb"?:
     | typeof import("../vectorstores/lancedb.js")
     | Promise<typeof import("../vectorstores/lancedb.js")>;
-  "langchain/vectorstores/mongo"?:
-    | typeof import("../vectorstores/mongo.js")
-    | Promise<typeof import("../vectorstores/mongo.js")>;
   "langchain/vectorstores/mongodb_atlas"?:
     | typeof import("../vectorstores/mongodb_atlas.js")
     | Promise<typeof import("../vectorstores/mongodb_atlas.js")>;
