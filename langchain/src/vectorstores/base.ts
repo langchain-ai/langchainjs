@@ -17,6 +17,11 @@ export type MaxMarginalRelevanceSearchOptions<FilterType> = {
   filter?: FilterType;
 };
 
+export type VectorStoreRetrieverMMRSearchKwargs = {
+  fetchK?: number;
+  lambda?: number;
+};
+
 export type VectorStoreRetrieverInput<V extends VectorStore> =
   BaseRetrieverInput &
     (
@@ -31,10 +36,7 @@ export type VectorStoreRetrieverInput<V extends VectorStore> =
           k?: number;
           filter?: V["FilterType"];
           searchType: "mmr";
-          searchKwargs?: {
-            fetchK?: number;
-            lambda?: number;
-          };
+          searchKwargs?: VectorStoreRetrieverMMRSearchKwargs;
         }
     );
 
@@ -50,6 +52,8 @@ export class VectorStoreRetriever<
   k = 4;
 
   searchType = "similarity";
+
+  searchKwargs?: VectorStoreRetrieverMMRSearchKwargs;
 
   filter?: V["FilterType"];
 
@@ -80,6 +84,7 @@ export class VectorStoreRetriever<
         {
           k: this.k,
           filter: this.filter,
+          ...this.searchKwargs,
         },
         runManager?.getChild("vectorstore")
       );
