@@ -12,10 +12,7 @@ export type RunnableFunc<RunInput, RunOutput> = (
 export type RunnableLike<RunInput = any, RunOutput = any> =
   | Runnable<RunInput, RunOutput>
   | RunnableFunc<RunInput, RunOutput>
-  | Record<
-      string,
-      Runnable<RunInput, RunOutput> | RunnableFunc<RunInput, RunOutput>
-    >;
+  | { [key: string]: RunnableLike<RunInput, RunOutput> };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function _coerceToDict(value: any, defaultKey: string) {
@@ -639,5 +636,84 @@ export class RunnableBinding<
     options?: Partial<CallOptions> | undefined
   ): Promise<IterableReadableStream<RunOutput>> {
     return this.bound.stream(input, { ...options, ...this.kwargs });
+  }
+}
+
+export type RouterInput = {
+  key: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  input: any;
+};
+
+export class RouterRunnable<
+  RunInput extends RouterInput,
+  RunnableInput,
+  RunOutput
+> extends Runnable<RunInput, RunOutput> {
+  lc_namespace = ["schema", "langchain"];
+
+  lc_serializable = true;
+
+  runnables: Record<string, Runnable<RunnableInput, RunOutput>>;
+
+  constructor(fields: {
+    runnables: Record<string, Runnable<RunnableInput, RunOutput>>;
+  }) {
+    super(fields);
+    this.runnables = fields.runnables;
+  }
+
+  async invoke(
+    input: RunInput,
+    options?: Partial<BaseCallbackConfig>
+  ): Promise<RunOutput> {
+    const { key, input: actualInput } = input;
+    const runnable = this.runnables[key];
+    if (runnable === undefined) {
+      throw new Error(`No runnable associated with key "${key}".`);
+    }
+    return runnable.invoke(actualInput, options);
+  }
+
+  async batch(
+    inputs: RunInput[],
+    options?: Partial<BaseCallbackConfig> | Partial<BaseCallbackConfig>[],
+    batchOptions?: { maxConcurrency?: number }
+  ): Promise<RunOutput[]> {
+    const keys = inputs.map((input) => input.key);
+    const actualInputs = inputs.map((input) => input.input);
+    const missingKey = keys.find((key) => this.runnables[key] === undefined);
+    if (missingKey !== undefined) {
+      throw new Error(`One or more keys do not have a corresponding runnable.`);
+    }
+    const runnables = keys.map((key) => this.runnables[key]);
+    const optionsList = this._getOptionsList(options ?? {}, inputs.length);
+    const batchSize =
+      batchOptions?.maxConcurrency && batchOptions.maxConcurrency > 0
+        ? batchOptions?.maxConcurrency
+        : inputs.length;
+    const batchResults = [];
+    for (let i = 0; i < actualInputs.length; i += batchSize) {
+      const batchPromises = actualInputs
+        .slice(i, i + batchSize)
+        .map((actualInput, i) =>
+          runnables[i].invoke(actualInput, optionsList[i])
+        );
+      const batchResult = await Promise.all(batchPromises);
+      batchResults.push(batchResult);
+    }
+    return batchResults.flat();
+  }
+
+  async stream(
+    input: RunInput,
+    options?: Partial<BaseCallbackConfig>
+  ): Promise<IterableReadableStream<RunOutput>> {
+    const { key, input: actualInput } = input;
+    const runnable = this.runnables[key];
+    if (runnable === undefined) {
+      throw new Error(`No runnable associated with key "${key}".`);
+    }
+    return runnable.stream(actualInput, options);
   }
 }
