@@ -1,5 +1,5 @@
 import type { Collection, Document as MongoDBDocument } from "mongodb";
-import { VectorStore } from "./base.js";
+import { MaxMarginalRelevanceSearchOptions, VectorStore } from "./base.js";
 import { Embeddings } from "../embeddings/base.js";
 import { Document } from "../document.js";
 import { maximalMarginalRelevance } from "../util/math.js";
@@ -127,33 +127,33 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
    * among selected documents.
    *
    * @param {string} query - Text to look up documents similar to.
-   * @param {number} k - Number of documents to return.
-   * @param {number} [fetchK=20]- Number of documents to fetch before passing to the MMR algorithm.
-   * @param {number} [lambda=0.5] - Number between 0 and 1 that determines the degree of diversity among the results,
+   * @param {number} options.k - Number of documents to return.
+   * @param {number} options.fetchK=20- Number of documents to fetch before passing to the MMR algorithm.
+   * @param {number} options.lambda=0.5 - Number between 0 and 1 that determines the degree of diversity among the results,
    *                 where 0 corresponds to maximum diversity and 1 to minimum diversity.
-   * @param {MongoDBAtlasFilter} filter - Optional Atlas Search operator to pre-filter on document fields
+   * @param {MongoDBAtlasFilter} options.filter - Optional Atlas Search operator to pre-filter on document fields
    *                                      or post-filter following the knnBeta search.
    *
    * @returns {Promise<Document[]>} - List of documents selected by maximal marginal relevance.
    */
   async maxMarginalRelevanceSearch(
     query: string,
-    k: number,
-    fetchK: number,
-    lambda: number,
-    filter?: MongoDBAtlasFilter
+    options: MaxMarginalRelevanceSearchOptions<this["FilterType"]>
   ): Promise<Document[]> {
     const queryEmbedding = await this.embeddings.embedQuery(query);
 
     // preserve the original value of includeEmbeddings
-    const includeEmbeddingsFlag = filter?.includeEmbeddings || false;
+    const includeEmbeddingsFlag = options.filter?.includeEmbeddings || false;
 
     // update filter to include embeddings, as they will be used in MMR
-    const includeEmbeddingsFilter = { ...filter, includeEmbeddings: true };
+    const includeEmbeddingsFilter = {
+      ...options.filter,
+      includeEmbeddings: true,
+    };
 
     const resultDocs = await this.similaritySearchVectorWithScore(
       queryEmbedding,
-      fetchK,
+      options.fetchK,
       includeEmbeddingsFilter
     );
 
@@ -164,8 +164,8 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
     const mmrIndexes = maximalMarginalRelevance(
       queryEmbedding,
       embeddingList,
-      lambda,
-      k
+      options.lambda,
+      options.k
     );
 
     return mmrIndexes.map((idx) => {

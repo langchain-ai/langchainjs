@@ -10,6 +10,13 @@ import {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AddDocumentOptions = Record<string, any>;
 
+export type MaxMarginalRelevanceSearchOptions<FilterType> = {
+  k: number;
+  fetchK: number;
+  lambda: number;
+  filter?: FilterType;
+};
+
 export interface VectorStoreRetrieverInput<V extends VectorStore>
   extends BaseRetrieverInput {
   vectorStore: V;
@@ -143,10 +150,7 @@ export abstract class VectorStore extends Serializable {
    */
   async maxMarginalRelevanceSearch?(
     query: string,
-    k: number,
-    fetchK: number,
-    lambda: number,
-    filter: this["FilterType"] | undefined,
+    options: MaxMarginalRelevanceSearchOptions<this["FilterType"]>,
     _callbacks: Callbacks | undefined // implement passing to embedQuery later
   ): Promise<Document[]>;
 

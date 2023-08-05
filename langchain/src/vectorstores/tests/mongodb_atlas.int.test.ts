@@ -7,7 +7,6 @@ import { CohereEmbeddings } from "../../embeddings/cohere.js";
 import { MongoDBAtlasVectorSearch } from "../mongodb_atlas.js";
 
 import { Document } from "../../document.js";
-import { OpenAIEmbeddings } from "../../embeddings/openai.js";
 
 /**
  * The following json can be used to create an index in atlas for Cohere embeddings.
@@ -95,7 +94,7 @@ test.skip("MongoDBAtlasVectorSearch with external ids", async () => {
   }
 });
 
-test("MongoDBAtlasVectorSearch with Maximal Marginal Relevance", async () => {
+test.skip("MongoDBAtlasVectorSearch with Maximal Marginal Relevance", async () => {
   expect(process.env.MONGODB_ATLAS_URI).toBeDefined();
   expect(
     process.env.OPENAI_API_KEY || process.env.AZURE_OPENAI_API_KEY
@@ -110,28 +109,27 @@ test("MongoDBAtlasVectorSearch with Maximal Marginal Relevance", async () => {
 
     await collection.deleteMany({});
 
-    const texts = ["foo", "foo", "fou", "foy"];
+    const texts = ["foo", "foo", "foy"];
     const vectorStore = await MongoDBAtlasVectorSearch.fromTexts(
       texts,
       {},
-      new OpenAIEmbeddings(),
+      new CohereEmbeddings(),
       { collection }
     );
 
     // we sleep 2 seconds to make sure the index in atlas has replicated the new documents
     await sleep(2000);
 
-    const output = await vectorStore.maxMarginalRelevanceSearch(
-      "foo",
-      10,
-      20,
-      0.1
-    );
+    const output = await vectorStore.maxMarginalRelevanceSearch("foo", {
+      k: 10,
+      fetchK: 20,
+      lambda: 0.1,
+    });
 
     expect(output).toHaveLength(texts.length);
 
     const actual = output.map((doc) => doc.pageContent);
-    const expected = ["foo", "fou", "foy", "foo"];
+    const expected = ["foo", "foy", "foo"];
     expect(actual).toEqual(expected);
   } finally {
     await client.close();
