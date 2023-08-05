@@ -143,6 +143,50 @@ export abstract class Runnable<
     return output;
   }
 
+  protected async *_streamWithConfig<T extends RunOutput>(
+    generator: AsyncGenerator<T>,
+    options?: RunnableConfig & { runType?: string }
+  ) {
+    const callbackManager_ = await CallbackManager.configure(
+      options?.callbacks,
+      undefined,
+      options?.tags,
+      undefined,
+      options?.metadata
+    );
+    // TODO: Find a way to pass the entire streamed value into the callback.
+    const runManager = await callbackManager_?.handleChainStart(
+      this.toJSON(),
+      _coerceToDict("<streamed value>", "input"),
+      undefined,
+      options?.runType
+    );
+    let output;
+    let concatSupported = true;
+    try {
+      for await (const chunk of generator) {
+        yield chunk;
+        if (concatSupported) {
+          if (output === undefined) {
+            output = chunk;
+          } else {
+            try {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              output = (output as any).concat(chunk);
+            } catch (e) {
+              output = undefined;
+              concatSupported = false;
+            }
+          }
+        }
+      }
+    } catch (e) {
+      await runManager?.handleChainError(e);
+      throw e;
+    }
+    await runManager?.handleChainEnd(_coerceToDict(output, "output"));
+  }
+
   _patchConfig(
     config: Partial<CallOptions> = {},
     callbackManager: CallbackManager | undefined = undefined
@@ -159,6 +203,11 @@ export abstract class Runnable<
       last: _coerceToRunnable(coerceable),
     });
   }
+
+  transform?(
+    generator: AsyncGenerator<RunInput>,
+    options: Partial<CallOptions>
+  ): AsyncGenerator<RunOutput>;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static isRunnable(thing: any): thing is Runnable {
@@ -314,8 +363,17 @@ export class RunnableSequence<
       _coerceToDict(input, "input")
     );
     let nextStepInput = input;
+    const steps = [this.first, ...this.middle, this.last];
+    // Find the index of the last runnable in the sequence that doesn't have a .transform() method
+    // and start streaming from there
+    const streamingStartStepIndex =
+      steps.length -
+      [...steps]
+        .reverse()
+        .findIndex((step) => typeof step.transform !== "function") -
+      1;
     try {
-      for (const step of [this.first, ...this.middle]) {
+      for (const step of steps.slice(0, streamingStartStepIndex)) {
         nextStepInput = await step.invoke(
           nextStepInput,
           this._patchConfig(options, runManager?.getChild())
@@ -328,11 +386,18 @@ export class RunnableSequence<
     let concatSupported = true;
     let finalOutput;
     try {
-      const iterator = await this.last._streamIterator(
+      let finalGenerator = await steps[streamingStartStepIndex]._streamIterator(
         nextStepInput,
         this._patchConfig(options, runManager?.getChild())
       );
-      for await (const chunk of iterator) {
+      for (const step of steps.slice(streamingStartStepIndex + 1)) {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        finalGenerator = await step.transform!(
+          finalGenerator,
+          this._patchConfig(options, runManager?.getChild())
+        );
+      }
+      for await (const chunk of finalGenerator) {
         yield chunk;
         if (concatSupported) {
           if (finalOutput === undefined) {

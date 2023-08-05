@@ -11,11 +11,11 @@ export interface TransformChainFields<
   outputVariables: (keyof O extends string ? keyof O : never)[];
 }
 
-export class TransformChain<I extends ChainValues, O extends ChainValues>
-  extends BaseChain
-  implements TransformChainFields<I, O>
-{
-  transform: (values: I, callbacks?: Callbacks) => O | Promise<O>;
+export class TransformChain<
+  I extends ChainValues,
+  O extends ChainValues
+> extends BaseChain {
+  transformFunc: (values: I, callbacks?: Callbacks) => O | Promise<O>;
 
   inputVariables: (keyof I extends string ? keyof I : never)[];
 
@@ -35,12 +35,12 @@ export class TransformChain<I extends ChainValues, O extends ChainValues>
 
   constructor(fields: TransformChainFields<I, O>) {
     super(fields);
-    this.transform = fields.transform;
+    this.transformFunc = fields.transform;
     this.inputVariables = fields.inputVariables;
     this.outputVariables = fields.outputVariables;
   }
 
   async _call(values: I, runManager?: CallbackManagerForChainRun): Promise<O> {
-    return this.transform(values, runManager?.getChild("transform"));
+    return this.transformFunc(values, runManager?.getChild("transform"));
   }
 }

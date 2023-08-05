@@ -1,3 +1,5 @@
+/* eslint-disable no-promise-executor-return */
+
 import { z } from "zod";
 import { test } from "@jest/globals";
 import { LLM } from "../../llms/base.js";
@@ -5,7 +7,12 @@ import {
   BaseChatModel,
   createChatMessageChunkEncoderStream,
 } from "../../chat_models/base.js";
-import { AIMessage, BaseMessage, ChatResult } from "../index.js";
+import {
+  AIMessage,
+  BaseMessage,
+  ChatResult,
+  GenerationChunk,
+} from "../index.js";
 import {
   ChatPromptTemplate,
   HumanMessagePromptTemplate,
@@ -25,6 +32,23 @@ class FakeLLM extends LLM {
 
   async _call(prompt: string): Promise<string> {
     return prompt;
+  }
+}
+
+class FakeStreamingLLM extends LLM {
+  _llmType() {
+    return "fake";
+  }
+
+  async _call(prompt: string): Promise<string> {
+    return prompt;
+  }
+
+  async *_streamResponseChunks(input: string) {
+    for (const c of input) {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      yield { text: c, generationInfo: {} } as GenerationChunk;
+    }
   }
 }
 
@@ -194,4 +218,31 @@ test("Bind kwargs to a runnable with a batch call", async () => {
     .batch(["Hi there!", "hey hey", "Hi there!", "hey hey"]);
   console.log(result);
   expect(result).toEqual(["testing", "testing", "testing", "testing"]);
+});
+
+test("Stream the entire way through", async () => {
+  const llm = new FakeStreamingLLM({});
+  const stream = await llm.pipe(new StringOutputParser()).stream("Hi there!");
+  const chunks = [];
+  for await (const chunk of stream) {
+    chunks.push(chunk);
+    console.log(chunk);
+  }
+  expect(chunks.length).toEqual("Hi there!".length);
+  expect(chunks.join("")).toEqual("Hi there!");
+});
+
+test("Don't use intermediate streaming", async () => {
+  const llm = new FakeStreamingLLM({});
+  const stream = await llm
+    .pipe(new StringOutputParser())
+    .pipe(new FakeLLM({}))
+    .stream("Hi there!");
+  const chunks = [];
+  for await (const chunk of stream) {
+    chunks.push(chunk);
+    console.log(chunk);
+  }
+  expect(chunks.length).toEqual(1);
+  expect(chunks[0]).toEqual("Hi there!");
 });
