@@ -169,6 +169,9 @@
     "vectorstores/lancedb.cjs",
     "vectorstores/lancedb.js",
     "vectorstores/lancedb.d.ts",
+    "vectorstores/mongo.cjs",
+    "vectorstores/mongo.js",
+    "vectorstores/mongo.d.ts",
     "vectorstores/mongodb_atlas.cjs",
     "vectorstores/mongodb_atlas.js",
     "vectorstores/mongodb_atlas.d.ts",
@@ -1199,6 +1202,11 @@
       "types": "./vectorstores/lancedb.d.ts",
       "import": "./vectorstores/lancedb.js",
       "require": "./vectorstores/lancedb.cjs"
+    },
+    "./vectorstores/mongo": {
+      "types": "./vectorstores/mongo.d.ts",
+      "import": "./vectorstores/mongo.js",
+      "require": "./vectorstores/mongo.cjs"
     },
     "./vectorstores/mongodb_atlas": {
       "types": "./vectorstores/mongodb_atlas.d.ts",
