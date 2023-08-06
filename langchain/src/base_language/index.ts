@@ -32,10 +32,10 @@ export interface BaseLangChainParams {
  */
 export abstract class BaseLangChain<
     RunInput,
-    CallOptions extends RunnableConfig,
-    RunOutput
+    RunOutput,
+    CallOptions extends RunnableConfig = RunnableConfig
   >
-  extends Runnable<RunInput, CallOptions, RunOutput>
+  extends Runnable<RunInput, RunOutput, CallOptions>
   implements BaseLangChainParams
 {
   /**
@@ -105,11 +105,11 @@ export type BaseLanguageModelInput = BasePromptValue | string | BaseMessage[];
  * Base class for language models.
  */
 export abstract class BaseLanguageModel<
-    CallOptions extends BaseLanguageModelCallOptions = BaseLanguageModelCallOptions,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput = any
+    RunOutput = any,
+    CallOptions extends BaseLanguageModelCallOptions = BaseLanguageModelCallOptions
   >
-  extends BaseLangChain<BaseLanguageModelInput, CallOptions, RunOutput>
+  extends BaseLangChain<BaseLanguageModelInput, RunOutput, CallOptions>
   implements BaseLanguageModelParams
 {
   declare CallOptions: CallOptions;

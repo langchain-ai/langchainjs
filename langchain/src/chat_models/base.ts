@@ -51,7 +51,7 @@ export function createChatMessageChunkEncoderStream() {
 
 export abstract class BaseChatModel<
   CallOptions extends BaseChatModelCallOptions = BaseChatModelCallOptions
-> extends BaseLanguageModel<CallOptions, BaseMessageChunk> {
+> extends BaseLanguageModel<BaseMessageChunk, CallOptions> {
   declare ParsedCallOptions: Omit<
     CallOptions,
     keyof RunnableConfig & "timeout"
@@ -68,7 +68,7 @@ export abstract class BaseChatModel<
   ): LLMResult["llmOutput"];
 
   protected _separateRunnableConfigFromCallOptions(
-    options: CallOptions
+    options?: Partial<CallOptions>
   ): [RunnableConfig, this["ParsedCallOptions"]] {
     const [runnableConfig, callOptions] =
       super._separateRunnableConfigFromCallOptions(options);
@@ -116,9 +116,7 @@ export abstract class BaseChatModel<
       const prompt = BaseChatModel._convertInputToPromptValue(input);
       const messages = prompt.toChatMessages();
       const [runnableConfig, callOptions] =
-        this._separateRunnableConfigFromCallOptions(
-          (options ?? {}) as CallOptions
-        );
+        this._separateRunnableConfigFromCallOptions(options);
       const callbackManager_ = await CallbackManager.configure(
         runnableConfig.callbacks,
         this.callbacks,
@@ -178,11 +176,11 @@ export abstract class BaseChatModel<
     callbacks?: Callbacks
   ): Promise<LLMResult> {
     // parse call options
-    let parsedOptions: CallOptions;
+    let parsedOptions: CallOptions | undefined;
     if (Array.isArray(options)) {
       parsedOptions = { stop: options } as CallOptions;
     } else {
-      parsedOptions = options ?? ({} as CallOptions);
+      parsedOptions = options;
     }
 
     const [runnableConfig, callOptions] =
@@ -213,7 +211,7 @@ export abstract class BaseChatModel<
       messages.map((messageList, i) =>
         this._generate(
           messageList,
-          { ...parsedOptions, promptIndex: i },
+          { ...callOptions, promptIndex: i },
           runManagers?.[i]
         )
       )

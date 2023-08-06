@@ -6786,6 +6786,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@xata.io/client@npm:^0.25.1":
+  version: 0.25.1
+  resolution: "@xata.io/client@npm:0.25.1"
+  peerDependencies:
+    typescript: ">=4.5"
+  checksum: 041988667b19e84a4af27b8abb6c3ca79904df595a687e4a8cd19ce0c1e3d180781fb2e54ba55de2217893f76b05048cffa99d171034f9a4229d694904d43bcd
+  languageName: node
+  linkType: hard
+
 "@zilliz/milvus2-sdk-node@npm:>=2.2.7, @zilliz/milvus2-sdk-node@npm:^2.2.7":
   version: 2.2.10
   resolution: "@zilliz/milvus2-sdk-node@npm:2.2.10"
@@ -10060,6 +10069,7 @@ __metadata:
     "@typescript-eslint/eslint-plugin": ^5.51.0
     "@typescript-eslint/parser": ^5.51.0
     "@upstash/redis": ^1.20.6
+    "@xata.io/client": ^0.25.1
     "@zilliz/milvus2-sdk-node": ^2.2.7
     axios: ^0.26.0
     chromadb: ^1.4.0
@@ -13137,6 +13147,7 @@ __metadata:
     "@typescript-eslint/eslint-plugin": ^5.58.0
     "@typescript-eslint/parser": ^5.58.0
     "@upstash/redis": ^1.20.6
+    "@xata.io/client": ^0.25.1
     "@zilliz/milvus2-sdk-node": ">=2.2.7"
     ansi-styles: ^5.0.0
     apify-client: ^2.7.1
@@ -13171,7 +13182,7 @@ __metadata:
     js-tiktoken: ^1.0.7
     js-yaml: ^4.1.0
     jsonpointer: ^5.0.1
-    langsmith: ~0.0.11
+    langsmith: ~0.0.16
     mammoth: ^1.5.1
     ml-distance: ^4.0.0
     ml-matrix: ^6.10.4
@@ -13237,6 +13248,7 @@ __metadata:
     "@tensorflow/tfjs-core": "*"
     "@tigrisdata/vector": ^1.1.0
     "@upstash/redis": ^1.20.6
+    "@xata.io/client": ^0.25.1
     "@zilliz/milvus2-sdk-node": ">=2.2.7"
     apify-client: ^2.7.1
     axios: "*"
@@ -13326,6 +13338,8 @@ __metadata:
       optional: true
     "@upstash/redis":
       optional: true
+    "@xata.io/client":
+      optional: true
     "@zilliz/milvus2-sdk-node":
       optional: true
     apify-client:
@@ -13412,9 +13426,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"langsmith@npm:~0.0.11":
-  version: 0.0.11
-  resolution: "langsmith@npm:0.0.11"
+"langsmith@npm:~0.0.16":
+  version: 0.0.16
+  resolution: "langsmith@npm:0.0.16"
   dependencies:
     "@types/uuid": ^9.0.1
     commander: ^10.0.1
@@ -13423,7 +13437,7 @@ __metadata:
     uuid: ^9.0.0
   bin:
     langsmith: dist/cli/main.cjs
-  checksum: 003e0ed0eb975512fc11cbc9d6880fa9bac1cf24cb963b89127d1d601e849faa2f5eff6216a6abb359f4b7c7cae96f056529e74b063af5c593fdee36e56c2249
+  checksum: fc738ef9a563af14a7dc06027f98eb6ac2641b95e384b109ae388c32e9abd5e098fe07925139e489eaed17df84a8e32b961207d4cc760631b4c14e4c06e418d9
   languageName: node
   linkType: hard
 
