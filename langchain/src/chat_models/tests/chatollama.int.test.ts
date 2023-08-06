@@ -1,10 +1,12 @@
 import { test } from "@jest/globals";
 import { ChatOllama } from "../ollama.js";
+import { AIMessage, HumanMessage } from "../../schema/index.js";
+import { LLMChain } from "../../chains/llm_chain.js";
+import { PromptTemplate } from "../../prompts/prompt.js";
+import { BufferMemory } from "../../memory/buffer_memory.js";
 
 test("test call", async () => {
-  const ollama = new ChatOllama({
-    baseUrl: "http://localhost:11434",
-  });
+  const ollama = new ChatOllama({});
   const result = await ollama.predict(
     "What is a good name for a company that makes colorful socks?"
   );
@@ -38,4 +40,44 @@ test("should abort the request", async () => {
     controller.abort();
     return ret;
   }).rejects.toThrow("This operation was aborted");
+});
+
+test("Test multiple messages", async () => {
+  const model = new ChatOllama({ baseUrl: "http://localhost:11434" });
+  const res = await model.call([
+    new HumanMessage({ content: "My name is Jonas" }),
+  ]);
+  console.log({ res });
+  const res2 = await model.call([
+    new HumanMessage("My name is Jonas"),
+    new AIMessage(
+      "Hello Jonas! It's nice to meet you. Is there anything I can help you with?"
+    ),
+    new HumanMessage("What did I say my name was?"),
+  ]);
+  console.log({ res2 });
+});
+
+test("Test chain with memory", async () => {
+  const template = `The following is a friendly conversation between a human and an AI. The AI is talkative and provides lots of specific details from its context. If the AI does not know the answer to a question, it truthfully says it does not know.
+
+Current conversation:
+{history}
+Human: {input}`;
+  const model = new ChatOllama({ baseUrl: "http://localhost:11434" });
+  const chain = new LLMChain({
+    prompt: PromptTemplate.fromTemplate(template),
+    llm: model,
+    memory: new BufferMemory({}),
+  });
+  const res = await chain.call({ input: "My name is Jonas" });
+  console.log({ res });
+  const res2 = await chain.call({
+    input: "What did I say my name was?",
+  });
+  console.log({ res2 });
+  const res3 = await chain.call({
+    input: "What is your name?",
+  });
+  console.log({ res3 });
 });

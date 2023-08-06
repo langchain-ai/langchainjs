@@ -3,7 +3,7 @@ import { IterableReadableStream } from "./stream.js";
 
 export interface OllamaInput {
   model?: string;
-  baseUrl: string;
+  baseUrl?: string;
   mirostat?: number;
   mirostatEta?: number;
   mirostatTau?: number;
@@ -79,6 +79,12 @@ export async function* createOllamaStream(
   const stream = IterableReadableStream.fromReadableStream(response.body);
   const decoder = new TextDecoder();
   for await (const chunk of stream) {
-    yield JSON.parse(decoder.decode(chunk).trim());
+    try {
+      yield JSON.parse(decoder.decode(chunk));
+    } catch (e) {
+      console.warn(
+        `Received a non-JSON parseable chunk: ${decoder.decode(chunk)}`
+      );
+    }
   }
 }

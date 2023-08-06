@@ -14,7 +14,7 @@ export class Ollama extends LLM implements OllamaInput {
 
   model = "llama2";
 
-  baseUrl: string;
+  baseUrl = "http://localhost:11434";
 
   mirostat?: number;
 
@@ -45,9 +45,9 @@ export class Ollama extends LLM implements OllamaInput {
   constructor(fields: OllamaInput & BaseLLMParams) {
     super(fields);
     this.model = fields.model ?? this.model;
-    this.baseUrl = fields.baseUrl.endsWith("/")
+    this.baseUrl = fields.baseUrl?.endsWith("/")
       ? fields.baseUrl.slice(0, -1)
-      : fields.baseUrl;
+      : fields.baseUrl ?? this.baseUrl;
     this.mirostat = fields.mirostat;
     this.mirostatEta = fields.mirostatEta;
     this.mirostatTau = fields.mirostatTau;

@@ -18,7 +18,7 @@ export class ChatOllama extends SimpleChatModel implements OllamaInput {
 
   model = "llama2";
 
-  baseUrl: string;
+  baseUrl = "http://localhost:11434";
 
   mirostat?: number;
 
@@ -49,9 +49,9 @@ export class ChatOllama extends SimpleChatModel implements OllamaInput {
   constructor(fields: OllamaInput & BaseChatModelParams) {
     super(fields);
     this.model = fields.model ?? this.model;
-    this.baseUrl = fields.baseUrl.endsWith("/")
+    this.baseUrl = fields.baseUrl?.endsWith("/")
       ? fields.baseUrl.slice(0, -1)
-      : fields.baseUrl;
+      : fields.baseUrl ?? this.baseUrl;
     this.mirostat = fields.mirostat;
     this.mirostatEta = fields.mirostatEta;
     this.mirostatTau = fields.mirostatTau;
@@ -106,7 +106,7 @@ export class ChatOllama extends SimpleChatModel implements OllamaInput {
         this.baseUrl,
         {
           ...this.invocationParams(options),
-          prompt: this._formatBaseMessages(input),
+          prompt: this._formatMessagesAsPrompt(input),
         },
         options
       )
@@ -120,12 +120,12 @@ export class ChatOllama extends SimpleChatModel implements OllamaInput {
     }
   }
 
-  protected _formatBaseMessages(messages: BaseMessage[]): string {
-    return messages
+  protected _formatMessagesAsPrompt(messages: BaseMessage[]): string {
+    const formattedMessages = messages
       .map((message) => {
         let rolePrefix;
         if (message._getType() === "human") {
-          rolePrefix = "User: ";
+          rolePrefix = "Human: ";
         } else if (message._getType() === "ai") {
           rolePrefix = "Assistant: ";
         } else if (message._getType() === "system") {
@@ -141,6 +141,7 @@ export class ChatOllama extends SimpleChatModel implements OllamaInput {
         return `${rolePrefix}${message.content}`;
       })
       .join("\n");
+    return `${formattedMessages}\nAssistant: `;
   }
 
   /** @ignore */
@@ -153,7 +154,7 @@ export class ChatOllama extends SimpleChatModel implements OllamaInput {
         this.baseUrl,
         {
           ...this.invocationParams(options),
-          prompt: this._formatBaseMessages(messages),
+          prompt: this._formatMessagesAsPrompt(messages),
         },
         options
       )

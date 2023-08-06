@@ -2,9 +2,7 @@ import { test } from "@jest/globals";
 import { Ollama } from "../ollama.js";
 
 test("test call", async () => {
-  const ollama = new Ollama({
-    baseUrl: "http://localhost:11434",
-  });
+  const ollama = new Ollama({});
   const result = await ollama.call(
     "What is a good name for a company that makes colorful socks?"
   );
