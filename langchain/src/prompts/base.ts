@@ -62,8 +62,10 @@ export interface BasePromptTemplateInput<
  * string prompt given a set of input values.
  */
 export abstract class BasePromptTemplate<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     RunInput extends InputValues = any,
     RunOutput extends BasePromptValue = BasePromptValue,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     PartialVariableName extends string = any
   >
   extends Runnable<RunInput, RunOutput>

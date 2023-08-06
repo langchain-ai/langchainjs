@@ -15,7 +15,7 @@ import {
   SystemMessage,
 } from "../../schema/index.js";
 
-function createChatPromptTemplate(): ChatPromptTemplate {
+function createChatPromptTemplate() {
   const systemPrompt = new PromptTemplate({
     template: "Here's some context: {context}",
     inputVariables: ["context"],
@@ -32,8 +32,6 @@ function createChatPromptTemplate(): ChatPromptTemplate {
     template: "I'm a generic message. I'm {foo}. I'm {bar}.",
     inputVariables: ["foo", "bar"],
   });
-  const placeholder = new MessagesPlaceholder({ variableName: "history" });
-  placeholder.inputVariables;
   return new ChatPromptTemplate({
     promptMessages: [
       new SystemMessagePromptTemplate(systemPrompt),
@@ -63,6 +61,7 @@ test("Test format", async () => {
 test("Test format with invalid input values", async () => {
   const chatPrompt = createChatPromptTemplate();
   await expect(
+    // @ts-expect-error TS compiler should flag this
     chatPrompt.formatPromptValue({
       context: "This is a context",
       foo: "Foo",

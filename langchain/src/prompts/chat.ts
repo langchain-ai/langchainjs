@@ -31,7 +31,9 @@ export abstract class BaseMessagePromptTemplate<
 
   abstract inputVariables: Array<Extract<keyof RunInput, string>>;
 
-  abstract formatMessages(values: RunInput): Promise<RunOutput>;
+  abstract formatMessages(
+    values: InputValues<Extract<keyof RunInput, string>>
+  ): Promise<RunOutput>;
 
   async invoke(
     input: RunInput,
@@ -120,6 +122,7 @@ export class MessagesPlaceholder<
 }
 
 export interface MessageStringPromptTemplateFields<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   T extends InputValues = any
 > {
   prompt: BaseStringPromptTemplate<T, string>;
@@ -129,16 +132,32 @@ export abstract class BaseMessageStringPromptTemplate<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends InputValues = any
 > extends BaseMessagePromptTemplate<RunInput> {
-  prompt: BaseStringPromptTemplate<RunInput, string>;
+  prompt: BaseStringPromptTemplate<
+    InputValues<Extract<keyof RunInput, string>>,
+    string
+  >;
 
-  constructor(prompt: BaseStringPromptTemplate<RunInput>);
+  constructor(
+    prompt: BaseStringPromptTemplate<
+      InputValues<Extract<keyof RunInput, string>>
+    >
+  );
 
-  constructor(fields: MessageStringPromptTemplateFields<RunInput>);
+  constructor(
+    fields: MessageStringPromptTemplateFields<
+      InputValues<Extract<keyof RunInput, string>>
+    >
+  );
 
   constructor(
     fields:
-      | MessageStringPromptTemplateFields<RunInput>
-      | BaseStringPromptTemplate<RunInput, string>
+      | MessageStringPromptTemplateFields<
+          InputValues<Extract<keyof RunInput, string>>
+        >
+      | BaseStringPromptTemplate<
+          InputValues<Extract<keyof RunInput, string>>,
+          string
+        >
   ) {
     if (!("prompt" in fields)) {
       // eslint-disable-next-line no-param-reassign
@@ -173,7 +192,9 @@ export abstract class BaseChatPromptTemplate<
     super(input);
   }
 
-  abstract formatMessages(values: InputValues): Promise<BaseMessage[]>;
+  abstract formatMessages(
+    values: InputValues<Extract<keyof RunInput, string>>
+  ): Promise<BaseMessage[]>;
 
   async format(
     values: InputValues<Extract<keyof RunInput, string>>
@@ -189,19 +210,30 @@ export abstract class BaseChatPromptTemplate<
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface ChatMessagePromptTemplateFields<T extends InputValues = any>
   extends MessageStringPromptTemplateFields<T> {
   role: string;
 }
 
 export class ChatMessagePromptTemplate<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends InputValues = any
 > extends BaseMessageStringPromptTemplate<RunInput> {
   role: string;
 
-  constructor(prompt: BaseStringPromptTemplate<RunInput>, role: string);
+  constructor(
+    prompt: BaseStringPromptTemplate<
+      InputValues<Extract<keyof RunInput, string>>
+    >,
+    role: string
+  );
 
-  constructor(fields: ChatMessagePromptTemplateFields<RunInput>);
+  constructor(
+    fields: ChatMessagePromptTemplateFields<
+      InputValues<Extract<keyof RunInput, string>>
+    >
+  );
 
   constructor(
     fields:
@@ -227,6 +259,7 @@ export class ChatMessagePromptTemplate<
 }
 
 export class HumanMessagePromptTemplate<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends InputValues = any
 > extends BaseMessageStringPromptTemplate<RunInput> {
   async format(values: RunInput): Promise<BaseMessage> {
@@ -239,6 +272,7 @@ export class HumanMessagePromptTemplate<
 }
 
 export class AIMessagePromptTemplate<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends InputValues = any
 > extends BaseMessageStringPromptTemplate<RunInput> {
   async format(values: RunInput): Promise<BaseMessage> {
@@ -251,6 +285,7 @@ export class AIMessagePromptTemplate<
 }
 
 export class SystemMessagePromptTemplate<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends InputValues = any
 > extends BaseMessageStringPromptTemplate<RunInput> {
   async format(values: RunInput): Promise<BaseMessage> {
