@@ -23,7 +23,7 @@ import { PromptTemplate } from "./prompt.js";
 export abstract class BaseMessagePromptTemplate<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends InputValues = any,
-  RunOutput extends BaseMessage[] = BaseMessage[],
+  RunOutput extends BaseMessage[] = BaseMessage[]
 > extends Runnable<RunInput, RunOutput> {
   lc_namespace = ["langchain", "prompts", "chat"];
 
@@ -91,9 +91,15 @@ export class MessagesPlaceholder<
 
   constructor(variableName: Extract<keyof RunInput, string>);
 
-  constructor(fields: MessagePlaceholderFields<Extract<keyof RunInput, string>>);
+  constructor(
+    fields: MessagePlaceholderFields<Extract<keyof RunInput, string>>
+  );
 
-  constructor(fields: Extract<keyof RunInput, string> | MessagePlaceholderFields<Extract<keyof RunInput, string>>) {
+  constructor(
+    fields:
+      | Extract<keyof RunInput, string>
+      | MessagePlaceholderFields<Extract<keyof RunInput, string>>
+  ) {
     if (typeof fields === "string") {
       // eslint-disable-next-line no-param-reassign
       fields = { variableName: fields };
@@ -106,24 +112,33 @@ export class MessagesPlaceholder<
     return [this.variableName];
   }
 
-  formatMessages(values: InputValues<Extract<keyof RunInput, string>>): Promise<BaseMessage[]> {
+  formatMessages(
+    values: InputValues<Extract<keyof RunInput, string>>
+  ): Promise<BaseMessage[]> {
     return Promise.resolve(values[this.variableName] as BaseMessage[]);
   }
 }
 
-export interface MessageStringPromptTemplateFields<T extends InputValues> {
+export interface MessageStringPromptTemplateFields<
+  T extends InputValues = any
+> {
   prompt: BaseStringPromptTemplate<T, string>;
 }
 
-export abstract class BaseMessageStringPromptTemplate<RunInput extends InputValues = any> extends BaseMessagePromptTemplate<RunInput, BaseMessage[]> {
+export abstract class BaseMessageStringPromptTemplate<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  RunInput extends InputValues = any
+> extends BaseMessagePromptTemplate<RunInput> {
   prompt: BaseStringPromptTemplate<RunInput, string>;
 
-  constructor(prompt: BaseStringPromptTemplate);
+  constructor(prompt: BaseStringPromptTemplate<RunInput>);
 
   constructor(fields: MessageStringPromptTemplateFields<RunInput>);
 
   constructor(
-    fields: MessageStringPromptTemplateFields<RunInput> | BaseStringPromptTemplate<RunInput, string>
+    fields:
+      | MessageStringPromptTemplateFields<RunInput>
+      | BaseStringPromptTemplate<RunInput, string>
   ) {
     if (!("prompt" in fields)) {
       // eslint-disable-next-line no-param-reassign
@@ -148,7 +163,12 @@ export abstract class BaseMessageStringPromptTemplate<RunInput extends InputValu
   }
 }
 
-export abstract class BaseChatPromptTemplate<RunInput extends InputValues = any, PartialVariableName extends string = any> extends BasePromptTemplate<RunInput, ChatPromptValue, PartialVariableName> {
+export abstract class BaseChatPromptTemplate<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  RunInput extends InputValues = any,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  PartialVariableName extends string = any
+> extends BasePromptTemplate<RunInput, ChatPromptValue, PartialVariableName> {
   constructor(input: BasePromptTemplateInput<RunInput, PartialVariableName>) {
     super(input);
   }
@@ -169,12 +189,14 @@ export abstract class BaseChatPromptTemplate<RunInput extends InputValues = any,
   }
 }
 
-export interface ChatMessagePromptTemplateFields<T extends InputValues>
+export interface ChatMessagePromptTemplateFields<T extends InputValues = any>
   extends MessageStringPromptTemplateFields<T> {
   role: string;
 }
 
-export class ChatMessagePromptTemplate<RunInput extends InputValues = any> extends BaseMessageStringPromptTemplate<RunInput> {
+export class ChatMessagePromptTemplate<
+  RunInput extends InputValues = any
+> extends BaseMessageStringPromptTemplate<RunInput> {
   role: string;
 
   constructor(prompt: BaseStringPromptTemplate<RunInput>, role: string);
@@ -182,7 +204,9 @@ export class ChatMessagePromptTemplate<RunInput extends InputValues = any> exten
   constructor(fields: ChatMessagePromptTemplateFields<RunInput>);
 
   constructor(
-    fields: ChatMessagePromptTemplateFields<RunInput> | BaseStringPromptTemplate<RunInput>,
+    fields:
+      | ChatMessagePromptTemplateFields<RunInput>
+      | BaseStringPromptTemplate<RunInput>,
     role?: string
   ) {
     if (!("prompt" in fields)) {
@@ -202,7 +226,9 @@ export class ChatMessagePromptTemplate<RunInput extends InputValues = any> exten
   }
 }
 
-export class HumanMessagePromptTemplate<RunInput extends InputValues = any> extends BaseMessageStringPromptTemplate<RunInput> {
+export class HumanMessagePromptTemplate<
+  RunInput extends InputValues = any
+> extends BaseMessageStringPromptTemplate<RunInput> {
   async format(values: RunInput): Promise<BaseMessage> {
     return new HumanMessage(await this.prompt.format(values));
   }
@@ -212,7 +238,9 @@ export class HumanMessagePromptTemplate<RunInput extends InputValues = any> exte
   }
 }
 
-export class AIMessagePromptTemplate<RunInput extends InputValues = any> extends BaseMessageStringPromptTemplate<RunInput> {
+export class AIMessagePromptTemplate<
+  RunInput extends InputValues = any
+> extends BaseMessageStringPromptTemplate<RunInput> {
   async format(values: RunInput): Promise<BaseMessage> {
     return new AIMessage(await this.prompt.format(values));
   }
@@ -222,7 +250,9 @@ export class AIMessagePromptTemplate<RunInput extends InputValues = any> extends
   }
 }
 
-export class SystemMessagePromptTemplate<RunInput extends InputValues = any> extends BaseMessageStringPromptTemplate<RunInput> {
+export class SystemMessagePromptTemplate<
+  RunInput extends InputValues = any
+> extends BaseMessageStringPromptTemplate<RunInput> {
   async format(values: RunInput): Promise<BaseMessage> {
     return new SystemMessage(await this.prompt.format(values));
   }
@@ -270,9 +300,7 @@ export class ChatPromptTemplate<
 
   validateTemplate = true;
 
-  constructor(
-    input: ChatPromptTemplateInput<RunInput, PartialVariableName>
-  ) {
+  constructor(input: ChatPromptTemplateInput<RunInput, PartialVariableName>) {
     super(input);
     Object.assign(this, input);
 
@@ -354,10 +382,7 @@ export class ChatPromptTemplate<
     // BaseMessagePromptTemplate aware of .partial()
     const newInputVariables = this.inputVariables.filter(
       (iv) => !(iv in values)
-    ) as Exclude<
-      Extract<keyof RunInput, string>,
-      NewPartialVariableName
-    >[];
+    ) as Exclude<Extract<keyof RunInput, string>, NewPartialVariableName>[];
     const newPartialVariables = {
       ...(this.partialVariables ?? {}),
       ...values,

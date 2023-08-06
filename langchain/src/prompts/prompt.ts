@@ -157,10 +157,7 @@ export class PromptTemplate<
   ) {
     const newInputVariables = this.inputVariables.filter(
       (iv) => !(iv in values)
-    ) as Exclude<
-      Extract<keyof RunInput, string>,
-      NewPartialVariableName
-    >[];
+    ) as Exclude<Extract<keyof RunInput, string>, NewPartialVariableName>[];
     const newPartialVariables = {
       ...(this.partialVariables ?? {}),
       ...values,

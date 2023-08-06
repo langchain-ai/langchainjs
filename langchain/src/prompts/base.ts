@@ -90,7 +90,7 @@ export abstract class BasePromptTemplate<
   constructor(input: BasePromptTemplateInput) {
     super(input);
     const { inputVariables } = input;
-    if ((inputVariables as string[]).includes("stop")) {
+    if (inputVariables.includes("stop")) {
       throw new Error(
         "Cannot have an input variable named 'stop', as it is used internally, please rename."
       );
@@ -156,7 +156,9 @@ export abstract class BasePromptTemplate<
    * @param values
    * @returns A formatted PromptValue.
    */
-  abstract formatPromptValue(values: InputValues<Extract<keyof RunInput, string>>): Promise<RunOutput>;
+  abstract formatPromptValue(
+    values: InputValues<Extract<keyof RunInput, string>>
+  ): Promise<RunOutput>;
 
   /**
    * Return the string type key uniquely identifying this class of prompt template.

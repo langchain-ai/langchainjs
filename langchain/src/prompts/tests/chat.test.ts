@@ -2,7 +2,7 @@ import { expect, test } from "@jest/globals";
 import {
   AIMessagePromptTemplate,
   ChatPromptTemplate,
-  // ChatMessagePromptTemplate,
+  ChatMessagePromptTemplate,
   HumanMessagePromptTemplate,
   SystemMessagePromptTemplate,
   MessagesPlaceholder,
@@ -28,16 +28,18 @@ function createChatPromptTemplate(): ChatPromptTemplate {
     template: "I'm an AI. I'm {foo}. I'm {bar}.",
     inputVariables: ["foo", "bar"],
   });
-  // const genericPrompt = new PromptTemplate({
-  //   template: "I'm a generic message. I'm {foo}. I'm {bar}.",
-  //   inputVariables: ["foo", "bar"],
-  // });
+  const genericPrompt = new PromptTemplate({
+    template: "I'm a generic message. I'm {foo}. I'm {bar}.",
+    inputVariables: ["foo", "bar"],
+  });
+  const placeholder = new MessagesPlaceholder({ variableName: "history" });
+  placeholder.inputVariables;
   return new ChatPromptTemplate({
     promptMessages: [
       new SystemMessagePromptTemplate(systemPrompt),
       new HumanMessagePromptTemplate(userPrompt),
-      new AIMessagePromptTemplate(aiPrompt),
-      // new ChatMessagePromptTemplate(genericPrompt, "test"),
+      new AIMessagePromptTemplate({ prompt: aiPrompt }),
+      new ChatMessagePromptTemplate(genericPrompt, "test"),
     ],
     inputVariables: ["context", "foo", "bar"],
   });
