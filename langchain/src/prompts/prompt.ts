@@ -76,7 +76,7 @@ export class PromptTemplate<
     Object.assign(this, input);
 
     if (this.validateTemplate) {
-      let totalInputVariables = this.inputVariables as string[];
+      let totalInputVariables: string[] = this.inputVariables;
       if (this.partialVariables) {
         totalInputVariables = totalInputVariables.concat(
           Object.keys(this.partialVariables)
