@@ -131,7 +131,8 @@ export class PromptTemplate<
   /**
    * Load prompt template from a template f-string
    */
-  static fromTemplate(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  static fromTemplate<RunInput extends InputValues = any>(
     template: string,
     {
       templateFormat = "f-string",
@@ -144,8 +145,8 @@ export class PromptTemplate<
         names.add(node.name);
       }
     });
-    return new PromptTemplate({
-      inputVariables: [...names],
+    return new PromptTemplate<RunInput>({
+      inputVariables: [...names] as Extract<keyof RunInput, string>[],
       templateFormat,
       template,
       ...rest,

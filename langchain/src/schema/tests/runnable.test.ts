@@ -162,7 +162,9 @@ test("Create a runnable sequence and run it", async () => {
 });
 
 test("Create a runnable sequence with a static method with invalid output and catch the error", async () => {
-  const promptTemplate = PromptTemplate.fromTemplate("{input}");
+  const promptTemplate = PromptTemplate.fromTemplate<{ input: string }>(
+    "{input}"
+  );
   const llm = new FakeChatModel({});
   const parser = StructuredOutputParser.fromZodSchema(
     z.object({ outputValue: z.string().describe("A test value") })
@@ -175,7 +177,10 @@ test("Create a runnable sequence with a static method with invalid output and ca
 });
 
 test("Create a runnable sequence with a runnable map", async () => {
-  const promptTemplate = ChatPromptTemplate.fromPromptMessages([
+  const promptTemplate = ChatPromptTemplate.fromPromptMessages<{
+    documents: string;
+    question: string;
+  }>([
     SystemMessagePromptTemplate.fromTemplate(`You are a nice assistant.`),
     HumanMessagePromptTemplate.fromTemplate(
       `Context:\n{documents}\n\nQuestion:\n{question}`

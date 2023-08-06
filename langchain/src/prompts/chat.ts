@@ -434,12 +434,12 @@ export class ChatPromptTemplate<
     >(promptDict);
   }
 
-  static fromPromptMessages(
+  static fromPromptMessages<RunInput extends InputValues = any>(
     promptMessages: (
       | BaseMessagePromptTemplate<InputValues>
       | ChatPromptTemplate<InputValues, string>
     )[]
-  ): ChatPromptTemplate {
+  ): ChatPromptTemplate<RunInput> {
     const flattenedMessages = promptMessages.reduce(
       (acc, promptMessage) =>
         acc.concat(
@@ -468,8 +468,8 @@ export class ChatPromptTemplate<
         inputVariables.add(inputVariable);
       }
     }
-    return new ChatPromptTemplate({
-      inputVariables: [...inputVariables],
+    return new ChatPromptTemplate<RunInput>({
+      inputVariables: [...inputVariables] as Extract<keyof RunInput, string>[],
       promptMessages: flattenedMessages,
       partialVariables: flattenedPartialVariables,
     });
