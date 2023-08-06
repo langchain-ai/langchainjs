@@ -15,6 +15,10 @@ import { SerializedFields } from "../load/map_keys.js";
 import { Runnable } from "../schema/runnable.js";
 import { BaseCallbackConfig } from "../callbacks/manager.js";
 
+export type TypedPromptInputValues<RunInput> = InputValues<
+  Extract<keyof RunInput, string> | (string & Record<never, never>)
+>;
+
 export class StringPromptValue extends BasePromptValue {
   lc_namespace = ["langchain", "prompts", "base"];
 
@@ -105,7 +109,7 @@ export abstract class BasePromptTemplate<
   ): Promise<BasePromptTemplate<RunInput, RunOutput, PartialVariableName>>;
 
   async mergePartialAndUserVariables(
-    userVariables: InputValues<Extract<keyof RunInput, string>>
+    userVariables: TypedPromptInputValues<RunInput>
   ): Promise<
     InputValues<Extract<keyof RunInput, string> | PartialVariableName>
   > {
@@ -132,7 +136,7 @@ export abstract class BasePromptTemplate<
     options?: BaseCallbackConfig
   ): Promise<RunOutput> {
     return this._callWithConfig(
-      (input: InputValues) => this.formatPromptValue(input),
+      (input: RunInput) => this.formatPromptValue(input),
       input,
       { ...options, runType: "prompt" }
     );
@@ -149,9 +153,7 @@ export abstract class BasePromptTemplate<
    * prompt.format({ foo: "bar" });
    * ```
    */
-  abstract format(
-    values: InputValues<Extract<keyof RunInput, string>>
-  ): Promise<string>;
+  abstract format(values: TypedPromptInputValues<RunInput>): Promise<string>;
 
   /**
    * Format the prompt given the input values and return a formatted prompt value.
@@ -159,7 +161,7 @@ export abstract class BasePromptTemplate<
    * @returns A formatted PromptValue.
    */
   abstract formatPromptValue(
-    values: InputValues<Extract<keyof RunInput, string>>
+    values: TypedPromptInputValues<RunInput>
   ): Promise<RunOutput>;
 
   /**
@@ -217,7 +219,7 @@ export abstract class BaseStringPromptTemplate<
   PartialVariableName extends string = any
 > extends BasePromptTemplate<RunInput, StringPromptValue, PartialVariableName> {
   async formatPromptValue(
-    values: InputValues<Extract<keyof RunInput, string>>
+    values: TypedPromptInputValues<RunInput>
   ): Promise<StringPromptValue> {
     const formattedPrompt = await this.format(values);
     return new StringPromptValue(formattedPrompt);

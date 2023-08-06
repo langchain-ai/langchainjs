@@ -1,7 +1,11 @@
 // Default generic "any" values are for backwards compatibility.
 // Replace with "string" when we are comfortable with a breaking change.
 
-import { BaseStringPromptTemplate, BasePromptTemplateInput } from "./base.js";
+import {
+  BaseStringPromptTemplate,
+  BasePromptTemplateInput,
+  TypedPromptInputValues,
+} from "./base.js";
 import {
   checkValidTemplate,
   parseTemplate,
@@ -94,9 +98,7 @@ export class PromptTemplate<
     return "prompt";
   }
 
-  async format(
-    values: InputValues<Extract<keyof RunInput, string>>
-  ): Promise<string> {
+  async format(values: TypedPromptInputValues<RunInput>): Promise<string> {
     const allValues = await this.mergePartialAndUserVariables(values);
     return renderTemplate(this.template, this.templateFormat, allValues);
   }

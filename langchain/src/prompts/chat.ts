@@ -17,6 +17,7 @@ import {
   BasePromptTemplate,
   BasePromptTemplateInput,
   BaseStringPromptTemplate,
+  TypedPromptInputValues,
 } from "./base.js";
 import { PromptTemplate } from "./prompt.js";
 
@@ -32,7 +33,7 @@ export abstract class BaseMessagePromptTemplate<
   abstract inputVariables: Array<Extract<keyof RunInput, string>>;
 
   abstract formatMessages(
-    values: InputValues<Extract<keyof RunInput, string>>
+    values: TypedPromptInputValues<RunInput>
   ): Promise<RunOutput>;
 
   async invoke(
@@ -115,7 +116,7 @@ export class MessagesPlaceholder<
   }
 
   formatMessages(
-    values: InputValues<Extract<keyof RunInput, string>>
+    values: TypedPromptInputValues<RunInput>
   ): Promise<BaseMessage[]> {
     return Promise.resolve(values[this.variableName] as BaseMessage[]);
   }
@@ -172,11 +173,11 @@ export abstract class BaseMessageStringPromptTemplate<
   }
 
   abstract format(
-    values: InputValues<Extract<keyof RunInput, string>>
+    values: TypedPromptInputValues<RunInput>
   ): Promise<BaseMessage>;
 
   async formatMessages(
-    values: InputValues<Extract<keyof RunInput, string>>
+    values: TypedPromptInputValues<RunInput>
   ): Promise<BaseMessage[]> {
     return [await this.format(values)];
   }
@@ -193,17 +194,15 @@ export abstract class BaseChatPromptTemplate<
   }
 
   abstract formatMessages(
-    values: InputValues<Extract<keyof RunInput, string>>
+    values: TypedPromptInputValues<RunInput>
   ): Promise<BaseMessage[]>;
 
-  async format(
-    values: InputValues<Extract<keyof RunInput, string>>
-  ): Promise<string> {
+  async format(values: TypedPromptInputValues<RunInput>): Promise<string> {
     return (await this.formatPromptValue(values)).toString();
   }
 
   async formatPromptValue(
-    values: InputValues<Extract<keyof RunInput, string>>
+    values: TypedPromptInputValues<RunInput>
   ): Promise<ChatPromptValue> {
     const resultMessages = await this.formatMessages(values);
     return new ChatPromptValue(resultMessages);
@@ -237,8 +236,10 @@ export class ChatMessagePromptTemplate<
 
   constructor(
     fields:
-      | ChatMessagePromptTemplateFields<RunInput>
-      | BaseStringPromptTemplate<RunInput>,
+      | ChatMessagePromptTemplateFields<
+          InputValues<Extract<keyof RunInput, string>>
+        >
+      | BaseStringPromptTemplate<InputValues<Extract<keyof RunInput, string>>>,
     role?: string
   ) {
     if (!("prompt" in fields)) {
@@ -385,7 +386,7 @@ export class ChatPromptTemplate<
   }
 
   async formatMessages(
-    values: InputValues<Extract<keyof RunInput, string>>
+    values: TypedPromptInputValues<RunInput>
   ): Promise<BaseMessage[]> {
     const allValues = await this.mergePartialAndUserVariables(values);
 

@@ -7,7 +7,7 @@ test("Test using partial", async () => {
     inputVariables: ["foo"],
     partialVariables: { bar: "baz" },
   });
-  expect(await prompt.format({ foo: "foo" })).toBe("foobaz");
+  expect(await prompt.format({ foo: "foo", unused: "nada" })).toBe("foobaz");
 });
 
 test("Test using full partial", async () => {

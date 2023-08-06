@@ -61,7 +61,7 @@ test("Test format", async () => {
 test("Test format with invalid input values", async () => {
   const chatPrompt = createChatPromptTemplate();
   await expect(
-    // @ts-expect-error TS compiler should flag this
+    // @ts-expect-error TS compiler should flag missing input variables
     chatPrompt.formatPromptValue({
       context: "This is a context",
       foo: "Foo",
