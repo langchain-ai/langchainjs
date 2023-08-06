@@ -172,8 +172,7 @@ export class VectaraStore extends VectorStore {
     file_paths: string[],
     metadata: Record<string, unknown> | undefined = undefined
   ) {
-    const docIds: string[] = [];
-    // TODO: What do I set doc ids to?
+    let numDocs = 0;
     for (const [index, file] of file_paths.entries()) {
       if (!fs.existsSync(path.resolve(file))) {
         console.error(`File ${file} does not exist, skipping`);
@@ -210,7 +209,7 @@ export class VectaraStore extends VectorStore {
           (error as any).code = 500;
           throw error;
         } else {
-          docIds.push(file);
+          numDocs += 1;
         }
       } catch (error) {
         console.log(error);
@@ -221,7 +220,7 @@ export class VectaraStore extends VectorStore {
       console.log(`Uploaded ${file_paths.length} files to Vectara`);
     }
 
-    return docIds;
+    return numDocs;
   }
 
   async similaritySearchWithScore(

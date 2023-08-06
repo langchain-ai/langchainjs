@@ -160,13 +160,11 @@ describe("VectaraStore", () => {
     it("addFiles", async () => {
       const docs = getDocs();
       const englishOneContent = docs[0].pageContent;
-      const englishTwoContent = docs[1].pageContent;
       const frenchOneContent = docs[2].pageContent;
 
       // Create temporary files for test
       const files = [
         { filename: "englishOne.txt", content: englishOneContent },
-        { filename: "englishTwo.txt", content: englishTwoContent },
         { filename: "frenchOne.txt", content: frenchOneContent },
       ];
 
@@ -179,8 +177,8 @@ describe("VectaraStore", () => {
 
       const results = await store.addFiles([
         "./englishOne.txt",
-        "./englishTwo.txt",
         "./frenchOne.txt",
+        "../examples/src/document_loaders/example_data/bitcoin.pdf",
       ]);
 
       // Delete temporary files
@@ -190,7 +188,12 @@ describe("VectaraStore", () => {
         });
       }
 
-      expect(results.length).toBeGreaterThan(0);
+      expect(results).toEqual(3);
+      const searchResults = await store.similaritySearch("What is bitcoin");
+      expect(searchResults.length).toBeGreaterThan(0);
+      expect(searchResults[0].pageContent).toContain(
+        "A Peer-to-Peer Electronic Cash System"
+      );
     });
   });
 });
