@@ -1,7 +1,7 @@
 import { DataSource } from "typeorm";
 import { OpenAI } from "langchain/llms/openai";
 import { SqlDatabase } from "langchain/sql_db";
-import { SqlDatabaseChain } from "langchain/chains";
+import { SqlDatabaseChain } from "langchain/chains/sql_db";
 
 /**
  * This example uses Chinook database, which is a sample database available for SQL Server, Oracle, MySQL, etc.

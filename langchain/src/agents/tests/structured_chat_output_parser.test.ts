@@ -24,7 +24,7 @@ test("Can parse JSON with text in front of it", async () => {
     },
   ];
 
-  const p = new StructuredChatOutputParser(["blogpost"]);
+  const p = new StructuredChatOutputParser({ toolNames: ["blogpost"] });
   for (const message of testCases) {
     const parsed = await p.parse(message.input);
     expect(parsed).toBeDefined();

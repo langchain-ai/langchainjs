@@ -4,6 +4,8 @@ import { FORMAT_INSTRUCTIONS } from "./prompt.js";
 
 export const FINAL_ANSWER_ACTION = "Final Answer:";
 export class ChatAgentOutputParser extends AgentActionOutputParser {
+  lc_namespace = ["langchain", "agents", "chat"];
+
   async parse(text: string) {
     if (text.includes(FINAL_ANSWER_ACTION) || !text.includes(`"action":`)) {
       const parts = text.split(FINAL_ANSWER_ACTION);

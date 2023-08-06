@@ -1,0 +1,39 @@
+---
+hide_table_of_contents: true
+---
+
+import CodeBlock from "@theme/CodeBlock";
+
+# Structured Output with OpenAI functions
+
+:::tip Compatibility
+Must be used with an [OpenAI functions](https://platform.openai.com/docs/guides/gpt/function-calling) model.
+:::
+
+This chain leverages OpenAI functions to output objects that match a given format for any given prompt.
+It converts input schema into an OpenAI function, then forces OpenAI to call that function to return a response in the correct format.
+
+You can use it where you would use a chain with a [`StructuredOutputParser`](/docs/modules/model_io/output_parsers) without any special
+instructions stuffed into the prompt. It will also more reliably output structured results with higher `temperature` values, making it better suited
+for more creative applications.
+
+**Note:** The outermost layer of the input schema must be an object.
+
+## Usage
+
+### Format Text into Structured Data
+
+import FormatExample from "@examples/chains/openai_functions_structured_format.ts";
+
+<CodeBlock language="typescript">{FormatExample}</CodeBlock>
+
+### Generate a Database Record
+
+import GenerateExample from "@examples/chains/openai_functions_structured_generate.ts";
+
+<CodeBlock language="typescript">{GenerateExample}</CodeBlock>
+
+### Customization
+
+This chain takes all the same arguments as a standard [`LLMChain`](/docs/modules/chains/foundational/llm_chain) minus an `outputParser`. It will also be created with a default model set to `gpt-3.5-turbo-0613`,
+but you can pass an options parameter into the input parameters with a pre-created `ChatOpenAI` instance as `llm`.

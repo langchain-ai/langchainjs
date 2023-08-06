@@ -7,6 +7,7 @@ import { ChatConversationalAgent } from "./chat_convo/index.js";
 import { StructuredChatAgent } from "./structured_chat/index.js";
 import { AgentExecutor, AgentExecutorInput } from "./executor.js";
 import { ZeroShotAgent } from "./mrkl/index.js";
+import { OpenAIAgent } from "./openai/index.js";
 
 type AgentType =
   | "zero-shot-react-description"
@@ -78,10 +79,14 @@ export type InitializeAgentExecutorOptions =
  * @interface
  */
 export type InitializeAgentExecutorOptionsStructured =
-  | {
+  | ({
       agentType: "structured-chat-zero-shot-react-description";
       agentArgs?: Parameters<typeof StructuredChatAgent.fromLLMAndTools>[2];
-    } & Omit<AgentExecutorInput, "agent" | "tools">;
+    } & Omit<AgentExecutorInput, "agent" | "tools">)
+  | ({
+      agentType: "openai-functions";
+      agentArgs?: Parameters<typeof OpenAIAgent.fromLLMAndTools>[2];
+    } & Omit<AgentExecutorInput, "agent" | "tools">);
 
 /**
  * Initialize an agent executor with options
@@ -117,24 +122,27 @@ export async function initializeAgentExecutorWithOptions(
   // the agentType is not in InitializeAgentExecutorOptionsStructured
   switch (options.agentType) {
     case "zero-shot-react-description": {
-      const { agentArgs, ...rest } = options;
+      const { agentArgs, tags, ...rest } = options;
       return AgentExecutor.fromAgentAndTools({
+        tags: [...(tags ?? []), "zero-shot-react-description"],
         agent: ZeroShotAgent.fromLLMAndTools(llm, tools as Tool[], agentArgs),
         tools,
         ...rest,
       });
     }
     case "chat-zero-shot-react-description": {
-      const { agentArgs, ...rest } = options;
+      const { agentArgs, tags, ...rest } = options;
       return AgentExecutor.fromAgentAndTools({
+        tags: [...(tags ?? []), "chat-zero-shot-react-description"],
         agent: ChatAgent.fromLLMAndTools(llm, tools as Tool[], agentArgs),
         tools,
         ...rest,
       });
     }
     case "chat-conversational-react-description": {
-      const { agentArgs, memory, ...rest } = options;
+      const { agentArgs, memory, tags, ...rest } = options;
       const executor = AgentExecutor.fromAgentAndTools({
+        tags: [...(tags ?? []), "chat-conversational-react-description"],
         agent: ChatConversationalAgent.fromLLMAndTools(
           llm,
           tools as Tool[],
@@ -147,17 +155,37 @@ export async function initializeAgentExecutorWithOptions(
             returnMessages: true,
             memoryKey: "chat_history",
             inputKey: "input",
+            outputKey: "output",
           }),
         ...rest,
       });
       return executor;
     }
     case "structured-chat-zero-shot-react-description": {
-      const { agentArgs, memory, ...rest } = options;
+      const { agentArgs, memory, tags, ...rest } = options;
       const executor = AgentExecutor.fromAgentAndTools({
+        tags: [...(tags ?? []), "structured-chat-zero-shot-react-description"],
         agent: StructuredChatAgent.fromLLMAndTools(llm, tools, agentArgs),
         tools,
         memory,
+        ...rest,
+      });
+      return executor;
+    }
+    case "openai-functions": {
+      const { agentArgs, memory, tags, ...rest } = options;
+      const executor = AgentExecutor.fromAgentAndTools({
+        tags: [...(tags ?? []), "openai-functions"],
+        agent: OpenAIAgent.fromLLMAndTools(llm, tools, agentArgs),
+        tools,
+        memory:
+          memory ??
+          new BufferMemory({
+            returnMessages: true,
+            memoryKey: "chat_history",
+            inputKey: "input",
+            outputKey: "output",
+          }),
         ...rest,
       });
       return executor;

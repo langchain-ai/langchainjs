@@ -2,10 +2,17 @@ import * as uuid from "uuid";
 import {
   AgentAction,
   AgentFinish,
-  BaseChatMessage,
+  BaseMessage,
   ChainValues,
   LLMResult,
 } from "../schema/index.js";
+import {
+  Serializable,
+  Serialized,
+  SerializedNotImplemented,
+} from "../load/serializable.js";
+import { SerializedFields } from "../load/map_keys.js";
+import { Document } from "../document.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Error = any;
@@ -14,6 +21,12 @@ export interface BaseCallbackHandlerInput {
   ignoreLLM?: boolean;
   ignoreChain?: boolean;
   ignoreAgent?: boolean;
+  ignoreRetriever?: boolean;
+}
+
+export interface NewTokenIndices {
+  prompt: number;
+  completion: number;
 }
 
 abstract class BaseCallbackHandlerMethodsClass {
@@ -22,11 +35,13 @@ abstract class BaseCallbackHandlerMethodsClass {
    * and the run ID.
    */
   handleLLMStart?(
-    llm: { name: string },
+    llm: Serialized,
     prompts: string[],
     runId: string,
     parentRunId?: string,
-    extraParams?: Record<string, unknown>
+    extraParams?: Record<string, unknown>,
+    tags?: string[],
+    metadata?: Record<string, unknown>
   ): Promise<void> | void;
 
   /**
@@ -34,8 +49,16 @@ abstract class BaseCallbackHandlerMethodsClass {
    */
   handleLLMNewToken?(
     token: string,
+    /**
+     * idx.prompt is the index of the prompt that produced the token
+     *   (if there are multiple prompts)
+     * idx.completion is the index of the completion that produced the token
+     *   (if multiple completions per prompt are requested)
+     */
+    idx: NewTokenIndices,
     runId: string,
-    parentRunId?: string
+    parentRunId?: string,
+    tags?: string[]
   ): Promise<void> | void;
 
   /**
@@ -44,7 +67,8 @@ abstract class BaseCallbackHandlerMethodsClass {
   handleLLMError?(
     err: Error,
     runId: string,
-    parentRunId?: string
+    parentRunId?: string,
+    tags?: string[]
   ): Promise<void> | void;
 
   /**
@@ -53,7 +77,8 @@ abstract class BaseCallbackHandlerMethodsClass {
   handleLLMEnd?(
     output: LLMResult,
     runId: string,
-    parentRunId?: string
+    parentRunId?: string,
+    tags?: string[]
   ): Promise<void> | void;
 
   /**
@@ -61,11 +86,13 @@ abstract class BaseCallbackHandlerMethodsClass {
    * and the run ID.
    */
   handleChatModelStart?(
-    llm: { name: string },
-    messages: BaseChatMessage[][],
+    llm: Serialized,
+    messages: BaseMessage[][],
     runId: string,
     parentRunId?: string,
-    extraParams?: Record<string, unknown>
+    extraParams?: Record<string, unknown>,
+    tags?: string[],
+    metadata?: Record<string, unknown>
   ): Promise<void> | void;
 
   /**
@@ -73,10 +100,13 @@ abstract class BaseCallbackHandlerMethodsClass {
    * and the run ID.
    */
   handleChainStart?(
-    chain: { name: string },
+    chain: Serialized,
     inputs: ChainValues,
     runId: string,
-    parentRunId?: string
+    parentRunId?: string,
+    tags?: string[],
+    metadata?: Record<string, unknown>,
+    runType?: string
   ): Promise<void> | void;
 
   /**
@@ -85,7 +115,8 @@ abstract class BaseCallbackHandlerMethodsClass {
   handleChainError?(
     err: Error,
     runId: string,
-    parentRunId?: string
+    parentRunId?: string,
+    tags?: string[]
   ): Promise<void> | void;
 
   /**
@@ -94,7 +125,8 @@ abstract class BaseCallbackHandlerMethodsClass {
   handleChainEnd?(
     outputs: ChainValues,
     runId: string,
-    parentRunId?: string
+    parentRunId?: string,
+    tags?: string[]
   ): Promise<void> | void;
 
   /**
@@ -102,10 +134,12 @@ abstract class BaseCallbackHandlerMethodsClass {
    * and the run ID.
    */
   handleToolStart?(
-    tool: { name: string },
+    tool: Serialized,
     input: string,
     runId: string,
-    parentRunId?: string
+    parentRunId?: string,
+    tags?: string[],
+    metadata?: Record<string, unknown>
   ): Promise<void> | void;
 
   /**
@@ -114,7 +148,8 @@ abstract class BaseCallbackHandlerMethodsClass {
   handleToolError?(
     err: Error,
     runId: string,
-    parentRunId?: string
+    parentRunId?: string,
+    tags?: string[]
   ): Promise<void> | void;
 
   /**
@@ -123,13 +158,15 @@ abstract class BaseCallbackHandlerMethodsClass {
   handleToolEnd?(
     output: string,
     runId: string,
-    parentRunId?: string
+    parentRunId?: string,
+    tags?: string[]
   ): Promise<void> | void;
 
   handleText?(
     text: string,
     runId: string,
-    parentRunId?: string
+    parentRunId?: string,
+    tags?: string[]
   ): Promise<void> | void;
 
   /**
@@ -139,7 +176,8 @@ abstract class BaseCallbackHandlerMethodsClass {
   handleAgentAction?(
     action: AgentAction,
     runId: string,
-    parentRunId?: string
+    parentRunId?: string,
+    tags?: string[]
   ): Promise<void> | void;
 
   /**
@@ -149,7 +187,31 @@ abstract class BaseCallbackHandlerMethodsClass {
   handleAgentEnd?(
     action: AgentFinish,
     runId: string,
-    parentRunId?: string
+    parentRunId?: string,
+    tags?: string[]
+  ): Promise<void> | void;
+
+  handleRetrieverStart?(
+    retriever: Serialized,
+    query: string,
+    runId: string,
+    parentRunId?: string,
+    tags?: string[],
+    metadata?: Record<string, unknown>
+  ): Promise<void> | void;
+
+  handleRetrieverEnd?(
+    documents: Document[],
+    runId: string,
+    parentRunId?: string,
+    tags?: string[]
+  ): Promise<void> | void;
+
+  handleRetrieverError?(
+    err: Error,
+    runId: string,
+    parentRunId?: string,
+    tags?: string[]
   ): Promise<void> | void;
 }
 
@@ -166,8 +228,28 @@ export type CallbackHandlerMethods = BaseCallbackHandlerMethodsClass;
 
 export abstract class BaseCallbackHandler
   extends BaseCallbackHandlerMethodsClass
-  implements BaseCallbackHandlerInput
+  implements BaseCallbackHandlerInput, Serializable
 {
+  lc_serializable = false;
+
+  get lc_namespace(): ["langchain", "callbacks", string] {
+    return ["langchain", "callbacks", this.name];
+  }
+
+  get lc_secrets(): { [key: string]: string } | undefined {
+    return undefined;
+  }
+
+  get lc_attributes(): { [key: string]: string } | undefined {
+    return undefined;
+  }
+
+  get lc_aliases(): { [key: string]: string } | undefined {
+    return undefined;
+  }
+
+  lc_kwargs: SerializedFields;
+
   abstract name: string;
 
   ignoreLLM = false;
@@ -176,12 +258,22 @@ export abstract class BaseCallbackHandler
 
   ignoreAgent = false;
 
+  ignoreRetriever = false;
+
+  awaitHandlers =
+    typeof process !== "undefined"
+      ? // eslint-disable-next-line no-process-env
+        process.env?.LANGCHAIN_CALLBACKS_BACKGROUND !== "true"
+      : true;
+
   constructor(input?: BaseCallbackHandlerInput) {
     super();
+    this.lc_kwargs = input || {};
     if (input) {
       this.ignoreLLM = input.ignoreLLM ?? this.ignoreLLM;
       this.ignoreChain = input.ignoreChain ?? this.ignoreChain;
       this.ignoreAgent = input.ignoreAgent ?? this.ignoreAgent;
+      this.ignoreRetriever = input.ignoreRetriever ?? this.ignoreRetriever;
     }
   }
 
@@ -189,6 +281,14 @@ export abstract class BaseCallbackHandler
     return new (this.constructor as new (
       input?: BaseCallbackHandlerInput
     ) => BaseCallbackHandler)(this);
+  }
+
+  toJSON(): Serialized {
+    return Serializable.prototype.toJSON.call(this);
+  }
+
+  toJSONNotImplemented(): SerializedNotImplemented {
+    return Serializable.prototype.toJSONNotImplemented.call(this);
   }
 
   static fromMethods(methods: CallbackHandlerMethods) {

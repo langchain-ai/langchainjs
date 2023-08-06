@@ -1,5 +1,5 @@
 import { test } from "@jest/globals";
-import { HumanChatMessage } from "../../schema/index.js";
+import { ChatMessage, HumanMessage } from "../../schema/index.js";
 import {
   PromptTemplate,
   ChatPromptTemplate,
@@ -14,15 +14,21 @@ import { ChatGoogleVertexAI } from "../googlevertexai.js";
 
 test("Test ChatGoogleVertexAI", async () => {
   const chat = new ChatGoogleVertexAI();
-  const message = new HumanChatMessage("Hello!");
+  const message = new HumanMessage("Hello!");
   const res = await chat.call([message]);
   console.log({ res });
 });
 
 test("Test ChatGoogleVertexAI generate", async () => {
   const chat = new ChatGoogleVertexAI();
-  const message = new HumanChatMessage("Hello!");
+  const message = new HumanMessage("Hello!");
   const res = await chat.generate([[message]]);
+  console.log(JSON.stringify(res, null, 2));
+});
+
+test("Google code messages with custom messages", async () => {
+  const chat = new ChatGoogleVertexAI();
+  const res = await chat.call([new ChatMessage("Hello!", "user")]);
   console.log(JSON.stringify(res, null, 2));
 });
 
@@ -93,4 +99,23 @@ test("ChatGoogleVertexAI, with a memory in a chain", async () => {
   });
 
   console.log(response2);
+});
+
+test("CodechatGoogleVertexAI, chain of messages", async () => {
+  const chat = new ChatGoogleVertexAI({ model: "codechat-bison" });
+
+  const chatPrompt = ChatPromptTemplate.fromPromptMessages([
+    SystemMessagePromptTemplate.fromTemplate(
+      `Answer all questions using Python and just show the code without an explanation.`
+    ),
+    HumanMessagePromptTemplate.fromTemplate("{text}"),
+  ]);
+
+  const responseA = await chat.generatePrompt([
+    await chatPrompt.formatPromptValue({
+      text: "How can I write a for loop counting to 10?",
+    }),
+  ]);
+
+  console.log(JSON.stringify(responseA.generations, null, 1));
 });

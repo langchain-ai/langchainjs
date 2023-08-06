@@ -66,7 +66,7 @@ export class APIChain extends BaseChain implements APIChainInput {
 
     const api_url = await this.apiRequestChain.predict(
       { question, api_docs: this.apiDocs },
-      runManager?.getChild()
+      runManager?.getChild("request")
     );
 
     const res = await fetch(api_url, { headers: this.headers });
@@ -74,7 +74,7 @@ export class APIChain extends BaseChain implements APIChainInput {
 
     const answer = await this.apiAnswerChain.predict(
       { question, api_docs: this.apiDocs, api_url, api_response },
-      runManager?.getChild()
+      runManager?.getChild("response")
     );
 
     return { [this.outputKey]: answer };

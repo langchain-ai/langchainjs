@@ -23,6 +23,7 @@ test("mapV1MessageToStoredMessage", () => {
     data: {
       content: "Hello, world!",
       role: "user",
+      name: undefined,
       additional_kwargs: {
         foo: "bar",
       },

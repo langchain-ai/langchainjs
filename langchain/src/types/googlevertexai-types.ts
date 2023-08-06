@@ -1,8 +1,11 @@
+import { GoogleAuthOptions } from "google-auth-library";
 import { BaseLLMParams } from "../llms/index.js";
 
 export interface GoogleVertexAIConnectionParams {
   /** Hostname for the API call */
   endpoint?: string;
+
+  authOptions?: GoogleAuthOptions;
 
   /** Region where the LLM is stored */
   location?: string;

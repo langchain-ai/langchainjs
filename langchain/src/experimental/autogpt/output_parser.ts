@@ -12,6 +12,8 @@ export function preprocessJsonInput(inputStr: string): string {
 }
 
 export class AutoGPTOutputParser extends BaseOutputParser<AutoGPTAction> {
+  lc_namespace = ["langchain", "experimental", "autogpt"];
+
   getFormatInstructions(): string {
     throw new Error("Method not implemented.");
   }

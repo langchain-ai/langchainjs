@@ -5,7 +5,7 @@ import type {
 import { Embeddings } from "../embeddings/base.js";
 import { SaveableVectorStore } from "./base.js";
 import { Document } from "../document.js";
-import { InMemoryDocstore } from "../docstore/index.js";
+import { SynchronousInMemoryDocstore } from "../stores/doc/in_memory.js";
 
 export interface HNSWLibBase {
   space: SpaceName;
@@ -13,7 +13,7 @@ export interface HNSWLibBase {
 }
 
 export interface HNSWLibArgs extends HNSWLibBase {
-  docstore?: InMemoryDocstore;
+  docstore?: SynchronousInMemoryDocstore;
   index?: HierarchicalNSWT;
 }
 
@@ -22,16 +22,20 @@ export class HNSWLib extends SaveableVectorStore {
 
   _index?: HierarchicalNSWT;
 
-  docstore: InMemoryDocstore;
+  docstore: SynchronousInMemoryDocstore;
 
   args: HNSWLibBase;
+
+  _vectorstoreType(): string {
+    return "hnswlib";
+  }
 
   constructor(embeddings: Embeddings, args: HNSWLibArgs) {
     super(embeddings, args);
     this._index = args.index;
     this.args = args;
     this.embeddings = embeddings;
-    this.docstore = args?.docstore ?? new InMemoryDocstore();
+    this.docstore = args?.docstore ?? new SynchronousInMemoryDocstore();
   }
 
   async addDocuments(documents: Document[]): Promise<void> {
@@ -101,11 +105,13 @@ export class HNSWLib extends SaveableVectorStore {
     if (needed > capacity) {
       this.index.resizeIndex(needed);
     }
-    const docstoreSize = this.docstore.count;
+    const docstoreSize = this.index.getCurrentCount();
+    const toSave: Record<string, Document> = {};
     for (let i = 0; i < vectors.length; i += 1) {
       this.index.addPoint(vectors[i], docstoreSize + i);
-      this.docstore.add({ [docstoreSize + i]: documents[i] });
+      toSave[docstoreSize + i] = documents[i];
     }
+    this.docstore.add(toSave);
   }
 
   async similaritySearchVectorWithScore(
@@ -184,7 +190,7 @@ export class HNSWLib extends SaveableVectorStore {
         .then(JSON.parse),
       index.readIndex(path.join(directory, "hnswlib.index")),
     ]);
-    args.docstore = new InMemoryDocstore(new Map(docstoreFiles));
+    args.docstore = new SynchronousInMemoryDocstore(new Map(docstoreFiles));
 
     args.index = index;
 
@@ -196,7 +202,7 @@ export class HNSWLib extends SaveableVectorStore {
     metadatas: object[] | object,
     embeddings: Embeddings,
     dbConfig?: {
-      docstore?: InMemoryDocstore;
+      docstore?: SynchronousInMemoryDocstore;
     }
   ): Promise<HNSWLib> {
     const docs: Document[] = [];
@@ -215,7 +221,7 @@ export class HNSWLib extends SaveableVectorStore {
     docs: Document[],
     embeddings: Embeddings,
     dbConfig?: {
-      docstore?: InMemoryDocstore;
+      docstore?: SynchronousInMemoryDocstore;
     }
   ): Promise<HNSWLib> {
     const args: HNSWLibArgs = {
@@ -236,9 +242,10 @@ export class HNSWLib extends SaveableVectorStore {
       } = await import("hnswlib-node");
 
       return { HierarchicalNSW };
-    } catch (err) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
       throw new Error(
-        "Please install hnswlib-node as a dependency with, e.g. `npm install -S hnswlib-node`"
+        `Could not import hnswlib-node. Please install hnswlib-node as a dependency with, e.g. \`npm install -S hnswlib-node\`.\n\nError: ${err?.message}`
       );
     }
   }

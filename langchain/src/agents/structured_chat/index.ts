@@ -36,6 +36,8 @@ export type StructuredChatAgentInput = Optional<AgentInput, "outputParser">;
  * @augments Agent
  */
 export class StructuredChatAgent extends Agent {
+  lc_namespace = ["langchain", "agents", "structured_chat"];
+
   constructor(input: StructuredChatAgentInput) {
     const outputParser =
       input?.outputParser ?? StructuredChatAgent.getDefaultOutputParser();

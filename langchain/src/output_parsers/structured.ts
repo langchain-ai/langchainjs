@@ -24,8 +24,14 @@ export interface JsonMarkdownFormatInstructionsOptions
 export class StructuredOutputParser<
   T extends z.ZodTypeAny
 > extends BaseOutputParser<z.infer<T>> {
+  lc_namespace = ["langchain", "output_parsers", "structured"];
+
+  toJSON() {
+    return this.toJSONNotImplemented();
+  }
+
   constructor(public schema: T) {
-    super();
+    super(schema);
   }
 
   static fromZodSchema<T extends z.ZodTypeAny>(schema: T) {
@@ -70,7 +76,7 @@ ${JSON.stringify(zodToJsonSchema(this.schema))}
       const json = text.includes("```")
         ? text.trim().split(/```(?:json)?/)[1]
         : text.trim();
-      return this.schema.parseAsync(JSON.parse(json));
+      return await this.schema.parseAsync(JSON.parse(json));
     } catch (e) {
       throw new OutputParserException(
         `Failed to parse. Text: "${text}". Error: ${e}`,
@@ -185,14 +191,20 @@ export class JsonMarkdownStructuredOutputParser<
   }
 }
 
+export interface AsymmetricStructuredOutputParserFields<
+  T extends z.ZodTypeAny
+> {
+  inputSchema: T;
+}
+
 export abstract class AsymmetricStructuredOutputParser<
   T extends z.ZodTypeAny,
   Y = unknown
 > extends BaseOutputParser<Y> {
   private structuredInputParser: JsonMarkdownStructuredOutputParser<T>;
 
-  constructor(public inputSchema: T) {
-    super();
+  constructor({ inputSchema }: AsymmetricStructuredOutputParserFields<T>) {
+    super(...arguments);
     this.structuredInputParser = new JsonMarkdownStructuredOutputParser(
       inputSchema
     );

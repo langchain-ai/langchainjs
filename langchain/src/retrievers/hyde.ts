@@ -8,6 +8,7 @@ import {
 } from "../vectorstores/base.js";
 import { BaseLanguageModel } from "../base_language/index.js";
 import { BasePromptValue } from "../schema/index.js";
+import { CallbackManagerForRetrieverRun } from "../callbacks/manager.js";
 
 export type PromptKey =
   | "websearch"
@@ -19,15 +20,19 @@ export type PromptKey =
   | "trec-news"
   | "mr-tydi";
 
-export interface HydeRetrieverOptions<V extends VectorStore>
-  extends VectorStoreRetrieverInput<V> {
-  llm: BaseLanguageModel;
-  promptTemplate?: BasePromptTemplate | PromptKey;
-}
+export type HydeRetrieverOptions<V extends VectorStore> =
+  VectorStoreRetrieverInput<V> & {
+    llm: BaseLanguageModel;
+    promptTemplate?: BasePromptTemplate | PromptKey;
+  };
 
 export class HydeRetriever<
   V extends VectorStore = VectorStore
 > extends VectorStoreRetriever<V> {
+  get lc_namespace(): string[] {
+    return ["langchain", "retrievers", "hyde"];
+  }
+
   llm: BaseLanguageModel;
 
   promptTemplate?: BasePromptTemplate;
@@ -49,7 +54,10 @@ export class HydeRetriever<
     }
   }
 
-  async getRelevantDocuments(query: string): Promise<Document[]> {
+  async _getRelevantDocuments(
+    query: string,
+    runManager?: CallbackManagerForRetrieverRun
+  ): Promise<Document[]> {
     let value: BasePromptValue = new StringPromptValue(query);
 
     // Use a custom template if provided
@@ -65,7 +73,8 @@ export class HydeRetriever<
     const results = await this.vectorStore.similaritySearch(
       answer,
       this.k,
-      this.filter
+      this.filter,
+      runManager?.getChild("vectorstore")
     );
 
     return results;
@@ -77,17 +86,17 @@ export function getPromptTemplateFromKey(key: PromptKey): BasePromptTemplate {
 
   switch (key) {
     case "websearch":
-      template = `Please write a passage to answer the question 
+      template = `Please write a passage to answer the question
 Question: {question}
 Passage:`;
       break;
     case "scifact":
-      template = `Please write a scientific paper passage to support/refute the claim 
+      template = `Please write a scientific paper passage to support/refute the claim
 Claim: {question}
 Passage:`;
       break;
     case "arguana":
-      template = `Please write a counter argument for the passage 
+      template = `Please write a counter argument for the passage
 Passage: {question}
 Counter Argument:`;
       break;

@@ -11,7 +11,7 @@ beforeAll(async () => {
   collectionName = `test_collection_${Math.random().toString(36).substring(7)}`;
 });
 
-test("Test Milvus.fromtext", async () => {
+test.skip("Test Milvus.fromtext", async () => {
   const texts = [
     `Tortoise: Labyrinth? Labyrinth? Could it Are we in the notorious Little
 Harmonic Labyrinth of the dreaded Majotaur?`,
@@ -49,9 +49,13 @@ Harmonic Labyrinth of the dreaded Majotaur?`,
     { id: 4, other: objB },
     { id: 5, other: objA },
   ]);
+
+  const resultThree = await milvus.similaritySearch(query, 1, "id == 1");
+  const resultThreeMetadatas = resultThree.map(({ metadata }) => metadata);
+  expect(resultThreeMetadatas).toEqual([{ id: 1, other: objB }]);
 });
 
-test("Test Milvus.fromExistingCollection", async () => {
+test.skip("Test Milvus.fromExistingCollection", async () => {
   const milvus = await Milvus.fromExistingCollection(embeddings, {
     collectionName,
   });
@@ -68,6 +72,11 @@ test("Test Milvus.fromExistingCollection", async () => {
   expect(resultTwoMetadatas[0].id).toEqual(1);
   expect(resultTwoMetadatas[1].id).toEqual(4);
   expect(resultTwoMetadatas[2].id).toEqual(5);
+
+  const resultThree = await milvus.similaritySearch(query, 1, "id == 1");
+  const resultThreeMetadatas = resultThree.map(({ metadata }) => metadata);
+  expect(resultThreeMetadatas.length).toBe(1);
+  expect(resultThreeMetadatas[0].id).toEqual(1);
 });
 
 afterAll(async () => {

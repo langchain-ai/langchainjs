@@ -13,7 +13,7 @@ import {
 } from "@gomomento/sdk";
 import { v4 } from "uuid";
 import { MomentoChatMessageHistory } from "../message/momento.js";
-import { AIChatMessage, HumanChatMessage } from "../../schema/index.js";
+import { AIMessage, HumanMessage } from "../../schema/index.js";
 
 const client = new CacheClient({
   configuration: Configurations.Laptop.v1(),
@@ -52,9 +52,9 @@ describe("Test Momento message history store", () => {
     await messageHistory.addUserMessage("Nice to meet you too!");
 
     const expectedMessages = [
-      new HumanChatMessage("My name's Jonas"),
-      new AIChatMessage("Nice to meet you, Jonas!"),
-      new HumanChatMessage("Nice to meet you too!"),
+      new HumanMessage("My name's Jonas"),
+      new AIMessage("Nice to meet you, Jonas!"),
+      new HumanMessage("Nice to meet you too!"),
     ];
 
     expect(await messageHistory.getMessages()).toEqual(expectedMessages);
@@ -72,9 +72,9 @@ describe("Test Momento message history store", () => {
     await messageHistory.addUserMessage("Nice to meet you too!");
 
     const expectedMessages = [
-      new HumanChatMessage("My name's Jonas"),
-      new AIChatMessage("Nice to meet you, Jonas!"),
-      new HumanChatMessage("Nice to meet you too!"),
+      new HumanMessage("My name's Jonas"),
+      new AIMessage("Nice to meet you, Jonas!"),
+      new HumanMessage("Nice to meet you too!"),
     ];
 
     expect(await messageHistory.getMessages()).toEqual(expectedMessages);
@@ -97,9 +97,9 @@ describe("Test Momento message history store", () => {
     await messageHistory.addUserMessage("Nice to meet you too!");
 
     const expectedMessages = [
-      new HumanChatMessage("My name's Jonas"),
-      new AIChatMessage("Nice to meet you, Jonas!"),
-      new HumanChatMessage("Nice to meet you too!"),
+      new HumanMessage("My name's Jonas"),
+      new AIMessage("Nice to meet you, Jonas!"),
+      new HumanMessage("Nice to meet you too!"),
     ];
 
     expect(await messageHistory.getMessages()).toEqual(expectedMessages);

@@ -1,5 +1,5 @@
 import { Example } from "../../schema/index.js";
-import type { BaseExampleSelector } from "../base.js";
+import { BaseExampleSelector } from "../base.js";
 import { PromptTemplate } from "../prompt.js";
 
 function getLengthBased(text: string): number {
@@ -12,7 +12,7 @@ export interface LengthBasedExampleSelectorInput {
   getTextLength?: (text: string) => number;
 }
 
-export class LengthBasedExampleSelector implements BaseExampleSelector {
+export class LengthBasedExampleSelector extends BaseExampleSelector {
   protected examples: Example[] = [];
 
   examplePrompt!: PromptTemplate;
@@ -24,6 +24,7 @@ export class LengthBasedExampleSelector implements BaseExampleSelector {
   exampleTextLengths: number[] = [];
 
   constructor(data: LengthBasedExampleSelectorInput) {
+    super(data);
     this.examplePrompt = data.examplePrompt;
     this.maxLength = data.maxLength ?? 2048;
     this.getTextLength = data.getTextLength ?? getLengthBased;

@@ -70,6 +70,8 @@ export class FewShotPromptTemplate
   extends BaseStringPromptTemplate
   implements FewShotPromptTemplateInput
 {
+  lc_serializable = false;
+
   examples?: InputValues[];
 
   exampleSelector?: BaseExampleSelector | undefined;

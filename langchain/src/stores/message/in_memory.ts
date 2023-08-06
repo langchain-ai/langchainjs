@@ -1,21 +1,20 @@
-import {
-  BaseChatMessage,
-  BaseListChatMessageHistory,
-} from "../../schema/index.js";
+import { BaseMessage, BaseListChatMessageHistory } from "../../schema/index.js";
 
 export class ChatMessageHistory extends BaseListChatMessageHistory {
-  private messages: BaseChatMessage[] = [];
+  lc_namespace = ["langchain", "stores", "message", "in_memory"];
 
-  constructor(messages?: BaseChatMessage[]) {
-    super();
+  private messages: BaseMessage[] = [];
+
+  constructor(messages?: BaseMessage[]) {
+    super(...arguments);
     this.messages = messages ?? [];
   }
 
-  async getMessages(): Promise<BaseChatMessage[]> {
+  async getMessages(): Promise<BaseMessage[]> {
     return this.messages;
   }
 
-  async addMessage(message: BaseChatMessage) {
+  async addMessage(message: BaseMessage) {
     this.messages.push(message);
   }
 

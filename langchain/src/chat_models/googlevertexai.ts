@@ -1,11 +1,11 @@
 import { BaseChatModel } from "./base.js";
 import {
-  AIChatMessage,
-  BaseChatMessage,
+  AIMessage,
+  BaseMessage,
   ChatGeneration,
+  ChatMessage,
   ChatResult,
   LLMResult,
-  MessageType,
 } from "../schema/index.js";
 import { GoogleVertexAIConnection } from "../util/googlevertexai-connection.js";
 import {
@@ -13,14 +13,15 @@ import {
   GoogleVertexAIBasePrediction,
   GoogleVertexAIModelParams,
 } from "../types/googlevertexai-types.js";
+import { BaseLanguageModelCallOptions } from "../base_language/index.js";
 
 /**
  * Represents a single "example" exchange that can be provided to
  * help illustrate what a model response should look like.
  */
 export interface ChatExample {
-  input: BaseChatMessage;
-  output: BaseChatMessage;
+  input: BaseMessage;
+  output: BaseMessage;
 }
 
 interface GoogleVertexAIChatExample {
@@ -28,7 +29,11 @@ interface GoogleVertexAIChatExample {
   output: GoogleVertexAIChatMessage;
 }
 
-export type GoogleVertexAIChatAuthor = "user" | "bot" | "context";
+export type GoogleVertexAIChatAuthor =
+  | "user" // Represents the human for Code and CodeChat models
+  | "bot" // Represents the AI for Code models
+  | "system" // Represents the AI for CodeChat models
+  | "context"; // Represents contextual instructions
 
 export type GoogleVertexAIChatMessageFields = {
   author?: GoogleVertexAIChatAuthor;
@@ -49,33 +54,52 @@ export class GoogleVertexAIChatMessage {
     this.name = fields.name;
   }
 
+  static extractGenericMessageCustomRole(message: ChatMessage) {
+    if (
+      message.role !== "system" &&
+      message.role !== "bot" &&
+      message.role !== "user" &&
+      message.role !== "context"
+    ) {
+      console.warn(`Unknown message role: ${message.role}`);
+    }
+
+    return message.role as GoogleVertexAIChatAuthor;
+  }
+
   static mapMessageTypeToVertexChatAuthor(
-    baseMessageType: MessageType
+    message: BaseMessage,
+    model: string
   ): GoogleVertexAIChatAuthor {
-    switch (baseMessageType) {
+    const type = message._getType();
+    switch (type) {
       case "ai":
-        return "bot";
+        return model.startsWith("codechat-") ? "system" : "bot";
       case "human":
         return "user";
       case "system":
         throw new Error(
           `System messages are only supported as the first passed message for Google Vertex AI.`
         );
-      case "generic":
-        throw new Error(
-          `Generic messages are not supported by Google Vertex AI.`
+      case "generic": {
+        if (!ChatMessage.isInstance(message))
+          throw new Error("Invalid generic chat message");
+        return GoogleVertexAIChatMessage.extractGenericMessageCustomRole(
+          message
         );
+      }
       default:
-        throw new Error(`Unknown message type: ${baseMessageType}`);
+        throw new Error(`Unknown / unsupported message type: ${message}`);
     }
   }
 
-  static fromChatMessage(message: BaseChatMessage) {
+  static fromChatMessage(message: BaseMessage, model: string) {
     return new GoogleVertexAIChatMessage({
       author: GoogleVertexAIChatMessage.mapMessageTypeToVertexChatAuthor(
-        message._getType()
+        message,
+        model
       ),
-      content: message.text,
+      content: message.content,
     });
   }
 }
@@ -130,7 +154,7 @@ export class ChatGoogleVertexAI
   examples: ChatExample[] = [];
 
   connection: GoogleVertexAIConnection<
-    this["CallOptions"],
+    BaseLanguageModelCallOptions,
     GoogleVertexAIChatInstance,
     GoogleVertexAIChatPrediction
   >;
@@ -161,7 +185,7 @@ export class ChatGoogleVertexAI
 
   // TODO: Add streaming support
   async _generate(
-    messages: BaseChatMessage[],
+    messages: BaseMessage[],
     options: this["ParsedCallOptions"]
   ): Promise<ChatResult> {
     const instance: GoogleVertexAIChatInstance = this.createInstance(messages);
@@ -192,11 +216,11 @@ export class ChatGoogleVertexAI
     return "googlevertexai";
   }
 
-  createInstance(messages: BaseChatMessage[]): GoogleVertexAIChatInstance {
+  createInstance(messages: BaseMessage[]): GoogleVertexAIChatInstance {
     let context = "";
     let conversationMessages = messages;
     if (messages[0]?._getType() === "system") {
-      context = messages[0].text;
+      context = messages[0].content;
       conversationMessages = messages.slice(1);
     }
     // https://cloud.google.com/vertex-ai/docs/generative-ai/chat/test-chat-prompts
@@ -206,21 +230,36 @@ export class ChatGoogleVertexAI
       );
     }
     const vertexChatMessages = conversationMessages.map((baseMessage, i) => {
+      const currMessage = GoogleVertexAIChatMessage.fromChatMessage(
+        baseMessage,
+        this.model
+      );
+      const prevMessage =
+        i > 0
+          ? GoogleVertexAIChatMessage.fromChatMessage(
+              conversationMessages[i - 1],
+              this.model
+            )
+          : null;
+
       // https://cloud.google.com/vertex-ai/docs/generative-ai/chat/chat-prompts#messages
-      if (
-        i > 0 &&
-        baseMessage._getType() === conversationMessages[i - 1]._getType()
-      ) {
+      if (prevMessage && currMessage.author === prevMessage.author) {
         throw new Error(
           `Google Vertex AI requires AI and human messages to alternate.`
         );
       }
-      return GoogleVertexAIChatMessage.fromChatMessage(baseMessage);
+      return currMessage;
     });
 
     const examples = this.examples.map((example) => ({
-      input: GoogleVertexAIChatMessage.fromChatMessage(example.input),
-      output: GoogleVertexAIChatMessage.fromChatMessage(example.output),
+      input: GoogleVertexAIChatMessage.fromChatMessage(
+        example.input,
+        this.model
+      ),
+      output: GoogleVertexAIChatMessage.fromChatMessage(
+        example.output,
+        this.model
+      ),
     }));
 
     const instance: GoogleVertexAIChatInstance = {
@@ -238,7 +277,7 @@ export class ChatGoogleVertexAI
     const message = prediction?.candidates[0];
     return {
       text: message?.content,
-      message: new AIChatMessage(message.content),
+      message: new AIMessage(message.content),
       generationInfo: prediction,
     };
   }

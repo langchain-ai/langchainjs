@@ -27,7 +27,7 @@ export const run = async () => {
         memoryKey: "chat_history",
         inputKey: "question", // The key for the input to the chain
         outputKey: "text", // The key for the final conversational output of the chain
-        returnMessages: true, // If using with a chat model
+        returnMessages: true, // If using with a chat model (e.g. gpt-3.5 or gpt-4)
       }),
       questionGeneratorChainOptions: {
         llm: fasterModel,

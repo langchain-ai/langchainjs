@@ -10,12 +10,20 @@ import {
   verifyIncludeTablesExistInDatabase,
   verifyListTablesExistInDatabase,
 } from "./util/sql_utils.js";
+import { Serializable } from "./load/serializable.js";
 
 export { SqlDatabaseDataSourceParams, SqlDatabaseOptionsParams };
 
 export class SqlDatabase
+  extends Serializable
   implements SqlDatabaseOptionsParams, SqlDatabaseDataSourceParams
 {
+  lc_namespace = ["langchain", "sql_db"];
+
+  toJSON() {
+    return this.toJSONNotImplemented();
+  }
+
   appDataSourceOptions: DataSourceOptions;
 
   appDataSource: DataSourceT;
@@ -29,6 +37,7 @@ export class SqlDatabase
   sampleRowsInTableInfo = 3;
 
   protected constructor(fields: SqlDatabaseDataSourceParams) {
+    super(...arguments);
     this.appDataSource = fields.appDataSource;
     this.appDataSourceOptions = fields.appDataSource.options;
     if (fields?.includesTables && fields?.ignoreTables) {

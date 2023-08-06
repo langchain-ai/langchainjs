@@ -1,14 +1,33 @@
-import { ZepClient, SearchResult, SearchPayload } from "@getzep/zep-js";
-import { BaseRetriever } from "../schema/index.js";
+import {
+  MemorySearchPayload,
+  MemorySearchResult,
+  NotFoundError,
+  ZepClient,
+} from "@getzep/zep-js";
+import { BaseRetriever, BaseRetrieverInput } from "../schema/retriever.js";
 import { Document } from "../document.js";
 
-export type ZepRetrieverConfig = {
+export interface ZepRetrieverConfig extends BaseRetrieverInput {
   sessionId: string;
   url: string;
   topK?: number;
-};
+  apiKey?: string;
+}
 
 export class ZepRetriever extends BaseRetriever {
+  lc_namespace = ["langchain", "retrievers", "zep"];
+
+  get lc_secrets(): { [key: string]: string } | undefined {
+    return {
+      apiKey: "ZEP_API_KEY",
+      url: "ZEP_API_URL",
+    };
+  }
+
+  get lc_aliases(): { [key: string]: string } | undefined {
+    return { apiKey: "api_key" };
+  }
+
   private zepClient: ZepClient;
 
   private sessionId: string;
@@ -16,18 +35,18 @@ export class ZepRetriever extends BaseRetriever {
   private topK?: number;
 
   constructor(config: ZepRetrieverConfig) {
-    super();
-    this.zepClient = new ZepClient(config.url);
+    super(config);
+    this.zepClient = new ZepClient(config.url, config.apiKey);
     this.sessionId = config.sessionId;
     this.topK = config.topK;
   }
 
   /**
    *  Converts an array of search results to an array of Document objects.
-   *  @param {SearchResult[]} results - The array of search results.
+   *  @param {MemorySearchResult[]} results - The array of search results.
    *  @returns {Document[]} An array of Document objects representing the search results.
    */
-  private searchResultToDoc(results: SearchResult[]): Document[] {
+  private searchResultToDoc(results: MemorySearchResult[]): Document[] {
     return results
       .filter((r) => r.message)
       .map(
@@ -44,14 +63,23 @@ export class ZepRetriever extends BaseRetriever {
    *  @param {string} query - The query string.
    *  @returns {Promise<Document[]>} A promise that resolves to an array of relevant Document objects.
    */
-  async getRelevantDocuments(query: string): Promise<Document[]> {
-    const payload: SearchPayload = { text: query, meta: {} };
-    const results: SearchResult[] = await this.zepClient.searchMemory(
-      this.sessionId,
-      payload,
-      this.topK
-    );
+  async _getRelevantDocuments(query: string): Promise<Document[]> {
+    const payload: MemorySearchPayload = { text: query, metadata: {} };
+    try {
+      const results: MemorySearchResult[] = await this.zepClient.searchMemory(
+        this.sessionId,
+        payload,
+        this.topK
+      );
 
-    return this.searchResultToDoc(results);
+      return this.searchResultToDoc(results);
+    } catch (error) {
+      // eslint-disable-next-line no-instanceof/no-instanceof
+      if (error instanceof NotFoundError) {
+        return Promise.resolve([]); // Return an empty Document array
+      }
+      // If it's not a NotFoundError, throw the error again
+      throw error;
+    }
   }
 }

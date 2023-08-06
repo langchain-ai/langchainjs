@@ -3,8 +3,10 @@ import {
   CallbackManager,
   CallbackManagerForToolRun,
   Callbacks,
+  parseCallbackConfigArg,
 } from "../callbacks/manager.js";
 import { BaseLangChain, BaseLangChainParams } from "../base_language/index.js";
+import { RunnableConfig } from "../schema/runnable.js";
 
 export interface ToolParams extends BaseLangChainParams {}
 
@@ -14,8 +16,15 @@ export interface ToolParams extends BaseLangChainParams {}
 export abstract class StructuredTool<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   T extends z.ZodObject<any, any, any, any> = z.ZodObject<any, any, any, any>
-> extends BaseLangChain {
+> extends BaseLangChain<
+  (z.output<T> extends string ? string : never) | z.input<T>,
+  string
+> {
   abstract schema: T | z.ZodEffects<T>;
+
+  get lc_namespace() {
+    return ["langchain", "tools"];
+  }
 
   constructor(fields?: ToolParams) {
     super(fields ?? {});
@@ -26,18 +35,32 @@ export abstract class StructuredTool<
     runManager?: CallbackManagerForToolRun
   ): Promise<string>;
 
+  async invoke(
+    input: (z.output<T> extends string ? string : never) | z.input<T>,
+    config?: RunnableConfig
+  ): Promise<string> {
+    return this.call(input, config);
+  }
+
   async call(
     arg: (z.output<T> extends string ? string : never) | z.input<T>,
-    callbacks?: Callbacks
+    configArg?: Callbacks | RunnableConfig,
+    /** @deprecated */
+    tags?: string[]
   ): Promise<string> {
     const parsed = await this.schema.parseAsync(arg);
+    const config = parseCallbackConfigArg(configArg);
     const callbackManager_ = await CallbackManager.configure(
-      callbacks,
+      config.callbacks,
       this.callbacks,
+      config.tags || tags,
+      this.tags,
+      config.metadata,
+      this.metadata,
       { verbose: this.verbose }
     );
     const runManager = await callbackManager_?.handleToolStart(
-      { name: this.name },
+      this.toJSON(),
       typeof parsed === "string" ? parsed : JSON.stringify(parsed)
     );
     let result;
@@ -66,8 +89,8 @@ export abstract class Tool extends StructuredTool {
     .object({ input: z.string().optional() })
     .transform((obj) => obj.input);
 
-  constructor(verbose?: boolean, callbacks?: Callbacks) {
-    super({ verbose, callbacks });
+  constructor(fields?: ToolParams) {
+    super(fields);
   }
 
   call(

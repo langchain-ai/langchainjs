@@ -9,6 +9,12 @@ module.exports = {
   transform: {
     "^.+\\.m?[tj]sx?$": ["ts-jest", { useESM: true }],
   },
+  transformIgnorePatterns: [
+    "/node_modules/",
+    "\\.pnp\\.[^\\/]+$",
+    "./scripts/jest-setup-after-env.js",
+  ],
   setupFiles: ["dotenv/config"],
+  setupFilesAfterEnv: ["./scripts/jest-setup-after-env.js"],
   testTimeout: 20_000,
 };

@@ -1,7 +1,7 @@
 import { BaseLanguageModel } from "../base_language/index.js";
 import { LLMChain } from "../chains/llm_chain.js";
 import { BasePromptTemplate } from "../prompts/base.js";
-import { BaseChatMessage, SystemChatMessage } from "../schema/index.js";
+import { BaseMessage, SystemMessage } from "../schema/index.js";
 import {
   getBufferString,
   InputValues,
@@ -11,18 +11,20 @@ import {
 import { BaseChatMemory, BaseChatMemoryInput } from "./chat_memory.js";
 import { SUMMARY_PROMPT } from "./prompt.js";
 
-export interface ConversationSummaryMemoryInput extends BaseChatMemoryInput {
+export interface ConversationSummaryMemoryInput
+  extends BaseConversationSummaryMemoryInput {}
+
+export interface BaseConversationSummaryMemoryInput
+  extends BaseChatMemoryInput {
   llm: BaseLanguageModel;
   memoryKey?: string;
   humanPrefix?: string;
   aiPrefix?: string;
   prompt?: BasePromptTemplate;
-  summaryChatMessageClass?: new (content: string) => BaseChatMessage;
+  summaryChatMessageClass?: new (content: string) => BaseMessage;
 }
 
-export class ConversationSummaryMemory extends BaseChatMemory {
-  buffer = "";
-
+export abstract class BaseConversationSummaryMemory extends BaseChatMemory {
   memoryKey = "history";
 
   humanPrefix = "Human";
@@ -33,10 +35,9 @@ export class ConversationSummaryMemory extends BaseChatMemory {
 
   prompt: BasePromptTemplate = SUMMARY_PROMPT;
 
-  summaryChatMessageClass: new (content: string) => BaseChatMessage =
-    SystemChatMessage;
+  summaryChatMessageClass: new (content: string) => BaseMessage = SystemMessage;
 
-  constructor(fields: ConversationSummaryMemoryInput) {
+  constructor(fields: BaseConversationSummaryMemoryInput) {
     const {
       returnMessages,
       inputKey,
@@ -60,12 +61,8 @@ export class ConversationSummaryMemory extends BaseChatMemory {
       summaryChatMessageClass ?? this.summaryChatMessageClass;
   }
 
-  get memoryKeys() {
-    return [this.memoryKey];
-  }
-
   async predictNewSummary(
-    messages: BaseChatMessage[],
+    messages: BaseMessage[],
     existingSummary: string
   ): Promise<string> {
     const newLines = getBufferString(messages, this.humanPrefix, this.aiPrefix);
@@ -74,6 +71,18 @@ export class ConversationSummaryMemory extends BaseChatMemory {
       summary: existingSummary,
       new_lines: newLines,
     });
+  }
+}
+
+export class ConversationSummaryMemory extends BaseConversationSummaryMemory {
+  buffer = "";
+
+  constructor(fields: ConversationSummaryMemoryInput) {
+    super(fields);
+  }
+
+  get memoryKeys() {
+    return [this.memoryKey];
   }
 
   async loadMemoryVariables(_: InputValues): Promise<MemoryVariables> {

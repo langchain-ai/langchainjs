@@ -1,6 +1,8 @@
 import { BaseFileStore } from "../../schema/index.js";
 
 export class InMemoryFileStore extends BaseFileStore {
+  lc_namespace = ["langchain", "stores", "file", "in_memory"];
+
   private files: Map<string, string> = new Map();
 
   async readFile(path: string): Promise<string> {

@@ -17,10 +17,10 @@ import { InputValues, PartialValues } from "../schema/index.js";
  */
 export interface PromptTemplateInput<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  InputVariables extends InputValues = any,
+  RunInput extends InputValues = any,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   PartialVariableName extends string = any
-> extends BasePromptTemplateInput<InputVariables, PartialVariableName> {
+> extends BasePromptTemplateInput<RunInput, PartialVariableName> {
   /**
    * The prompt template
    */
@@ -58,12 +58,12 @@ export interface PromptTemplateInput<
  */
 export class PromptTemplate<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    InputVariables extends InputValues = any,
+    RunInput extends InputValues = any,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     PartialVariableName extends string = any
   >
-  extends BaseStringPromptTemplate<InputVariables, PartialVariableName>
-  implements PromptTemplateInput<InputVariables, PartialVariableName>
+  extends BaseStringPromptTemplate<RunInput, PartialVariableName>
+  implements PromptTemplateInput<RunInput, PartialVariableName>
 {
   template: string;
 
@@ -71,7 +71,7 @@ export class PromptTemplate<
 
   validateTemplate = true;
 
-  constructor(input: PromptTemplateInput<InputVariables, PartialVariableName>) {
+  constructor(input: PromptTemplateInput<RunInput, PartialVariableName>) {
     super(input);
     Object.assign(this, input);
 
@@ -95,7 +95,7 @@ export class PromptTemplate<
   }
 
   async format(
-    values: InputValues<Extract<keyof InputVariables, string>>
+    values: InputValues<Extract<keyof RunInput, string>>
   ): Promise<string> {
     const allValues = await this.mergePartialAndUserVariables(values);
     return renderTemplate(this.template, this.templateFormat, allValues);
@@ -158,7 +158,7 @@ export class PromptTemplate<
     const newInputVariables = this.inputVariables.filter(
       (iv) => !(iv in values)
     ) as Exclude<
-      Extract<keyof InputVariables, string>,
+      Extract<keyof RunInput, string>,
       NewPartialVariableName
     >[];
     const newPartialVariables = {
@@ -172,7 +172,7 @@ export class PromptTemplate<
     };
     return new PromptTemplate<
       InputValues<
-        Exclude<Extract<keyof InputVariables, string>, NewPartialVariableName>
+        Exclude<Extract<keyof RunInput, string>, NewPartialVariableName>
       >
     >(promptDict);
   }

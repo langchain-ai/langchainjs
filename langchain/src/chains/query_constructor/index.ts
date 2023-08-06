@@ -45,43 +45,47 @@ export class StructuredQueryOutputParser extends AsymmetricStructuredOutputParse
   typeof queryInputSchema,
   StructuredQuery
 > {
-  constructor(
-    private parserFunction: (
-      query: string,
-      filter?: string
-    ) => Promise<StructuredQuery>
-  ) {
-    super(queryInputSchema);
+  lc_namespace = ["langchain", "chains", "query_constructor"];
+
+  queryTransformer: QueryTransformer;
+
+  constructor(fields: {
+    allowedComparators: Comparator[];
+    allowedOperators: Operator[];
+  }) {
+    super({ ...fields, inputSchema: queryInputSchema });
+
+    const { allowedComparators, allowedOperators } = fields;
+    this.queryTransformer = new QueryTransformer(
+      allowedComparators,
+      allowedOperators
+    );
   }
 
-  async outputProcessor(
-    input: z.infer<typeof queryInputSchema>
-  ): Promise<StructuredQuery> {
-    return this.parserFunction(input.query, input.filter);
+  async outputProcessor({
+    query,
+    filter,
+  }: z.infer<typeof queryInputSchema>): Promise<StructuredQuery> {
+    let myQuery = query;
+    if (myQuery.length === 0) {
+      myQuery = " ";
+    }
+    if (filter === "NO_FILTER" || filter === undefined) {
+      return new StructuredQuery(query);
+    } else {
+      const parsedFilter = await this.queryTransformer.parse(filter);
+      return new StructuredQuery(query, parsedFilter);
+    }
   }
 
   static fromComponents(
     allowedComparators: Comparator[] = [],
     allowedOperators: Operator[] = []
   ) {
-    const queryTransformer = new QueryTransformer(
+    return new StructuredQueryOutputParser({
       allowedComparators,
-      allowedOperators
-    );
-    return new StructuredQueryOutputParser(
-      async (query: string, filter?: string) => {
-        let myQuery = query;
-        if (myQuery.length === 0) {
-          myQuery = " ";
-        }
-        if (filter === "NO_FILTER" || filter === undefined) {
-          return new StructuredQuery(query);
-        } else {
-          const parsedFilter = await queryTransformer.parse(filter);
-          return new StructuredQuery(query, parsedFilter);
-        }
-      }
-    );
+      allowedOperators,
+    });
   }
 }
 

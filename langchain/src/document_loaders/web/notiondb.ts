@@ -29,6 +29,7 @@ interface NotionPage {
   };
 }
 
+/** @deprecated use the `NotionAPILoader` class instead. */
 export class NotionDBLoader
   extends BaseDocumentLoader
   implements NotionDBLoaderParams

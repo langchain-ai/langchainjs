@@ -23,7 +23,8 @@ test("Test entity memory in a chain", async () => {
   });
 
   const res2 = await chain.call({
-    input: "I work in sales. What about you?",
+    input:
+      "My office is the Scranton branch of Dunder Mifflin. What about you?",
   });
   console.log({
     res2,
@@ -31,8 +32,7 @@ test("Test entity memory in a chain", async () => {
   });
 
   const res3 = await chain.call({
-    input:
-      "My office is the Scranton branch of Dunder Mifflin. What about you?",
+    input: "I am Jim.",
   });
   console.log({
     res3,
@@ -40,18 +40,10 @@ test("Test entity memory in a chain", async () => {
   });
 
   const res4 = await chain.call({
-    input: "I am Jim.",
-  });
-  console.log({
-    res4,
-    memory: await memory.loadMemoryVariables({ input: "Who is Jim?" }),
-  });
-
-  const res5 = await chain.call({
     input: "What have I told you about Jim so far?",
   });
   console.log({
-    res5,
+    res4,
     memory: await memory.loadMemoryVariables({ input: "Who is Jim?" }),
   });
 }, 120000);
@@ -74,7 +66,7 @@ test("Test entity memory with a chat model in a chain", async () => {
   });
 
   const res2 = await chain.call({
-    input: "I work in sales. What about you?",
+    input: "My office is the Utica branch of Dunder Mifflin. What about you?",
   });
   console.log({
     res2,
@@ -82,7 +74,7 @@ test("Test entity memory with a chat model in a chain", async () => {
   });
 
   const res3 = await chain.call({
-    input: "My office is the Utica branch of Dunder Mifflin. What about you?",
+    input: "I am Jim.",
   });
   console.log({
     res3,
@@ -90,18 +82,10 @@ test("Test entity memory with a chat model in a chain", async () => {
   });
 
   const res4 = await chain.call({
-    input: "I am Jim.",
-  });
-  console.log({
-    res4,
-    memory: await memory.loadMemoryVariables({ input: "Who is Jim?" }),
-  });
-
-  const res5 = await chain.call({
     input: "What have I told you about Jim so far?",
   });
   console.log({
-    res5,
+    res4,
     memory: await memory.loadMemoryVariables({ input: "Who is Jim?" }),
   });
 }, 120000);

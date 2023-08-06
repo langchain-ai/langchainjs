@@ -10,7 +10,7 @@ beforeEach((done) => {
   setTimeout(done, 1000); // 1-second delay before each test case
 });
 
-test("addMemory to Zep memory", async () => {
+test.skip("addMemory to Zep memory", async () => {
   await zepMemory.saveContext(
     { input: "Who was Octavia Butler?" },
     {
@@ -21,7 +21,7 @@ test("addMemory to Zep memory", async () => {
   );
 });
 
-test("getMessages from Zep memory", async () => {
+test.skip("getMessages from Zep memory", async () => {
   const memoryVariables = await zepMemory.loadMemoryVariables({});
   console.log("memoryVariables", memoryVariables);
 

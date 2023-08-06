@@ -63,7 +63,7 @@ export class AnalyzeDocumentChain
     const newInputs = { input_documents: currentDocs, ...rest };
     const result = await this.combineDocumentsChain.call(
       newInputs,
-      runManager?.getChild()
+      runManager?.getChild("combine_documents")
     );
     return result;
   }

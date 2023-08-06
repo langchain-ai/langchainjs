@@ -1,6 +1,8 @@
 import { BaseEntityStore } from "../../../schema/index.js";
 
 export class InMemoryEntityStore extends BaseEntityStore {
+  lc_namespace = ["langchain", "stores", "entity", "in_memory"];
+
   private store: Record<string, string | undefined>;
 
   constructor() {

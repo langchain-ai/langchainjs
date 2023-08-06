@@ -290,6 +290,10 @@ type UrlParameters = Record<
  * To use, you should have the `serpapi` package installed and the SERPAPI_API_KEY environment variable set.
  */
 export class SerpAPI extends Tool {
+  toJSON() {
+    return this.toJSONNotImplemented();
+  }
+
   protected key: string;
 
   protected params: Partial<SerpAPIParameters>;
@@ -301,7 +305,7 @@ export class SerpAPI extends Tool {
     params: Partial<SerpAPIParameters> = {},
     baseUrl = "https://serpapi.com"
   ) {
-    super();
+    super(...arguments);
 
     if (!apiKey) {
       throw new Error(

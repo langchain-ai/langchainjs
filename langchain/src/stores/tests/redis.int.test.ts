@@ -3,7 +3,7 @@
 import { test, expect } from "@jest/globals";
 import { createClient } from "redis";
 import { RedisChatMessageHistory } from "../message/redis.js";
-import { HumanChatMessage, AIChatMessage } from "../../schema/index.js";
+import { HumanMessage, AIMessage } from "../../schema/index.js";
 import { ChatOpenAI } from "../../chat_models/openai.js";
 import { ConversationChain } from "../../chains/conversation.js";
 import { BufferMemory } from "../../memory/buffer_memory.js";
@@ -33,8 +33,8 @@ test("Test Redis history store", async () => {
   await chatHistory.addAIChatMessage("Ozzy Osbourne");
 
   const expectedMessages = [
-    new HumanChatMessage("Who is the best vocalist?"),
-    new AIChatMessage("Ozzy Osbourne"),
+    new HumanMessage("Who is the best vocalist?"),
+    new AIMessage("Ozzy Osbourne"),
   ];
 
   const resultWithHistory = await chatHistory.getMessages();
@@ -50,8 +50,8 @@ test("Test clear Redis history store", async () => {
   await chatHistory.addAIChatMessage("Ozzy Osbourne");
 
   const expectedMessages = [
-    new HumanChatMessage("Who is the best vocalist?"),
-    new AIChatMessage("Ozzy Osbourne"),
+    new HumanMessage("Who is the best vocalist?"),
+    new AIMessage("Ozzy Osbourne"),
   ];
 
   const resultWithHistory = await chatHistory.getMessages();
@@ -76,14 +76,14 @@ test("Test Redis history with a TTL", async () => {
   await chatHistory.addAIChatMessage("Ozzy Osbourne");
 
   const expectedMessages = [
-    new HumanChatMessage("Who is the best vocalist?"),
-    new AIChatMessage("Ozzy Osbourne"),
+    new HumanMessage("Who is the best vocalist?"),
+    new AIMessage("Ozzy Osbourne"),
   ];
 
   const resultWithHistory = await chatHistory.getMessages();
   expect(resultWithHistory).toEqual(expectedMessages);
 
-  await new Promise((resolve) => setTimeout(resolve, 5000));
+  await new Promise((resolve) => setTimeout(resolve, 6000));
 
   const expiredResult = await chatHistory.getMessages();
   expect(expiredResult).toStrictEqual([]);
@@ -103,8 +103,8 @@ test("Test Redis memory with Buffer Memory", async () => {
   );
 
   const expectedHistory = [
-    new HumanChatMessage("Who is the best vocalist?"),
-    new AIChatMessage("Ozzy Osbourne"),
+    new HumanMessage("Who is the best vocalist?"),
+    new AIMessage("Ozzy Osbourne"),
   ];
 
   const result2 = await memory.loadMemoryVariables({});
