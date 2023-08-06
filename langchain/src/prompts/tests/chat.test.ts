@@ -49,6 +49,7 @@ test("Test format", async () => {
     context: "This is a context",
     foo: "Foo",
     bar: "Bar",
+    unused: "extra",
   });
   expect(messages.toChatMessages()).toEqual([
     new SystemMessage("Here's some context: This is a context"),
