@@ -44,11 +44,11 @@ import ChainExample from "@examples/use_cases/local_retrieval_qa/chain.ts";
 
 ## RetrievalQA
 
-For an even simpler flow, use the preconfigured `RetrievalQA`.
+For an even simpler flow, use the preconfigured `RetrievalQAChain`.
 
-This will use a QA default prompt and will retrieve from the vectorDB.
+This will use a default QA prompt and will retrieve from the vector store.
 
-You can still pass in a custom prompt if desired, but it must include "context" and "query" input variables.
+You can still pass in a custom prompt if desired.
 
 `type: "stuff"` (see [here](https://js.langchain.com/docs/modules/chains/document/stuff)) means that all the docs will be added (stuffed) into a prompt.
 
