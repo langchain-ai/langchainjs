@@ -20,11 +20,11 @@ export type PromptKey =
   | "trec-news"
   | "mr-tydi";
 
-export interface HydeRetrieverOptions<V extends VectorStore>
-  extends VectorStoreRetrieverInput<V> {
-  llm: BaseLanguageModel;
-  promptTemplate?: BasePromptTemplate | PromptKey;
-}
+export type HydeRetrieverOptions<V extends VectorStore> =
+  VectorStoreRetrieverInput<V> & {
+    llm: BaseLanguageModel;
+    promptTemplate?: BasePromptTemplate | PromptKey;
+  };
 
 export class HydeRetriever<
   V extends VectorStore = VectorStore
@@ -86,17 +86,17 @@ export function getPromptTemplateFromKey(key: PromptKey): BasePromptTemplate {
 
   switch (key) {
     case "websearch":
-      template = `Please write a passage to answer the question 
+      template = `Please write a passage to answer the question
 Question: {question}
 Passage:`;
       break;
     case "scifact":
-      template = `Please write a scientific paper passage to support/refute the claim 
+      template = `Please write a scientific paper passage to support/refute the claim
 Claim: {question}
 Passage:`;
       break;
     case "arguana":
-      template = `Please write a counter argument for the passage 
+      template = `Please write a counter argument for the passage
 Passage: {question}
 Counter Argument:`;
       break;
