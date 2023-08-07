@@ -10,7 +10,7 @@ import {
 interface SearchEmbeddingsParams {
   query_embedding: number[];
   match_count: number; // int
-  filter: Record<string, unknown>; //jsonb
+  filter?: Record<string, unknown>; // jsonb
 }
 
 interface SearchKeywordParams {
@@ -97,8 +97,11 @@ export class SupabaseHybridSearch extends BaseRetriever {
     const matchDocumentsParams: SearchEmbeddingsParams = {
       query_embedding: embeddedQuery,
       match_count: k,
-      filter: this.metadata || {},
     };
+
+    if (Object.keys(this.metadata ?? {}).length > 0) {
+      matchDocumentsParams.filter = this.metadata;
+    }
 
     const { data: searches, error } = await this.client.rpc(
       this.similarityQueryName,
