@@ -29,7 +29,9 @@ test("Test Notion API Loader Database", async () => {
   });
 
   let total = 0;
-  loader.on("total_change", (pageTotal) => (total = pageTotal));
+  loader.on("total_change", (pageTotal) => {
+    total = pageTotal;
+  });
   loader.on("load", (current) =>
     console.log(`Loaded Page: ${current}/${total}`)
   );

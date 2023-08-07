@@ -29,7 +29,7 @@ export type NotionAPILoaderOptions = {
   clientOptions: ConstructorParameters<typeof Client>[0];
   id: string;
   type: NotionAPIType;
-  limiterOptions: ConstructorParameters<typeof Bottleneck>[0];
+  limiterOptions?: ConstructorParameters<typeof Bottleneck>[0];
 };
 
 export class NotionAPILoader extends BaseDocumentLoaderWithEventEmitter {
@@ -52,7 +52,9 @@ export class NotionAPILoader extends BaseDocumentLoaderWithEventEmitter {
   constructor(options: NotionAPILoaderOptions) {
     super();
 
-    this.limiter = new Bottleneck(options.limiterOptions);
+    this.limiter = new Bottleneck(
+      options.limiterOptions ?? { maxConcurrent: 64, minTime: 64 }
+    );
     this.notionClient = new Client(options.clientOptions);
     this.n2mClient = new NotionToMarkdown({
       notionClient: this.notionClient,
