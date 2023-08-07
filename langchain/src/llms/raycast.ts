@@ -1,8 +1,14 @@
 import { AI, environment } from "@raycast/api";
 import { LLM, BaseLLMParams } from "./base.js";
 
+/**
+ * The available models for the RaycastAI class.
+ */
 export type RaycastAIModel = "text-davinci-003" | "gpt-3.5-turbo";
 
+/**
+ * The input parameters for the RaycastAI class, which extends the BaseLLMParams interface.
+ */
 export interface RaycastAIInput extends BaseLLMParams {
   model?: RaycastAIModel;
   creativity?: number;
@@ -14,15 +20,35 @@ const wait = (ms: number) =>
     setTimeout(resolve, ms);
   });
 
+/**
+ * The RaycastAI class, which extends the LLM class and implements the RaycastAIInput interface.
+ */
 export class RaycastAI extends LLM implements RaycastAIInput {
+  /**
+   * The model to use for generating text.
+   */
   model: RaycastAIModel;
 
+  /**
+   * The creativity parameter, also known as the "temperature".
+   */
   creativity: number;
 
+  /**
+   * The rate limit for API calls, in requests per minute.
+   */
   rateLimitPerMinute: number;
 
+  /**
+   * The timestamp of the last API call, used to enforce the rate limit.
+   */
   private lastCallTimestamp = 0;
 
+  /**
+   * Creates a new instance of the RaycastAI class.
+   * @param {RaycastAIInput} fields The input parameters for the RaycastAI class.
+   * @throws {Error} If the Raycast AI environment is not accessible.
+   */
   constructor(fields: RaycastAIInput) {
     super(fields ?? {});
 
@@ -35,11 +61,21 @@ export class RaycastAI extends LLM implements RaycastAIInput {
     this.rateLimitPerMinute = fields.rateLimitPerMinute ?? 10;
   }
 
+  /**
+   * Returns the type of the LLM, which is "raycast_ai".
+   * @return {string} The type of the LLM.
+   * @ignore
+   */
   _llmType() {
     return "raycast_ai";
   }
 
-  /** @ignore */
+  /**
+   * Calls AI.ask with the given prompt and returns the generated text.
+   * @param {string} prompt The prompt to generate text from.
+   * @return {Promise<string>} A Promise that resolves to the generated text.
+   * @ignore
+   */
   async _call(
     prompt: string,
     options: this["ParsedCallOptions"]
