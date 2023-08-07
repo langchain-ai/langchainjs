@@ -13139,6 +13139,7 @@ __metadata:
     "@pinecone-database/pinecone": "*"
     "@planetscale/database": ^1.8.0
     "@qdrant/js-client-rest": ^1.2.0
+    "@raycast/api": ^1.55.2
     "@supabase/postgrest-js": ^1.1.1
     "@supabase/supabase-js": ^2.10.0
     "@tensorflow-models/universal-sentence-encoder": "*"
@@ -13218,6 +13219,8 @@ __metadata:
     "@planetscale/database":
       optional: true
     "@qdrant/js-client-rest":
+      optional: true
+    "@raycast/api":
       optional: true
     "@supabase/postgrest-js":
       optional: true
