@@ -4,6 +4,7 @@ import {
   AudioTranscriptLoader,
   AudioTranscriptParagraphsLoader,
   AudioTranscriptSentencesLoader,
+  SubtitleFormat,
 } from "../web/assemblyai.js";
 
 test("Test Invalid API key", async () => {
@@ -60,7 +61,7 @@ test("Test Audio Subtitles Loader", async () => {
     {
       audio_url: "https://storage.googleapis.com/aai-docs-samples/nbc.mp3",
     },
-    "srt"
+    SubtitleFormat.Srt
   );
   const docs = await loader.load();
 

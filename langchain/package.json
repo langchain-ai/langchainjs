@@ -1323,6 +1323,11 @@
       "import": "./document_loaders/web/apify_dataset.js",
       "require": "./document_loaders/web/apify_dataset.cjs"
     },
+    "./document_loaders/web/assemblyai": {
+      "types": "./document_loaders/web/assemblyai.d.ts",
+      "import": "./document_loaders/web/assemblyai.js",
+      "require": "./document_loaders/web/assemblyai.cjs"
+    },
     "./document_loaders/web/azure_blob_storage_container": {
       "types": "./document_loaders/web/azure_blob_storage_container.d.ts",
       "import": "./document_loaders/web/azure_blob_storage_container.js",

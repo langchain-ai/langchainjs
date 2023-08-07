@@ -2,13 +2,16 @@ import { promises as fs } from "node:fs";
 import { Document } from "../../document.js";
 import { BaseDocumentLoader } from "../base.js";
 import { getEnvironmentVariable } from "../../util/env.js";
-import { assemblyAIOptions } from "../../types/assemblyai-types.js";
+import { AssemblyAIClient } from "../../util/assemblyai-client.js";
 import {
-  AssemblyAIClient,
+  AssemblyAIOptions,
   CreateTranscriptParams,
+  SubtitleFormat,
   Transcript,
   TranscriptSegment,
-} from "../../util/assemblyai-client.js";
+} from "../../types/assemblyai-types.js";
+
+export * from "../../types/assemblyai-types.js";
 
 /**
  * Base class for AssemblyAI loaders.
@@ -21,7 +24,7 @@ abstract class AssemblyAILoader extends BaseDocumentLoader {
    * @param assemblyAIOptions The options to configure the AssemblyAI loader.
    * Configure the `assemblyAIOptions.apiKey` with your AssemblyAI API key, or configure it as the `ASSEMBLYAI_API_KEY` environment variable.
    */
-  constructor(assemblyAIOptions?: assemblyAIOptions) {
+  constructor(assemblyAIOptions?: AssemblyAIOptions) {
     super();
     const apiKey =
       assemblyAIOptions?.apiKey ?? getEnvironmentVariable("ASSEMBLYAI_API_KEY");
@@ -59,7 +62,7 @@ export class AudioTranscriptLoader extends AssemblyAILoader {
    */
   constructor(
     private createTranscriptParams: CreateTranscriptParams,
-    assemblyAIOptions?: assemblyAIOptions
+    assemblyAIOptions?: AssemblyAIOptions
   ) {
     super(assemblyAIOptions);
   }
@@ -99,7 +102,7 @@ export class AudioTranscriptParagraphsLoader extends AssemblyAILoader {
    */
   constructor(
     private createTranscriptParams: CreateTranscriptParams,
-    assemblyAIOptions?: assemblyAIOptions
+    assemblyAIOptions?: AssemblyAIOptions
   ) {
     super(assemblyAIOptions);
   }
@@ -115,7 +118,6 @@ export class AudioTranscriptParagraphsLoader extends AssemblyAILoader {
     );
     transcript = await this.client.waitForTranscriptToComplete(transcript.id);
     const paragraphsResponse = await this.client.getParagraphs(transcript.id);
-    console.dir(paragraphsResponse);
     return paragraphsResponse.paragraphs.map(
       (p) =>
         new Document({
@@ -139,7 +141,7 @@ export class AudioTranscriptSentencesLoader extends AssemblyAILoader {
    */
   constructor(
     private createTranscriptParams: CreateTranscriptParams,
-    assemblyAIOptions?: assemblyAIOptions
+    assemblyAIOptions?: AssemblyAIOptions
   ) {
     super(assemblyAIOptions);
   }
@@ -155,7 +157,6 @@ export class AudioTranscriptSentencesLoader extends AssemblyAILoader {
     );
     transcript = await this.client.waitForTranscriptToComplete(transcript.id);
     const sentencesResponse = await this.client.getSentences(transcript.id);
-    console.dir(sentencesResponse);
     return sentencesResponse.sentences.map(
       (p) =>
         new Document({
@@ -180,8 +181,8 @@ export class AudioSubtitleLoader extends AssemblyAILoader {
    */
   constructor(
     private createTranscriptParams: CreateTranscriptParams,
-    private subtitleFormat: "srt" | "vtt" = "srt",
-    assemblyAIOptions?: assemblyAIOptions
+    private subtitleFormat: (typeof SubtitleFormat)[keyof typeof SubtitleFormat] = SubtitleFormat.Srt,
+    assemblyAIOptions?: AssemblyAIOptions
   ) {
     super(assemblyAIOptions);
     this.subtitleFormat = subtitleFormat;
