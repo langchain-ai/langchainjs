@@ -587,6 +587,7 @@
     "@zilliz/milvus2-sdk-node": ">=2.2.7",
     "apify-client": "^2.7.1",
     "axios": "^0.26.0",
+    "bottleneck": "^2.19.5",
     "cheerio": "^1.0.0-rc.12",
     "chromadb": "^1.5.3",
     "cohere-ai": "^5.0.2",
@@ -669,6 +670,7 @@
     "@zilliz/milvus2-sdk-node": ">=2.2.7",
     "apify-client": "^2.7.1",
     "axios": "*",
+    "bottleneck": "^2.19.5",
     "cheerio": "^1.0.0-rc.12",
     "chromadb": "^1.5.3",
     "cohere-ai": "^5.0.2",
@@ -795,6 +797,9 @@
     "axios": {
       "optional": true
     },
+    "bottleneck": {
+      "optional": true
+    },
     "cheerio": {
       "optional": true
     },
@@ -893,7 +898,6 @@
     "@anthropic-ai/sdk": "^0.5.7",
     "ansi-styles": "^5.0.0",
     "binary-extensions": "^2.2.0",
-    "bottleneck": "^2.19.5",
     "camelcase": "6",
     "decamelize": "^1.2.0",
     "expr-eval": "^2.0.2",
@@ -909,7 +913,7 @@
     "p-queue": "^6.6.2",
     "p-retry": "4",
     "uuid": "^9.0.0",
-    "yaml": "^2.3.1",
+    "yaml": "^2.2.1",
     "zod": "^3.21.4",
     "zod-to-json-schema": "^3.20.4"
   },
