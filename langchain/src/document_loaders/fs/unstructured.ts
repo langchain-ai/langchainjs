@@ -48,7 +48,7 @@ export type UnstructuredLoaderStrategy =
 
 type StringWithAutocomplete<T> = T | (string & Record<never, never>);
 
-type UnstructuredLoaderOptions = {
+export type UnstructuredLoaderOptions = {
   apiKey?: string;
   apiUrl?: string;
   strategy?: StringWithAutocomplete<UnstructuredLoaderStrategy>;
@@ -171,15 +171,17 @@ export class UnstructuredLoader extends BaseDocumentLoader {
     const documents: Document[] = [];
     for (const element of elements) {
       const { metadata, text } = element;
-      documents.push(
-        new Document({
-          pageContent: text,
-          metadata: {
-            ...metadata,
-            category: element.type,
-          },
-        })
-      );
+      if (typeof text === "string") {
+        documents.push(
+          new Document({
+            pageContent: text,
+            metadata: {
+              ...metadata,
+              category: element.type,
+            },
+          })
+        );
+      }
     }
 
     return documents;

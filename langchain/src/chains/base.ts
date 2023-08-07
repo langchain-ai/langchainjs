@@ -4,11 +4,11 @@ import {
   CallbackManagerForChainRun,
   CallbackManager,
   Callbacks,
-  BaseCallbackConfig,
   parseCallbackConfigArg,
 } from "../callbacks/manager.js";
 import { SerializedBaseChain } from "./serde.js";
 import { BaseLangChain, BaseLangChainParams } from "../base_language/index.js";
+import { RunnableConfig } from "../schema/runnable.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type LoadValues = Record<string, any>;
@@ -25,7 +25,13 @@ export interface ChainInputs extends BaseLangChainParams {
 /**
  * Base interface that all chains must implement.
  */
-export abstract class BaseChain extends BaseLangChain implements ChainInputs {
+export abstract class BaseChain<
+    RunInput extends ChainValues = ChainValues,
+    RunOutput extends ChainValues = ChainValues
+  >
+  extends BaseLangChain<RunInput, RunOutput>
+  implements ChainInputs
+{
   declare memory?: BaseMemory;
 
   get lc_namespace(): string[] {
@@ -67,13 +73,17 @@ export abstract class BaseChain extends BaseLangChain implements ChainInputs {
     return valuesForMemory;
   }
 
+  async invoke(input: RunInput, config?: RunnableConfig): Promise<RunOutput> {
+    return this.call(input, config);
+  }
+
   /**
    * Run the core logic of this chain and return the output
    */
   abstract _call(
-    values: ChainValues,
+    values: RunInput,
     runManager?: CallbackManagerForChainRun
-  ): Promise<ChainValues>;
+  ): Promise<RunOutput>;
 
   /**
    * Return the string type key uniquely identifying this class of chain.
@@ -94,7 +104,7 @@ export abstract class BaseChain extends BaseLangChain implements ChainInputs {
   async run(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     input: any,
-    config?: Callbacks | BaseCallbackConfig
+    config?: Callbacks | RunnableConfig
   ): Promise<string> {
     const inputKeys = this.inputKeys.filter(
       (k) => !this.memory?.memoryKeys.includes(k) ?? true
@@ -105,7 +115,8 @@ export abstract class BaseChain extends BaseLangChain implements ChainInputs {
         `Chain ${this._chainType()} expects multiple inputs, cannot use 'run' `
       );
     }
-    const values = inputKeys.length ? { [inputKeys[0]]: input } : {};
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const values = inputKeys.length ? { [inputKeys[0]]: input } : ({} as any);
     const returnValues = await this.call(values, config);
     const keys = Object.keys(returnValues);
 
@@ -117,17 +128,9 @@ export abstract class BaseChain extends BaseLangChain implements ChainInputs {
     );
   }
 
-  /**
-   * Run the core logic of this chain and add to output if desired.
-   *
-   * Wraps _call and handles memory.
-   */
-  async call(
-    values: ChainValues & { signal?: AbortSignal; timeout?: number },
-    config?: Callbacks | BaseCallbackConfig,
-    /** @deprecated */
-    tags?: string[]
-  ): Promise<ChainValues> {
+  protected async _formatValues(
+    values: ChainValues & { signal?: AbortSignal; timeout?: number }
+  ) {
     const fullValues = { ...values } as typeof values;
     if (fullValues.timeout && !fullValues.signal) {
       fullValues.signal = AbortSignal.timeout(fullValues.timeout);
@@ -141,6 +144,21 @@ export abstract class BaseChain extends BaseLangChain implements ChainInputs {
         fullValues[key] = value;
       }
     }
+    return fullValues;
+  }
+
+  /**
+   * Run the core logic of this chain and add to output if desired.
+   *
+   * Wraps _call and handles memory.
+   */
+  async call(
+    values: ChainValues & { signal?: AbortSignal; timeout?: number },
+    config?: Callbacks | RunnableConfig,
+    /** @deprecated */
+    tags?: string[]
+  ): Promise<RunOutput> {
+    const fullValues = await this._formatValues(values);
     const parsedConfig = parseCallbackConfigArg(config);
     const callbackManager_ = await CallbackManager.configure(
       parsedConfig.callbacks,
@@ -155,18 +173,18 @@ export abstract class BaseChain extends BaseLangChain implements ChainInputs {
       this.toJSON(),
       fullValues
     );
-    let outputValues: ChainValues;
+    let outputValues: RunOutput;
     try {
       outputValues = await (values.signal
         ? (Promise.race([
-            this._call(fullValues, runManager),
+            this._call(fullValues as RunInput, runManager),
             new Promise((_, reject) => {
               values.signal?.addEventListener("abort", () => {
                 reject(new Error("AbortError"));
               });
             }),
-          ]) as Promise<ChainValues>)
-        : this._call(fullValues, runManager));
+          ]) as Promise<RunOutput>)
+        : this._call(fullValues as RunInput, runManager));
     } catch (e) {
       await runManager?.handleChainError(e);
       throw e;
@@ -190,9 +208,9 @@ export abstract class BaseChain extends BaseLangChain implements ChainInputs {
    * Call the chain on all inputs in the list
    */
   async apply(
-    inputs: ChainValues[],
-    config?: (Callbacks | BaseCallbackConfig)[]
-  ): Promise<ChainValues[]> {
+    inputs: RunInput[],
+    config?: (Callbacks | RunnableConfig)[]
+  ): Promise<RunOutput[]> {
     return Promise.all(
       inputs.map(async (i, idx) => this.call(i, config?.[idx]))
     );

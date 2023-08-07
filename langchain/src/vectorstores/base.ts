@@ -10,12 +10,35 @@ import {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AddDocumentOptions = Record<string, any>;
 
-export interface VectorStoreRetrieverInput<V extends VectorStore>
-  extends BaseRetrieverInput {
-  vectorStore: V;
-  k?: number;
-  filter?: V["FilterType"];
-}
+export type MaxMarginalRelevanceSearchOptions<FilterType> = {
+  k: number;
+  fetchK?: number;
+  lambda?: number;
+  filter?: FilterType;
+};
+
+export type VectorStoreRetrieverMMRSearchKwargs = {
+  fetchK?: number;
+  lambda?: number;
+};
+
+export type VectorStoreRetrieverInput<V extends VectorStore> =
+  BaseRetrieverInput &
+    (
+      | {
+          vectorStore: V;
+          k?: number;
+          filter?: V["FilterType"];
+          searchType?: "similarity";
+        }
+      | {
+          vectorStore: V;
+          k?: number;
+          filter?: V["FilterType"];
+          searchType: "mmr";
+          searchKwargs?: VectorStoreRetrieverMMRSearchKwargs;
+        }
+    );
 
 export class VectorStoreRetriever<
   V extends VectorStore = VectorStore
@@ -28,6 +51,10 @@ export class VectorStoreRetriever<
 
   k = 4;
 
+  searchType = "similarity";
+
+  searchKwargs?: VectorStoreRetrieverMMRSearchKwargs;
+
   filter?: V["FilterType"];
 
   _vectorstoreType(): string {
@@ -38,13 +65,33 @@ export class VectorStoreRetriever<
     super(fields);
     this.vectorStore = fields.vectorStore;
     this.k = fields.k ?? this.k;
+    this.searchType = fields.searchType ?? this.searchType;
     this.filter = fields.filter;
+    if (fields.searchType === "mmr") {
+      this.searchKwargs = fields.searchKwargs;
+    }
   }
 
   async _getRelevantDocuments(
     query: string,
     runManager?: CallbackManagerForRetrieverRun
   ): Promise<Document[]> {
+    if (this.searchType === "mmr") {
+      if (typeof this.vectorStore.maxMarginalRelevanceSearch !== "function") {
+        throw new Error(
+          `The vector store backing this retriever, ${this._vectorstoreType()} does not support max marginal relevance search.`
+        );
+      }
+      return this.vectorStore.maxMarginalRelevanceSearch(
+        query,
+        {
+          k: this.k,
+          filter: this.filter,
+          ...this.searchKwargs,
+        },
+        runManager?.getChild("vectorstore")
+      );
+    }
     return this.vectorStore.similaritySearch(
       query,
       this.k,
@@ -62,7 +109,7 @@ export class VectorStoreRetriever<
 }
 
 export abstract class VectorStore extends Serializable {
-  declare FilterType: object;
+  declare FilterType: object | string;
 
   lc_namespace = ["langchain", "vectorstores", this._vectorstoreType()];
 
@@ -126,6 +173,27 @@ export abstract class VectorStore extends Serializable {
     );
   }
 
+  /**
+   * Return documents selected using the maximal marginal relevance.
+   * Maximal marginal relevance optimizes for similarity to the query AND diversity
+   * among selected documents.
+   *
+   * @param {string} query - Text to look up documents similar to.
+   * @param {number} options.k - Number of documents to return.
+   * @param {number} options.fetchK - Number of documents to fetch before passing to the MMR algorithm.
+   * @param {number} options.lambda - Number between 0 and 1 that determines the degree of diversity among the results,
+   *                 where 0 corresponds to maximum diversity and 1 to minimum diversity.
+   * @param {this["FilterType"]} options.filter - Optional filter
+   * @param _callbacks
+   *
+   * @returns {Promise<Document[]>} - List of documents selected by maximal marginal relevance.
+   */
+  async maxMarginalRelevanceSearch?(
+    query: string,
+    options: MaxMarginalRelevanceSearchOptions<this["FilterType"]>,
+    _callbacks: Callbacks | undefined // implement passing to embedQuery later
+  ): Promise<Document[]>;
+
   static fromTexts(
     _texts: string[],
     _metadatas: object[] | object,
@@ -150,7 +218,7 @@ export abstract class VectorStore extends Serializable {
   }
 
   asRetriever(
-    kOrFields?: number | VectorStoreRetrieverInput<this>,
+    kOrFields?: number | Partial<VectorStoreRetrieverInput<this>>,
     filter?: this["FilterType"],
     callbacks?: Callbacks,
     tags?: string[],
@@ -168,7 +236,7 @@ export abstract class VectorStore extends Serializable {
         callbacks,
       });
     } else {
-      return new VectorStoreRetriever({
+      const params = {
         vectorStore: this,
         k: kOrFields?.k,
         filter: kOrFields?.filter,
@@ -176,7 +244,15 @@ export abstract class VectorStore extends Serializable {
         metadata: kOrFields?.metadata,
         verbose: kOrFields?.verbose,
         callbacks: kOrFields?.callbacks,
-      });
+        searchType: kOrFields?.searchType,
+      };
+      if (kOrFields?.searchType === "mmr") {
+        return new VectorStoreRetriever({
+          ...params,
+          searchKwargs: kOrFields.searchKwargs,
+        });
+      }
+      return new VectorStoreRetriever({ ...params });
     }
   }
 }

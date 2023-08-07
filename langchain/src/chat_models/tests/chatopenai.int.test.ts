@@ -2,6 +2,8 @@ import { test, expect } from "@jest/globals";
 import { ChatOpenAI } from "../openai.js";
 import {
   BaseMessage,
+  ChatMessage,
+  ChatGeneration,
   HumanMessage,
   LLMResult,
   SystemMessage,
@@ -135,7 +137,7 @@ test("Test ChatOpenAI in streaming mode", async () => {
 
   expect(nrNewTokens > 0).toBe(true);
   expect(result.content).toBe(streamedCompletion);
-});
+}, 10000);
 
 test("Test ChatOpenAI in streaming mode with n > 1 and multiple prompts", async () => {
   let nrNewTokens = 0;
@@ -167,7 +169,7 @@ test("Test ChatOpenAI in streaming mode with n > 1 and multiple prompts", async 
   expect(result.generations.map((g) => g.map((gg) => gg.text))).toEqual(
     streamedCompletions
   );
-});
+}, 10000);
 
 test("Test ChatOpenAI prompt value", async () => {
   const chat = new ChatOpenAI({
@@ -208,7 +210,7 @@ test("OpenAI Chat, docs, prompt templates", async () => {
   ]);
 
   console.log(responseA.generations);
-}, 50000);
+}, 5000);
 
 test("Test OpenAI with stop", async () => {
   const model = new ChatOpenAI({ maxTokens: 5 });
@@ -331,4 +333,118 @@ test("getNumTokensFromMessages gpt-4-0314 model for sample input", async () => {
   const { totalCount } = await chat.getNumTokensFromMessages(messages);
 
   expect(totalCount).toBe(129);
+});
+
+test("Test OpenAI with specific roles in ChatMessage", async () => {
+  const chat = new ChatOpenAI({ modelName: "gpt-3.5-turbo", maxTokens: 10 });
+  const system_message = new ChatMessage(
+    "You are to chat with a user.",
+    "system"
+  );
+  const user_message = new ChatMessage("Hello!", "user");
+  const res = await chat.call([system_message, user_message]);
+  console.log({ res });
+});
+
+test("Test ChatOpenAI stream method", async () => {
+  const model = new ChatOpenAI({ maxTokens: 50, modelName: "gpt-3.5-turbo" });
+  const stream = await model.stream("Print hello world.");
+  const chunks = [];
+  for await (const chunk of stream) {
+    console.log(chunk);
+    chunks.push(chunk);
+  }
+  expect(chunks.length).toBeGreaterThan(1);
+});
+
+test("Test ChatOpenAI stream method with abort", async () => {
+  await expect(async () => {
+    const model = new ChatOpenAI({ maxTokens: 50, modelName: "gpt-3.5-turbo" });
+    const stream = await model.stream(
+      "How is your day going? Be extremely verbose.",
+      {
+        signal: AbortSignal.timeout(1000),
+      }
+    );
+    for await (const chunk of stream) {
+      console.log(chunk);
+    }
+  }).rejects.toThrow();
+});
+
+test("Test ChatOpenAI stream method with early break", async () => {
+  const model = new ChatOpenAI({ maxTokens: 50, modelName: "gpt-3.5-turbo" });
+  const stream = await model.stream(
+    "How is your day going? Be extremely verbose."
+  );
+  let i = 0;
+  for await (const chunk of stream) {
+    console.log(chunk);
+    i += 1;
+    if (i > 10) {
+      break;
+    }
+  }
+});
+
+test("Function calling with streaming", async () => {
+  let finalResult: BaseMessage | undefined;
+  const modelForFunctionCalling = new ChatOpenAI({
+    modelName: "gpt-4-0613",
+    temperature: 0,
+    callbacks: [
+      {
+        handleLLMEnd(output: LLMResult) {
+          finalResult = (output.generations[0][0] as ChatGeneration).message;
+        },
+      },
+    ],
+  });
+
+  const stream = await modelForFunctionCalling.stream(
+    "What is the weather in New York?",
+    {
+      functions: [
+        {
+          name: "get_current_weather",
+          description: "Get the current weather in a given location",
+          parameters: {
+            type: "object",
+            properties: {
+              location: {
+                type: "string",
+                description: "The city and state, e.g. San Francisco, CA",
+              },
+              unit: { type: "string", enum: ["celsius", "fahrenheit"] },
+            },
+            required: ["location"],
+          },
+        },
+      ],
+      function_call: {
+        name: "get_current_weather",
+      },
+    }
+  );
+
+  const chunks = [];
+  let streamedOutput;
+  for await (const chunk of stream) {
+    chunks.push(chunk);
+    if (!streamedOutput) {
+      streamedOutput = chunk;
+    } else if (chunk) {
+      streamedOutput = streamedOutput.concat(chunk);
+    }
+  }
+
+  expect(finalResult).toEqual(streamedOutput);
+  expect(chunks.length).toBeGreaterThan(1);
+  expect(finalResult?.additional_kwargs?.function_call?.name).toBe(
+    "get_current_weather"
+  );
+  expect(
+    JSON.parse(finalResult?.additional_kwargs?.function_call?.arguments ?? "")
+      .location
+  ).toBe("New York");
 });

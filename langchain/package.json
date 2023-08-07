@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.117",
+  "version": "0.0.123",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -22,6 +22,9 @@
     "agents/load.cjs",
     "agents/load.js",
     "agents/load.d.ts",
+    "agents/toolkits.cjs",
+    "agents/toolkits.js",
+    "agents/toolkits.d.ts",
     "agents/toolkits/aws_sfn.cjs",
     "agents/toolkits/aws_sfn.js",
     "agents/toolkits/aws_sfn.d.ts",
@@ -211,6 +214,9 @@
     "vectorstores/vectara.cjs",
     "vectorstores/vectara.js",
     "vectorstores/vectara.d.ts",
+    "vectorstores/xata.cjs",
+    "vectorstores/xata.js",
+    "vectorstores/xata.d.ts",
     "text_splitter.cjs",
     "text_splitter.js",
     "text_splitter.d.ts",
@@ -232,6 +238,12 @@
     "document_loaders/web/apify_dataset.cjs",
     "document_loaders/web/apify_dataset.js",
     "document_loaders/web/apify_dataset.d.ts",
+    "document_loaders/web/azure_blob_storage_container.cjs",
+    "document_loaders/web/azure_blob_storage_container.js",
+    "document_loaders/web/azure_blob_storage_container.d.ts",
+    "document_loaders/web/azure_blob_storage_file.cjs",
+    "document_loaders/web/azure_blob_storage_file.js",
+    "document_loaders/web/azure_blob_storage_file.d.ts",
     "document_loaders/web/cheerio.cjs",
     "document_loaders/web/cheerio.js",
     "document_loaders/web/cheerio.d.ts",
@@ -313,6 +325,9 @@
     "document_loaders/fs/unstructured.cjs",
     "document_loaders/fs/unstructured.js",
     "document_loaders/fs/unstructured.d.ts",
+    "document_transformers/html_to_text.cjs",
+    "document_transformers/html_to_text.js",
+    "document_transformers/html_to_text.d.ts",
     "document_transformers/openai_functions.cjs",
     "document_transformers/openai_functions.js",
     "document_transformers/openai_functions.d.ts",
@@ -349,6 +364,9 @@
     "schema/retriever.cjs",
     "schema/retriever.js",
     "schema/retriever.d.ts",
+    "schema/runnable.cjs",
+    "schema/runnable.js",
+    "schema/runnable.d.ts",
     "sql_db.cjs",
     "sql_db.js",
     "sql_db.d.ts",
@@ -469,6 +487,9 @@
     "stores/message/planetscale.cjs",
     "stores/message/planetscale.js",
     "stores/message/planetscale.d.ts",
+    "util/math.cjs",
+    "util/math.js",
+    "util/math.d.ts",
     "experimental/autogpt.cjs",
     "experimental/autogpt.js",
     "experimental/autogpt.d.ts",
@@ -502,7 +523,7 @@
     "build:watch": "node scripts/create-entrypoints.js && tsc --outDir dist/ --watch",
     "lint": "eslint src && dpdm --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint:fix": "yarn lint --fix",
-    "precommit": "tsc --noEmit && lint-staged",
+    "precommit": "lint-staged",
     "clean": "rimraf dist/ && node scripts/create-entrypoints.js pre",
     "prepack": "yarn build",
     "release": "release-it --only-version --config .release-it.json",
@@ -522,6 +543,7 @@
     "@aws-sdk/client-s3": "^3.310.0",
     "@aws-sdk/client-sagemaker-runtime": "^3.310.0",
     "@aws-sdk/client-sfn": "^3.362.0",
+    "@azure/storage-blob": "^12.15.0",
     "@clickhouse/client": "^0.0.14",
     "@elastic/elasticsearch": "^8.4.0",
     "@faker-js/faker": "^7.6.0",
@@ -558,6 +580,7 @@
     "@typescript-eslint/eslint-plugin": "^5.58.0",
     "@typescript-eslint/parser": "^5.58.0",
     "@upstash/redis": "^1.20.6",
+    "@xata.io/client": "^0.25.1",
     "@zilliz/milvus2-sdk-node": ">=2.2.7",
     "apify-client": "^2.7.1",
     "axios": "^0.26.0",
@@ -621,6 +644,7 @@
     "@aws-sdk/client-s3": "^3.310.0",
     "@aws-sdk/client-sagemaker-runtime": "^3.310.0",
     "@aws-sdk/client-sfn": "^3.310.0",
+    "@azure/storage-blob": "^12.15.0",
     "@clickhouse/client": "^0.0.14",
     "@elastic/elasticsearch": "^8.4.0",
     "@getmetal/metal-sdk": "*",
@@ -641,6 +665,7 @@
     "@tensorflow/tfjs-core": "*",
     "@tigrisdata/vector": "^1.1.0",
     "@upstash/redis": "^1.20.6",
+    "@xata.io/client": "^0.25.1",
     "@zilliz/milvus2-sdk-node": ">=2.2.7",
     "apify-client": "^2.7.1",
     "axios": "*",
@@ -696,6 +721,9 @@
       "optional": true
     },
     "@aws-sdk/client-sfn": {
+      "optional": true
+    },
+    "@azure/storage-blob": {
       "optional": true
     },
     "@clickhouse/client": {
@@ -756,6 +784,9 @@
       "optional": true
     },
     "@upstash/redis": {
+      "optional": true
+    },
+    "@xata.io/client": {
       "optional": true
     },
     "@zilliz/milvus2-sdk-node": {
@@ -881,7 +912,7 @@
     "js-tiktoken": "^1.0.7",
     "js-yaml": "^4.1.0",
     "jsonpointer": "^5.0.1",
-    "langsmith": "~0.0.11",
+    "langsmith": "~0.0.16",
     "ml-distance": "^4.0.0",
     "object-hash": "^3.0.0",
     "openai": "^3.3.0",
@@ -935,6 +966,11 @@
       "types": "./agents/load.d.ts",
       "import": "./agents/load.js",
       "require": "./agents/load.cjs"
+    },
+    "./agents/toolkits": {
+      "types": "./agents/toolkits.d.ts",
+      "import": "./agents/toolkits.js",
+      "require": "./agents/toolkits.cjs"
     },
     "./agents/toolkits/aws_sfn": {
       "types": "./agents/toolkits/aws_sfn.d.ts",
@@ -1257,6 +1293,11 @@
       "import": "./vectorstores/vectara.js",
       "require": "./vectorstores/vectara.cjs"
     },
+    "./vectorstores/xata": {
+      "types": "./vectorstores/xata.d.ts",
+      "import": "./vectorstores/xata.js",
+      "require": "./vectorstores/xata.cjs"
+    },
     "./text_splitter": {
       "types": "./text_splitter.d.ts",
       "import": "./text_splitter.js",
@@ -1293,6 +1334,16 @@
       "types": "./document_loaders/web/apify_dataset.d.ts",
       "import": "./document_loaders/web/apify_dataset.js",
       "require": "./document_loaders/web/apify_dataset.cjs"
+    },
+    "./document_loaders/web/azure_blob_storage_container": {
+      "types": "./document_loaders/web/azure_blob_storage_container.d.ts",
+      "import": "./document_loaders/web/azure_blob_storage_container.js",
+      "require": "./document_loaders/web/azure_blob_storage_container.cjs"
+    },
+    "./document_loaders/web/azure_blob_storage_file": {
+      "types": "./document_loaders/web/azure_blob_storage_file.d.ts",
+      "import": "./document_loaders/web/azure_blob_storage_file.js",
+      "require": "./document_loaders/web/azure_blob_storage_file.cjs"
     },
     "./document_loaders/web/cheerio": {
       "types": "./document_loaders/web/cheerio.d.ts",
@@ -1429,6 +1480,11 @@
       "import": "./document_loaders/fs/unstructured.js",
       "require": "./document_loaders/fs/unstructured.cjs"
     },
+    "./document_transformers/html_to_text": {
+      "types": "./document_transformers/html_to_text.d.ts",
+      "import": "./document_transformers/html_to_text.js",
+      "require": "./document_transformers/html_to_text.cjs"
+    },
     "./document_transformers/openai_functions": {
       "types": "./document_transformers/openai_functions.d.ts",
       "import": "./document_transformers/openai_functions.js",
@@ -1490,6 +1546,11 @@
       "types": "./schema/retriever.d.ts",
       "import": "./schema/retriever.js",
       "require": "./schema/retriever.cjs"
+    },
+    "./schema/runnable": {
+      "types": "./schema/runnable.d.ts",
+      "import": "./schema/runnable.js",
+      "require": "./schema/runnable.cjs"
     },
     "./sql_db": {
       "types": "./sql_db.d.ts",
@@ -1692,6 +1753,11 @@
       "types": "./stores/message/planetscale.d.ts",
       "import": "./stores/message/planetscale.js",
       "require": "./stores/message/planetscale.cjs"
+    },
+    "./util/math": {
+      "types": "./util/math.d.ts",
+      "import": "./util/math.js",
+      "require": "./util/math.cjs"
     },
     "./experimental/autogpt": {
       "types": "./experimental/autogpt.d.ts",

@@ -16,9 +16,11 @@ export interface ReplicateInput {
 export class Replicate extends LLM implements ReplicateInput {
   get lc_secrets(): { [key: string]: string } | undefined {
     return {
-      apiKey: "REPLICATE_API_KEY",
+      apiKey: "REPLICATE_API_TOKEN",
     };
   }
+
+  lc_serializable = true;
 
   model: ReplicateInput["model"];
 
@@ -30,10 +32,14 @@ export class Replicate extends LLM implements ReplicateInput {
     super(fields);
 
     const apiKey =
-      fields?.apiKey ?? getEnvironmentVariable("REPLICATE_API_KEY");
+      fields?.apiKey ??
+      getEnvironmentVariable("REPLICATE_API_KEY") ?? // previous environment variable for backwards compatibility
+      getEnvironmentVariable("REPLICATE_API_TOKEN"); // current environment variable, matching the Python library
 
     if (!apiKey) {
-      throw new Error("Please set the REPLICATE_API_KEY environment variable");
+      throw new Error(
+        "Please set the REPLICATE_API_TOKEN environment variable"
+      );
     }
 
     this.apiKey = apiKey;
