@@ -1,6 +1,6 @@
 import { CheerioWebBaseLoader } from "langchain/document_loaders/web/cheerio";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
-import { FaissStore } from "langchain/vectorstores/faiss";
+import { HNSWLib } from "langchain/vectorstores/hnswlib";
 import { Ollama } from "langchain/llms/ollama";
 import { PromptTemplate } from "langchain/prompts";
 import {
@@ -26,7 +26,7 @@ const splitter = new RecursiveCharacterTextSplitter({
 
 const splitDocuments = await splitter.splitDocuments(docs);
 
-const vectorstore = await FaissStore.fromDocuments(
+const vectorstore = await HNSWLib.fromDocuments(
   splitDocuments,
   new TensorFlowEmbeddings()
 );

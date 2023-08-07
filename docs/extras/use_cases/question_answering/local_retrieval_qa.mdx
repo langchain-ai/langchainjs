@@ -5,21 +5,24 @@ The popularity of projects like [PrivateGPT](https://github.com/imartinez/privat
 LangChain integrates with [Ollama](https://ollama.ai/) to run several open source LLMs locally with GPU support.
 
 For example, here we show how to run `Llama 2` locally (e.g., on your laptop) using local embeddings, a local vector store, and a local LLM.
+You can check out other open-source models supported by Ollama [here](https://github.com/jmorganca/ollama#model-library).
 
 This tutorial is designed for Node.js running on Mac OSX with at least 16 GB of RAM.
 
 ## Setup
 
 First, install packages needed for local embeddings and vector storage. For this demo, we'll use Llama 2 through Ollama as our LLM,
-TensorFlow.js for embeddings, and FAISS for retrieval. We'll also install `cheerio` for scraping, though you can use any loader.
+[TensorFlow.js](/docs/modules/data_connection/text_embedding/integrations/tensorflow/) for embeddings,
+and [HNWSLib](/docs/modules/data_connection/vectorstores/integrations/hnswlib) as a vector store for retrieval.
+We'll also install `cheerio` for scraping, though you can use any loader.
 
 ```bash npm2yarn
 npm install @tensorflow/tfjs-core @tensorflow/tfjs-converter @tensorflow-models/universal-sentence-encoder @tensorflow/tfjs-node
-npm install faiss-node
+npm install hnswlib-node
 npm install cheerio
 ```
 
-You'll also need to set up Ollama and run a local instance using [these instructions](https://github.com/jmorganca/ollama).
+You'll also need to set up Ollama and run a local instance using [these instructions](https://github.com/jmorganca/ollama#ollama).
 
 ## Document loading
 
@@ -50,7 +53,7 @@ This will use a default QA prompt and will retrieve from the vector store.
 
 You can still pass in a custom prompt if desired.
 
-`type: "stuff"` (see [here](https://js.langchain.com/docs/modules/chains/document/stuff)) means that all the docs will be added (stuffed) into a prompt.
+`type: "stuff"` (see [here](/docs/modules/chains/document/stuff)) means that all the docs will be added (stuffed) into a prompt.
 
 import QAChainExample from "@examples/use_cases/local_retrieval_qa/qa_chain.ts";
 
