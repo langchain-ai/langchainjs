@@ -236,7 +236,11 @@ export class Milvus extends VectorStore {
     const results: [Document, number][] = [];
     searchResp.results.forEach((result) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const fields = { pageContent: "", metadata: {} as Record<string, any> };
+      const fields = {
+        pageContent: "",
+        metadata: {} as Record<string, any>,
+        [this.primaryField]: 0,
+      };
       Object.keys(result).forEach((key) => {
         if (key === this.textField) {
           fields.pageContent = result[key];
@@ -416,6 +420,31 @@ export class Milvus extends VectorStore {
     const instance = new this(embeddings, dbConfig);
     await instance.ensureCollection();
     return instance;
+  }
+
+  async delete(params: { filter: string }): Promise<void> {
+    const hasColResp = await this.client.hasCollection({
+      collection_name: this.collectionName,
+    });
+    if (hasColResp.status.error_code !== ErrorCode.SUCCESS) {
+      throw new Error(`Error checking collection: ${hasColResp}`);
+    }
+    if (hasColResp.value === false) {
+      throw new Error(
+        `Collection not found: ${this.collectionName}, please create collection before search.`
+      );
+    }
+
+    const { filter } = params;
+
+    const deleteResp = await this.client.deleteEntities({
+      collection_name: this.collectionName,
+      expr: filter,
+    });
+
+    if (deleteResp.status.error_code !== ErrorCode.SUCCESS) {
+      throw new Error(`Error deleting data: ${JSON.stringify(deleteResp)}`);
+    }
   }
 }
 
