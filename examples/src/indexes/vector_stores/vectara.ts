@@ -1,7 +1,7 @@
 import { VectaraStore } from "langchain/vectorstores/vectara";
 import { Document } from "langchain/document";
 
-// Create the store.
+// Create the Vectara store.
 const store = new VectaraStore({
   customerId: Number(process.env.VECTARA_CUSTOMER_ID),
   corpusId: Number(process.env.VECTARA_CORPUS_ID),
@@ -9,7 +9,7 @@ const store = new VectaraStore({
   verbose: true,
 });
 
-// Store your data.
+// Add two documents with some metadata.
 await store.addDocuments([
   new Document({
     pageContent: "Do I dare to eat a peach?",
@@ -25,8 +25,7 @@ await store.addDocuments([
   }),
 ]);
 
-// "Added 2 documents to Vectara"
-
+// Perform a similarity search.
 const resultsWithScore = await store.similaritySearchWithScore(
   "What were the women talking about?",
   1,
@@ -35,6 +34,7 @@ const resultsWithScore = await store.similaritySearchWithScore(
   }
 );
 
+// Print the results.
 console.log(JSON.stringify(resultsWithScore, null, 2));
 // [
 //   [

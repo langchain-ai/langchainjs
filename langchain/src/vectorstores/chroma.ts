@@ -108,10 +108,32 @@ export class Chroma extends VectorStore {
     const documentIds =
       options?.ids ?? Array.from({ length: vectors.length }, () => uuid.v1());
     const collection = await this.ensureCollection();
+
+    const mappedMetadatas = documents.map(({ metadata }) => {
+      let locFrom;
+      let locTo;
+
+      if (metadata?.loc) {
+        if (metadata.loc.lines?.from !== undefined)
+          locFrom = metadata.loc.lines.from;
+        if (metadata.loc.lines?.to !== undefined) locTo = metadata.loc.lines.to;
+      }
+
+      const newMetadata: Document["metadata"] = {
+        ...metadata,
+        ...(locFrom !== undefined && { locFrom }),
+        ...(locTo !== undefined && { locTo }),
+      };
+
+      if (newMetadata.loc) delete newMetadata.loc;
+
+      return newMetadata;
+    });
+
     await collection.upsert({
       ids: documentIds,
       embeddings: vectors,
-      metadatas: documents.map(({ metadata }) => metadata),
+      metadatas: mappedMetadatas,
       documents: documents.map(({ pageContent }) => pageContent),
     });
     return documentIds;
@@ -162,10 +184,28 @@ export class Chroma extends VectorStore {
 
     const results: [Document, number][] = [];
     for (let i = 0; i < firstIds.length; i += 1) {
+      let metadata: Document["metadata"] = {};
+      const storedMetadata = firstMetadatas?.[i];
+
+      if (storedMetadata && storedMetadata.locFrom && storedMetadata.locTo) {
+        metadata = {
+          ...firstMetadatas[i],
+          loc: {
+            lines: {
+              from: storedMetadata.locFrom,
+              to: storedMetadata.locTo,
+            },
+          },
+        };
+
+        delete metadata.locFrom;
+        delete metadata.locTo;
+      }
+
       results.push([
         new Document({
           pageContent: firstDocuments?.[i] ?? "",
-          metadata: firstMetadatas?.[i] ?? {},
+          metadata,
         }),
         firstDistances[i],
       ]);
