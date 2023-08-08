@@ -22,13 +22,18 @@ import type { StreamingAxiosConfiguration } from "../util/axios-types.js";
 import { BaseChatModel, BaseChatModelParams } from "./base.js";
 import {
   AIMessage,
+  AIMessageChunk,
   BaseMessage,
   ChatGeneration,
+  ChatGenerationChunk,
   ChatMessage,
+  ChatMessageChunk,
   ChatResult,
+  FunctionMessageChunk,
   HumanMessage,
-  MessageType,
+  HumanMessageChunk,
   SystemMessage,
+  SystemMessageChunk,
 } from "../schema/index.js";
 import { getModelNameForTiktoken } from "../base_language/count_tokens.js";
 import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
@@ -36,6 +41,7 @@ import { promptLayerTrackRequest } from "../util/prompt-layer.js";
 import { StructuredTool } from "../tools/base.js";
 import { formatToOpenAIFunction } from "../tools/convert_to_openai.js";
 import { getEndpoint, OpenAIEndpointConfig } from "../util/azure.js";
+import { readableStreamToAsyncIterable } from "../util/stream.js";
 
 export { OpenAICallOptions, OpenAIChatInput, AzureOpenAIInput };
 
@@ -49,9 +55,23 @@ interface OpenAILLMOutput {
   tokenUsage: TokenUsage;
 }
 
-function messageTypeToOpenAIRole(
-  type: MessageType
+function extractGenericMessageCustomRole(message: ChatMessage) {
+  if (
+    message.role !== "system" &&
+    message.role !== "assistant" &&
+    message.role !== "user" &&
+    message.role !== "function"
+  ) {
+    console.warn(`Unknown message role: ${message.role}`);
+  }
+
+  return message.role as ChatCompletionResponseMessageRoleEnum;
+}
+
+function messageToOpenAIRole(
+  message: BaseMessage
 ): ChatCompletionResponseMessageRoleEnum {
+  const type = message._getType();
   switch (type) {
     case "system":
       return "system";
@@ -61,6 +81,11 @@ function messageTypeToOpenAIRole(
       return "user";
     case "function":
       return "function";
+    case "generic": {
+      if (!ChatMessage.isInstance(message))
+        throw new Error("Invalid generic chat message");
+      return extractGenericMessageCustomRole(message);
+    }
     default:
       throw new Error(`Unknown message type: ${type}`);
   }
@@ -80,6 +105,38 @@ function openAIResponseToChatMessage(
       return new SystemMessage(message.content || "");
     default:
       return new ChatMessage(message.content || "", message.role ?? "unknown");
+  }
+}
+
+function _convertDeltaToMessageChunk(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  delta: Record<string, any>,
+  defaultRole?: ChatCompletionResponseMessageRoleEnum
+) {
+  const role = delta.role ?? defaultRole;
+  const content = delta.content ?? "";
+  let additional_kwargs;
+  if (delta.function_call) {
+    additional_kwargs = {
+      function_call: delta.function_call,
+    };
+  } else {
+    additional_kwargs = {};
+  }
+  if (role === "user") {
+    return new HumanMessageChunk({ content });
+  } else if (role === "assistant") {
+    return new AIMessageChunk({ content, additional_kwargs });
+  } else if (role === "system") {
+    return new SystemMessageChunk({ content });
+  } else if (role === "function") {
+    return new FunctionMessageChunk({
+      content,
+      additional_kwargs,
+      name: delta.name,
+    });
+  } else {
+    return new ChatMessageChunk({ content, role });
   }
 }
 
@@ -110,11 +167,9 @@ export interface ChatOpenAICallOptions extends OpenAICallOptions {
  * if not explicitly available on this class.
  */
 export class ChatOpenAI
-  extends BaseChatModel
+  extends BaseChatModel<ChatOpenAICallOptions>
   implements OpenAIChatInput, AzureOpenAIInput
 {
-  declare CallOptions: ChatOpenAICallOptions;
-
   get callKeys(): (keyof ChatOpenAICallOptions)[] {
     return [
       ...(super.callKeys as (keyof ChatOpenAICallOptions)[]),
@@ -240,7 +295,7 @@ export class ChatOpenAI
     this.streaming = fields?.streaming ?? false;
 
     if (this.azureOpenAIApiKey) {
-      if (!this.azureOpenAIApiInstanceName) {
+      if (!this.azureOpenAIApiInstanceName && !this.azureOpenAIBasePath) {
         throw new Error("Azure OpenAI API instance name not found");
       }
       if (!this.azureOpenAIApiDeploymentName) {
@@ -294,6 +349,113 @@ export class ChatOpenAI
     };
   }
 
+  // TODO(jacoblee): Refactor with _generate(..., {stream: true}) implementation
+  // when we integrate OpenAI's new SDK.
+  async *_streamResponseChunks(
+    messages: BaseMessage[],
+    options: this["ParsedCallOptions"],
+    runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatGenerationChunk> {
+    const messagesMapped: ChatCompletionRequestMessage[] = messages.map(
+      (message) => ({
+        role: messageToOpenAIRole(message),
+        content: message.content,
+        name: message.name,
+        function_call: message.additional_kwargs
+          .function_call as ChatCompletionRequestMessageFunctionCall,
+      })
+    );
+    const params = {
+      ...this.invocationParams(options),
+      messages: messagesMapped,
+      stream: true,
+    };
+    let defaultRole: ChatCompletionResponseMessageRoleEnum = "assistant";
+    const streamIterable = this.startStream(params, options);
+    for await (const streamedResponse of streamIterable) {
+      const data = JSON.parse(streamedResponse) as {
+        choices?: Array<{
+          index: number;
+          finish_reason: string | null;
+          delta: {
+            role?: string;
+            content?: string;
+            function_call?: { name: string; arguments: string };
+          };
+        }>;
+      };
+
+      const choice = data.choices?.[0];
+      if (!choice) {
+        continue;
+      }
+
+      const { delta } = choice;
+      const chunk = _convertDeltaToMessageChunk(delta, defaultRole);
+      defaultRole = (delta.role ??
+        defaultRole) as ChatCompletionResponseMessageRoleEnum;
+      const generationChunk = new ChatGenerationChunk({
+        message: chunk,
+        text: chunk.content,
+      });
+      yield generationChunk;
+      // eslint-disable-next-line no-void
+      void runManager?.handleLLMNewToken(generationChunk.text ?? "");
+    }
+  }
+
+  startStream(
+    request: CreateChatCompletionRequest,
+    options?: StreamingAxiosConfiguration
+  ) {
+    let done = false;
+    const stream = new TransformStream();
+    const writer = stream.writable.getWriter();
+    const iterable = readableStreamToAsyncIterable(stream.readable);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let err: any;
+    this.completionWithRetry(request, {
+      ...options,
+      adapter: fetchAdapter, // default adapter doesn't do streaming
+      responseType: "stream",
+      onmessage: (event) => {
+        if (done) return;
+        if (event.data?.trim?.() === "[DONE]") {
+          done = true;
+          // eslint-disable-next-line no-void
+          void writer.close();
+        } else {
+          const data = JSON.parse(event.data);
+          if (data.error) {
+            done = true;
+            throw data.error;
+          }
+          // eslint-disable-next-line no-void
+          void writer.write(event.data);
+        }
+      },
+    }).catch((error) => {
+      if (!done) {
+        err = error;
+        done = true;
+        // eslint-disable-next-line no-void
+        void writer.close();
+      }
+    });
+    return {
+      async next() {
+        const chunk = await iterable.next();
+        if (err) {
+          throw err;
+        }
+        return chunk;
+      },
+      [Symbol.asyncIterator]() {
+        return this;
+      },
+    };
+  }
+
   /**
    * Get the identifying parameters for the model
    */
@@ -311,7 +473,7 @@ export class ChatOpenAI
     const params = this.invocationParams(options);
     const messagesMapped: ChatCompletionRequestMessage[] = messages.map(
       (message) => ({
-        role: messageTypeToOpenAIRole(message._getType()),
+        role: messageToOpenAIRole(message),
         content: message.content,
         name: message.name,
         function_call: message.additional_kwargs
@@ -343,7 +505,7 @@ export class ChatOpenAI
                   resolve(response);
                 } else {
                   const data = JSON.parse(event.data);
-
+                  if (!data.id) return;
                   if (data?.error) {
                     if (rejected) {
                       return;
@@ -432,7 +594,6 @@ export class ChatOpenAI
                       // sending the function call arguments
                     }
                   }
-
                   // when all messages are finished, resolve
                   if (
                     !resolved &&
@@ -518,9 +679,7 @@ export class ChatOpenAI
     const countPerMessage = await Promise.all(
       messages.map(async (message) => {
         const textCount = await this.getNumTokens(message.content);
-        const roleCount = await this.getNumTokens(
-          messageTypeToOpenAIRole(message._getType())
-        );
+        const roleCount = await this.getNumTokens(messageToOpenAIRole(message));
         const nameCount =
           message.name !== undefined
             ? tokensPerName + (await this.getNumTokens(message.name))
@@ -646,14 +805,14 @@ export class PromptLayerChatOpenAI extends ChatOpenAI {
 
   async _generate(
     messages: BaseMessage[],
-    options?: string[] | this["CallOptions"],
+    options?: string[] | ChatOpenAICallOptions,
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
     const requestStartTime = Date.now();
 
-    let parsedOptions: this["CallOptions"];
+    let parsedOptions: ChatOpenAICallOptions;
     if (Array.isArray(options)) {
-      parsedOptions = { stop: options } as this["CallOptions"];
+      parsedOptions = { stop: options } as ChatOpenAICallOptions;
     } else if (options?.timeout && !options.signal) {
       parsedOptions = {
         ...options,
@@ -696,7 +855,7 @@ export class PromptLayerChatOpenAI extends ChatOpenAI {
 
     const _createMessageDicts = (
       messages: BaseMessage[],
-      callOptions?: this["CallOptions"]
+      callOptions?: ChatOpenAICallOptions
     ) => {
       const params = {
         ...this.invocationParams(),
@@ -722,7 +881,7 @@ export class PromptLayerChatOpenAI extends ChatOpenAI {
       const parsedResp = [
         {
           content: generation.text,
-          role: messageTypeToOpenAIRole(generation.message._getType()),
+          role: messageToOpenAIRole(generation.message),
         },
       ];
 

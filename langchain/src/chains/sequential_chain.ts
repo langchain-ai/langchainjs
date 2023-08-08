@@ -79,7 +79,12 @@ export class SequentialChain extends BaseChain implements SequentialChainInput {
 
     const availableKeys = union(inputKeysSet, memoryKeysSet);
     for (const chain of this.chains) {
-      const missingKeys = difference(new Set(chain.inputKeys), availableKeys);
+      let missingKeys = difference(new Set(chain.inputKeys), availableKeys);
+
+      if (chain.memory) {
+        missingKeys = difference(missingKeys, new Set(chain.memory.memoryKeys));
+      }
+
       if (missingKeys.size > 0) {
         throw new Error(
           `Missing variables for chain "${chain._chainType()}": ${formatSet(

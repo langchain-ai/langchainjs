@@ -56,6 +56,8 @@ export class Milvus extends VectorStore {
     };
   }
 
+  declare FilterType: string;
+
   collectionName: string;
 
   numDimensions?: number;
@@ -184,7 +186,8 @@ export class Milvus extends VectorStore {
 
   async similaritySearchVectorWithScore(
     query: number[],
-    k: number
+    k: number,
+    filter?: string
   ): Promise<[Document, number][]> {
     const hasColResp = await this.client.hasCollection({
       collection_name: this.collectionName,
@@ -197,6 +200,8 @@ export class Milvus extends VectorStore {
         `Collection not found: ${this.collectionName}, please create collection before search.`
       );
     }
+
+    const filterStr = filter ?? "";
 
     await this.grabCollectionFields();
 
@@ -223,6 +228,7 @@ export class Milvus extends VectorStore {
       output_fields: outputFields,
       vector_type: DataType.FloatVector,
       vectors: [query],
+      filter: filterStr,
     });
     if (searchResp.status.error_code !== ErrorCode.SUCCESS) {
       throw new Error(`Error searching data: ${JSON.stringify(searchResp)}`);
@@ -369,13 +375,7 @@ export class Milvus extends VectorStore {
     texts: string[],
     metadatas: object[] | object,
     embeddings: Embeddings,
-    dbConfig?: {
-      collectionName?: string;
-      url?: string;
-      ssl?: boolean;
-      username?: string;
-      password?: string;
-    }
+    dbConfig?: MilvusLibArgs
   ): Promise<Milvus> {
     const docs: Document[] = [];
     for (let i = 0; i < texts.length; i += 1) {
@@ -400,6 +400,9 @@ export class Milvus extends VectorStore {
       ssl: dbConfig?.ssl,
       username: dbConfig?.username,
       password: dbConfig?.password,
+      textField: dbConfig?.textField,
+      primaryField: dbConfig?.primaryField,
+      vectorField: dbConfig?.vectorField,
     };
     const instance = new this(embeddings, args);
     await instance.addDocuments(docs);

@@ -109,7 +109,7 @@ export class OpenAIEmbeddings
     this.azureOpenAIApiDeploymentName = azureApiDeploymentName;
 
     if (this.azureOpenAIApiKey) {
-      if (!this.azureOpenAIApiInstanceName) {
+      if (!this.azureOpenAIApiInstanceName && !this.azureOpenAIBasePath) {
         throw new Error("Azure OpenAI API instance name not found");
       }
       if (!this.azureOpenAIApiDeploymentName) {

@@ -105,7 +105,8 @@ abstract class BaseCallbackHandlerMethodsClass {
     runId: string,
     parentRunId?: string,
     tags?: string[],
-    metadata?: Record<string, unknown>
+    metadata?: Record<string, unknown>,
+    runType?: string
   ): Promise<void> | void;
 
   /**

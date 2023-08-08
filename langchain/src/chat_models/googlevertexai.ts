@@ -3,9 +3,9 @@ import {
   AIMessage,
   BaseMessage,
   ChatGeneration,
+  ChatMessage,
   ChatResult,
   LLMResult,
-  MessageType,
 } from "../schema/index.js";
 import { GoogleVertexAIConnection } from "../util/googlevertexai-connection.js";
 import {
@@ -13,6 +13,7 @@ import {
   GoogleVertexAIBasePrediction,
   GoogleVertexAIModelParams,
 } from "../types/googlevertexai-types.js";
+import { BaseLanguageModelCallOptions } from "../base_language/index.js";
 
 /**
  * Represents a single "example" exchange that can be provided to
@@ -53,11 +54,25 @@ export class GoogleVertexAIChatMessage {
     this.name = fields.name;
   }
 
+  static extractGenericMessageCustomRole(message: ChatMessage) {
+    if (
+      message.role !== "system" &&
+      message.role !== "bot" &&
+      message.role !== "user" &&
+      message.role !== "context"
+    ) {
+      console.warn(`Unknown message role: ${message.role}`);
+    }
+
+    return message.role as GoogleVertexAIChatAuthor;
+  }
+
   static mapMessageTypeToVertexChatAuthor(
-    baseMessageType: MessageType,
+    message: BaseMessage,
     model: string
   ): GoogleVertexAIChatAuthor {
-    switch (baseMessageType) {
+    const type = message._getType();
+    switch (type) {
       case "ai":
         return model.startsWith("codechat-") ? "system" : "bot";
       case "human":
@@ -66,17 +81,22 @@ export class GoogleVertexAIChatMessage {
         throw new Error(
           `System messages are only supported as the first passed message for Google Vertex AI.`
         );
-      default:
-        throw new Error(
-          `Unknown / unsupported message type: ${baseMessageType}`
+      case "generic": {
+        if (!ChatMessage.isInstance(message))
+          throw new Error("Invalid generic chat message");
+        return GoogleVertexAIChatMessage.extractGenericMessageCustomRole(
+          message
         );
+      }
+      default:
+        throw new Error(`Unknown / unsupported message type: ${message}`);
     }
   }
 
   static fromChatMessage(message: BaseMessage, model: string) {
     return new GoogleVertexAIChatMessage({
       author: GoogleVertexAIChatMessage.mapMessageTypeToVertexChatAuthor(
-        message._getType(),
+        message,
         model
       ),
       content: message.content,
@@ -134,7 +154,7 @@ export class ChatGoogleVertexAI
   examples: ChatExample[] = [];
 
   connection: GoogleVertexAIConnection<
-    this["CallOptions"],
+    BaseLanguageModelCallOptions,
     GoogleVertexAIChatInstance,
     GoogleVertexAIChatPrediction
   >;
@@ -210,16 +230,25 @@ export class ChatGoogleVertexAI
       );
     }
     const vertexChatMessages = conversationMessages.map((baseMessage, i) => {
+      const currMessage = GoogleVertexAIChatMessage.fromChatMessage(
+        baseMessage,
+        this.model
+      );
+      const prevMessage =
+        i > 0
+          ? GoogleVertexAIChatMessage.fromChatMessage(
+              conversationMessages[i - 1],
+              this.model
+            )
+          : null;
+
       // https://cloud.google.com/vertex-ai/docs/generative-ai/chat/chat-prompts#messages
-      if (
-        i > 0 &&
-        baseMessage._getType() === conversationMessages[i - 1]._getType()
-      ) {
+      if (prevMessage && currMessage.author === prevMessage.author) {
         throw new Error(
           `Google Vertex AI requires AI and human messages to alternate.`
         );
       }
-      return GoogleVertexAIChatMessage.fromChatMessage(baseMessage, this.model);
+      return currMessage;
     });
 
     const examples = this.examples.map((example) => ({

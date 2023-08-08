@@ -145,6 +145,12 @@ export interface OptionalImportMap {
   "langchain/document_loaders/web/apify_dataset"?:
     | typeof import("../document_loaders/web/apify_dataset.js")
     | Promise<typeof import("../document_loaders/web/apify_dataset.js")>;
+  "langchain/document_loaders/web/azure_blob_storage_container"?:
+    | typeof import("../document_loaders/web/azure_blob_storage_container.js")
+    | Promise<typeof import("../document_loaders/web/azure_blob_storage_container.js")>;
+  "langchain/document_loaders/web/azure_blob_storage_file"?:
+    | typeof import("../document_loaders/web/azure_blob_storage_file.js")
+    | Promise<typeof import("../document_loaders/web/azure_blob_storage_file.js")>;
   "langchain/document_loaders/web/cheerio"?:
     | typeof import("../document_loaders/web/cheerio.js")
     | Promise<typeof import("../document_loaders/web/cheerio.js")>;
@@ -220,6 +226,9 @@ export interface OptionalImportMap {
   "langchain/document_loaders/fs/unstructured"?:
     | typeof import("../document_loaders/fs/unstructured.js")
     | Promise<typeof import("../document_loaders/fs/unstructured.js")>;
+  "langchain/document_transformers/html_to_text"?:
+    | typeof import("../document_transformers/html_to_text.js")
+    | Promise<typeof import("../document_transformers/html_to_text.js")>;
   "langchain/chat_models/googlevertexai"?:
     | typeof import("../chat_models/googlevertexai.js")
     | Promise<typeof import("../chat_models/googlevertexai.js")>;
@@ -268,6 +277,9 @@ export interface OptionalImportMap {
   "langchain/cache/redis"?:
     | typeof import("../cache/redis.js")
     | Promise<typeof import("../cache/redis.js")>;
+  "langchain/cache/ioredis"?:
+    | typeof import("../cache/ioredis.js")
+    | Promise<typeof import("../cache/ioredis.js")>;
   "langchain/cache/upstash_redis"?:
     | typeof import("../cache/upstash_redis.js")
     | Promise<typeof import("../cache/upstash_redis.js")>;
@@ -298,6 +310,9 @@ export interface OptionalImportMap {
   "langchain/stores/message/planetscale"?:
     | typeof import("../stores/message/planetscale.js")
     | Promise<typeof import("../stores/message/planetscale.js")>;
+  "langchain/experimental/multimodal_embeddings/googlevertexai"?:
+    | typeof import("../experimental/multimodal_embeddings/googlevertexai.js")
+    | Promise<typeof import("../experimental/multimodal_embeddings/googlevertexai.js")>;
 }
 
 export interface SecretMap {
@@ -329,7 +344,7 @@ export interface SecretMap {
   REDIS_URL?: string;
   REDIS_USERNAME?: string;
   REMOTE_RETRIEVER_AUTH_BEARER?: string;
-  REPLICATE_API_KEY?: string;
+  REPLICATE_API_TOKEN?: string;
   SEARXNG_API_BASE?: string;
   UPSTASH_REDIS_REST_TOKEN?: string;
   UPSTASH_REDIS_REST_URL?: string;

@@ -17,9 +17,10 @@ import type { StreamingAxiosConfiguration } from "../util/axios-types.js";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
 import { BaseLLMParams, LLM } from "./base.js";
 import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
-import { Generation, LLMResult } from "../schema/index.js";
+import { Generation, LLMResult, GenerationChunk } from "../schema/index.js";
 import { promptLayerTrackRequest } from "../util/prompt-layer.js";
 import { getEndpoint, OpenAIEndpointConfig } from "../util/azure.js";
+import { readableStreamToAsyncIterable } from "../util/stream.js";
 
 export { OpenAIChatInput, AzureOpenAIInput };
 
@@ -50,11 +51,9 @@ export interface OpenAIChatCallOptions extends OpenAICallOptions {
  * @augments AzureOpenAIChatInput
  */
 export class OpenAIChat
-  extends LLM
+  extends LLM<OpenAIChatCallOptions>
   implements OpenAIChatInput, AzureOpenAIInput
 {
-  declare CallOptions: OpenAIChatCallOptions;
-
   get callKeys(): (keyof OpenAIChatCallOptions)[] {
     return [
       ...(super.callKeys as (keyof OpenAIChatCallOptions)[]),
@@ -188,7 +187,7 @@ export class OpenAIChat
     }
 
     if (this.azureOpenAIApiKey) {
-      if (!this.azureOpenAIApiInstanceName) {
+      if (!this.azureOpenAIApiInstanceName && !this.azureOpenAIBasePath) {
         throw new Error("Azure OpenAI API instance name not found");
       }
       if (!this.azureOpenAIApiDeploymentName) {
@@ -253,6 +252,99 @@ export class OpenAIChat
       content: prompt,
     };
     return this.prefixMessages ? [...this.prefixMessages, message] : [message];
+  }
+
+  // TODO(jacoblee): Refactor with _generate(..., {stream: true}) implementation
+  // when we integrate OpenAI's new SDK.
+  async *_streamResponseChunks(
+    prompt: string,
+    options: this["ParsedCallOptions"],
+    runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<GenerationChunk> {
+    const params = {
+      ...this.invocationParams(options),
+      messages: this.formatMessages(prompt),
+      stream: true,
+    };
+    const streamIterable = this.startStream(params, options);
+    for await (const streamedResponse of streamIterable) {
+      const data = JSON.parse(streamedResponse) as {
+        choices?: Array<{
+          index: number;
+          finish_reason: string | null;
+          delta: {
+            role?: string;
+            content?: string;
+            function_call?: { name: string; arguments: string };
+          };
+        }>;
+      };
+
+      const choice = data.choices?.[0];
+      if (!choice) {
+        continue;
+      }
+
+      const { delta } = choice;
+      const generationChunk = new GenerationChunk({
+        text: delta.content ?? "",
+      });
+      yield generationChunk;
+      // eslint-disable-next-line no-void
+      void runManager?.handleLLMNewToken(generationChunk.text ?? "");
+    }
+  }
+
+  startStream(
+    request: CreateChatCompletionRequest,
+    options?: StreamingAxiosConfiguration
+  ) {
+    let done = false;
+    const stream = new TransformStream();
+    const writer = stream.writable.getWriter();
+    const iterable = readableStreamToAsyncIterable(stream.readable);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let err: any;
+    this.completionWithRetry(request, {
+      ...options,
+      adapter: fetchAdapter, // default adapter doesn't do streaming
+      responseType: "stream",
+      onmessage: (event) => {
+        if (done) return;
+        if (event.data?.trim?.() === "[DONE]") {
+          done = true;
+          // eslint-disable-next-line no-void
+          void writer.close();
+        } else {
+          const data = JSON.parse(event.data);
+          if (data.error) {
+            done = true;
+            throw data.error;
+          }
+          // eslint-disable-next-line no-void
+          void writer.write(event.data);
+        }
+      },
+    }).catch((error) => {
+      if (!done) {
+        err = error;
+        done = true;
+        // eslint-disable-next-line no-void
+        void writer.close();
+      }
+    });
+    return {
+      async next() {
+        const chunk = await iterable.next();
+        if (err) {
+          throw err;
+        }
+        return chunk;
+      },
+      [Symbol.asyncIterator]() {
+        return this;
+      },
+    };
   }
 
   /** @ignore */

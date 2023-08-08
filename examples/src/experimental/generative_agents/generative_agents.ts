@@ -60,7 +60,7 @@ const Simulation = async () => {
     "Tommie tries to get some rest.",
   ];
   for (const observation of tommieObservations) {
-    await tommie.memory.addMemory(observation, new Date());
+    await tommie.addMemory(observation, new Date());
   }
 
   // Checking Tommie's summary again after giving him some memories
@@ -235,7 +235,7 @@ const Simulation = async () => {
   ];
 
   for (const observation of eveObservations) {
-    await eve.memory.addMemory(observation, new Date());
+    await eve.addMemory(observation, new Date());
   }
 
   const eveInitialSummary: string = await eve.getSummary({
@@ -275,9 +275,7 @@ const Simulation = async () => {
     initialObservation: string
   ): Promise<void> => {
     // Starts the conversation bewteen two agents
-    const [, observation] = await agents[1].generateReaction(
-      initialObservation
-    );
+    let [, observation] = await agents[1].generateReaction(initialObservation);
     console.log("Initial reply:", observation);
 
     // eslint-disable-next-line no-constant-condition
@@ -287,6 +285,7 @@ const Simulation = async () => {
         const [stayInDialogue, agentObservation] =
           await agent.generateDialogueResponse(observation);
         console.log("Next reply:", agentObservation);
+        observation = agentObservation;
         if (!stayInDialogue) {
           breakDialogue = true;
         }

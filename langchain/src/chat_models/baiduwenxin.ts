@@ -3,11 +3,10 @@ import {
   AIMessage,
   BaseMessage,
   ChatGeneration,
+  ChatMessage,
   ChatResult,
-  MessageType,
 } from "../schema/index.js";
 import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
-import { BaseLanguageModelCallOptions } from "../base_language/index.js";
 import { getEnvironmentVariable } from "../util/env.js";
 
 export type WenxinMessageRole = "assistant" | "user";
@@ -91,7 +90,16 @@ declare interface BaiduWenxinChatInput {
   penaltyScore?: number;
 }
 
-function messageTypeToWenxinRole(type: MessageType): WenxinMessageRole {
+function extractGenericMessageCustomRole(message: ChatMessage) {
+  if (message.role !== "assistant" && message.role !== "user") {
+    console.warn(`Unknown message role: ${message.role}`);
+  }
+
+  return message.role as WenxinMessageRole;
+}
+
+function messageToWenxinRole(message: BaseMessage): WenxinMessageRole {
+  const type = message._getType();
   switch (type) {
     case "ai":
       return "assistant";
@@ -99,6 +107,13 @@ function messageTypeToWenxinRole(type: MessageType): WenxinMessageRole {
       return "user";
     case "system":
       throw new Error("System messages not supported");
+    case "function":
+      throw new Error("Function messages not supported");
+    case "generic": {
+      if (!ChatMessage.isInstance(message))
+        throw new Error("Invalid generic chat message");
+      return extractGenericMessageCustomRole(message);
+    }
     default:
       throw new Error(`Unknown message type: ${type}`);
   }
@@ -117,8 +132,6 @@ export class ChatBaiduWenxin
   extends BaseChatModel
   implements BaiduWenxinChatInput
 {
-  declare CallOptions: BaseLanguageModelCallOptions;
-
   get callKeys(): string[] {
     return ["stop", "signal", "options"];
   }
@@ -266,7 +279,7 @@ export class ChatBaiduWenxin
 
     const params = this.invocationParams();
     const messagesMapped: WenxinMessage[] = messages.map((message) => ({
-      role: messageTypeToWenxinRole(message._getType()),
+      role: messageToWenxinRole(message),
       content: message.text,
     }));
 

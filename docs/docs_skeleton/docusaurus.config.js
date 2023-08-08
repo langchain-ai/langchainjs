@@ -184,7 +184,7 @@ const config = {
           // Please keep GitHub link to the right for consistency.
           {
             href: "https://github.com/hwchase17/langchainjs",
-            label: "GitHub",
+            className: "header-github-link",
             position: "right",
             "aria-label": "GitHub repository",
           },

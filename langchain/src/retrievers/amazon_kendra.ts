@@ -145,6 +145,7 @@ export class AmazonKendraRetriever extends BaseRetriever {
   getQueryItemExcerpt(item: QueryResultItem) {
     if (
       item.AdditionalAttributes &&
+      item.AdditionalAttributes.length &&
       item.AdditionalAttributes[0].Key === "AnswerText"
     ) {
       if (!item.AdditionalAttributes) {

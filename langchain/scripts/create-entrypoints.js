@@ -13,6 +13,7 @@ const entrypoints = {
   // agents
   agents: "agents/index",
   "agents/load": "agents/load",
+  "agents/toolkits": "agents/toolkits/index",
   "agents/toolkits/aws_sfn": "agents/toolkits/aws_sfn",
   "agents/toolkits/sql": "agents/toolkits/sql/index",
   // base language
@@ -51,6 +52,7 @@ const entrypoints = {
   "llms/cohere": "llms/cohere",
   "llms/hf": "llms/hf",
   "llms/raycast": "llms/raycast",
+  "llms/ollama": "llms/ollama",
   "llms/replicate": "llms/replicate",
   "llms/googlevertexai": "llms/googlevertexai",
   "llms/googlepalm": "llms/googlepalm",
@@ -84,6 +86,7 @@ const entrypoints = {
   "vectorstores/singlestore": "vectorstores/singlestore",
   "vectorstores/tigris": "vectorstores/tigris",
   "vectorstores/vectara": "vectorstores/vectara",
+  "vectorstores/xata": "vectorstores/xata",
   // text_splitter
   text_splitter: "text_splitter",
   // memory
@@ -95,6 +98,8 @@ const entrypoints = {
   document_loaders: "document_loaders/index",
   "document_loaders/base": "document_loaders/base",
   "document_loaders/web/apify_dataset": "document_loaders/web/apify_dataset",
+  "document_loaders/web/azure_blob_storage_container": "document_loaders/web/azure_blob_storage_container",
+  "document_loaders/web/azure_blob_storage_file": "document_loaders/web/azure_blob_storage_file",
   "document_loaders/web/cheerio": "document_loaders/web/cheerio",
   "document_loaders/web/puppeteer": "document_loaders/web/puppeteer",
   "document_loaders/web/playwright": "document_loaders/web/playwright",
@@ -125,6 +130,8 @@ const entrypoints = {
   "document_loaders/fs/notion": "document_loaders/fs/notion",
   "document_loaders/fs/unstructured": "document_loaders/fs/unstructured",
   // document_transformers
+  "document_transformers/html_to_text":
+    "document_transformers/html_to_text",
   "document_transformers/openai_functions":
     "document_transformers/openai_functions",
   // chat_models
@@ -135,11 +142,13 @@ const entrypoints = {
   "chat_models/googlevertexai": "chat_models/googlevertexai",
   "chat_models/googlepalm": "chat_models/googlepalm",
   "chat_models/baiduwenxin": "chat_models/baiduwenxin",
+  "chat_models/ollama": "chat_models/ollama",
   // schema
   schema: "schema/index",
   "schema/output_parser": "schema/output_parser",
   "schema/query_constructor": "schema/query_constructor",
   "schema/retriever": "schema/retriever",
+  "schema/runnable": "schema/runnable",
   // sql_db
   sql_db: "sql_db",
   // callbacks
@@ -172,6 +181,7 @@ const entrypoints = {
   cache: "cache/index",
   "cache/momento": "cache/momento",
   "cache/redis": "cache/redis",
+  "cache/ioredis": "cache/ioredis",
   "cache/upstash_redis": "cache/upstash_redis",
   // stores
   "stores/doc/in_memory": "stores/doc/in_memory",
@@ -186,11 +196,15 @@ const entrypoints = {
   "stores/message/ioredis": "stores/message/ioredis",
   "stores/message/upstash_redis": "stores/message/upstash_redis",
   "stores/message/planetscale": "stores/message/planetscale",
+  // utilities
+  "util/math": "util/math",
   // experimental
   "experimental/autogpt": "experimental/autogpt/index",
   "experimental/babyagi": "experimental/babyagi/index",
   "experimental/generative_agents": "experimental/generative_agents/index",
   "experimental/plan_and_execute": "experimental/plan_and_execute/index",
+  "experimental/multimodal_embeddings/googlevertexai":
+    "experimental/multimodal_embeddings/googlevertexai",
   // evaluation
   evaluation: "evaluation/index",
 };
@@ -256,6 +270,8 @@ const requiresOptionalDependency = [
   "vectorstores/tigris",
   "memory/zep",
   "document_loaders/web/apify_dataset",
+  "document_loaders/web/azure_blob_storage_container",
+  "document_loaders/web/azure_blob_storage_file",
   "document_loaders/web/cheerio",
   "document_loaders/web/puppeteer",
   "document_loaders/web/playwright",
@@ -281,6 +297,7 @@ const requiresOptionalDependency = [
   "document_loaders/fs/csv",
   "document_loaders/fs/notion",
   "document_loaders/fs/unstructured",
+  "document_transformers/html_to_text",
   "chat_models/googlevertexai",
   "chat_models/googlepalm",
   "sql_db",
@@ -299,6 +316,7 @@ const requiresOptionalDependency = [
   "chains/query_constructor/ir",
   "cache/momento",
   "cache/redis",
+  "cache/ioredis",
   "cache/upstash_redis",
   "stores/doc/gcs",
   "stores/file/node",
@@ -309,6 +327,7 @@ const requiresOptionalDependency = [
   "stores/message/ioredis",
   "stores/message/upstash_redis",
   "stores/message/planetscale",
+  "experimental/multimodal_embeddings/googlevertexai",
 ];
 
 // List of test-exports-* packages which we use to test that the exports field

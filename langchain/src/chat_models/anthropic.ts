@@ -1,19 +1,33 @@
 import { Anthropic, AI_PROMPT, HUMAN_PROMPT } from "@anthropic-ai/sdk";
 import type { CompletionCreateParams } from "@anthropic-ai/sdk/resources/completions";
 
-import { BaseLanguageModelCallOptions } from "../base_language/index.js";
 import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
 import {
   AIMessage,
+  AIMessageChunk,
   BaseMessage,
   ChatGeneration,
+  ChatGenerationChunk,
+  ChatMessage,
   ChatResult,
-  MessageType,
 } from "../schema/index.js";
 import { getEnvironmentVariable } from "../util/env.js";
 import { BaseChatModel, BaseChatModelParams } from "./base.js";
 
-function getAnthropicPromptFromMessage(type: MessageType): string {
+function extractGenericMessageCustomRole(message: ChatMessage) {
+  if (
+    message.role !== AI_PROMPT &&
+    message.role !== HUMAN_PROMPT &&
+    message.role !== ""
+  ) {
+    console.warn(`Unknown message role: ${message.role}`);
+  }
+
+  return message.role;
+}
+
+function getAnthropicPromptFromMessage(message: BaseMessage): string {
+  const type = message._getType();
   switch (type) {
     case "ai":
       return AI_PROMPT;
@@ -21,6 +35,11 @@ function getAnthropicPromptFromMessage(type: MessageType): string {
       return HUMAN_PROMPT;
     case "system":
       return "";
+    case "generic": {
+      if (!ChatMessage.isInstance(message))
+        throw new Error("Invalid generic chat message");
+      return extractGenericMessageCustomRole(message);
+    }
     default:
       throw new Error(`Unknown message type: ${type}`);
   }
@@ -100,8 +119,6 @@ type Kwargs = Record<string, any>;
  *
  */
 export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
-  declare CallOptions: BaseLanguageModelCallOptions;
-
   get lc_secrets(): { [key: string]: string } | undefined {
     return {
       anthropicApiKey: "ANTHROPIC_API_KEY",
@@ -206,13 +223,51 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
     };
   }
 
+  async *_streamResponseChunks(
+    messages: BaseMessage[],
+    options: this["ParsedCallOptions"],
+    runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatGenerationChunk> {
+    const params = this.invocationParams(options);
+    const stream = await this.createStreamWithRetry({
+      ...params,
+      prompt: this.formatMessagesAsPrompt(messages),
+    });
+    let modelSent = false;
+    let stopReasonSent = false;
+    for await (const data of stream) {
+      if (options.signal?.aborted) {
+        stream.controller.abort();
+        throw new Error("AbortError: User aborted the request.");
+      }
+      const additional_kwargs: Record<string, unknown> = {};
+      if (data.model && !modelSent) {
+        additional_kwargs.model = data.model;
+        modelSent = true;
+      } else if (data.stop_reason && !stopReasonSent) {
+        additional_kwargs.stop_reason = data.stop_reason;
+        stopReasonSent = true;
+      }
+      const delta = data.completion ?? "";
+      yield new ChatGenerationChunk({
+        message: new AIMessageChunk({
+          content: delta,
+          additional_kwargs,
+        }),
+        text: delta,
+      });
+      await runManager?.handleLLMNewToken(delta);
+      if (data.stop_reason) {
+        break;
+      }
+    }
+  }
+
   private formatMessagesAsPrompt(messages: BaseMessage[]): string {
     return (
       messages
         .map((message) => {
-          const messagePrompt = getAnthropicPromptFromMessage(
-            message._getType()
-          );
+          const messagePrompt = getAnthropicPromptFromMessage(message);
           return `${messagePrompt} ${message.content}`;
         })
         .join("") + AI_PROMPT
@@ -232,16 +287,37 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
     }
 
     const params = this.invocationParams(options);
-    const response = await this.completionWithRetry(
-      {
-        ...params,
-        prompt: this.formatMessagesAsPrompt(messages),
-      },
-      { signal: options.signal },
-      runManager
-    );
+    let response;
+    if (params.stream) {
+      response = {
+        completion: "",
+        model: "",
+        stop_reason: "",
+      };
+      const stream = await this._streamResponseChunks(
+        messages,
+        options,
+        runManager
+      );
+      for await (const chunk of stream) {
+        response.completion += chunk.message.content;
+        response.model =
+          (chunk.message.additional_kwargs.model as string) ?? response.model;
+        response.stop_reason =
+          (chunk.message.additional_kwargs.stop_reason as string) ??
+          response.stop_reason;
+      }
+    } else {
+      response = await this.completionWithRetry(
+        {
+          ...params,
+          prompt: this.formatMessagesAsPrompt(messages),
+        },
+        { signal: options.signal }
+      );
+    }
 
-    const generations: ChatGeneration[] = response.completion
+    const generations: ChatGeneration[] = (response.completion ?? "")
       .split(AI_PROMPT)
       .map((message) => ({
         text: message,
@@ -253,73 +329,40 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
     };
   }
 
+  private async createStreamWithRetry(
+    request: CompletionCreateParams & Kwargs
+  ) {
+    if (!this.streamingClient) {
+      const options = this.apiUrl ? { apiUrl: this.apiUrl } : undefined;
+      this.streamingClient = new Anthropic({
+        ...options,
+        apiKey: this.anthropicApiKey,
+      });
+    }
+    const makeCompletionRequest = async () =>
+      this.streamingClient.completions.create({ ...request, stream: true });
+    return this.caller.call(makeCompletionRequest);
+  }
+
   /** @ignore */
   private async completionWithRetry(
     request: CompletionCreateParams & Kwargs,
-    options: { signal?: AbortSignal },
-    runManager?: CallbackManagerForLLMRun
+    options: { signal?: AbortSignal }
   ): Promise<Anthropic.Completions.Completion> {
     if (!this.anthropicApiKey) {
       throw new Error("Missing Anthropic API key.");
     }
-    let makeCompletionRequest: () => Promise<Anthropic.Completions.Completion>;
-
-    let asyncCallerOptions = {};
-    if (request.stream) {
-      if (!this.streamingClient) {
-        const options = this.apiUrl ? { apiUrl: this.apiUrl } : undefined;
-        this.streamingClient = new Anthropic({
-          ...options,
-          apiKey: this.anthropicApiKey,
-        });
-      }
-      makeCompletionRequest = async () => {
-        const stream = await this.streamingClient.completions.create({
-          ...request,
-        });
-
-        const completion: Anthropic.Completion = {
-          completion: "",
-          model: "",
-          stop_reason: "",
-        };
-
-        for await (const data of stream) {
-          completion.stop_reason = data.stop_reason;
-          completion.model = data.model;
-
-          if (options.signal?.aborted) {
-            stream.controller.abort();
-            throw new Error("AbortError: User aborted the request.");
-          }
-
-          if (data.stop_reason) {
-            break;
-          }
-          const part = data.completion;
-          if (part) {
-            completion.completion += part;
-            // eslint-disable-next-line no-void
-            void runManager?.handleLLMNewToken(part ?? "");
-          }
-        }
-
-        return completion;
-      };
-    } else {
-      if (!this.batchClient) {
-        const options = this.apiUrl ? { apiUrl: this.apiUrl } : undefined;
-        this.batchClient = new Anthropic({
-          ...options,
-          apiKey: this.anthropicApiKey,
-        });
-      }
-      asyncCallerOptions = { signal: options.signal };
-      makeCompletionRequest = async () =>
-        this.batchClient.completions.create({ ...request });
+    if (!this.batchClient) {
+      const options = this.apiUrl ? { apiUrl: this.apiUrl } : undefined;
+      this.batchClient = new Anthropic({
+        ...options,
+        apiKey: this.anthropicApiKey,
+      });
     }
+    const makeCompletionRequest = async () =>
+      this.batchClient.completions.create({ ...request, stream: false });
     return this.caller.callWithOptions(
-      asyncCallerOptions,
+      { signal: options.signal },
       makeCompletionRequest
     );
   }

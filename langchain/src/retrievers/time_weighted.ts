@@ -80,6 +80,10 @@ export class TimeWeightedVectorStoreRetriever extends BaseRetriever {
     return this.memoryStream;
   }
 
+  setMemoryStream(memoryStream: Document[]) {
+    this.memoryStream = memoryStream;
+  }
+
   /**
    * Get relevant documents based on time-weighted relevance
    * @param query - The query to search for
@@ -213,6 +217,7 @@ export class TimeWeightedVectorStoreRetriever extends BaseRetriever {
     return docs.map((doc, i) => ({
       ...doc,
       metadata: {
+        ...doc.metadata,
         [LAST_ACCESSED_AT_KEY]: doc.metadata[LAST_ACCESSED_AT_KEY] ?? now,
         created_at: doc.metadata.created_at ?? now,
         [BUFFER_IDX]: this.memoryStream.length + i,
@@ -223,11 +228,10 @@ export class TimeWeightedVectorStoreRetriever extends BaseRetriever {
   /**
    * Calculate the combined score based on vector relevance and other factors
    * @param doc - The document to calculate the score for
-   * @param vectorRelevance - The relevance score
-   * from the vector store
-@param nowMsec - The current timestamp in milliseconds
-@returns The combined score for the document
-*/
+   * @param vectorRelevance - The relevance score from the vector store
+   * @param nowMsec - The current timestamp in milliseconds
+   * @returns The combined score for the document
+   */
   private getCombinedScore(
     doc: Document,
     vectorRelevance: number | null,
@@ -248,12 +252,11 @@ export class TimeWeightedVectorStoreRetriever extends BaseRetriever {
   }
 
   /**
-
-  Calculate the hours passed between two time points
-  @param time - The current time in seconds
-  @param refTime - The reference time in seconds
-  @returns The number of hours passed between the two time points
-  */
+   * Calculate the hours passed between two time points
+   * @param time - The current time in seconds
+   * @param refTime - The reference time in seconds
+   * @returns The number of hours passed between the two time points
+   */
   private getHoursPassed(time: number, refTime: number): number {
     return (time - refTime) / 3600;
   }

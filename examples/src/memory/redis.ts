@@ -1,5 +1,5 @@
 import { BufferMemory } from "langchain/memory";
-import { RedisChatMessageHistory } from "langchain/stores/message/redis";
+import { RedisChatMessageHistory } from "langchain/stores/message/ioredis";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { ConversationChain } from "langchain/chains";
 
@@ -7,9 +7,7 @@ const memory = new BufferMemory({
   chatHistory: new RedisChatMessageHistory({
     sessionId: new Date().toISOString(), // Or some other unique identifier for the conversation
     sessionTTL: 300, // 5 minutes, omit this parameter to make sessions never expire
-    config: {
-      url: "redis://localhost:6379", // Default value, override with your own instance's URL
-    },
+    url: "redis://localhost:6379", // Default value, override with your own instance's URL
   }),
 });
 

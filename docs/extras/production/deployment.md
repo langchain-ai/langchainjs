@@ -22,7 +22,8 @@ Some other considerations include:
 - Do you deploy your backend and frontend together, or separately?
 - Do you deploy your backend co-located with your database, or separately?
 
-As you move your LangChains into production, we'd love to offer more comprehensive support. Please fill out [this form](https://forms.gle/57d8AmXBYp8PP8tZA) and we'll set up a dedicated support Slack channel.
+**Production Support:** As you move your LangChains into production, we'd love to offer more hands-on support.
+Fill out [this form](https://airtable.com/appwQzlErAS2qiP0L/shrGtGaVBVAz7NcV2) to share more about what you're building, and our team will get in touch.
 
 ## Deployment Options
 
