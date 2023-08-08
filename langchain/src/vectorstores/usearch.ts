@@ -1,4 +1,4 @@
-import { Index } from "usearch";
+import usearch from "usearch";
 import * as uuid from "uuid";
 import { Embeddings } from "../embeddings/base.js";
 import { SaveableVectorStore } from "./base.js";
@@ -7,12 +7,12 @@ import { SynchronousInMemoryDocstore } from "../stores/doc/in_memory.js";
 
 export interface USearchArgs {
   docstore?: SynchronousInMemoryDocstore;
-  index?: Index;
+  index?: usearch.Index;
   mapping?: Record<number, string>;
 }
 
 export class USearch extends SaveableVectorStore {
-  _index?: Index;
+  _index?: usearch.Index;
 
   _mapping: Record<number, string>;
 
@@ -41,7 +41,7 @@ export class USearch extends SaveableVectorStore {
     );
   }
 
-  public get index(): Index {
+  public get index(): usearch.Index {
     if (!this._index) {
       throw new Error(
         "Vector store not initialised yet. Try calling `fromTexts` or `fromDocuments` first."
@@ -50,7 +50,7 @@ export class USearch extends SaveableVectorStore {
     return this._index;
   }
 
-  private set index(index: Index) {
+  private set index(index: usearch.Index) {
     this._index = index;
   }
 
@@ -63,7 +63,7 @@ export class USearch extends SaveableVectorStore {
     }
     const dv = vectors[0].length;
     if (!this._index) {
-      this._index = new Index({
+      this._index = new usearch.Index({
         metric: "l2sq",
         connectivity: BigInt(16),
         dimensions: BigInt(dv),
