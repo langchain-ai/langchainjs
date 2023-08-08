@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.123",
+  "version": "0.0.124",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -121,6 +121,9 @@
     "llms/hf.cjs",
     "llms/hf.js",
     "llms/hf.d.ts",
+    "llms/ollama.cjs",
+    "llms/ollama.js",
+    "llms/ollama.d.ts",
     "llms/replicate.cjs",
     "llms/replicate.js",
     "llms/replicate.d.ts",
@@ -355,6 +358,9 @@
     "chat_models/baiduwenxin.cjs",
     "chat_models/baiduwenxin.js",
     "chat_models/baiduwenxin.d.ts",
+    "chat_models/ollama.cjs",
+    "chat_models/ollama.js",
+    "chat_models/ollama.d.ts",
     "schema.cjs",
     "schema.js",
     "schema.d.ts",
@@ -1129,6 +1135,11 @@
       "import": "./llms/hf.js",
       "require": "./llms/hf.cjs"
     },
+    "./llms/ollama": {
+      "types": "./llms/ollama.d.ts",
+      "import": "./llms/ollama.js",
+      "require": "./llms/ollama.cjs"
+    },
     "./llms/replicate": {
       "types": "./llms/replicate.d.ts",
       "import": "./llms/replicate.js",
@@ -1524,6 +1535,11 @@
       "types": "./chat_models/baiduwenxin.d.ts",
       "import": "./chat_models/baiduwenxin.js",
       "require": "./chat_models/baiduwenxin.cjs"
+    },
+    "./chat_models/ollama": {
+      "types": "./chat_models/ollama.d.ts",
+      "import": "./chat_models/ollama.js",
+      "require": "./chat_models/ollama.cjs"
     },
     "./schema": {
       "types": "./schema.d.ts",
