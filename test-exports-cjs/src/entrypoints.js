@@ -23,7 +23,6 @@ const text_splitter = require("langchain/text_splitter");
 const memory = require("langchain/memory");
 const document = require("langchain/document");
 const document_loaders_base = require("langchain/document_loaders/base");
-const document_loaders_base_with_event_emitter = require("langchain/document_loaders/base_with_event_emitter");
 const document_loaders_web_serpapi = require("langchain/document_loaders/web/serpapi");
 const document_loaders_web_sort_xyz_blockchain = require("langchain/document_loaders/web/sort_xyz_blockchain");
 const document_transformers_openai_functions = require("langchain/document_transformers/openai_functions");

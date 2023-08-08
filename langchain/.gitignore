@@ -223,9 +223,6 @@ document_loaders.d.ts
 document_loaders/base.cjs
 document_loaders/base.js
 document_loaders/base.d.ts
-document_loaders/base_with_event_emitter.cjs
-document_loaders/base_with_event_emitter.js
-document_loaders/base_with_event_emitter.d.ts
 document_loaders/web/apify_dataset.cjs
 document_loaders/web/apify_dataset.js
 document_loaders/web/apify_dataset.d.ts

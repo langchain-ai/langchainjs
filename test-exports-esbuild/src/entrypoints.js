@@ -23,7 +23,6 @@ import * as text_splitter from "langchain/text_splitter";
 import * as memory from "langchain/memory";
 import * as document from "langchain/document";
 import * as document_loaders_base from "langchain/document_loaders/base";
-import * as document_loaders_base_with_event_emitter from "langchain/document_loaders/base_with_event_emitter";
 import * as document_loaders_web_serpapi from "langchain/document_loaders/web/serpapi";
 import * as document_loaders_web_sort_xyz_blockchain from "langchain/document_loaders/web/sort_xyz_blockchain";
 import * as document_transformers_openai_functions from "langchain/document_transformers/openai_functions";
