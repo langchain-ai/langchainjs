@@ -1,4 +1,4 @@
-import { EventEmitter } from "events";
+import { EventEmitter } from "node:events";
 import { BaseDocumentLoader } from "./base.js";
 
 export abstract class BaseDocumentLoaderWithEventEmitter extends BaseDocumentLoader {
@@ -10,43 +10,28 @@ export abstract class BaseDocumentLoaderWithEventEmitter extends BaseDocumentLoa
     this.emitter = new EventEmitter();
   }
 
-  public addListener(
-    eventName: string | symbol,
-    listener: (...args: any[]) => void // eslint-disable-line @typescript-eslint/no-explicit-any
-  ): this {
-    this.emitter.addListener(eventName, listener);
+  public on(event: string | symbol, listener: (...args: any[]) => void): this {
+    this.emitter.on(event, listener);
     return this;
   }
 
-  public on(
-    eventName: string | symbol,
-    listener: (...args: any[]) => void // eslint-disable-line @typescript-eslint/no-explicit-any
-  ): this {
-    this.emitter.on(eventName, listener);
-    return this;
+  public emit(event: string | symbol, ...args: any[]): boolean {
+    return this.emitter.emit(event, ...args);
   }
 
   public once(
-    eventName: string | symbol,
-    listener: (...args: any[]) => void // eslint-disable-line @typescript-eslint/no-explicit-any
+    event: string | symbol,
+    listener: (...args: any[]) => void
   ): this {
-    this.emitter.once(eventName, listener);
+    this.emitter.once(event, listener);
     return this;
   }
 
   public removeListener(
-    eventName: string | symbol,
-    listener: (...args: any[]) => void // eslint-disable-line @typescript-eslint/no-explicit-any
+    event: string | symbol,
+    listener: (...args: any[]) => void
   ): this {
-    this.emitter.removeListener(eventName, listener);
-    return this;
-  }
-
-  public off(
-    eventName: string | symbol,
-    listener: (...args: any[]) => void // eslint-disable-line @typescript-eslint/no-explicit-any
-  ): this {
-    this.emitter.off(eventName, listener);
+    this.emitter.removeListener(event, listener);
     return this;
   }
 
@@ -55,28 +40,12 @@ export abstract class BaseDocumentLoaderWithEventEmitter extends BaseDocumentLoa
     return this;
   }
 
-  public setMaxListeners(n: number): this {
-    this.emitter.setMaxListeners(n);
-    return this;
-  }
-
-  public getMaxListeners(): number {
-    return this.emitter.getMaxListeners();
-  }
-
-  // eslint-disable-next-line @typescript-eslint/ban-types
   public listeners(event: string | symbol): Function[] {
     return this.emitter.listeners(event);
   }
 
-  // eslint-disable-next-line @typescript-eslint/ban-types
-  public rawListeners(event: string | symbol): Function[] {
-    return this.emitter.rawListeners(event);
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  public emit(eventName: string | symbol, ...args: any[]): boolean {
-    return this.emitter.emit(eventName, ...args);
+  public eventNames(): Array<string | symbol> {
+    return this.emitter.eventNames();
   }
 
   public listenerCount(type: string | symbol): number {
@@ -84,22 +53,18 @@ export abstract class BaseDocumentLoaderWithEventEmitter extends BaseDocumentLoa
   }
 
   public prependListener(
-    eventName: string | symbol,
-    listener: (...args: any[]) => void // eslint-disable-line @typescript-eslint/no-explicit-any
+    event: string | symbol,
+    listener: (...args: any[]) => void
   ): this {
-    this.emitter.prependListener(eventName, listener);
+    this.emitter.prependListener(event, listener);
     return this;
   }
 
   public prependOnceListener(
-    eventName: string | symbol,
-    listener: (...args: any[]) => void // eslint-disable-line @typescript-eslint/no-explicit-any
+    event: string | symbol,
+    listener: (...args: any[]) => void
   ): this {
-    this.emitter.prependOnceListener(eventName, listener);
+    this.emitter.prependOnceListener(event, listener);
     return this;
-  }
-
-  public eventNames(): Array<string | symbol> {
-    return this.emitter.eventNames();
   }
 }

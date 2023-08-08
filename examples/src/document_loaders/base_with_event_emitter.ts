@@ -2,7 +2,7 @@ import { BaseDocumentLoaderWithEventEmitter } from "langchain/document_loaders/b
 import { Document } from "langchain/document";
 
 class ExampleTextLoaderWithEvents extends BaseDocumentLoaderWithEventEmitter {
-  private documentsTotal = 0;
+  private documentsTotal: number = 0;
 
   private documents: Document[] = [];
 
