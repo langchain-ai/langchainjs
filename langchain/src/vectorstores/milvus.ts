@@ -21,6 +21,7 @@ export interface MilvusLibArgs {
   ssl?: boolean;
   username?: string;
   password?: string;
+  textFieldMaxLength?:number;
 }
 
 type IndexType =
@@ -70,6 +71,8 @@ export class Milvus extends VectorStore {
 
   textField: string;
 
+  textFieldMaxLength:number;
+
   fields: string[];
 
   client: MilvusClient;
@@ -107,6 +110,9 @@ export class Milvus extends VectorStore {
     this.autoId = true;
     this.primaryField = args.primaryField ?? MILVUS_PRIMARY_FIELD_NAME;
     this.vectorField = args.vectorField ?? MILVUS_VECTOR_FIELD_NAME;
+
+    this.textFieldMaxLength = args.textFieldMaxLength ?? 0;
+
     this.fields = [];
 
     const url = args.url ?? getEnvironmentVariable("MILVUS_URL");
@@ -298,7 +304,7 @@ export class Milvus extends VectorStore {
         description: "Text field",
         data_type: DataType.VarChar,
         type_params: {
-          max_length: getTextFieldMaxLength(documents).toString(),
+          max_length: this.textFieldMaxLength>0 ? this.textFieldMaxLength.toString() : getTextFieldMaxLength(documents).toString(),
         },
       },
       {
