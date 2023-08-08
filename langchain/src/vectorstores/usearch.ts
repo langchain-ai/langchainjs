@@ -75,10 +75,10 @@ export class USearch extends SaveableVectorStore {
     const dv = vectors[0].length;
     if (!this._index) {
       const { Index } = await USearch.importUSearch();
-      this._index = new Index({ metric: 'l2sq', connectivity: 16, dimensions: dv });
+      this._index = new Index({ metric: 'l2sq', connectivity: BigInt(16), dimensions: BigInt(dv) });
     }
     const d = this.index.dimensions();
-    if (dv !== d) {
+    if (BigInt(dv) !== d) {
       throw new Error(
         `Vectors must have the same length as the number of dimensions (${d})`
       );
@@ -90,7 +90,7 @@ export class USearch extends SaveableVectorStore {
     for (let i = 0; i < vectors.length; i += 1) {
       const documentId = uuid.v4();
       documentIds.push(documentId);
-      const id = docstoreSize + i;
+      const id = Number(docstoreSize) + i;
       this.index.add(BigInt(id), new Float32Array(vectors[i]));
       this._mapping[id] = documentId;
       this.docstore.add({ [documentId]: documents[i] });
@@ -101,7 +101,7 @@ export class USearch extends SaveableVectorStore {
 
   async similaritySearchVectorWithScore(query: number[], k: number) {
     const d = this.index.dimensions();
-    if (query.length !== d) {
+    if (BigInt(query.length) !== d) {
       throw new Error(
         `Query vector must have the same length as the number of dimensions (${d})`
       );
@@ -112,9 +112,9 @@ export class USearch extends SaveableVectorStore {
         `k (${k}) is greater than the number of elements in the index (${total}), setting k to ${total}`
       );
       // eslint-disable-next-line no-param-reassign
-      k = total;
+      k = Number(total);
     }
-    const result = this.index.search(new Float32Array(query), k);
+    const result = this.index.search(new Float32Array(query), BigInt(k));
 
 
     let return_list: [Document, number][] = [];
