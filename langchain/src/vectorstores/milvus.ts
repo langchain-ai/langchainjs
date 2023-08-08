@@ -304,7 +304,7 @@ export class Milvus extends VectorStore {
         description: "Text field",
         data_type: DataType.VarChar,
         type_params: {
-          max_length: this.textFieldMaxLength>0 ? this.textFieldMaxLength.toString() : getTextFieldMaxLength(documents).toString(),
+          max_length: this.textFieldMaxLength > 0 ? this.textFieldMaxLength.toString() : getTextFieldMaxLength(documents).toString(),
         },
       },
       {
