@@ -9,11 +9,15 @@ test("Test Notion API Loader Page", async () => {
       auth: process.env.NOTION_INTEGRATION_TOKEN,
     },
     id: process.env.NOTION_PAGE_ID ?? "",
+    onDocumentLoaded: (current, total, currentTitle) => {
+      console.log(`Loaded Page: ${currentTitle} (${current}/${total})`);
+    },
   });
 
   const docs = await loader.load();
+  const titles = docs.map((doc) => doc.metadata.properties.title);
+  console.log("Titles:", titles);
   console.log(`Loaded ${docs.length} pages`);
-  // console.dir({ Pages: docs }, { depth: Infinity });
 });
 
 test("Test Notion API Loader Database", async () => {
@@ -22,15 +26,10 @@ test("Test Notion API Loader Database", async () => {
       auth: process.env.NOTION_INTEGRATION_TOKEN,
     },
     id: process.env.NOTION_DATABASE_ID ?? "",
+    onDocumentLoaded: (current, total, currentTitle) => {
+      console.log(`Loaded Page: ${currentTitle} (${current}/${total})`);
+    },
   });
-
-  let total = 0;
-  loader.on("total_change", (pageTotal) => {
-    total = pageTotal;
-  });
-  loader.on("load", (title, current) =>
-    console.log(`Loaded Page: ${title} (${current}/${total})`)
-  );
 
   const docs = await loader.load();
   const titles = docs.map((doc) => doc.metadata.properties.title);

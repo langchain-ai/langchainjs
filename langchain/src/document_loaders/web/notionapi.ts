@@ -17,7 +17,7 @@ import type {
 
 import Bottleneck from "bottleneck";
 import { Document } from "../../document.js";
-import { BaseDocumentLoaderWithEventEmitter } from "../base_with_event_emitter.js";
+import { BaseDocumentLoader } from "../base.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type GuardType<T> = T extends (x: any, ...rest: any) => x is infer U
@@ -65,14 +65,22 @@ const getTitle = (obj: GetResponse) => {
 // @deprecated `type` property is now automatically determined.
 export type NotionAPIType = "database" | "page";
 
+export type OnDocumentLoadedCallback = (
+  current: number,
+  total: number,
+  currentTitle?: string,
+  rootTitle?: string
+) => void;
+
 export type NotionAPILoaderOptions = {
   clientOptions: ConstructorParameters<typeof Client>[0];
   id: string;
   type?: NotionAPIType; // @deprecated `type` property is now automatically determined.
   limiterOptions?: ConstructorParameters<typeof Bottleneck>[0];
+  onDocumentLoaded?: OnDocumentLoadedCallback;
 };
 
-export class NotionAPILoader extends BaseDocumentLoaderWithEventEmitter {
+export class NotionAPILoader extends BaseDocumentLoader {
   private limiter: Bottleneck;
 
   private notionClient: Client;
@@ -91,6 +99,8 @@ export class NotionAPILoader extends BaseDocumentLoaderWithEventEmitter {
 
   private rootTitle: string;
 
+  private onDocumentLoaded: OnDocumentLoadedCallback;
+
   constructor(options: NotionAPILoaderOptions) {
     super();
 
@@ -108,6 +118,7 @@ export class NotionAPILoader extends BaseDocumentLoaderWithEventEmitter {
     this.pageQueueTotal = 0;
     this.documents = [];
     this.rootTitle = "";
+    this.onDocumentLoaded = options.onDocumentLoaded ?? ((_ti, _cu) => {});
   }
 
   private addToQueue(...items: string[]) {
@@ -116,7 +127,6 @@ export class NotionAPILoader extends BaseDocumentLoaderWithEventEmitter {
     );
     this.pageQueue.push(...deDuped);
     this.pageQueueTotal += deDuped.length;
-    this.emit("total_change", this.pageQueueTotal);
   }
 
   private parsePageProperties(page: PageObjectResponse): {
@@ -272,7 +282,6 @@ export class NotionAPILoader extends BaseDocumentLoaderWithEventEmitter {
     ]);
 
     if (!isFullPage(pageDetails)) return;
-    this.emit("update", pageId, 0, pageBlocks.length);
 
     const mdBlocks = await this.loadBlocks(pageBlocks);
     const mdStringObject = this.n2mClient.toMarkdownString(mdBlocks);
@@ -283,10 +292,11 @@ export class NotionAPILoader extends BaseDocumentLoaderWithEventEmitter {
 
     this.documents.push(pageDocument);
     this.pageCompleted.push(pageId);
-    this.emit(
-      "load",
+    this.onDocumentLoaded(
+      this.documents.length,
+      this.pageQueueTotal,
       pageDocument.metadata.properties.title,
-      this.documents.length
+      this.rootTitle
     );
   }
 
@@ -344,15 +354,11 @@ export class NotionAPILoader extends BaseDocumentLoaderWithEventEmitter {
 
     this.rootTitle = getTitle(resPage) || getTitle(resDatabase) || this.id;
 
-    this.emit("begin", this.rootTitle, this.pageQueueTotal);
-
     let pageId = this.pageQueue.shift();
     while (pageId) {
       await this.loadPage(pageId);
       pageId = this.pageQueue.shift();
     }
-
-    this.emit("end", this.documents.length);
     return this.documents;
   }
 }
