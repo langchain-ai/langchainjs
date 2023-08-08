@@ -37,8 +37,7 @@
     "publish": "bash scripts/release-branch.sh && turbo run --filter langchain build lint test && yarn run test:exports:docker && yarn workspace langchain run release && echo '🔗 Open https://github.com/hwchase17/langchainjs/compare/release?expand=1 and merge the release PR'",
     "example": "yarn workspace examples start",
     "precommit": "turbo run precommit",
-    "docs": "yarn workspace docs dev",
-    "postinstall": "husky install"
+    "docs": "yarn workspace docs dev"
   },
   "author": "LangChain",
   "license": "MIT",
