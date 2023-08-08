@@ -163,6 +163,9 @@
     "vectorstores/faiss.cjs",
     "vectorstores/faiss.js",
     "vectorstores/faiss.d.ts",
+    "vectorstores/usearch.cjs",
+    "vectorstores/usearch.js",
+    "vectorstores/usearch.d.ts",
     "vectorstores/weaviate.cjs",
     "vectorstores/weaviate.js",
     "vectorstores/weaviate.d.ts",
@@ -598,6 +601,7 @@
     "eslint-plugin-no-instanceof": "^1.0.1",
     "eslint-plugin-prettier": "^4.2.1",
     "faiss-node": "^0.2.1",
+    "usearch": "^1.1.1",
     "firebase-admin": "^11.9.0",
     "google-auth-library": "^8.9.0",
     "graphql": "^16.6.0",
@@ -672,6 +676,7 @@
     "d3-dsv": "^2.0.0",
     "epub2": "^3.0.1",
     "faiss-node": "^0.2.1",
+    "usearch": "^1.1.1",
     "firebase-admin": "^11.9.0",
     "google-auth-library": "^8.9.0",
     "hnswlib-node": "^1.4.2",
@@ -808,6 +813,9 @@
       "optional": true
     },
     "faiss-node": {
+      "optional": true
+    },
+    "usearch": {
       "optional": true
     },
     "firebase-admin": {
@@ -1192,6 +1200,11 @@
       "types": "./vectorstores/faiss.d.ts",
       "import": "./vectorstores/faiss.js",
       "require": "./vectorstores/faiss.cjs"
+    },
+    "./vectorstores/usearch": {
+      "types": "./vectorstores/usearch.d.ts",
+      "import": "./vectorstores/usearch.js",
+      "require": "./vectorstores/usearch.cjs"
     },
     "./vectorstores/weaviate": {
       "types": "./vectorstores/weaviate.d.ts",

@@ -7,10 +7,7 @@ const loader = new TextLoader("src/document_loaders/example_data/example.txt");
 const docs = await loader.load();
 
 // Load the docs into the vector store
-const vectorStore = await USearch.fromDocuments(
-  docs,
-  new OpenAIEmbeddings()
-);
+const vectorStore = await USearch.fromDocuments(docs, new OpenAIEmbeddings());
 
 // Search for the most similar document
 const resultOne = await vectorStore.similaritySearch("hello world", 1);

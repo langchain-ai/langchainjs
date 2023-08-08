@@ -9,7 +9,7 @@ test("Test USearch.fromTexts + addVectors", async () => {
     [{ id: 2 }],
     new FakeEmbeddings()
   );
-  expect(vectorStore.index?.size()).toBe(1);
+  expect(vectorStore.index?.size()).toBe(1n);
 
   await vectorStore.addVectors(
     [
@@ -27,12 +27,9 @@ test("Test USearch.fromTexts + addVectors", async () => {
       }),
     ]
   );
-  expect(vectorStore.index?.size()).toBe(3);
+  expect(vectorStore.index?.size()).toBe(3n);
 
-  const result = await vectorStore.similaritySearch(
-    'hello world',
-    2
-  );
+  const result = await vectorStore.similaritySearch("hello world", 2);
   expect(result[0].metadata).toEqual({ id: 2 });
 });
 
@@ -54,7 +51,7 @@ test("Test USearch.fromDocuments + addVectors", async () => {
     ],
     new FakeEmbeddings()
   );
-  expect(vectorStore.index?.size()).toBe(3);
+  expect(vectorStore.index?.size()).toBe(3n);
 
   await vectorStore.addVectors(
     [
@@ -72,7 +69,7 @@ test("Test USearch.fromDocuments + addVectors", async () => {
       }),
     ]
   );
-  expect(vectorStore.index?.size()).toBe(5);
+  expect(vectorStore.index?.size()).toBe(5n);
 
   const results = await vectorStore.similaritySearchVectorWithScore(
     [1, 0, 0, 0],
