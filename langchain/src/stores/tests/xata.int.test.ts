@@ -1,11 +1,11 @@
 /* eslint-disable no-process-env */
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { BaseClient } from "@xata.io/client";
-import { XataChatMessageHistory } from "../message/xata.js";
 import { AIMessage, HumanMessage } from "../../schema/index.js";
 import { BufferMemory } from "../../memory/buffer_memory.js";
 import { ChatOpenAI } from "../../chat_models/openai.js";
 import { ConversationChain } from "../../chains/conversation.js";
+import { XataChatMessageHistory } from "../message/xata.js";
 
 describe("XataChatMessageHistory", () => {
   if (!process.env.XATA_API_KEY) {
