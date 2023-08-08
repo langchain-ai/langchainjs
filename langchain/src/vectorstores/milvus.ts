@@ -239,12 +239,11 @@ export class Milvus extends VectorStore {
       const fields = {
         pageContent: "",
         metadata: {} as Record<string, any>,
-        [this.primaryField]: 0,
       };
       Object.keys(result).forEach((key) => {
         if (key === this.textField) {
           fields.pageContent = result[key];
-        } else if (this.fields.includes(key)) {
+        } else if (this.fields.includes(key) || key === this.primaryField) {
           if (typeof result[key] === "string") {
             const { isJson, obj } = checkJsonString(result[key]);
             fields.metadata[key] = isJson ? obj : result[key];
