@@ -234,7 +234,6 @@ export class VectaraStore extends VectorStore {
           ],
           contextConfig: filter?.contextConfig ?? {},
           rerankingConfig: filter?.rerankingConfig ?? {},
-          summary: filter?.summary ?? [],
         },
       ],
     };

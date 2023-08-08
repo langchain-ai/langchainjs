@@ -185,6 +185,7 @@ export abstract class VectorStore extends Serializable {
     documents: [Document, number][];
     summary: Record<string, unknown>[];
   }> {
+    // Purposely not implemented so as to make it optional for subclasses
     throw new Error("Not implemented.");
   }
 
