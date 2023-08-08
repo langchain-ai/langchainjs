@@ -267,6 +267,7 @@ const requiresOptionalDependency = [
   "vectorstores/tigris",
   "memory/zep",
   "document_loaders/web/apify_dataset",
+  "document_loaders/web/assemblyai",
   "document_loaders/web/azure_blob_storage_container",
   "document_loaders/web/azure_blob_storage_file",
   "document_loaders/web/cheerio",

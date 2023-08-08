@@ -7,7 +7,7 @@ import {
   SubtitleFormat,
 } from "../web/assemblyai.js";
 
-test("Test Invalid API key", async () => {
+test.skip("Test Invalid API key", async () => {
   const loader = new AudioTranscriptLoader(
     {
       audio_url: "https://storage.googleapis.com/aai-docs-samples/nbc.mp3",
@@ -20,7 +20,7 @@ test("Test Invalid API key", async () => {
   );
 });
 
-test("Test Audio Transcript Loader", async () => {
+test.skip("Test Audio Transcript Loader", async () => {
   const loader = new AudioTranscriptLoader({
     audio_url: "https://storage.googleapis.com/aai-docs-samples/nbc.mp3",
   });
@@ -32,7 +32,7 @@ test("Test Audio Transcript Loader", async () => {
   console.dir(docs, { depth: Infinity });
 });
 
-test("Test Audio Transcript Paragraphs Loader", async () => {
+test.skip("Test Audio Transcript Paragraphs Loader", async () => {
   const loader = new AudioTranscriptParagraphsLoader({
     audio_url: "https://storage.googleapis.com/aai-docs-samples/nbc.mp3",
   });
@@ -44,7 +44,7 @@ test("Test Audio Transcript Paragraphs Loader", async () => {
   console.dir(docs, { depth: Infinity });
 });
 
-test("Test Audio Transcript Sentences Loader", async () => {
+test.skip("Test Audio Transcript Sentences Loader", async () => {
   const loader = new AudioTranscriptSentencesLoader({
     audio_url: "https://storage.googleapis.com/aai-docs-samples/nbc.mp3",
   });
@@ -56,7 +56,7 @@ test("Test Audio Transcript Sentences Loader", async () => {
   console.dir(docs, { depth: Infinity });
 });
 
-test("Test Audio Subtitles Loader", async () => {
+test.skip("Test Audio Subtitles Loader", async () => {
   const loader = new AudioSubtitleLoader(
     {
       audio_url: "https://storage.googleapis.com/aai-docs-samples/nbc.mp3",
