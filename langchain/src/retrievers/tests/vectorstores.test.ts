@@ -36,7 +36,9 @@ test("Test HNSWLib Retriever with Callback", async () => {
 
   const results = await retriever.getRelevantDocuments(queryStr);
 
-  expect(results).toEqual([new Document({ metadata: { id: 4 }, pageContent })]);
+  expect(results).toEqual([
+    new Document({ metadata: { id: 4, score: 0 }, pageContent }),
+  ]);
   expect(startRun).toBe(1);
   expect(endRun).toBe(1);
 });
@@ -79,7 +81,12 @@ test("Test Memory Retriever with Callback", async () => {
 
   const results = await retriever.getRelevantDocuments(queryStr);
 
-  expect(results).toEqual([new Document({ metadata: { a: 1 }, pageContent })]);
+  expect(results).toEqual([
+    new Document({
+      metadata: { a: 1, score: 0.9999999999999998 },
+      pageContent,
+    }),
+  ]);
   expect(startRun).toBe(1);
   expect(endRun).toBe(1);
 });
@@ -126,7 +133,9 @@ test("Test Faiss Retriever with Callback", async () => {
 
   const results = await retriever.getRelevantDocuments(queryStr);
 
-  expect(results).toEqual([new Document({ metadata: { a: 1 }, pageContent })]);
+  expect(results).toEqual([
+    new Document({ metadata: { a: 1, score: 0 }, pageContent }),
+  ]);
   expect(startRun).toBe(1);
   expect(endRun).toBe(1);
 });

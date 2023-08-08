@@ -177,7 +177,11 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
       if (!includeEmbeddingsFlag) {
         delete doc.metadata[this.embeddingKey];
       }
-      return { ...doc, score };
+      return {
+        pageContent: doc?.pageContent,
+        metadata: { ...doc?.metadata, score },
+      };
+      // return { ...doc, score };
     });
   }
 

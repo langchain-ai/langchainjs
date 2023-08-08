@@ -59,5 +59,7 @@ test("Test HNSWLib metadata filtering", async () => {
     (document) => document.metadata.id === 3
   );
 
-  expect(results).toEqual([new Document({ metadata: { id: 3 }, pageContent })]);
+  expect(results).toEqual([
+    new Document({ metadata: { id: 3, score: 0 }, pageContent }),
+  ]);
 });

@@ -32,12 +32,23 @@ test("Test using LengthBasedExampleSelector", async () => {
 test("Test using SemanticSimilarityExampleSelector", async () => {
   const vectorStore = await HNSWLib.fromTexts(
     ["Hello world", "Bye bye", "hello nice world", "bye", "hi"],
-    [{ id: 2 }, { id: 1 }, { id: 3 }, { id: 4 }, { id: 5 }],
+    [
+      { id: 2, score: 0 },
+      { id: 1, score: 0 },
+      { id: 3, score: 0 },
+      { id: 4, score: 0 },
+      { id: 5, score: 0 },
+    ],
     new FakeEmbeddings() // not using  OpenAIEmbeddings() because would be extra dependency
   );
   const selector = new SemanticSimilarityExampleSelector({
     vectorStore,
   });
   const chosen = await selector.selectExamples({ id: 1 });
-  expect(chosen).toEqual([{ id: 1 }, { id: 3 }, { id: 4 }, { id: 5 }]);
+  expect(chosen).toEqual([
+    { id: 1, score: 0 },
+    { id: 3, score: 0 },
+    { id: 4, score: 0 },
+    { id: 5, score: 0 },
+  ]);
 });
