@@ -638,7 +638,7 @@
     "typescript": "^5.0.0",
     "typesense": "^1.5.3",
     "vectordb": "^0.1.4",
-    "weaviate-ts-client": "^1.0.0"
+    "weaviate-ts-client": "^1.4.0"
   },
   "peerDependencies": {
     "@aws-sdk/client-dynamodb": "^3.310.0",
@@ -702,7 +702,7 @@
     "typeorm": "^0.3.12",
     "typesense": "^1.5.3",
     "vectordb": "^0.1.4",
-    "weaviate-ts-client": "^1.0.0"
+    "weaviate-ts-client": "^1.4.0"
   },
   "peerDependenciesMeta": {
     "@aws-sdk/client-dynamodb": {

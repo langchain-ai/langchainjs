@@ -13216,7 +13216,7 @@ __metadata:
     typesense: ^1.5.3
     uuid: ^9.0.0
     vectordb: ^0.1.4
-    weaviate-ts-client: ^1.0.0
+    weaviate-ts-client: ^1.4.0
     yaml: ^2.2.1
     zod: ^3.21.4
     zod-to-json-schema: ^3.20.4
@@ -13282,7 +13282,7 @@ __metadata:
     typeorm: ^0.3.12
     typesense: ^1.5.3
     vectordb: ^0.1.4
-    weaviate-ts-client: ^1.0.0
+    weaviate-ts-client: ^1.4.0
   peerDependenciesMeta:
     "@aws-sdk/client-dynamodb":
       optional: true
@@ -18950,6 +18950,17 @@ __metadata:
     isomorphic-fetch: ^3.0.0
     tar: ^6.1.13
   checksum: ffa3c13913cf8999a1bfd3db1cc1952d7bfd4e6ca3d2f6eadfb17a56595bfc74fd9f068d1e9d73677b87281d53486ba333d5d5aedb31f072f05d6a5d8e7b2502
+  languageName: node
+  linkType: hard
+
+"weaviate-ts-client@npm:^1.4.0":
+  version: 1.4.0
+  resolution: "weaviate-ts-client@npm:1.4.0"
+  dependencies:
+    graphql-request: ^5.1.0
+    isomorphic-fetch: ^3.0.0
+    uuid: ^9.0.0
+  checksum: aef68e7d77ac8b3d42e1a3dd3c4dcb7a0c74b96c1a3d7b11e52313c7dfa9a9b3fc9ba5f3048628d67193ca6c84bb8a7eca641dacfdc459cfe26ac2fe20b07f11
   languageName: node
   linkType: hard
 
