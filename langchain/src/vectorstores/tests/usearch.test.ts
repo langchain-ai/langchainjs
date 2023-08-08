@@ -29,10 +29,7 @@ test("Test USearch.fromTexts + addVectors", async () => {
   );
   expect(vectorStore.index?.size()).toBe(3n);
 
-  const result = await vectorStore.similaritySearch(
-    'hello world',
-    2
-  );
+  const result = await vectorStore.similaritySearch("hello world", 2);
   expect(result[0].metadata).toEqual({ id: 2 });
 });
 
