@@ -157,7 +157,9 @@ export abstract class VectorStore extends Serializable {
       filter
     );
 
-    return results.map((result) => result[0]);
+    return results.map(([doc, score]) => {
+      return { ...doc, score };
+    });
   }
 
   async similaritySearchWithScore(

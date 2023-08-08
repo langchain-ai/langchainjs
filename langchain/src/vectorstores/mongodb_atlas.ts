@@ -171,13 +171,13 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
     );
 
     return mmrIndexes.map((idx) => {
-      const doc = resultDocs[idx][0];
+      const [doc, score] = resultDocs[idx];
 
       // remove embeddings if they were not requested originally
       if (!includeEmbeddingsFlag) {
         delete doc.metadata[this.embeddingKey];
       }
-      return doc;
+      return { ...doc, score };
     });
   }
 
