@@ -163,9 +163,6 @@
     "vectorstores/faiss.cjs",
     "vectorstores/faiss.js",
     "vectorstores/faiss.d.ts",
-    "vectorstores/usearch.cjs",
-    "vectorstores/usearch.js",
-    "vectorstores/usearch.d.ts",
     "vectorstores/weaviate.cjs",
     "vectorstores/weaviate.js",
     "vectorstores/weaviate.d.ts",
@@ -214,6 +211,9 @@
     "vectorstores/tigris.cjs",
     "vectorstores/tigris.js",
     "vectorstores/tigris.d.ts",
+    "vectorstores/usearch.cjs",
+    "vectorstores/usearch.js",
+    "vectorstores/usearch.d.ts",
     "vectorstores/vectara.cjs",
     "vectorstores/vectara.js",
     "vectorstores/vectara.d.ts",
@@ -601,7 +601,6 @@
     "eslint-plugin-no-instanceof": "^1.0.1",
     "eslint-plugin-prettier": "^4.2.1",
     "faiss-node": "^0.2.1",
-    "usearch": "^1.1.1",
     "firebase-admin": "^11.9.0",
     "google-auth-library": "^8.9.0",
     "graphql": "^16.6.0",
@@ -635,6 +634,7 @@
     "typeorm": "^0.3.12",
     "typescript": "^5.0.0",
     "typesense": "^1.5.3",
+    "usearch": "^1.1.1",
     "vectordb": "^0.1.4",
     "weaviate-ts-client": "^1.0.0"
   },
@@ -676,7 +676,6 @@
     "d3-dsv": "^2.0.0",
     "epub2": "^3.0.1",
     "faiss-node": "^0.2.1",
-    "usearch": "^1.1.1",
     "firebase-admin": "^11.9.0",
     "google-auth-library": "^8.9.0",
     "hnswlib-node": "^1.4.2",
@@ -700,6 +699,7 @@
     "srt-parser-2": "^1.2.2",
     "typeorm": "^0.3.12",
     "typesense": "^1.5.3",
+    "usearch": "^1.1.1",
     "vectordb": "^0.1.4",
     "weaviate-ts-client": "^1.0.0"
   },
@@ -815,9 +815,6 @@
     "faiss-node": {
       "optional": true
     },
-    "usearch": {
-      "optional": true
-    },
     "firebase-admin": {
       "optional": true
     },
@@ -885,6 +882,9 @@
       "optional": true
     },
     "typesense": {
+      "optional": true
+    },
+    "usearch": {
       "optional": true
     },
     "vectordb": {
@@ -1201,11 +1201,6 @@
       "import": "./vectorstores/faiss.js",
       "require": "./vectorstores/faiss.cjs"
     },
-    "./vectorstores/usearch": {
-      "types": "./vectorstores/usearch.d.ts",
-      "import": "./vectorstores/usearch.js",
-      "require": "./vectorstores/usearch.cjs"
-    },
     "./vectorstores/weaviate": {
       "types": "./vectorstores/weaviate.d.ts",
       "import": "./vectorstores/weaviate.js",
@@ -1285,6 +1280,11 @@
       "types": "./vectorstores/tigris.d.ts",
       "import": "./vectorstores/tigris.js",
       "require": "./vectorstores/tigris.cjs"
+    },
+    "./vectorstores/usearch": {
+      "types": "./vectorstores/usearch.d.ts",
+      "import": "./vectorstores/usearch.js",
+      "require": "./vectorstores/usearch.cjs"
     },
     "./vectorstores/vectara": {
       "types": "./vectorstores/vectara.d.ts",

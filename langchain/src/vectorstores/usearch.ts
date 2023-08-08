@@ -1,4 +1,4 @@
-import type { Index } from "usearch";
+import { Index } from "usearch";
 import * as uuid from "uuid";
 import { Embeddings } from "../embeddings/base.js";
 import { SaveableVectorStore } from "./base.js";
@@ -63,7 +63,6 @@ export class USearch extends SaveableVectorStore {
     }
     const dv = vectors[0].length;
     if (!this._index) {
-      const { Index } = await USearch.importUSearch();
       this._index = new Index({
         metric: "l2sq",
         connectivity: BigInt(16),
@@ -165,20 +164,5 @@ export class USearch extends SaveableVectorStore {
     const instance = new this(embeddings, args);
     await instance.addDocuments(docs);
     return instance;
-  }
-
-  static async importUSearch(): Promise<{ Index: typeof Index }> {
-    try {
-      const {
-        default: { Index },
-      } = await import("usearch");
-
-      return { Index };
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (err: any) {
-      throw new Error(
-        `Could not import usearch. Please install usearch as a dependency with, e.g. \`npm install usearch\`.\n\nError: ${err?.message}`
-      );
-    }
   }
 }

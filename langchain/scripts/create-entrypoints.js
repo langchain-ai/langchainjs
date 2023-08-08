@@ -83,6 +83,7 @@ const entrypoints = {
   "vectorstores/typesense": "vectorstores/typesense",
   "vectorstores/singlestore": "vectorstores/singlestore",
   "vectorstores/tigris": "vectorstores/tigris",
+  "vectorstores/usearch": "vectorstores/usearch",
   "vectorstores/vectara": "vectorstores/vectara",
   "vectorstores/xata": "vectorstores/xata",
   // text_splitter
@@ -264,6 +265,7 @@ const requiresOptionalDependency = [
   "vectorstores/singlestore",
   "vectorstores/typesense",
   "vectorstores/tigris",
+  "vectorstores/usearch",
   "memory/zep",
   "document_loaders/web/apify_dataset",
   "document_loaders/web/azure_blob_storage_container",
