@@ -160,5 +160,65 @@ describe("VectaraStore", () => {
       );
       expect(hasEnglish).toBe(false);
     });
+
+    test("similaritySearch with contextConfig", async () => {
+      const results = await store.similaritySearch(
+        "Was Gandalf dead?",
+        10, // Number of results needed
+        {
+          lambda: 0.025,
+          contextConfig: {
+            charsBefore: 30,
+            charsAfter: 30,
+            sentencesBefore: 3,
+            sentencesAfter: 3,
+            startTag: "<b>",
+            endTag: "</b>",
+          },
+        }
+      );
+      expect(results.length).toBeGreaterThan(0);
+      expect(results[0].pageContent.length).toBeGreaterThan(0);
+      expect(results[0].metadata.length).toBeGreaterThan(0);
+    });
+
+    test("similaritySearch with rerankingConfig", async () => {
+      const results = await store.similaritySearch(
+        "Was Gandalf dead?",
+        10, // Number of results needed
+        {
+          lambda: 0.025,
+          rerankingConfig: {
+            rerankerId: 272725717,
+          },
+        }
+      );
+      expect(results.length).toBeGreaterThan(0);
+      expect(results[0].pageContent.length).toBeGreaterThan(0);
+      expect(results[0].metadata.length).toBeGreaterThan(0);
+    });
+
+    test("similaritySearch with generative summarization", async () => {
+      const results = await store.similaritySearchWithSummary(
+        "Was Gandalf dead?",
+        10, // Number of results needed
+        {
+          lambda: 0.025,
+          summary: [
+            {
+              summarizerPromptName: "vectara-summary-ext-v1.2.0",
+              maxSummarizedResults: 3,
+              responseLang: "ita",
+            },
+          ],
+        }
+      );
+      expect(results.documents.length).toBeGreaterThan(0);
+      expect(results.documents[0][0].pageContent.length).toBeGreaterThan(0);
+      expect(results.documents[0][0].metadata.length).toBeGreaterThan(0);
+      expect(results.documents[0][1]).toBeGreaterThan(0);
+      expect(results.summary.length).toBeGreaterThan(0);
+      expect(results.summary[0].lang).toBe("ita");
+    });
   });
 });
