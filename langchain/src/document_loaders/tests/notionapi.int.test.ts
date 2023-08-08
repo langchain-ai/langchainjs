@@ -8,9 +8,7 @@ test("Test Notion API Loader Page", async () => {
     clientOptions: {
       auth: process.env.NOTION_INTEGRATION_TOKEN,
     },
-    limiterOptions: { maxConcurrent: 64, minTime: 64 },
     id: process.env.NOTION_PAGE_ID ?? "",
-    type: "page",
   });
 
   const docs = await loader.load();
@@ -23,17 +21,15 @@ test("Test Notion API Loader Database", async () => {
     clientOptions: {
       auth: process.env.NOTION_INTEGRATION_TOKEN,
     },
-    limiterOptions: { maxConcurrent: 64, minTime: 64 },
     id: process.env.NOTION_DATABASE_ID ?? "",
-    type: "database",
   });
 
   let total = 0;
   loader.on("total_change", (pageTotal) => {
     total = pageTotal;
   });
-  loader.on("load", (current) =>
-    console.log(`Loaded Page: ${current}/${total}`)
+  loader.on("load", (title, current) =>
+    console.log(`Loaded Page: ${title} (${current}/${total})`)
   );
 
   const docs = await loader.load();

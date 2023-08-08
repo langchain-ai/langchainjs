@@ -58,7 +58,7 @@ const getTitle = (obj: GetResponse) => {
   if (isPage(obj) && obj.properties.title.type === "title") {
     return obj.properties.title.title[0]?.plain_text;
   }
-  if (isDatabase(obj)) return obj.properties.title.name;
+  if (isDatabase(obj)) return obj.title[0]?.plain_text;
   return null;
 };
 
