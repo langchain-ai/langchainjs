@@ -1,8 +1,12 @@
 import {
+  APIResponseError,
   Client,
   isFullBlock,
   isFullPage,
   iteratePaginatedAPI,
+  APIErrorCode,
+  isNotionClientError,
+  isFullDatabase,
 } from "@notionhq/client";
 import { NotionToMarkdown } from "notion-to-md";
 import { getBlockChildren } from "notion-to-md/build/utils/notion.js";
@@ -20,15 +24,51 @@ type GuardType<T> = T extends (x: any, ...rest: any) => x is infer U
   ? U
   : never;
 
+type GetBlockResponse = Parameters<typeof isFullBlock>[0];
+type GetPageResponse = Parameters<typeof isFullPage>[0];
+type GetDatabaseResponse = Parameters<typeof isFullDatabase>[0];
+
 type BlockObjectResponse = GuardType<typeof isFullBlock>;
 type PageObjectResponse = GuardType<typeof isFullPage>;
+type DatabaseObjectResponse = GuardType<typeof isFullDatabase>;
 
+type GetResponse =
+  | GetBlockResponse
+  | GetPageResponse
+  | GetDatabaseResponse
+  | APIResponseError;
+
+// const isBlockResponse = (res: GetResponse): res is GetBlockResponse =>
+//   !isNotionClientError(res) && res.object === "block";
+const isPageResponse = (res: GetResponse): res is GetPageResponse =>
+  !isNotionClientError(res) && res.object === "page";
+const isDatabaseResponse = (res: GetResponse): res is GetDatabaseResponse =>
+  !isNotionClientError(res) && res.object === "database";
+const isErrorResponse = (res: GetResponse): res is APIResponseError =>
+  isNotionClientError(res);
+
+// const isBlock = (res: GetResponse): res is BlockObjectResponse =>
+//   isBlockResponse(res) && isFullBlock(res);
+const isPage = (res: GetResponse): res is PageObjectResponse =>
+  isPageResponse(res) && isFullPage(res);
+const isDatabase = (res: GetResponse): res is DatabaseObjectResponse =>
+  isDatabaseResponse(res) && isFullDatabase(res);
+
+const getTitle = (obj: GetResponse) => {
+  if (isPage(obj) && obj.properties.title.type === "title") {
+    return obj.properties.title.title[0]?.plain_text;
+  }
+  if (isDatabase(obj)) return obj.properties.title.name;
+  return null;
+};
+
+// @deprecated `type` property is now automatically determined.
 export type NotionAPIType = "database" | "page";
 
 export type NotionAPILoaderOptions = {
   clientOptions: ConstructorParameters<typeof Client>[0];
   id: string;
-  type: NotionAPIType;
+  type?: NotionAPIType; // @deprecated `type` property is now automatically determined.
   limiterOptions?: ConstructorParameters<typeof Bottleneck>[0];
 };
 
@@ -41,13 +81,15 @@ export class NotionAPILoader extends BaseDocumentLoaderWithEventEmitter {
 
   private id: string;
 
-  private type: NotionAPIType;
+  private pageQueue: string[];
 
-  private pageQueue: (string | PageObjectResponse)[];
+  private pageCompleted: string[];
 
   public pageQueueTotal: number;
 
   private documents: Document[];
+
+  private rootTitle: string;
 
   constructor(options: NotionAPILoaderOptions) {
     super();
@@ -61,16 +103,19 @@ export class NotionAPILoader extends BaseDocumentLoaderWithEventEmitter {
       config: { parseChildPages: false, convertImagesToBase64: false },
     });
     this.id = options.id;
-    this.type = options.type;
     this.pageQueue = [];
+    this.pageCompleted = [];
     this.pageQueueTotal = 0;
-    if (this.type === "page") this.pageQueue.push(this.id);
     this.documents = [];
+    this.rootTitle = "";
   }
 
   private addToQueue(...items: string[]) {
-    this.pageQueue.push(...items);
-    this.pageQueueTotal += items.length;
+    const deDuped = items.filter(
+      (item) => !this.pageCompleted.concat(this.pageQueue).includes(item)
+    );
+    this.pageQueue.push(...deDuped);
+    this.pageQueueTotal += deDuped.length;
     this.emit("total_change", this.pageQueueTotal);
   }
 
@@ -237,7 +282,12 @@ export class NotionAPILoader extends BaseDocumentLoaderWithEventEmitter {
     });
 
     this.documents.push(pageDocument);
-    this.emit("load", this.documents.length);
+    this.pageCompleted.push(pageId);
+    this.emit(
+      "load",
+      pageDocument.metadata.properties.title,
+      this.documents.length
+    );
   }
 
   private async loadDatabase(id: string) {
@@ -258,11 +308,43 @@ export class NotionAPILoader extends BaseDocumentLoaderWithEventEmitter {
   }
 
   async load(): Promise<Document[]> {
-    if (this.type === "database") {
-      await this.limiter.schedule(() => this.loadDatabase(this.id));
+    const resPagePromise = this.notionClient.pages
+      .retrieve({ page_id: this.id })
+      .then((res) => {
+        this.addToQueue(this.id);
+        return res;
+      })
+      .catch((error: APIResponseError) => error);
+
+    const resDatabasePromise = this.notionClient.databases
+      .retrieve({ database_id: this.id })
+      .then(async (res) => {
+        await this.loadDatabase(this.id);
+        return res;
+      })
+      .catch((error: APIResponseError) => error);
+
+    const [resPage, resDatabase] = await Promise.all([
+      resPagePromise,
+      resDatabasePromise,
+    ]);
+    const errors = [resPage, resDatabase].filter(isErrorResponse);
+
+    if (errors.length === 2) {
+      if (errors.every((e) => e.code === APIErrorCode.ObjectNotFound)) {
+        throw new AggregateError([
+          Error(
+            `Could not find object with ID: ${this.id}. Make sure the relevant pages and databases are shared with your integration.`
+          ),
+          ...errors,
+        ]);
+      }
+      throw new AggregateError(errors);
     }
 
-    this.emit("begin", this.pageQueueTotal);
+    this.rootTitle = getTitle(resPage) || getTitle(resDatabase) || this.id;
+
+    this.emit("begin", this.rootTitle, this.pageQueueTotal);
 
     let pageId = this.pageQueue.shift();
     while (pageId) {
