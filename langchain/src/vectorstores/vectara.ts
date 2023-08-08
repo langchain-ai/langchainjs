@@ -58,6 +58,8 @@ export class VectaraStore extends VectorStore {
 
   private verbose: boolean;
 
+  private vectaraApiTimeout = 60;
+
   _vectorstoreType(): string {
     return "vectara";
   }
@@ -130,11 +132,15 @@ export class VectaraStore extends VectorStore {
       };
 
       try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), this.vectaraApiTimeout * 1000);
         const response = await fetch(`https://${this.apiEndpoint}/v1/index`, {
           method: "POST",
           headers: headers?.headers,
           body: JSON.stringify(data),
+          signal: controller.signal,
         });
+        clearTimeout(timeout);
         const result = await response.json();
         if (
           result.status?.code !== "OK" &&
@@ -186,11 +192,15 @@ export class VectaraStore extends VectorStore {
       ],
     };
 
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), this.vectaraApiTimeout * 1000);
     const response = await fetch(`https://${this.apiEndpoint}/v1/query`, {
       method: "POST",
       headers: headers?.headers,
       body: JSON.stringify(data),
+      signal: controller.signal,
     });
+    clearTimeout(timeout);
     if (response.status !== 200) {
       throw new Error(`Vectara API returned status code ${response.status}`);
     }
@@ -202,12 +212,12 @@ export class VectaraStore extends VectorStore {
         metadata: Record<string, unknown>;
         score: number;
       }) => [
-        new Document({
-          pageContent: response.text,
-          metadata: response.metadata,
-        }),
-        response.score,
-      ]
+          new Document({
+            pageContent: response.text,
+            metadata: response.metadata,
+          }),
+          response.score,
+        ]
     );
     return documentsAndScores;
   }
