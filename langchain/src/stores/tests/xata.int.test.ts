@@ -21,6 +21,11 @@ describe("XataChatMessageHistory", () => {
     branch: process.env.XATA_BRANCH || "main",
   });
 
+  const randomSessionId = (): string =>
+    [...Array(6)]
+      .map(() => "abcdefghijklmnopqrstuvwxyz"[Math.floor(Math.random() * 26)])
+      .join("");
+
   afterAll(async () => {
     const records = await xata.db.memory.select(["id"]).getAll();
     await xata.db.memory.delete(records.map((m) => m.id));
@@ -28,7 +33,7 @@ describe("XataChatMessageHistory", () => {
 
   test("Test Xata history store", async () => {
     const chatHistory = new XataChatMessageHistory({
-      sessionId: new Date().toISOString(),
+      sessionId: randomSessionId(),
       client: xata,
     });
 
@@ -51,7 +56,7 @@ describe("XataChatMessageHistory", () => {
     const memory = new BufferMemory({
       returnMessages: true,
       chatHistory: new XataChatMessageHistory({
-        sessionId: new Date().toISOString(),
+        sessionId: randomSessionId(),
         client: xata,
       }),
     });
@@ -73,7 +78,7 @@ describe("XataChatMessageHistory", () => {
   test("Test Xata memory with LLM Chain", async () => {
     const memory = new BufferMemory({
       chatHistory: new XataChatMessageHistory({
-        sessionId: new Date().toISOString(),
+        sessionId: randomSessionId(),
         client: xata,
       }),
     });

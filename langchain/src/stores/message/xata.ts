@@ -58,6 +58,7 @@ export class XataChatMessageHistory<
   async getMessages(): Promise<BaseMessage[]> {
     const records = await this.client.db[this.table]
       .filter({ sessionId: this.sessionId })
+      .sort("xata.createdAt", "asc")
       .getAll();
 
     const rawStoredMessages = records as unknown as storedMessagesDTO[];
