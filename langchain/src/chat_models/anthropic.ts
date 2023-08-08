@@ -249,7 +249,6 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
         stopReasonSent = true;
       }
       const delta = data.completion ?? "";
-      // eslint-disable-next-line no-void
       yield new ChatGenerationChunk({
         message: new AIMessageChunk({
           content: delta,
@@ -257,7 +256,7 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
         }),
         text: delta,
       });
-      void runManager?.handleLLMNewToken(delta);
+      await runManager?.handleLLMNewToken(delta);
       if (data.stop_reason) {
         break;
       }

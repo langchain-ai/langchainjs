@@ -51,6 +51,7 @@ const entrypoints = {
   "llms/aleph_alpha": "llms/aleph_alpha",
   "llms/cohere": "llms/cohere",
   "llms/hf": "llms/hf",
+  "llms/ollama": "llms/ollama",
   "llms/replicate": "llms/replicate",
   "llms/googlevertexai": "llms/googlevertexai",
   "llms/googlepalm": "llms/googlepalm",
@@ -140,6 +141,7 @@ const entrypoints = {
   "chat_models/googlevertexai": "chat_models/googlevertexai",
   "chat_models/googlepalm": "chat_models/googlepalm",
   "chat_models/baiduwenxin": "chat_models/baiduwenxin",
+  "chat_models/ollama": "chat_models/ollama",
   // schema
   schema: "schema/index",
   "schema/output_parser": "schema/output_parser",
