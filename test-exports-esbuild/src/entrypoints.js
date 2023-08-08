@@ -51,6 +51,7 @@ import * as cache from "langchain/cache";
 import * as stores_doc_in_memory from "langchain/stores/doc/in_memory";
 import * as stores_file_in_memory from "langchain/stores/file/in_memory";
 import * as stores_message_in_memory from "langchain/stores/message/in_memory";
+import * as stores_message_xata from "langchain/stores/message/xata";
 import * as util_math from "langchain/util/math";
 import * as experimental_autogpt from "langchain/experimental/autogpt";
 import * as experimental_babyagi from "langchain/experimental/babyagi";
