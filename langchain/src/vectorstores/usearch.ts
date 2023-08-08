@@ -5,31 +5,24 @@ import { SaveableVectorStore } from "./base.js";
 import { Document } from "../document.js";
 import { SynchronousInMemoryDocstore } from "../stores/doc/in_memory.js";
 
-
 export interface USearchArgs {
   docstore?: SynchronousInMemoryDocstore;
   index?: Index;
   mapping?: Record<number, string>;
 }
 
-
 export class USearch extends SaveableVectorStore {
   _index?: Index;
 
-
   _mapping: Record<number, string>;
-
 
   docstore: SynchronousInMemoryDocstore;
 
-
   args: USearchArgs;
-
 
   _vectorstoreType(): string {
     return "usearch";
   }
-
 
   constructor(embeddings: Embeddings, args: USearchArgs) {
     super(embeddings, args);
@@ -40,7 +33,6 @@ export class USearch extends SaveableVectorStore {
     this.docstore = args?.docstore ?? new SynchronousInMemoryDocstore();
   }
 
-
   async addDocuments(documents: Document[]) {
     const texts = documents.map(({ pageContent }) => pageContent);
     return this.addVectors(
@@ -48,7 +40,6 @@ export class USearch extends SaveableVectorStore {
       documents
     );
   }
-
 
   public get index(): Index {
     if (!this._index) {
@@ -59,11 +50,9 @@ export class USearch extends SaveableVectorStore {
     return this._index;
   }
 
-
   private set index(index: Index) {
     this._index = index;
   }
-
 
   async addVectors(vectors: number[][], documents: Document[]) {
     if (vectors.length === 0) {
@@ -75,7 +64,11 @@ export class USearch extends SaveableVectorStore {
     const dv = vectors[0].length;
     if (!this._index) {
       const { Index } = await USearch.importUSearch();
-      this._index = new Index({ metric: 'l2sq', connectivity: BigInt(16), dimensions: BigInt(dv) });
+      this._index = new Index({
+        metric: "l2sq",
+        connectivity: BigInt(16),
+        dimensions: BigInt(dv),
+      });
     }
     const d = this.index.dimensions();
     if (BigInt(dv) !== d) {
@@ -83,7 +76,6 @@ export class USearch extends SaveableVectorStore {
         `Vectors must have the same length as the number of dimensions (${d})`
       );
     }
-
 
     const docstoreSize = this.index.size();
     const documentIds = [];
@@ -97,7 +89,6 @@ export class USearch extends SaveableVectorStore {
     }
     return documentIds;
   }
-
 
   async similaritySearchVectorWithScore(query: number[], k: number) {
     const d = this.index.dimensions();
@@ -116,17 +107,14 @@ export class USearch extends SaveableVectorStore {
     }
     const result = this.index.search(new Float32Array(query), BigInt(k));
 
-
-    let return_list: [Document, number][] = [];
-    for (let i = 0; i < result.count; i++) {
+    const return_list: [Document, number][] = [];
+    for (let i = 0; i < result.count; i += 1) {
       const uuid = this._mapping[Number(result.keys[i])];
       return_list.push([this.docstore.search(uuid), result.distances[i]]);
     }
 
-
     return return_list;
   }
-
 
   async save(directory: string) {
     const fs = await import("node:fs/promises");
@@ -143,7 +131,6 @@ export class USearch extends SaveableVectorStore {
       ),
     ]);
   }
-
 
   static async fromTexts(
     texts: string[],
@@ -165,7 +152,6 @@ export class USearch extends SaveableVectorStore {
     return this.fromDocuments(docs, embeddings, dbConfig);
   }
 
-
   static async fromDocuments(
     docs: Document[],
     embeddings: Embeddings,
@@ -181,13 +167,11 @@ export class USearch extends SaveableVectorStore {
     return instance;
   }
 
-
   static async importUSearch(): Promise<{ Index: typeof Index }> {
     try {
       const {
         default: { Index },
       } = await import("usearch");
-
 
       return { Index };
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -197,6 +181,4 @@ export class USearch extends SaveableVectorStore {
       );
     }
   }
-
-
 }
