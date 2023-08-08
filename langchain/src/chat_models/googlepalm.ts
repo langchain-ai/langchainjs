@@ -2,7 +2,12 @@ import { DiscussServiceClient } from "@google-ai/generativelanguage";
 import type { protos } from "@google-ai/generativelanguage";
 import { GoogleAuth } from "google-auth-library";
 import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
-import { AIMessage, BaseMessage, ChatResult } from "../schema/index.js";
+import {
+  AIMessage,
+  BaseMessage,
+  ChatMessage,
+  ChatResult,
+} from "../schema/index.js";
 import { getEnvironmentVariable } from "../util/env.js";
 import { BaseChatModel, BaseChatModelParams } from "./base.js";
 
@@ -58,6 +63,14 @@ export interface GooglePaLMChatInput extends BaseChatModelParams {
    * Google Palm API key to use
    */
   apiKey?: string;
+}
+
+function getMessageAuthor(message: BaseMessage) {
+  const type = message._getType();
+  if (ChatMessage.isInstance(message)) {
+    return message.role;
+  }
+  return message.name ?? type;
 }
 
 export class ChatGooglePaLM
@@ -175,7 +188,7 @@ export class ChatGooglePaLM
   ): string | undefined {
     // get the first message and checks if it's a system 'system' messages
     const systemMessage =
-      messages.length > 0 && messages[0]._getType() === "system"
+      messages.length > 0 && getMessageAuthor(messages[0]) === "system"
         ? messages[0]
         : undefined;
     return systemMessage?.content;
@@ -185,12 +198,16 @@ export class ChatGooglePaLM
     messages: BaseMessage[]
   ): protos.google.ai.generativelanguage.v1beta2.IMessage[] {
     // remove all 'system' messages
-    const nonSystemMessages = messages.filter((m) => m._getType() !== "system");
+    const nonSystemMessages = messages.filter(
+      (m) => getMessageAuthor(m) !== "system"
+    );
 
     // requires alternate human & ai messages. Throw error if two messages are consecutive
     nonSystemMessages.forEach((msg, index) => {
       if (index < 1) return;
-      if (msg._getType() === nonSystemMessages[index - 1]._getType()) {
+      if (
+        getMessageAuthor(msg) === getMessageAuthor(nonSystemMessages[index - 1])
+      ) {
         throw new Error(
           `Google PaLM requires alternate messages between authors`
         );
@@ -198,7 +215,7 @@ export class ChatGooglePaLM
     });
 
     return nonSystemMessages.map((m) => ({
-      author: m.name ?? m._getType(),
+      author: getMessageAuthor(m),
       content: m.content,
       citationMetadata: {
         citationSources: m.additional_kwargs.citationSources as

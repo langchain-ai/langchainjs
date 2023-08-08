@@ -122,9 +122,7 @@ export abstract class BaseMessageStringPromptTemplate extends BaseMessagePromptT
   }
 }
 
-export abstract class BaseChatPromptTemplate extends BasePromptTemplate {
-  declare PromptValueReturnType: ChatPromptValue;
-
+export abstract class BaseChatPromptTemplate extends BasePromptTemplate<ChatPromptValue> {
   constructor(input: BasePromptTemplateInput) {
     super(input);
   }

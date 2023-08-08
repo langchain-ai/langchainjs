@@ -8,7 +8,8 @@ sidebar_class_name: node-only
 Only available on Node.js.
 :::
 
-Langchain supports MongoDB Atlas as a vector store.
+LangChain.js supports MongoDB Atlas as a vector store, and supports both standard similarity search and maximal marginal relevance search,
+which takes a combination of documents are most similar to the inputs, then reranks and optimizes for diversity.
 
 ## Setup
 
@@ -69,3 +70,9 @@ import Ingestion from "@examples/indexes/vector_stores/mongodb_atlas_fromTexts.t
 import Search from "@examples/indexes/vector_stores/mongodb_atlas_search.ts";
 
 <CodeBlock language="typescript">{Search}</CodeBlock>
+
+### Maximal marginal relevance
+
+import MMRExample from "@examples/indexes/vector_stores/mongodb_mmr.ts";
+
+<CodeBlock language="typescript">{MMRExample}</CodeBlock>

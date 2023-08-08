@@ -47,3 +47,18 @@ test("Test Google Vertex Codey bison model", async () => {
   const res = await model.call("Count to 10 in JavaScript.");
   console.log(res);
 });
+
+test("Test Google Vertex stream returns one chunk", async () => {
+  const model = new GoogleVertexAI({
+    model: "code-bison",
+    maxOutputTokens: 2048,
+  });
+
+  const stream = await model.stream("Count to 10 in JavaScript.");
+  const chunks = [];
+  for await (const chunk of stream) {
+    chunks.push(chunk);
+    console.log(chunk);
+  }
+  expect(chunks.length).toBe(1);
+});

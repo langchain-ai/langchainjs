@@ -7,6 +7,7 @@ import {
   GoogleVertexAILLMResponse,
   GoogleVertexAIModelParams,
 } from "../types/googlevertexai-types.js";
+import { BaseLanguageModelCallOptions } from "../base_language/index.js";
 
 export interface GoogleVertexAITextInput extends GoogleVertexAIBaseLLMInput {}
 
@@ -55,7 +56,7 @@ export class GoogleVertexAI extends BaseLLM implements GoogleVertexAITextInput {
   topK = 40;
 
   private connection: GoogleVertexAIConnection<
-    this["CallOptions"],
+    BaseLanguageModelCallOptions,
     GoogleVertexAILLMInstance,
     TextPrediction
   >;
@@ -66,7 +67,7 @@ export class GoogleVertexAI extends BaseLLM implements GoogleVertexAITextInput {
     this.model = fields?.model ?? this.model;
 
     // Change the defaults for code models
-    if (this.model === "code-gecko") {
+    if (this.model.startsWith("code-gecko")) {
       this.maxOutputTokens = 64;
     }
     if (this.model.startsWith("code-")) {

@@ -30,6 +30,37 @@ export interface Generation {
   generationInfo?: Record<string, any>;
 }
 
+export type GenerationChunkFields = {
+  text: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  generationInfo?: Record<string, any>;
+};
+
+/**
+ * Chunk of a single generation. Used for streaming.
+ */
+export class GenerationChunk implements Generation {
+  public text: string;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  public generationInfo?: Record<string, any>;
+
+  constructor(fields: GenerationChunkFields) {
+    this.text = fields.text;
+    this.generationInfo = fields.generationInfo;
+  }
+
+  concat(chunk: GenerationChunk): GenerationChunk {
+    return new GenerationChunk({
+      text: this.text + chunk.text,
+      generationInfo: {
+        ...this.generationInfo,
+        ...chunk.generationInfo,
+      },
+    });
+  }
+}
+
 /**
  * Contains all relevant information returned by an LLM.
  */
@@ -135,9 +166,60 @@ export abstract class BaseMessage
   }
 }
 
+export abstract class BaseMessageChunk extends BaseMessage {
+  abstract concat(chunk: BaseMessageChunk): BaseMessageChunk;
+
+  static _mergeAdditionalKwargs(
+    left: NonNullable<BaseMessageFields["additional_kwargs"]>,
+    right: NonNullable<BaseMessageFields["additional_kwargs"]>
+  ): NonNullable<BaseMessageFields["additional_kwargs"]> {
+    const merged = { ...left };
+    for (const [key, value] of Object.entries(right)) {
+      if (merged[key] === undefined) {
+        merged[key] = value;
+      } else if (typeof merged[key] !== typeof value) {
+        throw new Error(
+          `additional_kwargs[${key}] already exists in the message chunk, but with a different type.`
+        );
+      } else if (typeof merged[key] === "string") {
+        merged[key] = (merged[key] as string) + value;
+      } else if (
+        !Array.isArray(merged[key]) &&
+        typeof merged[key] === "object"
+      ) {
+        merged[key] = this._mergeAdditionalKwargs(
+          merged[key] as NonNullable<BaseMessageFields["additional_kwargs"]>,
+          value as NonNullable<BaseMessageFields["additional_kwargs"]>
+        );
+      } else {
+        throw new Error(
+          `additional_kwargs[${key}] already exists in this message chunk.`
+        );
+      }
+    }
+    return merged;
+  }
+}
+
 export class HumanMessage extends BaseMessage {
   _getType(): MessageType {
     return "human";
+  }
+}
+
+export class HumanMessageChunk extends BaseMessageChunk {
+  _getType(): MessageType {
+    return "human";
+  }
+
+  concat(chunk: HumanMessageChunk) {
+    return new HumanMessageChunk({
+      content: this.content + chunk.content,
+      additional_kwargs: HumanMessageChunk._mergeAdditionalKwargs(
+        this.additional_kwargs,
+        chunk.additional_kwargs
+      ),
+    });
   }
 }
 
@@ -147,9 +229,41 @@ export class AIMessage extends BaseMessage {
   }
 }
 
+export class AIMessageChunk extends BaseMessageChunk {
+  _getType(): MessageType {
+    return "ai";
+  }
+
+  concat(chunk: AIMessageChunk) {
+    return new AIMessageChunk({
+      content: this.content + chunk.content,
+      additional_kwargs: AIMessageChunk._mergeAdditionalKwargs(
+        this.additional_kwargs,
+        chunk.additional_kwargs
+      ),
+    });
+  }
+}
+
 export class SystemMessage extends BaseMessage {
   _getType(): MessageType {
     return "system";
+  }
+}
+
+export class SystemMessageChunk extends BaseMessageChunk {
+  _getType(): MessageType {
+    return "system";
+  }
+
+  concat(chunk: SystemMessageChunk) {
+    return new SystemMessageChunk({
+      content: this.content + chunk.content,
+      additional_kwargs: SystemMessageChunk._mergeAdditionalKwargs(
+        this.additional_kwargs,
+        chunk.additional_kwargs
+      ),
+    });
   }
 }
 
@@ -195,6 +309,23 @@ export class FunctionMessage extends BaseMessage {
   }
 }
 
+export class FunctionMessageChunk extends BaseMessageChunk {
+  _getType(): MessageType {
+    return "function";
+  }
+
+  concat(chunk: FunctionMessageChunk) {
+    return new FunctionMessageChunk({
+      content: this.content + chunk.content,
+      additional_kwargs: FunctionMessageChunk._mergeAdditionalKwargs(
+        this.additional_kwargs,
+        chunk.additional_kwargs
+      ),
+      name: this.name ?? "",
+    });
+  }
+}
+
 export class ChatMessage
   extends BaseMessage
   implements ChatMessageFieldsWithRole
@@ -217,10 +348,73 @@ export class ChatMessage
   _getType(): MessageType {
     return "generic";
   }
+
+  static isInstance(message: BaseMessage): message is ChatMessage {
+    return message._getType() === "generic";
+  }
+}
+
+export class ChatMessageChunk extends BaseMessageChunk {
+  role: string;
+
+  constructor(content: string, role: string);
+
+  constructor(fields: ChatMessageFieldsWithRole);
+
+  constructor(fields: string | ChatMessageFieldsWithRole, role?: string) {
+    if (typeof fields === "string") {
+      // eslint-disable-next-line no-param-reassign, @typescript-eslint/no-non-null-assertion
+      fields = { content: fields, role: role! };
+    }
+    super(fields);
+    this.role = fields.role;
+  }
+
+  _getType(): MessageType {
+    return "generic";
+  }
+
+  concat(chunk: ChatMessageChunk) {
+    return new ChatMessageChunk({
+      content: this.content + chunk.content,
+      additional_kwargs: ChatMessageChunk._mergeAdditionalKwargs(
+        this.additional_kwargs,
+        chunk.additional_kwargs
+      ),
+      role: this.role,
+    });
+  }
 }
 
 export interface ChatGeneration extends Generation {
   message: BaseMessage;
+}
+
+export type ChatGenerationChunkFields = GenerationChunkFields & {
+  message: BaseMessageChunk;
+};
+
+export class ChatGenerationChunk
+  extends GenerationChunk
+  implements ChatGeneration
+{
+  public message: BaseMessageChunk;
+
+  constructor(fields: ChatGenerationChunkFields) {
+    super(fields);
+    this.message = fields.message;
+  }
+
+  concat(chunk: ChatGenerationChunk) {
+    return new ChatGenerationChunk({
+      text: this.text + chunk.text,
+      generationInfo: {
+        ...this.generationInfo,
+        ...chunk.generationInfo,
+      },
+      message: this.message.concat(chunk.message),
+    });
+  }
 }
 
 export interface ChatResult {
@@ -262,6 +456,8 @@ export type ChainValues = Record<string, any>;
 export abstract class BaseChatMessageHistory extends Serializable {
   public abstract getMessages(): Promise<BaseMessage[]>;
 
+  public abstract addMessage(message: BaseMessage): Promise<void>;
+
   public abstract addUserMessage(message: string): Promise<void>;
 
   public abstract addAIChatMessage(message: string): Promise<void>;
@@ -270,7 +466,7 @@ export abstract class BaseChatMessageHistory extends Serializable {
 }
 
 export abstract class BaseListChatMessageHistory extends Serializable {
-  protected abstract addMessage(message: BaseMessage): Promise<void>;
+  public abstract addMessage(message: BaseMessage): Promise<void>;
 
   public addUserMessage(message: string): Promise<void> {
     return this.addMessage(new HumanMessage(message));

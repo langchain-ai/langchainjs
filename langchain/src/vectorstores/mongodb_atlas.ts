@@ -1,25 +1,32 @@
 import type { Collection, Document as MongoDBDocument } from "mongodb";
-import { VectorStore } from "./base.js";
+import { MaxMarginalRelevanceSearchOptions, VectorStore } from "./base.js";
 import { Embeddings } from "../embeddings/base.js";
 import { Document } from "../document.js";
+import { maximalMarginalRelevance } from "../util/math.js";
 
 export type MongoDBAtlasVectorSearchLibArgs = {
-  collection: Collection<MongoDBDocument>;
-  indexName?: string;
-  textKey?: string;
-  embeddingKey?: string;
+  readonly collection: Collection<MongoDBDocument>;
+  readonly indexName?: string;
+  readonly textKey?: string;
+  readonly embeddingKey?: string;
 };
 
+type MongoDBAtlasFilter = {
+  preFilter?: MongoDBDocument;
+  postFilterPipeline?: MongoDBDocument[];
+  includeEmbeddings?: boolean;
+} & MongoDBDocument;
+
 export class MongoDBAtlasVectorSearch extends VectorStore {
-  declare FilterType: MongoDBDocument;
+  declare FilterType: MongoDBAtlasFilter;
 
-  collection: Collection<MongoDBDocument>;
+  private readonly collection: Collection<MongoDBDocument>;
 
-  indexName: string;
+  private readonly indexName: string;
 
-  textKey: string;
+  private readonly textKey: string;
 
-  embeddingKey: string;
+  private readonly embeddingKey: string;
 
   _vectorstoreType(): string {
     return "mongodb_atlas";
@@ -28,9 +35,9 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
   constructor(embeddings: Embeddings, args: MongoDBAtlasVectorSearchLibArgs) {
     super(embeddings, args);
     this.collection = args.collection;
-    this.indexName = args.indexName || "default";
-    this.textKey = args.textKey || "text";
-    this.embeddingKey = args.embeddingKey || "embedding";
+    this.indexName = args.indexName ?? "default";
+    this.textKey = args.textKey ?? "text";
+    this.embeddingKey = args.embeddingKey ?? "embedding";
   }
 
   async addVectors(vectors: number[][], documents: Document[]): Promise<void> {
@@ -53,14 +60,27 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
   async similaritySearchVectorWithScore(
     query: number[],
     k: number,
-    preFilter?: MongoDBDocument,
-    postFilterPipeline?: MongoDBDocument[]
+    filter?: MongoDBAtlasFilter
   ): Promise<[Document, number][]> {
     const knnBeta: MongoDBDocument = {
       vector: query,
       path: this.embeddingKey,
       k,
     };
+
+    let preFilter: MongoDBDocument | undefined;
+    let postFilterPipeline: MongoDBDocument[] | undefined;
+    let includeEmbeddings: boolean | undefined;
+    if (
+      filter?.preFilter ||
+      filter?.postFilterPipeline ||
+      filter?.includeEmbeddings
+    ) {
+      preFilter = filter.preFilter;
+      postFilterPipeline = filter.postFilterPipeline;
+      includeEmbeddings = filter.includeEmbeddings || false;
+    } else preFilter = filter;
+
     if (preFilter) {
       knnBeta.filter = preFilter;
     }
@@ -72,12 +92,21 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
         },
       },
       {
-        $project: {
-          [this.embeddingKey]: 0,
+        $set: {
           score: { $meta: "searchScore" },
         },
       },
     ];
+
+    if (!includeEmbeddings) {
+      const removeEmbeddingsStage = {
+        $project: {
+          [this.embeddingKey]: 0,
+        },
+      };
+      pipeline.push(removeEmbeddingsStage);
+    }
+
     if (postFilterPipeline) {
       pipeline.push(...postFilterPipeline);
     }
@@ -85,28 +114,71 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
 
     const ret: [Document, number][] = [];
     for await (const result of results) {
-      const text = result[this.textKey];
-      delete result[this.textKey];
-      const { score, ...metadata } = result;
+      const { score, [this.textKey]: text, ...metadata } = result;
       ret.push([new Document({ pageContent: text, metadata }), score]);
     }
 
     return ret;
   }
 
-  async similaritySearch(
+  /**
+   * Return documents selected using the maximal marginal relevance.
+   * Maximal marginal relevance optimizes for similarity to the query AND diversity
+   * among selected documents.
+   *
+   * @param {string} query - Text to look up documents similar to.
+   * @param {number} options.k - Number of documents to return.
+   * @param {number} options.fetchK=20- Number of documents to fetch before passing to the MMR algorithm.
+   * @param {number} options.lambda=0.5 - Number between 0 and 1 that determines the degree of diversity among the results,
+   *                 where 0 corresponds to maximum diversity and 1 to minimum diversity.
+   * @param {MongoDBAtlasFilter} options.filter - Optional Atlas Search operator to pre-filter on document fields
+   *                                      or post-filter following the knnBeta search.
+   *
+   * @returns {Promise<Document[]>} - List of documents selected by maximal marginal relevance.
+   */
+  async maxMarginalRelevanceSearch(
     query: string,
-    k: number,
-    preFilter?: MongoDBDocument,
-    postFilterPipeline?: MongoDBDocument[]
+    options: MaxMarginalRelevanceSearchOptions<this["FilterType"]>
   ): Promise<Document[]> {
-    const results = await this.similaritySearchVectorWithScore(
-      await this.embeddings.embedQuery(query),
-      k,
-      preFilter,
-      postFilterPipeline
+    const { k, fetchK = 20, lambda = 0.5, filter } = options;
+
+    const queryEmbedding = await this.embeddings.embedQuery(query);
+
+    // preserve the original value of includeEmbeddings
+    const includeEmbeddingsFlag = options.filter?.includeEmbeddings || false;
+
+    // update filter to include embeddings, as they will be used in MMR
+    const includeEmbeddingsFilter = {
+      ...filter,
+      includeEmbeddings: true,
+    };
+
+    const resultDocs = await this.similaritySearchVectorWithScore(
+      queryEmbedding,
+      fetchK,
+      includeEmbeddingsFilter
     );
-    return results.map((result) => result[0]);
+
+    const embeddingList = resultDocs.map(
+      (doc) => doc[0].metadata[this.embeddingKey]
+    );
+
+    const mmrIndexes = maximalMarginalRelevance(
+      queryEmbedding,
+      embeddingList,
+      lambda,
+      k
+    );
+
+    return mmrIndexes.map((idx) => {
+      const doc = resultDocs[idx][0];
+
+      // remove embeddings if they were not requested originally
+      if (!includeEmbeddingsFlag) {
+        delete doc.metadata[this.embeddingKey];
+      }
+      return doc;
+    });
   }
 
   static async fromTexts(
