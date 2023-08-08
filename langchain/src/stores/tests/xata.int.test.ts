@@ -35,6 +35,7 @@ describe("XataChatMessageHistory", () => {
     const chatHistory = new XataChatMessageHistory({
       sessionId: randomSessionId(),
       client: xata,
+      apiKey: process.env.XATA_API_KEY,
     });
 
     const blankResult = await chatHistory.getMessages();
@@ -58,6 +59,7 @@ describe("XataChatMessageHistory", () => {
       chatHistory: new XataChatMessageHistory({
         sessionId: randomSessionId(),
         client: xata,
+        apiKey: process.env.XATA_API_KEY,
       }),
     });
 
@@ -80,6 +82,7 @@ describe("XataChatMessageHistory", () => {
       chatHistory: new XataChatMessageHistory({
         sessionId: randomSessionId(),
         client: xata,
+        apiKey: process.env.XATA_API_KEY,
       }),
     });
 

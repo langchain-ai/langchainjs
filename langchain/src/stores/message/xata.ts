@@ -1,4 +1,11 @@
-import { BaseClient, BaseClientOptions } from "@xata.io/client";
+import {
+  BaseClient,
+  BaseClientOptions,
+  GetTableSchemaResponse,
+  Schemas,
+  XataApiClient,
+  parseWorkspacesUrlParts,
+} from "@xata.io/client";
 import {
   BaseMessage,
   BaseListChatMessageHistory,
@@ -14,6 +21,7 @@ export type XataChatMessageHistoryInput<XataClient> = {
   sessionId: string;
   config?: BaseClientOptions;
   client?: XataClient;
+  apiKey?: string;
   table?: string;
 };
 
@@ -27,6 +35,15 @@ interface storedMessagesDTO {
   additionalKwargs: string;
 }
 
+const chatMemoryColumns: Schemas.Column[] = [
+  { name: "sessionId", type: "string" },
+  { name: "type", type: "string" },
+  { name: "role", type: "string" },
+  { name: "content", type: "text" },
+  { name: "name", type: "string" },
+  { name: "additionalKwargs", type: "text" },
+];
+
 export class XataChatMessageHistory<
   XataClient extends BaseClient
 > extends BaseListChatMessageHistory {
@@ -37,6 +54,10 @@ export class XataChatMessageHistory<
   private sessionId: string;
 
   private table: string;
+
+  private tableInitialized: boolean;
+
+  private apiClient: XataApiClient;
 
   constructor(fields: XataChatMessageHistoryInput<XataClient>) {
     super(fields);
@@ -53,9 +74,18 @@ export class XataChatMessageHistory<
         "Either a client or a config must be provided to XataChatMessageHistoryInput"
       );
     }
+    const apiKey = fields.apiKey || fields.config?.apiKey;
+    if (!apiKey) {
+      throw new Error(
+        "An apiKey must be provided to XataChatMessageHistoryInput, either directly or through the config object"
+      );
+    }
+    this.apiClient = new XataApiClient({ apiKey });
+    this.tableInitialized = false;
   }
 
   async getMessages(): Promise<BaseMessage[]> {
+    await this.ensureTable();
     const records = await this.client.db[this.table]
       .filter({ sessionId: this.sessionId })
       .sort("xata.createdAt", "asc")
@@ -85,6 +115,7 @@ export class XataChatMessageHistory<
   }
 
   async addMessage(message: BaseMessage): Promise<void> {
+    await this.ensureTable();
     const messageToAdd = mapChatMessagesToStoredMessages([message]);
     await this.client.db[this.table].create({
       sessionId: this.sessionId,
@@ -97,11 +128,49 @@ export class XataChatMessageHistory<
   }
 
   async clear(): Promise<void> {
+    await this.ensureTable();
     const records = await this.client.db[this.table]
       .select(["id"])
       .filter({ sessionId: this.sessionId })
       .getAll();
     const ids = records.map((m) => m.id);
     await this.client.db[this.table].delete(ids);
+  }
+
+  private async ensureTable(): Promise<void> {
+    if (this.tableInitialized) {
+      return;
+    }
+
+    const { databaseURL, branch } = await this.client.getConfig();
+    const [, , host, , database] = databaseURL.split("/");
+    const urlParts = parseWorkspacesUrlParts(host);
+    if (urlParts == null) {
+      throw new Error("Invalid databaseURL");
+    }
+    const { workspace, region } = urlParts;
+    const tableParams = {
+      workspace,
+      region,
+      database,
+      branch,
+      table: this.table,
+    };
+
+    let schema: GetTableSchemaResponse | null = null;
+    try {
+      schema = await this.apiClient.tables.getTableSchema(tableParams);
+    } catch (e) {
+      // pass
+    }
+    if (schema == null) {
+      await this.apiClient.tables.createTable(tableParams);
+      await this.apiClient.tables.setTableSchema({
+        ...tableParams,
+        schema: {
+          columns: chatMemoryColumns,
+        },
+      });
+    }
   }
 }
