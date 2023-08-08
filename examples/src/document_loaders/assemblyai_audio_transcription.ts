@@ -10,11 +10,11 @@ const audioUrl = "https://storage.googleapis.com/aai-docs-samples/espn.m4a";
 // Use `AudioTranscriptParagraphsLoader` or `AudioTranscriptSentencesLoader` for splitting the transcript into paragraphs or sentences
 const loader = new AudioTranscriptLoader(
   {
-    audio_url: audioUrl
+    audio_url: audioUrl,
     // any other parameters as documented here: https://www.assemblyai.com/docs/API%20reference/transcript#create-a-transcript
   },
   {
-    apiKey: "<ASSEMBLYAI_API_KEY>" // or set the `ASSEMBLYAI_API_KEY` env variable
+    apiKey: "<ASSEMBLYAI_API_KEY>", // or set the `ASSEMBLYAI_API_KEY` env variable
   }
 );
 const docs = await loader.load();
