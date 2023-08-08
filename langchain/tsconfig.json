@@ -71,6 +71,7 @@
       "src/llms/googlevertexai.ts",
       "src/llms/googlepalm.ts",
       "src/llms/sagemaker_endpoint.ts",
+      "src/llms/bedrock.ts",
       "src/prompts/index.ts",
       "src/prompts/load.ts",
       "src/vectorstores/analyticdb.ts",

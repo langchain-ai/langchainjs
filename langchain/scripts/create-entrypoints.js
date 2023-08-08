@@ -55,6 +55,7 @@ const entrypoints = {
   "llms/googlevertexai": "llms/googlevertexai",
   "llms/googlepalm": "llms/googlepalm",
   "llms/sagemaker_endpoint": "llms/sagemaker_endpoint",
+  "llms/bedrock": "llms/bedrock",
   // prompts
   prompts: "prompts/index",
   "prompts/load": "prompts/load",
@@ -243,6 +244,7 @@ const requiresOptionalDependency = [
   "llms/hf",
   "llms/replicate",
   "llms/sagemaker_endpoint",
+  "llms/bedrock",
   "prompts/load",
   "vectorstores/analyticdb",
   "vectorstores/chroma",

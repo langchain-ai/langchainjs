@@ -133,6 +133,9 @@
     "llms/sagemaker_endpoint.cjs",
     "llms/sagemaker_endpoint.js",
     "llms/sagemaker_endpoint.d.ts",
+    "llms/bedrock.cjs",
+    "llms/bedrock.js",
+    "llms/bedrock.d.ts",
     "prompts.cjs",
     "prompts.js",
     "prompts.d.ts",
@@ -583,6 +586,7 @@
     "@xata.io/client": "^0.25.1",
     "@zilliz/milvus2-sdk-node": ">=2.2.7",
     "apify-client": "^2.7.1",
+    "aws-sigv4-fetch": "^2.1.1",
     "axios": "^0.26.0",
     "cheerio": "^1.0.0-rc.12",
     "chromadb": "^1.5.3",
@@ -665,6 +669,7 @@
     "@xata.io/client": "^0.25.1",
     "@zilliz/milvus2-sdk-node": ">=2.2.7",
     "apify-client": "^2.7.1",
+    "aws-sigv4-fetch": "^2.1.1",
     "axios": "*",
     "cheerio": "^1.0.0-rc.12",
     "chromadb": "^1.5.3",
@@ -787,6 +792,9 @@
       "optional": true
     },
     "apify-client": {
+      "optional": true
+    },
+    "aws-sigv4-fetch": {
       "optional": true
     },
     "axios": {
@@ -1140,6 +1148,11 @@
       "types": "./llms/sagemaker_endpoint.d.ts",
       "import": "./llms/sagemaker_endpoint.js",
       "require": "./llms/sagemaker_endpoint.cjs"
+    },
+    "./llms/bedrock": {
+      "types": "./llms/bedrock.d.ts",
+      "import": "./llms/bedrock.js",
+      "require": "./llms/bedrock.cjs"
     },
     "./prompts": {
       "types": "./prompts.d.ts",

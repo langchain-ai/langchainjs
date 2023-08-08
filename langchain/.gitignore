@@ -121,6 +121,9 @@ llms/googlepalm.d.ts
 llms/sagemaker_endpoint.cjs
 llms/sagemaker_endpoint.js
 llms/sagemaker_endpoint.d.ts
+llms/bedrock.cjs
+llms/bedrock.js
+llms/bedrock.d.ts
 prompts.cjs
 prompts.js
 prompts.d.ts

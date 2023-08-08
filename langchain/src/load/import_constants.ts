@@ -25,6 +25,7 @@ export const optionalImportEntrypoints = [
   "langchain/llms/googlevertexai",
   "langchain/llms/googlepalm",
   "langchain/llms/sagemaker_endpoint",
+  "langchain/llms/bedrock",
   "langchain/prompts/load",
   "langchain/vectorstores/analyticdb",
   "langchain/vectorstores/elasticsearch",
