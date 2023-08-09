@@ -100,4 +100,28 @@ describe("XataChatMessageHistory", () => {
     });
     console.log({ res2 });
   });
+
+  test("Test Xata don't create table", async () => {
+    const t = () => {
+      // eslint-disable-next-line no-new
+      new XataChatMessageHistory({
+        sessionId: randomSessionId(),
+        client: xata,
+        createTable: true,
+      });
+    };
+    expect(t).toThrowError(
+      "If createTable is set, an apiKey must be provided to XataChatMessageHistoryInput, either directly or through the config object"
+    );
+
+    const t1 = () => {
+      // eslint-disable-next-line no-new
+      new XataChatMessageHistory({
+        sessionId: randomSessionId(),
+        client: xata,
+        createTable: false,
+      });
+    };
+    expect(t1).not.toThrow();
+  });
 });

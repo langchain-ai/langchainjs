@@ -21,8 +21,9 @@ export type XataChatMessageHistoryInput<XataClient> = {
   sessionId: string;
   config?: BaseClientOptions;
   client?: XataClient;
-  apiKey?: string;
   table?: string;
+  createTable?: boolean;
+  apiKey?: string;
 };
 
 interface storedMessagesDTO {
@@ -57,6 +58,8 @@ export class XataChatMessageHistory<
 
   private tableInitialized: boolean;
 
+  private createTable: boolean;
+
   private apiClient: XataApiClient;
 
   constructor(fields: XataChatMessageHistoryInput<XataClient>) {
@@ -74,13 +77,18 @@ export class XataChatMessageHistory<
         "Either a client or a config must be provided to XataChatMessageHistoryInput"
       );
     }
-    const apiKey = fields.apiKey || fields.config?.apiKey;
-    if (!apiKey) {
-      throw new Error(
-        "An apiKey must be provided to XataChatMessageHistoryInput, either directly or through the config object"
-      );
+    if (fields.createTable !== false) {
+      this.createTable = true;
+      const apiKey = fields.apiKey || fields.config?.apiKey;
+      if (!apiKey) {
+        throw new Error(
+          "If createTable is set, an apiKey must be provided to XataChatMessageHistoryInput, either directly or through the config object"
+        );
+      }
+      this.apiClient = new XataApiClient({ apiKey });
+    } else {
+      this.createTable = false;
     }
-    this.apiClient = new XataApiClient({ apiKey });
     this.tableInitialized = false;
   }
 
@@ -138,6 +146,9 @@ export class XataChatMessageHistory<
   }
 
   private async ensureTable(): Promise<void> {
+    if (!this.createTable) {
+      return;
+    }
     if (this.tableInitialized) {
       return;
     }
