@@ -84,6 +84,7 @@ const entrypoints = {
   "vectorstores/typesense": "vectorstores/typesense",
   "vectorstores/singlestore": "vectorstores/singlestore",
   "vectorstores/tigris": "vectorstores/tigris",
+  "vectorstores/usearch": "vectorstores/usearch",
   "vectorstores/vectara": "vectorstores/vectara",
   "vectorstores/xata": "vectorstores/xata",
   // text_splitter
@@ -97,6 +98,7 @@ const entrypoints = {
   document_loaders: "document_loaders/index",
   "document_loaders/base": "document_loaders/base",
   "document_loaders/web/apify_dataset": "document_loaders/web/apify_dataset",
+  "document_loaders/web/assemblyai": "document_loaders/web/assemblyai",
   "document_loaders/web/azure_blob_storage_container":
     "document_loaders/web/azure_blob_storage_container",
   "document_loaders/web/azure_blob_storage_file":
@@ -268,8 +270,10 @@ const requiresOptionalDependency = [
   "vectorstores/singlestore",
   "vectorstores/typesense",
   "vectorstores/tigris",
+  "vectorstores/usearch",
   "memory/zep",
   "document_loaders/web/apify_dataset",
+  "document_loaders/web/assemblyai",
   "document_loaders/web/azure_blob_storage_container",
   "document_loaders/web/azure_blob_storage_file",
   "document_loaders/web/cheerio",
