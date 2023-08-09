@@ -12,7 +12,7 @@ function isBinaryPath(name: string) {
   return extensions.has(extname(name).slice(1).toLowerCase());
 }
 
-interface GithubFile {
+export interface GithubFile {
   name: string;
   path: string;
   sha: string;
@@ -27,6 +27,11 @@ interface GithubFile {
     git: string;
     html: string;
   };
+}
+
+interface GetContentResponse {
+  contents: string;
+  metadata: { source: string };
 }
 
 export interface GithubRepoLoaderParams {
@@ -110,15 +115,16 @@ export class GithubRepoLoader
   }
 
   public async load(): Promise<Document[]> {
-    const documents: Document[] = [];
-    await this.processDirectory(this.initialPath, documents);
-    return documents;
+    return (await this.processRepo()).map(
+      (fileResponse) =>
+        new Document({
+          pageContent: fileResponse.contents,
+          metadata: fileResponse.metadata,
+        })
+    );
   }
 
-  protected async shouldIgnore(
-    path: string,
-    fileType: string
-  ): Promise<boolean> {
+  protected shouldIgnore(path: string, fileType: string): boolean {
     if (fileType !== "dir" && isBinaryPath(path)) {
       return true;
     }
@@ -141,34 +147,82 @@ export class GithubRepoLoader
     );
   }
 
-  private async processDirectory(
-    path: string,
-    documents: Document[]
-  ): Promise<void> {
-    try {
-      const files = await this.fetchRepoFiles(path);
+  /**
+   * Takes the file info and wrap it in a promise that will resolve to the file content and metadata
+   * @param file
+   * @returns
+   */
+  private async fetchFileContentWrapper(
+    file: GithubFile
+  ): Promise<GetContentResponse> {
+    const fileContent = await this.fetchFileContent(file).catch((error) => {
+      this.handleError(`Failed wrap file content: ${file}, ${error}`);
+    });
+    return {
+      contents: fileContent || "",
+      metadata: { source: file.path },
+    };
+  }
 
-      for (const file of files) {
-        if (!(await this.shouldIgnore(file.path, file.type))) {
-          if (file.type !== "dir") {
-            try {
-              const fileContent = await this.fetchFileContent(file);
-              const metadata = { source: file.path };
-              documents.push(
-                new Document({ pageContent: fileContent, metadata })
-              );
-            } catch (e) {
-              this.handleError(
-                `Failed to fetch file content: ${file.path}, ${e}`
-              );
-            }
-          } else if (this.recursive) {
-            await this.processDirectory(file.path, documents);
+  /**
+   * Maps a list of files / directories to a list of promises that will fetch the file / directory contents
+   */
+  private async getCurrDirFilesPromises(
+    files: GithubFile[]
+  ): Promise<Promise<GetContentResponse>[]> {
+    const currDirFilePromises: Promise<GetContentResponse>[] = [];
+    // Directories have nested files / directories, which is why this is a list of promises of promises
+    const currDirDirPromises: Promise<Promise<GetContentResponse>[]>[] = [];
+
+    for (const file of files) {
+      if (!this.shouldIgnore(file.path, file.type)) {
+        if (file.type !== "dir") {
+          try {
+            currDirFilePromises.push(this.fetchFileContentWrapper(file));
+          } catch (e) {
+            this.handleError(
+              `Failed to fetch file content: ${file.path}, ${e}`
+            );
           }
+        } else if (this.recursive) {
+          currDirDirPromises.push(this.processDirectory(file.path));
         }
       }
+    }
+
+    const curDirDirectories: Promise<GetContentResponse>[][] =
+      await Promise.all(currDirDirPromises);
+
+    return [...currDirFilePromises, ...curDirDirectories.flat()];
+  }
+
+  /**
+   * Begins the process of fetching the contents of the repository
+   */
+  private async processRepo(): Promise<GetContentResponse[]> {
+    try {
+      // Get the list of file / directory names in the root directory
+      const files = await this.fetchRepoFiles(this.initialPath);
+      // Map the file / directory paths to promises that will fetch the file / directory contents
+      const currDirPromises = await this.getCurrDirFilesPromises(files);
+      return Promise.all(currDirPromises);
+    } catch (error) {
+      this.handleError(
+        `Failed to process directory: ${this.initialPath}, ${error}`
+      );
+      return Promise.reject(error);
+    }
+  }
+
+  private async processDirectory(
+    path: string
+  ): Promise<Promise<GetContentResponse>[]> {
+    try {
+      const files = await this.fetchRepoFiles(path);
+      return this.getCurrDirFilesPromises(files);
     } catch (error) {
       this.handleError(`Failed to process directory: ${path}, ${error}`);
+      return Promise.reject(error);
     }
   }
 
