@@ -140,6 +140,137 @@ export class NotionAPILoader extends BaseDocumentLoader {
     this.pageQueueTotal += deDuped.length;
   }
 
+  private getPropValue(prop: PagePropertiesValue) {
+    switch (prop.type) {
+      case "number": {
+        const propNumber = prop[prop.type];
+        return propNumber !== null ? propNumber.toString() : "";
+      }
+      case "url":
+        return prop[prop.type] || "";
+      case "select":
+        return prop[prop.type]?.name ?? "";
+      case "multi_select":
+        return `[${prop[prop.type].map((v) => `"${v.name}"`).join(", ")}]`;
+      case "status":
+        return prop[prop.type]?.name ?? "";
+      case "date":
+        return `${prop[prop.type]?.start ?? ""}${
+          prop[prop.type]?.end ? ` - ${prop[prop.type]?.end}` : ""
+        }`;
+      case "email":
+        return prop[prop.type] || "";
+      case "phone_number":
+        return prop[prop.type] || "";
+      case "checkbox":
+        return prop[prop.type].toString();
+      case "files":
+        return `[${prop[prop.type].map((v) => `"${v.name}"`).join(", ")}]`;
+      case "created_by":
+        return `["${prop[prop.type].object}", "${prop[prop.type].id}"]`;
+      case "created_time":
+        return prop[prop.type];
+      case "last_edited_by":
+        return `["${prop[prop.type].object}", "${prop[prop.type].id}"]`;
+      case "last_edited_time":
+        return prop[prop.type];
+      // TODO: Not all formula types are supported in the SDK (dependant on Notion)
+      case "formula": {
+        const formulaProp = prop[prop.type];
+        switch (formulaProp.type) {
+          case "boolean":
+            const formulaBool = formulaProp[formulaProp.type];
+            return formulaBool !== null ? formulaBool.toString() : "";
+          case "date":
+            return `${formulaProp[formulaProp.type]?.start ?? ""}${
+              formulaProp[formulaProp.type]?.end
+                ? `- ${formulaProp[formulaProp.type]?.end}`
+                : ""
+            }`;
+          case "number": {
+            const formulaNumber = formulaProp[formulaProp.type];
+            return formulaNumber !== null ? formulaNumber.toString() : "";
+          }
+          case "string":
+            return formulaProp[formulaProp.type] || "";
+        }
+      }
+      case "title":
+        return prop[prop.type]
+          .map((v) =>
+            this.n2mClient.annotatePlainText(v.plain_text, v.annotations)
+          )
+          .join("");
+      case "rich_text":
+        return prop[prop.type]
+          .map((v) =>
+            this.n2mClient.annotatePlainText(v.plain_text, v.annotations)
+          )
+          .join("");
+      case "people":
+        return `[${prop[prop.type]
+          .map((v) => `["${v.object}", "${v.id}"]`)
+          .join(", ")}]`;
+      case "unique_id":
+        return `${prop[prop.type].prefix || ""}${prop[prop.type].number}`;
+      case "relation":
+        return `[${prop[prop.type].map((v) => `"${v.id}"`).join(", ")}]`;
+      // TODO: Not all rollup types are supported in the SDK
+      case "rollup": {
+        const rollupProp = prop[prop.type];
+        switch (rollupProp.type) {
+          case "date":
+            return `{${rollupProp.function}: ${
+              rollupProp[rollupProp.type]?.start ?? ""
+            }${
+              rollupProp[rollupProp.type]?.end
+                ? ` - ${rollupProp[rollupProp.type]?.end}`
+                : ""
+            }}`;
+          case "number": {
+            const propNumber = prop[prop.type];
+            return `{${rollupProp.function}: ${
+              propNumber !== null ? propNumber.toString() : ""
+            }}`;
+          }
+          case "array": {
+            const arrayValues = rollupProp.array.map((v) => {
+              switch (v.type) {
+                case "title":
+                  return `"${v[v.type]
+                    .map((v) =>
+                      this.n2mClient.annotatePlainText(
+                        v.plain_text,
+                        v.annotations
+                      )
+                    )
+                    .join("")}"`;
+                case "rich_text":
+                  return `"${v[v.type]
+                    .map((v) =>
+                      this.n2mClient.annotatePlainText(
+                        v.plain_text,
+                        v.annotations
+                      )
+                    )
+                    .join("")}"`;
+                case "people":
+                  return v[v.type]
+                    .map((v) => `["${v.object}", "${v.id}"]`)
+                    .join(", ");
+                case "relation":
+                  return v[v.type].map((v) => `"${v.id}"`).join(", ");
+              }
+            });
+            return `{${rollupProp.function}: [${arrayValues.join(", ")}]}`;
+          }
+        }
+      }
+      // default:
+      //   return `Unsupported type: ${prop.type}`;
+    }
+  }
+
   /**
    * Parses the properties of a Notion page and returns them as key-value
    * pairs.
@@ -150,63 +281,10 @@ export class NotionAPILoader extends BaseDocumentLoader {
     [key: string]: string;
   } {
     return Object.fromEntries(
-      Object.entries(page.properties).map(([_, prop]) => {
-        switch (prop.type) {
-          case "number":
-            return [prop.type, prop[prop.type]];
-          case "url":
-            return [prop.type, prop[prop.type]];
-          case "select":
-            return [prop.type, prop[prop.type]?.name ?? ""];
-          case "multi_select":
-            return [
-              prop.type,
-              prop[prop.type].map((select) => select.name).join(", "),
-            ];
-          case "status":
-            return [prop.type, prop[prop.type]?.name ?? ""];
-          case "date":
-            return [
-              prop.type,
-              `${prop[prop.type]?.start ?? ""}${
-                prop[prop.type]?.end ? `-  ${prop[prop.type]?.end}` : ""
-              }`,
-            ];
-          case "email":
-            return [prop.type, prop[prop.type]];
-          case "phone_number":
-            return [prop.type, prop[prop.type]];
-          case "checkbox":
-            return [prop.type, prop[prop.type].toString()];
-          // case "files":
-          case "created_by":
-            return [prop.type, prop[prop.type]];
-          case "created_time":
-            return [prop.type, prop[prop.type]];
-          case "last_edited_by":
-            return [prop.type, prop[prop.type]];
-          case "last_edited_time":
-            return [prop.type, prop[prop.type]];
-          // case "formula":
-          case "title":
-            return [
-              prop.type,
-              prop[prop.type].map((v) => v.plain_text).join(""),
-            ];
-          case "rich_text":
-            return [
-              prop.type,
-              prop[prop.type].map((v) => v.plain_text).join(""),
-            ];
-          case "people":
-            return [prop.type, prop[prop.type]];
-          // case "relation":
-          // case "rollup":
-
-          default:
-            return [prop.type, "Unsupported type"];
-        }
-      })
+      Object.entries(page.properties).map(([propName, prop]) => [
+        propName,
+        this.getPropValue(prop),
+      ])
     );
   }
 
