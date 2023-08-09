@@ -5481,13 +5481,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@notionhq/client@npm:^2.2.5":
-  version: 2.2.5
-  resolution: "@notionhq/client@npm:2.2.5"
+"@notionhq/client@npm:^2.2.10":
+  version: 2.2.10
+  resolution: "@notionhq/client@npm:2.2.10"
   dependencies:
     "@types/node-fetch": ^2.5.10
     node-fetch: ^2.6.1
-  checksum: e663e9dec58548226ea463fba1409ee9c5af26bdae71b2c5885c11b3c39b9238578ae067e31d5bd33b67cef492f603b264dcdad52692e33e03e0c0a085cb89f0
+  checksum: ce723de8d13898318af1fa375628b5c48904b2c3eaa5483d8995bd18c6c592f033014546b45e7bb54190ea31dc2b3fbd73ffce20917778a62d6e41a7b9fcc91f
   languageName: node
   linkType: hard
 
@@ -14383,7 +14383,7 @@ __metadata:
     "@huggingface/inference": ^1.5.1
     "@jest/globals": ^29.5.0
     "@mozilla/readability": ^0.4.4
-    "@notionhq/client": ^2.2.5
+    "@notionhq/client": ^2.2.10
     "@opensearch-project/opensearch": ^2.2.0
     "@pinecone-database/pinecone": ^0.0.14
     "@planetscale/database": ^1.8.0
@@ -14510,7 +14510,7 @@ __metadata:
     "@google-cloud/storage": ^6.10.1
     "@huggingface/inference": ^1.5.1
     "@mozilla/readability": "*"
-    "@notionhq/client": ^2.2.5
+    "@notionhq/client": ^2.2.10
     "@opensearch-project/opensearch": "*"
     "@pinecone-database/pinecone": "*"
     "@planetscale/database": ^1.8.0
