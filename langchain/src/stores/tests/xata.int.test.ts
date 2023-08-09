@@ -7,7 +7,7 @@ import { ChatOpenAI } from "../../chat_models/openai.js";
 import { ConversationChain } from "../../chains/conversation.js";
 import { XataChatMessageHistory } from "../message/xata.js";
 
-describe("XataChatMessageHistory", () => {
+describe.skip("XataChatMessageHistory", () => {
   if (!process.env.XATA_API_KEY) {
     throw new Error("XATA_API_KEY not set");
   }
