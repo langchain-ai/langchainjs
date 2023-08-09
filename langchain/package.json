@@ -214,6 +214,9 @@
     "vectorstores/tigris.cjs",
     "vectorstores/tigris.js",
     "vectorstores/tigris.d.ts",
+    "vectorstores/usearch.cjs",
+    "vectorstores/usearch.js",
+    "vectorstores/usearch.d.ts",
     "vectorstores/vectara.cjs",
     "vectorstores/vectara.js",
     "vectorstores/vectara.d.ts",
@@ -640,6 +643,7 @@
     "typeorm": "^0.3.12",
     "typescript": "^5.0.0",
     "typesense": "^1.5.3",
+    "usearch": "^1.1.1",
     "vectordb": "^0.1.4",
     "weaviate-ts-client": "^1.0.0"
   },
@@ -704,6 +708,7 @@
     "srt-parser-2": "^1.2.2",
     "typeorm": "^0.3.12",
     "typesense": "^1.5.3",
+    "usearch": "^1.1.1",
     "vectordb": "^0.1.4",
     "weaviate-ts-client": "^1.0.0"
   },
@@ -886,6 +891,9 @@
       "optional": true
     },
     "typesense": {
+      "optional": true
+    },
+    "usearch": {
       "optional": true
     },
     "vectordb": {
@@ -1286,6 +1294,11 @@
       "types": "./vectorstores/tigris.d.ts",
       "import": "./vectorstores/tigris.js",
       "require": "./vectorstores/tigris.cjs"
+    },
+    "./vectorstores/usearch": {
+      "types": "./vectorstores/usearch.d.ts",
+      "import": "./vectorstores/usearch.js",
+      "require": "./vectorstores/usearch.cjs"
     },
     "./vectorstores/vectara": {
       "types": "./vectorstores/vectara.d.ts",

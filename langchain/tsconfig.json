@@ -97,6 +97,7 @@
       "src/vectorstores/typesense.ts",
       "src/vectorstores/singlestore.ts",
       "src/vectorstores/tigris.ts",
+      "src/vectorstores/usearch.ts",
       "src/vectorstores/vectara.ts",
       "src/vectorstores/xata.ts",
       "src/text_splitter.ts",
