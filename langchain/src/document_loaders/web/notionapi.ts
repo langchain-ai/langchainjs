@@ -24,19 +24,22 @@ type GuardType<T> = T extends (x: any, ...rest: any) => x is infer U
   ? U
   : never;
 
-type GetBlockResponse = Parameters<typeof isFullBlock>[0];
-type GetPageResponse = Parameters<typeof isFullPage>[0];
-type GetDatabaseResponse = Parameters<typeof isFullDatabase>[0];
+export type GetBlockResponse = Parameters<typeof isFullBlock>[0];
+export type GetPageResponse = Parameters<typeof isFullPage>[0];
+export type GetDatabaseResponse = Parameters<typeof isFullDatabase>[0];
 
-type BlockObjectResponse = GuardType<typeof isFullBlock>;
-type PageObjectResponse = GuardType<typeof isFullPage>;
-type DatabaseObjectResponse = GuardType<typeof isFullDatabase>;
+export type BlockObjectResponse = GuardType<typeof isFullBlock>;
+export type PageObjectResponse = GuardType<typeof isFullPage>;
+export type DatabaseObjectResponse = GuardType<typeof isFullDatabase>;
 
-type GetResponse =
+export type GetResponse =
   | GetBlockResponse
   | GetPageResponse
   | GetDatabaseResponse
   | APIResponseError;
+
+export type PagePropertiesType = PageObjectResponse["properties"];
+export type PagePropertiesValue = PagePropertiesType[keyof PagePropertiesType];
 
 const isPageResponse = (res: GetResponse): res is GetPageResponse =>
   !isNotionClientError(res) && res.object === "page";
