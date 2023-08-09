@@ -179,9 +179,8 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
       }
       return {
         pageContent: doc?.pageContent,
-        metadata: { ...doc?.metadata, score },
+        metadata: { score, ...doc?.metadata },
       };
-      // return { ...doc, score };
     });
   }
 

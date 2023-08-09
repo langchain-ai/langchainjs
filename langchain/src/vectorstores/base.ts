@@ -159,7 +159,7 @@ export abstract class VectorStore extends Serializable {
 
     return results.map(([doc, score]) => ({
       pageContent: doc?.pageContent,
-      metadata: { ...doc?.metadata, score },
+      metadata: { score, ...doc?.metadata },
     }));
   }
 
