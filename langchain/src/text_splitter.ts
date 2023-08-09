@@ -319,7 +319,7 @@ export class RecursiveCharacterTextSplitter
 
   static fromLanguage(
     language: SupportedTextSplitterLanguage,
-    options: Partial<RecursiveCharacterTextSplitterParams>
+    options?: Partial<RecursiveCharacterTextSplitterParams>
   ) {
     return new RecursiveCharacterTextSplitter({
       ...options,

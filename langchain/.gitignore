@@ -10,6 +10,9 @@ agents.d.ts
 agents/load.cjs
 agents/load.js
 agents/load.d.ts
+agents/toolkits.cjs
+agents/toolkits.js
+agents/toolkits.d.ts
 agents/toolkits/aws_sfn.cjs
 agents/toolkits/aws_sfn.js
 agents/toolkits/aws_sfn.d.ts
@@ -106,6 +109,9 @@ llms/cohere.d.ts
 llms/hf.cjs
 llms/hf.js
 llms/hf.d.ts
+llms/ollama.cjs
+llms/ollama.js
+llms/ollama.d.ts
 llms/replicate.cjs
 llms/replicate.js
 llms/replicate.d.ts
@@ -199,6 +205,9 @@ vectorstores/tigris.d.ts
 vectorstores/vectara.cjs
 vectorstores/vectara.js
 vectorstores/vectara.d.ts
+vectorstores/xata.cjs
+vectorstores/xata.js
+vectorstores/xata.d.ts
 text_splitter.cjs
 text_splitter.js
 text_splitter.d.ts
@@ -307,6 +316,9 @@ document_loaders/fs/notion.d.ts
 document_loaders/fs/unstructured.cjs
 document_loaders/fs/unstructured.js
 document_loaders/fs/unstructured.d.ts
+document_transformers/html_to_text.cjs
+document_transformers/html_to_text.js
+document_transformers/html_to_text.d.ts
 document_transformers/openai_functions.cjs
 document_transformers/openai_functions.js
 document_transformers/openai_functions.d.ts
@@ -331,6 +343,9 @@ chat_models/googlepalm.d.ts
 chat_models/baiduwenxin.cjs
 chat_models/baiduwenxin.js
 chat_models/baiduwenxin.d.ts
+chat_models/ollama.cjs
+chat_models/ollama.js
+chat_models/ollama.d.ts
 schema.cjs
 schema.js
 schema.d.ts
@@ -466,6 +481,9 @@ stores/message/upstash_redis.d.ts
 stores/message/planetscale.cjs
 stores/message/planetscale.js
 stores/message/planetscale.d.ts
+util/math.cjs
+util/math.js
+util/math.d.ts
 experimental/autogpt.cjs
 experimental/autogpt.js
 experimental/autogpt.d.ts

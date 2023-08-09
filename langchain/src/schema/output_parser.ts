@@ -1,4 +1,4 @@
-import { Callbacks } from "../callbacks/manager.js";
+import { BaseCallbackConfig, Callbacks } from "../callbacks/manager.js";
 import {
   BasePromptValue,
   Generation,
@@ -102,15 +102,64 @@ export abstract class BaseOutputParser<
 }
 
 /**
+ * Class to parse the output of an LLM call that also allows streaming inputs.
+ */
+export abstract class BaseTransformOutputParser<
+  T = unknown
+> extends BaseOutputParser<T> {
+  async *_transform(
+    inputGenerator: AsyncGenerator<string | BaseMessage>
+  ): AsyncGenerator<T> {
+    for await (const chunk of inputGenerator) {
+      if (typeof chunk === "string") {
+        yield this.parseResult([{ text: chunk }]);
+      } else {
+        yield this.parseResult([{ message: chunk, text: chunk.content }]);
+      }
+    }
+  }
+
+  async *transform(
+    inputGenerator: AsyncGenerator<string | BaseMessage>,
+    options: BaseCallbackConfig
+  ): AsyncGenerator<T> {
+    yield* this._streamWithConfig(this._transform(inputGenerator), {
+      ...options,
+      runType: "parser",
+    });
+  }
+}
+
+/**
  * OutputParser that parses LLMResult into the top likely string.
  */
-export class StringOutputParser extends BaseOutputParser<string> {
+export class StringOutputParser extends BaseTransformOutputParser<string> {
   lc_namespace = ["schema", "output_parser"];
 
   lc_serializable = true;
 
   parse(text: string): Promise<string> {
     return Promise.resolve(text);
+  }
+
+  getFormatInstructions(): string {
+    return "";
+  }
+}
+
+/**
+ * OutputParser that parses LLMResult into the top likely string and
+ * encodes it into bytes.
+ */
+export class BytesOutputParser extends BaseTransformOutputParser<Uint8Array> {
+  lc_namespace = ["schema", "output_parser"];
+
+  lc_serializable = true;
+
+  protected textEncoder = new TextEncoder();
+
+  parse(text: string): Promise<Uint8Array> {
+    return Promise.resolve(this.textEncoder.encode(text));
   }
 
   getFormatInstructions(): string {

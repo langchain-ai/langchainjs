@@ -35,6 +35,22 @@ import RetrieverExample from "@examples/guides/expression_language/cookbook_retr
 
 <CodeBlock language="typescript">{RetrieverExample}</CodeBlock>
 
+## Binding options
+
+Often times we want to attach kwargs to the model that's passed in. To do this, runnables contain a `.bind` method. Here's how you can use it:
+
+### Attaching stop sequences
+
+import StopSequenceExample from "@examples/guides/expression_language/cookbook_stop_sequence.ts";
+
+<CodeBlock language="typescript">{StopSequenceExample}</CodeBlock>
+
+### Attaching function call information
+
+import FunctionCallExample from "@examples/guides/expression_language/cookbook_function_call.ts";
+
+<CodeBlock language="typescript">{FunctionCallExample}</CodeBlock>
+
 ## Mapping multiple input keys
 
 In the above example, we pass a string input directly into our chain. If we want our chain to take multiple inputs, we can pass a map of functions to parse the inputs:

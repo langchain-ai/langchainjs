@@ -456,6 +456,8 @@ export type ChainValues = Record<string, any>;
 export abstract class BaseChatMessageHistory extends Serializable {
   public abstract getMessages(): Promise<BaseMessage[]>;
 
+  public abstract addMessage(message: BaseMessage): Promise<void>;
+
   public abstract addUserMessage(message: string): Promise<void>;
 
   public abstract addAIChatMessage(message: string): Promise<void>;
@@ -464,7 +466,7 @@ export abstract class BaseChatMessageHistory extends Serializable {
 }
 
 export abstract class BaseListChatMessageHistory extends Serializable {
-  protected abstract addMessage(message: BaseMessage): Promise<void>;
+  public abstract addMessage(message: BaseMessage): Promise<void>;
 
   public addUserMessage(message: string): Promise<void> {
     return this.addMessage(new HumanMessage(message));
