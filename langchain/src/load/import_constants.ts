@@ -48,6 +48,7 @@ export const optionalImportEntrypoints = [
   "langchain/vectorstores/tigris",
   "langchain/memory/zep",
   "langchain/document_loaders/web/apify_dataset",
+  "langchain/document_loaders/web/assemblyai",
   "langchain/document_loaders/web/azure_blob_storage_container",
   "langchain/document_loaders/web/azure_blob_storage_file",
   "langchain/document_loaders/web/cheerio",

@@ -229,6 +229,9 @@ document_loaders/base.d.ts
 document_loaders/web/apify_dataset.cjs
 document_loaders/web/apify_dataset.js
 document_loaders/web/apify_dataset.d.ts
+document_loaders/web/assemblyai.cjs
+document_loaders/web/assemblyai.js
+document_loaders/web/assemblyai.d.ts
 document_loaders/web/azure_blob_storage_container.cjs
 document_loaders/web/azure_blob_storage_container.js
 document_loaders/web/azure_blob_storage_container.d.ts
