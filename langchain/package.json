@@ -223,6 +223,9 @@
     "vectorstores/xata.cjs",
     "vectorstores/xata.js",
     "vectorstores/xata.d.ts",
+    "vectorstores/zep.cjs",
+    "vectorstores/zep.js",
+    "vectorstores/zep.d.ts",
     "text_splitter.cjs",
     "text_splitter.js",
     "text_splitter.d.ts",
@@ -1309,6 +1312,11 @@
       "types": "./vectorstores/xata.d.ts",
       "import": "./vectorstores/xata.js",
       "require": "./vectorstores/xata.cjs"
+    },
+    "./vectorstores/zep": {
+      "types": "./vectorstores/zep.d.ts",
+      "import": "./vectorstores/zep.js",
+      "require": "./vectorstores/zep.cjs"
     },
     "./text_splitter": {
       "types": "./text_splitter.d.ts",
