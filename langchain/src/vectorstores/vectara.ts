@@ -175,9 +175,9 @@ export class VectaraStore extends VectorStore {
   async similaritySearchWithScore(
     query: string,
     k = 10,
-    filter: VectaraFilter | undefined = undefined,
+    filter: VectaraFilter | undefined = undefined
   ): Promise<[Document, number][]> {
-    const headers = await this.getJsonHeader();    
+    const headers = await this.getJsonHeader();
     const data = {
       query: [
         {
