@@ -131,6 +131,9 @@ export class FunctionalTranslator extends BaseTranslator {
   visitStructuredQuery(
     query: StructuredQuery
   ): this["VisitStructuredQueryOutput"] {
+    if (!query.filter) {
+      return { filter: () => false };
+    }
     const filterFunction = query.filter?.accept(this);
     if (typeof filterFunction !== "function") {
       throw new Error("Structured query filter is not a function");
