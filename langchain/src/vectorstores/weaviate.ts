@@ -130,7 +130,7 @@ export class WeaviateStore extends VectorStore {
 
       const flattenedMetadata = flattenObjectForWeaviate(document.metadata);
       return {
-        ...this.tenant ? { tenant: this.tenant } : {},
+        ...(this.tenant ? { tenant: this.tenant } : {}),
         class: this.indexName,
         id: documentIds[index],
         vector: vectors[index],
