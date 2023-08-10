@@ -169,9 +169,9 @@ export class WeaviateStore extends VectorStore {
     if (ids && ids.length > 0) {
       for (const id of ids) {
         let deleter = this.client.data
-            .deleter()
-            .withClassName(this.indexName)
-            .withId(id);
+          .deleter()
+          .withClassName(this.indexName)
+          .withId(id);
 
         if (this.tenant) {
           deleter = deleter.withTenant(this.tenant);
@@ -181,9 +181,9 @@ export class WeaviateStore extends VectorStore {
       }
     } else if (filter) {
       let batchDeleter = this.client.batch
-          .objectsBatchDeleter()
-          .withClassName(this.indexName)
-          .withWhere(filter.where);
+        .objectsBatchDeleter()
+        .withClassName(this.indexName)
+        .withWhere(filter.where);
 
       if (this.tenant) {
         batchDeleter = batchDeleter.withTenant(this.tenant);
