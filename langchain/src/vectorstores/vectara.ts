@@ -27,6 +27,15 @@ export interface VectaraFilter {
   // between neural search and keyword-based search factors. Values between 0.01 and 0.2 tend to work well.
   // see https://docs.vectara.com/docs/api-reference/search-apis/lexical-matching for more details.
   lambda?: number;
+  // The number of sentences before/after the matching segment to add to the context.
+  contextConfig?: VectaraContextConfig;
+}
+
+export interface VectaraContextConfig {
+  // The number of sentences before the matching segment to add. Default is 2.
+  sentencesBefore?: number;
+  // The number of sentences after the matching segment to add. Default is 2.
+  sentencesAfter?: number;
 }
 
 export class VectaraStore extends VectorStore {
@@ -166,14 +175,18 @@ export class VectaraStore extends VectorStore {
   async similaritySearchWithScore(
     query: string,
     k = 10,
-    filter: VectaraFilter | undefined = undefined
+    filter: VectaraFilter | undefined = undefined,
   ): Promise<[Document, number][]> {
-    const headers = await this.getJsonHeader();
+    const headers = await this.getJsonHeader();    
     const data = {
       query: [
         {
           query,
           numResults: k,
+          contextConfig: {
+            sentencesAfter: filter?.contextConfig?.sentencesAfter ?? 2,
+            sentencesBefore: filter?.contextConfig?.sentencesBefore ?? 2,
+          },
           corpusKey: [
             {
               customerId: this.customerId,
