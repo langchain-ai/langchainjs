@@ -33,9 +33,9 @@ export interface VectaraFilter {
 
 export interface VectaraContextConfig {
   // The number of sentences before the matching segment to add. Default is 2.
-  nBefore?: number;
+  nSentencesBefore?: number;
   // The number of sentences after the matching segment to add. Default is 2.
-  nAfter?: number;
+  nSentencesAfter?: number;
 }
 
 export class VectaraStore extends VectorStore {
@@ -184,8 +184,8 @@ export class VectaraStore extends VectorStore {
           query,
           numResults: k,
           contextConfig: {
-            sentencesAfter: filter?.contextConfig?.nAfter ?? 2,
-            sentencesBefore: filter?.contextConfig?.nBefore ?? 2,
+            sentencesAfter: filter?.contextConfig?.nSentencesAfter ?? 2,
+            sentencesBefore: filter?.contextConfig?.nSentencesBefore ?? 2,
           },
           corpusKey: [
             {
