@@ -99,8 +99,10 @@ const entrypoints = {
   "document_loaders/base": "document_loaders/base",
   "document_loaders/web/apify_dataset": "document_loaders/web/apify_dataset",
   "document_loaders/web/assemblyai": "document_loaders/web/assemblyai",
-  "document_loaders/web/azure_blob_storage_container": "document_loaders/web/azure_blob_storage_container",
-  "document_loaders/web/azure_blob_storage_file": "document_loaders/web/azure_blob_storage_file",
+  "document_loaders/web/azure_blob_storage_container":
+    "document_loaders/web/azure_blob_storage_container",
+  "document_loaders/web/azure_blob_storage_file":
+    "document_loaders/web/azure_blob_storage_file",
   "document_loaders/web/cheerio": "document_loaders/web/cheerio",
   "document_loaders/web/puppeteer": "document_loaders/web/puppeteer",
   "document_loaders/web/playwright": "document_loaders/web/playwright",
@@ -131,8 +133,7 @@ const entrypoints = {
   "document_loaders/fs/notion": "document_loaders/fs/notion",
   "document_loaders/fs/unstructured": "document_loaders/fs/unstructured",
   // document_transformers
-  "document_transformers/html_to_text":
-    "document_transformers/html_to_text",
+  "document_transformers/html_to_text": "document_transformers/html_to_text",
   "document_transformers/openai_functions":
     "document_transformers/openai_functions",
   // chat_models
@@ -197,6 +198,7 @@ const entrypoints = {
   "stores/message/ioredis": "stores/message/ioredis",
   "stores/message/upstash_redis": "stores/message/upstash_redis",
   "stores/message/planetscale": "stores/message/planetscale",
+  "stores/message/xata": "stores/message/xata",
   // utilities
   "util/math": "util/math",
   // experimental
@@ -329,6 +331,7 @@ const requiresOptionalDependency = [
   "stores/message/ioredis",
   "stores/message/upstash_redis",
   "stores/message/planetscale",
+  "stores/message/xata",
   "experimental/multimodal_embeddings/googlevertexai",
 ];
 

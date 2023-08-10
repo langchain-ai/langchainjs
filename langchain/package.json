@@ -499,6 +499,9 @@
     "stores/message/planetscale.cjs",
     "stores/message/planetscale.js",
     "stores/message/planetscale.d.ts",
+    "stores/message/xata.cjs",
+    "stores/message/xata.js",
+    "stores/message/xata.d.ts",
     "util/math.cjs",
     "util/math.js",
     "util/math.d.ts",
@@ -1775,6 +1778,11 @@
       "types": "./stores/message/planetscale.d.ts",
       "import": "./stores/message/planetscale.js",
       "require": "./stores/message/planetscale.cjs"
+    },
+    "./stores/message/xata": {
+      "types": "./stores/message/xata.d.ts",
+      "import": "./stores/message/xata.js",
+      "require": "./stores/message/xata.cjs"
     },
     "./util/math": {
       "types": "./util/math.d.ts",

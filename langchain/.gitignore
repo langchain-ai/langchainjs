@@ -487,6 +487,9 @@ stores/message/upstash_redis.d.ts
 stores/message/planetscale.cjs
 stores/message/planetscale.js
 stores/message/planetscale.d.ts
+stores/message/xata.cjs
+stores/message/xata.js
+stores/message/xata.d.ts
 util/math.cjs
 util/math.js
 util/math.d.ts
