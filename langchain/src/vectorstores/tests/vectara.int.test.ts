@@ -132,8 +132,8 @@ describe("VectaraStore", () => {
         10, // Number of results needed
         { lambda: 0.025, 
           contextConfig: {
-          nSentencesAfter: 1,
-          nSentencesBefore: 1,
+          sentencesAfter: 1,
+          sentencesBefore: 1,
         },
        }
       );
