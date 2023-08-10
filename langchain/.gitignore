@@ -202,6 +202,9 @@ vectorstores/singlestore.d.ts
 vectorstores/tigris.cjs
 vectorstores/tigris.js
 vectorstores/tigris.d.ts
+vectorstores/usearch.cjs
+vectorstores/usearch.js
+vectorstores/usearch.d.ts
 vectorstores/vectara.cjs
 vectorstores/vectara.js
 vectorstores/vectara.d.ts
@@ -229,6 +232,9 @@ document_loaders/base.d.ts
 document_loaders/web/apify_dataset.cjs
 document_loaders/web/apify_dataset.js
 document_loaders/web/apify_dataset.d.ts
+document_loaders/web/assemblyai.cjs
+document_loaders/web/assemblyai.js
+document_loaders/web/assemblyai.d.ts
 document_loaders/web/azure_blob_storage_container.cjs
 document_loaders/web/azure_blob_storage_container.js
 document_loaders/web/azure_blob_storage_container.d.ts
