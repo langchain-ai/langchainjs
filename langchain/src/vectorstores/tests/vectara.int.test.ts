@@ -130,7 +130,7 @@ describe("VectaraStore", () => {
       const results = await store.similaritySearch(
         "Was Gandalf dead?",
         10, // Number of results needed
-        { lambda: 0.025 }
+        { lambda: 0.025, nSentenceContext: 1 }
       );
       expect(results.length).toBeGreaterThan(0);
       expect(results[0].pageContent.length).toBeGreaterThan(0);
