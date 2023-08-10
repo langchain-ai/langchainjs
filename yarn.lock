@@ -4206,13 +4206,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@getzep/zep-js@npm:^0.6.2":
-  version: 0.6.2
-  resolution: "@getzep/zep-js@npm:0.6.2"
+"@getzep/zep-js@npm:^0.6.3":
+  version: 0.6.3
+  resolution: "@getzep/zep-js@npm:0.6.3"
   dependencies:
     semver: ^7.5.4
     typescript: ^5.1.6
-  checksum: 8014793cff56e886e4378e936eea26904f536c1abbb4977055ed763e7ca074f4ef94790c1f178cc78db70f76c41c19fc38d2dfc2c2a07c5e0e58d1f11d6188b8
+  checksum: 37b18e9dbd7899eefe56888f1fd1ffb89112be80455d5ddb9c75db27250764455e035567065a7ac6fdfc0e18b5877a3ef60a53a9d5e0f77b5395469b0389fcb7
   languageName: node
   linkType: hard
 
@@ -13139,7 +13139,7 @@ __metadata:
     "@elastic/elasticsearch": ^8.4.0
     "@faker-js/faker": ^7.6.0
     "@getmetal/metal-sdk": ^4.0.0
-    "@getzep/zep-js": ^0.6.2
+    "@getzep/zep-js": ^0.6.3
     "@gomomento/sdk": ^1.23.0
     "@google-ai/generativelanguage": ^0.2.1
     "@google-cloud/storage": ^6.10.1
@@ -13256,7 +13256,7 @@ __metadata:
     "@clickhouse/client": ^0.0.14
     "@elastic/elasticsearch": ^8.4.0
     "@getmetal/metal-sdk": "*"
-    "@getzep/zep-js": ^0.6.2
+    "@getzep/zep-js": ^0.6.3
     "@gomomento/sdk": ^1.23.0
     "@google-ai/generativelanguage": ^0.2.1
     "@google-cloud/storage": ^6.10.1
