@@ -418,6 +418,9 @@
     "retrievers/document_compressors.cjs",
     "retrievers/document_compressors.js",
     "retrievers/document_compressors.d.ts",
+    "retrievers/parent_document.cjs",
+    "retrievers/parent_document.js",
+    "retrievers/parent_document.d.ts",
     "retrievers/time_weighted.cjs",
     "retrievers/time_weighted.js",
     "retrievers/time_weighted.d.ts",
@@ -1640,6 +1643,11 @@
       "types": "./retrievers/document_compressors.d.ts",
       "import": "./retrievers/document_compressors.js",
       "require": "./retrievers/document_compressors.cjs"
+    },
+    "./retrievers/parent_document": {
+      "types": "./retrievers/parent_document.d.ts",
+      "import": "./retrievers/parent_document.js",
+      "require": "./retrievers/parent_document.cjs"
     },
     "./retrievers/time_weighted": {
       "types": "./retrievers/time_weighted.d.ts",
