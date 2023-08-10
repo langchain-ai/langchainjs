@@ -136,12 +136,18 @@ export interface OptionalImportMap {
   "langchain/vectorstores/tigris"?:
     | typeof import("../vectorstores/tigris.js")
     | Promise<typeof import("../vectorstores/tigris.js")>;
+  "langchain/vectorstores/usearch"?:
+    | typeof import("../vectorstores/usearch.js")
+    | Promise<typeof import("../vectorstores/usearch.js")>;
   "langchain/memory/zep"?:
     | typeof import("../memory/zep.js")
     | Promise<typeof import("../memory/zep.js")>;
   "langchain/document_loaders/web/apify_dataset"?:
     | typeof import("../document_loaders/web/apify_dataset.js")
     | Promise<typeof import("../document_loaders/web/apify_dataset.js")>;
+  "langchain/document_loaders/web/assemblyai"?:
+    | typeof import("../document_loaders/web/assemblyai.js")
+    | Promise<typeof import("../document_loaders/web/assemblyai.js")>;
   "langchain/document_loaders/web/azure_blob_storage_container"?:
     | typeof import("../document_loaders/web/azure_blob_storage_container.js")
     | Promise<typeof import("../document_loaders/web/azure_blob_storage_container.js")>;

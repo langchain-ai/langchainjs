@@ -6173,6 +6173,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/node@npm:^20.4.5":
+  version: 20.4.8
+  resolution: "@types/node@npm:20.4.8"
+  checksum: 86a3963c0c7af3410553d1dfa4b018a20b3cb3ab4d8e8ffe27408b6338c5de0374b0bf379bc705da2205b466daa751ccfe062f453ba9bde34fdb0e5163ca6a68
+  languageName: node
+  linkType: hard
+
 "@types/object-hash@npm:^3.0.2":
   version: 3.0.2
   resolution: "@types/object-hash@npm:3.0.2"
@@ -7454,6 +7461,13 @@ __metadata:
   dependencies:
     file-uri-to-path: 1.0.0
   checksum: 65b6b48095717c2e6105a021a7da4ea435aa8d3d3cd085cb9e85bcb6e5773cf318c4745c3f7c504412855940b585bdf9b918236612a1c7a7942491de176f1ae7
+  languageName: node
+  linkType: hard
+
+"bindings@npm:~1.2.1":
+  version: 1.2.1
+  resolution: "bindings@npm:1.2.1"
+  checksum: fb542a5721cbeb0a75607a0447ac4d12e3ba8fe12ddf2adbe76814fa9cf3d1236a03ab51d55a7fef1b2d1d9917f4315e8b1cf8b74ff21a6cf9e722e7e363ba5f
   languageName: node
   linkType: hard
 
@@ -13214,6 +13228,7 @@ __metadata:
     typeorm: ^0.3.12
     typescript: ^5.0.0
     typesense: ^1.5.3
+    usearch: ^1.1.1
     uuid: ^9.0.0
     vectordb: ^0.1.4
     weaviate-ts-client: ^1.4.0
@@ -13281,6 +13296,7 @@ __metadata:
     srt-parser-2: ^1.2.2
     typeorm: ^0.3.12
     typesense: ^1.5.3
+    usearch: ^1.1.1
     vectordb: ^0.1.4
     weaviate-ts-client: ^1.4.0
   peerDependenciesMeta:
@@ -13403,6 +13419,8 @@ __metadata:
     typeorm:
       optional: true
     typesense:
+      optional: true
+    usearch:
       optional: true
     vectordb:
       optional: true
@@ -14673,6 +14691,15 @@ __metadata:
   version: 3.1.1
   resolution: "node-abort-controller@npm:3.1.1"
   checksum: 2c340916af9710328b11c0828223fc65ba320e0d082214a211311bf64c2891028e42ef276b9799188c4ada9e6e1c54cf7a0b7c05dd9d59fcdc8cd633304c8047
+  languageName: node
+  linkType: hard
+
+"node-addon-api@npm:^3.0.0":
+  version: 3.2.1
+  resolution: "node-addon-api@npm:3.2.1"
+  dependencies:
+    node-gyp: latest
+  checksum: 2369986bb0881ccd9ef6bacdf39550e07e089a9c8ede1cbc5fc7712d8e2faa4d50da0e487e333d4125f8c7a616c730131d1091676c9d499af1d74560756b4a18
   languageName: node
   linkType: hard
 
@@ -18713,6 +18740,18 @@ __metadata:
   version: 4.0.3
   resolution: "urlpattern-polyfill@npm:4.0.3"
   checksum: 96ac2aea49a7b17a9ff41b2ccccdaf5e58a18c33c494cf663bea853c1ac2e70fd26a147b33b83ff7c6b77f9e34ee48409d21dbc1f2a2ad5cd9509cf3d5cb148e
+  languageName: node
+  linkType: hard
+
+"usearch@npm:^1.1.1":
+  version: 1.1.1
+  resolution: "usearch@npm:1.1.1"
+  dependencies:
+    "@types/node": ^20.4.5
+    bindings: ~1.2.1
+    node-addon-api: ^3.0.0
+    node-gyp: latest
+  checksum: e8715ffbc9377958677c45656d01479131e0692d7e6857427712f4bb5ff116e094d9e71cd97585264ec4af43e5695dba7dc287e853599a6aee10ab6075ad4cb8
   languageName: node
   linkType: hard
 
