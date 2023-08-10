@@ -100,6 +100,9 @@ export interface AnthropicInput {
   /** Model name to use */
   modelName: string;
 
+  /** Overridable Anthropic ClientOptions */
+  clientOptions: ClientOptions;
+
   /** Holds any additional parameters that are valid to pass to {@link
    * https://console.anthropic.com/docs/api/reference |
    * `anthropic.complete`} that are not explicitly specified on this class.
@@ -158,20 +161,15 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
 
   streaming = false;
 
+  clientOptions: ClientOptions;
+
   // Used for non-streaming requests
   private batchClient: Anthropic;
 
   // Used for streaming requests
   private streamingClient: Anthropic;
 
-  private clientOptions: ClientOptions;
-
-  constructor(
-    fields?: Partial<AnthropicInput> &
-      BaseChatModelParams & {
-        clientOptions?: ClientOptions;
-      }
-  ) {
+  constructor(fields?: Partial<AnthropicInput> & BaseChatModelParams) {
     super(fields ?? {});
 
     this.anthropicApiKey =
