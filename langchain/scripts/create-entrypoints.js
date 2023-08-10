@@ -331,6 +331,7 @@ const requiresOptionalDependency = [
   "stores/message/ioredis",
   "stores/message/upstash_redis",
   "stores/message/planetscale",
+  "stores/message/xata",
   "experimental/multimodal_embeddings/googlevertexai",
 ];
 
