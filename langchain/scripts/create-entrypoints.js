@@ -87,6 +87,7 @@ const entrypoints = {
   "vectorstores/usearch": "vectorstores/usearch",
   "vectorstores/vectara": "vectorstores/vectara",
   "vectorstores/xata": "vectorstores/xata",
+  "vectorstores/zep": "vectorstores/zep",
   // text_splitter
   text_splitter: "text_splitter",
   // memory
