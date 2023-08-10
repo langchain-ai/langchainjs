@@ -1,4 +1,4 @@
-import {Document as ZepDocument, DocumentCollection, ZepClient} from "@getzep/zep-js";
+import {Document as ZepDocument, DocumentCollection, NotFoundError, ZepClient} from "@getzep/zep-js";
 
 import {VectorStore} from "./base.js";
 import {Embeddings} from "../embeddings/base.js";
@@ -13,6 +13,10 @@ export interface IZepConfig {
     apiUrl: string;
     apiKey: string;
     collectionName: string;
+    description?: string;
+    metadata?: Record<string, any>;
+    embeddingDimensions?: number;
+    isAutoEmbedded?: boolean;
 }
 
 export interface IZepDeleteParams {
@@ -20,25 +24,50 @@ export interface IZepDeleteParams {
 }
 
 export class ZepVectorStore extends VectorStore {
+    private client: ZepClient;
+
     private collection: DocumentCollection;
 
     constructor(embeddings: Embeddings, args: IZepConfig) {
         super(embeddings, args);
 
-        this.initCollection(args.apiUrl, args.apiKey, args.collectionName).catch(err => {
+        this.initCollection(args).catch(err => {
             console.error('Error retrieving collection:', err);
         });
         this.embeddings = embeddings;
     }
 
-    private async initCollection(apiUrl: string, apiKey: string, collectionName: string) {
-        const client = await ZepClient.init(apiUrl, apiKey);
-        this.collection = await client.document.getCollection(collectionName);
+    private async initCollection(args: IZepConfig) {
+        this.client = await ZepClient.init(args.apiUrl, args.apiKey);
+        try {
+            this.collection = await this.client.document.getCollection(args.collectionName);
+        } catch (err) {
+            // eslint-disable-next-line no-instanceof/no-instanceof
+            if (err instanceof NotFoundError) {
+                await this.createCollection(args);
+            } else {
+                throw err;
+            }
+        }
     }
 
-    async addVectors(vectors: number[][], documents: Document[]): Promise<void> {
+    private async createCollection(args: IZepConfig) {
+        if (!args.embeddingDimensions || !args.isAutoEmbedded) {
+            throw new Error(`Collection ${args.collectionName} not found. 
+ You can create a new Collection by providing embeddingDimensions and isAutoEmbedded.`);
+        }
+        this.collection = await this.client.document.addCollection({
+            name: args.collectionName,
+            description: args.description,
+            metadata: args.metadata,
+            embeddingDimensions: args.embeddingDimensions,
+            isAutoEmbedded: args.isAutoEmbedded
+        });
+    }
+
+    async addVectors(vectors: number[][], documents: Document[]): Promise<string[]> {
         if (vectors.length === 0) {
-            return;
+            return [];
         }
         if (vectors.length !== documents.length) {
             throw new Error(`Vectors and documents must have the same length`);
@@ -54,15 +83,13 @@ export class ZepVectorStore extends VectorStore {
                 });
             docs.push(doc);
         }
-        await this.collection.addDocuments(docs);
+        return await this.collection.addDocuments(docs);
     }
 
-    async addDocuments(documents: Document[]): Promise<void> {
+    async addDocuments(documents: Document[]): Promise<string[]> {
         const texts = documents.map(({pageContent}) => pageContent);
-        return this.addVectors(
-            await this.embeddings.embedDocuments(texts),
-            documents
-        );
+        const vectors = await this.embeddings.embedDocuments(texts);
+        return this.addVectors(vectors, documents);
     }
 
     _vectorstoreType(): string {
