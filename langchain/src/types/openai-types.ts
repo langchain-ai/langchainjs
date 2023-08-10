@@ -94,15 +94,16 @@ export declare interface AzureOpenAIInput {
    * Azure OpenAI API instance name to use when making requests to Azure OpenAI.
    * this is the name of the instance you created in the Azure portal.
    * e.g. "my-openai-instance"
-   * this will be used in the endpoint URL: https://my-openai-instance.openai.azure.com/openai/deployments/{DeploymentName}/
+   * this will be used in the endpoint URL: https://{InstanceName}.openai.azure.com/openai/deployments/my-openai-deployment/
    */
   azureOpenAIApiInstanceName?: string;
+
 
   /**
    * Azure OpenAI API deployment name to use for completions when making requests to Azure OpenAI.
    * This is the name of the deployment you created in the Azure portal.
    * e.g. "my-openai-deployment"
-   * this will be used in the endpoint URL: https://{InstanceName}.openai.azure.com/openai/deployments/my-openai-deployment/
+   * this will be used in the endpoint URL: https://my-openai-instance.openai.azure.com/openai/deployments/{DeploymentName}/
    */
   azureOpenAIApiDeploymentName?: string;
 
