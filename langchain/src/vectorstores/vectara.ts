@@ -26,9 +26,16 @@ export interface VectaraFilter {
   // Improve retrieval accuracy by adjusting the balance (from 0 to 1), known as lambda,
   // between neural search and keyword-based search factors. Values between 0.01 and 0.2 tend to work well.
   // see https://docs.vectara.com/docs/api-reference/search-apis/lexical-matching for more details.
-  lambda?: number; 
-  // The umber of sentences before/after the matching segment to add. Default is 2. 
-  nSentenceContext?: number;
+  lambda?: number;
+  // The number of sentences before/after the matching segment to add to the context.
+  contextConfig?: VectaraContextConfig;
+}
+
+export interface VectaraContextConfig {
+  // The number of sentences before the matching segment to add. Default is 2.
+  nBefore?: number;
+  // The number of sentences after the matching segment to add. Default is 2.
+  nAfter?: number;
 }
 
 export class VectaraStore extends VectorStore {
@@ -170,16 +177,15 @@ export class VectaraStore extends VectorStore {
     k = 10,
     filter: VectaraFilter | undefined = undefined,
   ): Promise<[Document, number][]> {
-    const headers = await this.getJsonHeader();
-    const nSentenceContext = filter?.nSentenceContext ?? 2;
+    const headers = await this.getJsonHeader();    
     const data = {
       query: [
         {
           query,
           numResults: k,
           contextConfig: {
-            sentencesBefore: nSentenceContext,
-            sentencesAfter: nSentenceContext,
+            sentencesAfter: filter?.contextConfig?.nAfter ?? 2,
+            sentencesBefore: filter?.contextConfig?.nBefore ?? 2,
           },
           corpusKey: [
             {
