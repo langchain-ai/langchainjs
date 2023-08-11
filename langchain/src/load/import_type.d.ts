@@ -208,6 +208,9 @@ export interface OptionalImportMap {
   "langchain/document_loaders/fs/json"?:
     | typeof import("../document_loaders/fs/json.js")
     | Promise<typeof import("../document_loaders/fs/json.js")>;
+  "langchain/document_loaders/fs/sber_salute"?:
+    | typeof import("../document_loaders/fs/sber_salute.js")
+    | Promise<typeof import("../document_loaders/fs/sber_salute.js")>;
   "langchain/document_loaders/fs/srt"?:
     | typeof import("../document_loaders/fs/srt.js")
     | Promise<typeof import("../document_loaders/fs/srt.js")>;

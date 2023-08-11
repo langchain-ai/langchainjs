@@ -1,0 +1,28 @@
+---
+hide_table_of_contents: true
+---
+
+# Sber SaluteSpeech
+
+This covers how to load document objects from an audio file using the [Sber SaluteSpeech](https://developers.sber.ru/docs/ru/salutespeech/recognition/recognition-sync) API.
+
+## Setup
+
+To run this loader you will need to create an account on the https://developers.sber.ru/, create SaluteSpeech project and obtain a client secret.
+
+You'll also need to install the `sber-salute-speech-recognition` library:
+
+```bash npm2yarn
+npm install sber-salute-speech-recognition
+```
+
+## Usage
+
+Once client secret is configured, you can use the loader to create transcriptions and then convert them into a Document.
+You can specify a local file by setting `audioFilePath`.
+You will also need to specify the audio encoding. See the list of supported encodings [here](https://developers.sber.ru/docs/ru/salutespeech/recognition/encodings).
+
+import CodeBlock from "@theme/CodeBlock";
+import Example from "@examples/document_loaders/sber_salute.ts";
+
+<CodeBlock language="typescript">{Example}</CodeBlock>
