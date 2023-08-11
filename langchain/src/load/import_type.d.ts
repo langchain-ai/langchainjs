@@ -313,6 +313,9 @@ export interface OptionalImportMap {
   "langchain/stores/message/planetscale"?:
     | typeof import("../stores/message/planetscale.js")
     | Promise<typeof import("../stores/message/planetscale.js")>;
+  "langchain/stores/message/xata"?:
+    | typeof import("../stores/message/xata.js")
+    | Promise<typeof import("../stores/message/xata.js")>;
   "langchain/experimental/multimodal_embeddings/googlevertexai"?:
     | typeof import("../experimental/multimodal_embeddings/googlevertexai.js")
     | Promise<typeof import("../experimental/multimodal_embeddings/googlevertexai.js")>;

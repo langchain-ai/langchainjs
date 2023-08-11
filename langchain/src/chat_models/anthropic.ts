@@ -1,4 +1,9 @@
-import { Anthropic, AI_PROMPT, HUMAN_PROMPT } from "@anthropic-ai/sdk";
+import {
+  Anthropic,
+  AI_PROMPT,
+  HUMAN_PROMPT,
+  ClientOptions,
+} from "@anthropic-ai/sdk";
 import type { CompletionCreateParams } from "@anthropic-ai/sdk/resources/completions";
 
 import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
@@ -95,6 +100,9 @@ export interface AnthropicInput {
   /** Model name to use */
   modelName: string;
 
+  /** Overridable Anthropic ClientOptions */
+  clientOptions: ClientOptions;
+
   /** Holds any additional parameters that are valid to pass to {@link
    * https://console.anthropic.com/docs/api/reference |
    * `anthropic.complete`} that are not explicitly specified on this class.
@@ -153,6 +161,8 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
 
   streaming = false;
 
+  clientOptions: ClientOptions;
+
   // Used for non-streaming requests
   private batchClient: Anthropic;
 
@@ -182,6 +192,7 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
     this.stopSequences = fields?.stopSequences ?? this.stopSequences;
 
     this.streaming = fields?.streaming ?? false;
+    this.clientOptions = fields?.clientOptions ?? {};
   }
 
   /**
@@ -335,6 +346,7 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
     if (!this.streamingClient) {
       const options = this.apiUrl ? { apiUrl: this.apiUrl } : undefined;
       this.streamingClient = new Anthropic({
+        ...this.clientOptions,
         ...options,
         apiKey: this.anthropicApiKey,
       });
@@ -355,6 +367,7 @@ export class ChatAnthropic extends BaseChatModel implements AnthropicInput {
     if (!this.batchClient) {
       const options = this.apiUrl ? { apiUrl: this.apiUrl } : undefined;
       this.batchClient = new Anthropic({
+        ...this.clientOptions,
         ...options,
         apiKey: this.anthropicApiKey,
       });
