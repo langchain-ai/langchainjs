@@ -72,7 +72,7 @@ describe("ZepVectorStore", () => {
       description: "Test Description",
       metadata: {},
       embeddingDimensions: 100,
-      isAutoEmbedded: false,
+      isAutoEmbedded: true,
     };
     embeddings = new FakeEmbeddings();
 
