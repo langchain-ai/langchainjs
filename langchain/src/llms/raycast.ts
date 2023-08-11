@@ -2,15 +2,10 @@ import { AI, environment } from "@raycast/api";
 import { LLM, BaseLLMParams } from "./base.js";
 
 /**
- * The available models for the RaycastAI class.
- */
-export type RaycastAIModel = "text-davinci-003" | "gpt-3.5-turbo";
-
-/**
  * The input parameters for the RaycastAI class, which extends the BaseLLMParams interface.
  */
 export interface RaycastAIInput extends BaseLLMParams {
-  model?: RaycastAIModel;
+  model?: AI.Model;
   creativity?: number;
   rateLimitPerMinute?: number;
 }
@@ -27,7 +22,7 @@ export class RaycastAI extends LLM implements RaycastAIInput {
   /**
    * The model to use for generating text.
    */
-  model: RaycastAIModel;
+  model: AI.Model;
 
   /**
    * The creativity parameter, also known as the "temperature".
