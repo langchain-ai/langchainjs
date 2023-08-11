@@ -3,6 +3,7 @@ import { DocumentCollection, IDocument, ZepClient } from "@getzep/zep-js";
 import { VectorStore } from "./base.js";
 import { Embeddings } from "../embeddings/base.js";
 import { Document } from "../document.js";
+import { FakeEmbeddings } from "../embeddings/fake.js";
 
 export interface IZepArgs {
   collection: DocumentCollection;
@@ -43,13 +44,21 @@ export class ZepVectorStore extends VectorStore {
 
   private initPromise: Promise<void>;
 
+  private autoEmbed = false;
+
   constructor(embeddings: Embeddings, args: IZepConfig) {
     super(embeddings, args);
+
+    this.embeddings = embeddings;
+
+    // eslint-disable-next-line no-instanceof/no-instanceof
+    if (this.embeddings instanceof FakeEmbeddings) {
+      this.autoEmbed = true;
+    }
 
     this.initPromise = this.initCollection(args).catch((err) => {
       console.error("Error retrieving collection:", err);
     });
-    this.embeddings = embeddings;
   }
 
   /**
@@ -63,6 +72,12 @@ export class ZepVectorStore extends VectorStore {
       this.collection = await this.client.document.getCollection(
         args.collectionName
       );
+      // If the Embedding passed in is fake, but the collection is not auto embedded, throw an error
+      // eslint-disable-next-line no-instanceof/no-instanceof
+      if (!this.collection.is_auto_embedded && this.autoEmbed) {
+        throw new Error(`You can't pass in FakeEmbeddings when collection ${args.collectionName} 
+ is not set to auto-embed.`);
+      }
     } catch (err) {
       // eslint-disable-next-line no-instanceof/no-instanceof
       if (err instanceof Error) {
@@ -85,12 +100,13 @@ export class ZepVectorStore extends VectorStore {
       throw new Error(`Collection ${args.collectionName} not found. 
  You can create a new Collection by providing embeddingDimensions.`);
     }
+
     this.collection = await this.client.document.addCollection({
       name: args.collectionName,
       description: args.description,
       metadata: args.metadata,
       embeddingDimensions: args.embeddingDimensions,
-      isAutoEmbedded: false, // we make this false as LangChain requires passing in Embeddings
+      isAutoEmbedded: this.autoEmbed,
     });
 
     console.info("Created new collection:", args.collectionName);
@@ -107,10 +123,10 @@ export class ZepVectorStore extends VectorStore {
     vectors: number[][],
     documents: Document[]
   ): Promise<string[]> {
-    if (vectors.length === 0) {
-      return [];
+    if (!this.autoEmbed && vectors.length === 0) {
+      throw new Error(`Vectors must be provided if autoEmbed is false`);
     }
-    if (vectors.length !== documents.length) {
+    if (!this.autoEmbed && vectors.length !== documents.length) {
       throw new Error(`Vectors and documents must have the same length`);
     }
 
@@ -119,7 +135,7 @@ export class ZepVectorStore extends VectorStore {
       const doc: IDocument = {
         content: documents[i].pageContent,
         metadata: documents[i].metadata,
-        embedding: vectors[i],
+        embedding: vectors.length > 0 ? vectors[i] : undefined,
       };
       docs.push(doc);
     }
@@ -137,7 +153,10 @@ export class ZepVectorStore extends VectorStore {
    */
   async addDocuments(documents: Document[]): Promise<string[]> {
     const texts = documents.map(({ pageContent }) => pageContent);
-    const vectors = await this.embeddings.embedDocuments(texts);
+    let vectors: number[][] = [];
+    if (!this.autoEmbed) {
+      vectors = await this.embeddings.embedDocuments(texts);
+    }
     return this.addVectors(vectors, documents);
   }
 

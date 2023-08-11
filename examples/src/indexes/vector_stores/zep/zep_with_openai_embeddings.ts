@@ -1,5 +1,5 @@
 import { ZepVectorStore } from "langchain/vectorstores/zep";
-import { FakeEmbeddings } from "langchain/embeddings/fake";
+import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { TextLoader } from "langchain/document_loaders/fs/text";
 import { randomUUID } from "crypto";
 
@@ -12,10 +12,10 @@ export const run = async () => {
     apiUrl: "http://localhost:8000", // this should be the URL of your Zep implementation
     collectionName,
     embeddingDimensions: 1536, // this much match the width of the embeddings you're using
-    isAutoEmbedded: true, // If true, the vector store will automatically embed documents when they are added
+    isAutoEmbedded: false, // set to false to disable auto-embedding
   };
 
-  const embeddings = new FakeEmbeddings();
+  const embeddings = new OpenAIEmbeddings();
 
   const vectorStore = await ZepVectorStore.fromDocuments(
     docs,

@@ -1,6 +1,7 @@
 import { ZepVectorStore } from "langchain/vectorstores/zep";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { Document } from "langchain/document";
+import { FakeEmbeddings } from "langchain/embeddings/fake";
+import { randomUUID } from "crypto";
 
 const docs = [
   new Document({
@@ -50,15 +51,16 @@ const docs = [
 ];
 
 export const run = async () => {
-  const collectionName = "musicCollection1";
+  const collectionName = `collection${randomUUID().split("-")[0]}`;
+
   const zepConfig = {
     apiUrl: "http://localhost:8000", // this should be the URL of your Zep implementation
     collectionName,
     embeddingDimensions: 1536, // this much match the width of the embeddings you're using
-    isAutoEmbedded: false,
+    isAutoEmbedded: true, // If true, the vector store will automatically embed documents when they are added
   };
 
-  const embeddings = new OpenAIEmbeddings();
+  const embeddings = new FakeEmbeddings();
 
   const vectorStore = await ZepVectorStore.fromDocuments(
     docs,
