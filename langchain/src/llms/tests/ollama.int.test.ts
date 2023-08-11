@@ -1,7 +1,7 @@
 import { test } from "@jest/globals";
 import { Ollama } from "../ollama.js";
 
-test("test call", async () => {
+test.skip("test call", async () => {
   const ollama = new Ollama({});
   const result = await ollama.call(
     "What is a good name for a company that makes colorful socks?"
@@ -9,7 +9,7 @@ test("test call", async () => {
   console.log({ result });
 });
 
-test("test streaming call", async () => {
+test.skip("test streaming call", async () => {
   const ollama = new Ollama({
     baseUrl: "http://localhost:11434",
   });
@@ -24,7 +24,7 @@ test("test streaming call", async () => {
   expect(chunks.length).toBeGreaterThan(1);
 });
 
-test("should abort the request", async () => {
+test.skip("should abort the request", async () => {
   const ollama = new Ollama({
     baseUrl: "http://localhost:11434",
   });
