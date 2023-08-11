@@ -121,6 +121,9 @@
     "llms/hf.cjs",
     "llms/hf.js",
     "llms/hf.d.ts",
+    "llms/raycast.cjs",
+    "llms/raycast.js",
+    "llms/raycast.d.ts",
     "llms/ollama.cjs",
     "llms/ollama.js",
     "llms/ollama.d.ts",
@@ -577,6 +580,7 @@
     "@pinecone-database/pinecone": "^0.0.14",
     "@planetscale/database": "^1.8.0",
     "@qdrant/js-client-rest": "^1.2.0",
+    "@raycast/api": "^1.55.2",
     "@supabase/postgrest-js": "^1.1.1",
     "@supabase/supabase-js": "^2.10.0",
     "@tensorflow-models/universal-sentence-encoder": "^1.3.3",
@@ -674,6 +678,7 @@
     "@pinecone-database/pinecone": "*",
     "@planetscale/database": "^1.8.0",
     "@qdrant/js-client-rest": "^1.2.0",
+    "@raycast/api": "^1.55.2",
     "@supabase/postgrest-js": "^1.1.1",
     "@supabase/supabase-js": "^2.10.0",
     "@tensorflow-models/universal-sentence-encoder": "*",
@@ -777,6 +782,9 @@
       "optional": true
     },
     "@qdrant/js-client-rest": {
+      "optional": true
+    },
+    "@raycast/api": {
       "optional": true
     },
     "@supabase/postgrest-js": {
@@ -1143,6 +1151,11 @@
       "types": "./llms/hf.d.ts",
       "import": "./llms/hf.js",
       "require": "./llms/hf.cjs"
+    },
+    "./llms/raycast": {
+      "types": "./llms/raycast.d.ts",
+      "import": "./llms/raycast.js",
+      "require": "./llms/raycast.cjs"
     },
     "./llms/ollama": {
       "types": "./llms/ollama.d.ts",

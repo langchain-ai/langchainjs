@@ -5494,6 +5494,28 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@raycast/api@npm:^1.55.2":
+  version: 1.55.2
+  resolution: "@raycast/api@npm:1.55.2"
+  dependencies:
+    "@types/node": 18.8.3
+    "@types/react": 18.0.9
+    react: 18.1.0
+    react-reconciler: 0.28.0
+  peerDependencies:
+    "@types/node": 18.8.3
+    "@types/react": 18.0.9
+  peerDependenciesMeta:
+    "@types/node":
+      optional: true
+    "@types/react":
+      optional: true
+  bin:
+    ray: bin/ray
+  checksum: 1154dc3d02d3ca1a9ee11d638682058464e2c01fb30df43b1f2ef0e6205744f34fcef10a413e16bfc93a08d19d6e569bbe7151660587a0d50c8df074f21c663d
+  languageName: node
+  linkType: hard
+
 "@redis/bloom@npm:1.2.0":
   version: 1.2.0
   resolution: "@redis/bloom@npm:1.2.0"
@@ -6166,6 +6188,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/node@npm:18.8.3":
+  version: 18.8.3
+  resolution: "@types/node@npm:18.8.3"
+  checksum: 9201adc6dc389644c9f478f950ef8926a93e5827865dcd80d7d12fefacab665c96879c87cd6ec74d5eccdd998c4603d02e1e07a35d71a63fe4c20670a381f6ef
+  languageName: node
+  linkType: hard
+
 "@types/node@npm:^18.11.18":
   version: 18.16.19
   resolution: "@types/node@npm:18.16.19"
@@ -6292,6 +6321,17 @@ __metadata:
     "@types/scheduler": "*"
     csstype: ^3.0.2
   checksum: 4fbd2b2b6a26378bdfde121081a6406ec2d39e4ba87ea5f6897ab7bb2198713165e6fd703ad4ed7ba1d4f23ef54a4c9f108f3105c7ed8e136411ee6bdebc5669
+  languageName: node
+  linkType: hard
+
+"@types/react@npm:18.0.9":
+  version: 18.0.9
+  resolution: "@types/react@npm:18.0.9"
+  dependencies:
+    "@types/prop-types": "*"
+    "@types/scheduler": "*"
+    csstype: ^3.0.2
+  checksum: 162364dad716d9017ee34aabf2ea37499709ebbdef70392ae1b39225985971e1a46f121efb9c5c7da92144ee1d96d4525df806a7c1c03a5db7fd31dd034ddc7a
   languageName: node
   linkType: hard
 
@@ -10075,6 +10115,7 @@ __metadata:
     "@pinecone-database/pinecone": ^0.0.14
     "@planetscale/database": ^1.8.0
     "@prisma/client": ^4.11.0
+    "@raycast/api": ^1.55.2
     "@supabase/supabase-js": ^2.10.0
     "@tensorflow/tfjs-backend-cpu": ^4.4.0
     "@tigrisdata/vector": ^1.1.0
@@ -13140,6 +13181,7 @@ __metadata:
     "@pinecone-database/pinecone": ^0.0.14
     "@planetscale/database": ^1.8.0
     "@qdrant/js-client-rest": ^1.2.0
+    "@raycast/api": ^1.55.2
     "@supabase/postgrest-js": ^1.1.1
     "@supabase/supabase-js": ^2.10.0
     "@tensorflow-models/universal-sentence-encoder": ^1.3.3
@@ -13256,6 +13298,7 @@ __metadata:
     "@pinecone-database/pinecone": "*"
     "@planetscale/database": ^1.8.0
     "@qdrant/js-client-rest": ^1.2.0
+    "@raycast/api": ^1.55.2
     "@supabase/postgrest-js": ^1.1.1
     "@supabase/supabase-js": ^2.10.0
     "@tensorflow-models/universal-sentence-encoder": "*"
@@ -13339,6 +13382,8 @@ __metadata:
     "@planetscale/database":
       optional: true
     "@qdrant/js-client-rest":
+      optional: true
+    "@raycast/api":
       optional: true
     "@supabase/postgrest-js":
       optional: true
@@ -16375,6 +16420,27 @@ __metadata:
   languageName: node
   linkType: hard
 
+"react-reconciler@npm:0.28.0":
+  version: 0.28.0
+  resolution: "react-reconciler@npm:0.28.0"
+  dependencies:
+    loose-envify: ^1.1.0
+    scheduler: ^0.22.0
+  peerDependencies:
+    react: ^18.1.0
+  checksum: 6421f9500827219556ead3d86cbdf0553c47d633ecda2144720bf235d404f5e4e1e585336c4dfa80e26a04f1a6117c455a60964917d5600c73a91d8374f0232f
+  languageName: node
+  linkType: hard
+
+"react@npm:18.1.0":
+  version: 18.1.0
+  resolution: "react@npm:18.1.0"
+  dependencies:
+    loose-envify: ^1.1.0
+  checksum: 5bb296b561b43ef2220395da4faac86c14a087c8c80e1a7598a5740f01ee605c11eaf249985c1e2000971c4cd32ccb46d40f00479bbd9fb6b1c7cf857393b7d4
+  languageName: node
+  linkType: hard
+
 "react@npm:18.2.0":
   version: 18.2.0
   resolution: "react@npm:18.2.0"
@@ -16922,6 +16988,15 @@ __metadata:
   version: 1.1.6
   resolution: "sax@npm:1.1.6"
   checksum: 879f18483d00f4630580fb4dc95da7d06046b1d71af1f27e33425f81d82751ab66a84eb584a462aa610f7a94de8d87416e03c708530ba76b1aa381b6828bfc9e
+  languageName: node
+  linkType: hard
+
+"scheduler@npm:^0.22.0":
+  version: 0.22.0
+  resolution: "scheduler@npm:0.22.0"
+  dependencies:
+    loose-envify: ^1.1.0
+  checksum: a8ef5cab769c020cd6382ad9ecc3f72dbde56a50a36639b3a42ad9c11f7724f03700bcad373044059b8067d4a6365154dc7c0ca8027ef20ff4900cf58a0fc2c5
   languageName: node
   linkType: hard
 
