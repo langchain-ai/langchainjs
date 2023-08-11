@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { LLMChain } from "../../chains/llm_chain.js";
 import {
   QueryConstructorChainOptions,
@@ -18,11 +19,86 @@ export interface SelfQueryRetrieverArgs extends BaseRetrieverInput {
   structuredQueryTranslator: BaseTranslator;
   llmChain: LLMChain;
   verbose?: boolean;
+  useOriginalQuery?: boolean;
   searchParams?: {
     k?: number;
     filter?: VectorStore["FilterType"];
   };
 }
+
+function isObject(obj: any): obj is object {
+  return obj !== null && typeof obj === "object" && !Array.isArray(obj);
+}
+
+function isFilterEmpty(
+  filter: ((q: any) => any) | object | string | undefined
+): filter is undefined {
+  if (!filter) return true;
+  if (typeof filter === "string" && filter.length > 0) {
+    return false;
+  }
+  if (typeof filter === "function") {
+    return false;
+  }
+  return Object.keys(filter).length === 0 && filter.constructor === Object;
+}
+
+function mergeFilters<
+  T extends ((q: any) => any) | object | string | undefined
+>(a: T, b: T): ((q: any) => any) | object | string | undefined {
+  if (isFilterEmpty(a) && isFilterEmpty(b)) {
+    return undefined;
+  }
+  if (isFilterEmpty(a)) {
+    return b;
+  }
+  if (isFilterEmpty(b)) {
+    return a;
+  }
+
+  /**
+   * This is for Milvus, which uses string
+   * metadata filtering. We don't have
+   * milvus self-query retriever (yet???), but
+   * users could build their own Milvus query
+   * translator and imo I think it might be a good
+   * idea to have it to be able to return string
+   * filter
+   */
+  if (typeof a === "string" && typeof b === "string") {
+    return `${a} && ${b}`;
+  }
+
+  if (typeof a === "function" && typeof b === "function") {
+    return (q: any) => {
+      const aResult = a(q);
+      const bResult = b(q);
+      // for regular functional filter
+      if (typeof aResult === "boolean" && typeof bResult === "boolean") {
+        return aResult && bResult;
+      }
+
+      // for SupabaseFilterRPCCall. We use "select" function
+      // because it should be there when RPC call object is
+      // passed into the filter
+      if (
+        typeof aResult.select === "function" &&
+        typeof bResult.select === "function"
+      ) {
+        return b(a(q));
+      }
+
+      throw new Error("Filter types mismatch");
+    };
+  }
+
+  if (isObject(a) && isObject(b)) {
+    return { ...a, ...b };
+  }
+
+  throw new Error("Filter types mismatch");
+}
+
 export class SelfQueryRetriever
   extends BaseRetriever
   implements SelfQueryRetrieverArgs
@@ -39,6 +115,8 @@ export class SelfQueryRetriever
 
   structuredQueryTranslator: BaseTranslator;
 
+  useOriginalQuery = false;
+
   searchParams?: {
     k?: number;
     filter?: VectorStore["FilterType"];
@@ -50,7 +128,7 @@ export class SelfQueryRetriever
     this.llmChain = options.llmChain;
     this.verbose = options.verbose ?? false;
     this.searchParams = options.searchParams ?? this.searchParams;
-
+    this.useOriginalQuery = options.useOriginalQuery ?? this.useOriginalQuery;
     this.structuredQueryTranslator = options.structuredQueryTranslator;
   }
 
@@ -69,18 +147,22 @@ export class SelfQueryRetriever
       output as StructuredQuery
     );
 
-    if (nextArg.filter) {
-      return this.vectorStore.similaritySearch(
-        query,
-        this.searchParams?.k,
-        nextArg.filter,
-        runManager?.getChild("vectorstore")
-      );
+    const filter = mergeFilters(this.searchParams?.filter, nextArg.filter);
+
+    const generatedQuery = (output as StructuredQuery).query;
+    let myQuery = query;
+
+    if (!this.useOriginalQuery && generatedQuery && generatedQuery.length > 0) {
+      myQuery = generatedQuery;
+    }
+
+    if (!filter) {
+      return [];
     } else {
       return this.vectorStore.similaritySearch(
-        query,
+        myQuery,
         this.searchParams?.k,
-        this.searchParams?.filter,
+        filter,
         runManager?.getChild("vectorstore")
       );
     }

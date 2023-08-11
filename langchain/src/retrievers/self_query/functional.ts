@@ -26,7 +26,9 @@ export class FunctionalTranslator extends BaseTranslator {
 
   declare VisitComparisonOutput: FunctionFilter;
 
-  declare VisitStructuredQueryOutput: { filter: FunctionFilter };
+  declare VisitStructuredQueryOutput:
+    | { filter: FunctionFilter }
+    | { [k: string]: never };
 
   allowedOperators: Operator[] = [Operators.and, Operators.or];
 
@@ -132,7 +134,7 @@ export class FunctionalTranslator extends BaseTranslator {
     query: StructuredQuery
   ): this["VisitStructuredQueryOutput"] {
     if (!query.filter) {
-      return { filter: () => false };
+      return {};
     }
     const filterFunction = query.filter?.accept(this);
     if (typeof filterFunction !== "function") {

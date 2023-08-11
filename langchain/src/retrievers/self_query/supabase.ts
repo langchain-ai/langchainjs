@@ -24,7 +24,9 @@ export class SupabaseTranslator extends BaseTranslator {
 
   declare VisitComparisonOutput: SupabaseFilterRPCCall;
 
-  declare VisitStructuredQueryOutput: { filter: SupabaseFilterRPCCall };
+  declare VisitStructuredQueryOutput:
+    | { filter: SupabaseFilterRPCCall }
+    | { [k: string]: never };
 
   allowedOperators: Operator[] = [Operators.and, Operators.or];
 
@@ -168,6 +170,9 @@ export class SupabaseTranslator extends BaseTranslator {
   visitStructuredQuery(
     query: StructuredQuery
   ): this["VisitStructuredQueryOutput"] {
+    if (!query.filter) {
+      return {};
+    }
     const filterFunction = query.filter?.accept(this);
     return { filter: (filterFunction as SupabaseFilterRPCCall) ?? {} };
   }
