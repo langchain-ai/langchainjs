@@ -7,7 +7,23 @@ test("Test using partial", async () => {
     inputVariables: ["foo"],
     partialVariables: { bar: "baz" },
   });
+  expect(await prompt.format({ foo: "foo" })).toBe("foobaz");
+});
+
+test("Test using partial with an extra variable", async () => {
+  const prompt = new PromptTemplate({
+    template: "{foo}{bar}",
+    inputVariables: ["foo"],
+    partialVariables: { bar: "baz" },
+  });
   expect(await prompt.format({ foo: "foo", unused: "nada" })).toBe("foobaz");
+});
+
+test("Test fromTemplate", async () => {
+  const prompt = PromptTemplate.fromTemplate("{foo}{bar}");
+  expect(await prompt.format({ foo: "foo", bar: "bar", unused: "eee" })).toBe(
+    "foobaz"
+  );
 });
 
 test("Test using full partial", async () => {

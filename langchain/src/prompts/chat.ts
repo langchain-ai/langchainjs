@@ -435,6 +435,7 @@ export class ChatPromptTemplate<
     >(promptDict);
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static fromPromptMessages<RunInput extends InputValues = any>(
     promptMessages: (
       | BaseMessagePromptTemplate<InputValues>

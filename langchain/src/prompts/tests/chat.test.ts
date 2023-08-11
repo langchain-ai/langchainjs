@@ -132,6 +132,33 @@ test("Test fromPromptMessages", async () => {
   ]);
 });
 
+test("Test fromPromptMessages with an extra input variable", async () => {
+  const systemPrompt = new PromptTemplate({
+    template: "Here's some context: {context}",
+    inputVariables: ["context"],
+  });
+  const userPrompt = new PromptTemplate({
+    template: "Hello {foo}, I'm {bar}",
+    inputVariables: ["foo", "bar"],
+  });
+  // TODO: Fix autocomplete for the fromPromptMessages method
+  const chatPrompt = ChatPromptTemplate.fromPromptMessages([
+    new SystemMessagePromptTemplate(systemPrompt),
+    new HumanMessagePromptTemplate(userPrompt),
+  ]);
+  expect(chatPrompt.inputVariables).toEqual(["context", "foo", "bar"]);
+  const messages = await chatPrompt.formatPromptValue({
+    context: "This is a context",
+    foo: "Foo",
+    bar: "Bar",
+    unused: "No problemo!",
+  });
+  expect(messages.toChatMessages()).toEqual([
+    new SystemMessage("Here's some context: This is a context"),
+    new HumanMessage("Hello Foo, I'm Bar"),
+  ]);
+});
+
 test("Test fromPromptMessages is composable", async () => {
   const systemPrompt = new PromptTemplate({
     template: "Here's some context: {context}",
