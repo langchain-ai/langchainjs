@@ -1,7 +1,7 @@
 import type { DataSource, DataSourceOptions } from "typeorm";
 import {
   DEFAULT_SQL_DATABASE_PROMPT,
-  SQL_SAPHANA_PROMPT,
+  SQL_SAP_HANA_PROMPT,
   SQL_MSSQL_PROMPT,
   SQL_MYSQL_PROMPT,
   SQL_POSTGRES_PROMPT,
@@ -326,7 +326,7 @@ export const getPromptTemplateFromDataSource = (
   }
 
   if (appDataSource.options.type === "sap") {
-    return SQL_SAPHANA_PROMPT;
+    return SQL_SAP_HANA_PROMPT;
   }
 
   return DEFAULT_SQL_DATABASE_PROMPT;

@@ -7,7 +7,7 @@ import {
 } from "../../../tools/sql.js";
 import { Toolkit } from "../base.js";
 import { BaseLanguageModel } from "../../../base_language/index.js";
-import { SQL_PREFIX, SQL_PREFIX_SAPHANA, SQL_SUFFIX } from "./prompt.js";
+import { SQL_PREFIX, SQL_SUFFIX } from "./prompt.js";
 import { renderTemplate } from "../../../prompts/template.js";
 import { LLMChain } from "../../../chains/llm_chain.js";
 import { ZeroShotAgent, ZeroShotCreatePromptArgs } from "../../mrkl/index.js";
@@ -29,7 +29,6 @@ export class SqlToolkit extends Toolkit {
   constructor(db: SqlDatabase, llm?: BaseLanguageModel) {
     super();
     this.db = db;
-    if (db.appDataSourceOptions?.type === 'sap') this.dialect = 'SAP HANA';
     this.tools = [
       new QuerySqlTool(db),
       new InfoSqlTool(db),
@@ -45,7 +44,7 @@ export function createSqlAgent(
   args?: SqlCreatePromptArgs
 ) {
   const {
-    prefix = toolkit.db.appDataSourceOptions?.type === 'sap' ? SQL_PREFIX_SAPHANA : SQL_PREFIX,
+    prefix = SQL_PREFIX,
     suffix = SQL_SUFFIX,
     inputVariables = ["input", "agent_scratchpad"],
     topK = 10,
