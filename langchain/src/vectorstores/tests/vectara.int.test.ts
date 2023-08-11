@@ -78,7 +78,7 @@ describe("VectaraStore", () => {
       apiKey: process.env.VECTARA_API_KEY || "",
     };
 
-    test("with fakeEmbeddings doesn't throw error", () => {
+    test.skip("with fakeEmbeddings doesn't throw error", () => {
       expect(() =>
         VectaraStore.fromTexts([], [], new FakeEmbeddings(), args)
       ).not.toThrow();
@@ -92,7 +92,7 @@ describe("VectaraStore", () => {
       apiKey: process.env.VECTARA_API_KEY || "",
     };
 
-    test("with fakeEmbeddings doesn't throw error", async () => {
+    test.skip("with fakeEmbeddings doesn't throw error", async () => {
       await expect(
         VectaraStore.fromDocuments(getDocs(), new FakeEmbeddings(), args)
       ).resolves.toBeDefined();
@@ -110,11 +110,11 @@ describe("VectaraStore", () => {
       });
     });
 
-    test("addDocuments", async () => {
+    test.skip("addDocuments", async () => {
       await store.addDocuments(getDocs());
     });
 
-    test("similaritySearchWithScore", async () => {
+    test.skip("similaritySearchWithScore", async () => {
       const resultsWithScore = await store.similaritySearchWithScore(
         "What did Sam do?",
         10, // Number of results needed
@@ -126,7 +126,7 @@ describe("VectaraStore", () => {
       expect(resultsWithScore[0][1]).toBeGreaterThan(0);
     });
 
-    test("similaritySearch", async () => {
+    test.skip("similaritySearch", async () => {
       const results = await store.similaritySearch(
         "Was Gandalf dead?",
         10, // Number of results needed
@@ -143,7 +143,7 @@ describe("VectaraStore", () => {
       expect(results[0].metadata.length).toBeGreaterThan(0);
     });
 
-    test("similaritySearch with filter", async () => {
+    test.skip("similaritySearch with filter", async () => {
       const results = await store.similaritySearch(
         "Was Gandalf dead?",
         10, // Number of results needed

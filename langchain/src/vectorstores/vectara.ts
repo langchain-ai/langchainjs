@@ -159,7 +159,9 @@ export class VectaraStore extends VectorStore {
           result.status?.code !== "ALREADY_EXISTS"
         ) {
           const error = new Error(
-            `Vectara API returned status code ${result.code}: ${result.message}`
+            `Vectara API returned status code ${
+              result.status?.code
+            }: ${JSON.stringify(result.message)}`
           );
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           (error as any).code = 500;
@@ -169,7 +171,7 @@ export class VectaraStore extends VectorStore {
         }
       } catch (e) {
         const error = new Error(
-          `Error ${(e as Error).message} while adding document ${document}`
+          `Error ${(e as Error).message} while adding document`
         );
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (error as any).code = 500;
