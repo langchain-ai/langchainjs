@@ -71,7 +71,7 @@ export class MemoryVectorStore extends VectorStore {
     const filteredMemoryVectors = this.memoryVectors.filter(filterFunction);
     const searches = filteredMemoryVectors
       .map((vector, index) => ({
-        similarity: this.similarity(query, vector.embedding),
+        similarity: Array.isArray(query) && Array.isArray(vector.embedding) ? this.similarity(query, vector.embedding) : 0,
         index,
       }))
       .sort((a, b) => (a.similarity > b.similarity ? -1 : 0))
