@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.123",
+  "version": "0.0.126",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -121,6 +121,9 @@
     "llms/hf.cjs",
     "llms/hf.js",
     "llms/hf.d.ts",
+    "llms/ollama.cjs",
+    "llms/ollama.js",
+    "llms/ollama.d.ts",
     "llms/replicate.cjs",
     "llms/replicate.js",
     "llms/replicate.d.ts",
@@ -211,6 +214,9 @@
     "vectorstores/tigris.cjs",
     "vectorstores/tigris.js",
     "vectorstores/tigris.d.ts",
+    "vectorstores/usearch.cjs",
+    "vectorstores/usearch.js",
+    "vectorstores/usearch.d.ts",
     "vectorstores/vectara.cjs",
     "vectorstores/vectara.js",
     "vectorstores/vectara.d.ts",
@@ -238,6 +244,9 @@
     "document_loaders/web/apify_dataset.cjs",
     "document_loaders/web/apify_dataset.js",
     "document_loaders/web/apify_dataset.d.ts",
+    "document_loaders/web/assemblyai.cjs",
+    "document_loaders/web/assemblyai.js",
+    "document_loaders/web/assemblyai.d.ts",
     "document_loaders/web/azure_blob_storage_container.cjs",
     "document_loaders/web/azure_blob_storage_container.js",
     "document_loaders/web/azure_blob_storage_container.d.ts",
@@ -352,6 +361,9 @@
     "chat_models/baiduwenxin.cjs",
     "chat_models/baiduwenxin.js",
     "chat_models/baiduwenxin.d.ts",
+    "chat_models/ollama.cjs",
+    "chat_models/ollama.js",
+    "chat_models/ollama.d.ts",
     "schema.cjs",
     "schema.js",
     "schema.d.ts",
@@ -406,6 +418,9 @@
     "retrievers/document_compressors.cjs",
     "retrievers/document_compressors.js",
     "retrievers/document_compressors.d.ts",
+    "retrievers/parent_document.cjs",
+    "retrievers/parent_document.js",
+    "retrievers/parent_document.d.ts",
     "retrievers/time_weighted.cjs",
     "retrievers/time_weighted.js",
     "retrievers/time_weighted.d.ts",
@@ -487,6 +502,9 @@
     "stores/message/planetscale.cjs",
     "stores/message/planetscale.js",
     "stores/message/planetscale.d.ts",
+    "stores/message/xata.cjs",
+    "stores/message/xata.js",
+    "stores/message/xata.d.ts",
     "util/math.cjs",
     "util/math.js",
     "util/math.d.ts",
@@ -631,8 +649,9 @@
     "typeorm": "^0.3.12",
     "typescript": "^5.0.0",
     "typesense": "^1.5.3",
+    "usearch": "^1.1.1",
     "vectordb": "^0.1.4",
-    "weaviate-ts-client": "^1.0.0"
+    "weaviate-ts-client": "^1.4.0"
   },
   "peerDependencies": {
     "@aws-sdk/client-dynamodb": "^3.310.0",
@@ -695,8 +714,9 @@
     "srt-parser-2": "^1.2.2",
     "typeorm": "^0.3.12",
     "typesense": "^1.5.3",
+    "usearch": "^1.1.1",
     "vectordb": "^0.1.4",
-    "weaviate-ts-client": "^1.0.0"
+    "weaviate-ts-client": "^1.4.0"
   },
   "peerDependenciesMeta": {
     "@aws-sdk/client-dynamodb": {
@@ -877,6 +897,9 @@
       "optional": true
     },
     "typesense": {
+      "optional": true
+    },
+    "usearch": {
       "optional": true
     },
     "vectordb": {
@@ -1121,6 +1144,11 @@
       "import": "./llms/hf.js",
       "require": "./llms/hf.cjs"
     },
+    "./llms/ollama": {
+      "types": "./llms/ollama.d.ts",
+      "import": "./llms/ollama.js",
+      "require": "./llms/ollama.cjs"
+    },
     "./llms/replicate": {
       "types": "./llms/replicate.d.ts",
       "import": "./llms/replicate.js",
@@ -1273,6 +1301,11 @@
       "import": "./vectorstores/tigris.js",
       "require": "./vectorstores/tigris.cjs"
     },
+    "./vectorstores/usearch": {
+      "types": "./vectorstores/usearch.d.ts",
+      "import": "./vectorstores/usearch.js",
+      "require": "./vectorstores/usearch.cjs"
+    },
     "./vectorstores/vectara": {
       "types": "./vectorstores/vectara.d.ts",
       "import": "./vectorstores/vectara.js",
@@ -1319,6 +1352,11 @@
       "types": "./document_loaders/web/apify_dataset.d.ts",
       "import": "./document_loaders/web/apify_dataset.js",
       "require": "./document_loaders/web/apify_dataset.cjs"
+    },
+    "./document_loaders/web/assemblyai": {
+      "types": "./document_loaders/web/assemblyai.d.ts",
+      "import": "./document_loaders/web/assemblyai.js",
+      "require": "./document_loaders/web/assemblyai.cjs"
     },
     "./document_loaders/web/azure_blob_storage_container": {
       "types": "./document_loaders/web/azure_blob_storage_container.d.ts",
@@ -1512,6 +1550,11 @@
       "import": "./chat_models/baiduwenxin.js",
       "require": "./chat_models/baiduwenxin.cjs"
     },
+    "./chat_models/ollama": {
+      "types": "./chat_models/ollama.d.ts",
+      "import": "./chat_models/ollama.js",
+      "require": "./chat_models/ollama.cjs"
+    },
     "./schema": {
       "types": "./schema.d.ts",
       "import": "./schema.js",
@@ -1603,6 +1646,11 @@
       "types": "./retrievers/document_compressors.d.ts",
       "import": "./retrievers/document_compressors.js",
       "require": "./retrievers/document_compressors.cjs"
+    },
+    "./retrievers/parent_document": {
+      "types": "./retrievers/parent_document.d.ts",
+      "import": "./retrievers/parent_document.js",
+      "require": "./retrievers/parent_document.cjs"
     },
     "./retrievers/time_weighted": {
       "types": "./retrievers/time_weighted.d.ts",
@@ -1738,6 +1786,11 @@
       "types": "./stores/message/planetscale.d.ts",
       "import": "./stores/message/planetscale.js",
       "require": "./stores/message/planetscale.cjs"
+    },
+    "./stores/message/xata": {
+      "types": "./stores/message/xata.d.ts",
+      "import": "./stores/message/xata.js",
+      "require": "./stores/message/xata.cjs"
     },
     "./util/math": {
       "types": "./util/math.d.ts",

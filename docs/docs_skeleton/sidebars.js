@@ -75,6 +75,7 @@
 	      slug: "additional_resources",
       },
     },
+    'community',
     {
       type: "html",
       value: "<hr>",

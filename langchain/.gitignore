@@ -109,6 +109,9 @@ llms/cohere.d.ts
 llms/hf.cjs
 llms/hf.js
 llms/hf.d.ts
+llms/ollama.cjs
+llms/ollama.js
+llms/ollama.d.ts
 llms/replicate.cjs
 llms/replicate.js
 llms/replicate.d.ts
@@ -199,6 +202,9 @@ vectorstores/singlestore.d.ts
 vectorstores/tigris.cjs
 vectorstores/tigris.js
 vectorstores/tigris.d.ts
+vectorstores/usearch.cjs
+vectorstores/usearch.js
+vectorstores/usearch.d.ts
 vectorstores/vectara.cjs
 vectorstores/vectara.js
 vectorstores/vectara.d.ts
@@ -226,6 +232,9 @@ document_loaders/base.d.ts
 document_loaders/web/apify_dataset.cjs
 document_loaders/web/apify_dataset.js
 document_loaders/web/apify_dataset.d.ts
+document_loaders/web/assemblyai.cjs
+document_loaders/web/assemblyai.js
+document_loaders/web/assemblyai.d.ts
 document_loaders/web/azure_blob_storage_container.cjs
 document_loaders/web/azure_blob_storage_container.js
 document_loaders/web/azure_blob_storage_container.d.ts
@@ -340,6 +349,9 @@ chat_models/googlepalm.d.ts
 chat_models/baiduwenxin.cjs
 chat_models/baiduwenxin.js
 chat_models/baiduwenxin.d.ts
+chat_models/ollama.cjs
+chat_models/ollama.js
+chat_models/ollama.d.ts
 schema.cjs
 schema.js
 schema.d.ts
@@ -394,6 +406,9 @@ retrievers/contextual_compression.d.ts
 retrievers/document_compressors.cjs
 retrievers/document_compressors.js
 retrievers/document_compressors.d.ts
+retrievers/parent_document.cjs
+retrievers/parent_document.js
+retrievers/parent_document.d.ts
 retrievers/time_weighted.cjs
 retrievers/time_weighted.js
 retrievers/time_weighted.d.ts
@@ -475,6 +490,9 @@ stores/message/upstash_redis.d.ts
 stores/message/planetscale.cjs
 stores/message/planetscale.js
 stores/message/planetscale.d.ts
+stores/message/xata.cjs
+stores/message/xata.js
+stores/message/xata.d.ts
 util/math.cjs
 util/math.js
 util/math.d.ts

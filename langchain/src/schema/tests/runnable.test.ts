@@ -20,18 +20,20 @@ import {
   SystemMessagePromptTemplate,
 } from "../../prompts/index.js";
 import { StructuredOutputParser } from "../../output_parsers/structured.js";
-import { RunnableMap, RunnableSequence } from "../runnable.js";
+import { RunnableMap, RunnableSequence, RouterRunnable } from "../runnable.js";
 import { BaseRetriever } from "../retriever.js";
 import { Document } from "../../document.js";
 import { OutputParserException, StringOutputParser } from "../output_parser.js";
 
 class FakeLLM extends LLM {
+  response: string;
+
   _llmType() {
     return "fake";
   }
 
   async _call(prompt: string): Promise<string> {
-    return prompt;
+    return this.response ?? prompt;
   }
 }
 
@@ -250,4 +252,45 @@ test("Don't use intermediate streaming", async () => {
   }
   expect(chunks.length).toEqual(1);
   expect(chunks[0]).toEqual("Hi there!");
+});
+
+test("Router runnables", async () => {
+  const mathLLM = new FakeLLM({});
+  mathLLM.response = "I am a math genius!";
+  const chain1 = PromptTemplate.fromTemplate(
+    "You are a math genius. Answer the question: {question}"
+  ).pipe(mathLLM);
+  const englishLLM = new FakeLLM({});
+  englishLLM.response = "I am an English genius!";
+  const chain2 = PromptTemplate.fromTemplate(
+    "You are an english major. Answer the question: {question}"
+  ).pipe(englishLLM);
+  const router = new RouterRunnable({
+    runnables: { math: chain1, english: chain2 },
+  });
+  type RouterChainInput = {
+    key: string;
+    question: string;
+  };
+  const chain = RunnableSequence.from([
+    {
+      key: (x: RouterChainInput) => x.key,
+      input: { question: (x: RouterChainInput) => x.question },
+    },
+    router,
+  ]);
+  const result = await chain.invoke({ key: "math", question: "2 + 2" });
+  expect(result).toEqual("I am a math genius!");
+
+  const result2 = await chain.batch([
+    {
+      key: "math",
+      question: "2 + 2",
+    },
+    {
+      key: "english",
+      question: "2 + 2",
+    },
+  ]);
+  expect(result2).toEqual(["I am a math genius!", "I am an English genius!"]);
 });
