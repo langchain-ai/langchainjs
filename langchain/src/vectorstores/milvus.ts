@@ -241,9 +241,9 @@ export class Milvus extends VectorStore {
     }
     const results: [Document, number][] = [];
     searchResp.results.forEach((result) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const fields = {
         pageContent: "",
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         metadata: {} as Record<string, any>,
       };
       Object.keys(result).forEach((key) => {

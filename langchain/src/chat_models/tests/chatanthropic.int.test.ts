@@ -35,6 +35,27 @@ test("Test ChatAnthropic Generate", async () => {
   console.log({ res });
 });
 
+test("Test ChatAnthropic Generate w/ ClientOptions", async () => {
+  const chat = new ChatAnthropic({
+    modelName: "claude-instant-v1",
+    clientOptions: {
+      defaultHeaders: {
+        "Helicone-Auth": "HELICONE_API_KEY",
+      },
+    },
+  });
+  const message = new HumanMessage("Hello!");
+  const res = await chat.generate([[message], [message]]);
+  expect(res.generations.length).toBe(2);
+  for (const generation of res.generations) {
+    expect(generation.length).toBe(1);
+    for (const message of generation) {
+      console.log(message.text);
+    }
+  }
+  console.log({ res });
+});
+
 test("Test ChatAnthropic Generate with a signal in call options", async () => {
   const chat = new ChatAnthropic({
     modelName: "claude-instant-v1",
