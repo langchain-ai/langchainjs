@@ -3,7 +3,7 @@ import { LLM, BaseLLMParams } from "./base.js";
 
 type Dict = { [key: string]: any };
 
-class LLMInputOutputAdapter {
+class BedrockLLMInputOutputAdapter {
   /** Adapter class to prepare the inputs from Langchain to a format
   that LLM model expects. Also, provides a helper function to extract
   the generated text from the model response. */
@@ -114,7 +114,10 @@ export class Bedrock extends LLM implements BedrockInput {
 
     const url = `https://bedrock.${this.regionName}.amazonaws.com/model/${this.model}/invoke`;
     const provider = this.model.split(".")[0];
-    const inputBody = LLMInputOutputAdapter.prepareInput(provider, prompt);
+    const inputBody = BedrockLLMInputOutputAdapter.prepareInput(
+      provider,
+      prompt
+    );
 
     const response = await this.caller.call(
       async () =>
@@ -136,7 +139,10 @@ export class Bedrock extends LLM implements BedrockInput {
       );
     }
     const responseJson = await response.json();
-    const text = LLMInputOutputAdapter.prepareOutput(provider, responseJson);
+    const text = BedrockLLMInputOutputAdapter.prepareOutput(
+      provider,
+      responseJson
+    );
     return text;
   }
 
