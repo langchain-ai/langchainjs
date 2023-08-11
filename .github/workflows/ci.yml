@@ -73,8 +73,6 @@ jobs:
     env:
       PUPPETEER_SKIP_DOWNLOAD: "true"
       PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
-      # See https://github.com/vercel/hyper/pull/7270/files#diff-e98936aa52a6dd7416e4296e9628456227d834f7245967383fd9ff80fd985dadR42
-      npm_config_node_gyp: ${{ github.workspace }}${{ runner.os == 'Windows' && '\node_modules\node-gyp\bin\node-gyp.js' || '/node_modules/node-gyp/bin/node-gyp.js' }}
     steps:
       - uses: actions/checkout@v3
       - name: Use Node.js ${{ matrix.node-version }}
@@ -84,6 +82,9 @@ jobs:
           cache: "yarn"
       - name: Install dependencies
         run: yarn install --immutable
+        env:
+          # See https://github.com/vercel/hyper/pull/7270/files#diff-e98936aa52a6dd7416e4296e9628456227d834f7245967383fd9ff80fd985dadR42
+          npm_config_node_gyp: ${{ github.workspace }}${{ runner.os == 'Windows' && '\node_modules\node-gyp\bin\node-gyp.js' || '/node_modules/node-gyp/bin/node-gyp.js' }}
       - name: Build
         run: yarn run build --filter="!docs"
       - name: Test
