@@ -88,6 +88,7 @@ const entrypoints = {
   "vectorstores/usearch": "vectorstores/usearch",
   "vectorstores/vectara": "vectorstores/vectara",
   "vectorstores/xata": "vectorstores/xata",
+  "vectorstores/zep": "vectorstores/zep",
   // text_splitter
   text_splitter: "text_splitter",
   // memory
@@ -274,6 +275,7 @@ const requiresOptionalDependency = [
   "vectorstores/typesense",
   "vectorstores/tigris",
   "vectorstores/usearch",
+  "vectorstores/zep",
   "memory/zep",
   "document_loaders/web/apify_dataset",
   "document_loaders/web/assemblyai",

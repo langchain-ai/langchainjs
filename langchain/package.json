@@ -226,6 +226,9 @@
     "vectorstores/xata.cjs",
     "vectorstores/xata.js",
     "vectorstores/xata.d.ts",
+    "vectorstores/zep.cjs",
+    "vectorstores/zep.js",
+    "vectorstores/zep.d.ts",
     "text_splitter.cjs",
     "text_splitter.js",
     "text_splitter.d.ts",
@@ -569,7 +572,7 @@
     "@elastic/elasticsearch": "^8.4.0",
     "@faker-js/faker": "^7.6.0",
     "@getmetal/metal-sdk": "^4.0.0",
-    "@getzep/zep-js": "^0.4.1",
+    "@getzep/zep-js": "^0.6.3",
     "@gomomento/sdk": "^1.23.0",
     "@google-ai/generativelanguage": "^0.2.1",
     "@google-cloud/storage": "^6.10.1",
@@ -668,7 +671,7 @@
     "@clickhouse/client": "^0.0.14",
     "@elastic/elasticsearch": "^8.4.0",
     "@getmetal/metal-sdk": "*",
-    "@getzep/zep-js": "^0.4.1",
+    "@getzep/zep-js": "^0.6.3",
     "@gomomento/sdk": "^1.23.0",
     "@google-ai/generativelanguage": "^0.2.1",
     "@google-cloud/storage": "^6.10.1",
@@ -1328,6 +1331,11 @@
       "types": "./vectorstores/xata.d.ts",
       "import": "./vectorstores/xata.js",
       "require": "./vectorstores/xata.cjs"
+    },
+    "./vectorstores/zep": {
+      "types": "./vectorstores/zep.d.ts",
+      "import": "./vectorstores/zep.js",
+      "require": "./vectorstores/zep.cjs"
     },
     "./text_splitter": {
       "types": "./text_splitter.d.ts",
