@@ -211,6 +211,9 @@ vectorstores/vectara.d.ts
 vectorstores/xata.cjs
 vectorstores/xata.js
 vectorstores/xata.d.ts
+vectorstores/zep.cjs
+vectorstores/zep.js
+vectorstores/zep.d.ts
 text_splitter.cjs
 text_splitter.js
 text_splitter.d.ts

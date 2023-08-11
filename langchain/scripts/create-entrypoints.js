@@ -273,6 +273,7 @@ const requiresOptionalDependency = [
   "vectorstores/typesense",
   "vectorstores/tigris",
   "vectorstores/usearch",
+  "vectorstores/zep",
   "memory/zep",
   "document_loaders/web/apify_dataset",
   "document_loaders/web/assemblyai",
