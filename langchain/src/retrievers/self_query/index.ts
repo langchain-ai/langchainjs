@@ -27,20 +27,30 @@ export interface SelfQueryRetrieverArgs extends BaseRetrieverInput {
 }
 
 function isObject(obj: any): obj is object {
-  return obj !== null && typeof obj === "object" && !Array.isArray(obj);
+  return (
+    obj &&
+    typeof obj === "object" &&
+    !Array.isArray(obj) &&
+    obj.constructor.name === "Object"
+  );
 }
 
 function isFilterEmpty(
   filter: ((q: any) => any) | object | string | undefined
 ): filter is undefined {
   if (!filter) return true;
+  // for Milvus
   if (typeof filter === "string" && filter.length > 0) {
     return false;
   }
   if (typeof filter === "function") {
     return false;
   }
-  return Object.keys(filter).length === 0 && filter.constructor === Object;
+  return (
+    typeof filter === "object" &&
+    filter.constructor.name === "Object" &&
+    Object.keys(filter).length === 0
+  );
 }
 
 function mergeFilters<
@@ -59,36 +69,33 @@ function mergeFilters<
   /**
    * This is for Milvus, which uses string
    * metadata filtering. We don't have
-   * milvus self-query retriever (yet???), but
+   * milvus self-query retriever (yet?), but
    * users could build their own Milvus query
    * translator and imo I think it might be a good
    * idea to have it to be able to return string
-   * filter
+   * filter.
+   *
+   * btw, since FilterType declaration includes
+   * string (which is required for Milvus),
+   * typescript will throw an error if
+   * we don't include this case.
    */
   if (typeof a === "string" && typeof b === "string") {
-    return `${a} && ${b}`;
+    return `(${a}) && (${b})`;
   }
 
   if (typeof a === "function" && typeof b === "function") {
     return (q: any) => {
-      const aResult = a(q);
-      const bResult = b(q);
-      // for regular functional filter
-      if (typeof aResult === "boolean" && typeof bResult === "boolean") {
-        return aResult && bResult;
+      // For functional filter (e.g. HNSWLib, memory, etc)
+      if (isObject(q)) {
+        return a(q) && b(q);
       }
 
-      // for SupabaseFilterRPCCall. We use "select" function
-      // because it should be there when RPC call object is
-      // passed into the filter
-      if (
-        typeof aResult.select === "function" &&
-        typeof bResult.select === "function"
-      ) {
+      // For SupabaseFilterRPCCall
+      if (q.filter && typeof q.filter === "function") {
         return b(a(q));
       }
-
-      throw new Error("Filter types mismatch");
+      throw new Error("Unknown filter type");
     };
   }
 
@@ -143,13 +150,15 @@ export class SelfQueryRetriever
       runManager?.getChild("llm_chain")
     );
 
+    const generatedStructuredQuery = output as StructuredQuery;
+
     const nextArg = this.structuredQueryTranslator.visitStructuredQuery(
-      output as StructuredQuery
+      generatedStructuredQuery
     );
 
     const filter = mergeFilters(this.searchParams?.filter, nextArg.filter);
 
-    const generatedQuery = (output as StructuredQuery).query;
+    const generatedQuery = generatedStructuredQuery.query;
     let myQuery = query;
 
     if (!this.useOriginalQuery && generatedQuery && generatedQuery.length > 0) {
