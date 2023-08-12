@@ -5,6 +5,12 @@ import { DataSource } from "typeorm";
 
 /**
  * This example uses a SAP HANA Cloud database. You can create a free trial database via https://developers.sap.com/tutorials/hana-cloud-deploying.html
+ *  
+ * You will need to add the following packages to your package.json as they are required when using typeorm with SAP HANA:
+ * 
+ *    "hdb-pool": "^0.1.6",             (or latest version)
+ *    "@sap/hana-client": "^2.17.22"    (or latest version)
+ * 
  */
 export const run = async () => {
 
