@@ -51,6 +51,7 @@ const entrypoints = {
   "llms/aleph_alpha": "llms/aleph_alpha",
   "llms/cohere": "llms/cohere",
   "llms/hf": "llms/hf",
+  "llms/raycast": "llms/raycast",
   "llms/ollama": "llms/ollama",
   "llms/replicate": "llms/replicate",
   "llms/googlevertexai": "llms/googlevertexai",
@@ -88,6 +89,7 @@ const entrypoints = {
   "vectorstores/usearch": "vectorstores/usearch",
   "vectorstores/vectara": "vectorstores/vectara",
   "vectorstores/xata": "vectorstores/xata",
+  "vectorstores/zep": "vectorstores/zep",
   // text_splitter
   text_splitter: "text_splitter",
   // memory
@@ -249,6 +251,7 @@ const requiresOptionalDependency = [
   "llms/googlevertexai",
   "llms/googlepalm",
   "llms/hf",
+  "llms/raycast",
   "llms/replicate",
   "llms/sagemaker_endpoint",
   "llms/bedrock",
@@ -274,6 +277,7 @@ const requiresOptionalDependency = [
   "vectorstores/typesense",
   "vectorstores/tigris",
   "vectorstores/usearch",
+  "vectorstores/zep",
   "memory/zep",
   "document_loaders/web/apify_dataset",
   "document_loaders/web/assemblyai",
