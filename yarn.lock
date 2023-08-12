@@ -5557,15 +5557,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@sap/hana-client@npm:^2.17.22":
-  version: 2.17.22
-  resolution: "@sap/hana-client@npm:2.17.22"
-  dependencies:
-    debug: 3.1.0
-  checksum: daafb16802ef514f4e36eb123a50c6822c1c12266bdcf27d8071392db7657440069bc9e4dd6637504e46cea170b1864d8d29c444e387ee2b1a98da54c7428aaa
-  languageName: node
-  linkType: hard
-
 "@selderee/plugin-htmlparser2@npm:^0.11.0":
   version: 0.11.0
   resolution: "@selderee/plugin-htmlparser2@npm:0.11.0"
@@ -8535,15 +8526,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"debug@npm:3.1.0":
-  version: 3.1.0
-  resolution: "debug@npm:3.1.0"
-  dependencies:
-    ms: 2.0.0
-  checksum: 0b52718ab957254a5b3ca07fc34543bc778f358620c206a08452251eb7fc193c3ea3505072acbf4350219c14e2d71ceb7bdaa0d3370aa630b50da790458d08b3
-  languageName: node
-  linkType: hard
-
 "debug@npm:4, debug@npm:4.3.4, debug@npm:^4.1.0, debug@npm:^4.1.1, debug@npm:^4.3.1, debug@npm:^4.3.2, debug@npm:^4.3.3, debug@npm:^4.3.4":
   version: 4.3.4
   resolution: "debug@npm:4.3.4"
@@ -10093,7 +10075,6 @@ __metadata:
     "@pinecone-database/pinecone": ^0.0.14
     "@planetscale/database": ^1.8.0
     "@prisma/client": ^4.11.0
-    "@sap/hana-client": ^2.17.22
     "@supabase/supabase-js": ^2.10.0
     "@tensorflow/tfjs-backend-cpu": ^4.4.0
     "@tigrisdata/vector": ^1.1.0
@@ -10114,7 +10095,6 @@ __metadata:
     eslint-plugin-prettier: ^4.2.1
     faiss-node: ^0.2.1
     graphql: ^16.6.0
-    hdb-pool: ^0.1.6
     ioredis: ^5.3.2
     js-yaml: ^4.1.0
     langchain: "workspace:*"
@@ -11362,13 +11342,6 @@ __metadata:
   dependencies:
     function-bind: ^1.1.1
   checksum: b9ad53d53be4af90ce5d1c38331e712522417d017d5ef1ebd0507e07c2fbad8686fffb8e12ddecd4c39ca9b9b47431afbb975b8abf7f3c3b82c98e9aad052792
-  languageName: node
-  linkType: hard
-
-"hdb-pool@npm:^0.1.6":
-  version: 0.1.6
-  resolution: "hdb-pool@npm:0.1.6"
-  checksum: 212a06110d25363a9cc47d1cfa4691b320e31eb8baf34f74f8c7f3e1c33ce74f142f1038235800f9703014bc42320b5c8940e533f6d55f6be8e1e18206e5edaf
   languageName: node
   linkType: hard
 
