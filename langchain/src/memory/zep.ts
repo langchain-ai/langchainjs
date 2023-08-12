@@ -9,9 +9,9 @@ import {
 } from "./base.js";
 import { BaseChatMemory, BaseChatMemoryInput } from "./chat_memory.js";
 import {
+  AIMessage,
   BaseMessage,
   ChatMessage,
-  AIMessage,
   HumanMessage,
   SystemMessage,
 } from "../schema/index.js";
@@ -42,7 +42,9 @@ export class ZepMemory extends BaseChatMemory implements ZepMemoryInput {
 
   sessionId: string;
 
-  zepClient: ZepClient;
+  zepClientPromise: Promise<ZepClient>;
+
+  private readonly zepInitFailMsg = "ZepClient is not initialized";
 
   constructor(fields: ZepMemoryInput) {
     super({
@@ -56,7 +58,7 @@ export class ZepMemory extends BaseChatMemory implements ZepMemoryInput {
     this.memoryKey = fields.memoryKey ?? this.memoryKey;
     this.baseURL = fields.baseURL;
     this.sessionId = fields.sessionId;
-    this.zepClient = new ZepClient(this.baseURL, fields.apiKey);
+    this.zepClientPromise = ZepClient.init(this.baseURL, fields.apiKey);
   }
 
   get memoryKeys() {
@@ -66,11 +68,18 @@ export class ZepMemory extends BaseChatMemory implements ZepMemoryInput {
   async loadMemoryVariables(values: InputValues): Promise<MemoryVariables> {
     // use either lastN provided by developer or undefined to use the
     // server preset.
+
+    // Wait for ZepClient to be initialized
+    const zepClient = await this.zepClientPromise;
+    if (!zepClient) {
+      throw new Error(this.zepInitFailMsg);
+    }
+
     const lastN = values.lastN ?? undefined;
 
     let memory: Memory | null = null;
     try {
-      memory = await this.zepClient.getMemory(this.sessionId, lastN);
+      memory = await zepClient.memory.getMemory(this.sessionId, lastN);
     } catch (error) {
       // eslint-disable-next-line no-instanceof/no-instanceof
       if (error instanceof NotFoundError) {
@@ -139,10 +148,16 @@ export class ZepMemory extends BaseChatMemory implements ZepMemoryInput {
       ],
     });
 
+    // Wait for ZepClient to be initialized
+    const zepClient = await this.zepClientPromise;
+    if (!zepClient) {
+      throw new Error(this.zepInitFailMsg);
+    }
+
     // Add the new memory to the session using the ZepClient
     if (this.sessionId) {
       try {
-        await this.zepClient.addMemory(this.sessionId, memory);
+        await zepClient.memory.addMemory(this.sessionId, memory);
       } catch (error) {
         console.error("Error adding memory: ", error);
       }
@@ -153,8 +168,14 @@ export class ZepMemory extends BaseChatMemory implements ZepMemoryInput {
   }
 
   async clear(): Promise<void> {
+    // Wait for ZepClient to be initialized
+    const zepClient = await this.zepClientPromise;
+    if (!zepClient) {
+      throw new Error(this.zepInitFailMsg);
+    }
+
     try {
-      await this.zepClient.deleteMemory(this.sessionId);
+      await zepClient.memory.deleteMemory(this.sessionId);
     } catch (error) {
       console.error("Error deleting session: ", error);
     }

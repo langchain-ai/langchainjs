@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.0.126",
+  "version": "0.0.127",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -121,6 +121,9 @@
     "llms/hf.cjs",
     "llms/hf.js",
     "llms/hf.d.ts",
+    "llms/raycast.cjs",
+    "llms/raycast.js",
+    "llms/raycast.d.ts",
     "llms/ollama.cjs",
     "llms/ollama.js",
     "llms/ollama.d.ts",
@@ -223,6 +226,9 @@
     "vectorstores/xata.cjs",
     "vectorstores/xata.js",
     "vectorstores/xata.d.ts",
+    "vectorstores/zep.cjs",
+    "vectorstores/zep.js",
+    "vectorstores/zep.d.ts",
     "text_splitter.cjs",
     "text_splitter.js",
     "text_splitter.d.ts",
@@ -566,7 +572,7 @@
     "@elastic/elasticsearch": "^8.4.0",
     "@faker-js/faker": "^7.6.0",
     "@getmetal/metal-sdk": "^4.0.0",
-    "@getzep/zep-js": "^0.4.1",
+    "@getzep/zep-js": "^0.6.3",
     "@gomomento/sdk": "^1.23.0",
     "@google-ai/generativelanguage": "^0.2.1",
     "@google-cloud/storage": "^6.10.1",
@@ -577,6 +583,7 @@
     "@pinecone-database/pinecone": "^0.0.14",
     "@planetscale/database": "^1.8.0",
     "@qdrant/js-client-rest": "^1.2.0",
+    "@raycast/api": "^1.55.2",
     "@supabase/postgrest-js": "^1.1.1",
     "@supabase/supabase-js": "^2.10.0",
     "@tensorflow-models/universal-sentence-encoder": "^1.3.3",
@@ -664,7 +671,7 @@
     "@clickhouse/client": "^0.0.14",
     "@elastic/elasticsearch": "^8.4.0",
     "@getmetal/metal-sdk": "*",
-    "@getzep/zep-js": "^0.4.1",
+    "@getzep/zep-js": "^0.6.3",
     "@gomomento/sdk": "^1.23.0",
     "@google-ai/generativelanguage": "^0.2.1",
     "@google-cloud/storage": "^6.10.1",
@@ -674,6 +681,7 @@
     "@pinecone-database/pinecone": "*",
     "@planetscale/database": "^1.8.0",
     "@qdrant/js-client-rest": "^1.2.0",
+    "@raycast/api": "^1.55.2",
     "@supabase/postgrest-js": "^1.1.1",
     "@supabase/supabase-js": "^2.10.0",
     "@tensorflow-models/universal-sentence-encoder": "*",
@@ -777,6 +785,9 @@
       "optional": true
     },
     "@qdrant/js-client-rest": {
+      "optional": true
+    },
+    "@raycast/api": {
       "optional": true
     },
     "@supabase/postgrest-js": {
@@ -1144,6 +1155,11 @@
       "import": "./llms/hf.js",
       "require": "./llms/hf.cjs"
     },
+    "./llms/raycast": {
+      "types": "./llms/raycast.d.ts",
+      "import": "./llms/raycast.js",
+      "require": "./llms/raycast.cjs"
+    },
     "./llms/ollama": {
       "types": "./llms/ollama.d.ts",
       "import": "./llms/ollama.js",
@@ -1315,6 +1331,11 @@
       "types": "./vectorstores/xata.d.ts",
       "import": "./vectorstores/xata.js",
       "require": "./vectorstores/xata.cjs"
+    },
+    "./vectorstores/zep": {
+      "types": "./vectorstores/zep.d.ts",
+      "import": "./vectorstores/zep.js",
+      "require": "./vectorstores/zep.cjs"
     },
     "./text_splitter": {
       "types": "./text_splitter.d.ts",

@@ -61,6 +61,9 @@ export interface OptionalImportMap {
   "langchain/llms/hf"?:
     | typeof import("../llms/hf.js")
     | Promise<typeof import("../llms/hf.js")>;
+  "langchain/llms/raycast"?:
+    | typeof import("../llms/raycast.js")
+    | Promise<typeof import("../llms/raycast.js")>;
   "langchain/llms/replicate"?:
     | typeof import("../llms/replicate.js")
     | Promise<typeof import("../llms/replicate.js")>;
@@ -139,6 +142,9 @@ export interface OptionalImportMap {
   "langchain/vectorstores/usearch"?:
     | typeof import("../vectorstores/usearch.js")
     | Promise<typeof import("../vectorstores/usearch.js")>;
+  "langchain/vectorstores/zep"?:
+    | typeof import("../vectorstores/zep.js")
+    | Promise<typeof import("../vectorstores/zep.js")>;
   "langchain/memory/zep"?:
     | typeof import("../memory/zep.js")
     | Promise<typeof import("../memory/zep.js")>;
