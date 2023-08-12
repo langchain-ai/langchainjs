@@ -1,8 +1,7 @@
 import fs from "fs";
 import path from "path";
 import FormData from "form-data";
-// eslint-disable-next-line import/no-extraneous-dependencies
-import nodeFetch from "node-fetch";
+import https from "https";
 import { Document } from "../document.js";
 import { Embeddings } from "../embeddings/base.js";
 import { FakeEmbeddings } from "../embeddings/fake.js";
@@ -173,55 +172,66 @@ export class VectaraStore extends VectorStore {
     metadata: Record<string, unknown> | undefined = undefined
   ) {
     let numDocs = 0;
+  
     for (const [index, file] of file_paths.entries()) {
       if (!fs.existsSync(path.resolve(file))) {
         console.error(`File ${file} does not exist, skipping`);
         continue;
       }
       const md = metadata ? metadata[index] : {};
-
-      try {
-        const f = fs.createReadStream(path.join(process.cwd(), file));
-        const data = new FormData();
-        data.append("file", f, file);
-        data.append("doc-metadata", JSON.stringify(md));
-
-        const response = await nodeFetch(
-          `https://api.vectara.io/v1/upload?c=${this.customerId}&o=${this.corpusId}`,
-          {
-            method: "POST",
-            body: data,
-            headers: {
-              "x-api-key": this.apiKey,
-              ...data.getHeaders(),
-            },
+  
+      const f = fs.createReadStream(path.join(process.cwd(), file));
+      const data = new FormData();
+      data.append("file", f, file);
+      data.append("doc-metadata", JSON.stringify(md));
+  
+      const options = {
+        method: 'POST',
+        headers: {
+          'x-api-key': this.apiKey,
+          ...data.getHeaders()
+        }
+      };
+  
+      const uploadResult = await new Promise<number>((resolve, reject) => {
+        const req = https.request(
+          `https://api.vectara.io/v1/upload?c=${this.customerId}&o=${this.corpusId}`, 
+          options, 
+          (res) => {
+            let responseBody = '';
+            res.on('data', (chunk) => {
+              responseBody += chunk;
+            });
+            res.on('end', () => {
+              const result = JSON.parse(responseBody);
+              const {statusCode} = res;
+  
+              if (statusCode !== 200 && statusCode !== 409) {
+                reject(new Error(`Vectara API returned status code ${statusCode}: ${result}`));
+              } else {
+                resolve(1);
+              }
+            });
           }
         );
-
-        const result = await response.json();
-        const statusCode = response.status;
-
-        if (statusCode !== 200 && statusCode !== 409) {
-          const error = new Error(
-            `Vectara API returned status code ${statusCode}: ${result}`
-          );
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (error as any).code = 500;
-          throw error;
-        } else {
-          numDocs += 1;
-        }
-      } catch (error) {
-        console.log(error);
-      }
+  
+        req.on('error', (err) => {
+          reject(err);
+        });
+  
+        data.pipe(req);
+      });
+  
+      numDocs += uploadResult;
     }
-
+  
     if (this.verbose) {
       console.log(`Uploaded ${file_paths.length} files to Vectara`);
     }
-
+  
     return numDocs;
   }
+  
 
   async similaritySearchWithScore(
     query: string,
