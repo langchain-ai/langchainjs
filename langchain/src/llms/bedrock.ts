@@ -1,7 +1,13 @@
+import { SignatureV4 } from "@aws-sdk/signature-v4";
+import { defaultProvider } from "@aws-sdk/credential-provider-node";
+import { HttpRequest } from "@aws-sdk/protocol-http";
+import { Sha256 } from "@aws-crypto/sha256-js";
+import type { AwsCredentialIdentity, Provider } from "@aws-sdk/types";
 import { getEnvironmentVariable } from "../util/env.js";
 import { LLM, BaseLLMParams } from "./base.js";
 
 type Dict = { [key: string]: any };
+type CredentialType = AwsCredentialIdentity | Provider<AwsCredentialIdentity>;
 
 class BedrockLLMInputOutputAdapter {
   /** Adapter class to prepare the inputs from Langchain to a format
@@ -52,23 +58,35 @@ export interface BedrockInput {
   /** The AWS region e.g. `us-west-2`.
       Fallback to AWS_DEFAULT_REGION env variable or region specified in ~/.aws/config in case it is not provided here.
   */
-  regionName?: string;
+  region?: string;
+
+  /** AWS Credentials.
+      If no credentials are provided, the default credentials from `@aws-sdk/credential-provider-node` will be used.
+   */
+  credentials?: CredentialType;
 
   /** Temperature */
   temperature?: number;
 
   /** Max tokens */
   maxTokens?: number;
+
+  /** A custom fetch function for low-level access to AWS API. Defaults to fetch() */
+  fetchFn?: typeof fetch;
 }
 
 export class Bedrock extends LLM implements BedrockInput {
   model = "amazon.titan-tg1-large";
 
-  regionName?: string | undefined = undefined;
+  region: string;
+
+  credentials: CredentialType;
 
   temperature?: number | undefined = undefined;
 
   maxTokens?: number | undefined = undefined;
+
+  fetchFn: typeof fetch;
 
   get lc_secrets(): { [key: string]: string } | undefined {
     return {};
@@ -88,10 +106,18 @@ export class Bedrock extends LLM implements BedrockInput {
         `Unknown model: '${this.model}', only these are supported: ${allowedModels}`
       );
     }
-    this.regionName =
-      fields?.regionName ?? getEnvironmentVariable("AWS_DEFAULT_REGION");
+    const region =
+      fields?.region ?? getEnvironmentVariable("AWS_DEFAULT_REGION");
+    if (!region) {
+      throw new Error(
+        "Please set the AWS_DEFAULT_REGION environment variable or pass it to the constructor as the region field."
+      );
+    }
+    this.region = region;
+    this.credentials = fields?.credentials ?? defaultProvider();
     this.temperature = fields?.temperature ?? this.temperature;
     this.maxTokens = fields?.maxTokens ?? this.maxTokens;
+    this.fetchFn = fields?.fetchFn ?? fetch;
   }
 
   /** Call out to Bedrock service model.
@@ -105,31 +131,48 @@ export class Bedrock extends LLM implements BedrockInput {
       response = model.call("Tell me a joke.")
   */
   async _call(prompt: string): Promise<string> {
-    const { createSignedFetcher } = await Bedrock.imports();
-
-    const signedFetcher = createSignedFetcher({
-      service: "bedrock",
-      region: this.regionName,
-    });
-
-    const url = `https://bedrock.${this.regionName}.amazonaws.com/model/${this.model}/invoke`;
     const provider = this.model.split(".")[0];
+    const service = "bedrock";
+
     const inputBody = BedrockLLMInputOutputAdapter.prepareInput(
       provider,
       prompt
     );
 
-    const response = await this.caller.call(
-      async () =>
-        await signedFetcher(url, {
-          method: "post",
-          body: JSON.stringify(inputBody),
-          headers: {
-            "Content-Type": "application/json",
-            accept: "application/json",
-          },
-        })
+    const url = new URL(
+      `https://${service}.${this.region}.amazonaws.com/model/${this.model}/invoke`
     );
+
+    const request = new HttpRequest({
+      hostname: url.hostname,
+      path: url.pathname,
+      protocol: url.protocol,
+      method: "POST", // method must be uppercase
+      body: JSON.stringify(inputBody),
+      query: Object.fromEntries(url.searchParams.entries()),
+      headers: {
+        // host is required by AWS Signature V4: https://docs.aws.amazon.com/general/latest/gr/sigv4-create-canonical-request.html
+        host: url.host,
+        accept: "application/json",
+        "Content-Type": "application/json",
+      },
+    });
+
+    const signer = new SignatureV4({
+      credentials: this.credentials,
+      service,
+      region: this.region,
+      sha256: Sha256,
+    });
+
+    const signedRequest = await signer.sign(request);
+
+    // Send request to AWS using the low-level fetch API
+    const response = await this.fetchFn(url, {
+      headers: signedRequest.headers,
+      body: signedRequest.body,
+      method: signedRequest.method,
+    });
 
     if (response.status < 200 || response.status >= 300) {
       throw Error(
@@ -138,23 +181,14 @@ export class Bedrock extends LLM implements BedrockInput {
         }: ${await response.text()}`
       );
     }
+
     const responseJson = await response.json();
+
     const text = BedrockLLMInputOutputAdapter.prepareOutput(
       provider,
       responseJson
     );
-    return text;
-  }
 
-  /** @ignore */
-  static async imports(): Promise<{ createSignedFetcher: any }> {
-    try {
-      const { createSignedFetcher } = await import("aws-sigv4-fetch");
-      return { createSignedFetcher };
-    } catch (e) {
-      throw new Error(
-        "Please install a dependency for bedrock with, e.g. `yarn add aws-sigv4-fetch`"
-      );
-    }
+    return text;
   }
 }

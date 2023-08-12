@@ -1,144 +1,171 @@
-import { jest, test, expect } from "@jest/globals";
+import { test, expect } from "@jest/globals";
 import { Bedrock } from "../bedrock.js";
 
-function setupMock(
-  expectedRegionName: string,
-  expectedModelName: string,
-  expectedPrompt: string
-) {
-  // Mock the underlying aws module
-  jest.mock("aws-sigv4-fetch", () => ({
-    createSignedFetcher: jest.fn(() => async (url: string, options: any) => {
-      // Verify the URL (also extract the region and model from the url)
-      const regex =
-        /https:\/\/bedrock\.([^/]+)\.amazonaws\.com\/model\/([^/]+)\/invoke/;
-      const matches = url.match(regex);
-      if (!matches) {
-        expect(matches).not.toBeNull();
-        return;
-      }
-      const regionName: string = matches[1];
-      const modelName: string = matches[2];
-      expect(regionName).not.toBeNull();
-      expect(modelName).not.toBeNull();
-      expect(expectedModelName).toBe(modelName);
-      expect(expectedRegionName).toBe(regionName);
-
-      // Test input based on provider
-      const provider = modelName.split(".")[0];
-
-      // Expectation on parameters sent to the underlying API
-      expect(options).not.toBeNull();
-      expect(typeof options).toBe("object");
-      expect(options.method).toBe("post");
-      if (["ai21", "anthropic"].includes(provider)) {
-        // These two providers expect the prompt text in the "prompt" json body parameter
-        expect(JSON.parse(options.body).prompt).toBe(expectedPrompt);
-      } else {
-        // All other providers expect the prompt text in the "inputText" json body parameter
-        expect(JSON.parse(options.body).inputText).toBe(expectedPrompt);
-      }
-      expect(options.headers).not.toBeNull();
-      expect(typeof options.headers).toBe("object");
-      expect(options.headers["Content-Type"]).toBe("application/json");
-      expect(options.headers.accept).toBe("application/json");
-
-      // Produce response based on underlying model being tested
-      let response: object = {};
-      if (provider === "anthropic") {
-        response = {
-          completion: "Hello! My name is Claude.",
-        };
-      } else if (provider === "ai21") {
-        response = {
-          completions: [{ data: { text: "Hello! My name is Claude." } }],
-        };
-      } else {
-        // all other models
-        response = {
-          results: [{ outputText: "Hello! My name is Claude." }],
-        };
-      }
-
-      return {
-        json: () => response,
-      };
-    }),
-  }));
-}
-
-test("Test Bedrock LLM: anthropic", async () => {
-  jest.resetModules();
-  const regionName = "us-east-1";
-  const modelName = "anthropic.model";
+test("Test Bedrock LLM: ai21", async () => {
+  const region = "us-east-1";
+  const model = "ai21.j2-grande-instruct";
   const prompt = "What is your name?";
+  const answer = "Hello! My name is Claude.";
 
-  setupMock(regionName, modelName, prompt);
-
-  const model = new Bedrock({
+  const bedrock = new Bedrock({
     maxTokens: 20,
-    regionName,
-    model: modelName,
+    region,
+    model,
+    async fetchFn(
+      input: RequestInfo | URL,
+      init?: RequestInit | undefined
+    ): Promise<Response> {
+      expect(input).toBeInstanceOf(URL);
+      expect((input as URL).href).toBe(
+        `https://bedrock.${region}.amazonaws.com/model/${model}/invoke`
+      );
+      expect(init?.method).toBe("POST");
+      expect(init?.headers).toMatchObject({
+        host: `bedrock.${region}.amazonaws.com`,
+        accept: "application/json",
+        "Content-Type": "application/json",
+      });
+      expect(init?.body).toBe(`{"prompt":"${prompt}"}`);
+      return new Promise<Response>((resolve) => {
+        resolve(
+          new Response(`{"completions":[{"data":{"text":"${answer}"}}]}`, {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          })
+        );
+      });
+    },
   });
 
-  const res = await model.call("What is your name?");
+  const res = await bedrock.call(prompt);
   expect(typeof res).toBe("string");
-  expect(res).toBe("Hello! My name is Claude.");
+  expect(res).toBe(answer);
 }, 5000);
 
-test("Test Bedrock LLM: ai21", async () => {
-  jest.resetModules();
-  const regionName = "us-east-1";
-  const modelName = "ai21.j2-grande-instruct";
+test("Test Bedrock LLM: anthropic", async () => {
+  const region = "us-east-1";
+  const model = "anthropic.model";
   const prompt = "What is your name?";
+  const answer = "Hello! My name is Claude.";
 
-  setupMock(regionName, modelName, prompt);
-
-  const model = new Bedrock({
+  const bedrock = new Bedrock({
     maxTokens: 20,
-    regionName,
-    model: modelName,
+    region,
+    model,
+    async fetchFn(
+      input: RequestInfo | URL,
+      init?: RequestInit | undefined
+    ): Promise<Response> {
+      expect(input).toBeInstanceOf(URL);
+      expect((input as URL).href).toBe(
+        `https://bedrock.${region}.amazonaws.com/model/${model}/invoke`
+      );
+      expect(init?.method).toBe("POST");
+      expect(init?.headers).toMatchObject({
+        host: `bedrock.${region}.amazonaws.com`,
+        accept: "application/json",
+        "Content-Type": "application/json",
+      });
+      expect(init?.body).toBe(
+        `{"prompt":"${prompt}","max_tokens_to_sample":50}`
+      );
+      return new Promise<Response>((resolve) => {
+        resolve(
+          new Response(`{"completion":"${answer}"}`, {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          })
+        );
+      });
+    },
   });
 
-  const res = await model.call("What is your name?");
+  const res = await bedrock.call(prompt);
   expect(typeof res).toBe("string");
-  expect(res).toBe("Hello! My name is Claude.");
+  expect(res).toBe(answer);
 }, 5000);
 
 test("Test Bedrock LLM: amazon", async () => {
-  jest.resetModules();
-  const regionName = "us-east-1";
-  const modelName = "amazon.model";
+  const region = "us-east-1";
+  const model = "amazon.model";
   const prompt = "What is your name?";
+  const answer = "Hello! My name is Claude.";
 
-  setupMock(regionName, modelName, prompt);
-
-  const model = new Bedrock({
+  const bedrock = new Bedrock({
     maxTokens: 20,
-    regionName,
-    model: modelName,
+    region,
+    model,
+    async fetchFn(
+      input: RequestInfo | URL,
+      init?: RequestInit | undefined
+    ): Promise<Response> {
+      expect(input).toBeInstanceOf(URL);
+      expect((input as URL).href).toBe(
+        `https://bedrock.${region}.amazonaws.com/model/${model}/invoke`
+      );
+      expect(init?.method).toBe("POST");
+      expect(init?.headers).toMatchObject({
+        host: `bedrock.${region}.amazonaws.com`,
+        accept: "application/json",
+        "Content-Type": "application/json",
+      });
+      expect(init?.body).toBe(
+        '{"inputText":"What is your name?","textGenerationConfig":{}}'
+      );
+      return new Promise<Response>((resolve) => {
+        resolve(
+          new Response(`{"results":[{"outputText":"${answer}"}]}`, {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          })
+        );
+      });
+    },
   });
 
-  const res = await model.call("What is your name?");
+  const res = await bedrock.call(prompt);
   expect(typeof res).toBe("string");
-  expect(res).toBe("Hello! My name is Claude.");
+  expect(res).toBe(answer);
 }, 5000);
 
-test("Test Bedrock LLM: other", async () => {
-  jest.resetModules();
-  const regionName = "us-east-1";
-  const modelName = "other.model";
-  const prompt = "What is your name?";
-
-  setupMock(regionName, modelName, prompt);
+test("Test Bedrock LLM: other model", async () => {
+  const region = "us-east-1";
+  const model = "other.model";
 
   async function tryInstantiateModel() {
-    const model = new Bedrock({
+    // eslint-disable-next-line no-new
+    new Bedrock({
       maxTokens: 20,
-      regionName,
-      model: modelName,
+      region,
+      model,
+      async fetchFn(
+        _input: RequestInfo | URL,
+        _init?: RequestInit | undefined
+      ): Promise<Response> {
+        throw new Error("fetch() must never be called for unknown models!");
+      },
     });
-    console.log(model);
+  }
+  await expect(tryInstantiateModel).rejects.toThrowError(
+    "Unknown model: 'other.model', only these are supported: ai21,anthropic,amazon"
+  );
+}, 5000);
+
+test("Test Bedrock LLM: no-region-specified", async () => {
+  const model = "other.model";
+
+  async function tryInstantiateModel() {
+    // eslint-disable-next-line no-new
+    new Bedrock({
+      maxTokens: 20,
+      model,
+      async fetchFn(
+        _input: RequestInfo | URL,
+        _init?: RequestInit | undefined
+      ): Promise<Response> {
+        throw new Error("fetch() must never be called in this case!");
+      },
+    });
   }
   await expect(tryInstantiateModel).rejects.toThrowError(
     "Unknown model: 'other.model', only these are supported: ai21,anthropic,amazon"
