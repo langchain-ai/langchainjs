@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, no-new */
+/* eslint-disable @typescript-eslint/no-explicit-any, no-new, @typescript-eslint/no-misused-promises */
 
 import { expect, jest, test } from "@jest/globals";
 
