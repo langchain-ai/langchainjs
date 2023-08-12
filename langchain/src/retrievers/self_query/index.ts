@@ -91,7 +91,7 @@ export class SelfQueryRetriever
       myQuery = generatedQuery;
     }
 
-    console.log(JSON.stringify({ filter }))
+    console.log(JSON.stringify({ filter }));
 
     if (!filter) {
       return [];

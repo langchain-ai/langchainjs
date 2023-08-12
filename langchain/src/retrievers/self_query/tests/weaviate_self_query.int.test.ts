@@ -124,22 +124,42 @@ test.skip("Weaviate Vector Store Self Query Retriever Test With Default Filter",
     new Document({
       pageContent:
         "A bunch of scientists bring back dinosaurs and mayhem breaks loose",
-      metadata: { year: 1993, rating: 7.7, genre: "science fiction", type: "movie" },
+      metadata: {
+        year: 1993,
+        rating: 7.7,
+        genre: "science fiction",
+        type: "movie",
+      },
     }),
     new Document({
       pageContent:
         "Leo DiCaprio gets lost in a dream within a dream within a dream within a ...",
-      metadata: { year: 2010, director: "Christopher Nolan", rating: 8.2, type: "movie" },
+      metadata: {
+        year: 2010,
+        director: "Christopher Nolan",
+        rating: 8.2,
+        type: "movie",
+      },
     }),
     new Document({
       pageContent:
         "A psychologist / detective gets lost in a series of dreams within dreams within dreams and Inception reused the idea",
-      metadata: { year: 2006, director: "Satoshi Kon", rating: 8.6, type: "movie" },
+      metadata: {
+        year: 2006,
+        director: "Satoshi Kon",
+        rating: 8.6,
+        type: "movie",
+      },
     }),
     new Document({
       pageContent:
         "A bunch of normal-sized women are supremely wholesome and some men pine after them",
-      metadata: { year: 2019, director: "Greta Gerwig", rating: 8.3, type: "movie" },
+      metadata: {
+        year: 2019,
+        director: "Greta Gerwig",
+        rating: 8.3,
+        type: "movie",
+      },
     }),
     new Document({
       pageContent: "Toys come alive and have a blast doing so",
@@ -153,18 +173,17 @@ test.skip("Weaviate Vector Store Self Query Retriever Test With Default Filter",
         director: "Andrei Tarkovsky",
         genre: "science fiction",
         rating: 9.9,
-        type: "movie"
+        type: "movie",
       },
     }),
     new Document({
-      pageContent:
-        "10x the previous gecs",
+      pageContent: "10x the previous gecs",
       metadata: {
         year: 2023,
         title: "10000 gecs",
         artist: "100 gecs",
         rating: 9.9,
-        type: "album"
+        type: "album",
       },
     }),
   ];
@@ -233,10 +252,10 @@ test.skip("Weaviate Vector Store Self Query Retriever Test With Default Filter",
           operator: "Equal",
           path: ["type"],
           valueText: "movie",
-        }
+        },
       },
-      mergeFilterMethod: "and"
-    }
+      mergeFilterMethod: "and",
+    },
   });
 
   const query4 = await selfQueryRetriever.getRelevantDocuments(
@@ -244,4 +263,4 @@ test.skip("Weaviate Vector Store Self Query Retriever Test With Default Filter",
   );
   console.log(query4); // query4 has to return documents, since the default filter takes over
   expect(query4.length).toBeGreaterThan(0);
-})
+});

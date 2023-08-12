@@ -7,7 +7,10 @@ import { OpenAIEmbeddings } from "../../../embeddings/openai.js";
 import { SelfQueryRetriever } from "../index.js";
 import { OpenAI } from "../../../llms/openai.js";
 import { SupabaseTranslator } from "../supabase.js";
-import { SupabaseFilter, SupabaseVectorStore } from "../../../vectorstores/supabase.js";
+import {
+  SupabaseFilter,
+  SupabaseVectorStore,
+} from "../../../vectorstores/supabase.js";
 
 test("Supabase Store Self Query Retriever Test", async () => {
   const docs = [
@@ -52,14 +55,13 @@ test("Supabase Store Self Query Retriever Test", async () => {
       },
     }),
     new Document({
-      pageContent:
-        "10x the previous gecs",
+      pageContent: "10x the previous gecs",
       metadata: {
         year: 2023,
         title: "10000 gecs",
         artist: "100 gecs",
         rating: 9.9,
-        type: "album"
+        type: "album",
       },
     }),
   ];
@@ -143,17 +145,32 @@ test("Supabase Store Self Query Retriever Test With Default Filter", async () =>
     new Document({
       pageContent:
         "A bunch of scientists bring back dinosaurs and mayhem breaks loose",
-      metadata: { type: "movie", year: 1993, rating: 7.7, genre: "science fiction" },
+      metadata: {
+        type: "movie",
+        year: 1993,
+        rating: 7.7,
+        genre: "science fiction",
+      },
     }),
     new Document({
       pageContent:
         "Leo DiCaprio gets lost in a dream within a dream within a dream within a ...",
-      metadata: { type: "movie", year: 2010, director: "Christopher Nolan", rating: 8.2 },
+      metadata: {
+        type: "movie",
+        year: 2010,
+        director: "Christopher Nolan",
+        rating: 8.2,
+      },
     }),
     new Document({
       pageContent:
         "A psychologist / detective gets lost in a series of dreams within dreams within dreams and Inception reused the idea",
-      metadata: { type: "movie", year: 2006, director: "Satoshi Kon", rating: 8.6 },
+      metadata: {
+        type: "movie",
+        year: 2006,
+        director: "Satoshi Kon",
+        rating: 8.6,
+      },
     }),
     new Document({
       pageContent:
@@ -183,14 +200,13 @@ test("Supabase Store Self Query Retriever Test With Default Filter", async () =>
       },
     }),
     new Document({
-      pageContent:
-        "10x the previous gecs",
+      pageContent: "10x the previous gecs",
       metadata: {
         year: 2023,
         title: "10000 gecs",
         artist: "100 gecs",
         rating: 9.9,
-        type: "album"
+        type: "album",
       },
     }),
   ];
@@ -247,9 +263,10 @@ test("Supabase Store Self Query Retriever Test With Default Filter", async () =>
     attributeInfo,
     structuredQueryTranslator: new SupabaseTranslator(),
     searchParams: {
-      filter: (rpc: SupabaseFilter) => rpc.filter("metadata->>type", "eq", "movie"),
-      mergeFilterMethod: "and"
-    }
+      filter: (rpc: SupabaseFilter) =>
+        rpc.filter("metadata->>type", "eq", "movie"),
+      mergeFilterMethod: "and",
+    },
   });
 
   const query1 = await selfQueryRetriever.getRelevantDocuments(

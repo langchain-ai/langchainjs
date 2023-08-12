@@ -111,22 +111,42 @@ test("Memory Vector Store Self Query Retriever Test With Default Filter", async 
     new Document({
       pageContent:
         "A bunch of scientists bring back dinosaurs and mayhem breaks loose",
-      metadata: { year: 1993, rating: 7.7, genre: "science fiction", type: "movie" },
+      metadata: {
+        year: 1993,
+        rating: 7.7,
+        genre: "science fiction",
+        type: "movie",
+      },
     }),
     new Document({
       pageContent:
         "Leo DiCaprio gets lost in a dream within a dream within a dream within a ...",
-      metadata: { year: 2010, director: "Christopher Nolan", rating: 8.2, type: "movie" },
+      metadata: {
+        year: 2010,
+        director: "Christopher Nolan",
+        rating: 8.2,
+        type: "movie",
+      },
     }),
     new Document({
       pageContent:
         "A psychologist / detective gets lost in a series of dreams within dreams within dreams and Inception reused the idea",
-      metadata: { year: 2006, director: "Satoshi Kon", rating: 8.6, type: "movie" },
+      metadata: {
+        year: 2006,
+        director: "Satoshi Kon",
+        rating: 8.6,
+        type: "movie",
+      },
     }),
     new Document({
       pageContent:
         "A bunch of normal-sized women are supremely wholesome and some men pine after them",
-      metadata: { year: 2019, director: "Greta Gerwig", rating: 8.3, type: "movie" },
+      metadata: {
+        year: 2019,
+        director: "Greta Gerwig",
+        rating: 8.3,
+        type: "movie",
+      },
     }),
     new Document({
       pageContent: "Toys come alive and have a blast doing so",
@@ -140,18 +160,17 @@ test("Memory Vector Store Self Query Retriever Test With Default Filter", async 
         director: "Andrei Tarkovsky",
         genre: "science fiction",
         rating: 9.9,
-        type: "movie"
+        type: "movie",
       },
     }),
     new Document({
-      pageContent:
-        "10x the previous gecs",
+      pageContent: "10x the previous gecs",
       metadata: {
         year: 2023,
         title: "10000 gecs",
         artist: "100 gecs",
         rating: 9.9,
-        type: "album"
+        type: "album",
       },
     }),
   ];
@@ -198,8 +217,8 @@ test("Memory Vector Store Self Query Retriever Test With Default Filter", async 
     structuredQueryTranslator: new FunctionalTranslator(),
     searchParams: {
       filter: (doc: Document) => doc.metadata && doc.metadata.type === "movie",
-      mergeFilterMethod: "and"
-    }
+      mergeFilterMethod: "and",
+    },
   });
 
   const query1 = await selfQueryRetriever.getRelevantDocuments(
@@ -225,4 +244,4 @@ test("Memory Vector Store Self Query Retriever Test With Default Filter", async 
   );
   console.log(query4);
   expect(query4.length).toBeGreaterThan(0); // this one should return documents since default filter takes over
-})
+});

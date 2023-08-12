@@ -152,7 +152,7 @@ export class WeaviateTranslator extends BaseTranslator {
         valueNumber: parseFloat(comparison.value as string),
       };
     }
-    console.log({ v: comparison.value, type: typeof comparison.value })
+    console.log({ v: comparison.value, type: typeof comparison.value });
     throw new Error("Value type is not supported");
   }
 
