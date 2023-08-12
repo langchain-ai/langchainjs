@@ -3,7 +3,8 @@ Here's a simple example:
 ```typescript
 import { PromptTemplate } from "langchain/prompts";
 
-const prompt = PromptTemplate.fromTemplate(`You are a naming consultant for new companies.
+const prompt = PromptTemplate.fromTemplate<{product: string}>(
+  `You are a naming consultant for new companies.
 What is a good name for a company that makes {product}?`
 );
 
@@ -80,6 +81,14 @@ console.log(formattedPromptTemplate);
 // "Tell me a funny joke about chickens."
 ```
 
+**Note:** If you're using TypeScript, keep in mind if you use `.fromTemplate` in this way, the compiler will not be able to automatically infer what inputs
+are required. To get around this, you can manually specify a type parameter like this:
+
+```typescript
+const template = "Tell me a {adjective} joke about {content}.";
+const promptTemplate = PromptTemplate.fromTemplate<{ adjective: string, content: string }>(template);
+```
+
 You can create custom prompt templates that format the prompt in any way you want. For more information, see [Custom Prompt Templates](/docs/modules/model_io/prompts/prompt_templates).
 
 ## Chat prompt template
@@ -131,11 +140,14 @@ const systemMessagePrompt2 = new SystemMessagePromptTemplate({
 });
 ```
 
-After that, you can build a `ChatPromptTemplate` from one or more `MessagePromptTemplates`. You can use `ChatPromptTemplate`'s `format_prompt` -- this returns a `PromptValue`, which you can convert to a string or Message object, depending on whether you want to use the formatted value as input to an llm or chat model.
+After that, you can build a `ChatPromptTemplate` from one or more `MessagePromptTemplates`. You can use `ChatPromptTemplate`'s `formatPrompt` method -- this returns a `PromptValue`, which you can convert to a string or Message object, depending on whether you want to use the formatted value as input to an llm or chat model.
 
 
 ```typescript
-const chatPrompt = ChatPromptTemplate.fromPromptMessages([systemMessagePrompt, humanMessagePrompt]);
+const chatPrompt = ChatPromptTemplate.fromPromptMessages([
+  systemMessagePrompt,
+  humanMessagePrompt
+]);
 
 // Format the messages
 const formattedChatPrompt = await chatPrompt.formatMessages({
@@ -156,4 +168,17 @@ console.log(formattedChatPrompt);
     }
   ]
 */
+```
+
+**Note:** Similarly to the `PromptTemplate` example, if using TypeScript, you can add typing to prompts created with `.fromPromptMessages` by passing a type parameter like this:
+
+```typescript
+const chatPrompt = ChatPromptTemplate.fromPromptMessages<{
+  input_language: string,
+  output_language: string,
+  text: string
+}>([
+  systemMessagePrompt,
+  humanMessagePrompt
+]);
 ```

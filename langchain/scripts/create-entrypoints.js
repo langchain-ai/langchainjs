@@ -51,6 +51,7 @@ const entrypoints = {
   "llms/aleph_alpha": "llms/aleph_alpha",
   "llms/cohere": "llms/cohere",
   "llms/hf": "llms/hf",
+  "llms/raycast": "llms/raycast",
   "llms/ollama": "llms/ollama",
   "llms/replicate": "llms/replicate",
   "llms/googlevertexai": "llms/googlevertexai",
@@ -84,8 +85,10 @@ const entrypoints = {
   "vectorstores/typesense": "vectorstores/typesense",
   "vectorstores/singlestore": "vectorstores/singlestore",
   "vectorstores/tigris": "vectorstores/tigris",
+  "vectorstores/usearch": "vectorstores/usearch",
   "vectorstores/vectara": "vectorstores/vectara",
   "vectorstores/xata": "vectorstores/xata",
+  "vectorstores/zep": "vectorstores/zep",
   // text_splitter
   text_splitter: "text_splitter",
   // memory
@@ -97,8 +100,11 @@ const entrypoints = {
   document_loaders: "document_loaders/index",
   "document_loaders/base": "document_loaders/base",
   "document_loaders/web/apify_dataset": "document_loaders/web/apify_dataset",
-  "document_loaders/web/azure_blob_storage_container": "document_loaders/web/azure_blob_storage_container",
-  "document_loaders/web/azure_blob_storage_file": "document_loaders/web/azure_blob_storage_file",
+  "document_loaders/web/assemblyai": "document_loaders/web/assemblyai",
+  "document_loaders/web/azure_blob_storage_container":
+    "document_loaders/web/azure_blob_storage_container",
+  "document_loaders/web/azure_blob_storage_file":
+    "document_loaders/web/azure_blob_storage_file",
   "document_loaders/web/cheerio": "document_loaders/web/cheerio",
   "document_loaders/web/puppeteer": "document_loaders/web/puppeteer",
   "document_loaders/web/playwright": "document_loaders/web/playwright",
@@ -129,8 +135,7 @@ const entrypoints = {
   "document_loaders/fs/notion": "document_loaders/fs/notion",
   "document_loaders/fs/unstructured": "document_loaders/fs/unstructured",
   // document_transformers
-  "document_transformers/html_to_text":
-    "document_transformers/html_to_text",
+  "document_transformers/html_to_text": "document_transformers/html_to_text",
   "document_transformers/openai_functions":
     "document_transformers/openai_functions",
   // chat_models
@@ -165,6 +170,7 @@ const entrypoints = {
   "retrievers/databerry": "retrievers/databerry",
   "retrievers/contextual_compression": "retrievers/contextual_compression",
   "retrievers/document_compressors": "retrievers/document_compressors/index",
+  "retrievers/parent_document": "retrievers/parent_document",
   "retrievers/time_weighted": "retrievers/time_weighted",
   "retrievers/document_compressors/chain_extract":
     "retrievers/document_compressors/chain_extract",
@@ -195,6 +201,7 @@ const entrypoints = {
   "stores/message/ioredis": "stores/message/ioredis",
   "stores/message/upstash_redis": "stores/message/upstash_redis",
   "stores/message/planetscale": "stores/message/planetscale",
+  "stores/message/xata": "stores/message/xata",
   // utilities
   "util/math": "util/math",
   // experimental
@@ -243,6 +250,7 @@ const requiresOptionalDependency = [
   "llms/googlevertexai",
   "llms/googlepalm",
   "llms/hf",
+  "llms/raycast",
   "llms/replicate",
   "llms/sagemaker_endpoint",
   "prompts/load",
@@ -266,8 +274,11 @@ const requiresOptionalDependency = [
   "vectorstores/singlestore",
   "vectorstores/typesense",
   "vectorstores/tigris",
+  "vectorstores/usearch",
+  "vectorstores/zep",
   "memory/zep",
   "document_loaders/web/apify_dataset",
+  "document_loaders/web/assemblyai",
   "document_loaders/web/azure_blob_storage_container",
   "document_loaders/web/azure_blob_storage_file",
   "document_loaders/web/cheerio",
@@ -325,6 +336,7 @@ const requiresOptionalDependency = [
   "stores/message/ioredis",
   "stores/message/upstash_redis",
   "stores/message/planetscale",
+  "stores/message/xata",
   "experimental/multimodal_embeddings/googlevertexai",
 ];
 

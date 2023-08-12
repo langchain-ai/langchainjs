@@ -12,7 +12,8 @@ import { PromptTemplate } from "./prompt.js";
 import { SerializedFewShotTemplate } from "./serde.js";
 import { Example, InputValues, PartialValues } from "../schema/index.js";
 
-export interface FewShotPromptTemplateInput extends BasePromptTemplateInput {
+export interface FewShotPromptTemplateInput
+  extends BasePromptTemplateInput<InputValues> {
   /**
    * Examples to format into the prompt. Exactly one of this or
    * {@link exampleSelector} must be
@@ -104,7 +105,7 @@ export class FewShotPromptTemplate
     }
 
     if (this.validateTemplate) {
-      let totalInputVariables = this.inputVariables;
+      let totalInputVariables: string[] = this.inputVariables;
       if (this.partialVariables) {
         totalInputVariables = totalInputVariables.concat(
           Object.keys(this.partialVariables)
@@ -137,14 +138,20 @@ export class FewShotPromptTemplate
     );
   }
 
-  async partial(values: PartialValues): Promise<FewShotPromptTemplate> {
-    const promptDict: FewShotPromptTemplate = { ...this };
-    promptDict.inputVariables = this.inputVariables.filter(
+  async partial<NewPartialVariableName extends string>(
+    values: PartialValues<NewPartialVariableName>
+  ) {
+    const newInputVariables = this.inputVariables.filter(
       (iv) => !(iv in values)
     );
-    promptDict.partialVariables = {
+    const newPartialVariables = {
       ...(this.partialVariables ?? {}),
       ...values,
+    };
+    const promptDict = {
+      ...this,
+      inputVariables: newInputVariables,
+      partialVariables: newPartialVariables,
     };
     return new FewShotPromptTemplate(promptDict);
   }

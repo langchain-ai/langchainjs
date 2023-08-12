@@ -79,6 +79,25 @@ test.skip("Test Milvus.fromExistingCollection", async () => {
   expect(resultThreeMetadatas[0].id).toEqual(1);
 });
 
+test.skip("Test Milvus.deleteData", async () => {
+  const milvus = await Milvus.fromExistingCollection(embeddings, {
+    collectionName,
+  });
+
+  const query = "who is achilles?";
+  const result = await milvus.similaritySearch(query, 1);
+  const resultMetadatas = result.map(({ metadata }) => metadata);
+  const primaryId = resultMetadatas[0].langchain_primaryid;
+  expect(resultMetadatas.length).toBe(1);
+  expect(resultMetadatas[0].id).toEqual(1);
+
+  await milvus.delete({ filter: `langchain_primaryid in [${primaryId}]` });
+
+  const resultTwo = await milvus.similaritySearch(query, 1);
+  const resultTwoMetadatas = resultTwo.map(({ metadata }) => metadata);
+  expect(resultTwoMetadatas[0].id).not.toEqual(1);
+});
+
 afterAll(async () => {
   // eslint-disable-next-line no-process-env
   if (!process.env.MILVUS_URL) return;

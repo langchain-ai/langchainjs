@@ -4196,13 +4196,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@getzep/zep-js@npm:0.4.1, @getzep/zep-js@npm:^0.4.1":
+"@getzep/zep-js@npm:0.4.1":
   version: 0.4.1
   resolution: "@getzep/zep-js@npm:0.4.1"
   dependencies:
     axios: ^1.4.0
     typescript: ^5.0.4
   checksum: 17296ddcff196ff2b8d9386775d14cdb104cebef07eabf0d6efc26d1d4824350eb902918a453fcfb6f4527f31d7312a157e9a09d1a8c151434701c2f5182d772
+  languageName: node
+  linkType: hard
+
+"@getzep/zep-js@npm:^0.6.3":
+  version: 0.6.3
+  resolution: "@getzep/zep-js@npm:0.6.3"
+  dependencies:
+    semver: ^7.5.4
+    typescript: ^5.1.6
+  checksum: 37b18e9dbd7899eefe56888f1fd1ffb89112be80455d5ddb9c75db27250764455e035567065a7ac6fdfc0e18b5877a3ef60a53a9d5e0f77b5395469b0389fcb7
   languageName: node
   linkType: hard
 
@@ -5494,6 +5504,28 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@raycast/api@npm:^1.55.2":
+  version: 1.55.2
+  resolution: "@raycast/api@npm:1.55.2"
+  dependencies:
+    "@types/node": 18.8.3
+    "@types/react": 18.0.9
+    react: 18.1.0
+    react-reconciler: 0.28.0
+  peerDependencies:
+    "@types/node": 18.8.3
+    "@types/react": 18.0.9
+  peerDependenciesMeta:
+    "@types/node":
+      optional: true
+    "@types/react":
+      optional: true
+  bin:
+    ray: bin/ray
+  checksum: 1154dc3d02d3ca1a9ee11d638682058464e2c01fb30df43b1f2ef0e6205744f34fcef10a413e16bfc93a08d19d6e569bbe7151660587a0d50c8df074f21c663d
+  languageName: node
+  linkType: hard
+
 "@redis/bloom@npm:1.2.0":
   version: 1.2.0
   resolution: "@redis/bloom@npm:1.2.0"
@@ -6166,10 +6198,24 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/node@npm:18.8.3":
+  version: 18.8.3
+  resolution: "@types/node@npm:18.8.3"
+  checksum: 9201adc6dc389644c9f478f950ef8926a93e5827865dcd80d7d12fefacab665c96879c87cd6ec74d5eccdd998c4603d02e1e07a35d71a63fe4c20670a381f6ef
+  languageName: node
+  linkType: hard
+
 "@types/node@npm:^18.11.18":
   version: 18.16.19
   resolution: "@types/node@npm:18.16.19"
   checksum: 63c31f09616508aa7135380a4c79470a897b75f9ff3a70eb069e534dfabdec3f32fb0f9df5939127f1086614d980ddea0fa5e8cc29a49103c4f74cd687618aaf
+  languageName: node
+  linkType: hard
+
+"@types/node@npm:^20.4.5":
+  version: 20.4.8
+  resolution: "@types/node@npm:20.4.8"
+  checksum: 86a3963c0c7af3410553d1dfa4b018a20b3cb3ab4d8e8ffe27408b6338c5de0374b0bf379bc705da2205b466daa751ccfe062f453ba9bde34fdb0e5163ca6a68
   languageName: node
   linkType: hard
 
@@ -6285,6 +6331,17 @@ __metadata:
     "@types/scheduler": "*"
     csstype: ^3.0.2
   checksum: 4fbd2b2b6a26378bdfde121081a6406ec2d39e4ba87ea5f6897ab7bb2198713165e6fd703ad4ed7ba1d4f23ef54a4c9f108f3105c7ed8e136411ee6bdebc5669
+  languageName: node
+  linkType: hard
+
+"@types/react@npm:18.0.9":
+  version: 18.0.9
+  resolution: "@types/react@npm:18.0.9"
+  dependencies:
+    "@types/prop-types": "*"
+    "@types/scheduler": "*"
+    csstype: ^3.0.2
+  checksum: 162364dad716d9017ee34aabf2ea37499709ebbdef70392ae1b39225985971e1a46f121efb9c5c7da92144ee1d96d4525df806a7c1c03a5db7fd31dd034ddc7a
   languageName: node
   linkType: hard
 
@@ -7454,6 +7511,13 @@ __metadata:
   dependencies:
     file-uri-to-path: 1.0.0
   checksum: 65b6b48095717c2e6105a021a7da4ea435aa8d3d3cd085cb9e85bcb6e5773cf318c4745c3f7c504412855940b585bdf9b918236612a1c7a7942491de176f1ae7
+  languageName: node
+  linkType: hard
+
+"bindings@npm:~1.2.1":
+  version: 1.2.1
+  resolution: "bindings@npm:1.2.1"
+  checksum: fb542a5721cbeb0a75607a0447ac4d12e3ba8fe12ddf2adbe76814fa9cf3d1236a03ab51d55a7fef1b2d1d9917f4315e8b1cf8b74ff21a6cf9e722e7e363ba5f
   languageName: node
   linkType: hard
 
@@ -10061,6 +10125,7 @@ __metadata:
     "@pinecone-database/pinecone": ^0.0.14
     "@planetscale/database": ^1.8.0
     "@prisma/client": ^4.11.0
+    "@raycast/api": ^1.55.2
     "@supabase/supabase-js": ^2.10.0
     "@tensorflow/tfjs-backend-cpu": ^4.4.0
     "@tigrisdata/vector": ^1.1.0
@@ -13115,7 +13180,7 @@ __metadata:
     "@elastic/elasticsearch": ^8.4.0
     "@faker-js/faker": ^7.6.0
     "@getmetal/metal-sdk": ^4.0.0
-    "@getzep/zep-js": ^0.4.1
+    "@getzep/zep-js": ^0.6.3
     "@gomomento/sdk": ^1.23.0
     "@google-ai/generativelanguage": ^0.2.1
     "@google-cloud/storage": ^6.10.1
@@ -13126,6 +13191,7 @@ __metadata:
     "@pinecone-database/pinecone": ^0.0.14
     "@planetscale/database": ^1.8.0
     "@qdrant/js-client-rest": ^1.2.0
+    "@raycast/api": ^1.55.2
     "@supabase/postgrest-js": ^1.1.1
     "@supabase/supabase-js": ^2.10.0
     "@tensorflow-models/universal-sentence-encoder": ^1.3.3
@@ -13214,9 +13280,10 @@ __metadata:
     typeorm: ^0.3.12
     typescript: ^5.0.0
     typesense: ^1.5.3
+    usearch: ^1.1.1
     uuid: ^9.0.0
     vectordb: ^0.1.4
-    weaviate-ts-client: ^1.0.0
+    weaviate-ts-client: ^1.4.0
     yaml: ^2.2.1
     zod: ^3.21.4
     zod-to-json-schema: ^3.20.4
@@ -13231,7 +13298,7 @@ __metadata:
     "@clickhouse/client": ^0.0.14
     "@elastic/elasticsearch": ^8.4.0
     "@getmetal/metal-sdk": "*"
-    "@getzep/zep-js": ^0.4.1
+    "@getzep/zep-js": ^0.6.3
     "@gomomento/sdk": ^1.23.0
     "@google-ai/generativelanguage": ^0.2.1
     "@google-cloud/storage": ^6.10.1
@@ -13241,6 +13308,7 @@ __metadata:
     "@pinecone-database/pinecone": "*"
     "@planetscale/database": ^1.8.0
     "@qdrant/js-client-rest": ^1.2.0
+    "@raycast/api": ^1.55.2
     "@supabase/postgrest-js": ^1.1.1
     "@supabase/supabase-js": ^2.10.0
     "@tensorflow-models/universal-sentence-encoder": "*"
@@ -13281,8 +13349,9 @@ __metadata:
     srt-parser-2: ^1.2.2
     typeorm: ^0.3.12
     typesense: ^1.5.3
+    usearch: ^1.1.1
     vectordb: ^0.1.4
-    weaviate-ts-client: ^1.0.0
+    weaviate-ts-client: ^1.4.0
   peerDependenciesMeta:
     "@aws-sdk/client-dynamodb":
       optional: true
@@ -13323,6 +13392,8 @@ __metadata:
     "@planetscale/database":
       optional: true
     "@qdrant/js-client-rest":
+      optional: true
+    "@raycast/api":
       optional: true
     "@supabase/postgrest-js":
       optional: true
@@ -13403,6 +13474,8 @@ __metadata:
     typeorm:
       optional: true
     typesense:
+      optional: true
+    usearch:
       optional: true
     vectordb:
       optional: true
@@ -14673,6 +14746,15 @@ __metadata:
   version: 3.1.1
   resolution: "node-abort-controller@npm:3.1.1"
   checksum: 2c340916af9710328b11c0828223fc65ba320e0d082214a211311bf64c2891028e42ef276b9799188c4ada9e6e1c54cf7a0b7c05dd9d59fcdc8cd633304c8047
+  languageName: node
+  linkType: hard
+
+"node-addon-api@npm:^3.0.0":
+  version: 3.2.1
+  resolution: "node-addon-api@npm:3.2.1"
+  dependencies:
+    node-gyp: latest
+  checksum: 2369986bb0881ccd9ef6bacdf39550e07e089a9c8ede1cbc5fc7712d8e2faa4d50da0e487e333d4125f8c7a616c730131d1091676c9d499af1d74560756b4a18
   languageName: node
   linkType: hard
 
@@ -16348,6 +16430,27 @@ __metadata:
   languageName: node
   linkType: hard
 
+"react-reconciler@npm:0.28.0":
+  version: 0.28.0
+  resolution: "react-reconciler@npm:0.28.0"
+  dependencies:
+    loose-envify: ^1.1.0
+    scheduler: ^0.22.0
+  peerDependencies:
+    react: ^18.1.0
+  checksum: 6421f9500827219556ead3d86cbdf0553c47d633ecda2144720bf235d404f5e4e1e585336c4dfa80e26a04f1a6117c455a60964917d5600c73a91d8374f0232f
+  languageName: node
+  linkType: hard
+
+"react@npm:18.1.0":
+  version: 18.1.0
+  resolution: "react@npm:18.1.0"
+  dependencies:
+    loose-envify: ^1.1.0
+  checksum: 5bb296b561b43ef2220395da4faac86c14a087c8c80e1a7598a5740f01ee605c11eaf249985c1e2000971c4cd32ccb46d40f00479bbd9fb6b1c7cf857393b7d4
+  languageName: node
+  linkType: hard
+
 "react@npm:18.2.0":
   version: 18.2.0
   resolution: "react@npm:18.2.0"
@@ -16898,6 +17001,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"scheduler@npm:^0.22.0":
+  version: 0.22.0
+  resolution: "scheduler@npm:0.22.0"
+  dependencies:
+    loose-envify: ^1.1.0
+  checksum: a8ef5cab769c020cd6382ad9ecc3f72dbde56a50a36639b3a42ad9c11f7724f03700bcad373044059b8067d4a6365154dc7c0ca8027ef20ff4900cf58a0fc2c5
+  languageName: node
+  linkType: hard
+
 "scheduler@npm:^0.23.0":
   version: 0.23.0
   resolution: "scheduler@npm:0.23.0"
@@ -16986,7 +17098,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"semver@npm:^7.3.8, semver@npm:^7.5.3":
+"semver@npm:^7.3.8, semver@npm:^7.5.3, semver@npm:^7.5.4":
   version: 7.5.4
   resolution: "semver@npm:7.5.4"
   dependencies:
@@ -18444,6 +18556,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"typescript@npm:^5.1.6":
+  version: 5.1.6
+  resolution: "typescript@npm:5.1.6"
+  bin:
+    tsc: bin/tsc
+    tsserver: bin/tsserver
+  checksum: b2f2c35096035fe1f5facd1e38922ccb8558996331405eb00a5111cc948b2e733163cc22fab5db46992aba7dd520fff637f2c1df4996ff0e134e77d3249a7350
+  languageName: node
+  linkType: hard
+
 "typescript@patch:typescript@^4.9.4#~builtin<compat/typescript>":
   version: 4.9.5
   resolution: "typescript@patch:typescript@npm%3A4.9.5#~builtin<compat/typescript>::version=4.9.5&hash=23ec76"
@@ -18471,6 +18593,16 @@ __metadata:
     tsc: bin/tsc
     tsserver: bin/tsserver
   checksum: 9ec0a8eed38d46cc2c8794555b7674e413604c56c159f71b8ff21ce7f17334a44127a68724cb2ef8221ff3b19369f8f05654e8a5266621d7d962aeed889bd630
+  languageName: node
+  linkType: hard
+
+"typescript@patch:typescript@^5.1.6#~builtin<compat/typescript>":
+  version: 5.1.6
+  resolution: "typescript@patch:typescript@npm%3A5.1.6#~builtin<compat/typescript>::version=5.1.6&hash=1f5320"
+  bin:
+    tsc: bin/tsc
+    tsserver: bin/tsserver
+  checksum: 21e88b0a0c0226f9cb9fd25b9626fb05b4c0f3fddac521844a13e1f30beb8f14e90bd409a9ac43c812c5946d714d6e0dee12d5d02dfc1c562c5aacfa1f49b606
   languageName: node
   linkType: hard
 
@@ -18716,6 +18848,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"usearch@npm:^1.1.1":
+  version: 1.1.1
+  resolution: "usearch@npm:1.1.1"
+  dependencies:
+    "@types/node": ^20.4.5
+    bindings: ~1.2.1
+    node-addon-api: ^3.0.0
+    node-gyp: latest
+  checksum: e8715ffbc9377958677c45656d01479131e0692d7e6857427712f4bb5ff116e094d9e71cd97585264ec4af43e5695dba7dc287e853599a6aee10ab6075ad4cb8
+  languageName: node
+  linkType: hard
+
 "utf-8-validate@npm:^5.0.2":
   version: 5.0.10
   resolution: "utf-8-validate@npm:5.0.10"
@@ -18950,6 +19094,17 @@ __metadata:
     isomorphic-fetch: ^3.0.0
     tar: ^6.1.13
   checksum: ffa3c13913cf8999a1bfd3db1cc1952d7bfd4e6ca3d2f6eadfb17a56595bfc74fd9f068d1e9d73677b87281d53486ba333d5d5aedb31f072f05d6a5d8e7b2502
+  languageName: node
+  linkType: hard
+
+"weaviate-ts-client@npm:^1.4.0":
+  version: 1.4.0
+  resolution: "weaviate-ts-client@npm:1.4.0"
+  dependencies:
+    graphql-request: ^5.1.0
+    isomorphic-fetch: ^3.0.0
+    uuid: ^9.0.0
+  checksum: aef68e7d77ac8b3d42e1a3dd3c4dcb7a0c74b96c1a3d7b11e52313c7dfa9a9b3fc9ba5f3048628d67193ca6c84bb8a7eca641dacfdc459cfe26ac2fe20b07f11
   languageName: node
   linkType: hard
 
