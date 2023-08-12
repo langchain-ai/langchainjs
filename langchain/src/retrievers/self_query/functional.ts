@@ -9,6 +9,7 @@ import {
 } from "../../chains/query_constructor/ir.js";
 import { Document } from "../../document.js";
 import { BaseTranslator } from "./base.js";
+import { isFilterEmpty } from "./utils.js";
 
 type ValueType = {
   eq: string | number;
@@ -141,5 +142,34 @@ export class FunctionalTranslator extends BaseTranslator {
       throw new Error("Structured query filter is not a function");
     }
     return { filter: filterFunction as FunctionFilter };
+  }
+
+  mergeFilters(
+    defaultFilter: FunctionFilter,
+    generatedFilter: FunctionFilter,
+    mergeType = "and"
+  ): FunctionFilter | undefined {
+    if (isFilterEmpty(defaultFilter) && isFilterEmpty(generatedFilter)) {
+      return undefined;
+    }
+    if (isFilterEmpty(defaultFilter) || mergeType === "replace") {
+      if (isFilterEmpty(generatedFilter)) {
+        return undefined;
+      }
+      return generatedFilter;
+    }
+    if (isFilterEmpty(generatedFilter)) {
+      return defaultFilter;
+    }
+
+    if (mergeType === "and") {
+      return (document: Document) =>
+        defaultFilter(document) && generatedFilter(document);
+    } else if (mergeType === "or") {
+      return (document: Document) =>
+        defaultFilter(document) || generatedFilter(document);
+    } else {
+      throw new Error("Unknown merge type");
+    }
   }
 }

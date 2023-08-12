@@ -10,6 +10,7 @@ import {
   Visitor,
 } from "../../chains/query_constructor/ir.js";
 import { BaseTranslator } from "./base.js";
+import { isFilterEmpty } from "./utils.js";
 
 type AllowedOperator = Exclude<Operator, NOT>;
 
@@ -43,11 +44,24 @@ export type WeaviateComparisonResult = {
 } & ExclusiveOperatorValue;
 
 export type WeaviateStructuredQueryResult = {
-  filter?:
-    | WeaviateComparisonResult
-    | WeaviateOperationResult
-    | WeaviateStructuredQueryResult;
+  filter?: {
+    where?: WeaviateComparisonResult | WeaviateOperationResult;
+  };
 };
+
+function isInt(value: unknown): boolean {
+  const numberValue = parseFloat(value as string);
+  return !Number.isNaN(numberValue) && numberValue % 1 === 0;
+}
+
+function isFloat(value: unknown): boolean {
+  const numberValue = parseFloat(value as string);
+  return !Number.isNaN(numberValue) && numberValue % 1 !== 0;
+}
+
+function isString(value: unknown): boolean {
+  return typeof value === "string" && Number.isNaN(parseFloat(value as string));
+}
 
 export class WeaviateTranslator extends BaseTranslator {
   declare VisitOperationOutput: WeaviateOperationResult;
@@ -117,28 +131,28 @@ export class WeaviateTranslator extends BaseTranslator {
   }
 
   visitComparison(comparison: Comparison): this["VisitComparisonOutput"] {
-    if (typeof comparison.value === "string") {
+    if (isString(comparison.value)) {
       return {
         path: [comparison.attribute],
         operator: this.formatFunction(comparison.comparator),
-        valueText: comparison.value,
+        valueText: comparison.value as string,
       };
     }
-    if (typeof comparison.value === "number") {
-      if (Number.isInteger(comparison.value)) {
-        return {
-          path: [comparison.attribute],
-          operator: this.formatFunction(comparison.comparator),
-          valueInt: comparison.value,
-        };
-      } else {
-        return {
-          path: [comparison.attribute],
-          operator: this.formatFunction(comparison.comparator),
-          valueNumber: comparison.value,
-        };
-      }
+    if (isInt(comparison.value)) {
+      return {
+        path: [comparison.attribute],
+        operator: this.formatFunction(comparison.comparator),
+        valueInt: parseInt(comparison.value as string, 10),
+      };
     }
+    if (isFloat(comparison.value)) {
+      return {
+        path: [comparison.attribute],
+        operator: this.formatFunction(comparison.comparator),
+        valueNumber: parseFloat(comparison.value as string),
+      };
+    }
+    console.log({ v: comparison.value, type: typeof comparison.value })
     throw new Error("Value type is not supported");
   }
 
@@ -152,5 +166,48 @@ export class WeaviateTranslator extends BaseTranslator {
       };
     }
     return nextArg;
+  }
+
+  mergeFilters(
+    defaultFilter: this["VisitStructuredQueryOutput"]["filter"] | undefined,
+    generatedFilter: this["VisitStructuredQueryOutput"]["filter"] | undefined,
+    mergeType = "and"
+  ): this["VisitStructuredQueryOutput"]["filter"] | undefined {
+    if (
+      isFilterEmpty(defaultFilter?.where) &&
+      isFilterEmpty(generatedFilter?.where)
+    ) {
+      return undefined;
+    }
+    if (isFilterEmpty(defaultFilter?.where) || mergeType === "replace") {
+      if (isFilterEmpty(generatedFilter?.where)) {
+        return undefined;
+      }
+      return generatedFilter;
+    }
+    if (isFilterEmpty(generatedFilter?.where)) {
+      return defaultFilter;
+    }
+    const merged: WeaviateOperationResult = {
+      operator: "And",
+      operands: [
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        defaultFilter!.where,
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        generatedFilter!.where,
+      ],
+    };
+    if (mergeType === "and") {
+      return {
+        where: merged,
+      };
+    } else if (mergeType === "or") {
+      merged.operator = "Or";
+      return {
+        where: merged,
+      };
+    } else {
+      throw new Error("Unknown merge type");
+    }
   }
 }

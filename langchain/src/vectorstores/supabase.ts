@@ -54,7 +54,10 @@ export class SupabaseVectorStore extends VectorStore {
     this.filter = args.filter;
   }
 
-  async addDocuments(documents: Document[], options?: { ids?: string[] }) {
+  async addDocuments(
+    documents: Document[],
+    options?: { ids?: string[] | number[] }
+  ) {
     const texts = documents.map(({ pageContent }) => pageContent);
     return this.addVectors(
       await this.embeddings.embedDocuments(texts),
@@ -66,7 +69,7 @@ export class SupabaseVectorStore extends VectorStore {
   async addVectors(
     vectors: number[][],
     documents: Document[],
-    options?: { ids?: string[] }
+    options?: { ids?: string[] | number[] }
   ) {
     const rows = vectors.map((embedding, idx) => ({
       content: documents[idx].pageContent,
@@ -79,9 +82,9 @@ export class SupabaseVectorStore extends VectorStore {
     const chunkSize = 500;
     let returnedIds: string[] = [];
     for (let i = 0; i < rows.length; i += chunkSize) {
-      const chunk = rows.slice(i, i + chunkSize).map((row) => {
+      const chunk = rows.slice(i, i + chunkSize).map((row, innerIdx) => {
         if (options?.ids) {
-          return { id: options.ids[i], ...row };
+          return { id: options.ids[i + innerIdx], ...row };
         }
         return row;
       });

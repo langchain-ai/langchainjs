@@ -118,5 +118,9 @@ test("Pinecone Store Self Query Retriever Test", async () => {
   const query4 = await selfQueryRetriever.getRelevantDocuments(
     "Which movies are either comedy or drama and are less than 90 minutes?"
   );
-  console.log(query1, query2, query3, query4);
+  const query5 = await selfQueryRetriever.getRelevantDocuments(
+    "Awawawawa hello hello hello huh where am i?"
+  );
+  console.log(query1, query2, query3, query4, query5); // query 5 should return empty array
+  expect(query5.length).toBe(0);
 });

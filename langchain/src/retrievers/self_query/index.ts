@@ -23,87 +23,8 @@ export interface SelfQueryRetrieverArgs extends BaseRetrieverInput {
   searchParams?: {
     k?: number;
     filter?: VectorStore["FilterType"];
+    mergeFilterMethod?: "or" | "and" | "replace";
   };
-}
-
-function isObject(obj: any): obj is object {
-  return (
-    obj &&
-    typeof obj === "object" &&
-    !Array.isArray(obj) &&
-    obj.constructor.name === "Object"
-  );
-}
-
-function isFilterEmpty(
-  filter: ((q: any) => any) | object | string | undefined
-): filter is undefined {
-  if (!filter) return true;
-  // for Milvus
-  if (typeof filter === "string" && filter.length > 0) {
-    return false;
-  }
-  if (typeof filter === "function") {
-    return false;
-  }
-  return (
-    typeof filter === "object" &&
-    filter.constructor.name === "Object" &&
-    Object.keys(filter).length === 0
-  );
-}
-
-function mergeFilters<
-  T extends ((q: any) => any) | object | string | undefined
->(a: T, b: T): ((q: any) => any) | object | string | undefined {
-  if (isFilterEmpty(a) && isFilterEmpty(b)) {
-    return undefined;
-  }
-  if (isFilterEmpty(a)) {
-    return b;
-  }
-  if (isFilterEmpty(b)) {
-    return a;
-  }
-
-  /**
-   * This is for Milvus, which uses string
-   * metadata filtering. We don't have
-   * milvus self-query retriever (yet?), but
-   * users could build their own Milvus query
-   * translator and imo I think it might be a good
-   * idea to have it to be able to return string
-   * filter.
-   *
-   * btw, since FilterType declaration includes
-   * string (which is required for Milvus),
-   * typescript will throw an error if
-   * we don't include this case.
-   */
-  if (typeof a === "string" && typeof b === "string") {
-    return `(${a}) && (${b})`;
-  }
-
-  if (typeof a === "function" && typeof b === "function") {
-    return (q: any) => {
-      // For functional filter (e.g. HNSWLib, memory, etc)
-      if (isObject(q)) {
-        return a(q) && b(q);
-      }
-
-      // For SupabaseFilterRPCCall
-      if (q.filter && typeof q.filter === "function") {
-        return b(a(q));
-      }
-      throw new Error("Unknown filter type");
-    };
-  }
-
-  if (isObject(a) && isObject(b)) {
-    return { ...a, ...b };
-  }
-
-  throw new Error("Filter types mismatch");
 }
 
 export class SelfQueryRetriever
@@ -127,6 +48,7 @@ export class SelfQueryRetriever
   searchParams?: {
     k?: number;
     filter?: VectorStore["FilterType"];
+    mergeFilterMethod?: "or" | "and" | "replace";
   } = { k: 4 };
 
   constructor(options: SelfQueryRetrieverArgs) {
@@ -156,7 +78,11 @@ export class SelfQueryRetriever
       generatedStructuredQuery
     );
 
-    const filter = mergeFilters(this.searchParams?.filter, nextArg.filter);
+    const filter = this.structuredQueryTranslator.mergeFilters(
+      this.searchParams?.filter,
+      nextArg.filter,
+      this.searchParams?.mergeFilterMethod
+    );
 
     const generatedQuery = generatedStructuredQuery.query;
     let myQuery = query;
@@ -164,6 +90,8 @@ export class SelfQueryRetriever
     if (!this.useOriginalQuery && generatedQuery && generatedQuery.length > 0) {
       myQuery = generatedQuery;
     }
+
+    console.log(JSON.stringify({ filter }))
 
     if (!filter) {
       return [];

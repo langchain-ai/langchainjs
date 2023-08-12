@@ -12,6 +12,7 @@ import {
   VisitorResult,
   VisitorStructuredQueryResult,
 } from "../../chains/query_constructor/ir.js";
+import { isFilterEmpty } from "./utils.js";
 
 export type TranslatorOpts = {
   allowedOperators: Operator[];
@@ -20,6 +21,12 @@ export type TranslatorOpts = {
 
 export abstract class BaseTranslator extends Visitor {
   abstract formatFunction(func: Operator | Comparator): string;
+
+  abstract mergeFilters(
+    defaultFilter: this["VisitStructuredQueryOutput"]["filter"] | undefined,
+    generatedFilter: this["VisitStructuredQueryOutput"]["filter"] | undefined,
+    mergeType?: "and" | "or" | "replace"
+  ): this["VisitStructuredQueryOutput"]["filter"] | undefined;
 }
 
 export class BasicTranslator extends BaseTranslator {
@@ -105,5 +112,35 @@ export class BasicTranslator extends BaseTranslator {
       };
     }
     return nextArg;
+  }
+
+  mergeFilters(
+    defaultFilter: VisitorStructuredQueryResult["filter"] | undefined,
+    generatedFilter: VisitorStructuredQueryResult["filter"] | undefined,
+    mergeType = "and"
+  ): VisitorStructuredQueryResult["filter"] | undefined {
+    if (isFilterEmpty(defaultFilter) && isFilterEmpty(generatedFilter)) {
+      return undefined;
+    }
+    if (isFilterEmpty(defaultFilter) || mergeType === "replace") {
+      if (isFilterEmpty(generatedFilter)) {
+        return undefined;
+      }
+      return generatedFilter;
+    }
+    if (isFilterEmpty(generatedFilter)) {
+      return defaultFilter;
+    }
+    if (mergeType === "and") {
+      return {
+        $and: [defaultFilter, generatedFilter],
+      };
+    } else if (mergeType === "or") {
+      return {
+        $or: [defaultFilter, generatedFilter],
+      };
+    } else {
+      throw new Error("Unknown merge type");
+    }
   }
 }

@@ -28,10 +28,7 @@ export const Comparators: { [key: string]: Comparator } = {
   gte: "gte",
 };
 
-export type VisitorResult =
-  | VisitorOperationResult
-  | VisitorComparisonResult
-  | VisitorStructuredQueryResult;
+export type VisitorResult = VisitorOperationResult | VisitorComparisonResult;
 
 export type VisitorOperationResult = {
   [operator: string]: VisitorResult[];
@@ -44,10 +41,7 @@ export type VisitorComparisonResult = {
 };
 
 export type VisitorStructuredQueryResult = {
-  filter?:
-    | VisitorStructuredQueryResult
-    | VisitorComparisonResult
-    | VisitorOperationResult;
+  filter?: VisitorComparisonResult | VisitorOperationResult;
 };
 
 export abstract class Visitor {
@@ -55,7 +49,8 @@ export abstract class Visitor {
 
   declare VisitComparisonOutput: object;
 
-  declare VisitStructuredQueryOutput: { filter?: object };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  declare VisitStructuredQueryOutput: { filter?: any };
 
   abstract allowedOperators: Operator[];
 
