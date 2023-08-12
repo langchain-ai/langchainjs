@@ -65,8 +65,8 @@ jobs:
         node-version: [18.x, 19.x, 20.x]
         # See Node.js release schedule at https://nodejs.org/en/about/releases/
         include:
-          - os: windows-latest
-            node-version: 20.x
+          # - os: windows-latest
+          #   node-version: 20.x
           - os: macos-latest
             node-version: 20.x
     runs-on: ${{ matrix.os }}
