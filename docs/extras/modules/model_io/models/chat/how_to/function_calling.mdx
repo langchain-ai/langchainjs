@@ -17,9 +17,9 @@ directly to the model and call it, as shown below.
 
 ## Usage
 
-OpenAI requires parameter schemas in the format below, where `parameters` must be in JSON Schema format.
+OpenAI requires parameter schemas in the format below, where `parameters` must be [JSON Schema](https://json-schema.org/).
 Specifying the `function_call` parameter will force the model to return a response using the specified function.
-If you have multiple schems you'd like the model to pick from
+This is useful if you have multiple schemas you'd like the model to pick from.
 
 <CodeBlock language="typescript">{OpenAIFunctionsExample}</CodeBlock>
 
