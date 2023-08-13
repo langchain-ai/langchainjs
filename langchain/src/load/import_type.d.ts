@@ -61,6 +61,9 @@ export interface OptionalImportMap {
   "langchain/llms/hf"?:
     | typeof import("../llms/hf.js")
     | Promise<typeof import("../llms/hf.js")>;
+  "langchain/llms/raycast"?:
+    | typeof import("../llms/raycast.js")
+    | Promise<typeof import("../llms/raycast.js")>;
   "langchain/llms/replicate"?:
     | typeof import("../llms/replicate.js")
     | Promise<typeof import("../llms/replicate.js")>;
@@ -136,12 +139,21 @@ export interface OptionalImportMap {
   "langchain/vectorstores/tigris"?:
     | typeof import("../vectorstores/tigris.js")
     | Promise<typeof import("../vectorstores/tigris.js")>;
+  "langchain/vectorstores/usearch"?:
+    | typeof import("../vectorstores/usearch.js")
+    | Promise<typeof import("../vectorstores/usearch.js")>;
+  "langchain/vectorstores/zep"?:
+    | typeof import("../vectorstores/zep.js")
+    | Promise<typeof import("../vectorstores/zep.js")>;
   "langchain/memory/zep"?:
     | typeof import("../memory/zep.js")
     | Promise<typeof import("../memory/zep.js")>;
   "langchain/document_loaders/web/apify_dataset"?:
     | typeof import("../document_loaders/web/apify_dataset.js")
     | Promise<typeof import("../document_loaders/web/apify_dataset.js")>;
+  "langchain/document_loaders/web/assemblyai"?:
+    | typeof import("../document_loaders/web/assemblyai.js")
+    | Promise<typeof import("../document_loaders/web/assemblyai.js")>;
   "langchain/document_loaders/web/azure_blob_storage_container"?:
     | typeof import("../document_loaders/web/azure_blob_storage_container.js")
     | Promise<typeof import("../document_loaders/web/azure_blob_storage_container.js")>;
@@ -307,6 +319,9 @@ export interface OptionalImportMap {
   "langchain/stores/message/planetscale"?:
     | typeof import("../stores/message/planetscale.js")
     | Promise<typeof import("../stores/message/planetscale.js")>;
+  "langchain/stores/message/xata"?:
+    | typeof import("../stores/message/xata.js")
+    | Promise<typeof import("../stores/message/xata.js")>;
   "langchain/experimental/multimodal_embeddings/googlevertexai"?:
     | typeof import("../experimental/multimodal_embeddings/googlevertexai.js")
     | Promise<typeof import("../experimental/multimodal_embeddings/googlevertexai.js")>;

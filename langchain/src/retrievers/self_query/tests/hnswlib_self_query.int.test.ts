@@ -106,3 +106,86 @@ test("HNSWLib Store Self Query Retriever Test", async () => {
   console.log(query3);
   expect(query3.length).toEqual(1);
 });
+
+test("HNSWLib shouldn't throw an error if a filter can't be generated, but should return no items", async () => {
+  const docs = [
+    new Document({
+      pageContent:
+        "A bunch of scientists bring back dinosaurs and mayhem breaks loose",
+      metadata: { year: 1993, rating: 7.7, genre: "science fiction" },
+    }),
+    new Document({
+      pageContent:
+        "Leo DiCaprio gets lost in a dream within a dream within a dream within a ...",
+      metadata: { year: 2010, director: "Christopher Nolan", rating: 8.2 },
+    }),
+    new Document({
+      pageContent:
+        "A psychologist / detective gets lost in a series of dreams within dreams within dreams and Inception reused the idea",
+      metadata: { year: 2006, director: "Satoshi Kon", rating: 8.6 },
+    }),
+    new Document({
+      pageContent:
+        "A bunch of normal-sized women are supremely wholesome and some men pine after them",
+      metadata: { year: 2019, director: "Greta Gerwig", rating: 8.3 },
+    }),
+    new Document({
+      pageContent: "Toys come alive and have a blast doing so",
+      metadata: { year: 1995, genre: "animated" },
+    }),
+    new Document({
+      pageContent:
+        "Three men walk into the Zone, three men walk out of the Zone",
+      metadata: {
+        year: 1979,
+        director: "Andrei Tarkovsky",
+        genre: "science fiction",
+        rating: 9.9,
+      },
+    }),
+  ];
+
+  const attributeInfo = [
+    {
+      name: "sectionNumber",
+      description: "The section number of the rule",
+      type: "number",
+    },
+    {
+      name: "sectionTitle",
+      description: "The section title of the rule",
+      type: "string",
+    },
+    {
+      name: "sectionScope",
+      description: "The section scope of the rule",
+      type: "string",
+    },
+    {
+      name: "codeRule",
+      description: "The code rule of the rule",
+      type: "string",
+    },
+  ];
+
+  const embeddings = new OpenAIEmbeddings();
+  const llm = new OpenAI({
+    modelName: "gpt-3.5-turbo",
+    temperature: 0.01,
+  });
+  const documentContents = "Brief summary of a movie";
+  const vectorStore = await HNSWLib.fromDocuments(docs, embeddings);
+  const selfQueryRetriever = await SelfQueryRetriever.fromLLM({
+    llm,
+    vectorStore,
+    documentContents,
+    attributeInfo,
+    structuredQueryTranslator: new FunctionalTranslator(),
+  });
+
+  const query1 = await selfQueryRetriever.getRelevantDocuments(
+    "Which sectionTitle talks about pools?"
+  );
+  console.log(query1);
+  expect(query1.length).toEqual(0);
+});

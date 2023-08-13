@@ -28,7 +28,7 @@ export class ZepRetriever extends BaseRetriever {
     return { apiKey: "api_key" };
   }
 
-  private zepClient: ZepClient;
+  zepClientPromise: Promise<ZepClient>;
 
   private sessionId: string;
 
@@ -36,9 +36,9 @@ export class ZepRetriever extends BaseRetriever {
 
   constructor(config: ZepRetrieverConfig) {
     super(config);
-    this.zepClient = new ZepClient(config.url, config.apiKey);
     this.sessionId = config.sessionId;
     this.topK = config.topK;
+    this.zepClientPromise = ZepClient.init(config.url, config.apiKey);
   }
 
   /**
@@ -65,8 +65,13 @@ export class ZepRetriever extends BaseRetriever {
    */
   async _getRelevantDocuments(query: string): Promise<Document[]> {
     const payload: MemorySearchPayload = { text: query, metadata: {} };
+    // Wait for ZepClient to be initialized
+    const zepClient = await this.zepClientPromise;
+    if (!zepClient) {
+      throw new Error("ZepClient is not initialized");
+    }
     try {
-      const results: MemorySearchResult[] = await this.zepClient.searchMemory(
+      const results: MemorySearchResult[] = await zepClient.memory.searchMemory(
         this.sessionId,
         payload,
         this.topK
