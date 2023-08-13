@@ -35,23 +35,30 @@ function parseOutput(message: BaseMessage): FunctionsAgentAction | AgentFinish {
     // eslint-disable-next-line prefer-destructuring
     const function_call: ChatCompletionRequestMessageFunctionCall =
       message.additional_kwargs.function_call;
+
+    let toolInput: string;
     try {
-      const toolInput = function_call.arguments
+      toolInput = function_call.arguments
         ? JSON.parse(function_call.arguments)
         : {};
-      return {
-        tool: function_call.name as string,
-        toolInput,
-        log: `Invoking "${function_call.name}" with ${
-          function_call.arguments ?? "{}"
-        }\n${message.content}`,
-        messageLog: [message],
-      };
     } catch (error) {
-      throw new OutputParserException(
-        `Failed to parse function arguments from chat model response. Text: "${function_call.arguments}". ${error}`
-      );
+      if (typeof function_call.arguments === "string") {
+        toolInput = function_call.arguments;
+      } else {
+        throw new OutputParserException(
+          `Failed to parse function arguments from chat model response. Text: "${function_call.arguments}". ${error}`
+        );
+      }
     }
+
+    return {
+      tool: function_call.name as string,
+      toolInput,
+      log: `Invoking "${function_call.name}" with ${
+        function_call.arguments ?? "{}"
+      }\n${message.content}`,
+      messageLog: [message],
+    };
   } else {
     return { returnValues: { output: message.content }, log: message.content };
   }
