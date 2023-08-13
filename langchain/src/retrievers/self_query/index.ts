@@ -23,7 +23,7 @@ export interface SelfQueryRetrieverArgs extends BaseRetrieverInput {
   searchParams?: {
     k?: number;
     filter?: VectorStore["FilterType"];
-    mergeFilterMethod?: "or" | "and" | "replace";
+    mergeFiltersOperator?: "or" | "and" | "replace";
   };
 }
 
@@ -48,7 +48,7 @@ export class SelfQueryRetriever
   searchParams?: {
     k?: number;
     filter?: VectorStore["FilterType"];
-    mergeFilterMethod?: "or" | "and" | "replace";
+    mergeFiltersOperator?: "or" | "and" | "replace";
   } = { k: 4 };
 
   constructor(options: SelfQueryRetrieverArgs) {
@@ -81,7 +81,7 @@ export class SelfQueryRetriever
     const filter = this.structuredQueryTranslator.mergeFilters(
       this.searchParams?.filter,
       nextArg.filter,
-      this.searchParams?.mergeFilterMethod
+      this.searchParams?.mergeFiltersOperator
     );
 
     const generatedQuery = generatedStructuredQuery.query;

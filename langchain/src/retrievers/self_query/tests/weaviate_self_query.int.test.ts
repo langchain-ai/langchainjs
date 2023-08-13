@@ -254,7 +254,7 @@ test.skip("Weaviate Vector Store Self Query Retriever Test With Default Filter",
           valueText: "movie",
         },
       },
-      mergeFilterMethod: "and",
+      mergeFiltersOperator: "and",
     },
   });
 

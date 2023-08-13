@@ -265,7 +265,7 @@ test("Supabase Store Self Query Retriever Test With Default Filter", async () =>
     searchParams: {
       filter: (rpc: SupabaseFilter) =>
         rpc.filter("metadata->>type", "eq", "movie"),
-      mergeFilterMethod: "and",
+      mergeFiltersOperator: "and",
     },
   });
 
