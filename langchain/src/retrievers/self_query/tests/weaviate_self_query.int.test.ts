@@ -9,7 +9,7 @@ import { OpenAI } from "../../../llms/openai.js";
 import { WeaviateStore } from "../../../vectorstores/weaviate.js";
 import { WeaviateTranslator } from "../weaviate.js";
 
-test.skip("Weaviate Self Query Retriever Test", async () => {
+test("Weaviate Self Query Retriever Test", async () => {
   const docs = [
     new Document({
       pageContent:
@@ -119,7 +119,7 @@ test.skip("Weaviate Self Query Retriever Test", async () => {
   expect(query4.length).toBe(0);
 });
 
-test.skip("Weaviate Vector Store Self Query Retriever Test With Default Filter", async () => {
+test("Weaviate Vector Store Self Query Retriever Test With Default Filter", async () => {
   const docs = [
     new Document({
       pageContent:
@@ -254,13 +254,13 @@ test.skip("Weaviate Vector Store Self Query Retriever Test With Default Filter",
           valueText: "movie",
         },
       },
-      mergeFiltersOperator: "and",
+      mergeFiltersOperator: "or",
     },
   });
 
   const query4 = await selfQueryRetriever.getRelevantDocuments(
     "Wau wau wau wau hello gello hello?"
   );
-  console.log(query4); // query4 has to return documents, since the default filter takes over
+  console.log(query4); // query4 has to return documents, since the default filter takes over with
   expect(query4.length).toBeGreaterThan(0);
 });

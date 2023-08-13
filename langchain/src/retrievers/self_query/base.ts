@@ -12,6 +12,7 @@ import {
   VisitorResult,
   VisitorStructuredQueryResult,
 } from "../../chains/query_constructor/ir.js";
+import { VectorStore } from "../../vectorstores/base.js";
 import { isFilterEmpty } from "./utils.js";
 
 export type TranslatorOpts = {
@@ -19,7 +20,9 @@ export type TranslatorOpts = {
   allowedComparators: Comparator[];
 };
 
-export abstract class BaseTranslator extends Visitor {
+export abstract class BaseTranslator<
+  T extends VectorStore = VectorStore
+> extends Visitor<T> {
   abstract formatFunction(func: Operator | Comparator): string;
 
   abstract mergeFilters(
@@ -29,7 +32,9 @@ export abstract class BaseTranslator extends Visitor {
   ): this["VisitStructuredQueryOutput"]["filter"] | undefined;
 }
 
-export class BasicTranslator extends BaseTranslator {
+export class BasicTranslator<
+  T extends VectorStore = VectorStore
+> extends BaseTranslator<T> {
   declare VisitOperationOutput: VisitorOperationResult;
 
   declare VisitComparisonOutput: VisitorComparisonResult;
@@ -129,6 +134,9 @@ export class BasicTranslator extends BaseTranslator {
       return generatedFilter;
     }
     if (isFilterEmpty(generatedFilter)) {
+      if (mergeType === "and") {
+        return undefined;
+      }
       return defaultFilter;
     }
     if (mergeType === "and") {

@@ -7,7 +7,10 @@ import {
   Operators,
   StructuredQuery,
 } from "../../chains/query_constructor/ir.js";
-import { SupabaseFilterRPCCall } from "../../vectorstores/supabase.js";
+import {
+  SupabaseFilterRPCCall,
+  SupabaseVectorStore,
+} from "../../vectorstores/supabase.js";
 import { BaseTranslator } from "./base.js";
 import { isFilterEmpty } from "./utils.js";
 
@@ -20,14 +23,12 @@ type ValueType = {
   gte: string | number;
 };
 
-export class SupabaseTranslator extends BaseTranslator {
+export class SupabaseTranslator<
+  T extends SupabaseVectorStore
+> extends BaseTranslator<T> {
   declare VisitOperationOutput: SupabaseFilterRPCCall;
 
   declare VisitComparisonOutput: SupabaseFilterRPCCall;
-
-  declare VisitStructuredQueryOutput:
-    | { filter: SupabaseFilterRPCCall }
-    | { [k: string]: never };
 
   allowedOperators: Operator[] = [Operators.and, Operators.or];
 
@@ -185,7 +186,7 @@ export class SupabaseTranslator extends BaseTranslator {
   ): SupabaseFilterRPCCall | undefined {
     if (mergeType === "or") {
       throw new Error(
-        "Supabase self-query filter does not support merging two filter with the OR operator"
+        "Supabase self-query filter does not support merging two filters with the OR operator"
       );
     }
     if (isFilterEmpty(defaultFilter) && isFilterEmpty(generatedFilter)) {
@@ -198,9 +199,16 @@ export class SupabaseTranslator extends BaseTranslator {
       return generatedFilter;
     }
     if (isFilterEmpty(generatedFilter)) {
+      if (mergeType === "and") {
+        return undefined;
+      }
       return defaultFilter;
     }
 
-    return (rpc) => generatedFilter(defaultFilter(rpc));
+    if (mergeType === "and") {
+      return (rpc) => generatedFilter(defaultFilter(rpc));
+    } else {
+      throw new Error("Unknown merge type");
+    }
   }
 }

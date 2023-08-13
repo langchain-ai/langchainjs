@@ -1,3 +1,5 @@
+import { VectorStore } from "../../vectorstores/base.js";
+
 export type AND = "and";
 export type OR = "or";
 export type NOT = "not";
@@ -44,13 +46,13 @@ export type VisitorStructuredQueryResult = {
   filter?: VisitorComparisonResult | VisitorOperationResult;
 };
 
-export abstract class Visitor {
+export abstract class Visitor<T extends VectorStore = VectorStore> {
   declare VisitOperationOutput: object;
 
   declare VisitComparisonOutput: object;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  declare VisitStructuredQueryOutput: { filter?: any };
+  declare VisitStructuredQueryOutput: { filter?: T["FilterType"] };
 
   abstract allowedOperators: Operator[];
 

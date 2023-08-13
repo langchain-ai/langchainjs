@@ -265,7 +265,7 @@ test("Supabase Store Self Query Retriever Test With Default Filter", async () =>
     searchParams: {
       filter: (rpc: SupabaseFilter) =>
         rpc.filter("metadata->>type", "eq", "movie"),
-      mergeFiltersOperator: "and",
+      mergeFiltersOperator: "and", // Supabase self-query filter does not support "or" operator for merging two filters
     },
   });
 
@@ -285,7 +285,7 @@ test("Supabase Store Self Query Retriever Test With Default Filter", async () =>
   console.log(query3);
   expect(query3.length).toEqual(1);
 
-  const query4 = await selfQueryRetriever.getRelevantDocuments("What is what"); // query4 has to return documents, since the default filter takes over
+  const query4 = await selfQueryRetriever.getRelevantDocuments("What is what"); // query4 has to empty document, since we can't use "or" operator
   console.log(query4);
-  expect(query4.length).toBeGreaterThan(0);
+  expect(query4.length).toEqual(0);
 });

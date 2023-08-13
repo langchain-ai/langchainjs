@@ -217,7 +217,7 @@ test("Memory Vector Store Self Query Retriever Test With Default Filter", async 
     structuredQueryTranslator: new FunctionalTranslator(),
     searchParams: {
       filter: (doc: Document) => doc.metadata && doc.metadata.type === "movie",
-      mergeFiltersOperator: "and",
+      mergeFiltersOperator: "or",
     },
   });
 

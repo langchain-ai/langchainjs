@@ -9,6 +9,7 @@ import {
   StructuredQuery,
   Visitor,
 } from "../../chains/query_constructor/ir.js";
+import { WeaviateFilter, WeaviateStore } from "../../vectorstores/weaviate.js";
 import { BaseTranslator } from "./base.js";
 import { isFilterEmpty } from "./utils.js";
 
@@ -63,12 +64,12 @@ function isString(value: unknown): boolean {
   return typeof value === "string" && Number.isNaN(parseFloat(value as string));
 }
 
-export class WeaviateTranslator extends BaseTranslator {
+export class WeaviateTranslator<
+  T extends WeaviateStore
+> extends BaseTranslator<T> {
   declare VisitOperationOutput: WeaviateOperationResult;
 
   declare VisitComparisonOutput: WeaviateComparisonResult;
-
-  declare VisitStructuredQueryOutput: WeaviateStructuredQueryResult;
 
   allowedOperators: Operator[] = [Operators.and, Operators.or];
 
@@ -169,10 +170,10 @@ export class WeaviateTranslator extends BaseTranslator {
   }
 
   mergeFilters(
-    defaultFilter: this["VisitStructuredQueryOutput"]["filter"] | undefined,
-    generatedFilter: this["VisitStructuredQueryOutput"]["filter"] | undefined,
+    defaultFilter: WeaviateFilter | undefined,
+    generatedFilter: WeaviateFilter | undefined,
     mergeType = "and"
-  ): this["VisitStructuredQueryOutput"]["filter"] | undefined {
+  ): WeaviateFilter | undefined {
     if (
       isFilterEmpty(defaultFilter?.where) &&
       isFilterEmpty(generatedFilter?.where)
@@ -186,26 +187,29 @@ export class WeaviateTranslator extends BaseTranslator {
       return generatedFilter;
     }
     if (isFilterEmpty(generatedFilter?.where)) {
+      if (mergeType === "and") {
+        return undefined;
+      }
       return defaultFilter;
     }
     const merged: WeaviateOperationResult = {
       operator: "And",
       operands: [
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        defaultFilter!.where,
+        defaultFilter!.where as WeaviateVisitorResult,
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        generatedFilter!.where,
+        generatedFilter!.where as WeaviateVisitorResult,
       ],
     };
     if (mergeType === "and") {
       return {
         where: merged,
-      };
+      } as WeaviateFilter;
     } else if (mergeType === "or") {
       merged.operator = "Or";
       return {
         where: merged,
-      };
+      } as WeaviateFilter;
     } else {
       throw new Error("Unknown merge type");
     }

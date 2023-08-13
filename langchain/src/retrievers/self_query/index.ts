@@ -14,44 +14,45 @@ import { CallbackManagerForRetrieverRun } from "../../callbacks/manager.js";
 
 export { BaseTranslator, BasicTranslator, FunctionalTranslator };
 
-export interface SelfQueryRetrieverArgs extends BaseRetrieverInput {
-  vectorStore: VectorStore;
-  structuredQueryTranslator: BaseTranslator;
+export interface SelfQueryRetrieverArgs<T extends VectorStore>
+  extends BaseRetrieverInput {
+  vectorStore: T;
+  structuredQueryTranslator: BaseTranslator<T>;
   llmChain: LLMChain;
   verbose?: boolean;
   useOriginalQuery?: boolean;
   searchParams?: {
     k?: number;
-    filter?: VectorStore["FilterType"];
+    filter?: T["FilterType"];
     mergeFiltersOperator?: "or" | "and" | "replace";
   };
 }
 
-export class SelfQueryRetriever
+export class SelfQueryRetriever<T extends VectorStore>
   extends BaseRetriever
-  implements SelfQueryRetrieverArgs
+  implements SelfQueryRetrieverArgs<T>
 {
   get lc_namespace() {
     return ["langchain", "retrievers", "self_query"];
   }
 
-  vectorStore: VectorStore;
+  vectorStore: T;
 
   llmChain: LLMChain;
 
   verbose?: boolean;
 
-  structuredQueryTranslator: BaseTranslator;
+  structuredQueryTranslator: BaseTranslator<T>;
 
   useOriginalQuery = false;
 
   searchParams?: {
     k?: number;
-    filter?: VectorStore["FilterType"];
+    filter?: T["FilterType"];
     mergeFiltersOperator?: "or" | "and" | "replace";
   } = { k: 4 };
 
-  constructor(options: SelfQueryRetrieverArgs) {
+  constructor(options: SelfQueryRetrieverArgs<T>) {
     super(options);
     this.vectorStore = options.vectorStore;
     this.llmChain = options.llmChain;
@@ -103,10 +104,10 @@ export class SelfQueryRetriever
     }
   }
 
-  static fromLLM(
+  static fromLLM<T extends VectorStore>(
     options: QueryConstructorChainOptions &
-      Omit<SelfQueryRetrieverArgs, "llmChain">
-  ): SelfQueryRetriever {
+      Omit<SelfQueryRetrieverArgs<T>, "llmChain">
+  ): SelfQueryRetriever<T> {
     const {
       structuredQueryTranslator,
       allowedComparators,
@@ -128,7 +129,7 @@ export class SelfQueryRetriever
       allowedOperators:
         allowedOperators ?? structuredQueryTranslator.allowedOperators,
     });
-    return new SelfQueryRetriever({
+    return new SelfQueryRetriever<T>({
       ...rest,
       llmChain,
       vectorStore,

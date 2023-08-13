@@ -159,6 +159,9 @@ export class FunctionalTranslator extends BaseTranslator {
       return generatedFilter;
     }
     if (isFilterEmpty(generatedFilter)) {
+      if (mergeType === "and") {
+        return undefined;
+      }
       return defaultFilter;
     }
 
