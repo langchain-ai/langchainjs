@@ -28,7 +28,7 @@ Use the chat history above and the following pieces of additional context knowle
 Question: {question}
 Helpful Answer:`;
 
-export interface ChatVectorDBQAChainInput extends ChainInputs {
+export interface AssistantantExpertChatVectorDBQAChainInput extends ChainInputs {
   vectorstore: VectorStore;
   combineDocumentsChain: BaseChain;
   questionGeneratorChain: LLMChain;
@@ -39,9 +39,9 @@ export interface ChatVectorDBQAChainInput extends ChainInputs {
 }
 
 /** @deprecated use `ConversationalRetrievalQAChain` instead. */
-export class ChatVectorDBQAChain
+export class AssistantantExpertChatVectorDBQAChain
   extends BaseChain
-  implements ChatVectorDBQAChainInput
+  implements AssistantantExpertChatVectorDBQAChainInput
 {
   k = 4;
 
@@ -67,7 +67,7 @@ export class ChatVectorDBQAChain
 
   returnSourceDocuments = false;
 
-  constructor(fields: ChatVectorDBQAChainInput) {
+  constructor(fields: AssistantantExpertChatVectorDBQAChainInput) {
     super(fields);
     this.vectorstore = fields.vectorstore;
     this.combineDocumentsChain = fields.combineDocumentsChain;
@@ -150,7 +150,7 @@ export class ChatVectorDBQAChain
     }
     const { vectorstore } = values;
 
-    return new ChatVectorDBQAChain({
+    return new AssistantantExpertChatVectorDBQAChain({
       combineDocumentsChain: await BaseChain.deserialize(
         data.combine_documents_chain
       ),
@@ -183,7 +183,7 @@ export class ChatVectorDBQAChain
       qaTemplate?: string;
       verbose?: boolean;
     } = {}
-  ): ChatVectorDBQAChain {
+  ): AssistantantExpertChatVectorDBQAChain {
     const { questionGeneratorTemplate, qaTemplate, verbose, ...rest } = options;
     const question_generator_prompt = PromptTemplate.fromTemplate(
       questionGeneratorTemplate || question_generator_template
