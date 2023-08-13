@@ -1,0 +1,21 @@
+# Transformer
+
+The `TransformerEmbeddings` class uses the Transformer.js API to generate embeddings for a given text. By default it strips new line characters from the text, as recommended by OpenAI, but you can disable this by passing `stripNewLines: false` to the constructor.
+
+## Pre-requisites
+
+### Peer Dependencies
+
+```bash
+  pnpm add @xenova/transformers
+```
+
+## Example
+
+```typescript
+import { TransformerEmbeddings } from "langchain/embeddings/openai";
+
+const embeddings = new TransformerEmbeddings({
+  modelName: "Xenova/all-MiniLM-L6-v2", // In Node.js defaults to process.env.OPENAI_API_KEY
+});
+```
