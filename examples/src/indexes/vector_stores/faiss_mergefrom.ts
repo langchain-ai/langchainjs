@@ -2,14 +2,14 @@ import { FaissStore } from "langchain/vectorstores/faiss";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 
 export const run = async () => {
-  // Create a vector store with initial documents and embeddings
+  // Create an initial vector store
   const vectorStore = await FaissStore.fromTexts(
     ["Hello world", "Bye bye", "hello nice world"],
     [{ id: 2 }, { id: 1 }, { id: 3 }],
     new OpenAIEmbeddings()
   );
 
-  // Create another vector store with new documents and embeddings
+  // Create another vector store from texts
   const vectorStore2 = await FaissStore.fromTexts(
     ["Some text"],
     [{ id: 1 }],
