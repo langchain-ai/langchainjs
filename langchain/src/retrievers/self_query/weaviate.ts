@@ -152,7 +152,7 @@ export class WeaviateTranslator extends BaseTranslator {
         valueNumber: parseFloat(comparison.value as string),
       };
     }
-    
+
     throw new Error("Value type is not supported");
   }
 
