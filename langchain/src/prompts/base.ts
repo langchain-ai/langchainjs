@@ -1,3 +1,6 @@
+// Default generic "any" values are for backwards compatibility.
+// Replace with "string" when we are comfortable with a breaking change.
+
 import {
   BasePromptValue,
   Example,
@@ -11,6 +14,10 @@ import { SerializedBasePromptTemplate } from "./serde.js";
 import { SerializedFields } from "../load/map_keys.js";
 import { Runnable } from "../schema/runnable.js";
 import { BaseCallbackConfig } from "../callbacks/manager.js";
+
+export type TypedPromptInputValues<RunInput> = InputValues<
+  Extract<keyof RunInput, string> | (string & Record<never, never>)
+>;
 
 export class StringPromptValue extends BasePromptValue {
   lc_namespace = ["langchain", "prompts", "base"];
@@ -34,11 +41,16 @@ export class StringPromptValue extends BasePromptValue {
 /**
  * Input common to all prompt templates.
  */
-export interface BasePromptTemplateInput {
+export interface BasePromptTemplateInput<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  InputVariables extends InputValues = any,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  PartialVariableName extends string = any
+> {
   /**
    * A list of variable names the prompt template expects
    */
-  inputVariables: string[];
+  inputVariables: Array<Extract<keyof InputVariables, string>>;
 
   /**
    * How to parse the output of calling an LLM on this formatted prompt
@@ -46,7 +58,7 @@ export interface BasePromptTemplateInput {
   outputParser?: BaseOutputParser;
 
   /** Partial variables */
-  partialVariables?: PartialValues;
+  partialVariables?: PartialValues<PartialVariableName>;
 }
 
 /**
@@ -54,12 +66,16 @@ export interface BasePromptTemplateInput {
  * string prompt given a set of input values.
  */
 export abstract class BasePromptTemplate<
-    FormattedOutput extends BasePromptValue = BasePromptValue
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunInput extends InputValues = any,
+    RunOutput extends BasePromptValue = BasePromptValue,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    PartialVariableName extends string = any
   >
-  extends Runnable<InputValues, FormattedOutput>
+  extends Runnable<RunInput, RunOutput>
   implements BasePromptTemplateInput
 {
-  declare PromptValueReturnType: FormattedOutput;
+  declare PromptValueReturnType: RunOutput;
 
   lc_serializable = true;
 
@@ -71,11 +87,11 @@ export abstract class BasePromptTemplate<
     };
   }
 
-  inputVariables: string[];
+  inputVariables: Array<Extract<keyof RunInput, string>>;
 
   outputParser?: BaseOutputParser;
 
-  partialVariables: InputValues = {};
+  partialVariables: PartialValues<PartialVariableName>;
 
   constructor(input: BasePromptTemplateInput) {
     super(input);
@@ -88,32 +104,39 @@ export abstract class BasePromptTemplate<
     Object.assign(this, input);
   }
 
-  abstract partial(values: PartialValues): Promise<BasePromptTemplate>;
+  abstract partial(
+    values: PartialValues
+  ): Promise<BasePromptTemplate<RunInput, RunOutput, PartialVariableName>>;
 
   async mergePartialAndUserVariables(
-    userVariables: InputValues
-  ): Promise<InputValues> {
+    userVariables: TypedPromptInputValues<RunInput>
+  ): Promise<
+    InputValues<Extract<keyof RunInput, string> | PartialVariableName>
+  > {
     const partialVariables = this.partialVariables ?? {};
-    const partialValues: InputValues = {};
+    const partialValues: Record<string, string> = {};
 
     for (const [key, value] of Object.entries(partialVariables)) {
       if (typeof value === "string") {
         partialValues[key] = value;
       } else {
-        partialValues[key] = await value();
+        partialValues[key] = await (value as () => Promise<string>)();
       }
     }
 
-    const allKwargs = { ...partialValues, ...userVariables };
+    const allKwargs = {
+      ...(partialValues as Record<PartialVariableName, string>),
+      ...userVariables,
+    };
     return allKwargs;
   }
 
   async invoke(
-    input: InputValues,
+    input: RunInput,
     options?: BaseCallbackConfig
-  ): Promise<FormattedOutput> {
+  ): Promise<RunOutput> {
     return this._callWithConfig(
-      (input: InputValues) => this.formatPromptValue(input),
+      (input: RunInput) => this.formatPromptValue(input),
       input,
       { ...options, runType: "prompt" }
     );
@@ -130,14 +153,16 @@ export abstract class BasePromptTemplate<
    * prompt.format({ foo: "bar" });
    * ```
    */
-  abstract format(values: InputValues): Promise<string>;
+  abstract format(values: TypedPromptInputValues<RunInput>): Promise<string>;
 
   /**
    * Format the prompt given the input values and return a formatted prompt value.
    * @param values
    * @returns A formatted PromptValue.
    */
-  abstract formatPromptValue(values: InputValues): Promise<FormattedOutput>;
+  abstract formatPromptValue(
+    values: TypedPromptInputValues<RunInput>
+  ): Promise<RunOutput>;
 
   /**
    * Return the string type key uniquely identifying this class of prompt template.
@@ -163,7 +188,7 @@ export abstract class BasePromptTemplate<
    */
   static async deserialize(
     data: SerializedBasePromptTemplate
-  ): Promise<BasePromptTemplate> {
+  ): Promise<BasePromptTemplate<InputValues, BasePromptValue, string>> {
     switch (data._type) {
       case "prompt": {
         const { PromptTemplate } = await import("./prompt.js");
@@ -187,8 +212,15 @@ export abstract class BasePromptTemplate<
   }
 }
 
-export abstract class BaseStringPromptTemplate extends BasePromptTemplate {
-  async formatPromptValue(values: InputValues): Promise<StringPromptValue> {
+export abstract class BaseStringPromptTemplate<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  RunInput extends InputValues = any,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  PartialVariableName extends string = any
+> extends BasePromptTemplate<RunInput, StringPromptValue, PartialVariableName> {
+  async formatPromptValue(
+    values: TypedPromptInputValues<RunInput>
+  ): Promise<StringPromptValue> {
     const formattedPrompt = await this.format(values);
     return new StringPromptValue(formattedPrompt);
   }

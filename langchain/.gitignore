@@ -109,6 +109,9 @@ llms/cohere.d.ts
 llms/hf.cjs
 llms/hf.js
 llms/hf.d.ts
+llms/raycast.cjs
+llms/raycast.js
+llms/raycast.d.ts
 llms/ollama.cjs
 llms/ollama.js
 llms/ollama.d.ts
@@ -211,6 +214,9 @@ vectorstores/vectara.d.ts
 vectorstores/xata.cjs
 vectorstores/xata.js
 vectorstores/xata.d.ts
+vectorstores/zep.cjs
+vectorstores/zep.js
+vectorstores/zep.d.ts
 text_splitter.cjs
 text_splitter.js
 text_splitter.d.ts
@@ -406,6 +412,9 @@ retrievers/contextual_compression.d.ts
 retrievers/document_compressors.cjs
 retrievers/document_compressors.js
 retrievers/document_compressors.d.ts
+retrievers/parent_document.cjs
+retrievers/parent_document.js
+retrievers/parent_document.d.ts
 retrievers/time_weighted.cjs
 retrievers/time_weighted.js
 retrievers/time_weighted.d.ts
@@ -487,6 +496,9 @@ stores/message/upstash_redis.d.ts
 stores/message/planetscale.cjs
 stores/message/planetscale.js
 stores/message/planetscale.d.ts
+stores/message/xata.cjs
+stores/message/xata.js
+stores/message/xata.d.ts
 util/math.cjs
 util/math.js
 util/math.d.ts
