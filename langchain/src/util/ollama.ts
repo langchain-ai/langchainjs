@@ -55,6 +55,8 @@ export async function* createOllamaStream(
 ): AsyncGenerator<OllamaGenerationChunk> {
   let formattedBaseUrl = baseUrl;
   if (formattedBaseUrl.startsWith("http://localhost:")) {
+    // Node 18 has issues with resolving "localhost"
+    // See https://github.com/node-fetch/node-fetch/issues/1624
     formattedBaseUrl = formattedBaseUrl.replace(
       "http://localhost:",
       "http://127.0.0.1:"
