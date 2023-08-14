@@ -1,10 +1,12 @@
 import ignore, { Ignore } from "ignore";
 import binaryExtensions from "binary-extensions";
+
 import { Document } from "../../document.js";
 import { BaseDocumentLoader } from "../base.js";
 import { UnknownHandling } from "../fs/directory.js";
 import { extname } from "../../util/extname.js";
 import { getEnvironmentVariable } from "../../util/env.js";
+import { AsyncCaller, AsyncCallerParams } from "../../util/async_caller.js";
 
 const extensions = new Set(binaryExtensions);
 
@@ -34,13 +36,22 @@ interface GetContentResponse {
   metadata: { source: string };
 }
 
-export interface GithubRepoLoaderParams {
+export interface GithubRepoLoaderParams extends AsyncCallerParams {
   branch?: string;
   recursive?: boolean;
   unknown?: UnknownHandling;
   accessToken?: string;
   ignoreFiles?: (string | RegExp)[];
   ignorePaths?: string[];
+  /**
+   * The maximum number of concurrent calls that can be made. Defaults to 2.
+   */
+  maxConcurrency?: number;
+  /**
+   * The maximum number of retries that can be made for a single call,
+   * with an exponential backoff between each attempt. Defaults to 2.
+   */
+  maxRetries?: number;
 }
 
 export class GithubRepoLoader
@@ -67,6 +78,8 @@ export class GithubRepoLoader
 
   public ignore?: Ignore;
 
+  protected caller: AsyncCaller;
+
   constructor(
     githubUrl: string,
     {
@@ -76,6 +89,9 @@ export class GithubRepoLoader
       unknown = UnknownHandling.Warn,
       ignoreFiles = [],
       ignorePaths,
+      maxConcurrency = 2,
+      maxRetries = 2,
+      ...rest
     }: GithubRepoLoaderParams = {}
   ) {
     super();
@@ -88,6 +104,11 @@ export class GithubRepoLoader
     this.unknown = unknown;
     this.accessToken = accessToken;
     this.ignoreFiles = ignoreFiles;
+    this.caller = new AsyncCaller({
+      maxConcurrency,
+      maxRetries,
+      ...rest,
+    });
     if (ignorePaths) {
       this.ignore = ignore.default().add(ignorePaths);
     }
@@ -167,33 +188,39 @@ export class GithubRepoLoader
   /**
    * Maps a list of files / directories to a list of promises that will fetch the file / directory contents
    */
-  private async getCurrDirFilesPromises(
+  private async getCurrentDirectoryFilePromises(
     files: GithubFile[]
   ): Promise<Promise<GetContentResponse>[]> {
-    const currDirFilePromises: Promise<GetContentResponse>[] = [];
+    const currentDirectoryFilePromises: Promise<GetContentResponse>[] = [];
     // Directories have nested files / directories, which is why this is a list of promises of promises
-    const currDirDirPromises: Promise<Promise<GetContentResponse>[]>[] = [];
+    const currentDirectoryDirectoryPromises: Promise<
+      Promise<GetContentResponse>[]
+    >[] = [];
 
     for (const file of files) {
       if (!this.shouldIgnore(file.path, file.type)) {
         if (file.type !== "dir") {
           try {
-            currDirFilePromises.push(this.fetchFileContentWrapper(file));
+            currentDirectoryFilePromises.push(
+              this.fetchFileContentWrapper(file)
+            );
           } catch (e) {
             this.handleError(
               `Failed to fetch file content: ${file.path}, ${e}`
             );
           }
         } else if (this.recursive) {
-          currDirDirPromises.push(this.processDirectory(file.path));
+          currentDirectoryDirectoryPromises.push(
+            this.processDirectory(file.path)
+          );
         }
       }
     }
 
     const curDirDirectories: Promise<GetContentResponse>[][] =
-      await Promise.all(currDirDirPromises);
+      await Promise.all(currentDirectoryDirectoryPromises);
 
-    return [...currDirFilePromises, ...curDirDirectories.flat()];
+    return [...currentDirectoryFilePromises, ...curDirDirectories.flat()];
   }
 
   /**
@@ -204,8 +231,9 @@ export class GithubRepoLoader
       // Get the list of file / directory names in the root directory
       const files = await this.fetchRepoFiles(this.initialPath);
       // Map the file / directory paths to promises that will fetch the file / directory contents
-      const currDirPromises = await this.getCurrDirFilesPromises(files);
-      return Promise.all(currDirPromises);
+      const currentDirectoryFilePromises =
+        await this.getCurrentDirectoryFilePromises(files);
+      return Promise.all(currentDirectoryFilePromises);
     } catch (error) {
       this.handleError(
         `Failed to process directory: ${this.initialPath}, ${error}`
@@ -219,7 +247,7 @@ export class GithubRepoLoader
   ): Promise<Promise<GetContentResponse>[]> {
     try {
       const files = await this.fetchRepoFiles(path);
-      return this.getCurrDirFilesPromises(files);
+      return this.getCurrentDirectoryFilePromises(files);
     } catch (error) {
       this.handleError(`Failed to process directory: ${path}, ${error}`);
       return Promise.reject(error);
@@ -228,7 +256,7 @@ export class GithubRepoLoader
 
   private async fetchRepoFiles(path: string): Promise<GithubFile[]> {
     const url = `https://api.github.com/repos/${this.owner}/${this.repo}/contents/${path}?ref=${this.branch}`;
-    const response = await fetch(url, { headers: this.headers });
+    const response = await this.caller.fetch(url, { headers: this.headers });
     const data = await response.json();
     if (!response.ok) {
       throw new Error(
