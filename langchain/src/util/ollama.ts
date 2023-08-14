@@ -53,7 +53,14 @@ export async function* createOllamaStream(
   params: OllamaRequestParams,
   options: OllamaCallOptions
 ): AsyncGenerator<OllamaGenerationChunk> {
-  const response = await fetch(`${baseUrl}/api/generate`, {
+  let formattedBaseUrl = baseUrl;
+  if (formattedBaseUrl.startsWith("http://localhost:")) {
+    formattedBaseUrl = formattedBaseUrl.replace(
+      "http://localhost:",
+      "http://127.0.0.1:"
+    );
+  }
+  const response = await fetch(`${formattedBaseUrl}/api/generate`, {
     method: "POST",
     body: JSON.stringify(params),
     headers: {

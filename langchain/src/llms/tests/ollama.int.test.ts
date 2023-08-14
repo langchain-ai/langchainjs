@@ -11,7 +11,7 @@ test.skip("test call", async () => {
 
 test.skip("test streaming call", async () => {
   const ollama = new Ollama({
-    baseUrl: "http://127.0.0.1:11434",
+    baseUrl: "http://localhost:11434",
   });
   const stream = await ollama.stream(
     `Translate "I love programming" into German.`
@@ -26,7 +26,7 @@ test.skip("test streaming call", async () => {
 
 test.skip("should abort the request", async () => {
   const ollama = new Ollama({
-    baseUrl: "http://127.0.0.1:11434",
+    baseUrl: "http://localhost:11434",
   });
   const controller = new AbortController();
 
