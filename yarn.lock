@@ -11051,6 +11051,7 @@ __metadata:
     vectordb: ^0.1.4
     weaviate-ts-client: ^1.0.0
     zod: ^3.21.4
+    zod-to-json-schema: ^3.21.4
   languageName: unknown
   linkType: soft
 
@@ -20524,6 +20525,15 @@ __metadata:
   peerDependencies:
     zod: ^3.20.0
   checksum: 55bc649dbc82ce25fbfbfdd42ca530d883d83be5d02cb81e89f6401d54bca151fc6b8cc57999c75eb6a3dcaa3f000697315fbd4f505637472621570ed52784d8
+  languageName: node
+  linkType: hard
+
+"zod-to-json-schema@npm:^3.21.4":
+  version: 3.21.4
+  resolution: "zod-to-json-schema@npm:3.21.4"
+  peerDependencies:
+    zod: ^3.21.4
+  checksum: 899c1f461fb6547c0b08a265c82040c250be9b88d3f408f2f3ff77a418fdfad7549077e589d418fccb312c1f6d555c3c7217b199cc9072762e1fab20716dd2a6
   languageName: node
   linkType: hard
 
