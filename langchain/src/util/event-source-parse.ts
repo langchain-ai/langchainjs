@@ -4,7 +4,7 @@
 // Adapted from https://github.com/gfortaine/fetch-event-source/blob/main/src/parse.ts
 // due to a packaging issue in the original.
 // MIT License
-import { type Readable } from "stream"
+import { type Readable } from "stream";
 
 export const EventStreamContentType = "text/event-stream";
 
@@ -24,7 +24,7 @@ export interface EventSourceMessage {
 }
 
 function isNodeJSReadable(x: unknown): x is Readable {
-  return x != null && typeof x === "object" && "on" in x
+  return x != null && typeof x === "object" && "on" in x;
 }
 
 /**
@@ -45,16 +45,16 @@ export async function getBytes(
         let chunk;
         // eslint-disable-next-line no-constant-condition
         while (true) {
-          chunk = stream.read()
+          chunk = stream.read();
           if (chunk == null) {
-            onChunk(new Uint8Array(), true)
-            break
+            onChunk(new Uint8Array(), true);
+            break;
           }
-          onChunk(chunk)
+          onChunk(chunk);
         }
 
-        resolve()
-      })
+        resolve();
+      });
     });
   }
 
