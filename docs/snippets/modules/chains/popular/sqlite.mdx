@@ -1,6 +1,7 @@
 import CodeBlock from "@theme/CodeBlock";
 import SqlDBExample from "@examples/chains/sql_db.ts";
 import SqlDBSqlOutputExample from "@examples/chains/sql_db_sql_output.ts";
+import SqlDBSAPHANAExample from "@examples/chains/sql_db_saphana.ts";
 import SqlDBSqlCustomPromptExample from "@examples/chains/sql_db_custom_prompt.ts";
 
 This example uses Chinook database, which is a sample database available for SQL Server, Oracle, MySQL, etc.
@@ -19,7 +20,8 @@ Then install the dependencies needed for your database. For example, for SQLite:
 npm install sqlite3
 ```
 
-For other databases see https://typeorm.io/#installation
+For other databases see https://typeorm.io/#installation. Currently, LangChain.js has default prompts for
+Postgres, SQLite, Microsoft SQL Server, MySQL, and SAP HANA.
 
 Finally follow the instructions on https://database.guide/2-sample-databases-sqlite/ to get the sample database for this example.
 
@@ -38,6 +40,12 @@ const db = await SqlDatabase.fromDataSourceParams({
 If desired, you can return the used SQL command when calling the chain.
 
 <CodeBlock language="typescript">{SqlDBSqlOutputExample}</CodeBlock>
+
+## SAP Hana
+
+Here's an example of using the chain with a SAP HANA database:
+
+<CodeBlock language="typescript">{SqlDBSAPHANAExample}</CodeBlock>
 
 ## Custom prompt
 

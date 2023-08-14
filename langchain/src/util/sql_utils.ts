@@ -192,8 +192,7 @@ export const getTableAndColumnsName = async (
 
   if (appDataSource.options.type === "sap") {
     const schema = appDataSource.options?.schema ?? "public";
-    sql =
-      `SELECT
+    sql = `SELECT
         TABLE_NAME,
         COLUMN_NAME,
         DATA_TYPE_NAME AS data_type,
@@ -201,15 +200,19 @@ export const getTableAndColumnsName = async (
       FROM TABLE_COLUMNS
       WHERE SCHEMA_NAME='${schema}'`;
 
-    const rep: Array<{ [key: string]: string }> = await appDataSource.query(sql);
+    const rep: Array<{ [key: string]: string }> = await appDataSource.query(
+      sql
+    );
 
     const repLowerCase: Array<RawResultTableAndColumn> = [];
-    rep.forEach(_rep => repLowerCase.push({
-      table_name: _rep.TABLE_NAME,
-      column_name: _rep.COLUMN_NAME,
-      data_type: _rep.DATA_TYPE,
-      is_nullable: _rep.IS_NULLABLE
-    }));
+    rep.forEach((_rep) =>
+      repLowerCase.push({
+        table_name: _rep.TABLE_NAME,
+        column_name: _rep.COLUMN_NAME,
+        data_type: _rep.DATA_TYPE,
+        is_nullable: _rep.IS_NULLABLE,
+      })
+    );
 
     return formatToSqlTable(repLowerCase);
   }
@@ -246,9 +249,12 @@ export const generateTableInfoFromTables = async (
     // Add the creation of the table in SQL
     let schema = null;
     if (appDataSource.options.type === "postgres") {
-      schema = appDataSource.options?.schema ?? "public"
+      schema = appDataSource.options?.schema ?? "public";
     } else if (appDataSource.options.type === "sap") {
-      schema = appDataSource.options?.schema ?? appDataSource.options?.username ?? "public"
+      schema =
+        appDataSource.options?.schema ??
+        appDataSource.options?.username ??
+        "public";
     }
     let sqlCreateTableQuery = schema
       ? `CREATE TABLE "${schema}"."${currentTable.tableName}" (\n`
@@ -273,7 +279,10 @@ export const generateTableInfoFromTables = async (
     } else if (appDataSource.options.type === "mssql") {
       sqlSelectInfoQuery = `SELECT TOP ${nbSampleRow} * FROM [${currentTable.tableName}];\n`;
     } else if (appDataSource.options.type === "sap") {
-      const schema = appDataSource.options?.schema ?? appDataSource.options?.username ?? "public";
+      const schema =
+        appDataSource.options?.schema ??
+        appDataSource.options?.username ??
+        "public";
       sqlSelectInfoQuery = `SELECT * FROM "${schema}"."${currentTable.tableName}" LIMIT ${nbSampleRow};\n`;
     } else {
       sqlSelectInfoQuery = `SELECT * FROM "${currentTable.tableName}" LIMIT ${nbSampleRow};\n`;
