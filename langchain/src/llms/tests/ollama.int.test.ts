@@ -41,7 +41,7 @@ test.skip("should abort the request", async () => {
   }).rejects.toThrow("This operation was aborted");
 });
 
-test.only("should stream through with a bytes output parser", async () => {
+test.skip("should stream through with a bytes output parser", async () => {
   const TEMPLATE = `You are a pirate named Patchy. All responses must be extremely verbose and in pirate dialect.
 
   User: {input}
