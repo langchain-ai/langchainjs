@@ -6,7 +6,7 @@ import type { AwsCredentialIdentity, Provider } from "@aws-sdk/types";
 import { getEnvironmentVariable } from "../util/env.js";
 import { LLM, BaseLLMParams } from "./base.js";
 
-type Dict = { [key: string]: any };
+type Dict = { [key: string]: unknown };
 type CredentialType = AwsCredentialIdentity | Provider<AwsCredentialIdentity>;
 
 class BedrockLLMInputOutputAdapter {
@@ -33,6 +33,7 @@ class BedrockLLMInputOutputAdapter {
     return inputBody;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static prepareOutput(provider: string, responseBody: any): string {
     if (provider === "anthropic") {
       return responseBody.completion;
