@@ -14182,12 +14182,16 @@ __metadata:
     zod: ^3.21.4
     zod-to-json-schema: ^3.20.4
   peerDependencies:
+    "@aws-crypto/sha256-js": ^5.0.0
     "@aws-sdk/client-dynamodb": ^3.310.0
     "@aws-sdk/client-kendra": ^3.352.0
     "@aws-sdk/client-lambda": ^3.310.0
     "@aws-sdk/client-s3": ^3.310.0
     "@aws-sdk/client-sagemaker-runtime": ^3.310.0
     "@aws-sdk/client-sfn": ^3.310.0
+    "@aws-sdk/credential-provider-node": ^3.388.0
+    "@aws-sdk/protocol-http": ^3.374.0
+    "@aws-sdk/signature-v4": ^3.374.0
     "@azure/storage-blob": ^12.15.0
     "@clickhouse/client": ^0.0.14
     "@elastic/elasticsearch": ^8.4.0
@@ -14247,6 +14251,8 @@ __metadata:
     vectordb: ^0.1.4
     weaviate-ts-client: ^1.4.0
   peerDependenciesMeta:
+    "@aws-crypto/sha256-js":
+      optional: true
     "@aws-sdk/client-dynamodb":
       optional: true
     "@aws-sdk/client-kendra":
@@ -14258,6 +14264,12 @@ __metadata:
     "@aws-sdk/client-sagemaker-runtime":
       optional: true
     "@aws-sdk/client-sfn":
+      optional: true
+    "@aws-sdk/credential-provider-node":
+      optional: true
+    "@aws-sdk/protocol-http":
+      optional: true
+    "@aws-sdk/signature-v4":
       optional: true
     "@azure/storage-blob":
       optional: true
@@ -14382,10 +14394,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "langchainjs@workspace:."
   dependencies:
-    "@aws-crypto/sha256-js": ^5.0.0
-    "@aws-sdk/credential-provider-node": ^3.388.0
-    "@aws-sdk/protocol-http": ^3.374.0
-    "@aws-sdk/signature-v4": ^3.374.0
     "@tsconfig/recommended": ^1.0.2
     "@types/jest": ^29.5.3
     dotenv: ^16.0.3

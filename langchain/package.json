@@ -564,12 +564,16 @@
   "author": "LangChain",
   "license": "MIT",
   "devDependencies": {
+    "@aws-crypto/sha256-js": "^5.0.0",
     "@aws-sdk/client-dynamodb": "^3.310.0",
     "@aws-sdk/client-kendra": "^3.352.0",
     "@aws-sdk/client-lambda": "^3.310.0",
     "@aws-sdk/client-s3": "^3.310.0",
     "@aws-sdk/client-sagemaker-runtime": "^3.310.0",
     "@aws-sdk/client-sfn": "^3.362.0",
+    "@aws-sdk/credential-provider-node": "^3.388.0",
+    "@aws-sdk/protocol-http": "^3.374.0",
+    "@aws-sdk/signature-v4": "^3.374.0",
     "@aws-sdk/types": "^3.357.0",
     "@azure/storage-blob": "^12.15.0",
     "@clickhouse/client": "^0.0.14",
@@ -665,12 +669,16 @@
     "weaviate-ts-client": "^1.4.0"
   },
   "peerDependencies": {
+    "@aws-crypto/sha256-js": "^5.0.0",
     "@aws-sdk/client-dynamodb": "^3.310.0",
     "@aws-sdk/client-kendra": "^3.352.0",
     "@aws-sdk/client-lambda": "^3.310.0",
     "@aws-sdk/client-s3": "^3.310.0",
     "@aws-sdk/client-sagemaker-runtime": "^3.310.0",
     "@aws-sdk/client-sfn": "^3.310.0",
+    "@aws-sdk/credential-provider-node": "^3.388.0",
+    "@aws-sdk/protocol-http": "^3.374.0",
+    "@aws-sdk/signature-v4": "^3.374.0",
     "@azure/storage-blob": "^12.15.0",
     "@clickhouse/client": "^0.0.14",
     "@elastic/elasticsearch": "^8.4.0",
@@ -731,6 +739,9 @@
     "weaviate-ts-client": "^1.4.0"
   },
   "peerDependenciesMeta": {
+    "@aws-crypto/sha256-js": {
+      "optional": true
+    },
     "@aws-sdk/client-dynamodb": {
       "optional": true
     },
@@ -747,6 +758,15 @@
       "optional": true
     },
     "@aws-sdk/client-sfn": {
+      "optional": true
+    },
+    "@aws-sdk/credential-provider-node": {
+      "optional": true
+    },
+    "@aws-sdk/protocol-http": {
+      "optional": true
+    },
+    "@aws-sdk/signature-v4": {
       "optional": true
     },
     "@azure/storage-blob": {
@@ -926,10 +946,6 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.5.7",
-    "@aws-crypto/sha256-js": "^5.0.0",
-    "@aws-sdk/credential-provider-node": "^3.388.0",
-    "@aws-sdk/protocol-http": "^3.374.0",
-    "@aws-sdk/signature-v4": "^3.374.0",
     "ansi-styles": "^5.0.0",
     "binary-extensions": "^2.2.0",
     "camelcase": "6",
