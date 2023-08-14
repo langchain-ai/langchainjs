@@ -72,7 +72,6 @@ export class AsyncCaller {
               if (error instanceof Error) {
                 throw error;
               } else {
-                console.log(error);
                 throw new Error(error);
               }
             }),

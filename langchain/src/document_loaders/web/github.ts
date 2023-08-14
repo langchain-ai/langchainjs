@@ -43,6 +43,7 @@ export interface GithubRepoLoaderParams extends AsyncCallerParams {
   accessToken?: string;
   ignoreFiles?: (string | RegExp)[];
   ignorePaths?: string[];
+  verbose?: boolean;
   /**
    * The maximum number of concurrent calls that can be made. Defaults to 2.
    */
@@ -78,6 +79,8 @@ export class GithubRepoLoader
 
   public ignore?: Ignore;
 
+  public verbose?: boolean;
+
   protected caller: AsyncCaller;
 
   constructor(
@@ -89,6 +92,7 @@ export class GithubRepoLoader
       unknown = UnknownHandling.Warn,
       ignoreFiles = [],
       ignorePaths,
+      verbose = false,
       maxConcurrency = 2,
       maxRetries = 2,
       ...rest
@@ -104,6 +108,7 @@ export class GithubRepoLoader
     this.unknown = unknown;
     this.accessToken = accessToken;
     this.ignoreFiles = ignoreFiles;
+    this.verbose = verbose;
     this.caller = new AsyncCaller({
       maxConcurrency,
       maxRetries,
@@ -256,26 +261,38 @@ export class GithubRepoLoader
 
   private async fetchRepoFiles(path: string): Promise<GithubFile[]> {
     const url = `https://api.github.com/repos/${this.owner}/${this.repo}/contents/${path}?ref=${this.branch}`;
-    const response = await this.caller.fetch(url, { headers: this.headers });
-    const data = await response.json();
-    if (!response.ok) {
-      throw new Error(
-        `Unable to fetch repository files: ${response.status} ${JSON.stringify(
-          data
-        )}`
-      );
-    }
+    return this.caller.call(async () => {
+      if (this.verbose) {
+        console.log("Fetching", url);
+      }
+      const response = await fetch(url, { headers: this.headers });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(
+          `Unable to fetch repository files: ${
+            response.status
+          } ${JSON.stringify(data)}`
+        );
+      }
 
-    if (!Array.isArray(data)) {
-      throw new Error("Unable to fetch repository files.");
-    }
+      if (!Array.isArray(data)) {
+        throw new Error("Unable to fetch repository files.");
+      }
 
-    return data as GithubFile[];
+      return data as GithubFile[];
+    });
   }
 
   private async fetchFileContent(file: GithubFile): Promise<string> {
-    const response = await fetch(file.download_url, { headers: this.headers });
-    return response.text();
+    return this.caller.call(async () => {
+      if (this.verbose) {
+        console.log("Fetching", file.download_url);
+      }
+      const response = await fetch(file.download_url, {
+        headers: this.headers,
+      });
+      return response.text();
+    });
   }
 
   private handleError(message: string): void {
