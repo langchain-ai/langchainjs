@@ -4,8 +4,9 @@ import { AIMessage, HumanMessage } from "../../schema/index.js";
 import { LLMChain } from "../../chains/llm_chain.js";
 import { PromptTemplate } from "../../prompts/prompt.js";
 import { BufferMemory } from "../../memory/buffer_memory.js";
+import { BytesOutputParser } from "../../schema/output_parser.js";
 
-test("test call", async () => {
+test.skip("test call", async () => {
   const ollama = new ChatOllama({});
   const result = await ollama.predict(
     "What is a good name for a company that makes colorful socks?"
@@ -13,9 +14,9 @@ test("test call", async () => {
   console.log({ result });
 });
 
-test("test streaming call", async () => {
+test.skip("test streaming call", async () => {
   const ollama = new ChatOllama({
-    baseUrl: "http://127.0.0.1:11434",
+    baseUrl: "http://localhost:11434",
   });
   const stream = await ollama.stream(
     `Translate "I love programming" into German.`
@@ -27,9 +28,9 @@ test("test streaming call", async () => {
   expect(chunks.length).toBeGreaterThan(1);
 });
 
-test("should abort the request", async () => {
+test.skip("should abort the request", async () => {
   const ollama = new ChatOllama({
-    baseUrl: "http://127.0.0.1:11434",
+    baseUrl: "http://localhost:11434",
   });
   const controller = new AbortController();
 
@@ -42,8 +43,8 @@ test("should abort the request", async () => {
   }).rejects.toThrow("This operation was aborted");
 });
 
-test("Test multiple messages", async () => {
-  const model = new ChatOllama({ baseUrl: "http://127.0.0.1:11434" });
+test.skip("Test multiple messages", async () => {
+  const model = new ChatOllama({ baseUrl: "http://localhost:11434" });
   const res = await model.call([
     new HumanMessage({ content: "My name is Jonas" }),
   ]);
@@ -58,13 +59,13 @@ test("Test multiple messages", async () => {
   console.log({ res2 });
 });
 
-test("Test chain with memory", async () => {
+test.skip("Test chain with memory", async () => {
   const template = `The following is a friendly conversation between a human and an AI. The AI is talkative and provides lots of specific details from its context. If the AI does not know the answer to a question, it truthfully says it does not know.
 
 Current conversation:
 {history}
 Human: {input}`;
-  const model = new ChatOllama({ baseUrl: "http://127.0.0.1:11434" });
+  const model = new ChatOllama({ baseUrl: "http://localhost:11434" });
   const chain = new LLMChain({
     prompt: PromptTemplate.fromTemplate(template),
     llm: model,
@@ -80,4 +81,31 @@ Human: {input}`;
     input: "What is your name?",
   });
   console.log({ res3 });
+});
+
+test.skip("should stream through with a bytes output parser", async () => {
+  const TEMPLATE = `You are a pirate named Patchy. All responses must be extremely verbose and in pirate dialect.
+
+  User: {input}
+  AI:`;
+
+  const prompt = PromptTemplate.fromTemplate<{
+    input: string;
+  }>(TEMPLATE);
+
+  const ollama = new ChatOllama({
+    model: "llama2",
+    baseUrl: "http://127.0.0.1:11434",
+  });
+  const outputParser = new BytesOutputParser();
+  const chain = prompt.pipe(ollama).pipe(outputParser);
+  const stream = await chain.stream({
+    input: `Translate "I love programming" into German.`,
+  });
+  const chunks = [];
+  for await (const chunk of stream) {
+    chunks.push(chunk);
+  }
+  console.log(chunks.join(""));
+  expect(chunks.length).toBeGreaterThan(1);
 });
