@@ -27,6 +27,15 @@ export interface VectaraFilter {
   // between neural search and keyword-based search factors. Values between 0.01 and 0.2 tend to work well.
   // see https://docs.vectara.com/docs/api-reference/search-apis/lexical-matching for more details.
   lambda?: number;
+  // The number of sentences before/after the matching segment to add to the context.
+  contextConfig?: VectaraContextConfig;
+}
+
+export interface VectaraContextConfig {
+  // The number of sentences before the matching segment to add. Default is 2.
+  sentencesBefore?: number;
+  // The number of sentences after the matching segment to add. Default is 2.
+  sentencesAfter?: number;
 }
 
 export class VectaraStore extends VectorStore {
@@ -57,6 +66,8 @@ export class VectaraStore extends VectorStore {
   private customerId: number;
 
   private verbose: boolean;
+
+  private vectaraApiTimeoutSeconds = 60;
 
   _vectorstoreType(): string {
     return "vectara";
@@ -130,18 +141,27 @@ export class VectaraStore extends VectorStore {
       };
 
       try {
+        const controller = new AbortController();
+        const timeout = setTimeout(
+          () => controller.abort(),
+          this.vectaraApiTimeoutSeconds * 1000
+        );
         const response = await fetch(`https://${this.apiEndpoint}/v1/index`, {
           method: "POST",
           headers: headers?.headers,
           body: JSON.stringify(data),
+          signal: controller.signal,
         });
+        clearTimeout(timeout);
         const result = await response.json();
         if (
           result.status?.code !== "OK" &&
           result.status?.code !== "ALREADY_EXISTS"
         ) {
           const error = new Error(
-            `Vectara API returned status code ${result.code}: ${result.message}`
+            `Vectara API returned status code ${
+              result.status?.code
+            }: ${JSON.stringify(result.message)}`
           );
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           (error as any).code = 500;
@@ -151,7 +171,7 @@ export class VectaraStore extends VectorStore {
         }
       } catch (e) {
         const error = new Error(
-          `Error ${(e as Error).message} while adding document ${document}`
+          `Error ${(e as Error).message} while adding document`
         );
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (error as any).code = 500;
@@ -174,6 +194,10 @@ export class VectaraStore extends VectorStore {
         {
           query,
           numResults: k,
+          contextConfig: {
+            sentencesAfter: filter?.contextConfig?.sentencesAfter ?? 2,
+            sentencesBefore: filter?.contextConfig?.sentencesBefore ?? 2,
+          },
           corpusKey: [
             {
               customerId: this.customerId,
@@ -186,11 +210,18 @@ export class VectaraStore extends VectorStore {
       ],
     };
 
+    const controller = new AbortController();
+    const timeout = setTimeout(
+      () => controller.abort(),
+      this.vectaraApiTimeoutSeconds * 1000
+    );
     const response = await fetch(`https://${this.apiEndpoint}/v1/query`, {
       method: "POST",
       headers: headers?.headers,
       body: JSON.stringify(data),
+      signal: controller.signal,
     });
+    clearTimeout(timeout);
     if (response.status !== 200) {
       throw new Error(`Vectara API returned status code ${response.status}`);
     }

@@ -7,10 +7,10 @@ export const RUN_KEY = "__run";
 export type Example = Record<string, string>;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type InputValues = Record<string, any>;
+export type InputValues<K extends string = string> = Record<K, any>;
 
-export type PartialValues = Record<
-  string,
+export type PartialValues<K extends string = string> = Record<
+  K,
   string | (() => Promise<string>) | (() => string)
 >;
 

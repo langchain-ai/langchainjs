@@ -21,6 +21,7 @@ export const optionalImportEntrypoints = [
   "langchain/llms/load",
   "langchain/llms/cohere",
   "langchain/llms/hf",
+  "langchain/llms/raycast",
   "langchain/llms/replicate",
   "langchain/llms/googlevertexai",
   "langchain/llms/googlepalm",
@@ -47,6 +48,7 @@ export const optionalImportEntrypoints = [
   "langchain/vectorstores/singlestore",
   "langchain/vectorstores/tigris",
   "langchain/vectorstores/usearch",
+  "langchain/vectorstores/zep",
   "langchain/memory/zep",
   "langchain/document_loaders/web/apify_dataset",
   "langchain/document_loaders/web/assemblyai",
@@ -105,5 +107,6 @@ export const optionalImportEntrypoints = [
   "langchain/stores/message/ioredis",
   "langchain/stores/message/upstash_redis",
   "langchain/stores/message/planetscale",
+  "langchain/stores/message/xata",
   "langchain/experimental/multimodal_embeddings/googlevertexai",
 ];

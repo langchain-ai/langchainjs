@@ -57,6 +57,7 @@ export interface WeaviateLibArgs {
   indexName: string;
   textKey?: string;
   metadataKeys?: string[];
+  tenant?: string;
 }
 
 interface ResultRow {
@@ -80,6 +81,8 @@ export class WeaviateStore extends VectorStore {
 
   private queryAttrs: string[];
 
+  private tenant?: string;
+
   _vectorstoreType(): string {
     return "weaviate";
   }
@@ -91,6 +94,7 @@ export class WeaviateStore extends VectorStore {
     this.indexName = args.indexName;
     this.textKey = args.textKey || "text";
     this.queryAttrs = [this.textKey];
+    this.tenant = args.tenant;
 
     if (args.metadataKeys) {
       this.queryAttrs = [
@@ -126,6 +130,7 @@ export class WeaviateStore extends VectorStore {
 
       const flattenedMetadata = flattenObjectForWeaviate(document.metadata);
       return {
+        ...(this.tenant ? { tenant: this.tenant } : {}),
         class: this.indexName,
         id: documentIds[index],
         vector: vectors[index],
@@ -163,18 +168,28 @@ export class WeaviateStore extends VectorStore {
 
     if (ids && ids.length > 0) {
       for (const id of ids) {
-        await this.client.data
+        let deleter = this.client.data
           .deleter()
           .withClassName(this.indexName)
-          .withId(id)
-          .do();
+          .withId(id);
+
+        if (this.tenant) {
+          deleter = deleter.withTenant(this.tenant);
+        }
+
+        await deleter.do();
       }
     } else if (filter) {
-      await this.client.batch
+      let batchDeleter = this.client.batch
         .objectsBatchDeleter()
         .withClassName(this.indexName)
-        .withWhere(filter.where)
-        .do();
+        .withWhere(filter.where);
+
+      if (this.tenant) {
+        batchDeleter = batchDeleter.withTenant(this.tenant);
+      }
+
+      await batchDeleter.do();
     } else {
       throw new Error(
         `This method requires either "ids" or "filter" to be set in the input object`
@@ -197,6 +212,10 @@ export class WeaviateStore extends VectorStore {
           distance: filter?.distance,
         })
         .withLimit(k);
+
+      if (this.tenant) {
+        builder = builder.withTenant(this.tenant);
+      }
 
       if (filter?.where) {
         builder = builder.withWhere(filter.where);
