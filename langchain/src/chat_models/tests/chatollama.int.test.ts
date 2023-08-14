@@ -4,6 +4,7 @@ import { AIMessage, HumanMessage } from "../../schema/index.js";
 import { LLMChain } from "../../chains/llm_chain.js";
 import { PromptTemplate } from "../../prompts/prompt.js";
 import { BufferMemory } from "../../memory/buffer_memory.js";
+import { BytesOutputParser } from "../../schema/output_parser.js";
 
 test.skip("test call", async () => {
   const ollama = new ChatOllama({});
@@ -80,4 +81,31 @@ Human: {input}`;
     input: "What is your name?",
   });
   console.log({ res3 });
+});
+
+test.skip("should stream through with a bytes output parser", async () => {
+  const TEMPLATE = `You are a pirate named Patchy. All responses must be extremely verbose and in pirate dialect.
+
+  User: {input}
+  AI:`;
+
+  const prompt = PromptTemplate.fromTemplate<{
+    input: string;
+  }>(TEMPLATE);
+
+  const ollama = new ChatOllama({
+    model: "llama2",
+    baseUrl: "http://127.0.0.1:11434",
+  });
+  const outputParser = new BytesOutputParser();
+  const chain = prompt.pipe(ollama).pipe(outputParser);
+  const stream = await chain.stream({
+    input: `Translate "I love programming" into German.`,
+  });
+  const chunks = [];
+  for await (const chunk of stream) {
+    chunks.push(chunk);
+  }
+  console.log(chunks.join(""));
+  expect(chunks.length).toBeGreaterThan(1);
 });

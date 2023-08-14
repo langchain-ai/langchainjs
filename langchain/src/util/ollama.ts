@@ -87,7 +87,15 @@ export async function* createOllamaStream(
   const decoder = new TextDecoder();
   for await (const chunk of stream) {
     try {
-      yield JSON.parse(decoder.decode(chunk));
+      if (chunk !== undefined) {
+        const lines = decoder
+          .decode(chunk)
+          .split("\n")
+          .filter((v) => v.length);
+        for (const line of lines) {
+          yield JSON.parse(line);
+        }
+      }
     } catch (e) {
       console.warn(
         `Received a non-JSON parseable chunk: ${decoder.decode(chunk)}`
