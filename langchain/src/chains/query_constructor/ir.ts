@@ -51,7 +51,6 @@ export abstract class Visitor<T extends VectorStore = VectorStore> {
 
   declare VisitComparisonOutput: object;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   declare VisitStructuredQueryOutput: { filter?: T["FilterType"] };
 
   abstract allowedOperators: Operator[];

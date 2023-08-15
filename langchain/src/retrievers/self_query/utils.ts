@@ -3,8 +3,7 @@ export function isObject(obj: any): obj is object {
   return (
     obj &&
     typeof obj === "object" &&
-    !Array.isArray(obj) &&
-    obj.constructor.name === "Object"
+    !Array.isArray(obj)
   );
 }
 
