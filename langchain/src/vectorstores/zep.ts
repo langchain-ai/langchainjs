@@ -224,8 +224,8 @@ export class ZepVectorStore extends VectorStore {
 
   async similaritySearchWithScore(
     query: string,
-    k: number = 4,
-    filter?: Record<string, unknown> | undefined,
+    k = 4,
+    filter?: Record<string, unknown> | undefined = undefined,
     _callbacks = undefined // implement passing to embedQuery later
   ): Promise<[Document, number][]> {
     if (this.autoEmbed) {
