@@ -13318,6 +13318,7 @@ __metadata:
     "@tigrisdata/vector": ^1.1.0
     "@upstash/redis": ^1.20.6
     "@xata.io/client": ^0.25.1
+    "@xenova/transformers": ^2.5.1
     "@zilliz/milvus2-sdk-node": ">=2.2.7"
     apify-client: ^2.7.1
     axios: "*"

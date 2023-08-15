@@ -661,7 +661,6 @@
     "weaviate-ts-client": "^1.4.0"
   },
   "peerDependencies": {
-    "@xenova/transformers": "^2.5.1",
     "@aws-sdk/client-dynamodb": "^3.310.0",
     "@aws-sdk/client-kendra": "^3.352.0",
     "@aws-sdk/client-lambda": "^3.310.0",
@@ -691,6 +690,7 @@
     "@tigrisdata/vector": "^1.1.0",
     "@upstash/redis": "^1.20.6",
     "@xata.io/client": "^0.25.1",
+    "@xenova/transformers": "^2.5.1",
     "@zilliz/milvus2-sdk-node": ">=2.2.7",
     "apify-client": "^2.7.1",
     "axios": "*",
