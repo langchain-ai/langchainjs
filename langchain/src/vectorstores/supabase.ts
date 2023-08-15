@@ -81,7 +81,7 @@ export class SupabaseVectorStore extends VectorStore {
     for (let i = 0; i < rows.length; i += chunkSize) {
       const chunk = rows.slice(i, i + chunkSize).map((row, j) => {
         if (options?.ids) {
-          return { id: options.ids[j], ...row };
+          return { id: options.ids[i+j], ...row };
         }
         return row;
       });
