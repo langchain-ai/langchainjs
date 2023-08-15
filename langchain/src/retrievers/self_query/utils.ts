@@ -1,10 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export function isObject(obj: any): obj is object {
-  return (
-    obj &&
-    typeof obj === "object" &&
-    !Array.isArray(obj)
-  );
+  return obj && typeof obj === "object" && !Array.isArray(obj);
 }
 
 export function isFilterEmpty(
