@@ -25,6 +25,14 @@ export class FaissStore extends SaveableVectorStore {
     return "faiss";
   }
 
+  getMapping(): Record<number, string> {
+    return this._mapping;
+  }
+
+  getDocstore(): SynchronousInMemoryDocstore {
+    return this.docstore;
+  }
+
   constructor(embeddings: Embeddings, args: FaissLibArgs) {
     super(embeddings, args);
     this.args = args;
@@ -45,7 +53,7 @@ export class FaissStore extends SaveableVectorStore {
   public get index(): IndexFlatL2 {
     if (!this._index) {
       throw new Error(
-        "Vector store not initialised yet. Try calling `fromTexts` or `fromDocuments` first."
+        "Vector store not initialised yet. Try calling `fromTexts`, `fromDocuments` or `fromIndex` first."
       );
     }
     return this._index;
@@ -126,6 +134,33 @@ export class FaissStore extends SaveableVectorStore {
         ])
       ),
     ]);
+  }
+
+  async mergeFrom(targetIndex: FaissStore) {
+    const targetIndexDimensions = targetIndex.index.getDimension();
+    if (!this._index) {
+      const { IndexFlatL2 } = await FaissStore.importFaiss();
+      this._index = new IndexFlatL2(targetIndexDimensions);
+    }
+    const d = this.index.getDimension();
+    if (targetIndexDimensions !== d) {
+      throw new Error("Cannot merge indexes with different dimensions.");
+    }
+    const targetMapping = targetIndex.getMapping();
+    const targetDocstore = targetIndex.getDocstore();
+    const targetSize = targetIndex.index.ntotal();
+    const documentIds = [];
+    const currentDocstoreSize = this.index.ntotal();
+    for (let i = 0; i < targetSize; i += 1) {
+      const targetId = targetMapping[i];
+      documentIds.push(targetId);
+      const targetDocument = targetDocstore.search(targetId);
+      const id = currentDocstoreSize + i;
+      this._mapping[id] = targetId;
+      this.docstore.add({ [targetId]: targetDocument });
+    }
+    this.index.mergeFrom(targetIndex.index);
+    return documentIds;
   }
 
   static async load(directory: string, embeddings: Embeddings) {
@@ -251,6 +286,21 @@ export class FaissStore extends SaveableVectorStore {
     };
     const instance = new this(embeddings, args);
     await instance.addDocuments(docs);
+    return instance;
+  }
+
+  static async fromIndex(
+    targetIndex: FaissStore,
+    embeddings: Embeddings,
+    dbConfig?: {
+      docstore?: SynchronousInMemoryDocstore;
+    }
+  ): Promise<FaissStore> {
+    const args: FaissLibArgs = {
+      docstore: dbConfig?.docstore,
+    };
+    const instance = new this(embeddings, args);
+    await instance.mergeFrom(targetIndex);
     return instance;
   }
 
