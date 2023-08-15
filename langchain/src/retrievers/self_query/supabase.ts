@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   Comparator,
   Comparators,
@@ -8,6 +9,7 @@ import {
   StructuredQuery,
 } from "../../chains/query_constructor/ir.js";
 import {
+  SupabaseFilter,
   SupabaseFilterRPCCall,
   SupabaseVectorStore,
 } from "../../vectorstores/supabase.js";
@@ -22,6 +24,162 @@ type ValueType = {
   gt: string | number;
   gte: string | number;
 };
+
+type SupabaseFilterProps = keyof SupabaseFilter;
+
+class ProxyParamsDuplicator {
+  duplicationAllowedOps: string[] = [
+    "eq",
+    "ne",
+    "lt",
+    "lte",
+    "gt",
+    "gte",
+    "like",
+    "ilike",
+    "or",
+    "in",
+    "contains",
+    "textSearch",
+    "filter",
+  ];
+
+  values: Set<string[]> = new Set();
+
+  buildProxyHandler() {
+    const proxyHandler: ProxyHandler<SupabaseFilter> = {
+      get: (target, prop, receiver) => {
+        if (typeof target[prop as SupabaseFilterProps] === "function") {
+          return (...args: any[]) => {
+            if (this.duplicationAllowedOps.includes(String(prop))) {
+              if (String(prop) === "or") {
+                const filters = args[0] as string;
+                const { foreignTable } = args[1] as { foreignTable?: string };
+                this.or(filters, foreignTable);
+              } else if (String(prop) === "filter") {
+                const column = args[0] as string;
+                const operator = args[1] as string;
+                const value = args[2] as unknown;
+                this.filter(column, operator, value);
+              } else if (String(prop) === "in") {
+                const column = args[0] as string;
+                const values = args[1] as unknown[];
+                this.in(column, values);
+              } else if (String(prop) === "contains") {
+                const column = args[0] as string;
+                const value = args[1] as unknown[];
+                this.contains(column, value);
+              } else if (String(prop) === "textSearch") {
+                const column = args[0] as string;
+                const query = args[1] as string[];
+                const { config, type } = (args[2] ?? {}) as {
+                  config?: string;
+                  type?: "plain" | "phrase" | "websearch";
+                };
+                this.textSearch(column, query, { config, type });
+              } else {
+                const column = args[0] as string;
+                const value = args[1] as string;
+                this.values.add([
+                  this.removeType(column),
+                  `${String(prop)}.${value}`,
+                ]);
+              }
+              return new Proxy(target, proxyHandler);
+            } else {
+              throw new Error(
+                "Duplication operation not supported for 'or' mergeFiltersOperator"
+              );
+            }
+          };
+        } else {
+          return Reflect.get(target, prop, receiver);
+        }
+      },
+    };
+
+    return proxyHandler;
+  }
+
+  addToValues(column: string, value: string) {
+    this.values.add([column, value]);
+  }
+
+  removeType(value: string) {
+    if (value.includes("::int")) {
+      return value.replace("::int", "");
+    }
+    return value;
+  }
+
+  or(filters: string, foreignTable?: string) {
+    const key = foreignTable ? `${foreignTable}.or` : "or";
+    this.values.add([this.removeType(key), `(${filters})`]);
+  }
+
+  filter(column: string, operator: string, value: unknown) {
+    this.values.add([this.removeType(column), `${operator}.${value}`]);
+  }
+
+  in(column: string, values: unknown[]) {
+    const cleanedValues = values
+      .map((s) => {
+        if (typeof s === "string" && /[,()]/.test(s)) return `"${s}"`;
+        else return `${s}`;
+      })
+      .join(",");
+    this.values.add([this.removeType(column), `in.(${cleanedValues})`]);
+  }
+
+  contains(column: string, value: unknown) {
+    if (typeof value === "string") {
+      this.values.add([this.removeType(column), `cs.${value}`]);
+    } else if (Array.isArray(value)) {
+      this.values.add([this.removeType(column), `cs.{${value.join(",")}}`]);
+    } else {
+      this.values.add([this.removeType(column), `cs.${JSON.stringify(value)}`]);
+    }
+  }
+
+  textSearch(
+    column: string,
+    query: string[],
+    {
+      config,
+      type,
+    }: { config?: string; type?: "plain" | "phrase" | "websearch" } = {}
+  ) {
+    let typePart = "";
+    if (type === "plain") {
+      typePart = "pl";
+    } else if (type === "phrase") {
+      typePart = "ph";
+    } else if (type === "websearch") {
+      typePart = "w";
+    }
+    const configPart = config === undefined ? "" : `(${config})`;
+    this.values.add([
+      this.removeType(column),
+      `${typePart}fts${configPart}.${query}`,
+    ]);
+  }
+
+  flattenedParams() {
+    return Array.from(this.values)
+      .map(([k, v]) => `${k}.${v}`)
+      .join(",");
+  }
+
+  static getFlattenedParams(
+    rpc: SupabaseFilter,
+    filter: SupabaseFilterRPCCall
+  ) {
+    const proxiedDuplicator = new ProxyParamsDuplicator();
+    const proxiedRpc = new Proxy(rpc, proxiedDuplicator.buildProxyHandler());
+    void filter(proxiedRpc);
+    return proxiedDuplicator.flattenedParams();
+  }
+}
 
 export class SupabaseTranslator<
   T extends SupabaseVectorStore
@@ -184,11 +342,6 @@ export class SupabaseTranslator<
     generatedFilter: SupabaseFilterRPCCall | undefined,
     mergeType = "and"
   ): SupabaseFilterRPCCall | undefined {
-    if (mergeType === "or") {
-      throw new Error(
-        "Supabase self-query filter does not support merging two filters with the OR operator"
-      );
-    }
     if (isFilterEmpty(defaultFilter) && isFilterEmpty(generatedFilter)) {
       return undefined;
     }
@@ -205,7 +358,17 @@ export class SupabaseTranslator<
       return defaultFilter;
     }
 
-    if (mergeType === "and") {
+    if (mergeType === "or") {
+      return (rpc) => {
+        const defaultFlattenedParams = ProxyParamsDuplicator.getFlattenedParams(
+          rpc,
+          defaultFilter
+        );
+        const generatedFlattenedParams =
+          ProxyParamsDuplicator.getFlattenedParams(rpc, generatedFilter);
+        return rpc.or(`${defaultFlattenedParams},${generatedFlattenedParams}`);
+      };
+    } else if (mergeType === "and") {
       return (rpc) => generatedFilter(defaultFilter(rpc));
     } else {
       throw new Error("Unknown merge type");
