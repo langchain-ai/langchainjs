@@ -4,6 +4,7 @@
 // Adapted from https://github.com/gfortaine/fetch-event-source/blob/main/src/parse.ts
 // due to a packaging issue in the original.
 // MIT License
+import { type Readable } from "stream";
 
 export const EventStreamContentType = "text/event-stream";
 
@@ -22,6 +23,10 @@ export interface EventSourceMessage {
   retry?: number;
 }
 
+function isNodeJSReadable(x: unknown): x is Readable {
+  return x != null && typeof x === "object" && "on" in x;
+}
+
 /**
  * Converts a ReadableStream into a callback pattern.
  * @param stream The input ReadableStream.
@@ -32,8 +37,28 @@ export async function getBytes(
   stream: ReadableStream<Uint8Array>,
   onChunk: (arr: Uint8Array, flush?: boolean) => void
 ) {
-  const reader = stream.getReader();
+  // stream is a Node.js Readable / PassThrough stream
+  // this can happen if node-fetch is polyfilled
+  if (isNodeJSReadable(stream)) {
+    return new Promise<void>((resolve) => {
+      stream.on("readable", () => {
+        let chunk;
+        // eslint-disable-next-line no-constant-condition
+        while (true) {
+          chunk = stream.read();
+          if (chunk == null) {
+            onChunk(new Uint8Array(), true);
+            break;
+          }
+          onChunk(chunk);
+        }
 
+        resolve();
+      });
+    });
+  }
+
+  const reader = stream.getReader();
   // CHANGED: Introduced a "flush" mechanism to process potential pending messages when the stream ends.
   //          This change is essential to ensure that we capture every last piece of information from streams,
   //          such as those from Azure OpenAI, which may not terminate with a blank line. Without this

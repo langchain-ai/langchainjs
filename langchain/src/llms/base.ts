@@ -146,7 +146,9 @@ export abstract class BaseLLM<
           } else {
             generation = generation.concat(chunk);
           }
-          yield chunk.text;
+          if (typeof chunk.text === "string") {
+            yield chunk.text;
+          }
         }
       } catch (err) {
         await Promise.all(
