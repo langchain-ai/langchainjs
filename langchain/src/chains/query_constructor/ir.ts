@@ -1,3 +1,5 @@
+import { VectorStore } from "../../vectorstores/base.js";
+
 export type AND = "and";
 export type OR = "or";
 export type NOT = "not";
@@ -28,10 +30,7 @@ export const Comparators: { [key: string]: Comparator } = {
   gte: "gte",
 };
 
-export type VisitorResult =
-  | VisitorOperationResult
-  | VisitorComparisonResult
-  | VisitorStructuredQueryResult;
+export type VisitorResult = VisitorOperationResult | VisitorComparisonResult;
 
 export type VisitorOperationResult = {
   [operator: string]: VisitorResult[];
@@ -44,18 +43,15 @@ export type VisitorComparisonResult = {
 };
 
 export type VisitorStructuredQueryResult = {
-  filter?:
-    | VisitorStructuredQueryResult
-    | VisitorComparisonResult
-    | VisitorOperationResult;
+  filter?: VisitorComparisonResult | VisitorOperationResult;
 };
 
-export abstract class Visitor {
+export abstract class Visitor<T extends VectorStore = VectorStore> {
   declare VisitOperationOutput: object;
 
   declare VisitComparisonOutput: object;
 
-  declare VisitStructuredQueryOutput: { filter?: object };
+  declare VisitStructuredQueryOutput: { filter?: T["FilterType"] };
 
   abstract allowedOperators: Operator[];
 

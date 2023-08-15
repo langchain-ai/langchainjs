@@ -76,6 +76,9 @@ export interface OptionalImportMap {
   "langchain/llms/sagemaker_endpoint"?:
     | typeof import("../llms/sagemaker_endpoint.js")
     | Promise<typeof import("../llms/sagemaker_endpoint.js")>;
+  "langchain/llms/bedrock"?:
+    | typeof import("../llms/bedrock.js")
+    | Promise<typeof import("../llms/bedrock.js")>;
   "langchain/prompts/load"?:
     | typeof import("../prompts/load.js")
     | Promise<typeof import("../prompts/load.js")>;
@@ -238,6 +241,9 @@ export interface OptionalImportMap {
   "langchain/document_transformers/html_to_text"?:
     | typeof import("../document_transformers/html_to_text.js")
     | Promise<typeof import("../document_transformers/html_to_text.js")>;
+  "langchain/document_transformers/mozilla_readability"?:
+    | typeof import("../document_transformers/mozilla_readability.js")
+    | Promise<typeof import("../document_transformers/mozilla_readability.js")>;
   "langchain/chat_models/googlevertexai"?:
     | typeof import("../chat_models/googlevertexai.js")
     | Promise<typeof import("../chat_models/googlevertexai.js")>;

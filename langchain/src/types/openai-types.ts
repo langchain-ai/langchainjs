@@ -28,6 +28,9 @@ export declare interface OpenAIBaseInput {
   /** Dictionary used to adjust the probability of specific tokens being generated */
   logitBias?: Record<string, number>;
 
+  /** Unique string identifier representing your end-user, which can help OpenAI to monitor and detect abuse. */
+  user?: string;
+
   /** Whether to stream the results or not. Enabling disables tokenUsage reporting */
   streaming: boolean;
 

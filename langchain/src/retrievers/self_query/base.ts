@@ -12,17 +12,29 @@ import {
   VisitorResult,
   VisitorStructuredQueryResult,
 } from "../../chains/query_constructor/ir.js";
+import { VectorStore } from "../../vectorstores/base.js";
+import { isFilterEmpty } from "./utils.js";
 
 export type TranslatorOpts = {
   allowedOperators: Operator[];
   allowedComparators: Comparator[];
 };
 
-export abstract class BaseTranslator extends Visitor {
+export abstract class BaseTranslator<
+  T extends VectorStore = VectorStore
+> extends Visitor<T> {
   abstract formatFunction(func: Operator | Comparator): string;
+
+  abstract mergeFilters(
+    defaultFilter: this["VisitStructuredQueryOutput"]["filter"] | undefined,
+    generatedFilter: this["VisitStructuredQueryOutput"]["filter"] | undefined,
+    mergeType?: "and" | "or" | "replace"
+  ): this["VisitStructuredQueryOutput"]["filter"] | undefined;
 }
 
-export class BasicTranslator extends BaseTranslator {
+export class BasicTranslator<
+  T extends VectorStore = VectorStore
+> extends BaseTranslator<T> {
   declare VisitOperationOutput: VisitorOperationResult;
 
   declare VisitComparisonOutput: VisitorComparisonResult;
@@ -105,5 +117,38 @@ export class BasicTranslator extends BaseTranslator {
       };
     }
     return nextArg;
+  }
+
+  mergeFilters(
+    defaultFilter: VisitorStructuredQueryResult["filter"] | undefined,
+    generatedFilter: VisitorStructuredQueryResult["filter"] | undefined,
+    mergeType = "and"
+  ): VisitorStructuredQueryResult["filter"] | undefined {
+    if (isFilterEmpty(defaultFilter) && isFilterEmpty(generatedFilter)) {
+      return undefined;
+    }
+    if (isFilterEmpty(defaultFilter) || mergeType === "replace") {
+      if (isFilterEmpty(generatedFilter)) {
+        return undefined;
+      }
+      return generatedFilter;
+    }
+    if (isFilterEmpty(generatedFilter)) {
+      if (mergeType === "and") {
+        return undefined;
+      }
+      return defaultFilter;
+    }
+    if (mergeType === "and") {
+      return {
+        $and: [defaultFilter, generatedFilter],
+      };
+    } else if (mergeType === "or") {
+      return {
+        $or: [defaultFilter, generatedFilter],
+      };
+    } else {
+      throw new Error("Unknown merge type");
+    }
   }
 }

@@ -1,13 +1,17 @@
+import { z } from "zod";
 import { CallbackManagerForToolRun } from "../../../callbacks/manager.js";
 import { BaseRetriever } from "../../../schema/retriever.js";
-import { DynamicTool, DynamicToolInput } from "../../../tools/dynamic.js";
+import {
+  DynamicStructuredTool,
+  DynamicStructuredToolInput,
+} from "../../../tools/dynamic.js";
 
 export function createRetrieverTool(
   retriever: BaseRetriever,
-  input: Omit<DynamicToolInput, "func">
+  input: Omit<DynamicStructuredToolInput, "func" | "schema">
 ) {
   const func = async (
-    input: string,
+    { input }: { input: string },
     runManager?: CallbackManagerForToolRun
   ) => {
     const docs = await retriever.getRelevantDocuments(
@@ -16,5 +20,10 @@ export function createRetrieverTool(
     );
     return docs.map((doc) => doc.pageContent).join("\n");
   };
-  return new DynamicTool({ ...input, func });
+  const schema = z.object({
+    input: z
+      .string()
+      .describe("Natural language query used as input to the retriever"),
+  });
+  return new DynamicStructuredTool({ ...input, func, schema });
 }
