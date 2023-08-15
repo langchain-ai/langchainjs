@@ -132,19 +132,18 @@ export class OpenAIEmbeddings
       this.batchSize
     );
 
+    const promises = subPrompts.map((input) => this.embeddingWithRetry({
+      model: this.modelName,
+      input,
+    }).then(({ data }) => ({ data, input })));
+    const dataResults = await Promise.all(promises);
+    
     const embeddings: number[][] = [];
-
-    for (let i = 0; i < subPrompts.length; i += 1) {
-      const input = subPrompts[i];
-      const { data } = await this.embeddingWithRetry({
-        model: this.modelName,
-        input,
-      });
+    dataResults.forEach(({ data, input }) => {
       for (let j = 0; j < input.length; j += 1) {
         embeddings.push(data.data[j].embedding);
       }
-    }
-
+    });
     return embeddings;
   }
 
