@@ -105,6 +105,8 @@ export class OpenAI
 
   stop?: string[];
 
+  user?: string;
+
   streaming = false;
 
   openAIApiKey?: string;
@@ -185,6 +187,7 @@ export class OpenAI
     this.bestOf = fields?.bestOf ?? this.bestOf;
     this.logitBias = fields?.logitBias;
     this.stop = fields?.stop;
+    this.user = fields?.user;
 
     this.streaming = fields?.streaming ?? false;
 
@@ -228,6 +231,7 @@ export class OpenAI
       best_of: this.bestOf,
       logit_bias: this.logitBias,
       stop: options?.stop ?? this.stop,
+      user: this.user,
       stream: this.streaming,
       ...this.modelKwargs,
     };
