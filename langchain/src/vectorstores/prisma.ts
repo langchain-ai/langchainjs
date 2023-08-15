@@ -354,15 +354,23 @@ export class PrismaVectorStore<
 
   buildSqlFilterStr(filter?: TFilterModel) {
     if (filter == null) return null;
+    const opsTemplate = (key: string, ops: object | undefined) => Object.entries(ops).map(([opName, value]) => {
+      // column name, operators cannot be parametrised
+      // these fields are thus not escaped by Prisma and can be dangerous if user input is used
+      const colRaw = this.Prisma.raw(`"${key}"`);
+      const opRaw = this.Prisma.raw(OpMap[opName as keyof typeof OpMap]);
+      return this.Prisma.sql`${colRaw} ${opRaw} ${value}`;
+    });
     return this.Prisma.join(
-      Object.entries(filter).flatMap(([key, ops]) =>
-        Object.entries(ops).map(([opName, value]) => {
-          // column name, operators cannot be parametrised
-          // these fields are thus not escaped by Prisma and can be dangerous if user input is used
-          const colRaw = this.Prisma.raw(`"${key}"`);
-          const opRaw = this.Prisma.raw(OpMap[opName as keyof typeof OpMap]);
-          return this.Prisma.sql`${colRaw} ${opRaw} ${value}`;
-        })
+      Object.entries(filter).flatMap(([key, ops]) => 
+        Array.isArray(ops)
+        ? this.Prisma.join(
+            ops.flatMap(orOps => opsTemplate(key, orOps)),
+            " OR ",
+            " ( ",
+            " ) "
+        )
+        : opsTemplate(key, ops)
       ),
       " AND ",
       " WHERE "
