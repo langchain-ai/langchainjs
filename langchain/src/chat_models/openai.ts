@@ -219,6 +219,8 @@ export class ChatOpenAI
 
   stop?: string[];
 
+  user?: string;
+
   timeout?: number;
 
   streaming = false;
@@ -291,6 +293,7 @@ export class ChatOpenAI
     this.n = fields?.n ?? this.n;
     this.logitBias = fields?.logitBias;
     this.stop = fields?.stop;
+    this.user = fields?.user;
 
     this.streaming = fields?.streaming ?? false;
 
@@ -329,6 +332,7 @@ export class ChatOpenAI
       n: this.n,
       logit_bias: this.logitBias,
       stop: options?.stop ?? this.stop,
+      user: this.user,
       stream: this.streaming,
       functions:
         options?.functions ??

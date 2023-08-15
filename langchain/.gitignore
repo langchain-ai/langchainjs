@@ -127,6 +127,9 @@ llms/googlepalm.d.ts
 llms/sagemaker_endpoint.cjs
 llms/sagemaker_endpoint.js
 llms/sagemaker_endpoint.d.ts
+llms/bedrock.cjs
+llms/bedrock.js
+llms/bedrock.d.ts
 prompts.cjs
 prompts.js
 prompts.d.ts
@@ -331,6 +334,9 @@ document_loaders/fs/unstructured.d.ts
 document_transformers/html_to_text.cjs
 document_transformers/html_to_text.js
 document_transformers/html_to_text.d.ts
+document_transformers/mozilla_readability.cjs
+document_transformers/mozilla_readability.js
+document_transformers/mozilla_readability.d.ts
 document_transformers/openai_functions.cjs
 document_transformers/openai_functions.js
 document_transformers/openai_functions.d.ts

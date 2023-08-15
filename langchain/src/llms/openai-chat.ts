@@ -106,6 +106,8 @@ export class OpenAIChat
 
   stop?: string[];
 
+  user?: string;
+
   streaming = false;
 
   openAIApiKey?: string;
@@ -177,6 +179,7 @@ export class OpenAIChat
     this.logitBias = fields?.logitBias;
     this.maxTokens = fields?.maxTokens;
     this.stop = fields?.stop;
+    this.user = fields?.user;
 
     this.streaming = fields?.streaming ?? false;
 
@@ -221,6 +224,7 @@ export class OpenAIChat
       logit_bias: this.logitBias,
       max_tokens: this.maxTokens === -1 ? undefined : this.maxTokens,
       stop: options?.stop ?? this.stop,
+      user: this.user,
       stream: this.streaming,
       ...this.modelKwargs,
     };
