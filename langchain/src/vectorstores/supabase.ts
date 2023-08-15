@@ -58,7 +58,10 @@ export class SupabaseVectorStore extends VectorStore {
     this.upsertBatchSize = args.upsertBatchSize ?? this.upsertBatchSize;
   }
 
-  async addDocuments(documents: Document[], options?: { ids?: string[] }) {
+  async addDocuments(
+    documents: Document[],
+    options?: { ids?: string[] | number[] }
+  ) {
     const texts = documents.map(({ pageContent }) => pageContent);
     return this.addVectors(
       await this.embeddings.embedDocuments(texts),
@@ -70,7 +73,7 @@ export class SupabaseVectorStore extends VectorStore {
   async addVectors(
     vectors: number[][],
     documents: Document[],
-    options?: { ids?: string[] }
+    options?: { ids?: string[] | number[] }
   ) {
     const rows = vectors.map((embedding, idx) => ({
       content: documents[idx].pageContent,
