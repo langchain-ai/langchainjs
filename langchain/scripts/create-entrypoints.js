@@ -35,6 +35,7 @@ const entrypoints = {
   // embeddings
   embeddings: "embeddings/index",
   "embeddings/base": "embeddings/base",
+  "embeddings/cache_backed": "embeddings/cache_backed",
   "embeddings/fake": "embeddings/fake",
   "embeddings/openai": "embeddings/openai",
   "embeddings/cohere": "embeddings/cohere",
@@ -206,6 +207,9 @@ const entrypoints = {
   "stores/message/upstash_redis": "stores/message/upstash_redis",
   "stores/message/planetscale": "stores/message/planetscale",
   "stores/message/xata": "stores/message/xata",
+  // storage
+  "storage/in_memory": "storage/in_memory",
+  "storage/ioredis": "storage/ioredis",
   // utilities
   "util/math": "util/math",
   // experimental
@@ -343,6 +347,7 @@ const requiresOptionalDependency = [
   "stores/message/upstash_redis",
   "stores/message/planetscale",
   "stores/message/xata",
+  "storage/ioredis",
   "experimental/multimodal_embeddings/googlevertexai",
 ];
 
