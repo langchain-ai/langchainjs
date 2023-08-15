@@ -28,6 +28,7 @@ export interface SupabaseLibArgs {
   tableName?: string;
   queryName?: string;
   filter?: SupabaseMetadata | SupabaseFilterRPCCall;
+  upsertBatchSize?: number;
 }
 
 export class SupabaseVectorStore extends VectorStore {
@@ -41,6 +42,8 @@ export class SupabaseVectorStore extends VectorStore {
 
   filter?: SupabaseMetadata | SupabaseFilterRPCCall;
 
+  upsertBatchSize = 500;
+
   _vectorstoreType(): string {
     return "supabase";
   }
@@ -52,6 +55,7 @@ export class SupabaseVectorStore extends VectorStore {
     this.tableName = args.tableName || "documents";
     this.queryName = args.queryName || "match_documents";
     this.filter = args.filter;
+    this.upsertBatchSize = args.upsertBatchSize ?? this.upsertBatchSize;
   }
 
   async addDocuments(
@@ -79,12 +83,11 @@ export class SupabaseVectorStore extends VectorStore {
 
     // upsert returns 500/502/504 (yes really any of them) if given too many rows/characters
     // ~2000 trips it, but my data is probably smaller than average pageContent and metadata
-    const chunkSize = 500;
     let returnedIds: string[] = [];
-    for (let i = 0; i < rows.length; i += chunkSize) {
-      const chunk = rows.slice(i, i + chunkSize).map((row, innerIdx) => {
+    for (let i = 0; i < rows.length; i += this.upsertBatchSize) {
+      const chunk = rows.slice(i, i + this.upsertBatchSize).map((row, j) => {
         if (options?.ids) {
-          return { id: options.ids[i + innerIdx], ...row };
+          return { id: options.ids[i + j], ...row };
         }
         return row;
       });
