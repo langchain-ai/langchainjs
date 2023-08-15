@@ -242,4 +242,34 @@ describe("ZepVectorStore", () => {
 
     expect(result).toEqual(docsAndScores);
   });
+
+    test("should perform similarity search successfully", async () => {
+        const zepVectorStore = new ZepVectorStore(embeddings, zepConfig);
+        // Inject mockCollection into zepVectorStore
+        (zepVectorStore as any).collection = mockCollection;
+
+        const query = "foo bar";
+        const k = 3;
+        const filter = { foo: "bar" };
+
+        const result = await zepVectorStore.similaritySearch(query, k, filter);
+
+        expect(mockCollection.search).toHaveBeenCalledWith(
+            expect.objectContaining({
+                text: query,
+                metadata: filter,
+            }),
+            k
+        );
+
+        const docs = mockZepDocuments.map((doc) =>
+            new Document({
+                pageContent: doc.content,
+                metadata: doc.metadata,
+            })
+        );
+
+        expect(result).toEqual(docs);
+    });
+
 });

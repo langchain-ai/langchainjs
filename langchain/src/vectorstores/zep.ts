@@ -1,9 +1,11 @@
 import { DocumentCollection, IDocument, ZepClient } from "@getzep/zep-js";
 
-import { VectorStore } from "./base.js";
+import { MaxMarginalRelevanceSearchOptions, VectorStore } from "./base.js";
 import { Embeddings } from "../embeddings/base.js";
 import { Document } from "../document.js";
 import { FakeEmbeddings } from "../embeddings/fake.js";
+import { Callbacks } from "../callbacks/index.js";
+import { maximalMarginalRelevance } from "../util/math.js";
 
 export interface IZepArgs {
   collection: DocumentCollection;
@@ -178,16 +180,6 @@ export class ZepVectorStore extends VectorStore {
     }
   }
 
-  private isRecord(value: unknown): value is Record<string, unknown> {
-    return (
-      typeof value === "object" &&
-      value !== null &&
-      !Array.isArray(value) &&
-      // eslint-disable-next-line no-instanceof/no-instanceof
-      !(value instanceof Function)
-    );
-  }
-
   /**
    * Performs a similarity search in the collection and returns the results with their scores.
    *
@@ -201,29 +193,113 @@ export class ZepVectorStore extends VectorStore {
     k: number,
     filter?: Record<string, unknown> | undefined
   ): Promise<[Document, number][]> {
-    if (filter && !this.isRecord(filter)) {
-      throw new Error(`Filter must be a record, got ${filter}`);
-    }
     await this.initPromise;
     const results = await this.collection.search(
       {
         embedding: new Float32Array(query),
-        metadata: filter,
+        metadata: assignMetadata(filter),
       },
       k
     );
+    return zepDocsToDocumentsAndScore(results);
+  }
 
-    const docsAndScore: [Document, number][] = [];
-    results.forEach((d) => {
-      docsAndScore.push([
-        new Document({
-          pageContent: d.content,
-          metadata: d.metadata,
-        }),
-        d.score ? d.score : 0,
-      ]);
+    /**
+     * Performs a similarity search on the Zep collection.
+     *
+     * @param {string} query - The query string to search for.
+     * @param {number} [k=4] - The number of results to return. Defaults to 4.
+     * @param {this["FilterType"] | undefined} [filter=undefined] - An optional set of JSONPath filters to apply to the search.
+     * @param {Callbacks | undefined} [_callbacks=undefined] - Optional callbacks. Currently not implemented.
+     * @returns {Promise<Document[]>} - A promise that resolves to an array of Documents that are similar to the query.
+     *
+     * @async
+     */
+  async similaritySearch(
+    query: string,
+    k = 4,
+    filter: this["FilterType"] | undefined = undefined,
+    _callbacks: Callbacks | undefined = undefined // implement passing to embedQuery later
+  ): Promise<Document[]> {
+    await this.initPromise;
+
+    let results: [Document, number][];
+    if (this.autoEmbed) {
+      const zepResults = await this.collection.search(
+        { text: query, metadata: assignMetadata(filter) },
+        k
+      );
+      results = zepDocsToDocumentsAndScore(zepResults);
+    } else {
+      results = await this.similaritySearchVectorWithScore(
+        await this.embeddings.embedQuery(query),
+        k,
+        assignMetadata(filter)
+      );
+    }
+
+    return results.map((result) => result[0]);
+  }
+
+  /**
+   * Return documents selected using the maximal marginal relevance.
+   * Maximal marginal relevance optimizes for similarity to the query AND diversity
+   * among selected documents.
+   *
+   * @param {string} query - Text to look up documents similar to.
+   * @param options
+   * @param {number} options.k - Number of documents to return.
+   * @param {number} options.fetchK=20- Number of documents to fetch before passing to the MMR algorithm.
+   * @param {number} options.lambda=0.5 - Number between 0 and 1 that determines the degree of diversity among the results,
+   *                 where 0 corresponds to maximum diversity and 1 to minimum diversity.
+   * @param {Record<string, any>} options.filter - Optional Zep JSONPath query to pre-filter on document metadata field
+   *
+   * @returns {Promise<Document[]>} - List of documents selected by maximal marginal relevance.
+   */
+  async maxMarginalRelevanceSearch(
+    query: string,
+    options: MaxMarginalRelevanceSearchOptions<this["FilterType"]>
+  ): Promise<Document[]> {
+    const { k, fetchK = 20, lambda = 0.5, filter } = options;
+
+    let queryEmbedding: number[];
+    let zepResults: IDocument[];
+    if (!this.autoEmbed) {
+      queryEmbedding = await this.embeddings.embedQuery(query);
+      zepResults = await this.collection.search(
+        {
+          embedding: new Float32Array(queryEmbedding),
+          metadata: assignMetadata(filter),
+        },
+        fetchK
+      );
+    } else {
+      let queryEmbeddingArray: Float32Array;
+      [zepResults, queryEmbeddingArray] =
+        await this.collection.searchReturnQueryVector(
+          { text: query, metadata: assignMetadata(filter) },
+          fetchK
+        );
+      queryEmbedding = Array.from(queryEmbeddingArray);
+    }
+
+    const results = zepDocsToDocumentsAndScore(zepResults);
+
+    const embeddingList = zepResults.map((doc) =>
+      Array.from(doc.embedding ? doc.embedding : [])
+    );
+
+    const mmrIndexes = maximalMarginalRelevance(
+      queryEmbedding,
+      embeddingList,
+      lambda,
+      k
+    );
+
+    return mmrIndexes.map((idx) => {
+      const doc = results[idx][0];
+      return doc;
     });
-    return docsAndScore;
   }
 
   /**
@@ -272,4 +348,26 @@ export class ZepVectorStore extends VectorStore {
     await instance.addDocuments(docs);
     return instance;
   }
+}
+
+function zepDocsToDocumentsAndScore(
+  results: IDocument[]
+): [Document, number][] {
+  return results.map((d) => [
+    new Document({
+      pageContent: d.content,
+      metadata: d.metadata,
+    }),
+    d.score ? d.score : 0,
+  ]);
+}
+
+function assignMetadata(
+  value: string | Record<string, unknown> | object | undefined
+): Record<string, unknown> | undefined {
+  if (typeof value === "object" && value !== null) {
+    return value as Record<string, unknown>;
+  }
+  console.warn("Metadata filters must be an object, Record, or undefined.");
+  return undefined;
 }
