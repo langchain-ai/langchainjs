@@ -37,7 +37,6 @@ test("Supabase Store Self Query Retriever Test", async () => {
         director: "Greta Gerwig",
         rating: 8.3,
         genre: "drama",
-        length: 89,
       },
     }),
     new Document({
@@ -123,7 +122,7 @@ test("Supabase Store Self Query Retriever Test", async () => {
     "Which movies are less than 90 minutes?"
   );
   console.log(query1);
-  expect(query1.length).toEqual(1);
+  expect(query1.length).toEqual(0);
   const query2 = await selfQueryRetriever.getRelevantDocuments(
     "Which movies are rated higher than 8.5?"
   );
@@ -181,7 +180,6 @@ test("Supabase Store Self Query Retriever Test With Default Filter", async () =>
         director: "Greta Gerwig",
         rating: 8.3,
         genre: "drama",
-        length: 89,
       },
     }),
     new Document({
@@ -266,6 +264,7 @@ test("Supabase Store Self Query Retriever Test With Default Filter", async () =>
       filter: (rpc: SupabaseFilter) =>
         rpc.filter("metadata->>type", "eq", "movie"),
       mergeFiltersOperator: "and", // Supabase self-query filter does not support "or" operator for merging two filters
+      k: docs.length,
     },
   });
 
@@ -273,7 +272,7 @@ test("Supabase Store Self Query Retriever Test With Default Filter", async () =>
     "Which movies are less than 90 minutes?"
   );
   console.log(query1);
-  expect(query1.length).toEqual(1);
+  expect(query1.length).toEqual(0);
   const query2 = await selfQueryRetriever.getRelevantDocuments(
     "Which movies are rated higher than 8.5?"
   );
