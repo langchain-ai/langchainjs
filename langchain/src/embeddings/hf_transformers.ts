@@ -2,7 +2,7 @@ import { TransformersEmbeddingFunction } from "chromadb";
 import { chunkArray } from "../util/chunk.js";
 import { Embeddings, EmbeddingsParams } from "./base.js";
 
-export interface TransformerEmbeddingsParams extends EmbeddingsParams {
+export interface HuggingFaceTransformersEmbeddingsParams extends EmbeddingsParams {
   /** Model name to use */
   modelName: string;
 
@@ -12,8 +12,7 @@ export interface TransformerEmbeddingsParams extends EmbeddingsParams {
   timeout?: number;
 
   /**
-   * The maximum number of documents to embed in a single request. This is
-   * limited by the OpenAI API to a maximum of 2048.
+   * The maximum number of documents to embed in a single request.
    */
   batchSize?: number;
 
@@ -24,9 +23,9 @@ export interface TransformerEmbeddingsParams extends EmbeddingsParams {
   stripNewLines?: boolean;
 }
 
-export class TransformerEmbeddings
+export class HuggingFaceTransformersEmbeddings
   extends Embeddings
-  implements TransformerEmbeddingsParams
+  implements HuggingFaceTransformersEmbeddingsParams
 {
   modelName = "Xenova/all-MiniLM-L6-v2";
 
@@ -40,7 +39,7 @@ export class TransformerEmbeddings
 
   timeout?: number;
 
-  constructor(fields?: Partial<TransformerEmbeddingsParams>) {
+  constructor(fields?: Partial<HuggingFaceTransformersEmbeddingsParams>) {
     super(fields ?? {});
 
     this.modelName = fields?.modelName ?? this.modelName;

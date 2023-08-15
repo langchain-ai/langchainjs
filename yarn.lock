@@ -7772,6 +7772,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@xenova/transformers@npm:^2.5.1":
+  version: 2.5.2
+  resolution: "@xenova/transformers@npm:2.5.2"
+  dependencies:
+    onnxruntime-node: 1.14.0
+    onnxruntime-web: 1.14.0
+    sharp: ^0.32.0
+  dependenciesMeta:
+    onnxruntime-node:
+      optional: true
+  checksum: e2efba3394b1af5443fa07a15e3a77bb59ffc0586b2dfa9387d554f1229709db880f4cb703f42be5e0922b3f74a3547c3e0f3c983f463b249d3ad80f60be4264
+  languageName: node
+  linkType: hard
+
 "@zilliz/milvus2-sdk-node@npm:>=2.2.7, @zilliz/milvus2-sdk-node@npm:^2.2.7":
   version: 2.2.10
   resolution: "@zilliz/milvus2-sdk-node@npm:2.2.10"
@@ -8297,6 +8311,13 @@ __metadata:
   dependencies:
     deep-equal: ^2.0.5
   checksum: c12a5da10dc7bab75e1cda9b6a3b5fcf10eba426ddf1a17b71ef65a434ed707ede7d1c4f013ba1609e970bc8c0cddac01365080d376204314e9b294719acd8a5
+  languageName: node
+  linkType: hard
+
+"b4a@npm:^1.6.4":
+  version: 1.6.4
+  resolution: "b4a@npm:1.6.4"
+  checksum: 81b086f9af1f8845fbef4476307236bda3d660c158c201db976f19cdce05f41f93110ab6b12fd7a2696602a490cc43d5410ee36a56d6eef93afb0d6ca69ac3b2
   languageName: node
   linkType: hard
 
@@ -9176,10 +9197,20 @@ __metadata:
   languageName: node
   linkType: hard
 
-"color-name@npm:~1.1.4":
+"color-name@npm:^1.0.0, color-name@npm:~1.1.4":
   version: 1.1.4
   resolution: "color-name@npm:1.1.4"
   checksum: b0445859521eb4021cd0fb0cc1a75cecf67fceecae89b63f62b201cca8d345baf8b952c966862a9d9a2632987d4f6581f0ec8d957dfacece86f0a7919316f610
+  languageName: node
+  linkType: hard
+
+"color-string@npm:^1.9.0":
+  version: 1.9.1
+  resolution: "color-string@npm:1.9.1"
+  dependencies:
+    color-name: ^1.0.0
+    simple-swizzle: ^0.2.2
+  checksum: c13fe7cff7885f603f49105827d621ce87f4571d78ba28ef4a3f1a104304748f620615e6bf065ecd2145d0d9dad83a3553f52bb25ede7239d18e9f81622f1cc5
   languageName: node
   linkType: hard
 
@@ -9189,6 +9220,16 @@ __metadata:
   bin:
     color-support: bin.js
   checksum: 9b7356817670b9a13a26ca5af1c21615463b500783b739b7634a0c2047c16cef4b2865d7576875c31c3cddf9dd621fa19285e628f20198b233a5cfdda6d0793b
+  languageName: node
+  linkType: hard
+
+"color@npm:^4.2.3":
+  version: 4.2.3
+  resolution: "color@npm:4.2.3"
+  dependencies:
+    color-convert: ^2.0.1
+    color-string: ^1.9.0
+  checksum: 0579629c02c631b426780038da929cca8e8d80a40158b09811a0112a107c62e10e4aad719843b791b1e658ab4e800558f2e87ca4522c8b32349d497ecb6adeb4
   languageName: node
   linkType: hard
 
@@ -9767,6 +9808,13 @@ __metadata:
   version: 2.0.1
   resolution: "detect-libc@npm:2.0.1"
   checksum: ccb05fcabbb555beb544d48080179c18523a343face9ee4e1a86605a8715b4169f94d663c21a03c310ac824592f2ba9a5270218819bb411ad7be578a527593d7
+  languageName: node
+  linkType: hard
+
+"detect-libc@npm:^2.0.2":
+  version: 2.0.2
+  resolution: "detect-libc@npm:2.0.2"
+  checksum: 2b2cd3649b83d576f4be7cc37eb3b1815c79969c8b1a03a40a4d55d83bc74d010753485753448eacb98784abf22f7dbd3911fd3b60e29fda28fed2d1a997944d
   languageName: node
   linkType: hard
 
@@ -11335,6 +11383,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"fast-fifo@npm:^1.1.0, fast-fifo@npm:^1.2.0":
+  version: 1.3.0
+  resolution: "fast-fifo@npm:1.3.0"
+  checksum: edc589b818eede61d0048f399daf67cbc5ef736588669482a20f37269b4808356e54ab89676fd8fa59b26c216c11e5ac57335cc70dca54fbbf692d4acde10de6
+  languageName: node
+  linkType: hard
+
 "fast-glob@npm:^3.2.11, fast-glob@npm:^3.2.9":
   version: 3.2.12
   resolution: "fast-glob@npm:3.2.12"
@@ -11554,6 +11609,13 @@ __metadata:
   version: 23.3.3
   resolution: "flatbuffers@npm:23.3.3"
   checksum: 7d8352e233cc81942e36b2ccfd7f3baf5d9a5e9614ebd83e9f4bc4accaebd43cb824788bd76334f5a61a8c2a74ddfd8f87ca7ac01cc522ad2774ae66c276dff1
+  languageName: node
+  linkType: hard
+
+"flatbuffers@npm:^1.12.0":
+  version: 1.12.0
+  resolution: "flatbuffers@npm:1.12.0"
+  checksum: 8a6461ec80a8f850c623439fbc3d031bac52dfd7dee27fbadf1d850e96fd92cbd782c28bf2a08f2d852a3ac329cc31e2ad21e133ab68993cf0df69d3dd32fd12
   languageName: node
   linkType: hard
 
@@ -12296,6 +12358,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"guid-typescript@npm:^1.0.9":
+  version: 1.0.9
+  resolution: "guid-typescript@npm:1.0.9"
+  checksum: 829dd87866800a5138aafa0873994028bbc446eb20ff4cae6452d471a2a3d26f7025bed3eb980692c0f022fd22f95ea7396122b46b45a4b5084958505a4fc50c
+  languageName: node
+  linkType: hard
+
 "has-bigints@npm:^1.0.1, has-bigints@npm:^1.0.2":
   version: 1.0.2
   resolution: "has-bigints@npm:1.0.2"
@@ -12796,6 +12865,13 @@ __metadata:
   version: 0.2.1
   resolution: "is-arrayish@npm:0.2.1"
   checksum: eef4417e3c10e60e2c810b6084942b3ead455af16c4509959a27e490e7aee87cfb3f38e01bbde92220b528a0ee1a18d52b787e1458ee86174d8c7f0e58cd488f
+  languageName: node
+  linkType: hard
+
+"is-arrayish@npm:^0.3.1":
+  version: 0.3.2
+  resolution: "is-arrayish@npm:0.3.2"
+  checksum: 977e64f54d91c8f169b59afcd80ff19227e9f5c791fa28fa2e5bce355cbaf6c2c356711b734656e80c9dd4a854dd7efcf7894402f1031dfc5de5d620775b4d5f
   languageName: node
   linkType: hard
 
@@ -14250,6 +14326,7 @@ __metadata:
     "@typescript-eslint/parser": ^5.58.0
     "@upstash/redis": ^1.20.6
     "@xata.io/client": ^0.25.1
+    "@xenova/transformers": ^2.5.1
     "@zilliz/milvus2-sdk-node": ">=2.2.7"
     ansi-styles: ^5.0.0
     apify-client: ^2.7.1
@@ -14462,6 +14539,8 @@ __metadata:
     "@upstash/redis":
       optional: true
     "@xata.io/client":
+      optional: true
+    "@xenova/transformers":
       optional: true
     "@zilliz/milvus2-sdk-node":
       optional: true
@@ -15828,6 +15907,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"node-addon-api@npm:^6.1.0":
+  version: 6.1.0
+  resolution: "node-addon-api@npm:6.1.0"
+  dependencies:
+    node-gyp: latest
+  checksum: 3a539510e677cfa3a833aca5397300e36141aca064cdc487554f2017110709a03a95da937e98c2a14ec3c626af7b2d1b6dabe629a481f9883143d0d5bff07bf2
+  languageName: node
+  linkType: hard
+
 "node-domexception@npm:1.0.0, node-domexception@npm:^1.0.0":
   version: 1.0.0
   resolution: "node-domexception@npm:1.0.0"
@@ -16252,6 +16340,45 @@ __metadata:
   dependencies:
     mimic-fn: ^4.0.0
   checksum: 0846ce78e440841335d4e9182ef69d5762e9f38aa7499b19f42ea1c4cd40f0b4446094c455c713f9adac3f4ae86f613bb5e30c99e52652764d06a89f709b3788
+  languageName: node
+  linkType: hard
+
+"onnx-proto@npm:^4.0.4":
+  version: 4.0.4
+  resolution: "onnx-proto@npm:4.0.4"
+  dependencies:
+    protobufjs: ^6.8.8
+  checksum: 4122ea200bb4a7c93a464c5a49351025537f5b2c9a5848a9b090700437e6c458a44491096502324a3d7e6fb388be4967a824d12ac18d7be6721d0d5779400fd5
+  languageName: node
+  linkType: hard
+
+"onnxruntime-common@npm:~1.14.0":
+  version: 1.14.0
+  resolution: "onnxruntime-common@npm:1.14.0"
+  checksum: 6f0dda57440e94ad8c3df80c9812b38651daa4482af4159bada6cf19f8e09a5258994e57038acdfd54ecab7b9779e0e8ce37b3315ee6c48dd6c1c943fd15fa13
+  languageName: node
+  linkType: hard
+
+"onnxruntime-node@npm:1.14.0":
+  version: 1.14.0
+  resolution: "onnxruntime-node@npm:1.14.0"
+  dependencies:
+    onnxruntime-common: ~1.14.0
+  conditions: (os=win32 | os=darwin | os=linux)
+  languageName: node
+  linkType: hard
+
+"onnxruntime-web@npm:1.14.0":
+  version: 1.14.0
+  resolution: "onnxruntime-web@npm:1.14.0"
+  dependencies:
+    flatbuffers: ^1.12.0
+    guid-typescript: ^1.0.9
+    long: ^4.0.0
+    onnx-proto: ^4.0.4
+    onnxruntime-common: ~1.14.0
+    platform: ^1.3.6
+  checksum: 6faa8886683c301e267dad336a8f819a33253f3b3e93c0fe7af7df2aa45e61f6737b43119d68a448d17d08cbcd83e17607f9242e2222d5b4f9552351ddaa3289
   languageName: node
   linkType: hard
 
@@ -16942,6 +17069,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"platform@npm:^1.3.6":
+  version: 1.3.6
+  resolution: "platform@npm:1.3.6"
+  checksum: 6f472a09c61d418c7e26c1c16d0bdc029549d512dbec6526216a1e59ec68100d07007d0097dcba69dddad883d6f2a83361b4bdfe0094a3d9a2af24158643d85e
+  languageName: node
+  linkType: hard
+
 "playwright-core@npm:1.32.1":
   version: 1.32.1
   resolution: "playwright-core@npm:1.32.1"
@@ -17302,6 +17436,30 @@ __metadata:
   languageName: node
   linkType: hard
 
+"protobufjs@npm:^6.8.8":
+  version: 6.11.4
+  resolution: "protobufjs@npm:6.11.4"
+  dependencies:
+    "@protobufjs/aspromise": ^1.1.2
+    "@protobufjs/base64": ^1.1.2
+    "@protobufjs/codegen": ^2.0.4
+    "@protobufjs/eventemitter": ^1.1.0
+    "@protobufjs/fetch": ^1.1.0
+    "@protobufjs/float": ^1.0.2
+    "@protobufjs/inquire": ^1.1.0
+    "@protobufjs/path": ^1.1.2
+    "@protobufjs/pool": ^1.1.0
+    "@protobufjs/utf8": ^1.1.0
+    "@types/long": ^4.0.1
+    "@types/node": ">=13.7.0"
+    long: ^4.0.0
+  bin:
+    pbjs: bin/pbjs
+    pbts: bin/pbts
+  checksum: b2fc6a01897b016c2a7e43a854ab4a3c57080f61be41e552235436e7a730711b8e89e47cb4ae52f0f065b5ab5d5989fc932f390337ce3a8ccf07203415700850
+  languageName: node
+  linkType: hard
+
 "protocols@npm:^2.0.0, protocols@npm:^2.0.1":
   version: 2.0.1
   resolution: "protocols@npm:2.0.1"
@@ -17434,6 +17592,13 @@ __metadata:
   version: 1.2.3
   resolution: "queue-microtask@npm:1.2.3"
   checksum: b676f8c040cdc5b12723ad2f91414d267605b26419d5c821ff03befa817ddd10e238d22b25d604920340fd73efd8ba795465a0377c4adf45a4a41e4234e42dc4
+  languageName: node
+  linkType: hard
+
+"queue-tick@npm:^1.0.1":
+  version: 1.0.1
+  resolution: "queue-tick@npm:1.0.1"
+  checksum: 57c3292814b297f87f792fbeb99ce982813e4e54d7a8bdff65cf53d5c084113913289d4a48ec8bbc964927a74b847554f9f4579df43c969a6c8e0f026457ad01
   languageName: node
   linkType: hard
 
@@ -18252,6 +18417,23 @@ __metadata:
   languageName: node
   linkType: hard
 
+"sharp@npm:^0.32.0":
+  version: 0.32.4
+  resolution: "sharp@npm:0.32.4"
+  dependencies:
+    color: ^4.2.3
+    detect-libc: ^2.0.2
+    node-addon-api: ^6.1.0
+    node-gyp: latest
+    prebuild-install: ^7.1.1
+    semver: ^7.5.4
+    simple-get: ^4.0.1
+    tar-fs: ^3.0.4
+    tunnel-agent: ^0.6.0
+  checksum: 52e3cfe8fbba2623a9b935be8a3d00d6993a2c56c775ac5cc89b273826db95f029f68a0029a37f96dcb6790aa2e3c05a02599035535b319f50ab31f5d86a13f0
+  languageName: node
+  linkType: hard
+
 "shebang-command@npm:^2.0.0":
   version: 2.0.0
   resolution: "shebang-command@npm:2.0.0"
@@ -18320,7 +18502,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"simple-get@npm:^4.0.0":
+"simple-get@npm:^4.0.0, simple-get@npm:^4.0.1":
   version: 4.0.1
   resolution: "simple-get@npm:4.0.1"
   dependencies:
@@ -18328,6 +18510,15 @@ __metadata:
     once: ^1.3.1
     simple-concat: ^1.0.0
   checksum: e4132fd27cf7af230d853fa45c1b8ce900cb430dd0a3c6d3829649fe4f2b26574c803698076c4006450efb0fad2ba8c5455fbb5755d4b0a5ec42d4f12b31d27e
+  languageName: node
+  linkType: hard
+
+"simple-swizzle@npm:^0.2.2":
+  version: 0.2.2
+  resolution: "simple-swizzle@npm:0.2.2"
+  dependencies:
+    is-arrayish: ^0.3.1
+  checksum: a7f3f2ab5c76c4472d5c578df892e857323e452d9f392e1b5cf74b74db66e6294a1e1b8b390b519fa1b96b5b613f2a37db6cffef52c3f1f8f3c5ea64eb2d54c0
   languageName: node
   linkType: hard
 
@@ -18670,6 +18861,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"streamx@npm:^2.15.0":
+  version: 2.15.1
+  resolution: "streamx@npm:2.15.1"
+  dependencies:
+    fast-fifo: ^1.1.0
+    queue-tick: ^1.0.1
+  checksum: 6f2b4fed68caacd28efbd44d4264f5d3c2b81b0a5de14419333dac57f2075c49ae648df8d03db632a33587a6c8ab7cb9cdb4f9a2f8305be0c2cd79af35742b15
+  languageName: node
+  linkType: hard
+
 "string-argv@npm:^0.3.1":
   version: 0.3.1
   resolution: "string-argv@npm:0.3.1"
@@ -18960,6 +19161,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"tar-fs@npm:^3.0.4":
+  version: 3.0.4
+  resolution: "tar-fs@npm:3.0.4"
+  dependencies:
+    mkdirp-classic: ^0.5.2
+    pump: ^3.0.0
+    tar-stream: ^3.1.5
+  checksum: dcf4054f9e92ca0efe61c2b3f612914fb259a47900aa908a63106513a6d006c899b426ada53eb88d9dbbf089b5724c8e90b96a2c4ca6171845fa14203d734e30
+  languageName: node
+  linkType: hard
+
 "tar-stream@npm:^2.1.4":
   version: 2.2.0
   resolution: "tar-stream@npm:2.2.0"
@@ -18970,6 +19182,17 @@ __metadata:
     inherits: ^2.0.3
     readable-stream: ^3.1.1
   checksum: 699831a8b97666ef50021c767f84924cfee21c142c2eb0e79c63254e140e6408d6d55a065a2992548e72b06de39237ef2b802b99e3ece93ca3904a37622a66f3
+  languageName: node
+  linkType: hard
+
+"tar-stream@npm:^3.1.5":
+  version: 3.1.6
+  resolution: "tar-stream@npm:3.1.6"
+  dependencies:
+    b4a: ^1.6.4
+    fast-fifo: ^1.2.0
+    streamx: ^2.15.0
+  checksum: f3627f918581976e954ff03cb8d370551053796b82564f8c7ca8fac84c48e4d042026d0854fc222171a34ff9c682b72fae91be9c9b0a112d4c54f9e4f443e9c5
   languageName: node
   linkType: hard
 
