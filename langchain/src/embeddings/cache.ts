@@ -36,7 +36,7 @@ export class CacheBackedEmbeddings extends Embeddings {
    *
    * This method does not support caching at the moment.
    *
-   * Support for caching queries is easily to implement, but might make
+   * Support for caching queries is easy to implement, but might make
    * sense to hold off to see the most common patterns.
    *
    * If the cache has an eviction policy, we may need to be a bit more careful
@@ -65,7 +65,7 @@ export class CacheBackedEmbeddings extends Embeddings {
     const missingIndicies = [];
     const missingDocuments = [];
     for (let i = 0; i < vectors.length; i += 1) {
-      if (vectors === undefined) {
+      if (vectors[i] === undefined) {
         missingIndicies.push(i);
         missingDocuments.push(documents[i]);
       }

@@ -11,11 +11,20 @@ export class RedisByteStore extends BaseStore<string, Uint8Array> {
 
   protected namespace?: string;
 
-  constructor(fields: { client: Redis; ttl?: number; namespace?: string }) {
+  protected yieldKeysScanBatchSize = 1000;
+
+  constructor(fields: {
+    client: Redis;
+    ttl?: number;
+    namespace?: string;
+    yieldKeysScanBatchSize?: number;
+  }) {
     super(fields);
     this.client = fields.client;
     this.ttl = fields.ttl;
     this.namespace = fields.namespace;
+    this.yieldKeysScanBatchSize =
+      fields.yieldKeysScanBatchSize ?? this.yieldKeysScanBatchSize;
   }
 
   _getPrefixedKey(key: string) {
@@ -74,13 +83,12 @@ export class RedisByteStore extends BaseStore<string, Uint8Array> {
     } else {
       pattern = this._getPrefixedKey("*");
     }
-    const batchSize = 10;
     let [cursor, batch] = await this.client.scan(
       0,
       "MATCH",
       pattern,
       "COUNT",
-      batchSize
+      this.yieldKeysScanBatchSize
     );
     for (const key of batch) {
       yield this._getDeprefixedKey(key);
@@ -91,7 +99,7 @@ export class RedisByteStore extends BaseStore<string, Uint8Array> {
         "MATCH",
         pattern,
         "COUNT",
-        batchSize
+        this.yieldKeysScanBatchSize
       );
       for (const key of batch) {
         yield this._getDeprefixedKey(key);

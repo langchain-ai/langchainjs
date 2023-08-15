@@ -22,8 +22,9 @@ test("Basic embeddings cache", async () => {
     new RandomEmbeddings({}),
     new InMemoryStore()
   );
-  const documents = ["How are you?"];
+  const documents = ["How are you?", "I am fine", "I am LangChain"];
   const result = await embeddingsCache.embedDocuments(documents);
+  expect(result.findIndex((v) => v === undefined)).toEqual(-1);
   const result2 = await embeddingsCache.embedDocuments(documents);
   expect(result).toEqual(result2);
 });
