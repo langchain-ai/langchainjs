@@ -26,13 +26,24 @@ import { Document } from "../../document.js";
 import { OutputParserException, StringOutputParser } from "../output_parser.js";
 
 class FakeLLM extends LLM {
-  response: string;
+  response?: string;
+
+  thrownErrorString?: string;
+
+  constructor(fields: { response?: string; thrownErrorString?: string }) {
+    super({});
+    this.response = fields.response;
+    this.thrownErrorString = fields.thrownErrorString;
+  }
 
   _llmType() {
     return "fake";
   }
 
   async _call(prompt: string): Promise<string> {
+    if (this.thrownErrorString) {
+      throw new Error(this.thrownErrorString);
+    }
     return this.response ?? prompt;
   }
 }
@@ -293,4 +304,19 @@ test("Router runnables", async () => {
     },
   ]);
   expect(result2).toEqual(["I am a math genius!", "I am an English genius!"]);
+});
+
+test.only("RunnableWithFallbacks", async () => {
+  const llm = new FakeLLM({
+    thrownErrorString: "Bad error!",
+  });
+  await expect(async () => {
+    const result1 = await llm.invoke("What up");
+    console.log(result1);
+  }).rejects.toThrow();
+  const llmWithFallbacks = llm.withFallbacks({
+    fallbacks: [new FakeLLM({})],
+  });
+  const result2 = await llmWithFallbacks.invoke("What up");
+  console.log(result2);
 });
