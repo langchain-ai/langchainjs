@@ -22,7 +22,7 @@ test("Test ConversationalRetrievalAgent", async () => {
   const tools = [
     createRetrieverTool(vectorStore.asRetriever(), {
       name: "search_LangCo_knowledge",
-      description: "Searches and returns documents regarding LangCo",
+      description: "Searches for and returns documents regarding LangCo",
     }),
   ];
   const executor = await createConversationalRetrievalAgent(llm, tools, {
