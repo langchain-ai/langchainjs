@@ -44,7 +44,7 @@ class ProxyParamsDuplicator {
     "filter",
   ];
 
-  values: Set<string[]> = new Set();
+  values: [string, string][] = [];
 
   buildProxyHandler() {
     const proxyHandler: ProxyHandler<SupabaseFilter> = {
@@ -80,7 +80,7 @@ class ProxyParamsDuplicator {
               } else {
                 const column = args[0] as string;
                 const value = args[1] as string;
-                this.values.add([
+                this.values.push([
                   this.removeType(column),
                   `${String(prop)}.${value}`,
                 ]);
@@ -102,7 +102,7 @@ class ProxyParamsDuplicator {
   }
 
   addToValues(column: string, value: string) {
-    this.values.add([column, value]);
+    this.values.push([column, value]);
   }
 
   removeType(value: string) {
@@ -114,11 +114,11 @@ class ProxyParamsDuplicator {
 
   or(filters: string, foreignTable?: string) {
     const key = foreignTable ? `${foreignTable}.or` : "or";
-    this.values.add([this.removeType(key), `(${filters})`]);
+    this.values.push([this.removeType(key), `(${filters})`]);
   }
 
   filter(column: string, operator: string, value: unknown) {
-    this.values.add([this.removeType(column), `${operator}.${value}`]);
+    this.values.push([this.removeType(column), `${operator}.${value}`]);
   }
 
   in(column: string, values: unknown[]) {
@@ -128,16 +128,19 @@ class ProxyParamsDuplicator {
         else return `${s}`;
       })
       .join(",");
-    this.values.add([this.removeType(column), `in.(${cleanedValues})`]);
+    this.values.push([this.removeType(column), `in.(${cleanedValues})`]);
   }
 
   contains(column: string, value: unknown) {
     if (typeof value === "string") {
-      this.values.add([this.removeType(column), `cs.${value}`]);
+      this.values.push([this.removeType(column), `cs.${value}`]);
     } else if (Array.isArray(value)) {
-      this.values.add([this.removeType(column), `cs.{${value.join(",")}}`]);
+      this.values.push([this.removeType(column), `cs.{${value.join(",")}}`]);
     } else {
-      this.values.add([this.removeType(column), `cs.${JSON.stringify(value)}`]);
+      this.values.push([
+        this.removeType(column),
+        `cs.${JSON.stringify(value)}`,
+      ]);
     }
   }
 
@@ -158,16 +161,16 @@ class ProxyParamsDuplicator {
       typePart = "w";
     }
     const configPart = config === undefined ? "" : `(${config})`;
-    this.values.add([
+    this.values.push([
       this.removeType(column),
       `${typePart}fts${configPart}.${query}`,
     ]);
   }
 
   flattenedParams() {
-    return Array.from(this.values)
-      .map(([k, v]) => `${k}.${v}`)
-      .join(",");
+    const mapped = this.values.map(([k, v]) => `${k}.${v}`);
+    if (mapped.length === 1) return mapped[0];
+    return `and(${mapped.join(",")})`;
   }
 
   static getFlattenedParams(

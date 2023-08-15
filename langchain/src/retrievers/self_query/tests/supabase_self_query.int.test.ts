@@ -412,7 +412,9 @@ test("Supabase Store Self Query Retriever Test With Default Filter Or Merge Oper
     structuredQueryTranslator: new SupabaseTranslator(),
     searchParams: {
       filter: (rpc: SupabaseFilter) =>
-        rpc.filter("metadata->>type", "eq", "movie"),
+        rpc
+          .filter("metadata->>type", "eq", "movie")
+          .filter("metadata->rating", "gt", 0.01),
       mergeFiltersOperator: "or",
       k: docs.length,
     },
@@ -422,19 +424,19 @@ test("Supabase Store Self Query Retriever Test With Default Filter Or Merge Oper
     "Which movies are less than 90 minutes?"
   );
   console.log(query1);
-  expect(query1.length).toEqual(6);
+  expect(query1.length).toEqual(5);
   const query2 = await selfQueryRetriever.getRelevantDocuments(
     "Which movies are rated higher than 8.5?"
   );
   console.log(query2);
-  expect(query2.length).toEqual(7);
+  expect(query2.length).toEqual(6);
   const query3 = await selfQueryRetriever.getRelevantDocuments(
     "Which movies are directed by Greta Gerwig?"
   );
   console.log(query3);
-  expect(query3.length).toEqual(6);
+  expect(query3.length).toEqual(5);
 
   const query4 = await selfQueryRetriever.getRelevantDocuments("What is what");
   console.log(query4);
-  expect(query4.length).toEqual(6);
+  expect(query4.length).toEqual(5);
 });
