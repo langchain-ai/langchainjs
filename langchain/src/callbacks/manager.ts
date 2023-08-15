@@ -432,6 +432,12 @@ export class CallbackManagerForToolRun
   }
 }
 
+function isTruthy(value: string | null | undefined): boolean {
+  if (!value) {
+    return false;
+  }
+  return /^(true|y|yes)$/i.test(value);
+}
 export class CallbackManager
   extends BaseCallbackManager
   implements BaseCallbackManagerMethods
@@ -817,8 +823,10 @@ export class CallbackManager
 
     const verboseEnabled =
       getEnvironmentVariable("LANGCHAIN_VERBOSE") || options?.verbose;
-    const tracingV2Enabled =
-      getEnvironmentVariable("LANGCHAIN_TRACING_V2") ?? false;
+    const tracingV2Enabled = isTruthy(
+      getEnvironmentVariable("LANGCHAIN_TRACING_V2")
+    );
+
     const tracingEnabled =
       tracingV2Enabled ||
       (getEnvironmentVariable("LANGCHAIN_TRACING") ?? false);
