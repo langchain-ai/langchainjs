@@ -14,7 +14,7 @@ const modelWithFallback = shorterLlm.withFallbacks({
   fallbacks: [longerLlm],
 });
 
-const input = "What is the next number: " + "one, two, ".repeat(3000);
+const input = `What is the next number: ${"one, two, ".repeat(3000)}`;
 
 try {
   await shorterLlm.invoke(input);
