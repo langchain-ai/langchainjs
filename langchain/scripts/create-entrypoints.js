@@ -57,6 +57,7 @@ const entrypoints = {
   "llms/googlevertexai": "llms/googlevertexai",
   "llms/googlepalm": "llms/googlepalm",
   "llms/sagemaker_endpoint": "llms/sagemaker_endpoint",
+  "llms/bedrock": "llms/bedrock",
   // prompts
   prompts: "prompts/index",
   "prompts/load": "prompts/load",
@@ -136,6 +137,8 @@ const entrypoints = {
   "document_loaders/fs/unstructured": "document_loaders/fs/unstructured",
   // document_transformers
   "document_transformers/html_to_text": "document_transformers/html_to_text",
+  "document_transformers/mozilla_readability":
+    "document_transformers/mozilla_readability",
   "document_transformers/openai_functions":
     "document_transformers/openai_functions",
   // chat_models
@@ -254,6 +257,7 @@ const requiresOptionalDependency = [
   "llms/raycast",
   "llms/replicate",
   "llms/sagemaker_endpoint",
+  "llms/bedrock",
   "prompts/load",
   "vectorstores/analyticdb",
   "vectorstores/chroma",
@@ -308,6 +312,7 @@ const requiresOptionalDependency = [
   "document_loaders/fs/notion",
   "document_loaders/fs/unstructured",
   "document_transformers/html_to_text",
+  "document_transformers/mozilla_readability",
   "chat_models/googlevertexai",
   "chat_models/googlepalm",
   "sql_db",

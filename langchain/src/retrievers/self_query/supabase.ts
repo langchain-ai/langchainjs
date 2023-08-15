@@ -7,8 +7,12 @@ import {
   Operators,
   StructuredQuery,
 } from "../../chains/query_constructor/ir.js";
-import { SupabaseFilterRPCCall } from "../../vectorstores/supabase.js";
+import {
+  SupabaseFilterRPCCall,
+  SupabaseVectorStore,
+} from "../../vectorstores/supabase.js";
 import { BaseTranslator } from "./base.js";
+import { isFilterEmpty } from "./utils.js";
 
 type ValueType = {
   eq: string | number;
@@ -19,12 +23,12 @@ type ValueType = {
   gte: string | number;
 };
 
-export class SupabaseTranslator extends BaseTranslator {
+export class SupabaseTranslator<
+  T extends SupabaseVectorStore
+> extends BaseTranslator<T> {
   declare VisitOperationOutput: SupabaseFilterRPCCall;
 
   declare VisitComparisonOutput: SupabaseFilterRPCCall;
-
-  declare VisitStructuredQueryOutput: { filter: SupabaseFilterRPCCall };
 
   allowedOperators: Operator[] = [Operators.and, Operators.or];
 
@@ -168,7 +172,43 @@ export class SupabaseTranslator extends BaseTranslator {
   visitStructuredQuery(
     query: StructuredQuery
   ): this["VisitStructuredQueryOutput"] {
+    if (!query.filter) {
+      return {};
+    }
     const filterFunction = query.filter?.accept(this);
     return { filter: (filterFunction as SupabaseFilterRPCCall) ?? {} };
+  }
+
+  mergeFilters(
+    defaultFilter: SupabaseFilterRPCCall | undefined,
+    generatedFilter: SupabaseFilterRPCCall | undefined,
+    mergeType = "and"
+  ): SupabaseFilterRPCCall | undefined {
+    if (mergeType === "or") {
+      throw new Error(
+        "Supabase self-query filter does not support merging two filters with the OR operator"
+      );
+    }
+    if (isFilterEmpty(defaultFilter) && isFilterEmpty(generatedFilter)) {
+      return undefined;
+    }
+    if (isFilterEmpty(defaultFilter) || mergeType === "replace") {
+      if (isFilterEmpty(generatedFilter)) {
+        return undefined;
+      }
+      return generatedFilter;
+    }
+    if (isFilterEmpty(generatedFilter)) {
+      if (mergeType === "and") {
+        return undefined;
+      }
+      return defaultFilter;
+    }
+
+    if (mergeType === "and") {
+      return (rpc) => generatedFilter(defaultFilter(rpc));
+    } else {
+      throw new Error("Unknown merge type");
+    }
   }
 }

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { LLMChain } from "../../chains/llm_chain.js";
 import {
   QueryConstructorChainOptions,
@@ -13,44 +14,51 @@ import { CallbackManagerForRetrieverRun } from "../../callbacks/manager.js";
 
 export { BaseTranslator, BasicTranslator, FunctionalTranslator };
 
-export interface SelfQueryRetrieverArgs extends BaseRetrieverInput {
-  vectorStore: VectorStore;
-  structuredQueryTranslator: BaseTranslator;
+export interface SelfQueryRetrieverArgs<T extends VectorStore>
+  extends BaseRetrieverInput {
+  vectorStore: T;
+  structuredQueryTranslator: BaseTranslator<T>;
   llmChain: LLMChain;
   verbose?: boolean;
+  useOriginalQuery?: boolean;
   searchParams?: {
     k?: number;
-    filter?: VectorStore["FilterType"];
+    filter?: T["FilterType"];
+    mergeFiltersOperator?: "or" | "and" | "replace";
   };
 }
-export class SelfQueryRetriever
+
+export class SelfQueryRetriever<T extends VectorStore>
   extends BaseRetriever
-  implements SelfQueryRetrieverArgs
+  implements SelfQueryRetrieverArgs<T>
 {
   get lc_namespace() {
     return ["langchain", "retrievers", "self_query"];
   }
 
-  vectorStore: VectorStore;
+  vectorStore: T;
 
   llmChain: LLMChain;
 
   verbose?: boolean;
 
-  structuredQueryTranslator: BaseTranslator;
+  structuredQueryTranslator: BaseTranslator<T>;
+
+  useOriginalQuery = false;
 
   searchParams?: {
     k?: number;
-    filter?: VectorStore["FilterType"];
+    filter?: T["FilterType"];
+    mergeFiltersOperator?: "or" | "and" | "replace";
   } = { k: 4 };
 
-  constructor(options: SelfQueryRetrieverArgs) {
+  constructor(options: SelfQueryRetrieverArgs<T>) {
     super(options);
     this.vectorStore = options.vectorStore;
     this.llmChain = options.llmChain;
     this.verbose = options.verbose ?? false;
     this.searchParams = options.searchParams ?? this.searchParams;
-
+    this.useOriginalQuery = options.useOriginalQuery ?? this.useOriginalQuery;
     this.structuredQueryTranslator = options.structuredQueryTranslator;
   }
 
@@ -65,31 +73,41 @@ export class SelfQueryRetriever
       runManager?.getChild("llm_chain")
     );
 
+    const generatedStructuredQuery = output as StructuredQuery;
+
     const nextArg = this.structuredQueryTranslator.visitStructuredQuery(
-      output as StructuredQuery
+      generatedStructuredQuery
     );
 
-    if (nextArg.filter) {
-      return this.vectorStore.similaritySearch(
-        query,
-        this.searchParams?.k,
-        nextArg.filter,
-        runManager?.getChild("vectorstore")
-      );
+    const filter = this.structuredQueryTranslator.mergeFilters(
+      this.searchParams?.filter,
+      nextArg.filter,
+      this.searchParams?.mergeFiltersOperator
+    );
+
+    const generatedQuery = generatedStructuredQuery.query;
+    let myQuery = query;
+
+    if (!this.useOriginalQuery && generatedQuery && generatedQuery.length > 0) {
+      myQuery = generatedQuery;
+    }
+
+    if (!filter) {
+      return [];
     } else {
       return this.vectorStore.similaritySearch(
-        query,
+        myQuery,
         this.searchParams?.k,
-        this.searchParams?.filter,
+        filter,
         runManager?.getChild("vectorstore")
       );
     }
   }
 
-  static fromLLM(
+  static fromLLM<T extends VectorStore>(
     options: QueryConstructorChainOptions &
-      Omit<SelfQueryRetrieverArgs, "llmChain">
-  ): SelfQueryRetriever {
+      Omit<SelfQueryRetrieverArgs<T>, "llmChain">
+  ): SelfQueryRetriever<T> {
     const {
       structuredQueryTranslator,
       allowedComparators,
@@ -111,7 +129,7 @@ export class SelfQueryRetriever
       allowedOperators:
         allowedOperators ?? structuredQueryTranslator.allowedOperators,
     });
-    return new SelfQueryRetriever({
+    return new SelfQueryRetriever<T>({
       ...rest,
       llmChain,
       vectorStore,

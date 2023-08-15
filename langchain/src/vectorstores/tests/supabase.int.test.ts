@@ -256,3 +256,41 @@ test("Delete on a SupabaseVectorStore", async () => {
     }),
   ]);
 });
+
+test("Add documents with manual ids", async () => {
+  const client = createClient(
+    process.env.SUPABASE_VECTOR_STORE_URL!,
+    process.env.SUPABASE_VECTOR_STORE_PRIVATE_KEY!
+  );
+
+  const embeddings = new OpenAIEmbeddings();
+
+  const store = new SupabaseVectorStore(embeddings, {
+    client,
+    tableName: "documents",
+    upsertBatchSize: 2,
+  });
+
+  expect(store).toBeDefined();
+
+  const createdAt = new Date().getTime();
+
+  const ids = [
+    (createdAt + 1).toString(),
+    (createdAt + 2).toString(),
+    (createdAt + 3).toString(),
+    (createdAt + 4).toString(),
+  ];
+
+  const returnedIds = await store.addDocuments(
+    [
+      { pageContent: "hello 0", metadata: { created_at: createdAt } },
+      { pageContent: "hello 1", metadata: { created_at: createdAt + 1 } },
+      { pageContent: "hello 2", metadata: { created_at: createdAt + 2 } },
+      { pageContent: "hello 3", metadata: { created_at: createdAt + 2 } },
+    ],
+    { ids }
+  );
+  expect(ids).toEqual(returnedIds.map((id) => id.toString()));
+  await store.delete({ ids });
+});
