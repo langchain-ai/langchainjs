@@ -238,6 +238,9 @@ export interface OptionalImportMap {
   "langchain/document_transformers/html_to_text"?:
     | typeof import("../document_transformers/html_to_text.js")
     | Promise<typeof import("../document_transformers/html_to_text.js")>;
+  "langchain/document_transformers/mozilla_readability"?:
+    | typeof import("../document_transformers/mozilla_readability.js")
+    | Promise<typeof import("../document_transformers/mozilla_readability.js")>;
   "langchain/chat_models/googlevertexai"?:
     | typeof import("../chat_models/googlevertexai.js")
     | Promise<typeof import("../chat_models/googlevertexai.js")>;
