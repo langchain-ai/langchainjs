@@ -34,6 +34,7 @@ const mockZepDocuments: IDocument[] = mockDocuments.map((doc, index) => ({
   uuid: `uuid${index}`,
   content: doc.pageContent,
   metadata: doc.metadata,
+  embeddings: new Float32Array([0.0, 0.1]),
   score: Math.random(),
 }));
 
@@ -47,6 +48,11 @@ const mockCollection = {
   deleteDocument: jest
     .fn<DocumentCollection["deleteDocument"]>()
     .mockResolvedValue(undefined as any),
+  searchReturnQueryVector: jest
+    .fn<DocumentCollection["searchReturnQueryVector"]>()
+    .mockResolvedValue([mockZepDocuments, new Float32Array([0.0, 0.1])] as any),
+  name: "testCollection",
+  is_auto_embedded: true,
 } as any;
 
 const mockClient = {
@@ -243,33 +249,56 @@ describe("ZepVectorStore", () => {
     expect(result).toEqual(docsAndScores);
   });
 
-    test("should perform similarity search successfully", async () => {
-        const zepVectorStore = new ZepVectorStore(embeddings, zepConfig);
-        // Inject mockCollection into zepVectorStore
-        (zepVectorStore as any).collection = mockCollection;
+  test("should perform similarity search successfully", async () => {
+    const zepVectorStore = new ZepVectorStore(embeddings, zepConfig);
+    // Inject mockCollection into zepVectorStore
+    (zepVectorStore as any).collection = mockCollection;
 
-        const query = "foo bar";
-        const k = 3;
-        const filter = { foo: "bar" };
+    const query = "foo bar";
+    const k = 3;
+    const filter = { foo: "bar" };
 
-        const result = await zepVectorStore.similaritySearch(query, k, filter);
+    const result = await zepVectorStore.similaritySearch(query, k, filter);
 
-        expect(mockCollection.search).toHaveBeenCalledWith(
-            expect.objectContaining({
-                text: query,
-                metadata: filter,
-            }),
-            k
-        );
+    expect(mockCollection.search).toHaveBeenCalledWith(
+      expect.objectContaining({
+        text: query,
+        metadata: filter,
+      }),
+      k
+    );
 
-        const docs = mockZepDocuments.map((doc) =>
-            new Document({
-                pageContent: doc.content,
-                metadata: doc.metadata,
-            })
-        );
+    const docs = mockZepDocuments.map(
+      (doc) =>
+        new Document({
+          pageContent: doc.content,
+          metadata: doc.metadata,
+        })
+    );
 
-        expect(result).toEqual(docs);
-    });
+    expect(result).toEqual(docs);
+  });
 
+  test("should perform max marginal relevance search successfully", async () => {
+    const zepVectorStore = new ZepVectorStore(embeddings, zepConfig);
+    (zepVectorStore as any).collection = mockCollection;
+
+    const query = "foo bar";
+    const options = {
+      k: 2,
+      fetchK: 3,
+      lambda: 0.5,
+      filter: { foo: "bar" },
+    };
+
+    await zepVectorStore.maxMarginalRelevanceSearch(query, options);
+
+    expect(mockCollection.search).toHaveBeenCalledWith(
+      expect.objectContaining({
+        text: query,
+        metadata: options.filter,
+      }),
+      options.fetchK
+    );
+  });
 });

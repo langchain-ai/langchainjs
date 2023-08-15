@@ -59,7 +59,8 @@ export class ZepVectorStore extends VectorStore {
     }
 
     this.initPromise = this.initCollection(args).catch((err) => {
-      console.error("Error retrieving collection:", err);
+      console.error("Error initializing collection:", err);
+      throw err;
     });
   }
 
@@ -74,6 +75,7 @@ export class ZepVectorStore extends VectorStore {
       this.collection = await this.client.document.getCollection(
         args.collectionName
       );
+
       // If the Embedding passed in is fake, but the collection is not auto embedded, throw an error
       // eslint-disable-next-line no-instanceof/no-instanceof
       if (!this.collection.is_auto_embedded && this.autoEmbed) {
@@ -204,17 +206,50 @@ export class ZepVectorStore extends VectorStore {
     return zepDocsToDocumentsAndScore(results);
   }
 
-    /**
-     * Performs a similarity search on the Zep collection.
-     *
-     * @param {string} query - The query string to search for.
-     * @param {number} [k=4] - The number of results to return. Defaults to 4.
-     * @param {this["FilterType"] | undefined} [filter=undefined] - An optional set of JSONPath filters to apply to the search.
-     * @param {Callbacks | undefined} [_callbacks=undefined] - Optional callbacks. Currently not implemented.
-     * @returns {Promise<Document[]>} - A promise that resolves to an array of Documents that are similar to the query.
-     *
-     * @async
-     */
+  async _similaritySearchWithScore(
+    query: string,
+    k: number,
+    filter?: Record<string, unknown> | undefined
+  ): Promise<[Document, number][]> {
+    await this.initPromise;
+    const results = await this.collection.search(
+      {
+        text: query,
+        metadata: assignMetadata(filter),
+      },
+      k
+    );
+    return zepDocsToDocumentsAndScore(results);
+  }
+
+  async similaritySearchWithScore(
+    query: string,
+    k: number = 4,
+    filter?: Record<string, unknown> | undefined,
+    _callbacks = undefined // implement passing to embedQuery later
+  ): Promise<[Document, number][]> {
+    if (this.autoEmbed) {
+      return this._similaritySearchWithScore(query, k, filter);
+    } else {
+      return this.similaritySearchVectorWithScore(
+        await this.embeddings.embedQuery(query),
+        k,
+        filter
+      );
+    }
+  }
+
+  /**
+   * Performs a similarity search on the Zep collection.
+   *
+   * @param {string} query - The query string to search for.
+   * @param {number} [k=4] - The number of results to return. Defaults to 4.
+   * @param {this["FilterType"] | undefined} [filter=undefined] - An optional set of JSONPath filters to apply to the search.
+   * @param {Callbacks | undefined} [_callbacks=undefined] - Optional callbacks. Currently not implemented.
+   * @returns {Promise<Document[]>} - A promise that resolves to an array of Documents that are similar to the query.
+   *
+   * @async
+   */
   async similaritySearch(
     query: string,
     k = 4,
@@ -296,10 +331,7 @@ export class ZepVectorStore extends VectorStore {
       k
     );
 
-    return mmrIndexes.map((idx) => {
-      const doc = results[idx][0];
-      return doc;
-    });
+    return mmrIndexes.filter((idx) => idx !== -1).map((idx) => results[idx][0]);
   }
 
   /**
@@ -368,6 +400,8 @@ function assignMetadata(
   if (typeof value === "object" && value !== null) {
     return value as Record<string, unknown>;
   }
-  console.warn("Metadata filters must be an object, Record, or undefined.");
+  if (value !== undefined) {
+    console.warn("Metadata filters must be an object, Record, or undefined.");
+  }
   return undefined;
 }
