@@ -21,6 +21,10 @@ function _coerceToDict(value: any, defaultKey: string) {
     : { [defaultKey]: value };
 }
 
+/**
+ * A Runnable is a generic unit of work that can be invoked, batched, streamed, and/or
+ * transformed.
+ */
 export abstract class Runnable<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput = any,
@@ -35,6 +39,11 @@ export abstract class Runnable<
     options?: Partial<CallOptions>
   ): Promise<RunOutput>;
 
+  /**
+   * Bind arguments to a Runnable, returning a new Runnable.
+   * @param kwargs
+   * @returns A new RunnableBinding that, when invoked, will apply the bound args.
+   */
   bind(
     kwargs: Partial<CallOptions>
   ): RunnableBinding<RunInput, RunOutput, CallOptions> {
@@ -42,6 +51,12 @@ export abstract class Runnable<
     return new RunnableBinding({ bound: this, kwargs });
   }
 
+  /**
+   * Create a new runnable from the current one that will try invoking
+   * other passed fallback runnables if the initial invocation fails.
+   * @param fields.fallbacks Other runnables to call if the runnable errors.
+   * @returns A new RunnableWithFallbacks.
+   */
   withFallbacks(fields: { fallbacks: Runnable<RunInput, RunOutput>[] }) {
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
     return new RunnableWithFallbacks<RunInput, RunOutput>({
@@ -65,6 +80,14 @@ export abstract class Runnable<
     return Array.from({ length }, () => options);
   }
 
+  /**
+   * Default implementation of batch, which calls invoke N times.
+   * Subclasses should override this method if they can batch more efficiently.
+   * @param inputs Array of inputs to each batch call.
+   * @param options Either a single call options object to apply to each batch call or an array for each call.
+   * @param batchOptions.maxConcurrency Maximum number of calls to run at once.
+   * @returns An array of RunOutputs
+   */
   async batch(
     inputs: RunInput[],
     options?: Partial<CallOptions> | Partial<CallOptions>[],
@@ -88,6 +111,12 @@ export abstract class Runnable<
     return batchResults.flat();
   }
 
+  /**
+   * Default streaming implementation.
+   * Subclasses should override this method if they support streaming output.
+   * @param input
+   * @param options
+   */
   async *_streamIterator(
     input: RunInput,
     options?: Partial<CallOptions>
@@ -95,6 +124,12 @@ export abstract class Runnable<
     yield this.invoke(input, options);
   }
 
+  /**
+   * Stream output in chunks.
+   * @param input
+   * @param options
+   * @returns A readable stream that is also an iterable.
+   */
   async stream(
     input: RunInput,
     options?: Partial<CallOptions>
@@ -199,6 +234,12 @@ export abstract class Runnable<
     return { ...config, callbacks: callbackManager };
   }
 
+  /**
+   * Create a new runnable sequence that runs each individual runnable in series,
+   * piping the output of one runnable into another runnable or runnable-like.
+   * @param coerceable A runnable, function, or object whose values are functions or runnables.
+   * @returns A new runnable sequence.
+   */
   pipe<NewRunOutput>(
     coerceable: RunnableLike<RunOutput, NewRunOutput>
   ): RunnableSequence<RunInput, NewRunOutput> {
@@ -209,6 +250,13 @@ export abstract class Runnable<
     });
   }
 
+  /**
+   * Default implementation of transform, which buffers input and then calls stream.
+   * Subclasses should override this method if they can start producing output while
+   * input is still being generated.
+   * @param generator
+   * @param options
+   */
   transform?(
     generator: AsyncGenerator<RunInput>,
     options: Partial<CallOptions>
@@ -220,6 +268,9 @@ export abstract class Runnable<
   }
 }
 
+/**
+ * A sequence of runnables, where the output of each is the input of the next.
+ */
 export class RunnableSequence<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput = any,
@@ -464,6 +515,10 @@ export class RunnableSequence<
   }
 }
 
+/**
+ * A runnable that runs a mapping of runnables in parallel,
+ * and returns a mapping of their outputs.
+ */
 export class RunnableMap<RunInput> extends Runnable<
   RunInput,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -517,6 +572,9 @@ export class RunnableMap<RunInput> extends Runnable<
   }
 }
 
+/**
+ * A runnable that runs a callable.
+ */
 export class RunnableLambda<RunInput, RunOutput> extends Runnable<
   RunInput,
   RunOutput
@@ -542,6 +600,9 @@ export class RunnableLambda<RunInput, RunOutput> extends Runnable<
   }
 }
 
+/**
+ * A runnable that passes through the input.
+ */
 export class RunnablePassthrough<RunInput> extends Runnable<
   RunInput,
   RunInput
@@ -562,6 +623,9 @@ export class RunnablePassthrough<RunInput> extends Runnable<
   }
 }
 
+/**
+ * A runnable that delegates calls to another runnable with a set of kwargs.
+ */
 export class RunnableBinding<
   RunInput,
   RunOutput,
@@ -628,6 +692,10 @@ export type RouterInput = {
   input: any;
 };
 
+/**
+ * A runnable that routes to a set of runnables based on Input['key'].
+ * Returns the output of the selected runnable.
+ */
 export class RouterRunnable<
   RunInput extends RouterInput,
   RunnableInput,
@@ -701,6 +769,9 @@ export class RouterRunnable<
   }
 }
 
+/**
+ * A Runnable that can fallback to other Runnables if it fails.
+ */
 export class RunnableWithFallbacks<RunInput, RunOutput> extends Runnable<
   RunInput,
   RunOutput
