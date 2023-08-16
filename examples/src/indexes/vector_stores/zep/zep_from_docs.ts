@@ -25,5 +25,13 @@ export const run = async () => {
 
   const results = await vectorStore.similaritySearchWithScore("bar", 3);
 
+  console.log("Similarity Results:");
   console.log(JSON.stringify(results));
+
+  const results2 = await vectorStore.maxMarginalRelevanceSearch("bar", {
+    k: 3,
+  });
+
+  console.log("MMR Results:");
+  console.log(JSON.stringify(results2));
 };

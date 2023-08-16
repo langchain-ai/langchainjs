@@ -64,6 +64,9 @@ embeddings.d.ts
 embeddings/base.cjs
 embeddings/base.js
 embeddings/base.d.ts
+embeddings/cache_backed.cjs
+embeddings/cache_backed.js
+embeddings/cache_backed.d.ts
 embeddings/fake.cjs
 embeddings/fake.js
 embeddings/fake.d.ts
@@ -379,6 +382,9 @@ schema/retriever.d.ts
 schema/runnable.cjs
 schema/runnable.js
 schema/runnable.d.ts
+schema/storage.cjs
+schema/storage.js
+schema/storage.d.ts
 sql_db.cjs
 sql_db.js
 sql_db.d.ts
@@ -505,6 +511,12 @@ stores/message/planetscale.d.ts
 stores/message/xata.cjs
 stores/message/xata.js
 stores/message/xata.d.ts
+storage/in_memory.cjs
+storage/in_memory.js
+storage/in_memory.d.ts
+storage/ioredis.cjs
+storage/ioredis.js
+storage/ioredis.d.ts
 util/math.cjs
 util/math.js
 util/math.d.ts
