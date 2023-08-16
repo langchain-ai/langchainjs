@@ -42,6 +42,14 @@ export abstract class Runnable<
     return new RunnableBinding({ bound: this, kwargs });
   }
 
+  withFallbacks(fields: { fallbacks: Runnable<RunInput, RunOutput>[] }) {
+    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    return new RunnableWithFallbacks<RunInput, RunOutput>({
+      runnable: this,
+      fallbacks: fields.fallbacks,
+    });
+  }
+
   protected _getOptionsList(
     options: Partial<CallOptions> | Partial<CallOptions>[],
     length = 0
@@ -73,7 +81,7 @@ export abstract class Runnable<
     for (let i = 0; i < inputs.length; i += batchSize) {
       const batchPromises = inputs
         .slice(i, i + batchSize)
-        .map((input, i) => this.invoke(input, configList[i]));
+        .map((input, j) => this.invoke(input, configList[j]));
       const batchResult = await Promise.all(batchPromises);
       batchResults.push(batchResult);
     }
@@ -312,23 +320,21 @@ export class RunnableSequence<
         const step = this.steps[i];
         nextStepInputs = await step.batch(
           nextStepInputs,
-          runManagers.map(
-            (runManager) =>
-              this._patchConfig(configList[i], runManager?.getChild()),
-            batchOptions
-          )
+          runManagers.map((runManager, j) =>
+            this._patchConfig(configList[j], runManager?.getChild())
+          ),
+          batchOptions
         );
       }
       finalOutputs = await this.last.batch(
         nextStepInputs,
-        runManagers.map(
-          (runManager) =>
-            this._patchConfig(
-              configList[this.steps.length - 1],
-              runManager?.getChild()
-            ),
-          batchOptions
-        )
+        runManagers.map((runManager) =>
+          this._patchConfig(
+            configList[this.steps.length - 1],
+            runManager?.getChild()
+          )
+        ),
+        batchOptions
       );
     } catch (e) {
       await Promise.all(
@@ -556,29 +562,6 @@ export class RunnablePassthrough<RunInput> extends Runnable<
   }
 }
 
-function _coerceToRunnable<RunInput, RunOutput>(
-  coerceable: RunnableLike<RunInput, RunOutput>
-): Runnable<RunInput, RunOutput> {
-  if (typeof coerceable === "function") {
-    return new RunnableLambda({ func: coerceable });
-  } else if (Runnable.isRunnable(coerceable)) {
-    return coerceable;
-  } else if (!Array.isArray(coerceable) && typeof coerceable === "object") {
-    const runnables: Record<string, Runnable<RunInput>> = {};
-    for (const [key, value] of Object.entries(coerceable)) {
-      runnables[key] = _coerceToRunnable(value);
-    }
-    return new RunnableMap<RunInput>({ steps: runnables }) as Runnable<
-      RunInput,
-      RunOutput
-    >;
-  } else {
-    throw new Error(
-      `Expected a Runnable, function or object.\nInstead got an unsupported type.`
-    );
-  }
-}
-
 export class RunnableBinding<
   RunInput,
   RunOutput,
@@ -715,5 +698,152 @@ export class RouterRunnable<
       throw new Error(`No runnable associated with key "${key}".`);
     }
     return runnable.stream(actualInput, options);
+  }
+}
+
+export class RunnableWithFallbacks<RunInput, RunOutput> extends Runnable<
+  RunInput,
+  RunOutput
+> {
+  lc_namespace = ["schema", "langchain"];
+
+  lc_serializable = true;
+
+  protected runnable: Runnable<RunInput, RunOutput>;
+
+  protected fallbacks: Runnable<RunInput, RunOutput>[];
+
+  constructor(fields: {
+    runnable: Runnable<RunInput, RunOutput>;
+    fallbacks: Runnable<RunInput, RunOutput>[];
+  }) {
+    super(fields);
+    this.runnable = fields.runnable;
+    this.fallbacks = fields.fallbacks;
+  }
+
+  *runnables() {
+    yield this.runnable;
+    for (const fallback of this.fallbacks) {
+      yield fallback;
+    }
+  }
+
+  async invoke(
+    input: RunInput,
+    options?: Partial<BaseCallbackConfig>
+  ): Promise<RunOutput> {
+    const callbackManager_ = await CallbackManager.configure(
+      options?.callbacks,
+      undefined,
+      options?.tags,
+      undefined,
+      options?.metadata
+    );
+    const runManager = await callbackManager_?.handleChainStart(
+      this.toJSON(),
+      _coerceToDict(input, "input")
+    );
+    let firstError;
+    for (const runnable of this.runnables()) {
+      try {
+        const output = await runnable.invoke(
+          input,
+          this._patchConfig(options, runManager?.getChild())
+        );
+        await runManager?.handleChainEnd(_coerceToDict(output, "output"));
+        return output;
+      } catch (e) {
+        if (firstError === undefined) {
+          firstError = e;
+        }
+      }
+    }
+    if (firstError === undefined) {
+      throw new Error("No error stored at end of fallback.");
+    }
+    await runManager?.handleChainError(firstError);
+    throw firstError;
+  }
+
+  async batch(
+    inputs: RunInput[],
+    options?: Partial<BaseCallbackConfig> | Partial<BaseCallbackConfig>[],
+    batchOptions?: { maxConcurrency?: number }
+  ): Promise<RunOutput[]> {
+    const configList = this._getOptionsList(options ?? {}, inputs.length);
+    const callbackManagers = await Promise.all(
+      configList.map((config) =>
+        CallbackManager.configure(
+          config?.callbacks,
+          undefined,
+          config?.tags,
+          undefined,
+          config?.metadata
+        )
+      )
+    );
+    const runManagers = await Promise.all(
+      callbackManagers.map((callbackManager, i) =>
+        callbackManager?.handleChainStart(
+          this.toJSON(),
+          _coerceToDict(inputs[i], "input")
+        )
+      )
+    );
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let firstError: any;
+    for (const runnable of this.runnables()) {
+      try {
+        const outputs = await runnable.batch(
+          inputs,
+          runManagers.map((runManager, j) =>
+            this._patchConfig(configList[j], runManager?.getChild())
+          ),
+          batchOptions
+        );
+        await Promise.all(
+          runManagers.map((runManager, i) =>
+            runManager?.handleChainEnd(_coerceToDict(outputs[i], "output"))
+          )
+        );
+        return outputs;
+      } catch (e) {
+        if (firstError === undefined) {
+          firstError = e;
+        }
+      }
+    }
+    if (!firstError) {
+      throw new Error("No error stored at end of fallbacks.");
+    }
+    await Promise.all(
+      runManagers.map((runManager) => runManager?.handleChainError(firstError))
+    );
+    throw firstError;
+  }
+}
+
+function _coerceToRunnable<RunInput, RunOutput>(
+  coerceable: RunnableLike<RunInput, RunOutput>
+): Runnable<RunInput, RunOutput> {
+  if (typeof coerceable === "function") {
+    return new RunnableLambda({ func: coerceable });
+  } else if (Runnable.isRunnable(coerceable)) {
+    return coerceable;
+  } else if (!Array.isArray(coerceable) && typeof coerceable === "object") {
+    const runnables: Record<string, Runnable<RunInput>> = {};
+    for (const [key, value] of Object.entries(coerceable)) {
+      runnables[key] = _coerceToRunnable(value);
+    }
+    return new RunnableMap<RunInput>({ steps: runnables }) as Runnable<
+      RunInput,
+      RunOutput
+    >;
+  } else {
+    throw new Error(
+      `Expected a Runnable, function or object.\nInstead got an unsupported type.`
+    );
   }
 }
