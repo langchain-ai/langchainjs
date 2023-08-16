@@ -57,7 +57,9 @@ export abstract class Runnable<
    * @param fields.fallbacks Other runnables to call if the runnable errors.
    * @returns A new RunnableWithFallbacks.
    */
-  withFallbacks(fields: { fallbacks: Runnable<RunInput, RunOutput>[] }) {
+  withFallbacks(fields: {
+    fallbacks: Runnable<RunInput, RunOutput>[];
+  }): RunnableWithFallbacks<RunInput, RunOutput> {
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
     return new RunnableWithFallbacks<RunInput, RunOutput>({
       runnable: this,
