@@ -85,6 +85,14 @@ export class CacheBackedEmbeddings extends Embeddings {
     return vectors as number[][];
   }
 
+  /**
+   * Create a new CacheBackedEmbeddings instance from another embeddings instance
+   * and a storage instance.
+   * @param underlyingEmbeddings Embeddings used to populate the cache for new documents.
+   * @param documentEmbeddingStore Stores raw document embedding values. Keys are hashes of the document content.
+   * @param options.namespace Optional namespace for store keys.
+   * @returns A new CacheBackedEmbeddings instance.
+   */
   static fromBytesStore(
     underlyingEmbeddings: Embeddings,
     documentEmbeddingStore: BaseStore<string, Uint8Array>,
