@@ -8,7 +8,7 @@ import {
   Operators,
   StructuredQuery,
 } from "../../chains/query_constructor/ir.js";
-import {
+import type {
   SupabaseFilter,
   SupabaseFilterRPCCall,
   SupabaseVectorStore,
@@ -54,8 +54,9 @@ class ProxyParamsDuplicator {
             if (this.duplicationAllowedOps.includes(String(prop))) {
               if (String(prop) === "or") {
                 const filters = args[0] as string;
-                const { foreignTable } = args[1] as { foreignTable?: string };
-                this.or(filters, foreignTable);
+                const { foreignTable } =
+                  args[1] ?? ({} as { foreignTable?: string });
+                this.or(filters, { foreignTable });
               } else if (String(prop) === "filter") {
                 const column = args[0] as string;
                 const operator = args[1] as string;
@@ -80,10 +81,7 @@ class ProxyParamsDuplicator {
               } else {
                 const column = args[0] as string;
                 const value = args[1] as string;
-                this.values.push([
-                  this.removeType(column),
-                  `${String(prop)}.${value}`,
-                ]);
+                this.defaultOp(prop as string, column, value);
               }
               return new Proxy(target, proxyHandler);
             } else {
@@ -112,7 +110,11 @@ class ProxyParamsDuplicator {
     return value;
   }
 
-  or(filters: string, foreignTable?: string) {
+  defaultOp(prop: string, column: string, value: unknown) {
+    this.values.push([this.removeType(column), `${String(prop)}.${value}`]);
+  }
+
+  or(filters: string, { foreignTable }: { foreignTable?: string } = {}) {
     const key = foreignTable ? `${foreignTable}.or` : "or";
     this.values.push([this.removeType(key), `(${filters})`]);
   }
