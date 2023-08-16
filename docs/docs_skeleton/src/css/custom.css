@@ -72,15 +72,19 @@
   position: relative;
 }
 
+.menu__list-item.node-only .menu__link {
+  padding-right: 80px;
+}
+
 .node-only::after {
   position: absolute;
-  right: 0.35rem;
+  right: 0.25rem;
   top: 5px;
-  content: "Node.js";
+  content: "Node-only";
   background: #026e00;
   color: #fff;
   border-radius: 0.25rem;
-  padding: 0 0.5rem;
+  padding: 0 0.25rem;
   pointer-events: none;
   font-size: 0.85rem;
 }
@@ -91,13 +95,13 @@
 
 .node-only-category::after {
   position: absolute;
-  right: 3rem;
+  right: 2.5rem;
   top: 5px;
-  content: "Node.js";
+  content: "Node-only";
   background: #026e00;
   color: #fff;
   border-radius: 0.25rem;
-  padding: 0 0.5rem;
+  padding: 0 0.25rem;
   pointer-events: none;
   font-size: 0.85rem;
 }

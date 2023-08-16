@@ -15,7 +15,7 @@ import {
   SystemMessage,
 } from "../../schema/index.js";
 
-function createChatPromptTemplate(): ChatPromptTemplate {
+function createChatPromptTemplate() {
   const systemPrompt = new PromptTemplate({
     template: "Here's some context: {context}",
     inputVariables: ["context"],
@@ -36,7 +36,7 @@ function createChatPromptTemplate(): ChatPromptTemplate {
     promptMessages: [
       new SystemMessagePromptTemplate(systemPrompt),
       new HumanMessagePromptTemplate(userPrompt),
-      new AIMessagePromptTemplate(aiPrompt),
+      new AIMessagePromptTemplate({ prompt: aiPrompt }),
       new ChatMessagePromptTemplate(genericPrompt, "test"),
     ],
     inputVariables: ["context", "foo", "bar"],
@@ -49,6 +49,7 @@ test("Test format", async () => {
     context: "This is a context",
     foo: "Foo",
     bar: "Bar",
+    unused: "extra",
   });
   expect(messages.toChatMessages()).toEqual([
     new SystemMessage("Here's some context: This is a context"),
@@ -61,6 +62,7 @@ test("Test format", async () => {
 test("Test format with invalid input values", async () => {
   const chatPrompt = createChatPromptTemplate();
   await expect(
+    // @ts-expect-error TS compiler should flag missing input variables
     chatPrompt.formatPromptValue({
       context: "This is a context",
       foo: "Foo",
@@ -113,6 +115,7 @@ test("Test fromPromptMessages", async () => {
     template: "Hello {foo}, I'm {bar}",
     inputVariables: ["foo", "bar"],
   });
+  // TODO: Fix autocomplete for the fromPromptMessages method
   const chatPrompt = ChatPromptTemplate.fromPromptMessages([
     new SystemMessagePromptTemplate(systemPrompt),
     new HumanMessagePromptTemplate(userPrompt),
@@ -122,6 +125,33 @@ test("Test fromPromptMessages", async () => {
     context: "This is a context",
     foo: "Foo",
     bar: "Bar",
+  });
+  expect(messages.toChatMessages()).toEqual([
+    new SystemMessage("Here's some context: This is a context"),
+    new HumanMessage("Hello Foo, I'm Bar"),
+  ]);
+});
+
+test("Test fromPromptMessages with an extra input variable", async () => {
+  const systemPrompt = new PromptTemplate({
+    template: "Here's some context: {context}",
+    inputVariables: ["context"],
+  });
+  const userPrompt = new PromptTemplate({
+    template: "Hello {foo}, I'm {bar}",
+    inputVariables: ["foo", "bar"],
+  });
+  // TODO: Fix autocomplete for the fromPromptMessages method
+  const chatPrompt = ChatPromptTemplate.fromPromptMessages([
+    new SystemMessagePromptTemplate(systemPrompt),
+    new HumanMessagePromptTemplate(userPrompt),
+  ]);
+  expect(chatPrompt.inputVariables).toEqual(["context", "foo", "bar"]);
+  const messages = await chatPrompt.formatPromptValue({
+    context: "This is a context",
+    foo: "Foo",
+    bar: "Bar",
+    unused: "No problemo!",
   });
   expect(messages.toChatMessages()).toEqual([
     new SystemMessage("Here's some context: This is a context"),

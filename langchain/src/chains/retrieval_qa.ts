@@ -56,7 +56,7 @@ export class RetrievalQAChain
     runManager?: CallbackManagerForChainRun
   ): Promise<ChainValues> {
     if (!(this.inputKey in values)) {
-      throw new Error(`Question key ${this.inputKey} not found.`);
+      throw new Error(`Question key "${this.inputKey}" not found.`);
     }
     const question: string = values[this.inputKey];
     const docs = await this.retriever.getRelevantDocuments(

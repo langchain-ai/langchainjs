@@ -32,10 +32,50 @@ export async function run() {
   [ Document { pageContent: 'see ya!', metadata: { foo: 'bar' } } ]
   */
 
+  // Delete documents with ids
   await store.delete({ ids });
 
   const results2 = await store.similaritySearch("see ya!", 1);
   console.log(results2);
+  /*
+  []
+  */
+
+  const docs2 = [
+    { pageContent: "hello world", metadata: { foo: "bar" } },
+    { pageContent: "hi there", metadata: { foo: "baz" } },
+    { pageContent: "how are you", metadata: { foo: "qux" } },
+    { pageContent: "hello world", metadata: { foo: "bar" } },
+    { pageContent: "bye now", metadata: { foo: "bar" } },
+  ];
+
+  await store.addDocuments(docs2);
+
+  const results3 = await store.similaritySearch("hello world", 1);
+  console.log(results3);
+  /*
+  [ Document { pageContent: 'hello world', metadata: { foo: 'bar' } } ]
+  */
+
+  // delete documents with filter
+  await store.delete({
+    filter: {
+      where: {
+        operator: "Equal",
+        path: ["foo"],
+        valueText: "bar",
+      },
+    },
+  });
+
+  const results4 = await store.similaritySearch("hello world", 1, {
+    where: {
+      operator: "Equal",
+      path: ["foo"],
+      valueText: "bar",
+    },
+  });
+  console.log(results4);
   /*
   []
   */

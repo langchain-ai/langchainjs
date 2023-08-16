@@ -1,5 +1,6 @@
 import { expect, test } from "@jest/globals";
-import { HumanMessage } from "../../schema/index.js";
+import { HUMAN_PROMPT } from "@anthropic-ai/sdk";
+import { ChatMessage, HumanMessage } from "../../schema/index.js";
 import { ChatPromptValue } from "../../prompts/chat.js";
 import {
   PromptTemplate,
@@ -21,6 +22,27 @@ test("Test ChatAnthropic", async () => {
 test("Test ChatAnthropic Generate", async () => {
   const chat = new ChatAnthropic({
     modelName: "claude-instant-v1",
+  });
+  const message = new HumanMessage("Hello!");
+  const res = await chat.generate([[message], [message]]);
+  expect(res.generations.length).toBe(2);
+  for (const generation of res.generations) {
+    expect(generation.length).toBe(1);
+    for (const message of generation) {
+      console.log(message.text);
+    }
+  }
+  console.log({ res });
+});
+
+test("Test ChatAnthropic Generate w/ ClientOptions", async () => {
+  const chat = new ChatAnthropic({
+    modelName: "claude-instant-v1",
+    clientOptions: {
+      defaultHeaders: {
+        "Helicone-Auth": "HELICONE_API_KEY",
+      },
+    },
   });
   const message = new HumanMessage("Hello!");
   const res = await chat.generate([[message], [message]]);
@@ -211,4 +233,64 @@ test("ChatAnthropic, Claude V2", async () => {
   ]);
 
   console.log(responseA.generations);
+});
+
+test("ChatAnthropic with specific roles in ChatMessage", async () => {
+  const chat = new ChatAnthropic({
+    modelName: "claude-instant-v1",
+    maxTokensToSample: 10,
+  });
+  const user_message = new ChatMessage("Hello!", HUMAN_PROMPT);
+  const res = await chat.call([user_message]);
+  console.log({ res });
+});
+
+test("Test ChatAnthropic stream method", async () => {
+  const model = new ChatAnthropic({
+    maxTokensToSample: 50,
+    modelName: "claude-instant-v1",
+  });
+  const stream = await model.stream("Print hello world.");
+  const chunks = [];
+  for await (const chunk of stream) {
+    console.log(chunk);
+    chunks.push(chunk);
+  }
+  expect(chunks.length).toBeGreaterThan(1);
+});
+
+test("Test ChatAnthropic stream method with abort", async () => {
+  await expect(async () => {
+    const model = new ChatAnthropic({
+      maxTokensToSample: 50,
+      modelName: "claude-instant-v1",
+    });
+    const stream = await model.stream(
+      "How is your day going? Be extremely verbose.",
+      {
+        signal: AbortSignal.timeout(1000),
+      }
+    );
+    for await (const chunk of stream) {
+      console.log(chunk);
+    }
+  }).rejects.toThrow();
+});
+
+test("Test ChatAnthropic stream method with early break", async () => {
+  const model = new ChatAnthropic({
+    maxTokensToSample: 50,
+    modelName: "claude-instant-v1",
+  });
+  const stream = await model.stream(
+    "How is your day going? Be extremely verbose."
+  );
+  let i = 0;
+  for await (const chunk of stream) {
+    console.log(chunk);
+    i += 1;
+    if (i > 10) {
+      break;
+    }
+  }
 });

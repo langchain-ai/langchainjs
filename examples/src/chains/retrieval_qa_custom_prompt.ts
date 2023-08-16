@@ -23,7 +23,7 @@ const docs = await textSplitter.createDocuments([text]);
 // Create a vector store from the documents.
 const vectorStore = await HNSWLib.fromDocuments(docs, new OpenAIEmbeddings());
 
-// Create a chain that uses a Refine chain and HNSWLib vector store.
+// Create a chain that uses a stuff chain and HNSWLib vector store.
 const chain = new RetrievalQAChain({
   combineDocumentsChain: loadQAStuffChain(model, { prompt }),
   retriever: vectorStore.asRetriever(),

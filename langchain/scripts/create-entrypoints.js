@@ -13,6 +13,7 @@ const entrypoints = {
   // agents
   agents: "agents/index",
   "agents/load": "agents/load",
+  "agents/toolkits": "agents/toolkits/index",
   "agents/toolkits/aws_sfn": "agents/toolkits/aws_sfn",
   "agents/toolkits/sql": "agents/toolkits/sql/index",
   // base language
@@ -34,6 +35,7 @@ const entrypoints = {
   // embeddings
   embeddings: "embeddings/index",
   "embeddings/base": "embeddings/base",
+  "embeddings/cache_backed": "embeddings/cache_backed",
   "embeddings/fake": "embeddings/fake",
   "embeddings/openai": "embeddings/openai",
   "embeddings/cohere": "embeddings/cohere",
@@ -50,10 +52,13 @@ const entrypoints = {
   "llms/aleph_alpha": "llms/aleph_alpha",
   "llms/cohere": "llms/cohere",
   "llms/hf": "llms/hf",
+  "llms/raycast": "llms/raycast",
+  "llms/ollama": "llms/ollama",
   "llms/replicate": "llms/replicate",
   "llms/googlevertexai": "llms/googlevertexai",
   "llms/googlepalm": "llms/googlepalm",
   "llms/sagemaker_endpoint": "llms/sagemaker_endpoint",
+  "llms/bedrock": "llms/bedrock",
   // prompts
   prompts: "prompts/index",
   "prompts/load": "prompts/load",
@@ -82,7 +87,10 @@ const entrypoints = {
   "vectorstores/typesense": "vectorstores/typesense",
   "vectorstores/singlestore": "vectorstores/singlestore",
   "vectorstores/tigris": "vectorstores/tigris",
+  "vectorstores/usearch": "vectorstores/usearch",
   "vectorstores/vectara": "vectorstores/vectara",
+  "vectorstores/xata": "vectorstores/xata",
+  "vectorstores/zep": "vectorstores/zep",
   // text_splitter
   text_splitter: "text_splitter",
   // memory
@@ -94,6 +102,11 @@ const entrypoints = {
   document_loaders: "document_loaders/index",
   "document_loaders/base": "document_loaders/base",
   "document_loaders/web/apify_dataset": "document_loaders/web/apify_dataset",
+  "document_loaders/web/assemblyai": "document_loaders/web/assemblyai",
+  "document_loaders/web/azure_blob_storage_container":
+    "document_loaders/web/azure_blob_storage_container",
+  "document_loaders/web/azure_blob_storage_file":
+    "document_loaders/web/azure_blob_storage_file",
   "document_loaders/web/cheerio": "document_loaders/web/cheerio",
   "document_loaders/web/puppeteer": "document_loaders/web/puppeteer",
   "document_loaders/web/playwright": "document_loaders/web/playwright",
@@ -124,6 +137,9 @@ const entrypoints = {
   "document_loaders/fs/notion": "document_loaders/fs/notion",
   "document_loaders/fs/unstructured": "document_loaders/fs/unstructured",
   // document_transformers
+  "document_transformers/html_to_text": "document_transformers/html_to_text",
+  "document_transformers/mozilla_readability":
+    "document_transformers/mozilla_readability",
   "document_transformers/openai_functions":
     "document_transformers/openai_functions",
   // chat_models
@@ -134,11 +150,14 @@ const entrypoints = {
   "chat_models/googlevertexai": "chat_models/googlevertexai",
   "chat_models/googlepalm": "chat_models/googlepalm",
   "chat_models/baiduwenxin": "chat_models/baiduwenxin",
+  "chat_models/ollama": "chat_models/ollama",
   // schema
   schema: "schema/index",
   "schema/output_parser": "schema/output_parser",
   "schema/query_constructor": "schema/query_constructor",
   "schema/retriever": "schema/retriever",
+  "schema/runnable": "schema/runnable",
+  "schema/storage": "schema/storage",
   // sql_db
   sql_db: "sql_db",
   // callbacks
@@ -156,6 +175,7 @@ const entrypoints = {
   "retrievers/databerry": "retrievers/databerry",
   "retrievers/contextual_compression": "retrievers/contextual_compression",
   "retrievers/document_compressors": "retrievers/document_compressors/index",
+  "retrievers/parent_document": "retrievers/parent_document",
   "retrievers/time_weighted": "retrievers/time_weighted",
   "retrievers/document_compressors/chain_extract":
     "retrievers/document_compressors/chain_extract",
@@ -186,12 +206,19 @@ const entrypoints = {
   "stores/message/ioredis": "stores/message/ioredis",
   "stores/message/upstash_redis": "stores/message/upstash_redis",
   "stores/message/planetscale": "stores/message/planetscale",
+  "stores/message/xata": "stores/message/xata",
+  // storage
+  "storage/in_memory": "storage/in_memory",
+  "storage/ioredis": "storage/ioredis",
+  // utilities
+  "util/math": "util/math",
   // experimental
   "experimental/autogpt": "experimental/autogpt/index",
   "experimental/babyagi": "experimental/babyagi/index",
   "experimental/generative_agents": "experimental/generative_agents/index",
   "experimental/plan_and_execute": "experimental/plan_and_execute/index",
-  "experimental/multimodal_embeddings/googlevertexai": "experimental/multimodal_embeddings/googlevertexai",
+  "experimental/multimodal_embeddings/googlevertexai":
+    "experimental/multimodal_embeddings/googlevertexai",
   // evaluation
   evaluation: "evaluation/index",
 };
@@ -231,8 +258,10 @@ const requiresOptionalDependency = [
   "llms/googlevertexai",
   "llms/googlepalm",
   "llms/hf",
+  "llms/raycast",
   "llms/replicate",
   "llms/sagemaker_endpoint",
+  "llms/bedrock",
   "prompts/load",
   "vectorstores/analyticdb",
   "vectorstores/chroma",
@@ -254,8 +283,13 @@ const requiresOptionalDependency = [
   "vectorstores/singlestore",
   "vectorstores/typesense",
   "vectorstores/tigris",
+  "vectorstores/usearch",
+  "vectorstores/zep",
   "memory/zep",
   "document_loaders/web/apify_dataset",
+  "document_loaders/web/assemblyai",
+  "document_loaders/web/azure_blob_storage_container",
+  "document_loaders/web/azure_blob_storage_file",
   "document_loaders/web/cheerio",
   "document_loaders/web/puppeteer",
   "document_loaders/web/playwright",
@@ -281,6 +315,8 @@ const requiresOptionalDependency = [
   "document_loaders/fs/csv",
   "document_loaders/fs/notion",
   "document_loaders/fs/unstructured",
+  "document_transformers/html_to_text",
+  "document_transformers/mozilla_readability",
   "chat_models/googlevertexai",
   "chat_models/googlepalm",
   "sql_db",
@@ -310,6 +346,8 @@ const requiresOptionalDependency = [
   "stores/message/ioredis",
   "stores/message/upstash_redis",
   "stores/message/planetscale",
+  "stores/message/xata",
+  "storage/ioredis",
   "experimental/multimodal_embeddings/googlevertexai",
 ];
 

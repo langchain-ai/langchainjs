@@ -603,7 +603,8 @@ export class CallbackManager
   async handleChainStart(
     chain: Serialized,
     inputs: ChainValues,
-    runId = uuidv4()
+    runId = uuidv4(),
+    runType: string | undefined = undefined
   ): Promise<CallbackManagerForChainRun> {
     await Promise.all(
       this.handlers.map((handler) =>
@@ -616,7 +617,8 @@ export class CallbackManager
                 runId,
                 this._parentRunId,
                 this.tags,
-                this.metadata
+                this.metadata,
+                runType
               );
             } catch (err) {
               console.error(

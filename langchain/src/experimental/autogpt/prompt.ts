@@ -8,7 +8,6 @@ import {
 import { VectorStoreRetriever } from "../../vectorstores/base.js";
 import { ObjectTool } from "./schema.js";
 import { getPrompt } from "./prompt_generator.js";
-import { BasePromptTemplate } from "../../index.js";
 import { SerializedBasePromptTemplate } from "../../prompts/serde.js";
 
 export interface AutoGPTPromptInput {
@@ -47,10 +46,10 @@ export class AutoGPTPrompt
   }
 
   constructFullPrompt(goals: string[]): string {
-    const promptStart = `Your decisions must always be made independently 
-            without seeking user assistance. Play to your strengths 
-            as an LLM and pursue simple strategies with no legal complications. 
-            If you have completed all your tasks, 
+    const promptStart = `Your decisions must always be made independently
+            without seeking user assistance. Play to your strengths
+            as an LLM and pursue simple strategies with no legal complications.
+            If you have completed all your tasks,
             make sure to use the "finish" command.`;
 
     let fullPrompt = `You are ${this.aiName}, ${this.aiRole}\n${promptStart}\n\nGOALS:\n\n`;
@@ -124,7 +123,7 @@ export class AutoGPTPrompt
     return messages;
   }
 
-  async partial(_values: PartialValues): Promise<BasePromptTemplate> {
+  async partial(_values: PartialValues): Promise<BaseChatPromptTemplate> {
     throw new Error("Method not implemented.");
   }
 
