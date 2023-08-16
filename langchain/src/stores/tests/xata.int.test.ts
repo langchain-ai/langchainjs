@@ -7,20 +7,7 @@ import { ChatOpenAI } from "../../chat_models/openai.js";
 import { ConversationChain } from "../../chains/conversation.js";
 import { XataChatMessageHistory } from "../message/xata.js";
 
-describe.skip("XataChatMessageHistory", () => {
-  if (!process.env.XATA_API_KEY) {
-    throw new Error("XATA_API_KEY not set");
-  }
-
-  if (!process.env.XATA_DB_URL) {
-    throw new Error("XATA_DB_URL not set");
-  }
-  const xata = new BaseClient({
-    databaseURL: process.env.XATA_DB_URL,
-    apiKey: process.env.XATA_API_KEY,
-    branch: process.env.XATA_BRANCH || "main",
-  });
-
+describe("XataChatMessageHistory", () => {
   const randomSessionId = (): string =>
     [...Array(6)]
       .map(() => "abcdefghijklmnopqrstuvwxyz"[Math.floor(Math.random() * 26)])
@@ -31,7 +18,12 @@ describe.skip("XataChatMessageHistory", () => {
     await xata.db.memory.delete(records.map((m) => m.id));
   });
 
-  test("Test Xata history store", async () => {
+  test.skip("Test Xata history store", async () => {
+    const xata = new BaseClient({
+      databaseURL: process.env.XATA_DB_URL,
+      apiKey: process.env.XATA_API_KEY,
+      branch: process.env.XATA_BRANCH || "main",
+    });
     const chatHistory = new XataChatMessageHistory({
       sessionId: randomSessionId(),
       client: xata,
@@ -53,7 +45,12 @@ describe.skip("XataChatMessageHistory", () => {
     expect(resultWithHistory).toEqual(expectedMessages);
   });
 
-  test("Test Xata memory with Buffer Memory", async () => {
+  test.skip("Test Xata memory with Buffer Memory", async () => {
+    const xata = new BaseClient({
+      databaseURL: process.env.XATA_DB_URL,
+      apiKey: process.env.XATA_API_KEY,
+      branch: process.env.XATA_BRANCH || "main",
+    });
     const memory = new BufferMemory({
       returnMessages: true,
       chatHistory: new XataChatMessageHistory({
@@ -77,7 +74,12 @@ describe.skip("XataChatMessageHistory", () => {
     expect(result2).toStrictEqual({ history: expectedHistory });
   });
 
-  test("Test Xata memory with LLM Chain", async () => {
+  test.skip("Test Xata memory with LLM Chain", async () => {
+    const xata = new BaseClient({
+      databaseURL: process.env.XATA_DB_URL,
+      apiKey: process.env.XATA_API_KEY,
+      branch: process.env.XATA_BRANCH || "main",
+    });
     const memory = new BufferMemory({
       chatHistory: new XataChatMessageHistory({
         sessionId: randomSessionId(),
@@ -101,7 +103,12 @@ describe.skip("XataChatMessageHistory", () => {
     console.log({ res2 });
   });
 
-  test("Test Xata don't create table", async () => {
+  test.skip("Test Xata don't create table", async () => {
+    const xata = new BaseClient({
+      databaseURL: process.env.XATA_DB_URL,
+      apiKey: process.env.XATA_API_KEY,
+      branch: process.env.XATA_BRANCH || "main",
+    });
     const t = () => {
       // eslint-disable-next-line no-new
       new XataChatMessageHistory({
