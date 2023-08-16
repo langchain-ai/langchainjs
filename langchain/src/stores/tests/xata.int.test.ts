@@ -14,6 +14,11 @@ describe("XataChatMessageHistory", () => {
       .join("");
 
   afterAll(async () => {
+    const xata = new BaseClient({
+      databaseURL: process.env.XATA_DB_URL,
+      apiKey: process.env.XATA_API_KEY,
+      branch: process.env.XATA_BRANCH || "main",
+    });
     const records = await xata.db.memory.select(["id"]).getAll();
     await xata.db.memory.delete(records.map((m) => m.id));
   });
