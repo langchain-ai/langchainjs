@@ -110,5 +110,6 @@ export const optionalImportEntrypoints = [
   "langchain/stores/message/upstash_redis",
   "langchain/stores/message/planetscale",
   "langchain/stores/message/xata",
+  "langchain/storage/ioredis",
   "langchain/experimental/multimodal_embeddings/googlevertexai",
 ];
