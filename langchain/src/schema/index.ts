@@ -109,6 +109,10 @@ export interface ChatMessageFieldsWithRole extends BaseMessageFields {
   role: string;
 }
 
+export interface FunctionMessageFieldsWithName extends BaseMessageFields {
+  name: string;
+}
+
 export abstract class BaseMessage
   extends Serializable
   implements BaseMessageFields
@@ -292,14 +296,22 @@ export const AIChatMessage = AIMessage;
 export const SystemChatMessage = SystemMessage;
 
 export class FunctionMessage extends BaseMessage {
+  constructor(fields: FunctionMessageFieldsWithName);
+
   constructor(
     fields: string | BaseMessageFields,
     /** @deprecated */
     name: string
+  );
+
+  constructor(
+    fields: string | FunctionMessageFieldsWithName,
+    /** @deprecated */
+    name?: string
   ) {
     if (typeof fields === "string") {
-      // eslint-disable-next-line no-param-reassign
-      fields = { content: fields, name };
+      // eslint-disable-next-line no-param-reassign, @typescript-eslint/no-non-null-assertion
+      fields = { content: fields, name: name! };
     }
     super(fields);
   }
