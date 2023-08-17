@@ -818,7 +818,8 @@ export class CallbackManager
     const verboseEnabled =
       getEnvironmentVariable("LANGCHAIN_VERBOSE") || options?.verbose;
     const tracingV2Enabled =
-      getEnvironmentVariable("LANGCHAIN_TRACING_V2") ?? false;
+      getEnvironmentVariable("LANGCHAIN_TRACING_V2") === "true";
+
     const tracingEnabled =
       tracingV2Enabled ||
       (getEnvironmentVariable("LANGCHAIN_TRACING") ?? false);
