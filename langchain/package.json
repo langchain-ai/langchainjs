@@ -817,6 +817,9 @@
     "@huggingface/inference": {
       "optional": true
     },
+    "@mozilla/readability": {
+      "optional": true
+    },
     "@notionhq/client": {
       "optional": true
     },
@@ -902,6 +905,9 @@
       "optional": true
     },
     "ioredis": {
+      "optional": true
+    },
+    "jsdom": {
       "optional": true
     },
     "mammoth": {
