@@ -20,6 +20,7 @@ export * as prompts from "../prompts/index.js";
 export * as vectorstores__base from "../vectorstores/base.js";
 export * as vectorstores__memory from "../vectorstores/memory.js";
 export * as vectorstores__prisma from "../vectorstores/prisma.js";
+export * as vectorstores__rockset from "../vectorstores/rockset.js";
 export * as vectorstores__vectara from "../vectorstores/vectara.js";
 export * as vectorstores__xata from "../vectorstores/xata.js";
 export * as text_splitter from "../text_splitter.js";
